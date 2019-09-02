@@ -123,7 +123,7 @@ G_DEFINE_TYPE (GstGaussianBlur, gst_gaussianblur, GST_TYPE_VIDEO_FILTER);
 
 #define DEFAULT_SIGMA 1.2
 
-/* Initalize the gaussianblur's class. */
+/* Initialize the gaussianblur's class. */
 static void
 gst_gaussianblur_class_init (GstGaussianBlurClass * klass)
 {

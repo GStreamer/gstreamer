@@ -5813,7 +5813,7 @@ GST_START_TEST (dash_mpdparser_xlink_period)
   file_uri_double_period =
       gst_filename_to_uri (XLINK_DOUBLE_PERIOD_FILENAME, NULL);
 
-  /* constructs inital mpd using external xml uri */
+  /* constructs initial mpd using external xml uri */
   /* For invalid URI, mpdparser should be ignore it */
   xml_joined = g_strjoin ("", xml_frag_start,
       xml_uri_front, "http://404/ERROR/XML.period", xml_uri_rear,

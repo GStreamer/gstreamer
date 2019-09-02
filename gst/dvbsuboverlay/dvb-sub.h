@@ -33,7 +33,7 @@ typedef struct _DvbSub DvbSub;
  *   as an index into the @palette.
  * @palette: the palette used for this subtitle rectangle, up to 256 items depending
  *   on the depth of the subpicture; each palette item is in ARGB form, 8-bits per channel.
- * @palette_bits_count: the amount of bits used in indeces into @palette in @data.
+ * @palette_bits_count: the amount of bits used in indices into @palette in @data.
  * @rowstride: the number of bytes between the start of a row and the start of the next row.
  *
  * A structure representing the contents of a subtitle rectangle.

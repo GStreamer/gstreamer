@@ -40,7 +40,7 @@ G_BEGIN_DECLS
 /**
  * GstPlayerStreamInfo:
  *
- * Base structure for information concering a media stream. Depending on
+ * Base structure for information concerning a media stream. Depending on
  * the stream type, one can find more media-specific information in
  * #GstPlayerVideoInfo, #GstPlayerAudioInfo, #GstPlayerSubtitleInfo.
  */

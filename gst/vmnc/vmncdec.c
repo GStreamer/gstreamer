@@ -235,12 +235,12 @@ vmnc_handle_wmvi_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
   format = gst_video_format_from_masks (dec->format.depth, bpp, endianness,
       redmask, greenmask, bluemask, 0);
 
-  GST_DEBUG_OBJECT (dec, "From depth: %d bpp: %u endianess: %s redmask: %X "
+  GST_DEBUG_OBJECT (dec, "From depth: %d bpp: %u endianness: %s redmask: %X "
       "greenmask: %X bluemask: %X got format %s",
       dec->format.depth, bpp, endianness == G_BIG_ENDIAN ? "BE" : "LE",
       GUINT32_FROM_BE (redmask), GUINT32_FROM_BE (greenmask),
       GUINT32_FROM_BE (bluemask),
-      format == GST_VIDEO_FORMAT_UNKNOWN ? "UNKOWN" :
+      format == GST_VIDEO_FORMAT_UNKNOWN ? "UNKNOWN" :
       gst_video_format_to_string (format));
 
   if (format == GST_VIDEO_FORMAT_UNKNOWN) {

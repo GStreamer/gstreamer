@@ -305,7 +305,7 @@ struct _GstVC1SeqStructC
 
   /* Wmvp specific */
   guint8 wmvp;          /* Specify if the stream is wmp or not */
-  /* In the wmvp case, the framerate is not computed but in the bistream */
+  /* In the wmvp case, the framerate is not computed but in the bitstream */
   guint8 slice_code;
 };
 

@@ -107,7 +107,7 @@ gst_msdk_video_memory_get_surface_available (GstMemory * mem)
 
 /*
  * Every time releasing a gst buffer, we need to check the status of surface's lock,
- * so that we could manage locked surfaces seperatedly in the context.
+ * so that we could manage locked surfaces separately in the context.
  * Otherwise, we put the surface to the available list.
  */
 void
@@ -209,7 +209,7 @@ gst_video_meta_map_msdk_memory (GstVideoMeta * meta, guint plane,
   }
 
   if ((flags & GST_MAP_WRITE) && mem->surface && mem->surface->Data.Locked) {
-    GST_WARNING ("The surface in memory %p is not still avaliable", mem);
+    GST_WARNING ("The surface in memory %p is not still available", mem);
     return FALSE;
   }
 
@@ -305,7 +305,7 @@ gst_msdk_video_memory_map_full (GstMemory * base_mem, GstMapInfo * info,
 
   if ((info->flags & GST_MAP_WRITE) && mem->surface
       && mem->surface->Data.Locked) {
-    GST_WARNING ("The surface in memory %p is not still avaliable", mem);
+    GST_WARNING ("The surface in memory %p is not still available", mem);
     return NULL;
   }
 

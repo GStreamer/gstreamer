@@ -832,7 +832,7 @@ gst_ass_render_negotiate (GstAssRender * render, GstCaps * caps)
   }
 
   if (upstream_has_meta || caps_has_meta) {
-    /* Send caps immediatly, it's needed by GstBaseTransform to get a reply
+    /* Send caps immediately, it's needed by GstBaseTransform to get a reply
      * from allocation query */
     ret = gst_pad_set_caps (render->srcpad, overlay_caps);
 
@@ -875,7 +875,7 @@ gst_ass_render_negotiate (GstAssRender * render, GstCaps * caps)
   render->window_height = height;
   gst_ass_render_update_render_size (render);
 
-  /* For backward compatbility, we will prefer bliting if downstream
+  /* For backward compatibility, we will prefer bliting if downstream
    * allocation does not support the meta. In other case we will prefer
    * attaching, and will fail the negotiation in the unlikely case we are
    * force to blit, but format isn't supported. */

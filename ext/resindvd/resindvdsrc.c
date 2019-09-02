@@ -2827,7 +2827,7 @@ rsn_dvdsrc_do_seek (GstBaseSrc * bsrc, GstSegment * segment)
   gboolean ret = FALSE;
 
   if (segment->format == rsndvd_format || src->first_seek) {
-    /* The internal format has alread served its purpose of waking
+    /* The internal format has already served its purpose of waking
      * everything up and flushing, we just need to step to the next
      * data block (below) so we know our new position */
     ret = TRUE;

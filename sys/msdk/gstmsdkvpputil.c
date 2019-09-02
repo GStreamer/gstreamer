@@ -333,7 +333,7 @@ fixate_output_frame_size (GstMsdkVPP * thiz, GstVideoInfo * vinfo,
         goto done;
       }
 
-      /* If all this failed, keep the height that was nearest to the orignal
+      /* If all this failed, keep the height that was nearest to the original
        * height and the nearest possible width. This changes the DAR but
        * there's not much else to do here.
        */

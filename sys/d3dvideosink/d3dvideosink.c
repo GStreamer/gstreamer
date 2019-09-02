@@ -527,7 +527,7 @@ gst_d3dvideosink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 
 /* PUBLIC FUNCTIONS */
 
-/* Iterface Registrations */
+/* Interface Registrations */
 
 static void
 gst_d3dvideosink_video_overlay_interface_init (GstVideoOverlayInterface * iface)

@@ -28,7 +28,7 @@ if not have_d3d11
   subdir_done()
 endif
 
-# required for HDR meatadata
+# required for HDR metadata
 if cc.has_header('dxgi1_5.h')
   extra_c_args += ['-DHAVE_DXGI_1_5_H']
 endif

@@ -4684,7 +4684,7 @@ mxf_dms1_rights_handle_tag (MXFMetadataBase * metadata, MXFPrimerPack * primer,
     GST_DEBUG ("  rights holder = %s", GST_STR_NULL (self->rights_holder));
   } else if (memcmp (tag_ul, &rights_managment_authority_ul, 16) == 0) {
     self->rights_managment_authority = mxf_utf16_to_utf8 (tag_data, tag_size);
-    GST_DEBUG ("  rights managment authority = %s",
+    GST_DEBUG ("  rights management authority = %s",
         GST_STR_NULL (self->rights_managment_authority));
   } else if (memcmp (tag_ul, &region_or_area_of_ip_license_ul, 16) == 0) {
     self->region_or_area_of_ip_license = mxf_utf16_to_utf8 (tag_data, tag_size);

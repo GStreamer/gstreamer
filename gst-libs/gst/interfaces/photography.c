@@ -448,7 +448,7 @@ gst_photography_set_autofocus (GstPhotography * photo, gboolean on)
 /**
  * gst_photography_set_config:
  * @photo: #GstPhotography interface of a #GstElement
- * @config: #GstPhotographySettings containg the configuration
+ * @config: #GstPhotographySettings containing the configuration
  *
  * Set all configuration settings at once.
  *
@@ -474,7 +474,7 @@ gst_photography_set_config (GstPhotography * photo,
 /**
  * gst_photography_get_config:
  * @photo: #GstPhotography interface of a #GstElement
- * @config: #GstPhotographySettings containg the configuration
+ * @config: #GstPhotographySettings containing the configuration
  *
  * Get all configuration settings at once.
  *
@@ -670,7 +670,7 @@ gst_photography_iface_class_init (gpointer g_class)
    * GstPhotography:lens-focus:
    *
    * Manual changing of lens focus in diopter units.
-   * Inteded use with GST_PHOTOGRAPHY_FOCUS_MODE_MANUAL focus mode, otherwise
+   * Intended use with GST_PHOTOGRAPHY_FOCUS_MODE_MANUAL focus mode, otherwise
    * to be ignored.
    *
    */

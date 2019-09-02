@@ -164,7 +164,7 @@ context_set_cuda_context (GstContext * context, GstCudaContext * cuda_ctx)
 /**
  * gst_cuda_ensure_element_context:
  * @element: the #GstElement running the query
- * @device_id: prefered device-id, pass device_id >=0 when
+ * @device_id: preferred device-id, pass device_id >=0 when
  *             the device_id explicitly required. Otherwise, set -1.
  * @cuda_ctx: (inout): the resulting #GstCudaContext
  *
@@ -224,7 +224,7 @@ gst_cuda_ensure_element_context (GstElement * element, gint device_id,
  * gst_cuda_handle_set_context:
  * @element: a #GstElement
  * @context: a #GstContext
- * @device_id: prefered device-id, pass device_id >=0 when
+ * @device_id: preferred device-id, pass device_id >=0 when
  *             the device_id explicitly required. Otherwise, set -1.
  * @cuda_ctx: (inout) (transfer full): location of a #GstCudaContext
  *
@@ -388,7 +388,7 @@ gst_cuda_quark_from_id (GstCudaQuarkId id)
 /**
  * gst_cuda_graphics_resource_new: (skip)
  * @context: (transfer none): a #GstCudaContext
- * @graphics_context: (transfer none) (nullable): a grapics API specific context object
+ * @graphics_context: (transfer none) (nullable): a graphics API specific context object
  * @type: a #GstCudaGraphicsResourceType of resource registration
  *
  * Create new #GstCudaGraphicsResource with given @context and @type

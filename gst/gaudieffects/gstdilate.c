@@ -159,7 +159,7 @@ gst_dilate_class_init (GstDilateClass * klass)
 
 /* Initialize the element,
  * instantiate pads and add them to element,
- * set pad calback functions, and
+ * set pad callback functions, and
  * initialize instance structure.
  */
 static void

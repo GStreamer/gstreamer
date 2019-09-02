@@ -34,7 +34,7 @@
  * directory.
  * The source will look for the environment variable â€œTMPâ€� which must contain
  * the absolute path to a writable directory.
- * It can be retreived using the following Java code :
+ * It can be retrieved using the following Java code :
  * |[
  *   context.getCacheDir().getAbsolutePath();
  * ]|

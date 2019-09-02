@@ -92,7 +92,7 @@ send_message_if_ipcpipelinesrc (const GValue * v, GValue * r,
   if (et == GST_TYPE_IPC_PIPELINE_SRC) {
     g_signal_emit_by_name (G_OBJECT (e), "forward-message", message, &ret);
 
-    /* if we succesfully sent this to the master and it's not ASYNC_DONE or EOS,
+    /* if we successfully sent this to the master and it's not ASYNC_DONE or EOS,
      * we can skip sending it again through the other ipcpipelinesrcs */
     if (ret && GST_MESSAGE_TYPE (message) != GST_MESSAGE_ASYNC_DONE &&
         GST_MESSAGE_TYPE (message) != GST_MESSAGE_EOS)

@@ -401,7 +401,7 @@ gst_h264_parse_negotiate (GstH264Parse * h264parse, gint in_format,
     }
   }
 
-  /* FIXME We could fail the negotiation immediatly if caps are empty */
+  /* FIXME We could fail the negotiation immediately if caps are empty */
   if (caps && !gst_caps_is_empty (caps)) {
     /* fixate to avoid ambiguity with lists when parsing */
     caps = gst_caps_fixate (caps);
@@ -936,7 +936,7 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
         GST_DEBUG_OBJECT (h264parse, "marking IDR in frame at offset %d",
             h264parse->idr_pos);
       }
-      /* if SEI preceeds (faked) IDR, then we have to insert config there */
+      /* if SEI precedes (faked) IDR, then we have to insert config there */
       if (h264parse->sei_pos >= 0 && h264parse->idr_pos > h264parse->sei_pos) {
         h264parse->idr_pos = h264parse->sei_pos;
         GST_DEBUG_OBJECT (h264parse, "moved IDR mark to SEI position %d",
@@ -2576,7 +2576,7 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     h264parse->sent_codec_tag = TRUE;
   }
 
-  /* In case of byte-stream, insert au delimeter by default
+  /* In case of byte-stream, insert au delimiter by default
    * if it doesn't exist */
   if (h264parse->aud_insert && h264parse->format == GST_H264_PARSE_FORMAT_BYTE) {
     if (h264parse->align == GST_H264_PARSE_ALIGN_AU) {
@@ -2669,7 +2669,7 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     }
   }
 
-  /* Fixme: setting passthrough mode casuing multiple issues:
+  /* Fixme: setting passthrough mode causing multiple issues:
    * For nal aligned multiresoluton streams, passthrough mode make h264parse
    * unable to advertise the new resoultions. Also causing issues while
    * parsing MVC streams when it has two layers.

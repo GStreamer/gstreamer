@@ -126,11 +126,11 @@ as I know, each type has a fixed length.
 
  * type 0x03 : '03wxyz' - 3 bytes
   this one has the palette information ; it basically says 'encoded color 0
- is the wth color of the palette, encoded color 1 is the xth color, aso.
+ is the with color of the palette, encoded color 1 is the xth color, aso.
 
  * type 0x04 : '04wxyz' - 3 bytes
   I *think* this is the alpha channel information ; I only saw values of 0 or f
- for those nibbles, so I can't really be sure, but it seems plausable.
+ for those nibbles, so I can't really be sure, but it seems plausible.
 
  * type 0x05 : '05xxxXXXyyyYYY' - 7 bytes
   the coordinates of the subtitle on the screen :

@@ -297,7 +297,7 @@ gst_msdk_buffer_pool_acquire_buffer (GstBufferPool * pool,
     }
   }
 #ifndef _WIN32
-  /* When using dmabuf, we should confirm that the fd of memeory and
+  /* When using dmabuf, we should confirm that the fd of memory and
    * the fd of surface match, since there is no guarantee that fd matches
    * between surface and memory.
    */

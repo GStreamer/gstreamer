@@ -1075,7 +1075,7 @@ _gl_sync_render_unlocked (struct gl_sync *sync)
 
   af_meta = gst_buffer_get_video_affine_transformation_meta (sync->buffer);
   if (!af_meta) {
-    GST_WARNING ("Failed to retreive the transformation meta from the "
+    GST_WARNING ("Failed to retrieve the transformation meta from the "
         "gl_sync %p buffer %p", sync, sync->buffer);
   } else if (gst_amc_surface_texture_get_transform_matrix (sync->surface,
           matrix, &error)) {

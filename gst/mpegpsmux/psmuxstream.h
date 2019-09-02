@@ -157,7 +157,7 @@ void 		psmux_stream_get_es_descrs 	(PsMuxStream *stream, guint8 *buf, guint16 *l
 /* get the pts of stream */
 guint64 	psmux_stream_get_pts 		(PsMuxStream *stream);
 
-/* stream_id assignemnt */
+/* stream_id assignment */
 #define PSMUX_STREAM_ID_MPGA_INIT       0xc0
 #define PSMUX_STREAM_ID_MPGA_MAX        0xcf
 

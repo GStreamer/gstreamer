@@ -141,7 +141,7 @@ msdk_status_to_string (mfxStatus status)
     default:
       break;
   }
-  return "undefiend error";
+  return "undefined error";
 }
 
 void

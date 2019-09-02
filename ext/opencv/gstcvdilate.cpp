@@ -88,7 +88,7 @@ gst_cv_dilate_class_init (GstCvDilateClass * klass)
 
 /* initialize the new element
  * instantiate pads and add them to element
- * set pad calback functions
+ * set pad callback functions
  * initialize instance structure
  */
 static void

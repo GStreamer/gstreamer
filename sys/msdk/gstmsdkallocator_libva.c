@@ -651,7 +651,7 @@ gst_msdk_replace_mfx_memid (GstMsdkContext * context,
   msdk_mid = (GstMsdkMemoryID *) mfx_surface->Data.MemId;
   dpy = gst_msdk_context_get_handle (context);
 
-  /* Destory the underlined VAImage if already mapped */
+  /* Destroy the underlined VAImage if already mapped */
   if (msdk_mid->image.image_id != VA_INVALID_ID
       && msdk_mid->image.buf != VA_INVALID_ID) {
     status =

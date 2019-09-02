@@ -48,7 +48,7 @@ recommended that the viewfinder pad keeps pushing buffers so the user
 has a smooth experience.
 
 Note that basecamerasrc already has the mode property and start/stop-capture
-signals. It has functions that should be overriden by its child classes to
+signals. It has functions that should be overridden by its child classes to
 implement the handling of these actions.
 
 

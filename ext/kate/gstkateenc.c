@@ -198,7 +198,7 @@ gst_kate_enc_class_init (GstKateEncClass * klass)
           0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, ARG_KEEPALIVE_MIN_TIME,
-      g_param_spec_float ("keepalive-min-time", "Keepalive mimimum time",
+      g_param_spec_float ("keepalive-min-time", "Keepalive minimum time",
           "Minimum time to emit keepalive packets (0 disables keepalive packets)",
           0.0f, FLT_MAX, DEFAULT_KEEPALIVE_MIN_TIME,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));

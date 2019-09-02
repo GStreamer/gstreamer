@@ -196,7 +196,7 @@ gst_dshowvideosrc_init (GstDshowVideoSrc * src)
 static GstCaps *
 gst_dshowvideosrc_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
 {
-  /* If there is no desired video size, set default video size to device preffered video size */
+  /* If there is no desired video size, set default video size to device preferred video size */
 
   GstDshowVideoSrc *src = GST_DSHOWVIDEOSRC (bsrc);
   GstStructure *structure = gst_caps_get_structure (caps, 0);
@@ -497,7 +497,7 @@ gst_dshowvideosrc_start (GstBaseSrc * bsrc)
       src->video_cap_filter, (GList**)&src->pins_mediatypes);
   if (gst_caps_is_empty (src->caps)) {
     GST_ELEMENT_ERROR (src, RESOURCE, FAILED,
-        ("Failed to get any caps from devce"), (NULL));
+        ("Failed to get any caps from device"), (NULL));
     return FALSE;
   }
 
@@ -649,7 +649,7 @@ gst_dshowvideosrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
     src->is_running = FALSE;
   }
 
-  /* search the negociated caps in our caps list to get its index and the corresponding mediatype */
+  /* search the negotiated caps in our caps list to get its index and the corresponding mediatype */
   if (gst_caps_is_subset (caps, src->caps)) {
     guint i = 0;
     gint res = -1;
@@ -745,7 +745,7 @@ gst_dshowvideosrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
           goto error;
         }
 
-        /* save width and height negociated */
+        /* save width and height negotiated */
         gst_structure_get_int (s, "width", &src->width);
         gst_structure_get_int (s, "height", &src->height);
 

@@ -331,7 +331,7 @@ gst_av1_enc_class_init (GstAV1EncClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_MIN_QUANTIZER,
       g_param_spec_uint ("min-quantizer", "Minimum (best quality) quantizer",
-          "Mininum (best quality) quantizer",
+          "Minimum (best quality) quantizer",
           0, G_MAXUINT, DEFAULT_MIN_QUANTIZER,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 

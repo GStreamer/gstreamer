@@ -450,7 +450,7 @@ gst_mpeg4_parse (GstMpeg4Packet * packet, gboolean skip_user_data,
         first_resync_marker);
     first_resync_marker = FALSE;
 
-    /*  We found a complet slice */
+    /*  We found a complete slice */
     if (resync_res == GST_MPEG4_PARSER_OK)
       return resync_res;
     else if (resync_res == GST_MPEG4_PARSER_NO_PACKET_END) {
@@ -1323,7 +1323,7 @@ gst_mpeg4_parse_video_object_plane (GstMpeg4VideoObjectPlane * vop,
   vop->fcode_forward = 1;
   vop->fcode_backward = 1;
 
-  /*  Compute macroblock informations */
+  /*  Compute macroblock information */
   if (vol->interlaced)
     vop->mb_height = (2 * (vol->height + 31) / 32);
   else
@@ -1398,7 +1398,7 @@ gst_mpeg4_parse_video_object_plane (GstMpeg4VideoObjectPlane * vop,
           gst_bit_reader_get_bits_uint16_unchecked (&br, 13);
       MARKER_UNCHECKED (&br);
 
-      /* Recompute the Macroblock informations
+      /* Recompute the Macroblock information
        * accordingly to the new values */
       if (vol->interlaced)
         vop->mb_height = (2 * (vol->height + 31) / 32);
@@ -1618,11 +1618,11 @@ failed:
  * gst_mpeg4_parse_video_packet_header:
  * @videopackethdr: The #GstMpeg4VideoPacketHdr structure to fill
  * @vol: The last parsed #GstMpeg4VideoObjectLayer, will be updated
- * with the informations found during the parsing
+ * with the information found during the parsing
  * @vop: The last parsed #GstMpeg4VideoObjectPlane, will be updated
- * with the informations found during the parsing
+ * with the information found during the parsing
  * @sprite_trajectory: A #GstMpeg4SpriteTrajectory to fill or %NULL
- * with the informations found during the parsing
+ * with the information found during the parsing
  * @data: The data to parse, should be set after the resync marker.
  * @size: The size of the data to parse
  *

@@ -167,7 +167,7 @@ get_profile_type (GstEncodingProfile * profile)
   else if (GST_IS_ENCODING_VIDEO_PROFILE (profile))
     return "Video";
   else
-    return "Unkonwn";
+    return "Unknown";
 }
 
 static void

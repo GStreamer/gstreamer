@@ -1024,7 +1024,7 @@ tsmux_stream_default_get_es_descrs (TsMuxStream * stream,
       g_ptr_array_add (pmt_stream->descriptors, descriptor);
       break;
     case TSMUX_ST_PS_DVB_SUBPICTURE:
-      /* falltrough ...
+      /* fallthrough ...
        * that should never happen anyway as
        * dvb subtitles are private data */
     case TSMUX_ST_PRIVATE_DATA:

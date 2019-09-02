@@ -489,7 +489,7 @@ struct _GstMpeg4VideoObjectPlane {
   guint8  load_backward_shape;
   guint8  ref_select_code;
 
-  /* Computed macroblock informations */
+  /* Computed macroblock information */
   guint16 mb_height;
   guint16 mb_width;
   guint mb_num;

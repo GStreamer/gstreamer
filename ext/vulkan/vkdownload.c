@@ -634,7 +634,7 @@ gst_vulkan_download_change_state (GstElement * element,
       if (!gst_vulkan_ensure_element_data (element, NULL,
               &vk_download->instance)) {
         GST_ELEMENT_ERROR (vk_download, RESOURCE, NOT_FOUND,
-            ("Failed to retreive vulkan instance"), (NULL));
+            ("Failed to retrieve vulkan instance"), (NULL));
         return GST_STATE_CHANGE_FAILURE;
       }
       if (!gst_vulkan_device_run_context_query (GST_ELEMENT (vk_download),

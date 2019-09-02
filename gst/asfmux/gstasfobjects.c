@@ -220,7 +220,7 @@ gst_asf_payload_get_size (AsfPayload * payload)
  * gst_asf_payload_free:
  * @payload: the #AsfPayload to be freed
  *
- * Releases teh memory associated with this payload
+ * Releases the memory associated with this payload
  */
 void
 gst_asf_payload_free (AsfPayload * payload)
@@ -278,7 +278,7 @@ gst_asf_match_guid (const guint8 * data, const Guid * guid)
 /**
  * gst_asf_put_i32:
  * @buf: the memory to write data to
- * @data: the value to be writen
+ * @data: the value to be written
  *
  * Writes a 32 bit signed integer to memory
  */
@@ -291,7 +291,7 @@ gst_asf_put_i32 (guint8 * buf, gint32 data)
 /**
  * gst_asf_put_time:
  * @buf: pointer to the buffer to write the value to
- * @time: value to be writen
+ * @time: value to be written
  *
  * Writes an asf time value to the buffer
  */
@@ -304,7 +304,7 @@ gst_asf_put_time (guint8 * buf, guint64 time)
 /**
  * gst_asf_put_guid:
  * @buf: the buffer to write the guid to
- * @guid: the guid to be writen
+ * @guid: the guid to be written
  *
  * Writes a GUID to the buffer
  */
@@ -324,7 +324,7 @@ gst_asf_put_guid (guint8 * buf, Guid guid)
 /**
  * gst_asf_put_payload:
  * @buf: memory to write the payload to
- * @payload: #AsfPayload to be writen
+ * @payload: #AsfPayload to be written
  *
  * Writes the asf payload to the buffer. The #AsfPayload
  * packet count is incremented.
@@ -348,19 +348,19 @@ gst_asf_put_payload (guint8 * buf, AsfPayload * payload)
 /**
  * gst_asf_put_subpayload:
  * @buf: buffer to write the payload to
- * @payload: the payload to be writen
+ * @payload: the payload to be written
  * @size: maximum size in bytes to write
  *
  * Serializes part of a payload to a buffer.
  * The maximum size is checked against the payload length,
- * the minimum of this size and the payload length is writen
- * to the buffer and the writen size is returned.
+ * the minimum of this size and the payload length is written
+ * to the buffer and the written size is returned.
  *
  * It also updates the values of the payload to match the remaining
  * data.
  * In case there is not enough space to write the headers, nothing is done.
  *
- * Returns: The writen size in bytes.
+ * Returns: The written size in bytes.
  */
 guint16
 gst_asf_put_subpayload (guint8 * buf, AsfPayload * payload, guint16 size)
@@ -461,7 +461,7 @@ gst_asf_match_and_peek_obj_size_buf (GstBuffer * buf, const Guid * guid)
  * is the last one in an asf packet and the remaining data
  * is probably uninteresting to the application.
  *
- * Returns: true on success, false if some error occurrs
+ * Returns: true on success, false if some error occurs
  */
 static gboolean
 gst_asf_parse_mult_payload (GstByteReader * reader, gboolean * has_keyframe)
@@ -486,7 +486,7 @@ gst_asf_parse_mult_payload (GstByteReader * reader, gboolean * has_keyframe)
     if (!gst_byte_reader_get_uint8 (reader, &stream_num))
       goto error;
     if ((stream_num & 0x80) != 0) {
-      GST_LOG ("Keyframe found, stoping parse of payloads");
+      GST_LOG ("Keyframe found, stopping parse of payloads");
       *has_keyframe = TRUE;
       return TRUE;
     }
@@ -525,7 +525,7 @@ error:
  * is the last one in an asf packet and the remaining data
  * is probably uninteresting to the application.
  *
- * Returns: true on success, false if some error occurrs
+ * Returns: true on success, false if some error occurs
  */
 static gboolean
 gst_asf_parse_single_payload (GstByteReader * reader, gboolean * has_keyframe)
@@ -753,7 +753,7 @@ gst_asf_parse_file_properties_obj (GstByteReader * reader,
     return GST_FLOW_ERROR;
 
   if (min_ps != max_ps) {
-    GST_WARNING ("Mininum and maximum packet size differ "
+    GST_WARNING ("Minimum and maximum packet size differ "
         "%" G_GUINT32_FORMAT " and %" G_GUINT32_FORMAT ", "
         "ASF spec states they should be the same", min_ps, max_ps);
     return FALSE;

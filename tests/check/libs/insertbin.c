@@ -310,7 +310,7 @@ GST_START_TEST (test_insertbin_simple)
 
   /* when removing an element insertbin will look at the pending operations list
    * and check if that element is pending and remove it before adding.
-   * So we check that the callback count hapenned before the end, and it
+   * So we check that the callback count happened before the end, and it
    * also happens from this same main thread. So we need to store the
    * streaming thread to restore it after the check */
   elem = gst_element_factory_make ("identity", NULL);

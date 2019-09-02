@@ -410,7 +410,7 @@ static AVCaptureVideoOrientation GstAVFVideoSourceOrientation2AVCaptureVideoOrie
 
   } @catch (NSException *exception) {
     if (![[exception name] isEqualToString:NSUndefinedKeyException]) {
-      GST_WARNING ("An unexpected error occured: %s",
+      GST_WARNING ("An unexpected error occurred: %s",
                    [[exception reason] UTF8String]);
     }
     GST_WARNING ("Capturing cursor is only supported in OS X >= 10.8");
@@ -610,7 +610,7 @@ static AVCaptureVideoOrientation GstAVFVideoSourceOrientation2AVCaptureVideoOrie
               [device setValue:frame_duration_value forKey:@"activeVideoMaxFrameDuration"];
             } @catch (NSException *exception) {
               if (![[exception name] isEqualToString:NSUndefinedKeyException]) {
-                GST_WARNING ("An unexcepted error occured: %s",
+                GST_WARNING ("An unexcepted error occurred: %s",
                               [exception.reason UTF8String]);
               }
             }
@@ -734,7 +734,7 @@ static AVCaptureVideoOrientation GstAVFVideoSourceOrientation2AVCaptureVideoOrie
     result = gst_caps_merge (result, [self getDeviceCaps]);
   } @catch (NSException *exception) {
     if (![[exception name] isEqualToString:NSUndefinedKeyException]) {
-      GST_WARNING ("An unexcepted error occured: %s", [exception.reason UTF8String]);
+      GST_WARNING ("An unexcepted error occurred: %s", [exception.reason UTF8String]);
       return result;
     }
 
@@ -781,7 +781,7 @@ static AVCaptureVideoOrientation GstAVFVideoSourceOrientation2AVCaptureVideoOrie
       } @catch (NSException *exception) {
 
         if (![[exception name] isEqualToString:NSUndefinedKeyException]) {
-          GST_WARNING ("An unexcepted error occured: %s", [exception.reason UTF8String]);
+          GST_WARNING ("An unexcepted error occurred: %s", [exception.reason UTF8String]);
           *successPtr = NO;
           return;
         }

@@ -53,11 +53,11 @@ _vk_create_shader (GstVulkanDevice * device, gchar * code, gsize size,
   g_return_val_if_fail (first_word == SPIRV_MAGIC_NUMBER_NE
       || first_word == SPIRV_MAGIC_NUMBER_OE, NULL);
   if (first_word == SPIRV_MAGIC_NUMBER_OE) {
-    /* endianess swap... */
+    /* endianness swap... */
     guint32 *old_code = (guint32 *) code;
     gsize i;
 
-    GST_DEBUG ("performaing endianess conversion on spirv shader of size %"
+    GST_DEBUG ("performaing endianness conversion on spirv shader of size %"
         G_GSIZE_FORMAT, size);
     new_code = g_new0 (guint32, size / 4);
 

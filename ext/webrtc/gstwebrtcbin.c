@@ -87,7 +87,7 @@
  * balanced bundle policy
  * setting custom DTLS certificates
  *
- * seperate session id's from mlineindex properly
+ * separate session id's from mlineindex properly
  * how to deal with replacing a input/output track/stream
  */
 
@@ -1411,7 +1411,7 @@ _find_codec_preferences (GstWebRTCBin * webrtc,
   WebRTCTransceiver *trans = (WebRTCTransceiver *) rtp_trans;
   GstCaps *ret = NULL;
 
-  GST_LOG_OBJECT (webrtc, "retreiving codec preferences from %" GST_PTR_FORMAT,
+  GST_LOG_OBJECT (webrtc, "retrieving codec preferences from %" GST_PTR_FORMAT,
       trans);
 
   if (rtp_trans && rtp_trans->codec_preferences) {
@@ -1481,7 +1481,7 @@ _add_supported_attributes_to_caps (GstWebRTCBin * webrtc,
     /*if (!gst_structure_has_field (s, "rtcp-fb-transport-cc"))
        gst_structure_set (s, "rtcp-fb-nack-pli", G_TYPE_BOOLEAN, TRUE, NULL); */
 
-    /* FIXME: codec-specific paramters? */
+    /* FIXME: codec-specific parameters? */
   }
 
   return ret;
@@ -5715,7 +5715,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
    * and is constantly changing these statistics may be changed to fit with
    * the latest spec.
    *
-   * Each field key is a unique identifer for each RTCStats
+   * Each field key is a unique identifier for each RTCStats
    * (https://www.w3.org/TR/webrtc/#rtcstats-dictionary) value (another
    * GstStructure) in the RTCStatsReport
    * (https://www.w3.org/TR/webrtc/#rtcstatsreport-object).  Each supported
@@ -5884,11 +5884,11 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
    * members outlined https://www.w3.org/TR/webrtc/#dom-rtcdatachannelinit and
    * and reproduced below
    *
-   *  ordered               G_TYPE_BOOLEAN        Whether the channal will send data with guarenteed ordering
+   *  ordered               G_TYPE_BOOLEAN        Whether the channal will send data with guaranteed ordering
    *  max-packet-lifetime   G_TYPE_INT            The time in milliseconds to attempt transmitting unacknowledged data. -1 for unset
    *  max-retransmits       G_TYPE_INT            The number of times data will be attempted to be transmitted without acknowledgement before dropping
    *  protocol              G_TYPE_STRING         The subprotocol used by this channel
-   *  negotiated            G_TYPE_BOOLEAN        Whether the created data channel should not perform in-band chnanel announcment.  If %TRUE, then application must negotiate the channel itself and create the corresponding channel on the peer with the same id.
+   *  negotiated            G_TYPE_BOOLEAN        Whether the created data channel should not perform in-band chnanel announcement.  If %TRUE, then application must negotiate the channel itself and create the corresponding channel on the peer with the same id.
    *  id                    G_TYPE_INT            Override the default identifier selection of this channel
    *  priority              GST_TYPE_WEBRTC_PRIORITY_TYPE   The priority to use for this channel
    *

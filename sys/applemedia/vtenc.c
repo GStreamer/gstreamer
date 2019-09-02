@@ -505,7 +505,7 @@ static GstFlowReturn
 gst_vtenc_finish_encoding (GstVTEnc * self, gboolean is_flushing)
 {
   GST_DEBUG_OBJECT (self,
-      "complete enconding and clean buffer queue, is flushing %d", is_flushing);
+      "complete encoding and clean buffer queue, is flushing %d", is_flushing);
   GstVideoCodecFrame *outframe;
   GstFlowReturn ret = GST_FLOW_OK;
   OSStatus vt_status;

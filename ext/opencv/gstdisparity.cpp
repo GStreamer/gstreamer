@@ -370,7 +370,7 @@ gst_disparity_handle_sink_event (GstPad * pad,
       GST_INFO_OBJECT (pad, " Negotiating caps via event %" GST_PTR_FORMAT,
           caps);
       if (!gst_pad_has_current_caps (fs->srcpad)) {
-        /* Init image info (widht, height, etc) and all OpenCV matrices */
+        /* Init image info (width, height, etc) and all OpenCV matrices */
         initialise_disparity (fs, info.width, info.height,
             info.finfo->n_components);
 

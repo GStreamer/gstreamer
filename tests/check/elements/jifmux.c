@@ -991,7 +991,7 @@ libexif_check_tags_from_taglist (GstTagList * taglist, const gchar * filepath)
   /* iterate over our tag mapping */
   for (i = 0; i < G_N_ELEMENTS (tag_map); i++) {
     if (gst_tag_list_get_value_index (taglist, tag_map[i].gst_tag, 0)) {
-      /* we have added this field to the taglist, check if it was writen in
+      /* we have added this field to the taglist, check if it was written in
        * exif */
       libexif_check_tag_exists (taglist, i, exif_data);
     }

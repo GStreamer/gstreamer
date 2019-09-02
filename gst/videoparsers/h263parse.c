@@ -465,7 +465,7 @@ gst_h263_parse_get_params (H263Params * params, GstBuffer * buffer,
 
   /* FIXME: Annex P (Reference Picture Resampling) can be signaled implicitly
    * as well as in the header. Should we set the field to false in caps if it
-   * is not specfied by the header? */
+   * is not specified by the header? */
 
   /* FIXME: Annex U (Enhanced Reference Picture Selection) poses a problem - we
    * have no means of specifying what sub-modes, if any, are used. */

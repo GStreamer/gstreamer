@@ -1263,7 +1263,7 @@ gst_rist_sink_class_init (GstRistSinkClass * klass)
 
   g_object_class_install_property (object_class, PROP_BONDING_ADDRESSES,
       g_param_spec_string ("bonding-addresses", "Bonding Addresses",
-          "Comma (,) seperated list of <address>:<port> to send to. ", NULL,
+          "Comma (,) separated list of <address>:<port> to send to. ", NULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (object_class, PROP_BONDING_METHOD,

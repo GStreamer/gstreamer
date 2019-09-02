@@ -98,7 +98,7 @@ typedef enum
 #ifdef CURL_VERSION_HTTP2
     GSTCURL_HTTP_VERSION_2_0,
 #endif
-    GSTCURL_HTTP_NOT,           /* For future use, incase not HTTP protocol! */
+    GSTCURL_HTTP_NOT,           /* For future use if HTTP protocol not used! */
     GSTCURL_HTTP_VERSION_MAX
   } GstCurlHttpVersion;
 

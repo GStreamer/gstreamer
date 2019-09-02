@@ -158,7 +158,7 @@ gst_dx9screencapsrc_class_init (GstDX9ScreenCapSrcClass * klass)
 static void
 gst_dx9screencapsrc_init (GstDX9ScreenCapSrc * src)
 {
-  /* Set src element inital values... */
+  /* Set src element initial values... */
   src->surface = NULL;
   src->d3d9_device = NULL;
   src->capture_x = 0;
@@ -549,7 +549,7 @@ gst_dx9screencapsrc_create (GstPushSrc * push_src, GstBuffer ** buf)
       new_buf_size, width, height);
 
   /* Do screen capture and put it into buffer...
-   * Aquire front buffer, and lock it
+   * Acquire front buffer, and lock it
    */
   hres =
       IDirect3DDevice9_GetFrontBufferData (src->d3d9_device, 0, src->surface);

@@ -131,7 +131,7 @@ gst_fragment_class_init (GstFragmentClass * klass)
           "Name of the fragment (eg:fragment-12.ts)", NULL, G_PARAM_READABLE));
 
   g_object_class_install_property (gobject_class, PROP_DISCONTINOUS,
-      g_param_spec_boolean ("discontinuous", "Discontinous",
+      g_param_spec_boolean ("discontinuous", "Discontinuous",
           "Whether this fragment has a discontinuity or not",
           FALSE, G_PARAM_READABLE));
 

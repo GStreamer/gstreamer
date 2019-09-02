@@ -1235,7 +1235,7 @@ gst_decklink_com_thread (gpointer data)
   else if (res == RPC_E_CHANGED_MODE)
     GST_WARNING ("The concurrency model of COM has changed.");
   else
-    GST_INFO ("COM intialized succesfully");
+    GST_INFO ("COM initialized successfully");
 
   com_initialized = TRUE;
 
@@ -1244,12 +1244,12 @@ gst_decklink_com_thread (gpointer data)
 
   g_mutex_unlock (&com_init_lock);
 
-  /* Wait until the unitialize condition is met to leave the COM apartement */
+  /* Wait until the uninitialize condition is met to leave the COM apartement */
   g_mutex_lock (&com_deinit_lock);
   g_cond_wait (&com_deinit_cond, &com_deinit_lock);
 
   CoUninitialize ();
-  GST_INFO ("COM unintialized succesfully");
+  GST_INFO ("COM uninitialized successfully");
   com_initialized = FALSE;
   g_cond_signal (&com_deinited_cond);
   g_mutex_unlock (&com_deinit_lock);
@@ -1576,7 +1576,7 @@ gst_decklink_release_nth_input (gint n, GstElement * src, gboolean is_audio)
  * the parent device is also checked and configured accordingly.
  *
  * If
- *  - full-duplex-mode is requsted and the device does not support it *or*
+ *  - full-duplex-mode is requested and the device does not support it *or*
  *  - half-duplex-mode is requested and there is not parent-device *or*
  *  - half-duplex-mode is requested and neither the device nor the parent device does support setting
  *    the duplex-mode, DUPLEX_MODE_SET_UNSUPPORTED is returnded.

@@ -89,7 +89,7 @@ struct _GstDshowVideoDec
   
   GstFlowReturn last_ret;
 
-  /* list of dshow mediatypes coresponding to the caps list */
+  /* list of dshow mediatypes corresponding to the caps list */
   GList *mediatypes;
 
   /* filters interfaces */

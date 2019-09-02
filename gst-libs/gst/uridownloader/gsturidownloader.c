@@ -680,7 +680,7 @@ quit:
       } else {
         GstQuery *query;
 
-        /* Download successfull, let's query the URI */
+        /* Download successful, let's query the URI */
         query = gst_query_new_uri ();
         if (gst_element_query (urisrc, query)) {
           gst_query_parse_uri (query, &download->uri);

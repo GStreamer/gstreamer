@@ -755,7 +755,7 @@ gst_h265_parser_parse_short_term_ref_pic_sets (GstH265ShortTermRefPicSet *
         READ_UINT8 (nr, use_delta_flag[j], 1);
     }
 
-    /* 7-47: calcuate NumNegativePics, DeltaPocS0 and UsedByCurrPicS0 */
+    /* 7-47: calculate NumNegativePics, DeltaPocS0 and UsedByCurrPicS0 */
     i = 0;
     for (j = (RefRPS->NumPositivePics - 1); j >= 0; j--) {
       dPoc = RefRPS->DeltaPocS1[j] + deltaRps;
@@ -778,7 +778,7 @@ gst_h265_parser_parse_short_term_ref_pic_sets (GstH265ShortTermRefPicSet *
     }
     stRPS->NumNegativePics = i;
 
-    /* 7-48: calcuate NumPositivePics, DeltaPocS1 and UsedByCurrPicS1 */
+    /* 7-48: calculate NumPositivePics, DeltaPocS1 and UsedByCurrPicS1 */
     i = 0;
     for (j = (RefRPS->NumNegativePics - 1); j >= 0; j--) {
       dPoc = RefRPS->DeltaPocS0[j] + deltaRps;
@@ -1032,7 +1032,7 @@ gst_h265_parser_parse_pic_timing (GstH265Parser * parser,
 
   GST_DEBUG ("parsing \"Picture timing\"");
   if (!parser->last_sps || !parser->last_sps->valid) {
-    GST_WARNING ("didn't get the associated sequence paramater set for the "
+    GST_WARNING ("didn't get the associated sequence parameter set for the "
         "current access unit");
     goto error;
   }
@@ -1114,7 +1114,7 @@ gst_h265_parser_parse_recovery_point (GstH265Parser * parser,
 
   GST_DEBUG ("parsing \"Recovery point\"");
   if (!sps || !sps->valid) {
-    GST_WARNING ("didn't get the associated sequence paramater set for the "
+    GST_WARNING ("didn't get the associated sequence parameter set for the "
         "current access unit");
     goto error;
   }
@@ -1621,7 +1621,7 @@ gst_h265_parse_vps (GstH265NalUnit * nalu, GstH265VPS * vps)
   CHECK_ALLOWED_MAX (vps->max_layer_id, 63);
 
   READ_UE_MAX (&nr, vps->num_layer_sets_minus1, 1023);
-  /* allowd range is 0 to 1023 */
+  /* allowed range is 0 to 1023 */
   CHECK_ALLOWED_MAX (vps->num_layer_sets_minus1, 1023);
 
   for (i = 1; i <= vps->num_layer_sets_minus1; i++) {
@@ -1643,13 +1643,13 @@ gst_h265_parse_vps (GstH265NalUnit * nalu, GstH265VPS * vps)
       READ_UE_MAX (&nr, vps->num_ticks_poc_diff_one_minus1, G_MAXUINT32 - 1);
 
     READ_UE_MAX (&nr, vps->num_hrd_parameters, 1024);
-    /* allowd range is
+    /* allowed range is
      * 0 to vps_num_layer_sets_minus1 + 1 */
     CHECK_ALLOWED_MAX (vps->num_hrd_parameters, vps->num_layer_sets_minus1 + 1);
 
     if (vps->num_hrd_parameters) {
       READ_UE_MAX (&nr, vps->hrd_layer_set_idx, 1023);
-      /* allowd range is
+      /* allowed range is
        * ( vps_base_layer_internal_flag ? 0 : 1 ) to vps_num_layer_sets_minus1
        */
       CHECK_ALLOWED_MAX (vps->hrd_layer_set_idx, vps->num_layer_sets_minus1);
@@ -3118,8 +3118,8 @@ get_format_range_extension_profile (GstH265ProfileTierLevel * ptl)
     guint extra_constraints = 0;
     FormatRangeExtensionProfileMatch *m;
 
-    /* Filter out all the profiles having constraints not satisified by @ptl.
-     * Then pick the one having the least extra contraints. This allow us
+    /* Filter out all the profiles having constraints not satisfied by @ptl.
+     * Then pick the one having the least extra constraints. This allow us
      * to match the closet profile if bitstream contains not standard
      * constraints. */
     if (p.max_14bit_constraint_flag != ptl->max_14bit_constraint_flag) {

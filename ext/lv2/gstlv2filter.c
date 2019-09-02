@@ -171,7 +171,7 @@ gst_lv2_filter_finalize (GObject * object)
 }
 
 #if 0
-/* Convert an LV2 port role to a Gst channel positon
+/* Convert an LV2 port role to a Gst channel position
  * WARNING: If the group has only a single port,
  * GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER will be returned for pg:centerRole
  * (which is used by LV2 for mono groups), but this is not correct.  In this
@@ -291,7 +291,7 @@ gst_lv2_filter_setup (GstAudioFilter * gsp, const GstAudioInfo * info)
   if (!gst_lv2_setup (&self->lv2, GST_AUDIO_INFO_RATE (info)))
     goto no_instance;
 
-  /* FIXME Handle audio channel positionning while negotiating CAPS */
+  /* FIXME Handle audio channel positioning while negotiating CAPS */
 #if 0
   gint i;
   /* set input group pad audio channel position */

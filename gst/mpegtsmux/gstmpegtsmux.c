@@ -336,7 +336,7 @@ gst_mpeg_ts_mux_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_M2TS_MODE:
-      /* set incase if the output stream need to be of 192 bytes */
+      /* set in case if the output stream need to be of 192 bytes */
       mux->m2ts_mode = g_value_get_boolean (value);
       gst_base_ts_mux_set_packet_size (GST_BASE_TS_MUX (mux),
           mux->m2ts_mode ? M2TS_PACKET_LENGTH :

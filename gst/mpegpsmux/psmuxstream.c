@@ -283,7 +283,7 @@ psmux_stream_get_data (PsMuxStream * stream, guint8 * buf, guint len)
       MIN (psmux_stream_bytes_in_buffer (stream), len - PSMUX_PES_MAX_HDR_LEN);
   /* Note that we cannot make a better estimation of the header length for the
    * time being; because the header length is dependent on whether we can find a
-   * timestamp in the upcomming buffers, which in turn depends on
+   * timestamp in the upcoming buffers, which in turn depends on
    * cur_pes_payload_size, which is exactly what we want to decide.
    */
 
@@ -463,7 +463,7 @@ psmux_stream_write_pes_header (PsMuxStream * stream, guint8 * data)
     if (stream->pi.flags & PSMUX_PACKET_FLAG_PES_EXT_STREAMID) {
       guint8 ext_len;
 
-      flags = 0x0f;             /* preceeding flags all 0 | (reserved bits) | PES_extension_flag_2 */
+      flags = 0x0f;             /* preceding flags all 0 | (reserved bits) | PES_extension_flag_2 */
       *data++ = flags;
 
       ext_len = 1;              /* Only writing 1 byte into the extended fields */

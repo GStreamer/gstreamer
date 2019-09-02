@@ -539,7 +539,7 @@ gst_msdkh264enc_class_init (GstMsdkH264EncClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_B_PYRAMID,
       g_param_spec_boolean ("b-pyramid", "B-pyramid",
-          "Enable B-Pyramid Referene structure", FALSE,
+          "Enable B-Pyramid Reference structure", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (element_class,

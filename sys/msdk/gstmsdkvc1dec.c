@@ -93,7 +93,7 @@ gst_msdkvc1dec_configure (GstMsdkDec * decoder)
     decoder->param.mfx.CodecProfile = MFX_PROFILE_VC1_MAIN;
   else {
     decoder->param.mfx.CodecProfile = MFX_PROFILE_VC1_ADVANCED;
-    /* asf advanced profile codec-data has 1 byte in the begining
+    /* asf advanced profile codec-data has 1 byte in the beginning
      * which is the ASF binding byte. MediaSDK can't recognize this
      * byte, so discard it */
     if (decoder->input_state->codec_data) {

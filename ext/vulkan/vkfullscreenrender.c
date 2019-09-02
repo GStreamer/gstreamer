@@ -729,7 +729,7 @@ gst_vulkan_full_screen_render_start (GstBaseTransform * bt)
   if (!gst_vulkan_ensure_element_data (GST_ELEMENT (bt), NULL,
           &render->instance)) {
     GST_ELEMENT_ERROR (render, RESOURCE, NOT_FOUND,
-        ("Failed to retreive vulkan instance"), (NULL));
+        ("Failed to retrieve vulkan instance"), (NULL));
     return FALSE;
   }
   if (!gst_vulkan_device_run_context_query (GST_ELEMENT (render),

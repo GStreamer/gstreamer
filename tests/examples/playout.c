@@ -113,7 +113,7 @@ typedef struct
   gulong video_pad_probe_block_id;
 
   /* The current running time of this item; updated with every audio buffer if
-   * this item has audio; otherwise it's updated withe very video buffer */
+   * this item has audio; otherwise it's updated with very video buffer */
   guint64 running_time;
 } PlayoutItem;
 

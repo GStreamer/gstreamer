@@ -194,7 +194,7 @@ start:
 
   switch (IRTSPParse->state) {
     case IRTSP_SEARCH_FRAME:
-      /* Use the first occurence of 0x24 as a start of interleaved frames.
+      /* Use the first occurrence of 0x24 as a start of interleaved frames.
        * This 'trick' allows us to parse a dump that doesn't contain RTSP
        * handshake. It's up to user to provide the data where the first 0x24
        * is an RTSP frame */

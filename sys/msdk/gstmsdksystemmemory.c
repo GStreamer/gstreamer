@@ -234,7 +234,7 @@ gst_msdk_system_memory_map_full (GstMemory * base_mem, GstMapInfo * info,
 
   if ((info->flags & GST_MAP_WRITE) && mem->surface
       && mem->surface->Data.Locked) {
-    GST_WARNING ("The surface in memory %p is not still avaliable", mem);
+    GST_WARNING ("The surface in memory %p is not still available", mem);
     return NULL;
   }
 

@@ -145,7 +145,7 @@
  * When requested (with GST_SEEK_FLAG_TRICKMODE_KEY_UNIT) and if the format
  * is supported (ISOBMFF profiles), dashdemux can download only keyframes
  * in order to provide fast forward/reverse playback without exceeding the
- * available bandwith/cpu/memory usage.
+ * available bandwidth/cpu/memory usage.
  *
  * This is done in two parts:
  * 1) Parsing ISOBMFF atoms to detect the location of keyframes and only
@@ -178,7 +178,7 @@
  *
  * The main reason for doing keyframe-only downloads is for trick-modes
  * (i.e. being able to do fast reverse/forward playback with limited
- * bandwith/cpu/memory).
+ * bandwidth/cpu/memory).
  *
  * Downloading all keyframes might not be the optimal solution, especially
  * at high playback rates, since the time taken to download the keyframe
@@ -252,13 +252,13 @@
  * buffering_level.
  *
  * The smaller the buffering level is (i.e. the closer we are between
- * current and downstream), the more aggresively we skip forward (and
+ * current and downstream), the more aggressively we skip forward (and
  * guarantee the keyframe will be downloaded, decoded and displayed in
  * time). And the higher the buffering level, the least aggresivelly
  * we need to skip forward (and therefore display more frames per
  * second).
  *
- * Right now the threshold for agressive switching is set to 3
+ * Right now the threshold for aggressive switching is set to 3
  * average_download_time. Below that buffering level we set the target time
  * to at least 3 average_download_time distance beyond the
  * qos_earliest_time.
@@ -1135,7 +1135,7 @@ gst_dash_demux_get_video_input_caps (GstDashDemux * demux,
   if (stream == NULL)
     return NULL;
 
-  /* if bitstreamSwitching is true we dont need to swich pads on resolution change */
+  /* if bitstreamSwitching is true we don't need to switch pads on resolution change */
   if (!gst_mpd_client_get_bitstream_switching_flag (stream)) {
     width = gst_mpd_client_get_video_stream_width (stream);
     height = gst_mpd_client_get_video_stream_height (stream);
@@ -1169,7 +1169,7 @@ gst_dash_demux_get_audio_input_caps (GstDashDemux * demux,
   if (stream == NULL)
     return NULL;
 
-  /* if bitstreamSwitching is true we dont need to swich pads on rate/channels change */
+  /* if bitstreamSwitching is true we don't need to switch pads on rate/channels change */
   if (!gst_mpd_client_get_bitstream_switching_flag (stream)) {
     channels = gst_mpd_client_get_audio_stream_num_channels (stream);
     rate = gst_mpd_client_get_audio_stream_rate (stream);
@@ -1923,7 +1923,7 @@ gst_dash_demux_stream_get_target_time (GstDashDemux * dashdemux,
         "MUST SKIP to at least %" GST_TIME_FORMAT " (was %" GST_TIME_FORMAT ")",
         GST_TIME_ARGS (ret), GST_TIME_ARGS (min_position));
   } else if (diff < 4 * dashstream->average_download_time) {
-    /* Go forward a bit less aggresively (and at most 1s forward) */
+    /* Go forward a bit less aggressively (and at most 1s forward) */
     ret = gst_segment_position_from_running_time (&stream->segment,
         GST_FORMAT_TIME, min_running + MIN (GST_SECOND,
             2 * dashstream->average_download_time));

@@ -317,7 +317,7 @@ gstspu_vobsub_render_line_with_chgcol (SpuState * state, guint8 * planes[3],
   disp_end = state->vobsub.disp_rect.right + 1;
 
   /* Work out the first pixel control info, which may point to the dummy entry if
-   * the global palette/alpha need using initally */
+   * the global palette/alpha need using initially */
   cur_pix_ctrl = chg_col->pix_ctrl_i;
   end_pix_ctrl = chg_col->pix_ctrl_i + chg_col->n_changes;
 

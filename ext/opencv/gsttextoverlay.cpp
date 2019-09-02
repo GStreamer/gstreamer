@@ -217,7 +217,7 @@ gst_opencv_text_overlay_class_init (GstOpencvTextOverlayClass * klass)
 
 /* initialize the new element
  * instantiate pads and add them to element
- * set pad calback functions
+ * set pad callback functions
  * initialize instance structure
  */
 static void

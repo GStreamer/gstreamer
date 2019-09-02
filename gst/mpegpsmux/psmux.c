@@ -248,7 +248,7 @@ psmux_write_stream_packet (PsMux * mux, PsMuxStream * stream)
     /* Time to write pack header */
     /* FIXME: currently we write the mux rate of the PREVIOUS pack into the
      * pack header, because of the incapability to calculate the mux_rate
-     * before outputing the pack. To calculate the mux_rate for the current
+     * before outputting the pack. To calculate the mux_rate for the current
      * pack, we need to put the whole pack into buffer, calculate the
      * mux_rate, and then output the whole trunck.
      */

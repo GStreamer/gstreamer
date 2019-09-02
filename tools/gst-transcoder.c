@@ -42,8 +42,8 @@ static const gchar *HELP_SUMMARY =
     "GstEncodingProfile serialization format\n"
     "---------------------------------------\n"
     "\n"
-    "GStreamer encoding profiles can be descibed with a quite extensive\n"
-    "syntax which is descibed in the GstEncodingProfile documentation.\n"
+    "GStreamer encoding profiles can be described with a quite extensive\n"
+    "syntax which is described in the GstEncodingProfile documentation.\n"
     "\n"
     "The simple case looks like:\n"
     "\n"
@@ -237,7 +237,7 @@ _error_cb (GstTranscoder * transcoder, GError * err, GstStructure * details)
             "msg-source-type", G_TYPE_GTYPE, &type, NULL) &&
         type == g_type_from_name ("GstTranscodeBin")) {
       error ("\nCould not setup transcoding pipeline,"
-          " make sure that you transcoding format parametters"
+          " make sure that your transcoding format parameters"
           " are compatible with the input stream.");
 
       return;

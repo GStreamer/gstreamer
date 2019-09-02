@@ -1050,7 +1050,7 @@ d3d_window_wndproc_unset (GstD3DVideoSink * sink)
     goto end;
   }
 
-  /* Restore orignal WndProc for window_handle */
+  /* Restore original WndProc for window_handle */
   if (!SetWindowLongPtr (sink->d3d.window_handle, GWLP_WNDPROC,
           (LONG_PTR) sink->d3d.orig_wnd_proc)) {
     GST_WARNING_OBJECT (sink, "D3D failed to set original WndProc");

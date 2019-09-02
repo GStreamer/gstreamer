@@ -1222,7 +1222,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
     case ST_PS_VIDEO_MPEG2_DCII:
       /* FIXME : Use DCII registration code (ETV1 ?) to handle that special
        * Stream type (ST_PS_VIDEO_MPEG2_DCII) */
-      /* FIXME : Use video decriptor (0x1) to refine caps with:
+      /* FIXME : Use video descriptor (0x1) to refine caps with:
        * * frame_rate
        * * profile_and_level
        */

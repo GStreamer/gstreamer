@@ -64,7 +64,7 @@
  * "nearest neighbor" principal, with some additional complexity for the
  * calculation of the "green" element, where an "adaptive" pairing is used.
  *
- * For purposes of documentation and indentification, each element of the
+ * For purposes of documentation and identification, each element of the
  * original array can be put into one of four classes:
  *   R   A red element
  *   B   A blue element

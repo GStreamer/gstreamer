@@ -212,7 +212,7 @@ static void
 guess_aspect (gint width, gint height, gint * par_width, gint * par_height)
 {
   /*
-   * As we dont have access to the actual pixel aspect, we will try to do a
+   * As we don't have access to the actual pixel aspect, we will try to do a
    * best-effort guess. The guess is based on most sensors being either 4/3
    * or 16/9, and most pixel aspects being close to 1/1.
    */

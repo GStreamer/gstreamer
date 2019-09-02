@@ -413,7 +413,7 @@ tsmux_program_compare (TsMuxProgram * program, gint * needle)
  * tsmux_program_new:
  * @mux: a #TsMux
  *
- * Create a new program in the mising session @mux.
+ * Create a new program in the missing session @mux.
  *
  * Returns: a new #TsMuxProgram or %NULL when the maximum number of programs has
  * been reached.
@@ -697,7 +697,7 @@ tsmux_create_stream (TsMux * mux, guint stream_type, guint16 pid,
  * @mux: a #TsMux
  * @pid: the PID to find.
  *
- * Find the stream associated wih PID.
+ * Find the stream associated with PID.
  *
  * Returns: a #TsMuxStream with @pid or NULL when the stream was not found.
  */

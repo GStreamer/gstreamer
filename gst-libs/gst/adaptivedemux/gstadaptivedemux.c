@@ -63,7 +63,7 @@
  * Subclasses:
  * While GstAdaptiveDemux is responsible for the workflow, it knows nothing
  * about the intrinsics of the subclass formats, so the subclasses are
- * resposible for maintaining the manifest data structures and stream
+ * responsible for maintaining the manifest data structures and stream
  * information.
  */
 
@@ -1745,7 +1745,7 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux, GstPad * pad,
       demux_class->stream_seek (stream, rate >= 0, stream_seek_flags, ts, &ts);
     }
 
-    /* replace event with a new one without snaping to seek on all streams */
+    /* replace event with a new one without snapping to seek on all streams */
     gst_event_unref (event);
     if (rate >= 0) {
       start = ts;

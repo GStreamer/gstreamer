@@ -567,7 +567,7 @@ gst_hls_demux_set_current_variant (GstHLSDemux * hlsdemux,
   if (hlsdemux->current_variant != NULL) {
     gint i;
 
-    //#warning FIXME: Synching fragments across variants
+    //#warning FIXME: Syncing fragments across variants
     //  should be done based on media timestamps, and
     //  discont-sequence-numbers not sequence numbers.
     variant->m3u8->sequence_position =
@@ -647,7 +647,7 @@ gst_hls_demux_process_manifest (GstAdaptiveDemux * demux, GstBuffer * buf)
     gst_hls_demux_set_current_variant (hlsdemux, variant);      // FIXME: inline?
   }
 
-  /* get the selected media playlist (unless the inital list was one already) */
+  /* get the selected media playlist (unless the initial list was one already) */
   if (!hlsdemux->master->is_simple) {
     GError *err = NULL;
 

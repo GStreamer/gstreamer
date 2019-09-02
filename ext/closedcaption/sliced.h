@@ -320,7 +320,7 @@ typedef unsigned int vbi_service_set;
  */
 typedef struct {
 	/**
-	 * A @ref VBI_SLICED_ symbol identifying the data service. Under cirumstances
+	 * A @ref VBI_SLICED_ symbol identifying the data service. Under circumstances
 	 * (see VBI_SLICED_TELETEXT_B) this can be a set of VBI_SLICED_ symbols.
 	 */
 	uint32_t		id;

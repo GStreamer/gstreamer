@@ -169,7 +169,7 @@ gst_edge_detect_class_init (GstEdgeDetectClass * klass)
 
 /* initialize the new element
  * instantiate pads and add them to element
- * set pad calback functions
+ * set pad callback functions
  * initialize instance structure
  */
 static void

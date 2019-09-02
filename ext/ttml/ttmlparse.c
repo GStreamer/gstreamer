@@ -1297,7 +1297,7 @@ ttml_handle_element_whitespace (GNode * node, gpointer data)
     gunichar u = g_utf8_get_char (c);
     gint nbytes = g_unichar_to_utf8 (u, buf);
 
-    /* Repace each newline or tab with a space. */
+    /* Replace each newline or tab with a space. */
     if (nbytes == 1 && (buf[0] == TTML_CHAR_LF || buf[0] == TTML_CHAR_TAB)) {
       *c = ' ';
       buf[0] = TTML_CHAR_SPACE;

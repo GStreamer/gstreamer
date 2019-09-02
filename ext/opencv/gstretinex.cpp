@@ -161,7 +161,7 @@ gst_retinex_class_init (GstRetinexClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_set_static_metadata (element_class,
-      "Retinex image colour enhacement", "Filter/Effect/Video",
+      "Retinex image colour enhancement", "Filter/Effect/Video",
       "Multiscale retinex for colour image enhancement",
       "Miguel Casas-Sanchez <miguelecasassanchez@gmail.com>");
 
@@ -171,7 +171,7 @@ gst_retinex_class_init (GstRetinexClass * klass)
 
 /* initialize the new element
  * instantiate pads and add them to element
- * set pad calback functions
+ * set pad callback functions
  * initialize instance structure
  */
 static void
@@ -277,7 +277,7 @@ gst_retinex_transform_ip (GstOpencvVideoFilter * filter, GstBuffer * buf,
     img.convertTo (retinex->cvA, retinex->cvA.type ());
     log (retinex->cvA, retinex->cvB);
 
-    /*  Compute log of blured image */
+    /*  Compute log of blurred image */
     filter_size = (int) floor (sigma * 6) / 2;
     filter_size = filter_size * 2 + 1;
 
@@ -294,7 +294,7 @@ gst_retinex_transform_ip (GstOpencvVideoFilter * filter, GstBuffer * buf,
   }
   /* Multiscale retinex restoration.  The image and a set of filtered images are
      converted to the log domain and subtracted from the original with some set
-     of weights. Typicaly called with three equally weighted scales of fine,
+     of weights. Typically called with three equally weighted scales of fine,
      medium and wide standard deviations.
      O = Log(I) - sum_i [ wi * Log(H(I)) ]
      where O is the output, H is a gaussian 2d filter and I is the input image

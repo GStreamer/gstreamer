@@ -550,7 +550,7 @@ register_plugin (GstPlugin * plugin, const gchar * vendor,
 
   instance = ftable.construct (640, 480);
   if (!instance) {
-    GST_WARNING ("Failed to instanciate plugin '%s'", info.name);
+    GST_WARNING ("Failed to instantiate plugin '%s'", info.name);
     ftable.deinit ();
     g_module_close (module);
     return FALSE;

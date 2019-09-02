@@ -133,7 +133,7 @@ GST_START_TEST (test_downstream_reconfigure)
 
   GST_BUFFER_DURATION (in_buf) = GST_SECOND;
 
-  /* Push bufffers until get decoder output */
+  /* Push buffers until get decoder output */
   do {
     fail_if (i > MAX_PUSH_BUFFER);
 

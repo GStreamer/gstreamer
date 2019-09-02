@@ -156,7 +156,7 @@ static GstVideoFormat
 _vk_format_to_video_format (VkFormat format)
 {
   switch (format) {
-      /* double check endianess */
+      /* double check endianness */
     case VK_FORMAT_R8G8B8A8_UNORM:
     case VK_FORMAT_R8G8B8A8_SRGB:
       return GST_VIDEO_FORMAT_RGBA;

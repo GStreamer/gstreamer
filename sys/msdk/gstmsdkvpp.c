@@ -352,7 +352,7 @@ gst_msdkvpp_create_buffer_pool (GstMsdkVPP * thiz, GstPadDirection direction,
   if (!gst_buffer_pool_set_config (pool, config))
     goto error_pool_config;
 
-  /* Updating pool_info with algined info of allocator */
+  /* Updating pool_info with aligned info of allocator */
   *pool_info = info;
 
   return pool;
@@ -445,7 +445,7 @@ gst_msdkvpp_decide_allocation (GstBaseTransform * trans, GstQuery * query)
     gst_object_unref (thiz->srcpad_buffer_pool);
 
   /* Always create a pool for vpp out buffers. Each of the msdk element
-   * has to create it's own mfxsurfacepool which is an msdk contraint.
+   * has to create it's own mfxsurfacepool which is an msdk constraint.
    * For eg: Each Msdk component (vpp, dec and enc) will invoke the external
    * Frame allocator for video-memory usage.So sharing the pool between
    * gst-msdk elements might not be a good idea, rather each element
@@ -534,7 +534,7 @@ gst_msdkvpp_propose_allocation (GstBaseTransform * trans,
     gst_query_add_allocation_param (query, allocator, &params);
   gst_structure_free (config);
 
-  /* if upstream does't have a pool requirement, set only
+  /* if upstream doesn't have a pool requirement, set only
    *  size, min_buffers and max_buffers in query */
   gst_query_add_allocation_pool (query, need_pool ? pool : NULL, size,
       min_buffers, 0);
@@ -808,7 +808,7 @@ vpp_error:
 
 error_more_data:
   GST_WARNING_OBJECT (thiz,
-      "MSDK Requries additional input for processing, "
+      "MSDK Requires additional input for processing, "
       "Retruning FLOW_DROPPED since no output buffer was generated");
   ret = GST_BASE_TRANSFORM_FLOW_DROPPED;
   goto transform_end;
@@ -1039,7 +1039,7 @@ gst_msdkvpp_initialize (GstMsdkVPP * thiz)
   /* Enable the required filters */
   ensure_filters (thiz);
 
-  /* Add exteneded buffers */
+  /* Add extended buffers */
   if (thiz->num_extra_params) {
     thiz->param.NumExtParam = thiz->num_extra_params;
     thiz->param.ExtParam = thiz->extra_params;

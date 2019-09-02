@@ -507,7 +507,7 @@ gst_dshowaudiosrc_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
     src->is_running = FALSE;
   }
 
-  /* search the negociated caps in our caps list to get its index and the corresponding mediatype */
+  /* search the negotiated caps in our caps list to get its index and the corresponding mediatype */
   if (gst_caps_is_subset (spec->caps, src->caps)) {
     guint i = 0;
     gint res = -1;

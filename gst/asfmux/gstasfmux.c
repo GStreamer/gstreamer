@@ -458,7 +458,7 @@ content_description_calc_size_for_tag (const GstTagList * taglist,
  * and get the same tags in the writing function */
 /**
  * gst_asf_mux_get_content_description_tags:
- * @asfmux: #GstAsfMux to have its tags proccessed
+ * @asfmux: #GstAsfMux to have its tags processed
  * @asftags: #GstAsfTags to hold the results
  *
  * Inspects the tags received by the GstTagSetter interface
@@ -466,7 +466,7 @@ content_description_calc_size_for_tag (const GstTagList * taglist,
  * size needed for the default and extended content description objects.
  * This results and a copy of the #GstTagList
  * are stored in the #GstAsfTags. We store a copy so that
- * the sizes estimated here mantain the same until they are
+ * the sizes estimated here maintain the same until they are
  * written to the asf file.
  */
 static void
@@ -784,7 +784,7 @@ gst_asf_mux_write_stream_properties (GstAsfMux * asfmux, guint8 ** buf,
  *
  * Writes the header of the header extension object. The buffer pointer
  * is incremented to the next writing position (the  header extension object
- * childs should be writen from that point)
+ * childs should be written from that point)
  */
 static void
 gst_asf_mux_write_header_extension (GstAsfMux * asfmux, guint8 ** buf,
@@ -802,7 +802,7 @@ gst_asf_mux_write_header_extension (GstAsfMux * asfmux, guint8 ** buf,
  * gst_asf_mux_write_extended_stream_properties:
  * @asfmux:
  * @buf: pointer to the buffer pointer
- * @asfpad: Pad that handles the stream of the properties to be writen
+ * @asfpad: Pad that handles the stream of the properties to be written
  *
  * Writes the extended stream properties object (that is part of the
  * header extension objects) for the stream handled by asfpad
@@ -849,13 +849,13 @@ gst_asf_mux_write_extended_stream_properties (GstAsfMux * asfmux, guint8 ** buf,
  * @asfmux:
  * @size_buf: pointer to the memory position to write the size of the string
  * @str_buf: pointer to the memory position to write the string
- * @str: the string to be writen (in UTF-8)
- * @use32: if the string size should be writen with 32 bits (if true)
+ * @str: the string to be written (in UTF-8)
+ * @use32: if the string size should be written with 32 bits (if true)
  * or with 16 (if false)
  *
  * Writes a string with its size as it is needed in many asf objects.
- * The size is writen to size_buf as a WORD field if use32 is false, and
- * as a DWORD if use32 is true. The string is writen to str_buf in UTF16-LE.
+ * The size is written to size_buf as a WORD field if use32 is false, and
+ * as a DWORD if use32 is true. The string is written to str_buf in UTF16-LE.
  * The string should be passed in UTF-8.
  *
  * The string size in UTF16-LE is returned.
@@ -909,8 +909,8 @@ gst_asf_mux_write_string_with_size (GstAsfMux * asfmux,
  * @data_buf:
  *
  * Checks if a string tag with tagname exists in the taglist. If it
- * exists it is writen as an UTF-16LE to data_buf and its size in bytes
- * is writen to size_buf. It is used for writing content description
+ * exists it is written as an UTF-16LE to data_buf and its size in bytes
+ * is written to size_buf. It is used for writing content description
  * object fields.
  *
  * Returns: the size of the string
@@ -1404,7 +1404,7 @@ gst_asf_mux_start_file (GstAsfMux * asfmux)
  * @videopad:
  *
  * Adds a new entry to the simple index of the stream handler by videopad.
- * This functions doesn't check if the time ellapsed
+ * This functions doesn't check if the time elapsed
  * is larger than the established time interval between entries. The caller
  * is responsible for verifying this.
  */

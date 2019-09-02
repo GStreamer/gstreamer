@@ -846,7 +846,7 @@ gst_mpeg4vparse_set_caps (GstBaseParse * parse, GstCaps * caps)
       && (buf = gst_value_get_buffer (value))) {
     /* best possible parse attempt,
      * src caps are based on sink caps so it will end up in there
-     * whether sucessful or not */
+     * whether successful or not */
     gst_buffer_map (buf, &map, GST_MAP_READ);
     data = map.data;
     size = map.size;

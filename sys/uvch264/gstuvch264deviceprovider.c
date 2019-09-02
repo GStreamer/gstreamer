@@ -23,7 +23,7 @@
  * SECTION:provider-uvch264deviceprovider
  *
  * Device provider for uvch264 devices, it basically contains
- * the same informations as the v4l2 device provider but on top
+ * the same information as the v4l2 device provider but on top
  * set the following properties:
  *
  * ```

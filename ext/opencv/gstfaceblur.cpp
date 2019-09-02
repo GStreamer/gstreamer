@@ -210,7 +210,7 @@ gst_face_blur_class_init (GstFaceBlurClass * klass)
           DEFAULT_SCALE_FACTOR,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_MIN_NEIGHBORS,
-      g_param_spec_int ("min-neighbors", "Mininum neighbors",
+      g_param_spec_int ("min-neighbors", "Minimum neighbors",
           "Minimum number (minus 1) of neighbor rectangles that makes up "
           "an object", 0, G_MAXINT, DEFAULT_MIN_NEIGHBORS,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
@@ -235,7 +235,7 @@ gst_face_blur_class_init (GstFaceBlurClass * klass)
 
 /* initialize the new element
  * instantiate pads and add them to element
- * set pad calback functions
+ * set pad callback functions
  * initialize instance structure
  */
 static void

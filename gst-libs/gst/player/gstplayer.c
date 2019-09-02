@@ -3933,7 +3933,7 @@ gst_player_set_video_track (GstPlayer * self, gint stream_index)
  *
  * Returns: %TRUE or %FALSE
  *
- * Sets the subtitle strack @stream_index.
+ * Sets the subtitle stack @stream_index.
  */
 gboolean
 gst_player_set_subtitle_track (GstPlayer * self, gint stream_index)

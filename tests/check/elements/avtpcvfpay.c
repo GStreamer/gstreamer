@@ -462,7 +462,7 @@ GST_START_TEST (test_payloader_single_and_fragment)
   gst_buffer_unref (out);
 
   /* For those wondering why DATA_LEN_4 is 55 and not 50 - or why
-   * comment above states that NAL units are broken "rougly" at 100 bytes:
+   * comment above states that NAL units are broken "roughly" at 100 bytes:
    * With mtu=128, there are only 100 bytes left for NAL units, so anything
    * bigger will be broken. But AVTP NAL units fragments have a header with
    * two bytes, so NAL units will use only 98 bytes. This leaves the last

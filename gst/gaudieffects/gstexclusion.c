@@ -160,7 +160,7 @@ gst_exclusion_class_init (GstExclusionClass * klass)
 
 /* Initialize the element,
  * instantiate pads and add them to element,
- * set pad calback functions, and
+ * set pad callback functions, and
  * initialize instance structure.
  */
 static void

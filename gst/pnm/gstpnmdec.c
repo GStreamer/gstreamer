@@ -149,7 +149,7 @@ gst_pnmdec_negotiate (GstVideoDecoder * decoder)
         const gchar *fmtstr;
 
         pnmdec->size = pnmdec->mngr.info.width * pnmdec->mngr.info.height * 2;
-        /* perform some basic negotiation to resolve which endianess,
+        /* perform some basic negotiation to resolve which endianness,
          * if any, is supported by the component downstream. Query
          * the peer caps, intersecting with our preferred caps
          */

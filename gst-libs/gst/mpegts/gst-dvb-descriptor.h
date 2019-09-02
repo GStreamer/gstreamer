@@ -763,7 +763,7 @@ typedef enum {
  * @priority: %TRUE High Priority %FALSE Low Priority
  * @time_slicing: %TRUE no time slicing %FALSE time slicing
  * @mpe_fec: %TRUE no mpe-fec is used %FALSE mpe-fec is use
- * @constellation: the constallation
+ * @constellation: the constellation
  * @hierarchy: the hierarchy
  * @code_rate_hp:
  * @code_rate_lp:

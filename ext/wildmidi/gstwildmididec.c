@@ -628,7 +628,7 @@ gst_wildmidi_dec_decode (GstNonstreamAudioDecoder * dec, GstBuffer ** buffer,
     return FALSE;
 
   /* Allocate output buffer
-   * Multiply by 2 to accomodate for the sample size (16 bit = 2 byte) */
+   * Multiply by 2 to accommodate for the sample size (16 bit = 2 byte) */
   outbuf_size = wildmidi_dec->output_buffer_size * 2 * WILDMIDI_NUM_CHANNELS;
   outbuf =
       gst_nonstream_audio_decoder_allocate_output_buffer (dec, outbuf_size);

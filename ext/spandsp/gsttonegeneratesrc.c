@@ -139,7 +139,7 @@ gst_tone_generate_src_class_init (GstToneGenerateSrcClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_REPEAT,
       g_param_spec_boolean ("repeat", "Repeat the specified tone period ",
-          "Whether to repeat specified tone indefinitly", DEFAULT_REPEAT,
+          "Whether to repeat specified tone indefinitely", DEFAULT_REPEAT,
           G_PARAM_READWRITE));
 
   gst_element_class_add_static_pad_template (gstelement_class,

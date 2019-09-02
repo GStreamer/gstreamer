@@ -329,7 +329,7 @@ gst_rist_rtx_send_get_ssrc_data (GstRistRtxSend * rtx, guint32 ssrc)
 
   data = g_hash_table_lookup (rtx->ssrc_data, GUINT_TO_POINTER (ssrc));
   if (!data) {
-    /* See 5.3.2 Retransmitted Packets, orignal packet have SSRC LSB set to
+    /* See 5.3.2 Retransmitted Packets, original packet have SSRC LSB set to
      * 0, while RTX packet have LSB set to 1 */
     rtx_ssrc = ssrc + 1;
     data = ssrc_rtx_data_new (rtx_ssrc);

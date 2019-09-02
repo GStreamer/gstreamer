@@ -407,7 +407,7 @@ seg_get_base_qindex (const GstVp9Parser * parser,
   int seg_base = frame_hdr->quant_indices.y_ac_qi;
   GstVp9ParserPrivate *priv = GST_VP9_PARSER_GET_PRIVATE (parser);
   const GstVp9SegmentationInfoData *seg = priv->segmentation + segid;
-  /* DEBUG("id = %d, seg_base = %d, seg enable = %d, alt eanble = %d, abs = %d, alt= %d\n",segid,
+  /* DEBUG("id = %d, seg_base = %d, seg enable = %d, alt enable = %d, abs = %d, alt= %d\n",segid,
      seg_base, frame_hdr->segmentation.enabled, seg->alternate_quantizer_enabled, priv->segmentation_abs_delta,  seg->alternate_quantizer);
    */
   if (frame_hdr->segmentation.enabled && seg->alternate_quantizer_enabled) {

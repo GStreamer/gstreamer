@@ -319,7 +319,7 @@ validate_sdp (GstWebRTCSignalingState state, SDPSource source,
     }
     if (!_media_has_setup (media, i, error))
       goto fail;
-    /* check paramaters in bundle are the same */
+    /* check parameters in bundle are the same */
     if (media_in_bundle) {
       const gchar *ice_ufrag =
           gst_sdp_media_get_attribute_val (media, "ice-ufrag");

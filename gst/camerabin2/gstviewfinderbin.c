@@ -216,7 +216,7 @@ gst_viewfinder_bin_create_elements (GstViewfinderBin * vfbin)
         GST_PAD_LINK_CHECK_NOTHING);
 
     vfbin->elements_created = TRUE;
-    GST_DEBUG_OBJECT (vfbin, "Elements succesfully created and linked");
+    GST_DEBUG_OBJECT (vfbin, "Elements successfully created and linked");
 
     updated_converters = TRUE;
   }

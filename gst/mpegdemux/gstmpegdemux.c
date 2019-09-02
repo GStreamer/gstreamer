@@ -2989,7 +2989,7 @@ pause:
   }
 }
 
-/* If we can pull that's prefered */
+/* If we can pull that's preferred */
 static gboolean
 gst_ps_demux_sink_activate (GstPad * sinkpad, GstObject * parent)
 {

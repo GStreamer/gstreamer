@@ -428,15 +428,15 @@ gst_jpeg_parse_skip_marker (GstJpegParse * parse,
     const gchar *id_str = NULL;
 
     if (gst_byte_reader_peek_string_utf8 (reader, &id_str)) {
-      GST_DEBUG_OBJECT (parse, "unhandled marker %x: '%s' skiping %u bytes",
+      GST_DEBUG_OBJECT (parse, "unhandled marker %x: '%s' skipping %u bytes",
           marker, id_str ? id_str : "(NULL)", size);
     } else {
-      GST_DEBUG_OBJECT (parse, "unhandled marker %x skiping %u bytes", marker,
+      GST_DEBUG_OBJECT (parse, "unhandled marker %x skipping %u bytes", marker,
           size);
     }
   }
 #else
-  GST_DEBUG_OBJECT (parse, "unhandled marker %x skiping %u bytes", marker,
+  GST_DEBUG_OBJECT (parse, "unhandled marker %x skipping %u bytes", marker,
       size);
 #endif // GST_DISABLE_GST_DEBUG
 

@@ -305,12 +305,12 @@ color_format_info_failed_to_set:
   return NULL;
 
 unsupported_profile:
-  GST_ERROR_OBJECT (encoder, "Unsupport profile '%s'", profile_string);
+  GST_ERROR_OBJECT (encoder, "Unsupported profile '%s'", profile_string);
   gst_amc_format_free (format);
   return NULL;
 
 unsupported_level:
-  GST_ERROR_OBJECT (encoder, "Unsupport level '%s'", level_string);
+  GST_ERROR_OBJECT (encoder, "Unsupported level '%s'", level_string);
   gst_amc_format_free (format);
   return NULL;
 }
@@ -409,14 +409,14 @@ caps_from_amc_format (GstAmcFormat * amc_format)
   return caps;
 
 unsupported_profile:
-  GST_ERROR ("Unsupport amc profile id %d", amc_profile);
+  GST_ERROR ("Unsupported amc profile id %d", amc_profile);
   g_free (mime);
   gst_caps_unref (caps);
 
   return NULL;
 
 unsupported_level:
-  GST_ERROR ("Unsupport amc level id %d", amc_level);
+  GST_ERROR ("Unsupported amc level id %d", amc_level);
   g_free (mime);
   gst_caps_unref (caps);
 

@@ -183,7 +183,7 @@ _gst_vk_debug_callback (VkDebugReportFlagsEXT msgFlags,
  * @instance: a #GstVulkanInstance
  * @error: #GError
  *
- * Returns: whether the instance vould be created
+ * Returns: whether the instance could be created
  *
  * Since: 1.18
  */
@@ -361,7 +361,7 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
         "vkCreateDebugReportCallbackEXT");
     if (!instance->dbgCreateDebugReportCallback) {
       g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
-          "Failed to retreive vkCreateDebugReportCallback");
+          "Failed to retrieve vkCreateDebugReportCallback");
       goto error;
     }
     instance->dbgDestroyDebugReportCallback =
@@ -370,7 +370,7 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
         "vkDestroyDebugReportCallbackEXT");
     if (!instance->dbgDestroyDebugReportCallback) {
       g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
-          "Failed to retreive vkDestroyDebugReportCallback");
+          "Failed to retrieve vkDestroyDebugReportCallback");
       goto error;
     }
     instance->dbgReportMessage = (PFN_vkDebugReportMessageEXT)
@@ -378,7 +378,7 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
         "vkDebugReportMessageEXT");
     if (!instance->dbgReportMessage) {
       g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
-          "Failed to retreive vkDebugReportMessage");
+          "Failed to retrieve vkDebugReportMessage");
       goto error;
     }
 

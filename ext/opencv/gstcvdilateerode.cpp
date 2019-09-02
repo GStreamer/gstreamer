@@ -149,7 +149,7 @@ gst_cv_dilate_erode_class_init (GstCvDilateErodeClass * klass)
 
 /* initialize the new element
  * instantiate pads and add them to element
- * set pad calback functions
+ * set pad callback functions
  * initialize instance structure
  */
 static void

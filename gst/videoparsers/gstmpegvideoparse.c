@@ -137,7 +137,7 @@ gst_mpegv_parse_class_init (GstMpegvParseClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_DROP,
       g_param_spec_boolean ("drop", "drop",
-          "Drop data untill valid configuration data is received either "
+          "Drop data until valid configuration data is received either "
           "in the stream or through caps", DEFAULT_PROP_DROP,
           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -1069,7 +1069,7 @@ gst_mpegv_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
     gst_buffer_map (buf, &map, GST_MAP_READ);
     /* best possible parse attempt,
      * src caps are based on sink caps so it will end up in there
-     * whether sucessful or not */
+     * whether successful or not */
     mpvparse->seq_offset = 4;
     gst_mpegv_parse_process_config (mpvparse, &map, gst_buffer_get_size (buf));
     gst_buffer_unmap (buf, &map);

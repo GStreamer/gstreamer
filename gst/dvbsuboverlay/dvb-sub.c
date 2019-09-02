@@ -82,7 +82,7 @@ typedef struct DVBSubObjectDisplay
   int fgcolor;
   int bgcolor;
 
-  /* FIXME: Should we use GSList? The relating interaction and pointer assigment is quite complex and perhaps unsuited for a plain GSList anyway */
+  /* FIXME: Should we use GSList? The relating interaction and pointer assignment is quite complex and perhaps unsuited for a plain GSList anyway */
   struct DVBSubObjectDisplay *region_list_next;
   struct DVBSubObjectDisplay *object_list_next;
 } DVBSubObjectDisplay;
@@ -1360,7 +1360,7 @@ dvb_sub_free (DvbSub * sub)
  * the PTS information).
  *
  * Return value: -1 if data was unhandled (e.g, not a subtitle packet),
- *				 -2 if data parsing was unsuccesful (e.g, length was invalid),
+ *				 -2 if data parsing was unsuccessful (e.g, length was invalid),
  *				  0 or positive if data was handled. If positive, then amount of data consumed on success. FIXME: List the positive return values.
  */
 gint

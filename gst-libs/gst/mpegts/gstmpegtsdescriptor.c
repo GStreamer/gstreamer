@@ -91,7 +91,7 @@ static void _##name##_free (type * source) \
  * These are the base descriptor types and methods.
  *
  * For more details, refer to the ITU H.222.0 or ISO/IEC 13818-1 specifications
- * and other specifications mentionned in the documentation.
+ * and other specifications mentioned in the documentation.
  */
 
 /* FIXME : Move this to proper file once we have a C file for ATSC/ISDB descriptors */
@@ -970,7 +970,7 @@ gst_mpegts_parse_descriptors (guint8 * buffer, gsize buf_len)
  * Note: To look for descriptors that can be present more than once in an
  * array of descriptors, iterate the #GArray manually.
  *
- * Returns: (transfer none): the first descriptor matchin @tag, else %NULL.
+ * Returns: (transfer none): the first descriptor matching @tag, else %NULL.
  */
 const GstMpegtsDescriptor *
 gst_mpegts_find_descriptor (GPtrArray * descriptors, guint8 tag)

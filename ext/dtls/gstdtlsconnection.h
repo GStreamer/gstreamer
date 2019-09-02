@@ -107,7 +107,7 @@ void gst_dtls_connection_close(GstDtlsConnection *);
 void gst_dtls_connection_set_send_callback(GstDtlsConnection *, GClosure *);
 
 /*
- * Processes data that has been recevied, the transformation is done in-place.
+ * Processes data that has been received, the transformation is done in-place.
  * Returns the length of the plaintext data that was decoded, if no data is available, 0<= will be returned.
  */
 gint gst_dtls_connection_process(GstDtlsConnection *, gpointer ptr, gint len);

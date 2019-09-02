@@ -246,7 +246,7 @@ cam_tl_connection_write_tpdu (CamTLConnection * connection,
 
   tl->expected_tpdus += 1;
 
-  GST_DEBUG ("Sucess writing tpdu 0x%x (%s)", buffer[2],
+  GST_DEBUG ("Success writing tpdu 0x%x (%s)", buffer[2],
       tag_get_name (buffer[2]));
 
   return CAM_RETURN_OK;

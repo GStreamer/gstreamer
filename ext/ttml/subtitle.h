@@ -127,7 +127,7 @@ struct _GstSubtitleColor {
  * @GST_SUBTITLE_TEXT_DIRECTION_RTL: Text direction is right-to-left.
  *
  * Defines the progression direction of unicode text that is being treated by
- * the unicode bidirectional algorithm as embedded or overidden (see
+ * the unicode bidirectional algorithm as embedded or overridden (see
  * http://unicode.org/reports/tr9/ for more details of the unicode
  * bidirectional algorithm).
  */
@@ -269,7 +269,7 @@ typedef enum {
 /**
  * GstSubtitleStyleSet:
  * @text_direction: Defines the direction of text that has been declared by the
- * #GstSubtitleStyleSet:unicode_bidi attribute to be embbedded or overridden.
+ * #GstSubtitleStyleSet:unicode_bidi attribute to be embedded or overridden.
  * Applies to both #GstSubtitleBlocks and #GstSubtitleElements.
  * @font_family: The name of the font family that should be used to render the
  * text of an inline element. Applies only to #GstSubtitleElements.

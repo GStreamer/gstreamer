@@ -71,7 +71,7 @@ typedef struct _GstAdaptiveDemuxTestCallbacks
    * appsink_received_data: called each time AppSink receives data
    * @engine: #GstAdaptiveDemuxTestEngine
    * @stream: #GstAdaptiveDemuxTestOutputStream
-   * @buffer: the #GstBuffer that was recevied by #GstAppSink
+   * @buffer: the #GstBuffer that was received by #GstAppSink
    * @user_data: the user_data passed to gst_adaptive_demux_test_run()
    * Returns: %TRUE to continue processing, %FALSE to cause EOS
    *

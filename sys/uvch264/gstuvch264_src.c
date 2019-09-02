@@ -432,9 +432,10 @@ gst_uvc_h264_src_class_init (GstUvcH264SrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_PLAYING));
   g_object_class_install_property (gobject_class, PROP_LTR_ENCODER_CONTROL,
-      g_param_spec_int ("ltr-encoder-control", "LTR frames controled by device",
-          "Number of LTR frames the device can control (dynamic control)",
-          0, G_MAXUINT8, DEFAULT_LTR_ENCODER_CONTROL,
+      g_param_spec_int ("ltr-encoder-control",
+          "LTR frames controlled by device",
+          "Number of LTR frames the device can control (dynamic control)", 0,
+          G_MAXUINT8, DEFAULT_LTR_ENCODER_CONTROL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_PLAYING));
 

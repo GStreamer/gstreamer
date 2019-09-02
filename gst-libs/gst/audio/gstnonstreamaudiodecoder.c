@@ -1805,7 +1805,7 @@ gst_nonstream_audio_decoder_output_new_segment (GstNonstreamAudioDecoder * dec,
 
   /* stop/duration members are not set, on purpose - in case of loops,
    * new segments will be generated, which automatically put an implicit
-   * end on the current segment (the segment implicitely "ends" when the
+   * end on the current segment (the segment implicitly "ends" when the
    * new one starts), and having a stop value might cause very slight
    * gaps occasionally due to slight jitter in the calculation of
    * base times etc. */
@@ -2478,7 +2478,7 @@ gst_nonstream_audio_decoder_allocate_output_buffer (GstNonstreamAudioDecoder *
      * params are used */
     if (!gst_nonstream_audio_decoder_negotiate (dec)) {
       GST_ERROR_OBJECT (dec,
-          "could not allocate output buffer because negotation failed");
+          "could not allocate output buffer because negotiation failed");
       return NULL;
     }
   }

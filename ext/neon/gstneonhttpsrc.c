@@ -298,7 +298,7 @@ gst_neonhttp_src_set_property (GObject * object, guint prop_id,
         goto done;
       }
       if (!gst_neonhttp_src_set_proxy (src, proxy)) {
-        GST_WARNING ("badly formated proxy");
+        GST_WARNING ("badly formatted proxy");
         goto done;
       }
       break;
@@ -314,7 +314,7 @@ gst_neonhttp_src_set_property (GObject * object, guint prop_id,
         goto done;
       }
       if (!gst_neonhttp_src_set_location (src, location, NULL)) {
-        GST_WARNING ("badly formated location");
+        GST_WARNING ("badly formatted location");
         goto done;
       }
       break;
@@ -429,7 +429,7 @@ gst_neonhttp_src_get_property (GObject * object, guint prop_id,
 static void
 oom_callback (void)
 {
-  GST_ERROR ("memory exeception in neon");
+  GST_ERROR ("memory exception in neon");
 }
 
 static GstFlowReturn

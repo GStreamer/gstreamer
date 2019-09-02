@@ -56,7 +56,7 @@
  * An application can request multiple RTP and RTCP pads to protect,
  * but every sink pad requested must receive packets from the same
  * source (identical SSRC). If a packet received contains a different
- * SSRC, a warning is emited and the valid SSRC is forced on the packet.
+ * SSRC, a warning is emitted and the valid SSRC is forced on the packet.
  *
  * This element uses libsrtp library. When receiving the first packet,
  * the library is initialized with a new stream (based on the SSRC). It
@@ -335,7 +335,7 @@ gst_srtp_enc_class_init (GstSrtpEncClass * klass)
    * GstSrtpEnc::soft-limit:
    * @gstsrtpenc: the element on which the signal is emitted
    *
-   * Signal emited when the stream with @ssrc has reached the soft
+   * Signal emitted when the stream with @ssrc has reached the soft
    * limit of utilisation of it's master encryption key. User should
    * provide a new key by setting the #GstSrtpEnc:key property.
    */
@@ -484,7 +484,7 @@ done:
   return ret;
 }
 
-/* Release ressources and set default values
+/* Release resources and set default values
  */
 static void
 gst_srtp_enc_reset_no_lock (GstSrtpEnc * filter)

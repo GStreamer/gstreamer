@@ -87,7 +87,7 @@ tunnel_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
   gdouble r;
 
 
-  /* normalize in ((-1.0, -1.0), (1.0, 1.0) and traslate the center */
+  /* normalize in ((-1.0, -1.0), (1.0, 1.0) and translate the center */
   /* plus a little trick to obtain a perfect circle, normalize in a
    * square with sides equal to MAX(width, height) */
   norm_x = 2.0 * (x - cgt->x_center * width) / MAX (width, height);

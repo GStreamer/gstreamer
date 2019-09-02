@@ -1130,7 +1130,7 @@ vbi3_raw_decoder_services (vbi3_raw_decoder * rd)
  * $return
  * Set of data services $rd will be decode after the change.
  * Can be zero if the sampling parameters are invalid or some
- * other error occured.
+ * other error occurred.
  */
 /* Attn: strict must be int for compatibility with libzvbi 0.2 (-1 == 0) */
 vbi_service_set

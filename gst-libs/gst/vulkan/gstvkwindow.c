@@ -340,7 +340,7 @@ gst_vulkan_window_get_presentation_support (GstVulkanWindow * window,
  * @window: a #GstVulkanWindow
  * @error: a #GError
  *
- * Returns: whether @window could be sucessfully opened
+ * Returns: whether @window could be successfully opened
  *
  * Since: 1.18
  */

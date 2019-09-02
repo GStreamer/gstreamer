@@ -440,7 +440,7 @@ transport_receive_bin_class_init (TransportReceiveBinClass * klass)
   g_object_class_install_property (gobject_class,
       PROP_STREAM,
       g_param_spec_object ("stream", "Stream",
-          "The TransportStream for this receiveing bin",
+          "The TransportStream for this receiving bin",
           transport_stream_get_type (),
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
 }

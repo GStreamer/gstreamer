@@ -84,7 +84,7 @@ gst_wayland_video_default_init (GstWaylandVideoInterface * klass)
  *
  * Please note that any calls to this method MUST be matched by
  * calls to end_geometry_change() and AFTER the parent surface has
- * commited its geometry changes.
+ * committed its geometry changes.
  */
 void
 gst_wayland_video_begin_geometry_change (GstWaylandVideo * video)
@@ -106,11 +106,11 @@ gst_wayland_video_begin_geometry_change (GstWaylandVideo * video)
  *
  * Notifies the video sink that we just finished changing the
  * geometry of both itself and its parent surface. This should
- * have been earlier preceeded by a call to begin_geometry_change()
+ * have been earlier preceded by a call to begin_geometry_change()
  * which notified the sink before any of these changes had happened.
  *
  * It is important to call this method only AFTER the parent surface
- * has commited its geometry changes, otherwise no synchronization
+ * has committed its geometry changes, otherwise no synchronization
  * is actually achieved.
  */
 void

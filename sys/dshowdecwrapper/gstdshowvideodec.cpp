@@ -448,7 +448,7 @@ gst_dshowvideodec_com_thread (GstDshowVideoDec * vdec)
   else if (res == RPC_E_CHANGED_MODE)
     GST_WARNING_OBJECT (vdec, "The concurrency model of COM has changed.");
   else
-    GST_INFO_OBJECT (vdec, "COM intialized succesfully");
+    GST_INFO_OBJECT (vdec, "COM initialized successfully");
 
   vdec->comInitialized = TRUE;
 
@@ -457,12 +457,12 @@ gst_dshowvideodec_com_thread (GstDshowVideoDec * vdec)
 
   g_mutex_unlock (&vdec->com_init_lock);
 
-  /* Wait until the unitialize condition is met to leave the COM apartement */
+  /* Wait until the uninitialize condition is met to leave the COM apartement */
   g_mutex_lock (&vdec->com_deinit_lock);
   g_cond_wait (&vdec->com_uninitialize, &vdec->com_deinit_lock);
 
   CoUninitialize ();
-  GST_INFO_OBJECT (vdec, "COM unintialized succesfully");
+  GST_INFO_OBJECT (vdec, "COM uninitialized successfully");
   vdec->comInitialized = FALSE;
   g_cond_signal (&vdec->com_uninitialized);
   g_mutex_unlock (&vdec->com_deinit_lock);
@@ -485,7 +485,7 @@ gst_dshowvideodec_init (GstDshowVideoDec * vdec)
   vdec->srcpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template
       (element_class, "src"), "src");
-/* needed to implement caps negociation on our src pad */
+/* needed to implement caps negotiation on our src pad */
 /*  gst_pad_set_getcaps_function (vdec->srcpad, gst_dshowvideodec_src_getcaps);
   gst_pad_set_setcaps_function (vdec->srcpad, gst_dshowvideodec_src_setcaps);*/
   gst_element_add_pad (GST_ELEMENT (vdec), vdec->srcpad);
@@ -980,7 +980,7 @@ gst_dshowvideodec_src_getcaps (GstPad * pad)
     output_pin = gst_dshow_get_pin_from_filter (vdec->decfilter, PINDIR_OUTPUT);
     if (!output_pin) {
       GST_ELEMENT_ERROR (vdec, STREAM, FAILED,
-          ("failed getting ouput pin from the decoder"), (NULL));
+          ("failed getting output pin from the decoder"), (NULL));
       goto beach;
     }
 
@@ -1074,7 +1074,7 @@ gst_dshowvideodec_get_filter_output_format (GstDshowVideoDec * vdec,
   output_pin = gst_dshow_get_pin_from_filter (vdec->decfilter, PINDIR_OUTPUT);
   if (!output_pin) {
     GST_ELEMENT_ERROR (vdec, CORE, NEGOTIATION,
-        ("failed getting ouput pin from the decoder"), (NULL));
+        ("failed getting output pin from the decoder"), (NULL));
     return FALSE;
   }
 

@@ -730,7 +730,7 @@ gst_d3d11_device_create_swap_chain_internal (GstD3D11Device * device,
  * @device: a #GstD3D11Device
  * @desc: a DXGI_SWAP_CHAIN_DESC structure for swapchain
  *
- * Creat a IDXGISwapChain object. Caller must release returned swap chain object
+ * Create a IDXGISwapChain object. Caller must release returned swap chain object
  * via IDXGISwapChain_Release()
  *
  * Returns: (transfer full) (nullable): a new IDXGISwapChain or %NULL

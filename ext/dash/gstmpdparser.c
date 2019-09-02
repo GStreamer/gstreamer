@@ -4706,7 +4706,7 @@ gst_mpd_client_get_adaptation_sets_for_period (GstMpdClient * client,
    * to decide which one to use, so we have to resolve them all here
    */
   for (list = period->period->AdaptationSets; list;
-      /* advanced explicitely below */ ) {
+      /* advanced explicitly below */ ) {
     GstAdaptationSetNode *adapt_set = (GstAdaptationSetNode *) list->data;
     GList *new_adapt_sets = NULL, *prev, *next;
 

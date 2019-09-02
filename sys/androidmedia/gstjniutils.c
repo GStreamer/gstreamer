@@ -808,21 +808,21 @@ gst_amc_jni_get_application_class (JNIEnv * env, const gchar * name,
 
   if (!get_class_loader) {
     g_set_error (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
-        "Could not retreive application class loader function");
+        "Could not retrieve application class loader function");
     goto done;
   }
 
   class_loader = get_class_loader ();
   if (!class_loader) {
     g_set_error (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
-        "Could not retreive application class loader");
+        "Could not retrieve application class loader");
     goto done;
   }
 
   class_loader_cls = (*env)->GetObjectClass (env, class_loader);
   if (!class_loader_cls) {
     g_set_error (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
-        "Could not retreive application class loader java class");
+        "Could not retrieve application class loader java class");
     goto done;
   }
 

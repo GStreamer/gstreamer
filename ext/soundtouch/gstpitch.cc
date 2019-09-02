@@ -669,7 +669,7 @@ gst_pitch_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 /* this function returns FALSE if not enough data is known to transform the
  * segment into proper downstream values.  If the function does return false
  * the segment should be stalled until enough information is available.
- * If the funtion returns TRUE, event will be replaced by the new downstream
+ * If the function returns TRUE, event will be replaced by the new downstream
  * compatible event.
  */
 static gboolean

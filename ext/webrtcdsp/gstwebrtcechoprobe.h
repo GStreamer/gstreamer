@@ -61,7 +61,7 @@ struct _GstWebrtcEchoProbe
    * object lock and also lock the probe. The natural order for the DSP is
    * to lock the DSP and then the echo probe. If we where using the probe
    * object lock, we'd be racing with GstBin which will lock sink to src,
-   * and may accidently reverse the order. */
+   * and may accidentally reverse the order. */
   GMutex lock;
 
   /* Protected by the lock */

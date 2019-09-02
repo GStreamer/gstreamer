@@ -1021,7 +1021,7 @@ gst_cea708dec_show_pango_window (Cea708Dec * decoder, guint window_id)
   }
 
   if (!display) {
-    GST_DEBUG ("No visible text, skiping rendering");
+    GST_DEBUG ("No visible text, skipping rendering");
     return;
   }
 

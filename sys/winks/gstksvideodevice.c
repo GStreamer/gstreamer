@@ -555,7 +555,7 @@ gst_ks_video_device_create_pin (GstKsVideoDevice * self,
   }
 
   /*
-   * Figure out how many simultanous requests it prefers.
+   * Figure out how many simultaneous requests it prefers.
    *
    * This is really important as it depends on the driver and the device.
    * Doing too few will result in poor capture performance, whilst doing too

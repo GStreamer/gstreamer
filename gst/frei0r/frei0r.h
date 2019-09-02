@@ -128,7 +128,7 @@
  * @subsection sec_icon_location Icon location
  *
  * The exact location where the application should look for the
- * plugin is platform dependant.
+ * plugin is platform dependent.
  *
  * For Windows platforms, the icon should be at the same place as
  * the plugin containing the effect.
@@ -251,7 +251,7 @@ void f0r_deinit();
  * List of supported color models.
  *
  * Note: the color models are endian independent, because the
- * color components are defined by their positon in memory, not
+ * color components are defined by their position in memory, not
  * by their significance in an uint32_t value.
  * 
  * For effects that work on the color components,
@@ -300,7 +300,7 @@ void f0r_deinit();
 
 /**
  * In PACKED32, each pixel is represented by 4 consecutive
- * bytes, but it is not defined how the color componets are
+ * bytes, but it is not defined how the color components are
  * stored. The true color format could be RGBA8888,
  * BGRA8888, a packed 32 bit YUV format, or any other
  * color format that stores pixels in 32 bit.

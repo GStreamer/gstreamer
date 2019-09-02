@@ -554,7 +554,7 @@
                         "writable": true
                     },
                     "min-quantizer": {
-                        "blurb": "Mininum (best quality) quantizer",
+                        "blurb": "Minimum (best quality) quantizer",
                         "construct": false,
                         "construct-only": false,
                         "default": "0",
@@ -2166,7 +2166,7 @@
         "url": "Unknown package origin"
     },
     "autoconvert": {
-        "description": "Selects convertor element based on caps",
+        "description": "Selects converter element based on caps",
         "elements": {
             "autoconvert": {
                 "author": "Olivier Crete <olivier.crete@collabora.com>",
@@ -2180,7 +2180,7 @@
                     "GObject"
                 ],
                 "klass": "Generic/Bin",
-                "long-name": "Select convertor based on caps",
+                "long-name": "Select converter based on caps",
                 "name": "autoconvert",
                 "pad-templates": {
                     "sink": {
@@ -2240,7 +2240,7 @@
             },
             "autovideoconvert": {
                 "author": "Benjamin Gaignard <benjamin.gaignard@stericsson.com>",
-                "description": "Selects the right color space convertor based on the caps",
+                "description": "Selects the right color space converter based on the caps",
                 "hierarchy": [
                     "GstAutoVideoConvert",
                     "GstBin",
@@ -2250,7 +2250,7 @@
                     "GObject"
                 ],
                 "klass": "Generic/Bin",
-                "long-name": "Select color space convertor based on caps",
+                "long-name": "Select color space converter based on caps",
                 "name": "autovideoconvert",
                 "pad-templates": {
                     "sink": {
@@ -4994,7 +4994,7 @@
                                 "value": "1"
                             },
                             {
-                                "desc": "Calculate and cache color replacement values on first occurence",
+                                "desc": "Calculate and cache color replacement values on first occurrence",
                                 "name": "cached",
                                 "value": "2"
                             }
@@ -8406,7 +8406,7 @@
                         "writable": true
                     },
                     "signal-fps-measurements": {
-                        "blurb": "If the fps-measurements signal should be emited.",
+                        "blurb": "If the fps-measurements signal should be emitted.",
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
@@ -11592,7 +11592,7 @@
                         "writable": true
                     },
                     "frequency": {
-                        "blurb": "Center frequency to tune into. Measured in kHz for the satellite distribution standars and Hz for all the rest",
+                        "blurb": "Center frequency to tune into. Measured in kHz for the satellite distribution standards and Hz for all the rest",
                         "construct": false,
                         "construct-only": false,
                         "default": "0",
@@ -13072,7 +13072,7 @@
                         "writable": true
                     },
                     "frequency": {
-                        "blurb": "Center frequency to tune into. Measured in kHz for the satellite distribution standars and Hz for all the rest",
+                        "blurb": "Center frequency to tune into. Measured in kHz for the satellite distribution standards and Hz for all the rest",
                         "construct": false,
                         "construct-only": false,
                         "default": "0",
@@ -22730,7 +22730,7 @@
                 },
                 "properties": {
                     "brightness": {
-                        "blurb": "Brightnesss of image",
+                        "blurb": "Brightness of image",
                         "construct": false,
                         "construct-only": false,
                         "default": "0.75",
@@ -32846,7 +32846,7 @@
                         "writable": true
                     },
                     "connector-properties": {
-                        "blurb": "Additionnal properties for the connector",
+                        "blurb": "Additional properties for the connector",
                         "construct": false,
                         "construct-only": false,
                         "type-name": "GstStructure",
@@ -32949,7 +32949,7 @@
                         "writable": true
                     },
                     "plane-properties": {
-                        "blurb": "Additionnal properties for the plane",
+                        "blurb": "Additional properties for the plane",
                         "construct": false,
                         "construct-only": false,
                         "type-name": "GstStructure",
@@ -35570,7 +35570,7 @@
                         "writable": true
                     },
                     "unit-coeff-elim": {
-                        "blurb": "How agressively small-unit picture blocks should be skipped",
+                        "blurb": "How aggressively small-unit picture blocks should be skipped",
                         "construct": false,
                         "construct-only": false,
                         "default": "0",
@@ -39102,12 +39102,12 @@
                                 "value": "0"
                             },
                             {
-                                "desc": "Dewarped image is splitted in two images displayed one below the other",
+                                "desc": "Dewarped image is split into two images displayed one below the other",
                                 "name": "double-panorama",
                                 "value": "1"
                             },
                             {
-                                "desc": "Dewarped image is splitted in four images dysplayed as a quad view",
+                                "desc": "Dewarped image is split into four images displayed as a quad view",
                                 "name": "quad-view",
                                 "value": "2"
                             }
@@ -40262,7 +40262,7 @@
                     "GObject"
                 ],
                 "klass": "Filter/Effect/Video",
-                "long-name": "Retinex image colour enhacement",
+                "long-name": "Retinex image colour enhancement",
                 "name": "retinex",
                 "pad-templates": {
                     "sink": {
@@ -42041,7 +42041,7 @@
                         "writable": true
                     },
                     "remove": {
-                        "blurb": "Set to true to remove silence from the stream, false otherwhise",
+                        "blurb": "Set to true to remove silence from the stream, false otherwise",
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
@@ -42616,7 +42616,7 @@
                         "writable": true
                     },
                     "bonding-addresses": {
-                        "blurb": "Comma (,) seperated list of <address>:<port> to send to. ",
+                        "blurb": "Comma (,) separated list of <address>:<port> to send to. ",
                         "construct": false,
                         "construct-only": false,
                         "default": "localhost:5004",
@@ -45623,7 +45623,7 @@
                         "writable": true
                     },
                     "repeat": {
-                        "blurb": "Whether to repeat specified tone indefinitly",
+                        "blurb": "Whether to repeat specified tone indefinitely",
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
@@ -45936,7 +45936,7 @@
                         "writable": true
                     },
                     "poll-timeout": {
-                        "blurb": "Return poll wait after timeout miliseconds (-1 = infinite)",
+                        "blurb": "Return poll wait after timeout milliseconds (-1 = infinite)",
                         "construct": false,
                         "construct-only": false,
                         "default": "-1",
@@ -46200,7 +46200,7 @@
                         "writable": true
                     },
                     "poll-timeout": {
-                        "blurb": "Return poll wait after timeout miliseconds (-1 = infinite)",
+                        "blurb": "Return poll wait after timeout milliseconds (-1 = infinite)",
                         "construct": false,
                         "construct-only": false,
                         "default": "-1",
@@ -49134,7 +49134,7 @@
                         "writable": true
                     },
                     "drop": {
-                        "blurb": "Drop data untill valid configuration data is received either in the stream or through caps",
+                        "blurb": "Drop data until valid configuration data is received either in the stream or through caps",
                         "construct": true,
                         "construct-only": false,
                         "default": "true",
@@ -51905,7 +51905,7 @@
                     "GObject"
                 ],
                 "klass": "Generic/Audio",
-                "long-name": "Accoustic Echo Canceller probe",
+                "long-name": "Acoustic Echo Canceller probe",
                 "name": "webrtcechoprobe",
                 "pad-templates": {
                     "sink": {

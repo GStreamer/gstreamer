@@ -52,7 +52,7 @@
  *   application, that means it won't handle navigation events and won't resize
  *   the #GstDfbVideoSink:surface to fit video
  *   frames geometry. Application has to implement the necessary code to grab
- *   informations about the negotiated geometry and resize there
+ *   information about the negotiated geometry and resize there
  *   #GstDfbVideoSink:surface accordingly.
  *
  * For both modes the element implements a buffer pool allocation system to

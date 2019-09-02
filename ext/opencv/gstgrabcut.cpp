@@ -203,7 +203,7 @@ IF nothing is present, then nothing is done.", "Miguel Casas-Sanchez <miguelecas
 
 /* initialize the new element
  * instantiate pads and add them to element
- * set pad calback functions
+ * set pad callback functions
  * initialize instance structure
  */
 static void

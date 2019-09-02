@@ -375,7 +375,7 @@ GstMpeg2EncOptions::initProperties (GObjectClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (klass, ARG_UNIT_COEFF_ELIM,
       g_param_spec_int ("unit-coeff-elim", "Unit coefficience elimination",
-          "How agressively small-unit picture blocks should be skipped",
+          "How aggressively small-unit picture blocks should be skipped",
           -40, 40, 0, 
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 

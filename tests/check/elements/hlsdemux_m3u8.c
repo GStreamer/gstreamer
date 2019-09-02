@@ -798,16 +798,16 @@ GST_START_TEST (test_get_next_fragment)
   GstHLSMasterPlaylist *master;
   GstM3U8 *pl;
   GstM3U8MediaFile *mf;
-  gboolean discontinous;
+  gboolean discontinuous;
   GstClockTime timestamp;
 
   master = load_playlist (BYTE_RANGES_PLAYLIST);
   pl = master->default_variant->m3u8;
 
   /* Check the next fragment */
-  mf = gst_m3u8_get_next_fragment (pl, TRUE, &timestamp, &discontinous);
+  mf = gst_m3u8_get_next_fragment (pl, TRUE, &timestamp, &discontinuous);
   fail_unless (mf != NULL);
-  assert_equals_int (discontinous, FALSE);
+  assert_equals_int (discontinuous, FALSE);
   assert_equals_string (mf->uri, "http://media.example.com/all.ts");
   assert_equals_uint64 (timestamp, 0);
   assert_equals_uint64 (mf->duration, 10 * GST_SECOND);
@@ -818,9 +818,9 @@ GST_START_TEST (test_get_next_fragment)
   gst_m3u8_advance_fragment (pl, TRUE);
 
   /* Check next media segments */
-  mf = gst_m3u8_get_next_fragment (pl, TRUE, &timestamp, &discontinous);
+  mf = gst_m3u8_get_next_fragment (pl, TRUE, &timestamp, &discontinuous);
   fail_unless (mf != NULL);
-  assert_equals_int (discontinous, FALSE);
+  assert_equals_int (discontinuous, FALSE);
   assert_equals_string (mf->uri, "http://media.example.com/all.ts");
   assert_equals_uint64 (timestamp, 10 * GST_SECOND);
   assert_equals_uint64 (mf->duration, 10 * GST_SECOND);
@@ -831,8 +831,8 @@ GST_START_TEST (test_get_next_fragment)
   gst_m3u8_advance_fragment (pl, TRUE);
 
   /* Check next media segments */
-  mf = gst_m3u8_get_next_fragment (pl, TRUE, &timestamp, &discontinous);
-  assert_equals_int (discontinous, FALSE);
+  mf = gst_m3u8_get_next_fragment (pl, TRUE, &timestamp, &discontinuous);
+  assert_equals_int (discontinuous, FALSE);
   assert_equals_string (mf->uri, "http://media.example.com/all.ts");
   assert_equals_uint64 (timestamp, 20 * GST_SECOND);
   assert_equals_uint64 (mf->duration, 10 * GST_SECOND);

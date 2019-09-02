@@ -156,7 +156,7 @@ gst_gdiscreencapsrc_class_init (GstGDIScreenCapSrcClass * klass)
 static void
 gst_gdiscreencapsrc_init (GstGDIScreenCapSrc * src)
 {
-  /* Set src element inital values... */
+  /* Set src element initial values... */
   src->dibMem = NULL;
   src->hBitmap = (HBITMAP) INVALID_HANDLE_VALUE;
   src->memDC = (HDC) INVALID_HANDLE_VALUE;

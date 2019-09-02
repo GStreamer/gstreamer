@@ -923,7 +923,7 @@ gst_x265_enc_init_encoder (GstX265Enc * encoder)
     }
 
     if (i == encoder->peer_profiles->len) {
-      GST_ERROR_OBJECT (encoder, "Could't apply peer profile");
+      GST_ERROR_OBJECT (encoder, "Couldn't apply peer profile");
       GST_OBJECT_UNLOCK (encoder);
 
       return FALSE;
@@ -1191,7 +1191,7 @@ gst_x265_enc_get_header_buffer (GstX265Enc * encoder)
   GST_DEBUG_OBJECT (encoder, "%d nal units in header", i_nal);
 
   /* x265 returns also non header nal units with the call x265_encoder_headers.
-   * The usefull headers are sequential (VPS, SPS and PPS), so we look for this
+   * The useful headers are sequential (VPS, SPS and PPS), so we look for this
    * nal units and only copy these tree nal units as the header */
 
   vps_idx = sps_idx = pps_idx = -1;

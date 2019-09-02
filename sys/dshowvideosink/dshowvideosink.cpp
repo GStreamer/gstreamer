@@ -369,7 +369,7 @@ gst_dshowvideosink_com_thread (GstDshowVideoSink * sink)
   else if (res == RPC_E_CHANGED_MODE)
     GST_WARNING_OBJECT (sink, "The concurrency model of COM has changed.");
   else
-    GST_INFO_OBJECT (sink, "COM intialized succesfully");
+    GST_INFO_OBJECT (sink, "COM initialized successfully");
 
   sink->comInitialized = TRUE;
 
@@ -378,12 +378,12 @@ gst_dshowvideosink_com_thread (GstDshowVideoSink * sink)
 
   g_mutex_unlock (&sink->com_init_lock);
 
-  /* Wait until the unitialize condition is met to leave the COM apartement */
+  /* Wait until the uninitialize condition is met to leave the COM apartement */
   g_mutex_lock (&sink->com_deinit_lock);
   g_cond_wait (&sink->com_uninitialize, &sink->com_deinit_lock);
 
   CoUninitialize ();
-  GST_INFO_OBJECT (sink, "COM unintialized succesfully");
+  GST_INFO_OBJECT (sink, "COM uninitialized successfully");
   sink->comInitialized = FALSE;
   g_cond_signal (&sink->com_uninitialized);
   g_mutex_unlock (&sink->com_deinit_lock);
@@ -1561,7 +1561,7 @@ gst_dshowvideosink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   sink->fakesrc->GetOutputPin()->SetMediaType (&sink->mediatype);
   GST_DEBUG_OBJECT (sink, "Configured output pin media type");
 
-  /* We have configured the ouput pin media type.
+  /* We have configured the output pin media type.
   * So, create a window (or start using an application-supplied
   * one, then connect the graph */
   gst_dshowvideosink_prepare_window (sink);

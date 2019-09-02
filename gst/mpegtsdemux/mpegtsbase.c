@@ -1116,7 +1116,7 @@ mpegts_base_apply_pmt (MpegTSBase * base, GstMpegtsSection * section)
     program = mpegts_base_new_program (base, program_number, section->pid);
     program->patcount = old_program->patcount;
 
-    /* Desactivate the old program */
+    /* Deactivate the old program */
     /* FIXME : THIS IS BREAKING THE STREAM SWITCHING LOGIC !
      *  */
     if (klass->can_remove_program (base, old_program)) {

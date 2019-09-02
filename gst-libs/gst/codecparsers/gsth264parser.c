@@ -915,7 +915,7 @@ gst_h264_parse_clock_timestamp (GstH264ClockTimestamp * tim,
 
   GST_DEBUG ("parsing \"Clock timestamp\"");
 
-  /* defalt values */
+  /* default values */
   tim->time_offset = 0;
 
   READ_UINT8 (nr, tim->ct_type, 2);
@@ -1089,7 +1089,7 @@ gst_h264_parser_parse_recovery_point (GstH264NalParser * nalparser,
 
   GST_DEBUG ("parsing \"Recovery point\"");
   if (!sps || !sps->valid) {
-    GST_WARNING ("didn't get the associated sequence paramater set for the "
+    GST_WARNING ("didn't get the associated sequence parameter set for the "
         "current access unit");
     goto error;
   }

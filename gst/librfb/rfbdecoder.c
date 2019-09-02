@@ -155,7 +155,7 @@ rfb_decoder_disconnect (RfbDecoder * decoder)
  *
  * Initializes the connection with the rfb server
  *
- * Returns: TRUE if initialization was succesfull, FALSE on fail.
+ * Returns: TRUE if initialization was successful, FALSE on fail.
  */
 gboolean
 rfb_decoder_iterate (RfbDecoder * decoder)
@@ -564,7 +564,7 @@ rfb_decoder_state_security_result (RfbDecoder * decoder)
     return FALSE;
   }
 
-  GST_DEBUG ("Security handshaking succesful");
+  GST_DEBUG ("Security handshake successful");
   decoder->state = rfb_decoder_state_send_client_initialisation;
 
   return TRUE;
@@ -598,7 +598,7 @@ rfb_decoder_message_set_encodings (GSList * encodings_list)
  *
  * Sends the encoding types that the client can decode to the server
  *
- * Returns: TRUE if initialization was succesfull, FALSE on fail.
+ * Returns: TRUE if initialization was successful, FALSE on fail.
  */
 static gboolean
 rfb_decoder_state_set_encodings (RfbDecoder * decoder)
@@ -807,7 +807,7 @@ rfb_decoder_state_framebuffer_update_rectangle (RfbDecoder * decoder)
   h = RFB_GET_UINT16 (decoder->data + 6);
   encoding = RFB_GET_UINT32 (decoder->data + 8);
 
-  GST_DEBUG ("update recieved");
+  GST_DEBUG ("update received");
   GST_DEBUG ("x:%d y:%d", x, y);
   GST_DEBUG ("w:%d h:%d", w, h);
   GST_DEBUG ("encoding: %d", encoding);

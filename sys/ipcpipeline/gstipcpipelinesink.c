@@ -57,7 +57,7 @@
  * serialized in a "packet" and sent over the socket. The sender then
  * performs a blocking wait for a reply, if a return code is needed.
  *
- * All objects that contan a GstStructure (messages, queries, events) are
+ * All objects that contain a GstStructure (messages, queries, events) are
  * serialized by serializing the GstStructure to a string
  * (gst_structure_to_string). This implies some limitations, of course.
  * All fields of this structures that are not serializable to strings (ex.
@@ -644,7 +644,7 @@ gst_ipc_pipeline_sink_change_state (GstElement * element,
 
   /* change the state of the peer first */
   /* If the fd out is -1, we do not actually call the peer. This will happen
-     when we explicitely disconnected, and in that case we want to be able
+     when we explicitly disconnected, and in that case we want to be able
      to bring the element down to NULL, so it can be restarted with a new
      slave pipeline. */
   if (sink->comm.fdout >= 0) {
@@ -714,7 +714,7 @@ gst_ipc_pipeline_sink_change_state (GstElement * element,
   }
 
   /* the parent's (GstElement) state change func won't return ASYNC or
-   * NO_PREROLL, so unless it has returned FAILURE, which we have catched above,
+   * NO_PREROLL, so unless it has returned FAILURE, which we have caught above,
    * we are not interested in its return code... just return the peer's */
   return peer_ret;
 }

@@ -7,7 +7,7 @@
  *  and adapted. Its license reads:
  *  "Oct. 3, 2008
  *   Right to use this code in any way you want without warrenty, support or
- *   any guarentee of it working. "
+ *   any guarantee of it working. "
  *
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -72,7 +72,7 @@
  * mixture model for real-time tracking with shadow detection", Proc. 2nd
  * European Workshop on Advanced Video-Based Surveillance Systems, 2001
  * [5] http://opencv.itseez.com/modules/video/doc/motion_analysis_and_object_tracking.html#backgroundsubtractormog2
- * [6] Z.Zivkovic, "Improved adaptive Gausian mixture model for background
+ * [6] Z.Zivkovic, "Improved adaptive Gaussian mixture model for background
  * subtraction", International Conference Pattern Recognition, UK, August, 2004.
  * [7] Z.Zivkovic, F. van der Heijden, "Efficient Adaptive Density Estimation
  * per Image Pixel for the Task of Background Subtraction", Pattern Recognition
@@ -230,7 +230,7 @@ gst_segmentation_class_init (GstSegmentationClass * klass)
 
 /* initialize the new element
  * instantiate pads and add them to element
- * set pad calback functions
+ * set pad callback functions
  * initialize instance structure
  */
 static void
@@ -421,7 +421,7 @@ gst_segmentation_transform_ip (GstOpencvVideoFilter * cvfilter,
    * OpenCV MOG2 implements the algorithm described in [2] and [3].
    *
    * [1] http://opencv.itseez.com/modules/video/doc/motion_analysis_and_object_tracking.html#backgroundsubtractormog2
-   * [2] Z.Zivkovic, "Improved adaptive Gausian mixture model for background
+   * [2] Z.Zivkovic, "Improved adaptive Gaussian mixture model for background
    * subtraction", International Conference Pattern Recognition, UK, Aug 2004.
    * [3] Z.Zivkovic, F. van der Heijden, "Efficient Adaptive Density Estimation
    * per Image Pixel for the Task of Background Subtraction", Pattern
@@ -630,7 +630,7 @@ clear_stale_entries (codeBook * c)
   maxMod Add this (possibly negative) number onto
 
   max level when determining if new pixel is foreground
-  minMod Subract this (possibly negative) number from
+  minMod Subtract this (possibly negative) number from
   min level when determining if new pixel is foreground
 
   NOTES:
@@ -770,7 +770,7 @@ run_mog2_iteration (GstSegmentation * filter)
      [2] and [3].
 
      [1] http://opencv.itseez.com/modules/video/doc/motion_analysis_and_object_tracking.html#backgroundsubtractormog2
-     [2] Z.Zivkovic, "Improved adaptive Gausian mixture model for background
+     [2] Z.Zivkovic, "Improved adaptive Gaussian mixture model for background
      subtraction", International Conference Pattern Recognition, UK, August, 2004.
      [3] Z.Zivkovic, F. van der Heijden, "Efficient Adaptive Density Estimation per
      Image Pixel for the Task of Background Subtraction", Pattern Recognition

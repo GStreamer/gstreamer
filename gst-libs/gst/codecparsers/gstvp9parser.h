@@ -73,7 +73,7 @@ typedef struct _GstVp9SegmentationInfoData GstVp9SegmentationInfoData;
  * GstVp9ParseResult:
  * @GST_VP9_PARSER_OK: The parsing went well
  * @GST_VP9_PARSER_BROKEN_DATA: The data to parse is broken
- * @GST_VP9_PARSER_NO_PACKET_ERROR: An error occured during the parsing
+ * @GST_VP9_PARSER_NO_PACKET_ERROR: An error occurred during the parsing
  *
  * Result type of any parsing function.
  *
@@ -367,7 +367,7 @@ struct _GstVp9SegmentationInfo {
  * @refresh_frame_context: refresh frame context indicator
  * @frame_parallel_decoding_mode: enable or disable parallel decoding support.
  * @loopfilter: loopfilter values
- * @quant_indices: quantization indeces
+ * @quant_indices: quantization indices
  * @segmentation: segmentation info
  * @log2_tile_rows: tile row indicator
  * @log2_tile_columns:  tile column indicator
@@ -433,7 +433,7 @@ struct _GstVp9FrameHdr
  * @reference_skip:  a block skip mode that implies both the use of a (0,0)
  *   motion vector and that no residual will be coded
  *
- * Segmentation info kept across multipe frames
+ * Segmentation info kept across multiple frames
  *
  * Since: 1.8
  */
@@ -469,7 +469,7 @@ struct _GstVp9Segmentation
  */
 struct _GstVp9Parser
 {
-  /* private stuct for tracking state variables across frames */
+  /* private struct for tracking state variables across frames */
   void *priv;
 
   gint subsampling_x;

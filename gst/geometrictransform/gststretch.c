@@ -139,7 +139,7 @@ stretch_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
   gdouble height = gt->height;
   gdouble a, b;
 
-  /* normalize in ((-1.0, -1.0), (1.0, 1.0) and traslate the center */
+  /* normalize in ((-1.0, -1.0), (1.0, 1.0) and translate the center */
   norm_x = 2.0 * (x / width - cgt->x_center);
   norm_y = 2.0 * (y / height - cgt->y_center);
 

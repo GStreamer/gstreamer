@@ -26,11 +26,11 @@
  * If the .#GstZBar:attach-frame property is %TRUE, the posted barcode message
  * includes a sample of the frame where the barcode was detected (Since 1.6).
  *
- * The element generate messages named`barcode`. The structure containes these fields:
+ * The element generate messages named`barcode`. The structure contains these fields:
  *
  * * #GstClockTime `timestamp`: the timestamp of the buffer that triggered the message.
  * * gchar * `type`: the symbol type.
- * * gchar * `symbol`: the deteted bar code data.
+ * * gchar * `symbol`: the detected bar code data.
  * * gint `quality`: an unscaled, relative quantity: larger values are better than smaller
  *   values.
  * * GstSample `frame`: the frame in which the barcode message was detected, if

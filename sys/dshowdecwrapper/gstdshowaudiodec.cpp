@@ -403,7 +403,7 @@ gst_dshowaudiodec_com_thread (GstDshowAudioDec * adec)
   else if (res == RPC_E_CHANGED_MODE)
     GST_WARNING_OBJECT (adec, "The concurrency model of COM has changed.");
   else
-    GST_INFO_OBJECT (adec, "COM intialized succesfully");
+    GST_INFO_OBJECT (adec, "COM initialized successfully");
 
   adec->comInitialized = TRUE;
 
@@ -412,12 +412,12 @@ gst_dshowaudiodec_com_thread (GstDshowAudioDec * adec)
 
   g_mutex_unlock (&adec->com_init_lock);
 
-  /* Wait until the unitialize condition is met to leave the COM apartement */
+  /* Wait until the uninitialize condition is met to leave the COM apartement */
   g_mutex_lock (&adec->com_deinit_lock);
   g_cond_wait (&adec->com_uninitialize, &adec->com_deinit_lock);
 
   CoUninitialize ();
-  GST_INFO_OBJECT (adec, "COM unintialized succesfully");
+  GST_INFO_OBJECT (adec, "COM uninitialized successfully");
   adec->comInitialized = FALSE;
   g_cond_signal (&adec->com_uninitialized);
   g_mutex_unlock (&adec->com_deinit_lock);
@@ -989,7 +989,7 @@ gst_dshowaudiodec_get_filter_settings (GstDshowAudioDec * adec)
   output_pin = gst_dshow_get_pin_from_filter (adec->decfilter, PINDIR_OUTPUT);
   if (!output_pin) {
     GST_ELEMENT_ERROR (adec, CORE, NEGOTIATION,
-        ("failed getting ouput pin from the decoder"), (NULL));
+        ("failed getting output pin from the decoder"), (NULL));
     return FALSE;
   }
 

@@ -248,7 +248,7 @@ typedef enum
 
 /**
  * GstH265ParserResult:
- * @GST_H265_PARSER_OK: The parsing succeded
+ * @GST_H265_PARSER_OK: The parsing succeeded
  * @GST_H265_PARSER_BROKEN_DATA: The data to parse is broken
  * @GST_H265_PARSER_BROKEN_LINK: The link to structure needed for the parsing couldn't be found
  * @GST_H265_PARSER_ERROR: An error accured when parsing
@@ -423,7 +423,7 @@ struct _GstH265NalUnit
  * @progressive_source_flag: flag to indicate the type of stream
  * @interlaced_source_flag: flag to indicate the type of stream
  * @non_packed_constraint_flag: indicate the presence of frame packing
- *   arragement sei message
+ *   arrangement sei message
  * @frame_only_constraint_flag: recognize the field_seq_flag
  * @max_12bit_constraint_flag: used to define profile extensions, see Annex A
  * @max_10bit_constraint_flag: used to define profile extensions, see Annex A
@@ -592,7 +592,7 @@ struct _GstH265HRDParams
  * @temporal_id_nesting_flag: specifies whether inter prediction is
  *   additionally restricted
  * @profile_tier_level: ProfileTierLevel info
- * @sub_layer_ordering_info_present_flag: indicates the presense of
+ * @sub_layer_ordering_info_present_flag: indicates the presence of
  *   vps_max_dec_pic_buffering_minus1, vps_max_num_reorder_pics and
  *   vps_max_latency_increase_plus1
  * @max_dec_pic_buffering_minus1: specifies the maximum required size

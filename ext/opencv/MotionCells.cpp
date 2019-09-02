@@ -408,7 +408,7 @@ MotionCells::calculateMotionPercentInCell (int p_row, int p_col,
       cntpixelsnum++;
       if ((((uchar *) (m_pbwImage.data + m_pbwImage.step[0] * i))[j]) > 0) {
         cntmotionpixelnum++;
-        if (cntmotionpixelnum >= thresholdmotionpixelnum) {     //we dont needs calculate anymore
+        if (cntmotionpixelnum >= thresholdmotionpixelnum) {     //we don't need to calculate anymore
           *p_motionarea = cntmotionpixelnum;
           return (cntmotionpixelnum / cntpixelsnum);
         }

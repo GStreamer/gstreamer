@@ -614,7 +614,7 @@ gst_wasapi_sink_write (GstAudioSink * asink, gpointer data, guint length)
   have_frames = length / (self->mix_format->nBlockAlign);
 
   if (self->sharemode == AUDCLNT_SHAREMODE_EXCLUSIVE) {
-    /* In exlusive mode we have to wait always */
+    /* In exclusive mode we have to wait always */
     dwWaitResult = WaitForSingleObject (self->event_handle, INFINITE);
     if (dwWaitResult != WAIT_OBJECT_0) {
       GST_ERROR_OBJECT (self, "Error waiting for event handle: %x",

@@ -1406,7 +1406,7 @@ flushing_seek_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
       }
     } else if (GST_EVENT_TYPE (info->data) == GST_EVENT_SEGMENT) {
       /* from the sink pipeline, we don't know whether the master issued a seek,
-         as the seek_sent memory location isn't directly accesible to us, so we
+         as the seek_sent memory location isn't directly accessible to us, so we
          look for a segment after a buffer to mean a seek was sent */
       idx = pad2idx (pad, td->two_streams);
       if (d->got_buffer_before_seek[idx])
@@ -5949,7 +5949,7 @@ ipcpipeline_suite (void)
 
   /* state_change tests issue a number of state changes in
      (hopefully) all interesting configurations, and checks
-     the state changes occured on the slave pipeline. The links
+     the state changes occurred on the slave pipeline. The links
      are disconnected and reconnected to check it all still
      works after this. */
   if (1) {

@@ -144,8 +144,8 @@ gst_auto_video_convert_class_init (GstAutoVideoConvertClass * klass)
   gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
 
   gst_element_class_set_static_metadata (gstelement_class,
-      "Select color space convertor based on caps", "Generic/Bin",
-      "Selects the right color space convertor based on the caps",
+      "Select color space converter based on caps", "Generic/Bin",
+      "Selects the right color space converter based on the caps",
       "Benjamin Gaignard <benjamin.gaignard@stericsson.com>");
 
   gstelement_class->change_state =

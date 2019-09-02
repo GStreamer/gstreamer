@@ -57,7 +57,7 @@
  * holds a reference to the GstWlBuffer, but without having an actual reference.
  * When we kill the display, there is no way for the GstWlBuffer, the associated
  * GstBuffer and the GstBufferPool to get destroyed, so we are going to leak a
- * fair ammount of memory.
+ * fair amount of memory.
  *
  * Normally, this rarely happens, because the compositor releases buffers
  * almost immediately and when waylandsink stops, they are already released.

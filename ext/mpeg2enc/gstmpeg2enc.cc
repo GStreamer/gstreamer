@@ -44,7 +44,7 @@
  * In particular, default property values are dependent on the format,
  * and can even be forcibly restrained to certain pre-sets (and thereby ignored).
  * Note that the (S)VCD profiles also restrict the image size, so some scaling
- * may be needed to accomodate this.  The so-called generic profiles (as used
+ * may be needed to accommodate this.  The so-called generic profiles (as used
  * in the example above) allow most parameters to be adjusted.
  *
  * |[

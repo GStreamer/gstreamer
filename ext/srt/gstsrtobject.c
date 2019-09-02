@@ -429,7 +429,7 @@ gst_srt_object_install_properties_helper (GObjectClass * gobject_class)
    */
   g_object_class_install_property (gobject_class, PROP_POLL_TIMEOUT,
       g_param_spec_int ("poll-timeout", "Poll timeout",
-          "Return poll wait after timeout miliseconds (-1 = infinite)", -1,
+          "Return poll wait after timeout milliseconds (-1 = infinite)", -1,
           G_MAXINT32, GST_SRT_DEFAULT_POLL_TIMEOUT,
           G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
           G_PARAM_STATIC_STRINGS));

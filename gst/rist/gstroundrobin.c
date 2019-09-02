@@ -26,7 +26,7 @@
  * buffers over multiple src pads. This is the opposite of tee
  * element, which duplicates buffers over all pads. This element 
  * can be used to distrute load across multiple branches when the buffer
- * can be processed indepently.
+ * can be processed independently.
  */
 
 #include "gstroundrobin.h"

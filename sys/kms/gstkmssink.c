@@ -1122,7 +1122,7 @@ gst_kms_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   self = GST_KMS_SINK (bsink);
 
   /* We are going to change the internal buffer pool, which means it will no
-   * longer be compatbile with the last_buffer size. Drain now, as we won't be
+   * longer be compatible with the last_buffer size. Drain now, as we won't be
    * able to do that later on. */
   gst_kms_sink_drain (self);
 
@@ -2006,7 +2006,7 @@ gst_kms_sink_class_init (GstKMSSinkClass * klass)
    */
   g_properties[PROP_CONNECTOR_PROPS] =
       g_param_spec_boxed ("connector-properties", "Connector Properties",
-      "Additionnal properties for the connector",
+      "Additional properties for the connector",
       GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   /**
@@ -2019,7 +2019,7 @@ gst_kms_sink_class_init (GstKMSSinkClass * klass)
    */
   g_properties[PROP_PLANE_PROPS] =
       g_param_spec_boxed ("plane-properties", "Connector Plane",
-      "Additionnal properties for the plane",
+      "Additional properties for the plane",
       GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, PROP_N, g_properties);

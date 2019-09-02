@@ -659,7 +659,7 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
   g_object_class_install_property (gobject_class, ARG_DVBSRC_FREQUENCY,
       g_param_spec_uint ("frequency", "Center frequency",
           "Center frequency to tune into. Measured in kHz for the satellite "
-          "distribution standars and Hz for all the rest",
+          "distribution standards and Hz for all the rest",
           0, G_MAXUINT, DEFAULT_FREQUENCY,
           GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE));
 
@@ -973,7 +973,7 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
    * GstDvbSrc::tuning-start:
    * @gstdvbsrc: the element on which the signal is emitted
    *
-   * Signal emited when the element first attempts to tune the
+   * Signal emitted when the element first attempts to tune the
    * frontend tunner to a given frequency.
    */
   gst_dvbsrc_signals[SIGNAL_TUNING_START] =
@@ -983,7 +983,7 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
    * GstDvbSrc::tuning-done:
    * @gstdvbsrc: the element on which the signal is emitted
    *
-   * Signal emited when the tunner has successfully got a lock on a signal.
+   * Signal emitted when the tunner has successfully got a lock on a signal.
    */
   gst_dvbsrc_signals[SIGNAL_TUNING_DONE] =
       g_signal_new ("tuning-done", G_TYPE_FROM_CLASS (klass),
@@ -992,7 +992,7 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
    * GstDvbSrc::tuning-fail:
    * @gstdvbsrc: the element on which the signal is emitted
    *
-   * Signal emited when the tunner failed to get a lock on the
+   * Signal emitted when the tunner failed to get a lock on the
    * signal.
    */
   gst_dvbsrc_signals[SIGNAL_TUNING_FAIL] =
@@ -1003,7 +1003,7 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
    * GstDvbSrc::tune:
    * @gstdvbsrc: the element on which the signal is emitted
    *
-   * Signal emited from the application to the element, instructing it
+   * Signal emitted from the application to the element, instructing it
    * to tune.
    */
   gst_dvbsrc_signals[SIGNAL_TUNE] =
@@ -2332,7 +2332,7 @@ gst_dvbsrc_tune_fe (GstDvbSrc * object)
     return FALSE;
   }
 
-  /* If set, confirm the choosen delivery system is actually
+  /* If set, confirm the chosen delivery system is actually
    * supported by the hardware */
   if (object->delsys != SYS_UNDEFINED) {
     GST_DEBUG_OBJECT (object, "Confirming delivery system '%u' is supported",

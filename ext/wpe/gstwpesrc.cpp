@@ -338,7 +338,7 @@ gst_wpe_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       case GST_NAVIGATION_EVENT_KEY_RELEASE:
         if (gst_navigation_event_parse_key_event (event, &key)) {
           /* FIXME: This is wrong... The GstNavigation API should pass
-             hardware-level informations, not high-level keysym strings */
+             hardware-level information, not high-level keysym strings */
           uint32_t keysym =
               (uint32_t) xkb_keysym_from_name (key, XKB_KEYSYM_NO_FLAGS);
           struct wpe_input_keyboard_event wpe_event;

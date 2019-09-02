@@ -99,7 +99,7 @@ gst_lcms_lookup_method_get_type (void)
           "Precalculate lookup table (takes a long time getting READY)",
         "precalculated"},
     {GST_LCMS_LOOKUP_METHOD_CACHED,
-          "Calculate and cache color replacement values on first occurence",
+          "Calculate and cache color replacement values on first occurrence",
         "cached"},
     {0, NULL, NULL},
   };

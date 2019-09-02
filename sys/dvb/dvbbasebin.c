@@ -422,7 +422,7 @@ dvb_base_bin_class_init (DvbBaseBinClass * klass)
    * DvbBaseBin::tuning-start:
    * @dvbbasebin: the element on which the signal is emitted
    *
-   * Signal emited when the element first attempts to tune the
+   * Signal emitted when the element first attempts to tune the
    * frontend tunner to a given frequency.
    */
   dvb_base_bin_signals[SIGNAL_TUNING_START] =
@@ -432,7 +432,7 @@ dvb_base_bin_class_init (DvbBaseBinClass * klass)
    * DvbBaseBin::tuning-done:
    * @dvbbasebin: the element on which the signal is emitted
    *
-   * Signal emited when the tunner has successfully got a lock on a signal.
+   * Signal emitted when the tunner has successfully got a lock on a signal.
    */
   dvb_base_bin_signals[SIGNAL_TUNING_DONE] =
       g_signal_new ("tuning-done", G_TYPE_FROM_CLASS (klass),
@@ -441,7 +441,7 @@ dvb_base_bin_class_init (DvbBaseBinClass * klass)
    * DvbBaseBin::tuning-fail:
    * @dvbbasebin: the element on which the signal is emitted
    *
-   * Signal emited when the tunner failed to get a lock on the
+   * Signal emitted when the tunner failed to get a lock on the
    * signal.
    */
   dvb_base_bin_signals[SIGNAL_TUNING_FAIL] =
@@ -452,7 +452,7 @@ dvb_base_bin_class_init (DvbBaseBinClass * klass)
    * DvbBaseBin::tune:
    * @dvbbasesink: the element on which the signal is emitted
    *
-   * Signal emited from the application to the element, instructing it
+   * Signal emitted from the application to the element, instructing it
    * to tune.
    */
   dvb_base_bin_signals[SIGNAL_TUNE] =

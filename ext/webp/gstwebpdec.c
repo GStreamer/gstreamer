@@ -380,7 +380,7 @@ gst_webp_dec_update_src_caps (GstWebPDec * dec, GstMapInfo * map_info)
 
   if (features.width < MIN_WIDTH || features.width > MAX_WIDTH
       || features.height < MIN_HEIGHT || features.height > MAX_HEIGHT) {
-    GST_ERROR_OBJECT (dec, "Dimensions of the frame is unspported by libwebp");
+    GST_ERROR_OBJECT (dec, "Dimensions of the frame is unsupported by libwebp");
     return GST_FLOW_ERROR;
   }
 

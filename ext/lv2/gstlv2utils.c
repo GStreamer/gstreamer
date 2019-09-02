@@ -847,7 +847,7 @@ gst_lv2_class_init (GstLV2Class * lv2_class, GType type)
         optional_pred);
     GstLV2Port desc = { j, GST_LV2_PORT_AUDIO, -1, };
     LilvNodes *lv2group = lilv_port_get (lv2plugin, port, group_pred);
-    /* FIXME Handle channels positionning
+    /* FIXME Handle channels positioning
      * GstAudioChannelPosition position = GST_AUDIO_CHANNEL_POSITION_INVALID; */
 
     if (lv2group) {
@@ -862,7 +862,7 @@ gst_lv2_class_init (GstLV2Class * lv2_class, GType type)
         group->ports = g_array_new (FALSE, TRUE, sizeof (GstLV2Port));
       }
 
-      /* FIXME Handle channels positionning
+      /* FIXME Handle channels positioning
          position = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
          sub_values = lilv_port_get_value (lv2plugin, port, designation_pred);
          if (lilv_nodes_size (sub_values) > 0) {

@@ -669,7 +669,7 @@ test_media_info_object (GstPlayer * player, GstPlayerMediaInfo * media_info)
 {
   GList *list;
 
-  /* gloabl tag */
+  /* global tag */
   fail_unless (gst_player_media_info_is_seekable (media_info) == TRUE);
   fail_unless (gst_player_media_info_get_tags (media_info) != NULL);
   fail_unless_equals_string (gst_player_media_info_get_title (media_info),

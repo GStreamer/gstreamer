@@ -795,7 +795,7 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
         gst_buffer_pool_config_set_params (config, caps, sink->video_info.size,
             2, 0);
 
-        /* This is a video pool, it should not fail with basic setings */
+        /* This is a video pool, it should not fail with basic settings */
         if (!gst_buffer_pool_set_config (sink->pool, config) ||
             !gst_buffer_pool_set_active (sink->pool, TRUE))
           goto activate_failed;

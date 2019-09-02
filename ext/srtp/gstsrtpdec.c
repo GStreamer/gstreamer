@@ -292,7 +292,7 @@ gst_srtp_dec_class_init (GstSrtpDecClass * klass)
    * @gstsrtpdec: the element on which the signal is emitted
    * @ssrc: The unique SSRC of the stream
    *
-   * Signal emited to get the parameters relevant to stream
+   * Signal emitted to get the parameters relevant to stream
    * with @ssrc. User should provide the key and the RTP and
    * RTCP encryption ciphers and authentication, and return
    * them wrapped in a GstCaps.
@@ -318,7 +318,7 @@ gst_srtp_dec_class_init (GstSrtpDecClass * klass)
    * @gstsrtpdec: the element on which the signal is emitted
    * @ssrc: The unique SSRC of the stream
    *
-   * Signal emited when the stream with @ssrc has reached the
+   * Signal emitted when the stream with @ssrc has reached the
    * soft limit of utilisation of it's master encryption key.
    * User should provide a new key and new RTP and RTCP encryption
    * ciphers and authentication, and return them wrapped in a
@@ -333,7 +333,7 @@ gst_srtp_dec_class_init (GstSrtpDecClass * klass)
    * @gstsrtpdec: the element on which the signal is emitted
    * @ssrc: The unique SSRC of the stream
    *
-   * Signal emited when the stream with @ssrc has reached the
+   * Signal emitted when the stream with @ssrc has reached the
    * hard limit of utilisation of it's master encryption key.
    * User should provide a new key and new RTP and RTCP encryption
    * ciphers and authentication, and return them wrapped in a
@@ -361,7 +361,7 @@ gst_srtp_dec_class_init (GstSrtpDecClass * klass)
 
 /* initialize the new element
  * instantiate pads and add them to element
- * set pad calback functions
+ * set pad callback functions
  * initialize instance structure
  */
 static void

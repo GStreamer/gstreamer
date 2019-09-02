@@ -148,7 +148,7 @@ ensure_bitrate_control (GstMsdkEnc * thiz)
   GST_DEBUG_OBJECT (thiz, "set target bitrate: %u kbit/sec", thiz->bitrate);
 
   mfx->RateControlMethod = thiz->rate_control;
-  /* No effect in CQP varient algorithms */
+  /* No effect in CQP variant algorithms */
   if ((mfx->RateControlMethod != MFX_RATECONTROL_CQP) &&
       (thiz->bitrate > G_MAXUINT16 || thiz->max_vbv_bitrate > G_MAXUINT16)) {
     mfxU32 max_val = MAX (thiz->max_vbv_bitrate, thiz->bitrate);

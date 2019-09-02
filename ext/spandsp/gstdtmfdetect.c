@@ -34,7 +34,7 @@
  * * gint `type` (0-1): The application uses this field to specify which of the two methods
  *   specified in RFC 2833 to use. The value should be 0 for tones and 1 for
  *   named events. Tones are specified by their frequencies and events are
- *   specfied by their number. This element can only take events as input.
+ *   specified by their number. This element can only take events as input.
  *   Do not confuse with "method" which specified the output.
  * * gint `number` (0-16): The event number.
  * * gint `method` (2): This field will always been 2 (ie sound) from this element.

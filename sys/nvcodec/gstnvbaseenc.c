@@ -978,9 +978,9 @@ gst_nv_base_enc_bitstream_thread (gpointer user_data)
   GstFlowReturn flow = GST_FLOW_OK;
 
   /* overview of operation:
-   * 1. retreive the next buffer submitted to the bitstream pool
+   * 1. retrieve the next buffer submitted to the bitstream pool
    * 2. wait for that buffer to be ready from nvenc (LockBitsream)
-   * 3. retreive the GstVideoCodecFrame associated with that buffer
+   * 3. retrieve the GstVideoCodecFrame associated with that buffer
    * 4. for each buffer in the frame
    * 4.1 (step 2): wait for that buffer to be ready from nvenc (LockBitsream)
    * 4.2 create an output GstBuffer from the nvenc buffers
@@ -1749,13 +1749,13 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
       memset (&resource->nv_mapped_resource, 0,
           sizeof (resource->nv_mapped_resource));
 
-      /* scratch buffer for non-contigious planer into a contigious buffer */
+      /* scratch buffer for non-contiguous planer into a contiguous buffer */
       cu_ret =
           CuMemAllocPitch (&resource->cuda_pointer,
           &resource->cuda_stride, _get_plane_width (info, 0),
           _get_frame_data_height (info), 16);
       if (!gst_cuda_result (cu_ret)) {
-        GST_ERROR_OBJECT (nvenc, "failed to alocate cuda scratch buffer "
+        GST_ERROR_OBJECT (nvenc, "failed to allocate cuda scratch buffer "
             "ret %d", cu_ret);
         g_assert_not_reached ();
       }

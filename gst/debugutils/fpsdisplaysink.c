@@ -179,7 +179,7 @@ fps_display_sink_class_init (GstFPSDisplaySinkClass * klass)
   g_object_class_install_property (gobject_klass, PROP_SIGNAL_FPS_MEASUREMENTS,
       g_param_spec_boolean ("signal-fps-measurements",
           "Signal fps measurements",
-          "If the fps-measurements signal should be emited.",
+          "If the fps-measurements signal should be emitted.",
           DEFAULT_SIGNAL_FPS_MEASUREMENTS,
           G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE));
 

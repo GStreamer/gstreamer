@@ -34,7 +34,7 @@
  *
  * # Duplex-Mode:
  * Certain DechLink Cards like the Duo2 or the Quad2 contain two or four
- * independant SDI units with two connectors each. These units can operate either
+ * independent SDI units with two connectors each. These units can operate either
  * in half- or in full-duplex mode.
  *
  * The Duplex-Mode of a Card can be configured using the `duplex-mode`-Property.
@@ -42,7 +42,7 @@
  *
  * ## Half-Duplex-Mode (default):
  * By default decklinkvideosink will configure them into half-duplex mode, so that
- * each connector acts as if it were an independant DeckLink Card which can either
+ * each connector acts as if it were an independent DeckLink Card which can either
  * be used as an Input or as an Output. In this mode the Duo2 can be used as as 4 SDI
  * In-/Outputs and the Quad2 as 8 SDI In-/Outputs.
  *

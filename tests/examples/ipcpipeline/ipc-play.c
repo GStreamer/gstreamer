@@ -29,7 +29,7 @@
  * while splitting the pipeline in two processes, running the source & demuxer
  * on the master process and the decoders & sinks on the slave.
  * See keyboard_cb() for the various keyboard shortcuts you can use to
- * interract with it while the video window is focused.
+ * interact with it while the video window is focused.
  */
 
 #define _GNU_SOURCE

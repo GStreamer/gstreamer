@@ -58,7 +58,7 @@
  *
  * ## Example pipeline
  *
- * This explicitely decodes a Kate stream:
+ * This explicitly decodes a Kate stream:
  * |[
  * gst-launch-1.0 filesrc location=test.ogg ! oggdemux ! katedec ! fakesink silent=TRUE
  * ]|

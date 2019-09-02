@@ -268,7 +268,7 @@ gst_synae_scope_render (GstAudioVisualizer * bscope, GstBuffer * audio,
     fc = r + l;
 
     x = (guint) (r * w / fc);
-    /* the brighness scaling factor was picked by experimenting */
+    /* the brightness scaling factor was picked by experimenting */
     br = b * fc * 0.01;
 
     br1 = br * (clarity + 128) >> 8;

@@ -1289,7 +1289,7 @@ gst_mpegts_descriptor_parse_dvb_component (const GstMpegtsDescriptor
  *
  * Extracts the component tag from @descriptor.
  *
- * Returns: %TRUE if the parsing happended correctly, else %FALSE.
+ * Returns: %TRUE if the parsing happened correctly, else %FALSE.
  */
 gboolean
 gst_mpegts_descriptor_parse_dvb_stream_identifier (const GstMpegtsDescriptor

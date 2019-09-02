@@ -175,7 +175,7 @@ gst_camerabin_create_and_add_element (GstBin * bin, const gchar * elem_name,
 
 /* try to change the state of an element. This function returns the element
  * when the state change could be performed. When this function returns NULL
- * an error occured and the element is unreffed. */
+ * an error occurred and the element is unreffed. */
 static GstElement *
 try_element (GstElement * bin, GstElement * element)
 {

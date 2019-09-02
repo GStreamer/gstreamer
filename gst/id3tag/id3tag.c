@@ -1212,7 +1212,7 @@ foreach_add_tag (const GstTagList * list, const gchar * tag, gpointer userdata)
   GST_LOG ("Processing tag %s (num=%u)", tag, num_tags);
 
   if (num_tags > 1 && gst_tag_is_fixed (tag)) {
-    GST_WARNING ("Multiple occurences of fixed tag '%s', ignoring some", tag);
+    GST_WARNING ("Multiple occurrences of fixed tag '%s', ignoring some", tag);
     num_tags = 1;
   }
 

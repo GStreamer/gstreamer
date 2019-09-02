@@ -2087,7 +2087,7 @@ gst_flups_demux_is_pes_sync (guint32 sync)
       ((sync & 0xe0) == 0xc0) || ((sync & 0xf0) == 0xe0);
 }
 
-/* If we can pull that's prefered */
+/* If we can pull that's preferred */
 static gboolean
 gst_flups_demux_sink_activate (GstPad * sinkpad, GstObject * parent)
 {
