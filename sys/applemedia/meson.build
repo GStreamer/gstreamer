@@ -71,7 +71,7 @@ if host_system == 'ios'
     applemedia_frameworks += [ios_media_dep]
 else
     applemedia_sources += [
-        'iosurfacememory.c'
+        'iosurfaceglmemory.c'
     ]
     applemedia_objc_args += ['-mmacosx-version-min=10.8']
     cocoa_dep = dependency('Cocoa', required : applemedia_option)

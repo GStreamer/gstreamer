@@ -23,7 +23,7 @@
 
 #if !HAVE_IOS
 #import <AppKit/AppKit.h>
-#include "iosurfacememory.h"
+#include "iosurfaceglmemory.h"
 #endif
 #include "iosglmemory.h"
 #include "videotexturecache-gl.h"
@@ -135,7 +135,7 @@ gst_video_texture_cache_gl_constructed (GObject * object)
   CVOpenGLESTextureCacheCreate (kCFAllocatorDefault, (CFDictionaryRef) cache_attrs,
       (__bridge CVEAGLContext) (gpointer) gst_gl_context_get_gl_context (cache_gl->ctx), NULL, &cache_gl->cache);
 #else
-  gst_ios_surface_memory_init ();
+  gst_ios_surface_gl_memory_init ();
 #if 0
   cache->pool = GST_BUFFER_POOL (gst_gl_buffer_pool_new (ctx));
 #endif
