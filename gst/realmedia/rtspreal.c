@@ -397,7 +397,7 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
     stream->mime_type = g_strndup (str, stream->mime_type_len);
 
     /* FIXME: Depending on the current bandwidth, we need to select one
-     * bandwith out of a list offered by the server. Someone needs to write
+     * bandwidth out of a list offered by the server. Someone needs to write
      * a parser for strings like
      *
      * #($Bandwidth < 67959),TimestampDelivery=T,DropByN=T,priority=9;

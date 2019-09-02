@@ -144,7 +144,7 @@ rdt_jitter_buffer_reset_skew (RDTJitterBuffer * jbuf)
  *    Cri    : The time of the clock at the receiver for packet i
  *    D + ni : The jitter when receiving packet i
  *
- * We see that the network delay is irrelevant here as we can elliminate D:
+ * We see that the network delay is irrelevant here as we can eliminate D:
  *
  *  recv_diff(i) = (Cri + ni) - (Cr0 + n0))
  *
@@ -420,7 +420,7 @@ duplicate:
  * @jbuf: an #RDTJitterBuffer
  *
  * Pops the oldest buffer from the packet queue of @jbuf. The popped buffer will
- * have its timestamp adjusted with the incomming running_time and the detected
+ * have its timestamp adjusted with the incoming running_time and the detected
  * clock skew.
  *
  * Returns: a #GstBuffer or %NULL when there was no packet in the queue.

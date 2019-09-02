@@ -422,7 +422,7 @@ gst_setup_palette (GstDvdSubDec * dec)
     target2_yuv->A = dec->menu_alpha[i] * 0xff / 0xf;
 
     /* If ARGB flag set, then convert YUV palette to RGB */
-    /* Using integer aritmetic */
+    /* Using integer arithmetic */
     if (dec->use_ARGB) {
       guchar C = target_yuv->Y_R - 16;
       guchar D = target_yuv->U_G - 128;

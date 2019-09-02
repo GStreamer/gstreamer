@@ -729,7 +729,7 @@ handle_sequence (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
         /* 0 forbidden */
         /* 2 unspecified */
         /* 3 reserved */
-        /* 8-255 reseved */
+        /* 8-255 reserved */
       default:
         vinfo->colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_UNKNOWN;
         break;
@@ -752,7 +752,7 @@ handle_sequence (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
         /* 0 forbidden */
         /* 2 unspecified */
         /* 3 reserved */
-        /* 8-255 reseved */
+        /* 8-255 reserved */
       default:
         vinfo->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_UNKNOWN;
         break;
@@ -780,7 +780,7 @@ handle_sequence (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
         /* 0 forbidden */
         /* 2 unspecified */
         /* 3 reserved */
-        /* 9-255 reseved */
+        /* 9-255 reserved */
       default:
         vinfo->colorimetry.transfer = GST_VIDEO_TRANSFER_UNKNOWN;
         break;

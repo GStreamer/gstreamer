@@ -768,7 +768,7 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
     /* First try to query our source to see if it can convert for us. This is
        the case when our source is an mms stream, notice that in this case
        gstmms will do a time based seek to get the byte offset, this is not a
-       problem as the seek to this offset needs to happen anway. */
+       problem as the seek to this offset needs to happen anyway. */
     if (gst_pad_peer_query_convert (demux->sinkpad, GST_FORMAT_TIME, seek_time,
             GST_FORMAT_BYTES, &offset)) {
       packet = (offset - demux->data_offset) / demux->packet_size;
@@ -1434,7 +1434,7 @@ gst_asf_demux_get_first_ts (GstASFDemux * demux)
       /* there are some DVR ms files where first packet has TS of 0 (instead of -1) while subsequent packets have
          regular (singificantly larger) timestamps. If we don't deal with it, we may end up with huge gap in timestamps
          which makes playback stuck. The 0 timestamp may also be valid though, if the second packet timestamp continues 
-         from it. I havent found a better way to distinguish between these two, except to set an arbitrary boundary
+         from it. I haven't found a better way to distinguish between these two, except to set an arbitrary boundary
          and disregard the first 0 timestamp if the second timestamp is bigger than the boundary) */
 
       GST_DEBUG_OBJECT (demux,
@@ -2300,7 +2300,7 @@ gst_asf_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
         GstAsfDemuxParsePacketError err;
 
         /* we don't know the length of the stream
-         * check for a chained asf everytime */
+         * check for a chained asf every time */
         if (demux->num_packets == 0) {
           gint result = gst_asf_demux_check_header (demux);
 

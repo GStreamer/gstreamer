@@ -2930,7 +2930,7 @@ plugin_init (GstPlugin * plugin)
 
   GST_INFO ("linked against x264 build: %u", X264_BUILD);
 
-  /* Initialize the static GstX264EncVTable which is overriden in load_x264()
+  /* Initialize the static GstX264EncVTable which is overridden in load_x264()
    * if needed. We can't initialize statically because these values are not
    * constant on Windows. */
   default_vtable.module = NULL;

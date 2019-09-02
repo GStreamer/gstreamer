@@ -755,7 +755,7 @@ gst_dvdlpcmdec_parse_1394 (GstDvdLpcmDec * dvdlpcmdec, GstAdapter * adapter,
     }
     switch (header & 0x7) {
       case 0x0:                /* 2 channels dual-mono */
-      case 0x1:                /* 2 channles stereo */
+      case 0x1:                /* 2 channels stereo */
         channels = 2;
         break;
       default:
