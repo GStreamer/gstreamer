@@ -95,7 +95,13 @@ foreach option : vulkan_conf_options
   vulkan_conf.set10(option, false)
 endforeach
 
-if host_system == 'ios'
+if ['ios', 'darwin'].contains(host_system)
+  # - ios does not support the loader/validation layers
+  # - We need to link directly to MoltenVK to be able to use
+  #   MoltenVK-specific functions that use dispatchable handles (like
+  #   retrieving the metal device from the VkDevice) which is currently waiting
+  #   on implementing a proper Metal extension for Vulkan
+  #   https://github.com/KhronosGroup/MoltenVK/issues/492
   vulkan_dep = cc.find_library('MoltenVK', required : get_option('vulkan'))
 elif host_system == 'windows'
   vulkan_root = run_command(python3, '-c', 'import os; print(os.environ.get("VK_SDK_PATH"))').stdout().strip()
