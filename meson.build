@@ -334,6 +334,18 @@ have_sse = cc.has_argument(sse_args)
 have_sse2 = cc.has_argument(sse2_args)
 have_sse41 = cc.has_argument(sse41_args)
 
+if host_machine.cpu_family() == 'arm'
+  if cc.compiles('''
+#include <arm_neon.h>
+int32x4_t testfunc(int16_t *a, int16_t *b) {
+  asm volatile ("vmull.s16 q0, d0, d0" : : : "q0");
+  return vmull_s16(vld1_s16(a), vld1_s16(b));
+}
+''', name : 'NEON support')
+    core_conf.set('HAVE_ARM_NEON', true)
+  endif
+endif
+
 if gst_dep.type_name() == 'internal'
     gst_proj = subproject('gstreamer')
 
