@@ -140,42 +140,39 @@ class Caps(Gst.Caps):
 Caps = override(Caps)
 __all__.append('Caps')
 
-class Pad(Gst.Pad):
-    def __init__(self, *args, **kwargs):
-        self._real_chain_func = None
-        self._real_event_func = None
-        self._real_query_func = None
-        super(Gst.Pad, self).__init__(*args, **kwargs)
+class PadFunc:
+    def __init__(self, func):
+        self.func = func
 
-    def _chain_override(self, pad, parent, buf):
-        return self._real_chain_func(pad, buf)
+    def __call__(self, pad, parent, obj):
+        if isinstance(self.func, weakref.WeakMethod):
+            func = self.func()
+        else:
+            func = self.func
 
-    def _event_override(self, pad, parent, event):
-        return self._real_event_func(pad, event)
-
-    def _query_override(self, pad, parent, query):
         try:
-            res = self._real_query_func(pad, query)
+            res = func(pad, obj)
         except TypeError:
             try:
-                res = self._real_query_func(pad, parent, query)
+                res = func(pad, parent, obj)
             except TypeError:
-                raise TypeError("Invalid query method %s, 2 or 3 arguments required"
-                                % self._real_query_func)
+                raise TypeError("Invalid method %s, 2 or 3 arguments required"
+                                % func)
 
         return res
 
+class Pad(Gst.Pad):
+    def __init__(self, *args, **kwargs):
+        super(Gst.Pad, self).__init__(*args, **kwargs)
+
     def set_chain_function(self, func):
-        self._real_chain_func = func
-        self.set_chain_function_full(weakref.WeakMethod(self._chain_override), None)
+        self.set_chain_function_full(PadFunc(func), None)
 
     def set_event_function(self, func):
-        self._real_event_func = func
-        self.set_event_function_full(weakref.WeakMethod(func), None)
+        self.set_event_function_full(PadFunc(func), None)
 
     def set_query_function(self, func):
-        self._real_query_func = func
-        self.set_query_function_full(weakref.WeakMethod(self._query_override), None)
+        self.set_query_function_full(PadFunc(func), None)
 
     def query_caps(self, filter=None):
         return Gst.Pad.query_caps(self, filter)
