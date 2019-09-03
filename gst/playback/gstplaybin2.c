@@ -170,6 +170,10 @@
  * type. The new location may be a relative or an absolute URI. Examples
  * for such redirects can be found in many quicktime movie trailers.
  *
+ * NOTE: playbin will internally handle the redirect messages in the case
+ * that the redirecting stream doesn't contain any tracks and thus
+ * needs to report an error message on the bus.
+ *
  * ## Examples
  * |[
  * gst-launch-1.0 -v playbin uri=file:///path/to/somefile.mp4
@@ -3024,6 +3028,42 @@ gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
           group->sub_pending = FALSE;
           no_more_pads_cb (NULL, group);
         }
+      }
+    } else {
+      const GstStructure *details = NULL;
+
+      gst_message_parse_error_details (msg, &details);
+      if (details && gst_structure_has_field (details, "redirect-location")) {
+        gchar *uri = NULL;
+        const gchar *location =
+            gst_structure_get_string ((GstStructure *) details,
+            "redirect-location");
+
+        if (gst_uri_is_valid (location)) {
+          uri = g_strdup (location);
+        } else {
+          uri = gst_uri_join_strings (group->uri, location);
+        }
+
+        if (g_strcmp0 (uri, group->uri)) {
+          GST_PLAY_BIN_LOCK (playbin);
+          if (playbin->next_group && playbin->next_group->valid) {
+            GST_DEBUG_OBJECT (playbin,
+                "User already setup next uri %s, using it",
+                playbin->next_group->uri);
+          } else {
+            GST_DEBUG_OBJECT (playbin,
+                "Using newly configured redirect URI: %s", uri);
+            gst_play_bin_set_uri (playbin, uri);
+          }
+          GST_PLAY_BIN_UNLOCK (playbin);
+
+          setup_next_source (playbin, GST_STATE_PAUSED);
+          gst_message_unref (msg);
+          msg = NULL;
+        }
+
+        g_free (uri);
       }
     }
   }
