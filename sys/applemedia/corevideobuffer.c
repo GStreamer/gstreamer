@@ -26,6 +26,12 @@
 #include "iosurfaceglmemory.h"
 #endif
 #include "videotexturecache-gl.h"
+#if defined(APPLEMEDIA_MOLTENVK)
+#include "videotexturecache-vulkan.h"
+#if !HAVE_IOS
+#include "iosurfacevulkanmemory.h"
+#endif
+#endif
 
 static const GstMetaInfo *gst_core_video_meta_get_info (void);
 
@@ -123,6 +129,13 @@ _create_glmem (GstAppleCoreVideoPixelBuffer * gpixbuf,
 #endif
 }
 
+#if defined(APPLEMEDIA_MOLTENVK)
+/* in videotexturecache-vulkan.m to avoid objc-ism from Metal being included
+  * in a non-objc file */
+extern GstMemory *_create_vulkan_memory (GstAppleCoreVideoPixelBuffer * gpixbuf,
+    GstVideoInfo * info, guint plane, gsize size, GstVideoTextureCache * cache);
+#endif
+
 void
 gst_core_video_wrap_pixel_buffer (GstBuffer * buf,
     GstVideoInfo * info,
@@ -136,6 +149,9 @@ gst_core_video_wrap_pixel_buffer (GstBuffer * buf,
   GstAppleCoreVideoPixelBuffer *gpixbuf;
   GstMemory *mem = NULL;
   gboolean do_gl = GST_IS_VIDEO_TEXTURE_CACHE_GL (cache);
+#if defined(APPLEMEDIA_MOLTENVK)
+  gboolean do_vulkan = GST_IS_VIDEO_TEXTURE_CACHE_VULKAN (cache);
+#endif
 
   gpixbuf = gst_apple_core_video_pixel_buffer_new (pixel_buf);
 
@@ -158,6 +174,10 @@ gst_core_video_wrap_pixel_buffer (GstBuffer * buf,
 
       if (do_gl)
         mem = _create_glmem (gpixbuf, info, i, size, cache);
+#if defined(APPLEMEDIA_MOLTENVK)
+      else if (do_vulkan)
+        mem = _create_vulkan_memory (gpixbuf, info, i, size, cache);
+#endif
       else
         mem =
             GST_MEMORY_CAST (gst_apple_core_video_memory_new_wrapped (gpixbuf,
@@ -172,6 +192,10 @@ gst_core_video_wrap_pixel_buffer (GstBuffer * buf,
 
     if (do_gl)
       mem = _create_glmem (gpixbuf, info, 0, size, cache);
+#if defined(APPLEMEDIA_MOLTENVK)
+    else if (do_vulkan)
+      mem = _create_vulkan_memory (gpixbuf, info, 0, size, cache);
+#endif
     else
       mem =
           GST_MEMORY_CAST (gst_apple_core_video_memory_new_wrapped (gpixbuf, 0,

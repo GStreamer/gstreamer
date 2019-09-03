@@ -68,12 +68,12 @@ if host_system == 'ios'
     applemedia_objc_args += ['-fobjc-abi-version=2', '-fobjc-legacy-dispatch']
 
     ios_media_dep = dependency('appleframeworks', modules : ['Foundation', 'AssetsLibrary'], required : applemedia_option)
-    applemedia_frameworks += [ios_media_dep]
+    iosurface_dep = dependency('IOSurface', required : applemedia_option)
+    applemedia_frameworks += [ios_media_dep, iosurface_dep]
 else
     applemedia_sources += [
         'iosurfaceglmemory.c'
     ]
-    applemedia_objc_args += ['-mmacosx-version-min=10.8']
     cocoa_dep = dependency('Cocoa', required : applemedia_option)
     iosurface_dep = dependency('IOSurface', required : applemedia_option)
     applemedia_opengl_dep = dependency('appleframeworks', modules : ['OpenGL'], required : applemedia_option)
@@ -87,11 +87,25 @@ foreach framework : applemedia_frameworks
     endif
 endforeach
 
+if gstvulkan_dep.found() and have_objcpp
+  moltenvk_dep = cc.find_library('MoltenVK', required : false)
+  metal_dep = dependency('appleframeworks', modules : ['Metal'], required : false)
+  if metal_dep.found() and moltenvk_dep.found() and cc.has_header ('MoltenVK/vk_mvk_moltenvk.h')
+    applemedia_frameworks += [moltenvk_dep, gstvulkan_dep, metal_dep]
+    applemedia_sources += [
+      'videotexturecache-vulkan.mm',
+      'iosurfacevulkanmemory.c',
+    ]
+    applemedia_args += ['-DAPPLEMEDIA_MOLTENVK']
+  endif
+endif
+
 if applemedia_found_deps
     gstapplemedia = library('gstapplemedia',
         applemedia_sources,
         c_args : gst_plugins_bad_args + applemedia_args,
         objc_args : gst_plugins_bad_args + applemedia_args + applemedia_objc_args,
+        objcpp_args : gst_plugins_bad_args + applemedia_args + applemedia_objc_args,
         link_args : noseh_link_args,
         include_directories : [configinc, libsinc],
         dependencies : [gstvideo_dep, gstaudio_dep, gstpbutils_dep, gst_dep, gstbase_dep, gstgl_dep] + applemedia_frameworks,

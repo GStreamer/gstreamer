@@ -369,6 +369,7 @@ if ['darwin', 'ios'].contains(host_system)
 #    cdata.set('HAVE_VIDEOTOOLBOX_10_9_6', 1)
 #  endif
 endif
+have_objcpp = add_languages('objcpp', required : false)
 
 have_orcc = false
 orcc_args = []

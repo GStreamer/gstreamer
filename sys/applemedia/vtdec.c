@@ -45,6 +45,9 @@
 #include "corevideobuffer.h"
 #include "coremediabuffer.h"
 #include "videotexturecache-gl.h"
+#if defined(APPLEMEDIA_MOLTENVK)
+#include "videotexturecache-vulkan.h"
+#endif
 
 GST_DEBUG_CATEGORY_STATIC (gst_vtdec_debug_category);
 #define GST_CAT_DEFAULT gst_vtdec_debug_category
@@ -111,11 +114,21 @@ const CFStringRef
 CFSTR ("RequireHardwareAcceleratedVideoDecoder");
 #endif
 
+#if defined(APPLEMEDIA_MOLTENVK)
 #define VIDEO_SRC_CAPS \
     GST_VIDEO_CAPS_MAKE("NV12") ";"                                     \
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES(GST_CAPS_FEATURE_MEMORY_GL_MEMORY,\
         "NV12") ", "                                                    \
-    "texture-target = (string) rectangle;"
+    "texture-target = (string) rectangle ; "                            \
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES(GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE,\
+        "NV12")
+#else
+#define VIDEO_SRC_CAPS \
+    GST_VIDEO_CAPS_MAKE("NV12") ";"                                     \
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES(GST_CAPS_FEATURE_MEMORY_GL_MEMORY,\
+        "NV12") ", "                                                    \
+    "texture-target = (string) rectangle "
+#endif
 
 G_DEFINE_TYPE (GstVtdec, gst_vtdec, GST_TYPE_VIDEO_DECODER);
 
@@ -210,20 +223,22 @@ gst_vtdec_stop (GstVideoDecoder * decoder)
     CFRelease (vtdec->format_description);
   vtdec->format_description = NULL;
 
+#if defined(APPLEMEDIA_MOLTENVK)
+  gst_clear_object (&vtdec->device);
+  gst_clear_object (&vtdec->instance);
+#endif
+
   GST_DEBUG_OBJECT (vtdec, "stop");
 
   return TRUE;
 }
 
 static void
-setup_texture_cache (GstVtdec * vtdec, GstGLContext * context)
+setup_texture_cache (GstVtdec * vtdec)
 {
   GstVideoCodecState *output_state;
 
-  g_return_if_fail (vtdec->texture_cache == NULL);
-
   output_state = gst_video_decoder_get_output_state (GST_VIDEO_DECODER (vtdec));
-  vtdec->texture_cache = gst_video_texture_cache_gl_new (context);
   gst_video_texture_cache_set_format (vtdec->texture_cache,
       GST_VIDEO_FORMAT_NV12, output_state->caps);
   gst_video_codec_state_unref (output_state);
@@ -240,7 +255,10 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
   GstVtdec *vtdec;
   OSStatus err = noErr;
   GstCapsFeatures *features = NULL;
-  gboolean output_textures;
+  gboolean output_textures = FALSE;
+#if defined(APPLEMEDIA_MOLTENVK)
+  gboolean output_vulkan = FALSE;
+#endif
 
   vtdec = GST_VTDEC (decoder);
   if (vtdec->session)
@@ -296,6 +314,12 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
           GST_GL_TEXTURE_TARGET_2D_STR,
 #endif
           NULL);
+
+#if defined(APPLEMEDIA_MOLTENVK)
+    output_vulkan =
+        gst_caps_features_contains (features,
+        GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE);
+#endif
   }
   gst_caps_unref (caps);
 
@@ -323,33 +347,83 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
     }
   }
 
-  if (vtdec->texture_cache != NULL && !output_textures) {
+  if (vtdec->texture_cache != NULL
+      && ((GST_IS_VIDEO_TEXTURE_CACHE_GL (vtdec->texture_cache)
+              && !output_textures)
+#if defined(APPLEMEDIA_MOLTENVK)
+          || (GST_IS_VIDEO_TEXTURE_CACHE_VULKAN (vtdec->texture_cache)
+              && !output_vulkan)
+#endif
+      )) {
     g_object_unref (vtdec->texture_cache);
     vtdec->texture_cache = NULL;
   }
 
-  if (err == noErr && output_textures) {
-    GstVideoTextureCacheGL *cache_gl = NULL;
+  if (err == noErr) {
+    if (output_textures) {
+      GstVideoTextureCacheGL *cache_gl = NULL;
 
-    if (vtdec->texture_cache)
-      cache_gl = GST_VIDEO_TEXTURE_CACHE_GL (vtdec->texture_cache);
+      if (vtdec->texture_cache)
+        cache_gl = GST_VIDEO_TEXTURE_CACHE_GL (vtdec->texture_cache);
 
-    /* call this regardless of whether caps have changed or not since a new
-     * local context could have become available
-     */
-    if (!vtdec->ctxh)
-      vtdec->ctxh = gst_gl_context_helper_new (GST_ELEMENT (vtdec));
-    gst_gl_context_helper_ensure_context (vtdec->ctxh);
+      /* call this regardless of whether caps have changed or not since a new
+       * local context could have become available
+       */
+      if (!vtdec->ctxh)
+        vtdec->ctxh = gst_gl_context_helper_new (GST_ELEMENT (vtdec));
+      gst_gl_context_helper_ensure_context (vtdec->ctxh);
 
-    GST_INFO_OBJECT (vtdec, "pushing textures, context %p old context %p",
-        vtdec->ctxh->context, cache_gl ? cache_gl->ctx : NULL);
+      GST_INFO_OBJECT (vtdec, "pushing GL textures, context %p old context %p",
+          vtdec->ctxh->context, cache_gl ? cache_gl->ctx : NULL);
 
-    if (cache_gl && cache_gl->ctx != vtdec->ctxh->context) {
-      g_object_unref (vtdec->texture_cache);
-      vtdec->texture_cache = NULL;
+      if (cache_gl && cache_gl->ctx != vtdec->ctxh->context) {
+        g_object_unref (vtdec->texture_cache);
+        vtdec->texture_cache = NULL;
+      }
+      if (!vtdec->texture_cache) {
+        vtdec->texture_cache =
+            gst_video_texture_cache_gl_new (vtdec->ctxh->context);
+        setup_texture_cache (vtdec);
+      }
     }
-    if (!vtdec->texture_cache)
-      setup_texture_cache (vtdec, vtdec->ctxh->context);
+#if defined(APPLEMEDIA_MOLTENVK)
+    if (output_vulkan) {
+      GstVideoTextureCacheVulkan *cache_vulkan = NULL;
+
+      if (vtdec->texture_cache)
+        cache_vulkan = GST_VIDEO_TEXTURE_CACHE_VULKAN (vtdec->texture_cache);
+
+      gst_vulkan_ensure_element_data (GST_ELEMENT (vtdec), NULL,
+          &vtdec->instance);
+
+      if (!gst_vulkan_device_run_context_query (GST_ELEMENT (vtdec),
+              &vtdec->device)) {
+        GError *error = NULL;
+        GST_DEBUG_OBJECT (vtdec, "No device retrieved from peer elements");
+        if (!(vtdec->device =
+                gst_vulkan_instance_create_device (vtdec->instance, &error))) {
+          GST_ELEMENT_ERROR (vtdec, RESOURCE, NOT_FOUND,
+              ("Failed to create vulkan device"), ("%s", error->message));
+          g_clear_error (&error);
+          return FALSE;
+        }
+      }
+
+      GST_INFO_OBJECT (vtdec, "pushing vulkan images, device %" GST_PTR_FORMAT
+          " old device %" GST_PTR_FORMAT, vtdec->device,
+          cache_vulkan ? cache_vulkan->device : NULL);
+
+      if (cache_vulkan && cache_vulkan->device != vtdec->device) {
+        g_object_unref (vtdec->texture_cache);
+        vtdec->texture_cache = NULL;
+      }
+      if (!vtdec->texture_cache) {
+        vtdec->texture_cache =
+            gst_video_texture_cache_vulkan_new (vtdec->device);
+        setup_texture_cache (vtdec);
+      }
+    }
+#endif
   }
 
   if (prevcaps)
@@ -1043,6 +1117,11 @@ gst_vtdec_set_context (GstElement * element, GstContext * context)
     vtdec->ctxh = gst_gl_context_helper_new (element);
   gst_gl_handle_set_context (element, context,
       &vtdec->ctxh->display, &vtdec->ctxh->other_context);
+
+#if defined (APPLEMEDIA_MOLTENVK)
+  gst_vulkan_handle_set_context (element, context, NULL, &vtdec->instance);
+#endif
+
   GST_ELEMENT_CLASS (gst_vtdec_parent_class)->set_context (element, context);
 }
 
