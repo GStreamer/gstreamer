@@ -155,11 +155,11 @@ _create_info_from_args (VkImageCreateInfo * info, VkFormat format, gsize width,
   return TRUE;
 }
 
-static void
-_vk_image_mem_init (GstVulkanImageMemory * mem, GstAllocator * allocator,
-    GstMemory * parent, GstVulkanDevice * device, VkImageUsageFlags usage,
-    GstAllocationParams * params, gsize size, gpointer user_data,
-    GDestroyNotify notify)
+gboolean
+gst_vulkan_image_memory_init (GstVulkanImageMemory * mem,
+    GstAllocator * allocator, GstMemory * parent, GstVulkanDevice * device,
+    VkImageUsageFlags usage, GstAllocationParams * params, gsize size,
+    gpointer user_data, GDestroyNotify notify)
 {
   gsize align = gst_memory_alignment, offset = 0, maxsize = size;
   GstMemoryFlags flags = 0;
@@ -200,6 +200,8 @@ _vk_image_mem_init (GstVulkanImageMemory * mem, GstAllocator * allocator,
 
   GST_CAT_DEBUG (GST_CAT_VULKAN_IMAGE_MEMORY,
       "new Vulkan Image memory:%p size:%" G_GSIZE_FORMAT, mem, maxsize);
+
+  return TRUE;
 }
 
 static GstVulkanImageMemory *
@@ -233,7 +235,7 @@ _vk_image_mem_new_alloc (GstAllocator * allocator, GstMemory * parent,
 
   vkGetImageMemoryRequirements (device->device, image, &mem->requirements);
 
-  _vk_image_mem_init (mem, allocator, parent, device, usage, &params,
+  gst_vulkan_image_memory_init (mem, allocator, parent, device, usage, &params,
       mem->requirements.size, user_data, notify);
   mem->create_info = image_info;
   mem->image = image;
@@ -301,7 +303,7 @@ _vk_image_mem_new_wrapped (GstAllocator * allocator, GstMemory * parent,
   /* XXX: assumes alignment is a power of 2 */
   params.align = mem->requirements.alignment - 1;
   params.flags = GST_MEMORY_FLAG_NOT_MAPPABLE;
-  _vk_image_mem_init (mem, allocator, parent, device, usage, &params,
+  gst_vulkan_image_memory_init (mem, allocator, parent, device, usage, &params,
       mem->requirements.size, user_data, notify);
   mem->wrapped = TRUE;
 

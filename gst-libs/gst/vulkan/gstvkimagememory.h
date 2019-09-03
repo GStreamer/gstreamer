@@ -112,6 +112,16 @@ GST_VULKAN_API
 gboolean        gst_is_vulkan_image_memory              (GstMemory * mem);
 
 GST_VULKAN_API
+gboolean        gst_vulkan_image_memory_init            (GstVulkanImageMemory * mem,
+                                                         GstAllocator * allocator,
+                                                         GstMemory * parent,
+                                                         GstVulkanDevice * device,
+                                                         VkImageUsageFlags usage,
+                                                         GstAllocationParams * params,
+                                                         gsize size,
+                                                         gpointer user_data,
+                                                         GDestroyNotify notify);
+GST_VULKAN_API
 GstMemory *     gst_vulkan_image_memory_alloc           (GstVulkanDevice * device,
                                                          VkFormat format,
                                                          gsize width,
