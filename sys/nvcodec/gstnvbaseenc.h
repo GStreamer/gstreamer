@@ -71,6 +71,12 @@ typedef struct {
 } GstNvEncDeviceCaps;
 
 typedef struct {
+  gint qp_i;
+  gint qp_p;
+  gint qp_b;
+} GstNvEncQP;
+
+typedef struct {
   GstVideoEncoder video_encoder;
 
   /* properties */
@@ -78,8 +84,11 @@ typedef struct {
   GUID            selected_preset;
   GstNvRCMode     rate_control_mode;
   gint            qp_min;
+  GstNvEncQP      qp_min_detail;
   gint            qp_max;
+  GstNvEncQP      qp_max_detail;
   gint            qp_const;
+  GstNvEncQP      qp_const_detail;
   guint           bitrate;
   gint            gop_size;
   guint           max_bitrate;

@@ -164,6 +164,15 @@ enum
   PROP_STRICT_GOP,
   PROP_CONST_QUALITY,
   PROP_I_ADAPT,
+  PROP_QP_MIN_I,
+  PROP_QP_MIN_P,
+  PROP_QP_MIN_B,
+  PROP_QP_MAX_I,
+  PROP_QP_MAX_P,
+  PROP_QP_MAX_B,
+  PROP_QP_CONST_I,
+  PROP_QP_CONST_P,
+  PROP_QP_CONST_B,
 };
 
 #define DEFAULT_PRESET GST_NV_PRESET_DEFAULT
@@ -181,6 +190,7 @@ enum
 #define DEFAULT_STRICT_GOP FALSE
 #define DEFAULT_CONST_QUALITY 0
 #define DEFAULT_I_ADAPT FALSE
+#define DEFAULT_QP_DETAIL -1
 
 /* This lock is needed to prevent the situation where multiple encoders are
  * initialised at the same time which appears to cause excessive CPU usage over
@@ -356,6 +366,78 @@ gst_nv_base_enc_class_init (GstNvBaseEncClass * klass)
           "Enable adaptive I-frame insert when lookahead is enabled",
           DEFAULT_I_ADAPT,
           G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+          G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_QP_MIN_I,
+      g_param_spec_int ("qp-min-i", "QP Min I",
+          "Minimum QP value for I frame, When >= 0, \"qp-min-p\" and "
+          "\"qp-min-b\" should be also >= 0. Overwritten by \"qp-min\""
+          " (-1 = from NVENC preset)", -1, 51,
+          DEFAULT_QP_DETAIL,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_QP_MIN_P,
+      g_param_spec_int ("qp-min-p", "QP Min P",
+          "Minimum QP value for P frame, When >= 0, \"qp-min-i\" and "
+          "\"qp-min-b\" should be also >= 0. Overwritten by \"qp-min\""
+          " (-1 = from NVENC preset)", -1, 51,
+          DEFAULT_QP_DETAIL,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_QP_MIN_B,
+      g_param_spec_int ("qp-min-b", "QP Min B",
+          "Minimum QP value for B frame, When >= 0, \"qp-min-i\" and "
+          "\"qp-min-p\" should be also >= 0. Overwritten by \"qp-min\""
+          " (-1 = from NVENC preset)", -1, 51,
+          DEFAULT_QP_DETAIL,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_QP_MAX_I,
+      g_param_spec_int ("qp-max-i", "QP Max I",
+          "Maximum QP value for I frame, When >= 0, \"qp-max-p\" and "
+          "\"qp-max-b\" should be also >= 0. Overwritten by \"qp-max\""
+          " (-1 = from NVENC preset)", -1, 51,
+          DEFAULT_QP_DETAIL,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_QP_MAX_P,
+      g_param_spec_int ("qp-max-p", "QP Max P",
+          "Maximum QP value for P frame, When >= 0, \"qp-max-i\" and "
+          "\"qp-max-b\" should be also >= 0. Overwritten by \"qp-max\""
+          " (-1 = from NVENC preset)", -1, 51,
+          DEFAULT_QP_DETAIL,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_QP_MAX_B,
+      g_param_spec_int ("qp-max-b", "QP Max B",
+          "Maximum QP value for B frame, When >= 0, \"qp-max-i\" and "
+          "\"qp-max-p\" should be also >= 0. Overwritten by \"qp-max\""
+          " (-1 = from NVENC preset)", -1, 51,
+          DEFAULT_QP_DETAIL,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_QP_CONST_I,
+      g_param_spec_int ("qp-const-i", "QP Const I",
+          "Constant QP value for I frame, When >= 0, \"qp-const-p\" and "
+          "\"qp-const-b\" should be also >= 0. Overwritten by \"qp-const\""
+          " (-1 = from NVENC preset)", -1, 51,
+          DEFAULT_QP_DETAIL,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_QP_CONST_P,
+      g_param_spec_int ("qp-const-p", "QP Const P",
+          "Constant QP value for P frame, When >= 0, \"qp-const-i\" and "
+          "\"qp-const-b\" should be also >= 0. Overwritten by \"qp-const\""
+          " (-1 = from NVENC preset)", -1, 51,
+          DEFAULT_QP_DETAIL,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_QP_CONST_B,
+      g_param_spec_int ("qp-const-b", "QP Const B",
+          "Constant QP value for B frame, When >= 0, \"qp-const-i\" and "
+          "\"qp-const-p\" should be also >= 0. Overwritten by \"qp-const\""
+          " (-1 = from NVENC preset)", -1, 51,
+          DEFAULT_QP_DETAIL,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
           G_PARAM_STATIC_STRINGS));
 }
 
@@ -777,6 +859,8 @@ static void
 gst_nv_base_enc_init (GstNvBaseEnc * nvenc)
 {
   GstVideoEncoder *encoder = GST_VIDEO_ENCODER (nvenc);
+  GstNvEncQP qp_detail =
+      { DEFAULT_QP_DETAIL, DEFAULT_QP_DETAIL, DEFAULT_QP_DETAIL };
 
   nvenc->preset_enum = DEFAULT_PRESET;
   nvenc->selected_preset = _nv_preset_to_guid (nvenc->preset_enum);
@@ -794,6 +878,9 @@ gst_nv_base_enc_init (GstNvBaseEnc * nvenc)
   nvenc->strict_gop = DEFAULT_STRICT_GOP;
   nvenc->const_quality = DEFAULT_CONST_QUALITY;
   nvenc->i_adapt = DEFAULT_I_ADAPT;
+  nvenc->qp_min_detail = qp_detail;
+  nvenc->qp_max_detail = qp_detail;
+  nvenc->qp_const_detail = qp_detail;
 
   GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
   GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
@@ -1188,6 +1275,12 @@ _get_frame_data_height (GstVideoInfo * info)
   return ret;
 }
 
+static gboolean
+qp_has_values (const GstNvEncQP * qp)
+{
+  return qp->qp_i >= 0 && qp->qp_p >= 0 && qp->qp_b >= 0;
+}
+
 static void
 gst_nv_base_enc_setup_rate_control (GstNvBaseEnc * nvenc,
     NV_ENC_RC_PARAMS * rc_params)
@@ -1217,6 +1310,11 @@ gst_nv_base_enc_setup_rate_control (GstNvBaseEnc * nvenc,
     rc_params->minQP.qpInterB = nvenc->qp_min;
     rc_params->minQP.qpInterP = nvenc->qp_min;
     rc_params->minQP.qpIntra = nvenc->qp_min;
+  } else if (qp_has_values (&nvenc->qp_min_detail)) {
+    rc_params->enableMinQP = 1;
+    rc_params->minQP.qpInterB = nvenc->qp_min_detail.qp_b;
+    rc_params->minQP.qpInterP = nvenc->qp_min_detail.qp_p;
+    rc_params->minQP.qpIntra = nvenc->qp_min_detail.qp_i;
   }
 
   if (nvenc->qp_max >= 0) {
@@ -1224,12 +1322,21 @@ gst_nv_base_enc_setup_rate_control (GstNvBaseEnc * nvenc,
     rc_params->maxQP.qpInterB = nvenc->qp_max;
     rc_params->maxQP.qpInterP = nvenc->qp_max;
     rc_params->maxQP.qpIntra = nvenc->qp_max;
+  } else if (qp_has_values (&nvenc->qp_max_detail)) {
+    rc_params->enableMaxQP = 1;
+    rc_params->maxQP.qpInterB = nvenc->qp_max_detail.qp_b;
+    rc_params->maxQP.qpInterP = nvenc->qp_max_detail.qp_p;
+    rc_params->maxQP.qpIntra = nvenc->qp_max_detail.qp_i;
   }
 
   if (nvenc->qp_const >= 0) {
     rc_params->constQP.qpInterB = nvenc->qp_const;
     rc_params->constQP.qpInterP = nvenc->qp_const;
     rc_params->constQP.qpIntra = nvenc->qp_const;
+  } else if (qp_has_values (&nvenc->qp_const_detail)) {
+    rc_params->constQP.qpInterB = nvenc->qp_const_detail.qp_b;
+    rc_params->constQP.qpInterP = nvenc->qp_const_detail.qp_p;
+    rc_params->constQP.qpIntra = nvenc->qp_const_detail.qp_i;
   }
 
   nv_rcmode = _rc_mode_to_nv (rc_mode);
@@ -2290,6 +2397,33 @@ gst_nv_base_enc_set_property (GObject * object, guint prop_id,
     case PROP_I_ADAPT:
       nvenc->i_adapt = g_value_get_boolean (value);
       break;
+    case PROP_QP_MIN_I:
+      nvenc->qp_min_detail.qp_i = g_value_get_int (value);
+      break;
+    case PROP_QP_MIN_P:
+      nvenc->qp_min_detail.qp_p = g_value_get_int (value);
+      break;
+    case PROP_QP_MIN_B:
+      nvenc->qp_min_detail.qp_b = g_value_get_int (value);
+      break;
+    case PROP_QP_MAX_I:
+      nvenc->qp_max_detail.qp_i = g_value_get_int (value);
+      break;
+    case PROP_QP_MAX_P:
+      nvenc->qp_max_detail.qp_p = g_value_get_int (value);
+      break;
+    case PROP_QP_MAX_B:
+      nvenc->qp_max_detail.qp_b = g_value_get_int (value);
+      break;
+    case PROP_QP_CONST_I:
+      nvenc->qp_const_detail.qp_i = g_value_get_int (value);
+      break;
+    case PROP_QP_CONST_P:
+      nvenc->qp_const_detail.qp_p = g_value_get_int (value);
+      break;
+    case PROP_QP_CONST_B:
+      nvenc->qp_const_detail.qp_b = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       reconfig = FALSE;
@@ -2355,6 +2489,33 @@ gst_nv_base_enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_I_ADAPT:
       g_value_set_boolean (value, nvenc->i_adapt);
+      break;
+    case PROP_QP_MIN_I:
+      g_value_set_int (value, nvenc->qp_min_detail.qp_i);
+      break;
+    case PROP_QP_MIN_P:
+      g_value_set_int (value, nvenc->qp_min_detail.qp_p);
+      break;
+    case PROP_QP_MIN_B:
+      g_value_set_int (value, nvenc->qp_min_detail.qp_b);
+      break;
+    case PROP_QP_MAX_I:
+      g_value_set_int (value, nvenc->qp_max_detail.qp_i);
+      break;
+    case PROP_QP_MAX_P:
+      g_value_set_int (value, nvenc->qp_max_detail.qp_p);
+      break;
+    case PROP_QP_MAX_B:
+      g_value_set_int (value, nvenc->qp_max_detail.qp_b);
+      break;
+    case PROP_QP_CONST_I:
+      g_value_set_int (value, nvenc->qp_const_detail.qp_i);
+      break;
+    case PROP_QP_CONST_P:
+      g_value_set_int (value, nvenc->qp_const_detail.qp_p);
+      break;
+    case PROP_QP_CONST_B:
+      g_value_set_int (value, nvenc->qp_const_detail.qp_b);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
