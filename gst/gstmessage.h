@@ -37,7 +37,9 @@ typedef struct _GstMessage GstMessage;
  * flushing seek in the pipeline, which will undo the EOS state again.
  * @GST_MESSAGE_ERROR: an error occurred. When the application receives an error
  * message it should stop playback of the pipeline and not assume that more
- * data will be played.
+ * data will be played. It is possible to specify a redirection url to the error
+ * messages by setting a `redirect-location` field into the error message, application
+ * or high level bins might use the information as required.
  * @GST_MESSAGE_WARNING: a warning occurred.
  * @GST_MESSAGE_INFO: an info message occurred
  * @GST_MESSAGE_TAG: a tag was found.
