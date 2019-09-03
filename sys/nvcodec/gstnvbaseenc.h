@@ -67,6 +67,7 @@ typedef struct {
   gboolean custom_vbv_bufsize;
   gboolean lookahead;
   gboolean temporal_aq;
+  gint bframes;
 } GstNvEncDeviceCaps;
 
 typedef struct {
@@ -139,6 +140,8 @@ typedef struct {
   guint           vbv_buffersize;
   guint           rc_lookahead;
   gboolean        temporal_aq;
+  guint           bframes;
+  gboolean        b_adapt;
 } GstNvBaseEnc;
 
 typedef struct {

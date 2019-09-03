@@ -834,6 +834,32 @@ _find_frame_with_output_buffer (GstNvBaseEnc * nvenc, NV_ENC_OUTPUT_PTR out_buf)
   return ret;
 }
 
+static const gchar *
+picture_type_to_string (NV_ENC_PIC_TYPE type)
+{
+  switch (type) {
+    case NV_ENC_PIC_TYPE_P:
+      return "P";
+    case NV_ENC_PIC_TYPE_B:
+      return "B";
+    case NV_ENC_PIC_TYPE_I:
+      return "I";
+    case NV_ENC_PIC_TYPE_IDR:
+      return "IDR";
+    case NV_ENC_PIC_TYPE_BI:
+      return "BI";
+    case NV_ENC_PIC_TYPE_SKIPPED:
+      return "SKIPPED";
+    case NV_ENC_PIC_TYPE_INTRA_REFRESH:
+      return "INTRA-REFRESH";
+    case NV_ENC_PIC_TYPE_UNKNOWN:
+    default:
+      break;
+  }
+
+  return "UNKNOWN";
+}
+
 static gpointer
 gst_nv_base_enc_bitstream_thread (gpointer user_data)
 {
@@ -910,9 +936,6 @@ gst_nv_base_enc_bitstream_thread (gpointer user_data)
       GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
     }
 
-    /* TODO: use lock_bs.outputTimeStamp and lock_bs.outputDuration */
-    /* TODO: check pts/dts is handled properly if there are B-frames */
-
     nv_ret = NvEncUnlockBitstream (nvenc->encoder, state->out_buf);
 
     if (nv_ret != NV_ENC_SUCCESS) {
@@ -926,6 +949,16 @@ gst_nv_base_enc_bitstream_thread (gpointer user_data)
 
       goto error_shutdown;
     }
+
+    frame->dts = frame->pts;
+    frame->pts = lock_bs.outputTimeStamp;
+    frame->duration = lock_bs.outputDuration;
+
+    GST_LOG_OBJECT (nvenc, "frame index %" G_GUINT32_FORMAT
+        ", frame type %s, dts %" GST_TIME_FORMAT
+        ", pts %" GST_TIME_FORMAT,
+        lock_bs.frameIdx, picture_type_to_string (lock_bs.pictureType),
+        GST_TIME_ARGS (frame->dts), GST_TIME_ARGS (frame->pts));
 
     frame->output_buffer = buffer;
 
@@ -1218,6 +1251,7 @@ gst_nv_base_enc_setup_rate_control (GstNvBaseEnc * nvenc,
     rc_params->enableLookahead = 1;
     rc_params->lookaheadDepth = nvenc->rc_lookahead;
     rc_params->disableIadapt = !nvenc->i_adapt;
+    rc_params->disableBadapt = !nvenc->b_adapt;
   }
 
   rc_params->strictGOPTarget = nvenc->strict_gop;
@@ -1413,6 +1447,16 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
     params->encodeConfig->frameIntervalP = 1;
   } else if (nvenc->gop_size > 0) {
     params->encodeConfig->gopLength = nvenc->gop_size;
+    /* frameIntervalP
+     * 0: All Intra frames
+     * 1: I/P only
+     * n ( > 1): n - 1 bframes
+     */
+    params->encodeConfig->frameIntervalP = nvenc->bframes + 1;
+  } else {
+    /* gop size == 0 means all intra frames */
+    params->encodeConfig->gopLength = 1;
+    params->encodeConfig->frameIntervalP = 0;
   }
 
   g_assert (nvenc_class->set_encoder_config);

@@ -507,14 +507,15 @@ gst_nvenc_get_supported_codec_profiles (gpointer enc, GUID codec_id)
   gint support_10bit = 0;
   GstNvEncCodecProfile profiles[] = {
     /* avc profiles */
-    {"baseline", NV_ENC_H264_PROFILE_BASELINE_GUID, NV_ENC_CODEC_H264_GUID,
-        FALSE, FALSE, FALSE},
     {"main", NV_ENC_H264_PROFILE_MAIN_GUID, NV_ENC_CODEC_H264_GUID, FALSE,
         FALSE, FALSE},
     {"high", NV_ENC_H264_PROFILE_HIGH_GUID, NV_ENC_CODEC_H264_GUID, FALSE,
         FALSE, FALSE},
     {"high-4:4:4", NV_ENC_H264_PROFILE_HIGH_444_GUID, NV_ENC_CODEC_H264_GUID,
         TRUE, FALSE, FALSE},
+    /* put baseline to last since it does not support bframe */
+    {"baseline", NV_ENC_H264_PROFILE_BASELINE_GUID, NV_ENC_CODEC_H264_GUID,
+        FALSE, FALSE, FALSE},
     /* hevc profiles */
     {"main", NV_ENC_HEVC_PROFILE_MAIN_GUID, NV_ENC_CODEC_HEVC_GUID, FALSE,
         FALSE, FALSE},
@@ -733,6 +734,12 @@ gst_nv_enc_register (GstPlugin * plugin, GUID codec_id, const gchar * codec,
       device_caps.temporal_aq = FALSE;
     }
 
+    caps_param.capsToQuery = NV_ENC_CAPS_NUM_MAX_BFRAMES;
+    if (NvEncGetEncodeCaps (enc, codec_id, &caps_param,
+            &device_caps.bframes) != NV_ENC_SUCCESS) {
+      device_caps.bframes = 0;
+    }
+
     DEBUG_DEVICE_CAPS (i,
         codec, "weighted prediction", device_caps.weighted_prediction);
 
@@ -743,6 +750,8 @@ gst_nv_enc_register (GstPlugin * plugin, GUID codec_id, const gchar * codec,
 
     DEBUG_DEVICE_CAPS (i, codec, "temporal adaptive quantization",
         device_caps.temporal_aq);
+
+    GST_DEBUG ("[device-%d %s] max bframes: %d", i, codec, device_caps.bframes);
 
     interlace_modes = gst_nvenc_get_interlace_modes (enc, codec_id);
 

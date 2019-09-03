@@ -47,6 +47,8 @@ enum
   PROP_VBV_BUFFER_SIZE,
   PROP_RC_LOOKAHEAD,
   PROP_TEMPORAL_AQ,
+  PROP_BFRAMES,
+  PROP_B_ADAPT,
 };
 
 #define DEFAULT_AUD TRUE
@@ -54,6 +56,8 @@ enum
 #define DEFAULT_VBV_BUFFER_SIZE 0
 #define DEFAULT_RC_LOOKAHEAD 0
 #define DEFAULT_TEMPORAL_AQ FALSE
+#define DEFAULT_BFRAMES 0
+#define DEFAULT_B_ADAPT FALSE
 
 static gboolean gst_nv_h264_enc_open (GstVideoEncoder * enc);
 static gboolean gst_nv_h264_enc_close (GstVideoEncoder * enc);
@@ -139,6 +143,24 @@ gst_nv_h264_enc_class_init (GstNvH264EncClass * klass, gpointer data)
             G_PARAM_STATIC_STRINGS));
   }
 
+  if (device_caps->bframes > 0) {
+    g_object_class_install_property (gobject_class, PROP_BFRAMES,
+        g_param_spec_uint ("bframes", "B-Frames",
+            "Number of B-frames between I and P "
+            "(Exposed only if supported by device)", 0, device_caps->bframes,
+            DEFAULT_BFRAMES,
+            G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+            G_PARAM_STATIC_STRINGS));
+
+    g_object_class_install_property (gobject_class, PROP_B_ADAPT,
+        g_param_spec_boolean ("b-adapt", "B Adapt",
+            "Enable adaptive B-frame insert when lookahead is enabled "
+            "(Exposed only if supported by device)",
+            DEFAULT_B_ADAPT,
+            G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+            G_PARAM_STATIC_STRINGS));
+  }
+
   if (cdata->is_default)
     long_name = g_strdup ("NVENC H.264 Video Encoder");
   else
@@ -180,6 +202,8 @@ gst_nv_h264_enc_init (GstNvH264Enc * nvenc)
   baseenc->vbv_buffersize = DEFAULT_VBV_BUFFER_SIZE;
   baseenc->rc_lookahead = DEFAULT_RC_LOOKAHEAD;
   baseenc->temporal_aq = DEFAULT_TEMPORAL_AQ;
+  baseenc->bframes = DEFAULT_BFRAMES;
+  baseenc->b_adapt = DEFAULT_B_ADAPT;
 }
 
 static void
@@ -505,6 +529,21 @@ gst_nv_h264_enc_set_property (GObject * object, guint prop_id,
         reconfig = TRUE;
       }
       break;
+    case PROP_BFRAMES:
+      if (!device_caps->bframes) {
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      } else {
+        nvenc->bframes = g_value_get_uint (value);
+        reconfig = TRUE;
+      }
+      break;
+    case PROP_B_ADAPT:
+      if (!device_caps->bframes) {
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      } else {
+        nvenc->b_adapt = g_value_get_boolean (value);
+      }
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -553,6 +592,20 @@ gst_nv_h264_enc_get_property (GObject * object, guint prop_id, GValue * value,
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       } else {
         g_value_set_boolean (value, nvenc->temporal_aq);
+      }
+      break;
+    case PROP_BFRAMES:
+      if (!device_caps->bframes) {
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      } else {
+        g_value_set_uint (value, nvenc->bframes);
+      }
+      break;
+    case PROP_B_ADAPT:
+      if (!device_caps->bframes) {
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      } else {
+        g_value_set_boolean (value, nvenc->b_adapt);
       }
       break;
     default:
