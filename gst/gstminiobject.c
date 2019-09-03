@@ -506,7 +506,12 @@ remove_notify (GstMiniObject * object, gint index)
 
   /* remove item */
   priv_data->n_qdata--;
-  if (index != priv_data->n_qdata) {
+  if (priv_data->n_qdata == 0) {
+    /* we don't shrink but free when everything is gone */
+    g_free (priv_data->qdata);
+    priv_data->qdata = NULL;
+    priv_data->n_qdata_len = 0;
+  } else if (index != priv_data->n_qdata) {
     QDATA (priv_data, index) = QDATA (priv_data, priv_data->n_qdata);
   }
 }
