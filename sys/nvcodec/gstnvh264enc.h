@@ -22,19 +22,6 @@
 
 #include "gstnvbaseenc.h"
 
-#define GST_TYPE_NV_H264_ENC \
-  (gst_nv_h264_enc_get_type())
-#define GST_NV_H264_ENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_NV_H264_ENC,GstNvH264Enc))
-#define GST_NV_H264_ENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_NV_H264_ENC,GstNvH264EncClass))
-#define GST_NV_H264_ENC_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_NV_H264_ENC,GstNvH264EncClass))
-#define GST_IS_NV_H264_ENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_NV_H264_ENC))
-#define GST_IS_NV_H264_ENC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_NV_H264_ENC))
-
 typedef struct {
   GstNvBaseEnc base_nvenc;
 } GstNvH264Enc;
@@ -44,6 +31,11 @@ typedef struct {
 } GstNvH264EncClass;
 
 G_GNUC_INTERNAL
-GType gst_nv_h264_enc_get_type (void);
+void gst_nv_h264_enc_register (GstPlugin * plugin,
+                               guint device_id,
+                               guint rank,
+                               GstCaps * sink_caps,
+                               GstCaps * src_caps);
+
 
 #endif /* __GST_NV_H264_ENC_H_INCLUDED__ */

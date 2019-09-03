@@ -128,13 +128,8 @@ typedef struct {
 G_GNUC_INTERNAL
 GType gst_nv_base_enc_get_type (void);
 
-void gst_nv_base_enc_register                 (GstPlugin * plugin,
-                                               GType type,
-                                               const char * codec,
-                                               guint device_id,
-                                               guint rank,
-                                               GstCaps * sink_caps,
-                                               GstCaps * src_caps);
+GType gst_nv_base_enc_register                (const char * codec,
+                                               guint device_id);
 
 
 #endif /* __GST_NV_BASE_ENC_H_INCLUDED__ */

@@ -593,8 +593,8 @@ gst_nvenc_get_supported_codec_profiles (gpointer enc, GUID codec_id)
 }
 
 static void
-gst_nv_enc_register (GstPlugin * plugin, GType type, GUID codec_id,
-    const gchar * codec, guint rank, gint device_count)
+gst_nv_enc_register (GstPlugin * plugin, GUID codec_id, const gchar * codec,
+    guint rank, gint device_count)
 {
   gint i;
 
@@ -730,9 +730,15 @@ gst_nv_enc_register (GstPlugin * plugin, GType type, GUID codec_id,
   cuda_free:
     CuCtxDestroy (cuda_ctx);
 
-    if (sink_templ && src_templ)
-      gst_nv_base_enc_register (plugin, type, codec, i, rank, sink_templ,
-          src_templ);
+    if (sink_templ && src_templ) {
+      if (gst_nvenc_cmp_guid (codec_id, NV_ENC_CODEC_H264_GUID)) {
+        gst_nv_h264_enc_register (plugin, i, rank, sink_templ, src_templ);
+      } else if (gst_nvenc_cmp_guid (codec_id, NV_ENC_CODEC_HEVC_GUID)) {
+        gst_nv_h265_enc_register (plugin, i, rank, sink_templ, src_templ);
+      } else {
+        g_assert_not_reached ();
+      }
+    }
 
     gst_clear_caps (&sink_templ);
     gst_clear_caps (&src_templ);
@@ -821,10 +827,10 @@ gst_nvenc_plugin_init (GstPlugin * plugin)
       return;
     }
 
-    gst_nv_enc_register (plugin, GST_TYPE_NV_H264_ENC,
-        NV_ENC_CODEC_H264_GUID, "h264", GST_RANK_PRIMARY * 2, dev_count);
-    gst_nv_enc_register (plugin, GST_TYPE_NV_H265_ENC,
-        NV_ENC_CODEC_HEVC_GUID, "h265", GST_RANK_PRIMARY * 2, dev_count);
+    gst_nv_enc_register (plugin, NV_ENC_CODEC_H264_GUID,
+        "h264", GST_RANK_PRIMARY * 2, dev_count);
+    gst_nv_enc_register (plugin, NV_ENC_CODEC_HEVC_GUID,
+        "h265", GST_RANK_PRIMARY * 2, dev_count);
   } else {
     GST_ERROR ("too old driver, could not load api vtable");
   }

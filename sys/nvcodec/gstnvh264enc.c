@@ -27,11 +27,17 @@
 
 #include <string.h>
 
+typedef struct
+{
+  GstCaps *sink_caps;
+  GstCaps *src_caps;
+  gboolean is_default;
+} GstNvH264EncClassData;
+
 GST_DEBUG_CATEGORY_STATIC (gst_nv_h264_enc_debug);
 #define GST_CAT_DEFAULT gst_nv_h264_enc_debug
 
-#define parent_class gst_nv_h264_enc_parent_class
-G_DEFINE_TYPE (GstNvH264Enc, gst_nv_h264_enc, GST_TYPE_NV_BASE_ENC);
+static GstElementClass *parent_class = NULL;
 
 static gboolean gst_nv_h264_enc_open (GstVideoEncoder * enc);
 static gboolean gst_nv_h264_enc_close (GstVideoEncoder * enc);
@@ -48,12 +54,16 @@ static void gst_nv_h264_enc_get_property (GObject * object, guint prop_id,
 static void gst_nv_h264_enc_finalize (GObject * obj);
 
 static void
-gst_nv_h264_enc_class_init (GstNvH264EncClass * klass)
+gst_nv_h264_enc_class_init (GstNvH264EncClass * klass, gpointer data)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstVideoEncoderClass *videoenc_class = GST_VIDEO_ENCODER_CLASS (klass);
   GstNvBaseEncClass *nvenc_class = GST_NV_BASE_ENC_CLASS (klass);
+  GstNvH264EncClassData *cdata = (GstNvH264EncClassData *) data;
+  gchar *long_name;
+
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->set_property = gst_nv_h264_enc_set_property;
   gobject_class->get_property = gst_nv_h264_enc_get_property;
@@ -67,16 +77,33 @@ gst_nv_h264_enc_class_init (GstNvH264EncClass * klass)
   nvenc_class->set_src_caps = gst_nv_h264_enc_set_src_caps;
   nvenc_class->set_pic_params = gst_nv_h264_enc_set_pic_params;
 
-  gst_element_class_set_static_metadata (element_class,
-      "NVENC H.264 Video Encoder",
+  if (cdata->is_default)
+    long_name = g_strdup ("NVENC H.264 Video Encoder");
+  else
+    long_name = g_strdup_printf ("NVENC H.264 Video Encoder with device %d",
+        nvenc_class->cuda_device_id);
+
+  gst_element_class_set_metadata (element_class, long_name,
       "Codec/Encoder/Video/Hardware",
       "Encode H.264 video streams using NVIDIA's hardware-accelerated NVENC encoder API",
       "Tim-Philipp Müller <tim@centricular.com>, "
       "Matthew Waters <matthew@centricular.com>, "
       "Seungha Yang <seungha.yang@navercorp.com>");
+  g_free (long_name);
 
   GST_DEBUG_CATEGORY_INIT (gst_nv_h264_enc_debug,
       "nvh264enc", 0, "Nvidia H.264 encoder");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+          cdata->sink_caps));
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+          cdata->src_caps));
+
+  gst_caps_unref (cdata->sink_caps);
+  gst_caps_unref (cdata->src_caps);
+  g_free (cdata);
 }
 
 static void
@@ -87,7 +114,7 @@ gst_nv_h264_enc_init (GstNvH264Enc * nvenc)
 static void
 gst_nv_h264_enc_finalize (GObject * obj)
 {
-  G_OBJECT_CLASS (gst_nv_h264_enc_parent_class)->finalize (obj);
+  G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
 static gboolean
@@ -95,7 +122,7 @@ gst_nv_h264_enc_open (GstVideoEncoder * enc)
 {
   GstNvBaseEnc *base = GST_NV_BASE_ENC (enc);
 
-  if (!GST_VIDEO_ENCODER_CLASS (gst_nv_h264_enc_parent_class)->open (enc))
+  if (!GST_VIDEO_ENCODER_CLASS (parent_class)->open (enc))
     return FALSE;
 
   /* Check if H.264 is supported */
@@ -122,7 +149,7 @@ gst_nv_h264_enc_open (GstVideoEncoder * enc)
 static gboolean
 gst_nv_h264_enc_close (GstVideoEncoder * enc)
 {
-  return GST_VIDEO_ENCODER_CLASS (gst_nv_h264_enc_parent_class)->close (enc);
+  return GST_VIDEO_ENCODER_CLASS (parent_class)->close (enc);
 }
 
 static gboolean
@@ -214,7 +241,7 @@ no_peer:
 static gboolean
 gst_nv_h264_enc_set_src_caps (GstNvBaseEnc * nvenc, GstVideoCodecState * state)
 {
-  GstNvH264Enc *h264enc = GST_NV_H264_ENC (nvenc);
+  GstNvH264Enc *h264enc = (GstNvH264Enc *) nvenc;
   GstVideoCodecState *out_state;
   GstStructure *s;
   GstCaps *out_caps;
@@ -247,7 +274,7 @@ static gboolean
 gst_nv_h264_enc_set_encoder_config (GstNvBaseEnc * nvenc,
     GstVideoCodecState * state, NV_ENC_CONFIG * config)
 {
-  GstNvH264Enc *h264enc = GST_NV_H264_ENC (nvenc);
+  GstNvH264Enc *h264enc = (GstNvH264Enc *) nvenc;
   GstCaps *allowed_caps, *template_caps;
   GUID selected_profile = NV_ENC_CODEC_PROFILE_AUTOSELECT_GUID;
   int level_idc = NV_ENC_LEVEL_AUTOSELECT;
@@ -375,4 +402,58 @@ gst_nv_h264_enc_get_property (GObject * object, guint prop_id, GValue * value,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+void
+gst_nv_h264_enc_register (GstPlugin * plugin, guint device_id, guint rank,
+    GstCaps * sink_caps, GstCaps * src_caps)
+{
+  GType parent_type;
+  GType type;
+  gchar *type_name;
+  gchar *feature_name;
+  GstNvH264EncClassData *cdata;
+  gboolean is_default = TRUE;
+  GTypeInfo type_info = {
+    sizeof (GstNvH264EncClass),
+    NULL,
+    NULL,
+    (GClassInitFunc) gst_nv_h264_enc_class_init,
+    NULL,
+    NULL,
+    sizeof (GstNvH264Enc),
+    0,
+    (GInstanceInitFunc) gst_nv_h264_enc_init,
+  };
+
+  parent_type = gst_nv_base_enc_register ("H264", device_id);
+
+  cdata = g_new0 (GstNvH264EncClassData, 1);
+  cdata->sink_caps = gst_caps_ref (sink_caps);
+  cdata->src_caps = gst_caps_ref (src_caps);
+  type_info.class_data = cdata;
+
+  type_name = g_strdup ("GstNvH264Enc");
+  feature_name = g_strdup ("nvh264enc");
+
+  if (g_type_from_name (type_name) != 0) {
+    g_free (type_name);
+    g_free (feature_name);
+    type_name = g_strdup_printf ("GstNvH264Device%dEnc", device_id);
+    feature_name = g_strdup_printf ("nvh264device%denc", device_id);
+    is_default = FALSE;
+  }
+
+  cdata->is_default = is_default;
+  type = g_type_register_static (parent_type, type_name, &type_info, 0);
+
+  /* make lower rank than default device */
+  if (rank > 0 && !is_default)
+    rank--;
+
+  if (!gst_element_register (plugin, feature_name, rank, type))
+    GST_WARNING ("Failed to register plugin '%s'", type_name);
+
+  g_free (type_name);
+  g_free (feature_name);
 }

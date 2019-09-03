@@ -2243,91 +2243,41 @@ gst_nv_base_enc_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-typedef struct
-{
-  GstCaps *sink_caps;
-  GstCaps *src_caps;
-  guint cuda_device_id;
-  gboolean is_default;
-} GstNvEncClassData;
-
 static void
 gst_nv_base_enc_subclass_init (gpointer g_class, gpointer data)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstNvBaseEncClass *nvbaseenc_class = GST_NV_BASE_ENC_CLASS (g_class);
-  GstNvEncClassData *cdata = data;
+  guint device_id = GPOINTER_TO_UINT (data);
 
-  if (!cdata->is_default) {
-    const gchar *long_name;
-    gchar *new_long_name;
-
-    long_name = gst_element_class_get_metadata (element_class,
-        GST_ELEMENT_METADATA_LONGNAME);
-
-    new_long_name = g_strdup_printf ("%s with devide-id %d", long_name,
-        cdata->cuda_device_id);
-
-    gst_element_class_add_metadata (element_class,
-        GST_ELEMENT_METADATA_LONGNAME, new_long_name);
-    g_free (new_long_name);
-  }
-
-
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-          cdata->sink_caps));
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          cdata->src_caps));
-
-  nvbaseenc_class->cuda_device_id = cdata->cuda_device_id;
-
-  gst_caps_unref (cdata->sink_caps);
-  gst_caps_unref (cdata->src_caps);
-  g_free (cdata);
+  nvbaseenc_class->cuda_device_id = device_id;
 }
 
-void
-gst_nv_base_enc_register (GstPlugin * plugin, GType type, const char *codec,
-    guint device_id, guint rank, GstCaps * sink_caps, GstCaps * src_caps)
+GType
+gst_nv_base_enc_register (const char *codec, guint device_id)
 {
   GTypeQuery type_query;
   GTypeInfo type_info = { 0, };
   GType subtype;
   gchar *type_name;
-  GstNvEncClassData *cdata;
-  gboolean is_default = TRUE;
 
-  cdata = g_new0 (GstNvEncClassData, 1);
-  cdata->sink_caps = gst_caps_ref (sink_caps);
-  cdata->src_caps = gst_caps_ref (src_caps);
-  cdata->cuda_device_id = device_id;
+  type_name = g_strdup_printf ("GstNvDevice%d%sEnc", device_id, codec);
+  subtype = g_type_from_name (type_name);
 
-  g_type_query (type, &type_query);
+  /* has already registered nvdeviceenc class */
+  if (subtype)
+    goto done;
+
+  g_type_query (GST_TYPE_NV_BASE_ENC, &type_query);
   memset (&type_info, 0, sizeof (type_info));
   type_info.class_size = type_query.class_size;
   type_info.instance_size = type_query.instance_size;
-  type_info.class_init = gst_nv_base_enc_subclass_init;
-  type_info.class_data = cdata;
+  type_info.class_init = (GClassInitFunc) gst_nv_base_enc_subclass_init;
+  type_info.class_data = GUINT_TO_POINTER (device_id);
 
-  type_name = g_strdup_printf ("nv%senc", codec);
+  subtype = g_type_register_static (GST_TYPE_NV_BASE_ENC,
+      type_name, &type_info, 0);
 
-  if (g_type_from_name (type_name) != 0) {
-    g_free (type_name);
-    type_name = g_strdup_printf ("nv%sdevice%denc", codec, device_id);
-    is_default = FALSE;
-  }
-
-  cdata->is_default = is_default;
-  subtype = g_type_register_static (type, type_name, &type_info, 0);
-
-  /* make lower rank than default device */
-  if (rank > 0 && !is_default)
-    rank--;
-
-  if (!gst_element_register (plugin, type_name, rank, subtype))
-    GST_WARNING ("Failed to register plugin '%s'", type_name);
-
+done:
   g_free (type_name);
+  return subtype;
 }
