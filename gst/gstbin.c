@@ -1122,11 +1122,15 @@ gst_bin_do_deep_add_remove (GstBin * bin, gint sig_id, const gchar * sig_name,
       while ((e = g_queue_pop_head (&elements))) {
         GstObject *parent = gst_object_get_parent (GST_OBJECT_CAST (e));
 
-        GST_LOG_OBJECT (bin, "calling %s for element %" GST_PTR_FORMAT
-            " in bin %" GST_PTR_FORMAT, sig_name, e, parent);
-        g_signal_emit (bin, sig_id, 0, parent, e);
-        gst_object_unref (parent);
-        g_object_unref (e);
+        /* an element could have removed some of its internal elements
+         * meanwhile, so protect against that */
+        if (parent) {
+          GST_LOG_OBJECT (bin, "calling %s for element %" GST_PTR_FORMAT
+              " in bin %" GST_PTR_FORMAT, sig_name, e, parent);
+          g_signal_emit (bin, sig_id, 0, parent, e);
+          gst_object_unref (parent);
+          g_object_unref (e);
+        }
       }
     }
     gst_iterator_free (it);
