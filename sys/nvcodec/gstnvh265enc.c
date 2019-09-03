@@ -45,9 +45,11 @@ enum
 {
   PROP_0,
   PROP_AUD,
+  PROP_WEIGHTED_PRED,
 };
 
 #define DEFAULT_AUD TRUE
+#define DEFAULT_WEIGHTED_PRED FALSE
 
 static gboolean gst_nv_h265_enc_open (GstVideoEncoder * enc);
 static gboolean gst_nv_h265_enc_close (GstVideoEncoder * enc);
@@ -71,6 +73,7 @@ gst_nv_h265_enc_class_init (GstNvH265EncClass * klass, gpointer data)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstVideoEncoderClass *videoenc_class = GST_VIDEO_ENCODER_CLASS (klass);
   GstNvBaseEncClass *nvenc_class = GST_NV_BASE_ENC_CLASS (klass);
+  GstNvEncDeviceCaps *device_caps = &nvenc_class->device_caps;
   GstNvH265EncClassData *cdata = (GstNvH265EncClassData *) data;
   gchar *long_name;
 
@@ -94,6 +97,15 @@ gst_nv_h265_enc_class_init (GstNvH265EncClass * klass, gpointer data)
           "Use AU (Access Unit) delimiter", DEFAULT_AUD,
           G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
           G_PARAM_STATIC_STRINGS));
+
+  if (device_caps->weighted_prediction) {
+    g_object_class_install_property (gobject_class, PROP_WEIGHTED_PRED,
+        g_param_spec_boolean ("weighted-pred", "Weighted Pred",
+            "Weighted Prediction "
+            "(Exposed only if supported by device)", DEFAULT_WEIGHTED_PRED,
+            G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+            G_PARAM_STATIC_STRINGS));
+  }
 
   if (cdata->is_default)
     long_name = g_strdup ("NVENC HEVC Video Encoder");
@@ -127,7 +139,12 @@ gst_nv_h265_enc_class_init (GstNvH265EncClass * klass, gpointer data)
 static void
 gst_nv_h265_enc_init (GstNvH265Enc * nvenc)
 {
+  GstNvBaseEnc *baseenc = GST_NV_BASE_ENC (nvenc);
+
   nvenc->aud = DEFAULT_AUD;
+
+  /* device capability dependent properties */
+  baseenc->weighted_pred = DEFAULT_WEIGHTED_PRED;
 }
 
 static void
@@ -555,6 +572,9 @@ gst_nv_h265_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstNvH265Enc *self = (GstNvH265Enc *) object;
+  GstNvBaseEnc *nvenc = GST_NV_BASE_ENC (object);
+  GstNvBaseEncClass *klass = GST_NV_BASE_ENC_GET_CLASS (object);
+  GstNvEncDeviceCaps *device_caps = &klass->device_caps;
   gboolean reconfig = FALSE;
 
   switch (prop_id) {
@@ -569,6 +589,14 @@ gst_nv_h265_enc_set_property (GObject * object, guint prop_id,
       }
       break;
     }
+    case PROP_WEIGHTED_PRED:
+      if (!device_caps->weighted_prediction) {
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      } else {
+        nvenc->weighted_pred = g_value_get_boolean (value);
+        reconfig = TRUE;
+      }
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -583,10 +611,20 @@ gst_nv_h265_enc_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
   GstNvH265Enc *self = (GstNvH265Enc *) object;
+  GstNvBaseEnc *nvenc = GST_NV_BASE_ENC (object);
+  GstNvBaseEncClass *klass = GST_NV_BASE_ENC_GET_CLASS (object);
+  GstNvEncDeviceCaps *device_caps = &klass->device_caps;
 
   switch (prop_id) {
     case PROP_AUD:
       g_value_set_boolean (value, self->aud);
+      break;
+    case PROP_WEIGHTED_PRED:
+      if (!device_caps->weighted_prediction) {
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      } else {
+        g_value_set_boolean (value, nvenc->weighted_pred);
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -596,7 +634,7 @@ gst_nv_h265_enc_get_property (GObject * object, guint prop_id, GValue * value,
 
 void
 gst_nv_h265_enc_register (GstPlugin * plugin, guint device_id, guint rank,
-    GstCaps * sink_caps, GstCaps * src_caps)
+    GstCaps * sink_caps, GstCaps * src_caps, GstNvEncDeviceCaps * device_caps)
 {
   GType parent_type;
   GType type;
@@ -616,7 +654,7 @@ gst_nv_h265_enc_register (GstPlugin * plugin, guint device_id, guint rank,
     (GInstanceInitFunc) gst_nv_h265_enc_init,
   };
 
-  parent_type = gst_nv_base_enc_register ("H265", device_id);
+  parent_type = gst_nv_base_enc_register ("H265", device_id, device_caps);
 
   cdata = g_new0 (GstNvH265EncClassData, 1);
   cdata->sink_caps = gst_caps_ref (sink_caps);

@@ -59,6 +59,10 @@ typedef enum {
 } GstNvRCMode;
 
 typedef struct {
+  gboolean weighted_prediction;
+} GstNvEncDeviceCaps;
+
+typedef struct {
   GstVideoEncoder video_encoder;
 
   /* properties */
@@ -107,6 +111,10 @@ typedef struct {
   GstVideoInfo        input_info;     /* buffer configuration for buffers sent to NVENC */
 
   GstFlowReturn   last_flow;          /* ATOMIC */
+
+  /*< protected >*/
+  /* device capability dependent properties, set by subclass */
+  gboolean        weighted_pred;
 } GstNvBaseEnc;
 
 typedef struct {
@@ -114,6 +122,7 @@ typedef struct {
 
   GUID codec_id;
   guint cuda_device_id;
+  GstNvEncDeviceCaps device_caps;
 
   gboolean (*set_src_caps)       (GstNvBaseEnc * nvenc,
                                   GstVideoCodecState * state);
@@ -129,7 +138,8 @@ G_GNUC_INTERNAL
 GType gst_nv_base_enc_get_type (void);
 
 GType gst_nv_base_enc_register                (const char * codec,
-                                               guint device_id);
+                                               guint device_id,
+                                               GstNvEncDeviceCaps * device_caps);
 
 void gst_nv_base_enc_schedule_reconfig        (GstNvBaseEnc * nvenc);
 

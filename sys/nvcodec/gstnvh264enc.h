@@ -37,7 +37,8 @@ void gst_nv_h264_enc_register (GstPlugin * plugin,
                                guint device_id,
                                guint rank,
                                GstCaps * sink_caps,
-                               GstCaps * src_caps);
+                               GstCaps * src_caps,
+                               GstNvEncDeviceCaps * device_caps);
 
 
 #endif /* __GST_NV_H264_ENC_H_INCLUDED__ */

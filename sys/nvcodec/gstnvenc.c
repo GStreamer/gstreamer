@@ -592,6 +592,10 @@ gst_nvenc_get_supported_codec_profiles (gpointer enc, GUID codec_id)
   return ret;
 }
 
+#define DEBUG_DEVICE_CAPS(d,c,caps,s) \
+  GST_DEBUG ("[device-%d %s] %s: %s", \
+      d, c, caps, s ? "supported" : "not supported");
+
 static void
 gst_nv_enc_register (GstPlugin * plugin, GUID codec_id, const gchar * codec,
     guint rank, gint device_count)
@@ -615,6 +619,7 @@ gst_nv_enc_register (GstPlugin * plugin, GUID codec_id, const gchar * codec,
     GstCaps *src_templ = NULL;
     gchar *name;
     gint j;
+    GstNvEncDeviceCaps device_caps = { 0, };
 
     if (CuDeviceGet (&cuda_device, i) != CUDA_SUCCESS)
       continue;
@@ -676,6 +681,15 @@ gst_nv_enc_register (GstPlugin * plugin, GUID codec_id, const gchar * codec,
       max_height = 4096;
     }
 
+    caps_param.capsToQuery = NV_ENC_CAPS_SUPPORT_WEIGHTED_PREDICTION;
+    if (NvEncGetEncodeCaps (enc, codec_id, &caps_param,
+            &device_caps.weighted_prediction) != NV_ENC_SUCCESS) {
+      device_caps.weighted_prediction = FALSE;
+    }
+
+    DEBUG_DEVICE_CAPS (i,
+        codec, "weighted prediction", device_caps.weighted_prediction);
+
     interlace_modes = gst_nvenc_get_interlace_modes (enc, codec_id);
 
     sink_templ = gst_caps_new_empty_simple ("video/x-raw");
@@ -732,9 +746,11 @@ gst_nv_enc_register (GstPlugin * plugin, GUID codec_id, const gchar * codec,
 
     if (sink_templ && src_templ) {
       if (gst_nvenc_cmp_guid (codec_id, NV_ENC_CODEC_H264_GUID)) {
-        gst_nv_h264_enc_register (plugin, i, rank, sink_templ, src_templ);
+        gst_nv_h264_enc_register (plugin, i, rank, sink_templ, src_templ,
+            &device_caps);
       } else if (gst_nvenc_cmp_guid (codec_id, NV_ENC_CODEC_HEVC_GUID)) {
-        gst_nv_h265_enc_register (plugin, i, rank, sink_templ, src_templ);
+        gst_nv_h265_enc_register (plugin, i, rank, sink_templ, src_templ,
+            &device_caps);
       } else {
         g_assert_not_reached ();
       }

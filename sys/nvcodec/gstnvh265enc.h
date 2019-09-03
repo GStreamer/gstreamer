@@ -42,6 +42,7 @@ void gst_nv_h265_enc_register (GstPlugin * plugin,
                                guint device_id,
                                guint rank,
                                GstCaps * sink_caps,
-                               GstCaps * src_caps);
+                               GstCaps * src_caps,
+                               GstNvEncDeviceCaps * device_caps);
 
 #endif /* __GST_NV_HEVC_ENC_H_INCLUDED__ */

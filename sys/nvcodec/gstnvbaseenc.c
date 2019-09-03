@@ -1311,6 +1311,8 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
     }
   }
 
+  params->enableWeightedPrediction = nvenc->weighted_pred;
+
   if (nvenc->gop_size < 0) {
     params->encodeConfig->gopLength = NVENC_INFINITE_GOPLENGTH;
     params->encodeConfig->frameIntervalP = 1;
@@ -2243,22 +2245,33 @@ gst_nv_base_enc_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
+typedef struct
+{
+  guint cuda_device_id;
+  GstNvEncDeviceCaps device_caps;
+} GstNvEncClassData;
+
 static void
 gst_nv_base_enc_subclass_init (gpointer g_class, gpointer data)
 {
   GstNvBaseEncClass *nvbaseenc_class = GST_NV_BASE_ENC_CLASS (g_class);
-  guint device_id = GPOINTER_TO_UINT (data);
+  GstNvEncClassData *cdata = (GstNvEncClassData *) data;
 
-  nvbaseenc_class->cuda_device_id = device_id;
+  nvbaseenc_class->cuda_device_id = cdata->cuda_device_id;
+  nvbaseenc_class->device_caps = cdata->device_caps;
+
+  g_free (cdata);
 }
 
 GType
-gst_nv_base_enc_register (const char *codec, guint device_id)
+gst_nv_base_enc_register (const char *codec, guint device_id,
+    GstNvEncDeviceCaps * device_caps)
 {
   GTypeQuery type_query;
   GTypeInfo type_info = { 0, };
   GType subtype;
   gchar *type_name;
+  GstNvEncClassData *cdata;
 
   type_name = g_strdup_printf ("GstNvDevice%d%sEnc", device_id, codec);
   subtype = g_type_from_name (type_name);
@@ -2267,12 +2280,16 @@ gst_nv_base_enc_register (const char *codec, guint device_id)
   if (subtype)
     goto done;
 
+  cdata = g_new0 (GstNvEncClassData, 1);
+  cdata->cuda_device_id = device_id;
+  cdata->device_caps = *device_caps;
+
   g_type_query (GST_TYPE_NV_BASE_ENC, &type_query);
   memset (&type_info, 0, sizeof (type_info));
   type_info.class_size = type_query.class_size;
   type_info.instance_size = type_query.instance_size;
   type_info.class_init = (GClassInitFunc) gst_nv_base_enc_subclass_init;
-  type_info.class_data = GUINT_TO_POINTER (device_id);
+  type_info.class_data = cdata;
 
   subtype = g_type_register_static (GST_TYPE_NV_BASE_ENC,
       type_name, &type_info, 0);
