@@ -69,7 +69,7 @@ struct _GstQTDemux {
   /* TRUE if pull-based */
   gboolean pullbased;
 
-  gboolean posted_redirect;
+  gchar *redirect_location;
 
   /* Protect pad exposing from flush event */
   GMutex expose_lock;
