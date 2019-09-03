@@ -46,10 +46,16 @@ enum
   PROP_0,
   PROP_AUD,
   PROP_WEIGHTED_PRED,
+  PROP_VBV_BUFFER_SIZE,
+  PROP_RC_LOOKAHEAD,
+  PROP_TEMPORAL_AQ,
 };
 
 #define DEFAULT_AUD TRUE
 #define DEFAULT_WEIGHTED_PRED FALSE
+#define DEFAULT_VBV_BUFFER_SIZE 0
+#define DEFAULT_RC_LOOKAHEAD 0
+#define DEFAULT_TEMPORAL_AQ FALSE
 
 static gboolean gst_nv_h265_enc_open (GstVideoEncoder * enc);
 static gboolean gst_nv_h265_enc_close (GstVideoEncoder * enc);
@@ -107,6 +113,36 @@ gst_nv_h265_enc_class_init (GstNvH265EncClass * klass, gpointer data)
             G_PARAM_STATIC_STRINGS));
   }
 
+  if (device_caps->custom_vbv_bufsize) {
+    g_object_class_install_property (gobject_class,
+        PROP_VBV_BUFFER_SIZE,
+        g_param_spec_uint ("vbv-buffer-size", "VBV Buffer Size",
+            "VBV(HRD) Buffer Size in kbits (0 = NVENC default) "
+            "(Exposed only if supported by device)", 0, G_MAXUINT,
+            DEFAULT_VBV_BUFFER_SIZE,
+            G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+            G_PARAM_STATIC_STRINGS));
+  }
+
+  if (device_caps->lookahead) {
+    g_object_class_install_property (gobject_class, PROP_RC_LOOKAHEAD,
+        g_param_spec_uint ("rc-lookahead", "Rate Control Lookahead",
+            "Number of frames for frame type lookahead "
+            "(Exposed only if supported by device)", 0, 32,
+            DEFAULT_RC_LOOKAHEAD,
+            G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+            G_PARAM_STATIC_STRINGS));
+  }
+
+  if (device_caps->temporal_aq) {
+    g_object_class_install_property (gobject_class, PROP_TEMPORAL_AQ,
+        g_param_spec_boolean ("temporal-aq", "Temporal AQ",
+            "Temporal Adaptive Quantization "
+            "(Exposed only if supported by device)", DEFAULT_TEMPORAL_AQ,
+            G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+            G_PARAM_STATIC_STRINGS));
+  }
+
   if (cdata->is_default)
     long_name = g_strdup ("NVENC HEVC Video Encoder");
   else
@@ -145,6 +181,9 @@ gst_nv_h265_enc_init (GstNvH265Enc * nvenc)
 
   /* device capability dependent properties */
   baseenc->weighted_pred = DEFAULT_WEIGHTED_PRED;
+  baseenc->vbv_buffersize = DEFAULT_VBV_BUFFER_SIZE;
+  baseenc->rc_lookahead = DEFAULT_RC_LOOKAHEAD;
+  baseenc->temporal_aq = DEFAULT_TEMPORAL_AQ;
 }
 
 static void
@@ -597,6 +636,30 @@ gst_nv_h265_enc_set_property (GObject * object, guint prop_id,
         reconfig = TRUE;
       }
       break;
+    case PROP_VBV_BUFFER_SIZE:
+      if (!device_caps->custom_vbv_bufsize) {
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      } else {
+        nvenc->vbv_buffersize = g_value_get_uint (value);
+        reconfig = TRUE;
+      }
+      break;
+    case PROP_RC_LOOKAHEAD:
+      if (!device_caps->lookahead) {
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      } else {
+        nvenc->rc_lookahead = g_value_get_uint (value);
+        reconfig = TRUE;
+      }
+      break;
+    case PROP_TEMPORAL_AQ:
+      if (!device_caps->temporal_aq) {
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      } else {
+        nvenc->temporal_aq = g_value_get_boolean (value);
+        reconfig = TRUE;
+      }
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -624,6 +687,27 @@ gst_nv_h265_enc_get_property (GObject * object, guint prop_id, GValue * value,
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       } else {
         g_value_set_boolean (value, nvenc->weighted_pred);
+      }
+      break;
+    case PROP_VBV_BUFFER_SIZE:
+      if (!device_caps->custom_vbv_bufsize) {
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      } else {
+        g_value_set_uint (value, nvenc->vbv_buffersize);
+      }
+      break;
+    case PROP_RC_LOOKAHEAD:
+      if (!device_caps->lookahead) {
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      } else {
+        g_value_set_uint (value, nvenc->rc_lookahead);
+      }
+      break;
+    case PROP_TEMPORAL_AQ:
+      if (!device_caps->temporal_aq) {
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      } else {
+        g_value_set_boolean (value, nvenc->temporal_aq);
       }
       break;
     default:

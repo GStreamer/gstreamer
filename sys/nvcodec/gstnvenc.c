@@ -681,14 +681,68 @@ gst_nv_enc_register (GstPlugin * plugin, GUID codec_id, const gchar * codec,
       max_height = 4096;
     }
 
+    caps_param.capsToQuery = NV_ENC_CAPS_SUPPORTED_RATECONTROL_MODES;
+    if (NvEncGetEncodeCaps (enc, codec_id, &caps_param,
+            &device_caps.rc_modes) != NV_ENC_SUCCESS) {
+      device_caps.rc_modes = 0;
+    } else {
+      GST_DEBUG ("[device-%d %s] rate control modes: 0x%x",
+          i, codec, device_caps.rc_modes);
+#define IS_SUPPORTED_RC(rc_modes,mode) \
+      ((((rc_modes) & (mode)) == mode) ? "supported" : "not supported")
+
+      GST_DEBUG ("\tconst-qp:         %s",
+          IS_SUPPORTED_RC (device_caps.rc_modes, NV_ENC_PARAMS_RC_CONSTQP));
+      GST_DEBUG ("\tvbr:              %s",
+          IS_SUPPORTED_RC (device_caps.rc_modes, NV_ENC_PARAMS_RC_VBR));
+      GST_DEBUG ("\tcbr:              %s",
+          IS_SUPPORTED_RC (device_caps.rc_modes, NV_ENC_PARAMS_RC_CBR));
+      GST_DEBUG ("\tcbr-lowdelay-hq:  %s",
+          IS_SUPPORTED_RC (device_caps.rc_modes,
+              NV_ENC_PARAMS_RC_CBR_LOWDELAY_HQ));
+      GST_DEBUG ("\tcbr-hq:           %s",
+          IS_SUPPORTED_RC (device_caps.rc_modes, NV_ENC_PARAMS_RC_CBR_HQ));
+      GST_DEBUG ("\tvbr-hq:           %s",
+          IS_SUPPORTED_RC (device_caps.rc_modes, NV_ENC_PARAMS_RC_VBR_HQ));
+      GST_DEBUG ("\tvbr-minqp:        %s (deprecated)",
+          IS_SUPPORTED_RC (device_caps.rc_modes, NV_ENC_PARAMS_RC_VBR_MINQP));
+#undef IS_SUPPORTED_RC
+    }
+
     caps_param.capsToQuery = NV_ENC_CAPS_SUPPORT_WEIGHTED_PREDICTION;
     if (NvEncGetEncodeCaps (enc, codec_id, &caps_param,
             &device_caps.weighted_prediction) != NV_ENC_SUCCESS) {
       device_caps.weighted_prediction = FALSE;
     }
 
+    caps_param.capsToQuery = NV_ENC_CAPS_SUPPORT_CUSTOM_VBV_BUF_SIZE;
+    if (NvEncGetEncodeCaps (enc, codec_id, &caps_param,
+            &device_caps.custom_vbv_bufsize) != NV_ENC_SUCCESS) {
+      device_caps.custom_vbv_bufsize = FALSE;
+    }
+
+    caps_param.capsToQuery = NV_ENC_CAPS_SUPPORT_LOOKAHEAD;
+    if (NvEncGetEncodeCaps (enc,
+            codec_id, &caps_param, &device_caps.lookahead) != NV_ENC_SUCCESS) {
+      device_caps.lookahead = FALSE;
+    }
+
+    caps_param.capsToQuery = NV_ENC_CAPS_SUPPORT_TEMPORAL_AQ;
+    if (NvEncGetEncodeCaps (enc, codec_id, &caps_param,
+            &device_caps.temporal_aq) != NV_ENC_SUCCESS) {
+      device_caps.temporal_aq = FALSE;
+    }
+
     DEBUG_DEVICE_CAPS (i,
         codec, "weighted prediction", device_caps.weighted_prediction);
+
+    DEBUG_DEVICE_CAPS (i, codec, "custom vbv-buffer-size",
+        device_caps.custom_vbv_bufsize);
+
+    DEBUG_DEVICE_CAPS (i, codec, "rc-loockahead", device_caps.lookahead);
+
+    DEBUG_DEVICE_CAPS (i, codec, "temporal adaptive quantization",
+        device_caps.temporal_aq);
 
     interlace_modes = gst_nvenc_get_interlace_modes (enc, codec_id);
 

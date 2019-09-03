@@ -106,13 +106,17 @@ gst_nv_rc_mode_get_type (void)
   static GType nv_rc_mode_type = 0;
 
   static const GEnumValue modes[] = {
-    {GST_NV_RC_MODE_DEFAULT, "Default (from NVENC preset)", "default"},
+    {GST_NV_RC_MODE_DEFAULT, "Default", "default"},
     {GST_NV_RC_MODE_CONSTQP, "Constant Quantization", "constqp"},
     {GST_NV_RC_MODE_CBR, "Constant Bit Rate", "cbr"},
     {GST_NV_RC_MODE_VBR, "Variable Bit Rate", "vbr"},
     {GST_NV_RC_MODE_VBR_MINQP,
-          "Variable Bit Rate (with minimum quantization parameter)",
-        "vbr-minqp"},
+        "Variable Bit Rate "
+          "(with minimum quantization parameter, DEPRECATED)", "vbr-minqp"},
+    {GST_NV_RC_MODE_CBR_LOWDELAY_HQ,
+        "Low-Delay CBR, High Quality", "cbr-ld-hq"},
+    {GST_NV_RC_MODE_CBR_HQ, "CBR, High Quality (slower)", "cbr-hq"},
+    {GST_NV_RC_MODE_VBR_HQ, "VBR, High Quality (slower)", "vbr-hq"},
     {0, NULL, NULL},
   };
 
@@ -127,15 +131,18 @@ _rc_mode_to_nv (GstNvRCMode mode)
 {
   switch (mode) {
     case GST_NV_RC_MODE_DEFAULT:
-      return -1;
+      return NV_ENC_PARAMS_RC_VBR;
 #define CASE(gst,nv) case G_PASTE(GST_NV_RC_MODE_,gst): return G_PASTE(NV_ENC_PARAMS_RC_,nv)
       CASE (CONSTQP, CONSTQP);
       CASE (CBR, CBR);
       CASE (VBR, VBR);
       CASE (VBR_MINQP, VBR_MINQP);
+      CASE (CBR_LOWDELAY_HQ, CBR_LOWDELAY_HQ);
+      CASE (CBR_HQ, CBR_HQ);
+      CASE (VBR_HQ, VBR_HQ);
 #undef CASE
     default:
-      return -1;
+      return NV_ENC_PARAMS_RC_VBR;
   }
 }
 
@@ -150,6 +157,14 @@ enum
   PROP_QP_MAX,
   PROP_QP_CONST,
   PROP_GOP_SIZE,
+  PROP_MAX_BITRATE,
+  PROP_SPATIAL_AQ,
+  PROP_AQ_STRENGTH,
+  PROP_NON_REF_P,
+  PROP_ZEROLATENCY,
+  PROP_STRICT_GOP,
+  PROP_CONST_QUALITY,
+  PROP_I_ADAPT,
 };
 
 #define DEFAULT_PRESET GST_NV_PRESET_DEFAULT
@@ -159,6 +174,14 @@ enum
 #define DEFAULT_QP_MAX -1
 #define DEFAULT_QP_CONST -1
 #define DEFAULT_GOP_SIZE 75
+#define DEFAULT_MAX_BITRATE 0
+#define DEFAULT_SPATIAL_AQ FALSE
+#define DEFAULT_AQ_STRENGTH 0
+#define DEFAULT_NON_REF_P FALSE
+#define DEFAULT_ZEROLATENCY FALSE
+#define DEFAULT_STRICT_GOP FALSE
+#define DEFAULT_CONST_QUALITY 0
+#define DEFAULT_I_ADAPT FALSE
 
 /* This lock is needed to prevent the situation where multiple encoders are
  * initialised at the same time which appears to cause excessive CPU usage over
@@ -284,6 +307,52 @@ gst_nv_base_enc_class_init (GstNvBaseEncClass * klass)
           "Bitrate in kbit/sec (0 = from NVENC preset)", 0, 2000 * 1024,
           DEFAULT_BITRATE,
           G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_MAX_BITRATE,
+      g_param_spec_uint ("max-bitrate", "Max Bitrate",
+          "Maximum Bitrate in kbit/sec (ignored for CBR mode)", 0, 2000 * 1024,
+          DEFAULT_MAX_BITRATE,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_SPATIAL_AQ,
+      g_param_spec_boolean ("spatial-aq", "Spatial AQ",
+          "Spatial Adaptive Quantization",
+          DEFAULT_SPATIAL_AQ,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_AQ_STRENGTH,
+      g_param_spec_uint ("aq-strength", "AQ Strength",
+          "Adaptive Quantization Strength when spatial-aq is enabled"
+          " from 1 (low) to 15 (aggressive), (0 = autoselect)",
+          0, 15, DEFAULT_AQ_STRENGTH,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_NON_REF_P,
+      g_param_spec_boolean ("nonref-p", "Nonref P",
+          "Automatic insertion of non-reference P-frames", DEFAULT_NON_REF_P,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_ZEROLATENCY,
+      g_param_spec_boolean ("zerolatency", "Zerolatency",
+          "Zero latency operation (no reordering delay)", DEFAULT_ZEROLATENCY,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_STRICT_GOP,
+      g_param_spec_boolean ("strict-gop", "Strict GOP",
+          "Minimize GOP-to-GOP rate fluctuations", DEFAULT_STRICT_GOP,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_CONST_QUALITY,
+      g_param_spec_double ("const-quality", "Constant Quality",
+          "Target Constant Quality level for VBR mode (0 = automatic)",
+          0, 51, DEFAULT_CONST_QUALITY,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_I_ADAPT,
+      g_param_spec_boolean ("i-adapt", "I Adapt",
+          "Enable adaptive I-frame insert when lookahead is enabled",
+          DEFAULT_I_ADAPT,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
           G_PARAM_STATIC_STRINGS));
 }
 
@@ -713,6 +782,14 @@ gst_nv_base_enc_init (GstNvBaseEnc * nvenc)
   nvenc->qp_const = DEFAULT_QP_CONST;
   nvenc->bitrate = DEFAULT_BITRATE;
   nvenc->gop_size = DEFAULT_GOP_SIZE;
+  nvenc->max_bitrate = DEFAULT_MAX_BITRATE;
+  nvenc->spatial_aq = DEFAULT_SPATIAL_AQ;
+  nvenc->aq_strength = DEFAULT_AQ_STRENGTH;
+  nvenc->non_refp = DEFAULT_NON_REF_P;
+  nvenc->zerolatency = DEFAULT_ZEROLATENCY;
+  nvenc->strict_gop = DEFAULT_STRICT_GOP;
+  nvenc->const_quality = DEFAULT_CONST_QUALITY;
+  nvenc->i_adapt = DEFAULT_I_ADAPT;
 
   GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
   GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
@@ -1112,6 +1189,83 @@ _get_frame_data_height (GstVideoInfo * info)
   return ret;
 }
 
+static void
+gst_nv_base_enc_setup_rate_control (GstNvBaseEnc * nvenc,
+    NV_ENC_RC_PARAMS * rc_params)
+{
+  GstNvRCMode rc_mode = nvenc->rate_control_mode;
+  NV_ENC_PARAMS_RC_MODE nv_rcmode;
+
+  if (nvenc->bitrate)
+    rc_params->averageBitRate = nvenc->bitrate * 1024;
+
+  if (nvenc->max_bitrate)
+    rc_params->maxBitRate = nvenc->max_bitrate * 1024;
+
+  if (nvenc->vbv_buffersize)
+    rc_params->vbvBufferSize = nvenc->vbv_buffersize * 1024;
+
+  /* Guess the best matching mode */
+  if (rc_mode == GST_NV_RC_MODE_DEFAULT) {
+    if (nvenc->qp_const >= 0) {
+      /* constQP is used only for RC_CONSTQP mode */
+      rc_mode = GST_NV_RC_MODE_CONSTQP;
+    }
+  }
+
+  if (nvenc->qp_min >= 0) {
+    rc_params->enableMinQP = 1;
+    rc_params->minQP.qpInterB = nvenc->qp_min;
+    rc_params->minQP.qpInterP = nvenc->qp_min;
+    rc_params->minQP.qpIntra = nvenc->qp_min;
+  }
+
+  if (nvenc->qp_max >= 0) {
+    rc_params->enableMaxQP = 1;
+    rc_params->maxQP.qpInterB = nvenc->qp_max;
+    rc_params->maxQP.qpInterP = nvenc->qp_max;
+    rc_params->maxQP.qpIntra = nvenc->qp_max;
+  }
+
+  if (nvenc->qp_const >= 0) {
+    rc_params->constQP.qpInterB = nvenc->qp_const;
+    rc_params->constQP.qpInterP = nvenc->qp_const;
+    rc_params->constQP.qpIntra = nvenc->qp_const;
+  }
+
+  nv_rcmode = _rc_mode_to_nv (rc_mode);
+  if (nv_rcmode == NV_ENC_PARAMS_RC_VBR_MINQP && nvenc->qp_min < 0) {
+    GST_WARNING_OBJECT (nvenc, "vbr-minqp was requested without qp-min");
+    nv_rcmode = NV_ENC_PARAMS_RC_VBR;
+  }
+
+  rc_params->rateControlMode = nv_rcmode;
+
+  if (nvenc->spatial_aq) {
+    rc_params->enableAQ = 1;
+    rc_params->aqStrength = nvenc->aq_strength;
+  }
+
+  rc_params->enableTemporalAQ = nvenc->temporal_aq;
+
+  if (nvenc->rc_lookahead) {
+    rc_params->enableLookahead = 1;
+    rc_params->lookaheadDepth = nvenc->rc_lookahead;
+    rc_params->disableIadapt = !nvenc->i_adapt;
+  }
+
+  rc_params->strictGOPTarget = nvenc->strict_gop;
+  rc_params->enableNonRefP = nvenc->non_refp;
+  rc_params->zeroReorderDelay = nvenc->zerolatency;
+
+  if (nvenc->const_quality) {
+    guint scaled = (gint) (nvenc->const_quality * 256.0);
+
+    rc_params->targetQuality = (guint8) (scaled >> 8);
+    rc_params->targetQualityLSB = (guint8) (scaled & 0xff);
+  }
+}
+
 /* GstVideoEncoder::set_format or by nvenc self if new properties were set.
  *
  * NvEncReconfigureEncoder with following conditions are not allowed
@@ -1284,32 +1438,7 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
     params->darHeight = dar_d;
   }
 
-  if (nvenc->rate_control_mode != GST_NV_RC_MODE_DEFAULT) {
-    params->encodeConfig->rcParams.rateControlMode =
-        _rc_mode_to_nv (nvenc->rate_control_mode);
-    if (nvenc->bitrate > 0) {
-      /* FIXME: this produces larger bitrates?! */
-      params->encodeConfig->rcParams.averageBitRate = nvenc->bitrate * 1024;
-      params->encodeConfig->rcParams.maxBitRate = nvenc->bitrate * 1024;
-    }
-    if (nvenc->qp_const > 0) {
-      params->encodeConfig->rcParams.constQP.qpInterB = nvenc->qp_const;
-      params->encodeConfig->rcParams.constQP.qpInterP = nvenc->qp_const;
-      params->encodeConfig->rcParams.constQP.qpIntra = nvenc->qp_const;
-    }
-    if (nvenc->qp_min >= 0) {
-      params->encodeConfig->rcParams.enableMinQP = 1;
-      params->encodeConfig->rcParams.minQP.qpInterB = nvenc->qp_min;
-      params->encodeConfig->rcParams.minQP.qpInterP = nvenc->qp_min;
-      params->encodeConfig->rcParams.minQP.qpIntra = nvenc->qp_min;
-    }
-    if (nvenc->qp_max >= 0) {
-      params->encodeConfig->rcParams.enableMaxQP = 1;
-      params->encodeConfig->rcParams.maxQP.qpInterB = nvenc->qp_max;
-      params->encodeConfig->rcParams.maxQP.qpInterP = nvenc->qp_max;
-      params->encodeConfig->rcParams.maxQP.qpIntra = nvenc->qp_max;
-    }
-  }
+  gst_nv_base_enc_setup_rate_control (nvenc, &params->encodeConfig->rcParams);
 
   params->enableWeightedPrediction = nvenc->weighted_pred;
 
@@ -2170,6 +2299,8 @@ gst_nv_base_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstNvBaseEnc *nvenc = GST_NV_BASE_ENC (object);
+  GstNvBaseEncClass *klass = GST_NV_BASE_ENC_GET_CLASS (nvenc);
+  gboolean reconfig = TRUE;
 
   switch (prop_id) {
     case PROP_PRESET:
@@ -2178,33 +2309,66 @@ gst_nv_base_enc_set_property (GObject * object, guint prop_id,
       gst_nv_base_enc_schedule_reconfig (nvenc);
       break;
     case PROP_RC_MODE:
-      nvenc->rate_control_mode = g_value_get_enum (value);
-      gst_nv_base_enc_schedule_reconfig (nvenc);
+    {
+      GstNvRCMode rc_mode = g_value_get_enum (value);
+      NV_ENC_PARAMS_RC_MODE nv_rc_mode = _rc_mode_to_nv (rc_mode);
+
+      if ((klass->device_caps.rc_modes & nv_rc_mode) == nv_rc_mode) {
+        nvenc->rate_control_mode = rc_mode;
+      } else {
+        GST_WARNING_OBJECT (nvenc,
+            "device does not support requested rate control mode %d", rc_mode);
+        reconfig = FALSE;
+      }
       break;
+    }
     case PROP_QP_MIN:
       nvenc->qp_min = g_value_get_int (value);
-      gst_nv_base_enc_schedule_reconfig (nvenc);
       break;
     case PROP_QP_MAX:
       nvenc->qp_max = g_value_get_int (value);
-      gst_nv_base_enc_schedule_reconfig (nvenc);
       break;
     case PROP_QP_CONST:
       nvenc->qp_const = g_value_get_int (value);
-      gst_nv_base_enc_schedule_reconfig (nvenc);
       break;
     case PROP_BITRATE:
       nvenc->bitrate = g_value_get_uint (value);
-      gst_nv_base_enc_schedule_reconfig (nvenc);
       break;
     case PROP_GOP_SIZE:
       nvenc->gop_size = g_value_get_int (value);
-      gst_nv_base_enc_schedule_reconfig (nvenc);
+      break;
+    case PROP_MAX_BITRATE:
+      nvenc->max_bitrate = g_value_get_uint (value);
+      break;
+    case PROP_SPATIAL_AQ:
+      nvenc->spatial_aq = g_value_get_boolean (value);
+      break;
+    case PROP_AQ_STRENGTH:
+      nvenc->aq_strength = g_value_get_uint (value);
+      break;
+    case PROP_NON_REF_P:
+      nvenc->non_refp = g_value_get_boolean (value);
+      break;
+    case PROP_ZEROLATENCY:
+      nvenc->zerolatency = g_value_get_boolean (value);
+      break;
+    case PROP_STRICT_GOP:
+      nvenc->strict_gop = g_value_get_boolean (value);
+      break;
+    case PROP_CONST_QUALITY:
+      nvenc->const_quality = g_value_get_double (value);
+      break;
+    case PROP_I_ADAPT:
+      nvenc->i_adapt = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      reconfig = FALSE;
       break;
   }
+
+  if (reconfig)
+    gst_nv_base_enc_schedule_reconfig (nvenc);
 }
 
 static void
@@ -2238,6 +2402,30 @@ gst_nv_base_enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_GOP_SIZE:
       g_value_set_int (value, nvenc->gop_size);
+      break;
+    case PROP_MAX_BITRATE:
+      g_value_set_uint (value, nvenc->max_bitrate);
+      break;
+    case PROP_SPATIAL_AQ:
+      g_value_set_boolean (value, nvenc->spatial_aq);
+      break;
+    case PROP_AQ_STRENGTH:
+      g_value_set_uint (value, nvenc->aq_strength);
+      break;
+    case PROP_NON_REF_P:
+      g_value_set_boolean (value, nvenc->non_refp);
+      break;
+    case PROP_ZEROLATENCY:
+      g_value_set_boolean (value, nvenc->zerolatency);
+      break;
+    case PROP_STRICT_GOP:
+      g_value_set_boolean (value, nvenc->strict_gop);
+      break;
+    case PROP_CONST_QUALITY:
+      g_value_set_double (value, nvenc->const_quality);
+      break;
+    case PROP_I_ADAPT:
+      g_value_set_boolean (value, nvenc->i_adapt);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

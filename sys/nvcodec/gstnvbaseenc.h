@@ -56,10 +56,17 @@ typedef enum {
   GST_NV_RC_MODE_CBR,
   GST_NV_RC_MODE_VBR,
   GST_NV_RC_MODE_VBR_MINQP,
+  GST_NV_RC_MODE_CBR_LOWDELAY_HQ,
+  GST_NV_RC_MODE_CBR_HQ,
+  GST_NV_RC_MODE_VBR_HQ,
 } GstNvRCMode;
 
 typedef struct {
   gboolean weighted_prediction;
+  gint rc_modes;
+  gboolean custom_vbv_bufsize;
+  gboolean lookahead;
+  gboolean temporal_aq;
 } GstNvEncDeviceCaps;
 
 typedef struct {
@@ -74,6 +81,15 @@ typedef struct {
   gint            qp_const;
   guint           bitrate;
   gint            gop_size;
+  guint           max_bitrate;
+  gboolean        spatial_aq;
+  guint           aq_strength;
+  gboolean        non_refp;
+  /* zero reorder delay (consistent naming with x264) */
+  gboolean        zerolatency;
+  gboolean        strict_gop;
+  gdouble         const_quality;
+  gboolean        i_adapt;
 
   GstCudaContext * cuda_ctx;
   CUstream         cuda_stream;
@@ -115,6 +131,9 @@ typedef struct {
   /*< protected >*/
   /* device capability dependent properties, set by subclass */
   gboolean        weighted_pred;
+  guint           vbv_buffersize;
+  guint           rc_lookahead;
+  gboolean        temporal_aq;
 } GstNvBaseEnc;
 
 typedef struct {
