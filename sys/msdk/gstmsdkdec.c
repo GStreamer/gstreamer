@@ -655,7 +655,14 @@ gst_msdkdec_context_prepare (GstMsdkDec * thiz)
     return TRUE;
   }
 
+  /* TODO: Currently d3d allocator is not implemented.
+   * So decoder uses system memory by default on Windows.
+   */
+#ifndef _WIN32
   thiz->use_video_memory = TRUE;
+#else
+  thiz->use_video_memory = FALSE;
+#endif
 
   GST_INFO_OBJECT (thiz, "Found context %" GST_PTR_FORMAT " from neighbour",
       thiz->context);
