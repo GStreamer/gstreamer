@@ -170,7 +170,7 @@ gst_msdk_video_memory_new (GstAllocator * base_allocator)
     return NULL;
 
   vip = &allocator->image_info;
-  gst_memory_init (&mem->parent_instance, GST_MEMORY_FLAG_NO_SHARE,
+  gst_memory_init (&mem->parent_instance, 0,
       base_allocator, NULL, GST_VIDEO_INFO_SIZE (vip), 0, 0,
       GST_VIDEO_INFO_SIZE (vip));
 
@@ -313,6 +313,38 @@ gst_msdk_video_memory_unmap (GstMemory * base_mem)
       mem->surface->Data.MemId, &mem->surface->Data);
 }
 
+static GstMemory *
+gst_msdk_video_memory_copy (GstMemory * base_mem, gssize offset, gssize size)
+{
+  GstMemory *copy;
+  GstVideoInfo *info;
+  GstMsdkVideoAllocator *msdk_video_allocator;
+  gsize mem_size;
+  GstMapInfo src_map, dst_map;
+
+  /* FIXME: can we consider offset and size here ? */
+  copy = gst_msdk_video_memory_new (base_mem->allocator);
+
+  if (!copy) {
+    GST_ERROR_OBJECT (base_mem->allocator, "Failed to create new video memory");
+    return NULL;
+  }
+
+  msdk_video_allocator = GST_MSDK_VIDEO_ALLOCATOR_CAST (base_mem->allocator);
+
+  info = &msdk_video_allocator->image_info;
+  mem_size = GST_VIDEO_INFO_SIZE (info);
+
+  gst_memory_map (base_mem, &src_map, GST_MAP_READ);
+  gst_memory_map (copy, &dst_map, GST_MAP_WRITE);
+
+  memcpy (dst_map.data, src_map.data, mem_size);
+  gst_memory_unmap (copy, &dst_map);
+  gst_memory_unmap (base_mem, &src_map);
+
+  return copy;
+}
+
 /* GstMsdkVideoAllocator */
 G_DEFINE_TYPE (GstMsdkVideoAllocator, gst_msdk_video_allocator,
     GST_TYPE_ALLOCATOR);
@@ -352,6 +384,7 @@ gst_msdk_video_allocator_init (GstMsdkVideoAllocator * allocator)
   base_allocator->mem_type = GST_MSDK_VIDEO_MEMORY_NAME;
   base_allocator->mem_map_full = gst_msdk_video_memory_map_full;
   base_allocator->mem_unmap = gst_msdk_video_memory_unmap;
+  base_allocator->mem_copy = gst_msdk_video_memory_copy;
 
   GST_OBJECT_FLAG_SET (allocator, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
 }

@@ -35,6 +35,7 @@
 #endif
 #include <stdlib.h>
 #include "gstmsdksystemmemory.h"
+#include <string.h>
 
 #ifdef _WIN32
 #define posix_memalign(d, a, s) ((*((void**)d) = _aligned_malloc(s, a)) ? 0 : -1)
@@ -199,7 +200,7 @@ gst_msdk_system_memory_new (GstAllocator * base_allocator)
   mem->surface = gst_msdk_system_allocator_create_surface (base_allocator);
 
   vip = &allocator->image_info;
-  gst_memory_init (&mem->parent_instance, GST_MEMORY_FLAG_NO_SHARE,
+  gst_memory_init (&mem->parent_instance, 0,
       base_allocator, NULL, GST_VIDEO_INFO_SIZE (vip), 0, 0,
       GST_VIDEO_INFO_SIZE (vip));
 
@@ -244,6 +245,28 @@ gst_msdk_system_memory_unmap (GstMemory * base_mem)
 {
 }
 
+static GstMemory *
+gst_msdk_system_memory_copy (GstMemory * base_mem, gssize offset, gssize size)
+{
+  GstMsdkSystemMemory *copy;
+  GstVideoInfo *info;
+  GstMsdkSystemAllocator *msdk_allocator;
+  gsize mem_size;
+
+  /* FIXME: can we consider offset and size here ? */
+  copy =
+      (GstMsdkSystemMemory *) gst_msdk_system_memory_new (base_mem->allocator);
+
+  msdk_allocator = GST_MSDK_SYSTEM_ALLOCATOR_CAST (base_mem->allocator);
+
+  info = &msdk_allocator->image_info;
+  mem_size = GST_VIDEO_INFO_SIZE (info);
+
+  memcpy (copy->cache, GST_MSDK_SYSTEM_MEMORY_CAST (base_mem)->cache, mem_size);
+
+  return GST_MEMORY_CAST (copy);
+}
+
 /* GstMsdkSystemAllocator */
 G_DEFINE_TYPE (GstMsdkSystemAllocator, gst_msdk_system_allocator,
     GST_TYPE_ALLOCATOR);
@@ -281,6 +304,7 @@ gst_msdk_system_allocator_init (GstMsdkSystemAllocator * allocator)
   base_allocator->mem_type = GST_MSDK_SYSTEM_MEMORY_NAME;
   base_allocator->mem_map_full = gst_msdk_system_memory_map_full;
   base_allocator->mem_unmap = gst_msdk_system_memory_unmap;
+  base_allocator->mem_copy = gst_msdk_system_memory_copy;
 
   GST_OBJECT_FLAG_SET (allocator, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
 }
