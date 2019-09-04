@@ -1639,11 +1639,33 @@ gst_vaapipostproc_decide_allocation (GstBaseTransform * trans, GstQuery * query)
       query);
 }
 
+static void
+get_scale_factor (GstVaapiPostproc * const postproc, gdouble * w_factor,
+    gdouble * h_factor)
+{
+  gdouble wd = GST_VIDEO_INFO_WIDTH (&postproc->srcpad_info);
+  gdouble hd = GST_VIDEO_INFO_HEIGHT (&postproc->srcpad_info);
+
+  switch (gst_vaapi_filter_get_video_direction (postproc->filter)) {
+    case GST_VIDEO_ORIENTATION_90R:
+    case GST_VIDEO_ORIENTATION_90L:
+    case GST_VIDEO_ORIENTATION_UR_LL:
+    case GST_VIDEO_ORIENTATION_UL_LR:
+      G_PRIMITIVE_SWAP (gdouble, wd, hd);
+      break;
+    default:
+      break;
+  }
+
+  *w_factor = GST_VIDEO_INFO_WIDTH (&postproc->sinkpad_info) / wd;
+  *h_factor = GST_VIDEO_INFO_HEIGHT (&postproc->sinkpad_info) / hd;
+}
+
 static gboolean
 gst_vaapipostproc_src_event (GstBaseTransform * trans, GstEvent * event)
 {
   GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (trans);
-  gdouble new_x = 0, new_y = 0, x = 0, y = 0;
+  gdouble new_x = 0, new_y = 0, x = 0, y = 0, w_factor = 1, h_factor = 1;
   GstStructure *structure;
   gboolean ret;
 
@@ -1659,54 +1681,44 @@ gst_vaapipostproc_src_event (GstBaseTransform * trans, GstEvent * event)
           gst_structure_get_double (structure, "pointer_y", &y)) {
         GST_DEBUG_OBJECT (postproc, "converting %fx%f", x, y);
 
-        if (postproc->flags & GST_VAAPI_POSTPROC_FLAG_SIZE) {
-          if ((GST_VIDEO_INFO_WIDTH (&postproc->srcpad_info)
-                  != GST_VIDEO_INFO_WIDTH (&postproc->sinkpad_info))
-              && (GST_VIDEO_INFO_HEIGHT (&postproc->srcpad_info)
-                  != GST_VIDEO_INFO_HEIGHT (&postproc->sinkpad_info))) {
-            new_x =
-                x * GST_VIDEO_INFO_WIDTH (&postproc->sinkpad_info) /
-                GST_VIDEO_INFO_WIDTH (&postproc->srcpad_info);
-            new_y =
-                y * GST_VIDEO_INFO_HEIGHT (&postproc->sinkpad_info) /
-                GST_VIDEO_INFO_HEIGHT (&postproc->srcpad_info);
-          }
-        } else if (postproc->flags & GST_VAAPI_POSTPROC_FLAG_VIDEO_DIRECTION) {
-          switch (gst_vaapi_filter_get_video_direction (postproc->filter)) {
-            case GST_VIDEO_ORIENTATION_90R:
-              new_x = y;
-              new_y = GST_VIDEO_INFO_WIDTH (&postproc->srcpad_info) - x;
-              break;
-            case GST_VIDEO_ORIENTATION_90L:
-              new_x = GST_VIDEO_INFO_HEIGHT (&postproc->srcpad_info) - y;
-              new_y = x;
-              break;
-            case GST_VIDEO_ORIENTATION_UR_LL:
-              new_x = GST_VIDEO_INFO_HEIGHT (&postproc->srcpad_info) - y;
-              new_y = GST_VIDEO_INFO_WIDTH (&postproc->srcpad_info) - x;
-              break;
-            case GST_VIDEO_ORIENTATION_UL_LR:
-              new_x = y;
-              new_y = x;
-              break;
-            case GST_VIDEO_ORIENTATION_180:
-              new_x = GST_VIDEO_INFO_WIDTH (&postproc->srcpad_info) - x;
-              new_y = GST_VIDEO_INFO_HEIGHT (&postproc->srcpad_info) - y;
-              break;
-            case GST_VIDEO_ORIENTATION_HORIZ:
-              new_x = GST_VIDEO_INFO_WIDTH (&postproc->srcpad_info) - x;
-              new_y = y;
-              break;
-            case GST_VIDEO_ORIENTATION_VERT:
-              new_x = x;
-              new_y = GST_VIDEO_INFO_HEIGHT (&postproc->srcpad_info) - y;
-              break;
-            default:
-              new_x = x;
-              new_y = y;
-              break;
-          }
+        switch (gst_vaapi_filter_get_video_direction (postproc->filter)) {
+          case GST_VIDEO_ORIENTATION_90R:
+            new_x = y;
+            new_y = GST_VIDEO_INFO_WIDTH (&postproc->srcpad_info) - x;
+            break;
+          case GST_VIDEO_ORIENTATION_90L:
+            new_x = GST_VIDEO_INFO_HEIGHT (&postproc->srcpad_info) - y;
+            new_y = x;
+            break;
+          case GST_VIDEO_ORIENTATION_UR_LL:
+            new_x = GST_VIDEO_INFO_HEIGHT (&postproc->srcpad_info) - y;
+            new_y = GST_VIDEO_INFO_WIDTH (&postproc->srcpad_info) - x;
+            break;
+          case GST_VIDEO_ORIENTATION_UL_LR:
+            new_x = y;
+            new_y = x;
+            break;
+          case GST_VIDEO_ORIENTATION_180:
+            new_x = GST_VIDEO_INFO_WIDTH (&postproc->srcpad_info) - x;
+            new_y = GST_VIDEO_INFO_HEIGHT (&postproc->srcpad_info) - y;
+            break;
+          case GST_VIDEO_ORIENTATION_HORIZ:
+            new_x = GST_VIDEO_INFO_WIDTH (&postproc->srcpad_info) - x;
+            new_y = y;
+            break;
+          case GST_VIDEO_ORIENTATION_VERT:
+            new_x = x;
+            new_y = GST_VIDEO_INFO_HEIGHT (&postproc->srcpad_info) - y;
+            break;
+          default:
+            new_x = x;
+            new_y = y;
+            break;
         }
+
+        get_scale_factor (postproc, &w_factor, &h_factor);
+        new_x *= w_factor;
+        new_y *= h_factor;
 
         GST_DEBUG_OBJECT (postproc, "to %fx%f", new_x, new_y);
         gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE, new_x,
