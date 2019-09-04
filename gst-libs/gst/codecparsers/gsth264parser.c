@@ -2143,6 +2143,7 @@ gst_h264_parser_parse_slice_hdr (GstH264NalParser * nalparser,
   gint pps_id;
   GstH264PPS *pps;
   GstH264SPS *sps;
+  guint start_pos;
 
   memset (slice, 0, sizeof (*slice));
 
@@ -2208,6 +2209,8 @@ gst_h264_parser_parse_slice_hdr (GstH264NalParser * nalparser,
   if (nalu->idr_pic_flag)
     READ_UE_MAX (&nr, slice->idr_pic_id, G_MAXUINT16);
 
+  start_pos = nal_reader_get_pos (&nr);
+
   if (sps->pic_order_cnt_type == 0) {
     READ_UINT16 (&nr, slice->pic_order_cnt_lsb,
         sps->log2_max_pic_order_cnt_lsb_minus4 + 4);
@@ -2221,6 +2224,8 @@ gst_h264_parser_parse_slice_hdr (GstH264NalParser * nalparser,
     if (pps->pic_order_present_flag && !slice->field_pic_flag)
       READ_SE (&nr, slice->delta_pic_order_cnt[1]);
   }
+
+  slice->pic_order_cnt_bit_size = nal_reader_get_pos (&nr) - start_pos;
 
   if (pps->redundant_pic_cnt_present_flag)
     READ_UE_MAX (&nr, slice->redundant_pic_cnt, G_MAXINT8);

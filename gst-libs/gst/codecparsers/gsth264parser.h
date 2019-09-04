@@ -938,6 +938,13 @@ struct _GstH264SliceHdr
   /* Since: 1.18 */
   guint8 num_ref_idx_active_override_flag;
   guint8 sp_for_switch_flag;
+
+  /*
+   * Size of the pic_order_cnt related syntax elements pic_order_cnt_lsb,
+   * delta_pic_order_cnt_bottom, delta_pic_order_cnt[0], and
+   * delta_pic_order_cnt[1]. (Since: 1.18)
+   */
+  guint pic_order_cnt_bit_size;
 };
 
 
