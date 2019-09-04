@@ -867,6 +867,9 @@ struct _GstH264DecRefPicMarking
   guint8 adaptive_ref_pic_marking_mode_flag;
   GstH264RefPicMarking ref_pic_marking[10];
   guint8 n_ref_pic_marking;
+
+  /* Size of the dec_ref_pic_marking() syntax element in bits (Since: 1.18) */
+  guint bit_size;
 };
 
 

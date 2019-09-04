@@ -704,8 +704,11 @@ gst_h264_slice_parse_dec_ref_pic_marking (GstH264SliceHdr * slice,
     GstH264NalUnit * nalu, NalReader * nr)
 {
   GstH264DecRefPicMarking *dec_ref_pic_m;
+  guint start_pos;
 
   GST_DEBUG ("parsing \"Decoded reference picture marking\"");
+
+  start_pos = nal_reader_get_pos (nr);
 
   dec_ref_pic_m = &slice->dec_ref_pic_marking;
 
@@ -745,6 +748,8 @@ gst_h264_slice_parse_dec_ref_pic_marking (GstH264SliceHdr * slice,
       }
     }
   }
+
+  dec_ref_pic_m->bit_size = nal_reader_get_pos (nr) - start_pos;
 
   return TRUE;
 
