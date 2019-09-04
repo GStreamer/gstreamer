@@ -2851,6 +2851,72 @@ no_peer:
 }
 
 /**
+ * gst_pad_get_single_internal_link:
+ * @pad: the #GstPad to get the internal link of.
+ *
+ * If there is a single internal link of the given pad, this function will
+ * return it. Otherwise, it will return NULL.
+ *
+ * Returns: (transfer full) (nullable): a #GstPad, or %NULL if @pad has none
+ * or more than one internal links. Unref returned pad with
+ * gst_object_unref().
+ *
+ * Since: 1.18
+ */
+GstPad *
+gst_pad_get_single_internal_link (GstPad * pad)
+{
+  GstIterator *iter;
+  gboolean done = FALSE;
+  GValue item = { 0, };
+  GstPad *ret = NULL;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+
+  iter = gst_pad_iterate_internal_links (pad);
+
+  if (!iter)
+    return NULL;
+
+  while (!done) {
+    switch (gst_iterator_next (iter, &item)) {
+      case GST_ITERATOR_OK:
+      {
+        if (ret == NULL) {
+          ret = g_value_dup_object (&item);
+        } else {
+          /* More than one internal link found - don't bother reffing */
+          g_clear_object (&ret);
+          GST_DEBUG_OBJECT (pad,
+              "Requested single internally linked pad, multiple found");
+          done = TRUE;
+        }
+        g_value_reset (&item);
+        break;
+      }
+      case GST_ITERATOR_RESYNC:
+        g_clear_object (&ret);
+        gst_iterator_resync (iter);
+        break;
+      case GST_ITERATOR_ERROR:
+        GST_ERROR_OBJECT (pad, "Could not iterate over internally linked pads");
+        return NULL;
+      case GST_ITERATOR_DONE:
+        if (ret == NULL) {
+          GST_DEBUG_OBJECT (pad,
+              "Requested single internally linked pad, none found");
+        }
+        done = TRUE;
+        break;
+    }
+  }
+  g_value_unset (&item);
+  gst_iterator_free (iter);
+
+  return ret;
+}
+
+/**
  * gst_pad_iterate_internal_links_default:
  * @pad: the #GstPad to get the internal links of.
  * @parent: (allow-none): the parent of @pad or %NULL

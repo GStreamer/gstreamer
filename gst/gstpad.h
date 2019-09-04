@@ -1539,6 +1539,9 @@ GstIterator *           gst_pad_iterate_internal_links_default  (GstPad * pad, G
 
 #define gst_pad_set_iterate_internal_links_function(p,f) gst_pad_set_iterate_internal_links_function_full((p),(f),NULL,NULL)
 
+GST_API
+GstPad *                gst_pad_get_single_internal_link        (GstPad * pad);
+
 /* generic query function */
 
 GST_API
