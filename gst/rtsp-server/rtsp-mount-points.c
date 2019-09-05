@@ -302,6 +302,27 @@ gst_rtsp_mount_points_match (GstRTSPMountPoints * mounts,
   return result;
 }
 
+static void
+gst_rtsp_mount_points_remove_factory_unlocked (GstRTSPMountPoints * mounts,
+    const gchar * path)
+{
+  GstRTSPMountPointsPrivate *priv = mounts->priv;
+  DataItem item;
+  GSequenceIter *iter;
+
+  item.path = (gchar *) path;
+
+  if (priv->dirty) {
+    g_sequence_sort (priv->mounts, data_item_compare, mounts);
+    priv->dirty = FALSE;
+  }
+  iter = g_sequence_lookup (priv->mounts, &item, data_item_compare, mounts);
+  if (iter) {
+    g_sequence_remove (iter);
+    priv->dirty = TRUE;
+  }
+}
+
 /**
  * gst_rtsp_mount_points_add_factory:
  * @mounts: a #GstRTSPMountPoints
@@ -333,6 +354,7 @@ gst_rtsp_mount_points_add_factory (GstRTSPMountPoints * mounts,
   GST_INFO ("adding media factory %p for path %s", factory, path);
 
   g_mutex_lock (&priv->lock);
+  gst_rtsp_mount_points_remove_factory_unlocked (mounts, path);
   g_sequence_append (priv->mounts, item);
   priv->dirty = TRUE;
   g_mutex_unlock (&priv->lock);
@@ -350,27 +372,15 @@ gst_rtsp_mount_points_remove_factory (GstRTSPMountPoints * mounts,
     const gchar * path)
 {
   GstRTSPMountPointsPrivate *priv;
-  DataItem item;
-  GSequenceIter *iter;
 
   g_return_if_fail (GST_IS_RTSP_MOUNT_POINTS (mounts));
   g_return_if_fail (path != NULL);
 
   priv = mounts->priv;
 
-  item.path = (gchar *) path;
-
   GST_INFO ("removing media factory for path %s", path);
 
   g_mutex_lock (&priv->lock);
-  if (priv->dirty) {
-    g_sequence_sort (priv->mounts, data_item_compare, mounts);
-    priv->dirty = FALSE;
-  }
-  iter = g_sequence_lookup (priv->mounts, &item, data_item_compare, mounts);
-  if (iter) {
-    g_sequence_remove (iter);
-    priv->dirty = TRUE;
-  }
+  gst_rtsp_mount_points_remove_factory_unlocked (mounts, path);
   g_mutex_unlock (&priv->lock);
 }
