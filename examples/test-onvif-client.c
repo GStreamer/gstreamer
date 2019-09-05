@@ -189,7 +189,6 @@ translate_seek_parameters (Context * ctx, SeekParameters * seek_params)
   GstSeekFlags flags;
   gchar **split = NULL;
   GstClockTime trickmode_interval = 0;
-  gint64 cur_pos;
 
   range_str = g_strdup_printf ("clock=%s", seek_params->range);
 
@@ -211,7 +210,6 @@ translate_seek_parameters (Context * ctx, SeekParameters * seek_params)
   if (!ctx->new_range) {
     GstClockTime current_position =
         get_current_position (ctx, seek_params->reverse);
-    gst_element_query_position (ctx->pipe, GST_FORMAT_TIME, &cur_pos);
 
     if (seek_params->reverse) {
       stop_type = GST_SEEK_TYPE_SET;
