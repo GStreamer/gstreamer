@@ -294,6 +294,13 @@ gst-launch-1.0 osssrc ! audioconvert ! vorbisenc ! oggmux !
 filesink location=input.ogg
 ```
 
+Running a pipeline using a specific user-defined latency
+(see gst_pipeline_set_latency()):
+
+```
+gst-launch-1.0 pipeline. \( latency=2000000000 videotestsrc ! jpegenc ! jpegdec ! fakevideosink \)
+```
+
 ### Video
 
 Display only the video portion of an MPEG-1 video file, outputting to an X
