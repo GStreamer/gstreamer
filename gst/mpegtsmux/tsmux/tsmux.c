@@ -1082,6 +1082,8 @@ tsmux_section_write_packet (gpointer unused_arg,
             payload_len) >= 4) {
       /* enough space */
       extra_alloc_bytes = 4;
+    } else {
+      extra_alloc_bytes = 0;
     }
     packet_buffer = gst_buffer_copy_region (section_buffer, GST_BUFFER_COPY_ALL,
         payload_written, payload_len + extra_alloc_bytes);
