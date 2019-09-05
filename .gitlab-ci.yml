@@ -33,7 +33,7 @@ test manifest:
   script:
     - export DATE=$(date +"%Y-%m-%d")
     - export IMAGE="${CI_REGISTRY_IMAGE}/${ARCH}/${TAG}"
-    - export UID="${IMAGE}:${DATE}-${CI_JOB_ID}"
+    - export _UID="${IMAGE}:${DATE}-${CI_JOB_ID}"
     - export LATEST="${IMAGE}:latest"
 
     - docker build --pull -f ${DOCKERFILE} -t ${LATEST} ${CONTEXT_DIR}
@@ -49,10 +49,10 @@ test manifest:
     - |
       if [ "$CI_COMMIT_REF_NAME" = "master" -a "$CI_PROJECT_NAMESPACE" = "gstreamer" ]; then
         # Tag the image with the git ref
-        docker image tag ${LATEST} ${UID}
+        docker image tag ${LATEST} ${_UID}
         # Push the tags
         docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
-        docker push ${UID}
+        docker push ${_UID}
         docker push ${LATEST}
       fi
 
