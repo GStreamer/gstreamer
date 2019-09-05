@@ -828,9 +828,9 @@ gst_openh264enc_handle_frame (GstVideoEncoder * encoder,
   gint ret;
   SFrameBSInfo frame_info;
   gfloat fps;
-  GstMapInfo map;
   gint i, j;
   gsize buf_length = 0;
+  GList* headers = NULL;
 
   GST_OBJECT_LOCK (openh264enc);
 
@@ -971,7 +971,7 @@ gst_openh264enc_handle_frame (GstVideoEncoder * encoder,
 
   frame->output_buffer =
       gst_video_encoder_allocate_output_buffer (encoder, buf_length);
-  gst_buffer_map (frame->output_buffer, &map, GST_MAP_WRITE);
+
 
   buf_length = 0;
   for (i = 0; i < frame_info.iLayerNum; i++) {
@@ -979,11 +979,28 @@ gst_openh264enc_handle_frame (GstVideoEncoder * encoder,
     for (j = 0; j < frame_info.sLayerInfo[i].iNalCount; j++) {
       layer_size += frame_info.sLayerInfo[i].pNalLengthInByte[j];
     }
-    memcpy (map.data + buf_length, frame_info.sLayerInfo[i].pBsBuf, layer_size);
+    /* detect header with NON_VIDEO_CODING_LAYER and fill headers list */
+    if (frame_info.sLayerInfo[i].uiLayerType == NON_VIDEO_CODING_LAYER) {
+        int nal_type;
+        gint nal_offset = 0;
+        GstBuffer* hdr = gst_buffer_new_and_alloc (layer_size);
+        GST_BUFFER_FLAG_SET (hdr, GST_BUFFER_FLAG_HEADER);
+        for (j = 0; j < frame_info.sLayerInfo[i].iNalCount; j++) {
+          if (j > 0)
+            nal_offset = nal_offset + frame_info.sLayerInfo[i].pNalLengthInByte[j-1];
+          nal_type = ((* (frame_info.sLayerInfo[i].pBsBuf + nal_offset + 4)) & 0x1f);
+          if (nal_type == NAL_SPS || nal_type == NAL_PPS)
+            gst_buffer_fill (hdr, nal_offset, frame_info.sLayerInfo[i].pBsBuf, frame_info.sLayerInfo[i].pNalLengthInByte[j]);
+        }
+        headers = g_list_append (headers, gst_buffer_ref (hdr));
+    }
+    gst_buffer_fill (frame->output_buffer, buf_length, frame_info.sLayerInfo[i].pBsBuf, layer_size);
     buf_length += layer_size;
   }
 
-  gst_buffer_unmap (frame->output_buffer, &map);
+  /*Set headers from the frame_info*/
+  if (headers)
+    gst_video_encoder_set_headers (encoder, headers);
 
   GST_LOG_OBJECT (openh264enc, "openh264 picture %scoded OK!",
       (ret != cmResultSuccess) ? "NOT " : "");
