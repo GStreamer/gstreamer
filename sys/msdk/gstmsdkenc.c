@@ -316,6 +316,11 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
         g_assert_not_reached ();
         break;
     }
+
+    /* work-around to avoid zero fps in msdk structure */
+    if (0 == thiz->vpp_param.vpp.In.FrameRateExtN)
+      thiz->vpp_param.vpp.In.FrameRateExtN = 30;
+
     thiz->vpp_param.vpp.Out = thiz->vpp_param.vpp.In;
     thiz->vpp_param.vpp.Out.FourCC = MFX_FOURCC_NV12;
     thiz->vpp_param.vpp.Out.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
@@ -414,6 +419,10 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
     thiz->param.mfx.FrameInfo.BitDepthLuma = 8;
     thiz->param.mfx.FrameInfo.BitDepthChroma = 8;
   }
+
+  /* work-around to avoid zero fps in msdk structure */
+  if (0 == thiz->param.mfx.FrameInfo.FrameRateExtN)
+    thiz->param.mfx.FrameInfo.FrameRateExtN = 30;
 
   /* ensure bitrate control parameters */
   ensure_bitrate_control (thiz);
