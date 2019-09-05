@@ -330,7 +330,10 @@ enum
   PROP_DEINTERLACING = GST_VAAPI_FILTER_OP_DEINTERLACING,
   PROP_SCALING = GST_VAAPI_FILTER_OP_SCALING,
   PROP_VIDEO_DIRECTION = GST_VAAPI_FILTER_OP_VIDEO_DIRECTION,
+#ifndef GST_REMOVE_DEPRECATED
   PROP_SKINTONE = GST_VAAPI_FILTER_OP_SKINTONE,
+#endif
+  PROP_SKINTONE_LEVEL = GST_VAAPI_FILTER_OP_SKINTONE_LEVEL,
 
   N_PROPERTIES
 };
@@ -465,6 +468,7 @@ init_properties (void)
       GST_TYPE_VIDEO_ORIENTATION_METHOD,
       DEFAULT_VIDEO_DIRECTION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
+#ifndef GST_REMOVE_DEPRECATED
   /**
    * GstVaapiFilter:skin-tone-enhancement:
    *
@@ -474,6 +478,18 @@ init_properties (void)
       "Skin tone enhancement",
       "Apply the skin tone enhancement algorithm",
       FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+#endif
+
+  /**
+   * GstVaapiFilter:skin-tone-enhancement-level:
+   *
+   * Apply the skin tone enhancement algorithm with specified value.
+   */
+  g_properties[PROP_SKINTONE_LEVEL] =
+      g_param_spec_uint ("skin-tone-enhancement-level",
+      "Skin tone enhancement level",
+      "Apply the skin tone enhancement algorithm with specified level", 0, 9, 3,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 }
 
 static void
@@ -523,7 +539,10 @@ op_data_new (GstVaapiFilterOp op, GParamSpec * pspec)
       op_data->va_cap_size = sizeof (VAProcFilterCap);
       op_data->va_buffer_size = sizeof (VAProcFilterParameterBuffer);
       break;
+#ifndef GST_REMOVE_DEPRECATED
     case GST_VAAPI_FILTER_OP_SKINTONE:
+#endif
+    case GST_VAAPI_FILTER_OP_SKINTONE_LEVEL:
       op_data->va_type = VAProcFilterSkinToneEnhancement;
       op_data->va_buffer_size = sizeof (VAProcFilterParameterBuffer);
       break;
@@ -1023,27 +1042,54 @@ op_set_deinterlace (GstVaapiFilter * filter, GstVaapiFilterOpData * op_data,
   return success;
 }
 
-/* Update skin tone enhancement */
+/* Update skin tone enhancement level */
 static gboolean
-op_set_skintone_unlocked (GstVaapiFilter * filter,
-    GstVaapiFilterOpData * op_data, gboolean value)
+op_set_skintone_level_unlocked (GstVaapiFilter * filter,
+    GstVaapiFilterOpData * op_data, guint value)
 {
   VAProcFilterParameterBuffer *buf;
 
   if (!op_data || !op_ensure_buffer (filter, op_data))
     return FALSE;
 
-  op_data->is_enabled = value;
-  if (!op_data->is_enabled)
-    return TRUE;
+  op_data->is_enabled = 1;
 
   buf = vaapi_map_buffer (filter->va_display, op_data->va_buffer);
   if (!buf)
     return FALSE;
   buf->type = op_data->va_type;
-  buf->value = 0;
+  buf->value = value;
   vaapi_unmap_buffer (filter->va_display, op_data->va_buffer, NULL);
   return TRUE;
+}
+
+static inline gboolean
+op_set_skintone_level (GstVaapiFilter * filter,
+    GstVaapiFilterOpData * op_data, guint value)
+{
+  gboolean success = FALSE;
+
+  GST_VAAPI_DISPLAY_LOCK (filter->display);
+  success = op_set_skintone_level_unlocked (filter, op_data, value);
+  GST_VAAPI_DISPLAY_UNLOCK (filter->display);
+  return success;
+}
+
+#ifndef GST_REMOVE_DEPRECATED
+/* Update skin tone enhancement */
+static gboolean
+op_set_skintone_unlocked (GstVaapiFilter * filter,
+    GstVaapiFilterOpData * op_data, gboolean value)
+{
+  if (!op_data)
+    return FALSE;
+
+  if (!value) {
+    op_data->is_enabled = 0;
+    return TRUE;
+  }
+
+  return op_set_skintone_level_unlocked (filter, op_data, 3);
 }
 
 static inline gboolean
@@ -1057,6 +1103,7 @@ op_set_skintone (GstVaapiFilter * filter, GstVaapiFilterOpData * op_data,
   GST_VAAPI_DISPLAY_UNLOCK (filter->display);
   return success;
 }
+#endif
 
 static gboolean
 deint_refs_set (GArray * refs, GstVaapiSurface ** surfaces, guint num_surfaces)
@@ -1441,10 +1488,16 @@ gst_vaapi_filter_set_operation (GstVaapiFilter * filter, GstVaapiFilterOp op,
     case GST_VAAPI_FILTER_OP_SCALING:
       return gst_vaapi_filter_set_scaling (filter, value ?
           g_value_get_enum (value) : DEFAULT_SCALING);
+#ifndef GST_REMOVE_DEPRECATED
     case GST_VAAPI_FILTER_OP_SKINTONE:
       return op_set_skintone (filter, op_data,
           (value ? g_value_get_boolean (value) :
               G_PARAM_SPEC_BOOLEAN (op_data->pspec)->default_value));
+#endif
+    case GST_VAAPI_FILTER_OP_SKINTONE_LEVEL:
+      return op_set_skintone_level (filter, op_data,
+          (value ? g_value_get_uint (value) :
+              G_PARAM_SPEC_UINT (op_data->pspec)->default_value));
     case GST_VAAPI_FILTER_OP_VIDEO_DIRECTION:
       return gst_vaapi_filter_set_video_direction (filter, value ?
           g_value_get_enum (value) : DEFAULT_VIDEO_DIRECTION);
@@ -1985,6 +2038,7 @@ gst_vaapi_filter_set_scaling (GstVaapiFilter * filter,
   return TRUE;
 }
 
+#ifndef GST_REMOVE_DEPRECATED
 /**
  * gst_vaapi_filter_set_skintone:
  * @filter: a #GstVaapiFilter
@@ -2002,6 +2056,26 @@ gst_vaapi_filter_set_skintone (GstVaapiFilter * filter, gboolean enhance)
 
   return op_set_skintone (filter,
       find_operation (filter, GST_VAAPI_FILTER_OP_SKINTONE), enhance);
+}
+#endif
+
+/**
+ * gst_vaapi_filter_set_skintone_level:
+ * @filter: a #GstVaapiFilter
+ * @value: the value if enable the skin tone enhancement algorithm
+ *
+ * Applies the skin tone enhancement algorithm with specifled value.
+ *
+ * Return value: %TRUE if the operation is supported, %FALSE
+ * otherwise.
+  **/
+gboolean
+gst_vaapi_filter_set_skintone_level (GstVaapiFilter * filter, guint value)
+{
+  g_return_val_if_fail (filter != NULL, FALSE);
+
+  return op_set_skintone_level (filter,
+      find_operation (filter, GST_VAAPI_FILTER_OP_SKINTONE_LEVEL), value);
 }
 
 /**
@@ -2124,12 +2198,22 @@ gst_vaapi_filter_get_scaling_default (GstVaapiFilter * filter)
   return DEFAULT_SCALING;
 }
 
+#ifndef GST_REMOVE_DEPRECATED
 gboolean
 gst_vaapi_filter_get_skintone_default (GstVaapiFilter * filter)
 {
   g_return_val_if_fail (filter != NULL, FALSE);
 
   return FALSE;
+}
+#endif
+
+guint
+gst_vaapi_filter_get_skintone_level_default (GstVaapiFilter * filter)
+{
+  g_return_val_if_fail (filter != NULL, FALSE);
+
+  return 3;
 }
 
 GstVideoOrientationMethod

@@ -127,7 +127,10 @@ enum
   PROP_CROP_RIGHT,
   PROP_CROP_TOP,
   PROP_CROP_BOTTOM,
+#ifndef GST_REMOVE_DEPRECATED
   PROP_SKIN_TONE_ENHANCEMENT,
+#endif
+  PROP_SKIN_TONE_ENHANCEMENT_LEVEL,
 };
 
 #define GST_VAAPI_TYPE_DEINTERLACE_MODE \
@@ -519,7 +522,8 @@ check_filter_update (GstVaapiPostproc * postproc)
   if (!postproc->has_vpp)
     return FALSE;
 
-  for (i = GST_VAAPI_FILTER_OP_DENOISE; i <= GST_VAAPI_FILTER_OP_SKINTONE; i++) {
+  for (i = GST_VAAPI_FILTER_OP_DENOISE;
+      i <= GST_VAAPI_FILTER_OP_SKINTONE_LEVEL; i++) {
     op_flag = (filter_flag >> i) & 1;
     if (op_flag)
       return TRUE;
@@ -628,14 +632,33 @@ update_filter (GstVaapiPostproc * postproc)
             | postproc->crop_bottom) == 0)
       postproc->flags &= ~(GST_VAAPI_POSTPROC_FLAG_CROP);
 
-  if (postproc->flags & GST_VAAPI_POSTPROC_FLAG_SKINTONE) {
-    if (!gst_vaapi_filter_set_skintone (postproc->filter,
-            postproc->skintone_enhance))
+  if (postproc->flags & GST_VAAPI_POSTPROC_FLAG_SKINTONE_LEVEL) {
+    if (!gst_vaapi_filter_set_skintone_level (postproc->filter,
+            postproc->skintone_value))
       return FALSE;
 
-    if (gst_vaapi_filter_get_skintone_default (postproc->filter) ==
-        postproc->skintone_enhance)
-      postproc->flags &= ~(GST_VAAPI_POSTPROC_FLAG_SKINTONE);
+    if (gst_vaapi_filter_get_skintone_level_default (postproc->filter) ==
+        postproc->skintone_value)
+      postproc->flags &= ~(GST_VAAPI_POSTPROC_FLAG_SKINTONE_LEVEL);
+
+#ifndef GST_REMOVE_DEPRECATED
+    /*
+     * When use skin tone level property, disable old skin tone property always
+     */
+    postproc->flags &= ~(GST_VAAPI_POSTPROC_FLAG_SKINTONE);
+#endif
+  } else {
+#ifndef GST_REMOVE_DEPRECATED
+    if (postproc->flags & GST_VAAPI_POSTPROC_FLAG_SKINTONE) {
+      if (!gst_vaapi_filter_set_skintone (postproc->filter,
+              postproc->skintone_enhance))
+        return FALSE;
+
+      if (gst_vaapi_filter_get_skintone_default (postproc->filter) ==
+          postproc->skintone_enhance)
+        postproc->flags &= ~(GST_VAAPI_POSTPROC_FLAG_SKINTONE);
+    }
+#endif
   }
 
   return TRUE;
@@ -1969,9 +1992,15 @@ gst_vaapipostproc_set_property (GObject * object,
       postproc->video_direction = g_value_get_enum (value);
       postproc->flags |= GST_VAAPI_POSTPROC_FLAG_VIDEO_DIRECTION;
       break;
+#ifndef GST_REMOVE_DEPRECATED
     case PROP_SKIN_TONE_ENHANCEMENT:
       postproc->skintone_enhance = g_value_get_boolean (value);
       postproc->flags |= GST_VAAPI_POSTPROC_FLAG_SKINTONE;
+      break;
+#endif
+    case PROP_SKIN_TONE_ENHANCEMENT_LEVEL:
+      postproc->skintone_value = g_value_get_uint (value);
+      postproc->flags |= GST_VAAPI_POSTPROC_FLAG_SKINTONE_LEVEL;
       break;
     case PROP_CROP_LEFT:
       postproc->crop_left = g_value_get_uint (value);
@@ -2049,8 +2078,13 @@ gst_vaapipostproc_get_property (GObject * object,
     case PROP_VIDEO_DIRECTION:
       g_value_set_enum (value, postproc->video_direction);
       break;
+#ifndef GST_REMOVE_DEPRECATED
     case PROP_SKIN_TONE_ENHANCEMENT:
       g_value_set_boolean (value, postproc->skintone_enhance);
+      break;
+#endif
+    case PROP_SKIN_TONE_ENHANCEMENT_LEVEL:
+      g_value_set_uint (value, postproc->skintone_value);
       break;
     case PROP_CROP_LEFT:
       g_value_set_uint (value, postproc->crop_left);
@@ -2346,6 +2380,7 @@ gst_vaapipostproc_class_init (GstVaapiPostprocClass * klass)
     g_object_class_install_property (object_class,
         PROP_VIDEO_DIRECTION, filter_op->pspec);
 
+#ifndef GST_REMOVE_DEPRECATED
   /**
    * GstVaapiPostproc:skin-tone-enhancement:
    *
@@ -2355,6 +2390,17 @@ gst_vaapipostproc_class_init (GstVaapiPostprocClass * klass)
   if (filter_op)
     g_object_class_install_property (object_class,
         PROP_SKIN_TONE_ENHANCEMENT, filter_op->pspec);
+#endif
+
+  /**
+   * GstVaapiPostproc:skin-tone-enhancement-setting:
+   *
+   * Apply the skin tone enhancement algorithm with specified value.
+   */
+  filter_op = find_filter_op (filter_ops, GST_VAAPI_FILTER_OP_SKINTONE_LEVEL);
+  if (filter_op)
+    g_object_class_install_property (object_class,
+        PROP_SKIN_TONE_ENHANCEMENT_LEVEL, filter_op->pspec);
 
   g_ptr_array_unref (filter_ops);
 }
@@ -2395,6 +2441,19 @@ cb_set_default_value (GstVaapiPostproc * postproc, GPtrArray * filter_ops,
 }
 
 static void
+skintone_set_default_value (GstVaapiPostproc * postproc, GPtrArray * filter_ops)
+{
+  GstVaapiFilterOpInfo *filter_op;
+  GParamSpecUInt *pspec;
+
+  filter_op = find_filter_op (filter_ops, GST_VAAPI_FILTER_OP_SKINTONE_LEVEL);
+  if (!filter_op)
+    return;
+  pspec = G_PARAM_SPEC_UINT (filter_op->pspec);
+  postproc->skintone_value = pspec->default_value;
+}
+
+static void
 gst_vaapipostproc_init (GstVaapiPostproc * postproc)
 {
   GPtrArray *filter_ops;
@@ -2420,6 +2479,8 @@ gst_vaapipostproc_init (GstVaapiPostproc * postproc)
   if (filter_ops) {
     for (i = GST_VAAPI_FILTER_OP_HUE; i <= GST_VAAPI_FILTER_OP_CONTRAST; i++)
       cb_set_default_value (postproc, filter_ops, i);
+
+    skintone_set_default_value (postproc, filter_ops);
     g_ptr_array_unref (filter_ops);
   }
 

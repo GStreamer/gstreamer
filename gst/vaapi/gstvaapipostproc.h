@@ -88,6 +88,7 @@ typedef enum
  * @GST_VAAPI_POSTPROC_FLAG_SCALE: Video scaling mode.
  * @GST_VAAPI_POSTPROC_FLAG_VIDEO_DIRECTION: Video rotation and flip/mirroring.
  * @GST_VAAPI_POSTPROC_FLAG_SKINTONE: Skin tone enhancement.
+ * @GST_VAAPI_POSTPROC_FLAG_SKINTONE_LEVEL: Skin tone enhancement with value.
  *
  * The set of operations that are to be performed for each frame.
  */
@@ -105,7 +106,11 @@ typedef enum
   GST_VAAPI_POSTPROC_FLAG_VIDEO_DIRECTION =
       1 << GST_VAAPI_FILTER_OP_VIDEO_DIRECTION,
   GST_VAAPI_POSTPROC_FLAG_CROP        = 1 << GST_VAAPI_FILTER_OP_CROP,
+#ifndef GST_REMOVE_DEPRECATED
   GST_VAAPI_POSTPROC_FLAG_SKINTONE    = 1 << GST_VAAPI_FILTER_OP_SKINTONE,
+#endif
+  GST_VAAPI_POSTPROC_FLAG_SKINTONE_LEVEL =
+      1 << GST_VAAPI_FILTER_OP_SKINTONE_LEVEL,
 
   /* Additional custom flags */
   GST_VAAPI_POSTPROC_FLAG_CUSTOM      = 1 << 20,
@@ -182,6 +187,7 @@ struct _GstVaapiPostproc
   gfloat contrast;
 
   gboolean skintone_enhance;
+  guint skintone_value;
   gboolean forward_crop;
 
   guint get_va_surfaces:1;
