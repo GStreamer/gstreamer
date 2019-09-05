@@ -59,6 +59,9 @@ gst_vaapi_video_format_from_chroma (guint chroma);
 GstVideoFormat
 gst_vaapi_video_format_get_best_native (GstVideoFormat format);
 
+gboolean
+gst_vaapi_video_format_create_map (VAImageFormat * formats, guint n);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_VIDEO_FORMAT_H */

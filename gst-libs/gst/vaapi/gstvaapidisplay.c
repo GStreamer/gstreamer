@@ -675,6 +675,11 @@ ensure_image_formats (GstVaapiDisplay * display)
   for (i = 0; i < n; i++)
     GST_DEBUG ("  %" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (formats[i].fourcc));
 
+  if (!gst_vaapi_video_format_create_map (formats, n)) {
+    GST_ERROR ("fail to create map between gst video format and vaImageFormat");
+    goto cleanup;
+  }
+
   append_formats (priv->image_formats, formats, NULL, n);
   g_array_sort (priv->image_formats, compare_yuv_formats);
   success = TRUE;
@@ -906,6 +911,12 @@ gst_vaapi_display_create (GstVaapiDisplay * display,
   GST_INFO_OBJECT (display, "new display addr=%p", display);
   g_free (priv->display_name);
   priv->display_name = g_strdup (info.display_name);
+
+  if (!ensure_image_formats (display)) {
+    gst_vaapi_display_destroy (display);
+    return FALSE;
+  }
+
   return TRUE;
 }
 
