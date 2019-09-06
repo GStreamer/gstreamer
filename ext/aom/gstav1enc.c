@@ -253,7 +253,7 @@ gst_av1_enc_class_init (GstAV1EncClass * klass)
   g_object_class_install_property (gobject_class, PROP_CPU_USED,
       g_param_spec_int ("cpu-used", "CPU Used",
           "CPU Used. A Value greater than 0 will increase encoder speed at the expense of quality.",
-          0, 8, DEFAULT_CPU_USED, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          0, 5, DEFAULT_CPU_USED, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* Rate control configurations */
   g_object_class_install_property (gobject_class, PROP_DROP_FRAME,
