@@ -70,6 +70,7 @@ if cc.get_id() == 'msvc'
   export_define = '__declspec(dllexport) extern'
 elif cc.has_argument('-fvisibility=hidden')
   add_project_arguments('-fvisibility=hidden', language: 'c')
+  add_project_arguments('-fvisibility=hidden', language: 'cpp')
   export_define = 'extern __attribute__ ((visibility ("default")))'
 else
   export_define = 'extern'
