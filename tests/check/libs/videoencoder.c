@@ -38,6 +38,7 @@ static GList *events = NULL;
 #define TEST_VIDEO_FPS_D 1
 
 #define GST_VIDEO_ENCODER_TESTER_TYPE gst_video_encoder_tester_get_type()
+#define GST_VIDEO_ENCODER_TESTER(obj)          (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_VIDEO_ENCODER_TESTER_TYPE, GstVideoEncoderTester))
 static GType gst_video_encoder_tester_get_type (void);
 
 typedef struct _GstVideoEncoderTester GstVideoEncoderTester;
@@ -48,10 +49,18 @@ struct _GstVideoEncoderTester
   GstVideoEncoder parent;
 
   GstFlowReturn pre_push_result;
+  gint num_subframes;
+  gint current_subframe;
+  gboolean send_headers;
+  gboolean key_frame_sent;
+  gboolean enable_step_by_step;
+  GstVideoCodecFrame *last_frame;
 };
 
 struct _GstVideoEncoderTesterClass
 {
+  GstFlowReturn (*step_by_step) (GstVideoEncoder * encoder,
+      GstVideoCodecFrame * frame, int steps);
   GstVideoEncoderClass parent_class;
 };
 
@@ -84,33 +93,85 @@ gst_video_encoder_tester_set_format (GstVideoEncoder * enc,
 }
 
 static GstFlowReturn
-gst_video_encoder_tester_handle_frame (GstVideoEncoder * enc,
-    GstVideoCodecFrame * frame)
+gst_video_encoder_push_subframe (GstVideoEncoder * enc,
+    GstVideoCodecFrame * frame, int current_subframe)
 {
   guint8 *data;
   GstMapInfo map;
   guint64 input_num;
-  GstClockTimeDiff deadline;
+  GstVideoEncoderTester *enc_tester = GST_VIDEO_ENCODER_TESTER (enc);
 
-  deadline = gst_video_encoder_get_max_encode_time (enc, frame);
-  if (deadline < 0) {
-    /* Calling finish_frame() with frame->output_buffer == NULL means to drop it */
-    goto out;
+  if (enc_tester->send_headers) {
+    GstBuffer *hdr;
+    GList *headers = NULL;
+    hdr = gst_buffer_new_and_alloc (0);
+    GST_BUFFER_FLAG_SET (hdr, GST_BUFFER_FLAG_HEADER);
+    headers = g_list_append (headers, hdr);
+    gst_video_encoder_set_headers (enc, headers);
+    enc_tester->send_headers = FALSE;
   }
 
   gst_buffer_map (frame->input_buffer, &map, GST_MAP_READ);
   input_num = *((guint64 *) map.data);
   gst_buffer_unmap (frame->input_buffer, &map);
 
+  if (!enc_tester->key_frame_sent) {
+    GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
+    enc_tester->key_frame_sent = TRUE;
+  }
+
   data = g_malloc (sizeof (guint64));
   *(guint64 *) data = input_num;
-
   frame->output_buffer = gst_buffer_new_wrapped (data, sizeof (guint64));
   frame->pts = GST_BUFFER_PTS (frame->input_buffer);
   frame->duration = GST_BUFFER_DURATION (frame->input_buffer);
 
-out:
-  return gst_video_encoder_finish_frame (enc, frame);
+  if (current_subframe < enc_tester->num_subframes - 1)
+    return gst_video_encoder_finish_subframe (enc, frame);
+  else
+    return gst_video_encoder_finish_frame (enc, frame);
+}
+
+static GstFlowReturn
+gst_video_encoder_tester_output_step_by_step (GstVideoEncoder * enc,
+    GstVideoCodecFrame * frame, gint steps)
+{
+  GstVideoEncoderTester *enc_tester = GST_VIDEO_ENCODER_TESTER (enc);
+  GstFlowReturn ret = GST_FLOW_OK;
+  int i;
+  for (i = enc_tester->current_subframe;
+      i < MIN (steps + enc_tester->current_subframe, enc_tester->num_subframes);
+      i++) {
+    ret = gst_video_encoder_push_subframe (enc, frame, i);
+  }
+  enc_tester->current_subframe = i;
+  if (enc_tester->current_subframe >= enc_tester->num_subframes) {
+    enc_tester->current_subframe = 0;
+    gst_video_codec_frame_unref (enc_tester->last_frame);
+  }
+
+  return ret;
+}
+
+static GstFlowReturn
+gst_video_encoder_tester_handle_frame (GstVideoEncoder * enc,
+    GstVideoCodecFrame * frame)
+{
+  GstClockTimeDiff deadline;
+  GstVideoEncoderTester *enc_tester = GST_VIDEO_ENCODER_TESTER (enc);
+
+  deadline = gst_video_encoder_get_max_encode_time (enc, frame);
+  if (deadline < 0) {
+    /* Calling finish_frame() with frame->output_buffer == NULL means to drop it */
+    return gst_video_encoder_finish_frame (enc, frame);
+  }
+
+  enc_tester->last_frame = gst_video_codec_frame_ref (frame);
+  if (enc_tester->enable_step_by_step)
+    return GST_FLOW_OK;
+
+  return gst_video_encoder_tester_output_step_by_step (enc, frame,
+      enc_tester->num_subframes);
 }
 
 static GstFlowReturn
@@ -118,7 +179,6 @@ gst_video_encoder_tester_pre_push (GstVideoEncoder * enc,
     GstVideoCodecFrame * frame)
 {
   GstVideoEncoderTester *tester = (GstVideoEncoderTester *) enc;
-
   return tester->pre_push_result;
 }
 
@@ -147,12 +207,15 @@ gst_video_encoder_tester_class_init (GstVideoEncoderTesterClass * klass)
   videoencoder_class->handle_frame = gst_video_encoder_tester_handle_frame;
   videoencoder_class->pre_push = gst_video_encoder_tester_pre_push;
   videoencoder_class->set_format = gst_video_encoder_tester_set_format;
+
 }
 
 static void
 gst_video_encoder_tester_init (GstVideoEncoderTester * tester)
 {
   tester->pre_push_result = GST_FLOW_OK;
+  /* One subframe is considered as a whole single frame. */
+  tester->num_subframes = 1;
 }
 
 static gboolean
@@ -181,6 +244,16 @@ setup_videoencodertester (void)
   mysinkpad = gst_check_setup_sink_pad (enc, &sinktemplate);
 
   gst_pad_set_event_function (mysinkpad, _mysinkpad_event);
+}
+
+static void
+setup_videoencodertester_with_subframes (int num_subframes)
+{
+  GstVideoEncoderTester *enc_tester;
+  setup_videoencodertester ();
+  enc_tester = GST_VIDEO_ENCODER_TESTER (enc);
+  enc_tester->num_subframes = num_subframes;
+  enc_tester->send_headers = TRUE;
 }
 
 static void
@@ -526,6 +599,7 @@ GST_START_TEST (videoencoder_pre_push_fails)
 {
   GstVideoEncoderTester *tester;
   GstHarness *h;
+  GstFlowReturn ret;
 
   tester = g_object_new (GST_VIDEO_ENCODER_TESTER_TYPE, NULL);
   tester->pre_push_result = GST_FLOW_ERROR;
@@ -533,8 +607,8 @@ GST_START_TEST (videoencoder_pre_push_fails)
   h = gst_harness_new_with_element (GST_ELEMENT (tester), "sink", "src");
   gst_harness_set_src_caps (h, create_test_caps ());
 
-  fail_unless_equals_int (gst_harness_push (h, create_test_buffer (0)),
-      GST_FLOW_ERROR);
+  ret = gst_harness_push (h, create_test_buffer (0));
+  fail_unless_equals_int (ret, GST_FLOW_ERROR);
 
   gst_harness_teardown (h);
   gst_object_unref (tester);
@@ -602,6 +676,242 @@ GST_START_TEST (videoencoder_qos)
 
 GST_END_TEST;
 
+#define NUM_BUFFERS 100
+GST_START_TEST (videoencoder_playback_subframes)
+{
+  GstSegment segment;
+  GstBuffer *buffer;
+  guint64 i;
+  GList *iter;
+  int subframes = 4;
+
+  setup_videoencodertester_with_subframes (subframes);
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_element_set_state (enc, GST_STATE_PLAYING);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  send_startup_events ();
+
+  /* push a new segment */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  /* push buffers, the data is actually a number so we can track them */
+  for (i = 0; i < NUM_BUFFERS; i++) {
+    buffer = create_test_buffer (i);
+
+    fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+  }
+
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+
+  /* check that all buffers (plus one header buffer) were received by our source pad */
+  fail_unless (g_list_length (buffers) == NUM_BUFFERS * subframes + 1);
+  /* check that first buffer is an header */
+  buffer = buffers->data;
+  fail_unless (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_HEADER));
+  /* check the other buffers */
+  i = 0;
+  for (iter = g_list_next (buffers); iter; iter = g_list_next (iter)) {
+    /* first buffer should be the header */
+    GstMapInfo map;
+    guint64 num;
+    buffer = iter->data;
+    fail_unless (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_HEADER));
+    gst_buffer_map (buffer, &map, GST_MAP_READ);
+
+    num = *(guint64 *) map.data;
+    fail_unless (i / subframes == num);
+
+    if (i % subframes)
+      fail_unless (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT));
+
+    fail_unless (GST_BUFFER_PTS (buffer) ==
+        gst_util_uint64_scale_round (i / subframes,
+            GST_SECOND * TEST_VIDEO_FPS_D, TEST_VIDEO_FPS_N));
+    fail_unless (GST_BUFFER_DURATION (buffer) ==
+        gst_util_uint64_scale_round (GST_SECOND, TEST_VIDEO_FPS_D,
+            TEST_VIDEO_FPS_N));
+    gst_buffer_unmap (buffer, &map);
+
+
+    i++;
+  }
+
+  g_list_free_full (buffers, (GDestroyNotify) gst_buffer_unref);
+  buffers = NULL;
+
+  cleanup_videoencodertest ();
+}
+
+GST_END_TEST;
+
+GST_START_TEST (videoencoder_playback_events_subframes)
+{
+  GstSegment segment;
+  GstBuffer *buffer;
+  GList *iter;
+  gint subframes = 4;
+  gint i, header_found;
+  GstVideoEncoderTester *enc_tester;
+
+  setup_videoencodertester_with_subframes (subframes);
+
+  enc_tester = GST_VIDEO_ENCODER_TESTER (enc);
+  enc_tester->send_headers = TRUE;
+  enc_tester->enable_step_by_step = TRUE;
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_element_set_state (enc, GST_STATE_PLAYING);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  send_startup_events ();
+
+  /* push a new segment -> no new buffer and no new events (still pending two custom events) */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+  fail_unless (g_list_length (buffers) == 0 && g_list_length (events) == 0);
+
+  /* push a first buffer -> no new buffer and no new events (still pending two custom events) */
+  buffer = create_test_buffer (0);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+  fail_unless (g_list_length (buffers) == 0 && g_list_length (events) == 0);
+
+  /* ouput only one subframe -> 2 buffers(header + subframe) and 3 events (stream-start, caps, segment) */
+  gst_video_encoder_tester_output_step_by_step (GST_VIDEO_ENCODER (enc),
+      enc_tester->last_frame, 1);
+  fail_unless (g_list_length (buffers) == 2 && g_list_length (events) == 3);
+  fail_unless (GST_BUFFER_FLAG_IS_SET ((GstBuffer *) buffers->data,
+          GST_BUFFER_FLAG_HEADER));
+  fail_unless (GST_EVENT_TYPE ((GstEvent *) (g_list_nth (events,
+                  0)->data)) == GST_EVENT_STREAM_START);
+  fail_unless (GST_EVENT_TYPE ((GstEvent *) (g_list_nth (events,
+                  1)->data)) == GST_EVENT_CAPS);
+  fail_unless (GST_EVENT_TYPE ((GstEvent *) (g_list_nth (events,
+                  2)->data)) == GST_EVENT_SEGMENT);
+
+  /* output 3 last subframes -> 2 more buffers and no new events */
+  gst_video_encoder_tester_output_step_by_step (GST_VIDEO_ENCODER (enc),
+      enc_tester->last_frame, 3);
+  fail_unless (g_list_length (buffers) == 5 && g_list_length (events) == 3);
+
+  /* push a new buffer -> no new buffer and no new events */
+  buffer = create_test_buffer (1);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+  fail_unless (g_list_length (buffers) == 5 && g_list_length (events) == 3);
+
+  /* push an event in between -> no new buffer and no new event */
+  fail_unless (gst_pad_push_event (mysrcpad,
+          gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+              gst_structure_new_empty ("custom1"))));
+  fail_unless (g_list_length (buffers) == 5 && g_list_length (events) == 3);
+
+  /* output 1 subframe -> one new buffer and no new events */
+  gst_video_encoder_tester_output_step_by_step (GST_VIDEO_ENCODER (enc),
+      enc_tester->last_frame, 1);
+  fail_unless (g_list_length (buffers) == 6 && g_list_length (events) == 3);
+
+  /* push another custom event in between , no new event should appear until the next frame is handled */
+  fail_unless (gst_pad_push_event (mysrcpad,
+          gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+              gst_structure_new_empty ("custom2"))));
+  fail_unless (g_list_length (buffers) == 6 && g_list_length (events) == 3);
+
+  /* output 2 subframes -> 2 new buffers and no new events */
+  gst_video_encoder_tester_output_step_by_step (GST_VIDEO_ENCODER (enc),
+      enc_tester->last_frame, 2);
+  fail_unless (g_list_length (buffers) == 8 && g_list_length (events) == 3);
+
+  /* output 1 last subframe -> 1 new buffers and no new events */
+  gst_video_encoder_tester_output_step_by_step (GST_VIDEO_ENCODER (enc),
+      enc_tester->last_frame, 1);
+  fail_unless (g_list_length (buffers) == 9 && g_list_length (events) == 3);
+
+  /* push a third buffer -> no new buffer and no new events (still pending two custom events) */
+  buffer = create_test_buffer (2);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+  fail_unless (g_list_length (buffers) == 9 && g_list_length (events) == 3);
+
+  /* output 1 subframes -> 1 new buffer and 2 custom events from the last input frame */
+  gst_video_encoder_tester_output_step_by_step (GST_VIDEO_ENCODER (enc),
+      enc_tester->last_frame, 1);
+  fail_unless (g_list_length (buffers) == 10 && g_list_length (events) == 5);
+  fail_unless (GST_EVENT_TYPE ((GstEvent *) (g_list_nth (events,
+                  3)->data)) == GST_EVENT_CUSTOM_DOWNSTREAM);
+  fail_unless (GST_EVENT_TYPE ((GstEvent *) (g_list_nth (events,
+                  4)->data)) == GST_EVENT_CUSTOM_DOWNSTREAM);
+
+  /* push another custom event in between , no new event should appear until eos */
+  fail_unless (gst_pad_push_event (mysrcpad,
+          gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+              gst_structure_new_empty ("custom3"))));
+  fail_unless (g_list_length (buffers) == 10 && g_list_length (events) == 5);
+
+  /* output 3 subframes -> 3 new buffer and no new events */
+  gst_video_encoder_tester_output_step_by_step (GST_VIDEO_ENCODER (enc),
+      enc_tester->last_frame, 3);
+  fail_unless (g_list_length (buffers) == 13 && g_list_length (events) == 5);
+
+  /* push a force key-unit event */
+  enc_tester->key_frame_sent = FALSE;
+  fail_unless (gst_pad_push_event (mysrcpad,
+          gst_video_event_new_downstream_force_key_unit (GST_CLOCK_TIME_NONE,
+              GST_CLOCK_TIME_NONE, GST_CLOCK_TIME_NONE, TRUE, 1)));
+
+  /* Create a new buffer which should be a key unit -> no new buffer and no new event */
+  buffer = create_test_buffer (3);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+  fail_unless (g_list_length (buffers) == 13 && g_list_length (events) == 5);
+
+  /*  output 2 subframes -> 3 new buffer(one header and two subframes and two events key-unit and custom3  */
+  gst_video_encoder_tester_output_step_by_step (GST_VIDEO_ENCODER (enc),
+      enc_tester->last_frame, 2);
+  fail_unless (g_list_length (buffers) == 16 && g_list_length (events) == 7);
+
+  /*  output 2 subframes -> 2 new buffer correspong the two last subframes */
+  gst_video_encoder_tester_output_step_by_step (GST_VIDEO_ENCODER (enc),
+      enc_tester->last_frame, 2);
+  fail_unless (g_list_length (buffers) == 18 && g_list_length (events) == 7);
+
+  /* push eos event -> 1 new event ( eos) */
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+  fail_unless (g_list_length (buffers) == 18 && g_list_length (events) == 8);
+
+  /* check the order of the last events received */
+  fail_unless (GST_EVENT_TYPE ((GstEvent *) (g_list_nth (events,
+                  6)->data)) == GST_EVENT_CUSTOM_DOWNSTREAM);
+  fail_unless (GST_EVENT_TYPE ((GstEvent *) (g_list_nth (events,
+                  7)->data)) == GST_EVENT_EOS);
+
+  /* check that only last subframe owns the GST_VIDEO_BUFFER_FLAG_MARKER flag */
+  i = 0;
+  header_found = 0;
+  for (iter = g_list_next (buffers); iter; iter = g_list_next (iter)) {
+    buffer = (GstBuffer *) (iter->data);
+    if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_HEADER)) {
+      if ((i - header_found) % subframes == (subframes - 1))
+        fail_unless (GST_BUFFER_FLAG_IS_SET (buffer,
+                GST_VIDEO_BUFFER_FLAG_MARKER));
+      else
+        fail_unless (!GST_BUFFER_FLAG_IS_SET (buffer,
+                GST_VIDEO_BUFFER_FLAG_MARKER));
+    } else {
+      fail_unless (!GST_BUFFER_FLAG_IS_SET (buffer,
+              GST_VIDEO_BUFFER_FLAG_MARKER));
+      header_found++;
+    }
+    i++;
+  }
+
+  g_list_free_full (buffers, (GDestroyNotify) gst_buffer_unref);
+  buffers = NULL;
+
+  cleanup_videoencodertest ();
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_videoencoder_suite (void)
 {
@@ -616,6 +926,8 @@ gst_videoencoder_suite (void)
   tcase_add_test (tc, videoencoder_flush_events);
   tcase_add_test (tc, videoencoder_pre_push_fails);
   tcase_add_test (tc, videoencoder_qos);
+  tcase_add_test (tc, videoencoder_playback_subframes);
+  tcase_add_test (tc, videoencoder_playback_events_subframes);
 
   return s;
 }
