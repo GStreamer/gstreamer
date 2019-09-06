@@ -13,9 +13,6 @@ sudo dnf install -y \
 
 dnf upgrade -y
 
-# Enable the cisco openh264 repo
-dnf config-manager --set-enabled fedora-cisco-openh264
-
 # install rest of the extra deps
 dnf install -y \
     aom \
@@ -68,8 +65,6 @@ dnf install -y \
     opencv-devel \
     openjpeg2 \
     openjpeg2-devel \
-    openh264 \
-    openh264-devel \
     SDL2 \
     SDL2-devel \
     sbc \
