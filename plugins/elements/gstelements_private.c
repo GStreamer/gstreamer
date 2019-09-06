@@ -127,10 +127,18 @@ struct iovec
 #define FDSINK_MAX_ALLOCA_SIZE (64 * 1024)      /* 64k */
 #define FDSINK_MAX_MALLOC_SIZE ( 8 * 1024 * 1024)       /*  8M */
 
-/* UIO_MAXIOV is documented in writev(2), but <sys/uio.h> only
- * declares it on osx/ios if defined(KERNEL) */
+/* UIO_MAXIOV is documented in writev(2) on osx/ios, but <sys/uio.h>
+ * only declares it if defined(KERNEL) */
 #ifndef UIO_MAXIOV
 #define UIO_MAXIOV 512
+#endif
+
+/*
+ * POSIX writev(2) documents IOV_MAX as the max length of the iov array.
+ * If IOV_MAX is undefined, fall back to the legacy UIO_MAXIOV.
+ */
+#ifndef IOV_MAX
+#define IOV_MAX UIO_MAXIOV
 #endif
 
 static gssize
@@ -139,7 +147,7 @@ gst_writev (gint fd, const struct iovec *iov, gint iovcnt, gsize total_bytes)
   gssize written;
 
 #ifdef HAVE_SYS_UIO_H
-  if (iovcnt <= UIO_MAXIOV) {
+  if (iovcnt <= IOV_MAX) {
     do {
       written = writev (fd, iov, iovcnt);
     } while (written < 0 && errno == EINTR);
