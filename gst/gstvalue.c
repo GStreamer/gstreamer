@@ -3754,7 +3754,7 @@ gst_value_serialize_enum (const GValue * value)
   }
 
   g_return_val_if_fail (en, NULL);
-  return g_strdup (en->value_name);
+  return g_strdup (en->value_nick);
 }
 
 static gint

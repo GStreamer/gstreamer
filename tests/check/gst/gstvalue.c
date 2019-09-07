@@ -2668,9 +2668,9 @@ GST_START_TEST (test_serialize_deserialize_format_enum)
   str = gst_structure_to_string (s);
   GST_LOG ("Got structure string '%s'", GST_STR_NULL (str));
   fail_unless (str != NULL);
-  fail_unless (strstr (str, "TIME") != NULL);
-  fail_unless (strstr (str, "BYTE") != NULL);
-  fail_unless (strstr (str, "DEFAULT") != NULL);
+  fail_unless (strstr (str, "time") != NULL);
+  fail_unless (strstr (str, "byte") != NULL);
+  fail_unless (strstr (str, "default") != NULL);
   fail_unless (strstr (str, "FOOBAR") != NULL);
 
   s2 = gst_structure_from_string (str, &end);
