@@ -271,7 +271,9 @@ string_of_VAEntrypoint (VAEntrypoint entrypoint)
       MAP (EncPicture);
       MAP (EncSliceLP);
       MAP (VideoProc);
+#if VA_CHECK_VERSION(1,0,0)
       MAP (FEI);
+#endif
 #undef MAP
     default:
       break;
