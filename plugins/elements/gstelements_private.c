@@ -127,18 +127,23 @@ struct iovec
 #define FDSINK_MAX_ALLOCA_SIZE (64 * 1024)      /* 64k */
 #define FDSINK_MAX_MALLOC_SIZE ( 8 * 1024 * 1024)       /*  8M */
 
-/* UIO_MAXIOV is documented in writev(2) on osx/ios, but <sys/uio.h>
+/* Adapted from GLib (gio/gioprivate.h)
+ *
+ * POSIX defines IOV_MAX/UIO_MAXIOV as the maximum number of iovecs that can
+ * be sent in one go.  We define our own version of it here as there are two
+ * possible names, and also define a fall-back value if none of the constants
+ * are defined */
+#if defined(IOV_MAX)
+#define GST_IOV_MAX IOV_MAX
+#elif defined(UIO_MAXIOV)
+#define GST_IOV_MAX UIO_MAXIOV
+#elif defined(__APPLE__)
+/* For osx/ios, UIO_MAXIOV is documented in writev(2), but <sys/uio.h>
  * only declares it if defined(KERNEL) */
-#ifndef UIO_MAXIOV
-#define UIO_MAXIOV 512
-#endif
-
-/*
- * POSIX writev(2) documents IOV_MAX as the max length of the iov array.
- * If IOV_MAX is undefined, fall back to the legacy UIO_MAXIOV.
- */
-#ifndef IOV_MAX
-#define IOV_MAX UIO_MAXIOV
+#define GST_IOV_MAX 512
+#else
+/* 16 is the minimum value required by POSIX */
+#define GST_IOV_MAX 16
 #endif
 
 static gssize
@@ -147,7 +152,7 @@ gst_writev (gint fd, const struct iovec *iov, gint iovcnt, gsize total_bytes)
   gssize written;
 
 #ifdef HAVE_SYS_UIO_H
-  if (iovcnt <= IOV_MAX) {
+  if (iovcnt <= GST_IOV_MAX) {
     do {
       written = writev (fd, iov, iovcnt);
     } while (written < 0 && errno == EINTR);
