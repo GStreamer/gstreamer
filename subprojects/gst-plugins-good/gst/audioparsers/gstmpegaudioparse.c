@@ -98,7 +98,7 @@
  * backwards compatibility with older hardware MP3 players, but can be safely
  * dropped.
  *
- * For more about Xng header frames, see:
+ * For more about Xing header frames, see:
  * https://www.codeproject.com/Articles/8295/MPEG-Audio-Frame-Header#XINGHeader
  * https://www.compuphase.com/mp3/mp3loops.htm#PADDING_DELAYS
  *

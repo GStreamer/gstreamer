@@ -71,16 +71,31 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "channels = (int) [ 1, 2 ], " "parsed = (boolean) true ")
     );
 
+typedef struct
+{
+  guint64 clip_start, clip_end;
+} GstMpg123AudioDecClipInfo;
+
+static void gst_mpg123_audio_dec_dispose (GObject * object);
 static gboolean gst_mpg123_audio_dec_start (GstAudioDecoder * dec);
 static gboolean gst_mpg123_audio_dec_stop (GstAudioDecoder * dec);
 static GstFlowReturn gst_mpg123_audio_dec_push_decoded_bytes (GstMpg123AudioDec
     * mpg123_decoder, unsigned char const *decoded_bytes,
-    size_t const num_decoded_bytes);
+    size_t num_decoded_bytes, guint64 clip_start, guint64 clip_end);
 static GstFlowReturn gst_mpg123_audio_dec_handle_frame (GstAudioDecoder * dec,
     GstBuffer * input_buffer);
 static gboolean gst_mpg123_audio_dec_set_format (GstAudioDecoder * dec,
     GstCaps * input_caps);
 static void gst_mpg123_audio_dec_flush (GstAudioDecoder * dec, gboolean hard);
+
+static void gst_mpg123_audio_dec_push_clip_info
+    (GstMpg123AudioDec * mpg123_decoder, guint64 clip_start, guint64 clip_end);
+static void gst_mpg123_audio_dec_pop_oldest_clip_info (GstMpg123AudioDec *
+    mpg123_decoder, guint64 * clip_start, guint64 * clip_end);
+static void gst_mpg123_audio_dec_clear_clip_info_queue (GstMpg123AudioDec *
+    mpg123_decoder);
+static guint gst_mpg123_audio_dec_get_info_queue_size (GstMpg123AudioDec *
+    mpg123_decoder);
 
 G_DEFINE_TYPE (GstMpg123AudioDec, gst_mpg123_audio_dec, GST_TYPE_AUDIO_DECODER);
 GST_ELEMENT_REGISTER_DEFINE (mpg123audiodec, "mpg123audiodec",
@@ -89,6 +104,7 @@ GST_ELEMENT_REGISTER_DEFINE (mpg123audiodec, "mpg123audiodec",
 static void
 gst_mpg123_audio_dec_class_init (GstMpg123AudioDecClass * klass)
 {
+  GObjectClass *object_class;
   GstAudioDecoderClass *base_class;
   GstElementClass *element_class;
   GstPadTemplate *src_template, *sink_template;
@@ -96,6 +112,7 @@ gst_mpg123_audio_dec_class_init (GstMpg123AudioDecClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (mpg123_debug, "mpg123", 0, "mpg123 mp3 decoder");
 
+  object_class = G_OBJECT_CLASS (klass);
   base_class = GST_AUDIO_DECODER_CLASS (klass);
   element_class = GST_ELEMENT_CLASS (klass);
 
@@ -178,6 +195,7 @@ gst_mpg123_audio_dec_class_init (GstMpg123AudioDecClass * klass)
   gst_element_class_add_pad_template (element_class, sink_template);
   gst_element_class_add_pad_template (element_class, src_template);
 
+  object_class->dispose = GST_DEBUG_FUNCPTR (gst_mpg123_audio_dec_dispose);
   base_class->start = GST_DEBUG_FUNCPTR (gst_mpg123_audio_dec_start);
   base_class->stop = GST_DEBUG_FUNCPTR (gst_mpg123_audio_dec_stop);
   base_class->handle_frame =
@@ -198,10 +216,27 @@ void
 gst_mpg123_audio_dec_init (GstMpg123AudioDec * mpg123_decoder)
 {
   mpg123_decoder->handle = NULL;
+  mpg123_decoder->audio_clip_info_queue =
+      gst_queue_array_new_for_struct (sizeof (GstMpg123AudioDecClipInfo), 16);
+
   gst_audio_decoder_set_needs_format (GST_AUDIO_DECODER (mpg123_decoder), TRUE);
   gst_audio_decoder_set_use_default_pad_acceptcaps (GST_AUDIO_DECODER_CAST
       (mpg123_decoder), TRUE);
   GST_PAD_SET_ACCEPT_TEMPLATE (GST_AUDIO_DECODER_SINK_PAD (mpg123_decoder));
+}
+
+
+static void
+gst_mpg123_audio_dec_dispose (GObject * object)
+{
+  GstMpg123AudioDec *mpg123_decoder = GST_MPG123_AUDIO_DEC (object);
+
+  if (mpg123_decoder->audio_clip_info_queue != NULL) {
+    gst_queue_array_free (mpg123_decoder->audio_clip_info_queue);
+    mpg123_decoder->audio_clip_info_queue = NULL;
+  }
+
+  G_OBJECT_CLASS (gst_mpg123_audio_dec_parent_class)->dispose (object);
 }
 
 
@@ -271,6 +306,8 @@ gst_mpg123_audio_dec_stop (GstAudioDecoder * dec)
     mpg123_decoder->handle = NULL;
   }
 
+  gst_mpg123_audio_dec_clear_clip_info_queue (mpg123_decoder);
+
   GST_INFO_OBJECT (dec, "mpg123 decoder stopped");
 
   return TRUE;
@@ -279,7 +316,8 @@ gst_mpg123_audio_dec_stop (GstAudioDecoder * dec)
 
 static GstFlowReturn
 gst_mpg123_audio_dec_push_decoded_bytes (GstMpg123AudioDec * mpg123_decoder,
-    unsigned char const *decoded_bytes, size_t const num_decoded_bytes)
+    unsigned char const *decoded_bytes, size_t num_decoded_bytes,
+    guint64 clip_start, guint64 clip_end)
 {
   GstBuffer *output_buffer;
   GstAudioDecoder *dec;
@@ -287,15 +325,31 @@ gst_mpg123_audio_dec_push_decoded_bytes (GstMpg123AudioDec * mpg123_decoder,
   output_buffer = NULL;
   dec = GST_AUDIO_DECODER (mpg123_decoder);
 
-  if ((num_decoded_bytes == 0) || (decoded_bytes == NULL)) {
-    /* This occurs in the first few frames, which do not carry data; once
-     * MPG123_AUDIO_DEC_NEW_FORMAT is received, the empty frames stop occurring */
-    GST_DEBUG_OBJECT (mpg123_decoder,
-        "cannot decode yet, need more data -> no output buffer to push");
+  if (G_UNLIKELY ((num_decoded_bytes == 0) || (decoded_bytes == NULL))) {
+    /* This occurs in two cases:
+     *
+     * 1. The first few frames come in. These fill mpg123's buffers, and
+     *    do not immediately yield decoded output. This stops once the
+     *    mpg123_decode_frame () returns MPG123_NEW_FORMAT.
+     * 2. The decoder is being drained.
+     */
     return GST_FLOW_OK;
   }
 
-  output_buffer = gst_buffer_new_allocate (NULL, num_decoded_bytes, NULL);
+  if (G_UNLIKELY (clip_end >= num_decoded_bytes)) {
+    /* Fully-clipped frames still need to be finished, since they got
+     * decoded properly, they are just made of padding samples. */
+    GST_LOG_OBJECT (mpg123_decoder, "frame is fully clipped; "
+        "not pushing anything downstream");
+    return gst_audio_decoder_finish_frame (dec, NULL, 1);
+  }
+
+  /* Apply clipping. */
+  decoded_bytes += clip_start;
+  num_decoded_bytes -= clip_start + clip_end;
+
+  output_buffer = gst_audio_decoder_allocate_output_buffer (dec,
+      num_decoded_bytes);
 
   if (output_buffer == NULL) {
     /* This is necessary to advance playback in time,
@@ -327,114 +381,192 @@ gst_mpg123_audio_dec_handle_frame (GstAudioDecoder * dec,
   unsigned char *decoded_bytes;
   size_t num_decoded_bytes;
   GstFlowReturn retval;
+  gboolean loop = TRUE;
 
   mpg123_decoder = GST_MPG123_AUDIO_DEC (dec);
 
   g_assert (mpg123_decoder->handle != NULL);
 
-  /* The actual decoding */
-  {
-    /* feed input data (if there is any) */
-    if (G_LIKELY (input_buffer != NULL)) {
-      GstMapInfo info;
+  /* Feed input data (if there is any) into mpg123. */
+  if (G_LIKELY (input_buffer != NULL)) {
+    GstMapInfo info;
+    GstAudioClippingMeta *clipping_meta = NULL;
 
-      if (gst_buffer_map (input_buffer, &info, GST_MAP_READ)) {
-        mpg123_feed (mpg123_decoder->handle, info.data, info.size);
-        gst_buffer_unmap (input_buffer, &info);
-      } else {
-        GST_AUDIO_DECODER_ERROR (mpg123_decoder, 1, RESOURCE, READ, (NULL),
-            ("gst_memory_map() failed"), retval);
-        return retval;
-      }
+    /* Drop any Xing/LAME header as marked from the parser. It's not parsed in
+     * this element and would decode to unnecessary silence samples. */
+    if (GST_BUFFER_FLAG_IS_SET (input_buffer, GST_BUFFER_FLAG_DECODE_ONLY) &&
+        GST_BUFFER_FLAG_IS_SET (input_buffer, GST_BUFFER_FLAG_DROPPABLE)) {
+      return gst_audio_decoder_finish_frame (dec, NULL, 1);
+    } else if (gst_buffer_map (input_buffer, &info, GST_MAP_READ)) {
+      GST_LOG_OBJECT (mpg123_decoder, "got new MPEG audio frame with %"
+          G_GSIZE_FORMAT " byte(s); feeding it into mpg123", info.size);
+      mpg123_feed (mpg123_decoder->handle, info.data, info.size);
+      gst_buffer_unmap (input_buffer, &info);
+    } else {
+      GST_AUDIO_DECODER_ERROR (mpg123_decoder, 1, RESOURCE, READ, (NULL),
+          ("gst_memory_map() failed; could not feed MPEG frame into mpg123"),
+          retval);
+      return retval;
     }
+
+    clipping_meta = gst_buffer_get_audio_clipping_meta (input_buffer);
+    if (clipping_meta != NULL) {
+      if (clipping_meta->format == GST_FORMAT_DEFAULT) {
+        /* Get clipping info and convert it to bytes. */
+        gint bpf = GST_AUDIO_INFO_BPF (&(mpg123_decoder->next_audioinfo));
+        guint64 clip_start = clipping_meta->start * bpf;
+        guint64 clip_end = clipping_meta->end * bpf;
+
+        /* Push the clipping info into the queue. We cannot use clipping info
+         * directly since mpg123 might not immediately be able to decode this
+         * MPEG frame. In other words, it queues the frames internally. To
+         * make sure we apply clipping properly, we therefore also have to
+         * queue the clipping info accordingly. */
+        gst_mpg123_audio_dec_push_clip_info (mpg123_decoder, clip_start,
+            clip_end);
+
+        GST_LOG_OBJECT (dec, "buffer has clipping metadata: start/end %"
+            G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT " samples (= %"
+            G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT " bytes); pushed it into "
+            "audio clip info queue (now has %u item(s))", clipping_meta->start,
+            clipping_meta->end, clip_start, clip_end,
+            gst_mpg123_audio_dec_get_info_queue_size (mpg123_decoder));
+      } else {
+        gst_mpg123_audio_dec_push_clip_info (mpg123_decoder, 0, 0);
+        GST_WARNING_OBJECT (dec,
+            "buffer has clipping metadata in unsupported format %s",
+            gst_format_get_name (clipping_meta->format));
+      }
+    } else {
+      gst_mpg123_audio_dec_push_clip_info (mpg123_decoder, 0, 0);
+    }
+  } else {
+    GST_LOG_OBJECT (dec, "got NULL pointer as input; "
+        "will drain mpg123 decoder");
+  }
+
+  retval = GST_FLOW_OK;
+
+  /* Keep trying to decode with mpg123 until it reports that,
+   * it is done, needs more data, or an error occurs. */
+  while (loop) {
+    guint64 clip_start = 0, clip_end = 0;
 
     /* Try to decode a frame */
     decoded_bytes = NULL;
     num_decoded_bytes = 0;
     decode_error = mpg123_decode_frame (mpg123_decoder->handle,
         &mpg123_decoder->frame_offset, &decoded_bytes, &num_decoded_bytes);
-  }
 
-  retval = GST_FLOW_OK;
+    if (G_LIKELY (decoded_bytes != NULL)) {
+      gst_mpg123_audio_dec_pop_oldest_clip_info (mpg123_decoder, &clip_start,
+          &clip_end);
 
-  switch (decode_error) {
-    case MPG123_NEW_FORMAT:
-      /* As mentioned in gst_mpg123_audio_dec_set_format(), the next audioinfo
-       * is not set immediately; instead, the code waits for mpg123 to take
-       * note of the new format, and then sets the audioinfo. This fixes glitches
-       * with mp3s containing several format headers (for example, first half
-       * using 44.1kHz, second half 32 kHz) */
-
-      GST_LOG_OBJECT (dec,
-          "mpg123 reported a new format -> setting next srccaps");
-
-      gst_mpg123_audio_dec_push_decoded_bytes (mpg123_decoder, decoded_bytes,
-          num_decoded_bytes);
-
-      /* If there is a next audioinfo, use it, then set has_next_audioinfo to
-       * FALSE, to make sure gst_audio_decoder_set_output_format() isn't called
-       * again until set_format is called by the base class */
-      if (mpg123_decoder->has_next_audioinfo) {
-        if (!gst_audio_decoder_set_output_format (dec,
-                &(mpg123_decoder->next_audioinfo))) {
-          GST_WARNING_OBJECT (dec, "Unable to set output format");
-          retval = GST_FLOW_NOT_NEGOTIATED;
-        }
-        mpg123_decoder->has_next_audioinfo = FALSE;
+      if ((clip_start + clip_end) > 0) {
+        GST_LOG_OBJECT (dec, "retrieved clip info from queue; "
+            "will clip %" G_GUINT64_FORMAT " byte(s) at the start and %"
+            G_GUINT64_FORMAT " at the end of the decoded frame; queue now "
+            "has %u item(s)", clip_start, clip_end,
+            gst_mpg123_audio_dec_get_info_queue_size (mpg123_decoder));
       }
 
-      break;
-
-    case MPG123_NEED_MORE:
-    case MPG123_OK:
-      retval = gst_mpg123_audio_dec_push_decoded_bytes (mpg123_decoder,
-          decoded_bytes, num_decoded_bytes);
-      break;
-
-    case MPG123_DONE:
-      /* If this happens, then the upstream parser somehow missed the ending
-       * of the bitstream */
-      GST_LOG_OBJECT (dec, "mpg123 is done decoding");
-      gst_mpg123_audio_dec_push_decoded_bytes (mpg123_decoder, decoded_bytes,
+      GST_LOG_OBJECT (dec, "decoded %" G_GSIZE_FORMAT " byte(s)", (gsize)
           num_decoded_bytes);
-      retval = GST_FLOW_EOS;
-      break;
+    }
 
-    default:
-    {
-      /* Anything else is considered an error */
-      int errcode;
-      retval = GST_FLOW_ERROR;  /* use error by default */
-      switch (decode_error) {
-        case MPG123_ERR:
-          errcode = mpg123_errcode (mpg123_decoder->handle);
-          break;
-        default:
-          errcode = decode_error;
-      }
-      switch (errcode) {
-        case MPG123_BAD_OUTFORMAT:{
-          GstCaps *input_caps =
-              gst_pad_get_current_caps (GST_AUDIO_DECODER_SINK_PAD (dec));
-          GST_ELEMENT_ERROR (dec, STREAM, FORMAT, (NULL),
-              ("Output sample format could not be used when trying to decode frame. "
-                  "This is typically caused when the input caps (often the sample "
-                  "rate) do not match the actual format of the audio data. "
-                  "Input caps: %" GST_PTR_FORMAT, input_caps)
-              );
-          gst_caps_unref (input_caps);
-          break;
+    switch (decode_error) {
+      case MPG123_NEW_FORMAT:
+        /* As mentioned in gst_mpg123_audio_dec_set_format(), the next audioinfo
+         * is not set immediately; instead, the code waits for mpg123 to take
+         * note of the new format, and then sets the audioinfo. This fixes glitches
+         * with mp3s containing several format headers (for example, first half
+         * using 44.1kHz, second half 32 kHz) */
+
+        gst_mpg123_audio_dec_push_decoded_bytes (mpg123_decoder, decoded_bytes,
+            num_decoded_bytes, clip_start, clip_end);
+
+        GST_LOG_OBJECT (dec,
+            "mpg123 reported a new format -> setting next srccaps");
+
+        /* If there is a next audioinfo, use it, then set has_next_audioinfo to
+         * FALSE, to make sure gst_audio_decoder_set_output_format() isn't called
+         * again until set_format is called by the base class */
+        if (mpg123_decoder->has_next_audioinfo) {
+          if (!gst_audio_decoder_set_output_format (dec,
+                  &(mpg123_decoder->next_audioinfo))) {
+            GST_WARNING_OBJECT (dec, "Unable to set output format");
+            retval = GST_FLOW_NOT_NEGOTIATED;
+            loop = FALSE;
+          }
+          mpg123_decoder->has_next_audioinfo = FALSE;
         }
-        default:{
-          char const *errmsg = mpg123_plain_strerror (errcode);
-          /* GST_AUDIO_DECODER_ERROR sets a new return value according to
-           * its estimations */
-          GST_AUDIO_DECODER_ERROR (mpg123_decoder, 1, STREAM, DECODE, (NULL),
-              ("mpg123 decoding error: %s", errmsg), retval);
+
+        break;
+
+      case MPG123_NEED_MORE:
+        loop = FALSE;
+        GST_LOG_OBJECT (dec, "mpg123 needs more data to continue decoding");
+        retval = gst_mpg123_audio_dec_push_decoded_bytes (mpg123_decoder,
+            decoded_bytes, num_decoded_bytes, clip_start, clip_end);
+        break;
+
+      case MPG123_OK:
+        retval = gst_mpg123_audio_dec_push_decoded_bytes (mpg123_decoder,
+            decoded_bytes, num_decoded_bytes, clip_start, clip_end);
+        break;
+
+      case MPG123_DONE:
+        /* If this happens, then the upstream parser somehow missed the ending
+         * of the bitstream */
+        gst_mpg123_audio_dec_push_decoded_bytes (mpg123_decoder, decoded_bytes,
+            num_decoded_bytes, clip_start, clip_end);
+        GST_LOG_OBJECT (dec, "mpg123 is done decoding");
+        retval = GST_FLOW_EOS;
+        loop = FALSE;
+        break;
+
+      default:
+      {
+        /* Anything else is considered an error */
+        int errcode;
+
+        /* use error by default */
+        retval = GST_FLOW_ERROR;
+        loop = FALSE;
+
+        switch (decode_error) {
+          case MPG123_ERR:
+            errcode = mpg123_errcode (mpg123_decoder->handle);
+            break;
+          default:
+            errcode = decode_error;
+        }
+        switch (errcode) {
+          case MPG123_BAD_OUTFORMAT:{
+            GstCaps *input_caps =
+                gst_pad_get_current_caps (GST_AUDIO_DECODER_SINK_PAD (dec));
+            GST_ELEMENT_ERROR (dec, STREAM, FORMAT, (NULL),
+                ("Output sample format could not be used when trying to decode frame. "
+                    "This is typically caused when the input caps (often the sample "
+                    "rate) do not match the actual format of the audio data. "
+                    "Input caps: %" GST_PTR_FORMAT, (gpointer) input_caps)
+                );
+            gst_caps_unref (input_caps);
+            break;
+          }
+          default:{
+            char const *errmsg = mpg123_plain_strerror (errcode);
+            /* GST_AUDIO_DECODER_ERROR sets a new return value according to
+             * its estimations */
+            GST_AUDIO_DECODER_ERROR (mpg123_decoder, 1, STREAM, DECODE, (NULL),
+                ("mpg123 decoding error: %s", errmsg), retval);
+          }
         }
       }
     }
   }
+
+  GST_LOG_OBJECT (mpg123_decoder, "done handling frame");
 
   return retval;
 }
@@ -514,7 +646,7 @@ gst_mpg123_audio_dec_set_format (GstAudioDecoder * dec, GstCaps * input_caps)
         format_str = g_value_get_string (format_value);
       } else {
         GST_ERROR_OBJECT (mpg123_decoder, "unexpected type for 'format' field "
-            "in caps structure %" GST_PTR_FORMAT, structure);
+            "in caps structure %" GST_PTR_FORMAT, (gpointer) structure);
         gst_caps_unref (allowed_srccaps);
         goto done;
       }
@@ -616,10 +748,53 @@ gst_mpg123_audio_dec_flush (GstAudioDecoder * dec, gboolean hard)
   if (hard)
     mpg123_decoder->has_next_audioinfo = FALSE;
 
+  gst_mpg123_audio_dec_clear_clip_info_queue (mpg123_decoder);
+
   /* opening/closing feeds do not affect the format defined by the
    * mpg123_format() call that was made in gst_mpg123_audio_dec_set_format(),
    * and since the up/downstream caps are not expected to change here, no
    * mpg123_format() calls are done */
+}
+
+
+static void gst_mpg123_audio_dec_push_clip_info
+    (GstMpg123AudioDec * mpg123_decoder, guint64 clip_start, guint64 clip_end)
+{
+  GstMpg123AudioDecClipInfo clip_info = { clip_start, clip_end };
+  gst_queue_array_push_tail_struct (mpg123_decoder->audio_clip_info_queue,
+      &clip_info);
+}
+
+
+static void
+gst_mpg123_audio_dec_pop_oldest_clip_info (GstMpg123AudioDec *
+    mpg123_decoder, guint64 * clip_start, guint64 * clip_end)
+{
+  guint queue_length;
+  GstMpg123AudioDecClipInfo *clip_info;
+
+  queue_length = gst_mpg123_audio_dec_get_info_queue_size (mpg123_decoder);
+  if (queue_length == 0)
+    return;
+
+  clip_info =
+      gst_queue_array_pop_head_struct (mpg123_decoder->audio_clip_info_queue);
+
+  *clip_start = clip_info->clip_start;
+  *clip_end = clip_info->clip_end;
+}
+
+static void
+gst_mpg123_audio_dec_clear_clip_info_queue (GstMpg123AudioDec * mpg123_decoder)
+{
+  gst_queue_array_clear (mpg123_decoder->audio_clip_info_queue);
+}
+
+
+static guint
+gst_mpg123_audio_dec_get_info_queue_size (GstMpg123AudioDec * mpg123_decoder)
+{
+  return gst_queue_array_get_length (mpg123_decoder->audio_clip_info_queue);
 }
 
 static gboolean

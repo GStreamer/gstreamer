@@ -20,6 +20,7 @@
 #define __GST_MPG123_AUDIO_DEC_H__
 
 #include <gst/gst.h>
+#include <gst/base/base.h>
 #include <gst/audio/gstaudiodecoder.h>
 #include <mpg123.h>
 
@@ -40,6 +41,8 @@ struct _GstMpg123AudioDec
   gboolean has_next_audioinfo;
 
   off_t frame_offset;
+
+  GstQueueArray *audio_clip_info_queue;
 };
 
 GST_ELEMENT_REGISTER_DECLARE (mpg123audiodec);

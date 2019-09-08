@@ -42,6 +42,7 @@ static GstPad *mysrcpad, *mysinkpad;
 #define MP2_STREAM_FILENAME "stream.mp2"
 #define MP3_CBR_STREAM_FILENAME "cbr_stream.mp3"
 #define MP3_VBR_STREAM_FILENAME "vbr_stream.mp3"
+#define MP3_GAPLESS_STREAM_FILENAME "sine-1009ms-1ch-32000hz-gapless-with-lame-tag.mp3"
 
 
 /* mpeg 1 layer 2 stream created with:
@@ -220,7 +221,7 @@ setup_mpeg1layer2dec (void)
 }
 
 static GstElement *
-setup_mpeg1layer3dec (void)
+setup_mpeg1layer3dec (gint sample_rate)
 {
   GstElement *mpg123audiodec;
   GstCaps *caps;
@@ -237,7 +238,7 @@ setup_mpeg1layer3dec (void)
   caps = gst_caps_new_simple ("audio/mpeg",
       "mpegversion", G_TYPE_INT, 1,
       "layer", G_TYPE_INT, 3,
-      "rate", G_TYPE_INT, 44100,
+      "rate", G_TYPE_INT, sample_rate,
       "channels", G_TYPE_INT, 1, "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
   gst_check_setup_events (mysrcpad, mpg123audiodec, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
@@ -300,7 +301,7 @@ run_decoding_test (GstElement * mpg123audiodec, gchar const *filename)
 
     /* This is done to be on the safe side - docs say lifetime of the input buffer
      * depends *solely* on the sample */
-    input_buffer = gst_buffer_copy (input_buffer);
+    input_buffer = gst_buffer_ref (input_buffer);
 
     fail_unless_equals_int (gst_pad_push (mysrcpad, input_buffer), GST_FLOW_OK);
 
@@ -312,7 +313,7 @@ run_decoding_test (GstElement * mpg123audiodec, gchar const *filename)
   num_decoded_buffers = g_list_length (buffers);
 
   /* check number of decoded buffers */
-  fail_unless_equals_int (num_decoded_buffers, num_input_buffers - 2);
+  fail_unless_equals_int (num_decoded_buffers, num_input_buffers);
 
   caps = gst_pad_get_current_caps (mysinkpad);
   GST_LOG ("output caps %" GST_PTR_FORMAT, caps);
@@ -333,6 +334,7 @@ run_decoding_test (GstElement * mpg123audiodec, gchar const *filename)
   /* here, test if decoded data is a sine tone, and if the sine frequency is at the
    * right spot in the spectrum */
   for (i = 0; i < num_decoded_buffers; ++i) {
+    fail_if (buffers == NULL);
     outbuffer = GST_BUFFER (buffers->data);
     fail_if (outbuffer == NULL, "Invalid buffer retrieved");
 
@@ -342,13 +344,12 @@ run_decoding_test (GstElement * mpg123audiodec, gchar const *filename)
 
     check_main_frequency_spot_S32 (outbuffer, expected_frequency_spot);
 
-    buffers = g_list_remove (buffers, outbuffer);
+    buffers = g_list_delete_link (buffers, buffers);
     gst_buffer_unref (outbuffer);
     outbuffer = NULL;
   }
 
-  g_list_free (buffers);
-  buffers = NULL;
+  fail_unless (buffers == NULL);
 
   cleanup_input_pipeline (input_pipeline);
   gst_bus_set_flushing (bus, TRUE);
@@ -372,7 +373,7 @@ GST_END_TEST;
 GST_START_TEST (test_decode_mpeg1layer3_cbr)
 {
   GstElement *mpg123audiodec;
-  mpg123audiodec = setup_mpeg1layer3dec ();
+  mpg123audiodec = setup_mpeg1layer3dec (44100);
   run_decoding_test (mpg123audiodec, MP3_CBR_STREAM_FILENAME);
   cleanup_mpg123audiodec (mpg123audiodec);
 }
@@ -383,8 +384,119 @@ GST_END_TEST;
 GST_START_TEST (test_decode_mpeg1layer3_vbr)
 {
   GstElement *mpg123audiodec;
-  mpg123audiodec = setup_mpeg1layer3dec ();
+  mpg123audiodec = setup_mpeg1layer3dec (44100);
   run_decoding_test (mpg123audiodec, MP3_VBR_STREAM_FILENAME);
+  cleanup_mpg123audiodec (mpg123audiodec);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_decode_mpeg1layer3_gapless)
+{
+  GstBus *bus;
+  guint num_decoded_buffers;
+  guint num_decoded_pcm_frames;
+  GstCaps *out_caps, *caps;
+  GstAudioInfo audioinfo;
+  GstElement *input_pipeline, *input_appsink;
+  int i;
+  GstBuffer *outbuffer;
+  GstElement *mpg123audiodec;
+
+  /* 440 Hz = frequency of sine wave in audio data
+   * 32000 Hz = sample rate
+   * (32000 / 2) Hz = Nyquist frequency */
+  static double const expected_frequency_spot = 440.0 / (32000.0 / 2.0);
+
+  mpg123audiodec = setup_mpeg1layer3dec (32000);
+
+  fail_unless (gst_element_set_state (mpg123audiodec,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+  bus = gst_bus_new ();
+
+  gst_element_set_bus (mpg123audiodec, bus);
+
+  setup_input_pipeline (MP3_GAPLESS_STREAM_FILENAME, &input_pipeline,
+      &input_appsink);
+
+  while (TRUE) {
+    GstSample *sample;
+    GstBuffer *input_buffer;
+
+    sample = gst_app_sink_pull_sample (GST_APP_SINK (input_appsink));
+    if (sample == NULL)
+      break;
+
+    fail_unless (GST_IS_SAMPLE (sample));
+
+    input_buffer = gst_sample_get_buffer (sample);
+    fail_if (input_buffer == NULL);
+
+    /* This is done to be on the safe side - docs say lifetime of the input buffer
+     * depends *solely* on the sample */
+    input_buffer = gst_buffer_ref (input_buffer);
+
+    fail_unless_equals_int (gst_pad_push (mysrcpad, input_buffer), GST_FLOW_OK);
+
+    gst_sample_unref (sample);
+  }
+
+  num_decoded_buffers = g_list_length (buffers);
+
+  caps = gst_pad_get_current_caps (mysinkpad);
+  GST_LOG ("output caps %" GST_PTR_FORMAT, caps);
+  fail_unless (gst_audio_info_from_caps (&audioinfo, caps),
+      "Getting audio info from caps failed");
+
+  /* check caps */
+  out_caps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, GST_AUDIO_NE (S32),
+      "layout", G_TYPE_STRING, "interleaved",
+      "rate", G_TYPE_INT, 32000, "channels", G_TYPE_INT, 1, NULL);
+
+  fail_unless (gst_caps_is_equal_fixed (caps, out_caps), "Incorrect out caps");
+
+  gst_caps_unref (out_caps);
+  gst_caps_unref (caps);
+
+  /* This is the main check. We see how many PCM frames got decoded
+   * in total. If the amount is not what we expected, then gapless
+   * decoding failed, because padding samples have to be omitted
+   * in order for the playback to be really gapless. */
+  num_decoded_pcm_frames = 0;
+  for (i = 0; i < num_decoded_buffers; ++i) {
+    guint num_frames;
+
+    fail_if (buffers == NULL);
+    outbuffer = GST_BUFFER (buffers->data);
+    fail_if (outbuffer == NULL, "Invalid buffer retrieved");
+
+    num_frames =
+        gst_buffer_get_size (outbuffer) / GST_AUDIO_INFO_BPF (&audioinfo);
+    num_decoded_pcm_frames += num_frames;
+
+    /* Don't check the first frame for a sine wave, because it will
+     * unavoidably have a discontinuity at the beginning, causing the
+     * spectrum to be filled with additional peaks, so the FFT check
+     * will detect false positives. */
+    if (i != 0)
+      check_main_frequency_spot_S32 (outbuffer, expected_frequency_spot);
+
+    buffers = g_list_delete_link (buffers, buffers);
+    gst_buffer_unref (outbuffer);
+    outbuffer = NULL;
+  }
+
+  fail_unless_equals_int (num_decoded_pcm_frames, 32288);
+  fail_unless (buffers == NULL);
+
+  cleanup_input_pipeline (input_pipeline);
+  gst_bus_set_flushing (bus, TRUE);
+  gst_element_set_bus (mpg123audiodec, NULL);
+  gst_object_unref (GST_OBJECT (bus));
+
   cleanup_mpg123audiodec (mpg123audiodec);
 }
 
@@ -446,7 +558,7 @@ GST_START_TEST (test_decode_garbage_mpeg1layer3)
   int i, num_buffers;
   guint32 *tmpbuf;
 
-  mpg123audiodec = setup_mpeg1layer3dec ();
+  mpg123audiodec = setup_mpeg1layer3dec (44100);
 
   fail_unless (gst_element_set_state (mpg123audiodec,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
@@ -490,14 +602,17 @@ is_test_file_available (gchar const *filename)
 {
   gboolean ret;
   gchar *full_filename;
-  gchar *cwd;
 
-  cwd = g_get_current_dir ();
-  full_filename = g_build_filename (cwd, GST_TEST_FILES_PATH, filename, NULL);
+  if (g_path_is_absolute (GST_TEST_FILES_PATH)) {
+    full_filename = g_build_filename (GST_TEST_FILES_PATH, filename, NULL);
+  } else {
+    gchar *cwd = g_get_current_dir ();
+    full_filename = g_build_filename (cwd, GST_TEST_FILES_PATH, filename, NULL);
+    g_free (cwd);
+  }
   ret =
       g_file_test (full_filename, G_FILE_TEST_IS_REGULAR | G_FILE_TEST_EXISTS);
   g_free (full_filename);
-  g_free (cwd);
   return ret;
 }
 
@@ -523,6 +638,8 @@ mpg123audiodec_suite (void)
       tcase_add_test (tc_chain, test_decode_mpeg1layer3_cbr);
     if (is_test_file_available (MP3_VBR_STREAM_FILENAME))
       tcase_add_test (tc_chain, test_decode_mpeg1layer3_vbr);
+    if (is_test_file_available (MP3_GAPLESS_STREAM_FILENAME))
+      tcase_add_test (tc_chain, test_decode_mpeg1layer3_gapless);
   }
   tcase_add_test (tc_chain, test_decode_garbage_mpeg1layer2);
   tcase_add_test (tc_chain, test_decode_garbage_mpeg1layer3);
