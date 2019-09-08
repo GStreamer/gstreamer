@@ -472,6 +472,7 @@ gst_wayland_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
     GArray *formats;
     gint i;
     guint fmt;
+    GstVideoFormat gfmt;
 
     g_value_init (&shm_list, GST_TYPE_LIST);
     g_value_init (&dmabuf_list, GST_TYPE_LIST);
@@ -479,10 +480,13 @@ gst_wayland_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
     /* Add corresponding shm formats */
     formats = sink->display->shm_formats;
     for (i = 0; i < formats->len; i++) {
-      g_value_init (&value, G_TYPE_STRING);
       fmt = g_array_index (formats, uint32_t, i);
-      g_value_set_static_string (&value, gst_wl_shm_format_to_string (fmt));
-      gst_value_list_append_and_take_value (&shm_list, &value);
+      gfmt = gst_wl_shm_format_to_video_format (fmt);
+      if (gfmt != GST_VIDEO_FORMAT_UNKNOWN) {
+        g_value_init (&value, G_TYPE_STRING);
+        g_value_set_static_string (&value, gst_video_format_to_string (gfmt));
+        gst_value_list_append_and_take_value (&shm_list, &value);
+      }
     }
 
     gst_structure_take_value (gst_caps_get_structure (caps, 0), "format",
@@ -491,10 +495,13 @@ gst_wayland_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
     /* Add corresponding dmabuf formats */
     formats = sink->display->dmabuf_formats;
     for (i = 0; i < formats->len; i++) {
-      g_value_init (&value, G_TYPE_STRING);
       fmt = g_array_index (formats, uint32_t, i);
-      g_value_set_static_string (&value, gst_wl_dmabuf_format_to_string (fmt));
-      gst_value_list_append_and_take_value (&dmabuf_list, &value);
+      gfmt = gst_wl_dmabuf_format_to_video_format (fmt);
+      if (gfmt != GST_VIDEO_FORMAT_UNKNOWN) {
+        g_value_init (&value, G_TYPE_STRING);
+        g_value_set_static_string (&value, gst_video_format_to_string (gfmt));
+        gst_value_list_append_and_take_value (&dmabuf_list, &value);
+      }
     }
 
     gst_structure_take_value (gst_caps_get_structure (caps, 1), "format",
