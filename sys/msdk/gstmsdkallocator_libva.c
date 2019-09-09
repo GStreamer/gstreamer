@@ -73,6 +73,7 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
         return MFX_ERR_MEMORY_ALLOC;
 
       *resp = cached->response;
+      g_atomic_int_inc (&cached->refcount);
       return MFX_ERR_NONE;
     }
   }
@@ -207,6 +208,7 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
 
   msdk_resp->response = *resp;
   msdk_resp->request = *req;
+  msdk_resp->refcount = 1;
 
   gst_msdk_context_add_alloc_response (context, msdk_resp);
 
@@ -222,6 +224,15 @@ gst_msdk_frame_free (mfxHDL pthis, mfxFrameAllocResponse * resp)
   GstMsdkMemoryID *mem_id;
   VADisplay dpy;
   gint i;
+  GstMsdkAllocResponse *cached = NULL;
+
+  cached = gst_msdk_context_get_cached_alloc_responses (context, resp);
+
+  if (cached) {
+    if (!g_atomic_int_dec_and_test (&cached->refcount))
+      return MFX_ERR_NONE;
+  } else
+    return MFX_ERR_NONE;
 
   if (!gst_msdk_context_remove_alloc_response (context, resp))
     return MFX_ERR_NONE;

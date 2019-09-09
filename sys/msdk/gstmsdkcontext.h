@@ -97,6 +97,7 @@ gint gst_msdk_context_get_fd (GstMsdkContext * context);
 typedef struct _GstMsdkAllocResponse GstMsdkAllocResponse;
 
 struct _GstMsdkAllocResponse {
+  gint refcount;
   mfxFrameAllocResponse response;
   mfxFrameAllocRequest request;
   GList *surfaces_avail;

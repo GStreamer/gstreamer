@@ -363,6 +363,8 @@ gst_msdk_video_allocator_finalize (GObject * object)
 {
   GstMsdkVideoAllocator *allocator = GST_MSDK_VIDEO_ALLOCATOR_CAST (object);
 
+  gst_msdk_frame_free (allocator->context, allocator->alloc_response);
+
   gst_object_unref (allocator->context);
   G_OBJECT_CLASS (gst_msdk_video_allocator_parent_class)->finalize (object);
 }
@@ -405,17 +407,27 @@ gst_msdk_video_allocator_new (GstMsdkContext * context,
     GstVideoInfo * image_info, mfxFrameAllocResponse * alloc_resp)
 {
   GstMsdkVideoAllocator *allocator;
+  GstMsdkAllocResponse *cached = NULL;
 
   g_return_val_if_fail (context != NULL, NULL);
   g_return_val_if_fail (image_info != NULL, NULL);
+
+  cached = gst_msdk_context_get_cached_alloc_responses (context, alloc_resp);
+
+  if (!cached) {
+    GST_ERROR ("Failed to get the cached alloc response");
+    return NULL;
+  }
 
   allocator = g_object_new (GST_TYPE_MSDK_VIDEO_ALLOCATOR, NULL);
   if (!allocator)
     return NULL;
 
+  g_atomic_int_inc (&cached->refcount);
   allocator->context = gst_object_ref (context);
   allocator->image_info = *image_info;
-  allocator->alloc_response = alloc_resp;
+  allocator->mfx_response = *alloc_resp;
+  allocator->alloc_response = &allocator->mfx_response;
 
   return GST_ALLOCATOR_CAST (allocator);
 }
@@ -487,6 +499,8 @@ gst_msdk_dmabuf_allocator_finalize (GObject * object)
 {
   GstMsdkDmaBufAllocator *allocator = GST_MSDK_DMABUF_ALLOCATOR_CAST (object);
 
+  gst_msdk_frame_free (allocator->context, allocator->alloc_response);
+
   gst_object_unref (allocator->context);
   G_OBJECT_CLASS (gst_msdk_dmabuf_allocator_parent_class)->finalize (object);
 }
@@ -511,17 +525,27 @@ gst_msdk_dmabuf_allocator_new (GstMsdkContext * context,
     GstVideoInfo * image_info, mfxFrameAllocResponse * alloc_resp)
 {
   GstMsdkDmaBufAllocator *allocator;
+  GstMsdkAllocResponse *cached = NULL;
 
   g_return_val_if_fail (context != NULL, NULL);
   g_return_val_if_fail (image_info != NULL, NULL);
+
+  cached = gst_msdk_context_get_cached_alloc_responses (context, alloc_resp);
+
+  if (!cached) {
+    GST_ERROR ("Failed to get the cached alloc response");
+    return NULL;
+  }
 
   allocator = g_object_new (GST_TYPE_MSDK_DMABUF_ALLOCATOR, NULL);
   if (!allocator)
     return NULL;
 
+  g_atomic_int_inc (&cached->refcount);
   allocator->context = gst_object_ref (context);
   allocator->image_info = *image_info;
-  allocator->alloc_response = alloc_resp;
+  allocator->mfx_response = *alloc_resp;
+  allocator->alloc_response = &allocator->mfx_response;
 
   return GST_ALLOCATOR_CAST (allocator);
 }
