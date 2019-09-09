@@ -1,4 +1,4 @@
-set -eu
+set -eux
 
 dnf install -y git-core ninja-build dnf-plugins-core
 

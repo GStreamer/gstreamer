@@ -1,4 +1,4 @@
-set -eu
+set -eux
 
 echo "Removing DNF cache"
 dnf clean all
