@@ -205,7 +205,7 @@ gst_viewfinder_bin_create_elements (GstViewfinderBin * vfbin)
     }
     gst_bin_add (GST_BIN_CAST (vfbin), csp);
 
-    videoscale = gst_element_factory_make ("videoscale", "vfbin->videoscale");
+    videoscale = gst_element_factory_make ("videoscale", "vfbin-videoscale");
     if (!videoscale) {
       missing_element_name = "videoscale";
       goto missing_element;
@@ -227,7 +227,7 @@ gst_viewfinder_bin_create_elements (GstViewfinderBin * vfbin)
     gboolean unref = FALSE;
     if (!videoscale) {
       videoscale = gst_bin_get_by_name (GST_BIN_CAST (vfbin),
-          "vfbin-videscale");
+          "vfbin-videoscale");
       unref = TRUE;
     }
 
