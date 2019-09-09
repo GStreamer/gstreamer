@@ -2348,7 +2348,7 @@ gst_alpha_init_params_full (GstAlpha * alpha,
   tmp = MIN (tmp, 255);
   alpha->accept_angle_ctg = tmp;
   tmp = 1 / (kgl);
-  alpha->one_over_kc = 255 * 2 * tmp - 255;
+  alpha->one_over_kc = (gint) (255 * 2 * tmp - 255);
   tmp = 15 * y / kgl;
   tmp = MIN (tmp, 255);
   alpha->kfgy_scale = tmp;
