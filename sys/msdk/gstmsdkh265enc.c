@@ -267,5 +267,7 @@ gst_msdkh265enc_class_init (GstMsdkH265EncClass * klass)
 static void
 gst_msdkh265enc_init (GstMsdkH265Enc * thiz)
 {
+  GstMsdkEnc *msdk_enc = (GstMsdkEnc *) thiz;
   thiz->lowpower = PROP_LOWPOWER_DEFAULT;
+  msdk_enc->num_extra_frames = 1;
 }
