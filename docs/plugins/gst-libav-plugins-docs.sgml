@@ -32,9 +32,4 @@
     <title>gst-libav Plugins</title>
     <xi:include href="xml/plugin-libav.xml" />
   </chapter>
-
-  <chapter>
-    <title>Object Hierarchy</title>
-    <xi:include href="xml/tree_index.sgml" />
-  </chapter>
 </book>
