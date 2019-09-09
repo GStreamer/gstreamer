@@ -160,6 +160,8 @@ static const GstVideoFormatMap gst_vaapi_video_default_formats[] = {
       0x0000f800, 0x000007e0, 0x0000001f, 0x00000000),
   DEF_RGB (VA_BYTE_ORDER_NOT_CARE, RGB, ('R', 'G', '2', '4'), 32, 24,
       0x00ff0000, 0x0000ff00, 0x000000ff, 0x00000000),
+  DEF_RGB (VA_LSB_FIRST, BGR10A2_LE, ('A', 'R', '3', '0'), 32, 30,
+      0x3ff00000, 0x000ffc00, 0x000003ff, 0x30000000),
   {0,}
 };
 /* *INDENT-ON* */
