@@ -457,12 +457,15 @@ gst_device_provider_start (GstDeviceProvider * provider)
     goto started;
   }
 
+  gst_bus_set_flushing (provider->priv->bus, FALSE);
+
   if (klass->start)
     ret = klass->start (provider);
 
   if (ret) {
     provider->priv->started_count++;
-    gst_bus_set_flushing (provider->priv->bus, FALSE);
+  } else if (provider->priv->started_count == 0) {
+    gst_bus_set_flushing (provider->priv->bus, TRUE);
   }
 
 started:
