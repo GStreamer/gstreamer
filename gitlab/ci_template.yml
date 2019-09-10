@@ -879,9 +879,6 @@ documentation:
 
 ios universal examples:
   extends: ".ios universal examples"
-  needs:
-    - "build cerbero ios universal"
-    - "manifest"
   dependencies:
     - "build cerbero ios universal"
   except:
@@ -894,9 +891,6 @@ ios universal examples:
 
 cerbero ios universal examples:
   extends: ".ios universal examples"
-  needs:
-    - "cerbero ios universal"
-    - "manifest"
   dependencies:
     - "cerbero ios universal"
   only:
