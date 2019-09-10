@@ -1170,8 +1170,10 @@ gst_msdkdec_create_buffer_pool (GstMsdkDec * thiz, GstVideoInfo * info,
   else
     allocator = gst_msdk_system_allocator_new (info);
 
-  if (!allocator)
+  if (!allocator) {
+    gst_caps_unref (caps);
     goto error_no_allocator;
+  }
 
   config = gst_buffer_pool_get_config (GST_BUFFER_POOL_CAST (pool));
   gst_buffer_pool_config_set_params (config, caps,
@@ -1179,6 +1181,7 @@ gst_msdkdec_create_buffer_pool (GstMsdkDec * thiz, GstVideoInfo * info,
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
   gst_buffer_pool_config_add_option (config,
       GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+  gst_caps_unref (caps);
 
   if (thiz->use_video_memory) {
     gst_buffer_pool_config_add_option (config,
