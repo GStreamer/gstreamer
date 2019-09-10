@@ -1,7 +1,7 @@
 project('gst-examples', 'c', version : '1.17.0.1', license : 'LGPL')
 
 cc = meson.get_compiler('c')
-m_dep = cc.find_library('m', required : true)
+m_dep = cc.find_library('m', required : false)
 
 glib_dep = dependency('glib-2.0', version: '>= 2.38',
     fallback: ['glib', 'libglib_dep'])
