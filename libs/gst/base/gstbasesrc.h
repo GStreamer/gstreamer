@@ -174,7 +174,12 @@ struct _GstBaseSrcClass {
   /*< public >*/
   /* virtual methods for subclasses */
 
-  /* get caps from subclass */
+  /**
+   * GstBaseSrcClass::get_caps:
+   * @filter: (in) (nullable):
+   *
+   * Called to get the caps to report.
+   */
   GstCaps*      (*get_caps)     (GstBaseSrc *src, GstCaps *filter);
   /* decide on caps */
   gboolean      (*negotiate)    (GstBaseSrc *src);

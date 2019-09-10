@@ -151,7 +151,12 @@ struct _GstBaseSink {
 struct _GstBaseSinkClass {
   GstElementClass parent_class;
 
-  /* get caps from subclass */
+  /**
+   * GstBaseSink::get_caps:
+   * @filter: (in) (nullable):
+   *
+   * Called to get sink pad caps from the subclass.
+   */
   GstCaps*      (*get_caps)     (GstBaseSink *sink, GstCaps *filter);
   /* notify subclass of new caps */
   gboolean      (*set_caps)     (GstBaseSink *sink, GstCaps *caps);
