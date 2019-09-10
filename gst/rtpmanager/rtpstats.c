@@ -47,13 +47,21 @@ gst_rtp_packet_rate_ctx_update (RTPPacketRateCtx * ctx, guint16 seqnum,
 
   if (!ctx->probed) {
     ctx->probed = TRUE;
-    goto done;
+    goto done_but_save;
   }
 
   diff_seqnum = gst_rtp_buffer_compare_seqnum (ctx->last_seqnum, seqnum);
-  if (diff_seqnum <= 0 || new_ts <= ctx->last_ts || diff_seqnum > 1) {
+  /* Ignore seqnums that are over 15,000 away from the latest one, it's close
+   * to 2^14 but far enough to avoid any risk of computing error.
+   */
+  if (diff_seqnum > 15000)
+    goto done_but_save;
+
+  /* Ignore any packet that is in the past, we're only interested in newer
+   * packets to compute the packet rate.
+   */
+  if (diff_seqnum <= 0 || new_ts <= ctx->last_ts)
     goto done;
-  }
 
   diff_ts = new_ts - ctx->last_ts;
   diff_ts = gst_util_uint64_scale_int (diff_ts, GST_SECOND, ctx->clock_rate);
@@ -72,9 +80,11 @@ gst_rtp_packet_rate_ctx_update (RTPPacketRateCtx * ctx, guint16 seqnum,
     ctx->avg_packet_rate = (ctx->avg_packet_rate + new_packet_rate + 1) / 2;
   }
 
-done:
+done_but_save:
+
   ctx->last_seqnum = seqnum;
   ctx->last_ts = new_ts;
+done:
 
   return ctx->avg_packet_rate;
 }
