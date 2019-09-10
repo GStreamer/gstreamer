@@ -289,6 +289,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "aasink": {
@@ -785,6 +786,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "alpha": {
@@ -969,6 +971,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "alphacolor": {
@@ -1034,6 +1037,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "apetag": {
@@ -1090,6 +1094,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "audiofx": {
@@ -2563,6 +2568,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "audioparsers": {
@@ -3013,6 +3019,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "auparse": {
@@ -3068,6 +3075,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "autodetect": {
@@ -3394,6 +3402,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "avi": {
@@ -3585,6 +3594,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "cacasink": {
@@ -3905,6 +3915,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "cutter": {
@@ -4008,6 +4019,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "debug": {
@@ -4890,6 +4902,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "deinterlace": {
@@ -4910,12 +4923,12 @@
                 "name": "deinterlace",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw:\n         format: { AYUV, ARGB, ABGR, RGBA, BGRA, Y444, xRGB, xBGR, RGBx, BGRx, RGB, BGR, YUY2, YVYU, UYVY, Y42B, I420, YV12, Y41B, NV12, NV21 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { AYUV, ARGB, ABGR, RGBA, BGRA, Y444, xRGB, xBGR, RGBx, BGRx, RGB, BGR, YUY2, YVYU, UYVY, Y42B, I420, YV12, Y41B, NV12, NV21 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40, Y444_16BE, Y444_16LE, P016_BE, P016_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw:\n         format: { AYUV, ARGB, ABGR, RGBA, BGRA, Y444, xRGB, xBGR, RGBx, BGRx, RGB, BGR, YUY2, YVYU, UYVY, Y42B, I420, YV12, Y41B, NV12, NV21 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { AYUV, ARGB, ABGR, RGBA, BGRA, Y444, xRGB, xBGR, RGBx, BGRx, RGB, BGR, YUY2, YVYU, UYVY, Y42B, I420, YV12, Y41B, NV12, NV21 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40, Y444_16BE, Y444_16LE, P016_BE, P016_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -5141,6 +5154,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "dtmf": {
@@ -5268,6 +5282,16 @@
                         "max": "-1",
                         "min": "0",
                         "type-name": "guint",
+                        "writable": true
+                    },
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
                         "writable": true
                     },
                     "name": {
@@ -5477,6 +5501,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "dv": {
@@ -5667,6 +5692,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "effectv": {
@@ -6609,6 +6635,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "equalizer": {
@@ -6927,6 +6954,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "flac": {
@@ -7325,6 +7353,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "flv": {
@@ -7617,6 +7646,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "flxdec": {
@@ -7672,6 +7702,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "gdkpixbuf": {
@@ -8090,6 +8121,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "goom": {
@@ -8217,6 +8249,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "goom2k1": {
@@ -8344,6 +8377,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "gtk": {
@@ -8722,6 +8756,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "icydemux": {
@@ -8795,6 +8830,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "id3demux": {
@@ -8859,6 +8895,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "imagefreeze": {
@@ -8924,6 +8961,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "interleave": {
@@ -9065,6 +9103,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "isomp4": {
@@ -10766,6 +10805,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -10806,6 +10855,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "jack": {
@@ -11384,6 +11434,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "jpeg": {
@@ -11574,6 +11625,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "lame": {
@@ -11747,6 +11799,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "level": {
@@ -11857,6 +11910,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "matroska": {
@@ -12002,7 +12056,7 @@
                         "writable": true
                     },
                     "min-cluster-duration": {
-                        "blurb": "Desidered cluster duration as nanoseconds. A new cluster will be created irrespective of this property if a force key unit event is received. 0 means create a new cluster for each video keyframe or for each audio buffer in audio only streams.",
+                        "blurb": "Desired cluster duration as nanoseconds. A new cluster will be created irrespective of this property if a force key unit event is received. 0 means create a new cluster for each video keyframe or for each audio buffer in audio only streams.",
                         "construct": false,
                         "construct-only": false,
                         "default": "500000000",
@@ -12028,6 +12082,14 @@
                         "default": "NULL",
                         "hotdoc-fixed-default": true,
                         "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "offset-to-zero": {
+                        "blurb": "Offsets all streams so that the earliest stream starts at 0.",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
                         "writable": true
                     },
                     "parent": {
@@ -12169,7 +12231,7 @@
                         "writable": true
                     },
                     "min-cluster-duration": {
-                        "blurb": "Desidered cluster duration as nanoseconds. A new cluster will be created irrespective of this property if a force key unit event is received. 0 means create a new cluster for each video keyframe or for each audio buffer in audio only streams.",
+                        "blurb": "Desired cluster duration as nanoseconds. A new cluster will be created irrespective of this property if a force key unit event is received. 0 means create a new cluster for each video keyframe or for each audio buffer in audio only streams.",
                         "construct": false,
                         "construct-only": false,
                         "default": "500000000",
@@ -12195,6 +12257,14 @@
                         "default": "NULL",
                         "hotdoc-fixed-default": true,
                         "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "offset-to-zero": {
+                        "blurb": "Offsets all streams so that the earliest stream starts at 0.",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
                         "writable": true
                     },
                     "parent": {
@@ -12248,6 +12318,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "monoscope": {
@@ -12303,6 +12374,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "mpg123": {
@@ -12387,6 +12459,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "mulaw": {
@@ -12551,6 +12624,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "multifile": {
@@ -13069,6 +13143,11 @@
                         "caps": "ANY",
                         "direction": "sink",
                         "presence": "request"
+                    },
+                    "video_aux_%%u": {
+                        "caps": "ANY",
+                        "direction": "sink",
+                        "presence": "request"
                     }
                 },
                 "properties": {
@@ -13175,6 +13254,13 @@
                         "construct-only": false,
                         "default": "mp4mux",
                         "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "muxer-pad-map": {
+                        "blurb": "A GstStructure specifies the mapping from splitmuxsink sink pads to muxer pads",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstStructure",
                         "writable": true
                     },
                     "muxer-properties": {
@@ -13319,6 +13405,11 @@
                         "caps": "ANY",
                         "direction": "src",
                         "presence": "sometimes"
+                    },
+                    "video_%%u": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "sometimes"
                     }
                 },
                 "properties": {
@@ -13392,6 +13483,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "multipart": {
@@ -13534,6 +13626,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "navigationtest": {
@@ -13599,6 +13692,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "oss4": {
@@ -14075,6 +14169,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "ossaudio": {
@@ -14525,6 +14620,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "png": {
@@ -14653,6 +14749,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "pulseaudio": {
@@ -15218,6 +15315,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "qmlgl": {
@@ -15479,6 +15577,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "replaygain": {
@@ -15761,6 +15860,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "rtp": {
@@ -15838,6 +15938,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -16087,6 +16197,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -16336,6 +16456,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -16585,6 +16715,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -16825,6 +16965,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -17065,6 +17215,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -17314,6 +17474,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -17554,6 +17724,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -17820,6 +18000,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -18069,6 +18259,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -18315,6 +18515,16 @@
                         "construct-only": false,
                         "default": "true",
                         "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
                         "writable": true
                     },
                     "name": {
@@ -18574,6 +18784,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -18814,6 +19034,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -19054,6 +19284,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -19304,6 +19544,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -19544,6 +19794,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -19792,6 +20052,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -20053,6 +20323,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -20115,6 +20395,32 @@
                     }
                 },
                 "properties": {
+                    "aggregate-mode": {
+                        "blurb": "Bundle suitable SPS/PPS NAL units into STAP-A aggregate packets. ",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "zero-latency (1)",
+                        "enum": true,
+                        "type-name": "GstRtpH264AggregateMode",
+                        "values": [
+                            {
+                                "desc": "Do not aggregate NAL units",
+                                "name": "none",
+                                "value": "0"
+                            },
+                            {
+                                "desc": "Aggregate NAL units until a VCL unit is included",
+                                "name": "zero-latency",
+                                "value": "1"
+                            },
+                            {
+                                "desc": "Aggregate all NAL units with the same timestamp (adds one frame of latency)",
+                                "name": "max-stap",
+                                "value": "2"
+                            }
+                        ],
+                        "writable": true
+                    },
                     "config-interval": {
                         "blurb": "Send SPS and PPS Insertion Interval in seconds (sprop parameter sets will be multiplexed in the data stream when detected.) (0 = disabled, -1 = send with every IDR frame)",
                         "construct": false,
@@ -20311,6 +20617,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -20373,6 +20689,32 @@
                     }
                 },
                 "properties": {
+                    "aggregate-mode": {
+                        "blurb": "Bundle suitable SPS/PPS NAL units into aggregate packets.",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "zero-latency (1)",
+                        "enum": true,
+                        "type-name": "GstRtpH265AggregateMode",
+                        "values": [
+                            {
+                                "desc": "Do not aggregate NAL units",
+                                "name": "none",
+                                "value": "0"
+                            },
+                            {
+                                "desc": "Aggregate NAL units until a VCL or suffix unit is included",
+                                "name": "zero-latency",
+                                "value": "1"
+                            },
+                            {
+                                "desc": "Aggregate all NAL units with the same timestamp (adds one frame of latency)",
+                                "name": "max",
+                                "value": "2"
+                            }
+                        ],
+                        "writable": true
+                    },
                     "config-interval": {
                         "blurb": "Send VPS, SPS and PPS Insertion Interval in seconds (sprop parameter sets will be multiplexed in the data stream when detected.) (0 = disabled, -1 = send with every IDR frame)",
                         "construct": false,
@@ -20561,6 +20903,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "mode": {
                         "blurb": "iLBC frame mode",
                         "construct": false,
@@ -20831,6 +21183,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -21071,6 +21433,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -21331,6 +21703,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -21571,6 +21953,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -21633,6 +22025,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -21883,6 +22285,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -22123,6 +22535,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -22363,6 +22785,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -22426,13 +22858,13 @@
                 },
                 "properties": {
                     "config-interval": {
-                        "blurb": "Send Config Insertion Interval in seconds (configuration headers will be multiplexed in the data stream when detected.) (0 = disabled)",
+                        "blurb": "Send Config Insertion Interval in seconds (configuration headers will be multiplexed in the data stream when detected.) (0 = disabled, -1 = send with every IDR frame)",
                         "construct": false,
                         "construct-only": false,
                         "default": "0",
                         "max": "3600",
-                        "min": "0",
-                        "type-name": "guint",
+                        "min": "-1",
+                        "type-name": "gint",
                         "writable": true
                     },
                     "max-ptime": {
@@ -22613,6 +23045,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -22853,6 +23295,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -22915,6 +23367,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -23155,6 +23617,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -23395,6 +23867,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -23644,6 +24126,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -23893,6 +24385,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -23955,6 +24457,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -24171,6 +24683,16 @@
                         "construct-only": false,
                         "default": "false",
                         "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
                         "writable": true
                     },
                     "name": {
@@ -24423,6 +24945,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -24672,6 +25204,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -25073,6 +25615,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -25135,6 +25687,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -25560,6 +26122,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -25810,6 +26382,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -25841,6 +26423,14 @@
                         "default": "application/x-rtp-depayload-stats, clock_rate=(uint)0, npt-start=(guint64)0, npt-stop=(guint64)18446744073709551615, play-speed=(double)1, play-scale=(double)1, running-time-dts=(guint64)18446744073709551615, running-time-pts=(guint64)18446744073709551615, seqnum=(uint)0, timestamp=(uint)0;",
                         "type-name": "GstStructure",
                         "writable": false
+                    },
+                    "wait-for-keyframe": {
+                        "blurb": "Wait for the next keyframe after packet loss",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
                     }
                 },
                 "rank": "marginal"
@@ -26076,6 +26666,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -26342,6 +26942,16 @@
                     }
                 },
                 "properties": {
+                    "max-reorder": {
+                        "blurb": "Max seqnum reorder before assuming sender has restarted",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -26570,6 +27180,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "rtpmanager": {
@@ -27130,6 +27741,12 @@
                         ],
                         "retval": "GstElement"
                     },
+                    "request-jitterbuffer": {
+                        "args": [
+                            "guint"
+                        ],
+                        "retval": "GstElement"
+                    },
                     "request-pt-map": {
                         "args": [
                             "guint",
@@ -27393,7 +28010,7 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "60000",
-                        "max": "-1",
+                        "max": "2147483647",
                         "min": "0",
                         "type-name": "guint",
                         "writable": true
@@ -28554,6 +29171,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "rtsp": {
@@ -28863,6 +29481,14 @@
                         "type-name": "gboolean",
                         "writable": true
                     },
+                    "is-live": {
+                        "blurb": "Whether to act as a live source",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
                     "latency": {
                         "blurb": "Amount of ms to buffer",
                         "construct": false,
@@ -28994,6 +29620,22 @@
                                 "value": "3"
                             }
                         ],
+                        "writable": true
+                    },
+                    "onvif-mode": {
+                        "blurb": "Act as an ONVIF client",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "onvif-rate-control": {
+                        "blurb": "When in onvif-mode, whether to set Rate-Control to yes or no",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
                         "writable": true
                     },
                     "parent": {
@@ -29443,6 +30085,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "shapewipe": {
@@ -29523,6 +30166,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "shout2": {
@@ -29820,6 +30464,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "smpte": {
@@ -29924,24 +30569,9 @@
                                 "value": "1"
                             },
                             {
-                                "desc": "A bar moves from left to right",
-                                "name": "bar-wipe-lr",
-                                "value": "1"
-                            },
-                            {
                                 "desc": "A bar moves from top to bottom",
                                 "name": "bar-wipe-tb",
                                 "value": "2"
-                            },
-                            {
-                                "desc": "A bar moves from top to bottom",
-                                "name": "bar-wipe-tb",
-                                "value": "2"
-                            },
-                            {
-                                "desc": "A box expands from the upper-left corner to the lower-right corner",
-                                "name": "box-wipe-tl",
-                                "value": "3"
                             },
                             {
                                 "desc": "A box expands from the upper-left corner to the lower-right corner",
@@ -29954,24 +30584,9 @@
                                 "value": "4"
                             },
                             {
-                                "desc": "A box expands from the upper-right corner to the lower-left corner",
-                                "name": "box-wipe-tr",
-                                "value": "4"
-                            },
-                            {
                                 "desc": "A box expands from the lower-right corner to the upper-left corner",
                                 "name": "box-wipe-br",
                                 "value": "5"
-                            },
-                            {
-                                "desc": "A box expands from the lower-right corner to the upper-left corner",
-                                "name": "box-wipe-br",
-                                "value": "5"
-                            },
-                            {
-                                "desc": "A box expands from the lower-left corner to the upper-right corner",
-                                "name": "box-wipe-bl",
-                                "value": "6"
                             },
                             {
                                 "desc": "A box expands from the lower-left corner to the upper-right corner",
@@ -29984,24 +30599,9 @@
                                 "value": "7"
                             },
                             {
-                                "desc": "A box shape expands from each of the four corners toward the center",
-                                "name": "four-box-wipe-ci",
-                                "value": "7"
-                            },
-                            {
                                 "desc": "A box shape expands from the center of each quadrant toward the corners of each quadrant",
                                 "name": "four-box-wipe-co",
                                 "value": "8"
-                            },
-                            {
-                                "desc": "A box shape expands from the center of each quadrant toward the corners of each quadrant",
-                                "name": "four-box-wipe-co",
-                                "value": "8"
-                            },
-                            {
-                                "desc": "A central, vertical line splits and expands toward the left and right edges",
-                                "name": "barndoor-v",
-                                "value": "21"
                             },
                             {
                                 "desc": "A central, vertical line splits and expands toward the left and right edges",
@@ -30014,24 +30614,9 @@
                                 "value": "22"
                             },
                             {
-                                "desc": "A central, horizontal line splits and expands toward the top and bottom edges",
-                                "name": "barndoor-h",
-                                "value": "22"
-                            },
-                            {
                                 "desc": "A box expands from the top edge's midpoint to the bottom corners",
                                 "name": "box-wipe-tc",
                                 "value": "23"
-                            },
-                            {
-                                "desc": "A box expands from the top edge's midpoint to the bottom corners",
-                                "name": "box-wipe-tc",
-                                "value": "23"
-                            },
-                            {
-                                "desc": "A box expands from the right edge's midpoint to the left corners",
-                                "name": "box-wipe-rc",
-                                "value": "24"
                             },
                             {
                                 "desc": "A box expands from the right edge's midpoint to the left corners",
@@ -30044,24 +30629,9 @@
                                 "value": "25"
                             },
                             {
-                                "desc": "A box expands from the bottom edge's midpoint to the top corners",
-                                "name": "box-wipe-bc",
-                                "value": "25"
-                            },
-                            {
                                 "desc": "A box expands from the left edge's midpoint to the right corners",
                                 "name": "box-wipe-lc",
                                 "value": "26"
-                            },
-                            {
-                                "desc": "A box expands from the left edge's midpoint to the right corners",
-                                "name": "box-wipe-lc",
-                                "value": "26"
-                            },
-                            {
-                                "desc": "A diagonal line moves from the upper-left corner to the lower-right corner",
-                                "name": "diagonal-tl",
-                                "value": "41"
                             },
                             {
                                 "desc": "A diagonal line moves from the upper-left corner to the lower-right corner",
@@ -30074,24 +30644,9 @@
                                 "value": "42"
                             },
                             {
-                                "desc": "A diagonal line moves from the upper right corner to the lower-left corner",
-                                "name": "diagonal-tr",
-                                "value": "42"
-                            },
-                            {
                                 "desc": "Two wedge shapes slide in from the top and bottom edges toward the center",
                                 "name": "bowtie-v",
                                 "value": "43"
-                            },
-                            {
-                                "desc": "Two wedge shapes slide in from the top and bottom edges toward the center",
-                                "name": "bowtie-v",
-                                "value": "43"
-                            },
-                            {
-                                "desc": "Two wedge shapes slide in from the left and right edges toward the center",
-                                "name": "bowtie-h",
-                                "value": "44"
                             },
                             {
                                 "desc": "Two wedge shapes slide in from the left and right edges toward the center",
@@ -30104,24 +30659,9 @@
                                 "value": "45"
                             },
                             {
-                                "desc": "A diagonal line from the lower-left to upper-right corners splits and expands toward the opposite corners",
-                                "name": "barndoor-dbl",
-                                "value": "45"
-                            },
-                            {
                                 "desc": "A diagonal line from upper-left to lower-right corners splits and expands toward the opposite corners",
                                 "name": "barndoor-dtl",
                                 "value": "46"
-                            },
-                            {
-                                "desc": "A diagonal line from upper-left to lower-right corners splits and expands toward the opposite corners",
-                                "name": "barndoor-dtl",
-                                "value": "46"
-                            },
-                            {
-                                "desc": "Four wedge shapes split from the center and retract toward the four edges",
-                                "name": "misc-diagonal-dbd",
-                                "value": "47"
                             },
                             {
                                 "desc": "Four wedge shapes split from the center and retract toward the four edges",
@@ -30134,24 +30674,9 @@
                                 "value": "48"
                             },
                             {
-                                "desc": "A diamond connecting the four edge midpoints simultaneously contracts toward the center and expands toward the edges",
-                                "name": "misc-diagonal-dd",
-                                "value": "48"
-                            },
-                            {
                                 "desc": "A wedge shape moves from top to bottom",
                                 "name": "vee-d",
                                 "value": "61"
-                            },
-                            {
-                                "desc": "A wedge shape moves from top to bottom",
-                                "name": "vee-d",
-                                "value": "61"
-                            },
-                            {
-                                "desc": "A wedge shape moves from right to left",
-                                "name": "vee-l",
-                                "value": "62"
                             },
                             {
                                 "desc": "A wedge shape moves from right to left",
@@ -30164,24 +30689,9 @@
                                 "value": "63"
                             },
                             {
-                                "desc": "A wedge shape moves from bottom to top",
-                                "name": "vee-u",
-                                "value": "63"
-                            },
-                            {
                                 "desc": "A wedge shape moves from left to right",
                                 "name": "vee-r",
                                 "value": "64"
-                            },
-                            {
-                                "desc": "A wedge shape moves from left to right",
-                                "name": "vee-r",
-                                "value": "64"
-                            },
-                            {
-                                "desc": "A 'V' shape extending from the bottom edge's midpoint to the opposite corners contracts toward the center and expands toward the edges",
-                                "name": "barnvee-d",
-                                "value": "65"
                             },
                             {
                                 "desc": "A 'V' shape extending from the bottom edge's midpoint to the opposite corners contracts toward the center and expands toward the edges",
@@ -30194,24 +30704,9 @@
                                 "value": "66"
                             },
                             {
-                                "desc": "A 'V' shape extending from the left edge's midpoint to the opposite corners contracts toward the center and expands toward the edges",
-                                "name": "barnvee-l",
-                                "value": "66"
-                            },
-                            {
                                 "desc": "A 'V' shape extending from the top edge's midpoint to the opposite corners contracts toward the center and expands toward the edges",
                                 "name": "barnvee-u",
                                 "value": "67"
-                            },
-                            {
-                                "desc": "A 'V' shape extending from the top edge's midpoint to the opposite corners contracts toward the center and expands toward the edges",
-                                "name": "barnvee-u",
-                                "value": "67"
-                            },
-                            {
-                                "desc": "A 'V' shape extending from the right edge's midpoint to the opposite corners contracts toward the center and expands toward the edges",
-                                "name": "barnvee-r",
-                                "value": "68"
                             },
                             {
                                 "desc": "A 'V' shape extending from the right edge's midpoint to the opposite corners contracts toward the center and expands toward the edges",
@@ -30224,24 +30719,9 @@
                                 "value": "101"
                             },
                             {
-                                "desc": "A rectangle expands from the center.",
-                                "name": "iris-rect",
-                                "value": "101"
-                            },
-                            {
                                 "desc": "A radial hand sweeps clockwise from the twelve o'clock position",
                                 "name": "clock-cw12",
                                 "value": "201"
-                            },
-                            {
-                                "desc": "A radial hand sweeps clockwise from the twelve o'clock position",
-                                "name": "clock-cw12",
-                                "value": "201"
-                            },
-                            {
-                                "desc": "A radial hand sweeps clockwise from the three o'clock position",
-                                "name": "clock-cw3",
-                                "value": "202"
                             },
                             {
                                 "desc": "A radial hand sweeps clockwise from the three o'clock position",
@@ -30254,24 +30734,9 @@
                                 "value": "203"
                             },
                             {
-                                "desc": "A radial hand sweeps clockwise from the six o'clock position",
-                                "name": "clock-cw6",
-                                "value": "203"
-                            },
-                            {
                                 "desc": "A radial hand sweeps clockwise from the nine o'clock position",
                                 "name": "clock-cw9",
                                 "value": "204"
-                            },
-                            {
-                                "desc": "A radial hand sweeps clockwise from the nine o'clock position",
-                                "name": "clock-cw9",
-                                "value": "204"
-                            },
-                            {
-                                "desc": "Two radial hands sweep clockwise from the twelve and six o'clock positions",
-                                "name": "pinwheel-tbv",
-                                "value": "205"
                             },
                             {
                                 "desc": "Two radial hands sweep clockwise from the twelve and six o'clock positions",
@@ -30284,24 +30749,9 @@
                                 "value": "206"
                             },
                             {
-                                "desc": "Two radial hands sweep clockwise from the nine and three o'clock positions",
-                                "name": "pinwheel-tbh",
-                                "value": "206"
-                            },
-                            {
                                 "desc": "Four radial hands sweep clockwise",
                                 "name": "pinwheel-fb",
                                 "value": "207"
-                            },
-                            {
-                                "desc": "Four radial hands sweep clockwise",
-                                "name": "pinwheel-fb",
-                                "value": "207"
-                            },
-                            {
-                                "desc": "A fan unfolds from the top edge, the fan axis at the center",
-                                "name": "fan-ct",
-                                "value": "211"
                             },
                             {
                                 "desc": "A fan unfolds from the top edge, the fan axis at the center",
@@ -30314,24 +30764,9 @@
                                 "value": "212"
                             },
                             {
-                                "desc": "A fan unfolds from the right edge, the fan axis at the center",
-                                "name": "fan-cr",
-                                "value": "212"
-                            },
-                            {
                                 "desc": "Two fans, their axes at the center, unfold from the top and bottom",
                                 "name": "doublefan-fov",
                                 "value": "213"
-                            },
-                            {
-                                "desc": "Two fans, their axes at the center, unfold from the top and bottom",
-                                "name": "doublefan-fov",
-                                "value": "213"
-                            },
-                            {
-                                "desc": "Two fans, their axes at the center, unfold from the left and right",
-                                "name": "doublefan-foh",
-                                "value": "214"
                             },
                             {
                                 "desc": "Two fans, their axes at the center, unfold from the left and right",
@@ -30344,24 +30779,9 @@
                                 "value": "221"
                             },
                             {
-                                "desc": "A radial hand sweeps clockwise from the top edge's midpoint",
-                                "name": "singlesweep-cwt",
-                                "value": "221"
-                            },
-                            {
                                 "desc": "A radial hand sweeps clockwise from the right edge's midpoint",
                                 "name": "singlesweep-cwr",
                                 "value": "222"
-                            },
-                            {
-                                "desc": "A radial hand sweeps clockwise from the right edge's midpoint",
-                                "name": "singlesweep-cwr",
-                                "value": "222"
-                            },
-                            {
-                                "desc": "A radial hand sweeps clockwise from the bottom edge's midpoint",
-                                "name": "singlesweep-cwb",
-                                "value": "223"
                             },
                             {
                                 "desc": "A radial hand sweeps clockwise from the bottom edge's midpoint",
@@ -30374,24 +30794,9 @@
                                 "value": "224"
                             },
                             {
-                                "desc": "A radial hand sweeps clockwise from the left edge's midpoint",
-                                "name": "singlesweep-cwl",
-                                "value": "224"
-                            },
-                            {
                                 "desc": "Two radial hands sweep clockwise and counter-clockwise from the top and bottom edges' midpoints",
                                 "name": "doublesweep-pv",
                                 "value": "225"
-                            },
-                            {
-                                "desc": "Two radial hands sweep clockwise and counter-clockwise from the top and bottom edges' midpoints",
-                                "name": "doublesweep-pv",
-                                "value": "225"
-                            },
-                            {
-                                "desc": "Two radial hands sweep clockwise and counter-clockwise from the left and right edges' midpoints",
-                                "name": "doublesweep-pd",
-                                "value": "226"
                             },
                             {
                                 "desc": "Two radial hands sweep clockwise and counter-clockwise from the left and right edges' midpoints",
@@ -30404,24 +30809,9 @@
                                 "value": "227"
                             },
                             {
-                                "desc": "Two radial hands attached at the top and bottom edges' midpoints sweep from right to left",
-                                "name": "doublesweep-ov",
-                                "value": "227"
-                            },
-                            {
                                 "desc": "Two radial hands attached at the left and right edges' midpoints sweep from top to bottom",
                                 "name": "doublesweep-oh",
                                 "value": "228"
-                            },
-                            {
-                                "desc": "Two radial hands attached at the left and right edges' midpoints sweep from top to bottom",
-                                "name": "doublesweep-oh",
-                                "value": "228"
-                            },
-                            {
-                                "desc": "A fan unfolds from the bottom, the fan axis at the top edge's midpoint",
-                                "name": "fan-t",
-                                "value": "231"
                             },
                             {
                                 "desc": "A fan unfolds from the bottom, the fan axis at the top edge's midpoint",
@@ -30434,24 +30824,9 @@
                                 "value": "232"
                             },
                             {
-                                "desc": "A fan unfolds from the left, the fan axis at the right edge's midpoint",
-                                "name": "fan-r",
-                                "value": "232"
-                            },
-                            {
                                 "desc": "A fan unfolds from the top, the fan axis at the bottom edge's midpoint",
                                 "name": "fan-b",
                                 "value": "233"
-                            },
-                            {
-                                "desc": "A fan unfolds from the top, the fan axis at the bottom edge's midpoint",
-                                "name": "fan-b",
-                                "value": "233"
-                            },
-                            {
-                                "desc": "A fan unfolds from the right, the fan axis at the left edge's midpoint",
-                                "name": "fan-l",
-                                "value": "234"
                             },
                             {
                                 "desc": "A fan unfolds from the right, the fan axis at the left edge's midpoint",
@@ -30464,24 +30839,9 @@
                                 "value": "235"
                             },
                             {
-                                "desc": "Two fans, their axes at the top and bottom, unfold from the center",
-                                "name": "doublefan-fiv",
-                                "value": "235"
-                            },
-                            {
                                 "desc": "Two fans, their axes at the left and right, unfold from the center",
                                 "name": "doublefan-fih",
                                 "value": "236"
-                            },
-                            {
-                                "desc": "Two fans, their axes at the left and right, unfold from the center",
-                                "name": "doublefan-fih",
-                                "value": "236"
-                            },
-                            {
-                                "desc": "A radial hand sweeps clockwise from the upper-left corner",
-                                "name": "singlesweep-cwtl",
-                                "value": "241"
                             },
                             {
                                 "desc": "A radial hand sweeps clockwise from the upper-left corner",
@@ -30494,24 +30854,9 @@
                                 "value": "242"
                             },
                             {
-                                "desc": "A radial hand sweeps counter-clockwise from the lower-left corner.",
-                                "name": "singlesweep-cwbl",
-                                "value": "242"
-                            },
-                            {
                                 "desc": "A radial hand sweeps clockwise from the lower-right corner",
                                 "name": "singlesweep-cwbr",
                                 "value": "243"
-                            },
-                            {
-                                "desc": "A radial hand sweeps clockwise from the lower-right corner",
-                                "name": "singlesweep-cwbr",
-                                "value": "243"
-                            },
-                            {
-                                "desc": "A radial hand sweeps counter-clockwise from the upper-right corner",
-                                "name": "singlesweep-cwtr",
-                                "value": "244"
                             },
                             {
                                 "desc": "A radial hand sweeps counter-clockwise from the upper-right corner",
@@ -30524,24 +30869,9 @@
                                 "value": "245"
                             },
                             {
-                                "desc": "Two radial hands attached at the upper-left and lower-right corners sweep down and up",
-                                "name": "doublesweep-pdtl",
-                                "value": "245"
-                            },
-                            {
                                 "desc": "Two radial hands attached at the lower-left and upper-right corners sweep down and up",
                                 "name": "doublesweep-pdbl",
                                 "value": "246"
-                            },
-                            {
-                                "desc": "Two radial hands attached at the lower-left and upper-right corners sweep down and up",
-                                "name": "doublesweep-pdbl",
-                                "value": "246"
-                            },
-                            {
-                                "desc": "Two radial hands attached at the upper-left and upper-right corners sweep down",
-                                "name": "saloondoor-t",
-                                "value": "251"
                             },
                             {
                                 "desc": "Two radial hands attached at the upper-left and upper-right corners sweep down",
@@ -30554,24 +30884,9 @@
                                 "value": "252"
                             },
                             {
-                                "desc": "Two radial hands attached at the upper-left and lower-left corners sweep to the right",
-                                "name": "saloondoor-l",
-                                "value": "252"
-                            },
-                            {
                                 "desc": "Two radial hands attached at the lower-left and lower-right corners sweep up",
                                 "name": "saloondoor-b",
                                 "value": "253"
-                            },
-                            {
-                                "desc": "Two radial hands attached at the lower-left and lower-right corners sweep up",
-                                "name": "saloondoor-b",
-                                "value": "253"
-                            },
-                            {
-                                "desc": "Two radial hands attached at the upper-right and lower-right corners sweep to the left",
-                                "name": "saloondoor-r",
-                                "value": "254"
                             },
                             {
                                 "desc": "Two radial hands attached at the upper-right and lower-right corners sweep to the left",
@@ -30584,16 +30899,6 @@
                                 "value": "261"
                             },
                             {
-                                "desc": "Two radial hands attached at the midpoints of the top and bottom halves sweep from right to left",
-                                "name": "windshield-r",
-                                "value": "261"
-                            },
-                            {
-                                "desc": "Two radial hands attached at the midpoints of the left and right halves sweep from top to bottom",
-                                "name": "windshield-u",
-                                "value": "262"
-                            },
-                            {
                                 "desc": "Two radial hands attached at the midpoints of the left and right halves sweep from top to bottom",
                                 "name": "windshield-u",
                                 "value": "262"
@@ -30602,16 +30907,6 @@
                                 "desc": "Two sets of radial hands attached at the midpoints of the top and bottom halves sweep from top to bottom and bottom to top",
                                 "name": "windshield-v",
                                 "value": "263"
-                            },
-                            {
-                                "desc": "Two sets of radial hands attached at the midpoints of the top and bottom halves sweep from top to bottom and bottom to top",
-                                "name": "windshield-v",
-                                "value": "263"
-                            },
-                            {
-                                "desc": "Two sets of radial hands attached at the midpoints of the left and right halves sweep from left to right and right to left",
-                                "name": "windshield-h",
-                                "value": "264"
                             },
                             {
                                 "desc": "Two sets of radial hands attached at the midpoints of the left and right halves sweep from left to right and right to left",
@@ -31083,6 +31378,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "soup": {
@@ -31665,6 +31961,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "spectrum": {
@@ -31792,6 +32089,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "speex": {
@@ -32077,6 +32375,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "taglib": {
@@ -32179,6 +32478,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "twolame": {
@@ -32460,6 +32760,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "udp": {
@@ -33639,6 +33940,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "video4linux2": {
@@ -34716,6 +35018,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "videobox": {
@@ -34890,6 +35193,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "videocrop": {
@@ -35067,6 +35371,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "videofilter": {
@@ -35493,6 +35798,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "videomixer": {
@@ -35579,6 +35885,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "vpx": {
@@ -35679,29 +35986,9 @@
                                 "value": "0x00000004"
                             },
                             {
-                                "desc": "Print frame information",
-                                "name": "visualize-frame-info",
-                                "value": "0x00000008"
-                            },
-                            {
-                                "desc": "Show macroblock mode selection overlaid on image",
-                                "name": "visualize-macroblock-modes",
-                                "value": "0x00000010"
-                            },
-                            {
-                                "desc": "Show dc diff for each macro block overlaid on image",
-                                "name": "visualize-dc-diff",
-                                "value": "0x00000020"
-                            },
-                            {
-                                "desc": "Print video rate info",
-                                "name": "visualize-rate-info",
-                                "value": "0x00000040"
-                            },
-                            {
                                 "desc": "Multi-frame quality enhancement",
                                 "name": "mfqe",
-                                "value": "0x00000400"
+                                "value": "0x00000008"
                             }
                         ],
                         "writable": true
@@ -36421,29 +36708,9 @@
                                 "value": "0x00000004"
                             },
                             {
-                                "desc": "Print frame information",
-                                "name": "visualize-frame-info",
-                                "value": "0x00000008"
-                            },
-                            {
-                                "desc": "Show macroblock mode selection overlaid on image",
-                                "name": "visualize-macroblock-modes",
-                                "value": "0x00000010"
-                            },
-                            {
-                                "desc": "Show dc diff for each macro block overlaid on image",
-                                "name": "visualize-dc-diff",
-                                "value": "0x00000020"
-                            },
-                            {
-                                "desc": "Print video rate info",
-                                "name": "visualize-rate-info",
-                                "value": "0x00000040"
-                            },
-                            {
                                 "desc": "Multi-frame quality enhancement",
                                 "name": "mfqe",
-                                "value": "0x00000400"
+                                "value": "0x00000008"
                             }
                         ],
                         "writable": true
@@ -37073,6 +37340,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "wavenc": {
@@ -37128,6 +37396,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "wavpack": {
@@ -37436,6 +37705,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "wavparse": {
@@ -37499,6 +37769,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "ximagesrc": {
@@ -37677,6 +37948,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "y4menc": {
@@ -37741,6 +38013,7 @@
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
+        "tracers": {},
         "url": "Unknown package origin"
     }
 }
