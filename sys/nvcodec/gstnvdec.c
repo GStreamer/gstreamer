@@ -80,7 +80,7 @@ register_cuda_resource (GstGLContext * context,
     gl_buf_obj = gl_mem->pbo;
 
     GST_LOG_OBJECT (nvdec,
-        "registure glbuffer %d to CUDA resource", gl_buf_obj->id);
+        "register glbuffer %d to CUDA resource", gl_buf_obj->id);
 
     /* register resource without read/write only flags, since
      * downstream CUDA elements (e.g., nvenc) might want to access
@@ -706,7 +706,7 @@ gst_nvdec_open (GstVideoDecoder * decoder)
     cuda_ret = CuStreamCreate (&nvdec->cuda_stream, CU_STREAM_DEFAULT);
     if (!gst_cuda_result (cuda_ret)) {
       GST_WARNING_OBJECT (nvdec,
-          "Could not create cuda stream, will use default stream");
+          "Could not create CUDA stream, will use default stream");
       nvdec->cuda_stream = NULL;
     }
     gst_cuda_context_pop (NULL);
