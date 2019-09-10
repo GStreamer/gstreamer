@@ -564,7 +564,7 @@ build cerbero android universal:
 #
 # Cerbero Cross Windows builds
 #
-cerbero deps windows x86:
+cerbero deps cross-windows x86:
   extends: '.cerbero deps'
   variables:
     CONFIG: "cross-win32.cbc"
@@ -578,10 +578,10 @@ cerbero deps windows x86:
 cerbero cross win32:
   extends: '.cerbero cross win32'
   needs:
-    - "cerbero deps windows x86"
+    - "cerbero deps cross-windows x86"
     - "manifest"
   dependencies:
-    - "cerbero deps windows x86"
+    - "cerbero deps cross-windows x86"
   only:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
@@ -596,7 +596,7 @@ build cerbero cross win32:
       - $CI_PROJECT_NAME == "gstreamer-vaapi"
       - $CI_PROJECT_NAME == "gst-docs"
 
-cerbero deps windows x86_64:
+cerbero deps cross-windows x86_64:
   extends: '.cerbero deps'
   variables:
     CONFIG: "cross-win64.cbc"
@@ -610,10 +610,10 @@ cerbero deps windows x86_64:
 cerbero cross win64:
   extends: '.cerbero cross win64'
   needs:
-    - "cerbero deps windows x86_64"
+    - "cerbero deps cross-windows x86_64"
     - "manifest"
   dependencies:
-    - "cerbero deps windows x86_64"
+    - "cerbero deps cross-windows x86_64"
   only:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
