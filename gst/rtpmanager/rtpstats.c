@@ -37,6 +37,7 @@ gst_rtp_packet_rate_ctx_update (RTPPacketRateCtx * ctx, guint16 seqnum,
   guint64 new_ts, diff_ts;
   gint diff_seqnum;
   gint32 new_packet_rate;
+  gint32 base;
 
   if (ctx->clock_rate <= 0) {
     return ctx->avg_packet_rate;
@@ -73,12 +74,19 @@ gst_rtp_packet_rate_ctx_update (RTPPacketRateCtx * ctx, guint16 seqnum,
    * This is useful for bursty cases, where a lot of packets are close
    * to each other and should allow a higher reorder/dropout there.
    * Round up the new average.
+   * We do it on different rates depending on the packet rate, so it's not too
+   * jumpy.
    */
-  if (ctx->avg_packet_rate > new_packet_rate) {
-    ctx->avg_packet_rate = (7 * ctx->avg_packet_rate + new_packet_rate + 7) / 8;
-  } else {
-    ctx->avg_packet_rate = (ctx->avg_packet_rate + new_packet_rate + 1) / 2;
-  }
+  if (ctx->avg_packet_rate > new_packet_rate)
+    base = MAX (ctx->avg_packet_rate / 3, 8);   /* about 333 ms */
+  else
+    base = MAX (ctx->avg_packet_rate / 15, 2);  /* about 66 ms */
+
+  diff_seqnum = MIN (diff_seqnum, base - 1);
+
+  ctx->avg_packet_rate = (((base - diff_seqnum) * ctx->avg_packet_rate) +
+      (new_packet_rate * diff_seqnum)) / base;
+
 
 done_but_save:
 
