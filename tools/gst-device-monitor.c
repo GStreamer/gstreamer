@@ -288,7 +288,6 @@ main (int argc, char **argv)
   GTimer *timer;
   DevMonApp app;
   GstBus *bus;
-  GList *devices;
 
   setlocale (LC_ALL, "");
 
@@ -364,19 +363,6 @@ main (int argc, char **argv)
   }
 
   GST_INFO ("Took %.2f seconds", g_timer_elapsed (timer, NULL));
-
-  devices = gst_device_monitor_get_devices (app.monitor);
-  if (devices != NULL) {
-    while (devices != NULL) {
-      GstDevice *device = devices->data;
-
-      print_device (device, FALSE);
-      gst_object_unref (device);
-      devices = g_list_delete_link (devices, devices);
-    }
-  } else {
-    g_print ("No devices found!\n");
-  }
 
   if (follow) {
     g_print ("Monitoring devices, waiting for devices to be removed or "
