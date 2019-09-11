@@ -491,41 +491,48 @@ video_format_create_map_once (gpointer data)
   guint n = ((struct ImageFormatsData *) data)->n;
   GArray *array = NULL;
 
-  if (formats == NULL || n == 0)
-    return NULL;
-
   array = g_array_new (FALSE, TRUE, sizeof (GstVideoFormatMap));
   if (array == NULL)
     return NULL;
 
-  for (i = 0; i < n; i++) {
-    src_entry = get_map_in_default_by_va_format (&formats[i]);
-    if (src_entry) {
-      entry = get_map_by_gst_format (array, src_entry->format);
-      if (entry && !va_format_is_same (&entry->va_format, &formats[i])) {
-        GST_INFO ("va_format1 with fourcc %" GST_FOURCC_FORMAT
-            " byte order: %d, BPP: %d, depth %d, red mask 0x%4x,"
-            " green mask 0x%4x, blue mask 0x%4x, alpha mask 0x%4x"
-            " conflict with va_foramt2 fourcc %" GST_FOURCC_FORMAT
-            " byte order: %d, BPP: %d, depth %d, red mask 0x%4x,"
-            " green mask 0x%4x, blue mask 0x%4x, alpha mask 0x%4x."
-            " Both map to the same GST format: %s, which is not"
-            " allowed, va_format1 will be skipped",
-            GST_FOURCC_ARGS (entry->va_format.fourcc),
-            entry->va_format.byte_order, entry->va_format.bits_per_pixel,
-            entry->va_format.depth, entry->va_format.red_mask,
-            entry->va_format.green_mask, entry->va_format.blue_mask,
-            entry->va_format.alpha_mask,
-            GST_FOURCC_ARGS (formats[i].fourcc),
-            formats[i].byte_order, formats[i].bits_per_pixel, formats[i].depth,
-            formats[i].red_mask, formats[i].green_mask, formats[i].blue_mask,
-            formats[i].alpha_mask, gst_video_format_to_string (entry->format));
-        continue;
-      }
-      g_array_append_val (array, (*src_entry));
-    }
+  /* All the YUV format has no ambiguity */
+  for (i = 0; i < G_N_ELEMENTS (gst_vaapi_video_default_formats); i++) {
+    if (va_format_is_yuv (&gst_vaapi_video_default_formats[i].va_format))
+      g_array_append_val (array, gst_vaapi_video_default_formats[i]);
+  }
 
-    if (va_format_is_rgb (&formats[i])) {
+  if (formats) {
+    for (i = 0; i < n; i++) {
+      if (!va_format_is_rgb (&formats[i]))
+        continue;
+
+      src_entry = get_map_in_default_by_va_format (&formats[i]);
+      if (src_entry) {
+        entry = get_map_by_gst_format (array, src_entry->format);
+        if (entry && !va_format_is_same (&entry->va_format, &formats[i])) {
+          GST_INFO ("va_format1 with fourcc %" GST_FOURCC_FORMAT
+              " byte order: %d, BPP: %d, depth %d, red mask 0x%4x,"
+              " green mask 0x%4x, blue mask 0x%4x, alpha mask 0x%4x"
+              " conflict with va_foramt2 fourcc %" GST_FOURCC_FORMAT
+              " byte order: %d, BPP: %d, depth %d, red mask 0x%4x,"
+              " green mask 0x%4x, blue mask 0x%4x, alpha mask 0x%4x."
+              " Both map to the same GST format: %s, which is not"
+              " allowed, va_format1 will be skipped",
+              GST_FOURCC_ARGS (entry->va_format.fourcc),
+              entry->va_format.byte_order, entry->va_format.bits_per_pixel,
+              entry->va_format.depth, entry->va_format.red_mask,
+              entry->va_format.green_mask, entry->va_format.blue_mask,
+              entry->va_format.alpha_mask,
+              GST_FOURCC_ARGS (formats[i].fourcc),
+              formats[i].byte_order, formats[i].bits_per_pixel,
+              formats[i].depth, formats[i].red_mask, formats[i].green_mask,
+              formats[i].blue_mask, formats[i].alpha_mask,
+              gst_video_format_to_string (entry->format));
+          continue;
+        }
+        g_array_append_val (array, (*src_entry));
+      }
+
       GST_LOG ("%s to map RGB va_format with fourcc: %"
           GST_FOURCC_FORMAT
           ", byte order: %d BPP: %d, depth %d, red mask %4x,"
@@ -534,13 +541,6 @@ video_format_create_map_once (gpointer data)
           GST_FOURCC_ARGS (formats[i].fourcc), formats[i].byte_order,
           formats[i].bits_per_pixel, formats[i].depth, formats[i].red_mask,
           formats[i].green_mask, formats[i].blue_mask, formats[i].alpha_mask,
-          src_entry ? gst_video_format_to_string (src_entry->format) : "any");
-    } else {
-      GST_LOG ("%s to map YUV va format with fourcc: %"
-          GST_FOURCC_FORMAT ", byte order: %d BPP: %d to %s gstreamer"
-          " video format", src_entry ? "succeed" : "failed",
-          GST_FOURCC_ARGS (formats[i].fourcc), formats[i].byte_order,
-          formats[i].bits_per_pixel,
           src_entry ? gst_video_format_to_string (src_entry->format) : "any");
     }
   }
