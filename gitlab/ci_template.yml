@@ -529,30 +529,30 @@ build cerbero fedora x86_64:
 #
 # Cerbero Android Universal build
 #
-cerbero deps android universal:
+cerbero deps cross-android universal:
   extends: '.cerbero deps'
   variables:
     CONFIG: "cross-android-universal.cbc"
     ARCH: "android_universal"
 
-.cerbero android universal:
+.cerbero cross-android universal:
   extends: '.cerbero'
   variables:
     CONFIG: "cross-android-universal.cbc"
 
-cerbero android universal:
-  extends: '.cerbero android universal'
+cerbero cross-android universal:
+  extends: '.cerbero cross-android universal'
   needs:
-    - "cerbero deps android universal"
+    - "cerbero deps cross-android universal"
     - "manifest"
   dependencies:
-    - "cerbero deps android universal"
+    - "cerbero deps cross-android universal"
   only:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
 
-build cerbero android universal:
-  extends: '.cerbero android universal'
+build cerbero cross-android universal:
+  extends: '.cerbero cross-android universal'
   except:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
@@ -631,7 +631,7 @@ build cerbero cross win64:
 #
 # Build an Android App using the android binaries
 #
-.android universal examples:
+.cross-android universal examples:
   image: $ANDROID_IMAGE
   stage: 'integrate'
   variables:
@@ -670,13 +670,13 @@ build cerbero cross win64:
       - "manifest.xml"
       - "${EXAMPLES_HOME}/outputs"
 
-android universal examples:
-  extends: ".android universal examples"
+cross-android universal examples:
+  extends: ".cross-android universal examples"
   needs:
-    - "build cerbero android universal"
+    - "build cerbero cross-android universal"
     - "manifest"
   dependencies:
-    - "build cerbero android universal"
+    - "build cerbero cross-android universal"
   except:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
@@ -686,13 +686,13 @@ android universal examples:
       - $CI_PROJECT_NAME == "gstreamer-vaapi"
       - $CI_PROJECT_NAME == "gst-docs"
 
-cerbero android universal examples:
-  extends: ".android universal examples"
+cerbero cross-android universal examples:
+  extends: ".cross-android universal examples"
   needs:
-    - "cerbero android universal"
+    - "cerbero cross-android universal"
     - "manifest"
   dependencies:
-    - "cerbero android universal"
+    - "cerbero cross-android universal"
   only:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
@@ -756,7 +756,7 @@ build cerbero macos x86_64:
 #
 # Cerbero iOS build
 #
-cerbero deps ios universal:
+cerbero deps cross-ios universal:
   extends: '.cerbero deps'
   variables:
     ARCH: "ios_universal"
@@ -766,7 +766,7 @@ cerbero deps ios universal:
   tags:
     - gst-ios-12.2
 
-.cerbero ios universal:
+.cerbero cross-ios universal:
   extends: '.cerbero'
   variables:
     ARCH: "ios_universal"
@@ -785,19 +785,19 @@ cerbero deps ios universal:
       - "${CERBERO_HOME}/logs"
       - "gstreamer-1.0-*-ios-universal.pkg"
 
-cerbero ios universal:
-  extends: '.cerbero ios universal'
+cerbero cross-ios universal:
+  extends: '.cerbero cross-ios universal'
   needs:
-    - "cerbero deps ios universal"
+    - "cerbero deps cross-ios universal"
     - "manifest"
   dependencies:
-    - "cerbero deps ios universal"
+    - "cerbero deps cross-ios universal"
   only:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
 
-build cerbero ios universal:
-  extends: '.cerbero ios universal'
+build cerbero cross-ios universal:
+  extends: '.cerbero cross-ios universal'
   when: 'manual'
   except:
     variables:
@@ -839,7 +839,7 @@ documentation:
 #
 # Build an iOS App using the iOS binaries
 #
-.ios universal examples:
+.cross-ios universal examples:
   stage: 'integrate'
   when: 'manual'
   variables:
@@ -877,10 +877,10 @@ documentation:
   tags:
     - gst-ios-12.2
 
-ios universal examples:
-  extends: ".ios universal examples"
+cross-ios universal examples:
+  extends: ".cross-ios universal examples"
   dependencies:
-    - "build cerbero ios universal"
+    - "build cerbero cross-ios universal"
   except:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
@@ -889,10 +889,10 @@ ios universal examples:
       - $CI_PROJECT_NAME == "gst-integration-testsuites"
       - $CI_PROJECT_NAME == "gstreamer-vaapi"
 
-cerbero ios universal examples:
-  extends: ".ios universal examples"
+cerbero cross-ios universal examples:
+  extends: ".cross-ios universal examples"
   dependencies:
-    - "cerbero ios universal"
+    - "cerbero cross-ios universal"
   only:
     variables:
       - $CI_PROJECT_NAME == "cerbero"

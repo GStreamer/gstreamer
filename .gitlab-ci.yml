@@ -135,8 +135,8 @@ build cerbero fedora x86_64 local:
     refs:
       - "master@gstreamer/gst-ci"
 
-build cerbero android universal local:
-  extends: '.cerbero android universal'
+build cerbero cross-android universal local:
+  extends: '.cerbero cross-android universal'
   image: "${CI_REGISTRY_IMAGE}/amd64/cerbero-fedora:latest"
   when: 'manual'
   except:
@@ -174,11 +174,11 @@ check fedora local:
   variables:
     TEST_SUITE: 'check.gst*'
 
-android universal examples local:
-  extends: '.android universal examples'
+cross-android universal examples local:
+  extends: '.cross-android universal examples'
   image: "${CI_REGISTRY_IMAGE}/amd64/android:latest"
   dependencies:
-    - "build cerbero android universal local"
+    - "build cerbero cross-android universal local"
   when: 'manual'
   except:
     refs:
