@@ -56,7 +56,9 @@ static const struct
   {VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, "host-coherent"},
   {VK_MEMORY_PROPERTY_HOST_CACHED_BIT, "host-cached"},
   {VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT, "lazily-allocated"},
+#if VK_HEADER_VERSION >= 70
   {VK_MEMORY_PROPERTY_PROTECTED_BIT, "protected"},
+#endif
 #if VK_HEADER_VERSION >= 121
   {VK_MEMORY_PROPERTY_DEVICE_COHERENT_BIT_AMD, "device-coherent"},
   {VK_MEMORY_PROPERTY_DEVICE_UNCACHED_BIT_AMD, "device-uncached"},
@@ -70,7 +72,9 @@ static const struct
   const char *str;
 } vk_memory_heap_flags_map[] = {
   {VK_MEMORY_HEAP_DEVICE_LOCAL_BIT, "device-local"},
+#if VK_HEADER_VERSION >= 70
   {VK_MEMORY_HEAP_MULTI_INSTANCE_BIT, "multi-instance"},
+#endif
 };
 FLAGS_TO_STRING(memory_heap, VkMemoryHeapFlagBits);
 
@@ -83,7 +87,9 @@ static const struct
   {VK_QUEUE_COMPUTE_BIT, "compute"},
   {VK_QUEUE_TRANSFER_BIT, "transfer"},
   {VK_QUEUE_SPARSE_BINDING_BIT, "sparse-binding"},
+#if VK_HEADER_VERSION >= 70
   {VK_QUEUE_PROTECTED_BIT, "protected"},
+#endif
 };
 FLAGS_TO_STRING(queue, VkQueueFlags);
 
