@@ -808,6 +808,9 @@ struct _GstH264PPS
   guint8 second_chroma_qp_index_offset;
 
   gboolean valid;
+
+  /* Since: 1.18 */
+  guint8 pic_scaling_matrix_present_flag;
 };
 
 struct _GstH264RefPicListModification

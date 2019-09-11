@@ -1956,7 +1956,6 @@ gst_h264_parse_pps (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
   NalReader nr;
   GstH264SPS *sps;
   gint sps_id;
-  guint8 pic_scaling_matrix_present_flag;
   gint qp_bd_offset;
 
   GST_DEBUG ("parsing PPS");
@@ -2036,8 +2035,8 @@ gst_h264_parse_pps (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
 
   READ_UINT8 (&nr, pps->transform_8x8_mode_flag, 1);
 
-  READ_UINT8 (&nr, pic_scaling_matrix_present_flag, 1);
-  if (pic_scaling_matrix_present_flag) {
+  READ_UINT8 (&nr, pps->pic_scaling_matrix_present_flag, 1);
+  if (pps->pic_scaling_matrix_present_flag) {
     guint8 n_lists;
 
     n_lists = 6 + ((sps->chroma_format_idc != 3) ? 2 : 6) *
