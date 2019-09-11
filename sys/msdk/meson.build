@@ -97,7 +97,7 @@ if msdk_deps_found
   gstmsdktag = library('gstmsdk',
     msdk_sources,
     c_args : gst_plugins_bad_args,
-    include_directories : [configinc],
+    include_directories : [configinc, mfx_incdir],
     dependencies : [gstbase_dep, gstvideo_dep, gstpbutils_dep, gstallocators_dep, mfx_dep, msdk_deps],
     install : true,
     install_dir : plugins_install_dir,
