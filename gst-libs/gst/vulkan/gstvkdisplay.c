@@ -217,6 +217,16 @@ gst_vulkan_display_new_with_type (GstVulkanInstance * instance,
     display = GST_VULKAN_DISPLAY (gst_vulkan_display_wayland_new (NULL));
   }
 #endif
+#if GST_VULKAN_HAVE_WINDOW_COCOA
+  if (!display && type & GST_VULKAN_DISPLAY_TYPE_COCOA) {
+    display = GST_VULKAN_DISPLAY (gst_vulkan_display_cocoa_new ());
+  }
+#endif
+#if GST_VULKAN_HAVE_WINDOW_IOS
+  if (!display && type & GST_VULKAN_DISPLAY_TYPE_IOS) {
+    display = GST_VULKAN_DISPLAY (gst_vulkan_display_ios_new ());
+  }
+#endif
 
   if (display)
     display->instance = gst_object_ref (instance);
