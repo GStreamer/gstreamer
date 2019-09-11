@@ -72,7 +72,9 @@ dnf install -y \
     x264 \
     x264-libs \
     x264-devel \
+    python3 \
     python3-devel \
+    python3-libs \
     python3-gobject \
     python3-cairo \
     python3-cairo-devel \
@@ -110,6 +112,7 @@ dnf debuginfo-install -y gtk3 \
     openjpeg \
     gobject-introspection \
     python3 \
+    python3-libs \
     python3-gobject \
     libjpeg-turbo \
     glib-networking \
