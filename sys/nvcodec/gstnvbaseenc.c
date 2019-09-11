@@ -1437,6 +1437,36 @@ gst_nv_base_enc_setup_rate_control (GstNvBaseEnc * nvenc,
   }
 }
 
+static gint
+gst_nv_base_enc_calculate_num_prealloc_buffers (GstNvBaseEnc * enc,
+    NV_ENC_CONFIG * config)
+{
+  gint num_buffers;
+
+  /* At least 4 surfaces are required as documented by Nvidia Encoder guide */
+  num_buffers = 4;
+
+  /* + lookahead depth */
+  num_buffers += config->rcParams.lookaheadDepth;
+
+  /* + GOP size */
+  num_buffers += config->frameIntervalP;
+
+  /* hardcoded upper bound "48"
+   * The worst case
+   *   default num buffers: 4
+   *   maximum allowed lookahead: 32
+   *   max bfraems: 4 -> frameIntervalP: 5
+   * "4 + 32 + 5" < "48" so it seems to sufficiently safe upper bound */
+  num_buffers = MIN (num_buffers, 48);
+
+  GST_DEBUG_OBJECT (enc, "Calculated num buffers: %d "
+      "(lookahead %d, frameIntervalP %d)",
+      num_buffers, config->rcParams.lookaheadDepth, config->frameIntervalP);
+
+  return num_buffers;
+}
+
 /* GstVideoEncoder::set_format or by nvenc self if new properties were set.
  *
  * NvEncReconfigureEncoder with following conditions are not allowed
@@ -1669,15 +1699,15 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
 #if HAVE_NVCODEC_GST_GL
     GstCapsFeatures *features;
 #endif
-    guint num_macroblocks, i;
+    guint i;
     guint input_width, input_height;
 
     input_width = GST_VIDEO_INFO_WIDTH (info);
     input_height = GST_VIDEO_INFO_HEIGHT (info);
 
-    num_macroblocks = (GST_ROUND_UP_16 (input_width) >> 4)
-        * (GST_ROUND_UP_16 (input_height) >> 4);
-    nvenc->n_bufs = (num_macroblocks >= 8160) ? 32 : 48;
+    nvenc->n_bufs =
+        gst_nv_base_enc_calculate_num_prealloc_buffers (nvenc,
+        params->encodeConfig);
 
     /* input buffers */
     g_array_set_size (nvenc->items, nvenc->n_bufs);
