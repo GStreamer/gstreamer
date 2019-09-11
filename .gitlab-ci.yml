@@ -123,6 +123,12 @@ build fedora x86_64 local:
   extends: '.build local'
   stage: 'build'
   image: "${CI_REGISTRY_IMAGE}/amd64/fedora:latest"
+  artifacts:
+    expire_in: '5 days'
+    when: always
+    paths:
+      - "manifest.xml"
+      - "gst-build/"
   except:
     refs:
       - "master@gstreamer/gst-ci"
