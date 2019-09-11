@@ -152,6 +152,7 @@ struct _GstRTSPMediaPrivate
   /* Dynamic element handling */
   guint nb_dynamic_elements;
   guint no_more_pads_pending;
+  gboolean expected_async_done;
 };
 
 #define DEFAULT_SHARED          FALSE
@@ -476,6 +477,7 @@ gst_rtsp_media_init (GstRTSPMedia * media)
   priv->max_mcast_ttl = DEFAULT_MAX_MCAST_TTL;
   priv->bind_mcast_address = DEFAULT_BIND_MCAST_ADDRESS;
   priv->do_rate_control = DEFAULT_DO_RATE_CONTROL;
+  priv->expected_async_done = FALSE;
 }
 
 static void
@@ -2819,6 +2821,30 @@ gst_rtsp_media_seek_trickmode (GstRTSPMedia * media,
       GstEvent *seek_event;
       gboolean unblock = FALSE;
 
+      /* Handle expected async-done before waiting on next async-done.
+       * 
+       * Since the seek further down in code will cause a preroll and
+       * a async-done will be generated it's important to wait on async-done
+       * if that is expected. Otherwise there is the risk that the waiting
+       * for async-done after the seek is detecting the expected async-done
+       * instead of the one that corresponds to the seek. Then execution
+       * continue and act as if the pipeline is prerolled, but it's not.
+       * 
+       * During wait_preroll message GST_MESSAGE_ASYNC_DONE will come
+       * and then the state will change from preparing to prepared */
+      if (priv->expected_async_done) {
+        GST_DEBUG (" expected to get async-done, waiting ");
+        gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARING);
+        g_rec_mutex_unlock (&priv->state_lock);
+
+        /* wait until pipeline is prerolled  */
+        if (!wait_preroll (media))
+          goto preroll_failed_expected_async_done;
+
+        g_rec_mutex_lock (&priv->state_lock);
+        GST_DEBUG (" got expected async-done");
+      }
+
       gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARING);
 
       if (rate < 0.0) {
@@ -2908,6 +2934,11 @@ seek_failed:
 preroll_failed:
   {
     GST_WARNING ("failed to preroll after seek");
+    return FALSE;
+  }
+preroll_failed_expected_async_done:
+  {
+    GST_WARNING ("failed to preroll");
     return FALSE;
   }
 }
@@ -3118,6 +3149,8 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
     case GST_MESSAGE_STREAM_STATUS:
       break;
     case GST_MESSAGE_ASYNC_DONE:
+      if (priv->expected_async_done)
+        priv->expected_async_done = FALSE;
       if (priv->complete) {
         /* receive the final ASYNC_DONE, that is posted by the media pipeline
          * after all the transport parts have been successfully added to
@@ -4459,6 +4492,8 @@ static void
 media_set_pipeline_state_locked (GstRTSPMedia * media, GstState state)
 {
   GstRTSPMediaPrivate *priv = media->priv;
+  GstStateChangeReturn set_state_ret;
+  priv->expected_async_done = FALSE;
 
   if (state == GST_STATE_NULL) {
     gst_rtsp_media_unprepare (media);
@@ -4474,11 +4509,15 @@ media_set_pipeline_state_locked (GstRTSPMedia * media, GstState state)
         /* make sure pads are not blocking anymore when going to PLAYING */
         media_unblock_linked (media);
 
-      set_state (media, state);
-
-      /* and suspend after pause */
-      if (state == GST_STATE_PAUSED)
+      if (state == GST_STATE_PAUSED) {
+        set_state_ret = set_state (media, state);
+        if (set_state_ret == GST_STATE_CHANGE_ASYNC)
+          priv->expected_async_done = TRUE;
+        /* and suspend after pause */
         gst_rtsp_media_suspend (media);
+      } else {
+        set_state (media, state);
+      }
     }
   }
 }
