@@ -8,6 +8,7 @@ vulkan_sources = [
   'gstvkbufferpool.c',
   'gstvkcommandpool.c',
   'gstvkdevice.c',
+  'gstvkdebug.c',
   'gstvkdisplay.c',
   'gstvkerror.c',
   'gstvkfence.c',

@@ -26,6 +26,8 @@
 
 #include "gstvkmemory.h"
 
+#include "gstvkdebug-private.h"
+
 /**
  * SECTION:vkmemory
  * @title: GstVulkanMemory
@@ -43,45 +45,6 @@
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFUALT);
 
 static GstAllocator *_vulkan_memory_allocator;
-
-static gchar *
-_memory_properties_to_string (VkMemoryPropertyFlags prop_bits)
-{
-  GString *s;
-  gboolean first = TRUE;
-
-#define STR_APPEND(s,str) \
-  G_STMT_START { \
-    if (!first) \
-      g_string_append (s, "|"); \
-    g_string_append (s, str); \
-    first = FALSE; \
-  } G_STMT_END
-
-  s = g_string_new (NULL);
-  if (prop_bits & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) {
-    STR_APPEND (s, "device-local");
-  }
-  if (prop_bits & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) {
-    STR_APPEND (s, "host-visible");
-    if (prop_bits & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) {
-      STR_APPEND (s, "host-coherent");
-    } else {
-      STR_APPEND (s, "host-incoherent");
-    }
-    if (prop_bits & VK_MEMORY_PROPERTY_HOST_CACHED_BIT) {
-      STR_APPEND (s, "host-cached");
-    } else {
-      STR_APPEND (s, "host-uncached");
-    }
-  }
-
-  if (prop_bits & VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT) {
-    STR_APPEND (s, "lazily-allocated");
-  }
-
-  return g_string_free (s, FALSE);
-}
 
 static void
 _vk_mem_init (GstVulkanMemory * mem, GstAllocator * allocator,
@@ -117,7 +80,7 @@ _vk_mem_init (GstVulkanMemory * mem, GstAllocator * allocator,
 
   g_mutex_init (&mem->lock);
 
-  props_str = _memory_properties_to_string (mem_prop_flags);
+  props_str = gst_vulkan_memory_property_flags_to_string (mem_prop_flags);
 
   GST_CAT_DEBUG (GST_CAT_VULKAN_MEMORY, "new Vulkan memory:%p size:%"
       G_GSIZE_FORMAT " properties:%s", mem, maxsize, props_str);

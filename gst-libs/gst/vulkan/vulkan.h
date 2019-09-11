@@ -25,6 +25,7 @@
 
 #include <gst/vulkan/gstvkapi.h>
 
+#include <gst/vulkan/gstvkdebug.h>
 #include <gst/vulkan/gstvkerror.h>
 #include <gst/vulkan/gstvkinstance.h>
 #include <gst/vulkan/gstvkdevice.h>
