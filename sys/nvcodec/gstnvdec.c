@@ -1330,7 +1330,7 @@ gst_nvdec_subclass_init (gpointer g_class, gpointer data)
   if (cdata->is_default) {
     long_name = g_strdup_printf ("NVDEC %s Video Decoder", cdata->codec);
   } else {
-    long_name = g_strdup_printf ("NVDEC %s Video Decoder with devide-id %d",
+    long_name = g_strdup_printf ("NVDEC %s Video Decoder with device %d",
         cdata->codec, cdata->cuda_device_id);
   }
 
