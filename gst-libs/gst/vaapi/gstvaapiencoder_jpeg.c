@@ -853,7 +853,7 @@ gst_vaapi_encoder_jpeg_class_init (GstVaapiEncoderJpegClass * klass)
       g_class_data.rate_control_get_type (),
       g_class_data.default_rate_control,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
-      G_PARAM_FLAG_VAAPI_ENCODER_EXPOSURE);
+      GST_VAAPI_PARAM_ENCODER_EXPOSURE);
 
   properties[ENCODER_JPEG_PROP_TUNE] =
       g_param_spec_enum ("tune",
@@ -862,14 +862,14 @@ gst_vaapi_encoder_jpeg_class_init (GstVaapiEncoderJpegClass * klass)
       g_class_data.encoder_tune_get_type (),
       g_class_data.default_encoder_tune,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
-      G_PARAM_FLAG_VAAPI_ENCODER_EXPOSURE);
+      GST_VAAPI_PARAM_ENCODER_EXPOSURE);
 
   properties[ENCODER_JPEG_PROP_QUALITY] =
       g_param_spec_uint ("quality",
       "Quality factor",
       "Quality factor", 0, 100, 50,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
-      G_PARAM_FLAG_VAAPI_ENCODER_EXPOSURE);
+      GST_VAAPI_PARAM_ENCODER_EXPOSURE);
 
   g_object_class_install_properties (object_class, ENCODER_JPEG_N_PROPERTIES,
       properties);

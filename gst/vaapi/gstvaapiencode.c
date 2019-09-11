@@ -1021,7 +1021,7 @@ gst_vaapiencode_class_install_properties (GstVaapiEncodeClass * klass,
     pspec = specs[i];
 
     /* Encoder do not want to expose */
-    if (!(pspec->flags & G_PARAM_FLAG_VAAPI_ENCODER_EXPOSURE))
+    if (!(pspec->flags & GST_VAAPI_PARAM_ENCODER_EXPOSURE))
       continue;
     /* Can only set on encoder init time */
     if (pspec->flags & G_PARAM_CONSTRUCT_ONLY)
@@ -1029,8 +1029,8 @@ gst_vaapiencode_class_install_properties (GstVaapiEncodeClass * klass,
 
     /* filter out the G_PARAM_CONSTRUCT, the encoder created later, no need
        to set the init value in encode.
-       Also no G_PARAM_FLAG_VAAPI_ENCODER_EXPOSURE */
-    flags = pspec->flags & (~(G_PARAM_FLAG_VAAPI_ENCODER_EXPOSURE |
+       Also no GST_VAAPI_PARAM_ENCODER_EXPOSURE */
+    flags = pspec->flags & (~(GST_VAAPI_PARAM_ENCODER_EXPOSURE |
             G_PARAM_CONSTRUCT));
 
     if (G_PARAM_SPEC_TYPE (pspec) == G_TYPE_PARAM_UINT) {

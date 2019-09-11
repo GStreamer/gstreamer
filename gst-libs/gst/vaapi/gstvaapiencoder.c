@@ -1432,7 +1432,7 @@ gst_vaapi_encoder_class_init (GstVaapiEncoderClass * klass)
       "The desired bitrate expressed in kbps (0: auto-calculate)",
       0, 2000 * 1024, 0,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
-      G_PARAM_FLAG_VAAPI_ENCODER_EXPOSURE);
+      GST_VAAPI_PARAM_ENCODER_EXPOSURE);
 
   /**
    * GstVaapiEncoder:target-percentage:
@@ -1445,7 +1445,7 @@ gst_vaapi_encoder_class_init (GstVaapiEncoderClass * klass)
       "The desired target percentage of bitrate for variable rate "
       "controls.", 1, 100, 70,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
-      G_PARAM_FLAG_VAAPI_ENCODER_EXPOSURE);
+      GST_VAAPI_PARAM_ENCODER_EXPOSURE);
 
   /**
    * GstVaapiEncoder:keyframe-period:
@@ -1458,7 +1458,7 @@ gst_vaapi_encoder_class_init (GstVaapiEncoderClass * klass)
       "Maximal distance between two keyframes (0: auto-calculate)", 0,
       G_MAXUINT32, 30,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
-      G_PARAM_FLAG_VAAPI_ENCODER_EXPOSURE);
+      GST_VAAPI_PARAM_ENCODER_EXPOSURE);
 
   /**
    * GstVaapiEncoder:quality-level:
@@ -1471,7 +1471,7 @@ gst_vaapi_encoder_class_init (GstVaapiEncoderClass * klass)
       "(lower value means higher-quality/slow-encode, "
       " higher value means lower-quality/fast-encode)",
       1, 7, 4, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
-      G_PARAM_FLAG_VAAPI_ENCODER_EXPOSURE);
+      GST_VAAPI_PARAM_ENCODER_EXPOSURE);
 
   /**
    * GstVapiEncoder:roi-default-delta-qp
@@ -1485,7 +1485,7 @@ gst_vaapi_encoder_class_init (GstVaapiEncoderClass * klass)
       "higher value means lower-quality)",
       -10, 10, -10,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
-      G_PARAM_FLAG_VAAPI_ENCODER_EXPOSURE);
+      GST_VAAPI_PARAM_ENCODER_EXPOSURE);
 
   /**
    * GstVaapiEncoder: trellis:
@@ -1499,7 +1499,7 @@ gst_vaapi_encoder_class_init (GstVaapiEncoderClass * klass)
       "Trellis Quantization",
       "The Trellis Quantization Method of Encoder",
       FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
-      G_PARAM_FLAG_VAAPI_ENCODER_EXPOSURE);
+      GST_VAAPI_PARAM_ENCODER_EXPOSURE);
 
   g_object_class_install_properties (object_class, ENCODER_N_PROPERTIES,
       properties);
