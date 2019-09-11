@@ -69,10 +69,10 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
         gst_msdk_context_get_cached_alloc_responses_by_request (context, req);
     if (cached) {
       /* check if enough frames were allocated */
-      if (req->NumFrameSuggested > cached->response->NumFrameActual)
+      if (req->NumFrameSuggested > cached->response.NumFrameActual)
         return MFX_ERR_MEMORY_ALLOC;
 
-      *resp = *cached->response;
+      *resp = cached->response;
       return MFX_ERR_NONE;
     }
   }
@@ -205,8 +205,7 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
   resp->mids = mids;
   resp->NumFrameActual = surfaces_num;
 
-  msdk_resp->response = resp;
-  msdk_resp->mem_ids = mids;
+  msdk_resp->response = *resp;
   msdk_resp->request = *req;
 
   gst_msdk_context_add_alloc_response (context, msdk_resp);

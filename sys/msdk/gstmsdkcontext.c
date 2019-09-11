@@ -346,7 +346,7 @@ _find_response (gconstpointer resp, gconstpointer comp_resp)
   GstMsdkAllocResponse *cached_resp = (GstMsdkAllocResponse *) resp;
   mfxFrameAllocResponse *_resp = (mfxFrameAllocResponse *) comp_resp;
 
-  return cached_resp ? cached_resp->mem_ids != _resp->mids : -1;
+  return cached_resp ? cached_resp->response.mids != _resp->mids : -1;
 }
 
 static gint
@@ -400,8 +400,8 @@ create_surfaces (GstMsdkContext * context, GstMsdkAllocResponse * resp)
   mfxMemId *mem_id;
   mfxFrameSurface1 *surface;
 
-  for (i = 0; i < resp->response->NumFrameActual; i++) {
-    mem_id = resp->mem_ids[i];
+  for (i = 0; i < resp->response.NumFrameActual; i++) {
+    mem_id = resp->response.mids[i];
     surface = (mfxFrameSurface1 *) g_slice_new0 (mfxFrameSurface1);
     if (!surface) {
       GST_ERROR ("failed to allocate surface");
