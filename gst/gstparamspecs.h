@@ -70,6 +70,16 @@ G_BEGIN_DECLS
 #define GST_PARAM_DOC_SHOW_DEFAULT  (1 << (G_PARAM_USER_SHIFT + 5))
 
 /**
+ * GST_PARAM_CONDITIONALLY_AVAILABLE: (value 16384)
+ *
+ * Use this flag on GObject properties of GstObject to indicate that
+ * they might not be available depending on environment such as OS, device, etc,
+ * so such properties will be installed conditionally only if the GstObject is
+ * able to support it.
+ */
+#define GST_PARAM_CONDITIONALLY_AVAILABLE  (1 << (G_PARAM_USER_SHIFT + 6))
+
+/**
  * GST_PARAM_USER_SHIFT: (value 65536)
  *
  * Bits based on GST_PARAM_USER_SHIFT can be used by 3rd party applications.

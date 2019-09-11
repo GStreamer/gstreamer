@@ -340,7 +340,8 @@ flags_to_string (GFlagsValue * vals, guint flags)
   G_PARAM_LAX_VALIDATION |  G_PARAM_STATIC_STRINGS | \
   G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_DEPRECATED | \
   GST_PARAM_CONTROLLABLE | GST_PARAM_MUTABLE_PLAYING | \
-  GST_PARAM_MUTABLE_PAUSED | GST_PARAM_MUTABLE_READY)
+  GST_PARAM_MUTABLE_PAUSED | GST_PARAM_MUTABLE_READY | \
+  GST_PARAM_CONDITIONALLY_AVAILABLE)
 
 static int
 sort_gparamspecs (GParamSpec ** a, GParamSpec ** b)
@@ -412,6 +413,11 @@ print_object_properties_info (GObject * obj, GObjectClass * obj_class,
     }
     if (param->flags & GST_PARAM_CONTROLLABLE) {
       g_print (", %s%s%s", PROP_ATTR_VALUE_COLOR, _("controllable"),
+          RESET_COLOR);
+      first_flag = FALSE;
+    }
+    if (param->flags & GST_PARAM_CONDITIONALLY_AVAILABLE) {
+      g_print (", %s%s%s", PROP_ATTR_VALUE_COLOR, _("conditionally available"),
           RESET_COLOR);
       first_flag = FALSE;
     }
