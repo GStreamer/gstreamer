@@ -59,10 +59,14 @@ enum
 struct _GstVulkanWindowIosPrivate
 {
   gpointer internal_view;
+  gpointer internal_layer;
   gpointer external_view;
 
   gint preferred_width;
   gint preferred_height;
+
+  GMutex lock;
+  GCond cond;
 };
 
 #define gst_vulkan_window_ios_parent_class parent_class
@@ -82,6 +86,11 @@ static void gst_vulkan_window_ios_set_window_handle (GstVulkanWindow * window,
 static void
 gst_vulkan_window_ios_finalize (GObject * object)
 {
+  GstVulkanWindowIos *window_ios = GST_VULKAN_WINDOW_IOS (object);
+
+  g_mutex_clear (&window_ios->priv->lock);
+  g_cond_clear (&window_ios->priv->cond);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -109,6 +118,9 @@ gst_vulkan_window_ios_init (GstVulkanWindowIos * window)
 
   window->priv->preferred_width = 320;
   window->priv->preferred_height = 240;
+
+  g_mutex_init (&window->priv->lock);
+  g_cond_init (&window->priv->cond);
 }
 
 /* Must be called in the gl thread */
@@ -146,20 +158,34 @@ _create_window (GstVulkanWindowIos * window_ios)
   view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
   view.contentMode = UIViewContentModeRedraw;
 
-  priv->internal_view = (__bridge_retained gpointer)view;
+  g_mutex_lock (&priv->lock);
+
+  priv->internal_view = (__bridge_retained gpointer) view;
   [external_view addSubview:view];
+  priv->internal_layer = (__bridge_retained gpointer) [view layer];
+
+  g_cond_broadcast (&priv->cond);
+  g_mutex_unlock (&priv->lock);
 }
 
 gboolean
 gst_vulkan_window_ios_create_window (GstVulkanWindowIos * window_ios)
 {
-  if (!window_ios->priv->external_view) {
+  GstVulkanWindowIosPrivate *priv = window_ios->priv;
+
+  if (!priv->external_view) {
     GST_WARNING_OBJECT(window_ios, "No external UIView provided");
     return FALSE;
   }
 
   _invoke_on_main ((GstVulkanWindowFunc) _create_window,
       gst_object_ref (window_ios), gst_object_unref);
+
+  /* XXX: Maybe we need an async create_window/get_surface()? */
+  g_mutex_lock (&priv->lock);
+  while (!priv->internal_view)
+    g_cond_wait (&priv->cond, &priv->lock);
+  g_mutex_unlock (&priv->lock);
 
   return TRUE;
 }
@@ -172,10 +198,17 @@ gst_vulkan_window_ios_get_surface (GstVulkanWindow * window, GError ** error)
   VkSurfaceKHR ret;
   VkResult err;
 
+  if (!window_ios->priv->internal_layer) {
+    g_set_error_literal (error, GST_VULKAN_ERROR,
+        VK_ERROR_INITIALIZATION_FAILED,
+        "No layer to retrieve surface for. Has create_window() been called?");
+    return 0;
+  }
+
   info.sType = VK_STRUCTURE_TYPE_IOS_SURFACE_CREATE_INFO_MVK;
   info.pNext = NULL;
   info.flags = 0;
-  info.pView = window_ios->priv->internal_view;
+  info.pView = window_ios->priv->internal_layer;
 
   if (!window_ios->CreateIOSSurface)
     window_ios->CreateIOSSurface =
@@ -223,6 +256,8 @@ gst_vulkan_window_ios_close (GstVulkanWindow * window)
   [view setGstWindow:NULL];
   CFBridgingRelease (window_ios->priv->internal_view);
   window_ios->priv->internal_view = NULL;
+  CFBridgingRelease (window_ios->priv->internal_layer);
+  window_ios->priv->internal_layer = NULL;
 
   GST_VULKAN_WINDOW_CLASS (parent_class)->close (window);
 }
