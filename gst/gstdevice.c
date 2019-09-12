@@ -196,7 +196,7 @@ gst_device_set_property (GObject * object, guint prop_id,
  * Creates the element with all of the required parameters set to use
  * this device.
  *
- * Returns: (transfer full) (nullable): a new #GstElement configured to use
+ * Returns: (transfer floating) (nullable): a new #GstElement configured to use
  * this device
  *
  * Since: 1.4
