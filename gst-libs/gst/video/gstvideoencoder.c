@@ -2410,7 +2410,9 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
   GST_OBJECT_UNLOCK (encoder);
 
   if (G_UNLIKELY (send_headers))
-    gst_video_encoder_send_header_unlocked (encoder, &discont);
+    priv->new_headers = TRUE;
+
+  gst_video_encoder_send_header_unlocked (encoder, &discont);
 
   if (G_UNLIKELY (discont)) {
     GST_LOG_OBJECT (encoder, "marking discont");
