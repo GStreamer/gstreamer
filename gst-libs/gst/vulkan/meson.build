@@ -30,6 +30,7 @@ vulkan_headers = [
   'gstvkbuffermemory.h',
   'gstvkbufferpool.h',
   'gstvkcommandpool.h',
+  'gstvkdebug.h',
   'gstvkdevice.h',
   'gstvkdisplay.h',
   'gstvkerror.h',
