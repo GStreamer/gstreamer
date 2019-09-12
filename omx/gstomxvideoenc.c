@@ -69,6 +69,16 @@ gst_omx_video_enc_control_rate_get_type (void)
 
 #ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
 #define GST_TYPE_OMX_VIDEO_ENC_QP_MODE (gst_omx_video_enc_qp_mode_get_type ())
+typedef enum
+{
+  UNIFORM_QP,
+  ROI_QP,
+  AUTO_QP,
+  LOAD_QP_ABSOLUTE,
+  LOAD_QP_RELATIVE,
+} GstOMXVideoEncQpMode;
+
+
 static GType
 gst_omx_video_enc_qp_mode_get_type (void)
 {
@@ -76,14 +86,20 @@ gst_omx_video_enc_qp_mode_get_type (void)
 
   if (qtype == 0) {
     static const GEnumValue values[] = {
-      {OMX_ALG_UNIFORM_QP, "Use the same QP for all coding units of the frame",
+      {UNIFORM_QP, "Use the same QP for all coding units of the frame",
           "uniform"},
-      {OMX_ALG_AUTO_QP,
-            "Let the VCU encoder change the QP for each coding unit according to its content",
-          "auto"},
-      {OMX_ALG_ROI_QP,
+      {ROI_QP,
             "Adjust QP according to the regions of interest defined on each frame. Must be set to handle ROI metadata.",
           "roi"},
+      {AUTO_QP,
+            "Let the VCU encoder change the QP for each coding unit according to its content",
+          "auto"},
+      {LOAD_QP_ABSOLUTE,
+            "Uses absolute QP values set by user. Must be set to use External QP buffer",
+          "load-qp-absolute"},
+      {LOAD_QP_RELATIVE,
+            "Uses Relative/Delta QP values set by user. Must be set to use External QP buffer",
+          "load-qp-relative"},
       {0xffffffff, "Component Default", "default"},
       {0, NULL, NULL}
     };
@@ -552,20 +568,62 @@ static gboolean
 set_zynqultrascaleplus_props (GstOMXVideoEnc * self)
 {
   OMX_ERRORTYPE err;
+  OMX_ALG_VIDEO_PARAM_QUANTIZATION_CONTROL quant;
+  OMX_ALG_VIDEO_PARAM_QUANTIZATION_TABLE quant_table;
 
   if (self->qp_mode != GST_OMX_VIDEO_ENC_QP_MODE_DEFAULT) {
-    OMX_ALG_VIDEO_PARAM_QUANTIZATION_CONTROL quant;
+    guint32 qp_mode = OMX_ALG_QP_CTRL_NONE;
+    guint32 qp_table = OMX_ALG_QP_TABLE_NONE;
+
+    /* qp_mode should be mapped to combination QUANTIZATION_CONTROL & QUANTIZATION_TABLE Params */
+    switch (self->qp_mode) {
+      case UNIFORM_QP:
+        qp_mode = OMX_ALG_QP_CTRL_NONE;
+        qp_table = OMX_ALG_QP_TABLE_NONE;
+        break;
+      case AUTO_QP:
+        qp_mode = OMX_ALG_QP_CTRL_AUTO;
+        qp_table = OMX_ALG_QP_TABLE_NONE;
+        break;
+      case ROI_QP:
+        qp_mode = OMX_ALG_QP_CTRL_NONE;
+        qp_table = OMX_ALG_QP_TABLE_RELATIVE;
+        break;
+      case LOAD_QP_ABSOLUTE:
+        qp_mode = OMX_ALG_QP_CTRL_NONE;
+        qp_table = OMX_ALG_QP_TABLE_ABSOLUTE;
+        break;
+      case LOAD_QP_RELATIVE:
+        qp_mode = OMX_ALG_QP_CTRL_NONE;
+        qp_table = OMX_ALG_QP_TABLE_RELATIVE;
+        break;
+      default:
+        GST_WARNING_OBJECT (self,
+            "Invalid option. Falling back to Uniform mode");
+        break;
+    }
 
     GST_OMX_INIT_STRUCT (&quant);
     quant.nPortIndex = self->enc_out_port->index;
-    quant.eQpControlMode = self->qp_mode;
+    quant.eQpControlMode = qp_mode;
 
-    GST_DEBUG_OBJECT (self, "setting QP mode to %d", self->qp_mode);
+    GST_DEBUG_OBJECT (self, "setting QP mode to %d", qp_mode);
 
     err =
         gst_omx_component_set_parameter (self->enc,
         (OMX_INDEXTYPE) OMX_ALG_IndexParamVideoQuantizationControl, &quant);
     CHECK_ERR ("quantization");
+
+    GST_OMX_INIT_STRUCT (&quant_table);
+    quant_table.nPortIndex = self->enc_out_port->index;
+    quant_table.eQpTableMode = qp_table;
+
+    GST_DEBUG_OBJECT (self, "setting QP Table Mode to %d", qp_table);
+
+    err =
+        gst_omx_component_set_parameter (self->enc,
+        (OMX_INDEXTYPE) OMX_ALG_IndexParamVideoQuantizationTable, &quant_table);
+    CHECK_ERR ("quantization table");
   }
 
   {
@@ -2673,7 +2731,7 @@ handle_roi_metadata (GstOMXVideoEnc * self, GstBuffer * input)
         g_quark_to_string (roi->roi_type), roi->id, roi->x, roi->y, roi->w,
         roi->h);
 
-    if (self->qp_mode != OMX_ALG_ROI_QP) {
+    if (self->qp_mode != ROI_QP) {
       GST_WARNING_OBJECT (self,
           "Need qp-mode=roi to handle ROI metadata (current: %d); ignoring",
           self->qp_mode);
