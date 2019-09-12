@@ -205,13 +205,20 @@ GstElement *
 gst_device_create_element (GstDevice * device, const gchar * name)
 {
   GstDeviceClass *klass = GST_DEVICE_GET_CLASS (device);
+  GstElement *element = NULL;
 
   g_return_val_if_fail (GST_IS_DEVICE (device), NULL);
 
   if (klass->create_element)
-    return klass->create_element (device, name);
-  else
-    return NULL;
+    element = klass->create_element (device, name);
+
+  /* Ensure that the reference is floating. Bindings might have a hard time
+   * making sure that the reference is indeed still floating after returning
+   * here */
+  if (element)
+    g_object_force_floating ((GObject *) element);
+
+  return element;
 }
 
 /**
