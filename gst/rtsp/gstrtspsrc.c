@@ -2751,7 +2751,7 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   gdouble rate;
   GstFormat format;
   GstSeekFlags flags;
-  GstSeekType cur_type = GST_SEEK_TYPE_NONE, stop_type;
+  GstSeekType cur_type = GST_SEEK_TYPE_NONE, stop_type = GST_SEEK_TYPE_NONE;
   gint64 cur, stop;
   gboolean flush, server_side_trickmode;
   gboolean update;
@@ -2759,11 +2759,15 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   GstSegment seeksegment = { 0, };
   GList *walk;
   const gchar *seek_style = NULL;
+  gboolean rate_change_only = FALSE;
+  gboolean rate_change_same_direction = FALSE;
 
   GST_DEBUG_OBJECT (src, "doing seek with event %" GST_PTR_FORMAT, event);
 
   gst_event_parse_seek (event, &rate, &format, &flags,
       &cur_type, &cur, &stop_type, &stop);
+  rate_change_only = cur_type == GST_SEEK_TYPE_NONE
+      && stop_type == GST_SEEK_TYPE_NONE;
 
   /* we need TIME format */
   if (format != src->segment.format)
@@ -2818,6 +2822,7 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
    * right values in the segment to perform the seek */
   GST_DEBUG_OBJECT (src, "configuring seek");
   seeksegment.duration = GST_CLOCK_TIME_NONE;
+  rate_change_same_direction = (rate * seeksegment.rate) > 0;
   gst_segment_do_seek (&seeksegment, rate, format, flags,
       cur_type, cur, stop_type, stop, &update);
 
@@ -2861,11 +2866,13 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   GST_DEBUG_OBJECT (src, "Creating newsegment from %" G_GINT64_FORMAT
       " to %" G_GINT64_FORMAT, src->segment.position, stop);
 
-  /* mark discont */
-  GST_DEBUG_OBJECT (src, "mark DISCONT, we did a seek to another position");
-  for (walk = src->streams; walk; walk = g_list_next (walk)) {
-    GstRTSPStream *stream = (GstRTSPStream *) walk->data;
-    stream->discont = TRUE;
+  /* mark discont when needed */
+  if (!(rate_change_only && rate_change_same_direction)) {
+    GST_DEBUG_OBJECT (src, "mark DISCONT, we did a seek to another position");
+    for (walk = src->streams; walk; walk = g_list_next (walk)) {
+      GstRTSPStream *stream = (GstRTSPStream *) walk->data;
+      stream->discont = TRUE;
+    }
   }
 
   /* and continue playing if needed. If we are not acting as a live source,
