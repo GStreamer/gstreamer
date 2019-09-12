@@ -841,7 +841,6 @@ documentation:
 #
 .cross-ios universal examples:
   stage: 'integrate'
-  when: 'manual'
   variables:
     EXAMPLES_HOME: ${CI_PROJECT_DIR}/examples
     # disable codesigning so we don't need developer identities on the CI
@@ -879,6 +878,7 @@ documentation:
 
 cross-ios universal examples:
   extends: ".cross-ios universal examples"
+  when: 'manual'
   dependencies:
     - "build cerbero cross-ios universal"
   except:
@@ -891,6 +891,9 @@ cross-ios universal examples:
 
 cerbero cross-ios universal examples:
   extends: ".cross-ios universal examples"
+  needs:
+    - "cerbero cross-ios universal"
+    - "manifest"
   dependencies:
     - "cerbero cross-ios universal"
   only:
