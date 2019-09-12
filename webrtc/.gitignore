@@ -52,3 +52,4 @@ out/
 # Our stuff
 *.pem
 webrtc-sendrecv
+__pycache__
