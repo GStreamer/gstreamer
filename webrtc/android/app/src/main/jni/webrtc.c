@@ -322,8 +322,8 @@ start_pipeline (WebRTC * webrtc)
 
   webrtc->pipe =
           gst_parse_launch ("webrtcbin name=sendrecv "
-                            "videotestsrc pattern=ball ! queue ! vp8enc deadline=1 error-resilient=default ! rtpvp8pay picture-id-mode=15-bit ! "
-                            "queue ! " RTP_CAPS_VP8 " ! sendrecv.sink_0 "
+                            "ahcsrc ! queue max-size-buffers=2 ! videoconvert ! vp8enc deadline=1 error-resilient=default ! rtpvp8pay picture-id-mode=15-bit ! "
+                            "queue max-size-buffers=1 ! " RTP_CAPS_VP8 " ! sendrecv.sink_0 "
                             "openslessrc ! queue ! audioconvert ! audioresample ! audiorate ! queue ! opusenc ! rtpopuspay ! "
                             "queue ! " RTP_CAPS_OPUS " ! sendrecv.sink_1 ",
                             &error);
@@ -497,6 +497,9 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
     JsonNode *root;
     JsonObject *object;
     JsonParser *parser = json_parser_new ();
+
+    g_print ("Got server message %s", text);
+
     if (!json_parser_load_from_data (parser, text, -1, NULL)) {
       g_printerr ("Unknown message '%s', ignoring", text);
       g_object_unref (parser);
@@ -520,7 +523,10 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
 
       g_assert (webrtc->app_state == PEER_CALL_NEGOTIATING);
 
+      object = json_object_get_object_member (object, "sdp");
+
       g_assert (json_object_has_member (object, "type"));
+
       /* In this example, we always create the offer and receive one answer.
        * See tests/examples/webrtcbidirectional.c in gst-plugins-bad for how to
        * handle offers from peers and reply with answers using webrtcbin. */
@@ -799,7 +805,7 @@ native_class_init (JNIEnv * env, jclass klass)
     (*env)->ThrowNew (env, exception_class, message);
   }
 
-  gst_debug_set_threshold_from_string ("gl*:7", FALSE);
+  //gst_debug_set_threshold_from_string ("gl*:7", FALSE);
 }
 
 static void
