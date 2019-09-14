@@ -335,8 +335,9 @@ start_pipeline (WebRTC * webrtc)
 
   webrtc->pipe =
           gst_parse_launch ("webrtcbin name=sendrecv "
-                            "ahcsrc ! queue max-size-buffers=2 ! videoconvert ! vp8enc deadline=1 error-resilient=default ! rtpvp8pay picture-id-mode=15-bit ! "
-                            "queue max-size-buffers=1 ! " RTP_CAPS_VP8 " ! sendrecv.sink_0 "
+                            "ahcsrc device-facing=front ! video/x-raw,width=[320,1280] ! queue max-size-buffers=1 ! videoconvert ! "
+                            "vp8enc keyframe-max-dist=30 deadline=1 error-resilient=default ! rtpvp8pay picture-id-mode=15-bit mtu=1300 ! "
+                            "queue max-size-time=300000000 ! " RTP_CAPS_VP8 " ! sendrecv.sink_0 "
                             "openslessrc ! queue ! audioconvert ! audioresample ! audiorate ! queue ! opusenc ! rtpopuspay ! "
                             "queue ! " RTP_CAPS_OPUS " ! sendrecv.sink_1 ",
                             &error);
