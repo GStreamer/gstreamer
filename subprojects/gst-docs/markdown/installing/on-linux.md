@@ -59,6 +59,14 @@ git clone https://gitlab.freedesktop.org/gstreamer/gstreamer
 
 #### Building the tutorials
 
+Change directory to find basic-tutorials-1:
+
+```
+cd gstreamer/subprojects/gst-docs/examples/tutorials/
+```
+
+And then compile it with:
+
 ```
 gcc basic-tutorial-1.c -o basic-tutorial-1 `pkg-config --cflags --libs gstreamer-1.0`
 ```
