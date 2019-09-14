@@ -310,6 +310,19 @@ on_negotiation_needed (GstElement * element, WebRTC * webrtc)
   g_signal_emit_by_name (webrtc->webrtcbin, "create-offer", NULL, promise);
 }
 
+static void
+add_fec_to_offer (GstElement * webrtc)
+{
+  GstWebRTCRTPTransceiver *trans = NULL;
+
+  /* A transceiver has already been created when a sink pad was
+   * requested on the sending webrtcbin */
+  g_signal_emit_by_name (webrtc, "get-transceiver", 0, &trans);
+
+  g_object_set (trans, "fec-type", GST_WEBRTC_FEC_TYPE_ULP_RED,
+      "fec-percentage", 25, "do-nack", FALSE, NULL);
+}
+
 #define RTP_CAPS_OPUS "application/x-rtp,media=audio,encoding-name=OPUS,payload=100"
 #define RTP_CAPS_VP8 "application/x-rtp,media=video,encoding-name=VP8,payload=101"
 
@@ -336,11 +349,7 @@ start_pipeline (WebRTC * webrtc)
 
   webrtc->webrtcbin = gst_bin_get_by_name (GST_BIN (webrtc->pipe), "sendrecv");
   g_assert (webrtc->webrtcbin != NULL);
-
-  pad = gst_element_get_static_pad (webrtc->webrtcbin, "sink_0");
-  gst_util_set_object_arg (G_OBJECT (pad), "fec-type", "ulp-red");
-  g_object_set (pad, "do-nack", FALSE, NULL);
-  gst_object_unref (pad);
+  add_fec_to_offer (webrtc->webrtcbin);
 
   /* This is the gstwebrtc entry point where we create the offer and so on. It
    * will be called when the pipeline goes to PLAYING. */
