@@ -13,7 +13,7 @@ ctx = ssl.create_default_context()
 ctx.check_hostname = False
 ctx.verify_mode = ssl.CERT_NONE
 
-base_url = 'https://sourceforge.net/projects/winflexbison/files/win_flex_bison-{}.zip'
+base_url = 'https://github.com/lexxmark/winflexbison/releases/download/v{0}/win_flex_bison-{0}.zip'
 url = base_url.format(sys.argv[1])
 zip_sha256 = sys.argv[2]
 source_dir = os.path.join(os.environ['MESON_SOURCE_ROOT'], os.environ['MESON_SUBDIR'])
