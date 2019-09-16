@@ -86,6 +86,12 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
         "channels = (int) [ 1, 2 ], "
         "rate = (int) [ 16000, 48000 ], " "layout = (string) interleaved"));
 
+/* HACK: After calling MLAudioStopSound() there is no way to know when it will
+ * actually stop calling buffer_cb(). If the sink is disposed first, it would
+ * crash. Keep here a set of active sinks. */
+static GHashTable *active_sinks;
+static GMutex active_sinks_mutex;
+
 struct _GstMLAudioSink
 {
   GstAudioSink parent;
@@ -198,11 +204,18 @@ buffer_cb (MLHandle handle, gpointer user_data)
 {
   GstMLAudioSink *self = user_data;
 
+  g_mutex_lock (&active_sinks_mutex);
+  if (!g_hash_table_contains (active_sinks, self))
+    goto out;
+
   gst_ml_audio_wrapper_set_handle (self->wrapper, handle);
 
   g_mutex_lock (&self->mutex);
   g_cond_signal (&self->cond);
   g_mutex_unlock (&self->mutex);
+
+out:
+  g_mutex_unlock (&active_sinks_mutex);
 }
 
 /* Must be called with self->mutex locked */
@@ -282,6 +295,10 @@ gst_ml_audio_sink_prepare (GstAudioSink * sink, GstAudioRingBufferSpec * spec)
   self->stopped = FALSE;
   self->paused = FALSE;
 
+  g_mutex_lock (&active_sinks_mutex);
+  g_hash_table_add (active_sinks, self);
+  g_mutex_unlock (&active_sinks_mutex);
+
   /* createAudioNode() and createSoundWithOutputStream() must both be called in
    * application's main thread, and in a single main loop iteration. */
   if (!gst_ml_audio_wrapper_invoke_sync (self->wrapper, create_sound_cb, self))
@@ -306,8 +323,11 @@ gst_ml_audio_sink_unprepare (GstAudioSink * sink)
 {
   GstMLAudioSink *self = GST_ML_AUDIO_SINK (sink);
 
+  g_mutex_lock (&active_sinks_mutex);
+  g_hash_table_remove (active_sinks, self);
   release_current_buffer (self);
   g_clear_pointer (&self->wrapper, gst_ml_audio_wrapper_free);
+  g_mutex_unlock (&active_sinks_mutex);
 
   return TRUE;
 }
@@ -431,6 +451,9 @@ gst_ml_audio_sink_class_init (GstMLAudioSinkClass * klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstBaseSinkClass *basesink_class = GST_BASE_SINK_CLASS (klass);
   GstAudioSinkClass *audiosink_class = GST_AUDIO_SINK_CLASS (klass);
+
+  active_sinks = g_hash_table_new (NULL, NULL);
+  g_mutex_init (&active_sinks_mutex);
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_ml_audio_sink_dispose);
   gobject_class->set_property =
