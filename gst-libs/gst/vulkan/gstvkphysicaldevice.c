@@ -184,7 +184,8 @@ gst_vulkan_physical_device_class_init (GstVulkanPhysicalDeviceClass *
 
   g_object_class_install_property (gobject_class, PROP_DEVICE_ID,
       g_param_spec_uint ("device-index", "Device Index", "Device Index", 0,
-          G_MAXUINT32, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_MAXUINT32, 0,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_NAME,
       g_param_spec_string ("name", "Name", "Device Name", NULL,

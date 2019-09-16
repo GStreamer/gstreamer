@@ -35,6 +35,7 @@
 #include "vkcolorconvert.h"
 #include "vkdownload.h"
 #include "vkviewconvert.h"
+#include "vkdeviceprovider.h"
 
 #define GST_CAT_DEFAULT gst_vulkan_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -73,6 +74,10 @@ plugin_init (GstPlugin * plugin)
           GST_RANK_NONE, GST_TYPE_VULKAN_VIEW_CONVERT)) {
     return FALSE;
   }
+
+  if (!gst_device_provider_register (plugin, "vulkandeviceprovider",
+          GST_RANK_MARGINAL, GST_TYPE_VULKAN_DEVICE_PROVIDER))
+    return FALSE;
 
   return TRUE;
 }

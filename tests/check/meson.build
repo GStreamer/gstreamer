@@ -58,6 +58,7 @@ base_tests = [
   [['elements/vkcolorconvert.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
   [['libs/vkwindow.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
   [['libs/vkdevice.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
+  [['elements/vkdeviceprovider.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
 ]
 
 # FIXME: unistd dependency, unstable or not tested yet on windows
