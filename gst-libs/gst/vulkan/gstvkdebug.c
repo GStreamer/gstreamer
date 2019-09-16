@@ -25,6 +25,7 @@
 #include <glib/gprintf.h>
 
 #include "gstvkerror.h"
+#include "gstvkdebug.h"
 #include "gstvkdebug-private.h"
 
 #define FLAGS_TO_STRING(under_name, VkType)                                     \
@@ -108,3 +109,22 @@ static const struct
 };
 FLAGS_TO_STRING(sample_count, VkSampleCountFlags);
 /* *INDENT-ON* */
+
+const gchar *
+gst_vulkan_device_type_to_string (VkPhysicalDeviceType type)
+{
+  switch (type) {
+    case VK_PHYSICAL_DEVICE_TYPE_OTHER:
+      return "other";
+    case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU:
+      return "integrated";
+    case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
+      return "discrete";
+    case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:
+      return "virtual";
+    case VK_PHYSICAL_DEVICE_TYPE_CPU:
+      return "CPU";
+    default:
+      return "unknown";
+  }
+}

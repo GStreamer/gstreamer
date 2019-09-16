@@ -30,6 +30,18 @@ G_BEGIN_DECLS
 #define GST_VULKAN_EXTENT3D_FORMAT G_GUINT32_FORMAT ", %" G_GUINT32_FORMAT ", %" G_GUINT32_FORMAT
 #define GST_VULKAN_EXTENT3D_ARGS(var) (var).width, (var).height, (var).depth
 
+GST_VULKAN_API
+const gchar *           gst_vulkan_device_type_to_string            (VkPhysicalDeviceType type);
+
+GST_VULKAN_API
+gchar *                     gst_vulkan_memory_property_flags_to_string      (VkMemoryPropertyFlags prop_bits);
+GST_VULKAN_API
+gchar *                     gst_vulkan_memory_heap_flags_to_string          (VkMemoryHeapFlags prop_bits);
+GST_VULKAN_API
+gchar *                     gst_vulkan_queue_flags_to_string                (VkQueueFlags queue_bits);
+GST_VULKAN_API
+gchar *                     gst_vulkan_sample_count_flags_to_string         (VkSampleCountFlags sample_count_bits);
+
 G_END_DECLS
 
 #endif /* __GST_VULKAN_DEBUG_H__ */

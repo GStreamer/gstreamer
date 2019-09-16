@@ -27,11 +27,6 @@
 
 G_BEGIN_DECLS
 
-gchar *                     gst_vulkan_memory_property_flags_to_string      (VkMemoryPropertyFlags prop_bits);
-gchar *                     gst_vulkan_memory_heap_flags_to_string          (VkMemoryHeapFlags prop_bits);
-gchar *                     gst_vulkan_queue_flags_to_string                (VkQueueFlags queue_bits);
-gchar *                     gst_vulkan_sample_count_flags_to_string         (VkSampleCountFlags sample_count_bits);
-
 G_END_DECLS
 
 #endif /* __GST_VULKAN_DEBUG_PRIVATE_H__ */

@@ -511,25 +511,6 @@ dump_sparse_properties (GstVulkanDevice * device, GError ** error)
   return TRUE;
 }
 
-static const gchar *
-_device_type_to_string (VkPhysicalDeviceType type)
-{
-  switch (type) {
-    case VK_PHYSICAL_DEVICE_TYPE_OTHER:
-      return "other";
-    case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU:
-      return "integrated";
-    case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
-      return "discrete";
-    case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:
-      return "virtual";
-    case VK_PHYSICAL_DEVICE_TYPE_CPU:
-      return "CPU";
-    default:
-      return "unknown";
-  }
-}
-
 static gboolean
 _physical_device_info (GstVulkanDevice * device, GError ** error)
 {
@@ -548,7 +529,7 @@ _physical_device_info (GstVulkanDevice * device, GError ** error)
   GST_INFO_OBJECT (device, "pyhsical device %i name \'%s\' type \'%s\' "
       "api version %u.%u.%u, driver version %u.%u.%u vendor ID 0x%x, "
       "device ID 0x%x", device->device_index, props.deviceName,
-      _device_type_to_string (props.deviceType),
+      gst_vulkan_device_type_to_string (props.deviceType),
       VK_VERSION_MAJOR (props.apiVersion), VK_VERSION_MINOR (props.apiVersion),
       VK_VERSION_PATCH (props.apiVersion),
       VK_VERSION_MAJOR (props.driverVersion),
