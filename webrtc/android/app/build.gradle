@@ -28,7 +28,7 @@ android {
                 targets "gstwebrtc"
 
                 // All archs except MIPS and MIPS64 are supported
-                abiFilters 'armeabi-v7a', 'arm64-v8a' //, 'x86', 'x86_64', 'armeabi'
+                abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
             }
         }
     }
