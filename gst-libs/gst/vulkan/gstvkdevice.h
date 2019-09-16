@@ -96,7 +96,7 @@ gboolean            gst_context_get_vulkan_device           (GstContext * contex
 GST_VULKAN_API
 gboolean            gst_vulkan_device_handle_context_query  (GstElement * element,
                                                              GstQuery * query,
-                                                             GstVulkanDevice ** device);
+                                                             GstVulkanDevice * device);
 GST_VULKAN_API
 gboolean            gst_vulkan_device_run_context_query     (GstElement * element,
                                                              GstVulkanDevice ** device);

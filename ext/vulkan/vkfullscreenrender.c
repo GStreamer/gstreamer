@@ -170,11 +170,11 @@ gst_vulkan_full_screen_render_query (GstBaseTransform * bt,
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:{
       if (gst_vulkan_handle_context_query (GST_ELEMENT (render), query,
-              NULL, &render->instance, &render->device))
+              NULL, render->instance, render->device))
         return TRUE;
 
       if (gst_vulkan_queue_handle_context_query (GST_ELEMENT (render),
-              query, &render->queue))
+              query, render->queue))
         return TRUE;
 
       break;

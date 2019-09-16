@@ -67,7 +67,7 @@ gboolean            gst_context_get_vulkan_queue                (GstContext * co
 GST_VULKAN_API
 gboolean            gst_vulkan_queue_handle_context_query       (GstElement * element,
                                                                  GstQuery * query,
-                                                                 GstVulkanQueue ** queue);
+                                                                 GstVulkanQueue * queue);
 GST_VULKAN_API
 gboolean            gst_vulkan_queue_run_context_query          (GstElement * element,
                                                                  GstVulkanQueue ** queue);

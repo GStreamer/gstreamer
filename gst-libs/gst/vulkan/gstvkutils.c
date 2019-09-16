@@ -390,11 +390,10 @@ gst_vulkan_handle_set_context (GstElement * element, GstContext * context,
  */
 gboolean
 gst_vulkan_handle_context_query (GstElement * element, GstQuery * query,
-    GstVulkanDisplay ** display, GstVulkanInstance ** instance,
-    GstVulkanDevice ** device)
+    GstVulkanDisplay * display, GstVulkanInstance * instance,
+    GstVulkanDevice * device)
 {
-  if (display
-      && gst_vulkan_display_handle_context_query (element, query, display))
+  if (gst_vulkan_display_handle_context_query (element, query, display))
     return TRUE;
   if (gst_vulkan_instance_handle_context_query (element, query, instance))
     return TRUE;

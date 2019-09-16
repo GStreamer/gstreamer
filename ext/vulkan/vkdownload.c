@@ -546,11 +546,11 @@ gst_vulkan_download_query (GstBaseTransform * bt, GstPadDirection direction,
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:{
       if (gst_vulkan_handle_context_query (GST_ELEMENT (vk_download), query,
-              NULL, &vk_download->instance, &vk_download->device))
+              NULL, vk_download->instance, vk_download->device))
         return TRUE;
 
       if (gst_vulkan_queue_handle_context_query (GST_ELEMENT (vk_download),
-              query, &vk_download->queue))
+              query, vk_download->queue))
         return TRUE;
 
       break;

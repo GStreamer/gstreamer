@@ -125,7 +125,7 @@ void                    gst_context_set_vulkan_display              (GstContext 
 GST_VULKAN_API
 gboolean                gst_vulkan_display_handle_context_query     (GstElement * element,
                                                                      GstQuery * query,
-                                                                     GstVulkanDisplay ** display);
+                                                                     GstVulkanDisplay * display);
 GST_VULKAN_API
 gboolean                gst_vulkan_display_run_context_query        (GstElement * element,
                                                                      GstVulkanDisplay ** display);

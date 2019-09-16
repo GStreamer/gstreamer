@@ -80,7 +80,7 @@ gboolean            gst_context_get_vulkan_instance             (GstContext * co
 GST_VULKAN_API
 gboolean            gst_vulkan_instance_handle_context_query    (GstElement * element,
                                                                  GstQuery * query,
-                                                                 GstVulkanInstance ** instance);
+                                                                 GstVulkanInstance * instance);
 GST_VULKAN_API
 gboolean            gst_vulkan_instance_run_context_query       (GstElement * element,
                                                                  GstVulkanInstance ** instance);

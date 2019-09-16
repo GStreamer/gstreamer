@@ -526,7 +526,7 @@ gst_context_get_vulkan_instance (GstContext * context,
  * gst_vulkan_instance_handle_context_query:
  * @element: a #GstElement
  * @query: a #GstQuery of type #GST_QUERY_CONTEXT
- * @instance: the #GstVulkanInstance
+ * @instance: (nullable): the #GstVulkanInstance
  *
  * If a #GstVulkanInstance is requested in @query, sets @instance as the reply.
  *
@@ -539,7 +539,7 @@ gst_context_get_vulkan_instance (GstContext * context,
  */
 gboolean
 gst_vulkan_instance_handle_context_query (GstElement * element,
-    GstQuery * query, GstVulkanInstance ** instance)
+    GstQuery * query, GstVulkanInstance * instance)
 {
   gboolean res = FALSE;
   const gchar *context_type;
@@ -548,7 +548,9 @@ gst_vulkan_instance_handle_context_query (GstElement * element,
   g_return_val_if_fail (element != NULL, FALSE);
   g_return_val_if_fail (query != NULL, FALSE);
   g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_CONTEXT, FALSE);
-  g_return_val_if_fail (instance != NULL, FALSE);
+
+  if (!instance)
+    return FALSE;
 
   gst_query_parse_context_type (query, &context_type);
 
@@ -560,11 +562,11 @@ gst_vulkan_instance_handle_context_query (GstElement * element,
     else
       context = gst_context_new (GST_VULKAN_INSTANCE_CONTEXT_TYPE_STR, TRUE);
 
-    gst_context_set_vulkan_instance (context, *instance);
+    gst_context_set_vulkan_instance (context, instance);
     gst_query_set_context (query, context);
     gst_context_unref (context);
 
-    res = *instance != NULL;
+    res = instance != NULL;
   }
 
   return res;

@@ -928,7 +928,7 @@ gst_context_get_vulkan_device (GstContext * context, GstVulkanDevice ** device)
  */
 gboolean
 gst_vulkan_device_handle_context_query (GstElement * element, GstQuery * query,
-    GstVulkanDevice ** device)
+    GstVulkanDevice * device)
 {
   gboolean res = FALSE;
   const gchar *context_type;
@@ -937,7 +937,9 @@ gst_vulkan_device_handle_context_query (GstElement * element, GstQuery * query,
   g_return_val_if_fail (element != NULL, FALSE);
   g_return_val_if_fail (query != NULL, FALSE);
   g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_CONTEXT, FALSE);
-  g_return_val_if_fail (device != NULL, FALSE);
+
+  if (!device)
+    return FALSE;
 
   gst_query_parse_context_type (query, &context_type);
 
@@ -949,11 +951,11 @@ gst_vulkan_device_handle_context_query (GstElement * element, GstQuery * query,
     else
       context = gst_context_new (GST_VULKAN_DEVICE_CONTEXT_TYPE_STR, TRUE);
 
-    gst_context_set_vulkan_device (context, *device);
+    gst_context_set_vulkan_device (context, device);
     gst_query_set_context (query, context);
     gst_context_unref (context);
 
-    res = *device != NULL;
+    res = device != NULL;
   }
 
   return res;

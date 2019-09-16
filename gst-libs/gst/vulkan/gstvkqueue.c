@@ -200,7 +200,7 @@ gst_context_get_vulkan_queue (GstContext * context, GstVulkanQueue ** queue)
  * gst_vulkan_queue_handle_context_query:
  * @element: a #GstElement
  * @query: a #GstQuery of type #GST_QUERY_CONTEXT
- * @queue: the #GstVulkanQueue
+ * @queue: (nullable): the #GstVulkanQueue
  *
  * If a #GstVulkanQueue is requested in @query, sets @queue as the reply.
  *
@@ -213,7 +213,7 @@ gst_context_get_vulkan_queue (GstContext * context, GstVulkanQueue ** queue)
  */
 gboolean
 gst_vulkan_queue_handle_context_query (GstElement * element, GstQuery * query,
-    GstVulkanQueue ** queue)
+    GstVulkanQueue * queue)
 {
   gboolean res = FALSE;
   const gchar *context_type;
@@ -222,7 +222,9 @@ gst_vulkan_queue_handle_context_query (GstElement * element, GstQuery * query,
   g_return_val_if_fail (element != NULL, FALSE);
   g_return_val_if_fail (query != NULL, FALSE);
   g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_CONTEXT, FALSE);
-  g_return_val_if_fail (queue != NULL, FALSE);
+
+  if (!queue)
+    return FALSE;
 
   gst_query_parse_context_type (query, &context_type);
 
@@ -234,11 +236,11 @@ gst_vulkan_queue_handle_context_query (GstElement * element, GstQuery * query,
     else
       context = gst_context_new (GST_VULKAN_QUEUE_CONTEXT_TYPE_STR, TRUE);
 
-    gst_context_set_vulkan_queue (context, *queue);
+    gst_context_set_vulkan_queue (context, queue);
     gst_query_set_context (query, context);
     gst_context_unref (context);
 
-    res = *queue != NULL;
+    res = queue != NULL;
   }
 
   return res;

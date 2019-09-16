@@ -37,9 +37,9 @@ gboolean                gst_vulkan_handle_set_context           (GstElement * el
 GST_VULKAN_API
 gboolean                gst_vulkan_handle_context_query         (GstElement * element,
                                                                  GstQuery * query,
-                                                                 GstVulkanDisplay ** display,
-                                                                 GstVulkanInstance ** instance,
-                                                                 GstVulkanDevice ** device);
+                                                                 GstVulkanDisplay * display,
+                                                                 GstVulkanInstance * instance,
+                                                                 GstVulkanDevice * device);
 
 GST_VULKAN_API
 void                    gst_vulkan_global_context_query         (GstElement * element,

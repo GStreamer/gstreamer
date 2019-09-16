@@ -570,7 +570,7 @@ gst_vulkan_display_type_to_extension_string (GstVulkanDisplayType type)
  * gst_vulkan_display_handle_context_query:
  * @element: a #GstElement
  * @query: a #GstQuery of type #GST_QUERY_CONTEXT
- * @display: the #GstVulkanDisplay
+ * @display: (nullable): the #GstVulkanDisplay
  *
  * If a #GstVulkanDisplay is requested in @query, sets @device as the reply.
  *
@@ -583,7 +583,7 @@ gst_vulkan_display_type_to_extension_string (GstVulkanDisplayType type)
  */
 gboolean
 gst_vulkan_display_handle_context_query (GstElement * element, GstQuery * query,
-    GstVulkanDisplay ** display)
+    GstVulkanDisplay * display)
 {
   gboolean res = FALSE;
   const gchar *context_type;
@@ -592,7 +592,9 @@ gst_vulkan_display_handle_context_query (GstElement * element, GstQuery * query,
   g_return_val_if_fail (element != NULL, FALSE);
   g_return_val_if_fail (query != NULL, FALSE);
   g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_CONTEXT, FALSE);
-  g_return_val_if_fail (display != NULL, FALSE);
+
+  if (!display)
+    return FALSE;
 
   gst_query_parse_context_type (query, &context_type);
 
@@ -604,11 +606,11 @@ gst_vulkan_display_handle_context_query (GstElement * element, GstQuery * query,
     else
       context = gst_context_new (GST_VULKAN_DISPLAY_CONTEXT_TYPE_STR, TRUE);
 
-    gst_context_set_vulkan_display (context, *display);
+    gst_context_set_vulkan_display (context, display);
     gst_query_set_context (query, context);
     gst_context_unref (context);
 
-    res = *display != NULL;
+    res = display != NULL;
   }
 
   return res;

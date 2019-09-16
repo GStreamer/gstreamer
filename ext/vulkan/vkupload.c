@@ -1259,11 +1259,11 @@ gst_vulkan_upload_query (GstBaseTransform * bt, GstPadDirection direction,
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:{
       if (gst_vulkan_handle_context_query (GST_ELEMENT (vk_upload), query,
-              NULL, &vk_upload->instance, &vk_upload->device))
+              NULL, vk_upload->instance, vk_upload->device))
         return TRUE;
 
       if (gst_vulkan_queue_handle_context_query (GST_ELEMENT (vk_upload), query,
-              &vk_upload->queue))
+              vk_upload->queue))
         return TRUE;
 
       break;
