@@ -81,6 +81,7 @@ enum
   PROP_0,
   PROP_FORCE_ASPECT_RATIO,
   PROP_PIXEL_ASPECT_RATIO,
+  PROP_DEVICE,
 };
 
 enum
@@ -126,6 +127,10 @@ gst_vulkan_sink_class_init (GstVulkanSinkClass * klass)
       gst_param_spec_fraction ("pixel-aspect-ratio", "Pixel Aspect Ratio",
           "The pixel aspect ratio of the device", 0, 1, G_MAXINT, 1, 1, 1,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_DEVICE,
+      g_param_spec_object ("device", "Device", "Vulkan device",
+          GST_TYPE_VULKAN_DEVICE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_metadata (element_class, "Vulkan video sink",
       "Sink/Video", "A videosink based on OpenGL",
@@ -207,6 +212,9 @@ gst_vulkan_sink_get_property (GObject * object, guint prop_id,
     case PROP_PIXEL_ASPECT_RATIO:
       gst_value_set_fraction (value, vk_sink->par_n, vk_sink->par_d);
       break;
+    case PROP_DEVICE:
+      g_value_set_object (value, vk_sink->device);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -267,13 +275,19 @@ gst_vulkan_sink_change_state (GstElement * element, GstStateChange transition)
         return GST_STATE_CHANGE_FAILURE;
       }
 
-      if (!(vk_sink->device =
-              gst_vulkan_instance_create_device (vk_sink->instance, &error))) {
-        GST_ELEMENT_ERROR (vk_sink, RESOURCE, NOT_FOUND,
-            ("Failed to create vulkan device"), ("%s",
-                error ? error->message : ""));
-        g_clear_error (&error);
-        return GST_STATE_CHANGE_FAILURE;
+      if (!vk_sink->device) {
+        if (!gst_vulkan_device_run_context_query (GST_ELEMENT (vk_sink),
+                &vk_sink->device)) {
+          if (!(vk_sink->device =
+                  gst_vulkan_instance_create_device (vk_sink->instance,
+                      &error))) {
+            GST_ELEMENT_ERROR (vk_sink, RESOURCE, NOT_FOUND,
+                ("Failed to create vulkan device"), ("%s",
+                    error ? error->message : ""));
+            g_clear_error (&error);
+            return GST_STATE_CHANGE_FAILURE;
+          }
+        }
       }
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
