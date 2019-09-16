@@ -28,6 +28,7 @@
 #include <gst/vulkan/gstvkdebug.h>
 #include <gst/vulkan/gstvkerror.h>
 #include <gst/vulkan/gstvkinstance.h>
+#include <gst/vulkan/gstvkphysicaldevice.h>
 #include <gst/vulkan/gstvkdevice.h>
 #include <gst/vulkan/gstvkqueue.h>
 #include <gst/vulkan/gstvkfence.h>

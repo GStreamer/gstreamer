@@ -21,7 +21,7 @@
 #ifndef __GST_VULKAN_DEVICE_H__
 #define __GST_VULKAN_DEVICE_H__
 
-#include <gst/vulkan/gstvkinstance.h>
+#include <gst/vulkan/gstvkphysicaldevice.h>
 #include <gst/vulkan/gstvkqueue.h>
 
 G_BEGIN_DECLS
@@ -44,20 +44,8 @@ struct _GstVulkanDevice
   GstObject parent;
 
   GstVulkanInstance *instance;
-
-  guint device_index;
+  GstVulkanPhysicalDevice *physical_device;
   VkDevice device; /* hides a pointer */
-  VkPhysicalDeviceProperties gpu_props;
-  VkPhysicalDeviceFeatures gpu_features;
-  VkPhysicalDeviceMemoryProperties memory_properties;
-
-  VkQueueFamilyProperties *queue_family_props;
-  guint32 n_queue_families;
-
-  guint32 queue_family_id;
-  guint32 n_queues;
-
-  GstVulkanDevicePrivate *priv;
 };
 
 struct _GstVulkanDeviceClass
@@ -66,9 +54,11 @@ struct _GstVulkanDeviceClass
 };
 
 GST_VULKAN_API
-GstVulkanDevice *   gst_vulkan_device_new                   (GstVulkanInstance * instance);
+GstVulkanDevice *   gst_vulkan_device_new                   (GstVulkanPhysicalDevice * physical_device);
 GST_VULKAN_API
-GstVulkanInstance * gst_vulkan_device_get_instance           (GstVulkanDevice * device);
+GstVulkanDevice *   gst_vulkan_device_new_with_index        (GstVulkanInstance * instance, guint device_index);
+GST_VULKAN_API
+GstVulkanInstance * gst_vulkan_device_get_instance          (GstVulkanDevice * device);
 GST_VULKAN_API
 gboolean            gst_vulkan_device_open                  (GstVulkanDevice * device,
                                                              GError ** error);

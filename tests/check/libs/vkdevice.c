@@ -46,7 +46,7 @@ GST_START_TEST (test_device_new)
   GstVulkanDevice *device;
   GstVulkanInstance *dev_instance;
 
-  device = gst_vulkan_device_new (instance);
+  device = gst_vulkan_device_new_with_index (instance, 0);
   g_object_get (device, "instance", &dev_instance, NULL);
   fail_unless (dev_instance == instance);
   gst_object_unref (dev_instance);

@@ -258,7 +258,8 @@ static gboolean
 _choose_queue (GstVulkanDevice * device, GstVulkanQueue * queue,
     struct choose_data *data)
 {
-  guint flags = device->queue_family_props[queue->family].queueFlags;
+  guint flags =
+      device->physical_device->queue_family_props[queue->family].queueFlags;
   VkPhysicalDevice gpu;
   gboolean supports_present;
 
@@ -324,7 +325,8 @@ gst_vulkan_swapper_choose_queue (GstVulkanSwapper * swapper,
 
   if (available_queue) {
     guint flags =
-        swapper->device->queue_family_props[available_queue->family].queueFlags;
+        swapper->device->physical_device->
+        queue_family_props[available_queue->family].queueFlags;
     gboolean supports_present;
 
     supports_present =
@@ -649,7 +651,8 @@ gst_vulkan_swapper_get_supported_caps (GstVulkanSwapper * swapper,
   }
 
   {
-    guint32 max_dim = swapper->device->gpu_props.limits.maxImageDimension2D;
+    guint32 max_dim =
+        swapper->device->physical_device->properties.limits.maxImageDimension2D;
 
     gst_structure_set (s, "width", GST_TYPE_INT_RANGE, 1, (gint) max_dim,
         "height", GST_TYPE_INT_RANGE, 1, (gint) max_dim, "pixel-aspect-ratio",

@@ -1295,7 +1295,8 @@ static gboolean
 _choose_queue (GstVulkanDevice * device, GstVulkanQueue * queue,
     struct choose_data *data)
 {
-  guint flags = device->queue_family_props[queue->family].queueFlags;
+  guint flags =
+      device->physical_device->queue_family_props[queue->family].queueFlags;
 
   if ((flags & VK_QUEUE_GRAPHICS_BIT) != 0) {
     if (data->queue)

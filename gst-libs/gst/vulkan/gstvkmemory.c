@@ -236,7 +236,7 @@ gst_vulkan_memory_find_memory_type_index_with_type_properties (GstVulkanDevice *
   for (i = 0; i < 32; i++) {
     if ((type_bits & 1) == 1) {
       /* Type is available, does it match user properties? */
-      if ((device->memory_properties.memoryTypes[i].
+      if ((device->physical_device->memory_properties.memoryTypes[i].
               propertyFlags & properties) == properties) {
         *type_index = i;
         return TRUE;

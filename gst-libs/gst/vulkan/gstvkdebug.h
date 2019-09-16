@@ -31,7 +31,7 @@ G_BEGIN_DECLS
 #define GST_VULKAN_EXTENT3D_ARGS(var) (var).width, (var).height, (var).depth
 
 GST_VULKAN_API
-const gchar *           gst_vulkan_device_type_to_string            (VkPhysicalDeviceType type);
+const gchar *               gst_vulkan_physical_device_type_to_string       (VkPhysicalDeviceType type);
 
 GST_VULKAN_API
 gchar *                     gst_vulkan_memory_property_flags_to_string      (VkMemoryPropertyFlags prop_bits);

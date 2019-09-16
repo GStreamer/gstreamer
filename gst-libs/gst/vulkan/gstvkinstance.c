@@ -454,8 +454,9 @@ gst_vulkan_instance_create_device (GstVulkanInstance * instance,
   g_signal_emit (instance, gst_vulkan_instance_signals[SIGNAL_CREATE_DEVICE], 0,
       &device);
 
-  if (!device)
-    device = gst_vulkan_device_new (instance);
+  if (!device) {
+    device = gst_vulkan_device_new_with_index (instance, 0);
+  }
 
   if (!gst_vulkan_device_open (device, error)) {
     gst_object_unref (device);

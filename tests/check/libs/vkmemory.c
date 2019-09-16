@@ -34,7 +34,7 @@ setup (void)
 {
   instance = gst_vulkan_instance_new ();
   fail_unless (gst_vulkan_instance_open (instance, NULL));
-  device = gst_vulkan_device_new (instance);
+  device = gst_vulkan_device_new_with_index (instance, 0);
   fail_unless (gst_vulkan_device_open (device, NULL));
 }
 

@@ -111,7 +111,7 @@ FLAGS_TO_STRING(sample_count, VkSampleCountFlags);
 /* *INDENT-ON* */
 
 const gchar *
-gst_vulkan_device_type_to_string (VkPhysicalDeviceType type)
+gst_vulkan_physical_device_type_to_string (VkPhysicalDeviceType type)
 {
   switch (type) {
     case VK_PHYSICAL_DEVICE_TYPE_OTHER:
