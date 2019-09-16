@@ -496,6 +496,7 @@ _drm_rgba_fourcc_from_info (GstVideoInfo * info, int plane,
     case GST_VIDEO_FORMAT_ABGR:
     case GST_VIDEO_FORMAT_xBGR:
     case GST_VIDEO_FORMAT_AYUV:
+    case GST_VIDEO_FORMAT_VUYA:
       *out_format = GST_GL_RGBA;
       return rgba_fourcc;
 
@@ -637,6 +638,7 @@ _drm_direct_fourcc_from_info (GstVideoInfo * info)
       return DRM_FORMAT_VYUY;
 
     case GST_VIDEO_FORMAT_AYUV:
+    case GST_VIDEO_FORMAT_VUYA:
       return DRM_FORMAT_AYUV;
 
     case GST_VIDEO_FORMAT_NV12:
