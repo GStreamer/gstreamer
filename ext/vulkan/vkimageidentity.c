@@ -538,7 +538,7 @@ gst_vulkan_image_identity_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   GstVulkanFence *fence = NULL;
   GstMemory *in_mem, *out_mem;
   VkFramebuffer framebuffer;
-  VkCommandBuffer cmd;
+  GstVulkanCommandBuffer *cmd_buf;
   GError *error = NULL;
   VkResult err;
 
@@ -565,7 +565,8 @@ gst_vulkan_image_identity_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     update_descriptor_set (vk_identity, in_img_mem->view);
   }
 
-  if (!(cmd = gst_vulkan_command_pool_create (vk_identity->cmd_pool, &error)))
+  if (!(cmd_buf =
+          gst_vulkan_command_pool_create (vk_identity->cmd_pool, &error)))
     goto error;
 
   if (!(framebuffer = _create_framebuffer (vk_identity, out_img_mem->view))) {
@@ -590,9 +591,10 @@ gst_vulkan_image_identity_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     };
     /* *INDENT-ON* */
 
-    err = vkBeginCommandBuffer (cmd, &cmd_buf_info);
+    gst_vulkan_command_buffer_lock (cmd_buf);
+    err = vkBeginCommandBuffer (cmd_buf->cmd, &cmd_buf_info);
     if (gst_vulkan_error_to_g_error (err, &error, "vkBeginCommandBuffer") < 0)
-      goto error;
+      goto unlock_error;
   }
 
   {
@@ -626,7 +628,8 @@ gst_vulkan_image_identity_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     };
     /* *INDENT-ON* */
 
-    vkCmdPipelineBarrier (cmd, in_img_mem->barrier.parent.pipeline_stages,
+    vkCmdPipelineBarrier (cmd_buf->cmd,
+        in_img_mem->barrier.parent.pipeline_stages,
         VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, NULL, 0, NULL, 1,
         &in_image_memory_barrier);
 
@@ -636,7 +639,8 @@ gst_vulkan_image_identity_transform (GstBaseTransform * bt, GstBuffer * inbuf,
         in_image_memory_barrier.dstAccessMask;
     in_img_mem->barrier.image_layout = in_image_memory_barrier.newLayout;
 
-    vkCmdPipelineBarrier (cmd, out_img_mem->barrier.parent.pipeline_stages,
+    vkCmdPipelineBarrier (cmd_buf->cmd,
+        out_img_mem->barrier.parent.pipeline_stages,
         VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0, 0, NULL, 0, NULL, 1,
         &out_image_memory_barrier);
 
@@ -647,13 +651,14 @@ gst_vulkan_image_identity_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     out_img_mem->barrier.image_layout = out_image_memory_barrier.newLayout;
   }
 
-  vkCmdBindDescriptorSets (cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
+  vkCmdBindDescriptorSets (cmd_buf->cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
       render->pipeline_layout, 0, 1, &vk_identity->descriptor_set, 0, NULL);
-  if (!gst_vulkan_full_screen_render_fill_command_buffer (render, cmd,
+  if (!gst_vulkan_full_screen_render_fill_command_buffer (render, cmd_buf->cmd,
           framebuffer))
-    return GST_FLOW_ERROR;
+    goto unlock_error;
 
-  err = vkEndCommandBuffer (cmd);
+  err = vkEndCommandBuffer (cmd_buf->cmd);
+  gst_vulkan_command_buffer_unlock (cmd_buf);
   if (gst_vulkan_error_to_g_error (err, &error, "vkEndCommandBuffer") < 0)
     goto error;
 
@@ -661,14 +666,19 @@ gst_vulkan_image_identity_transform (GstBaseTransform * bt, GstBuffer * inbuf,
       gst_vulkan_trash_new_free_framebuffer (gst_vulkan_fence_ref (fence),
           framebuffer));
   gst_vulkan_trash_list_add (render->trash_list,
-      gst_vulkan_trash_new_free_command_buffer (gst_vulkan_fence_ref (fence),
-          vk_identity->cmd_pool, cmd));
+      gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref (fence),
+          GST_MINI_OBJECT_CAST (cmd_buf)));
 
-  if (!gst_vulkan_full_screen_render_submit (render, cmd, fence))
+  if (!gst_vulkan_full_screen_render_submit (render, cmd_buf->cmd, fence))
     return GST_FLOW_ERROR;
 
   return GST_FLOW_OK;
 
+unlock_error:
+  if (cmd_buf) {
+    gst_vulkan_command_buffer_unlock (cmd_buf);
+    gst_vulkan_command_buffer_unref (cmd_buf);
+  }
 error:
   GST_ELEMENT_ERROR (bt, LIBRARY, FAILED, ("%s", error->message), (NULL));
   g_clear_error (&error);

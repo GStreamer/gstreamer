@@ -963,18 +963,18 @@ gst_vulkan_swapper_set_caps (GstVulkanSwapper * swapper, GstCaps * caps,
 
 static gboolean
 _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
-    GstBuffer * buffer, VkCommandBuffer * cmd_ret, GError ** error)
+    GstBuffer * buffer, GstVulkanCommandBuffer ** cmd_ret, GError ** error)
 {
   GstMemory *in_mem;
   GstVulkanImageMemory *swap_img;
-  VkCommandBuffer cmd;
+  GstVulkanCommandBuffer *cmd_buf;
   GstVideoRectangle src, dst, rslt;
   VkResult err;
 
   g_return_val_if_fail (swap_idx < swapper->priv->n_swap_chain_images, FALSE);
   swap_img = swapper->priv->swap_chain_images[swap_idx];
 
-  if (!(cmd = gst_vulkan_command_pool_create (swapper->cmd_pool, error)))
+  if (!(cmd_buf = gst_vulkan_command_pool_create (swapper->cmd_pool, error)))
     return FALSE;
 
   {
@@ -987,9 +987,10 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
     };
     /* *INDENT-ON* */
 
-    err = vkBeginCommandBuffer (cmd, &cmd_buf_info);
+    gst_vulkan_command_buffer_lock (cmd_buf);
+    err = vkBeginCommandBuffer (cmd_buf->cmd, &cmd_buf_info);
     if (gst_vulkan_error_to_g_error (err, error, "vkBeginCommandBuffer") < 0)
-      return FALSE;
+      goto unlock_error;
   }
 
   {
@@ -1009,7 +1010,8 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
     };
     /* *INDENT-ON* */
 
-    vkCmdPipelineBarrier (cmd, swap_img->barrier.parent.pipeline_stages,
+    vkCmdPipelineBarrier (cmd_buf->cmd,
+        swap_img->barrier.parent.pipeline_stages,
         VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1,
         &image_memory_barrier);
 
@@ -1082,7 +1084,7 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
     };
     /* *INDENT-ON* */
 
-    vkCmdPipelineBarrier (cmd, img_mem->barrier.parent.pipeline_stages,
+    vkCmdPipelineBarrier (cmd_buf->cmd, img_mem->barrier.parent.pipeline_stages,
         VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1,
         &image_memory_barrier);
 
@@ -1090,9 +1092,9 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
     img_mem->barrier.parent.access_flags = image_memory_barrier.dstAccessMask;
     img_mem->barrier.image_layout = image_memory_barrier.newLayout;
 
-    vkCmdClearColorImage (cmd, swap_img->image, swap_img->barrier.image_layout,
-        &clear, 1, &clear_range);
-    vkCmdBlitImage (cmd, img_mem->image, img_mem->barrier.image_layout,
+    vkCmdClearColorImage (cmd_buf->cmd, swap_img->image,
+        swap_img->barrier.image_layout, &clear, 1, &clear_range);
+    vkCmdBlitImage (cmd_buf->cmd, img_mem->image, img_mem->barrier.image_layout,
         swap_img->image, swap_img->barrier.image_layout, 1, &blit,
         VK_FILTER_LINEAR);
   }
@@ -1113,7 +1115,8 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
     };
     /* *INDENT-ON* */
 
-    vkCmdPipelineBarrier (cmd, swap_img->barrier.parent.pipeline_stages,
+    vkCmdPipelineBarrier (cmd_buf->cmd,
+        swap_img->barrier.parent.pipeline_stages,
         VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1,
         &image_memory_barrier);
 
@@ -1122,13 +1125,18 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
     swap_img->barrier.image_layout = image_memory_barrier.newLayout;
   }
 
-  err = vkEndCommandBuffer (cmd);
+  err = vkEndCommandBuffer (cmd_buf->cmd);
   if (gst_vulkan_error_to_g_error (err, error, "vkEndCommandBuffer") < 0)
-    return FALSE;
+    goto unlock_error;
+  gst_vulkan_command_buffer_unlock (cmd_buf);
 
-  *cmd_ret = cmd;
+  *cmd_ret = cmd_buf;
 
   return TRUE;
+
+unlock_error:
+  gst_vulkan_command_buffer_unlock (cmd_buf);
+  return FALSE;
 }
 
 static gboolean
@@ -1140,7 +1148,7 @@ _render_buffer_unlocked (GstVulkanSwapper * swapper,
   VkSemaphoreCreateInfo semaphore_info = { 0, };
   GstVulkanFence *fence = NULL;
   VkPresentInfoKHR present;
-  VkCommandBuffer cmd = VK_NULL_HANDLE;
+  GstVulkanCommandBuffer *cmd_buf = NULL;
   guint32 swap_idx;
   VkResult err, present_err = VK_SUCCESS;
 
@@ -1192,7 +1200,7 @@ reacquire:
     goto error;
   }
 
-  if (!_build_render_buffer_cmd (swapper, swap_idx, buffer, &cmd, error))
+  if (!_build_render_buffer_cmd (swapper, swap_idx, buffer, &cmd_buf, error))
     goto error;
 
   err = vkCreateSemaphore (swapper->device->device, &semaphore_info,
@@ -1212,7 +1220,7 @@ reacquire:
         .pWaitSemaphores = &acquire_semaphore,
         .pWaitDstStageMask = &stages,
         .commandBufferCount = 1,
-        .pCommandBuffers = &cmd,
+        .pCommandBuffers = &cmd_buf->cmd,
         .signalSemaphoreCount = 1,
         .pSignalSemaphores = &present_semaphore,
     };
@@ -1229,13 +1237,14 @@ reacquire:
       goto error;
 
     gst_vulkan_trash_list_add (swapper->priv->trash_list,
-        gst_vulkan_trash_new_free_command_buffer (gst_vulkan_fence_ref (fence),
-            swapper->cmd_pool, cmd));
+        gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref (fence),
+            GST_MINI_OBJECT_CAST (cmd_buf)));
     gst_vulkan_trash_list_add (swapper->priv->trash_list,
         gst_vulkan_trash_new_free_semaphore (fence, acquire_semaphore));
     acquire_semaphore = NULL;
 
-    cmd = VK_NULL_HANDLE;
+    gst_vulkan_command_buffer_unlock (cmd_buf);
+    cmd_buf = NULL;
     fence = NULL;
   }
 
@@ -1297,9 +1306,10 @@ error:
       vkDestroySemaphore (swapper->device->device, acquire_semaphore, NULL);
     if (present_semaphore)
       vkDestroySemaphore (swapper->device->device, present_semaphore, NULL);
-    if (cmd)
-      vkFreeCommandBuffers (swapper->device->device, swapper->cmd_pool->pool,
-          1, &cmd);
+    if (cmd_buf) {
+      gst_vulkan_command_buffer_unlock (cmd_buf);
+      gst_vulkan_command_buffer_unref (cmd_buf);
+    }
     return FALSE;
   }
 }

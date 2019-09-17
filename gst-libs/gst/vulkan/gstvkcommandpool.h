@@ -47,10 +47,15 @@ struct _GstVulkanCommandPoolClass
 };
 
 GST_VULKAN_API
-GstVulkanQueue *    gst_vulkan_command_pool_get_queue       (GstVulkanCommandPool * pool);
+GstVulkanQueue *        gst_vulkan_command_pool_get_queue           (GstVulkanCommandPool * pool);
 
 GST_VULKAN_API
-VkCommandBuffer     gst_vulkan_command_pool_create          (GstVulkanCommandPool * pool,
-                                                             GError ** error);
+GstVulkanCommandBuffer * gst_vulkan_command_pool_create             (GstVulkanCommandPool * pool,
+                                                                     GError ** error);
+
+GST_VULKAN_API
+void                    gst_vulkan_command_pool_lock                (GstVulkanCommandPool * pool);
+GST_VULKAN_API
+void                    gst_vulkan_command_pool_unlock              (GstVulkanCommandPool * pool);
 
 #endif /* __GST_VULKAN_COMMAND_POOL_H__ */

@@ -118,7 +118,7 @@ gst_vulkan_queue_create_command_pool (GstVulkanQueue * queue, GError ** error)
   cmd_pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
   cmd_pool_info.pNext = NULL;
   cmd_pool_info.queueFamilyIndex = queue->family;
-  cmd_pool_info.flags = 0;
+  cmd_pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
   GST_OBJECT_LOCK (queue->device);
   err =

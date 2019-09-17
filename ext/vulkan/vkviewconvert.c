@@ -2234,8 +2234,8 @@ gst_vulkan_view_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   GstVulkanImageMemory *in_img_mems[GST_VIDEO_MAX_PLANES] = { NULL, };
   GstVulkanImageMemory *out_img_mems[4] = { NULL, };
   GstVulkanFence *fence = NULL;
+  GstVulkanCommandBuffer *cmd_buf;
   VkFramebuffer framebuffer;
-  VkCommandBuffer cmd;
   GError *error = NULL;
   VkResult err;
   int i;
@@ -2266,7 +2266,7 @@ gst_vulkan_view_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
       goto error;
   }
 
-  if (!(cmd = gst_vulkan_command_pool_create (conv->cmd_pool, &error)))
+  if (!(cmd_buf = gst_vulkan_command_pool_create (conv->cmd_pool, &error)))
     goto error;
 
   fence = gst_vulkan_fence_new (render->device, 0, &error);
@@ -2285,9 +2285,10 @@ gst_vulkan_view_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     };
     /* *INDENT-ON* */
 
-    err = vkBeginCommandBuffer (cmd, &cmd_buf_info);
+    gst_vulkan_command_buffer_lock (cmd_buf);
+    err = vkBeginCommandBuffer (cmd_buf->cmd, &cmd_buf_info);
     if (gst_vulkan_error_to_g_error (err, &error, "vkBeginCommandBuffer") < 0)
-      goto error;
+      goto unlock_error;
   }
 
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&render->in_info); i++) {
@@ -2307,7 +2308,8 @@ gst_vulkan_view_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     };
     /* *INDENT-ON* */
 
-    vkCmdPipelineBarrier (cmd, in_img_mems[i]->barrier.parent.pipeline_stages,
+    vkCmdPipelineBarrier (cmd_buf->cmd,
+        in_img_mems[i]->barrier.parent.pipeline_stages,
         VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, NULL, 0, NULL, 1,
         &in_image_memory_barrier);
 
@@ -2337,7 +2339,7 @@ gst_vulkan_view_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     };
     /* *INDENT-ON* */
 
-    vkCmdPipelineBarrier (cmd,
+    vkCmdPipelineBarrier (cmd_buf->cmd,
         out_img_mems[i]->barrier.parent.pipeline_stages,
         VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0, 0, NULL, 0, NULL, 1,
         &out_image_memory_barrier);
@@ -2359,17 +2361,22 @@ gst_vulkan_view_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
                 GST_VIDEO_INFO_N_PLANES (&render->out_info), attachments))) {
       g_set_error_literal (&error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
           "Failed to create framebuffer");
-      goto error;
+      goto unlock_error;
     }
   }
 
-  view_convert_update_command_state (conv, cmd, in_img_mems, out_img_mems);
+  view_convert_update_command_state (conv, cmd_buf->cmd, in_img_mems,
+      out_img_mems);
 
-  if (!gst_vulkan_full_screen_render_fill_command_buffer (render, cmd,
-          framebuffer))
-    return GST_FLOW_ERROR;
+  if (!gst_vulkan_full_screen_render_fill_command_buffer (render, cmd_buf->cmd,
+          framebuffer)) {
+    g_set_error (&error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
+        "Failed to fill framebuffer");
+    goto unlock_error;
+  }
 
-  err = vkEndCommandBuffer (cmd);
+  err = vkEndCommandBuffer (cmd_buf->cmd);
+  gst_vulkan_command_buffer_unlock (cmd_buf);
   if (gst_vulkan_error_to_g_error (err, &error, "vkEndCommandBuffer") < 0)
     goto error;
 
@@ -2377,14 +2384,19 @@ gst_vulkan_view_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
       gst_vulkan_trash_new_free_framebuffer (gst_vulkan_fence_ref (fence),
           framebuffer));
   gst_vulkan_trash_list_add (render->trash_list,
-      gst_vulkan_trash_new_free_command_buffer (gst_vulkan_fence_ref (fence),
-          conv->cmd_pool, cmd));
+      gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref (fence),
+          GST_MINI_OBJECT_CAST (cmd_buf)));
 
-  if (!gst_vulkan_full_screen_render_submit (render, cmd, fence))
+  if (!gst_vulkan_full_screen_render_submit (render, cmd_buf->cmd, fence))
     return GST_FLOW_ERROR;
 
   return GST_FLOW_OK;
 
+unlock_error:
+  if (cmd_buf) {
+    gst_vulkan_command_buffer_unlock (cmd_buf);
+    gst_vulkan_command_buffer_unref (cmd_buf);
+  }
 error:
   GST_ELEMENT_ERROR (bt, LIBRARY, FAILED, ("%s", error->message), (NULL));
   g_clear_error (&error);

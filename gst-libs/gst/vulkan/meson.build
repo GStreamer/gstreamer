@@ -6,6 +6,7 @@ endif
 vulkan_sources = [
   'gstvkbuffermemory.c',
   'gstvkbufferpool.c',
+  'gstvkcommandbuffer.c',
   'gstvkcommandpool.c',
   'gstvkdevice.c',
   'gstvkdebug.c',
@@ -30,6 +31,7 @@ vulkan_headers = [
   'gstvkbarrier.h',
   'gstvkbuffermemory.h',
   'gstvkbufferpool.h',
+  'gstvkcommandbuffer.h',
   'gstvkcommandpool.h',
   'gstvkdebug.h',
   'gstvkdevice.h',

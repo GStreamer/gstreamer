@@ -105,10 +105,6 @@ GstVulkanTrash *    gst_vulkan_trash_new_free_semaphore             (GstVulkanFe
                                                                      VkSemaphore semaphore);
 
 GST_VULKAN_API
-GstVulkanTrash *    gst_vulkan_trash_new_free_command_buffer        (GstVulkanFence * fence,
-                                                                     GstVulkanCommandPool * parent,
-                                                                     VkCommandBuffer command_buffer);
-GST_VULKAN_API
 GstVulkanTrash *    gst_vulkan_trash_new_free_descriptor_set        (GstVulkanFence * fence,
                                                                      VkDescriptorPool parent,
                                                                      VkDescriptorSet descriptor_set);

@@ -116,36 +116,6 @@ FREE_DESTROY_FUNC (vkDestroyPipelineLayout, VkPipelineLayout, pipeline_layout);
 FREE_DESTROY_FUNC (vkDestroyRenderPass, VkRenderPass, render_pass);
 FREE_DESTROY_FUNC (vkDestroySemaphore, VkSemaphore, semaphore)
     FREE_DESTROY_FUNC (vkDestroySampler, VkSampler, sampler);
-#define FREE_WITH_GST_PARENT(func, type, type_name, parent_type, parent_resource) \
-struct G_PASTE(free_parent_info_,type_name) \
-{ \
-  parent_type parent; \
-  type resource; \
-}; \
-static void \
-G_PASTE(_free_,type_name) (GstVulkanDevice * device, struct G_PASTE(free_parent_info_,type_name) *info) \
-{ \
-  GST_TRACE_OBJECT (device, "Freeing vulkan " G_STRINGIFY (type) " %p", info->resource); \
-  func (device->device, info->parent parent_resource, 1, &info->resource); \
-  gst_object_unref (info->parent); \
-  g_free (info); \
-} \
-GstVulkanTrash * \
-G_PASTE(gst_vulkan_trash_new_free_,type_name) (GstVulkanFence * fence, \
-    parent_type parent, type type_name) \
-{ \
-  struct G_PASTE(free_parent_info_,type_name) *info; \
-  GstVulkanTrash *trash; \
-  g_return_val_if_fail (type_name != NULL, NULL); \
-  info = g_new0 (struct G_PASTE(free_parent_info_,type_name), 1); \
-  info->parent = gst_object_ref (parent); \
-  info->resource = (gpointer) type_name; \
-  trash = gst_vulkan_trash_new (fence, \
-      (GstVulkanTrashNotify) G_PASTE(_free_,type_name), info); \
-  return trash; \
-}
-FREE_WITH_GST_PARENT (vkFreeCommandBuffers, VkCommandBuffer, command_buffer,
-    GstVulkanCommandPool *,->pool);
 #define FREE_WITH_VK_PARENT(func, type, type_name, parent_type) \
 struct G_PASTE(free_parent_info_,type_name) \
 { \

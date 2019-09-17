@@ -44,6 +44,8 @@ typedef struct _GstVulkanCommandPool GstVulkanCommandPool;
 typedef struct _GstVulkanCommandPoolClass GstVulkanCommandPoolClass;
 typedef struct _GstVulkanCommandPoolPrivate GstVulkanCommandPoolPrivate;
 
+typedef struct _GstVulkanCommandBuffer GstVulkanCommandBuffer;
+
 typedef struct _GstVulkanDisplay GstVulkanDisplay;
 typedef struct _GstVulkanDisplayClass GstVulkanDisplayClass;
 typedef struct _GstVulkanDisplayPrivate GstVulkanDisplayPrivate;

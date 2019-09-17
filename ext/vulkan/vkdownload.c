@@ -143,7 +143,7 @@ static GstFlowReturn
 _image_to_raw_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
 {
   struct ImageToRawDownload *raw = impl;
-  VkCommandBuffer cmd;
+  GstVulkanCommandBuffer *cmd_buf;
   GError *error = NULL;
   GstFlowReturn ret;
   VkResult err;
@@ -157,7 +157,7 @@ _image_to_raw_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     }
   }
 
-  if (!(cmd = gst_vulkan_command_pool_create (raw->cmd_pool, &error)))
+  if (!(cmd_buf = gst_vulkan_command_pool_create (raw->cmd_pool, &error)))
     goto error;
 
   if (!raw->pool) {
@@ -191,9 +191,10 @@ _image_to_raw_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     };
     /* *INDENT-ON* */
 
-    err = vkBeginCommandBuffer (cmd, &cmd_buf_info);
+    gst_vulkan_command_buffer_lock (cmd_buf);
+    err = vkBeginCommandBuffer (cmd_buf->cmd, &cmd_buf_info);
     if (gst_vulkan_error_to_g_error (err, &error, "vkBeginCommandBuffer") < 0)
-      return FALSE;
+      goto unlock_error;
   }
 
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&raw->out_info); i++) {
@@ -207,7 +208,7 @@ _image_to_raw_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     in_mem = gst_buffer_peek_memory (inbuf, i);
     if (!gst_is_vulkan_image_memory (in_mem)) {
       GST_WARNING_OBJECT (raw->download, "Input is not a GstVulkanImageMemory");
-      goto error;
+      goto unlock_error;
     }
     img_mem = (GstVulkanImageMemory *) in_mem;
 
@@ -215,7 +216,7 @@ _image_to_raw_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     if (!gst_is_vulkan_buffer_memory (out_mem)) {
       GST_WARNING_OBJECT (raw->download,
           "Output is not a GstVulkanBufferMemory");
-      goto error;
+      goto unlock_error;
     }
     buf_mem = (GstVulkanBufferMemory *) out_mem;
 
@@ -266,7 +267,7 @@ _image_to_raw_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     };
     /* *INDENT-ON* */
 
-    vkCmdPipelineBarrier (cmd,
+    vkCmdPipelineBarrier (cmd_buf->cmd,
         buf_mem->barrier.parent.pipeline_stages | img_mem->barrier.
         parent.pipeline_stages, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 1,
         &buffer_memory_barrier, 1, &image_memory_barrier);
@@ -278,13 +279,14 @@ _image_to_raw_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     img_mem->barrier.parent.access_flags = image_memory_barrier.dstAccessMask;
     img_mem->barrier.image_layout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
 
-    vkCmdCopyImageToBuffer (cmd, img_mem->image, img_mem->barrier.image_layout,
-        buf_mem->buffer, 1, &region);
+    vkCmdCopyImageToBuffer (cmd_buf->cmd, img_mem->image,
+        img_mem->barrier.image_layout, buf_mem->buffer, 1, &region);
   }
 
-  err = vkEndCommandBuffer (cmd);
+  err = vkEndCommandBuffer (cmd_buf->cmd);
+  gst_vulkan_command_buffer_unlock (cmd_buf);
   if (gst_vulkan_error_to_g_error (err, &error, "vkEndCommandBuffer") < 0)
-    return FALSE;
+    goto error;
 
   {
     VkSubmitInfo submit_info = { 0, };
@@ -299,7 +301,7 @@ _image_to_raw_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
         .pWaitSemaphores = NULL,
         .pWaitDstStageMask = &stages,
         .commandBufferCount = 1,
-        .pCommandBuffers = &cmd,
+        .pCommandBuffers = &cmd_buf->cmd,
         .signalSemaphoreCount = 0,
         .pSignalSemaphores = NULL
     };
@@ -316,7 +318,8 @@ _image_to_raw_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
       goto error;
 
     gst_vulkan_trash_list_add (raw->trash_list,
-        gst_vulkan_trash_new_free_command_buffer (fence, raw->cmd_pool, cmd));
+        gst_vulkan_trash_new_mini_object_unref (fence,
+            GST_MINI_OBJECT_CAST (cmd_buf)));
   }
 
   /* XXX: STALL!
@@ -330,16 +333,19 @@ _image_to_raw_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
 out:
   return ret;
 
+unlock_error:
+  if (cmd_buf) {
+    gst_vulkan_command_buffer_unlock (cmd_buf);
+    gst_vulkan_command_buffer_unref (cmd_buf);
+  }
 error:
   if (error) {
     GST_WARNING_OBJECT (raw->download, "Error: %s", error->message);
     g_clear_error (&error);
   }
-  gst_buffer_unref (*outbuf);
-  *outbuf = NULL;
+  gst_clear_buffer (outbuf);
   ret = GST_FLOW_ERROR;
   goto out;
-  return GST_FLOW_OK;
 }
 
 static void
