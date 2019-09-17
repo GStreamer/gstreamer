@@ -170,6 +170,8 @@ gst_wasapi_device_role_to_erole (gint role)
     default:
       g_assert_not_reached ();
   }
+
+  return -1;
 }
 
 gint
@@ -185,6 +187,8 @@ gst_wasapi_erole_to_device_role (gint erole)
     default:
       g_assert_not_reached ();
   }
+
+  return -1;
 }
 
 static const gchar *
