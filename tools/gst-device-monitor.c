@@ -159,6 +159,16 @@ print_structure_field (GQuark field_id, const GValue * value,
   return TRUE;
 }
 
+static gboolean
+print_field (GQuark field, const GValue * value, gpointer unused)
+{
+  gchar *str = gst_value_serialize (value);
+
+  g_print (", %s=%s", g_quark_to_string (field), str);
+  g_free (str);
+  return TRUE;
+}
+
 static void
 print_device (GstDevice * device, gboolean modified)
 {
@@ -180,9 +190,20 @@ print_device (GstDevice * device, gboolean modified)
   g_print ("\tclass : %s\n", device_class);
   for (i = 0; i < size; ++i) {
     GstStructure *s = gst_caps_get_structure (caps, i);
-    str = gst_structure_to_string (s);
-    g_print ("\t%s %s\n", (i == 0) ? "caps  :" : "       ", str);
-    g_free (str);
+    GstCapsFeatures *features = gst_caps_get_features (caps, i);
+
+    g_print ("\t%s %s", (i == 0) ? "caps  :" : "       ",
+        gst_structure_get_name (s));
+    if (features && (gst_caps_features_is_any (features) ||
+            !gst_caps_features_is_equal (features,
+                GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY))) {
+      gchar *features_string = gst_caps_features_to_string (features);
+
+      g_print ("(%s)", features_string);
+      g_free (features_string);
+    }
+    gst_structure_foreach (s, print_field, NULL);
+    g_print ("\n");
   }
   if (props) {
     g_print ("\tproperties:");
