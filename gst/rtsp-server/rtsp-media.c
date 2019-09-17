@@ -739,6 +739,26 @@ default_create_rtpbin (GstRTSPMedia * media)
   return rtpbin;
 }
 
+/* Must be called with priv->lock */
+static gboolean
+is_receive_only (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv = media->priv;
+  gboolean receive_only = TRUE;
+  guint i;
+
+  for (i = 0; i < priv->streams->len; i++) {
+    GstRTSPStream *stream = g_ptr_array_index (priv->streams, i);
+    if (gst_rtsp_stream_is_sender (stream) ||
+        !gst_rtsp_stream_is_receiver (stream)) {
+      receive_only = FALSE;
+      break;
+    }
+  }
+
+  return receive_only;
+}
+
 /* must be called with state lock */
 static void
 check_seekable (GstRTSPMedia * media)
@@ -746,8 +766,9 @@ check_seekable (GstRTSPMedia * media)
   GstQuery *query;
   GstRTSPMediaPrivate *priv = media->priv;
 
+  g_mutex_lock (&priv->lock);
   /* Update the seekable state of the pipeline in case it changed */
-  if (gst_rtsp_media_is_receive_only (media)) {
+  if (is_receive_only (media)) {
     /* TODO: Seeking for "receive-only"? */
     priv->seekable = -1;
   } else {
@@ -759,6 +780,7 @@ check_seekable (GstRTSPMedia * media)
       if (gst_rtsp_stream_get_publish_clock_mode (stream) ==
           GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK_AND_OFFSET) {
         priv->seekable = -1;
+        g_mutex_unlock (&priv->lock);
         return;
       }
     }
@@ -785,7 +807,7 @@ check_seekable (GstRTSPMedia * media)
   }
 
   GST_DEBUG_OBJECT (media, "seekable:%" G_GINT64_FORMAT, priv->seekable);
-
+  g_mutex_unlock (&priv->lock);
   gst_query_unref (query);
 }
 
@@ -807,7 +829,7 @@ check_complete (GstRTSPMedia * media)
   return FALSE;
 }
 
-/* must be called with state lock */
+/* must be called with state lock and private lock */
 static void
 collect_media_stats (GstRTSPMedia * media)
 {
@@ -815,8 +837,9 @@ collect_media_stats (GstRTSPMedia * media)
   gint64 position = 0, stop = -1;
 
   if (priv->status != GST_RTSP_MEDIA_STATUS_PREPARED &&
-      priv->status != GST_RTSP_MEDIA_STATUS_PREPARING)
+      priv->status != GST_RTSP_MEDIA_STATUS_PREPARING) {
     return;
+  }
 
   priv->range.unit = GST_RTSP_RANGE_NPT;
 
@@ -876,8 +899,9 @@ collect_media_stats (GstRTSPMedia * media)
       priv->range.max.seconds = ((gdouble) stop) / GST_SECOND;
       priv->range_stop = stop;
     }
-
+    g_mutex_unlock (&priv->lock);
     check_seekable (media);
+    g_mutex_lock (&priv->lock);
   }
 }
 
@@ -2509,9 +2533,8 @@ gst_rtsp_media_get_range_string (GstRTSPMedia * media, gboolean play,
       priv->status != GST_RTSP_MEDIA_STATUS_SUSPENDED)
     goto not_prepared;
 
-  g_mutex_lock (&priv->lock);
-
   /* Update the range value with current position/duration */
+  g_mutex_lock (&priv->lock);
   collect_media_stats (media);
 
   /* make copy */
@@ -3056,7 +3079,9 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
           && gst_rtsp_media_is_receive_only (media) && old == GST_STATE_READY
           && new == GST_STATE_PAUSED) {
         GST_INFO ("%p: went to PAUSED, prepared now", media);
+        g_mutex_lock (&priv->lock);
         collect_media_stats (media);
+        g_mutex_unlock (&priv->lock);
 
         if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARING)
           gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARED);
@@ -3138,7 +3163,9 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
         if (priv->blocked && media_streams_blocking (media) &&
             priv->no_more_pads_pending == 0) {
           GST_DEBUG_OBJECT (GST_MESSAGE_SRC (message), "media is blocking");
+          g_mutex_lock (&priv->lock);
           collect_media_stats (media);
+          g_mutex_unlock (&priv->lock);
 
           if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARING)
             gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARED);
@@ -4632,7 +4659,7 @@ gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
   /* we just activated the first media, do the playing state change */
   if (old_active == 0 && activate)
     do_state = TRUE;
-  /* if we have no more active media and prepare count is not indicate 
+  /* if we have no more active media and prepare count is not indicate
    * that there are new session/sessions ongoing,
    * do the downward state changes */
   else if (priv->n_active == 0 && priv->prepare_count <= 1)
@@ -4653,9 +4680,11 @@ gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
 
   /* remember where we are */
   if (state != GST_STATE_NULL && (state == GST_STATE_PAUSED ||
-          old_active != priv->n_active))
+          old_active != priv->n_active)) {
+    g_mutex_lock (&priv->lock);
     collect_media_stats (media);
-
+    g_mutex_unlock (&priv->lock);
+  }
   g_rec_mutex_unlock (&priv->state_lock);
 
   return TRUE;
@@ -4831,17 +4860,11 @@ gboolean
 gst_rtsp_media_is_receive_only (GstRTSPMedia * media)
 {
   GstRTSPMediaPrivate *priv = media->priv;
-  gboolean receive_only = TRUE;
-  guint i;
+  gboolean receive_only;
 
-  for (i = 0; i < priv->streams->len; i++) {
-    GstRTSPStream *stream = g_ptr_array_index (priv->streams, i);
-    if (gst_rtsp_stream_is_sender (stream) ||
-        !gst_rtsp_stream_is_receiver (stream)) {
-      receive_only = FALSE;
-      break;
-    }
-  }
+  g_mutex_lock (&priv->lock);
+  receive_only = is_receive_only (media);
+  g_mutex_unlock (&priv->lock);
 
   return receive_only;
 }
@@ -4850,7 +4873,7 @@ gst_rtsp_media_is_receive_only (GstRTSPMedia * media)
  * gst_rtsp_media_has_completed_sender:
  *
  * See gst_rtsp_stream_is_complete(), gst_rtsp_stream_is_sender().
- *    
+ *
  * Returns: whether @media has at least one complete sender stream.
  * Since: 1.18
  */
