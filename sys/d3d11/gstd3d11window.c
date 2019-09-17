@@ -29,6 +29,8 @@
 
 #include <windows.h>
 
+G_LOCK_DEFINE_STATIC (create_lock);
+
 enum
 {
   PROP_0,
@@ -411,6 +413,7 @@ _create_window (GstD3D11Window * self, GError ** error)
 
   GST_LOG_OBJECT (self, "Attempting to create a win32 window");
 
+  G_LOCK (create_lock);
   atom = GetClassInfoEx (hinstance, "GSTD3D11", &wc);
   if (atom == 0) {
     GST_LOG_OBJECT (self, "Register internal window class");
@@ -428,6 +431,7 @@ _create_window (GstD3D11Window * self, GError ** error)
     atom = RegisterClassEx (&wc);
 
     if (atom == 0) {
+      G_UNLOCK (create_lock);
       GST_ERROR_OBJECT (self, "Failed to register window class 0x%x",
           (unsigned int) GetLastError ());
       g_set_error (error, GST_RESOURCE_ERROR,
@@ -449,6 +453,8 @@ _create_window (GstD3D11Window * self, GError ** error)
       WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW,
       CW_USEDEFAULT, CW_USEDEFAULT,
       0, 0, (HWND) NULL, (HMENU) NULL, hinstance, self);
+
+  G_UNLOCK (create_lock);
 
   if (!self->internal_win_id) {
     GST_ERROR_OBJECT (self, "Failed to create d3d11 window");
