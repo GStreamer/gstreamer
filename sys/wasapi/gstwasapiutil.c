@@ -313,7 +313,7 @@ gst_wasapi_util_hresult_to_string (HRESULT hr)
 }
 
 static IMMDeviceEnumerator *
-gst_wasapi_util_get_device_enumerator (GstElement * self)
+gst_wasapi_util_get_device_enumerator (GstObject * self)
 {
   HRESULT hr;
   IMMDeviceEnumerator *enumerator = NULL;
@@ -326,7 +326,7 @@ gst_wasapi_util_get_device_enumerator (GstElement * self)
 }
 
 gboolean
-gst_wasapi_util_get_devices (GstElement * self, gboolean active,
+gst_wasapi_util_get_devices (GstObject * self, gboolean active,
     GList ** devices)
 {
   gboolean res = FALSE;
@@ -550,7 +550,7 @@ gst_wasapi_util_get_device_client (GstElement * self,
   IMMDevice *device = NULL;
   IAudioClient *client = NULL;
 
-  if (!(enumerator = gst_wasapi_util_get_device_enumerator (self)))
+  if (!(enumerator = gst_wasapi_util_get_device_enumerator (GST_OBJECT (self))))
     goto beach;
 
   if (!device_strid) {

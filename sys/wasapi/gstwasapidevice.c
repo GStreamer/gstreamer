@@ -63,7 +63,7 @@ gst_wasapi_device_provider_probe (GstDeviceProvider * provider)
   GstWasapiDeviceProvider *self = GST_WASAPI_DEVICE_PROVIDER (provider);
   GList *devices = NULL;
 
-  if (!gst_wasapi_util_get_devices (GST_ELEMENT (self), TRUE, &devices))
+  if (!gst_wasapi_util_get_devices (GST_OBJECT (self), TRUE, &devices))
     GST_ERROR_OBJECT (self, "Failed to enumerate devices");
 
   return devices;
