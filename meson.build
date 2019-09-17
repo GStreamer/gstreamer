@@ -9,6 +9,7 @@ gst_branch = 'master'
 build_system = build_machine.system()
 cc = meson.get_compiler('c')
 
+pkgconfig = import('pkgconfig')
 python3 = import('python').find_installation()
 # Ensure that we're not being run from inside the gst-uninstalled env
 # because that will confuse meson, and it might find the already-built
@@ -177,6 +178,89 @@ configure_file(
              '@OUTPUT@',
              all_plugins_paths]
 )
+
+# FIXME: Create a 'libraries' list in each subproject like we do for 'plugins'
+libraries_map = {
+  # name: [subproject_name, variable_name]
+  'gstreamer': ['gstreamer', 'libgst'],
+  'base': ['gstreamer', 'gst_base'],
+  'check': ['gstreamer', 'gst_check'],
+  'controller': ['gstreamer', 'gst_controller'],
+  'net': ['gstreamer', 'gst_net'],
+
+  'allocators': ['gst-plugins-base', 'gstallocators'],
+  'app': ['gst-plugins-base', 'gstapp'],
+  'audio': ['gst-plugins-base', 'gstaudio'],
+  'fft': ['gst-plugins-base', 'gstfft'],
+  'pbutils': ['gst-plugins-base', 'pbutils'],
+  'riff': ['gst-plugins-base', 'gstriff'],
+  'rtp': ['gst-plugins-base', 'gst_rtp'],
+  'rtsp': ['gst-plugins-base', 'gst_rtsp'],
+  'sdp': ['gst-plugins-base', 'gstsdp'],
+  'tag': ['gst-plugins-base', 'gsttag'],
+  'video': ['gst-plugins-base', 'gstvideo'],
+  'gl': ['gst-plugins-base', 'gstgl'],
+
+  'bad-audio': ['gst-plugins-bad', 'gstbadaudio'],
+  'bad-transcoder': ['gst-plugins-bad', 'gst_transcoder'],
+  'codecparsers': ['gst-plugins-bad', 'gstcodecparsers'],
+  'insertbin': ['gst-plugins-bad', 'gstinsertbin'],
+  'mpegts': ['gst-plugins-bad', 'gstmpegts'],
+  'player': ['gst-plugins-bad', 'gstplayer'],
+  'sctp': ['gst-plugins-bad', 'libgstsctp'],
+  'webrtc': ['gst-plugins-bad', 'gstwebrtc'],
+  'vulkan': ['gst-plugins-bad', 'gstvulkan'],
+
+  'rtsp-server': ['gst-rtsp-server', 'gst_rtsp_server'],
+}
+
+if get_option('default_library') == 'static'
+  # Generate a .c file which declare and register all built plugins
+  generate_init_static_plugins = find_program('scripts/generate_init_static_plugins.py')
+  init_static_plugins_c = configure_file(
+    output: 'gstinitstaticplugins.c',
+    command : [generate_init_static_plugins,
+               '@OUTPUT@',
+               all_plugins_paths]
+  )
+  install_headers('gstinitstaticplugins.h', subdir : 'gstreamer-1.0/gst')
+
+  # Get include paths in source tree
+  gst_dep = subproject('gstreamer').get_variable('gst_dep')
+  gst_includes = gst_dep.partial_dependency(includes: true, compile_args: true)
+
+  # Get a list of libraries that needs to be exposed in the ABI.
+  exposed_libs = []
+  foreach name : get_option('gst-full-libraries') + ['gstreamer']
+    info = libraries_map[name]
+    exposed_libs += subproject(info[0]).get_variable(info[1])
+  endforeach
+
+  # glib and gobject are part of our public API. If we are using glib from the
+  # system then our pkg-config file must require it. If we built it as
+  # subproject then we need to link_whole it.
+  requires = []
+  gobject_dep = dependency('gobject-2.0', fallback: ['glib', 'libgobject_dep'])
+  if gobject_dep.type_name() == 'internal'
+      glib_subproject = subproject('glib')
+      exposed_libs += glib_subproject.get_variable('libglib')
+      exposed_libs += glib_subproject.get_variable('libgobject')
+  else
+      requires = ['glib-2.0', 'gobject-2.0']
+  endif
+
+  # Build both shared and static library
+  gstfull = both_libraries('gstreamer-full-1.0',
+    init_static_plugins_c,
+    link_with : all_plugins,
+    link_whole : exposed_libs,
+    dependencies : gst_includes,
+    install : true,
+  )
+  pkgconfig.generate(gstfull,
+    requires: requires,
+    subdirs : 'gstreamer-1.0')
+endif
 
 message('Building subprojects: ' + ', '.join(subprojects_names))
 setenv = find_program('gst-env.py')
