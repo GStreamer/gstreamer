@@ -86,13 +86,11 @@ if build_system == 'windows'
   subproject('win-nasm')
 endif
 
-pathsep = host_machine.system() == 'windows' ? ';' : ':'
-
 subproject('orc', required: get_option('orc'))
 
 subprojects_names = []
 plugins_doc_caches = []
-all_plugins = ''
+all_plugins = []
 foreach sp : subprojects
   project_name = sp[0]
   build_infos = sp[1]
@@ -114,10 +112,7 @@ foreach sp : subprojects
     else
       plugins = []
     endif
-
-    foreach plugin: plugins
-      all_plugins += pathsep + plugin.full_path()
-    endforeach
+    all_plugins += plugins
 
     subprojects_names += [project_name]
     cmdres = run_command(python3, '-c', symlink.format(project_name, meson.current_source_dir()))
@@ -170,9 +165,18 @@ else
   endif
 endif
 
-cmdres = run_command(python3, find_program('scripts/generate_plugins_path.py'), '--builddir',
-    meson.build_root(), all_plugins)
-assert(cmdres.returncode() == 0, 'Could not create plugins path: @0@'.format(cmdres.stderr()))
+all_plugins_paths = []
+foreach plugin: all_plugins
+  all_plugins_paths += plugin.full_path()
+endforeach
+
+generate_plugins_paths = find_program('scripts/generate_plugins_path.py')
+configure_file(
+  output : 'GstPluginsPath.json',
+  command : [generate_plugins_paths,
+             '@OUTPUT@',
+             all_plugins_paths]
+)
 
 message('Building subprojects: ' + ', '.join(subprojects_names))
 setenv = find_program('gst-env.py')
