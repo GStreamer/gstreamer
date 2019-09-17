@@ -3313,7 +3313,6 @@ gst_omx_video_enc_sink_query (GstVideoEncoder * encoder, GstQuery * query)
           GST_QUERY_TYPE_NAME (query));
 
       gst_omx_video_enc_drain (self);
-      return TRUE;
     }
     default:
       break;
