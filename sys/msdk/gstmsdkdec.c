@@ -1067,7 +1067,11 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
 
       if (bitstream.DataLength == 0) {
         flow = GST_FLOW_OK;
-        surface = NULL;
+
+        /* Don't release it if the current surface is in use */
+        if (surface && task->surface == surface->surface)
+          surface = NULL;
+
         break;
       }
     } else if (status == MFX_ERR_MORE_DATA) {
