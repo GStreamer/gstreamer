@@ -573,6 +573,7 @@ egl_display_thread (gpointer data)
   EGLint major_version, minor_version;
   gchar **gl_apis, **gl_api;
 
+  g_mutex_lock (&display->mutex);
   if (!display->base.is_wrapped) {
     gl_display = display->base.handle.p =
         egl_get_display_from_native (display->base.handle.u,
@@ -609,7 +610,9 @@ egl_display_thread (gpointer data)
     goto error;
 
   display->base.is_valid = TRUE;
+  display->created = TRUE;
   g_cond_broadcast (&display->gl_thread_ready);
+  g_mutex_unlock (&display->mutex);
 
   while (!display->gl_thread_cancel) {
     EglMessage *const msg =
@@ -624,17 +627,20 @@ egl_display_thread (gpointer data)
       egl_object_unref (msg);
     }
   }
+  g_mutex_lock (&display->mutex);
 
 done:
   if (gl_display != EGL_NO_DISPLAY && !display->base.is_wrapped)
     eglTerminate (gl_display);
   display->base.handle.p = NULL;
   g_cond_broadcast (&display->gl_thread_ready);
+  g_mutex_unlock (&display->mutex);
   return NULL;
 
   /* ERRORS */
 error:
   {
+    display->created = TRUE;
     display->base.is_valid = FALSE;
     goto done;
   }
@@ -656,7 +662,8 @@ egl_display_init (EglDisplay * display)
     return FALSE;
 
   g_mutex_lock (&display->mutex);
-  g_cond_wait (&display->gl_thread_ready, &display->mutex);
+  while (!display->created)
+    g_cond_wait (&display->gl_thread_ready, &display->mutex);
   g_mutex_unlock (&display->mutex);
   return display->base.is_valid;
 }
