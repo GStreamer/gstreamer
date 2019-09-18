@@ -1,6 +1,6 @@
 /*
  * GStreamer
- * Copyright (C) 2016 Matthew Waters <matthew@centricular.com>
+ * Copyright (C) 2019 Matthew Waters <matthew@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -30,4 +30,4 @@ void        gst_vulkan_command_pool_release_buffer      (GstVulkanCommandPool * 
 
 G_END_DECLS
 
-#endif /* __GST_VULKAN_IMAGE_BUFFER_POOL_H__ */
+#endif /* __GST_VULKAN_COMMAND_POOL_PRIVATE_H__ */

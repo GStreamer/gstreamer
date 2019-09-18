@@ -22,6 +22,7 @@
 #define __GST_VULKAN_WINDOW_IOS_H__
 
 #include <gst/vulkan/vulkan.h>
+#include <vulkan/vulkan_ios.h>
 
 G_BEGIN_DECLS
 

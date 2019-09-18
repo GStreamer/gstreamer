@@ -26,6 +26,8 @@
 
 #include <gst/vulkan/vulkan.h>
 
+#include <vulkan/vulkan_wayland.h>
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_VULKAN_WINDOW_WAYLAND         (gst_vulkan_window_wayland_get_type())

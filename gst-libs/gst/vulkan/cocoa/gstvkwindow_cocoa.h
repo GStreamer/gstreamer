@@ -22,6 +22,7 @@
 #define __GST_VULKAN_WINDOW_COCOA_H__
 
 #include <gst/vulkan/vulkan.h>
+#include <vulkan/vulkan_macos.h>
 
 G_BEGIN_DECLS
 

@@ -28,37 +28,6 @@
 #include <gst/vulkan/vulkan_fwd.h>
 #include <gst/vulkan/vulkan-enumtypes.h>
 
-/* Need these defined to have access to winsys functions before including vulkan.h */
-#if GST_VULKAN_HAVE_WINDOW_XCB
-#ifndef VK_USE_PLATFORM_XCB_KHR
-#define VK_USE_PLATFORM_XCB_KHR
-#endif
-#endif
-
-#if GST_VULKAN_HAVE_WINDOW_WAYLAND
-#ifndef VK_USE_PLATFORM_WAYLAND_KHR
-#define VK_USE_PLATFORM_WAYLAND_KHR
-#endif
-#endif
-
-#if GST_VULKAN_HAVE_WINDOW_COCOA
-#ifndef VK_USE_PLATFORM_MACOS_MVK
-#define VK_USE_PLATFORM_MACOS_MVK
-#endif
-#endif
-
-#if GST_VULKAN_HAVE_WINDOW_IOS
-#ifndef VK_USE_PLATFORM_IOS_MVK
-#define VK_USE_PLATFORM_IOS_MVK
-#endif
-#endif
-
-#if GST_VULKAN_HAVE_WINDOW_WIN32
-#ifndef VK_USE_PLATFORM_WIN32_KHR
-#define VK_USE_PLATFORM_WIN32_KHR
-#endif
-#endif
-
-#include <vulkan/vulkan.h>
+#include <vulkan/vulkan_core.h>
 
 #endif /* __GST_VULKAN_API_H__ */

@@ -23,13 +23,8 @@
 
 #include <gst/gst.h>
 
-#ifndef VK_USE_PLATFORM_MACOS_MVK
-#error "VK_USE_PLATFORM_MACOS_MVK not defined before including this header"
-#error "Either include vkapi.h or define VK_USE_PLATFORM_MACOS_MVK before including this header"
-#endif
-#include <vulkan/vulkan.h>
-
 #include <gst/vulkan/vulkan.h>
+#include <vulkan/vulkan_macos.h>
 
 G_BEGIN_DECLS
 

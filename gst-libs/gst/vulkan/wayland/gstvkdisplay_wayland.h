@@ -26,6 +26,7 @@
 #include <wayland-client.h>
 
 #include <gst/vulkan/vulkan.h>
+#include <vulkan/vulkan_wayland.h>
 
 G_BEGIN_DECLS
 

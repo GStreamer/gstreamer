@@ -24,12 +24,7 @@
 #include <gst/gst.h>
 
 #include <xcb/xcb.h>
-
-#ifndef VK_USE_PLATFORM_XCB_KHR
-#error "VK_USE_PLATFORM_XCB_KHR not defined before including this header"
-#error "Either include vkapi.h or define VK_USE_PLATFORM_XCB_KHR before including this header"
-#endif
-#include <vulkan/vulkan.h>
+#include <vulkan/vulkan_xcb.h>
 
 #include <gst/vulkan/vulkan.h>
 

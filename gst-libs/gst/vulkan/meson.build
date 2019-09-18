@@ -93,7 +93,7 @@ elif host_system == 'windows'
                                  required : get_option('vulkan'))
 
     vulkan_inc_dir = join_paths(vulkan_root, 'Include')
-    has_vulkan_header = cc.has_header('vulkan/vulkan.h',
+    has_vulkan_header = cc.has_header('vulkan/vulkan_core.h',
                                       args: '-I' + vulkan_inc_dir)
 
     if vulkan_lib.found() and has_vulkan_header
@@ -102,19 +102,25 @@ elif host_system == 'windows'
     endif
   endif
 else
-  vulkan_dep = cc.find_library('vulkan', required : get_option('vulkan'))
+  vulkan_dep = dependency('vulkan', method: 'pkg-config', required : false)
+  if not vulkan_dep.found()
+    vulkan_dep = cc.find_library('vulkan', required : false)
+  endif
 endif
 
 if host_system != 'windows'
-  has_vulkan_header = cc.has_header('vulkan/vulkan.h')
+  has_vulkan_header = cc.has_header('vulkan/vulkan_core.h')
 endif
 
 if not has_vulkan_header and get_option('vulkan').enabled()
   error('vulkan plugin enabled, but vulkan.h not found')
 endif
+if not vulkan_dep.found() and get_option('vulkan').enabled()
+  error('vulkan plugin enabled, but could not find vulkan library')
+endif
 
 xcb_dep = dependency('xcb', version : '>=1.10', required : get_option('x11'))
-if xcb_dep.found()
+if xcb_dep.found() and cc.has_header('vulkan/vulkan_xcb.h', dependencies : vulkan_dep)
   vulkan_sources += [
     'xcb/gstvkdisplay_xcb.c',
     'xcb/gstvkwindow_xcb.c',
@@ -130,7 +136,7 @@ if xcb_dep.found()
   endif
 
 wayland_client_dep = dependency('wayland-client', version : '>=1.4', required : get_option('wayland'))
-if wayland_client_dep.found()
+if wayland_client_dep.found() and cc.has_header('vulkan/vulkan_wayland.h', dependencies : vulkan_dep)
   vulkan_sources += [
     'wayland/gstvkdisplay_wayland.c',
     'wayland/gstvkwindow_wayland.c',
@@ -164,7 +170,7 @@ endif
 if host_system == 'darwin'
   cocoa_dep = dependency('appleframeworks', modules : ['Cocoa'], required : get_option('vulkan'))
 
-  if cocoa_dep.found()
+  if cocoa_dep.found() and cc.has_header('vulkan/vulkan_macos.h', dependencies : vulkan_dep)
     vulkan_sources += [
       'cocoa/gstvkdisplay_cocoa.m',
       'cocoa/gstvkwindow_cocoa.m',
@@ -178,7 +184,7 @@ endif
 if host_system == 'ios'
   uikit_dep = dependency('appleframeworks', modules : ['UIKit'], required : get_option('vulkan'))
 
-  if uikit_dep.found()
+  if uikit_dep.found() and cc.has_header('vulkan/vulkan_ios.h', dependencies : vulkan_dep)
     vulkan_sources += [
       'ios/gstvkdisplay_ios.m',
       'ios/gstvkwindow_ios.m',
@@ -192,7 +198,7 @@ endif
 if host_system == 'windows'
   gdi_dep = cc.find_library('gdi32', required : get_option('vulkan'))
 
-  if gdi_dep.found()
+  if gdi_dep.found() and cc.has_header('vulkan/vulkan_win32.h', dependencies : vulkan_dep)
     vulkan_sources += ['win32/gstvkwindow_win32.c']
     optional_deps += [gdi_dep]
     vulkan_windowing = true
@@ -204,69 +210,72 @@ if not vulkan_windowing
   warning('No Windowing system found.  vulkansink will not work')
 endif
 
-if vulkan_dep.found() and has_vulkan_header
-  gen_sources = []
+if not vulkan_dep.found() or not has_vulkan_header
+  if get_option('vulkan').enabled()
+    error('GStreamer Vulkan integration required via options, but needed dependencies not found.')
+  else
+    gstvulkan_dep = dependency('', required : false)
+    subdir_done()
+  endif
+endif
 
-  install_headers(vulkan_headers, subdir : 'gstreamer-1.0/gst/vulkan')
-  install_headers(vulkan_xcb_headers, subdir : 'gstreamer-1.0/gst/vulkan/xcb')
-  install_headers(vulkan_wayland_headers, subdir : 'gstreamer-1.0/gst/vulkan/wayland')
+gen_sources = []
 
-  configure_file(input : 'gstvkconfig.h.meson',
-    output : 'gstvkconfig.h',
-    install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst/vulkan'),
-    configuration : vulkan_conf)
+install_headers(vulkan_headers, subdir : 'gstreamer-1.0/gst/vulkan')
+install_headers(vulkan_xcb_headers, subdir : 'gstreamer-1.0/gst/vulkan/xcb')
+install_headers(vulkan_wayland_headers, subdir : 'gstreamer-1.0/gst/vulkan/wayland')
 
-  vulkan_enums = gnome.mkenums_simple('vulkan-enumtypes',
-    sources : vulkan_headers,
-    body_prefix : '#ifdef HAVE_CONFIG_H\n#include "config.h"\n#endif',
-    header_prefix : '#include <gst/vulkan/vulkan-prelude.h>',
-    decorator : 'GST_VULKAN_API',
-    install_header: true,
-    install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst/vulkan'))
-  vulkan_enumtypes_c = vulkan_enums[0]
-  vulkan_enumtypes_h = vulkan_enums[1]
-  gen_sources += [vulkan_enumtypes_h]
+configure_file(input : 'gstvkconfig.h.meson',
+  output : 'gstvkconfig.h',
+  install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst/vulkan'),
+  configuration : vulkan_conf)
 
-  gstvulkan = library('gstvulkan-' + api_version,
-    vulkan_sources, vulkan_enumtypes_c, vulkan_enumtypes_h,
-    c_args : gst_plugins_bad_args + vulkan_defines + ['-DBUILDING_GST_VULKAN'],
-    objc_args : gst_plugins_bad_args + vulkan_defines + vulkan_objc_args + ['-DBUILDING_GST_VULKAN'],
-    include_directories : [configinc, libsinc],
-    version : libversion,
-    soversion : soversion,
-    darwin_versions : osxversion,
-    install : true,
-    dependencies : [gstbase_dep, gstvideo_dep, vulkan_dep] + optional_deps)
+vulkan_enums = gnome.mkenums_simple('vulkan-enumtypes',
+  sources : vulkan_headers,
+  body_prefix : '#ifdef HAVE_CONFIG_H\n#include "config.h"\n#endif',
+  header_prefix : '#include <gst/vulkan/vulkan-prelude.h>',
+  decorator : 'GST_VULKAN_API',
+  install_header: true,
+  install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst/vulkan'))
+vulkan_enumtypes_c = vulkan_enums[0]
+vulkan_enumtypes_h = vulkan_enums[1]
+gen_sources += [vulkan_enumtypes_h]
 
-  if build_gir
-    extra_gir_includes = []
-    gobject_introspection_dep = dependency('gobject-introspection-1.0')
-    if gobject_introspection_dep.version().version_compare('>=1.61.1')
-      # This is the first version that contains Vulkan-1.0.gir
-      extra_gir_includes += ['Vulkan-1.0']
-    endif
+gstvulkan = library('gstvulkan-' + api_version,
+  vulkan_sources, vulkan_enumtypes_c, vulkan_enumtypes_h,
+  c_args : gst_plugins_bad_args + vulkan_defines + ['-DBUILDING_GST_VULKAN'],
+  objc_args : gst_plugins_bad_args + vulkan_defines + vulkan_objc_args + ['-DBUILDING_GST_VULKAN'],
+  include_directories : [configinc, libsinc],
+  version : libversion,
+  soversion : soversion,
+  darwin_versions : osxversion,
+  install : true,
+  dependencies : [gstbase_dep, gstvideo_dep, vulkan_dep] + optional_deps)
 
-    vulkan_gir = gnome.generate_gir(gstvulkan,
-      sources : vulkan_sources + vulkan_headers + [vulkan_enumtypes_h, vulkan_enumtypes_c],
-      namespace : 'GstVulkan',
-      nsversion : api_version,
-      identifier_prefix : 'Gst',
-      symbol_prefix : 'gst',
-      export_packages : 'gstreamer-vulkan-1.0',
-      includes : ['Gst-1.0', 'GstBase-1.0', 'GstVideo-1.0'] + extra_gir_includes,
-      install : true,
-      extra_args : gir_init_section + ['--c-include=gst/vulkan/vulkan.h'],
-      dependencies : [gstvideo_dep, gst_dep, gstbase_dep] + optional_deps
-    )
-    gen_sources += vulkan_gir
+if build_gir
+  extra_gir_includes = []
+  gobject_introspection_dep = dependency('gobject-introspection-1.0')
+  if gobject_introspection_dep.version().version_compare('>=1.61.1')
+    # This is the first version that contains Vulkan-1.0.gir
+    extra_gir_includes += ['Vulkan-1.0']
   endif
 
-  gstvulkan_dep = declare_dependency(link_with : gstvulkan,
-    include_directories : [libsinc],
-    sources: gen_sources,
-    dependencies : [gstvideo_dep, gstbase_dep, vulkan_dep] + optional_deps)
-elif get_option('vulkan').enabled()
-  error('GStreamer Vulkan integration required via options, but needed dependencies not found.')
-else
-  gstvulkan_dep = dependency('', required : false)
+  vulkan_gir = gnome.generate_gir(gstvulkan,
+    sources : vulkan_sources + vulkan_headers + [vulkan_enumtypes_h, vulkan_enumtypes_c],
+    namespace : 'GstVulkan',
+    nsversion : api_version,
+    identifier_prefix : 'Gst',
+    symbol_prefix : 'gst',
+    export_packages : 'gstreamer-vulkan-1.0',
+    includes : ['Gst-1.0', 'GstBase-1.0', 'GstVideo-1.0'] + extra_gir_includes,
+    install : true,
+    extra_args : gir_init_section + ['--c-include=gst/vulkan/vulkan.h'],
+    dependencies : [gstvideo_dep, gst_dep, gstbase_dep] + optional_deps
+  )
+  gen_sources += vulkan_gir
 endif
+
+gstvulkan_dep = declare_dependency(link_with : gstvulkan,
+  include_directories : [libsinc],
+  sources: gen_sources,
+  dependencies : [gstvideo_dep, gstbase_dep, vulkan_dep] + optional_deps)

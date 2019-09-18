@@ -27,6 +27,7 @@
 #define UNICODE
 
 #include <gst/vulkan/vulkan.h>
+#include <vulkan/vulkan_win32.h>
 
 G_BEGIN_DECLS
 

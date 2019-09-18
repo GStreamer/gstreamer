@@ -25,6 +25,8 @@
 
 #include <gst/vulkan/vulkan.h>
 
+#include <vulkan/vulkan_xcb.h>
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_VULKAN_WINDOW_XCB         (gst_vulkan_window_xcb_get_type())
