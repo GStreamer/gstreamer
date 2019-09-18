@@ -4194,57 +4194,9 @@ build_colr_extension (const GstVideoColorimetry * colorimetry, gboolean is_mp4)
   guint16 transfer_function;
   guint16 matrix;
 
-  switch (colorimetry->primaries) {
-    case GST_VIDEO_COLOR_PRIMARIES_BT709:
-      primaries = 1;
-      break;
-    case GST_VIDEO_COLOR_PRIMARIES_BT470BG:
-      primaries = 5;
-      break;
-    case GST_VIDEO_COLOR_PRIMARIES_SMPTE170M:
-    case GST_VIDEO_COLOR_PRIMARIES_SMPTE240M:
-      primaries = 6;
-      break;
-    case GST_VIDEO_COLOR_PRIMARIES_BT2020:
-      primaries = 9;
-      break;
-    case GST_VIDEO_COLOR_PRIMARIES_UNKNOWN:
-    default:
-      primaries = 2;
-      break;
-  }
-
-  switch (colorimetry->transfer) {
-    case GST_VIDEO_TRANSFER_BT709:
-      transfer_function = 1;
-      break;
-    case GST_VIDEO_TRANSFER_SMPTE240M:
-      transfer_function = 7;
-      break;
-    case GST_VIDEO_TRANSFER_UNKNOWN:
-    default:
-      transfer_function = 2;
-      break;
-  }
-
-  switch (colorimetry->matrix) {
-    case GST_VIDEO_COLOR_MATRIX_BT709:
-      matrix = 1;
-      break;
-    case GST_VIDEO_COLOR_MATRIX_BT601:
-      matrix = 6;
-      break;
-    case GST_VIDEO_COLOR_MATRIX_SMPTE240M:
-      matrix = 7;
-      break;
-    case GST_VIDEO_COLOR_MATRIX_BT2020:
-      matrix = 9;
-      break;
-    case GST_VIDEO_COLOR_MATRIX_UNKNOWN:
-    default:
-      matrix = 2;
-      break;
-  }
+  primaries = gst_video_color_primaries_to_iso (colorimetry->primaries);
+  transfer_function = gst_video_color_transfer_to_iso (colorimetry->transfer);
+  matrix = gst_video_color_matrix_to_iso (colorimetry->matrix);
 
   atom_data_alloc_mem (atom_data, 10 + (is_mp4 ? 1 : 0));
   data = atom_data->data;
