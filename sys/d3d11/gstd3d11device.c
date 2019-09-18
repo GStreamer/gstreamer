@@ -653,7 +653,7 @@ gst_d3d11_device_message_callback (MessageData * msg)
 
   g_mutex_lock (&priv->lock);
   msg->fired = TRUE;
-  g_cond_signal (&priv->cond);
+  g_cond_broadcast (&priv->cond);
   g_mutex_unlock (&priv->lock);
 
   return G_SOURCE_REMOVE;
