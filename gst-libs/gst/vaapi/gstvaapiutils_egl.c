@@ -1124,8 +1124,6 @@ egl_context_new_wrapped (EglDisplay * display, EGLContext gl_context)
   if (!success)
     return NULL;
 
-  if (args.context)
-    args.context->base.is_wrapped = TRUE;
   return args.context;
 }
 
