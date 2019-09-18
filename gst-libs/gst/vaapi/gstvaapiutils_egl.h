@@ -122,6 +122,7 @@ struct egl_display_s
   GCond gl_thread_ready;
   volatile gboolean gl_thread_cancel;
   GAsyncQueue *gl_queue;
+  gboolean created;
 };
 
 struct egl_config_s
