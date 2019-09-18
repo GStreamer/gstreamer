@@ -1079,7 +1079,7 @@ gst_rist_src_set_property (GObject * object, guint prop_id,
     case PROP_PORT:{
       guint port = g_value_get_uint (value);
 
-      /* According to 5.1.1, RTCP receiver port most be event number and RTCP
+      /* According to 5.1.1, RTP receiver port most be even number and RTCP
        * port should be the RTP port + 1 */
 
       if (port & 0x1) {
