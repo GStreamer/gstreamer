@@ -10962,61 +10962,12 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
             guint16 matrix = GST_READ_UINT16_BE (colr_data + 16);
             gboolean full_range = len == 19 ? colr_data[17] >> 7 : FALSE;
 
-            switch (primaries) {
-              case 1:
-                CUR_STREAM (stream)->colorimetry.primaries =
-                    GST_VIDEO_COLOR_PRIMARIES_BT709;
-                break;
-              case 5:
-                CUR_STREAM (stream)->colorimetry.primaries =
-                    GST_VIDEO_COLOR_PRIMARIES_BT470BG;
-                break;
-              case 6:
-                CUR_STREAM (stream)->colorimetry.primaries =
-                    GST_VIDEO_COLOR_PRIMARIES_SMPTE170M;
-                break;
-              case 9:
-                CUR_STREAM (stream)->colorimetry.primaries =
-                    GST_VIDEO_COLOR_PRIMARIES_BT2020;
-                break;
-              default:
-                break;
-            }
-
-            switch (transfer_function) {
-              case 1:
-                CUR_STREAM (stream)->colorimetry.transfer =
-                    GST_VIDEO_TRANSFER_BT709;
-                break;
-              case 7:
-                CUR_STREAM (stream)->colorimetry.transfer =
-                    GST_VIDEO_TRANSFER_SMPTE240M;
-                break;
-              default:
-                break;
-            }
-
-            switch (matrix) {
-              case 1:
-                CUR_STREAM (stream)->colorimetry.matrix =
-                    GST_VIDEO_COLOR_MATRIX_BT709;
-                break;
-              case 6:
-                CUR_STREAM (stream)->colorimetry.matrix =
-                    GST_VIDEO_COLOR_MATRIX_BT601;
-                break;
-              case 7:
-                CUR_STREAM (stream)->colorimetry.matrix =
-                    GST_VIDEO_COLOR_MATRIX_SMPTE240M;
-                break;
-              case 9:
-                CUR_STREAM (stream)->colorimetry.matrix =
-                    GST_VIDEO_COLOR_MATRIX_BT2020;
-                break;
-              default:
-                break;
-            }
-
+            CUR_STREAM (stream)->colorimetry.primaries =
+                gst_video_color_primaries_from_iso (primaries);
+            CUR_STREAM (stream)->colorimetry.transfer =
+                gst_video_color_transfer_from_iso (transfer_function);
+            CUR_STREAM (stream)->colorimetry.matrix =
+                gst_video_color_matrix_from_iso (matrix);
             CUR_STREAM (stream)->colorimetry.range =
                 full_range ? GST_VIDEO_COLOR_RANGE_0_255 :
                 GST_VIDEO_COLOR_RANGE_16_235;
