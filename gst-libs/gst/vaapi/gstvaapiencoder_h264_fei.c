@@ -4535,8 +4535,6 @@ gst_vaapi_encoder_h264_fei_new (GstVaapiDisplay * display)
 error:
   if (feienc)
     g_object_unref (feienc);
-  if (feipak)
-    gst_vaapi_mini_object_replace ((GstVaapiMiniObject **) & feipak, NULL);
   if (feiencoder)
     g_object_unref (feiencoder);
 
