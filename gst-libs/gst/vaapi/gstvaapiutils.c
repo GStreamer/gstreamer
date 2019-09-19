@@ -917,6 +917,7 @@ from_GstVaapiBufferMemoryType (guint type)
       break;
     case GST_VAAPI_BUFFER_MEMORY_TYPE_USER_PTR:
       va_type = VA_SURFACE_ATTRIB_MEM_TYPE_USER_PTR;
+      break;
     default:
       va_type = 0;
       break;
