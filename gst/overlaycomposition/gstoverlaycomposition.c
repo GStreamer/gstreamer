@@ -159,6 +159,7 @@ gst_overlay_composition_init (GstOverlayComposition * self)
       GST_DEBUG_FUNCPTR (gst_overlay_composition_sink_event));
   gst_pad_set_query_function (self->sinkpad,
       GST_DEBUG_FUNCPTR (gst_overlay_composition_sink_query));
+  GST_PAD_SET_PROXY_ALLOCATION (self->sinkpad);
   gst_element_add_pad (GST_ELEMENT (self), self->sinkpad);
 
   self->srcpad = gst_pad_new_from_static_template (&src_template, "src");
