@@ -27,6 +27,10 @@ DEFAULT_BUILDDIR = os.path.join(SCRIPTDIR, 'build')
 if not os.path.exists(DEFAULT_BUILDDIR):
     DEFAULT_BUILDDIR = os.path.join(SCRIPTDIR, '_build')
 
+TYPELIB_REG = re.compile(r'.*\.typelib$')
+SHAREDLIB_REG = re.compile(r'\.so|\.dylib|\.dll')
+GSTPLUGIN_FILEPATH_REG = re.compile(r'.*/lib[^/]*/gstreamer-1.0/[^/]+$')
+
 
 def listify(o):
     if isinstance(o, str):
@@ -58,6 +62,31 @@ def prepend_env_var(env, var, value, sysroot):
     env[var] = val + env_val
     env[var] = env[var].replace(os.pathsep + os.pathsep, os.pathsep).strip(os.pathsep)
 
+def is_library_target_and_not_plugin(target, filename):
+    '''
+    Don't add plugins to PATH/LD_LIBRARY_PATH because:
+    1. We don't need to
+    2. It causes us to exceed the PATH length limit on Windows and Wine
+    '''
+    if not target['type'].startswith('shared'):
+        return False
+    if not target['installed']:
+        return False
+    # Check if this output of that target is a shared library
+    if not SHAREDLIB_REG.search(filename):
+        return False
+    # Check if it's installed to the gstreamer plugin location
+    for install_filename in target['install_filename']:
+        if install_filename.endswith(os.path.basename(filename)):
+            break
+    else:
+        # None of the installed files in the target correspond to the built
+        # filename, so skip
+        return False
+    if GSTPLUGIN_FILEPATH_REG.search(install_filename.replace('\\', '/')):
+        return False
+    return True
+
 
 def get_subprocess_env(options, gst_version):
     env = os.environ.copy()
@@ -82,9 +111,6 @@ def get_subprocess_env(options, gst_version):
     env["GST_PTP_HELPER"] = os.path.normpath(
         "%s/subprojects/gstreamer/libs/gst/helpers/gst-ptp-helper" % options.builddir)
     env["GST_REGISTRY"] = os.path.normpath(options.builddir + "/registry.dat")
-
-    sharedlib_reg = re.compile(r'\.so|\.dylib|\.dll')
-    typelib_reg = re.compile(r'.*\.typelib$')
 
     if os.name is 'nt':
         lib_path_envvar = 'PATH'
@@ -143,14 +169,11 @@ def get_subprocess_env(options, gst_version):
                 continue
             if filename.endswith('.dll'):
                 mono_paths.add(os.path.join(options.builddir, root))
-            if typelib_reg.search(filename):
+            if TYPELIB_REG.search(filename):
                 prepend_env_var(env, "GI_TYPELIB_PATH",
                                 os.path.join(options.builddir, root),
                                 options.sysroot)
-            elif sharedlib_reg.search(filename):
-                if not target['type'].startswith('shared'):
-                    continue
-
+            elif is_library_target_and_not_plugin(target, filename):
                 prepend_env_var(env, lib_path_envvar,
                                 os.path.join(options.builddir, root),
                                 options.sysroot)
