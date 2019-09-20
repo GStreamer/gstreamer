@@ -231,8 +231,6 @@ static GstCaps *gst_omx_video_enc_getcaps (GstVideoEncoder * encoder,
     GstCaps * filter);
 static gboolean gst_omx_video_enc_decide_allocation (GstVideoEncoder * encoder,
     GstQuery * query);
-static gboolean gst_omx_video_enc_sink_query (GstVideoEncoder * encoder,
-    GstQuery * query);
 
 static GstFlowReturn gst_omx_video_enc_drain (GstOMXVideoEnc * self);
 
@@ -490,8 +488,6 @@ gst_omx_video_enc_class_init (GstOMXVideoEncClass * klass)
   video_encoder_class->getcaps = GST_DEBUG_FUNCPTR (gst_omx_video_enc_getcaps);
   video_encoder_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_omx_video_enc_decide_allocation);
-  video_encoder_class->sink_query =
-      GST_DEBUG_FUNCPTR (gst_omx_video_enc_sink_query);
 
   klass->cdata.type = GST_OMX_COMPONENT_TYPE_FILTER;
   klass->cdata.default_sink_template_caps =
@@ -3298,27 +3294,4 @@ gst_omx_video_enc_decide_allocation (GstVideoEncoder * encoder,
   self->nb_downstream_buffers = min;
 
   return TRUE;
-}
-
-static gboolean
-gst_omx_video_enc_sink_query (GstVideoEncoder * encoder, GstQuery * query)
-{
-  GstOMXVideoEnc *self = GST_OMX_VIDEO_ENC (encoder);
-
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_ALLOCATION:
-    case GST_QUERY_DRAIN:
-    {
-      GST_DEBUG_OBJECT (encoder, "%s query: drain encoder",
-          GST_QUERY_TYPE_NAME (query));
-
-      gst_omx_video_enc_drain (self);
-    }
-    default:
-      break;
-  }
-
-  return
-      GST_VIDEO_ENCODER_CLASS (gst_omx_video_enc_parent_class)->sink_query
-      (encoder, query);
 }
