@@ -59,13 +59,17 @@ GST_DEBUG_CATEGORY_STATIC (gst_rtp_src_debug);
 #define DEFAULT_PROP_ENCODING_NAME    NULL
 #define DEFAULT_PROP_LATENCY          200
 
-#define DEFAULT_PROP_URI              "rtp://0.0.0.0:5004"
+#define DEFAULT_PROP_ADDRESS          "0.0.0.0"
+#define DEFAULT_PROP_PORT             5004
+#define DEFAULT_PROP_URI              "rtp://"DEFAULT_PROP_ADDRESS":"G_STRINGIFY(DEFAULT_PROP_PORT)
 
 enum
 {
   PROP_0,
 
   PROP_URI,
+  PROP_ADDRESS,
+  PROP_PORT,
   PROP_TTL,
   PROP_TTL_MC,
   PROP_ENCODING_NAME,
@@ -95,7 +99,7 @@ static GstStateChangeReturn
 gst_rtp_src_change_state (GstElement * element, GstStateChange transition);
 
 /**
- * gst_rtp_src_rtpbin_erquest_pt_map_cb:
+ * gst_rtp_src_rtpbin_request_pt_map_cb:
  * @self: The current #GstRtpSrc object
  *
  * #GstRtpBin callback to map a pt on RTP caps.
@@ -168,12 +172,41 @@ gst_rtp_src_set_property (GObject * object, guint prop_id,
       if (self->uri)
         gst_uri_unref (self->uri);
       self->uri = uri;
-      if (gst_uri_get_port (self->uri) % 2)
-        GST_WARNING_OBJECT (self,
-            "Port %u is not even, this is not standard (see RFC 3550).",
-            gst_uri_get_port (self->uri));
+
+      /* Recursive set to self, do not use the same lock in all property
+       * setters. */
+      g_object_set (self, "address", gst_uri_get_host (self->uri), NULL);
+      g_object_set (self, "port", gst_uri_get_port (self->uri), NULL);
       gst_rtp_utils_set_properties_from_uri_query (G_OBJECT (self), self->uri);
       GST_RTP_SRC_UNLOCK (object);
+      break;
+    }
+    case PROP_ADDRESS:{
+      GInetAddress *addr;
+
+      gst_uri_set_host (self->uri, g_value_get_string (value));
+      g_object_set_property (G_OBJECT (self->rtp_src), "address", value);
+
+      addr = g_inet_address_new_from_string (gst_uri_get_host (self->uri));
+      if (g_inet_address_get_is_multicast (addr)) {
+        g_object_set (self->rtcp_src, "address", gst_uri_get_host (self->uri),
+            NULL);
+      }
+      g_object_unref (addr);
+      break;
+    }
+    case PROP_PORT:{
+      guint port = g_value_get_uint (value);
+
+      /* According to RFC 3550, 11, RTCP receiver port should be even
+       * number and RTCP port should be the RTP port + 1 */
+      if (port & 0x1)
+        GST_WARNING_OBJECT (self,
+            "Port %u is odd, this is not standard (see RFC 3550).", port);
+
+      gst_uri_set_port (self->uri, port);
+      g_object_set (self->rtp_src, "port", port, NULL);
+      g_object_set (self->rtcp_src, "port", port + 1, NULL);
       break;
     }
     case PROP_TTL:
@@ -192,7 +225,7 @@ gst_rtp_src_set_property (GObject * object, guint prop_id,
       }
       break;
     case PROP_LATENCY:
-      self->latency = g_value_get_uint (value);
+      g_object_set (self->rtpbin, "latency", g_value_get_uint (value), NULL);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -215,6 +248,12 @@ gst_rtp_src_get_property (GObject * object, guint prop_id,
         g_value_set_string (value, NULL);
       GST_RTP_SRC_UNLOCK (object);
       break;
+    case PROP_ADDRESS:
+      g_value_set_string (value, gst_uri_get_host (self->uri));
+      break;
+    case PROP_PORT:
+      g_value_set_uint (value, gst_uri_get_port (self->uri));
+      break;
     case PROP_TTL:
       g_value_set_int (value, self->ttl);
       break;
@@ -225,7 +264,7 @@ gst_rtp_src_get_property (GObject * object, guint prop_id,
       g_value_set_string (value, self->encoding_name);
       break;
     case PROP_LATENCY:
-      g_value_set_uint (value, self->latency);
+      g_object_get_property (G_OBJECT (self->rtpbin), "latency", value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -267,6 +306,28 @@ gst_rtp_src_class_init (GstRtpSrcClass * klass)
       g_param_spec_string ("uri", "URI",
           "URI in the form of rtp://host:port?query", DEFAULT_PROP_URI,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstRtpSrc:address:
+   *
+   * Address to receive packets from (can be IPv4 or IPv6).
+   */
+  g_object_class_install_property (gobject_class, PROP_ADDRESS,
+      g_param_spec_string ("address", "Address",
+          "Address to receive packets from (can be IPv4 or IPv6).",
+          DEFAULT_PROP_ADDRESS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstRtpSrc:port:
+   *
+   * The port to listen to RTP packets, the RTCP port is this value
+   * +1. This port must be an even number.
+   */
+  g_object_class_install_property (gobject_class, PROP_PORT,
+      g_param_spec_uint ("port", "Port", "The port to listen for RTP packets, "
+          "the RTCP port is this value + 1. This port must be an even number.",
+          2, 65534, DEFAULT_PROP_PORT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT));
 
   /**
    * GstRtpSrc:ttl:
@@ -463,118 +524,32 @@ gst_rtp_src_on_send_rtcp (GstPad * pad, GstPadProbeInfo * info,
 }
 
 static gboolean
-gst_rtp_src_setup_elements (GstRtpSrc * self)
+gst_rtp_src_start (GstRtpSrc * self)
 {
   GstPad *pad;
   GSocket *socket;
   GInetAddress *addr;
-  gchar name[48];
   GstCaps *caps;
-  gchar *address;
-  guint rtcp_port;
-
-  /* Construct the RTP receiver pipeline.
-   *
-   * udpsrc -> [recv_rtp_sink_%u]  --------  [recv_rtp_src_%u_%u_%u]
-   *                              | rtpbin |
-   * udpsrc -> [recv_rtcp_sink_%u] --------  [send_rtcp_src_%u] -> udpsink
-   *
-   * This pipeline is fixed for now, note that optionally an FEC stream could
-   * be added later.
-   */
 
   /* Should not be NULL */
   g_return_val_if_fail (self->uri != NULL, FALSE);
 
-  self->rtpbin = gst_element_factory_make ("rtpbin", NULL);
-  if (self->rtpbin == NULL) {
-    GST_ELEMENT_ERROR (self, CORE, MISSING_PLUGIN, (NULL),
-        ("%s", "rtpbin element is not available"));
-    return FALSE;
+  /* share the socket created by the source */
+  g_object_get (G_OBJECT (self->rtcp_src), "used-socket", &socket, NULL);
+  if (!G_IS_SOCKET (socket)) {
+    GST_WARNING_OBJECT (self, "Could not retrieve RTCP src socket.");
   }
-
-  self->rtp_src = gst_element_factory_make ("udpsrc", NULL);
-  if (self->rtp_src == NULL) {
-    GST_ELEMENT_ERROR (self, CORE, MISSING_PLUGIN, (NULL),
-        ("%s", "rtp_src element is not available"));
-    return FALSE;
-  }
-
-  self->rtcp_src = gst_element_factory_make ("udpsrc", NULL);
-  if (self->rtcp_src == NULL) {
-    GST_ELEMENT_ERROR (self, CORE, MISSING_PLUGIN, (NULL),
-        ("%s", "rtcp_src element is not available"));
-    return FALSE;
-  }
-
-  self->rtcp_sink = gst_element_factory_make ("dynudpsink", NULL);
-  if (self->rtcp_sink == NULL) {
-    GST_ELEMENT_ERROR (self, CORE, MISSING_PLUGIN, (NULL),
-        ("%s", "rtcp_sink element is not available"));
-    return FALSE;
-  }
-
-  /* Add rtpbin callbacks to monitor the operation of rtpbin */
-  g_signal_connect (self->rtpbin, "pad-added",
-      G_CALLBACK (gst_rtp_src_rtpbin_pad_added_cb), self);
-  g_signal_connect (self->rtpbin, "pad-removed",
-      G_CALLBACK (gst_rtp_src_rtpbin_pad_removed_cb), self);
-  g_signal_connect (self->rtpbin, "request-pt-map",
-      G_CALLBACK (gst_rtp_src_rtpbin_request_pt_map_cb), self);
-  g_signal_connect (self->rtpbin, "on-new-ssrc",
-      G_CALLBACK (gst_rtp_src_rtpbin_on_new_ssrc_cb), self);
-  g_signal_connect (self->rtpbin, "on-ssrc-collision",
-      G_CALLBACK (gst_rtp_src_rtpbin_on_ssrc_collision_cb), self);
-
-  g_object_set (self->rtpbin, "latency", self->latency, NULL);
-
-  /* Add elements as needed, since udpsrc/udpsink for RTCP share a socket,
-   * not all at the same moment */
-  gst_bin_add (GST_BIN (self), self->rtpbin);
-  gst_bin_add (GST_BIN (self), self->rtp_src);
-
-  g_object_set (self->rtp_src,
-      "address", gst_uri_get_host (self->uri),
-      "port", gst_uri_get_port (self->uri), NULL);
-
-  gst_bin_add (GST_BIN (self), self->rtcp_sink);
-
-  /* no need to set address if unicast */
-  caps = gst_caps_new_empty_simple ("application/x-rtcp");
-  g_object_set (self->rtcp_src,
-      "port", gst_uri_get_port (self->uri) + 1, "caps", caps, NULL);
-  gst_caps_unref (caps);
 
   addr = g_inet_address_new_from_string (gst_uri_get_host (self->uri));
-  if (g_inet_address_get_is_multicast (addr)) {
-    g_object_set (self->rtcp_src, "address", gst_uri_get_host (self->uri),
-        NULL);
-  }
-  g_object_unref (addr);
-
-  g_object_set (self->rtcp_sink,
-      "host", gst_uri_get_host (self->uri),
-      "port", gst_uri_get_port (self->uri) + 1,
-      "ttl", self->ttl, "ttl-mc", self->ttl_mc,
-      /* Set false since we're reusing a socket */
-      "auto-multicast", FALSE, NULL);
-
-  gst_bin_add (GST_BIN (self), self->rtcp_src);
-
-  /* share the socket created by the source */
-  g_object_get (G_OBJECT (self->rtcp_src), "used-socket", &socket,
-      "address", &address, "port", &rtcp_port, NULL);
-
-  addr = g_inet_address_new_from_string (address);
-  g_free (address);
-
   if (g_inet_address_get_is_multicast (addr)) {
     /* mc-ttl is not supported by dynudpsink */
     g_socket_set_multicast_ttl (socket, self->ttl_mc);
     /* In multicast, send RTCP to the multicast group */
-    self->rtcp_send_addr = g_inet_socket_address_new (addr, rtcp_port);
+    self->rtcp_send_addr =
+        g_inet_socket_address_new (addr, gst_uri_get_port (self->uri) + 1);
   } else {
     /* In unicast, send RTCP to the detected sender address */
+    g_socket_set_ttl (socket, self->ttl);
     pad = gst_element_get_static_pad (self->rtcp_src, "src");
     self->rtcp_recv_probe = gst_pad_add_probe (pad,
         GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
@@ -583,29 +558,22 @@ gst_rtp_src_setup_elements (GstRtpSrc * self)
   }
   g_object_unref (addr);
 
+  /* no need to set address if unicast */
+  caps = gst_caps_new_empty_simple ("application/x-rtcp");
+  g_object_set (self->rtcp_src, "caps", caps, NULL);
+  gst_caps_unref (caps);
+
   pad = gst_element_get_static_pad (self->rtcp_sink, "sink");
   self->rtcp_send_probe = gst_pad_add_probe (pad,
       GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
       gst_rtp_src_on_send_rtcp, self, NULL);
   gst_object_unref (pad);
 
-  g_object_set (G_OBJECT (self->rtcp_sink), "socket", socket, NULL);
+  g_object_set (self->rtcp_sink, "socket", socket, "close-socket", FALSE, NULL);
+  g_object_unref (socket);
 
-  /* pads are all named */
-  g_snprintf (name, 48, "recv_rtp_sink_%u", GST_ELEMENT (self)->numpads);
-  gst_element_link_pads (self->rtp_src, "src", self->rtpbin, name);
-
-  g_snprintf (name, 48, "recv_rtcp_sink_%u", GST_ELEMENT (self)->numpads);
-  gst_element_link_pads (self->rtcp_src, "src", self->rtpbin, name);
-
-  gst_element_sync_state_with_parent (self->rtpbin);
-  gst_element_sync_state_with_parent (self->rtp_src);
+  gst_element_set_locked_state (self->rtcp_sink, FALSE);
   gst_element_sync_state_with_parent (self->rtcp_sink);
-
-  g_snprintf (name, 48, "send_rtcp_src_%u", GST_ELEMENT (self)->numpads);
-  gst_element_link_pads (self->rtpbin, name, self->rtcp_sink, "sink");
-
-  gst_element_sync_state_with_parent (self->rtcp_src);
 
   return TRUE;
 }
@@ -638,20 +606,15 @@ gst_rtp_src_change_state (GstElement * element, GstStateChange transition)
       gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
       gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
 
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      if (gst_rtp_src_setup_elements (self) == FALSE)
-        return GST_STATE_CHANGE_FAILURE;
-      break;
-    default:
-      break;
-  }
-
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
   if (ret == GST_STATE_CHANGE_FAILURE)
     return ret;
 
   switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      if (gst_rtp_src_start (self) == FALSE)
+        return GST_STATE_CHANGE_FAILURE;
+      break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       ret = GST_STATE_CHANGE_NO_PREROLL;
       break;
@@ -671,6 +634,9 @@ gst_rtp_src_change_state (GstElement * element, GstStateChange transition)
 static void
 gst_rtp_src_init (GstRtpSrc * self)
 {
+  gchar name[48];
+  const gchar *missing_plugin = NULL;
+
   self->rtpbin = NULL;
   self->rtp_src = NULL;
   self->rtcp_src = NULL;
@@ -680,13 +646,85 @@ gst_rtp_src_init (GstRtpSrc * self)
   self->ttl = DEFAULT_PROP_TTL;
   self->ttl_mc = DEFAULT_PROP_TTL_MC;
   self->encoding_name = DEFAULT_PROP_ENCODING_NAME;
-  self->latency = DEFAULT_PROP_LATENCY;
 
   GST_OBJECT_FLAG_SET (GST_OBJECT (self), GST_ELEMENT_FLAG_SOURCE);
   gst_bin_set_suppressed_flags (GST_BIN (self),
       GST_ELEMENT_FLAG_SOURCE | GST_ELEMENT_FLAG_SINK);
 
   g_mutex_init (&self->lock);
+
+  /* Construct the RTP receiver pipeline.
+   *
+   * udpsrc -> [recv_rtp_sink_%u]  --------  [recv_rtp_src_%u_%u_%u]
+   *                              | rtpbin |
+   * udpsrc -> [recv_rtcp_sink_%u] --------  [send_rtcp_src_%u] -> udpsink
+   *
+   * This pipeline is fixed for now, note that optionally an FEC stream could
+   * be added later.
+   */
+
+  self->rtpbin = gst_element_factory_make ("rtpbin", NULL);
+  if (self->rtpbin == NULL) {
+    missing_plugin = "rtpmanager";
+    goto missing_plugin;
+  }
+
+  gst_bin_add (GST_BIN (self), self->rtpbin);
+
+  /* Add rtpbin callbacks to monitor the operation of rtpbin */
+  g_signal_connect (self->rtpbin, "pad-added",
+      G_CALLBACK (gst_rtp_src_rtpbin_pad_added_cb), self);
+  g_signal_connect (self->rtpbin, "pad-removed",
+      G_CALLBACK (gst_rtp_src_rtpbin_pad_removed_cb), self);
+  g_signal_connect (self->rtpbin, "request-pt-map",
+      G_CALLBACK (gst_rtp_src_rtpbin_request_pt_map_cb), self);
+  g_signal_connect (self->rtpbin, "on-new-ssrc",
+      G_CALLBACK (gst_rtp_src_rtpbin_on_new_ssrc_cb), self);
+  g_signal_connect (self->rtpbin, "on-ssrc-collision",
+      G_CALLBACK (gst_rtp_src_rtpbin_on_ssrc_collision_cb), self);
+
+  self->rtp_src = gst_element_factory_make ("udpsrc", NULL);
+  if (self->rtp_src == NULL) {
+    missing_plugin = "udp";
+    goto missing_plugin;
+  }
+
+  self->rtcp_src = gst_element_factory_make ("udpsrc", NULL);
+  if (self->rtcp_src == NULL) {
+    missing_plugin = "udp";
+    goto missing_plugin;
+  }
+
+  self->rtcp_sink = gst_element_factory_make ("dynudpsink", NULL);
+  if (self->rtcp_sink == NULL) {
+    missing_plugin = "udp";
+    goto missing_plugin;
+  }
+
+  /* Add elements as needed, since udpsrc/udpsink for RTCP share a socket,
+   * not all at the same moment */
+  gst_bin_add (GST_BIN (self), self->rtp_src);
+  gst_bin_add (GST_BIN (self), self->rtcp_src);
+  gst_bin_add (GST_BIN (self), self->rtcp_sink);
+
+  g_object_set (self->rtcp_sink, "sync", FALSE, "async", FALSE, NULL);
+  gst_element_set_locked_state (self->rtcp_sink, TRUE);
+
+  /* pads are all named */
+  g_snprintf (name, 48, "recv_rtp_sink_%u", GST_ELEMENT (self)->numpads);
+  gst_element_link_pads (self->rtp_src, "src", self->rtpbin, name);
+  g_snprintf (name, 48, "recv_rtcp_sink_%u", GST_ELEMENT (self)->numpads);
+  gst_element_link_pads (self->rtcp_src, "src", self->rtpbin, name);
+  g_snprintf (name, 48, "send_rtcp_src_%u", GST_ELEMENT (self)->numpads);
+  gst_element_link_pads (self->rtpbin, name, self->rtcp_sink, "sink");
+
+  if (missing_plugin == NULL)
+    return;
+
+missing_plugin:
+  {
+    GST_ERROR_OBJECT (self, "'%s' plugin is missing.", missing_plugin);
+  }
 }
 
 static GstURIType

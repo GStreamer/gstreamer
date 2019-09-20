@@ -46,11 +46,10 @@ struct _GstRtpSrc
 
   /* Properties */
   GstUri *uri;
+
   gint ttl;
   gint ttl_mc;
-  gint latency;
   gchar *encoding_name;
-  guint latency_ms;
 
   /* Internal elements */
   GstElement *rtpbin;
