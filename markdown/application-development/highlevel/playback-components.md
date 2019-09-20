@@ -361,6 +361,8 @@ cb_pad_added (GstElement *dec,
 
     gst_object_unref (sinkpad);
   }
+
+  gst_clear_caps (&caps);
 }
 
 gint
