@@ -62,6 +62,10 @@
 /* for strtol() */
 #include <stdlib.h>
 
+#ifdef HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+
 #include "gstrist.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_rist_src_debug);
@@ -598,6 +602,20 @@ gst_rist_src_setup_rtcp_socket (GstRistSrc * src, RistReceiverBond * bond)
       GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
       gst_rist_src_on_send_rtcp, src, NULL);
   gst_object_unref (pad);
+
+  if (bond->multicast_iface) {
+#ifdef SO_BINDTODEVICE
+    if (setsockopt (g_socket_get_fd (socket), SOL_SOCKET,
+            SO_BINDTODEVICE, bond->multicast_iface,
+            strlen (bond->multicast_iface)) < 0)
+      GST_WARNING_OBJECT (src, "setsockopt SO_BINDTODEVICE failed: %s",
+          strerror (errno));
+#else
+    GST_WARNING_OBJECT (src, "Tried to set a multicast interface while"
+        " GStreamer was compiled on a platform without SO_BINDTODEVICE");
+#endif
+  }
+
 
   /* share the socket created by the source */
   g_object_set (bond->rtcp_sink, "socket", socket, "close-socket", FALSE, NULL);
