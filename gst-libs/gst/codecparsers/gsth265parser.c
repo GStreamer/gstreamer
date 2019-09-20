@@ -2271,10 +2271,13 @@ gst_h265_parser_parse_slice_hdr (GstH265Parser * parser,
 
       READ_UINT8 (&nr, slice->short_term_ref_pic_set_sps_flag, 1);
       if (!slice->short_term_ref_pic_set_sps_flag) {
+        guint pos = nal_reader_get_pos (&nr);
         if (!gst_h265_parser_parse_short_term_ref_pic_sets
             (&slice->short_term_ref_pic_sets, &nr,
                 sps->num_short_term_ref_pic_sets, sps))
           goto error;
+
+        slice->short_term_ref_pic_set_size = nal_reader_get_pos (&nr) - pos;
       } else if (sps->num_short_term_ref_pic_sets > 1) {
         const guint n = ceil_log2 (sps->num_short_term_ref_pic_sets);
         READ_UINT8 (&nr, slice->short_term_ref_pic_set_idx, n);

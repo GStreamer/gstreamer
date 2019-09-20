@@ -1189,6 +1189,8 @@ struct _GstH265PredWeightTable
  * @header_size: the calculated size of the slice_header() in bits.
  * @n_emulation_prevention_bytes: number of emulation prevention bytes (EPB)
  *   in this slice_header()
+ * @short_term_ref_pic_set_size: the calculated size of short_term_ref_pic_set()
+ *   in bits. (Since: 1.18)
  */
 struct _GstH265SliceHdr
 {
@@ -1260,6 +1262,9 @@ struct _GstH265SliceHdr
   guint header_size;
   /* Number of emulation prevention bytes (EPB) in this slice_header() */
   guint n_emulation_prevention_bytes;
+
+  /* Size of short_term_ref_pic_set() in bits */
+  guint short_term_ref_pic_set_size;
 };
 
 struct _GstH265PicTiming
