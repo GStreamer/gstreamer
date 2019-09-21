@@ -676,7 +676,8 @@ dpb_output (GstVaapiDecoderH265 * decoder, GstVaapiFrameStore * fs)
   g_return_val_if_fail (fs != NULL, FALSE);
 
   picture = fs->buffer;
-  g_return_val_if_fail (picture != NULL, FALSE);
+  if (!picture)
+    return FALSE;
 
   picture->output_needed = FALSE;
   return gst_vaapi_picture_output (GST_VAAPI_PICTURE_CAST (picture));
@@ -1630,8 +1631,8 @@ init_picture_refs (GstVaapiDecoderH265 * decoder,
 {
   GstVaapiDecoderH265Private *const priv = &decoder->priv;
   guint32 NumRpsCurrTempList0 = 0, NumRpsCurrTempList1 = 0;
-  GstVaapiPictureH265 *RefPicListTemp0[16] = { NULL, }, *RefPicListTemp1[16] = {
-  NULL,};
+  GstVaapiPictureH265 *RefPicListTemp0[16] = { NULL, };
+  GstVaapiPictureH265 *RefPicListTemp1[16] = { NULL, };
   guint i, rIdx = 0;
   guint num_ref_idx_l0_active_minus1 = 0;
   guint num_ref_idx_l1_active_minus1 = 0;
@@ -2208,9 +2209,9 @@ decode_ref_pic_set (GstVaapiDecoderH265 * decoder,
     priv->NumPocLtCurr = priv->NumPocLtFoll = 0;
   } else {
     GstH265ShortTermRefPicSet *stRefPic = NULL;
-    gint32 num_lt_pics, pocLt, PocLsbLt[16] = { 0, }
-    , UsedByCurrPicLt[16] = {
-    0,};
+    gint32 num_lt_pics, pocLt;
+    gint32 PocLsbLt[16] = { 0, };
+    gint32 UsedByCurrPicLt[16] = { 0, };
     gint32 DeltaPocMsbCycleLt[16] = { 0, };
     gint numtotalcurr = 0;
 
@@ -2306,8 +2307,8 @@ decode_picture (GstVaapiDecoderH265 * decoder, GstVaapiDecoderUnit * unit)
   GstVaapiPictureH265 *picture;
   GstVaapiDecoderStatus status;
 
-  g_return_val_if_fail (pps != NULL, GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN);
-  g_return_val_if_fail (sps != NULL, GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN);
+  if (!(pps && sps))
+    return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
 
   status = ensure_context (decoder, sps);
   if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
