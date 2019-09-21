@@ -369,10 +369,15 @@ gst_vaapi_frame_store_add (GstVaapiFrameStore * fs,
 
   field = picture->structure == GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD ?
       TOP_FIELD : BOTTOM_FIELD;
-  g_return_val_if_fail (fs->buffers[0]->field_poc[field] == G_MAXINT32, FALSE);
+
+  if (fs->buffers[0]->field_poc[field] != G_MAXINT32)
+    return FALSE;
   fs->buffers[0]->field_poc[field] = picture->field_poc[field];
-  g_return_val_if_fail (picture->field_poc[!field] == G_MAXINT32, FALSE);
+
+  if (picture->field_poc[!field] != G_MAXINT32)
+    return FALSE;
   picture->field_poc[!field] = fs->buffers[0]->field_poc[!field];
+
   return TRUE;
 }
 
@@ -744,7 +749,8 @@ dpb_output (GstVaapiDecoderH264 * decoder, GstVaapiFrameStore * fs)
 
   for (i = 0; i < fs->num_buffers; i++) {
     GstVaapiPictureH264 *const pic = fs->buffers[i];
-    g_return_val_if_fail (pic != NULL, FALSE);
+    if (pic == NULL)
+      return FALSE;
     pic->output_needed = FALSE;
     if (!GST_VAAPI_PICTURE_FLAG_IS_SET (pic, GST_VAAPI_PICTURE_FLAG_GHOST))
       picture = pic;
@@ -3995,8 +4001,8 @@ decode_picture (GstVaapiDecoderH264 * decoder, GstVaapiDecoderUnit * unit)
   GstVaapiPictureH264 *picture, *first_field;
   GstVaapiDecoderStatus status;
 
-  g_return_val_if_fail (pps != NULL, GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN);
-  g_return_val_if_fail (sps != NULL, GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN);
+  if (!(pps && sps))
+    return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
 
   status = ensure_context (decoder, sps);
   if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
