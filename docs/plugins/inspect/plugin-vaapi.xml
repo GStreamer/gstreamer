@@ -3,7 +3,7 @@
   <description>VA-API based elements</description>
   <filename>../../gst/vaapi/.libs/libgstvaapi.so</filename>
   <basename>libgstvaapi.so</basename>
-  <version>1.16.0</version>
+  <version>1.16.1</version>
   <license>LGPL</license>
   <source>gstreamer-vaapi</source>
   <package>gstreamer-vaapi</package>
@@ -12,7 +12,7 @@
     <element>
       <name>vaapidecodebin</name>
       <longname>VA-API Decode Bin</longname>
-      <class>Codec/Decoder/Video</class>
+      <class>Codec/Decoder/Video/Hardware</class>
       <description>A VA-API based bin with a decoder and a postprocessor</description>
       <author>Sreerenj Balachandran &lt;sreerenj.balachandran@intel.com&gt;, Victor Jaquez &lt;victorx.jaquez@intel.com&gt;</author>
       <pads>
