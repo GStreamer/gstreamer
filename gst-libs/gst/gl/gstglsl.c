@@ -330,7 +330,7 @@ gst_glsl_version_profile_from_string (const gchar * string,
   if (str[0] == '#') {
     if (!(version_s =
             (gchar *) _check_valid_version_preprocessor_string (version_s))) {
-      GST_WARNING ("Invalid preprocesser directive detected: %s", version_s);
+      GST_WARNING ("Invalid preprocesser directive detected");
       g_free (str);
       goto error;
     }

@@ -314,7 +314,8 @@ print_stream_info (GstDiscovererStreamInfo * info, void *depth)
   }
 
   g_print ("%*s%s: %s\n", 2 * GPOINTER_TO_INT (depth), " ",
-      gst_discoverer_stream_info_get_stream_type_nick (info), desc);
+      gst_discoverer_stream_info_get_stream_type_nick (info),
+      GST_STR_NULL (desc));
 
   if (desc) {
     g_free (desc);

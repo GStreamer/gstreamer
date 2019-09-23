@@ -811,11 +811,11 @@ deserialize_exif_gps_direction (XmpTag * xmptag, GstTagList * taglist,
   }
 
   if (!dir_str) {
-    GST_WARNING ("Missing %s tag", dir_str);
+    GST_WARNING ("Missing GPSImgDirection tag");
     return;
   }
   if (!dirref_str) {
-    GST_WARNING ("Missing %s tag", dirref_str);
+    GST_WARNING ("Missing GPSImgDirectionRef tag");
     return;
   }
 
