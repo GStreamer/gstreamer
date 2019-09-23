@@ -3,7 +3,7 @@
   <description>Read audio from audio CDs</description>
   <filename>../../ext/cdio/.libs/libgstcdio.so</filename>
   <basename>libgstcdio.so</basename>
-  <version>1.16.0</version>
+  <version>1.16.1</version>
   <license>GPL</license>
   <source>gst-plugins-ugly</source>
   <package>GStreamer Ugly Plug-ins source release</package>
