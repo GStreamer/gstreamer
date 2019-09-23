@@ -3,7 +3,7 @@
   <description>Creates audio test signals of given frequency and volume</description>
   <filename>../../gst/audiotestsrc/.libs/libgstaudiotestsrc.so</filename>
   <basename>libgstaudiotestsrc.so</basename>
-  <version>1.16.0</version>
+  <version>1.16.1</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>

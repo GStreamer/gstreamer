@@ -3,7 +3,7 @@
   <description>Renders overlays on top of video frames</description>
   <filename>../../gst/overlaycomposition/.libs/libgstoverlaycomposition.so</filename>
   <basename>libgstoverlaycomposition.so</basename>
-  <version>1.16.0</version>
+  <version>1.16.1</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>
