@@ -801,6 +801,10 @@ gst_check_buffer_data (GstBuffer * buffer, gconstpointer data, gsize size)
   fail_unless (gst_buffer_map (buffer, &info, GST_MAP_READ));
   GST_MEMDUMP ("Converted data", info.data, info.size);
   GST_MEMDUMP ("Expected data", data, size);
+  if (info.size != size) {
+    fail ("buffer sizes not equal: expected %" G_GSIZE_FORMAT " got %"
+        G_GSIZE_FORMAT, size, info.size);
+  }
   if (memcmp (info.data, data, size) != 0) {
     g_print ("\nConverted data:\n");
     gst_util_dump_mem (info.data, info.size);
