@@ -1,3 +1,169 @@
+=== release 1.16.1 ===
+
+2019-09-23 11:20:44 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gstreamer-vaapi.doap:
+	* meson.build:
+	  Release 1.16.1
+
+2019-09-23 11:20:44 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/inspect/plugin-vaapi.xml:
+	  Update docs
+
+2019-09-18 15:30:03 +1000  Matthew Waters <matthew@centricular.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils_egl.c:
+	* gst-libs/gst/vaapi/gstvaapiutils_egl.h:
+	  egl: Fix racyness in display thread creation
+	  Multiple different scenarios could break the display thread creation and
+	  end up blocking waiting for thread o be created.  Fix them all by
+	  correctly waiting for a new boolean to become valid.
+
+2019-09-18 15:29:03 +1000  Matthew Waters <matthew@centricular.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils_egl.c:
+	  egl: don't advertise a wrapped EGLContext as actually wrapped
+	  It's not actually wrapped as we create a new EGLContext from the passed
+	  in EGLContext.  As a result, the created EGLContext was never destroyed.
+
+2019-04-15 16:51:26 +0100  Philippe Normand <philn@igalia.com>
+
+	* gst/vaapi/gstvaapipluginutil.c:
+	  pluginutil: Remove Mesa from drivers white list
+	  The Mesa Gallium driver is poorly tested currently, leading to bad user
+	  experience for AMD users. The driver can be added back to the white list at
+	  runtime using the GST_VAAPI_ALL_DRIVERS environment variable.
+
+2019-08-28 12:49:03 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* gst/vaapi/gstvaapidecodebin.c:
+	  Classify vaapidecodebin as a hardware decoder
+
+2019-08-27 18:12:45 +0800  He Junyan <junyan.he@hotmail.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  libs: postproc: fix a memory leak point.
+	  filter_ops and filter_formats should already have valid value when
+	  the function gst_vaapipostproc_ensure_filter_caps re-enter
+
+2019-08-12 18:41:52 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: demote error message to info
+	  The main reason to demote the message's level is because it is not an
+	  error, it's a possible output of the trial and there's a code path
+	  that handles it.
+	  Secondly, it's very annoying when using gallium driver for radeon.
+
+2019-06-06 17:24:30 +0300  Freyr <freyrnjordrson@gmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp8.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_vp9.c:
+	  libs: encoder: vp8,vp9: reset frame_counter when input frame's format changes
+	  When input frame's formate changes, vp{8,9} encoders don't reset their frame
+	  counter, hence the newly created frame could become a P-frame, leading to some
+	  major troubles (sigabrt in libdrm in case of vp9). This patch adds some frame
+	  prediction-related reset logic to the `flush' methods of GstVaapiEncoderVP8 and
+	  GstVaapiEncoderVP9 implementations.
+
+2019-06-04 13:27:50 +0800  He Junyan <junyan.he@hotmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_mpeg2.c:
+	  libs: mpeg2 encoder: No packed header for SPS and PPS
+	  Dislable passing down packed PPS and PPS to driver if driver does
+	  not want it.
+	  Fix: #168
+
+2019-05-31 13:08:39 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_vp9.c:
+	  libs: dec: vp9: clear parser pointer after release
+	  Fix an use-after-release of the parser pointer in VP9 decoder.
+
+2019-05-28 12:09:36 +0300  Freyr666 <sky_rider_93@mail.ru>
+
+	* gst/vaapi/gstvaapiencode.c:
+	  vaapiencode: Fixes deadlock in gst_vaapiencode_change_state function
+	  This fixes a deadlock in gst_vaapiencode_change_state, which was due to
+	  srcpad's chain function was locked waiting for available buffers. Since the
+	  coded buffers in codedbuf_queue become available after sinkpad consume the
+	  encoded frames, Paused -> Ready state change leads to deadlock. Coded buffers
+	  are never consumed and marked free, hence gst_vaapiencode_handle_frame waits for
+	  available buffers and holds the stream_lock of the srcpad.
+
+2019-05-16 10:05:17 +0800  Wangfei <fei.w.wang@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: enc: h265: reset num_ref_idx_l1_active_minus1 when low delay B.
+	  When enable low delay B, the reference list 1 will be same with
+	  reference list 0, so need reset the num_ref_idx_l1_active_minus1
+	  to num_ref_idx_l0_active_minus1.
+	  Fixes: #160
+
+2019-05-10 18:29:10 +0800  He Junyan <junyan.he@hotmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: not call ensure_num_slices inside g_assert
+	  g_assert will take no effect when glib's G_DISABLE_ASSERT macro is
+	  defined. The function inside the g_assert will take no effect and
+	  we will fail to set the correct slice number.
+
+2019-05-03 10:31:52 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	  libs: encoder: continue if roi meta is NULL
+	  Coverity scan bug:
+	  If the function actually returns a null value, a null pointer
+	  dereference will occur.
+	  In gst_vaapi_encoder_ensure_param_roi_regions(): Return value of
+	  function which returns null is dereferenced without checking
+
+2019-04-15 19:58:14 +0800  He Junyan <junyan.he@hotmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_vp9.c:
+	  lib: decoder: vp9: Set chroma_type by VP9 bit_depth
+	  The decoder's surface chroma type should depend on the bit depth
+	  of VP9's parser. For 10bits VP9 stream, we need to use P10LE kind
+	  10 bits surface as the decoder result.
+	  Fixes #155
+
+2019-05-02 16:00:57 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipostprocutil.c:
+	  vaapipostproc: don't do any color conversion when GL_TEXTURE_UPLOAD
+	  https://bugzilla.gnome.org/show_bug.cgi?id=748184 has resurrected
+	  with commit 3e992d8a
+	  Since gst_vaapi_find_preferred_caps_feature() returns a color format
+	  from caps negotiation, different from the default one (NV12), the
+	  postproc enables the color transformation. But when GL_TEXTURE_UPLOAD
+	  feature is negotiated, no color transformation shall be done.
+	  Nonetheless, with commit 3e992d8a the requested format changes
+	  firstly, because there's no video sink yet, so ANY caps are
+	  negotiated; but later, when there's a video sink and a caps
+	  renegotiation, the GL_TEXTURE_UPLOAD is negotiated though the color
+	  format conversion still ongoing. It is required to reset that
+	  conversion.
+	  This patch force default color format when GL_TEXTURE_UPLOAD is
+	  selected as preferred, thus avoiding the color conversion.
+	  Fixes: #157
+
+2019-04-19 15:49:37 -0700  Julien Isorce <jisorce@oblong.com>
+
+	* gst-libs/gst/vaapi/gstvaapisurface_drm.c:
+	  libs: surface: fix double free when dmabuf export fails
+	  Happens if vaAcquireBufferHandle fails.
+
+2019-05-02 12:37:18 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitlab-ci.yml:
+	  ci: use template from 1.16 branch
+
 === release 1.16.0 ===
 
 2019-04-19 00:38:12 +0100  Tim-Philipp Müller <tim@centricular.com>
@@ -14904,8 +15070,6 @@
 	* configure.ac:
 	  Bump version for development.
 
-=== release 0.5.9 ===
-
 2014-07-29 10:31:58 +0200  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
 	* AUTHORS:
@@ -16583,8 +16747,6 @@
 
 	* configure.ac:
 	  Bump version for development.
-
-=== release 0.5.8 ===
 
 2014-01-24 10:55:39 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
@@ -18598,8 +18760,6 @@
 	* configure.ac:
 	  Bump version for development.
 
-=== release 0.5.7 ===
-
 2013-11-22 11:28:09 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
 	* gst/vaapi/Makefile.am:
@@ -19599,8 +19759,6 @@
 	* configure.ac:
 	  Bump version for development.
 
-=== release 0.5.6 ===
-
 2013-08-31 15:47:33 +0200  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
 	* NEWS:
@@ -20147,8 +20305,6 @@
 	* configure.ac:
 	  Bump version for development.
 
-=== release 0.5.5 ===
-
 2013-07-15 17:49:31 +0200  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
 	* gst-libs/gst/vaapi/gstvaapidecoder_mpeg2.c:
@@ -20685,8 +20841,6 @@
 
 	* configure.ac:
 	  Bump version for development.
-
-=== release 0.5.4 ===
 
 2013-06-14 11:47:50 +0200  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
@@ -21234,8 +21388,6 @@
 	* configure.ac:
 	  Bump version for development.
 
-=== release 0.5.3 ===
-
 2013-04-18 19:09:45 +0200  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
 	* NEWS:
@@ -21733,8 +21885,6 @@
 	* configure.ac:
 	  Bump version for development.
 
-=== release 0.5.2 ===
-
 2013-03-28 10:18:51 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
 	* NEWS:
@@ -22220,8 +22370,6 @@
 	* configure.ac:
 	  Bump version for development.
 
-=== release 0.5.1 ===
-
 2013-01-30 09:37:38 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
 	* NEWS:
@@ -22685,8 +22833,6 @@
 
 	* configure.ac:
 	  Bump version for development.
-
-=== release 0.5.0 ===
 
 2013-01-15 09:21:08 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
@@ -25723,8 +25869,6 @@
 	* configure.ac:
 	  Bump version for development.
 
-=== release 0.3.6 ===
-
 2012-04-02 10:07:33 +0200  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
 	* configure.ac:
@@ -26038,8 +26182,6 @@
 	  bitstream. i.e. the direct slice() information. VA drivers will be fixed
 	  accordingly.
 
-=== release 0.3.5 ===
-
 2012-03-02 15:03:57 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
 	* gst/vaapi/gstvaapidecode.c:
@@ -26212,8 +26354,6 @@
 
 	* configure.ac:
 	  Bump version for development.
-
-=== release 0.3.4 ===
 
 2012-02-01 23:34:09 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
@@ -26491,8 +26631,6 @@
 
 	* configure.ac:
 	  Bump version for development.
-
-=== release 0.3.3 ===
 
 2012-01-16 11:05:31 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
@@ -26927,8 +27065,6 @@
 	* configure.ac:
 	  Bump version for development.
 
-=== release 0.3.2 ===
-
 2012-01-06 11:20:48 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
 	* NEWS:
@@ -27055,8 +27191,6 @@
 
 	* configure.ac:
 	  Bump version for development.
-
-=== release 0.3.1 ===
 
 2012-01-03 13:42:12 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
@@ -27237,8 +27371,6 @@
 	* gst-libs/gst/video/gstbasevideoutils.c:
 	* gst-libs/gst/video/gstbasevideoutils.h:
 	  Drop unused copy of GstBaseVideoDecoder.
-
-=== release 0.3.0 ===
 
 2011-12-09 11:46:45 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 
@@ -27670,8 +27802,6 @@
 	* tests/Makefile.am:
 	  Fix build with libva headers not in a standard include dir.
 
-=== release 0.2.6 ===
-
 2011-06-14 15:59:08 +0200  Gwenole Beauchesne <gbeauchesne@splitted-desktop.com>
 
 	* configure.ac:
@@ -27886,8 +28016,6 @@
 	* gst-libs/gst/vaapi/gstvaapicompat.h:
 	  Fix build with older VA-API 0.29-sds.
 
-=== release 0.2.4 ===
-
 2010-05-18 11:22:54 +0000  gb <gb@5584edef-b1fe-4b99-b61b-dd2bab72e969>
 
 	* gst/vaapisink/gstvaapisink.c:
@@ -27920,8 +28048,6 @@
 
 	* configure.ac:
 	  Bump version for development.
-
-=== release 0.2.3 ===
 
 2010-05-16 21:44:17 +0000  gb <gb@5584edef-b1fe-4b99-b61b-dd2bab72e969>
 
@@ -27999,8 +28125,6 @@
 	* configure.ac:
 	  Bump version for development.
 
-=== release 0.2.2 ===
-
 2010-05-13 21:52:22 +0000  gb <gb@5584edef-b1fe-4b99-b61b-dd2bab72e969>
 
 	* NEWS:
@@ -28068,8 +28192,6 @@
 
 	* gst/vaapisink/gstvaapisink.c:
 	  Use XGetGeometry() to retrieve the window size.
-
-=== release 0.2.1 ===
 
 2010-05-12 19:40:30 +0000  gb <gb@5584edef-b1fe-4b99-b61b-dd2bab72e969>
 
@@ -28220,8 +28342,6 @@
 
 	* configure.ac:
 	  Bump version for development.
-
-=== release 0.2.0 ===
 
 2010-05-05 12:29:28 +0000  gb <gb@5584edef-b1fe-4b99-b61b-dd2bab72e969>
 
@@ -28935,8 +29055,6 @@
 	* configure.ac:
 	  Bump version for development.
 
-=== release 0.1.2 ===
-
 2010-03-30 13:29:34 +0000  gb <gb@5584edef-b1fe-4b99-b61b-dd2bab72e969>
 
 	* configure.ac:
@@ -29606,8 +29724,6 @@
 	* configure.ac:
 	  Bump version for development.
 
-=== release 0.1.1 ===
-
 2010-03-23 17:29:47 +0000  gb <gb@5584edef-b1fe-4b99-b61b-dd2bab72e969>
 
 	* gst-libs/gst/vaapi/gstvaapiutils_x11.c:
@@ -30136,8 +30252,6 @@
 
 	* configure.ac:
 	  Bump version for development.
-
-=== release 0.1.0 ===
 
 2010-03-16 14:07:53 +0000  gb <gb@5584edef-b1fe-4b99-b61b-dd2bab72e969>
 
