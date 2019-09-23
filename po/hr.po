@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-1.15.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:43+0000\n"
-"PO-Revision-Date: 2019-03-03 13:33-0800\n"
+"POT-Creation-Date: 2019-01-17 01:50+0000\n"
+"PO-Revision-Date: 2019-05-31 17:42-0700\n"
 "Last-Translator: Božidar Putanec <bozidarp@yahoo.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
 "Language: hr\n"
@@ -18,683 +18,880 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
-"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Generator: Poedit 2.2.1\n"
 
+#: ext/alsa/gstalsasink.c:579
 msgid "Could not open device for playback in mono mode."
-msgstr "Uređaj za reprodukciju nije moguće otvoriti u mono mȏdu."
+msgstr "Uređaj za reprodukciju nije moguće otvoriti u mono načinu."
 
+#: ext/alsa/gstalsasink.c:581
 msgid "Could not open device for playback in stereo mode."
-msgstr "Uređaj za reprodukciju nije moguće otvoriti u stereo mȏdu."
+msgstr "Uređaj za reprodukciju nije moguće otvoriti u stereo načinu."
 
+#: ext/alsa/gstalsasink.c:585
 #, c-format
 msgid "Could not open device for playback in %d-channel mode."
-msgstr "Uređaj za reprodukciju nije moguće otvoriti u %d-kanalnom mȏdu."
+msgstr "Uređaj za reprodukciju nije moguće otvoriti u %d-kanalnom načinu."
 
-msgid ""
-"Could not open audio device for playback. Device is being used by another "
-"application."
-msgstr ""
-"Audiouređaj nije moguće otvoriti za reprodukciju jer ga koristi neka druga "
-"aplikacija."
+#: ext/alsa/gstalsasink.c:858
+msgid "Could not open audio device for playback. Device is being used by another application."
+msgstr "Audiouređaj nije moguće otvoriti za reprodukciju jer ga koristi neka druga aplikacija."
 
+#: ext/alsa/gstalsasink.c:863
 msgid "Could not open audio device for playback."
 msgstr "Audiouređaj nije moguće otvoriti za reprodukciju."
 
+#: ext/alsa/gstalsasink.c:1076
 msgid "Error outputting to audio device. The device has been disconnected."
 msgstr "Greška na ulazu audiouređaja. Uređaj nije spojen."
 
+#: ext/alsa/gstalsasrc.c:444
 msgid "Could not open device for recording in mono mode."
-msgstr "Uređaj za snimanje nije moguće otvoriti u mono mȏdu."
+msgstr "Uređaj za snimanje nije moguće otvoriti u mono načinu."
 
+#: ext/alsa/gstalsasrc.c:446
 msgid "Could not open device for recording in stereo mode."
-msgstr "Uređaj za snimanje nije moguće otvoriti u stereo mȏdu."
+msgstr "Uređaj za snimanje nije moguće otvoriti u stereo načinu."
 
+#: ext/alsa/gstalsasrc.c:450
 #, c-format
 msgid "Could not open device for recording in %d-channel mode"
-msgstr "Uređaj za snimanje nije moguće otvoriti u %d-kanalnom mȏdu"
+msgstr "Uređaj za snimanje nije moguće otvoriti u %d-kanalnom načinu"
 
-msgid ""
-"Could not open audio device for recording. Device is being used by another "
-"application."
-msgstr ""
-"Uređaj nije moguće otvoriti za snimanje. Uređaj trenutačno koristi neka "
-"druga aplikacija."
+#: ext/alsa/gstalsasrc.c:741
+msgid "Could not open audio device for recording. Device is being used by another application."
+msgstr "Uređaj nije moguće otvoriti za snimanje. Uređaj trenutačno koristi neka druga aplikacija."
 
+#: ext/alsa/gstalsasrc.c:746
 msgid "Could not open audio device for recording."
 msgstr "Audiouređaj nije moguće otvoriti za snimanje."
 
+#: ext/alsa/gstalsasrc.c:992
 msgid "Error recording from audio device. The device has been disconnected."
 msgstr "Greška pri snimanju iz audiouređaja. Uređaj nije spojen."
 
+#: ext/cdparanoia/gstcdparanoiasrc.c:277 ext/cdparanoia/gstcdparanoiasrc.c:283
 msgid "Could not open CD device for reading."
 msgstr "CD uređaj nije moguće otvoriti za čitanje."
 
+#: ext/cdparanoia/gstcdparanoiasrc.c:409
 msgid "Could not seek CD."
 msgstr "Nije moguće pozicioniranje (skočiti na poziciju) na CD-u."
 
+#: ext/cdparanoia/gstcdparanoiasrc.c:417
 msgid "Could not read CD."
 msgstr "CD nije moguće čitati."
 
+#: ext/gl/gstgltestsrc.c:491
 msgid "failed to draw pattern"
 msgstr "nije uspjelo iscrtati uzorak"
 
+#: ext/gl/gstgltestsrc.c:492
 msgid "A GL error occurred"
 msgstr "Dogodila se GL greška"
 
+#: ext/gl/gstgltestsrc.c:498
 msgid "format wasn't negotiated before get function"
 msgstr "format nije dogovoren prije pozivanja funkcije"
 
+#: gst/encoding/gstencodebin.c:1636 gst/playback/gstplaybin2.c:3399
+#: gst/playback/gstplaysink.c:1522 gst/playback/gstplaysink.c:1535
+#: gst/playback/gstplaysink.c:1872 gst/playback/gstplaysink.c:1904
+#: gst/playback/gstplaysink.c:2488 gst/playback/gstplaysink.c:2537
+#: gst/playback/gstplaysink.c:2552 gst/playback/gstplaysink.c:2577
+#: gst/playback/gstplaysink.c:2609 gst/playback/gstplaysink.c:2757
+#: gst/playback/gstplaysink.c:2788 gst/playback/gstplaysink.c:3166
+#: gst/playback/gstplaysink.c:3175 gst/playback/gstplaysink.c:3184
+#: gst/playback/gstplaysink.c:3193 gst/playback/gstplaysink.c:3606
+#: gst/playback/gstplaysink.c:4526 gst/playback/gstplaysinkconvertbin.c:97
+#: gst/playback/gstplaysinkconvertbin.c:117
+#: gst/playback/gsturidecodebin.c:1472 gst/playback/gsturisourcebin.c:1596
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Nema elementa „%s“ -- provjerite vašu GStreamer instalaciju."
 
+#: gst/playback/gstdecodebin2.c:1873 gst/playback/gstparsebin.c:1553
 msgid "Could not determine type of stream"
 msgstr "Nije moguće odrediti vrstu protoka"
 
+#: gst/playback/gstdecodebin2.c:2851 gst/playback/gstparsebin.c:2385
 msgid "This appears to be a text file"
 msgstr "Ovo izgleda kao tekstualna datoteka"
 
+#: gst/playback/gstplaybin2.c:5452
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Nije moguće stvoriti element „uridecodebin“."
 
+#: gst/playback/gstplaybin3.c:4558
 msgid "Could not create \"uridecodebin3\" element."
 msgstr "Nije moguće stvoriti element „uridecodebin3“."
 
+#: gst/playback/gstplaysink.c:2003
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
 msgstr "Nema ni elementa autovideosink ni elementa %s."
 
+#: gst/playback/gstplaysink.c:2007
 msgid "The autovideosink element is missing."
 msgstr "Nema elementa autovideosink."
 
+#: gst/playback/gstplaysink.c:2012
 #, c-format
 msgid "Configured videosink %s is not working."
 msgstr "Konfigurirani videosink %s ne radi."
 
+#: gst/playback/gstplaysink.c:2016
 #, c-format
 msgid "Both autovideosink and %s elements are not working."
 msgstr "Ne radi ni element autovideosink ni element %s."
 
+#: gst/playback/gstplaysink.c:2020
 msgid "The autovideosink element is not working."
 msgstr "Element autovideosink ne radi."
 
+#: gst/playback/gstplaysink.c:2525
 msgid "Custom text sink element is not usable."
 msgstr "Prilagođeni tekstualni element-ponor nije upotrebljivi."
 
+#: gst/playback/gstplaysink.c:2903
 msgid "No volume control found"
 msgstr "Nema regulatora glasnoće"
 
+#: gst/playback/gstplaysink.c:2933
 #, c-format
 msgid "Both autoaudiosink and %s elements are missing."
 msgstr "Nema ni elementa autoaudiosink ni elementa %s."
 
+#: gst/playback/gstplaysink.c:2937
 msgid "The autoaudiosink element is missing."
 msgstr "Nema elementa autoaudiosink."
 
+#: gst/playback/gstplaysink.c:2942
 #, c-format
 msgid "Configured audiosink %s is not working."
 msgstr "Konfigurirani audiosink %s ne radi."
 
+#: gst/playback/gstplaysink.c:2946
 #, c-format
 msgid "Both autoaudiosink and %s elements are not working."
 msgstr "Ne radi ni element autoaudiosink ni element %s."
 
+#: gst/playback/gstplaysink.c:2950
 msgid "The autoaudiosink element is not working."
 msgstr "Element autoaudiosink ne radi."
 
+#: gst/playback/gstplaysink.c:3269 gst/playback/gstplaysink.c:3274
 msgid "Can't play a text file without video or visualizations."
-msgstr ""
-"Nije moguće reproducirati tekstualnu datoteku bez videa ili vizualizacije."
+msgstr "Nije moguće reproducirati tekstualnu datoteku bez videa ili vizualizacije."
 
+#: gst/playback/gsturidecodebin.c:921
 #, c-format
 msgid "No decoder available for type '%s'."
 msgstr "Dekoder za vrstu „%s“ nije na raspolaganju."
 
+#: gst/playback/gsturidecodebin.c:1378 gst/playback/gsturisourcebin.c:1490
 msgid "No URI specified to play from."
 msgstr "Nije naveden URI izvor za reprodukciju."
 
+#: gst/playback/gsturidecodebin.c:1384 gst/playback/gsturisourcebin.c:1496
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr "URI adresa „%s“ nije valjana."
 
+#: gst/playback/gsturidecodebin.c:1391 gst/playback/gsturisourcebin.c:1503
 msgid "This stream type cannot be played yet."
 msgstr "Ova vrsta protoka još se ne može reproducirati."
 
+#: gst/playback/gsturidecodebin.c:1409 gst/playback/gsturisourcebin.c:1521
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Nijedan URI rukovatelj nije realiziran za „%s“."
 
+#: gst/playback/gsturidecodebin.c:2280 gst/playback/gsturisourcebin.c:2227
 msgid "Source element is invalid."
 msgstr "Element izvor nije valjan."
 
+#: gst/tcp/gsttcpclientsink.c:216
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Greška pri slanju podataka u „%s:%d“."
 
+#: gst-libs/gst/audio/gstaudiobasesrc.c:842
 msgid "Can't record audio fast enough"
 msgstr "Audio se ne može dovoljno brzo snimati"
 
+#: gst-libs/gst/audio/gstaudiocdsrc.c:1625
 msgid "This CD has no audio tracks"
 msgstr "Ovaj CD nema audio zapisa"
 
+#: gst-libs/gst/pbutils/descriptions.c:89
 msgid "ID3 tag"
 msgstr "ID3 tag"
 
+#: gst-libs/gst/pbutils/descriptions.c:90
+#: gst-libs/gst/pbutils/descriptions.c:91
 msgid "APE tag"
 msgstr "APE tag"
 
+#: gst-libs/gst/pbutils/descriptions.c:92
 msgid "ICY internet radio"
 msgstr "ICY internetski radio"
 
+#: gst-libs/gst/pbutils/descriptions.c:127
 msgid "Apple Lossless Audio (ALAC)"
 msgstr "Apple Lossless Audio (ALAC)"
 
+#: gst-libs/gst/pbutils/descriptions.c:143
 msgid "Free Lossless Audio Codec (FLAC)"
 msgstr "Free Lossless Audio Codec (FLAC)"
 
+#: gst-libs/gst/pbutils/descriptions.c:173
+#: gst-libs/gst/pbutils/descriptions.c:174
 msgid "Lossless True Audio (TTA)"
 msgstr "Lossless True Audio (TTA)"
 
+#: gst-libs/gst/pbutils/descriptions.c:182
 msgid "Windows Media Speech"
 msgstr "Windows Media Speech"
 
+#: gst-libs/gst/pbutils/descriptions.c:198
 msgid "CYUV Lossless"
 msgstr "CYUV Lossless"
 
+#: gst-libs/gst/pbutils/descriptions.c:202
 msgid "FFMpeg v1"
 msgstr "FFMpeg v1"
 
+#: gst-libs/gst/pbutils/descriptions.c:216
 msgid "Lossless MSZH"
 msgstr "Lossless MSZH"
 
+#: gst-libs/gst/pbutils/descriptions.c:227
 msgid "Run-length encoding"
 msgstr "RLE (Run-length encoding)"
 
 # https://en.wikipedia.org/wiki/Timed_text
+#: gst-libs/gst/pbutils/descriptions.c:273
 msgid "Timed Text"
 msgstr "Timed Text (vremenski napasani tekst)"
 
+#: gst-libs/gst/pbutils/descriptions.c:277
 msgid "Subtitle"
 msgstr "Podnaslov"
 
+#: gst-libs/gst/pbutils/descriptions.c:278
 msgid "MPL2 subtitle format"
 msgstr "Format podnaslova MPL2"
 
+#: gst-libs/gst/pbutils/descriptions.c:279
 msgid "DKS subtitle format"
 msgstr "Format podnaslova DKS"
 
+#: gst-libs/gst/pbutils/descriptions.c:280
 msgid "QTtext subtitle format"
 msgstr "Format podnaslova QText"
 
+#: gst-libs/gst/pbutils/descriptions.c:281
 msgid "Sami subtitle format"
 msgstr "Format podnaslova Sami"
 
+#: gst-libs/gst/pbutils/descriptions.c:282
 msgid "TMPlayer subtitle format"
 msgstr "Format podnaslova TMPlayer"
 
+#: gst-libs/gst/pbutils/descriptions.c:286
 msgid "CEA 608 Closed Caption"
 msgstr "CEA 608 Closed Caption (titlovanje)"
 
+#: gst-libs/gst/pbutils/descriptions.c:287
 msgid "CEA 708 Closed Caption"
 msgstr "CEA 708 Closed Caption (titlovanje)"
 
+#: gst-libs/gst/pbutils/descriptions.c:288
 msgid "Kate subtitle format"
 msgstr "Format naslova Kate"
 
+#: gst-libs/gst/pbutils/descriptions.c:289
 msgid "WebVTT subtitle format"
 msgstr "Format naslova WebVTT"
 
+#: gst-libs/gst/pbutils/descriptions.c:454
+#: gst-libs/gst/pbutils/descriptions.c:457
+#: gst-libs/gst/pbutils/descriptions.c:507
 msgid "Uncompressed video"
 msgstr "Nekomprimirani video"
 
+#: gst-libs/gst/pbutils/descriptions.c:462
 msgid "Uncompressed gray"
 msgstr "Nekomprimirano sivilo"
 
+#: gst-libs/gst/pbutils/descriptions.c:485
 #, c-format
 msgid "Uncompressed packed YUV %s"
 msgstr "Nekomprimirani pakirani YUV %s"
 
+#: gst-libs/gst/pbutils/descriptions.c:487
 #, c-format
 msgid "Uncompressed semi-planar YUV %s"
 msgstr "Nekomprimirani polu-planarni YUV %s"
 
+#: gst-libs/gst/pbutils/descriptions.c:489
 #, c-format
 msgid "Uncompressed planar YUV %s"
 msgstr "Nekomprimirani planarni YUV %s"
 
+#: gst-libs/gst/pbutils/descriptions.c:500
 #, c-format
 msgid "Uncompressed palettized %d-bit %s"
 msgstr "Nekomprimirani paletizirani %d-bitni %s"
 
+#: gst-libs/gst/pbutils/descriptions.c:503
 #, c-format
 msgid "Uncompressed %d-bit %s"
 msgstr "Nekomprimirani %d-bitni %s"
 
+#: gst-libs/gst/pbutils/descriptions.c:585
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 inačica %d"
 
+#: gst-libs/gst/pbutils/descriptions.c:833
 msgid "Uncompressed audio"
 msgstr "Nekomprimirani audio"
 
+#: gst-libs/gst/pbutils/descriptions.c:839
 #, c-format
 msgid "Raw %d-bit %s audio"
 msgstr "Sirovi (neobrađeni) %d-bitni %s audio"
 
+#: gst-libs/gst/pbutils/descriptions.c:941
 msgid "Audio CD source"
 msgstr "Izvor je CD audio"
 
+#: gst-libs/gst/pbutils/descriptions.c:944
 msgid "DVD source"
 msgstr "Izvor je DVD"
 
+#: gst-libs/gst/pbutils/descriptions.c:947
 msgid "Real Time Streaming Protocol (RTSP) source"
 msgstr "Izvor je Real Time Streaming Protocol (RTSP)"
 
+#: gst-libs/gst/pbutils/descriptions.c:951
 msgid "Microsoft Media Server (MMS) protocol source"
 msgstr "Izvor je Microsoft Media Server (MMS)"
 
+#: gst-libs/gst/pbutils/descriptions.c:959
 #, c-format
 msgid "%s protocol source"
 msgstr "Protokol izvora je %s"
 
 # https://en.wikipedia.org/wiki/Payload_(computing)
 # http://www.rfc-editor.org/rfc/rfc3984.txt
+#: gst-libs/gst/pbutils/descriptions.c:1033
 #, c-format
 msgid "%s video RTP depayloader"
 msgstr "Depayloader RTP %s video"
 
+#: gst-libs/gst/pbutils/descriptions.c:1035
 #, c-format
 msgid "%s audio RTP depayloader"
 msgstr "Depayloader RTP %s audio"
 
+#: gst-libs/gst/pbutils/descriptions.c:1037
 #, c-format
 msgid "%s RTP depayloader"
 msgstr "Depayloader RTP %s"
 
+#: gst-libs/gst/pbutils/descriptions.c:1044
 #, c-format
 msgid "%s demuxer"
 msgstr "Demultipleksor %s (demuxer)"
 
+#: gst-libs/gst/pbutils/descriptions.c:1046
 #, c-format
 msgid "%s decoder"
 msgstr "Dekoder %s"
 
+#: gst-libs/gst/pbutils/descriptions.c:1085
 #, c-format
 msgid "%s video RTP payloader"
 msgstr "Payloader RTP %s video"
 
+#: gst-libs/gst/pbutils/descriptions.c:1087
 #, c-format
 msgid "%s audio RTP payloader"
 msgstr "%s audio RTP payloader (RPT-utovarivač audia)"
 
+#: gst-libs/gst/pbutils/descriptions.c:1089
 #, c-format
 msgid "%s RTP payloader"
 msgstr "Payloader RTP %s audio"
 
+#: gst-libs/gst/pbutils/descriptions.c:1096
 #, c-format
 msgid "%s muxer"
 msgstr "Multipleksor %s (muxer)"
 
+#: gst-libs/gst/pbutils/descriptions.c:1098
 #, c-format
 msgid "%s encoder"
 msgstr "Koder %s (encoder)"
 
+#: gst-libs/gst/pbutils/descriptions.c:1132
 #, c-format
 msgid "GStreamer element %s"
 msgstr "Element GStreamera %s"
 
+#: gst-libs/gst/pbutils/missing-plugins.c:558
 msgid "Unknown source element"
 msgstr "Nepoznati element-izvor"
 
-#, fuzzy
+#: gst-libs/gst/pbutils/missing-plugins.c:561
 msgid "Unknown sink element"
-msgstr "Nepoznati element"
+msgstr "Nepoznati element-ponor"
 
+#: gst-libs/gst/pbutils/missing-plugins.c:564
 msgid "Unknown element"
 msgstr "Nepoznati element"
 
+#: gst-libs/gst/pbutils/missing-plugins.c:567
 msgid "Unknown decoder element"
 msgstr "Nepoznati element dekoder"
 
+#: gst-libs/gst/pbutils/missing-plugins.c:570
 msgid "Unknown encoder element"
 msgstr "Nepoznati element koder"
 
+#: gst-libs/gst/pbutils/missing-plugins.c:575
 msgid "Plugin or element of unknown type"
 msgstr "Plugin ili element nepoznate vrste"
 
+#: gst-libs/gst/tag/gsttagdemux.c:1243
 msgid "Failed to read tag: not enough data"
 msgstr "Nije uspjelo pročitati tag: nema dovoljno podataka"
 
+#: gst-libs/gst/tag/tags.c:77
 msgid "track ID"
 msgstr "ID zapisa"
 
+#: gst-libs/gst/tag/tags.c:77
 msgid "MusicBrainz track ID"
 msgstr "MusicBrainz ID zapisa"
 
+#: gst-libs/gst/tag/tags.c:79
 msgid "artist ID"
 msgstr "ID izvođača"
 
+#: gst-libs/gst/tag/tags.c:79
 msgid "MusicBrainz artist ID"
 msgstr "MusicBrainz ID izvođača"
 
+#: gst-libs/gst/tag/tags.c:81
 msgid "album ID"
 msgstr "ID albuma"
 
+#: gst-libs/gst/tag/tags.c:81
 msgid "MusicBrainz album ID"
 msgstr "MusicBrainz ID albuma"
 
+#: gst-libs/gst/tag/tags.c:84
 msgid "album artist ID"
 msgstr "ID izvođača albuma"
 
+#: gst-libs/gst/tag/tags.c:84
 msgid "MusicBrainz album artist ID"
 msgstr "MusicBrainz ID izvođača albuma"
 
+#: gst-libs/gst/tag/tags.c:86
 msgid "track TRM ID"
 msgstr "ID TRM zapisa"
 
+#: gst-libs/gst/tag/tags.c:86
 msgid "MusicBrainz TRM ID"
 msgstr "MusicBrainz TRM ID"
 
+#: gst-libs/gst/tag/tags.c:108
 msgid "capturing shutter speed"
 msgstr "ekspozicija"
 
+#: gst-libs/gst/tag/tags.c:109
 msgid "Shutter speed used when capturing an image, in seconds"
 msgstr "Primijenjena ekspozicija pri snimanju slike u sekundama"
 
+#: gst-libs/gst/tag/tags.c:112
 msgid "capturing focal ratio"
 msgstr "otvor blende (f broj)"
 
+#: gst-libs/gst/tag/tags.c:113
 msgid "Focal ratio (f-number) used when capturing the image"
 msgstr "Primijenjeni otvor blende (f-broj) pri snimanju slike"
 
+#: gst-libs/gst/tag/tags.c:116
 msgid "capturing focal length"
 msgstr "žarišna duljina"
 
+#: gst-libs/gst/tag/tags.c:117
 msgid "Focal length of the lens used capturing the image, in mm"
 msgstr "Primijenjena žarišna duljina leće pri snimanju slike u mm"
 
+#: gst-libs/gst/tag/tags.c:121
 msgid "capturing 35 mm equivalent focal length"
 msgstr "snimanje s 35 mm ekvivalentne žarišne duljine"
 
-msgid ""
-"35 mm equivalent focal length of the lens used capturing the image, in mm"
+#: gst-libs/gst/tag/tags.c:122
+msgid "35 mm equivalent focal length of the lens used capturing the image, in mm"
 msgstr "snimanje s 35 mm ekvivalentne žarišne duljine pri snimanju u mm"
 
+#: gst-libs/gst/tag/tags.c:126
 msgid "capturing digital zoom ratio"
 msgstr "omjer digitalnog zuma"
 
+#: gst-libs/gst/tag/tags.c:127
 msgid "Digital zoom ratio used when capturing an image"
 msgstr "Primijenjeni omjer digitalnog zuma pri snimanju slike"
 
+#: gst-libs/gst/tag/tags.c:130
 msgid "capturing iso speed"
 msgstr "osjetljivost ISO"
 
+#: gst-libs/gst/tag/tags.c:131
 msgid "The ISO speed used when capturing an image"
 msgstr "Primijenjena osjetljivost ISO pri snimanju slike"
 
+#: gst-libs/gst/tag/tags.c:134
 msgid "capturing exposure program"
 msgstr "program ekspozicije"
 
+#: gst-libs/gst/tag/tags.c:135
 msgid "The exposure program used when capturing an image"
 msgstr "Primijenjeni program ekspozicije pri snimanju slike"
 
+#: gst-libs/gst/tag/tags.c:138
 msgid "capturing exposure mode"
-msgstr "mȏd ekspozicije"
+msgstr "način ekspozicije"
 
+#: gst-libs/gst/tag/tags.c:139
 msgid "The exposure mode used when capturing an image"
-msgstr "Primijenjeni mȏd ekspozicije pri snimanju"
+msgstr "Primijenjeni način ekspozicije pri snimanju"
 
+#: gst-libs/gst/tag/tags.c:142
 msgid "capturing exposure compensation"
 msgstr "korektura ekspozicije"
 
+#: gst-libs/gst/tag/tags.c:143
 msgid "The exposure compensation used when capturing an image"
 msgstr "Primijenjena korektura ekspozicije pri snimanju"
 
+#: gst-libs/gst/tag/tags.c:146
 msgid "capturing scene capture type"
 msgstr "izbor motiva"
 
+#: gst-libs/gst/tag/tags.c:147
 msgid "The scene capture mode used when capturing an image"
 msgstr "Primijenjeni izbor motiva pri snimanju slike"
 
+#: gst-libs/gst/tag/tags.c:150
 msgid "capturing gain adjustment"
 msgstr "korekcija osvjetljenja"
 
+#: gst-libs/gst/tag/tags.c:151
 msgid "The overall gain adjustment applied on an image"
 msgstr "Ukupna korekcija osvjetljenja primijenjena na sliku"
 
+#: gst-libs/gst/tag/tags.c:154
 msgid "capturing white balance"
 msgstr "balans bijele"
 
+#: gst-libs/gst/tag/tags.c:155
 msgid "The white balance mode set when capturing an image"
 msgstr "Primijenjeni balans bijele pri snimanju slike"
 
+#: gst-libs/gst/tag/tags.c:158
 msgid "capturing contrast"
 msgstr "kontrast"
 
+#: gst-libs/gst/tag/tags.c:159
 msgid "The direction of contrast processing applied when capturing an image"
 msgstr "Postavke za obradu kontrasta primijenjene pri snimanju slike"
 
+#: gst-libs/gst/tag/tags.c:163
 msgid "capturing saturation"
 msgstr "zasićenje"
 
+#: gst-libs/gst/tag/tags.c:164
 msgid "The direction of saturation processing applied when capturing an image"
 msgstr "Postavke za obradu zasićenja primijenjene pri snimanju slike"
 
+#: gst-libs/gst/tag/tags.c:168
 msgid "capturing sharpness"
 msgstr "oštrina"
 
+#: gst-libs/gst/tag/tags.c:169
 msgid "The direction of sharpness processing applied when capturing an image"
 msgstr "Postavke za obradu oštrine primijenjene pri snimanju slike"
 
+#: gst-libs/gst/tag/tags.c:173
 msgid "capturing flash fired"
 msgstr "upotreba bljeskalice"
 
+#: gst-libs/gst/tag/tags.c:174
 msgid "If the flash fired while capturing an image"
 msgstr "Je li se bljeskalica aktivirala pri snimanju slike"
 
+#: gst-libs/gst/tag/tags.c:177
 msgid "capturing flash mode"
-msgstr "mȏd bljeskalice"
+msgstr "način bljeskalice"
 
+#: gst-libs/gst/tag/tags.c:178
 msgid "The selected flash mode while capturing an image"
-msgstr "Odabrani mȏd bljeskalice pri snimanju slike"
+msgstr "Odabrani način bljeskalice pri snimanju slike"
 
+#: gst-libs/gst/tag/tags.c:181
 msgid "capturing metering mode"
-msgstr "mȏd mjerenja"
+msgstr "način mjerenja"
 
-msgid ""
-"The metering mode used while determining exposure for capturing an image"
-msgstr ""
-"Primijenjeni mȏd mjerenja za određivanje ekspozicije pri snimanju slike"
+#: gst-libs/gst/tag/tags.c:182
+msgid "The metering mode used while determining exposure for capturing an image"
+msgstr "Primijenjeni način mjerenja za određivanje ekspozicije pri snimanju slike"
 
+#: gst-libs/gst/tag/tags.c:186
 msgid "capturing source"
 msgstr "izvor za snimanje"
 
+#: gst-libs/gst/tag/tags.c:187
 msgid "The source or type of device used for the capture"
 msgstr "Izvor ili vrsta uređaja korištena za snimanje"
 
+#: gst-libs/gst/tag/tags.c:190
 msgid "image horizontal ppi"
 msgstr "horizontalna rezolucija slike (ppi)"
 
+#: gst-libs/gst/tag/tags.c:191
 msgid "Media (image/video) intended horizontal pixel density in ppi"
-msgstr ""
-"Horizontalna rezolucija medija (nositelja slike/videa) u ppi (piksel/col)"
+msgstr "Horizontalna rezolucija medija (nositelja slike/videa) u ppi (piksel/col)"
 
+#: gst-libs/gst/tag/tags.c:194
 msgid "image vertical ppi"
 msgstr "vertikalna rezolucija slike (ppi)"
 
+#: gst-libs/gst/tag/tags.c:195
 msgid "Media (image/video) intended vertical pixel density in ppi"
-msgstr ""
-"Vertikalna rezolucija medija (nositelja slike/videa) u ppi (piksel/col)"
+msgstr "Vertikalna rezolucija medija (nositelja slike/videa) u ppi (piksel/col)"
 
+#: gst-libs/gst/tag/tags.c:198
 msgid "ID3v2 frame"
 msgstr "Okvir ID3v2"
 
+#: gst-libs/gst/tag/tags.c:198
 msgid "unparsed id3v2 tag frame"
 msgstr "neobrađeni okvir taga id3v2"
 
+#: gst-libs/gst/tag/tags.c:202
 msgid "musical-key"
 msgstr "glazbeni ključ"
 
+#: gst-libs/gst/tag/tags.c:202
 msgid "Initial key in which the sound starts"
 msgstr "Početni ključ u kojem započinje audio"
 
+#: tools/gst-device-monitor.c:255 tools/gst-play.c:1442
 msgid "Print version information and exit"
 msgstr "ispiše inačicu ovog programa i iziđe"
 
-msgid ""
-"Don't exit after showing the initial device list, but wait for devices to "
-"added/removed."
-msgstr ""
-"Ne izlazi nakon prikaza popisa početnih uređaja već pričeka da se uređaji "
-"dodaju ili uklone."
+#: tools/gst-device-monitor.c:257
+msgid "Don't exit after showing the initial device list, but wait for devices to added/removed."
+msgstr "Ne izlazi nakon prikaza popisa početnih uređaja već pričeka da se uređaji dodaju ili uklone."
 
+#: tools/gst-play.c:308
 #, c-format
 msgid "Volume: %.0f%%"
 msgstr "Glasnoća: %.0f%%"
 
+#: tools/gst-play.c:347
 msgid "Buffering..."
 msgstr "Punjenje međuspremnika..."
 
+#: tools/gst-play.c:368
 msgid "Clock lost, selecting a new one\n"
 msgstr "Vrijeme (sat) je izgubljeno, bira se novo\n"
 
+#: tools/gst-play.c:398 tools/gst-play.c:444 tools/gst-play.c:881
+#: tools/gst-play.c:1345
 msgid "Reached end of play list."
 msgstr "Dostignut je kraj popisa za reprodukciju."
 
+#: tools/gst-play.c:611
 msgid "Paused"
 msgstr "Pauziranje"
 
+#: tools/gst-play.c:669
 #, c-format
 msgid "Now playing %s\n"
 msgstr "Upravo se reproducira %s\n"
 
+#: tools/gst-play.c:732
 #, c-format
 msgid "About to finish, preparing next title: %s"
 msgstr "Bliži se kraj, priprema se novi naslov: %s"
 
+#: tools/gst-play.c:977
 #, c-format
 msgid "Playback rate: %.2f"
 msgstr "Brzina reproduciranja: %.2f"
 
+#: tools/gst-play.c:981
 #, c-format
 msgid "Could not change playback rate to %.2f"
 msgstr "Brzinu reprodukcije nije moguće promijeniti na %.2f"
 
+#: tools/gst-play.c:1285
 msgid "space"
 msgstr "tipka za razmak"
 
+#: tools/gst-play.c:1285
 msgid "pause/unpause"
 msgstr "stani/nastavi"
 
+#: tools/gst-play.c:1286
 msgid "q or ESC"
 msgstr "q ili ESC"
 
+#: tools/gst-play.c:1286
 msgid "quit"
 msgstr "svršetak"
 
+#: tools/gst-play.c:1287
 msgid "> or n"
 msgstr "> ili n"
 
+#: tools/gst-play.c:1287
 msgid "play next"
 msgstr "sljedeći zapis (glazba/video/...)"
 
+#: tools/gst-play.c:1288
 msgid "< or b"
 msgstr "< ili b"
 
+#: tools/gst-play.c:1288
 msgid "play previous"
 msgstr "prethodni zapis (glazba/video/...)"
 
+#: tools/gst-play.c:1289
 msgid "seek forward"
 msgstr "traži (brzo) poziciju prema naprijed"
 
+#: tools/gst-play.c:1290
 msgid "seek backward"
 msgstr "traži (brzo) poziciju prema natrag"
 
+#: tools/gst-play.c:1291
 msgid "volume up"
 msgstr "glasnije"
 
+#: tools/gst-play.c:1292
 msgid "volume down"
 msgstr "tiše"
 
+#: tools/gst-play.c:1293
 msgid "increase playback rate"
 msgstr "brže"
 
+#: tools/gst-play.c:1294
 msgid "decrease playback rate"
 msgstr "sporije"
 
+#: tools/gst-play.c:1295
 msgid "change playback direction"
 msgstr "promjeni smjer reprodukcije"
 
 # A feature of digital video systems that mimics the visual feedback given during fast forward and rewind operations that were provided by analog systems such as VCRs.
+#: tools/gst-play.c:1296
 msgid "enable/disable trick modes"
-msgstr ""
-"omogući/onemogući „trick modes“ (simulira brzo premotavanje analognih VCR)"
+msgstr "omogući/onemogući „trick modes“ (simulira brzo premotavanje analognih VCR)"
 
+#: tools/gst-play.c:1297
 msgid "change audio track"
 msgstr "promijeni audio zapis"
 
+#: tools/gst-play.c:1298
 msgid "change video track"
 msgstr "promijeni video zapis"
 
+#: tools/gst-play.c:1299
 msgid "change subtitle track"
 msgstr "promijeni (zapis) podnaslov"
 
+#: tools/gst-play.c:1300
 msgid "seek to beginning"
 msgstr "skoči (premota) na početak"
 
+#: tools/gst-play.c:1301
 msgid "show keyboard shortcuts"
 msgstr "tipkovnički prečaci"
 
+#: tools/gst-play.c:1304
 msgid "Interactive mode - keyboard controls:"
-msgstr "Interaktivni mȏd - tipkovničko upravljanje:"
+msgstr "Interaktivni način - tipkovničko upravljanje:"
 
+#: tools/gst-play.c:1437
 msgid "Output status information and property notifications"
 msgstr "ispiše status i obavijesti o svojstvima"
 
+#: tools/gst-play.c:1439
 msgid "Control playback behaviour setting playbin 'flags' property"
-msgstr ""
-"Upravljajte ponašanjem reprodukcije postavkama za „playbin“ via „flags“"
+msgstr "Upravljajte ponašanjem reprodukcije postavkama za „playbin“ via „flags“"
 
+#: tools/gst-play.c:1444
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Videosink koji će se koristiti (zadano: autovideosink)"
 
+#: tools/gst-play.c:1446
 msgid "Audio sink to use (default is autoaudiosink)"
 msgstr "Audiosink koji će se koristiti (zadano: autovideosink)"
 
+#: tools/gst-play.c:1448
 msgid "Enable gapless playback"
 msgstr "Omogući reprodukciju bez pauza (između zapisa)"
 
+#: tools/gst-play.c:1450
 msgid "Shuffle playlist"
 msgstr "Izmiješati popis za reprodukciju"
 
+#: tools/gst-play.c:1453
 msgid "Disable interactive control via the keyboard"
 msgstr "Onemogući interaktivno upravljanje pomoću tipkovnice"
 
+#: tools/gst-play.c:1455
 msgid "Volume"
 msgstr "Glasnoća"
 
+#: tools/gst-play.c:1457
 msgid "Playlist file containing input media files"
-msgstr ""
-"Datoteka s popisom za reprodukciju koja sadrži ulazne multimedijalne datoteke"
+msgstr "Datoteka s popisom za reprodukciju koja sadrži ulazne multimedijalne datoteke"
 
+#: tools/gst-play.c:1459
 msgid "Do not print any output (apart from errors)"
 msgstr "Ne ispisuje nikakve izlazne informacije (osim greški)"
 
+#: tools/gst-play.c:1461
 msgid "Use playbin3 pipeline"
 msgstr "Rabi playbin3 cjevovod"
 
+#: tools/gst-play.c:1462
 msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
 msgstr "(zadano: varira, ovisno o varijabli okružja „USE_PLAYBIN“)"
 
+#: tools/gst-play.c:1536
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr "Uporaba: %s DATOTEKA1|URI1 [DATOTEKA2|URI2] [DATOTEKA3|URI3] ..."
 
+#: tools/gst-play.c:1540
 msgid "You must provide at least one filename or URI to play."
 msgstr "Morate navesti barem jednu datoteku ili URI adresu za reprodukciju."
 
+#: tools/gst-play.c:1580
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Pritisnite „k“ da pogledate listu tipkovničkih prečaca.\n"
 
@@ -756,8 +953,7 @@ msgstr "Pritisnite „k“ da pogledate listu tipkovničkih prečaca.\n"
 #~ msgstr "Greška pri pisanju u datoteku „%s”."
 
 #~ msgid "A %s plugin is required to play this stream, but not installed."
-#~ msgstr ""
-#~ "Potreban je priključak %s za reprodukciju ovog niza, ali nije instaliran."
+#~ msgstr "Potreban je priključak %s za reprodukciju ovog niza, ali nije instaliran."
 
 #~ msgid "Invalid subtitle URI \"%s\", subtitles disabled."
 #~ msgstr "Neispravan URI titlova „%s”, titlovi su onemogućeni."
@@ -765,20 +961,11 @@ msgstr "Pritisnite „k“ da pogledate listu tipkovničkih prečaca.\n"
 #~ msgid "RTSP streams cannot be played yet."
 #~ msgstr "Još ne mogu reproducirati RTSP nizove."
 
-#~ msgid ""
-#~ "Only a subtitle stream was detected. Either you are loading a subtitle "
-#~ "file or some other type of text file, or the media file was not "
-#~ "recognized."
-#~ msgstr ""
-#~ "Pronađen je samo niz titlova. Ili ste učitali datoteku titlova ili neku "
-#~ "drugu vrstu tekstualne datoteke, ili medijska datoteka nije prepoznata."
+#~ msgid "Only a subtitle stream was detected. Either you are loading a subtitle file or some other type of text file, or the media file was not recognized."
+#~ msgstr "Pronađen je samo niz titlova. Ili ste učitali datoteku titlova ili neku drugu vrstu tekstualne datoteke, ili medijska datoteka nije prepoznata."
 
-#~ msgid ""
-#~ "You do not have a decoder installed to handle this file. You might need "
-#~ "to install the necessary plugins."
-#~ msgstr ""
-#~ "Nemate instaliran dekoder za upravljanje ovom datotekom. Trebate "
-#~ "instalirati potrebne priključke."
+#~ msgid "You do not have a decoder installed to handle this file. You might need to install the necessary plugins."
+#~ msgstr "Nemate instaliran dekoder za upravljanje ovom datotekom. Trebate instalirati potrebne priključke."
 
 #~ msgid "This is not a media file"
 #~ msgstr "Ovo nije medijska datoteka"
