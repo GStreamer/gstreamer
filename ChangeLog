@@ -1,3 +1,55 @@
+=== release 1.16.1 ===
+
+2019-09-23 11:17:41 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	* meson.build:
+	  Release 1.16.1
+
+2019-08-30 14:00:52 +0200  Kristofer Björkström <kristofb@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: RTP Info must exist in PLAY response
+	  If RTP Info is missing. Then return GST_RTSP_STS_INTERNAL_SERVER_ERROR
+	  Fixes #76
+
+2019-06-25 13:19:44 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/rtsp-onvif-media-factory.c:
+	* gst/rtsp-server/rtsp-onvif-media.c:
+	  onvif-media: fix "void function returning a value" compiler warning
+
+2019-04-23 14:38:05 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-server: Add various missing Since: 1.16 markers
+
+2019-04-23 15:01:32 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-sdp.c:
+	* gst/rtsp-server/rtsp-session-media.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-server: Add various Since: 1.14 markers
+
+2019-04-23 15:09:34 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-client.h:
+	  rtsp-server: Fix various Since markers
+
+2019-05-02 12:35:34 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitlab-ci.yml:
+	  ci: use template from 1.16 branch
+
 === release 1.16.0 ===
 
 2019-04-19 00:34:54 +0100  Tim-Philipp Müller <tim@centricular.com>
