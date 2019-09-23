@@ -312,12 +312,22 @@ static gboolean
 _ges_command_line_formatter_add_clip (GESTimeline * timeline,
     GstStructure * structure, GError ** error)
 {
+  GESProject *proj;
+  GESAsset *asset;
   if (!_cleanup_fields (options[CLIP].properties, structure, error))
     return FALSE;
 
   gst_structure_set (structure, "type", G_TYPE_STRING, "GESUriClip", NULL);
 
-  return _ges_add_clip_from_struct (timeline, structure, error);
+  if (!_ges_add_clip_from_struct (timeline, structure, error))
+    return FALSE;
+
+  proj = GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE (timeline)));
+  asset = _ges_get_asset_from_timeline (timeline, GES_TYPE_URI_CLIP,
+      gst_structure_get_string (structure, "asset-id"), NULL);
+  ges_project_add_asset (proj, asset);
+
+  return TRUE;
 }
 
 static gboolean

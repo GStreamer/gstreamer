@@ -428,6 +428,7 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
     asset_id = g_strdup (check_asset_id);
   }
 
+  gst_structure_set (structure, "asset-id", G_TYPE_STRING, asset_id, NULL);
   asset = _ges_get_asset_from_timeline (timeline, type, asset_id, error);
   if (!asset) {
     res = FALSE;
@@ -585,7 +586,7 @@ _ges_container_add_child_from_struct (GESTimeline * timeline,
   }
 
   if (!child) {
-    g_error_new (GES_ERROR, 0, "Wong parametters, could not get a child");
+    g_error_new (GES_ERROR, 0, "Wrong parameters, could not get a child");
 
     return FALSE;
   }

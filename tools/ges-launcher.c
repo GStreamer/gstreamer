@@ -53,6 +53,7 @@ typedef struct
   gchar *sanitized_timeline;
   const gchar *video_track_caps;
   const gchar *audio_track_caps;
+  gboolean embed_nesteds;
 } ParsedOptions;
 
 struct _GESLauncherPrivate
@@ -397,7 +398,7 @@ intr_handler (GESLauncher * self)
   g_print ("interrupt received.\n");
 
   GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (self->priv->pipeline),
-      GST_DEBUG_GRAPH_SHOW_ALL, "ges-launch.interupted");
+      GST_DEBUG_GRAPH_SHOW_ALL, "ges-launch.interrupted");
 
   g_application_quit (G_APPLICATION (self));
 
@@ -410,6 +411,29 @@ static gboolean
 _save_timeline (GESLauncher * self)
 {
   ParsedOptions *opts = &self->priv->parsed_options;
+
+
+  if (opts->embed_nesteds) {
+    GList *tmp, *assets;
+    GESProject *proj =
+        GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE (self->
+                priv->timeline)));
+
+    assets = ges_project_list_assets (proj, GES_TYPE_URI_CLIP);
+    for (tmp = assets; tmp; tmp = tmp->next) {
+      gboolean is_nested;
+
+      g_object_get (tmp->data, "is-nested-timeline", &is_nested, NULL);
+      if (is_nested) {
+        GESAsset *subproj =
+            ges_asset_request (GES_TYPE_TIMELINE, ges_asset_get_id (tmp->data),
+            NULL);
+
+        ges_project_add_asset (proj, subproj);
+      }
+    }
+    g_list_free_full (assets, gst_object_unref);
+  }
 
   if (opts->save_only_path) {
     gchar *uri;
@@ -750,6 +774,8 @@ _local_command_line (GApplication * application, gchar ** arguments[],
           "and --inspect-action-type.",
         "<scenario_name>"},
 #endif
+    {"embed-nesteds", 0, 0, G_OPTION_ARG_NONE, &opts->embed_nesteds,
+        "Embed nested timelines when saving.",},
     {NULL}
   };
 
