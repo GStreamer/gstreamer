@@ -1,3 +1,71 @@
+=== release 1.16.1 ===
+
+2019-09-23 11:18:40 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	* meson.build:
+	  Release 1.16.1
+
+2019-05-26 09:55:03 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-validate.c:
+	  validate: Add action type to copy/paste clips
+
+2019-05-25 20:20:07 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-container.c:
+	* tests/check/python/test_timeline.py:
+	  container: Handle children pasting failures
+
+2019-05-25 18:51:08 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-clip.c:
+	* tests/check/python/test_timeline.py:
+	  clip: Fix layer managament when copying a clip that was pasted
+
+2019-05-25 16:05:00 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-timeline-element.c:
+	* tests/check/python/test_timeline.py:
+	  element: Properly handle the fact that pasting can return NULL
+	  And fix paste annotation
+
+2019-05-16 15:06:14 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline.c:
+	* ges/ges-uri-asset.c:
+	* ges/ges.c:
+	  ges: Sprinkle around some Since: 1.16 markers
+
+2019-05-05 11:38:28 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tools/ges-launcher.c:
+	  launch: Fix caps restriction short names
+
+2019-05-04 10:47:07 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* bindings/python/gi/overrides/GES.py:
+	* tests/check/python/test_timeline.py:
+	  python: Avoid warning about using deprecated methods
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/69
+
+2019-05-02 12:35:36 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitlab-ci.yml:
+	  ci: use template from 1.16 branch
+
+2019-04-20 01:36:10 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* plugins/ges/meson.build:
+	  meson: Generate a pkgconfig file for the GES plugin
+	  This was missing due to a typo.
+
 === release 1.16.0 ===
 
 2019-04-19 00:35:57 +0100  Tim-Philipp Müller <tim@centricular.com>
