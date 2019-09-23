@@ -3,7 +3,7 @@
   <description>Audio effects plugin</description>
   <filename>../../gst/audiofx/.libs/libgstaudiofx.so</filename>
   <basename>libgstaudiofx.so</basename>
-  <version>1.16.0</version>
+  <version>1.16.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
@@ -272,13 +272,13 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, format=(string)F32LE, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]; audio/x-raw, format=(string)F64LE, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]; audio/x-raw, format=(string)S16LE, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
+          <details>audio/x-raw, format=(string)F32LE, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], layout=(string)interleaved; audio/x-raw, format=(string)F64LE, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], layout=(string)interleaved; audio/x-raw, format=(string)S16LE, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, format=(string)F32LE, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]; audio/x-raw, format=(string)F64LE, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]; audio/x-raw, format=(string)S16LE, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
+          <details>audio/x-raw, format=(string)F32LE, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], layout=(string)interleaved; audio/x-raw, format=(string)F64LE, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], layout=(string)interleaved; audio/x-raw, format=(string)S16LE, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], layout=(string)interleaved</details>
         </caps>
       </pads>
     </element>

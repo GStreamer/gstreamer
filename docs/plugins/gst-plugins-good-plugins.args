@@ -1025,7 +1025,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>User Agent</NICK>
 <BLURB>The User-Agent string to send to the server.</BLURB>
-<DEFAULT>"GStreamer/1.16.0"</DEFAULT>
+<DEFAULT>"GStreamer/1.16.1"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -3555,7 +3555,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>User-Agent</NICK>
 <BLURB>Value of the User-Agent HTTP request header field.</BLURB>
-<DEFAULT>"GStreamer souphttpsrc 1.16.0 "</DEFAULT>
+<DEFAULT>"GStreamer souphttpsrc 1.16.1 "</DEFAULT>
 </ARG>
 
 <ARG>
@@ -20871,7 +20871,7 @@
 <ARG>
 <NAME>GstRtpJitterBuffer::max-dropout-time</NAME>
 <TYPE>guint</TYPE>
-<RANGE></RANGE>
+<RANGE><= G_MAXINT</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max dropout time</NICK>
 <BLURB>The maximum time (milliseconds) of missing packets tolerated.</BLURB>

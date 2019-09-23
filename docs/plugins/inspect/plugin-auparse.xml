@@ -3,7 +3,7 @@
   <description>parses au streams</description>
   <filename>../../gst/auparse/.libs/libgstauparse.so</filename>
   <basename>libgstauparse.so</basename>
-  <version>1.16.0</version>
+  <version>1.16.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
