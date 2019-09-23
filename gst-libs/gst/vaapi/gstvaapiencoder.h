@@ -131,12 +131,6 @@ gst_vaapi_encoder_tune_get_type (void) G_GNUC_CONST;
 GType
 gst_vaapi_encoder_mbbrc_get_type (void) G_GNUC_CONST;
 
-GstVaapiEncoder *
-gst_vaapi_encoder_ref (GstVaapiEncoder * encoder);
-
-void
-gst_vaapi_encoder_unref (GstVaapiEncoder * encoder);
-
 void
 gst_vaapi_encoder_replace (GstVaapiEncoder ** old_encoder_ptr,
     GstVaapiEncoder * new_encoder);

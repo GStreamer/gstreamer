@@ -343,7 +343,7 @@ app_free (App * app)
 
   if (app->encoder) {
     gst_vaapi_encoder_flush (app->encoder);
-    gst_vaapi_encoder_unref (app->encoder);
+    gst_object_unref (app->encoder);
   }
 
   if (app->display)

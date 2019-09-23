@@ -223,33 +223,6 @@ gst_vaapi_encoder_ensure_param_roi_regions (GstVaapiEncoder * encoder,
 }
 
 /**
- * gst_vaapi_encoder_ref:
- * @encoder: a #GstVaapiEncoder
- *
- * Atomically increases the reference count of the given @encoder by one.
- *
- * Returns: The same @encoder argument
- */
-GstVaapiEncoder *
-gst_vaapi_encoder_ref (GstVaapiEncoder * encoder)
-{
-  return gst_object_ref (encoder);
-}
-
-/**
- * gst_vaapi_encoder_unref:
- * @encoder: a #GstVaapiEncoder
- *
- * Atomically decreases the reference count of the @encoder by one. If
- * the reference count reaches zero, the encoder will be free'd.
- */
-void
-gst_vaapi_encoder_unref (GstVaapiEncoder * encoder)
-{
-  gst_object_unref (encoder);
-}
-
-/**
  * gst_vaapi_encoder_replace:
  * @old_encoder_ptr: a pointer to a #GstVaapiEncoder
  * @new_encoder: a #GstVaapiEncoder
