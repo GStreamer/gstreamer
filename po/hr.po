@@ -10,10 +10,10 @@
 # Božidar Putanec <bozidarp@yahoo.com>, 2016, 2017, 2018, 2019.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-1.15.1\n"
+"Project-Id-Version: gstreamer-1.16.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:37+0000\n"
-"PO-Revision-Date: 2019-02-03 13:10-0800\n"
+"POT-Creation-Date: 2019-04-19 00:15+0100\n"
+"PO-Revision-Date: 2019-09-03 14:53+0200\n"
 "Last-Translator: Božidar Putanec <bozidarp@yahoo.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
 "Language: hr_HR\n"
@@ -21,838 +21,996 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
-"%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
-"X-Generator: Lokalize 2.0\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
+"X-Generator: Poedit 2.2.3\n"
 
+#: gst/gst.c:250
 msgid "Print the GStreamer version"
 msgstr "ispiše inačicu GStreamera"
 
+#: gst/gst.c:252
 msgid "Make all warnings fatal"
 msgstr "svako upozorenje tretira kao da je fatalno"
 
+#: gst/gst.c:256
 msgid "Print available debug categories and exit"
 msgstr "ispiše postojeće kategorije za debugiranje i iziđe"
 
-msgid ""
-"Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
-msgstr ""
-"RAZINA poruka za debugiranje od 1 (samo greške) do 9 (sve) ili 0 (bez poruka)"
+#: gst/gst.c:260
+msgid "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
+msgstr "RAZINA poruka za debugiranje od 1 (samo greške) do 9 (sve) ili 0 (bez poruka)"
 
+#: gst/gst.c:262
 msgid "LEVEL"
 msgstr "RAZINA"
 
-msgid ""
-"Comma-separated list of category_name:level pairs to set specific levels for "
-"the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
-msgstr ""
-"POPIS parova (odvojenih zarezom) u formatu „category_name:level“ za "
-"postavljanje razine debugiranja za pojedine kategorije; Primjer: GST_CAT:5,"
-"GST_ELEMENT_*:3,oggdemux:5"
+#: gst/gst.c:264
+msgid "Comma-separated list of category_name:level pairs to set specific levels for the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgstr "POPIS parova (odvojenih zarezom) u formatu „category_name:level“ za postavljanje razine debugiranja za pojedine kategorije; Primjer: GST_CAT:5,GST_ELEMENT_*:3,oggdemux:5"
 
+#: gst/gst.c:267
 msgid "LIST"
 msgstr "POPIS"
 
+#: gst/gst.c:269
 msgid "Disable colored debugging output"
 msgstr "onemogući obojeni ispis poruka za debugiranje"
 
-msgid ""
-"Changes coloring mode of the debug log. Possible modes: off, on, disable, "
-"auto, unix"
-msgstr ""
-"mȏd za bojenje poruka za debugiranje je jedan od: off, on, disable, auto ili "
-"unix"
+#: gst/gst.c:273
+msgid "Changes coloring mode of the debug log. Possible modes: off, on, disable, auto, unix"
+msgstr "mȏd za bojenje poruka za debugiranje je jedan od: off, on, disable, auto ili unix"
 
+#: gst/gst.c:277
 msgid "Disable debugging"
 msgstr "onemogući debugiranje"
 
+#: gst/gst.c:281
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "omogući opširne poruke tijekom učitavanja plugina"
 
+#: gst/gst.c:285
 msgid "Colon-separated paths containing plugins"
 msgstr "popis STAZA (odvojenih dvotočkom) koje sadrže plugine"
 
+#: gst/gst.c:285
 msgid "PATHS"
 msgstr "STAZE"
 
-msgid ""
-"Comma-separated list of plugins to preload in addition to the list stored in "
-"environment variable GST_PLUGIN_PATH"
-msgstr ""
-"popis PLUGINA (odvojenih zarezom) koje treba učitati pored onih iz popisa "
-"spremljenog u varijabli okoline GST_PLUGIN_PATH"
+#: gst/gst.c:288
+msgid "Comma-separated list of plugins to preload in addition to the list stored in environment variable GST_PLUGIN_PATH"
+msgstr "popis PLUGINA (odvojenih zarezom) koje treba učitati pored onih iz popisa spremljenog u varijabli okoline GST_PLUGIN_PATH"
 
+#: gst/gst.c:290
 msgid "PLUGINS"
 msgstr "PLUGINI"
 
+#: gst/gst.c:293
 msgid "Disable trapping of segmentation faults during plugin loading"
-msgstr ""
-"onemogući presretanje segmentacijskih grešaka tijekom učitavanja plugina"
+msgstr "onemogući presretanje segmentacijskih grešaka tijekom učitavanja plugina"
 
+#: gst/gst.c:298
 msgid "Disable updating the registry"
 msgstr "onemogući ažuriranje registra"
 
+#: gst/gst.c:303
 msgid "Disable spawning a helper process while scanning the registry"
 msgstr "onemogući stvaranje procesa „helper“ tijekom skeniranja registra"
 
+#: gst/gst.c:308
 msgid "GStreamer Options"
 msgstr "Opcije GStreamera"
 
+#: gst/gst.c:309
 msgid "Show GStreamer Options"
 msgstr "pokaže opcije GStreamera"
 
+#: gst/gst.c:1012
 msgid "Unknown option"
 msgstr "Nepoznata opcija"
 
+#: gst/gsterror.c:130
 msgid "GStreamer encountered a general core library error."
 msgstr "GStreamer: otkrivena je opća greška u osnovnoj (core) biblioteci."
 
-msgid ""
-"GStreamer developers were too lazy to assign an error code to this error."
+#: gst/gsterror.c:132 gst/gsterror.c:174 gst/gsterror.c:198 gst/gsterror.c:240
+msgid "GStreamer developers were too lazy to assign an error code to this error."
 msgstr "Ovoj grešci nije dodijeljen broj greške."
 
+#: gst/gsterror.c:135
 msgid "Internal GStreamer error: code not implemented."
 msgstr "Interna greška GStreamera: rutina nije realizirana."
 
-msgid ""
-"GStreamer error: state change failed and some element failed to post a "
-"proper error message with the reason for the failure."
-msgstr ""
-"Greška GStreamera: nije uspjela promjena stanja i neki elementi nisu poslali "
-"ispravnu poruku o grešci s razlogom za neuspjeh."
+#: gst/gsterror.c:137
+msgid "GStreamer error: state change failed and some element failed to post a proper error message with the reason for the failure."
+msgstr "Greška GStreamera: nije uspjela promjena stanja i neki elementi nisu poslali ispravnu poruku o grešci s razlogom za neuspjeh."
 
+#: gst/gsterror.c:140
 msgid "Internal GStreamer error: pad problem."
 msgstr "Interna greška GStreamera: problem s konekcijom."
 
 # Rač.: nezavisni skup naredbi koji se samostalno izvršavaju u programu
+#: gst/gsterror.c:142
 msgid "Internal GStreamer error: thread problem."
 msgstr "Interna greška GStreamera: problem s dretvom."
 
+#: gst/gsterror.c:144
 msgid "GStreamer error: negotiation problem."
-msgstr ""
-"Interna greška GStreamera: problem u dogovaranju (za povezivanje elemenata)."
+msgstr "Interna greška GStreamera: problem u dogovaranju (za povezivanje elemenata)."
 
+#: gst/gsterror.c:146
 msgid "Internal GStreamer error: event problem."
 msgstr "Interna greška GStreamera: problem s događajem."
 
+#: gst/gsterror.c:148
 msgid "Internal GStreamer error: seek problem."
 msgstr "Interna GStreamer greška: problem u pozicioniranju."
 
+#: gst/gsterror.c:150
 msgid "Internal GStreamer error: caps problem."
 msgstr "Interna greška GStreamera: problem sa sposobnostima"
 
+#: gst/gsterror.c:152
 msgid "Internal GStreamer error: tag problem."
 msgstr "Interna greška GStreamera: problem s tagom."
 
+#: gst/gsterror.c:154
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "Vašoj instalaciji GStreamera nedostaje plugin."
 
+#: gst/gsterror.c:156
 msgid "GStreamer error: clock problem."
 msgstr "Greška GStreamera: problem sa sinkronizacijom (clock)."
 
-msgid ""
-"This application is trying to use GStreamer functionality that has been "
-"disabled."
-msgstr ""
-"Aplikacija pokušava koristiti funkcionalnost GStreamera a koja je bila "
-"onemogućena."
+#: gst/gsterror.c:158
+msgid "This application is trying to use GStreamer functionality that has been disabled."
+msgstr "Aplikacija pokušava koristiti funkcionalnost GStreamera koja je bila onemogućena."
 
+#: gst/gsterror.c:172
 msgid "GStreamer encountered a general supporting library error."
-msgstr ""
-"GStreamer: otkrivena je opća greška (problem) s dopunskom pomoćnom "
-"bibliotekom."
+msgstr "GStreamer: otkrivena je opća greška (problem) s dopunskom pomoćnom bibliotekom."
 
+#: gst/gsterror.c:177
 msgid "Could not initialize supporting library."
 msgstr "Nije moguće inicijalizirati pomoćnu biblioteku."
 
+#: gst/gsterror.c:179
 msgid "Could not close supporting library."
 msgstr "Nije moguće zatvoriti pomoćnu biblioteku."
 
+#: gst/gsterror.c:181
 msgid "Could not configure supporting library."
 msgstr "Nije moguće konfigurirati pomoćnu biblioteku."
 
+#: gst/gsterror.c:183
 msgid "Encoding error."
 msgstr "Greška u kodiranju."
 
+#: gst/gsterror.c:196
 msgid "GStreamer encountered a general resource error."
 msgstr "GStreamer: otkrivena je opća greška (problem) s resursom."
 
+#: gst/gsterror.c:201
 msgid "Resource not found."
 msgstr "Resurs nije pronađen."
 
+#: gst/gsterror.c:203
 msgid "Resource busy or not available."
 msgstr "Resurs je zauzet ili nije na raspolaganju."
 
+#: gst/gsterror.c:205
 msgid "Could not open resource for reading."
 msgstr "Resurs nije moguće otvoriti za čitanje."
 
+#: gst/gsterror.c:207
 msgid "Could not open resource for writing."
 msgstr "Resurs nije moguće otvoriti za pisanje."
 
+#: gst/gsterror.c:209
 msgid "Could not open resource for reading and writing."
 msgstr "Resurs nije moguće otvoriti za čitanje i pisanje."
 
+#: gst/gsterror.c:211
 msgid "Could not close resource."
 msgstr "Resurs nije moguće zatvoriti."
 
+#: gst/gsterror.c:213
 msgid "Could not read from resource."
 msgstr "Nije moguće čitati iz resursa."
 
+#: gst/gsterror.c:215
 msgid "Could not write to resource."
 msgstr "Nije moguće pisati u resurs."
 
+#: gst/gsterror.c:217
 msgid "Could not perform seek on resource."
 msgstr "Nije moguće pozicioniranje na resursu."
 
+#: gst/gsterror.c:219
 msgid "Could not synchronize on resource."
 msgstr "Nije moguće sinkroniziranje na resursu."
 
+#: gst/gsterror.c:221
 msgid "Could not get/set settings from/on resource."
 msgstr "Nije moguće dobiti/promijeniti postavke resursa."
 
+#: gst/gsterror.c:223
 msgid "No space left on the resource."
 msgstr "Na resursu nema slobodnog prostora."
 
+#: gst/gsterror.c:225
 msgid "Not authorized to access resource."
 msgstr "Neovlašteni pristup resursu."
 
+#: gst/gsterror.c:238
 msgid "GStreamer encountered a general stream error."
 msgstr "GStreamer: otkrivena je opća greška (problem) s protokom podataka."
 
+#: gst/gsterror.c:243
 msgid "Element doesn't implement handling of this stream. Please file a bug."
-msgstr ""
-"U ovom elementu nije realizirana manipulacija s ovakvim protokom. Prijavite "
-"ovaj bug."
+msgstr "U ovom elementu nije realizirana manipulacija s ovakvim protokom. Prijavite ovaj bug."
 
+#: gst/gsterror.c:246
 msgid "Could not determine type of stream."
 msgstr "Nije moguće odrediti vrstu ovog protoka."
 
+#: gst/gsterror.c:248
 msgid "The stream is of a different type than handled by this element."
 msgstr "Protok je vrste kojom ovaj element ne može manipulirati."
 
+#: gst/gsterror.c:251
 msgid "There is no codec present that can handle the stream's type."
 msgstr "Nema kodeka koji može manipulirati s ovom vrstom protoka."
 
+#: gst/gsterror.c:253
 msgid "Could not decode stream."
 msgstr "Nije moguće dekodirati protok."
 
+#: gst/gsterror.c:255
 msgid "Could not encode stream."
 msgstr "Nije moguće kodirati protok."
 
+#: gst/gsterror.c:257
 msgid "Could not demultiplex stream."
 msgstr "Nije moguće demultipleksirati protok."
 
+#: gst/gsterror.c:259
 msgid "Could not multiplex stream."
 msgstr "Nije moguće multipleksirati protok."
 
+#: gst/gsterror.c:261
 msgid "The stream is in the wrong format."
 msgstr "Protok je u krivom formatu."
 
+#: gst/gsterror.c:263
 msgid "The stream is encrypted and decryption is not supported."
 msgstr "Protok je šifriran a dešifriranje nije podržano."
 
-msgid ""
-"The stream is encrypted and can't be decrypted because no suitable key has "
-"been supplied."
-msgstr ""
-"Protok je šifriran i ne može se dešifrirati jer nije dobiven prikladni ključ."
+#: gst/gsterror.c:265
+msgid "The stream is encrypted and can't be decrypted because no suitable key has been supplied."
+msgstr "Protok je šifriran i ne može se dešifrirati jer nije dobiven prikladni ključ."
 
+#: gst/gsterror.c:305
 #, c-format
 msgid "No error message for domain %s."
 msgstr "Nema poruke o grešci za domenu %s."
 
+#: gst/gsterror.c:313
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr "Nema standardne poruke o grešci za domenu %s i za kȏd %d."
 
+#: gst/gstpipeline.c:562
 msgid "Selected clock cannot be used in pipeline."
 msgstr "Odabrani sat ne može se koristiti u cjevovodu."
 
+#: gst/gstregistry.c:1694
 #, c-format
 msgid "Error writing registry cache to %s: %s"
 msgstr "Greška pri zapisivanju u predmemoriju registra u %s: %s"
 
+#: gst/gsttaglist.c:108
 msgid "title"
 msgstr "naslov"
 
+#: gst/gsttaglist.c:108
 msgid "commonly used title"
 msgstr "uobičajeni naslov"
 
+#: gst/gsttaglist.c:111
 msgid "title sortname"
 msgstr "naslov (za sortiranje)"
 
+#: gst/gsttaglist.c:111
 msgid "commonly used title for sorting purposes"
 msgstr "uobičajeni naslov (za sortiranje)"
 
+#: gst/gsttaglist.c:114
 msgid "artist"
 msgstr "izvođač"
 
+#: gst/gsttaglist.c:115
 msgid "person(s) responsible for the recording"
 msgstr "osobe odgovorne za snimanje"
 
+#: gst/gsttaglist.c:119
 msgid "artist sortname"
 msgstr "izvođač (za sortiranje)"
 
+#: gst/gsttaglist.c:120
 msgid "person(s) responsible for the recording for sorting purposes"
 msgstr "osobe odgovorne za snimanje (za sortiranje)"
 
+#: gst/gsttaglist.c:123
 msgid "album"
 msgstr "album"
 
+#: gst/gsttaglist.c:124
 msgid "album containing this data"
 msgstr "album koji sadrži ove podatke"
 
+#: gst/gsttaglist.c:127
 msgid "album sortname"
 msgstr "album (za sortiranje)"
 
+#: gst/gsttaglist.c:128
 msgid "album containing this data for sorting purposes"
 msgstr "album koji sadrži ove podatke (za sortiranje)"
 
+#: gst/gsttaglist.c:131
 msgid "album artist"
 msgstr "izvođač albuma"
 
+#: gst/gsttaglist.c:132
 msgid "The artist of the entire album, as it should be displayed"
 msgstr "Izvođač cijelog albuma (prikazan onako kako  treba)"
 
+#: gst/gsttaglist.c:136
 msgid "album artist sortname"
 msgstr "izvođač albuma (za sortiranje)"
 
+#: gst/gsttaglist.c:137
 msgid "The artist of the entire album, as it should be sorted"
 msgstr "Izvođač cijelog albuma sortiran kako treba"
 
+#: gst/gsttaglist.c:139
 msgid "date"
 msgstr "datum"
 
+#: gst/gsttaglist.c:139
 msgid "date the data was created (as a GDate structure)"
 msgstr "datum stvaranja podataka (kao GDate)"
 
+#: gst/gsttaglist.c:141
 msgid "datetime"
 msgstr "datum-vrijeme"
 
+#: gst/gsttaglist.c:142
 msgid "date and time the data was created (as a GstDateTime structure)"
 msgstr "datum i vrijeme stvaranja podataka (kao GstDateTime)"
 
+#: gst/gsttaglist.c:146
 msgid "genre"
 msgstr "žanr"
 
+#: gst/gsttaglist.c:147
 msgid "genre this data belongs to"
 msgstr "žanr kojem pripadaju podaci"
 
+#: gst/gsttaglist.c:150
 msgid "comment"
 msgstr "komentar"
 
+#: gst/gsttaglist.c:151
 msgid "free text commenting the data"
 msgstr "slobodni (tekst)komentar o tim podacima"
 
+#: gst/gsttaglist.c:154
 msgid "extended comment"
 msgstr "prošireni komentar"
 
+#: gst/gsttaglist.c:155
 msgid "free text commenting the data in key=value or key[en]=comment form"
-msgstr ""
-"slobodni (tekst) komentar o tim podacima u obliku ključ=vrijednost ili "
-"ključ[hr]=komentar"
+msgstr "slobodni (tekst) komentar o tim podacima u obliku ključ=vrijednost ili ključ[hr]=komentar"
 
+#: gst/gsttaglist.c:159
 msgid "track number"
 msgstr "redni broj zapisa"
 
+#: gst/gsttaglist.c:160
 msgid "track number inside a collection"
 msgstr "redni broj zapisa u kolekciji"
 
+#: gst/gsttaglist.c:163
 msgid "track count"
 msgstr "ukupni broj zapisa"
 
+#: gst/gsttaglist.c:164
 msgid "count of tracks inside collection this track belongs to"
 msgstr "količina zapisa u kolekciji kojoj pripada ovaj zapis"
 
+#: gst/gsttaglist.c:168
 msgid "disc number"
 msgstr "redni broj diska"
 
+#: gst/gsttaglist.c:169
 msgid "disc number inside a collection"
 msgstr "redni broj diska u kolekciji"
 
+#: gst/gsttaglist.c:172
 msgid "disc count"
 msgstr "ukupni broj diskova"
 
+#: gst/gsttaglist.c:173
 msgid "count of discs inside collection this disc belongs to"
 msgstr "količina diskova u kolekciji kojoj pripada ovaj disk"
 
+#: gst/gsttaglist.c:177
 msgid "location"
 msgstr "mjesto"
 
-msgid ""
-"Origin of media as a URI (location, where the original of the file or stream "
-"is hosted)"
-msgstr ""
-"Porijeklo medija kao URI (mjesto gdje se nalazi originalna datoteka ili "
-"originalni izvor protoka)"
+#: gst/gsttaglist.c:177
+msgid "Origin of media as a URI (location, where the original of the file or stream is hosted)"
+msgstr "Porijeklo medija kao URI (mjesto gdje se nalazi originalna datoteka ili originalni izvor protoka)"
 
+#: gst/gsttaglist.c:182
 msgid "homepage"
 msgstr "internetska stranica"
 
+#: gst/gsttaglist.c:183
 msgid "Homepage for this media (i.e. artist or movie homepage)"
-msgstr ""
-"Internetska stranica ovog medija (tj. internetska stranica izvođača ili "
-"filma)"
+msgstr "Internetska stranica ovog medija (tj. internetska stranica izvođača ili filma)"
 
+#: gst/gsttaglist.c:186
 msgid "description"
 msgstr "opis"
 
+#: gst/gsttaglist.c:187
 msgid "short text describing the content of the data"
 msgstr "sažetak koji opisuje sadržaj podataka"
 
+#: gst/gsttaglist.c:190
 msgid "version"
 msgstr "inačica"
 
+#: gst/gsttaglist.c:190
 msgid "version of this data"
 msgstr "inačica ovih podataka"
 
+#: gst/gsttaglist.c:192
 msgid "ISRC"
 msgstr "ISRC"
 
+#: gst/gsttaglist.c:194
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
-msgstr ""
-"International Standard Recording Code - posjetite http://www.ifpi.org/isrc/"
+msgstr "International Standard Recording Code - posjetite http://www.ifpi.org/isrc/"
 
+#: gst/gsttaglist.c:198
 msgid "organization"
 msgstr "organizacija"
 
+#: gst/gsttaglist.c:201
 msgid "copyright"
 msgstr "autorska prava"
 
+#: gst/gsttaglist.c:201
 msgid "copyright notice of the data"
 msgstr "napomena o autorskim pravima podataka"
 
+#: gst/gsttaglist.c:203
 msgid "copyright uri"
 msgstr "copyright URI"
 
+#: gst/gsttaglist.c:204
 msgid "URI to the copyright notice of the data"
 msgstr "URI s napomenom o autorskim pravima na podatke"
 
+#: gst/gsttaglist.c:206
 msgid "encoded by"
 msgstr "kodirao"
 
+#: gst/gsttaglist.c:206
 msgid "name of the encoding person or organization"
 msgstr "ime osobe ili organizacije koja je kodirala"
 
+#: gst/gsttaglist.c:210
 msgid "contact"
 msgstr "kontakt"
 
+#: gst/gsttaglist.c:210
 msgid "contact information"
 msgstr "informacije o kontaktu"
 
+#: gst/gsttaglist.c:212
 msgid "license"
 msgstr "licencija"
 
+#: gst/gsttaglist.c:212
 msgid "license of data"
 msgstr "licencija za podatke"
 
+#: gst/gsttaglist.c:214
 msgid "license uri"
 msgstr "URI licencija"
 
+#: gst/gsttaglist.c:215
 msgid "URI to the license of the data"
 msgstr "URI za licenciju tih podataka"
 
+#: gst/gsttaglist.c:218
 msgid "performer"
 msgstr "izvođač"
 
+#: gst/gsttaglist.c:219
 msgid "person(s) performing"
 msgstr "osoba/osobe, izvođači"
 
+#: gst/gsttaglist.c:222
 msgid "composer"
 msgstr "skladatelj"
 
+#: gst/gsttaglist.c:223
 msgid "person(s) who composed the recording"
 msgstr "osoba/osobe), skladatelji snimljene glazbe"
 
+#: gst/gsttaglist.c:227
 msgid "conductor"
 msgstr "dirigent"
 
+#: gst/gsttaglist.c:228
 msgid "conductor/performer refinement"
 msgstr "dirigent/izvođač u obradi"
 
+#: gst/gsttaglist.c:231
 msgid "duration"
 msgstr "trajanje"
 
+#: gst/gsttaglist.c:231
 msgid "length in GStreamer time units (nanoseconds)"
 msgstr "dužina u vremenskim jedinicama GStreamera (nanosekunde)"
 
+#: gst/gsttaglist.c:234
 msgid "codec"
 msgstr "kodek"
 
+#: gst/gsttaglist.c:235
 msgid "codec the data is stored in"
 msgstr "kodek u kojem su spremljeni podaci"
 
+#: gst/gsttaglist.c:238
 msgid "video codec"
 msgstr "videokodek"
 
+#: gst/gsttaglist.c:238
 msgid "codec the video data is stored in"
 msgstr "kodek u kojem su spremljeni video podaci"
 
+#: gst/gsttaglist.c:241
 msgid "audio codec"
 msgstr "audiokodek"
 
+#: gst/gsttaglist.c:241
 msgid "codec the audio data is stored in"
 msgstr "kodek u kojem su spremljeni audio podaci"
 
+#: gst/gsttaglist.c:244
 msgid "subtitle codec"
 msgstr "kodek za titlovanje"
 
+#: gst/gsttaglist.c:244
 msgid "codec the subtitle data is stored in"
 msgstr "kodek u kojem su spremljeni podaci titlova"
 
+#: gst/gsttaglist.c:246
 msgid "container format"
 msgstr "format kontejnera"
 
+#: gst/gsttaglist.c:247
 msgid "container format the data is stored in"
 msgstr "format kontejnera u kojem su spremljeni podaci"
 
+#: gst/gsttaglist.c:249
 msgid "bitrate"
 msgstr "bitrate"
 
+#: gst/gsttaglist.c:249
 msgid "exact or average bitrate in bits/s"
 msgstr "točni ili prosječni bitrate u bit/s"
 
+#: gst/gsttaglist.c:251
 msgid "nominal bitrate"
 msgstr "nominalni bitrate"
 
+#: gst/gsttaglist.c:251
 msgid "nominal bitrate in bits/s"
 msgstr "nominalni bitrate u bit/a"
 
+#: gst/gsttaglist.c:253
 msgid "minimum bitrate"
 msgstr "najmanji bitrate"
 
+#: gst/gsttaglist.c:253
 msgid "minimum bitrate in bits/s"
 msgstr "najmanji bitrate u bit/s"
 
+#: gst/gsttaglist.c:255
 msgid "maximum bitrate"
 msgstr "najveći bitrate"
 
+#: gst/gsttaglist.c:255
 msgid "maximum bitrate in bits/s"
 msgstr "najveći bitrate u bit/s"
 
+#: gst/gsttaglist.c:258
 msgid "encoder"
 msgstr "koder"
 
+#: gst/gsttaglist.c:258
 msgid "encoder used to encode this stream"
 msgstr "koder s kojim je kodiran ovaj protok"
 
+#: gst/gsttaglist.c:261
 msgid "encoder version"
 msgstr "inačica kodera"
 
+#: gst/gsttaglist.c:262
 msgid "version of the encoder used to encode this stream"
 msgstr "inačica kodera s kojim je kodiran ovaj protok"
 
+#: gst/gsttaglist.c:264
 msgid "serial"
 msgstr "serijski broj"
 
+#: gst/gsttaglist.c:264
 msgid "serial number of track"
 msgstr "serijski broj zapisa"
 
 # https://en.wikipedia.org/wiki/ReplayGain
 # http://www.audiohq.de/index.php?showtopic=23#Referenzlautstaerke
+#: gst/gsttaglist.c:266
 msgid "replaygain track gain"
 msgstr "normalizacija razine glasnoće zapisa"
 
+#: gst/gsttaglist.c:266
 msgid "track gain in db"
 msgstr "razina pojačanja zapisa u db"
 
+#: gst/gsttaglist.c:268
 msgid "replaygain track peak"
 msgstr "normalizacija vršne glasnoće zapisa"
 
+#: gst/gsttaglist.c:268
 msgid "peak of the track"
 msgstr "vršna razina zapisa"
 
+#: gst/gsttaglist.c:270
 msgid "replaygain album gain"
 msgstr "normalizacija razine glasnoće albuma"
 
+#: gst/gsttaglist.c:270
 msgid "album gain in db"
 msgstr "razina pojačanja albuma u db"
 
+#: gst/gsttaglist.c:272
 msgid "replaygain album peak"
 msgstr "normalizacija vršne glasnoće albuma"
 
+#: gst/gsttaglist.c:272
 msgid "peak of the album"
 msgstr "vršna razina albuma"
 
+#: gst/gsttaglist.c:274
 msgid "replaygain reference level"
 msgstr "normalizacija referentne razine"
 
+#: gst/gsttaglist.c:275
 msgid "reference level of track and album gain values"
 msgstr "referentna razina pojačanja zapisa i albuma"
 
+#: gst/gsttaglist.c:277
 msgid "language code"
 msgstr "jezični kȏd"
 
+#: gst/gsttaglist.c:278
 msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
 msgstr "jezični kȏd za ovaj protok, u skladu s ISO-639-1 ili ISO-639-2"
 
+#: gst/gsttaglist.c:281
 msgid "language name"
 msgstr "ime jezika"
 
+#: gst/gsttaglist.c:282
 msgid "freeform name of the language this stream is in"
 msgstr "uobičajeno ime jezika u ovom protoku"
 
+#: gst/gsttaglist.c:284
 msgid "image"
 msgstr "slika"
 
+#: gst/gsttaglist.c:284
 msgid "image related to this stream"
 msgstr "slika za ovaj protok"
 
 # thumbnail
 #. TRANSLATORS: 'preview image' = image that shows a preview of the full image
+#: gst/gsttaglist.c:288
 msgid "preview image"
 msgstr "pregledna slika"
 
+#: gst/gsttaglist.c:288
 msgid "preview image related to this stream"
 msgstr "pregledna slika za ovaj protok"
 
+#: gst/gsttaglist.c:290
 msgid "attachment"
 msgstr "privitak"
 
+#: gst/gsttaglist.c:290
 msgid "file attached to this stream"
 msgstr "datoteka privijena ovom protoku"
 
+#: gst/gsttaglist.c:293
 msgid "beats per minute"
 msgstr "otkucaja u minuti (tempo)"
 
+#: gst/gsttaglist.c:294
 msgid "number of beats per minute in audio"
 msgstr "broj otkucaja u minuti (tempo) u tonskom zapisu"
 
+#: gst/gsttaglist.c:296
 msgid "keywords"
 msgstr "ključne riječi"
 
+#: gst/gsttaglist.c:296
 msgid "comma separated keywords describing the content"
 msgstr "ključne riječi (odvojene zarezima) koje opisuju sadržaj"
 
 # https://en.wikipedia.org/wiki/Geolocation
+#: gst/gsttaglist.c:299
 msgid "geo location name"
 msgstr "geografsko ime mjesta"
 
-msgid ""
-"human readable descriptive location of where the media has been recorded or "
-"produced"
+#: gst/gsttaglist.c:300
+msgid "human readable descriptive location of where the media has been recorded or produced"
 msgstr "opis mjesta gdje je medij snimljen ili proizveden"
 
+#: gst/gsttaglist.c:303
 msgid "geo location latitude"
 msgstr "geografska širina"
 
-msgid ""
-"geo latitude location of where the media has been recorded or produced in "
-"degrees according to WGS84 (zero at the equator, negative values for "
-"southern latitudes)"
-msgstr ""
-"geografska širina mjesta gdje je medij snimljen ili proizveden, u "
-"stupnjevima prema WGS84 (nula na ekvatoru, negativne vrijednosti za južne "
-"širine)"
+#: gst/gsttaglist.c:304
+msgid "geo latitude location of where the media has been recorded or produced in degrees according to WGS84 (zero at the equator, negative values for southern latitudes)"
+msgstr "geografska širina mjesta gdje je medij snimljen ili proizveden, u stupnjevima prema WGS84 (nula na ekvatoru, negativne vrijednosti za južne širine)"
 
+#: gst/gsttaglist.c:308
 msgid "geo location longitude"
 msgstr "geografska dužina"
 
-msgid ""
-"geo longitude location of where the media has been recorded or produced in "
-"degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  "
-"negative values for western longitudes)"
-msgstr ""
-"geografska dužina mjesta gdje je medij snimljen ili proizveden, u "
-"stupnjevima prema WGS84 (nula na nultom meridijanu Greenwich/UK, negativne "
-"vrijednosti za zapadne dužine)"
+#: gst/gsttaglist.c:309
+msgid "geo longitude location of where the media has been recorded or produced in degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  negative values for western longitudes)"
+msgstr "geografska dužina mjesta gdje je medij snimljen ili proizveden, u stupnjevima prema WGS84 (nula na nultom meridijanu Greenwich/UK, negativne vrijednosti za zapadne dužine)"
 
+#: gst/gsttaglist.c:313
 msgid "geo location elevation"
 msgstr "geografska visina"
 
-msgid ""
-"geo elevation of where the media has been recorded or produced in meters "
-"according to WGS84 (zero is average sea level)"
-msgstr ""
-"nadmorska visina mjesta gdje je medij snimljen ili proizveden, u metrima "
-"prema WGS84 (nula je prosječna razina mora)"
+#: gst/gsttaglist.c:314
+msgid "geo elevation of where the media has been recorded or produced in meters according to WGS84 (zero is average sea level)"
+msgstr "nadmorska visina mjesta gdje je medij snimljen ili proizveden, u metrima prema WGS84 (nula je prosječna razina mora)"
 
+#: gst/gsttaglist.c:317
 msgid "geo location country"
 msgstr "geografski položaj države"
 
+#: gst/gsttaglist.c:318
 msgid "country (english name) where the media has been recorded or produced"
 msgstr "država (englesko ime) gdje je medij snimljen ili proizveden"
 
+#: gst/gsttaglist.c:321
 msgid "geo location city"
 msgstr "geografski položaj grada"
 
+#: gst/gsttaglist.c:322
 msgid "city (english name) where the media has been recorded or produced"
 msgstr "grad (englesko ime) gdje je medij snimljen ili proizveden"
 
+#: gst/gsttaglist.c:325
 msgid "geo location sublocation"
 msgstr "geografski položaj djela grada"
 
-msgid ""
-"a location within a city where the media has been produced or created (e.g. "
-"the neighborhood)"
+#: gst/gsttaglist.c:326
+msgid "a location within a city where the media has been produced or created (e.g. the neighborhood)"
 msgstr "mjesto u gradu gdje je medij snimljen ili proizveden (npr. Trešnjevka)"
 
+#: gst/gsttaglist.c:329
 msgid "geo location horizontal error"
 msgstr "greška u vodoravnoj geografskoj lokaciji"
 
+#: gst/gsttaglist.c:330
 msgid "expected error of the horizontal positioning measures (in meters)"
 msgstr "očekivana greška u mjerenju vodoravnog položaja (u metrima)"
 
+#: gst/gsttaglist.c:333
 msgid "geo location movement speed"
 msgstr "geografska brzina kretanja"
 
-msgid ""
-"movement speed of the capturing device while performing the capture in m/s"
+#: gst/gsttaglist.c:334
+msgid "movement speed of the capturing device while performing the capture in m/s"
 msgstr "brzina kretanja uređaja za snimanje pri snimanju u m/s"
 
+#: gst/gsttaglist.c:337
 msgid "geo location movement direction"
 msgstr "geografski smjer kretanja"
 
-msgid ""
-"indicates the movement direction of the device performing the capture of a "
-"media. It is represented as degrees in floating point representation, 0 "
-"means the geographic north, and increases clockwise"
-msgstr ""
-"smjer kretanja uređaja za snimanje; mjeri se u stupnjevima u formatu realnog "
-"broja; 0 je smjer geografskog sjevera a raste u smjeru kazaljke na satu (kao "
-"kompas)"
+#: gst/gsttaglist.c:338
+msgid "indicates the movement direction of the device performing the capture of a media. It is represented as degrees in floating point representation, 0 means the geographic north, and increases clockwise"
+msgstr "smjer kretanja uređaja za snimanje; mjeri se u stupnjevima u formatu realnog broja; 0 je smjer geografskog sjevera a raste u smjeru kazaljke na satu (kao kompas)"
 
+#: gst/gsttaglist.c:343
 msgid "geo location capture direction"
 msgstr "geografski smjer pri snimanju"
 
-msgid ""
-"indicates the direction the device is pointing to when capturing  a media. "
-"It is represented as degrees in floating point  representation, 0 means the "
-"geographic north, and increases clockwise"
-msgstr ""
-"smjer u kojem je uređaj bio usmjeren pri snimanju; mjeri se u stupnjevima u "
-"formatu realnog broja; 0 je smjer geografskog sjevera a raste u smjeru "
-"kazaljke na satu (kao kompas)"
+#: gst/gsttaglist.c:344
+msgid "indicates the direction the device is pointing to when capturing  a media. It is represented as degrees in floating point  representation, 0 means the geographic north, and increases clockwise"
+msgstr "smjer u kojem je uređaj bio usmjeren pri snimanju; mjeri se u stupnjevima u formatu realnog broja; 0 je smjer geografskog sjevera a raste u smjeru kazaljke na satu (kao kompas)"
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
+#: gst/gsttaglist.c:350
 msgid "show name"
 msgstr "ime predstave (TV/podcast/serije...)"
 
+#: gst/gsttaglist.c:351
 msgid "Name of the tv/podcast/series show the media is from"
 msgstr "Ime od (TV/podcast/serije...) predstave iz koje je nastao ovaj medij"
 
 #. TRANSLATORS: 'show sortname' = 'TV/radio/podcast show name as used for sorting purposes' here
+#: gst/gsttaglist.c:356
 msgid "show sortname"
 msgstr "ime predstave (za sortiranje)"
 
-msgid ""
-"Name of the tv/podcast/series show the media is from, for sorting purposes"
-msgstr ""
-"Ime od (TV/podcast/serije...) predstave iz koje je nastao ovaj medij (za "
-"sortiranje)"
+#: gst/gsttaglist.c:357
+msgid "Name of the tv/podcast/series show the media is from, for sorting purposes"
+msgstr "Ime od (TV/podcast/serije...) predstave iz koje je nastao ovaj medij (za sortiranje)"
 
+#: gst/gsttaglist.c:360
 msgid "episode number"
 msgstr "redni broj epizode"
 
+#: gst/gsttaglist.c:361
 msgid "The episode number in the season the media is part of"
 msgstr "Redni broj epizode u sezoni čiji je medij dio"
 
+#: gst/gsttaglist.c:364
 msgid "season number"
 msgstr "redni broj sezone"
 
+#: gst/gsttaglist.c:365
 msgid "The season number of the show the media is part of"
 msgstr "Redni broj sezone serije čiji je medij dio"
 
+#: gst/gsttaglist.c:368
 msgid "lyrics"
 msgstr "stihovi"
 
+#: gst/gsttaglist.c:368
 msgid "The lyrics of the media, commonly used for songs"
 msgstr "Stihovi pjesma na mediju"
 
+#: gst/gsttaglist.c:371
 msgid "composer sortname"
 msgstr "skladatelj (za sortiranje)"
 
+#: gst/gsttaglist.c:372
 msgid "person(s) who composed the recording, for sorting purposes"
 msgstr "osoba/osobe, skladatelji snimljene glazbe (za sortiranje)"
 
+#: gst/gsttaglist.c:374
 msgid "grouping"
 msgstr "grupiranje"
 
-msgid ""
-"Groups related media that spans multiple tracks, like the different pieces "
-"of a concerto. It is a higher level than a track, but lower than an album"
-msgstr ""
-"Svrsta u grupe srodne medije koji obuhvaćaju nekoliko zapisa kao npr. "
-"različiti dijelovi koncerta; to je viša razina od zapisa, ali niža od albuma"
+#: gst/gsttaglist.c:375
+msgid "Groups related media that spans multiple tracks, like the different pieces of a concerto. It is a higher level than a track, but lower than an album"
+msgstr "Svrsta u grupe srodne medije koji obuhvaćaju nekoliko zapisa kao npr. različiti dijelovi koncerta; to je viša razina od zapisa, ali niža od albuma"
 
+#: gst/gsttaglist.c:379
 msgid "user rating"
 msgstr "ocjena korisnika"
 
-msgid ""
-"Rating attributed by a user. The higher the rank, the more the user likes "
-"this media"
-msgstr ""
-"Ocjena koju je dao korisnik; što je ocjena viša, više mu se sviđa medij"
+#: gst/gsttaglist.c:380
+msgid "Rating attributed by a user. The higher the rank, the more the user likes this media"
+msgstr "Ocjena koju je dao korisnik; što je ocjena viša, više mu se sviđa medij"
 
+#: gst/gsttaglist.c:383
 msgid "device manufacturer"
 msgstr "proizvođač uređaja"
 
+#: gst/gsttaglist.c:384
 msgid "Manufacturer of the device used to create this media"
 msgstr "Proizvođač uređaja kojim je izrađen medij"
 
+#: gst/gsttaglist.c:386
 msgid "device model"
 msgstr "model uređaja"
 
+#: gst/gsttaglist.c:387
 msgid "Model of the device used to create this media"
 msgstr "Model uređaja s kojim je izrađen medij"
 
+#: gst/gsttaglist.c:389
 msgid "application name"
 msgstr "ime aplikacije"
 
+#: gst/gsttaglist.c:390
 msgid "Application used to create the media"
 msgstr "Aplikacija s kojom je izrađen medij"
 
+#: gst/gsttaglist.c:392
 msgid "application data"
 msgstr "podaci o aplikaciji"
 
+#: gst/gsttaglist.c:393
 msgid "Arbitrary application data to be serialized into the media"
 msgstr "Proizvoljni podaci o aplikaciji za serijalizaciju u medij"
 
+#: gst/gsttaglist.c:395
 msgid "image orientation"
 msgstr "orijentacija slike"
 
+#: gst/gsttaglist.c:396
 msgid "How the image should be rotated or flipped before display"
 msgstr "Kako sliku treba rotirati ili preokrenuti prije prikaza"
 
+#: gst/gsttaglist.c:399
 msgid "publisher"
 msgstr "izdavač"
 
+#: gst/gsttaglist.c:400
 msgid "Name of the label or publisher"
 msgstr "Ime studija (label) ili izdavača"
 
+#: gst/gsttaglist.c:403
 msgid "interpreted-by"
 msgstr "interpreted-by"
 
+#: gst/gsttaglist.c:404
 msgid "Information about the people behind a remix and similar interpretations"
 msgstr "Informacije o ljudima koji su radili na remiksu i sličnim obradama"
 
+#: gst/gsttaglist.c:408
 msgid "midi-base-note"
 msgstr "midi-base-note"
 
+#: gst/gsttaglist.c:408
 msgid "Midi note number of the audio track."
 msgstr "Broj note MIDI na audio zapisu."
 
+#: gst/gsttaglist.c:411
 msgid "private-data"
 msgstr "privatni-podaci"
 
+#: gst/gsttaglist.c:411
 msgid "Private data"
 msgstr "Privatni podaci"
 
+#: gst/gsttaglist.c:451
 msgid ", "
 msgstr ", "
 
+#: gst/gsturi.c:648
 #, c-format
 msgid "No URI handler for the %s protocol found"
 msgstr "Za protokol %s nije pronađen URI rukovatelj"
 
+#: gst/gsturi.c:823
 #, c-format
 msgid "URI scheme '%s' not supported"
 msgstr "URI shema „%s“ nije podržana"
 
+#: gst/gstutils.c:2632 tools/gst-launch.c:325
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "GREŠKA: iz elementa %s: %s\n"
 
+#: gst/gstutils.c:2634 tools/gst-launch.c:327 tools/gst-launch.c:697
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -861,222 +1019,283 @@ msgstr ""
 "Dodatne informacije za debugiranje:\n"
 "%s\n"
 
+#: gst/parse/grammar.y:216
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr "poveznica nema izvor [sink=%s@%p]"
 
+#: gst/parse/grammar.y:221
 #, c-format
 msgid "link has no sink [source=%s@%p]"
 msgstr "poveznica nema ponor [source=%s@%p]"
 
+#: gst/parse/grammar.y:413
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "nema svojstva „%s“ u elementu „%s“"
 
+#: gst/parse/grammar.y:454
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "nije moguće postaviti svojstvo „%s“ u elementu „%s“ na „%s“"
 
+#: gst/parse/grammar.y:507
 msgid "Delayed linking failed."
 msgstr "Odgođeno povezivanje nije uspjelo."
 
+#: gst/parse/grammar.y:719 gst/parse/grammar.y:724
 #, c-format
 msgid "could not link %s to %s, %s can't handle caps %s"
 msgstr "nije moguće povezati %s na %s -- %s ne podržava sposobnosti %s"
 
+#: gst/parse/grammar.y:729
 #, c-format
 msgid "could not link %s to %s, neither element can handle caps %s"
-msgstr ""
-"nije moguće povezati %s na %s -- nijedan element ne podržava sposobnosti %s"
+msgstr "nije moguće povezati %s na %s -- nijedan element ne podržava sposobnosti %s"
 
+#: gst/parse/grammar.y:733
 #, c-format
 msgid "could not link %s to %s with caps %s"
 msgstr "nije moguće povezati %s sa %s sa sposobnostima %s"
 
+#: gst/parse/grammar.y:739
 #, c-format
 msgid "could not link %s to %s"
 msgstr "nije moguće povezati %s sa %s"
 
+#: gst/parse/grammar.y:816
 #, c-format
 msgid "no element \"%s\""
 msgstr "nema elementa „%s“"
 
+#: gst/parse/grammar.y:877
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"
 msgstr "neočekivana referencija „%s“ - ignorira se"
 
 # pad (u elektronskoj glazbi) > A category of synthsizer patches which produce a soft, pleasing sound.
+#: gst/parse/grammar.y:883
 #, c-format
 msgid "unexpected pad-reference \"%s\" - ignoring"
 msgstr "neočekivana poveznica (pad-reference) „%s“ - ignorira se"
 
+#: gst/parse/grammar.y:915 gst/parse/grammar.y:924
 #, c-format
 msgid "could not parse caps \"%s\""
 msgstr "nije moguće raščlaniti sposobnosti „%s“"
 
+#: gst/parse/grammar.y:952
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "nema elementa-ponor za URI „%s“"
 
+#: gst/parse/grammar.y:971
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr "nema elementa-izvor za URI „%s“"
 
+#: gst/parse/grammar.y:1061
 msgid "syntax error"
 msgstr "greška u sintaksi"
 
+#: gst/parse/grammar.y:1084
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "specificiran je prazni spremnik „%s“ -- to nije dopušteno"
 
+#: gst/parse/grammar.y:1094
 #, c-format
 msgid "no bin \"%s\", unpacking elements"
 msgstr "nema „%s“ bin -- raspakiravanje elemenata"
 
+#: gst/parse/grammar.y:1125
 msgid "empty pipeline not allowed"
 msgstr "prazan cjevovod nije dopušten"
 
+#: libs/gst/base/gstbasesink.c:1210
 msgid "Pipeline construction is invalid, please add queues."
 msgstr "Konstrukcija cjevovoda nije valjana -- dodajte redove čekanja."
 
+#: libs/gst/base/gstbasesink.c:3004
 msgid "A lot of buffers are being dropped."
 msgstr "Puno međuspremnika je odbačeno."
 
+#: libs/gst/base/gstbasesink.c:3496
 msgid "Internal data flow problem."
 msgstr "Problem s internim tokom podataka."
 
+#: libs/gst/base/gstbasesink.c:4222 libs/gst/base/gstbasesrc.c:2708
 msgid "Internal data flow error."
 msgstr "Interna greška toka podataka."
 
+#: libs/gst/base/gstbasesrc.c:2638
 msgid "Internal clock error."
 msgstr "Interna greška sinkronizacije (clock)."
 
+#: libs/gst/base/gstbasesrc.c:2666 plugins/elements/gstdownloadbuffer.c:842
+#: plugins/elements/gstdownloadbuffer.c:1265
 msgid "Failed to map buffer."
 msgstr "Nije uspjelo mapirati međuspremnik."
 
+#: plugins/elements/gstcapsfilter.c:128
 msgid "Filter caps"
 msgstr "Filtriranje (ograničavanje) sposobnosti"
 
-msgid ""
-"Restrict the possible allowed capabilities (NULL means ANY). Setting this "
-"property takes a reference to the supplied GstCaps object."
-msgstr ""
-"Ograniči moguće dopuštene sposobnosti (NULL znači ANY (sve)). Postavljanje "
-"ovog svojstva povećava se količina poveznica na taj GstCaps objekt."
+#: plugins/elements/gstcapsfilter.c:129
+msgid "Restrict the possible allowed capabilities (NULL means ANY). Setting this property takes a reference to the supplied GstCaps object."
+msgstr "Ograniči moguće dopuštene sposobnosti (NULL znači ANY (sve)). Postavljanje ovog svojstva povećava se količina poveznica na taj GstCaps objekt."
 
+#: plugins/elements/gstcapsfilter.c:136
 msgid "Caps Change Mode"
 msgstr "Mȏd (način) izmjena sposobnosti"
 
+#: plugins/elements/gstcapsfilter.c:137
 msgid "Filter caps change behaviour"
 msgstr "Ponašanje se mijenja filtriranjem (ograničavanjem) sposobnosti"
 
+#: plugins/elements/gstdownloadbuffer.c:927 plugins/elements/gstqueue2.c:1792
 msgid "No Temp directory specified."
 msgstr "Nijedan privremeni direktorij nije specificiran."
 
+#: plugins/elements/gstdownloadbuffer.c:933 plugins/elements/gstqueue2.c:1798
 #, c-format
 msgid "Could not create temp file \"%s\"."
 msgstr "Nije moguće kreirati privremenu datoteku „%s“."
 
+#: plugins/elements/gstdownloadbuffer.c:941 plugins/elements/gstfilesrc.c:537
+#: plugins/elements/gstqueue2.c:1806
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nije moguće otvoriti datoteku „%s“ za čitanje."
 
+#: plugins/elements/gstdownloadbuffer.c:1274 plugins/elements/gstqueue2.c:2225
 msgid "Error while writing to download file."
 msgstr "Greška pri pisanju u preuzetu datoteku."
 
+#: plugins/elements/gstfilesink.c:404
 msgid "No file name specified for writing."
 msgstr "Nije specificirana datoteka za pisanje."
 
+#: plugins/elements/gstfilesink.c:410
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Nije moguće otvoriti datoteku „%s“ za pisanje."
 
+#: plugins/elements/gstfilesink.c:422 plugins/elements/gstfilesink.c:426
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Greška pri zatvaranju datoteke „%s“."
 
+#: plugins/elements/gstfilesink.c:605
 #, c-format
 msgid "Error while seeking in file \"%s\"."
 msgstr "Greška pri pozicioniranju u datoteci „%s“."
 
+#: plugins/elements/gstfilesink.c:613 plugins/elements/gstfilesink.c:620
+#: plugins/elements/gstfilesink.c:793 plugins/elements/gstfilesink.c:848
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Greška pri pisanju u datoteku „%s“."
 
+#: plugins/elements/gstfilesrc.c:525
 msgid "No file name specified for reading."
 msgstr "Nije specificirana datoteka za čitanje."
 
+#: plugins/elements/gstfilesrc.c:546
 #, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "Nije moguće dobiti podatke o „%s“."
 
+#: plugins/elements/gstfilesrc.c:552
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "„%s“ je direktorij."
 
+#: plugins/elements/gstfilesrc.c:558
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Datoteka „%s“ je utičnica (socket)."
 
+#: plugins/elements/gstidentity.c:722
 msgid "Failed after iterations as requested."
 msgstr "Neuspjeh nakon iteracija na zahtjev."
 
+#: plugins/elements/gstidentity.c:903
 msgid "eos-after and error-after can't both be defined."
 msgstr "oba, eos-after i error-error se ne mogu definirati ."
 
+#: plugins/elements/gsttypefindelement.c:251
 msgid "caps"
 msgstr "sposobnosti (caps)"
 
+#: plugins/elements/gsttypefindelement.c:252
 msgid "detected capabilities in stream"
 msgstr "doznata su svojstva strujanja"
 
+#: plugins/elements/gsttypefindelement.c:255
 msgid "minimum"
 msgstr "minimum"
 
+#: plugins/elements/gsttypefindelement.c:260
 msgid "force caps"
 msgstr "nametne sposobnosti"
 
+#: plugins/elements/gsttypefindelement.c:261
 msgid "force caps without doing a typefind"
 msgstr "nametne sposobnosti bez upotrebe „typefind“"
 
+#: plugins/elements/gsttypefindelement.c:987
+#: plugins/elements/gsttypefindelement.c:1009
 msgid "Stream doesn't contain enough data."
 msgstr "Protok ne sadrži dovoljno podataka."
 
+#: plugins/elements/gsttypefindelement.c:1129
 msgid "Stream contains no data."
 msgstr "Protok ne sadrži podatke."
 
+#: tools/gst-inspect.c:290
 #, c-format
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "%sRealizirana sučelja%s:\n"
 
+#: tools/gst-inspect.c:400
 msgid "readable"
 msgstr "čitljivo"
 
+#: tools/gst-inspect.c:405
 msgid "writable"
 msgstr "zapisivo"
 
+#: tools/gst-inspect.c:410
 msgid "deprecated"
 msgstr "zastarjelo"
 
+#: tools/gst-inspect.c:414
 msgid "controllable"
 msgstr "upravljivo"
 
+#: tools/gst-inspect.c:420
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "promjenjivo u stanje NULL, READY, PAUSED ili PLAYING"
 
+#: tools/gst-inspect.c:423
 msgid "changeable only in NULL, READY or PAUSED state"
 msgstr "promjenjivo samo u stanje NULL, READY ili PAUSED"
 
+#: tools/gst-inspect.c:426
 msgid "changeable only in NULL or READY state"
 msgstr "promjenjivo samo u stanje NULL ili READY"
 
+#: tools/gst-inspect.c:1131
 msgid "Blacklisted files:"
 msgstr "Datoteke na crnoj listi:"
 
+#: tools/gst-inspect.c:1143 tools/gst-inspect.c:1276
 #, c-format
 msgid "%sTotal count%s: %s"
 msgstr "%sUkupna količina%s: %s"
 
+#: tools/gst-inspect.c:1145
 #, c-format
 msgid "%d blacklisted file"
 msgid_plural "%d blacklisted files"
@@ -1084,6 +1303,7 @@ msgstr[0] "%d datoteka na crnoj listi"
 msgstr[1] "%d datoteke na crnoj listi"
 msgstr[2] "%d datoteka na crnoj listi"
 
+#: tools/gst-inspect.c:1278
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
@@ -1091,6 +1311,7 @@ msgstr[0] "%d plugin"
 msgstr[1] "%d plugina"
 msgstr[2] "%d plugina"
 
+#: tools/gst-inspect.c:1281
 #, c-format
 msgid "%d blacklist entry"
 msgid_plural "%d blacklist entries"
@@ -1098,6 +1319,7 @@ msgstr[0] "%d stavka na crnoj listi"
 msgstr[1] "%d stavke na crnoj listi"
 msgstr[2] "%d stavki na crnoj listi"
 
+#: tools/gst-inspect.c:1286
 #, c-format
 msgid "%d feature"
 msgid_plural "%d features"
@@ -1105,17 +1327,18 @@ msgstr[0] "%d značajka"
 msgstr[1] "%d značajke"
 msgstr[2] "%d značajki"
 
+#: tools/gst-inspect.c:1953
 msgid "Print all elements"
 msgstr "ispiše sve elemente"
 
+#: tools/gst-inspect.c:1955
 msgid "Print list of blacklisted files"
 msgstr "ispiše popis datoteka na crnoj listi"
 
+#: tools/gst-inspect.c:1957
 msgid ""
-"Print a machine-parsable list of features the specified plugin or all "
-"plugins provide.\n"
-"                                       Useful in connection with external "
-"automatic plugin installation mechanisms"
+"Print a machine-parsable list of features the specified plugin or all plugins provide.\n"
+"                                       Useful in connection with external automatic plugin installation mechanisms"
 msgstr ""
 "ispiše (raščlanjiv) popis značajki\n"
 "                                         samo navedenog ili svih plugina;\n"
@@ -1123,99 +1346,113 @@ msgstr ""
 "                                         automatskim mehanizmima za\n"
 "                                         instalaciju plugina"
 
+#: tools/gst-inspect.c:1962
 msgid "List the plugin contents"
 msgstr "izlista sadržaj plugina"
 
-msgid ""
-"A slashes ('/') separated list of types of elements (also known as klass) to "
-"list. (unordered)"
+#: tools/gst-inspect.c:1964
+msgid "A slashes ('/') separated list of types of elements (also known as klass) to list. (unordered)"
 msgstr ""
 "izlista nesortirani popis vrsta elemenata\n"
 "                                         (odvojenih s „/“); taj popis je\n"
 "                                          poznat kao „klass“"
 
+#: tools/gst-inspect.c:1967
 msgid "Check if the specified element or plugin exists"
 msgstr ""
 "provjeri postoji li specificirani\n"
 "                                         element ili plugin"
 
-msgid ""
-"When checking if an element or plugin exists, also check that its version is "
-"at least the version specified"
+#: tools/gst-inspect.c:1970
+msgid "When checking if an element or plugin exists, also check that its version is at least the version specified"
 msgstr ""
 "isto kao gore ali dodatno provjeri\n"
 "                                         da njihova inačica nije niža\n"
 "                                         od specificirane"
 
+#: tools/gst-inspect.c:1974
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr ""
 "ispiše podržane URI sheme s elementima\n"
 "                                         koji ih realiziraju"
 
-msgid ""
-"Disable colors in output. You can also achieve the same by "
-"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
-msgstr ""
-"Onemogućite obojeni ispis. To možete učiniti i postavljanjem varijable "
-"okruženja „GST_INSPECT_NO_COLORS“ na bilo koju vrijednost."
+#: tools/gst-inspect.c:1979
+msgid "Disable colors in output. You can also achieve the same by setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+msgstr "Onemogućite obojeni ispis. To možete učiniti i postavljanjem varijable okruženja „GST_INSPECT_NO_COLORS“ na bilo koju vrijednost."
 
+#: tools/gst-inspect.c:2135
 #, c-format
 msgid "Could not load plugin file: %s\n"
 msgstr "Nije moguće učitati datoteku plugina: %s\n"
 
+#: tools/gst-inspect.c:2141
 #, c-format
 msgid "No such element or plugin '%s'\n"
 msgstr "Nema takvog elementa ili plugina „%s“\n"
 
+#: tools/gst-launch.c:252
 msgid "Index statistics"
 msgstr "Indeksna statistika"
 
+#: tools/gst-launch.c:578
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
 msgstr "Primljena je poruka #%u od elementa „%s“ (%s): "
 
+#: tools/gst-launch.c:582
 #, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
 msgstr "Primljena je poruka #%u od konekcije „%s:%s“ (%s): "
 
+#: tools/gst-launch.c:586
 #, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
 msgstr "Primljena je poruka #%u od objekta „%s“ (%s): "
 
+#: tools/gst-launch.c:590
 #, c-format
 msgid "Got message #%u (%s): "
 msgstr "Primljena je poruka #%u (%s): "
 
+#: tools/gst-launch.c:622
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "Primljen je EOS (znak kraja protoka) od elementa „%s“.\n"
 
+#: tools/gst-launch.c:631
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "PRONAĐEN TAG   : pronađen elementom „%s“.\n"
 
+#: tools/gst-launch.c:634
 #, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
 msgstr "PRONAĐEN TAG   : pronađen s konekcijom „%s:%s“.\n"
 
+#: tools/gst-launch.c:637
 #, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
 msgstr "PRONAĐEN TAG   : pronađen objektom „%s“.\n"
 
+#: tools/gst-launch.c:640
 msgid "FOUND TAG\n"
 msgstr "PRONAĐEN TAG\n"
 
+#: tools/gst-launch.c:655
 #, c-format
 msgid "FOUND TOC      : found by element \"%s\".\n"
 msgstr "PRONAĐEN TOC   : pronađen elementom „%s“.\n"
 
+#: tools/gst-launch.c:658
 #, c-format
 msgid "FOUND TOC      : found by object \"%s\".\n"
 msgstr "PRONAĐEN TOC   : pronađen objektom „%s“.\n"
 
+#: tools/gst-launch.c:661
 msgid "FOUND TOC\n"
 msgstr "PRONAĐEN TOC\n"
 
+#: tools/gst-launch.c:678
 #, c-format
 msgid ""
 "INFO:\n"
@@ -1224,148 +1461,190 @@ msgstr ""
 "INFORMACIJE:\n"
 "%s\n"
 
+#: tools/gst-launch.c:695
 #, c-format
 msgid "WARNING: from element %s: %s\n"
 msgstr "UPOZORENJE: od elementa %s: %s\n"
 
+#: tools/gst-launch.c:730
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Pripremljeno, čeka se završetak punjenja međuspremnika...\n"
 
+#: tools/gst-launch.c:734
 msgid "Prerolled, waiting for progress to finish...\n"
 msgstr "Pripremljeno, čeka se završetak procesa...\n"
 
+#: tools/gst-launch.c:746
 msgid "buffering..."
 msgstr "punjenje međuspremnika..."
 
+#: tools/gst-launch.c:757
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Gotovo je s punjenjem, cjevovod se stavlja u stanje PLAYING ...\n"
 
+#: tools/gst-launch.c:765
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Punjenje međuspremnika, cjevovod se stavlja u stanje PAUSED ...\n"
 
+#: tools/gst-launch.c:774
 msgid "Redistribute latency...\n"
 msgstr "Preraspodjela latencije...\n"
 
+#: tools/gst-launch.c:785
 #, c-format
 msgid "Setting state to %s as requested by %s...\n"
 msgstr "Uspostavlja se stanje %s prema zahtjevu od %s...\n"
 
+#: tools/gst-launch.c:801
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Prekid: Zaustavlja se cjevovod ...\n"
 
+#: tools/gst-launch.c:830
 #, c-format
 msgid "Progress: (%s) %s\n"
 msgstr "Progres: (%s) %s\n"
 
+#: tools/gst-launch.c:843
 #, c-format
 msgid "Missing element: %s\n"
 msgstr "Nedostaje element %s\n"
 
+#: tools/gst-launch.c:857
 #, c-format
 msgid "Got context from element '%s': %s=%s\n"
 msgstr "Primljen je kontekst od elementa „%s“: %s=%s\n"
 
+#: tools/gst-launch.c:991
 msgid "Output tags (also known as metadata)"
 msgstr "izlazni tagovi (znani i kao „metapodaci“)"
 
+#: tools/gst-launch.c:993
 msgid "Output TOC (chapters and editions)"
 msgstr "ispiše TOC (sadržaj: poglavlja i izdanja)"
 
+#: tools/gst-launch.c:995
 msgid "Output status information and property notifications"
 msgstr "ispiše status i obavijesti o svojstvima"
 
+#: tools/gst-launch.c:997
 msgid "Do not print any progress information"
 msgstr "ne ispisivati informacije o progresu"
 
+#: tools/gst-launch.c:999
 msgid "Output messages"
 msgstr "izlazne poruke"
 
-msgid ""
-"Do not output status information for the specified property if verbose "
-"output is enabled (can be used multiple times)"
+#: tools/gst-launch.c:1001
+msgid "Do not output status information for the specified property if verbose output is enabled (can be used multiple times)"
 msgstr ""
 "ne ispiše status za IME-SVOJSTVA iako je\n"
 "                                      aktivna opcija za opširno ispisivanje"
 
+#: tools/gst-launch.c:1003
 msgid "PROPERTY-NAME"
 msgstr "IME-SVOJSTVA"
 
+#: tools/gst-launch.c:1005
 msgid "Do not install a fault handler"
 msgstr "ne instalira rutinu za obradu greški"
 
+#: tools/gst-launch.c:1007
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr ""
 "nametni EOS na sources prije zatvaranja\n"
 "                                      cjevovoda"
 
+#: tools/gst-launch.c:1010
 msgid "Gather and print index statistics"
 msgstr "Prikupiti i ispisati indeksne statistike"
 
+#: tools/gst-launch.c:1077
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "GREŠKA: nije moguće sastaviti cjevovod: %s.\n"
 
+#: tools/gst-launch.c:1081
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "GREŠKA: nije moguće sastaviti cjevovod.\n"
 
+#: tools/gst-launch.c:1085
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "UPOZORENJE: pogrešni cjevovod: %s\n"
 
+#: tools/gst-launch.c:1101
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "GREŠKA: nije pronađen element „pipeline“.\n"
 
+#: tools/gst-launch.c:1132 tools/gst-launch.c:1233
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Cjevovod se stavlja u stanje PAUSED ...\n"
 
+#: tools/gst-launch.c:1137
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "GREŠKA: Cjevovod ne želi pauzirati.\n"
 
+#: tools/gst-launch.c:1142
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Cjevovod je aktiv i ne treba PREROLL (pripravu)...\n"
 
+#: tools/gst-launch.c:1146
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Cjevovod se priprema (PREROLLING)....\n"
 
+#: tools/gst-launch.c:1149 tools/gst-launch.c:1163
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "GREŠKA: cjevovod se ne želi pripremiti (preroll).\n"
 
+#: tools/gst-launch.c:1156
 msgid "Pipeline is PREROLLED ...\n"
 msgstr "Cjevovod je pripremljen (PREROLLED) ...\n"
 
+#: tools/gst-launch.c:1169
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Cjevovod je stavlja u stanje PLAYING ...\n"
 
+#: tools/gst-launch.c:1176
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "GREŠKA: cjevovod ne želi reproducirati (play).\n"
 
+#: tools/gst-launch.c:1195
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
 msgstr "Omogućen je EOS pri zatvaranju -- nameće se EOS na cjevovod\n"
 
+#: tools/gst-launch.c:1199
 msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
 msgstr "Omogućen je EOS pri zatvaranju -- čekanje na EOS nakon greške\n"
 
+#: tools/gst-launch.c:1202
 msgid "Waiting for EOS...\n"
 msgstr "Čeka se EOS...\n"
 
+#: tools/gst-launch.c:1209
 msgid "EOS received - stopping pipeline...\n"
 msgstr "Primljen je EOS - cjevovod se zaustavlja...\n"
 
+#: tools/gst-launch.c:1213
 msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
 msgstr "Prekid dok se čeka na EOS - cjevovod se zaustavlja...\n"
 
+#: tools/gst-launch.c:1218
 msgid "An error happened while waiting for EOS\n"
 msgstr "Dogodila se greška pri čekanju na EOS\n"
 
+#: tools/gst-launch.c:1229
 msgid "Execution ended after %"
 msgstr "Izvršavanje je završilo nakon %"
 
+#: tools/gst-launch.c:1245
 msgid "Setting pipeline to READY ...\n"
 msgstr "Cjevovod se stavlja u stanje READY ...\n"
 
+#: tools/gst-launch.c:1257
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Cjevovod se stavlja u stanje NULL ...\n"
 
+#: tools/gst-launch.c:1261
 msgid "Freeing pipeline ...\n"
 msgstr "Cjevovod se prazni...\n"
 
@@ -1400,9 +1679,7 @@ msgstr "Cjevovod se prazni...\n"
 #~ msgstr "najviše"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-#~ msgstr ""
-#~ "Uporaba: gst-xmllaunch <datoteka.xml> [ element."
-#~ "svojstvo=vrijednost ... ]\n"
+#~ msgstr "Uporaba: gst-xmllaunch <datoteka.xml> [ element.svojstvo=vrijednost ... ]\n"
 
 #~ msgid "ERROR: parse of xml file '%s' failed.\n"
 #~ msgstr "GREŠKA: analiza xml datoteke „%s” nije uspjela.\n"
