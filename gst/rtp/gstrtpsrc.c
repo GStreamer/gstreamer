@@ -663,7 +663,7 @@ gst_rtp_src_init (GstRtpSrc * self)
    * be added later.
    */
 
-  self->rtpbin = gst_element_factory_make ("rtpbin", NULL);
+  self->rtpbin = gst_element_factory_make ("rtpbin", "rtp_recv_rtpbin0");
   if (self->rtpbin == NULL) {
     missing_plugin = "rtpmanager";
     goto missing_plugin;
@@ -683,19 +683,20 @@ gst_rtp_src_init (GstRtpSrc * self)
   g_signal_connect (self->rtpbin, "on-ssrc-collision",
       G_CALLBACK (gst_rtp_src_rtpbin_on_ssrc_collision_cb), self);
 
-  self->rtp_src = gst_element_factory_make ("udpsrc", NULL);
+  self->rtp_src = gst_element_factory_make ("udpsrc", "rtp_rtp_udpsrc0");
   if (self->rtp_src == NULL) {
     missing_plugin = "udp";
     goto missing_plugin;
   }
 
-  self->rtcp_src = gst_element_factory_make ("udpsrc", NULL);
+  self->rtcp_src = gst_element_factory_make ("udpsrc", "rtp_rtcp_udpsrc0");
   if (self->rtcp_src == NULL) {
     missing_plugin = "udp";
     goto missing_plugin;
   }
 
-  self->rtcp_sink = gst_element_factory_make ("dynudpsink", NULL);
+  self->rtcp_sink =
+      gst_element_factory_make ("dynudpsink", "rtp_rtcp_dynudpsink0");
   if (self->rtcp_sink == NULL) {
     missing_plugin = "udp";
     goto missing_plugin;

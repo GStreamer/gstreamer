@@ -546,7 +546,7 @@ gst_rtp_sink_init (GstRtpSink * self)
    *                                   | rtpbin |
    * udpsrc     -> [recv_rtcp_sink_%u]  --------  [send_rtcp_src_%u] -> * udpsink
    */
-  self->rtpbin = gst_element_factory_make ("rtpbin", NULL);
+  self->rtpbin = gst_element_factory_make ("rtpbin", "rtp_send_rtpbin0");
   if (self->rtpbin == NULL) {
     missing_plugin = "rtpmanager";
     goto missing_plugin;
@@ -566,31 +566,31 @@ gst_rtp_sink_init (GstRtpSink * self)
   gst_bin_set_suppressed_flags (GST_BIN (self),
       GST_ELEMENT_FLAG_SOURCE | GST_ELEMENT_FLAG_SINK);
 
-  self->funnel_rtp = gst_element_factory_make ("funnel", NULL);
+  self->funnel_rtp = gst_element_factory_make ("funnel", "rtp_rtp_funnel0");
   if (self->funnel_rtp == NULL) {
     missing_plugin = "funnel";
     goto missing_plugin;
   }
 
-  self->funnel_rtcp = gst_element_factory_make ("funnel", NULL);
+  self->funnel_rtcp = gst_element_factory_make ("funnel", "rtp_rtcp_funnel0");
   if (self->funnel_rtcp == NULL) {
     missing_plugin = "funnel";
     goto missing_plugin;
   }
 
-  self->rtp_sink = gst_element_factory_make ("udpsink", NULL);
+  self->rtp_sink = gst_element_factory_make ("udpsink", "rtp_rtp_udpsink0");
   if (self->rtp_sink == NULL) {
     missing_plugin = "udp";
     goto missing_plugin;
   }
 
-  self->rtcp_src = gst_element_factory_make ("udpsrc", NULL);
+  self->rtcp_src = gst_element_factory_make ("udpsrc", "rtp_rtcp_udpsrc0");
   if (self->rtcp_src == NULL) {
     missing_plugin = "udp";
     goto missing_plugin;
   }
 
-  self->rtcp_sink = gst_element_factory_make ("udpsink", NULL);
+  self->rtcp_sink = gst_element_factory_make ("udpsink", "rtp_rtcp_udpsink0");
   if (self->rtcp_sink == NULL) {
     missing_plugin = "udp";
     goto missing_plugin;
