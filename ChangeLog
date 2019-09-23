@@ -1,3 +1,46 @@
+=== release 1.16.1 ===
+
+2019-09-23 11:10:55 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-plugins-ugly.doap:
+	* meson.build:
+	  Release 1.16.1
+
+2019-09-23 11:10:55 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-sid.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	  Update docs
+
+2019-04-22 12:51:33 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/dvdread/meson.build:
+	* meson.build:
+	  meson: Always require the gmodule dependency
+	  It's needed by the dvdread plugin but also by the x264 plugin in certain
+	  circumstances. As it's part of GLib and always available, simply move it
+	  as a hard dependency to the top-level meson.build.
+
+2019-05-02 12:35:23 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitlab-ci.yml:
+	  ci: use template from 1.16 branch
+
 === release 1.16.0 ===
 
 2019-04-19 00:24:40 +0100  Tim-Philipp Müller <tim@centricular.com>
