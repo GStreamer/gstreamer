@@ -10292,7 +10292,7 @@ qtdemux_inspect_transformation_matrix (GstQTDemux * qtdemux,
     }
 
     GST_DEBUG_OBJECT (qtdemux, "Transformation matrix rotation %s",
-        rotation_tag);
+        GST_STR_NULL (rotation_tag));
     if (rotation_tag != NULL) {
       if (*taglist == NULL)
         *taglist = gst_tag_list_new_empty ();
