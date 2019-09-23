@@ -1,3 +1,38 @@
+=== release 1.16.1 ===
+
+2019-09-23 11:19:32 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* validate/ChangeLog:
+	* validate/NEWS:
+	* validate/RELEASE:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	* validate/meson.build:
+	  Release 1.16.1
+
+2019-04-19 13:02:43 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* validate/launcher/testsuites/check.py:
+	  launcher: testsuites: skip systemclock stress tests
+	  These are very flaky when the build bots are under load.
+
+2019-05-04 19:54:16 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* validate/gst/validate/gst-validate-internal.h:
+	* validate/gst/validate/validate.c:
+	  validate: fix build on macOS
+	  _Q_VALIDATE_MONITOR was defined twice because it wasn't declared
+	  as extern in the header, so it would be defined as variable in all
+	  included files. This doesn't seem to cause problems on Linux, but
+	  seems to cause build failures on macOS.
+	  Fixes #42
+
+2019-05-02 12:35:38 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitlab-ci.yml:
+	  ci: use template from 1.16 branch
+
 === release 1.16.0 ===
 
 2019-04-19 00:36:53 +0100  Tim-Philipp Müller <tim@centricular.com>
