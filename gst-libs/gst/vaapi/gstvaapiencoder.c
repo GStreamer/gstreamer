@@ -233,7 +233,7 @@ gst_vaapi_encoder_ensure_param_roi_regions (GstVaapiEncoder * encoder,
 GstVaapiEncoder *
 gst_vaapi_encoder_ref (GstVaapiEncoder * encoder)
 {
-  return gst_vaapi_object_ref (encoder);
+  return gst_object_ref (encoder);
 }
 
 /**
@@ -246,7 +246,7 @@ gst_vaapi_encoder_ref (GstVaapiEncoder * encoder)
 void
 gst_vaapi_encoder_unref (GstVaapiEncoder * encoder)
 {
-  gst_vaapi_object_unref (encoder);
+  gst_object_unref (encoder);
 }
 
 /**
