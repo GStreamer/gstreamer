@@ -483,7 +483,8 @@ gst_vaapi_decoder_finalize (GObject * object)
     decoder->frames = NULL;
   }
 
-  gst_vaapi_object_replace (&decoder->context, NULL);
+  gst_vaapi_context_unref (decoder->context);
+  decoder->context = NULL;
   decoder->va_context = VA_INVALID_ID;
 
   gst_vaapi_display_replace (&decoder->display, NULL);

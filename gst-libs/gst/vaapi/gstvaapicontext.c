@@ -31,8 +31,7 @@
 #include "gstvaapicompat.h"
 #include "gstvaapicontext.h"
 #include "gstvaapidisplay_priv.h"
-#include "gstvaapiobject_priv.h"
-#include "gstvaapisurface.h"
+#include "gstvaapisurface_priv.h"
 #include "gstvaapisurfacepool.h"
 #include "gstvaapisurfaceproxy.h"
 #include "gstvaapivideopool_priv.h"
@@ -54,7 +53,7 @@ ensure_attributes (GstVaapiContext * context)
     return TRUE;
 
   context->attribs =
-      gst_vaapi_config_surface_attributes_get (GST_VAAPI_OBJECT_DISPLAY
+      gst_vaapi_config_surface_attributes_get (GST_VAAPI_CONTEXT_DISPLAY
       (context), context->va_config);
   return (context->attribs != NULL);
 }
@@ -63,7 +62,7 @@ static inline gboolean
 context_get_attribute (GstVaapiContext * context, VAConfigAttribType type,
     guint * out_value_ptr)
 {
-  return gst_vaapi_get_config_attribute (GST_VAAPI_OBJECT_DISPLAY (context),
+  return gst_vaapi_get_config_attribute (GST_VAAPI_CONTEXT_DISPLAY (context),
       context->va_profile, context->va_entrypoint, type, out_value_ptr);
 }
 
@@ -80,11 +79,11 @@ context_destroy_surfaces (GstVaapiContext * context)
 static void
 context_destroy (GstVaapiContext * context)
 {
-  GstVaapiDisplay *const display = GST_VAAPI_OBJECT_DISPLAY (context);
+  GstVaapiDisplay *const display = GST_VAAPI_CONTEXT_DISPLAY (context);
   VAContextID context_id;
   VAStatus status;
 
-  context_id = GST_VAAPI_OBJECT_ID (context);
+  context_id = GST_VAAPI_CONTEXT_ID (context);
   GST_DEBUG ("context 0x%08x", context_id);
 
   if (context_id != VA_INVALID_ID) {
@@ -94,7 +93,7 @@ context_destroy (GstVaapiContext * context)
     GST_VAAPI_DISPLAY_UNLOCK (display);
     if (!vaapi_check_status (status, "vaDestroyContext()"))
       GST_WARNING ("failed to destroy context 0x%08x", context_id);
-    GST_VAAPI_OBJECT_ID (context) = VA_INVALID_ID;
+    GST_VAAPI_CONTEXT_ID (context) = VA_INVALID_ID;
   }
 
   if (context->va_config != VA_INVALID_ID) {
@@ -126,7 +125,7 @@ context_ensure_surfaces (GstVaapiContext * context)
 
   for (i = context->surfaces->len; i < num_surfaces; i++) {
     surface =
-        gst_vaapi_surface_new_from_formats (GST_VAAPI_OBJECT_DISPLAY (context),
+        gst_vaapi_surface_new_from_formats (GST_VAAPI_CONTEXT_DISPLAY (context),
         cip->chroma_type, cip->width, cip->height, context->attribs->formats);
     if (!surface)
       return FALSE;
@@ -142,7 +141,7 @@ static gboolean
 context_create_surfaces (GstVaapiContext * context)
 {
   const GstVaapiContextInfo *const cip = &context->info;
-  GstVaapiDisplay *const display = GST_VAAPI_OBJECT_DISPLAY (context);
+  GstVaapiDisplay *const display = GST_VAAPI_CONTEXT_DISPLAY (context);
   guint num_surfaces;
 
   num_surfaces = cip->ref_frames + SCRATCH_SURFACES_COUNT;
@@ -168,7 +167,7 @@ static gboolean
 context_create (GstVaapiContext * context)
 {
   const GstVaapiContextInfo *const cip = &context->info;
-  GstVaapiDisplay *const display = GST_VAAPI_OBJECT_DISPLAY (context);
+  GstVaapiDisplay *const display = GST_VAAPI_CONTEXT_DISPLAY (context);
   VAContextID context_id;
   VASurfaceID surface_id;
   VAStatus status;
@@ -203,7 +202,7 @@ context_create (GstVaapiContext * context)
     goto cleanup;
 
   GST_DEBUG ("context 0x%08x", context_id);
-  GST_VAAPI_OBJECT_ID (context) = context_id;
+  GST_VAAPI_CONTEXT_ID (context) = context_id;
   success = TRUE;
 
 cleanup:
@@ -216,7 +215,7 @@ static gboolean
 config_create (GstVaapiContext * context)
 {
   const GstVaapiContextInfo *const cip = &context->info;
-  GstVaapiDisplay *const display = GST_VAAPI_OBJECT_DISPLAY (context);
+  GstVaapiDisplay *const display = GST_VAAPI_CONTEXT_DISPLAY (context);
   VAConfigAttrib attribs[7], *attrib;
   VAStatus status;
   guint value, va_chroma_format, attrib_index;
@@ -393,15 +392,6 @@ gst_vaapi_context_init (GstVaapiContext * context,
   context->attribs = NULL;
 }
 
-static void
-gst_vaapi_context_finalize (GstVaapiContext * context)
-{
-  context_destroy (context);
-  context_destroy_surfaces (context);
-}
-
-GST_VAAPI_OBJECT_DEFINE_CLASS (GstVaapiContext, gst_vaapi_context);
-
 /**
  * gst_vaapi_context_new:
  * @display: a #GstVaapiDisplay
@@ -421,10 +411,17 @@ gst_vaapi_context_new (GstVaapiDisplay * display,
 
   g_return_val_if_fail (cip->profile, NULL);
   g_return_val_if_fail (cip->entrypoint, NULL);
+  g_return_val_if_fail (display, NULL);
 
-  context = gst_vaapi_object_new (gst_vaapi_context_class (), display);
+  context = g_slice_new (GstVaapiContext);
   if (!context)
     return NULL;
+
+  GST_VAAPI_CONTEXT_DISPLAY (context) = gst_object_ref (display);
+  GST_VAAPI_CONTEXT_ID (context) = VA_INVALID_ID;
+  g_atomic_int_set (&context->ref_count, 1);
+  context->surfaces = NULL;
+  context->surfaces_pool = NULL;
 
   gst_vaapi_context_init (context, cip);
 
@@ -448,7 +445,7 @@ done:
   /* ERRORS */
 error:
   {
-    gst_vaapi_object_unref (context);
+    gst_vaapi_context_unref (context);
     return NULL;
   }
 }
@@ -537,7 +534,7 @@ gst_vaapi_context_get_id (GstVaapiContext * context)
 {
   g_return_val_if_fail (context != NULL, VA_INVALID_ID);
 
-  return GST_VAAPI_OBJECT_ID (context);
+  return GST_VAAPI_CONTEXT_ID (context);
 }
 
 /**
@@ -654,4 +651,43 @@ gst_vaapi_context_get_surface_attributes (GstVaapiContext * context,
   }
 
   return TRUE;
+}
+
+/**
+ * gst_vaapi_context_ref:
+ * @context: a #GstVaapiContext
+ *
+ * Atomically increases the reference count of the given @context by one.
+ *
+ * Returns: The same @context argument
+ */
+GstVaapiContext *
+gst_vaapi_context_ref (GstVaapiContext * context)
+{
+  g_return_val_if_fail (context != NULL, NULL);
+
+  g_atomic_int_inc (&context->ref_count);
+
+  return context;
+}
+
+/**
+ * gst_vaapi_context_unref:
+ * @context: a #GstVaapiContext
+ *
+ * Atomically decreases the reference count of the @context by one. If
+ * the reference count reaches zero, the object will be free'd.
+ */
+void
+gst_vaapi_context_unref (GstVaapiContext * context)
+{
+  g_return_if_fail (context != NULL);
+  g_return_if_fail (context->ref_count > 0);
+
+  if (g_atomic_int_dec_and_test (&context->ref_count)) {
+    context_destroy (context);
+    context_destroy_surfaces (context);
+    gst_vaapi_display_replace (&context->display, NULL);
+    g_slice_free (GstVaapiContext, context);
+  }
 }

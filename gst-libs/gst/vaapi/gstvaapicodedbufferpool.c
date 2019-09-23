@@ -47,7 +47,7 @@ static void
 coded_buffer_pool_init (GstVaapiCodedBufferPool * pool,
     GstVaapiContext * context, gsize buf_size)
 {
-  pool->context = gst_vaapi_object_ref (context);
+  pool->context = gst_vaapi_context_ref (context);
   pool->buf_size = buf_size;
 }
 
@@ -55,7 +55,8 @@ static void
 coded_buffer_pool_finalize (GstVaapiCodedBufferPool * pool)
 {
   gst_vaapi_video_pool_finalize (GST_VAAPI_VIDEO_POOL (pool));
-  gst_vaapi_object_replace (&pool->context, NULL);
+  gst_vaapi_context_unref (pool->context);
+  pool->context = NULL;
 }
 
 static gpointer
@@ -106,7 +107,7 @@ gst_vaapi_coded_buffer_pool_new (GstVaapiEncoder * encoder, gsize buf_size)
   if (!pool)
     return NULL;
 
-  gst_vaapi_video_pool_init (pool, GST_VAAPI_OBJECT_DISPLAY (context),
+  gst_vaapi_video_pool_init (pool, GST_VAAPI_CONTEXT_DISPLAY (context),
       GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_CODED_BUFFER);
   coded_buffer_pool_init (GST_VAAPI_CODED_BUFFER_POOL (pool),
       context, buf_size);

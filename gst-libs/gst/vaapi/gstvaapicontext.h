@@ -41,7 +41,6 @@ G_BEGIN_DECLS
 typedef struct _GstVaapiConfigInfoEncoder GstVaapiConfigInfoEncoder;
 typedef struct _GstVaapiContextInfo GstVaapiContextInfo;
 typedef struct _GstVaapiContext GstVaapiContext;
-typedef struct _GstVaapiContextClass GstVaapiContextClass;
 
 /**
  * GstVaapiContextUsage:
@@ -105,30 +104,23 @@ struct _GstVaapiContextInfo
 struct _GstVaapiContext
 {
   /*< private >*/
-  GstVaapiObject parent_instance;
+  volatile gint ref_count;
+  GstVaapiDisplay *display;
+  GstVaapiID object_id;
 
+  /*< public >*/
   GstVaapiContextInfo info;
   VAProfile va_profile;
   VAEntrypoint va_entrypoint;
   VAConfigID va_config;
   GPtrArray *surfaces;
   GstVaapiVideoPool *surfaces_pool;
-  GPtrArray *overlays[2];
-  guint overlay_id;
   gboolean reset_on_resize;
   GstVaapiConfigSurfaceAttributes *attribs;
 };
 
-/**
- * GstVaapiContextClass:
- *
- * A VA context wrapper class.
- */
-struct _GstVaapiContextClass
-{
-  /*< private >*/
-  GstVaapiObjectClass parent_class;
-};
+#define GST_VAAPI_CONTEXT_ID(context)        (((GstVaapiContext *)(context))->object_id)
+#define GST_VAAPI_CONTEXT_DISPLAY(context)   (((GstVaapiContext *)(context))->display)
 
 G_GNUC_INTERNAL
 GstVaapiContext *
@@ -165,6 +157,16 @@ G_GNUC_INTERNAL
 gboolean
 gst_vaapi_context_get_surface_attributes (GstVaapiContext * context,
     GstVaapiConfigSurfaceAttributes * out_attribs);
+
+G_GNUC_INTERNAL
+GstVaapiContext *
+gst_vaapi_context_ref (GstVaapiContext * context);
+
+G_GNUC_INTERNAL
+void
+gst_vaapi_context_unref (GstVaapiContext * context);
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiContext, gst_vaapi_context_unref)
 
 G_END_DECLS
 

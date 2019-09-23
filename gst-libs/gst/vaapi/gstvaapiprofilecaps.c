@@ -87,7 +87,7 @@ append_caps_with_context_info (GstVaapiDisplay * display,
     return FALSE;
 
   ret = append_caps (context, structure);
-  gst_vaapi_object_unref (context);
+  gst_vaapi_context_unref (context);
   return ret;
 }
 
