@@ -1041,6 +1041,8 @@ ges_project_list_assets (GESProject * project, GType filter)
   gpointer key, value;
 
   g_return_val_if_fail (GES_IS_PROJECT (project), NULL);
+  g_return_val_if_fail (filter == G_TYPE_NONE
+      || g_type_is_a (filter, GES_TYPE_EXTRACTABLE), NULL);
 
   g_hash_table_iter_init (&iter, project->priv->assets);
   while (g_hash_table_iter_next (&iter, &key, &value)) {
