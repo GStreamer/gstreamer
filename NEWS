@@ -5,10 +5,13 @@ GSTREAMER 1.16 RELEASE NOTES
 
 GStreamer 1.16.0 was originally released on 19 April 2019.
 
+The latest bug-fix release in the 1.16 series is 1.16.1 and was released
+on 23 September 2019.
+
 See https://gstreamer.freedesktop.org/releases/1.16/ for the latest
 version of this document.
 
-_Last updated: Friday 19 April 2019, 00:00 UTC (log)_
+_Last updated: Sunday 22 September 2019, 21:00 UTC (log)_
 
 
 Introduction
@@ -353,7 +356,7 @@ New element features and additions
 
 -   rtpjitterbuffer has improved end-of-stream handling
 
--   rtpmp4vpay will be prefered over rtpmp4gpay for MPEG-4 video in
+-   rtpmp4vpay will be preferred over rtpmp4gpay for MPEG-4 video in
     autoplugging scenarios now
 
 -   rtspsrc now allows applications to send RTSP SET_PARAMETER and
@@ -1208,7 +1211,7 @@ Cerbero has seen a number of improvements:
     used in order to re-produce a specific build. To set a manifest, you
     can set manifest = 'my_manifest.xml' in your configuration file, or
     use the --manifest command line option. The command line option will
-    take precendence over anything specific in the configuration file.
+    take precedence over anything specific in the configuration file.
 
 -   The new build-deps command can be used to build only the
     dependencies of a recipe, without the recipe itself.
@@ -1223,6 +1226,12 @@ Cerbero has seen a number of improvements:
     codec support. See the Enabling Optional Features with Variants
     section in the Cerbero documentation for more details how to enable
     and use these variants.
+
+-   When building on Windows, Cerbero can now build GStreamer recipes
+    and core dependencies such as glib with Visual Studio. This is
+    controlled by the visualstudio variant. Visual Studio 2015, 2017,
+    and 2019 are supported. Currently, only 64-bit x86 is supported due
+    to a known bug which will be fixed for the next release.
 
 -   A new -t / --timestamp command line switch makes commands print
     timestamps
@@ -1353,6 +1362,342 @@ the git 1.16 branch, which is a stable branch.
 
 1.16.0 was released on 19 April 2019.
 
+1.16.1
+
+The first 1.16 bug-fix release (1.16.1) was released on 23 September
+2019.
+
+This release only contains bugfixes and it _should_ be safe to update
+from 1.16.0.
+
+Highlighted bugfixes in 1.16.1
+
+-   GStreamer-vaapi: fix green frames and decoding artefacts in some
+    cases
+-   OpenGL: fix wayland event source burning CPU in certain
+    circumstances
+-   Memory leak fixes and memory footprint improvements
+-   Performance improvements
+-   Stability and security fixes
+-   Fix enum for GST_MESSAGE_DEVICE_CHANGED which is technically an API
+    break, but this is only used internally in GStreamer and duplicated
+    another message enum
+-   hls: Make crypto dependency optional when hls-crypto is auto
+-   player: fix switching back and forth between forward and reverse
+    playback
+-   decklinkaudiosink: Drop late buffers
+-   openh264enc: Fix compilation with openh264 v2.0
+-   wasapisrc: fix segtotal value being always 2
+-   Fix issues on Android Q
+
+gstreamer core
+
+-   device: gst_device_create_element() is transfer floating, not
+    transfer full
+-   filesink, fdsink: respect IOV_MAX for the writev iovec array
+    (Solaris)
+-   miniobject: free qdata array when the last qdata is removed (reduces
+    memory footprint)
+-   bin: Fix minor race when adding to a bin
+-   aggregator: Actually handle NEED_DATA return from update_src_caps()
+-   aggregator: Ensure that the source pad is created as a
+    GstAggregatorPad if no type is given in the pad template
+-   latency: fix custom event leaks
+-   registry: Use plugin directory from the build system for
+    relocateable Windows builds
+-   message: fix up enum value for GST_MESSAGE_DEVICE_CHANGED
+-   info: Fix deadlock in gst_ring_buffer_logger_log()
+-   downloadbuffer: Check for flush after seek
+-   identity: Non-live upstream have no max latency
+-   identity: Fix the ts-offset property getter
+-   aggregator: Make parsing of explicit sink pad names more robust
+-   bufferpool: Fix the buffer size reset code
+-   fakesink, fakesrc, identity: sync gst_buffer_get_flags_string() with
+    new flags
+-   multiqueue: never unref queries we do not own
+-   concat: Reset last_stop on FLUSH_STOP too
+-   aggregator: fix flow-return boolean return type mismatch
+-   gstpad: Handle probes that reset the data field
+-   gst: Add support for g_autoptr(GstPromise)
+-   gst-inspect: fix unused-const-variable error in windows
+-   base: Include gstbitwriter.h in the single-include header
+-   Add various Since: 1.16 markers
+-   GST_MESSAGE_DEVICE_CHANGED duplicates GST_MESSAGE_REDIRECT
+-   Targetting wrong meson version
+-   meson: Make get_flex_version.py script executable
+-   meson: Link to objects instead of static helper library
+-   meson: set correct install path for gdb helper
+-   meson: fix warning about configure_file() install kwarg
+
+gst-plugins-base
+
+-   video-info: parse field-order for all interleaved formats
+-   tests: fix up valgrind suppressions for glibc getaddrinfo leaks
+-   meson: Reenable NEON support (in audio resampler)
+-   audio-resampler: Update NEON to handle remainders not multiples of 4
+-   eglimage: Fix memory leak
+-   audiodecoder: Set output caps with negotiated caps to avoid critical
+    info printed
+-   video-frame: Take TFF flag from the video info if it was set in
+    there
+-   glcolorconvert: Fix external-oes shader
+-   video-anc: Fix ADF detection when trying to extract data from vanc
+-   gl/wayland: fix wayland event source burning CPU
+-   configure: add used attribute in order to make NEON detection
+    working with -flto.
+-   audioaggregator: Return a valid rate range from caps query if
+    downstream supports a whole range
+-   rtspconnection: data-offset increase not set
+-   rtpsconnection: Fix number of n_vectors
+-   video-color: Add compile-time assert for ColorimetryInfo enum
+-   audiodecoder: Fix leak on failed audio gaps
+-   glupload: Keep track of cached EGLImage texture format
+-   playsink: Set ts-offset to text sink.
+-   meson.build: use join_paths() on prefix
+-   compositor: copy frames as-is when possible
+-   compositor: Skip background when a pad obscures it completely
+-   rtspconnection: Start CSeq at 1 (some servers don’t cope well with
+    seqnum 0)
+-   viv-fb: fix build break for GST_GL_API
+-   gl/tests: fix shader creation tests part 2
+-   gl/tests: fix shader creation tests
+-   wayland: set the event queue also for the xdg_wm_base object
+-   video: Added GI annotation for gstvideoaffinetransformationmeta
+    apply_matrix
+-   compositor: Remove unneeded left shift for ARGB/AYUV SOURCE operator
+-   Colorimetry fixes
+-   alsasrc: Don’t use driver timestamp if it’s zero
+-   gloverlaycompositor: fix crash if buffer doesn’t have video meta
+-   meson: Don’t try to find gio-unix on Windows
+-   glshader: fix default external-oes shaders
+-   subparse: fix pushing WebVTT cue with no newline at the end
+-   meson: Missing “android” choice in gl_winsys
+-   video test: Keep BE test inline with LE test
+-   id3tag: Correctly validate the year from v1 tags before passing to
+    GstDateTime
+-   gl/wayland: Don’t prefix wl_shell struct field
+-   eglimage: Add compatibility define for DRM_FORMAT_NV24
+-   Add various Since: 1.16 markers
+-   video-anc: Handle SD formats correctly
+-   Docs: add GL_CFLAGS to GTK_DOC_CFLAGS
+-   GL: using vaapi and showing on glimagesink on wayland loads one core
+    for 100% on 1.16
+-   GL: external-oes shader places precision qualifier before #extension
+    (was: androidmedia amcviddec fail after 1.15.90 1.16.0 update)
+
+gst-plugins-good
+
+-   alpha: Fix one_over_kc calculation on arm/aarch64
+-   souphttpsrc: Fix incompatible type build warning
+-   rtpjitterbuffer: limit max-dropout-time to maxint32
+-   rtpjitterbuffer: Clear clock master before unreffing
+-   qtdemux: Use empty-array safe way to cleanup GPtrArray
+-   v4l2: Fix type compatibility issue with glibc 2.30
+-   valgrind: suppress Cond error coming from gnutls and Ignore leaks
+    caused by shout/sethostent
+-   rtpfunnel: forward correct segment when switching pad
+-   gtkglsink: fix crash when widget is resized after element
+    destruction
+-   jpegdec: Don’t dereference NULL input state if we have no caps in
+    TIME segments
+-   rtp: opuspay: fix memory leak in gst_rtp_opus_pay_setcaps
+-   v4l2videodec: return right type for drain.
+-   rtpssrcdemux: Avoid taking streamlock out-of-band
+-   Support v4l2src buffer orphaning
+-   splitmuxsink: Only set running time on finalizing sink element when
+    in async-finalize mode
+-   rtpsession: Always keep at least one NACK on early RTCP
+-   rtspsrc: do not try to send EOS with invalid seqnum
+-   rtpsession: Call on-new-ssrc earlier
+-   rtprawdepay: Don’t get rid of the buffer pool on FLUSH_STOP
+-   rtpbin: Free storage when freeing session
+-   scaletempo: Advertise interleaved layout in caps templates
+-   Support v4l2src buffer orphaning
+
+gst-plugins-bad
+
+-   hls: Make crypto dependency optional when hls-crypto is auto
+-   player: fix switching back and forth between forward and reverse
+    playback
+-   decklinkaudiosink: Drop late buffers
+-   srt: Add stats property, include sender-side statistics and fix a
+    crash
+-   dshowsrcwrapper: fix regression on device selection
+-   tsdemux: Limit the maximum PES payload size
+-   wayland: Define libdrm_dep in meson.build to fix meson configure
+    error when kms is disabled
+-   sctp: Fix crash on free() when using the MSVC binaries
+-   webrtc: Fix signals documentation
+-   h264parse: don’t critical on VUI parameters > 2^31
+-   rtmp: Fix crash inside free() with MSVC on Windows
+-   iqa: fix leak of map_meta.data
+-   d3dvideosink: Fix crash on WinProc handler
+-   amc: Fix crash when a sync_meta survives its sink
+-   pitch: Fix race between putSamples() and setting soundtouch
+    parameters
+-   webrtc: fix type of max-retransmits, make it work
+-   mxfdemux: Also allow picture essence element type 0x05 for VC-3
+-   wasapi: fix symbol redefinition build error
+-   decklinkvideosrc: Retrieve mode of the ancillary data from the frame
+-   decklinkaudiosrc/decklinkvideosrc: Do nothing in
+    BaseSrc::negotiate() and…
+-   adaptivedemux: do not retry downloads during shutdown.
+-   webrtcbin: fix GInetAddress leak
+-   dtls: fix dtls connection object leak
+-   siren: fix a global buffer overflow spotted by asan
+-   kmssink: Fix implicit declaration build error
+-   Fix -Werror=return-type error in configure.
+-   aiff: Fix infinite loop in header parsing.
+-   nvdec: Fix possible frame drop on EOS
+-   srtserversrc: yields malformed rtp payloads
+-   srtsink: Fix crash in case no URI
+-   dtlsagent: Fix leaked dtlscertificate
+-   meson: bluez: Early terminate configure on Windows
+-   decklink: Correctly ensure >=16 byte alignment for the buffers we
+    allocate
+-   webrtcbin: fix DTLS when receivebin is set to DROP
+-   zbar: Include running-time, stream-time and duration in the messages
+-   uvch264src: Make sure we set our segment
+-   avwait: Allow start and end timecode to be set back to NULL
+-   avwait: Don’t print warnings for every buffer passed
+-   hls/meson: fix dependency logic
+-   Waylandsink gnome shell workaround
+-   avwait: Allow setting start timecode after end timecode; protect
+    propeties with mutex
+-   wayland/wlbuffer: just return if used_by_compositor is true when
+    attach
+-   proxy: Set SOURCE flag on the source and SINK flag on the sink
+-   ivfparse: Check the data size against IVF_FRAME_HEADER_SIZE
+-   webrtc: Add various Since markers to new types after 1.14.0
+-   msdk: fix the typo in debug category
+-   dtlsagent: Do not overwrite openssl locking callbacks
+-   meson: Fix typo in gsm header file name
+-   srt: handle races in state change
+-   webrtc: Add g_autoptr() support for public types
+-   openh264enc: Fix compilation with openh264 v2.0
+-   meson: Allow CUDA_PATH fallback on linux
+-   meson: fix build with opencv=enabled and opencv4. Fixes #964
+-   meson: Add support for the colormanagement plugin
+-   autotools: gstsctp: set LDFLAGS
+-   nvenc/nvdec: Add NVIDIA SDK headers to noinst_HEADERS
+-   h264parse: Fix typo when setting multiview mode and flags
+-   Add various Since: 1.16 markers
+-   opencv: allow compilation against 4.1.x
+-   Backport of some minor srt commits without MR into 1.16
+-   meson: fix build with opencv=enabled and opencv4
+-   wasapisrc: fix segtotal value being always 2 due to an unused
+    variable
+-   meson: colormanagement missing
+-   androidmedia amcviddec fail after 1.15.90 1.16.0 update
+
+gst-plugins-ugly
+
+-   meson: Always require the gmodule dependency
+
+gst-libav
+
+-   docs: don’t include the type hierarchy, fixing build with gtk-doc
+    1.30
+-   avvidenc: Correctly signal interlaced input to ffmpeg when the input
+    caps are interlaced
+-   autotools: add bcrypt to win32 libs
+-   gstav: Use libavcodec util function for version check
+-   API documentation fails to build with gtk-doc 1.30
+
+gst-rtsp-server
+
+-   rtsp-client: RTP Info must exist in PLAY response
+-   onvif-media: fix “void function returning a value” compiler warning
+-   Add various Since: 1.16 markers
+
+gstreamer-vaapi
+
+-   fix egl context leak and display creation race
+-   pluginutil: Remove Mesa from drivers white list
+-   Classify vaapidecodebin as a hardware decoder
+-   Fix two leak
+-   vaapivideomemory: demote error message to info
+-   encoder: vp8,vp9: reset frame_counter when input frame’s format
+    changes
+-   encoder: mpeg2: No packed header for SPS and PPS
+-   decoder: vp9: clear parser pointer after release
+-   encoder: Fixes deadlock in change state function
+-   encoder: h265: reset num_ref_idx_l1_active_minus1 when low delay B.
+-   encoder: not call ensure_num_slices inside g_assert()
+-   encoder: continue if roi meta is NULL
+-   decoder: vp9: Set chroma_ ype by VP9 bit_depth
+-   vaapipostproc: don’t do any color conversion when GL_TEXTURE_UPLOAD
+-   libs: surface: fix double free when dmabuf export fails
+-   h264 colors and artifacts upon upgrade to GStreamer Core Library
+    version 1.15.90
+
+gst-editing-services
+
+-   element: Properly handle the fact that pasting can return NULL
+-   Add various missing Since markers
+-   launch: Fix caps restriction short names
+-   python: Avoid warning about using deprecated methods
+-   video-transition: When using non crossfade effect use ‘over’
+    operations
+-   meson: Generate a pkgconfig file for the GES plugin
+
+gst-devtools
+
+-   launcher: testsuites: skip systemclock stress tests
+-   validate: fix build on macOS
+
+gst-build
+
+-   Update win flex bison binaries
+-   Update the flexmeson windows binary version
+-   Don’t allow people to run meson inside the uninstalled env
+
+Cerbero build tool and packaging changes in 1.16.1
+
+-   cerbero: Add enums for Fedora 30, Fedora 31 and Debian bullseye
+-   gnutls.recipe: Fix crash when running on Android Q
+-   recipes: Upgrade openssl to 1.1.1c
+-   Fix some typos
+-   add support for vs build tools 2019, fixes #183
+-   android: Adjust gstreamer-1.0.mk for NDK r20
+-   Fix license enums
+-   bootstrap: Fix dnf usage on CentOS
+-   Make _add_system_libs reentrant
+-   meson.recipe: Fix setting of bitcode compiler options
+-   cerbero: support Ubuntu disco dingo
+-   cerbero: Set utf-8 to execution character set also on MSVC
+-   git: simplify the reset of the source branch.
+-   FORTIFY: %n not allowed on Android Q
+-   Fails to build if there’s no license file for the given license
+    (GPL/LGPL without Plus, Proprietary, …)
+
+Contributors to 1.16.1
+
+Aaron Boxer, Adam Duskett, Alicia Boya García, Andoni Morales Alastruey,
+Antonio Ospite, Arun Raghavan, Askar Safin, A. Wilcox, Charlie Turner,
+Christoph Reiter, Damian Hobson-Garcia, Daniel Klamt, Danny Smith, David
+Gunzinger, David Ing, David Svensson Fors, Doug Nazar, Edward Hervey,
+Eike Hein, Fabrice Bellet, Fernando Herrrera, Georg Lippitsch, Göran
+Jönsson, Guillaume Desmottes, Haihao Xiang, Haihua Hu, Håvard Graff, Hou
+Qi, Ignacio Casal Quinteiro, Ilya Smelykh, Jan Schmidt, Javier Celaya,
+Jim Mason, Jonas Larsson, Jordan Petridis, Jose Antonio Santos Cadenas,
+Juan Navarro, Knut Andre Tidemann, Kristofer Björkström, Lucas Stach,
+Marco Felsch, Marcos Kintschner, Mark Nauwelaerts, Martin Liska, Martin
+Theriault, Mathieu Duponchelle, Matthew Waters, Michael Olbrich, Mike
+Gorse, Nicola Murino, Nicolas Dufresne, Niels De Graef, Niklas
+Hambüchen, Nirbheek Chauhan, Olivier Crête, Philippe Normand, Ross
+Burton, Sebastian Dröge, Seungha Yang, Song Bing, Thiago Santos,
+Thibault Saunier, Thomas Coldrick, Tim-Philipp Müller, Víctor Manuel
+Jáquez Leal, Vivia Nikolaidou, Xavier Claessens, Yeongjin Jeong,
+
+… and many others who have contributed bug reports, translations, sent
+suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.16.1
+
+-   List of Merge Requests applied in 1.16
+-   List of Issues fixed in 1.16.1
+
 
 Known Issues
 
@@ -1376,9 +1721,9 @@ unstable development version leading up to the stable 1.18 release. The
 development of 1.17/1.18 will happen in the git master branch.
 
 The plan for the 1.18 development cycle is yet to be confirmed, but it
-is possible that the next cycle will be a short one in which case
-feature freeze would be perhaps around August 2019 with a new 1.18
-stable release in September.
+is now expected that feature freeze will take place shortly after the
+GStreamer conference/hackfest in early November 2019, with the first
+1.18 stable release ready in late November or early December.
 
 1.18 will be backwards-compatible to the stable 1.16, 1.14, 1.12, 1.10,
 1.8, 1.6, 1.4, 1.2 and 1.0 release series.

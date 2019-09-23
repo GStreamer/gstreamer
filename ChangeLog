@@ -1,3 +1,20 @@
+=== release 1.16.1 ===
+
+2019-09-23 11:21:15 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-omx.doap:
+	* meson.build:
+	  Release 1.16.1
+
+2019-05-02 12:37:20 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitlab-ci.yml:
+	  ci: use template from 1.16 branch
+
 === release 1.16.0 ===
 
 2019-04-19 00:38:44 +0100  Tim-Philipp Müller <tim@centricular.com>
