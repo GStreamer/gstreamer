@@ -12,7 +12,8 @@ The development machine can either be a Linux, Mac OS X or Windows, and
 needs to have installed:
 
 -   The latest version of the [Android SDK]
--   The latest version of the [Android NDK]
+-   The correct version of the [Android NDK] corresponding to the version of
+    [GStreamer binaries] you're using (f.ex., r18b for 1.16.x)
 -   GStreamer for Android is targeted at API version 9 (Android
     2.3.1, Gingerbread) or higher. Use the SDK Manager tool to make sure
     you have at least one Android SDK platform installed with API
@@ -343,6 +344,7 @@ Build and run your application as explained in the [Building the tutorials] sect
   [information]: images/icons/emoticons/information.svg
   [Android SDK]: http://developer.android.com/sdk/index.html
   [Android NDK]: http://developer.android.com/tools/sdk/ndk/index.html
+  [GStreamer binaries]: https://gstreamer.freedesktop.org/download/#android
   [Java Native Interface]: http://en.wikipedia.org/wiki/Java_Native_Interface
   [Android JNI tips here]: http://developer.android.com/guide/practices/jni.html
   [prebuilt binaries]: https://gstreamer.freedesktop.org/data/pkg/android/
