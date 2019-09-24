@@ -34,16 +34,19 @@
 #include <termios.h>
 #endif
 
+#ifdef G_OS_WIN32
+#include <windows.h>
+#endif
+
 #include <gst/gst.h>
 
 /* This is all not thread-safe, but doesn't have to be really */
-
-#ifdef G_OS_UNIX
-
-static struct termios term_settings;
-static gboolean term_settings_saved = FALSE;
 static GstPlayKbFunc kb_callback;
 static gpointer kb_callback_data;
+
+#ifdef G_OS_UNIX
+static struct termios term_settings;
+static gboolean term_settings_saved = FALSE;
 static gulong io_watch_id;
 
 static gboolean
@@ -128,7 +131,81 @@ gst_play_kb_set_key_handler (GstPlayKbFunc kb_func, gpointer user_data)
   return TRUE;
 }
 
-#else /* !G_OS_UNIX */
+#elif defined(G_OS_WIN32)
+
+static GSource *source = NULL;
+
+static gboolean
+gst_play_kb_source_cb (gpointer user_data)
+{
+  HANDLE h_input = GetStdHandle (STD_INPUT_HANDLE);
+  INPUT_RECORD buffer;
+  DWORD n;
+
+  if (PeekConsoleInput (h_input, &buffer, 1, &n) && n == 1) {
+    ReadConsoleInput (h_input, &buffer, 1, &n);
+
+    if (!kb_callback)
+      return G_SOURCE_REMOVE;
+
+    if (buffer.EventType == KEY_EVENT && !buffer.Event.KeyEvent.bKeyDown) {
+      gchar key_val[2] = { 0 };
+
+      switch (buffer.Event.KeyEvent.wVirtualKeyCode) {
+        case VK_RIGHT:
+          kb_callback (GST_PLAY_KB_ARROW_RIGHT, kb_callback_data);
+          break;
+        case VK_LEFT:
+          kb_callback (GST_PLAY_KB_ARROW_LEFT, kb_callback_data);
+          break;
+        case VK_UP:
+          kb_callback (GST_PLAY_KB_ARROW_UP, kb_callback_data);
+          break;
+        case VK_DOWN:
+          kb_callback (GST_PLAY_KB_ARROW_DOWN, kb_callback_data);
+          break;
+        default:
+          key_val[0] = buffer.Event.KeyEvent.uChar.AsciiChar;
+          kb_callback (key_val, kb_callback_data);
+          break;
+      }
+    }
+  }
+
+  return G_SOURCE_CONTINUE;
+}
+
+gboolean
+gst_play_kb_set_key_handler (GstPlayKbFunc kb_func, gpointer user_data)
+{
+  gint fd = _fileno (stdin);
+
+  if (!_isatty (fd)) {
+    GST_INFO ("stdin is not connected to a terminal");
+    return FALSE;
+  }
+
+  if (source) {
+    g_source_destroy (source);
+    g_source_unref (source);
+    source = NULL;
+  }
+
+  if (kb_func) {
+    /* check input per 50 ms */
+    source = g_timeout_source_new (50);
+    g_source_set_callback (source,
+        (GSourceFunc) gst_play_kb_source_cb, NULL, NULL);
+    g_source_attach (source, NULL);
+  }
+
+  kb_callback = kb_func;
+  kb_callback_data = user_data;
+
+  return TRUE;
+}
+
+#else
 
 gboolean
 gst_play_kb_set_key_handler (GstPlayKbFunc key_func, gpointer user_data)
