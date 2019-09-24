@@ -122,13 +122,15 @@ class GstValidateTranscodingTestsGenerator(GstValidateTestsGenerator):
             if protocol == Protocols.RTSP:
                 continue
 
+            options = self.test_manager.options
             for comb in self.test_manager.get_encoding_formats():
                 classname = "%s.transcode.to_%s.%s" % (mediainfo.media_descriptor.get_protocol(),
                                                        str(comb).replace(
                                                        ' ', '_'),
                                                        mediainfo.media_descriptor.get_clean_name())
+
                 self.add_test(GstValidateTranscodingTest(classname,
-                                                         self.test_manager.options,
+                                                         options,
                                                          self.test_manager.reporter,
                                                          comb,
                                                          uri,
@@ -1114,6 +1116,8 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
         self.add_encoding_formats([
             MediaFormatCombination("ogg", "vorbis", "theora"),
             MediaFormatCombination("webm", "vorbis", "vp8"),
+            MediaFormatCombination(
+                "webm", "vorbis", "vp9", video_restriction="video/x-raw,width=320,height=240"),
             MediaFormatCombination("mp4", "mp3", "h264"),
             MediaFormatCombination("mkv", "vorbis", "h264"),
         ])

@@ -1196,6 +1196,10 @@ class GstValidateEncodingTestInterface(object):
     def get_profile(self, video_restriction=None, audio_restriction=None):
         vcaps = self.combination.get_video_caps()
         acaps = self.combination.get_audio_caps()
+        if video_restriction is None:
+            video_restriction = self.combination.video_restriction
+        if audio_restriction is None:
+            audio_restriction = self.combination.audio_restriction
         if self.media_descriptor is not None:
             if self.media_descriptor.get_num_tracks("video") == 0:
                 vcaps = None
@@ -2614,7 +2618,7 @@ class MediaFormatCombination(object):
     def __str__(self):
         return "%s and %s in %s" % (self.audio, self.video, self.container)
 
-    def __init__(self, container, audio, video):
+    def __init__(self, container, audio, video, duration_factor=1, video_restriction=None, audio_restriction=None):
         """
         Describes a media format to be used for transcoding tests.
 
@@ -2625,6 +2629,8 @@ class MediaFormatCombination(object):
         self.container = container
         self.audio = audio
         self.video = video
+        self.video_restriction = video_restriction
+        self.audio_restriction = audio_restriction
 
     def get_caps(self, track_type):
         try:
