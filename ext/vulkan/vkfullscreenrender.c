@@ -689,8 +689,7 @@ _create_vertex_buffers (GstVulkanFullScreenRender * render)
   GstMapInfo map_info;
 
   render->vertices =
-      gst_vulkan_buffer_memory_alloc (render->device, VK_FORMAT_R8_UNORM,
-      sizeof (vertices),
+      gst_vulkan_buffer_memory_alloc (render->device, sizeof (vertices),
       VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
       VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
@@ -704,8 +703,7 @@ _create_vertex_buffers (GstVulkanFullScreenRender * render)
   gst_memory_unmap (render->vertices, &map_info);
 
   render->indices =
-      gst_vulkan_buffer_memory_alloc (render->device, VK_FORMAT_R8_UNORM,
-      sizeof (indices),
+      gst_vulkan_buffer_memory_alloc (render->device, sizeof (indices),
       VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
       VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);

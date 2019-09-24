@@ -145,14 +145,9 @@ gst_vulkan_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   }
 
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&priv->v_info); i++) {
-    GstVideoFormat v_format = GST_VIDEO_INFO_FORMAT (&priv->v_info);
-    VkFormat vk_format;
     GstMemory *mem;
 
-    vk_format = gst_vulkan_format_from_video_format (v_format, i);
-
-    mem = gst_vulkan_buffer_memory_alloc (vk_pool->device,
-        vk_format, priv->alloc_sizes[i],
+    mem = gst_vulkan_buffer_memory_alloc (vk_pool->device, priv->alloc_sizes[i],
         /* FIXME: choose from outside */
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
         /* FIXME: choose from outside */

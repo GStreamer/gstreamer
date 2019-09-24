@@ -64,7 +64,7 @@ GST_START_TEST (test_buffer_mem_allocate)
 
   usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
   mem =
-      gst_vulkan_buffer_memory_alloc (device, VK_FORMAT_R8_UNORM, orig_size,
+      gst_vulkan_buffer_memory_alloc (device, orig_size,
       usage, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
   fail_unless (gst_is_vulkan_buffer_memory (mem));
   vk_mem = (GstVulkanBufferMemory *) mem;

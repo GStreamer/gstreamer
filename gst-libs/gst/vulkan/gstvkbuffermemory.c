@@ -60,28 +60,6 @@ _create_info_from_args (VkBufferCreateInfo * info, gsize size,
   return TRUE;
 }
 
-static gboolean
-_create_view_from_args (VkBufferViewCreateInfo * info, VkBuffer buffer,
-    VkFormat format, gsize offset, gsize range)
-{
-  /* FIXME: validate these */
-  g_assert (format != VK_FORMAT_UNDEFINED);
-
-  /* *INDENT-OFF* */
-  *info = (VkBufferViewCreateInfo) {
-      .sType = VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO,
-      .pNext = NULL,
-      .flags = 0,
-      .buffer = buffer,
-      .format = format,
-      .offset = offset,
-      .range = range,
-  };
-  /* *INDENT-ON* */
-
-  return TRUE;
-}
-
 static void
 _vk_buffer_mem_init (GstVulkanBufferMemory * mem, GstAllocator * allocator,
     GstMemory * parent, GstVulkanDevice * device, VkBufferUsageFlags usage,
@@ -119,9 +97,9 @@ _vk_buffer_mem_init (GstVulkanBufferMemory * mem, GstAllocator * allocator,
 
 static GstVulkanBufferMemory *
 _vk_buffer_mem_new_alloc (GstAllocator * allocator, GstMemory * parent,
-    GstVulkanDevice * device, VkFormat format, gsize size,
-    VkBufferUsageFlags usage, VkMemoryPropertyFlags mem_prop_flags,
-    gpointer user_data, GDestroyNotify notify)
+    GstVulkanDevice * device, gsize size, VkBufferUsageFlags usage,
+    VkMemoryPropertyFlags mem_prop_flags, gpointer user_data,
+    GDestroyNotify notify)
 {
   GstVulkanBufferMemory *mem = NULL;
   GstAllocationParams params = { 0, };
@@ -167,17 +145,6 @@ _vk_buffer_mem_new_alloc (GstAllocator * allocator, GstMemory * parent,
   if (gst_vulkan_error_to_g_error (err, &error, "vkBindBufferMemory") < 0)
     goto vk_error;
 
-  if (usage & (VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT |
-          VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT)) {
-    VkBufferViewCreateInfo view_info;
-
-    _create_view_from_args (&view_info, mem->buffer, format, 0,
-        mem->requirements.size);
-    err = vkCreateBufferView (device->device, &view_info, NULL, &mem->view);
-    if (gst_vulkan_error_to_g_error (err, &error, "vkCreateBufferView") < 0)
-      goto vk_error;
-  }
-
   return mem;
 
 vk_error:
@@ -198,13 +165,11 @@ error:
 
 static GstVulkanBufferMemory *
 _vk_buffer_mem_new_wrapped (GstAllocator * allocator, GstMemory * parent,
-    GstVulkanDevice * device, VkBuffer buffer, VkFormat format,
-    VkBufferUsageFlags usage, gpointer user_data, GDestroyNotify notify)
+    GstVulkanDevice * device, VkBuffer buffer, VkBufferUsageFlags usage,
+    gpointer user_data, GDestroyNotify notify)
 {
   GstVulkanBufferMemory *mem = g_new0 (GstVulkanBufferMemory, 1);
   GstAllocationParams params = { 0, };
-  GError *error = NULL;
-  VkResult err;
 
   mem->buffer = buffer;
 
@@ -217,34 +182,7 @@ _vk_buffer_mem_new_wrapped (GstAllocator * allocator, GstMemory * parent,
       mem->requirements.size, user_data, notify);
   mem->wrapped = TRUE;
 
-  /* XXX: we don't actually if the buffer has a vkDeviceMemory bound so
-   * this may fail */
-  if (usage & (VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT |
-          VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT)) {
-    VkBufferViewCreateInfo view_info;
-
-    _create_view_from_args (&view_info, mem->buffer, format, 0,
-        mem->requirements.size);
-    err = vkCreateBufferView (device->device, &view_info, NULL, &mem->view);
-    if (gst_vulkan_error_to_g_error (err, &error, "vkCreateBufferView") < 0)
-      goto vk_error;
-  }
-
   return mem;
-
-vk_error:
-  {
-    GST_CAT_ERROR (GST_CAT_VULKAN_BUFFER_MEMORY,
-        "Failed to allocate buffer memory %s", error->message);
-    g_clear_error (&error);
-    goto error;
-  }
-
-error:
-  {
-    gst_memory_unref ((GstMemory *) mem);
-    return NULL;
-  }
 }
 
 static gpointer
@@ -322,9 +260,6 @@ _vk_buffer_mem_free (GstAllocator * allocator, GstMemory * memory)
   if (mem->buffer && !mem->wrapped)
     vkDestroyBuffer (mem->device->device, mem->buffer, NULL);
 
-  if (mem->view)
-    vkDestroyBufferView (mem->device->device, mem->view, NULL);
-
   if (mem->vk_mem)
     gst_memory_unref ((GstMemory *) mem->vk_mem);
 
@@ -339,7 +274,6 @@ _vk_buffer_mem_free (GstAllocator * allocator, GstMemory * memory)
 /**
  * gst_vulkan_buffer_memory_alloc:
  * @device: a #GstVulkanDevice
- * @format: the format for the buffer
  * @size: size of the new buffer
  * @usage: buffer usage flags
  * @mem_prop_flags: memory properties flags for the backing memory
@@ -352,13 +286,13 @@ _vk_buffer_mem_free (GstAllocator * allocator, GstMemory * memory)
  * Since: 1.18
  */
 GstMemory *
-gst_vulkan_buffer_memory_alloc (GstVulkanDevice * device, VkFormat format,
-    gsize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags mem_prop_flags)
+gst_vulkan_buffer_memory_alloc (GstVulkanDevice * device, gsize size,
+    VkBufferUsageFlags usage, VkMemoryPropertyFlags mem_prop_flags)
 {
   GstVulkanBufferMemory *mem;
 
   mem = _vk_buffer_mem_new_alloc (_vulkan_buffer_memory_allocator, NULL, device,
-      format, size, usage, mem_prop_flags, NULL, NULL);
+      size, usage, mem_prop_flags, NULL, NULL);
 
   return (GstMemory *) mem;
 }
@@ -367,7 +301,6 @@ gst_vulkan_buffer_memory_alloc (GstVulkanDevice * device, VkFormat format,
  * gst_vulkan_buffer_memory_wrapped:
  * @device: a #GstVulkanDevice
  * @buffer: a #VkBuffer
- * @format: the #VkFormat of @buffer
  * @usage: usage flags of @buffer
  * @user_data: (allow-none): user data to call @notify with
  * @notify: (allow-none): a #GDestroyNotify called when @buffer is no longer in use
@@ -380,14 +313,13 @@ gst_vulkan_buffer_memory_alloc (GstVulkanDevice * device, VkFormat format,
  */
 GstMemory *
 gst_vulkan_buffer_memory_wrapped (GstVulkanDevice * device, VkBuffer buffer,
-    VkFormat format, VkBufferUsageFlags usage, gpointer user_data,
-    GDestroyNotify notify)
+    VkBufferUsageFlags usage, gpointer user_data, GDestroyNotify notify)
 {
   GstVulkanBufferMemory *mem;
 
   mem =
       _vk_buffer_mem_new_wrapped (_vulkan_buffer_memory_allocator, NULL, device,
-      buffer, format, usage, user_data, notify);
+      buffer, usage, user_data, notify);
 
   return (GstMemory *) mem;
 }

@@ -2088,7 +2088,7 @@ _create_uniform_buffer (GstVulkanViewConvert * conv)
   GstVulkanFullScreenRender *render = GST_VULKAN_FULL_SCREEN_RENDER (conv);
 
   conv->uniform =
-      gst_vulkan_buffer_memory_alloc (render->device, VK_FORMAT_R8_UNORM,
+      gst_vulkan_buffer_memory_alloc (render->device,
       sizeof (struct ViewUpdate),
       VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |

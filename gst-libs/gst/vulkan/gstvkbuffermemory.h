@@ -60,7 +60,6 @@ struct _GstVulkanBufferMemory
   GstVulkanDevice * device;
 
   VkBuffer buffer;
-  VkBufferView view;
   GstVulkanMemory *vk_mem;
 
   VkMemoryRequirements requirements;
@@ -101,7 +100,6 @@ gboolean        gst_is_vulkan_buffer_memory              (GstMemory * mem);
 
 GST_VULKAN_API
 GstMemory *     gst_vulkan_buffer_memory_alloc           (GstVulkanDevice * device,
-                                                         VkFormat format,
                                                          gsize size,
                                                          VkBufferUsageFlags usage,
                                                          VkMemoryPropertyFlags mem_prop_flags);
@@ -109,7 +107,6 @@ GstMemory *     gst_vulkan_buffer_memory_alloc           (GstVulkanDevice * devi
 GST_VULKAN_API
 GstMemory *     gst_vulkan_buffer_memory_wrapped         (GstVulkanDevice * device,
                                                          VkBuffer buffer,
-                                                         VkFormat format,
                                                          VkBufferUsageFlags usage,
                                                          gpointer user_data,
                                                          GDestroyNotify notify);
