@@ -388,7 +388,7 @@ gst_data_uri_src_set_uri (GstURIHandler * handler, const gchar * uri,
     bdata = g_uri_unescape_string (data_start, NULL);
     if (bdata == NULL)
       goto invalid_uri_encoded_data;
-    bsize = strlen (bdata) + 1;
+    bsize = strlen (bdata);
   }
   /* Convert to UTF8 */
   if (strcmp ("text/plain", mimetype) == 0 &&
@@ -399,7 +399,7 @@ gst_data_uri_src_set_uri (GstURIHandler * handler, const gchar * uri,
     gpointer data;
 
     data =
-        g_convert_with_fallback (bdata, -1, "UTF-8", charset, (char *) "*",
+        g_convert_with_fallback (bdata, bsize, "UTF-8", charset, (char *) "*",
         &read, &written, NULL);
     g_free (bdata);
 

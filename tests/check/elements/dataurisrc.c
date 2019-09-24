@@ -553,11 +553,15 @@ GST_START_TEST (test_dataurisrc_uris)
     h = gst_harness_new_with_element (src, NULL, "src");
     gst_harness_play (h);
 
-    buf = gst_harness_pull (h);
-    fail_unless (buf);
+    fail_unless (gst_harness_pull_until_eos (h, &buf));
 
-    gst_check_buffer_data (buf, tests[i].contents, tests[i].contents_len);
-    gst_buffer_unref (buf);
+    if (tests[i].contents_len == 0) {
+      fail_unless (buf == NULL);
+    } else {
+      fail_unless (buf);
+      gst_check_buffer_data (buf, tests[i].contents, tests[i].contents_len);
+      gst_buffer_unref (buf);
+    }
 
     gst_harness_teardown (h);
     gst_object_unref (src);
