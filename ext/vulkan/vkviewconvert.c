@@ -33,6 +33,8 @@
 
 #include "vkviewconvert.h"
 #include "vkshader.h"
+#include "vkelementutils.h"
+
 #include "shaders/identity.vert.h"
 #include "shaders/view_convert.frag.h"
 #include "gstvulkan-plugins-enumtypes.h"
@@ -240,9 +242,9 @@ get_vulkan_format_swizzle_order (GstVideoFormat v_format,
 
 static void
 calculate_reorder_indexes (GstVideoFormat in_format,
-    GstVulkanImageMemory * in_mems[GST_VIDEO_MAX_COMPONENTS],
+    GstVulkanImageView * in_views[GST_VIDEO_MAX_COMPONENTS],
     GstVideoFormat out_format,
-    GstVulkanImageMemory * out_mems[GST_VIDEO_MAX_COMPONENTS],
+    GstVulkanImageView * out_views[GST_VIDEO_MAX_COMPONENTS],
     int ret_in[GST_VIDEO_MAX_COMPONENTS], int ret_out[GST_VIDEO_MAX_COMPONENTS])
 {
   const GstVideoFormatInfo *in_finfo, *out_finfo;
@@ -259,9 +261,9 @@ calculate_reorder_indexes (GstVideoFormat in_format,
   out_finfo = gst_video_format_get_info (out_format);
 
   for (i = 0; i < in_finfo->n_planes; i++)
-    in_vk_formats[i] = in_mems[i]->create_info.format;
+    in_vk_formats[i] = in_views[i]->image->create_info.format;
   for (i = 0; i < out_finfo->n_planes; i++)
-    out_vk_formats[i] = out_mems[i]->create_info.format;
+    out_vk_formats[i] = out_views[i]->image->create_info.format;
 
   get_vulkan_format_swizzle_order (in_format, in_vk_formats, in_vk_order);
   video_format_to_reorder (in_format, in_reorder, TRUE);
@@ -346,8 +348,8 @@ update_descriptor_set (GstVulkanViewConvert * conv, VkImageView * views,
 }
 
 static gboolean
-_update_uniform (GstVulkanViewConvert * conv, GstVulkanImageMemory ** in_mems,
-    GstVulkanImageMemory ** out_mems, VkImageView views[GST_VIDEO_MAX_PLANES])
+_update_uniform (GstVulkanViewConvert * conv, GstVulkanImageView ** in_views,
+    GstVulkanImageView ** out_views, VkImageView views[GST_VIDEO_MAX_PLANES])
 {
   GstVulkanFullScreenRender *render = GST_VULKAN_FULL_SCREEN_RENDER (conv);
   GstVideoMultiviewMode in_mode, out_mode;
@@ -358,8 +360,8 @@ _update_uniform (GstVulkanViewConvert * conv, GstVulkanImageMemory ** in_mems,
   gboolean mono_input = FALSE;
 
   calculate_reorder_indexes (GST_VIDEO_INFO_FORMAT (&render->in_info),
-      in_mems, GST_VIDEO_INFO_FORMAT (&render->out_info),
-      out_mems, data.in_reorder_idx, data.out_reorder_idx);
+      in_views, GST_VIDEO_INFO_FORMAT (&render->out_info),
+      out_views, data.in_reorder_idx, data.out_reorder_idx);
 
   data.tex_scale[0][0] = data.tex_scale[0][1] = 1.;
   data.tex_scale[1][0] = data.tex_scale[1][1] = 1.;
@@ -487,20 +489,20 @@ _update_uniform (GstVulkanViewConvert * conv, GstVulkanImageMemory ** in_mems,
 
 static gboolean
 view_convert_update_command_state (GstVulkanViewConvert * conv,
-    VkCommandBuffer cmd, GstVulkanImageMemory ** in_mems,
-    GstVulkanImageMemory ** out_mems)
+    VkCommandBuffer cmd, GstVulkanImageView ** in_views,
+    GstVulkanImageView ** out_views)
 {
   GstVulkanFullScreenRender *render = GST_VULKAN_FULL_SCREEN_RENDER (conv);
   VkImageView views[GST_VIDEO_MAX_PLANES];
   int i;
 
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&render->in_info); i++) {
-    views[2 * i] = in_mems[i]->view;
-    views[2 * i + 1] = in_mems[i]->view;
+    views[2 * i] = in_views[i]->view;
+    views[2 * i + 1] = in_views[i]->view;
   }
 
   if (!conv->descriptor_up_to_date) {
-    if (!_update_uniform (conv, in_mems, out_mems, views))
+    if (!_update_uniform (conv, in_views, out_views, views))
       return FALSE;
     update_descriptor_set (conv, views,
         GST_VIDEO_INFO_N_PLANES (&render->in_info) * 2);
@@ -2232,7 +2234,9 @@ gst_vulkan_view_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   GstVulkanFullScreenRender *render = GST_VULKAN_FULL_SCREEN_RENDER (bt);
   GstVulkanViewConvert *conv = GST_VULKAN_VIEW_CONVERT (bt);
   GstVulkanImageMemory *in_img_mems[GST_VIDEO_MAX_PLANES] = { NULL, };
-  GstVulkanImageMemory *out_img_mems[4] = { NULL, };
+  GstVulkanImageView *in_img_views[GST_VIDEO_MAX_PLANES] = { NULL, };
+  GstVulkanImageMemory *out_img_mems[GST_VIDEO_MAX_PLANES] = { NULL, };
+  GstVulkanImageView *out_img_views[GST_VIDEO_MAX_PLANES] = { NULL, };
   GstVulkanFence *fence = NULL;
   GstVulkanCommandBuffer *cmd_buf;
   VkFramebuffer framebuffer;
@@ -2248,6 +2252,10 @@ gst_vulkan_view_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
       goto error;
     }
     in_img_mems[i] = (GstVulkanImageMemory *) mem;
+    in_img_views[i] = get_or_create_image_view (in_img_mems[i]);
+    gst_vulkan_trash_list_add (render->trash_list,
+        gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref (fence),
+            (GstMiniObject *) in_img_views[i]));
   }
 
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&render->out_info); i++) {
@@ -2258,6 +2266,10 @@ gst_vulkan_view_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
       goto error;
     }
     out_img_mems[i] = (GstVulkanImageMemory *) mem;
+    in_img_views[i] = get_or_create_image_view (out_img_mems[i]);
+    gst_vulkan_trash_list_add (render->trash_list,
+        gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref (fence),
+            (GstMiniObject *) out_img_views[i]));
   }
 
   if (!conv->cmd_pool) {
@@ -2354,7 +2366,7 @@ gst_vulkan_view_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   {
     VkImageView attachments[4] = { 0, };
     for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&render->out_info); i++) {
-      attachments[i] = out_img_mems[i]->view;
+      attachments[i] = out_img_views[i]->view;
     }
 
     if (!(framebuffer = _create_framebuffer (conv,
@@ -2365,8 +2377,8 @@ gst_vulkan_view_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     }
   }
 
-  view_convert_update_command_state (conv, cmd_buf->cmd, in_img_mems,
-      out_img_mems);
+  view_convert_update_command_state (conv, cmd_buf->cmd, in_img_views,
+      out_img_views);
 
   if (!gst_vulkan_full_screen_render_fill_command_buffer (render, cmd_buf->cmd,
           framebuffer)) {

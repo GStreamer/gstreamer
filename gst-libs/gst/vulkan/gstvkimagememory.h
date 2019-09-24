@@ -58,7 +58,6 @@ struct _GstVulkanImageMemory
   GstVulkanDevice * device;
 
   VkImage image;
-  VkImageView view;
   GstVulkanMemory *vk_mem;
 
   VkImageCreateInfo create_info;
@@ -72,7 +71,17 @@ struct _GstVulkanImageMemory
   gboolean wrapped;
   GDestroyNotify notify;
   gpointer user_data;
+
+  GPtrArray *views;
 };
+
+/**
+ * GstVulkanImageMemoryFindViewFunc:
+ *
+ * Function definition used to find views.  Return %TRUE if @view matches the
+ * criteria.
+ */
+typedef gboolean (*GstVulkanImageMemoryFindViewFunc) (GstVulkanImageView * view, gpointer user_data);
 
 /**
  * GstVulkanImageMemoryAllocator
@@ -123,6 +132,14 @@ GST_VULKAN_API
 guint32         gst_vulkan_image_memory_get_width       (GstVulkanImageMemory * image);
 GST_VULKAN_API
 guint32         gst_vulkan_image_memory_get_height      (GstVulkanImageMemory * image);
+
+GST_VULKAN_API
+GstVulkanImageView *gst_vulkan_image_memory_find_view   (GstVulkanImageMemory * image,
+                                                         GstVulkanImageMemoryFindViewFunc find_func,
+                                                         gpointer user_data);
+GST_VULKAN_API
+void            gst_vulkan_image_memory_add_view        (GstVulkanImageMemory * image,
+                                                         GstVulkanImageView * view);
 
 GST_VULKAN_API
 VkFormat gst_vulkan_format_from_video_format (GstVideoFormat v_format,

@@ -33,6 +33,8 @@
 
 #include "vkcolorconvert.h"
 #include "vkshader.h"
+#include "vkelementutils.h"
+
 #include "shaders/identity.vert.h"
 #include "shaders/swizzle.frag.h"
 #include "shaders/swizzle_and_clobber_alpha.frag.h"
@@ -649,9 +651,9 @@ get_vulkan_format_swizzle_order (GstVideoFormat v_format,
 
 static void
 calculate_reorder_indexes (GstVideoFormat in_format,
-    GstVulkanImageMemory * in_mems[GST_VIDEO_MAX_COMPONENTS],
+    GstVulkanImageView * in_views[GST_VIDEO_MAX_COMPONENTS],
     GstVideoFormat out_format,
-    GstVulkanImageMemory * out_mems[GST_VIDEO_MAX_COMPONENTS],
+    GstVulkanImageView * out_views[GST_VIDEO_MAX_COMPONENTS],
     int ret_in[GST_VIDEO_MAX_COMPONENTS], int ret_out[GST_VIDEO_MAX_COMPONENTS])
 {
   const GstVideoFormatInfo *in_finfo, *out_finfo;
@@ -668,9 +670,9 @@ calculate_reorder_indexes (GstVideoFormat in_format,
   out_finfo = gst_video_format_get_info (out_format);
 
   for (i = 0; i < in_finfo->n_planes; i++)
-    in_vk_formats[i] = in_mems[i]->create_info.format;
+    in_vk_formats[i] = in_views[i]->image->create_info.format;
   for (i = 0; i < out_finfo->n_planes; i++)
-    out_vk_formats[i] = out_mems[i]->create_info.format;
+    out_vk_formats[i] = out_views[i]->image->create_info.format;
 
   get_vulkan_format_swizzle_order (in_format, in_vk_formats, in_vk_order);
   video_format_to_reorder (in_format, in_reorder, TRUE);
@@ -701,19 +703,19 @@ calculate_reorder_indexes (GstVideoFormat in_format,
 static gboolean
 swizzle_rgb_update_command_state (GstVulkanColorConvert * conv,
     VkCommandBuffer cmd, shader_info * sinfo,
-    GstVulkanImageMemory ** in_mems, GstVulkanImageMemory ** out_mems)
+    GstVulkanImageView ** in_views, GstVulkanImageView ** out_views)
 {
   GstVulkanFullScreenRender *render = GST_VULKAN_FULL_SCREEN_RENDER (conv);
   gint reorder[8];
 
   calculate_reorder_indexes (GST_VIDEO_INFO_FORMAT (&render->in_info),
-      in_mems, GST_VIDEO_INFO_FORMAT (&render->out_info),
-      out_mems, reorder, &reorder[4]);
+      in_views, GST_VIDEO_INFO_FORMAT (&render->out_info),
+      out_views, reorder, &reorder[4]);
 
   vkCmdPushConstants (cmd, render->pipeline_layout,
       VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof (reorder),
       (const void *) reorder);
-  update_descriptor_set (conv, &in_mems[0]->view, 1);
+  update_descriptor_set (conv, &in_views[0]->view, 1);
   vkCmdBindDescriptorSets (cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
       render->pipeline_layout, 0, 1, &conv->descriptor_set, 0, NULL);
 
@@ -739,8 +741,8 @@ struct YUVUpdateData
 
 static gboolean
 yuv_to_rgb_update_command_state (GstVulkanColorConvert * conv,
-    VkCommandBuffer cmd, shader_info * sinfo, GstVulkanImageMemory ** in_mems,
-    GstVulkanImageMemory ** out_mems)
+    VkCommandBuffer cmd, shader_info * sinfo, GstVulkanImageView ** in_views,
+    GstVulkanImageView ** out_views)
 {
   GstVulkanFullScreenRender *render = GST_VULKAN_FULL_SCREEN_RENDER (conv);
 
@@ -752,8 +754,8 @@ yuv_to_rgb_update_command_state (GstVulkanColorConvert * conv,
     int i;
 
     calculate_reorder_indexes (GST_VIDEO_INFO_FORMAT (&render->in_info),
-        in_mems, GST_VIDEO_INFO_FORMAT (&render->out_info),
-        out_mems, data.in_reorder, data.out_reorder);
+        in_views, GST_VIDEO_INFO_FORMAT (&render->out_info),
+        out_views, data.in_reorder, data.out_reorder);
 
     conv_info = convert_info_new (&render->in_info, &render->out_info);
     matrix_to_float (&conv_info->to_RGB_matrix, data.matrices.to_RGB);
@@ -772,7 +774,7 @@ yuv_to_rgb_update_command_state (GstVulkanColorConvert * conv,
     gst_memory_unmap (conv->uniform, &map_info);
 
     for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&render->in_info); i++)
-      views[i] = in_mems[i]->view;
+      views[i] = in_views[i]->view;
 
     update_descriptor_set (conv, views,
         GST_VIDEO_INFO_N_PLANES (&render->in_info));
@@ -1657,14 +1659,20 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   GstVulkanFullScreenRender *render = GST_VULKAN_FULL_SCREEN_RENDER (bt);
   GstVulkanColorConvert *conv = GST_VULKAN_COLOR_CONVERT (bt);
   GstVulkanImageMemory *in_img_mems[GST_VIDEO_MAX_PLANES] = { NULL, };
+  GstVulkanImageView *in_img_views[GST_VIDEO_MAX_PLANES] = { NULL, };
   GstVulkanImageMemory *render_img_mems[GST_VIDEO_MAX_PLANES] = { NULL, };
-  GstVulkanImageMemory *out_img_mems[4] = { NULL, };
+  GstVulkanImageView *render_img_views[GST_VIDEO_MAX_PLANES] = { NULL, };
+  GstVulkanImageMemory *out_img_mems[GST_VIDEO_MAX_PLANES] = { NULL, };
   GstVulkanFence *fence = NULL;
   VkFramebuffer framebuffer;
   GstVulkanCommandBuffer *cmd_buf;
   GError *error = NULL;
   VkResult err;
   int i;
+
+  fence = gst_vulkan_fence_new (render->device, 0, &error);
+  if (!fence)
+    goto error;
 
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&render->in_info); i++) {
     GstMemory *mem = gst_buffer_peek_memory (inbuf, i);
@@ -1674,6 +1682,10 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
       goto error;
     }
     in_img_mems[i] = (GstVulkanImageMemory *) mem;
+    in_img_views[i] = get_or_create_image_view (in_img_mems[i]);
+    gst_vulkan_trash_list_add (render->trash_list,
+        gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref (fence),
+            (GstMiniObject *) in_img_views[i]));
   }
 
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&render->out_info); i++) {
@@ -1693,10 +1705,6 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   }
 
   if (!(cmd_buf = gst_vulkan_command_pool_create (conv->cmd_pool, &error)))
-    goto error;
-
-  fence = gst_vulkan_fence_new (render->device, 0, &error);
-  if (!fence)
     goto error;
 
   {
@@ -1803,7 +1811,11 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   {
     VkImageView attachments[4] = { 0, };
     for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&render->out_info); i++) {
-      attachments[i] = render_img_mems[i]->view;
+      render_img_views[i] = get_or_create_image_view (render_img_mems[i]);
+      gst_vulkan_trash_list_add (render->trash_list,
+          gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref (fence),
+              (GstMiniObject *) render_img_views[i]));
+      attachments[i] = render_img_views[i]->view;
     }
 
     if (!(framebuffer = _create_framebuffer (conv,
@@ -1815,7 +1827,7 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   }
 
   conv->current_shader->cmd_state_update (conv, cmd_buf->cmd,
-      conv->current_shader, in_img_mems, render_img_mems);
+      conv->current_shader, in_img_views, render_img_views);
   if (!gst_vulkan_full_screen_render_fill_command_buffer (render, cmd_buf->cmd,
           framebuffer)) {
     g_set_error (&error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,

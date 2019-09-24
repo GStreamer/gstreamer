@@ -76,6 +76,8 @@ typedef struct _GstVulkanImageBufferPool GstVulkanImageBufferPool;
 typedef struct _GstVulkanImageBufferPoolClass GstVulkanImageBufferPoolClass;
 typedef struct _GstVulkanImageBufferPoolPrivate GstVulkanImageBufferPoolPrivate;
 
+typedef struct _GstVulkanImageView GstVulkanImageView;
+
 typedef struct _GstVulkanBarrierMemoryInfo GstVulkanBarrierMemoryInfo;
 typedef struct _GstVulkanBarrierBufferInfo GstVulkanBarrierBufferInfo;
 typedef struct _GstVulkanBarrierImageInfo GstVulkanBarrierImageInfo;

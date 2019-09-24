@@ -39,6 +39,7 @@
 #include <gst/vulkan/gstvkbarrier.h>
 #include <gst/vulkan/gstvkbuffermemory.h>
 #include <gst/vulkan/gstvkimagememory.h>
+#include <gst/vulkan/gstvkimageview.h>
 #include <gst/vulkan/gstvkbufferpool.h>
 #include <gst/vulkan/gstvkimagebufferpool.h>
 #include <gst/vulkan/gstvkutils.h>

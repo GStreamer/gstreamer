@@ -33,6 +33,8 @@
 
 #include "vkimageidentity.h"
 #include "vkshader.h"
+#include "vkelementutils.h"
+
 #include "shaders/identity.vert.h"
 #include "shaders/identity.frag.h"
 
@@ -535,6 +537,7 @@ gst_vulkan_image_identity_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   GstVulkanFullScreenRender *render = GST_VULKAN_FULL_SCREEN_RENDER (bt);
   GstVulkanImageIdentity *vk_identity = GST_VULKAN_IMAGE_IDENTITY (bt);
   GstVulkanImageMemory *in_img_mem, *out_img_mem;
+  GstVulkanImageView *in_img_view, *out_img_view;
   GstVulkanFence *fence = NULL;
   GstMemory *in_mem, *out_mem;
   VkFramebuffer framebuffer;
@@ -549,6 +552,10 @@ gst_vulkan_image_identity_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     goto error;
   }
   in_img_mem = (GstVulkanImageMemory *) in_mem;
+  in_img_view = get_or_create_image_view (in_img_mem);
+  gst_vulkan_trash_list_add (render->trash_list,
+      gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref (fence),
+          GST_MINI_OBJECT_CAST (in_img_view)));
 
   out_mem = gst_buffer_peek_memory (outbuf, 0);
   if (!gst_is_vulkan_image_memory (out_mem)) {
@@ -557,19 +564,23 @@ gst_vulkan_image_identity_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     goto error;
   }
   out_img_mem = (GstVulkanImageMemory *) out_mem;
+  out_img_view = get_or_create_image_view (out_img_mem);
+  gst_vulkan_trash_list_add (render->trash_list,
+      gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref (fence),
+          GST_MINI_OBJECT_CAST (out_img_view)));
 
   if (!vk_identity->cmd_pool) {
     if (!(vk_identity->cmd_pool =
             gst_vulkan_queue_create_command_pool (render->queue, &error)))
       goto error;
-    update_descriptor_set (vk_identity, in_img_mem->view);
+    update_descriptor_set (vk_identity, in_img_view->view);
   }
 
   if (!(cmd_buf =
           gst_vulkan_command_pool_create (vk_identity->cmd_pool, &error)))
     goto error;
 
-  if (!(framebuffer = _create_framebuffer (vk_identity, out_img_mem->view))) {
+  if (!(framebuffer = _create_framebuffer (vk_identity, out_img_view->view))) {
     g_set_error_literal (&error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
         "Failed to create framebuffer");
     goto error;

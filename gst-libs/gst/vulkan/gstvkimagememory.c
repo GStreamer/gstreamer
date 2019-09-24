@@ -113,34 +113,6 @@ gst_vulkan_format_from_video_format (GstVideoFormat v_format, guint plane)
   }
 }
 
-static void
-_view_create_info (VkImage image, VkFormat format, VkImageViewCreateInfo * info)
-{
-  /* *INDENT-OFF* */
-  *info = (VkImageViewCreateInfo) {
-      .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-      .pNext = NULL,
-      .image = image,
-      .format = format,
-      .viewType = VK_IMAGE_VIEW_TYPE_2D,
-      .flags = 0,
-      .components = (VkComponentMapping) {
-          VK_COMPONENT_SWIZZLE_R,
-          VK_COMPONENT_SWIZZLE_G,
-          VK_COMPONENT_SWIZZLE_B,
-          VK_COMPONENT_SWIZZLE_A
-      },
-      .subresourceRange = (VkImageSubresourceRange) {
-          .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-          .baseMipLevel = 0,
-          .levelCount = 1,
-          .baseArrayLayer = 0,
-          .layerCount = 1,
-      }
-  };
-  /* *INDENT-ON* */
-}
-
 static gboolean
 _create_info_from_args (VkImageCreateInfo * info, VkFormat format, gsize width,
     gsize height, VkImageTiling tiling, VkImageUsageFlags usage)
@@ -210,6 +182,8 @@ _vk_image_mem_init (GstVulkanImageMemory * mem, GstAllocator * allocator,
 
   g_mutex_init (&mem->lock);
 
+  mem->views = g_ptr_array_new ();
+
   GST_CAT_DEBUG (GST_CAT_VULKAN_IMAGE_MEMORY,
       "new Vulkan Image memory:%p size:%" G_GSIZE_FORMAT, mem, maxsize);
 }
@@ -223,7 +197,6 @@ _vk_image_mem_new_alloc (GstAllocator * allocator, GstMemory * parent,
 {
   GstVulkanImageMemory *mem = NULL;
   GstAllocationParams params = { 0, };
-  VkImageViewCreateInfo view_info;
   VkImageCreateInfo image_info;
   VkPhysicalDevice gpu;
   GError *error = NULL;
@@ -276,14 +249,6 @@ _vk_image_mem_new_alloc (GstAllocator * allocator, GstMemory * parent,
   if (gst_vulkan_error_to_g_error (err, &error, "vkBindImageMemory") < 0)
     goto vk_error;
 
-  if (usage & (VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT |
-          VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)) {
-    _view_create_info (mem->image, format, &view_info);
-    err = vkCreateImageView (device->device, &view_info, NULL, &mem->view);
-    if (gst_vulkan_error_to_g_error (err, &error, "vkCreateImageView") < 0)
-      goto vk_error;
-  }
-
   return mem;
 
 vk_error:
@@ -310,7 +275,6 @@ _vk_image_mem_new_wrapped (GstAllocator * allocator, GstMemory * parent,
 {
   GstVulkanImageMemory *mem = g_new0 (GstVulkanImageMemory, 1);
   GstAllocationParams params = { 0, };
-  VkImageViewCreateInfo view_info;
   VkPhysicalDevice gpu;
   GError *error = NULL;
   VkResult err;
@@ -338,16 +302,6 @@ _vk_image_mem_new_wrapped (GstAllocator * allocator, GstMemory * parent,
   if (gst_vulkan_error_to_g_error (err, &error,
           "vkGetPhysicalDeviceImageFormatProperties") < 0)
     goto vk_error;
-
-  /* XXX: we don't actually if the image has a vkDeviceMemory bound so
-   * this may fail */
-  if (usage & (VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT |
-          VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)) {
-    _view_create_info (mem->image, format, &view_info);
-    err = vkCreateImageView (device->device, &view_info, NULL, &mem->view);
-    if (gst_vulkan_error_to_g_error (err, &error, "vkCreateImageView") < 0)
-      goto vk_error;
-  }
 
   return mem;
 
@@ -438,11 +392,14 @@ _vk_image_mem_free (GstAllocator * allocator, GstMemory * memory)
   GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "freeing image memory:%p "
       "id:%" G_GUINT64_FORMAT, mem, (guint64) mem->image);
 
+  if (mem->views->len > 0) {
+    g_warning ("GstVulkanImageMemory <%p> is being freed with outstanding "
+        "GstVulkanImageView's.  This usually means there is a reference "
+        "counting issue.", mem);
+  }
+
   if (mem->image && !mem->wrapped)
     vkDestroyImage (mem->device->device, mem->image, NULL);
-
-  if (mem->view)
-    vkDestroyImageView (mem->device->device, mem->view, NULL);
 
   if (mem->vk_mem)
     gst_memory_unref ((GstMemory *) mem->vk_mem);
@@ -545,6 +502,103 @@ gst_vulkan_image_memory_get_height (GstVulkanImageMemory * image)
       0);
 
   return image->create_info.extent.height;
+}
+
+static gint
+find_view_index_unlocked (GstVulkanImageMemory * image,
+    GstVulkanImageView * view)
+{
+  guint index;
+
+  if (!g_ptr_array_find (image->views, view, &index))
+    return -1;
+
+  return (gint) index;
+}
+
+static void
+gst_vulkan_image_memory_remove_view (GstVulkanImageMemory * image,
+    GstVulkanImageView * view)
+{
+  guint index;
+
+  g_return_if_fail (gst_is_vulkan_image_memory (GST_MEMORY_CAST (image)));
+
+  g_mutex_lock (&image->lock);
+  if (!g_ptr_array_find (image->views, view, &index)) {
+    g_warning ("GstVulkanImageMemory:%p Attempting to remove a view %p"
+        "that we do not own", image, view);
+    g_assert_not_reached ();
+  }
+  g_ptr_array_remove_index_fast (image->views, index);
+  g_mutex_unlock (&image->lock);
+}
+
+static void
+view_free_notify (GstVulkanImageMemory * image, GstVulkanImageView * view)
+{
+  gst_vulkan_image_memory_remove_view (image, view);
+}
+
+/**
+ * gst_vulkan_image_memory_add_view:
+ * @image: a #GstVulkanImageMemory
+ * @view: a #GstVulkanImageView
+ *
+ * Return: the height of @image
+ *
+ * Since: 1.18
+ */
+void
+gst_vulkan_image_memory_add_view (GstVulkanImageMemory * image,
+    GstVulkanImageView * view)
+{
+  g_return_if_fail (gst_is_vulkan_image_memory (GST_MEMORY_CAST (image)));
+  g_return_if_fail (view != NULL);
+  g_return_if_fail (image == view->image);
+
+  g_mutex_lock (&image->lock);
+  if (find_view_index_unlocked (image, view) != -1) {
+    g_warn_if_reached ();
+    g_mutex_unlock (&image->lock);
+    return;
+  }
+  g_ptr_array_add (image->views, view);
+  gst_mini_object_weak_ref (GST_MINI_OBJECT_CAST (view),
+      (GstMiniObjectNotify) view_free_notify, image);
+
+  g_mutex_unlock (&image->lock);
+}
+
+/**
+ * gst_vulkan_image_memory_find_view:
+ * @image: a #GstVulkanImageMemory
+ * @find_func: #GstVulkanImageMemoryFindViewFunc to search with
+ * @data: user data to call @finc_func with
+ *
+ * Return: (transfer full): the first #GstVulkanImageView that @find_func
+ * returns %TRUE for, or %NULL
+ *
+ * Since: 1.18
+ */
+GstVulkanImageView *
+gst_vulkan_image_memory_find_view (GstVulkanImageMemory * image,
+    GstVulkanImageMemoryFindViewFunc find_func, gpointer data)
+{
+  GstVulkanImageView *ret = NULL;
+  guint index;
+
+  g_return_val_if_fail (gst_is_vulkan_image_memory (GST_MEMORY_CAST (image)),
+      NULL);
+  g_return_val_if_fail (find_func != NULL, NULL);
+
+  g_mutex_lock (&image->lock);
+  if (g_ptr_array_find_with_equal_func (image->views, data,
+          (GEqualFunc) find_func, &index))
+    ret = gst_vulkan_image_view_ref (g_ptr_array_index (image->views, index));
+  g_mutex_unlock (&image->lock);
+
+  return ret;
 }
 
 G_DEFINE_TYPE (GstVulkanImageMemoryAllocator, gst_vulkan_image_memory_allocator,
