@@ -3612,7 +3612,7 @@ done:
 
 invalid_name:
   {
-    GST_ERROR ("Invalid name for scenario '%s'", scenario_name);
+    GST_ERROR ("Invalid name for scenario '%s'", GST_STR_NULL (scenario_name));
   error:
     ret = FALSE;
     goto done;
