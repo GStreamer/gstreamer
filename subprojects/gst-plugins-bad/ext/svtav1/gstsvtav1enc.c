@@ -664,7 +664,6 @@ set_default_svt_configuration (EbSvtAv1EncConfiguration * svt_config)
   //svt_config->tile_columns = 0;
   //svt_config->tile_rows = 0;
   svt_config->stat_report = FALSE;
-  svt_config->improve_sharpness = FALSE;
   svt_config->high_dynamic_range_input = FALSE;
   svt_config->encoder_bit_depth = 8;
   svt_config->compressed_ten_bit_format = FALSE;
