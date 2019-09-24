@@ -214,7 +214,9 @@ struct _GstVideoDecoder
  * @reset:          Optional.
  *                  Allows subclass (decoder) to perform post-seek semantics reset.
  *                  Deprecated.
- * @handle_frame:   Provides input data frame to subclass.
+ * @handle_frame:   Provides input data frame to subclass. In subframe mode, the subclass needs
+ *                  to take ownership of @GstVideoCodecFrame.input_buffer as it will be modified
+ *                  by the base class on the next subframe buffer receiving.
  * @finish:         Optional.
  *                  Called to request subclass to dispatch any pending remaining
  *                  data at EOS. Sub-classes can refuse to decode new data after.
@@ -305,6 +307,11 @@ struct _GstVideoDecoderClass
 
   GstFlowReturn (*finish)         (GstVideoDecoder *decoder);
 
+  /**
+   * GstVideoDecoderClass::handle_frame:
+   * @decoder: The #GstVideoDecoder
+   * @frame: (transfer full): The frame to handle
+   */
   GstFlowReturn (*handle_frame)   (GstVideoDecoder *decoder,
 				   GstVideoCodecFrame *frame);
 
@@ -369,6 +376,19 @@ void     gst_video_decoder_set_packetized (GstVideoDecoder * decoder,
 
 GST_VIDEO_API
 gboolean gst_video_decoder_get_packetized (GstVideoDecoder * decoder);
+
+GST_VIDEO_API
+void     gst_video_decoder_set_subframe_mode (GstVideoDecoder * decoder,
+                                              gboolean subframe_mode);
+
+GST_VIDEO_API
+gboolean gst_video_decoder_get_subframe_mode (GstVideoDecoder * decoder);
+
+GST_VIDEO_API
+guint gst_video_decoder_get_input_subframe_index (GstVideoDecoder * decoder, GstVideoCodecFrame * frame);
+
+GST_VIDEO_API
+guint gst_video_decoder_get_processed_subframe_index (GstVideoDecoder * decoder, GstVideoCodecFrame * frame);
 
 GST_VIDEO_API
 void     gst_video_decoder_set_estimate_rate (GstVideoDecoder * dec,
@@ -438,6 +458,10 @@ GST_VIDEO_API
 GstFlowReturn  gst_video_decoder_have_frame       (GstVideoDecoder *decoder);
 
 GST_VIDEO_API
+GstFlowReturn  gst_video_decoder_have_last_subframe (GstVideoDecoder *decoder,
+                                                     GstVideoCodecFrame * frame);
+
+GST_VIDEO_API
 gsize          gst_video_decoder_get_pending_frame_size (GstVideoDecoder *decoder);
 
 GST_VIDEO_API
@@ -478,10 +502,16 @@ gdouble          gst_video_decoder_get_qos_proportion (GstVideoDecoder * decoder
 GST_VIDEO_API
 GstFlowReturn    gst_video_decoder_finish_frame (GstVideoDecoder *decoder,
 						 GstVideoCodecFrame *frame);
+GST_VIDEO_API
+GstFlowReturn    gst_video_decoder_finish_subframe (GstVideoDecoder *decoder,
+                                                 GstVideoCodecFrame *frame);
 
 GST_VIDEO_API
 GstFlowReturn    gst_video_decoder_drop_frame (GstVideoDecoder *dec,
 					       GstVideoCodecFrame *frame);
+GST_VIDEO_API
+GstFlowReturn    gst_video_decoder_drop_subframe (GstVideoDecoder *dec,
+                                               GstVideoCodecFrame *frame);
 
 GST_VIDEO_API
 void             gst_video_decoder_request_sync_point (GstVideoDecoder *dec,

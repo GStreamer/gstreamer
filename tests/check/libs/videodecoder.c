@@ -82,6 +82,7 @@ struct _GstVideoDecoderTester
   guint64 last_buf_num;
   guint64 last_kf_num;
   gboolean set_output_state;
+  gboolean subframe_mode;
 };
 
 struct _GstVideoDecoderTesterClass
@@ -145,6 +146,14 @@ gst_video_decoder_tester_handle_frame (GstVideoDecoder * dec,
   guint8 *data;
   gint size;
   GstMapInfo map;
+  gboolean last_subframe = GST_BUFFER_FLAG_IS_SET (frame->input_buffer,
+      GST_VIDEO_BUFFER_FLAG_MARKER);
+
+  if (gst_video_decoder_get_subframe_mode (dec) && !last_subframe) {
+    if (!GST_CLOCK_TIME_IS_VALID (frame->pts))
+      return gst_video_decoder_drop_subframe (dec, frame);
+    goto done;
+  }
 
   gst_buffer_map (frame->input_buffer, &map, GST_MAP_READ);
 
@@ -153,7 +162,7 @@ gst_video_decoder_tester_handle_frame (GstVideoDecoder * dec,
   if ((input_num == dectester->last_buf_num + 1
           && dectester->last_buf_num != -1)
       || !GST_BUFFER_FLAG_IS_SET (frame->input_buffer,
-          GST_BUFFER_FLAG_DELTA_UNIT)) {
+          GST_BUFFER_FLAG_DELTA_UNIT) || last_subframe) {
 
     /* the output is gray8 */
     size = TEST_VIDEO_WIDTH * TEST_VIDEO_HEIGHT;
@@ -171,11 +180,36 @@ gst_video_decoder_tester_handle_frame (GstVideoDecoder * dec,
   }
 
   gst_buffer_unmap (frame->input_buffer, &map);
+  if (GST_CLOCK_TIME_IS_VALID (frame->pts)) {
 
-  if (frame->output_buffer)
-    return gst_video_decoder_finish_frame (dec, frame);
+    if (gst_video_decoder_get_subframe_mode (dec) && last_subframe)
+      gst_video_decoder_have_last_subframe (dec, frame);
+
+    if (frame->output_buffer)
+      return gst_video_decoder_finish_frame (dec, frame);
+  } else {
+    return gst_video_decoder_drop_frame (dec, frame);
+
+  }
+
+
+done:
   gst_video_codec_frame_unref (frame);
+
   return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+gst_video_decoder_tester_parse (GstVideoDecoder * decoder,
+    GstVideoCodecFrame * frame, GstAdapter * adapter, gboolean at_eos)
+{
+  gint av;
+
+  av = gst_adapter_available (adapter);
+
+  /* and pass along all */
+  gst_video_decoder_add_to_frame (decoder, av);
+  return gst_video_decoder_have_frame (decoder);
 }
 
 static void
@@ -203,6 +237,7 @@ gst_video_decoder_tester_class_init (GstVideoDecoderTesterClass * klass)
   videodecoder_class->flush = gst_video_decoder_tester_flush;
   videodecoder_class->handle_frame = gst_video_decoder_tester_handle_frame;
   videodecoder_class->set_format = gst_video_decoder_tester_set_format;
+  videodecoder_class->parse = gst_video_decoder_tester_parse;
 }
 
 static void
@@ -284,6 +319,8 @@ send_startup_events (void)
 }
 
 #define NUM_BUFFERS 1000
+#define NUM_SUB_BUFFERS 4
+
 GST_START_TEST (videodecoder_playback)
 {
   GstSegment segment;
@@ -326,6 +363,7 @@ GST_START_TEST (videodecoder_playback)
 
     num = *(guint64 *) map.data;
     fail_unless (i == num);
+
     fail_unless (GST_BUFFER_PTS (buffer) == gst_util_uint64_scale_round (i,
             GST_SECOND * TEST_VIDEO_FPS_D, TEST_VIDEO_FPS_N));
     fail_unless (GST_BUFFER_DURATION (buffer) ==
@@ -737,14 +775,25 @@ GST_START_TEST (videodecoder_first_data_is_gap)
 
 GST_END_TEST;
 
-GST_START_TEST (videodecoder_backwards_playback)
+static void
+videodecoder_backwards_playback (gboolean subframe)
 {
   GstSegment segment;
   GstBuffer *buffer;
   guint64 i;
   GList *iter;
+  guint num_subframes = 1;
+  guint num_buffers;
+
+  if (subframe)
+    num_subframes = 2;
+  num_buffers = NUM_BUFFERS / num_subframes;
 
   setup_videodecodertester (NULL, NULL);
+
+  if (num_subframes > 1) {
+    gst_video_decoder_set_subframe_mode (GST_VIDEO_DECODER (dec), TRUE);
+  }
 
   gst_pad_set_active (mysrcpad, TRUE);
   gst_element_set_state (dec, GST_STATE_PLAYING);
@@ -755,12 +804,12 @@ GST_START_TEST (videodecoder_backwards_playback)
   /* push a new segment with -1 rate */
   gst_segment_init (&segment, GST_FORMAT_TIME);
   segment.rate = -1.0;
-  segment.stop = (NUM_BUFFERS + 1) * gst_util_uint64_scale_round (GST_SECOND,
+  segment.stop = (num_buffers + 1) * gst_util_uint64_scale_round (GST_SECOND,
       TEST_VIDEO_FPS_D, TEST_VIDEO_FPS_N);
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
 
   /* push buffers, the data is actually a number so we can track them */
-  i = NUM_BUFFERS;
+  i = num_buffers * num_subframes;
   while (i > 0) {
     gint target = i;
     gint j;
@@ -773,8 +822,9 @@ GST_START_TEST (videodecoder_backwards_playback)
      * it pushes buffers from 'target - 10' up to target.
      */
     for (j = MAX (target - 10, 0); j < target; j++) {
-      GstBuffer *buffer = create_test_buffer (j);
-
+      GstBuffer *buffer = create_test_buffer (j / num_subframes);
+      if ((j + 1) % num_subframes == 0)
+        GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_MARKER);
       if (j % 10 == 0)
         GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
       if (j % 20 != 0)
@@ -788,8 +838,8 @@ GST_START_TEST (videodecoder_backwards_playback)
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
 
   /* check that all buffers were received by our source pad */
-  fail_unless (g_list_length (buffers) == NUM_BUFFERS);
-  i = NUM_BUFFERS - 1;
+  fail_unless (g_list_length (buffers) == num_buffers);
+  i = num_buffers - 1;
   for (iter = buffers; iter; iter = g_list_next (iter)) {
     GstMapInfo map;
     guint64 num;
@@ -817,8 +867,19 @@ GST_START_TEST (videodecoder_backwards_playback)
   cleanup_videodecodertest ();
 }
 
+GST_START_TEST (videodecoder_backwards_playback_normal)
+{
+  videodecoder_backwards_playback (FALSE);
+}
+
 GST_END_TEST;
 
+GST_START_TEST (videodecoder_backwards_playback_subframes)
+{
+  videodecoder_backwards_playback (TRUE);
+}
+
+GST_END_TEST;
 
 GST_START_TEST (videodecoder_backwards_buffer_after_segment)
 {
@@ -1254,6 +1315,248 @@ GST_START_TEST (videodecoder_playback_event_order)
 
 GST_END_TEST;
 
+typedef enum
+{
+  MODE_NONE = 0,
+  MODE_SUBFRAMES = 1,
+  MODE_PACKETIZED = 1 << 1,
+  MODE_META_ROI = 1 << 2,
+} SubframeMode;
+
+static void
+videodecoder_playback_subframe_mode (SubframeMode mode)
+{
+  GstSegment segment;
+  GstBuffer *buffer;
+  guint i;
+  GList *iter;
+  gint num_buffers = NUM_BUFFERS;
+  gint num_subframes = 1;
+  GList *list;
+  gint num_roi_metas = 0;
+
+  setup_videodecodertester (NULL, NULL);
+
+  /* Allow to test combination of subframes and packetized configuration
+   * 0-0: no subframes not packetized.
+   * 0-1: subframes not packetized.
+   * 1-0: no subframes packetized.
+   * 1-1: subframes and packetized.
+   */
+  if (mode & MODE_SUBFRAMES) {
+    gst_video_decoder_set_subframe_mode (GST_VIDEO_DECODER (dec), TRUE);
+    num_subframes = NUM_SUB_BUFFERS;
+  } else {
+    gst_video_decoder_set_subframe_mode (GST_VIDEO_DECODER (dec), FALSE);
+    num_subframes = 1;
+  }
+  gst_video_decoder_set_packetized (GST_VIDEO_DECODER (dec),
+      mode & MODE_PACKETIZED ? TRUE : FALSE);
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_element_set_state (dec, GST_STATE_PLAYING);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  send_startup_events ();
+
+  /* push a new segment */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  /* push header only in packetized subframe mode */
+  if (mode == (MODE_PACKETIZED | MODE_SUBFRAMES)) {
+    buffer = gst_buffer_new_and_alloc (0);
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_HEADER);
+    fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+  }
+
+  /* push buffers, the data is actually a number so we can track them */
+  for (i = 0; i < num_buffers; i++) {
+    buffer = create_test_buffer (i / num_subframes);
+    if ((i + 1) % num_subframes == 0)
+      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_MARKER);
+    if (mode & MODE_META_ROI)
+      gst_buffer_add_video_region_of_interest_meta (buffer, "face", 0, 0, 10,
+          10);
+
+    fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+    fail_unless (gst_pad_push_event (mysrcpad,
+            gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+                gst_structure_new_empty ("custom1"))));
+  }
+  /* Send EOS */
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+
+  /* Test that no frames or pending events are remaining in the base class */
+  list = gst_video_decoder_get_frames (GST_VIDEO_DECODER (dec));
+  fail_unless (g_list_length (list) == 0);
+  g_list_free_full (list, (GDestroyNotify) gst_video_codec_frame_unref);
+
+  /* check that all buffers were received by our source pad 1 output buffer for 4 input buffer */
+  fail_unless (g_list_length (buffers) == num_buffers / num_subframes);
+
+  i = 0;
+  for (iter = buffers; iter; iter = g_list_next (iter)) {
+    GstMapInfo map;
+    guint num;
+    GstMeta *meta;
+    gpointer state = NULL;
+
+    buffer = iter->data;
+    while ((meta = gst_buffer_iterate_meta (buffer, &state))) {
+      if (meta->info->api == GST_VIDEO_REGION_OF_INTEREST_META_API_TYPE)
+        num_roi_metas++;
+    }
+    gst_buffer_map (buffer, &map, GST_MAP_READ);
+    /* Test that the buffer is carrying the expected value 'num' */
+    num = *(guint64 *) map.data;
+
+    fail_unless (i == num);
+    /* Test that the buffer metadata are correct */
+    fail_unless (GST_BUFFER_PTS (buffer) == gst_util_uint64_scale_round (i,
+            GST_SECOND * TEST_VIDEO_FPS_D, TEST_VIDEO_FPS_N));
+    fail_unless (GST_BUFFER_DURATION (buffer) ==
+        gst_util_uint64_scale_round (GST_SECOND, TEST_VIDEO_FPS_D,
+            TEST_VIDEO_FPS_N));
+
+
+    gst_buffer_unmap (buffer, &map);
+    i++;
+  }
+
+  if (mode &= MODE_META_ROI)
+    fail_unless (num_roi_metas == num_buffers);
+
+  g_list_free_full (buffers, (GDestroyNotify) gst_buffer_unref);
+  buffers = NULL;
+
+  cleanup_videodecodertest ();
+}
+
+static void
+videodecoder_playback_invalid_ts_subframe_mode (SubframeMode mode)
+{
+  GstSegment segment;
+  GstBuffer *buffer;
+  guint i;
+  gint num_buffers = NUM_BUFFERS;
+  gint num_subframes = 1;
+  GList *list;
+
+  setup_videodecodertester (NULL, NULL);
+
+  /* Allow to test combination of subframes and packetized configuration
+   * 0-0: no subframes not packetized.
+   * 0-1: subframes not packetized.
+   * 1-0: no subframes packetized.
+   * 1-1: subframes and packetized.
+   */
+  if (mode & MODE_SUBFRAMES) {
+    gst_video_decoder_set_subframe_mode (GST_VIDEO_DECODER (dec), TRUE);
+    num_subframes = NUM_SUB_BUFFERS;
+  }
+
+  gst_video_decoder_set_packetized (GST_VIDEO_DECODER (dec),
+      mode & MODE_PACKETIZED ? TRUE : FALSE);
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_element_set_state (dec, GST_STATE_PLAYING);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  send_startup_events ();
+
+  /* push a new segment */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  /* push header only in packetized subframe mode */
+  if (mode == (MODE_PACKETIZED | MODE_SUBFRAMES)) {
+    buffer = gst_buffer_new_and_alloc (0);
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_HEADER);
+    fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+  }
+
+  /* push buffers, the data is actually a number so we can track them */
+  for (i = 0; i < num_buffers; i++) {
+    buffer = create_test_buffer (i / num_subframes);
+    GST_BUFFER_PTS (buffer) = GST_CLOCK_TIME_NONE;
+    if ((i + 1) % num_subframes == 0)
+      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_MARKER);
+
+    fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+    fail_unless (gst_pad_push_event (mysrcpad,
+            gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+                gst_structure_new_empty ("custom1"))));
+  }
+  /* Send EOS */
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+
+  /* Test that no frames or pending events are remaining in the base class */
+  list = gst_video_decoder_get_frames (GST_VIDEO_DECODER (dec));
+  fail_unless (g_list_length (list) == 0);
+  g_list_free_full (list, (GDestroyNotify) gst_video_codec_frame_unref);
+
+  /* check that all buffers were received by our source pad 1 output buffer for 4 input buffer */
+  fail_unless (g_list_length (buffers) == 0);
+
+
+  cleanup_videodecodertest ();
+}
+
+GST_START_TEST (videodecoder_playback_parsed)
+{
+  videodecoder_playback_subframe_mode (MODE_NONE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (videodecoder_playback_packetized)
+{
+  videodecoder_playback_subframe_mode (MODE_PACKETIZED);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (videodecoder_playback_parsed_subframes)
+{
+  videodecoder_playback_subframe_mode (MODE_SUBFRAMES);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (videodecoder_playback_packetized_subframes)
+{
+  videodecoder_playback_subframe_mode (MODE_SUBFRAMES | MODE_PACKETIZED);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (videodecoder_playback_packetized_subframes_metadata)
+{
+  videodecoder_playback_subframe_mode (MODE_SUBFRAMES |
+      MODE_PACKETIZED | MODE_META_ROI);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (videodecoder_playback_invalid_ts_packetized)
+{
+  videodecoder_playback_invalid_ts_subframe_mode (MODE_PACKETIZED);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (videodecoder_playback_invalid_ts_packetized_subframes)
+{
+  videodecoder_playback_invalid_ts_subframe_mode (MODE_SUBFRAMES |
+      MODE_PACKETIZED);
+}
+
+GST_END_TEST;
+
+
+
 static Suite *
 gst_videodecoder_suite (void)
 {
@@ -1272,7 +1575,8 @@ gst_videodecoder_suite (void)
   tcase_add_test (tc, videodecoder_buffer_after_segment);
   tcase_add_test (tc, videodecoder_first_data_is_gap);
 
-  tcase_add_test (tc, videodecoder_backwards_playback);
+  tcase_add_test (tc, videodecoder_backwards_playback_normal);
+  tcase_add_test (tc, videodecoder_backwards_playback_subframes);
   tcase_add_test (tc, videodecoder_backwards_buffer_after_segment);
   tcase_add_test (tc, videodecoder_flush_events);
 
@@ -1280,6 +1584,13 @@ gst_videodecoder_suite (void)
       G_N_ELEMENTS (test_default_caps));
 
   tcase_add_test (tc, videodecoder_playback_event_order);
+  tcase_add_test (tc, videodecoder_playback_parsed);
+  tcase_add_test (tc, videodecoder_playback_packetized);
+  tcase_add_test (tc, videodecoder_playback_parsed_subframes);
+  tcase_add_test (tc, videodecoder_playback_packetized_subframes);
+  tcase_add_test (tc, videodecoder_playback_packetized_subframes_metadata);
+  tcase_add_test (tc, videodecoder_playback_invalid_ts_packetized);
+  tcase_add_test (tc, videodecoder_playback_invalid_ts_packetized_subframes);
 
   return s;
 }

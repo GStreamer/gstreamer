@@ -269,9 +269,11 @@ struct _GstVideoCodecFrame
 
   union {
     struct {
+      /*< private >*/
       GstClockTime ts;
       GstClockTime ts2;
       guint num_subframes;
+      guint subframes_processed;
     } ABI;
     gpointer padding[GST_PADDING_LARGE];
   } abidata;
