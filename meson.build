@@ -1,5 +1,5 @@
 project('All GStreamer modules', 'c',
-  version : '1.16.0',
+  version : '1.16.1',
   meson_version : '>= 0.48.0',
   default_options : ['buildtype=debugoptimized'])
 
@@ -59,7 +59,7 @@ subprojects = [
   ['gst-editing-services', { 'option': get_option('ges') }],
   ['gstreamer-vaapi', { 'option': get_option('vaapi') }],
   ['gst-omx', { 'option': get_option('omx'), }],
-  ['gstreamer-sharp', { 'option': get_option('sharp') }],
+  ['gstreamer-sharp', { 'option': get_option('sharp'), 'match_gst_version': false }],
   ['pygobject', { 'option': get_option('python'), 'match_gst_version': false }],
   ['gst-python', { 'option': get_option('python') }],
 ]
