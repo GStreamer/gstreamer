@@ -41,6 +41,7 @@ GST_DEBUG_CATEGORY_EXTERN (lv2_debug);
 
 /* - log extension */
 
+#ifndef GST_DISABLE_GST_DEBUG
 static int
 lv2_log_printf (LV2_Log_Handle handle, LV2_URID type, const char *fmt, ...)
 {
@@ -66,6 +67,7 @@ static LV2_Log_Log lv2_log = {
 
 
 static const LV2_Feature lv2_log_feature = { LV2_LOG__log, &lv2_log };
+#endif
 
 /* - urid map/unmap extension */
 
@@ -95,7 +97,9 @@ static const LV2_Feature lv2_unmap_feature = { LV2_URID__unmap, &lv2_unmap };
 /* feature list */
 
 static const LV2_Feature *lv2_features[] = {
+#ifndef GST_DISABLE_GST_DEBUG
   &lv2_log_feature,
+#endif
   &lv2_map_feature,
   &lv2_unmap_feature,
   NULL
