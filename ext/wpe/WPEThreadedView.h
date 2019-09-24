@@ -40,6 +40,7 @@ public:
 
     void resize(int width, int height);
     void loadUri(const gchar*);
+    void loadData(GBytes*);
     void setDrawBackground(gboolean);
 
     GstEGLImage* image();

@@ -241,12 +241,9 @@ bool WPEThreadedView::initialize(GstWpeSrc* src, GstGLContext* context, GstGLDis
             const gchar* location;
             gboolean drawBackground = TRUE;
             g_object_get(initializeContext.src, "location", &location, "draw-background", &drawBackground, nullptr);
-            if (!location)
-                g_warning("Invalid location");
-            else {
-                view.setDrawBackground(drawBackground);
+            view.setDrawBackground(drawBackground);
+            if (location)
                 view.loadUriUnlocked(location);
-            }
             g_cond_signal(&view.threading.cond);
             return G_SOURCE_REMOVE;
         },
@@ -261,7 +258,7 @@ bool WPEThreadedView::initialize(GstWpeSrc* src, GstGLContext* context, GstGLDis
 
     g_source_unref(source);
 
-    if (initializeContext.result) {
+    if (initializeContext.result && webkit.uri) {
         GST_DEBUG("waiting load to finish");
         GMutexHolder lock(threading.ready_mutex);
         g_cond_wait(&threading.ready_cond, &threading.ready_mutex);
@@ -387,6 +384,40 @@ void WPEThreadedView::loadUri(const gchar* uri)
             return G_SOURCE_REMOVE;
         },
         &uriContext, nullptr);
+    g_source_set_priority(source, WPE_GLIB_SOURCE_PRIORITY);
+
+    {
+        GMutexHolder lock(threading.mutex);
+        g_source_attach(source, glib.context);
+        g_cond_wait(&threading.cond, &threading.mutex);
+        GST_DEBUG("done");
+    }
+
+    g_source_unref(source);
+}
+
+void WPEThreadedView::loadData(GBytes* bytes)
+{
+    struct DataContext {
+        WPEThreadedView& view;
+        GBytes* bytes;
+    } dataContext { *this, g_bytes_ref(bytes) };
+
+    GSource* source = g_idle_source_new();
+    g_source_set_callback(source,
+        [](gpointer data) -> gboolean {
+            GST_DEBUG("on view thread");
+            auto& dataContext = *static_cast<DataContext*>(data);
+            auto& view = dataContext.view;
+            GMutexHolder lock(view.threading.mutex);
+
+            webkit_web_view_load_bytes(view.webkit.view, dataContext.bytes, nullptr, nullptr, nullptr);
+            g_bytes_unref(dataContext.bytes);
+
+            g_cond_signal(&view.threading.cond);
+            return G_SOURCE_REMOVE;
+        },
+        &dataContext, nullptr);
     g_source_set_priority(source, WPE_GLIB_SOURCE_PRIORITY);
 
     {

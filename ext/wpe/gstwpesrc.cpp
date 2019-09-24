@@ -86,6 +86,7 @@ enum
 enum
 {
   SIGNAL_CONFIGURE_WEB_VIEW,
+  SIGNAL_LOAD_BYTES,
   LAST_SIGNAL
 };
 static guint gst_wpe_src_signals[LAST_SIGNAL] = { 0 };
@@ -99,6 +100,8 @@ struct _GstWpeSrc
   /* properties */
   gchar *location;
   gboolean draw_background;
+
+  GBytes *bytes;
 };
 
 static void gst_wpe_src_uri_handler_init (gpointer iface, gpointer data);
@@ -164,6 +167,13 @@ gst_wpe_src_gl_start (GstGLBaseSrc * base_src)
   result = src->view->initialize (src, base_src->context, base_src->display,
       GST_VIDEO_INFO_WIDTH (&base_src->out_info),
       GST_VIDEO_INFO_HEIGHT (&base_src->out_info));
+
+  if (src->bytes != NULL) {
+    src->view->loadData (src->bytes);
+    g_bytes_unref (src->bytes);
+    src->bytes = NULL;
+  }
+
   GST_OBJECT_UNLOCK (src);
   if (!result) {
     GST_ELEMENT_ERROR (src, RESOURCE, FAILED,
@@ -227,6 +237,15 @@ gst_wpe_src_configure_web_view (GstWpeSrc * src, WebKitWebView * webview)
 
   g_value_unset (&args[0]);
   g_value_unset (&args[1]);
+}
+
+static void
+gst_wpe_src_load_bytes (GstWpeSrc * src, GBytes * bytes)
+{
+  if (src->view && GST_STATE (GST_ELEMENT_CAST (src)) > GST_STATE_NULL)
+    src->view->loadData (bytes);
+  else
+    src->bytes = g_bytes_ref (bytes);
 }
 
 static gboolean
@@ -485,6 +504,19 @@ gst_wpe_src_class_init (GstWpeSrcClass * klass)
       g_signal_new ("configure-web-view", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 1, G_TYPE_OBJECT);
+
+  /**
+   * GstWpeSrc::load-bytes:
+   * @src: the object which received the signal
+   * @bytes: the GBytes data to load
+   *
+   * Load the specified bytes into the internal webView.
+   */
+  gst_wpe_src_signals[SIGNAL_LOAD_BYTES] =
+      g_signal_new_class_handler ("load-bytes", G_TYPE_FROM_CLASS (klass),
+      static_cast < GSignalFlags > (G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION),
+      G_CALLBACK (gst_wpe_src_load_bytes), NULL, NULL,
+      g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_BYTES);
 }
 
 static gboolean
