@@ -1,6 +1,6 @@
-/* vkconfig.h
+/* gstvkconfig.h
  *
- * This is a generated file.  Please modify `configure.ac'
+ * This is a generated file.  Please modify `gstvkconfig.h.meson'
  */
 
 #ifndef __GST_VULKAN_CONFIG_H__
