@@ -189,6 +189,9 @@ GST_CHECK_API
 GstBuffer *    gst_harness_try_pull (GstHarness * h);
 
 GST_CHECK_API
+gboolean       gst_harness_pull_until_eos (GstHarness * h, GstBuffer ** buf);
+
+GST_CHECK_API
 GstBuffer *    gst_harness_push_and_pull (GstHarness * h, GstBuffer * buffer);
 
 GST_CHECK_API
