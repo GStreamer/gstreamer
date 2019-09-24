@@ -530,8 +530,9 @@ gst_fluid_dec_open (GstFluidDec * fluiddec)
         fluiddec->soundfont);
   } else {
     gint i, j;
-    /* ubuntu/debian in sounds/sf2, fedora in soundfonts */
-    static const gchar *paths[] = { "sounds/sf2/", "soundfonts/", NULL };
+    /* ubuntu/debian in sounds/sf[23], fedora in soundfonts */
+    static const gchar *paths[] =
+        { "sounds/sf3/", "sounds/sf2/", "soundfonts/", NULL };
 
     sharedirs = g_get_system_data_dirs ();
 
