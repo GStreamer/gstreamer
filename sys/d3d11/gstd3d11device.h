@@ -77,7 +77,7 @@ struct _GstD3D11DeviceClass
 
 GType                 gst_d3d11_device_get_type           (void);
 
-GstD3D11Device *      gst_d3d11_device_new                (gint adapter);
+GstD3D11Device *      gst_d3d11_device_new                (guint adapter);
 
 ID3D11Device *        gst_d3d11_device_get_device_handle  (GstD3D11Device * device);
 
