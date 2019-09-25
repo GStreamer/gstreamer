@@ -2392,6 +2392,12 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
   GST_BUFFER_DTS (frame->output_buffer) = frame->dts;
   GST_BUFFER_DURATION (frame->output_buffer) = frame->duration;
 
+  /* At this stage we have a full frame in subframe use case ,
+   * let's mark it to enabled some latency optimization
+   *  in some uses cases like RTP. */
+
+  GST_BUFFER_FLAG_SET (frame->output_buffer, GST_VIDEO_BUFFER_FLAG_MARKER);
+
   GST_OBJECT_LOCK (encoder);
   /* update rate estimate */
   priv->bytes += gst_buffer_get_size (frame->output_buffer);
