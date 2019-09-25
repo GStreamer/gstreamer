@@ -1942,7 +1942,7 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
   gchar *str;
   GstRTSPState rtspstate;
   GstRTSPRangeUnit unit = GST_RTSP_RANGE_NPT;
-  gchar *path, *rtpinfo;
+  gchar *path, *rtpinfo = NULL;
   gint matched;
   gchar *seek_style = NULL;
   GstRTSPStatusCode sig_result;
@@ -2006,7 +2006,8 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
     goto invalid_mode;
 
   /* grab RTPInfo from the media now */
-  if (!(rtpinfo = gst_rtsp_session_media_get_rtpinfo (sessmedia)))
+  if (!gst_rtsp_media_is_receive_only (media) &&
+      !(rtpinfo = gst_rtsp_session_media_get_rtpinfo (sessmedia)))
     goto rtp_info_error;
 
   /* construct the response now */
@@ -2015,7 +2016,9 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
       gst_rtsp_status_as_text (code), ctx->request);
 
   /* add the RTP-Info header */
-  gst_rtsp_message_take_header (ctx->response, GST_RTSP_HDR_RTP_INFO, rtpinfo);
+  if (rtpinfo)
+    gst_rtsp_message_take_header (ctx->response, GST_RTSP_HDR_RTP_INFO,
+        rtpinfo);
   if (seek_style)
     gst_rtsp_message_add_header (ctx->response, GST_RTSP_HDR_SEEK_STYLE,
         seek_style);
