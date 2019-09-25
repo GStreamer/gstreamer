@@ -1438,7 +1438,7 @@ gst_v4l2_object_v4l2fourcc_to_bare_struct (guint32 fourcc)
       break;
     case V4L2_PIX_FMT_MPEG1:
       structure = gst_structure_new ("video/mpeg",
-          "mpegversion", G_TYPE_INT, 2, NULL);
+          "mpegversion", G_TYPE_INT, 1, NULL);
       break;
     case V4L2_PIX_FMT_MPEG2:
       structure = gst_structure_new ("video/mpeg",
