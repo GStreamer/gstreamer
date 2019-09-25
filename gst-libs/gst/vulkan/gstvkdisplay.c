@@ -36,6 +36,9 @@
 #if GST_VULKAN_HAVE_WINDOW_IOS
 #include "ios/gstvkdisplay_ios.h"
 #endif
+#if GST_VULKAN_HAVE_WINDOW_WIN32
+#include "win32/gstvkwindow_win32.h"
+#endif
 
 /**
  * SECTION:vkdisplay

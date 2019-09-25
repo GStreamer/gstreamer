@@ -65,6 +65,7 @@ vulkan_defines = []
 optional_deps = []
 has_vulkan_header = false
 vulkan_dep = dependency('', required: false)
+vulkan_inc_dir = ''
 
 vulkan_conf = configuration_data()
 vulkan_conf_options = [
@@ -200,7 +201,8 @@ endif
 if host_system == 'windows'
   gdi_dep = cc.find_library('gdi32', required : get_option('vulkan'))
 
-  if gdi_dep.found() and cc.has_header('vulkan/vulkan_win32.h', dependencies : vulkan_dep)
+  # Cannot use internal dependency object with cc.has_header()
+  if gdi_dep.found() and cc.has_header('vulkan/vulkan_win32.h', args: '-I' + vulkan_inc_dir)
     vulkan_sources += ['win32/gstvkwindow_win32.c']
     optional_deps += [gdi_dep]
     vulkan_windowing = true
