@@ -61,6 +61,7 @@ struct _GstD3D11DevicePrivate
 
   IDXGIFactory1 *factory;
   GstD3D11DXGIFactoryVersion factory_ver;
+  D3D_FEATURE_LEVEL feature_level;
 
   ID3D11VideoDevice *video_device;
   ID3D11VideoContext *video_context;
@@ -283,6 +284,7 @@ gst_d3d11_device_constructed (GObject * object)
   hr = D3D11CreateDevice ((IDXGIAdapter *) adapter, D3D_DRIVER_TYPE_UNKNOWN,
       NULL, d3d11_flags, feature_levels, G_N_ELEMENTS (feature_levels),
       D3D11_SDK_VERSION, &priv->device, &selected_level, &priv->device_context);
+  priv->feature_level = selected_level;
 
   if (FAILED (hr)) {
     /* Retry if the system could not recognize D3D_FEATURE_LEVEL_11_1 */
@@ -290,6 +292,7 @@ gst_d3d11_device_constructed (GObject * object)
         NULL, d3d11_flags, &feature_levels[1],
         G_N_ELEMENTS (feature_levels) - 1, D3D11_SDK_VERSION, &priv->device,
         &selected_level, &priv->device_context);
+    priv->feature_level = selected_level;
   }
 
   if (SUCCEEDED (hr)) {
@@ -601,6 +604,14 @@ gst_d3d11_device_get_chosen_dxgi_factory_version (GstD3D11Device * device)
       GST_D3D11_DXGI_FACTORY_UNKNOWN);
 
   return device->priv->factory_ver;
+}
+
+D3D_FEATURE_LEVEL
+gst_d3d11_device_get_chosen_feature_level (GstD3D11Device * device)
+{
+  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), 0);
+
+  return device->priv->feature_level;
 }
 
 typedef struct

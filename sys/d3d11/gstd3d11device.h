@@ -85,6 +85,8 @@ ID3D11DeviceContext * gst_d3d11_device_get_device_context_handle (GstD3D11Device
 
 GstD3D11DXGIFactoryVersion gst_d3d11_device_get_chosen_dxgi_factory_version (GstD3D11Device * device);
 
+D3D_FEATURE_LEVEL     gst_d3d11_device_get_chosen_feature_level (GstD3D11Device * device);
+
 IDXGISwapChain *      gst_d3d11_device_create_swap_chain  (GstD3D11Device * device,
                                                            const DXGI_SWAP_CHAIN_DESC * desc);
 
