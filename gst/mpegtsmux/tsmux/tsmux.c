@@ -1433,7 +1433,10 @@ tsmux_write_pmt (TsMux * mux, TsMuxProgram * program)
      */
     GstMpegtsDescriptor *descriptor;
     GstMpegtsPMT *pmt;
+#if 0
+    /* See note about bluray descriptors below */
     guint8 desc[] = { 0x0F, 0xFF, 0xFC, 0xFC };
+#endif
     guint i;
 
     pmt = gst_mpegts_pmt_new ();
@@ -1443,11 +1446,18 @@ tsmux_write_pmt (TsMux * mux, TsMuxProgram * program)
     else
       pmt->pcr_pid = tsmux_stream_get_pid (program->pcr_stream);
 
+#if 0
+    /* FIXME : These two descriptors should not be added in all PMT
+     * but only in "bluray-compatible" mpeg-ts output. I even have my
+     * doubt whether the DTCP descriptor is even needed */
     descriptor = gst_mpegts_descriptor_from_registration ("HDMV", NULL, 0);
     g_ptr_array_add (pmt->descriptors, descriptor);
 
+    /* DTCP descriptor, see
+     * http://www.dtcp.com/documents/dtcp/info-20150204-dtcp-v1-rev%201-71.pdf */
     descriptor = gst_mpegts_descriptor_from_custom (0x88, desc, 4);
     g_ptr_array_add (pmt->descriptors, descriptor);
+#endif
 
     /* Write out the entries */
     for (i = 0; i < program->streams->len; i++) {
