@@ -174,11 +174,14 @@ struct GstBaseTsMux {
   guint si_interval;
   guint64 bitrate;
   guint pcr_interval;
-
+  guint scte35_pid;
+  guint scte35_null_interval;
+  
   /* state */
   gboolean first;
   GstClockTime pending_key_unit_ts;
   GstEvent *force_key_unit_event;
+  GstMpegtsSection *pending_scte35_section;
 
   /* write callback handling/state */
   GstFlowReturn last_flow_ret;

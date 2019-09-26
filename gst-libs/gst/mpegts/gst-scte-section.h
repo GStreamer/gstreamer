@@ -1,9 +1,11 @@
 /*
  * gst-scte-section.h -
  * Copyright (C) 2013, CableLabs, Louisville, CO 80027
+ *           (c) 2019, Centricular ltd
  *
  * Authors:
  *   RUIH Team <ruih@cablelabs.com>
+ *   Edward Hervey <edward@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

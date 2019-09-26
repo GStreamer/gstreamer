@@ -112,6 +112,7 @@
 
 static gboolean tsmux_write_pat (TsMux * mux);
 static gboolean tsmux_write_pmt (TsMux * mux, TsMuxProgram * program);
+static gboolean tsmux_write_scte_null (TsMux * mux, TsMuxProgram * program);
 static void
 tsmux_section_free (TsMuxSection * section)
 {
@@ -361,6 +362,7 @@ tsmux_add_mpegts_si_section (TsMux * mux, GstMpegtsSection * section)
   return TRUE;
 }
 
+
 /**
  * tsmux_free:
  * @mux: a #TsMux
@@ -451,6 +453,11 @@ tsmux_program_new (TsMux * mux, gint prog_id)
   program->pmt_pid = mux->next_pmt_pid++;
   program->pcr_stream = NULL;
 
+  /* SCTE35 is disabled by default */
+  program->scte35_pid = 0;
+  program->scte35_null_interval = TSMUX_DEFAULT_SCTE_35_NULL_INTERVAL;
+  program->next_scte35_pcr = -1;
+
   program->streams = g_array_sized_new (FALSE, TRUE, sizeof (TsMuxStream *), 1);
 
   mux->programs = g_list_prepend (mux->programs, program);
@@ -496,6 +503,22 @@ tsmux_get_pmt_interval (TsMuxProgram * program)
 }
 
 /**
+ * tsmux_program_set_scte35_interval:
+ * @program: a #TsMuxProgram
+ * @freq: a new SCTE-35 NULL interval
+ *
+ * Set the interval (in cycles of the 90kHz clock) for sending out the SCTE-35
+ * NULL command. This is only effective is the SCTE-35 PID is not 0.
+ */
+void
+tsmux_program_set_scte35_interval (TsMuxProgram * program, guint interval)
+{
+  g_return_if_fail (program != NULL);
+
+  program->scte35_null_interval = interval;
+}
+
+/**
  * tsmux_resend_pmt:
  * @program: a #TsMuxProgram
  *
@@ -507,6 +530,55 @@ tsmux_resend_pmt (TsMuxProgram * program)
   g_return_if_fail (program != NULL);
 
   program->next_pmt_pcr = -1;
+}
+
+/**
+ * tsmux_program_set_scte35_pid:
+ * @program: a #TsMuxProgram
+ * @pid: The pid to use, or 0 to deactivate usage.
+ *
+ * Set the @pid to use for sending SCTE-35 packets on the given
+ * @program.
+ *
+ * This needs to be called as early as possible if SCTE-35 sections
+ * are even going to be used with the given @program so that the PMT
+ * can be properly configured.
+ */
+void
+tsmux_program_set_scte35_pid (TsMuxProgram * program, guint16 pid)
+{
+  TsMuxSection *section;
+  GstMpegtsSCTESIT *sit;
+  g_return_if_fail (program != NULL);
+
+  program->scte35_pid = pid;
+  /* Create/Update the section */
+  if (program->scte35_null_section) {
+    tsmux_section_free (program->scte35_null_section);
+    program->scte35_null_section = NULL;
+  }
+  if (pid != 0) {
+    program->scte35_null_section = section = g_slice_new0 (TsMuxSection);
+    section->pi.pid = pid;
+    sit = gst_mpegts_scte_null_new ();
+    section->section = gst_mpegts_section_from_scte_sit (sit, pid);
+  }
+}
+
+/**
+ * tsmux_program_get_scte35_pid:
+ * @program: a #TsMuxProgram
+ *
+ * Get the PID configured for sending SCTE-35 packets.
+ *
+ * Returns: the configured SCTE-35 PID, or 0 if not active.
+ */
+guint16
+tsmux_program_get_scte35_pid (TsMuxProgram * program)
+{
+  g_return_val_if_fail (program != NULL, 0);
+
+  return program->scte35_pid;
 }
 
 /**
@@ -931,8 +1003,9 @@ tsmux_write_ts_header (TsMux * mux, guint8 * buf, TsMuxPacketInfo * pi,
   return TRUE;
 }
 
+/* The unused_arg is needed for g_hash_table_foreach() */
 static gboolean
-tsmux_section_write_packet (GstMpegtsSectionType * type,
+tsmux_section_write_packet (gpointer unused_arg,
     TsMuxSection * section, TsMux * mux)
 {
   GstBuffer *section_buffer;
@@ -1054,6 +1127,38 @@ fail:
   if (section_buffer)
     gst_buffer_unref (section_buffer);
   return FALSE;
+}
+
+/**
+ * tsmux_send_section:
+ * @mux: a #TsMux
+ * @section: (transfer full): a #GstMpegtsSection to add
+ *
+ * Send a @section immediately on the stream.
+ *
+ * Returns: %TRUE on success, %FALSE otherwise
+ */
+gboolean
+tsmux_send_section (TsMux * mux, GstMpegtsSection * section)
+{
+  gboolean ret;
+  TsMuxSection tsmux_section;
+
+  g_return_val_if_fail (mux != NULL, FALSE);
+  g_return_val_if_fail (section != NULL, FALSE);
+
+  memset (&tsmux_section, 0, sizeof (tsmux_section));
+
+  GST_DEBUG ("Sending mpegts section with type %d to mux",
+      section->section_type);
+
+  tsmux_section.section = section;
+  tsmux_section.pi.pid = section->pid;
+
+  ret = tsmux_section_write_packet (NULL, &tsmux_section, mux);
+  gst_mpegts_section_unref (section);
+
+  return ret;
 }
 
 static gboolean
@@ -1182,6 +1287,31 @@ rewrite_si (TsMux * mux, gint64 cur_ts)
         return FALSE;
 
       cur_pcr = get_current_pcr (mux, cur_ts);
+    }
+
+    if (program->scte35_pid != 0) {
+      gboolean write_scte_null = FALSE;
+      if (program->next_scte35_pcr == -1)
+        write_scte_null = TRUE;
+      else if (cur_pcr > program->next_scte35_pcr)
+        write_scte_null = TRUE;
+
+      if (write_scte_null) {
+        GST_DEBUG ("next scte35 pcr %" G_GINT64_FORMAT,
+            program->next_scte35_pcr);
+        if (program->next_scte35_pcr == -1)
+          program->next_scte35_pcr =
+              cur_pcr + program->scte35_null_interval * 300;
+        else
+          program->next_scte35_pcr += program->scte35_null_interval * 300;
+        GST_DEBUG ("next scte35 NOW pcr %" G_GINT64_FORMAT,
+            program->next_scte35_pcr);
+
+        if (!tsmux_write_scte_null (mux, program))
+          return FALSE;
+
+        cur_pcr = get_current_pcr (mux, cur_ts);
+      }
     }
   }
 
@@ -1358,6 +1488,8 @@ tsmux_program_free (TsMuxProgram * program)
   /* Free PMT section */
   if (program->pmt.section)
     gst_mpegts_section_unref (program->pmt.section);
+  if (program->scte35_null_section)
+    tsmux_section_free (program->scte35_null_section);
 
   g_array_free (program->streams, TRUE);
   g_slice_free (TsMuxProgram, program);
@@ -1403,8 +1535,7 @@ tsmux_write_pat (TsMux * mux)
     mux->pat_changed = FALSE;
   }
 
-  return tsmux_section_write_packet (GINT_TO_POINTER (GST_MPEGTS_SECTION_PAT),
-      &mux->pat, mux);
+  return tsmux_section_write_packet (NULL, &mux->pat, mux);
 }
 
 static gboolean
@@ -1459,6 +1590,12 @@ tsmux_write_pmt (TsMux * mux, TsMuxProgram * program)
     g_ptr_array_add (pmt->descriptors, descriptor);
 #endif
 
+    /* Will SCTE-35 be potentially used ? */
+    if (program->scte35_pid != 0) {
+      descriptor = gst_mpegts_descriptor_from_registration ("CUEI", NULL, 0);
+      g_ptr_array_add (pmt->descriptors, descriptor);
+    }
+
     /* Write out the entries */
     for (i = 0; i < program->streams->len; i++) {
       GstMpegtsPMTStream *pmt_stream;
@@ -1472,6 +1609,14 @@ tsmux_write_pmt (TsMux * mux, TsMuxProgram * program)
 
       /* Write any ES descriptors needed */
       tsmux_stream_get_es_descrs (stream, pmt_stream);
+      g_ptr_array_add (pmt->streams, pmt_stream);
+    }
+
+    /* Will SCTE-35 be potentially used ? */
+    if (program->scte35_pid != 0) {
+      GstMpegtsPMTStream *pmt_stream = gst_mpegts_pmt_stream_new ();
+      pmt_stream->stream_type = GST_MPEGTS_STREAM_TYPE_SCTE_SIT;
+      pmt_stream->pid = program->scte35_pid;
       g_ptr_array_add (pmt->streams, pmt_stream);
     }
 
@@ -1490,8 +1635,15 @@ tsmux_write_pmt (TsMux * mux, TsMuxProgram * program)
     program->pmt.section->version_number = program->pmt_version++;
   }
 
-  return tsmux_section_write_packet (GINT_TO_POINTER (GST_MPEGTS_SECTION_PMT),
-      &program->pmt, mux);
+  return tsmux_section_write_packet (NULL, &program->pmt, mux);
+}
+
+static gboolean
+tsmux_write_scte_null (TsMux * mux, TsMuxProgram * program)
+{
+  /* SCTE-35 NULL section is created when PID is set */
+  GST_LOG ("Writing SCTE NULL packet");
+  return tsmux_section_write_packet (NULL, program->scte35_null_section, mux);
 }
 
 void

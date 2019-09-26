@@ -195,7 +195,11 @@ enum
   PROP_SI_INTERVAL,
   PROP_BITRATE,
   PROP_PCR_INTERVAL,
+  PROP_SCTE_35_PID,
+  PROP_SCTE_35_NULL_INTERVAL
 };
+
+#define DEFAULT_SCTE_35_PID 0
 
 #define BASETSMUX_DEFAULT_ALIGNMENT    -1
 
@@ -726,8 +730,11 @@ gst_base_ts_mux_create_streams (GstBaseTsMux * mux)
       if (ts_pad->prog == NULL)
         goto no_program;
       tsmux_set_pmt_interval (ts_pad->prog, mux->pmt_interval);
-      g_hash_table_insert (mux->programs,
-          GINT_TO_POINTER (ts_pad->prog_id), ts_pad->prog);
+      tsmux_program_set_scte35_pid (ts_pad->prog, mux->scte35_pid);
+      tsmux_program_set_scte35_interval (ts_pad->prog,
+          mux->scte35_null_interval);
+      g_hash_table_insert (mux->programs, GINT_TO_POINTER (ts_pad->prog_id),
+          ts_pad->prog);
     }
 
     if (ts_pad->stream == NULL) {
@@ -1052,6 +1059,7 @@ gst_base_ts_mux_aggregate_buffer (GstBaseTsMux * mux,
   gint64 dts = GST_CLOCK_STIME_NONE;
   gboolean delta = TRUE, header = FALSE;
   StreamData *stream_data;
+  GstMpegtsSection *scte_section = NULL;
 
   GST_DEBUG_OBJECT (mux, "Pads collected");
 
@@ -1127,6 +1135,16 @@ gst_base_ts_mux_aggregate_buffer (GstBaseTsMux * mux,
   }
 
   GST_DEBUG_OBJECT (best, "Chose stream for output (PID: 0x%04x)", best->pid);
+
+  GST_OBJECT_LOCK (mux);
+  scte_section = mux->pending_scte35_section;
+  mux->pending_scte35_section = NULL;
+  GST_OBJECT_UNLOCK (mux);
+  if (G_UNLIKELY (scte_section)) {
+    GST_DEBUG_OBJECT (mux, "Sending pending SCTE section");
+    if (!tsmux_send_section (mux->tsmux, scte_section))
+      GST_ERROR_OBJECT (mux, "Error sending SCTE section !");
+  }
 
   if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_PTS (buf))) {
     pts = GSTTIME_TO_MPEGTIME (GST_BUFFER_PTS (buf));
@@ -1249,8 +1267,18 @@ gst_base_ts_mux_send_event (GstElement * element, GstEvent * event)
   if (section) {
     GST_DEBUG ("Received event with mpegts section");
 
-    /* TODO: Check that the section type is supported */
-    tsmux_add_mpegts_si_section (mux->tsmux, section);
+    if (section->section_type == GST_MPEGTS_SECTION_SCTE_SIT) {
+      /* Will be sent from the streaming threads */
+      GST_DEBUG_OBJECT (mux, "Storing SCTE event");
+      GST_OBJECT_LOCK (element);
+      if (mux->pending_scte35_section)
+        gst_mpegts_section_unref (mux->pending_scte35_section);
+      mux->pending_scte35_section = section;
+      GST_OBJECT_UNLOCK (element);
+    } else {
+      /* TODO: Check that the section type is supported */
+      tsmux_add_mpegts_si_section (mux->tsmux, section);
+    }
 
     gst_event_unref (event);
 
@@ -1710,6 +1738,12 @@ gst_base_ts_mux_set_property (GObject * object, guint prop_id,
       if (mux->tsmux)
         tsmux_set_pcr_interval (mux->tsmux, mux->pcr_interval);
       break;
+    case PROP_SCTE_35_PID:
+      mux->scte35_pid = g_value_get_uint (value);
+      break;
+    case PROP_SCTE_35_NULL_INTERVAL:
+      mux->scte35_null_interval = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1743,6 +1777,12 @@ gst_base_ts_mux_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PCR_INTERVAL:
       g_value_set_uint (value, mux->pcr_interval);
+      break;
+    case PROP_SCTE_35_PID:
+      g_value_set_uint (value, mux->scte35_pid);
+      break;
+    case PROP_SCTE_35_NULL_INTERVAL:
+      g_value_set_uint (value, mux->scte35_null_interval);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1878,6 +1918,20 @@ gst_base_ts_mux_class_init (GstBaseTsMuxClass * klass)
           1, G_MAXUINT, TSMUX_DEFAULT_PCR_INTERVAL,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SCTE_35_PID,
+      g_param_spec_uint ("scte-35-pid", "SCTE-35 PID",
+          "PID to use for inserting SCTE-35 packets (0: unused)",
+          0, G_MAXUINT, DEFAULT_SCTE_35_PID,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_SCTE_35_NULL_INTERVAL, g_param_spec_uint ("scte-35-null-interval",
+          "SCTE-35 NULL packet interval",
+          "Set the interval (in ticks of the 90kHz clock) for writing SCTE-35 NULL (heartbeat) packets."
+          " (only valid if scte-35-pid is different from 0)", 1, G_MAXUINT,
+          TSMUX_DEFAULT_SCTE_35_NULL_INTERVAL,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
       &gst_base_ts_mux_src_factory, GST_TYPE_AGGREGATOR_PAD);
 }
@@ -1895,6 +1949,8 @@ gst_base_ts_mux_init (GstBaseTsMux * mux)
   mux->prog_map = NULL;
   mux->alignment = BASETSMUX_DEFAULT_ALIGNMENT;
   mux->bitrate = TSMUX_DEFAULT_BITRATE;
+  mux->scte35_pid = DEFAULT_SCTE_35_PID;
+  mux->scte35_null_interval = TSMUX_DEFAULT_SCTE_35_NULL_INTERVAL;
 
   mux->packet_size = GST_BASE_TS_MUX_NORMAL_PACKET_LENGTH;
   mux->automatic_alignment = 0;
