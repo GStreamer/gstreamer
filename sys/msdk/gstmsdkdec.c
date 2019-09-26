@@ -140,6 +140,10 @@ allocate_output_buffer (GstMsdkDec * thiz, GstBuffer ** buffer)
   *buffer = gst_buffer_ref (frame->output_buffer);
   gst_buffer_replace (&frame->output_buffer, NULL);
   gst_video_codec_frame_unref (frame);
+
+  if (thiz->postpone_free_surface)
+    GST_MINI_OBJECT_FLAG_SET (*buffer, GST_MINI_OBJECT_FLAG_LOCKABLE);
+
   return GST_FLOW_OK;
 }
 
