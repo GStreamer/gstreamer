@@ -4,6 +4,7 @@ mpegts_sources = [
   'gst-dvb-descriptor.c',
   'gst-dvb-section.c',
   'gst-atsc-section.c',
+  'gst-scte-section.c',
 ]
 
 mpegts_headers = [

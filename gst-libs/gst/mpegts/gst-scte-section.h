@@ -34,6 +34,7 @@ G_BEGIN_DECLS
  * GstMpegtsScteStreamType:
  * @GST_MPEGTS_STREAM_TYPE_SCTE_SUBTITLING:  SCTE-27 Subtitling
  * @GST_MPEGTS_STREAM_TYPE_SCTE_ISOCH_DATA:  SCTE-19 Isochronous data
+ * @GST_MPEGTS_STREAM_TYPE_SCTE_SIT:         SCTE-35 Splice Information Table
  * @GST_MPEGTS_STREAM_TYPE_SCTE_DST_NRT:     SCTE-07 Data Service or
  * Network Resource Table
  * @GST_MPEGTS_STREAM_TYPE_SCTE_DSMCC_DCB:   Type B - DSM-CC Data Carousel
@@ -51,7 +52,9 @@ typedef enum {
   /* 0x01 - 0x82 : defined in other specs */
   GST_MPEGTS_STREAM_TYPE_SCTE_SUBTITLING = 0x82,   /* Subtitling data */
   GST_MPEGTS_STREAM_TYPE_SCTE_ISOCH_DATA = 0x83,   /* Isochronous data */
-  /* 0x84 - 0x94 : defined in other specs */
+  /* 0x84 - 0x85 : defined in other specs */
+  GST_MPEGTS_STREAM_TYPE_SCTE_SIT        = 0x86,   /* Splice Information Table */
+  /* 0x87 - 0x94 : defined in other specs */
   GST_MPEGTS_STREAM_TYPE_SCTE_DST_NRT    = 0x95,   /* DST / NRT data */
   /* 0x96 - 0xaf : defined in other specs */
   GST_MPEGTS_STREAM_TYPE_SCTE_DSMCC_DCB  = 0xb0,   /* Data Carousel Type B */
@@ -96,6 +99,117 @@ typedef enum {
   GST_MTS_TABLE_ID_SCTE_SPLICE   = 0xfc,     /* splice information table */
 
 } GstMpegtsSectionSCTETableID;
+
+/* Splice Information Table (SIT) */
+#define GST_TYPE_MPEGTS_SCTE_SPLICE_EVENT (gst_mpegts_scte_splice_event_get_type);
+typedef struct _GstMpegtsSCTESpliceEvent GstMpegtsSCTESpliceEvent;
+
+struct _GstMpegtsSCTESpliceEvent {
+  /* TRUE if from/to an insert event (else belongs to a schedule event) */
+  gboolean insert_event;
+
+  guint32 splice_event_id;
+  gboolean splice_event_cancel_indicator;
+
+  /* If splice_event_cancel_indicator == 0 */
+  gboolean out_of_network_indicator;
+  gboolean program_splice_flag;	  /* NOTE: Only program splice are supported */
+  gboolean duration_flag;
+  gboolean splice_immediate_flag; /* Only valid for insert_event */
+
+  gboolean program_splice_time_specified;
+  guint64 program_splice_time;
+
+  gboolean break_duration_auto_return;
+  guint64 break_duration;
+
+  guint16 unique_program_id;
+  guint8 avail_num;
+  guint8 avails_expected;
+
+};
+
+/*
+ * Types of descriptors
+ *
+ * Note: These are only for the descriptors *WITHIN* a SIT */
+typedef enum {
+  GST_MTS_SCTE_DESC_AVAIL        = 0x00,
+  GST_MTS_SCTE_DESC_DTMF         = 0x01,
+  GST_MTS_SCTE_DESC_SEGMENTATION = 0x02,
+  GST_MTS_SCTE_DESC_TIME         = 0x03,
+  GST_MTS_SCTE_DESC_AUDIO        = 0x04
+} GstMpegtsSCTESpliceDescriptor;
+
+typedef enum {
+  GST_MTS_SCTE_SPLICE_COMMAND_NULL      = 0x00,
+  GST_MTS_SCTE_SPLICE_COMMAND_SCHEDULE  = 0x04,
+  GST_MTS_SCTE_SPLICE_COMMAND_INSERT    = 0x05,
+  GST_MTS_SCTE_SPLICE_COMMAND_TIME      = 0x06,
+  GST_MTS_SCTE_SPLICE_COMMAND_BANDWIDTH = 0x07,
+  GST_MTS_SCTE_SPLICE_COMMAND_PRIVATE   = 0xff
+} GstMpegtsSCTESpliceCommandType;
+
+#define GST_TYPE_MPEGTS_SCTE_SIT (gst_mpegts_scte_sit_get_type());
+
+typedef struct _GstMpegtsSCTESIT GstMpegtsSCTESIT;
+
+struct _GstMpegtsSCTESIT
+{
+  /* Encryption not supported for now */
+  gboolean encrypted_packet;
+  guint8   encryption_algorithm;
+
+  guint64  pts_adjustment;
+  guint8   cw_index;
+  guint16  tier;
+
+  guint16  splice_command_length;
+  GstMpegtsSCTESpliceCommandType splice_command_type;
+
+  /* For time_signal commands */
+  gboolean splice_time_specified;
+  guint64  splice_time;
+
+  GPtrArray *splices;
+
+  GPtrArray *descriptors;
+};
+
+GST_MPEGTS_API
+GType gst_mpegts_scte_sit_get_type (void);
+
+GST_MPEGTS_API
+GstMpegtsSCTESIT *gst_mpegts_scte_sit_new (void);
+
+GST_MPEGTS_API
+GstMpegtsSCTESIT *gst_mpegts_scte_null_new (void);
+
+GST_MPEGTS_API
+GstMpegtsSCTESIT *gst_mpegts_scte_cancel_new (guint32 event_id);
+
+GST_MPEGTS_API
+GstMpegtsSCTESIT *gst_mpegts_scte_splice_in_new (guint32 event_id,
+						 guint64 splice_time);
+
+GST_MPEGTS_API
+GstMpegtsSCTESIT *gst_mpegts_scte_splice_out_new (guint32 event_id,
+						  guint64 splice_time,
+						  guint64 duration);
+
+
+GST_MPEGTS_API
+GType gst_mpegts_scte_splice_event_get_type (void);
+
+GST_MPEGTS_API
+GstMpegtsSCTESpliceEvent *gst_mpegts_scte_splice_event_new (void);
+
+GST_MPEGTS_API
+const GstMpegtsSCTESIT *gst_mpegts_section_get_scte_sit (GstMpegtsSection *section);
+
+GST_MPEGTS_API
+GstMpegtsSection *gst_mpegts_section_from_scte_sit (GstMpegtsSCTESIT * sit, guint16 pid);
+
 
 G_END_DECLS
 

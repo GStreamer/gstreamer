@@ -68,6 +68,113 @@ static const guint8 stt_data_check[] = {
   0xc0, 0x00, 0xc4, 0x86, 0x56, 0xa5
 };
 
+GST_START_TEST (test_scte_sit)
+{
+  GstMpegtsSCTESIT *sit;
+  GstMpegtsSection *sit_section;
+  GstMpegtsSCTESpliceEvent *event;
+  guint8 *data;
+  gsize data_size;
+
+  /* Try a simple NULL command before anything else */
+  sit = gst_mpegts_scte_sit_new ();
+  sit->tier = 123;
+  sit->pts_adjustment = 0x1fedcba12;
+  sit->splice_command_type = GST_MTS_SCTE_SPLICE_COMMAND_NULL;
+
+  sit_section = gst_mpegts_section_from_scte_sit (sit, 456);
+  fail_if (sit_section == NULL);
+  fail_unless (sit_section->short_section);
+
+  /* Serialize and check that we can re-parse it into something valid */
+  data = gst_mpegts_section_packetize (sit_section, &data_size);
+  fail_if (data == NULL);
+  GST_MEMDUMP ("section", data, data_size);
+
+  GST_LOG ("here");
+  sit_section->destroy_parsed (sit_section->cached_parsed);
+  sit_section->cached_parsed = NULL;
+
+  sit = (GstMpegtsSCTESIT *) gst_mpegts_section_get_scte_sit (sit_section);
+  fail_if (sit == NULL);
+  /* Check the values */
+  fail_unless (sit->encrypted_packet == FALSE);
+  fail_unless (sit->pts_adjustment == 0x1fedcba12);
+  fail_unless (sit->tier == 123);
+  fail_unless (sit->splice_command_type == GST_MTS_SCTE_SPLICE_COMMAND_NULL);
+
+  gst_mpegts_section_unref (sit_section);
+
+
+  /* Same thing but now with an insert command */
+  sit = gst_mpegts_scte_sit_new ();
+  sit->tier = 123;
+  sit->pts_adjustment = 0x1fedcba12;
+  sit->splice_command_type = GST_MTS_SCTE_SPLICE_COMMAND_INSERT;
+
+  event = gst_mpegts_scte_splice_event_new ();
+  event->insert_event = TRUE;
+  event->splice_event_id = 4285;
+  event->program_splice_flag = TRUE;
+  event->duration_flag = TRUE;
+  event->splice_immediate_flag = FALSE;
+
+  event->program_splice_time_specified = TRUE;
+  event->program_splice_time = 0x1fdecba12;
+
+  event->break_duration_auto_return = TRUE;
+  event->break_duration = 590000;
+  event->unique_program_id = 4256;
+  event->avail_num = 2;
+  event->avails_expected = 2;
+  g_ptr_array_add (sit->splices, event);
+
+  sit_section = gst_mpegts_section_from_scte_sit (sit, 456);
+  fail_if (sit_section == NULL);
+  fail_unless (sit_section->short_section);
+
+  /* Serialize and check that we can re-parse it into something valid */
+  data = gst_mpegts_section_packetize (sit_section, &data_size);
+  fail_if (data == NULL);
+  GST_MEMDUMP ("section", data, data_size);
+
+  GST_LOG ("here");
+  sit_section->destroy_parsed (sit_section->cached_parsed);
+  sit_section->cached_parsed = NULL;
+
+  sit = (GstMpegtsSCTESIT *) gst_mpegts_section_get_scte_sit (sit_section);
+  fail_if (sit == NULL);
+  /* Check the values */
+  fail_unless (sit->encrypted_packet == FALSE);
+  fail_unless (sit->pts_adjustment == 0x1fedcba12);
+  fail_unless (sit->tier == 123);
+  fail_unless (sit->pts_adjustment == 0x1fedcba12);
+  fail_unless (sit->splice_command_type == GST_MTS_SCTE_SPLICE_COMMAND_INSERT);
+
+  event = g_ptr_array_index (sit->splices, 0);
+  fail_unless (event->insert_event == TRUE);
+  fail_unless (event->splice_event_id == 4285);
+  fail_unless (event->program_splice_flag == TRUE);
+  fail_unless (event->duration_flag == TRUE);
+  fail_unless (event->splice_immediate_flag == FALSE);
+
+  fail_unless (event->program_splice_time_specified == TRUE);
+  fail_unless (event->program_splice_time == 0x1fdecba12);
+
+  fail_unless (event->break_duration_auto_return == TRUE);
+  fail_unless (event->break_duration == 590000);
+  fail_unless (event->unique_program_id == 4256);
+  fail_unless (event->avail_num == 2);
+  fail_unless (event->avails_expected == 2);
+
+
+  gst_mpegts_section_unref (sit_section);
+
+
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_mpegts_pat)
 {
   GstMpegtsPatProgram *program;
@@ -570,6 +677,7 @@ mpegts_suite (void)
   gst_mpegts_initialize ();
 
   suite_add_tcase (s, tc_chain);
+  tcase_add_test (tc_chain, test_scte_sit);
   tcase_add_test (tc_chain, test_mpegts_pat);
   tcase_add_test (tc_chain, test_mpegts_pmt);
   tcase_add_test (tc_chain, test_mpegts_nit);

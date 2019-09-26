@@ -31,6 +31,7 @@
 #include <glib/gprintf.h>
 #include <gst/gst.h>
 #include <gst/mpegts/mpegts.h>
+#define MPEGTIME_TO_GSTTIME(t) ((t) * (guint64)100000 / 9)
 
 static void
 gst_info_dump_mem_line (gchar * linebuf, gsize linebuf_size,
@@ -125,6 +126,22 @@ table_id_name (gint val)
     /* Else try with SCTE enum types */
     en = g_enum_get_value (G_ENUM_CLASS (g_type_class_peek
             (GST_TYPE_MPEGTS_SECTION_SCTE_TABLE_ID)), val);
+  if (en == NULL)
+    return "UNKNOWN/PRIVATE";
+  return en->value_nick;
+}
+
+static const gchar *
+stream_type_name (gint val)
+{
+  GEnumValue *en;
+
+  en = g_enum_get_value (G_ENUM_CLASS (g_type_class_peek
+          (GST_TYPE_MPEGTS_STREAM_TYPE)), val);
+  if (en == NULL)
+    /* Else try with SCTE enum types */
+    en = g_enum_get_value (G_ENUM_CLASS (g_type_class_peek
+            (GST_TYPE_MPEGTS_SCTE_STREAM_TYPE)), val);
   if (en == NULL)
     return "UNKNOWN/PRIVATE";
   return en->value_nick;
@@ -798,8 +815,7 @@ dump_pmt (GstMpegtsSection * section)
   for (i = 0; i < len; i++) {
     GstMpegtsPMTStream *stream = g_ptr_array_index (pmt->streams, i);
     g_printf ("       pid:0x%04x , stream_type:0x%02x (%s)\n", stream->pid,
-        stream->stream_type,
-        enum_name (GST_TYPE_MPEGTS_STREAM_TYPE, stream->stream_type));
+        stream->stream_type, stream_type_name (stream->stream_type));
     dump_descriptors (stream->descriptors, 9);
   }
 }
@@ -1111,6 +1127,96 @@ dump_cat (GstMpegtsSection * section)
   g_ptr_array_unref (descriptors);
 }
 
+static const gchar *
+scte_descriptor_name (guint8 tag)
+{
+  switch (tag) {
+    case 0x00:
+      return "avail";
+    case 0x01:
+      return "DTMF";
+    case 0x02:
+      return "segmentation";
+    case 0x03:
+      return "time";
+    case 0x04:
+      return "audio";
+    default:
+      return "UNKNOWN";
+  }
+}
+
+static void
+dump_scte_descriptors (GPtrArray * descriptors, guint spacing)
+{
+  guint i;
+
+  for (i = 0; i < descriptors->len; i++) {
+    GstMpegtsDescriptor *desc = g_ptr_array_index (descriptors, i);
+    g_printf ("%*s [scte descriptor 0x%02x (%s) length:%d]\n", spacing, "",
+        desc->tag, scte_descriptor_name (desc->tag), desc->length);
+    if (DUMP_DESCRIPTORS)
+      dump_memory_content (desc, spacing + 2);
+    /* FIXME : Add parsing of SCTE descriptors */
+  }
+}
+
+
+static void
+dump_scte_sit (GstMpegtsSection * section)
+{
+  const GstMpegtsSCTESIT *sit = gst_mpegts_section_get_scte_sit (section);
+  guint i, len;
+
+  g_assert (sit);
+
+  g_printf ("     encrypted_packet    : %d\n", sit->encrypted_packet);
+  if (sit->encrypted_packet) {
+    g_printf ("     encryption_algorithm: %d\n", sit->encryption_algorithm);
+    g_printf ("     cw_index            : %d\n", sit->cw_index);
+    g_printf ("     tier                : %d\n", sit->tier);
+  }
+  g_printf ("     pts_adjustment      : %" G_GUINT64_FORMAT " (%"
+      GST_TIME_FORMAT ")\n", sit->pts_adjustment,
+      GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (sit->pts_adjustment)));
+  g_printf ("     command_type        : %d\n", sit->splice_command_type);
+
+  if ((len = sit->splices->len)) {
+    g_printf ("     %d splice(s):\n", len);
+    for (i = 0; i < len; i++) {
+      GstMpegtsSCTESpliceEvent *event = g_ptr_array_index (sit->splices, i);
+      g_printf ("     event_id:%d event_cancel_indicator:%d\n",
+          event->splice_event_id, event->splice_event_cancel_indicator);
+      if (!event->splice_event_cancel_indicator) {
+        g_printf ("       out_of_network_indicator:%d\n",
+            event->out_of_network_indicator);
+        if (event->program_splice_flag) {
+          if (event->program_splice_time_specified)
+            g_printf ("       program_splice_time:%" G_GUINT64_FORMAT " (%"
+                GST_TIME_FORMAT ")\n", event->program_splice_time,
+                GST_TIME_ARGS (MPEGTIME_TO_GSTTIME
+                    (event->program_splice_time)));
+          else
+            g_printf ("       program_splice_time not specified\n");
+        }
+        if (event->duration_flag) {
+          g_printf ("       break_duration_auto_return:%d\n",
+              event->break_duration_auto_return);
+          g_printf ("       break_duration:%" G_GUINT64_FORMAT " (%"
+              GST_TIME_FORMAT ")\n", event->break_duration,
+              GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (event->break_duration)));
+
+        }
+        g_printf ("       unique_program_id  : %d\n", event->unique_program_id);
+        g_printf ("       avail num/expected : %d/%d\n",
+            event->avail_num, event->avails_expected);
+      }
+    }
+  }
+
+  dump_scte_descriptors (sit->descriptors, 4);
+}
+
 static void
 dump_section (GstMpegtsSection * section)
 {
@@ -1157,6 +1263,9 @@ dump_section (GstMpegtsSection * section)
       break;
     case GST_MPEGTS_SECTION_ATSC_STT:
       dump_stt (section);
+      break;
+    case GST_MPEGTS_SECTION_SCTE_SIT:
+      dump_scte_sit (section);
       break;
     default:
       g_printf ("     Unknown section type\n");
@@ -1251,6 +1360,8 @@ main (int argc, gchar ** argv)
   g_type_class_ref (GST_TYPE_MPEGTS_DVB_LINKAGE_HAND_OVER_TYPE);
   g_type_class_ref (GST_TYPE_MPEGTS_COMPONENT_STREAM_CONTENT);
   g_type_class_ref (GST_TYPE_MPEGTS_CONTENT_NIBBLE_HI);
+  g_type_class_ref (GST_TYPE_MPEGTS_SCTE_STREAM_TYPE);
+  g_type_class_ref (GST_TYPE_MPEGTS_SECTION_SCTE_TABLE_ID);
 
   mainloop = g_main_loop_new (NULL, FALSE);
 

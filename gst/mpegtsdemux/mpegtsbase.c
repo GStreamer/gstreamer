@@ -688,7 +688,8 @@ mpegts_base_update_program (MpegTSBase * base, MpegTSBaseProgram * program,
 
 
 static gboolean
-_stream_is_private_section (GstMpegtsPMTStream * stream)
+_stream_is_private_section (const GstMpegtsPMT * pmt,
+    GstMpegtsPMTStream * stream)
 {
   switch (stream->stream_type) {
     case GST_MPEGTS_STREAM_TYPE_SCTE_DSMCC_DCB:
@@ -711,6 +712,15 @@ _stream_is_private_section (GstMpegtsPMTStream * stream)
     case GST_MPEGTS_STREAM_TYPE_METADATA_SECTIONS:
       /* known PSI streams */
       return TRUE;
+    case GST_MPEGTS_STREAM_TYPE_SCTE_SIT:
+    {
+      guint32 registration_id =
+          get_registration_from_descriptors (pmt->descriptors);
+      /* Not a private section stream */
+      if (registration_id != DRF_ID_CUEI)
+        return FALSE;
+      return TRUE;
+    }
     default:
       return FALSE;
   }
@@ -818,7 +828,7 @@ mpegts_base_is_program_update (MpegTSBase * base,
       GST_DEBUG
           ("New stream 0x%04x has a different stream type (new:%d, old:%d)",
           stream->pid, stream->stream_type, oldstream->stream_type);
-    } else if (!_stream_is_private_section (stream)) {
+    } else if (!_stream_is_private_section (new_pmt, stream)) {
       /* FIXME : We should actually be checking a bit deeper,
        * especially for private streams (where the differentiation is
        * done at the registration level) */
@@ -855,7 +865,7 @@ mpegts_base_deactivate_program (MpegTSBase * base, MpegTSBaseProgram * program)
       /* Only unset the is_pes/known_psi bit if the PID isn't used in any other active
        * program */
       if (!mpegts_pid_in_active_programs (base, stream->pid)) {
-        if (_stream_is_private_section (stream)) {
+        if (_stream_is_private_section (program->pmt, stream)) {
           if (base->parse_private_sections)
             MPEGTS_BIT_UNSET (base->known_psi, stream->pid);
         } else {
@@ -908,7 +918,7 @@ mpegts_base_activate_program (MpegTSBase * base, MpegTSBaseProgram * program,
 
   for (i = 0; i < pmt->streams->len; ++i) {
     GstMpegtsPMTStream *stream = g_ptr_array_index (pmt->streams, i);
-    if (_stream_is_private_section (stream)) {
+    if (_stream_is_private_section (pmt, stream)) {
       if (base->parse_private_sections)
         MPEGTS_BIT_SET (base->known_psi, stream->pid);
     } else {

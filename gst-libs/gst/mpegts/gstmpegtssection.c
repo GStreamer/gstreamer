@@ -1126,6 +1126,9 @@ _identify_section (guint16 pid, guint8 table_id)
       if (pid == 0x1ffb)
         return GST_MPEGTS_SECTION_ATSC_RRT;
       break;
+    case GST_MTS_TABLE_ID_SCTE_SPLICE:
+      return GST_MPEGTS_SECTION_SCTE_SIT;
+      break;
     default:
       /* Handle ranges */
       if (table_id >= GST_MTS_TABLE_ID_EVENT_INFORMATION_ACTUAL_TS_PRESENT &&
@@ -1176,8 +1179,13 @@ _packetize_common_section (GstMpegtsSection * section, gsize length)
     case GST_MPEGTS_SECTION_PMT:
     case GST_MPEGTS_SECTION_CAT:
     case GST_MPEGTS_SECTION_TSDT:
+    case GST_MPEGTS_SECTION_SCTE_SIT:
       /* Tables from ISO/IEC 13818-1 has a '0' bit
        * after the section_syntax_indicator */
+      /* FIXME : that 'bit' after the section_syntax_indicator is the
+       * private_indicator field. We should figure out why/when it
+       * needs to be set *OR* decide that by default it is set to 0
+       * (i.e. not private data) unless the user/caller decides */
       GST_WRITE_UINT16_BE (data, (section->section_length - 3) | 0x3000);
       break;
     default:
