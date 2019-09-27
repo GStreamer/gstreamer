@@ -1958,15 +1958,14 @@ update_timer_offsets (GstRtpJitterBuffer * jitterbuffer)
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
   RtpTimer *test = rtp_timer_queue_peek_earliest (priv->timers);
+  GstClockTimeDiff new_offset = timeout_offset (jitterbuffer);
 
   while (test) {
     if (test->type != RTP_TIMER_EXPECTED) {
-      GstClockTimeDiff new_offset = timeout_offset (jitterbuffer);
-
       test->timeout = get_pts_timeout (test) + new_offset;
       test->offset = new_offset;
-
-      rtp_timer_queue_reschedule (priv->timers, test);
+      /* as we apply the offset on all timers, the order of timers won't
+       * change and we can skip updating the timer queue */
     }
 
     test = rtp_timer_get_next (test);
