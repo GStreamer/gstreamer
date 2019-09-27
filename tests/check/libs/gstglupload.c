@@ -281,6 +281,8 @@ GST_START_TEST (test_upload_data)
   res = gst_gl_upload_perform_with_buffer (upload, inbuf, &outbuf);
   fail_unless (res == GST_GL_UPLOAD_DONE, "Failed to upload buffer");
   fail_unless (GST_IS_BUFFER (outbuf));
+  fail_unless (gst_buffer_get_video_meta (outbuf));
+  fail_unless (gst_buffer_get_gl_sync_meta (outbuf));
 
   res = gst_buffer_map (outbuf, &map_info, GST_MAP_READ | GST_MAP_GL);
   fail_if (res == FALSE, "Failed to map gl memory");
