@@ -134,20 +134,26 @@ gst_play_kb_set_key_handler (GstPlayKbFunc kb_func, gpointer user_data)
 
 #elif defined(G_OS_WIN32)
 
-static GSource *source = NULL;
+typedef struct
+{
+  GThread *thread;
+  HANDLE event_handle;
+  HANDLE console_handle;
+  gboolean closing;
+  GMutex lock;
+} Win32KeyHandler;
+
+static Win32KeyHandler *win32_handler = NULL;
 
 static gboolean
-gst_play_kb_source_cb (gpointer user_data)
+gst_play_kb_source_cb (Win32KeyHandler * handler)
 {
-  HANDLE h_input = GetStdHandle (STD_INPUT_HANDLE);
+  HANDLE h_input = handler->console_handle;
   INPUT_RECORD buffer;
   DWORD n;
 
   if (PeekConsoleInput (h_input, &buffer, 1, &n) && n == 1) {
     ReadConsoleInput (h_input, &buffer, 1, &n);
-
-    if (!kb_callback)
-      return G_SOURCE_REMOVE;
 
     if (buffer.EventType == KEY_EVENT && !buffer.Event.KeyEvent.bKeyDown) {
       gchar key_val[2] = { 0 };
@@ -173,7 +179,41 @@ gst_play_kb_source_cb (gpointer user_data)
     }
   }
 
-  return G_SOURCE_CONTINUE;
+  return G_SOURCE_REMOVE;
+}
+
+static gpointer
+gst_play_kb_win32_thread (gpointer user_data)
+{
+  Win32KeyHandler *handler = (Win32KeyHandler *) user_data;
+  HANDLE handles[2];
+
+  handles[0] = handler->event_handle;
+  handles[1] = handler->console_handle;
+
+  if (!kb_callback)
+    return NULL;
+
+  while (TRUE) {
+    DWORD ret = WaitForMultipleObjects (2, handles, FALSE, INFINITE);
+
+    if (ret == WAIT_FAILED) {
+      GST_WARNING ("WaitForMultipleObject Failed");
+      return NULL;
+    }
+
+    g_mutex_lock (&handler->lock);
+    if (handler->closing) {
+      g_mutex_unlock (&handler->lock);
+
+      return NULL;
+    }
+    g_mutex_unlock (&handler->lock);
+
+    g_idle_add ((GSourceFunc) gst_play_kb_source_cb, handler);
+  }
+
+  return NULL;
 }
 
 gboolean
@@ -186,18 +226,53 @@ gst_play_kb_set_key_handler (GstPlayKbFunc kb_func, gpointer user_data)
     return FALSE;
   }
 
-  if (source) {
-    g_source_destroy (source);
-    g_source_unref (source);
-    source = NULL;
+  if (win32_handler) {
+    g_mutex_lock (&win32_handler->lock);
+    win32_handler->closing = TRUE;
+    g_mutex_unlock (&win32_handler->lock);
+
+    SetEvent (win32_handler->event_handle);
+    g_thread_join (win32_handler->thread);
+    CloseHandle (win32_handler->event_handle);
+
+    g_mutex_clear (&win32_handler->lock);
+    g_free (win32_handler);
+    win32_handler = NULL;
   }
 
   if (kb_func) {
-    /* check input per 50 ms */
-    source = g_timeout_source_new (50);
-    g_source_set_callback (source,
-        (GSourceFunc) gst_play_kb_source_cb, NULL, NULL);
-    g_source_attach (source, NULL);
+    SECURITY_ATTRIBUTES sec_attrs;
+
+    sec_attrs.nLength = sizeof (SECURITY_ATTRIBUTES);
+    sec_attrs.lpSecurityDescriptor = NULL;
+    sec_attrs.bInheritHandle = FALSE;
+
+    win32_handler = g_new0 (Win32KeyHandler, 1);
+
+    /* create cancellable event handle */
+    win32_handler->event_handle = CreateEvent (&sec_attrs, TRUE, FALSE, NULL);
+
+    if (!win32_handler->event_handle) {
+      GST_WARNING ("Couldn't create event handle");
+      g_free (win32_handler);
+      win32_handler = NULL;
+
+      return FALSE;
+    }
+
+    win32_handler->console_handle = GetStdHandle (STD_INPUT_HANDLE);
+    if (!win32_handler->console_handle) {
+      GST_WARNING ("Couldn't get console handle");
+      CloseHandle (win32_handler->event_handle);
+      g_free (win32_handler);
+      win32_handler = NULL;
+
+      return FALSE;
+    }
+
+    g_mutex_init (&win32_handler->lock);
+    win32_handler->thread =
+        g_thread_new ("gst-play-kb", gst_play_kb_win32_thread, win32_handler);
   }
 
   kb_callback = kb_func;
