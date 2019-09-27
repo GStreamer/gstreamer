@@ -155,7 +155,7 @@ gst_play_kb_source_cb (Win32KeyHandler * handler)
   if (PeekConsoleInput (h_input, &buffer, 1, &n) && n == 1) {
     ReadConsoleInput (h_input, &buffer, 1, &n);
 
-    if (buffer.EventType == KEY_EVENT && !buffer.Event.KeyEvent.bKeyDown) {
+    if (buffer.EventType == KEY_EVENT && buffer.Event.KeyEvent.bKeyDown) {
       gchar key_val[2] = { 0 };
 
       switch (buffer.Event.KeyEvent.wVirtualKeyCode) {
