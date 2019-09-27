@@ -97,6 +97,81 @@ rtp_timer_is_sooner (RtpTimer * timer, RtpTimer * prev)
   return FALSE;
 }
 
+static inline gboolean
+rtp_timer_is_closer_to_head (RtpTimer * timer, RtpTimer * head)
+{
+  RtpTimer *prev = rtp_timer_get_prev (timer);
+  GstClockTimeDiff prev_delta = 0;
+  GstClockTimeDiff head_delta = 0;
+
+  if (prev == NULL)
+    return FALSE;
+
+  if (rtp_timer_is_sooner (timer, head))
+    return TRUE;
+
+  if (rtp_timer_is_later (timer, prev))
+    return FALSE;
+
+  if (prev->timeout == head->timeout) {
+    gint prev_gap, head_gap;
+
+    prev_gap = gst_rtp_buffer_compare_seqnum (timer->seqnum, prev->seqnum);
+    head_gap = gst_rtp_buffer_compare_seqnum (head->seqnum, timer->seqnum);
+
+    if (head_gap < prev_gap)
+      return TRUE;
+  }
+
+  if (GST_CLOCK_TIME_IS_VALID (timer->timeout) &&
+      GST_CLOCK_TIME_IS_VALID (head->timeout)) {
+    prev_delta = GST_CLOCK_DIFF (timer->timeout, prev->timeout);
+    head_delta = GST_CLOCK_DIFF (head->timeout, timer->timeout);
+
+    if (head_delta < prev_delta)
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
+static inline gboolean
+rtp_timer_is_closer_to_tail (RtpTimer * timer, RtpTimer * tail)
+{
+  RtpTimer *next = rtp_timer_get_next (timer);
+  GstClockTimeDiff tail_delta = 0;
+  GstClockTimeDiff next_delta = 0;
+
+  if (next == NULL)
+    return FALSE;
+
+  if (rtp_timer_is_later (timer, tail))
+    return TRUE;
+
+  if (rtp_timer_is_sooner (timer, next))
+    return FALSE;
+
+  if (tail->timeout == next->timeout) {
+    gint tail_gap, next_gap;
+
+    tail_gap = gst_rtp_buffer_compare_seqnum (timer->seqnum, tail->seqnum);
+    next_gap = gst_rtp_buffer_compare_seqnum (next->seqnum, timer->seqnum);
+
+    if (tail_gap < next_gap)
+      return TRUE;
+  }
+
+  if (GST_CLOCK_TIME_IS_VALID (timer->timeout) &&
+      GST_CLOCK_TIME_IS_VALID (next->timeout)) {
+    tail_delta = GST_CLOCK_DIFF (timer->timeout, tail->timeout);
+    next_delta = GST_CLOCK_DIFF (next->timeout, timer->timeout);
+
+    if (tail_delta < next_delta)
+      return TRUE;
+  }
+
+  return FALSE;
+}
 
 static inline RtpTimer *
 rtp_timer_queue_get_tail (RtpTimerQueue * queue)
@@ -362,12 +437,24 @@ rtp_timer_queue_reschedule (RtpTimerQueue * queue, RtpTimer * timer)
 
   g_return_val_if_fail (timer->queued == TRUE, FALSE);
 
+  if (rtp_timer_is_closer_to_head (timer, rtp_timer_queue_get_head (queue))) {
+    g_queue_unlink (&queue->timers, (GList *) timer);
+    rtp_timer_queue_insert_head (queue, timer);
+    return TRUE;
+  }
+
   while (rtp_timer_is_sooner (timer, rtp_timer_get_prev (it)))
     it = rtp_timer_get_prev (it);
 
   if (it != timer) {
     g_queue_unlink (&queue->timers, (GList *) timer);
     rtp_timer_queue_insert_before (queue, it, timer);
+    return TRUE;
+  }
+
+  if (rtp_timer_is_closer_to_tail (timer, rtp_timer_queue_get_tail (queue))) {
+    g_queue_unlink (&queue->timers, (GList *) timer);
+    rtp_timer_queue_insert_tail (queue, timer);
     return TRUE;
   }
 
