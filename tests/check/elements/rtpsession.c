@@ -2382,6 +2382,87 @@ GST_START_TEST (test_clear_pt_map_stress)
 
 GST_END_TEST;
 
+static GstBuffer *
+generate_stepped_ts_buffer (guint i, gboolean stepped)
+{
+  GstBuffer *buf;
+  guint ts = (TEST_BUF_CLOCK_RATE * i) / 1000;
+
+  if (stepped) {
+    const int TEST_BUF_CLOCK_STEP = TEST_BUF_CLOCK_RATE / 30;
+
+    ts /= TEST_BUF_CLOCK_STEP;
+    ts *= TEST_BUF_CLOCK_STEP;
+  }
+  GST_LOG ("ts: %" GST_TIME_FORMAT " rtp: %u (%" GST_TIME_FORMAT "), seq: %u\n",
+      GST_TIME_ARGS (i * GST_MSECOND), ts,
+      GST_TIME_ARGS (gst_util_uint64_scale_int (GST_SECOND, ts,
+              TEST_BUF_CLOCK_RATE)), i);
+
+  buf = generate_test_buffer_full (i * GST_MSECOND, i, ts, 0xAAAA);
+  return buf;
+}
+
+static void
+test_packet_rate_impl (gboolean stepped)
+{
+  SessionHarness *h = session_harness_new ();
+  GstBuffer *buf;
+  guint i;
+  const int PROBATION_CNT = 5;
+  GstStructure *stats;
+  GObject *source;
+  guint pktrate;
+
+  /* First do probation */
+  for (i = 0; i < PROBATION_CNT; i++) {
+    buf = generate_stepped_ts_buffer (i, stepped);
+    fail_unless_equals_int (session_harness_recv_rtp (h, buf), GST_FLOW_OK);
+  }
+  for (i = 0; i < PROBATION_CNT; i++) {
+    buf = gst_harness_pull (h->recv_rtp_h);
+    fail_unless (buf);
+    gst_buffer_unref (buf);
+  }
+
+  /* Now run the real test */
+  for (i = PROBATION_CNT; i < 10000; i++) {
+    buf = generate_stepped_ts_buffer (i, stepped);
+    fail_unless_equals_int (session_harness_recv_rtp (h, buf), GST_FLOW_OK);
+
+    buf = gst_harness_pull (h->recv_rtp_h);
+    fail_unless (buf);
+    gst_buffer_unref (buf);
+  }
+
+  g_signal_emit_by_name (h->internal_session, "get-source-by-ssrc", 0xAAAA,
+      &source);
+
+  g_object_get (source, "stats", &stats, NULL);
+
+  fail_unless (gst_structure_get_uint (stats, "recv-packet-rate", &pktrate));
+  fail_unless (pktrate > 900 && pktrate < 1100);        /* Allow 10% of error */
+
+  gst_structure_free (stats);
+  g_object_unref (source);
+
+  session_harness_free (h);
+}
+
+GST_START_TEST (test_packet_rate)
+{
+  test_packet_rate_impl (FALSE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_stepped_packet_rate)
+{
+  test_packet_rate_impl (TRUE);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtpsession_suite (void)
 {
@@ -2419,6 +2500,8 @@ rtpsession_suite (void)
   tcase_add_test (tc_chain, test_disable_probation);
   tcase_add_test (tc_chain, test_request_late_nack);
   tcase_add_test (tc_chain, test_clear_pt_map_stress);
+  tcase_add_test (tc_chain, test_packet_rate);
+  tcase_add_test (tc_chain, test_stepped_packet_rate);
 
   return s;
 }

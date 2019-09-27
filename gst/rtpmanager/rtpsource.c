@@ -426,7 +426,9 @@ rtp_source_create_stats (RTPSource * src)
       "sent-fir-count", G_TYPE_UINT, src->stats.sent_fir_count,
       "recv-fir-count", G_TYPE_UINT, src->stats.recv_fir_count,
       "sent-nack-count", G_TYPE_UINT, src->stats.sent_nack_count,
-      "recv-nack-count", G_TYPE_UINT, src->stats.recv_nack_count, NULL);
+      "recv-nack-count", G_TYPE_UINT, src->stats.recv_nack_count,
+      "recv-packet-rate", G_TYPE_UINT,
+      gst_rtp_packet_rate_ctx_get (&src->packet_rate_ctx), NULL);
 
   /* get the last SR. */
   have_sr = rtp_source_get_last_sr (src, &time, &ntptime, &rtptime,
