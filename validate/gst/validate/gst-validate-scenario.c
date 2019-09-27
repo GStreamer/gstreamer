@@ -3569,6 +3569,9 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
         goto error;
       }
     }
+
+    scenario_file = tldir;
+
     /* else check scenario */
   check_scenario:
     if (!is_config) {
