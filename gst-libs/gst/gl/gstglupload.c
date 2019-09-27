@@ -1293,33 +1293,23 @@ _raw_data_upload_perform (gpointer impl, GstBuffer * buffer,
       (raw->upload->context));
 
   /* FIXME Use a buffer pool to cache the generated textures */
-  /* FIXME: multiview support with separated left/right frames? */
   *outbuf = gst_buffer_new ();
-  for (i = 0; i < n_mem; i++) {
-    GstGLBaseMemory *tex;
+  raw->params->parent.context = raw->upload->context;
+  if (gst_gl_memory_setup_buffer ((GstGLMemoryAllocator *) allocator, *outbuf,
+          raw->params, NULL, raw->in_frame->frame.data, n_mem)) {
 
-    raw->params->parent.wrapped_data = raw->in_frame->frame.data[i];
-    raw->params->plane = i;
-    raw->params->tex_format =
-        gst_gl_format_from_video_info (raw->upload->context, in_info, i);
-
-    tex =
-        gst_gl_base_memory_alloc (allocator,
-        (GstGLAllocationParams *) raw->params);
-    if (!tex) {
-      gst_buffer_unref (*outbuf);
-      *outbuf = NULL;
-      GST_ERROR_OBJECT (raw->upload, "Failed to allocate wrapped texture");
-      return GST_GL_UPLOAD_ERROR;
-    }
-
-    _raw_upload_frame_ref (raw->in_frame);
-    gst_buffer_append_memory (*outbuf, (GstMemory *) tex);
+    for (i = 0; i < n_mem; i++)
+      _raw_upload_frame_ref (raw->in_frame);
+    gst_buffer_add_gl_sync_meta (raw->upload->context, *outbuf);
+  } else {
+    GST_ERROR_OBJECT (raw->upload, "Failed to allocate wrapped texture");
+    gst_buffer_unref (*outbuf);
+    return GST_GL_UPLOAD_ERROR;
   }
   gst_object_unref (allocator);
-
   _raw_upload_frame_unref (raw->in_frame);
   raw->in_frame = NULL;
+
   return GST_GL_UPLOAD_DONE;
 }
 
