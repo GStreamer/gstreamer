@@ -109,6 +109,7 @@ if host_machine.system() != 'windows'
     [['elements/webrtcbin.c'], not libnice_dep.found(), [gstwebrtc_dep]],
     [['elements/x265enc.c'], not x265_dep.found(), [x265_dep]],
     [['elements/zbar.c'], not zbar_dep.found(), [zbar_dep]],
+    [['elements/zxing.c'], not zxing_dep.found(), [zxing_dep]],
   ]
 endif
 

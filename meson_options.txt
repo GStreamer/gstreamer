@@ -161,7 +161,8 @@ option('wildmidi', type : 'feature', value : 'auto', description : 'WildMidi mid
 option('winks', type : 'feature', value : 'auto', description : 'Windows Kernel Streaming video source plugin')
 option('winscreencap', type : 'feature', value : 'auto', description : 'Windows Screen Capture video source plugin')
 option('x265', type : 'feature', value : 'auto', description : 'HEVC/H.265 video encoder plugin')
-option('zbar', type : 'feature', value : 'auto', description : 'Barcode image scanner plugin')
+option('zbar', type : 'feature', value : 'auto', description : 'Barcode image scanner plugin using zbar library')
+option('zxing', type : 'feature', value : 'auto', description : 'Barcode image scanner plugin using zxing-cpp library')
 option('wpe', type : 'feature', value : 'auto', description : 'WPE Web browser plugin')
 option('magicleap', type : 'feature', value : 'auto', description : 'Magic Leap platform support')
 
