@@ -84,6 +84,7 @@ if host_machine.system() != 'windows'
     [['elements/avtpcrfbase.c'], not avtp_dep.found(), [avtp_dep]],
     [['elements/avtpcrfcheck.c'], not avtp_dep.found(), [avtp_dep], ['../../ext/avtp/gstavtpcrfutil.c']],
     [['elements/avtpcrfsync.c'], not avtp_dep.found(), [avtp_dep], ['../../ext/avtp/gstavtpcrfutil.c', '../../ext/avtp/gstavtpcrfbase.c']],
+    [['elements/avtpcrfutil.c'], not avtp_dep.found(), [avtp_dep], ['../../ext/avtp/gstavtpcrfutil.c', '../../ext/avtp/gstavtpcrfbase.c']],
     [['elements/avtpcvfpay.c'], not avtp_dep.found(), [avtp_dep]],
     [['elements/avtpcvfdepay.c'], not avtp_dep.found(), [avtp_dep]],
     [['elements/avtpsink.c'], not avtp_dep.found(), [avtp_dep]],
