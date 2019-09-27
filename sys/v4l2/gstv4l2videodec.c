@@ -34,6 +34,7 @@
 
 #include "gstv4l2h264codec.h"
 #include "gstv4l2h265codec.h"
+#include "gstv4l2mpeg2codec.h"
 #include "gstv4l2mpeg4codec.h"
 #include "gstv4l2vp8codec.h"
 #include "gstv4l2vp9codec.h"
@@ -1085,6 +1086,7 @@ G_STMT_START { \
 
     if (mpegversion == 2) {
       SET_META ("MPEG2");
+      cdata->codec = gst_v4l2_mpeg2_get_codec ();
     } else {
       SET_META ("MPEG4");
       cdata->codec = gst_v4l2_mpeg4_get_codec ();

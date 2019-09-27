@@ -23,6 +23,7 @@ libgstvideo4linux2_la_SOURCES = gstv4l2.c \
 				gstv4l2h265codec.c \
 				gstv4l2h265enc.c \
 				gstv4l2jpegenc.c \
+				gstv4l2mpeg2codec.c \
 				gstv4l2mpeg4enc.c \
 				gstv4l2mpeg4codec.c \
 				gstv4l2vidorient.c \
