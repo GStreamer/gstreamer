@@ -2168,7 +2168,7 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
       if (gap <= priv->rtx_delay_reorder)
         break;
 
-      /* max gap, we exceevded the max reorder distance and we don't expect the
+      /* max gap, we exceeded the max reorder distance and we don't expect the
        * missing packet to be this reordered */
       if (test->num_rtx_retry == 0 && test->type == RTP_TIMER_EXPECTED)
         rtp_timer_queue_update_timer (priv->timers, test, test->seqnum,
