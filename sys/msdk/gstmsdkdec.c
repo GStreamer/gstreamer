@@ -1135,7 +1135,6 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   if (!thiz->is_packetized) {
     /* flush out the data which has already been consumed by msdk */
     gst_adapter_flush (thiz->adapter, bitstream.DataOffset);
-    flow = GST_FLOW_OK;
   }
 
   /*
@@ -1164,6 +1163,32 @@ error:
   return flow;
 }
 
+static GstFlowReturn
+gst_msdkdec_parse (GstVideoDecoder * decoder, GstVideoCodecFrame * frame,
+    GstAdapter * adapter, gboolean at_eos)
+{
+  gsize size;
+  GstFlowReturn ret;
+  GstBuffer *buffer;
+  GstMsdkDec *thiz = GST_MSDKDEC (decoder);
+
+  /* Don't parse the input buffer indeed, it will invoke
+   * gst_msdkdec_handle_frame to handle the input buffer */
+  size = gst_adapter_available (adapter);
+  gst_video_decoder_add_to_frame (decoder, size);
+  ret = gst_video_decoder_have_frame (decoder);
+  size = gst_adapter_available (thiz->adapter);
+
+  if (size) {
+    /* The base class will set up a new frame for parsing as
+     * soon as there is valid data in the buffer */
+    buffer = gst_adapter_get_buffer (thiz->adapter, size);
+    gst_adapter_flush (thiz->adapter, size);
+    gst_adapter_push (adapter, buffer);
+  }
+
+  return ret;
+}
 
 static GstBufferPool *
 gst_msdkdec_create_buffer_pool (GstMsdkDec * thiz, GstVideoInfo * info,
@@ -1591,6 +1616,7 @@ gst_msdkdec_class_init (GstMsdkDecClass * klass)
   decoder_class->set_format = GST_DEBUG_FUNCPTR (gst_msdkdec_set_format);
   decoder_class->finish = GST_DEBUG_FUNCPTR (gst_msdkdec_finish);
   decoder_class->handle_frame = GST_DEBUG_FUNCPTR (gst_msdkdec_handle_frame);
+  decoder_class->parse = GST_DEBUG_FUNCPTR (gst_msdkdec_parse);
   decoder_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_msdkdec_decide_allocation);
   decoder_class->flush = GST_DEBUG_FUNCPTR (gst_msdkdec_flush);

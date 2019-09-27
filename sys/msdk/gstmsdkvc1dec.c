@@ -104,6 +104,7 @@ gst_msdkvc1dec_configure (GstMsdkDec * decoder)
     }
 
     decoder->is_packetized = FALSE;
+    gst_video_decoder_set_packetized (GST_VIDEO_DECODER (decoder), FALSE);
   }
 
   /* This is a deprecated attribute in msdk-2017 version, but some
