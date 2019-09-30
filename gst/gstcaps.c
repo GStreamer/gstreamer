@@ -175,8 +175,7 @@ _gst_caps_copy (const GstCaps * caps)
   GST_CAPS_FLAGS (newcaps) = GST_CAPS_FLAGS (caps);
   n = GST_CAPS_LEN (caps);
 
-  GST_CAT_DEBUG_OBJECT (GST_CAT_PERFORMANCE, caps, "doing copy %p -> %p",
-      caps, newcaps);
+  GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "doing copy %p -> %p", caps, newcaps);
 
   for (i = 0; i < n; i++) {
     structure = gst_caps_get_structure_unchecked (caps, i);
