@@ -291,10 +291,6 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
     thiz->vpp_param.vpp.In.AspectRatioH = info->par_d;
     thiz->vpp_param.vpp.In.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
     switch (GST_VIDEO_INFO_FORMAT (info)) {
-      case GST_VIDEO_FORMAT_NV12:
-        thiz->vpp_param.vpp.In.FourCC = MFX_FOURCC_NV12;
-        thiz->vpp_param.vpp.In.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
-        break;
       case GST_VIDEO_FORMAT_YV12:
       case GST_VIDEO_FORMAT_I420:
         thiz->vpp_param.vpp.In.FourCC = MFX_FOURCC_YV12;

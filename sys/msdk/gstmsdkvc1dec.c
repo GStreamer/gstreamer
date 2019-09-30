@@ -111,8 +111,6 @@ gst_msdkvc1dec_configure (GstMsdkDec * decoder)
    * encoded streams */
   decoder->param.mfx.DecodedOrder = vc1dec->output_order;
   return TRUE;
-
-  return TRUE;
 }
 
 static void
