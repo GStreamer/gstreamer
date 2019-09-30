@@ -36,6 +36,7 @@
 
 #ifdef G_OS_WIN32
 #include <windows.h>
+#include <io.h>
 #endif
 
 #include <gst/gst.h>
