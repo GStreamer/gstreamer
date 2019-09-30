@@ -244,6 +244,7 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
   mfxStatus status;
   mfxFrameAllocRequest request[2];
   guint i;
+  gboolean need_vpp = TRUE;
 
   if (thiz->initialized)
     return TRUE;
@@ -266,14 +267,34 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
   if (thiz->use_video_memory)
     gst_msdk_set_frame_allocator (thiz->context);
 
-  /* Check 10bit input */
-  if (GST_VIDEO_INFO_COMP_DEPTH (info, 0) == 10) {
-    if (GST_VIDEO_INFO_FORMAT (info) != GST_VIDEO_FORMAT_P010_10LE) {
-      GST_WARNING_OBJECT (thiz,
-          "P010_10LE is the only supported 10bit format\n");
-      goto failed;
-    }
-  } else if (GST_VIDEO_INFO_FORMAT (info) != GST_VIDEO_FORMAT_NV12) {
+  switch (GST_VIDEO_INFO_FORMAT (info)) {
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_P010_10LE:
+      need_vpp = FALSE;
+      break;
+    case GST_VIDEO_FORMAT_YV12:
+    case GST_VIDEO_FORMAT_I420:
+      thiz->vpp_param.vpp.In.FourCC = MFX_FOURCC_YV12;
+      thiz->vpp_param.vpp.In.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
+      break;
+    case GST_VIDEO_FORMAT_YUY2:
+      thiz->vpp_param.vpp.In.FourCC = MFX_FOURCC_YUY2;
+      thiz->vpp_param.vpp.In.ChromaFormat = MFX_CHROMAFORMAT_YUV422;
+      break;
+    case GST_VIDEO_FORMAT_UYVY:
+      thiz->vpp_param.vpp.In.FourCC = MFX_FOURCC_UYVY;
+      thiz->vpp_param.vpp.In.ChromaFormat = MFX_CHROMAFORMAT_YUV422;
+      break;
+    case GST_VIDEO_FORMAT_BGRA:
+      thiz->vpp_param.vpp.In.FourCC = MFX_FOURCC_RGB4;
+      thiz->vpp_param.vpp.In.ChromaFormat = MFX_CHROMAFORMAT_YUV444;
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+
+  if (need_vpp) {
     if (thiz->use_video_memory)
       thiz->vpp_param.IOPattern =
           MFX_IOPATTERN_IN_VIDEO_MEMORY | MFX_IOPATTERN_OUT_VIDEO_MEMORY;
@@ -290,36 +311,20 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
     thiz->vpp_param.vpp.In.AspectRatioW = info->par_n;
     thiz->vpp_param.vpp.In.AspectRatioH = info->par_d;
     thiz->vpp_param.vpp.In.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
-    switch (GST_VIDEO_INFO_FORMAT (info)) {
-      case GST_VIDEO_FORMAT_YV12:
-      case GST_VIDEO_FORMAT_I420:
-        thiz->vpp_param.vpp.In.FourCC = MFX_FOURCC_YV12;
-        thiz->vpp_param.vpp.In.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
-        break;
-      case GST_VIDEO_FORMAT_YUY2:
-        thiz->vpp_param.vpp.In.FourCC = MFX_FOURCC_YUY2;
-        thiz->vpp_param.vpp.In.ChromaFormat = MFX_CHROMAFORMAT_YUV422;
-        break;
-      case GST_VIDEO_FORMAT_UYVY:
-        thiz->vpp_param.vpp.In.FourCC = MFX_FOURCC_UYVY;
-        thiz->vpp_param.vpp.In.ChromaFormat = MFX_CHROMAFORMAT_YUV422;
-        break;
-      case GST_VIDEO_FORMAT_BGRA:
-        thiz->vpp_param.vpp.In.FourCC = MFX_FOURCC_RGB4;
-        thiz->vpp_param.vpp.In.ChromaFormat = MFX_CHROMAFORMAT_YUV444;
-        break;
-      default:
-        g_assert_not_reached ();
-        break;
-    }
 
     /* work-around to avoid zero fps in msdk structure */
     if (0 == thiz->vpp_param.vpp.In.FrameRateExtN)
       thiz->vpp_param.vpp.In.FrameRateExtN = 30;
 
     thiz->vpp_param.vpp.Out = thiz->vpp_param.vpp.In;
-    thiz->vpp_param.vpp.Out.FourCC = MFX_FOURCC_NV12;
-    thiz->vpp_param.vpp.Out.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
+
+    if ((GST_VIDEO_INFO_COMP_DEPTH (info, 0)) == 10) {
+      thiz->vpp_param.vpp.Out.FourCC = MFX_FOURCC_P010;
+      thiz->vpp_param.vpp.Out.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
+    } else {
+      thiz->vpp_param.vpp.Out.FourCC = MFX_FOURCC_NV12;
+      thiz->vpp_param.vpp.Out.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
+    }
 
     /* validate parameters and allow the Media SDK to make adjustments */
     status = MFXVideoVPP_Query (session, &thiz->vpp_param, &thiz->vpp_param);
@@ -405,15 +410,17 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
   thiz->param.mfx.FrameInfo.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
   thiz->param.mfx.FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
 
-  if (GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_P010_10LE) {
-    thiz->param.mfx.FrameInfo.FourCC = MFX_FOURCC_P010;
-    thiz->param.mfx.FrameInfo.BitDepthLuma = 10;
-    thiz->param.mfx.FrameInfo.BitDepthChroma = 10;
-    thiz->param.mfx.FrameInfo.Shift = 1;
-  } else {
-    thiz->param.mfx.FrameInfo.FourCC = MFX_FOURCC_NV12;
-    thiz->param.mfx.FrameInfo.BitDepthLuma = 8;
-    thiz->param.mfx.FrameInfo.BitDepthChroma = 8;
+  switch (GST_VIDEO_INFO_FORMAT (info)) {
+    case GST_VIDEO_FORMAT_P010_10LE:
+      thiz->param.mfx.FrameInfo.FourCC = MFX_FOURCC_P010;
+      thiz->param.mfx.FrameInfo.BitDepthLuma = 10;
+      thiz->param.mfx.FrameInfo.BitDepthChroma = 10;
+      thiz->param.mfx.FrameInfo.Shift = 1;
+      break;
+    default:
+      thiz->param.mfx.FrameInfo.FourCC = MFX_FOURCC_NV12;
+      thiz->param.mfx.FrameInfo.BitDepthLuma = 8;
+      thiz->param.mfx.FrameInfo.BitDepthChroma = 8;
   }
 
   /* work-around to avoid zero fps in msdk structure */
