@@ -4013,24 +4013,32 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
       GList *l, *contexts;
 
       gst_message_parse_context_type (message, &context_type);
-      GST_OBJECT_LOCK (bin);
-      contexts = GST_ELEMENT_CAST (bin)->contexts;
-      GST_LOG_OBJECT (bin, "got need-context message type: %s", context_type);
-      for (l = contexts; l; l = l->next) {
-        GstContext *tmp = l->data;
-        const gchar *tmp_type = gst_context_get_context_type (tmp);
 
-        if (strcmp (context_type, tmp_type) == 0) {
-          gst_element_set_context (GST_ELEMENT (src), l->data);
-          break;
+      if (src) {
+        GST_OBJECT_LOCK (bin);
+        contexts = GST_ELEMENT_CAST (bin)->contexts;
+        GST_LOG_OBJECT (bin, "got need-context message type: %s", context_type);
+        for (l = contexts; l; l = l->next) {
+          GstContext *tmp = l->data;
+          const gchar *tmp_type = gst_context_get_context_type (tmp);
+
+          if (strcmp (context_type, tmp_type) == 0) {
+            gst_element_set_context (GST_ELEMENT (src), l->data);
+            break;
+          }
         }
-      }
-      GST_OBJECT_UNLOCK (bin);
+        GST_OBJECT_UNLOCK (bin);
 
-      /* Forward if we couldn't answer the message */
-      if (l == NULL) {
-        goto forward;
+        /* Forward if we couldn't answer the message */
+        if (l == NULL) {
+          goto forward;
+        } else {
+          gst_message_unref (message);
+        }
       } else {
+        g_warning
+            ("Got need-context message in bin '%s' without source element, dropping",
+            GST_ELEMENT_NAME (bin));
         gst_message_unref (message);
       }
 
