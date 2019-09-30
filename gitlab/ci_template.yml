@@ -60,6 +60,23 @@ variables:
     -Dvaapi=enabled
     -Dsharp=disabled
 
+  MESON_GST_WERROR: >
+    -Dgstreamer:werror=true
+    -Dgst-plugins-base:werror=true
+    -Dgst-plugins-good:werror=true
+    -Dgst-plugins-ugly:werror=true
+    -Dgst-plugins-bad:werror=true
+    -Dgst-rtsp-server:werror=true
+    -Dgst-libav:werror=true
+    -Dgst-examples:werror=true
+    -Dgst-editing-services:werror=true
+    -Dgst-docs:werror=true
+    -Dgst-omx:werror=true
+    -Dgst-devtools:werror=true
+    -Dgst-python:werror=true
+    -Dgstreamer-vaapi:werror=true
+    -Dgstreamer-sharp:werror=true
+
   DEFAULT_CERBERO_ARGS: >
     --variants werror
     --timestamps
@@ -383,7 +400,7 @@ gst indent:
   -Ddoc=disabled
   -Drs=disabled
   ${MESON_BUILDTYPE_ARGS}
-  --werror
+  ${MESON_GST_WERROR}
 
 .build:
   stage: 'build'
@@ -395,7 +412,7 @@ gst indent:
   # Also need to take into account I/O of pulling docker images and uploading artifacts
   timeout: '45min'
   variables:
-    MESON_ARGS: "${DEFAULT_MESON_ARGS} ${MESON_BUILDTYPE_ARGS} --werror"
+    MESON_ARGS: "${DEFAULT_MESON_ARGS} ${MESON_BUILDTYPE_ARGS} ${MESON_GST_WERROR}"
   rules:
     - if: '$CI_PROJECT_NAME != "cerbero"'
   script:
@@ -424,7 +441,7 @@ build nodebug fedora x86_64:
   extends: '.build'
   image: $FEDORA_IMAGE
   variables:
-    MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Dgstreamer:gst_debug=false -Domx=enabled -Dgst-omx:target=generic -Drs=disabled ${MESON_BUILDTYPE_ARGS} --werror"
+    MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Dgstreamer:gst_debug=false -Domx=enabled -Dgst-omx:target=generic ${MESON_BUILDTYPE_ARGS} ${MESON_GST_WERROR}"
   rules:
     - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-docs|gst-integration-testsuites|gst-omx|gst-plugins-rs)$/'
 
@@ -529,6 +546,7 @@ gstreamer-full:
       --default-library=static
       -Dauto_features=disabled
       -Dgst-plugins-good:alpha=enabled
+      $MESON_GST_WERROR
   rules:
     - if: '$CI_PROJECT_NAME =~ /^(gst-build|gst-ci)$/'
 
@@ -1150,7 +1168,7 @@ cerbero cross-ios universal examples:
 build gst-omx zynq fedora x86_64:
   extends: '.build fedora x86_64'
   variables:
-    MESON_ARGS: "-Domx=enabled -Dgst-omx:target=zynqultrascaleplus -Dgst-omx:header_path=${CI_PROJECT_DIR}/vcu-omx-il/omx_header -Dpython=disabled -Dlibav=disabled -Dlibnice=disabled -Dugly=disabled -Dbad=disabled -Ddevtools=disabled -Dges=disabled -Drtsp_server=disabled -Dvaapi=disabled -Dsharp=disabled -Dgst-examples=disabled -Drs=disabled ${MESON_BUILDTYPE_ARGS} --werror"
+    MESON_ARGS: "-Domx=enabled -Dgst-omx:target=zynqultrascaleplus -Dgst-omx:header_path=${CI_PROJECT_DIR}/vcu-omx-il/omx_header -Dpython=disabled -Dlibav=disabled -Dlibnice=disabled -Dugly=disabled -Dbad=disabled -Ddevtools=disabled -Dges=disabled -Drtsp_server=disabled -Dvaapi=disabled -Dsharp=disabled -Dgst-examples=disabled -Drs=disabled ${MESON_BUILDTYPE_ARGS} $MESON_GST_WERROR"
   rules:
     - if: '$CI_PROJECT_NAME =~ /^(gst-omx|gst-ci)$/'
   before_script:
@@ -1159,7 +1177,7 @@ build gst-omx zynq fedora x86_64:
 build gst-omx tizonia fedora x86_64:
   extends: '.build fedora x86_64'
   variables:
-    MESON_ARGS: "-Domx=enabled -Dgst-omx:target=tizonia -Dpython=disabled -Dlibav=disabled -Dlibnice=disabled -Dugly=disabled -Dbad=disabled -Ddevtools=disabled -Dges=disabled -Drtsp_server=disabled -Dvaapi=disabled -Dsharp=disabled -Dgst-examples=disabled -Drs=disabled ${MESON_BUILDTYPE_ARGS} --werror"
+    MESON_ARGS: "-Domx=enabled -Dgst-omx:target=tizonia -Dpython=disabled -Dlibav=disabled -Dlibnice=disabled -Dugly=disabled -Dbad=disabled -Ddevtools=disabled -Dges=disabled -Drtsp_server=disabled -Dvaapi=disabled -Dsharp=disabled -Dgst-examples=disabled -Drs=disabled ${MESON_BUILDTYPE_ARGS} $MESON_GST_WERROR"
     PKG_CONFIG_PATH: ${PKG_CONFIG_PATH}:${CI_PROJECT_DIR}/tizonia-install/lib64/pkgconfig/
   rules:
     - if: '$CI_PROJECT_NAME =~ /^(gst-omx|gst-ci)$/'
