@@ -251,6 +251,63 @@ gst_h265_parse_nalu_header (GstH265NalUnit * nalu)
   return TRUE;
 }
 
+struct h265_profile_string
+{
+  GstH265Profile profile;
+  const gchar *name;
+};
+
+static const struct h265_profile_string h265_profiles[] = {
+  /* keep in sync with definition in the header */
+  {GST_H265_PROFILE_MAIN, "main"},
+  {GST_H265_PROFILE_MAIN_10, "main-10"},
+  {GST_H265_PROFILE_MAIN_STILL_PICTURE, "main-still-picture"},
+  {GST_H265_PROFILE_MONOCHROME, "monochrome"},
+  {GST_H265_PROFILE_MONOCHROME_12, "monochrome-12"},
+  {GST_H265_PROFILE_MONOCHROME_16, "monochrome-16"},
+  {GST_H265_PROFILE_MAIN_12, "main-12"},
+  {GST_H265_PROFILE_MAIN_422_10, "main-422-10"},
+  {GST_H265_PROFILE_MAIN_422_12, "main-422-12"},
+  {GST_H265_PROFILE_MAIN_444, "main-444"},
+  {GST_H265_PROFILE_MAIN_444_10, "main-444-10"},
+  {GST_H265_PROFILE_MAIN_444_12, "main-444-12"},
+  {GST_H265_PROFILE_MAIN_INTRA, "main-intra"},
+  {GST_H265_PROFILE_MAIN_10_INTRA, "main-10-intra"},
+  {GST_H265_PROFILE_MAIN_12_INTRA, "main-12-intra"},
+  {GST_H265_PROFILE_MAIN_422_10_INTRA, "main-422-10-intra"},
+  {GST_H265_PROFILE_MAIN_422_12_INTRA, "main-422-12-intra"},
+  {GST_H265_PROFILE_MAIN_444_INTRA, "main-444-intra"},
+  {GST_H265_PROFILE_MAIN_444_10_INTRA, "main-444-10-intra"},
+  {GST_H265_PROFILE_MAIN_444_12_INTRA, "main-444-12-intra"},
+  {GST_H265_PROFILE_MAIN_444_16_INTRA, "main-444-16-intra"},
+  {GST_H265_PROFILE_MAIN_444_STILL_PICTURE, "main-444-still-picture"},
+  {GST_H265_PROFILE_MAIN_444_16_STILL_PICTURE, "main-444-16-still-picture"},
+  {GST_H265_PROFILE_MONOCHROME_10, "monochrome-10"},
+  {GST_H265_PROFILE_HIGH_THROUGHPUT_444, "high-throughput-444"},
+  {GST_H265_PROFILE_HIGH_THROUGHPUT_444_10, "high-throughput-444-10"},
+  {GST_H265_PROFILE_HIGH_THROUGHPUT_444_14, "high-throughput-444-14"},
+  {GST_H265_PROFILE_HIGH_THROUGHPUT_444_16_INTRA,
+      "high-throughput-444-16-intra"},
+  {GST_H265_PROFILE_SCREEN_EXTENDED_MAIN, "screen-extended-main"},
+  {GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_10, "screen-extended-main-10"},
+  {GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_444, "screen-extended-main-444"},
+  {GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_444_10, "screen-extended-main-444-10"},
+  {GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444,
+      "screen-extended-high-throughput-444"},
+  {GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444_10,
+      "screen-extended-high-throughput-444-10"},
+  {GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444_14,
+      "screen-extended-high-throughput-444-14"},
+  {GST_H265_PROFILE_MULTIVIEW_MAIN, "multiview-main"},
+  {GST_H265_PROFILE_SCALABLE_MAIN, "scalable-main"},
+  {GST_H265_PROFILE_SCALABLE_MAIN_10, "scalable-main-10"},
+  {GST_H265_PROFILE_SCALABLE_MONOCHROME, "scalable-monochrome"},
+  {GST_H265_PROFILE_SCALABLE_MONOCHROME_12, "scalable-monochrome-12"},
+  {GST_H265_PROFILE_SCALABLE_MONOCHROME_16, "scalable-monochrome-16"},
+  {GST_H265_PROFILE_SCALABLE_MAIN_444, "scalable-main-444"},
+  {GST_H265_PROFILE_3D_MAIN, "3d-main"},
+};
+
 /****** Parsing functions *****/
 
 static gboolean
@@ -3233,4 +3290,57 @@ gst_h265_profile_tier_level_get_profile (GstH265ProfileTierLevel * ptl)
     return GST_H265_PROFILE_MAIN_STILL_PICTURE;
 
   return get_format_range_extension_profile (ptl);
+}
+
+/**
+ * gst_h265_profile_to_string:
+ * @profile: a #GstH265Profile
+ *
+ * Returns the descriptive name for the #GstH265Profile.
+ *
+ * Returns: (nullable): the name for @profile or %NULL on error
+ *
+ * Since: 1.18
+ */
+const gchar *
+gst_h265_profile_to_string (GstH265Profile profile)
+{
+  guint i;
+
+  if (profile == GST_H265_PROFILE_INVALID || profile == GST_H265_PROFILE_MAX)
+    return NULL;
+
+  for (i = 0; i < G_N_ELEMENTS (h265_profiles); i++) {
+    if (profile == h265_profiles[i].profile)
+      return h265_profiles[i].name;
+  }
+
+  return NULL;
+}
+
+/**
+ * gst_h265_profile_from_string:
+ * @string: the descriptive name for #GstH265Profile
+ *
+ * Returns a #GstH265Profile for the @string.
+ *
+ * Returns: the #GstH265Profile of @string or %GST_H265_PROFILE_INVALID on error
+ *
+ * Since: 1.18
+ */
+GstH265Profile
+gst_h265_profile_from_string (const gchar * string)
+{
+  guint i;
+
+  if (string == NULL)
+    return GST_H265_PROFILE_INVALID;
+
+  for (i = 0; i < G_N_ELEMENTS (h265_profiles); i++) {
+    if (g_strcmp0 (string, h265_profiles[i].name) == 0) {
+      return h265_profiles[i].profile;
+    }
+  }
+
+  return GST_H265_PROFILE_INVALID;
 }

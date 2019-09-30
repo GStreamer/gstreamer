@@ -1566,103 +1566,6 @@ digit_to_string (guint digit)
 }
 
 static const gchar *
-get_profile_string (GstH265Profile profile)
-{
-  switch (profile) {
-    case GST_H265_PROFILE_MAIN:
-      return "main";
-    case GST_H265_PROFILE_MAIN_10:
-      return "main-10";
-    case GST_H265_PROFILE_MAIN_STILL_PICTURE:
-      return "main-still-picture";
-    case GST_H265_PROFILE_MONOCHROME:
-      return "monochrome";
-    case GST_H265_PROFILE_MONOCHROME_10:
-      return "monochrome-10";
-    case GST_H265_PROFILE_MONOCHROME_12:
-      return "monochrome-12";
-    case GST_H265_PROFILE_MONOCHROME_16:
-      return "monochrome-16";
-    case GST_H265_PROFILE_MAIN_12:
-      return "main-12";
-    case GST_H265_PROFILE_MAIN_422_10:
-      return "main-422-10";
-    case GST_H265_PROFILE_MAIN_422_12:
-      return "main-422-12";
-    case GST_H265_PROFILE_MAIN_444:
-      return "main-444";
-    case GST_H265_PROFILE_MAIN_444_10:
-      return "main-444-10";
-    case GST_H265_PROFILE_MAIN_444_12:
-      return "main-444-12";
-    case GST_H265_PROFILE_MAIN_INTRA:
-      return "main-intra";
-    case GST_H265_PROFILE_MAIN_10_INTRA:
-      return "main-10-intra";
-    case GST_H265_PROFILE_MAIN_12_INTRA:
-      return "main-12-intra";
-    case GST_H265_PROFILE_MAIN_422_10_INTRA:
-      return "main-422-10-intra";
-    case GST_H265_PROFILE_MAIN_422_12_INTRA:
-      return "main-422-12-intra";
-    case GST_H265_PROFILE_MAIN_444_INTRA:
-      return "main-444-intra";
-    case GST_H265_PROFILE_MAIN_444_10_INTRA:
-      return "main-444-10-intra";
-    case GST_H265_PROFILE_MAIN_444_12_INTRA:
-      return "main-444-12-intra";
-    case GST_H265_PROFILE_MAIN_444_16_INTRA:
-      return "main-444-16-intra";
-    case GST_H265_PROFILE_MAIN_444_STILL_PICTURE:
-      return "main-444-still-picture";
-    case GST_H265_PROFILE_MAIN_444_16_STILL_PICTURE:
-      return "main-444-16-still-picture";
-    case GST_H265_PROFILE_HIGH_THROUGHPUT_444:
-      return "high-throughput-444";
-    case GST_H265_PROFILE_HIGH_THROUGHPUT_444_10:
-      return "high-throughput-444-10";
-    case GST_H265_PROFILE_HIGH_THROUGHPUT_444_14:
-      return "high-throughput-444-14";
-    case GST_H265_PROFILE_HIGH_THROUGHPUT_444_16_INTRA:
-      return "high-throughput-444-16-intra";
-    case GST_H265_PROFILE_SCREEN_EXTENDED_MAIN:
-      return "screen-extended-main";
-    case GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_10:
-      return "screen-extended-main-10";
-    case GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_444:
-      return "screen-extended-main-444";
-    case GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_444_10:
-      return "screen-extended-main-444-10";
-    case GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444:
-      return "screen-extended-high-throughput-444";
-    case GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444_10:
-      return "screen-extended-high-throughput-444-10";
-    case GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444_14:
-      return "screen-extended-high-throughput-444-14";
-    case GST_H265_PROFILE_MULTIVIEW_MAIN:
-      return "multiview-main";
-    case GST_H265_PROFILE_SCALABLE_MAIN:
-      return "scalable-main";
-    case GST_H265_PROFILE_SCALABLE_MAIN_10:
-      return "scalable-main-10";
-    case GST_H265_PROFILE_SCALABLE_MONOCHROME:
-      return "scalable-monochrome";
-    case GST_H265_PROFILE_SCALABLE_MONOCHROME_12:
-      return "scalable-monochrome-12";
-    case GST_H265_PROFILE_SCALABLE_MONOCHROME_16:
-      return "scalable-monochrome-16";
-    case GST_H265_PROFILE_SCALABLE_MAIN_444:
-      return "scalable-main-444";
-    case GST_H265_PROFILE_3D_MAIN:
-      return "3d-main";
-    default:
-      break;
-  }
-
-  return NULL;
-}
-
-static const gchar *
 get_tier_string (guint8 tier_flag)
 {
   const gchar *tier = NULL;
@@ -1912,7 +1815,7 @@ get_compatible_profile_caps (GstH265SPS * sps, GstH265Profile profile)
 
     for (i = GST_H265_PROFILE_MAIN; i < GST_H265_PROFILE_MAX; i++) {
       if ((profiles & profile_to_flag (i)) == profile_to_flag (i)) {
-        profile_str = get_profile_string (i);
+        profile_str = gst_h265_profile_to_string (i);
 
         if (G_UNLIKELY (profile_str == NULL)) {
           GST_FIXME ("Unhandled profile index %d", i);
@@ -2225,7 +2128,7 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
       GstH265Profile p;
 
       p = gst_h265_profile_tier_level_get_profile (&sps->profile_tier_level);
-      profile = get_profile_string (p);
+      profile = gst_h265_profile_to_string (p);
       if (profile != NULL)
         gst_caps_set_simple (caps, "profile", G_TYPE_STRING, profile, NULL);
 
