@@ -268,6 +268,13 @@ bus_msg_handler (GstBus * bus, GstMessage * msg, gpointer user_data)
   return TRUE;
 }
 
+static gboolean
+quit_loop (GMainLoop * loop)
+{
+  g_main_loop_quit (loop);
+  return G_SOURCE_REMOVE;
+}
+
 int
 main (int argc, char **argv)
 {
@@ -364,11 +371,15 @@ main (int argc, char **argv)
 
   GST_INFO ("Took %.2f seconds", g_timer_elapsed (timer, NULL));
 
-  if (follow) {
+  if (!follow) {
+    /* Consume all the messages pending on the bus and exit */
+    g_idle_add ((GSourceFunc) quit_loop, app.loop);
+  } else {
     g_print ("Monitoring devices, waiting for devices to be removed or "
         "new devices to be added...\n");
-    g_main_loop_run (app.loop);
   }
+
+  g_main_loop_run (app.loop);
 
   gst_device_monitor_stop (app.monitor);
   gst_object_unref (app.monitor);
