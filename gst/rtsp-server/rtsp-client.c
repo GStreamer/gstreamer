@@ -2006,7 +2006,7 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
     goto invalid_mode;
 
   /* grab RTPInfo from the media now */
-  if (!gst_rtsp_media_is_receive_only (media) &&
+  if (gst_rtsp_media_has_completed_sender (media) &&
       !(rtpinfo = gst_rtsp_session_media_get_rtpinfo (sessmedia)))
     goto rtp_info_error;
 
