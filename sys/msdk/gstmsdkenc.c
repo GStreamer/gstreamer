@@ -270,6 +270,7 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
   switch (GST_VIDEO_INFO_FORMAT (info)) {
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_P010_10LE:
+    case GST_VIDEO_FORMAT_VUYA:
       need_vpp = FALSE;
       break;
     case GST_VIDEO_FORMAT_YV12:
@@ -416,6 +417,12 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
       thiz->param.mfx.FrameInfo.BitDepthLuma = 10;
       thiz->param.mfx.FrameInfo.BitDepthChroma = 10;
       thiz->param.mfx.FrameInfo.Shift = 1;
+      break;
+    case GST_VIDEO_FORMAT_VUYA:
+      thiz->param.mfx.FrameInfo.FourCC = MFX_FOURCC_AYUV;
+      thiz->param.mfx.FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV444;
+      thiz->param.mfx.FrameInfo.BitDepthLuma = 8;
+      thiz->param.mfx.FrameInfo.BitDepthChroma = 8;
       break;
     default:
       thiz->param.mfx.FrameInfo.FourCC = MFX_FOURCC_NV12;

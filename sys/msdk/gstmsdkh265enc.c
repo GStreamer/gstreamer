@@ -49,7 +49,7 @@ enum
 
 #define PROP_LOWPOWER_DEFAULT           FALSE
 
-#define COMMON_FORMAT "{ NV12, I420, YV12, YUY2, UYVY, BGRA, P010_10LE }"
+#define COMMON_FORMAT "{ NV12, I420, YV12, YUY2, UYVY, BGRA, P010_10LE, VUYA }"
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -63,7 +63,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "framerate = (fraction) [0/1, MAX], "
         "width = (int) [ 1, MAX ], height = (int) [ 1, MAX ], "
         "stream-format = (string) byte-stream , alignment = (string) au , "
-        "profile = (string) { main, main-10 } ")
+        "profile = (string) { main, main-10, main-444 } ")
     );
 
 #define gst_msdkh265enc_parent_class parent_class
@@ -105,6 +105,9 @@ gst_msdkh265enc_configure (GstMsdkEnc * encoder)
   switch (encoder->param.mfx.FrameInfo.FourCC) {
     case MFX_FOURCC_P010:
       encoder->param.mfx.CodecProfile = MFX_PROFILE_HEVC_MAIN10;
+      break;
+    case MFX_FOURCC_AYUV:
+      encoder->param.mfx.CodecProfile = MFX_PROFILE_HEVC_REXT;
       break;
     default:
       encoder->param.mfx.CodecProfile = MFX_PROFILE_HEVC_MAIN;
@@ -181,6 +184,9 @@ gst_msdkh265enc_set_src_caps (GstMsdkEnc * encoder)
   switch (encoder->param.mfx.FrameInfo.FourCC) {
     case MFX_FOURCC_P010:
       gst_structure_set (structure, "profile", G_TYPE_STRING, "main-10", NULL);
+      break;
+    case MFX_FOURCC_AYUV:
+      gst_structure_set (structure, "profile", G_TYPE_STRING, "main-444", NULL);
       break;
     default:
       gst_structure_set (structure, "profile", G_TYPE_STRING, "main", NULL);
