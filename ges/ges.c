@@ -43,7 +43,7 @@
 #define GES_GNONLIN_VERSION_NEEDED_MINOR 2
 #define GES_GNONLIN_VERSION_NEEDED_MICRO 0
 
-GST_DEBUG_CATEGORY (_ges_debug);
+GST_DEBUG_CATEGORY (_ges_debug_category);
 
 G_LOCK_DEFINE_STATIC (init_lock);
 
@@ -51,6 +51,35 @@ G_LOCK_DEFINE_STATIC (init_lock);
  * between init/deinit
  */
 static GThread *initialized_thread = NULL;
+
+#ifndef GST_DISABLE_GST_DEBUG
+static gpointer
+init_debug_category (gpointer data)
+{
+  /* initialize debugging category */
+  GST_DEBUG_CATEGORY_INIT (_ges_debug_category, "ges", GST_DEBUG_FG_YELLOW,
+      "GStreamer Editing Services");
+
+  return _ges_debug_category;
+}
+
+GstDebugCategory *
+_ges_debug (void)
+{
+  static GOnce my_once = G_ONCE_INIT;
+
+  g_once (&my_once, init_debug_category, NULL);
+
+  return my_once.retval;
+}
+#else
+GstDebugCategory *
+_ges_debug (void)
+{
+  return NULL;
+}
+
+#endif
 
 static gboolean
 ges_init_pre (GOptionContext * context, GOptionGroup * group, gpointer data,
@@ -60,10 +89,6 @@ ges_init_pre (GOptionContext * context, GOptionGroup * group, gpointer data,
     GST_DEBUG ("already initialized");
     return TRUE;
   }
-
-  /* initialize debugging category */
-  GST_DEBUG_CATEGORY_INIT (_ges_debug, "ges", GST_DEBUG_FG_YELLOW,
-      "GStreamer Editing Services");
 
   return TRUE;
 }
