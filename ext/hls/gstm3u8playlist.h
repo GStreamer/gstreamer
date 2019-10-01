@@ -41,6 +41,13 @@ struct _GstM3U8Playlist
   GQueue *entries;
 };
 
+typedef enum
+{
+  GST_M3U8_PLAYLIST_RENDER_INIT = (1 << 0),
+  GST_M3U8_PLAYLIST_RENDER_STARTED = (1 << 1),
+  GST_M3U8_PLAYLIST_RENDER_ENDED = (1 << 2),
+} GstM3U8PlaylistRenderState;
+
 
 GstM3U8Playlist * gst_m3u8_playlist_new (guint version, 
 				         guint window_size,

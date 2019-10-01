@@ -227,6 +227,8 @@ gst_hls_sink2_reset (GstHlsSink2 * sink)
 
   g_queue_foreach (&sink->old_locations, (GFunc) g_free, NULL);
   g_queue_clear (&sink->old_locations);
+
+  sink->state = GST_M3U8_PLAYLIST_RENDER_INIT;
 }
 
 static void
@@ -288,6 +290,7 @@ gst_hls_sink2_handle_message (GstBin * bin, GstMessage * message)
           g_free (entry_location);
 
           gst_hls_sink2_write_playlist (sink);
+          sink->state |= GST_M3U8_PLAYLIST_RENDER_STARTED;
 
           g_queue_push_tail (&sink->old_locations,
               g_strdup (sink->current_location));
@@ -305,6 +308,7 @@ gst_hls_sink2_handle_message (GstBin * bin, GstMessage * message)
     case GST_MESSAGE_EOS:{
       sink->playlist->end_list = TRUE;
       gst_hls_sink2_write_playlist (sink);
+      sink->state |= GST_M3U8_PLAYLIST_RENDER_ENDED;
       break;
     }
     default:
@@ -397,6 +401,13 @@ gst_hls_sink2_change_state (GstElement * element, GstStateChange trans)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      /* drain playlist with #EXT-X-ENDLIST */
+      if (sink->playlist && (sink->state & GST_M3U8_PLAYLIST_RENDER_STARTED) &&
+          !(sink->state & GST_M3U8_PLAYLIST_RENDER_ENDED)) {
+        sink->playlist->end_list = TRUE;
+        gst_hls_sink2_write_playlist (sink);
+      }
+      /* fall-through */
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_hls_sink2_reset (sink);
       break;

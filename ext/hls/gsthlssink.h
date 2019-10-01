@@ -54,6 +54,7 @@ struct _GstHlsSink
   GstSegment segment;
   gboolean waiting_fku;
   GstClockTime last_running_time;
+  GstM3U8PlaylistRenderState state;
 };
 
 struct _GstHlsSinkClass

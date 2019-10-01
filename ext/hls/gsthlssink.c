@@ -209,6 +209,8 @@ gst_hls_sink_reset (GstHlsSink * sink)
   sink->playlist =
       gst_m3u8_playlist_new (GST_M3U8_PLAYLIST_VERSION, sink->playlist_length,
       FALSE);
+
+  sink->state = GST_M3U8_PLAYLIST_RENDER_INIT;
 }
 
 static gboolean
@@ -304,6 +306,7 @@ gst_hls_sink_handle_message (GstBin * bin, GstMessage * message)
       g_free (entry_location);
 
       gst_hls_sink_write_playlist (sink);
+      sink->state |= GST_M3U8_PLAYLIST_RENDER_STARTED;
 
       /* multifilesink is starting a new file. It means that upstream sent a key
        * unit and we can schedule the next key unit now.
@@ -321,6 +324,7 @@ gst_hls_sink_handle_message (GstBin * bin, GstMessage * message)
     case GST_MESSAGE_EOS:{
       sink->playlist->end_list = TRUE;
       gst_hls_sink_write_playlist (sink);
+      sink->state |= GST_M3U8_PLAYLIST_RENDER_ENDED;
       break;
     }
     default:
@@ -355,6 +359,12 @@ gst_hls_sink_change_state (GstElement * element, GstStateChange trans)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      /* drain playlist with #EXT-X-ENDLIST */
+      if (sink->playlist && (sink->state & GST_M3U8_PLAYLIST_RENDER_STARTED) &&
+          !(sink->state & GST_M3U8_PLAYLIST_RENDER_ENDED)) {
+        sink->playlist->end_list = TRUE;
+        gst_hls_sink_write_playlist (sink);
+      }
       gst_hls_sink_reset (sink);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
