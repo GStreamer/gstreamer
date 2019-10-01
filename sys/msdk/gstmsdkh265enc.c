@@ -49,7 +49,13 @@ enum
 
 #define PROP_LOWPOWER_DEFAULT           FALSE
 
-#define COMMON_FORMAT "{ NV12, I420, YV12, YUY2, UYVY, BGRA, P010_10LE, VUYA, Y410 }"
+#define RAW_FORMATS "NV12, I420, YV12, YUY2, UYVY, BGRA, P010_10LE, VUYA"
+
+#if (MFX_VERSION >= 1027)
+#define COMMON_FORMAT "{ " RAW_FORMATS ", Y410 }"
+#else
+#define COMMON_FORMAT "{ " RAW_FORMATS " }"
+#endif
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -107,7 +113,9 @@ gst_msdkh265enc_configure (GstMsdkEnc * encoder)
       encoder->param.mfx.CodecProfile = MFX_PROFILE_HEVC_MAIN10;
       break;
     case MFX_FOURCC_AYUV:
+#if (MFX_VERSION >= 1027)
     case MFX_FOURCC_Y410:
+#endif
       encoder->param.mfx.CodecProfile = MFX_PROFILE_HEVC_REXT;
       break;
     default:
@@ -189,10 +197,12 @@ gst_msdkh265enc_set_src_caps (GstMsdkEnc * encoder)
     case MFX_FOURCC_AYUV:
       gst_structure_set (structure, "profile", G_TYPE_STRING, "main-444", NULL);
       break;
+#if (MFX_VERSION >= 1027)
     case MFX_FOURCC_Y410:
       gst_structure_set (structure, "profile", G_TYPE_STRING, "main-444-10",
           NULL);
       break;
+#endif
     default:
       gst_structure_set (structure, "profile", G_TYPE_STRING, "main", NULL);
       break;
