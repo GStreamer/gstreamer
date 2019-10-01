@@ -191,9 +191,11 @@ ges_demux_class_init (GESDemuxClass * self_class)
 {
   GObjectClass *gclass = G_OBJECT_CLASS (self_class);
   GstElementClass *gstelement_klass = GST_ELEMENT_CLASS (self_class);
-  GstCaps *sinkpad_caps = ges_demux_get_sinkpad_caps ();
+  GstCaps *sinkpad_caps;
 
   GST_DEBUG_CATEGORY_INIT (gesdemux, "gesdemux", 0, "ges demux element");
+
+  sinkpad_caps = ges_demux_get_sinkpad_caps ();
 
   gst_tag_register ("is-ges-timeline", GST_TAG_FLAG_META, G_TYPE_BOOLEAN,
       "is-ges-timeline", "The stream is a ges timeline.", NULL);
