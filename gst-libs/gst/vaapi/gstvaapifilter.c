@@ -308,7 +308,6 @@ vpp_get_pipeline_caps (GstVaapiFilter * filter)
 
 #define DEFAULT_FORMAT  GST_VIDEO_FORMAT_UNKNOWN
 #define DEFAULT_SCALING GST_VAAPI_SCALE_METHOD_DEFAULT
-#define DEFAULT_VIDEO_DIRECTION GST_VIDEO_ORIENTATION_IDENTITY
 
 enum
 {
@@ -466,7 +465,8 @@ init_properties (void)
       "Video Direction",
       "Video direction: rotation and flipping",
       GST_TYPE_VIDEO_ORIENTATION_METHOD,
-      DEFAULT_VIDEO_DIRECTION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+      GST_VIDEO_ORIENTATION_IDENTITY,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
 #ifndef GST_REMOVE_DEPRECATED
   /**
@@ -1499,8 +1499,9 @@ gst_vaapi_filter_set_operation (GstVaapiFilter * filter, GstVaapiFilterOp op,
           (value ? g_value_get_uint (value) :
               G_PARAM_SPEC_UINT (op_data->pspec)->default_value));
     case GST_VAAPI_FILTER_OP_VIDEO_DIRECTION:
-      return gst_vaapi_filter_set_video_direction (filter, value ?
-          g_value_get_enum (value) : DEFAULT_VIDEO_DIRECTION);
+      return gst_vaapi_filter_set_video_direction (filter,
+          (value ? g_value_get_enum (value) :
+              G_PARAM_SPEC_ENUM (op_data->pspec)->default_value));
     default:
       break;
   }
@@ -2136,6 +2137,14 @@ op_get_float_default_value (GstVaapiFilter * filter,
   return pspec->default_value;
 }
 
+static inline gint
+op_get_enum_default_value (GstVaapiFilter * filter,
+    GstVaapiFilterOpData * op_data)
+{
+  GParamSpecEnum *const pspec = G_PARAM_SPEC_ENUM (op_data->pspec);
+  return pspec->default_value;
+}
+
 gfloat
 gst_vaapi_filter_get_denoising_level_default (GstVaapiFilter * filter)
 {
@@ -2221,5 +2230,6 @@ gst_vaapi_filter_get_video_direction_default (GstVaapiFilter * filter)
 {
   g_return_val_if_fail (filter != NULL, FALSE);
 
-  return DEFAULT_VIDEO_DIRECTION;
+  return op_get_enum_default_value (filter,
+      find_operation (filter, GST_VAAPI_FILTER_OP_VIDEO_DIRECTION));
 }
