@@ -37,6 +37,7 @@
 
 #include <gst/gst.h>
 #include <gst/gl/gl.h>
+#include <gst/gl/gstglfuncs.h>
 
 static GstStaticCaps render_caps =
     GST_STATIC_CAPS
@@ -48,6 +49,92 @@ static GstGLContext *sdl_context;
 static GstGLContext *gst_context;
 static GstGLDisplay *sdl_gl_display;
 
+static GstGLShader *texture_shader;
+static GLuint texture_vao;
+static GLuint texture_vbo;
+static GLint texture_vertex_attr;
+static GLint texture_texcoord_attr;
+static GstGLShader *triangle_shader;
+static GLuint triangle_vao;
+static GLuint triangle_vbo;
+static GLint triangle_vertex_attr;
+static GLint triangle_color_attr;
+static GLuint index_buffer;
+
+/* OpenGL shaders */
+static const gchar *triangle_vert = "attribute vec4 a_position;\n\
+attribute vec4 a_color;\n\
+uniform float yrot;\n\
+varying vec4 v_color;\n\
+void main()\n\
+{\n\
+   mat4 rotate_y = mat4 (\n\
+      cos(yrot),        0.0, -sin(yrot),    0.0,\n\
+            0.0,        1.0,        0.0,    0.0,\n\
+      sin(yrot),        0.0,  cos(yrot),    0.0,\n\
+            0.0,        0.0,       0.0,     1.0 );\n\
+   mat4 translate_x = mat4 (\n\
+            1.0,        0.0,        0.0,    0.0,\n\
+            0.0,        1.0,        0.0,    0.0,\n\
+            0.0,        0.0,        1.0,    0.0,\n\
+           -0.4,        0.0,        0.0,    1.0 );\n\
+   gl_Position = translate_x * rotate_y * a_position;\n\
+   v_color = a_color;\n\
+}";
+
+static const gchar *triangle_frag = "#ifdef GL_ES\n\
+precision mediump float;\n\
+#endif\n\
+varying vec4 v_color;\n\
+void main()\n\
+{\n\
+  gl_FragColor = v_color;\n\
+}";
+
+static const gchar *texture_vert = "attribute vec4 a_position;\n\
+attribute vec2 a_texcoord;\n\
+uniform float xrot;\n\
+varying vec2 v_texcoord;\n\
+void main()\n\
+{\n\
+   mat4 rotate_x = mat4 (\n\
+            1.0,        0.0,        0.0, 0.0,\n\
+            0.0,  cos(xrot),  sin(xrot), 0.0,\n\
+            0.0, -sin(xrot),  cos(xrot), 0.0,\n\
+            0.0,        0.0,        0.0, 1.0 );\n\
+   gl_Position = rotate_x * a_position;\n\
+   v_texcoord = a_texcoord;\n\
+}";
+
+static const gchar *texture_frag = "#ifdef GL_ES\n\
+precision mediump float;\n\
+#endif\n\
+varying vec2 v_texcoord;\n\
+uniform sampler2D tex;\n\
+void main()\n\
+{\n\
+  gl_FragColor = texture2D(tex, v_texcoord);\n\
+}";
+
+/* *INDENT-OFF* */
+static const float texture_vertices[] = {
+/*  X      Y      Z      S      T */
+   0.1f,  0.4f,  0.0f,  0.0f,  0.0f,
+   0.9f,  0.4f,  0.0f,  1.0f,  0.0f,
+   0.9f, -0.4f,  0.0f,  1.0f,  1.0f,
+   0.1f, -0.4f,  0.0f,  0.0f,  1.0f,
+};
+
+static const float triangle_vertices[] = {
+/*  X      Y      Z      R      G      B      A */
+   0.0f,  0.4f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
+   0.4f, -0.4f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
+  -0.4f, -0.4f,  0.0f,  0.0f,  0.0f,  1.0f,  1.0f
+};
+
+static const GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
+/* *INDENT-ON* */
+
 static guint32 sdl_message_event = -1;
 static SDL_Window *sdl_window;
 static SDL_GLContext sdl_gl_context;
@@ -56,81 +143,181 @@ static GAsyncQueue *queue_input_buf;
 static GAsyncQueue *queue_output_buf;
 
 /* rotation angle for the triangle. */
-float rtri = 0.0f;
+static float rtri = 0.0f;
 
 /* rotation angle for the quadrilateral. */
-float rquad = 0.0f;
+static float rquad = 0.0f;
 
 /* A general OpenGL initialization function.  Sets all of the initial parameters. */
-static void
-InitGL (int Width, int Height)  // We call this right after our OpenGL window is created.
+static gboolean
+InitGL (int width, int height)  // We call this right after our OpenGL window is created.
 {
-  glViewport (0, 0, Width, Height);
-  glClearColor (0.0f, 0.0f, 0.0f, 0.0f);        // This Will Clear The Background Color To Black
-  glClearDepth (1.0);           // Enables Clearing Of The Depth Buffer
-  glDepthFunc (GL_LESS);        // The Type Of Depth Test To Do
-  glEnable (GL_DEPTH_TEST);     // Enables Depth Testing
-  glShadeModel (GL_SMOOTH);     // Enables Smooth Color Shading
+  const GstGLFuncs *gl = sdl_context->gl_vtable;
+  GError *error = NULL;
+  gboolean ret = TRUE;
 
-  glMatrixMode (GL_PROJECTION);
-  glLoadIdentity ();            // Reset The Projection Matrix
+  gl->Viewport (0, 0, width, height);
+  gl->ClearColor (0.0f, 0.0f, 0.0f, 0.0f);      // This Will Clear The Background Color To Black
+  gl->ClearDepth (1.0);         // Enables Clearing Of The Depth Buffer
+  gl->DepthFunc (GL_LESS);      // The Type Of Depth Test To Do
+  gl->Enable (GL_DEPTH_TEST);   // Enables Depth Testing
 
-  glMatrixMode (GL_MODELVIEW);
+  /* setup the index buffer shared between the texture and triangle draw code */
+  gl->GenBuffers (1, &index_buffer);
+  gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, index_buffer);
+  gl->BufferData (GL_ELEMENT_ARRAY_BUFFER, sizeof (indices), indices,
+      GL_STATIC_DRAW);
+
+  gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
+
+  /* setup texture shader */
+  texture_shader = gst_gl_shader_new_link_with_stages (sdl_context, &error,
+      gst_glsl_stage_new_with_string (sdl_context, GL_VERTEX_SHADER,
+          GST_GLSL_VERSION_NONE,
+          GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY, texture_vert),
+      gst_glsl_stage_new_with_string (sdl_context, GL_FRAGMENT_SHADER,
+          GST_GLSL_VERSION_NONE,
+          GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY, texture_frag),
+      NULL);
+  if (!texture_shader) {
+    g_warning ("Failed to compile and link shader: %s", error->message);
+    g_clear_error (&error);
+    ret = FALSE;
+    goto out;
+  }
+
+  /* setup buffers for drawing the texture */
+  gl->GenVertexArrays (1, &texture_vao);
+  gl->BindVertexArray (texture_vao);
+
+  gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, index_buffer);
+
+  gl->GenBuffers (1, &texture_vbo);
+  gl->BindBuffer (GL_ARRAY_BUFFER, texture_vbo);
+  gl->BufferData (GL_ARRAY_BUFFER, sizeof (texture_vertices), texture_vertices,
+      GL_STATIC_DRAW);
+
+  texture_vertex_attr = gst_gl_shader_get_attribute_location (texture_shader,
+      "a_position");
+  gl->VertexAttribPointer (texture_vertex_attr, 3, GL_FLOAT, GL_FALSE,
+      5 * sizeof (float), (void *) 0);
+
+  texture_texcoord_attr = gst_gl_shader_get_attribute_location (texture_shader,
+      "a_texcoord");
+  gl->VertexAttribPointer (texture_texcoord_attr, 2, GL_FLOAT, GL_FALSE,
+      5 * sizeof (float), (void *) (3 * sizeof (float)));
+
+  gl->EnableVertexAttribArray (texture_vertex_attr);
+  gl->EnableVertexAttribArray (texture_texcoord_attr);
+
+  gl->BindVertexArray (0);
+
+  /* setup triangle shader */
+  triangle_shader = gst_gl_shader_new_link_with_stages (sdl_context, &error,
+      gst_glsl_stage_new_with_string (sdl_context, GL_VERTEX_SHADER,
+          GST_GLSL_VERSION_NONE,
+          GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY, triangle_vert),
+      gst_glsl_stage_new_with_string (sdl_context, GL_FRAGMENT_SHADER,
+          GST_GLSL_VERSION_NONE,
+          GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY, triangle_frag),
+      NULL);
+  if (!triangle_shader) {
+    g_warning ("Failed to compile and link shader: %s", error->message);
+    gst_clear_object (&texture_shader);
+    g_clear_error (&error);
+    ret = FALSE;
+    goto out;
+  }
+
+  /* setup buffers for drawing the triangle */
+  gl->GenVertexArrays (1, &triangle_vao);
+  gl->BindVertexArray (triangle_vao);
+
+  gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, index_buffer);
+
+  gl->GenBuffers (1, &triangle_vbo);
+  gl->BindBuffer (GL_ARRAY_BUFFER, triangle_vbo);
+  gl->BufferData (GL_ARRAY_BUFFER, sizeof (triangle_vertices),
+      triangle_vertices, GL_STATIC_DRAW);
+
+  /* reuse the index buffer */
+
+  triangle_vertex_attr = gst_gl_shader_get_attribute_location (triangle_shader,
+      "a_position");
+  gl->VertexAttribPointer (triangle_vertex_attr, 3, GL_FLOAT, GL_FALSE,
+      7 * sizeof (float), (void *) 0);
+
+  triangle_color_attr = gst_gl_shader_get_attribute_location (triangle_shader,
+      "a_color");
+  gl->VertexAttribPointer (triangle_color_attr, 4, GL_FLOAT, GL_FALSE,
+      7 * sizeof (float), (void *) (3 * sizeof (float)));
+
+  gl->EnableVertexAttribArray (triangle_vertex_attr);
+  gl->EnableVertexAttribArray (triangle_color_attr);
+
+  gl->BindVertexArray (0);
+
+out:
+  return ret;
+}
+
+static void
+DeinitGL (void)
+{
+  const GstGLFuncs *gl = sdl_context->gl_vtable;
+
+  gst_gl_context_activate (sdl_context, TRUE);
+
+  gst_clear_object (&texture_shader);
+  gst_clear_object (&triangle_shader);
+
+  gst_gl_context_activate (sdl_context, FALSE);
+
+  gl->DeleteBuffers (1, &triangle_vbo);
+  gl->DeleteBuffers (1, &texture_vbo);
+  gl->DeleteBuffers (1, &index_buffer);
+
+  gl->DeleteVertexArrays (1, &triangle_vao);
+  gl->DeleteVertexArrays (1, &texture_vao);
 }
 
 /* The main drawing function. */
 static void
 DrawGLScene (GstVideoFrame * vframe)
 {
+  const GstGLFuncs *gl = sdl_context->gl_vtable;
   guint texture;
 
   texture = *(guint *) vframe->data[0];
 
-  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  // Clear The Screen And The Depth Buffer
-  glLoadIdentity ();            // Reset The View
+  gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);        // Clear The Screen And The Depth Buffer
 
-  glTranslatef (-0.4f, 0.0f, 0.0f);     // Move Left 1.5 Units And Into The Screen 6.0
+  /* draw the triangle */
+  gl->BindVertexArray (triangle_vao);
 
-  glRotatef (rtri, 0.0f, 1.0f, 0.0f);   // Rotate The Triangle On The Y axis 
-  // draw a triangle (in smooth coloring mode)
-  glBegin (GL_POLYGON);         // start drawing a polygon
-  glColor3f (1.0f, 0.0f, 0.0f); // Set The Color To Red
-  glVertex3f (0.0f, 0.4f, 0.0f);        // Top
-  glColor3f (0.0f, 1.0f, 0.0f); // Set The Color To Green
-  glVertex3f (0.4f, -0.4f, 0.0f);       // Bottom Right
-  glColor3f (0.0f, 0.0f, 1.0f); // Set The Color To Blue
-  glVertex3f (-0.4f, -0.4f, 0.0f);      // Bottom Left  
-  glEnd ();                     // we're done with the polygon (smooth color interpolation)
+  gst_gl_shader_use (triangle_shader);
+  gst_gl_shader_set_uniform_1f (triangle_shader, "yrot", rtri);
 
-  glEnable (GL_TEXTURE_2D);
-  glBindTexture (GL_TEXTURE_2D, texture);
-  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+  gl->DrawElements (GL_TRIANGLES, 3, GL_UNSIGNED_SHORT, 0);
 
-  glLoadIdentity ();            // make sure we're no longer rotated.
-  glTranslatef (0.5f, 0.0f, 0.0f);      // Move Right 3 Units, and back into the screen 6.0
+  /* draw the textured quad */
+  gl->BindVertexArray (texture_vao);
+  gl->ActiveTexture (GL_TEXTURE0);
+  gl->BindTexture (GL_TEXTURE_2D, texture);
 
-  glRotatef (rquad, 1.0f, 0.0f, 0.0f);  // Rotate The Quad On The X axis 
-  // draw a square (quadrilateral)
-  glColor3f (0.4f, 0.4f, 1.0f); // set color to a blue shade.
-  glBegin (GL_QUADS);           // start drawing a polygon (4 sided)
-  glTexCoord3f (0.0f, 1.0f, 0.0f);
-  glVertex3f (-0.4f, 0.4f, 0.0f);       // Top Left
-  glTexCoord3f (1.0f, 1.0f, 0.0f);
-  glVertex3f (0.4f, 0.4f, 0.0f);        // Top Right
-  glTexCoord3f (1.0f, 0.0f, 0.0f);
-  glVertex3f (0.4f, -0.4f, 0.0f);       // Bottom Right
-  glTexCoord3f (0.0f, 0.0f, 0.0f);
-  glVertex3f (-0.4f, -0.4f, 0.0f);      // Bottom Left  
-  glEnd ();                     // done with the polygon
+  gst_gl_shader_use (texture_shader);
+  gst_gl_shader_set_uniform_1i (texture_shader, "tex", 0);
+  gst_gl_shader_set_uniform_1f (texture_shader, "xrot", rquad);
 
-  glBindTexture (GL_TEXTURE_2D, 0);
+  gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
 
-  rtri += 1.0f;                 // Increase The Rotation Variable For The Triangle
-  rquad -= 1.0f;                // Decrease The Rotation Variable For The Quad 
+  /* reset GL state we have changed to the default */
+  gl->BindTexture (GL_TEXTURE_2D, 0);
+  gl->BindVertexArray (0);
+  gst_gl_context_clear_shader (sdl_context);
+
+  rtri += 1.0f * G_PI / 360.0;  // Increase The Rotation Variable For The Triangle
+  rquad -= 1.0f * G_PI / 360.0; // Decrease The Rotation Variable For The Quad
 
   // swap buffers to display, since we're double buffered.
   SDL_GL_SwapWindow (sdl_window);
@@ -234,7 +421,8 @@ sdl_event_loop (GstBus * bus)
   SDL_GL_MakeCurrent (sdl_window, sdl_gl_context);
   SDL_GL_SetSwapInterval (1);
 
-  InitGL (640, 480);
+  if (!InitGL (640, 480))
+    return;
 
   while (!quit) {
     SDL_Event event;
@@ -319,6 +507,8 @@ sdl_event_loop (GstBus * bus)
 
   if (vframe)
     g_async_queue_push (queue_output_buf, vframe);
+
+  DeinitGL ();
 }
 
 int
@@ -337,8 +527,9 @@ main (int argc, char **argv)
   GstBus *bus = NULL;
   GstCaps *caps;
   GstElement *appsink;
-  const gchar *platform;
+  GstGLPlatform gl_platform;
   GError *err = NULL;
+  GstGLAPI gl_api;
 
   /* Initialize SDL for video output */
   if (SDL_Init (SDL_INIT_VIDEO) < 0) {
@@ -348,8 +539,10 @@ main (int argc, char **argv)
 
   gst_init (&argc, &argv);
 
-  SDL_GL_SetAttribute (SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-  SDL_GL_SetAttribute (SDL_GL_CONTEXT_MINOR_VERSION, 0);
+  SDL_GL_SetAttribute (SDL_GL_CONTEXT_PROFILE_MASK,
+      SDL_GL_CONTEXT_PROFILE_CORE);
+  SDL_GL_SetAttribute (SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+  SDL_GL_SetAttribute (SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
   sdl_message_event = SDL_RegisterEvents (1);
   g_assert (sdl_message_event != -1);
@@ -372,21 +565,23 @@ main (int argc, char **argv)
 #ifdef WIN32
   gl_context = wglGetCurrentContext ();
   sdl_dc = wglGetCurrentDC ();
-  platform = "wgl";
+  gl_platform = GST_GL_PLATFORM_WGL;
   sdl_gl_display = gst_gl_display_new ();
 #else
   SDL_VERSION (&info.version);
   SDL_GetWindowWMInfo (sdl_window, &info);
   sdl_display = info.info.x11.display;
   gl_context = glXGetCurrentContext ();
-  platform = "glx";
+  gl_platform = GST_GL_PLATFORM_GLX;
   sdl_gl_display =
       (GstGLDisplay *) gst_gl_display_x11_new_with_display (sdl_display);
 #endif
 
+  gl_api = gst_gl_context_get_current_gl_api (gl_platform, NULL, NULL);
+
   sdl_context =
       gst_gl_context_new_wrapped (sdl_gl_display, (guintptr) gl_context,
-      gst_gl_platform_from_string (platform), GST_GL_API_OPENGL);
+      gl_platform, gl_api);
 
   gst_gl_context_activate (sdl_context, TRUE);
 
@@ -411,7 +606,6 @@ main (int argc, char **argv)
   queue_input_buf = g_async_queue_new ();
   queue_output_buf = g_async_queue_new ();
 
-  /* append a gst-gl texture to this queue when you do not need it no more */
   appsink = gst_bin_get_by_name (GST_BIN (pipeline), "sink");
 
   caps = gst_static_caps_get (&render_caps);
