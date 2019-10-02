@@ -231,6 +231,10 @@ gst_gl_mosaic_reset (GstGLMixer * mixer)
   if (mosaic->shader)
     gst_object_unref (mosaic->shader);
   mosaic->shader = NULL;
+
+  mosaic->xrot = 0.0;
+  mosaic->yrot = 0.0;
+  mosaic->zrot = 0.0;
 }
 
 static gboolean
@@ -276,10 +280,6 @@ gst_gl_mosaic_callback (gpointer stuff)
   GstGLFuncs *gl = GST_GL_BASE_MIXER (mixer)->context->gl_vtable;
   GList *walk;
 
-  static GLfloat xrot = 0;
-  static GLfloat yrot = 0;
-  static GLfloat zrot = 0;
-
   GLint attr_position_loc = 0;
   GLint attr_texture_loc = 0;
 
@@ -310,6 +310,13 @@ gst_gl_mosaic_callback (gpointer stuff)
       gst_gl_shader_get_attribute_location (mosaic->shader, "a_position");
   attr_texture_loc =
       gst_gl_shader_get_attribute_location (mosaic->shader, "a_texCoord");
+
+  gst_gl_shader_set_uniform_1i (mosaic->shader, "s_texture", 0);
+  gst_gl_shader_set_uniform_1f (mosaic->shader, "xrot_degree", mosaic->xrot);
+  gst_gl_shader_set_uniform_1f (mosaic->shader, "yrot_degree", mosaic->yrot);
+  gst_gl_shader_set_uniform_1f (mosaic->shader, "zrot_degree", mosaic->zrot);
+  gst_gl_shader_set_uniform_matrix_4fv (mosaic->shader, "u_matrix", 1,
+      GL_FALSE, matrix);
 
   GST_OBJECT_LOCK (mosaic);
   walk = GST_ELEMENT (mosaic)->sinkpads;
@@ -378,9 +385,9 @@ gst_gl_mosaic_callback (gpointer stuff)
     gl->ActiveTexture (GL_TEXTURE0);
     gl->BindTexture (GL_TEXTURE_2D, in_tex);
     gst_gl_shader_set_uniform_1i (mosaic->shader, "s_texture", 0);
-    gst_gl_shader_set_uniform_1f (mosaic->shader, "xrot_degree", xrot);
-    gst_gl_shader_set_uniform_1f (mosaic->shader, "yrot_degree", yrot);
-    gst_gl_shader_set_uniform_1f (mosaic->shader, "zrot_degree", zrot);
+    gst_gl_shader_set_uniform_1f (mosaic->shader, "xrot_degree", mosaic->xrot);
+    gst_gl_shader_set_uniform_1f (mosaic->shader, "yrot_degree", mosaic->yrot);
+    gst_gl_shader_set_uniform_1f (mosaic->shader, "zrot_degree", mosaic->zrot);
     gst_gl_shader_set_uniform_matrix_4fv (mosaic->shader, "u_matrix", 1,
         GL_FALSE, matrix);
 
@@ -401,9 +408,9 @@ gst_gl_mosaic_callback (gpointer stuff)
 
   gst_gl_context_clear_shader (GST_GL_BASE_MIXER (mixer)->context);
 
-  xrot += 0.6f;
-  yrot += 0.4f;
-  zrot += 0.8f;
+  mosaic->xrot += 0.6f;
+  mosaic->yrot += 0.4f;
+  mosaic->zrot += 0.8f;
 
   return TRUE;
 }

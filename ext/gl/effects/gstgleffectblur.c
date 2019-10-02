@@ -25,19 +25,24 @@
 
 #include "../gstgleffects.h"
 
+static gpointer
+init_kernel (gpointer data)
+{
+  float *kernel = g_malloc (sizeof (gfloat) * 9);
+  fill_gaussian_kernel (kernel, 7, 3.f);
+  return kernel;
+}
+
 static float *
 gst_gl_effects_blur_kernel (void)
 {
   /* gaussian kernel (well, actually vector), size 9, standard
    * deviation 3.0 */
   /* FIXME: make this a runtime property */
-  static gfloat *kernel = NULL;
-  if (G_UNLIKELY (NULL == kernel)) {
-    /* 3x3 matrix */
-    kernel = g_malloc (sizeof (gfloat) * 9);
-    fill_gaussian_kernel (kernel, 7, 3.f);
-  }
-  return kernel;
+  static GOnce my_once = G_ONCE_INIT;
+
+  g_once (&my_once, init_kernel, NULL);
+  return my_once.retval;
 }
 
 void

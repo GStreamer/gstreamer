@@ -41,6 +41,7 @@ struct _GstGLMosaic
 
     GstGLShader *shader;
     GstGLMemory *out_tex;
+    GLfloat xrot, yrot, zrot;
 };
 
 struct _GstGLMosaicClass

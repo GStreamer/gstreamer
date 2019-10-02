@@ -321,6 +321,9 @@ gst_gl_bumper_reset (GstGLFilter * filter)
   if (bumper_filter->shader)
     gst_gl_context_del_shader (filter->context, bumper_filter->shader);
   bumper_filter->shader = NULL;
+  bumper_filter->xrot = 0.0;
+  bumper_filter->yrot = 0.0;
+  bumper_filter->zrot = 0.0;
 }
 
 static void
@@ -399,10 +402,6 @@ typedef struct _MeshData
 static void
 gst_gl_bumper_callback (gint width, gint height, guint texture, gpointer stuff)
 {
-  static GLfloat xrot = 0;
-  static GLfloat yrot = 0;
-  static GLfloat zrot = 0;
-
   GstGLFuncs *gl;
   GstGLBumper *bumper = GST_GL_BUMPER (stuff);
   GstGLContext *context = GST_GL_FILTER (bumper)->context;
@@ -501,9 +500,9 @@ gst_gl_bumper_callback (gint width, gint height, guint texture, gpointer stuff)
   gst_gl_shader_set_uniform_1i (bumper->shader, "texture0", 0);
   gl->BindTexture (GL_TEXTURE_2D, texture);
 
-  gl->Rotatef (xrot, 1.0f, 0.0f, 0.0f);
-  gl->Rotatef (yrot, 0.0f, 1.0f, 0.0f);
-  gl->Rotatef (zrot, 0.0f, 0.0f, 1.0f);
+  gl->Rotatef (bumper->xrot, 1.0f, 0.0f, 0.0f);
+  gl->Rotatef (bumper->yrot, 0.0f, 1.0f, 0.0f);
+  gl->Rotatef (bumper->zrot, 0.0f, 0.0f, 1.0f);
 
   gl->EnableVertexAttribArray (locTangent);
 
@@ -540,7 +539,7 @@ gst_gl_bumper_callback (gint width, gint height, guint texture, gpointer stuff)
   gl->Disable (GL_LIGHTING);
   gl->Disable (GL_COLOR_MATERIAL);
 
-  xrot += 1.0f;
-  yrot += 0.9f;
-  zrot += 0.6f;
+  bumper->xrot += 1.0f;
+  bumper->yrot += 0.9f;
+  bumper->zrot += 0.6f;
 }

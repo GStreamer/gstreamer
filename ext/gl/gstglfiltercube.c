@@ -311,6 +311,10 @@ gst_gl_filter_cube_gl_start (GstGLBaseFilter * filter)
   gchar *frag_str;
   gboolean ret;
 
+  cube_filter->xrot = 0.0;
+  cube_filter->yrot = 0.0;
+  cube_filter->zrot = 0.0;
+
   frag_str =
       g_strdup_printf ("%s%s",
       gst_gl_shader_string_get_highest_precision (context,
@@ -433,10 +437,6 @@ _callback (gpointer stuff)
   GstGLFilterCube *cube_filter = GST_GL_FILTER_CUBE (filter);
   GstGLFuncs *gl = GST_GL_BASE_FILTER (filter)->context->gl_vtable;
 
-  static GLfloat xrot = 0;
-  static GLfloat yrot = 0;
-  static GLfloat zrot = 0;
-
   const GLfloat matrix[] = {
     0.5f, 0.0f, 0.0f, 0.0f,
     0.0f, 0.5f, 0.0f, 0.0f,
@@ -454,9 +454,12 @@ _callback (gpointer stuff)
   gl->ActiveTexture (GL_TEXTURE0);
   gl->BindTexture (GL_TEXTURE_2D, cube_filter->in_tex->tex_id);
   gst_gl_shader_set_uniform_1i (cube_filter->shader, "s_texture", 0);
-  gst_gl_shader_set_uniform_1f (cube_filter->shader, "xrot_degree", xrot);
-  gst_gl_shader_set_uniform_1f (cube_filter->shader, "yrot_degree", yrot);
-  gst_gl_shader_set_uniform_1f (cube_filter->shader, "zrot_degree", zrot);
+  gst_gl_shader_set_uniform_1f (cube_filter->shader, "xrot_degree",
+      cube_filter->xrot);
+  gst_gl_shader_set_uniform_1f (cube_filter->shader, "yrot_degree",
+      cube_filter->yrot);
+  gst_gl_shader_set_uniform_1f (cube_filter->shader, "zrot_degree",
+      cube_filter->zrot);
   gst_gl_shader_set_uniform_matrix_4fv (cube_filter->shader, "u_matrix", 1,
       GL_FALSE, matrix);
 
@@ -498,9 +501,9 @@ _callback (gpointer stuff)
 
   gl->Disable (GL_DEPTH_TEST);
 
-  xrot += 0.3f;
-  yrot += 0.2f;
-  zrot += 0.4f;
+  cube_filter->xrot += 0.3f;
+  cube_filter->yrot += 0.2f;
+  cube_filter->zrot += 0.4f;
 
   return TRUE;
 }
