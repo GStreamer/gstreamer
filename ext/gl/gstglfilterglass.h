@@ -43,6 +43,7 @@ struct _GstGLFilterGlass
   gint64 timestamp;
   GstGLMemory *in_tex;
   GstGLMemory *out_tex;
+  gint64 start_time;
 };
 
 struct _GstGLFilterGlassClass

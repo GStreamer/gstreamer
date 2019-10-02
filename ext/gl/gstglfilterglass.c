@@ -193,6 +193,8 @@ gst_gl_filter_glass_reset (GstBaseTransform * trans)
     gst_object_unref (glass_filter->passthrough_shader);
   glass_filter->passthrough_shader = NULL;
 
+  glass_filter->start_time = 0;
+
   return GST_BASE_TRANSFORM_CLASS (parent_class)->stop (trans);
 }
 
@@ -258,10 +260,7 @@ gst_gl_filter_glass_filter_texture (GstGLFilter * filter, GstGLMemory * in_tex,
 static gint64
 get_time (void)
 {
-  static GTimeVal val;
-  g_get_current_time (&val);
-
-  return (val.tv_sec * G_USEC_PER_SEC) + val.tv_usec;
+  return g_get_real_time ();
 }
 
 static void
@@ -356,7 +355,6 @@ gst_gl_filter_glass_draw_video_plane (GstGLFilter * filter,
 static gboolean
 gst_gl_filter_glass_callback (gpointer stuff)
 {
-  static gint64 start_time = 0;
   gfloat rotation;
 
   GstGLFilter *filter = GST_GL_FILTER (stuff);
@@ -367,11 +365,12 @@ gst_gl_filter_glass_callback (gpointer stuff)
   gint height = GST_VIDEO_INFO_HEIGHT (&filter->out_info);
   guint texture = glass_filter->in_tex->tex_id;
 
-  if (start_time == 0)
-    start_time = get_time ();
+  if (glass_filter->start_time == 0)
+    glass_filter->start_time = get_time ();
   else {
     gint64 time_left =
-        (glass_filter->timestamp / 1000) - (get_time () - start_time);
+        (glass_filter->timestamp / 1000) - (get_time () -
+        glass_filter->start_time);
     time_left -= 1000000 / 25;
     if (time_left > 2000) {
       GST_LOG ("escape");
@@ -384,8 +383,8 @@ gst_gl_filter_glass_callback (gpointer stuff)
   gst_gl_filter_glass_draw_background_gradient (glass_filter);
 
   //Rotation
-  if (start_time != 0) {
-    gint64 time_passed = get_time () - start_time;
+  if (glass_filter->start_time != 0) {
+    gint64 time_passed = get_time () - glass_filter->start_time;
     rotation = sin (time_passed / 1200000.0) * 45.0f;
   } else {
     rotation = 0.0f;

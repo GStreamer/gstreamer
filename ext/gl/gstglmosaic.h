@@ -46,6 +46,7 @@ struct _GstGLMosaic
     gint attr_position_loc;
     gint attr_texture_loc;
     GstGLMemory *out_tex;
+    GLfloat xrot, yrot, zrot;
 };
 
 struct _GstGLMosaicClass

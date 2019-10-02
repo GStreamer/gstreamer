@@ -59,6 +59,8 @@ struct _GstGLFilterCube
     GLuint             vertex_buffer;
     GLint              attr_position;
     GLint              attr_texture;
+
+    GLfloat            xrot, yrot, zrot;
 };
 
 struct _GstGLFilterCubeClass

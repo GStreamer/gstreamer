@@ -43,6 +43,7 @@ struct _GstGLBumper
   gint bumpmap_width;
   gint bumpmap_height;
   gchar *location;
+  GLfloat xrot, yrot, zrot;
 };
 
 struct _GstGLBumperClass
