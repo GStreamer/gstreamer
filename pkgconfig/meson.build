@@ -24,6 +24,7 @@ pkg_install_dir = '@0@/pkgconfig'.format(get_option('libdir'))
 
 pkg_libs = [
   'bad-audio',
+  'bad-transcoder',
   'codecparsers',
   'insertbin',
   'mpegts',
