@@ -4013,6 +4013,7 @@ gst_rtsp_source_dispatch_write (GPollableOutputStream * stream,
           /* all data of this message is sent, check body and otherwise
            * skip the whole message for next time */
           bytes_written -= (msg->data_size - msg->data_offset);
+          watch->messages_bytes -= (msg->data_size - msg->data_offset);
           msg->data_offset = msg->data_size;
 
           if (msg->body_data) {
@@ -4026,6 +4027,7 @@ gst_rtsp_source_dispatch_write (GPollableOutputStream * stream,
           if (bytes_written + msg->body_offset >= body_size) {
             /* body written, drop this message */
             bytes_written -= body_size - msg->body_offset;
+            watch->messages_bytes -= body_size - msg->body_offset;
             msg->body_offset = body_size;
             drop_messages++;
 
@@ -4037,11 +4039,13 @@ gst_rtsp_source_dispatch_write (GPollableOutputStream * stream,
             gst_rtsp_serialized_message_clear (msg);
           } else {
             msg->body_offset += bytes_written;
+            watch->messages_bytes -= bytes_written;
             bytes_written = 0;
           }
         } else {
           /* Need to continue sending from the data of this message */
           msg->data_offset += bytes_written;
+          watch->messages_bytes -= bytes_written;
           bytes_written = 0;
         }
       }
