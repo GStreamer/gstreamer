@@ -1060,6 +1060,8 @@ _present_on_device_thread (GstD3D11Device * device, FramePresentData * data)
   device_context = gst_d3d11_device_get_device_context_handle (device);
 
   if (data->resource) {
+    ID3D11DeviceContext_OMSetRenderTargets (device_context,
+        1, &self->rtv, NULL);
     ID3D11DeviceContext_ClearRenderTargetView (device_context, self->rtv,
         black);
     ID3D11DeviceContext_CopySubresourceRegion (device_context,
