@@ -680,13 +680,8 @@ class GstValidateTranscodingTest(GstValidateTest, GstValidateEncodingTestInterfa
         return size
 
     def check_results(self):
-        if self.result in [Result.FAILED, Result.TIMEOUT] or \
-                self.process.returncode != 0:
-            GstValidateTest.check_results(self)
-            return
-
-        res, msg = self.check_encoded_file()
-        self.set_result(res, msg)
+        self.check_encoded_file()
+        GstValidateTest.check_results(self)
 
 
 class GstValidateBaseRTSPTest:

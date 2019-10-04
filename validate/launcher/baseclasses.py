@@ -1287,10 +1287,17 @@ class GstValidateEncodingTestInterface(object):
 
         if orig_duration - tolerance >= duration <= orig_duration + tolerance:
             os.remove(result_descriptor.get_path())
-            return (Result.FAILED, "Duration of encoded file is "
-                    " wrong (%s instead of %s)" %
-                    (utils.TIME_ARGS(duration),
-                     utils.TIME_ARGS(orig_duration)))
+            self.add_report(
+                {
+                    'type': 'report',
+                    'issue-id': 'transcoded-file-wrong-duration',
+                    'summary': 'The duration of a transcoded file doesn\'t match the duration of the original file',
+                    'level': 'critical',
+                    'detected-on': 'pipeline',
+                    'details': "Duration of encoded file is " " wrong (%s instead of %s)" % (
+                        utils.TIME_ARGS(duration), utils.TIME_ARGS(orig_duration))
+                }
+            )
         else:
             all_tracks_caps = result_descriptor.get_tracks_caps()
             container_caps = result_descriptor.get_caps()
@@ -1304,21 +1311,38 @@ class GstValidateEncodingTestInterface(object):
 
                 if wanted_caps is None:
                     os.remove(result_descriptor.get_path())
-                    return (Result.FAILED,
-                            "Found a track of type %s in the encoded files"
-                            " but none where wanted in the encoded profile: %s"
-                            % (track_type, self.combination))
+                    self.add_report(
+                        {
+                            'type': 'report',
+                            'issue-id': 'transcoded-file-wrong-stream-type',
+                            'summary': 'Expected stream types during transcoding do not match expectations',
+                            'level': 'critical',
+                            'detected-on': 'pipeline',
+                            'details': "Found a track of type %s in the encoded files"
+                                    " but none where wanted in the encoded profile: %s" % (
+                                        track_type, self.combination)
+                        }
+                    )
+                    return
 
                 for c in cwanted_caps:
                     if c not in ccaps:
                         if not self._has_caps_type_variant(c, ccaps):
                             os.remove(result_descriptor.get_path())
-                            return (Result.FAILED,
-                                    "Field: %s  (from %s) not in caps of the outputed file %s"
-                                    % (wanted_caps, c, ccaps))
+                            self.add_report(
+                                {
+                                    'type': 'report',
+                                    'issue-id': 'transcoded-file-wrong-caps',
+                                    'summary': 'Expected stream caps during transcoding do not match expectations',
+                                    'level': 'critical',
+                                    'detected-on': 'pipeline',
+                                    'details': "Field: %s  (from %s) not in caps of the outputed file %s" % (
+                                        wanted_caps, c, ccaps)
+                                }
+                            )
+                            return
 
             os.remove(result_descriptor.get_path())
-            return (Result.PASSED, "")
 
 
 class TestsManager(Loggable):
