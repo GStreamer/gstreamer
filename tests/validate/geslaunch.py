@@ -224,26 +224,8 @@ class GESRenderTest(GESTest, GstValidateEncodingTestInterface):
         self.add_arguments("-f", profile, "-o", self.dest_file)
 
     def check_results(self):
-        if self.result in [Result.PASSED, Result.NOT_RUN] and self.scenario is None:
-            if self.process.returncode != 0:
-                return super().check_results()
-
-            res, msg = self.check_encoded_file()
-            self.set_result(res, msg)
-        else:
-            if self.result == utils.Result.TIMEOUT:
-                missing_eos = False
-                try:
-                    if utils.get_duration(self.dest_file) == self.project.get_duration():
-                        missing_eos = True
-                except Exception as e:
-                    pass
-
-                if missing_eos is True:
-                    self.set_result(utils.Result.TIMEOUT, "The rendered file had right duration, MISSING EOS?\n",
-                                    "failure")
-            else:
-                GstValidateTest.check_results(self)
+        self.check_encoded_file()
+        return GstValidateTest.check_results(self)
 
     def get_current_value(self):
         size = self.get_current_size()
