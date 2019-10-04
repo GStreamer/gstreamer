@@ -12,7 +12,7 @@ avtp_sources = [
 
 avtp_dep = dependency('avtp', required: get_option('avtp'))
 
-if avtp_dep.found()
+if avtp_dep.found() and cc.has_type('struct sock_txtime', prefix : '#include <linux/net_tstamp.h>')
   gstavtp = library('gstavtp',
     avtp_sources,
     c_args : gst_plugins_bad_args,

@@ -43,23 +43,46 @@
  *
  * AVTP mime type is pretty simple and has no fields.
  *
- * ### PTP Clock
+ * ### gPTP Setup
  *
- * The AVTP plugin elements require that GStreamer pipeline clock be in sync
- * with the network generalized PTP clock (gPTP). Applications using the AVTP
- * plugin elements can achieve that by using GstPtpClock as the pipeline clock.
+ * The Linuxptp project provides the ptp4l daemon, which synchronizes the PTP
+ * clock from NIC, and the pmc tool which communicates with ptp4l to get/set
+ * some runtime settings. The project also provides the phc2sys daemon which
+ * synchronizes the PTP clock and system clock.
  *
- * Note that GstPtpClock is a UDP slave only clock, meaning that some other
- * endpoint needs to provide the gPTP master clock.
+ * The AVTP plugin requires system clock is synchronized with PTP clock and
+ * TAI offset is properly set in the kernel. ptp4l and phc2sys can be set up
+ * in many different ways, below we provide an example that fullfils the plugin
+ * requirements. For further information check ptp4l(8) and phc2sys(8).
  *
- * One can use, on another endpoint on the network, Linuxptp project ptp4l
- * daemon to provide a gPTP master clock on the network over UDP:
+ * In the following instructions, replace $IFNAME by your PTP capable NIC
+ * interface. The gPTP.cfg file mentioned below can be found in /usr/share/
+ * doc/linuxptp/ (depending on your distro).
  *
- *     $ ptp4l -i $IFNAME
+ * Synchronize PTP clock with PTP time:
  *
- * For further information check ptp4l(8).
+ *	$ ptp4l -f gPTP.cfg -i $IFNAME
  *
- * ### FQTSS Setup
+ * Enable TAI offset to be automatically set by phc2sys:
+ *
+ *	$ pmc -u -t 1 -b 0 'SET GRANDMASTER_SETTINGS_NP \
+ * 		clockClass 248 clockAccuracy 0xfe \
+ * 		offsetScaledLogVariance 0xffff \
+ * 		currentUtcOffset 37 leap61 0 leap59 0 \
+ * 		currentUtcOffsetValid 1 ptpTimescale 1 \
+ * 		timeTraceable 1 frequencyTraceable 0 timeSource 0xa0'
+ *
+ * Synchronize system clock with PTP clock:
+ *
+ * 	$ phc2sys -f gPTP.cfg -s $IFNAME -c CLOCK_REALTIME -w
+ *
+ * The commands above should be run on both AVTP Talker and Listener hosts.
+ *
+ * With clocks properly synchronized, applications using the AVTP plugin
+ * should use GstSytemClock with GST_CLOCK_TYPE_REALTIME as the pipeline
+ * clock.
+ *
+ * ### Traffic Control Setup
  *
  * FQTSS (Forwarding and Queuing Enhancements for Time-Sensitive Streams) can be
  * enabled on Linux with the help of the mqprio and cbs qdiscs provided by the
@@ -71,18 +94,27 @@
  * On the host that will run as AVTP Talker (pipeline that generates the video
  * stream), run the following commands:
  *
- * Configure mpqrio qdisc (replace $HANDLE_ID by an unused handle ID):
+ * Configure mpqrio qdisc (replace $MQPRIO_HANDLE_ID by an unused handle ID):
  *
- *     $ tc qdisc add dev $IFNAME parent root handle $HANDLE_ID mqprio \
+ *     $ tc qdisc add dev $IFNAME parent root handle $MQPRIO_HANDLE_ID mqprio \
  *         num_tc 3 map 2 2 1 0 2 2 2 2 2 2 2 2 2 2 2 2 \
  *         queues 1@0 1@1 2@2 hw 0
  *
- * Configure cbs qdisc:
+ * Configure cbs qdisc (replace $CBS_HANDLE_ID by an unused handle ID):
  *
- *     $ tc qdisc replace dev $IFNAME parent $HANDLE_ID:1 cbs idleslope 27756 \
- *         sendslope -972244 hicredit 42 locredit -1499 offload 1
+ *     $ tc qdisc replace dev $IFNAME parent $MQPRIO_HANDLE_ID:1 \
+ *         handle $CBS_HANDLE_ID cbs idleslope 27756 sendslope -972244 \
+ *         hicredit 42 locredit -1499 offload 1
  *
- * No FQTSS configuration is required at the host running as AVTP Listener.
+ * Also, the plugin implements a transmission scheduling mechanism that relies
+ * on ETF qdisc so make sure it is properly configured in your system. It could
+ * be configured in many ways, below follows an example.
+ *
+ *     $ tc qdisc add dev $IFNAME parent $CBS_HANDLE_ID:1 etf \
+ *         clockid CLOCK_TAI delta 500000 offload
+ *
+ * No Traffic Control configuration is required at the host running as AVTP
+ * Listener.
  *
  * ### Capabilities
  *

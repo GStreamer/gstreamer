@@ -45,6 +45,7 @@
 
 #include <arpa/inet.h>
 #include <linux/if_packet.h>
+#include <linux/net_tstamp.h>
 #include <net/ethernet.h>
 #include <net/if.h>
 #include <stdio.h>
@@ -61,6 +62,10 @@ GST_DEBUG_CATEGORY_STATIC (avtpsink_debug);
 #define DEFAULT_IFNAME "eth0"
 #define DEFAULT_ADDRESS "01:AA:AA:AA:AA:AA"
 #define DEFAULT_PRIORITY 0
+
+#define NSEC_PER_SEC  1000000000
+#define TAI_OFFSET    (37ULL * NSEC_PER_SEC)
+#define UTC_TO_TAI(t) (t + TAI_OFFSET)
 
 enum
 {
@@ -89,6 +94,8 @@ static gboolean gst_avtp_sink_start (GstBaseSink * basesink);
 static gboolean gst_avtp_sink_stop (GstBaseSink * basesink);
 static GstFlowReturn gst_avtp_sink_render (GstBaseSink * basesink, GstBuffer *
     buffer);
+static void gst_avtp_sink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
+    GstClockTime * start, GstClockTime * end);
 
 static void
 gst_avtp_sink_class_init (GstAvtpSinkClass * klass)
@@ -127,6 +134,7 @@ gst_avtp_sink_class_init (GstAvtpSinkClass * klass)
   basesink_class->start = GST_DEBUG_FUNCPTR (gst_avtp_sink_start);
   basesink_class->stop = GST_DEBUG_FUNCPTR (gst_avtp_sink_stop);
   basesink_class->render = GST_DEBUG_FUNCPTR (gst_avtp_sink_render);
+  basesink_class->get_times = GST_DEBUG_FUNCPTR (gst_avtp_sink_get_times);
 
   GST_DEBUG_CATEGORY_INIT (avtpsink_debug, "avtpsink", 0, "AVTP Sink");
 }
@@ -211,6 +219,7 @@ gst_avtp_sink_init_socket (GstAvtpSink * avtpsink)
   unsigned int index;
   guint8 addr[ETH_ALEN];
   struct sockaddr_ll sk_addr;
+  struct sock_txtime txtime_cfg;
 
   index = if_nametoindex (avtpsink->ifname);
   if (!index) {
@@ -228,6 +237,16 @@ gst_avtp_sink_init_socket (GstAvtpSink * avtpsink)
       sizeof (avtpsink->priority));
   if (res < 0) {
     GST_ERROR_OBJECT (avtpsink, "Failed to socket priority: %s", strerror
+        (errno));
+    goto err;
+  }
+
+  txtime_cfg.clockid = CLOCK_TAI;
+  txtime_cfg.flags = 0;
+  res = setsockopt (fd, SOL_SOCKET, SO_TXTIME, &txtime_cfg,
+      sizeof (txtime_cfg));
+  if (res < 0) {
+    GST_ERROR_OBJECT (avtpsink, "Failed to set SO_TXTIME: %s", strerror
         (errno));
     goto err;
   }
@@ -257,6 +276,28 @@ err:
   return FALSE;
 }
 
+static void
+gst_avtp_sink_init_msghdr (GstAvtpSink * avtpsink)
+{
+  struct msghdr *msg;
+  struct cmsghdr *cmsg;
+
+  msg = g_malloc0 (sizeof (struct msghdr));
+  msg->msg_name = &avtpsink->sk_addr;
+  msg->msg_namelen = sizeof (avtpsink->sk_addr);
+  msg->msg_iovlen = 1;
+  msg->msg_iov = g_malloc0 (sizeof (struct iovec));
+  msg->msg_controllen = CMSG_SPACE (sizeof (__u64));
+  msg->msg_control = g_malloc0 (msg->msg_controllen);
+
+  cmsg = CMSG_FIRSTHDR (msg);
+  cmsg->cmsg_level = SOL_SOCKET;
+  cmsg->cmsg_type = SCM_TXTIME;
+  cmsg->cmsg_len = CMSG_LEN (sizeof (__u64));
+
+  avtpsink->msg = msg;
+}
+
 static gboolean
 gst_avtp_sink_start (GstBaseSink * basesink)
 {
@@ -264,6 +305,8 @@ gst_avtp_sink_start (GstBaseSink * basesink)
 
   if (!gst_avtp_sink_init_socket (avtpsink))
     return FALSE;
+
+  gst_avtp_sink_init_msghdr (avtpsink);
 
   GST_DEBUG_OBJECT (avtpsink, "AVTP sink started");
 
@@ -275,10 +318,49 @@ gst_avtp_sink_stop (GstBaseSink * basesink)
 {
   GstAvtpSink *avtpsink = GST_AVTP_SINK (basesink);
 
+  g_free (avtpsink->msg->msg_iov);
+  g_free (avtpsink->msg->msg_control);
+  g_free (avtpsink->msg);
   close (avtpsink->sk_fd);
 
   GST_DEBUG_OBJECT (avtpsink, "AVTP sink stopped");
   return TRUE;
+}
+
+/* This function was heavily inspired by gst_base_sink_adjust_time() from
+ * GstBaseSink.
+ */
+static GstClockTime
+gst_avtp_sink_adjust_time (GstBaseSink * basesink, GstClockTime time)
+{
+  GstClockTimeDiff ts_offset;
+  GstClockTime render_delay;
+
+  /* don't do anything funny with invalid timestamps */
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (time)))
+    return time;
+
+  time += gst_base_sink_get_latency (basesink);
+
+  /* apply offset, be careful for underflows */
+  ts_offset = gst_base_sink_get_ts_offset (basesink);
+  if (ts_offset < 0) {
+    ts_offset = -ts_offset;
+    if (ts_offset < time)
+      time -= ts_offset;
+    else
+      time = 0;
+  } else
+    time += ts_offset;
+
+  /* subtract the render delay again, which was included in the latency */
+  render_delay = gst_base_sink_get_render_delay (basesink);
+  if (time > render_delay)
+    time -= render_delay;
+  else
+    time = 0;
+
+  return time;
 }
 
 static GstFlowReturn
@@ -287,14 +369,30 @@ gst_avtp_sink_render (GstBaseSink * basesink, GstBuffer * buffer)
   ssize_t n;
   GstMapInfo info;
   GstAvtpSink *avtpsink = GST_AVTP_SINK (basesink);
+  struct iovec *iov = avtpsink->msg->msg_iov;
+
+  if (G_LIKELY (basesink->sync)) {
+    GstClockTime base_time, running_time;
+    struct cmsghdr *cmsg = CMSG_FIRSTHDR (avtpsink->msg);
+
+    g_assert (GST_BUFFER_DTS_OR_PTS (buffer) != GST_CLOCK_TIME_NONE);
+
+    base_time = gst_element_get_base_time (GST_ELEMENT (avtpsink));
+    running_time = gst_segment_to_running_time (&basesink->segment,
+        basesink->segment.format, GST_BUFFER_DTS_OR_PTS (buffer));
+    running_time = gst_avtp_sink_adjust_time (basesink, running_time);
+    *(__u64 *) CMSG_DATA (cmsg) = UTC_TO_TAI (base_time + running_time);
+  }
 
   if (!gst_buffer_map (buffer, &info, GST_MAP_READ)) {
     GST_ERROR_OBJECT (avtpsink, "Failed to map buffer");
     return GST_FLOW_ERROR;
   }
 
-  n = sendto (avtpsink->sk_fd, info.data, info.size, 0,
-      (struct sockaddr *) &avtpsink->sk_addr, sizeof (avtpsink->sk_addr));
+  iov->iov_base = info.data;
+  iov->iov_len = info.size;
+
+  n = sendmsg (avtpsink->sk_fd, avtpsink->msg, 0);
   if (n < 0) {
     GST_INFO_OBJECT (avtpsink, "Failed to send AVTPDU: %s", strerror (errno));
     goto out;
@@ -307,6 +405,18 @@ gst_avtp_sink_render (GstBaseSink * basesink, GstBuffer * buffer)
 out:
   gst_buffer_unmap (buffer, &info);
   return GST_FLOW_OK;
+}
+
+static void
+gst_avtp_sink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
+    GstClockTime * start, GstClockTime * end)
+{
+  /* Rendering synchronization is handled by the GstAvtpSink class itself, not
+   * GstBaseSink so we set 'start' and 'end' to GST_CLOCK_TIME_NONE to signal
+   * that to the base class.
+   */
+  *start = GST_CLOCK_TIME_NONE;
+  *end = GST_CLOCK_TIME_NONE;
 }
 
 gboolean

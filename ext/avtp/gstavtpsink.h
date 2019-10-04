@@ -51,6 +51,7 @@ struct _GstAvtpSink
 
   int sk_fd;
   struct sockaddr_ll sk_addr;
+  struct msghdr * msg;
 };
 
 struct _GstAvtpSinkClass
