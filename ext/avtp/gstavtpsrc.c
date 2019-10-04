@@ -195,11 +195,17 @@ static gboolean
 gst_avtp_src_start (GstBaseSrc * basesrc)
 {
   int fd, res;
+  unsigned int index;
   guint8 addr[ETH_ALEN];
-  struct ifreq req = { 0 };
   struct sockaddr_ll sk_addr = { 0 };
   struct packet_mreq mreq = { 0 };
   GstAvtpSrc *avtpsrc = GST_AVTP_SRC (basesrc);
+
+  index = if_nametoindex (avtpsrc->ifname);
+  if (!index) {
+    GST_ERROR_OBJECT (avtpsrc, "Failed to get if_index: %s", strerror (errno));
+    return FALSE;
+  }
 
   fd = socket (AF_PACKET, SOCK_DGRAM, htons (ETH_P_TSN));
   if (fd < 0) {
@@ -207,16 +213,9 @@ gst_avtp_src_start (GstBaseSrc * basesrc)
     return FALSE;
   }
 
-  snprintf (req.ifr_name, sizeof (req.ifr_name), "%s", avtpsrc->ifname);
-  res = ioctl (fd, SIOCGIFINDEX, &req);
-  if (res < 0) {
-    GST_ERROR_OBJECT (avtpsrc, "Failed to ioctl(): %s", strerror (errno));
-    goto err;
-  }
-
   sk_addr.sll_family = AF_PACKET;
   sk_addr.sll_protocol = htons (ETH_P_TSN);
-  sk_addr.sll_ifindex = req.ifr_ifindex;
+  sk_addr.sll_ifindex = index;
 
   res = bind (fd, (struct sockaddr *) &sk_addr, sizeof (sk_addr));
   if (res < 0) {
@@ -231,7 +230,7 @@ gst_avtp_src_start (GstBaseSrc * basesrc)
     goto err;
   }
 
-  mreq.mr_ifindex = req.ifr_ifindex;
+  mreq.mr_ifindex = index;
   mreq.mr_type = PACKET_MR_MULTICAST;
   mreq.mr_alen = ETH_ALEN;
   memcpy (&mreq.mr_address, addr, ETH_ALEN);

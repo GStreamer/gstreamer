@@ -208,10 +208,16 @@ static gboolean
 gst_avtp_sink_start (GstBaseSink * basesink)
 {
   int fd, res;
-  struct ifreq req;
+  unsigned int index;
   guint8 addr[ETH_ALEN];
   struct sockaddr_ll sk_addr;
   GstAvtpSink *avtpsink = GST_AVTP_SINK (basesink);
+
+  index = if_nametoindex (avtpsink->ifname);
+  if (!index) {
+    GST_ERROR_OBJECT (avtpsink, "Failed to get if_index: %s", strerror (errno));
+    return FALSE;
+  }
 
   fd = socket (AF_PACKET, SOCK_DGRAM | SOCK_NONBLOCK, htons (ETH_P_TSN));
   if (fd < 0) {
@@ -234,17 +240,10 @@ gst_avtp_sink_start (GstBaseSink * basesink)
     goto err;
   }
 
-  snprintf (req.ifr_name, sizeof (req.ifr_name), "%s", avtpsink->ifname);
-  res = ioctl (fd, SIOCGIFINDEX, &req);
-  if (res < 0) {
-    GST_ERROR_OBJECT (avtpsink, "Failed to ioctl(): %s", strerror (errno));
-    goto err;
-  }
-
   sk_addr.sll_family = AF_PACKET;
   sk_addr.sll_protocol = htons (ETH_P_TSN);
   sk_addr.sll_halen = ETH_ALEN;
-  sk_addr.sll_ifindex = req.ifr_ifindex;
+  sk_addr.sll_ifindex = index;
   sk_addr.sll_hatype = 0;
   sk_addr.sll_pkttype = 0;
   memcpy (sk_addr.sll_addr, addr, ETH_ALEN);
