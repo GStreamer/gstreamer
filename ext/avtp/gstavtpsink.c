@@ -219,7 +219,7 @@ gst_avtp_sink_start (GstBaseSink * basesink)
     return FALSE;
   }
 
-  fd = socket (AF_PACKET, SOCK_DGRAM | SOCK_NONBLOCK, htons (ETH_P_TSN));
+  fd = socket (AF_PACKET, SOCK_DGRAM, htons (ETH_P_TSN));
   if (fd < 0) {
     GST_ERROR_OBJECT (avtpsink, "Failed to open socket: %s", strerror (errno));
     return FALSE;
