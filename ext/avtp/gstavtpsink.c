@@ -205,13 +205,12 @@ gst_avtp_sink_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-gst_avtp_sink_start (GstBaseSink * basesink)
+gst_avtp_sink_init_socket (GstAvtpSink * avtpsink)
 {
   int fd, res;
   unsigned int index;
   guint8 addr[ETH_ALEN];
   struct sockaddr_ll sk_addr;
-  GstAvtpSink *avtpsink = GST_AVTP_SINK (basesink);
 
   index = if_nametoindex (avtpsink->ifname);
   if (!index) {
@@ -251,12 +250,24 @@ gst_avtp_sink_start (GstBaseSink * basesink)
   avtpsink->sk_fd = fd;
   avtpsink->sk_addr = sk_addr;
 
-  GST_DEBUG_OBJECT (avtpsink, "AVTP sink started");
   return TRUE;
 
 err:
   close (fd);
   return FALSE;
+}
+
+static gboolean
+gst_avtp_sink_start (GstBaseSink * basesink)
+{
+  GstAvtpSink *avtpsink = GST_AVTP_SINK (basesink);
+
+  if (!gst_avtp_sink_init_socket (avtpsink))
+    return FALSE;
+
+  GST_DEBUG_OBJECT (avtpsink, "AVTP sink started");
+
+  return TRUE;
 }
 
 static gboolean
