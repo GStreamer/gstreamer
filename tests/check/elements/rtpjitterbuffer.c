@@ -899,7 +899,7 @@ GST_START_TEST (test_late_packets_still_makes_lost_events)
           generate_test_buffer_full (now,
               seqnum, seqnum * TEST_RTP_TS_DURATION)));
 
-  /* we should now receive packet-lost-events for the gap 
+  /* we should now receive packet-lost-events for the gap
    * FIXME: The timeout and duration here are a bit crap...
    */
   verify_lost_event (h, next_seqnum, 3400 * GST_MSECOND, 6500 * GST_MSECOND);
@@ -3018,6 +3018,292 @@ GST_START_TEST (test_timer_queue_timer_offset)
 
 GST_END_TEST;
 
+static gboolean
+check_drop_message (GstMessage * drop_msg, const char *reason_check,
+    guint seqnum_check, guint num_msg)
+{
+
+  const GstStructure *s = gst_message_get_structure (drop_msg);
+  const gchar *reason_str;
+  GstClockTime timestamp;
+  guint seqnum;
+  guint num_too_late;
+  guint num_already_lost;
+  guint num_drop_on_latency;
+
+  guint num_too_late_check = 0;
+  guint num_already_lost_check = 0;
+  guint num_drop_on_latency_check = 0;
+
+  /* Check that fields exist */
+  fail_unless (gst_structure_get_uint (s, "seqnum", &seqnum));
+  fail_unless (gst_structure_get_uint64 (s, "timestamp", &timestamp));
+  fail_unless (gst_structure_get_uint (s, "num-too-late", &num_too_late));
+  fail_unless (gst_structure_get_uint (s, "num-already-lost",
+          &num_already_lost));
+  fail_unless (gst_structure_get_uint (s, "num-drop-on-latency",
+          &num_drop_on_latency));
+  fail_unless (reason_str = gst_structure_get_string (s, "reason"));
+
+  /* Assing what to compare message fields to based on message reason */
+  if (g_strcmp0 (reason_check, "too-late") == 0) {
+    num_too_late_check += num_msg;
+  } else if (g_strcmp0 (reason_check, "already-lost") == 0) {
+    num_already_lost_check += num_msg;
+  } else if (g_strcmp0 (reason_check, "drop-on-latency") == 0) {
+    num_drop_on_latency_check += num_msg;
+  } else {
+    return FALSE;
+  }
+
+  /* Check that fields have correct value */
+  fail_unless (seqnum == seqnum_check);
+  fail_unless (g_strcmp0 (reason_str, reason_check) == 0);
+  fail_unless (num_too_late == num_too_late_check);
+  fail_unless (num_already_lost == num_already_lost_check);
+  fail_unless (num_drop_on_latency == num_drop_on_latency_check);
+
+  return TRUE;
+}
+
+GST_START_TEST (test_drop_messages_too_late)
+{
+  GstHarness *h = gst_harness_new ("rtpjitterbuffer");
+  gint latency_ms = 100;
+  guint next_seqnum;
+  GstBus *bus;
+  GstMessage *drop_msg;
+  gboolean have_message = FALSE;
+
+  g_object_set (h->element, "post-drop-messages", TRUE, NULL);
+  next_seqnum = construct_deterministic_initial_state (h, latency_ms);
+
+  /* Create a bus to get the drop message on */
+  bus = gst_bus_new ();
+  gst_element_set_bus (h->element, bus);
+
+  /* Push test buffer resulting in gap of one */
+  push_test_buffer (h, next_seqnum + 1);
+
+  /* Advance time to trigger timeout of the missing buffer */
+  gst_harness_crank_single_clock_wait (h);
+
+  /* Pull out and unref pushed buffer */
+  gst_buffer_unref (gst_harness_pull (h));
+
+  /* Push missing buffer, now arriving "too-late" */
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h,
+          generate_test_buffer (next_seqnum)));
+
+  /* Pop the resulting drop message and check its correctness */
+  while (!have_message &&
+      (drop_msg = gst_bus_pop_filtered (bus, GST_MESSAGE_ELEMENT)) != NULL) {
+    if (gst_message_has_name (drop_msg, "drop-msg")) {
+      fail_unless (check_drop_message (drop_msg, "too-late", next_seqnum, 1));
+      have_message = TRUE;
+    }
+    gst_message_unref (drop_msg);
+  }
+  fail_unless (have_message);
+
+  /* Cleanup */
+  gst_element_set_bus (h->element, NULL);
+  gst_object_unref (bus);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_drop_messages_already_lost)
+{
+  GstHarness *h = gst_harness_new ("rtpjitterbuffer");
+  GstTestClock *testclock;
+  GstClockID id;
+  gint latency_ms = 20;
+  guint seqnum_late;
+  guint seqnum_final;
+  GstBus *bus;
+  GstMessage *drop_msg;
+  gboolean have_message = FALSE;
+
+  testclock = gst_harness_get_testclock (h);
+  g_object_set (h->element, "post-drop-messages", TRUE, NULL);
+
+  /* Create a bus to get the drop message on */
+  bus = gst_bus_new ();
+  gst_element_set_bus (h->element, bus);
+
+  /* Get seqnum from initial state */
+  seqnum_late = construct_deterministic_initial_state (h, latency_ms);
+
+  /* Hop over 3 buffers and push buffer (gap of 3) */
+  seqnum_final = seqnum_late + 4;
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h,
+          generate_test_buffer_full (seqnum_final * TEST_BUF_DURATION,
+              seqnum_final, seqnum_final * TEST_RTP_TS_DURATION)));
+
+  /* The jitterbuffer should be waiting for the timeout of a "large gap timer"
+   * for buffer seqnum_late and seqnum_late+1 */
+  gst_test_clock_wait_for_next_pending_id (testclock, &id);
+  fail_unless_equals_uint64 (seqnum_late * TEST_BUF_DURATION +
+      latency_ms * GST_MSECOND, gst_clock_id_get_time (id));
+
+  /* Now seqnum_late sneaks in before the lost event for buffer seqnum_late and seqnum_late+1 is
+   * processed. It will be dropped due to already having been considered lost */
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h,
+          generate_test_buffer_full (seqnum_late * TEST_BUF_DURATION,
+              seqnum_late, seqnum_late * TEST_RTP_TS_DURATION)));
+
+  /* Pop the resulting drop message and check its correctness */
+  while (!have_message &&
+      (drop_msg = gst_bus_pop_filtered (bus, GST_MESSAGE_ELEMENT)) != NULL) {
+    if (gst_message_has_name (drop_msg, "drop-msg")) {
+      fail_unless (check_drop_message (drop_msg, "already-lost", seqnum_late,
+              1));
+      have_message = TRUE;
+    }
+    gst_message_unref (drop_msg);
+  }
+  fail_unless (have_message);
+
+  /* Cleanup */
+  gst_clock_id_unref (id);
+  gst_element_set_bus (h->element, NULL);
+  gst_buffer_unref (gst_harness_take_all_data_as_buffer (h));
+  gst_object_unref (bus);
+  gst_object_unref (testclock);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_drop_messages_drop_on_latency)
+{
+  GstHarness *h = gst_harness_new ("rtpjitterbuffer");
+  gint latency_ms = 20;
+  guint next_seqnum;
+  guint first_seqnum;
+  guint final_seqnum;
+  GstBus *bus;
+  GstMessage *drop_msg;
+  gboolean have_message = FALSE;
+
+  g_object_set (h->element, "post-drop-messages", TRUE, NULL);
+  g_object_set (h->element, "drop-on-latency", TRUE, NULL);
+  next_seqnum = construct_deterministic_initial_state (h, latency_ms);
+
+  /* Create a bus to get the drop message on */
+  bus = gst_bus_new ();
+  gst_element_set_bus (h->element, bus);
+
+  /* Push 3 buffers in correct seqnum order with initial gap of 1, with the buffers
+   * arriving simultaneously in harness time. First buffer will wait for gap buffer,
+   * and the third arriving buffer will trigger the first to be dropped due to
+   * drop-on-latency.
+   */
+  first_seqnum = ++next_seqnum;
+  final_seqnum = next_seqnum + 2;
+  for (; next_seqnum <= final_seqnum; next_seqnum++) {
+    fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h,
+            generate_test_buffer_full (next_seqnum * TEST_BUF_DURATION,
+                next_seqnum, next_seqnum * TEST_RTP_TS_DURATION)));
+  }
+
+  /* Pop the resulting drop message and check its correctness */
+  while (!have_message &&
+      (drop_msg = gst_bus_pop_filtered (bus, GST_MESSAGE_ELEMENT)) != NULL) {
+    if (gst_message_has_name (drop_msg, "drop-msg")) {
+      fail_unless (check_drop_message (drop_msg, "drop-on-latency",
+              first_seqnum, 1));
+      have_message = TRUE;
+    }
+    gst_message_unref (drop_msg);
+  }
+  fail_unless (have_message);
+
+  /* Cleanup */
+  gst_element_set_bus (h->element, NULL);
+  gst_object_unref (bus);
+  gst_buffer_unref (gst_harness_take_all_data_as_buffer (h));
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_drop_messages_interval)
+{
+  GstHarness *h = gst_harness_new ("rtpjitterbuffer");
+  guint latency_ms = 100;
+  GstClockTime interval = 10;
+  guint next_seqnum;
+  guint final_seqnum;
+  GstBus *bus;
+  GstMessage *drop_msg;
+  GstClockType now;
+  guint num_late_not_sent = 0;
+  guint num_sent_msg = 0;
+
+  g_object_set (h->element, "post-drop-messages", TRUE, NULL);
+  g_object_set (h->element, "drop-messages-interval", interval, NULL);
+  next_seqnum = construct_deterministic_initial_state (h, latency_ms);
+
+  /* Create a bus to get the drop message on */
+  bus = gst_bus_new ();
+  gst_element_set_bus (h->element, bus);
+
+  /* Jump 1 second forward in time */
+  now = 1 * GST_SECOND;
+  gst_harness_set_time (h, now);
+
+  /* Push a packet with a gap of 3, that now is very late */
+  final_seqnum = next_seqnum + 3;
+
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h,
+          generate_test_buffer_full (now,
+              final_seqnum, final_seqnum * TEST_RTP_TS_DURATION)));
+
+  /* Pull and unref pushed buffer */
+  gst_buffer_unref (gst_harness_pull (h));
+
+  /* The 3 missing packets are now pushed with half the message "interval" between them.
+   * When arriving they are considered as "too-late". Only the first and third should trigger
+   * a drop_msg, as the second is dropped during the interval where no new messages will be sent.
+   * The second should have num-too-late=2, as the "too-late" event that never sent a message
+   * still increments the count of dropped "too-late" buffers.
+   */
+  for (; next_seqnum < final_seqnum; next_seqnum++) {
+    fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h,
+            generate_test_buffer (next_seqnum)));
+    num_late_not_sent++;
+
+    /* Pop a potential drop message and check its correctness */
+    while ((drop_msg = gst_bus_pop (bus)) != NULL) {
+      if (gst_message_has_name (drop_msg, "drop-msg")) {
+        fail_unless (check_drop_message (drop_msg, "too-late", next_seqnum,
+                num_late_not_sent));
+
+        num_late_not_sent = 0;
+        num_sent_msg++;
+      }
+      gst_message_unref (drop_msg);
+    }
+    /* Advance time half the minimum interval of sending drop messages */
+    now += (interval * GST_MSECOND) / 2;
+    gst_harness_set_time (h, now);
+  }
+  /* Exactly two drop messages should have been sent */
+  fail_unless (num_sent_msg == 2);
+
+  /* Cleanup */
+  gst_element_set_bus (h->element, NULL);
+  gst_object_unref (bus);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtpjitterbuffer_suite (void)
 {
@@ -3089,6 +3375,11 @@ rtpjitterbuffer_suite (void)
       G_N_ELEMENTS (test_considered_lost_packet_in_large_gap_arrives_input));
 
   tcase_add_test (tc_chain, test_performance);
+
+  tcase_add_test (tc_chain, test_drop_messages_too_late);
+  tcase_add_test (tc_chain, test_drop_messages_already_lost);
+  tcase_add_test (tc_chain, test_drop_messages_drop_on_latency);
+  tcase_add_test (tc_chain, test_drop_messages_interval);
 
   return s;
 }

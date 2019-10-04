@@ -134,6 +134,8 @@ enum
 #define DEFAULT_TS_OFFSET           0
 #define DEFAULT_MAX_TS_OFFSET_ADJUSTMENT 0
 #define DEFAULT_DO_LOST             FALSE
+#define DEFAULT_POST_DROP_MESSAGES  FALSE
+#define DEFAULT_DROP_MESSAGES_INTERVAL_MS   200
 #define DEFAULT_MODE                RTP_JITTER_BUFFER_MODE_SLAVE
 #define DEFAULT_PERCENT             0
 #define DEFAULT_DO_RETRANSMISSION   FALSE
@@ -164,6 +166,8 @@ enum
   PROP_TS_OFFSET,
   PROP_MAX_TS_OFFSET_ADJUSTMENT,
   PROP_DO_LOST,
+  PROP_POST_DROP_MESSAGES,
+  PROP_DROP_MESSAGES_INTERVAL,
   PROP_MODE,
   PROP_PERCENT,
   PROP_DO_RETRANSMISSION,
@@ -297,6 +301,8 @@ struct _GstRtpJitterBufferPrivate
   gint64 ts_offset;
   guint64 max_ts_offset_adjustment;
   gboolean do_lost;
+  gboolean post_drop_messages;
+  guint drop_messages_interval_ms;
   gboolean do_retransmission;
   gboolean rtx_next_seqnum;
   gint rtx_delay;
@@ -388,7 +394,20 @@ struct _GstRtpJitterBufferPrivate
   GstClockTime last_pts;
   guint64 last_rtptime;
   GstClockTime avg_jitter;
+
+  /* for dropped packet messages */
+  GstClockTime last_drop_msg_timestamp;
+  /* accumulators; reset every time a drop message is posted */
+  guint num_too_late;
+  guint num_already_lost;
+  guint num_drop_on_latency;
 };
+typedef enum
+{
+  REASON_TOO_LATE,
+  REASON_ALREADY_LOST,
+  REASON_DROP_ON_LATENCY
+} DropMessageReason;
 
 static GstStaticPadTemplate gst_rtp_jitter_buffer_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -490,6 +509,9 @@ static GstStructure *gst_rtp_jitter_buffer_create_stats (GstRtpJitterBuffer *
 static void update_rtx_stats (GstRtpJitterBuffer * jitterbuffer,
     const RtpTimer * timer, GstClockTime dts, gboolean success);
 
+static GstClockTime get_current_running_time (GstRtpJitterBuffer *
+    jitterbuffer);
+
 static void
 gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
 {
@@ -559,6 +581,49 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
   g_object_class_install_property (gobject_class, PROP_DO_LOST,
       g_param_spec_boolean ("do-lost", "Do Lost",
           "Send an event downstream when a packet is lost", DEFAULT_DO_LOST,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstRtpJitterBuffer:post-drop-messages:
+   *
+   * Post custom messages to the bus when a packet is dropped by the
+   * jitterbuffer due to arriving too late, being already considered lost,
+   * or being dropped due to the drop-on-latency property being enabled.
+   * Message is of type GST_MESSAGE_ELEMENT and contains a GstStructure named
+   * "drop-msg" with the following fields:
+   *
+   * * #guint   `seqnum`: Seqnum of dropped packet.
+   * * #guint64 `timestamp`: PTS timestamp of dropped packet.
+   * * #gstring `reason`: Reason for dropping the packet.
+   * * #guint   `num-too-late`: Number of packets arriving too late since
+   *    last drop message.
+   * * #guint   `num-already-lost`: Number of packets already considered lost
+   *    since drop message.
+   * * #guint   `num-drop-on-latency`: Number of packets dropped due to the
+   *    drop-on-latency property since last drop message.
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (gobject_class, PROP_POST_DROP_MESSAGES,
+      g_param_spec_boolean ("post-drop-messages", "Post drop messages",
+          "Post a custom message to the bus when a packet is dropped by the jitterbuffer",
+          DEFAULT_POST_DROP_MESSAGES,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstRtpJitterBuffer:drop-messages-interval:
+   *
+   * Minimal time in milliseconds between posting dropped packet messages, if enabled
+   * by setting property by setting #GstRtpJitterBuffer:post-drop-messages to %TRUE.
+   * If interval is set to 0, every dropped packet will result in a drop message being posted.
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (gobject_class, PROP_DROP_MESSAGES_INTERVAL,
+      g_param_spec_uint ("drop-messages-interval",
+          "Drop message interval",
+          "Minimal time between posting dropped packet messages", 0,
+          G_MAXUINT, DEFAULT_DROP_MESSAGES_INTERVAL_MS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
@@ -935,6 +1000,8 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer)
   priv->ts_offset = DEFAULT_TS_OFFSET;
   priv->max_ts_offset_adjustment = DEFAULT_MAX_TS_OFFSET_ADJUSTMENT;
   priv->do_lost = DEFAULT_DO_LOST;
+  priv->post_drop_messages = DEFAULT_POST_DROP_MESSAGES;
+  priv->drop_messages_interval_ms = DEFAULT_DROP_MESSAGES_INTERVAL_MS;
   priv->do_retransmission = DEFAULT_DO_RETRANSMISSION;
   priv->rtx_next_seqnum = DEFAULT_RTX_NEXT_SEQNUM;
   priv->rtx_delay = DEFAULT_RTX_DELAY;
@@ -956,6 +1023,10 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer)
   priv->last_pts = -1;
   priv->last_rtptime = -1;
   priv->avg_jitter = 0;
+  priv->last_drop_msg_timestamp = GST_CLOCK_TIME_NONE;
+  priv->num_too_late = 0;
+  priv->num_already_lost = 0;
+  priv->num_drop_on_latency = 0;
   priv->segment_seqnum = GST_SEQNUM_INVALID;
   priv->timers = rtp_timer_queue_new ();
   priv->rtx_stats_timers = rtp_timer_queue_new ();
@@ -1530,6 +1601,10 @@ gst_rtp_jitter_buffer_flush_stop (GstRtpJitterBuffer * jitterbuffer)
   priv->last_in_pts = 0;
   priv->equidistant = 0;
   priv->segment_seqnum = GST_SEQNUM_INVALID;
+  priv->last_drop_msg_timestamp = GST_CLOCK_TIME_NONE;
+  priv->num_too_late = 0;
+  priv->num_already_lost = 0;
+  priv->num_drop_on_latency = 0;
   GST_DEBUG_OBJECT (jitterbuffer, "flush and reset jitterbuffer");
   rtp_jitter_buffer_flush (priv->jbuf, NULL, NULL);
   rtp_jitter_buffer_disable_buffering (priv->jbuf, FALSE);
@@ -1936,6 +2011,59 @@ check_buffering_percent (GstRtpJitterBuffer * jitterbuffer, gint percent)
 
   return message;
 }
+
+/* call with jbuf lock held */
+static GstMessage *
+new_drop_message (GstRtpJitterBuffer * jitterbuffer, guint seqnum,
+    GstClockTime timestamp, DropMessageReason reason)
+{
+
+  GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
+  GstMessage *drop_msg = NULL;
+  GstStructure *s;
+  GstClockTime current_time;
+  GstClockTime time_diff;
+  const gchar *reason_str;
+
+  current_time = get_current_running_time (jitterbuffer);
+  time_diff = current_time - priv->last_drop_msg_timestamp;
+
+  if (reason == REASON_TOO_LATE) {
+    priv->num_too_late++;
+    reason_str = "too-late";
+  } else if (reason == REASON_ALREADY_LOST) {
+    priv->num_already_lost++;
+    reason_str = "already-lost";
+  } else if (reason == REASON_DROP_ON_LATENCY) {
+    priv->num_drop_on_latency++;
+    reason_str = "drop-on-latency";
+  } else {
+    GST_WARNING_OBJECT (jitterbuffer, "Invalid reason for drop message");
+    return drop_msg;
+  }
+
+  /* Only create new drop_msg if time since last drop_msg is larger that
+   * that the set interval, or if it is the first drop message posted */
+  if ((time_diff >= priv->drop_messages_interval_ms * GST_MSECOND) ||
+      (priv->last_drop_msg_timestamp == GST_CLOCK_TIME_NONE)) {
+
+    s = gst_structure_new ("drop-msg",
+        "seqnum", G_TYPE_UINT, seqnum,
+        "timestamp", GST_TYPE_CLOCK_TIME, timestamp,
+        "reason", G_TYPE_STRING, reason_str,
+        "num-too-late", G_TYPE_UINT, priv->num_too_late,
+        "num-already-lost", G_TYPE_UINT, priv->num_already_lost,
+        "num-drop-on-latency", G_TYPE_UINT, priv->num_drop_on_latency, NULL);
+
+    priv->last_drop_msg_timestamp = current_time;
+    priv->num_too_late = 0;
+    priv->num_already_lost = 0;
+    priv->num_drop_on_latency = 0;
+    drop_msg = gst_message_new_element (GST_OBJECT (jitterbuffer), s);
+  }
+  return drop_msg;
+}
+
 
 static inline GstClockTimeDiff
 timeout_offset (GstRtpJitterBuffer * jitterbuffer)
@@ -2689,6 +2817,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
   gboolean do_next_seqnum = FALSE;
   RTPJitterBufferItem *item;
   GstMessage *msg = NULL;
+  GstMessage *drop_msg = NULL;
   gboolean estimated_dts = FALSE;
   gint32 packet_rate, max_dropout, max_misorder;
   RtpTimer *timer = NULL;
@@ -2997,6 +3126,11 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
         GST_DEBUG_OBJECT (jitterbuffer, "Queue full, dropping old packet %p",
             old_item);
         priv->next_seqnum = (old_item->seqnum + old_item->count) & 0xffff;
+        if (priv->post_drop_messages) {
+          drop_msg =
+              new_drop_message (jitterbuffer, old_item->seqnum, old_item->pts,
+              REASON_DROP_ON_LATENCY);
+        }
         rtp_jitter_buffer_free_item (old_item);
       }
       /* we might have removed some head buffers, signal the pushing thread to
@@ -3057,6 +3191,8 @@ finished:
 
   if (msg)
     gst_element_post_message (GST_ELEMENT_CAST (jitterbuffer), msg);
+  if (drop_msg)
+    gst_element_post_message (GST_ELEMENT_CAST (jitterbuffer), drop_msg);
 
   return ret;
 
@@ -3095,6 +3231,9 @@ too_late:
     GST_DEBUG_OBJECT (jitterbuffer, "Packet #%d too late as #%d was already"
         " popped, dropping", seqnum, priv->last_popped_seqnum);
     priv->num_late++;
+    if (priv->post_drop_messages) {
+      drop_msg = new_drop_message (jitterbuffer, seqnum, pts, REASON_TOO_LATE);
+    }
     gst_buffer_unref (buffer);
     goto finished;
   }
@@ -3103,6 +3242,10 @@ already_lost:
     GST_DEBUG_OBJECT (jitterbuffer, "Packet #%d too late as it was already "
         "considered lost", seqnum);
     priv->num_late++;
+    if (priv->post_drop_messages) {
+      drop_msg =
+          new_drop_message (jitterbuffer, seqnum, pts, REASON_ALREADY_LOST);
+    }
     gst_buffer_unref (buffer);
     goto finished;
   }
@@ -4434,6 +4577,16 @@ gst_rtp_jitter_buffer_set_property (GObject * object,
       priv->do_lost = g_value_get_boolean (value);
       JBUF_UNLOCK (priv);
       break;
+    case PROP_POST_DROP_MESSAGES:
+      JBUF_LOCK (priv);
+      priv->post_drop_messages = g_value_get_boolean (value);
+      JBUF_UNLOCK (priv);
+      break;
+    case PROP_DROP_MESSAGES_INTERVAL:
+      JBUF_LOCK (priv);
+      priv->drop_messages_interval_ms = g_value_get_uint (value);
+      JBUF_UNLOCK (priv);
+      break;
     case PROP_MODE:
       JBUF_LOCK (priv);
       rtp_jitter_buffer_set_mode (priv->jbuf, g_value_get_enum (value));
@@ -4560,6 +4713,16 @@ gst_rtp_jitter_buffer_get_property (GObject * object,
     case PROP_DO_LOST:
       JBUF_LOCK (priv);
       g_value_set_boolean (value, priv->do_lost);
+      JBUF_UNLOCK (priv);
+      break;
+    case PROP_POST_DROP_MESSAGES:
+      JBUF_LOCK (priv);
+      g_value_set_boolean (value, priv->post_drop_messages);
+      JBUF_UNLOCK (priv);
+      break;
+    case PROP_DROP_MESSAGES_INTERVAL:
+      JBUF_LOCK (priv);
+      g_value_set_uint (value, priv->drop_messages_interval_ms);
       JBUF_UNLOCK (priv);
       break;
     case PROP_MODE:
