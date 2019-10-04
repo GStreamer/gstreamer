@@ -245,6 +245,7 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
   guint num, den;
   D3D11_TEXTURE2D_DESC desc = { 0, };
   ID3D11Texture2D *staging;
+  GError *error = NULL;
 
   GST_DEBUG_OBJECT (self, "set caps %" GST_PTR_FORMAT, caps);
 
@@ -349,8 +350,15 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
 
   if (!gst_d3d11_window_prepare (self->window, GST_VIDEO_SINK_WIDTH (self),
           GST_VIDEO_SINK_HEIGHT (self), video_par_n, video_par_d,
-          self->dxgi_format, caps)) {
+          self->dxgi_format, caps, &error)) {
+    GstMessage *error_msg;
+
     GST_ERROR_OBJECT (self, "cannot create swapchain");
+    error_msg = gst_message_new_error (GST_OBJECT_CAST (self),
+        error, "Failed to prepare d3d11window");
+    g_clear_error (&error);
+    gst_element_post_message (GST_ELEMENT (self), error_msg);
+
     return FALSE;
   }
 

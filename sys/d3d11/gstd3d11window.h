@@ -119,7 +119,8 @@ gboolean gst_d3d11_window_prepare (GstD3D11Window * window,
                                    guint aspect_ratio_n,
                                    guint aspect_ratio_d,
                                    DXGI_FORMAT format,
-                                   GstCaps * caps);
+                                   GstCaps * caps,
+                                   GError ** error);
 
 GstFlowReturn gst_d3d11_window_render (GstD3D11Window * window,
                                        ID3D11Texture2D * texture,

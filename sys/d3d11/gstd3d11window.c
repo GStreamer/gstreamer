@@ -71,7 +71,7 @@ static void gst_d3d11_window_get_property (GObject * object, guint prop_id,
 static void gst_d3d11_window_dispose (GObject * object);
 static void gst_d3d11_window_finalize (GObject * object);
 static gpointer gst_d3d11_window_thread_func (gpointer data);
-static gboolean _create_window (GstD3D11Window * self);
+static gboolean _create_window (GstD3D11Window * self, GError ** error);
 static void _open_window (GstD3D11Window * self);
 static void _close_window (GstD3D11Window * self);
 static void release_external_win_id (GstD3D11Window * self);
@@ -132,7 +132,6 @@ gst_d3d11_window_init (GstD3D11Window * self)
   g_cond_init (&self->cond);
 
   self->main_context = g_main_context_new ();
-  self->loop = g_main_loop_new (self->main_context, FALSE);
 
   self->force_aspect_ratio = DEFAULT_FORCE_ASPECT_RATIO;
   self->enable_navigation_events = DEFAULT_ENABLE_NAVIGATION_EVENTS;
@@ -274,16 +273,23 @@ running_cb (gpointer user_data)
   return G_SOURCE_REMOVE;
 }
 
+typedef struct
+{
+  GstD3D11Window *self;
+  GError **error;
+} GstD3D11ThreadFuncData;
+
 static gpointer
 gst_d3d11_window_thread_func (gpointer data)
 {
-  GstD3D11Window *self = GST_D3D11_WINDOW (data);
+  GstD3D11ThreadFuncData *func_data = (GstD3D11ThreadFuncData *) data;
+  GstD3D11Window *self = func_data->self;
   GSource *source;
 
   GST_DEBUG_OBJECT (self, "Enter loop");
   g_main_context_push_thread_default (self->main_context);
 
-  self->created = _create_window (self);
+  self->created = _create_window (self, func_data->error);
 
   source = g_idle_source_new ();
   g_source_set_callback (source, (GSourceFunc) running_cb, self, NULL);
@@ -397,7 +403,7 @@ release_external_win_id (GstD3D11Window * self)
 }
 
 static gboolean
-_create_window (GstD3D11Window * self)
+_create_window (GstD3D11Window * self, GError ** error)
 {
   WNDCLASSEX wc;
   ATOM atom = 0;
@@ -422,9 +428,11 @@ _create_window (GstD3D11Window * self)
     atom = RegisterClassEx (&wc);
 
     if (atom == 0) {
-      GST_ELEMENT_ERROR (self, RESOURCE, FAILED, (NULL),
-          ("Failed to register window class 0x%x",
-              (unsigned int) GetLastError ()));
+      GST_ERROR_OBJECT (self, "Failed to register window class 0x%x",
+          (unsigned int) GetLastError ());
+      g_set_error (error, GST_RESOURCE_ERROR,
+          GST_RESOURCE_ERROR_FAILED, "Failed to register window class 0x%x",
+          (unsigned int) GetLastError ());
       return FALSE;
     }
   } else {
@@ -443,8 +451,9 @@ _create_window (GstD3D11Window * self)
       0, 0, (HWND) NULL, (HMENU) NULL, hinstance, self);
 
   if (!self->internal_win_id) {
-    GST_ELEMENT_ERROR (self, RESOURCE, FAILED, (NULL),
-        ("Failed to create d3d11 window"));
+    GST_ERROR_OBJECT (self, "Failed to create d3d11 window");
+    g_set_error (error, GST_RESOURCE_ERROR,
+        GST_RESOURCE_ERROR_FAILED, "Failed to create d3d11 window");
     return FALSE;
   }
 
@@ -456,8 +465,9 @@ _create_window (GstD3D11Window * self)
 
   /* device_handle is set in the window_proc */
   if (!self->device_handle) {
-    GST_ELEMENT_ERROR (self, RESOURCE, FAILED, (NULL),
-        ("Failed to create device_handle"));
+    GST_ERROR_OBJECT (self, "device handle is not available");
+    g_set_error (error, GST_RESOURCE_ERROR,
+        GST_RESOURCE_ERROR_FAILED, "device handle is not available");
     return FALSE;
   }
 
@@ -785,12 +795,13 @@ mastering_display_gst_to_dxgi (GstVideoMasteringDisplayInfo * m,
 gboolean
 gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
     guint aspect_ratio_n, guint aspect_ratio_d, DXGI_FORMAT format,
-    GstCaps * caps)
+    GstCaps * caps, GError ** error)
 {
   DXGI_SWAP_CHAIN_DESC desc = { 0, };
   gboolean have_cll = FALSE;
   gboolean have_mastering = FALSE;
   gboolean hdr_api_available = FALSE;
+  GstD3D11ThreadFuncData data;
 
   g_return_val_if_fail (GST_IS_D3D11_WINDOW (window), FALSE);
   g_return_val_if_fail (aspect_ratio_n > 0, FALSE);
@@ -799,14 +810,26 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
   GST_DEBUG_OBJECT (window, "Prepare window with %dx%d format %d",
       width, height, format);
 
+  data.self = window;
+  data.error = error;
+
   g_mutex_lock (&window->lock);
-  if (!window->external_win_id) {
+  if (!window->external_win_id && !window->created) {
+    window->loop = g_main_loop_new (window->main_context, FALSE);
     window->thread = g_thread_new ("GstD3D11Window",
-        (GThreadFunc) gst_d3d11_window_thread_func, window);
+        (GThreadFunc) gst_d3d11_window_thread_func, &data);
     while (!g_main_loop_is_running (window->loop))
       g_cond_wait (&window->cond, &window->lock);
   }
   g_mutex_unlock (&window->lock);
+
+  if (!window->created) {
+    g_main_loop_quit (window->loop);
+    g_thread_join (window->thread);
+    g_main_loop_unref (window->loop);
+    window->loop = NULL;
+    window->thread = NULL;
+  }
 
   gst_video_info_from_caps (&window->info, caps);
   if (!gst_video_content_light_level_from_caps (&window->content_light_level,
