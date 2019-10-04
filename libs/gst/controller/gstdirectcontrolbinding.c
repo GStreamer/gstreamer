@@ -427,7 +427,7 @@ gst_direct_control_binding_get_value_array (GstControlBinding * _self,
     gpointer values_)
 {
   GstDirectControlBinding *self = GST_DIRECT_CONTROL_BINDING (_self);
-  gint i;
+  guint i;
   gdouble *src_val;
   gboolean res = FALSE;
   GstDirectControlBindingConvertValue convert;
@@ -470,7 +470,7 @@ gst_direct_control_binding_get_g_value_array (GstControlBinding * _self,
     GValue * values)
 {
   GstDirectControlBinding *self = GST_DIRECT_CONTROL_BINDING (_self);
-  gint i;
+  guint i;
   gdouble *src_val;
   gboolean res = FALSE;
   GType type;
