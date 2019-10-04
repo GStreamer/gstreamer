@@ -49,6 +49,12 @@
  *
  * The temp-location property will be used to notify the application of the
  * allocated filename.
+ *
+ * If the #GstQueue2:use-buffering property is set to TRUE, and any writable
+ * property is modified, #GstQueue2 will attempt to post a buffering message
+ * if the changes to the properties also cause the buffering percentage to be
+ * changed (for example, because the queue's capacity was changed and it already
+ * contains some data).
  */
 
 #ifdef HAVE_CONFIG_H
@@ -1142,10 +1148,7 @@ gst_queue2_get_buffering_message (GstQueue2 * queue)
 
       gst_message_set_buffering_stats (msg, queue->mode, queue->avg_in,
           queue->avg_out, queue->buffering_left);
-
-      queue->last_posted_buffering_percent = percent;
     }
-    queue->percent_changed = FALSE;
   }
 
   return msg;
@@ -1161,8 +1164,20 @@ gst_queue2_post_buffering (GstQueue2 * queue)
   msg = gst_queue2_get_buffering_message (queue);
   GST_QUEUE2_MUTEX_UNLOCK (queue);
 
-  if (msg != NULL)
-    gst_element_post_message (GST_ELEMENT_CAST (queue), msg);
+  if (msg != NULL) {
+    if (gst_element_post_message (GST_ELEMENT_CAST (queue), msg)) {
+      GST_QUEUE2_MUTEX_LOCK (queue);
+      /* Set these states only if posting the message succeeded. Otherwise,
+       * this post attempt failed, and the next one won't be done, because
+       * gst_queue2_get_buffering_message() checks these states and decides
+       * based on their values that it won't produce a message. */
+      queue->last_posted_buffering_percent = queue->percent_changed;
+      queue->percent_changed = FALSE;
+      GST_QUEUE2_MUTEX_UNLOCK (queue);
+      GST_DEBUG_OBJECT (queue, "successfully posted buffering message");
+    } else
+      GST_DEBUG_OBJECT (queue, "could not post buffering message");
+  }
 
   g_mutex_unlock (&queue->buffering_post_lock);
 }
@@ -2181,11 +2196,26 @@ gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
       update_buffering (queue);
       msg = gst_queue2_get_buffering_message (queue);
       if (msg) {
+        gboolean post_ok;
+
         GST_QUEUE2_MUTEX_UNLOCK (queue);
+
         g_mutex_lock (&queue->buffering_post_lock);
-        gst_element_post_message (GST_ELEMENT_CAST (queue), msg);
+        post_ok = gst_element_post_message (GST_ELEMENT_CAST (queue), msg);
         g_mutex_unlock (&queue->buffering_post_lock);
+
         GST_QUEUE2_MUTEX_LOCK (queue);
+
+        if (post_ok) {
+          /* Set these states only if posting the message succeeded. Otherwise,
+           * this post attempt failed, and the next one won't be done, because
+           * gst_queue2_get_buffering_message() checks these states and decides
+           * based on their values that it won't produce a message. */
+          queue->last_posted_buffering_percent = queue->percent_changed;
+          queue->percent_changed = FALSE;
+          GST_DEBUG_OBJECT (queue, "successfully posted buffering message");
+        } else
+          GST_DEBUG_OBJECT (queue, "could not post buffering message");
       }
     }
 
@@ -3755,6 +3785,14 @@ gst_queue2_change_state (GstElement * element, GstStateChange transition)
       gst_event_replace (&queue->stream_start_event, NULL);
       GST_QUEUE2_MUTEX_UNLOCK (queue);
       query_downstream_bitrate (queue);
+
+      /* Post a buffering message now to make sure the application receives
+       * a buffering message as early as possible. This prevents situations
+       * where the pipeline's state is set to PLAYING too early, before
+       * buffering actually finished. */
+      update_buffering (queue);
+      gst_queue2_post_buffering (queue);
+
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;

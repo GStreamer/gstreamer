@@ -661,6 +661,58 @@ GST_START_TEST (test_bitrate_query)
 
 GST_END_TEST;
 
+GST_START_TEST (test_ready_paused_buffering_message)
+{
+  /* This test verifies that a buffering message is posted during the
+   * READY->PAUSED state change. */
+
+  GstElement *pipe;
+  GstElement *fakesrc, *queue2, *fakesink;
+
+  /* Set up simple test pipeline. */
+
+  pipe = gst_pipeline_new ("pipeline");
+
+  /* Set up the fakesrc to actually produce data. */
+  fakesrc = gst_element_factory_make ("fakesrc", NULL);
+  fail_unless (fakesrc != NULL);
+  g_object_set (G_OBJECT (fakesrc), "format", (gint) 3, "filltype", (gint) 2,
+      "sizetype", (gint) 2, "sizemax", (gint) 4096, "datarate", (gint) 4096,
+      NULL);
+
+  queue2 = gst_element_factory_make ("queue2", NULL);
+  fail_unless (queue2 != NULL);
+  /* Note that use-buffering is set _before_ the queue2 got added to pipe.
+   * This is intentional. queue2's set_property function attempts to post a
+   * buffering message. This fails silently, because without having been added
+   * to a bin, queue2 won't have been assigned a bus, so it cannot post that
+   * message anywhere. In such a case, the next attempt to post a buffering
+   * message must always actually be attempted. (Normally, queue2 performs
+   * internal checks to see whether or not the buffering message would be
+   * redundant because a prior message with the same percentage was already
+   * posted. But these checked only make sense if the previous posting attempt
+   * succeeded.) */
+  g_object_set (queue2, "use-buffering", (gboolean) TRUE, NULL);
+
+  fakesink = gst_element_factory_make ("fakesink", NULL);
+  fail_unless (fakesink != NULL);
+
+  gst_bin_add_many (GST_BIN (pipe), fakesrc, queue2, fakesink, NULL);
+
+  /* Set the pipeline to PAUSED. This should cause queue2 to attempt to post
+   * a buffering message during its READY->PAUSED state change. And this should
+   * succeed, since queue2 has been added to pipe by now. */
+  gst_element_set_state (pipe, GST_STATE_PAUSED);
+
+  /* Look for the expected 0% buffering message. */
+  CHECK_FOR_BUFFERING_MSG (pipe, 0);
+
+  gst_element_set_state (pipe, GST_STATE_NULL);
+  gst_object_unref (pipe);
+}
+
+GST_END_TEST;
+
 static Suite *
 queue2_suite (void)
 {
@@ -678,6 +730,7 @@ queue2_suite (void)
   tcase_add_test (tc_chain, test_percent_overflow);
   tcase_add_test (tc_chain, test_small_ring_buffer);
   tcase_add_test (tc_chain, test_bitrate_query);
+  tcase_add_test (tc_chain, test_ready_paused_buffering_message);
 
   return s;
 }
