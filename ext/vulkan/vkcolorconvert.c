@@ -1388,6 +1388,8 @@ _create_sampler (GstVulkanColorConvert * conv)
   /* *INDENT-OFF* */
   VkSamplerCreateInfo samplerInfo = {
       .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+      .pNext = NULL,
+      .flags = 0,
       .magFilter = VK_FILTER_LINEAR,
       .minFilter = VK_FILTER_LINEAR,
       .addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
