@@ -172,7 +172,7 @@ enum
 #define DEFAULT_TIMEBASE_D                                     30
 #define DEFAULT_BIT_DEPTH                              AOM_BITS_8
 #define DEFAULT_THREADS                                         0
-#define DEFAULT_ROW_MT                                      FALSE
+#define DEFAULT_ROW_MT                                       TRUE
 
 static void gst_av1_enc_finalize (GObject * object);
 static void gst_av1_enc_set_property (GObject * object, guint prop_id,
