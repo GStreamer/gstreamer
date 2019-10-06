@@ -144,7 +144,9 @@ enum
   PROP_BUF_INITIAL_SZ,
   PROP_BUF_OPTIMAL_SZ,
   PROP_THREADS,
-  PROP_ROW_MT
+  PROP_ROW_MT,
+  PROP_TILE_COLUMNS,
+  PROP_TILE_ROWS
 };
 
 /* From av1/av1_cx_iface.c */
@@ -173,6 +175,8 @@ enum
 #define DEFAULT_BIT_DEPTH                              AOM_BITS_8
 #define DEFAULT_THREADS                                         0
 #define DEFAULT_ROW_MT                                       TRUE
+#define DEFAULT_TILE_COLUMNS                                    0
+#define DEFAULT_TILE_ROWS                                       0
 
 static void gst_av1_enc_finalize (GObject * object);
 static void gst_av1_enc_set_property (GObject * object, guint prop_id,
@@ -380,6 +384,19 @@ gst_av1_enc_class_init (GstAV1EncClass * klass)
           "Enable row based multi-threading",
           DEFAULT_ROW_MT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #endif
+
+  g_object_class_install_property (gobject_class, PROP_TILE_COLUMNS,
+      g_param_spec_uint ("tile-columns", "Number of tile columns",
+          "Partition into separate vertical tile columns from image frame which "
+          "can enable parallel encoding",
+          0, 6, DEFAULT_TILE_COLUMNS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_TILE_ROWS,
+      g_param_spec_uint ("tile-rows", "Number of tile rows",
+          "Partition into separate horizontal tile rows from image frame which "
+          "can enable parallel encoding",
+          0, 6, DEFAULT_TILE_ROWS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -402,6 +419,8 @@ gst_av1_enc_init (GstAV1Enc * av1enc)
   av1enc->format = AOM_IMG_FMT_I420;
   av1enc->threads = DEFAULT_THREADS;
   av1enc->row_mt = DEFAULT_ROW_MT;
+  av1enc->tile_columns = DEFAULT_TILE_COLUMNS;
+  av1enc->tile_rows = DEFAULT_TILE_ROWS;
 
   av1enc->aom_cfg.rc_dropframe_thresh = DEFAULT_DROP_FRAME;
   av1enc->aom_cfg.rc_resize_mode = DEFAULT_RESIZE_MODE;
@@ -692,6 +711,10 @@ gst_av1_enc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
   GST_AV1_ENC_APPLY_CODEC_CONTROL (av1enc, AV1E_SET_ROW_MT,
       (av1enc->row_mt ? 1 : 0));
 #endif
+  GST_AV1_ENC_APPLY_CODEC_CONTROL (av1enc, AV1E_SET_TILE_COLUMNS,
+      av1enc->tile_columns);
+  GST_AV1_ENC_APPLY_CODEC_CONTROL (av1enc, AV1E_SET_TILE_ROWS,
+      av1enc->tile_rows);
   g_mutex_unlock (&av1enc->encoder_lock);
 
   return TRUE;
@@ -948,6 +971,16 @@ gst_av1_enc_set_property (GObject * object, guint prop_id,
           (av1enc->row_mt ? 1 : 0));
       break;
 #endif
+    case PROP_TILE_COLUMNS:
+      av1enc->tile_columns = g_value_get_uint (value);
+      GST_AV1_ENC_APPLY_CODEC_CONTROL (av1enc, AV1E_SET_TILE_COLUMNS,
+          av1enc->tile_columns);
+      break;
+    case PROP_TILE_ROWS:
+      av1enc->tile_rows = g_value_get_uint (value);
+      GST_AV1_ENC_APPLY_CODEC_CONTROL (av1enc, AV1E_SET_TILE_ROWS,
+          av1enc->tile_rows);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1037,6 +1070,12 @@ gst_av1_enc_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_boolean (value, av1enc->row_mt);
       break;
 #endif
+    case PROP_TILE_COLUMNS:
+      g_value_set_uint (value, av1enc->tile_columns);
+      break;
+    case PROP_TILE_ROWS:
+      g_value_set_uint (value, av1enc->tile_rows);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;

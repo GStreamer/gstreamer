@@ -112,6 +112,8 @@ struct _GstAV1Enc
   gint cpu_used;
   gint threads;
   gboolean row_mt;
+  guint tile_columns;
+  guint tile_rows;
 
   /* state */
   gboolean encoder_inited;
