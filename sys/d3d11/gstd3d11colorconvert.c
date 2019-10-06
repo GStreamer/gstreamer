@@ -1853,10 +1853,15 @@ do_convert (GstD3D11Device * device, DoConvertData * data)
   UINT vertex_stride = sizeof (VertexData);
   UINT offsets = 0;
   ID3D11ShaderResourceView *clear_view[GST_VIDEO_MAX_PLANES] = { NULL, };
-  gint i;
+  ID3D11ShaderResourceView *resource_view[GST_VIDEO_MAX_PLANES] = { NULL, };
+  ID3D11RenderTargetView *render_view[GST_VIDEO_MAX_PLANES] = { NULL, };
+  gint i, j, view_index;
+  gboolean copy_input = FALSE;
+  gboolean copy_output = FALSE;
 
   context_handle = gst_d3d11_device_get_device_context_handle (device);
 
+  view_index = 0;
   for (i = 0; i < gst_buffer_n_memory (data->in_buf); i++) {
     GstMemory *mem = gst_buffer_peek_memory (data->in_buf, i);
     GstD3D11Memory *d3d11_mem;
@@ -1869,14 +1874,66 @@ do_convert (GstD3D11Device * device, DoConvertData * data)
     gst_memory_unmap (mem, &info);
 
     d3d11_mem = (GstD3D11Memory *) mem;
-
-    ID3D11DeviceContext_CopySubresourceRegion (context_handle,
-        (ID3D11Resource *) self->in_texture[i], 0, 0, 0, 0,
-        (ID3D11Resource *) d3d11_mem->texture, 0, NULL);
+    if (gst_d3d11_memory_ensure_shader_resource_view (mem)) {
+      for (j = 0; j < d3d11_mem->num_shader_resource_views; j++) {
+        resource_view[view_index] = d3d11_mem->shader_resource_view[j];
+        view_index++;
+      }
+    } else {
+      copy_input = TRUE;
+      break;
+    }
   }
 
-  ID3D11DeviceContext_OMSetRenderTargets (context_handle,
-      self->num_output_view, self->render_target_view, NULL);
+  /* if input memory has no resource view,
+   * copy texture into our fallback texture */
+  if (copy_input) {
+    for (i = 0; i < gst_buffer_n_memory (data->in_buf); i++) {
+      GstMemory *mem = gst_buffer_peek_memory (data->in_buf, i);
+      GstD3D11Memory *d3d11_mem;
+
+      g_assert (gst_is_d3d11_memory (mem));
+
+      d3d11_mem = (GstD3D11Memory *) mem;
+
+      ID3D11DeviceContext_CopySubresourceRegion (context_handle,
+          (ID3D11Resource *) self->in_texture[i], 0, 0, 0, 0,
+          (ID3D11Resource *) d3d11_mem->texture, 0, NULL);
+    }
+  }
+
+  view_index = 0;
+  for (i = 0; i < gst_buffer_n_memory (data->out_buf); i++) {
+    GstMemory *mem = gst_buffer_peek_memory (data->out_buf, i);
+    GstD3D11Memory *d3d11_mem;
+
+    g_assert (gst_is_d3d11_memory (mem));
+
+    d3d11_mem = (GstD3D11Memory *) mem;
+
+    if (gst_d3d11_memory_ensure_render_target_view (mem)) {
+      for (j = 0; j < d3d11_mem->num_render_target_views; j++) {
+        render_view[view_index] = d3d11_mem->render_target_view[j];
+        view_index++;
+      }
+    } else {
+      copy_output = TRUE;
+      break;
+    }
+  }
+
+  if (copy_output) {
+    GST_TRACE_OBJECT (self, "Render to fallback output texture");
+
+    ID3D11DeviceContext_OMSetRenderTargets (context_handle,
+        self->num_output_view, self->render_target_view, NULL);
+  } else {
+    GST_TRACE_OBJECT (self, "Render to output texture directly");
+
+    ID3D11DeviceContext_OMSetRenderTargets (context_handle,
+        self->num_output_view, render_view, NULL);
+  }
+
   ID3D11DeviceContext_IASetPrimitiveTopology (context_handle,
       D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
   ID3D11DeviceContext_IASetInputLayout (context_handle, self->layout);
@@ -1895,8 +1952,17 @@ do_convert (GstD3D11Device * device, DoConvertData * data)
         0, 1, &self->const_buffer);
   }
 
-  ID3D11DeviceContext_PSSetShaderResources (context_handle,
-      0, self->num_input_view, self->shader_resource_view);
+  if (copy_input) {
+    GST_TRACE_OBJECT (self, "Render using fallback input texture");
+
+    ID3D11DeviceContext_PSSetShaderResources (context_handle,
+        0, self->num_input_view, self->shader_resource_view);
+  } else {
+    GST_TRACE_OBJECT (self, "Use input texture resource without copy");
+
+    ID3D11DeviceContext_PSSetShaderResources (context_handle,
+        0, self->num_input_view, resource_view);
+  }
 
   /* FIXME: handle multiple shader case */
   ID3D11DeviceContext_PSSetShader (context_handle, self->pixel_shader, NULL, 0);
@@ -1907,17 +1973,19 @@ do_convert (GstD3D11Device * device, DoConvertData * data)
   ID3D11DeviceContext_PSSetShaderResources (context_handle,
       0, self->num_input_view, clear_view);
 
-  for (i = 0; i < gst_buffer_n_memory (data->out_buf); i++) {
-    GstMemory *mem = gst_buffer_peek_memory (data->out_buf, i);
-    GstD3D11Memory *d3d11_mem;
+  if (copy_output) {
+    for (i = 0; i < gst_buffer_n_memory (data->out_buf); i++) {
+      GstMemory *mem = gst_buffer_peek_memory (data->out_buf, i);
+      GstD3D11Memory *d3d11_mem;
 
-    g_assert (gst_is_d3d11_memory (mem));
+      g_assert (gst_is_d3d11_memory (mem));
 
-    d3d11_mem = (GstD3D11Memory *) mem;
+      d3d11_mem = (GstD3D11Memory *) mem;
 
-    ID3D11DeviceContext_CopySubresourceRegion (context_handle,
-        (ID3D11Resource *) d3d11_mem->texture, 0, 0, 0, 0,
-        (ID3D11Resource *) self->out_texture[i], 0, NULL);
+      ID3D11DeviceContext_CopySubresourceRegion (context_handle,
+          (ID3D11Resource *) d3d11_mem->texture, 0, 0, 0, 0,
+          (ID3D11Resource *) self->out_texture[i], 0, NULL);
+    }
   }
 }
 
