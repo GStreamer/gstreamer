@@ -107,6 +107,12 @@ struct _GstD3D11Memory
   ID3D11Texture2D *texture;
   ID3D11Texture2D *staging;
 
+  ID3D11ShaderResourceView *shader_resource_view[GST_VIDEO_MAX_PLANES];
+  guint num_shader_resource_views;
+
+  ID3D11RenderTargetView *render_target_view[GST_VIDEO_MAX_PLANES];
+  guint num_render_target_views;
+
   GstVideoInfo info;
 
   guint plane;
@@ -154,6 +160,10 @@ GstMemory *         gst_d3d11_allocator_alloc     (GstD3D11Allocator * allocator
                                                    GstD3D11AllocationParams * params);
 
 gboolean            gst_is_d3d11_memory           (GstMemory * mem);
+
+gboolean            gst_d3d11_memory_ensure_shader_resource_view (GstMemory * mem);
+
+gboolean            gst_d3d11_memory_ensure_render_target_view (GstMemory * mem);
 
 G_END_DECLS
 
