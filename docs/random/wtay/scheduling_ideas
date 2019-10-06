@@ -473,7 +473,7 @@ without connections are removed from the group.
 
 It is possible that when an element still has a connection with some other
 element in the group, the group has to be split up anyway. This can happen
-in fakesrc ! indentity ! identity ! fakesink when we break the connection
+in fakesrc ! identity ! identity ! fakesink when we break the connection
 between the two identity elements. We have to be careful here in the cothread
 case that we don't take away the running cothread from under the elements.
 In the non-cothread case we can just move the elements to another new group.

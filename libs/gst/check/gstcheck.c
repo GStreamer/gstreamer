@@ -1217,7 +1217,7 @@ weak_notify (DestroyedObjectStruct * destroyed, GObject ** object)
  *
  * Unrefs @object_to_unref and checks that is has properly been
  * destroyed, also checks that the other objects passed in
- * parametter have been destroyed as a concequence of
+ * parameter have been destroyed as a concequence of
  * unrefing @object_to_unref. Last variable argument should be NULL.
  *
  * Since: 1.6

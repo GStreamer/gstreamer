@@ -37,13 +37,13 @@ HOW THE BUILD SYSTEM IS SET UP
 Hotdoc build targets are generated for each documentation 'components' (ie. hotdoc
 subprojects). This includes libraries documentation and one target per GStreamer plugin.
 
-One can build a specific documentation target by explicitely building the target,
+One can build a specific documentation target by explicitly building the target,
 for example to build the GStreamer core library documentation (adapt the paths if you
 are using `gst-build`):
 
     ninja docs/libgstreamer-doc
 
-Then the documentation will be avalaible in `docs/libgstreamer-doc/html/`.
+Then the documentation will be available in `docs/libgstreamer-doc/html/`.
 
 SPELL CHECKING
 --------------

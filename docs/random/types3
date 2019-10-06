@@ -166,7 +166,7 @@ mpeg2dec: an mpeg video decoder that can do mpeg1 and mpeg2.
   }
 
 
-5. capabilty compatibility
+5. capability compatibility
 --------------------------
 
 Two pads are compatible if:

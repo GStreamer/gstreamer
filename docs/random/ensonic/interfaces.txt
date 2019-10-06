@@ -37,7 +37,7 @@ $Id$
         - a label: giving a title to the group
         - a role:
           - this can give the UI a hint about the purpose of the controls
-          - this only makes sense, if we dont make this a thousand templates
+          - this only makes sense, if we don't make this a thousand templates
         - a list of dparams or properties
     - question
       - should this be aware of instruments (voice-groups)

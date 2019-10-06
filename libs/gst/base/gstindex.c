@@ -39,7 +39,7 @@
  * The application that wants to index the stream will create a new index object
  * using gst_index_new() or gst_index_factory_make(). The index is assigned to a
  * specific element, a bin or the whole pipeline. This will cause indexable
- * elements to add entires to the index while playing.
+ * elements to add entries to the index while playing.
  */
 
 /* FIXME: complete gobject annotations */

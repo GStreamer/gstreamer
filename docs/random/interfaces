@@ -63,7 +63,7 @@ facour of it...
 OK, so an element exposes interfaces. This allows us to think of
 the idea of embedding interfaces (dynamically, of course) in the
 GstElement object. Think of an object being able to register an
-indefinate number of interfaces per object instance, and a client
+indefinite number of interfaces per object instance, and a client
 application could then enumerate interfaces and instantiate one.
 Glib gives us GInterface for this purpose. The disadvantage of
 this is that it's on a per-class basis, not a per-instance basis.
@@ -81,7 +81,7 @@ bad thing. It does improve performance compared to action signals!
 So an element contains interfaces. But where are these interfaces
 described? And who creates them? I suggest that we do that just as
 we handle gstvideo and gstaudio right now (these libs do *nothing*
-useful currently, so this'd make them a lot more interesting).
+useful currently, so this would make them a lot more interesting).
 These interfaces inherit from GstInterface. The functions that
 are needed, can be provided through a class object. The element is
 then responsible for storing variables and so on. gstvideo/audio

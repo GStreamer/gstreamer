@@ -808,7 +808,7 @@ gst_date_time_new_from_iso8601_string (const gchar * string)
       goto ymd;
 
     string += 10;
-    /* Exit if there is no expeceted value on this stage */
+    /* Exit if there is no expected value on this stage */
     if (!(*string == 'T' || *string == '-' || *string == ' '))
       goto ymd;
 

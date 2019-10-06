@@ -353,7 +353,7 @@ New element features and additions
 
 -   rtpjitterbuffer has improved end-of-stream handling
 
--   rtpmp4vpay will be prefered over rtpmp4gpay for MPEG-4 video in
+-   rtpmp4vpay will be preferred over rtpmp4gpay for MPEG-4 video in
     autoplugging scenarios now
 
 -   rtspsrc now allows applications to send RTSP SET_PARAMETER and
@@ -1208,7 +1208,7 @@ Cerbero has seen a number of improvements:
     used in order to re-produce a specific build. To set a manifest, you
     can set manifest = 'my_manifest.xml' in your configuration file, or
     use the --manifest command line option. The command line option will
-    take precendence over anything specific in the configuration file.
+    take precedence over anything specific in the configuration file.
 
 -   The new build-deps command can be used to build only the
     dependencies of a recipe, without the recipe itself.

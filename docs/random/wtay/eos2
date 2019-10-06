@@ -101,7 +101,7 @@ case 3)
 
   after the queues have sent out their last buffer, they calls eos on their
   src pads.
-  the parent already has the two queues in the EOS provider list so they dont
+  the parent already has the two queues in the EOS provider list so they don't
   get added twice.
   the two queues perform gst_pad_eos () on their pads when the queue is empty,
   the parent removes the EOS providers from its list, when the list is empty,

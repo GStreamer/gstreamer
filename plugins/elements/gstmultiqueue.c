@@ -3261,7 +3261,7 @@ gst_single_queue_new (GstMultiQueue * mqueue, guint id)
   GST_MULTI_QUEUE_MUTEX_UNLOCK (mqueue);
 
   /* only activate the pads when we are not in the NULL state
-   * and add the pad under the state_lock to prevend state changes
+   * and add the pad under the state_lock to prevent state changes
    * between activating and adding */
   g_rec_mutex_lock (GST_STATE_GET_LOCK (mqueue));
   if (GST_STATE_TARGET (mqueue) != GST_STATE_NULL) {

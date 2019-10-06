@@ -457,7 +457,7 @@ class GdbGValue:
                     # it is not a string-like type
                     if gvalue_type.fields()[1].type == value.type:
                         # don't print the raw GValue union
-                        v = "<unkown type: %s>" % tname
+                        v = "<unknown type: %s>" % tname
                     else:
                         v = str(value)
         except gdb.MemoryError:
@@ -1077,7 +1077,7 @@ Usage gst-print <gstreamer-object>"""
         elif g_inherits_type(value, "GstEvent"):
             obj = GdbGstCaps(value)
         else:
-            raise Exception("'%s' has an unkown type" % arg)
+            raise Exception("'%s' has an unknown type" % arg)
 
         obj.print(0)
 
@@ -1192,6 +1192,6 @@ def register(obj):
     if obj is None:
         obj = gdb
 
-    # Make sure this is always used befor the glib lookup function.
+    # Make sure this is always used before the glib lookup function.
     # Otherwise the gobject pretty printer is used for GstObjects
     obj.pretty_printers.insert(0, gst_pretty_printer_lookup)

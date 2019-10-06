@@ -31,9 +31,9 @@ Network Transparent elements
      in parallel with the datastream so the event path should
      use a different connection.
      
-4) GStreamer deamon
+4) GStreamer daemon
 
-   - each host has to run a deamon that listens for
+   - each host has to run a daemon that listens for
      commands and creates elements/pipelines and performs all
      operations on the real pipeline.
 

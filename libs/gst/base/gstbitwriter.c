@@ -84,7 +84,7 @@ gst_bit_writer_new_with_size (guint size, gboolean fixed)
  *
  * Creates a new #GstBitWriter instance with the given memory area. If
  * @initialized is %TRUE it is possible to read @size bits from the
- * #GstBitWriter from the beginnig.
+ * #GstBitWriter from the beginning.
  *
  * Free-function: gst_bit_writer_free
  *
@@ -341,7 +341,7 @@ gst_bit_writer_get_data (const GstBitWriter * bitwriter)
  * @bitwriter: a #GstBitWriter instance
  * @pos: The new position in bits
  *
- * Set the new postion of data end which should be the new size of @data.
+ * Set the new position of data end which should be the new size of @data.
  *
  * Returns: %TRUE if successful, %FALSE otherwise
  */

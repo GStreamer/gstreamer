@@ -973,7 +973,7 @@ GST_START_TEST (test_flushing_seek)
   fail_unless_equals_int (flush_start_events, 0);
   fail_unless_equals_int (flush_stop_events, 0);
 
-  /* flush ogg:sink_0. This flushs collectpads, calls ::flush() and sends
+  /* flush ogg:sink_0. This flushes collectpads, calls ::flush() and sends
    * FLUSH_START downstream */
   fail_unless (gst_pad_push_event (srcpad1, gst_event_new_flush_start ()));
   fail_unless_equals_int (flush_start_events, 1);

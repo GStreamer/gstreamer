@@ -77,7 +77,7 @@ gst_pads_insert_link (e1.src, e4.sink, e5.src, e6.sink);
     at runtime
   * it can be used in a pipeline to remove/insert elements at runtime
 * element with 1 source- and 1 sinkpad
-* when both connected it passes data thru
+* when both connected it passes data through
 * if src is not connected it drops received buffers
 * if sink is not connected
   * it does not push

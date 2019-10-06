@@ -54,7 +54,7 @@ EOS denial: An element can deny an EOS call by returning FALSE on the
 ---------------------
 
 EOS is currently implemented by selectively disabling scheduling of
-the chains. This procedure continues untill a bin/thread has no more
+the chains. This procedure continues until a bin/thread has no more
 chains left to schedule, at which point it will fire the EOS signal.
 
 A gboolean was added to the chain structure to indicate if this chain

@@ -2,7 +2,7 @@ Autoplugger V2
 ==============
 
 The current autoplugger as described in autoplug1 has some
-serious shortcommings:
+serious shortcomings:
 
  - it is embedded in GstPipeline and cannot be used with a 
    generic interface. A lot of complexity is inside the 

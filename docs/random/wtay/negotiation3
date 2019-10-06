@@ -50,7 +50,7 @@ and then call the do_link function on the peer pad. The do_link function can onl
 accept or refuse the provided caps.
 
 For autopluggers it is important to know when the pad is ready to start the negotiation.
-It is also inportant to know when the negotiation failed and it must be possible to 
+It is also important to know when the negotiation failed and it must be possible to 
 restart the negotiation with another element. This functionality will be provided
 with signals.
 

@@ -305,8 +305,8 @@
    -bad  asfmux:        asfmux: ASF muxer
    -bad  asfmux:        asfparse: ASF parser
    -bad  asfmux:        rtpasfpay: RTP ASF payloader
-   -bad  autoconvert:   autoconvert: Select convertor based on caps
-   -bad  autoconvert:   autovideoconvert: Select color space convertor based on caps
+   -bad  autoconvert:   autoconvert: Select converter based on caps
+   -bad  autoconvert:   autovideoconvert: Select color space converter based on caps
    -bad  avcsrc:        avcsrc:
 
          bluetooth:     a2dpsink: Bluetooth A2DP sink

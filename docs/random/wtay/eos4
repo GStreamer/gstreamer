@@ -33,7 +33,7 @@ case 1)
   all the pads in i1 and fsk1 to EOS too. none of these elements
   override the default behaviour so gst_pad_set_eos returns TRUE.
 
-  fakesrc signals EOS.  since an element in chain1 has signales
+  fakesrc signals EOS.  since an element in chain1 has signals
   EOS, chain1 becomes EOS. All the elements in the chain are set
   to the READY state and the chain is not scheduled anymore because
   its EOS flag is on.

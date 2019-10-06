@@ -98,7 +98,7 @@ Questions
  2) Threading:
 
    - Can signals be emitted from any thread?
-   - what operations are permited from a signal handler?
+   - what operations are permitted from a signal handler?
 
  3) Error reporting
 

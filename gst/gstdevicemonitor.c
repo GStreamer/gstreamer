@@ -900,7 +900,7 @@ gst_device_monitor_set_show_all_devices (GstDeviceMonitor * monitor,
  * gst_device_monitor_get_show_all_devices:
  * @monitor: a #GstDeviceMonitor
  *
- * Get if @monitor is curretly showing all devices, even those from hidden
+ * Get if @monitor is currently showing all devices, even those from hidden
  * providers.
  *
  * Returns: %TRUE when all devices will be shown.

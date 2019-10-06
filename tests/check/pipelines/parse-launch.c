@@ -321,9 +321,9 @@ static const gchar *expected_failures[] = {
   "fakesrc ! video/raw,format=(antwerp)monkeys ! fakesink silent=true",
   /* checks: Empty pipeline is invalid */
   "",
-  /* checks: Link without sink element failes */
+  /* checks: Link without sink element fails */
   "fakesrc ! ",
-  /* checks: Link without src element failes */
+  /* checks: Link without src element fails */
   " ! fakesink silent=true",
   /* checks: Source URI for which no element exists is a failure */
   "borky://fdaffd ! fakesink silent=true",

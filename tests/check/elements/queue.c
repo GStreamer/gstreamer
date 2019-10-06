@@ -183,7 +183,7 @@ setup_sink_pad (GstElement * element, GstStaticPadTemplate * tmpl)
 
 /* set queue size to 2 buffers
  * pull 1 buffer
- * check over/underuns
+ * check over/underruns
  */
 GST_START_TEST (test_non_leaky_underrun)
 {
@@ -225,9 +225,9 @@ queue_overrun_link_and_activate (GstElement * queue, gpointer user_data)
 
 /* set queue size to 2 buffers
  * push 2 buffers
- * check over/underuns
+ * check over/underruns
  * push 1 more buffer
- * check over/underuns again
+ * check over/underruns again
  */
 GST_START_TEST (test_non_leaky_overrun)
 {
@@ -320,9 +320,9 @@ GST_END_TEST;
 
 /* set queue size to 2 buffers
  * push 2 buffers
- * check over/underuns
+ * check over/underruns
  * push 1 more buffer
- * check over/underuns again
+ * check over/underruns again
  * check which buffer was leaked
  */
 GST_START_TEST (test_leaky_upstream)
@@ -409,9 +409,9 @@ GST_END_TEST;
 
 /* set queue size to 2 buffers
  * push 2 buffers
- * check over/underuns
+ * check over/underruns
  * push 1 more buffer
- * check over/underuns again
+ * check over/underruns again
  * check which buffer was leaked
  */
 GST_START_TEST (test_leaky_downstream)

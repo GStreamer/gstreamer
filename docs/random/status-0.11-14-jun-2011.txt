@@ -87,7 +87,7 @@ For the sticky events to work with SEGMENT events, we needed to change
 the SEGMENT event so that it became selfcontained. The complicated segment
 accumulation logic of 0.10 was simply removed and replaced with pad offsets.
 
-It is now possible to tweak the timing of the data comming from a pad by
+It is now possible to tweak the timing of the data coming from a pad by
 using the pad offset property.
 
 

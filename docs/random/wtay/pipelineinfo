@@ -205,7 +205,7 @@ always performed relative to 0, so if we convert track2 to bytes, we
 always get the number of bytes from track0->track2.
 
 If we want to get the number of bytes of one particular track, we have
-to substract two convert values. Look at the following figure to understand
+to subtract two convert values. Look at the following figure to understand
 this. The --- defines the region we want to convert.
 
 
@@ -240,7 +240,7 @@ stream (bitrate == byterate * 8). So, we do:
 
 ..and we get the number of bytes this plugin takes in each second.
 Again, note that this value is relative to 0, you can get an average
-of a specific period by using the same substract trick as above.
+of a specific period by using the same subtract trick as above.
 
 
 Element Properties

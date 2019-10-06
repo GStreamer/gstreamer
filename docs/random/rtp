@@ -10,7 +10,7 @@ Each codec is packeted in a specific way in RTP packets. This is necessary to mi
 
 Suggested implementation:
 
-Tbe implementation that I suggest contains an rtpdec element. This element has one sink pad for the data, one src pad for the decoded data, and a pair of src and sink pads for control messages. The decoded data that comes from rtpdec has no RTP dependency. It is in the format expected by the codec that it decodes it. Therefore, rtpdec must do codec specific processing of data to take into account that different codecs are stored differently in RTP.
+The implementation that I suggest contains an rtpdec element. This element has one sink pad for the data, one src pad for the decoded data, and a pair of src and sink pads for control messages. The decoded data that comes from rtpdec has no RTP dependency. It is in the format expected by the codec that it decodes it. Therefore, rtpdec must do codec specific processing of data to take into account that different codecs are stored differently in RTP.
 
 A possible pipeline is:
 
