@@ -119,9 +119,36 @@ gst_d3d11_allocation_params_free (GstD3D11AllocationParams * params)
   g_free (params);
 }
 
-G_DEFINE_BOXED_TYPE (GstD3D11AllocationParams, gst_d3d11_allocation_params,
+static gint
+gst_d3d11_allocation_params_compare (const GstD3D11AllocationParams * p1,
+    const GstD3D11AllocationParams * p2)
+{
+  g_return_val_if_fail (p1 != NULL, -1);
+  g_return_val_if_fail (p2 != NULL, -1);
+
+  if (p1 == p2)
+    return 0;
+
+  return -1;
+}
+
+static void
+_init_alloc_params (GType type)
+{
+  static GstValueTable table = {
+    0, (GstValueCompareFunc) gst_d3d11_allocation_params_compare,
+    NULL, NULL
+  };
+
+  table.type = type;
+  gst_value_register (&table);
+}
+
+G_DEFINE_BOXED_TYPE_WITH_CODE (GstD3D11AllocationParams,
+    gst_d3d11_allocation_params,
     (GBoxedCopyFunc) gst_d3d11_allocation_params_copy,
-    (GBoxedFreeFunc) gst_d3d11_allocation_params_free);
+    (GBoxedFreeFunc) gst_d3d11_allocation_params_free,
+    _init_alloc_params (g_define_type_id));
 
 #define gst_d3d11_allocator_parent_class parent_class
 G_DEFINE_TYPE (GstD3D11Allocator, gst_d3d11_allocator, GST_TYPE_ALLOCATOR);
