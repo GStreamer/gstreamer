@@ -1270,9 +1270,10 @@ wait_for_text_buf:
             !GST_BUFFER_DURATION_IS_VALID (subtitle_pending->data)) {
           GSList *bad = subtitle_pending;
           GST_WARNING_OBJECT (render,
-              "Got text buffer with invalid timestamp or duration");
+              "Got text buffer with invalid timestamp or duration %"
+              GST_PTR_FORMAT, bad->data);
           gst_buffer_unref (bad->data);
-          bad = subtitle_pending->next;
+          subtitle_pending = bad->next;
           render->subtitle_pending =
               g_slist_delete_link (render->subtitle_pending, bad);
           GST_ASS_RENDER_BROADCAST (render);
@@ -1297,7 +1298,8 @@ wait_for_text_buf:
         /* Text too old */
         if (text_running_time_end <= vid_running_time) {
           GSList *old = subtitle_pending;
-          GST_DEBUG_OBJECT (render, "text buffer too old, popping");
+          GST_DEBUG_OBJECT (render,
+              "text buffer too old, popping %" GST_PTR_FORMAT, old->data);
           gst_buffer_unref (old->data);
           subtitle_pending = old->next;
           render->subtitle_pending =
@@ -1357,7 +1359,8 @@ wait_for_text_buf:
 
         if (text_running_time_end <= vid_running_time_end) {
           GSList *old = subtitle_pending;
-          GST_DEBUG_OBJECT (render, "finished text buffer, popping");
+          GST_DEBUG_OBJECT (render,
+              "finished text buffer, popping %" GST_PTR_FORMAT, old->data);
           GST_ASS_RENDER_LOCK (render);
           gst_buffer_unref (old->data);
           subtitle_pending = old->next;
@@ -1475,7 +1478,8 @@ gst_ass_render_chain_text (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   gboolean in_seg = FALSE;
   guint64 clip_start = 0, clip_stop = 0;
 
-  GST_DEBUG_OBJECT (render, "entering chain for buffer %p", buffer);
+  GST_DEBUG_OBJECT (render, "entering chain for buffer %" GST_PTR_FORMAT,
+      buffer);
 
   GST_ASS_RENDER_LOCK (render);
 
@@ -1516,9 +1520,7 @@ gst_ass_render_chain_text (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
       render->subtitle_segment.position = clip_start;
 
-    GST_DEBUG_OBJECT (render,
-        "New buffer arrived for timestamp %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
+    GST_DEBUG_OBJECT (render, "New buffer arrived %" GST_PTR_FORMAT, buffer);
     render->subtitle_pending = g_slist_append (render->subtitle_pending,
         gst_buffer_ref (buffer));
     render->need_process = TRUE;
