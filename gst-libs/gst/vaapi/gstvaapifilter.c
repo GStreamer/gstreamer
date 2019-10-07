@@ -868,8 +868,7 @@ op_set_generic_unlocked (GstVaapiFilter * filter,
   if (!op_data || !op_ensure_buffer (filter, op_data))
     return FALSE;
 
-  op_data->is_enabled =
-      (value != G_PARAM_SPEC_FLOAT (op_data->pspec)->default_value);
+  op_data->is_enabled = (value != OP_DATA_DEFAULT_VALUE (float, op_data));
   if (!op_data->is_enabled)
     return TRUE;
 
@@ -935,8 +934,10 @@ op_set_color_balance_unlocked (GstVaapiFilter * filter,
    * which will store all the color balance operators.
    */
   if (!enabled_data) {
-    if (value == G_PARAM_SPEC_FLOAT (op_data->pspec)->default_value)
+    /* *INDENT-OFF* */
+    if (value == OP_DATA_DEFAULT_VALUE (float, op_data))
       return TRUE;
+    /* *INDENT-ON* */
 
     if (!op_ensure_n_elements_buffer (filter, op_data, COLOR_BALANCE_NUM))
       return FALSE;
@@ -954,7 +955,7 @@ op_set_color_balance_unlocked (GstVaapiFilter * filter,
       buf[i].type = color_data[i]->va_type;
       buf[i].attrib = color_data[i]->va_subtype;
 
-      va_value = G_PARAM_SPEC_FLOAT (color_data[i]->pspec)->default_value;
+      va_value = OP_DATA_DEFAULT_VALUE (float, color_data[i]);
       if (color_data[i]->op == op_data->op) {
         filter_cap = color_data[i]->va_caps;
         /* fail but ignore current value and set default one */
@@ -1481,37 +1482,37 @@ gst_vaapi_filter_set_operation (GstVaapiFilter * filter, GstVaapiFilterOp op,
     case GST_VAAPI_FILTER_OP_SHARPEN:
       return op_set_generic (filter, op_data,
           (value ? g_value_get_float (value) :
-              G_PARAM_SPEC_FLOAT (op_data->pspec)->default_value));
+              OP_DATA_DEFAULT_VALUE (float, op_data)));
     case GST_VAAPI_FILTER_OP_HUE:
     case GST_VAAPI_FILTER_OP_SATURATION:
     case GST_VAAPI_FILTER_OP_BRIGHTNESS:
     case GST_VAAPI_FILTER_OP_CONTRAST:
       return op_set_color_balance (filter, op_data,
           (value ? g_value_get_float (value) :
-              G_PARAM_SPEC_FLOAT (op_data->pspec)->default_value));
+              OP_DATA_DEFAULT_VALUE (float, op_data)));
     case GST_VAAPI_FILTER_OP_DEINTERLACING:
       return op_set_deinterlace (filter, op_data,
           (value ? g_value_get_enum (value) :
-              G_PARAM_SPEC_ENUM (op_data->pspec)->default_value), 0);
+              OP_DATA_DEFAULT_VALUE (enum, op_data)), 0);
       break;
     case GST_VAAPI_FILTER_OP_SCALING:
       return gst_vaapi_filter_set_scaling (filter,
           (value ? g_value_get_enum (value) :
-              G_PARAM_SPEC_ENUM (op_data->pspec)->default_value));
+              OP_DATA_DEFAULT_VALUE (enum, op_data)));
 #ifndef GST_REMOVE_DEPRECATED
     case GST_VAAPI_FILTER_OP_SKINTONE:
       return op_set_skintone (filter, op_data,
           (value ? g_value_get_boolean (value) :
-              G_PARAM_SPEC_BOOLEAN (op_data->pspec)->default_value));
+              OP_DATA_DEFAULT_VALUE (boolean, op_data)));
 #endif
     case GST_VAAPI_FILTER_OP_SKINTONE_LEVEL:
       return op_set_skintone_level (filter, op_data,
           (value ? g_value_get_uint (value) :
-              G_PARAM_SPEC_UINT (op_data->pspec)->default_value));
+              OP_DATA_DEFAULT_VALUE (uint, op_data)));
     case GST_VAAPI_FILTER_OP_VIDEO_DIRECTION:
       return gst_vaapi_filter_set_video_direction (filter,
           (value ? g_value_get_enum (value) :
-              G_PARAM_SPEC_ENUM (op_data->pspec)->default_value));
+              OP_DATA_DEFAULT_VALUE (enum, op_data)));
     default:
       break;
   }
@@ -2137,38 +2138,6 @@ gst_vaapi_filter_get_video_direction (GstVaapiFilter * filter)
 {
   g_return_val_if_fail (filter != NULL, GST_VIDEO_ORIENTATION_IDENTITY);
   return filter->video_direction;
-}
-
-static inline gfloat
-op_get_float_default_value (GstVaapiFilter * filter,
-    GstVaapiFilterOpData * op_data)
-{
-  GParamSpecFloat *const pspec = G_PARAM_SPEC_FLOAT (op_data->pspec);
-  return pspec->default_value;
-}
-
-static inline gint
-op_get_enum_default_value (GstVaapiFilter * filter,
-    GstVaapiFilterOpData * op_data)
-{
-  GParamSpecEnum *const pspec = G_PARAM_SPEC_ENUM (op_data->pspec);
-  return pspec->default_value;
-}
-
-static inline guint
-op_get_uint_default_value (GstVaapiFilter * filter,
-    GstVaapiFilterOpData * op_data)
-{
-  GParamSpecUInt *const pspec = G_PARAM_SPEC_UINT (op_data->pspec);
-  return pspec->default_value;
-}
-
-static inline gboolean
-op_get_bool_default_value (GstVaapiFilter * filter,
-    GstVaapiFilterOpData * op_data)
-{
-  GParamSpecBoolean *const pspec = G_PARAM_SPEC_BOOLEAN (op_data->pspec);
-  return pspec->default_value;
 }
 
 gfloat
