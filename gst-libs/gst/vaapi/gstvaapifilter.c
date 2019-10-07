@@ -2145,6 +2145,22 @@ op_get_enum_default_value (GstVaapiFilter * filter,
   return pspec->default_value;
 }
 
+static inline guint
+op_get_uint_default_value (GstVaapiFilter * filter,
+    GstVaapiFilterOpData * op_data)
+{
+  GParamSpecUInt *const pspec = G_PARAM_SPEC_UINT (op_data->pspec);
+  return pspec->default_value;
+}
+
+static inline gboolean
+op_get_bool_default_value (GstVaapiFilter * filter,
+    GstVaapiFilterOpData * op_data)
+{
+  GParamSpecBoolean *const pspec = G_PARAM_SPEC_BOOLEAN (op_data->pspec);
+  return pspec->default_value;
+}
+
 gfloat
 gst_vaapi_filter_get_denoising_level_default (GstVaapiFilter * filter)
 {
@@ -2213,7 +2229,8 @@ gst_vaapi_filter_get_skintone_default (GstVaapiFilter * filter)
 {
   g_return_val_if_fail (filter != NULL, FALSE);
 
-  return FALSE;
+  return op_get_bool_default_value (filter,
+      find_operation (filter, GST_VAAPI_FILTER_OP_SKINTONE));
 }
 #endif
 
@@ -2222,7 +2239,8 @@ gst_vaapi_filter_get_skintone_level_default (GstVaapiFilter * filter)
 {
   g_return_val_if_fail (filter != NULL, FALSE);
 
-  return 3;
+  return op_get_uint_default_value (filter,
+      find_operation (filter, GST_VAAPI_FILTER_OP_SKINTONE_LEVEL));
 }
 
 GstVideoOrientationMethod
