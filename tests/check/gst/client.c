@@ -1847,6 +1847,7 @@ attach_rate_tweaking_probe (void)
 
   gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
       rate_tweaking_probe, NULL, NULL);
+  gst_object_unref (srcpad);
 }
 
 static void
