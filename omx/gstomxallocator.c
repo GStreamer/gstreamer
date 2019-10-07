@@ -233,6 +233,8 @@ gst_omx_allocator_finalize (GObject * object)
   gst_omx_component_unref (allocator->component);
   g_mutex_clear (&allocator->lock);
   g_cond_clear (&allocator->cond);
+
+  G_OBJECT_CLASS (gst_omx_allocator_parent_class)->finalize (object);
 }
 
 gboolean
