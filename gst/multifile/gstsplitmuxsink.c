@@ -3161,6 +3161,7 @@ set_next_filename (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
   }
 }
 
+/* called with GST_SPLITMUX_LOCK */
 static void
 do_async_start (GstSplitMuxSink * splitmux)
 {
@@ -3175,10 +3176,14 @@ do_async_start (GstSplitMuxSink * splitmux)
 
   GST_INFO_OBJECT (splitmux, "Sending async_start message");
   message = gst_message_new_async_start (GST_OBJECT_CAST (splitmux));
+
+  GST_SPLITMUX_UNLOCK (splitmux);
   GST_BIN_CLASS (parent_class)->handle_message (GST_BIN_CAST
       (splitmux), message);
+  GST_SPLITMUX_LOCK (splitmux);
 }
 
+/* called with GST_SPLITMUX_LOCK */
 static void
 do_async_done (GstSplitMuxSink * splitmux)
 {
@@ -3186,13 +3191,15 @@ do_async_done (GstSplitMuxSink * splitmux)
 
   if (splitmux->async_pending) {
     GST_INFO_OBJECT (splitmux, "Sending async_done message");
+    splitmux->async_pending = FALSE;
+    GST_SPLITMUX_UNLOCK (splitmux);
+
     message =
         gst_message_new_async_done (GST_OBJECT_CAST (splitmux),
         GST_CLOCK_TIME_NONE);
     GST_BIN_CLASS (parent_class)->handle_message (GST_BIN_CAST
         (splitmux), message);
-
-    splitmux->async_pending = FALSE;
+    GST_SPLITMUX_LOCK (splitmux);
   }
 
   splitmux->need_async_start = FALSE;
