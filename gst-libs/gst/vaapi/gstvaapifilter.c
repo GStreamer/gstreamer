@@ -308,6 +308,15 @@ vpp_get_pipeline_caps (GstVaapiFilter * filter)
 
 #define DEFAULT_FORMAT  GST_VIDEO_FORMAT_UNKNOWN
 
+#define OP_DATA_DEFAULT_VALUE(type, op_data) \
+    g_value_get_##type (g_param_spec_get_default_value (op_data->pspec))
+
+#define OP_RET_DEFAULT_VALUE(type, filter, op) \
+    do { \
+      g_return_val_if_fail (filter != NULL, FALSE); \
+      return OP_DATA_DEFAULT_VALUE (type, find_operation (filter, op)); \
+    } while (0)
+
 enum
 {
   PROP_DISPLAY = 1,
@@ -2165,91 +2174,61 @@ op_get_bool_default_value (GstVaapiFilter * filter,
 gfloat
 gst_vaapi_filter_get_denoising_level_default (GstVaapiFilter * filter)
 {
-  g_return_val_if_fail (filter != NULL, FALSE);
-
-  return op_get_float_default_value (filter,
-      find_operation (filter, GST_VAAPI_FILTER_OP_DENOISE));
+  OP_RET_DEFAULT_VALUE (float, filter, GST_VAAPI_FILTER_OP_DENOISE);
 }
 
 gfloat
 gst_vaapi_filter_get_sharpening_level_default (GstVaapiFilter * filter)
 {
-  g_return_val_if_fail (filter != NULL, FALSE);
-
-  return op_get_float_default_value (filter,
-      find_operation (filter, GST_VAAPI_FILTER_OP_SHARPEN));
+  OP_RET_DEFAULT_VALUE (float, filter, GST_VAAPI_FILTER_OP_SHARPEN);
 }
 
 gfloat
 gst_vaapi_filter_get_hue_default (GstVaapiFilter * filter)
 {
-  g_return_val_if_fail (filter != NULL, FALSE);
-
-  return op_get_float_default_value (filter,
-      find_operation (filter, GST_VAAPI_FILTER_OP_HUE));
+  OP_RET_DEFAULT_VALUE (float, filter, GST_VAAPI_FILTER_OP_HUE);
 }
 
 gfloat
 gst_vaapi_filter_get_saturation_default (GstVaapiFilter * filter)
 {
-  g_return_val_if_fail (filter != NULL, FALSE);
-
-  return op_get_float_default_value (filter,
-      find_operation (filter, GST_VAAPI_FILTER_OP_SATURATION));
+  OP_RET_DEFAULT_VALUE (float, filter, GST_VAAPI_FILTER_OP_SATURATION);
 }
 
 gfloat
 gst_vaapi_filter_get_brightness_default (GstVaapiFilter * filter)
 {
-  g_return_val_if_fail (filter != NULL, FALSE);
-
-  return op_get_float_default_value (filter,
-      find_operation (filter, GST_VAAPI_FILTER_OP_BRIGHTNESS));
+  OP_RET_DEFAULT_VALUE (float, filter, GST_VAAPI_FILTER_OP_BRIGHTNESS);
 }
 
 gfloat
 gst_vaapi_filter_get_contrast_default (GstVaapiFilter * filter)
 {
-  g_return_val_if_fail (filter != NULL, FALSE);
-
-  return op_get_float_default_value (filter,
-      find_operation (filter, GST_VAAPI_FILTER_OP_CONTRAST));
+  OP_RET_DEFAULT_VALUE (float, filter, GST_VAAPI_FILTER_OP_CONTRAST);
 }
 
 GstVaapiScaleMethod
 gst_vaapi_filter_get_scaling_default (GstVaapiFilter * filter)
 {
-  g_return_val_if_fail (filter != NULL, FALSE);
-
-  return op_get_enum_default_value (filter,
-      find_operation (filter, GST_VAAPI_FILTER_OP_SCALING));
+  OP_RET_DEFAULT_VALUE (enum, filter, GST_VAAPI_FILTER_OP_SCALING);
 }
 
 #ifndef GST_REMOVE_DEPRECATED
 gboolean
 gst_vaapi_filter_get_skintone_default (GstVaapiFilter * filter)
 {
-  g_return_val_if_fail (filter != NULL, FALSE);
-
-  return op_get_bool_default_value (filter,
-      find_operation (filter, GST_VAAPI_FILTER_OP_SKINTONE));
+  OP_RET_DEFAULT_VALUE (boolean, filter, GST_VAAPI_FILTER_OP_SKINTONE);
 }
 #endif
 
 guint
 gst_vaapi_filter_get_skintone_level_default (GstVaapiFilter * filter)
 {
-  g_return_val_if_fail (filter != NULL, FALSE);
-
-  return op_get_uint_default_value (filter,
-      find_operation (filter, GST_VAAPI_FILTER_OP_SKINTONE_LEVEL));
+  OP_RET_DEFAULT_VALUE (uint, filter, GST_VAAPI_FILTER_OP_SKINTONE_LEVEL);
 }
 
 GstVideoOrientationMethod
 gst_vaapi_filter_get_video_direction_default (GstVaapiFilter * filter)
 {
-  g_return_val_if_fail (filter != NULL, FALSE);
-
-  return op_get_enum_default_value (filter,
-      find_operation (filter, GST_VAAPI_FILTER_OP_VIDEO_DIRECTION));
+  OP_RET_DEFAULT_VALUE (boolean, filter, GST_VAAPI_FILTER_OP_VIDEO_DIRECTION);
 }
