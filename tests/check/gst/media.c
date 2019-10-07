@@ -115,6 +115,8 @@ GST_START_TEST (test_media_seek)
   fail_unless (rate == 1.5);
   fail_unless (applied_rate == 1.0);
 
+  gst_rtsp_range_free (range);
+
   /* seeking with rate set to -2.0 should result in rate == -2.0 */
   fail_unless (gst_rtsp_range_parse ("npt=10-5", &range) == GST_RTSP_OK);
   fail_unless (gst_rtsp_media_seek_trickmode (media, range,
