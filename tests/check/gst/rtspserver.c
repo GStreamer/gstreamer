@@ -2589,6 +2589,8 @@ GST_START_TEST (test_double_play)
           session) == GST_RTSP_STS_OK);
 
   /* clean up and iterate so the clean-up can finish */
+  g_object_unref (rtp_socket);
+  g_object_unref (rtcp_socket);
   g_free (session);
   gst_rtsp_transport_free (video_transport);
   gst_rtsp_transport_free (audio_transport);
