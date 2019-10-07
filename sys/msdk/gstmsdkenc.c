@@ -1136,6 +1136,28 @@ gst_msdkenc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
         info->height);
     caps = gst_video_info_to_caps (&nv12_info);
 
+    /* If there's an existing pool try to reuse it when is compatible */
+    if (thiz->msdk_converted_pool) {
+      GstStructure *config;
+      GstCaps *pool_caps;
+      gboolean is_pool_compatible = FALSE;
+
+      config = gst_buffer_pool_get_config (thiz->msdk_converted_pool);
+      gst_buffer_pool_config_get_params (config, &pool_caps, NULL, NULL, NULL);
+      if (caps && pool_caps)
+        is_pool_compatible = gst_caps_is_equal (caps, pool_caps);
+      gst_structure_free (config);
+
+      /* If caps are the same then we are done */
+      if (is_pool_compatible) {
+        gst_caps_unref (caps);
+        goto done;
+      }
+      /* Release current pool because we are going to create a new one */
+      gst_object_replace ((GstObject **) & thiz->msdk_converted_pool, NULL);
+    }
+
+    /* Otherwise create a new pool */
     pool =
         gst_msdkenc_create_buffer_pool (thiz, caps, thiz->num_surfaces, FALSE);
 
@@ -1143,6 +1165,7 @@ gst_msdkenc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
     gst_caps_unref (caps);
   }
 
+done:
   return TRUE;
 }
 
@@ -1683,9 +1706,16 @@ gst_msdkenc_set_common_property (GObject * object, guint prop_id,
       thiz->rate_control = g_value_get_enum (value);
       break;
     case GST_MSDKENC_PROP_BITRATE:
-      thiz->bitrate = g_value_get_uint (value);
-      thiz->reconfig = TRUE;
+    {
+      guint bitrate = g_value_get_uint (value);
+      /* Ensure that bitrate changed before triggering a reconfig */
+      if (bitrate != thiz->bitrate) {
+        thiz->bitrate = bitrate;
+        thiz->reconfig = TRUE;
+        GST_DEBUG_OBJECT (thiz, "changed bitrate to %u", bitrate);
+      }
       break;
+    }
     case GST_MSDKENC_PROP_MAX_FRAME_SIZE:
       thiz->max_frame_size = g_value_get_uint (value);
       break;
