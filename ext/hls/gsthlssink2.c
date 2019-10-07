@@ -295,11 +295,12 @@ gst_hls_sink2_handle_message (GstBin * bin, GstMessage * message)
           g_queue_push_tail (&sink->old_locations,
               g_strdup (sink->current_location));
 
-          while (g_queue_get_length (&sink->old_locations) >
-              g_queue_get_length (sink->playlist->entries)) {
-            gchar *old_location = g_queue_pop_head (&sink->old_locations);
-            g_remove (old_location);
-            g_free (old_location);
+          if (sink->max_files > 0) {
+            while (g_queue_get_length (&sink->old_locations) > sink->max_files) {
+              gchar *old_location = g_queue_pop_head (&sink->old_locations);
+              g_remove (old_location);
+              g_free (old_location);
+            }
           }
         }
       }
