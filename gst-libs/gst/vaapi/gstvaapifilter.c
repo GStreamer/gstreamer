@@ -307,7 +307,6 @@ vpp_get_pipeline_caps (GstVaapiFilter * filter)
 /* ------------------------------------------------------------------------- */
 
 #define DEFAULT_FORMAT  GST_VIDEO_FORMAT_UNKNOWN
-#define DEFAULT_SCALING GST_VAAPI_SCALE_METHOD_DEFAULT
 
 enum
 {
@@ -453,7 +452,8 @@ init_properties (void)
       "Scaling Method",
       "Scaling method to use",
       GST_VAAPI_TYPE_SCALE_METHOD,
-      DEFAULT_SCALING, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+      GST_VAAPI_SCALE_METHOD_DEFAULT,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   /**
    * GstVaapiFilter:video-direction:
@@ -1486,8 +1486,9 @@ gst_vaapi_filter_set_operation (GstVaapiFilter * filter, GstVaapiFilterOp op,
               G_PARAM_SPEC_ENUM (op_data->pspec)->default_value), 0);
       break;
     case GST_VAAPI_FILTER_OP_SCALING:
-      return gst_vaapi_filter_set_scaling (filter, value ?
-          g_value_get_enum (value) : DEFAULT_SCALING);
+      return gst_vaapi_filter_set_scaling (filter,
+          (value ? g_value_get_enum (value) :
+              G_PARAM_SPEC_ENUM (op_data->pspec)->default_value));
 #ifndef GST_REMOVE_DEPRECATED
     case GST_VAAPI_FILTER_OP_SKINTONE:
       return op_set_skintone (filter, op_data,
@@ -2220,7 +2221,8 @@ gst_vaapi_filter_get_scaling_default (GstVaapiFilter * filter)
 {
   g_return_val_if_fail (filter != NULL, FALSE);
 
-  return DEFAULT_SCALING;
+  return op_get_enum_default_value (filter,
+      find_operation (filter, GST_VAAPI_FILTER_OP_SCALING));
 }
 
 #ifndef GST_REMOVE_DEPRECATED
