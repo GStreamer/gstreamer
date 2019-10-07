@@ -1111,6 +1111,85 @@ struct _GstH265PredWeightTable
   gint16 delta_chroma_offset_l1[15][2];
 };
 
+/**
+ * GstH265SliceHdr:
+ * @first_slice_segment_in_pic_flag: equal to 1 if this slice segment is
+ *   the first slice segment of the picture in decoding order
+ * @no_output_of_prior_pics_flag: affects the output of previously-decoded pictures
+ *   in the decoded picture buffer after the decoding of an IDR or a BLA picture
+ *   that is not the first picture in the bitstream as specified in Annex C
+ * @pps: a #GstH265PPS
+ * @dependent_slice_segment_flag: equal to 1 if the value of each slice segment header
+ *   syntax element that is not present is inferred to be equal to the value of corresponding
+ *   slice segment header syntax element in the slice header.
+ * @segment_address: the address of the first CTB in the slice segment
+ * @type: slice type (B, P, or I)
+ * @pic_output_flag: affects the decoded picture output and removal processes
+ *   as specified in Annex C.
+ * @colour_plane_id: specifies the colour plane associated with the current slice RBSP
+ *   when separate_colour_plane_flag is equal to 1
+ * @pic_order_cnt_lsb: the picture order count modulo MaxPicOrderCntLsb for the current picture
+ * @short_term_ref_pic_set_sps_flag: equal to 1 specifies that the short-term RPS
+ *   of the current picture is derived based on the active SPS.
+ * @short_term_ref_pic_sets: a #GstH265ShortTermRefPicSet structure
+ * @short_term_ref_pic_set_idx: the index of st_ref_pic_set syntax structure
+ *   that is used for derivation of the short-term RPS of the current picture.
+ * @num_long_term_sps: the number of entries in the long-term RPS of current picture
+ *   that are derived based on the syntax in active SPS.
+ * @num_long_term_pics: the number of entries in the long-term RPS of the current picture
+ *   that are directly signalled in the slice header.
+ * @lt_idx_sps: the index of candidate long-term reference pictures
+ *   specified in the active SPS.
+ * @poc_lsb_lt: the value of the picture order count modulo MaxPicOrderCntLsb
+ *   of the each entry in the long-term RPS of the current picture.
+ * @used_by_curr_pic_lt_flag: equal to 0 if the entry in the long-term RPS
+ *   of the current picture is not used for reference by the current picture.
+ * @delta_poc_msb_present_flag: equal to 1 if i-th delta_poc_msb_cycle_lt[] is present.
+ * @delta_poc_msb_cycle_lt: used to determine the value of the most significant bits
+ *   of the picture order count value of the i-th entry in the long-term RPS of the current picture.
+ * @temporal_mvp_enabled_flag: whether temporal motion vector predictors can be used for inter prediction.
+ * @sao_luma_flag: equal to 1 if SAO is enabled for the luma component in the current slice.
+ * @sao_chroma_flag: equal to 1 if SAO is enabled for the chroma component in the current slice.
+ * @num_ref_idx_active_override_flag: equal to 1 specifies that the syntax elements
+ *   num_ref_idx_l0_active_minus1 and num_ref_idx_l1_active_minus1 are present.
+ * @num_ref_idx_l0_active_minus1: the maximum reference index for reference picture list 0
+ *   that may be used to decode the slice.
+ * @num_ref_idx_l1_active_minus1: the maximum reference index for reference picture list 1
+ *   that may be used to decode the slice.
+ * @ref_pic_list_modification: a #GstH265RefPicListModification
+ * @mvd_l1_zero_flag: equal to 1 if the mvd_coding sytanx structure is not parsed
+ * @cabac_init_flag: specifies the method for determining the initialization table
+ *   used in the initialization process for context variables.
+ * @collocated_from_l0_flag: equal to 1 specifies that the collocated picture
+ *   used for temporal motion vector prediction is derived from reference picture list 0.
+ * @collocated_ref_idx: the reference index of the collocated picture
+ *   used for temporal motion vector prediction.
+ * @pred_weight_table: a #GstH265PredWeightTable
+ * @five_minus_max_num_merge_cand: specifies the maximum number of merging motion vector prediction (MVP)
+ *   candidates supported in the slice.
+ * @qp_delta: specifies the inital value of QPy to be used for the coding blocks in the slice.
+ * @cb_qp_offset: a difference to be added to the value of pps_cb_qp_offset.
+ * @cr_qp_offset: a difference to be added to the value of pps_cr_qp_offset.
+ * @cu_chroma_qp_offset_enabled_flag: equal to 1 if the cu_chroma_qp_offset_flag
+ *   may be present in the transform unit syntax. (Since: 1.18)
+ * @deblocking_filter_override_flag: equal to 1 if deblocking paramertes are present in the slice header.
+ * @deblocking_filter_disabled_flag: equal to 1 specifies that the operation of
+ *   the deblocking filter is not applied for the current slice.
+ * @beta_offset_div2: deblocking parameter offset for beta divided by 2 for the current slice.
+ * @tc_offset_div2: deblocking parameter offset for tC divided by 2 for the current slice.
+ * @loop_filter_across_slices_enabled_flag: equal to 1 specifies that in-loop filtering
+ *   operation may be performed across the left and upper boundaries of the current slice.
+ * @num_entry_point_offsets: specifies the number of entry_point_offset_minus1 syntax elements
+ *   in the slice header.
+ * @offset_len_minus1: specifies the length of the entry_point_minus1 syntax elements
+ *   in bits.
+ * @entry_point_offset_minus1: the entry point offset in bytes.
+ * @NumPocTotalCurr: calculated NumPocTotalCurr which is used for
+ *   decoding process for reference picture set
+ * @header_size: the calculated size of the slice_header() in bits.
+ * @n_emulation_prevention_bytes: number of emulation prevention bytes (EPB)
+ *   in this slice_header()
+ */
 struct _GstH265SliceHdr
 {
   guint8 first_slice_segment_in_pic_flag;
