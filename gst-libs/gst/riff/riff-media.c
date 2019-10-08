@@ -509,6 +509,12 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("Microsoft MPEG-4 4.3");        /* FIXME? */
       break;
 
+    case GST_MAKE_FOURCC ('C', 'F', 'H', 'D'):
+      caps = gst_caps_new_empty_simple ("video/x-cineform");
+      if (codec_name)
+        *codec_name = g_strdup ("CineForm");
+      break;
+
     case GST_MAKE_FOURCC ('D', 'V', 'S', 'D'):
     case GST_MAKE_FOURCC ('d', 'v', 's', 'd'):
     case GST_MAKE_FOURCC ('d', 'v', 'c', ' '):
@@ -1864,6 +1870,7 @@ gst_riff_create_video_template_caps (void)
     GST_MAKE_FOURCC ('3', 'I', 'V', '1'),
     GST_MAKE_FOURCC ('A', 'S', 'V', '1'),
     GST_MAKE_FOURCC ('A', 'S', 'V', '2'),
+    GST_MAKE_FOURCC ('C', 'F', 'H', 'D'),
     GST_MAKE_FOURCC ('C', 'L', 'J', 'R'),
     GST_MAKE_FOURCC ('C', 'S', 'C', 'D'),
     GST_MAKE_FOURCC ('C', 'Y', 'U', 'V'),
