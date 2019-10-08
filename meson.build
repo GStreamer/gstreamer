@@ -164,9 +164,7 @@ libsinc = include_directories('gst-libs')
 
 subdir('gst-libs')
 subdir('gst')
-if not get_option('examples').disabled()
-  subdir('tests')
-endif
+subdir('tests')
 subdir('docs')
 
 python3 = import('python').find_installation()
