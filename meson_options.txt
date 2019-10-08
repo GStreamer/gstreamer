@@ -7,5 +7,6 @@ option('with_egl', type : 'combo', choices : ['yes', 'no', 'auto'], value : 'aut
 
 # Common feature options
 option('examples', type : 'feature', value : 'auto', yield : true)
+option('tests', type : 'feature', value : 'auto', yield : true)
 option('doc', type : 'feature', value : 'auto', yield: true,
        description: 'Enable documentation.')

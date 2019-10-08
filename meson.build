@@ -81,6 +81,9 @@ libudev_dep = dependency('libudev', required: false)
 egl_dep = dependency('egl', required: false)
 gl_dep = dependency('gl', required: false)
 glesv2_dep = dependency('glesv2', required: false)
+gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
+  required : get_option('tests'),
+  fallback : ['gstreamer', 'gst_check_dep'])
 libdl_dep = cc.find_library('dl', required: false)
 wayland_client_dep = dependency('wayland-client', version: libwayland_req, required: false)
 wayland_protocols_dep = dependency('wayland-protocols', version: '>= 1.15', required: false)
