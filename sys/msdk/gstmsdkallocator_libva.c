@@ -343,10 +343,10 @@ gst_msdk_frame_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData * data)
         break;
       case VA_FOURCC_ARGB:
         data->Pitch = mem_id->image.pitches[0];
-        data->R = buf + mem_id->image.offsets[0];
-        data->G = data->R + 1;
-        data->B = data->R + 2;
-        data->A = data->R + 3;
+        data->B = buf + mem_id->image.offsets[0];
+        data->G = data->B + 1;
+        data->R = data->B + 2;
+        data->A = data->B + 3;
         break;
 #if (MFX_VERSION >= 1028)
       case VA_FOURCC_RGB565:

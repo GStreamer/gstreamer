@@ -237,15 +237,26 @@ gst_video_meta_map_msdk_memory (GstVideoMeta * meta, guint plane,
   pitch = mem_id->pitch;
 #endif
 
-  /* The first channel in memory is V for GST_VIDEO_FORMAT_VUYA */
-  if (meta->format == GST_VIDEO_FORMAT_VUYA)
-    *data = mem->surface->Data.V + offset;
-  else if (meta->format == GST_VIDEO_FORMAT_Y410)
-    *data = mem->surface->Data.U + offset;      /* Data.Y410 */
-  else
-    *data = mem->surface->Data.Y + offset;
-  *stride = pitch;
+  switch (meta->format) {
+    case GST_VIDEO_FORMAT_BGRA:
+      *data = mem->surface->Data.B + offset;
+      break;
 
+      /* The first channel in memory is V for GST_VIDEO_FORMAT_VUYA */
+    case GST_VIDEO_FORMAT_VUYA:
+      *data = mem->surface->Data.V + offset;
+      break;
+
+    case GST_VIDEO_FORMAT_Y410:
+      *data = mem->surface->Data.U + offset;    /* Data.Y410 */
+      break;
+
+    default:
+      *data = mem->surface->Data.Y + offset;
+      break;
+  }
+
+  *stride = pitch;
   info->flags = flags;
   ret = (*data != NULL);
 
@@ -300,7 +311,23 @@ gst_msdk_video_memory_map_full (GstMemory * base_mem, GstMapInfo * info,
 
   gst_msdk_frame_lock (msdk_video_allocator->context, mem->surface->Data.MemId,
       &mem->surface->Data);
-  return mem->surface->Data.Y;
+
+  switch (mem->surface->Info.FourCC) {
+    case MFX_FOURCC_RGB4:
+      return mem->surface->Data.B;      /* The first channel is B */
+
+      /* The first channel in memory is V for MFX_FOURCC_AYUV (GST_VIDEO_FORMAT_VUYA) format */
+    case MFX_FOURCC_AYUV:
+      return mem->surface->Data.V;
+
+#if (MFX_VERSION >= 1027)
+    case MFX_FOURCC_Y410:
+      return mem->surface->Data.U;      /* Data.Y410 */
+#endif
+
+    default:
+      return mem->surface->Data.Y;
+  }
 }
 
 static void

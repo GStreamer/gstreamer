@@ -109,9 +109,10 @@ ensure_data (GstMsdkSystemMemory * mem)
       mem->surface->Data.Pitch = mem->destination_pitches[0];
       break;
     case GST_VIDEO_FORMAT_BGRA:
-      mem->surface->Data.R = mem->cached_data[0];
-      mem->surface->Data.G = mem->surface->Data.R + 1;
-      mem->surface->Data.B = mem->surface->Data.R + 2;
+      mem->surface->Data.B = mem->cached_data[0];
+      mem->surface->Data.G = mem->surface->Data.B + 1;
+      mem->surface->Data.R = mem->surface->Data.B + 2;
+      mem->surface->Data.A = mem->surface->Data.B + 3;
       mem->surface->Data.Pitch = mem->destination_pitches[0];
       break;
 #if (MFX_VERSION >= 1028)
@@ -237,15 +238,22 @@ gst_msdk_system_memory_map_full (GstMemory * base_mem, GstMapInfo * info,
     return NULL;
   }
 
-  /* The first channel in memory is V for MFX_FOURCC_AYUV (GST_VIDEO_FORMAT_VUYA) format */
-  if (mem->surface->Info.FourCC == MFX_FOURCC_AYUV)
-    return mem->surface->Data.V;
+  switch (mem->surface->Info.FourCC) {
+    case MFX_FOURCC_RGB4:
+      return mem->surface->Data.B;      /* The first channel is B */
+
+      /* The first channel in memory is V for MFX_FOURCC_AYUV (GST_VIDEO_FORMAT_VUYA) format */
+    case MFX_FOURCC_AYUV:
+      return mem->surface->Data.V;
+
 #if (MFX_VERSION >= 1027)
-  else if (mem->surface->Info.FourCC == MFX_FOURCC_Y410)
-    return mem->surface->Data.U;        /* Data.Y410 */
+    case MFX_FOURCC_Y410:
+      return mem->surface->Data.U;      /* Data.Y410 */
 #endif
-  else
-    return mem->surface->Data.Y;
+
+    default:
+      return mem->surface->Data.Y;
+  }
 }
 
 static void
