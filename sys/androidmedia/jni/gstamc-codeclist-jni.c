@@ -158,7 +158,7 @@ gst_amc_codeclist_static_init (void)
 
   media_codeccapabilities.klass =
       gst_amc_jni_get_class (env, &err,
-      "android/media/MediaCodecInfo/CodecCapabilities");
+      "android/media/MediaCodecInfo$CodecCapabilities");
   if (!media_codeccapabilities.klass) {
     GST_ERROR
         ("Failed to get android.media.MediaCodecInfo.CodecCapabilities class: %s",
@@ -191,7 +191,7 @@ gst_amc_codeclist_static_init (void)
 
   media_codecprofilelevel.klass =
       gst_amc_jni_get_class (env, &err,
-      "android/media/MediaCodecInfo/CodecProfileLevel");
+      "android/media/MediaCodecInfo$CodecProfileLevel");
   if (!media_codecprofilelevel.klass) {
     GST_ERROR
         ("Failed to get android.media.MediaCodecInfo.CodecProfileLevel class: %s",
