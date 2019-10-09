@@ -2199,5 +2199,5 @@ gst_vaapi_filter_get_skintone_level_default (GstVaapiFilter * filter)
 GstVideoOrientationMethod
 gst_vaapi_filter_get_video_direction_default (GstVaapiFilter * filter)
 {
-  OP_RET_DEFAULT_VALUE (boolean, filter, GST_VAAPI_FILTER_OP_VIDEO_DIRECTION);
+  OP_RET_DEFAULT_VALUE (enum, filter, GST_VAAPI_FILTER_OP_VIDEO_DIRECTION);
 }
