@@ -267,7 +267,7 @@ gst_amc_codec_info_handle_free (GstAmcCodecInfoHandle * handle)
   env = gst_amc_jni_get_env ();
 
   if (handle->object)
-    gst_amc_jni_object_unref (env, handle->object);
+    gst_amc_jni_object_local_unref (env, handle->object);
   g_free (handle);
 }
 
@@ -403,7 +403,7 @@ gst_amc_codec_capabilities_handle_free (GstAmcCodecCapabilitiesHandle * handle)
   env = gst_amc_jni_get_env ();
 
   if (handle->object)
-    gst_amc_jni_object_unref (env, handle->object);
+    gst_amc_jni_object_local_unref (env, handle->object);
   g_free (handle);
 }
 
