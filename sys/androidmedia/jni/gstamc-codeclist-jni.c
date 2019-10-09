@@ -322,7 +322,7 @@ gst_amc_codec_info_handle_get_supported_types (GstAmcCodecInfoHandle * handle,
   env = gst_amc_jni_get_env ();
 
   if (!gst_amc_jni_call_object_method (env, err, handle->object,
-          media_codecinfo.get_name, &array))
+          media_codecinfo.get_supported_types, &array))
     goto done;
 
   len = (*env)->GetArrayLength (env, array);
