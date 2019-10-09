@@ -242,6 +242,7 @@ check fedora:
       - $CI_PROJECT_NAME == "gst-examples"
       - $CI_PROJECT_NAME == "gst-omx"
       - $CI_PROJECT_NAME == "gst-docs"
+      - $CI_PROJECT_NAME == "gstreamer-vaapi"
 
 integration testsuites fedora:
   extends: '.test fedora x86_64'
