@@ -105,6 +105,13 @@ vpp_test_set_crop (VppTestContext * ctx, gint l, gint r, gint t, gint b)
 }
 
 static void
+vpp_test_set_orientation (VppTestContext * ctx, GstVideoOrientationMethod m)
+{
+  GST_LOG ("%u", m);
+  g_object_set (ctx->vpp, "video-direction", m, NULL);
+}
+
+static void
 vpp_test_set_dimensions (VppTestContext * ctx, gint w, gint h)
 {
   GST_LOG ("%dx%d", w, h);
@@ -178,6 +185,8 @@ vpp_test_mouse_events (VppTestContext * ctx,
       gst_element_send_event (ctx->pipeline, event);
 
       GST_LOG ("probed %s event %fx%f", mouse_events[j], probed.x, probed.y);
+      GST_LOG ("expect %s event %fx%f", mouse_events[j], params[i].expect.x,
+          params[i].expect.y);
 
       fail_unless (params[i].expect.x == probed.x);
       fail_unless (params[i].expect.y == probed.y);
@@ -266,6 +275,102 @@ GST_START_TEST (test_crop_mouse_events)
 
 GST_END_TEST;
 
+static void
+vpp_test_orientation_mouse_events (VppTestContext * ctx, gint w, gint h)
+{
+  size_t i;
+  const gdouble xmin = 0.0;
+  const gdouble ymin = 0.0;
+  const gdouble xmax = w - 1;
+  const gdouble ymax = h - 1;
+  const VppTestCoordinateParams params[8][4] = {
+    /* (0) identity */
+    {
+          {{xmin, ymin}, {xmin, ymin}},
+          {{xmax, ymin}, {xmax, ymin}},
+          {{xmin, ymax}, {xmin, ymax}},
+          {{xmax, ymax}, {xmax, ymax}},
+        },
+    /* (1) 90 Rotation */
+    {
+          {{ymin, xmin}, {xmin, ymax}},
+          {{ymax, xmin}, {xmin, ymin}},
+          {{ymin, xmax}, {xmax, ymax}},
+          {{ymax, xmax}, {xmax, ymin}},
+        },
+    /* (2) 180 Rotation */
+    {
+          {{xmin, ymin}, {xmax, ymax}},
+          {{xmax, ymin}, {xmin, ymax}},
+          {{xmin, ymax}, {xmax, ymin}},
+          {{xmax, ymax}, {xmin, ymin}},
+        },
+    /* (3) 270 Rotation */
+    {
+          {{ymin, xmin}, {xmax, ymin}},
+          {{ymax, xmin}, {xmax, ymax}},
+          {{ymin, xmax}, {xmin, ymin}},
+          {{ymax, xmax}, {xmin, ymax}},
+        },
+    /* (4) Horizontal Flip */
+    {
+          {{xmin, ymin}, {xmax, ymin}},
+          {{xmax, ymin}, {xmin, ymin}},
+          {{xmin, ymax}, {xmax, ymax}},
+          {{xmax, ymax}, {xmin, ymax}},
+        },
+    /* (5) Vertical Flip */
+    {
+          {{xmin, ymin}, {xmin, ymax}},
+          {{xmax, ymin}, {xmax, ymax}},
+          {{xmin, ymax}, {xmin, ymin}},
+          {{xmax, ymax}, {xmax, ymin}},
+        },
+    /* (6) Vertical Flip + 90 Rotation */
+    {
+          {{ymin, xmin}, {xmin, ymin}},
+          {{ymax, xmin}, {xmin, ymax}},
+          {{ymin, xmax}, {xmax, ymin}},
+          {{ymax, xmax}, {xmax, ymax}},
+        },
+    /* (7) Horizontal Flip + 90 Rotation */
+    {
+          {{ymin, xmin}, {xmax, ymax}},
+          {{ymax, xmin}, {xmax, ymin}},
+          {{ymin, xmax}, {xmin, ymax}},
+          {{ymax, xmax}, {xmin, ymin}},
+        },
+  };
+
+  vpp_test_set_dimensions (ctx, w, h);
+
+  for (i = 0; i < 8; ++i) {
+    vpp_test_set_orientation (ctx, i);
+    vpp_test_mouse_events (ctx, params[i], 4);
+  }
+}
+
+GST_START_TEST (test_orientation_mouse_events)
+{
+  VppTestContext ctx;
+
+  vpp_test_init_context (&ctx);
+
+  vpp_test_orientation_mouse_events (&ctx, 160, 320);
+  vpp_test_orientation_mouse_events (&ctx, 161, 320);
+  vpp_test_orientation_mouse_events (&ctx, 160, 321);
+  vpp_test_orientation_mouse_events (&ctx, 161, 321);
+
+  vpp_test_orientation_mouse_events (&ctx, 320, 160);
+  vpp_test_orientation_mouse_events (&ctx, 320, 161);
+  vpp_test_orientation_mouse_events (&ctx, 321, 160);
+  vpp_test_orientation_mouse_events (&ctx, 321, 161);
+
+  vpp_test_deinit_context (&ctx);
+}
+
+GST_END_TEST;
+
 static Suite *
 vaapipostproc_suite (void)
 {
@@ -275,6 +380,7 @@ vaapipostproc_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_make);
   tcase_add_test (tc_chain, test_crop_mouse_events);
+  tcase_add_test (tc_chain, test_orientation_mouse_events);
 
   return s;
 }
