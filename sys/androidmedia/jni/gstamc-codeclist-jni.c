@@ -84,7 +84,7 @@ gst_amc_codeclist_static_init (void)
   }
 
   media_codeclist.get_codec_count =
-      gst_amc_jni_get_method_id (env, &err, media_codeclist.klass,
+      gst_amc_jni_get_static_method_id (env, &err, media_codeclist.klass,
       "getCodecCount", "()I");
   if (!media_codeclist.get_codec_count) {
     GST_ERROR ("Failed to get android.media.MediaCodecList getCodecCount(): %s",
@@ -94,7 +94,7 @@ gst_amc_codeclist_static_init (void)
   }
 
   media_codeclist.get_codec_info_at =
-      gst_amc_jni_get_method_id (env, &err, media_codeclist.klass,
+      gst_amc_jni_get_static_method_id (env, &err, media_codeclist.klass,
       "getCodecInfoAt", "(I)Landroid/media/MediaCodecInfo;");
   if (!media_codeclist.get_codec_count) {
     GST_ERROR
