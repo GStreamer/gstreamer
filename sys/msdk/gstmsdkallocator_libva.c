@@ -46,7 +46,8 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
   guint format;
   guint va_fourcc = 0;
   VASurfaceID *surfaces = NULL;
-  VASurfaceAttrib attrib;
+  VASurfaceAttrib attribs[2];
+  guint num_attribs = 0;
   mfxMemId *mids = NULL;
   GstMsdkContext *context = (GstMsdkContext *) pthis;
   GstMsdkMemoryID *msdk_mids = NULL;
@@ -98,10 +99,21 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
       (GstMsdkAllocResponse *) g_slice_alloc0 (sizeof (GstMsdkAllocResponse));
 
   if (va_fourcc != VA_FOURCC_P208) {
-    attrib.type = VASurfaceAttribPixelFormat;
-    attrib.flags = VA_SURFACE_ATTRIB_SETTABLE;
-    attrib.value.type = VAGenericValueTypeInteger;
-    attrib.value.value.i = va_fourcc;
+    attribs[0].type = VASurfaceAttribPixelFormat;
+    attribs[0].flags = VA_SURFACE_ATTRIB_SETTABLE;
+    attribs[0].value.type = VAGenericValueTypeInteger;
+    attribs[0].value.value.i = va_fourcc;
+    num_attribs = 1;
+
+    /* set VA_SURFACE_ATTRIB_USAGE_HINT_ENCODER flag for encoding */
+    if ((req->Type & MFX_MEMTYPE_VIDEO_MEMORY_ENCODER_TARGET) &&
+        (req->Type & MFX_MEMTYPE_FROM_ENCODE)) {
+      attribs[1].type = VASurfaceAttribUsageHint;
+      attribs[1].flags = VA_SURFACE_ATTRIB_SETTABLE;
+      attribs[1].value.type = VAGenericValueTypeInteger;
+      attribs[1].value.value.i = VA_SURFACE_ATTRIB_USAGE_HINT_ENCODER;
+      num_attribs = 2;
+    }
 
     format =
         gst_msdk_get_va_rt_format_from_mfx_rt_format (req->Info.ChromaFormat);
@@ -127,7 +139,8 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
 
     va_status = vaCreateSurfaces (gst_msdk_context_get_handle (context),
         format,
-        req->Info.Width, req->Info.Height, surfaces, surfaces_num, &attrib, 1);
+        req->Info.Width, req->Info.Height, surfaces, surfaces_num, attribs,
+        num_attribs);
 
     status = gst_msdk_get_mfx_status_from_va_status (va_status);
     if (status != MFX_ERR_NONE) {
@@ -385,6 +398,13 @@ gst_msdk_frame_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData * data)
         data->U = buf + mem_id->image.offsets[0];       /* data->Y410 */
         break;
 #endif
+      case VA_FOURCC_ABGR:
+        data->Pitch = mem_id->image.pitches[0];
+        data->R = buf + mem_id->image.offsets[0];
+        data->G = data->R + 1;
+        data->B = data->R + 2;
+        data->A = data->R + 3;
+        break;
 
       default:
         g_assert_not_reached ();
