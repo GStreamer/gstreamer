@@ -2,7 +2,7 @@ tests = [
   [ 'elements/vaapipostproc' ],
 ]
 
-test_deps = [gst_dep, gstcheck_dep]
+test_deps = [gst_dep, gstbase_dep, gstvideo_dep, gstcheck_dep]
 test_defines = [
   '-UG_DISABLE_ASSERT',
   '-UG_DISABLE_CAST_CHECKS',
