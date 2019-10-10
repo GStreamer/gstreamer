@@ -511,31 +511,6 @@ GST_START_TEST (test_play_twice_then_add_and_play_again)
 
 GST_END_TEST;
 
-
-static GstElement *
-test_live_seeking_try_audiosrc (const gchar * factory_name)
-{
-  GstElement *src;
-  GstStateChangeReturn state_res;
-
-  if (!(src = gst_element_factory_make (factory_name, NULL))) {
-    GST_INFO ("can't make '%s', skipping", factory_name);
-    return NULL;
-  }
-
-  /* Test that the audio source can get to ready, else skip */
-  state_res = gst_element_set_state (src, GST_STATE_READY);
-  gst_element_set_state (src, GST_STATE_NULL);
-
-  if (state_res == GST_STATE_CHANGE_FAILURE) {
-    GST_INFO_OBJECT (src, "can't go to ready, skipping");
-    gst_object_unref (src);
-    return NULL;
-  }
-
-  return src;
-}
-
 /* test failing seeks on live-sources */
 GST_START_TEST (test_live_seeking)
 {
@@ -545,11 +520,6 @@ GST_START_TEST (test_live_seeking)
   GstPad *srcpad;
   gint i;
   GstStreamConsistency *consist;
-  /* don't use autoaudiosrc, as then we can't set anything here */
-  const gchar *audio_src_factories[] = {
-    "alsasrc",
-    "pulseaudiosrc"
-  };
 
   GST_INFO ("preparing test");
   play_seek_event = NULL;
@@ -559,19 +529,8 @@ GST_START_TEST (test_live_seeking)
   bus = gst_element_get_bus (bin);
   gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
 
-  for (i = 0; (i < G_N_ELEMENTS (audio_src_factories) && src1 == NULL); i++) {
-    src1 = test_live_seeking_try_audiosrc (audio_src_factories[i]);
-  }
-  if (!src1) {
-    /* normal audiosources behave differently than audiotestsrc */
-    src1 = gst_element_factory_make ("audiotestsrc", "src1");
-    g_object_set (src1, "wave", 4, "is-live", TRUE, NULL);      /* silence */
-  } else {
-    /* live sources ignore seeks, force eos after 2 sec (4 buffers half second
-     * each)
-     */
-    g_object_set (src1, "num-buffers", 4, "blocksize", 44100, NULL);
-  }
+  src1 = gst_element_factory_make ("audiotestsrc", "src1");
+  g_object_set (src1, "wave", 4, "is-live", TRUE, NULL);        /* silence */
 
   ac1 = gst_element_factory_make ("audioconvert", "ac1");
   src2 = gst_element_factory_make ("audiotestsrc", "src2");
