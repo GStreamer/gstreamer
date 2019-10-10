@@ -101,6 +101,18 @@ gst_photography_iface_base_init (GstPhotographyInterface * iface)
   iface->set_autofocus = NULL;
   iface->set_config = NULL;
   iface->get_config = NULL;
+  iface->set_exposure_mode = NULL;
+  iface->get_exposure_mode = NULL;
+  iface->set_analog_gain = NULL;
+  iface->get_analog_gain = NULL;
+  iface->set_lens_focus = NULL;
+  iface->get_lens_focus = NULL;
+  iface->set_color_temperature = NULL;
+  iface->get_color_temperature = NULL;
+  iface->set_min_exposure_time = NULL;
+  iface->get_min_exposure_time = NULL;
+  iface->set_max_exposure_time = NULL;
+  iface->get_max_exposure_time = NULL;
 }
 
 #define GST_PHOTOGRAPHY_FUNC_TEMPLATE(function_name, param_type) \
@@ -708,5 +720,13 @@ gst_photography_iface_class_init (gpointer g_class)
           "Noise Reduction settings",
           "Which noise reduction modes are enabled (0 = disabled)",
           GST_TYPE_PHOTOGRAPHY_NOISE_REDUCTION,
+          0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /* Exposure mode */
+  g_object_interface_install_property (g_class,
+      g_param_spec_enum (GST_PHOTOGRAPHY_PROP_EXPOSURE_MODE,
+          "Exposure mode property",
+          "Exposure mode to either automatic or manual",
+          GST_TYPE_PHOTOGRAPHY_EXPOSURE_MODE,
           0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
