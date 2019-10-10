@@ -1801,31 +1801,31 @@ gst_vaapipostproc_src_event (GstBaseTransform * trans, GstEvent * event)
         switch (gst_vaapi_filter_get_video_direction (postproc->filter)) {
           case GST_VIDEO_ORIENTATION_90R:
             new_x = y;
-            new_y = GST_VIDEO_INFO_WIDTH (&postproc->srcpad_info) - x;
+            new_y = GST_VIDEO_INFO_WIDTH (&postproc->srcpad_info) - 1 - x;
             break;
           case GST_VIDEO_ORIENTATION_90L:
-            new_x = GST_VIDEO_INFO_HEIGHT (&postproc->srcpad_info) - y;
+            new_x = GST_VIDEO_INFO_HEIGHT (&postproc->srcpad_info) - 1 - y;
             new_y = x;
             break;
           case GST_VIDEO_ORIENTATION_UR_LL:
-            new_x = GST_VIDEO_INFO_HEIGHT (&postproc->srcpad_info) - y;
-            new_y = GST_VIDEO_INFO_WIDTH (&postproc->srcpad_info) - x;
+            new_x = GST_VIDEO_INFO_HEIGHT (&postproc->srcpad_info) - 1 - y;
+            new_y = GST_VIDEO_INFO_WIDTH (&postproc->srcpad_info) - 1 - x;
             break;
           case GST_VIDEO_ORIENTATION_UL_LR:
             new_x = y;
             new_y = x;
             break;
           case GST_VIDEO_ORIENTATION_180:
-            new_x = GST_VIDEO_INFO_WIDTH (&postproc->srcpad_info) - x;
-            new_y = GST_VIDEO_INFO_HEIGHT (&postproc->srcpad_info) - y;
+            new_x = GST_VIDEO_INFO_WIDTH (&postproc->srcpad_info) - 1 - x;
+            new_y = GST_VIDEO_INFO_HEIGHT (&postproc->srcpad_info) - 1 - y;
             break;
           case GST_VIDEO_ORIENTATION_HORIZ:
-            new_x = GST_VIDEO_INFO_WIDTH (&postproc->srcpad_info) - x;
+            new_x = GST_VIDEO_INFO_WIDTH (&postproc->srcpad_info) - 1 - x;
             new_y = y;
             break;
           case GST_VIDEO_ORIENTATION_VERT:
             new_x = x;
-            new_y = GST_VIDEO_INFO_HEIGHT (&postproc->srcpad_info) - y;
+            new_y = GST_VIDEO_INFO_HEIGHT (&postproc->srcpad_info) - 1 - y;
             break;
           default:
             new_x = x;
