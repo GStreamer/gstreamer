@@ -178,13 +178,12 @@ GST_END_TEST;
 
 GST_START_TEST (test_GstDateTime_get_microsecond)
 {
-  GTimeVal tv;
+  gint64 now_us;
   GstDateTime *dt;
 
-  g_get_current_time (&tv);
-  dt = gst_date_time_new (0, 2010, 7, 15, 11, 12,
-      13 + (tv.tv_usec / 1000000.0));
-  assert_almost_equals_int (tv.tv_usec, gst_date_time_get_microsecond (dt));
+  now_us = g_get_real_time () % GST_USECOND;
+  dt = gst_date_time_new (0, 2010, 7, 15, 11, 12, 13 + (now_us / 1000000.0));
+  assert_almost_equals_int (now_us, gst_date_time_get_microsecond (dt));
   gst_date_time_unref (dt);
 }
 

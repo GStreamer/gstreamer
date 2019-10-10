@@ -503,7 +503,7 @@ gst_bus_timed_pop_filtered (GstBus * bus, GstClockTime timeout,
     GstMessageType types)
 {
   GstMessage *message;
-  GTimeVal now, then;
+  gint64 now, then;
   gboolean first_round = TRUE;
   GstClockTime elapsed = 0;
 
@@ -563,12 +563,12 @@ gst_bus_timed_pop_filtered (GstBus * bus, GstClockTime timeout,
 
     else if (timeout != GST_CLOCK_TIME_NONE) {
       if (first_round) {
-        g_get_current_time (&then);
+        then = g_get_monotonic_time ();
         first_round = FALSE;
       } else {
-        g_get_current_time (&now);
+        now = g_get_monotonic_time ();
 
-        elapsed = GST_TIMEVAL_TO_TIME (now) - GST_TIMEVAL_TO_TIME (then);
+        elapsed = (now - then) * GST_USECOND;
 
         if (elapsed > timeout)
           break;
