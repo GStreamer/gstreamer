@@ -673,7 +673,6 @@ gst_multi_fd_sink_handle_client_write (GstMultiFdSink * sink,
   gboolean more;
   gboolean flushing;
   GstClockTime now;
-  GTimeVal nowtv;
   GstMultiHandleSink *mhsink = GST_MULTI_HANDLE_SINK (sink);
   GstMultiHandleSinkClass *mhsinkclass =
       GST_MULTI_HANDLE_SINK_GET_CLASS (mhsink);
@@ -686,8 +685,7 @@ gst_multi_fd_sink_handle_client_write (GstMultiFdSink * sink,
   do {
     gint maxsize;
 
-    g_get_current_time (&nowtv);
-    now = GST_TIMEVAL_TO_TIME (nowtv);
+    now = g_get_real_time () * GST_USECOND;
 
     if (!mhclient->sending) {
       /* client is not working on a buffer */
@@ -905,10 +903,8 @@ gst_multi_fd_sink_handle_clients (GstMultiFdSink * sink)
      * and will not disconnect inactive client in the streaming thread. */
     if (G_UNLIKELY (result == 0)) {
       GstClockTime now;
-      GTimeVal nowtv;
 
-      g_get_current_time (&nowtv);
-      now = GST_TIMEVAL_TO_TIME (nowtv);
+      now = g_get_real_time () * GST_USECOND;
 
       CLIENTS_LOCK (mhsink);
       for (clients = mhsink->clients; clients; clients = next) {

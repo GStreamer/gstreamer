@@ -102,8 +102,8 @@ static gboolean drawCallback (GstElement * gl_sink, GstGLContext *context, GstSa
     static GLfloat	xrot = 0;
     static GLfloat	yrot = 0;
     static GLfloat	zrot = 0;
-    static GTimeVal current_time;
-    static glong last_sec = current_time.tv_sec;
+    static GstClockTime current_time;
+    static GstClockTime last_time = gst_util_get_timestamp();
     static gint nbFrames = 0;
 
     GstVideoFrame v_frame;
@@ -121,14 +121,14 @@ static gboolean drawCallback (GstElement * gl_sink, GstGLContext *context, GstSa
 
     texture = *(guint *) v_frame.data[0];
 
-    g_get_current_time (&current_time);
+    current_time = gst_util_get_timestamp ();
     nbFrames++ ;
 
-    if ((current_time.tv_sec - last_sec) >= 1)
+    if ((current_time - last_time) >= GST_SECOND)
     {
         std::cout << "GRAPHIC FPS of the scene which contains the custom cube) = " << nbFrames << std::endl;
         nbFrames = 0;
-        last_sec = current_time.tv_sec;
+        last_time = current_time;
     }
 
     glEnable(GL_DEPTH_TEST);

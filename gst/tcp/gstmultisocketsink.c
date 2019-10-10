@@ -823,7 +823,6 @@ gst_multi_socket_sink_handle_client_write (GstMultiSocketSink * sink,
   gboolean more;
   gboolean flushing;
   GstClockTime now;
-  GTimeVal nowtv;
   GError *err = NULL;
   GstMultiHandleSink *mhsink = GST_MULTI_HANDLE_SINK (sink);
   GstMultiHandleClient *mhclient = (GstMultiHandleClient *) client;
@@ -831,8 +830,7 @@ gst_multi_socket_sink_handle_client_write (GstMultiSocketSink * sink,
       GST_MULTI_HANDLE_SINK_GET_CLASS (mhsink);
 
 
-  g_get_current_time (&nowtv);
-  now = GST_TIMEVAL_TO_TIME (nowtv);
+  now = g_get_real_time () * GST_USECOND;
 
   flushing = mhclient->status == GST_CLIENT_STATUS_FLUSHING;
 
@@ -1111,12 +1109,10 @@ static gboolean
 gst_multi_socket_sink_timeout (GstMultiSocketSink * sink)
 {
   GstClockTime now;
-  GTimeVal nowtv;
   GList *clients;
   GstMultiHandleSink *mhsink = GST_MULTI_HANDLE_SINK (sink);
 
-  g_get_current_time (&nowtv);
-  now = GST_TIMEVAL_TO_TIME (nowtv);
+  now = g_get_real_time () * GST_USECOND;
 
   CLIENTS_LOCK (mhsink);
   for (clients = mhsink->clients; clients; clients = clients->next) {

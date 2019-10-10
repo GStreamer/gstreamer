@@ -1081,7 +1081,7 @@ gst_video_test_src_ball (GstVideoTestSrc * v, GstClockTime pts,
   int i;
   int radius = 20;
   int w = frame->info.width, h = frame->info.height;
-  GTimeVal rand_tv;
+  gint64 wall_time;
   gdouble rad = 0;
   double x, y;
   int flipit = 0;
@@ -1099,10 +1099,10 @@ gst_video_test_src_ball (GstVideoTestSrc * v, GstClockTime pts,
       flipit = (v->n_frames / 50) % 2;
       break;
     case GST_VIDEO_TEST_SRC_WALL_TIME:
-      g_get_current_time (&rand_tv);
+      wall_time = g_get_real_time ();
 
-      rad = (gdouble) (rand_tv.tv_usec) / 1000000.0 + rand_tv.tv_sec;
-      flipit = rand_tv.tv_sec % 2;
+      rad = (gdouble) wall_time / 1000000.0;
+      flipit = (wall_time / 1000000) % 2;
       break;
     case GST_VIDEO_TEST_SRC_RUNNING_TIME:
       rad = (gdouble) (pts) / GST_SECOND;

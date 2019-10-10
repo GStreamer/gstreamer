@@ -199,7 +199,6 @@ do_seek (GtkWidget * widget, gboolean flush, gboolean segment)
   gboolean res = FALSE;
   GstEvent *s_event;
   gdouble rate;
-  GTimeVal tv;
   gboolean valid;
   gdouble new_range;
 
@@ -222,8 +221,7 @@ do_seek (GtkWidget * widget, gboolean flush, gboolean segment)
 
   cur_range = new_range;
 
-  g_get_current_time (&tv);
-  cur_time = GST_TIMEVAL_TO_TIME (tv);
+  cur_time = g_get_real_time () * GST_USECOND;
 
   if (!valid)
     return FALSE;
