@@ -141,6 +141,10 @@ gst_msdkmjpegenc_need_conversion (GstMsdkEnc * encoder, GstVideoInfo * info,
     case GST_VIDEO_FORMAT_BGRA:
       return FALSE;
 
+    case GST_VIDEO_FORMAT_UYVY:
+      *out_format = GST_VIDEO_FORMAT_YUY2;
+      return TRUE;
+
     default:
       *out_format = GST_VIDEO_FORMAT_NV12;
       return TRUE;

@@ -322,12 +322,21 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
 
     thiz->vpp_param.vpp.Out = thiz->vpp_param.vpp.In;
 
-    if (encoder_input_fmt == GST_VIDEO_FORMAT_P010_10LE) {
-      thiz->vpp_param.vpp.Out.FourCC = MFX_FOURCC_P010;
-      thiz->vpp_param.vpp.Out.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
-    } else {
-      thiz->vpp_param.vpp.Out.FourCC = MFX_FOURCC_NV12;
-      thiz->vpp_param.vpp.Out.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
+    switch (encoder_input_fmt) {
+      case GST_VIDEO_FORMAT_P010_10LE:
+        thiz->vpp_param.vpp.Out.FourCC = MFX_FOURCC_P010;
+        thiz->vpp_param.vpp.Out.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
+        break;
+
+      case GST_VIDEO_FORMAT_YUY2:
+        thiz->vpp_param.vpp.Out.FourCC = MFX_FOURCC_YUY2;
+        thiz->vpp_param.vpp.Out.ChromaFormat = MFX_CHROMAFORMAT_YUV422;
+        break;
+
+      default:
+        thiz->vpp_param.vpp.Out.FourCC = MFX_FOURCC_NV12;
+        thiz->vpp_param.vpp.Out.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
+        break;
     }
 
     /* validate parameters and allow the Media SDK to make adjustments */
