@@ -284,7 +284,7 @@ gst_h264_parse_start (GstBaseParse * parse)
   h264parse->sei_pic_struct = 0;
   h264parse->field_pic_flag = 0;
 
-  gst_base_parse_set_min_frame_size (parse, 6);
+  gst_base_parse_set_min_frame_size (parse, 4);
 
   return TRUE;
 }
@@ -1013,11 +1013,12 @@ gst_h264_parse_collect_nal (GstH264Parse * h264parse, const guint8 * data,
 
   GST_LOG_OBJECT (h264parse, "next nal type: %d %s", nal_type,
       _nal_name (nal_type));
-  complete |= h264parse->picture_start && (nal_type == GST_H264_NAL_SLICE
-      || nal_type == GST_H264_NAL_SLICE_DPA
-      || nal_type == GST_H264_NAL_SLICE_IDR) &&
-      /* first_mb_in_slice == 0 considered start of frame */
-      (nnalu.data[nnalu.offset + nnalu.header_bytes] & 0x80);
+  /* first_mb_in_slice == 0 considered start of frame */
+  if (nnalu.size > nnalu.header_bytes)
+    complete |= h264parse->picture_start && (nal_type == GST_H264_NAL_SLICE
+        || nal_type == GST_H264_NAL_SLICE_DPA
+        || nal_type == GST_H264_NAL_SLICE_IDR) &&
+        (nnalu.data[nnalu.offset + nnalu.header_bytes] & 0x80);
 
   GST_LOG_OBJECT (h264parse, "au complete: %d", complete);
 
@@ -1155,8 +1156,10 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
   data = map.data;
   size = map.size;
 
-  /* expect at least 3 bytes startcode == sc, and 2 bytes NALU payload */
-  if (G_UNLIKELY (size < 5)) {
+  /* expect at least 3 bytes start_code, and 1 bytes NALU header.
+   * the length of the NALU payload can be zero.
+   * (e.g. EOS/EOB placed at the end of an AU.) */
+  if (G_UNLIKELY (size < 4)) {
     gst_buffer_unmap (buffer, &map);
     *skipsize = 1;
     return GST_FLOW_OK;
@@ -1295,7 +1298,10 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
         data, nalu.offset, nalu.size);
 
     if (!nonext) {
-      if (nalu.offset + nalu.size + 4 + 2 > size) {
+      /* expect at least 3 bytes start_code, and 1 bytes NALU header.
+       * the length of the NALU payload can be zero.
+       * (e.g. EOS/EOB placed at the end of an AU.) */
+      if (nalu.offset + nalu.size + 3 + 1 > size) {
         GST_DEBUG_OBJECT (h264parse, "not enough data for next NALU");
         if (drain) {
           GST_DEBUG_OBJECT (h264parse, "but draining anyway");
