@@ -105,7 +105,6 @@ timed_wait_event (GstVaapiWindow * window, int type, guint64 end_time,
   Display *const dpy = GST_VAAPI_WINDOW_NATIVE_DISPLAY (window);
   const Window xid = GST_VAAPI_WINDOW_ID (window);
   XEvent tmp_event;
-  GTimeVal now;
   guint64 now_time;
   Bool got_event;
 
@@ -125,8 +124,7 @@ timed_wait_event (GstVaapiWindow * window, int type, guint64 end_time,
     GST_VAAPI_WINDOW_UNLOCK_DISPLAY (window);
     if (got_event)
       return TRUE;
-    g_get_current_time (&now);
-    now_time = (guint64) now.tv_sec * 1000000 + now.tv_usec;
+    now_time = g_get_real_time ();
   } while (now_time < end_time);
   return FALSE;
 }
@@ -341,7 +339,6 @@ gst_vaapi_window_x11_set_fullscreen (GstVaapiWindow * window,
   XEvent e;
   guint width, height;
   gboolean has_errors;
-  GTimeVal now;
   guint64 end_time;
 
   GST_VAAPI_WINDOW_LOCK_DISPLAY (window);
@@ -378,8 +375,7 @@ gst_vaapi_window_x11_set_fullscreen (GstVaapiWindow * window,
   /* Try to wait for the completion of the fullscreen mode switch */
   if (!window->use_foreign_window && priv->is_mapped) {
     const guint DELAY = 100000; /* 100 ms */
-    g_get_current_time (&now);
-    end_time = DELAY + ((guint64) now.tv_sec * 1000000 + now.tv_usec);
+    end_time = DELAY + g_get_real_time ();
     while (timed_wait_event (window, ConfigureNotify, end_time, &e)) {
       if (fullscreen) {
         gst_vaapi_display_get_size (GST_VAAPI_WINDOW_DISPLAY (window),
