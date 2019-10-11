@@ -115,6 +115,10 @@ USE_GLX = libva_x11_dep.found() and x11_dep.found() and gl_dep.found() and libdl
 USE_WAYLAND = libva_wayland_dep.found() and wayland_client_dep.found() and wayland_protocols_dep.found() and wayland_scanner_bin.found() and get_option('with_wayland') != 'no'
 USE_X11 = libva_x11_dep.found() and x11_dep.found() and get_option('with_x11') != 'no'
 
+if not (USE_DRM or USE_X11 or USE_EGL or USE_GLX or USE_WAYLAND)
+  error('No renderer API found (it is requried either DRM, X11 and/or WAYLAND)')
+endif
+
 driverdir = libva_dep.get_pkgconfig_variable('driverdir')
 if driverdir == ''
   driverdir = '@0@/@1@/@2@'.format(get_option('prefix'), get_option('libdir'), 'dri')
