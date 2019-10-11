@@ -310,6 +310,9 @@ gst_v4l2_video_dec_flush (GstVideoDecoder * decoder)
     GST_VIDEO_DECODER_STREAM_LOCK (decoder);
   }
 
+  if (G_UNLIKELY (!g_atomic_int_get (&self->active)))
+    return TRUE;
+
   self->output_flow = GST_FLOW_OK;
 
   gst_v4l2_object_unlock_stop (self->v4l2output);
