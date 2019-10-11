@@ -54,20 +54,28 @@
 #endif
 #endif
 
+#if (MFX_VERSION >= 1028)
+#define EXT_SINK_FORMATS        ", RGB16, Y410, Y210"
+#define EXT_SRC_FORMATS         ", Y410, Y210"
+#elif (MFX_VERSION >= 1027)
+#define EXT_SINK_FORMATS        ", Y410, Y210"
+#define EXT_SRC_FORMATS         ", Y410, Y210"
+#else
+#define EXT_SINK_FORMATS        ""
+#define EXT_SRC_FORMATS         ""
+#endif
+
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkvpp_debug);
 #define GST_CAT_DEFAULT gst_msdkvpp_debug
 
-#if (MFX_VERSION >= 1028)
 #define SUPPORTED_SYSTEM_FORMAT \
-    "{ NV12, YV12, I420, YUY2, UYVY, VUYA, BGRA, BGRx, RGB16, P010_10LE }"
+    "{ NV12, YV12, I420, YUY2, UYVY, VUYA, BGRA, BGRx, P010_10LE" EXT_SINK_FORMATS "}"
 #define SUPPORTED_DMABUF_FORMAT \
-    "{ NV12, BGRA, YUY2, UYVY, VUYA, RGB16, P010_10LE}"
-#else
-#define SUPPORTED_SYSTEM_FORMAT \
-    "{ NV12, YV12, I420, YUY2, UYVY, VUYA, BGRA, BGRx, P010_10LE }"
-#define SUPPORTED_DMABUF_FORMAT \
-    "{ NV12, BGRA, YUY2, UYVY, VUYA, P010_10LE}"
-#endif
+    "{ NV12, BGRA, YUY2, UYVY, VUYA, P010_10LE" EXT_SINK_FORMATS "}"
+#define SRC_SYSTEM_FORMAT \
+    "{ BGRA, NV12, YUY2, UYVY, VUYA, BGRx, P010_10LE" EXT_FORMATS EXT_SRC_FORMATS "}"
+#define SRC_DMABUF_FORMAT       \
+    "{ BGRA, YUY2, UYVY, NV12, VUYA, BGRx, P010_10LE" EXT_FORMATS EXT_SRC_FORMATS "}"
 
 #ifndef _WIN32
 #define DMABUF_SINK_CAPS_STR \
@@ -80,7 +88,7 @@ GST_DEBUG_CATEGORY_EXTERN (gst_msdkvpp_debug);
 #ifndef _WIN32
 #define DMABUF_SRC_CAPS_STR \
   GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_DMABUF, \
-      "{ BGRA, YUY2, UYVY, NV12, VUYA, BGRx, P010_10LE" EXT_FORMATS "}") ";"
+      SRC_DMABUF_FORMAT) ";"
 #else
 #define DMABUF_SRC_CAPS_STR ""
 #endif
@@ -99,8 +107,7 @@ static GstStaticPadTemplate gst_msdkvpp_src_factory =
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (DMABUF_SRC_CAPS_STR
-        GST_VIDEO_CAPS_MAKE ("{ BGRA, NV12, YUY2, UYVY, VUYA, BGRx, P010_10LE"
-            EXT_FORMATS "}") ", "
+        GST_VIDEO_CAPS_MAKE (SRC_SYSTEM_FORMAT) ", "
         "interlace-mode = (string){ progressive, interleaved, mixed }" ";"));
 
 enum
