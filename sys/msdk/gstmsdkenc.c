@@ -247,6 +247,7 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
   mfxFrameAllocRequest request[2];
   guint i;
   gboolean need_vpp = TRUE;
+  GstVideoFormat encoder_input_fmt;
 
   if (thiz->initialized) {
     GST_DEBUG_OBJECT (thiz, "Already initialized");
@@ -271,38 +272,33 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
   if (thiz->use_video_memory)
     gst_msdk_set_frame_allocator (thiz->context);
 
-  switch (GST_VIDEO_INFO_FORMAT (info)) {
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_P010_10LE:
-    case GST_VIDEO_FORMAT_VUYA:
-#if (MFX_VERSION >= 1027)
-    case GST_VIDEO_FORMAT_Y410:
-#endif
-      need_vpp = FALSE;
-      break;
-    case GST_VIDEO_FORMAT_YV12:
-    case GST_VIDEO_FORMAT_I420:
-      thiz->vpp_param.vpp.In.FourCC = MFX_FOURCC_YV12;
-      thiz->vpp_param.vpp.In.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
-      break;
-    case GST_VIDEO_FORMAT_YUY2:
-      thiz->vpp_param.vpp.In.FourCC = MFX_FOURCC_YUY2;
-      thiz->vpp_param.vpp.In.ChromaFormat = MFX_CHROMAFORMAT_YUV422;
-      break;
-    case GST_VIDEO_FORMAT_UYVY:
-      thiz->vpp_param.vpp.In.FourCC = MFX_FOURCC_UYVY;
-      thiz->vpp_param.vpp.In.ChromaFormat = MFX_CHROMAFORMAT_YUV422;
-      break;
-    case GST_VIDEO_FORMAT_BGRA:
-      thiz->vpp_param.vpp.In.FourCC = MFX_FOURCC_RGB4;
-      thiz->vpp_param.vpp.In.ChromaFormat = MFX_CHROMAFORMAT_YUV444;
-      break;
-    default:
-      g_assert_not_reached ();
-      break;
-  }
+  encoder_input_fmt = GST_VIDEO_INFO_FORMAT (info);
+  need_vpp = klass->need_conversion (thiz, info, &encoder_input_fmt);
 
   if (need_vpp) {
+    switch (GST_VIDEO_INFO_FORMAT (info)) {
+      case GST_VIDEO_FORMAT_YV12:
+      case GST_VIDEO_FORMAT_I420:
+        thiz->vpp_param.vpp.In.FourCC = MFX_FOURCC_YV12;
+        thiz->vpp_param.vpp.In.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
+        break;
+      case GST_VIDEO_FORMAT_YUY2:
+        thiz->vpp_param.vpp.In.FourCC = MFX_FOURCC_YUY2;
+        thiz->vpp_param.vpp.In.ChromaFormat = MFX_CHROMAFORMAT_YUV422;
+        break;
+      case GST_VIDEO_FORMAT_UYVY:
+        thiz->vpp_param.vpp.In.FourCC = MFX_FOURCC_UYVY;
+        thiz->vpp_param.vpp.In.ChromaFormat = MFX_CHROMAFORMAT_YUV422;
+        break;
+      case GST_VIDEO_FORMAT_BGRA:
+        thiz->vpp_param.vpp.In.FourCC = MFX_FOURCC_RGB4;
+        thiz->vpp_param.vpp.In.ChromaFormat = MFX_CHROMAFORMAT_YUV444;
+        break;
+      default:
+        g_assert_not_reached ();
+        break;
+    }
+
     if (thiz->use_video_memory)
       thiz->vpp_param.IOPattern =
           MFX_IOPATTERN_IN_VIDEO_MEMORY | MFX_IOPATTERN_OUT_VIDEO_MEMORY;
@@ -326,7 +322,7 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
 
     thiz->vpp_param.vpp.Out = thiz->vpp_param.vpp.In;
 
-    if ((GST_VIDEO_INFO_COMP_DEPTH (info, 0)) == 10) {
+    if (encoder_input_fmt == GST_VIDEO_FORMAT_P010_10LE) {
       thiz->vpp_param.vpp.Out.FourCC = MFX_FOURCC_P010;
       thiz->vpp_param.vpp.Out.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
     } else {
@@ -418,7 +414,7 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
   thiz->param.mfx.FrameInfo.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
   thiz->param.mfx.FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
 
-  switch (GST_VIDEO_INFO_FORMAT (info)) {
+  switch (encoder_input_fmt) {
     case GST_VIDEO_FORMAT_P010_10LE:
       thiz->param.mfx.FrameInfo.FourCC = MFX_FOURCC_P010;
       thiz->param.mfx.FrameInfo.BitDepthLuma = 10;
@@ -1133,14 +1129,17 @@ gst_msdkenc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
   /* Create another bufferpool if VPP requires */
   if (thiz->has_vpp) {
     GstVideoInfo *info = &thiz->input_state->info;
-    GstVideoInfo nv12_info;
+    GstVideoInfo out_info;
+    GstVideoFormat out_fmt;
     GstCaps *caps;
     GstBufferPool *pool = NULL;
 
-    gst_video_info_init (&nv12_info);
-    gst_video_info_set_format (&nv12_info, GST_VIDEO_FORMAT_NV12, info->width,
-        info->height);
-    caps = gst_video_info_to_caps (&nv12_info);
+    gst_video_info_init (&out_info);
+    out_fmt =
+        gst_msdk_get_video_format_from_mfx_fourcc (thiz->vpp_param.vpp.
+        Out.FourCC);
+    gst_video_info_set_format (&out_info, out_fmt, info->width, info->height);
+    caps = gst_video_info_to_caps (&out_info);
 
     /* If there's an existing pool try to reuse it when is compatible */
     if (thiz->msdk_converted_pool) {
@@ -1634,6 +1633,28 @@ gst_msdkenc_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static gboolean
+gst_msdkenc_need_conversion (GstMsdkEnc * encoder, GstVideoInfo * info,
+    GstVideoFormat * out_format)
+{
+  switch (GST_VIDEO_INFO_FORMAT (info)) {
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_P010_10LE:
+    case GST_VIDEO_FORMAT_VUYA:
+#if (MFX_VERSION >= 1027)
+    case GST_VIDEO_FORMAT_Y410:
+#endif
+      return FALSE;
+
+    default:
+      if (GST_VIDEO_INFO_COMP_DEPTH (info, 0) == 10)
+        *out_format = GST_VIDEO_FORMAT_P010_10LE;
+      else
+        *out_format = GST_VIDEO_FORMAT_NV12;
+      return TRUE;
+  }
+}
+
 static void
 gst_msdkenc_class_init (GstMsdkEncClass * klass)
 {
@@ -1644,6 +1665,8 @@ gst_msdkenc_class_init (GstMsdkEncClass * klass)
   gobject_class = G_OBJECT_CLASS (klass);
   element_class = GST_ELEMENT_CLASS (klass);
   gstencoder_class = GST_VIDEO_ENCODER_CLASS (klass);
+
+  klass->need_conversion = gst_msdkenc_need_conversion;
 
   gobject_class->finalize = gst_msdkenc_finalize;
 

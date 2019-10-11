@@ -167,6 +167,13 @@ struct _GstMsdkEncClass
   gboolean (*set_format) (GstMsdkEnc * encoder);
   gboolean (*configure) (GstMsdkEnc * encoder);
   GstCaps *(*set_src_caps) (GstMsdkEnc * encoder);
+  /* Return TRUE if vpp is required before encoding
+   * @info (in), input video info
+   * @out_format (out), a pointer to the output format of vpp, which is set
+   * when return TRUE
+   */
+  gboolean (*need_conversion) (GstMsdkEnc * encoder, GstVideoInfo * info,
+      GstVideoFormat * out_format);
 };
 
 struct _MsdkEncTask
