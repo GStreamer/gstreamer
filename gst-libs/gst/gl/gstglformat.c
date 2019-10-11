@@ -190,6 +190,8 @@ gst_gl_format_from_video_info (GstGLContext * context, GstVideoInfo * vinfo,
       break;
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_NV21:
+    case GST_VIDEO_FORMAT_NV16:
+    case GST_VIDEO_FORMAT_NV61:
       n_plane_components = plane == 0 ? 1 : 2;
       break;
     case GST_VIDEO_FORMAT_GRAY8:

@@ -117,8 +117,8 @@ static const gfloat from_rgb_bt709_ucoeff[] = {-0.100640f, -0.338688f, 0.439327f
 static const gfloat from_rgb_bt709_vcoeff[] = {0.440654f, -0.400285f, -0.040370f};
 
 /* GRAY16 to RGB conversion
- *  data transferred as GL_LUMINANCE_ALPHA then convert back to GRAY16 
- *  high byte weight as : 255*256/65535 
+ *  data transferred as GL_LUMINANCE_ALPHA then convert back to GRAY16
+ *  high byte weight as : 255*256/65535
  *  ([0~1] denormalize to [0~255],shift to high byte,normalize to [0~1])
  *  low byte weight as : 255/65535 (similar)
  * */
@@ -181,8 +181,8 @@ static const struct shader_templ templ_REORDER =
   };
 
 /* GRAY16 to RGB conversion
- *  data transferred as GL_LUMINANCE_ALPHA then convert back to GRAY16 
- *  high byte weight as : 255*256/65535 
+ *  data transferred as GL_LUMINANCE_ALPHA then convert back to GRAY16
+ *  high byte weight as : 255*256/65535
  *  ([0~1] denormalize to [0~255],shift to high byte,normalize to [0~1])
  *  low byte weight as : 255/65535 (similar)
  * */
@@ -310,22 +310,23 @@ static const struct shader_templ templ_SEMI_PLANAR_to_RGB =
     GST_GL_TEXTURE_TARGET_2D
   };
 
-/* RGB to NV12/NV21 conversion */
-/* NV12: u, v
-   NV21: v, u */
-static const gchar templ_RGB_to_NV12_NV21_BODY[] =
+  /* RGB to NV12/NV21/NV16/NV61 conversion */
+  /* NV12/NV16: u, v
+     NV21/NV61: v, u */
+static const gchar templ_RGB_to_SEMI_PLANAR_YUV_BODY[] =
     "vec4 texel, uv_texel;\n"
     "vec3 yuv;\n"
     "texel = texture2D(tex, texcoord).%c%c%c%c;\n"
-    "uv_texel = texture2D(tex, texcoord * tex_scale0 * 2.0).%c%c%c%c;\n"
+    "uv_texel = texture2D(tex, texcoord * tex_scale0 * chroma_sampling).%c%c%c%c;\n"
     "yuv.x = rgb_to_yuv (texel.rgb, offset, coeff1, coeff2, coeff3).x;\n"
     "yuv.yz = rgb_to_yuv (uv_texel.rgb, offset, coeff1, coeff2, coeff3).yz;\n"
     "gl_FragData[0] = vec4(yuv.x, 0.0, 0.0, 1.0);\n"
     "gl_FragData[1] = vec4(yuv.%c, yuv.%c, 0.0, 1.0);\n";
 
-static const struct shader_templ templ_RGB_to_NV12_NV21 =
+static const struct shader_templ templ_RGB_to_SEMI_PLANAR_YUV =
   { NULL,
-    DEFAULT_UNIFORMS RGB_TO_YUV_COEFFICIENTS "uniform sampler2D tex;\n",
+    DEFAULT_UNIFORMS RGB_TO_YUV_COEFFICIENTS "uniform sampler2D tex;\n"
+    "uniform vec2 chroma_sampling;\n",
     { glsl_func_rgb_to_yuv, NULL, },
     GST_GL_TEXTURE_TARGET_2D
   };
@@ -912,7 +913,7 @@ _init_supported_formats (GstGLContext * context, gboolean output,
   /* Always supported input formats or output with multiple draw buffers */
   if (!output || (!context || context->gl_vtable->DrawBuffers))
     _append_value_string_list (supported_formats, "Y444", "I420", "YV12",
-        "Y42B", "Y41B", "NV12", "NV21", NULL);
+        "Y42B", "Y41B", "NV12", "NV21", "NV16", "NV61", NULL);
 
   /* Requires reading from a RG/LA framebuffer... */
   if (!context || (USING_GLES3 (context) || USING_OPENGL (context)))
@@ -1532,6 +1533,8 @@ _get_n_textures (GstVideoFormat v_format)
       return 1;
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_NV21:
+    case GST_VIDEO_FORMAT_NV16:
+    case GST_VIDEO_FORMAT_NV61:
     case GST_VIDEO_FORMAT_P010_10LE:
     case GST_VIDEO_FORMAT_P010_10BE:
     case GST_VIDEO_FORMAT_P016_LE:
@@ -1679,6 +1682,7 @@ _YUV_to_RGB (GstGLColorConvert * convert)
         break;
       }
       case GST_VIDEO_FORMAT_NV12:
+      case GST_VIDEO_FORMAT_NV16:
       {
         char val2 = convert->priv->in_tex_formats[1] == GST_GL_RG ? 'g' : 'a';
         info->templ = &templ_SEMI_PLANAR_to_RGB;
@@ -1690,6 +1694,7 @@ _YUV_to_RGB (GstGLColorConvert * convert)
         break;
       }
       case GST_VIDEO_FORMAT_NV21:
+      case GST_VIDEO_FORMAT_NV61:
       {
         char val2 = convert->priv->in_tex_formats[1] == GST_GL_RG ? 'g' : 'a';
         info->templ = &templ_SEMI_PLANAR_to_RGB;
@@ -1810,20 +1815,34 @@ _RGB_to_YUV (GstGLColorConvert * convert)
       info->out_n_textures = 1;
       break;
     case GST_VIDEO_FORMAT_NV12:
-      info->templ = &templ_RGB_to_NV12_NV21,
-          info->frag_body = g_strdup_printf (templ_RGB_to_NV12_NV21_BODY,
+    case GST_VIDEO_FORMAT_NV16:
+      info->templ = &templ_RGB_to_SEMI_PLANAR_YUV,
+          info->frag_body = g_strdup_printf (templ_RGB_to_SEMI_PLANAR_YUV_BODY,
           pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3],
           pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3],
           'y', 'z');
       info->out_n_textures = 2;
+      if (out_format == GST_VIDEO_FORMAT_NV16) {
+        info->chroma_sampling[0] = 2.0f;
+        info->chroma_sampling[1] = 1.0f;
+      } else {
+        info->chroma_sampling[0] = info->chroma_sampling[1] = 2.0f;
+      }
       break;
     case GST_VIDEO_FORMAT_NV21:
-      info->templ = &templ_RGB_to_NV12_NV21,
-          info->frag_body = g_strdup_printf (templ_RGB_to_NV12_NV21_BODY,
+    case GST_VIDEO_FORMAT_NV61:
+      info->templ = &templ_RGB_to_SEMI_PLANAR_YUV,
+          info->frag_body = g_strdup_printf (templ_RGB_to_SEMI_PLANAR_YUV_BODY,
           pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3],
           pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3],
           'z', 'y');
       info->out_n_textures = 2;
+      if (out_format == GST_VIDEO_FORMAT_NV61) {
+        info->chroma_sampling[0] = 2.0f;
+        info->chroma_sampling[1] = 1.0f;
+      } else {
+        info->chroma_sampling[0] = info->chroma_sampling[1] = 2.0f;
+      }
       break;
     default:
       break;

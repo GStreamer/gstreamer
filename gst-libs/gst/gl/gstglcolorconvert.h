@@ -95,9 +95,9 @@ struct _GstGLColorConvertClass
 
 #define GST_GL_COLOR_CONVERT_FORMATS "{ RGBA, RGB, RGBx, BGR, BGRx, BGRA, xRGB, " \
                                "xBGR, ARGB, ABGR, Y444, I420, YV12, Y42B, " \
-                               "Y41B, NV12, NV21, YUY2, UYVY, AYUV, VUYA, Y410, " \
-                               "GRAY8, GRAY16_LE, GRAY16_BE, RGB16, BGR16, ARGB64 " \
-                               COLOR_CONVERT_EXT_FORMATS "}"
+                               "Y41B, NV12, NV21, NV16, NV61, YUY2, UYVY, AYUV, " \
+                               "VUYA, Y410, GRAY8, GRAY16_LE, GRAY16_BE, " \
+                               "RGB16, BGR16, ARGB64 " COLOR_CONVERT_EXT_FORMATS "}"
 
 /**
  * GST_GL_COLOR_CONVERT_VIDEO_CAPS:
