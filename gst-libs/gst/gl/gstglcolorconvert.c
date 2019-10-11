@@ -924,11 +924,14 @@ _init_supported_formats (GstGLContext * context, gboolean output,
   if (!context || gst_gl_format_is_supported (context, GST_GL_RGB565))
     _append_value_string_list (supported_formats, "RGB16", "BGR16", NULL);
 
+  if (!context || gst_gl_format_is_supported (context, GST_GL_RGB10_A2)) {
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-  if (!context || gst_gl_format_is_supported (context, GST_GL_RGB10_A2))
     _append_value_string_list (supported_formats, "BGR10A2_LE", "RGB10A2_LE",
-        NULL);
+        "Y410", NULL);
+#else
+    _append_value_string_list (supported_formats, "Y410", NULL);
 #endif
+  }
 
   if (!context || (gst_gl_format_is_supported (context, GST_GL_R16) &&
           gst_gl_format_is_supported (context, GST_GL_RG16)))
@@ -1525,6 +1528,7 @@ _get_n_textures (GstVideoFormat v_format)
     case GST_VIDEO_FORMAT_ARGB64:
     case GST_VIDEO_FORMAT_BGR10A2_LE:
     case GST_VIDEO_FORMAT_RGB10A2_LE:
+    case GST_VIDEO_FORMAT_Y410:
       return 1;
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_NV21:
@@ -1622,6 +1626,12 @@ _YUV_to_RGB (GstGLColorConvert * convert)
       case GST_VIDEO_FORMAT_VUYA:
         info->templ = &templ_AYUV_to_RGB;
         info->frag_body = g_strdup_printf (templ_AYUV_to_RGB_BODY, "zyx", 'w',
+            pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3]);
+        info->shader_tex_names[0] = "tex";
+        break;
+      case GST_VIDEO_FORMAT_Y410:
+        info->templ = &templ_AYUV_to_RGB;
+        info->frag_body = g_strdup_printf (templ_AYUV_to_RGB_BODY, "yxz", 'w',
             pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3]);
         info->shader_tex_names[0] = "tex";
         break;
@@ -1752,6 +1762,13 @@ _RGB_to_YUV (GstGLColorConvert * convert)
       info->templ = &templ_RGB_to_AYUV;
       info->frag_body = g_strdup_printf (templ_RGB_to_AYUV_BODY, pixel_order[0],
           pixel_order[1], pixel_order[2], pixel_order[3], "zyx", 'w', alpha);
+      info->out_n_textures = 1;
+      break;
+    case GST_VIDEO_FORMAT_Y410:
+      alpha = _is_RGBx (in_format) ? "1.0" : "texel.a";
+      info->templ = &templ_RGB_to_AYUV;
+      info->frag_body = g_strdup_printf (templ_RGB_to_AYUV_BODY, pixel_order[0],
+          pixel_order[1], pixel_order[2], pixel_order[3], "yxz", 'w', alpha);
       info->out_n_textures = 1;
       break;
     case GST_VIDEO_FORMAT_I420:
