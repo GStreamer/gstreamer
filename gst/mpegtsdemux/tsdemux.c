@@ -3040,7 +3040,8 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,
     buffer = gst_buffer_list_get (buffer_list, 0);
 
   if (GST_CLOCK_TIME_IS_VALID (stream->pts))
-    GST_BUFFER_PTS (buffer) = stream->pts;
+    GST_BUFFER_PTS (buffer) = GST_BUFFER_DTS (buffer) = stream->pts;
+  /* DTS = PTS by default, we override it if there's a real DTS */
   if (GST_CLOCK_TIME_IS_VALID (stream->dts))
     GST_BUFFER_DTS (buffer) = stream->dts;
 
