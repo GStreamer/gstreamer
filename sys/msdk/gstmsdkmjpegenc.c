@@ -131,6 +131,22 @@ gst_msdkmjpegenc_set_property (GObject * object, guint prop_id,
   GST_OBJECT_UNLOCK (thiz);
 }
 
+static gboolean
+gst_msdkmjpegenc_need_conversion (GstMsdkEnc * encoder, GstVideoInfo * info,
+    GstVideoFormat * out_format)
+{
+  switch (GST_VIDEO_INFO_FORMAT (info)) {
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_BGRA:
+      return FALSE;
+
+    default:
+      *out_format = GST_VIDEO_FORMAT_NV12;
+      return TRUE;
+  }
+}
+
 static void
 gst_msdkmjpegenc_class_init (GstMsdkMJPEGEncClass * klass)
 {
@@ -145,6 +161,7 @@ gst_msdkmjpegenc_class_init (GstMsdkMJPEGEncClass * klass)
   encoder_class->set_format = gst_msdkmjpegenc_set_format;
   encoder_class->configure = gst_msdkmjpegenc_configure;
   encoder_class->set_src_caps = gst_msdkmjpegenc_set_src_caps;
+  encoder_class->need_conversion = gst_msdkmjpegenc_need_conversion;
 
   gobject_class->get_property = gst_msdkmjpegenc_get_property;
   gobject_class->set_property = gst_msdkmjpegenc_set_property;
