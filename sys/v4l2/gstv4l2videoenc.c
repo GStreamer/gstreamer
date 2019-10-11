@@ -720,7 +720,7 @@ gst_v4l2_video_enc_handle_frame (GstVideoEncoder * encoder,
   if (G_UNLIKELY (!g_atomic_int_get (&self->active)))
     goto flushing;
 
-  task_state = gst_pad_get_task_state (GST_VIDEO_DECODER_SRC_PAD (self));
+  task_state = gst_pad_get_task_state (GST_VIDEO_ENCODER_SRC_PAD (self));
   if (task_state == GST_TASK_STOPPED || task_state == GST_TASK_PAUSED) {
     GstBufferPool *pool = GST_BUFFER_POOL (self->v4l2output->pool);
 
