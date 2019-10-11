@@ -990,15 +990,59 @@ static GstFlowReturn
 gst_base_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
   GstBuffer *buffer = frame->buffer;
+  gboolean must_approximate_pts = !GST_BUFFER_PTS_IS_VALID (buffer)
+      && GST_CLOCK_TIME_IS_VALID (parse->priv->next_pts);
+  gboolean must_approximate_dts = !GST_BUFFER_DTS_IS_VALID (buffer)
+      && GST_CLOCK_TIME_IS_VALID (parse->priv->next_dts);
 
-  if (!GST_BUFFER_PTS_IS_VALID (buffer) &&
-      GST_CLOCK_TIME_IS_VALID (parse->priv->next_pts)) {
+  if (must_approximate_pts) {
     GST_BUFFER_PTS (buffer) = parse->priv->next_pts;
+    if (!must_approximate_dts
+        && GST_BUFFER_DTS (buffer) > parse->priv->next_pts) {
+      /* Can't present a frame before it's decoded: change the pts! This can
+       * happen, for example, when accumulating rounding errors from the
+       * buffer durations. Assume DTS is correct because only PTS is
+       * approximated here */
+      GST_LOG_OBJECT (parse,
+          "Found DTS (%" GST_TIME_FORMAT ") > PTS (%" GST_TIME_FORMAT
+          "), set PTS = DTS", GST_TIME_ARGS (GST_BUFFER_DTS (buffer)),
+          GST_TIME_ARGS (GST_BUFFER_PTS (buffer)));
+      GST_BUFFER_PTS (buffer) = GST_BUFFER_DTS (buffer);
+    }
   }
-  if (!GST_BUFFER_DTS_IS_VALID (buffer) &&
-      GST_CLOCK_TIME_IS_VALID (parse->priv->next_dts)) {
-    GST_BUFFER_DTS (buffer) = parse->priv->next_dts;
+
+  if (must_approximate_dts) {
+    if (!must_approximate_pts
+        && GST_BUFFER_PTS (buffer) < parse->priv->next_dts) {
+      /* Can't present a frame before it's decoded: change the dts! This can
+       * happen, for example, when accumulating rounding errors from the
+       * buffer durations. Assume PTS is correct because only DTS is
+       * approximated here */
+      GST_LOG_OBJECT (parse,
+          "Found DTS (%" GST_TIME_FORMAT ") > PTS (%" GST_TIME_FORMAT
+          "), set DTS = PTS", GST_TIME_ARGS (GST_BUFFER_DTS (buffer)),
+          GST_TIME_ARGS (GST_BUFFER_PTS (buffer)));
+      GST_BUFFER_DTS (buffer) = GST_BUFFER_PTS (buffer);
+    } else {
+      GST_BUFFER_DTS (buffer) = parse->priv->next_dts;
+    }
   }
+
+  if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_PTS (buffer))
+      && GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DTS (buffer))
+      && GST_BUFFER_PTS (buffer) < GST_BUFFER_DTS (buffer)) {
+    /* Can't present a frame before it's decoded: change the pts! This can
+     * happen, for example, when accumulating rounding errors from the buffer
+     * durations. PTS and DTS are either both approximated or both from the
+     * original buffer timestamp. Set PTS = DTS because the opposite has been
+     * observed to cause DTS going backwards */
+    GST_LOG_OBJECT (parse,
+        "Found DTS (%" GST_TIME_FORMAT ") > PTS (%" GST_TIME_FORMAT
+        "), set PTS = DTS", GST_TIME_ARGS (GST_BUFFER_DTS (buffer)),
+        GST_TIME_ARGS (GST_BUFFER_PTS (buffer)));
+    GST_BUFFER_PTS (buffer) = GST_BUFFER_DTS (buffer);
+  }
+
   if (!GST_BUFFER_DURATION_IS_VALID (buffer) &&
       GST_CLOCK_TIME_IS_VALID (parse->priv->frame_duration)) {
     GST_BUFFER_DURATION (buffer) = parse->priv->frame_duration;
