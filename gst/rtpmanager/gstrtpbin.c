@@ -1214,11 +1214,8 @@ get_current_times (GstRtpBin * bin, GstClockTime * running_time,
       switch (bin->ntp_time_source) {
         case GST_RTP_NTP_TIME_SOURCE_NTP:
         case GST_RTP_NTP_TIME_SOURCE_UNIX:{
-          GTimeVal current;
-
           /* get current NTP time */
-          g_get_current_time (&current);
-          ntpns = GST_TIMEVAL_TO_TIME (current);
+          ntpns = g_get_real_time () * GST_USECOND;
 
           /* add constant to convert from 1970 based time to 1900 based time */
           if (bin->ntp_time_source == GST_RTP_NTP_TIME_SOURCE_NTP)

@@ -14161,12 +14161,12 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
   if (creation_time != 0) {
     /* Try to use epoch first as it should be faster and more commonly found */
     if (creation_time >= QTDEMUX_SECONDS_FROM_1904_TO_1970) {
-      GTimeVal now;
+      gint64 now_s;
 
       creation_time -= QTDEMUX_SECONDS_FROM_1904_TO_1970;
       /* some data cleansing sanity */
-      g_get_current_time (&now);
-      if (now.tv_sec + 24 * 3600 < creation_time) {
+      now_s = g_get_real_time () / G_USEC_PER_SEC;
+      if (now_s + 24 * 3600 < creation_time) {
         GST_DEBUG_OBJECT (qtdemux, "discarding bogus future creation time");
       } else {
         datetime = gst_date_time_new_from_unix_epoch_utc (creation_time);

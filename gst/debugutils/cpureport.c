@@ -99,21 +99,19 @@ static GstFlowReturn
 gst_cpu_report_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 {
   GstCpuReport *filter;
-  GTimeVal cur_time;
+  GstClockTime cur_time;
   clock_t cur_cpu_time;
   GstMessage *msg;
   GstStructure *s;
-  gint64 time_taken;
+  GstClockTimeDiff time_taken;
 
-
-  g_get_current_time (&cur_time);
+  cur_time = g_get_real_time () * GST_USECOND;
   cur_cpu_time = clock ();
 
   filter = GST_CPU_REPORT (trans);
 
 
-  time_taken = GST_TIMEVAL_TO_TIME (cur_time) -
-      GST_TIMEVAL_TO_TIME (filter->last_time);
+  time_taken = cur_time - filter->last_time;
 
   s = gst_structure_new ("cpu-report", "cpu-time", G_TYPE_DOUBLE,
       ((gdouble) (cur_cpu_time - filter->last_cpu_time)),
@@ -135,8 +133,7 @@ gst_cpu_report_start (GstBaseTransform * trans)
 
   filter = GST_CPU_REPORT (trans);
 
-  g_get_current_time (&filter->last_time);
-  filter->start_time = filter->last_time;
+  filter->start_time = filter->last_time = g_get_real_time () * GST_USECOND;
   filter->last_cpu_time = clock ();
   return TRUE;
 }

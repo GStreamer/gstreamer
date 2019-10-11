@@ -2960,7 +2960,6 @@ gst_matroska_mux_start (GstMatroskaMux * mux, GstMatroskaPad * first_pad,
   GstClockTime earliest_time = GST_CLOCK_TIME_NONE;
   GstClockTime duration = 0;
   guint32 segment_uid[4];
-  GTimeVal time = { 0, 0 };
   gchar s_id[32];
   GstToc *toc;
 
@@ -3098,8 +3097,8 @@ gst_matroska_mux_start (GstMatroskaMux * mux, GstMatroskaPad * first_pad,
   if (mux->writing_app && mux->writing_app[0]) {
     gst_ebml_write_utf8 (ebml, GST_MATROSKA_ID_WRITINGAPP, mux->writing_app);
   }
-  g_get_current_time (&time);
-  gst_ebml_write_date (ebml, GST_MATROSKA_ID_DATEUTC, time.tv_sec);
+  gst_ebml_write_date (ebml, GST_MATROSKA_ID_DATEUTC,
+      g_get_real_time () / G_USEC_PER_SEC);
   gst_ebml_write_master_finish (ebml, master);
 
   /* tracks */

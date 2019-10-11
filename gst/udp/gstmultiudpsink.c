@@ -211,8 +211,9 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
    *
    * Get the statistics of the client with destination @host and @port.
    *
-   * Returns: a GstStructure: bytes_sent, packets_sent,
-   *           connect_time (in epoch seconds), disconnect_time (in epoch seconds)
+   * Returns: a GstStructure: bytes_sent, packets_sent, connect_time
+   *           (in epoch nanoseconds), disconnect_time (in epoch
+   *           nanoseconds)
    */
   gst_multiudpsink_signals[SIGNAL_GET_STATS] =
       g_signal_new ("get-stats", G_TYPE_FROM_CLASS (klass),
@@ -1525,7 +1526,6 @@ gst_multiudpsink_add_internal (GstMultiUDPSink * sink, const gchar * host,
   GSocketFamily family;
   GstUDPClient *client;
   GstUDPClient udpclient;
-  GTimeVal now;
   GList *find;
 
   udpclient.host = (gchar *) host;
@@ -1560,8 +1560,7 @@ gst_multiudpsink_add_internal (GstMultiUDPSink * sink, const gchar * host,
 
     family = g_socket_address_get_family (client->addr);
 
-    g_get_current_time (&now);
-    client->connect_time = GST_TIMEVAL_TO_TIME (now);
+    client->connect_time = g_get_real_time () * GST_USECOND;
 
     if (sink->used_socket)
       gst_multiudpsink_configure_client (sink, client);
@@ -1619,7 +1618,6 @@ gst_multiudpsink_remove (GstMultiUDPSink * sink, const gchar * host, gint port)
   GList *find;
   GstUDPClient udpclient;
   GstUDPClient *client;
-  GTimeVal now;
 
   udpclient.host = (gchar *) host;
   udpclient.port = port;
@@ -1656,8 +1654,7 @@ gst_multiudpsink_remove (GstMultiUDPSink * sink, const gchar * host, gint port)
 
     GST_DEBUG_OBJECT (sink, "remove client with host %s, port %d", host, port);
 
-    g_get_current_time (&now);
-    client->disconnect_time = GST_TIMEVAL_TO_TIME (now);
+    client->disconnect_time = g_get_real_time () * GST_USECOND;
 
     if (socket && sink->auto_multicast
         && g_inet_address_get_is_multicast (addr)) {

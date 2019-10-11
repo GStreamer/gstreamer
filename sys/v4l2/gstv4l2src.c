@@ -879,11 +879,8 @@ retry:
     gstnow = GST_TIMESPEC_TO_TIME (now);
 
     if (timestamp > gstnow || (gstnow - timestamp) > (10 * GST_SECOND)) {
-      GTimeVal now;
-
       /* very large diff, fall back to system time */
-      g_get_current_time (&now);
-      gstnow = GST_TIMEVAL_TO_TIME (now);
+      gstnow = g_get_real_time () * GST_USECOND;
     }
 
     /* Detect buggy drivers here, and stop using their timestamp. Failing any

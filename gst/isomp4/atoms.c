@@ -78,11 +78,10 @@ atoms_context_free (AtomsContext * context)
 guint64
 atoms_get_current_qt_time (void)
 {
-  GTimeVal timeval;
+  gint64 curtime_s = g_get_real_time () / G_USEC_PER_SEC;
 
-  g_get_current_time (&timeval);
   /* FIXME this should use UTC coordinated time */
-  return timeval.tv_sec + (((1970 - 1904) * (guint64) 365) +
+  return curtime_s + (((1970 - 1904) * (guint64) 365) +
       LEAP_YEARS_FROM_1904_TO_1970) * SECS_PER_DAY;
 }
 

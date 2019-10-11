@@ -1083,7 +1083,6 @@ tags:
   tags_written++;
 
   {
-    GTimeVal tv = { 0, };
     time_t secs;
     struct tm *tm;
     gchar *s;
@@ -1095,8 +1094,7 @@ tags:
       "Aug", "Sep", "Oct", "Nov", "Dec"
     };
 
-    g_get_current_time (&tv);
-    secs = tv.tv_sec;
+    secs = g_get_real_time () / G_USEC_PER_SEC;
     tm = gmtime (&secs);
 
     s = g_strdup_printf ("%s %s %d %02d:%02d:%02d %d", weekdays[tm->tm_wday],

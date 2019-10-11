@@ -42,8 +42,8 @@ struct _GstCpuReport
 {
   GstBaseTransform basetransform;
 
-  GTimeVal start_time;
-  GTimeVal last_time;
+  GstClockTime start_time;
+  GstClockTime last_time;
   clock_t last_cpu_time;
 };
 

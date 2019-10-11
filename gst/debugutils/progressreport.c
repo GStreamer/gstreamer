@@ -325,7 +325,7 @@ gst_progress_report_do_query (GstProgressReport * filter, GstFormat format,
 }
 
 static void
-gst_progress_report_report (GstProgressReport * filter, GTimeVal cur_time,
+gst_progress_report_report (GstProgressReport * filter, gint64 cur_time_s,
     GstBuffer * buf)
 {
   GstFormat try_formats[] = { GST_FORMAT_TIME, GST_FORMAT_BYTES,
@@ -338,7 +338,7 @@ gst_progress_report_report (GstProgressReport * filter, GTimeVal cur_time,
   glong run_time;
   gint hh, mm, ss;
 
-  run_time = cur_time.tv_sec - filter->start_time.tv_sec;
+  run_time = cur_time_s - filter->start_time_s;
 
   hh = (run_time / 3600) % 100;
   mm = (run_time / 60) % 60;
@@ -387,10 +387,9 @@ gst_progress_report_sink_event (GstBaseTransform * trans, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
     {
-      GTimeVal cur_time;
+      gint64 cur_time_s = g_get_real_time () / G_USEC_PER_SEC;
 
-      g_get_current_time (&cur_time);
-      gst_progress_report_report (filter, cur_time, NULL);
+      gst_progress_report_report (filter, cur_time_s, NULL);
       break;
     }
     default:
@@ -404,23 +403,22 @@ gst_progress_report_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 {
   GstProgressReport *filter;
   gboolean need_update;
-  GTimeVal cur_time;
+  gint64 cur_time;
 
-  g_get_current_time (&cur_time);
+  cur_time = g_get_real_time () / G_USEC_PER_SEC;
 
   filter = GST_PROGRESS_REPORT (trans);
 
   /* Check if update_freq seconds have passed since the last update */
   GST_OBJECT_LOCK (filter);
-  need_update =
-      ((cur_time.tv_sec - filter->last_report.tv_sec) >= filter->update_freq);
+  need_update = (cur_time - filter->last_report_s) >= filter->update_freq;
   filter->buffer_count++;
   GST_OBJECT_UNLOCK (filter);
 
   if (need_update) {
     gst_progress_report_report (filter, cur_time, buf);
     GST_OBJECT_LOCK (filter);
-    filter->last_report = cur_time;
+    filter->last_report_s = cur_time;
     GST_OBJECT_UNLOCK (filter);
   }
 
@@ -434,8 +432,8 @@ gst_progress_report_start (GstBaseTransform * trans)
 
   filter = GST_PROGRESS_REPORT (trans);
 
-  g_get_current_time (&filter->last_report);
-  filter->start_time = filter->last_report;
+  filter->start_time_s = filter->last_report_s =
+      g_get_real_time () / G_USEC_PER_SEC;
   filter->buffer_count = 0;
 
   return TRUE;

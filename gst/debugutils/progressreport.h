@@ -48,8 +48,8 @@ struct _GstProgressReport
   gint update_freq;
   gboolean silent;
   gboolean do_query;
-  GTimeVal start_time;
-  GTimeVal last_report;
+  gint64 start_time_s;
+  gint64 last_report_s;
   gint64 buffer_count;
 
   /* Format used for querying. Using a string here because the
