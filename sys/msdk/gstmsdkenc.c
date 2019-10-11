@@ -145,6 +145,8 @@ ensure_bitrate_control (GstMsdkEnc * thiz)
   mfxExtCodingOption2 *option2 = &thiz->option2;
   mfxExtCodingOption3 *option3 = &thiz->option3;
 
+  GST_DEBUG_OBJECT (thiz, "set target bitrate: %u kbit/sec", thiz->bitrate);
+
   mfx->RateControlMethod = thiz->rate_control;
   /* No effect in CQP varient algorithms */
   if ((mfx->RateControlMethod != MFX_RATECONTROL_CQP) &&
@@ -246,8 +248,10 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
   guint i;
   gboolean need_vpp = TRUE;
 
-  if (thiz->initialized)
+  if (thiz->initialized) {
+    GST_DEBUG_OBJECT (thiz, "Already initialized");
     return TRUE;
+  }
 
   if (!thiz->context) {
     GST_WARNING_OBJECT (thiz, "No MSDK Context");
@@ -875,6 +879,8 @@ gst_msdkenc_flush_frames (GstMsdkEnc * thiz, gboolean discard)
   if (!thiz->tasks)
     return;
 
+  GST_DEBUG_OBJECT (thiz, "flush frames");
+
   session = gst_msdk_context_get_session (thiz->context);
 
   for (;;) {
@@ -1347,8 +1353,17 @@ gst_msdkenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
   MsdkSurface *surface;
 
   if (thiz->reconfig) {
+    mfxInfoMFX *mfx = NULL;
+
+    GST_INFO_OBJECT (encoder, "Adjust encoder bitrate before current frame");
     gst_msdkenc_flush_frames (thiz, FALSE);
+    gst_msdkenc_close_encoder (thiz);
+
+    // This will reinitialized the encoder but keep same input format.
     gst_msdkenc_set_format (encoder, NULL);
+
+    mfx = &thiz->param.mfx;
+    GST_INFO_OBJECT (encoder, "New target bitrate: %u", mfx->TargetKbps);
   }
 
   if (G_UNLIKELY (thiz->context == NULL))
@@ -1524,6 +1539,8 @@ static gboolean
 gst_msdkenc_flush (GstVideoEncoder * encoder)
 {
   GstMsdkEnc *thiz = GST_MSDKENC (encoder);
+
+  GST_DEBUG_OBJECT (encoder, "flush and close encoder");
 
   gst_msdkenc_flush_frames (thiz, TRUE);
   gst_msdkenc_close_encoder (thiz);
