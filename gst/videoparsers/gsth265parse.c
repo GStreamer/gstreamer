@@ -276,7 +276,7 @@ gst_h265_parse_start (GstBaseParse * parse)
   h265parse->nalparser = gst_h265_parser_new ();
   h265parse->state = 0;
 
-  gst_base_parse_set_min_frame_size (parse, 7);
+  gst_base_parse_set_min_frame_size (parse, 5);
 
   return TRUE;
 }
@@ -1023,14 +1023,15 @@ gst_h265_parse_collect_nal (GstH265Parse * h265parse, const guint8 * data,
 
   GST_LOG_OBJECT (h265parse, "next nal type: %d %s", nal_type,
       _nal_name (nal_type));
-
-  /* Any VCL Nal unit with first_slice_segment_in_pic_flag == 1 considered start of frame */
-  complete |= h265parse->picture_start
-      && (((nal_type >= GST_H265_NAL_SLICE_TRAIL_N
-              && nal_type <= GST_H265_NAL_SLICE_RASL_R)
-          || (nal_type >= GST_H265_NAL_SLICE_BLA_W_LP
-              && nal_type <= RESERVED_IRAP_NAL_TYPE_MAX))
-      && (nnalu.data[nnalu.offset + 2] & 0x80));
+  if (nnalu.size > nnalu.header_bytes) {
+    /* Any VCL Nal unit with first_slice_segment_in_pic_flag == 1 considered start of frame */
+    complete |= h265parse->picture_start
+        && (((nal_type >= GST_H265_NAL_SLICE_TRAIL_N
+                && nal_type <= GST_H265_NAL_SLICE_RASL_R)
+            || (nal_type >= GST_H265_NAL_SLICE_BLA_W_LP
+                && nal_type <= RESERVED_IRAP_NAL_TYPE_MAX))
+        && (nnalu.data[nnalu.offset + 2] & 0x80));
+  }
 
   GST_LOG_OBJECT (h265parse, "au complete: %d", complete);
   return complete;
@@ -1159,8 +1160,10 @@ gst_h265_parse_handle_frame (GstBaseParse * parse,
   data = map.data;
   size = map.size;
 
-  /* expect at least 3 bytes startcode == sc, and 3 bytes NALU payload */
-  if (G_UNLIKELY (size < 6)) {
+  /* expect at least 3 bytes start_code, and 2 bytes NALU header.
+   * the length of the NALU payload can be zero.
+   * (e.g. EOS/EOB placed at the end of an AU.) */
+  if (G_UNLIKELY (size < 5)) {
     gst_buffer_unmap (buffer, &map);
     *skipsize = 1;
     return GST_FLOW_OK;
@@ -1279,7 +1282,10 @@ gst_h265_parse_handle_frame (GstBaseParse * parse,
     nonext = nonext || (h265parse->align == GST_H265_PARSE_ALIGN_NAL);
 
     if (!nonext) {
-      if (nalu.offset + nalu.size + 5 + 2 > size) {
+      /* expect at least 3 bytes start_code, and 2 bytes NALU header.
+       * the length of the NALU payload can be zero.
+       * (e.g. EOS/EOB placed at the end of an AU.) */
+      if (nalu.offset + nalu.size + 3 + 2 > size) {
         GST_DEBUG_OBJECT (h265parse, "not enough data for next NALU");
         if (drain) {
           GST_DEBUG_OBJECT (h265parse, "but draining anyway");
