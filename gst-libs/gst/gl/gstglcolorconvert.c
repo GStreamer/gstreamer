@@ -935,12 +935,16 @@ _init_supported_formats (GstGLContext * context, gboolean output,
   }
 
   if (!context || (gst_gl_format_is_supported (context, GST_GL_R16) &&
-          gst_gl_format_is_supported (context, GST_GL_RG16)))
+          gst_gl_format_is_supported (context, GST_GL_RG16))) {
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
     _append_value_string_list (supported_formats, "P010_10LE", "P016_LE", NULL);
 #else
     _append_value_string_list (supported_formats, "P010_10BE", "P016_BE", NULL);
 #endif
+  }
+
+  if (!context || (gst_gl_format_is_supported (context, GST_GL_RG16)))
+    _append_value_string_list (supported_formats, "Y210", NULL);
 }
 
 /* copies the given caps */
@@ -1530,6 +1534,7 @@ _get_n_textures (GstVideoFormat v_format)
     case GST_VIDEO_FORMAT_BGR10A2_LE:
     case GST_VIDEO_FORMAT_RGB10A2_LE:
     case GST_VIDEO_FORMAT_Y410:
+    case GST_VIDEO_FORMAT_Y210:
       return 1;
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_NV21:
@@ -1681,6 +1686,16 @@ _YUV_to_RGB (GstGLColorConvert * convert)
         info->shader_tex_names[0] = "Ytex";
         break;
       }
+      case GST_VIDEO_FORMAT_Y210:
+      {
+        info->templ = &templ_YUY2_UYVY_to_RGB;
+        info->frag_body =
+            g_strdup_printf (templ_YUY2_UYVY_to_RGB_BODY, 'r', 'g', 'g',
+            'g', 'a', pixel_order[0], pixel_order[1], pixel_order[2],
+            pixel_order[3]);
+        info->shader_tex_names[0] = "Ytex";
+        break;
+      }
       case GST_VIDEO_FORMAT_NV12:
       case GST_VIDEO_FORMAT_NV16:
       {
@@ -1799,6 +1814,7 @@ _RGB_to_YUV (GstGLColorConvert * convert)
       }
       break;
     case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_Y210:
       info->templ = &templ_RGB_to_YUY2_UYVY;
       info->frag_body = g_strdup_printf (templ_RGB_to_YUY2_UYVY_BODY,
           pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3],
