@@ -772,8 +772,7 @@ gst_v4l2_video_enc_handle_frame (GstVideoEncoder * encoder,
     GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
 
     if (ret == GST_FLOW_FLUSHING) {
-      if (gst_pad_get_task_state (GST_VIDEO_DECODER_SRC_PAD (self)) !=
-          GST_TASK_STARTED)
+      if (gst_pad_get_task_state (encoder->srcpad) != GST_TASK_STARTED)
         ret = self->output_flow;
       goto drop;
     } else if (ret != GST_FLOW_OK) {
