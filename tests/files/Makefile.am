@@ -1,3 +1,0 @@
-EXTRA_DIST = \
-	586957.ape \
-	591809.wav
