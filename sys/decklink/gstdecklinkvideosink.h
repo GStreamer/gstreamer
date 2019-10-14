@@ -64,6 +64,7 @@ struct _GstDecklinkVideoSink
 
   /* really an internal start time */
   GstClockTime internal_time_offset;
+  GstClockTime internal_pause_time;
 
   GstDecklinkOutput *output;
 
