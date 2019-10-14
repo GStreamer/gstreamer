@@ -11,6 +11,7 @@ avtp_sources = [
   'gstavtpcrfutil.c',
   'gstavtpcrfbase.c',
   'gstavtpcrfsync.c',
+  'gstavtpcrfcheck.c',
 ]
 
 avtp_dep = dependency('avtp', required: get_option('avtp'))

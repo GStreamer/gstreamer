@@ -92,8 +92,10 @@
  * systems.
  *
  * This can be achieved by using the avtpcrfsync element which implements CRF
- * as described in Chapter 10 of IEEE 1722-2016. For further details, look at
- * the documentation for avtpcrfsync.
+ * as described in Chapter 10 of IEEE 1722-2016. avtpcrfcheck can also be used
+ * to validate that the adjustment conforms to the criteria specified in the
+ * spec. For further details, look at the documentation for the respective
+ * elements.
  *
  * ### Traffic Control Setup
  *
@@ -147,9 +149,9 @@
  * to several elements. Basic properties are:
  *
  *   * streamid (avtpaafpay, avtpcvfpay, avtpaafdepay, avtpcvfdepay,
- *     avtpcrfsync): Stream ID associated with the stream.
+ *     avtpcrfsync, avtpcrfcheck): Stream ID associated with the stream.
  *
- *   * ifname (avtpsink, avtpsrc, avtpcrfsync): Network interface
+ *   * ifname (avtpsink, avtpsrc, avtpcrfsync, avtpcrfcheck): Network interface
  *     used to send/receive AVTP packets.
  *
  *   * dst-macaddr (avtpsink, avtpsrc): Destination MAC address for the stream.
@@ -195,7 +197,8 @@
  * On the AVTP listener host, the following pipeline can be used to get the
  * AVTP stream, depacketize it and show it on the screen:
  *
- *     $ gst-launch-1.0 -k ptp avtpsrc ifname=$IFNAME ! avtpcvfdepay ! \
+ *     $ gst-launch-1.0 -k ptp avtpsrc ifname=$IFNAME ! \
+ *         avtpcrfcheck ifname=$IFNAME ! avtpcvfdepay ! \
  *         vaapih264dec ! videoconvert ! clockoverlay halignment=right ! \
  *         queue ! autovideosink
  *
@@ -237,6 +240,7 @@
 #include "gstavtpsink.h"
 #include "gstavtpsrc.h"
 #include "gstavtpcrfsync.h"
+#include "gstavtpcrfcheck.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -254,6 +258,8 @@ plugin_init (GstPlugin * plugin)
   if (!gst_avtp_cvf_depay_plugin_init (plugin))
     return FALSE;
   if (!gst_avtp_crf_sync_plugin_init (plugin))
+    return FALSE;
+  if (!gst_avtp_crf_check_plugin_init (plugin))
     return FALSE;
 
   return TRUE;
