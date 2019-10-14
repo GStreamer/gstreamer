@@ -1,3 +1,0 @@
-[submodule "validate/common"]
-	path = validate/common
-	url = https://gitlab.freedesktop.org/gstreamer/common.git
