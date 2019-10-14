@@ -1,6 +1,0 @@
----
-- hosts: vagrant
-  tasks:
-    - include: ipython.yml
-    - include: gstreamer-git.yml
-    - include: gst-streaming-server-git.yml
