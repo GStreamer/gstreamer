@@ -200,11 +200,12 @@ static const struct shader_templ templ_COMPOSE =
     GST_GL_TEXTURE_TARGET_2D
   };
 
+/* Shaders for AYUV and varieties */
 static const gchar templ_AYUV_to_RGB_BODY[] =
     "vec4 texel, rgba;\n"
     "texel = texture2D(tex, texcoord * tex_scale0);\n"
-    "rgba.rgb = yuv_to_rgb (texel.yzw, offset, coeff1, coeff2, coeff3);\n"
-    "rgba.a = texel.r;\n"
+    "rgba.rgb = yuv_to_rgb (texel.%s, offset, coeff1, coeff2, coeff3);\n"
+    "rgba.a = texel.%c;\n"
     "gl_FragColor=vec4(rgba.%c,rgba.%c,rgba.%c,rgba.%c);\n";
 
 static const struct shader_templ templ_AYUV_to_RGB =
@@ -217,39 +218,11 @@ static const struct shader_templ templ_AYUV_to_RGB =
 static const gchar templ_RGB_to_AYUV_BODY[] =
     "vec4 texel, ayuv;\n"
     "texel = texture2D(tex, texcoord).%c%c%c%c;\n"
-    "ayuv.yzw = rgb_to_yuv (texel.rgb, offset, coeff1, coeff2, coeff3);\n"
-    "ayuv.x = %s;\n"
+    "ayuv.%s = rgb_to_yuv (texel.rgb, offset, coeff1, coeff2, coeff3);\n"
+    "ayuv.%c = %s;\n"
     "gl_FragColor = ayuv;\n";
 
 static const struct shader_templ templ_RGB_to_AYUV =
-  { NULL,
-    DEFAULT_UNIFORMS RGB_TO_YUV_COEFFICIENTS "uniform sampler2D tex;\n",
-    { glsl_func_rgb_to_yuv, NULL, },
-    GST_GL_TEXTURE_TARGET_2D
-  };
-
-static const gchar templ_VUYA_to_RGB_BODY[] =
-    "vec4 texel, rgba;\n"
-    "texel = texture2D(tex, texcoord * tex_scale0);\n"
-    "rgba.rgb = yuv_to_rgb (texel.zyx, offset, coeff1, coeff2, coeff3);\n"
-    "rgba.a = texel.w;\n"
-    "gl_FragColor=vec4(rgba.%c,rgba.%c,rgba.%c,rgba.%c);\n";
-
-static const struct shader_templ templ_VUYA_to_RGB =
-  { NULL,
-    DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D tex;\n",
-    { glsl_func_yuv_to_rgb, NULL, },
-    GST_GL_TEXTURE_TARGET_2D
-  };
-
-static const gchar templ_RGB_to_VUYA_BODY[] =
-    "vec4 texel, ayuv;\n"
-    "texel = texture2D(tex, texcoord).%c%c%c%c;\n"
-    "ayuv.zyx = rgb_to_yuv (texel.rgb, offset, coeff1, coeff2, coeff3);\n"
-    "ayuv.w = %s;\n"
-    "gl_FragColor = ayuv;\n";
-
-static const struct shader_templ templ_RGB_to_VUYA =
   { NULL,
     DEFAULT_UNIFORMS RGB_TO_YUV_COEFFICIENTS "uniform sampler2D tex;\n",
     { glsl_func_rgb_to_yuv, NULL, },
@@ -1642,13 +1615,13 @@ _YUV_to_RGB (GstGLColorConvert * convert)
     switch (GST_VIDEO_INFO_FORMAT (&convert->in_info)) {
       case GST_VIDEO_FORMAT_AYUV:
         info->templ = &templ_AYUV_to_RGB;
-        info->frag_body = g_strdup_printf (templ_AYUV_to_RGB_BODY,
+        info->frag_body = g_strdup_printf (templ_AYUV_to_RGB_BODY, "yzw", 'x',
             pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3]);
         info->shader_tex_names[0] = "tex";
         break;
       case GST_VIDEO_FORMAT_VUYA:
-        info->templ = &templ_VUYA_to_RGB;
-        info->frag_body = g_strdup_printf (templ_VUYA_to_RGB_BODY,
+        info->templ = &templ_AYUV_to_RGB;
+        info->frag_body = g_strdup_printf (templ_AYUV_to_RGB_BODY, "zyx", 'w',
             pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3]);
         info->shader_tex_names[0] = "tex";
         break;
@@ -1771,14 +1744,14 @@ _RGB_to_YUV (GstGLColorConvert * convert)
       alpha = _is_RGBx (in_format) ? "1.0" : "texel.a";
       info->templ = &templ_RGB_to_AYUV;
       info->frag_body = g_strdup_printf (templ_RGB_to_AYUV_BODY, pixel_order[0],
-          pixel_order[1], pixel_order[2], pixel_order[3], alpha);
+          pixel_order[1], pixel_order[2], pixel_order[3], "yzw", 'x', alpha);
       info->out_n_textures = 1;
       break;
     case GST_VIDEO_FORMAT_VUYA:
       alpha = _is_RGBx (in_format) ? "1.0" : "texel.a";
-      info->templ = &templ_RGB_to_VUYA;
-      info->frag_body = g_strdup_printf (templ_RGB_to_VUYA_BODY, pixel_order[0],
-          pixel_order[1], pixel_order[2], pixel_order[3], alpha);
+      info->templ = &templ_RGB_to_AYUV;
+      info->frag_body = g_strdup_printf (templ_RGB_to_AYUV_BODY, pixel_order[0],
+          pixel_order[1], pixel_order[2], pixel_order[3], "zyx", 'w', alpha);
       info->out_n_textures = 1;
       break;
     case GST_VIDEO_FORMAT_I420:
