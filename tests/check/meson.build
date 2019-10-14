@@ -81,6 +81,7 @@ if host_machine.system() != 'windows'
     [['elements/assrender.c'], not ass_dep.found(), [ass_dep]],
     [['elements/avtpaafpay.c'], not avtp_dep.found(), [avtp_dep]],
     [['elements/avtpaafdepay.c'], not avtp_dep.found(), [avtp_dep]],
+    [['elements/avtpcrfsync.c'], not avtp_dep.found(), [avtp_dep], ['../../ext/avtp/gstavtpcrfutil.c', '../../ext/avtp/gstavtpcrfbase.c']],
     [['elements/avtpcvfpay.c'], not avtp_dep.found(), [avtp_dep]],
     [['elements/avtpcvfdepay.c'], not avtp_dep.found(), [avtp_dep]],
     [['elements/avtpsink.c'], not avtp_dep.found(), [avtp_dep]],
@@ -158,8 +159,10 @@ foreach t : base_tests
     skip_test = t.get(1)
   endif
 
+  extra_sources = t.get(3, [ ])
+
   if not skip_test
-    exe = executable(test_name, fnames,
+    exe = executable(test_name, fnames, extra_sources,
       include_directories : [configinc],
       c_args : gst_plugins_bad_args + test_defines,
       cpp_args : gst_plugins_bad_args + test_defines,
