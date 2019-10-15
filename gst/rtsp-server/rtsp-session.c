@@ -64,6 +64,7 @@ struct _GstRTSPSessionPrivate
 
   GList *medias;
   guint medias_cookie;
+  guint extra_time_timeout;
 };
 
 #undef DEBUG
@@ -71,6 +72,7 @@ struct _GstRTSPSessionPrivate
 #define DEFAULT_TIMEOUT	       60
 #define NO_TIMEOUT              -1
 #define DEFAULT_ALWAYS_VISIBLE  FALSE
+#define DEFAULT_EXTRA_TIMEOUT 5
 
 enum
 {
@@ -78,6 +80,7 @@ enum
   PROP_SESSIONID,
   PROP_TIMEOUT,
   PROP_TIMEOUT_ALWAYS_VISIBLE,
+  PROP_EXTRA_TIME_TIMEOUT,
   PROP_LAST
 };
 
@@ -118,6 +121,28 @@ gst_rtsp_session_class_init (GstRTSPSessionClass * klass)
           "timeout always visible in header",
           DEFAULT_ALWAYS_VISIBLE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstRTSPSession::extra-timeout:
+   *
+   * Extra time to add to the timeout, in seconds. This only affects the
+   * time until a session is considered timed out and is not signalled 
+   * in the RTSP request responses. Only the value of the timeout 
+   * property is signalled in the request responses.
+   * 
+   * Default value is 5 seconds.
+   * If the application is using a buffer that is configured to hold 
+   * amount of data equal to the sessiontimeout, extra-timeout can be 
+   * set to zero to prevent loss of data 
+   *        
+   * Since: 1.18
+   */
+  g_object_class_install_property (gobject_class, PROP_EXTRA_TIME_TIMEOUT,
+      g_param_spec_uint ("extra-timeout",
+          "Add extra time to timeout ", "Add extra time to timeout", 0,
+          G_MAXUINT, DEFAULT_EXTRA_TIMEOUT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+
   GST_DEBUG_CATEGORY_INIT (rtsp_session_debug, "rtspsession", 0,
       "GstRTSPSession");
 }
@@ -134,6 +159,7 @@ gst_rtsp_session_init (GstRTSPSession * session)
   g_mutex_init (&priv->lock);
   g_mutex_init (&priv->last_access_lock);
   priv->timeout = DEFAULT_TIMEOUT;
+  priv->extra_time_timeout = DEFAULT_EXTRA_TIMEOUT;
 
   gst_rtsp_session_touch (session);
 }
@@ -177,6 +203,9 @@ gst_rtsp_session_get_property (GObject * object, guint propid,
     case PROP_TIMEOUT_ALWAYS_VISIBLE:
       g_value_set_boolean (value, priv->timeout_always_visible);
       break;
+    case PROP_EXTRA_TIME_TIMEOUT:
+      g_value_set_uint (value, priv->extra_time_timeout);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
@@ -200,6 +229,11 @@ gst_rtsp_session_set_property (GObject * object, guint propid,
     case PROP_TIMEOUT_ALWAYS_VISIBLE:
       g_mutex_lock (&priv->lock);
       priv->timeout_always_visible = g_value_get_boolean (value);
+      g_mutex_unlock (&priv->lock);
+      break;
+    case PROP_EXTRA_TIME_TIMEOUT:
+      g_mutex_lock (&priv->lock);
+      priv->extra_time_timeout = g_value_get_uint (value);
       g_mutex_unlock (&priv->lock);
       break;
     default:
@@ -651,8 +685,11 @@ gst_rtsp_session_next_timeout_usec (GstRTSPSession * session, gint64 now)
 
   last_access = GST_USECOND * (priv->last_access_monotonic_time);
 
-  /* add timeout allow for 5 seconds of extra time */
-  last_access += priv->timeout * GST_SECOND + (5 * GST_SECOND);
+  /* add timeout allow for priv->extra_time_timeout
+   * seconds of extra time */
+  last_access += priv->timeout * GST_SECOND +
+      (priv->extra_time_timeout * GST_SECOND);
+
   g_mutex_unlock (&priv->last_access_lock);
 
   now_ns = GST_USECOND * now;
@@ -701,8 +738,11 @@ gst_rtsp_session_next_timeout (GstRTSPSession * session, GTimeVal * now)
 
   last_access = GST_USECOND * (priv->last_access_real_time);
 
-  /* add timeout allow for 5 seconds of extra time */
-  last_access += priv->timeout * GST_SECOND + (5 * GST_SECOND);
+  /* add timeout allow for priv->extra_time_timeout
+   * seconds of extra time */
+  last_access += priv->timeout * GST_SECOND +
+      (priv->extra_time_timeout * GST_SECOND);
+
   g_mutex_unlock (&priv->last_access_lock);
 
   now_ns = GST_TIMEVAL_TO_TIME (*now);
