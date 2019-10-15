@@ -53,6 +53,7 @@
 #include "rtsp-client.h"
 #include "rtsp-sdp.h"
 #include "rtsp-params.h"
+#include "rtsp-server-internal.h"
 
 typedef enum
 {
@@ -1200,6 +1201,12 @@ do_send_data (GstBuffer * buffer, guint8 channel, GstRTSPClient * client)
   }
 
   return ret;
+}
+
+static gboolean
+do_check_back_pressure (guint8 channel, GstRTSPClient * client)
+{
+  return get_data_seq (client, channel) != 0;
 }
 
 static gboolean
@@ -2853,6 +2860,9 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
     gst_rtsp_stream_transport_set_list_callbacks (trans,
         (GstRTSPSendListFunc) do_send_data_list,
         (GstRTSPSendListFunc) do_send_data_list, client, NULL);
+
+    gst_rtsp_stream_transport_set_back_pressure_callback (trans,
+        (GstRTSPBackPressureFunc) do_check_back_pressure, client, NULL);
 
     g_hash_table_insert (priv->transports,
         GINT_TO_POINTER (ct->interleaved.min), trans);

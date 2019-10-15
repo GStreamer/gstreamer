@@ -18,6 +18,7 @@
  */
 
 #include <gst/gst.h>
+#include <gst/base/base.h>
 #include <gst/rtsp/gstrtsprange.h>
 #include <gst/rtsp/gstrtspurl.h>
 
@@ -88,7 +89,7 @@ typedef void     (*GstRTSPKeepAliveFunc) (gpointer user_data);
  * Function registered with gst_rtsp_stream_transport_set_message_sent()
  * and called when a message has been sent on the transport.
  */
-typedef void     (*GstRTSPMessageSentFunc) (gpointer user_data);
+typedef void     (*GstRTSPMessageSentFunc) (GstRTSPStreamTransport *trans, gpointer user_data);
 
 /**
  * GstRTSPStreamTransport:
@@ -182,8 +183,6 @@ void                     gst_rtsp_stream_transport_set_timed_out (GstRTSPStreamT
 
 GST_RTSP_SERVER_API
 gboolean                 gst_rtsp_stream_transport_is_timed_out  (GstRTSPStreamTransport *trans);
-
-
 
 GST_RTSP_SERVER_API
 gboolean                 gst_rtsp_stream_transport_send_rtp      (GstRTSPStreamTransport *trans,

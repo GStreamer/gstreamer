@@ -43,7 +43,26 @@
  * stream should be sent to. Use gst_rtsp_stream_remove_transport() to remove
  * the destination again.
  *
- * Last reviewed on 2013-07-16 (1.0.0)
+ * Each #GstRTSPStreamTransport spawns one queue that will serve as a backlog of a
+ * controllable maximum size when the reflux from the TCP connection's backpressure
+ * starts spilling all over.
+ *
+ * Unlike the backlog in rtspconnection, which we have decided should only contain
+ * at most one RTP and one RTCP data message in order to allow control messages to
+ * go through unobstructed, this backlog only consists of data messages, allowing
+ * us to fill it up without concern.
+ *
+ * When multiple TCP transports exist, for example in the context of a shared media,
+ * we only pop samples from our appsinks when at least one of the transports doesn't
+ * experience back pressure: this allows us to pace our sample popping to the speed
+ * of the fastest client.
+ *
+ * When a sample is popped, it is either sent directly on transports that don't
+ * experience backpressure, or queued on the transport's backlog otherwise. Samples
+ * are then popped from that backlog when the transport reports it has sent the message.
+ *
+ * Once the backlog reaches an overly large duration, the transport is dropped as
+ * the client was deemed too slow.
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -61,6 +80,7 @@
 #include <gst/rtp/gstrtpbuffer.h>
 
 #include "rtsp-stream.h"
+#include "rtsp-server-internal.h"
 
 struct _GstRTSPStreamPrivate
 {
@@ -167,7 +187,6 @@ struct _GstRTSPStreamPrivate
   guint tr_cache_cookie;
   guint n_tcp_transports;
   gboolean have_buffer[2];
-  guint n_outstanding;
 
   gint dscp_qos;
 
@@ -2450,13 +2469,93 @@ clear_tr_cache (GstRTSPStreamPrivate * priv)
   priv->tr_cache = NULL;
 }
 
+/* With lock taken */
+static gboolean
+any_transport_ready (GstRTSPStream * stream, guint8 channel)
+{
+  gboolean ret = TRUE;
+  GstRTSPStreamPrivate *priv = stream->priv;
+  GPtrArray *transports;
+  gint index;
+
+  transports = priv->tr_cache;
+
+  if (!transports)
+    goto done;
+
+  for (index = 0; index < transports->len; index++) {
+    GstRTSPStreamTransport *tr = g_ptr_array_index (transports, index);
+    if (!gst_rtsp_stream_transport_check_back_pressure (tr, channel)) {
+      ret = TRUE;
+      break;
+    } else {
+      ret = FALSE;
+    }
+  }
+
+done:
+  return ret;
+}
+
+/* Must be called *without* priv->lock */
+static void
+push_data (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
+    GstBuffer * buffer, GstBufferList * buffer_list, gboolean is_rtp)
+{
+  GstRTSPStreamPrivate *priv = stream->priv;
+  gboolean send_ret = TRUE;
+
+  if (is_rtp) {
+    if (buffer)
+      send_ret = gst_rtsp_stream_transport_send_rtp (trans, buffer);
+    if (buffer_list)
+      send_ret = gst_rtsp_stream_transport_send_rtp_list (trans, buffer_list);
+  } else {
+    if (buffer)
+      send_ret = gst_rtsp_stream_transport_send_rtcp (trans, buffer);
+    if (buffer_list)
+      send_ret = gst_rtsp_stream_transport_send_rtcp_list (trans, buffer_list);
+  }
+
+  if (!send_ret) {
+    /* remove transport on send error */
+    g_mutex_lock (&priv->lock);
+    update_transport (stream, trans, FALSE);
+    g_mutex_unlock (&priv->lock);
+  }
+}
+
+/* With priv->lock */
+static void
+ensure_cached_transports (GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv = stream->priv;
+  GList *walk;
+
+  if (priv->tr_cache_cookie != priv->transports_cookie) {
+    clear_tr_cache (priv);
+    priv->tr_cache =
+        g_ptr_array_new_full (priv->n_tcp_transports, g_object_unref);
+
+    for (walk = priv->transports; walk; walk = g_list_next (walk)) {
+      GstRTSPStreamTransport *tr = (GstRTSPStreamTransport *) walk->data;
+      const GstRTSPTransport *t = gst_rtsp_stream_transport_get_transport (tr);
+
+      if (t->lower_transport != GST_RTSP_LOWER_TRANS_TCP)
+        continue;
+
+      g_ptr_array_add (priv->tr_cache, g_object_ref (tr));
+    }
+    priv->tr_cache_cookie = priv->transports_cookie;
+  }
+}
+
 /* Must be called with priv->lock */
 static void
 send_tcp_message (GstRTSPStream * stream, gint idx)
 {
   GstRTSPStreamPrivate *priv = stream->priv;
   GstAppSink *sink;
-  GList *walk;
   GstSample *sample;
   GstBuffer *buffer;
   GstBufferList *buffer_list;
@@ -2464,9 +2563,13 @@ send_tcp_message (GstRTSPStream * stream, gint idx)
   gboolean is_rtp;
   GPtrArray *transports;
 
-  if (priv->n_outstanding > 0 || !priv->have_buffer[idx]) {
+  if (!priv->have_buffer[idx])
     return;
-  }
+
+  ensure_cached_transports (stream);
+
+  if (!any_transport_ready (stream, idx))
+    return;
 
   priv->have_buffer[idx] = FALSE;
 
@@ -2493,52 +2596,38 @@ send_tcp_message (GstRTSPStream * stream, gint idx)
 
   is_rtp = (idx == 0);
 
-  if (priv->tr_cache_cookie != priv->transports_cookie) {
-    clear_tr_cache (priv);
-    priv->tr_cache =
-        g_ptr_array_new_full (priv->n_tcp_transports, g_object_unref);
-
-    for (walk = priv->transports; walk; walk = g_list_next (walk)) {
-      GstRTSPStreamTransport *tr = (GstRTSPStreamTransport *) walk->data;
-      const GstRTSPTransport *t = gst_rtsp_stream_transport_get_transport (tr);
-
-      if (t->lower_transport != GST_RTSP_LOWER_TRANS_TCP)
-        continue;
-
-      g_ptr_array_add (priv->tr_cache, g_object_ref (tr));
-    }
-    priv->tr_cache_cookie = priv->transports_cookie;
-  }
-
   transports = priv->tr_cache;
   g_ptr_array_ref (transports);
-  priv->n_outstanding += n_messages * priv->n_tcp_transports;
 
   g_mutex_unlock (&priv->lock);
 
   if (transports) {
-    for (gint index = 0; index < transports->len; index++) {
-      GstRTSPStreamTransport *tr =
-          (GstRTSPStreamTransport *) g_ptr_array_index (transports, index);
-      gboolean send_ret = TRUE;
+    gint index;
 
-      if (is_rtp) {
-        if (buffer)
-          send_ret = gst_rtsp_stream_transport_send_rtp (tr, buffer);
-        if (buffer_list)
-          send_ret = gst_rtsp_stream_transport_send_rtp_list (tr, buffer_list);
+    for (index = 0; index < transports->len; index++) {
+      GstRTSPStreamTransport *tr = g_ptr_array_index (transports, index);
+
+      if (gst_rtsp_stream_transport_backlog_is_empty (tr)
+          && !gst_rtsp_stream_transport_check_back_pressure (tr, idx)) {
+        push_data (stream, tr, buffer, buffer_list, is_rtp);
       } else {
-        if (buffer)
-          send_ret = gst_rtsp_stream_transport_send_rtcp (tr, buffer);
-        if (buffer_list)
-          send_ret = gst_rtsp_stream_transport_send_rtcp_list (tr, buffer_list);
-      }
+        GstBuffer *buf_ref = NULL;
+        GstBufferList *buflist_ref = NULL;
 
-      if (!send_ret) {
-        /* remove transport on send error */
         g_mutex_lock (&priv->lock);
-        priv->n_outstanding -= n_messages;
-        update_transport (stream, tr, FALSE);
+
+        if (buffer)
+          buf_ref = gst_buffer_ref (buffer);
+        if (buffer_list)
+          buflist_ref = gst_buffer_list_ref (buffer_list);
+
+        if (!gst_rtsp_stream_transport_backlog_push (tr,
+                buf_ref, buflist_ref, is_rtp)) {
+          GST_WARNING_OBJECT (stream,
+              "Dropping slow transport %" GST_PTR_FORMAT, tr);
+          update_transport (stream, tr, FALSE);
+        }
+
         g_mutex_unlock (&priv->lock);
       }
     }
@@ -2558,6 +2647,7 @@ send_thread_main (gpointer data, gpointer user_data)
   gint i;
 
   g_mutex_lock (&priv->lock);
+
   do {
     idx = -1;
     /* iterate from 1 and down, so we prioritize RTCP over RTP */
@@ -2569,9 +2659,9 @@ send_thread_main (gpointer data, gpointer user_data)
       }
     }
 
-    if (idx != -1 && priv->n_outstanding == 0)
+    if (idx != -1)
       send_tcp_message (stream, idx);
-  } while (idx != -1 && priv->n_outstanding == 0);
+  } while (idx != -1);
 
   GST_DEBUG_OBJECT (stream, "send thread done");
   g_mutex_unlock (&priv->lock);
@@ -2596,10 +2686,7 @@ handle_new_sample (GstAppSink * sink, gpointer user_data)
   for (i = 0; i < 2; i++)
     if (GST_ELEMENT_CAST (sink) == priv->appsink[i]) {
       priv->have_buffer[i] = TRUE;
-      if (priv->n_outstanding == 0) {
-        /* send message */
-        idx = i;
-      }
+      idx = i;
       break;
     }
 
@@ -4459,25 +4546,36 @@ mcast_error:
 }
 
 static void
-on_message_sent (gpointer user_data)
+on_message_sent (GstRTSPStreamTransport * trans, gpointer user_data)
 {
   GstRTSPStream *stream = user_data;
   GstRTSPStreamPrivate *priv = stream->priv;
   gint idx = -1;
+  gint i;
 
   GST_DEBUG_OBJECT (stream, "message send complete");
 
   g_mutex_lock (&priv->lock);
 
-  g_assert (priv->n_outstanding >= 0);
+  if (!gst_rtsp_stream_transport_backlog_is_empty (trans)) {
+    GstBuffer *buffer;
+    GstBufferList *buffer_list;
+    gboolean is_rtp;
+    gboolean popped;
 
-  if (priv->n_outstanding == 0)
-    goto no_outstanding;
+    popped =
+        gst_rtsp_stream_transport_backlog_pop (trans, &buffer, &buffer_list,
+        &is_rtp);
 
-  priv->n_outstanding--;
-  if (priv->n_outstanding == 0) {
-    gint i;
+    g_assert (popped == TRUE);
 
+    g_mutex_unlock (&priv->lock);
+
+    push_data (stream, trans, buffer, buffer_list, is_rtp);
+
+    gst_clear_buffer (&buffer);
+    gst_clear_buffer_list (&buffer_list);
+  } else {
     /* iterate from 1 and down, so we prioritize RTCP over RTP */
     for (i = 1; i >= 0; i--) {
       if (priv->have_buffer[i]) {
@@ -4486,27 +4584,17 @@ on_message_sent (gpointer user_data)
         break;
       }
     }
-  }
 
-  if (idx != -1) {
-    gint dummy;
+    if (idx != -1) {
+      gint dummy;
 
-    if (priv->send_pool) {
-      GST_DEBUG_OBJECT (stream, "start thread");
-      g_thread_pool_push (priv->send_pool, &dummy, NULL);
+      if (priv->send_pool) {
+        GST_DEBUG_OBJECT (stream, "start thread");
+        g_thread_pool_push (priv->send_pool, &dummy, NULL);
+      }
     }
-  }
 
-  g_mutex_unlock (&priv->lock);
-
-  return;
-
-  /* ERRORS */
-no_outstanding:
-  {
-    GST_INFO ("no outstanding messages");
     g_mutex_unlock (&priv->lock);
-    return;
   }
 }
 
@@ -5928,8 +6016,8 @@ gst_rtsp_stream_set_rate_control (GstRTSPStream * stream, gboolean enabled)
   if (stream->priv->appsink[0])
     g_object_set (stream->priv->appsink[0], "sync", enabled, NULL);
   if (stream->priv->payloader
-      && g_object_class_find_property (G_OBJECT_GET_CLASS (stream->priv->
-              payloader), "onvif-no-rate-control"))
+      && g_object_class_find_property (G_OBJECT_GET_CLASS (stream->
+              priv->payloader), "onvif-no-rate-control"))
     g_object_set (stream->priv->payloader, "onvif-no-rate-control", !enabled,
         NULL);
   if (stream->priv->session) {

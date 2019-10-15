@@ -48,6 +48,7 @@
 #include <stdlib.h>
 
 #include "rtsp-stream-transport.h"
+#include "rtsp-server-internal.h"
 
 struct _GstRTSPStreamTransportPrivate
 {
@@ -63,6 +64,10 @@ struct _GstRTSPStreamTransportPrivate
   gpointer list_user_data;
   GDestroyNotify list_notify;
 
+  GstRTSPBackPressureFunc back_pressure_func;
+  gpointer back_pressure_func_data;
+  GDestroyNotify back_pressure_func_notify;
+
   GstRTSPKeepAliveFunc keep_alive;
   gpointer ka_user_data;
   GDestroyNotify ka_notify;
@@ -77,7 +82,22 @@ struct _GstRTSPStreamTransportPrivate
   GstRTSPUrl *url;
 
   GObject *rtpsource;
+
+  /* TCP backlog */
+  GstClockTime first_rtp_timestamp;
+  GstQueueArray *items;
 };
+
+#define MAX_BACKLOG_DURATION (10 * GST_SECOND)
+#define MAX_BACKLOG_SIZE 100
+
+typedef struct
+{
+  GstBuffer *buffer;
+  GstBufferList *buffer_list;
+  gboolean is_rtp;
+} BackLogItem;
+
 
 enum
 {
@@ -107,9 +127,20 @@ gst_rtsp_stream_transport_class_init (GstRTSPStreamTransportClass * klass)
 }
 
 static void
+clear_backlog_item (BackLogItem * item)
+{
+  gst_clear_buffer (&item->buffer);
+  gst_clear_buffer_list (&item->buffer_list);
+}
+
+static void
 gst_rtsp_stream_transport_init (GstRTSPStreamTransport * trans)
 {
   trans->priv = gst_rtsp_stream_transport_get_instance_private (trans);
+  trans->priv->items = gst_queue_array_new_for_struct (sizeof (BackLogItem), 0);
+  trans->priv->first_rtp_timestamp = GST_CLOCK_TIME_NONE;
+  gst_queue_array_set_clear_func (trans->priv->items,
+      (GDestroyNotify) clear_backlog_item);
 }
 
 static void
@@ -134,6 +165,8 @@ gst_rtsp_stream_transport_finalize (GObject * obj)
 
   if (priv->url)
     gst_rtsp_url_free (priv->url);
+
+  gst_queue_array_free (priv->items);
 
   G_OBJECT_CLASS (gst_rtsp_stream_transport_parent_class)->finalize (obj);
 }
@@ -242,6 +275,39 @@ gst_rtsp_stream_transport_set_list_callbacks (GstRTSPStreamTransport * trans,
     priv->list_notify (priv->list_user_data);
   priv->list_user_data = user_data;
   priv->list_notify = notify;
+}
+
+void
+gst_rtsp_stream_transport_set_back_pressure_callback (GstRTSPStreamTransport *
+    trans, GstRTSPBackPressureFunc back_pressure_func, gpointer user_data,
+    GDestroyNotify notify)
+{
+  GstRTSPStreamTransportPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_STREAM_TRANSPORT (trans));
+
+  priv = trans->priv;
+
+  priv->back_pressure_func = back_pressure_func;
+  if (priv->back_pressure_func_notify)
+    priv->back_pressure_func_notify (priv->back_pressure_func_data);
+  priv->back_pressure_func_data = user_data;
+  priv->back_pressure_func_notify = notify;
+}
+
+gboolean
+gst_rtsp_stream_transport_check_back_pressure (GstRTSPStreamTransport * trans,
+    guint8 channel)
+{
+  GstRTSPStreamTransportPrivate *priv;
+  gboolean ret = FALSE;
+
+  priv = trans->priv;
+
+  if (priv->back_pressure_func)
+    ret = priv->back_pressure_func (channel, priv->back_pressure_func_data);
+
+  return ret;
 }
 
 /**
@@ -693,7 +759,7 @@ gst_rtsp_stream_transport_message_sent (GstRTSPStreamTransport * trans)
   priv = trans->priv;
 
   if (priv->message_sent)
-    priv->message_sent (priv->ms_user_data);
+    priv->message_sent (trans, priv->ms_user_data);
 }
 
 /**
@@ -728,4 +794,116 @@ gst_rtsp_stream_transport_recv_data (GstRTSPStreamTransport * trans,
     res = GST_FLOW_NOT_LINKED;
   }
   return res;
+}
+
+static GstClockTime
+get_backlog_item_timestamp (BackLogItem * item)
+{
+  GstClockTime ret = GST_CLOCK_TIME_NONE;
+
+  if (item->buffer) {
+    ret = GST_BUFFER_DTS_OR_PTS (item->buffer);
+  } else if (item->buffer_list) {
+    g_assert (gst_buffer_list_length (item->buffer_list) > 0);
+    ret = GST_BUFFER_DTS_OR_PTS (gst_buffer_list_get (item->buffer_list, 0));
+  }
+
+  return ret;
+}
+
+static GstClockTime
+get_first_backlog_timestamp (GstRTSPStreamTransport * trans)
+{
+  GstRTSPStreamTransportPrivate *priv = trans->priv;
+  GstClockTime ret = GST_CLOCK_TIME_NONE;
+  guint i, l;
+
+  l = gst_queue_array_get_length (priv->items);
+
+  for (i = 0; i < l; i++) {
+    BackLogItem *item = (BackLogItem *)
+        gst_queue_array_peek_nth_struct (priv->items, i);
+
+    if (item->is_rtp) {
+      ret = get_backlog_item_timestamp (item);
+      break;
+    }
+  }
+
+  return ret;
+}
+
+/* Not MT-safe, caller should ensure consistent locking. Ownership
+ * of @buffer and @buffer_list is transfered to the transport */
+gboolean
+gst_rtsp_stream_transport_backlog_push (GstRTSPStreamTransport * trans,
+    GstBuffer * buffer, GstBufferList * buffer_list, gboolean is_rtp)
+{
+  gboolean ret = TRUE;
+  BackLogItem item = { 0, };
+  GstClockTime item_timestamp;
+  GstRTSPStreamTransportPrivate *priv;
+
+  priv = trans->priv;
+
+  if (buffer)
+    item.buffer = buffer;
+  if (buffer_list)
+    item.buffer_list = buffer_list;
+  item.is_rtp = is_rtp;
+
+  gst_queue_array_push_tail_struct (priv->items, &item);
+
+  item_timestamp = get_backlog_item_timestamp (&item);
+
+  if (is_rtp && priv->first_rtp_timestamp != GST_CLOCK_TIME_NONE) {
+    GstClockTimeDiff queue_duration;
+
+    g_assert (GST_CLOCK_TIME_IS_VALID (item_timestamp));
+
+    queue_duration = GST_CLOCK_DIFF (priv->first_rtp_timestamp, item_timestamp);
+
+    g_assert (queue_duration >= 0);
+
+    if (queue_duration > MAX_BACKLOG_DURATION &&
+        gst_queue_array_get_length (priv->items) > MAX_BACKLOG_SIZE) {
+      ret = FALSE;
+    }
+  } else if (is_rtp) {
+    priv->first_rtp_timestamp = item_timestamp;
+  }
+
+  return ret;
+}
+
+/* Not MT-safe, caller should ensure consistent locking. Ownership
+ * of @buffer and @buffer_list is transfered back to the caller */
+gboolean
+gst_rtsp_stream_transport_backlog_pop (GstRTSPStreamTransport * trans,
+    GstBuffer ** buffer, GstBufferList ** buffer_list, gboolean * is_rtp)
+{
+  BackLogItem *item;
+  GstRTSPStreamTransportPrivate *priv;
+
+  g_return_val_if_fail (!gst_rtsp_stream_transport_backlog_is_empty (trans),
+      FALSE);
+
+  priv = trans->priv;
+
+  item = (BackLogItem *) gst_queue_array_pop_head_struct (priv->items);
+
+  priv->first_rtp_timestamp = get_first_backlog_timestamp (trans);
+
+  *buffer = item->buffer;
+  *buffer_list = item->buffer_list;
+  *is_rtp = item->is_rtp;
+
+  return TRUE;
+}
+
+/* Not MT-safe, caller should ensure consistent locking. */
+gboolean
+gst_rtsp_stream_transport_backlog_is_empty (GstRTSPStreamTransport * trans)
+{
+  return gst_queue_array_is_empty (trans->priv->items);
 }
