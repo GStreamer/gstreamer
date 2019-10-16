@@ -365,6 +365,12 @@ GstRTSPStream *       gst_rtsp_media_create_stream    (GstRTSPMedia *media,
 /* dealing with the media */
 
 GST_RTSP_SERVER_API
+void                  gst_rtsp_media_lock             (GstRTSPMedia *media);
+
+GST_RTSP_SERVER_API
+void                  gst_rtsp_media_unlock           (GstRTSPMedia *media);
+
+GST_RTSP_SERVER_API
 GstClock *            gst_rtsp_media_get_clock        (GstRTSPMedia *media);
 
 GST_RTSP_SERVER_API

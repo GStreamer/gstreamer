@@ -90,6 +90,12 @@ struct _GstRTSPMediaPrivate
   GMutex lock;
   GCond cond;
 
+  /* the global lock is used to lock the entire media. This is needed by callers
+     such as rtsp_client to protect the media when it is shared by many clients.
+     The lock prevents that concurrenting clients messes up media.
+     Typically the lock is taken in external API calls such as SETUP */
+  GMutex global_lock;
+
   /* protected by lock */
   GstRTSPPermissions *permissions;
   gboolean shared;
@@ -459,6 +465,7 @@ gst_rtsp_media_init (GstRTSPMedia * media)
 
   priv->streams = g_ptr_array_new_with_free_func (g_object_unref);
   g_mutex_init (&priv->lock);
+  g_mutex_init (&priv->global_lock);
   g_cond_init (&priv->cond);
   g_rec_mutex_init (&priv->state_lock);
 
@@ -512,6 +519,7 @@ gst_rtsp_media_finalize (GObject * obj)
     gst_object_unref (priv->clock);
   g_free (priv->multicast_iface);
   g_mutex_clear (&priv->lock);
+  g_mutex_clear (&priv->global_lock);
   g_cond_clear (&priv->cond);
   g_rec_mutex_clear (&priv->state_lock);
 
@@ -3995,6 +4003,54 @@ get_clock_unlocked (GstRTSPMedia * media)
 }
 
 /**
+ * gst_rtsp_media_lock:
+ * @media: a #GstRTSPMedia
+ *
+ * Lock the entire media. This is needed by callers such as rtsp_client to
+ * protect the media when it is shared by many clients.
+ * The lock prevents that concurrent clients alters the shared media,
+ * while one client already is working with it.
+ * Typically the lock is taken in external RTSP API calls that uses shared media
+ * such as DESCRIBE, SETUP, ANNOUNCE, TEARDOWN, PLAY, PAUSE.
+ *
+ * As best practice take the lock as soon as the function get hold of a shared
+ * media object. Release the lock right before the function returns.
+ *
+ * Since: 1.18
+ */
+void
+gst_rtsp_media_lock (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA (media));
+
+  priv = media->priv;
+
+  g_mutex_lock (&priv->global_lock);
+}
+
+/**
+ * gst_rtsp_media_unlock:
+ * @media: a #GstRTSPMedia
+ *
+ * Unlock the media.
+ *
+ * Since: 1.18
+ */
+void
+gst_rtsp_media_unlock (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA (media));
+
+  priv = media->priv;
+
+  g_mutex_unlock (&priv->global_lock);
+}
+
+/**
  * gst_rtsp_media_get_clock:
  * @media: a #GstRTSPMedia
  *
@@ -4369,6 +4425,14 @@ gst_rtsp_media_suspend (GstRTSPMedia * media)
 
   GST_FIXME ("suspend for dynamic pipelines needs fixing");
 
+  /* this typically can happen for shared media. */
+  if (priv->prepare_count > 1 &&
+      priv->status == GST_RTSP_MEDIA_STATUS_SUSPENDED) {
+    goto done;
+  } else if (priv->prepare_count > 1) {
+    goto prepared_by_other_client;
+  }
+
   g_rec_mutex_lock (&priv->state_lock);
   if (priv->status != GST_RTSP_MEDIA_STATUS_PREPARED)
     goto not_prepared;
@@ -4390,6 +4454,11 @@ done:
   return TRUE;
 
   /* ERRORS */
+prepared_by_other_client:
+  {
+    GST_WARNING ("media %p was prepared by other client", media);
+    return FALSE;
+  }
 not_prepared:
   {
     g_rec_mutex_unlock (&priv->state_lock);
