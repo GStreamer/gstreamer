@@ -39,6 +39,9 @@
 #if GST_VULKAN_HAVE_WINDOW_WIN32
 #include "win32/gstvkwindow_win32.h"
 #endif
+#if GST_VULKAN_HAVE_WINDOW_ANDROID
+#include "android/gstvkdisplay_android.h"
+#endif
 
 /**
  * SECTION:vkdisplay
@@ -234,6 +237,11 @@ gst_vulkan_display_new_with_type (GstVulkanInstance * instance,
 #if GST_VULKAN_HAVE_WINDOW_IOS
   if (!display && type & GST_VULKAN_DISPLAY_TYPE_IOS) {
     display = GST_VULKAN_DISPLAY (gst_vulkan_display_ios_new ());
+  }
+#endif
+#if GST_VULKAN_HAVE_WINDOW_ANDROID
+  if (!display && type & GST_VULKAN_DISPLAY_TYPE_ANDROID) {
+    display = GST_VULKAN_DISPLAY (gst_vulkan_display_android_new ());
   }
 #endif
 
@@ -522,6 +530,16 @@ gst_vulkan_display_choose_type (GstVulkanInstance * instance)
     first_supported = GST_VULKAN_DISPLAY_TYPE_WIN32;
 #endif
 
+#if GST_VULKAN_HAVE_WINDOW_ANDROID
+  /* CHOOSE_WINSYS macro doesn't work with "ANDROID" */
+  if (!type && g_strcmp0 (window_str, "android") == 0) {
+    type = GST_VULKAN_DISPLAY_TYPE_ANDROID;
+  }
+
+  if (!first_supported)
+    first_supported = GST_VULKAN_DISPLAY_TYPE_ANDROID;
+#endif
+
   /* if there are no winsys enabled at build time, we get a 'unused but set'
    * warning.  Remove that. */
   (void) window_str;
@@ -570,6 +588,10 @@ gst_vulkan_display_type_to_extension_string (GstVulkanDisplayType type)
 #if GST_VULKAN_HAVE_WINDOW_WIN32
   if (type & GST_VULKAN_DISPLAY_TYPE_WIN32)
     return VK_KHR_WIN32_SURFACE_EXTENSION_NAME;
+#endif
+#if GST_VULKAN_HAVE_WINDOW_ANDROID
+  if (type & GST_VULKAN_DISPLAY_TYPE_ANDROID)
+    return VK_KHR_ANDROID_SURFACE_EXTENSION_NAME;
 #endif
 
   return NULL;

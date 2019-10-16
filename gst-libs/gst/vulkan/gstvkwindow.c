@@ -52,6 +52,9 @@
 #if GST_VULKAN_HAVE_WINDOW_WIN32
 #include "win32/gstvkwindow_win32.h"
 #endif
+#if GST_VULKAN_HAVE_WINDOW_ANDROID
+#include "android/gstvkwindow_android.h"
+#endif
 
 #define GST_CAT_DEFAULT gst_vulkan_window_debug
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
@@ -250,6 +253,10 @@ gst_vulkan_window_new (GstVulkanDisplay * display)
 #if GST_VULKAN_HAVE_WINDOW_WIN32
   if (!window && (!user_choice || g_strstr_len (user_choice, 5, "win32")))
     window = GST_VULKAN_WINDOW (gst_vulkan_window_win32_new (display));
+#endif
+#if GST_VULKAN_HAVE_WINDOW_ANDROID
+  if (!window && (!user_choice || g_strstr_len (user_choice, 7, "android")))
+    window = GST_VULKAN_WINDOW (gst_vulkan_window_android_new (display));
 #endif
   if (!window) {
     /* subclass returned a NULL window */

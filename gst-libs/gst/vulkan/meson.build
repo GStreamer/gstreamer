@@ -82,6 +82,7 @@ vulkan_conf_options = [
     'GST_VULKAN_HAVE_WINDOW_COCOA',
     'GST_VULKAN_HAVE_WINDOW_IOS',
     'GST_VULKAN_HAVE_WINDOW_WIN32',
+    'GST_VULKAN_HAVE_WINDOW_ANDROID',
 ]
 
 foreach option : vulkan_conf_options
@@ -215,6 +216,17 @@ if host_system == 'windows'
     optional_deps += [gdi_dep]
     vulkan_windowing = true
     vulkan_conf.set10('GST_VULKAN_HAVE_WINDOW_WIN32', 1)
+  endif
+endif
+
+if host_system == 'android'
+  if cc.has_header('vulkan/vulkan_android.h', dependencies : vulkan_dep)
+    vulkan_sources += [
+      'android/gstvkdisplay_android.c',
+      'android/gstvkwindow_android.c',
+    ]
+    vulkan_windowing = true
+    vulkan_conf.set10('GST_VULKAN_HAVE_WINDOW_ANDROID', 1)
   endif
 endif
 
