@@ -36,6 +36,7 @@
 #include "gstnvdecoder.h"
 #include "gstcudadownload.h"
 #include "gstcudaupload.h"
+#include "gstcudafilter.h"
 
 GST_DEBUG_CATEGORY (gst_nvcodec_debug);
 GST_DEBUG_CATEGORY (gst_nvdec_debug);
@@ -200,6 +201,8 @@ plugin_init (GstPlugin * plugin)
       GST_TYPE_CUDA_DOWNLOAD);
   gst_element_register (plugin, "cudaupload", GST_RANK_NONE,
       GST_TYPE_CUDA_UPLOAD);
+
+  gst_cuda_filter_plugin_init (plugin);
 
   return TRUE;
 }
