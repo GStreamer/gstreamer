@@ -182,6 +182,12 @@ ges_meta_container_set_marker_list     (GESMetaContainer * container,
                                         const GESMarkerList *list);
 
 GES_API gboolean
+ges_meta_container_register_static_meta (GESMetaContainer * container,
+                                         GESMetaFlag flags,
+                                         const gchar * meta_item,
+                                         GType type);
+
+GES_API gboolean
 ges_meta_container_register_meta_boolean (GESMetaContainer *container,
                                           GESMetaFlag flags,
                                           const gchar* meta_item,

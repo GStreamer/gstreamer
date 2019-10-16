@@ -528,6 +528,55 @@ ges_meta_container_add_metas_from_string (GESMetaContainer * container,
   return TRUE;
 }
 
+/**
+ * ges_meta_container_register_static_meta:
+ * @container: Target container
+ * @flags: The #GESMetaFlag to be used
+ * @meta_item: Name of the meta item to register
+ * @type: The required data type for this meta
+ *
+ * Registers a static meta on @container. This method lets you define a
+ * static metadata, which means that @type will be the only type accepted
+ * for this meta on this particular @container. Unlike
+ * #ges_meta_container_register_meta, no initial value is set for this
+ * meta, which means you can use this method to reserve the meta under
+ * @meta_item to be optionally set later. Note, if a meta has already been
+ * set, but not registered, under @meta_item before calling this method,
+ * then its type must match @type, and its value will be left in place.
+ * Otherwise, you'll likely want to include #GES_META_WRITABLE in @flags
+ * to allow the value to be later set for this meta.
+ *
+ * Return: %TRUE if the meta could be registered, %FALSE otherwise
+ */
+gboolean
+ges_meta_container_register_static_meta (GESMetaContainer * container,
+    GESMetaFlag flags, const gchar * meta_item, GType type)
+{
+  GstStructure *structure;
+
+  g_return_val_if_fail (GES_IS_META_CONTAINER (container), FALSE);
+  g_return_val_if_fail (meta_item != NULL, FALSE);
+
+  /* If the meta is already in use, and is of a different type, then we
+   * want to fail since, unlike ges_meta_container_register_meta, we will
+   * not be overwriting this value! If we didn't fail, the user could have
+   * a false sense that this meta will always be of the reserved type.
+   */
+  structure = _meta_container_get_structure (container);
+  if (gst_structure_has_field (structure, meta_item) &&
+      gst_structure_get_field_type (structure, meta_item) != type) {
+    gchar *value_string =
+        g_strdup_value_contents (gst_structure_get_value (structure,
+            meta_item));
+    GST_WARNING_OBJECT (container,
+        "Meta %s already assigned a value of %s, which is a different type",
+        meta_item, value_string);
+    g_free (value_string);
+    return FALSE;
+  }
+  return _register_meta (container, flags, meta_item, type);
+}
+
 #define CREATE_REGISTER_STATIC(name, value_ctype, value_gtype, setter_name) \
 gboolean                                                                      \
 ges_meta_container_register_meta_ ## name (GESMetaContainer *container,\
