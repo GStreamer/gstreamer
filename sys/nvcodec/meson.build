@@ -23,6 +23,7 @@ nvcodec_sources = [
   'gstcudafilter.c',
   'gstcudabasefilter.c',
   'gstcudaconvert.c',
+  'gstcudascale.c',
 ]
 
 if get_option('nvcodec').disabled()
