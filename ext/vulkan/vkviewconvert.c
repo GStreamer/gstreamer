@@ -1992,7 +1992,7 @@ _create_sampler (GstVulkanViewConvert * conv)
   err = vkCreateSampler (render->device->device, &samplerInfo, NULL, &sampler);
   if (gst_vulkan_error_to_g_error (err, &error, "vkCreateSampler") < 0) {
     g_clear_error (&error);
-    return NULL;
+    return VK_NULL_HANDLE;
   }
 
   return sampler;
@@ -2047,7 +2047,7 @@ _create_descriptor_pool (GstVulkanViewConvert * conv)
     GST_ERROR_OBJECT (render, "Failed to create descriptor pool: %s",
         error->message);
     g_clear_error (&error);
-    return NULL;
+    return VK_NULL_HANDLE;
   }
 
   return pool;
@@ -2078,7 +2078,7 @@ _create_descriptor_set (GstVulkanViewConvert * conv)
     GST_ERROR_OBJECT (conv, "Failed to allocate descriptor: %s",
         error->message);
     g_clear_error (&error);
-    return NULL;
+    return VK_NULL_HANDLE;
   }
 
   return descriptor;
@@ -2111,8 +2111,8 @@ gst_vulkan_view_convert_set_caps (GstBaseTransform * bt, GstCaps * in_caps,
       gst_vulkan_trash_list_add (render->trash_list,
           gst_vulkan_trash_new_free_descriptor_pool (gst_vulkan_fence_ref
               (render->last_fence), conv->descriptor_pool));
-    conv->descriptor_set = NULL;
-    conv->descriptor_pool = NULL;
+    conv->descriptor_set = VK_NULL_HANDLE;
+    conv->descriptor_pool = VK_NULL_HANDLE;
     if (conv->uniform)
       gst_vulkan_trash_list_add (render->trash_list,
           gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref
@@ -2122,8 +2122,8 @@ gst_vulkan_view_convert_set_caps (GstBaseTransform * bt, GstCaps * in_caps,
     if (conv->descriptor_pool)
       vkDestroyDescriptorPool (render->device->device,
           conv->descriptor_pool, NULL);
-    conv->descriptor_set = NULL;
-    conv->descriptor_pool = NULL;
+    conv->descriptor_set = VK_NULL_HANDLE;
+    conv->descriptor_pool = VK_NULL_HANDLE;
     if (conv->uniform)
       gst_memory_unref (conv->uniform);
     conv->uniform = NULL;
@@ -2158,13 +2158,13 @@ gst_vulkan_view_convert_stop (GstBaseTransform * bt)
         gst_vulkan_trash_list_add (render->trash_list,
             gst_vulkan_trash_new_free_descriptor_pool (gst_vulkan_fence_ref
                 (render->last_fence), conv->descriptor_pool));
-      conv->descriptor_set = NULL;
-      conv->descriptor_pool = NULL;
+      conv->descriptor_set = VK_NULL_HANDLE;
+      conv->descriptor_pool = VK_NULL_HANDLE;
       if (conv->sampler)
         gst_vulkan_trash_list_add (render->trash_list,
             gst_vulkan_trash_new_free_sampler (gst_vulkan_fence_ref
                 (render->last_fence), conv->sampler));
-      conv->sampler = NULL;
+      conv->sampler = VK_NULL_HANDLE;
       if (conv->uniform)
         gst_vulkan_trash_list_add (render->trash_list,
             gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref
@@ -2174,14 +2174,14 @@ gst_vulkan_view_convert_stop (GstBaseTransform * bt)
       if (conv->descriptor_pool)
         vkDestroyDescriptorPool (render->device->device,
             conv->descriptor_pool, NULL);
-      conv->descriptor_set = NULL;
-      conv->descriptor_pool = NULL;
+      conv->descriptor_set = VK_NULL_HANDLE;
+      conv->descriptor_pool = VK_NULL_HANDLE;
       if (conv->sampler)
         vkDestroySampler (render->device->device, conv->sampler, NULL);
-      conv->sampler = NULL;
+      conv->sampler = VK_NULL_HANDLE;
       if (conv->uniform)
         gst_memory_unref (conv->uniform);
-      conv->uniform = NULL;
+      conv->uniform = VK_NULL_HANDLE;
     }
   }
 
@@ -2221,7 +2221,7 @@ _create_framebuffer (GstVulkanViewConvert * conv, guint n_views,
     GST_ERROR_OBJECT (render, "Failed to create framebuffer: %s",
         error->message);
     g_clear_error (&error);
-    return NULL;
+    return VK_NULL_HANDLE;
   }
 
   return framebuffer;

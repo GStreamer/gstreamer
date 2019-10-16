@@ -101,7 +101,7 @@ G_PASTE(gst_vulkan_trash_new_free_,type_name) (GstVulkanFence * fence, \
     type type_name) \
 { \
   GstVulkanTrash *trash; \
-  g_return_val_if_fail (type_name != NULL, NULL); \
+  g_return_val_if_fail (type_name != VK_NULL_HANDLE, NULL); \
   trash = gst_vulkan_trash_new (fence, \
       (GstVulkanTrashNotify) G_PASTE(_free_,type_name), type_name); \
   return trash; \
@@ -135,7 +135,7 @@ G_PASTE(gst_vulkan_trash_new_free_,type_name) (GstVulkanFence * fence, \
 { \
   struct G_PASTE(free_parent_info_,type_name) *info; \
   GstVulkanTrash *trash; \
-  g_return_val_if_fail (type_name != NULL, NULL); \
+  g_return_val_if_fail (type_name != VK_NULL_HANDLE, NULL); \
   info = g_new0 (struct G_PASTE(free_parent_info_,type_name), 1); \
   /* FIXME: keep parent alive ? */\
   info->parent = parent; \

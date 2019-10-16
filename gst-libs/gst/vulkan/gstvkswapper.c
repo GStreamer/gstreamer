@@ -1202,7 +1202,7 @@ reacquire:
     GST_DEBUG_OBJECT (swapper, "out of date frame acquired");
 
     vkDestroySemaphore (swapper->device->device, acquire_semaphore, NULL);
-    acquire_semaphore = NULL;
+    acquire_semaphore = VK_NULL_HANDLE;
     if (!_swapchain_resize (swapper, error))
       goto error;
     goto reacquire;
@@ -1252,7 +1252,7 @@ reacquire:
             GST_MINI_OBJECT_CAST (cmd_buf)));
     gst_vulkan_trash_list_add (swapper->priv->trash_list,
         gst_vulkan_trash_new_free_semaphore (fence, acquire_semaphore));
-    acquire_semaphore = NULL;
+    acquire_semaphore = VK_NULL_HANDLE;
 
     gst_vulkan_command_buffer_unlock (cmd_buf);
     cmd_buf = NULL;

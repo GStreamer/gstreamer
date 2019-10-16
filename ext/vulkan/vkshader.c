@@ -46,12 +46,12 @@ _vk_create_shader (GstVulkanDevice * device, gchar * code, gsize size,
   guint32 first_word;
   guint32 *new_code = NULL;
 
-  g_return_val_if_fail (size >= 4, NULL);
-  g_return_val_if_fail (size % 4 == 0, NULL);
+  g_return_val_if_fail (size >= 4, VK_NULL_HANDLE);
+  g_return_val_if_fail (size % 4 == 0, VK_NULL_HANDLE);
 
   first_word = ((guint32 *) code)[0];
   g_return_val_if_fail (first_word == SPIRV_MAGIC_NUMBER_NE
-      || first_word == SPIRV_MAGIC_NUMBER_OE, NULL);
+      || first_word == SPIRV_MAGIC_NUMBER_OE, VK_NULL_HANDLE);
   if (first_word == SPIRV_MAGIC_NUMBER_OE) {
     /* endianness swap... */
     guint32 *old_code = (guint32 *) code;
@@ -81,7 +81,7 @@ _vk_create_shader (GstVulkanDevice * device, gchar * code, gsize size,
   res = vkCreateShaderModule (device->device, &info, NULL, &ret);
   g_free (new_code);
   if (gst_vulkan_error_to_g_error (res, error, "VkCreateShaderModule") < 0)
-    return NULL;
+    return VK_NULL_HANDLE;
 
   g_free (new_code);
 

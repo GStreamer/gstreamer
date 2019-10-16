@@ -306,7 +306,7 @@ _create_descriptor_pool (GstVulkanImageIdentity * vk_identity)
     GST_ERROR_OBJECT (render, "Failed to create descriptor pool: %s",
         error->message);
     g_clear_error (&error);
-    return NULL;
+    return VK_NULL_HANDLE;
   }
 
   return pool;
@@ -338,7 +338,7 @@ _create_descriptor_set (GstVulkanImageIdentity * vk_identity)
     GST_ERROR_OBJECT (vk_identity, "Failed to allocate descriptor: %s",
         error->message);
     g_clear_error (&error);
-    return NULL;
+    return VK_NULL_HANDLE;
   }
 
   return descriptor;
@@ -359,13 +359,13 @@ gst_vulkan_image_identity_set_caps (GstBaseTransform * bt, GstCaps * in_caps,
     gst_vulkan_trash_list_add (render->trash_list,
         gst_vulkan_trash_new_free_descriptor_pool (gst_vulkan_fence_ref
             (render->last_fence), vk_identity->descriptor_pool));
-    vk_identity->descriptor_set = NULL;
-    vk_identity->descriptor_pool = NULL;
+    vk_identity->descriptor_set = VK_NULL_HANDLE;
+    vk_identity->descriptor_pool = VK_NULL_HANDLE;
   } else {
     vkDestroyDescriptorPool (render->device->device,
         vk_identity->descriptor_pool, NULL);
-    vk_identity->descriptor_set = NULL;
-    vk_identity->descriptor_pool = NULL;
+    vk_identity->descriptor_set = VK_NULL_HANDLE;
+    vk_identity->descriptor_pool = VK_NULL_HANDLE;
   }
 
   if (!(vk_identity->descriptor_pool = _create_descriptor_pool (vk_identity)))
@@ -411,7 +411,7 @@ _create_sampler (GstVulkanImageIdentity * vk_identity)
     GST_ERROR_OBJECT (vk_identity, "Failed to create sampler: %s",
         error->message);
     g_clear_error (&error);
-    return NULL;
+    return VK_NULL_HANDLE;
   }
 
   return sampler;
@@ -442,25 +442,25 @@ gst_vulkan_image_identity_stop (GstBaseTransform * bt)
       gst_vulkan_trash_list_add (render->trash_list,
           gst_vulkan_trash_new_free_descriptor_pool (gst_vulkan_fence_ref
               (render->last_fence), vk_identity->descriptor_pool));
-      vk_identity->descriptor_set = NULL;
-      vk_identity->descriptor_pool = NULL;
+      vk_identity->descriptor_set = VK_NULL_HANDLE;
+      vk_identity->descriptor_pool = VK_NULL_HANDLE;
       gst_vulkan_trash_list_add (render->trash_list,
           gst_vulkan_trash_new_free_sampler (gst_vulkan_fence_ref
               (render->last_fence), vk_identity->sampler));
-      vk_identity->sampler = NULL;
+      vk_identity->sampler = VK_NULL_HANDLE;
     } else {
       vkDestroyDescriptorPool (render->device->device,
           vk_identity->descriptor_pool, NULL);
-      vk_identity->descriptor_set = NULL;
-      vk_identity->descriptor_pool = NULL;
+      vk_identity->descriptor_set = VK_NULL_HANDLE;
+      vk_identity->descriptor_pool = VK_NULL_HANDLE;
       vkDestroySampler (render->device->device, vk_identity->sampler, NULL);
-      vk_identity->sampler = NULL;
+      vk_identity->sampler = VK_NULL_HANDLE;
     }
   }
 
   if (vk_identity->cmd_pool)
     gst_object_unref (vk_identity->cmd_pool);
-  vk_identity->cmd_pool = NULL;
+  vk_identity->cmd_pool = VK_NULL_HANDLE;
 
   return GST_BASE_TRANSFORM_CLASS (parent_class)->stop (bt);
 }
@@ -524,7 +524,7 @@ _create_framebuffer (GstVulkanImageIdentity * vk_identity, VkImageView view)
     GST_ERROR_OBJECT (render, "Failed to create framebuffer: %s",
         error->message);
     g_clear_error (&error);
-    return NULL;
+    return VK_NULL_HANDLE;
   }
 
   return framebuffer;
