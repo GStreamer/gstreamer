@@ -24,6 +24,8 @@
  * @short_description: implements a list of markers with metadata asociated to time positions
  * @see_also: #GESMarker
  *
+ * A #GESMarker can be colored by setting the #GES_META_MARKER_COLOR meta.
+ *
  * Since: 1.18
  */
 
@@ -80,6 +82,8 @@ ges_marker_get_property (GObject * object, guint property_id,
 static void
 ges_marker_init (GESMarker * self)
 {
+  ges_meta_container_register_static_meta (GES_META_CONTAINER (self),
+      GES_META_READ_WRITE, GES_META_MARKER_COLOR, G_TYPE_UINT);
 }
 
 static void

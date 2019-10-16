@@ -109,6 +109,13 @@ G_BEGIN_DECLS
  */
 #define GES_META_FORMAT_VERSION                       "format-version"
 
+/**
+ * GES_META_MARKER_COLOR:
+ *
+ * The ARGB color of a #GESMarker (an AARRGGBB hex as a guint)
+ */
+#define GES_META_MARKER_COLOR                         "marker-color"
+
 typedef struct _GESMetaContainer          GESMetaContainer;
 typedef struct _GESMetaContainerInterface GESMetaContainerInterface;
 

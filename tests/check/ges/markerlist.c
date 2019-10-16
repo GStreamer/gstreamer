@@ -343,6 +343,39 @@ GST_START_TEST (test_serialize_deserialize)
 
 GST_END_TEST;
 
+
+GST_START_TEST (test_marker_color)
+{
+  GESMarkerList *mlist;
+  GESMarker *marker;
+  const guint yellow_rgb = 16776960;
+  guint color;
+
+  ges_init ();
+
+  mlist = ges_marker_list_new ();
+  marker = ges_marker_list_add (mlist, 0);
+  /* getting the color should fail since no value should be set yet */
+  fail_unless (ges_meta_container_get_meta (GES_META_CONTAINER (marker),
+          GES_META_MARKER_COLOR) == NULL);
+  /* trying to set the color field to something other than a uint should
+   * fail */
+  fail_unless (ges_meta_container_set_float (GES_META_CONTAINER (marker),
+          GES_META_MARKER_COLOR, 0.0) == FALSE);
+  fail_unless (ges_meta_container_set_uint (GES_META_CONTAINER (marker),
+          GES_META_MARKER_COLOR, yellow_rgb));
+  fail_unless (ges_meta_container_get_uint (GES_META_CONTAINER (marker),
+          GES_META_MARKER_COLOR, &color));
+  fail_unless_equals_int (color, yellow_rgb);
+
+  g_object_unref (mlist);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
+
 static Suite *
 ges_suite (void)
 {
@@ -359,6 +392,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_get_markers);
   tcase_add_test (tc_chain, test_move_marker);
   tcase_add_test (tc_chain, test_serialize_deserialize);
+  tcase_add_test (tc_chain, test_marker_color);
 
   return s;
 }
