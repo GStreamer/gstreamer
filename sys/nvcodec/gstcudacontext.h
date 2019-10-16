@@ -73,6 +73,9 @@ G_GNUC_INTERNAL
 gpointer         gst_cuda_context_get_handle  (GstCudaContext * ctx);
 
 G_GNUC_INTERNAL
+gint             gst_cuda_context_get_texture_alignment (GstCudaContext * ctx);
+
+G_GNUC_INTERNAL
 gboolean         gst_cuda_context_can_access_peer (GstCudaContext * ctx,
                                                    GstCudaContext * peer);
 

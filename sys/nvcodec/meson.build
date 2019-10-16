@@ -19,6 +19,7 @@ nvcodec_sources = [
   'gstcudaupload.c',
   'gstcudanvrtc.c',
   'gstnvrtcloader.c',
+  'cuda-converter.c',
 ]
 
 if get_option('nvcodec').disabled()

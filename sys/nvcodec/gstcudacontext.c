@@ -46,6 +46,8 @@ struct _GstCudaContextPrivate
   CUdevice device;
   gint device_id;
 
+  gint tex_align;
+
   GHashTable *accessible_peer;
 };
 
@@ -142,6 +144,7 @@ gst_cuda_context_constructed (GObject * object)
   gchar name[256];
   gint min = 0, maj = 0;
   gint i;
+  gint tex_align = 0;
   GList *iter;
 
   if (g_once_init_enter (&once)) {
@@ -166,11 +169,15 @@ gst_cuda_context_constructed (GObject * object)
         gst_cuda_result (CuDeviceGetAttribute (&maj,
                 CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR, cdev)) &&
         gst_cuda_result (CuDeviceGetAttribute (&min,
-                CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR, cdev))) {
+                CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR, cdev)) &&
+        gst_cuda_result (CuDeviceGetAttribute (&tex_align,
+                CU_DEVICE_ATTRIBUTE_TEXTURE_ALIGNMENT, cdev))) {
       GST_INFO ("GPU #%d supports NVENC: %s (%s) (Compute SM %d.%d)", i,
           (((maj << 4) + min) >= 0x30) ? "yes" : "no", name, maj, min);
       if (priv->device_id == -1 || priv->device_id == cdev) {
         priv->device_id = cuda_dev = cdev;
+        priv->tex_align = tex_align;
+        break;
       }
     }
   }
@@ -380,6 +387,23 @@ gst_cuda_context_get_handle (GstCudaContext * ctx)
   g_return_val_if_fail (GST_IS_CUDA_CONTEXT (ctx), NULL);
 
   return ctx->priv->context;
+}
+
+/**
+ * gst_cuda_context_get_texture_alignment:
+ * @ctx: a #GstCudaContext
+ *
+ * Get required texture alignment by device
+ *
+ * Returns: the #CUcontext of @ctx
+ */
+gint
+gst_cuda_context_get_texture_alignment (GstCudaContext * ctx)
+{
+  g_return_val_if_fail (ctx, 0);
+  g_return_val_if_fail (GST_IS_CUDA_CONTEXT (ctx), 0);
+
+  return ctx->priv->tex_align;
 }
 
 /**

@@ -145,6 +145,43 @@ CUresult CUDAAPI CuDeviceCanAccessPeer (int *canAccessPeer,
                                         CUdevice dev,
                                         CUdevice peerDev);
 
+G_GNUC_INTERNAL
+CUresult CUDAAPI CuDriverGetVersion   (int * driverVersion);
+
+G_GNUC_INTERNAL
+CUresult CUDAAPI CuModuleLoadData     (CUmodule* module,
+                                       const void *image);
+
+G_GNUC_INTERNAL
+CUresult CUDAAPI CuModuleUnload      (CUmodule module);
+
+G_GNUC_INTERNAL
+CUresult CUDAAPI CuModuleGetFunction  (CUfunction* hfunc,
+                                       CUmodule hmod,
+                                       const char* name);
+
+G_GNUC_INTERNAL
+CUresult CUDAAPI CuTexObjectCreate    (CUtexObject *pTexObject,
+                                       const CUDA_RESOURCE_DESC *pResDesc,
+                                       const CUDA_TEXTURE_DESC *pTexDesc,
+                                       const CUDA_RESOURCE_VIEW_DESC *pResViewDesc);
+
+G_GNUC_INTERNAL
+CUresult CUDAAPI CuTexObjectDestroy   (CUtexObject texObject);
+
+G_GNUC_INTERNAL
+CUresult CUDAAPI CuLaunchKernel       (CUfunction f,
+                                       unsigned int gridDimX,
+                                       unsigned int gridDimY,
+                                       unsigned int gridDimZ,
+                                       unsigned int blockDimX,
+                                       unsigned int blockDimY,
+                                       unsigned int blockDimZ,
+                                       unsigned int sharedMemBytes,
+                                       CUstream hStream,
+                                       void **kernelParams,
+                                       void **extra);
+
 /* cudaGL.h */
 G_GNUC_INTERNAL
 CUresult CUDAAPI CuGraphicsGLRegisterImage  (CUgraphicsResource * pCudaResource,

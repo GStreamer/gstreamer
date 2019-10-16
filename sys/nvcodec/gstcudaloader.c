@@ -92,6 +92,22 @@ typedef struct _GstNvCodecCudaVTable
       CUdevice_attribute attrib, CUdevice dev);
     CUresult (CUDAAPI * CuDeviceCanAccessPeer) (int *canAccessPeer,
       CUdevice dev, CUdevice peerDev);
+    CUresult (CUDAAPI * CuDriverGetVersion) (int *driverVersion);
+
+    CUresult (CUDAAPI * CuModuleLoadData) (CUmodule * module,
+      const void *image);
+    CUresult (CUDAAPI * CuModuleUnload) (CUmodule module);
+    CUresult (CUDAAPI * CuModuleGetFunction) (CUfunction * hfunc,
+      CUmodule hmod, const char *name);
+    CUresult (CUDAAPI * CuTexObjectCreate) (CUtexObject * pTexObject,
+      const CUDA_RESOURCE_DESC * pResDesc, const CUDA_TEXTURE_DESC * pTexDesc,
+      const CUDA_RESOURCE_VIEW_DESC * pResViewDesc);
+    CUresult (CUDAAPI * CuTexObjectDestroy) (CUtexObject texObject);
+    CUresult (CUDAAPI * CuLaunchKernel) (CUfunction f, unsigned int gridDimX,
+      unsigned int gridDimY, unsigned int gridDimZ,
+      unsigned int blockDimX, unsigned int blockDimY, unsigned int blockDimZ,
+      unsigned int sharedMemBytes, CUstream hStream, void **kernelParams,
+      void **extra);
 
     CUresult (CUDAAPI * CuGraphicsGLRegisterImage) (CUgraphicsResource *
       pCudaResource, unsigned int image, unsigned int target,
@@ -163,6 +179,15 @@ gst_cuda_load_library (void)
   LOAD_SYMBOL (cuDeviceGetName, CuDeviceGetName);
   LOAD_SYMBOL (cuDeviceGetAttribute, CuDeviceGetAttribute);
   LOAD_SYMBOL (cuDeviceCanAccessPeer, CuDeviceCanAccessPeer);
+
+  LOAD_SYMBOL (cuDriverGetVersion, CuDriverGetVersion);
+
+  LOAD_SYMBOL (cuModuleLoadData, CuModuleLoadData);
+  LOAD_SYMBOL (cuModuleUnload, CuModuleUnload);
+  LOAD_SYMBOL (cuModuleGetFunction, CuModuleGetFunction);
+  LOAD_SYMBOL (cuTexObjectCreate, CuTexObjectCreate);
+  LOAD_SYMBOL (cuTexObjectDestroy, CuTexObjectDestroy);
+  LOAD_SYMBOL (cuLaunchKernel, CuLaunchKernel);
 
   /* cudaGL.h */
   LOAD_SYMBOL (cuGraphicsGLRegisterImage, CuGraphicsGLRegisterImage);
@@ -418,6 +443,71 @@ CuDeviceCanAccessPeer (int *canAccessPeer, CUdevice dev, CUdevice peerDev)
   g_assert (gst_cuda_vtable.CuDeviceCanAccessPeer != NULL);
 
   return gst_cuda_vtable.CuDeviceCanAccessPeer (canAccessPeer, dev, peerDev);
+}
+
+CUresult CUDAAPI
+CuDriverGetVersion (int *driverVersion)
+{
+  g_assert (gst_cuda_vtable.CuDriverGetVersion != NULL);
+
+  return gst_cuda_vtable.CuDriverGetVersion (driverVersion);
+}
+
+CUresult CUDAAPI
+CuModuleLoadData (CUmodule * module, const void *image)
+{
+  g_assert (gst_cuda_vtable.CuModuleLoadData != NULL);
+
+  return gst_cuda_vtable.CuModuleLoadData (module, image);
+}
+
+CUresult CUDAAPI
+CuModuleUnload (CUmodule module)
+{
+  g_assert (gst_cuda_vtable.CuModuleUnload != NULL);
+
+  return gst_cuda_vtable.CuModuleUnload (module);
+}
+
+CUresult CUDAAPI
+CuModuleGetFunction (CUfunction * hfunc, CUmodule hmod, const char *name)
+{
+  g_assert (gst_cuda_vtable.CuModuleGetFunction != NULL);
+
+  return gst_cuda_vtable.CuModuleGetFunction (hfunc, hmod, name);
+}
+
+CUresult CUDAAPI
+CuTexObjectCreate (CUtexObject * pTexObject,
+    const CUDA_RESOURCE_DESC * pResDesc, const CUDA_TEXTURE_DESC * pTexDesc,
+    const CUDA_RESOURCE_VIEW_DESC * pResViewDesc)
+{
+  g_assert (gst_cuda_vtable.CuTexObjectCreate != NULL);
+
+  return gst_cuda_vtable.CuTexObjectCreate (pTexObject, pResDesc, pTexDesc,
+      pResViewDesc);
+}
+
+CUresult CUDAAPI
+CuTexObjectDestroy (CUtexObject texObject)
+{
+  g_assert (gst_cuda_vtable.CuTexObjectDestroy != NULL);
+
+  return gst_cuda_vtable.CuTexObjectDestroy (texObject);
+}
+
+CUresult CUDAAPI
+CuLaunchKernel (CUfunction f, unsigned int gridDimX,
+    unsigned int gridDimY, unsigned int gridDimZ,
+    unsigned int blockDimX, unsigned int blockDimY, unsigned int blockDimZ,
+    unsigned int sharedMemBytes, CUstream hStream, void **kernelParams,
+    void **extra)
+{
+  g_assert (gst_cuda_vtable.CuLaunchKernel != NULL);
+
+  return gst_cuda_vtable.CuLaunchKernel (f, gridDimX, gridDimY, gridDimZ,
+      blockDimX, blockDimY, blockDimZ, sharedMemBytes, hStream, kernelParams,
+      extra);
 }
 
 /* cudaGL.h */

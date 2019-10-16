@@ -27,7 +27,11 @@ typedef gpointer CUcontext;
 typedef gpointer CUgraphicsResource;
 typedef gpointer CUstream;
 typedef gpointer CUarray;
+typedef gpointer CUmodule;
+typedef gpointer CUfunction;
+typedef gpointer CUmipmappedArray;
 
+typedef guint64  CUtexObject;
 typedef guintptr CUdeviceptr;
 typedef gint CUdevice;
 
@@ -46,6 +50,7 @@ typedef enum
 
 typedef enum
 {
+  CU_DEVICE_ATTRIBUTE_TEXTURE_ALIGNMENT = 14,
   CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR = 75,
   CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR = 76,
 } CUdevice_attribute;
@@ -69,6 +74,39 @@ typedef enum
   CU_STREAM_DEFAULT = 0x0,
   CU_STREAM_NON_BLOCKING = 0x1
 } CUstream_flags;
+
+typedef enum
+{
+  CU_TR_FILTER_MODE_POINT = 0,
+  CU_TR_FILTER_MODE_LINEAR = 1
+} CUfilter_mode;
+
+typedef enum
+{
+  CU_TR_ADDRESS_MODE_WRAP = 0,
+  CU_TR_ADDRESS_MODE_CLAMP = 1,
+  CU_TR_ADDRESS_MODE_MIRROR = 2,
+  CU_TR_ADDRESS_MODE_BORDER = 3
+} CUaddress_mode;
+
+typedef enum
+{
+  CU_RESOURCE_TYPE_ARRAY = 0,
+  CU_RESOURCE_TYPE_MIPMAPPED_ARRAY = 1,
+  CU_RESOURCE_TYPE_LINEAR = 2,
+  CU_RESOURCE_TYPE_PITCH2D = 3
+} CUresourcetype;
+
+typedef enum
+{
+  CU_AD_FORMAT_UNSIGNED_INT8  = 1,
+  CU_AD_FORMAT_UNSIGNED_INT16 = 2,
+} CUarray_format;
+
+typedef enum
+{
+  CU_RES_VIEW_FORMAT_NONE = 0,
+} CUresourceViewFormat;
 
 typedef struct
 {
@@ -97,6 +135,66 @@ typedef enum
   CU_GL_DEVICE_LIST_ALL = 0x01,
 } CUGLDeviceList;
 
+typedef struct
+{
+  CUaddress_mode addressMode[3];
+  CUfilter_mode filterMode;
+  guint flags;
+  guint maxAnisotropy;
+  CUfilter_mode mipmapFilterMode;
+  gfloat mipmapLevelBias;
+  gfloat minMipmapLevelClamp;
+  gfloat maxMipmapLevelClamp;
+  gfloat borderColor[4];
+  gint reserved[12];
+} CUDA_TEXTURE_DESC;
+
+typedef struct
+{
+  CUresourcetype resType;
+
+  union {
+    struct {
+      CUarray hArray;
+    } array;
+    struct {
+      CUmipmappedArray hMipmappedArray;
+    } mipmap;
+    struct {
+      CUdeviceptr devPtr;
+      CUarray_format format;
+      guint numChannels;
+      gsize sizeInBytes;
+    } linear;
+    struct {
+      CUdeviceptr devPtr;
+      CUarray_format format;
+      guint numChannels;
+      gsize width;
+      gsize height;
+      gsize pitchInBytes;
+    } pitch2D;
+    struct {
+        gint reserved[32];
+    } reserved;
+  } res;
+
+  guint flags;
+} CUDA_RESOURCE_DESC;
+
+typedef struct
+{
+  CUresourceViewFormat format;
+  gsize width;
+  gsize height;
+  gsize depth;
+  guint firstMipmapLevel;
+  guint lastMipmapLevel;
+  guint firstLayer;
+  guint lastLayer;
+  guint reserved[16];
+} CUDA_RESOURCE_VIEW_DESC;
+
 #define CUDA_VERSION 10000
 
 #ifdef _WIN32
@@ -119,6 +217,8 @@ typedef enum
 #define cuMemcpy2DAsync cuMemcpy2DAsync_v2
 #define cuMemFree cuMemFree_v2
 #define cuGLGetDevices cuGLGetDevices_v2
+
+#define CU_TRSF_READ_AS_INTEGER 1
 
 G_END_DECLS
 
