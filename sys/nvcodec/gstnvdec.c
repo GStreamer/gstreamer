@@ -1151,10 +1151,12 @@ gst_nvdec_copy_device_to_memory (GstNvDec * nvdec,
       gst_is_cuda_memory (mem)) {
     GstCudaMemory *cmem = GST_CUDA_MEMORY_CAST (mem);
 
-    /* FIXME: enhance CUDA memory copy over multiple-gpu */
     if (cmem->context == nvdec->cuda_ctx ||
         gst_cuda_context_get_handle (cmem->context) ==
-        gst_cuda_context_get_handle (nvdec->cuda_ctx)) {
+        gst_cuda_context_get_handle (nvdec->cuda_ctx) ||
+        (gst_cuda_context_can_access_peer (cmem->context, nvdec->cuda_ctx) &&
+            gst_cuda_context_can_access_peer (nvdec->cuda_ctx,
+                cmem->context))) {
       cuda_mem = cmem;
     }
   }

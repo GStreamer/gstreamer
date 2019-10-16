@@ -2450,10 +2450,12 @@ gst_nv_base_enc_handle_frame (GstVideoEncoder * enc, GstVideoCodecFrame * frame)
         gst_is_cuda_memory (mem)) {
       GstCudaMemory *cmem = GST_CUDA_MEMORY_CAST (mem);
 
-      /* FIXME: enhance CUDA memory copy over multiple-gpu */
       if (cmem->context == nvenc->cuda_ctx ||
           gst_cuda_context_get_handle (cmem->context) ==
-          gst_cuda_context_get_handle (nvenc->cuda_ctx)) {
+          gst_cuda_context_get_handle (nvenc->cuda_ctx) ||
+          (gst_cuda_context_can_access_peer (cmem->context, nvenc->cuda_ctx) &&
+              gst_cuda_context_can_access_peer (nvenc->cuda_ctx,
+                  cmem->context))) {
         use_device_memory = TRUE;
         in_map_flags |= GST_MAP_CUDA;
       }
