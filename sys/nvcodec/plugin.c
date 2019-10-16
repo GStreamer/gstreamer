@@ -34,6 +34,8 @@
 #include "gstnvh264dec.h"
 #include "gstnvh265dec.h"
 #include "gstnvdecoder.h"
+#include "gstcudadownload.h"
+#include "gstcudaupload.h"
 
 GST_DEBUG_CATEGORY (gst_nvcodec_debug);
 GST_DEBUG_CATEGORY (gst_nvdec_debug);
@@ -193,6 +195,11 @@ plugin_init (GstPlugin * plugin)
 
     CuCtxDestroy (cuda_ctx);
   }
+
+  gst_element_register (plugin, "cudadownload", GST_RANK_NONE,
+      GST_TYPE_CUDA_DOWNLOAD);
+  gst_element_register (plugin, "cudaupload", GST_RANK_NONE,
+      GST_TYPE_CUDA_UPLOAD);
 
   return TRUE;
 }

@@ -14,6 +14,9 @@ nvcodec_sources = [
   'gstnvh265dec.c',
   'gstcudamemory.c',
   'gstcudabufferpool.c',
+  'gstcudabasetransform.c',
+  'gstcudadownload.c',
+  'gstcudaupload.c',
 ]
 
 if get_option('nvcodec').disabled()
