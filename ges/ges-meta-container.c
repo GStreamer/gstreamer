@@ -174,7 +174,6 @@ ges_meta_container_foreach (GESMetaContainer * container,
       (GstStructureForeachFunc) structure_foreach_wrapper, &foreach_data);
 }
 
-/* _can_write_value should have been checked before calling */
 static gboolean
 _register_meta (GESMetaContainer * container, GESMetaFlag flags,
     const gchar * meta_item, GType type)
@@ -200,6 +199,7 @@ _register_meta (GESMetaContainer * container, GESMetaFlag flags,
   return TRUE;
 }
 
+/* _can_write_value should have been checked before calling */
 static gboolean
 _set_value (GESMetaContainer * container, const gchar * meta_item,
     const GValue * value)
