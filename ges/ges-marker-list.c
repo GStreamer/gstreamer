@@ -162,9 +162,10 @@ ges_marker_list_class_init (GESMarkerListClass * klass)
 
   object_class->finalize = ges_marker_list_finalize;
 
-  /**
+/**
   * GESMarkerList::marker-added:
   * @marker-list: the #GESMarkerList
+  * @position: the position of the added marker
   * @marker: the #GESMarker that was added.
   *
   * Will be emitted after the marker was added to the marker-list.
@@ -191,7 +192,9 @@ ges_marker_list_class_init (GESMarkerListClass * klass)
 /**
   * GESMarkerList::marker-moved:
   * @marker-list: the #GESMarkerList
-  * @marker: the #GESMarker that was added.
+  * @previous-position: the previous position of the marker
+  * @new-position: the new position of the marker
+  * @marker: the #GESMarker that was moved.
   *
   * Will be emitted after the marker was moved to.
   * Since: 1.18
@@ -199,7 +202,7 @@ ges_marker_list_class_init (GESMarkerListClass * klass)
   ges_marker_list_signals[MARKER_MOVED] =
       g_signal_new ("marker-moved", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
-      G_TYPE_NONE, 2, G_TYPE_UINT64, GES_TYPE_MARKER);
+      G_TYPE_NONE, 3, G_TYPE_UINT64, G_TYPE_UINT64, GES_TYPE_MARKER);
 }
 
 static gint
@@ -358,6 +361,7 @@ ges_marker_list_move (GESMarkerList * self, GESMarker * marker,
 {
   GSequenceIter *iter;
   gboolean ret = FALSE;
+  GstClockTime previous_position;
 
   g_return_val_if_fail (GES_IS_MARKER_LIST (self), FALSE);
 
@@ -367,10 +371,11 @@ ges_marker_list_move (GESMarkerList * self, GESMarker * marker,
     goto done;
   }
 
+  previous_position = marker->position;
   marker->position = position;
 
-  g_signal_emit (self, ges_marker_list_signals[MARKER_MOVED], 0, position,
-      marker);
+  g_signal_emit (self, ges_marker_list_signals[MARKER_MOVED], 0,
+      previous_position, position, marker);
 
   g_sequence_sort_changed (iter, cmp_marker, NULL);
 

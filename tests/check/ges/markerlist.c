@@ -150,9 +150,10 @@ GST_END_TEST;
 
 
 static void
-marker_moved_cb (GESMarkerList * mlist, GstClockTime position,
-    GESMarker * marker, gboolean * called)
+marker_moved_cb (GESMarkerList * mlist, GstClockTime prev_position,
+    GstClockTime position, GESMarker * marker, gboolean * called)
 {
+  fail_unless_equals_int (prev_position, 10);
   fail_unless_equals_int (position, 42);
 
   ASSERT_OBJECT_REFCOUNT (marker, "local ref + signal", 2);
