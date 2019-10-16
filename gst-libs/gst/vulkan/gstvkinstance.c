@@ -142,7 +142,7 @@ gst_vulkan_instance_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-static VkBool32
+VKAPI_ATTR static VkBool32
 _gst_vk_debug_callback (VkDebugReportFlagsEXT msgFlags,
     VkDebugReportObjectTypeEXT objType, uint64_t srcObject, size_t location,
     int32_t msgCode, const char *pLayerPrefix, const char *pMsg,
