@@ -121,6 +121,10 @@ struct _GstMsdkVPP
   gboolean keep_aspect;
   guint frc_algm;
   guint video_direction;
+  guint crop_left;
+  guint crop_right;
+  guint crop_top;
+  guint crop_bottom;
 
   GstClockTime buffer_duration;
 

@@ -79,6 +79,15 @@ fixate_output_frame_size (GstMsdkVPP * thiz, GstVideoInfo * vinfo,
     from_w = GST_VIDEO_INFO_WIDTH (vinfo);
     from_h = GST_VIDEO_INFO_HEIGHT (vinfo);
 
+    /* adjust for crop settings (NOTE: msdk min frame size is 2x2) */
+    if ((thiz->crop_left + thiz->crop_right >= from_w - 1)
+        || (thiz->crop_top + thiz->crop_bottom >= from_h - 1)) {
+      GST_WARNING_OBJECT (thiz, "ignoring crop... cropping too much!");
+    } else {
+      from_w -= thiz->crop_left + thiz->crop_right;
+      from_h -= thiz->crop_top + thiz->crop_bottom;
+    }
+
     /* compensate for rotation if needed */
     if (thiz->rotation == 90 || thiz->rotation == 270) {
       SWAP_GINT (from_w, from_h);

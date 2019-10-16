@@ -126,6 +126,10 @@ enum
   PROP_FORCE_ASPECT_RATIO,
   PROP_FRC_ALGORITHM,
   PROP_VIDEO_DIRECTION,
+  PROP_CROP_LEFT,
+  PROP_CROP_RIGHT,
+  PROP_CROP_TOP,
+  PROP_CROP_BOTTOM,
   PROP_N,
 };
 
@@ -147,6 +151,10 @@ enum
 #define PROP_FORCE_ASPECT_RATIO_DEFAULT  TRUE
 #define PROP_FRC_ALGORITHM_DEFAULT       _MFX_FRC_ALGORITHM_NONE
 #define PROP_VIDEO_DIRECTION_DEFAULT     GST_VIDEO_ORIENTATION_IDENTITY
+#define PROP_CROP_LEFT_DEFAULT           0
+#define PROP_CROP_RIGHT_DEFAULT          0
+#define PROP_CROP_TOP_DEFAULT            0
+#define PROP_CROP_BOTTOM_DEFAULT         0
 
 #define gst_msdkvpp_parent_class parent_class
 G_DEFINE_TYPE (GstMsdkVPP, gst_msdkvpp, GST_TYPE_BASE_TRANSFORM);
@@ -704,6 +712,7 @@ gst_msdkvpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   mfxSession session;
   mfxSyncPoint sync_point = NULL;
   mfxStatus status;
+  mfxFrameInfo *in_info = NULL;
   MsdkSurface *in_surface = NULL;
   MsdkSurface *out_surface = NULL;
 
@@ -720,6 +729,18 @@ gst_msdkvpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     GST_ERROR ("Failed to get msdk outsurface!");
     free_msdk_surface (in_surface);
     return GST_FLOW_ERROR;
+  }
+
+  /* update surface crop info (NOTE: msdk min frame size is 2x2) */
+  in_info = &in_surface->surface->Info;
+  if ((thiz->crop_left + thiz->crop_right >= in_info->CropW - 1)
+      || (thiz->crop_top + thiz->crop_bottom >= in_info->CropH - 1)) {
+    GST_WARNING_OBJECT (thiz, "ignoring crop... cropping too much!");
+  } else {
+    in_info->CropX = thiz->crop_left;
+    in_info->CropY = thiz->crop_top;
+    in_info->CropW -= thiz->crop_left + thiz->crop_right;
+    in_info->CropH -= thiz->crop_top + thiz->crop_bottom;
   }
 
   session = gst_msdk_context_get_session (thiz->context);
@@ -1335,6 +1356,18 @@ gst_msdkvpp_set_property (GObject * object, guint prop_id,
       thiz->video_direction = g_value_get_enum (value);
       thiz->flags |= GST_MSDK_FLAG_VIDEO_DIRECTION;
       break;
+    case PROP_CROP_LEFT:
+      thiz->crop_left = g_value_get_uint (value);
+      break;
+    case PROP_CROP_RIGHT:
+      thiz->crop_right = g_value_get_uint (value);
+      break;
+    case PROP_CROP_TOP:
+      thiz->crop_top = g_value_get_uint (value);
+      break;
+    case PROP_CROP_BOTTOM:
+      thiz->crop_bottom = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1397,6 +1430,18 @@ gst_msdkvpp_get_property (GObject * object, guint prop_id,
       break;
     case PROP_VIDEO_DIRECTION:
       g_value_set_enum (value, thiz->video_direction);
+      break;
+    case PROP_CROP_LEFT:
+      g_value_set_uint (value, thiz->crop_left);
+      break;
+    case PROP_CROP_RIGHT:
+      g_value_set_uint (value, thiz->crop_right);
+      break;
+    case PROP_CROP_TOP:
+      g_value_set_uint (value, thiz->crop_top);
+      break;
+    case PROP_CROP_BOTTOM:
+      g_value_set_uint (value, thiz->crop_bottom);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1567,6 +1612,26 @@ gst_msdkvpp_class_init (GstMsdkVPPClass * klass)
       GST_TYPE_VIDEO_ORIENTATION_METHOD,
       PROP_VIDEO_DIRECTION_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
+  obj_properties[PROP_CROP_LEFT] = g_param_spec_uint ("crop-left",
+      "Crop Left", "Pixels to crop at left",
+      0, G_MAXUINT16, PROP_CROP_LEFT_DEFAULT,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  obj_properties[PROP_CROP_RIGHT] = g_param_spec_uint ("crop-right",
+      "Crop Right", "Pixels to crop at right",
+      0, G_MAXUINT16, PROP_CROP_RIGHT_DEFAULT,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  obj_properties[PROP_CROP_TOP] = g_param_spec_uint ("crop-top",
+      "Crop Top", "Pixels to crop at top",
+      0, G_MAXUINT16, PROP_CROP_TOP_DEFAULT,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  obj_properties[PROP_CROP_BOTTOM] = g_param_spec_uint ("crop-bottom",
+      "Crop Bottom", "Pixels to crop at bottom",
+      0, G_MAXUINT16, PROP_CROP_BOTTOM_DEFAULT,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
   g_object_class_install_properties (gobject_class, PROP_N, obj_properties);
 }
 
@@ -1596,6 +1661,11 @@ gst_msdkvpp_init (GstMsdkVPP * thiz)
   thiz->keep_aspect = PROP_FORCE_ASPECT_RATIO_DEFAULT;
   thiz->frc_algm = PROP_FRC_ALGORITHM_DEFAULT;
   thiz->video_direction = PROP_VIDEO_DIRECTION_DEFAULT;
+  thiz->crop_left = PROP_CROP_LEFT_DEFAULT;
+  thiz->crop_right = PROP_CROP_RIGHT_DEFAULT;
+  thiz->crop_top = PROP_CROP_TOP_DEFAULT;
+  thiz->crop_bottom = PROP_CROP_BOTTOM_DEFAULT;
+
   gst_video_info_init (&thiz->sinkpad_info);
   gst_video_info_init (&thiz->srcpad_info);
 }
