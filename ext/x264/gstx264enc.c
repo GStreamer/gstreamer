@@ -724,9 +724,36 @@ static void gst_x264_enc_set_property (GObject * object, guint prop_id,
 static void gst_x264_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+typedef gboolean (*LoadPresetFunc) (GstPreset * preset, const gchar * name);
+
+LoadPresetFunc parent_load_preset = NULL;
+
+static gboolean
+gst_x264_enc_load_preset (GstPreset * preset, const gchar * name)
+{
+  GstX264Enc *enc = GST_X264_ENC (preset);
+  gboolean res;
+
+  gst_encoder_bitrate_profile_manager_start_loading_preset
+      (enc->bitrate_manager);
+  res = parent_load_preset (preset, name);
+  gst_encoder_bitrate_profile_manager_end_loading_preset (enc->bitrate_manager,
+      res ? name : NULL);
+
+  return res;
+}
+
+static void
+gst_x264_enc_preset_interface_init (GstPresetInterface * iface)
+{
+  parent_load_preset = iface->load_preset;
+  iface->load_preset = gst_x264_enc_load_preset;
+}
+
 #define gst_x264_enc_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstX264Enc, gst_x264_enc, GST_TYPE_VIDEO_ENCODER,
-    G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL));
+    G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET,
+        gst_x264_enc_preset_interface_init));
 
 /* don't forget to free the string after use */
 static const gchar *
@@ -1227,7 +1254,6 @@ gst_x264_enc_init (GstX264Enc * encoder)
   encoder->quantizer = ARG_QUANTIZER_DEFAULT;
   encoder->mp_cache_file = g_strdup (ARG_MULTIPASS_CACHE_FILE_DEFAULT);
   encoder->byte_stream = ARG_BYTE_STREAM_DEFAULT;
-  encoder->bitrate = ARG_BITRATE_DEFAULT;
   encoder->intra_refresh = ARG_INTRA_REFRESH_DEFAULT;
   encoder->vbv_buf_capacity = ARG_VBV_BUF_CAPACITY_DEFAULT;
   encoder->me = ARG_ME_DEFAULT;
@@ -1260,6 +1286,9 @@ gst_x264_enc_init (GstX264Enc * encoder)
   encoder->tune = ARG_TUNE_DEFAULT;
   encoder->frame_packing = ARG_FRAME_PACKING_DEFAULT;
   encoder->insert_vui = ARG_INSERT_VUI_DEFAULT;
+
+  encoder->bitrate_manager =
+      gst_encoder_bitrate_profile_manager_new (ARG_BITRATE_DEFAULT);
 }
 
 typedef struct
@@ -1384,6 +1413,7 @@ gst_x264_enc_finalize (GObject * object)
   FREE_STRING (encoder->tunings);
   FREE_STRING (encoder->option_string);
   FREE_STRING (encoder->option_string_prop);
+  gst_encoder_bitrate_profile_manager_free (encoder->bitrate_manager);
 
 #undef FREE_STRING
 
@@ -1497,6 +1527,7 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
 {
   guint pass = 0;
   GstVideoInfo *info;
+  guint bitrate;
 
   if (!encoder->input_state) {
     GST_DEBUG_OBJECT (encoder, "Have no input state yet");
@@ -1661,6 +1692,10 @@ skip_vui_parameters:
 
   encoder->x264param.analyse.b_psnr = 0;
 
+  bitrate =
+      gst_encoder_bitrate_profile_manager_get_bitrate (encoder->bitrate_manager,
+      encoder->input_state ? &encoder->input_state->info : NULL);
+
   /* FIXME 2.0 make configuration more sane and consistent with x264 cmdline:
    * + split pass property into a pass property (pass1/2/3 enum) and rc-method
    * + bitrate property should only be used in case of CBR method
@@ -1677,7 +1712,7 @@ skip_vui_parameters:
     case GST_X264_ENC_PASS_QUAL:
       encoder->x264param.rc.i_rc_method = X264_RC_CRF;
       encoder->x264param.rc.f_rf_constant = encoder->quantizer;
-      encoder->x264param.rc.i_vbv_max_bitrate = encoder->bitrate;
+      encoder->x264param.rc.i_vbv_max_bitrate = bitrate;
       encoder->x264param.rc.i_vbv_buffer_size
           = encoder->x264param.rc.i_vbv_max_bitrate
           * encoder->vbv_buf_capacity / 1000;
@@ -1688,8 +1723,8 @@ skip_vui_parameters:
     case GST_X264_ENC_PASS_PASS3:
     default:
       encoder->x264param.rc.i_rc_method = X264_RC_ABR;
-      encoder->x264param.rc.i_bitrate = encoder->bitrate;
-      encoder->x264param.rc.i_vbv_max_bitrate = encoder->bitrate;
+      encoder->x264param.rc.i_bitrate = bitrate;
+      encoder->x264param.rc.i_vbv_max_bitrate = bitrate;
       encoder->x264param.rc.i_vbv_buffer_size =
           encoder->x264param.rc.i_vbv_max_bitrate
           * encoder->vbv_buf_capacity / 1000;
@@ -2031,6 +2066,9 @@ gst_x264_enc_set_src_caps (GstX264Enc * encoder, GstCaps * caps)
   GstStructure *structure;
   GstVideoCodecState *state;
   GstTagList *tags;
+  guint bitrate =
+      gst_encoder_bitrate_profile_manager_get_bitrate (encoder->bitrate_manager,
+      encoder->input_state ? &encoder->input_state->info : NULL);
 
   outcaps = gst_caps_new_empty_simple ("video/x-h264");
   structure = gst_caps_get_structure (outcaps, 0);
@@ -2099,8 +2137,8 @@ gst_x264_enc_set_src_caps (GstX264Enc * encoder, GstCaps * caps)
   tags = gst_tag_list_new_empty ();
   gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_ENCODER, "x264",
       GST_TAG_ENCODER_VERSION, X264_BUILD,
-      GST_TAG_MAXIMUM_BITRATE, encoder->bitrate * 1024,
-      GST_TAG_NOMINAL_BITRATE, encoder->bitrate * 1024, NULL);
+      GST_TAG_MAXIMUM_BITRATE, bitrate * 1024,
+      GST_TAG_NOMINAL_BITRATE, bitrate * 1024, NULL);
   gst_video_encoder_merge_tags (GST_VIDEO_ENCODER (encoder), tags,
       GST_TAG_MERGE_REPLACE);
   gst_tag_list_unref (tags);
@@ -2545,13 +2583,18 @@ gst_x264_enc_flush_frames (GstX264Enc * encoder, gboolean send)
 static void
 gst_x264_enc_reconfig (GstX264Enc * encoder)
 {
+  guint bitrate;
+
   if (!encoder->vtable)
     return;
 
+  bitrate =
+      gst_encoder_bitrate_profile_manager_get_bitrate (encoder->bitrate_manager,
+      encoder->input_state ? &encoder->input_state->info : NULL);
   switch (encoder->pass) {
     case GST_X264_ENC_PASS_QUAL:
       encoder->x264param.rc.f_rf_constant = encoder->quantizer;
-      encoder->x264param.rc.i_vbv_max_bitrate = encoder->bitrate;
+      encoder->x264param.rc.i_vbv_max_bitrate = bitrate;
       encoder->x264param.rc.i_vbv_buffer_size
           = encoder->x264param.rc.i_vbv_max_bitrate
           * encoder->vbv_buf_capacity / 1000;
@@ -2561,8 +2604,8 @@ gst_x264_enc_reconfig (GstX264Enc * encoder)
     case GST_X264_ENC_PASS_PASS2:
     case GST_X264_ENC_PASS_PASS3:
     default:
-      encoder->x264param.rc.i_bitrate = encoder->bitrate;
-      encoder->x264param.rc.i_vbv_max_bitrate = encoder->bitrate;
+      encoder->x264param.rc.i_bitrate = bitrate;
+      encoder->x264param.rc.i_vbv_max_bitrate = bitrate;
       encoder->x264param.rc.i_vbv_buffer_size
           = encoder->x264param.rc.i_vbv_max_bitrate
           * encoder->vbv_buf_capacity / 1000;
@@ -2601,7 +2644,8 @@ gst_x264_enc_set_property (GObject * object, guint prop_id,
       gst_x264_enc_reconfig (encoder);
       break;
     case ARG_BITRATE:
-      encoder->bitrate = g_value_get_uint (value);
+      gst_encoder_bitrate_profile_manager_set_bitrate (encoder->bitrate_manager,
+          g_value_get_uint (value));
       gst_x264_enc_reconfig (encoder);
       break;
     case ARG_VBV_BUF_CAPACITY:
@@ -2820,7 +2864,9 @@ gst_x264_enc_get_property (GObject * object, guint prop_id,
       g_value_set_boolean (value, encoder->byte_stream);
       break;
     case ARG_BITRATE:
-      g_value_set_uint (value, encoder->bitrate);
+      g_value_set_uint (value,
+          gst_encoder_bitrate_profile_manager_get_bitrate
+          (encoder->bitrate_manager, NULL));
       break;
     case ARG_INTRA_REFRESH:
       g_value_set_boolean (value, encoder->intra_refresh);

@@ -25,6 +25,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideoencoder.h>
+#include "gstencoderbitrateprofilemanager.h"
 
 #ifdef HAVE_STDINT_H
 #include <stdint.h>
@@ -126,6 +127,8 @@ struct _GstX264Enc
 
   /* cached values to set x264_picture_t */
   gint x264_nplanes;
+
+  GstEncoderBitrateProfileManager *bitrate_manager;
 };
 
 struct _GstX264EncClass

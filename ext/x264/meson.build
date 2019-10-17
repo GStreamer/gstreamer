@@ -1,5 +1,6 @@
 x264_sources = [
   'gstx264enc.c',
+  'gstencoderbitrateprofilemanager.c',
 ]
 
 x264_dep = dependency('x264', required : get_option('x264'),
