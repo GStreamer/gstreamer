@@ -93,5 +93,24 @@ class TestBin(TestCase):
         Gst.init(None)
         self.assertEqual(Gst.ElementFactory.make("bin", None).sinkpads, [])
 
+class TestBufferMap(TestCase):
+
+    def test_map_unmap_manual(self):
+        Gst.init(None)
+        buf = Gst.Buffer.new_wrapped([42])
+        info = buf.map(Gst.MapFlags.READ | Gst.MapFlags.WRITE)
+        self.assertEqual(info.data[0], 42)
+        buf.unmap(info)
+        with self.assertRaises(ValueError):
+            info.data[0]
+
+    def test_map_unmap_context(self):
+        Gst.init(None)
+        buf = Gst.Buffer.new_wrapped([42])
+        with buf.map(Gst.MapFlags.READ | Gst.MapFlags.WRITE) as info:
+            self.assertEqual(info.data[0], 42)
+        with self.assertRaises(ValueError):
+            info.data[0]
+
 if __name__ == "__main__":
     unittest.main()
