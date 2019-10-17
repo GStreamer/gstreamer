@@ -17,6 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#include <gst/pbutils/pbutils.h>
 #include <gst/pbutils/encoding-profile.h>
 
 gchar * sanitize_timeline_description (int argc, char **argv);
@@ -24,3 +25,11 @@ gboolean get_flags_from_string (GType type, const gchar * str_flags, guint *val)
 gchar * ensure_uri (const gchar * location);
 GstEncodingProfile * parse_encoding_profile (const gchar * format);
 void print_enum (GType enum_type);
+
+void print (GstDebugColorFlags c, gboolean err, gboolean nline, const gchar * format, va_list var_args);
+void ok (const gchar * format, ...);
+void warn (const gchar * format, ...);
+void error (const gchar * format, ...);
+
+gchar * get_file_extension (gchar * uri);
+void describe_encoding_profile (GstEncodingProfile *profile);

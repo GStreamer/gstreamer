@@ -504,8 +504,9 @@ _set_rendering_details (GESLauncher * self)
   ParsedOptions *opts = &self->priv->parsed_options;
 
   /* Setup profile/encoding if needed */
-  if (opts->smartrender || opts->outputuri) {
+  if (opts->outputuri) {
     GstEncodingProfile *prof = NULL;
+    gchar *format = NULL;
 
     if (!opts->format) {
       GESProject *proj =
@@ -525,15 +526,27 @@ _set_rendering_details (GESLauncher * self)
 
     if (!prof) {
       if (opts->format == NULL)
-        opts->format =
-            g_strdup ("application/ogg:video/x-theora:audio/x-vorbis");
+        opts->format = get_file_extension (opts->outputuri);
 
       prof = parse_encoding_profile (opts->format);
+      if (!prof) {
+        warn ("No format specified and couldn't find one from output file extension, " "falling back to theora+vorbis in ogg.");
+        format = opts->format =
+            g_strdup ("application/ogg:video/x-theora:audio/x-vorbis");
+        prof = parse_encoding_profile (opts->format);
+      }
+
+      g_free (format);
+      if (!prof) {
+        error ("Could not find any encoding format for %s\n", opts->format);
+        return FALSE;
+      }
+
+      g_print ("Encoding to:\n\n");
+      describe_encoding_profile (prof);
     }
 
-    if (opts->outputuri)
-      opts->outputuri = ensure_uri (opts->outputuri);
-
+    opts->outputuri = ensure_uri (opts->outputuri);
     if (!prof
         || !ges_pipeline_set_render_settings (self->priv->pipeline,
             opts->outputuri, prof)
@@ -696,7 +709,9 @@ ges_launcher_get_rendering_option_group (GESLauncher * self)
   GOptionEntry options[] = {
     {"outputuri", 'o', 0, G_OPTION_ARG_STRING, &opts->outputuri,
           "If set, ges-launch-1.0 will render the timeline instead of playing "
-          "it back. The default rendering format is ogv, containing theora and vorbis.",
+          "it back. If no format `--format` is specified, the outputuri extension"
+          " will be used to determine an encoding format, or default to theora+vorbis"
+          " in ogg if that doesn't work out.",
         "<URI>"},
     {"format", 'f', 0, G_OPTION_ARG_STRING, &opts->format,
           "Set an encoding profile on the command line. "
