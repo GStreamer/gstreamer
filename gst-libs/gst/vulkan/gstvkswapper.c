@@ -777,6 +777,9 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
   } else if ((priv->surf_props.supportedCompositeAlpha &
           VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR) != 0) {
     alpha_flags = VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR;
+  } else if ((priv->surf_props.supportedCompositeAlpha &
+          VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR) != 0) {
+    alpha_flags = VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR;
   } else {
     g_set_error (error, GST_VULKAN_ERROR,
         VK_ERROR_INITIALIZATION_FAILED,
