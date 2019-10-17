@@ -1041,6 +1041,7 @@ ges_pipeline_set_render_settings (GESPipeline * pipeline,
 {
   GError *err = NULL;
   GstEncodingProfile *set_profile;
+  guint n_videotracks = 0, n_audiotracks = 0;
 
   g_return_val_if_fail (GES_IS_PIPELINE (pipeline), FALSE);
   CHECK_THREAD (pipeline);
@@ -1056,21 +1057,27 @@ ges_pipeline_set_render_settings (GESPipeline * pipeline,
     GList *tmptrack, *tracks =
         ges_timeline_get_tracks (pipeline->priv->timeline);
 
-    for (; tmpprofiles; tmpprofiles = tmpprofiles->next) {
-      for (tmptrack = tracks; tmptrack; tmptrack = tmptrack->next) {
-        if ((GST_IS_ENCODING_AUDIO_PROFILE (tmpprofiles->data) &&
-                GES_IS_AUDIO_TRACK (tmptrack->data)) ||
-            (GST_IS_ENCODING_VIDEO_PROFILE (tmpprofiles->data) &&
-                GES_IS_VIDEO_TRACK (tmptrack->data))) {
-          GST_DEBUG_OBJECT (pipeline, "Setting presence to 1!");
-          gst_encoding_profile_set_presence (tmpprofiles->data, 1);
-          gst_encoding_profile_set_allow_dynamic_output (tmpprofiles->data,
-              FALSE);
-        }
-      }
+    for (tmptrack = tracks; tmptrack; tmptrack = tmptrack->next) {
+      if (GES_IS_AUDIO_TRACK (tmptrack->data))
+        n_audiotracks++;
+      else if (GES_IS_VIDEO_TRACK (tmptrack->data))
+        n_videotracks++;
     }
-
     g_list_free_full (tracks, gst_object_unref);
+
+    for (; tmpprofiles; tmpprofiles = tmpprofiles->next) {
+      if ((GST_IS_ENCODING_AUDIO_PROFILE (tmpprofiles->data) && n_audiotracks))
+        n_audiotracks--;
+      else if ((GST_IS_ENCODING_VIDEO_PROFILE (tmpprofiles->data)
+              && n_videotracks))
+        n_videotracks--;
+      else
+        continue;
+
+      GST_DEBUG_OBJECT (pipeline, "Setting presence to 1!");
+      gst_encoding_profile_set_presence (tmpprofiles->data, 1);
+      gst_encoding_profile_set_allow_dynamic_output (tmpprofiles->data, FALSE);
+    }
   }
 
   /* Clear previous URI sink if it existed */
