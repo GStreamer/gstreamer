@@ -29,7 +29,7 @@ void print_enum (GType enum_type);
 void print (GstDebugColorFlags c, gboolean err, gboolean nline, const gchar * format, va_list var_args);
 void ok (const gchar * format, ...);
 void warn (const gchar * format, ...);
-void error (const gchar * format, ...);
+void printerr (const gchar * format, ...);
 
 gchar * get_file_extension (gchar * uri);
 void describe_encoding_profile (GstEncodingProfile *profile);

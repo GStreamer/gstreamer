@@ -205,7 +205,7 @@ warn (const gchar * format, ...)
 }
 
 void
-error (const gchar * format, ...)
+printerr (const gchar * format, ...)
 {
   va_list var_args;
 
