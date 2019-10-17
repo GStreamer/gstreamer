@@ -3370,16 +3370,18 @@ handle_announce_request (GstRTSPClient * client, GstRTSPContext * ctx)
   n_streams = gst_rtsp_media_n_streams (media);
   for (i = 0; i < n_streams; i++) {
     GstRTSPStream *stream = gst_rtsp_media_get_stream (media, i);
-    gchar *location =
-        g_strdup_printf ("rtsp://%s%s:8554/stream=%d", priv->server_ip, path,
-        i);
-    gchar *keymgmt = stream_make_keymgmt (client, location, stream);
+    gchar *uri, *location, *keymgmt;
+
+    uri = gst_rtsp_url_get_request_uri (ctx->uri);
+    location = g_strdup_printf ("%s/stream=%d", uri, i);
+    keymgmt = stream_make_keymgmt (client, location, stream);
 
     if (keymgmt)
       gst_rtsp_message_take_header (ctx->response, GST_RTSP_HDR_KEYMGMT,
           keymgmt);
 
     g_free (location);
+    g_free (uri);
   }
 
   /* we suspend after the announce */
