@@ -780,7 +780,8 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
   } else {
     g_set_error (error, GST_VULKAN_ERROR,
         VK_ERROR_INITIALIZATION_FAILED,
-        "Incorrect alpha flags available for the swap images");
+        "Incorrect alpha flags (0x%x) available for the swap images",
+        priv->surf_props.supportedCompositeAlpha);
     return FALSE;
   }
 
@@ -790,7 +791,8 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
   } else {
     g_set_error (error, GST_VULKAN_ERROR,
         VK_ERROR_INITIALIZATION_FAILED,
-        "Incorrect usage flags available for the swap images");
+        "Incorrect usage flags (0x%x) available for the swap images",
+        priv->surf_props.supportedUsageFlags);
     return FALSE;
   }
   if ((priv->
@@ -800,7 +802,8 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
   } else {
     g_set_error (error, GST_VULKAN_ERROR,
         VK_ERROR_INITIALIZATION_FAILED,
-        "Incorrect usage flags available for the swap images");
+        "Incorrect usage flags (0x%x) available for the swap images",
+        priv->surf_props.supportedUsageFlags);
     return FALSE;
   }
 
