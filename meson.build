@@ -466,7 +466,7 @@ rt_lib = cc.find_library('rt', required : false)
 gir = find_program('g-ir-scanner', required : get_option('introspection'))
 gnome = import('gnome')
 
-build_gir = gir.found() and not meson.is_cross_build()
+build_gir = gir.found() and (not meson.is_cross_build() or get_option('introspection').enabled())
 
 gir_init_section = [ '--add-init-section=extern void gst_init(gint*,gchar**);' + \
     'g_setenv("GST_REGISTRY_DISABLE", "yes", TRUE);' + \
