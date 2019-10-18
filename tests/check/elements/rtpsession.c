@@ -1374,6 +1374,134 @@ GST_START_TEST (test_request_pli)
 
 GST_END_TEST;
 
+GST_START_TEST (test_request_fir_after_pli_in_caps)
+{
+  SessionHarness *h = session_harness_new ();
+  GstBuffer *buf;
+  GstRTCPBuffer rtcp = GST_RTCP_BUFFER_INIT;
+  GstRTCPPacket rtcp_packet;
+  guint8 *fci_data;
+
+  /* add PLI-capabilites to our caps */
+  gst_caps_set_simple (h->caps, "rtcp-fb-nack-pli", G_TYPE_BOOLEAN, TRUE, NULL);
+  /* clear pt-map to removed the cached caps without PLI */
+  g_signal_emit_by_name (h->session, "clear-pt-map");
+
+  g_object_set (h->internal_session, "internal-ssrc", 0xDEADBEEF, NULL);
+
+  /* Receive a RTP buffer from the wire */
+  fail_unless_equals_int (GST_FLOW_OK,
+      session_harness_recv_rtp (h, generate_test_buffer (0, 0x12345678)));
+
+  /* Wait for first regular RTCP to be sent so that we are clear to send early RTCP */
+  session_harness_produce_rtcp (h, 1);
+  gst_buffer_unref (session_harness_pull_rtcp (h));
+
+  /* request PLI */
+  session_harness_force_key_unit (h, 0, 0x12345678, TEST_BUF_PT, NULL, NULL);
+
+  /* PLI should be produced immediately as early RTCP is allowed. Pull buffer
+     without advancing the clock to ensure this is the case */
+  buf = session_harness_pull_rtcp (h);
+  fail_unless (gst_rtcp_buffer_validate (buf));
+  gst_rtcp_buffer_map (buf, GST_MAP_READ, &rtcp);
+  fail_unless_equals_int (3, gst_rtcp_buffer_get_packet_count (&rtcp));
+  fail_unless (gst_rtcp_buffer_get_first_packet (&rtcp, &rtcp_packet));
+
+  /* first a Receiver Report */
+  fail_unless_equals_int (GST_RTCP_TYPE_RR,
+      gst_rtcp_packet_get_type (&rtcp_packet));
+  fail_unless (gst_rtcp_packet_move_to_next (&rtcp_packet));
+
+  /* then a SDES */
+  fail_unless_equals_int (GST_RTCP_TYPE_SDES,
+      gst_rtcp_packet_get_type (&rtcp_packet));
+  fail_unless (gst_rtcp_packet_move_to_next (&rtcp_packet));
+
+  /* and then our PLI */
+  fail_unless_equals_int (GST_RTCP_TYPE_PSFB,
+      gst_rtcp_packet_get_type (&rtcp_packet));
+  fail_unless_equals_int (GST_RTCP_PSFB_TYPE_PLI,
+      gst_rtcp_packet_fb_get_type (&rtcp_packet));
+
+  fail_unless_equals_int (0xDEADBEEF,
+      gst_rtcp_packet_fb_get_sender_ssrc (&rtcp_packet));
+  fail_unless_equals_int (0x12345678,
+      gst_rtcp_packet_fb_get_media_ssrc (&rtcp_packet));
+  fail_unless_equals_int (0, gst_rtcp_packet_fb_get_fci_length (&rtcp_packet));
+
+  gst_rtcp_buffer_unmap (&rtcp);
+  gst_buffer_unref (buf);
+
+  /* Rebuild the caps */
+  gst_caps_unref (h->caps);
+  h->caps = generate_caps ();
+
+  /* add FIR-capabilites to our caps */
+  gst_caps_set_simple (h->caps, "rtcp-fb-ccm-fir", G_TYPE_BOOLEAN, TRUE, NULL);
+  /* clear pt-map to removed the cached caps without fir */
+  g_signal_emit_by_name (h->session, "clear-pt-map");
+
+  /* Receive a RTP buffer from the wire */
+  fail_unless_equals_int (GST_FLOW_OK,
+      session_harness_recv_rtp (h, generate_test_buffer (0, 0x12345678)));
+
+  /* fix to make the test deterministic: We need to wait for the RTCP-thread
+     to have settled to ensure the key-unit will considered once released */
+  gst_test_clock_wait_for_next_pending_id (h->testclock, NULL);
+
+  /* request FIR */
+  session_harness_force_key_unit (h, 0, 0x12345678, TEST_BUF_PT, NULL, NULL);
+
+  session_harness_produce_rtcp (h, 1);
+  buf = session_harness_pull_rtcp (h);
+
+  fail_unless (gst_rtcp_buffer_validate (buf));
+  gst_rtcp_buffer_map (buf, GST_MAP_READ, &rtcp);
+  fail_unless_equals_int (3, gst_rtcp_buffer_get_packet_count (&rtcp));
+  fail_unless (gst_rtcp_buffer_get_first_packet (&rtcp, &rtcp_packet));
+
+  /* first a Receiver Report */
+  fail_unless_equals_int (GST_RTCP_TYPE_RR,
+      gst_rtcp_packet_get_type (&rtcp_packet));
+  fail_unless (gst_rtcp_packet_move_to_next (&rtcp_packet));
+
+  /* then a SDES */
+  fail_unless_equals_int (GST_RTCP_TYPE_SDES,
+      gst_rtcp_packet_get_type (&rtcp_packet));
+  fail_unless (gst_rtcp_packet_move_to_next (&rtcp_packet));
+
+  /* and then our FIR */
+  fail_unless_equals_int (GST_RTCP_TYPE_PSFB,
+      gst_rtcp_packet_get_type (&rtcp_packet));
+  fail_unless_equals_int (GST_RTCP_PSFB_TYPE_FIR,
+      gst_rtcp_packet_fb_get_type (&rtcp_packet));
+
+  /* FIR has sender-ssrc as normal, but media-ssrc set to 0, because
+     it can have multiple media-ssrcs in its fci-data */
+  fail_unless_equals_int (0xDEADBEEF,
+      gst_rtcp_packet_fb_get_sender_ssrc (&rtcp_packet));
+  fail_unless_equals_int (0, gst_rtcp_packet_fb_get_media_ssrc (&rtcp_packet));
+  fci_data = gst_rtcp_packet_fb_get_fci (&rtcp_packet);
+
+  fail_unless_equals_int (8,
+      gst_rtcp_packet_fb_get_fci_length (&rtcp_packet) * sizeof (guint32));
+
+  /* verify the FIR contains the SSRC */
+  fail_unless_equals_int (0x12345678, GST_READ_UINT32_BE (fci_data));
+  fail_unless_equals_int (1, fci_data[4]);
+  fail_unless_equals_int (0, fci_data[5]);
+  fail_unless_equals_int (0, fci_data[6]);
+  fail_unless_equals_int (0, fci_data[7]);
+  fail_unless_equals_int (0, fci_data[7]);
+
+  gst_rtcp_buffer_unmap (&rtcp);
+  gst_buffer_unref (buf);
+  session_harness_free (h);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_illegal_rtcp_fb_packet)
 {
   SessionHarness *h = session_harness_new ();
@@ -2275,6 +2403,7 @@ rtpsession_suite (void)
   tcase_add_test (tc_chain, test_ssrc_collision_third_party_favor_new);
   tcase_add_test (tc_chain, test_request_fir);
   tcase_add_test (tc_chain, test_request_pli);
+  tcase_add_test (tc_chain, test_request_fir_after_pli_in_caps);
   tcase_add_test (tc_chain, test_request_nack);
   tcase_add_test (tc_chain, test_request_nack_surplus);
   tcase_add_test (tc_chain, test_request_nack_packing);
