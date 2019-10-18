@@ -2243,6 +2243,8 @@ gst_value_deserialize_caps (GValue * dest, const gchar * s)
   GstCaps *caps;
 
   if (*s != '"') {
+    /* this can happen if caps are ANY, EMPTY, or only contains a single
+     * empty structure */
     caps = gst_caps_from_string (s);
   } else {
     gchar *str = gst_string_unwrap (s);
@@ -2802,7 +2804,7 @@ _priv_gst_value_parse_value (gchar * str,
       };
       int i;
 
-      if (G_UNLIKELY (!_priv_gst_value_parse_string (s, &value_end, &s, TRUE)))
+      if (G_UNLIKELY (!_priv_gst_value_parse_string (s, &value_end, &s, FALSE)))
         return FALSE;
       /* Set NULL terminator for deserialization */
       value_s = g_strndup (value_s, value_end - value_s);
@@ -2817,8 +2819,7 @@ _priv_gst_value_parse_value (gchar * str,
     } else {
       g_value_init (value, type);
 
-      if (G_UNLIKELY (!_priv_gst_value_parse_string (s, &value_end, &s,
-                  (type != G_TYPE_STRING))))
+      if (G_UNLIKELY (!_priv_gst_value_parse_string (s, &value_end, &s, FALSE)))
         return FALSE;
       /* Set NULL terminator for deserialization */
       value_s = g_strndup (value_s, value_end - value_s);
@@ -2878,14 +2879,32 @@ gst_value_serialize_segment (const GValue * value)
 }
 
 static gboolean
-gst_value_deserialize_segment (GValue * dest, const gchar * s)
+gst_value_deserialize_segment_internal (GValue * dest, const gchar * s,
+    gboolean unescape)
 {
   GstStructure *str;
   GstSegment seg;
   gboolean res;
+  gsize len;
+  gchar *t;
 
-  str = gst_structure_from_string (s, NULL);
-  if (str == NULL)
+  if (unescape) {
+    len = strlen (s);
+    if (G_UNLIKELY (*s != '"' || len < 2 || s[len - 1] != '"')) {
+      /* "\"" is not an accepted string, so len must be at least 2 */
+      GST_ERROR ("Failed deserializing segement: expected string to start and "
+          "end with '\"'");
+      return FALSE;
+    }
+    t = g_strdup (s + 1);
+    t[len - 2] = '\0';
+    /* removed trailing '"' */
+    str = gst_structure_from_string (t, NULL);
+    g_free (t);
+  } else {
+    str = gst_structure_from_string (s, NULL);
+  }
+  if (G_UNLIKELY (str == NULL))
     return FALSE;
 
   res = gst_structure_id_get (str,
@@ -2906,6 +2925,12 @@ gst_value_deserialize_segment (GValue * dest, const gchar * s)
     g_value_set_boxed (dest, &seg);
 
   return res;
+}
+
+static gboolean
+gst_value_deserialize_segment (GValue * dest, const gchar * s)
+{
+  return gst_value_deserialize_segment_internal (dest, s, TRUE);
 }
 
 /****************
@@ -2952,6 +2977,8 @@ gst_value_serialize_structure (const GValue * value)
   GstStructure *structure = g_value_get_boxed (value);
 
   return priv_gst_string_take_and_wrap (gst_structure_to_string (structure));
+  /* string should always end up being wrapped, since a structure string
+   * ends in a ';' character */
 }
 
 static gboolean
@@ -2960,6 +2987,14 @@ gst_value_deserialize_structure (GValue * dest, const gchar * s)
   GstStructure *structure;
 
   if (*s != '"') {
+    /* the output of gst_value_serialize_structure would never produce
+     * such a string, but a user may pass to gst_structure_from_string
+     * the string:
+     *     name, sub=(GstStructure)sub-name, val=(int)5;
+     * and expect sub to be read as an *empty* structure with the name
+     * sub-name. Similar to
+     *     name, caps=(GstCaps)video/x-raw, val=(int)5;
+     * which gst_structure_to_string can produce. */
     structure = gst_structure_from_string (s, NULL);
   } else {
     gchar *str = gst_string_unwrap (s);
@@ -3048,6 +3083,9 @@ gst_value_deserialize_caps_features (GValue * dest, const gchar * s)
   GstCapsFeatures *features;
 
   if (*s != '"') {
+    /* This can happen if gst_caps_features_to_string only returns
+     * ALL, NONE, or a single features name, which means it is not
+     * actually wrapped by priv_gst_string_take_and_wrap */
     features = gst_caps_features_from_string (s);
   } else {
     gchar *str = gst_string_unwrap (s);
@@ -3086,6 +3124,13 @@ gst_value_deserialize_tag_list (GValue * dest, const gchar * s)
   GstTagList *taglist;
 
   if (*s != '"') {
+    /* the output of gst_value_serialize_tag_list would never produce
+     * such a string, but a user may pass to gst_structure_from_string
+     * the string:
+     *     name, list=(GstTagList)taglist, val=(int)5;
+     * and expect list to be read as an *empty* tag list. Similar to
+     *     name, caps=(GstCaps)video/x-raw, val=(int)5;
+     * which gst_structure_to_string can produce. */
     taglist = gst_tag_list_new_from_string (s);
   } else {
     gchar *str = gst_string_unwrap (s);
@@ -3110,6 +3155,8 @@ gst_value_serialize_tag_list (const GValue * value)
   GstTagList *taglist = g_value_get_boxed (value);
 
   return priv_gst_string_take_and_wrap (gst_tag_list_to_string (taglist));
+  /* string should always end up being wrapped, since a taglist (structure)
+   * string ends in a ';' character */
 }
 
 
@@ -3367,7 +3414,7 @@ gst_value_deserialize_sample (GValue * dest, const gchar * s)
     g_strdelimit (fields[2], "_", '=');
     g_base64_decode_inplace (fields[2], &outlen);
     GST_TRACE ("segment : %s", fields[2]);
-    if (!gst_value_deserialize_segment (&sval, fields[2]))
+    if (!gst_value_deserialize_segment_internal (&sval, fields[2], FALSE))
       goto fail;
   }
 
