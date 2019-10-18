@@ -60,7 +60,8 @@ enum
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_MSDK_CAPS_STR (COMMON_FORMAT, "NV12")));
+    GST_STATIC_CAPS (GST_MSDK_CAPS_STR (COMMON_FORMAT,
+            "{ NV12, P010_10LE }")));
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
