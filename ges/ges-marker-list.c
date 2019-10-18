@@ -395,8 +395,28 @@ ges_marker_list_deserialize (GValue * dest, const gchar * s)
   GstCaps *caps = NULL;
   GESMarkerList *list = ges_marker_list_new ();
   guint i, l;
+  gsize len;
+  gchar *escaped, *caps_str;
 
-  caps = gst_caps_from_string (s);
+  len = strlen (s);
+  if (G_UNLIKELY (*s != '"' || len < 2 || s[len - 1] != '"')) {
+    /* "\"" is not an accepted string, so len must be at least 2 */
+    GST_ERROR ("Failed deserializing marker list: expected string to start "
+        "and end with '\"'");
+    goto done;
+  }
+  escaped = g_strdup (s + 1);
+  escaped[len - 2] = '\0';
+  /* removed trailing '"' */
+  caps_str = g_strcompress (escaped);
+  g_free (escaped);
+
+  caps = gst_caps_from_string (caps_str);
+  g_free (caps_str);
+  if (G_UNLIKELY (caps == NULL)) {
+    GST_ERROR ("Failed deserializing marker list: could not extract caps");
+    goto done;
+  }
 
   l = gst_caps_get_size (caps);
   if (l == 0) {
@@ -405,7 +425,7 @@ ges_marker_list_deserialize (GValue * dest, const gchar * s)
     goto done;
   }
 
-  if (l % 2) {
+  if (G_UNLIKELY (l % 2)) {
     GST_ERROR ("Failed deserializing marker list: expected evenly-sized caps");
     goto done;
   }

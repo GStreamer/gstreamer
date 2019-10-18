@@ -284,7 +284,7 @@ GST_START_TEST (test_move_marker)
 
 GST_END_TEST;
 
-GST_START_TEST (test_serialize_deserialize)
+GST_START_TEST (test_serialize_deserialize_in_timeline)
 {
   GESMarkerList *markerlist1, *markerlist2;
   gchar *metas1, *metas2;
@@ -343,6 +343,84 @@ GST_START_TEST (test_serialize_deserialize)
 
 GST_END_TEST;
 
+GST_START_TEST (test_serialize_deserialize_in_value)
+{
+  GESMarkerList *markerlist1, *markerlist2;
+  GESMarker *marker;
+  gchar *serialized, *cmp;
+  const gchar *str_val;
+  guint uint_val;
+  const gchar *test_string = "test \" string";
+  GList *markers;
+  guint64 position;
+  GValue val1 = G_VALUE_INIT, val2 = G_VALUE_INIT;
+
+  ges_init ();
+
+  g_value_init (&val1, GES_TYPE_MARKER_LIST);
+  g_value_init (&val2, GES_TYPE_MARKER_LIST);
+
+  markerlist1 = ges_marker_list_new ();
+  marker = ges_marker_list_add (markerlist1, 0);
+  fail_unless (ges_meta_container_set_string (GES_META_CONTAINER (marker),
+          "str-val", test_string));
+  marker = ges_marker_list_add (markerlist1, 10);
+  fail_unless (ges_meta_container_set_string (GES_META_CONTAINER (marker),
+          "first", test_string));
+  fail_unless (ges_meta_container_set_uint (GES_META_CONTAINER (marker),
+          "second", 43));
+
+  ASSERT_OBJECT_REFCOUNT (markerlist1, "local ref", 1);
+
+  g_value_set_instance (&val1, markerlist1);
+  ASSERT_OBJECT_REFCOUNT (markerlist1, "GValue + local ref", 2);
+
+  serialized = gst_value_serialize (&val1);
+  fail_unless (serialized != NULL);
+  GST_DEBUG ("serialized to %s", serialized);
+  fail_unless (gst_value_deserialize (&val2, serialized));
+  cmp = gst_value_serialize (&val2);
+  fail_unless_equals_string (cmp, serialized);
+
+  markerlist2 = GES_MARKER_LIST (g_value_get_object (&val2));
+  ASSERT_OBJECT_REFCOUNT (markerlist2, "GValue", 1);
+
+  fail_unless_equals_int (ges_marker_list_size (markerlist2), 2);
+  markers = ges_marker_list_get_markers (markerlist2);
+  marker = GES_MARKER (markers->data);
+  fail_unless (marker != NULL);
+
+  g_object_get (marker, "position", &position, NULL);
+  fail_unless_equals_uint64 (position, 0);
+  str_val =
+      ges_meta_container_get_string (GES_META_CONTAINER (marker), "str-val");
+  fail_unless_equals_string (str_val, test_string);
+
+  marker = GES_MARKER (markers->next->data);
+  fail_unless (marker != NULL);
+  fail_unless (markers->next->next == NULL);
+
+  g_object_get (marker, "position", &position, NULL);
+  fail_unless_equals_uint64 (position, 10);
+  str_val =
+      ges_meta_container_get_string (GES_META_CONTAINER (marker), "first");
+  fail_unless_equals_string (str_val, test_string);
+  fail_unless (ges_meta_container_get_uint (GES_META_CONTAINER (marker),
+          "second", &uint_val));
+  fail_unless_equals_int (uint_val, 43);
+
+  g_list_free_full (markers, g_object_unref);
+  g_value_unset (&val1);
+  g_value_unset (&val2);
+  ASSERT_OBJECT_REFCOUNT (markerlist1, "local ref", 1);
+  g_object_unref (markerlist1);
+  g_free (serialized);
+  g_free (cmp);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
 
 GST_START_TEST (test_marker_color)
 {
@@ -391,7 +469,8 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_signal_marker_moved);
   tcase_add_test (tc_chain, test_get_markers);
   tcase_add_test (tc_chain, test_move_marker);
-  tcase_add_test (tc_chain, test_serialize_deserialize);
+  tcase_add_test (tc_chain, test_serialize_deserialize_in_timeline);
+  tcase_add_test (tc_chain, test_serialize_deserialize_in_value);
   tcase_add_test (tc_chain, test_marker_color);
 
   return s;
