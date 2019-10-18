@@ -94,7 +94,7 @@ gir_init_section = [ '--add-init-section=extern void gst_init(gint*,gchar**);' +
     'g_setenv("GST_PLUGIN_SYSTEM_PATH_1_0", "", TRUE);' + \
     'gst_init(NULL,NULL);', '--quiet']
 gir = find_program('g-ir-scanner', required : get_option('introspection'))
-build_gir = gir.found() and not meson.is_cross_build()
+build_gir = gir.found() and (not meson.is_cross_build() or get_option('introspection').enabled())
 gnome = import('gnome')
 
 if gst_dep.type_name() == 'internal'
