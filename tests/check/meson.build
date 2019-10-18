@@ -68,11 +68,11 @@ good_tests = [
   [ 'elements/rtpbin_buffer_list' ],
   [ 'elements/rtpcollision' ],
   [ 'elements/rtpfunnel' ],
-  [ 'elements/rtpjitterbuffer', false, [gstrtp_dep],
-     ['../../gst/rtpmanager/gstrtpjitterbuffer.c',
-      '../../gst/rtpmanager/rtpjitterbuffer.c',
-      '../../gst/rtpmanager/rtpstats.c',
-      '../../gst/rtpmanager/rtptimerqueue.c']],
+  [ 'elements/rtpjitterbuffer' ],
+
+  [ 'elements/rtptimerqueue', false, [gstrtp_dep],
+      ['../../gst/rtpmanager/rtptimerqueue.c']],
+
   [ 'elements/rtpmux' ],
   [ 'elements/rtpptdemux' ],
   [ 'elements/rtprtx' ],
