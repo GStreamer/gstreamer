@@ -125,15 +125,15 @@ gst_rtsp_session_class_init (GstRTSPSessionClass * klass)
    * GstRTSPSession::extra-timeout:
    *
    * Extra time to add to the timeout, in seconds. This only affects the
-   * time until a session is considered timed out and is not signalled 
-   * in the RTSP request responses. Only the value of the timeout 
+   * time until a session is considered timed out and is not signalled
+   * in the RTSP request responses. Only the value of the timeout
    * property is signalled in the request responses.
-   * 
+   *
    * Default value is 5 seconds.
-   * If the application is using a buffer that is configured to hold 
-   * amount of data equal to the sessiontimeout, extra-timeout can be 
-   * set to zero to prevent loss of data 
-   *        
+   * If the application is using a buffer that is configured to hold
+   * amount of data equal to the sessiontimeout, extra-timeout can be
+   * set to zero to prevent loss of data
+   *
    * Since: 1.18
    */
   g_object_class_install_property (gobject_class, PROP_EXTRA_TIME_TIMEOUT,
