@@ -23,7 +23,7 @@ if build_gir
                 'GstPbutils-' + api_version],
     dependencies: [gst_dep, gstpbutils_dep],
     install : true,
-    extra_args : ['--add-init-section=extern gboolean gst_init(gint *argc, gchar **argv); gst_init(NULL,NULL);']
+    extra_args : gir_init_section
   )
 endif
 
