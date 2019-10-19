@@ -270,26 +270,30 @@ bool WPEThreadedView::initialize(GstWpeSrc* src, GstGLContext* context, GstGLDis
 GstEGLImage* WPEThreadedView::image()
 {
     GstEGLImage* ret = nullptr;
-    GMutexHolder lock(images.mutex);
 
-    GST_TRACE("pending %" GST_PTR_FORMAT " (%d) committed %" GST_PTR_FORMAT " (%d)", images.pending,
-        GST_IS_EGL_IMAGE(images.pending) ? GST_MINI_OBJECT_REFCOUNT_VALUE(GST_MINI_OBJECT_CAST(images.pending)) : 0,
-        images.committed,
-        GST_IS_EGL_IMAGE(images.committed) ? GST_MINI_OBJECT_REFCOUNT_VALUE(GST_MINI_OBJECT_CAST(images.committed)) : 0);
+    {
+        GMutexHolder lock(images.mutex);
 
-    if (images.pending) {
-        auto* previousImage = images.committed;
-        images.committed = images.pending;
-        images.pending = nullptr;
+        GST_TRACE("pending %" GST_PTR_FORMAT " (%d) committed %" GST_PTR_FORMAT " (%d)", images.pending,
+                  GST_IS_EGL_IMAGE(images.pending) ? GST_MINI_OBJECT_REFCOUNT_VALUE(GST_MINI_OBJECT_CAST(images.pending)) : 0,
+                  images.committed,
+                  GST_IS_EGL_IMAGE(images.committed) ? GST_MINI_OBJECT_REFCOUNT_VALUE(GST_MINI_OBJECT_CAST(images.committed)) : 0);
 
-        if (previousImage)
-            gst_egl_image_unref(previousImage);
+        if (images.pending) {
+            auto* previousImage = images.committed;
+            images.committed = images.pending;
+            images.pending = nullptr;
+
+            if (previousImage)
+                gst_egl_image_unref(previousImage);
+        }
+
+        if (images.committed)
+            ret = images.committed;
     }
 
-    if (images.committed) {
-        ret = images.committed;
+    if (ret)
         frameComplete();
-    }
 
     return ret;
 }
