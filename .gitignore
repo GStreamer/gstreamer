@@ -21,6 +21,7 @@ __pycache__
 meson/
 subprojects/gst-integration-testsuites
 subprojects/gst-devtools
+subprojects/gst-docs
 subprojects/gst-editing-services
 subprojects/gst-examples
 subprojects/gst-libav
