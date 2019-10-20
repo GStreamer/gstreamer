@@ -955,8 +955,8 @@ rtp_jitter_buffer_calculate_pts (RTPJitterBuffer * jbuf, GstClockTime dts,
         GST_TIME_FORMAT ", reset jitterbuffer and discard", GST_TIME_ARGS (pts),
         jbuf->delay, GST_TIME_ARGS (dts));
     rtp_jitter_buffer_reset_skew (jbuf);
-    pts = GST_CLOCK_TIME_NONE;
-    goto done;
+    rtp_jitter_buffer_resync (jbuf, dts, gstrtptime, ext_rtptime, TRUE);
+    pts = dts;
   }
 
   jbuf->prev_out_time = pts;

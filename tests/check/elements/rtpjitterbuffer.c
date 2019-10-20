@@ -2729,6 +2729,39 @@ GST_START_TEST (test_rtx_does_not_affect_pts_calculation)
 
 GST_END_TEST;
 
+GST_START_TEST (test_dont_drop_packet_based_on_skew)
+{
+  GstHarness *h = gst_harness_new ("rtpjitterbuffer");
+  guint base_seqnum;
+  GstClockTime now;
+  guint i;
+
+  /* set up a deterministic state and take the time on the clock */
+  g_object_set (h->element, "do-retransmission", TRUE, "do-lost", TRUE, NULL);
+  base_seqnum = construct_deterministic_initial_state (h, 20);
+  now = gst_clock_get_time (GST_ELEMENT_CLOCK (h->element));
+
+  /* and after a delay of 50ms... */
+  now += GST_MSECOND * 50;
+  gst_test_clock_set_time (GST_TEST_CLOCK (GST_ELEMENT_CLOCK (h->element)),
+      now);
+
+  /* ..two more buffers arrive in perfect order */
+  for (i = 0; i < 2; i++) {
+    gst_harness_push (h, generate_test_buffer_full (now + i * GST_MSECOND * 20,
+            base_seqnum + i, (base_seqnum + i) * TEST_RTP_TS_DURATION));
+  }
+
+  /* verify we did not drop any of them */
+  for (i = 0; i < 2; i++) {
+    gst_buffer_unref (gst_harness_pull (h));
+  }
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_timer_queue_set_timer)
 {
   RtpTimerQueue *queue = rtp_timer_queue_new ();
@@ -3364,6 +3397,7 @@ rtpjitterbuffer_suite (void)
   tcase_add_test (tc_chain, test_minor_reorder_does_not_skew);
   tcase_add_loop_test (tc_chain, test_rtx_does_not_affect_pts_calculation, 0,
       G_N_ELEMENTS (rtx_does_not_affect_pts_calculation_input));
+  tcase_add_test (tc_chain, test_dont_drop_packet_based_on_skew);
 
   tcase_add_test (tc_chain, test_deadline_ts_offset);
   tcase_add_test (tc_chain, test_big_gap_seqnum);
