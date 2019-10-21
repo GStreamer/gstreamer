@@ -5935,6 +5935,7 @@ setup_scale (GstVideoConverter * convert)
   GstVideoInfo *in_info, *out_info;
   const GstVideoFormatInfo *in_finfo, *out_finfo;
   GstVideoFormat in_format, out_format;
+  gboolean interlaced;
   guint n_threads = convert->conversion_runner->n_threads;
 
   in_info = &convert->in_info;
@@ -5944,6 +5945,8 @@ setup_scale (GstVideoConverter * convert)
   out_finfo = out_info->finfo;
 
   n_planes = GST_VIDEO_INFO_N_PLANES (out_info);
+
+  interlaced = GST_VIDEO_INFO_IS_INTERLACED (&convert->in_info);
 
   method = GET_OPT_RESAMPLER_METHOD (convert);
   if (method == GST_VIDEO_RESAMPLER_METHOD_NEAREST)
@@ -6039,7 +6042,9 @@ setup_scale (GstVideoConverter * convert)
 
       for (j = 0; j < n_threads; j++) {
         convert->fv_scaler[0].scaler[j] =
-            gst_video_scaler_new (method, GST_VIDEO_SCALER_FLAG_NONE, taps,
+            gst_video_scaler_new (method,
+            interlaced ?
+            GST_VIDEO_SCALER_FLAG_INTERLACED : GST_VIDEO_SCALER_FLAG_NONE, taps,
             in_height, out_height, convert->config);
       }
     } else {
@@ -6193,7 +6198,9 @@ setup_scale (GstVideoConverter * convert)
 
         for (j = 0; j < n_threads; j++) {
           convert->fv_scaler[i].scaler[j] =
-              gst_video_scaler_new (resample_method, GST_VIDEO_SCALER_FLAG_NONE,
+              gst_video_scaler_new (resample_method,
+              interlaced ?
+              GST_VIDEO_SCALER_FLAG_INTERLACED : GST_VIDEO_SCALER_FLAG_NONE,
               taps, ih, oh, config);
         }
       } else {
