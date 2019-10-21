@@ -6712,7 +6712,7 @@ video_converter_lookup_fastpath (GstVideoConverter * convert)
       || convert->out_width < convert->out_maxwidth
       || convert->out_height < convert->out_maxheight;
 
-  for (i = 0; i < sizeof (transforms) / sizeof (transforms[0]); i++) {
+  for (i = 0; i < G_N_ELEMENTS (transforms); i++) {
     if (transforms[i].in_format == in_format &&
         transforms[i].out_format == out_format &&
         (transforms[i].keeps_interlaced || !interlaced) &&
