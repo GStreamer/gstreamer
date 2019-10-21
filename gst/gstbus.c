@@ -852,20 +852,40 @@ no_handler:
   }
 }
 
+#if GLIB_CHECK_VERSION(2,63,3)
 static void
-gst_bus_source_finalize (GSource * source)
+gst_bus_source_dispose (GSource * source)
 {
   GstBusSource *bsource = (GstBusSource *) source;
   GstBus *bus;
 
   bus = bsource->bus;
 
-  GST_DEBUG_OBJECT (bus, "finalize source %p", source);
+  GST_DEBUG_OBJECT (bus, "disposing source %p", source);
 
   GST_OBJECT_LOCK (bus);
   if (bus->priv->signal_watch == source)
     bus->priv->signal_watch = NULL;
   GST_OBJECT_UNLOCK (bus);
+}
+#endif
+
+static void
+gst_bus_source_finalize (GSource * source)
+{
+  GstBusSource *bsource = (GstBusSource *) source;
+#if !GLIB_CHECK_VERSION(2,63,3)
+  GstBus *bus = bsource->bus;
+#endif
+
+  GST_DEBUG_OBJECT (bus, "finalize source %p", source);
+
+#if !GLIB_CHECK_VERSION(2,63,3)
+  GST_OBJECT_LOCK (bus);
+  if (bus->priv->signal_watch == source)
+    bus->priv->signal_watch = NULL;
+  GST_OBJECT_UNLOCK (bus);
+#endif
 
   gst_object_unref (bsource->bus);
   bsource->bus = NULL;
@@ -900,6 +920,9 @@ gst_bus_create_watch (GstBus * bus)
       sizeof (GstBusSource));
 
   g_source_set_name ((GSource *) source, "GStreamer message bus watch");
+#if GLIB_CHECK_VERSION(2,63,3)
+  g_source_set_dispose_function ((GSource *) source, gst_bus_source_dispose);
+#endif
 
   source->bus = gst_object_ref (bus);
   g_source_add_poll ((GSource *) source, &bus->priv->pollfd);
