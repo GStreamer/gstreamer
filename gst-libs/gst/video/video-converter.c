@@ -6129,14 +6129,14 @@ setup_scale (GstVideoConverter * convert)
       need_v_scaler = FALSE;
       need_h_scaler = FALSE;
       if (iw == ow) {
-        if (ih == oh) {
+        if (!interlaced && ih == oh) {
           convert->fconvert[i] = convert_plane_hv;
           GST_DEBUG ("plane %d: copy", i);
-        } else if (ih == 2 * oh && pstride == 1
+        } else if (!interlaced && ih == 2 * oh && pstride == 1
             && resample_method == GST_VIDEO_RESAMPLER_METHOD_LINEAR) {
           convert->fconvert[i] = convert_plane_v_halve;
           GST_DEBUG ("plane %d: vertical halve", i);
-        } else if (2 * ih == oh && pstride == 1
+        } else if (!interlaced && 2 * ih == oh && pstride == 1
             && resample_method == GST_VIDEO_RESAMPLER_METHOD_NEAREST) {
           convert->fconvert[i] = convert_plane_v_double;
           GST_DEBUG ("plane %d: vertical double", i);
@@ -6146,11 +6146,11 @@ setup_scale (GstVideoConverter * convert)
           need_v_scaler = TRUE;
         }
       } else if (ih == oh) {
-        if (iw == 2 * ow && pstride == 1
+        if (!interlaced && iw == 2 * ow && pstride == 1
             && resample_method == GST_VIDEO_RESAMPLER_METHOD_LINEAR) {
           convert->fconvert[i] = convert_plane_h_halve;
           GST_DEBUG ("plane %d: horizontal halve", i);
-        } else if (2 * iw == ow && pstride == 1
+        } else if (!interlaced && 2 * iw == ow && pstride == 1
             && resample_method == GST_VIDEO_RESAMPLER_METHOD_NEAREST) {
           convert->fconvert[i] = convert_plane_h_double;
           GST_DEBUG ("plane %d: horizontal double", i);
@@ -6160,11 +6160,11 @@ setup_scale (GstVideoConverter * convert)
           need_h_scaler = TRUE;
         }
       } else {
-        if (iw == 2 * ow && ih == 2 * oh && pstride == 1
+        if (!interlaced && iw == 2 * ow && ih == 2 * oh && pstride == 1
             && resample_method == GST_VIDEO_RESAMPLER_METHOD_LINEAR) {
           convert->fconvert[i] = convert_plane_hv_halve;
           GST_DEBUG ("plane %d: horizontal/vertical halve", i);
-        } else if (2 * iw == ow && 2 * ih == oh && pstride == 1
+        } else if (!interlaced && 2 * iw == ow && 2 * ih == oh && pstride == 1
             && resample_method == GST_VIDEO_RESAMPLER_METHOD_NEAREST) {
           convert->fconvert[i] = convert_plane_hv_double;
           GST_DEBUG ("plane %d: horizontal/vertical double", i);
