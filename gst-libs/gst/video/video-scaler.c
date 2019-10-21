@@ -1491,6 +1491,9 @@ gst_video_scaler_2d (GstVideoScaler * hscale, GstVideoScaler * vscale,
       realloc_tmplines (vscale, n_elems, width);
 
     v_taps = vscale->resampler.max_taps;
+    if (vscale->flags & GST_VIDEO_SCALER_FLAG_INTERLACED)
+      v_taps *= 2;
+
     lines = g_alloca (v_taps * sizeof (gpointer));
 
     if (hscale == NULL) {
