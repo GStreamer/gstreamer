@@ -552,7 +552,14 @@ _ges_container_add_child_from_struct (GESTimeline * timeline,
         GES_CONTAINER (ges_timeline_get_element (timeline, container_name));
   }
 
-  g_return_val_if_fail (GES_IS_CONTAINER (container), FALSE);
+  if (!GES_IS_CONTAINER (container)) {
+    *error =
+        g_error_new (GES_ERROR, 0, "Could not find container: %s (%p)",
+        container_name, container);
+
+    res = FALSE;
+    goto beach;
+  }
 
   id = gst_structure_get_string (structure, "asset-id");
   child_type = gst_structure_get_string (structure, "child-type");
@@ -569,7 +576,7 @@ _ges_container_add_child_from_struct (GESTimeline * timeline,
 
     child = GES_TIMELINE_ELEMENT (ges_asset_extract (asset, NULL));
     if (!GES_IS_TIMELINE_ELEMENT (child)) {
-      g_error_new (GES_ERROR, 0, "Could not extract child element");
+      *error = g_error_new (GES_ERROR, 0, "Could not extract child element");
 
       goto beach;
     }
@@ -579,14 +586,15 @@ _ges_container_add_child_from_struct (GESTimeline * timeline,
   if (!child && child_name) {
     child = ges_timeline_get_element (timeline, child_name);
     if (!GES_IS_TIMELINE_ELEMENT (child)) {
-      g_error_new (GES_ERROR, 0, "Could not find child element");
+      *error = g_error_new (GES_ERROR, 0, "Could not find child element");
 
       goto beach;
     }
   }
 
   if (!child) {
-    g_error_new (GES_ERROR, 0, "Wrong parameters, could not get a child");
+    *error =
+        g_error_new (GES_ERROR, 0, "Wrong parameters, could not get a child");
 
     return FALSE;
   }
