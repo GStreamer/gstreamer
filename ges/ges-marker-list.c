@@ -396,6 +396,11 @@ ges_marker_list_deserialize (GValue * dest, const gchar * s)
   caps = gst_caps_from_string (s);
 
   l = gst_caps_get_size (caps);
+  if (l == 0) {
+    GST_DEBUG ("Got empty caps: %s", s);
+
+    goto done;
+  }
 
   if (l % 2) {
     GST_ERROR ("Failed deserializing marker list: expected evenly-sized caps");
