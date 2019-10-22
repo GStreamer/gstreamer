@@ -178,7 +178,7 @@ ges_marker_list_class_init (GESMarkerListClass * klass)
 
 /**
   * GESMarkerList::marker-removed:
-  * @marker-list: the #GESMarkerList
+  * @marker_list: the #GESMarkerList
   * @marker: the #GESMarker that was removed.
   *
   * Will be emitted after the marker was removed the marker-list.
@@ -191,9 +191,9 @@ ges_marker_list_class_init (GESMarkerListClass * klass)
 
 /**
   * GESMarkerList::marker-moved:
-  * @marker-list: the #GESMarkerList
-  * @previous-position: the previous position of the marker
-  * @new-position: the new position of the marker
+  * @marker_list: the #GESMarkerList
+  * @previous_position: the previous position of the marker
+  * @new_position: the new position of the marker
   * @marker: the #GESMarker that was moved.
   *
   * Will be emitted after the marker was moved to.
