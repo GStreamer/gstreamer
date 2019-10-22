@@ -24,6 +24,7 @@
 #endif
 
 #include "d3dvideosink.h"
+#include "gstd3d9overlay.h"
 
 #define ELEMENT_NAME  "d3dvideosink"
 
@@ -42,14 +43,15 @@ enum
 #define DEFAULT_STREAM_STOP_ON_CLOSE     TRUE
 #define DEFAULT_ENABLE_NAVIGATION_EVENTS TRUE
 
+#define GST_D3D9_VIDEO_FORMATS \
+	"{ I420, YV12, UYVY, YUY2, NV12,  BGRx, RGBx, BGRA, RGBA, BGR, RGB16, RGB15 }"
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw, "
-        "format = (string) { I420, YV12, UYVY, YUY2, NV12, BGRx, RGBx, RGBA, BGRA, BGR, RGB16, RGB15 }, "
-        "framerate = (fraction) [ 0, MAX ], "
-        "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
-    );
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_D3D9_VIDEO_FORMATS) ";"
+        GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+        (GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
+            GST_D3D9_VIDEO_FORMATS)));
 
 GST_DEBUG_CATEGORY (gst_d3dvideosink_debug);
 #define GST_CAT_DEFAULT gst_d3dvideosink_debug
@@ -81,6 +83,8 @@ static GstCaps *gst_d3dvideosink_get_caps (GstBaseSink * basesink,
 static gboolean gst_d3dvideosink_set_caps (GstBaseSink * bsink, GstCaps * caps);
 static gboolean gst_d3dvideosink_start (GstBaseSink * sink);
 static gboolean gst_d3dvideosink_stop (GstBaseSink * sink);
+static GstFlowReturn gst_d3dvideosink_prepare (GstBaseSink * bsink,
+    GstBuffer * buf);
 static gboolean gst_d3dvideosink_propose_allocation (GstBaseSink * bsink,
     GstQuery * query);
 /* GstVideoSink */
@@ -118,6 +122,7 @@ gst_d3dvideosink_class_init (GstD3DVideoSinkClass * klass)
   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_d3dvideosink_set_caps);
   gstbasesink_class->start = GST_DEBUG_FUNCPTR (gst_d3dvideosink_start);
   gstbasesink_class->stop = GST_DEBUG_FUNCPTR (gst_d3dvideosink_stop);
+  gstbasesink_class->prepare = GST_DEBUG_FUNCPTR (gst_d3dvideosink_prepare);
   gstbasesink_class->propose_allocation =
       GST_DEBUG_FUNCPTR (gst_d3dvideosink_propose_allocation);
 
@@ -172,7 +177,8 @@ gst_d3dvideosink_init (GstD3DVideoSink * sink)
   sink->stream_stop_on_close = DEFAULT_STREAM_STOP_ON_CLOSE;
   sink->enable_navigation_events = DEFAULT_ENABLE_NAVIGATION_EVENTS;
   sink->d3d.surface = NULL;
-
+  sink->d3d.overlay = NULL;
+  sink->d3d.overlay_needs_resize = FALSE;
   g_rec_mutex_init (&sink->lock);
 }
 
@@ -442,9 +448,28 @@ gst_d3dvideosink_stop (GstBaseSink * bsink)
 
   GST_DEBUG_OBJECT (bsink, "Stop() called");
   d3d_stop (sink);
+  gst_d3d9_overlay_free (sink);
   d3d_class_destroy (sink);
 
   return TRUE;
+}
+
+static GstFlowReturn
+gst_d3dvideosink_prepare (GstBaseSink * bsink, GstBuffer * buf)
+{
+  GstD3DVideoSink *sink = GST_D3DVIDEOSINK (bsink);
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  GST_TRACE ("preparing buffer:%p", buf);
+
+  if (GST_VIDEO_SINK_WIDTH (sink) < 1 || GST_VIDEO_SINK_HEIGHT (sink) < 1) {
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
+
+  GST_OBJECT_LOCK (sink);
+  ret = gst_d3d9_overlay_prepare (sink, buf);
+  GST_OBJECT_UNLOCK (sink);
+  return ret;
 }
 
 static gboolean
@@ -456,16 +481,13 @@ gst_d3dvideosink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   GstCaps *caps;
   guint size;
   gboolean need_pool;
+  GstStructure *allocation_meta = NULL;
 
   gst_query_parse_allocation (query, &caps, &need_pool);
   if (!caps) {
     GST_DEBUG_OBJECT (sink, "no caps specified");
     return FALSE;
   }
-
-  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
-  gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE, NULL);
-
 #ifdef DISABLE_BUFFER_POOL
   return TRUE;
 #endif
@@ -521,6 +543,22 @@ gst_d3dvideosink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   gst_query_add_allocation_pool (query, pool, size, 2, 0);
   if (pool)
     gst_object_unref (pool);
+
+  if (sink->width != 0 && sink->height != 0) {
+    allocation_meta =
+        gst_structure_new ("GstVideoOverlayCompositionMeta",
+        "width", G_TYPE_UINT, sink->width,
+        "height", G_TYPE_UINT, sink->height, NULL);
+    GST_DEBUG ("sending allocation query with size %dx%d",
+        sink->width, sink->height);
+  }
+  gst_query_add_allocation_meta (query,
+      GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, allocation_meta);
+  if (allocation_meta)
+    gst_structure_free (allocation_meta);
+
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+  gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE, NULL);
 
   return TRUE;
 }

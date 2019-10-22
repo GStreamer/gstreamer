@@ -1,6 +1,7 @@
 d3dvideosink_sources = [
   'd3dhelpers.c',
   'd3dvideosink.c',
+  'gstd3d9overlay.c'
 ]
 
 if host_system != 'windows' or get_option('d3dvideosink').disabled()

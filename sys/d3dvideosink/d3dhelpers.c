@@ -25,6 +25,7 @@
 
 #include "d3dvideosink.h"
 #include "d3dhelpers.h"
+#include "gstd3d9overlay.h"
 
 #include <stdio.h>
 
@@ -840,10 +841,10 @@ d3d_supported_caps (GstD3DVideoSink * sink)
     gst_value_list_append_value (&va, &v);
   }
 
-  caps = gst_caps_new_simple ("video/x-raw",
-      "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-      "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-      "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+  caps =
+      gst_caps_make_writable (gst_pad_get_pad_template_caps (GST_VIDEO_SINK_PAD
+          (sink)));
+
   gst_caps_set_value (caps, "format", &va);
   g_value_unset (&v);
   g_value_unset (&va);
@@ -897,7 +898,7 @@ end:
   return ret;
 }
 
-static gboolean
+gboolean
 d3d_get_hwnd_window_size (HWND hwnd, gint * width, gint * height)
 {
   RECT sz;
@@ -1534,6 +1535,7 @@ d3d_resize_swap_chain (GstD3DVideoSink * sink)
   }
 
   sink->d3d.swapchain = swapchain;
+  sink->d3d.overlay_needs_resize = TRUE;
   ret = TRUE;
 
 end:
@@ -1747,15 +1749,35 @@ d3d_present_swap_chain (GstD3DVideoSink * sink)
   CHECK_D3D_SWAPCHAIN (sink, end);
 
   /* Set the render target to our swap chain */
-  IDirect3DSwapChain9_GetBackBuffer (sink->d3d.swapchain, 0,
+  hr = IDirect3DSwapChain9_GetBackBuffer (sink->d3d.swapchain, 0,
       D3DBACKBUFFER_TYPE_MONO, &back_buffer);
-  IDirect3DDevice9_SetRenderTarget (klass->d3d.device.d3d_device, 0,
+  ERROR_CHECK_HR (hr) {
+    CASE_HR_ERR (D3DERR_INVALIDCALL);
+    CASE_HR_ERR_END (sink, "IDirect3DSwapChain9_GetBackBuffer");
+    goto end;
+  }
+  hr = IDirect3DDevice9_SetRenderTarget (klass->d3d.device.d3d_device, 0,
       back_buffer);
-  IDirect3DSurface9_Release (back_buffer);
+  ERROR_CHECK_HR (hr) {
+    CASE_HR_ERR (D3DERR_INVALIDCALL);
+    CASE_HR_ERR_END (sink, "IDirect3DDevice9_SetRenderTarget");
+    goto end;
+  }
+  hr = IDirect3DSurface9_Release (back_buffer);
+  ERROR_CHECK_HR (hr) {
+    CASE_HR_ERR (D3DERR_INVALIDCALL);
+    CASE_HR_ERR_END (sink, "IDirect3DSurface9_Release");
+    goto end;
+  }
 
   /* Clear the target */
-  IDirect3DDevice9_Clear (klass->d3d.device.d3d_device, 0, NULL,
+  hr = IDirect3DDevice9_Clear (klass->d3d.device.d3d_device, 0, NULL,
       D3DCLEAR_TARGET, D3DCOLOR_XRGB (0, 0, 0), 1.0f, 0);
+  ERROR_CHECK_HR (hr) {
+    CASE_HR_ERR (D3DERR_INVALIDCALL);
+    CASE_HR_ERR_END (sink, "IDirect3DDevice9_Clear");
+    goto end;
+  }
 
   hr = IDirect3DDevice9_BeginScene (klass->d3d.device.d3d_device);
   ERROR_CHECK_HR (hr) {
@@ -1764,11 +1786,26 @@ d3d_present_swap_chain (GstD3DVideoSink * sink)
     goto end;
   }
 
+  if (!gst_d3d9_overlay_set_render_state (sink)) {
+    IDirect3DDevice9_EndScene (klass->d3d.device.d3d_device);
+    goto end;
+  }
+
   /* Stretch and blit ops, to copy offscreen surface buffer
    * to Display back buffer.
    */
-  d3d_stretch_and_copy (sink, back_buffer);
-  IDirect3DDevice9_EndScene (klass->d3d.device.d3d_device);
+  if (!d3d_stretch_and_copy (sink, back_buffer) ||
+      !gst_d3d9_overlay_render (sink)) {
+    IDirect3DDevice9_EndScene (klass->d3d.device.d3d_device);
+    goto end;
+  }
+
+  hr = IDirect3DDevice9_EndScene (klass->d3d.device.d3d_device);
+  ERROR_CHECK_HR (hr) {
+    CASE_HR_ERR (D3DERR_INVALIDCALL);
+    CASE_HR_ERR_END (sink, "IDirect3DDevice9_EndScene");
+    goto end;
+  }
 
   if (d3d_get_render_rects (sink->d3d.render_rect, &dstr, &srcr)) {
     pDestRect = &dstr;

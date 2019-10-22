@@ -90,6 +90,10 @@ typedef struct _GstD3DData {
   GstVideoRectangle    * render_rect;
   gboolean               renderable;
   gboolean               device_lost;
+
+  /* list of GstD3DVideoSinkOverlay structs */
+  GList * overlay;
+  gboolean overlay_needs_resize;
 } GstD3DData;
 
 gboolean       d3d_class_init(GstD3DVideoSink * klass);
@@ -103,6 +107,7 @@ void           d3d_expose_window(GstD3DVideoSink * sink);
 GstFlowReturn  d3d_render_buffer(GstD3DVideoSink * sink, GstBuffer * buf);
 GstCaps *      d3d_supported_caps(GstD3DVideoSink * sink);
 gboolean       d3d_set_render_format(GstD3DVideoSink * sink);
+gboolean       d3d_get_hwnd_window_size (HWND hwnd, gint * width, gint * height);
 
 #define GST_TYPE_D3DSURFACE_BUFFER_POOL      (gst_d3dsurface_buffer_pool_get_type())
 #define GST_IS_D3DSURFACE_BUFFER_POOL(obj)   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_D3DSURFACE_BUFFER_POOL))
