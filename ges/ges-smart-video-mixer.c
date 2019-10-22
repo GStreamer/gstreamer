@@ -155,6 +155,29 @@ destroy_pad (PadInfos * infos)
   g_slice_free (PadInfos, infos);
 }
 
+static gboolean
+ges_smart_mixer_sinkpad_event_func (GstPad * pad, GstObject * parent,
+    GstEvent * event)
+{
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEGMENT:
+    {
+      const GstSegment *seg;
+
+      gst_event_parse_segment (event, &seg);
+
+      GST_OBJECT_LOCK (pad);
+      ((GESSmartMixerPad *) pad)->segment = *seg;
+      GST_OBJECT_UNLOCK (pad);
+      break;
+    }
+    default:
+      break;
+  }
+
+  return gst_pad_event_default (pad, parent, event);
+}
+
 GstPad *
 ges_smart_mixer_get_mixer_pad (GESSmartMixer * self, GstPad ** mixerpad)
 {
@@ -198,20 +221,6 @@ parse_metadata (GstPad * mixer_pad, GstPadProbeInfo * info,
     gdouble transalpha;
 
     GST_OBJECT_LOCK (ghost);
-    if (ghost->segment.format == GST_FORMAT_UNDEFINED) {
-      const GstSegment *seg;
-      GstEvent *segev;
-
-      GST_OBJECT_UNLOCK (ghost);
-      segev = gst_pad_get_sticky_event (GST_PAD (ghost), GST_EVENT_SEGMENT, 0);
-      gst_event_parse_segment (segev, &seg);
-      gst_event_unref (segev);
-      GST_OBJECT_LOCK (ghost);
-
-      ghost->segment = *seg;
-
-    }
-
     stream_time = gst_segment_to_stream_time (&ghost->segment, GST_FORMAT_TIME,
         GST_BUFFER_PTS (info->data));
     GST_OBJECT_UNLOCK (ghost);
@@ -285,6 +294,8 @@ _request_new_pad (GstElement * element, GstPadTemplate * templ,
   infos->probe_id =
       gst_pad_add_probe (infos->mixer_pad, GST_PAD_PROBE_TYPE_BUFFER,
       (GstPadProbeCallback) parse_metadata, ghost, NULL);
+  gst_pad_set_event_function (GST_PAD (ghost),
+      ges_smart_mixer_sinkpad_event_func);
 
   LOCK (self);
   g_hash_table_insert (self->pads_infos, ghost, infos);
