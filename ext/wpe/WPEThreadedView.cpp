@@ -270,6 +270,7 @@ bool WPEThreadedView::initialize(GstWpeSrc* src, GstGLContext* context, GstGLDis
 GstEGLImage* WPEThreadedView::image()
 {
     GstEGLImage* ret = nullptr;
+    bool dispatchFrameComplete = false;
 
     {
         GMutexHolder lock(images.mutex);
@@ -286,13 +287,14 @@ GstEGLImage* WPEThreadedView::image()
 
             if (previousImage)
                 gst_egl_image_unref(previousImage);
+            dispatchFrameComplete = true;
         }
 
         if (images.committed)
             ret = images.committed;
     }
 
-    if (ret)
+    if (dispatchFrameComplete)
         frameComplete();
 
     return ret;
