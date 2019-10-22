@@ -244,6 +244,9 @@ gst_pnmdec_parse_ascii (GstPnmdec * s, const guint8 * b, guint bs)
   GstMapInfo map;
   guint8 *outdata;
 
+  if (!s->buf)
+    return GST_FLOW_OK;
+
   target = s->size - s->current_size;
 
   gst_buffer_map (s->buf, &map, GST_MAP_WRITE);
@@ -571,7 +574,7 @@ gst_pnmdec_finish (GstVideoDecoder * decoder)
   if (s->mngr.info.encoding == GST_PNM_ENCODING_ASCII) {
     /* One last go at outputting any final value */
     gst_pnmdec_parse_ascii (s, 0, 0);
-    if (s->size <= s->current_size) {
+    if (s->size && s->size <= s->current_size) {
       return gst_video_decoder_have_frame (decoder);
     }
   }
