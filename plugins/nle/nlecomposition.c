@@ -3073,10 +3073,14 @@ static gboolean
 _print_stack (GNode * node, gpointer res)
 {
   NleObject *obj = NLE_OBJECT (node->data);
+  gint i;
+
+  for (i = 0; i < (g_node_depth (node) - 1) * 4; ++i)
+    g_string_append_c ((GString *) res, ' ');
 
   g_string_append_printf ((GString *) res,
-      "%*s [s=%" GST_TIME_FORMAT " - d=%" GST_TIME_FORMAT "] prio=%d\n",
-      g_node_depth (node) * 4, GST_OBJECT_NAME (obj),
+      "%s [s=%" GST_TIME_FORMAT " - d=%" GST_TIME_FORMAT "] prio=%d\n",
+      GST_OBJECT_NAME (obj),
       GST_TIME_ARGS (NLE_OBJECT_START (obj)),
       GST_TIME_ARGS (NLE_OBJECT_STOP (obj)), obj->priority);
 
@@ -3085,7 +3089,8 @@ _print_stack (GNode * node, gpointer res)
 #endif
 
 static void
-_dump_stack (NleComposition * comp, GNode * stack)
+_dump_stack (NleComposition * comp, NleUpdateStackReason update_reason,
+    GNode * stack)
 {
 #ifndef GST_DISABLE_GST_DEBUG
   GString *res;
@@ -3097,10 +3102,11 @@ _dump_stack (NleComposition * comp, GNode * stack)
     return;
 
   res = g_string_new (NULL);
-  g_string_append_printf (res, " ====> dumping stack [%" GST_TIME_FORMAT " - %"
-      GST_TIME_FORMAT "]:\n",
-      GST_TIME_ARGS (comp->priv->current_stack_start),
-      GST_TIME_ARGS (comp->priv->current_stack_stop));
+  g_string_append_printf (res,
+      " ====> dumping stack [%" GST_TIME_FORMAT " - %" GST_TIME_FORMAT
+      "] (%s):\n", GST_TIME_ARGS (comp->priv->current_stack_start),
+      GST_TIME_ARGS (comp->priv->current_stack_stop),
+      UPDATE_PIPELINE_REASONS[update_reason]);
   g_node_traverse (stack, G_LEVEL_ORDER, G_TRAVERSE_ALL, -1, _print_stack, res);
 
   GST_INFO_OBJECT (comp, "%s", res->str);
@@ -3229,7 +3235,7 @@ update_pipeline (NleComposition * comp, GstClockTime currenttime, gint32 seqnum,
 
   /* If stacks are different, unlink/relink objects */
   if (tear_down) {
-    _dump_stack (comp, stack);
+    _dump_stack (comp, update_reason, stack);
     _deactivate_stack (comp, update_reason);
     _relink_new_stack (comp, stack, toplevel_seek);
   }
