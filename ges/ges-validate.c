@@ -758,6 +758,7 @@ _project_loaded_cb (GESProject * project, GESTimeline * timeline,
 static gboolean
 _load_project (GstValidateScenario * scenario, GstValidateAction * action)
 {
+  GstState state;
   GESProject *project;
   GList *tmp, *tmp_full;
 
@@ -780,6 +781,8 @@ _load_project (GstValidateScenario * scenario, GstValidateAction * action)
 
     goto fail;
   }
+  gst_element_get_state (pipeline, &state, NULL, 0);
+  gst_element_set_state (pipeline, GST_STATE_NULL);
 
   content = gst_structure_get_string (action->structure, "serialized-content");
   if (content) {
@@ -833,6 +836,8 @@ _load_project (GstValidateScenario * scenario, GstValidateAction * action)
 
     goto fail;
   }
+
+  gst_element_set_state (pipeline, state);
 
 done:
   if (error)
