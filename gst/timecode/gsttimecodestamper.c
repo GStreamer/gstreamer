@@ -60,6 +60,7 @@ enum
   PROP_0,
   PROP_SOURCE,
   PROP_SET,
+  PROP_AUTO_RESYNC,
   PROP_DROP_FRAME,
   PROP_POST_MESSAGES,
   PROP_SET_INTERNAL_TIMECODE,
@@ -72,6 +73,7 @@ enum
 
 #define DEFAULT_SOURCE GST_TIME_CODE_STAMPER_SOURCE_INTERNAL
 #define DEFAULT_SET GST_TIME_CODE_STAMPER_SET_KEEP
+#define DEFAULT_AUTO_RESYNC TRUE
 #define DEFAULT_DROP_FRAME FALSE
 #define DEFAULT_POST_MESSAGES FALSE
 #define DEFAULT_SET_INTERNAL_TIMECODE NULL
@@ -219,6 +221,12 @@ gst_timecodestamper_class_init (GstTimeCodeStamperClass * klass)
           "Choose whether timecodes should be overridden or not",
           GST_TYPE_TIME_CODE_STAMPER_SET,
           DEFAULT_SET, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_AUTO_RESYNC,
+      g_param_spec_boolean ("auto-resync",
+          "Auto Resync",
+          "If true resync last known timecode from upstream, otherwise only "
+          "count up from the last known one",
+          DEFAULT_AUTO_RESYNC, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_DROP_FRAME,
       g_param_spec_boolean ("drop-frame", "Drop Frame",
           "Use drop-frame timecodes for 29.97 and 59.94 FPS",
@@ -245,8 +253,8 @@ gst_timecodestamper_class_init (GstTimeCodeStamperClass * klass)
   g_object_class_install_property (gobject_class, PROP_LTC_AUTO_RESYNC,
       g_param_spec_boolean ("ltc-auto-resync",
           "LTC Auto Resync",
-          "If true and LTC timecode is used, it will be automatically "
-          "resynced if it drifts, otherwise it will only be initialised once",
+          "If true the LTC timecode will be automatically resynced if it drifts, "
+          "otherwise it will only be counted up from the last known one",
           DEFAULT_LTC_AUTO_RESYNC, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_RTC_MAX_DRIFT,
       g_param_spec_uint64 ("rtc-max-drift",
@@ -258,8 +266,8 @@ gst_timecodestamper_class_init (GstTimeCodeStamperClass * klass)
   g_object_class_install_property (gobject_class, PROP_RTC_AUTO_RESYNC,
       g_param_spec_boolean ("rtc-auto-resync",
           "RTC Auto Resync",
-          "If true and RTC timecode is used, it will be automatically "
-          "resynced if it drifts, otherwise it will only be initialised once",
+          "If true the RTC timecode will be automatically resynced if it drifts, "
+          "otherwise it will only be counted up from the last known one",
           DEFAULT_RTC_AUTO_RESYNC, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_TIMECODE_OFFSET,
       g_param_spec_int ("timecode-offset",
@@ -295,6 +303,7 @@ gst_timecodestamper_init (GstTimeCodeStamper * timecodestamper)
 
   timecodestamper->tc_source = GST_TIME_CODE_STAMPER_SOURCE_INTERNAL;
   timecodestamper->tc_set = GST_TIME_CODE_STAMPER_SET_KEEP;
+  timecodestamper->tc_auto_resync = DEFAULT_AUTO_RESYNC;
   timecodestamper->drop_frame = DEFAULT_DROP_FRAME;
   timecodestamper->post_messages = DEFAULT_POST_MESSAGES;
   timecodestamper->set_internal_tc = NULL;
@@ -407,6 +416,9 @@ gst_timecodestamper_set_property (GObject * object, guint prop_id,
       timecodestamper->tc_set = (GstTimeCodeStamperSet)
           g_value_get_enum (value);
       break;
+    case PROP_AUTO_RESYNC:
+      timecodestamper->tc_auto_resync = g_value_get_boolean (value);
+      break;
     case PROP_DROP_FRAME:
       timecodestamper->drop_frame = g_value_get_boolean (value);
       gst_timecodestamper_update_drop_frame (timecodestamper);
@@ -486,6 +498,9 @@ gst_timecodestamper_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SET:
       g_value_set_enum (value, timecodestamper->tc_set);
+      break;
+    case PROP_AUTO_RESYNC:
+      g_value_set_boolean (value, timecodestamper->tc_auto_resync);
       break;
     case PROP_DROP_FRAME:
       g_value_set_boolean (value, timecodestamper->drop_frame);
@@ -894,7 +909,7 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
 
   /* If we have a new timecode on the incoming frame, update our last known
    * timecode or otherwise increment it by one */
-  if (tc_meta) {
+  if (tc_meta && (!timecodestamper->last_tc || timecodestamper->tc_auto_resync)) {
     gchar *tc_str;
 
     if (timecodestamper->last_tc)

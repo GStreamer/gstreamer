@@ -77,6 +77,7 @@ struct _GstTimeCodeStamper
   /* Properties, protected by object lock */
   GstTimeCodeStamperSource tc_source;
   GstTimeCodeStamperSet tc_set;
+  gboolean tc_auto_resync;
   gboolean drop_frame;
   gboolean post_messages;
   GstVideoTimeCode *set_internal_tc;
