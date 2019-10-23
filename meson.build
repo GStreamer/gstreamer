@@ -50,6 +50,7 @@ if not meson.is_subproject() and cc.get_id() == 'msvc'
       '/w14062', # enumerator 'identifier' in switch of enum 'enumeration' is not handled
       '/w14101', # 'identifier' : unreferenced local variable
       '/w14189', # 'identifier' : local variable is initialized but not referenced
+      cc.get_supported_arguments(['/utf-8']), # set the input encoding to utf-8
       language: 'c')
 endif
 
