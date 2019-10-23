@@ -156,6 +156,9 @@ gst_timecodestamper_source_get_type (void)
     {GST_TIME_CODE_STAMPER_SOURCE_LAST_KNOWN,
           "Count up from the last known upstream timecode or internal if unknown",
         "last-known"},
+    {GST_TIME_CODE_STAMPER_SOURCE_LAST_KNOWN_OR_ZERO,
+          "Count up from the last known upstream timecode or zero if unknown",
+        "last-known-or-zero"},
     {GST_TIME_CODE_STAMPER_SOURCE_LTC,
         "Linear timecode from an audio device", "ltc"},
     {GST_TIME_CODE_STAMPER_SOURCE_RTC,
@@ -1164,6 +1167,13 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
       if (!tc)
         tc = timecodestamper->internal_tc;
       break;
+    case GST_TIME_CODE_STAMPER_SOURCE_LAST_KNOWN_OR_ZERO:
+      tc = timecodestamper->last_tc;
+      if (!tc) {
+        tc = gst_video_time_code_new (timecodestamper->vinfo.fps_n,
+            timecodestamper->vinfo.fps_d, NULL, tc_flags, 0, 0, 0, 0, 0);
+        free_tc = TRUE;
+      }
       break;
     case GST_TIME_CODE_STAMPER_SOURCE_LTC:
 #if HAVE_LTC
