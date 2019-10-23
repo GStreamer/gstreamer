@@ -32,6 +32,7 @@ GType gst_error_ignore_get_type (void);
 GType gst_watchdog_get_type (void);
 GType gst_fake_video_sink_get_type (void);
 GType gst_test_src_bin_get_type (void);
+GType gst_clock_select_get_type (void);
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -54,6 +55,8 @@ plugin_init (GstPlugin * plugin)
       gst_fake_video_sink_get_type ());
   gst_element_register (plugin, "testsrcbin", GST_RANK_NONE,
       gst_test_src_bin_get_type ());
+  gst_element_register (plugin, "clockselect", GST_RANK_NONE,
+      gst_clock_select_get_type ());
 
   return TRUE;
 }

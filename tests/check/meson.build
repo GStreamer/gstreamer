@@ -76,6 +76,7 @@ if host_machine.system() != 'windows'
     [['elements/ccconverter.c']],
     [['elements/cccombiner.c']],
     [['elements/ccextractor.c']],
+    [['elements/clockselect.c']],
     [['elements/line21.c']],
     [['elements/curlhttpsink.c'], not curl_dep.found(), [curl_dep]],
     [['elements/curlhttpsrc.c'], not curl_dep.found(), [curl_dep, gio_dep]],
