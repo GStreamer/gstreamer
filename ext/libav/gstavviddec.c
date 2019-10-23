@@ -730,6 +730,12 @@ gst_ffmpegviddec_can_direct_render (GstFFMpegVidDec * ffmpegdec)
       AV_CODEC_CAP_DR1);
 }
 
+static void
+gst_ffmpegviddec_avbuffer_unref (AVBufferRef * avbuffer)
+{
+  av_buffer_unref (&avbuffer);
+}
+
 /* called when ffmpeg wants us to allocate a buffer to write the decoded frame
  * into. We try to give it memory from our pool */
 static int
@@ -823,6 +829,16 @@ gst_ffmpegviddec_get_buffer2 (AVCodecContext * context, AVFrame * picture,
   }
 
   picture->buf[0] = av_buffer_create (NULL, 0, dummy_free_buffer, dframe, 0);
+  if ((flags & AV_GET_BUFFER_FLAG_REF) == AV_GET_BUFFER_FLAG_REF) {
+    /* decoder might reuse this AVFrame and it would result to no more
+     * get_buffer() call if the AVFrame's AVBuffer is writable
+     * (meaning that the refcount of AVBuffer == 1).
+     * To enforce get_buffer() for the every output frame, hold another ref here
+     */
+    gst_video_codec_frame_set_user_data (frame,
+        av_buffer_ref (picture->buf[0]),
+        (GDestroyNotify) gst_ffmpegviddec_avbuffer_unref);
+  }
 
   GST_LOG_OBJECT (ffmpegdec, "returned frame %p", dframe->buffer);
 
