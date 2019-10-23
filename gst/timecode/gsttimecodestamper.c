@@ -61,11 +61,13 @@ enum
   PROP_SOURCE,
   PROP_SET,
   PROP_AUTO_RESYNC,
+  PROP_TIMEOUT,
   PROP_DROP_FRAME,
   PROP_POST_MESSAGES,
   PROP_SET_INTERNAL_TIMECODE,
   PROP_LTC_DAILY_JAM,
   PROP_LTC_AUTO_RESYNC,
+  PROP_LTC_TIMEOUT,
   PROP_RTC_MAX_DRIFT,
   PROP_RTC_AUTO_RESYNC,
   PROP_TIMECODE_OFFSET
@@ -74,11 +76,13 @@ enum
 #define DEFAULT_SOURCE GST_TIME_CODE_STAMPER_SOURCE_INTERNAL
 #define DEFAULT_SET GST_TIME_CODE_STAMPER_SET_KEEP
 #define DEFAULT_AUTO_RESYNC TRUE
+#define DEFAULT_TIMEOUT GST_CLOCK_TIME_NONE
 #define DEFAULT_DROP_FRAME FALSE
 #define DEFAULT_POST_MESSAGES FALSE
 #define DEFAULT_SET_INTERNAL_TIMECODE NULL
 #define DEFAULT_LTC_DAILY_JAM NULL
 #define DEFAULT_LTC_AUTO_RESYNC TRUE
+#define DEFAULT_LTC_TIMEOUT GST_CLOCK_TIME_NONE
 #define DEFAULT_RTC_MAX_DRIFT 250000000
 #define DEFAULT_RTC_AUTO_RESYNC TRUE
 #define DEFAULT_TIMECODE_OFFSET 0
@@ -227,6 +231,12 @@ gst_timecodestamper_class_init (GstTimeCodeStamperClass * klass)
           "If true resync last known timecode from upstream, otherwise only "
           "count up from the last known one",
           DEFAULT_AUTO_RESYNC, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_TIMEOUT,
+      g_param_spec_uint64 ("timeout",
+          "Timeout",
+          "Time out upstream timecode if no new timecode was detected after this time",
+          0, G_MAXUINT64, DEFAULT_TIMEOUT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_DROP_FRAME,
       g_param_spec_boolean ("drop-frame", "Drop Frame",
           "Use drop-frame timecodes for 29.97 and 59.94 FPS",
@@ -256,6 +266,11 @@ gst_timecodestamper_class_init (GstTimeCodeStamperClass * klass)
           "If true the LTC timecode will be automatically resynced if it drifts, "
           "otherwise it will only be counted up from the last known one",
           DEFAULT_LTC_AUTO_RESYNC, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_LTC_TIMEOUT,
+      g_param_spec_uint64 ("ltc-timeout", "LTC Timeout",
+          "Time out LTC timecode if no new timecode was detected after this time",
+          0, G_MAXUINT64, DEFAULT_LTC_TIMEOUT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_RTC_MAX_DRIFT,
       g_param_spec_uint64 ("rtc-max-drift",
           "RTC Maximum Offset",
@@ -304,17 +319,20 @@ gst_timecodestamper_init (GstTimeCodeStamper * timecodestamper)
   timecodestamper->tc_source = GST_TIME_CODE_STAMPER_SOURCE_INTERNAL;
   timecodestamper->tc_set = GST_TIME_CODE_STAMPER_SET_KEEP;
   timecodestamper->tc_auto_resync = DEFAULT_AUTO_RESYNC;
+  timecodestamper->tc_timeout = DEFAULT_TIMEOUT;
   timecodestamper->drop_frame = DEFAULT_DROP_FRAME;
   timecodestamper->post_messages = DEFAULT_POST_MESSAGES;
   timecodestamper->set_internal_tc = NULL;
   timecodestamper->ltc_daily_jam = DEFAULT_LTC_DAILY_JAM;
   timecodestamper->ltc_auto_resync = DEFAULT_LTC_AUTO_RESYNC;
+  timecodestamper->ltc_timeout = DEFAULT_LTC_TIMEOUT;
   timecodestamper->rtc_max_drift = DEFAULT_RTC_MAX_DRIFT;
   timecodestamper->rtc_auto_resync = DEFAULT_RTC_AUTO_RESYNC;
   timecodestamper->timecode_offset = 0;
 
   timecodestamper->internal_tc = NULL;
   timecodestamper->last_tc = NULL;
+  timecodestamper->last_tc_running_time = GST_CLOCK_TIME_NONE;
   timecodestamper->rtc_tc = NULL;
 
 #if HAVE_LTC
@@ -329,6 +347,7 @@ gst_timecodestamper_init (GstTimeCodeStamper * timecodestamper)
   timecodestamper->ltc_current_tc = NULL;
   timecodestamper->ltc_current_tc_running_time = GST_CLOCK_TIME_NONE;
   timecodestamper->ltc_internal_tc = NULL;
+  timecodestamper->ltc_internal_running_time = GST_CLOCK_TIME_NONE;
   timecodestamper->ltc_dec = NULL;
   timecodestamper->ltc_total = 0;
 
@@ -368,6 +387,7 @@ gst_timecodestamper_dispose (GObject * object)
     gst_video_time_code_free (timecodestamper->last_tc);
     timecodestamper->last_tc = NULL;
   }
+  timecodestamper->last_tc_running_time = GST_CLOCK_TIME_NONE;
 
   if (timecodestamper->rtc_tc != NULL) {
     gst_video_time_code_free (timecodestamper->rtc_tc);
@@ -385,6 +405,7 @@ gst_timecodestamper_dispose (GObject * object)
     gst_video_time_code_free (timecodestamper->ltc_internal_tc);
     timecodestamper->ltc_internal_tc = NULL;
   }
+  timecodestamper->ltc_internal_running_time = GST_CLOCK_TIME_NONE;
 
   if (timecodestamper->ltc_dec) {
     ltc_decoder_free (timecodestamper->ltc_dec);
@@ -418,6 +439,9 @@ gst_timecodestamper_set_property (GObject * object, guint prop_id,
       break;
     case PROP_AUTO_RESYNC:
       timecodestamper->tc_auto_resync = g_value_get_boolean (value);
+      break;
+    case PROP_TIMEOUT:
+      timecodestamper->tc_timeout = g_value_get_uint64 (value);
       break;
     case PROP_DROP_FRAME:
       timecodestamper->drop_frame = g_value_get_boolean (value);
@@ -468,6 +492,9 @@ gst_timecodestamper_set_property (GObject * object, guint prop_id,
     case PROP_LTC_AUTO_RESYNC:
       timecodestamper->ltc_auto_resync = g_value_get_boolean (value);
       break;
+    case PROP_LTC_TIMEOUT:
+      timecodestamper->ltc_timeout = g_value_get_uint64 (value);
+      break;
     case PROP_RTC_MAX_DRIFT:
       timecodestamper->rtc_max_drift = g_value_get_uint64 (value);
       break;
@@ -502,6 +529,9 @@ gst_timecodestamper_get_property (GObject * object, guint prop_id,
     case PROP_AUTO_RESYNC:
       g_value_set_boolean (value, timecodestamper->tc_auto_resync);
       break;
+    case PROP_TIMEOUT:
+      g_value_set_uint64 (value, timecodestamper->tc_timeout);
+      break;
     case PROP_DROP_FRAME:
       g_value_set_boolean (value, timecodestamper->drop_frame);
       break;
@@ -516,6 +546,9 @@ gst_timecodestamper_get_property (GObject * object, guint prop_id,
       break;
     case PROP_LTC_AUTO_RESYNC:
       g_value_set_boolean (value, timecodestamper->ltc_auto_resync);
+      break;
+    case PROP_LTC_TIMEOUT:
+      g_value_set_uint64 (value, timecodestamper->ltc_timeout);
       break;
     case PROP_RTC_MAX_DRIFT:
       g_value_set_uint64 (value, timecodestamper->rtc_max_drift);
@@ -563,6 +596,7 @@ gst_timecodestamper_stop (GstBaseTransform * trans)
     gst_video_time_code_free (timecodestamper->last_tc);
     timecodestamper->last_tc = NULL;
   }
+  timecodestamper->last_tc_running_time = GST_CLOCK_TIME_NONE;
 #if HAVE_LTC
   g_mutex_lock (&timecodestamper->mutex);
   gst_audio_info_init (&timecodestamper->ainfo);
@@ -575,6 +609,7 @@ gst_timecodestamper_stop (GstBaseTransform * trans)
     gst_video_time_code_free (timecodestamper->ltc_internal_tc);
     timecodestamper->ltc_internal_tc = NULL;
   }
+  timecodestamper->ltc_internal_running_time = GST_CLOCK_TIME_NONE;
 
   if (timecodestamper->ltc_current_tc != NULL) {
     gst_video_time_code_free (timecodestamper->ltc_current_tc);
@@ -915,21 +950,36 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
     if (timecodestamper->last_tc)
       gst_video_time_code_free (timecodestamper->last_tc);
     timecodestamper->last_tc = gst_video_time_code_copy (&tc_meta->tc);
+    timecodestamper->last_tc_running_time = running_time;
 
     tc_str = gst_video_time_code_to_string (timecodestamper->last_tc);
     GST_DEBUG_OBJECT (timecodestamper, "Updated upstream timecode to %s",
         tc_str);
     g_free (tc_str);
   } else {
-    gchar *tc_str;
-
     if (timecodestamper->last_tc) {
-      gst_video_time_code_increment_frame (timecodestamper->last_tc);
+      if (timecodestamper->tc_auto_resync
+          && timecodestamper->tc_timeout != GST_CLOCK_TIME_NONE
+          && (running_time + timecodestamper->tc_timeout <
+              timecodestamper->last_tc_running_time
+              || running_time >=
+              timecodestamper->last_tc_running_time +
+              timecodestamper->tc_timeout)) {
+        if (timecodestamper->last_tc)
+          gst_video_time_code_free (timecodestamper->last_tc);
+        timecodestamper->last_tc = NULL;
+        timecodestamper->last_tc_running_time = GST_CLOCK_TIME_NONE;
+        GST_DEBUG_OBJECT (timecodestamper, "Upstream timecode timed out");
+      } else {
+        gchar *tc_str;
 
-      tc_str = gst_video_time_code_to_string (timecodestamper->last_tc);
-      GST_DEBUG_OBJECT (timecodestamper, "Incremented upstream timecode to %s",
-          tc_str);
-      g_free (tc_str);
+        gst_video_time_code_increment_frame (timecodestamper->last_tc);
+
+        tc_str = gst_video_time_code_to_string (timecodestamper->last_tc);
+        GST_DEBUG_OBJECT (timecodestamper,
+            "Incremented upstream timecode to %s", tc_str);
+        g_free (tc_str);
+      }
     } else {
       GST_DEBUG_OBJECT (timecodestamper, "Never saw an upstream timecode");
     }
@@ -1107,6 +1157,7 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
           if (gst_video_time_code_is_valid (ltc_read_tc_ptr)) {
             timecodestamper->ltc_internal_tc =
                 gst_video_time_code_copy (ltc_read_tc_ptr);
+            timecodestamper->ltc_internal_running_time = running_time;
             updated_internal = TRUE;
             GST_INFO_OBJECT (timecodestamper, "Resynced internal LTC counter");
           } else {
@@ -1152,9 +1203,25 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
     }
 
     if (timecodestamper->ltc_internal_tc) {
-      tc_str = gst_video_time_code_to_string (timecodestamper->ltc_internal_tc);
-      GST_DEBUG_OBJECT (timecodestamper, "Updated LTC timecode to %s", tc_str);
-      g_free (tc_str);
+      if (timecodestamper->ltc_auto_resync
+          && timecodestamper->ltc_timeout != GST_CLOCK_TIME_NONE
+          && (running_time + timecodestamper->ltc_timeout <
+              timecodestamper->ltc_internal_running_time
+              || running_time >=
+              timecodestamper->ltc_internal_running_time +
+              timecodestamper->ltc_timeout)) {
+        if (timecodestamper->ltc_internal_tc)
+          gst_video_time_code_free (timecodestamper->ltc_internal_tc);
+        timecodestamper->ltc_internal_tc = NULL;
+        GST_DEBUG_OBJECT (timecodestamper, "LTC timecode timed out");
+        timecodestamper->ltc_internal_running_time = GST_CLOCK_TIME_NONE;
+      } else {
+        tc_str =
+            gst_video_time_code_to_string (timecodestamper->ltc_internal_tc);
+        GST_DEBUG_OBJECT (timecodestamper, "Updated LTC timecode to %s",
+            tc_str);
+        g_free (tc_str);
+      }
     } else {
       GST_DEBUG_OBJECT (timecodestamper, "Have no LTC timecode yet");
     }
@@ -1341,6 +1408,7 @@ gst_timecodestamper_release_pad (GstElement * element, GstPad * pad)
     gst_video_time_code_free (timecodestamper->ltc_internal_tc);
     timecodestamper->ltc_internal_tc = NULL;
   }
+  timecodestamper->ltc_internal_running_time = GST_CLOCK_TIME_NONE;
 
   if (timecodestamper->ltc_current_tc != NULL) {
     gst_video_time_code_free (timecodestamper->ltc_current_tc);

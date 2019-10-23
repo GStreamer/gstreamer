@@ -78,11 +78,13 @@ struct _GstTimeCodeStamper
   GstTimeCodeStamperSource tc_source;
   GstTimeCodeStamperSet tc_set;
   gboolean tc_auto_resync;
+  GstClockTime tc_timeout;
   gboolean drop_frame;
   gboolean post_messages;
   GstVideoTimeCode *set_internal_tc;
   GDateTime *ltc_daily_jam;
   gboolean ltc_auto_resync;
+  GstClockTime ltc_timeout;
   GstClockTime rtc_max_drift;
   gboolean rtc_auto_resync;
   gint timecode_offset;
@@ -90,6 +92,7 @@ struct _GstTimeCodeStamper
   /* Timecode tracking, protected by object lock */
   GstVideoTimeCode *internal_tc;
   GstVideoTimeCode *last_tc;
+  GstClockTime last_tc_running_time;
   GstVideoTimeCode *rtc_tc;
 
   /* Internal state */
@@ -119,6 +122,7 @@ struct _GstTimeCodeStamper
   /* LTC timecode we last synced to and potentially incremented manually since
    * then */
   GstVideoTimeCode *ltc_internal_tc;
+  GstClockTime ltc_internal_running_time;
 
   /* Protected by mutex above */
   LTCDecoder *ltc_dec;
