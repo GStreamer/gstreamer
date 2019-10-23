@@ -907,17 +907,14 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
 
     if (timecodestamper->last_tc) {
       gst_video_time_code_increment_frame (timecodestamper->last_tc);
-    } else {
-      /* We have no last known timecode so initialize with 0 here */
-      timecodestamper->last_tc =
-          gst_video_time_code_new (timecodestamper->vinfo.fps_n,
-          timecodestamper->vinfo.fps_d, dt_frame, tc_flags, 0, 0, 0, 0, 0);
-    }
 
-    tc_str = gst_video_time_code_to_string (timecodestamper->last_tc);
-    GST_DEBUG_OBJECT (timecodestamper, "Incremented upstream timecode to %s",
-        tc_str);
-    g_free (tc_str);
+      tc_str = gst_video_time_code_to_string (timecodestamper->last_tc);
+      GST_DEBUG_OBJECT (timecodestamper, "Incremented upstream timecode to %s",
+          tc_str);
+      g_free (tc_str);
+    } else {
+      GST_DEBUG_OBJECT (timecodestamper, "Never saw an upstream timecode");
+    }
   }
 
   /* Update RTC-based timecode */
@@ -1164,6 +1161,9 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
       break;
     case GST_TIME_CODE_STAMPER_SOURCE_LAST_KNOWN:
       tc = timecodestamper->last_tc;
+      if (!tc)
+        tc = timecodestamper->internal_tc;
+      break;
       break;
     case GST_TIME_CODE_STAMPER_SOURCE_LTC:
 #if HAVE_LTC
