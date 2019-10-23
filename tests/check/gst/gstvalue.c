@@ -801,21 +801,21 @@ GST_START_TEST (test_deserialize_string)
     "\"Hello\\ World", "\"Hello\\ World"}, {
     "\"\\", "\"\\"}, {
     "\"\\0", "\"\\0"}, {
+    "\"t\\303\\274t\"", "tüt"}, {
+      /* utf8 octal sequence */
     "", ""},                    /* empty strings */
     {
-    "\"\"", ""},                /* quoted empty string -> empty string */
+    "\"\"", ""}, {              /* quoted empty string -> empty string */
+    "\" \"", " "}, {            /* allow spaces to be not escaped */
+    "tüüt", "tüüt"},        /* allow special chars to be not escaped */
         /* Expected FAILURES: */
     {
-    "\"\\0\"", NULL},           /* unfinished escaped character */
-    {
-    "\"", NULL},                /* solitary quote */
-    {
-    "\" \"", NULL},             /* spaces must be escaped */
-#if 0
-        /* FIXME 0.9: this test should fail, but it doesn't */
-    {
-    "tüüt", NULL}             /* string with special chars must be escaped */
-#endif
+    "\"\\0\"", NULL}, {         /* unfinished escaped character */
+    "\"", NULL}, {              /* solitary quote */
+    "\"\\380\"", NULL}, {       /* invalid octal sequence */
+    "\"\\344\\204\\062\"", NULL}, {
+      /* invalid utf8: wrong end byte */
+    "\"\\344\\204\"", NULL}     /* invalid utf8: wrong number of bytes */
   };
   guint i;
   GValue v = { 0, };

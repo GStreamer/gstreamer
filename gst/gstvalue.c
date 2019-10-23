@@ -3931,13 +3931,13 @@ gst_string_unwrap (const gchar * s)
         /* if we run into a \0 here, we definitely won't get a quote later */
         if (*read == 0)
           goto beach;
-
         /* else copy \X sequence */
         *write++ = *read++;
       }
-    } else {
-      /* weird character, error */
+    } else if (*read == '\0') {
       goto beach;
+    } else {
+      *write++ = *read++;
     }
   }
   /* if the string is not ending in " and zero terminated, we error */
@@ -3975,6 +3975,10 @@ gst_value_deserialize_string (GValue * dest, const gchar * s)
     gchar *str = gst_string_unwrap (s);
     if (G_UNLIKELY (!str))
       return FALSE;
+    if (!g_utf8_validate (str, -1, NULL)) {
+      g_free (str);
+      return FALSE;
+    }
     g_value_take_string (dest, str);
   }
 
