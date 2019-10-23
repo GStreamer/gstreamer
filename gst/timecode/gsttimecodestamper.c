@@ -230,8 +230,8 @@ gst_timecodestamper_class_init (GstTimeCodeStamperClass * klass)
           "If set, take this timecode as the internal timecode for the first "
           "frame and increment from it. Only the values itself and daily jam are taken, "
           "flags and frame rate are always determined by timecodestamper "
-          "itself. If unset (and to-now is also not set), the internal timecode will "
-          "start at 0 with the daily jam being the current real-time clock time",
+          "itself. If unset, the internal timecode will start at 0 with the daily jam "
+          "being the current real-time clock time",
           GST_TYPE_VIDEO_TIME_CODE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_LTC_DAILY_JAM,
