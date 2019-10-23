@@ -67,7 +67,9 @@ typedef struct
   const gchar *long_name;
   gchar short_name;
   ActionFromStructureFunc callback;
+  const gchar *synopsis;
   const gchar *description;
+  const gchar *examples;
   /* The first property must be the ID on the command line */
   Property properties[MAX_PROPERTIES];
 } GESCommandLineOption;
@@ -75,7 +77,36 @@ typedef struct
 /*  *INDENT-OFF* */
 static GESCommandLineOption options[] = {
   {"clip", 'c', (ActionFromStructureFunc) _ges_command_line_formatter_add_clip,
-    "<clip uri> - Adds a clip in the timeline.",
+    "<clip uri>",
+    "Adds a clip in the timeline. "
+    "See documentation for the --track-types option to ges-launch-1.0, as it "
+    " will affect the result of this command.",
+    "    ges-launch-1.0 +clip /path/to/media\n\n"
+    "This will simply play the sample from its beginning to its end.\n\n"
+    "    ges-launch-1.0 +clip /path/to/media inpoint=4.0\n\n"
+    "Assuming 'media' is a 10 second long media sample, this will play the sample\n"
+    "from the 4th second to the 10th, resulting in a 6-seconds long playback.\n\n"
+    "    ges-launch-1.0 +clip /path/to/media inpoint=4.0 duration=2.0 start=4.0\n\n"
+    "Assuming \"media\" is an audio video sample longer than 6 seconds, this will play\n"
+    "a black frame and silence for 4 seconds, then the sample from its 4th second to\n"
+    "its sixth second, resulting in a 6-seconds long playback.\n\n"
+    "    ges-launch-1.0 --track-types=audio +clip /path/to/media\n\n"
+    "Assuming \"media\" is an audio video sample, this will only play the audio of the\n"
+    "sample in its entirety.\n\n"
+    "    ges-launch-1.0 +clip /path/to/media1 layer=1 set-alpha 0.9 +clip /path/to/media2 layer=0\n\n"
+    "Assume media1 and media2 both contain audio and video and last for 10 seconds.\n\n"
+    "This will first add media1 in a new layer of \"priority\" 1, thus implicitly\n"
+    "creating a layer of \"priority\" 0, the start of the clip will be 0 as no clip\n"
+    "had been added in that layer before.\n\n"
+    "It will then add media2 in the layer of \"priority\" 0 which was created\n"
+    "previously, the start of this new clip will also be 0 as no clip has been added\n"
+    "in this layer before.\n\n"
+    "Both clips will thus overlap on two layers for 10 seconds.\n\n"
+    "The \"alpha\" property of the second clip will finally be set to a value of 0.9.\n\n"
+    "All this will result in a 10 seconds playback, where media2 is barely visible\n"
+    "through media1, which is nearly opaque. If alpha was set to 0.5, both clips\n"
+    "would be equally visible, and if it was set to 0.0, media1 would be invisible\n"
+    "and media2 completely opaque.\n",
     {
       {
         "uri", "n", 0, "asset-id",
@@ -109,9 +140,12 @@ static GESCommandLineOption options[] = {
     },
   },
   {"effect", 'e', (ActionFromStructureFunc) _ges_command_line_formatter_add_effect,
-    "<effect bin description> - Adds an effect as specified by 'bin-description',\n"
-    "similar to gst-launch-style pipeline description, without setting properties\n"
-    "(see `set-` for information about how to set properties).\n",
+    "<effect bin description>",
+    "Adds an effect as specified by 'bin-description', similar to gst-launch-style"
+    " pipeline description, without setting properties (see `set-<property-name>` for information"
+    " about how to set properties).",
+    "    ges-launch-1.0 +clip /path/to/media +effect \"agingtv\"\n\n"
+    "This will apply the agingtv effect to \"media\" and play it back.",
     {
       {
         "bin-description", "d", 0, "asset-id",
@@ -129,7 +163,8 @@ static GESCommandLineOption options[] = {
     },
   },
   {"test-clip", 0, (ActionFromStructureFunc) _ges_command_line_formatter_add_test_clip,
-    "<test clip pattern> - Add a test clip in the timeline.",
+    "<test clip pattern>", "Add a test clip in the timeline.",
+    NULL,
     {
       {
         "pattern", "p", 0, NULL,
@@ -140,7 +175,7 @@ static GESCommandLineOption options[] = {
         "The name of the clip, can be used as an ID later."
       },
       {
-        "start", "s",GST_TYPE_CLOCK_TIME, NULL,
+        "start", "s", GST_TYPE_CLOCK_TIME, NULL,
         "The starting position of the clip in the timeline."
       },
       {
@@ -159,7 +194,7 @@ static GESCommandLineOption options[] = {
     },
   },
   {"title", 'c', (ActionFromStructureFunc) _ges_command_line_formatter_add_title_clip,
-    "<title text> - Adds a clip in the timeline.",
+    "<title text>", "Adds a clip in the timeline.", NULL,
     {
       {
         "text", "n", 0, NULL,
@@ -194,9 +229,17 @@ static GESCommandLineOption options[] = {
   },
   {
     "set-", 0, NULL,
-    "<property name> <value> - Set a property on the last added element.\n"
-    "Any child property that exists on the previously added element\n"
-    "can be used as <property name>",
+    "<property name> <value>", "Set a property on the last added element."
+    " Any child property that exists on the previously added element"
+    " can be used as <property name>"
+    "By default, set-<property-name> will lookup the property on the last added"
+    "object.",
+    "    ges-launch-1.0 +clip /path/to/media set-alpha 0.3\n\n"
+    "This will set the alpha property on \"media\" then play it back, assuming \"media\""
+    "contains a video stream.\n\n"
+    "    ges-launch-1.0 +clip /path/to/media +effect \"agingtv\" set-dusts false\n\n"
+    "This will set the \"dusts\" property of the agingtv to false and play the\n"
+    "timeline back.",
     {
       {NULL, NULL, 0, NULL, FALSE},
     },
@@ -395,23 +438,55 @@ ges_command_line_formatter_get_help (gint nargs, gchar ** commands)
     }
 
     if (print) {
-      g_string_append_printf (help, "%s%s %s\n",
+      gint j;
+
+      gchar *tmp = g_strdup_printf ("  `%s%s` - %s\n",
           option.properties[0].long_name ? "+" : "",
-          option.long_name, option.description);
+          option.long_name, option.synopsis);
+
+      g_string_append (help, tmp);
+      g_string_append (help, "  ");
+      g_string_append (help, "\n\n  ");
+      g_free (tmp);
+
+      for (j = 0; option.description[j] != '\0'; j++) {
+
+        if (j && (j % 80) == 0) {
+          while (option.description[j] != '\0' && option.description[j] != ' ')
+            g_string_append_c (help, option.description[j++]);
+          g_string_append (help, "\n  ");
+          continue;
+        }
+
+        g_string_append_c (help, option.description[j]);
+      }
+      g_string_append_c (help, '\n');
 
       if (option.properties[0].long_name) {
         gint j;
 
-        g_string_append (help, "  Properties:\n");
+        g_string_append (help, "\n  Properties:\n\n");
 
         for (j = 1; option.properties[j].long_name; j++) {
           Property prop = option.properties[j];
-          g_string_append_printf (help, "    * %s: %s\n", prop.long_name,
+          g_string_append_printf (help, "    * `%s`: %s\n", prop.long_name,
               prop.desc);
         }
       }
+      if (option.examples) {
+        gint j;
+        gchar **examples = g_strsplit (option.examples, "\n", -1);
 
-      g_string_append (help, "\n");
+        g_string_append (help, "\n  Examples:\n\n");
+        for (j = 0; examples[j]; j++) {
+          if (examples[j])
+            g_string_append_printf (help, "    %s", examples[j]);
+          g_string_append_c (help, '\n');
+        }
+        g_strfreev (examples);
+      }
+
+      g_string_append_c (help, '\n');
     }
   }
 

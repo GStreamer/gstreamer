@@ -70,16 +70,15 @@ struct _GESLauncherPrivate
 G_DEFINE_TYPE_WITH_PRIVATE (GESLauncher, ges_launcher, G_TYPE_APPLICATION);
 
 static const gchar *HELP_SUMMARY =
-    "ges-launch-1.0 creates a multimedia timeline and plays it back,\n"
+    "  `ges-launch-1.0` creates a multimedia timeline and plays it back,\n"
     "  or renders it to the specified format.\n\n"
-    " It can load a timeline from an existing project, or create one\n"
-    " from the specified commands.\n\n"
-    " Updating an existing project can be done through --set-scenario\n"
-    " if ges-launch-1.0 has been compiled with gst-validate, see\n"
-    " ges-launch-1.0 --inspect-action-type for the available commands.\n\n"
-    " You can learn more about individual ges-launch-1.0 commands with\n"
-    " \"ges-launch-1.0 help command\".\n\n"
-    " By default, ges-launch-1.0 is in \"playback-mode\".";
+    "  It can load a timeline from an existing project, or create one\n"
+    "  using the 'Timeline description format', specified in the section\n"
+    "  of the same name.\n\n"
+    "  Updating an existing project can be done through `--set-scenario`\n"
+    "  if ges-launch-1.0 has been compiled with gst-validate, see\n"
+    "  `ges-launch-1.0 --inspect-action-type` for the available commands.\n\n"
+    "  By default, ges-launch-1.0 is in \"playback-mode\".";
 
 static gboolean
 _parse_track_type (const gchar * option_name, const gchar * value,
@@ -769,6 +768,8 @@ _local_command_line (GApplication * application, gchar ** arguments[],
   GOptionContext *ctx;
   ParsedOptions *opts = &self->priv->parsed_options;
   GOptionGroup *main_group;
+  gint nargs = 0;
+  gchar **commands = NULL, *help, *tmp;
   GOptionEntry options[] = {
     {"disable-mixing", 0, 0, G_OPTION_ARG_NONE, &opts->disable_mixing,
         "Do not use mixing elements to mix layers together.", NULL},
@@ -795,7 +796,21 @@ _local_command_line (GApplication * application, gchar ** arguments[],
   };
 
   ctx = g_option_context_new ("- plays or renders a timeline.");
-  g_option_context_set_summary (ctx, HELP_SUMMARY);
+  argv = *arguments;
+  argc = g_strv_length (argv);
+
+  if (argc > 2) {
+    nargs = argc - 2;
+    commands = &argv[2];
+  }
+
+  tmp = ges_command_line_formatter_get_help (nargs, commands);
+  help =
+      g_strdup_printf ("%s\n\nTimeline description format:\n\n%s", HELP_SUMMARY,
+      tmp);
+  g_free (tmp);
+  g_option_context_set_summary (ctx, help);
+  g_free (help);
 
   main_group =
       g_option_group_new ("launcher", "launcher options",
@@ -813,8 +828,6 @@ _local_command_line (GApplication * application, gchar ** arguments[],
   g_option_context_add_group (ctx, ges_launcher_get_info_option_group (self));
   g_option_context_set_ignore_unknown_options (ctx, TRUE);
 
-  argv = *arguments;
-  argc = g_strv_length (argv);
   *exit_status = 0;
 
   gst_init (&argc, &argv);

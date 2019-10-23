@@ -21,58 +21,6 @@
 #include <locale.h>             /* for LC_ALL */
 #include "ges-launcher.h"
 
-static void
-_print_all_commands (gint nargs, gchar ** commands)
-{
-  gchar *help;
-
-  if (nargs == 0)
-    g_print ("Available ges-launch-1.0 commands:\n\n");
-
-  help = ges_command_line_formatter_get_help (nargs, commands);
-
-  g_print ("%s", help);
-
-  g_free (help);
-}
-
-static void
-_check_command_help (int argc, gchar ** argv)
-{
-/**
- *   gchar *page = NULL;
- *
- *     if (argc == 2)
- *       page = g_strdup ("ges-launch-1.0");
- *     else if (!g_strcmp0 (argv[2], "all"))
- */
-
-  if (!g_strcmp0 (argv[1], "help")) {
-    gint nargs = 0;
-    gchar **commands = NULL;
-
-    if (argc > 2) {
-      nargs = argc - 2;
-      commands = &argv[2];
-    }
-
-    _print_all_commands (nargs, commands);
-    exit (0);
-  }
-
-/*     else
- *       page = g_strconcat ("ges-launch-1.0", "-", argv[2], NULL);
- *
- *     if (page) {
- *       execlp ("man", "man", page, NULL);
- *       g_free (page);
- *     }
- *
- *     an error is raised by execlp it will be displayed in the terminal
- *     exit (0);
- *   }
- */
-}
 
 int
 main (int argc, gchar ** argv)
@@ -80,7 +28,6 @@ main (int argc, gchar ** argv)
   GESLauncher *launcher;
   gint ret;
 
-  _check_command_help (argc, argv);
   setlocale (LC_ALL, "");
 
   launcher = ges_launcher_new ();
