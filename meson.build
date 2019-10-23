@@ -43,6 +43,14 @@ if not meson.is_subproject() and cc.get_id() == 'msvc'
       endif
     endif
   endif
+
+  # Change some warning which belong to level 3 (production quality) or
+  # 4 (informational) to level 1 (severe)
+  add_global_arguments (
+      '/w14062', # enumerator 'identifier' in switch of enum 'enumeration' is not handled
+      '/w14101', # 'identifier' : unreferenced local variable
+      '/w14189', # 'identifier' : local variable is initialized but not referenced
+      language: 'c')
 endif
 
 # Ordered list of subprojects (dict has no ordering guarantees)
