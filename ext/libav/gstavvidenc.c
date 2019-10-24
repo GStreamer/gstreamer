@@ -932,30 +932,18 @@ gst_ffmpegvidenc_register (GstPlugin * plugin)
       continue;
     }
 
-    if (strstr (in_plugin->name, "vaapi")) {
+    /* Skip hardware or hybrid (hardware with software fallback) */
+    if ((in_plugin->capabilities & AV_CODEC_CAP_HARDWARE) ==
+        AV_CODEC_CAP_HARDWARE) {
       GST_DEBUG
-          ("Ignoring VAAPI encoder %s. We can't handle this outside of ffmpeg",
+          ("Ignoring hardware encoder %s. We can't handle this outside of ffmpeg",
           in_plugin->name);
       continue;
     }
 
-    if (strstr (in_plugin->name, "nvenc")) {
+    if ((in_plugin->capabilities & AV_CODEC_CAP_HYBRID) == AV_CODEC_CAP_HYBRID) {
       GST_DEBUG
-          ("Ignoring nvenc encoder %s. We can't handle this outside of ffmpeg",
-          in_plugin->name);
-      continue;
-    }
-
-    if (g_str_has_suffix (in_plugin->name, "_qsv")) {
-      GST_DEBUG
-          ("Ignoring qsv encoder %s. We can't handle this outside of ffmpeg",
-          in_plugin->name);
-      continue;
-    }
-
-    if (g_str_has_suffix (in_plugin->name, "_v4l2m2m")) {
-      GST_DEBUG
-          ("Ignoring V4L2 mem-to-mem encoder %s. We can't handle this outside of ffmpeg",
+          ("Ignoring hybrid encoder %s. We can't handle this outside of ffmpeg",
           in_plugin->name);
       continue;
     }

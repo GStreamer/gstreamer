@@ -2341,6 +2341,22 @@ gst_ffmpegviddec_register (GstPlugin * plugin)
       continue;
     }
 
+    /* Skip hardware or hybrid (hardware with software fallback) */
+    if ((in_plugin->capabilities & AV_CODEC_CAP_HARDWARE) ==
+        AV_CODEC_CAP_HARDWARE) {
+      GST_DEBUG
+          ("Ignoring hardware decoder %s. We can't handle this outside of ffmpeg",
+          in_plugin->name);
+      continue;
+    }
+
+    if ((in_plugin->capabilities & AV_CODEC_CAP_HYBRID) == AV_CODEC_CAP_HYBRID) {
+      GST_DEBUG
+          ("Ignoring hybrid decoder %s. We can't handle this outside of ffmpeg",
+          in_plugin->name);
+      continue;
+    }
+
     /* No vdpau plugins until we can figure out how to properly use them
      * outside of ffmpeg. */
     if (g_str_has_suffix (in_plugin->name, "_vdpau")) {
@@ -2367,20 +2383,6 @@ gst_ffmpegviddec_register (GstPlugin * plugin)
     if (g_str_has_suffix (in_plugin->name, "_qsv")) {
       GST_DEBUG
           ("Ignoring qsv decoder %s. We can't handle this outside of ffmpeg",
-          in_plugin->name);
-      continue;
-    }
-
-    if (g_str_has_suffix (in_plugin->name, "_cuvid")) {
-      GST_DEBUG
-          ("Ignoring CUVID decoder %s. We can't handle this outside of ffmpeg",
-          in_plugin->name);
-      continue;
-    }
-
-    if (g_str_has_suffix (in_plugin->name, "_v4l2m2m")) {
-      GST_DEBUG
-          ("Ignoring V4L2 mem-to-mem decoder %s. We can't handle this outside of ffmpeg",
           in_plugin->name);
       continue;
     }
