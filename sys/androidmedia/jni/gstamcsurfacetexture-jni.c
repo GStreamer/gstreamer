@@ -30,6 +30,7 @@
 
 struct _GstAmcSurfaceTextureJNI
 {
+  GstAmcSurfaceTexture parent_instance;
   jobject jobject;
   gint texture_id;
 
