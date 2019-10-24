@@ -819,7 +819,7 @@ fn main() {
                 let send_gst_msg_tx = Mutex::new(send_gst_msg_tx);
                 bus.set_sync_handler(move |_, msg| {
                     let _ = send_gst_msg_tx.lock().unwrap().try_send(msg.clone());
-                    gst::BusSyncReply::Pass
+                    gst::BusSyncReply::Drop
                 });
 
                 // Create our application control logic
