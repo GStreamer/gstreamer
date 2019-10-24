@@ -945,6 +945,8 @@ restart:
 
       GST_OBJECT_LOCK (tee);
       /* keep track of which pad we pushed and the result value */
+      if (GST_TEE_PAD_CAST (pad)->removed)
+        ret = GST_FLOW_NOT_LINKED;
       GST_TEE_PAD_CAST (pad)->pushed = TRUE;
       GST_TEE_PAD_CAST (pad)->result = ret;
       gst_object_unref (pad);
