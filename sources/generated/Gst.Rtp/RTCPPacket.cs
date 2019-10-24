@@ -34,7 +34,7 @@ namespace Gst.Rtp {
 			return (Gst.Rtp.RTCPPacket) Marshal.PtrToStructure (raw, typeof (Gst.Rtp.RTCPPacket));
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_add_profile_specific_ext(IntPtr raw, byte[] data, uint len);
 
 		public bool AddProfileSpecificExt(byte[] data, uint len) {
@@ -47,7 +47,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_add_rb(IntPtr raw, uint ssrc, byte fractionlost, int packetslost, uint exthighestseq, uint jitter, uint lsr, uint dlsr);
 
 		public bool AddRb(uint ssrc, byte fractionlost, int packetslost, uint exthighestseq, uint jitter, uint lsr, uint dlsr) {
@@ -60,7 +60,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern byte gst_rtcp_packet_app_get_data(IntPtr raw);
 
 		public byte AppGetData() {
@@ -73,7 +73,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ushort gst_rtcp_packet_app_get_data_length(IntPtr raw);
 
 		public ushort AppGetDataLength() {
@@ -86,7 +86,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_rtcp_packet_app_get_name(IntPtr raw);
 
 		public string AppGetName() {
@@ -99,7 +99,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_rtcp_packet_app_get_ssrc(IntPtr raw);
 
 		public uint AppGetSsrc() {
@@ -112,7 +112,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern byte gst_rtcp_packet_app_get_subtype(IntPtr raw);
 
 		public byte AppGetSubtype() {
@@ -125,7 +125,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_app_set_data_length(IntPtr raw, ushort wordlen);
 
 		public bool AppSetDataLength(ushort wordlen) {
@@ -138,7 +138,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_rtcp_packet_app_set_name(IntPtr raw, IntPtr name);
 
 		public void AppSetName(string name) {
@@ -151,7 +151,7 @@ namespace Gst.Rtp {
 			GLib.Marshaller.Free (native_name);
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_rtcp_packet_app_set_ssrc(IntPtr raw, uint ssrc);
 
 		public void AppSetSsrc(uint ssrc) {
@@ -162,7 +162,7 @@ namespace Gst.Rtp {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_rtcp_packet_app_set_subtype(IntPtr raw, byte subtype);
 
 		public void AppSetSubtype(byte subtype) {
@@ -173,7 +173,7 @@ namespace Gst.Rtp {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_bye_add_ssrc(IntPtr raw, uint ssrc);
 
 		public bool ByeAddSsrc(uint ssrc) {
@@ -186,7 +186,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_bye_add_ssrcs(IntPtr raw, uint[] ssrc, uint len);
 
 		public bool ByeAddSsrcs(uint[] ssrc, uint len) {
@@ -199,7 +199,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_rtcp_packet_bye_get_nth_ssrc(IntPtr raw, uint nth);
 
 		public uint ByeGetNthSsrc(uint nth) {
@@ -212,7 +212,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_rtcp_packet_bye_get_reason(IntPtr raw);
 
 		public string ByeGetReason() {
@@ -225,7 +225,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern byte gst_rtcp_packet_bye_get_reason_len(IntPtr raw);
 
 		public byte ByeGetReasonLen() {
@@ -238,7 +238,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_rtcp_packet_bye_get_ssrc_count(IntPtr raw);
 
 		public uint ByeGetSsrcCount() {
@@ -251,7 +251,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_bye_set_reason(IntPtr raw, IntPtr reason);
 
 		public bool ByeSetReason(string reason) {
@@ -266,7 +266,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_copy_profile_specific_ext(IntPtr raw, out byte data, out uint len);
 
 		public bool CopyProfileSpecificExt(out byte data, out uint len) {
@@ -279,7 +279,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern byte gst_rtcp_packet_fb_get_fci(IntPtr raw);
 
 		public byte FbGetFci() {
@@ -292,7 +292,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ushort gst_rtcp_packet_fb_get_fci_length(IntPtr raw);
 
 		public ushort FbGetFciLength() {
@@ -305,7 +305,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_rtcp_packet_fb_get_media_ssrc(IntPtr raw);
 
 		public uint FbGetMediaSsrc() {
@@ -318,7 +318,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_rtcp_packet_fb_get_sender_ssrc(IntPtr raw);
 
 		public uint FbGetSenderSsrc() {
@@ -331,7 +331,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtcp_packet_fb_get_type(IntPtr raw);
 
 		public Gst.Rtp.RTCPFBType FbGetType() {
@@ -344,7 +344,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_fb_set_fci_length(IntPtr raw, ushort wordlen);
 
 		public bool FbSetFciLength(ushort wordlen) {
@@ -357,7 +357,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_rtcp_packet_fb_set_media_ssrc(IntPtr raw, uint ssrc);
 
 		public void FbSetMediaSsrc(uint ssrc) {
@@ -368,7 +368,7 @@ namespace Gst.Rtp {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_rtcp_packet_fb_set_sender_ssrc(IntPtr raw, uint ssrc);
 
 		public void FbSetSenderSsrc(uint ssrc) {
@@ -379,7 +379,7 @@ namespace Gst.Rtp {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_rtcp_packet_fb_set_type(IntPtr raw, int type);
 
 		public void FbSetType(Gst.Rtp.RTCPFBType type) {
@@ -390,7 +390,7 @@ namespace Gst.Rtp {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_get_profile_specific_ext(IntPtr raw, out byte data, out uint len);
 
 		public bool GetProfileSpecificExt(out byte data, out uint len) {
@@ -403,7 +403,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ushort gst_rtcp_packet_get_profile_specific_ext_length(IntPtr raw);
 
 		public ushort ProfileSpecificExtLength { 
@@ -418,7 +418,7 @@ namespace Gst.Rtp {
 			}
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_rtcp_packet_get_rb(IntPtr raw, uint nth, out uint ssrc, out byte fractionlost, out int packetslost, out uint exthighestseq, out uint jitter, out uint lsr, out uint dlsr);
 
 		public void GetRb(uint nth, out uint ssrc, out byte fractionlost, out int packetslost, out uint exthighestseq, out uint jitter, out uint lsr, out uint dlsr) {
@@ -429,7 +429,7 @@ namespace Gst.Rtp {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_rtcp_packet_get_rb_count(IntPtr raw);
 
 		public uint RbCount { 
@@ -444,7 +444,7 @@ namespace Gst.Rtp {
 			}
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtcp_packet_get_type(IntPtr raw);
 
 		public Gst.Rtp.RTCPType GType { 
@@ -459,7 +459,7 @@ namespace Gst.Rtp {
 			}
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_move_to_next(IntPtr raw);
 
 		public bool MoveToNext() {
@@ -472,7 +472,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_remove(IntPtr raw);
 
 		public bool Remove() {
@@ -485,7 +485,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_rtcp_packet_rr_get_ssrc(IntPtr raw);
 
 		public uint RrGetSsrc() {
@@ -498,7 +498,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_rtcp_packet_rr_set_ssrc(IntPtr raw, uint ssrc);
 
 		public void RrSetSsrc(uint ssrc) {
@@ -509,7 +509,7 @@ namespace Gst.Rtp {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_sdes_add_entry(IntPtr raw, int type, byte len, byte[] data);
 
 		public bool SdesAddEntry(Gst.Rtp.RTCPSDESType type, byte len, byte[] data) {
@@ -522,7 +522,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_sdes_add_item(IntPtr raw, uint ssrc);
 
 		public bool SdesAddItem(uint ssrc) {
@@ -535,7 +535,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_sdes_first_entry(IntPtr raw);
 
 		public bool SdesFirstEntry() {
@@ -548,7 +548,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_sdes_first_item(IntPtr raw);
 
 		public bool SdesFirstItem() {
@@ -561,7 +561,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_rtcp_packet_sdes_get_item_count(IntPtr raw);
 
 		public uint SdesGetItemCount() {
@@ -574,7 +574,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_rtcp_packet_sdes_get_ssrc(IntPtr raw);
 
 		public uint SdesGetSsrc() {
@@ -587,7 +587,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_sdes_next_entry(IntPtr raw);
 
 		public bool SdesNextEntry() {
@@ -600,7 +600,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_sdes_next_item(IntPtr raw);
 
 		public bool SdesNextItem() {
@@ -613,7 +613,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_rtcp_packet_set_rb(IntPtr raw, uint nth, uint ssrc, byte fractionlost, int packetslost, uint exthighestseq, uint jitter, uint lsr, uint dlsr);
 
 		public void SetRb(uint nth, uint ssrc, byte fractionlost, int packetslost, uint exthighestseq, uint jitter, uint lsr, uint dlsr) {
@@ -624,7 +624,7 @@ namespace Gst.Rtp {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_rtcp_packet_sr_get_sender_info(IntPtr raw, out uint ssrc, out ulong ntptime, out uint rtptime, out uint packet_count, out uint octet_count);
 
 		public void SrGetSenderInfo(out uint ssrc, out ulong ntptime, out uint rtptime, out uint packet_count, out uint octet_count) {
@@ -635,7 +635,7 @@ namespace Gst.Rtp {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_rtcp_packet_sr_set_sender_info(IntPtr raw, uint ssrc, ulong ntptime, uint rtptime, uint packet_count, uint octet_count);
 
 		public void SrSetSenderInfo(uint ssrc, ulong ntptime, uint rtptime, uint packet_count, uint octet_count) {
@@ -646,7 +646,7 @@ namespace Gst.Rtp {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_xr_first_rb(IntPtr raw);
 
 		public bool XrFirstRb() {
@@ -659,7 +659,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ushort gst_rtcp_packet_xr_get_block_length(IntPtr raw);
 
 		public ushort XrGetBlockLength() {
@@ -672,7 +672,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtcp_packet_xr_get_block_type(IntPtr raw);
 
 		public Gst.Rtp.RTCPXRType XrGetBlockType() {
@@ -685,7 +685,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_xr_get_dlrr_block(IntPtr raw, uint nth, uint ssrc, uint last_rr, uint delay);
 
 		public bool XrGetDlrrBlock(uint nth, uint ssrc, uint last_rr, uint delay) {
@@ -698,7 +698,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_xr_get_prt_by_seq(IntPtr raw, ushort seq, uint receipt_time);
 
 		public bool XrGetPrtBySeq(ushort seq, uint receipt_time) {
@@ -711,7 +711,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_xr_get_prt_info(IntPtr raw, uint ssrc, byte thinning, ushort begin_seq, ushort end_seq);
 
 		public bool XrGetPrtInfo(uint ssrc, byte thinning, ushort begin_seq, ushort end_seq) {
@@ -724,7 +724,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_xr_get_rle_info(IntPtr raw, uint ssrc, byte thinning, ushort begin_seq, ushort end_seq, uint chunk_count);
 
 		public bool XrGetRleInfo(uint ssrc, byte thinning, ushort begin_seq, ushort end_seq, uint chunk_count) {
@@ -737,7 +737,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_xr_get_rle_nth_chunk(IntPtr raw, uint nth, ushort chunk);
 
 		public bool XrGetRleNthChunk(uint nth, ushort chunk) {
@@ -750,7 +750,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_xr_get_rrt(IntPtr raw, ulong timestamp);
 
 		public bool XrGetRrt(ulong timestamp) {
@@ -763,7 +763,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_rtcp_packet_xr_get_ssrc(IntPtr raw);
 
 		public uint XrGetSsrc() {
@@ -776,7 +776,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_xr_get_summary_info(IntPtr raw, uint ssrc, ushort begin_seq, ushort end_seq);
 
 		public bool XrGetSummaryInfo(uint ssrc, ushort begin_seq, ushort end_seq) {
@@ -789,7 +789,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_xr_get_summary_jitter(IntPtr raw, uint min_jitter, uint max_jitter, uint mean_jitter, uint dev_jitter);
 
 		public bool XrGetSummaryJitter(uint min_jitter, uint max_jitter, uint mean_jitter, uint dev_jitter) {
@@ -802,7 +802,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_xr_get_summary_pkt(IntPtr raw, uint lost_packets, uint dup_packets);
 
 		public bool XrGetSummaryPkt(uint lost_packets, uint dup_packets) {
@@ -815,7 +815,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_xr_get_summary_ttl(IntPtr raw, bool is_ipv4, byte min_ttl, byte max_ttl, byte mean_ttl, byte dev_ttl);
 
 		public bool XrGetSummaryTtl(bool is_ipv4, byte min_ttl, byte max_ttl, byte mean_ttl, byte dev_ttl) {
@@ -828,7 +828,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_xr_get_voip_burst_metrics(IntPtr raw, byte burst_density, byte gap_density, ushort burst_duration, ushort gap_duration);
 
 		public bool XrGetVoipBurstMetrics(byte burst_density, byte gap_density, ushort burst_duration, ushort gap_duration) {
@@ -841,7 +841,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_xr_get_voip_configuration_params(IntPtr raw, byte gmin, byte rx_config);
 
 		public bool XrGetVoipConfigurationParams(byte gmin, byte rx_config) {
@@ -854,7 +854,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_xr_get_voip_delay_metrics(IntPtr raw, ushort roundtrip_delay, ushort end_system_delay);
 
 		public bool XrGetVoipDelayMetrics(ushort roundtrip_delay, ushort end_system_delay) {
@@ -867,7 +867,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_xr_get_voip_jitter_buffer_params(IntPtr raw, ushort jb_nominal, ushort jb_maximum, ushort jb_abs_max);
 
 		public bool XrGetVoipJitterBufferParams(ushort jb_nominal, ushort jb_maximum, ushort jb_abs_max) {
@@ -880,7 +880,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_xr_get_voip_metrics_ssrc(IntPtr raw, uint ssrc);
 
 		public bool XrGetVoipMetricsSsrc(uint ssrc) {
@@ -893,7 +893,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_xr_get_voip_packet_metrics(IntPtr raw, byte loss_rate, byte discard_rate);
 
 		public bool XrGetVoipPacketMetrics(byte loss_rate, byte discard_rate) {
@@ -906,7 +906,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_xr_get_voip_quality_metrics(IntPtr raw, byte r_factor, byte ext_r_factor, byte mos_lq, byte mos_cq);
 
 		public bool XrGetVoipQualityMetrics(byte r_factor, byte ext_r_factor, byte mos_lq, byte mos_cq) {
@@ -919,7 +919,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_xr_get_voip_signal_metrics(IntPtr raw, byte signal_level, byte noise_level, byte rerl, byte gmin);
 
 		public bool XrGetVoipSignalMetrics(byte signal_level, byte noise_level, byte rerl, byte gmin) {
@@ -932,7 +932,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_packet_xr_next_rb(IntPtr raw);
 
 		public bool XrNextRb() {

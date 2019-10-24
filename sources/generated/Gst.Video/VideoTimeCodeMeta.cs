@@ -23,7 +23,7 @@ namespace Gst.Video {
 			return (Gst.Video.VideoTimeCodeMeta) Marshal.PtrToStructure (raw, typeof (Gst.Video.VideoTimeCodeMeta));
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_time_code_meta_get_info();
 
 		public static Gst.MetaInfo Info { 

@@ -33,7 +33,7 @@ namespace Gst {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_tracer_record_get_type();
 
 		public static new GLib.GType GType { 

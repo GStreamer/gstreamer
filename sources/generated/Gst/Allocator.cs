@@ -251,7 +251,7 @@ namespace Gst {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_allocator_get_type();
 
 		public static new GLib.GType GType { 
@@ -262,7 +262,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_allocator_find(IntPtr name);
 
 		public static Gst.Allocator Find(string name) {
@@ -277,7 +277,7 @@ namespace Gst {
 			return Find (null);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_allocator_register(IntPtr name, IntPtr allocator);
 
 		public static void Register(string name, Gst.Allocator allocator) {
@@ -286,7 +286,7 @@ namespace Gst {
 			GLib.Marshaller.Free (native_name);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_allocator_alloc(IntPtr raw, UIntPtr size, IntPtr parms);
 
 		public Gst.Memory Alloc(ulong size, Gst.AllocationParams parms) {
@@ -301,7 +301,7 @@ namespace Gst {
 			return Alloc (size, Gst.AllocationParams.Zero);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_allocator_free(IntPtr raw, IntPtr memory);
 
 		public void Free(Gst.Memory memory) {
@@ -309,7 +309,7 @@ namespace Gst {
 			gst_allocator_free(Handle, memory == null ? IntPtr.Zero : memory.Handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_allocator_set_default(IntPtr raw);
 
 		public void SetDefault() {

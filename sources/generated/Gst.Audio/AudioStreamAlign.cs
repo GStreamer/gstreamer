@@ -21,7 +21,7 @@ namespace Gst.Audio {
 			return (Gst.Audio.AudioStreamAlign) Marshal.PtrToStructure (raw, typeof (Gst.Audio.AudioStreamAlign));
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_audio_stream_align_new(int rate, ulong alignment_threshold, ulong discont_wait);
 
 		public static AudioStreamAlign New(int rate, ulong alignment_threshold, ulong discont_wait)
@@ -30,7 +30,7 @@ namespace Gst.Audio {
 			return result;
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_audio_stream_align_get_type();
 
 		public static GLib.GType GType { 
@@ -41,10 +41,10 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_audio_stream_align_get_alignment_threshold(IntPtr raw);
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_stream_align_set_alignment_threshold(IntPtr raw, ulong alignment_threshold);
 
 		public ulong AlignmentThreshold { 
@@ -66,10 +66,10 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_audio_stream_align_get_discont_wait(IntPtr raw);
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_stream_align_set_discont_wait(IntPtr raw, ulong discont_wait);
 
 		public ulong DiscontWait { 
@@ -91,10 +91,10 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_audio_stream_align_get_rate(IntPtr raw);
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_stream_align_set_rate(IntPtr raw, int rate);
 
 		public int Rate { 
@@ -116,7 +116,7 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_audio_stream_align_get_samples_since_discont(IntPtr raw);
 
 		public ulong SamplesSinceDiscont { 
@@ -131,7 +131,7 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_audio_stream_align_get_timestamp_at_discont(IntPtr raw);
 
 		public ulong TimestampAtDiscont { 
@@ -146,7 +146,7 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_stream_align_mark_discont(IntPtr raw);
 
 		public void MarkDiscont() {
@@ -157,7 +157,7 @@ namespace Gst.Audio {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_audio_stream_align_process(IntPtr raw, bool discont, ulong timestamp, uint n_samples, out ulong out_timestamp, out ulong out_duration, out ulong out_sample_position);
 
 		public bool Process(bool discont, ulong timestamp, uint n_samples, out ulong out_timestamp, out ulong out_duration, out ulong out_sample_position) {

@@ -312,7 +312,7 @@ namespace Gst.WebRTC {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_webrtc_ice_transport_get_type();
 
 		public static new GLib.GType GType { 
@@ -323,21 +323,21 @@ namespace Gst.WebRTC {
 			}
 		}
 
-		[DllImport("libgstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_webrtc_ice_transport_connection_state_change(IntPtr raw, int new_state);
 
 		public void ConnectionStateChange(Gst.WebRTC.WebRTCICEConnectionState new_state) {
 			gst_webrtc_ice_transport_connection_state_change(Handle, (int) new_state);
 		}
 
-		[DllImport("libgstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_webrtc_ice_transport_gathering_state_change(IntPtr raw, int new_state);
 
 		public void GatheringStateChange(Gst.WebRTC.WebRTCICEGatheringState new_state) {
 			gst_webrtc_ice_transport_gathering_state_change(Handle, (int) new_state);
 		}
 
-		[DllImport("libgstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_webrtc_ice_transport_new_candidate(IntPtr raw, uint stream_id, int component, IntPtr attr);
 
 		public void NewCandidate(uint stream_id, Gst.WebRTC.WebRTCICEComponent component, string attr) {
@@ -346,7 +346,7 @@ namespace Gst.WebRTC {
 			GLib.Marshaller.Free (native_attr);
 		}
 
-		[DllImport("libgstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_webrtc_ice_transport_selected_pair_change(IntPtr raw);
 
 		public void SelectedPairChange() {

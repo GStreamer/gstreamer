@@ -216,7 +216,7 @@ namespace Gst {
 			implementor = GLib.Object.GetObject (handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_preset_get_type();
 
 		private static GLib.GType _gtype = new GLib.GType (gst_preset_get_type ());
@@ -269,7 +269,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_preset_get_app_dir();
 
 		public static string AppDir { 
@@ -280,7 +280,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_preset_set_app_dir(IntPtr app_dir);
 
 		public static bool SetAppDir(string app_dir) {
@@ -291,7 +291,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_preset_delete_preset(IntPtr raw, IntPtr name);
 
 		public bool DeletePreset(string name) {
@@ -302,7 +302,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_preset_get_meta(IntPtr raw, IntPtr name, IntPtr tag, out IntPtr value);
 
 		public bool GetMeta(string name, string tag, out string value) {
@@ -317,7 +317,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_preset_get_preset_names(IntPtr raw);
 
 		public string[] PresetNames { 
@@ -328,7 +328,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_preset_get_property_names(IntPtr raw);
 
 		public string[] PropertyNames { 
@@ -339,7 +339,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_preset_is_editable(IntPtr raw);
 
 		public bool IsEditable { 
@@ -350,7 +350,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_preset_load_preset(IntPtr raw, IntPtr name);
 
 		public bool LoadPreset(string name) {
@@ -361,7 +361,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_preset_rename_preset(IntPtr raw, IntPtr old_name, IntPtr new_name);
 
 		public bool RenamePreset(string old_name, string new_name) {
@@ -374,7 +374,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_preset_save_preset(IntPtr raw, IntPtr name);
 
 		public bool SavePreset(string name) {
@@ -385,7 +385,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_preset_set_meta(IntPtr raw, IntPtr name, IntPtr tag, IntPtr value);
 
 		public bool SetMeta(string name, string tag, string value) {

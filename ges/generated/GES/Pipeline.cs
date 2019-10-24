@@ -246,35 +246,35 @@ namespace GES {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_video_overlay_expose(IntPtr raw);
 
 		public void Expose() {
 			gst_video_overlay_expose(Handle);
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_video_overlay_got_window_handle(IntPtr raw, IntPtr handle);
 
 		public void GotWindowHandle(IntPtr handle) {
 			gst_video_overlay_got_window_handle(Handle, handle);
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_video_overlay_handle_events(IntPtr raw, bool handle_events);
 
 		public void HandleEvents(bool handle_events) {
 			gst_video_overlay_handle_events(Handle, handle_events);
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_video_overlay_prepare_window_handle(IntPtr raw);
 
 		public void PrepareWindowHandle() {
 			gst_video_overlay_prepare_window_handle(Handle);
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_overlay_set_render_rectangle(IntPtr raw, int x, int y, int width, int height);
 
 		public bool SetRenderRectangle(int x, int y, int width, int height) {
@@ -283,7 +283,7 @@ namespace GES {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_video_overlay_set_window_handle(IntPtr raw, IntPtr handle);
 
 		public IntPtr WindowHandle { 

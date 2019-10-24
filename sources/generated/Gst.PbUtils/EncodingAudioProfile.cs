@@ -13,7 +13,7 @@ namespace Gst.PbUtils {
 
 		public EncodingAudioProfile (IntPtr raw) : base(raw) {}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_encoding_audio_profile_new(IntPtr format, IntPtr preset, IntPtr restriction, uint presence);
 
 		public EncodingAudioProfile (Gst.Caps format, string preset, Gst.Caps restriction, uint presence) : base (IntPtr.Zero)
@@ -44,7 +44,7 @@ namespace Gst.PbUtils {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_encoding_audio_profile_get_type();
 
 		public static new GLib.GType GType { 

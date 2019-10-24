@@ -34,7 +34,7 @@ namespace Gst {
 			return (Gst.Segment) Marshal.PtrToStructure (raw, typeof (Gst.Segment));
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_segment_new();
 
 		public static Segment New()
@@ -43,7 +43,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_segment_get_type();
 
 		public static GLib.GType GType { 
@@ -54,7 +54,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_segment_clip(IntPtr raw, int format, ulong start, ulong stop, out ulong clip_start, out ulong clip_stop);
 
 		public bool Clip(Gst.Format format, ulong start, ulong stop, out ulong clip_start, out ulong clip_stop) {
@@ -67,7 +67,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_segment_copy_into(IntPtr raw, IntPtr dest);
 
 		public void CopyInto(Gst.Segment dest) {
@@ -80,7 +80,7 @@ namespace Gst {
 			Marshal.FreeHGlobal (native_dest);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_segment_do_seek(IntPtr raw, double rate, int format, int flags, int start_type, ulong start, int stop_type, ulong stop, out bool update);
 
 		public bool DoSeek(double rate, Gst.Format format, Gst.SeekFlags flags, Gst.SeekType start_type, ulong start, Gst.SeekType stop_type, ulong stop, out bool update) {
@@ -93,7 +93,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_segment_init(IntPtr raw, int format);
 
 		public void Init(Gst.Format format) {
@@ -104,7 +104,7 @@ namespace Gst {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_segment_is_equal(IntPtr raw, IntPtr s1);
 
 		public bool IsEqual(Gst.Segment s1) {
@@ -119,7 +119,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_segment_offset_running_time(IntPtr raw, int format, long offset);
 
 		public bool OffsetRunningTime(Gst.Format format, long offset) {
@@ -132,7 +132,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_segment_position_from_running_time(IntPtr raw, int format, ulong running_time);
 
 		public ulong PositionFromRunningTime(Gst.Format format, ulong running_time) {
@@ -145,7 +145,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_segment_position_from_running_time_full(IntPtr raw, int format, ulong running_time, out ulong position);
 
 		public int PositionFromRunningTimeFull(Gst.Format format, ulong running_time, out ulong position) {
@@ -158,7 +158,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_segment_position_from_stream_time(IntPtr raw, int format, ulong stream_time);
 
 		public ulong PositionFromStreamTime(Gst.Format format, ulong stream_time) {
@@ -171,7 +171,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_segment_position_from_stream_time_full(IntPtr raw, int format, ulong stream_time, out ulong position);
 
 		public int PositionFromStreamTimeFull(Gst.Format format, ulong stream_time, out ulong position) {
@@ -184,7 +184,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_segment_set_running_time(IntPtr raw, int format, ulong running_time);
 
 		public bool SetRunningTime(Gst.Format format, ulong running_time) {
@@ -197,7 +197,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_segment_to_position(IntPtr raw, int format, ulong running_time);
 
 		[Obsolete]
@@ -211,7 +211,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_segment_to_running_time(IntPtr raw, int format, ulong position);
 
 		public ulong ToRunningTime(Gst.Format format, ulong position) {
@@ -224,7 +224,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_segment_to_running_time_full(IntPtr raw, int format, ulong position, out ulong running_time);
 
 		public int ToRunningTimeFull(Gst.Format format, ulong position, out ulong running_time) {
@@ -237,7 +237,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_segment_to_stream_time(IntPtr raw, int format, ulong position);
 
 		public ulong ToStreamTime(Gst.Format format, ulong position) {
@@ -250,7 +250,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_segment_to_stream_time_full(IntPtr raw, int format, ulong position, out ulong stream_time);
 
 		public int ToStreamTimeFull(Gst.Format format, ulong position, out ulong stream_time) {

@@ -13,7 +13,7 @@ namespace Gst.Net {
 
 		public PtpClock (IntPtr raw) : base(raw) {}
 
-		[DllImport("libgstnet-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstnet-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_ptp_clock_new(IntPtr name, uint domain);
 
 		public PtpClock (string name, uint domain) : base (IntPtr.Zero)
@@ -97,7 +97,7 @@ namespace Gst.Net {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstnet-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstnet-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_ptp_clock_get_type();
 
 		public static new GLib.GType GType { 

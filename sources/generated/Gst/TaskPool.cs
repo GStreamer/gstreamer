@@ -13,7 +13,7 @@ namespace Gst {
 
 		public TaskPool (IntPtr raw) : base(raw) {}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_task_pool_new();
 
 		public TaskPool () : base (IntPtr.Zero)
@@ -309,7 +309,7 @@ namespace Gst {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_task_pool_get_type();
 
 		public static new GLib.GType GType { 
@@ -320,14 +320,14 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_task_pool_cleanup(IntPtr raw);
 
 		public void Cleanup() {
 			gst_task_pool_cleanup(Handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_task_pool_join(IntPtr raw, IntPtr id);
 
 		public void Join(IntPtr id) {
@@ -338,7 +338,7 @@ namespace Gst {
 			Join (IntPtr.Zero);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern unsafe void gst_task_pool_prepare(IntPtr raw, out IntPtr error);
 
 		public unsafe void Prepare() {
@@ -347,7 +347,7 @@ namespace Gst {
 			if (error != IntPtr.Zero) throw new GLib.GException (error);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern unsafe IntPtr gst_task_pool_push(IntPtr raw, GstSharp.TaskPoolFunctionNative func, IntPtr user_data, out IntPtr error);
 
 		public unsafe IntPtr Push(Gst.TaskPoolFunction func) {

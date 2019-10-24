@@ -21,7 +21,7 @@ namespace Gst.Base {
 			return (Gst.Base.FlowCombiner) Marshal.PtrToStructure (raw, typeof (Gst.Base.FlowCombiner));
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_flow_combiner_new();
 
 		public static FlowCombiner New()
@@ -30,7 +30,7 @@ namespace Gst.Base {
 			return result;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_flow_combiner_get_type();
 
 		public static GLib.GType GType { 
@@ -41,7 +41,7 @@ namespace Gst.Base {
 			}
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_flow_combiner_add_pad(IntPtr raw, IntPtr pad);
 
 		public void AddPad(Gst.Pad pad) {
@@ -52,7 +52,7 @@ namespace Gst.Base {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_flow_combiner_clear(IntPtr raw);
 
 		public void Clear() {
@@ -63,7 +63,7 @@ namespace Gst.Base {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_flow_combiner_ref(IntPtr raw);
 
 		public Gst.Base.FlowCombiner Ref() {
@@ -76,7 +76,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_flow_combiner_remove_pad(IntPtr raw, IntPtr pad);
 
 		public void RemovePad(Gst.Pad pad) {
@@ -87,7 +87,7 @@ namespace Gst.Base {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_flow_combiner_reset(IntPtr raw);
 
 		public void Reset() {
@@ -98,7 +98,7 @@ namespace Gst.Base {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_flow_combiner_unref(IntPtr raw);
 
 		public void Unref() {
@@ -109,7 +109,7 @@ namespace Gst.Base {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_flow_combiner_update_flow(IntPtr raw, int fret);
 
 		public Gst.FlowReturn UpdateFlow(Gst.FlowReturn fret) {
@@ -122,7 +122,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_flow_combiner_update_pad_flow(IntPtr raw, IntPtr pad, int fret);
 
 		public Gst.FlowReturn UpdatePadFlow(Gst.Pad pad, Gst.FlowReturn fret) {

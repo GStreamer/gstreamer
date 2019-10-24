@@ -116,7 +116,7 @@ namespace Gst {
 			implementor = GLib.Object.GetObject (handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_child_proxy_get_type();
 
 		private static GLib.GType _gtype = new GLib.GType (gst_child_proxy_get_type ());
@@ -189,7 +189,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_child_proxy_child_added(IntPtr raw, IntPtr child, IntPtr name);
 
 		public void ChildAdded(GLib.Object child, string name) {
@@ -198,7 +198,7 @@ namespace Gst {
 			GLib.Marshaller.Free (native_name);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_child_proxy_child_removed(IntPtr raw, IntPtr child, IntPtr name);
 
 		public void ChildRemoved(GLib.Object child, string name) {
@@ -207,7 +207,7 @@ namespace Gst {
 			GLib.Marshaller.Free (native_name);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_child_proxy_get_child_by_index(IntPtr raw, uint index);
 
 		public GLib.Object GetChildByIndex(uint index) {
@@ -216,7 +216,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_child_proxy_get_child_by_name(IntPtr raw, IntPtr name);
 
 		public GLib.Object GetChildByName(string name) {
@@ -227,7 +227,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_child_proxy_get_children_count(IntPtr raw);
 
 		public uint ChildrenCount { 
@@ -238,7 +238,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_child_proxy_lookup(IntPtr raw, IntPtr name, out IntPtr target, out IntPtr pspec);
 
 		public bool Lookup(string name, out GLib.Object target, out IntPtr pspec) {

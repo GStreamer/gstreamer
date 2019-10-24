@@ -131,7 +131,7 @@ namespace Gst.Video {
 			implementor = GLib.Object.GetObject (handle);
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_color_balance_get_type();
 
 		private static GLib.GType _gtype = new GLib.GType (gst_color_balance_get_type ());
@@ -194,7 +194,7 @@ namespace Gst.Video {
 			}
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_color_balance_get_balance_type(IntPtr raw);
 
 		public Gst.Video.ColorBalanceType BalanceType { 
@@ -205,7 +205,7 @@ namespace Gst.Video {
 			}
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_color_balance_get_value(IntPtr raw, IntPtr channel);
 
 		public int GetValue(Gst.Video.ColorBalanceChannel channel) {
@@ -214,7 +214,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_color_balance_list_channels(IntPtr raw);
 
 		public Gst.Video.ColorBalanceChannel[] ListChannels() {
@@ -223,14 +223,14 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_color_balance_set_value(IntPtr raw, IntPtr channel, int value);
 
 		public void SetValue(Gst.Video.ColorBalanceChannel channel, int value) {
 			gst_color_balance_set_value(Handle, channel == null ? IntPtr.Zero : channel.Handle, value);
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_color_balance_value_changed(IntPtr raw, IntPtr channel, int value);
 
 		public void ValueChanged(Gst.Video.ColorBalanceChannel channel, int value) {

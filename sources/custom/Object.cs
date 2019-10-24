@@ -48,7 +48,7 @@ namespace Gst {
 	{
 		private Dictionary <string, bool> PropertyNameCache = new Dictionary<string, bool> ();
 
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_object_class_find_property (IntPtr klass, IntPtr name);
 
 		bool PropertyExists (string name) {

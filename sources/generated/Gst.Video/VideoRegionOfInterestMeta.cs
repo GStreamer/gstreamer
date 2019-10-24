@@ -30,7 +30,7 @@ namespace Gst.Video {
 			return (Gst.Video.VideoRegionOfInterestMeta) Marshal.PtrToStructure (raw, typeof (Gst.Video.VideoRegionOfInterestMeta));
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_video_region_of_interest_meta_add_param(IntPtr raw, IntPtr s);
 
 		public void AddParam(Gst.Structure s) {
@@ -42,7 +42,7 @@ namespace Gst.Video {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_region_of_interest_meta_get_param(IntPtr raw, IntPtr name);
 
 		public Gst.Structure GetParam(string name) {
@@ -57,7 +57,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_region_of_interest_meta_get_info();
 
 		public static Gst.MetaInfo Info { 

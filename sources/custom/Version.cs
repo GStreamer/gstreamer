@@ -75,10 +75,10 @@ namespace Gst
 			}
 		}
 
-		[DllImport ("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		private static extern void gst_version (out uint major, out uint minor, out uint micro, out uint nano);
 
-		[DllImport ("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		private static extern IntPtr gst_version_string ();
 	}
 }

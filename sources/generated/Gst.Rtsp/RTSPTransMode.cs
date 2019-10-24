@@ -17,7 +17,7 @@ namespace Gst.Rtsp {
 	}
 
 	internal class RTSPTransModeGType {
-		[DllImport ("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_rtsp_trans_mode_get_type ();
 
 		public static GLib.GType GType {

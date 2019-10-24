@@ -273,7 +273,7 @@ namespace Gst.Video {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_filter_get_type();
 
 		public static new GLib.GType GType { 

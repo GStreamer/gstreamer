@@ -17,7 +17,7 @@ namespace Gst {
 	}
 
 	internal class TracerValueScopeGType {
-		[DllImport ("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_tracer_value_scope_get_type ();
 
 		public static GLib.GType GType {

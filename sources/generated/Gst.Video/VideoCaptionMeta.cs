@@ -34,7 +34,7 @@ namespace Gst.Video {
 			return (Gst.Video.VideoCaptionMeta) Marshal.PtrToStructure (raw, typeof (Gst.Video.VideoCaptionMeta));
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_caption_meta_get_info();
 
 		public static Gst.MetaInfo Info { 

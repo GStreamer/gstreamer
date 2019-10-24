@@ -25,7 +25,7 @@ namespace Gst.Video {
 			return (Gst.Video.VideoColorimetry) Marshal.PtrToStructure (raw, typeof (Gst.Video.VideoColorimetry));
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_colorimetry_from_string(IntPtr raw, IntPtr color);
 
 		public bool FromString(string color) {
@@ -40,7 +40,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_colorimetry_is_equal(IntPtr raw, IntPtr other);
 
 		public bool IsEqual(Gst.Video.VideoColorimetry other) {
@@ -55,7 +55,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_colorimetry_matches(IntPtr raw, IntPtr color);
 
 		public bool Matches(string color) {
@@ -70,7 +70,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_colorimetry_to_string(IntPtr raw);
 
 		public override string ToString() {

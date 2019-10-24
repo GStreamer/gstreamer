@@ -56,7 +56,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_control_binding_set_disabled(IntPtr raw, bool disabled);
 
 		public bool Disabled {
@@ -237,7 +237,7 @@ namespace Gst {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_control_binding_get_type();
 
 		public static new GLib.GType GType { 
@@ -248,7 +248,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_control_binding_get_g_value_array(IntPtr raw, ulong timestamp, ulong interval, uint n_values, IntPtr[] values);
 
 		public bool GetGValueArray(ulong timestamp, ulong interval, GLib.Value[] values) {
@@ -265,7 +265,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_control_binding_get_value(IntPtr raw, ulong timestamp);
 
 		public GLib.Value GetValue(ulong timestamp) {
@@ -274,7 +274,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_control_binding_is_disabled(IntPtr raw);
 
 		public bool IsDisabled { 
@@ -285,7 +285,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_control_binding_sync_values(IntPtr raw, IntPtr _object, ulong timestamp, ulong last_sync);
 
 		public bool SyncValues(Gst.Object _object, ulong timestamp, ulong last_sync) {

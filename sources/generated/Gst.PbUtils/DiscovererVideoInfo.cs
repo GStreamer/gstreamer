@@ -18,7 +18,7 @@ namespace Gst.PbUtils {
 			CreateNativeObject (new string [0], new GLib.Value [0]);
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_discoverer_video_info_get_type();
 
 		public static new GLib.GType GType { 
@@ -29,7 +29,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_discoverer_video_info_get_bitrate(IntPtr raw);
 
 		public uint Bitrate { 
@@ -40,7 +40,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_discoverer_video_info_get_depth(IntPtr raw);
 
 		public uint Depth { 
@@ -51,7 +51,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_discoverer_video_info_get_framerate_denom(IntPtr raw);
 
 		public uint FramerateDenom { 
@@ -62,7 +62,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_discoverer_video_info_get_framerate_num(IntPtr raw);
 
 		public uint FramerateNum { 
@@ -73,7 +73,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_discoverer_video_info_get_height(IntPtr raw);
 
 		public uint Height { 
@@ -84,7 +84,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_discoverer_video_info_get_max_bitrate(IntPtr raw);
 
 		public uint MaxBitrate { 
@@ -95,7 +95,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_discoverer_video_info_get_par_denom(IntPtr raw);
 
 		public uint ParDenom { 
@@ -106,7 +106,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_discoverer_video_info_get_par_num(IntPtr raw);
 
 		public uint ParNum { 
@@ -117,7 +117,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_discoverer_video_info_get_width(IntPtr raw);
 
 		public uint Width { 
@@ -128,7 +128,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_discoverer_video_info_is_image(IntPtr raw);
 
 		public bool IsImage { 
@@ -139,7 +139,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_discoverer_video_info_is_interlaced(IntPtr raw);
 
 		public bool IsInterlaced { 

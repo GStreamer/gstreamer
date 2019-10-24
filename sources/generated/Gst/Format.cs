@@ -19,7 +19,7 @@ namespace Gst {
 	}
 
 	internal class FormatGType {
-		[DllImport ("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_format_get_type ();
 
 		public static GLib.GType GType {

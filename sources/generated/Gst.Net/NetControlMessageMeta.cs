@@ -31,7 +31,7 @@ namespace Gst.Net {
 			return (Gst.Net.NetControlMessageMeta) Marshal.PtrToStructure (raw, typeof (Gst.Net.NetControlMessageMeta));
 		}
 
-		[DllImport("libgstnet-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstnet-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_net_control_message_meta_get_info();
 
 		public static Gst.MetaInfo Info { 

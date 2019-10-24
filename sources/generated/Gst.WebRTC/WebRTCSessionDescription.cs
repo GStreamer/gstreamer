@@ -31,7 +31,7 @@ namespace Gst.WebRTC {
 			return (Gst.WebRTC.WebRTCSessionDescription) Marshal.PtrToStructure (raw, typeof (Gst.WebRTC.WebRTCSessionDescription));
 		}
 
-		[DllImport("libgstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_webrtc_session_description_new(int type, IntPtr sdp);
 
 		public static WebRTCSessionDescription New(Gst.WebRTC.WebRTCSDPType type, Gst.Sdp.SDPMessage sdp)
@@ -41,7 +41,7 @@ namespace Gst.WebRTC {
 			return result;
 		}
 
-		[DllImport("libgstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_webrtc_session_description_get_type();
 
 		public static GLib.GType GType { 

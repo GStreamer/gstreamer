@@ -19,7 +19,7 @@ namespace Gst.Rtsp {
 	}
 
 	internal class RTSPMsgTypeGType {
-		[DllImport ("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_rtsp_msg_type_get_type ();
 
 		public static GLib.GType GType {

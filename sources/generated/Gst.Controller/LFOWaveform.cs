@@ -18,7 +18,7 @@ namespace Gst.Controller {
 	}
 
 	internal class LFOWaveformGType {
-		[DllImport ("libgstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_lfo_waveform_get_type ();
 
 		public static GLib.GType GType {

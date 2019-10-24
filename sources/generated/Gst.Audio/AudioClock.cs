@@ -13,7 +13,7 @@ namespace Gst.Audio {
 
 		public AudioClock (IntPtr raw) : base(raw) {}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_audio_clock_new(IntPtr name, Gst.AudioSharp.AudioClockGetTimeFuncNative func, IntPtr user_data, GLib.DestroyNotify destroy_notify);
 
 		public AudioClock (string name, Gst.Audio.AudioClockGetTimeFunc func, IntPtr user_data, GLib.DestroyNotify destroy_notify) : base (IntPtr.Zero)
@@ -75,7 +75,7 @@ namespace Gst.Audio {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_audio_clock_get_type();
 
 		public static new GLib.GType GType { 
@@ -86,7 +86,7 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_audio_clock_adjust(IntPtr raw, ulong time);
 
 		public ulong Adjust(ulong time) {
@@ -95,7 +95,7 @@ namespace Gst.Audio {
 			return ret;
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_audio_clock_get_time(IntPtr raw);
 
 		public new ulong Time { 
@@ -106,14 +106,14 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_clock_invalidate(IntPtr raw);
 
 		public void Invalidate() {
 			gst_audio_clock_invalidate(Handle);
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_clock_reset(IntPtr raw, ulong time);
 
 		public void Reset(ulong time) {

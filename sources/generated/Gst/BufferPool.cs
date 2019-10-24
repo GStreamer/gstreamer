@@ -13,7 +13,7 @@ namespace Gst {
 
 		public BufferPool (IntPtr raw) : base(raw) {}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_pool_new();
 
 		public BufferPool () : base (IntPtr.Zero)
@@ -25,7 +25,7 @@ namespace Gst {
 			Raw = gst_buffer_pool_new();
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_buffer_pool_set_flushing(IntPtr raw, bool flushing);
 
 		public bool Flushing {
@@ -775,7 +775,7 @@ namespace Gst {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_pool_get_type();
 
 		public static new GLib.GType GType { 
@@ -786,7 +786,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_buffer_pool_config_add_option(IntPtr config, IntPtr option);
 
 		public static void ConfigAddOption(Gst.Structure config, string option) {
@@ -795,7 +795,7 @@ namespace Gst {
 			GLib.Marshaller.Free (native_option);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_buffer_pool_config_get_allocator(IntPtr config, out IntPtr allocator, IntPtr parms);
 
 		public static bool ConfigGetAllocator(Gst.Structure config, out Gst.Allocator allocator, out Gst.AllocationParams parms) {
@@ -809,7 +809,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_pool_config_get_option(IntPtr config, uint index);
 
 		public static string ConfigGetOption(Gst.Structure config, uint index) {
@@ -818,7 +818,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_buffer_pool_config_get_params(IntPtr config, out IntPtr caps, out uint size, out uint min_buffers, out uint max_buffers);
 
 		public static bool ConfigGetParams(Gst.Structure config, out Gst.Caps caps, out uint size, out uint min_buffers, out uint max_buffers) {
@@ -829,7 +829,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_buffer_pool_config_has_option(IntPtr config, IntPtr option);
 
 		public static bool ConfigHasOption(Gst.Structure config, string option) {
@@ -840,7 +840,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_buffer_pool_config_n_options(IntPtr config);
 
 		public static uint ConfigNOptions(Gst.Structure config) {
@@ -849,7 +849,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_buffer_pool_config_set_allocator(IntPtr config, IntPtr allocator, IntPtr parms);
 
 		public static void ConfigSetAllocator(Gst.Structure config, Gst.Allocator allocator, Gst.AllocationParams parms) {
@@ -862,14 +862,14 @@ namespace Gst {
 			ConfigSetAllocator (config, null, Gst.AllocationParams.Zero);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_buffer_pool_config_set_params(IntPtr config, IntPtr caps, uint size, uint min_buffers, uint max_buffers);
 
 		public static void ConfigSetParams(Gst.Structure config, Gst.Caps caps, uint size, uint min_buffers, uint max_buffers) {
 			gst_buffer_pool_config_set_params(config == null ? IntPtr.Zero : config.Handle, caps == null ? IntPtr.Zero : caps.Handle, size, min_buffers, max_buffers);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_buffer_pool_config_validate_params(IntPtr config, IntPtr caps, uint size, uint min_buffers, uint max_buffers);
 
 		public static bool ConfigValidateParams(Gst.Structure config, Gst.Caps caps, uint size, uint min_buffers, uint max_buffers) {
@@ -878,7 +878,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_buffer_pool_acquire_buffer(IntPtr raw, out IntPtr buffer, IntPtr parms);
 
 		public Gst.FlowReturn AcquireBuffer(out Gst.Buffer buffer, Gst.BufferPoolAcquireParams parms) {
@@ -895,7 +895,7 @@ namespace Gst {
 			return AcquireBuffer (out buffer, Gst.BufferPoolAcquireParams.Zero);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_pool_get_config(IntPtr raw);
 
 		public Gst.Structure Config { 
@@ -906,7 +906,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_pool_get_options(IntPtr raw);
 
 		public string[] Options { 
@@ -917,7 +917,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_buffer_pool_has_option(IntPtr raw, IntPtr option);
 
 		public bool HasOption(string option) {
@@ -928,7 +928,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_buffer_pool_is_active(IntPtr raw);
 
 		public bool IsActive { 
@@ -939,7 +939,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_buffer_pool_release_buffer(IntPtr raw, IntPtr buffer);
 
 		public void ReleaseBuffer(Gst.Buffer buffer) {
@@ -947,7 +947,7 @@ namespace Gst {
 			gst_buffer_pool_release_buffer(Handle, buffer == null ? IntPtr.Zero : buffer.Handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_buffer_pool_set_active(IntPtr raw, bool active);
 
 		public bool SetActive(bool active) {
@@ -956,7 +956,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_buffer_pool_set_config(IntPtr raw, IntPtr config);
 
 		public bool SetConfig(Gst.Structure config) {

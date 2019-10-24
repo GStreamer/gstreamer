@@ -41,10 +41,10 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_event_get_seqnum(IntPtr raw);
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_event_set_seqnum(IntPtr raw, uint seqnum);
 
 		public uint Seqnum {
@@ -58,7 +58,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_event_get_type();
 
 		public static GLib.GType GType { 
@@ -69,7 +69,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_event_copy_segment(IntPtr raw, IntPtr segment);
 
 		public void CopySegment(Gst.Segment segment) {
@@ -78,10 +78,10 @@ namespace Gst {
 			Marshal.FreeHGlobal (native_segment);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern long gst_event_get_running_time_offset(IntPtr raw);
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_event_set_running_time_offset(IntPtr raw, long offset);
 
 		public long RunningTimeOffset { 
@@ -95,7 +95,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_event_get_structure(IntPtr raw);
 
 		public Gst.Structure Structure { 
@@ -106,7 +106,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_event_has_name(IntPtr raw, IntPtr name);
 
 		public bool HasName(string name) {
@@ -117,7 +117,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_event_parse_buffer_size(IntPtr raw, out int format, out long minsize, out long maxsize, out bool async);
 
 		public void ParseBufferSize(out Gst.Format format, out long minsize, out long maxsize, out bool async) {
@@ -126,7 +126,7 @@ namespace Gst {
 			format = (Gst.Format) native_format;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_event_parse_caps(IntPtr raw, out IntPtr caps);
 
 		public Gst.Caps ParseCaps() {
@@ -137,7 +137,7 @@ namespace Gst {
 			return caps;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_event_parse_flush_stop(IntPtr raw, out bool reset_time);
 
 		public bool ParseFlushStop() {
@@ -146,14 +146,14 @@ namespace Gst {
 			return reset_time;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_event_parse_gap(IntPtr raw, out ulong timestamp, out ulong duration);
 
 		public void ParseGap(out ulong timestamp, out ulong duration) {
 			gst_event_parse_gap(Handle, out timestamp, out duration);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_event_parse_group_id(IntPtr raw, out uint group_id);
 
 		public bool ParseGroupId(out uint group_id) {
@@ -162,7 +162,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_event_parse_latency(IntPtr raw, out ulong latency);
 
 		public ulong ParseLatency() {
@@ -171,7 +171,7 @@ namespace Gst {
 			return latency;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_event_parse_protection(IntPtr raw, out IntPtr system_id, out IntPtr data, out IntPtr origin);
 
 		public void ParseProtection(out string system_id, out Gst.Buffer data, out string origin) {
@@ -184,7 +184,7 @@ namespace Gst {
 			origin = GLib.Marshaller.Utf8PtrToString (native_origin);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_event_parse_qos(IntPtr raw, out int type, out double proportion, out long diff, out ulong timestamp);
 
 		public void ParseQos(out Gst.QOSType type, out double proportion, out long diff, out ulong timestamp) {
@@ -193,7 +193,7 @@ namespace Gst {
 			type = (Gst.QOSType) native_type;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_event_parse_seek(IntPtr raw, out double rate, out int format, out int flags, out int start_type, out long start, out int stop_type, out long stop);
 
 		public void ParseSeek(out double rate, out Gst.Format format, out Gst.SeekFlags flags, out Gst.SeekType start_type, out long start, out Gst.SeekType stop_type, out long stop) {
@@ -208,7 +208,7 @@ namespace Gst {
 			stop_type = (Gst.SeekType) native_stop_type;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_event_parse_seek_trickmode_interval(IntPtr raw, out ulong interval);
 
 		public ulong ParseSeekTrickmodeInterval() {
@@ -217,7 +217,7 @@ namespace Gst {
 			return interval;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_event_parse_segment(IntPtr raw, IntPtr segment);
 
 		public Gst.Segment ParseSegment() {
@@ -229,7 +229,7 @@ namespace Gst {
 			return segment;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_event_parse_segment_done(IntPtr raw, out int format, out long position);
 
 		public void ParseSegmentDone(out Gst.Format format, out long position) {
@@ -238,7 +238,7 @@ namespace Gst {
 			format = (Gst.Format) native_format;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_event_parse_select_streams(IntPtr raw, out IntPtr streams);
 
 		public GLib.List ParseSelectStreams() {
@@ -249,7 +249,7 @@ namespace Gst {
 			return streams;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_event_parse_sink_message(IntPtr raw, out IntPtr msg);
 
 		public Gst.Message ParseSinkMessage() {
@@ -260,7 +260,7 @@ namespace Gst {
 			return msg;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_event_parse_step(IntPtr raw, out int format, out ulong amount, out double rate, out bool flush, out bool intermediate);
 
 		public void ParseStep(out Gst.Format format, out ulong amount, out double rate, out bool flush, out bool intermediate) {
@@ -269,7 +269,7 @@ namespace Gst {
 			format = (Gst.Format) native_format;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_event_parse_stream(IntPtr raw, out IntPtr stream);
 
 		public Gst.Stream ParseStream() {
@@ -280,7 +280,7 @@ namespace Gst {
 			return stream;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_event_parse_stream_collection(IntPtr raw, out IntPtr collection);
 
 		public Gst.StreamCollection ParseStreamCollection() {
@@ -291,7 +291,7 @@ namespace Gst {
 			return collection;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_event_parse_stream_flags(IntPtr raw, out int flags);
 
 		public Gst.StreamFlags ParseStreamFlags() {
@@ -302,7 +302,7 @@ namespace Gst {
 			return flags;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_event_parse_stream_group_done(IntPtr raw, out uint group_id);
 
 		public uint ParseStreamGroupDone() {
@@ -311,7 +311,7 @@ namespace Gst {
 			return group_id;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_event_parse_stream_start(IntPtr raw, out IntPtr stream_id);
 
 		public string ParseStreamStart() {
@@ -322,7 +322,7 @@ namespace Gst {
 			return stream_id;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_event_parse_tag(IntPtr raw, out IntPtr taglist);
 
 		public Gst.TagList ParseTag() {
@@ -333,7 +333,7 @@ namespace Gst {
 			return taglist;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_event_parse_toc(IntPtr raw, IntPtr toc, out bool updated);
 
 		public void ParseToc(out Gst.Toc toc, out bool updated) {
@@ -343,7 +343,7 @@ namespace Gst {
 			Marshal.FreeHGlobal (native_toc);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_event_parse_toc_select(IntPtr raw, out IntPtr uid);
 
 		public string ParseTocSelect() {
@@ -354,7 +354,7 @@ namespace Gst {
 			return uid;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_event_set_group_id(IntPtr raw, uint group_id);
 
 		public uint GroupId { 
@@ -363,7 +363,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_event_set_seek_trickmode_interval(IntPtr raw, ulong interval);
 
 		public ulong SeekTrickmodeInterval { 
@@ -372,7 +372,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_event_set_stream(IntPtr raw, IntPtr stream);
 
 		public Gst.Stream Stream { 
@@ -381,7 +381,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_event_set_stream_flags(IntPtr raw, int flags);
 
 		public Gst.StreamFlags StreamFlags { 
@@ -390,7 +390,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_event_writable_structure(IntPtr raw);
 
 		public Gst.Structure WritableStructure() {
@@ -401,7 +401,7 @@ namespace Gst {
 
 		public Event(IntPtr raw) : base(raw) {}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_event_new_buffer_size(int format, long minsize, long maxsize, bool async);
 
 		public static Event NewBufferSize(Gst.Format format, long minsize, long maxsize, bool async)
@@ -410,7 +410,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_event_new_caps(IntPtr caps);
 
 		public static Event NewCaps(Gst.Caps caps)
@@ -419,7 +419,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_event_new_custom(int type, IntPtr structure);
 
 		public static Event NewCustom(Gst.EventType type, Gst.Structure structure)
@@ -429,7 +429,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_event_new_eos();
 
 		public static Event NewEos()
@@ -438,7 +438,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_event_new_flush_start();
 
 		public static Event NewFlushStart()
@@ -447,7 +447,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_event_new_flush_stop(bool reset_time);
 
 		public static Event NewFlushStop(bool reset_time)
@@ -456,7 +456,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_event_new_gap(ulong timestamp, ulong duration);
 
 		public static Event NewGap(ulong timestamp, ulong duration)
@@ -465,7 +465,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_event_new_latency(ulong latency);
 
 		public static Event NewLatency(ulong latency)
@@ -474,7 +474,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_event_new_navigation(IntPtr structure);
 
 		public static Event NewNavigation(Gst.Structure structure)
@@ -484,7 +484,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_event_new_protection(IntPtr system_id, IntPtr data, IntPtr origin);
 
 		public static Event NewProtection(string system_id, Gst.Buffer data, string origin)
@@ -497,7 +497,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_event_new_qos(int type, double proportion, long diff, ulong timestamp);
 
 		public static Event NewQos(Gst.QOSType type, double proportion, long diff, ulong timestamp)
@@ -506,7 +506,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_event_new_reconfigure();
 
 		public static Event NewReconfigure()
@@ -515,7 +515,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_event_new_seek(double rate, int format, int flags, int start_type, long start, int stop_type, long stop);
 
 		public static Event NewSeek(double rate, Gst.Format format, Gst.SeekFlags flags, Gst.SeekType start_type, long start, Gst.SeekType stop_type, long stop)
@@ -524,7 +524,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_event_new_segment(IntPtr segment);
 
 		public static Event NewSegment(Gst.Segment segment)
@@ -535,7 +535,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_event_new_segment_done(int format, long position);
 
 		public static Event NewSegmentDone(Gst.Format format, long position)
@@ -544,7 +544,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_event_new_select_streams(IntPtr streams);
 
 		public static Event NewSelectStreams(GLib.List streams)
@@ -553,7 +553,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_event_new_sink_message(IntPtr name, IntPtr msg);
 
 		public static Event NewSinkMessage(string name, Gst.Message msg)
@@ -564,7 +564,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_event_new_step(int format, ulong amount, double rate, bool flush, bool intermediate);
 
 		public static Event NewStep(Gst.Format format, ulong amount, double rate, bool flush, bool intermediate)
@@ -573,7 +573,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_event_new_stream_collection(IntPtr collection);
 
 		public static Event NewStreamCollection(Gst.StreamCollection collection)
@@ -582,7 +582,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_event_new_stream_group_done(uint group_id);
 
 		public static Event NewStreamGroupDone(uint group_id)
@@ -591,7 +591,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_event_new_stream_start(IntPtr stream_id);
 
 		public static Event NewStreamStart(string stream_id)
@@ -602,7 +602,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_event_new_tag(IntPtr taglist);
 
 		public static Event NewTag(Gst.TagList taglist)
@@ -612,7 +612,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_event_new_toc(IntPtr toc, bool updated);
 
 		public static Event NewToc(Gst.Toc toc, bool updated)
@@ -623,7 +623,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_event_new_toc_select(IntPtr uid);
 
 		public static Event NewTocSelect(string uid)

@@ -13,7 +13,7 @@ namespace Gst.PbUtils {
 
 		public EncodingContainerProfile (IntPtr raw) : base(raw) {}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_encoding_container_profile_new(IntPtr name, IntPtr description, IntPtr format, IntPtr preset);
 
 		public EncodingContainerProfile (string name, string description, Gst.Caps format, string preset) : base (IntPtr.Zero)
@@ -48,7 +48,7 @@ namespace Gst.PbUtils {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_encoding_container_profile_get_type();
 
 		public static new GLib.GType GType { 
@@ -59,7 +59,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_encoding_container_profile_add_profile(IntPtr raw, IntPtr profile);
 
 		public bool AddProfile(Gst.PbUtils.EncodingProfile profile) {
@@ -68,7 +68,7 @@ namespace Gst.PbUtils {
 			return ret;
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_encoding_container_profile_contains_profile(IntPtr raw, IntPtr profile);
 
 		public bool ContainsProfile(Gst.PbUtils.EncodingProfile profile) {
@@ -77,7 +77,7 @@ namespace Gst.PbUtils {
 			return ret;
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_encoding_container_profile_get_profiles(IntPtr raw);
 
 		public Gst.PbUtils.EncodingProfile[] Profiles { 

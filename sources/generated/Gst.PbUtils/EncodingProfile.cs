@@ -48,7 +48,7 @@ namespace Gst.PbUtils {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_encoding_profile_get_type();
 
 		public static new GLib.GType GType { 
@@ -59,7 +59,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_encoding_profile_find(IntPtr targetname, IntPtr profilename, IntPtr category);
 
 		public static Gst.PbUtils.EncodingProfile Find(string targetname, string profilename, string category) {
@@ -78,7 +78,7 @@ namespace Gst.PbUtils {
 			return Find (targetname, null, null);
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_encoding_profile_from_discoverer(IntPtr info);
 
 		public static Gst.PbUtils.EncodingProfile FromDiscoverer(Gst.PbUtils.DiscovererInfo info) {
@@ -87,7 +87,7 @@ namespace Gst.PbUtils {
 			return ret;
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_encoding_profile_copy(IntPtr raw);
 
 		public Gst.PbUtils.EncodingProfile Copy() {
@@ -96,10 +96,10 @@ namespace Gst.PbUtils {
 			return ret;
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_encoding_profile_get_allow_dynamic_output(IntPtr raw);
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_encoding_profile_set_allow_dynamic_output(IntPtr raw, bool allow_dynamic_output);
 
 		public bool AllowDynamicOutput { 
@@ -113,10 +113,10 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_encoding_profile_get_description(IntPtr raw);
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_encoding_profile_set_description(IntPtr raw, IntPtr description);
 
 		public string Description { 
@@ -132,7 +132,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_encoding_profile_get_file_extension(IntPtr raw);
 
 		public string FileExtension { 
@@ -143,10 +143,10 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_encoding_profile_get_format(IntPtr raw);
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_encoding_profile_set_format(IntPtr raw, IntPtr format);
 
 		public Gst.Caps Format { 
@@ -160,7 +160,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_encoding_profile_get_input_caps(IntPtr raw);
 
 		public Gst.Caps InputCaps { 
@@ -171,10 +171,10 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_encoding_profile_get_name(IntPtr raw);
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_encoding_profile_set_name(IntPtr raw, IntPtr name);
 
 		public string Name { 
@@ -190,10 +190,10 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_encoding_profile_get_presence(IntPtr raw);
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_encoding_profile_set_presence(IntPtr raw, uint presence);
 
 		public uint Presence { 
@@ -207,10 +207,10 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_encoding_profile_get_preset(IntPtr raw);
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_encoding_profile_set_preset(IntPtr raw, IntPtr preset);
 
 		public string Preset { 
@@ -226,10 +226,10 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_encoding_profile_get_preset_name(IntPtr raw);
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_encoding_profile_set_preset_name(IntPtr raw, IntPtr preset_name);
 
 		public string PresetName { 
@@ -245,10 +245,10 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_encoding_profile_get_restriction(IntPtr raw);
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_encoding_profile_set_restriction(IntPtr raw, IntPtr restriction);
 
 		public Gst.Caps Restriction { 
@@ -263,7 +263,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_encoding_profile_get_type_nick(IntPtr raw);
 
 		public string TypeNick { 
@@ -274,7 +274,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_encoding_profile_is_enabled(IntPtr raw);
 
 		public bool IsEnabled { 
@@ -285,7 +285,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_encoding_profile_is_equal(IntPtr raw, IntPtr b);
 
 		public bool IsEqual(Gst.PbUtils.EncodingProfile b) {
@@ -294,7 +294,7 @@ namespace Gst.PbUtils {
 			return ret;
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_encoding_profile_set_enabled(IntPtr raw, bool enabled);
 
 		public bool Enabled { 

@@ -21,7 +21,7 @@ namespace Gst {
 			return (Gst.CapsFeatures) Marshal.PtrToStructure (raw, typeof (Gst.CapsFeatures));
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_caps_features_new_any();
 
 		public static CapsFeatures NewAny()
@@ -30,7 +30,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_caps_features_new_empty();
 
 		public static CapsFeatures NewEmpty()
@@ -39,7 +39,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_caps_features_get_type();
 
 		public static GLib.GType GType { 
@@ -50,7 +50,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_caps_features_add(IntPtr raw, IntPtr feature);
 
 		public void Add(string feature) {
@@ -63,7 +63,7 @@ namespace Gst {
 			GLib.Marshaller.Free (native_feature);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_caps_features_add_id(IntPtr raw, uint feature);
 
 		public void AddId(uint feature) {
@@ -74,7 +74,7 @@ namespace Gst {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_caps_features_contains(IntPtr raw, IntPtr feature);
 
 		public bool Contains(string feature) {
@@ -89,7 +89,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_caps_features_contains_id(IntPtr raw, uint feature);
 
 		public bool ContainsId(uint feature) {
@@ -102,7 +102,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_caps_features_get_nth(IntPtr raw, uint i);
 
 		public string GetNth(uint i) {
@@ -115,7 +115,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_caps_features_get_nth_id(IntPtr raw, uint i);
 
 		public uint GetNthId(uint i) {
@@ -128,7 +128,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_caps_features_get_size(IntPtr raw);
 
 		public uint Size { 
@@ -143,7 +143,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_caps_features_is_any(IntPtr raw);
 
 		public bool IsAny { 
@@ -158,7 +158,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_caps_features_is_equal(IntPtr raw, IntPtr features2);
 
 		public bool IsEqual(Gst.CapsFeatures features2) {
@@ -173,7 +173,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_caps_features_remove(IntPtr raw, IntPtr feature);
 
 		public void Remove(string feature) {
@@ -186,7 +186,7 @@ namespace Gst {
 			GLib.Marshaller.Free (native_feature);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_caps_features_remove_id(IntPtr raw, uint feature);
 
 		public void RemoveId(uint feature) {
@@ -197,7 +197,7 @@ namespace Gst {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_caps_features_set_parent_refcount(IntPtr raw, int refcount);
 
 		public bool SetParentRefcount(int refcount) {
@@ -210,7 +210,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_caps_features_to_string(IntPtr raw);
 
 		public override string ToString() {
@@ -223,7 +223,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_caps_features_from_string(IntPtr features);
 
 		public static Gst.CapsFeatures FromString(string features) {

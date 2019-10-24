@@ -13,7 +13,7 @@ namespace Gst {
 
 		public DeviceMonitor (IntPtr raw) : base(raw) {}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_device_monitor_new();
 
 		public DeviceMonitor () : base (IntPtr.Zero)
@@ -64,7 +64,7 @@ namespace Gst {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_device_monitor_get_type();
 
 		public static new GLib.GType GType { 
@@ -75,7 +75,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_device_monitor_add_filter(IntPtr raw, IntPtr classes, IntPtr caps);
 
 		public uint AddFilter(string classes, Gst.Caps caps) {
@@ -90,7 +90,7 @@ namespace Gst {
 			return AddFilter (null, null);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_device_monitor_get_bus(IntPtr raw);
 
 		public Gst.Bus Bus { 
@@ -101,7 +101,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_device_monitor_get_devices(IntPtr raw);
 
 		public Gst.Device[] Devices { 
@@ -112,7 +112,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_device_monitor_get_providers(IntPtr raw);
 
 		public string[] Providers { 
@@ -123,10 +123,10 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_device_monitor_get_show_all_devices(IntPtr raw);
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_device_monitor_set_show_all_devices(IntPtr raw, bool show_all);
 
 		public bool ShowAllDevices { 
@@ -140,7 +140,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_device_monitor_remove_filter(IntPtr raw, uint filter_id);
 
 		public bool RemoveFilter(uint filter_id) {
@@ -149,7 +149,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_device_monitor_start(IntPtr raw);
 
 		public bool Start() {
@@ -158,7 +158,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_device_monitor_stop(IntPtr raw);
 
 		public void Stop() {

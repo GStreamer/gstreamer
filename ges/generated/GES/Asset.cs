@@ -931,7 +931,7 @@ namespace GES {
 				v.Dispose ();
 		}
 
-		[DllImport("libgio-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gio-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void g_async_initable_init_async(IntPtr raw, int io_priority, IntPtr cancellable, GLibSharp.AsyncReadyCallbackNative cb, IntPtr user_data);
 
 		public void InitAsync(int io_priority, GLib.Cancellable cancellable, GLib.AsyncReadyCallback cb) {
@@ -940,7 +940,7 @@ namespace GES {
 			g_async_initable_init_async(Handle, io_priority, cancellable == null ? IntPtr.Zero : cancellable.Handle, cb_wrapper.NativeDelegate, IntPtr.Zero);
 		}
 
-		[DllImport("libgio-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gio-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool g_async_initable_init_finish(IntPtr raw, IntPtr res, out IntPtr error);
 
 		public bool InitFinish(GLib.IAsyncResult res) {
@@ -951,7 +951,7 @@ namespace GES {
 			return ret;
 		}
 
-		[DllImport("libgio-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gio-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool g_initable_init(IntPtr raw, IntPtr cancellable, out IntPtr error);
 
 		public bool Init(GLib.Cancellable cancellable) {

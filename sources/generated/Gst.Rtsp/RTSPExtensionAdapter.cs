@@ -235,7 +235,7 @@ namespace Gst.Rtsp {
 			implementor = GLib.Object.GetObject (handle);
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_rtsp_extension_get_type();
 
 		private static GLib.GType _gtype = new GLib.GType (gst_rtsp_extension_get_type ());
@@ -298,7 +298,7 @@ namespace Gst.Rtsp {
 			}
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_extension_after_send(IntPtr raw, IntPtr req, IntPtr resp);
 
 		public Gst.Rtsp.RTSPResult AfterSend(Gst.Rtsp.RTSPMessage req, Gst.Rtsp.RTSPMessage resp) {
@@ -311,7 +311,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_extension_before_send(IntPtr raw, IntPtr req);
 
 		public Gst.Rtsp.RTSPResult BeforeSend(Gst.Rtsp.RTSPMessage req) {
@@ -322,7 +322,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtsp_extension_configure_stream(IntPtr raw, IntPtr caps);
 
 		public bool ConfigureStream(Gst.Caps caps) {
@@ -331,7 +331,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtsp_extension_detect_server(IntPtr raw, IntPtr resp);
 
 		public bool DetectServer(Gst.Rtsp.RTSPMessage resp) {
@@ -342,7 +342,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_extension_get_transports(IntPtr raw, int protocols, IntPtr transport);
 
 		public Gst.Rtsp.RTSPResult GetTransports(Gst.Rtsp.RTSPLowerTrans protocols, string transport) {
@@ -353,7 +353,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_extension_parse_sdp(IntPtr raw, IntPtr sdp, IntPtr s);
 
 		public Gst.Rtsp.RTSPResult ParseSdp(Gst.Sdp.SDPMessage sdp, Gst.Structure s) {
@@ -362,7 +362,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_extension_receive_request(IntPtr raw, IntPtr req);
 
 		public Gst.Rtsp.RTSPResult ReceiveRequest(Gst.Rtsp.RTSPMessage req) {
@@ -373,7 +373,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_extension_send(IntPtr raw, IntPtr req, IntPtr resp);
 
 		public Gst.Rtsp.RTSPResult Send(Gst.Rtsp.RTSPMessage req, Gst.Rtsp.RTSPMessage resp) {
@@ -386,7 +386,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_extension_setup_media(IntPtr raw, IntPtr media);
 
 		public Gst.Rtsp.RTSPResult SetupMedia(Gst.Sdp.SDPMedia media) {
@@ -397,7 +397,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_extension_stream_select(IntPtr raw, IntPtr url);
 
 		public Gst.Rtsp.RTSPResult StreamSelect(Gst.Rtsp.RTSPUrl url) {

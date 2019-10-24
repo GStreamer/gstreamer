@@ -27,7 +27,7 @@ namespace Gst {
 
 	partial class DeviceProvider 
 	{
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_device_provider_class_add_metadata(IntPtr klass, IntPtr key, IntPtr value);
 
 		public void AddMetadata(string key, string value) {
@@ -38,7 +38,7 @@ namespace Gst {
 			GLib.Marshaller.Free (native_value);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_device_provider_class_add_static_metadata(IntPtr klass, IntPtr key, IntPtr value);
 
 		public void AddStaticMetadata(string key, string value) {
@@ -50,7 +50,7 @@ namespace Gst {
 			GLib.Marshaller.Free (native_value);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_device_provider_class_set_metadata(IntPtr klass, IntPtr longname, IntPtr classification, IntPtr description, IntPtr author);
 
 		public void SetMetadata(string longname, string classification, string description, string author) {
@@ -65,7 +65,7 @@ namespace Gst {
 			GLib.Marshaller.Free (native_author);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_device_provider_class_set_static_metadata(IntPtr klass, IntPtr longname, IntPtr classification, IntPtr description, IntPtr author);
 
 		public void SetStaticMetadata(string longname, string classification, string description, string author) {

@@ -212,7 +212,7 @@ namespace Gst.Video {
 			implementor = GLib.Object.GetObject (handle);
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_orientation_get_type();
 
 		private static GLib.GType _gtype = new GLib.GType (gst_video_orientation_get_type ());
@@ -265,7 +265,7 @@ namespace Gst.Video {
 			}
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_orientation_get_hcenter(IntPtr raw, out int center);
 
 		public bool GetHcenter(out int center) {
@@ -274,7 +274,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_orientation_get_hflip(IntPtr raw, out bool flip);
 
 		public bool GetHflip(out bool flip) {
@@ -283,7 +283,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_orientation_get_vcenter(IntPtr raw, out int center);
 
 		public bool GetVcenter(out int center) {
@@ -292,7 +292,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_orientation_get_vflip(IntPtr raw, out bool flip);
 
 		public bool GetVflip(out bool flip) {
@@ -301,7 +301,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_orientation_set_hcenter(IntPtr raw, int center);
 
 		public bool SetHcenter(int center) {
@@ -310,7 +310,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_orientation_set_hflip(IntPtr raw, bool flip);
 
 		public bool SetHflip(bool flip) {
@@ -319,7 +319,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_orientation_set_vcenter(IntPtr raw, int center);
 
 		public bool SetVcenter(int center) {
@@ -328,7 +328,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_orientation_set_vflip(IntPtr raw, bool flip);
 
 		public bool SetVflip(bool flip) {

@@ -889,7 +889,7 @@ namespace Gst.Base {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_base_parse_get_type();
 
 		public static new GLib.GType GType { 
@@ -900,7 +900,7 @@ namespace Gst.Base {
 			}
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_base_parse_add_index_entry(IntPtr raw, ulong offset, ulong ts, bool key, bool force);
 
 		public bool AddIndexEntry(ulong offset, ulong ts, bool key, bool force) {
@@ -909,7 +909,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_base_parse_convert_default(IntPtr raw, int src_format, long src_value, int dest_format, out long dest_value);
 
 		public bool ConvertDefault(Gst.Format src_format, long src_value, Gst.Format dest_format, out long dest_value) {
@@ -918,14 +918,14 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_base_parse_drain(IntPtr raw);
 
 		public void Drain() {
 			gst_base_parse_drain(Handle);
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_base_parse_finish_frame(IntPtr raw, IntPtr frame, int size);
 
 		public Gst.FlowReturn FinishFrame(Gst.Base.BaseParseFrame frame, int size) {
@@ -936,7 +936,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_base_parse_merge_tags(IntPtr raw, IntPtr tags, int mode);
 
 		public void MergeTags(Gst.TagList tags, Gst.TagMergeMode mode) {
@@ -947,7 +947,7 @@ namespace Gst.Base {
 			MergeTags (null, mode);
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_base_parse_push_frame(IntPtr raw, IntPtr frame);
 
 		public Gst.FlowReturn PushFrame(Gst.Base.BaseParseFrame frame) {
@@ -958,7 +958,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_base_parse_set_average_bitrate(IntPtr raw, uint bitrate);
 
 		public uint AverageBitrate { 
@@ -967,21 +967,21 @@ namespace Gst.Base {
 			}
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_base_parse_set_duration(IntPtr raw, int fmt, long duration, int interval);
 
 		public void SetDuration(Gst.Format fmt, long duration, int interval) {
 			gst_base_parse_set_duration(Handle, (int) fmt, duration, interval);
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_base_parse_set_frame_rate(IntPtr raw, uint fps_num, uint fps_den, uint lead_in, uint lead_out);
 
 		public void SetFrameRate(uint fps_num, uint fps_den, uint lead_in, uint lead_out) {
 			gst_base_parse_set_frame_rate(Handle, fps_num, fps_den, lead_in, lead_out);
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_base_parse_set_has_timing_info(IntPtr raw, bool has_timing);
 
 		public bool HasTimingInfo { 
@@ -990,7 +990,7 @@ namespace Gst.Base {
 			}
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_base_parse_set_infer_ts(IntPtr raw, bool infer_ts);
 
 		public bool InferTs { 
@@ -999,14 +999,14 @@ namespace Gst.Base {
 			}
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_base_parse_set_latency(IntPtr raw, ulong min_latency, ulong max_latency);
 
 		public void SetLatency(ulong min_latency, ulong max_latency) {
 			gst_base_parse_set_latency(Handle, min_latency, max_latency);
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_base_parse_set_min_frame_size(IntPtr raw, uint min_size);
 
 		public uint MinFrameSize { 
@@ -1015,7 +1015,7 @@ namespace Gst.Base {
 			}
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_base_parse_set_passthrough(IntPtr raw, bool passthrough);
 
 		public bool Passthrough { 
@@ -1024,7 +1024,7 @@ namespace Gst.Base {
 			}
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_base_parse_set_pts_interpolation(IntPtr raw, bool pts_interpolate);
 
 		public bool PtsInterpolation { 
@@ -1033,7 +1033,7 @@ namespace Gst.Base {
 			}
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_base_parse_set_syncable(IntPtr raw, bool syncable);
 
 		public bool Syncable { 
@@ -1042,7 +1042,7 @@ namespace Gst.Base {
 			}
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_base_parse_set_ts_at_offset(IntPtr raw, UIntPtr offset);
 
 		public ulong TsAtOffset { 

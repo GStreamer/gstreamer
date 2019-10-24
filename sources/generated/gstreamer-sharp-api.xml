@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <api parser_version="3">
-  <namespace name="Gst" library="libgstreamer-1.0-0.dll">
+  <namespace name="Gst" library="gstreamer-1.0-0.dll">
     <enum name="BufferingMode" cname="GstBufferingMode" type="enum" gtype="gst_buffering_mode_get_type">
       <member cname="GST_BUFFERING_STREAM" name="Stream" value="0" />
       <member cname="GST_BUFFERING_DOWNLOAD" name="Download" value="1" />
@@ -13139,7 +13139,7 @@
       </method>
     </class>
   </namespace>
-  <namespace name="Gst.App" library="libgstapp-1.0-0.dll">
+  <namespace name="Gst.App" library="gstapp-1.0-0.dll">
     <enum name="AppStreamType" cname="GstAppStreamType" type="enum" gtype="gst_app_stream_type_get_type">
       <member cname="GST_APP_STREAM_TYPE_STREAM" name="Stream" value="0" />
       <member cname="GST_APP_STREAM_TYPE_SEEKABLE" name="Seekable" value="1" />
@@ -13532,7 +13532,7 @@
     <object name="Global" cname="GstAppGlobal" opaque="true" />
     <object name="Constants" cname="GstAppConstants" opaque="true" />
   </namespace>
-  <namespace name="Gst.Audio" library="libgstaudio-1.0-0.dll">
+  <namespace name="Gst.Audio" library="gstaudio-1.0-0.dll">
     <enum name="AudioBaseSinkDiscontReason" cname="GstAudioBaseSinkDiscontReason" type="enum" gtype="gst_audio_base_sink_discont_reason_get_type" version="1.6">
       <member cname="GST_AUDIO_BASE_SINK_DISCONT_REASON_NO_DISCONT" name="NoDiscont" value="0" />
       <member cname="GST_AUDIO_BASE_SINK_DISCONT_REASON_NEW_CAPS" name="NewCaps" value="1" />
@@ -16231,7 +16231,7 @@
       <constant value="audio" ctype="gchar*" gtype="gchar*" name="META_TAG_AUDIO_STR" version="1.2" />
     </object>
   </namespace>
-  <namespace name="Gst.Base" library="libgstbase-1.0-0.dll">
+  <namespace name="Gst.Base" library="gstbase-1.0-0.dll">
     <enum name="BaseParseFrameFlags" cname="GstBaseParseFrameFlags" type="flags">
       <member cname="GST_BASE_PARSE_FRAME_FLAG_NONE" name="None" value="0" />
       <member cname="GST_BASE_PARSE_FRAME_FLAG_NEW_FRAME" name="NewFrame" value="1" />
@@ -19112,7 +19112,7 @@
       <constant value="src" ctype="gchar*" gtype="gchar*" name="BASE_TRANSFORM_SRC_NAME" />
     </object>
   </namespace>
-  <namespace name="Gst.Controller" library="libgstcontroller-1.0-0.dll">
+  <namespace name="Gst.Controller" library="gstcontroller-1.0-0.dll">
     <enum name="InterpolationMode" cname="GstInterpolationMode" type="enum" gtype="gst_interpolation_mode_get_type">
       <member cname="GST_INTERPOLATION_MODE_NONE" name="None" value="0" />
       <member cname="GST_INTERPOLATION_MODE_LINEAR" name="Linear" value="1" />
@@ -19437,7 +19437,7 @@
     </object>
     <object name="Constants" cname="GstControllerConstants" opaque="true" />
   </namespace>
-  <namespace name="Gst.Net" library="libgstnet-1.0-0.dll">
+  <namespace name="Gst.Net" library="gstnet-1.0-0.dll">
     <callback name="PtpStatisticsCallback" cname="GstPtpStatisticsCallback">
       <return-type type="gboolean" />
       <parameters>
@@ -19729,7 +19729,7 @@
       <constant value="GstPtpStatisticsTimeUpdated" ctype="gchar*" gtype="gchar*" name="PTP_STATISTICS_TIME_UPDATED" />
     </object>
   </namespace>
-  <namespace name="Gst.PbUtils" library="libgstpbutils-1.0-0.dll">
+  <namespace name="Gst.PbUtils" library="gstpbutils-1.0-0.dll">
     <enum name="AudioVisualizerShader" cname="GstAudioVisualizerShader" type="enum" gtype="gst_audio_visualizer_shader_get_type">
       <member cname="GST_AUDIO_VISUALIZER_SHADER_NONE" name="None" value="0" />
       <member cname="GST_AUDIO_VISUALIZER_SHADER_FADE" name="Fade" value="1" />
@@ -20942,7 +20942,7 @@
       <constant value="1" ctype="gint" gtype="gint" name="PLUGINS_BASE_VERSION_NANO" />
     </object>
   </namespace>
-  <namespace name="Gst.Rtp" library="libgstrtp-1.0-0.dll">
+  <namespace name="Gst.Rtp" library="gstrtp-1.0-0.dll">
     <enum name="RTCPFBType" cname="GstRTCPFBType" type="enum" gtype="gst_rtcpfb_type_get_type">
       <member cname="GST_RTCP_FB_TYPE_INVALID" name="FbTypeInvalid" value="0" />
       <member cname="GST_RTCP_RTPFB_TYPE_NACK" name="RtpfbTypeNack" value="1" />
@@ -22650,7 +22650,7 @@
       <constant value="2" ctype="gint" gtype="gint" name="RTP_VERSION" />
     </object>
   </namespace>
-  <namespace name="Gst.Rtsp" library="libgstrtsp-1.0-0.dll">
+  <namespace name="Gst.Rtsp" library="gstrtsp-1.0-0.dll">
     <enum name="RTSPAuthMethod" cname="GstRTSPAuthMethod" type="enum" gtype="gst_rtsp_auth_method_get_type">
       <member cname="GST_RTSP_AUTH_NONE" name="None" value="0" />
       <member cname="GST_RTSP_AUTH_BASIC" name="Basic" value="1" />
@@ -24182,7 +24182,7 @@
       <constant value="554" ctype="gint" gtype="gint" name="RTSP_DEFAULT_PORT" />
     </object>
   </namespace>
-  <namespace name="Gst.Sdp" library="libgstsdp-1.0-0.dll">
+  <namespace name="Gst.Sdp" library="gstsdp-1.0-0.dll">
     <enum name="MIKEYCacheType" cname="GstMIKEYCacheType" type="enum">
       <member cname="GST_MIKEY_CACHE_NONE" name="None" value="0" />
       <member cname="GST_MIKEY_CACHE_ALWAYS" name="Always" value="1" />
@@ -25655,7 +25655,7 @@
       <constant value="TIAS" ctype="gchar*" gtype="gchar*" name="SDP_BWTYPE_TIAS" />
     </object>
   </namespace>
-  <namespace name="Gst.Tags" library="libgsttag-1.0-0.dll">
+  <namespace name="Gst.Tags" library="gsttag-1.0-0.dll">
     <enum name="TagDemuxResult" cname="GstTagDemuxResult" type="enum" gtype="gst_tag_demux_result_get_type">
       <member cname="GST_TAG_DEMUX_RESULT_BROKEN_TAG" name="BrokenTag" value="0" />
       <member cname="GST_TAG_DEMUX_RESULT_AGAIN" name="Again" value="1" />
@@ -25896,7 +25896,7 @@
       <constant value="musicbrainz-trmid" ctype="gchar*" gtype="gchar*" name="TAG_MUSICBRAINZ_TRMID" />
     </object>
   </namespace>
-  <namespace name="Gst.Video" library="libgstvideo-1.0-0.dll">
+  <namespace name="Gst.Video" library="gstvideo-1.0-0.dll">
     <enum name="ColorBalanceType" cname="GstColorBalanceType" type="enum" gtype="gst_color_balance_type_get_type">
       <member cname="GST_COLOR_BALANCE_HARDWARE" name="Hardware" value="0" />
       <member cname="GST_COLOR_BALANCE_SOFTWARE" name="Software" value="1" />
@@ -29994,7 +29994,7 @@
       <constant value="16" ctype="gint" gtype="gint" name="VIDEO_TILE_Y_TILES_SHIFT" />
     </object>
   </namespace>
-  <namespace name="Gst.WebRTC" library="libgstwebrtc-1.0-0.dll">
+  <namespace name="Gst.WebRTC" library="gstwebrtc-1.0-0.dll">
     <enum name="WebRTCBundlePolicy" cname="GstWebRTCBundlePolicy" type="enum" gtype="gst_webrtc_bundle_policy_get_type">
       <member cname="GST_WEBRTC_BUNDLE_POLICY_NONE" name="None" value="0" />
       <member cname="GST_WEBRTC_BUNDLE_POLICY_BALANCED" name="Balanced" value="1" />

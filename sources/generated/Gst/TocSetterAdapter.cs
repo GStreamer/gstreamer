@@ -47,7 +47,7 @@ namespace Gst {
 			implementor = GLib.Object.GetObject (handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_toc_setter_get_type();
 
 		private static GLib.GType _gtype = new GLib.GType (gst_toc_setter_get_type ());
@@ -100,10 +100,10 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_toc_setter_get_toc(IntPtr raw);
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_toc_setter_set_toc(IntPtr raw, IntPtr value);
 
 		public Gst.Toc Toc { 
@@ -119,7 +119,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_toc_setter_reset(IntPtr raw);
 
 		public void Reset() {

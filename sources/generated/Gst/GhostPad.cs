@@ -13,7 +13,7 @@ namespace Gst {
 
 		public GhostPad (IntPtr raw) : base(raw) {}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_ghost_pad_new(IntPtr name, IntPtr target);
 
 		public GhostPad (string name, Gst.Pad target) : base (IntPtr.Zero)
@@ -31,7 +31,7 @@ namespace Gst {
 			GLib.Marshaller.Free (native_name);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_ghost_pad_new_from_template(IntPtr name, IntPtr target, IntPtr templ);
 
 		public GhostPad (string name, Gst.Pad target, Gst.PadTemplate templ) : base (IntPtr.Zero)
@@ -49,7 +49,7 @@ namespace Gst {
 			GLib.Marshaller.Free (native_name);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_ghost_pad_new_no_target(IntPtr name, int dir);
 
 		public GhostPad (string name, Gst.PadDirection dir) : base (IntPtr.Zero)
@@ -67,7 +67,7 @@ namespace Gst {
 			GLib.Marshaller.Free (native_name);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_ghost_pad_new_no_target_from_template(IntPtr name, IntPtr templ);
 
 		public GhostPad (string name, Gst.PadTemplate templ) : base (IntPtr.Zero)
@@ -109,7 +109,7 @@ namespace Gst {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_ghost_pad_get_type();
 
 		public static new GLib.GType GType { 
@@ -120,7 +120,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_ghost_pad_activate_mode_default(IntPtr pad, IntPtr parent, int mode, bool active);
 
 		public static bool ActivateModeDefault(Gst.Pad pad, Gst.Object parent, Gst.PadMode mode, bool active) {
@@ -133,7 +133,7 @@ namespace Gst {
 			return ActivateModeDefault (pad, null, mode, active);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_ghost_pad_internal_activate_mode_default(IntPtr pad, IntPtr parent, int mode, bool active);
 
 		public static bool InternalActivateModeDefault(Gst.Pad pad, Gst.Object parent, Gst.PadMode mode, bool active) {
@@ -146,7 +146,7 @@ namespace Gst {
 			return InternalActivateModeDefault (pad, null, mode, active);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_ghost_pad_construct(IntPtr raw);
 
 		public bool Construct() {
@@ -155,7 +155,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_ghost_pad_get_target(IntPtr raw);
 
 		public Gst.Pad Target { 
@@ -166,7 +166,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_ghost_pad_set_target(IntPtr raw, IntPtr newtarget);
 
 		public bool SetTarget(Gst.Pad newtarget) {

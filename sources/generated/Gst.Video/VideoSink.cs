@@ -141,7 +141,7 @@ namespace Gst.Video {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_sink_get_type();
 
 		public static new GLib.GType GType { 
@@ -152,7 +152,7 @@ namespace Gst.Video {
 			}
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_video_sink_center_rect(IntPtr src, IntPtr dst, IntPtr _result, bool scaling);
 
 		public static void CenterRect(Gst.Video.VideoRectangle src, Gst.Video.VideoRectangle dst, Gst.Video.VideoRectangle _result, bool scaling) {

@@ -18,7 +18,7 @@ namespace Gst.PbUtils {
 			CreateNativeObject (new string [0], new GLib.Value [0]);
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_discoverer_container_info_get_type();
 
 		public static new GLib.GType GType { 
@@ -29,7 +29,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_discoverer_container_info_get_streams(IntPtr raw);
 
 		public Gst.PbUtils.DiscovererStreamInfo[] Streams { 

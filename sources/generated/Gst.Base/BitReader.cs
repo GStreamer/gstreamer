@@ -28,7 +28,7 @@ namespace Gst.Base {
 			return (Gst.Base.BitReader) Marshal.PtrToStructure (raw, typeof (Gst.Base.BitReader));
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_bit_reader_free(IntPtr raw);
 
 		public void Free() {
@@ -39,7 +39,7 @@ namespace Gst.Base {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_bit_reader_get_bits_uint16(IntPtr raw, out ushort val, uint nbits);
 
 		public bool GetBitsUint16(out ushort val, uint nbits) {
@@ -52,7 +52,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_bit_reader_get_bits_uint32(IntPtr raw, out uint val, uint nbits);
 
 		public bool GetBitsUint32(out uint val, uint nbits) {
@@ -65,7 +65,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_bit_reader_get_bits_uint64(IntPtr raw, out ulong val, uint nbits);
 
 		public bool GetBitsUint64(out ulong val, uint nbits) {
@@ -78,7 +78,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_bit_reader_get_bits_uint8(IntPtr raw, out byte val, uint nbits);
 
 		public bool GetBitsUint8(out byte val, uint nbits) {
@@ -91,7 +91,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_bit_reader_get_pos(IntPtr raw);
 
 		public uint Pos { 
@@ -106,7 +106,7 @@ namespace Gst.Base {
 			}
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_bit_reader_get_remaining(IntPtr raw);
 
 		public uint Remaining { 
@@ -121,7 +121,7 @@ namespace Gst.Base {
 			}
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_bit_reader_init(IntPtr raw, byte[] data, uint size);
 
 		public void Init(byte[] data, uint size) {
@@ -132,7 +132,7 @@ namespace Gst.Base {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_bit_reader_peek_bits_uint16(IntPtr raw, out ushort val, uint nbits);
 
 		public bool PeekBitsUint16(out ushort val, uint nbits) {
@@ -145,7 +145,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_bit_reader_peek_bits_uint32(IntPtr raw, out uint val, uint nbits);
 
 		public bool PeekBitsUint32(out uint val, uint nbits) {
@@ -158,7 +158,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_bit_reader_peek_bits_uint64(IntPtr raw, out ulong val, uint nbits);
 
 		public bool PeekBitsUint64(out ulong val, uint nbits) {
@@ -171,7 +171,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_bit_reader_peek_bits_uint8(IntPtr raw, out byte val, uint nbits);
 
 		public bool PeekBitsUint8(out byte val, uint nbits) {
@@ -184,7 +184,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_bit_reader_set_pos(IntPtr raw, uint pos);
 
 		public bool SetPos(uint pos) {
@@ -197,7 +197,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_bit_reader_skip(IntPtr raw, uint nbits);
 
 		public bool Skip(uint nbits) {
@@ -210,7 +210,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_bit_reader_skip_to_byte(IntPtr raw);
 
 		public bool SkipToByte() {

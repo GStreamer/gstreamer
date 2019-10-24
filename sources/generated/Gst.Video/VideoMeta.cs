@@ -43,7 +43,7 @@ namespace Gst.Video {
 			return (Gst.Video.VideoMeta) Marshal.PtrToStructure (raw, typeof (Gst.Video.VideoMeta));
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_meta_map(IntPtr raw, uint plane, IntPtr info, out IntPtr data, out int stride, int flags);
 
 		public bool Map(uint plane, Gst.MapInfo info, out IntPtr data, out int stride, Gst.MapFlags flags) {
@@ -58,7 +58,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_meta_unmap(IntPtr raw, uint plane, IntPtr info);
 
 		public bool Unmap(uint plane, Gst.MapInfo info) {
@@ -73,7 +73,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_meta_get_info();
 
 		public static Gst.MetaInfo Info { 

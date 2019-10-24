@@ -15,7 +15,7 @@ namespace Gst.Audio {
 	}
 
 	internal class AudioCdSrcModeGType {
-		[DllImport ("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_audio_cd_src_mode_get_type ();
 
 		public static GLib.GType GType {

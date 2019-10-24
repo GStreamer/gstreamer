@@ -13,7 +13,7 @@ namespace Gst.Video {
 
 		public VideoBufferPool (IntPtr raw) : base(raw) {}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_buffer_pool_new();
 
 		public VideoBufferPool () : base (IntPtr.Zero)
@@ -40,7 +40,7 @@ namespace Gst.Video {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_buffer_pool_get_type();
 
 		public static new GLib.GType GType { 

@@ -24,7 +24,7 @@ namespace Gst.Video {
 			return (Gst.Video.VideoAffineTransformationMeta) Marshal.PtrToStructure (raw, typeof (Gst.Video.VideoAffineTransformationMeta));
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_video_affine_transformation_meta_apply_matrix(IntPtr raw, float matrix);
 
 		public void ApplyMatrix(float matrix) {
@@ -35,7 +35,7 @@ namespace Gst.Video {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_affine_transformation_meta_get_info();
 
 		public static Gst.MetaInfo Info { 

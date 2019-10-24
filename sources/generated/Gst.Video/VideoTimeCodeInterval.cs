@@ -25,7 +25,7 @@ namespace Gst.Video {
 			return (Gst.Video.VideoTimeCodeInterval) Marshal.PtrToStructure (raw, typeof (Gst.Video.VideoTimeCodeInterval));
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_time_code_interval_new(uint hours, uint minutes, uint seconds, uint frames);
 
 		public static VideoTimeCodeInterval New(uint hours, uint minutes, uint seconds, uint frames)
@@ -34,7 +34,7 @@ namespace Gst.Video {
 			return result;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_time_code_interval_new_from_string(IntPtr tc_inter_str);
 
 		public static VideoTimeCodeInterval NewFromString(string tc_inter_str)
@@ -45,7 +45,7 @@ namespace Gst.Video {
 			return result;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_time_code_interval_get_type();
 
 		public static GLib.GType GType { 
@@ -56,7 +56,7 @@ namespace Gst.Video {
 			}
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_video_time_code_interval_clear(IntPtr raw);
 
 		public void Clear() {
@@ -67,7 +67,7 @@ namespace Gst.Video {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_video_time_code_interval_init(IntPtr raw, uint hours, uint minutes, uint seconds, uint frames);
 
 		public void Init(uint hours, uint minutes, uint seconds, uint frames) {

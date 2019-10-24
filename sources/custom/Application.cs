@@ -36,10 +36,10 @@ namespace Gst {
 			GLib.GType.Register(Gst.WebRTC.WebRTCSessionDescription.GType, typeof(Gst.WebRTC.WebRTCSessionDescription));
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_init(ref int argc, ref IntPtr[] argv);
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_init(IntPtr argc, IntPtr argv);
 
 		private static void CheckVersion() {
@@ -66,10 +66,10 @@ namespace Gst {
 			CheckVersion();
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_init_check(ref int argc, ref IntPtr[] argv, out IntPtr error);
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_init_check(IntPtr argc, IntPtr argv, out IntPtr error);
 
 		public static bool InitCheck() {

@@ -18,7 +18,7 @@ namespace Gst.PbUtils {
 			CreateNativeObject (new string [0], new GLib.Value [0]);
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_discoverer_stream_info_get_type();
 
 		public static new GLib.GType GType { 
@@ -29,14 +29,14 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_discoverer_stream_info_list_free(IntPtr infos);
 
 		public static void ListFree(GLib.List infos) {
 			gst_discoverer_stream_info_list_free(infos == null ? IntPtr.Zero : infos.Handle);
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_discoverer_stream_info_get_caps(IntPtr raw);
 
 		public Gst.Caps Caps { 
@@ -47,7 +47,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_discoverer_stream_info_get_misc(IntPtr raw);
 
 		[Obsolete]
@@ -59,7 +59,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_discoverer_stream_info_get_next(IntPtr raw);
 
 		public Gst.PbUtils.DiscovererStreamInfo Next { 
@@ -70,7 +70,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_discoverer_stream_info_get_previous(IntPtr raw);
 
 		public Gst.PbUtils.DiscovererStreamInfo Previous { 
@@ -81,7 +81,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_discoverer_stream_info_get_stream_id(IntPtr raw);
 
 		public string StreamId { 
@@ -92,7 +92,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_discoverer_stream_info_get_stream_type_nick(IntPtr raw);
 
 		public string StreamTypeNick { 
@@ -103,7 +103,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_discoverer_stream_info_get_tags(IntPtr raw);
 
 		public Gst.TagList Tags { 
@@ -114,7 +114,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_discoverer_stream_info_get_toc(IntPtr raw);
 
 		public Gst.Toc Toc { 

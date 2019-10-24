@@ -21,7 +21,7 @@ namespace Gst.Video {
 			return (Gst.Video.VideoVBIParser) Marshal.PtrToStructure (raw, typeof (Gst.Video.VideoVBIParser));
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_vbi_parser_new(int format, uint pixel_width);
 
 		public static VideoVBIParser New(Gst.Video.VideoFormat format, uint pixel_width)
@@ -30,7 +30,7 @@ namespace Gst.Video {
 			return result;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_vbi_parser_get_type();
 
 		public static GLib.GType GType { 
@@ -41,7 +41,7 @@ namespace Gst.Video {
 			}
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_video_vbi_parser_add_line(IntPtr raw, byte[] data);
 
 		public void AddLine(byte[] data) {
@@ -52,7 +52,7 @@ namespace Gst.Video {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_video_vbi_parser_get_ancillary(IntPtr raw, IntPtr anc);
 
 		public Gst.Video.VideoVBIParserResult GetAncillary(out Gst.Video.VideoAncillary anc) {

@@ -17,7 +17,7 @@ namespace Gst.Audio {
 	}
 
 	internal class AudioConverterFlagsGType {
-		[DllImport ("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_audio_converter_flags_get_type ();
 
 		public static GLib.GType GType {

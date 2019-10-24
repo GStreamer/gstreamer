@@ -23,7 +23,7 @@ namespace Gst {
 			return (Gst.PollFD) Marshal.PtrToStructure (raw, typeof (Gst.PollFD));
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_poll_fd_init(IntPtr raw);
 
 		public void Init() {

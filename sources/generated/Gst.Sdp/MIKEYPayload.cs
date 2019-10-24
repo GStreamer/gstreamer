@@ -41,7 +41,7 @@ namespace Gst.Sdp {
 			}
 		}
 
-		[DllImport("libgstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_mikey_payload_get_type();
 
 		public static GLib.GType GType { 
@@ -52,7 +52,7 @@ namespace Gst.Sdp {
 			}
 		}
 
-		[DllImport("libgstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_mikey_payload_kemac_add_sub(IntPtr raw, IntPtr newpay);
 
 		public bool KemacAddSub(Gst.Sdp.MIKEYPayload newpay) {
@@ -62,7 +62,7 @@ namespace Gst.Sdp {
 			return ret;
 		}
 
-		[DllImport("libgstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_mikey_payload_kemac_get_n_sub(IntPtr raw);
 
 		public uint KemacGetNSub() {
@@ -71,7 +71,7 @@ namespace Gst.Sdp {
 			return ret;
 		}
 
-		[DllImport("libgstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_mikey_payload_kemac_get_sub(IntPtr raw, uint idx);
 
 		public Gst.Sdp.MIKEYPayload KemacGetSub(uint idx) {
@@ -80,7 +80,7 @@ namespace Gst.Sdp {
 			return ret;
 		}
 
-		[DllImport("libgstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_mikey_payload_kemac_remove_sub(IntPtr raw, uint idx);
 
 		public bool KemacRemoveSub(uint idx) {
@@ -89,7 +89,7 @@ namespace Gst.Sdp {
 			return ret;
 		}
 
-		[DllImport("libgstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_mikey_payload_kemac_set(IntPtr raw, int enc_alg, int mac_alg);
 
 		public bool KemacSet(Gst.Sdp.MIKEYEncAlg enc_alg, Gst.Sdp.MIKEYMacAlg mac_alg) {
@@ -98,7 +98,7 @@ namespace Gst.Sdp {
 			return ret;
 		}
 
-		[DllImport("libgstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_mikey_payload_key_data_set_interval(IntPtr raw, byte vf_len, byte[] vf_data, byte vt_len, byte[] vt_data);
 
 		public bool KeyDataSetInterval(byte vf_len, byte[] vf_data, byte vt_len, byte[] vt_data) {
@@ -107,7 +107,7 @@ namespace Gst.Sdp {
 			return ret;
 		}
 
-		[DllImport("libgstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_mikey_payload_key_data_set_key(IntPtr raw, int key_type, ushort key_len, byte[] key_data);
 
 		public bool KeyDataSetKey(Gst.Sdp.MIKEYKeyDataType key_type, ushort key_len, byte[] key_data) {
@@ -116,7 +116,7 @@ namespace Gst.Sdp {
 			return ret;
 		}
 
-		[DllImport("libgstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_mikey_payload_key_data_set_salt(IntPtr raw, ushort salt_len, byte[] salt_data);
 
 		public bool KeyDataSetSalt(ushort salt_len, byte[] salt_data) {
@@ -129,7 +129,7 @@ namespace Gst.Sdp {
 			return KeyDataSetSalt (salt_len, null);
 		}
 
-		[DllImport("libgstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_mikey_payload_key_data_set_spi(IntPtr raw, byte spi_len, byte[] spi_data);
 
 		public bool KeyDataSetSpi(byte spi_len, byte[] spi_data) {
@@ -138,7 +138,7 @@ namespace Gst.Sdp {
 			return ret;
 		}
 
-		[DllImport("libgstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_mikey_payload_pke_set(IntPtr raw, int C, ushort data_len, byte[] data);
 
 		public bool PkeSet(Gst.Sdp.MIKEYCacheType C, ushort data_len, byte[] data) {
@@ -147,7 +147,7 @@ namespace Gst.Sdp {
 			return ret;
 		}
 
-		[DllImport("libgstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_mikey_payload_rand_set(IntPtr raw, byte len, byte[] rand);
 
 		public bool RandSet(byte len, byte[] rand) {
@@ -156,7 +156,7 @@ namespace Gst.Sdp {
 			return ret;
 		}
 
-		[DllImport("libgstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_mikey_payload_sp_add_param(IntPtr raw, byte type, byte len, byte[] val);
 
 		public bool SpAddParam(byte type, byte len, byte[] val) {
@@ -165,7 +165,7 @@ namespace Gst.Sdp {
 			return ret;
 		}
 
-		[DllImport("libgstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_mikey_payload_sp_get_n_params(IntPtr raw);
 
 		public uint SpGetNParams() {
@@ -174,7 +174,7 @@ namespace Gst.Sdp {
 			return ret;
 		}
 
-		[DllImport("libgstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_mikey_payload_sp_get_param(IntPtr raw, uint idx);
 
 		public Gst.Sdp.MIKEYPayloadSPParam SpGetParam(uint idx) {
@@ -183,7 +183,7 @@ namespace Gst.Sdp {
 			return ret;
 		}
 
-		[DllImport("libgstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_mikey_payload_sp_remove_param(IntPtr raw, uint idx);
 
 		public bool SpRemoveParam(uint idx) {
@@ -192,7 +192,7 @@ namespace Gst.Sdp {
 			return ret;
 		}
 
-		[DllImport("libgstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_mikey_payload_sp_set(IntPtr raw, uint policy, int proto);
 
 		public bool SpSet(uint policy, Gst.Sdp.MIKEYSecProto proto) {
@@ -201,7 +201,7 @@ namespace Gst.Sdp {
 			return ret;
 		}
 
-		[DllImport("libgstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_mikey_payload_t_set(IntPtr raw, int type, byte[] ts_value);
 
 		public bool TSet(Gst.Sdp.MIKEYTSType type, byte[] ts_value) {
@@ -212,7 +212,7 @@ namespace Gst.Sdp {
 
 		public MIKEYPayload(IntPtr raw) : base(raw) {}
 
-		[DllImport("libgstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_mikey_payload_new(int type);
 
 		public MIKEYPayload (Gst.Sdp.MIKEYPayloadType type) 

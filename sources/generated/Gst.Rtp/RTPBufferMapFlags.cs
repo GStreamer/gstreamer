@@ -16,7 +16,7 @@ namespace Gst.Rtp {
 	}
 
 	internal class RTPBufferMapFlagsGType {
-		[DllImport ("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_rtp_buffer_map_flags_get_type ();
 
 		public static GLib.GType GType {

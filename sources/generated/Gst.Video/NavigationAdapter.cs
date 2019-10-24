@@ -68,7 +68,7 @@ namespace Gst.Video {
 			implementor = GLib.Object.GetObject (handle);
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_navigation_get_type();
 
 		private static GLib.GType _gtype = new GLib.GType (gst_navigation_get_type ());
@@ -121,7 +121,7 @@ namespace Gst.Video {
 			}
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_navigation_event_get_type(IntPtr evnt);
 
 		public static Gst.Video.NavigationEventType EventGetType(Gst.Event evnt) {
@@ -130,7 +130,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_navigation_event_parse_command(IntPtr evnt, out int command);
 
 		public static bool EventParseCommand(Gst.Event evnt, out Gst.Video.NavigationCommand command) {
@@ -141,7 +141,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_navigation_event_parse_key_event(IntPtr evnt, out IntPtr key);
 
 		public static bool EventParseKeyEvent(Gst.Event evnt, out string key) {
@@ -152,7 +152,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_navigation_event_parse_mouse_button_event(IntPtr evnt, out int button, out double x, out double y);
 
 		public static bool EventParseMouseButtonEvent(Gst.Event evnt, out int button, out double x, out double y) {
@@ -161,7 +161,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_navigation_event_parse_mouse_move_event(IntPtr evnt, out double x, out double y);
 
 		public static bool EventParseMouseMoveEvent(Gst.Event evnt, out double x, out double y) {
@@ -170,7 +170,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_navigation_message_get_type(IntPtr message);
 
 		public static Gst.Video.NavigationMessageType MessageGetType(Gst.Message message) {
@@ -179,7 +179,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_navigation_message_new_angles_changed(IntPtr src, uint cur_angle, uint n_angles);
 
 		public static Gst.Message MessageNewAnglesChanged(Gst.Object src, uint cur_angle, uint n_angles) {
@@ -188,7 +188,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_navigation_message_new_commands_changed(IntPtr src);
 
 		public static Gst.Message MessageNewCommandsChanged(Gst.Object src) {
@@ -197,7 +197,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_navigation_message_new_event(IntPtr src, IntPtr evnt);
 
 		public static Gst.Message MessageNewEvent(Gst.Object src, Gst.Event evnt) {
@@ -206,7 +206,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_navigation_message_new_mouse_over(IntPtr src, bool active);
 
 		public static Gst.Message MessageNewMouseOver(Gst.Object src, bool active) {
@@ -215,7 +215,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_navigation_message_parse_angles_changed(IntPtr message, out uint cur_angle, out uint n_angles);
 
 		public static bool MessageParseAnglesChanged(Gst.Message message, out uint cur_angle, out uint n_angles) {
@@ -224,7 +224,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_navigation_message_parse_event(IntPtr message, out IntPtr evnt);
 
 		public static bool MessageParseEvent(Gst.Message message, out Gst.Event evnt) {
@@ -235,7 +235,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_navigation_message_parse_mouse_over(IntPtr message, out bool active);
 
 		public static bool MessageParseMouseOver(Gst.Message message, out bool active) {
@@ -244,7 +244,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_navigation_query_get_type(IntPtr query);
 
 		public static Gst.Video.NavigationQueryType QueryGetType(Gst.Query query) {
@@ -253,7 +253,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_navigation_query_new_angles();
 
 		public static Gst.Query QueryNewAngles() {
@@ -262,7 +262,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_navigation_query_new_commands();
 
 		public static Gst.Query QueryNewCommands() {
@@ -271,7 +271,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_navigation_query_parse_angles(IntPtr query, out uint cur_angle, out uint n_angles);
 
 		public static bool QueryParseAngles(Gst.Query query, out uint cur_angle, out uint n_angles) {
@@ -280,7 +280,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_navigation_query_parse_commands_length(IntPtr query, out uint n_cmds);
 
 		public static bool QueryParseCommandsLength(Gst.Query query, out uint n_cmds) {
@@ -289,7 +289,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_navigation_query_parse_commands_nth(IntPtr query, uint nth, out int cmd);
 
 		public static bool QueryParseCommandsNth(Gst.Query query, uint nth, out Gst.Video.NavigationCommand cmd) {
@@ -300,14 +300,14 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_navigation_query_set_angles(IntPtr query, uint cur_angle, uint n_angles);
 
 		public static void QuerySetAngles(Gst.Query query, uint cur_angle, uint n_angles) {
 			gst_navigation_query_set_angles(query == null ? IntPtr.Zero : query.Handle, cur_angle, n_angles);
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_navigation_query_set_commandsv(IntPtr query, int n_cmds, int[] cmds);
 
 		public static void QuerySetCommandsv(Gst.Query query, Gst.Video.NavigationCommand[] cmds) {
@@ -318,21 +318,21 @@ namespace Gst.Video {
 			gst_navigation_query_set_commandsv(query == null ? IntPtr.Zero : query.Handle, (cmds == null ? 0 : cmds.Length), native_cmds);
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_navigation_send_command(IntPtr raw, int command);
 
 		public void SendCommand(Gst.Video.NavigationCommand command) {
 			gst_navigation_send_command(Handle, (int) command);
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_navigation_send_event(IntPtr raw, IntPtr structure);
 
 		public void SendEvent(Gst.Structure structure) {
 			gst_navigation_send_event(Handle, structure == null ? IntPtr.Zero : structure.Handle);
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_navigation_send_key_event(IntPtr raw, IntPtr evnt, IntPtr key);
 
 		public void SendKeyEvent(string evnt, string key) {
@@ -343,7 +343,7 @@ namespace Gst.Video {
 			GLib.Marshaller.Free (native_key);
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_navigation_send_mouse_event(IntPtr raw, IntPtr evnt, int button, double x, double y);
 
 		public void SendMouseEvent(string evnt, int button, double x, double y) {

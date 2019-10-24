@@ -13,7 +13,7 @@ namespace Gst {
 
 		public Pad (IntPtr raw) : base(raw) {}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_new(IntPtr name, int direction);
 
 		public Pad (string name, Gst.PadDirection direction) : base (IntPtr.Zero)
@@ -33,7 +33,7 @@ namespace Gst {
 			GLib.Marshaller.Free (native_name);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_new_from_static_template(IntPtr templ, IntPtr name);
 
 		public Pad (Gst.StaticPadTemplate templ, string name) : base (IntPtr.Zero)
@@ -53,7 +53,7 @@ namespace Gst {
 			GLib.Marshaller.Free (native_name);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_new_from_template(IntPtr templ, IntPtr name);
 
 		public Pad (Gst.PadTemplate templ, string name) : base (IntPtr.Zero)
@@ -73,7 +73,7 @@ namespace Gst {
 			GLib.Marshaller.Free (native_name);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_pad_get_direction(IntPtr raw);
 
 		[GLib.Property ("direction")]
@@ -85,10 +85,10 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern long gst_pad_get_offset(IntPtr raw);
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_pad_set_offset(IntPtr raw, long offset);
 
 		[GLib.Property ("offset")]
@@ -118,10 +118,10 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_get_element_private(IntPtr raw);
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_pad_set_element_private(IntPtr raw, IntPtr priv);
 
 		public IntPtr ElementPrivate {
@@ -153,7 +153,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_get_peer(IntPtr raw);
 
 		public Gst.Pad Peer {
@@ -330,7 +330,7 @@ namespace Gst {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_get_type();
 
 		public static new GLib.GType GType { 
@@ -341,7 +341,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_link_get_name(int _ret);
 
 		public static string LinkGetName(Gst.PadLinkReturn _ret) {
@@ -350,7 +350,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_pad_activate_mode(IntPtr raw, int mode, bool active);
 
 		public bool ActivateMode(Gst.PadMode mode, bool active) {
@@ -359,7 +359,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern UIntPtr gst_pad_add_probe(IntPtr raw, int mask, GstSharp.PadProbeCallbackNative cb, IntPtr user_data, GLib.DestroyNotify destroy_data);
 
 		public ulong AddProbe(Gst.PadProbeType mask, Gst.PadProbeCallback cb) {
@@ -378,7 +378,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_pad_can_link(IntPtr raw, IntPtr sinkpad);
 
 		public bool CanLink(Gst.Pad sinkpad) {
@@ -387,7 +387,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_pad_chain(IntPtr raw, IntPtr buffer);
 
 		public Gst.FlowReturn Chain(Gst.Buffer buffer) {
@@ -397,7 +397,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_pad_chain_list(IntPtr raw, IntPtr list);
 
 		public Gst.FlowReturn ChainList(Gst.BufferList list) {
@@ -407,7 +407,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_pad_check_reconfigure(IntPtr raw);
 
 		public bool CheckReconfigure() {
@@ -416,7 +416,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_create_stream_id(IntPtr raw, IntPtr parent, IntPtr stream_id);
 
 		public string CreateStreamId(Gst.Element parent, string stream_id) {
@@ -431,7 +431,7 @@ namespace Gst {
 			return CreateStreamId (parent, null);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_pad_event_default(IntPtr raw, IntPtr parent, IntPtr evnt);
 
 		public bool EventDefault(Gst.Object parent, Gst.Event evnt) {
@@ -445,7 +445,7 @@ namespace Gst {
 			return EventDefault (null, evnt);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_pad_forward(IntPtr raw, GstSharp.PadForwardFunctionNative forward, IntPtr user_data);
 
 		public bool Forward(Gst.PadForwardFunction forward) {
@@ -455,7 +455,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_get_allowed_caps(IntPtr raw);
 
 		public Gst.Caps AllowedCaps { 
@@ -466,7 +466,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_get_current_caps(IntPtr raw);
 
 		public Gst.Caps CurrentCaps { 
@@ -477,7 +477,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_pad_get_last_flow_return(IntPtr raw);
 
 		public Gst.FlowReturn LastFlowReturn { 
@@ -488,7 +488,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_get_pad_template(IntPtr raw);
 
 		public Gst.PadTemplate PadTemplate { 
@@ -499,7 +499,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_get_pad_template_caps(IntPtr raw);
 
 		public Gst.Caps PadTemplateCaps { 
@@ -510,7 +510,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_get_parent_element(IntPtr raw);
 
 		public Gst.Element ParentElement { 
@@ -521,7 +521,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_pad_get_range(IntPtr raw, ulong offset, uint size, out IntPtr buffer);
 
 		public Gst.FlowReturn GetRange(ulong offset, uint size, out Gst.Buffer buffer) {
@@ -532,7 +532,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_get_sticky_event(IntPtr raw, int event_type, uint idx);
 
 		public Gst.Event GetStickyEvent(Gst.EventType event_type, uint idx) {
@@ -541,7 +541,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_get_stream(IntPtr raw);
 
 		public Gst.Stream Stream { 
@@ -552,7 +552,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_get_stream_id(IntPtr raw);
 
 		public string StreamId { 
@@ -563,7 +563,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_pad_get_task_state(IntPtr raw);
 
 		public Gst.TaskState TaskState { 
@@ -574,7 +574,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_pad_has_current_caps(IntPtr raw);
 
 		public bool HasCurrentCaps { 
@@ -585,7 +585,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_pad_is_active(IntPtr raw);
 
 		public bool IsActive { 
@@ -596,7 +596,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_pad_is_blocked(IntPtr raw);
 
 		public bool IsBlocked { 
@@ -607,7 +607,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_pad_is_blocking(IntPtr raw);
 
 		public bool IsBlocking { 
@@ -618,7 +618,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_pad_is_linked(IntPtr raw);
 
 		public bool IsLinked { 
@@ -629,7 +629,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_iterate_internal_links(IntPtr raw);
 
 		public Gst.Iterator IterateInternalLinks() {
@@ -638,7 +638,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_iterate_internal_links_default(IntPtr raw, IntPtr parent);
 
 		public Gst.Iterator IterateInternalLinksDefault(Gst.Object parent) {
@@ -651,7 +651,7 @@ namespace Gst {
 			return IterateInternalLinksDefault (null);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_pad_link(IntPtr raw, IntPtr sinkpad);
 
 		public Gst.PadLinkReturn Link(Gst.Pad sinkpad) {
@@ -660,7 +660,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_pad_link_full(IntPtr raw, IntPtr sinkpad, int flags);
 
 		public Gst.PadLinkReturn LinkFull(Gst.Pad sinkpad, Gst.PadLinkCheck flags) {
@@ -669,7 +669,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_pad_link_maybe_ghosting(IntPtr raw, IntPtr sink);
 
 		public bool LinkMaybeGhosting(Gst.Pad sink) {
@@ -678,7 +678,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_pad_link_maybe_ghosting_full(IntPtr raw, IntPtr sink, int flags);
 
 		public bool LinkMaybeGhostingFull(Gst.Pad sink, Gst.PadLinkCheck flags) {
@@ -687,14 +687,14 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_pad_mark_reconfigure(IntPtr raw);
 
 		public void MarkReconfigure() {
 			gst_pad_mark_reconfigure(Handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_pad_needs_reconfigure(IntPtr raw);
 
 		public bool NeedsReconfigure() {
@@ -703,7 +703,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_pad_pause_task(IntPtr raw);
 
 		public bool PauseTask() {
@@ -712,7 +712,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_pad_peer_query(IntPtr raw, IntPtr query);
 
 		public bool PeerQuery(Gst.Query query) {
@@ -721,7 +721,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_pad_peer_query_accept_caps(IntPtr raw, IntPtr caps);
 
 		public bool PeerQueryAcceptCaps(Gst.Caps caps) {
@@ -730,7 +730,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_peer_query_caps(IntPtr raw, IntPtr filter);
 
 		public Gst.Caps PeerQueryCaps(Gst.Caps filter) {
@@ -743,7 +743,7 @@ namespace Gst {
 			return PeerQueryCaps (null);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_pad_peer_query_convert(IntPtr raw, int src_format, long src_val, int dest_format, out long dest_val);
 
 		public bool PeerQueryConvert(Gst.Format src_format, long src_val, Gst.Format dest_format, out long dest_val) {
@@ -752,7 +752,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_pad_peer_query_duration(IntPtr raw, int format, out long duration);
 
 		public bool PeerQueryDuration(Gst.Format format, out long duration) {
@@ -761,7 +761,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_pad_peer_query_position(IntPtr raw, int format, out long cur);
 
 		public bool PeerQueryPosition(Gst.Format format, out long cur) {
@@ -770,7 +770,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_pad_proxy_query_accept_caps(IntPtr raw, IntPtr query);
 
 		public bool ProxyQueryAcceptCaps(Gst.Query query) {
@@ -779,7 +779,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_pad_proxy_query_caps(IntPtr raw, IntPtr query);
 
 		public bool ProxyQueryCaps(Gst.Query query) {
@@ -788,7 +788,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_pad_pull_range(IntPtr raw, ulong offset, uint size, out IntPtr buffer);
 
 		public Gst.FlowReturn PullRange(ulong offset, uint size, out Gst.Buffer buffer) {
@@ -799,7 +799,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_pad_push(IntPtr raw, IntPtr buffer);
 
 		public Gst.FlowReturn Push(Gst.Buffer buffer) {
@@ -809,7 +809,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_pad_push_event(IntPtr raw, IntPtr evnt);
 
 		public bool PushEvent(Gst.Event evnt) {
@@ -819,7 +819,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_pad_push_list(IntPtr raw, IntPtr list);
 
 		public Gst.FlowReturn PushList(Gst.BufferList list) {
@@ -829,7 +829,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_pad_query(IntPtr raw, IntPtr query);
 
 		public bool Query(Gst.Query query) {
@@ -838,7 +838,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_pad_query_accept_caps(IntPtr raw, IntPtr caps);
 
 		public bool QueryAcceptCaps(Gst.Caps caps) {
@@ -847,7 +847,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_query_caps(IntPtr raw, IntPtr filter);
 
 		public Gst.Caps QueryCaps(Gst.Caps filter) {
@@ -860,7 +860,7 @@ namespace Gst {
 			return QueryCaps (null);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_pad_query_convert(IntPtr raw, int src_format, long src_val, int dest_format, out long dest_val);
 
 		public bool QueryConvert(Gst.Format src_format, long src_val, Gst.Format dest_format, out long dest_val) {
@@ -869,7 +869,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_pad_query_default(IntPtr raw, IntPtr parent, IntPtr query);
 
 		public bool QueryDefault(Gst.Object parent, Gst.Query query) {
@@ -882,7 +882,7 @@ namespace Gst {
 			return QueryDefault (null, query);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_pad_query_duration(IntPtr raw, int format, out long duration);
 
 		public bool QueryDuration(Gst.Format format, out long duration) {
@@ -891,7 +891,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_pad_query_position(IntPtr raw, int format, out long cur);
 
 		public bool QueryPosition(Gst.Format format, out long cur) {
@@ -900,14 +900,14 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_pad_remove_probe(IntPtr raw, UIntPtr id);
 
 		public void RemoveProbe(ulong id) {
 			gst_pad_remove_probe(Handle, new UIntPtr (id));
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_pad_send_event(IntPtr raw, IntPtr evnt);
 
 		public bool SendEvent(Gst.Event evnt) {
@@ -917,7 +917,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_pad_set_activate_function_full(IntPtr raw, GstSharp.PadActivateFunctionNative activate, IntPtr user_data, GLib.DestroyNotify notify);
 
 		public Gst.PadActivateFunction ActivateFunctionFull { 
@@ -936,7 +936,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_pad_set_activatemode_function_full(IntPtr raw, GstSharp.PadActivateModeFunctionNative activatemode, IntPtr user_data, GLib.DestroyNotify notify);
 
 		public Gst.PadActivateModeFunction ActivatemodeFunctionFull { 
@@ -955,7 +955,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_pad_set_active(IntPtr raw, bool active);
 
 		public bool SetActive(bool active) {
@@ -964,7 +964,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_pad_set_chain_function_full(IntPtr raw, GstSharp.PadChainFunctionNative chain, IntPtr user_data, GLib.DestroyNotify notify);
 
 		public Gst.PadChainFunction ChainFunctionFull { 
@@ -983,7 +983,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_pad_set_chain_list_function_full(IntPtr raw, GstSharp.PadChainListFunctionNative chainlist, IntPtr user_data, GLib.DestroyNotify notify);
 
 		public Gst.PadChainListFunction ChainListFunctionFull { 
@@ -1002,7 +1002,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_pad_set_event_full_function_full(IntPtr raw, GstSharp.PadEventFullFunctionNative evnt, IntPtr user_data, GLib.DestroyNotify notify);
 
 		public Gst.PadEventFullFunction EventFullFunctionFull { 
@@ -1021,7 +1021,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_pad_set_event_function_full(IntPtr raw, GstSharp.PadEventFunctionNative evnt, IntPtr user_data, GLib.DestroyNotify notify);
 
 		public Gst.PadEventFunction EventFunctionFull { 
@@ -1040,7 +1040,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_pad_set_getrange_function_full(IntPtr raw, GstSharp.PadGetRangeFunctionNative get, IntPtr user_data, GLib.DestroyNotify notify);
 
 		public Gst.PadGetRangeFunction GetrangeFunctionFull { 
@@ -1059,7 +1059,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_pad_set_iterate_internal_links_function_full(IntPtr raw, GstSharp.PadIterIntLinkFunctionNative iterintlink, IntPtr user_data, GLib.DestroyNotify notify);
 
 		public Gst.PadIterIntLinkFunction IterateInternalLinksFunctionFull { 
@@ -1078,7 +1078,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_pad_set_link_function_full(IntPtr raw, GstSharp.PadLinkFunctionNative link, IntPtr user_data, GLib.DestroyNotify notify);
 
 		public Gst.PadLinkFunction LinkFunctionFull { 
@@ -1097,7 +1097,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_pad_set_query_function_full(IntPtr raw, GstSharp.PadQueryFunctionNative query, IntPtr user_data, GLib.DestroyNotify notify);
 
 		public Gst.PadQueryFunction QueryFunctionFull { 
@@ -1116,7 +1116,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_pad_set_unlink_function_full(IntPtr raw, GstSharp.PadUnlinkFunctionNative unlink, IntPtr user_data, GLib.DestroyNotify notify);
 
 		public Gst.PadUnlinkFunction UnlinkFunctionFull { 
@@ -1135,7 +1135,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_pad_start_task(IntPtr raw, GstSharp.TaskFunctionNative func, IntPtr user_data, GLib.DestroyNotify notify);
 
 		public bool StartTask(Gst.TaskFunction func) {
@@ -1154,7 +1154,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_pad_sticky_events_foreach(IntPtr raw, GstSharp.PadStickyEventsForeachFunctionNative foreach_func, IntPtr user_data);
 
 		public void StickyEventsForeach(Gst.PadStickyEventsForeachFunction foreach_func) {
@@ -1162,7 +1162,7 @@ namespace Gst {
 			gst_pad_sticky_events_foreach(Handle, foreach_func_wrapper.NativeDelegate, IntPtr.Zero);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_pad_stop_task(IntPtr raw);
 
 		public bool StopTask() {
@@ -1171,7 +1171,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_pad_store_sticky_event(IntPtr raw, IntPtr evnt);
 
 		public Gst.FlowReturn StoreStickyEvent(Gst.Event evnt) {
@@ -1180,7 +1180,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_pad_unlink(IntPtr raw, IntPtr sinkpad);
 
 		public bool Unlink(Gst.Pad sinkpad) {
@@ -1189,14 +1189,14 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_pad_use_fixed_caps(IntPtr raw);
 
 		public void UseFixedCaps() {
 			gst_pad_use_fixed_caps(Handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_mode_get_name(int mode);
 
 		public static string ModeGetName(Gst.PadMode mode) {

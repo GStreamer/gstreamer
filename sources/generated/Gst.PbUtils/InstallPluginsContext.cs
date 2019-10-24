@@ -21,7 +21,7 @@ namespace Gst.PbUtils {
 			return (Gst.PbUtils.InstallPluginsContext) Marshal.PtrToStructure (raw, typeof (Gst.PbUtils.InstallPluginsContext));
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_install_plugins_context_new();
 
 		public static InstallPluginsContext New()
@@ -30,7 +30,7 @@ namespace Gst.PbUtils {
 			return result;
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_install_plugins_context_get_type();
 
 		public static GLib.GType GType { 
@@ -41,7 +41,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_install_plugins_context_set_confirm_search(IntPtr raw, bool confirm_search);
 
 		public bool ConfirmSearch { 
@@ -54,7 +54,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_install_plugins_context_set_desktop_id(IntPtr raw, IntPtr desktop_id);
 
 		public string DesktopId { 
@@ -69,7 +69,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_install_plugins_context_set_startup_notification_id(IntPtr raw, IntPtr startup_id);
 
 		public string StartupNotificationId { 
@@ -84,7 +84,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_install_plugins_context_set_xid(IntPtr raw, uint xid);
 
 		public uint Xid { 

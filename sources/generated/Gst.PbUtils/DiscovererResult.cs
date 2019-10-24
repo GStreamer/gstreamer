@@ -19,7 +19,7 @@ namespace Gst.PbUtils {
 	}
 
 	internal class DiscovererResultGType {
-		[DllImport ("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_discoverer_result_get_type ();
 
 		public static GLib.GType GType {

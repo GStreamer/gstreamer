@@ -38,7 +38,7 @@ namespace Gst.Rtsp {
 			return (Gst.Rtsp.RTSPTransport) Marshal.PtrToStructure (raw, typeof (Gst.Rtsp.RTSPTransport));
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_rtsp_transport_as_text(IntPtr raw);
 
 		public string AsText() {
@@ -51,7 +51,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_transport_free(IntPtr raw);
 
 		public Gst.Rtsp.RTSPResult Free() {
@@ -64,7 +64,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_transport_get_media_type(IntPtr raw, out IntPtr media_type);
 
 		public Gst.Rtsp.RTSPResult GetMediaType(out string media_type) {
@@ -79,7 +79,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_transport_init(IntPtr raw);
 
 		public Gst.Rtsp.RTSPResult Init() {
@@ -92,7 +92,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_transport_get_manager(int trans, out IntPtr manager, uint option);
 
 		public static Gst.Rtsp.RTSPResult GetManager(Gst.Rtsp.RTSPTransMode trans, out string manager, uint option) {
@@ -103,7 +103,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_transport_get_mime(int trans, IntPtr mime);
 
 		[Obsolete]
@@ -115,7 +115,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_transport_new(IntPtr transport);
 
 		public static Gst.Rtsp.RTSPResult New(Gst.Rtsp.RTSPTransport transport) {
@@ -126,7 +126,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_transport_parse(IntPtr str, IntPtr transport);
 
 		public static Gst.Rtsp.RTSPResult Parse(string str, Gst.Rtsp.RTSPTransport transport) {

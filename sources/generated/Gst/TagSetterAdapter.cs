@@ -47,7 +47,7 @@ namespace Gst {
 			implementor = GLib.Object.GetObject (handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_tag_setter_get_type();
 
 		private static GLib.GType _gtype = new GLib.GType (gst_tag_setter_get_type ());
@@ -100,7 +100,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_tag_setter_add_tag_value(IntPtr raw, int mode, IntPtr tag, IntPtr value);
 
 		public void AddTagValue(Gst.TagMergeMode mode, string tag, GLib.Value value) {
@@ -111,7 +111,7 @@ namespace Gst {
 			Marshal.FreeHGlobal (native_value);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_tag_setter_get_tag_list(IntPtr raw);
 
 		public Gst.TagList TagList { 
@@ -122,10 +122,10 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_tag_setter_get_tag_merge_mode(IntPtr raw);
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_tag_setter_set_tag_merge_mode(IntPtr raw, int mode);
 
 		public Gst.TagMergeMode TagMergeMode { 
@@ -139,14 +139,14 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_tag_setter_merge_tags(IntPtr raw, IntPtr list, int mode);
 
 		public void MergeTags(Gst.TagList list, Gst.TagMergeMode mode) {
 			gst_tag_setter_merge_tags(Handle, list == null ? IntPtr.Zero : list.Handle, (int) mode);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_tag_setter_reset_tags(IntPtr raw);
 
 		public void ResetTags() {

@@ -21,7 +21,7 @@ namespace Gst {
 	}
 
 	internal class DebugGraphDetailsGType {
-		[DllImport ("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_debug_graph_details_get_type ();
 
 		public static GLib.GType GType {

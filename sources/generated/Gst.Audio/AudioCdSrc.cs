@@ -291,7 +291,7 @@ namespace Gst.Audio {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_audio_cd_src_get_type();
 
 		public static new GLib.GType GType { 
@@ -302,7 +302,7 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_audio_cd_src_add_track(IntPtr raw, IntPtr track);
 
 		public bool AddTrack(Gst.Audio.AudioCdSrcTrack track) {
@@ -313,7 +313,7 @@ namespace Gst.Audio {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_uri_handler_get_uri(IntPtr raw);
 
 		public string Uri { 
@@ -324,7 +324,7 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_uri_handler_get_uri_type(IntPtr raw);
 
 		public Gst.URIType UriType { 
@@ -335,7 +335,7 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_uri_handler_set_uri(IntPtr raw, IntPtr uri, out IntPtr error);
 
 		public bool SetUri(string uri) {

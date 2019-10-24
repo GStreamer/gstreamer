@@ -17,7 +17,7 @@ namespace Gst.WebRTC {
 	}
 
 	internal class WebRTCSDPTypeGType {
-		[DllImport ("libgstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_webrtc_sdp_type_get_type ();
 
 		public static GLib.GType GType {

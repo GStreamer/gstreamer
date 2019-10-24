@@ -252,21 +252,21 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace[@name='GstSdp']" name="name">Gst.Sdp</attr>
 	<attr path="/api/namespace[@name='GstWebRTC']" name="name">Gst.WebRTC</attr>
 
-	<attr path="/api/namespace" name="library">libgstreamer-1.0-0.dll</attr>
-	<attr path="/api/namespace[@name='Gst.Base']" name="library">libgstbase-1.0-0.dll</attr>
-	<attr path="/api/namespace[@name='Gst.Audio']" name="library">libgstaudio-1.0-0.dll</attr>
-	<attr path="/api/namespace[@name='Gst.Video']" name="library">libgstvideo-1.0-0.dll</attr>
-	<attr path="/api/namespace[@name='Gst.PbUtils']" name="library">libgstpbutils-1.0-0.dll</attr>
-	<attr path="/api/namespace[@name='Gst.Tags']" name="library">libgsttag-1.0-0.dll</attr>
-	<attr path="/api/namespace[@name='Gst.App']" name="library">libgstapp-1.0-0.dll</attr>
-	<attr path="/api/namespace[@name='Gst.Controller']" name="library">libgstcontroller-1.0-0.dll</attr>
-	<attr path="/api/namespace[@name='Gst.FFT']" name="library">libgstfft-1.0-0.dll</attr>
-	<attr path="/api/namespace[@name='Gst.Net']" name="library">libgstnet-1.0-0.dll</attr>
-	<attr path="/api/namespace[@name='Gst.Riff']" name="library">libgstriff-1.0-0.dll</attr>
-	<attr path="/api/namespace[@name='Gst.Rtp']" name="library">libgstrtp-1.0-0.dll</attr>
-	<attr path="/api/namespace[@name='Gst.Rtsp']" name="library">libgstrtsp-1.0-0.dll</attr>
-	<attr path="/api/namespace[@name='Gst.Sdp']" name="library">libgstsdp-1.0-0.dll</attr>
-	<attr path="/api/namespace[@name='Gst.WebRTC']" name="library">libgstwebrtc-1.0-0.dll</attr>
+	<attr path="/api/namespace" name="library">gstreamer-1.0-0.dll</attr>
+	<attr path="/api/namespace[@name='Gst.Base']" name="library">gstbase-1.0-0.dll</attr>
+	<attr path="/api/namespace[@name='Gst.Audio']" name="library">gstaudio-1.0-0.dll</attr>
+	<attr path="/api/namespace[@name='Gst.Video']" name="library">gstvideo-1.0-0.dll</attr>
+	<attr path="/api/namespace[@name='Gst.PbUtils']" name="library">gstpbutils-1.0-0.dll</attr>
+	<attr path="/api/namespace[@name='Gst.Tags']" name="library">gsttag-1.0-0.dll</attr>
+	<attr path="/api/namespace[@name='Gst.App']" name="library">gstapp-1.0-0.dll</attr>
+	<attr path="/api/namespace[@name='Gst.Controller']" name="library">gstcontroller-1.0-0.dll</attr>
+	<attr path="/api/namespace[@name='Gst.FFT']" name="library">gstfft-1.0-0.dll</attr>
+	<attr path="/api/namespace[@name='Gst.Net']" name="library">gstnet-1.0-0.dll</attr>
+	<attr path="/api/namespace[@name='Gst.Riff']" name="library">gstriff-1.0-0.dll</attr>
+	<attr path="/api/namespace[@name='Gst.Rtp']" name="library">gstrtp-1.0-0.dll</attr>
+	<attr path="/api/namespace[@name='Gst.Rtsp']" name="library">gstrtsp-1.0-0.dll</attr>
+	<attr path="/api/namespace[@name='Gst.Sdp']" name="library">gstsdp-1.0-0.dll</attr>
+	<attr path="/api/namespace[@name='Gst.WebRTC']" name="library">gstwebrtc-1.0-0.dll</attr>
 
 	<!-- DoubleRange and Fraction are in Value.cs -->
 	<attr path="//struct[@name='DoubleRange' or @name='Fraction' or @name='IntRange' or @name='FractionRange']" name="hidden">true</attr>

@@ -23,7 +23,7 @@ namespace Gst.Rtsp {
 			return (Gst.Rtsp.RTSPAuthParam) Marshal.PtrToStructure (raw, typeof (Gst.Rtsp.RTSPAuthParam));
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_rtsp_auth_param_get_type();
 
 		public static GLib.GType GType { 

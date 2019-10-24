@@ -26,10 +26,10 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_structure_get_name(IntPtr raw);
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_structure_set_name(IntPtr raw, IntPtr name);
 
 		public string Name {
@@ -45,7 +45,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_structure_get_type();
 
 		public static GLib.GType GType { 
@@ -56,7 +56,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_structure_can_intersect(IntPtr raw, IntPtr struct2);
 
 		public bool CanIntersect(Gst.Structure struct2) {
@@ -65,7 +65,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_structure_copy(IntPtr raw);
 
 		public Gst.Structure Copy() {
@@ -74,7 +74,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_structure_filter_and_map_in_place(IntPtr raw, GstSharp.StructureFilterMapFuncNative func, IntPtr user_data);
 
 		public void FilterAndMapInPlace(Gst.StructureFilterMapFunc func) {
@@ -82,14 +82,14 @@ namespace Gst {
 			gst_structure_filter_and_map_in_place(Handle, func_wrapper.NativeDelegate, IntPtr.Zero);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_structure_fixate(IntPtr raw);
 
 		public void Fixate() {
 			gst_structure_fixate(Handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_structure_fixate_field(IntPtr raw, IntPtr field_name);
 
 		public bool FixateField(string field_name) {
@@ -100,7 +100,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_structure_fixate_field_boolean(IntPtr raw, IntPtr field_name, bool target);
 
 		public bool FixateFieldBoolean(string field_name, bool target) {
@@ -111,7 +111,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_structure_fixate_field_nearest_double(IntPtr raw, IntPtr field_name, double target);
 
 		public bool FixateFieldNearestDouble(string field_name, double target) {
@@ -122,7 +122,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_structure_fixate_field_nearest_fraction(IntPtr raw, IntPtr field_name, int target_numerator, int target_denominator);
 
 		public bool FixateFieldNearestFraction(string field_name, int target_numerator, int target_denominator) {
@@ -133,7 +133,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_structure_fixate_field_nearest_int(IntPtr raw, IntPtr field_name, int target);
 
 		public bool FixateFieldNearestInt(string field_name, int target) {
@@ -144,7 +144,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_structure_fixate_field_string(IntPtr raw, IntPtr field_name, IntPtr target);
 
 		public bool FixateFieldString(string field_name, string target) {
@@ -157,7 +157,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_structure_foreach(IntPtr raw, GstSharp.StructureForeachFuncNative func, IntPtr user_data);
 
 		public bool Foreach(Gst.StructureForeachFunc func) {
@@ -167,7 +167,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_structure_get_array(IntPtr raw, IntPtr fieldname, out IntPtr array);
 
 		public bool GetArray(string fieldname, out GLib.ValueArray array) {
@@ -180,7 +180,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_structure_get_boolean(IntPtr raw, IntPtr fieldname, out bool value);
 
 		public bool GetBoolean(string fieldname, out bool value) {
@@ -191,7 +191,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_structure_get_clock_time(IntPtr raw, IntPtr fieldname, out ulong value);
 
 		public bool GetClockTime(string fieldname, out ulong value) {
@@ -202,7 +202,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_structure_get_date(IntPtr raw, IntPtr fieldname, out IntPtr value);
 
 		public bool GetDate(string fieldname, out GLib.Date value) {
@@ -215,7 +215,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_structure_get_date_time(IntPtr raw, IntPtr fieldname, out IntPtr value);
 
 		public bool GetDateTime(string fieldname, out Gst.DateTime value) {
@@ -228,7 +228,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_structure_get_double(IntPtr raw, IntPtr fieldname, out double value);
 
 		public bool GetDouble(string fieldname, out double value) {
@@ -239,7 +239,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_structure_get_enum(IntPtr raw, IntPtr fieldname, IntPtr enumtype, out int value);
 
 		public bool GetEnum(string fieldname, GLib.GType enumtype, out int value) {
@@ -250,7 +250,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_structure_get_field_type(IntPtr raw, IntPtr fieldname);
 
 		public GLib.GType GetFieldType(string fieldname) {
@@ -261,7 +261,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_structure_get_flagset(IntPtr raw, IntPtr fieldname, out uint value_flags, out uint value_mask);
 
 		public bool GetFlagset(string fieldname, out uint value_flags, out uint value_mask) {
@@ -272,7 +272,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_structure_get_fraction(IntPtr raw, IntPtr fieldname, out int value_numerator, out int value_denominator);
 
 		public bool GetFraction(string fieldname, out int value_numerator, out int value_denominator) {
@@ -283,7 +283,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_structure_get_int(IntPtr raw, IntPtr fieldname, out int value);
 
 		public bool GetInt(string fieldname, out int value) {
@@ -294,7 +294,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_structure_get_int64(IntPtr raw, IntPtr fieldname, out long value);
 
 		public bool GetInt64(string fieldname, out long value) {
@@ -305,7 +305,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_structure_get_list(IntPtr raw, IntPtr fieldname, out IntPtr array);
 
 		public bool GetList(string fieldname, out GLib.ValueArray array) {
@@ -318,7 +318,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_structure_get_name_id(IntPtr raw);
 
 		public uint NameId { 
@@ -329,7 +329,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_structure_get_string(IntPtr raw, IntPtr fieldname);
 
 		public string GetString(string fieldname) {
@@ -340,7 +340,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_structure_get_uint(IntPtr raw, IntPtr fieldname, out uint value);
 
 		public bool GetUint(string fieldname, out uint value) {
@@ -351,7 +351,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_structure_get_uint64(IntPtr raw, IntPtr fieldname, out ulong value);
 
 		public bool GetUint64(string fieldname, out ulong value) {
@@ -362,7 +362,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_structure_get_value(IntPtr raw, IntPtr fieldname);
 
 		public GLib.Value GetValue(string fieldname) {
@@ -373,7 +373,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_structure_has_field(IntPtr raw, IntPtr fieldname);
 
 		public bool HasField(string fieldname) {
@@ -384,7 +384,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_structure_has_field_typed(IntPtr raw, IntPtr fieldname, IntPtr type);
 
 		public bool HasFieldTyped(string fieldname, GLib.GType type) {
@@ -395,7 +395,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_structure_has_name(IntPtr raw, IntPtr name);
 
 		public bool HasName(string name) {
@@ -406,7 +406,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_structure_id_get_value(IntPtr raw, uint field);
 
 		public GLib.Value IdGetValue(uint field) {
@@ -415,7 +415,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_structure_id_has_field(IntPtr raw, uint field);
 
 		public bool IdHasField(uint field) {
@@ -424,7 +424,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_structure_id_has_field_typed(IntPtr raw, uint field, IntPtr type);
 
 		public bool IdHasFieldTyped(uint field, GLib.GType type) {
@@ -433,7 +433,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_structure_id_set_value(IntPtr raw, uint field, IntPtr value);
 
 		public void IdSetValue(uint field, GLib.Value value) {
@@ -442,7 +442,7 @@ namespace Gst {
 			Marshal.FreeHGlobal (native_value);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_structure_id_take_value(IntPtr raw, uint field, IntPtr value);
 
 		public void IdTakeValue(uint field, GLib.Value value) {
@@ -451,7 +451,7 @@ namespace Gst {
 			Marshal.FreeHGlobal (native_value);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_structure_intersect(IntPtr raw, IntPtr struct2);
 
 		public Gst.Structure Intersect(Gst.Structure struct2) {
@@ -460,7 +460,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_structure_is_equal(IntPtr raw, IntPtr structure2);
 
 		public bool IsEqual(Gst.Structure structure2) {
@@ -469,7 +469,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_structure_is_subset(IntPtr raw, IntPtr superset);
 
 		public bool IsSubset(Gst.Structure superset) {
@@ -478,7 +478,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_structure_map_in_place(IntPtr raw, GstSharp.StructureMapFuncNative func, IntPtr user_data);
 
 		public bool MapInPlace(Gst.StructureMapFunc func) {
@@ -488,7 +488,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_structure_n_fields(IntPtr raw);
 
 		public int NFields() {
@@ -497,7 +497,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_structure_nth_field_name(IntPtr raw, uint index);
 
 		public string NthFieldName(uint index) {
@@ -506,14 +506,14 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_structure_remove_all_fields(IntPtr raw);
 
 		public void RemoveAllFields() {
 			gst_structure_remove_all_fields(Handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_structure_remove_field(IntPtr raw, IntPtr fieldname);
 
 		public void RemoveField(string fieldname) {
@@ -522,7 +522,7 @@ namespace Gst {
 			GLib.Marshaller.Free (native_fieldname);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_structure_set_array(IntPtr raw, IntPtr fieldname, IntPtr array);
 
 		public void SetArray(string fieldname, GLib.ValueArray array) {
@@ -531,7 +531,7 @@ namespace Gst {
 			GLib.Marshaller.Free (native_fieldname);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_structure_set_list(IntPtr raw, IntPtr fieldname, IntPtr array);
 
 		public void SetList(string fieldname, GLib.ValueArray array) {
@@ -540,7 +540,7 @@ namespace Gst {
 			GLib.Marshaller.Free (native_fieldname);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_structure_set_parent_refcount(IntPtr raw, int refcount);
 
 		public bool SetParentRefcount(int refcount) {
@@ -549,7 +549,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_structure_set_value(IntPtr raw, IntPtr fieldname, IntPtr value);
 
 		public void SetValue(string fieldname, GLib.Value value) {
@@ -560,7 +560,7 @@ namespace Gst {
 			Marshal.FreeHGlobal (native_value);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_structure_take_value(IntPtr raw, IntPtr fieldname, IntPtr value);
 
 		public void TakeValue(string fieldname, GLib.Value value) {
@@ -571,7 +571,7 @@ namespace Gst {
 			Marshal.FreeHGlobal (native_value);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_structure_to_string(IntPtr raw);
 
 		public override string ToString() {
@@ -580,7 +580,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_structure_from_string(IntPtr str1ng, out IntPtr end);
 
 		public static Gst.Structure FromString(string str1ng, out string end) {
@@ -595,7 +595,7 @@ namespace Gst {
 
 		public Structure(IntPtr raw) : base(raw) {}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_structure_new_empty(IntPtr name);
 
 		public Structure (string name) 
@@ -605,7 +605,7 @@ namespace Gst {
 			GLib.Marshaller.Free (native_name);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_structure_new_from_string(IntPtr str1ng);
 
 		public static Structure NewFromString(string str1ng)
@@ -616,7 +616,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_structure_new_id_empty(uint quark);
 
 		public Structure (uint quark) 
@@ -624,7 +624,7 @@ namespace Gst {
 			Raw = gst_structure_new_id_empty(quark);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_structure_free(IntPtr raw);
 
 		protected override void Free (IntPtr raw)

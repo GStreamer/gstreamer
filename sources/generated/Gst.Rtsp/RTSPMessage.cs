@@ -28,7 +28,7 @@ namespace Gst.Rtsp {
 			return (Gst.Rtsp.RTSPMessage) Marshal.PtrToStructure (raw, typeof (Gst.Rtsp.RTSPMessage));
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_rtsp_msg_get_type();
 
 		public static GLib.GType GType { 
@@ -39,7 +39,7 @@ namespace Gst.Rtsp {
 			}
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_message_add_header(IntPtr raw, int field, IntPtr value);
 
 		public Gst.Rtsp.RTSPResult AddHeader(Gst.Rtsp.RTSPHeaderField field, string value) {
@@ -54,7 +54,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_message_add_header_by_name(IntPtr raw, IntPtr header, IntPtr value);
 
 		public Gst.Rtsp.RTSPResult AddHeaderByName(string header, string value) {
@@ -71,7 +71,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_message_append_headers(IntPtr raw, IntPtr str);
 
 		public Gst.Rtsp.RTSPResult AppendHeaders(string str) {
@@ -84,7 +84,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_message_dump(IntPtr raw);
 
 		public Gst.Rtsp.RTSPResult Dump() {
@@ -97,7 +97,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_message_get_body_buffer(IntPtr raw, out IntPtr buffer);
 
 		public Gst.Rtsp.RTSPResult GetBodyBuffer(out Gst.Buffer buffer) {
@@ -112,7 +112,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_message_get_header(IntPtr raw, int field, out IntPtr value, int indx);
 
 		public Gst.Rtsp.RTSPResult GetHeader(Gst.Rtsp.RTSPHeaderField field, out string value, int indx) {
@@ -127,7 +127,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_message_get_header_by_name(IntPtr raw, IntPtr header, out IntPtr value, int index);
 
 		public Gst.Rtsp.RTSPResult GetHeaderByName(string header, out string value, int index) {
@@ -144,7 +144,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_message_get_type(IntPtr raw);
 
 		public Gst.Rtsp.RTSPMsgType MessageType { 
@@ -159,7 +159,7 @@ namespace Gst.Rtsp {
 			}
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtsp_message_has_body_buffer(IntPtr raw);
 
 		public bool HasBodyBuffer { 
@@ -174,7 +174,7 @@ namespace Gst.Rtsp {
 			}
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_message_init(IntPtr raw);
 
 		public Gst.Rtsp.RTSPResult Init() {
@@ -187,7 +187,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_message_init_data(IntPtr raw, byte channel);
 
 		public Gst.Rtsp.RTSPResult InitData(byte channel) {
@@ -200,7 +200,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_message_init_request(IntPtr raw, int method, IntPtr uri);
 
 		public Gst.Rtsp.RTSPResult InitRequest(Gst.Rtsp.RTSPMethod method, string uri) {
@@ -215,7 +215,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_message_init_response(IntPtr raw, int code, IntPtr reason, IntPtr request);
 
 		public Gst.Rtsp.RTSPResult InitResponse(Gst.Rtsp.RTSPStatusCode code, string reason, Gst.Rtsp.RTSPMessage request) {
@@ -236,7 +236,7 @@ namespace Gst.Rtsp {
 			return InitResponse (code, null, Gst.Rtsp.RTSPMessage.Zero);
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_message_parse_data(IntPtr raw, out byte channel);
 
 		public Gst.Rtsp.RTSPResult ParseData(out byte channel) {
@@ -249,7 +249,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_message_parse_request(IntPtr raw, out int method, out IntPtr uri, out int version);
 
 		public Gst.Rtsp.RTSPResult ParseRequest(out Gst.Rtsp.RTSPMethod method, out string uri, out Gst.Rtsp.RTSPVersion version) {
@@ -268,7 +268,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_message_parse_response(IntPtr raw, out int code, out IntPtr reason, out int version);
 
 		public Gst.Rtsp.RTSPResult ParseResponse(out Gst.Rtsp.RTSPStatusCode code, out string reason, out Gst.Rtsp.RTSPVersion version) {
@@ -287,7 +287,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_message_remove_header(IntPtr raw, int field, int indx);
 
 		public Gst.Rtsp.RTSPResult RemoveHeader(Gst.Rtsp.RTSPHeaderField field, int indx) {
@@ -300,7 +300,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_message_remove_header_by_name(IntPtr raw, IntPtr header, int index);
 
 		public Gst.Rtsp.RTSPResult RemoveHeaderByName(string header, int index) {
@@ -315,7 +315,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_message_set_body(IntPtr raw, byte[] data, uint size);
 
 		public Gst.Rtsp.RTSPResult SetBody(byte[] data, uint size) {
@@ -328,7 +328,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_message_set_body_buffer(IntPtr raw, IntPtr buffer);
 
 		public Gst.Rtsp.RTSPResult SetBodyBuffer(Gst.Buffer buffer) {
@@ -341,7 +341,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_message_steal_body_buffer(IntPtr raw, out IntPtr buffer);
 
 		public Gst.Rtsp.RTSPResult StealBodyBuffer(out Gst.Buffer buffer) {
@@ -356,7 +356,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_message_take_body(IntPtr raw, byte[] data, uint size);
 
 		public Gst.Rtsp.RTSPResult TakeBody(byte[] data, uint size) {
@@ -369,7 +369,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_message_take_body_buffer(IntPtr raw, IntPtr buffer);
 
 		public Gst.Rtsp.RTSPResult TakeBodyBuffer(Gst.Buffer buffer) {
@@ -383,7 +383,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_message_take_header(IntPtr raw, int field, IntPtr value);
 
 		public Gst.Rtsp.RTSPResult TakeHeader(Gst.Rtsp.RTSPHeaderField field, string value) {
@@ -396,7 +396,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_message_take_header_by_name(IntPtr raw, IntPtr header, IntPtr value);
 
 		public Gst.Rtsp.RTSPResult TakeHeaderByName(string header, string value) {
@@ -411,7 +411,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_message_unset(IntPtr raw);
 
 		public Gst.Rtsp.RTSPResult Unset() {

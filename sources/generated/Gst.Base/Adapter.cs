@@ -13,7 +13,7 @@ namespace Gst.Base {
 
 		public Adapter (IntPtr raw) : base(raw) {}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_adapter_new();
 
 		public Adapter () : base (IntPtr.Zero)
@@ -40,7 +40,7 @@ namespace Gst.Base {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_adapter_get_type();
 
 		public static new GLib.GType GType { 
@@ -51,7 +51,7 @@ namespace Gst.Base {
 			}
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern UIntPtr gst_adapter_available(IntPtr raw);
 
 		public ulong Available() {
@@ -60,7 +60,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern UIntPtr gst_adapter_available_fast(IntPtr raw);
 
 		public ulong AvailableFast() {
@@ -69,14 +69,14 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_adapter_clear(IntPtr raw);
 
 		public void Clear() {
 			gst_adapter_clear(Handle);
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_adapter_copy_bytes(IntPtr raw, UIntPtr offset, UIntPtr size);
 
 		public GLib.Bytes CopyBytes(ulong offset, ulong size) {
@@ -85,7 +85,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_adapter_distance_from_discont(IntPtr raw);
 
 		public ulong DistanceFromDiscont() {
@@ -94,7 +94,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_adapter_dts_at_discont(IntPtr raw);
 
 		public ulong DtsAtDiscont() {
@@ -103,14 +103,14 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_adapter_flush(IntPtr raw, UIntPtr flush);
 
 		public void Flush(ulong flush) {
 			gst_adapter_flush(Handle, new UIntPtr (flush));
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_adapter_get_buffer(IntPtr raw, UIntPtr nbytes);
 
 		public Gst.Buffer GetBuffer(ulong nbytes) {
@@ -119,7 +119,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_adapter_get_buffer_fast(IntPtr raw, UIntPtr nbytes);
 
 		public Gst.Buffer GetBufferFast(ulong nbytes) {
@@ -128,7 +128,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_adapter_get_buffer_list(IntPtr raw, UIntPtr nbytes);
 
 		public Gst.BufferList GetBufferList(ulong nbytes) {
@@ -137,7 +137,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_adapter_get_list(IntPtr raw, UIntPtr nbytes);
 
 		public GLib.List[] GetList(ulong nbytes) {
@@ -146,7 +146,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_adapter_masked_scan_uint32(IntPtr raw, uint mask, uint pattern, UIntPtr offset, UIntPtr size);
 
 		public long MaskedScanUint32(uint mask, uint pattern, ulong offset, ulong size) {
@@ -155,7 +155,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_adapter_masked_scan_uint32_peek(IntPtr raw, uint mask, uint pattern, UIntPtr offset, UIntPtr size, out uint value);
 
 		public long MaskedScanUint32Peek(uint mask, uint pattern, ulong offset, ulong size, out uint value) {
@@ -164,7 +164,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_adapter_offset_at_discont(IntPtr raw);
 
 		public ulong OffsetAtDiscont() {
@@ -173,7 +173,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_adapter_prev_dts(IntPtr raw, out ulong distance);
 
 		public ulong PrevDts(out ulong distance) {
@@ -182,7 +182,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_adapter_prev_dts_at_offset(IntPtr raw, UIntPtr offset, out ulong distance);
 
 		public ulong PrevDtsAtOffset(ulong offset, out ulong distance) {
@@ -191,7 +191,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_adapter_prev_offset(IntPtr raw, out ulong distance);
 
 		public ulong PrevOffset(out ulong distance) {
@@ -200,7 +200,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_adapter_prev_pts(IntPtr raw, out ulong distance);
 
 		public ulong PrevPts(out ulong distance) {
@@ -209,7 +209,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_adapter_prev_pts_at_offset(IntPtr raw, UIntPtr offset, out ulong distance);
 
 		public ulong PrevPtsAtOffset(ulong offset, out ulong distance) {
@@ -218,7 +218,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_adapter_pts_at_discont(IntPtr raw);
 
 		public ulong PtsAtDiscont() {
@@ -227,7 +227,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_adapter_push(IntPtr raw, IntPtr buf);
 
 		public void Push(Gst.Buffer buf) {
@@ -235,7 +235,7 @@ namespace Gst.Base {
 			gst_adapter_push(Handle, buf == null ? IntPtr.Zero : buf.Handle);
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_adapter_take_buffer(IntPtr raw, UIntPtr nbytes);
 
 		public Gst.Buffer TakeBuffer(ulong nbytes) {
@@ -244,7 +244,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_adapter_take_buffer_fast(IntPtr raw, UIntPtr nbytes);
 
 		public Gst.Buffer TakeBufferFast(ulong nbytes) {
@@ -253,7 +253,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_adapter_take_buffer_list(IntPtr raw, UIntPtr nbytes);
 
 		public Gst.BufferList TakeBufferList(ulong nbytes) {
@@ -262,7 +262,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_adapter_take_list(IntPtr raw, UIntPtr nbytes);
 
 		public GLib.List[] TakeList(ulong nbytes) {
@@ -271,7 +271,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_adapter_unmap(IntPtr raw);
 
 		public void Unmap() {

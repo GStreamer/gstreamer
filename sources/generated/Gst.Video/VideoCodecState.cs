@@ -60,7 +60,7 @@ namespace Gst.Video {
 			return (Gst.Video.VideoCodecState) Marshal.PtrToStructure (raw, typeof (Gst.Video.VideoCodecState));
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_codec_state_get_type();
 
 		public static GLib.GType GType { 
@@ -71,7 +71,7 @@ namespace Gst.Video {
 			}
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_codec_state_ref(IntPtr raw);
 
 		public Gst.Video.VideoCodecState Ref() {
@@ -84,7 +84,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_video_codec_state_unref(IntPtr raw);
 
 		public void Unref() {

@@ -265,7 +265,7 @@ namespace Gstreameroverlay
 		[DllImport ("libgdk-3.so.0") ]
 		static extern IntPtr gdk_x11_window_get_xid (IntPtr handle);
 
-		[DllImport ("libgdk-win32-3.0-0.dll") ]
+		[DllImport ("gdk-win32-3.0-0.dll") ]
 		static extern IntPtr gdk_win32_drawable_get_handle (IntPtr handle);
 
 		[DllImport ("libX11.so.6")]

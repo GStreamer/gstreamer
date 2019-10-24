@@ -144,7 +144,7 @@ namespace Gst.WebRTC {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_webrtc_rtp_transceiver_get_type();
 
 		public static new GLib.GType GType { 

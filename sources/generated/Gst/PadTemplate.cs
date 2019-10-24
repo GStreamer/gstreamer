@@ -13,7 +13,7 @@ namespace Gst {
 
 		public PadTemplate (IntPtr raw) : base(raw) {}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_template_new(IntPtr name_template, int direction, int presence, IntPtr caps);
 
 		public PadTemplate (string name_template, Gst.PadDirection direction, Gst.PadPresence presence, Gst.Caps caps) : base (IntPtr.Zero)
@@ -39,7 +39,7 @@ namespace Gst {
 			GLib.Marshaller.Free (native_name_template);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_template_new_from_static_pad_template_with_gtype(IntPtr pad_template, IntPtr pad_type);
 
 		public PadTemplate (Gst.StaticPadTemplate pad_template, GLib.GType pad_type) : base (IntPtr.Zero)
@@ -55,7 +55,7 @@ namespace Gst {
 			Marshal.FreeHGlobal (native_pad_template);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_template_new_with_gtype(IntPtr name_template, int direction, int presence, IntPtr caps, IntPtr pad_type);
 
 		public PadTemplate (string name_template, Gst.PadDirection direction, Gst.PadPresence presence, Gst.Caps caps, GLib.GType pad_type) : base (IntPtr.Zero)
@@ -81,7 +81,7 @@ namespace Gst {
 			GLib.Marshaller.Free (native_name_template);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_template_get_caps(IntPtr raw);
 
 		[GLib.Property ("caps")]
@@ -264,7 +264,7 @@ namespace Gst {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_template_get_type();
 
 		public static new GLib.GType GType { 
@@ -275,7 +275,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_pad_template_pad_created(IntPtr raw, IntPtr pad);
 
 		public void PadCreated(Gst.Pad pad) {

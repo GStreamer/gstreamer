@@ -23,7 +23,7 @@ namespace Gst.Controller {
 			return (Gst.Controller.ControlPoint) Marshal.PtrToStructure (raw, typeof (Gst.Controller.ControlPoint));
 		}
 
-		[DllImport("libgstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_control_point_get_type();
 
 		public static GLib.GType GType { 

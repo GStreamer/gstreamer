@@ -15,7 +15,7 @@ namespace Gst {
 	}
 
 	internal class CapsIntersectModeGType {
-		[DllImport ("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_caps_intersect_mode_get_type ();
 
 		public static GLib.GType GType {

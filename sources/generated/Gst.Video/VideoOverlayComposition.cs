@@ -21,7 +21,7 @@ namespace Gst.Video {
 			return (Gst.Video.VideoOverlayComposition) Marshal.PtrToStructure (raw, typeof (Gst.Video.VideoOverlayComposition));
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_overlay_composition_new(IntPtr rectangle);
 
 		public static VideoOverlayComposition New(Gst.Video.VideoOverlayRectangle rectangle)
@@ -30,7 +30,7 @@ namespace Gst.Video {
 			return result;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_overlay_composition_get_type();
 
 		public static GLib.GType GType { 
@@ -41,7 +41,7 @@ namespace Gst.Video {
 			}
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_video_overlay_composition_add_rectangle(IntPtr raw, IntPtr rectangle);
 
 		public void AddRectangle(Gst.Video.VideoOverlayRectangle rectangle) {
@@ -52,7 +52,7 @@ namespace Gst.Video {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_overlay_composition_blend(IntPtr raw, IntPtr video_buf);
 
 		public bool Blend(Gst.Video.VideoFrame video_buf) {
@@ -67,7 +67,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_overlay_composition_get_rectangle(IntPtr raw, uint n);
 
 		public Gst.Video.VideoOverlayRectangle GetRectangle(uint n) {
@@ -80,7 +80,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_video_overlay_composition_get_seqnum(IntPtr raw);
 
 		public uint Seqnum { 
@@ -95,7 +95,7 @@ namespace Gst.Video {
 			}
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_overlay_composition_make_writable(IntPtr raw);
 
 		public Gst.Video.VideoOverlayComposition MakeWritable() {
@@ -108,7 +108,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_video_overlay_composition_n_rectangles(IntPtr raw);
 
 		public uint NRectangles() {

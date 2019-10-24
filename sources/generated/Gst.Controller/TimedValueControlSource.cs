@@ -252,7 +252,7 @@ namespace Gst.Controller {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_timed_value_control_source_get_type();
 
 		public static new GLib.GType GType { 
@@ -263,7 +263,7 @@ namespace Gst.Controller {
 			}
 		}
 
-		[DllImport("libgstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_timed_value_control_source_get_all(IntPtr raw);
 
 		public GLib.List[] All { 
@@ -274,7 +274,7 @@ namespace Gst.Controller {
 			}
 		}
 
-		[DllImport("libgstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_timed_value_control_source_get_count(IntPtr raw);
 
 		public int Count { 
@@ -285,7 +285,7 @@ namespace Gst.Controller {
 			}
 		}
 
-		[DllImport("libgstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_timed_value_control_source_set(IntPtr raw, ulong timestamp, double value);
 
 		public bool Set(ulong timestamp, double value) {
@@ -294,7 +294,7 @@ namespace Gst.Controller {
 			return ret;
 		}
 
-		[DllImport("libgstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_timed_value_control_source_set_from_list(IntPtr raw, IntPtr timedvalues);
 
 		public bool SetFromList(GLib.SList timedvalues) {
@@ -303,7 +303,7 @@ namespace Gst.Controller {
 			return ret;
 		}
 
-		[DllImport("libgstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_timed_value_control_source_unset(IntPtr raw, ulong timestamp);
 
 		public bool Unset(ulong timestamp) {
@@ -312,7 +312,7 @@ namespace Gst.Controller {
 			return ret;
 		}
 
-		[DllImport("libgstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_timed_value_control_source_unset_all(IntPtr raw);
 
 		public void UnsetAll() {

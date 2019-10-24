@@ -29,7 +29,7 @@ namespace Gst.Rtp {
 			return (Gst.Rtp.RTPPayloadInfo) Marshal.PtrToStructure (raw, typeof (Gst.Rtp.RTPPayloadInfo));
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_rtp_payload_info_for_name(IntPtr media, IntPtr encoding_name);
 
 		public static Gst.Rtp.RTPPayloadInfo ForName(string media, string encoding_name) {
@@ -42,7 +42,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_rtp_payload_info_for_pt(byte payload_type);
 
 		public static Gst.Rtp.RTPPayloadInfo ForPt(byte payload_type) {

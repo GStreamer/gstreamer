@@ -23,7 +23,7 @@ namespace Gst.Video {
 	}
 
 	internal class VideoBufferFlagsGType {
-		[DllImport ("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_buffer_flags_get_type ();
 
 		public static GLib.GType GType {

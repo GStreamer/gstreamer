@@ -54,7 +54,7 @@ namespace Gst.Audio {
 			return (Gst.Audio.AudioBuffer) Marshal.PtrToStructure (raw, typeof (Gst.Audio.AudioBuffer));
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_audio_buffer_map(IntPtr raw, IntPtr info, IntPtr gstbuffer, int flags);
 
 		public bool Map(Gst.Audio.AudioInfo info, Gst.Buffer gstbuffer, Gst.MapFlags flags) {
@@ -67,7 +67,7 @@ namespace Gst.Audio {
 			return ret;
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_buffer_unmap(IntPtr raw);
 
 		public void Unmap() {
@@ -78,7 +78,7 @@ namespace Gst.Audio {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_audio_buffer_clip(IntPtr buffer, IntPtr segment, int rate, int bpf);
 
 		public static Gst.Buffer Clip(Gst.Buffer buffer, Gst.Segment segment, int rate, int bpf) {
@@ -90,7 +90,7 @@ namespace Gst.Audio {
 			return ret;
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_audio_buffer_reorder_channels(IntPtr buffer, int format, int channels, int[] from, int[] to);
 
 		public static bool ReorderChannels(Gst.Buffer buffer, Gst.Audio.AudioFormat format, int channels, Gst.Audio.AudioChannelPosition[] from, Gst.Audio.AudioChannelPosition[] to) {
@@ -107,7 +107,7 @@ namespace Gst.Audio {
 			return ret;
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_audio_buffer_truncate(IntPtr buffer, int bpf, UIntPtr trim, UIntPtr samples);
 
 		public static Gst.Buffer Truncate(Gst.Buffer buffer, int bpf, ulong trim, ulong samples) {

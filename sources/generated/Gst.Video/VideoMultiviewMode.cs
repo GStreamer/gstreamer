@@ -26,7 +26,7 @@ namespace Gst.Video {
 	}
 
 	internal class VideoMultiviewModeGType {
-		[DllImport ("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_multiview_mode_get_type ();
 
 		public static GLib.GType GType {

@@ -23,7 +23,7 @@ namespace Gst.Sdp {
 			return (Gst.Sdp.SDPZone) Marshal.PtrToStructure (raw, typeof (Gst.Sdp.SDPZone));
 		}
 
-		[DllImport("libgstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_sdp_zone_clear(IntPtr raw);
 
 		public Gst.Sdp.SDPResult Clear() {
@@ -36,7 +36,7 @@ namespace Gst.Sdp {
 			return ret;
 		}
 
-		[DllImport("libgstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_sdp_zone_set(IntPtr raw, IntPtr adj_time, IntPtr typed_time);
 
 		public Gst.Sdp.SDPResult Set(string adj_time, string typed_time) {

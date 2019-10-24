@@ -33,10 +33,10 @@ namespace Gst {
 
 	public partial class Iterator : IEnumerable {
 
-		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_value_reset (ref GLib.Value val);
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_iterator_next(IntPtr raw, ref GLib.Value elem);
 
 		public Gst.IteratorResult Next(ref GLib.Value elem) {

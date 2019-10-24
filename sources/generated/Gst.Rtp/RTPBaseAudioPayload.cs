@@ -93,7 +93,7 @@ namespace Gst.Rtp {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_rtp_base_audio_payload_get_type();
 
 		public static new GLib.GType GType { 
@@ -104,7 +104,7 @@ namespace Gst.Rtp {
 			}
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtp_base_audio_payload_flush(IntPtr raw, uint payload_len, ulong timestamp);
 
 		public Gst.FlowReturn Flush(uint payload_len, ulong timestamp) {
@@ -113,7 +113,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_rtp_base_audio_payload_get_adapter(IntPtr raw);
 
 		public Gst.Base.Adapter Adapter { 
@@ -124,7 +124,7 @@ namespace Gst.Rtp {
 			}
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtp_base_audio_payload_push(IntPtr raw, byte[] data, uint payload_len, ulong timestamp);
 
 		public Gst.FlowReturn Push(byte[] data, uint payload_len, ulong timestamp) {
@@ -133,28 +133,28 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_rtp_base_audio_payload_set_frame_based(IntPtr raw);
 
 		public void SetFrameBased() {
 			gst_rtp_base_audio_payload_set_frame_based(Handle);
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_rtp_base_audio_payload_set_frame_options(IntPtr raw, int frame_duration, int frame_size);
 
 		public void SetFrameOptions(int frame_duration, int frame_size) {
 			gst_rtp_base_audio_payload_set_frame_options(Handle, frame_duration, frame_size);
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_rtp_base_audio_payload_set_sample_based(IntPtr raw);
 
 		public void SetSampleBased() {
 			gst_rtp_base_audio_payload_set_sample_based(Handle);
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_rtp_base_audio_payload_set_sample_options(IntPtr raw, int sample_size);
 
 		public int SampleOptions { 
@@ -163,7 +163,7 @@ namespace Gst.Rtp {
 			}
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_rtp_base_audio_payload_set_samplebits_options(IntPtr raw, int sample_size);
 
 		public int SamplebitsOptions { 

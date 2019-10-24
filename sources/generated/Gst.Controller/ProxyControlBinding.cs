@@ -13,7 +13,7 @@ namespace Gst.Controller {
 
 		public ProxyControlBinding (IntPtr raw) : base(raw) {}
 
-		[DllImport("libgstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_proxy_control_binding_new(IntPtr _object, IntPtr property_name, IntPtr ref_object, IntPtr ref_property_name);
 
 		public ProxyControlBinding (Gst.Object _object, string property_name, Gst.Object ref_object, string ref_property_name) : base (IntPtr.Zero)
@@ -35,7 +35,7 @@ namespace Gst.Controller {
 			GLib.Marshaller.Free (native_ref_property_name);
 		}
 
-		[DllImport("libgstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_proxy_control_binding_get_type();
 
 		public static new GLib.GType GType { 

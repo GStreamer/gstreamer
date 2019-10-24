@@ -17,7 +17,7 @@ namespace Gst.Controller {
 	}
 
 	internal class InterpolationModeGType {
-		[DllImport ("libgstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_interpolation_mode_get_type ();
 
 		public static GLib.GType GType {

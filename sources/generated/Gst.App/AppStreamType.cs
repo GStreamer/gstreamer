@@ -16,7 +16,7 @@ namespace Gst.App {
 	}
 
 	internal class AppStreamTypeGType {
-		[DllImport ("libgstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_app_stream_type_get_type ();
 
 		public static GLib.GType GType {

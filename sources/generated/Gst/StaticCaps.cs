@@ -33,7 +33,7 @@ namespace Gst {
 			return (Gst.StaticCaps) Marshal.PtrToStructure (raw, typeof (Gst.StaticCaps));
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_static_caps_cleanup(IntPtr raw);
 
 		public void Cleanup() {
@@ -44,7 +44,7 @@ namespace Gst {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_static_caps_get(IntPtr raw);
 
 		public Gst.Caps Get() {

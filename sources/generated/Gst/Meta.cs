@@ -27,7 +27,7 @@ namespace Gst {
 			return (Gst.Meta) Marshal.PtrToStructure (raw, typeof (Gst.Meta));
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_meta_compare_seqnum(IntPtr raw, IntPtr meta2);
 
 		public int CompareSeqnum(Gst.Meta meta2) {
@@ -42,7 +42,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_meta_get_seqnum(IntPtr raw);
 
 		public ulong Seqnum { 
@@ -57,7 +57,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_meta_api_type_has_tag(IntPtr api, uint tag);
 
 		public static bool ApiTypeHasTag(GLib.GType api, uint tag) {
@@ -66,7 +66,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_meta_api_type_register(IntPtr api, IntPtr[] tags);
 
 		public static GLib.GType ApiTypeRegister(string api, string[] tags) {
@@ -82,7 +82,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_meta_get_info(IntPtr impl);
 
 		public static Gst.MetaInfo GetInfo(string impl) {
@@ -93,7 +93,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_meta_register(IntPtr api, IntPtr impl, UIntPtr size, GstSharp.MetaInitFunctionNative init_func, GstSharp.MetaFreeFunctionNative free_func, GstSharp.MetaTransformFunctionNative transform_func);
 
 		public static Gst.MetaInfo Register(GLib.GType api, string impl, ulong size, Gst.MetaInitFunction init_func, Gst.MetaFreeFunction free_func, Gst.MetaTransformFunction transform_func) {

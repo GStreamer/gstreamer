@@ -33,7 +33,7 @@ namespace Gst {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_element_factory_get_type();
 
 		public static new GLib.GType GType { 
@@ -44,7 +44,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_element_factory_find(IntPtr name);
 
 		public static Gst.ElementFactory Find(string name) {
@@ -55,7 +55,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_element_factory_list_filter(IntPtr list, IntPtr caps, int direction, bool subsetonly);
 
 		public static Gst.ElementFactory[] ListFilter(GLib.List list, Gst.Caps caps, Gst.PadDirection direction, bool subsetonly) {
@@ -64,7 +64,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_element_factory_list_get_elements(ulong type, int minrank);
 
 		public static Gst.ElementFactory[] ListGetElements(ulong type, Gst.Rank minrank) {
@@ -73,7 +73,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_element_factory_make(IntPtr factoryname, IntPtr name);
 
 		public static Gst.Element Make(string factoryname, string name) {
@@ -90,7 +90,7 @@ namespace Gst {
 			return Make (factoryname, null);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_element_factory_can_sink_all_caps(IntPtr raw, IntPtr caps);
 
 		public bool CanSinkAllCaps(Gst.Caps caps) {
@@ -99,7 +99,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_element_factory_can_sink_any_caps(IntPtr raw, IntPtr caps);
 
 		public bool CanSinkAnyCaps(Gst.Caps caps) {
@@ -108,7 +108,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_element_factory_can_src_all_caps(IntPtr raw, IntPtr caps);
 
 		public bool CanSrcAllCaps(Gst.Caps caps) {
@@ -117,7 +117,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_element_factory_can_src_any_caps(IntPtr raw, IntPtr caps);
 
 		public bool CanSrcAnyCaps(Gst.Caps caps) {
@@ -126,7 +126,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_element_factory_create(IntPtr raw, IntPtr name);
 
 		public Gst.Element Create(string name) {
@@ -141,7 +141,7 @@ namespace Gst {
 			return Create (null);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_element_factory_get_element_type(IntPtr raw);
 
 		public GLib.GType ElementType { 
@@ -152,7 +152,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_element_factory_get_metadata(IntPtr raw, IntPtr key);
 
 		public string GetMetadata(string key) {
@@ -163,7 +163,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_element_factory_get_metadata_keys(IntPtr raw);
 
 		public string[] MetadataKeys { 
@@ -174,7 +174,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_element_factory_get_num_pad_templates(IntPtr raw);
 
 		public uint NumPadTemplates { 
@@ -185,7 +185,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_element_factory_get_static_pad_templates(IntPtr raw);
 
 		public Gst.StaticPadTemplate[] StaticPadTemplates { 
@@ -196,7 +196,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_element_factory_get_uri_type(IntPtr raw);
 
 		public Gst.URIType UriType { 
@@ -207,7 +207,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_element_factory_has_interface(IntPtr raw, IntPtr interfacename);
 
 		public bool HasInterface(string interfacename) {
@@ -218,7 +218,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_element_factory_list_is_type(IntPtr raw, ulong type);
 
 		public bool ListIsType(ulong type) {

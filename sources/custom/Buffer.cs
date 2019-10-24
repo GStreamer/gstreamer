@@ -21,7 +21,7 @@ namespace Gst {
 	using System.Runtime.InteropServices;
 
 	partial class Buffer {
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern UIntPtr gst_buffer_extract(IntPtr raw, UIntPtr offset, byte[] dest, UIntPtr size);
 
 		public ulong Extract(ulong offset, ref byte[] dest) {
@@ -30,7 +30,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_buffer_extract_dup(IntPtr raw, UIntPtr offset, UIntPtr size, out IntPtr dest, out UIntPtr dest_size);
 
 		public ulong ExtractDup(ulong offset, ulong size, out byte[] dest) {

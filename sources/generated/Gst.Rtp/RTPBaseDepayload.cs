@@ -444,7 +444,7 @@ namespace Gst.Rtp {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_rtp_base_depayload_get_type();
 
 		public static new GLib.GType GType { 
@@ -455,7 +455,7 @@ namespace Gst.Rtp {
 			}
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtp_base_depayload_is_source_info_enabled(IntPtr raw);
 
 		public bool IsSourceInfoEnabled { 
@@ -466,7 +466,7 @@ namespace Gst.Rtp {
 			}
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtp_base_depayload_push(IntPtr raw, IntPtr out_buf);
 
 		public Gst.FlowReturn Push(Gst.Buffer out_buf) {
@@ -475,7 +475,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtp_base_depayload_push_list(IntPtr raw, IntPtr out_list);
 
 		public Gst.FlowReturn PushList(Gst.BufferList out_list) {
@@ -484,7 +484,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_rtp_base_depayload_set_source_info_enabled(IntPtr raw, bool enable);
 
 		public bool SourceInfoEnabled { 

@@ -1597,7 +1597,7 @@ namespace Gst.Base {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_base_transform_get_type();
 
 		public static new GLib.GType GType { 
@@ -1608,7 +1608,7 @@ namespace Gst.Base {
 			}
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_base_transform_get_allocator(IntPtr raw, out IntPtr allocator, IntPtr parms);
 
 		public void GetAllocator(out Gst.Allocator allocator, out Gst.AllocationParams parms) {
@@ -1620,7 +1620,7 @@ namespace Gst.Base {
 			Marshal.FreeHGlobal (native_parms);
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_base_transform_get_buffer_pool(IntPtr raw);
 
 		public Gst.BufferPool BufferPool { 
@@ -1631,7 +1631,7 @@ namespace Gst.Base {
 			}
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_base_transform_is_in_place(IntPtr raw);
 
 		public bool IsInPlace { 
@@ -1642,7 +1642,7 @@ namespace Gst.Base {
 			}
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_base_transform_is_passthrough(IntPtr raw);
 
 		public bool IsPassthrough { 
@@ -1653,7 +1653,7 @@ namespace Gst.Base {
 			}
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_base_transform_is_qos_enabled(IntPtr raw);
 
 		public bool IsQosEnabled { 
@@ -1664,21 +1664,21 @@ namespace Gst.Base {
 			}
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_base_transform_reconfigure_sink(IntPtr raw);
 
 		public void ReconfigureSink() {
 			gst_base_transform_reconfigure_sink(Handle);
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_base_transform_reconfigure_src(IntPtr raw);
 
 		public void ReconfigureSrc() {
 			gst_base_transform_reconfigure_src(Handle);
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_base_transform_set_gap_aware(IntPtr raw, bool gap_aware);
 
 		public bool GapAware { 
@@ -1687,7 +1687,7 @@ namespace Gst.Base {
 			}
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_base_transform_set_in_place(IntPtr raw, bool in_place);
 
 		public bool InPlace { 
@@ -1696,7 +1696,7 @@ namespace Gst.Base {
 			}
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_base_transform_set_passthrough(IntPtr raw, bool passthrough);
 
 		public bool Passthrough { 
@@ -1705,7 +1705,7 @@ namespace Gst.Base {
 			}
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_base_transform_set_prefer_passthrough(IntPtr raw, bool prefer_passthrough);
 
 		public bool PreferPassthrough { 
@@ -1714,7 +1714,7 @@ namespace Gst.Base {
 			}
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_base_transform_set_qos_enabled(IntPtr raw, bool enabled);
 
 		public bool QosEnabled { 
@@ -1723,14 +1723,14 @@ namespace Gst.Base {
 			}
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_base_transform_update_qos(IntPtr raw, double proportion, long diff, ulong timestamp);
 
 		public void UpdateQos(double proportion, long diff, ulong timestamp) {
 			gst_base_transform_update_qos(Handle, proportion, diff, timestamp);
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_base_transform_update_src_caps(IntPtr raw, IntPtr updated_caps);
 
 		public bool UpdateSrcCaps(Gst.Caps updated_caps) {

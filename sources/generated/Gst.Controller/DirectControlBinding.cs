@@ -13,7 +13,7 @@ namespace Gst.Controller {
 
 		public DirectControlBinding (IntPtr raw) : base(raw) {}
 
-		[DllImport("libgstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_direct_control_binding_new(IntPtr _object, IntPtr property_name, IntPtr cs);
 
 		public DirectControlBinding (Gst.Object _object, string property_name, Gst.ControlSource cs) : base (IntPtr.Zero)
@@ -33,7 +33,7 @@ namespace Gst.Controller {
 			GLib.Marshaller.Free (native_property_name);
 		}
 
-		[DllImport("libgstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_direct_control_binding_new_absolute(IntPtr _object, IntPtr property_name, IntPtr cs);
 
 		public static DirectControlBinding NewAbsolute(Gst.Object _object, string property_name, Gst.ControlSource cs)
@@ -93,7 +93,7 @@ namespace Gst.Controller {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_direct_control_binding_get_type();
 
 		public static new GLib.GType GType { 

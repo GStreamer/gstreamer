@@ -18,7 +18,7 @@ namespace Gst.Base {
 			CreateNativeObject (new string [0], new GLib.Value [0]);
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_aggregator_get_latency(IntPtr raw);
 
 		[GLib.Property ("latency")]
@@ -1233,7 +1233,7 @@ namespace Gst.Base {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_aggregator_get_type();
 
 		public static new GLib.GType GType { 
@@ -1244,7 +1244,7 @@ namespace Gst.Base {
 			}
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_aggregator_finish_buffer(IntPtr raw, IntPtr buffer);
 
 		public Gst.FlowReturn FinishBuffer(Gst.Buffer buffer) {
@@ -1254,7 +1254,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_aggregator_get_allocator(IntPtr raw, out IntPtr allocator, IntPtr parms);
 
 		public void GetAllocator(out Gst.Allocator allocator, out Gst.AllocationParams parms) {
@@ -1266,7 +1266,7 @@ namespace Gst.Base {
 			Marshal.FreeHGlobal (native_parms);
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_aggregator_get_buffer_pool(IntPtr raw);
 
 		public Gst.BufferPool BufferPool { 
@@ -1277,14 +1277,14 @@ namespace Gst.Base {
 			}
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_aggregator_set_latency(IntPtr raw, ulong min_latency, ulong max_latency);
 
 		public void SetLatency(ulong min_latency, ulong max_latency) {
 			gst_aggregator_set_latency(Handle, min_latency, max_latency);
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_aggregator_set_src_caps(IntPtr raw, IntPtr caps);
 
 		public Gst.Caps SrcCaps { 
@@ -1293,7 +1293,7 @@ namespace Gst.Base {
 			}
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_aggregator_simple_get_next_time(IntPtr raw);
 
 		public ulong SimpleGetNextTime() {

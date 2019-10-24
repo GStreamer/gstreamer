@@ -33,7 +33,7 @@ namespace Gst {
 			return (Gst.ReferenceTimestampMeta) Marshal.PtrToStructure (raw, typeof (Gst.ReferenceTimestampMeta));
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_reference_timestamp_meta_get_info();
 
 		public static Gst.MetaInfo Info { 

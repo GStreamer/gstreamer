@@ -25,7 +25,7 @@ namespace Gst {
 			return (Gst.DebugCategory) Marshal.PtrToStructure (raw, typeof (Gst.DebugCategory));
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_debug_category_free(IntPtr raw);
 
 		public void Free() {
@@ -36,7 +36,7 @@ namespace Gst {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_debug_category_reset_threshold(IntPtr raw);
 
 		public void ResetThreshold() {

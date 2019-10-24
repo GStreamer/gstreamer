@@ -22,7 +22,7 @@ namespace Gst {
 	}
 
 	internal class ClockFlagsGType {
-		[DllImport ("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_clock_flags_get_type ();
 
 		public static GLib.GType GType {

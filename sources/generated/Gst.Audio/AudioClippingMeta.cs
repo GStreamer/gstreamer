@@ -25,7 +25,7 @@ namespace Gst.Audio {
 			return (Gst.Audio.AudioClippingMeta) Marshal.PtrToStructure (raw, typeof (Gst.Audio.AudioClippingMeta));
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_audio_clipping_meta_get_info();
 
 		public static Gst.MetaInfo Info { 

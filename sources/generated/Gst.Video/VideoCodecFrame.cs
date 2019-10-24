@@ -52,7 +52,7 @@ namespace Gst.Video {
 			return (Gst.Video.VideoCodecFrame) Marshal.PtrToStructure (raw, typeof (Gst.Video.VideoCodecFrame));
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_codec_frame_get_type();
 
 		public static GLib.GType GType { 
@@ -63,7 +63,7 @@ namespace Gst.Video {
 			}
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_codec_frame_ref(IntPtr raw);
 
 		public Gst.Video.VideoCodecFrame Ref() {
@@ -76,7 +76,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_video_codec_frame_set_user_data(IntPtr raw, IntPtr user_data, GLib.DestroyNotify notify);
 
 		public void SetUserData(IntPtr user_data, GLib.DestroyNotify notify) {
@@ -87,7 +87,7 @@ namespace Gst.Video {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_video_codec_frame_unref(IntPtr raw);
 
 		public void Unref() {

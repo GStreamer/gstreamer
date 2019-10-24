@@ -101,7 +101,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_memory_get_type();
 
 		public static GLib.GType GType { 
@@ -112,7 +112,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_memory_copy(IntPtr raw, IntPtr offset, IntPtr size);
 
 		public Gst.Memory Copy(long offset, long size) {
@@ -121,7 +121,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern UIntPtr gst_memory_get_sizes(IntPtr raw, out UIntPtr offset, out UIntPtr maxsize);
 
 		public ulong GetSizes(out ulong offset, out ulong maxsize) {
@@ -134,7 +134,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_memory_is_span(IntPtr raw, IntPtr mem2, out UIntPtr offset);
 
 		public bool IsSpan(Gst.Memory mem2, out ulong offset) {
@@ -145,7 +145,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_memory_is_type(IntPtr raw, IntPtr mem_type);
 
 		public bool IsType(string mem_type) {
@@ -156,7 +156,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_memory_make_mapped(IntPtr raw, IntPtr info, int flags);
 
 		public Gst.Memory MakeMapped(out Gst.MapInfo info, Gst.MapFlags flags) {
@@ -168,7 +168,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_memory_map(IntPtr raw, IntPtr info, int flags);
 
 		public bool Map(out Gst.MapInfo info, Gst.MapFlags flags) {
@@ -180,14 +180,14 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_memory_resize(IntPtr raw, IntPtr offset, UIntPtr size);
 
 		public void Resize(long offset, ulong size) {
 			gst_memory_resize(Handle, new IntPtr (offset), new UIntPtr (size));
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_memory_share(IntPtr raw, IntPtr offset, IntPtr size);
 
 		public Gst.Memory Share(long offset, long size) {
@@ -196,7 +196,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_memory_unmap(IntPtr raw, IntPtr info);
 
 		public void Unmap(Gst.MapInfo info) {
@@ -207,7 +207,7 @@ namespace Gst {
 
 		public Memory(IntPtr raw) : base(raw) {}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_memory_new_wrapped(int flags, byte[] data, UIntPtr maxsize, UIntPtr offset, UIntPtr size, IntPtr user_data, GLib.DestroyNotify notify);
 
 		public Memory (Gst.MemoryFlags flags, byte[] data, ulong maxsize, ulong offset, ulong size, IntPtr user_data, GLib.DestroyNotify notify) 

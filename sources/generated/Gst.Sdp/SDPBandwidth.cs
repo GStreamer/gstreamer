@@ -23,7 +23,7 @@ namespace Gst.Sdp {
 			return (Gst.Sdp.SDPBandwidth) Marshal.PtrToStructure (raw, typeof (Gst.Sdp.SDPBandwidth));
 		}
 
-		[DllImport("libgstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_sdp_bandwidth_clear(IntPtr raw);
 
 		public Gst.Sdp.SDPResult Clear() {
@@ -36,7 +36,7 @@ namespace Gst.Sdp {
 			return ret;
 		}
 
-		[DllImport("libgstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_sdp_bandwidth_set(IntPtr raw, IntPtr bwtype, uint bandwidth);
 
 		public Gst.Sdp.SDPResult Set(string bwtype, uint bandwidth) {

@@ -13,7 +13,7 @@ namespace Gst.PbUtils {
 
 		public Discoverer (IntPtr raw) : base(raw) {}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_discoverer_new(ulong timeout);
 
 		public Discoverer (ulong timeout) : base (IntPtr.Zero)
@@ -367,7 +367,7 @@ namespace Gst.PbUtils {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_discoverer_get_type();
 
 		public static new GLib.GType GType { 
@@ -378,7 +378,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern unsafe IntPtr gst_discoverer_discover_uri(IntPtr raw, IntPtr uri, out IntPtr error);
 
 		public unsafe Gst.PbUtils.DiscovererInfo DiscoverUri(string uri) {
@@ -391,7 +391,7 @@ namespace Gst.PbUtils {
 			return ret;
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_discoverer_discover_uri_async(IntPtr raw, IntPtr uri);
 
 		public bool DiscoverUriAsync(string uri) {
@@ -402,14 +402,14 @@ namespace Gst.PbUtils {
 			return ret;
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_discoverer_start(IntPtr raw);
 
 		public void Start() {
 			gst_discoverer_start(Handle);
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_discoverer_stop(IntPtr raw);
 
 		public void Stop() {

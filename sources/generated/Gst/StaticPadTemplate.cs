@@ -25,7 +25,7 @@ namespace Gst {
 			return (Gst.StaticPadTemplate) Marshal.PtrToStructure (raw, typeof (Gst.StaticPadTemplate));
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_static_pad_template_get(IntPtr raw);
 
 		public Gst.PadTemplate Get() {
@@ -38,7 +38,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_static_pad_template_get_caps(IntPtr raw);
 
 		public Gst.Caps Caps { 

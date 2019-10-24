@@ -27,7 +27,7 @@ namespace Gst.Video {
 			return (Gst.Video.VideoAlignment) Marshal.PtrToStructure (raw, typeof (Gst.Video.VideoAlignment));
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_video_alignment_reset(IntPtr raw);
 
 		public void Reset() {

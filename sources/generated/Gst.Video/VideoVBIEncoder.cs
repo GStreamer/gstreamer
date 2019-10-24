@@ -21,7 +21,7 @@ namespace Gst.Video {
 			return (Gst.Video.VideoVBIEncoder) Marshal.PtrToStructure (raw, typeof (Gst.Video.VideoVBIEncoder));
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_vbi_encoder_new(int format, uint pixel_width);
 
 		public static VideoVBIEncoder New(Gst.Video.VideoFormat format, uint pixel_width)
@@ -30,7 +30,7 @@ namespace Gst.Video {
 			return result;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_vbi_encoder_get_type();
 
 		public static GLib.GType GType { 
@@ -41,7 +41,7 @@ namespace Gst.Video {
 			}
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_vbi_encoder_add_ancillary(IntPtr raw, bool composite, byte DID, byte SDID_block_number, byte[] data, uint data_count);
 
 		public bool AddAncillary(bool composite, byte DID, byte SDID_block_number, byte[] data, uint data_count) {
@@ -54,7 +54,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_video_vbi_encoder_write_line(IntPtr raw, byte data);
 
 		public void WriteLine(byte data) {

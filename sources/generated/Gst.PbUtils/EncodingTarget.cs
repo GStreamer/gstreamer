@@ -13,7 +13,7 @@ namespace Gst.PbUtils {
 
 		public EncodingTarget (IntPtr raw) : base(raw) {}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_encoding_target_new(IntPtr name, IntPtr category, IntPtr description, IntPtr profiles);
 
 		public EncodingTarget (string name, string category, string description, GLib.List profiles) : base (IntPtr.Zero)
@@ -33,7 +33,7 @@ namespace Gst.PbUtils {
 			GLib.Marshaller.Free (native_description);
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_encoding_target_get_type();
 
 		public static new GLib.GType GType { 
@@ -44,7 +44,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern unsafe IntPtr gst_encoding_target_load(IntPtr name, IntPtr category, out IntPtr error);
 
 		public static unsafe Gst.PbUtils.EncodingTarget Load(string name, string category) {
@@ -63,7 +63,7 @@ namespace Gst.PbUtils {
 			return Load (name, null);
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern unsafe IntPtr gst_encoding_target_load_from_file(IntPtr filepath, out IntPtr error);
 
 		public static unsafe Gst.PbUtils.EncodingTarget LoadFromFile(string filepath) {
@@ -76,7 +76,7 @@ namespace Gst.PbUtils {
 			return ret;
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_encoding_target_add_profile(IntPtr raw, IntPtr profile);
 
 		public bool AddProfile(Gst.PbUtils.EncodingProfile profile) {
@@ -85,7 +85,7 @@ namespace Gst.PbUtils {
 			return ret;
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_encoding_target_get_category(IntPtr raw);
 
 		public string Category { 
@@ -96,7 +96,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_encoding_target_get_description(IntPtr raw);
 
 		public string Description { 
@@ -107,7 +107,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_encoding_target_get_name(IntPtr raw);
 
 		public string Name { 
@@ -118,7 +118,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_encoding_target_get_profile(IntPtr raw, IntPtr name);
 
 		public Gst.PbUtils.EncodingProfile GetProfile(string name) {
@@ -129,7 +129,7 @@ namespace Gst.PbUtils {
 			return ret;
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_encoding_target_get_profiles(IntPtr raw);
 
 		public Gst.PbUtils.EncodingProfile[] Profiles { 
@@ -140,7 +140,7 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern unsafe bool gst_encoding_target_save(IntPtr raw, out IntPtr error);
 
 		public unsafe bool Save() {
@@ -151,7 +151,7 @@ namespace Gst.PbUtils {
 			return ret;
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern unsafe bool gst_encoding_target_save_to_file(IntPtr raw, IntPtr filepath, out IntPtr error);
 
 		public unsafe bool SaveToFile(string filepath) {

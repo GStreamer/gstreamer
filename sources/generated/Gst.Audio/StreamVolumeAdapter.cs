@@ -47,7 +47,7 @@ namespace Gst.Audio {
 			implementor = GLib.Object.GetObject (handle);
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_stream_volume_get_type();
 
 		private static GLib.GType _gtype = new GLib.GType (gst_stream_volume_get_type ());
@@ -100,10 +100,10 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_stream_volume_get_mute(IntPtr raw);
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_stream_volume_set_mute(IntPtr raw, bool mute);
 
 		[GLib.Property ("mute")]
@@ -118,7 +118,7 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern double gst_stream_volume_convert_volume(int from, int to, double val);
 
 		public static double ConvertVolume(Gst.Audio.StreamVolumeFormat from, Gst.Audio.StreamVolumeFormat to, double val) {
@@ -127,7 +127,7 @@ namespace Gst.Audio {
 			return ret;
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern double gst_stream_volume_get_volume(IntPtr raw, int format);
 
 		public double GetVolume(Gst.Audio.StreamVolumeFormat format) {
@@ -136,7 +136,7 @@ namespace Gst.Audio {
 			return ret;
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_stream_volume_set_volume(IntPtr raw, int format, double val);
 
 		public void SetVolume(Gst.Audio.StreamVolumeFormat format, double val) {

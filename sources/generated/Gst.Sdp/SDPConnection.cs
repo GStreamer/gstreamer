@@ -26,7 +26,7 @@ namespace Gst.Sdp {
 			return (Gst.Sdp.SDPConnection) Marshal.PtrToStructure (raw, typeof (Gst.Sdp.SDPConnection));
 		}
 
-		[DllImport("libgstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_sdp_connection_clear(IntPtr raw);
 
 		public Gst.Sdp.SDPResult Clear() {
@@ -39,7 +39,7 @@ namespace Gst.Sdp {
 			return ret;
 		}
 
-		[DllImport("libgstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_sdp_connection_set(IntPtr raw, IntPtr nettype, IntPtr addrtype, IntPtr address, uint ttl, uint addr_number);
 
 		public Gst.Sdp.SDPResult Set(string nettype, string addrtype, string address, uint ttl, uint addr_number) {

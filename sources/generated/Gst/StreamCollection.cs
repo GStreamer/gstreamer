@@ -13,7 +13,7 @@ namespace Gst {
 
 		public StreamCollection (IntPtr raw) : base(raw) {}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_stream_collection_new(IntPtr upstream_id);
 
 		public StreamCollection (string upstream_id) : base (IntPtr.Zero)
@@ -31,7 +31,7 @@ namespace Gst {
 			GLib.Marshaller.Free (native_upstream_id);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_stream_collection_get_upstream_id(IntPtr raw);
 
 		[GLib.Property ("upstream-id")]
@@ -143,7 +143,7 @@ namespace Gst {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_stream_collection_get_type();
 
 		public static new GLib.GType GType { 
@@ -154,7 +154,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_stream_collection_add_stream(IntPtr raw, IntPtr stream);
 
 		public bool AddStream(Gst.Stream stream) {
@@ -163,7 +163,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_stream_collection_get_size(IntPtr raw);
 
 		public uint Size { 
@@ -174,7 +174,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_stream_collection_get_stream(IntPtr raw, uint index);
 
 		public Gst.Stream GetStream(uint index) {

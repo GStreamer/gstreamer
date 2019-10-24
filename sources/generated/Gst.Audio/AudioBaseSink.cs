@@ -18,10 +18,10 @@ namespace Gst.Audio {
 			CreateNativeObject (new string [0], new GLib.Value [0]);
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_audio_base_sink_get_alignment_threshold(IntPtr raw);
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_base_sink_set_alignment_threshold(IntPtr raw, ulong alignment_threshold);
 
 		[GLib.Property ("alignment-threshold")]
@@ -66,10 +66,10 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_audio_base_sink_get_discont_wait(IntPtr raw);
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_base_sink_set_discont_wait(IntPtr raw, ulong discont_wait);
 
 		[GLib.Property ("discont-wait")]
@@ -84,10 +84,10 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern long gst_audio_base_sink_get_drift_tolerance(IntPtr raw);
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_base_sink_set_drift_tolerance(IntPtr raw, long drift_tolerance);
 
 		[GLib.Property ("drift-tolerance")]
@@ -117,10 +117,10 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_audio_base_sink_get_provide_clock(IntPtr raw);
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_base_sink_set_provide_clock(IntPtr raw, bool provide);
 
 		[GLib.Property ("provide-clock")]
@@ -135,10 +135,10 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_audio_base_sink_get_slave_method(IntPtr raw);
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_base_sink_set_slave_method(IntPtr raw, int method);
 
 		[GLib.Property ("slave-method")]
@@ -363,7 +363,7 @@ namespace Gst.Audio {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_audio_base_sink_get_type();
 
 		public static new GLib.GType GType { 
@@ -374,7 +374,7 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_audio_base_sink_create_ringbuffer(IntPtr raw);
 
 		public Gst.Audio.AudioRingBuffer CreateRingbuffer() {
@@ -383,14 +383,14 @@ namespace Gst.Audio {
 			return ret;
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_base_sink_report_device_failure(IntPtr raw);
 
 		public void ReportDeviceFailure() {
 			gst_audio_base_sink_report_device_failure(Handle);
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_base_sink_set_custom_slaving_callback(IntPtr raw, Gst.AudioSharp.AudioBaseSinkCustomSlavingCallbackNative cb, IntPtr user_data, GLib.DestroyNotify notify);
 
 		public Gst.Audio.AudioBaseSinkCustomSlavingCallback CustomSlavingCallback { 

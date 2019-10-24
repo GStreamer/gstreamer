@@ -27,7 +27,7 @@ namespace Gst.Audio {
 			return (Gst.Audio.AudioDownmixMeta) Marshal.PtrToStructure (raw, typeof (Gst.Audio.AudioDownmixMeta));
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_audio_downmix_meta_get_info();
 
 		public static Gst.MetaInfo Info { 

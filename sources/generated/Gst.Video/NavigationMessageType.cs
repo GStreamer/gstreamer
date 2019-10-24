@@ -18,7 +18,7 @@ namespace Gst.Video {
 	}
 
 	internal class NavigationMessageTypeGType {
-		[DllImport ("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_navigation_message_type_get_type ();
 
 		public static GLib.GType GType {

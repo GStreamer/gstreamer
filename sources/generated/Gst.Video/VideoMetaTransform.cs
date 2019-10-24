@@ -39,7 +39,7 @@ namespace Gst.Video {
 			return (Gst.Video.VideoMetaTransform) Marshal.PtrToStructure (raw, typeof (Gst.Video.VideoMetaTransform));
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_video_meta_transform_scale_get_quark();
 
 		public static uint ScaleGetQuark() {

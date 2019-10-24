@@ -18,7 +18,7 @@ namespace Gst.WebRTC {
 	}
 
 	internal class WebRTCDTLSTransportStateGType {
-		[DllImport ("libgstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_webrtc_dtls_transport_state_get_type ();
 
 		public static GLib.GType GType {

@@ -13,7 +13,7 @@ namespace Gst.WebRTC {
 
 		public WebRTCDTLSTransport (IntPtr raw) : base(raw) {}
 
-		[DllImport("libgstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_webrtc_dtls_transport_new(uint session_id, bool rtcp);
 
 		public WebRTCDTLSTransport (uint session_id, bool rtcp) : base (IntPtr.Zero)
@@ -101,7 +101,7 @@ namespace Gst.WebRTC {
 			}
 		}
 
-		[DllImport("libgstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_webrtc_dtls_transport_set_transport(IntPtr raw, IntPtr ice);
 
 		[GLib.Property ("transport")]
@@ -204,7 +204,7 @@ namespace Gst.WebRTC {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_webrtc_dtls_transport_get_type();
 
 		public static new GLib.GType GType { 

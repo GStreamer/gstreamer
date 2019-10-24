@@ -19,7 +19,7 @@ namespace Gst.Audio {
 	}
 
 	internal class AudioBaseSinkDiscontReasonGType {
-		[DllImport ("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_audio_base_sink_discont_reason_get_type ();
 
 		public static GLib.GType GType {

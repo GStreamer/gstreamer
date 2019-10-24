@@ -29,7 +29,7 @@ namespace Gst.Video {
 			return (Gst.Video.VideoGLTextureUploadMeta) Marshal.PtrToStructure (raw, typeof (Gst.Video.VideoGLTextureUploadMeta));
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_gl_texture_upload_meta_upload(IntPtr raw, uint texture_id);
 
 		public bool Upload(uint texture_id) {
@@ -42,7 +42,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_gl_texture_upload_meta_get_info();
 
 		public static Gst.MetaInfo Info { 

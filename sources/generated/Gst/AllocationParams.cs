@@ -51,7 +51,7 @@ namespace Gst {
 			return (Gst.AllocationParams) Marshal.PtrToStructure (raw, typeof (Gst.AllocationParams));
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_allocation_params_get_type();
 
 		public static GLib.GType GType { 
@@ -62,7 +62,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_allocation_params_init(IntPtr raw);
 
 		public void Init() {

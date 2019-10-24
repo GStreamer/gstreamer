@@ -23,7 +23,7 @@ namespace Gst.PbUtils {
 	}
 
 	internal class AudioVisualizerShaderGType {
-		[DllImport ("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_audio_visualizer_shader_get_type ();
 
 		public static GLib.GType GType {

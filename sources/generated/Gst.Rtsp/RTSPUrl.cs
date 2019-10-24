@@ -29,7 +29,7 @@ namespace Gst.Rtsp {
 			return (Gst.Rtsp.RTSPUrl) Marshal.PtrToStructure (raw, typeof (Gst.Rtsp.RTSPUrl));
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_rtsp_url_get_type();
 
 		public static GLib.GType GType { 
@@ -40,7 +40,7 @@ namespace Gst.Rtsp {
 			}
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_rtsp_url_decode_path_components(IntPtr raw);
 
 		public string[] DecodePathComponents() {
@@ -53,7 +53,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_url_get_port(IntPtr raw, out ushort port);
 
 		public Gst.Rtsp.RTSPResult GetPort(out ushort port) {
@@ -66,7 +66,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_rtsp_url_get_request_uri(IntPtr raw);
 
 		public string RequestUri { 
@@ -81,7 +81,7 @@ namespace Gst.Rtsp {
 			}
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_url_set_port(IntPtr raw, ushort port);
 
 		public Gst.Rtsp.RTSPResult SetPort(ushort port) {
@@ -94,7 +94,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_url_parse(IntPtr urlstr, IntPtr url);
 
 		public static Gst.Rtsp.RTSPResult Parse(string urlstr, out Gst.Rtsp.RTSPUrl url) {

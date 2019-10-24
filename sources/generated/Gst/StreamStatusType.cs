@@ -20,7 +20,7 @@ namespace Gst {
 	}
 
 	internal class StreamStatusTypeGType {
-		[DllImport ("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_stream_status_type_get_type ();
 
 		public static GLib.GType GType {

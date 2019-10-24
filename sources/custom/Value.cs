@@ -144,19 +144,19 @@ namespace Gst
 			return new Fraction (a.Numerator * b.Denominator, a.Denominator * b.Numerator);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 
 		private static extern void gst_value_set_fraction (ref GLib.Value v, int numerator, int denominator);
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 
 		private static extern int gst_value_get_fraction_numerator (ref GLib.Value v);
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 
 		private static extern int gst_value_get_fraction_denominator (ref GLib.Value v);
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 
 		private static extern IntPtr gst_fraction_get_type ();
 	}
@@ -205,19 +205,19 @@ namespace Gst
 			return val;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 
 		private static extern IntPtr gst_double_range_get_type ();
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 
 		private static extern void gst_value_set_double_range (ref GLib.Value v, double min, double max);
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 
 		private static extern double gst_value_get_double_range_min (ref GLib.Value v);
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 
 		private static extern double gst_value_get_double_range_max (ref GLib.Value v);
 	}
@@ -266,19 +266,19 @@ namespace Gst
 			return val;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 
 		private static extern IntPtr gst_int_range_get_type ();
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 
 		private static extern void gst_value_set_int_range (ref GLib.Value v, int min, int max);
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 
 		private static extern int gst_value_get_int_range_min (ref GLib.Value v);
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 
 		private static extern int gst_value_get_int_range_max (ref GLib.Value v);
 	}
@@ -345,19 +345,19 @@ namespace Gst
 			return val;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 
 		private static extern IntPtr gst_fraction_range_get_type ();
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 
 		private static extern void gst_value_set_fraction_range (ref GLib.Value v, ref GLib.Value min, ref GLib.Value max);
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 
 		private static extern IntPtr gst_value_get_fraction_range_min (ref GLib.Value v);
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 
 		private static extern IntPtr gst_value_get_fraction_range_max (ref GLib.Value v);
 	}
@@ -432,30 +432,30 @@ namespace Gst
 			return val;
 		}
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("glib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		private static extern byte g_date_get_day (IntPtr date);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("glib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		private static extern int g_date_get_month (IntPtr date);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("glib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		private static extern ushort g_date_get_year (IntPtr date);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("glib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		private static extern IntPtr g_date_new_dmy (byte day, int month, ushort year);
 
-		[DllImport ("libglib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("glib-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		private static extern void g_date_free (IntPtr date);
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 
 		private static extern IntPtr gst_date_get_type ();
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 
 		private static extern IntPtr gst_value_get_date (ref GLib.Value val);
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 
 		private static extern void gst_value_set_date (ref GLib.Value val, IntPtr date);
 	}
@@ -538,19 +538,19 @@ namespace Gst
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 
 		private static extern IntPtr gst_value_list_get_type ();
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 
 		private static extern uint gst_value_list_get_size (ref GLib.Value val);
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 
 		private static extern IntPtr gst_value_list_get_value (ref GLib.Value val, uint index);
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 
 		private static extern void gst_value_list_append_value (ref GLib.Value val, ref GLib.Value el);
 	}
@@ -633,19 +633,19 @@ namespace Gst
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 
 		private static extern IntPtr gst_value_array_get_type ();
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 
 		private static extern uint gst_value_array_get_size (ref GLib.Value val);
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 
 		private static extern IntPtr gst_value_array_get_value (ref GLib.Value val, uint index);
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 
 		private static extern void gst_value_array_append_value (ref GLib.Value val, ref GLib.Value el);
 	}

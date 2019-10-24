@@ -23,7 +23,7 @@ namespace Gst.Rtsp {
 			return (Gst.Rtsp.RTSPRange) Marshal.PtrToStructure (raw, typeof (Gst.Rtsp.RTSPRange));
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtsp_range_convert_units(IntPtr range, int unit);
 
 		public static bool ConvertUnits(Gst.Rtsp.RTSPTimeRange range, Gst.Rtsp.RTSPRangeUnit unit) {
@@ -34,7 +34,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_rtsp_range_free(IntPtr range);
 
 		public static void Free(Gst.Rtsp.RTSPTimeRange range) {
@@ -43,7 +43,7 @@ namespace Gst.Rtsp {
 			Marshal.FreeHGlobal (native_range);
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtsp_range_get_times(IntPtr range, out ulong min, out ulong max);
 
 		public static bool GetTimes(Gst.Rtsp.RTSPTimeRange range, out ulong min, out ulong max) {
@@ -54,7 +54,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_range_parse(IntPtr rangestr, IntPtr range);
 
 		public static Gst.Rtsp.RTSPResult Parse(string rangestr, out Gst.Rtsp.RTSPTimeRange range) {
@@ -68,7 +68,7 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
-		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_rtsp_range_to_string(IntPtr range);
 
 		public static string ToString(Gst.Rtsp.RTSPTimeRange range) {

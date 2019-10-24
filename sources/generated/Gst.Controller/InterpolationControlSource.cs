@@ -13,7 +13,7 @@ namespace Gst.Controller {
 
 		public InterpolationControlSource (IntPtr raw) : base(raw) {}
 
-		[DllImport("libgstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_interpolation_control_source_new();
 
 		public InterpolationControlSource () : base (IntPtr.Zero)
@@ -64,7 +64,7 @@ namespace Gst.Controller {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_interpolation_control_source_get_type();
 
 		public static new GLib.GType GType { 

@@ -103,7 +103,7 @@ namespace Gst.Rtsp {
 	}
 
 	internal class RTSPHeaderFieldGType {
-		[DllImport ("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_rtsp_header_field_get_type ();
 
 		public static GLib.GType GType {

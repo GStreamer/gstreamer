@@ -24,21 +24,21 @@ namespace Gst.FFT {
 
 	public partial class FFTF32 : GLib.Opaque {
 
-		[DllImport("libgstfft-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstfft-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_fft_f32_new (int len, bool inverse);
 
 		public FFTF32 (int len, bool inverse) {
 			Raw = gst_fft_f32_new (len, inverse);
 		}
 
-		[DllImport("libgstfft-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstfft-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_fft_f32_fft(IntPtr raw, float[] timedata, [MarshalAs (UnmanagedType.LPArray, ArraySubType=UnmanagedType.Struct)] FFTF32Complex[] freqdata);
 
 		public void Fft(float[] timedata, Gst.FFT.FFTF32Complex[] freqdata) {
 			gst_fft_f32_fft(Handle, timedata, freqdata);
 		}
 
-		[DllImport("libgstfft-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstfft-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_fft_f32_window(IntPtr raw, float[] timedata, int window);
 
 		public void Window(float[] timedata, Gst.FFT.FFTWindow window) {

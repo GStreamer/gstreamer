@@ -17,7 +17,7 @@ namespace Gst.Audio {
 	}
 
 	internal class AudioBaseSinkSlaveMethodGType {
-		[DllImport ("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_audio_base_sink_slave_method_get_type ();
 
 		public static GLib.GType GType {

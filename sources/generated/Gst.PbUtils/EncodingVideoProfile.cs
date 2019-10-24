@@ -13,7 +13,7 @@ namespace Gst.PbUtils {
 
 		public EncodingVideoProfile (IntPtr raw) : base(raw) {}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_encoding_video_profile_new(IntPtr format, IntPtr preset, IntPtr restriction, uint presence);
 
 		public EncodingVideoProfile (Gst.Caps format, string preset, Gst.Caps restriction, uint presence) : base (IntPtr.Zero)
@@ -44,7 +44,7 @@ namespace Gst.PbUtils {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_encoding_video_profile_get_type();
 
 		public static new GLib.GType GType { 
@@ -55,10 +55,10 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_encoding_video_profile_get_pass(IntPtr raw);
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_encoding_video_profile_set_pass(IntPtr raw, uint pass);
 
 		public uint Pass { 
@@ -72,10 +72,10 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_encoding_video_profile_get_variableframerate(IntPtr raw);
 
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_encoding_video_profile_set_variableframerate(IntPtr raw, bool variableframerate);
 
 		public bool Variableframerate { 

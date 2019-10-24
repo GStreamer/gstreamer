@@ -26,7 +26,7 @@ namespace Gst {
 	}
 
 	internal class SeekFlagsGType {
-		[DllImport ("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_seek_flags_get_type ();
 
 		public static GLib.GType GType {

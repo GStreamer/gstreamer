@@ -47,7 +47,7 @@ namespace Gst.Tags {
 			implementor = GLib.Object.GetObject (handle);
 		}
 
-		[DllImport("libgsttag-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gsttag-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_tag_xmp_writer_get_type();
 
 		private static GLib.GType _gtype = new GLib.GType (gst_tag_xmp_writer_get_type ());
@@ -100,14 +100,14 @@ namespace Gst.Tags {
 			}
 		}
 
-		[DllImport("libgsttag-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gsttag-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_tag_xmp_writer_add_all_schemas(IntPtr raw);
 
 		public void AddAllSchemas() {
 			gst_tag_xmp_writer_add_all_schemas(Handle);
 		}
 
-		[DllImport("libgsttag-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gsttag-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_tag_xmp_writer_add_schema(IntPtr raw, IntPtr schema);
 
 		public void AddSchema(string schema) {
@@ -116,7 +116,7 @@ namespace Gst.Tags {
 			GLib.Marshaller.Free (native_schema);
 		}
 
-		[DllImport("libgsttag-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gsttag-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_tag_xmp_writer_has_schema(IntPtr raw, IntPtr schema);
 
 		public bool HasSchema(string schema) {
@@ -127,14 +127,14 @@ namespace Gst.Tags {
 			return ret;
 		}
 
-		[DllImport("libgsttag-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gsttag-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_tag_xmp_writer_remove_all_schemas(IntPtr raw);
 
 		public void RemoveAllSchemas() {
 			gst_tag_xmp_writer_remove_all_schemas(Handle);
 		}
 
-		[DllImport("libgsttag-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gsttag-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_tag_xmp_writer_remove_schema(IntPtr raw, IntPtr schema);
 
 		public void RemoveSchema(string schema) {
@@ -143,7 +143,7 @@ namespace Gst.Tags {
 			GLib.Marshaller.Free (native_schema);
 		}
 
-		[DllImport("libgsttag-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gsttag-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_tag_xmp_writer_tag_list_to_xmp_buffer(IntPtr raw, IntPtr taglist, bool read_only);
 
 		public Gst.Buffer TagListToXmpBuffer(Gst.TagList taglist, bool read_only) {

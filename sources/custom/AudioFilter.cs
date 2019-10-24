@@ -27,7 +27,7 @@ namespace Gst.Audio {
 
 	partial class AudioFilter 
 	{
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_filter_class_add_pad_templates(IntPtr klass, IntPtr allowed_caps);
 
 		public void AddPadTemplates(Gst.Caps allowed_caps) {

@@ -33,7 +33,7 @@ namespace Gst {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_device_provider_factory_get_type();
 
 		public static new GLib.GType GType { 
@@ -44,7 +44,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_device_provider_factory_find(IntPtr name);
 
 		public static Gst.DeviceProviderFactory Find(string name) {
@@ -55,7 +55,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_device_provider_factory_get_by_name(IntPtr factoryname);
 
 		public static Gst.DeviceProvider GetByName(string factoryname) {
@@ -66,7 +66,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_device_provider_factory_list_get_device_providers(int minrank);
 
 		public static Gst.DeviceProviderFactory[] ListGetDeviceProviders(Gst.Rank minrank) {
@@ -75,7 +75,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_device_provider_factory_get(IntPtr raw);
 
 		public Gst.DeviceProvider Get() {
@@ -84,7 +84,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_device_provider_factory_get_device_provider_type(IntPtr raw);
 
 		public GLib.GType DeviceProviderType { 
@@ -95,7 +95,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_device_provider_factory_get_metadata(IntPtr raw, IntPtr key);
 
 		public string GetMetadata(string key) {
@@ -106,7 +106,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_device_provider_factory_get_metadata_keys(IntPtr raw);
 
 		public string[] MetadataKeys { 
@@ -117,7 +117,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_device_provider_factory_has_classes(IntPtr raw, IntPtr classes);
 
 		public bool HasClasses(string classes) {
@@ -132,7 +132,7 @@ namespace Gst {
 			return HasClasses (null);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_device_provider_factory_has_classesv(IntPtr raw, IntPtr[] classes);
 
 		public bool HasClassesv(string[] classes) {

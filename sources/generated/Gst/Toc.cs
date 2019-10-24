@@ -21,7 +21,7 @@ namespace Gst {
 			return (Gst.Toc) Marshal.PtrToStructure (raw, typeof (Gst.Toc));
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_toc_new(int scope);
 
 		public static Toc New(Gst.TocScope scope)
@@ -30,7 +30,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_toc_get_type();
 
 		public static GLib.GType GType { 
@@ -41,7 +41,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_toc_append_entry(IntPtr raw, IntPtr entry);
 
 		public void AppendEntry(Gst.TocEntry entry) {
@@ -54,7 +54,7 @@ namespace Gst {
 			Marshal.FreeHGlobal (native_entry);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_toc_dump(IntPtr raw);
 
 		public void Dump() {
@@ -65,7 +65,7 @@ namespace Gst {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_toc_find_entry(IntPtr raw, IntPtr uid);
 
 		public Gst.TocEntry FindEntry(string uid) {
@@ -80,7 +80,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_toc_get_entries(IntPtr raw);
 
 		public GLib.List[] Entries { 
@@ -95,7 +95,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_toc_get_scope(IntPtr raw);
 
 		public Gst.TocScope Scope { 
@@ -110,10 +110,10 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_toc_get_tags(IntPtr raw);
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_toc_set_tags(IntPtr raw, IntPtr tags);
 
 		public Gst.TagList Tags { 
@@ -136,7 +136,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_toc_merge_tags(IntPtr raw, IntPtr tags, int mode);
 
 		public void MergeTags(Gst.TagList tags, Gst.TagMergeMode mode) {

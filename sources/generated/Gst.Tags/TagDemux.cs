@@ -270,7 +270,7 @@ namespace Gst.Tags {
 
 		// End of the ABI representation.
 
-		[DllImport("libgsttag-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gsttag-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_tag_demux_get_type();
 
 		public static new GLib.GType GType { 

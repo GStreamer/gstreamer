@@ -62,7 +62,7 @@ namespace Gst {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_control_source_get_type();
 
 		public static new GLib.GType GType { 
@@ -73,7 +73,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_control_source_get_value(IntPtr raw, ulong timestamp, out double value);
 
 		public bool GetValueAt(ulong timestamp, out double value) {
@@ -82,7 +82,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_control_source_get_value_array(IntPtr raw, ulong timestamp, ulong interval, uint n_values, double[] values);
 
 		public bool GetValues(ulong timestamp, ulong interval, double[] values) {

@@ -21,7 +21,7 @@ namespace Gst {
 			return (Gst.Uri) Marshal.PtrToStructure (raw, typeof (Gst.Uri));
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_uri_new(IntPtr scheme, IntPtr userinfo, IntPtr host, uint port, IntPtr path, IntPtr query, IntPtr fragment);
 
 		public static Uri New(string scheme, string userinfo, string host, uint port, string path, string query, string fragment)
@@ -42,7 +42,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_uri_get_type();
 
 		public static GLib.GType GType { 
@@ -53,7 +53,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_uri_append_path(IntPtr raw, IntPtr relative_path);
 
 		public bool AppendPath(string relative_path) {
@@ -68,7 +68,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_uri_append_path_segment(IntPtr raw, IntPtr path_segment);
 
 		public bool AppendPathSegment(string path_segment) {
@@ -83,7 +83,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_uri_equal(IntPtr raw, IntPtr second);
 
 		public bool Equal(Gst.Uri second) {
@@ -98,7 +98,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_uri_from_string_with_base(IntPtr raw, IntPtr uri);
 
 		public Gst.Uri FromStringWithBase(string uri) {
@@ -113,7 +113,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_uri_get_fragment(IntPtr raw);
 
 		public string Fragment { 
@@ -128,7 +128,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_uri_get_host(IntPtr raw);
 
 		public string Host { 
@@ -143,7 +143,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern System.IntPtr gst_uri_get_media_fragment_table(IntPtr raw);
 
 		public string[] MediaFragmentTable { 
@@ -158,7 +158,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_uri_get_path(IntPtr raw);
 
 		public string Path { 
@@ -173,7 +173,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_uri_get_path_segments(IntPtr raw);
 
 		public string[] PathSegments { 
@@ -188,7 +188,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_uri_get_path_string(IntPtr raw);
 
 		public string PathString { 
@@ -203,7 +203,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_uri_get_port(IntPtr raw);
 
 		public uint Port { 
@@ -218,7 +218,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_uri_get_query_keys(IntPtr raw);
 
 		public string[] QueryKeys { 
@@ -233,7 +233,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_uri_get_query_string(IntPtr raw);
 
 		public string QueryString { 
@@ -248,7 +248,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern System.IntPtr gst_uri_get_query_table(IntPtr raw);
 
 		public string[] QueryTable { 
@@ -263,7 +263,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_uri_get_query_value(IntPtr raw, IntPtr query_key);
 
 		public string GetQueryValue(string query_key) {
@@ -278,7 +278,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_uri_get_scheme(IntPtr raw);
 
 		public string Scheme { 
@@ -293,7 +293,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_uri_get_userinfo(IntPtr raw);
 
 		public string Userinfo { 
@@ -308,7 +308,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_uri_is_normalized(IntPtr raw);
 
 		public bool IsNormalized { 
@@ -323,7 +323,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_uri_is_writable(IntPtr raw);
 
 		public bool IsWritable { 
@@ -338,7 +338,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_uri_join(IntPtr raw, IntPtr ref_uri);
 
 		public Gst.Uri Join(Gst.Uri ref_uri) {
@@ -357,7 +357,7 @@ namespace Gst {
 			return Join (Gst.Uri.Zero);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_uri_make_writable(IntPtr raw);
 
 		public Gst.Uri MakeWritable() {
@@ -370,7 +370,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_uri_new_with_base(IntPtr raw, IntPtr scheme, IntPtr userinfo, IntPtr host, uint port, IntPtr path, IntPtr query, IntPtr fragment);
 
 		public Gst.Uri NewWithBase(string scheme, string userinfo, string host, uint port, string path, string query, string fragment) {
@@ -399,7 +399,7 @@ namespace Gst {
 			return NewWithBase (null, null, null, port, null, null, null);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_uri_normalize(IntPtr raw);
 
 		public bool Normalize() {
@@ -412,7 +412,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_uri_query_has_key(IntPtr raw, IntPtr query_key);
 
 		public bool QueryHasKey(string query_key) {
@@ -427,7 +427,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_uri_remove_query_key(IntPtr raw, IntPtr query_key);
 
 		public bool RemoveQueryKey(string query_key) {
@@ -442,7 +442,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_uri_set_fragment(IntPtr raw, IntPtr fragment);
 
 		public bool SetFragment(string fragment) {
@@ -461,7 +461,7 @@ namespace Gst {
 			return SetFragment (null);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_uri_set_host(IntPtr raw, IntPtr host);
 
 		public bool SetHost(string host) {
@@ -476,7 +476,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_uri_set_path(IntPtr raw, IntPtr path);
 
 		public bool SetPath(string path) {
@@ -491,7 +491,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_uri_set_path_segments(IntPtr raw, IntPtr path_segments);
 
 		public bool SetPathSegments(GLib.List path_segments) {
@@ -508,7 +508,7 @@ namespace Gst {
 			return SetPathSegments (null);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_uri_set_path_string(IntPtr raw, IntPtr path);
 
 		public bool SetPathString(string path) {
@@ -523,7 +523,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_uri_set_port(IntPtr raw, uint port);
 
 		public bool SetPort(uint port) {
@@ -536,7 +536,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_uri_set_query_string(IntPtr raw, IntPtr query);
 
 		public bool SetQueryString(string query) {
@@ -551,7 +551,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_uri_set_query_table(IntPtr raw, System.IntPtr query_table);
 
 		public bool SetQueryTable(System.IntPtr query_table) {
@@ -568,7 +568,7 @@ namespace Gst {
 			return SetQueryTable (IntPtr.Zero);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_uri_set_query_value(IntPtr raw, IntPtr query_key, IntPtr query_value);
 
 		public bool SetQueryValue(string query_key, string query_value) {
@@ -589,7 +589,7 @@ namespace Gst {
 			return SetQueryValue (query_key, null);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_uri_set_scheme(IntPtr raw, IntPtr scheme);
 
 		public bool SetScheme(string scheme) {
@@ -604,7 +604,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_uri_set_userinfo(IntPtr raw, IntPtr userinfo);
 
 		public bool SetUserinfo(string userinfo) {
@@ -619,7 +619,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_uri_to_string(IntPtr raw);
 
 		public override string ToString() {
@@ -632,7 +632,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_uri_construct(IntPtr protocol, IntPtr location);
 
 		[Obsolete]
@@ -646,7 +646,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_uri_from_string(IntPtr uri);
 
 		public static Gst.Uri FromString(string uri) {
@@ -657,7 +657,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_uri_get_location(IntPtr uri);
 
 		public static string GetLocation(string uri) {
@@ -668,7 +668,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_uri_get_protocol(IntPtr uri);
 
 		public static string GetProtocol(string uri) {
@@ -679,7 +679,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_uri_has_protocol(IntPtr uri, IntPtr protocol);
 
 		public static bool HasProtocol(string uri, string protocol) {
@@ -692,7 +692,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_uri_is_valid(IntPtr uri);
 
 		public static bool IsValid(string uri) {
@@ -703,7 +703,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_uri_join_strings(IntPtr base_uri, IntPtr ref_uri);
 
 		public static string JoinStrings(string base_uri, string ref_uri) {
@@ -716,7 +716,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_uri_protocol_is_supported(int type, IntPtr protocol);
 
 		public static bool ProtocolIsSupported(Gst.URIType type, string protocol) {
@@ -727,7 +727,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_uri_protocol_is_valid(IntPtr protocol);
 
 		public static bool ProtocolIsValid(string protocol) {

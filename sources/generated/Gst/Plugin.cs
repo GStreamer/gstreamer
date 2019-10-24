@@ -33,7 +33,7 @@ namespace Gst {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_plugin_get_type();
 
 		public static new GLib.GType GType { 
@@ -44,14 +44,14 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_plugin_list_free(IntPtr list);
 
 		public static void ListFree(GLib.List list) {
 			gst_plugin_list_free(list == null ? IntPtr.Zero : list.Handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_plugin_load_by_name(IntPtr name);
 
 		public static Gst.Plugin LoadByName(string name) {
@@ -62,7 +62,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern unsafe IntPtr gst_plugin_load_file(IntPtr filename, out IntPtr error);
 
 		public static unsafe Gst.Plugin LoadFile(string filename) {
@@ -75,7 +75,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_plugin_register_static(int major_version, int minor_version, IntPtr name, IntPtr description, GstSharp.PluginInitFuncNative init_func, IntPtr version, IntPtr license, IntPtr source, IntPtr package, IntPtr origin);
 
 		public static bool RegisterStatic(int major_version, int minor_version, string name, string description, Gst.PluginInitFunc init_func, string version, string license, string source, string package, string origin) {
@@ -99,7 +99,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_plugin_register_static_full(int major_version, int minor_version, IntPtr name, IntPtr description, GstSharp.PluginInitFullFuncNative init_full_func, IntPtr version, IntPtr license, IntPtr source, IntPtr package, IntPtr origin, IntPtr user_data);
 
 		public static bool RegisterStaticFull(int major_version, int minor_version, string name, string description, Gst.PluginInitFullFunc init_full_func, string version, string license, string source, string package, string origin) {
@@ -123,7 +123,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_plugin_add_dependency(IntPtr raw, IntPtr[] env_vars, IntPtr[] paths, IntPtr[] names, int flags);
 
 		public void AddDependency(string[] env_vars, string[] paths, string[] names, Gst.PluginDependencyFlags flags) {
@@ -149,7 +149,7 @@ namespace Gst {
 			AddDependency (null, null, null, flags);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_plugin_add_dependency_simple(IntPtr raw, IntPtr env_vars, IntPtr paths, IntPtr names, int flags);
 
 		public void AddDependencySimple(string env_vars, string paths, string names, Gst.PluginDependencyFlags flags) {
@@ -166,10 +166,10 @@ namespace Gst {
 			AddDependencySimple (null, null, null, flags);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_plugin_get_cache_data(IntPtr raw);
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_plugin_set_cache_data(IntPtr raw, IntPtr cache_data);
 
 		public Gst.Structure CacheData { 
@@ -184,7 +184,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_plugin_get_description(IntPtr raw);
 
 		public string Description { 
@@ -195,7 +195,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_plugin_get_filename(IntPtr raw);
 
 		public string Filename { 
@@ -206,7 +206,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_plugin_get_license(IntPtr raw);
 
 		public string License { 
@@ -217,7 +217,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_plugin_get_origin(IntPtr raw);
 
 		public string Origin { 
@@ -228,7 +228,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_plugin_get_package(IntPtr raw);
 
 		public string Package { 
@@ -239,7 +239,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_plugin_get_release_date_string(IntPtr raw);
 
 		public string ReleaseDateString { 
@@ -250,7 +250,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_plugin_get_source(IntPtr raw);
 
 		public string Source { 
@@ -261,7 +261,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_plugin_get_version(IntPtr raw);
 
 		public string Version { 
@@ -272,7 +272,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_plugin_is_loaded(IntPtr raw);
 
 		public bool IsLoaded { 
@@ -283,7 +283,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_plugin_load(IntPtr raw);
 
 		public Gst.Plugin Load() {

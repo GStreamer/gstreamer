@@ -48,7 +48,7 @@ namespace Gst.Base {
 			return (Gst.Base.BaseParseFrame) Marshal.PtrToStructure (raw, typeof (Gst.Base.BaseParseFrame));
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_base_parse_frame_new(IntPtr buffer, int flags, int overhead);
 
 		public static BaseParseFrame New(Gst.Buffer buffer, Gst.Base.BaseParseFrameFlags flags, int overhead)
@@ -57,7 +57,7 @@ namespace Gst.Base {
 			return result;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_base_parse_frame_get_type();
 
 		public static GLib.GType GType { 
@@ -68,7 +68,7 @@ namespace Gst.Base {
 			}
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_base_parse_frame_init(IntPtr raw);
 
 		public void Init() {

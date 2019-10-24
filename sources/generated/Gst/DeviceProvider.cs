@@ -18,7 +18,7 @@ namespace Gst {
 			CreateNativeObject (new string [0], new GLib.Value [0]);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_device_provider_get_devices(IntPtr raw);
 
 		public Gst.Device[] Devices {
@@ -326,7 +326,7 @@ namespace Gst {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_device_provider_get_type();
 
 		public static new GLib.GType GType { 
@@ -337,7 +337,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_device_provider_register(IntPtr plugin, IntPtr name, uint rank, IntPtr type);
 
 		public static bool Register(Gst.Plugin plugin, string name, uint rank, GLib.GType type) {
@@ -352,7 +352,7 @@ namespace Gst {
 			return Register (null, name, rank, type);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_device_provider_can_monitor(IntPtr raw);
 
 		public bool CanMonitor() {
@@ -361,28 +361,28 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_device_provider_device_add(IntPtr raw, IntPtr device);
 
 		public void DeviceAdd(Gst.Device device) {
 			gst_device_provider_device_add(Handle, device == null ? IntPtr.Zero : device.Handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_device_provider_device_changed(IntPtr raw, IntPtr device, IntPtr changed_device);
 
 		public void DeviceChanged(Gst.Device device, Gst.Device changed_device) {
 			gst_device_provider_device_changed(Handle, device == null ? IntPtr.Zero : device.Handle, changed_device == null ? IntPtr.Zero : changed_device.Handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_device_provider_device_remove(IntPtr raw, IntPtr device);
 
 		public void DeviceRemove(Gst.Device device) {
 			gst_device_provider_device_remove(Handle, device == null ? IntPtr.Zero : device.Handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_device_provider_get_bus(IntPtr raw);
 
 		public Gst.Bus Bus { 
@@ -393,7 +393,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_device_provider_get_factory(IntPtr raw);
 
 		public Gst.DeviceProviderFactory Factory { 
@@ -404,7 +404,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_device_provider_get_hidden_providers(IntPtr raw);
 
 		public string[] HiddenProviders { 
@@ -415,7 +415,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_device_provider_get_metadata(IntPtr raw, IntPtr key);
 
 		public string GetMetadata(string key) {
@@ -426,7 +426,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_device_provider_hide_provider(IntPtr raw, IntPtr name);
 
 		public void HideProvider(string name) {
@@ -435,7 +435,7 @@ namespace Gst {
 			GLib.Marshaller.Free (native_name);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_device_provider_start(IntPtr raw);
 
 		public bool Start() {
@@ -444,14 +444,14 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_device_provider_stop(IntPtr raw);
 
 		public void Stop() {
 			gst_device_provider_stop(Handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_device_provider_unhide_provider(IntPtr raw, IntPtr name);
 
 		public void UnhideProvider(string name) {

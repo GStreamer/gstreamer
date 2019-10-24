@@ -42,7 +42,7 @@ namespace Gst {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_proxy_pad_get_type();
 
 		public static new GLib.GType GType { 
@@ -53,7 +53,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_proxy_pad_chain_default(IntPtr pad, IntPtr parent, IntPtr buffer);
 
 		public static Gst.FlowReturn ChainDefault(Gst.Pad pad, Gst.Object parent, Gst.Buffer buffer) {
@@ -67,7 +67,7 @@ namespace Gst {
 			return ChainDefault (pad, null, buffer);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_proxy_pad_chain_list_default(IntPtr pad, IntPtr parent, IntPtr list);
 
 		public static Gst.FlowReturn ChainListDefault(Gst.Pad pad, Gst.Object parent, Gst.BufferList list) {
@@ -81,7 +81,7 @@ namespace Gst {
 			return ChainListDefault (pad, null, list);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_proxy_pad_getrange_default(IntPtr pad, IntPtr parent, ulong offset, uint size, out IntPtr buffer);
 
 		public static Gst.FlowReturn GetrangeDefault(Gst.Pad pad, Gst.Object parent, ulong offset, uint size, out Gst.Buffer buffer) {
@@ -92,7 +92,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_proxy_pad_iterate_internal_links_default(IntPtr pad, IntPtr parent);
 
 		public static Gst.Iterator IterateInternalLinksDefault(Gst.Pad pad, Gst.Object parent) {
@@ -105,7 +105,7 @@ namespace Gst {
 			return IterateInternalLinksDefault (pad, null);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_proxy_pad_get_internal(IntPtr raw);
 
 		public Gst.ProxyPad Internal { 

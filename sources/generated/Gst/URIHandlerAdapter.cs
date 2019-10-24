@@ -95,7 +95,7 @@ namespace Gst {
 			implementor = GLib.Object.GetObject (handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_uri_handler_get_type();
 
 		private static GLib.GType _gtype = new GLib.GType (gst_uri_handler_get_type ());
@@ -148,7 +148,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_uri_handler_get_uri(IntPtr raw);
 
 		public string Uri { 
@@ -159,7 +159,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_uri_handler_get_uri_type(IntPtr raw);
 
 		public Gst.URIType UriType { 
@@ -170,7 +170,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_uri_handler_set_uri(IntPtr raw, IntPtr uri, out IntPtr error);
 
 		public bool SetUri(string uri) {

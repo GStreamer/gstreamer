@@ -47,7 +47,7 @@ namespace Gst.Video {
 			implementor = GLib.Object.GetObject (handle);
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_direction_get_type();
 
 		private static GLib.GType _gtype = new GLib.GType (gst_video_direction_get_type ());

@@ -26,7 +26,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_type_find_get_length(IntPtr raw);
 
 		public ulong Length { 
@@ -37,14 +37,14 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_type_find_suggest(IntPtr raw, uint probability, IntPtr caps);
 
 		public void Suggest(uint probability, Gst.Caps caps) {
 			gst_type_find_suggest(Handle, probability, caps == null ? IntPtr.Zero : caps.Handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_type_find_register(IntPtr plugin, IntPtr name, uint rank, GstSharp.TypeFindFunctionNative func, IntPtr extensions, IntPtr possible_caps, IntPtr data, GLib.DestroyNotify data_notify);
 
 		public static bool Register(Gst.Plugin plugin, string name, uint rank, Gst.TypeFindFunction func, string extensions, Gst.Caps possible_caps) {

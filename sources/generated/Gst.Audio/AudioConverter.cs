@@ -21,7 +21,7 @@ namespace Gst.Audio {
 			return (Gst.Audio.AudioConverter) Marshal.PtrToStructure (raw, typeof (Gst.Audio.AudioConverter));
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_audio_converter_new(int flags, IntPtr in_info, IntPtr out_info, IntPtr config);
 
 		public static AudioConverter New(Gst.Audio.AudioConverterFlags flags, Gst.Audio.AudioInfo in_info, Gst.Audio.AudioInfo out_info, Gst.Structure config)
@@ -31,7 +31,7 @@ namespace Gst.Audio {
 			return result;
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_audio_converter_get_type();
 
 		public static GLib.GType GType { 
@@ -42,7 +42,7 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_audio_converter_get_config(IntPtr raw, out int in_rate, out int out_rate);
 
 		public Gst.Structure GetConfig(out int in_rate, out int out_rate) {
@@ -55,7 +55,7 @@ namespace Gst.Audio {
 			return ret;
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern UIntPtr gst_audio_converter_get_in_frames(IntPtr raw, UIntPtr out_frames);
 
 		public ulong GetInFrames(ulong out_frames) {
@@ -68,7 +68,7 @@ namespace Gst.Audio {
 			return ret;
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern UIntPtr gst_audio_converter_get_max_latency(IntPtr raw);
 
 		public ulong MaxLatency { 
@@ -83,7 +83,7 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern UIntPtr gst_audio_converter_get_out_frames(IntPtr raw, UIntPtr in_frames);
 
 		public ulong GetOutFrames(ulong in_frames) {
@@ -96,7 +96,7 @@ namespace Gst.Audio {
 			return ret;
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_audio_converter_is_passthrough(IntPtr raw);
 
 		public bool IsPassthrough { 
@@ -111,7 +111,7 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_converter_reset(IntPtr raw);
 
 		public void Reset() {
@@ -122,7 +122,7 @@ namespace Gst.Audio {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_audio_converter_samples(IntPtr raw, int flags, IntPtr in_param, UIntPtr in_frames, IntPtr out_param, UIntPtr out_frames);
 
 		public bool Samples(Gst.Audio.AudioConverterFlags flags, IntPtr in_param, ulong in_frames, IntPtr out_param, ulong out_frames) {
@@ -139,7 +139,7 @@ namespace Gst.Audio {
 			return Samples (flags, IntPtr.Zero, in_frames, IntPtr.Zero, out_frames);
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_audio_converter_supports_inplace(IntPtr raw);
 
 		public bool SupportsInplace() {
@@ -152,7 +152,7 @@ namespace Gst.Audio {
 			return ret;
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_audio_converter_update_config(IntPtr raw, int in_rate, int out_rate, IntPtr config);
 
 		public bool UpdateConfig(int in_rate, int out_rate, Gst.Structure config) {

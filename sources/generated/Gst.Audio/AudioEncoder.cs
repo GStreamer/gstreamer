@@ -18,10 +18,10 @@ namespace Gst.Audio {
 			CreateNativeObject (new string [0], new GLib.Value [0]);
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_audio_encoder_get_hard_resync(IntPtr raw);
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_encoder_set_hard_resync(IntPtr raw, bool enabled);
 
 		[GLib.Property ("hard-resync")]
@@ -36,10 +36,10 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_audio_encoder_get_mark_granule(IntPtr raw);
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_encoder_set_mark_granule(IntPtr raw, bool enabled);
 
 		[GLib.Property ("mark-granule")]
@@ -54,10 +54,10 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_audio_encoder_get_perfect_timestamp(IntPtr raw);
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_encoder_set_perfect_timestamp(IntPtr raw, bool enabled);
 
 		[GLib.Property ("perfect-timestamp")]
@@ -72,10 +72,10 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_audio_encoder_get_tolerance(IntPtr raw);
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_encoder_set_tolerance(IntPtr raw, ulong tolerance);
 
 		[GLib.Property ("tolerance")]
@@ -1278,7 +1278,7 @@ namespace Gst.Audio {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_audio_encoder_get_type();
 
 		public static new GLib.GType GType { 
@@ -1289,7 +1289,7 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_audio_encoder_allocate_output_buffer(IntPtr raw, UIntPtr size);
 
 		public Gst.Buffer AllocateOutputBuffer(ulong size) {
@@ -1298,7 +1298,7 @@ namespace Gst.Audio {
 			return ret;
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_audio_encoder_finish_frame(IntPtr raw, IntPtr buffer, int samples);
 
 		public Gst.FlowReturn FinishFrame(Gst.Buffer buffer, int samples) {
@@ -1307,7 +1307,7 @@ namespace Gst.Audio {
 			return ret;
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_encoder_get_allocator(IntPtr raw, out IntPtr allocator, IntPtr parms);
 
 		public void GetAllocator(out Gst.Allocator allocator, out Gst.AllocationParams parms) {
@@ -1319,7 +1319,7 @@ namespace Gst.Audio {
 			Marshal.FreeHGlobal (native_parms);
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_audio_encoder_get_audio_info(IntPtr raw);
 
 		public Gst.Audio.AudioInfo AudioInfo { 
@@ -1330,10 +1330,10 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_audio_encoder_get_drainable(IntPtr raw);
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_encoder_set_drainable(IntPtr raw, bool enabled);
 
 		public bool Drainable { 
@@ -1347,10 +1347,10 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_audio_encoder_get_frame_max(IntPtr raw);
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_encoder_set_frame_max(IntPtr raw, int num);
 
 		public int FrameMax { 
@@ -1364,10 +1364,10 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_audio_encoder_get_frame_samples_max(IntPtr raw);
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_encoder_set_frame_samples_max(IntPtr raw, int num);
 
 		public int FrameSamplesMax { 
@@ -1381,10 +1381,10 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_audio_encoder_get_frame_samples_min(IntPtr raw);
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_encoder_set_frame_samples_min(IntPtr raw, int num);
 
 		public int FrameSamplesMin { 
@@ -1398,10 +1398,10 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_audio_encoder_get_hard_min(IntPtr raw);
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_encoder_set_hard_min(IntPtr raw, bool enabled);
 
 		public bool HardMin { 
@@ -1415,17 +1415,17 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_encoder_get_latency(IntPtr raw, out ulong min, out ulong max);
 
 		public void GetLatency(out ulong min, out ulong max) {
 			gst_audio_encoder_get_latency(Handle, out min, out max);
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_audio_encoder_get_lookahead(IntPtr raw);
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_encoder_set_lookahead(IntPtr raw, int num);
 
 		public int Lookahead { 
@@ -1439,7 +1439,7 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_encoder_merge_tags(IntPtr raw, IntPtr tags, int mode);
 
 		public void MergeTags(Gst.TagList tags, Gst.TagMergeMode mode) {
@@ -1450,7 +1450,7 @@ namespace Gst.Audio {
 			MergeTags (null, mode);
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_audio_encoder_negotiate(IntPtr raw);
 
 		public bool Negotiate() {
@@ -1459,7 +1459,7 @@ namespace Gst.Audio {
 			return ret;
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_audio_encoder_proxy_getcaps(IntPtr raw, IntPtr caps, IntPtr filter);
 
 		public Gst.Caps ProxyGetcaps(Gst.Caps caps, Gst.Caps filter) {
@@ -1472,7 +1472,7 @@ namespace Gst.Audio {
 			return ProxyGetcaps (null, null);
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_encoder_set_allocation_caps(IntPtr raw, IntPtr allocation_caps);
 
 		public Gst.Caps AllocationCaps { 
@@ -1481,7 +1481,7 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_encoder_set_headers(IntPtr raw, IntPtr headers);
 
 		public GLib.List Headers { 
@@ -1490,14 +1490,14 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_encoder_set_latency(IntPtr raw, ulong min, ulong max);
 
 		public void SetLatency(ulong min, ulong max) {
 			gst_audio_encoder_set_latency(Handle, min, max);
 		}
 
-		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_audio_encoder_set_output_format(IntPtr raw, IntPtr caps);
 
 		public bool SetOutputFormat(Gst.Caps caps) {
@@ -1506,7 +1506,7 @@ namespace Gst.Audio {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_preset_delete_preset(IntPtr raw, IntPtr name);
 
 		public bool DeletePreset(string name) {
@@ -1517,7 +1517,7 @@ namespace Gst.Audio {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_preset_get_meta(IntPtr raw, IntPtr name, IntPtr tag, out IntPtr value);
 
 		public bool GetMeta(string name, string tag, out string value) {
@@ -1532,7 +1532,7 @@ namespace Gst.Audio {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_preset_get_preset_names(IntPtr raw);
 
 		public string[] PresetNames { 
@@ -1543,7 +1543,7 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_preset_get_property_names(IntPtr raw);
 
 		public string[] PropertyNames { 
@@ -1554,7 +1554,7 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_preset_is_editable(IntPtr raw);
 
 		public bool IsEditable { 
@@ -1565,7 +1565,7 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_preset_load_preset(IntPtr raw, IntPtr name);
 
 		public bool LoadPreset(string name) {
@@ -1576,7 +1576,7 @@ namespace Gst.Audio {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_preset_rename_preset(IntPtr raw, IntPtr old_name, IntPtr new_name);
 
 		public bool RenamePreset(string old_name, string new_name) {
@@ -1589,7 +1589,7 @@ namespace Gst.Audio {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_preset_save_preset(IntPtr raw, IntPtr name);
 
 		public bool SavePreset(string name) {
@@ -1600,7 +1600,7 @@ namespace Gst.Audio {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_preset_set_meta(IntPtr raw, IntPtr name, IntPtr tag, IntPtr value);
 
 		public bool SetMeta(string name, string tag, string value) {

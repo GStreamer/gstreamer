@@ -190,7 +190,7 @@ namespace GstreamerSharp
 			pipeline.SetState (State.Null);
 		}
 
-		[DllImport ("libglib-2.0.dll")]
+		[DllImport ("glib-2.0.dll")]
 		static extern IntPtr g_quark_to_string (uint quark);
 	}
 }

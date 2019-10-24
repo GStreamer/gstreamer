@@ -33,10 +33,10 @@ namespace Gst.App {
 			}
 		}
 
-		[DllImport("libgstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_app_src_get_caps(IntPtr raw);
 
-		[DllImport("libgstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_app_src_set_caps(IntPtr raw, IntPtr caps);
 
 		[GLib.Property ("caps")]
@@ -51,7 +51,7 @@ namespace Gst.App {
 			}
 		}
 
-		[DllImport("libgstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_app_src_get_current_level_bytes(IntPtr raw);
 
 		[GLib.Property ("current-level-bytes")]
@@ -63,10 +63,10 @@ namespace Gst.App {
 			}
 		}
 
-		[DllImport("libgstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_app_src_get_duration(IntPtr raw);
 
-		[DllImport("libgstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_app_src_set_duration(IntPtr raw, ulong duration);
 
 		[GLib.Property ("duration")]
@@ -81,10 +81,10 @@ namespace Gst.App {
 			}
 		}
 
-		[DllImport("libgstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_app_src_get_emit_signals(IntPtr raw);
 
-		[DllImport("libgstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_app_src_set_emit_signals(IntPtr raw, bool emit);
 
 		[GLib.Property ("emit-signals")]
@@ -129,10 +129,10 @@ namespace Gst.App {
 			}
 		}
 
-		[DllImport("libgstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_app_src_get_max_bytes(IntPtr raw);
 
-		[DllImport("libgstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_app_src_set_max_bytes(IntPtr raw, ulong max);
 
 		[GLib.Property ("max-bytes")]
@@ -192,10 +192,10 @@ namespace Gst.App {
 			}
 		}
 
-		[DllImport("libgstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern long gst_app_src_get_size(IntPtr raw);
 
-		[DllImport("libgstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_app_src_set_size(IntPtr raw, long size);
 
 		[GLib.Property ("size")]
@@ -210,10 +210,10 @@ namespace Gst.App {
 			}
 		}
 
-		[DllImport("libgstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_app_src_get_stream_type(IntPtr raw);
 
-		[DllImport("libgstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_app_src_set_stream_type(IntPtr raw, int type);
 
 		[GLib.Property ("stream-type")]
@@ -774,7 +774,7 @@ namespace Gst.App {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_app_src_get_type();
 
 		public static new GLib.GType GType { 
@@ -785,7 +785,7 @@ namespace Gst.App {
 			}
 		}
 
-		[DllImport("libgstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_app_src_end_of_stream(IntPtr raw);
 
 		public Gst.FlowReturn EndOfStream() {
@@ -794,14 +794,14 @@ namespace Gst.App {
 			return ret;
 		}
 
-		[DllImport("libgstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_app_src_get_latency(IntPtr raw, out ulong min, out ulong max);
 
 		public void GetLatency(out ulong min, out ulong max) {
 			gst_app_src_get_latency(Handle, out min, out max);
 		}
 
-		[DllImport("libgstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_app_src_push_buffer(IntPtr raw, IntPtr buffer);
 
 		public Gst.FlowReturn PushBuffer(Gst.Buffer buffer) {
@@ -811,7 +811,7 @@ namespace Gst.App {
 			return ret;
 		}
 
-		[DllImport("libgstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_app_src_push_buffer_list(IntPtr raw, IntPtr buffer_list);
 
 		public Gst.FlowReturn PushBufferList(Gst.BufferList buffer_list) {
@@ -821,7 +821,7 @@ namespace Gst.App {
 			return ret;
 		}
 
-		[DllImport("libgstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_app_src_push_sample(IntPtr raw, IntPtr sample);
 
 		public Gst.FlowReturn PushSample(Gst.Sample sample) {
@@ -830,14 +830,14 @@ namespace Gst.App {
 			return ret;
 		}
 
-		[DllImport("libgstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_app_src_set_latency(IntPtr raw, ulong min, ulong max);
 
 		public void SetLatency(ulong min, ulong max) {
 			gst_app_src_set_latency(Handle, min, max);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_uri_handler_get_uri(IntPtr raw);
 
 		public string Uri { 
@@ -848,7 +848,7 @@ namespace Gst.App {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_uri_handler_get_uri_type(IntPtr raw);
 
 		public Gst.URIType UriType { 
@@ -859,7 +859,7 @@ namespace Gst.App {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_uri_handler_set_uri(IntPtr raw, IntPtr uri, out IntPtr error);
 
 		public bool SetUri(string uri) {

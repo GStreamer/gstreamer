@@ -26,7 +26,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_query_get_type();
 
 		public static GLib.GType GType { 
@@ -37,7 +37,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_add_allocation_meta(IntPtr raw, IntPtr api, IntPtr parms);
 
 		public void AddAllocationMeta(GLib.GType api, Gst.Structure parms) {
@@ -48,7 +48,7 @@ namespace Gst {
 			AddAllocationMeta (api, null);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_add_allocation_param(IntPtr raw, IntPtr allocator, IntPtr parms);
 
 		public void AddAllocationParam(Gst.Allocator allocator, Gst.AllocationParams parms) {
@@ -61,7 +61,7 @@ namespace Gst {
 			AddAllocationParam (null, Gst.AllocationParams.Zero);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_add_allocation_pool(IntPtr raw, IntPtr pool, uint size, uint min_buffers, uint max_buffers);
 
 		public void AddAllocationPool(Gst.BufferPool pool, uint size, uint min_buffers, uint max_buffers) {
@@ -72,7 +72,7 @@ namespace Gst {
 			AddAllocationPool (null, size, min_buffers, max_buffers);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_query_add_buffering_range(IntPtr raw, long start, long stop);
 
 		public bool AddBufferingRange(long start, long stop) {
@@ -81,14 +81,14 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_add_scheduling_mode(IntPtr raw, int mode);
 
 		public void AddSchedulingMode(Gst.PadMode mode) {
 			gst_query_add_scheduling_mode(Handle, (int) mode);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_query_find_allocation_meta(IntPtr raw, IntPtr api, out uint index);
 
 		public bool FindAllocationMeta(GLib.GType api, out uint index) {
@@ -97,7 +97,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_query_get_n_allocation_metas(IntPtr raw);
 
 		public uint NAllocationMetas { 
@@ -108,7 +108,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_query_get_n_allocation_params(IntPtr raw);
 
 		public uint NAllocationParams { 
@@ -119,7 +119,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_query_get_n_allocation_pools(IntPtr raw);
 
 		public uint NAllocationPools { 
@@ -130,7 +130,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_query_get_n_buffering_ranges(IntPtr raw);
 
 		public uint NBufferingRanges { 
@@ -141,7 +141,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_query_get_n_scheduling_modes(IntPtr raw);
 
 		public uint NSchedulingModes { 
@@ -152,7 +152,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_query_get_structure(IntPtr raw);
 
 		public Gst.Structure Structure { 
@@ -163,7 +163,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_query_has_scheduling_mode(IntPtr raw, int mode);
 
 		public bool HasSchedulingMode(Gst.PadMode mode) {
@@ -172,7 +172,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_query_has_scheduling_mode_with_flags(IntPtr raw, int mode, int flags);
 
 		public bool HasSchedulingModeWithFlags(Gst.PadMode mode, Gst.SchedulingFlags flags) {
@@ -181,7 +181,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_parse_accept_caps(IntPtr raw, out IntPtr caps);
 
 		public Gst.Caps ParseAcceptCaps() {
@@ -192,7 +192,7 @@ namespace Gst {
 			return caps;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_parse_accept_caps_result(IntPtr raw, out bool _result);
 
 		public bool ParseAcceptCapsResult() {
@@ -201,7 +201,7 @@ namespace Gst {
 			return _result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_parse_allocation(IntPtr raw, out IntPtr caps, out bool need_pool);
 
 		public void ParseAllocation(out Gst.Caps caps, out bool need_pool) {
@@ -210,7 +210,7 @@ namespace Gst {
 			caps = native_caps == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (native_caps, typeof (Gst.Caps), false);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_parse_bitrate(IntPtr raw, out uint nominal_bitrate);
 
 		public uint ParseBitrate() {
@@ -219,14 +219,14 @@ namespace Gst {
 			return nominal_bitrate;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_parse_buffering_percent(IntPtr raw, out bool busy, out int percent);
 
 		public void ParseBufferingPercent(out bool busy, out int percent) {
 			gst_query_parse_buffering_percent(Handle, out busy, out percent);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_parse_buffering_range(IntPtr raw, out int format, out long start, out long stop, out long estimated_total);
 
 		public void ParseBufferingRange(out Gst.Format format, out long start, out long stop, out long estimated_total) {
@@ -235,7 +235,7 @@ namespace Gst {
 			format = (Gst.Format) native_format;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_parse_buffering_stats(IntPtr raw, out int mode, out int avg_in, out int avg_out, out long buffering_left);
 
 		public void ParseBufferingStats(out Gst.BufferingMode mode, out int avg_in, out int avg_out, out long buffering_left) {
@@ -244,7 +244,7 @@ namespace Gst {
 			mode = (Gst.BufferingMode) native_mode;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_parse_caps(IntPtr raw, out IntPtr filter);
 
 		public Gst.Caps ParseCaps() {
@@ -255,7 +255,7 @@ namespace Gst {
 			return filter;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_parse_caps_result(IntPtr raw, out IntPtr caps);
 
 		public Gst.Caps ParseCapsResult() {
@@ -266,7 +266,7 @@ namespace Gst {
 			return caps;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_parse_context(IntPtr raw, IntPtr context);
 
 		public Gst.Context ParseContext() {
@@ -278,7 +278,7 @@ namespace Gst {
 			return context;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_query_parse_context_type(IntPtr raw, out IntPtr context_type);
 
 		public bool ParseContextType(out string context_type) {
@@ -289,7 +289,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_parse_convert(IntPtr raw, out int src_format, out long src_value, out int dest_format, out long dest_value);
 
 		public void ParseConvert(out Gst.Format src_format, out long src_value, out Gst.Format dest_format, out long dest_value) {
@@ -300,7 +300,7 @@ namespace Gst {
 			dest_format = (Gst.Format) native_dest_format;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_parse_duration(IntPtr raw, out int format, out long duration);
 
 		public void ParseDuration(out Gst.Format format, out long duration) {
@@ -309,14 +309,14 @@ namespace Gst {
 			format = (Gst.Format) native_format;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_parse_latency(IntPtr raw, out bool live, out ulong min_latency, out ulong max_latency);
 
 		public void ParseLatency(out bool live, out ulong min_latency, out ulong max_latency) {
 			gst_query_parse_latency(Handle, out live, out min_latency, out max_latency);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_parse_n_formats(IntPtr raw, out uint n_formats);
 
 		public uint ParseNFormats() {
@@ -325,7 +325,7 @@ namespace Gst {
 			return n_formats;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_query_parse_nth_allocation_meta(IntPtr raw, uint index, out IntPtr parms);
 
 		public GLib.GType ParseNthAllocationMeta(uint index, out Gst.Structure parms) {
@@ -336,7 +336,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_parse_nth_allocation_param(IntPtr raw, uint index, out IntPtr allocator, IntPtr parms);
 
 		public void ParseNthAllocationParam(uint index, out Gst.Allocator allocator, out Gst.AllocationParams parms) {
@@ -348,7 +348,7 @@ namespace Gst {
 			Marshal.FreeHGlobal (native_parms);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_parse_nth_allocation_pool(IntPtr raw, uint index, out IntPtr pool, out uint size, out uint min_buffers, out uint max_buffers);
 
 		public void ParseNthAllocationPool(uint index, out Gst.BufferPool pool, out uint size, out uint min_buffers, out uint max_buffers) {
@@ -357,7 +357,7 @@ namespace Gst {
 			pool = GLib.Object.GetObject(native_pool, true) as Gst.BufferPool;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_query_parse_nth_buffering_range(IntPtr raw, uint index, out long start, out long stop);
 
 		public bool ParseNthBufferingRange(uint index, out long start, out long stop) {
@@ -366,7 +366,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_parse_nth_format(IntPtr raw, uint nth, out int format);
 
 		public Gst.Format ParseNthFormat(uint nth) {
@@ -377,7 +377,7 @@ namespace Gst {
 			return format;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_query_parse_nth_scheduling_mode(IntPtr raw, uint index);
 
 		public Gst.PadMode ParseNthSchedulingMode(uint index) {
@@ -386,7 +386,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_parse_position(IntPtr raw, out int format, out long cur);
 
 		public void ParsePosition(out Gst.Format format, out long cur) {
@@ -395,7 +395,7 @@ namespace Gst {
 			format = (Gst.Format) native_format;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_parse_scheduling(IntPtr raw, out int flags, out int minsize, out int maxsize, out int align);
 
 		public void ParseScheduling(out Gst.SchedulingFlags flags, out int minsize, out int maxsize, out int align) {
@@ -404,7 +404,7 @@ namespace Gst {
 			flags = (Gst.SchedulingFlags) native_flags;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_parse_seeking(IntPtr raw, out int format, out bool seekable, out long segment_start, out long segment_end);
 
 		public void ParseSeeking(out Gst.Format format, out bool seekable, out long segment_start, out long segment_end) {
@@ -413,7 +413,7 @@ namespace Gst {
 			format = (Gst.Format) native_format;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_parse_segment(IntPtr raw, out double rate, out int format, out long start_value, out long stop_value);
 
 		public void ParseSegment(out double rate, out Gst.Format format, out long start_value, out long stop_value) {
@@ -422,7 +422,7 @@ namespace Gst {
 			format = (Gst.Format) native_format;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_parse_uri(IntPtr raw, out IntPtr uri);
 
 		public string ParseUri() {
@@ -433,7 +433,7 @@ namespace Gst {
 			return uri;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_parse_uri_redirection(IntPtr raw, out IntPtr uri);
 
 		public string ParseUriRedirection() {
@@ -444,7 +444,7 @@ namespace Gst {
 			return uri;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_parse_uri_redirection_permanent(IntPtr raw, out bool permanent);
 
 		public bool ParseUriRedirectionPermanent() {
@@ -453,28 +453,28 @@ namespace Gst {
 			return permanent;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_remove_nth_allocation_meta(IntPtr raw, uint index);
 
 		public void RemoveNthAllocationMeta(uint index) {
 			gst_query_remove_nth_allocation_meta(Handle, index);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_remove_nth_allocation_param(IntPtr raw, uint index);
 
 		public void RemoveNthAllocationParam(uint index) {
 			gst_query_remove_nth_allocation_param(Handle, index);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_remove_nth_allocation_pool(IntPtr raw, uint index);
 
 		public void RemoveNthAllocationPool(uint index) {
 			gst_query_remove_nth_allocation_pool(Handle, index);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_set_accept_caps_result(IntPtr raw, bool _result);
 
 		public bool AcceptCapsResult { 
@@ -483,7 +483,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_set_bitrate(IntPtr raw, uint nominal_bitrate);
 
 		public uint Bitrate { 
@@ -492,28 +492,28 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_set_buffering_percent(IntPtr raw, bool busy, int percent);
 
 		public void SetBufferingPercent(bool busy, int percent) {
 			gst_query_set_buffering_percent(Handle, busy, percent);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_set_buffering_range(IntPtr raw, int format, long start, long stop, long estimated_total);
 
 		public void SetBufferingRange(Gst.Format format, long start, long stop, long estimated_total) {
 			gst_query_set_buffering_range(Handle, (int) format, start, stop, estimated_total);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_set_buffering_stats(IntPtr raw, int mode, int avg_in, int avg_out, long buffering_left);
 
 		public void SetBufferingStats(Gst.BufferingMode mode, int avg_in, int avg_out, long buffering_left) {
 			gst_query_set_buffering_stats(Handle, (int) mode, avg_in, avg_out, buffering_left);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_set_caps_result(IntPtr raw, IntPtr caps);
 
 		public Gst.Caps CapsResult { 
@@ -522,7 +522,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_set_context(IntPtr raw, IntPtr value);
 
 		public Gst.Context Context { 
@@ -533,21 +533,21 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_set_convert(IntPtr raw, int src_format, long src_value, int dest_format, long dest_value);
 
 		public void SetConvert(Gst.Format src_format, long src_value, Gst.Format dest_format, long dest_value) {
 			gst_query_set_convert(Handle, (int) src_format, src_value, (int) dest_format, dest_value);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_set_duration(IntPtr raw, int format, long duration);
 
 		public void SetDuration(Gst.Format format, long duration) {
 			gst_query_set_duration(Handle, (int) format, duration);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_set_formatsv(IntPtr raw, int n_formats, int[] formats);
 
 		public Gst.Format[] Formatsv { 
@@ -560,14 +560,14 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_set_latency(IntPtr raw, bool live, ulong min_latency, ulong max_latency);
 
 		public void SetLatency(bool live, ulong min_latency, ulong max_latency) {
 			gst_query_set_latency(Handle, live, min_latency, max_latency);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_set_nth_allocation_param(IntPtr raw, uint index, IntPtr allocator, IntPtr parms);
 
 		public void SetNthAllocationParam(uint index, Gst.Allocator allocator, Gst.AllocationParams parms) {
@@ -580,7 +580,7 @@ namespace Gst {
 			SetNthAllocationParam (index, null, Gst.AllocationParams.Zero);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_set_nth_allocation_pool(IntPtr raw, uint index, IntPtr pool, uint size, uint min_buffers, uint max_buffers);
 
 		public void SetNthAllocationPool(uint index, Gst.BufferPool pool, uint size, uint min_buffers, uint max_buffers) {
@@ -591,35 +591,35 @@ namespace Gst {
 			SetNthAllocationPool (index, null, size, min_buffers, max_buffers);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_set_position(IntPtr raw, int format, long cur);
 
 		public void SetPosition(Gst.Format format, long cur) {
 			gst_query_set_position(Handle, (int) format, cur);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_set_scheduling(IntPtr raw, int flags, int minsize, int maxsize, int align);
 
 		public void SetScheduling(Gst.SchedulingFlags flags, int minsize, int maxsize, int align) {
 			gst_query_set_scheduling(Handle, (int) flags, minsize, maxsize, align);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_set_seeking(IntPtr raw, int format, bool seekable, long segment_start, long segment_end);
 
 		public void SetSeeking(Gst.Format format, bool seekable, long segment_start, long segment_end) {
 			gst_query_set_seeking(Handle, (int) format, seekable, segment_start, segment_end);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_set_segment(IntPtr raw, double rate, int format, long start_value, long stop_value);
 
 		public void SetSegment(double rate, Gst.Format format, long start_value, long stop_value) {
 			gst_query_set_segment(Handle, rate, (int) format, start_value, stop_value);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_set_uri(IntPtr raw, IntPtr uri);
 
 		public string Uri { 
@@ -630,7 +630,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_set_uri_redirection(IntPtr raw, IntPtr uri);
 
 		public string UriRedirection { 
@@ -641,7 +641,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_set_uri_redirection_permanent(IntPtr raw, bool permanent);
 
 		public bool UriRedirectionPermanent { 
@@ -650,7 +650,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_query_writable_structure(IntPtr raw);
 
 		public Gst.Structure WritableStructure() {
@@ -661,7 +661,7 @@ namespace Gst {
 
 		public Query(IntPtr raw) : base(raw) {}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_query_new_accept_caps(IntPtr caps);
 
 		public Query (Gst.Caps caps) 
@@ -669,7 +669,7 @@ namespace Gst {
 			Raw = gst_query_new_accept_caps(caps == null ? IntPtr.Zero : caps.Handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_query_new_allocation(IntPtr caps, bool need_pool);
 
 		public Query (Gst.Caps caps, bool need_pool) 
@@ -677,7 +677,7 @@ namespace Gst {
 			Raw = gst_query_new_allocation(caps == null ? IntPtr.Zero : caps.Handle, need_pool);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_query_new_bitrate();
 
 		public Query () 
@@ -685,7 +685,7 @@ namespace Gst {
 			Raw = gst_query_new_bitrate();
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_query_new_buffering(int format);
 
 		public Query (Gst.Format format) 
@@ -693,7 +693,7 @@ namespace Gst {
 			Raw = gst_query_new_buffering((int) format);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_query_new_caps(IntPtr filter);
 
 		public static Query NewCaps(Gst.Caps filter)
@@ -702,7 +702,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_query_new_context(IntPtr context_type);
 
 		public Query (string context_type) 
@@ -712,7 +712,7 @@ namespace Gst {
 			GLib.Marshaller.Free (native_context_type);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_query_new_convert(int src_format, long value, int dest_format);
 
 		public Query (Gst.Format src_format, long value, Gst.Format dest_format) 
@@ -720,7 +720,7 @@ namespace Gst {
 			Raw = gst_query_new_convert((int) src_format, value, (int) dest_format);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_query_new_custom(int type, IntPtr structure);
 
 		public Query (Gst.QueryType type, Gst.Structure structure) 
@@ -729,7 +729,7 @@ namespace Gst {
 			Raw = gst_query_new_custom((int) type, structure == null ? IntPtr.Zero : structure.Handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_query_new_drain();
 
 		public static Query NewDrain()
@@ -738,7 +738,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_query_new_duration(int format);
 
 		public static Query NewDuration(Gst.Format format)
@@ -747,7 +747,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_query_new_formats();
 
 		public static Query NewFormats()
@@ -756,7 +756,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_query_new_latency();
 
 		public static Query NewLatency()
@@ -765,7 +765,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_query_new_position(int format);
 
 		public static Query NewPosition(Gst.Format format)
@@ -774,7 +774,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_query_new_scheduling();
 
 		public static Query NewScheduling()
@@ -783,7 +783,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_query_new_seeking(int format);
 
 		public static Query NewSeeking(Gst.Format format)
@@ -792,7 +792,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_query_new_segment(int format);
 
 		public static Query NewSegment(Gst.Format format)
@@ -801,7 +801,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_query_new_uri();
 
 		public static Query NewUri()

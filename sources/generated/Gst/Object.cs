@@ -18,7 +18,7 @@ namespace Gst {
 			CreateNativeObject (new string [0], new GLib.Value [0]);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_object_get_name(IntPtr raw);
 
 		[GLib.Property ("name")]
@@ -35,7 +35,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_object_get_parent(IntPtr raw);
 
 		[GLib.Property ("parent")]
@@ -85,10 +85,10 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_object_get_control_rate(IntPtr raw);
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_object_set_control_rate(IntPtr raw, ulong control_rate);
 
 		public ulong ControlRate {
@@ -205,7 +205,7 @@ namespace Gst {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_object_get_type();
 
 		public static new GLib.GType GType { 
@@ -216,7 +216,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_object_check_uniqueness(IntPtr list, IntPtr name);
 
 		public static bool CheckUniqueness(GLib.List list, string name) {
@@ -227,7 +227,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_object_default_deep_notify(IntPtr _object, IntPtr orig, IntPtr pspec, IntPtr[] excluded_props);
 
 		public static void DefaultDeepNotify(GLib.Object _object, Gst.Object orig, IntPtr pspec, string[] excluded_props) {
@@ -247,7 +247,7 @@ namespace Gst {
 			DefaultDeepNotify (_object, orig, pspec, null);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_object_replace(IntPtr oldobj, IntPtr newobj);
 
 		public static bool Replace(Gst.Object oldobj, Gst.Object newobj) {
@@ -260,7 +260,7 @@ namespace Gst {
 			return Replace (null, null);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_object_add_control_binding(IntPtr raw, IntPtr binding);
 
 		public bool AddControlBinding(Gst.ControlBinding binding) {
@@ -269,7 +269,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_object_default_error(IntPtr raw, IntPtr error, IntPtr debug);
 
 		public void DefaultError(IntPtr error, string debug) {
@@ -282,7 +282,7 @@ namespace Gst {
 			DefaultError (error, null);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_object_get_control_binding(IntPtr raw, IntPtr property_name);
 
 		public Gst.ControlBinding GetControlBinding(string property_name) {
@@ -293,7 +293,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_object_get_g_value_array(IntPtr raw, IntPtr property_name, ulong timestamp, ulong interval, uint n_values, IntPtr[] values);
 
 		public bool GetGValueArray(string property_name, ulong timestamp, ulong interval, GLib.Value[] values) {
@@ -312,7 +312,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_object_get_path_string(IntPtr raw);
 
 		public string PathString { 
@@ -323,7 +323,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_object_get_value(IntPtr raw, IntPtr property_name, ulong timestamp);
 
 		public GLib.Value GetValue(string property_name, ulong timestamp) {
@@ -334,7 +334,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_object_has_active_control_bindings(IntPtr raw);
 
 		public bool HasActiveControlBindings { 
@@ -345,7 +345,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_object_has_ancestor(IntPtr raw, IntPtr ancestor);
 
 		[Obsolete]
@@ -355,7 +355,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_object_has_as_ancestor(IntPtr raw, IntPtr ancestor);
 
 		public bool HasAsAncestor(Gst.Object ancestor) {
@@ -364,7 +364,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_object_has_as_parent(IntPtr raw, IntPtr parent);
 
 		public bool HasAsParent(Gst.Object parent) {
@@ -373,7 +373,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_object_ref(IntPtr raw);
 
 		public Gst.Object Ref() {
@@ -382,7 +382,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_object_remove_control_binding(IntPtr raw, IntPtr binding);
 
 		public bool RemoveControlBinding(Gst.ControlBinding binding) {
@@ -391,7 +391,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_object_set_control_binding_disabled(IntPtr raw, IntPtr property_name, bool disabled);
 
 		public void SetControlBindingDisabled(string property_name, bool disabled) {
@@ -400,7 +400,7 @@ namespace Gst {
 			GLib.Marshaller.Free (native_property_name);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_object_set_control_bindings_disabled(IntPtr raw, bool disabled);
 
 		public bool ControlBindingsDisabled { 
@@ -409,7 +409,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_object_set_name(IntPtr raw, IntPtr name);
 
 		public bool SetName(string name) {
@@ -424,7 +424,7 @@ namespace Gst {
 			return SetName (null);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_object_set_parent(IntPtr raw, IntPtr parent);
 
 		public bool SetParent(Gst.Object parent) {
@@ -433,7 +433,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_object_suggest_next_sync(IntPtr raw);
 
 		public ulong SuggestNextSync() {
@@ -442,7 +442,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_object_sync_values(IntPtr raw, ulong timestamp);
 
 		public bool SyncValues(ulong timestamp) {
@@ -451,14 +451,14 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_object_unparent(IntPtr raw);
 
 		public void Unparent() {
 			gst_object_unparent(Handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_object_unref(IntPtr raw);
 
 		public void Unref() {

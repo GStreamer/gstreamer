@@ -13,7 +13,7 @@ namespace Gst.Controller {
 
 		public ARGBControlBinding (IntPtr raw) : base(raw) {}
 
-		[DllImport("libgstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_argb_control_binding_new(IntPtr _object, IntPtr property_name, IntPtr cs_a, IntPtr cs_r, IntPtr cs_g, IntPtr cs_b);
 
 		public ARGBControlBinding (Gst.Object _object, string property_name, Gst.ControlSource cs_a, Gst.ControlSource cs_r, Gst.ControlSource cs_g, Gst.ControlSource cs_b) : base (IntPtr.Zero)
@@ -117,7 +117,7 @@ namespace Gst.Controller {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstcontroller-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_argb_control_binding_get_type();
 
 		public static new GLib.GType GType { 

@@ -28,7 +28,7 @@ namespace Gst.Base {
 			return (Gst.Base.BitWriter) Marshal.PtrToStructure (raw, typeof (Gst.Base.BitWriter));
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_bit_writer_align_bytes(IntPtr raw, byte trailing_bit);
 
 		public bool AlignBytes(byte trailing_bit) {
@@ -41,7 +41,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_bit_writer_free(IntPtr raw);
 
 		public void Free() {
@@ -52,7 +52,7 @@ namespace Gst.Base {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_bit_writer_free_and_get_buffer(IntPtr raw);
 
 		public Gst.Buffer FreeAndGetBuffer() {
@@ -65,7 +65,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_bit_writer_get_remaining(IntPtr raw);
 
 		public uint Remaining { 
@@ -80,7 +80,7 @@ namespace Gst.Base {
 			}
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_bit_writer_get_size(IntPtr raw);
 
 		public uint Size { 
@@ -95,7 +95,7 @@ namespace Gst.Base {
 			}
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_bit_writer_put_bits_uint16(IntPtr raw, ushort value, uint nbits);
 
 		public bool PutBitsUint16(ushort value, uint nbits) {
@@ -108,7 +108,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_bit_writer_put_bits_uint32(IntPtr raw, uint value, uint nbits);
 
 		public bool PutBitsUint32(uint value, uint nbits) {
@@ -121,7 +121,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_bit_writer_put_bits_uint64(IntPtr raw, ulong value, uint nbits);
 
 		public bool PutBitsUint64(ulong value, uint nbits) {
@@ -134,7 +134,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_bit_writer_put_bits_uint8(IntPtr raw, byte value, uint nbits);
 
 		public bool PutBitsUint8(byte value, uint nbits) {
@@ -147,7 +147,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_bit_writer_put_bytes(IntPtr raw, byte data, uint nbytes);
 
 		public bool PutBytes(byte data, uint nbytes) {
@@ -160,7 +160,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_bit_writer_reset(IntPtr raw);
 
 		public void Reset() {
@@ -171,7 +171,7 @@ namespace Gst.Base {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_bit_writer_reset_and_get_buffer(IntPtr raw);
 
 		public Gst.Buffer ResetAndGetBuffer() {
@@ -184,7 +184,7 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_bit_writer_set_pos(IntPtr raw, uint pos);
 
 		public bool SetPos(uint pos) {

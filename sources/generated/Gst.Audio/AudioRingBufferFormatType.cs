@@ -28,7 +28,7 @@ namespace Gst.Audio {
 	}
 
 	internal class AudioRingBufferFormatTypeGType {
-		[DllImport ("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_audio_ring_buffer_format_type_get_type ();
 
 		public static GLib.GType GType {

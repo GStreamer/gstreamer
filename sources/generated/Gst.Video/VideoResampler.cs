@@ -31,7 +31,7 @@ namespace Gst.Video {
 			return (Gst.Video.VideoResampler) Marshal.PtrToStructure (raw, typeof (Gst.Video.VideoResampler));
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_video_resampler_clear(IntPtr raw);
 
 		public void Clear() {
@@ -42,7 +42,7 @@ namespace Gst.Video {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_resampler_init(IntPtr raw, int method, int flags, uint n_phases, uint n_taps, double shift, uint in_size, uint out_size, IntPtr options);
 
 		public bool Init(Gst.Video.VideoResamplerMethod method, Gst.Video.VideoResamplerFlags flags, uint n_phases, uint n_taps, double shift, uint in_size, uint out_size, Gst.Structure options) {

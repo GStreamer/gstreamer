@@ -206,7 +206,7 @@ namespace Gst.Video {
 			}
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_info_get_type();
 
 		public static GLib.GType GType { 
@@ -217,7 +217,7 @@ namespace Gst.Video {
 			}
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_info_align(IntPtr raw, IntPtr align);
 
 		public bool Align(Gst.Video.VideoAlignment align) {
@@ -228,7 +228,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_info_convert(IntPtr raw, int src_format, long src_value, int dest_format, out long dest_value);
 
 		public bool Convert(Gst.Format src_format, long src_value, Gst.Format dest_format, out long dest_value) {
@@ -237,7 +237,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_info_copy(IntPtr raw);
 
 		public Gst.Video.VideoInfo Copy() {
@@ -246,7 +246,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_info_from_caps(IntPtr raw, IntPtr caps);
 
 		public bool FromCaps(Gst.Caps caps) {
@@ -255,14 +255,14 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_video_info_init(IntPtr raw);
 
 		public void Init() {
 			gst_video_info_init(Handle);
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_info_is_equal(IntPtr raw, IntPtr other);
 
 		public bool IsEqual(Gst.Video.VideoInfo other) {
@@ -271,7 +271,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_info_set_format(IntPtr raw, int format, uint width, uint height);
 
 		public bool SetFormat(Gst.Video.VideoFormat format, uint width, uint height) {
@@ -280,7 +280,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_info_set_interlaced_format(IntPtr raw, int format, int mode, uint width, uint height);
 
 		public bool SetInterlacedFormat(Gst.Video.VideoFormat format, Gst.Video.VideoInterlaceMode mode, uint width, uint height) {
@@ -289,7 +289,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_info_to_caps(IntPtr raw);
 
 		public Gst.Caps ToCaps() {
@@ -300,7 +300,7 @@ namespace Gst.Video {
 
 		public VideoInfo(IntPtr raw) : base(raw) {}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_info_new();
 
 		public VideoInfo () 
@@ -308,7 +308,7 @@ namespace Gst.Video {
 			Raw = gst_video_info_new();
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_video_info_free(IntPtr raw);
 
 		protected override void Free (IntPtr raw)

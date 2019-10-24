@@ -48,7 +48,7 @@ namespace Gst.Video {
 			return (Gst.Video.VideoFrame) Marshal.PtrToStructure (raw, typeof (Gst.Video.VideoFrame));
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_frame_copy(IntPtr raw, IntPtr src);
 
 		public bool Copy(Gst.Video.VideoFrame src) {
@@ -63,7 +63,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_frame_copy_plane(IntPtr raw, IntPtr src, uint plane);
 
 		public bool CopyPlane(Gst.Video.VideoFrame src, uint plane) {
@@ -78,7 +78,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_frame_map(IntPtr raw, IntPtr info, IntPtr buffer, int flags);
 
 		public bool Map(Gst.Video.VideoInfo info, Gst.Buffer buffer, Gst.MapFlags flags) {
@@ -91,7 +91,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_frame_map_id(IntPtr raw, IntPtr info, IntPtr buffer, int id, int flags);
 
 		public bool MapId(Gst.Video.VideoInfo info, Gst.Buffer buffer, int id, Gst.MapFlags flags) {
@@ -104,7 +104,7 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_video_frame_unmap(IntPtr raw);
 
 		public void Unmap() {

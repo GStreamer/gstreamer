@@ -13,7 +13,7 @@ namespace Gst {
 
 		public Bus (IntPtr raw) : base(raw) {}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_bus_new();
 
 		public Bus () : base (IntPtr.Zero)
@@ -191,7 +191,7 @@ namespace Gst {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_bus_get_type();
 
 		public static new GLib.GType GType { 
@@ -202,21 +202,21 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_bus_add_signal_watch(IntPtr raw);
 
 		public void AddSignalWatch() {
 			gst_bus_add_signal_watch(Handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_bus_add_signal_watch_full(IntPtr raw, int priority);
 
 		public void AddSignalWatchFull(int priority) {
 			gst_bus_add_signal_watch_full(Handle, priority);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_bus_add_watch_full(IntPtr raw, int priority, GstSharp.BusFuncNative func, IntPtr user_data, GLib.DestroyNotify notify);
 
 		public uint AddWatchFull(int priority, Gst.BusFunc func) {
@@ -235,7 +235,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_bus_async_signal_func(IntPtr raw, IntPtr message, IntPtr data);
 
 		public bool AsyncSignalFunc(Gst.Message message, IntPtr data) {
@@ -244,7 +244,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_bus_create_watch(IntPtr raw);
 
 		public GLib.Source CreateWatch() {
@@ -253,21 +253,21 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_bus_disable_sync_message_emission(IntPtr raw);
 
 		public void DisableSyncMessageEmission() {
 			gst_bus_disable_sync_message_emission(Handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_bus_enable_sync_message_emission(IntPtr raw);
 
 		public void EnableSyncMessageEmission() {
 			gst_bus_enable_sync_message_emission(Handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_bus_get_pollfd(IntPtr raw, out GLib.PollFD fd);
 
 		public GLib.PollFD Pollfd { 
@@ -278,7 +278,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_bus_have_pending(IntPtr raw);
 
 		public bool HavePending() {
@@ -287,7 +287,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_bus_peek(IntPtr raw);
 
 		public Gst.Message Peek() {
@@ -296,7 +296,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_bus_poll(IntPtr raw, int events, ulong timeout);
 
 		public Gst.Message Poll(Gst.MessageType events, ulong timeout) {
@@ -305,7 +305,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_bus_pop(IntPtr raw);
 
 		public Gst.Message Pop() {
@@ -314,7 +314,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_bus_pop_filtered(IntPtr raw, int types);
 
 		public Gst.Message PopFiltered(Gst.MessageType types) {
@@ -323,7 +323,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_bus_post(IntPtr raw, IntPtr message);
 
 		public bool Post(Gst.Message message) {
@@ -333,14 +333,14 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_bus_remove_signal_watch(IntPtr raw);
 
 		public void RemoveSignalWatch() {
 			gst_bus_remove_signal_watch(Handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_bus_remove_watch(IntPtr raw);
 
 		public bool RemoveWatch() {
@@ -349,7 +349,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_bus_set_flushing(IntPtr raw, bool flushing);
 
 		public bool Flushing { 
@@ -358,7 +358,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_bus_set_sync_handler(IntPtr raw, GstSharp.BusSyncHandlerNative func, IntPtr user_data, GLib.DestroyNotify notify);
 
 		public Gst.BusSyncHandler SyncHandler { 
@@ -377,7 +377,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_bus_sync_signal_handler(IntPtr raw, IntPtr message, IntPtr data);
 
 		public Gst.BusSyncReply SyncSignalHandler(Gst.Message message) {
@@ -386,7 +386,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_bus_timed_pop(IntPtr raw, ulong timeout);
 
 		public Gst.Message TimedPop(ulong timeout) {
@@ -395,7 +395,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_bus_timed_pop_filtered(IntPtr raw, ulong timeout, int types);
 
 		public Gst.Message TimedPopFiltered(ulong timeout, Gst.MessageType types) {

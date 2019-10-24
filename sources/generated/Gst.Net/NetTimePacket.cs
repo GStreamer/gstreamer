@@ -23,7 +23,7 @@ namespace Gst.Net {
 			return (Gst.Net.NetTimePacket) Marshal.PtrToStructure (raw, typeof (Gst.Net.NetTimePacket));
 		}
 
-		[DllImport("libgstnet-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstnet-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_net_time_packet_new(byte[] buffer);
 
 		public static NetTimePacket New(byte[] buffer)
@@ -32,7 +32,7 @@ namespace Gst.Net {
 			return result;
 		}
 
-		[DllImport("libgstnet-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstnet-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_net_time_packet_get_type();
 
 		public static GLib.GType GType { 
@@ -43,7 +43,7 @@ namespace Gst.Net {
 			}
 		}
 
-		[DllImport("libgstnet-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstnet-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern unsafe bool gst_net_time_packet_send(IntPtr raw, IntPtr socket, IntPtr dest_address, out IntPtr error);
 
 		public unsafe bool Send(GLib.Socket socket, GLib.SocketAddress dest_address) {
@@ -58,7 +58,7 @@ namespace Gst.Net {
 			return ret;
 		}
 
-		[DllImport("libgstnet-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstnet-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern byte gst_net_time_packet_serialize(IntPtr raw);
 
 		public byte Serialize() {
@@ -71,7 +71,7 @@ namespace Gst.Net {
 			return ret;
 		}
 
-		[DllImport("libgstnet-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstnet-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern unsafe IntPtr gst_net_time_packet_receive(IntPtr socket, out IntPtr src_address, out IntPtr error);
 
 		public static unsafe Gst.Net.NetTimePacket Receive(GLib.Socket socket, out GLib.SocketAddress src_address) {

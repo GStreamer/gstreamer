@@ -15,7 +15,7 @@ namespace Gst.WebRTC {
 	}
 
 	internal class WebRTCICERoleGType {
-		[DllImport ("libgstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_webrtc_ice_role_get_type ();
 
 		public static GLib.GType GType {

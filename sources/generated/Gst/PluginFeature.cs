@@ -33,7 +33,7 @@ namespace Gst {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_plugin_feature_get_type();
 
 		public static new GLib.GType GType { 
@@ -44,7 +44,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_plugin_feature_list_copy(IntPtr list);
 
 		public static Gst.PluginFeature[] ListCopy(GLib.List list) {
@@ -53,21 +53,21 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_plugin_feature_list_debug(IntPtr list);
 
 		public static void ListDebug(GLib.List list) {
 			gst_plugin_feature_list_debug(list == null ? IntPtr.Zero : list.Handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_plugin_feature_list_free(IntPtr list);
 
 		public static void ListFree(GLib.List list) {
 			gst_plugin_feature_list_free(list == null ? IntPtr.Zero : list.Handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_plugin_feature_rank_compare_func(IntPtr p1, IntPtr p2);
 
 		public static int RankCompareFunc(IntPtr p1, IntPtr p2) {
@@ -80,7 +80,7 @@ namespace Gst {
 			return RankCompareFunc (IntPtr.Zero, IntPtr.Zero);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_plugin_feature_check_version(IntPtr raw, uint min_major, uint min_minor, uint min_micro);
 
 		public bool CheckVersion(uint min_major, uint min_minor, uint min_micro) {
@@ -89,7 +89,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_plugin_feature_get_plugin(IntPtr raw);
 
 		public Gst.Plugin Plugin { 
@@ -100,7 +100,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_plugin_feature_get_plugin_name(IntPtr raw);
 
 		public string PluginName { 
@@ -111,10 +111,10 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_plugin_feature_get_rank(IntPtr raw);
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_plugin_feature_set_rank(IntPtr raw, uint rank);
 
 		public uint Rank { 
@@ -128,7 +128,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_plugin_feature_load(IntPtr raw);
 
 		public Gst.PluginFeature Load() {

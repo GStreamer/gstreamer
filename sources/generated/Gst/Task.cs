@@ -13,7 +13,7 @@ namespace Gst {
 
 		public Task (IntPtr raw) : base(raw) {}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_task_new(GstSharp.TaskFunctionNative func, IntPtr user_data, GLib.DestroyNotify notify);
 
 		public Task (Gst.TaskFunction func, IntPtr user_data, GLib.DestroyNotify notify) : base (IntPtr.Zero)
@@ -28,7 +28,7 @@ namespace Gst {
 			Raw = gst_task_new(func_wrapper.NativeDelegate, user_data, notify);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_task_get_state(IntPtr raw);
 
 		public Gst.TaskState State {
@@ -48,7 +48,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_task_set_lock(IntPtr raw, IntPtr mutex);
 
 		public GLib.RecMutex Lock {
@@ -123,7 +123,7 @@ namespace Gst {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_task_get_type();
 
 		public static new GLib.GType GType { 
@@ -134,17 +134,17 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_task_cleanup_all();
 
 		public static void CleanupAll() {
 			gst_task_cleanup_all();
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_task_get_pool(IntPtr raw);
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_task_set_pool(IntPtr raw, IntPtr pool);
 
 		public Gst.TaskPool Pool { 
@@ -158,7 +158,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_task_join(IntPtr raw);
 
 		public bool Join() {
@@ -167,7 +167,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_task_pause(IntPtr raw);
 
 		public bool Pause() {
@@ -176,7 +176,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_task_set_enter_callback(IntPtr raw, GstSharp.TaskThreadFuncNative enter_func, IntPtr user_data, GLib.DestroyNotify notify);
 
 		public Gst.TaskThreadFunc EnterCallback { 
@@ -195,7 +195,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_task_set_leave_callback(IntPtr raw, GstSharp.TaskThreadFuncNative leave_func, IntPtr user_data, GLib.DestroyNotify notify);
 
 		public Gst.TaskThreadFunc LeaveCallback { 
@@ -214,7 +214,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_task_set_state(IntPtr raw, int state);
 
 		public bool SetState(Gst.TaskState state) {
@@ -223,7 +223,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_task_start(IntPtr raw);
 
 		public bool Start() {
@@ -232,7 +232,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_task_stop(IntPtr raw);
 
 		public bool Stop() {

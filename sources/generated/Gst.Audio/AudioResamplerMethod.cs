@@ -18,7 +18,7 @@ namespace Gst.Audio {
 	}
 
 	internal class AudioResamplerMethodGType {
-		[DllImport ("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_audio_resampler_method_get_type ();
 
 		public static GLib.GType GType {

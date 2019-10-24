@@ -18,7 +18,7 @@ namespace Gst.Rtp {
 	}
 
 	internal class RTPProfileGType {
-		[DllImport ("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_rtp_profile_get_type ();
 
 		public static GLib.GType GType {

@@ -21,7 +21,7 @@ namespace Gst {
 			return (Gst.TocEntry) Marshal.PtrToStructure (raw, typeof (Gst.TocEntry));
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_toc_entry_new(int type, IntPtr uid);
 
 		public static TocEntry New(Gst.TocEntryType type, string uid)
@@ -32,7 +32,7 @@ namespace Gst {
 			return result;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_toc_entry_get_type();
 
 		public static GLib.GType GType { 
@@ -43,7 +43,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_toc_entry_append_sub_entry(IntPtr raw, IntPtr subentry);
 
 		public void AppendSubEntry(Gst.TocEntry subentry) {
@@ -56,7 +56,7 @@ namespace Gst {
 			Marshal.FreeHGlobal (native_subentry);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_toc_entry_get_entry_type(IntPtr raw);
 
 		public Gst.TocEntryType EntryType { 
@@ -71,7 +71,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_toc_entry_get_loop(IntPtr raw, out int loop_type, out int repeat_count);
 
 		public bool GetLoop(out Gst.TocLoopType loop_type, out int repeat_count) {
@@ -86,7 +86,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_toc_entry_get_parent(IntPtr raw);
 
 		public Gst.TocEntry Parent { 
@@ -101,7 +101,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_toc_entry_get_start_stop_times(IntPtr raw, out long start, out long stop);
 
 		public bool GetStartStopTimes(out long start, out long stop) {
@@ -114,7 +114,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_toc_entry_get_sub_entries(IntPtr raw);
 
 		public GLib.List[] SubEntries { 
@@ -129,10 +129,10 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_toc_entry_get_tags(IntPtr raw);
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_toc_entry_set_tags(IntPtr raw, IntPtr tags);
 
 		public Gst.TagList Tags { 
@@ -155,7 +155,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_toc_entry_get_toc(IntPtr raw);
 
 		public Gst.Toc Toc { 
@@ -170,7 +170,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_toc_entry_get_uid(IntPtr raw);
 
 		public string Uid { 
@@ -185,7 +185,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_toc_entry_is_alternative(IntPtr raw);
 
 		public bool IsAlternative { 
@@ -200,7 +200,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_toc_entry_is_sequence(IntPtr raw);
 
 		public bool IsSequence { 
@@ -215,7 +215,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_toc_entry_merge_tags(IntPtr raw, IntPtr tags, int mode);
 
 		public void MergeTags(Gst.TagList tags, Gst.TagMergeMode mode) {
@@ -230,7 +230,7 @@ namespace Gst {
 			MergeTags (null, mode);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_toc_entry_set_loop(IntPtr raw, int loop_type, int repeat_count);
 
 		public void SetLoop(Gst.TocLoopType loop_type, int repeat_count) {
@@ -241,7 +241,7 @@ namespace Gst {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_toc_entry_set_start_stop_times(IntPtr raw, long start, long stop);
 
 		public void SetStartStopTimes(long start, long stop) {

@@ -101,7 +101,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_get_type();
 
 		public static GLib.GType GType { 
@@ -112,7 +112,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_add_meta(IntPtr raw, IntPtr info, IntPtr parms);
 
 		public Gst.Meta AddMeta(Gst.MetaInfo info, IntPtr parms) {
@@ -127,7 +127,7 @@ namespace Gst {
 			return AddMeta (info, IntPtr.Zero);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_add_parent_buffer_meta(IntPtr raw, IntPtr reference);
 
 		public Gst.ParentBufferMeta AddParentBufferMeta(Gst.Buffer reference) {
@@ -136,7 +136,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_add_protection_meta(IntPtr raw, IntPtr info);
 
 		public Gst.ProtectionMeta AddProtectionMeta(Gst.Structure info) {
@@ -146,7 +146,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_add_reference_timestamp_meta(IntPtr raw, IntPtr reference, ulong timestamp, ulong duration);
 
 		public Gst.ReferenceTimestampMeta AddReferenceTimestampMeta(Gst.Caps reference, ulong timestamp, ulong duration) {
@@ -155,7 +155,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_append(IntPtr raw, IntPtr buf2);
 
 		public Gst.Buffer Append(Gst.Buffer buf2) {
@@ -165,7 +165,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_buffer_append_memory(IntPtr raw, IntPtr mem);
 
 		public void AppendMemory(Gst.Memory mem) {
@@ -173,7 +173,7 @@ namespace Gst {
 			gst_buffer_append_memory(Handle, mem == null ? IntPtr.Zero : mem.Handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_append_region(IntPtr raw, IntPtr buf2, IntPtr offset, IntPtr size);
 
 		public Gst.Buffer AppendRegion(Gst.Buffer buf2, long offset, long size) {
@@ -183,7 +183,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_copy_deep(IntPtr raw);
 
 		public Gst.Buffer CopyDeep() {
@@ -192,7 +192,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_buffer_copy_into(IntPtr raw, IntPtr src, int flags, UIntPtr offset, UIntPtr size);
 
 		public bool CopyInto(Gst.Buffer src, Gst.BufferCopyFlags flags, ulong offset, ulong size) {
@@ -201,7 +201,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_copy_region(IntPtr raw, int flags, UIntPtr offset, UIntPtr size);
 
 		public Gst.Buffer CopyRegion(Gst.BufferCopyFlags flags, ulong offset, ulong size) {
@@ -210,7 +210,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern UIntPtr gst_buffer_fill(IntPtr raw, UIntPtr offset, byte[] src, UIntPtr n_length);
 
 		public ulong Fill(ulong offset, byte[] src) {
@@ -219,7 +219,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_buffer_find_memory(IntPtr raw, UIntPtr offset, UIntPtr size, out uint idx, out uint length, out UIntPtr skip);
 
 		public bool FindMemory(ulong offset, ulong size, out uint idx, out uint length, out ulong skip) {
@@ -230,7 +230,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_get_all_memory(IntPtr raw);
 
 		public Gst.Memory AllMemory { 
@@ -241,7 +241,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_buffer_get_flags(IntPtr raw);
 
 		public Gst.BufferFlags Flags { 
@@ -252,7 +252,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_get_memory(IntPtr raw, uint idx);
 
 		public Gst.Memory GetMemory(uint idx) {
@@ -261,7 +261,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_get_memory_range(IntPtr raw, uint idx, int length);
 
 		public Gst.Memory GetMemoryRange(uint idx, int length) {
@@ -270,7 +270,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_get_meta(IntPtr raw, IntPtr api);
 
 		public Gst.Meta GetMeta(GLib.GType api) {
@@ -279,7 +279,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_buffer_get_n_meta(IntPtr raw, IntPtr api_type);
 
 		public uint GetNMeta(GLib.GType api_type) {
@@ -288,7 +288,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_get_reference_timestamp_meta(IntPtr raw, IntPtr reference);
 
 		public Gst.ReferenceTimestampMeta GetReferenceTimestampMeta(Gst.Caps reference) {
@@ -301,7 +301,7 @@ namespace Gst {
 			return GetReferenceTimestampMeta (null);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern UIntPtr gst_buffer_get_size(IntPtr raw);
 
 		public ulong Size { 
@@ -312,7 +312,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern UIntPtr gst_buffer_get_sizes(IntPtr raw, out UIntPtr offset, out UIntPtr maxsize);
 
 		public ulong GetSizes(out ulong offset, out ulong maxsize) {
@@ -325,7 +325,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern UIntPtr gst_buffer_get_sizes_range(IntPtr raw, uint idx, int length, out UIntPtr offset, out UIntPtr maxsize);
 
 		public ulong GetSizesRange(uint idx, int length, out ulong offset, out ulong maxsize) {
@@ -338,7 +338,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_buffer_has_flags(IntPtr raw, int flags);
 
 		public bool HasFlags(Gst.BufferFlags flags) {
@@ -347,7 +347,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_buffer_insert_memory(IntPtr raw, int idx, IntPtr mem);
 
 		public void InsertMemory(int idx, Gst.Memory mem) {
@@ -355,7 +355,7 @@ namespace Gst {
 			gst_buffer_insert_memory(Handle, idx, mem == null ? IntPtr.Zero : mem.Handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_buffer_is_all_memory_writable(IntPtr raw);
 
 		public bool IsAllMemoryWritable { 
@@ -366,7 +366,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_buffer_is_memory_range_writable(IntPtr raw, uint idx, int length);
 
 		public bool IsMemoryRangeWritable(uint idx, int length) {
@@ -375,7 +375,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_buffer_map(IntPtr raw, IntPtr info, int flags);
 
 		public bool Map(out Gst.MapInfo info, Gst.MapFlags flags) {
@@ -387,7 +387,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_buffer_map_range(IntPtr raw, uint idx, int length, IntPtr info, int flags);
 
 		public bool MapRange(uint idx, int length, out Gst.MapInfo info, Gst.MapFlags flags) {
@@ -399,7 +399,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_buffer_memcmp(IntPtr raw, UIntPtr offset, byte[] mem, UIntPtr n_length);
 
 		public int Memcmp(ulong offset, byte[] mem) {
@@ -408,7 +408,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern UIntPtr gst_buffer_memset(IntPtr raw, UIntPtr offset, byte val, UIntPtr size);
 
 		public ulong Memset(ulong offset, byte val, ulong size) {
@@ -417,7 +417,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_buffer_n_memory(IntPtr raw);
 
 		public uint NMemory() {
@@ -426,7 +426,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_peek_memory(IntPtr raw, uint idx);
 
 		public Gst.Memory PeekMemory(uint idx) {
@@ -435,7 +435,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_buffer_prepend_memory(IntPtr raw, IntPtr mem);
 
 		public void PrependMemory(Gst.Memory mem) {
@@ -443,28 +443,28 @@ namespace Gst {
 			gst_buffer_prepend_memory(Handle, mem == null ? IntPtr.Zero : mem.Handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_buffer_remove_all_memory(IntPtr raw);
 
 		public void RemoveAllMemory() {
 			gst_buffer_remove_all_memory(Handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_buffer_remove_memory(IntPtr raw, uint idx);
 
 		public void RemoveMemory(uint idx) {
 			gst_buffer_remove_memory(Handle, idx);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_buffer_remove_memory_range(IntPtr raw, uint idx, int length);
 
 		public void RemoveMemoryRange(uint idx, int length) {
 			gst_buffer_remove_memory_range(Handle, idx, length);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_buffer_remove_meta(IntPtr raw, IntPtr meta);
 
 		public bool RemoveMeta(Gst.Meta meta) {
@@ -475,7 +475,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_buffer_replace_all_memory(IntPtr raw, IntPtr mem);
 
 		public void ReplaceAllMemory(Gst.Memory mem) {
@@ -483,7 +483,7 @@ namespace Gst {
 			gst_buffer_replace_all_memory(Handle, mem == null ? IntPtr.Zero : mem.Handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_buffer_replace_memory(IntPtr raw, uint idx, IntPtr mem);
 
 		public void ReplaceMemory(uint idx, Gst.Memory mem) {
@@ -491,7 +491,7 @@ namespace Gst {
 			gst_buffer_replace_memory(Handle, idx, mem == null ? IntPtr.Zero : mem.Handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_buffer_replace_memory_range(IntPtr raw, uint idx, int length, IntPtr mem);
 
 		public void ReplaceMemoryRange(uint idx, int length, Gst.Memory mem) {
@@ -499,14 +499,14 @@ namespace Gst {
 			gst_buffer_replace_memory_range(Handle, idx, length, mem == null ? IntPtr.Zero : mem.Handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_buffer_resize(IntPtr raw, IntPtr offset, IntPtr size);
 
 		public void Resize(long offset, long size) {
 			gst_buffer_resize(Handle, new IntPtr (offset), new IntPtr (size));
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_buffer_resize_range(IntPtr raw, uint idx, int length, IntPtr offset, IntPtr size);
 
 		public bool ResizeRange(uint idx, int length, long offset, long size) {
@@ -515,7 +515,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_buffer_set_flags(IntPtr raw, int flags);
 
 		public bool SetFlags(Gst.BufferFlags flags) {
@@ -524,14 +524,14 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_buffer_set_size(IntPtr raw, IntPtr size);
 
 		public void SetSize(long size) {
 			gst_buffer_set_size(Handle, new IntPtr (size));
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_buffer_unmap(IntPtr raw, IntPtr info);
 
 		public void Unmap(Gst.MapInfo info) {
@@ -540,7 +540,7 @@ namespace Gst {
 			Marshal.FreeHGlobal (native_info);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_buffer_unset_flags(IntPtr raw, int flags);
 
 		public bool UnsetFlags(Gst.BufferFlags flags) {
@@ -549,7 +549,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_buffer_get_max_memory();
 
 		public static uint MaxMemory { 
@@ -562,7 +562,7 @@ namespace Gst {
 
 		public Buffer(IntPtr raw) : base(raw) {}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_new();
 
 		public Buffer () 
@@ -570,7 +570,7 @@ namespace Gst {
 			Raw = gst_buffer_new();
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_new_allocate(IntPtr allocator, UIntPtr size, IntPtr parms);
 
 		public Buffer (Gst.Allocator allocator, ulong size, Gst.AllocationParams parms) 
@@ -580,7 +580,7 @@ namespace Gst {
 			Marshal.FreeHGlobal (native_parms);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_new_wrapped(byte[] data, UIntPtr n_length);
 
 		public Buffer (byte[] data) 
@@ -588,7 +588,7 @@ namespace Gst {
 			Raw = gst_buffer_new_wrapped(data, new UIntPtr ((ulong) (data == null ? 0 : data.Length)));
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_new_wrapped_bytes(IntPtr bytes);
 
 		public Buffer (GLib.Bytes bytes) 
@@ -596,7 +596,7 @@ namespace Gst {
 			Raw = gst_buffer_new_wrapped_bytes(bytes == null ? IntPtr.Zero : bytes.Handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_new_wrapped_full(int flags, byte[] data, UIntPtr maxsize, UIntPtr offset, UIntPtr size, IntPtr user_data, GLib.DestroyNotify notify);
 
 		public Buffer (Gst.MemoryFlags flags, byte[] data, ulong maxsize, ulong offset, ulong size, IntPtr user_data, GLib.DestroyNotify notify) 

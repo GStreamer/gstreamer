@@ -186,7 +186,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_iterator_get_type();
 
 		public static GLib.GType GType { 
@@ -197,7 +197,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_iterator_copy(IntPtr raw);
 
 		public Gst.Iterator Copy() {
@@ -206,7 +206,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_iterator_fold(IntPtr raw, GstSharp.IteratorFoldFunctionNative func, IntPtr _ret, IntPtr user_data);
 
 		public Gst.IteratorResult Fold(Gst.IteratorFoldFunction func, GLib.Value _ret) {
@@ -218,7 +218,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_iterator_foreach(IntPtr raw, GstSharp.IteratorForeachFunctionNative func, IntPtr user_data);
 
 		public Gst.IteratorResult Foreach(Gst.IteratorForeachFunction func) {
@@ -228,14 +228,14 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_iterator_push(IntPtr raw, IntPtr other);
 
 		public void Push(Gst.Iterator other) {
 			gst_iterator_push(Handle, other == null ? IntPtr.Zero : other.Handle);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_iterator_resync(IntPtr raw);
 
 		public void Resync() {
@@ -244,7 +244,7 @@ namespace Gst {
 
 		public Iterator(IntPtr raw) : base(raw) {}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_iterator_new_single(IntPtr type, IntPtr _object);
 
 		public Iterator (GLib.GType type, GLib.Value _object) 
@@ -254,7 +254,7 @@ namespace Gst {
 			Marshal.FreeHGlobal (native__object);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_iterator_free(IntPtr raw);
 
 		protected override void Free (IntPtr raw)

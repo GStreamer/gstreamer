@@ -27,7 +27,7 @@ namespace Gst.Rtp {
 			return (Gst.Rtp.RTPSourceMeta) Marshal.PtrToStructure (raw, typeof (Gst.Rtp.RTPSourceMeta));
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtp_source_meta_append_csrc(IntPtr raw, uint csrc, uint csrc_count);
 
 		public bool AppendCsrc(uint csrc, uint csrc_count) {
@@ -40,7 +40,7 @@ namespace Gst.Rtp {
 			return ret;
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_rtp_source_meta_get_source_count(IntPtr raw);
 
 		public uint SourceCount { 
@@ -55,7 +55,7 @@ namespace Gst.Rtp {
 			}
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtp_source_meta_set_ssrc(IntPtr raw, uint ssrc);
 
 		public bool SetSsrc(uint ssrc) {
@@ -72,7 +72,7 @@ namespace Gst.Rtp {
 			return SetSsrc (0);
 		}
 
-		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_rtp_source_meta_get_info();
 
 		public static Gst.MetaInfo Info { 

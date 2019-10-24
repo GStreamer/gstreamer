@@ -273,7 +273,7 @@ namespace Gst.Video {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_aggregator_pad_get_type();
 
 		public static new GLib.GType GType { 
@@ -284,7 +284,7 @@ namespace Gst.Video {
 			}
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_aggregator_pad_get_current_buffer(IntPtr raw);
 
 		public Gst.Buffer CurrentBuffer { 
@@ -295,7 +295,7 @@ namespace Gst.Video {
 			}
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_aggregator_pad_get_prepared_frame(IntPtr raw);
 
 		public Gst.Video.VideoFrame PreparedFrame { 
@@ -306,7 +306,7 @@ namespace Gst.Video {
 			}
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_aggregator_pad_has_current_buffer(IntPtr raw);
 
 		public bool HasCurrentBuffer { 
@@ -317,7 +317,7 @@ namespace Gst.Video {
 			}
 		}
 
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_video_aggregator_pad_set_needs_alpha(IntPtr raw, bool needs_alpha);
 
 		public bool NeedsAlpha { 

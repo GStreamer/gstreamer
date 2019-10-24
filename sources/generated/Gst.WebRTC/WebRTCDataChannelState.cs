@@ -18,7 +18,7 @@ namespace Gst.WebRTC {
 	}
 
 	internal class WebRTCDataChannelStateGType {
-		[DllImport ("libgstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_webrtc_data_channel_state_get_type ();
 
 		public static GLib.GType GType {

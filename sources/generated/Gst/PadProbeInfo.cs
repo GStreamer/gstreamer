@@ -34,7 +34,7 @@ namespace Gst {
 			return (Gst.PadProbeInfo) Marshal.PtrToStructure (raw, typeof (Gst.PadProbeInfo));
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_probe_info_get_buffer(IntPtr raw);
 
 		public Gst.Buffer Buffer { 
@@ -49,7 +49,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_probe_info_get_buffer_list(IntPtr raw);
 
 		public Gst.BufferList BufferList { 
@@ -64,7 +64,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_probe_info_get_event(IntPtr raw);
 
 		public Gst.Event Event { 
@@ -79,7 +79,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pad_probe_info_get_query(IntPtr raw);
 
 		public Gst.Query Query { 

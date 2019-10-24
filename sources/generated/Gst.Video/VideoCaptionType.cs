@@ -18,7 +18,7 @@ namespace Gst.Video {
 	}
 
 	internal class VideoCaptionTypeGType {
-		[DllImport ("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_caption_type_get_type ();
 
 		public static GLib.GType GType {

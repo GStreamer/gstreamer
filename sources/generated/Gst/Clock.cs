@@ -18,10 +18,10 @@ namespace Gst {
 			CreateNativeObject (new string [0], new GLib.Value [0]);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_clock_get_timeout(IntPtr raw);
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_clock_set_timeout(IntPtr raw, ulong timeout);
 
 		[GLib.Property ("timeout")]
@@ -542,7 +542,7 @@ namespace Gst {
 
 		// End of the ABI representation.
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_clock_get_type();
 
 		public static new GLib.GType GType { 
@@ -553,7 +553,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_clock_id_compare_func(IntPtr id1, IntPtr id2);
 
 		public static int IdCompareFunc(IntPtr id1, IntPtr id2) {
@@ -566,7 +566,7 @@ namespace Gst {
 			return IdCompareFunc (IntPtr.Zero, IntPtr.Zero);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_clock_id_get_clock(IntPtr id);
 
 		public static Gst.Clock IdGetClock(IntPtr id) {
@@ -575,7 +575,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_clock_id_get_time(IntPtr id);
 
 		public static ulong IdGetTime(IntPtr id) {
@@ -584,7 +584,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_clock_id_ref(IntPtr id);
 
 		public static IntPtr IdRef(IntPtr id) {
@@ -593,21 +593,21 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_clock_id_unref(IntPtr id);
 
 		public static void IdUnref(IntPtr id) {
 			gst_clock_id_unref(id);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_clock_id_unschedule(IntPtr id);
 
 		public static void IdUnschedule(IntPtr id) {
 			gst_clock_id_unschedule(id);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_clock_id_uses_clock(IntPtr id, IntPtr clock);
 
 		public static bool IdUsesClock(IntPtr id, Gst.Clock clock) {
@@ -616,7 +616,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_clock_id_wait(IntPtr id, out long jitter);
 
 		public static Gst.ClockReturn IdWait(IntPtr id, out long jitter) {
@@ -625,7 +625,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_clock_id_wait_async(IntPtr id, GstSharp.ClockCallbackNative func, IntPtr user_data, GLib.DestroyNotify destroy_data);
 
 		public static Gst.ClockReturn IdWaitAsync(IntPtr id, Gst.ClockCallback func) {
@@ -644,7 +644,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_clock_add_observation(IntPtr raw, ulong slave, ulong master, out double r_squared);
 
 		public bool AddObservation(ulong slave, ulong master, out double r_squared) {
@@ -653,7 +653,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_clock_add_observation_unapplied(IntPtr raw, ulong slave, ulong master, out double r_squared, out ulong _internal, out ulong external, out ulong rate_num, out ulong rate_denom);
 
 		public bool AddObservationUnapplied(ulong slave, ulong master, out double r_squared, out ulong _internal, out ulong external, out ulong rate_num, out ulong rate_denom) {
@@ -662,7 +662,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_clock_adjust_unlocked(IntPtr raw, ulong _internal);
 
 		public ulong AdjustUnlocked(ulong _internal) {
@@ -671,7 +671,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_clock_adjust_with_calibration(IntPtr raw, ulong internal_target, ulong cinternal, ulong cexternal, ulong cnum, ulong cdenom);
 
 		public ulong AdjustWithCalibration(ulong internal_target, ulong cinternal, ulong cexternal, ulong cnum, ulong cdenom) {
@@ -680,14 +680,14 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_clock_get_calibration(IntPtr raw, out ulong _internal, out ulong external, out ulong rate_num, out ulong rate_denom);
 
 		public void GetCalibration(out ulong _internal, out ulong external, out ulong rate_num, out ulong rate_denom) {
 			gst_clock_get_calibration(Handle, out _internal, out external, out rate_num, out rate_denom);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_clock_get_internal_time(IntPtr raw);
 
 		public ulong InternalTime { 
@@ -698,7 +698,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_clock_get_master(IntPtr raw);
 
 		public Gst.Clock Master { 
@@ -709,7 +709,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_clock_get_resolution(IntPtr raw);
 
 		public ulong Resolution { 
@@ -720,7 +720,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_clock_get_time(IntPtr raw);
 
 		public ulong Time { 
@@ -731,7 +731,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_clock_is_synced(IntPtr raw);
 
 		public bool IsSynced { 
@@ -742,7 +742,7 @@ namespace Gst {
 			}
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_clock_new_periodic_id(IntPtr raw, ulong start_time, ulong interval);
 
 		public IntPtr NewPeriodicId(ulong start_time, ulong interval) {
@@ -751,7 +751,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_clock_new_single_shot_id(IntPtr raw, ulong time);
 
 		public IntPtr NewSingleShotId(ulong time) {
@@ -760,7 +760,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_clock_periodic_id_reinit(IntPtr raw, IntPtr id, ulong start_time, ulong interval);
 
 		public bool PeriodicIdReinit(IntPtr id, ulong start_time, ulong interval) {
@@ -769,14 +769,14 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_clock_set_calibration(IntPtr raw, ulong _internal, ulong external, ulong rate_num, ulong rate_denom);
 
 		public void SetCalibration(ulong _internal, ulong external, ulong rate_num, ulong rate_denom) {
 			gst_clock_set_calibration(Handle, _internal, external, rate_num, rate_denom);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_clock_set_master(IntPtr raw, IntPtr master);
 
 		public bool SetMaster(Gst.Clock master) {
@@ -789,7 +789,7 @@ namespace Gst {
 			return SetMaster (null);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_clock_set_resolution(IntPtr raw, ulong resolution);
 
 		public ulong SetResolution(ulong resolution) {
@@ -798,14 +798,14 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_clock_set_synced(IntPtr raw, bool synced);
 
 		public void is_synced(bool synced) {
 			gst_clock_set_synced(Handle, synced);
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_clock_single_shot_id_reinit(IntPtr raw, IntPtr id, ulong time);
 
 		public bool SingleShotIdReinit(IntPtr id, ulong time) {
@@ -814,7 +814,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_clock_unadjust_unlocked(IntPtr raw, ulong external);
 
 		public ulong UnadjustUnlocked(ulong external) {
@@ -823,7 +823,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_clock_unadjust_with_calibration(IntPtr raw, ulong external_target, ulong cinternal, ulong cexternal, ulong cnum, ulong cdenom);
 
 		public ulong UnadjustWithCalibration(ulong external_target, ulong cinternal, ulong cexternal, ulong cnum, ulong cdenom) {
@@ -832,7 +832,7 @@ namespace Gst {
 			return ret;
 		}
 
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_clock_wait_for_sync(IntPtr raw, ulong timeout);
 
 		public bool WaitForSync(ulong timeout) {

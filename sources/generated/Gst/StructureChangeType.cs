@@ -15,7 +15,7 @@ namespace Gst {
 	}
 
 	internal class StructureChangeTypeGType {
-		[DllImport ("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport ("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_structure_change_type_get_type ();
 
 		public static GLib.GType GType {
