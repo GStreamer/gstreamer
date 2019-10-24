@@ -539,7 +539,8 @@ gst_amc_codec_configure (GstAmcCodec * codec, GstAmcFormat * format,
     flags = 1;
 
   return gst_amc_jni_call_void_method (env, err, codec->object,
-      media_codec.configure, format->object, codec->surface, NULL, flags);
+      media_codec.configure, format->object, codec->surface->jobject, NULL,
+      flags);
 }
 
 GstAmcFormat *
