@@ -820,6 +820,16 @@ get_rtp_other_pad (GstPad * pad)
   return GST_PAD (gst_pad_get_element_private (pad));
 }
 
+static void
+gst_srtp_enc_add_ssrc (GstSrtpEnc * filter, guint ssrc)
+{
+  gboolean is_added =
+      g_hash_table_add (filter->ssrcs_set, GUINT_TO_POINTER (ssrc));
+  if (is_added) {
+    GST_DEBUG_OBJECT (filter, "Added ssrc %u", ssrc);
+  }
+}
+
 /* Release a sink pad and it's linked source pad
  */
 static void
@@ -872,7 +882,7 @@ gst_srtp_enc_sink_setcaps (GstPad * pad, GstSrtpEnc * filter,
   if (gst_structure_has_field_typed (ps, "ssrc", G_TYPE_UINT)) {
     guint ssrc;
     gst_structure_get_uint (ps, "ssrc", &ssrc);
-    g_hash_table_add (filter->ssrcs_set, GUINT_TO_POINTER (ssrc));
+    gst_srtp_enc_add_ssrc (filter, ssrc);
   }
 
   if (HAS_CRYPTO (filter))
@@ -1097,6 +1107,18 @@ gst_srtp_enc_check_set_caps (GstSrtpEnc * filter, GstPad * pad,
   return GST_FLOW_OK;
 }
 
+static void
+gst_srtp_enc_ensure_ssrc (GstSrtpEnc * filter, GstBuffer * buf)
+{
+  GstRTPBuffer rtpbuf = GST_RTP_BUFFER_INIT;
+  if (gst_rtp_buffer_map (buf,
+          GST_MAP_READ | GST_RTP_BUFFER_MAP_FLAG_SKIP_PADDING, &rtpbuf)) {
+    guint32 ssrc = gst_rtp_buffer_get_ssrc (&rtpbuf);
+    gst_srtp_enc_add_ssrc (filter, ssrc);
+    gst_rtp_buffer_unmap (&rtpbuf);
+  }
+}
+
 static GstFlowReturn
 gst_srtp_enc_process_buffer (GstSrtpEnc * filter, GstPad * pad,
     GstBuffer * buf, gboolean is_rtcp, GstBuffer ** outbuf_ptr)
@@ -1126,6 +1148,9 @@ gst_srtp_enc_process_buffer (GstSrtpEnc * filter, GstPad * pad,
     ret = GST_FLOW_FLUSHING;
     goto fail;
   }
+
+  gst_srtp_enc_ensure_ssrc (filter, buf);
+
 #ifdef HAVE_SRTP2
   if (is_rtcp)
     err = srtp_protect_rtcp_mki (filter->session, mapout.data, &size,
