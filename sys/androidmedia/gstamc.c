@@ -2410,7 +2410,7 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    androidmedia,
-    "Android Media plugin",
+    PLUGIN_NAME,
+    PLUGIN_DESCRIPTION,
     plugin_init,
     PACKAGE_VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

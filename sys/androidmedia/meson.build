@@ -46,9 +46,18 @@ if have_mlsdk
   ]
   extra_deps = ml_deps
   have_jni_h = false
+  extra_cargs += [
+    '-DPLUGIN_NAME=mlmedia',
+    '-DPLUGIN_DESCRIPTION="Magic Leap Media plugin"'
+  ]
+  plugin_name = 'gstmlmedia'
 else
   have_jni_h = cc.has_header('jni.h', required : amc_opt)
-  extra_cargs += '-DHAVE_JNI_H'
+  extra_cargs += [
+    '-DHAVE_JNI_H',
+    '-DPLUGIN_NAME=androidmedia',
+    '-DPLUGIN_DESCRIPTION="Android Media plugin"'
+  ]
   androidmedia_sources += [
     'gstahcsrc.c',
     'gstahssrc.c',
@@ -62,10 +71,11 @@ else
     'jni/gstamcsurface.c',
     'jni/gstamcsurfacetexture-jni.c',
   ]
+  plugin_name = 'gstandroidmedia'
 endif
 
 if have_jni_h or have_mlsdk
-  gstandroidmedia = library('gstandroidmedia',
+  gstandroidmedia = library(plugin_name,
     androidmedia_sources,
     c_args : [gst_plugins_bad_args, extra_cargs],
     include_directories : [configinc],
