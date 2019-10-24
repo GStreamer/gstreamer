@@ -45,9 +45,13 @@ GST_DEBUG_CATEGORY_EXTERN (gst_msdkh265enc_debug);
 enum
 {
   PROP_LOW_POWER = GST_MSDKENC_PROP_MAX,
+  PROP_TILE_ROW,
+  PROP_TILE_COL,
 };
 
 #define PROP_LOWPOWER_DEFAULT           FALSE
+#define PROP_TILE_ROW_DEFAULT           1
+#define PROP_TILE_COL_DEFAULT           1
 
 #define RAW_FORMATS "NV12, I420, YV12, YUY2, UYVY, BGRA, P010_10LE, VUYA"
 
@@ -132,6 +136,21 @@ gst_msdkh265enc_configure (GstMsdkEnc * encoder)
 
   /* Enable Extended coding options */
   gst_msdkenc_ensure_extended_coding_options (encoder);
+
+  if (h265enc->num_tile_rows > 1 || h265enc->num_tile_cols > 1) {
+    h265enc->ext_tiles.Header.BufferId = MFX_EXTBUFF_HEVC_TILES;
+    h265enc->ext_tiles.Header.BufferSz = sizeof (h265enc->ext_tiles);
+    h265enc->ext_tiles.NumTileRows = h265enc->num_tile_rows;
+    h265enc->ext_tiles.NumTileColumns = h265enc->num_tile_cols;
+
+    gst_msdkenc_add_extra_param (encoder,
+        (mfxExtBuffer *) & h265enc->ext_tiles);
+
+    /* Set a valid value to NumSlice */
+    if (encoder->param.mfx.NumSlice == 0)
+      encoder->param.mfx.NumSlice =
+          h265enc->num_tile_rows * h265enc->num_tile_cols;
+  }
 
   encoder->param.mfx.LowPower =
       (h265enc->lowpower ? MFX_CODINGOPTION_ON : MFX_CODINGOPTION_OFF);
@@ -231,6 +250,15 @@ gst_msdkh265enc_set_property (GObject * object, guint prop_id,
     case PROP_LOW_POWER:
       thiz->lowpower = g_value_get_boolean (value);
       break;
+
+    case PROP_TILE_ROW:
+      thiz->num_tile_rows = g_value_get_uint (value);
+      break;
+
+    case PROP_TILE_COL:
+      thiz->num_tile_cols = g_value_get_uint (value);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -252,6 +280,15 @@ gst_msdkh265enc_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_LOW_POWER:
       g_value_set_boolean (value, thiz->lowpower);
       break;
+
+    case PROP_TILE_ROW:
+      g_value_set_uint (value, thiz->num_tile_rows);
+      break;
+
+    case PROP_TILE_COL:
+      g_value_set_uint (value, thiz->num_tile_cols);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -283,6 +320,18 @@ gst_msdkh265enc_class_init (GstMsdkH265EncClass * klass)
       g_param_spec_boolean ("low-power", "Low power", "Enable low power mode",
           PROP_LOWPOWER_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_TILE_ROW,
+      g_param_spec_uint ("num-tile-rows", "number of rows for tiled encoding",
+          "number of rows for tiled encoding",
+          1, 8192, PROP_TILE_ROW_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_TILE_COL,
+      g_param_spec_uint ("num-tile-cols",
+          "number of columns for tiled encoding",
+          "number of columns for tiled encoding", 1, 8192,
+          PROP_TILE_COL_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_set_static_metadata (element_class,
       "Intel MSDK H265 encoder",
       "Codec/Encoder/Video/Hardware",
@@ -298,5 +347,7 @@ gst_msdkh265enc_init (GstMsdkH265Enc * thiz)
 {
   GstMsdkEnc *msdk_enc = (GstMsdkEnc *) thiz;
   thiz->lowpower = PROP_LOWPOWER_DEFAULT;
+  thiz->num_tile_rows = PROP_TILE_ROW_DEFAULT;
+  thiz->num_tile_cols = PROP_TILE_COL_DEFAULT;
   msdk_enc->num_extra_frames = 1;
 }

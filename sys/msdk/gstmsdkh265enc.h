@@ -55,6 +55,10 @@ struct _GstMsdkH265Enc
   GstMsdkEnc base;
 
   gboolean lowpower;
+  gushort num_tile_rows;
+  gushort num_tile_cols;
+
+  mfxExtHEVCTiles ext_tiles;
 };
 
 struct _GstMsdkH265EncClass
