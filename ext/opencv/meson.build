@@ -95,10 +95,14 @@ if opencv_found
       if r.returncode() == 0
         gstopencv_cargs += '-DOPENCV_PATH_NAME="opencv4"'
       else
-        error('Unable to detect OpenCV data directory')
+        message('Unable to detect OpenCV data directory')
+        opencv_found = false
       endif
     endif
   endif
+endif
+
+if opencv_found
   gstopencv = library('gstopencv',
     gstopencv_sources,
     cpp_args : gst_plugins_bad_args + gstopencv_cargs + [ '-DGST_USE_UNSTABLE_API' ],
