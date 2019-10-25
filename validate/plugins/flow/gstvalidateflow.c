@@ -206,6 +206,29 @@ parse_caps_properties_setting (const ValidateFlowOverride * flow,
   return parsed_list;
 }
 
+static gchar *
+make_safe_file_name (const gchar * name)
+{
+  gchar *ret = g_strdup (name);
+  gchar *c;
+  for (c = ret; *c; c++) {
+    switch (*c) {
+      case '<':
+      case '>':
+      case ':':
+      case '"':
+      case '/':
+      case '\\':
+      case '|':
+      case '?':
+      case '*':
+        *c = '-';
+        break;
+    }
+  }
+  return ret;
+}
+
 static ValidateFlowOverride *
 validate_flow_override_new (GstStructure * config)
 {
@@ -276,10 +299,11 @@ validate_flow_override_new (GstStructure * config)
     flow->actual_results_dir = g_strdup (".");
 
   {
+    gchar *pad_name_safe = make_safe_file_name (flow->pad_name);
     gchar *expectations_file_name =
-        g_strdup_printf ("log-%s-expected", flow->pad_name);
+        g_strdup_printf ("log-%s-expected", pad_name_safe);
     gchar *actual_results_file_name =
-        g_strdup_printf ("log-%s-actual", flow->pad_name);
+        g_strdup_printf ("log-%s-actual", pad_name_safe);
     flow->expectations_file_path =
         g_build_path (G_DIR_SEPARATOR_S, flow->expectations_dir,
         expectations_file_name, NULL);
@@ -288,6 +312,7 @@ validate_flow_override_new (GstStructure * config)
         actual_results_file_name, NULL);
     g_free (expectations_file_name);
     g_free (actual_results_file_name);
+    g_free (pad_name_safe);
   }
 
   if (g_file_test (flow->expectations_file_path, G_FILE_TEST_EXISTS)) {
