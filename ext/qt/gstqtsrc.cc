@@ -79,9 +79,9 @@ G_DEFINE_TYPE_WITH_CODE (GstQtSrc, gst_qt_src,
 
 static const gfloat vertical_flip_matrix[] = {
   1.0f, 0.0f, 0.0f, 0.0f,
-  0.0f, -1.0f, 0.0f, 1.0f,
+  0.0f, -1.0f, 0.0f, 0.0f,
   0.0f, 0.0f, 1.0f, 0.0f,
-  0.0f, 0.0f, 0.0f, 1.0f,
+  0.0f, 1.0f, 0.0f, 1.0f,
 };
 
 static void
