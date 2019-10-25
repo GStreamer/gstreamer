@@ -1402,6 +1402,95 @@ GST_START_TEST (test_audio_buffer_and_audio_meta)
 
 GST_END_TEST;
 
+typedef struct
+{
+  const gchar *str;
+  GstAudioFormat format;
+  GstAudioLayout layout;
+  gint rate;
+  gint channels;
+  gboolean ret;
+} AudioInfoFromCapsData;
+
+GST_START_TEST (test_audio_info_from_caps)
+{
+  static const AudioInfoFromCapsData format_list[] = {
+    /* raw format, positive */
+    {"audio/x-raw, format = (string) S8, layout = (string) non-interleaved, "
+          "rate = (int) 44100, channels = (int) 2", GST_AUDIO_FORMAT_S8,
+        GST_AUDIO_LAYOUT_NON_INTERLEAVED, 44100, 2, TRUE},
+    {"audio/x-raw, format = (string) U8, layout = (string) interleaved, "
+          "rate = (int) 44100, channels = (int) 1", GST_AUDIO_FORMAT_U8,
+        GST_AUDIO_LAYOUT_INTERLEAVED, 44100, 1, TRUE},
+
+    /* raw format, negative */
+    /* unknown format */
+    {"audio/x-raw, format = (string) foo, layout = (string) interleaved, "
+          "rate = (int) 44100, channels = (int) 2", GST_AUDIO_FORMAT_UNKNOWN,
+        GST_AUDIO_LAYOUT_INTERLEAVED, 0, 0, FALSE},
+    {"audio/x-raw, layout = (string) non-interleaved, "
+          "rate = (int) 44100, channels = (int) 2", GST_AUDIO_FORMAT_UNKNOWN,
+        GST_AUDIO_LAYOUT_INTERLEAVED, 0, 0, FALSE},
+    /* unknown layout */
+    {"audio/x-raw, format = (string) U8, "
+          "rate = (int) 44100, channels = (int) 2", GST_AUDIO_FORMAT_UNKNOWN,
+        GST_AUDIO_LAYOUT_INTERLEAVED, 0, 0, FALSE},
+    /* unknown rate */
+    {"audio/x-raw, format = (string) U8, layout = (string) interleaved, "
+          "channels = (int) 2", GST_AUDIO_FORMAT_UNKNOWN,
+        GST_AUDIO_LAYOUT_INTERLEAVED, 0, 0, FALSE},
+    /* unknown channels */
+    {"audio/x-raw, format = (string) U8, layout = (string) interleaved, "
+          "rate = (int) 44100", GST_AUDIO_FORMAT_UNKNOWN,
+        GST_AUDIO_LAYOUT_INTERLEAVED, 0, 0, FALSE},
+    /* video caps */
+    {"video/x-raw, format = (string) NV12",
+        GST_AUDIO_FORMAT_UNKNOWN, GST_AUDIO_LAYOUT_INTERLEAVED, 0, 0, FALSE},
+
+    /* encoded format, it allow empty fields */
+    {"audio/x-opus", GST_AUDIO_FORMAT_ENCODED,
+        GST_AUDIO_LAYOUT_INTERLEAVED, 0, 0, TRUE},
+    /* rate only  */
+    {"audio/x-opus, rate = (int) 44100", GST_AUDIO_FORMAT_ENCODED,
+        GST_AUDIO_LAYOUT_INTERLEAVED, 44100, 0, TRUE},
+    /* channels only  */
+    {"audio/x-opus, channels = (int) 2", GST_AUDIO_FORMAT_ENCODED,
+        GST_AUDIO_LAYOUT_INTERLEAVED, 0, 2, TRUE},
+    /* rate and channels  */
+    {"audio/x-opus, rate = (int) 44100, channels = (int) 2",
+        GST_AUDIO_FORMAT_ENCODED, GST_AUDIO_LAYOUT_INTERLEAVED, 44100, 2, TRUE},
+  };
+  gint i;
+
+  for (i = 0; i < G_N_ELEMENTS (format_list); i++) {
+    GstAudioInfo info;
+    GstCaps *caps;
+
+    GST_LOG ("checking %dth format", i);
+
+    caps = gst_caps_from_string (format_list[i].str);
+    fail_unless (caps != NULL);
+
+    gst_audio_info_init (&info);
+    fail_unless_equals_int (gst_audio_info_from_caps (&info, caps),
+        format_list[i].ret);
+
+    if (format_list[i].ret) {
+      fail_unless_equals_int (GST_AUDIO_INFO_FORMAT (&info),
+          format_list[i].format);
+      fail_unless_equals_int (GST_AUDIO_INFO_LAYOUT (&info),
+          format_list[i].layout);
+      fail_unless_equals_int (GST_AUDIO_INFO_RATE (&info), format_list[i].rate);
+      fail_unless_equals_int (GST_AUDIO_INFO_CHANNELS (&info),
+          format_list[i].channels);
+    }
+
+    gst_caps_unref (caps);
+  }
+}
+
+GST_END_TEST;
+
 static Suite *
 audio_suite (void)
 {
@@ -1436,6 +1525,7 @@ audio_suite (void)
   tcase_add_test (tc_chain, test_stream_align);
   tcase_add_test (tc_chain, test_stream_align_reverse);
   tcase_add_test (tc_chain, test_audio_buffer_and_audio_meta);
+  tcase_add_test (tc_chain, test_audio_info_from_caps);
 
   return s;
 }
