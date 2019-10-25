@@ -145,6 +145,7 @@ BLACKLIST = [
     (r'check.gstreamer-sharp.SdpTests$', 'https://gitlab.freedesktop.org/gstreamer/gstreamer-sharp/issues/17'),
     (r'check.gst-devtools.validate.launcher_tests.test_validate.launch_pipeline.not_negotiated.caps_query_failure.play_15s$', '?'),
     (r'check.gst-editing-services.nle_simple.test_one_bin_after_other$', 'https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/66'),
+    (r'check.gstreamer-vaapi.*$', 'only run the tests explicitly'),
 ]
 
 
