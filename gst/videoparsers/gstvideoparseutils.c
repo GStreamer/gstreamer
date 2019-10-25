@@ -98,7 +98,29 @@ gst_video_parse_user_data (GstElement * elt, GstVideoParseUserData * user_data,
 
   switch (user_data_id) {
     case USER_DATA_ID_SCTE_20_CC:
-      GST_DEBUG_OBJECT (elt, "Unsupported SCTE 20 closed captions");
+    {
+      if (!gst_byte_reader_peek_uint8 (br, &temp)) {
+        GST_WARNING_OBJECT (elt, "Missing VBI data flag, ignoring");
+        break;
+      }
+      if ((temp & 0x7E) != 0) {
+        GST_WARNING_OBJECT (elt, "Middle 6 bits should be zero, ignoring");
+        break;
+      }
+      if ((temp & 1) == 0) {
+        GST_WARNING_OBJECT (elt, "VBI data flag not set, ignoring");
+        break;
+      }
+      if (!gst_byte_reader_get_data (br, gst_byte_reader_get_remaining (br),
+              &data))
+        break;
+      user_data->closedcaptions_size = gst_byte_reader_get_remaining (br);
+      memcpy (user_data->closedcaptions, data, user_data->closedcaptions_size);
+      user_data->closedcaptions_type = GST_VIDEO_CAPTION_TYPE_CEA608_SCTE_20;
+      user_data->field = field;
+      GST_DEBUG_OBJECT (elt, "CEA 608 SCTE 20 closed captions, %u bytes",
+          user_data->closedcaptions_size);
+    }
       break;
     case A53_USER_DATA_ID_DTG1:
       if (!gst_byte_reader_get_uint8 (br, &temp)) {
@@ -198,8 +220,32 @@ gst_video_parse_user_data (GstElement * elt, GstVideoParseUserData * user_data,
                 cc_size);
           }
           break;
-        case A53_USER_DATA_TYPE_CODE_SCTE_21_EIA_608_CC_DATA:
-          GST_DEBUG_OBJECT (elt, "Unsupported SCTE 21 closed captions");
+        case A53_USER_DATA_TYPE_CODE_SCTE_21_ADDITIONAL_608_DATA:
+        {
+          guint8 temp;
+          if (!gst_byte_reader_get_uint8 (br, &temp) || (temp & 0xE0) != 0xE0) {
+            GST_WARNING_OBJECT (elt, "Missing closed caption count, ignoring");
+            break;
+          }
+          cc_count = temp & 0x1F;
+          cc_size = cc_count * 3;
+          if (cc_size == 0 || cc_size > gst_byte_reader_get_remaining (br)) {
+            GST_DEBUG_OBJECT (elt, "ignoring closed captions, not enough data");
+            break;
+          }
+          g_assert (cc_size <= sizeof (user_data->closedcaptions));
+          if (!gst_byte_reader_get_data (br, cc_size, &data))
+            break;
+          memcpy (user_data->closedcaptions, data, cc_size);
+          user_data->closedcaptions_size = cc_size;
+          user_data->closedcaptions_type =
+              GST_VIDEO_CAPTION_TYPE_CEA608_ADDITIONAL_CEA_608;
+          user_data->field = field;
+          GST_DEBUG_OBJECT (elt,
+              "SCTE 21 Additional CEA-608 closed captions, %u bytes", cc_size);
+          GST_LOG_OBJECT (elt,
+              "Extracted SCTE 21 Additional CEA 608 closed captions");
+        }
           break;
         case A53_USER_DATA_TYPE_CODE_BAR_DATA:
           bar_size = gst_byte_reader_get_remaining (br);
