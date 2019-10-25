@@ -242,14 +242,17 @@ QtGLWindow::afterRendering()
       GST_ERROR ("FBO errors");
       goto errors;
     }
-    gl->ReadBuffer (GL_COLOR_ATTACHMENT0);
+    if (this->priv->useDefaultFbo)
+      gl->ReadBuffer (GL_BACK);
+    else
+      gl->ReadBuffer (GL_COLOR_ATTACHMENT0);
     gl->BlitFramebuffer (0, 0, width, height,
         0, 0, width, height,
         GL_COLOR_BUFFER_BIT, GL_LINEAR);
   } else {
     gl->CopyTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, 0, 0, width, height, 0);
   }
-  
+
   GST_DEBUG ("rendering finished");
 
 errors:
