@@ -545,6 +545,10 @@ gst_vulkan_image_identity_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   GError *error = NULL;
   VkResult err;
 
+  fence = gst_vulkan_fence_new (render->device, 0, &error);
+  if (!fence)
+    goto error;
+
   in_mem = gst_buffer_peek_memory (inbuf, 0);
   if (!gst_is_vulkan_image_memory (in_mem)) {
     g_set_error_literal (&error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
@@ -586,9 +590,6 @@ gst_vulkan_image_identity_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     goto error;
   }
 
-  fence = gst_vulkan_fence_new (render->device, 0, &error);
-  if (!fence)
-    goto error;
 
   {
     VkCommandBufferBeginInfo cmd_buf_info = { 0, };
