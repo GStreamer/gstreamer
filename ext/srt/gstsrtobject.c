@@ -1274,6 +1274,7 @@ gst_srt_object_write_to_callers (GstSRTObject * srtobject,
     gssize len = 0;
     const guint8 *msg = mapinfo->data;
     gint sent;
+    gint payload_size, optlen = 1;
 
     SRTCaller *caller = callers->data;
     callers = callers->next;
@@ -1291,8 +1292,14 @@ gst_srt_object_write_to_callers (GstSRTObject * srtobject,
       caller->sent_headers = TRUE;
     }
 
+    if (srt_getsockflag (caller->sock, SRTO_PAYLOADSIZE, &payload_size,
+            &optlen)) {
+      GST_WARNING_OBJECT (srtobject->element, "%s", srt_getlasterror_str ());
+      goto err;
+    }
+
     while (len < mapinfo->size) {
-      gint rest = mapinfo->size - len;
+      gint rest = MIN (mapinfo->size - len, payload_size);
       sent = srt_sendmsg2 (caller->sock, (char *) (msg + len), rest, 0);
       if (sent < 0) {
         goto err;
@@ -1321,6 +1328,7 @@ gst_srt_object_write_one (GstSRTObject * srtobject,
   gssize len = 0;
   gint poll_timeout;
   const guint8 *msg = mapinfo->data;
+  gint payload_size, optlen = 1;
 
   if (!gst_structure_get_int (srtobject->parameters, "poll-timeout",
           &poll_timeout)) {
@@ -1340,7 +1348,7 @@ gst_srt_object_write_one (GstSRTObject * srtobject,
     gint wsocklen = 1;
 
     gint sent;
-    gint rest = mapinfo->size - len;
+    gint rest;
 
     if (g_cancellable_is_cancelled (cancellable)) {
       break;
@@ -1350,6 +1358,13 @@ gst_srt_object_write_one (GstSRTObject * srtobject,
             &wsocklen, poll_timeout, NULL, 0, NULL, 0) < 0) {
       continue;
     }
+
+    if (srt_getsockflag (wsock, SRTO_PAYLOADSIZE, &payload_size, &optlen)) {
+      GST_WARNING_OBJECT (srtobject->element, "%s", srt_getlasterror_str ());
+      break;
+    }
+
+    rest = MIN (mapinfo->size - len, payload_size);
 
     switch (srt_getsockstate (wsock)) {
       case SRTS_BROKEN:
