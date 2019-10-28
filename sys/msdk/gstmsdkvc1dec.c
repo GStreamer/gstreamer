@@ -103,7 +103,6 @@ gst_msdkvc1dec_configure (GstMsdkDec * decoder)
       gst_adapter_push (decoder->adapter, buffer);
     }
 
-    decoder->is_packetized = FALSE;
     gst_video_decoder_set_packetized (GST_VIDEO_DECODER (decoder), FALSE);
   }
 

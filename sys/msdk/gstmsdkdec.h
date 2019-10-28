@@ -75,7 +75,6 @@ struct _GstMsdkDec
 
   /* for packetization */
   GstAdapter *adapter;
-  gboolean is_packetized;
   /* cap negotiation needed, allocation may or may not be required*/
   gboolean do_renego;
   /* re-allocation is mandatory if enabled */

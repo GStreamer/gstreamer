@@ -903,7 +903,7 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   if (!thiz->initialized || thiz->do_renego) {
     /* Clear the internal adapter in re-negotiation for non-packetized
      * formats */
-    if (!thiz->is_packetized)
+    if (!gst_video_decoder_get_packetized (decoder))
       gst_adapter_clear (thiz->adapter);
 
     if (!klass->configure || !klass->configure (thiz)) {
@@ -927,7 +927,7 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
 
   memset (&bitstream, 0, sizeof (bitstream));
 
-  if (thiz->is_packetized) {
+  if (gst_video_decoder_get_packetized (decoder)) {
     /* Packetized stream: we prefer to have a parser as a connected upstream
      * element to the decoder */
     bitstream.Data = map_info.data;
@@ -1132,7 +1132,7 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
     }
   }
 
-  if (!thiz->is_packetized) {
+  if (!gst_video_decoder_get_packetized (decoder)) {
     /* flush out the data which has already been consumed by msdk */
     gst_adapter_flush (thiz->adapter, bitstream.DataOffset);
   }
@@ -1646,7 +1646,6 @@ gst_msdkdec_init (GstMsdkDec * thiz)
   thiz->tasks = g_array_new (FALSE, TRUE, sizeof (MsdkDecTask));
   thiz->hardware = PROP_HARDWARE_DEFAULT;
   thiz->async_depth = PROP_ASYNC_DEPTH_DEFAULT;
-  thiz->is_packetized = TRUE;
   thiz->do_renego = TRUE;
   thiz->do_realloc = TRUE;
   thiz->force_reset_on_res_change = TRUE;
