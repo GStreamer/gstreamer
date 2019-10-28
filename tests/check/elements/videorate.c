@@ -402,11 +402,11 @@ GST_START_TEST (test_wrong_order_from_zero)
 
 GST_END_TEST;
 
-/* send frames with 0, 1, 2, 5 seconds, max-duplication-time=2sec */
+/* send frames with 0, 1, 2, 5, 6 seconds, max-duplication-time=2sec */
 GST_START_TEST (test_max_duplication_time)
 {
   GstElement *videorate;
-  GstBuffer *first, *second, *third, *fourth, *outbuffer;
+  GstBuffer *first, *second, *third, *fourth, *fifth, *outbuffer;
   GstCaps *caps;
 
   videorate = setup_videorate ();
@@ -466,6 +466,7 @@ GST_START_TEST (test_max_duplication_time)
   fail_unless_equals_int (g_list_length (buffers), 38);
   ASSERT_BUFFER_REFCOUNT (first, "first", 1);
   ASSERT_BUFFER_REFCOUNT (second, "second", 1);
+  ASSERT_BUFFER_REFCOUNT (third, "third", 1);
   /* three frames submitted; two of them output as is, and 36 duplicated */
   assert_videorate_stats (videorate, "third", 3, 38, 0, 36);
 
@@ -481,23 +482,60 @@ GST_START_TEST (test_max_duplication_time)
   /* ... and a copy is now stuck inside videorate */
   ASSERT_BUFFER_REFCOUNT (fourth, "fourth", 1);
 
-  fail_unless_equals_int (g_list_length (buffers), 38);
+  /* should now have drained everything up to the 2s buffer above */
+  fail_unless_equals_int (g_list_length (buffers), 51);
   ASSERT_BUFFER_REFCOUNT (first, "first", 1);
   ASSERT_BUFFER_REFCOUNT (second, "second", 1);
-  assert_videorate_stats (videorate, "fourth", 4, 38, 0, 36);
+  ASSERT_BUFFER_REFCOUNT (third, "third", 1);
+  ASSERT_BUFFER_REFCOUNT (fourth, "fourth", 1);
+  assert_videorate_stats (videorate, "fourth", 4, 51, 0, 48);
 
   /* verify last buffer */
   outbuffer = g_list_last (buffers)->data;
   fail_unless (GST_IS_BUFFER (outbuffer));
-  fail_unless_equals_uint64 (GST_BUFFER_TIMESTAMP (outbuffer),
-      GST_SECOND * 37 / 25);
+  fail_unless_equals_uint64 (GST_BUFFER_TIMESTAMP (outbuffer), 2 * GST_SECOND);
 
+  /* fifth buffer */
+  fifth = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (fifth) = 6 * GST_SECOND;
+  gst_buffer_memset (fifth, 0, 0, 4);
+  ASSERT_BUFFER_REFCOUNT (fifth, "fifth", 1);
+  gst_buffer_ref (fifth);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, fifth) == GST_FLOW_OK);
+  /* ... and a copy is now stuck inside videorate */
+  ASSERT_BUFFER_REFCOUNT (third, "fifth", 1);
+
+  /* submitting a frame with 6 seconds triggers output of 12 more frames */
+  fail_unless_equals_int (g_list_length (buffers), 63);
+  ASSERT_BUFFER_REFCOUNT (first, "first", 1);
+  ASSERT_BUFFER_REFCOUNT (second, "second", 1);
+  ASSERT_BUFFER_REFCOUNT (third, "third", 1);
+  ASSERT_BUFFER_REFCOUNT (fourth, "fourth", 1);
+  ASSERT_BUFFER_REFCOUNT (fifth, "fifth", 1);
+  /* five frames submitted; two of them output as is, 63 and 59 duplicated */
+  assert_videorate_stats (videorate, "fifth", 5, 63, 0, 59);
+
+  /* push EOS to drain */
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+
+  /* we should now have gotten one output for the last frame */
+  fail_unless_equals_int (g_list_length (buffers), 64);
+  ASSERT_BUFFER_REFCOUNT (first, "first", 1);
+  ASSERT_BUFFER_REFCOUNT (second, "second", 1);
+  ASSERT_BUFFER_REFCOUNT (third, "third", 1);
+  ASSERT_BUFFER_REFCOUNT (fourth, "fourth", 1);
+  ASSERT_BUFFER_REFCOUNT (fifth, "fifth", 1);
+  /* five frames submitted; two of them output as is, 64 and 60 duplicated */
+  assert_videorate_stats (videorate, "fifth", 5, 64, 0, 59);
 
   /* cleanup */
   gst_buffer_unref (first);
   gst_buffer_unref (second);
   gst_buffer_unref (third);
   gst_buffer_unref (fourth);
+  gst_buffer_unref (fifth);
   cleanup_videorate (videorate);
 }
 
