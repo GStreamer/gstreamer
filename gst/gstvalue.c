@@ -2803,17 +2803,43 @@ _priv_gst_value_parse_value (gchar * str,
         G_TYPE_BOOLEAN, G_TYPE_STRING
       };
       int i;
+      int value_size;
+      gboolean check_wrapped_non_string;
 
       if (G_UNLIKELY (!_priv_gst_value_parse_string (s, &value_end, &s, FALSE)))
         return FALSE;
       /* Set NULL terminator for deserialization */
+      value_size = value_end - value_s;
       value_s = g_strndup (value_s, value_end - value_s);
+      /* Keep old broken behavior where "2" could be interpretted as an int */
+      check_wrapped_non_string = value_s[0] == '"' &&
+          strlen (value_s) >= 2 && value_end[-1] == '"';
 
       for (i = 0; i < G_N_ELEMENTS (try_types); i++) {
         g_value_init (value, try_types[i]);
-        ret = gst_value_deserialize (value, value_s);
-        if (ret)
-          break;
+        if (try_types[i] != G_TYPE_STRING && check_wrapped_non_string) {
+          value_s[value_size - 1] = '\0';
+          ret = gst_value_deserialize (value, value_s + 1);
+          value_s[value_size - 1] = '"';
+          if (ret) {
+            const gchar *type_name = g_type_name (try_types[i]);
+
+            g_warning ("Received a structure string that contains "
+                "'=%s'. Reading as a %s value, rather than a string "
+                "value. This is undesired behaviour, and with GStreamer 1.22 "
+                " onward, this will be interpreted as a string value instead "
+                "because it is wrapped in '\"' quotes. If you want to "
+                "guarantee this value is read as a string, before this "
+                "change, use '=(string)%s' instead. If you want to read "
+                "in a %s value, leave its value unquoted.",
+                value_s, type_name, value_s, type_name);
+            break;
+          }
+        } else {
+          ret = gst_value_deserialize (value, value_s);
+          if (ret)
+            break;
+        }
         g_value_unset (value);
       }
     } else {
