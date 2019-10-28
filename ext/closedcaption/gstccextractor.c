@@ -67,11 +67,6 @@ static GstStaticPadTemplate captiontemplate =
 G_DEFINE_TYPE (GstCCExtractor, gst_cc_extractor, GST_TYPE_ELEMENT);
 #define parent_class gst_cc_extractor_parent_class
 
-static void gst_cc_extractor_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_cc_extractor_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-
 static gboolean gst_cc_extractor_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 static gboolean gst_cc_extractor_sink_query (GstPad * pad, GstObject * parent,
@@ -92,8 +87,6 @@ gst_cc_extractor_class_init (GstCCExtractorClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  gobject_class->set_property = gst_cc_extractor_set_property;
-  gobject_class->get_property = gst_cc_extractor_get_property;
   gobject_class->finalize = gst_cc_extractor_finalize;
 
   gstelement_class->change_state =
@@ -184,32 +177,6 @@ gst_cc_extractor_init (GstCCExtractor * filter)
   filter->combiner = gst_flow_combiner_new ();
 
   gst_cc_extractor_reset (filter);
-}
-
-static void
-gst_cc_extractor_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  /* GstCCExtractor *filter = GST_CCEXTRACTOR (object); */
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_cc_extractor_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  /* GstCCExtractor *filter = GST_CCEXTRACTOR (object); */
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
 }
 
 static GstEvent *
