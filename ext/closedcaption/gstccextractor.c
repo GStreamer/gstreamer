@@ -212,6 +212,25 @@ gst_cc_extractor_get_property (GObject * object, guint prop_id,
   }
 }
 
+static GstEvent *
+create_stream_start_event_from_stream_start_event (GstEvent * event)
+{
+  GstEvent *new_event;
+  const gchar *stream_id;
+  gchar *new_stream_id;
+  guint group_id;
+
+  gst_event_parse_stream_start (event, &stream_id);
+  new_stream_id = g_strdup_printf ("%s/caption", stream_id);
+
+  new_event = gst_event_new_stream_start (new_stream_id);
+  g_free (new_stream_id);
+  if (gst_event_parse_group_id (event, &group_id))
+    gst_event_set_group_id (new_event, group_id);
+
+  return new_event;
+}
+
 static gboolean
 gst_cc_extractor_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
@@ -231,17 +250,21 @@ gst_cc_extractor_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       }
       break;
     }
-    case GST_EVENT_EOS:
-    case GST_EVENT_FLUSH_START:
-    case GST_EVENT_FLUSH_STOP:
-      /* Also forward to the caption pad if present */
+    case GST_EVENT_STREAM_START:
+      if (filter->captionpad) {
+        GstEvent *new_event =
+            create_stream_start_event_from_stream_start_event (event);
+        gst_pad_push_event (filter->captionpad, new_event);
+      }
+      break;
+    default:
+      /* Also forward all other events to the caption pad if present */
       if (filter->captionpad)
         gst_pad_push_event (filter->captionpad, gst_event_ref (event));
       break;
-    default:
-      break;
   }
 
+  /* This only forwards to the non-caption source pad */
   return gst_pad_event_default (pad, parent, event);
 }
 
@@ -289,28 +312,55 @@ create_caps_from_caption_type (GstVideoCaptionType caption_type,
   return caption_caps;
 }
 
+static gboolean
+forward_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
+{
+  GstCCExtractor *filter = user_data;
+
+  switch (GST_EVENT_TYPE (*event)) {
+    case GST_EVENT_CAPS:{
+      GstCaps *caption_caps =
+          create_caps_from_caption_type (filter->caption_type,
+          &filter->video_info);
+
+      if (caption_caps) {
+        GstEvent *new_event = gst_event_new_caps (caption_caps);
+        gst_event_set_seqnum (new_event, gst_event_get_seqnum (*event));
+        gst_pad_store_sticky_event (filter->captionpad, new_event);
+        gst_event_unref (new_event);
+        gst_caps_unref (caption_caps);
+      }
+
+      break;
+    }
+    case GST_EVENT_STREAM_START:{
+      GstEvent *new_event =
+          create_stream_start_event_from_stream_start_event (*event);
+      gst_pad_store_sticky_event (filter->captionpad, new_event);
+      gst_event_unref (new_event);
+
+      break;
+    }
+    default:
+      gst_pad_store_sticky_event (filter->captionpad, *event);
+      break;
+  }
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_cc_extractor_handle_meta (GstCCExtractor * filter, GstBuffer * buf,
     GstVideoCaptionMeta * meta, GstVideoTimeCodeMeta * tc_meta)
 {
   GstBuffer *outbuf = NULL;
-  GstEvent *event;
-  gchar *captionid;
   GstFlowReturn flow;
 
   GST_DEBUG_OBJECT (filter, "Handling meta");
 
   /* Check if the meta type matches the configured one */
   if (filter->captionpad == NULL) {
-    GstCaps *caption_caps =
-        create_caps_from_caption_type (meta->caption_type, &filter->video_info);
-    GstEvent *stream_event;
-
     GST_DEBUG_OBJECT (filter, "Creating new caption pad");
-    if (caption_caps == NULL) {
-      GST_ERROR_OBJECT (filter, "Unknown/invalid caption type");
-      return GST_FLOW_NOT_NEGOTIATED;
-    }
 
     /* Create the caption pad and set the caps */
     filter->captionpad =
@@ -318,36 +368,19 @@ gst_cc_extractor_handle_meta (GstCCExtractor * filter, GstBuffer * buf,
     gst_pad_set_iterate_internal_links_function (filter->sinkpad,
         GST_DEBUG_FUNCPTR (gst_cc_extractor_iterate_internal_links));
     gst_pad_set_active (filter->captionpad, TRUE);
-    gst_element_add_pad (GST_ELEMENT (filter), filter->captionpad);
-    gst_flow_combiner_add_pad (filter->combiner, filter->captionpad);
-
-    captionid =
-        gst_pad_create_stream_id (filter->captionpad, (GstElement *) filter,
-        "caption");
-    stream_event = gst_event_new_stream_start (captionid);
-    g_free (captionid);
-
-    /* FIXME : Create a proper stream-id */
-    if ((event =
-            gst_pad_get_sticky_event (filter->srcpad, GST_EVENT_STREAM_START,
-                0))) {
-      guint group_id;
-      if (gst_event_parse_group_id (event, &group_id))
-        gst_event_set_group_id (stream_event, group_id);
-      gst_event_unref (event);
-    }
-    gst_pad_push_event (filter->captionpad, stream_event);
-    gst_pad_set_caps (filter->captionpad, caption_caps);
-    gst_caps_unref (caption_caps);
-
-    /* Carry over sticky events */
-    if ((event =
-            gst_pad_get_sticky_event (filter->srcpad, GST_EVENT_SEGMENT, 0)))
-      gst_pad_push_event (filter->captionpad, event);
-    if ((event = gst_pad_get_sticky_event (filter->srcpad, GST_EVENT_TAG, 0)))
-      gst_pad_push_event (filter->captionpad, event);
 
     filter->caption_type = meta->caption_type;
+
+    gst_pad_sticky_events_foreach (filter->sinkpad, forward_sticky_events,
+        filter);
+
+    if (!gst_pad_has_current_caps (filter->captionpad)) {
+      GST_ERROR_OBJECT (filter, "Unknown/invalid caption type");
+      return GST_FLOW_NOT_NEGOTIATED;
+    }
+
+    gst_element_add_pad (GST_ELEMENT (filter), filter->captionpad);
+    gst_flow_combiner_add_pad (filter->combiner, filter->captionpad);
   } else if (meta->caption_type != filter->caption_type) {
     GstCaps *caption_caps =
         create_caps_from_caption_type (meta->caption_type, &filter->video_info);
@@ -359,7 +392,7 @@ gst_cc_extractor_handle_meta (GstCCExtractor * filter, GstBuffer * buf,
       return GST_FLOW_NOT_NEGOTIATED;
     }
 
-    gst_pad_set_caps (filter->captionpad, caption_caps);
+    gst_pad_push_event (filter->captionpad, gst_event_new_caps (caption_caps));
     gst_caps_unref (caption_caps);
 
     filter->caption_type = meta->caption_type;
