@@ -109,7 +109,7 @@ static GESCommandLineOption options[] = {
     "and media2 completely opaque.\n",
     {
       {
-        "uri", "n", 0, "asset-id",
+        "uri", "u", 0, "asset-id",
         "The URI of the media file."
       },
       {
@@ -202,7 +202,7 @@ static GESCommandLineOption options[] = {
     "<title text>", "Adds a clip in the timeline.", NULL,
     {
       {
-        "text", "n", 0, NULL,
+        "text", "t", 0, NULL,
         "The text to be used as title."
       },
       {
@@ -403,7 +403,7 @@ static gboolean
 _ges_command_line_formatter_add_title_clip (GESTimeline * timeline,
     GstStructure * structure, GError ** error)
 {
-  if (!_cleanup_fields (options[TEST_CLIP].properties, structure, error))
+  if (!_cleanup_fields (options[TITLE].properties, structure, error))
     return FALSE;
 
   gst_structure_set (structure, "type", G_TYPE_STRING, "GESTitleClip", NULL);
