@@ -261,7 +261,7 @@ static VkAttachmentDescription
   color_attachments = g_new0 (VkAttachmentDescription, *n_descriptions);
   /* *INDENT-OFF* */
   color_attachments[0] = (VkAttachmentDescription) {
-      .format = gst_vulkan_format_from_video_format (GST_VIDEO_INFO_FORMAT (&render->in_info), 0),
+      .format = gst_vulkan_format_from_video_info (&render->in_info, 0),
       .samples = VK_SAMPLE_COUNT_1_BIT,
       .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
       .storeOp = VK_ATTACHMENT_STORE_OP_STORE,

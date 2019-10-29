@@ -158,52 +158,15 @@ _vk_format_to_video_format (VkFormat format)
   switch (format) {
       /* double check endianness */
     case VK_FORMAT_R8G8B8A8_UNORM:
-    case VK_FORMAT_R8G8B8A8_SRGB:
       return GST_VIDEO_FORMAT_RGBA;
     case VK_FORMAT_R8G8B8_UNORM:
-    case VK_FORMAT_R8G8B8_SRGB:
       return GST_VIDEO_FORMAT_RGB;
     case VK_FORMAT_B8G8R8A8_UNORM:
-    case VK_FORMAT_B8G8R8A8_SRGB:
       return GST_VIDEO_FORMAT_BGRA;
     case VK_FORMAT_B8G8R8_UNORM:
-    case VK_FORMAT_B8G8R8_SRGB:
       return GST_VIDEO_FORMAT_BGR;
     default:
       return GST_VIDEO_FORMAT_UNKNOWN;
-  }
-}
-
-static VkFormat
-_vk_format_from_video_info (GstVideoInfo * v_info)
-{
-  switch (GST_VIDEO_INFO_FORMAT (v_info)) {
-    case GST_VIDEO_FORMAT_RGBA:
-      if (GST_VIDEO_INFO_COLORIMETRY (v_info).transfer ==
-          GST_VIDEO_TRANSFER_SRGB)
-        return VK_FORMAT_R8G8B8A8_SRGB;
-      else
-        return VK_FORMAT_R8G8B8A8_UNORM;
-    case GST_VIDEO_FORMAT_RGB:
-      if (GST_VIDEO_INFO_COLORIMETRY (v_info).transfer ==
-          GST_VIDEO_TRANSFER_SRGB)
-        return VK_FORMAT_R8G8B8_SRGB;
-      else
-        return VK_FORMAT_R8G8B8_UNORM;
-    case GST_VIDEO_FORMAT_BGRA:
-      if (GST_VIDEO_INFO_COLORIMETRY (v_info).transfer ==
-          GST_VIDEO_TRANSFER_SRGB)
-        return VK_FORMAT_B8G8R8A8_SRGB;
-      else
-        return VK_FORMAT_B8G8R8A8_UNORM;
-    case GST_VIDEO_FORMAT_BGR:
-      if (GST_VIDEO_INFO_COLORIMETRY (v_info).transfer ==
-          GST_VIDEO_TRANSFER_SRGB)
-        return VK_FORMAT_B8G8R8_SRGB;
-      else
-        return VK_FORMAT_B8G8R8_UNORM;
-    default:
-      return VK_FORMAT_UNDEFINED;
   }
 }
 
@@ -742,7 +705,7 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
     preTransform = swapper->priv->surf_props.currentTransform;
   }
 
-  format = _vk_format_from_video_info (&swapper->priv->v_info);
+  format = gst_vulkan_format_from_video_info (&swapper->priv->v_info, 0);
   color_space = _vk_color_space_from_video_info (&swapper->priv->v_info);
 
   if ((swapper->priv->surf_props.supportedCompositeAlpha &

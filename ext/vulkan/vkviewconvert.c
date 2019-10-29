@@ -1944,7 +1944,7 @@ static VkAttachmentDescription
   for (i = 0; i < *n_descriptions; i++) {
     /* *INDENT-OFF* */
     color_attachments[i] = (VkAttachmentDescription) {
-        .format = gst_vulkan_format_from_video_format (GST_VIDEO_INFO_FORMAT (&render->out_info), i),
+        .format = gst_vulkan_format_from_video_info (&render->out_info, i),
         .samples = VK_SAMPLE_COUNT_1_BIT,
         .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
         .storeOp = VK_ATTACHMENT_STORE_OP_STORE,

@@ -1333,7 +1333,7 @@ static VkAttachmentDescription
   for (i = 0; i < *n_descriptions; i++) {
     /* *INDENT-OFF* */
     color_attachments[i] = (VkAttachmentDescription) {
-        .format = gst_vulkan_format_from_video_format (GST_VIDEO_INFO_FORMAT (&render->out_info), i),
+        .format = gst_vulkan_format_from_video_info (&render->out_info, i),
         .samples = VK_SAMPLE_COUNT_1_BIT,
         .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
         .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
@@ -1764,12 +1764,11 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
       /* we need a scratch buffer because framebuffers can only output to
        * attachments of at least the same size which means no sub-sampled
        * rendering */
-      GstVideoFormat v_format = GST_VIDEO_INFO_FORMAT (&render->out_info);
       VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
       VkFormat vk_format;
       GstMemory *mem;
 
-      vk_format = gst_vulkan_format_from_video_format (v_format, i);
+      vk_format = gst_vulkan_format_from_video_info (&render->out_info, i);
 
       mem = gst_vulkan_image_memory_alloc (render->device,
           vk_format, GST_VIDEO_INFO_WIDTH (&render->out_info),

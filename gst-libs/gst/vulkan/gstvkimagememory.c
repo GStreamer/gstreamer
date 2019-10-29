@@ -40,8 +40,8 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFUALT);
 static GstAllocator *_vulkan_image_memory_allocator;
 
 /**
- * gst_vulkan_format_from_video_format: (skip)
- * @v_format: the #GstVideoFormat
+ * gst_vulkan_format_from_video_info: (skip)
+ * @v_info: the #GstVideoInfo
  * @plane: the plane
  *
  * Returns: the VkFormat to use for @v_format and @plane
@@ -49,21 +49,34 @@ static GstAllocator *_vulkan_image_memory_allocator;
  * Since: 1.18
  */
 VkFormat
-gst_vulkan_format_from_video_format (GstVideoFormat v_format, guint plane)
+gst_vulkan_format_from_video_info (GstVideoInfo * v_info, guint plane)
 {
   guint n_plane_components;
 
-  switch (v_format) {
+  switch (GST_VIDEO_INFO_FORMAT (v_info)) {
     case GST_VIDEO_FORMAT_RGBx:
     case GST_VIDEO_FORMAT_RGBA:
-      return VK_FORMAT_R8G8B8A8_UNORM;
+      if (GST_VIDEO_INFO_COLORIMETRY (v_info).transfer ==
+          GST_VIDEO_TRANSFER_SRGB)
+        return VK_FORMAT_R8G8B8A8_UNORM;
+      else
+        return VK_FORMAT_R8G8B8A8_SRGB;
     case GST_VIDEO_FORMAT_BGRx:
     case GST_VIDEO_FORMAT_BGRA:
-      return VK_FORMAT_B8G8R8A8_UNORM;
+      if (GST_VIDEO_INFO_COLORIMETRY (v_info).transfer ==
+          GST_VIDEO_TRANSFER_SRGB)
+        return VK_FORMAT_B8G8R8A8_UNORM;
+      else
+        return VK_FORMAT_B8G8R8A8_SRGB;
     case GST_VIDEO_FORMAT_xRGB:
     case GST_VIDEO_FORMAT_ARGB:
     case GST_VIDEO_FORMAT_xBGR:
     case GST_VIDEO_FORMAT_ABGR:
+      if (GST_VIDEO_INFO_COLORIMETRY (v_info).transfer ==
+          GST_VIDEO_TRANSFER_SRGB)
+        n_plane_components = 4;
+      else
+        return VK_FORMAT_UNDEFINED;
     case GST_VIDEO_FORMAT_AYUV:
       n_plane_components = 4;
       break;

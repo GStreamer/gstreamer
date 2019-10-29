@@ -103,13 +103,12 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
   /* get the size of the buffer to allocate */
   priv->v_info.size = 0;
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&priv->v_info); i++) {
-    GstVideoFormat v_format = GST_VIDEO_INFO_FORMAT (&priv->v_info);
     GstVulkanImageMemory *img_mem;
     VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
     guint width, height;
     VkFormat vk_format;
 
-    vk_format = gst_vulkan_format_from_video_format (v_format, i);
+    vk_format = gst_vulkan_format_from_video_info (&priv->v_info, i);
     width = GST_VIDEO_INFO_COMP_WIDTH (&priv->v_info, i);
     height = GST_VIDEO_INFO_COMP_HEIGHT (&priv->v_info, i);
     if (priv->raw_caps)
@@ -171,12 +170,11 @@ gst_vulkan_image_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   }
 
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&priv->v_info); i++) {
-    GstVideoFormat v_format = GST_VIDEO_INFO_FORMAT (&priv->v_info);
     VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
     VkFormat vk_format;
     GstMemory *mem;
 
-    vk_format = gst_vulkan_format_from_video_format (v_format, i);
+    vk_format = gst_vulkan_format_from_video_info (&priv->v_info, i);
     if (priv->raw_caps)
       tiling = VK_IMAGE_TILING_LINEAR;
 

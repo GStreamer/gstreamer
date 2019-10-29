@@ -239,11 +239,10 @@ _raw_to_buffer_set_caps (gpointer impl, GstCaps * in_caps, GstCaps * out_caps)
   out_height = GST_VIDEO_INFO_HEIGHT (&raw->out_info);
 
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&raw->out_info); i++) {
-    GstVideoFormat v_format = GST_VIDEO_INFO_FORMAT (&raw->out_info);
     GstVulkanImageMemory *img_mem;
     VkFormat vk_format;
 
-    vk_format = gst_vulkan_format_from_video_format (v_format, i);
+    vk_format = gst_vulkan_format_from_video_info (&raw->out_info, i);
 
     img_mem = (GstVulkanImageMemory *)
         gst_vulkan_image_memory_alloc (raw->upload->device, vk_format,

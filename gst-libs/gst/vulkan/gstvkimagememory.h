@@ -142,7 +142,7 @@ void            gst_vulkan_image_memory_add_view        (GstVulkanImageMemory * 
                                                          GstVulkanImageView * view);
 
 GST_VULKAN_API
-VkFormat gst_vulkan_format_from_video_format (GstVideoFormat v_format,
+VkFormat gst_vulkan_format_from_video_info   (GstVideoInfo * v_info,
                                               guint plane);
 
 G_END_DECLS
