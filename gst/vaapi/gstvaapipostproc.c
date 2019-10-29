@@ -379,7 +379,7 @@ create_output_buffer (GstVaapiPostproc * postproc)
   GstBuffer *outbuf;
 
   GstBufferPool *const pool =
-      GST_VAAPI_PLUGIN_BASE (postproc)->srcpad_buffer_pool;
+      GST_VAAPI_PLUGIN_BASE_SRC_PAD_BUFFER_POOL (postproc);
   GstFlowReturn ret;
 
   g_return_val_if_fail (pool != NULL, NULL);
@@ -412,9 +412,10 @@ create_output_dump_buffer (GstVaapiPostproc * postproc)
 {
   GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (postproc);
 
-  return gst_buffer_new_allocate (plugin->other_srcpad_allocator,
-      GST_VIDEO_INFO_SIZE (&plugin->srcpad_info),
-      &plugin->other_allocator_params);
+  return
+      gst_buffer_new_allocate (GST_VAAPI_PLUGIN_BASE_OTHER_ALLOCATOR (plugin),
+      GST_VIDEO_INFO_SIZE (GST_VAAPI_PLUGIN_BASE_SRC_PAD_INFO (plugin)),
+      &GST_VAAPI_PLUGIN_BASE_OTHER_ALLOCATOR_PARAMS (plugin));
 }
 
 static void

@@ -499,7 +499,9 @@ is_src_allocator_dmabuf (GstVaapiDecode * decode)
 
   if (!GST_VAAPI_PLUGIN_BASE_SRC_PAD_CAN_DMABUF (plugin))
     return FALSE;
-  return gst_vaapi_is_dmabuf_allocator (plugin->srcpad_allocator);
+  return
+      gst_vaapi_is_dmabuf_allocator (GST_VAAPI_PLUGIN_BASE_SRC_PAD_ALLOCATOR
+      (plugin));
 }
 
 static GstFlowReturn
@@ -596,9 +598,11 @@ gst_vaapidecode_push_decoded_frame (GstVideoDecoder * vdec,
       GstBuffer *sys_buf, *va_buf;
 
       va_buf = out_frame->output_buffer;
-      sys_buf = gst_buffer_new_allocate (plugin->other_srcpad_allocator,
-          GST_VIDEO_INFO_SIZE (&plugin->srcpad_info),
-          &plugin->other_allocator_params);
+      sys_buf =
+          gst_buffer_new_allocate (GST_VAAPI_PLUGIN_BASE_OTHER_ALLOCATOR
+          (plugin),
+          GST_VIDEO_INFO_SIZE (GST_VAAPI_PLUGIN_BASE_SRC_PAD_INFO (plugin)),
+          &GST_VAAPI_PLUGIN_BASE_OTHER_ALLOCATOR_PARAMS (plugin));
       if (!sys_buf)
         goto error_no_sys_buffer;
 

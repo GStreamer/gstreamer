@@ -888,7 +888,7 @@ gst_vaapiencode_init (GstVaapiEncode * encode)
   GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (encode);
 
   gst_vaapi_plugin_base_init (GST_VAAPI_PLUGIN_BASE (encode), GST_CAT_DEFAULT);
-  gst_pad_use_fixed_caps (plugin->srcpad);
+  gst_pad_use_fixed_caps (GST_VAAPI_PLUGIN_BASE_SRC_PAD (plugin));
 }
 
 static void
