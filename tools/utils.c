@@ -23,41 +23,63 @@
 #include <gst/gst.h>
 #include "utils.h"
 
-#define IS_ALPHANUM(c) (g_ascii_isalnum((c)) || ((c) == '-') || ((c) == '+'))
+/* Copy of GST_ASCII_IS_STRING */
+#define ASCII_IS_STRING(c) (g_ascii_isalnum((c)) || ((c) == '_') || \
+    ((c) == '-') || ((c) == '+') || ((c) == '/') || ((c) == ':') || \
+    ((c) == '.'))
 
 /* g_free after usage */
 static gchar *
-_sanitize_argument (gchar * arg)
+_sanitize_argument (gchar * arg, const gchar * prev_arg)
 {
-  gboolean has_non_alphanum = FALSE;
-  char *equal_index = strstr (arg, "=");
+  gboolean expect_equal = !(arg[0] == '+' || g_str_has_prefix (arg, "set-")
+      || prev_arg == NULL || prev_arg[0] == '+'
+      || g_str_has_prefix (prev_arg, "set-"));
+  gboolean need_wrap = FALSE;
+  gchar *first_equal = NULL;
+  gchar *wrap_start;
   gchar *new_string, *tmp_string;
+  gsize num_escape;
 
   for (tmp_string = arg; *tmp_string != '\0'; tmp_string++) {
-    if (!IS_ALPHANUM (*tmp_string)) {
-      has_non_alphanum = TRUE;
-
+    if (expect_equal && first_equal == NULL && *tmp_string == '=') {
+      first_equal = tmp_string;
+      /* if this is the first equal, then don't count it as necessarily
+       * needing a wrap */
+    } else if (!ASCII_IS_STRING (*tmp_string)) {
+      need_wrap = TRUE;
       break;
     }
   }
 
-  if (!has_non_alphanum)
+  if (!need_wrap)
     return g_strdup (arg);
 
-  if (!equal_index)
-    return g_strdup_printf ("\"%s\"", arg);
+  if (first_equal)
+    wrap_start = first_equal + 1;
+  else
+    wrap_start = arg;
 
-  tmp_string = new_string = g_malloc (sizeof (gchar) * (strlen (arg) + 3));
-  for (; *arg != '\0'; arg++) {
-    *tmp_string = *arg;
-    tmp_string += 1;
-    if (*arg == '=') {
-      *tmp_string = '"';
-      tmp_string += 1;
-    }
+  /* need to escape any '"' or '\\' to correctly parse in as a structure */
+  num_escape = 0;
+  for (tmp_string = wrap_start; *tmp_string != '\0'; tmp_string++) {
+    if (*tmp_string == '"' || *tmp_string == '\\')
+      num_escape++;
   }
-  *tmp_string = '"';
-  tmp_string += 1;
+
+  tmp_string = new_string =
+      g_malloc (sizeof (gchar) * (strlen (arg) + num_escape + 3));
+
+  while (arg != wrap_start)
+    *(tmp_string++) = *(arg++);
+  (*tmp_string++) = '"';
+
+  while (*arg != '\0') {
+    if (*arg == '"' || *arg == '\\')
+      (*tmp_string++) = '\\';
+    *(tmp_string++) = *(arg++);
+  }
+  *(tmp_string++) = '"';
   *tmp_string = '\0';
 
   return new_string;
@@ -67,18 +89,20 @@ gchar *
 sanitize_timeline_description (gchar ** args)
 {
   gint i;
+  gchar *prev_arg = NULL;
 
   gchar *string = g_strdup (" ");
 
   for (i = 1; args[i]; i++) {
     gchar *new_string;
-    gchar *sanitized = _sanitize_argument (args[i]);
+    gchar *sanitized = _sanitize_argument (args[i], prev_arg);
 
     new_string = g_strconcat (string, " ", sanitized, NULL);
 
     g_free (sanitized);
     g_free (string);
     string = new_string;
+    prev_arg = args[i];
   }
 
   return string;
@@ -145,8 +169,8 @@ print_enum (GType enum_type)
 }
 
 void
-print (GstDebugColorFlags c, gboolean err, gboolean nline, const gchar * format,
-    va_list var_args)
+print (GstDebugColorFlags c, gboolean err, gboolean nline,
+    const gchar * format, va_list var_args)
 {
   GString *str = g_string_new (NULL);
   GstDebugColorMode color_mode;
