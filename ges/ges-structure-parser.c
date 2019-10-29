@@ -66,6 +66,15 @@ ges_structure_parser_parse_string (GESStructureParser * self,
 }
 
 void
+ges_structure_parser_parse_value (GESStructureParser * self, const gchar * text)
+{
+  /* text starts with '=' */
+  gchar *val_string = g_strconcat ("=(string)", text + 1, NULL);
+  ges_structure_parser_parse_string (self, val_string, FALSE);
+  g_free (val_string);
+}
+
+void
 ges_structure_parser_parse_default (GESStructureParser * self,
     const gchar * text)
 {
@@ -126,13 +135,15 @@ ges_structure_parser_parse_symbol (GESStructureParser * self,
 
   self->add_comma = FALSE;
   if (!g_ascii_strncasecmp (symbol, "clip", 4))
-    ges_structure_parser_parse_string (self, "clip, uri=", TRUE);
+    ges_structure_parser_parse_string (self, "clip, uri=(string)", TRUE);
   else if (!g_ascii_strncasecmp (symbol, "test-clip", 9))
-    ges_structure_parser_parse_string (self, "test-clip, pattern=", TRUE);
+    ges_structure_parser_parse_string (self, "test-clip, pattern=(string)",
+        TRUE);
   else if (!g_ascii_strncasecmp (symbol, "effect", 6))
-    ges_structure_parser_parse_string (self, "effect, bin-description=", TRUE);
+    ges_structure_parser_parse_string (self, "effect, bin-description=(string)",
+        TRUE);
   else if (!g_ascii_strncasecmp (symbol, "transition", 10))
-    ges_structure_parser_parse_string (self, "transition, type=", TRUE);
+    ges_structure_parser_parse_string (self, "transition, type=(string)", TRUE);
   else if (!g_ascii_strncasecmp (symbol, "title", 5))
     ges_structure_parser_parse_string (self, "title, text=(string)", TRUE);
 }
@@ -153,7 +164,8 @@ ges_structure_parser_parse_setter (GESStructureParser * self,
 
   setter++;
 
-  parsed_setter = g_strdup_printf ("set-property, property=%s, value=", setter);
+  parsed_setter = g_strdup_printf ("set-property, property=(string)%s, "
+      "value=(string)", setter);
   self->add_comma = FALSE;
   ges_structure_parser_parse_string (self, parsed_setter, TRUE);
   g_free (parsed_setter);

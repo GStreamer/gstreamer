@@ -52,6 +52,7 @@ G_GNUC_INTERNAL GType ges_structure_parser_get_type (void) G_GNUC_CONST;
 
 G_GNUC_INTERNAL GError * ges_structure_parser_get_error (GESStructureParser *self);
 G_GNUC_INTERNAL void ges_structure_parser_parse_string (GESStructureParser *self, const gchar *string, gboolean is_symbol);
+G_GNUC_INTERNAL void ges_structure_parser_parse_value (GESStructureParser *self, const gchar *string);
 G_GNUC_INTERNAL void ges_structure_parser_parse_default (GESStructureParser *self, const gchar *text);
 G_GNUC_INTERNAL void ges_structure_parser_parse_whitespace (GESStructureParser *self);
 G_GNUC_INTERNAL void ges_structure_parser_parse_symbol (GESStructureParser *self, const gchar *symbol);

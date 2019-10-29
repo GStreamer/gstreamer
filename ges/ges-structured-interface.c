@@ -706,8 +706,12 @@ _ges_set_child_property_from_struct (GESTimeline * timeline,
     GstStructure * structure, GError ** error)
 {
   const GValue *value;
+  GValue prop_value = G_VALUE_INIT;
+  gboolean prop_value_set = FALSE;
   GESTimelineElement *element;
   const gchar *property_name, *element_name;
+  gchar *serialized;
+  gboolean res;
 
   const gchar *valid_fields[] =
       { "element-name", "property", "value", "project-uri", NULL };
@@ -768,11 +772,41 @@ _ges_set_child_property_from_struct (GESTimeline * timeline,
 
   value = gst_structure_get_value (structure, "value");
 
-  g_print ("%s Setting %s property to %s\n", element->name, property_name,
-      gst_value_serialize (value));
+  if (G_VALUE_TYPE (value) == G_TYPE_STRING) {
+    GParamSpec *pspec;
+    if (ges_timeline_element_lookup_child (element, property_name, NULL,
+            &pspec)) {
+      GType p_type = pspec->value_type;
+      g_param_spec_unref (pspec);
+      if (p_type != G_TYPE_STRING) {
+        const gchar *val_string = g_value_get_string (value);
+        g_value_init (&prop_value, p_type);
+        if (!gst_value_deserialize (&prop_value, val_string)) {
+          *error = g_error_new (GES_ERROR, 0, "Could not set the property %s "
+              "because the value %s could not be deserialized to the %s type",
+              property_name, val_string, g_type_name (p_type));
+          return FALSE;
+        }
+        prop_value_set = TRUE;
+      }
+    }
+    /* else, let the setter fail below */
+  }
 
-  if (!ges_timeline_element_set_child_property (element, property_name,
-          (GValue *) value)) {
+  if (!prop_value_set) {
+    g_value_init (&prop_value, G_VALUE_TYPE (value));
+    g_value_copy (value, &prop_value);
+  }
+
+  serialized = gst_value_serialize (&prop_value);
+  GST_INFO_OBJECT (element, "Setting property %s to %s\n", property_name,
+      serialized);
+  g_free (serialized);
+
+  res = ges_timeline_element_set_child_property (element, property_name,
+      &prop_value);
+  g_value_unset (&prop_value);
+  if (!res) {
     guint n_specs, i;
     GParamSpec **specs =
         ges_timeline_element_list_children_properties (element, &n_specs);

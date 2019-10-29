@@ -268,7 +268,7 @@ _convert_to_clocktime (GstStructure * structure, const gchar * name,
 {
   gint res = 1;
   gdouble val;
-  GValue d_val = { 0 };
+  GValue d_val = G_VALUE_INIT, converted = G_VALUE_INIT;
   GstClockTime timestamp;
   const GValue *gvalue = gst_structure_get_value (structure, name);
 
@@ -281,20 +281,41 @@ _convert_to_clocktime (GstStructure * structure, const gchar * name,
   }
 
   if (G_VALUE_TYPE (gvalue) == G_TYPE_STRING) {
-    const gchar *v = g_value_get_string (gvalue);
-    return v && v[0] == 'f';
+    const gchar *val_string = g_value_get_string (gvalue);
+    /* if starts with an 'f', interpret as a frame number, keep as
+     * a string for now */
+    if (val_string && val_string[0] == 'f')
+      return 1;
+    /* else, try convert to a GstClockTime, or a double */
+    g_value_init (&converted, GST_TYPE_CLOCK_TIME);
+    if (!gst_value_deserialize (&converted, val_string)) {
+      g_value_unset (&converted);
+      g_value_init (&converted, G_TYPE_DOUBLE);
+      if (!gst_value_deserialize (&converted, val_string)) {
+        GST_ERROR ("Could not get timestamp for %s by deserializing %s",
+            name, val_string);
+        goto error;
+      }
+    }
+  } else {
+    g_value_init (&converted, G_VALUE_TYPE (gvalue));
+    g_value_copy (gvalue, &converted);
   }
 
-  if (G_VALUE_TYPE (gvalue) == GST_TYPE_CLOCK_TIME)
-    return 1;
+  if (G_VALUE_TYPE (&converted) == GST_TYPE_CLOCK_TIME) {
+    timestamp = g_value_get_uint64 (&converted);
+    goto done;
+  }
 
   g_value_init (&d_val, G_TYPE_DOUBLE);
-  if (!g_value_transform (gvalue, &d_val)) {
-    GST_ERROR ("Could not get timestamp for %s", name);
 
-    return 0;
+  if (!g_value_transform (&converted, &d_val)) {
+    GST_ERROR ("Could not get timestamp for %s", name);
+    goto error;
   }
+
   val = g_value_get_double ((const GValue *) &d_val);
+  g_value_unset (&d_val);
 
   if (val == -1.0)
     timestamp = GST_CLOCK_TIME_NONE;
@@ -303,8 +324,14 @@ _convert_to_clocktime (GstStructure * structure, const gchar * name,
 
 done:
   gst_structure_set (structure, name, G_TYPE_UINT64, timestamp, NULL);
+  g_value_unset (&converted);
 
   return res;
+
+error:
+  g_value_unset (&converted);
+
+  return 0;
 }
 
 static gboolean
