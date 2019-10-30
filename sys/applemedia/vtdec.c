@@ -205,6 +205,10 @@ gst_vtdec_stop (GstVideoDecoder * decoder)
     gst_gl_context_helper_free (vtdec->ctxh);
   vtdec->ctxh = NULL;
 
+  if (vtdec->format_description)
+    CFRelease (vtdec->format_description);
+  vtdec->format_description = NULL;
+
   GST_DEBUG_OBJECT (vtdec, "stop");
 
   return TRUE;
