@@ -151,9 +151,11 @@ _gst_vk_debug_callback (VkDebugReportFlagsEXT msgFlags,
   if (msgFlags & VK_DEBUG_REPORT_ERROR_BIT_EXT) {
     GST_CAT_ERROR (GST_VULKAN_DEBUG_CAT, "[%s] Code %d : %s", pLayerPrefix,
         msgCode, pMsg);
+    g_critical ("[%s] Code %d : %s", pLayerPrefix, msgCode, pMsg);
   } else if (msgFlags & VK_DEBUG_REPORT_WARNING_BIT_EXT) {
     GST_CAT_WARNING (GST_VULKAN_DEBUG_CAT, "[%s] Code %d : %s", pLayerPrefix,
         msgCode, pMsg);
+    g_warning ("[%s] Code %d : %s", pLayerPrefix, msgCode, pMsg);
   } else if (msgFlags & VK_DEBUG_REPORT_INFORMATION_BIT_EXT) {
     GST_CAT_LOG (GST_VULKAN_DEBUG_CAT, "[%s] Code %d : %s", pLayerPrefix,
         msgCode, pMsg);
