@@ -267,7 +267,7 @@ gst_avtp_cvf_depay_validate_avtpdu (GstAvtpCvfDepay * avtpcvfdepay,
   gint r;
 
   if (G_UNLIKELY (map->size < AVTP_CVF_H264_HEADER_SIZE)) {
-    GST_WARNING_OBJECT (avtpcvfdepay,
+    GST_DEBUG_OBJECT (avtpcvfdepay,
         "Incomplete AVTP header, expected it to have size of %zd, got %zd",
         AVTP_CVF_H264_HEADER_SIZE, map->size);
     goto end;
@@ -277,8 +277,8 @@ gst_avtp_cvf_depay_validate_avtpdu (GstAvtpCvfDepay * avtpcvfdepay,
 
   r = avtp_pdu_get ((struct avtp_common_pdu *) pdu, AVTP_FIELD_SUBTYPE, &val32);
   g_assert (r == 0);
-  if (G_UNLIKELY (val32 != AVTP_SUBTYPE_CVF)) {
-    GST_WARNING_OBJECT (avtpcvfdepay,
+  if (val32 != AVTP_SUBTYPE_CVF) {
+    GST_DEBUG_OBJECT (avtpcvfdepay,
         "Unexpected AVTP header subtype %d, expected %d", val32,
         AVTP_SUBTYPE_CVF);
     goto end;
@@ -287,7 +287,7 @@ gst_avtp_cvf_depay_validate_avtpdu (GstAvtpCvfDepay * avtpcvfdepay,
   r = avtp_pdu_get ((struct avtp_common_pdu *) pdu, AVTP_FIELD_VERSION, &val32);
   g_assert (r == 0);
   if (G_UNLIKELY (val32 != 0)) {
-    GST_WARNING_OBJECT (avtpcvfdepay,
+    GST_DEBUG_OBJECT (avtpcvfdepay,
         "Unexpected AVTP header version %d, expected %d", val32, 0);
     goto end;
   }
@@ -295,15 +295,15 @@ gst_avtp_cvf_depay_validate_avtpdu (GstAvtpCvfDepay * avtpcvfdepay,
   r = avtp_cvf_pdu_get (pdu, AVTP_CVF_FIELD_SV, &val);
   g_assert (r == 0);
   if (G_UNLIKELY (val != 1)) {
-    GST_WARNING_OBJECT (avtpcvfdepay,
+    GST_DEBUG_OBJECT (avtpcvfdepay,
         "Unexpected AVTP header stream valid %ld, expected %d", val, 1);
     goto end;
   }
 
   r = avtp_cvf_pdu_get (pdu, AVTP_CVF_FIELD_STREAM_ID, &val);
   g_assert (r == 0);
-  if (G_UNLIKELY (val != avtpbasedepayload->streamid)) {
-    GST_WARNING_OBJECT (avtpcvfdepay,
+  if (val != avtpbasedepayload->streamid) {
+    GST_DEBUG_OBJECT (avtpcvfdepay,
         "Unexpected AVTP header stream id 0x%lx, expected 0x%lx", val,
         avtpbasedepayload->streamid);
     goto end;
@@ -312,7 +312,7 @@ gst_avtp_cvf_depay_validate_avtpdu (GstAvtpCvfDepay * avtpcvfdepay,
   r = avtp_cvf_pdu_get (pdu, AVTP_CVF_FIELD_FORMAT, &val);
   g_assert (r == 0);
   if (G_UNLIKELY (val != AVTP_CVF_FORMAT_RFC)) {
-    GST_WARNING_OBJECT (avtpcvfdepay,
+    GST_DEBUG_OBJECT (avtpcvfdepay,
         "Unexpected AVTP header format %ld, expected %d", val,
         AVTP_CVF_FORMAT_RFC);
     goto end;
@@ -321,7 +321,7 @@ gst_avtp_cvf_depay_validate_avtpdu (GstAvtpCvfDepay * avtpcvfdepay,
   r = avtp_cvf_pdu_get (pdu, AVTP_CVF_FIELD_FORMAT_SUBTYPE, &val);
   g_assert (r == 0);
   if (G_UNLIKELY (val != AVTP_CVF_FORMAT_SUBTYPE_H264)) {
-    GST_WARNING_OBJECT (avtpcvfdepay,
+    GST_DEBUG_OBJECT (avtpcvfdepay,
         "Unsupported AVTP header format subtype %ld", val);
     goto end;
   }
@@ -329,7 +329,7 @@ gst_avtp_cvf_depay_validate_avtpdu (GstAvtpCvfDepay * avtpcvfdepay,
   r = avtp_cvf_pdu_get (pdu, AVTP_CVF_FIELD_STREAM_DATA_LEN, &val);
   g_assert (r == 0);
   if (G_UNLIKELY (map->size < sizeof (*pdu) + val)) {
-    GST_WARNING_OBJECT (avtpcvfdepay,
+    GST_DEBUG_OBJECT (avtpcvfdepay,
         "AVTP packet size %ld too small, expected at least %lu",
         map->size - AVTP_CVF_H264_HEADER_SIZE, sizeof (*pdu) + val);
     goto end;
@@ -471,7 +471,7 @@ gst_avtp_cvf_depay_process_last_fragment (GstAvtpCvfDepay * avtpcvfdepay,
   GstFlowReturn ret = GST_FLOW_OK;
 
   if (G_UNLIKELY (avtpcvfdepay->fragments == NULL)) {
-    GST_WARNING_OBJECT (avtpcvfdepay,
+    GST_DEBUG_OBJECT (avtpcvfdepay,
         "Received final fragment, but no start fragment received. Dropping it.");
     goto end;
   }
@@ -564,7 +564,7 @@ gst_avtp_cvf_depay_handle_fu_a (GstAvtpCvfDepay * avtpcvfdepay,
 
   if (start) {
     if (G_UNLIKELY (avtpcvfdepay->fragments != NULL)) {
-      GST_WARNING_OBJECT (avtpcvfdepay,
+      GST_DEBUG_OBJECT (avtpcvfdepay,
           "Received starting fragment, but previous one is not complete. Dropping old fragment");
       gst_avtp_cvf_depay_push_and_discard (avtpcvfdepay);
     }
@@ -576,7 +576,7 @@ gst_avtp_cvf_depay_handle_fu_a (GstAvtpCvfDepay * avtpcvfdepay,
 
   if (!start && !end) {
     if (G_UNLIKELY (avtpcvfdepay->fragments == NULL)) {
-      GST_WARNING_OBJECT (avtpcvfdepay,
+      GST_DEBUG_OBJECT (avtpcvfdepay,
           "Received intermediate fragment, but no start fragment received. Dropping it.");
       gst_avtp_cvf_depay_push_and_discard (avtpcvfdepay);
       goto end;
@@ -608,7 +608,7 @@ gst_avtp_cvf_depay_handle_single_nal (GstAvtpCvfDepay * avtpcvfdepay,
   GST_DEBUG_OBJECT (avtpcvfdepay, "Handling single NAL unit");
 
   if (avtpcvfdepay->fragments != NULL) {
-    GST_WARNING_OBJECT (avtpcvfdepay,
+    GST_DEBUG_OBJECT (avtpcvfdepay,
         "Received single NAL unit, but previous fragment is incomplete. Dropping fragment.");
     gst_avtp_cvf_depay_push_and_discard (avtpcvfdepay);
   }
@@ -647,7 +647,7 @@ gst_avtp_cvf_depay_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   gst_buffer_map (buffer, &map, GST_MAP_READ);
 
   if (!gst_avtp_cvf_depay_validate_avtpdu (avtpcvfdepay, &map)) {
-    GST_WARNING_OBJECT (avtpcvfdepay, "Invalid AVTPDU buffer, dropping it");
+    GST_DEBUG_OBJECT (avtpcvfdepay, "Invalid AVTPDU buffer, dropping it");
     goto end;
   }
 
@@ -656,14 +656,14 @@ gst_avtp_cvf_depay_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     case STAP_B_TYPE:
     case MTAP16_TYPE:
     case MTAP24_TYPE:
-      GST_WARNING_OBJECT (avtpcvfdepay,
+      GST_DEBUG_OBJECT (avtpcvfdepay,
           "AVTP aggregation packets not supported, dropping it");
       break;
     case FU_A_TYPE:
       ret = gst_avtp_cvf_depay_handle_fu_a (avtpcvfdepay, buffer, &map);
       break;
     case FU_B_TYPE:
-      GST_WARNING_OBJECT (avtpcvfdepay,
+      GST_DEBUG_OBJECT (avtpcvfdepay,
           "AVTP fragmentation FU-B packets not supported, dropping it");
       break;
     default:
