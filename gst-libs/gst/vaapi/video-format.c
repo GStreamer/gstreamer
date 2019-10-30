@@ -58,6 +58,9 @@ typedef struct _GstVideoFormatMapMap
     { VA_FOURCC FOURCC, BYTE_ORDER, BPP, DEPTH, R, G, B, A }, }
 
 /* Image formats, listed in HW order preference */
+/* XXX: The new added video format must be added to
+ * GST_VAAPI_FORMATS_ALL in header file to make it available to all
+ * vaapi element's pad cap template. */
 /* *INDENT-OFF* */
 static const GstVideoFormatMap gst_vaapi_video_default_formats[] = {
   /* LSB and MSB video formats definitions are unclear and ambiguous.

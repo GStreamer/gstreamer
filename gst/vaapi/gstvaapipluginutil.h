@@ -103,16 +103,16 @@ gst_vaapi_caps_feature_contains (const GstCaps * caps,
 # define GST_CAPS_INTERLACED_FALSE \
     "interlace-mode = (string)progressive"
 
-#define GST_VAAPI_MAKE_SURFACE_CAPS					\
-    GST_VIDEO_CAPS_MAKE_WITH_FEATURES(					\
-        GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE, "{ ENCODED, NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410, Y444 }")
+#define GST_VAAPI_MAKE_SURFACE_CAPS                                     \
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES(                                  \
+        GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE, GST_VAAPI_FORMATS_ALL)
 
-#define GST_VAAPI_MAKE_GLTEXUPLOAD_CAPS				\
-    GST_VIDEO_CAPS_MAKE_WITH_FEATURES(					\
+#define GST_VAAPI_MAKE_GLTEXUPLOAD_CAPS                                 \
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES(                                  \
         GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, "{ RGBA, BGRA }")
 
-#define GST_VAAPI_MAKE_DMABUF_CAPS					\
-    GST_VIDEO_CAPS_MAKE_WITH_FEATURES(					\
+#define GST_VAAPI_MAKE_DMABUF_CAPS                                      \
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES(                                  \
         GST_CAPS_FEATURE_MEMORY_DMABUF, "{ I420, YV12, RGBA }")
 
 G_GNUC_INTERNAL

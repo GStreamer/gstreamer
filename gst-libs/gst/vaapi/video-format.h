@@ -29,6 +29,11 @@
 
 G_BEGIN_DECLS
 
+#define GST_VAAPI_FORMATS_ALL "{ ENCODED, " \
+  "NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, " \
+  "ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE "  \
+  "}"
+
 const gchar *
 gst_vaapi_video_format_to_string (GstVideoFormat format);
 
