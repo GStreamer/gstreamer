@@ -486,16 +486,16 @@ static const gfloat vertical_flip_matrix[] = {
 
 /* upper-left-diagonal */
 static const gfloat upper_left_matrix[] = {
-  0.0f, 1.0f, 0.0f, 0.0f,
-  1.0f, 0.0f, 0.0f, 0.0f,
+  0.0f, -1.0f, 0.0f, 0.0f,
+  -1.0f, 0.0f, 0.0f, 0.0f,
   0.0f, 0.0f, 1.0f, 0.0f,
   0.0f, 0.0f, 0.0f, 1.0f,
 };
 
 /* upper-right-diagonal */
 static const gfloat upper_right_matrix[] = {
-  0.0f, -1.0f, 0.0f, 0.0f,
-  -1.0f, 0.0f, 0.0f, 0.0f,
+  0.0f, 1.0f, 0.0f, 0.0f,
+  1.0f, 0.0f, 0.0f, 0.0f,
   0.0f, 0.0f, 1.0f, 0.0f,
   0.0f, 0.0f, 0.0f, 1.0f,
 };
