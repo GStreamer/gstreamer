@@ -145,6 +145,7 @@ enum
   PROP_BITRATE,
   PROP_LAST
 };
+static GParamSpec *obj_props[PROP_LAST] = { NULL, };
 
 /* Explanation for buffer levels and percentages:
  *
@@ -335,104 +336,92 @@ gst_queue2_class_init (GstQueue2Class * klass)
   gobject_class->get_property = gst_queue2_get_property;
 
   /* properties */
-  g_object_class_install_property (gobject_class, PROP_CUR_LEVEL_BYTES,
-      g_param_spec_uint ("current-level-bytes", "Current level (kB)",
-          "Current amount of data in the queue (bytes)",
-          0, G_MAXUINT, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_CUR_LEVEL_BUFFERS,
+  obj_props[PROP_CUR_LEVEL_BYTES] = g_param_spec_uint ("current-level-bytes",
+      "Current level (kB)", "Current amount of data in the queue (bytes)",
+      0, G_MAXUINT, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_CUR_LEVEL_BUFFERS] =
       g_param_spec_uint ("current-level-buffers", "Current level (buffers)",
-          "Current number of buffers in the queue",
-          0, G_MAXUINT, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_CUR_LEVEL_TIME,
-      g_param_spec_uint64 ("current-level-time", "Current level (ns)",
-          "Current amount of data in the queue (in ns)",
-          0, G_MAXUINT64, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+      "Current number of buffers in the queue",
+      0, G_MAXUINT, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_CUR_LEVEL_TIME] = g_param_spec_uint64 ("current-level-time",
+      "Current level (ns)", "Current amount of data in the queue (in ns)",
+      0, G_MAXUINT64, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
-  g_object_class_install_property (gobject_class, PROP_MAX_SIZE_BYTES,
-      g_param_spec_uint ("max-size-bytes", "Max. size (kB)",
-          "Max. amount of data in the queue (bytes, 0=disable)",
-          0, G_MAXUINT, DEFAULT_MAX_SIZE_BYTES,
-          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
-          G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_MAX_SIZE_BUFFERS,
-      g_param_spec_uint ("max-size-buffers", "Max. size (buffers)",
-          "Max. number of buffers in the queue (0=disable)", 0, G_MAXUINT,
-          DEFAULT_MAX_SIZE_BUFFERS,
-          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
-          G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_MAX_SIZE_TIME,
-      g_param_spec_uint64 ("max-size-time", "Max. size (ns)",
-          "Max. amount of data in the queue (in ns, 0=disable)", 0, G_MAXUINT64,
-          DEFAULT_MAX_SIZE_TIME, G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
-          G_PARAM_STATIC_STRINGS));
+  obj_props[PROP_MAX_SIZE_BYTES] = g_param_spec_uint ("max-size-bytes",
+      "Max. size (kB)", "Max. amount of data in the queue (bytes, 0=disable)",
+      0, G_MAXUINT, DEFAULT_MAX_SIZE_BYTES,
+      G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_MAX_SIZE_BUFFERS] = g_param_spec_uint ("max-size-buffers",
+      "Max. size (buffers)", "Max. number of buffers in the queue (0=disable)",
+      0, G_MAXUINT, DEFAULT_MAX_SIZE_BUFFERS,
+      G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_MAX_SIZE_TIME] = g_param_spec_uint64 ("max-size-time",
+      "Max. size (ns)", "Max. amount of data in the queue (in ns, 0=disable)",
+      0, G_MAXUINT64, DEFAULT_MAX_SIZE_TIME,
+      G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING | G_PARAM_STATIC_STRINGS);
 
-  g_object_class_install_property (gobject_class, PROP_USE_BUFFERING,
-      g_param_spec_boolean ("use-buffering", "Use buffering",
-          "Emit GST_MESSAGE_BUFFERING based on low-/high-percent thresholds",
-          DEFAULT_USE_BUFFERING, G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
-          G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_USE_TAGS_BITRATE,
-      g_param_spec_boolean ("use-tags-bitrate", "Use bitrate from tags",
-          "Use a bitrate from upstream tags to estimate buffer duration if not provided",
-          DEFAULT_USE_TAGS_BITRATE,
-          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
-          G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_USE_RATE_ESTIMATE,
-      g_param_spec_boolean ("use-rate-estimate", "Use Rate Estimate",
-          "Estimate the bitrate of the stream to calculate time level",
-          DEFAULT_USE_RATE_ESTIMATE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_LOW_PERCENT,
-      g_param_spec_int ("low-percent", "Low percent",
-          "Low threshold for buffering to start. Only used if use-buffering is True "
-          "(Deprecated: use low-watermark instead)",
-          0, 100, DEFAULT_LOW_WATERMARK * 100,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_HIGH_PERCENT,
-      g_param_spec_int ("high-percent", "High percent",
-          "High threshold for buffering to finish. Only used if use-buffering is True "
-          "(Deprecated: use high-watermark instead)",
-          0, 100, DEFAULT_HIGH_WATERMARK * 100,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_LOW_WATERMARK,
-      g_param_spec_double ("low-watermark", "Low watermark",
-          "Low threshold for buffering to start. Only used if use-buffering is True",
-          0.0, 1.0, DEFAULT_LOW_WATERMARK,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_HIGH_WATERMARK,
-      g_param_spec_double ("high-watermark", "High watermark",
-          "High threshold for buffering to finish. Only used if use-buffering is True",
-          0.0, 1.0, DEFAULT_HIGH_WATERMARK,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  obj_props[PROP_USE_BUFFERING] = g_param_spec_boolean ("use-buffering",
+      "Use buffering",
+      "Emit GST_MESSAGE_BUFFERING based on low-/high-percent thresholds",
+      DEFAULT_USE_BUFFERING,
+      G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_USE_TAGS_BITRATE] = g_param_spec_boolean ("use-tags-bitrate",
+      "Use bitrate from tags",
+      "Use a bitrate from upstream tags to estimate buffer duration if not provided",
+      DEFAULT_USE_TAGS_BITRATE,
+      G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_USE_RATE_ESTIMATE] = g_param_spec_boolean ("use-rate-estimate",
+      "Use Rate Estimate",
+      "Estimate the bitrate of the stream to calculate time level",
+      DEFAULT_USE_RATE_ESTIMATE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_LOW_PERCENT] = g_param_spec_int ("low-percent", "Low percent",
+      "Low threshold for buffering to start. Only used if use-buffering is True "
+      "(Deprecated: use low-watermark instead)",
+      0, 100, DEFAULT_LOW_WATERMARK * 100,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_HIGH_PERCENT] = g_param_spec_int ("high-percent",
+      "High percent",
+      "High threshold for buffering to finish. Only used if use-buffering is True "
+      "(Deprecated: use high-watermark instead)",
+      0, 100, DEFAULT_HIGH_WATERMARK * 100,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_LOW_WATERMARK] = g_param_spec_double ("low-watermark",
+      "Low watermark",
+      "Low threshold for buffering to start. Only used if use-buffering is True",
+      0.0, 1.0, DEFAULT_LOW_WATERMARK,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  obj_props[PROP_HIGH_WATERMARK] = g_param_spec_double ("high-watermark",
+      "High watermark",
+      "High threshold for buffering to finish. Only used if use-buffering is True",
+      0.0, 1.0, DEFAULT_HIGH_WATERMARK,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
-  g_object_class_install_property (gobject_class, PROP_TEMP_TEMPLATE,
-      g_param_spec_string ("temp-template", "Temporary File Template",
-          "File template to store temporary files in, should contain directory "
-          "and XXXXXX. (NULL == disabled)",
-          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  obj_props[PROP_TEMP_TEMPLATE] = g_param_spec_string ("temp-template",
+      "Temporary File Template",
+      "File template to store temporary files in, should contain directory "
+      "and XXXXXX. (NULL == disabled)",
+      NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
-  g_object_class_install_property (gobject_class, PROP_TEMP_LOCATION,
-      g_param_spec_string ("temp-location", "Temporary File Location",
-          "Location to store temporary files in (Only read this property, "
-          "use temp-template to configure the name template)",
-          NULL, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_USE_BITRATE_QUERY,
-      g_param_spec_boolean ("use-bitrate-query",
-          "Use bitrate from downstream query",
-          "Use a bitrate from a downstream query to estimate buffer duration if not provided",
-          DEFAULT_USE_BITRATE_QUERY,
-          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
-          G_PARAM_STATIC_STRINGS));
+  obj_props[PROP_TEMP_LOCATION] = g_param_spec_string ("temp-location",
+      "Temporary File Location",
+      "Location to store temporary files in (Only read this property, "
+      "use temp-template to configure the name template)",
+      NULL, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+
+  obj_props[PROP_USE_BITRATE_QUERY] = g_param_spec_boolean ("use-bitrate-query",
+      "Use bitrate from downstream query",
+      "Use a bitrate from a downstream query to estimate buffer duration if not provided",
+      DEFAULT_USE_BITRATE_QUERY,
+      G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING | G_PARAM_STATIC_STRINGS);
 
   /**
    * GstQueue2:temp-remove
    *
    * When temp-template is set, remove the temporary file when going to READY.
    */
-  g_object_class_install_property (gobject_class, PROP_TEMP_REMOVE,
-      g_param_spec_boolean ("temp-remove", "Remove the Temporary File",
-          "Remove the temp-location after use",
-          DEFAULT_TEMP_REMOVE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  obj_props[PROP_TEMP_REMOVE] = g_param_spec_boolean ("temp-remove",
+      "Remove the Temporary File", "Remove the temp-location after use",
+      DEFAULT_TEMP_REMOVE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   /**
    * GstQueue2:ring-buffer-max-size
@@ -440,22 +429,21 @@ gst_queue2_class_init (GstQueue2Class * klass)
    * The maximum size of the ring buffer in bytes. If set to 0, the ring
    * buffer is disabled. Default 0.
    */
-  g_object_class_install_property (gobject_class, PROP_RING_BUFFER_MAX_SIZE,
+  obj_props[PROP_RING_BUFFER_MAX_SIZE] =
       g_param_spec_uint64 ("ring-buffer-max-size",
-          "Max. ring buffer size (bytes)",
-          "Max. amount of data in the ring buffer (bytes, 0 = disabled)",
-          0, G_MAXUINT64, DEFAULT_RING_BUFFER_MAX_SIZE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      "Max. ring buffer size (bytes)",
+      "Max. amount of data in the ring buffer (bytes, 0 = disabled)",
+      0, G_MAXUINT64, DEFAULT_RING_BUFFER_MAX_SIZE,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   /**
    * GstQueue2:avg-in-rate
    *
    * The average input data rate.
    */
-  g_object_class_install_property (gobject_class, PROP_AVG_IN_RATE,
-      g_param_spec_int64 ("avg-in-rate", "Input data rate (bytes/s)",
-          "Average input data rate (bytes/s)",
-          0, G_MAXINT64, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+  obj_props[PROP_AVG_IN_RATE] = g_param_spec_int64 ("avg-in-rate",
+      "Input data rate (bytes/s)", "Average input data rate (bytes/s)",
+      0, G_MAXINT64, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
   /**
    * GstQueue2:bitrate
@@ -464,10 +452,11 @@ gst_queue2_class_init (GstQueue2Class * klass)
    * the size of the queue.  Values are taken from either the upstream tags
    * or from the downstream bitrate query.
    */
-  g_object_class_install_property (gobject_class, PROP_BITRATE,
-      g_param_spec_uint64 ("bitrate", "Bitrate (bits/s)",
-          "Conversion value between data size and time",
-          0, G_MAXUINT64, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+  obj_props[PROP_BITRATE] = g_param_spec_uint64 ("bitrate", "Bitrate (bits/s)",
+      "Conversion value between data size and time",
+      0, G_MAXUINT64, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+
+  g_object_class_install_properties (gobject_class, PROP_LAST, obj_props);
 
   /* set several parent class virtual functions */
   gobject_class->finalize = gst_queue2_finalize;
@@ -851,7 +840,7 @@ query_downstream_bitrate (GstQueue2 * queue)
   queue->downstream_bitrate = downstream_bitrate;
   GST_QUEUE2_MUTEX_UNLOCK (queue);
 
-  g_object_notify (G_OBJECT (queue), "bitrate");
+  g_object_notify_by_pspec (G_OBJECT (queue), obj_props[PROP_BITRATE]);
 }
 
 /* take a buffer and update segment, updating the time level of the queue. */
@@ -1772,7 +1761,7 @@ gst_queue2_open_temp_location_file (GstQueue2 * queue)
   GST_QUEUE2_MUTEX_UNLOCK (queue);
 
   /* we can't emit the notify with the lock */
-  g_object_notify (G_OBJECT (queue), "temp-location");
+  g_object_notify_by_pspec (G_OBJECT (queue), obj_props[PROP_TEMP_LOCATION]);
 
   GST_QUEUE2_MUTEX_LOCK (queue);
 
@@ -2603,7 +2592,7 @@ gst_queue2_handle_sink_event (GstPad * pad, GstObject * parent,
 
         gst_event_unref (event);
       }
-      g_object_notify (G_OBJECT (queue), "bitrate");
+      g_object_notify_by_pspec (G_OBJECT (queue), obj_props[PROP_BITRATE]);
       break;
     }
     case GST_EVENT_TAG:{
@@ -2618,7 +2607,7 @@ gst_queue2_handle_sink_event (GstPad * pad, GstObject * parent,
           queue->sink_tags_bitrate = bitrate;
           GST_QUEUE2_MUTEX_UNLOCK (queue);
           GST_LOG_OBJECT (queue, "Sink pad bitrate from tags now %u", bitrate);
-          g_object_notify (G_OBJECT (queue), "bitrate");
+          g_object_notify_by_pspec (G_OBJECT (queue), obj_props[PROP_BITRATE]);
         }
       }
       /* Fall-through */
@@ -2687,7 +2676,7 @@ gst_queue2_handle_sink_event (GstPad * pad, GstObject * parent,
         GST_QUEUE2_MUTEX_UNLOCK (queue);
         gst_queue2_post_buffering (queue);
         if (bitrate_changed)
-          g_object_notify (G_OBJECT (queue), "bitrate");
+          g_object_notify_by_pspec (G_OBJECT (queue), obj_props[PROP_BITRATE]);
       } else {
         /* non-serialized events are passed downstream. */
         ret = gst_pad_push_event (queue->srcpad, event);
@@ -3053,7 +3042,7 @@ next:
           queue->src_tags_bitrate = bitrate;
           GST_QUEUE2_MUTEX_UNLOCK (queue);
           GST_LOG_OBJECT (queue, "src pad bitrate from tags now %u", bitrate);
-          g_object_notify (G_OBJECT (queue), "bitrate");
+          g_object_notify_by_pspec (G_OBJECT (queue), obj_props[PROP_BITRATE]);
         }
       }
     }
