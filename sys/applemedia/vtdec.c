@@ -545,6 +545,9 @@ gst_vtdec_create_session (GstVtdec * vtdec, GstVideoFormat format,
       videoDecoderSpecification, output_image_buffer_attrs, &callback,
       &vtdec->session);
 
+  if (videoDecoderSpecification)
+    CFRelease (videoDecoderSpecification);
+
   CFRelease (output_image_buffer_attrs);
 
   return status;
@@ -606,6 +609,9 @@ create_format_description_from_codec_data (GstVtdec * vtdec,
   status = CMVideoFormatDescriptionCreate (NULL,
       cm_format, vtdec->video_info.width, vtdec->video_info.height,
       extensions, &fmt_desc);
+
+  if (extensions)
+    CFRelease (extensions);
 
   if (status == noErr)
     return fmt_desc;
