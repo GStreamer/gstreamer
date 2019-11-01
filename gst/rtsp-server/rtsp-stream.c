@@ -4451,9 +4451,17 @@ update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
   const GstRTSPTransport *tr;
   gchar *dest;
   gint min, max;
+  GList *tr_element;
 
   tr = gst_rtsp_stream_transport_get_transport (trans);
   dest = tr->destination;
+
+  tr_element = g_list_find (priv->transports, trans);
+
+  if (add && tr_element)
+    return TRUE;
+  else if (!add && !tr_element)
+    return FALSE;
 
   switch (tr->lower_transport) {
     case GST_RTSP_LOWER_TRANS_UDP_MCAST:
@@ -4483,9 +4491,9 @@ update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
         if (!remove_mcast_client_addr (stream, dest, min, max))
           GST_WARNING_OBJECT (stream,
               "Failed to remove multicast address: %s:%d-%d", dest, min, max);
+        priv->transports = g_list_delete_link (priv->transports, tr_element);
         remove_client (priv->mcast_udpsink[0], priv->mcast_udpsink[1], dest,
             min, max);
-        priv->transports = g_list_remove (priv->transports, trans);
       }
       break;
     }
@@ -4507,8 +4515,8 @@ update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
         priv->transports = g_list_prepend (priv->transports, trans);
       } else {
         GST_INFO ("removing %s:%d-%d", dest, min, max);
+        priv->transports = g_list_delete_link (priv->transports, tr_element);
         remove_client (priv->udpsink[0], priv->udpsink[1], dest, min, max);
-        priv->transports = g_list_remove (priv->transports, trans);
       }
       priv->transports_cookie++;
       break;
@@ -4520,7 +4528,7 @@ update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
         priv->n_tcp_transports++;
       } else {
         GST_INFO ("removing TCP %s", tr->destination);
-        priv->transports = g_list_remove (priv->transports, trans);
+        priv->transports = g_list_delete_link (priv->transports, tr_element);
         priv->n_tcp_transports--;
       }
       priv->transports_cookie++;
@@ -4601,7 +4609,8 @@ on_message_sent (GstRTSPStreamTransport * trans, gpointer user_data)
  * @trans: (transfer none): a #GstRTSPStreamTransport
  *
  * Add the transport in @trans to @stream. The media of @stream will
- * then also be send to the values configured in @trans.
+ * then also be send to the values configured in @trans. Adding the
+ * same transport twice will not add it a second time.
  *
  * @stream must be joined to a bin.
  *

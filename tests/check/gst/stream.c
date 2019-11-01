@@ -575,6 +575,72 @@ GST_START_TEST (test_multicast_client_address_invalid)
 
 GST_END_TEST;
 
+static void
+add_transports (gboolean add_twice)
+{
+  GstRTSPTransport *transport;
+  GstRTSPStream *stream;
+  GstRTSPStreamTransport *tr;
+  GstPad *srcpad;
+  GstElement *pay;
+  GstBin *bin;
+  GstElement *rtpbin;
+
+  fail_unless (gst_rtsp_transport_new (&transport) == GST_RTSP_OK);
+  transport->lower_transport = GST_RTSP_LOWER_TRANS_TCP;
+  transport->destination = g_strdup ("127.0.0.1");
+  srcpad = gst_pad_new ("testsrcpad", GST_PAD_SRC);
+  fail_unless (srcpad != NULL);
+  pay = gst_element_factory_make ("rtpgstpay", "testpayloader");
+  fail_unless (pay != NULL);
+  stream = gst_rtsp_stream_new (0, pay, srcpad);
+  fail_unless (stream != NULL);
+  gst_object_unref (pay);
+  gst_object_unref (srcpad);
+  rtpbin = gst_element_factory_make ("rtpbin", "testrtpbin");
+  fail_unless (rtpbin != NULL);
+  bin = GST_BIN (gst_bin_new ("testbin"));
+  fail_unless (bin != NULL);
+  fail_unless (gst_bin_add (bin, rtpbin));
+
+  /* TCP transport */
+  gst_rtsp_stream_set_protocols (stream, GST_RTSP_LOWER_TRANS_TCP);
+  fail_unless (gst_rtsp_stream_join_bin (stream, bin, rtpbin, GST_STATE_NULL));
+
+  tr = gst_rtsp_stream_transport_new (stream, transport);
+  fail_unless (tr);
+
+  if (add_twice) {
+    fail_unless (gst_rtsp_stream_add_transport (stream, tr));
+    fail_unless (gst_rtsp_stream_add_transport (stream, tr));
+    fail_unless (gst_rtsp_stream_remove_transport (stream, tr));
+  } else {
+    fail_unless (gst_rtsp_stream_add_transport (stream, tr));
+    fail_unless (gst_rtsp_stream_remove_transport (stream, tr));
+    fail_if (gst_rtsp_stream_remove_transport (stream, tr));
+  }
+
+  fail_unless (gst_rtsp_transport_free (transport) == GST_RTSP_OK);
+  fail_unless (gst_rtsp_stream_leave_bin (stream, bin, rtpbin));
+  gst_object_unref (bin);
+  gst_object_unref (stream);
+}
+
+
+GST_START_TEST (test_add_transport_twice)
+{
+  add_transports (TRUE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_remove_transport_twice)
+{
+  add_transports (FALSE);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtspstream_suite (void)
 {
@@ -592,6 +658,8 @@ rtspstream_suite (void)
   tcase_add_test (tc, test_tcp_transport);
   tcase_add_test (tc, test_multicast_client_address);
   tcase_add_test (tc, test_multicast_client_address_invalid);
+  tcase_add_test (tc, test_add_transport_twice);
+  tcase_add_test (tc, test_remove_transport_twice);
 
   return s;
 }

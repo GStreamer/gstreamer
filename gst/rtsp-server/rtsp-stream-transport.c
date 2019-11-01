@@ -28,7 +28,7 @@
  * to handle the RTP and RTCP packets from the stream, for example when they
  * need to be sent over TCP.
  *
- * With  gst_rtsp_stream_transport_set_active() the transports are added and
+ * With gst_rtsp_stream_transport_set_active() the transports are added and
  * removed from the stream.
  *
  * A #GstRTSPStream will call gst_rtsp_stream_transport_keep_alive() when RTCP
@@ -71,7 +71,6 @@ struct _GstRTSPStreamTransportPrivate
   GstRTSPKeepAliveFunc keep_alive;
   gpointer ka_user_data;
   GDestroyNotify ka_notify;
-  gboolean active;
   gboolean timed_out;
 
   GstRTSPMessageSentFunc message_sent;
@@ -526,16 +525,10 @@ gst_rtsp_stream_transport_set_active (GstRTSPStreamTransport * trans,
 
   priv = trans->priv;
 
-  if (priv->active == active)
-    return FALSE;
-
   if (active)
     res = gst_rtsp_stream_add_transport (priv->stream, trans);
   else
     res = gst_rtsp_stream_remove_transport (priv->stream, trans);
-
-  if (res)
-    priv->active = active;
 
   return res;
 }
