@@ -96,6 +96,277 @@ fetch_nal (GstBuffer * buffer, gsize * offset)
   return ret;
 }
 
+GST_START_TEST (test_depayloader_fragment_and_single)
+{
+  GstHarness *h;
+  GstBuffer *in;
+  const gint DATA_LEN = sizeof (guint32) + 10;
+  struct avtp_stream_pdu *pdu;
+  GstMapInfo map;
+
+  /* Create the harness for the avtpcvfpay */
+  h = gst_harness_new_parse ("avtpcvfdepay ! fakesink num-buffers=1");
+  gst_harness_set_src_caps_str (h, "application/x-avtp");
+
+  /* Create the input AVTPDU */
+  in = gst_harness_create_buffer (h, AVTP_CVF_H264_HEADER_SIZE + 10);
+  gst_buffer_map (in, &map, GST_MAP_READWRITE);
+  pdu = (struct avtp_stream_pdu *) map.data;
+
+  /* Start with a single NAL */
+  avtp_cvf_pdu_init (pdu, AVTP_CVF_FORMAT_SUBTYPE_H264);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_STREAM_ID, STREAM_ID);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_TV, 0);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_M, 0);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_TIMESTAMP, 0);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_H264_PTV, 1);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_H264_TIMESTAMP, 2000000);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_STREAM_DATA_LEN, DATA_LEN);
+  map.data[AVTP_CVF_H264_HEADER_SIZE] = 0x1;
+  gst_buffer_unmap (in, &map);
+
+  /* We push a copy so that we can change only what is necessary on our buffer */
+  fail_unless_equals_int (gst_harness_push (h, gst_buffer_copy (in)),
+      GST_FLOW_OK);
+  fail_unless (gst_harness_try_pull (h) == NULL);
+
+  /* Then a fragment */
+  gst_buffer_map (in, &map, GST_MAP_READWRITE);
+  pdu = (struct avtp_stream_pdu *) map.data;
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_SEQ_NUM, 1);
+  map.data[AVTP_CVF_H264_HEADER_SIZE] = 3 << 5 | 28;    /* NAL type FU-A, NRI 3 */
+  map.data[AVTP_CVF_H264_HEADER_SIZE + 1] = (1 << 7) | 4;       /* S = 1, type 4 */
+  gst_buffer_unmap (in, &map);
+
+  fail_unless_equals_int (gst_harness_push (h, gst_buffer_copy (in)),
+      GST_FLOW_OK);
+
+  /* Third and last AVTPDU, again a single NAL */
+  gst_buffer_map (in, &map, GST_MAP_READWRITE);
+  pdu = (struct avtp_stream_pdu *) map.data;
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_TV, 1);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_TIMESTAMP, 1000000);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_M, 1);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_SEQ_NUM, 2);
+  map.data[AVTP_CVF_H264_HEADER_SIZE] = 0x1;
+  gst_buffer_unmap (in, &map);
+
+  fail_unless_equals_int (gst_harness_push (h, gst_buffer_copy (in)),
+      GST_FLOW_EOS);
+
+  gst_buffer_unref (in);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_depayloader_fragmented_two_start_eos)
+{
+  GstHarness *h;
+  GstBuffer *in;
+  const gint DATA_LEN = sizeof (guint32) + 10;
+  struct avtp_stream_pdu *pdu;
+  GstMapInfo map;
+
+  /* Create the harness for the avtpcvfpay */
+  h = gst_harness_new_parse ("avtpcvfdepay ! fakesink num-buffers=1");
+  gst_harness_set_src_caps_str (h, "application/x-avtp");
+
+  /* Create the input AVTPDU */
+  in = gst_harness_create_buffer (h, AVTP_CVF_H264_HEADER_SIZE + 10);
+  gst_buffer_map (in, &map, GST_MAP_READWRITE);
+  pdu = (struct avtp_stream_pdu *) map.data;
+
+  /* Start with a single NAL */
+  avtp_cvf_pdu_init (pdu, AVTP_CVF_FORMAT_SUBTYPE_H264);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_STREAM_ID, STREAM_ID);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_TV, 0);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_M, 0);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_TIMESTAMP, 0);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_H264_PTV, 1);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_H264_TIMESTAMP, 2000000);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_STREAM_DATA_LEN, DATA_LEN);
+  map.data[AVTP_CVF_H264_HEADER_SIZE] = 0x1;
+  gst_buffer_unmap (in, &map);
+
+  /* We push a copy so that we can change only what is necessary on our buffer */
+  fail_unless_equals_int (gst_harness_push (h, gst_buffer_copy (in)),
+      GST_FLOW_OK);
+  fail_unless (gst_harness_try_pull (h) == NULL);
+
+  /* Then a fragment */
+  gst_buffer_map (in, &map, GST_MAP_READWRITE);
+  pdu = (struct avtp_stream_pdu *) map.data;
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_SEQ_NUM, 1);
+  map.data[AVTP_CVF_H264_HEADER_SIZE] = 3 << 5 | 28;    /* NAL type FU-A, NRI 3 */
+  map.data[AVTP_CVF_H264_HEADER_SIZE + 1] = (1 << 7) | 4;       /* S = 1, type 4 */
+  gst_buffer_unmap (in, &map);
+
+  fail_unless_equals_int (gst_harness_push (h, gst_buffer_copy (in)),
+      GST_FLOW_OK);
+
+  /* Third and last AVTPDU, another fragment with start bit set */
+  gst_buffer_map (in, &map, GST_MAP_READWRITE);
+  pdu = (struct avtp_stream_pdu *) map.data;
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_TV, 1);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_TIMESTAMP, 1000000);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_M, 1);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_SEQ_NUM, 2);
+  map.data[AVTP_CVF_H264_HEADER_SIZE + 1] = (1 << 7) | 4;       /* S = 1, type 4 */
+  fill_nal (&map.data[AVTP_CVF_H264_HEADER_SIZE + 2], 8, 16);
+  gst_buffer_unmap (in, &map);
+
+  fail_unless_equals_int (gst_harness_push (h, gst_buffer_copy (in)),
+      GST_FLOW_EOS);
+
+  gst_buffer_unref (in);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_depayloader_multiple_lost_eos)
+{
+  GstHarness *h;
+  GstBuffer *in;
+  const gint DATA_LEN = sizeof (guint32) + 4;
+  struct avtp_stream_pdu *pdu;
+  GstMapInfo map;
+
+  /* Create the harness for the avtpcvfpay */
+  h = gst_harness_new_parse ("avtpcvfdepay ! fakesink num-buffers=1");
+  gst_harness_set_src_caps_str (h, "application/x-avtp");
+
+  /* Create the input AVTPDU header */
+  in = gst_harness_create_buffer (h, AVTP_CVF_H264_HEADER_SIZE + 4);
+  gst_buffer_map (in, &map, GST_MAP_READWRITE);
+  pdu = (struct avtp_stream_pdu *) map.data;
+
+  avtp_cvf_pdu_init (pdu, AVTP_CVF_FORMAT_SUBTYPE_H264);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_STREAM_ID, STREAM_ID);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_TV, 1);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_M, 0);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_TIMESTAMP, 1000000);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_H264_PTV, 1);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_H264_TIMESTAMP, 2000000);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_STREAM_DATA_LEN, DATA_LEN);
+  map.data[AVTP_CVF_H264_HEADER_SIZE] = 0x7;    /* Add NAL type */
+  fill_nal (&map.data[AVTP_CVF_H264_HEADER_SIZE + 1], 3, 0);
+  gst_buffer_unmap (in, &map);
+
+  /* We push a copy so that we can change only what is necessary on our buffer */
+  gst_harness_push (h, gst_buffer_copy (in));
+  fail_unless (gst_harness_try_pull (h) == NULL);
+
+  /* Send second AVTPDU, but skipping one seqnum */
+  gst_buffer_map (in, &map, GST_MAP_READWRITE);
+  pdu = (struct avtp_stream_pdu *) map.data;
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_SEQ_NUM, 2);
+  map.data[AVTP_CVF_H264_HEADER_SIZE] = 0x1;    /* Add NAL type */
+  fill_nal (&map.data[AVTP_CVF_H264_HEADER_SIZE + 1], 3, 0);
+  gst_buffer_unmap (in, &map);
+
+  fail_unless_equals_int (gst_harness_push (h, gst_buffer_copy (in)),
+      GST_FLOW_EOS);
+
+  gst_buffer_unref (in);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_depayloader_fragmented_eos)
+{
+  GstHarness *h;
+  GstBuffer *in;
+  const gint DATA_LEN = sizeof (guint32) + 10;
+  struct avtp_stream_pdu *pdu;
+  GstMapInfo map;
+
+  /* Create the harness for the avtpcvfpay */
+  h = gst_harness_new_parse ("avtpcvfdepay ! fakesink num-buffers=1");
+  gst_harness_set_src_caps_str (h, "application/x-avtp");
+
+  /* Create the input AVTPDU */
+  in = gst_harness_create_buffer (h, AVTP_CVF_H264_HEADER_SIZE + 10);
+  gst_buffer_map (in, &map, GST_MAP_READWRITE);
+  pdu = (struct avtp_stream_pdu *) map.data;
+
+  avtp_cvf_pdu_init (pdu, AVTP_CVF_FORMAT_SUBTYPE_H264);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_STREAM_ID, STREAM_ID);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_TV, 0);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_M, 0);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_TIMESTAMP, 0);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_H264_PTV, 1);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_H264_TIMESTAMP, 2000000);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_STREAM_DATA_LEN, DATA_LEN);
+  map.data[AVTP_CVF_H264_HEADER_SIZE] = 3 << 5 | 28;    /* NAL type FU-A, NRI 3 */
+  map.data[AVTP_CVF_H264_HEADER_SIZE + 1] = (1 << 7) | 4;       /* S = 1, type 4 */
+  fill_nal (&map.data[AVTP_CVF_H264_HEADER_SIZE + 2], 8, 0);
+  gst_buffer_unmap (in, &map);
+
+  /* We push a copy so that we can change only what is necessary on our buffer */
+  fail_unless_equals_int (gst_harness_push (h, gst_buffer_copy (in)),
+      GST_FLOW_OK);
+  fail_unless (gst_harness_try_pull (h) == NULL);
+
+  /* Send second and last AVTPDU */
+  gst_buffer_map (in, &map, GST_MAP_READWRITE);
+  pdu = (struct avtp_stream_pdu *) map.data;
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_TV, 1);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_TIMESTAMP, 1000000);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_M, 1);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_SEQ_NUM, 1);
+  map.data[AVTP_CVF_H264_HEADER_SIZE + 1] = (1 << 6) | 4;       /* E = 1, type 4 */
+  fill_nal (&map.data[AVTP_CVF_H264_HEADER_SIZE + 2], 8, 16);
+  gst_buffer_unmap (in, &map);
+
+  fail_unless_equals_int (gst_harness_push (h, gst_buffer_copy (in)),
+      GST_FLOW_EOS);
+
+  gst_buffer_unref (in);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+/* Tests a big fragmented NAL scenario */
+GST_START_TEST (test_depayloader_single_eos)
+{
+  GstHarness *h;
+  GstBuffer *in;
+  const gint DATA_LEN = sizeof (guint32) + 4;
+  struct avtp_stream_pdu *pdu;
+  GstMapInfo map;
+
+  /* Create the harness for the avtpcvfpay */
+  h = gst_harness_new_parse ("avtpcvfdepay ! fakesink num-buffers=1");
+  gst_harness_set_src_caps_str (h, "application/x-avtp");
+
+  /* Create the input AVTPDU header */
+  in = gst_harness_create_buffer (h, AVTP_CVF_H264_HEADER_SIZE + 4);
+  gst_buffer_map (in, &map, GST_MAP_READWRITE);
+  pdu = (struct avtp_stream_pdu *) map.data;
+
+  avtp_cvf_pdu_init (pdu, AVTP_CVF_FORMAT_SUBTYPE_H264);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_STREAM_ID, STREAM_ID);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_TV, 1);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_M, 1);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_TIMESTAMP, 1000000);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_H264_PTV, 1);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_H264_TIMESTAMP, 2000000);
+  avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_STREAM_DATA_LEN, DATA_LEN);
+  map.data[AVTP_CVF_H264_HEADER_SIZE] = 0x1;    /* Add NAL type */
+  fill_nal (&map.data[AVTP_CVF_H264_HEADER_SIZE + 1], 3, 0);
+  gst_buffer_unmap (in, &map);
+
+  fail_unless_equals_int (gst_harness_push (h, in), GST_FLOW_EOS);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_depayloader_invalid_avtpdu)
 {
   GstHarness *h;
@@ -1198,6 +1469,11 @@ avtpcvfdepay_suite (void)
   tcase_add_test (tc_chain, test_depayloader_single_and_messed_fragments_2);
   tcase_add_test (tc_chain, test_depayloader_single_and_messed_fragments_3);
   tcase_add_test (tc_chain, test_depayloader_invalid_avtpdu);
+  tcase_add_test (tc_chain, test_depayloader_single_eos);
+  tcase_add_test (tc_chain, test_depayloader_fragmented_eos);
+  tcase_add_test (tc_chain, test_depayloader_fragmented_two_start_eos);
+  tcase_add_test (tc_chain, test_depayloader_multiple_lost_eos);
+  tcase_add_test (tc_chain, test_depayloader_fragment_and_single);
 
   return s;
 }

@@ -145,11 +145,12 @@ gst_avtp_cvf_depay_push_caps (GstAvtpCvfDepay * avtpcvfdepay)
   return gst_pad_push_event (avtpbasedepayload->srcpad, event);
 }
 
-static void
+static GstFlowReturn
 gst_avtp_cvf_depay_push (GstAvtpCvfDepay * avtpcvfdepay)
 {
   GstAvtpBaseDepayload *avtpbasedepayload =
       GST_AVTP_BASE_DEPAYLOAD (avtpcvfdepay);
+  GstFlowReturn ret;
 
   if (G_UNLIKELY (!gst_pad_has_current_caps (avtpbasedepayload->srcpad))) {
     guint64 pts_m;
@@ -169,7 +170,7 @@ gst_avtp_cvf_depay_push (GstAvtpCvfDepay * avtpcvfdepay)
 
     if (!gst_avtp_cvf_depay_push_caps (avtpcvfdepay)) {
       GST_ELEMENT_ERROR (avtpcvfdepay, CORE, CAPS, (NULL), (NULL));
-      return;
+      return GST_FLOW_ERROR;
     }
 
     if (!gst_avtp_base_depayload_push_segment_event (avtpbasedepayload,
@@ -231,19 +232,23 @@ gst_avtp_cvf_depay_push (GstAvtpCvfDepay * avtpcvfdepay)
    * next calculations of PTS/DTS won't wrap too early */
   avtpbasedepayload->prev_ptime = GST_BUFFER_DTS (avtpcvfdepay->out_buffer);
 
-  gst_pad_push (GST_AVTP_BASE_DEPAYLOAD (avtpcvfdepay)->srcpad,
+  ret = gst_pad_push (GST_AVTP_BASE_DEPAYLOAD (avtpcvfdepay)->srcpad,
       avtpcvfdepay->out_buffer);
   avtpcvfdepay->out_buffer = NULL;
+
+  return ret;
 }
 
-static void
+static GstFlowReturn
 gst_avtp_cvf_depay_push_and_discard (GstAvtpCvfDepay * avtpcvfdepay)
 {
+  GstFlowReturn ret = GST_FLOW_OK;
+
   /* Push everything we have, hopefully decoder can handle it */
   if (avtpcvfdepay->out_buffer != NULL) {
     GST_DEBUG_OBJECT (avtpcvfdepay, "Pushing incomplete buffers");
 
-    gst_avtp_cvf_depay_push (avtpcvfdepay);
+    ret = gst_avtp_cvf_depay_push (avtpcvfdepay);
   }
 
   /* Discard any incomplete fragments */
@@ -252,11 +257,13 @@ gst_avtp_cvf_depay_push_and_discard (GstAvtpCvfDepay * avtpcvfdepay)
     gst_buffer_unref (avtpcvfdepay->fragments);
     avtpcvfdepay->fragments = NULL;
   }
+
+  return ret;
 }
 
 static gboolean
 gst_avtp_cvf_depay_validate_avtpdu (GstAvtpCvfDepay * avtpcvfdepay,
-    GstMapInfo * map)
+    GstMapInfo * map, gboolean * lost_packet)
 {
   GstAvtpBaseDepayload *avtpbasedepayload =
       GST_AVTP_BASE_DEPAYLOAD (avtpcvfdepay);
@@ -335,6 +342,7 @@ gst_avtp_cvf_depay_validate_avtpdu (GstAvtpCvfDepay * avtpcvfdepay,
     goto end;
   }
 
+  *lost_packet = FALSE;
   r = avtp_cvf_pdu_get (pdu, AVTP_CVF_FIELD_SEQ_NUM, &val);
   g_assert (r == 0);
   if (G_UNLIKELY (val != avtpcvfdepay->seqnum)) {
@@ -345,7 +353,7 @@ gst_avtp_cvf_depay_validate_avtpdu (GstAvtpCvfDepay * avtpcvfdepay,
     avtpcvfdepay->seqnum = val;
     /* This is not a reason to drop the packet, but it may be a good moment
      * to push everything we have - maybe we lost the M packet? */
-    gst_avtp_cvf_depay_push_and_discard (avtpcvfdepay);
+    *lost_packet = TRUE;
   }
   avtpcvfdepay->seqnum++;
 
@@ -404,10 +412,12 @@ gst_avtp_cvf_depay_get_avtp_timestamps (GstAvtpCvfDepay * avtpcvfdepay,
   }
 }
 
-static void
+static GstFlowReturn
 gst_avtp_cvf_depay_internal_push (GstAvtpCvfDepay * avtpcvfdepay,
     GstBuffer * buffer, gboolean M)
 {
+  GstFlowReturn ret = GST_FLOW_OK;
+
   GST_LOG_OBJECT (avtpcvfdepay,
       "Adding buffer of size %lu (nalu size %lu) to out_buffer",
       gst_buffer_get_size (buffer),
@@ -422,8 +432,10 @@ gst_avtp_cvf_depay_internal_push (GstAvtpCvfDepay * avtpcvfdepay,
 
   /* We only truly push to decoder when we get the last video buffer */
   if (M) {
-    gst_avtp_cvf_depay_push (avtpcvfdepay);
+    ret = gst_avtp_cvf_depay_push (avtpcvfdepay);
   }
+
+  return ret;
 }
 
 static void
@@ -507,7 +519,7 @@ gst_avtp_cvf_depay_process_last_fragment (GstAvtpCvfDepay * avtpcvfdepay,
   GST_BUFFER_DTS (nal) = dts;
 
   gst_avtp_cvf_depay_get_M (avtpcvfdepay, map, &M);
-  gst_avtp_cvf_depay_internal_push (avtpcvfdepay, nal, M);
+  ret = gst_avtp_cvf_depay_internal_push (avtpcvfdepay, nal, M);
 
   avtpcvfdepay->fragments = NULL;
 
@@ -530,7 +542,7 @@ gst_avtp_cvf_depay_handle_fu_a (GstAvtpCvfDepay * avtpcvfdepay,
     GST_ERROR_OBJECT (avtpcvfdepay,
         "Buffer too small to contain fragment headers, size: %lu",
         map->size - AVTP_CVF_H264_HEADER_SIZE);
-    gst_avtp_cvf_depay_push_and_discard (avtpcvfdepay);
+    ret = gst_avtp_cvf_depay_push_and_discard (avtpcvfdepay);
     goto end;
   }
 
@@ -552,7 +564,7 @@ gst_avtp_cvf_depay_handle_fu_a (GstAvtpCvfDepay * avtpcvfdepay,
   if (G_UNLIKELY (start && end)) {
     GST_ERROR_OBJECT (avtpcvfdepay,
         "Invalid fragment header - 'start' and 'end' bits set");
-    gst_avtp_cvf_depay_push_and_discard (avtpcvfdepay);
+    ret = gst_avtp_cvf_depay_push_and_discard (avtpcvfdepay);
     goto end;
   }
 
@@ -566,7 +578,9 @@ gst_avtp_cvf_depay_handle_fu_a (GstAvtpCvfDepay * avtpcvfdepay,
     if (G_UNLIKELY (avtpcvfdepay->fragments != NULL)) {
       GST_DEBUG_OBJECT (avtpcvfdepay,
           "Received starting fragment, but previous one is not complete. Dropping old fragment");
-      gst_avtp_cvf_depay_push_and_discard (avtpcvfdepay);
+      ret = gst_avtp_cvf_depay_push_and_discard (avtpcvfdepay);
+      if (ret != GST_FLOW_OK)
+        goto end;
     }
 
     avtpcvfdepay->fragments =
@@ -578,7 +592,7 @@ gst_avtp_cvf_depay_handle_fu_a (GstAvtpCvfDepay * avtpcvfdepay,
     if (G_UNLIKELY (avtpcvfdepay->fragments == NULL)) {
       GST_DEBUG_OBJECT (avtpcvfdepay,
           "Received intermediate fragment, but no start fragment received. Dropping it.");
-      gst_avtp_cvf_depay_push_and_discard (avtpcvfdepay);
+      ret = gst_avtp_cvf_depay_push_and_discard (avtpcvfdepay);
       goto end;
     }
     gst_buffer_copy_into (avtpcvfdepay->fragments, avtpdu,
@@ -608,9 +622,13 @@ gst_avtp_cvf_depay_handle_single_nal (GstAvtpCvfDepay * avtpcvfdepay,
   GST_DEBUG_OBJECT (avtpcvfdepay, "Handling single NAL unit");
 
   if (avtpcvfdepay->fragments != NULL) {
+    GstFlowReturn ret;
+
     GST_DEBUG_OBJECT (avtpcvfdepay,
         "Received single NAL unit, but previous fragment is incomplete. Dropping fragment.");
-    gst_avtp_cvf_depay_push_and_discard (avtpcvfdepay);
+    ret = gst_avtp_cvf_depay_push_and_discard (avtpcvfdepay);
+    if (ret != GST_FLOW_OK)
+      return ret;
   }
 
   gst_avtp_cvf_depay_get_avtp_timestamps (avtpcvfdepay, map, &pts, &dts);
@@ -632,9 +650,7 @@ gst_avtp_cvf_depay_handle_single_nal (GstAvtpCvfDepay * avtpcvfdepay,
   GST_BUFFER_PTS (nal) = pts;
   GST_BUFFER_DTS (nal) = dts;
 
-  gst_avtp_cvf_depay_internal_push (avtpcvfdepay, nal, M);
-
-  return GST_FLOW_OK;
+  return gst_avtp_cvf_depay_internal_push (avtpcvfdepay, nal, M);
 }
 
 static GstFlowReturn
@@ -642,13 +658,19 @@ gst_avtp_cvf_depay_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstAvtpCvfDepay *avtpcvfdepay = GST_AVTP_CVF_DEPAY (parent);
   GstFlowReturn ret = GST_FLOW_OK;
+  gboolean lost_packet;
   GstMapInfo map;
 
   gst_buffer_map (buffer, &map, GST_MAP_READ);
 
-  if (!gst_avtp_cvf_depay_validate_avtpdu (avtpcvfdepay, &map)) {
+  if (!gst_avtp_cvf_depay_validate_avtpdu (avtpcvfdepay, &map, &lost_packet)) {
     GST_DEBUG_OBJECT (avtpcvfdepay, "Invalid AVTPDU buffer, dropping it");
     goto end;
+  }
+  if (lost_packet) {
+    ret = gst_avtp_cvf_depay_push_and_discard (avtpcvfdepay);
+    if (ret != GST_FLOW_OK)
+      goto end;
   }
 
   switch (gst_avtp_cvf_depay_get_nal_type (&map)) {
