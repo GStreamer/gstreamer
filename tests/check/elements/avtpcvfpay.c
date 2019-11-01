@@ -137,6 +137,29 @@ compare_h264_avtpdu (struct avtp_stream_pdu *pdu, GstBuffer * buffer)
   return result;
 }
 
+GST_START_TEST (test_payloader_downstream_eos)
+{
+  GstHarness *h;
+  GstBuffer *in;
+
+  /* Create the harness for the avtpcvfpay */
+  h = gst_harness_new_parse
+      ("avtpcvfpay streamid=0xAABBCCDDEEFF0001 mtt=1000000 tu=1000000 processing-deadline=0 ! fakesink num-buffers=1");
+  gst_harness_set_src_caps (h, generate_caps (4));
+
+  /* Buffer must have the nal len (4 bytes) and the nal (4 bytes) */
+  in = gst_harness_create_buffer (h, 8);
+  add_nal (in, 4, 1, 0);
+  GST_BUFFER_DTS (in) = 1000000;
+  GST_BUFFER_PTS (in) = 2000000;
+
+  fail_unless_equals_int (gst_harness_push (h, in), GST_FLOW_EOS);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_payloader_zero_sized_nal)
 {
   GstHarness *h;
@@ -674,6 +697,7 @@ avtpcvfpay_suite (void)
   tcase_add_test (tc_chain, test_payloader_properties);
   tcase_add_test (tc_chain, test_payloader_no_codec_data);
   tcase_add_test (tc_chain, test_payloader_zero_sized_nal);
+  tcase_add_test (tc_chain, test_payloader_downstream_eos);
 
   return s;
 }

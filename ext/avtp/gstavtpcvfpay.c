@@ -483,22 +483,24 @@ gst_avtp_cvf_pay_prepare_avtp_packets (GstAvtpCvfPay * avtpcvfpay,
   return TRUE;
 }
 
-static gboolean
+static GstFlowReturn
 gst_avtp_cvf_pay_push_packets (GstAvtpCvfPay * avtpcvfpay,
     GPtrArray * avtp_packets)
 {
   int i;
+  GstFlowReturn ret;
   GstAvtpBasePayload *avtpbasepayload = GST_AVTP_BASE_PAYLOAD (avtpcvfpay);
 
   for (i = 0; i < avtp_packets->len; i++) {
     GstBuffer *packet;
 
     packet = g_ptr_array_index (avtp_packets, i);
-    if (gst_pad_push (avtpbasepayload->srcpad, packet) != GST_FLOW_OK)
-      return FALSE;
+    ret = gst_pad_push (avtpbasepayload->srcpad, packet);
+    if (ret != GST_FLOW_OK)
+      return ret;
   }
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
@@ -523,8 +525,7 @@ gst_avtp_cvf_pay_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   avtp_packets = g_ptr_array_new ();
   gst_avtp_cvf_pay_prepare_avtp_packets (avtpcvfpay, nals, avtp_packets);
 
-  if (!gst_avtp_cvf_pay_push_packets (avtpcvfpay, avtp_packets))
-    ret = GST_FLOW_ERROR;
+  ret = gst_avtp_cvf_pay_push_packets (avtpcvfpay, avtp_packets);
 
   /* Contents of both ptr_arrays should be unref'd or transferred
    * to rightful owner by this point, no need to unref them again */
