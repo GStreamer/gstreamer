@@ -1,6 +1,15 @@
 if get_option('vulkan').disabled()
   subdir_done()
 endif
+
+if not gstvulkan_dep.found()
+  if get_option('vulkan').enabled()
+    error('GStreamer Vulkan plugin required via options, but needed dependencies not found.')
+  else
+    subdir_done()
+  endif
+endif
+
 glslc = find_program('glslc', required: get_option('vulkan'))
 if not glslc.found()
   subdir_done()
