@@ -10,6 +10,7 @@ option('omx', type : 'feature', value : 'disabled')
 option('vaapi', type : 'feature', value : 'auto')
 option('sharp', type : 'feature', value : 'disabled')
 option('custom_subprojects', type : 'string', value : '', description : 'Comma-separated project names')
+option('gst-examples', type : 'feature', value : 'auto', description : 'Build gst-examples')
 
 # Common options, automatically inherited by subprojects
 option('examples', type : 'feature', value : 'auto', description : 'Build examples')
