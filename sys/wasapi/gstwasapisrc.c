@@ -312,10 +312,8 @@ gst_wasapi_src_get_property (GObject * object, guint prop_id,
 static gboolean
 gst_wasapi_src_can_audioclient3 (GstWasapiSrc * self)
 {
-  if (self->sharemode == AUDCLNT_SHAREMODE_SHARED &&
-      self->try_audioclient3 && gst_wasapi_util_have_audioclient3 ())
-    return TRUE;
-  return FALSE;
+  return (self->sharemode == AUDCLNT_SHAREMODE_SHARED &&
+      self->try_audioclient3 && gst_wasapi_util_have_audioclient3 ());
 }
 
 static GstCaps *
