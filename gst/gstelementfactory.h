@@ -105,6 +105,7 @@ gboolean                gst_element_register                    (GstPlugin *plug
  * @GST_ELEMENT_FACTORY_TYPE_DEPAYLOADER: Depayloader elements
  * @GST_ELEMENT_FACTORY_TYPE_DECRYPTOR: Elements handling decryption (Since: 1.6)
  * @GST_ELEMENT_FACTORY_TYPE_ENCRYPTOR: Elements handling encryption (Since: 1.6)
+ * @GST_ELEMENT_FACTORY_TYPE_HARDWARE: Hardware based elements (Since: 1.18)
  * @GST_ELEMENT_FACTORY_TYPE_MAX_ELEMENTS: Private, do not use
  * @GST_ELEMENT_FACTORY_TYPE_MEDIA_VIDEO: Elements handling video media types
  * @GST_ELEMENT_FACTORY_TYPE_MEDIA_AUDIO: Elements handling audio media types
@@ -139,6 +140,7 @@ typedef guint64 GstElementFactoryListType;
 #define  GST_ELEMENT_FACTORY_TYPE_FORMATTER      ((GstElementFactoryListType)(G_GUINT64_CONSTANT (1) << 9))
 #define  GST_ELEMENT_FACTORY_TYPE_DECRYPTOR      ((GstElementFactoryListType)(G_GUINT64_CONSTANT (1) << 10))
 #define  GST_ELEMENT_FACTORY_TYPE_ENCRYPTOR      ((GstElementFactoryListType)(G_GUINT64_CONSTANT (1) << 11))
+#define  GST_ELEMENT_FACTORY_TYPE_HARDWARE      ((GstElementFactoryListType)(G_GUINT64_CONSTANT (1) << 12))
 
 #define  GST_ELEMENT_FACTORY_TYPE_MAX_ELEMENTS   ((GstElementFactoryListType)(G_GUINT64_CONSTANT (1) << 48))
 

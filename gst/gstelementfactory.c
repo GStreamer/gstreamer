@@ -743,6 +743,9 @@ gst_element_factory_list_is_type (GstElementFactory * factory,
   if (!res && (type & GST_ELEMENT_FACTORY_TYPE_ENCRYPTOR))
     res = (strstr (klass, "Encryptor") != NULL);
 
+  if (!res && (type & GST_ELEMENT_FACTORY_TYPE_HARDWARE))
+    res = (strstr (klass, "Hardware") != NULL);
+
   /* Filter by media type now, we only test if it
    * matched any of the types above or only checking the media
    * type was requested. */
