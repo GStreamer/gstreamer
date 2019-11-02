@@ -148,9 +148,13 @@ resampler_zip (GstVideoResampler * resampler, const GstVideoResampler * r1,
 static void
 realloc_tmplines (GstVideoScaler * scale, gint n_elems, gint width)
 {
+  gint n_taps = scale->resampler.max_taps;
+
+  if (scale->flags & GST_VIDEO_SCALER_FLAG_INTERLACED)
+    n_taps *= 2;
+
   scale->tmpline1 =
-      g_realloc (scale->tmpline1,
-      sizeof (gint32) * width * n_elems * scale->resampler.max_taps);
+      g_realloc (scale->tmpline1, sizeof (gint32) * width * n_elems * n_taps);
   scale->tmpline2 =
       g_realloc (scale->tmpline2, sizeof (gint32) * width * n_elems);
   scale->tmpwidth = width;
@@ -1445,6 +1449,7 @@ gst_video_scaler_2d (GstVideoScaler * hscale, GstVideoScaler * vscale,
   GstVideoScalerHFunc hfunc = NULL;
   GstVideoScalerVFunc vfunc = NULL;
   gint i;
+  gboolean interlaced;
 
   g_return_if_fail (src != NULL);
   g_return_if_fail (dest != NULL);
@@ -1453,8 +1458,10 @@ gst_video_scaler_2d (GstVideoScaler * hscale, GstVideoScaler * vscale,
           &bits))
     goto no_func;
 
+  interlaced = vscale && ! !(vscale->flags & GST_VIDEO_SCALER_FLAG_INTERLACED);
+
 #define LINE(s,ss,i)  ((guint8 *)(s) + ((i) * (ss)))
-#define TMP_LINE(s,i,v) ((guint8 *)(s->tmpline1) + (((i) % (v)) * (sizeof (gint32) * width * n_elems)))
+#define TMP_LINE(s,i) ((guint8 *)((s)->tmpline1) + (i) * (sizeof (gint32) * width * n_elems))
 
   if (vscale == NULL) {
     if (hscale == NULL) {
@@ -1491,24 +1498,35 @@ gst_video_scaler_2d (GstVideoScaler * hscale, GstVideoScaler * vscale,
       realloc_tmplines (vscale, n_elems, width);
 
     v_taps = vscale->resampler.max_taps;
-    if (vscale->flags & GST_VIDEO_SCALER_FLAG_INTERLACED)
-      v_taps *= 2;
 
-    lines = g_alloca (v_taps * sizeof (gpointer));
+    lines = g_alloca ((interlaced ? 2 : 1) * v_taps * sizeof (gpointer));
+    memset (lines, 0, (interlaced ? 2 : 1) * v_taps * sizeof (gpointer));
 
     if (hscale == NULL) {
+      guint src_inc = interlaced ? 2 : 1;
+
       /* only vertical scaling */
       for (i = y; i < height; i++) {
         guint in, j;
 
         in = vscale->resampler.offset[i];
-        for (j = 0; j < v_taps; j++)
-          lines[j] = LINE (src, src_stride, in + j);
+        for (j = 0; j < v_taps; j++) {
+          guint l = in + j * src_inc;
+
+          g_assert (l < vscale->resampler.in_size);
+          lines[j * src_inc] = LINE (src, src_stride, l);
+        }
 
         vfunc (vscale, lines, LINE (dest, dest_stride, i), i, width, n_elems);
       }
     } else {
       gint s1, s2;
+      guint *tmpline_lines;
+
+      tmpline_lines = g_newa (guint, (interlaced ? 2 : 1) * v_taps);
+      /* initialize with -1 */
+      memset (tmpline_lines, 0xff,
+          (interlaced ? 2 : 1) * v_taps * sizeof (guint));
 
       if (hscale->tmpwidth < width)
         realloc_tmplines (hscale, n_elems, width);
@@ -1517,21 +1535,44 @@ gst_video_scaler_2d (GstVideoScaler * hscale, GstVideoScaler * vscale,
       s2 = width * height;
 
       if (s1 <= s2) {
-        gint tmp_in = vscale->resampler.offset[y];
-
         for (i = y; i < height; i++) {
           guint in, j;
+          guint src_inc = interlaced ? 2 : 1;
+          guint f2_offset = (interlaced && (i % 2 == 1)) * v_taps;
 
           in = vscale->resampler.offset[i];
-          while (tmp_in < in)
-            tmp_in++;
-          while (tmp_in < in + v_taps) {
-            hfunc (hscale, LINE (src, src_stride, tmp_in), TMP_LINE (vscale,
-                    tmp_in, v_taps), x, width, n_elems);
-            tmp_in++;
+          for (j = 0; j < v_taps; j++) {
+            guint k;
+            guint l = in + j * src_inc;
+
+            g_assert (l < vscale->resampler.in_size);
+
+            /* First check if we already have this line in tmplines */
+            for (k = f2_offset; k < v_taps + f2_offset; k++) {
+              if (tmpline_lines[k] == l) {
+                lines[j * src_inc] = TMP_LINE (vscale, k);
+                break;
+              }
+            }
+            /* Found */
+            if (k < v_taps + f2_offset)
+              continue;
+
+            /* Otherwise find an empty line we can clear */
+            for (k = f2_offset; k < v_taps + f2_offset; k++) {
+              if (tmpline_lines[k] < in || tmpline_lines[k] == -1)
+                break;
+            }
+
+            /* Must not happen, that would mean we don't have enough space to
+             * begin with */
+            g_assert (k < v_taps + f2_offset);
+
+            hfunc (hscale, LINE (src, src_stride, l), TMP_LINE (vscale, k), x,
+                width, n_elems);
+            tmpline_lines[k] = l;
+            lines[j * src_inc] = TMP_LINE (vscale, k);
           }
-          for (j = 0; j < v_taps; j++)
-            lines[j] = TMP_LINE (vscale, in + j, v_taps);
 
           vfunc (vscale, lines, LINE (dest, dest_stride, i), i, width, n_elems);
         }
@@ -1566,15 +1607,21 @@ gst_video_scaler_2d (GstVideoScaler * hscale, GstVideoScaler * vscale,
 
         for (i = y; i < height; i++) {
           guint in, j;
+          guint src_inc = interlaced ? 2 : 1;
 
           in = vscale->resampler.offset[i];
-          for (j = 0; j < v_taps; j++)
-            lines[j] = LINE (src, src_stride, in + j) + vx * n_elems;
+          for (j = 0; j < v_taps; j++) {
+            guint l = in + j * src_inc;
 
-          vfunc (vscale, lines, TMP_LINE (vscale, 0, v_taps) + vx * n_elems, i,
+            g_assert (l < vscale->resampler.in_size);
+            lines[j * src_inc] =
+                LINE (src, src_stride, in + j * src_inc) + vx * n_elems;
+          }
+
+          vfunc (vscale, lines, TMP_LINE (vscale, 0) + vx * n_elems, i,
               vw - vx, n_elems);
 
-          hfunc (hscale, TMP_LINE (vscale, 0, v_taps), LINE (dest, dest_stride,
+          hfunc (hscale, TMP_LINE (vscale, 0), LINE (dest, dest_stride,
                   i), x, width, n_elems);
         }
       }
@@ -1587,3 +1634,6 @@ no_func:
     GST_WARNING ("no scaler function for format");
   }
 }
+
+#undef LINE
+#undef TMP_LINE
