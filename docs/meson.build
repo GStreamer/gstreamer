@@ -107,6 +107,7 @@ libs = []
 if build_gir
     libs = [
         {'name': 'mpegts', 'gir': mpegts_gir, 'lib': gstmpegts_dep},
+        {'name': 'play', 'gir': play_gir, 'lib': gstplay_dep},
         {'name': 'player', 'gir': player_gir, 'lib': gstplayer_dep},
         {'name': 'insertbin', 'gir': insertbin_gir, 'lib': gstinsertbin_dep},
         {'name': 'codecparsers', 'lib': gstcodecparsers_dep},
