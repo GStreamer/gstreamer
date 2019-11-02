@@ -773,7 +773,7 @@ sort_element_stats_by_first_activity (gconstpointer es1, gconstpointer es2)
 static void
 sort_bin_stats (gpointer value, gpointer user_data)
 {
-  if (((GstElementStats *) value)->is_bin) {
+  if (value != NULL && ((GstElementStats *) value)->is_bin) {
     GSList **list = user_data;
 
     *list =
@@ -785,7 +785,7 @@ sort_bin_stats (gpointer value, gpointer user_data)
 static void
 sort_element_stats (gpointer value, gpointer user_data)
 {
-  if (!(((GstElementStats *) value)->is_bin)) {
+  if (value != NULL && !(((GstElementStats *) value)->is_bin)) {
     GSList **list = user_data;
 
     *list =
@@ -962,7 +962,7 @@ print_stats (void)
     /* attribute bin stats to parent-bins */
     for (i = 0; i < num_elements; i++) {
       GstElementStats *stats = g_ptr_array_index (elements, i);
-      if (stats->is_bin) {
+      if (stats != NULL && stats->is_bin) {
         g_hash_table_insert (accum_bins, GUINT_TO_POINTER (i), stats);
       }
     }
