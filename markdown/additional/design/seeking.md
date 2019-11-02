@@ -51,10 +51,51 @@ The seek can also change the playback speed of the configured segment. A
 speed of 1.0 is normal speed, 2.0 is double speed. Negative values mean
 backward playback.
 
-When performing a seek with a playback rate different from 1.0, the
-`GST_SEEK_FLAG_SKIP` flag can be used to instruct decoders and demuxers
-that they are allowed to skip decoding. This can be useful when resource
-consumption is more important than accurately producing all frames.
+When performing a seek, several trickmode flags can be used to instruct
+decoders and demuxers that they are allowed to skip decoding in various
+ways. This is most useful when changing to a playback rate different
+to 1.0 and helps when resource consumption is more important than
+accurately producing all frames.
+
+The trickmode flags are:
+
+  - [](GST_SEEK_FLAG_TRICKMODE_KEY_UNITS): Only decode/display key frames
+  - [](GST_SEEK_FLAG_TRICKMODE_FORWARD_PREDICTED): Skip B-frames
+  - [](GST_SEEK_FLAG_TRICKMODE_NO_AUDIO): Don't decode audio
+
+In some pipelines, it is possible to control the playback rate instantly
+by sending a seek with the [](GST_SEEK_FLAG_INSTANT_RATE_CHANGE)
+flag. This flag does not work for all pipelines, in which case it is necessary to
+send a full flushing seek to change the playback rate. When using this
+flag, the seek event is only allowed to change the current rate and can
+modify the trickmode flags, but it is not possible to change the current
+playback position or flush.
+
+Instant rate changing is handled in the pipeline in a specific sequence.
+
+1. The application creates and sends a seek event with the
+[](GST_SEEK_FLAG_INSTANT_RATE_CHANGE) flag and `start_type = stop_type = GST_SEEK_TYPE_NONE`.
+2. When the seek event reaches an element that will perform the seek
+operation, that element calculates a rate multiplier according to the
+requested playback rate, divided by the element's current output rate
+(from the most recent seek, but usually 1.0). It also extracts the
+new trickmode flags from the seek event - the set of flags in
+[](GST_SEGMENT_INSTANT_FLAGS)
+3. The element sends a downstream [](GST_EVENT_INSTANT_RATE_CHANGE) containing
+the rate multiplier, and the flags subset, and copying the seqnum from the
+seek event.
+4. Downstream elements which handle the instant-rate-change event will
+update their trickmode flags, and (if they sync to the clock) send a
+[](GST_MESSAGE_INSTANT_RATE_REQUEST) message on the bus, with the event seqnum.
+5. The pipeline handles the message on the bus and responds with a
+[](GST_EVENT_INSTANT_RATE_SYNC_TIME)
+event into the pipeline, which informs all elements to switch to the new
+playback rate multiplier, and with a running-time and upstream-running-time
+from which the new rate applies.  All elements now start synchronising to
+the clock using a new multiplied playback rate effective from the
+indicated running-time. The difference between running-time (the clock
+time at which the switch happens) and upstream-running-time is equal to
+the amount of accumulated extra playback due to chained instant-rate-changes.
 
 <!-- FIXME # Seeking in push based elements-->
 
@@ -192,7 +233,7 @@ flag.
 #### Summary:
 
   - if the `ACCURATE` flag is **not** specified, it is up to the
-    demuxer/parser to decide how exact the seek should be. In this case, 
+    demuxer/parser to decide how exact the seek should be. In this case,
     the expectation is that the demuxer/parser does a
     resonable best effort attempt, trading speed for accuracy. In the
     absence of an index, the seek position may be approximated.
