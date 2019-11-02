@@ -188,20 +188,15 @@ _find_window_from_xcb_window (GstGLDisplayX11 * display_x11,
     xcb_window_t window_id)
 {
   GstGLDisplay *display = GST_GL_DISPLAY (display_x11);
-  GstGLWindowX11 *ret = NULL;
-  GList *l;
+  GstGLWindow *window = NULL;
 
   if (!window_id)
     return NULL;
 
-  GST_OBJECT_LOCK (display);
-  l = g_list_find_custom (display->windows, &window_id,
+  window = gst_gl_display_retrieve_window (display, &window_id,
       (GCompareFunc) _compare_xcb_window);
-  if (l)
-    ret = gst_object_ref (l->data);
-  GST_OBJECT_UNLOCK (display);
 
-  return ret;
+  return (GstGLWindowX11 *) window;
 }
 
 static GstGLWindowX11 *

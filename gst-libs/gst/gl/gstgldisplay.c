@@ -636,6 +636,8 @@ gst_gl_display_remove_window (GstGLDisplay * display, GstGLWindow * window)
  * @data: (closure): some data to pass to @compare_func
  * @compare_func: (scope call): a comparison function to run
  *
+ * Deprecated for gst_gl_display_retrieve_window().
+ *
  * Execute @compare_func over the list of windows stored by @display.  The
  * first argument to @compare_func is the #GstGLWindow being checked and the
  * second argument is @data.
@@ -649,13 +651,44 @@ GstGLWindow *
 gst_gl_display_find_window (GstGLDisplay * display, gpointer data,
     GCompareFunc compare_func)
 {
+  GstGLWindow *ret;
+
+  ret = gst_gl_display_retrieve_window (display, data, compare_func);
+  if (ret)
+    gst_object_unref (ret);
+
+  return ret;
+}
+
+/**
+ * gst_gl_display_retrieve_window:
+ * @display: a #GstGLDisplay
+ * @data: (closure): some data to pass to @compare_func
+ * @compare_func: (scope call): a comparison function to run
+ *
+ * Execute @compare_func over the list of windows stored by @display.  The
+ * first argument to @compare_func is the #GstGLWindow being checked and the
+ * second argument is @data.
+ *
+ * Returns: (transfer full): The first #GstGLWindow that causes a match
+ *          from @compare_func
+ *
+ * Since: 1.18
+ */
+GstGLWindow *
+gst_gl_display_retrieve_window (GstGLDisplay * display, gpointer data,
+    GCompareFunc compare_func)
+{
   GstGLWindow *ret = NULL;
   GList *l;
 
   GST_OBJECT_LOCK (display);
   l = g_list_find_custom (display->windows, data, compare_func);
   if (l)
-    ret = l->data;
+    ret = gst_object_ref (l->data);
+
+  GST_DEBUG_OBJECT (display, "Found window %" GST_PTR_FORMAT
+      " (%p) in internal list", ret, ret);
   GST_OBJECT_UNLOCK (display);
 
   return ret;
