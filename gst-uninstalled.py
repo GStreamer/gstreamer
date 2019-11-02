@@ -77,7 +77,7 @@ def is_library_target_and_not_plugin(target, filename):
     if not SHAREDLIB_REG.search(filename):
         return False
     # Check if it's installed to the gstreamer plugin location
-    for install_filename in target['install_filename']:
+    for install_filename in listify(target['install_filename']):
         if install_filename.endswith(os.path.basename(filename)):
             break
     else:
