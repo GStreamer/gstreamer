@@ -359,7 +359,7 @@ GType gst_video_info_get_type            (void);
  *
  * Since: 1.16.
  */
-#define GST_VIDEO_INFO_FIELD_HEIGHT(i)   ((i)->interlace_mode == GST_VIDEO_INTERLACE_MODE_ALTERNATE? (i)->height / 2 : (i)->height)
+#define GST_VIDEO_INFO_FIELD_HEIGHT(i)   ((i)->interlace_mode == GST_VIDEO_INTERLACE_MODE_ALTERNATE? GST_ROUND_UP_2 ((i)->height) / 2 : (i)->height)
 #define GST_VIDEO_INFO_SIZE(i)           ((i)->size)
 #define GST_VIDEO_INFO_VIEWS(i)          ((i)->views)
 #define GST_VIDEO_INFO_PAR_N(i)          ((i)->par_n)
