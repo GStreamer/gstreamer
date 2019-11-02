@@ -110,6 +110,8 @@ struct _GstGLDisplayPrivate
 
   GMutex thread_lock;
   GCond thread_cond;
+
+  GMutex window_lock;
 };
 
 #define DEBUG_INIT \
@@ -194,6 +196,8 @@ gst_gl_display_init (GstGLDisplay * display)
   g_mutex_init (&display->priv->thread_lock);
   g_cond_init (&display->priv->thread_cond);
 
+  g_mutex_init (&display->priv->window_lock);
+
   display->priv->event_thread = g_thread_new ("gldisplay-event",
       (GThreadFunc) _event_thread_main, display);
 
@@ -259,6 +263,7 @@ gst_gl_display_finalize (GObject * object)
 
   g_cond_clear (&display->priv->thread_cond);
   g_mutex_clear (&display->priv->thread_lock);
+  g_mutex_clear (&display->priv->window_lock);
 
   G_OBJECT_CLASS (gst_gl_display_parent_class)->finalize (object);
 }
@@ -576,10 +581,10 @@ gst_gl_display_create_context (GstGLDisplay * display,
  * gst_gl_display_create_window:
  * @display: a #GstGLDisplay
  *
- * It requires the display's object lock to be held.
- *
  * Returns: (transfer full): a new #GstGLWindow for @display or %NULL.
  */
+/* XXX: previous versions had documentation requiring the OBJECT lock to be
+ * held when this fuction is called so that needs to always work. */
 GstGLWindow *
 gst_gl_display_create_window (GstGLDisplay * display)
 {
@@ -590,11 +595,13 @@ gst_gl_display_create_window (GstGLDisplay * display)
   klass = GST_GL_DISPLAY_GET_CLASS (display);
   g_return_val_if_fail (klass->create_window != NULL, NULL);
 
+  g_mutex_lock (&display->priv->window_lock);
   window = klass->create_window (display);
 
   if (window) {
     display->windows = g_list_prepend (display->windows, window);
   }
+  g_mutex_unlock (&display->priv->window_lock);
   GST_DEBUG_OBJECT (display, "Adding window %" GST_PTR_FORMAT
       " (%p) to internal list", window, window);
 
@@ -622,7 +629,7 @@ gst_gl_display_remove_window (GstGLDisplay * display, GstGLWindow * window)
   gboolean ret = FALSE;
   GList *l;
 
-  GST_OBJECT_LOCK (display);
+  g_mutex_lock (&display->priv->window_lock);
   l = g_list_find (display->windows, window);
   if (l) {
     display->windows = g_list_delete_link (display->windows, l);
@@ -630,7 +637,7 @@ gst_gl_display_remove_window (GstGLDisplay * display, GstGLWindow * window)
   }
   GST_DEBUG_OBJECT (display, "Removing window %" GST_PTR_FORMAT
       " (%p) from internal list", window, window);
-  GST_OBJECT_UNLOCK (display);
+  g_mutex_unlock (&display->priv->window_lock);
 
   return ret;
 }
@@ -687,14 +694,14 @@ gst_gl_display_retrieve_window (GstGLDisplay * display, gpointer data,
   GstGLWindow *ret = NULL;
   GList *l;
 
-  GST_OBJECT_LOCK (display);
+  g_mutex_lock (&display->priv->window_lock);
   l = g_list_find_custom (display->windows, data, compare_func);
   if (l)
     ret = gst_object_ref (l->data);
 
   GST_DEBUG_OBJECT (display, "Found window %" GST_PTR_FORMAT
       " (%p) in internal list", ret, ret);
-  GST_OBJECT_UNLOCK (display);
+  g_mutex_unlock (&display->priv->window_lock);
 
   return ret;
 }

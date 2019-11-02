@@ -83,7 +83,7 @@ struct _GstGLDisplay
   GstGLDisplayType      type;
 
   /*< protected >*/
-  GList                    *windows;        /* OBJECT lock */
+  GList                    *windows;        /* internal lock, use *_window functions instead */
   GMainContext             *main_context;
   GMainLoop                *main_loop;
   GSource                  *event_source;
