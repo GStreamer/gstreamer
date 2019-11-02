@@ -1,11 +1,16 @@
 openexr_dep = dependency('OpenEXR', required: get_option('openexr'))
 if openexr_dep.found()
-  openexr_extra_cpp_args = cxx.get_supported_arguments(['-std=c++98'])
+  openexr_cppargs = []
+
+  if openexr_dep.version().version_compare('< 2.4.0')
+    openexr_cppargs += cxx.get_supported_arguments(['-std=c++98'])
+  endif
+
   gstopenexr = library('gstopenexr',
     'gstopenexr.c',
     'gstopenexrdec.cpp',
     c_args: gst_plugins_bad_args,
-    cpp_args: gst_plugins_bad_args + openexr_extra_cpp_args,
+    cpp_args: gst_plugins_bad_args + openexr_cppargs,
     link_args: noseh_link_args,
     include_directories: [configinc, libsinc],
     dependencies: [gstvideo_dep, openexr_dep],
