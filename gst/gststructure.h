@@ -138,6 +138,9 @@ void                  gst_clear_structure                (GstStructure **structu
 #define               gst_clear_structure(structure_ptr) g_clear_pointer ((structure_ptr), gst_structure_free)
 
 GST_API
+gboolean              gst_structure_take                 (GstStructure ** oldstr_ptr,
+                                                          GstStructure * newstr);
+GST_API
 const gchar *         gst_structure_get_name             (const GstStructure  * structure);
 
 GST_API

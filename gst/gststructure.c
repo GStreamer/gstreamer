@@ -419,6 +419,47 @@ gst_clear_structure (GstStructure ** structure_ptr)
 }
 
 /**
+ * gst_structure_take:
+ * @oldstr_ptr: (inout) (transfer full) (nullable): pointer to a place of
+ *     a #GstStructure to take
+ * @newstr: (transfer full) (allow-none): a new #GstStructure
+ *
+ * Atomically modifies a pointer to point to a new object.
+ * The #GstStructure @oldstr_ptr is pointing to is freed and
+ * @newstr is taken ownership over.
+ *
+ * Either @newstr and the value pointed to by @oldstr_ptr may be %NULL.
+ *
+ * Returns: %TRUE if @newstr was different from @oldstr_ptr
+ *
+ * Since: 1.18
+ */
+gboolean
+gst_structure_take (GstStructure ** oldstr_ptr, GstStructure * newstr)
+{
+  GstStructure *oldstr;
+
+  g_return_val_if_fail (oldstr_ptr != NULL, FALSE);
+
+  oldstr = g_atomic_pointer_get ((gpointer *) oldstr_ptr);
+
+  if (G_UNLIKELY (oldstr == newstr))
+    return FALSE;
+
+  while (G_UNLIKELY (!g_atomic_pointer_compare_and_exchange ((gpointer *)
+              oldstr_ptr, oldstr, newstr))) {
+    oldstr = g_atomic_pointer_get ((gpointer *) oldstr_ptr);
+    if (G_UNLIKELY (oldstr == newstr))
+      break;
+  }
+
+  if (oldstr)
+    gst_structure_free (oldstr);
+
+  return oldstr != newstr;
+}
+
+/**
  * gst_structure_get_name:
  * @structure: a #GstStructure
  *
