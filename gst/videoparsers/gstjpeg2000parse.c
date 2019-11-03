@@ -239,7 +239,7 @@ gst_jpeg2000_parse_negotiate (GstJPEG2000Parse * parse, GstCaps * in_caps)
   GstCaps *caps;
   guint codec_format = GST_JPEG2000_PARSE_NO_CODEC;
 
-  if (in_caps != NULL && gst_caps_is_fixed (in_caps))
+  if (in_caps != NULL && !gst_caps_is_fixed (in_caps))
     return FALSE;
 
   caps = gst_pad_get_allowed_caps (GST_BASE_PARSE_SRC_PAD (parse));
