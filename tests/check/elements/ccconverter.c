@@ -217,6 +217,20 @@ GST_START_TEST (convert_cea608_s334_1a_cea608_raw)
 
 GST_END_TEST;
 
+GST_START_TEST (convert_cea608_s334_1a_cea608_raw_too_big)
+{
+  const guint8 in[] =
+      { 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x00, 0x80, 0x80, 0x00, 0x80,
+    0x80
+  };
+  const guint8 out[] = { 0x80, 0x80, 0x80, 0x80 };
+  check_conversion (in, sizeof (in), out, sizeof (out),
+      "closedcaption/x-cea-608,format=(string)s334-1a",
+      "closedcaption/x-cea-608,format=(string)raw");
+}
+
+GST_END_TEST;
+
 GST_START_TEST (convert_cea608_s334_1a_cea708_cc_data)
 {
   const guint8 in[] = { 0x80, 0x80, 0x80, 0x00, 0x80, 0x80 };
@@ -338,6 +352,7 @@ ccextractor_suite (void)
   tcase_add_test (tc, convert_cea608_raw_cea708_cc_data);
   tcase_add_test (tc, convert_cea608_raw_cea708_cdp);
   tcase_add_test (tc, convert_cea608_s334_1a_cea608_raw);
+  tcase_add_test (tc, convert_cea608_s334_1a_cea608_raw_too_big);
   tcase_add_test (tc, convert_cea608_s334_1a_cea708_cc_data);
   tcase_add_test (tc, convert_cea608_s334_1a_cea708_cdp);
   tcase_add_test (tc, convert_cea708_cc_data_cea608_raw);

@@ -487,9 +487,9 @@ convert_cea708_cc_data_cea708_cdp_internal (GstCCConverter * self,
   }
 
   if (cc_data_len / 3 > cc_count) {
-    GST_ERROR_OBJECT (self, "Too many cc_data triplet for framerate: %u > %u",
+    GST_WARNING_OBJECT (self, "Too many cc_data triplet for framerate: %u > %u",
         cc_data_len / 3, cc_count);
-    return -1;
+    cc_data_len = 3 * cc_count;
   }
 
   /* ccdata_present | caption_service_active */
@@ -708,15 +708,16 @@ convert_cea608_raw_cea608_s334_1a (GstCCConverter * self, GstBuffer * inbuf,
 
   n = gst_buffer_get_size (inbuf);
   if (n & 1) {
-    GST_ERROR_OBJECT (self, "Invalid raw CEA608 buffer size");
-    return GST_FLOW_ERROR;
+    GST_WARNING_OBJECT (self, "Invalid raw CEA608 buffer size");
+    gst_buffer_set_size (outbuf, 0);
+    return GST_FLOW_OK;
   }
 
   n /= 2;
 
   if (n > 3) {
-    GST_ERROR_OBJECT (self, "Too many CEA608 pairs %u", n);
-    return GST_FLOW_ERROR;
+    GST_WARNING_OBJECT (self, "Too many CEA608 pairs %u", n);
+    n = 3;
   }
 
   gst_buffer_set_size (outbuf, 3 * n);
@@ -747,15 +748,16 @@ convert_cea608_raw_cea708_cc_data (GstCCConverter * self, GstBuffer * inbuf,
 
   n = gst_buffer_get_size (inbuf);
   if (n & 1) {
-    GST_ERROR_OBJECT (self, "Invalid raw CEA608 buffer size");
-    return GST_FLOW_ERROR;
+    GST_WARNING_OBJECT (self, "Invalid raw CEA608 buffer size");
+    gst_buffer_set_size (outbuf, 0);
+    return GST_FLOW_OK;
   }
 
   n /= 2;
 
   if (n > 3) {
-    GST_ERROR_OBJECT (self, "Too many CEA608 pairs %u", n);
-    return GST_FLOW_ERROR;
+    GST_WARNING_OBJECT (self, "Too many CEA608 pairs %u", n);
+    n = 3;
   }
 
   gst_buffer_set_size (outbuf, 3 * n);
@@ -787,15 +789,16 @@ convert_cea608_raw_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
 
   n = gst_buffer_get_size (inbuf);
   if (n & 1) {
-    GST_ERROR_OBJECT (self, "Invalid raw CEA608 buffer size");
-    return GST_FLOW_ERROR;
+    GST_WARNING_OBJECT (self, "Invalid raw CEA608 buffer size");
+    gst_buffer_set_size (outbuf, 0);
+    return GST_FLOW_OK;
   }
 
   n /= 2;
 
   if (n > 3) {
-    GST_ERROR_OBJECT (self, "Too many CEA608 pairs %u", n);
-    return GST_FLOW_ERROR;
+    GST_WARNING_OBJECT (self, "Too many CEA608 pairs %u", n);
+    n = 3;
   }
 
   gst_buffer_map (inbuf, &in, GST_MAP_READ);
@@ -814,9 +817,6 @@ convert_cea608_raw_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
   gst_buffer_unmap (inbuf, &in);
   gst_buffer_unmap (outbuf, &out);
 
-  if (len == -1)
-    return GST_FLOW_ERROR;
-
   gst_buffer_set_size (outbuf, len);
 
   return GST_FLOW_OK;
@@ -832,15 +832,15 @@ convert_cea608_s334_1a_cea608_raw (GstCCConverter * self, GstBuffer * inbuf,
 
   n = gst_buffer_get_size (inbuf);
   if (n % 3 != 0) {
-    GST_ERROR_OBJECT (self, "Invalid S334-1A CEA608 buffer size");
-    return GST_FLOW_ERROR;
+    GST_WARNING_OBJECT (self, "Invalid S334-1A CEA608 buffer size");
+    n = n - (n % 3);
   }
 
   n /= 3;
 
   if (n > 3) {
-    GST_ERROR_OBJECT (self, "Too many S334-1A CEA608 triplets %u", n);
-    return GST_FLOW_ERROR;
+    GST_WARNING_OBJECT (self, "Too many S334-1A CEA608 triplets %u", n);
+    n = 3;
   }
 
   gst_buffer_map (inbuf, &in, GST_MAP_READ);
@@ -871,15 +871,15 @@ convert_cea608_s334_1a_cea708_cc_data (GstCCConverter * self, GstBuffer * inbuf,
 
   n = gst_buffer_get_size (inbuf);
   if (n % 3 != 0) {
-    GST_ERROR_OBJECT (self, "Invalid S334-1A CEA608 buffer size");
-    return GST_FLOW_ERROR;
+    GST_WARNING_OBJECT (self, "Invalid S334-1A CEA608 buffer size");
+    n = n - (n % 3);
   }
 
   n /= 3;
 
   if (n > 3) {
-    GST_ERROR_OBJECT (self, "Too many S334-1A CEA608 triplets %u", n);
-    return GST_FLOW_ERROR;
+    GST_WARNING_OBJECT (self, "Too many S334-1A CEA608 triplets %u", n);
+    n = 3;
   }
 
   gst_buffer_set_size (outbuf, 3 * n);
@@ -909,15 +909,15 @@ convert_cea608_s334_1a_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
 
   n = gst_buffer_get_size (inbuf);
   if (n % 3 != 0) {
-    GST_ERROR_OBJECT (self, "Invalid S334-1A CEA608 buffer size");
-    return GST_FLOW_ERROR;
+    GST_WARNING_OBJECT (self, "Invalid S334-1A CEA608 buffer size");
+    n = n - (n % 3);
   }
 
   n /= 3;
 
   if (n > 3) {
-    GST_ERROR_OBJECT (self, "Too many S334-1A CEA608 triplets %u", n);
-    return GST_FLOW_ERROR;
+    GST_WARNING_OBJECT (self, "Too many S334-1A CEA608 triplets %u", n);
+    n = 3;
   }
 
   gst_buffer_map (inbuf, &in, GST_MAP_READ);
@@ -936,9 +936,6 @@ convert_cea608_s334_1a_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
   gst_buffer_unmap (inbuf, &in);
   gst_buffer_unmap (outbuf, &out);
 
-  if (len == -1)
-    return GST_FLOW_ERROR;
-
   gst_buffer_set_size (outbuf, len);
 
   return GST_FLOW_OK;
@@ -954,15 +951,15 @@ convert_cea708_cc_data_cea608_raw (GstCCConverter * self, GstBuffer * inbuf,
 
   n = gst_buffer_get_size (inbuf);
   if (n % 3 != 0) {
-    GST_ERROR_OBJECT (self, "Invalid raw CEA708 buffer size");
-    return GST_FLOW_ERROR;
+    GST_WARNING_OBJECT (self, "Invalid raw CEA708 buffer size");
+    n = n - (n % 3);
   }
 
   n /= 3;
 
   if (n > 25) {
-    GST_ERROR_OBJECT (self, "Too many CEA708 triplets %u", n);
-    return GST_FLOW_ERROR;
+    GST_WARNING_OBJECT (self, "Too many CEA708 triplets %u", n);
+    n = 25;
   }
 
   gst_buffer_map (inbuf, &in, GST_MAP_READ);
@@ -998,15 +995,15 @@ convert_cea708_cc_data_cea608_s334_1a (GstCCConverter * self, GstBuffer * inbuf,
 
   n = gst_buffer_get_size (inbuf);
   if (n % 3 != 0) {
-    GST_ERROR_OBJECT (self, "Invalid raw CEA708 buffer size");
-    return GST_FLOW_ERROR;
+    GST_WARNING_OBJECT (self, "Invalid raw CEA708 buffer size");
+    n = n - (n % 3);
   }
 
   n /= 3;
 
   if (n > 25) {
-    GST_ERROR_OBJECT (self, "Too many CEA708 triplets %u", n);
-    return GST_FLOW_ERROR;
+    GST_WARNING_OBJECT (self, "Too many CEA708 triplets %u", n);
+    n = 25;
   }
 
   gst_buffer_map (inbuf, &in, GST_MAP_READ);
@@ -1040,15 +1037,15 @@ convert_cea708_cc_data_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
 
   n = gst_buffer_get_size (inbuf);
   if (n % 3 != 0) {
-    GST_ERROR_OBJECT (self, "Invalid raw CEA708 buffer size");
-    return GST_FLOW_ERROR;
+    GST_WARNING_OBJECT (self, "Invalid raw CEA708 buffer size");
+    n = n - (n % 3);
   }
 
   n /= 3;
 
   if (n > 25) {
-    GST_ERROR_OBJECT (self, "Too many CEA708 triplets %u", n);
-    return GST_FLOW_ERROR;
+    GST_WARNING_OBJECT (self, "Too many CEA708 triplets %u", n);
+    n = 25;
   }
 
   gst_buffer_map (inbuf, &in, GST_MAP_READ);
@@ -1060,9 +1057,6 @@ convert_cea708_cc_data_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
 
   gst_buffer_unmap (inbuf, &in);
   gst_buffer_unmap (outbuf, &out);
-
-  if (len == -1)
-    return GST_FLOW_ERROR;
 
   gst_buffer_set_size (outbuf, len);
 
@@ -1088,8 +1082,8 @@ convert_cea708_cdp_cea608_raw (GstCCConverter * self, GstBuffer * inbuf,
   len /= 3;
 
   if (len > 25) {
-    GST_ERROR_OBJECT (self, "Too many cc_data triples in CDP packet %u", len);
-    return GST_FLOW_ERROR;
+    GST_WARNING_OBJECT (self, "Too many cc_data triples in CDP packet %u", len);
+    len = 25;
   }
 
   for (i = 0; i < len; i++) {
@@ -1134,8 +1128,8 @@ convert_cea708_cdp_cea608_s334_1a (GstCCConverter * self, GstBuffer * inbuf,
   len /= 3;
 
   if (len > 25) {
-    GST_ERROR_OBJECT (self, "Too many cc_data triples in CDP packet %u", len);
-    return GST_FLOW_ERROR;
+    GST_WARNING_OBJECT (self, "Too many cc_data triples in CDP packet %u", len);
+    len = 25;
   }
 
   for (i = 0; i < len; i++) {
@@ -1178,9 +1172,9 @@ convert_cea708_cdp_cea708_cc_data (GstCCConverter * self, GstBuffer * inbuf,
   gst_buffer_unmap (outbuf, &out);
 
   if (len / 3 > 25) {
-    GST_ERROR_OBJECT (self, "Too many cc_data triples in CDP packet %u",
+    GST_WARNING_OBJECT (self, "Too many cc_data triples in CDP packet %u",
         len / 3);
-    return GST_FLOW_ERROR;
+    len = 3 * 25;
   }
 
   gst_buffer_set_size (outbuf, len);
