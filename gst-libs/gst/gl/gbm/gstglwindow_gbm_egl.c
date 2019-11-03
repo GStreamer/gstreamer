@@ -51,7 +51,6 @@ static void gst_gl_window_gbm_egl_draw (GstGLWindow * window);
 
 static gboolean gst_gl_window_gbm_init_surface (GstGLWindowGBMEGL * window_egl);
 
-
 static void
 gst_gl_window_gbm_egl_class_init (GstGLWindowGBMEGLClass * klass)
 {
@@ -239,6 +238,13 @@ draw_cb (gpointer data)
     }
   }
 
+  if (window->queue_resize) {
+    guint width, height;
+
+    gst_gl_window_get_surface_dimensions (window, &width, &height);
+    gst_gl_window_resize (window, width, height);
+  }
+
   /* Do the actual drawing */
   if (window->draw)
     window->draw (window->draw_data);
@@ -361,15 +367,16 @@ gst_gl_window_gbm_init_surface (GstGLWindowGBMEGL * window_egl)
       GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING);
 
   gst_gl_window_resize (window, hdisplay, vdisplay);
+  gst_gl_window_queue_resize (window);
 
-  GST_DEBUG ("Successfully created GBM surface");
+  GST_DEBUG ("Successfully created GBM surface %ix%i from info %p", hdisplay,
+      vdisplay, drm_mode_info);
 
 cleanup:
 
   gst_object_unref (context);
   return ret;
 }
-
 
 /* Must be called in the gl thread */
 GstGLWindowGBMEGL *
