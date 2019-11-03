@@ -95,6 +95,7 @@ struct _GstURIDecodeBin
   guint buffer_size;            /* When buffering, buffer size (bytes) */
   gboolean download;
   gboolean use_buffering;
+  gboolean force_sw_decoders;
 
   GstElement *source;
   GstElement *queue;
@@ -180,6 +181,7 @@ enum
 #define DEFAULT_BUFFER_SIZE         -1
 #define DEFAULT_DOWNLOAD            FALSE
 #define DEFAULT_USE_BUFFERING       FALSE
+#define DEFAULT_FORCE_SW_DECODERS   FALSE
 #define DEFAULT_EXPOSE_ALL_STREAMS  TRUE
 #define DEFAULT_RING_BUFFER_MAX_SIZE 0
 
@@ -195,6 +197,7 @@ enum
   PROP_BUFFER_DURATION,
   PROP_DOWNLOAD,
   PROP_USE_BUFFERING,
+  PROP_FORCE_SW_DECODERS,
   PROP_EXPOSE_ALL_STREAMS,
   PROP_RING_BUFFER_MAX_SIZE
 };
@@ -311,14 +314,33 @@ static void
 gst_uri_decode_bin_update_factories_list (GstURIDecodeBin * dec)
 {
   guint32 cookie;
+  GList *factories, *tmp;
 
   cookie = gst_registry_get_feature_list_cookie (gst_registry_get ());
   if (!dec->factories || dec->factories_cookie != cookie) {
     if (dec->factories)
       gst_plugin_feature_list_free (dec->factories);
-    dec->factories =
+    factories =
         gst_element_factory_list_get_elements
         (GST_ELEMENT_FACTORY_TYPE_DECODABLE, GST_RANK_MARGINAL);
+
+    if (dec->force_sw_decoders) {
+      /* filter out Hardware class elements */
+      dec->factories = NULL;
+      for (tmp = factories; tmp; tmp = g_list_next (tmp)) {
+        GstElementFactory *factory = GST_ELEMENT_FACTORY_CAST (tmp->data);
+        if (!gst_element_factory_list_is_type (factory,
+                GST_ELEMENT_FACTORY_TYPE_HARDWARE)) {
+          dec->factories = g_list_prepend (dec->factories, factory);
+        } else {
+          gst_object_unref (factory);
+        }
+      }
+      g_list_free (factories);
+    } else {
+      dec->factories = factories;
+    }
+
     dec->factories =
         g_list_sort (dec->factories, gst_playback_utils_compare_factories_func);
     dec->factories_cookie = cookie;
@@ -460,6 +482,20 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
       g_param_spec_boolean ("use-buffering", "Use Buffering",
           "Perform buffering on demuxed/parsed media",
           DEFAULT_USE_BUFFERING, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstURIDecodeBin::force-sw-decoders:
+   *
+   * While auto-plugging, if set to %TRUE, those decoders within
+   * "Hardware" klass will be ignored. Otherwise they will be tried.
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (gobject_class, PROP_FORCE_SW_DECODERS,
+      g_param_spec_boolean ("force-sw-decoders", "Software Docoders Only",
+          "Use only sofware decoders to process streams",
+          DEFAULT_FORCE_SW_DECODERS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstURIDecodeBin::expose-all-streams:
@@ -713,6 +749,7 @@ gst_uri_decode_bin_init (GstURIDecodeBin * dec)
   dec->buffer_size = DEFAULT_BUFFER_SIZE;
   dec->download = DEFAULT_DOWNLOAD;
   dec->use_buffering = DEFAULT_USE_BUFFERING;
+  dec->force_sw_decoders = DEFAULT_FORCE_SW_DECODERS;
   dec->expose_allstreams = DEFAULT_EXPOSE_ALL_STREAMS;
   dec->ring_buffer_max_size = DEFAULT_RING_BUFFER_MAX_SIZE;
 
@@ -801,6 +838,9 @@ gst_uri_decode_bin_set_property (GObject * object, guint prop_id,
     case PROP_USE_BUFFERING:
       dec->use_buffering = g_value_get_boolean (value);
       break;
+    case PROP_FORCE_SW_DECODERS:
+      dec->force_sw_decoders = g_value_get_boolean (value);
+      break;
     case PROP_EXPOSE_ALL_STREAMS:
       dec->expose_allstreams = g_value_get_boolean (value);
       break;
@@ -860,6 +900,9 @@ gst_uri_decode_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_USE_BUFFERING:
       g_value_set_boolean (value, dec->use_buffering);
+      break;
+    case PROP_FORCE_SW_DECODERS:
+      g_value_set_boolean (value, dec->force_sw_decoders);
       break;
     case PROP_EXPOSE_ALL_STREAMS:
       g_value_set_boolean (value, dec->expose_allstreams);
@@ -1814,6 +1857,9 @@ make_decoder (GstURIDecodeBin * decoder)
     g_signal_connect (decodebin,
         "unknown-type", G_CALLBACK (unknown_type_cb), decoder);
   }
+
+  g_object_set (decodebin, "force-sw-decoders", decoder->force_sw_decoders,
+      NULL);
 
   /* configure caps if we have any */
   if (decoder->caps)

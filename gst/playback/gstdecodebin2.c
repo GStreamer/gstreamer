@@ -149,6 +149,7 @@ struct _GstDecodeBin
   GstCaps *caps;                /* caps on which to stop decoding */
   gchar *encoding;              /* encoding of subtitles */
   gboolean use_buffering;       /* configure buffering on multiqueues */
+  gboolean force_sw_decoders;
   gint low_percent;
   gint high_percent;
   guint max_size_bytes;
@@ -253,6 +254,7 @@ enum
 
 #define DEFAULT_SUBTITLE_ENCODING NULL
 #define DEFAULT_USE_BUFFERING     FALSE
+#define DEFAULT_FORCE_SW_DECODERS FALSE
 #define DEFAULT_LOW_PERCENT       10
 #define DEFAULT_HIGH_PERCENT      99
 /* by default we use the automatic values above */
@@ -271,6 +273,7 @@ enum
   PROP_SUBTITLE_ENCODING,
   PROP_SINK_CAPS,
   PROP_USE_BUFFERING,
+  PROP_FORCE_SW_DECODERS,
   PROP_LOW_PERCENT,
   PROP_HIGH_PERCENT,
   PROP_MAX_SIZE_BYTES,
@@ -909,6 +912,20 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
           DEFAULT_USE_BUFFERING, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstDecodeBin::force-sw-decoders:
+   *
+   * While auto-plugging, if set to %TRUE, those decoders within
+   * "Hardware" klass will be ignored. Otherwise they will be tried.
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (gobject_klass, PROP_FORCE_SW_DECODERS,
+      g_param_spec_boolean ("force-sw-decoders", "Software Docoders Only",
+          "Use only sofware decoders to process streams",
+          DEFAULT_FORCE_SW_DECODERS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstDecodeBin:low-percent
    *
    * Low threshold percent for buffering to start.
@@ -1034,14 +1051,33 @@ static void
 gst_decode_bin_update_factories_list (GstDecodeBin * dbin)
 {
   guint cookie;
+  GList *factories, *tmp;
 
   cookie = gst_registry_get_feature_list_cookie (gst_registry_get ());
   if (!dbin->factories || dbin->factories_cookie != cookie) {
     if (dbin->factories)
       gst_plugin_feature_list_free (dbin->factories);
-    dbin->factories =
+    factories =
         gst_element_factory_list_get_elements
         (GST_ELEMENT_FACTORY_TYPE_DECODABLE, GST_RANK_MARGINAL);
+
+    if (dbin->force_sw_decoders) {
+      /* filter out Hardware class elements */
+      dbin->factories = NULL;
+      for (tmp = factories; tmp; tmp = g_list_next (tmp)) {
+        GstElementFactory *factory = GST_ELEMENT_FACTORY_CAST (tmp->data);
+        if (!gst_element_factory_list_is_type (factory,
+                GST_ELEMENT_FACTORY_TYPE_HARDWARE)) {
+          dbin->factories = g_list_prepend (dbin->factories, factory);
+        } else {
+          gst_object_unref (factory);
+        }
+      }
+      g_list_free (factories);
+    } else {
+      dbin->factories = factories;
+    }
+
     dbin->factories =
         g_list_sort (dbin->factories,
         gst_playback_utils_compare_factories_func);
@@ -1103,6 +1139,7 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
   decode_bin->encoding = g_strdup (DEFAULT_SUBTITLE_ENCODING);
   decode_bin->caps = gst_static_caps_get (&default_raw_caps);
   decode_bin->use_buffering = DEFAULT_USE_BUFFERING;
+  decode_bin->force_sw_decoders = DEFAULT_FORCE_SW_DECODERS;
   decode_bin->low_percent = DEFAULT_LOW_PERCENT;
   decode_bin->high_percent = DEFAULT_HIGH_PERCENT;
 
@@ -1276,6 +1313,9 @@ gst_decode_bin_set_property (GObject * object, guint prop_id,
     case PROP_USE_BUFFERING:
       dbin->use_buffering = g_value_get_boolean (value);
       break;
+    case PROP_FORCE_SW_DECODERS:
+      dbin->force_sw_decoders = g_value_get_boolean (value);
+      break;
     case PROP_LOW_PERCENT:
       dbin->low_percent = g_value_get_int (value);
       break;
@@ -1327,6 +1367,9 @@ gst_decode_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_USE_BUFFERING:
       g_value_set_boolean (value, dbin->use_buffering);
+      break;
+    case PROP_FORCE_SW_DECODERS:
+      g_value_set_boolean (value, dbin->force_sw_decoders);
       break;
     case PROP_LOW_PERCENT:
       g_value_set_int (value, dbin->low_percent);

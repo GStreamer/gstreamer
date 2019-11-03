@@ -2404,8 +2404,11 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
       if (playbin->curr_group) {
         GST_SOURCE_GROUP_LOCK (playbin->curr_group);
         if (playbin->curr_group->uridecodebin) {
-          g_object_set (playbin->curr_group->uridecodebin, "download",
-              (g_value_get_flags (value) & GST_PLAY_FLAG_DOWNLOAD) != 0, NULL);
+          guint flags = g_value_get_flags (value);
+          g_object_set (playbin->curr_group->uridecodebin,
+              "download", (flags & GST_PLAY_FLAG_DOWNLOAD) != 0,
+              "force-sw-decoders",
+              (flags & GST_PLAY_FLAG_FORCE_SW_DECODERS) != 0, NULL);
         }
         GST_SOURCE_GROUP_UNLOCK (playbin->curr_group);
       }
@@ -4131,7 +4134,8 @@ avelement_iter_is_equal (GSequenceIter * iter, GstElementFactory * factory)
 }
 
 static GList *
-create_decoders_list (GList * factory_list, GSequence * avelements)
+create_decoders_list (GList * factory_list, GSequence * avelements,
+    GstPlayFlags flags)
 {
   GList *dec_list = NULL, *tmp;
   GList *ave_list = NULL;
@@ -4150,7 +4154,9 @@ create_decoders_list (GList * factory_list, GSequence * avelements)
         gst_element_factory_list_is_type (factory,
             GST_ELEMENT_FACTORY_TYPE_SINK)) {
       dec_list = g_list_prepend (dec_list, gst_object_ref (factory));
-    } else {
+    } else if (!(((flags & GST_PLAY_FLAG_FORCE_SW_DECODERS) != 0)
+            && gst_element_factory_list_is_type (factory,
+                GST_ELEMENT_FACTORY_TYPE_HARDWARE))) {
       GSequenceIter *seq_iter;
 
       seq_iter =
@@ -4272,14 +4278,18 @@ autoplug_factories_cb (GstElement * decodebin, GstPad * pad,
 
   if (isaudiodeclist || isvideodeclist) {
     GSequence **ave_list;
+    GstPlayFlags flags;
+
     if (isaudiodeclist)
       ave_list = &playbin->aelements;
     else
       ave_list = &playbin->velements;
 
+    flags = gst_play_bin_get_flags (playbin);
+
     g_mutex_lock (&playbin->elements_lock);
     /* sort factory_list based on the GstAVElement list priority */
-    factory_list = create_decoders_list (factory_list, *ave_list);
+    factory_list = create_decoders_list (factory_list, *ave_list, flags);
     g_mutex_unlock (&playbin->elements_lock);
   }
 
@@ -5366,6 +5376,8 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
       "download", ((flags & GST_PLAY_FLAG_DOWNLOAD) != 0),
       /* configure buffering of demuxed/parsed data */
       "use-buffering", ((flags & GST_PLAY_FLAG_BUFFERING) != 0),
+      /* enable hardware-based elements */
+      "force-sw-decoders", ((flags & GST_PLAY_FLAG_FORCE_SW_DECODERS) != 0),
       /* configure buffering parameters */
       "buffer-duration", playbin->buffer_duration,
       "buffer-size", playbin->buffer_size,
