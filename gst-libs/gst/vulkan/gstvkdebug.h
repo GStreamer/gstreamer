@@ -29,6 +29,8 @@ G_BEGIN_DECLS
 
 #define GST_VULKAN_EXTENT3D_FORMAT G_GUINT32_FORMAT ", %" G_GUINT32_FORMAT ", %" G_GUINT32_FORMAT
 #define GST_VULKAN_EXTENT3D_ARGS(var) (var).width, (var).height, (var).depth
+#define GST_VULKAN_EXTENT2D_FORMAT G_GUINT32_FORMAT ", %" G_GUINT32_FORMAT
+#define GST_VULKAN_EXTENT2D_ARGS(var) (var).width, (var).height
 
 GST_VULKAN_API
 const gchar *               gst_vulkan_physical_device_type_to_string       (VkPhysicalDeviceType type);

@@ -331,6 +331,48 @@ gst_vulkan_swapper_choose_queue (GstVulkanSwapper * swapper,
   return TRUE;
 }
 
+static void
+dump_surface_properties (GstVulkanSwapper * swapper)
+{
+  GST_TRACE_OBJECT (swapper, "surface %p, n images [%" G_GUINT32_FORMAT ", %"
+      G_GUINT32_FORMAT "], extent [%" GST_VULKAN_EXTENT2D_FORMAT ", %"
+      GST_VULKAN_EXTENT2D_FORMAT "], max layers %" G_GUINT32_FORMAT
+      " transforms supported 0x%x current transform 0x%x, alpha flags 0x%x, "
+      "supported image usage flags 0x%x", swapper->priv->surface,
+      swapper->priv->surf_props.minImageCount,
+      swapper->priv->surf_props.maxImageCount,
+      GST_VULKAN_EXTENT2D_ARGS (swapper->priv->surf_props.minImageExtent),
+      GST_VULKAN_EXTENT2D_ARGS (swapper->priv->surf_props.maxImageExtent),
+      swapper->priv->surf_props.maxImageArrayLayers,
+      swapper->priv->surf_props.supportedTransforms,
+      swapper->priv->surf_props.currentTransform,
+      swapper->priv->surf_props.supportedCompositeAlpha,
+      swapper->priv->surf_props.supportedUsageFlags);
+}
+
+static void
+dump_surface_formats (GstVulkanSwapper * swapper)
+{
+  int i;
+
+  for (i = 0; i < swapper->priv->n_surf_formats; i++) {
+    GST_DEBUG_OBJECT (swapper, "surface %p format 0x%x colorspace 0x%x",
+        swapper->priv->surface, swapper->priv->surf_formats[i].format,
+        swapper->priv->surf_formats[i].colorSpace);
+  }
+}
+
+static void
+dump_surface_present_modes (GstVulkanSwapper * swapper)
+{
+  int i;
+
+  for (i = 0; i < swapper->priv->n_surf_present_modes; i++) {
+    GST_DEBUG_OBJECT (swapper, "surface %p present modes 0x%x",
+        swapper->priv->surface, swapper->priv->surf_present_modes[i]);
+  }
+}
+
 static gboolean
 _vulkan_swapper_retrieve_surface_properties (GstVulkanSwapper * swapper,
     GError ** error)
@@ -357,6 +399,8 @@ _vulkan_swapper_retrieve_surface_properties (GstVulkanSwapper * swapper,
           "GetPhysicalDeviceSurfaceCapabilitiesKHR") < 0)
     return FALSE;
 
+  dump_surface_properties (swapper);
+
   err =
       swapper->priv->GetPhysicalDeviceSurfaceFormatsKHR (gpu,
       swapper->priv->surface, &swapper->priv->n_surf_formats, NULL);
@@ -374,6 +418,8 @@ _vulkan_swapper_retrieve_surface_properties (GstVulkanSwapper * swapper,
           "GetPhysicalDeviceSurfaceFormatsKHR") < 0)
     return FALSE;
 
+  dump_surface_formats (swapper);
+
   err =
       swapper->priv->GetPhysicalDeviceSurfacePresentModesKHR (gpu,
       swapper->priv->surface, &swapper->priv->n_surf_present_modes, NULL);
@@ -390,6 +436,8 @@ _vulkan_swapper_retrieve_surface_properties (GstVulkanSwapper * swapper,
   if (gst_vulkan_error_to_g_error (err, error,
           "GetPhysicalDeviceSurfacePresentModesKHR") < 0)
     return FALSE;
+
+  dump_surface_present_modes (swapper);
 
   return TRUE;
 }
