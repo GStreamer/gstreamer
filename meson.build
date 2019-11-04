@@ -47,7 +47,7 @@ else
 endif
 sitemap_gen = find_program('scripts/generate_sitemap.py')
 sitemap = configure_file(command: [sitemap_gen, '@INPUT@', '@OUTPUT@',
-  index.split('/')[1], libs, plugins_doc],
+  'gi-index', libs, plugins_doc],
   input: 'sitemap.txt',
   output: 'sitemap.txt')
 
@@ -57,6 +57,7 @@ gstreamer_doc = hotdoc.generate_doc('GStreamer',
     project_version: apiversion,
     sitemap: sitemap,
     index: index,
+    gi_index: index,
     install: true,
     extra_assets: [join_paths(meson.current_source_dir(), 'images')],
     syntax_highlighting_activate: true,
