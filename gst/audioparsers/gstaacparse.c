@@ -1237,7 +1237,7 @@ gst_aac_parse_prepend_adts_headers (GstAacParse * aacparse,
   adts_headers[0] = 0xFFU;
   adts_headers[1] = 0xF0U | (id << 3) | 0x1U;
   adts_headers[2] = (profile << 6) | (sampling_frequency_index << 2) | 0x2U |
-      (channel_configuration & 0x4U);
+      ((channel_configuration & 0x4U) >> 2);
   adts_headers[3] = ((channel_configuration & 0x3U) << 6) | 0x30U |
       (guint8) (frame_size >> 11);
   adts_headers[4] = (guint8) ((frame_size >> 3) & 0x00FF);
