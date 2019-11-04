@@ -1994,9 +1994,14 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         in_plugin->name, in_plugin->long_name);
 
     /* no emulators */
-    if (!strncmp (in_plugin->long_name, "raw ", 4) ||
-        !strncmp (in_plugin->long_name, "pcm ", 4) ||
-        !strcmp (in_plugin->name, "audio_device") ||
+    if (in_plugin->long_name != NULL) {
+      if (!strncmp (in_plugin->long_name, "raw ", 4) ||
+          !strncmp (in_plugin->long_name, "pcm ", 4)
+          )
+        continue;
+    }
+
+    if (!strcmp (in_plugin->name, "audio_device") ||
         !strncmp (in_plugin->name, "image", 5) ||
         !strcmp (in_plugin->name, "mpegvideo") ||
         !strcmp (in_plugin->name, "mjpeg") ||
