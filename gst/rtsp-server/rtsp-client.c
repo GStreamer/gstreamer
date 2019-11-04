@@ -202,6 +202,7 @@ static GstRTSPStatusCode default_pre_signal_handler (GstRTSPClient * client,
     GstRTSPContext * ctx);
 static gboolean pre_signal_accumulator (GSignalInvocationHint * ihint,
     GValue * return_accu, const GValue * handler_return, gpointer data);
+gboolean gst_rtsp_media_has_completed_sender (GstRTSPMedia * media);
 
 G_DEFINE_TYPE_WITH_PRIVATE (GstRTSPClient, gst_rtsp_client, G_TYPE_OBJECT);
 
@@ -1741,7 +1742,7 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
   GstRTSPResult res;
   GstRTSPState rtspstate;
   GstRTSPRangeUnit unit = GST_RTSP_RANGE_NPT;
-  gchar *path, *rtpinfo;
+  gchar *path, *rtpinfo = NULL;
   gint matched;
   gchar *seek_style = NULL;
   GstRTSPStatusCode sig_result;
@@ -1830,7 +1831,8 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
   }
 
   /* grab RTPInfo from the media now */
-  if (!(rtpinfo = gst_rtsp_session_media_get_rtpinfo (sessmedia)))
+  if (gst_rtsp_media_has_completed_sender (media) &&
+      !(rtpinfo = gst_rtsp_session_media_get_rtpinfo (sessmedia)))
     goto rtp_info_error;
 
   /* construct the response now */
@@ -1839,7 +1841,9 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
       gst_rtsp_status_as_text (code), ctx->request);
 
   /* add the RTP-Info header */
-  gst_rtsp_message_take_header (ctx->response, GST_RTSP_HDR_RTP_INFO, rtpinfo);
+  if (rtpinfo)
+    gst_rtsp_message_take_header (ctx->response, GST_RTSP_HDR_RTP_INFO,
+        rtpinfo);
   if (seek_style)
     gst_rtsp_message_add_header (ctx->response, GST_RTSP_HDR_SEEK_STYLE,
         seek_style);

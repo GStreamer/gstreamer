@@ -237,6 +237,7 @@ static GstElement *find_payload_element (GstElement * payloader);
 static guint gst_rtsp_media_signals[SIGNAL_LAST] = { 0 };
 
 static gboolean check_complete (GstRTSPMedia * media);
+gboolean gst_rtsp_media_has_completed_sender (GstRTSPMedia * media);
 
 #define C_ENUM(v) ((gint) v)
 
@@ -2552,6 +2553,27 @@ conversion_failed:
     GST_WARNING ("range conversion to unit %d failed", unit);
     return NULL;
   }
+}
+
+gboolean
+gst_rtsp_media_has_completed_sender (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv = media->priv;
+  gboolean sender = FALSE;
+  guint i;
+
+  g_mutex_lock (&priv->lock);
+  for (i = 0; i < priv->streams->len; i++) {
+    GstRTSPStream *stream = g_ptr_array_index (priv->streams, i);
+    if (gst_rtsp_stream_is_complete (stream) &&
+        gst_rtsp_stream_is_sender (stream)) {
+      sender = TRUE;
+      break;
+    }
+  }
+  g_mutex_unlock (&priv->lock);
+
+  return sender;
 }
 
 static void

@@ -55,6 +55,51 @@ test_response_200 (GstRTSPClient * client, GstRTSPMessage * response,
 }
 
 static gboolean
+test_response_play_200 (GstRTSPClient * client, GstRTSPMessage * response,
+    gboolean close, gpointer user_data)
+{
+  GstRTSPStatusCode code;
+  const gchar *reason;
+  GstRTSPVersion version;
+  gchar *str;
+  gchar **session_hdr_params;
+  gchar *pattern;
+
+  fail_unless_equals_int (gst_rtsp_message_get_type (response),
+      GST_RTSP_MESSAGE_RESPONSE);
+
+  fail_unless (gst_rtsp_message_parse_response (response, &code, &reason,
+          &version)
+      == GST_RTSP_OK);
+  fail_unless_equals_int (code, GST_RTSP_STS_OK);
+  fail_unless_equals_string (reason, "OK");
+  fail_unless_equals_int (version, GST_RTSP_VERSION_1_0);
+
+  /* Verify mandatory headers according to RFC 2326 */
+  /* verify mandatory CSeq header */
+  fail_unless (gst_rtsp_message_get_header (response, GST_RTSP_HDR_CSEQ, &str,
+          0) == GST_RTSP_OK);
+  fail_unless (atoi (str) == cseq++);
+
+  /* verify mandatory Session header */
+  fail_unless (gst_rtsp_message_get_header (response, GST_RTSP_HDR_SESSION,
+          &str, 0) == GST_RTSP_OK);
+  session_hdr_params = g_strsplit (str, ";", -1);
+  fail_unless (session_hdr_params[0] != NULL);
+  g_strfreev (session_hdr_params);
+
+  /* verify mandatory RTP-Info header */
+  fail_unless (gst_rtsp_message_get_header (response, GST_RTSP_HDR_RTP_INFO,
+          &str, 0) == GST_RTSP_OK);
+  pattern = g_strdup_printf ("^url=rtsp://.+;seq=[0-9]+;rtptime=[0-9]+");
+  fail_unless (g_regex_match_simple (pattern, str, 0, 0),
+      "GST_RTSP_HDR_RTP_INFO '%s' doesn't match pattern '%s'", str, pattern);
+  g_free (pattern);
+
+  return TRUE;
+}
+
+static gboolean
 test_response_400 (GstRTSPClient * client, GstRTSPMessage * response,
     gboolean close, gpointer user_data)
 {
@@ -1707,7 +1752,55 @@ GST_START_TEST (test_client_multicast_invalid_ttl)
 
 GST_END_TEST;
 
-static Suite *
+GST_START_TEST (test_client_play)
+{
+  GstRTSPClient *client;
+  GstRTSPMessage request = { 0, };
+  gchar *str;
+  GstRTSPContext ctx = { NULL };
+
+  client = setup_multicast_client (1);
+
+  ctx.client = client;
+  ctx.auth = gst_rtsp_auth_new ();
+  ctx.token =
+      gst_rtsp_token_new (GST_RTSP_TOKEN_MEDIA_FACTORY_ROLE, G_TYPE_STRING,
+      "user", NULL);
+  gst_rtsp_context_push_current (&ctx);
+
+  fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_SETUP,
+          "rtsp://localhost/test/stream=0") == GST_RTSP_OK);
+  str = g_strdup_printf ("%d", cseq);
+  gst_rtsp_message_take_header (&request, GST_RTSP_HDR_CSEQ, str);
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_TRANSPORT,
+      "RTP/AVP;multicast");
+  /* destination is from adress pool */
+  expected_transport = "RTP/AVP;multicast;destination=233.252.0.1;"
+      "ttl=1;port=.*;mode=\"PLAY\"";
+  gst_rtsp_client_set_send_func (client, test_setup_response_200, NULL, NULL);
+  fail_unless (gst_rtsp_client_handle_message (client,
+          &request) == GST_RTSP_OK);
+  gst_rtsp_message_unset (&request);
+  expected_transport = NULL;
+
+  fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_PLAY,
+          "rtsp://localhost/test") == GST_RTSP_OK);
+  str = g_strdup_printf ("%d", cseq);
+  gst_rtsp_message_take_header (&request, GST_RTSP_HDR_CSEQ, str);
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SESSION, session_id);
+  gst_rtsp_client_set_send_func (client, test_response_play_200, NULL, NULL);
+  fail_unless (gst_rtsp_client_handle_message (client,
+          &request) == GST_RTSP_OK);
+  gst_rtsp_message_unset (&request);
+
+  send_teardown (client);
+  teardown_client (client);
+  g_object_unref (ctx.auth);
+  gst_rtsp_token_unref (ctx.token);
+  gst_rtsp_context_pop_current (&ctx);
+}
+
+GST_END_TEST static Suite *
 rtspclient_suite (void)
 {
   Suite *s = suite_create ("rtspclient");
@@ -1759,6 +1852,7 @@ rtspclient_suite (void)
   tcase_add_test (tc, test_client_multicast_max_ttl_first_client);
   tcase_add_test (tc, test_client_multicast_max_ttl_second_client);
   tcase_add_test (tc, test_client_multicast_invalid_ttl);
+  tcase_add_test (tc, test_client_play);
 
   return s;
 }
