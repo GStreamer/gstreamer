@@ -633,3 +633,107 @@ influencing the allocation strategy:
 
 Implementors of these methods should modify the given `GstQuery` object
 by updating the pool options and allocation options.
+
+### Negotiating the exact layout of video buffers
+
+Hardware elements may have specific constraints on the layout
+of their input buffers, requiring to add vertical and/or horizontal paddings
+to their planes.
+If the producer is able to create buffers fulfilling these requirements,
+we can ensure zero-copy by configuring its driver accordingly before starting to produce
+buffers.
+
+In such setup on Linux we'll generally use dmabuf to exchange buffers in order
+to reduce memory copies. The producer can either export its buffers
+to the consumer (dmabuf export) or import them from it (dmabuf import).
+
+In this section we'll outline the steps for how the consumer can inform the
+producer of its expected buffer layout for import and export use cases.
+Let's consider `v4l2src` (the producer) feeding buffers to
+`omxvideoenc` (the consumer) for encoding.
+
+#### v4l2src importing buffers from omxvideoenc
+
+  1. *omxvideoenc*: query the hardware for its requirements and create a
+    `GstVideoAlignment` accordingly.
+  2. *omxvideoenc*: in its buffer pool `alloc_buffer` implementation, call
+    `gst_buffer_add_video_meta_full()` and then
+    `gst_video_meta_set_alignment()` on the returned meta with the
+    requested alignment. The alignment will be added to the meta, allowing
+    `v4l2src` to configure its driver before trying to import buffers.
+``` c
+      meta = gst_buffer_add_video_meta_full (buf, GST_VIDEO_FRAME_FLAG_NONE,
+          GST_VIDEO_INFO_FORMAT (&pool->video_info),
+          GST_VIDEO_INFO_WIDTH (&pool->video_info),
+          GST_VIDEO_INFO_HEIGHT (&pool->video_info),
+          GST_VIDEO_INFO_N_PLANES (&pool->video_info), offset, stride);
+
+      if (gst_omx_video_get_port_padding (pool->port, &pool->video_info,
+              &align))
+        gst_video_meta_set_alignment (meta, align);
+```
+  3. *omxvideoenc*: propose its pool to the producer when replying to the
+    `ALLOCATION` query (`propose_allocation()`).
+  4. *v4l2src*: when receiving the reply from the `ALLOCATION` query
+    (`decide_allocation()`) acquire
+    a single buffer from the suggested pool and retrieve its layout
+    using `GstVideoMeta.stride` and `gst_video_meta_get_plane_height()`.
+  5. *v4l2src*: configure its driver to produce data matching those requirements,
+    if possible, then try to import the buffer.
+    If not, `v4l2src` won't be able to import from `omxvideoenc` and so will
+    fallback to sending its own buffers to `omxvideoenc` which will
+    have to copy each input buffer to fit its requirements.
+
+#### v4l2src exporting buffers to omxvideoenc
+
+  1. *omxvideoenc*: query the hardware for its requirements and create a
+    `GstVideoAlignment` accordingly.
+  2. *omxvideoenc*: create a `GstStructure` named `video-meta` serializing the alignment:
+``` c
+params = gst_structure_new ("video-meta",
+    "padding-top", G_TYPE_UINT, align.padding_top,
+    "padding-bottom", G_TYPE_UINT, align.padding_bottom,
+    "padding-left", G_TYPE_UINT, align.padding_left,
+    "padding-right", G_TYPE_UINT, align.padding_right,
+    NULL);
+```
+  3. *omxvideoenc*: when handling the `ALLOCATION` query (`propose_allocation()`),
+    pass this structure as parameter when adding the `GST_VIDEO_META_API_TYPE`
+    meta:
+``` c
+gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, params);
+```
+  4. *v4l2src*: when receiving the reply from the `ALLOCATION` query
+    (`decide_allocation()`) retrieve the `GST_VIDEO_META_API_TYPE` parameters
+    to compute the expected buffers layout:
+``` c
+guint video_idx;
+GstStructure *params;
+
+if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, &video_idx)) {
+  gst_query_parse_nth_allocation_meta (query, video_idx, &params);
+
+  if (params) {
+    GstVideoAlignment align;
+    GstVideoInfo info;
+    gsize plane_size[GST_VIDEO_MAX_PLANES];
+
+    gst_video_alignment_reset (&align);
+
+    gst_structure_get_uint (s, "padding-top", &align.padding_top);
+    gst_structure_get_uint (s, "padding-bottom", &align.padding_bottom);
+    gst_structure_get_uint (s, "padding-left", &align.padding_left);
+    gst_structure_get_uint (s, "padding-right", &align.padding_right);
+
+    gst_video_info_from_caps (&info, caps);
+
+    gst_video_info_align_full (&info, align, plane_size);
+  }
+}
+```
+  5. *v4l2src*: retrieve the requested buffers layout using
+    `GstVideoInfo.stride` and `GST_VIDEO_INFO_PLANE_HEIGHT()`.
+  6. *v4l2src*: configure its driver to produce data matching those requirements,
+    if possible.
+    If not, driver will produce buffers using its own layout but `omxvideoenc` will
+    have to copy each input buffer to fit its requirements.
