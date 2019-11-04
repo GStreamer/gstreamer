@@ -676,7 +676,7 @@ set_default_svt_configuration (EbSvtAv1EncConfiguration * svt_config)
   svt_config->super_block_size = 128;
   svt_config->partition_depth = 4;
   svt_config->enable_qp_scaling_flag = 0;
-  svt_config->asm_type = 1;
+  svt_config->use_cpu_flags = CPU_FLAGS_ALL;
 }
 
 GstFlowReturn
