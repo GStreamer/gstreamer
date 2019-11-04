@@ -19,6 +19,44 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-switchbin
+ * @title: switchbin
+ *
+ * switchbin is a helper element which chooses between a set of
+ * processing chains (paths) based on input caps, and changes if new caps
+ * arrive. Paths are child objects, which are accessed by the
+ * #GstChildProxy interface.
+ *
+ * Whenever new input caps are encountered at the switchbin's sinkpad,
+ * the * first path with matching caps is picked. The paths are looked at
+ * in order: path \#0's caps are looked at first, checked against the new
+ * input caps with gst_caps_can_intersect(), and if its return value
+ * is TRUE, path \#0 is picked. Otherwise, path \#1's caps are looked at etc.
+ * If no path matches, an error is reported.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ *
+ * In this example, if the data is raw PCM audio with 44.1 kHz, a volume
+ * element is used for reducing the audio volume to 10%. Otherwise, it is
+ * just passed through. So, a 44.1 kHz MP3 will sound quiet, a 48 kHz MP3
+ * will be at full volume.
+ *
+ * |[
+ *   gst-launch-1.0 uridecodebin uri=<URI> ! switchbin num-paths=2 \
+ *     path0::element="audioconvert ! volume volume=0.1" path0::caps="audio/x-raw, rate=44100" \
+ *     path1::element="identity" path1::caps="ANY" ! \
+ *     autoaudiosink
+ * ]|
+ *
+ * This example's path \#1 is a fallback "catch-all" path. Its caps are "ANY" caps,
+ * so any input caps will match against this. A catch-all path with an identity element
+ * is useful for cases where certain kinds of processing should only be done for specific
+ * formats, like the example above (it applies volume only to 44.1 kHz PCM audio).
+ * </refsect2>
+ *
+ */
 
 #include <string.h>
 #include <stdio.h>
@@ -39,16 +77,13 @@ enum
   PROP_NUM_PATHS
 };
 
-
 #define DEFAULT_NUM_PATHS 0
-
 
 static GstStaticPadTemplate static_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
-
 
 static GstStaticPadTemplate static_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -178,6 +213,14 @@ gst_switch_bin_class_init (GstSwitchBinClass * klass)
   object_class->set_property = GST_DEBUG_FUNCPTR (gst_switch_bin_set_property);
   object_class->get_property = GST_DEBUG_FUNCPTR (gst_switch_bin_get_property);
 
+  /**
+   * GstSwitchBin:num-paths
+   *
+   * Configure how many paths the switchbin will be choosing between. Attempting
+   * to configure a path outside the range 0..(n-1) will fail. Reducing the
+   * number of paths will release any paths outside the new range, which might
+   * trigger activation of a new path by re-assessing the current caps.
+   */
   g_object_class_install_property (object_class,
       PROP_NUM_PATHS,
       g_param_spec_uint ("num-paths",
