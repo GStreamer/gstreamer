@@ -2105,29 +2105,26 @@ gst_vulkan_view_convert_set_caps (GstBaseTransform * bt, GstCaps * in_caps,
 {
   GstVulkanViewConvert *conv = GST_VULKAN_VIEW_CONVERT (bt);
   GstVulkanFullScreenRender *render = GST_VULKAN_FULL_SCREEN_RENDER (bt);
+  GstVulkanFence *last_fence;
 
-  if (render->last_fence) {
-    if (conv->descriptor_pool)
-      gst_vulkan_trash_list_add (render->trash_list,
-          gst_vulkan_trash_new_free_descriptor_pool (gst_vulkan_fence_ref
-              (render->last_fence), conv->descriptor_pool));
-    conv->descriptor_set = VK_NULL_HANDLE;
-    conv->descriptor_pool = VK_NULL_HANDLE;
-    if (conv->uniform)
-      gst_vulkan_trash_list_add (render->trash_list,
-          gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref
-              (render->last_fence), (GstMiniObject *) conv->uniform));
-    conv->uniform = NULL;
-  } else {
-    if (conv->descriptor_pool)
-      vkDestroyDescriptorPool (render->device->device,
-          conv->descriptor_pool, NULL);
-    conv->descriptor_set = VK_NULL_HANDLE;
-    conv->descriptor_pool = VK_NULL_HANDLE;
-    if (conv->uniform)
-      gst_memory_unref (conv->uniform);
-    conv->uniform = NULL;
-  }
+  if (render->last_fence)
+    last_fence = gst_vulkan_fence_ref (render->last_fence);
+  else
+    last_fence = gst_vulkan_fence_new_always_signalled (render->device);
+
+  if (conv->descriptor_pool)
+    gst_vulkan_trash_list_add (render->trash_list,
+        gst_vulkan_trash_new_free_descriptor_pool (gst_vulkan_fence_ref
+            (last_fence), conv->descriptor_pool));
+  conv->descriptor_set = VK_NULL_HANDLE;
+  conv->descriptor_pool = VK_NULL_HANDLE;
+  if (conv->uniform)
+    gst_vulkan_trash_list_add (render->trash_list,
+        gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref
+            (last_fence), (GstMiniObject *) conv->uniform));
+  conv->uniform = NULL;
+
+  gst_vulkan_fence_unref (last_fence);
 
   if (!GST_BASE_TRANSFORM_CLASS (parent_class)->set_caps (bt, in_caps,
           out_caps))
@@ -2153,36 +2150,31 @@ gst_vulkan_view_convert_stop (GstBaseTransform * bt)
   conv->descriptor_up_to_date = FALSE;
 
   if (render->device) {
-    if (render->last_fence) {
-      if (conv->descriptor_pool)
-        gst_vulkan_trash_list_add (render->trash_list,
-            gst_vulkan_trash_new_free_descriptor_pool (gst_vulkan_fence_ref
-                (render->last_fence), conv->descriptor_pool));
-      conv->descriptor_set = VK_NULL_HANDLE;
-      conv->descriptor_pool = VK_NULL_HANDLE;
-      if (conv->sampler)
-        gst_vulkan_trash_list_add (render->trash_list,
-            gst_vulkan_trash_new_free_sampler (gst_vulkan_fence_ref
-                (render->last_fence), conv->sampler));
-      conv->sampler = VK_NULL_HANDLE;
-      if (conv->uniform)
-        gst_vulkan_trash_list_add (render->trash_list,
-            gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref
-                (render->last_fence), (GstMiniObject *) conv->uniform));
-      conv->uniform = NULL;
-    } else {
-      if (conv->descriptor_pool)
-        vkDestroyDescriptorPool (render->device->device,
-            conv->descriptor_pool, NULL);
-      conv->descriptor_set = VK_NULL_HANDLE;
-      conv->descriptor_pool = VK_NULL_HANDLE;
-      if (conv->sampler)
-        vkDestroySampler (render->device->device, conv->sampler, NULL);
-      conv->sampler = VK_NULL_HANDLE;
-      if (conv->uniform)
-        gst_memory_unref (conv->uniform);
-      conv->uniform = VK_NULL_HANDLE;
-    }
+    GstVulkanFence *last_fence;
+
+    if (render->last_fence)
+      last_fence = gst_vulkan_fence_ref (render->last_fence);
+    else
+      last_fence = gst_vulkan_fence_new_always_signalled (render->device);
+
+    if (conv->descriptor_pool)
+      gst_vulkan_trash_list_add (render->trash_list,
+          gst_vulkan_trash_new_free_descriptor_pool (gst_vulkan_fence_ref
+              (last_fence), conv->descriptor_pool));
+    conv->descriptor_set = VK_NULL_HANDLE;
+    conv->descriptor_pool = VK_NULL_HANDLE;
+    if (conv->sampler)
+      gst_vulkan_trash_list_add (render->trash_list,
+          gst_vulkan_trash_new_free_sampler (gst_vulkan_fence_ref
+              (last_fence), conv->sampler));
+    conv->sampler = VK_NULL_HANDLE;
+    if (conv->uniform)
+      gst_vulkan_trash_list_add (render->trash_list,
+          gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref
+              (last_fence), (GstMiniObject *) conv->uniform));
+    conv->uniform = NULL;
+
+    gst_vulkan_fence_unref (last_fence);
   }
 
   if (conv->cmd_pool)
@@ -2244,6 +2236,10 @@ gst_vulkan_view_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   VkResult err;
   int i;
 
+  fence = gst_vulkan_fence_new (render->device, 0, &error);
+  if (!fence)
+    goto error;
+
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&render->in_info); i++) {
     GstMemory *mem = gst_buffer_peek_memory (inbuf, i);
     if (!gst_is_vulkan_image_memory (mem)) {
@@ -2279,10 +2275,6 @@ gst_vulkan_view_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   }
 
   if (!(cmd_buf = gst_vulkan_command_pool_create (conv->cmd_pool, &error)))
-    goto error;
-
-  fence = gst_vulkan_fence_new (render->device, 0, &error);
-  if (!fence)
     goto error;
 
   {

@@ -46,6 +46,9 @@ GstVulkanFence *    gst_vulkan_fence_new            (GstVulkanDevice * device,
                                                      VkFenceCreateFlags flags,
                                                      GError ** error);
 GST_VULKAN_API
+GstVulkanFence *    gst_vulkan_fence_new_always_signalled (GstVulkanDevice *device);
+
+GST_VULKAN_API
 gboolean            gst_vulkan_fence_is_signaled    (GstVulkanFence * fence);
 
 static inline GstVulkanFence *

@@ -554,6 +554,7 @@ gst_vulkan_full_screen_render_set_caps (GstBaseTransform * bt,
     GstCaps * in_caps, GstCaps * out_caps)
 {
   GstVulkanFullScreenRender *render = GST_VULKAN_FULL_SCREEN_RENDER (bt);
+  GstVulkanFence *last_fence;
 
   if (!gst_video_info_from_caps (&render->in_info, in_caps))
     return FALSE;
@@ -563,51 +564,37 @@ gst_vulkan_full_screen_render_set_caps (GstBaseTransform * bt,
   gst_caps_replace (&render->in_caps, in_caps);
   gst_caps_replace (&render->out_caps, out_caps);
 
-  if (render->last_fence) {
-    if (render->descriptor_set_layout) {
-      gst_vulkan_trash_list_add (render->trash_list,
-          gst_vulkan_trash_new_free_descriptor_set_layout (gst_vulkan_fence_ref
-              (render->last_fence), render->descriptor_set_layout));
-      render->descriptor_set_layout = VK_NULL_HANDLE;
-    }
-    if (render->pipeline_layout) {
-      gst_vulkan_trash_list_add (render->trash_list,
-          gst_vulkan_trash_new_free_pipeline_layout (gst_vulkan_fence_ref
-              (render->last_fence), render->pipeline_layout));
-      render->pipeline_layout = VK_NULL_HANDLE;
-    }
-    if (render->render_pass) {
-      gst_vulkan_trash_list_add (render->trash_list,
-          gst_vulkan_trash_new_free_render_pass (gst_vulkan_fence_ref
-              (render->last_fence), render->render_pass));
-      render->render_pass = VK_NULL_HANDLE;
-    }
-    if (render->graphics_pipeline) {
-      gst_vulkan_trash_list_add (render->trash_list,
-          gst_vulkan_trash_new_free_pipeline (gst_vulkan_fence_ref
-              (render->last_fence), render->graphics_pipeline));
-      render->graphics_pipeline = VK_NULL_HANDLE;
-    }
-  } else {
-    if (render->graphics_pipeline)
-      vkDestroyPipeline (render->device->device,
-          render->graphics_pipeline, NULL);
-    render->graphics_pipeline = VK_NULL_HANDLE;
+  if (render->last_fence)
+    last_fence = gst_vulkan_fence_ref (render->last_fence);
+  else
+    last_fence = gst_vulkan_fence_new_always_signalled (render->device);
 
-    if (render->pipeline_layout)
-      vkDestroyPipelineLayout (render->device->device,
-          render->pipeline_layout, NULL);
-    render->pipeline_layout = VK_NULL_HANDLE;
-
-    if (render->render_pass)
-      vkDestroyRenderPass (render->device->device, render->render_pass, NULL);
-    render->render_pass = VK_NULL_HANDLE;
-
-    if (render->descriptor_set_layout)
-      vkDestroyDescriptorSetLayout (render->device->device,
-          render->descriptor_set_layout, NULL);
+  if (render->descriptor_set_layout) {
+    gst_vulkan_trash_list_add (render->trash_list,
+        gst_vulkan_trash_new_free_descriptor_set_layout (gst_vulkan_fence_ref
+            (last_fence), render->descriptor_set_layout));
     render->descriptor_set_layout = VK_NULL_HANDLE;
   }
+  if (render->pipeline_layout) {
+    gst_vulkan_trash_list_add (render->trash_list,
+        gst_vulkan_trash_new_free_pipeline_layout (gst_vulkan_fence_ref
+            (last_fence), render->pipeline_layout));
+    render->pipeline_layout = VK_NULL_HANDLE;
+  }
+  if (render->render_pass) {
+    gst_vulkan_trash_list_add (render->trash_list,
+        gst_vulkan_trash_new_free_render_pass (gst_vulkan_fence_ref
+            (last_fence), render->render_pass));
+    render->render_pass = VK_NULL_HANDLE;
+  }
+  if (render->graphics_pipeline) {
+    gst_vulkan_trash_list_add (render->trash_list,
+        gst_vulkan_trash_new_free_pipeline (gst_vulkan_fence_ref
+            (last_fence), render->graphics_pipeline));
+    render->graphics_pipeline = VK_NULL_HANDLE;
+  }
+
+  gst_vulkan_fence_unref (last_fence);
 
   if (!(render->descriptor_set_layout = _create_descriptor_set_layout (render)))
     return FALSE;
@@ -767,42 +754,35 @@ gst_vulkan_full_screen_render_stop (GstBaseTransform * bt)
   GstVulkanFullScreenRender *render = GST_VULKAN_FULL_SCREEN_RENDER (bt);
 
   if (render->device) {
-    if (render->last_fence) {
-      gst_vulkan_trash_list_add (render->trash_list,
-          gst_vulkan_trash_new_free_pipeline (gst_vulkan_fence_ref
-              (render->last_fence), render->graphics_pipeline));
-      render->graphics_pipeline = VK_NULL_HANDLE;
-      gst_vulkan_trash_list_add (render->trash_list,
-          gst_vulkan_trash_new_free_pipeline_layout (gst_vulkan_fence_ref
-              (render->last_fence), render->pipeline_layout));
-      render->pipeline_layout = VK_NULL_HANDLE;
-      gst_vulkan_trash_list_add (render->trash_list,
-          gst_vulkan_trash_new_free_render_pass (gst_vulkan_fence_ref
-              (render->last_fence), render->render_pass));
-      render->render_pass = VK_NULL_HANDLE;
-      gst_vulkan_trash_list_add (render->trash_list,
-          gst_vulkan_trash_new_free_descriptor_set_layout (gst_vulkan_fence_ref
-              (render->last_fence), render->descriptor_set_layout));
-      render->descriptor_set_layout = VK_NULL_HANDLE;
+    GstVulkanFence *last_fence;
 
+    if (render->last_fence)
+      last_fence = gst_vulkan_fence_ref (render->last_fence);
+    else
+      last_fence = gst_vulkan_fence_new_always_signalled (render->device);
+
+    gst_vulkan_trash_list_add (render->trash_list,
+        gst_vulkan_trash_new_free_pipeline (gst_vulkan_fence_ref
+            (last_fence), render->graphics_pipeline));
+    render->graphics_pipeline = VK_NULL_HANDLE;
+    gst_vulkan_trash_list_add (render->trash_list,
+        gst_vulkan_trash_new_free_pipeline_layout (gst_vulkan_fence_ref
+            (last_fence), render->pipeline_layout));
+    render->pipeline_layout = VK_NULL_HANDLE;
+    gst_vulkan_trash_list_add (render->trash_list,
+        gst_vulkan_trash_new_free_render_pass (gst_vulkan_fence_ref
+            (last_fence), render->render_pass));
+    render->render_pass = VK_NULL_HANDLE;
+    gst_vulkan_trash_list_add (render->trash_list,
+        gst_vulkan_trash_new_free_descriptor_set_layout (gst_vulkan_fence_ref
+            (last_fence), render->descriptor_set_layout));
+    render->descriptor_set_layout = VK_NULL_HANDLE;
+
+    gst_vulkan_fence_unref (last_fence);
+
+    if (render->last_fence)
       gst_vulkan_fence_unref (render->last_fence);
-      render->last_fence = NULL;
-    } else {
-      vkDestroyPipeline (render->device->device,
-          render->graphics_pipeline, NULL);
-      render->graphics_pipeline = VK_NULL_HANDLE;
-
-      vkDestroyPipelineLayout (render->device->device,
-          render->pipeline_layout, NULL);
-      render->pipeline_layout = VK_NULL_HANDLE;
-
-      vkDestroyRenderPass (render->device->device, render->render_pass, NULL);
-      render->render_pass = VK_NULL_HANDLE;
-
-      vkDestroyDescriptorSetLayout (render->device->device,
-          render->descriptor_set_layout, NULL);
-      render->descriptor_set_layout = VK_NULL_HANDLE;
-    }
+    render->last_fence = NULL;
 
     if (!gst_vulkan_trash_list_wait (render->trash_list, -1))
       GST_WARNING_OBJECT (render,

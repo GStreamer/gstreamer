@@ -350,23 +350,24 @@ gst_vulkan_image_identity_set_caps (GstBaseTransform * bt, GstCaps * in_caps,
 {
   GstVulkanImageIdentity *vk_identity = GST_VULKAN_IMAGE_IDENTITY (bt);
   GstVulkanFullScreenRender *render = GST_VULKAN_FULL_SCREEN_RENDER (bt);
+  GstVulkanFence *last_fence;
 
   if (!GST_BASE_TRANSFORM_CLASS (parent_class)->set_caps (bt, in_caps,
           out_caps))
     return FALSE;
 
-  if (render->last_fence) {
-    gst_vulkan_trash_list_add (render->trash_list,
-        gst_vulkan_trash_new_free_descriptor_pool (gst_vulkan_fence_ref
-            (render->last_fence), vk_identity->descriptor_pool));
-    vk_identity->descriptor_set = VK_NULL_HANDLE;
-    vk_identity->descriptor_pool = VK_NULL_HANDLE;
-  } else {
-    vkDestroyDescriptorPool (render->device->device,
-        vk_identity->descriptor_pool, NULL);
-    vk_identity->descriptor_set = VK_NULL_HANDLE;
-    vk_identity->descriptor_pool = VK_NULL_HANDLE;
-  }
+  if (render->last_fence)
+    last_fence = gst_vulkan_fence_ref (render->last_fence);
+  else
+    last_fence = gst_vulkan_fence_new_always_signalled (render->device);
+
+  gst_vulkan_trash_list_add (render->trash_list,
+      gst_vulkan_trash_new_free_descriptor_pool (gst_vulkan_fence_ref
+          (last_fence), vk_identity->descriptor_pool));
+  vk_identity->descriptor_set = VK_NULL_HANDLE;
+  vk_identity->descriptor_pool = VK_NULL_HANDLE;
+
+  gst_vulkan_fence_unref (last_fence);
 
   if (!(vk_identity->descriptor_pool = _create_descriptor_pool (vk_identity)))
     return FALSE;
@@ -438,24 +439,25 @@ gst_vulkan_image_identity_stop (GstBaseTransform * bt)
   GstVulkanFullScreenRender *render = GST_VULKAN_FULL_SCREEN_RENDER (bt);
 
   if (render->device) {
-    if (render->last_fence) {
+    GstVulkanFence *last_fence;
+
+    if (render->last_fence)
+      last_fence = gst_vulkan_fence_ref (render->last_fence);
+    else
+      last_fence = gst_vulkan_fence_new_always_signalled (render->device);
+
+    if (vk_identity->descriptor_pool)
       gst_vulkan_trash_list_add (render->trash_list,
           gst_vulkan_trash_new_free_descriptor_pool (gst_vulkan_fence_ref
               (render->last_fence), vk_identity->descriptor_pool));
-      vk_identity->descriptor_set = VK_NULL_HANDLE;
-      vk_identity->descriptor_pool = VK_NULL_HANDLE;
+    vk_identity->descriptor_pool = VK_NULL_HANDLE;
+    if (vk_identity->sampler)
       gst_vulkan_trash_list_add (render->trash_list,
           gst_vulkan_trash_new_free_sampler (gst_vulkan_fence_ref
               (render->last_fence), vk_identity->sampler));
-      vk_identity->sampler = VK_NULL_HANDLE;
-    } else {
-      vkDestroyDescriptorPool (render->device->device,
-          vk_identity->descriptor_pool, NULL);
-      vk_identity->descriptor_set = VK_NULL_HANDLE;
-      vk_identity->descriptor_pool = VK_NULL_HANDLE;
-      vkDestroySampler (render->device->device, vk_identity->sampler, NULL);
-      vk_identity->sampler = VK_NULL_HANDLE;
-    }
+    vk_identity->sampler = VK_NULL_HANDLE;
+
+    gst_vulkan_fence_unref (last_fence);
   }
 
   if (vk_identity->cmd_pool)

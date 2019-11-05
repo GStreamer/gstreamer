@@ -56,7 +56,8 @@ gst_vulkan_fence_free (GstVulkanFence * fence)
 
   GST_TRACE ("Freeing fence %p", fence);
 
-  vkDestroyFence (fence->device->device, fence->fence, NULL);
+  if (fence->fence)
+    vkDestroyFence (fence->device->device, fence->fence, NULL);
 
   gst_object_unref (fence->device);
 
@@ -95,9 +96,36 @@ gst_vulkan_fence_new (GstVulkanDevice * device, VkFenceCreateFlags flags,
 
   err = vkCreateFence (device->device, &fence_info, NULL, &fence->fence);
   if (gst_vulkan_error_to_g_error (err, error, "vkCreateFence") < 0) {
+    gst_clear_object (&fence->device);
     g_free (fence);
     return NULL;
   }
+
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (fence), 0, GST_TYPE_VULKAN_FENCE,
+      NULL, NULL, (GstMiniObjectFreeFunction) gst_vulkan_fence_free);
+
+  return fence;
+}
+
+/**
+ * gst_vulkan_fence_new_always_signalled:
+ *
+ * Returns: a new #GstVulkanFence that is always in the signalled state
+ */
+GstVulkanFence *
+gst_vulkan_fence_new_always_signalled (GstVulkanDevice * device)
+{
+  GstVulkanFence *fence;
+
+  g_return_val_if_fail (GST_IS_VULKAN_DEVICE (device), FALSE);
+
+  _init_debug ();
+
+  fence = g_new0 (GstVulkanFence, 1);
+  GST_TRACE ("Creating always-signalled fence %p with device %" GST_PTR_FORMAT,
+      fence, device);
+  fence->device = gst_object_ref (device);
+  fence->fence = VK_NULL_HANDLE;
 
   gst_mini_object_init (GST_MINI_OBJECT_CAST (fence), 0, GST_TYPE_VULKAN_FENCE,
       NULL, NULL, (GstMiniObjectFreeFunction) gst_vulkan_fence_free);
@@ -117,6 +145,9 @@ gboolean
 gst_vulkan_fence_is_signaled (GstVulkanFence * fence)
 {
   g_return_val_if_fail (fence != NULL, FALSE);
+
+  if (!fence->fence)
+    return TRUE;
 
   return vkGetFenceStatus (fence->device->device, fence->fence) == VK_SUCCESS;
 }
