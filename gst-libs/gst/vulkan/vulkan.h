@@ -45,6 +45,7 @@
 #include <gst/vulkan/gstvkutils.h>
 #include <gst/vulkan/gstvkcommandbuffer.h>
 #include <gst/vulkan/gstvkcommandpool.h>
+#include <gst/vulkan/gstvkhandle.h>
 #include <gst/vulkan/gstvktrash.h>
 #include <gst/vulkan/gstvkswapper.h>
 

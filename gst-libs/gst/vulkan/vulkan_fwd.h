@@ -68,6 +68,8 @@ typedef struct _GstVulkanBufferPool GstVulkanBufferPool;
 typedef struct _GstVulkanBufferPoolClass GstVulkanBufferPoolClass;
 typedef struct _GstVulkanBufferPoolPrivate GstVulkanBufferPoolPrivate;
 
+typedef struct _GstVulkanHandle GstVulkanHandle;
+
 typedef struct _GstVulkanImageMemory GstVulkanImageMemory;
 typedef struct _GstVulkanImageMemoryAllocator GstVulkanImageMemoryAllocator;
 typedef struct _GstVulkanImageMemoryAllocatorClass GstVulkanImageMemoryAllocatorClass;
