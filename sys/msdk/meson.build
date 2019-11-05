@@ -42,6 +42,7 @@ endif
 mfx_dep = dependency('libmfx', required: false)
 if mfx_dep.found()
   mfx_incdir = mfx_dep.get_pkgconfig_variable('includedir')
+  mfx_inc = []
 else
   # Old versions of MediaSDK don't provide a pkg-config file
   mfx_root = run_command(python3, '-c', 'import os; print(os.environ.get("INTELMEDIASDKROOT", os.environ.get("MFX_HOME", "")))').stdout().strip()
@@ -69,6 +70,7 @@ endif
 # Old versions of MediaSDK don't have the 'mfx' directory prefix
 if cxx.has_header('mfx/mfxdefs.h', args: '-I' + mfx_incdir)
   mfx_incdir = join_paths([mfx_incdir, 'mfx'])
+  mfx_inc = include_directories(mfx_incdir)
 endif
 
 if cxx.has_header('mfxvp9.h', args: '-I' + mfx_incdir)
@@ -96,7 +98,7 @@ if msdk_deps_found
   gstmsdktag = library('gstmsdk',
     msdk_sources,
     c_args : gst_plugins_bad_args,
-    include_directories : [configinc, mfx_incdir],
+    include_directories : [configinc, mfx_inc],
     dependencies : [gstbase_dep, gstvideo_dep, gstpbutils_dep, gstallocators_dep, mfx_dep, msdk_deps],
     install : true,
     install_dir : plugins_install_dir,
