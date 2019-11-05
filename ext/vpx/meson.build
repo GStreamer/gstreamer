@@ -16,7 +16,8 @@ vpx_features = [
   [ 'vpx/vp8dx.h', 'vpx_codec_vp9_dx_algo', '-DHAVE_VP9_DECODER', 'VP9 decoder' ],
 ]
 
-vpx_dep = dependency('vpx', version : '>=1.3.0', required : get_option('vpx'))
+vpx_option = get_option('vpx')
+vpx_dep = dependency('vpx', version : '>=1.3.0', required : vpx_option)
 
 if vpx_dep.found()
   vpx_args = []
@@ -41,7 +42,13 @@ if vpx_dep.found()
   endforeach
 
   if vpx_args.length() == 0
-    message('WARNING: libvpx was built without any encoder or decoder features!')
+    msg = 'libvpx was built without any encoder or decoder features!'
+    # Error out if explicitly enabled, but continue with a warning if the
+    # plugin is in auto-detect mode to reduce build-time friction.
+    if vpx_option.enabled()
+      error(msg)
+    endif
+    warning(msg)
   endif
 
   if dependency('vpx', version : '>=1.4.0', required : false).found()
