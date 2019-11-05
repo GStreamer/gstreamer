@@ -380,7 +380,7 @@ gst_base_ts_mux_create_stream (GstBaseTsMux * mux, GstBaseTsMuxPad * ts_pad)
   const GValue *value = NULL;
   GstBuffer *codec_data = NULL;
   guint8 opus_channel_config_code = 0;
-  guint16 profile = 0;
+  guint16 profile = GST_JPEG2000_PARSE_PROFILE_NONE;
   guint8 main_level = 0;
   guint32 max_rate = 0;
   guint8 color_spec = 0;
@@ -550,11 +550,14 @@ gst_base_ts_mux_create_stream (GstBaseTsMux * mux, GstBaseTsMuxPad * ts_pad)
     const GValue *vFramerate = gst_structure_get_value (s, "framerate");
     const GValue *vColorimetry = gst_structure_get_value (s, "colorimetry");
     private_data = g_new0 (j2k_private_data, 1);
-    profile = g_value_get_uint (vProfile);
-    if (profile != GST_JPEG2000_PARSE_PROFILE_BC_SINGLE) {
-      /* for now, we will relax the condition that the profile must equal GST_JPEG2000_PARSE_PROFILE_BC_SINGLE */
-      /*GST_ERROR_OBJECT (pad, "Invalid JPEG 2000 profile %d", profile);
-         goto not_negotiated; */
+    /* for now, we relax the condition that profile must exist and equal
+     * GST_JPEG2000_PARSE_PROFILE_BC_SINGLE */
+    if (vProfile) {
+      profile = g_value_get_int (vProfile);
+      if (profile != GST_JPEG2000_PARSE_PROFILE_BC_SINGLE) {
+        GST_LOG_OBJECT (pad, "Invalid JPEG 2000 profile %d", profile);
+        /*goto not_negotiated; */
+      }
     }
     /* for now, we will relax the condition that the main level must be present */
     if (vMainlevel) {
