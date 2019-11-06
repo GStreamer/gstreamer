@@ -246,6 +246,7 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
   D3D11_TEXTURE2D_DESC desc = { 0, };
   ID3D11Texture2D *staging;
   GError *error = NULL;
+  const GstD3D11Format *d3d11_format = NULL;
 
   GST_DEBUG_OBJECT (self, "set caps %" GST_PTR_FORMAT, caps);
 
@@ -261,6 +262,11 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
   gst_clear_caps (&sink_caps);
 
   if (!gst_video_info_from_caps (&self->info, caps))
+    goto invalid_format;
+
+  d3d11_format =
+      gst_d3d11_format_from_gst (GST_VIDEO_INFO_FORMAT (&self->info));
+  if (!d3d11_format || d3d11_format->dxgi_format == DXGI_FORMAT_UNKNOWN)
     goto invalid_format;
 
   video_width = GST_VIDEO_INFO_WIDTH (&self->info);
@@ -316,8 +322,7 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
   if (GST_VIDEO_SINK_WIDTH (self) <= 0 || GST_VIDEO_SINK_HEIGHT (self) <= 0)
     goto no_display_size;
 
-  self->dxgi_format =
-      gst_d3d11_dxgi_format_from_gst (GST_VIDEO_INFO_FORMAT (&self->info));
+  self->dxgi_format = d3d11_format->dxgi_format;
 
   if (!self->window_id)
     gst_video_overlay_prepare_window_handle (GST_VIDEO_OVERLAY (self));
@@ -523,7 +528,7 @@ gst_d3d11_video_sink_propose_allocation (GstBaseSink * sink, GstQuery * query)
   if (need_pool) {
     GST_DEBUG_OBJECT (self, "create new pool");
 
-    pool = (GstBufferPool *) gst_d3d11_buffer_pool_new (self->device);
+    pool = gst_d3d11_buffer_pool_new (self->device);
     config = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_set_params (config, caps, size, 2,
         DXGI_MAX_SWAP_CHAIN_BUFFERS);

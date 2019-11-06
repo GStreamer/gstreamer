@@ -27,19 +27,6 @@
 
 G_BEGIN_DECLS
 
-GstVideoFormat  gst_d3d11_dxgi_format_to_gst        (DXGI_FORMAT format);
-
-DXGI_FORMAT     gst_d3d11_dxgi_format_from_gst      (GstVideoFormat format);
-
-GstCaps *       gst_d3d11_device_get_supported_caps (GstD3D11Device * device,
-                                                     D3D11_FORMAT_SUPPORT flags);
-
-gboolean        gst_d3d11_calculate_buffer_size     (GstVideoInfo * info,
-                                                     guint pitch,
-                                                     gsize offset[GST_VIDEO_MAX_PLANES],
-                                                     gint stride[GST_VIDEO_MAX_PLANES],
-                                                     gsize *size);
-
 gboolean        gst_d3d11_handle_set_context        (GstElement * element,
                                                      GstContext * context,
                                                      gint adapter,
@@ -52,6 +39,8 @@ gboolean        gst_d3d11_handle_context_query      (GstElement * element,
 gboolean        gst_d3d11_ensure_element_data       (GstElement * element,
                                                      gint adapter,
                                                      GstD3D11Device ** device);
+
+gboolean        gst_d3d11_is_windows_8_or_greater   (void);
 
 G_END_DECLS
 

@@ -39,6 +39,9 @@ struct _GstD3D11BufferPool
 {
   GstBufferPool parent;
 
+  /* re-calculated buffer size based on d3d11 pitch and stride */
+  guint buffer_size;
+
   /*< private >*/
   GstD3D11BufferPoolPrivate *priv;
 
@@ -55,7 +58,7 @@ struct _GstD3D11BufferPoolClass
 
 GType                gst_d3d11_buffer_pool_get_type  (void);
 
-GstD3D11BufferPool * gst_d3d11_buffer_pool_new       (GstD3D11Device *device);
+GstBufferPool *      gst_d3d11_buffer_pool_new       (GstD3D11Device *device);
 
 GstD3D11AllocationParams * gst_buffer_pool_config_get_d3d11_allocation_params (GstStructure * config);
 

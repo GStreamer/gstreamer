@@ -25,6 +25,7 @@
 #include <gst/video/video.h>
 
 #include "gstd3d11_fwd.h"
+#include "gstd3d11format.h"
 
 G_BEGIN_DECLS
 
@@ -52,35 +53,70 @@ G_BEGIN_DECLS
  */
 #define GST_MAP_D3D11 (GST_MAP_FLAG_LAST << 1)
 
+/**
+ * GstD3D11AllocationFlags:
+ * GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT: Allocate texture with resource format
+ *                                                per planes instead of the direct use of DXGI format
+ */
+typedef enum
+{
+  GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT = (1 << 0),
+} GstD3D11AllocationFlags;
+
+/**
+ * GstD3D11MemoryTransfer:
+ * @GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD: the texture needs downloading
+ *                                           to the staging texture memory
+ * @GST_D3D11_MEMORY_TRANSFER_NEED_UPLOAD:   the staging texture needs uploading
+ *                                           to the texture
+ */
+typedef enum
+{
+  GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD   = (GST_MEMORY_FLAG_LAST << 0),
+  GST_D3D11_MEMORY_TRANSFER_NEED_UPLOAD     = (GST_MEMORY_FLAG_LAST << 1)
+} GstD3D11MemoryTransfer;
+
+struct _GstD3D11AllocationParams
+{
+  /* Texture description per plane */
+  D3D11_TEXTURE2D_DESC desc[GST_VIDEO_MAX_PLANES];
+
+  GstVideoInfo info;
+  const GstD3D11Format *d3d11_format;
+
+  /* size and stride of staging texture, set by allocator */
+  gint stride[GST_VIDEO_MAX_PLANES];
+  gsize size[GST_VIDEO_MAX_PLANES];
+
+  /* Current target plane for allocation */
+  guint plane;
+
+  GstD3D11AllocationFlags flags;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING_LARGE];
+};
+
 struct _GstD3D11Memory
 {
   GstMemory mem;
 
-  GstMapFlags map_flags;
-  gint cpu_map_count;
+  /*< public > */
+  GstD3D11Device *device;
 
   ID3D11Texture2D *texture;
   ID3D11Texture2D *staging;
 
+  GstVideoInfo info;
+
+  guint plane;
+
   D3D11_TEXTURE2D_DESC desc;
   D3D11_MAPPED_SUBRESOURCE map;
-  gboolean need_upload;
-
-  gsize offset[GST_VIDEO_MAX_PLANES];
-  gint stride[GST_VIDEO_MAX_PLANES];
-};
-
-struct _GstD3D11AllocationParams
-{
-  GstAllocationParams parent;
-
-  D3D11_TEXTURE2D_DESC desc;
-
-  GstVideoInfo info;
-  GstVideoAlignment align;
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING_LARGE];
+  GMutex lock;
+  gint cpu_map_count;
 };
 
 struct _GstD3D11Allocator
@@ -103,9 +139,8 @@ struct _GstD3D11AllocatorClass
 
 GType               gst_d3d11_allocation_params_get_type (void);
 
-GstD3D11AllocationParams * gst_d3d11_allocation_params_new (GstAllocationParams * alloc_params,
-                                                            GstVideoInfo * info,
-                                                            GstVideoAlignment * align);
+GstD3D11AllocationParams * gst_d3d11_allocation_params_new (GstVideoInfo * info,
+                                                            GstD3D11AllocationFlags flags);
 
 GstD3D11AllocationParams * gst_d3d11_allocation_params_copy (GstD3D11AllocationParams * src);
 
@@ -119,7 +154,6 @@ GstMemory *         gst_d3d11_allocator_alloc     (GstD3D11Allocator * allocator
                                                    GstD3D11AllocationParams * params);
 
 gboolean            gst_is_d3d11_memory           (GstMemory * mem);
-
 
 G_END_DECLS
 

@@ -6,6 +6,7 @@ d3d11_sources = [
   'gstd3d11videosink.c',
   'gstd3d11window.c',
   'plugin.c',
+  'gstd3d11format.c',
 ]
 
 have_d3d11 = false

@@ -32,7 +32,9 @@ struct _GstD3D11BufferPoolPrivate
 {
   GstD3D11Device *device;
   GstD3D11Allocator *allocator;
-  GstCaps *caps;
+
+  /* initial buffer used for calculating buffer size */
+  GstBuffer *initial_buffer;
 
   gboolean add_videometa;
   GstD3D11AllocationParams *d3d11_params;
@@ -80,9 +82,10 @@ gst_d3d11_buffer_pool_dispose (GObject * object)
   if (priv->d3d11_params)
     gst_d3d11_allocation_params_free (priv->d3d11_params);
   priv->d3d11_params = NULL;
+
+  gst_clear_buffer (&priv->initial_buffer);
   gst_clear_object (&priv->device);
   gst_clear_object (&priv->allocator);
-  gst_clear_caps (&priv->caps);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -90,10 +93,9 @@ gst_d3d11_buffer_pool_dispose (GObject * object)
 static const gchar **
 gst_d3d11_buffer_pool_get_options (GstBufferPool * pool)
 {
-  static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META,
-    GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT,
-    NULL
-  };
+  /* NOTE: d3d11 memory does not support alignment */
+  static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META, NULL };
+
   return options;
 }
 
@@ -105,11 +107,8 @@ gst_d3d11_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   GstVideoInfo info;
   GstCaps *caps = NULL;
   guint min_buffers, max_buffers;
-  guint max_align, n;
   GstAllocator *allocator = NULL;
-  GstAllocationParams alloc_params;
   gboolean ret = TRUE;
-  D3D11_TEXTURE2D_DESC *desc;
 
   if (!gst_buffer_pool_config_get_params (config, &caps, NULL, &min_buffers,
           &max_buffers))
@@ -125,17 +124,14 @@ gst_d3d11_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   GST_LOG_OBJECT (pool, "%dx%d, caps %" GST_PTR_FORMAT, info.width, info.height,
       caps);
 
-  if (!gst_buffer_pool_config_get_allocator (config, &allocator, &alloc_params))
+  if (!gst_buffer_pool_config_get_allocator (config, &allocator, NULL))
     goto wrong_config;
 
-  gst_caps_replace (&priv->caps, caps);
-
-  if (priv->allocator)
-    gst_object_unref (priv->allocator);
+  gst_clear_buffer (&priv->initial_buffer);
+  gst_clear_object (&priv->allocator);
 
   if (allocator) {
     if (!GST_IS_D3D11_ALLOCATOR (allocator)) {
-      gst_object_unref (allocator);
       goto wrong_allocator;
     } else {
       priv->allocator = gst_object_ref (allocator);
@@ -152,59 +148,50 @@ gst_d3d11_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     gst_d3d11_allocation_params_free (priv->d3d11_params);
   priv->d3d11_params =
       gst_buffer_pool_config_get_d3d11_allocation_params (config);
-  if (!priv->d3d11_params)
-    priv->d3d11_params = gst_d3d11_allocation_params_new (&alloc_params,
-        &info, NULL);
+  if (!priv->d3d11_params) {
+    /* allocate memory with resource format by default */
+    priv->d3d11_params = gst_d3d11_allocation_params_new (&info,
+        GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT);
+  }
+#ifndef GST_DISABLE_GST_DEBUG
+  {
+    D3D11_TEXTURE2D_DESC *desc;
+    gint i;
+    desc = priv->d3d11_params->desc;
 
-  desc = &priv->d3d11_params->desc;
+    GST_LOG_OBJECT (self, "Direct3D11 Allocation params");
+    for (i = 0; GST_VIDEO_MAX_PLANES; i++) {
+      if (desc[i].Format == DXGI_FORMAT_UNKNOWN)
+        break;
+      GST_LOG_OBJECT (self, "\t[plane %d] %dx%d, DXGI format %d",
+          i, desc[i].Width, desc[i].Height, desc[i].Format);
+      GST_LOG_OBJECT (self, "\t[plane %d] MipLevel %d, ArraySize %d",
+          i, desc[i].MipLevels, desc[i].ArraySize);
+      GST_LOG_OBJECT (self,
+          "\t[plane %d] SampleDesc.Count %d, SampleDesc.Quality %d",
+          i, desc[i].SampleDesc.Count, desc[i].SampleDesc.Quality);
+      GST_LOG_OBJECT (self, "\t[plane %d] Usage %d", i, desc[i].Usage);
+      GST_LOG_OBJECT (self,
+          "\t[plane %d] BindFlags 0x%x", i, desc[i].BindFlags);
+      GST_LOG_OBJECT (self,
+          "\t[plane %d] CPUAccessFlags 0x%x", i, desc[i].CPUAccessFlags);
+      GST_LOG_OBJECT (self,
+          "\t[plane %d] MiscFlags 0x%x", i, desc[i].MiscFlags);
+    }
+  }
+#endif
 
-  GST_LOG_OBJECT (self, "Direct3D11 Allocation params");
-  GST_LOG_OBJECT (self, "\t%dx%d, DXGI format %d",
-      desc->Width, desc->Height, desc->Format);
-  GST_LOG_OBJECT (self, "\tMipLevel %d, ArraySize %d",
-      desc->MipLevels, desc->ArraySize);
-  GST_LOG_OBJECT (self, "\tSampleDesc.Count %d, SampleDesc.Quality %d",
-      desc->SampleDesc.Count, desc->SampleDesc.Quality);
-  GST_LOG_OBJECT (self, "\tUsage %d", desc->Usage);
-  GST_LOG_OBJECT (self, "\tBindFlags 0x%x", desc->BindFlags);
-  GST_LOG_OBJECT (self, "\tCPUAccessFlags 0x%x", desc->CPUAccessFlags);
-  GST_LOG_OBJECT (self, "\tMiscFlags 0x%x", desc->MiscFlags);
+  gst_d3d11_buffer_pool_alloc (pool, &priv->initial_buffer, NULL);
 
-  max_align = alloc_params.align;
-
-  if (gst_buffer_pool_config_has_option (config,
-          GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT)) {
-    priv->add_videometa = TRUE;
-
-    gst_buffer_pool_config_get_video_alignment (config,
-        &priv->d3d11_params->align);
-
-    for (n = 0; n < GST_VIDEO_MAX_PLANES; ++n)
-      max_align |= priv->d3d11_params->align.stride_align[n];
-
-    for (n = 0; n < GST_VIDEO_MAX_PLANES; ++n)
-      priv->d3d11_params->align.stride_align[n] = max_align;
-
-    gst_video_info_align (&priv->d3d11_params->info,
-        &priv->d3d11_params->align);
-
-    gst_buffer_pool_config_set_video_alignment (config,
-        &priv->d3d11_params->align);
+  if (!priv->initial_buffer) {
+    GST_ERROR_OBJECT (pool, "Could not create initial buffer");
+    return FALSE;
   }
 
-  if (alloc_params.align < max_align) {
-    GST_WARNING_OBJECT (pool, "allocation params alignment %u is smaller "
-        "than the max specified video stride alignment %u, fixing",
-        (guint) alloc_params.align, max_align);
-
-    alloc_params.align = priv->d3d11_params->parent.align = max_align;
-    gst_buffer_pool_config_set_allocator (config, allocator, &alloc_params);
-    gst_allocation_params_copy (&alloc_params);
-  }
+  self->buffer_size = gst_buffer_get_size (priv->initial_buffer);
 
   gst_buffer_pool_config_set_params (config,
-      caps, GST_VIDEO_INFO_SIZE (&priv->d3d11_params->info), min_buffers,
-      max_buffers);
+      caps, self->buffer_size, min_buffers, max_buffers);
 
   return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config) && ret;
 
@@ -240,34 +227,71 @@ gst_d3d11_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   GstD3D11BufferPoolPrivate *priv = self->priv;
   GstMemory *mem;
   GstBuffer *buf;
-  GstVideoInfo *info = &priv->d3d11_params->info;
+  GstD3D11AllocationParams *d3d11_params = priv->d3d11_params;
+  GstVideoInfo *info = &d3d11_params->info;
+  gint n_texture = 0;
+  gint i;
+  gsize offset[GST_VIDEO_MAX_PLANES] = { 0, };
 
-  mem = gst_d3d11_allocator_alloc (priv->allocator, priv->d3d11_params);
+  /* consume pre-allocated buffer if any */
+  if (G_UNLIKELY (priv->initial_buffer)) {
+    *buffer = priv->initial_buffer;
+    priv->initial_buffer = NULL;
 
-  if (!mem) {
-    GST_ERROR_OBJECT (self, "cannot create texture memory");
-    return GST_FLOW_ERROR;
+    return GST_FLOW_OK;
   }
 
   buf = gst_buffer_new ();
-  gst_buffer_append_memory (buf, mem);
+
+  if ((d3d11_params->flags & GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT) ==
+      GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT) {
+
+    for (n_texture = 0; n_texture < GST_VIDEO_INFO_N_PLANES (info); n_texture++) {
+      d3d11_params->plane = n_texture;
+      mem = gst_d3d11_allocator_alloc (priv->allocator, d3d11_params);
+      if (!mem)
+        goto error;
+
+      gst_buffer_append_memory (buf, mem);
+    }
+  } else {
+    d3d11_params->plane = 0;
+    mem = gst_d3d11_allocator_alloc (priv->allocator, priv->d3d11_params);
+    n_texture++;
+
+    if (!mem)
+      goto error;
+
+    gst_buffer_append_memory (buf, mem);
+  }
+
+  /* calculate offset */
+  for (i = 0; i < n_texture && i < GST_VIDEO_MAX_PLANES - 1; i++) {
+    offset[i + 1] = offset[i] +
+        d3d11_params->stride[i] * GST_VIDEO_INFO_COMP_HEIGHT (info, i);
+  }
 
   if (priv->add_videometa) {
-    GstD3D11Memory *dmem = (GstD3D11Memory *) mem;
-
     GST_DEBUG_OBJECT (self, "adding GstVideoMeta");
     gst_buffer_add_video_meta_full (buf, GST_VIDEO_FRAME_FLAG_NONE,
         GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_WIDTH (info),
         GST_VIDEO_INFO_HEIGHT (info), GST_VIDEO_INFO_N_PLANES (info),
-        dmem->offset, dmem->stride);
+        offset, d3d11_params->stride);
   }
 
   *buffer = buf;
 
   return GST_FLOW_OK;
+
+error:
+  gst_buffer_unref (buf);
+
+  GST_ERROR_OBJECT (self, "cannot create texture memory");
+
+  return GST_FLOW_ERROR;
 }
 
-GstD3D11BufferPool *
+GstBufferPool *
 gst_d3d11_buffer_pool_new (GstD3D11Device * device)
 {
   GstD3D11BufferPool *pool;
@@ -281,7 +305,7 @@ gst_d3d11_buffer_pool_new (GstD3D11Device * device)
   pool->priv->device = gst_object_ref (device);
   pool->priv->allocator = alloc;
 
-  return pool;
+  return GST_BUFFER_POOL_CAST (pool);
 }
 
 GstD3D11AllocationParams *

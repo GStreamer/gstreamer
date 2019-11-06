@@ -24,6 +24,9 @@
 #include "gstd3d11utils.h"
 #include "gstd3d11device.h"
 
+#include <windows.h>
+#include <versionhelpers.h>
+
 GST_DEBUG_CATEGORY_STATIC (gst_d3d11_utils_debug);
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
 
@@ -53,157 +56,6 @@ _init_context_debug (void)
 }
 
 #define GST_CAT_DEFAULT _init_d3d11_utils_debug()
-
-static const struct
-{
-  GstVideoFormat gst_format;
-  DXGI_FORMAT dxgi_format;
-} gst_dxgi_format_map[] = {
-  /* TODO: add more formats */
-  {
-  GST_VIDEO_FORMAT_BGRA, DXGI_FORMAT_B8G8R8A8_UNORM}, {
-  GST_VIDEO_FORMAT_RGBA, DXGI_FORMAT_R8G8B8A8_UNORM}, {
-  GST_VIDEO_FORMAT_RGB10A2_LE, DXGI_FORMAT_R10G10B10A2_UNORM}
-};
-
-GstVideoFormat
-gst_d3d11_dxgi_format_to_gst (DXGI_FORMAT format)
-{
-  gint i;
-
-  for (i = 0; i < G_N_ELEMENTS (gst_dxgi_format_map); i++) {
-    if (gst_dxgi_format_map[i].dxgi_format == format)
-      return gst_dxgi_format_map[i].gst_format;
-  }
-
-  return GST_VIDEO_FORMAT_UNKNOWN;
-}
-
-DXGI_FORMAT
-gst_d3d11_dxgi_format_from_gst (GstVideoFormat format)
-{
-  gint i;
-
-  for (i = 0; i < G_N_ELEMENTS (gst_dxgi_format_map); i++) {
-    if (gst_dxgi_format_map[i].gst_format == format)
-      return gst_dxgi_format_map[i].dxgi_format;
-  }
-
-  return DXGI_FORMAT_UNKNOWN;
-}
-
-typedef struct
-{
-  GstCaps *caps;
-  D3D11_FORMAT_SUPPORT flags;
-} SupportCapsData;
-
-static void
-gst_d3d11_device_get_supported_caps_internal (GstD3D11Device * device,
-    SupportCapsData * data)
-{
-  ID3D11Device *d3d11_device;
-  HRESULT hr;
-  gint i;
-  GValue v_list = G_VALUE_INIT;
-  GstCaps *supported_caps;
-
-  d3d11_device = gst_d3d11_device_get_device_handle (device);
-  g_value_init (&v_list, GST_TYPE_LIST);
-
-  for (i = 0; i < G_N_ELEMENTS (gst_dxgi_format_map); i++) {
-    UINT format_support = 0;
-    GstVideoFormat format = gst_dxgi_format_map[i].gst_format;
-
-    hr = ID3D11Device_CheckFormatSupport (d3d11_device,
-        gst_dxgi_format_map[i].dxgi_format, &format_support);
-
-    if (SUCCEEDED (hr) && ((format_support & data->flags) == data->flags)) {
-      GValue v_str = G_VALUE_INIT;
-      g_value_init (&v_str, G_TYPE_STRING);
-
-      GST_LOG_OBJECT (device, "d3d11 device can support %s with flags 0x%x",
-          gst_video_format_to_string (format), data->flags);
-      g_value_set_string (&v_str, gst_video_format_to_string (format));
-      gst_value_list_append_and_take_value (&v_list, &v_str);
-    }
-  }
-
-  supported_caps = gst_caps_new_simple ("video/x-raw",
-      "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-      "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-      "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
-  gst_caps_set_value (supported_caps, "format", &v_list);
-  g_value_unset (&v_list);
-
-  data->caps = supported_caps;
-}
-
-/**
- * gst_d3d11_device_get_supported_caps:
- * @device: a #GstD3DDevice
- * @flags: D3D11_FORMAT_SUPPORT flags
- *
- * Check supported format with given flags
- *
- * Returns: a #GstCaps representing supported format
- */
-GstCaps *
-gst_d3d11_device_get_supported_caps (GstD3D11Device * device,
-    D3D11_FORMAT_SUPPORT flags)
-{
-  SupportCapsData data;
-
-  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
-
-  _init_d3d11_utils_debug ();
-  _init_context_debug ();
-
-  data.caps = NULL;
-  data.flags = flags;
-
-  gst_d3d11_device_thread_add (device, (GstD3D11DeviceThreadFunc)
-      gst_d3d11_device_get_supported_caps_internal, &data);
-
-  return data.caps;
-}
-
-gboolean
-gst_d3d11_calculate_buffer_size (GstVideoInfo * info, guint pitch,
-    gsize offset[GST_VIDEO_MAX_PLANES], gint stride[GST_VIDEO_MAX_PLANES],
-    gsize * size)
-{
-  g_return_val_if_fail (info != NULL, FALSE);
-
-  _init_d3d11_utils_debug ();
-  _init_context_debug ();
-
-  switch (GST_VIDEO_INFO_FORMAT (info)) {
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_RGB10A2_LE:
-      offset[0] = 0;
-      stride[0] = pitch;
-      *size = pitch * GST_VIDEO_INFO_HEIGHT (info);
-      break;
-    case GST_VIDEO_FORMAT_NV12:
-      offset[0] = 0;
-      stride[0] = pitch;
-      offset[1] = offset[0] + stride[0] * GST_VIDEO_INFO_COMP_HEIGHT (info, 0);
-      stride[1] = pitch;
-      *size = offset[1] + stride[1] * GST_VIDEO_INFO_COMP_HEIGHT (info, 1);
-      break;
-    default:
-      return FALSE;
-  }
-
-  GST_LOG ("Calculated buffer size: %" G_GSIZE_FORMAT
-      " (%s %dx%d, Pitch %d)", *size,
-      gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (info)),
-      GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info), pitch);
-
-  return TRUE;
-}
 
 /**
  * gst_d3d11_handle_set_context:
@@ -486,4 +338,20 @@ gst_d3d11_ensure_element_data (GstElement * element, gint adapter,
   }
 
   return TRUE;
+}
+
+gboolean
+gst_d3d11_is_windows_8_or_greater (void)
+{
+  static gsize version_once = 0;
+  static gboolean ret = FALSE;
+
+  if (g_once_init_enter (&version_once)) {
+    if (IsWindows8OrGreater ())
+      ret = TRUE;
+
+    g_once_init_leave (&version_once, 1);
+  }
+
+  return ret;
 }
