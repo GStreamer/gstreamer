@@ -107,7 +107,7 @@ struct _GstHLSDemuxStream
   EVP_CIPHER_CTX *aes_ctx;
 # endif
 #elif defined(HAVE_NETTLE)
-  struct CBC_CTX (struct aes_ctx, AES_BLOCK_SIZE) aes_ctx;
+  struct CBC_CTX (struct aes128_ctx, AES_BLOCK_SIZE) aes_ctx;
 #elif defined(HAVE_LIBGCRYPT)
   gcry_cipher_hd_t aes_ctx;
 #endif

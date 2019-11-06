@@ -1735,7 +1735,7 @@ static gboolean
 gst_hls_demux_stream_decrypt_start (GstHLSDemuxStream * stream,
     const guint8 * key_data, const guint8 * iv_data)
 {
-  aes_set_decrypt_key (&stream->aes_ctx.ctx, 16, key_data);
+  aes128_set_decrypt_key (&stream->aes_ctx.ctx, key_data);
   CBC_SET_IV (&stream->aes_ctx, iv_data);
 
   return TRUE;
@@ -1748,7 +1748,7 @@ decrypt_fragment (GstHLSDemuxStream * stream, gsize length,
   if (length % 16 != 0)
     return FALSE;
 
-  CBC_DECRYPT (&stream->aes_ctx, aes_decrypt, length, decrypted_data,
+  CBC_DECRYPT (&stream->aes_ctx, aes128_decrypt, length, decrypted_data,
       encrypted_data);
 
   return TRUE;
