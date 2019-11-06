@@ -23,12 +23,21 @@
 
 #include <gst/gst.h>
 #include "gstd3d11videosink.h"
+#include "gstd3d11upload.h"
+#include "gstd3d11download.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin,
+  gst_element_register (plugin,
       "d3d11videosink", GST_RANK_SECONDARY - 1, GST_TYPE_D3D11_VIDEO_SINK);
+
+  gst_element_register (plugin,
+      "d3d11upload", GST_RANK_NONE, GST_TYPE_D3D11_UPLOAD);
+  gst_element_register (plugin,
+      "d3d11download", GST_RANK_NONE, GST_TYPE_D3D11_DOWNLOAD);
+
+  return TRUE;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

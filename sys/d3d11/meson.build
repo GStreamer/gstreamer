@@ -7,6 +7,9 @@ d3d11_sources = [
   'gstd3d11window.c',
   'plugin.c',
   'gstd3d11format.c',
+  'gstd3d11basefilter.c',
+  'gstd3d11upload.c',
+  'gstd3d11download.c',
 ]
 
 have_d3d11 = false

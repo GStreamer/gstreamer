@@ -55,6 +55,15 @@ typedef struct _GstD3D11BufferPoolPrivate GstD3D11BufferPoolPrivate;
 
 typedef struct _GstD3D11Format GstD3D11Format;
 
+typedef struct _GstD3D11BaseFilter GstD3D11BaseFilter;
+typedef struct _GstD3D11BaseFilterClass GstD3D11BaseFilterClass;
+
+typedef struct _GstD3D11Upload GstD3D11Upload;
+typedef struct _GstD3D11UploadClass GstD3D11UploadClass;
+
+typedef struct _GstD3D11Download GstD3D11Download;
+typedef struct _GstD3D11DownloadClass GstD3D11DownloadClass;
+
 G_END_DECLS
 
 #endif /* __GST_D3D11_FWD_H__ */
