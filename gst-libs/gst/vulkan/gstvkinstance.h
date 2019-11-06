@@ -48,8 +48,6 @@ struct _GstVulkanInstance
   PFN_vkCreateDebugReportCallbackEXT dbgCreateDebugReportCallback;
   PFN_vkDestroyDebugReportCallbackEXT dbgDestroyDebugReportCallback;
   PFN_vkDebugReportMessageEXT dbgReportMessage;
-
-  GstVulkanInstancePrivate *priv;
 };
 
 struct _GstVulkanInstanceClass

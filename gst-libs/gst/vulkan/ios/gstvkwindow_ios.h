@@ -54,8 +54,6 @@ struct _GstVulkanWindowIos
   PFN_vkCreateIOSSurfaceMVK CreateIOSSurface;
 
   /*< private >*/
-  GstVulkanWindowIosPrivate *priv;
-  
   gpointer _reserved[GST_PADDING];
 };
 

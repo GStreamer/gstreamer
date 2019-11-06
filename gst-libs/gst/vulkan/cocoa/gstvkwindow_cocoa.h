@@ -53,9 +53,7 @@ struct _GstVulkanWindowCocoa
 
   PFN_vkCreateMacOSSurfaceMVK CreateMacOSSurface;
 
-  /*< private >*/
-  GstVulkanWindowCocoaPrivate *priv;
-  
+  /*< private >*/  
   gpointer _reserved[GST_PADDING];
 };
 

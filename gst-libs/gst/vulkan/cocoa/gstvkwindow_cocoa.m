@@ -34,8 +34,7 @@
 
 #include "gstvkcocoa_utils.h"
 
-#define GST_VULKAN_WINDOW_COCOA_GET_PRIVATE(o)  \
-  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_TYPE_VULKAN_WINDOW_COCOA, GstVulkanWindowCocoaPrivate))
+#define GET_PRIV(o) gst_vulkan_window_cocoa_get_instance_private (o)
 
 #define GST_CAT_DEFAULT gst_vulkan_window_cocoa_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -106,10 +105,10 @@ gst_vulkan_window_cocoa_class_init (GstVulkanWindowCocoaClass * klass)
 static void
 gst_vulkan_window_cocoa_init (GstVulkanWindowCocoa * window)
 {
-  window->priv = gst_vulkan_window_cocoa_get_instance_private (window);
+  GstVulkanWindowCocoaPrivate *priv = GET_PRIV (window);
 
-  window->priv->preferred_width = 320;
-  window->priv->preferred_height = 240;
+  priv->preferred_width = 320;
+  priv->preferred_height = 240;
 }
 
 /* Must be called in the gl thread */
@@ -138,7 +137,7 @@ static void
 _show_window (gpointer data)
 {
   GstVulkanWindowCocoa *window_cocoa = GST_VULKAN_WINDOW_COCOA (data);
-  GstVulkanWindowCocoaPrivate *priv = window_cocoa->priv;
+  GstVulkanWindowCocoaPrivate *priv = GET_PRIV (window_cocoa);
   GstVulkanNSWindow *internal_win_id = (__bridge GstVulkanNSWindow *)priv->internal_win_id;
 
   GST_DEBUG_OBJECT (window_cocoa, "showing");
@@ -153,7 +152,7 @@ static void
 gst_vulkan_window_cocoa_show (GstVulkanWindow * window)
 {
   GstVulkanWindowCocoa *window_cocoa = GST_VULKAN_WINDOW_COCOA (window);
-  GstVulkanWindowCocoaPrivate *priv = window_cocoa->priv;
+  GstVulkanWindowCocoaPrivate *priv = GET_PRIV (window_cocoa);
 
   if (!priv->visible)
     _invoke_on_main ((GstVulkanWindowFunc) _show_window, gst_object_ref (window),
@@ -171,7 +170,7 @@ gst_vulkan_window_cocoa_hide (GstVulkanWindow * window)
 static void
 _create_window (GstVulkanWindowCocoa * window_cocoa)
 {
-  GstVulkanWindowCocoaPrivate *priv = window_cocoa->priv;
+  GstVulkanWindowCocoaPrivate *priv = GET_PRIV (window_cocoa);
   NSRect mainRect = [[NSScreen mainScreen] visibleFrame];
   gint h = priv->preferred_height;
   gint y = mainRect.size.height > h ? (mainRect.size.height - h) * 0.5 : 0;
@@ -210,6 +209,7 @@ static VkSurfaceKHR
 gst_vulkan_window_cocoa_get_surface (GstVulkanWindow * window, GError ** error)
 {
   GstVulkanWindowCocoa *window_cocoa = GST_VULKAN_WINDOW_COCOA (window);
+  GstVulkanWindowCocoaPrivate *priv = GET_PRIV (window_cocoa);
   VkMacOSSurfaceCreateInfoMVK info = { 0, };
   VkSurfaceKHR ret;
   VkResult err;
@@ -217,7 +217,7 @@ gst_vulkan_window_cocoa_get_surface (GstVulkanWindow * window, GError ** error)
   info.sType = VK_STRUCTURE_TYPE_MACOS_SURFACE_CREATE_INFO_MVK;
   info.pNext = NULL;
   info.flags = 0;
-  info.pView = window_cocoa->priv->internal_view;
+  info.pView = priv->internal_view;
 
   if (!window_cocoa->CreateMacOSSurface)
     window_cocoa->CreateMacOSSurface =
@@ -261,16 +261,17 @@ _close_window (gpointer * data)
 {
   GstVulkanWindowCocoa *window_cocoa = GST_VULKAN_WINDOW_COCOA (data);
   GstVulkanWindow *window = GST_VULKAN_WINDOW (window_cocoa);
+  GstVulkanWindowCocoaPrivate *priv = GET_PRIV (window_cocoa);
   GstVulkanNSWindow *internal_win_id =
-      (__bridge GstVulkanNSWindow *) window_cocoa->priv->internal_win_id;
+      (__bridge GstVulkanNSWindow *) priv->internal_win_id;
 
   gst_vulkan_window_cocoa_hide (window);
 
   [[internal_win_id contentView] removeFromSuperview];
-  CFBridgingRelease (window_cocoa->priv->internal_win_id);
-  window_cocoa->priv->internal_win_id = NULL;
-  CFBridgingRelease (window_cocoa->priv->internal_view);
-  window_cocoa->priv->internal_view = NULL;
+  CFBridgingRelease (priv->internal_win_id);
+  priv->internal_win_id = NULL;
+  CFBridgingRelease (priv->internal_view);
+  priv->internal_view = NULL;
 }
 
 static void
@@ -325,7 +326,7 @@ gst_vulkan_window_cocoa_close (GstVulkanWindow * window)
 
 - (BOOL) windowShouldClose:(id)sender {
 
-  GstVulkanWindowCocoaPrivate *priv = window_cocoa->priv;
+  GstVulkanWindowCocoaPrivate *priv = GET_PRIV (window_cocoa);
   GstVulkanNSWindow *internal_win_id = (__bridge GstVulkanNSWindow *)priv->internal_win_id;
   GST_DEBUG ("user clicked the close button\n");
   [internal_win_id setClosed];

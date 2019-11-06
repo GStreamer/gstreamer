@@ -34,10 +34,7 @@
 
 #define GST_VULKAN_COMMAND_POOL_LARGE_OUTSTANDING 1024
 
-#define GET_PRIV(pool) G_TYPE_INSTANCE_GET_PRIVATE(pool, GST_TYPE_VULKAN_COMMAND_POOL, GstVulkanCommandPoolPrivate)
-
-#define GST_VULKAN_COMMAND_POOL_LOCK(pool) (g_rec_mutex_lock(&GET_PRIV(pool)->rec_mutex))
-#define GST_VULKAN_COMMAND_POOL_UNLOCK(pool) (g_rec_mutex_unlock(&GET_PRIV(pool)->rec_mutex))
+#define GET_PRIV(pool) gst_vulkan_command_pool_get_instance_private (pool)
 
 #define GST_CAT_DEFAULT gst_vulkan_command_pool_debug
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
@@ -88,10 +85,10 @@ gst_vulkan_command_pool_finalize (GObject * object)
   GstVulkanCommandPool *pool = GST_VULKAN_COMMAND_POOL (object);
   GstVulkanCommandPoolPrivate *priv = GET_PRIV (pool);
 
-  GST_VULKAN_COMMAND_POOL_LOCK (pool);
+  gst_vulkan_command_pool_lock (pool);
   g_queue_free_full (priv->available, (GDestroyNotify) do_free_buffer);
   priv->available = NULL;
-  GST_VULKAN_COMMAND_POOL_UNLOCK (pool);
+  gst_vulkan_command_pool_unlock (pool);
 
   if (priv->outstanding > 0)
     g_critical
@@ -138,9 +135,9 @@ command_alloc (GstVulkanCommandPool * pool, GError ** error)
   cmd_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
   cmd_info.commandBufferCount = 1;
 
-  GST_VULKAN_COMMAND_POOL_LOCK (pool);
+  gst_vulkan_command_pool_lock (pool);
   err = vkAllocateCommandBuffers (pool->queue->device->device, &cmd_info, &cmd);
-  GST_VULKAN_COMMAND_POOL_UNLOCK (pool);
+  gst_vulkan_command_pool_unlock (pool);
   if (gst_vulkan_error_to_g_error (err, error, "vkCreateCommandBuffer") < 0)
     return NULL;
 
@@ -182,9 +179,9 @@ gst_vulkan_command_pool_create (GstVulkanCommandPool * pool, GError ** error)
   priv = GET_PRIV (pool);
 
   if (gst_vulkan_command_pool_can_reset (pool)) {
-    GST_VULKAN_COMMAND_POOL_LOCK (pool);
+    gst_vulkan_command_pool_lock (pool);
     cmd = g_queue_pop_head (priv->available);
-    GST_VULKAN_COMMAND_POOL_UNLOCK (pool);
+    gst_vulkan_command_pool_unlock (pool);
   }
   if (!cmd)
     cmd = command_alloc (pool, error);
@@ -193,13 +190,13 @@ gst_vulkan_command_pool_create (GstVulkanCommandPool * pool, GError ** error)
 
   cmd->pool = gst_object_ref (pool);
 
-  GST_VULKAN_COMMAND_POOL_LOCK (pool);
+  gst_vulkan_command_pool_lock (pool);
   priv->outstanding++;
   if (priv->outstanding > GST_VULKAN_COMMAND_POOL_LARGE_OUTSTANDING)
     g_critical ("%s: There are a large number of command buffers outstanding! "
         "This usually means there is a reference counting issue somewhere.",
         GST_OBJECT_NAME (pool));
-  GST_VULKAN_COMMAND_POOL_UNLOCK (pool);
+  gst_vulkan_command_pool_unlock (pool);
   return cmd;
 }
 
@@ -217,7 +214,7 @@ gst_vulkan_command_pool_release_buffer (GstVulkanCommandPool * pool,
   priv = GET_PRIV (pool);
   can_reset = gst_vulkan_command_pool_can_reset (pool);
 
-  GST_VULKAN_COMMAND_POOL_LOCK (pool);
+  gst_vulkan_command_pool_lock (pool);
   if (can_reset) {
     vkResetCommandBuffer (buffer->cmd, 0);
     g_queue_push_tail (priv->available, buffer);
@@ -226,7 +223,7 @@ gst_vulkan_command_pool_release_buffer (GstVulkanCommandPool * pool,
   /* TODO: if this is a secondary command buffer, all primary command buffers
    * that reference this command buffer will be invalid */
   priv->outstanding--;
-  GST_VULKAN_COMMAND_POOL_UNLOCK (pool);
+  gst_vulkan_command_pool_unlock (pool);
 
   /* decrease the refcount that the buffer had to us */
   gst_clear_object (&buffer->pool);
@@ -249,8 +246,10 @@ gst_vulkan_command_pool_release_buffer (GstVulkanCommandPool * pool,
 void
 gst_vulkan_command_pool_lock (GstVulkanCommandPool * pool)
 {
+  GstVulkanCommandPoolPrivate *priv;
   g_return_if_fail (GST_IS_VULKAN_COMMAND_POOL (pool));
-  GST_VULKAN_COMMAND_POOL_LOCK (pool);
+  priv = GET_PRIV (pool);
+  g_rec_mutex_lock (&priv->rec_mutex);
 }
 
 /**
@@ -263,6 +262,8 @@ gst_vulkan_command_pool_lock (GstVulkanCommandPool * pool)
 void
 gst_vulkan_command_pool_unlock (GstVulkanCommandPool * pool)
 {
+  GstVulkanCommandPoolPrivate *priv;
   g_return_if_fail (GST_IS_VULKAN_COMMAND_POOL (pool));
-  GST_VULKAN_COMMAND_POOL_UNLOCK (pool);
+  priv = GET_PRIV (pool);
+  g_rec_mutex_unlock (&priv->rec_mutex);
 }

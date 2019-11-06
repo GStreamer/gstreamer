@@ -32,7 +32,7 @@
  * @see_also: #GstVulkanDevice
  */
 
-#define GET_PRIV(cache) G_TYPE_INSTANCE_GET_PRIVATE(cache, GST_TYPE_VULKAN_DESCRIPTOR_CACHE, GstVulkanDescriptorCachePrivate)
+#define GET_PRIV(cache) gst_vulkan_descriptor_cache_get_instance_private (cache)
 
 #define GST_CAT_DEFAULT gst_vulkan_descriptor_cache_debug
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);

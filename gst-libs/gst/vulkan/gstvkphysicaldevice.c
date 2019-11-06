@@ -67,6 +67,8 @@ _init_debug (void)
   }
 }
 
+#define GET_PRIV(device) gst_vulkan_physical_device_get_instance_private (device)
+
 #define gst_vulkan_physical_device_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstVulkanPhysicalDevice, gst_vulkan_physical_device,
     GST_TYPE_OBJECT, G_ADD_PRIVATE (GstVulkanPhysicalDevice);

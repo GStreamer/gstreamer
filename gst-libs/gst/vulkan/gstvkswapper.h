@@ -50,8 +50,6 @@ struct _GstVulkanSwapper
   GstVulkanWindow *window;
   GstVulkanQueue *queue;
   GstVulkanCommandPool *cmd_pool;
-
-  GstVulkanSwapperPrivate *priv;
 };
 
 struct _GstVulkanSwapperClass

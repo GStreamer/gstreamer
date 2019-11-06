@@ -74,6 +74,8 @@ _init_debug (void)
   }
 }
 
+#define GET_PRIV(instance) gst_vulkan_instance_get_instance_private (instance)
+
 #define gst_vulkan_instance_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstVulkanInstance, gst_vulkan_instance,
     GST_TYPE_OBJECT, G_ADD_PRIVATE (GstVulkanInstance)
@@ -93,7 +95,6 @@ gst_vulkan_instance_new (void)
 static void
 gst_vulkan_instance_init (GstVulkanInstance * instance)
 {
-  instance->priv = gst_vulkan_instance_get_instance_private (instance);
 }
 
 static void
@@ -125,15 +126,16 @@ static void
 gst_vulkan_instance_finalize (GObject * object)
 {
   GstVulkanInstance *instance = GST_VULKAN_INSTANCE (object);
+  GstVulkanInstancePrivate *priv = GET_PRIV (instance);
 
-  if (instance->priv->opened) {
+  if (priv->opened) {
     if (instance->dbgDestroyDebugReportCallback)
       instance->dbgDestroyDebugReportCallback (instance->instance,
           instance->msg_callback, NULL);
 
     g_free (instance->physical_devices);
   }
-  instance->priv->opened = FALSE;
+  priv->opened = FALSE;
 
   if (instance->instance)
     vkDestroyInstance (instance->instance, NULL);
@@ -191,6 +193,7 @@ _gst_vk_debug_callback (VkDebugReportFlagsEXT msgFlags,
 gboolean
 gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
 {
+  GstVulkanInstancePrivate *priv;
   VkExtensionProperties *instance_extensions;
   char *extension_names[64];    /* FIXME: make dynamic */
   VkLayerProperties *instance_layers;
@@ -202,8 +205,10 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
 
   g_return_val_if_fail (GST_IS_VULKAN_INSTANCE (instance), FALSE);
 
+  priv = GET_PRIV (instance);
+
   GST_OBJECT_LOCK (instance);
-  if (instance->priv->opened) {
+  if (priv->opened) {
     GST_OBJECT_UNLOCK (instance);
     return TRUE;
   }
@@ -400,7 +405,7 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
       goto error;
   }
 
-  instance->priv->opened = TRUE;
+  priv->opened = TRUE;
   GST_OBJECT_UNLOCK (instance);
 
   return TRUE;

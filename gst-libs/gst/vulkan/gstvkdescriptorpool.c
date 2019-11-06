@@ -31,7 +31,7 @@
  * @see_also: #GstVulkanDevice
  */
 
-#define GET_PRIV(pool) G_TYPE_INSTANCE_GET_PRIVATE(pool, GST_TYPE_VULKAN_DESCRIPTOR_POOL, GstVulkanDescriptorPoolPrivate)
+#define GET_PRIV(pool) gst_vulkan_descriptor_pool_get_instance_private (pool)
 
 #define GST_CAT_DEFAULT gst_vulkan_descriptor_pool_debug
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
@@ -68,9 +68,9 @@ static void
 gst_vulkan_descriptor_pool_finalize (GObject * object)
 {
   GstVulkanDescriptorPool *pool = GST_VULKAN_DESCRIPTOR_POOL (object);
+#if 0
   GstVulkanDescriptorPoolPrivate *priv = GET_PRIV (pool);
 
-#if 0
   /* FIXME: track these correctly */
   if (priv->outstanding > 0)
     g_critical

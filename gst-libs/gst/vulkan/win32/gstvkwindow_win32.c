@@ -53,6 +53,8 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 G_DEFINE_TYPE_WITH_CODE (GstVulkanWindowWin32, gst_vulkan_window_win32,
     GST_TYPE_VULKAN_WINDOW, G_ADD_PRIVATE (GstVulkanWindowWin32) DEBUG_INIT);
 
+#define GET_PRIV(window) gst_vulkan_window_win32_get_instance_private (window)
+
 static void gst_vulkan_window_win32_set_window_handle (GstVulkanWindow * window,
     guintptr handle);
 static VkSurfaceKHR
@@ -84,10 +86,10 @@ gst_vulkan_window_win32_class_init (GstVulkanWindowWin32Class * klass)
 static void
 gst_vulkan_window_win32_init (GstVulkanWindowWin32 * window)
 {
-  window->priv = gst_vulkan_window_win32_get_instance_private (window);
+  GstVulkanWindowWin32Private *priv = GET_PRIV (window);
 
-  window->priv->preferred_width = 320;
-  window->priv->preferred_height = 240;
+  priv->preferred_width = 320;
+  priv->preferred_height = 240;
 }
 
 GstVulkanWindowWin32 *
@@ -148,6 +150,7 @@ static gboolean
 gst_vulkan_window_win32_open (GstVulkanWindow * window, GError ** error)
 {
   GstVulkanWindowWin32 *window_win32 = GST_VULKAN_WINDOW_WIN32 (window);
+  GstVulkanWindowWin32Private *priv = GET_PRIV (window_win32);
   GstVulkanDisplay *display;
   GMainContext *context;
   CreateWindowData data = { 0, };
@@ -159,9 +162,8 @@ gst_vulkan_window_win32_open (GstVulkanWindow * window, GError ** error)
   context = g_main_context_ref (display->main_context);
   gst_object_unref (display);
 
-  window_win32->priv->msg_io_channel = g_io_channel_win32_new_messages (0);
-  window_win32->msg_source =
-      g_io_create_watch (window_win32->priv->msg_io_channel, G_IO_IN);
+  priv->msg_io_channel = g_io_channel_win32_new_messages (0);
+  msg_source = g_io_create_watch (priv->msg_io_channel, G_IO_IN);
   g_source_set_callback (window_win32->msg_source, (GSourceFunc) msg_cb, NULL,
       NULL);
   g_source_attach (window_win32->msg_source, context);
@@ -193,6 +195,7 @@ static void
 gst_vulkan_window_win32_close (GstVulkanWindow * window)
 {
   GstVulkanWindowWin32 *window_win32 = GST_VULKAN_WINDOW_WIN32 (window);
+  GstVulkanWindowWin32Private *priv = GET_PRIV (window_win32);
 
   release_parent_win_id (window_win32);
 
@@ -209,8 +212,8 @@ gst_vulkan_window_win32_close (GstVulkanWindow * window)
   g_source_destroy (window_win32->msg_source);
   g_source_unref (window_win32->msg_source);
   window_win32->msg_source = NULL;
-  g_io_channel_unref (window_win32->priv->msg_io_channel);
-  window_win32->priv->msg_io_channel = NULL;
+  g_io_channel_unref (priv->msg_io_channel);
+  priv->msg_io_channel = NULL;
 
   GST_VULKAN_WINDOW_CLASS (parent_class)->close (window);
 }
@@ -455,8 +458,9 @@ gst_vulkan_window_win32_set_window_handle (GstVulkanWindow * window,
 static void
 gst_vulkan_window_win32_show (GstVulkanWindowWin32 * window)
 {
-  gint width = window->priv->preferred_width;
-  gint height = window->priv->preferred_height;
+  GstVulkanWindowWin32Private *priv = GET_PRIV (window);
+  gint width = priv->preferred_width;
+  gint height = priv->preferred_height;
 
   if (!window->visible) {
     HWND parent_id = window->parent_win_id;

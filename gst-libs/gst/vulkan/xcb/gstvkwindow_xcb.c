@@ -28,8 +28,7 @@
 #include "gstvkwindow_xcb.h"
 #include "gstvkdisplay_xcb.h"
 
-#define GST_VULKAN_WINDOW_XCB_GET_PRIVATE(o)  \
-  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_TYPE_VULKAN_WINDOW_XCB, GstVulkanWindowXCBPrivate))
+#define GET_PRIV(o) gst_vulkan_window_xcb_get_instance_private (o)
 
 #define GST_CAT_DEFAULT gst_vulkan_window_xcb_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -100,7 +99,6 @@ gst_vulkan_window_xcb_class_init (GstVulkanWindowXCBClass * klass)
 static void
 gst_vulkan_window_xcb_init (GstVulkanWindowXCB * window)
 {
-  window->priv = gst_vulkan_window_xcb_get_instance_private (window);
 }
 
 /* Must be called in the gl thread */
@@ -303,6 +301,7 @@ static void
 gst_vulkan_window_xcb_close (GstVulkanWindow * window)
 {
   GstVulkanWindowXCB *window_xcb = GST_VULKAN_WINDOW_XCB (window);
+  GstVulkanWindowXCBPrivate *priv = GET_PRIV (window_xcb);
   GstVulkanDisplayXCB *display_xcb = (GstVulkanDisplayXCB *) window->display;
   xcb_connection_t *connection =
       GST_VULKAN_DISPLAY_XCB_CONNECTION (display_xcb);
@@ -310,8 +309,8 @@ gst_vulkan_window_xcb_close (GstVulkanWindow * window)
   if (connection) {
     gst_vulkan_window_xcb_hide (window);
 
-    g_free (window_xcb->priv->atom_wm_delete_window);
-    window_xcb->priv->atom_wm_delete_window = NULL;
+    g_free (priv->atom_wm_delete_window);
+    priv->atom_wm_delete_window = NULL;
     GST_DEBUG ("display receiver closed");
   }
 

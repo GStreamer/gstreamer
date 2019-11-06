@@ -58,8 +58,6 @@ struct _GstVulkanWindowWin32 {
   GSource *msg_source;
 
   /*< private >*/
-  GstVulkanWindowWin32Private *priv;
-
   gpointer _reserved[GST_PADDING];
 };
 

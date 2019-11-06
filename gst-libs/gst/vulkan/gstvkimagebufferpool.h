@@ -46,8 +46,6 @@ struct _GstVulkanImageBufferPool
   GstBufferPool bufferpool;
 
   GstVulkanDevice *device;
-
-  GstVulkanImageBufferPoolPrivate *priv;
 };
 
 /**

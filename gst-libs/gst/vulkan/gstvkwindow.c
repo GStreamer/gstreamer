@@ -62,6 +62,8 @@ struct _GstVulkanWindowPrivate
   guint surface_height;
 };
 
+#define GET_PRIV(window) gst_vulkan_window_get_instance_private (window)
+
 #define gst_vulkan_window_parent_class parent_class
 G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GstVulkanWindow, gst_vulkan_window,
     GST_TYPE_OBJECT);
@@ -175,7 +177,6 @@ gst_vulkan_window_get_property (GObject * object, guint prop_id,
 static void
 gst_vulkan_window_init (GstVulkanWindow * window)
 {
-  window->priv = gst_vulkan_window_get_instance_private (window);
 }
 
 static void
@@ -395,10 +396,14 @@ gst_vulkan_window_close (GstVulkanWindow * window)
 void
 gst_vulkan_window_resize (GstVulkanWindow * window, gint width, gint height)
 {
+  GstVulkanWindowPrivate *priv;
+
   g_return_if_fail (GST_IS_VULKAN_WINDOW (window));
 
-  window->priv->surface_width = width;
-  window->priv->surface_height = height;
+  priv = GET_PRIV (window);
+
+  priv->surface_width = width;
+  priv->surface_height = height;
 
   g_signal_emit (window, gst_vulkan_window_signals[SIGNAL_RESIZE], 0, width,
       height);
@@ -442,18 +447,20 @@ void
 gst_vulkan_window_get_surface_dimensions (GstVulkanWindow * window,
     guint * width, guint * height)
 {
+  GstVulkanWindowPrivate *priv;
   GstVulkanWindowClass *klass;
 
   g_return_if_fail (GST_IS_VULKAN_WINDOW (window));
   klass = GST_VULKAN_WINDOW_GET_CLASS (window);
+  priv = GET_PRIV (window);
 
   if (klass->get_surface_dimensions) {
     klass->get_surface_dimensions (window, width, height);
   } else {
     GST_DEBUG_OBJECT (window, "Returning size %ix%i",
-        window->priv->surface_width, window->priv->surface_height);
-    *width = window->priv->surface_width;
-    *height = window->priv->surface_height;
+        priv->surface_width, priv->surface_height);
+    *width = priv->surface_width;
+    *height = priv->surface_height;
   }
 }
 

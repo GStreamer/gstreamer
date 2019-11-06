@@ -89,23 +89,27 @@ struct _GstVulkanDisplayPrivate
   GCond thread_cond;
 };
 
+#define GET_PRIV(display) gst_vulkan_display_get_instance_private (display)
+
 G_DEFINE_TYPE_WITH_CODE (GstVulkanDisplay, gst_vulkan_display, GST_TYPE_OBJECT,
     G_ADD_PRIVATE (GstVulkanDisplay) _init_debug ());
 
 static gpointer
 _event_thread_main (GstVulkanDisplay * display)
 {
-  g_mutex_lock (&display->priv->thread_lock);
+  GstVulkanDisplayPrivate *priv = GET_PRIV (display);
+
+  g_mutex_lock (&priv->thread_lock);
 
   display->main_context = g_main_context_new ();
   display->main_loop = g_main_loop_new (display->main_context, FALSE);
 
-  g_cond_broadcast (&display->priv->thread_cond);
-  g_mutex_unlock (&display->priv->thread_lock);
+  g_cond_broadcast (&priv->thread_cond);
+  g_mutex_unlock (&priv->thread_lock);
 
   g_main_loop_run (display->main_loop);
 
-  g_mutex_lock (&display->priv->thread_lock);
+  g_mutex_lock (&priv->thread_lock);
 
   g_main_loop_unref (display->main_loop);
   g_main_context_unref (display->main_context);
@@ -113,8 +117,8 @@ _event_thread_main (GstVulkanDisplay * display)
   display->main_loop = NULL;
   display->main_context = NULL;
 
-  g_cond_broadcast (&display->priv->thread_cond);
-  g_mutex_unlock (&display->priv->thread_lock);
+  g_cond_broadcast (&priv->thread_cond);
+  g_mutex_unlock (&priv->thread_lock);
 
   return NULL;
 }
@@ -131,19 +135,20 @@ gst_vulkan_display_class_init (GstVulkanDisplayClass * klass)
 static void
 gst_vulkan_display_init (GstVulkanDisplay * display)
 {
-  display->priv = gst_vulkan_display_get_instance_private (display);
+  GstVulkanDisplayPrivate *priv = GET_PRIV (display);
+
   display->type = GST_VULKAN_DISPLAY_TYPE_ANY;
 
-  g_mutex_init (&display->priv->thread_lock);
-  g_cond_init (&display->priv->thread_cond);
+  g_mutex_init (&priv->thread_lock);
+  g_cond_init (&priv->thread_cond);
 
-  display->priv->event_thread = g_thread_new ("vkdisplay-event",
+  priv->event_thread = g_thread_new ("vkdisplay-event",
       (GThreadFunc) _event_thread_main, display);
 
-  g_mutex_lock (&display->priv->thread_lock);
+  g_mutex_lock (&priv->thread_lock);
   while (!display->main_loop)
-    g_cond_wait (&display->priv->thread_cond, &display->priv->thread_lock);
-  g_mutex_unlock (&display->priv->thread_lock);
+    g_cond_wait (&priv->thread_cond, &priv->thread_lock);
+  g_mutex_unlock (&priv->thread_lock);
 }
 
 static void
@@ -160,19 +165,20 @@ static void
 gst_vulkan_display_finalize (GObject * object)
 {
   GstVulkanDisplay *display = GST_VULKAN_DISPLAY (object);
+  GstVulkanDisplayPrivate *priv = GET_PRIV (display);
 
-  g_mutex_lock (&display->priv->thread_lock);
+  g_mutex_lock (&priv->thread_lock);
 
   if (display->main_loop)
     g_main_loop_quit (display->main_loop);
 
   while (display->main_loop)
-    g_cond_wait (&display->priv->thread_cond, &display->priv->thread_lock);
+    g_cond_wait (&priv->thread_cond, &priv->thread_lock);
 
-  if (display->priv->event_thread)
-    g_thread_unref (display->priv->event_thread);
-  display->priv->event_thread = NULL;
-  g_mutex_unlock (&display->priv->thread_lock);
+  if (priv->event_thread)
+    g_thread_unref (priv->event_thread);
+  priv->event_thread = NULL;
+  g_mutex_unlock (&priv->thread_lock);
 
   if (display->event_source) {
     g_source_destroy (display->event_source);

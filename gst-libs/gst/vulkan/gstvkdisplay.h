@@ -85,9 +85,6 @@ struct _GstVulkanDisplay
   GMainContext             *main_context;
   GMainLoop                *main_loop;
   GSource                  *event_source;
-
-  /* <private> */
-  GstVulkanDisplayPrivate  *priv;
 };
 
 struct _GstVulkanDisplayClass

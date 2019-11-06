@@ -59,8 +59,6 @@ struct _GstVulkanWindowXCB
   PFN_vkGetPhysicalDeviceXcbPresentationSupportKHR GetPhysicalDeviceXcbPresentationSupport;
 
   /*< private >*/
-  GstVulkanWindowXCBPrivate *priv;
-  
   gpointer _reserved[GST_PADDING];
 };
 

@@ -52,6 +52,8 @@ static void gst_vulkan_buffer_pool_finalize (GObject * object);
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_VULKAN_BUFFER_POOL);
 #define GST_CAT_DEFAULT GST_CAT_VULKAN_BUFFER_POOL
 
+#define GET_PRIV(pool) gst_vulkan_buffer_pool_get_instance_private (pool)
+
 #define gst_vulkan_buffer_pool_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstVulkanBufferPool, gst_vulkan_buffer_pool,
     GST_TYPE_BUFFER_POOL, G_ADD_PRIVATE (GstVulkanBufferPool)
@@ -72,7 +74,7 @@ static gboolean
 gst_vulkan_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 {
   GstVulkanBufferPool *vk_pool = GST_VULKAN_BUFFER_POOL_CAST (pool);
-  GstVulkanBufferPoolPrivate *priv = vk_pool->priv;
+  GstVulkanBufferPoolPrivate *priv = GET_PRIV (vk_pool);
   guint min_buffers, max_buffers;
   GstCaps *caps = NULL;
   gboolean ret = TRUE;
@@ -136,7 +138,7 @@ gst_vulkan_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
     GstBufferPoolAcquireParams * params)
 {
   GstVulkanBufferPool *vk_pool = GST_VULKAN_BUFFER_POOL_CAST (pool);
-  GstVulkanBufferPoolPrivate *priv = vk_pool->priv;
+  GstVulkanBufferPoolPrivate *priv = GET_PRIV (vk_pool);
   GstBuffer *buf;
   guint i;
 
@@ -223,14 +225,13 @@ gst_vulkan_buffer_pool_class_init (GstVulkanBufferPoolClass * klass)
 static void
 gst_vulkan_buffer_pool_init (GstVulkanBufferPool * pool)
 {
-  pool->priv = gst_vulkan_buffer_pool_get_instance_private (pool);
 }
 
 static void
 gst_vulkan_buffer_pool_finalize (GObject * object)
 {
   GstVulkanBufferPool *pool = GST_VULKAN_BUFFER_POOL_CAST (object);
-  GstVulkanBufferPoolPrivate *priv = pool->priv;
+  GstVulkanBufferPoolPrivate *priv = GET_PRIV (pool);
 
   GST_LOG_OBJECT (pool, "finalize Vulkan buffer pool %p", pool);
 

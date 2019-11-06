@@ -56,8 +56,6 @@ struct _GstVulkanPhysicalDevice
 
   VkQueueFamilyProperties *queue_family_props;
   guint32 n_queue_families;
-
-  GstVulkanPhysicalDevicePrivate *priv;
 };
 
 struct _GstVulkanPhysicalDeviceClass

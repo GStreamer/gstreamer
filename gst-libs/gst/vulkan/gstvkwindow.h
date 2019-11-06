@@ -65,8 +65,6 @@ struct _GstVulkanWindow {
 
   GMutex                  lock;
 
-  GstVulkanWindowPrivate *priv;
-
   gpointer                _reserved[GST_PADDING];
 };
 

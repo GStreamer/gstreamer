@@ -87,9 +87,10 @@ static void
 gst_vulkan_window_ios_finalize (GObject * object)
 {
   GstVulkanWindowIos *window_ios = GST_VULKAN_WINDOW_IOS (object);
+  GstVulkanWindowIosPrivate *priv = GET_PRIV (window_ios);
 
-  g_mutex_clear (&window_ios->priv->lock);
-  g_cond_clear (&window_ios->priv->cond);
+  g_mutex_clear (&priv->lock);
+  g_cond_clear (&priv->cond);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -114,13 +115,13 @@ gst_vulkan_window_ios_class_init (GstVulkanWindowIosClass * klass)
 static void
 gst_vulkan_window_ios_init (GstVulkanWindowIos * window)
 {
-  window->priv = gst_vulkan_window_ios_get_instance_private (window);
+  GstVulkanWindowIosPrivate *priv = GET_PRIV (window_ios);
 
-  window->priv->preferred_width = 320;
-  window->priv->preferred_height = 240;
+  priv->preferred_width = 320;
+  priv->preferred_height = 240;
 
-  g_mutex_init (&window->priv->lock);
-  g_cond_init (&window->priv->cond);
+  g_mutex_init (&priv->lock);
+  g_cond_init (&priv->cond);
 }
 
 /* Must be called in the gl thread */
@@ -148,7 +149,7 @@ gst_vulkan_window_ios_new (GstVulkanDisplay * display)
 static void
 _create_window (GstVulkanWindowIos * window_ios)
 {
-  GstVulkanWindowIosPrivate *priv = window_ios->priv;
+  GstVulkanWindowIosPrivate *priv = GET_PRIV (window_ios);
   UIView *external_view = (__bridge UIView *) priv->external_view;
   CGRect rect = CGRectMake (0, 0, external_view.frame.size.width, external_view.frame.size.height);
   GstVulkanUIView *view;
@@ -171,7 +172,7 @@ _create_window (GstVulkanWindowIos * window_ios)
 gboolean
 gst_vulkan_window_ios_create_window (GstVulkanWindowIos * window_ios)
 {
-  GstVulkanWindowIosPrivate *priv = window_ios->priv;
+  GstVulkanWindowIosPrivate *priv = GET_PRIV (window_ios);
 
   if (!priv->external_view) {
     GST_WARNING_OBJECT(window_ios, "No external UIView provided");
@@ -194,11 +195,12 @@ static VkSurfaceKHR
 gst_vulkan_window_ios_get_surface (GstVulkanWindow * window, GError ** error)
 {
   GstVulkanWindowIos *window_ios = GST_VULKAN_WINDOW_IOS (window);
+  GstVulkanWindowIosPrivate *priv = GET_PRIV (window_ios);
   VkIOSSurfaceCreateInfoMVK info = { 0, };
   VkSurfaceKHR ret;
   VkResult err;
 
-  if (!window_ios->priv->internal_layer) {
+  if (!priv->internal_layer) {
     g_set_error_literal (error, GST_VULKAN_ERROR,
         VK_ERROR_INITIALIZATION_FAILED,
         "No layer to retrieve surface for. Has create_window() been called?");
@@ -208,7 +210,7 @@ gst_vulkan_window_ios_get_surface (GstVulkanWindow * window, GError ** error)
   info.sType = VK_STRUCTURE_TYPE_IOS_SURFACE_CREATE_INFO_MVK;
   info.pNext = NULL;
   info.flags = 0;
-  info.pView = window_ios->priv->internal_layer;
+  info.pView = priv->internal_layer;
 
   if (!window_ios->CreateIOSSurface)
     window_ios->CreateIOSSurface =
@@ -251,13 +253,14 @@ static void
 gst_vulkan_window_ios_close (GstVulkanWindow * window)
 {
   GstVulkanWindowIos *window_ios = GST_VULKAN_WINDOW_IOS (window);
-  GstVulkanUIView *view = (__bridge GstVulkanUIView *) window_ios->priv->internal_view;
+  GstVulkanWindowIosPrivate *priv = GET_PRIV (window_ios);
+  GstVulkanUIView *view = (__bridge GstVulkanUIView *) priv->internal_view;
 
   [view setGstWindow:NULL];
-  CFBridgingRelease (window_ios->priv->internal_view);
-  window_ios->priv->internal_view = NULL;
-  CFBridgingRelease (window_ios->priv->internal_layer);
-  window_ios->priv->internal_layer = NULL;
+  CFBridgingRelease (priv->internal_view);
+  priv->internal_view = NULL;
+  CFBridgingRelease (priv->internal_layer);
+  priv->internal_layer = NULL;
 
   GST_VULKAN_WINDOW_CLASS (parent_class)->close (window);
 }
@@ -271,12 +274,12 @@ gst_vulkan_window_ios_set_window_handle (GstVulkanWindow * window,
 
   g_return_if_fail (view != NULL);
 
-  if (window_ios->priv->external_view && window_ios->priv->external_view != view) {
+  if (priv->external_view && priv->external_view != view) {
     GST_FIXME_OBJECT (window_ios, "View changes are not implemented");
     return;
   }
 
-  window_ios->priv->external_view = view;
+  priv->external_view = view;
 }
 
 @implementation GstVulkanUIView {
