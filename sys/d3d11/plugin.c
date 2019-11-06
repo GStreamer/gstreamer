@@ -26,19 +26,21 @@
 #include "gstd3d11upload.h"
 #include "gstd3d11download.h"
 #include "gstd3d11colorconvert.h"
+#include "gstd3d11videosinkbin.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gst_element_register (plugin,
-      "d3d11videosink", GST_RANK_SECONDARY - 1, GST_TYPE_D3D11_VIDEO_SINK);
-
   gst_element_register (plugin,
       "d3d11upload", GST_RANK_NONE, GST_TYPE_D3D11_UPLOAD);
   gst_element_register (plugin,
       "d3d11download", GST_RANK_NONE, GST_TYPE_D3D11_DOWNLOAD);
   gst_element_register (plugin,
       "d3d11colorconvert", GST_RANK_NONE, GST_TYPE_D3D11_COLOR_CONVERT);
+  gst_element_register (plugin,
+      "d3d11videosinkelement", GST_RANK_NONE, GST_TYPE_D3D11_VIDEO_SINK);
+  gst_element_register (plugin,
+      "d3d11videosink", GST_RANK_SECONDARY - 1, GST_TYPE_D3D11_VIDEO_SINK_BIN);
 
   return TRUE;
 }

@@ -11,6 +11,7 @@ d3d11_sources = [
   'gstd3d11upload.c',
   'gstd3d11download.c',
   'gstd3d11colorconvert.c',
+  'gstd3d11videosinkbin.c',
 ]
 
 have_d3d11 = false
