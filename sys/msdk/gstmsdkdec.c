@@ -55,6 +55,11 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 
 #define IS_ALIGNED(i, n) (((i) & ((n)-1)) == 0)
 
+#define GST_TO_MFX_TIME(time) ((time) == GST_CLOCK_TIME_NONE ? \
+    MFX_TIMESTAMP_UNKNOWN : gst_util_uint64_scale_round ((time), 9, 100000))
+
+#define MFX_TIME_IS_VALID(time) ((time) != MFX_TIMESTAMP_UNKNOWN)
+
 #define gst_msdkdec_parent_class parent_class
 G_DEFINE_TYPE (GstMsdkDec, gst_msdkdec, GST_TYPE_VIDEO_DECODER);
 
@@ -623,6 +628,7 @@ gst_msdkdec_finish_task (GstMsdkDec * thiz, MsdkDecTask * task)
   MsdkSurface *surface;
   mfxStatus status;
   GList *l;
+  guint64 pts = MFX_TIMESTAMP_UNKNOWN;
 
   if (G_LIKELY (task->sync_point)) {
     status =
@@ -634,10 +640,26 @@ gst_msdkdec_finish_task (GstMsdkDec * thiz, MsdkDecTask * task)
     }
   }
 
+  if (task->surface) {
+    GST_DEBUG_OBJECT (thiz, "Decoded MFX TimeStamp: %" G_GUINT64_FORMAT,
+        (guint64) task->surface->Data.TimeStamp);
+    pts = task->surface->Data.TimeStamp;
+  }
+
   if (G_LIKELY (task->sync_point || (task->surface && task->decode_only))) {
     gboolean decode_only = task->decode_only;
 
     frame = gst_msdkdec_get_oldest_frame (decoder);
+    /* align decoder frame list with current decoded position */
+    while (frame && MFX_TIME_IS_VALID (pts)
+        && GST_CLOCK_TIME_IS_VALID (frame->pts)
+        && GST_TO_MFX_TIME (frame->pts) < pts) {
+      GST_INFO_OBJECT (thiz, "Discarding frame: %p PTS: %" GST_TIME_FORMAT
+          " MFX TimeStamp: %" G_GUINT64_FORMAT,
+          frame, GST_TIME_ARGS (frame->pts), GST_TO_MFX_TIME (frame->pts));
+      gst_video_decoder_release_frame (decoder, frame);
+      frame = gst_msdkdec_get_oldest_frame (decoder);
+    }
 
     l = g_list_find_custom (thiz->decoded_msdk_surfaces, task->surface,
         _find_msdk_surface);
@@ -655,6 +677,10 @@ gst_msdkdec_finish_task (GstMsdkDec * thiz, MsdkDecTask * task)
         gst_video_frame_copy (&surface->copy, &surface->data);
         frame->output_buffer = gst_buffer_ref (surface->copy.buffer);
       }
+      GST_DEBUG_OBJECT (thiz, "surface %p TimeStamp: %" G_GUINT64_FORMAT
+          " frame %p TimeStamp: %" G_GUINT64_FORMAT,
+          surface->surface, (guint64) surface->surface->Data.TimeStamp,
+          frame, GST_TO_MFX_TIME (frame->pts));
     }
 
     if (!thiz->postpone_free_surface)
@@ -892,6 +918,7 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   guint i, retry_err_incompatible = 0;
   gsize data_size;
   gboolean hard_reset = FALSE;
+  GstClockTime pts = GST_CLOCK_TIME_NONE;
 
   /* configure the subclass in order to fill the CodecID field of
    * mfxVideoParam and also to load the PluginID for some of the
@@ -936,9 +963,11 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   if (gst_video_decoder_get_packetized (decoder)) {
     /* Packetized stream: we prefer to have a parser as a connected upstream
      * element to the decoder */
+    pts = frame->pts;
     bitstream.Data = map_info.data;
     bitstream.DataLength = map_info.size;
     bitstream.MaxLength = map_info.size;
+    bitstream.TimeStamp = GST_TO_MFX_TIME (pts);
 
     /*
      * MFX_BITSTREAM_COMPLETE_FRAME was removed since commit df59db9, however
@@ -956,10 +985,13 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
     bitstream.Data = (mfxU8 *) gst_adapter_map (thiz->adapter, data_size);
     bitstream.DataLength = (mfxU32) data_size;
     bitstream.MaxLength = bitstream.DataLength;
+    bitstream.TimeStamp = GST_TO_MFX_TIME (pts);
   }
-  GST_INFO_OBJECT (thiz,
-      "mfxBitStream=> DataLength:%d DataOffset:%d MaxLength:%d",
-      bitstream.DataLength, bitstream.DataOffset, bitstream.MaxLength);
+  GST_DEBUG_OBJECT (thiz,
+      "mfxBitStream=> DataLength:%d DataOffset:%d MaxLength:%d "
+      "PTS: %" GST_TIME_FORMAT " MFX TimeStamp %" G_GUINT64_FORMAT,
+      bitstream.DataLength, bitstream.DataOffset, bitstream.MaxLength,
+      GST_TIME_ARGS (pts), (guint64) bitstream.TimeStamp);
 
   session = gst_msdk_context_get_session (thiz->context);
 
@@ -972,6 +1004,7 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
      * So instead of introducing a codecparser dependency to parse the headers
      * inside msdk plugin, we simply use the mfx APIs to extract header information */
     status = MFXVideoDECODE_DecodeHeader (session, &bitstream, &thiz->param);
+    GST_DEBUG_OBJECT (decoder, "DecodeHeader => %d", status);
     if (status == MFX_ERR_MORE_DATA) {
       flow = GST_FLOW_OK;
       goto done;
@@ -1060,6 +1093,7 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
     status =
         MFXVideoDECODE_DecodeFrameAsync (session, &bitstream, surface->surface,
         &task->surface, &task->sync_point);
+    GST_DEBUG_OBJECT (decoder, "DecodeFrameAsync => %d", status);
 
     /* media-sdk requires complete reset since the surface is inadequate
      * for further decoding */
@@ -1070,6 +1104,7 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
        * the current frame size, then do memory re-allocation, otherwise
        * MFXVideoDECODE_DecodeFrameAsync will still fail on next call */
       status = MFXVideoDECODE_DecodeHeader (session, &bitstream, &thiz->param);
+      GST_DEBUG_OBJECT (decoder, "DecodeHeader => %d", status);
       if (status == MFX_ERR_MORE_DATA) {
         flow = GST_FLOW_OK;
         goto done;
@@ -1458,6 +1493,7 @@ gst_msdkdec_drain (GstVideoDecoder * decoder)
     status =
         MFXVideoDECODE_DecodeFrameAsync (session, NULL, surface->surface,
         &task->surface, &task->sync_point);
+    GST_DEBUG_OBJECT (decoder, "DecodeFrameAsync => %d", status);
     if (G_LIKELY (status == MFX_ERR_NONE)) {
       thiz->next_task = (thiz->next_task + 1) % thiz->tasks->len;
 
