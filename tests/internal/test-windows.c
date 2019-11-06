@@ -62,7 +62,7 @@ create_test_surface (GstVaapiDisplay * display, guint width, guint height)
     GST_VIDEO_FORMAT_NV12,
     GST_VIDEO_FORMAT_YV12,
     GST_VIDEO_FORMAT_I420,
-    GST_VIDEO_FORMAT_AYUV,
+    GST_VIDEO_FORMAT_VUYA,
     GST_VIDEO_FORMAT_ARGB,
     GST_VIDEO_FORMAT_BGRA,
     GST_VIDEO_FORMAT_RGBA,
