@@ -1851,7 +1851,8 @@ attach_rate_tweaking_probe (void)
 }
 
 static void
-do_test_scale_and_speed (const gchar * scale, const gchar * speed)
+do_test_scale_and_speed (const gchar * scale, const gchar * speed,
+    GstRTSPStatusCode expected_response_code)
 {
   GstRTSPClient *client;
   GstRTSPMessage request = { 0, };
@@ -1901,7 +1902,12 @@ do_test_scale_and_speed (const gchar * scale, const gchar * speed)
   if (speed != NULL)
     gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SPEED, speed);
 
-  gst_rtsp_client_set_send_func (client, test_response_scale_speed, NULL, NULL);
+  if (expected_response_code == GST_RTSP_STS_BAD_REQUEST)
+    gst_rtsp_client_set_send_func (client, test_response_400, NULL, NULL);
+  else
+    gst_rtsp_client_set_send_func (client, test_response_scale_speed, NULL,
+        NULL);
+
   fail_unless (gst_rtsp_client_handle_message (client,
           &request) == GST_RTSP_OK);
   gst_rtsp_message_unset (&request);
@@ -1919,28 +1925,28 @@ GST_START_TEST (test_scale_and_speed)
   /* no scale/speed requested, no scale/speed should be received */
   expected_scale_header = NULL;
   expected_speed_header = NULL;
-  do_test_scale_and_speed (NULL, NULL);
+  do_test_scale_and_speed (NULL, NULL, GST_RTSP_STS_OK);
 
   /* scale requested, scale should be received */
   fake_applied_rate_value = 2;
   fake_rate_value = 1;
   expected_scale_header = "2.000";
   expected_speed_header = NULL;
-  do_test_scale_and_speed ("2.000", NULL);
+  do_test_scale_and_speed ("2.000", NULL, GST_RTSP_STS_OK);
 
   /* speed requested, speed should be received */
   fake_applied_rate_value = 0;
   fake_rate_value = 0;
   expected_scale_header = NULL;
   expected_speed_header = "2.000";
-  do_test_scale_and_speed (NULL, "2.000");
+  do_test_scale_and_speed (NULL, "2.000", GST_RTSP_STS_OK);
 
   /* both requested, both should be received */
   fake_applied_rate_value = 2;
   fake_rate_value = 2;
   expected_scale_header = "2.000";
   expected_speed_header = "2.000";
-  do_test_scale_and_speed ("2", "2");
+  do_test_scale_and_speed ("2", "2", GST_RTSP_STS_OK);
 
   /* scale requested but media doesn't handle scaling so both should be
    * received, with scale set to 1.000 and speed set to (requested scale
@@ -1949,7 +1955,7 @@ GST_START_TEST (test_scale_and_speed)
   fake_rate_value = 5;
   expected_scale_header = "1.000";
   expected_speed_header = "5.000";
-  do_test_scale_and_speed ("5", NULL);
+  do_test_scale_and_speed ("5", NULL, GST_RTSP_STS_OK);
 
   /* both requested but media only handles scaling so both should be received,
    * with scale set to (requested scale * requested speed) and speed set to 1.00
@@ -1958,7 +1964,22 @@ GST_START_TEST (test_scale_and_speed)
   fake_applied_rate_value = 4.000;
   expected_scale_header = "4.000";
   expected_speed_header = "1.000";
-  do_test_scale_and_speed ("2", "2");
+  do_test_scale_and_speed ("2", "2", GST_RTSP_STS_OK);
+
+  /* test invalid values */
+  fake_applied_rate_value = 0;
+  fake_rate_value = 0;
+  expected_scale_header = NULL;
+  expected_speed_header = NULL;
+
+  /* scale or speed not decimal values */
+  do_test_scale_and_speed ("x", NULL, GST_RTSP_STS_BAD_REQUEST);
+  do_test_scale_and_speed (NULL, "y", GST_RTSP_STS_BAD_REQUEST);
+
+  /* scale or speed illegal decimal values */
+  do_test_scale_and_speed ("0", NULL, GST_RTSP_STS_BAD_REQUEST);
+  do_test_scale_and_speed (NULL, "0", GST_RTSP_STS_BAD_REQUEST);
+  do_test_scale_and_speed (NULL, "-2", GST_RTSP_STS_BAD_REQUEST);
 }
 
 GST_END_TEST
