@@ -2266,7 +2266,7 @@ gst_vulkan_view_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
       goto error;
     }
     out_img_mems[i] = (GstVulkanImageMemory *) mem;
-    in_img_views[i] = get_or_create_image_view (out_img_mems[i]);
+    out_img_views[i] = get_or_create_image_view (out_img_mems[i]);
     gst_vulkan_trash_list_add (render->trash_list,
         gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref (fence),
             (GstMiniObject *) out_img_views[i]));
