@@ -51,8 +51,7 @@ struct _GstVulkanViewConvert
   GstVulkanCommandPool             *cmd_pool;
 
   VkSampler                         sampler;
-  VkDescriptorPool                  descriptor_pool;
-  VkDescriptorSet                   descriptor_set;
+  GstVulkanDescriptorCache         *descriptor_pool;
 
   VkShaderModule                    vert_module;
   VkShaderModule                    frag_module;

@@ -66,7 +66,7 @@ struct _GstVulkanFullScreenRender
   VkRenderPass          render_pass;
   VkPipelineLayout      pipeline_layout;
   VkPipeline            graphics_pipeline;
-  VkDescriptorSetLayout descriptor_set_layout;
+  GstVulkanHandle      *descriptor_set_layout;
 
   GstMemory            *vertices;
   GstMemory            *indices;

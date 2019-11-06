@@ -41,7 +41,7 @@ typedef struct _GstVulkanColorConvertClass GstVulkanColorConvertClass;
 
 typedef struct _shader_info shader_info;
 
-typedef gboolean (*CommandStateUpdate) (GstVulkanColorConvert * conv, VkCommandBuffer cmd, shader_info * sinfo, GstVulkanImageView ** src_views, GstVulkanImageView ** dest_views);
+typedef gboolean (*CommandStateUpdate) (GstVulkanColorConvert * conv, VkCommandBuffer cmd, shader_info * sinfo, GstVulkanImageView ** src_views, GstVulkanImageView ** dest_views, GstVulkanFence * fence);
 
 struct _shader_info
 {
@@ -63,8 +63,7 @@ struct _GstVulkanColorConvert
   GstVulkanCommandPool             *cmd_pool;
 
   VkSampler                         sampler;
-  VkDescriptorPool                  descriptor_pool;
-  VkDescriptorSet                   descriptor_set;
+  GstVulkanDescriptorCache         *descriptor_pool;
 
   VkShaderModule                    vert_module;
   VkShaderModule                    frag_module;

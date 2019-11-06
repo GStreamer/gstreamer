@@ -276,16 +276,17 @@ static VkAttachmentDescription
   return color_attachments;
 }
 
-static VkDescriptorPool
+static GstVulkanDescriptorCache *
 _create_descriptor_pool (GstVulkanImageIdentity * vk_identity)
 {
   GstVulkanFullScreenRender *render =
       GST_VULKAN_FULL_SCREEN_RENDER (vk_identity);
+  guint max_sets = 32;          /* FIXME: Don't hardcode this! */
 
   /* *INDENT-OFF* */
   VkDescriptorPoolSize pool_sizes = {
       .type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-      .descriptorCount = 1
+      .descriptorCount = max_sets
   };
 
   VkDescriptorPoolCreateInfo pool_info = {
@@ -293,10 +294,12 @@ _create_descriptor_pool (GstVulkanImageIdentity * vk_identity)
       .pNext = NULL,
       .poolSizeCount = 1,
       .pPoolSizes = &pool_sizes,
-      .maxSets = 1
+      .maxSets = max_sets
   };
   /* *INDENT-ON* */
   VkDescriptorPool pool;
+  GstVulkanDescriptorPool *ret;
+  GstVulkanDescriptorCache *cache;
   GError *error = NULL;
   VkResult err;
 
@@ -306,42 +309,15 @@ _create_descriptor_pool (GstVulkanImageIdentity * vk_identity)
     GST_ERROR_OBJECT (render, "Failed to create descriptor pool: %s",
         error->message);
     g_clear_error (&error);
-    return VK_NULL_HANDLE;
+    return NULL;
   }
 
-  return pool;
-}
+  ret = gst_vulkan_descriptor_pool_new_wrapped (render->device, pool, max_sets);
+  cache =
+      gst_vulkan_descriptor_cache_new (ret, 1, &render->descriptor_set_layout);
+  gst_object_unref (ret);
 
-static VkDescriptorSet
-_create_descriptor_set (GstVulkanImageIdentity * vk_identity)
-{
-  GstVulkanFullScreenRender *render =
-      GST_VULKAN_FULL_SCREEN_RENDER (vk_identity);
-
-  /* *INDENT-OFF* */
-  VkDescriptorSetAllocateInfo alloc_info = {
-      .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-      .pNext = NULL,
-      .descriptorPool = vk_identity->descriptor_pool,
-      .descriptorSetCount = 1,
-      .pSetLayouts = &render->descriptor_set_layout
-  };
-  /* *INDENT-ON* */
-  VkDescriptorSet descriptor;
-  GError *error = NULL;
-  VkResult err;
-
-  err =
-      vkAllocateDescriptorSets (render->device->device, &alloc_info,
-      &descriptor);
-  if (gst_vulkan_error_to_g_error (err, &error, "vkAllocateDescriptorSets") < 0) {
-    GST_ERROR_OBJECT (vk_identity, "Failed to allocate descriptor: %s",
-        error->message);
-    g_clear_error (&error);
-    return VK_NULL_HANDLE;
-  }
-
-  return descriptor;
+  return cache;
 }
 
 static gboolean
@@ -361,17 +337,15 @@ gst_vulkan_image_identity_set_caps (GstBaseTransform * bt, GstCaps * in_caps,
   else
     last_fence = gst_vulkan_fence_new_always_signalled (render->device);
 
-  gst_vulkan_trash_list_add (render->trash_list,
-      gst_vulkan_trash_new_free_descriptor_pool (gst_vulkan_fence_ref
-          (last_fence), vk_identity->descriptor_pool));
-  vk_identity->descriptor_set = VK_NULL_HANDLE;
-  vk_identity->descriptor_pool = VK_NULL_HANDLE;
+  if (vk_identity->descriptor_pool)
+    gst_vulkan_trash_list_add (render->trash_list,
+        gst_vulkan_trash_new_object_unref (gst_vulkan_fence_ref
+            (last_fence), (GstObject *) vk_identity->descriptor_pool));
+  vk_identity->descriptor_pool = NULL;
 
   gst_vulkan_fence_unref (last_fence);
 
   if (!(vk_identity->descriptor_pool = _create_descriptor_pool (vk_identity)))
-    return FALSE;
-  if (!(vk_identity->descriptor_set = _create_descriptor_set (vk_identity)))
     return FALSE;
 
   return TRUE;
@@ -446,15 +420,13 @@ gst_vulkan_image_identity_stop (GstBaseTransform * bt)
     else
       last_fence = gst_vulkan_fence_new_always_signalled (render->device);
 
-    if (vk_identity->descriptor_pool)
-      gst_vulkan_trash_list_add (render->trash_list,
-          gst_vulkan_trash_new_free_descriptor_pool (gst_vulkan_fence_ref
-              (render->last_fence), vk_identity->descriptor_pool));
-    vk_identity->descriptor_pool = VK_NULL_HANDLE;
-    if (vk_identity->sampler)
-      gst_vulkan_trash_list_add (render->trash_list,
-          gst_vulkan_trash_new_free_sampler (gst_vulkan_fence_ref
-              (render->last_fence), vk_identity->sampler));
+    gst_vulkan_trash_list_add (render->trash_list,
+        gst_vulkan_trash_new_object_unref (gst_vulkan_fence_ref
+            (last_fence), (GstObject *) vk_identity->descriptor_pool));
+    vk_identity->descriptor_pool = NULL;
+    gst_vulkan_trash_list_add (render->trash_list,
+        gst_vulkan_trash_new_free_sampler (gst_vulkan_fence_ref
+            (last_fence), vk_identity->sampler));
     vk_identity->sampler = VK_NULL_HANDLE;
 
     gst_vulkan_fence_unref (last_fence);
@@ -468,7 +440,8 @@ gst_vulkan_image_identity_stop (GstBaseTransform * bt)
 }
 
 static void
-update_descriptor_set (GstVulkanImageIdentity * vk_identity, VkImageView view)
+update_descriptor_set (GstVulkanImageIdentity * vk_identity,
+    VkDescriptorSet set, VkImageView view)
 {
   GstVulkanFullScreenRender *render =
       GST_VULKAN_FULL_SCREEN_RENDER (vk_identity);
@@ -483,7 +456,7 @@ update_descriptor_set (GstVulkanImageIdentity * vk_identity, VkImageView view)
   VkWriteDescriptorSet writes = {
       .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
       .pNext = NULL,
-      .dstSet = vk_identity->descriptor_set,
+      .dstSet = set,
       .dstBinding = 0,
       .dstArrayElement = 0,
       .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
@@ -541,6 +514,7 @@ gst_vulkan_image_identity_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   GstVulkanImageMemory *in_img_mem, *out_img_mem;
   GstVulkanImageView *in_img_view, *out_img_view;
   GstVulkanFence *fence = NULL;
+  GstVulkanDescriptorSet *set;
   GstMemory *in_mem, *out_mem;
   VkFramebuffer framebuffer;
   GstVulkanCommandBuffer *cmd_buf;
@@ -579,8 +553,12 @@ gst_vulkan_image_identity_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     if (!(vk_identity->cmd_pool =
             gst_vulkan_queue_create_command_pool (render->queue, &error)))
       goto error;
-    update_descriptor_set (vk_identity, in_img_view->view);
   }
+  if (!(set =
+          gst_vulkan_descriptor_cache_acquire (vk_identity->descriptor_pool,
+              &error)))
+    goto error;
+  update_descriptor_set (vk_identity, set->set, in_img_view->view);
 
   if (!(cmd_buf =
           gst_vulkan_command_pool_create (vk_identity->cmd_pool, &error)))
@@ -666,7 +644,7 @@ gst_vulkan_image_identity_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   }
 
   vkCmdBindDescriptorSets (cmd_buf->cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
-      render->pipeline_layout, 0, 1, &vk_identity->descriptor_set, 0, NULL);
+      render->pipeline_layout, 0, 1, &set->set, 0, NULL);
   if (!gst_vulkan_full_screen_render_fill_command_buffer (render, cmd_buf->cmd,
           framebuffer))
     goto unlock_error;
@@ -676,6 +654,9 @@ gst_vulkan_image_identity_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   if (gst_vulkan_error_to_g_error (err, &error, "vkEndCommandBuffer") < 0)
     goto error;
 
+  gst_vulkan_trash_list_add (render->trash_list,
+      gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref (fence),
+          GST_MINI_OBJECT_CAST (set)));
   gst_vulkan_trash_list_add (render->trash_list,
       gst_vulkan_trash_new_free_framebuffer (gst_vulkan_fence_ref (fence),
           framebuffer));

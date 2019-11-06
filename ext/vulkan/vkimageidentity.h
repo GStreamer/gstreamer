@@ -44,8 +44,7 @@ struct _GstVulkanImageIdentity
   GstVulkanCommandPool             *cmd_pool;
 
   VkSampler                         sampler;
-  VkDescriptorPool                  descriptor_pool;
-  VkDescriptorSet                   descriptor_set;
+  GstVulkanDescriptorCache         *descriptor_pool;
 
   VkDescriptorSetLayoutBinding      sampler_layout_binding;
   VkDescriptorSetLayoutCreateInfo   layout_info;

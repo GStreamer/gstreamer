@@ -445,7 +445,7 @@ _create_pipeline_layout (GstVulkanFullScreenRender * render)
       .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
       .pNext = NULL,
       .setLayoutCount = 1,
-      .pSetLayouts = &render->descriptor_set_layout,
+      .pSetLayouts = (VkDescriptorSetLayout *) &render->descriptor_set_layout->handle,
       .pushConstantRangeCount = n_constants,
       .pPushConstantRanges = constants,
   };
@@ -514,7 +514,7 @@ _create_render_pass (GstVulkanFullScreenRender * render)
   return render_pass;
 }
 
-static VkDescriptorSetLayout
+static GstVulkanHandle *
 _create_descriptor_set_layout (GstVulkanFullScreenRender * render)
 {
   GstVulkanFullScreenRenderClass *render_class =
@@ -532,6 +532,7 @@ _create_descriptor_set_layout (GstVulkanFullScreenRender * render)
   };
   /* *INDENT-ON* */
   VkDescriptorSetLayout descriptor_set_layout;
+  GstVulkanHandle *ret;
   VkResult err;
   GError *error = NULL;
 
@@ -546,7 +547,12 @@ _create_descriptor_set_layout (GstVulkanFullScreenRender * render)
     return VK_NULL_HANDLE;
   }
 
-  return descriptor_set_layout;
+  ret = gst_vulkan_handle_new_wrapped (render->device,
+      GST_VULKAN_HANDLE_TYPE_DESCRIPTOR_SET_LAYOUT,
+      (GstVulkanHandleTypedef) descriptor_set_layout,
+      gst_vulkan_handle_free_descriptor_set_layout, NULL);
+
+  return ret;
 }
 
 static gboolean
@@ -571,9 +577,9 @@ gst_vulkan_full_screen_render_set_caps (GstBaseTransform * bt,
 
   if (render->descriptor_set_layout) {
     gst_vulkan_trash_list_add (render->trash_list,
-        gst_vulkan_trash_new_free_descriptor_set_layout (gst_vulkan_fence_ref
-            (last_fence), render->descriptor_set_layout));
-    render->descriptor_set_layout = VK_NULL_HANDLE;
+        gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref
+            (last_fence), (GstMiniObject *) render->descriptor_set_layout));
+    render->descriptor_set_layout = NULL;
   }
   if (render->pipeline_layout) {
     gst_vulkan_trash_list_add (render->trash_list,
@@ -774,9 +780,9 @@ gst_vulkan_full_screen_render_stop (GstBaseTransform * bt)
             (last_fence), render->render_pass));
     render->render_pass = VK_NULL_HANDLE;
     gst_vulkan_trash_list_add (render->trash_list,
-        gst_vulkan_trash_new_free_descriptor_set_layout (gst_vulkan_fence_ref
-            (last_fence), render->descriptor_set_layout));
-    render->descriptor_set_layout = VK_NULL_HANDLE;
+        gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref
+            (last_fence), (GstMiniObject *) render->descriptor_set_layout));
+    render->descriptor_set_layout = NULL;
 
     gst_vulkan_fence_unref (last_fence);
 

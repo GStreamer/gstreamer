@@ -46,6 +46,18 @@ typedef struct _GstVulkanCommandPoolPrivate GstVulkanCommandPoolPrivate;
 
 typedef struct _GstVulkanCommandBuffer GstVulkanCommandBuffer;
 
+typedef struct _GstVulkanDescriptorSet GstVulkanDescriptorSet;
+typedef struct _GstVulkanDescriptorSetClass GstVulkanDescriptorSetClass;
+typedef struct _GstVulkanDescriptorSetPrivate GstVulkanDescriptorSetPrivate;
+
+typedef struct _GstVulkanDescriptorPool GstVulkanDescriptorPool;
+typedef struct _GstVulkanDescriptorPoolClass GstVulkanDescriptorPoolClass;
+typedef struct _GstVulkanDescriptorPoolPrivate GstVulkanDescriptorPoolPrivate;
+
+typedef struct _GstVulkanDescriptorCache GstVulkanDescriptorCache;
+typedef struct _GstVulkanDescriptorCacheClass GstVulkanDescriptorCacheClass;
+typedef struct _GstVulkanDescriptorCachePrivate GstVulkanDescriptorCachePrivate;
+
 typedef struct _GstVulkanDisplay GstVulkanDisplay;
 typedef struct _GstVulkanDisplayClass GstVulkanDisplayClass;
 typedef struct _GstVulkanDisplayPrivate GstVulkanDisplayPrivate;
