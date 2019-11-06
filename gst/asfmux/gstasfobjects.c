@@ -240,14 +240,14 @@ gst_asf_payload_free (AsfPayload * payload)
 guint64
 gst_asf_get_current_time (void)
 {
-  GTimeVal timeval;
+  gint64 now;
   guint64 secs;
   guint64 usecs;
 
-  g_get_current_time (&timeval);
+  now = g_get_real_time ();
 
-  secs = (guint64) timeval.tv_sec;
-  usecs = (guint64) timeval.tv_usec;
+  secs = (guint64) now / G_USEC_PER_SEC;
+  usecs = (guint64) now % G_USEC_PER_SEC;
   return secs * G_GUINT64_CONSTANT (10000000) + usecs * 10
       + G_GUINT64_CONSTANT (116444628000000000);
 }

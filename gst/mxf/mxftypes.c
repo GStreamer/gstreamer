@@ -555,7 +555,7 @@ mxf_timestamp_to_string (const MXFTimestamp * t, gchar str[32])
 void
 mxf_timestamp_set_now (MXFTimestamp * timestamp)
 {
-  GTimeVal tv;
+  gint64 now;
   time_t t;
   struct tm *tm;
 
@@ -563,8 +563,8 @@ mxf_timestamp_set_now (MXFTimestamp * timestamp)
   struct tm tm_;
 #endif
 
-  g_get_current_time (&tv);
-  t = (time_t) tv.tv_sec;
+  now = g_get_real_time ();
+  t = now / G_USEC_PER_SEC;
 
 #ifdef HAVE_GMTIME_R
   tm = gmtime_r (&t, &tm_);
@@ -578,7 +578,7 @@ mxf_timestamp_set_now (MXFTimestamp * timestamp)
   timestamp->hour = tm->tm_hour;
   timestamp->minute = tm->tm_min;
   timestamp->second = tm->tm_sec;
-  timestamp->msecond = tv.tv_usec / 1000;
+  timestamp->msecond = now / 1000;
 }
 
 void

@@ -480,14 +480,12 @@ gst_adaptive_demux_init (GstAdaptiveDemux * demux,
   } else {
     GDateTime *utc_now;
     GstClockTime rtc_now;
-    GTimeVal gtv;
 
     utc_now = g_date_time_new_now_utc ();
     rtc_now = gst_clock_get_time (demux->realtime_clock);
-    g_date_time_to_timeval (utc_now, &gtv);
     demux->clock_offset =
-        gtv.tv_sec * G_TIME_SPAN_SECOND + gtv.tv_usec -
-        GST_TIME_AS_USECONDS (rtc_now);
+        g_date_time_to_unix (utc_now) * G_TIME_SPAN_SECOND +
+        g_date_time_get_microsecond (utc_now) - GST_TIME_AS_USECONDS (rtc_now);
     g_date_time_unref (utc_now);
   }
   g_rec_mutex_init (&demux->priv->updates_lock);
@@ -4478,14 +4476,10 @@ GDateTime *
 gst_adaptive_demux_get_client_now_utc (GstAdaptiveDemux * demux)
 {
   GstClockTime rtc_now;
-  gint64 utc_now;
-  GTimeVal gtv;
 
   rtc_now = gst_clock_get_time (demux->realtime_clock);
-  utc_now = demux->clock_offset + GST_TIME_AS_USECONDS (rtc_now);
-  gtv.tv_sec = utc_now / G_TIME_SPAN_SECOND;
-  gtv.tv_usec = utc_now % G_TIME_SPAN_SECOND;
-  return g_date_time_new_from_timeval_utc (&gtv);
+  return g_date_time_new_from_unix_utc (demux->clock_offset +
+      GST_TIME_AS_USECONDS (rtc_now));
 }
 
 /**
