@@ -973,7 +973,10 @@ send_fragment_opened_closed_msg (GstSplitMuxSink * splitmux, gboolean opened,
       running_time = *rtime;
   }
 
-  g_object_get (sink, "location", &location, NULL);
+  if (g_object_class_find_property (G_OBJECT_GET_CLASS (splitmux->sink),
+          "location") != NULL)
+    g_object_get (sink, "location", &location, NULL);
+
 
   /* If it's in the middle of a teardown, the reference_ctc might have become
    * NULL */
@@ -3149,7 +3152,9 @@ set_next_filename (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
 
   if (fname) {
     GST_INFO_OBJECT (splitmux, "Setting file to %s", fname);
-    g_object_set (splitmux->sink, "location", fname, NULL);
+    if (g_object_class_find_property (G_OBJECT_GET_CLASS (splitmux->sink),
+            "location") != NULL)
+      g_object_set (splitmux->sink, "location", fname, NULL);
     g_free (fname);
 
     splitmux->fragment_id++;
