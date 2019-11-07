@@ -224,6 +224,7 @@ build clang fedora x86_64:
 .test fedora x86_64:
   image: $FEDORA_IMAGE
   extends: '.test'
+  tags: ['gstreamer']
   needs:
     - 'build fedora x86_64'
   dependencies:
