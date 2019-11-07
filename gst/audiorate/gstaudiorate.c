@@ -216,11 +216,23 @@ static gboolean
 gst_audio_rate_setcaps (GstAudioRate * audiorate, GstCaps * caps)
 {
   GstAudioInfo info;
+  gint prev_rate = 0;
 
   if (!gst_audio_info_from_caps (&info, caps))
     goto wrong_caps;
 
+  prev_rate = audiorate->info.rate;
   audiorate->info = info;
+
+  if (audiorate->next_offset >= 0 && prev_rate > 0 && prev_rate != info.rate) {
+    GST_DEBUG_OBJECT (audiorate,
+        "rate changed from %d to %d", prev_rate, info.rate);
+
+    /* calculate next_offset based on new rate value */
+    audiorate->next_offset =
+        gst_util_uint64_scale_int_round (audiorate->next_ts,
+        info.rate, GST_SECOND);
+  }
 
   return TRUE;
 
