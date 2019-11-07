@@ -3081,7 +3081,7 @@ gst_validate_scenario_check_latency (GstValidateScenario * scenario,
   query = gst_query_new_latency ();
   if (!gst_element_query (GST_ELEMENT_CAST (pipeline), query)) {
     GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
-        "Failed to perfom LATENCY query");
+        "Failed to perform LATENCY query");
     gst_query_unref (query);
     return;
   }
@@ -3168,7 +3168,7 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
     case GST_MESSAGE_ERROR:
       is_error = TRUE;
 
-      /* Passtrough */
+      /* Passthrough */
     case GST_MESSAGE_EOS:
     {
       GstValidateAction *stop_action;
@@ -3494,7 +3494,7 @@ _load_scenario_file (GstValidateScenario * scenario,
     action->action_number = priv->num_actions++;
   }
 
-  /* max-latency and max-dropped can be overriden using config */
+  /* max-latency and max-dropped can be overridden using config */
   for (config = gst_validate_plugin_get_config (NULL); config;
       config = g_list_next (config)) {
     GstClockTime max_latency;
@@ -3755,7 +3755,7 @@ gst_validate_scenario_class_init (GstValidateScenarioClass * klass)
 
   /**
    * GstValidateScenario::done:
-   * @scenario: The scenario runing
+   * @scenario: The scenario running
    *
    * Emitted once all actions have been executed
    */
@@ -5094,7 +5094,7 @@ init_scenarios (void)
       {
         .name = "max-latency",
         .description = "The maximum latency in nanoseconds allowed for this pipeline.\n"
-          "It can be overriden using core configuration, like for example by defining the "
+          "It can be overridden using core configuration, like for example by defining the "
           "env variable GST_VALIDATE_CONFIG=core,max-latency=33000000",
         .mandatory = FALSE,
         .types = "double, int",
@@ -5104,7 +5104,7 @@ init_scenarios (void)
       {
         .name = "max-dropped",
         .description = "The maximum number of buffers which can be dropped by the QoS system allowed for this pipeline.\n"
-          "It can be overriden using core configuration, like for example by defining the "
+          "It can be overridden using core configuration, like for example by defining the "
           "env variable GST_VALIDATE_CONFIG=core,max-dropped=100",
         .mandatory = FALSE,
         .types = "int",
