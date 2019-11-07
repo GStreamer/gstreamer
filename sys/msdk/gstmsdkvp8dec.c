@@ -34,10 +34,9 @@
 #  include <config.h>
 #endif
 
-#include <mfxplugin.h>
-#include <mfxvp8.h>
-
 #include "gstmsdkvp8dec.h"
+
+#include <mfxvp8.h>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkvp8dec_debug);
 #define GST_CAT_DEFAULT gst_msdkvp8dec_debug
@@ -56,22 +55,14 @@ gst_msdkvp8dec_configure (GstMsdkDec * decoder)
 {
   GstMsdkVP8Dec *vp8dec = GST_MSDKVP8DEC (decoder);
   mfxSession session;
-  mfxStatus status;
   const mfxPluginUID *uid;
 
   session = gst_msdk_context_get_session (decoder->context);
 
   uid = &MFX_PLUGINID_VP8D_HW;
 
-  status = MFXVideoUSER_Load (session, uid, 1);
-  if (status < MFX_ERR_NONE) {
-    GST_ERROR_OBJECT (vp8dec, "Media SDK Plugin load failed (%s)",
-        msdk_status_to_string (status));
+  if (!gst_msdk_load_plugin (session, uid, 1, "msdkvp8dec"))
     return FALSE;
-  } else if (status > MFX_ERR_NONE) {
-    GST_WARNING_OBJECT (vp8dec, "Media SDK Plugin load warning: %s",
-        msdk_status_to_string (status));
-  }
 
   decoder->param.mfx.CodecId = MFX_CODEC_VP8;
   /* Replaced with width and height rounded up to 16 */

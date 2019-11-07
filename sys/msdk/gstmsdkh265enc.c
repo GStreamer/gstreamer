@@ -33,8 +33,6 @@
 #  include <config.h>
 #endif
 
-#include <mfxplugin.h>
-
 #include <gst/allocators/gstdmabuf.h>
 
 #include "gstmsdkh265enc.h"
@@ -91,7 +89,6 @@ gst_msdkh265enc_configure (GstMsdkEnc * encoder)
 {
   GstMsdkH265Enc *h265enc = GST_MSDKH265ENC (encoder);
   mfxSession session;
-  mfxStatus status;
   const mfxPluginUID *uid;
 
   session = gst_msdk_context_get_session (encoder->context);
@@ -101,15 +98,8 @@ gst_msdkh265enc_configure (GstMsdkEnc * encoder)
   else
     uid = &MFX_PLUGINID_HEVCE_SW;
 
-  status = MFXVideoUSER_Load (session, uid, 1);
-  if (status < MFX_ERR_NONE) {
-    GST_ERROR_OBJECT (h265enc, "Media SDK Plugin load failed (%s)",
-        msdk_status_to_string (status));
+  if (!gst_msdk_load_plugin (session, uid, 1, "msdkh265enc"))
     return FALSE;
-  } else if (status > MFX_ERR_NONE) {
-    GST_WARNING_OBJECT (h265enc, "Media SDK Plugin load warning: %s",
-        msdk_status_to_string (status));
-  }
 
   encoder->param.mfx.CodecId = MFX_CODEC_HEVC;
 

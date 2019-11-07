@@ -450,3 +450,25 @@ gst_msdk_get_mfx_video_orientation_from_video_direction (guint value,
       break;
   }
 }
+
+gboolean
+gst_msdk_load_plugin (mfxSession session, const mfxPluginUID * uid,
+    mfxU32 version, const gchar * plugin)
+{
+  mfxStatus status;
+
+  status = MFXVideoUSER_Load (session, uid, version);
+
+  if (status == MFX_ERR_UNDEFINED_BEHAVIOR) {
+    GST_WARNING ("Media SDK Plugin for %s has been loaded", plugin);
+  } else if (status < MFX_ERR_NONE) {
+    GST_ERROR ("Media SDK Plugin for %s load failed (%s)", plugin,
+        msdk_status_to_string (status));
+    return FALSE;
+  } else if (status > MFX_ERR_NONE) {
+    GST_WARNING ("Media SDK Plugin for %s load warning: %s", plugin,
+        msdk_status_to_string (status));
+  }
+
+  return TRUE;
+}

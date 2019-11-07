@@ -43,6 +43,7 @@
 #include <gst/allocators/allocators.h>
 
 #include <mfxvideo.h>
+#include <mfxplugin.h>
 
 G_BEGIN_DECLS
 
@@ -98,6 +99,10 @@ gst_msdk_update_mfx_frame_info_from_mfx_video_param (mfxFrameInfo * mfx_info,
 void
 gst_msdk_get_mfx_video_orientation_from_video_direction (guint value,
     guint * mfx_mirror, guint * mfx_rotation);
+
+gboolean
+gst_msdk_load_plugin (mfxSession session, const mfxPluginUID * uid,
+    mfxU32 version, const gchar * plugin);
 
 G_END_DECLS
 

@@ -35,7 +35,6 @@
 #  include <config.h>
 #endif
 
-#include <mfxplugin.h>
 #include <mfxvp9.h>
 
 #include "gstmsdkvp9dec.h"
@@ -66,22 +65,14 @@ gst_msdkvp9dec_configure (GstMsdkDec * decoder)
 {
   GstMsdkVP9Dec *vp9dec = GST_MSDKVP9DEC (decoder);
   mfxSession session;
-  mfxStatus status;
   const mfxPluginUID *uid;
 
   session = gst_msdk_context_get_session (decoder->context);
 
   uid = &MFX_PLUGINID_VP9D_HW;
 
-  status = MFXVideoUSER_Load (session, uid, 1);
-  if (status < MFX_ERR_NONE) {
-    GST_ERROR_OBJECT (vp9dec, "Media SDK Plugin load failed (%s)",
-        msdk_status_to_string (status));
+  if (!gst_msdk_load_plugin (session, uid, 1, "msdkvp9dec"))
     return FALSE;
-  } else if (status > MFX_ERR_NONE) {
-    GST_WARNING_OBJECT (vp9dec, "Media SDK Plugin load warning: %s",
-        msdk_status_to_string (status));
-  }
 
   decoder->param.mfx.CodecId = MFX_CODEC_VP9;
   /* Replaced with width and height rounded up to 16 */

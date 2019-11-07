@@ -33,8 +33,6 @@
 #  include <config.h>
 #endif
 
-#include <mfxplugin.h>
-
 #include <gst/allocators/gstdmabuf.h>
 
 #include "gstmsdkvp9enc.h"
@@ -115,20 +113,12 @@ gst_msdkvp9enc_configure (GstMsdkEnc * encoder)
 {
   GstMsdkVP9Enc *thiz = GST_MSDKVP9ENC (encoder);
   mfxSession session;
-  mfxStatus status;
 
   if (encoder->hardware) {
     session = gst_msdk_context_get_session (encoder->context);
-    status = MFXVideoUSER_Load (session, &MFX_PLUGINID_VP9E_HW, 1);
 
-    if (status < MFX_ERR_NONE) {
-      GST_ERROR_OBJECT (thiz, "Media SDK Plugin load failed (%s)",
-          msdk_status_to_string (status));
+    if (!gst_msdk_load_plugin (session, &MFX_PLUGINID_VP9E_HW, 1, "msdkvp9enc"))
       return FALSE;
-    } else if (status > MFX_ERR_NONE) {
-      GST_WARNING_OBJECT (thiz, "Media SDK Plugin load warning: %s",
-          msdk_status_to_string (status));
-    }
   }
 
   encoder->num_extra_frames = encoder->async_depth - 1;
