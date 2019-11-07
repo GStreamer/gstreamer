@@ -63,9 +63,6 @@ struct _GstAudioRate
   guint64 next_offset;
   guint64 next_ts;
 
-  GstClockTime prev_in_time;
-  guint64 prev_in_offset;
-
   gboolean discont;
 
   gboolean new_segment;
