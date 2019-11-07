@@ -129,7 +129,11 @@ has_python = false
 if build_gir
   pymod = import('python')
   python = pymod.find_installation(required: get_option('python'))
-  python_dep = python.dependency(required : get_option('python'))
+  if python.found()
+    python_dep = python.dependency(required : get_option('python'))
+  else
+    python_dep = dependency('', required: false)
+  endif
   if python_dep.found()
     python_abi_flags = python.get_variable('ABIFLAGS', '')
     pylib_loc = get_option('libpython-dir')
