@@ -2522,15 +2522,12 @@ _get_target_elements_by_klass_or_factory_name (GstValidateScenario * scenario,
   return result;
 }
 
-static gboolean
-_execute_set_property (GstValidateScenario * scenario,
+static GList *
+_find_elements_defined_in_action (GstValidateScenario * scenario,
     GstValidateAction * action)
 {
   GstElement *target;
-  GList *targets = NULL, *l;
-  const gchar *property;
-  const GValue *property_value;
-  gboolean ret = TRUE;
+  GList *targets = NULL;
 
   /* set-property can be applied on either:
    * - a single element having target-element-name as name
@@ -2547,8 +2544,27 @@ _execute_set_property (GstValidateScenario * scenario,
       gst_structure_get_string (action->structure,
           "target-element-factory-name")) {
     targets = _get_target_elements_by_klass_or_factory_name (scenario, action);
-  } else {
-    g_assert_not_reached ();
+  }
+
+  return targets;
+}
+
+static GstValidateExecuteActionReturn
+_execute_set_or_check_property (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  GList *targets, *l;
+  const gchar *property;
+  const GValue *property_value;
+  gboolean ret = GST_VALIDATE_EXECUTE_ACTION_OK;
+  gboolean check = gst_structure_has_name (action->structure, "check-property");
+
+  targets = _find_elements_defined_in_action (scenario, action);
+  if (!targets) {
+    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+        "No element found for action: %" GST_PTR_FORMAT, action->structure);
+
+    return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
   }
 
   property = gst_structure_get_string (action->structure, "property-name");
@@ -2556,13 +2572,36 @@ _execute_set_property (GstValidateScenario * scenario,
       "property-value");
 
   for (l = targets; l != NULL; l = g_list_next (l)) {
-    GstValidateActionReturn tmpres =
-        gst_validate_object_set_property (GST_VALIDATE_REPORTER (scenario),
-        G_OBJECT (l->data), property,
-        property_value, action->priv->optional);
+    if (!check) {
+      GstValidateActionReturn tmpres;
 
-    if (!tmpres)
-      ret = tmpres;
+      tmpres =
+          gst_validate_object_set_property (GST_VALIDATE_REPORTER (scenario),
+          G_OBJECT (l->data), property, property_value, action->priv->optional);
+
+      if (!tmpres)
+        ret = tmpres;
+    } else {
+      GValue cvalue = G_VALUE_INIT;
+
+      g_value_init (&cvalue, G_VALUE_TYPE (property_value));
+      g_object_get_property (l->data, property, &cvalue);
+
+      if (gst_value_compare (&cvalue, property_value) != GST_VALUE_EQUAL) {
+        gchar *expected = gst_value_serialize (property_value), *observed =
+            gst_value_serialize (&cvalue);
+
+        GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+            "%s::%s expected value: '%s' different than observed: '%s'",
+            GST_OBJECT_NAME (l->data), property, expected, observed);
+
+        g_free (expected);
+        g_free (observed);
+
+        ret = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+      }
+      g_value_reset (&cvalue);
+    }
   }
 
   g_list_free_full (targets, gst_object_unref);
@@ -5313,7 +5352,7 @@ init_scenarios (void)
       "```\n",
       GST_VALIDATE_ACTION_TYPE_NONE);
 
-  REGISTER_ACTION_TYPE ("set-property", _execute_set_property,
+  REGISTER_ACTION_TYPE ("set-property", _execute_set_or_check_property,
       ((GstValidateActionParameter []) {
         {
           .name = "target-element-name",
@@ -5358,6 +5397,39 @@ init_scenarios (void)
       GST_VALIDATE_ACTION_TYPE_CAN_EXECUTE_ON_ADDITION |
           GST_VALIDATE_ACTION_TYPE_CAN_BE_OPTIONAL |
           GST_VALIDATE_ACTION_TYPE_HANDLED_IN_CONFIG);
+
+  REGISTER_ACTION_TYPE("check-property", _execute_set_or_check_property,
+      ((GstValidateActionParameter[]) {
+          { .name = "target-element-name",
+              .description = "The name of the GstElement to check a property value",
+              .mandatory = FALSE,
+              .types = "string",
+              NULL },
+          { .name = "target-element-factory-name",
+              .description = "The name factory for which to check a property value on built elements",
+              .mandatory = FALSE,
+              .types = "string",
+              NULL },
+          { .name = "target-element-klass",
+              .description = "The klass of the GstElements to check a property on",
+              .mandatory = FALSE,
+              .types = "string",
+              NULL },
+          { .name = "property-name",
+              .description = "The name of the property to set on @target-element-name",
+              .mandatory = TRUE,
+              .types = "string",
+              NULL },
+          { .name = "property-value",
+              .description = "The expected value of @property-name",
+              .mandatory = TRUE,
+              .types = "The same type of @property-name",
+              NULL },
+          { NULL } }),
+      "Check the value of property of an element or klass of elements in the pipeline.\n"
+      "Besides property-name and value, either 'target-element-name' or\n"
+      "'target-element-klass' needs to be defined",
+      GST_VALIDATE_ACTION_TYPE_NONE);
 
   REGISTER_ACTION_TYPE ("set-debug-threshold",
       _execute_set_debug_threshold,
