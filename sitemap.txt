@@ -173,6 +173,7 @@
 			additional/design/miniobject.md
 			additional/design/missing-plugins.md
 			additional/design/negotiation.md
+			additional/design/opengl.md
 			additional/design/orc-integration.md
 			additional/design/overview.md
 			additional/design/playbin.md
