@@ -163,7 +163,7 @@ gst_vulkan_window_win32_open (GstVulkanWindow * window, GError ** error)
   gst_object_unref (display);
 
   priv->msg_io_channel = g_io_channel_win32_new_messages (0);
-  msg_source = g_io_create_watch (priv->msg_io_channel, G_IO_IN);
+  window_win32->msg_source = g_io_create_watch (priv->msg_io_channel, G_IO_IN);
   g_source_set_callback (window_win32->msg_source, (GSourceFunc) msg_cb, NULL,
       NULL);
   g_source_attach (window_win32->msg_source, context);
