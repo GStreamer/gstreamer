@@ -1403,6 +1403,8 @@ gst_kms_sink_import_dmabuf (GstKMSSink * self, GstBuffer * inbuf,
       return FALSE;
   }
 
+  ensure_kms_allocator (self);
+
   kmsmem = (GstKMSMemory *) gst_kms_allocator_get_cached (mems[0]);
   if (kmsmem) {
     GST_LOG_OBJECT (self, "found KMS mem %p in DMABuf mem %p with fb id = %d",
