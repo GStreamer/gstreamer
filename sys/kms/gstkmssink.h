@@ -73,6 +73,9 @@ struct _GstKMSSink {
   GstCaps *allowed_caps;
   GstBufferPool *pool;
   GstAllocator *allocator;
+  GstVideoInfo last_vinfo;
+  guint last_width;
+  guint last_height;
   GstBuffer *last_buffer;
   GstMemory *tmp_kmsmem;
 
