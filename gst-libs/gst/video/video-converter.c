@@ -1755,26 +1755,49 @@ chain_convert (GstVideoConverter * convert, GstLineCache * prev, gint idx)
   if (!same_primaries) {
     const GstVideoColorPrimariesInfo *pi;
 
+    /* Convert from RGB_input to RGB_output via XYZ
+     *    res = XYZ_to_RGB_output ( RGB_to_XYZ_input ( input ) )
+     * or in matricial form:
+     *    RGB_output = XYZ_to_RGB_output_matrix * RGB_TO_XYZ_input_matrix * RGB_input
+     *
+     * The RGB_input is the pre-existing convert_matrix
+     * The convert_matrix will become the RGB_output
+     */
+
+    /* Convert input RGB to XYZ */
     pi = gst_video_color_primaries_get_info (convert->in_info.colorimetry.
         primaries);
+    /* Get the RGB_TO_XYZ_input_matrix */
     color_matrix_RGB_to_XYZ (&p1, pi->Rx, pi->Ry, pi->Gx, pi->Gy, pi->Bx,
         pi->By, pi->Wx, pi->Wy);
     GST_DEBUG ("to XYZ matrix");
     color_matrix_debug (&p1);
     GST_DEBUG ("current matrix");
+    /* convert_matrix = RGB_TO_XYZ_input_matrix * input_RGB */
     color_matrix_multiply (&convert->convert_matrix, &convert->convert_matrix,
         &p1);
     color_matrix_debug (&convert->convert_matrix);
 
+    /* Convert XYZ to output RGB */
     pi = gst_video_color_primaries_get_info (convert->out_info.colorimetry.
         primaries);
+    /* Calculate the XYZ_to_RGB_output_matrix
+     *  * Get the RGB_TO_XYZ_output_matrix
+     *  * invert it
+     *  * store in p2
+     */
     color_matrix_RGB_to_XYZ (&p2, pi->Rx, pi->Ry, pi->Gx, pi->Gy, pi->Bx,
         pi->By, pi->Wx, pi->Wy);
     color_matrix_invert (&p2, &p2);
     GST_DEBUG ("to RGB matrix");
     color_matrix_debug (&p2);
-    color_matrix_multiply (&convert->convert_matrix, &convert->convert_matrix,
-        &p2);
+    /* Finally:
+     * convert_matrix = XYZ_to_RGB_output_matrix * RGB_TO_XYZ_input_matrix * RGB_input
+     *                = XYZ_to_RGB_output_matrix * convert_matrix
+     *                = p2 * convert_matrix
+     */
+    color_matrix_multiply (&convert->convert_matrix, &p2,
+        &convert->convert_matrix);
     GST_DEBUG ("current matrix");
     color_matrix_debug (&convert->convert_matrix);
   }
