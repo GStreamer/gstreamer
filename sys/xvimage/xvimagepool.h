@@ -50,6 +50,9 @@ struct _GstXvImageBufferPool
   guint padded_height;
   gboolean add_metavideo;
   gboolean need_alignment;
+
+  /* used for calculating actual size, stride, and offset */
+  GstMemory *pre_alloc_mem;
 };
 
 struct _GstXvImageBufferPoolClass

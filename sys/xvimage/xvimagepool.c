@@ -128,6 +128,39 @@ xvimage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   xvpool->crop.w = xvpool->info.width;
   xvpool->crop.h = xvpool->info.height;
 
+  /* update offset, stride and size with actual xvimage buffer */
+  if (xvpool->pre_alloc_mem)
+    gst_memory_unref (xvpool->pre_alloc_mem);
+
+  xvpool->pre_alloc_mem = gst_xvimage_allocator_alloc (xvpool->allocator,
+      xvpool->im_format, &info, xvpool->padded_width,
+      xvpool->padded_height, &xvpool->crop, NULL);
+
+  if (!xvpool->pre_alloc_mem) {
+    GST_ERROR_OBJECT (pool, "couldn't allocate image");
+    gst_structure_free (config);
+    return FALSE;
+  } else {
+    gint i;
+    XvImage *img;
+
+    img = gst_xvimage_memory_get_xvimage ((GstXvImageMemory *)
+        xvpool->pre_alloc_mem);
+
+    info.size = img->data_size;
+
+    for (i = 0; i < img->num_planes; i++) {
+      info.stride[i] = img->pitches[i];
+      info.offset[i] = img->offsets[i];
+    }
+
+    if (!gst_video_info_is_equal (&xvpool->info, &info) ||
+        xvpool->info.size != info.size) {
+      GST_WARNING_OBJECT (pool, "different size, stride and/or offset, update");
+      xvpool->info = info;
+    }
+  }
+
   gst_buffer_pool_config_set_params (config, caps, info.size, min_buffers,
       max_buffers);
 
@@ -173,8 +206,13 @@ xvimage_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
 
   xvimage = gst_buffer_new ();
 
-  mem = gst_xvimage_allocator_alloc (xvpool->allocator, xvpool->im_format,
-      info, xvpool->padded_width, xvpool->padded_height, &xvpool->crop, &err);
+  if (xvpool->pre_alloc_mem) {
+    mem = xvpool->pre_alloc_mem;
+    xvpool->pre_alloc_mem = NULL;
+  } else {
+    mem = gst_xvimage_allocator_alloc (xvpool->allocator, xvpool->im_format,
+        info, xvpool->padded_width, xvpool->padded_height, &xvpool->crop, &err);
+  }
 
   if (mem == NULL) {
     gst_buffer_unref (xvimage);
@@ -247,6 +285,8 @@ gst_xvimage_buffer_pool_finalize (GObject * object)
 
   GST_LOG_OBJECT (pool, "finalize XvImage buffer pool %p", pool);
 
+  if (pool->pre_alloc_mem)
+    gst_memory_unref (pool->pre_alloc_mem);
   if (pool->caps)
     gst_caps_unref (pool->caps);
   if (pool->allocator)
