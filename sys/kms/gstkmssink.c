@@ -1717,8 +1717,6 @@ gst_kms_sink_drain (GstKMSSink * self)
 {
   GstParentBufferMeta *parent_meta;
 
-  GST_DEBUG_OBJECT (self, "draining");
-
   if (!self->last_buffer)
     return;
 
@@ -1727,6 +1725,14 @@ gst_kms_sink_drain (GstKMSSink * self)
   parent_meta = gst_buffer_get_parent_buffer_meta (self->last_buffer);
   if (parent_meta) {
     GstBuffer *dumb_buf, *last_buf;
+
+    /* If this was imported from our dumb buffer pool we can safely skip the
+     * drain */
+    if (parent_meta->buffer->pool &&
+        GST_IS_KMS_BUFFER_POOL (parent_meta->buffer->pool))
+      return;
+
+    GST_DEBUG_OBJECT (self, "draining");
 
     dumb_buf = gst_kms_sink_copy_to_dumb_buffer (self, &self->last_vinfo,
         parent_meta->buffer);
