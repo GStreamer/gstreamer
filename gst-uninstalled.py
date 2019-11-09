@@ -69,6 +69,10 @@ def get_subprocess_env(options, gst_version):
         "%s/subprojects/gst-editing-services/tests/validate" % SCRIPTDIR)
     prepend_env_var(env, "PATH", os.path.normpath(
         "%s/subprojects/gst-devtools/validate/tools" % options.builddir))
+    prepend_env_var(env, "PATH", os.path.normpath(
+        "%s/subprojects/gstreamer/tools" % options.builddir))
+    prepend_env_var(env, "PATH", os.path.normpath(
+        "%s/subprojects/gst-plugins-base/tools" % options.builddir))
     prepend_env_var(env, "PATH", os.path.join(SCRIPTDIR, 'meson'))
     env["GST_VERSION"] = gst_version
     env["GST_ENV"] = 'gst-' + gst_version
