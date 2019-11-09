@@ -71,7 +71,7 @@ GST_DEBUG_CATEGORY (gstwayland_debug);
 
 #define WL_VIDEO_FORMATS \
     "{ BGRx, BGRA, RGBx, xBGR, xRGB, RGBA, ABGR, ARGB, RGB, BGR, " \
-    "RGB16, BGR16, YUY2, YVYU, UYVY, AYUV, NV12, NV21, NV16, " \
+    "RGB16, BGR16, YUY2, YVYU, UYVY, AYUV, NV12, NV21, NV16, NV61, " \
     "YUV9, YVU9, Y41B, I420, YV12, Y42B, v308 }"
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
