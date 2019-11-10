@@ -23,6 +23,7 @@
 #endif
 
 #include "gstvktrash.h"
+#include "gstvkhandle.h"
 
 GST_DEBUG_CATEGORY (gst_debug_vulkan_trash);
 #define GST_CAT_DEFAULT gst_debug_vulkan_trash
@@ -90,17 +91,13 @@ gst_vulkan_trash_new (GstVulkanFence * fence, GstVulkanTrashNotify notify,
 }
 
 #if GLIB_SIZEOF_VOID_P == 8
-# define VK_NON_DISPATCHABLE_HANDLE_FORMAT "p"
-# define GstVulkanHandleType void *
 # define PUSH_NON_DISPATCHABLE_HANDLE_TO_GPOINTER(pointer, handle) pointer = (gpointer) handle
 # define TAKE_NON_DISPATCHABLE_HANDLE_FROM_GPOINTER(handle, type, pointer) handle = (type) pointer
 #else
-# define VK_NON_DISPATCHABLE_HANDLE_FORMAT G_GUINT64_FORMAT
-# define GstVulkanHandleType guint64
 # define PUSH_NON_DISPATCHABLE_HANDLE_TO_GPOINTER(pointer, handle) \
     G_STMT_START { \
       pointer = g_new0(guint64, 1); \
-      *((GstVulkanHandleType *) pointer) = (GstVulkanHandleType) handle; \
+      *((GstVulkanHandleTypedef *) pointer) = (GstVulkanHandleTypedef) handle; \
     } G_STMT_END
 # define TAKE_NON_DISPATCHABLE_HANDLE_FROM_GPOINTER(handle, type, pointer) \
     G_STMT_START { \
@@ -116,7 +113,7 @@ G_PASTE(_free_,type_name) (GstVulkanDevice * device, gpointer resource_handle) \
   type resource; \
   TAKE_NON_DISPATCHABLE_HANDLE_FROM_GPOINTER(resource, type, resource_handle); \
   GST_TRACE_OBJECT (device, "Freeing vulkan " G_STRINGIFY (type) \
-      " %" VK_NON_DISPATCHABLE_HANDLE_FORMAT, resource); \
+      " %" GST_VULKAN_NON_DISPATCHABLE_HANDLE_FORMAT, resource); \
   func (device->device, resource, NULL); \
 } \
 GstVulkanTrash * \
@@ -151,7 +148,7 @@ static void \
 G_PASTE(_free_,type_name) (GstVulkanDevice * device, struct G_PASTE(free_parent_info_,type_name) *info) \
 { \
   GST_TRACE_OBJECT (device, "Freeing vulkan " G_STRINGIFY (type) \
-      " %" VK_NON_DISPATCHABLE_HANDLE_FORMAT, info->resource); \
+      " %" GST_VULKAN_NON_DISPATCHABLE_HANDLE_FORMAT, info->resource); \
   func (device->device, info->parent, 1, &info->resource); \
   g_free (info); \
 } \
@@ -165,7 +162,7 @@ G_PASTE(gst_vulkan_trash_new_free_,type_name) (GstVulkanFence * fence, \
   info = g_new0 (struct G_PASTE(free_parent_info_,type_name), 1); \
   /* FIXME: keep parent alive ? */\
   info->parent = parent; \
-  info->resource = (GstVulkanHandleType) type_name; \
+  info->resource = type_name; \
   trash = gst_vulkan_trash_new (fence, \
       (GstVulkanTrashNotify) G_PASTE(_free_,type_name), info); \
   return trash; \

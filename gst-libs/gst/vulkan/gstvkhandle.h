@@ -34,6 +34,12 @@ GType gst_vulkan_handle_get_type (void);
 
 VK_DEFINE_NON_DISPATCHABLE_HANDLE(GstVulkanHandleTypedef)
 
+#if GLIB_SIZEOF_VOID_P == 8
+# define GST_VULKAN_NON_DISPATCHABLE_HANDLE_FORMAT "p"
+#else
+# define GST_VULKAN_NON_DISPATCHABLE_HANDLE_FORMAT G_GUINT64_FORMAT
+#endif
+
 typedef void (*GstVulkanHandleDestroyNotify) (GstVulkanHandle * handle, gpointer user_data);
 
 typedef enum

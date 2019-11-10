@@ -344,10 +344,12 @@ dump_surface_properties (GstVulkanSwapper * swapper)
 {
   GstVulkanSwapperPrivate *priv = GET_PRIV (swapper);
 
-  GST_TRACE_OBJECT (swapper, "surface %p, n images [%" G_GUINT32_FORMAT ", %"
-      G_GUINT32_FORMAT "], extent [%" GST_VULKAN_EXTENT2D_FORMAT ", %"
-      GST_VULKAN_EXTENT2D_FORMAT "], max layers %" G_GUINT32_FORMAT
-      " transforms supported 0x%x current transform 0x%x, alpha flags 0x%x, "
+  GST_TRACE_OBJECT (swapper, "surface %"
+      GST_VULKAN_NON_DISPATCHABLE_HANDLE_FORMAT ", n images [%"
+      G_GUINT32_FORMAT ", %" G_GUINT32_FORMAT "], extent [%"
+      GST_VULKAN_EXTENT2D_FORMAT ", %" GST_VULKAN_EXTENT2D_FORMAT
+      "], max layers %" G_GUINT32_FORMAT " transforms supported 0x%x "
+      "current transform 0x%x, alpha flags 0x%x, "
       "supported image usage flags 0x%x", priv->surface,
       priv->surf_props.minImageCount,
       priv->surf_props.maxImageCount,
@@ -367,9 +369,10 @@ dump_surface_formats (GstVulkanSwapper * swapper)
   int i;
 
   for (i = 0; i < priv->n_surf_formats; i++) {
-    GST_DEBUG_OBJECT (swapper, "surface %p format 0x%x colorspace 0x%x",
-        priv->surface, priv->surf_formats[i].format,
-        priv->surf_formats[i].colorSpace);
+    GST_DEBUG_OBJECT (swapper, "surface %"
+        GST_VULKAN_NON_DISPATCHABLE_HANDLE_FORMAT
+        " format 0x%x colorspace 0x%x", priv->surface,
+        priv->surf_formats[i].format, priv->surf_formats[i].colorSpace);
   }
 }
 
@@ -380,7 +383,8 @@ dump_surface_present_modes (GstVulkanSwapper * swapper)
   int i;
 
   for (i = 0; i < priv->n_surf_present_modes; i++) {
-    GST_DEBUG_OBJECT (swapper, "surface %p present modes 0x%x",
+    GST_DEBUG_OBJECT (swapper, "surface %"
+        GST_VULKAN_NON_DISPATCHABLE_HANDLE_FORMAT " present modes 0x%x",
         priv->surface, priv->surf_present_modes[i]);
   }
 }
