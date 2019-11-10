@@ -33,8 +33,7 @@
 
 #include "gstvkios_utils.h"
 
-#define GST_VULKAN_WINDOW_IOS_GET_PRIVATE(o)  \
-  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_TYPE_VULKAN_WINDOW_IOS, GstVulkanWindowIosPrivate))
+#define GET_PRIV(o) gst_vulkan_window_ios_get_instance_private (o)
 
 #define GST_CAT_DEFAULT gst_vulkan_window_ios_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -113,7 +112,7 @@ gst_vulkan_window_ios_class_init (GstVulkanWindowIosClass * klass)
 }
 
 static void
-gst_vulkan_window_ios_init (GstVulkanWindowIos * window)
+gst_vulkan_window_ios_init (GstVulkanWindowIos * window_ios)
 {
   GstVulkanWindowIosPrivate *priv = GET_PRIV (window_ios);
 
@@ -270,6 +269,7 @@ gst_vulkan_window_ios_set_window_handle (GstVulkanWindow * window,
     guintptr window_handle)
 {
   GstVulkanWindowIos *window_ios = GST_VULKAN_WINDOW_IOS (window);
+  GstVulkanWindowIosPrivate *priv = GET_PRIV (window_ios);
   gpointer view = (gpointer) window_handle;
 
   g_return_if_fail (view != NULL);
