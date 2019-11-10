@@ -217,6 +217,8 @@ gst_vulkan_descriptor_pool_create (GstVulkanDescriptorPool * pool,
   if (priv->outstanding >= priv->max_sets) {
     g_warning ("%s: Attempt was made to allocate more descriptor sets than are "
         "available", GST_OBJECT_NAME (pool));
+    g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_TOO_MANY_OBJECTS,
+        "Attempt was made to allocate more descriptor sets than are available");
     priv->outstanding--;
     GST_OBJECT_UNLOCK (pool);
     return NULL;
