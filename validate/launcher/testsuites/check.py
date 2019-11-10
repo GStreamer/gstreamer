@@ -120,6 +120,7 @@ BLACKLIST = [
     (r'check.gst-plugins-good.elements_flvmux.test_incrementing_timestamps$', 'https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/530'),
     (r'check.gst-plugins-good.elements_flvmux.test_video_caps_late$', 'https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/543'),
     (r'check.gst-plugins-base.elements_appsrc.test_appsrc_blocked_on_caps$', '?'),
+    (r'check.gst-plugins-good.elements_splitmux.test_splitmuxsink$', 'https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/626'),
     (r'check.gst-plugins-good.elements_splitmux.test_splitmuxsrc_sparse_streams$', 'https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/544'),
     (r'check.gst-plugins-good.elements_splitmux.test_splitmuxsrc_caps_change$', 'https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/547'),
     (r'check.gst-plugins-bad.elements_dtls.test_data_transfer$', 'https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/811'),
