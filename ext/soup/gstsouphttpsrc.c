@@ -1173,8 +1173,9 @@ gst_soup_http_src_got_headers (GstSoupHTTPSrc * src, SoupMessage * msg)
   gst_event_unref (http_headers_event);
 
   /* Parse Content-Length. */
-  if (soup_message_headers_get_encoding (msg->response_headers) ==
-      SOUP_ENCODING_CONTENT_LENGTH) {
+  if (SOUP_STATUS_IS_SUCCESSFUL (msg->status_code) &&
+      (soup_message_headers_get_encoding (msg->response_headers) ==
+          SOUP_ENCODING_CONTENT_LENGTH)) {
     newsize = src->request_position +
         soup_message_headers_get_content_length (msg->response_headers);
     if (!src->have_size || (src->content_size != newsize)) {
