@@ -19,6 +19,7 @@
 
 """ Class representing tests and test managers. """
 
+import importlib.util
 import json
 import os
 import sys
@@ -1636,7 +1637,10 @@ class _TestsLauncher(Loggable):
         for testsuite in testsuites:
             try:
                 sys.path.insert(0, os.path.dirname(testsuite))
-                return (__import__(os.path.basename(testsuite).replace(".py", "")), None)
+                spec = importlib.util.spec_from_file_location(os.path.basename(testsuite).replace(".py", ""), testsuite)
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                return (module, None)
             except Exception as e:
                 exceptions.append("Could not load %s: %s" % (testsuite, e))
                 continue
