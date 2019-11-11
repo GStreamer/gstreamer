@@ -1986,7 +1986,7 @@ gst_vc1_parse_entry_point_header (const guint8 * data, gsize size,
     READ_UINT8 (&br, entrypoint->range_mapy, 3);
 
   READ_UINT8 (&br, entrypoint->range_mapuv_flag, 1);
-  if (entrypoint->range_mapy_flag)
+  if (entrypoint->range_mapuv_flag)
     READ_UINT8 (&br, entrypoint->range_mapuv, 3);
 
   advanced->entrypoint = *entrypoint;
