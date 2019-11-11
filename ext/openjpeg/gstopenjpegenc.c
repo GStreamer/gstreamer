@@ -66,7 +66,9 @@ enum
   PROP_TILE_OFFSET_X,
   PROP_TILE_OFFSET_Y,
   PROP_TILE_WIDTH,
-  PROP_TILE_HEIGHT
+  PROP_TILE_HEIGHT,
+  PROP_NUM_STRIPES,
+  PROP_LAST
 };
 
 #define DEFAULT_NUM_LAYERS 1
@@ -76,6 +78,7 @@ enum
 #define DEFAULT_TILE_OFFSET_Y 0
 #define DEFAULT_TILE_WIDTH 0
 #define DEFAULT_TILE_HEIGHT 0
+#define GST_OPENJPEG_ENC_DEFAULT_NUM_STRIPES  1
 
 static void gst_openjpeg_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -116,6 +119,7 @@ static GstStaticPadTemplate gst_openjpeg_enc_src_template =
         "width = (int) [1, MAX], "
         "height = (int) [1, MAX], "
         "num-components = (int) [1, 4], "
+        "num-stripes = (int) [1, MAX], "
         GST_JPEG2000_SAMPLING_LIST ","
         GST_JPEG2000_COLORSPACE_LIST "; "
         "image/x-jpc, "
@@ -180,6 +184,19 @@ gst_openjpeg_enc_class_init (GstOpenJPEGEncClass * klass)
           "Tile Height", 0, G_MAXINT, DEFAULT_TILE_HEIGHT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstOpenJPEGEnc:num-stripes:
+   *
+   * Number of stripes to use for low latency encoding . (1 = low latency disabled)
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_NUM_STRIPES,
+      g_param_spec_int ("num-stripes", "Number of stripes",
+          "Number of stripes for low latency encoding. (1 = low latency disabled)",
+          1, G_MAXINT, GST_OPENJPEG_ENC_DEFAULT_NUM_STRIPES,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_static_pad_template (element_class,
       &gst_openjpeg_enc_src_template);
   gst_element_class_add_static_pad_template (element_class,
@@ -235,6 +252,8 @@ gst_openjpeg_enc_init (GstOpenJPEGEnc * self)
   self->params.cp_tdy = DEFAULT_TILE_HEIGHT;
   self->params.tile_size_on = (self->params.cp_tdx != 0
       && self->params.cp_tdy != 0);
+
+  self->num_stripes = GST_OPENJPEG_ENC_DEFAULT_NUM_STRIPES;
 }
 
 static void
@@ -269,6 +288,9 @@ gst_openjpeg_enc_set_property (GObject * object, guint prop_id,
       self->params.tile_size_on = (self->params.cp_tdx != 0
           && self->params.cp_tdy != 0);
       break;
+    case PROP_NUM_STRIPES:
+      self->num_stripes = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -302,6 +324,9 @@ gst_openjpeg_enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_TILE_HEIGHT:
       g_value_set_int (value, self->params.cp_tdy);
+      break;
+    case PROP_NUM_STRIPES:
+      g_value_set_int (value, self->num_stripes);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -341,6 +366,16 @@ gst_openjpeg_enc_stop (GstVideoEncoder * video_encoder)
   return TRUE;
 }
 
+static guint
+get_stripe_height (GstOpenJPEGEnc * self, guint slice_num, guint frame_height)
+{
+  guint nominal_stripe_height = frame_height / self->num_stripes;
+  return (slice_num <
+      self->num_stripes -
+      1) ? nominal_stripe_height : frame_height -
+      (slice_num * nominal_stripe_height);
+}
+
 static void
 fill_image_packed16_4 (opj_image_t * image, GstVideoFrame * frame)
 {
@@ -350,9 +385,10 @@ fill_image_packed16_4 (opj_image_t * image, GstVideoFrame * frame)
   gint sstride;
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
-  h = GST_VIDEO_FRAME_HEIGHT (frame);
-  data_in = (guint16 *) GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  h = image->y1 - image->y0;
   sstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0) / 2;
+  data_in =
+      (guint16 *) GST_VIDEO_FRAME_PLANE_DATA (frame, 0) + image->y0 * sstride;
 
   data_out[0] = image->comps[0].data;
   data_out[1] = image->comps[1].data;
@@ -376,6 +412,8 @@ fill_image_packed16_4 (opj_image_t * image, GstVideoFrame * frame)
     }
     data_in += sstride;
   }
+  image->y1 -= image->y0;
+  image->y0 = 0;
 }
 
 static void
@@ -387,9 +425,10 @@ fill_image_packed8_4 (opj_image_t * image, GstVideoFrame * frame)
   gint sstride;
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
-  h = GST_VIDEO_FRAME_HEIGHT (frame);
-  data_in = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  h = image->y1 - image->y0;
   sstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+  data_in =
+      (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (frame, 0) + image->y0 * sstride;
 
   data_out[0] = image->comps[0].data;
   data_out[1] = image->comps[1].data;
@@ -413,6 +452,8 @@ fill_image_packed8_4 (opj_image_t * image, GstVideoFrame * frame)
     }
     data_in += sstride;
   }
+  image->y1 -= image->y0;
+  image->y0 = 0;
 }
 
 static void
@@ -424,9 +465,10 @@ fill_image_packed8_3 (opj_image_t * image, GstVideoFrame * frame)
   gint sstride;
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
-  h = GST_VIDEO_FRAME_HEIGHT (frame);
-  data_in = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  h = image->y1 - image->y0;
   sstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+  data_in =
+      (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (frame, 0) + image->y0 * sstride;
 
   data_out[0] = image->comps[0].data;
   data_out[1] = image->comps[1].data;
@@ -447,6 +489,8 @@ fill_image_packed8_3 (opj_image_t * image, GstVideoFrame * frame)
     }
     data_in += sstride;
   }
+  image->y1 -= image->y0;
+  image->y0 = 0;
 }
 
 static void
@@ -459,9 +503,10 @@ fill_image_planar16_3 (opj_image_t * image, GstVideoFrame * frame)
 
   for (c = 0; c < 3; c++) {
     w = GST_VIDEO_FRAME_COMP_WIDTH (frame, c);
-    h = GST_VIDEO_FRAME_COMP_HEIGHT (frame, c);
-    data_in = (guint16 *) GST_VIDEO_FRAME_COMP_DATA (frame, c);
+    h = image->comps[c].h;
     sstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, c) / 2;
+    data_in =
+        (guint16 *) GST_VIDEO_FRAME_COMP_DATA (frame, c) + image->y0 * sstride;
     data_out = image->comps[c].data;
 
     for (y = 0; y < h; y++) {
@@ -474,6 +519,8 @@ fill_image_planar16_3 (opj_image_t * image, GstVideoFrame * frame)
       data_in += sstride;
     }
   }
+  image->y1 -= image->y0;
+  image->y0 = 0;
 }
 
 static void
@@ -486,9 +533,10 @@ fill_image_planar8_3 (opj_image_t * image, GstVideoFrame * frame)
 
   for (c = 0; c < 3; c++) {
     w = GST_VIDEO_FRAME_COMP_WIDTH (frame, c);
-    h = GST_VIDEO_FRAME_COMP_HEIGHT (frame, c);
-    data_in = GST_VIDEO_FRAME_COMP_DATA (frame, c);
+    h = image->comps[c].h;
     sstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, c);
+    data_in =
+        (guint8 *) GST_VIDEO_FRAME_COMP_DATA (frame, c) + image->y0 * sstride;
     data_out = image->comps[c].data;
 
     for (y = 0; y < h; y++) {
@@ -501,6 +549,8 @@ fill_image_planar8_3 (opj_image_t * image, GstVideoFrame * frame)
       data_in += sstride;
     }
   }
+  image->y1 -= image->y0;
+  image->y0 = 0;
 }
 
 static void
@@ -512,9 +562,10 @@ fill_image_planar8_1 (opj_image_t * image, GstVideoFrame * frame)
   gint sstride;
 
   w = GST_VIDEO_FRAME_COMP_WIDTH (frame, 0);
-  h = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 0);
-  data_in = GST_VIDEO_FRAME_COMP_DATA (frame, 0);
+  h = image->comps[0].h;
   sstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+  data_in =
+      (guint8 *) GST_VIDEO_FRAME_COMP_DATA (frame, 0) + image->y0 * sstride;
   data_out = image->comps[0].data;
 
   for (y = 0; y < h; y++) {
@@ -526,6 +577,8 @@ fill_image_planar8_1 (opj_image_t * image, GstVideoFrame * frame)
     }
     data_in += sstride;
   }
+  image->y1 -= image->y0;
+  image->y0 = 0;
 }
 
 static void
@@ -537,9 +590,10 @@ fill_image_planar16_1 (opj_image_t * image, GstVideoFrame * frame)
   gint sstride;
 
   w = GST_VIDEO_FRAME_COMP_WIDTH (frame, 0);
-  h = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 0);
-  data_in = (guint16 *) GST_VIDEO_FRAME_COMP_DATA (frame, 0);
+  h = image->comps[0].h;
   sstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0) / 2;
+  data_in =
+      (guint16 *) GST_VIDEO_FRAME_COMP_DATA (frame, 0) + image->y0 * sstride;
   data_out = image->comps[0].data;
 
   for (y = 0; y < h; y++) {
@@ -551,6 +605,8 @@ fill_image_planar16_1 (opj_image_t * image, GstVideoFrame * frame)
     }
     data_in += sstride;
   }
+  image->y1 -= image->y0;
+  image->y0 = 0;
 }
 
 static gboolean
@@ -560,9 +616,12 @@ gst_openjpeg_enc_set_format (GstVideoEncoder * encoder,
   GstOpenJPEGEnc *self = GST_OPENJPEG_ENC (encoder);
   GstCaps *allowed_caps, *caps;
   GstStructure *s;
+  const gchar *str = NULL;
   const gchar *colorspace = NULL;
   GstJPEG2000Sampling sampling = GST_JPEG2000_SAMPLING_NONE;
   gint ncomps;
+  gboolean stripe_mode =
+      self->num_stripes != GST_OPENJPEG_ENC_DEFAULT_NUM_STRIPES;
 
   GST_DEBUG_OBJECT (self, "Setting format: %" GST_PTR_FORMAT, state->caps);
 
@@ -677,8 +736,6 @@ gst_openjpeg_enc_set_format (GstVideoEncoder * encoder,
       break;
   }
 
-
-
   if ((state->info.finfo->flags & GST_VIDEO_FORMAT_FLAG_YUV)) {
     colorspace = "sYUV";
   } else if ((state->info.finfo->flags & GST_VIDEO_FORMAT_FLAG_RGB)) {
@@ -688,16 +745,31 @@ gst_openjpeg_enc_set_format (GstVideoEncoder * encoder,
   } else
     g_return_val_if_reached (FALSE);
 
+  if (stripe_mode) {
+    str = gst_structure_get_string (s, "alignment");
+    if (!str || strcmp (str, "stripe") != 0) {
+      GST_ERROR_OBJECT (self,
+          "Number of stripes set to %d, but alignment=stripe not supported downstream",
+          self->num_stripes);
+      return FALSE;
+    }
+  }
+
   if (sampling != GST_JPEG2000_SAMPLING_NONE) {
     caps = gst_caps_new_simple (gst_structure_get_name (s),
         "colorspace", G_TYPE_STRING, colorspace,
         "sampling", G_TYPE_STRING, gst_jpeg2000_sampling_to_string (sampling),
-        "num-components", G_TYPE_INT, ncomps, NULL);
+        "num-components", G_TYPE_INT, ncomps,
+        "alignment", G_TYPE_STRING,
+        stripe_mode ? "stripe" : "frame",
+        "num-stripes", G_TYPE_INT, self->num_stripes, NULL);
   } else {
     caps = gst_caps_new_simple (gst_structure_get_name (s),
         "colorspace", G_TYPE_STRING, colorspace,
-        "num-components", G_TYPE_INT, ncomps, NULL);
-
+        "num-components", G_TYPE_INT, ncomps,
+        "alignment", G_TYPE_STRING,
+        stripe_mode ? "stripe" : "frame",
+        "num-stripes", G_TYPE_INT, self->num_stripes, NULL);
   }
   gst_caps_unref (allowed_caps);
 
@@ -712,12 +784,15 @@ gst_openjpeg_enc_set_format (GstVideoEncoder * encoder,
 }
 
 static opj_image_t *
-gst_openjpeg_enc_fill_image (GstOpenJPEGEnc * self, GstVideoFrame * frame)
+gst_openjpeg_enc_fill_image (GstOpenJPEGEnc * self, GstVideoFrame * frame,
+    guint slice_num)
 {
   gint i, ncomps;
   opj_image_cmptparm_t *comps;
   OPJ_COLOR_SPACE colorspace;
   opj_image_t *image;
+  guint nominal_stripe_height =
+      GST_VIDEO_FRAME_HEIGHT (frame) / self->num_stripes;
 
   ncomps = GST_VIDEO_FRAME_N_COMPONENTS (frame);
   comps = g_new0 (opj_image_cmptparm_t, ncomps);
@@ -727,7 +802,9 @@ gst_openjpeg_enc_fill_image (GstOpenJPEGEnc * self, GstVideoFrame * frame)
     comps[i].bpp = GST_VIDEO_FRAME_COMP_DEPTH (frame, i);
     comps[i].sgnd = 0;
     comps[i].w = GST_VIDEO_FRAME_COMP_WIDTH (frame, i);
-    comps[i].h = GST_VIDEO_FRAME_COMP_HEIGHT (frame, i);
+    comps[i].h =
+        get_stripe_height (self, slice_num, GST_VIDEO_FRAME_COMP_HEIGHT (frame,
+            i));
     comps[i].dx =
         GST_VIDEO_FRAME_WIDTH (frame) / GST_VIDEO_FRAME_COMP_WIDTH (frame, i);
     comps[i].dy =
@@ -746,10 +823,12 @@ gst_openjpeg_enc_fill_image (GstOpenJPEGEnc * self, GstVideoFrame * frame)
   image = opj_image_create (ncomps, comps, colorspace);
   g_free (comps);
 
-  image->x0 = image->y0 = 0;
+  image->x0 = 0;
   image->x1 = GST_VIDEO_FRAME_WIDTH (frame);
-  image->y1 = GST_VIDEO_FRAME_HEIGHT (frame);
-
+  image->y0 = slice_num * nominal_stripe_height;
+  image->y1 =
+      image->y0 + get_stripe_height (self, slice_num,
+      GST_VIDEO_FRAME_HEIGHT (frame));
   self->fill_image (image, frame);
 
   return image;
@@ -859,86 +938,94 @@ gst_openjpeg_enc_handle_frame (GstVideoEncoder * encoder,
   MemStream mstream;
   opj_image_t *image;
   GstVideoFrame vframe;
+  guint i;
 
   GST_DEBUG_OBJECT (self, "Handling frame");
 
-  enc = opj_create_compress (self->codec_format);
-  if (!enc)
-    goto initialization_error;
+  for (i = 0; i < self->num_stripes; ++i) {
+    enc = opj_create_compress (self->codec_format);
+    if (!enc)
+      goto initialization_error;
 
-  if (G_UNLIKELY (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >=
-          GST_LEVEL_TRACE)) {
-    opj_set_info_handler (enc, gst_openjpeg_enc_opj_info, self);
-    opj_set_warning_handler (enc, gst_openjpeg_enc_opj_warning, self);
-    opj_set_error_handler (enc, gst_openjpeg_enc_opj_error, self);
-  } else {
-    opj_set_info_handler (enc, NULL, NULL);
-    opj_set_warning_handler (enc, NULL, NULL);
-    opj_set_error_handler (enc, NULL, NULL);
+    if (G_UNLIKELY (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >=
+            GST_LEVEL_TRACE)) {
+      opj_set_info_handler (enc, gst_openjpeg_enc_opj_info, self);
+      opj_set_warning_handler (enc, gst_openjpeg_enc_opj_warning, self);
+      opj_set_error_handler (enc, gst_openjpeg_enc_opj_error, self);
+    } else {
+      opj_set_info_handler (enc, NULL, NULL);
+      opj_set_warning_handler (enc, NULL, NULL);
+      opj_set_error_handler (enc, NULL, NULL);
+    }
+
+    if (!gst_video_frame_map (&vframe, &self->input_state->info,
+            frame->input_buffer, GST_MAP_READ))
+      goto map_read_error;
+
+    image = gst_openjpeg_enc_fill_image (self, &vframe, i);
+    if (!image)
+      goto fill_image_error;
+    gst_video_frame_unmap (&vframe);
+
+    if (vframe.info.finfo->flags & GST_VIDEO_FORMAT_FLAG_RGB) {
+      self->params.tcp_mct = 1;
+    }
+    opj_setup_encoder (enc, &self->params, image);
+    stream = opj_stream_create (4096, OPJ_FALSE);
+    if (!stream)
+      goto open_error;
+
+    mstream.allocsize = 4096;
+    mstream.data = g_malloc (mstream.allocsize);
+    mstream.offset = 0;
+    mstream.size = 0;
+
+    opj_stream_set_read_function (stream, read_fn);
+    opj_stream_set_write_function (stream, write_fn);
+    opj_stream_set_skip_function (stream, skip_fn);
+    opj_stream_set_seek_function (stream, seek_fn);
+    opj_stream_set_user_data (stream, &mstream, NULL);
+    opj_stream_set_user_data_length (stream, mstream.size);
+
+    if (!opj_start_compress (enc, image, stream))
+      goto encode_error;
+
+    if (!opj_encode (enc, stream))
+      goto encode_error;
+
+    if (!opj_end_compress (enc, stream))
+      goto encode_error;
+
+    opj_image_destroy (image);
+    opj_stream_destroy (stream);
+    opj_destroy_codec (enc);
+
+    frame->output_buffer = gst_buffer_new ();
+
+    if (self->is_jp2c) {
+      GstMapInfo map;
+      GstMemory *mem;
+
+      mem = gst_allocator_alloc (NULL, 8, NULL);
+      gst_memory_map (mem, &map, GST_MAP_WRITE);
+      GST_WRITE_UINT32_BE (map.data, mstream.size + 8);
+      GST_WRITE_UINT32_BE (map.data + 4, GST_MAKE_FOURCC ('j', 'p', '2', 'c'));
+      gst_memory_unmap (mem, &map);
+      gst_buffer_append_memory (frame->output_buffer, mem);
+    }
+
+    gst_buffer_append_memory (frame->output_buffer,
+        gst_memory_new_wrapped (0, mstream.data, mstream.allocsize, 0,
+            mstream.size, NULL, (GDestroyNotify) g_free));
+
+    GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
+    ret =
+        (i ==
+        self->num_stripes -
+        1) ? gst_video_encoder_finish_frame (encoder,
+        frame) : gst_video_encoder_finish_subframe (encoder, frame);
+
   }
-
-  if (!gst_video_frame_map (&vframe, &self->input_state->info,
-          frame->input_buffer, GST_MAP_READ))
-    goto map_read_error;
-
-  image = gst_openjpeg_enc_fill_image (self, &vframe);
-  if (!image)
-    goto fill_image_error;
-  gst_video_frame_unmap (&vframe);
-
-  if (vframe.info.finfo->flags & GST_VIDEO_FORMAT_FLAG_RGB) {
-    self->params.tcp_mct = 1;
-  }
-  opj_setup_encoder (enc, &self->params, image);
-  stream = opj_stream_create (4096, OPJ_FALSE);
-  if (!stream)
-    goto open_error;
-
-  mstream.allocsize = 4096;
-  mstream.data = g_malloc (mstream.allocsize);
-  mstream.offset = 0;
-  mstream.size = 0;
-
-  opj_stream_set_read_function (stream, read_fn);
-  opj_stream_set_write_function (stream, write_fn);
-  opj_stream_set_skip_function (stream, skip_fn);
-  opj_stream_set_seek_function (stream, seek_fn);
-  opj_stream_set_user_data (stream, &mstream, NULL);
-  opj_stream_set_user_data_length (stream, mstream.size);
-
-  if (!opj_start_compress (enc, image, stream))
-    goto encode_error;
-
-  if (!opj_encode (enc, stream))
-    goto encode_error;
-
-  if (!opj_end_compress (enc, stream))
-    goto encode_error;
-
-  opj_image_destroy (image);
-  opj_stream_destroy (stream);
-  opj_destroy_codec (enc);
-
-  frame->output_buffer = gst_buffer_new ();
-
-  if (self->is_jp2c) {
-    GstMapInfo map;
-    GstMemory *mem;
-
-    mem = gst_allocator_alloc (NULL, 8, NULL);
-    gst_memory_map (mem, &map, GST_MAP_WRITE);
-    GST_WRITE_UINT32_BE (map.data, mstream.size + 8);
-    GST_WRITE_UINT32_BE (map.data + 4, GST_MAKE_FOURCC ('j', 'p', '2', 'c'));
-    gst_memory_unmap (mem, &map);
-    gst_buffer_append_memory (frame->output_buffer, mem);
-  }
-
-  gst_buffer_append_memory (frame->output_buffer,
-      gst_memory_new_wrapped (0, mstream.data, mstream.allocsize, 0,
-          mstream.size, NULL, (GDestroyNotify) g_free));
-
-  GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
-  ret = gst_video_encoder_finish_frame (encoder, frame);
 
   return ret;
 

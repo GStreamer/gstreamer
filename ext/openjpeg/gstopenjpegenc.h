@@ -57,6 +57,7 @@ struct _GstOpenJPEGEnc
   void (*fill_image) (opj_image_t * image, GstVideoFrame *frame);
 
   opj_cparameters_t params;
+  gint num_stripes;
 };
 
 struct _GstOpenJPEGEncClass
