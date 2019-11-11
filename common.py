@@ -10,7 +10,7 @@ import subprocess
 ROOTDIR = os.path.abspath(os.path.dirname(__file__))
 
 
-if os.name is 'nt':
+if os.name == 'nt':
     import ctypes
     from ctypes import wintypes
     _GetShortPathNameW = ctypes.windll.kernel32.GetShortPathNameW

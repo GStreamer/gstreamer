@@ -56,7 +56,7 @@ def prepend_env_var(env, var, value, sysroot):
     if value.startswith(sysroot):
         value = value[len(sysroot):]
     # Try not to exceed maximum length limits for env vars on Windows
-    if os.name is 'nt':
+    if os.name == 'nt':
         value = win32_get_short_path_name(value)
     env_val = env.get(var, '')
     val = os.pathsep + value + os.pathsep
@@ -126,7 +126,7 @@ def get_subprocess_env(options, gst_version):
         "%s/subprojects/gstreamer/libs/gst/helpers/gst-ptp-helper" % options.builddir)
     env["GST_REGISTRY"] = os.path.normpath(options.builddir + "/registry.dat")
 
-    if os.name is 'nt':
+    if os.name == 'nt':
         lib_path_envvar = 'PATH'
     elif platform.system() == 'Darwin':
         lib_path_envvar = 'DYLD_LIBRARY_PATH'
@@ -338,7 +338,7 @@ if __name__ == "__main__":
                       repository_path=options.srcdir).strip('\n')
 
     if not args:
-        if os.name is 'nt':
+        if os.name == 'nt':
             shell = get_windows_shell()
             if shell == 'powershell.exe':
                 args = ['powershell.exe']
