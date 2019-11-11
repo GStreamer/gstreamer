@@ -524,11 +524,8 @@ gst_video_crop_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   }
 
   crop_meta = gst_buffer_get_video_crop_meta (buf);
-  if (!crop_meta) {
+  if (!crop_meta)
     crop_meta = gst_buffer_add_video_crop_meta (buf);
-    crop_meta->width = vcrop->in_info.width;
-    crop_meta->height = vcrop->in_info.height;
-  }
 
   crop_meta->x += vcrop->crop_left;
   crop_meta->y += vcrop->crop_top;
