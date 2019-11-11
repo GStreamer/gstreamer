@@ -51,6 +51,7 @@ struct _GstGLDownloadElement
   GstGLBaseFilter  parent;
 
   GstGlDownloadMode mode;
+  gboolean try_dmabuf_exports;
   GstAllocator * dmabuf_allocator;
   gboolean add_videometa;
 };

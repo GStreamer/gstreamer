@@ -45,6 +45,8 @@ static gboolean gst_gl_download_element_get_unit_size (GstBaseTransform * trans,
     GstCaps * caps, gsize * size);
 static GstCaps *gst_gl_download_element_transform_caps (GstBaseTransform * bt,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter);
+static GstCaps *gst_gl_download_element_fixate_caps (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
 static gboolean gst_gl_download_element_set_caps (GstBaseTransform * bt,
     GstCaps * in_caps, GstCaps * out_caps);
 static GstFlowReturn
@@ -89,12 +91,15 @@ gst_gl_download_element_class_init (GstGLDownloadElementClass * klass)
   bt_class->start = gst_gl_download_element_start;
   bt_class->stop = gst_gl_download_element_stop;
   bt_class->transform_caps = gst_gl_download_element_transform_caps;
+  bt_class->fixate_caps = gst_gl_download_element_fixate_caps;
   bt_class->set_caps = gst_gl_download_element_set_caps;
   bt_class->get_unit_size = gst_gl_download_element_get_unit_size;
   bt_class->prepare_output_buffer =
       gst_gl_download_element_prepare_output_buffer;
   bt_class->transform = gst_gl_download_element_transform;
   bt_class->decide_allocation = gst_gl_download_element_decide_allocation;
+  bt_class->sink_event = gst_gl_download_element_sink_event;
+  bt_class->src_event = gst_gl_download_element_src_event;
 
   bt_class->passthrough_on_same_caps = TRUE;
 
@@ -124,6 +129,7 @@ gst_gl_download_element_start (GstBaseTransform * bt)
   GstGLDownloadElement *dl = GST_GL_DOWNLOAD_ELEMENT (bt);
 
   dl->dmabuf_allocator = gst_dmabuf_allocator_new ();
+  g_atomic_int_set (&dl->try_dmabuf_exports, TRUE);
 #endif
 
   return TRUE;
@@ -158,8 +164,8 @@ gst_gl_download_element_set_caps (GstBaseTransform * bt, GstCaps * in_caps,
   if (gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
     dl->mode = GST_GL_DOWNLOAD_MODE_PASSTHROUGH;
 #if GST_GL_HAVE_PLATFORM_EGL && GST_GL_HAVE_DMABUF
-  } else if (gst_caps_features_contains (features,
-          GST_CAPS_FEATURE_MEMORY_DMABUF)) {
+  } else if (g_atomic_int_get (&dl->try_dmabuf_exports) &&
+      gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_DMABUF)) {
     dl->mode = GST_GL_DOWNLOAD_MODE_DMABUF_EXPORTS;
 #endif
   } else {
@@ -230,6 +236,33 @@ gst_gl_download_element_transform_caps (GstBaseTransform * bt,
   GST_DEBUG_OBJECT (bt, "returning caps %" GST_PTR_FORMAT, result);
 
   return result;
+}
+
+static GstCaps *
+gst_gl_download_element_fixate_caps (GstBaseTransform * bt,
+    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
+{
+#if GST_GL_HAVE_PLATFORM_EGL && GST_GL_HAVE_DMABUF
+  GstGLDownloadElement *dl = GST_GL_DOWNLOAD_ELEMENT (bt);
+
+  /* Remove DMABuf features if try_dmabuf_exports is not set */
+  if (direction == GST_PAD_SINK && !g_atomic_int_get (&dl->try_dmabuf_exports)) {
+    gint i;
+
+    for (i = 0; i < gst_caps_get_size (othercaps); i++) {
+      GstCapsFeatures *features = gst_caps_get_features (othercaps, i);
+
+      if (features && gst_caps_features_contains (features,
+              GST_CAPS_FEATURE_MEMORY_DMABUF)) {
+        caps = gst_caps_make_writable (othercaps);
+        gst_caps_remove_structure (othercaps, i--);
+      }
+    }
+  }
+#endif
+
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->fixate_caps (bt, direction,
+      caps, othercaps);
 }
 
 static gboolean
@@ -453,6 +486,7 @@ gst_gl_download_element_prepare_output_buffer (GstBaseTransform * bt,
       src_caps = gst_caps_make_writable (src_caps);
       features = gst_caps_get_features (src_caps, 0);
       gst_caps_features_remove (features, GST_CAPS_FEATURE_MEMORY_DMABUF);
+      g_atomic_int_set (&dl->try_dmabuf_exports, FALSE);
       dl->mode = GST_GL_DOWNLOAD_MODE_PBO_TRANSFERS;
 
       if (!gst_base_transform_update_src_caps (bt, src_caps)) {
@@ -498,6 +532,30 @@ gst_gl_download_element_decide_allocation (GstBaseTransform * trans,
 
   return GST_BASE_TRANSFORM_CLASS (parent_class)->decide_allocation (trans,
       query);
+}
+
+static gboolean
+gst_gl_download_element_sink_event (GstBaseTransform * bt, GstEvent * event)
+{
+  GstGLDownloadElement *dl = GST_GL_DOWNLOAD_ELEMENT (bt);
+
+  /* Retry exporting whenever we have new caps from upstream */
+  if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS)
+    g_atomic_int_set (&dl->try_dmabuf_exports, TRUE);
+
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (bt, event);
+}
+
+static gboolean
+gst_gl_download_element_src_event (GstBaseTransform * bt, GstEvent * event)
+{
+  GstGLDownloadElement *dl = GST_GL_DOWNLOAD_ELEMENT (bt);
+
+  /* Retry exporting whenever downstream have changed */
+  if (GST_EVENT_TYPE (event) == GST_EVENT_RECONFIGURE)
+    g_atomic_int_set (&dl->try_dmabuf_exports, TRUE);
+
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->src_event (bt, event);
 }
 
 static void
