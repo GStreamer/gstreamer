@@ -798,9 +798,11 @@ gst_video_crop_set_info (GstVideoFilter * vfilter, GstCaps * in,
   crop->in_info = *in_info;
   crop->out_info = *out_info;
 
-  /* Ensure our decide_allocation will be called again */
-  gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (crop), FALSE);
-  gst_base_transform_set_in_place (GST_BASE_TRANSFORM (crop), FALSE);
+  /* Ensure our decide_allocation will be called again when needed */
+  if (gst_base_transform_is_passthrough (GST_BASE_TRANSFORM (crop))) {
+    gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (crop), FALSE);
+    gst_base_transform_set_in_place (GST_BASE_TRANSFORM (crop), FALSE);
+  }
 
   return TRUE;
 
