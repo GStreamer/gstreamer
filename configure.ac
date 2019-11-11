@@ -1896,6 +1896,15 @@ dnl *** OpenEXR ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_OPENEXR, true)
 AG_GST_CHECK_FEATURE(OPENEXR, [openexr library], openexr, [
   AG_GST_PKG_CHECK_MODULES(OPENEXR, OpenEXR)
+  if test "x$HAVE_OPENEXR" = "xyes"; then
+    AG_GST_PKG_CHECK_MODULES(OPENEXR240, OpenEXR >= 2.4.0)
+    if test "x$HAVE_OPENEXR240" = "xyes"; then
+      OPENEXR_STDCFLAGS=
+    else
+      OPENEXR_STDCFLAGS="-std=c++98"
+    fi
+    AC_SUBST([OPENEXR_STDCFLAGS])
+  fi
 ])
 
 dnl *** openh264 ***
