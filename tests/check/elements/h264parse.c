@@ -271,6 +271,14 @@ verify_buffer_bs_au (buffer_verify_data_s * vdata, GstBuffer * buffer)
 
   fail_unless (ctx_sink_template == &sinktemplate_bs_au);
 
+  /* Currently the parser can only predict DTS when dealing with raw data.
+   * Ensure that this behavior is being checked here. */
+  GST_DEBUG ("PTS: %" GST_TIME_FORMAT " DTS: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_PTS (buffer)),
+      GST_TIME_ARGS (GST_BUFFER_DTS (buffer)));
+  fail_if (GST_BUFFER_PTS_IS_VALID (buffer));
+  fail_unless (GST_BUFFER_DTS_IS_VALID (buffer));
+
   gst_buffer_map (buffer, &map, GST_MAP_READ);
   fail_unless (map.size > 4);
 

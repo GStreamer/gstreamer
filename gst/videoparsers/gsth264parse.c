@@ -457,7 +457,7 @@ gst_h264_parse_wrap_nal (GstH264Parse * h264parse, guint format, guint8 * data,
       || format == GST_H264_PARSE_FORMAT_AVC3) {
     tmp = GUINT32_TO_BE (size << (32 - 8 * nl));
   } else {
-    /* HACK: nl should always be 4 here, otherwise this won't work. 
+    /* HACK: nl should always be 4 here, otherwise this won't work.
      * There are legit cases where nl in avc stream is 2, but byte-stream
      * SC is still always 4 bytes. */
     nl = 4;
@@ -2444,7 +2444,7 @@ gst_h264_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
    * particularly since our ts not that good they handle seeking etc */
   if (h264parse->do_ts)
     gst_h264_parse_get_timestamp (h264parse,
-        &GST_BUFFER_TIMESTAMP (buffer), &GST_BUFFER_DURATION (buffer),
+        &GST_BUFFER_DTS (buffer), &GST_BUFFER_DURATION (buffer),
         h264parse->frame_start);
 
   if (h264parse->keyframe)
