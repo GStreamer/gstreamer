@@ -39,11 +39,18 @@ GType gst_gl_download_element_get_type (void);
 typedef struct _GstGLDownloadElement GstGLDownloadElement;
 typedef struct _GstGLDownloadElementClass GstGLDownloadElementClass;
 
+typedef enum
+{
+  GST_GL_DOWNLOAD_MODE_PASSTHROUGH,
+  GST_GL_DOWNLOAD_MODE_PBO_TRANSFERS,
+  GST_GL_DOWNLOAD_MODE_DMABUF_EXPORTS
+} GstGlDownloadMode;
+
 struct _GstGLDownloadElement
 {
   GstGLBaseFilter  parent;
 
-  gboolean do_pbo_transfers;
+  GstGlDownloadMode mode;
   GstAllocator * dmabuf_allocator;
   gboolean add_videometa;
 };
