@@ -539,10 +539,18 @@ gst_gl_window_run (GstGLWindow * window)
 }
 
 static void
-gst_gl_window_default_quit (GstGLWindow * window)
+window_default_quit_func (GstGLWindow * window)
 {
   gst_gl_display_remove_window (window->display, window);
   g_main_loop_quit (window->priv->loop);
+}
+
+static void
+gst_gl_window_default_quit (GstGLWindow * window)
+{
+  gst_gl_window_send_message_async (window,
+      (GstGLWindowCB) window_default_quit_func, gst_object_ref (window),
+      gst_object_unref);
 }
 
 /**
