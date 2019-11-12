@@ -660,6 +660,7 @@ static void
 send_message (GstRtmp2Sink * self, GstBuffer * message)
 {
   GstRtmpMeta *meta = gst_buffer_get_rtmp_meta (message);
+  g_return_if_fail (meta != NULL);
   g_return_if_fail (self->stream_id != 0);
   meta->mstream = self->stream_id;
   gst_rtmp_connection_queue_message (self->connection, message);
