@@ -196,7 +196,7 @@ gst_rtmp_meta_transform (GstBuffer * dest, GstMeta * meta, GstBuffer * buffer,
   dmeta->type = smeta->type;
   dmeta->mstream = smeta->mstream;
 
-  return dmeta != NULL;
+  return TRUE;
 }
 
 const GstMetaInfo *
@@ -221,6 +221,7 @@ gst_buffer_add_rtmp_meta (GstBuffer * buffer)
   g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
 
   meta = (GstRtmpMeta *) gst_buffer_add_meta (buffer, GST_RTMP_META_INFO, NULL);
+  g_assert (meta != NULL);
 
   return meta;
 }
