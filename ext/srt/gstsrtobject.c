@@ -47,6 +47,7 @@ enum
   PROP_LATENCY,
   PROP_MSG_SIZE,
   PROP_STATS,
+  PROP_WAIT_FOR_CONNECTION,
   PROP_LAST
 };
 
@@ -216,6 +217,7 @@ gst_srt_object_new (GstElement * element)
   srtobject->listener_sock = SRT_INVALID_SOCK;
   srtobject->listener_poll_id = SRT_ERROR;
   srtobject->sent_headers = FALSE;
+  srtobject->wait_for_connection = GST_SRT_DEFAULT_WAIT_FOR_CONNECTION;
 
   g_cond_init (&srtobject->sock_cond);
   return srtobject;
@@ -279,6 +281,11 @@ gst_srt_object_set_property_helper (GstSRTObject * srtobject,
       break;
     case PROP_PBKEYLEN:
       gst_structure_set_value (srtobject->parameters, "pbkeylen", value);
+      break;
+    case PROP_WAIT_FOR_CONNECTION:
+      GST_OBJECT_LOCK (srtobject);
+      srtobject->wait_for_connection = g_value_get_boolean (value);
+      GST_OBJECT_UNLOCK (srtobject);
       break;
     default:
       return FALSE;
@@ -348,6 +355,10 @@ gst_srt_object_get_property_helper (GstSRTObject * srtobject,
     case PROP_STATS:
       g_value_take_boxed (value, gst_srt_object_get_stats (srtobject));
       break;
+    case PROP_WAIT_FOR_CONNECTION:{
+      g_value_set_boolean (value, srtobject->wait_for_connection);
+      break;
+    }
     default:
       return FALSE;
   }
@@ -467,6 +478,18 @@ gst_srt_object_install_properties_helper (GObjectClass * gobject_class)
           "SRT Statistics", GST_TYPE_STRUCTURE,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstSRTSink:wait-for-connection:
+   *
+   * Boolean to block streaming until a client connects.  If TRUE,
+   * `srtsink' will stream only when a client is connected.
+   */
+  g_object_class_install_property (gobject_class, PROP_WAIT_FOR_CONNECTION,
+      g_param_spec_boolean ("wait-for-connection",
+          "Wait for a connection",
+          "Block the stream until a client connects",
+          GST_SRT_DEFAULT_WAIT_FOR_CONNECTION,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -1429,9 +1452,10 @@ gst_srt_object_write (GstSRTObject * srtobject,
       GST_TYPE_SRT_CONNECTION_MODE, (gint *) & connection_mode);
 
   if (connection_mode == GST_SRT_CONNECTION_MODE_LISTENER) {
-    if (!gst_srt_object_wait_caller (srtobject, cancellable, error))
-      return -1;
-
+    if (srtobject->wait_for_connection) {
+      if (!gst_srt_object_wait_caller (srtobject, cancellable, error))
+        return -1;
+    }
     len =
         gst_srt_object_write_to_callers (srtobject, headers, mapinfo,
         cancellable, error);

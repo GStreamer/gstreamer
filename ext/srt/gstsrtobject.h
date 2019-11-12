@@ -41,6 +41,7 @@ G_BEGIN_DECLS
 #define GST_SRT_DEFAULT_POLL_TIMEOUT -1
 #define GST_SRT_DEFAULT_LATENCY 125
 #define GST_SRT_DEFAULT_MSG_SIZE 1316
+#define GST_SRT_DEFAULT_WAIT_FOR_CONNECTION (TRUE)
 
 typedef struct _GstSRTObject GstSRTObject;
 
@@ -69,6 +70,8 @@ struct _GstSRTObject
   GClosure                     *caller_removed_closure;
 
   gchar                        *passphrase;
+
+  gboolean                     wait_for_connection;
 };
 
 
