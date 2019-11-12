@@ -114,6 +114,7 @@ G_DEFINE_TYPE_WITH_CODE (GstSwitchBin,
 
 static void gst_switch_bin_unlock_paths_and_notify (GstSwitchBin * switchbin);
 
+static void gst_switch_bin_dispose (GObject * object);
 static void gst_switch_bin_finalize (GObject * object);
 static void gst_switch_bin_set_property (GObject * object, guint prop_id,
     GValue const *value, GParamSpec * pspec);
@@ -222,6 +223,7 @@ gst_switch_bin_class_init (GstSwitchBinClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&static_src_template));
 
+  object_class->dispose = GST_DEBUG_FUNCPTR (gst_switch_bin_dispose);
   object_class->finalize = GST_DEBUG_FUNCPTR (gst_switch_bin_finalize);
   object_class->set_property = GST_DEBUG_FUNCPTR (gst_switch_bin_set_property);
   object_class->get_property = GST_DEBUG_FUNCPTR (gst_switch_bin_get_property);
@@ -300,15 +302,37 @@ gst_switch_bin_init (GstSwitchBin * switch_bin)
 }
 
 static void
+gst_switch_bin_dispose (GObject * object)
+{
+  GstSwitchBin *switch_bin = GST_SWITCH_BIN (object);
+  guint i;
+
+  /* Chaining up will release all children of the bin,
+   * invalidating any pointer to elements in the paths, so make sure
+   * and clear those first */
+  PATH_LOCK (switch_bin);
+  for (i = 0; i < switch_bin->num_paths; ++i) {
+    if (switch_bin->paths[i])
+      switch_bin->paths[i]->element = NULL;
+  }
+  PATH_UNLOCK (switch_bin);
+  G_OBJECT_CLASS (gst_switch_bin_parent_class)->dispose (object);
+}
+
+static void
 gst_switch_bin_finalize (GObject * object)
 {
   GstSwitchBin *switch_bin = GST_SWITCH_BIN (object);
+  guint i;
 
   if (switch_bin->last_caps != NULL)
     gst_caps_unref (switch_bin->last_caps);
   if (switch_bin->last_stream_start != NULL)
     gst_event_unref (switch_bin->last_stream_start);
 
+  for (i = 0; i < switch_bin->num_paths; ++i) {
+    gst_object_unparent (GST_OBJECT (switch_bin->paths[i]));
+  }
   g_free (switch_bin->paths);
 
   G_OBJECT_CLASS (gst_switch_bin_parent_class)->finalize (object);
@@ -581,11 +605,8 @@ gst_switch_bin_set_num_paths (GstSwitchBin * switch_bin, guint new_num_paths)
       g_free (path_name);
     }
 
-    if (new_num_paths != 0)
-      switch_bin->paths =
-          g_realloc (switch_bin->paths, sizeof (GstObject *) * new_num_paths);
-    else
-      switch_bin->paths = 0;
+    switch_bin->paths =
+        g_realloc (switch_bin->paths, sizeof (GstObject *) * new_num_paths);
   }
 
   switch_bin->num_paths = new_num_paths;
