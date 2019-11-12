@@ -135,13 +135,18 @@ _serialize_flags (GString * json, const gchar * key_name, GType gtype,
 
   while (values[0].value_name) {
     gchar *value_name = json_strescape (values[0].value_name);
+    gchar *value_nick = json_strescape (values[0].value_nick);
+
     g_string_append_printf (json, "{\"name\": \"%s\","
         "\"value\": \"0x%08x\","
-        "\"desc\": \"%s\"}", values[0].value_nick, values[0].value, value_name);
+        "\"desc\": \"%s\"}", value_nick, values[0].value, value_name);
     ++values;
 
     if (values[0].value_name)
       g_string_append_c (json, ',');
+
+    g_free (value_name);
+    g_free (value_nick);
   }
   g_string_append_c (json, ']');
 }
@@ -153,19 +158,23 @@ _serialize_enum (GString * json, const gchar * key_name, GType gtype,
   GEnumValue *values;
   guint j = 0;
   gint enum_value;
-  const gchar *value_nick = "";
+  gchar *value_nick = g_strdup ("");
 
   values = G_ENUM_CLASS (g_type_class_ref (gtype))->values;
 
   if (value) {
     enum_value = g_value_get_enum (value);
     while (values[j].value_name) {
-      if (values[j].value == enum_value)
-        value_nick = values[j].value_nick;
+      if (values[j].value == enum_value) {
+        g_free (value_nick);
+        value_nick = json_strescape (values[j].value_nick);
+      }
+
       j++;
     }
     g_string_append_printf (json, ",\"default\": \"%s (%d)\","
         "\"enum\": true,", value_nick, enum_value);;
+    g_free (value_nick);
   }
 
   g_string_append_printf (json, "\"%s\": [", key_name);
@@ -173,14 +182,19 @@ _serialize_enum (GString * json, const gchar * key_name, GType gtype,
   j = 0;
   while (values[j].value_name) {
     gchar *value_name = json_strescape (values[j].value_name);
+    gchar *value_nick = json_strescape (values[j].value_nick);
 
     g_string_append_printf (json, "{\"name\": \"%s\","
         "\"value\": \"%d\","
-        "\"desc\": \"%s\"}", values[j].value_nick, values[j].value, value_name);
+        "\"desc\": \"%s\"}", value_nick, values[j].value, value_name);
     j++;
     if (values[j].value_name)
       g_string_append_c (json, ',');
+
+    g_free (value_name);
+    g_free (value_nick);
   }
+
 
   g_string_append_c (json, ']');
 }
