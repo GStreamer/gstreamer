@@ -508,10 +508,18 @@ static GstFlowReturn
 gst_video_crop_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 {
   GstVideoCrop *vcrop = GST_VIDEO_CROP (trans);
+  GstVideoFilter *vfilter = GST_VIDEO_FILTER (trans);
   GstVideoMeta *video_meta;
   GstVideoCropMeta *crop_meta;
 
   GST_LOG_OBJECT (trans, "Transforming in-place");
+
+  if (G_UNLIKELY (vcrop->need_update)) {
+    if (!gst_video_crop_set_info (vfilter, NULL, &vcrop->in_info, NULL,
+            &vcrop->out_info)) {
+      return GST_FLOW_ERROR;
+    }
+  }
 
   /* The video meta is required since we are going to make the caps
    * width/height smaller, which would not result in a usable GstVideoInfo for
