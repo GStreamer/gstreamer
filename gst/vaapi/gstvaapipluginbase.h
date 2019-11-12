@@ -35,6 +35,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstVaapiPluginBase GstVaapiPluginBase;
 typedef struct _GstVaapiPluginBaseClass GstVaapiPluginBaseClass;
+typedef struct _GstVaapiPadPrivate GstVaapiPadPrivate;
 
 #define GST_VAAPI_PLUGIN_BASE(plugin) \
   ((GstVaapiPluginBase *)(plugin))
@@ -73,26 +74,32 @@ typedef struct _GstVaapiPluginBaseClass GstVaapiPluginBaseClass;
 
 #define GST_VAAPI_PLUGIN_BASE_SINK_PAD(plugin) \
   (GST_VAAPI_PLUGIN_BASE(plugin)->sinkpad)
+#define GST_VAAPI_PLUGIN_BASE_SINK_PAD_PRIVATE(plugin) \
+  (GST_VAAPI_PLUGIN_BASE(plugin)->sinkpriv)
 #define GST_VAAPI_PLUGIN_BASE_SINK_PAD_CAPS(plugin) \
-  (GST_VAAPI_PLUGIN_BASE(plugin)->sinkpad_caps)
+  (GST_VAAPI_PLUGIN_BASE_SINK_PAD_PRIVATE(plugin)->caps)
 #define GST_VAAPI_PLUGIN_BASE_SINK_PAD_INFO(plugin) \
-  (&GST_VAAPI_PLUGIN_BASE(plugin)->sinkpad_info)
+  (&GST_VAAPI_PLUGIN_BASE_SINK_PAD_PRIVATE(plugin)->info)
+
 #define GST_VAAPI_PLUGIN_BASE_SRC_PAD(plugin) \
   (GST_VAAPI_PLUGIN_BASE(plugin)->srcpad)
+#define GST_VAAPI_PLUGIN_BASE_SRC_PAD_PRIVATE(plugin) \
+  (GST_VAAPI_PLUGIN_BASE(plugin)->srcpriv)
 #define GST_VAAPI_PLUGIN_BASE_SRC_PAD_CAPS(plugin) \
-  (GST_VAAPI_PLUGIN_BASE(plugin)->srcpad_caps)
+  (GST_VAAPI_PLUGIN_BASE_SRC_PAD_PRIVATE(plugin)->caps)
 #define GST_VAAPI_PLUGIN_BASE_SRC_PAD_INFO(plugin) \
-  (&GST_VAAPI_PLUGIN_BASE(plugin)->srcpad_info)
+  (&GST_VAAPI_PLUGIN_BASE_SRC_PAD_PRIVATE(plugin)->info)
 #define GST_VAAPI_PLUGIN_BASE_SRC_PAD_CAN_DMABUF(plugin) \
-  (GST_VAAPI_PLUGIN_BASE(plugin)->srcpad_can_dmabuf)
+  (GST_VAAPI_PLUGIN_BASE_SRC_PAD_PRIVATE(plugin)->can_dmabuf)
 #define GST_VAAPI_PLUGIN_BASE_SRC_PAD_BUFFER_POOL(plugin) \
-  (GST_VAAPI_PLUGIN_BASE(plugin)->srcpad_buffer_pool)
+  (GST_VAAPI_PLUGIN_BASE_SRC_PAD_PRIVATE(plugin)->buffer_pool)
 #define GST_VAAPI_PLUGIN_BASE_SRC_PAD_ALLOCATOR(plugin) \
-  (GST_VAAPI_PLUGIN_BASE(plugin)->srcpad_allocator)
+  (GST_VAAPI_PLUGIN_BASE_SRC_PAD_PRIVATE(plugin)->allocator)
 #define GST_VAAPI_PLUGIN_BASE_OTHER_ALLOCATOR(plugin) \
-  (GST_VAAPI_PLUGIN_BASE(plugin)->other_srcpad_allocator)
+  (GST_VAAPI_PLUGIN_BASE_SRC_PAD_PRIVATE(plugin)->other_allocator)
 #define GST_VAAPI_PLUGIN_BASE_OTHER_ALLOCATOR_PARAMS(plugin) \
-  (GST_VAAPI_PLUGIN_BASE(plugin)->other_allocator_params)
+  (GST_VAAPI_PLUGIN_BASE_SRC_PAD_PRIVATE(plugin)->other_allocator_params)
+
 #define GST_VAAPI_PLUGIN_BASE_COPY_OUTPUT_FRAME(plugin) \
   (GST_VAAPI_PLUGIN_BASE(plugin)->copy_output_frame)
 
@@ -116,6 +123,21 @@ typedef struct _GstVaapiPluginBaseClass GstVaapiPluginBaseClass;
     GST_ELEMENT_CLASS (parent_class)->set_context (element, context); \
   }
 
+struct _GstVaapiPadPrivate
+{
+  GstCaps *caps;
+  GstVideoInfo info;
+  GstBufferPool *buffer_pool;
+  GstAllocator *allocator;
+  guint buffer_size;
+  gboolean caps_is_raw;
+
+  gboolean can_dmabuf;
+
+  GstAllocator *other_allocator;
+  GstAllocationParams other_allocator_params;
+};
+
 struct _GstVaapiPluginBase
 {
   /*< private >*/
@@ -131,16 +153,10 @@ struct _GstVaapiPluginBase
   GstDebugCategory *debug_category;
 
   GstPad *sinkpad;
-  GstCaps *sinkpad_caps;
-  gboolean sinkpad_caps_is_raw;
-  GstVideoInfo sinkpad_info;
-  GstBufferPool *sinkpad_buffer_pool;
-  guint sinkpad_buffer_size;
-
   GstPad *srcpad;
-  GstCaps *srcpad_caps;
-  GstVideoInfo srcpad_info;
-  GstBufferPool *srcpad_buffer_pool;
+
+  GstVaapiPadPrivate *sinkpriv;
+  GstVaapiPadPrivate *srcpriv;
 
   GstVaapiDisplay *display;
   GstVaapiDisplayType display_type;
@@ -152,14 +168,8 @@ struct _GstVaapiPluginBase
   GstObject *gl_other_context;
 
   GstCaps *allowed_raw_caps;
-  GstAllocator *sinkpad_allocator;
-  GstAllocator *srcpad_allocator;
-  gboolean srcpad_can_dmabuf;
 
   gboolean enable_direct_rendering;
-
-  GstAllocator *other_srcpad_allocator;
-  GstAllocationParams other_allocator_params;
   gboolean copy_output_frame;
 };
 
@@ -177,6 +187,7 @@ struct _GstVaapiPluginBaseClass
 
   gboolean  (*has_interface) (GstVaapiPluginBase * plugin, GType type);
   void (*display_changed) (GstVaapiPluginBase * plugin);
+  GstVaapiPadPrivate * (*get_vaapi_pad_private) (GstVaapiPluginBase * plugin, GstPad * pad);
 };
 
 G_GNUC_INTERNAL
