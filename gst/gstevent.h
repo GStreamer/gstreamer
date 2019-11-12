@@ -752,13 +752,13 @@ void            gst_event_parse_instant_rate_change (GstEvent *event,
 /* instant-rate-change-sync-time event */
 
 GST_API
-GstEvent *      gst_event_new_instant_rate_sync_time   (gdouble      rate,
+GstEvent *      gst_event_new_instant_rate_sync_time   (gdouble      rate_multiplier,
                                                         GstClockTime running_time,
                                                         GstClockTime upstream_running_time) G_GNUC_MALLOC;
 
 GST_API
 void            gst_event_parse_instant_rate_sync_time (GstEvent     *event,
-                                                        gdouble      *rate,
+                                                        gdouble      *rate_multiplier,
                                                         GstClockTime *running_time,
                                                         GstClockTime *upstream_running_time);
 
