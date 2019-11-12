@@ -1041,6 +1041,7 @@ main (int argc, char *argv[])
 #endif
   gchar *savefile = NULL;
   gboolean no_position = FALSE;
+  gboolean force_position = FALSE;
 #ifndef GST_DISABLE_OPTION_PARSING
   GOptionEntry options[] = {
     {"tags", 't', 0, G_OPTION_ARG_NONE, &tags,
@@ -1067,7 +1068,16 @@ main (int argc, char *argv[])
 #endif
     GST_TOOLS_GOPTION_VERSION,
     {"no-position", '\0', 0, G_OPTION_ARG_NONE, &no_position,
-        N_("Do not print current position of pipeline"), NULL},
+        N_("Do not print current position of pipeline. "
+              "If this option is unspecified, the position will be printed "
+              "when stdout is a TTY. "
+              "To enable printing position when stdout is not a TTY, "
+              "use \"force-position\" option"), NULL},
+    {"force-position", '\0', 0, G_OPTION_ARG_NONE, &force_position,
+          N_("Allow printing current position of pipeline even if "
+              "stdout is not a TTY. This option has no effect if "
+              "the \"no-position\" option is specified"),
+        NULL},
     {NULL}
   };
   GOptionContext *ctx;
@@ -1224,10 +1234,12 @@ main (int argc, char *argv[])
       if (!isatty (STDOUT_FILENO))
         output_is_tty = FALSE;
 
-      position_source = g_timeout_source_new (100);
-      g_source_set_callback (position_source, query_pipeline_position,
-          GINT_TO_POINTER (output_is_tty), NULL);
-      g_source_attach (position_source, NULL);
+      if (output_is_tty || (!output_is_tty && force_position)) {
+        position_source = g_timeout_source_new (100);
+        g_source_set_callback (position_source, query_pipeline_position,
+            GINT_TO_POINTER (output_is_tty), NULL);
+        g_source_attach (position_source, NULL);
+      }
     }
 
     /* playing state will be set on state-changed message handler */

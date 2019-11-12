@@ -56,7 +56,14 @@ Print memory allocation traces. The feature must be enabled at compile time to
 work.
 .TP 8
 .B  \-\-no\-position
-Do not print current position of pipeline
+Do not print current position of pipeline.
+If this option is unspecified, the position will be printed when stdout is a TTY.
+To enable printing position when stdout is not a TTY,
+use "force-position" option.
+.TP 8
+.B  \-\-force\-position
+Allow printing current position of pipeline even if stdout is not a TTY.
+This option has no effect if the "no-position" option is specified.
 .TP 8
 
 .
