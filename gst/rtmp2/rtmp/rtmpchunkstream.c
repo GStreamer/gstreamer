@@ -195,6 +195,7 @@ select_chunk_type (GstRtmpChunkStream * cstream, GstBuffer * buffer)
   }
 
   old_meta = gst_buffer_get_rtmp_meta (old_buffer);
+  g_return_val_if_fail (old_meta, -1);
 
   if (old_meta->mstream != meta->mstream) {
     GST_TRACE ("Picking header 0: stream mismatch; "

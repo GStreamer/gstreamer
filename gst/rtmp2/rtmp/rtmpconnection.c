@@ -734,10 +734,13 @@ is_command_response (const gchar * command_name)
 static void
 gst_rtmp_connection_handle_cm (GstRtmpConnection * sc, GstBuffer * buffer)
 {
-  GstRtmpMeta *meta = gst_buffer_get_rtmp_meta (buffer);
+  GstRtmpMeta *meta;
   gchar *command_name;
   gdouble transaction_id;
   GPtrArray *args;
+
+  meta = gst_buffer_get_rtmp_meta (buffer);
+  g_return_if_fail (meta);
 
   {
     GstMapInfo map;
