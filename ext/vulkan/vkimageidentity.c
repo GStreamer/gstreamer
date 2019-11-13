@@ -420,12 +420,14 @@ gst_vulkan_image_identity_stop (GstBaseTransform * bt)
     else
       last_fence = gst_vulkan_fence_new_always_signalled (render->device);
 
-    gst_vulkan_trash_list_add (render->trash_list,
-        gst_vulkan_trash_new_object_unref (last_fence,
-            (GstObject *) vk_identity->descriptor_pool));
+    if (vk_identity->descriptor_pool)
+      gst_vulkan_trash_list_add (render->trash_list,
+          gst_vulkan_trash_new_object_unref (last_fence,
+              (GstObject *) vk_identity->descriptor_pool));
     vk_identity->descriptor_pool = NULL;
-    gst_vulkan_trash_list_add (render->trash_list,
-        gst_vulkan_trash_new_free_sampler (last_fence, vk_identity->sampler));
+    if (vk_identity->sampler)
+      gst_vulkan_trash_list_add (render->trash_list,
+          gst_vulkan_trash_new_free_sampler (last_fence, vk_identity->sampler));
     vk_identity->sampler = VK_NULL_HANDLE;
 
     gst_vulkan_fence_unref (last_fence);
