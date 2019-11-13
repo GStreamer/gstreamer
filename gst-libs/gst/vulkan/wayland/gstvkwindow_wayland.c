@@ -141,6 +141,9 @@ create_surfaces (GstVulkanWindowWayland * window_wl)
   else
     height = 240;
   window_wl->window_height = height;
+
+  gst_vulkan_window_resize (GST_VULKAN_WINDOW (window_wl),
+      window_wl->window_width, window_wl->window_height);
 }
 
 static void
