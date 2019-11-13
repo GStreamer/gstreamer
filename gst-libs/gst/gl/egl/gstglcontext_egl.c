@@ -420,6 +420,9 @@ gst_gl_context_egl_choose_config (GstGLContextEGL * egl, GstGLAPI gl_api,
     surface_type = EGL_PBUFFER_BIT;
   }
 
+  if (window)
+    gst_object_unref (window);
+
   create_context =
       gst_gl_check_extension ("EGL_KHR_create_context", egl->egl_exts);
   /* silence unused warnings */
