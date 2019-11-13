@@ -220,6 +220,8 @@ gst_d3d11_window_dispose (GObject * object)
 {
   GstD3D11Window *self = GST_D3D11_WINDOW (object);
 
+  release_external_win_id (self);
+
   if (self->loop) {
     g_main_loop_quit (self->loop);
   }
