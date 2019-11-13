@@ -30,6 +30,7 @@
 
 static GMainLoop *loop = NULL;
 static gboolean visible = FALSE;
+static gboolean test_reuse = FALSE;
 static GIOChannel *msg_io_channel;
 static HWND hwnd = NULL;
 
@@ -77,6 +78,7 @@ bus_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
         g_printerr ("ERROR debug information: %s\n", dbg);
       g_clear_error (&err);
       g_free (dbg);
+      test_reuse = FALSE;
 
       g_main_loop_quit (loop);
       break;
@@ -102,6 +104,14 @@ msg_cb (GIOChannel * source, GIOCondition condition, gpointer data)
   return G_SOURCE_CONTINUE;
 }
 
+static gboolean
+timeout_cb (gpointer user_data)
+{
+  g_main_loop_quit ((GMainLoop *) user_data);
+
+  return G_SOURCE_REMOVE;
+}
+
 gint
 main (gint argc, gchar ** argv)
 {
@@ -109,7 +119,6 @@ main (gint argc, gchar ** argv)
   GstStateChangeReturn sret;
   WNDCLASSEX wc = { 0, };
   HINSTANCE hinstance = GetModuleHandle (NULL);
-  GstBus *bus;
   GIOChannel *msg_io_channel;
   GOptionContext *option_ctx;
   GError *error = NULL;
@@ -117,24 +126,29 @@ main (gint argc, gchar ** argv)
   gchar *title = NULL;
   RECT wr = { 0, 0, 320, 240 };
   gint exitcode = 0;
+  gboolean ret;
   GOptionEntry options[] = {
     {"videosink", 0, 0, G_OPTION_ARG_STRING, &video_sink,
         "Video sink to use (default is glimagesink)", NULL}
     ,
+    {"repeat", 0, 0, G_OPTION_ARG_NONE, &test_reuse,
+        "Test reuse video sink element", NULL}
+    ,
     {NULL}
   };
+  gint num_repeat = 0;
 
   option_ctx = g_option_context_new ("WIN32 video overlay example");
   g_option_context_add_main_entries (option_ctx, options, NULL);
-  g_option_context_set_help_enabled (option_ctx, TRUE);
-  if (!g_option_context_parse (option_ctx, &argc, &argv, &error)) {
+  g_option_context_add_group (option_ctx, gst_init_get_option_group ());
+  ret = g_option_context_parse (option_ctx, &argc, &argv, &error);
+  g_option_context_free (option_ctx);
+
+  if (!ret) {
     g_printerr ("option parsing failed: %s\n", error->message);
     g_clear_error (&error);
     exit (1);
   }
-
-  g_option_context_free (option_ctx);
-  gst_init (NULL, NULL);
 
   /* prepare window */
   wc.cbSize = sizeof (WNDCLASSEX);
@@ -145,8 +159,10 @@ main (gint argc, gchar ** argv)
   wc.lpszClassName = "GstWIN32VideoOverlay";
   RegisterClassEx (&wc);
 
-  title = g_strdup_printf ("%s - Win32-VideoOverlay",
-      video_sink ? video_sink : DEFAULT_VIDEO_SINK);
+  if (!video_sink)
+    video_sink = g_strdup (DEFAULT_VIDEO_SINK);
+
+  title = g_strdup_printf ("%s - Win32-VideoOverlay", video_sink);
 
   AdjustWindowRect (&wr, WS_OVERLAPPEDWINDOW, FALSE);
   hwnd = CreateWindowEx (0, wc.lpszClassName,
@@ -163,35 +179,48 @@ main (gint argc, gchar ** argv)
   /* prepare the pipeline */
   pipeline = gst_pipeline_new ("win32-overlay");
   src = gst_element_factory_make ("videotestsrc", NULL);
-  if (video_sink) {
-    sink = gst_element_factory_make (video_sink, NULL);
-  } else {
-    sink = gst_element_factory_make (DEFAULT_VIDEO_SINK, NULL);
-  }
+  sink = gst_element_factory_make (video_sink, NULL);
 
   if (!sink) {
-    g_printerr ("%s element is not available\n",
-        video_sink ? video_sink : DEFAULT_VIDEO_SINK);
+    g_printerr ("%s element is not available\n", video_sink);
+    exitcode = 1;
+
     goto terminate;
   }
 
   gst_bin_add_many (GST_BIN (pipeline), src, sink, NULL);
   gst_element_link (src, sink);
 
-  gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (sink),
-      (guintptr) hwnd);
-
   gst_bus_add_watch (GST_ELEMENT_BUS (pipeline), bus_msg, pipeline);
 
-  /* run the pipeline */
-  sret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
-  if (sret == GST_STATE_CHANGE_FAILURE) {
-    g_printerr ("Pipeline doesn't want to pause\n");
-  } else {
-    g_main_loop_run (loop);
-  }
+  do {
+    gst_print ("Running loop %d\n", num_repeat++);
 
-  gst_element_set_state (pipeline, GST_STATE_NULL);
+    gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (sink),
+        (guintptr) hwnd);
+
+    sret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
+    if (sret == GST_STATE_CHANGE_FAILURE) {
+      g_printerr ("Pipeline doesn't want to pause\n");
+      break;
+    } else {
+      /* add timer to repeat and reuse pipeline  */
+      if (test_reuse) {
+        GSource *timeout_source = g_timeout_source_new_seconds (3);
+
+        g_source_set_callback (timeout_source,
+            (GSourceFunc) timeout_cb, loop, NULL);
+        g_source_attach (timeout_source, NULL);
+        g_source_unref (timeout_source);
+      }
+
+      g_main_loop_run (loop);
+    }
+    gst_element_set_state (pipeline, GST_STATE_NULL);
+
+    visible = FALSE;
+  } while (test_reuse);
+
   gst_bus_remove_watch (GST_ELEMENT_BUS (pipeline));
 
 terminate:
@@ -202,6 +231,7 @@ terminate:
   g_io_channel_unref (msg_io_channel);
   g_main_loop_unref (loop);
   g_free (title);
+  g_free (video_sink);
 
   return exitcode;
 }
