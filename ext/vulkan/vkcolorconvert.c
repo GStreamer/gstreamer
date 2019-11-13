@@ -741,8 +741,8 @@ swizzle_rgb_update_command_state (GstVulkanColorConvert * conv,
       render->pipeline_layout, 0, 1, &descriptor_set->set, 0, NULL);
 
   gst_vulkan_trash_list_add (render->trash_list,
-      gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref
-          (fence), (GstMiniObject *) descriptor_set));
+      gst_vulkan_trash_new_mini_object_unref (fence,
+          (GstMiniObject *) descriptor_set));
 
   return TRUE;
 }
@@ -811,8 +811,8 @@ yuv_to_rgb_update_command_state (GstVulkanColorConvert * conv,
       render->pipeline_layout, 0, 1, &descriptor_set->set, 0, NULL);
 
   gst_vulkan_trash_list_add (render->trash_list,
-      gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref
-          (fence), (GstMiniObject *) descriptor_set));
+      gst_vulkan_trash_new_mini_object_unref (fence,
+          (GstMiniObject *) descriptor_set));
 
   return TRUE;
 }
@@ -1546,13 +1546,13 @@ gst_vulkan_color_convert_set_caps (GstBaseTransform * bt, GstCaps * in_caps,
 
   if (conv->descriptor_pool)
     gst_vulkan_trash_list_add (render->trash_list,
-        gst_vulkan_trash_new_object_unref (gst_vulkan_fence_ref
-            (last_fence), (GstObject *) conv->descriptor_pool));
+        gst_vulkan_trash_new_object_unref (last_fence,
+            (GstObject *) conv->descriptor_pool));
   conv->descriptor_pool = NULL;
   if (conv->uniform)
     gst_vulkan_trash_list_add (render->trash_list,
-        gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref
-            (last_fence), (GstMiniObject *) conv->uniform));
+        gst_vulkan_trash_new_mini_object_unref (last_fence,
+            (GstMiniObject *) conv->uniform));
   conv->uniform = NULL;
 
   gst_vulkan_fence_unref (last_fence);
@@ -1586,18 +1586,17 @@ gst_vulkan_color_convert_stop (GstBaseTransform * bt)
 
     if (conv->descriptor_pool)
       gst_vulkan_trash_list_add (render->trash_list,
-          gst_vulkan_trash_new_object_unref (gst_vulkan_fence_ref
-              (last_fence), (GstObject *) conv->descriptor_pool));
+          gst_vulkan_trash_new_object_unref (last_fence,
+              (GstObject *) conv->descriptor_pool));
     conv->descriptor_pool = NULL;
     if (conv->sampler)
       gst_vulkan_trash_list_add (render->trash_list,
-          gst_vulkan_trash_new_free_sampler (gst_vulkan_fence_ref
-              (last_fence), conv->sampler));
+          gst_vulkan_trash_new_free_sampler (last_fence, conv->sampler));
     conv->sampler = VK_NULL_HANDLE;
     if (conv->uniform)
       gst_vulkan_trash_list_add (render->trash_list,
-          gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref
-              (last_fence), (GstMiniObject *) conv->uniform));
+          gst_vulkan_trash_new_mini_object_unref (last_fence,
+              (GstMiniObject *) conv->uniform));
     conv->uniform = NULL;
 
     gst_vulkan_fence_unref (last_fence);
@@ -1679,7 +1678,7 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     in_img_mems[i] = (GstVulkanImageMemory *) mem;
     in_img_views[i] = get_or_create_image_view (in_img_mems[i]);
     gst_vulkan_trash_list_add (render->trash_list,
-        gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref (fence),
+        gst_vulkan_trash_new_mini_object_unref (fence,
             (GstMiniObject *) in_img_views[i]));
   }
 
@@ -1807,7 +1806,7 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&render->out_info); i++) {
       render_img_views[i] = get_or_create_image_view (render_img_mems[i]);
       gst_vulkan_trash_list_add (render->trash_list,
-          gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref (fence),
+          gst_vulkan_trash_new_mini_object_unref (fence,
               (GstMiniObject *) render_img_views[i]));
       attachments[i] = render_img_views[i]->view;
     }
@@ -1918,7 +1917,7 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
 
       /* XXX: try to reuse this image later */
       gst_vulkan_trash_list_add (render->trash_list,
-          gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref (fence),
+          gst_vulkan_trash_new_mini_object_unref (fence,
               (GstMiniObject *) render_img_mems[i]));
     }
   }
@@ -1929,10 +1928,9 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     goto error;
 
   gst_vulkan_trash_list_add (render->trash_list,
-      gst_vulkan_trash_new_free_framebuffer (gst_vulkan_fence_ref (fence),
-          framebuffer));
+      gst_vulkan_trash_new_free_framebuffer (fence, framebuffer));
   gst_vulkan_trash_list_add (render->trash_list,
-      gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref (fence),
+      gst_vulkan_trash_new_mini_object_unref (fence,
           GST_MINI_OBJECT_CAST (cmd_buf)));
 
   if (!gst_vulkan_full_screen_render_submit (render, cmd_buf->cmd, fence))

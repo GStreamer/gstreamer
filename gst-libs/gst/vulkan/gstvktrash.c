@@ -83,7 +83,7 @@ gst_vulkan_trash_new (GstVulkanFence * fence, GstVulkanTrashNotify notify,
       " on device %" GST_PTR_FORMAT, ret, fence, fence->device);
   gst_mini_object_init ((GstMiniObject *) ret, 0, gst_vulkan_trash_get_type (),
       NULL, NULL, (GstMiniObjectFreeFunction) gst_vulkan_trash_free);
-  ret->fence = fence;
+  ret->fence = gst_vulkan_fence_ref (fence);
   ret->notify = notify;
   ret->user_data = user_data;
 

@@ -1275,7 +1275,7 @@ reacquire:
       goto error;
 
     gst_vulkan_trash_list_add (priv->trash_list,
-        gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref (fence),
+        gst_vulkan_trash_new_mini_object_unref (fence,
             GST_MINI_OBJECT_CAST (cmd_buf)));
     gst_vulkan_trash_list_add (priv->trash_list,
         gst_vulkan_trash_new_free_semaphore (fence, acquire_semaphore));
@@ -1333,6 +1333,7 @@ reacquire:
 
     gst_vulkan_trash_list_add (priv->trash_list,
         gst_vulkan_trash_new_free_semaphore (fence, present_semaphore));
+    gst_vulkan_fence_unref (fence);
     fence = NULL;
   }
 

@@ -532,8 +532,7 @@ view_convert_update_command_state (GstVulkanViewConvert * conv,
       render->pipeline_layout, 0, 1, &set->set, 0, NULL);
 
   gst_vulkan_trash_list_add (render->trash_list,
-      gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref
-          (fence), (GstMiniObject *) set));
+      gst_vulkan_trash_new_mini_object_unref (fence, (GstMiniObject *) set));
 
   return TRUE;
 }
@@ -2115,13 +2114,13 @@ gst_vulkan_view_convert_set_caps (GstBaseTransform * bt, GstCaps * in_caps,
 
   if (conv->descriptor_pool)
     gst_vulkan_trash_list_add (render->trash_list,
-        gst_vulkan_trash_new_object_unref (gst_vulkan_fence_ref
-            (last_fence), (GstObject *) conv->descriptor_pool));
+        gst_vulkan_trash_new_object_unref (last_fence,
+            (GstObject *) conv->descriptor_pool));
   conv->descriptor_pool = NULL;
   if (conv->uniform)
     gst_vulkan_trash_list_add (render->trash_list,
-        gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref
-            (last_fence), (GstMiniObject *) conv->uniform));
+        gst_vulkan_trash_new_mini_object_unref (last_fence,
+            (GstMiniObject *) conv->uniform));
   conv->uniform = NULL;
 
   gst_vulkan_fence_unref (last_fence);
@@ -2157,18 +2156,17 @@ gst_vulkan_view_convert_stop (GstBaseTransform * bt)
 
     if (conv->descriptor_pool)
       gst_vulkan_trash_list_add (render->trash_list,
-          gst_vulkan_trash_new_object_unref (gst_vulkan_fence_ref
-              (last_fence), (GstObject *) conv->descriptor_pool));
+          gst_vulkan_trash_new_object_unref (last_fence,
+              (GstObject *) conv->descriptor_pool));
     conv->descriptor_pool = NULL;
     if (conv->sampler)
       gst_vulkan_trash_list_add (render->trash_list,
-          gst_vulkan_trash_new_free_sampler (gst_vulkan_fence_ref
-              (last_fence), conv->sampler));
+          gst_vulkan_trash_new_free_sampler (last_fence, conv->sampler));
     conv->sampler = VK_NULL_HANDLE;
     if (conv->uniform)
       gst_vulkan_trash_list_add (render->trash_list,
-          gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref
-              (last_fence), (GstMiniObject *) conv->uniform));
+          gst_vulkan_trash_new_mini_object_unref (last_fence,
+              (GstMiniObject *) conv->uniform));
     conv->uniform = NULL;
 
     gst_vulkan_fence_unref (last_fence);
@@ -2247,7 +2245,7 @@ gst_vulkan_view_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     in_img_mems[i] = (GstVulkanImageMemory *) mem;
     in_img_views[i] = get_or_create_image_view (in_img_mems[i]);
     gst_vulkan_trash_list_add (render->trash_list,
-        gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref (fence),
+        gst_vulkan_trash_new_mini_object_unref (fence,
             (GstMiniObject *) in_img_views[i]));
   }
 
@@ -2261,7 +2259,7 @@ gst_vulkan_view_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     out_img_mems[i] = (GstVulkanImageMemory *) mem;
     out_img_views[i] = get_or_create_image_view (out_img_mems[i]);
     gst_vulkan_trash_list_add (render->trash_list,
-        gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref (fence),
+        gst_vulkan_trash_new_mini_object_unref (fence,
             (GstMiniObject *) out_img_views[i]));
   }
 
@@ -2382,10 +2380,9 @@ gst_vulkan_view_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     goto error;
 
   gst_vulkan_trash_list_add (render->trash_list,
-      gst_vulkan_trash_new_free_framebuffer (gst_vulkan_fence_ref (fence),
-          framebuffer));
+      gst_vulkan_trash_new_free_framebuffer (fence, framebuffer));
   gst_vulkan_trash_list_add (render->trash_list,
-      gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref (fence),
+      gst_vulkan_trash_new_mini_object_unref (fence,
           GST_MINI_OBJECT_CAST (cmd_buf)));
 
   if (!gst_vulkan_full_screen_render_submit (render, cmd_buf->cmd, fence))
