@@ -852,7 +852,7 @@ gst_vulkan_full_screen_render_fill_command_buffer (GstVulkanFullScreenRender *
       .clearValueCount = GST_VIDEO_INFO_N_PLANES (&render->out_info),
       .pClearValues = clearColors,
   };
-  /* *INDENI-ON* */
+  /* *INDENT-ON* */
   VkDeviceSize offsets[] = { 0 };
 
   vkCmdBeginRenderPass (cmd, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
