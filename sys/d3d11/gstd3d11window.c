@@ -828,7 +828,7 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
   }
   g_mutex_unlock (&window->lock);
 
-  if (!window->created) {
+  if (!window->external_win_id && !window->created) {
     g_main_loop_quit (window->loop);
     g_thread_join (window->thread);
     g_main_loop_unref (window->loop);
