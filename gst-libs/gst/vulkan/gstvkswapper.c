@@ -1268,9 +1268,11 @@ reacquire:
     if (!fence)
       goto error;
 
+    gst_vulkan_queue_submit_lock (swapper->queue);
     err =
         vkQueueSubmit (swapper->queue->queue, 1, &submit_info,
         GST_VULKAN_FENCE_FENCE (fence));
+    gst_vulkan_queue_submit_unlock (swapper->queue);
     if (gst_vulkan_error_to_g_error (err, error, "vkQueueSubmit") < 0)
       goto error;
 
@@ -1325,9 +1327,11 @@ reacquire:
     if (!fence)
       goto error;
 
+    gst_vulkan_queue_submit_lock (swapper->queue);
     err =
         vkQueueSubmit (swapper->queue->queue, 1, &submit_info,
         GST_VULKAN_FENCE_FENCE (fence));
+    gst_vulkan_queue_submit_unlock (swapper->queue);
     if (gst_vulkan_error_to_g_error (err, error, "vkQueueSubmit") < 0)
       goto error;
 

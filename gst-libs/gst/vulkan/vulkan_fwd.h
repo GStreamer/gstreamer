@@ -39,6 +39,7 @@ typedef struct _GstVulkanPhysicalDevicePrivate GstVulkanPhysicalDevicePrivate;
 
 typedef struct _GstVulkanQueue GstVulkanQueue;
 typedef struct _GstVulkanQueueClass GstVulkanQueueClass;
+typedef struct _GstVulkanQueuePrivate GstVulkanQueuePrivate;
 
 typedef struct _GstVulkanCommandPool GstVulkanCommandPool;
 typedef struct _GstVulkanCommandPoolClass GstVulkanCommandPoolClass;

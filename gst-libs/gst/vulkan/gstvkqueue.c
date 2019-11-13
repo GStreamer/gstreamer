@@ -49,21 +49,31 @@ _init_debug (void)
   }
 }
 
+struct _GstVulkanQueuePrivate
+{
+  GMutex submit_lock;
+};
+
 #define parent_class gst_vulkan_queue_parent_class
 G_DEFINE_TYPE_WITH_CODE (GstVulkanQueue, gst_vulkan_queue, GST_TYPE_OBJECT,
-    _init_debug ());
+    G_ADD_PRIVATE (GstVulkanQueue); _init_debug ());
+
+#define GET_PRIV(queue) gst_vulkan_queue_get_instance_private (queue)
 
 static void gst_vulkan_queue_dispose (GObject * object);
 
 static void
-gst_vulkan_queue_init (GstVulkanQueue * device)
+gst_vulkan_queue_init (GstVulkanQueue * queue)
 {
+  GstVulkanQueuePrivate *priv = GET_PRIV (queue);
+
+  g_mutex_init (&priv->submit_lock);
 }
 
 static void
-gst_vulkan_queue_class_init (GstVulkanQueueClass * device_class)
+gst_vulkan_queue_class_init (GstVulkanQueueClass * queue_class)
 {
-  GObjectClass *gobject_class = (GObjectClass *) device_class;
+  GObjectClass *gobject_class = (GObjectClass *) queue_class;
 
   gobject_class->dispose = gst_vulkan_queue_dispose;
 }
@@ -72,10 +82,13 @@ static void
 gst_vulkan_queue_dispose (GObject * object)
 {
   GstVulkanQueue *queue = GST_VULKAN_QUEUE (object);
+  GstVulkanQueuePrivate *priv = GET_PRIV (queue);
 
   if (queue->device)
     gst_object_unref (queue->device);
   queue->device = NULL;
+
+  g_mutex_clear (&priv->submit_lock);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -290,4 +303,35 @@ gst_vulkan_queue_run_context_query (GstElement * element,
     return TRUE;
 
   return FALSE;
+}
+
+/**
+ * gst_vulkan_queue_submit_lock:
+ * @queue: a #GstVulkanQueue
+ *
+ * Locks the queue for command submission using `vkQueueSubmit()` to meet the
+ * Vulkan requirements for externally synchronised resources.
+ */
+void
+gst_vulkan_queue_submit_lock (GstVulkanQueue * queue)
+{
+  GstVulkanQueuePrivate *priv = GET_PRIV (queue);
+
+  g_mutex_lock (&priv->submit_lock);
+}
+
+/**
+ * gst_vulkan_queue_submit_unlock:
+ * @queue: a #GstVulkanQueue
+ *
+ * Unlocks the queue for command submission using `vkQueueSubmit()`.
+ *
+ * See gst_vulkan_queue_submit_lock() for details on when this call is needed.
+ */
+void
+gst_vulkan_queue_submit_unlock (GstVulkanQueue * queue)
+{
+  GstVulkanQueuePrivate *priv = GET_PRIV (queue);
+
+  g_mutex_unlock (&priv->submit_lock);
 }

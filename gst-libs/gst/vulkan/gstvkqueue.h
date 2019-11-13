@@ -59,6 +59,11 @@ GstVulkanCommandPool *  gst_vulkan_queue_create_command_pool    (GstVulkanQueue 
                                                                  GError ** error);
 
 GST_VULKAN_API
+void                gst_vulkan_queue_submit_lock                (GstVulkanQueue * queue);
+GST_VULKAN_API
+void                gst_vulkan_queue_submit_unlock              (GstVulkanQueue * queue);
+
+GST_VULKAN_API
 void                gst_context_set_vulkan_queue                (GstContext * context,
                                                                  GstVulkanQueue * queue);
 GST_VULKAN_API

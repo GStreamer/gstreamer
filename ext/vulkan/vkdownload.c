@@ -311,9 +311,11 @@ _image_to_raw_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     if (!fence)
       goto error;
 
+    gst_vulkan_queue_submit_lock (raw->download->queue);
     err =
         vkQueueSubmit (raw->download->queue->queue, 1, &submit_info,
         GST_VULKAN_FENCE_FENCE (fence));
+    gst_vulkan_queue_submit_unlock (raw->download->queue);
     if (gst_vulkan_error_to_g_error (err, &error, "vkQueueSubmit") < 0)
       goto error;
 

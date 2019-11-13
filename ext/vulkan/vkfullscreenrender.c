@@ -900,9 +900,11 @@ gst_vulkan_full_screen_render_submit (GstVulkanFullScreenRender * render,
     gst_vulkan_fence_unref (render->last_fence);
   render->last_fence = gst_vulkan_fence_ref (fence);
 
+  gst_vulkan_queue_submit_lock (render->queue);
   err =
       vkQueueSubmit (render->queue->queue, 1, &submit_info,
       GST_VULKAN_FENCE_FENCE (fence));
+  gst_vulkan_queue_submit_unlock (render->queue);
   if (gst_vulkan_error_to_g_error (err, &error, "vkQueueSubmit") < 0)
     goto error;
 
