@@ -2,6 +2,7 @@ vaapi_sources = [
   'gstvaapi.c',
   'gstvaapidecode.c',
   'gstvaapidecodedoc.c',
+  'gstvaapioverlay.c',
   'gstvaapipluginbase.c',
   'gstvaapipluginutil.c',
   'gstvaapipostproc.c',
