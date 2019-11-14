@@ -117,7 +117,6 @@ typedef struct {
   /* array of allocated input/output buffers (GstNvEncFrameState),
    * and hold the ownership of the GstNvEncFrameState. */
   GArray            *items;
-  guint              n_bufs;
 
   /* (GstNvEncFrameState) available empty items which could be submitted
    * to encoder */

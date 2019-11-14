@@ -1272,8 +1272,11 @@ gst_nv_base_enc_free_buffers (GstNvBaseEnc * nvenc)
 
   gst_nv_base_enc_reset_queues (nvenc);
 
+  if (!nvenc->items || !nvenc->items->len)
+    return;
+
   gst_cuda_context_push (nvenc->cuda_ctx);
-  for (i = 0; i < nvenc->n_bufs; ++i) {
+  for (i = 0; i < nvenc->items->len; ++i) {
     NV_ENC_OUTPUT_PTR out_buf =
         g_array_index (nvenc->items, GstNvEncFrameState, i).out_buf;
     GstNvEncInputResource *in_buf =
@@ -1448,11 +1451,11 @@ gst_nv_base_enc_setup_rate_control (GstNvBaseEnc * nvenc,
   }
 }
 
-static gint
+static guint
 gst_nv_base_enc_calculate_num_prealloc_buffers (GstNvBaseEnc * enc,
     NV_ENC_CONFIG * config)
 {
-  gint num_buffers;
+  guint num_buffers;
 
   /* At least 4 surfaces are required as documented by Nvidia Encoder guide */
   num_buffers = 4;
@@ -1712,16 +1715,17 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
 #endif
     guint i;
     guint input_width, input_height;
+    guint n_bufs;
 
     input_width = GST_VIDEO_INFO_WIDTH (info);
     input_height = GST_VIDEO_INFO_HEIGHT (info);
 
-    nvenc->n_bufs =
+    n_bufs =
         gst_nv_base_enc_calculate_num_prealloc_buffers (nvenc,
         params->encodeConfig);
 
     /* input buffers */
-    g_array_set_size (nvenc->items, nvenc->n_bufs);
+    g_array_set_size (nvenc->items, n_bufs);
 
 #if HAVE_NVCODEC_GST_GL
     features = gst_caps_get_features (state->caps, 0);
@@ -1732,7 +1736,7 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
 #endif
 
     gst_cuda_context_push (nvenc->cuda_ctx);
-    for (i = 0; i < nvenc->n_bufs; ++i) {
+    for (i = 0; i < nvenc->items->len; ++i) {
       GstNvEncInputResource *resource = g_new0 (GstNvEncInputResource, 1);
       CUresult cu_ret;
 
@@ -1773,7 +1777,7 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
     gst_cuda_context_pop (NULL);
 
     /* output buffers */
-    for (i = 0; i < nvenc->n_bufs; ++i) {
+    for (i = 0; i < nvenc->items->len; ++i) {
       NV_ENC_CREATE_BITSTREAM_BUFFER cout_buf = { 0, };
 
       cout_buf.version = gst_nvenc_get_create_bitstream_buffer_version ();
