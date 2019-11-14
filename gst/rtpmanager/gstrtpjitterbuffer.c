@@ -4044,9 +4044,14 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
         }
       } while ((timer = rtp_timer_queue_pop_until (priv->timers, now)));
 
-      /* execetute the remaining timers */
+      /* execute the remaining timers */
       while ((timer = (RtpTimer *) g_queue_pop_head_link (&timers)))
         do_timeout (jitterbuffer, timer, now);
+
+      /* do_expected_timeout(), called by do_timeout will drop the
+       * JBUF_LOCK, so we need to check if we are still running */
+      if (!priv->timer_running)
+        goto stopping;
     }
 
     timer = rtp_timer_queue_peek_earliest (priv->timers);
