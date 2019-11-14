@@ -161,9 +161,9 @@ _set_cached_surface (GstBuffer * buf, GstVaapiSurface * surface)
 
 static gboolean
 plugin_update_sinkpad_info_from_buffer (GstVaapiPluginBase * plugin,
-    GstBuffer * buf)
+    GstPad * sinkpad, GstBuffer * buf)
 {
-  GstVaapiPadPrivate *sinkpriv = GST_VAAPI_PAD_PRIVATE (plugin->sinkpad);
+  GstVaapiPadPrivate *sinkpriv = GST_VAAPI_PAD_PRIVATE (sinkpad);
   GstVideoInfo *const vip = &sinkpriv->info;
   GstVideoMeta *vmeta;
   guint i;
@@ -201,10 +201,10 @@ is_dma_buffer (GstBuffer * buf)
 }
 
 static gboolean
-plugin_bind_dma_to_vaapi_buffer (GstVaapiPluginBase * plugin,
+plugin_bind_dma_to_vaapi_buffer (GstVaapiPluginBase * plugin, GstPad * sinkpad,
     GstBuffer * inbuf, GstBuffer * outbuf)
 {
-  GstVaapiPadPrivate *sinkpriv = GST_VAAPI_PAD_PRIVATE (plugin->sinkpad);
+  GstVaapiPadPrivate *sinkpriv = GST_VAAPI_PAD_PRIVATE (sinkpad);
   GstVideoInfo *const vip = &sinkpriv->info;
   GstVaapiVideoMeta *meta;
   GstVaapiSurface *surface;
@@ -215,7 +215,7 @@ plugin_bind_dma_to_vaapi_buffer (GstVaapiPluginBase * plugin,
   if (fd < 0)
     return FALSE;
 
-  if (!plugin_update_sinkpad_info_from_buffer (plugin, inbuf))
+  if (!plugin_update_sinkpad_info_from_buffer (plugin, sinkpad, inbuf))
     goto error_update_sinkpad_info;
 
   meta = gst_buffer_get_vaapi_video_meta (outbuf);
@@ -489,10 +489,10 @@ reset_allocator (GstAllocator * allocator, GstVideoInfo * vinfo)
 }
 
 static gboolean
-ensure_sinkpad_allocator (GstVaapiPluginBase * plugin, GstCaps * caps,
-    guint * size)
+ensure_sinkpad_allocator (GstVaapiPluginBase * plugin, GstPad * sinkpad,
+    GstCaps * caps, guint * size)
 {
-  GstVaapiPadPrivate *sinkpriv = GST_VAAPI_PAD_PRIVATE (plugin->sinkpad);
+  GstVaapiPadPrivate *sinkpriv = GST_VAAPI_PAD_PRIVATE (sinkpad);
   GstVideoInfo vinfo;
   const GstVideoInfo *image_info;
   GstVaapiImageUsageFlags usage_flag =
@@ -583,10 +583,10 @@ create_dmabuf_srcpad_allocator (GstVaapiPluginBase * plugin,
 }
 
 static gboolean
-ensure_srcpad_allocator (GstVaapiPluginBase * plugin, GstVideoInfo * vinfo,
-    GstCaps * caps)
+ensure_srcpad_allocator (GstVaapiPluginBase * plugin, GstPad * srcpad,
+    GstVideoInfo * vinfo, GstCaps * caps)
 {
-  GstVaapiPadPrivate *srcpriv = GST_VAAPI_PAD_PRIVATE (plugin->srcpad);
+  GstVaapiPadPrivate *srcpriv = GST_VAAPI_PAD_PRIVATE (srcpad);
   const GstVideoInfo *image_info;
 
   if (!reset_allocator (srcpriv->allocator, vinfo))
@@ -743,17 +743,18 @@ error_pool_config:
 /**
  * ensure_sinkpad_buffer_pool:
  * @plugin: a #GstVaapiPluginBase
- * @caps: the initial #GstCaps for the resulting buffer pool
+ * @sinkpad: the #GstPad to use for the resulting buffer pool
  *
  * Makes sure the sink pad video buffer pool is created with the
- * appropriate @caps.
+ * appropriate caps defined in the @sinkpad.
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
  */
 static gboolean
-ensure_sinkpad_buffer_pool (GstVaapiPluginBase * plugin, GstCaps * caps)
+ensure_sinkpad_buffer_pool (GstVaapiPluginBase * plugin, GstPad * sinkpad)
 {
-  GstVaapiPadPrivate *sinkpriv = GST_VAAPI_PAD_PRIVATE (plugin->sinkpad);
+  GstVaapiPadPrivate *sinkpriv = GST_VAAPI_PAD_PRIVATE (sinkpad);
+  GstCaps *caps = sinkpriv->caps;
   GstBufferPool *pool;
   guint size;
 
@@ -773,7 +774,7 @@ ensure_sinkpad_buffer_pool (GstVaapiPluginBase * plugin, GstCaps * caps)
     sinkpriv->buffer_size = 0;
   }
 
-  if (!ensure_sinkpad_allocator (plugin, caps, &size))
+  if (!ensure_sinkpad_allocator (plugin, sinkpad, caps, &size))
     return FALSE;
 
   pool =
@@ -788,6 +789,59 @@ ensure_sinkpad_buffer_pool (GstVaapiPluginBase * plugin, GstCaps * caps)
   return TRUE;
 }
 
+static gboolean
+_set_srcpad_caps (GstVaapiPluginBase * plugin, GstPad * srcpad, GstCaps * caps)
+{
+  GstVaapiPadPrivate *srcpriv = NULL;
+
+  if (caps) {
+    g_assert (srcpad);
+    srcpriv = GST_VAAPI_PAD_PRIVATE (srcpad);
+    g_assert (srcpriv);
+
+    if (caps != srcpriv->caps) {
+      if (!gst_video_info_from_caps (&srcpriv->info, caps))
+        return FALSE;
+      if (srcpriv->buffer_pool
+          && !gst_vaapi_buffer_pool_caps_is_equal (srcpriv->buffer_pool,
+              caps)) {
+        gst_buffer_pool_set_active (srcpriv->buffer_pool, FALSE);
+        g_clear_object (&srcpriv->buffer_pool);
+        g_clear_object (&srcpriv->allocator);
+        plugin_reset_texture_map (plugin);
+      }
+      gst_caps_replace (&srcpriv->caps, caps);
+    }
+  }
+
+  return TRUE;
+}
+
+static gboolean
+_set_sinkpad_caps (GstVaapiPluginBase * plugin, GstPad * sinkpad,
+    GstCaps * caps)
+{
+  GstVaapiPadPrivate *sinkpriv = NULL;
+
+  if (caps) {
+    g_assert (sinkpad);
+    sinkpriv = GST_VAAPI_PAD_PRIVATE (sinkpad);
+    g_assert (sinkpriv);
+
+    if (caps != sinkpriv->caps) {
+      if (!gst_video_info_from_caps (&sinkpriv->info, caps))
+        return FALSE;
+      gst_caps_replace (&sinkpriv->caps, caps);
+      sinkpriv->caps_is_raw = !gst_caps_has_vaapi_surface (caps);
+    }
+
+    if (!ensure_sinkpad_buffer_pool (plugin, sinkpad))
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
 /**
  * gst_vaapi_plugin_base_set_caps:
  * @plugin: a #GstVaapiPluginBase
@@ -795,7 +849,7 @@ ensure_sinkpad_buffer_pool (GstVaapiPluginBase * plugin, GstCaps * caps)
  * @outcaps: the src pad (output) caps
  *
  * Notifies the base plugin object of the new input and output caps,
- * obtained from the subclass.
+ * obtained from the subclass, on the base plugin static pads.
  *
  * Returns: %TRUE if the update of caps was successful, %FALSE otherwise.
  */
@@ -803,43 +857,8 @@ gboolean
 gst_vaapi_plugin_base_set_caps (GstVaapiPluginBase * plugin, GstCaps * incaps,
     GstCaps * outcaps)
 {
-  GstVaapiPadPrivate *sinkpriv = NULL;
-  GstVaapiPadPrivate *srcpriv = NULL;
-
-  if (incaps) {
-    g_assert (plugin->sinkpad);
-    sinkpriv = GST_VAAPI_PAD_PRIVATE (plugin->sinkpad);
-  }
-
-  if (incaps && incaps != sinkpriv->caps) {
-    if (!gst_video_info_from_caps (&sinkpriv->info, incaps))
-      return FALSE;
-    gst_caps_replace (&sinkpriv->caps, incaps);
-    sinkpriv->caps_is_raw = !gst_caps_has_vaapi_surface (incaps);
-  }
-
-  if (outcaps) {
-    g_assert (plugin->srcpad);
-    srcpriv = GST_VAAPI_PAD_PRIVATE (plugin->srcpad);
-  }
-
-  if (outcaps && outcaps != srcpriv->caps) {
-    if (!gst_video_info_from_caps (&srcpriv->info, outcaps))
-      return FALSE;
-    if (srcpriv->buffer_pool
-        && !gst_vaapi_buffer_pool_caps_is_equal (srcpriv->buffer_pool,
-            outcaps)) {
-      gst_buffer_pool_set_active (srcpriv->buffer_pool, FALSE);
-      g_clear_object (&srcpriv->buffer_pool);
-      g_clear_object (&srcpriv->allocator);
-      plugin_reset_texture_map (plugin);
-    }
-    gst_caps_replace (&srcpriv->caps, outcaps);
-  }
-
-  if (incaps && !ensure_sinkpad_buffer_pool (plugin, sinkpriv->caps))
-    return FALSE;
-  return TRUE;
+  return _set_sinkpad_caps (plugin, plugin->sinkpad, incaps)
+      && _set_srcpad_caps (plugin, plugin->srcpad, outcaps);
 }
 
 /**
@@ -847,7 +866,8 @@ gst_vaapi_plugin_base_set_caps (GstVaapiPluginBase * plugin, GstCaps * incaps,
  * @plugin: a #GstVaapiPluginBase
  * @query: the allocation query to configure
  *
- * Proposes allocation parameters to the upstream elements.
+ * Proposes allocation parameters to the upstream elements on the base plugin
+ * static sinkpad.
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
  */
@@ -865,7 +885,7 @@ gst_vaapi_plugin_base_propose_allocation (GstVaapiPluginBase * plugin,
   if (!caps)
     goto error_no_caps;
 
-  if (!ensure_sinkpad_allocator (plugin, caps, &size))
+  if (!ensure_sinkpad_allocator (plugin, plugin->sinkpad, caps, &size))
     return FALSE;
 
   if (need_pool) {
@@ -915,7 +935,8 @@ error_no_caps:
  * @feature: the desired #GstVaapiCapsFeature, or zero to find the
  *   preferred one
  *
- * Decides allocation parameters for the downstream elements.
+ * Decides allocation parameters for the downstream elements on the base
+ * plugin static srcpad.
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
  */
@@ -1038,7 +1059,7 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
   }
 
   if (!pool) {
-    if (!ensure_srcpad_allocator (plugin, &vi, caps))
+    if (!ensure_srcpad_allocator (plugin, plugin->srcpad, &vi, caps))
       goto error;
     size = GST_VIDEO_INFO_SIZE (&vi);   /* size might be updated by
                                          * allocator */
@@ -1105,7 +1126,7 @@ error:
  * @inbuf: the sink pad (input) buffer
  * @outbuf_ptr: the pointer to location to the VA surface backed buffer
  *
- * Acquires the sink pad (input) buffer as a VA surface backed
+ * Acquires the static sink pad (input) buffer as a VA surface backed
  * buffer. This is mostly useful for raw YUV buffers, as source
  * buffers that are already backed as a VA surface are passed
  * verbatim.
@@ -1147,7 +1168,8 @@ gst_vaapi_plugin_base_get_input_buffer (GstVaapiPluginBase * plugin,
     goto error_create_buffer;
 
   if (is_dma_buffer (inbuf)) {
-    if (!plugin_bind_dma_to_vaapi_buffer (plugin, inbuf, outbuf))
+    if (!plugin_bind_dma_to_vaapi_buffer (plugin, plugin->sinkpad, inbuf,
+            outbuf))
       goto error_bind_dma_buffer;
     goto done;
   }
@@ -1474,7 +1496,7 @@ gst_vaapi_plugin_base_get_allowed_srcpad_raw_caps (GstVaapiPluginBase *
  * @object: the GL context from gst-gl
  *
  * This function will determine if @object supports dmabuf
- * importing.
+ * importing on the base plugin static srcpad.
  *
  * Please note that the context @object should come from downstream.
  **/
