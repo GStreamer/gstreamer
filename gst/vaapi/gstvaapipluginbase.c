@@ -842,6 +842,27 @@ _set_sinkpad_caps (GstVaapiPluginBase * plugin, GstPad * sinkpad,
 }
 
 /**
+ * gst_vaapi_plugin_base_pad_set_caps:
+ * @plugin: a #GstVaapiPluginBase
+ * @sinkpad: the sink pad to set @incaps on
+ * @incaps: the sink pad (input) caps
+ * @srcpad: the src pad to set @outcaps on
+ * @outcaps: the src pad (output) caps
+ *
+ * Notifies the base plugin object of the new input and output caps,
+ * obtained from the subclass on the requested pads.
+ *
+ * Returns: %TRUE if the update of caps was successful, %FALSE otherwise.
+ */
+gboolean
+gst_vaapi_plugin_base_pad_set_caps (GstVaapiPluginBase * plugin,
+    GstPad * sinkpad, GstCaps * incaps, GstPad * srcpad, GstCaps * outcaps)
+{
+  return _set_sinkpad_caps (plugin, sinkpad, incaps)
+      && _set_srcpad_caps (plugin, srcpad, outcaps);
+}
+
+/**
  * gst_vaapi_plugin_base_set_caps:
  * @plugin: a #GstVaapiPluginBase
  * @incaps: the sink pad (input) caps
@@ -856,25 +877,26 @@ gboolean
 gst_vaapi_plugin_base_set_caps (GstVaapiPluginBase * plugin, GstCaps * incaps,
     GstCaps * outcaps)
 {
-  return _set_sinkpad_caps (plugin, plugin->sinkpad, incaps)
-      && _set_srcpad_caps (plugin, plugin->srcpad, outcaps);
+  return gst_vaapi_plugin_base_pad_set_caps (plugin, plugin->sinkpad, incaps,
+      plugin->srcpad, outcaps);
 }
 
 /**
- * gst_vaapi_plugin_base_propose_allocation:
+ * gst_vaapi_plugin_base_pad_propose_allocation:
  * @plugin: a #GstVaapiPluginBase
+ * @sinkpad: the sinkpad to configure the allocation query on
  * @query: the allocation query to configure
  *
- * Proposes allocation parameters to the upstream elements on the base plugin
- * static sinkpad.
+ * Proposes allocation parameters to the upstream elements on the requested
+ * sinkpad.
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
  */
 gboolean
-gst_vaapi_plugin_base_propose_allocation (GstVaapiPluginBase * plugin,
-    GstQuery * query)
+gst_vaapi_plugin_base_pad_propose_allocation (GstVaapiPluginBase * plugin,
+    GstPad * sinkpad, GstQuery * query)
 {
-  GstVaapiPadPrivate *sinkpriv = GST_VAAPI_PAD_PRIVATE (plugin->sinkpad);
+  GstVaapiPadPrivate *sinkpriv = GST_VAAPI_PAD_PRIVATE (sinkpad);
   GstCaps *caps = NULL;
   GstBufferPool *pool = NULL;
   gboolean need_pool;
@@ -884,7 +906,7 @@ gst_vaapi_plugin_base_propose_allocation (GstVaapiPluginBase * plugin,
   if (!caps)
     goto error_no_caps;
 
-  if (!ensure_sinkpad_allocator (plugin, plugin->sinkpad, caps, &size))
+  if (!ensure_sinkpad_allocator (plugin, sinkpad, caps, &size))
     return FALSE;
 
   if (need_pool) {
@@ -925,6 +947,24 @@ error_no_caps:
     GST_INFO_OBJECT (plugin, "no caps specified");
     return FALSE;
   }
+}
+
+/**
+ * gst_vaapi_plugin_base_propose_allocation:
+ * @plugin: a #GstVaapiPluginBase
+ * @query: the allocation query to configure
+ *
+ * Proposes allocation parameters to the upstream elements on the base plugin
+ * static sinkpad.
+ *
+ * Returns: %TRUE if successful, %FALSE otherwise.
+ */
+gboolean
+gst_vaapi_plugin_base_propose_allocation (GstVaapiPluginBase * plugin,
+    GstQuery * query)
+{
+  return gst_vaapi_plugin_base_pad_propose_allocation (plugin, plugin->sinkpad,
+      query);
 }
 
 /**
@@ -1120,8 +1160,9 @@ error:
 }
 
 /**
- * gst_vaapi_plugin_base_get_input_buffer:
+ * gst_vaapi_plugin_base_pad_get_input_buffer:
  * @plugin: a #GstVaapiPluginBase
+ * @sinkpad: the sink pad to obtain input buffer on
  * @inbuf: the sink pad (input) buffer
  * @outbuf_ptr: the pointer to location to the VA surface backed buffer
  *
@@ -1133,10 +1174,10 @@ error:
  * Returns: #GST_FLOW_OK if the buffer could be acquired
  */
 GstFlowReturn
-gst_vaapi_plugin_base_get_input_buffer (GstVaapiPluginBase * plugin,
-    GstBuffer * inbuf, GstBuffer ** outbuf_ptr)
+gst_vaapi_plugin_base_pad_get_input_buffer (GstVaapiPluginBase * plugin,
+    GstPad * sinkpad, GstBuffer * inbuf, GstBuffer ** outbuf_ptr)
 {
-  GstVaapiPadPrivate *sinkpriv = GST_VAAPI_PAD_PRIVATE (plugin->sinkpad);
+  GstVaapiPadPrivate *sinkpriv = GST_VAAPI_PAD_PRIVATE (sinkpad);
   GstVaapiVideoMeta *meta;
   GstBuffer *outbuf;
   GstVideoFrame src_frame, out_frame;
@@ -1167,8 +1208,7 @@ gst_vaapi_plugin_base_get_input_buffer (GstVaapiPluginBase * plugin,
     goto error_create_buffer;
 
   if (is_dma_buffer (inbuf)) {
-    if (!plugin_bind_dma_to_vaapi_buffer (plugin, plugin->sinkpad, inbuf,
-            outbuf))
+    if (!plugin_bind_dma_to_vaapi_buffer (plugin, sinkpad, inbuf, outbuf))
       goto error_bind_dma_buffer;
     goto done;
   }
@@ -1244,6 +1284,27 @@ error_copy_buffer:
     gst_buffer_unref (outbuf);
     return GST_FLOW_NOT_SUPPORTED;
   }
+}
+
+/**
+ * gst_vaapi_plugin_base_get_input_buffer:
+ * @plugin: a #GstVaapiPluginBase
+ * @inbuf: the sink pad (input) buffer
+ * @outbuf_ptr: the pointer to location to the VA surface backed buffer
+ *
+ * Acquires the static sink pad (input) buffer as a VA surface backed
+ * buffer. This is mostly useful for raw YUV buffers, as source
+ * buffers that are already backed as a VA surface are passed
+ * verbatim.
+ *
+ * Returns: #GST_FLOW_OK if the buffer could be acquired
+ */
+GstFlowReturn
+gst_vaapi_plugin_base_get_input_buffer (GstVaapiPluginBase * plugin,
+    GstBuffer * inbuf, GstBuffer ** outbuf_ptr)
+{
+  return gst_vaapi_plugin_base_pad_get_input_buffer (plugin, plugin->sinkpad,
+      inbuf, outbuf_ptr);
 }
 
 /**
