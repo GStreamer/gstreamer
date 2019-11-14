@@ -1243,10 +1243,9 @@ gst_nv_base_enc_stop_bitstream_thread (GstNvBaseEnc * nvenc, gboolean force)
 }
 
 static void
-gst_nv_base_enc_reset_queues (GstNvBaseEnc * nvenc, gboolean refill)
+gst_nv_base_enc_reset_queues (GstNvBaseEnc * nvenc)
 {
   gpointer ptr;
-  gint i;
 
   GST_INFO_OBJECT (nvenc, "clearing queues");
 
@@ -1258,14 +1257,6 @@ gst_nv_base_enc_reset_queues (GstNvBaseEnc * nvenc, gboolean refill)
   }
   while ((ptr = g_async_queue_try_pop (nvenc->bitstream_queue))) {
     /* do nothing */
-  }
-
-  if (refill) {
-    GST_INFO_OBJECT (nvenc, "refilling buffer pools");
-    for (i = 0; i < nvenc->n_bufs; ++i) {
-      g_async_queue_push (nvenc->available_queue,
-          &g_array_index (nvenc->items, GstNvEncFrameState, i));
-    }
   }
 }
 
@@ -1279,7 +1270,7 @@ gst_nv_base_enc_free_buffers (GstNvBaseEnc * nvenc)
   if (nvenc->encoder == NULL)
     return;
 
-  gst_nv_base_enc_reset_queues (nvenc, FALSE);
+  gst_nv_base_enc_reset_queues (nvenc);
 
   gst_cuda_context_push (nvenc->cuda_ctx);
   for (i = 0; i < nvenc->n_bufs; ++i) {
