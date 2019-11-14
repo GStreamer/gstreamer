@@ -3078,9 +3078,9 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
 
     update_current_timer (jitterbuffer);
     JBUF_WAIT_QUEUE (priv);
+    if (priv->srcresult != GST_FLOW_OK)
+      goto out_flushing;
   }
-  if (priv->srcresult != GST_FLOW_OK)
-    goto out_flushing;
 
   /* let's check if this buffer is too late, we can only accept packets with
    * bigger seqnum than the one we last pushed. */
