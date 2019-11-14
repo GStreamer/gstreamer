@@ -1,4 +1,5 @@
 gstlibvaapi_sources = [
+  'gstvaapiblend.c',
   'gstvaapibufferproxy.c',
   'gstvaapicodec_objects.c',
   'gstvaapicontext.c',
@@ -44,6 +45,7 @@ gstlibvaapi_sources = [
 ]
 
 gstlibvaapi_headers = [
+  'gstvaapiblend.h',
   'gstvaapibufferproxy.h',
   'gstvaapidecoder.h',
   'gstvaapidecoder_h264.h',
