@@ -1304,6 +1304,7 @@ _raw_data_upload_perform (gpointer impl, GstBuffer * buffer,
   } else {
     GST_ERROR_OBJECT (raw->upload, "Failed to allocate wrapped texture");
     gst_buffer_unref (*outbuf);
+    gst_object_unref (allocator);
     return GST_GL_UPLOAD_ERROR;
   }
   gst_object_unref (allocator);
