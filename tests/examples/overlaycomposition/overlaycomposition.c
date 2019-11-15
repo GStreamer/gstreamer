@@ -256,7 +256,7 @@ main (int argc, char **argv)
   OverlayState overlay_state = { 0, };
   GOptionContext *option_ctx;
   GError *error = NULL;
-  const gchar *video_sink = "autovidesink";
+  const gchar *video_sink = "autovideosink";
   gboolean ret;
   GOptionEntry options[] = {
     {"videosink", 0, 0, G_OPTION_ARG_STRING, &video_sink,
