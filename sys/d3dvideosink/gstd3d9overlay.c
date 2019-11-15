@@ -318,6 +318,8 @@ gst_d3d9_overlay_init_vb (GstD3DVideoSink * sink,
   GstD3DVideoSinkClass *klass = GST_D3DVIDEOSINK_GET_CLASS (sink);
   gint x = 0, y = 0;
   guint width = 0, height = 0;
+  guint sink_width = GST_VIDEO_SINK_WIDTH (sink);
+  guint sink_height = GST_VIDEO_SINK_HEIGHT (sink);
   float scaleX = 1.0f, scaleY = 1.0f;
   RECT dest_rect;
   guint dest_width, dest_height;
@@ -325,7 +327,7 @@ gst_d3d9_overlay_init_vb (GstD3DVideoSink * sink,
   HRESULT hr = 0;
   int vert_count, byte_count;
 
-  if (GST_VIDEO_SINK_WIDTH (sink) < 1 || GST_VIDEO_SINK_HEIGHT (sink) < 1) {
+  if (sink_width < 1 || sink_height < 1) {
     return D3D_OK;
   }
 
@@ -341,8 +343,8 @@ gst_d3d9_overlay_init_vb (GstD3DVideoSink * sink,
   gst_d3d9_overlay_calc_dest_rect (sink, &dest_rect);
   dest_width = dest_rect.right - dest_rect.left;
   dest_height = dest_rect.bottom - dest_rect.top;
-  scaleX = (float) dest_width / width;
-  scaleY = (float) dest_height / height;
+  scaleX = (float) dest_width / sink_width;
+  scaleY = (float) dest_height / sink_height;
   x = dest_rect.left + x * scaleX;
   y = dest_rect.top + y * scaleY;
   width *= scaleX;
