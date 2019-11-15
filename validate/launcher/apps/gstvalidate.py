@@ -212,7 +212,7 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
         self._valid_scenarios = valid_scenarios
 
     @classmethod
-    def from_json(cls, test_manager, json_file, extra_data=None):
+    def from_dict(cls, test_manager, name, descriptions, extra_data=None):
         """
         :param json_file: Path to a JSON file containing pipeline tests.
         :param extra_data: Variables available for interpolation in validate
@@ -220,10 +220,7 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
         """
         if extra_data is None:
             extra_data = {}
-        with open(json_file, 'r') as f:
-            descriptions = json.load(f)
 
-        name = os.path.basename(json_file).replace('.json', '')
         pipelines_descriptions = []
         for test_name, defs in descriptions.items():
             tests_definition = {'name': test_name, 'pipeline': defs.pop('pipeline')}
@@ -268,7 +265,7 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
 
             expand_vars_in_dict_recurse(local_extra_data, extra_data)
             tests_definition['extra_data'] = local_extra_data
-            tests_definition['pipeline_data'] = {"config_path": os.path.dirname(json_file)}
+            tests_definition['pipeline_data'] = {}
             tests_definition['pipeline_data'].update(local_extra_data)
             pipelines_descriptions.append(tests_definition)
 
