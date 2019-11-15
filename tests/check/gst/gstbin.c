@@ -153,6 +153,82 @@ GST_START_TEST (test_interface)
 
 GST_END_TEST;
 
+GST_START_TEST (test_iterate_all_by_element_factory_name)
+{
+  GstBin *bin, *bin2;
+  GstElement *filesrc;
+  GstIterator *it;
+  GValue item = { 0, };
+
+  bin = GST_BIN (gst_bin_new (NULL));
+  fail_unless (bin != NULL, "Could not create bin");
+
+  filesrc = gst_element_factory_make ("filesrc", NULL);
+  fail_unless (filesrc != NULL, "Could not create filesrc");
+  gst_bin_add (bin, filesrc);
+
+  /* Test bin with single element */
+  it = gst_bin_iterate_all_by_element_factory_name (bin, "filesrc");
+  fail_unless (it != NULL);
+  fail_unless (gst_iterator_next (it, &item) == GST_ITERATOR_OK);
+  fail_unless (g_value_get_object (&item) == (gpointer) filesrc);
+  g_value_reset (&item);
+  fail_unless (gst_iterator_next (it, &item) == GST_ITERATOR_DONE);
+  gst_iterator_free (it);
+
+  /* Negative test bin with single element */
+  it = gst_bin_iterate_all_by_element_factory_name (bin, "filesink");
+  fail_unless (it != NULL);
+  fail_unless (gst_iterator_next (it, &item) == GST_ITERATOR_DONE);
+  gst_iterator_free (it);
+
+  /* Test bin with multiple other elements, 1 layer */
+  gst_bin_add_many (bin,
+      gst_element_factory_make ("identity", NULL),
+      gst_element_factory_make ("identity", NULL),
+      gst_element_factory_make ("identity", NULL), NULL);
+  it = gst_bin_iterate_all_by_element_factory_name (bin, "filesrc");
+  fail_unless (it != NULL);
+  fail_unless (gst_iterator_next (it, &item) == GST_ITERATOR_OK);
+  fail_unless (g_value_get_object (&item) == (gpointer) filesrc);
+  g_value_reset (&item);
+  fail_unless (gst_iterator_next (it, &item) == GST_ITERATOR_DONE);
+  gst_iterator_free (it);
+
+  /* Test bin with multiple other elements in subbins */
+  bin2 = bin;
+  bin = GST_BIN (gst_bin_new (NULL));
+  fail_unless (bin != NULL);
+  gst_bin_add_many (bin,
+      gst_element_factory_make ("identity", NULL),
+      gst_element_factory_make ("identity", NULL),
+      GST_ELEMENT (bin2), gst_element_factory_make ("identity", NULL), NULL);
+  it = gst_bin_iterate_all_by_element_factory_name (bin, "filesrc");
+  fail_unless (gst_iterator_next (it, &item) == GST_ITERATOR_OK);
+  fail_unless (g_value_get_object (&item) == (gpointer) filesrc);
+  g_value_reset (&item);
+  fail_unless (gst_iterator_next (it, &item) == GST_ITERATOR_DONE);
+  gst_iterator_free (it);
+
+  /* Test bin with multiple other elements, multiple occurrences in subbins */
+  gst_bin_add (bin, gst_element_factory_make ("filesrc", NULL));
+  gst_bin_add (bin2, gst_element_factory_make ("filesrc", NULL));
+  it = gst_bin_iterate_all_by_element_factory_name (bin, "filesrc");
+  fail_unless (gst_iterator_next (it, &item) == GST_ITERATOR_OK);
+  g_value_reset (&item);
+  fail_unless (gst_iterator_next (it, &item) == GST_ITERATOR_OK);
+  g_value_reset (&item);
+  fail_unless (gst_iterator_next (it, &item) == GST_ITERATOR_OK);
+  g_value_reset (&item);
+  fail_unless (gst_iterator_next (it, &item) == GST_ITERATOR_DONE);
+  g_value_unset (&item);
+  gst_iterator_free (it);
+
+  gst_object_unref (bin);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_eos)
 {
   GstBus *bus;
@@ -1789,6 +1865,7 @@ gst_bin_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_interface);
+  tcase_add_test (tc_chain, test_iterate_all_by_element_factory_name);
   tcase_add_test (tc_chain, test_eos);
   tcase_add_test (tc_chain, test_stream_start);
   tcase_add_test (tc_chain, test_children_state_change_order_flagged_sink);

@@ -4630,3 +4630,56 @@ gst_bin_iterate_all_by_interface (GstBin * bin, GType iface)
 
   return result;
 }
+
+static gint
+compare_factory_names (const GValue * velement, GValue * factory_name_val)
+{
+  GstElement *element = g_value_get_object (velement);
+  GstElementFactory *factory = gst_element_get_factory (element);
+  const gchar *factory_name = g_value_get_string (factory_name_val);
+
+  if (factory == NULL)
+    return -1;
+
+  return g_strcmp0 (GST_OBJECT_NAME (factory), factory_name);
+}
+
+/**
+ * gst_bin_iterate_all_by_element_factory_name:
+ * @bin: a #GstBin
+ * @factory_name: (not nullable): the name of the #GstElementFactory
+ *
+ * Looks for all elements inside the bin with the given element factory name.
+ * The function recurses inside child bins. The iterator will yield a series of
+ * #GstElement that should be unreffed after use.
+ *
+ * MT safe. Caller owns returned value.
+ *
+ * Returns: (transfer full) (nullable): a #GstIterator of #GstElement
+ *     for all elements in the bin with the given element factory name,
+ *     or %NULL.
+ *
+ * Since: 1.18
+ */
+GstIterator *
+gst_bin_iterate_all_by_element_factory_name (GstBin * bin,
+    const gchar * factory_name)
+{
+  GstIterator *children;
+  GstIterator *result;
+  GValue factory_name_val = G_VALUE_INIT;
+
+  g_return_val_if_fail (GST_IS_BIN (bin), NULL);
+  g_return_val_if_fail (factory_name && *factory_name, NULL);
+
+  g_value_init (&factory_name_val, G_TYPE_STRING);
+  g_value_set_string (&factory_name_val, factory_name);
+
+  children = gst_bin_iterate_recurse (bin);
+  result = gst_iterator_filter (children, (GCompareFunc) compare_factory_names,
+      &factory_name_val);
+
+  g_value_unset (&factory_name_val);
+
+  return result;
+}

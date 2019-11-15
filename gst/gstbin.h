@@ -237,6 +237,9 @@ GstIterator*	gst_bin_iterate_sources		 (GstBin *bin);
 GST_API
 GstIterator*	gst_bin_iterate_all_by_interface (GstBin *bin, GType iface);
 
+GST_API
+GstIterator*	gst_bin_iterate_all_by_element_factory_name (GstBin * bin, const gchar * factory_name);
+
 /* latency */
 
 GST_API
