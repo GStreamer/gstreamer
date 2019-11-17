@@ -124,6 +124,8 @@ gst_opus_enc_audio_type_get_type (void)
   static const GEnumValue values[] = {
     {OPUS_APPLICATION_AUDIO, "Generic audio", "generic"},
     {OPUS_APPLICATION_VOIP, "Voice", "voice"},
+    {OPUS_APPLICATION_RESTRICTED_LOWDELAY, "Restricted low delay",
+        "restricted-lowdelay"},
     {0, NULL, NULL}
   };
   static volatile GType id = 0;
