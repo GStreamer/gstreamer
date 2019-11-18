@@ -11,7 +11,7 @@ xml2_dep = dependency('libxml-2.0',
 )
 
 if xml2_dep.found()
-  gstsouphttpsrc = library('gstdashdemux',
+  gstdashdemux = library('gstdashdemux',
     dash_sources,
     c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
     link_args : noseh_link_args,
@@ -21,6 +21,6 @@ if xml2_dep.found()
     install : true,
     install_dir : plugins_install_dir,
   )
-  pkgconfig.generate(gstsouphttpsrc, install_dir : plugins_pkgconfig_install_dir)
-  plugins += [gstsouphttpsrc]
+  pkgconfig.generate(gstdashdemux, install_dir : plugins_pkgconfig_install_dir)
+  plugins += [gstdashdemux]
 endif
