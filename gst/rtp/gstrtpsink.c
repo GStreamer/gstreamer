@@ -58,6 +58,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_rtp_sink_debug);
 #define DEFAULT_PROP_ADDRESS          "0.0.0.0"
 #define DEFAULT_PROP_PORT             5004
 #define DEFAULT_PROP_URI              "rtp://"DEFAULT_PROP_ADDRESS":"G_STRINGIFY(DEFAULT_PROP_PORT)
+#define DEFAULT_PROP_MULTICAST_IFACE  NULL
 
 enum
 {
@@ -68,6 +69,7 @@ enum
   PROP_PORT,
   PROP_TTL,
   PROP_TTL_MC,
+  PROP_MULTICAST_IFACE,
 
   PROP_LAST
 };
@@ -149,6 +151,14 @@ gst_rtp_sink_set_property (GObject * object, guint prop_id,
       g_object_set (self->rtp_sink, "ttl-mc", self->ttl_mc, NULL);
       g_object_set (self->rtcp_sink, "ttl-mc", self->ttl_mc, NULL);
       break;
+    case PROP_MULTICAST_IFACE:
+      g_free (self->multi_iface);
+
+      if (g_value_get_string (value) == NULL)
+        self->multi_iface = g_strdup (DEFAULT_PROP_MULTICAST_IFACE);
+      else
+        self->multi_iface = g_value_dup_string (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -182,6 +192,9 @@ gst_rtp_sink_get_property (GObject * object, guint prop_id,
     case PROP_TTL_MC:
       g_value_set_int (value, self->ttl_mc);
       break;
+    case PROP_MULTICAST_IFACE:
+      g_value_set_string (value, self->multi_iface);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -195,6 +208,8 @@ gst_rtp_sink_finalize (GObject * gobject)
 
   if (self->uri)
     gst_uri_unref (self->uri);
+
+  g_free (self->multi_iface);
 
   g_mutex_clear (&self->lock);
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
@@ -330,6 +345,17 @@ gst_rtp_sink_class_init (GstRtpSinkClass * klass)
           "Used for setting the multicast TTL parameter", 0, 255,
           DEFAULT_PROP_TTL_MC, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /* GstRtpSink:multicast-iface:
+   *
+   * The networkinterface on which to join the multicast group
+   */
+  g_object_class_install_property (gobject_class, PROP_MULTICAST_IFACE,
+      g_param_spec_string ("multicast-iface", "Multicast Interface",
+          "The network interface on which to join the multicast group."
+          "This allows multiple interfaces separated by comma. (\"eth0,eth1\")",
+          DEFAULT_PROP_MULTICAST_IFACE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_template));
 
@@ -446,6 +472,11 @@ gst_rtp_sink_start (GstRtpSink * self)
   if (g_inet_address_get_is_multicast (iaddr)) {
     g_object_set (self->rtcp_src, "address", remote_addr, "port",
         gst_uri_get_port (self->uri) + 1, NULL);
+
+    /* set multicast-iface on the udpsrc and udpsink elements */
+    g_object_set (self->rtcp_src, "multicast-iface", self->multi_iface, NULL);
+    g_object_set (self->rtcp_sink, "multicast-iface", self->multi_iface, NULL);
+    g_object_set (self->rtp_sink, "multicast-iface", self->multi_iface, NULL);
   } else {
     const gchar *any_addr;
 
@@ -537,6 +568,7 @@ gst_rtp_sink_init (GstRtpSink * self)
   self->uri = gst_uri_from_string (DEFAULT_PROP_URI);
   self->ttl = DEFAULT_PROP_TTL;
   self->ttl_mc = DEFAULT_PROP_TTL_MC;
+  self->multi_iface = g_strdup (DEFAULT_PROP_MULTICAST_IFACE);
 
   g_mutex_init (&self->lock);
 

@@ -50,6 +50,7 @@ struct _GstRtpSrc
   gint ttl;
   gint ttl_mc;
   gchar *encoding_name;
+  gchar *multi_iface;
 
   /* Internal elements */
   GstElement *rtpbin;

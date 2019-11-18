@@ -49,6 +49,7 @@ struct _GstRtpSink
   GstUri *uri;
   gint ttl;
   gint ttl_mc;
+  gchar *multi_iface;
 
   /* Internal elements */
   GstElement *rtpbin;
