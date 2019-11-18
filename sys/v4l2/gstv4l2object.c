@@ -3251,6 +3251,7 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
   enum v4l2_ycbcr_encoding matrix = 0;
   enum v4l2_xfer_func transfer = 0;
   GstStructure *s;
+  gboolean disable_colorimetry = FALSE;
 
   g_return_val_if_fail (!v4l2object->skip_try_fmt_probes ||
       gst_caps_is_writable (caps), FALSE);
@@ -3583,17 +3584,24 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
       goto invalid_field;
   }
 
-  gst_v4l2_object_get_colorspace (&format, &info.colorimetry);
-  if (gst_structure_has_field (s, "colorimetry")) {
-    if (!gst_v4l2_video_colorimetry_matches (&info.colorimetry,
-            gst_structure_get_string (s, "colorimetry")))
-      goto invalid_colorimetry;
+  if (gst_v4l2_object_get_colorspace (&format, &info.colorimetry)) {
+    if (gst_structure_has_field (s, "colorimetry")) {
+      if (!gst_v4l2_video_colorimetry_matches (&info.colorimetry,
+              gst_structure_get_string (s, "colorimetry")))
+        goto invalid_colorimetry;
+    }
+  } else {
+    /* The driver (or libv4l2) is miss-behaving, just ignore colorimetry from
+     * the TRY_FMT */
+    disable_colorimetry = TRUE;
+    if (gst_structure_has_field (s, "colorimetry"))
+      gst_structure_remove_field (s, "colorimetry");
   }
 
   /* In case we have skipped the try_fmt probes, we'll need to set the
    * colorimetry and interlace-mode back into the caps. */
   if (v4l2object->skip_try_fmt_probes) {
-    if (!gst_structure_has_field (s, "colorimetry")) {
+    if (!disable_colorimetry && !gst_structure_has_field (s, "colorimetry")) {
       gchar *str = gst_video_colorimetry_to_string (&info.colorimetry);
       gst_structure_set (s, "colorimetry", G_TYPE_STRING, str, NULL);
       g_free (str);
