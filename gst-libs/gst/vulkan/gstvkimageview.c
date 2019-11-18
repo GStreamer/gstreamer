@@ -49,6 +49,24 @@ init_debug (void)
   }
 }
 
+extern void
+gst_vulkan_image_memory_release_view (GstVulkanImageMemory * image,
+    GstVulkanImageView * view);
+
+static gboolean
+gst_vulkan_image_view_dispose (GstVulkanImageView * view)
+{
+  GstVulkanImageMemory *image;
+
+  if ((image = view->image) == NULL)
+    return TRUE;
+
+  gst_vulkan_image_view_ref (view);
+  gst_vulkan_image_memory_release_view (image, view);
+
+  return FALSE;
+}
+
 static void
 gst_vulkan_image_view_free (GstVulkanImageView * view)
 {
@@ -57,8 +75,9 @@ gst_vulkan_image_view_free (GstVulkanImageView * view)
   if (view->view)
     vkDestroyImageView (view->device->device, view->view, NULL);
 
-  if (view->image)
+  if (view->image) {
     gst_memory_unref (GST_MEMORY_CAST (view->image));
+  }
   view->image = NULL;
   gst_clear_object (&view->device);
 
@@ -90,7 +109,8 @@ gst_vulkan_image_view_new (GstVulkanImageMemory * image,
   view = g_new0 (GstVulkanImageView, 1);
 
   gst_mini_object_init ((GstMiniObject *) view, 0,
-      gst_vulkan_image_view_get_type (), NULL, NULL,
+      gst_vulkan_image_view_get_type (), NULL,
+      (GstMiniObjectDisposeFunction) gst_vulkan_image_view_dispose,
       (GstMiniObjectFreeFunction) gst_vulkan_image_view_free);
 
   err =
@@ -104,6 +124,9 @@ gst_vulkan_image_view_new (GstVulkanImageMemory * image,
   view->create_info = *create_info;
   /* we cannot keep this as it may point to stack allocated memory */
   view->create_info.pNext = NULL;
+
+  GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_VIEW, "new image view for image: %p",
+      image);
 
   return view;
 

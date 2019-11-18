@@ -73,6 +73,9 @@ struct _GstVulkanImageMemory
   gpointer user_data;
 
   GPtrArray *views;
+  GPtrArray *outstanding_views;
+
+  gpointer _padding[GST_PADDING];
 };
 
 /**
