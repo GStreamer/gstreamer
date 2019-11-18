@@ -174,6 +174,18 @@ gst_srt_object_set_common_params (SRTSOCKET sock, GstSRTObject * srtobject,
     }
   }
 
+  if (gst_structure_has_field (srtobject->parameters, "streamid")) {
+    const gchar *streamid;
+
+    streamid = gst_structure_get_string (srtobject->parameters, "streamid");
+    if (streamid != NULL && streamid[0] != '\0') {
+      if (srt_setsockopt (sock, 0, SRTO_STREAMID, streamid, strlen (streamid))) {
+        g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_SETTINGS,
+            "failed to set stream ID (reason: %s)", srt_getlasterror_str ());
+      }
+    }
+  }
+
   return TRUE;
 }
 
@@ -587,6 +599,8 @@ gst_srt_object_set_uri (GstSRTObject * srtobject, const gchar * uri,
       } else if (!g_strcmp0 ("pbkeylen", key)) {
         gst_srt_object_set_enum_value (srtobject->parameters,
             GST_TYPE_SRT_KEY_LENGTH, key, value);
+      } else if (!g_strcmp0 ("streamid", key)) {
+        gst_srt_object_set_string_value (srtobject->parameters, key, value);
       }
     }
 
