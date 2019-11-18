@@ -194,8 +194,8 @@ typedef struct _GstBufferPool GstBufferPool;
  *                                 and this buffer is a good point to resynchronize.
  * @GST_BUFFER_FLAG_CORRUPTED:     the buffer data is corrupted.
  * @GST_BUFFER_FLAG_MARKER:        the buffer contains a media specific marker. for
- *                                 video this is typically the end of a frame boundary, for audio
- *                                 this is usually the start of a talkspurt.
+ *                                 video this is the end of a frame boundary, for audio
+ *                                 this is the start of a talkspurt.
  * @GST_BUFFER_FLAG_HEADER:        the buffer contains header information that is
  *                                 needed to decode the following data.
  * @GST_BUFFER_FLAG_GAP:           the buffer has been created to fill a gap in the
@@ -208,8 +208,8 @@ typedef struct _GstBufferPool GstBufferPool;
  * @GST_BUFFER_FLAG_TAG_MEMORY:    this flag is set when memory of the buffer
  *                                 is added/removed
  * @GST_BUFFER_FLAG_SYNC_AFTER:    Elements which write to disk or permanent
- * 				 storage should ensure the data is synced after
- * 				 writing the contents of this buffer. (Since: 1.6)
+ *                                 storage should ensure the data is synced after
+ *                                 writing the contents of this buffer. (Since: 1.6)
  * @GST_BUFFER_FLAG_NON_DROPPABLE: This buffer is important and should not be dropped.
  *                                 This can be used to mark important buffers, e.g. to flag
  *                                 RTP packets carrying keyframes or codec setup data for RTP
