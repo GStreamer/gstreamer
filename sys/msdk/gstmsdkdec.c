@@ -1021,8 +1021,15 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
         || (status == MFX_WRN_VIDEO_PARAM_CHANGED)) {
       thiz->next_task = (thiz->next_task + 1) % thiz->tasks->len;
 
-      if (surface->surface->Data.Locked > 0 || !thiz->use_video_memory)
+      if (surface->surface->Data.Locked > 0)
         surface = NULL;
+      else if (!thiz->use_video_memory) {
+        /* The for loop will continue because DataLength is greater than 0 so
+         * free the surface right away if not in use. */
+        if (bitstream.DataLength > 0 && task->surface != surface->surface)
+          free_surface (thiz, surface);
+        surface = NULL;
+      }
 
       if (bitstream.DataLength == 0) {
         flow = GST_FLOW_OK;
