@@ -1285,6 +1285,7 @@ reacquire:
 
     gst_vulkan_command_buffer_unlock (cmd_buf);
     cmd_buf = NULL;
+    gst_vulkan_fence_unref (fence);
     fence = NULL;
   }
 

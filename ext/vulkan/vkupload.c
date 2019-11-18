@@ -998,6 +998,7 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     gst_vulkan_trash_list_add (raw->trash_list,
         gst_vulkan_trash_new_mini_object_unref (fence,
             GST_MINI_OBJECT_CAST (cmd_buf)));
+    gst_vulkan_fence_unref (fence);
   }
 
   gst_vulkan_trash_list_gc (raw->trash_list);
