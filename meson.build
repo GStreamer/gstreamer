@@ -24,6 +24,9 @@ pygobject_dep = dependency('pygobject-3.0', fallback: ['pygobject', 'pygobject_d
 
 pymod = import('python')
 python = pymod.find_installation(get_option('python'))
+if python.language_version().version_compare('<3.0')
+  error('Python2 is not supported anymore, please port your code to python3 (@0@ specified)'.format(python.language_version()))
+endif
 python_dep = python.dependency(required : true)
 
 python_abi_flags = python.get_variable('ABIFLAGS', '')

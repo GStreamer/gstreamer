@@ -32,7 +32,6 @@
 
 #include <locale.h>
 
-#if PY_MAJOR_VERSION >= 3
 #define PYGLIB_MODULE_START(symbol, modname)	        \
     static struct PyModuleDef _##symbol##module = {     \
     PyModuleDef_HEAD_INIT,                              \
@@ -51,15 +50,6 @@ PyMODINIT_FUNC PyInit_##symbol(void)                    \
     PyObject *module;                                   \
     module = PyModule_Create(&_##symbol##module);
 #define PYGLIB_MODULE_END return module; }
-#else
-#define PYGLIB_MODULE_START(symbol, modname)            \
-DL_EXPORT(void) init##symbol(void);         \
-DL_EXPORT(void) init##symbol(void)          \
-{                                                       \
-    PyObject *module;                                   \
-    module = Py_InitModule(modname, symbol##_functions);
-#define PYGLIB_MODULE_END }
-#endif
 
 GST_DEBUG_CATEGORY_STATIC (python_debug);
 GST_DEBUG_CATEGORY_STATIC (pygst_debug);
@@ -81,7 +71,7 @@ gi_gst_get_type (gchar * type_name)
   dict = PyModule_GetDict (module);
   Py_DECREF (module);
 
-  /* For some reson we need this intermediary step */
+  /* For some reason we need this intermediary step */
   module = PyMapping_GetItemString (dict, "_overrides_module");
   if (module == NULL) {
     PyErr_SetString (PyExc_KeyError,
@@ -654,7 +644,6 @@ pygst_debug_log (PyObject * pyobject, PyObject * string, GstDebugLevel level,
   }
 
   frame = PyEval_GetFrame ();
-#if PY_MAJOR_VERSION >= 3
   {
     PyObject *utf8;
     const gchar *utf8_str;
@@ -671,11 +660,6 @@ pygst_debug_log (PyObject * pyobject, PyObject * string, GstDebugLevel level,
     filename = g_strdup (utf8_str);
     Py_DECREF (utf8);
   }
-#else
-  function = g_strdup (PyString_AsString (frame->f_code->co_name));
-  filename =
-      g_path_get_basename (PyString_AsString (frame->f_code->co_filename));
-#endif
   lineno = PyCode_Addr2Line (frame->f_code, frame->f_lasti);
   /* gst_debug_log : category, level, file, function, line, object, format, va_list */
   if (isgstobject)

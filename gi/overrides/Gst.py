@@ -34,14 +34,6 @@ from ..module import get_introspection_module
 from gi.repository import GLib
 
 
-if sys.version_info >= (3, 0):
-    _basestring = str
-    _callable = lambda c: hasattr(c, '__call__')
-    long = int
-else:
-    _basestring = basestring
-    _callable = callable
-
 Gst = get_introspection_module('Gst')
 
 __all__ = []
@@ -52,7 +44,7 @@ if Gst._version == '0.10':
 was not designed for use with introspection some of the \
 interfaces and API will fail.  As such this is not supported \
 by the GStreamer development team and we encourage you to \
-port your app to Gst 1 or greater. gst-python is the recomended \
+port your app to Gst 1 or greater. gst-python is the recommended \
 python module to use with Gst 0.10"
 
     warnings.warn(warn_msg, RuntimeWarning)
@@ -481,10 +473,10 @@ class Int64Range(Gst.Int64Range):
 
 class Bitmask(Gst.Bitmask):
     def __init__(self, v):
-        if not isinstance(v, long) and not isinstance(v, int):
-            raise TypeError("%s is not an int or long." % (type(v)))
+        if not isinstance(v, int):
+            raise TypeError("%s is not an int." % (type(v)))
 
-        self.v = long(v)
+        self.v = int(v)
 
     def __str__(self):
         return hex(self.v)
