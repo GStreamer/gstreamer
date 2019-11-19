@@ -2439,7 +2439,7 @@ gst_matroska_mux_request_new_pad (GstElement * element,
   gst_matroskamux_pad_init (newpad);
   collect_pad = (GstMatroskaPad *)
       gst_collect_pads_add_pad (mux->collect, GST_PAD (newpad),
-      sizeof (GstMatroskamuxPad),
+      sizeof (GstMatroskaPad),
       (GstCollectDataDestroyNotify) gst_matroska_pad_free, locked);
 
   collect_pad->mux = mux;
