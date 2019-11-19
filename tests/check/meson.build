@@ -1,5 +1,6 @@
 tests = [
   [ 'elements/vaapipostproc' ],
+  [ 'elements/vaapioverlay' ],
 ]
 
 test_deps = [gst_dep, gstbase_dep, gstvideo_dep, gstcheck_dep]
