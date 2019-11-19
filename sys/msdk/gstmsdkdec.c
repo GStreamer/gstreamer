@@ -1569,6 +1569,12 @@ gst_msdkdec_finalize (GObject * object)
 
   g_array_unref (thiz->tasks);
   g_object_unref (thiz->adapter);
+
+  /* NULL is the empty list. */
+  if (G_UNLIKELY (thiz->decoded_msdk_surfaces != NULL)) {
+    GST_ERROR_OBJECT (thiz, "leaking %u surfaces",
+        g_list_length (thiz->decoded_msdk_surfaces));
+  }
 }
 
 static gboolean
@@ -1658,4 +1664,8 @@ gst_msdkdec_init (GstMsdkDec * thiz)
   thiz->force_reset_on_res_change = TRUE;
   thiz->postpone_free_surface = FALSE;
   thiz->adapter = gst_adapter_new ();
+  thiz->input_state = NULL;
+  thiz->pool = NULL;
+  thiz->context = NULL;
+  thiz->decoded_msdk_surfaces = NULL;
 }
