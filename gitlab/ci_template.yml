@@ -190,6 +190,7 @@ build clang fedora x86_64:
     GST_DEBUG_NO_COLOR: "true"
     CI_ARTIFACTS_URL: "${CI_PROJECT_URL}/-/jobs/${CI_JOB_ID}/artifacts/raw/validate-logs/"
     GST_VALIDATE_LAUNCHER_FORCE_COLORS: "true"
+    TIMEOUT_FACTOR: "2"
   script:
     - cd gst-build/
     - echo "-> Running ${TEST_SUITE}"
@@ -201,6 +202,7 @@ build clang fedora x86_64:
       --shuffle
       --no-display
       --meson-no-rebuild
+      --timeout-factor "${TIMEOUT_FACTOR}"
       --fail-on-testlist-change
       -l "${CI_PROJECT_DIR}/validate-logs/"
       --xunit-file "${CI_PROJECT_DIR}/validate-logs/xunit.xml"
