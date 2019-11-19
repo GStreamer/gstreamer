@@ -1369,7 +1369,7 @@ gst_timecodestamper_request_new_pad (GstElement * element,
   }
 
   timecodestamper->ltcpad = gst_pad_new_from_static_template
-      (&gst_timecodestamper_ltc_template, "ltc");
+      (&gst_timecodestamper_ltc_template, "ltc_sink");
 
   gst_pad_set_chain_function (timecodestamper->ltcpad,
       GST_DEBUG_FUNCPTR (gst_timecodestamper_ltcpad_chain));
