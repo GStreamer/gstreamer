@@ -12,7 +12,7 @@ curl_sources = [
   'gstcurlqueue.c',
 ]
 
-curl_dep = dependency('libcurl', version : '>= 7.35.0', required : get_option('curl'))
+curl_dep = dependency('libcurl', version : '>= 7.55.0', required : get_option('curl'))
 
 if curl_dep.found()
   ssh_dep = dependency('libssh2', version : '>= 1.4.3', required : get_option('curl-ssh2'))
