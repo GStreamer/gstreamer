@@ -199,6 +199,9 @@ _parse_encoding_profile (GMarkupParseContext * context,
   ges_base_xml_formatter_add_encoding_profile (GES_BASE_XML_FORMATTER (self),
       type, NULL, name, description, capsformat, preset, preset_properties,
       preset_name, 0, 0, NULL, 0, FALSE, NULL, TRUE, error);
+
+  if (preset_properties)
+    gst_structure_free (preset_properties);
 }
 
 static inline void
@@ -612,6 +615,8 @@ _parse_clip (GMarkupParseContext * context,
       track_types, props, children_props, metadatas, error);
   if (props)
     gst_structure_free (props);
+  if (children_props)
+    gst_structure_free (children_props);
 
   return;
 
@@ -627,6 +632,8 @@ wrong_children_properties:
       G_MARKUP_ERROR_INVALID_CONTENT,
       "element '%s', Clip %s children properties '%s', could no be deserialized",
       element_name, asset_id, children_properties);
+  if (props)
+    gst_structure_free (props);
   return;
 
 convertion_failed:
