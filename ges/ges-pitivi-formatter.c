@@ -229,6 +229,8 @@ parse_metadatas (GESFormatter * self)
           (gchar *) xmlGetProp (node, cur_attr->name));
     }
   }
+
+  xmlXPathFreeObject (xpathObj);
 }
 
 static void
