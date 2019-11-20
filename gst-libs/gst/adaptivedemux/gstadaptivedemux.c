@@ -4476,10 +4476,18 @@ GDateTime *
 gst_adaptive_demux_get_client_now_utc (GstAdaptiveDemux * demux)
 {
   GstClockTime rtc_now;
+  GDateTime *unix_datetime;
+  GDateTime *result_datetime;
+  gint64 utc_now_in_us;
 
   rtc_now = gst_clock_get_time (demux->realtime_clock);
-  return g_date_time_new_from_unix_utc (demux->clock_offset +
-      GST_TIME_AS_USECONDS (rtc_now));
+  utc_now_in_us = demux->clock_offset + GST_TIME_AS_USECONDS (rtc_now);
+  unix_datetime =
+      g_date_time_new_from_unix_utc (utc_now_in_us / G_TIME_SPAN_SECOND);
+  result_datetime =
+      g_date_time_add (unix_datetime, utc_now_in_us % G_TIME_SPAN_SECOND);
+  g_date_time_unref (unix_datetime);
+  return result_datetime;
 }
 
 /**
