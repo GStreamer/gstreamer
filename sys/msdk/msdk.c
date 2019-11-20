@@ -214,7 +214,7 @@ failed:
 gboolean
 msdk_is_available (void)
 {
-  mfxSession session = msdk_open_session (MFX_IMPL_AUTO_ANY);
+  mfxSession session = msdk_open_session (MFX_IMPL_HARDWARE_ANY);
   if (!session) {
     return FALSE;
   }
