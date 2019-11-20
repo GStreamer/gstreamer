@@ -135,6 +135,7 @@ validate_flow_format_caps (const GstCaps * caps,
         (gpointer) keys_to_print);
     structure_str = gst_structure_to_string (structure);
     g_array_append_val (structures_strv, structure_str);
+    gst_structure_free (structure);
   }
 
   caps_str = g_strjoinv (" ", (gchar **) structures_strv->data);

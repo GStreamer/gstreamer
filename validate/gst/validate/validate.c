@@ -137,7 +137,7 @@ _set_vars_func (GQuark field_id, const GValue * value, GstStructure * vars)
 static GList *
 create_config (const gchar * config, const gchar * suffix)
 {
-  GstStructure *local_vars = gst_structure_new_empty ("vars");
+  GstStructure *local_vars;
   GList *structures = NULL, *tmp, *result = NULL;
   gchar *config_file = NULL;
 
@@ -146,6 +146,7 @@ create_config (const gchar * config, const gchar * suffix)
     return NULL;
   }
 
+  local_vars = gst_structure_new_empty ("vars");
   structures =
       gst_validate_utils_structs_parse_from_filename (config, &config_file);
   if (!structures) {

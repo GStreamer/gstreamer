@@ -12,21 +12,23 @@ GST_START_TEST (test_expression_parser)
       g_object_new (GST_TYPE_VALIDATE_SCENARIO, "validate-runner",
       runner, NULL);
   GstValidateAction *action;
+  GstStructure *st;
 
   fail_unless (seek_type);
 
-  action = gst_validate_action_new (scenario, set_vars,
-      gst_structure_from_string
+  st = gst_structure_from_string
       ("set-vars, a=(string)\"50\", b=(string)\"70\", default_flags=flush",
-          NULL), FALSE);
+      NULL);
+  action = gst_validate_action_new (scenario, set_vars, st, FALSE);
   fail_unless_equals_int (gst_validate_execute_action (set_vars, action),
       GST_VALIDATE_EXECUTE_ACTION_OK);
+  gst_structure_free (st);
   gst_validate_action_unref (action);
 
-  action = gst_validate_action_new (scenario, seek_type,
-      gst_structure_from_string
-      ("seek, start=\"min($(a), $(b))\", flags=\"$(default_flags)\"", NULL),
-      FALSE);
+  st = gst_structure_from_string
+      ("seek, start=\"min($(a), $(b))\", flags=\"$(default_flags)\"", NULL);
+  action = gst_validate_action_new (scenario, seek_type, st, FALSE);
+  gst_structure_free (st);
   fail_unless (action);
 
   fail_unless (seek_type->prepare (action));
