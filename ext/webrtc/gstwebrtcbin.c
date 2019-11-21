@@ -3390,6 +3390,8 @@ _set_rtx_ptmap_from_stream (GstWebRTCBin * webrtc, TransportStream * stream)
       g_object_set (stream->rtxreceive, "payload-type-map", pt_map, NULL);
     if (stream->rtxsend)
       g_object_set (stream->rtxsend, "payload-type-map", pt_map, NULL);
+
+    gst_structure_free (pt_map);
   }
 }
 
