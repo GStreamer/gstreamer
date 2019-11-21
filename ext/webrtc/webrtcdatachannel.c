@@ -432,6 +432,8 @@ _parse_control_packet (GstWebRTCDataChannel * channel, guint8 * data,
 {
   GstByteReader r;
   guint8 message_type;
+  gchar *label = NULL;
+  gchar *proto = NULL;
 
   if (!data)
     g_return_val_if_reached (GST_FLOW_ERROR);
@@ -452,7 +454,6 @@ _parse_control_packet (GstWebRTCDataChannel * channel, guint8 * data,
     guint32 reliability_param;
     guint16 priority, label_len, proto_len;
     const guint8 *src;
-    gchar *label, *proto;
     GstBuffer *buffer;
     GstFlowReturn ret;
 
@@ -536,6 +537,8 @@ _parse_control_packet (GstWebRTCDataChannel * channel, guint8 * data,
 
 parse_error:
   {
+    g_free (label);
+    g_free (proto);
     g_set_error (error, GST_WEBRTC_BIN_ERROR,
         GST_WEBRTC_BIN_ERROR_DATA_CHANNEL_FAILURE, "Failed to parse packet");
     g_return_val_if_reached (GST_FLOW_ERROR);
