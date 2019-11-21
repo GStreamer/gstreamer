@@ -20,10 +20,14 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
 #include "gstwinscreencap.h"
 #include "gstgdiscreencapsrc.h"
 #include "gstdx9screencapsrc.h"
+
+#ifdef HAVE_DXGI_CAP
+#include <versionhelpers.h>
+#include "gstdxgiscreencapsrc.h"
+#endif
 
 static BOOL CALLBACK
 _diplay_monitor_enum (HMONITOR hMon, HDC hdc, LPRECT rect, LPARAM param)
@@ -66,6 +70,15 @@ plugin_init (GstPlugin * plugin)
           GST_RANK_NONE, GST_TYPE_DX9SCREENCAPSRC)) {
     return FALSE;
   }
+#ifdef HAVE_DXGI_CAP
+  if (IsWindows8OrGreater ()) {
+    /* dxgiscreencapsrc is needs Windows8 or later. */
+    if (!gst_element_register (plugin, "dxgiscreencapsrc",
+            GST_RANK_NONE, GST_TYPE_DXGI_SCREEN_CAP_SRC)) {
+      return FALSE;
+    }
+  }
+#endif
 
   return TRUE;
 }
