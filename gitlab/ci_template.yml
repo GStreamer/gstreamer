@@ -152,6 +152,7 @@ build nodebug fedora x86_64:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
       - $CI_PROJECT_NAME == "gst-docs"
+      - $CI_PROJECT_NAME == "gst-integration-testsuites"
 
 build static fedora x86_64:
   extends: 'build fedora x86_64'
@@ -161,6 +162,7 @@ build static fedora x86_64:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
       - $CI_PROJECT_NAME == "gst-docs"
+      - $CI_PROJECT_NAME == "gst-integration-testsuites"
 
 build static nodebug fedora x86_64:
   extends: 'build nodebug fedora x86_64'
@@ -170,6 +172,7 @@ build static nodebug fedora x86_64:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
       - $CI_PROJECT_NAME == "gst-docs"
+      - $CI_PROJECT_NAME == "gst-integration-testsuites"
 
 build clang fedora x86_64:
   extends: 'build fedora x86_64'
@@ -180,6 +183,7 @@ build clang fedora x86_64:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
       - $CI_PROJECT_NAME == "gst-docs"
+      - $CI_PROJECT_NAME == "gst-integration-testsuites"
 
 .test:
   stage: 'test'
@@ -266,6 +270,7 @@ integration testsuites fedora:
   except:
     variables:
       - $CI_PROJECT_NAMESPACE == 'gstreamer'
+      - $CI_PROJECT_NAME == "gst-integration-testsuites"
 
 valgrind core:
   extends: '.valgrind fedora x86_64'
@@ -374,6 +379,7 @@ valgrind ges:
     variables:
       - $CI_PROJECT_NAME == "gst-build"
       - $CI_PROJECT_NAME == "gst-docs"
+      - $CI_PROJECT_NAME == "gst-integration-testsuites"
   cache:
     key: "${CI_JOB_NAME}"
     paths:
@@ -436,6 +442,7 @@ valgrind ges:
       - $CI_PROJECT_NAME == "gst-omx"
       - $CI_PROJECT_NAME == "gstreamer-vaapi"
       - $CI_PROJECT_NAME == "gst-docs"
+      - $CI_PROJECT_NAME == "gst-integration-testsuites"
 
 build vs2017 amd64:
   extends: '.build windows'
@@ -542,6 +549,7 @@ build cerbero fedora x86_64:
       - $CI_PROJECT_NAME == "gst-omx"
       - $CI_PROJECT_NAME == "gstreamer-vaapi"
       - $CI_PROJECT_NAME == "gst-docs"
+      - $CI_PROJECT_NAME == "gst-integration-testsuites"
 
 #
 # Cerbero Android Universal build
@@ -577,6 +585,7 @@ build cerbero cross-android universal:
       - $CI_PROJECT_NAME == "gst-omx"
       - $CI_PROJECT_NAME == "gstreamer-vaapi"
       - $CI_PROJECT_NAME == "gst-docs"
+      - $CI_PROJECT_NAME == "gst-integration-testsuites"
 
 #
 # Cerbero Cross Windows builds
@@ -612,6 +621,7 @@ build cerbero cross win32:
       - $CI_PROJECT_NAME == "gst-omx"
       - $CI_PROJECT_NAME == "gstreamer-vaapi"
       - $CI_PROJECT_NAME == "gst-docs"
+      - $CI_PROJECT_NAME == "gst-integration-testsuites"
 
 cerbero deps cross-windows x86_64:
   extends: '.cerbero deps'
@@ -644,6 +654,7 @@ build cerbero cross win64:
       - $CI_PROJECT_NAME == "gst-omx"
       - $CI_PROJECT_NAME == "gstreamer-vaapi"
       - $CI_PROJECT_NAME == "gst-docs"
+      - $CI_PROJECT_NAME == "gst-integration-testsuites"
 
 #
 # Build an Android App using the android binaries
@@ -766,7 +777,7 @@ build cerbero macos x86_64:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
       - $CI_PROJECT_NAME == "gst-build"
-      - $CI_PROJECT_NAME == "gst-integration-testsuite"
+      - $CI_PROJECT_NAME == "gst-integration-testsuites"
       - $CI_PROJECT_NAME == "gst-omx"
       - $CI_PROJECT_NAME == "gstreamer-vaapi"
       - $CI_PROJECT_NAME == "gst-docs"
@@ -822,7 +833,7 @@ build cerbero cross-ios universal:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
       - $CI_PROJECT_NAME == "gst-build"
-      - $CI_PROJECT_NAME == "gst-integration-testsuite"
+      - $CI_PROJECT_NAME == "gst-integration-testsuites"
       - $CI_PROJECT_NAME == "gst-omx"
       - $CI_PROJECT_NAME == "gstreamer-vaapi"
       - $CI_PROJECT_NAME == "gst-docs"
@@ -852,7 +863,7 @@ documentation:
   except:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
-      - $CI_PROJECT_NAME == "gst-integration-testsuite"
+      - $CI_PROJECT_NAME == "gst-integration-testsuites"
       - $CI_PROJECT_NAME == "gst-python"
       - $CI_PROJECT_NAME == "gst-sharp"
       - $CI_PROJECT_NAME == "gst-build"
