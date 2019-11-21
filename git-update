@@ -117,6 +117,23 @@ def update_repo(repo_name, repo_dir, revision, no_interaction, fetch_args=[], re
     return True
 
 
+# Update gst-plugins-rs dependencies
+def update_cargo(build_dir):
+    cargo_toml = os.path.join('subprojects', 'gst-plugins-rs', 'Cargo.toml')
+    if not os.path.exists(cargo_toml):
+        return True
+
+    cmd = ['cargo', 'update', '--manifest-path', cargo_toml]
+
+    try:
+        ret = subprocess.run(cmd)
+    except FileNotFoundError:
+        # silenty ignore if cargo isn't installed
+        return False
+
+    return ret == 0
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="git-update")
 
@@ -156,6 +173,8 @@ if __name__ == "__main__":
 
     if not update_subprojects(repos_commits, options.no_interaction):
         exit(1)
+
+    update_cargo(options.builddir)
 
     if options.builddir:
         ninja = accept_command(["ninja", "ninja-build"])
