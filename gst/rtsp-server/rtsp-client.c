@@ -1877,6 +1877,10 @@ setup_play_mode (GstRTSPClient * client, GstRTSPContext * ctx,
     } else {
       flags = GST_SEEK_FLAG_KEY_UNIT;
     }
+
+    if (seek_style)
+      gst_rtsp_message_add_header (ctx->response, GST_RTSP_HDR_SEEK_STYLE,
+          seek_style);
   } else {
     flags = GST_SEEK_FLAG_ACCURATE;
   }
@@ -1954,7 +1958,6 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
   GstRTSPRangeUnit unit = GST_RTSP_RANGE_NPT;
   gchar *path, *rtpinfo = NULL;
   gint matched;
-  gchar *seek_style = NULL;
   GstRTSPStatusCode sig_result;
   GPtrArray *transports;
   gboolean scale_present;
@@ -2032,9 +2035,6 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
   if (rtpinfo)
     gst_rtsp_message_take_header (ctx->response, GST_RTSP_HDR_RTP_INFO,
         rtpinfo);
-  if (seek_style)
-    gst_rtsp_message_add_header (ctx->response, GST_RTSP_HDR_SEEK_STYLE,
-        seek_style);
 
   /* add the range */
   str = gst_rtsp_media_get_range_string (media, TRUE, unit);
