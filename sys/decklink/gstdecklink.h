@@ -41,11 +41,11 @@
 #define COMSTR_T BSTR
 /* MinGW does not have comsuppw.lib, so no _com_util::ConvertBSTRToString */
 # ifdef __MINGW32__
-#  define CONVERT_COM_STRING(s) BSTR _s = (BSTR)s; s = (char*) malloc(100); wcstombs(s, _s, 100); ::SysFreeString(_s);
+#  define CONVERT_COM_STRING(s) G_STMT_START { BSTR _s = (BSTR)s; s = (char*) malloc(100); wcstombs(s, _s, 100); ::SysFreeString(_s); } G_STMT_END
 #  define FREE_COM_STRING(s) free(s);
 # else
-#  define CONVERT_COM_STRING(s) BSTR _s = (BSTR)s; s = _com_util::ConvertBSTRToString(_s); ::SysFreeString(_s);
-#  define FREE_COM_STRING(s) delete[] s;
+#  define CONVERT_COM_STRING(s) G_STMT_START { BSTR _s = (BSTR)s; s = _com_util::ConvertBSTRToString(_s); ::SysFreeString(_s); } G_STMT_END
+#  define FREE_COM_STRING(s) G_STMT_START { delete[] s; } G_STMT_END
 # endif /* __MINGW32__ */
 #else
 #define COMSTR_T const char*
@@ -287,5 +287,28 @@ const GstDecklinkMode * gst_decklink_find_mode_for_caps (GstCaps * caps);
 const GstDecklinkMode * gst_decklink_find_mode_and_format_for_caps (GstCaps * caps, BMDPixelFormat * format);
 GstCaps * gst_decklink_mode_get_caps_all_formats (GstDecklinkModeEnum e, gboolean input);
 GstCaps * gst_decklink_pixel_format_get_caps (BMDPixelFormat f, gboolean input);
+
+#define GST_TYPE_DECKLINK_DEVICE gst_decklink_device_get_type()
+#define GST_DECKLINK_DEVICE(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DECKLINK_DEVICE,GstDecklinkDevice))
+
+typedef struct _GstDecklinkDevice GstDecklinkDevice;
+typedef struct _GstDecklinkDeviceClass GstDecklinkDeviceClass;
+
+struct _GstDecklinkDeviceClass
+{
+  GstDeviceClass parent_class;
+};
+
+struct _GstDecklinkDevice
+{
+  GstDevice parent;
+  gboolean video;
+  gboolean capture;
+  guint device_number;
+};
+
+GType gst_decklink_device_get_type (void);
+
+GList * gst_decklink_get_devices (void);
 
 #endif

@@ -4,6 +4,7 @@ decklink_sources = [
   'gstdecklinkvideosink.cpp',
   'gstdecklinkaudiosrc.cpp',
   'gstdecklinkvideosrc.cpp',
+  'gstdecklinkdeviceprovider.cpp',
 ]
 
 if get_option('decklink').disabled()

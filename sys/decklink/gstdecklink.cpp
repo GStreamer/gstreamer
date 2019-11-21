@@ -29,6 +29,7 @@
 #include "gstdecklinkvideosink.h"
 #include "gstdecklinkaudiosrc.h"
 #include "gstdecklinkvideosrc.h"
+#include "gstdecklinkdeviceprovider.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_decklink_debug);
 #define GST_CAT_DEFAULT gst_decklink_debug
@@ -481,7 +482,7 @@ gst_decklink_get_mode_enum_from_bmd (BMDDisplayMode mode)
       displayMode = GST_DECKLINK_MODE_2160p60;
       break;
     default:
-      g_assert_not_reached ();
+      displayMode = (GstDecklinkModeEnum) - 1;
       break;
   }
   return displayMode;
@@ -621,8 +622,7 @@ gst_decklink_caps_get_pixel_format (GstCaps * caps, BMDPixelFormat * format)
 }
 
 static GstStructure *
-gst_decklink_mode_get_structure (GstDecklinkModeEnum e, BMDPixelFormat f,
-    gboolean input)
+gst_decklink_mode_get_generic_structure (GstDecklinkModeEnum e)
 {
   const GstDecklinkMode *mode = &modes[e];
   GstStructure *s = gst_structure_new ("video/x-raw",
@@ -632,6 +632,16 @@ gst_decklink_mode_get_structure (GstDecklinkModeEnum e, BMDPixelFormat f,
       "interlace-mode", G_TYPE_STRING,
       mode->interlaced ? "interleaved" : "progressive",
       "framerate", GST_TYPE_FRACTION, mode->fps_n, mode->fps_d, NULL);
+
+  return s;
+}
+
+static GstStructure *
+gst_decklink_mode_get_structure (GstDecklinkModeEnum e, BMDPixelFormat f,
+    gboolean input)
+{
+  const GstDecklinkMode *mode = &modes[e];
+  GstStructure *s = gst_decklink_mode_get_generic_structure (e);
 
   if (input && mode->interlaced) {
     if (mode->tff)
@@ -801,6 +811,9 @@ struct _Device
 {
   GstDecklinkOutput output;
   GstDecklinkInput input;
+
+  /* Audio/video output, Audio/video input */
+  GstDecklinkDevice *devices[4];
 };
 
 DuplexModeSetOperationResult gst_decklink_configure_duplex_mode (Device *
@@ -1261,6 +1274,76 @@ gst_decklink_com_thread (gpointer data)
 static GOnce devices_once = G_ONCE_INIT;
 static GPtrArray *devices;      /* array of Device */
 
+
+static GstDecklinkDevice *
+gst_decklink_device_new (const gchar * model_name, const gchar * display_name,
+    const gchar * serial_number, gboolean supports_format_detection,
+    GstCaps * video_caps, guint max_channels, gboolean video, gboolean capture,
+    guint device_number)
+{
+  GstDevice *ret;
+  gchar *name;
+  const gchar *device_class;
+  GstCaps *caps = NULL;
+  GstStructure *properties;
+
+  if (capture)
+    device_class = video ? "Video/Source/Hardware" : "Audio/Source/Hardware";
+  else
+    device_class = video ? "Video/Sink/Hardware" : "Audio/Sink/Hardware";
+
+  name =
+      g_strdup_printf ("%s (%s %s)", display_name,
+      video ? "Video" : "Audio", capture ? "Capture" : "Output");
+
+  if (video) {
+    caps = gst_caps_ref (video_caps);
+  } else {
+    static GstStaticCaps audio_caps =
+        GST_STATIC_CAPS
+        ("audio/x-raw, format={S16LE,S32LE}, channels={2, 8, 16}, rate=48000, "
+        "layout=interleaved");
+    GstCaps *max_channel_caps =
+        gst_caps_new_simple ("audio/x-raw", "channels", GST_TYPE_INT_RANGE, 2,
+        max_channels, NULL);
+
+    caps =
+        gst_caps_intersect (gst_static_caps_get (&audio_caps),
+        max_channel_caps);
+    gst_caps_unref (max_channel_caps);
+  }
+  properties = gst_structure_new_empty ("properties");
+
+  gst_structure_set (properties,
+      "device-number", G_TYPE_UINT, device_number,
+      "model-name", G_TYPE_STRING, model_name,
+      "display-name", G_TYPE_STRING, display_name,
+      "max-channels", G_TYPE_UINT, max_channels, NULL);
+
+  if (capture)
+    gst_structure_set (properties, "supports-format-detection", G_TYPE_BOOLEAN,
+        supports_format_detection, NULL);
+
+  if (serial_number)
+    gst_structure_set (properties, "serial-number", G_TYPE_STRING,
+        serial_number, NULL);
+
+  ret = GST_DEVICE (g_object_new (GST_TYPE_DECKLINK_DEVICE,
+          "display-name", name,
+          "device-class", device_class, "caps", caps, "properties", properties,
+          NULL));
+
+  g_free (name);
+  gst_caps_unref (caps);
+  gst_structure_free (properties);
+
+  GST_DECKLINK_DEVICE (ret)->video = video;
+  GST_DECKLINK_DEVICE (ret)->capture = capture;
+  GST_DECKLINK_DEVICE (ret)->device_number = device_number;
+
+  return GST_DECKLINK_DEVICE (ret);
+}
+
 static gpointer
 init_devices (gpointer data)
 {
@@ -1294,6 +1377,15 @@ init_devices (gpointer data)
   ret = iterator->Next (&decklink);
   while (ret == S_OK) {
     Device *dev;
+    gboolean capture = FALSE;
+    gboolean output = FALSE;
+    gchar *model_name = NULL;
+    gchar *display_name = NULL;
+    gchar *serial_number = NULL;
+    gboolean supports_format_detection = 0;
+    gint64 max_channels = 2;
+    GstCaps *video_input_caps = gst_caps_new_empty ();
+    GstCaps *video_output_caps = gst_caps_new_empty ();
 
     dev = g_new0 (Device, 1);
 
@@ -1319,6 +1411,14 @@ init_devices (gpointer data)
         GST_DEBUG ("Input %d supports:", i);
         while ((ret = mode_iter->Next (&mode)) == S_OK) {
           char *name;
+          GstDecklinkModeEnum mode_enum;
+
+          mode_enum =
+              gst_decklink_get_mode_enum_from_bmd (mode->GetDisplayMode ());
+          if (mode_enum != (GstDecklinkModeEnum) - 1)
+            video_input_caps =
+                gst_caps_merge_structure (video_input_caps,
+                gst_decklink_mode_get_generic_structure (mode_enum));
 
           mode->GetName ((COMSTR_T *) & name);
           CONVERT_COM_STRING (name);
@@ -1332,6 +1432,9 @@ init_devices (gpointer data)
         }
         mode_iter->Release ();
       }
+
+      capture = TRUE;
+
       ret = S_OK;
     }
 
@@ -1355,6 +1458,14 @@ init_devices (gpointer data)
         GST_DEBUG ("Output %d supports:", i);
         while ((ret = mode_iter->Next (&mode)) == S_OK) {
           char *name;
+          GstDecklinkModeEnum mode_enum;
+
+          mode_enum =
+              gst_decklink_get_mode_enum_from_bmd (mode->GetDisplayMode ());
+          if (mode_enum != (GstDecklinkModeEnum) - 1)
+            video_output_caps =
+                gst_caps_merge_structure (video_output_caps,
+                gst_decklink_mode_get_generic_structure (mode_enum));
 
           mode->GetName ((COMSTR_T *) & name);
           CONVERT_COM_STRING (name);
@@ -1368,6 +1479,9 @@ init_devices (gpointer data)
         }
         mode_iter->Release ();
       }
+
+      output = TRUE;
+
       ret = S_OK;
     }
 
@@ -1377,8 +1491,6 @@ init_devices (gpointer data)
       GST_WARNING ("selected device does not have config interface: 0x%08lx",
           (unsigned long) ret);
     } else {
-      char *serial_number;
-
       ret =
           dev->input.
           config->GetString (bmdDeckLinkConfigDeviceInformationSerialNumber,
@@ -1388,7 +1500,6 @@ init_devices (gpointer data)
         dev->output.hw_serial_number = g_strdup (serial_number);
         dev->input.hw_serial_number = g_strdup (serial_number);
         GST_DEBUG ("device %d has serial number %s", i, serial_number);
-        FREE_COM_STRING (serial_number);
       }
     }
 
@@ -1398,7 +1509,54 @@ init_devices (gpointer data)
     if (ret != S_OK) {
       GST_WARNING ("selected device does not have attributes interface: "
           "0x%08lx", (unsigned long) ret);
+    } else {
+      bool tmp_bool = false;
+      int64_t tmp_int = 2;
+
+      dev->input.attributes->GetInt (BMDDeckLinkMaximumAudioChannels,
+          &tmp_int);
+      dev->input.attributes->GetFlag (BMDDeckLinkSupportsInputFormatDetection,
+          &tmp_bool);
+      supports_format_detection = tmp_bool;
+      max_channels = tmp_int;
     }
+
+    decklink->GetModelName ((COMSTR_T *) & model_name);
+    if (model_name)
+      CONVERT_COM_STRING (model_name);
+    decklink->GetDisplayName ((COMSTR_T *) & display_name);
+    if (display_name)
+      CONVERT_COM_STRING (display_name);
+
+    if (capture) {
+      dev->devices[0] =
+          gst_decklink_device_new (model_name, display_name, serial_number,
+          supports_format_detection, video_input_caps, max_channels, TRUE, TRUE,
+          i);
+      dev->devices[1] =
+          gst_decklink_device_new (model_name, display_name, serial_number,
+          supports_format_detection, video_input_caps, max_channels, FALSE,
+          TRUE, i);
+    }
+    if (output) {
+      dev->devices[2] =
+          gst_decklink_device_new (model_name, display_name, serial_number,
+          supports_format_detection, video_output_caps, max_channels, TRUE,
+          FALSE, i);
+      dev->devices[3] =
+          gst_decklink_device_new (model_name, display_name, serial_number,
+          supports_format_detection, video_output_caps, max_channels, FALSE,
+          FALSE, i);
+    }
+
+    if (model_name)
+      FREE_COM_STRING (model_name);
+    if (display_name)
+      FREE_COM_STRING (display_name);
+    if (serial_number)
+      FREE_COM_STRING (serial_number);
+    gst_caps_unref (video_input_caps);
+    gst_caps_unref (video_output_caps);
 
     ret = decklink->QueryInterface (IID_IDeckLinkKeyer,
         (void **) &dev->output.keyer);
@@ -1418,6 +1576,35 @@ init_devices (gpointer data)
   iterator->Release ();
 
   return NULL;
+}
+
+GList *
+gst_decklink_get_devices (void)
+{
+  guint i;
+  GList *l = NULL;
+
+  g_once (&devices_once, init_devices, NULL);
+
+  for (i = 0; i < devices->len; i++) {
+    Device *device = (Device *) g_ptr_array_index (devices, i);
+
+    if (device->devices[0])
+      l = g_list_prepend (l, device->devices[0]);
+
+    if (device->devices[1])
+      l = g_list_prepend (l, device->devices[1]);
+
+    if (device->devices[2])
+      l = g_list_prepend (l, device->devices[2]);
+
+    if (device->devices[3])
+      l = g_list_prepend (l, device->devices[3]);
+  }
+
+  l = g_list_reverse (l);
+
+  return l;
 }
 
 GstDecklinkOutput *
@@ -1817,6 +2004,10 @@ plugin_init (GstPlugin * plugin)
       GST_TYPE_DECKLINK_AUDIO_SRC);
   gst_element_register (plugin, "decklinkvideosrc", GST_RANK_NONE,
       GST_TYPE_DECKLINK_VIDEO_SRC);
+
+  gst_device_provider_register (plugin, "decklinkdeviceprovider",
+      GST_RANK_PRIMARY, GST_TYPE_DECKLINK_DEVICE_PROVIDER);
+
   return TRUE;
 }
 
