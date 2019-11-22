@@ -63,6 +63,8 @@ struct _GstRTPBaseDepayloadPrivate
 
   gboolean source_info;
   GstBuffer *input_buffer;
+
+  GstFlowReturn process_flow_ret;
 };
 
 /* Filter signals and args */
@@ -386,7 +388,6 @@ gst_rtp_base_depayload_handle_buffer (GstRTPBaseDepayload * filter,
       GstRTPBuffer * rtp_buffer);
   GstBuffer *(*process_func) (GstRTPBaseDepayload * base, GstBuffer * in);
   GstRTPBaseDepayloadPrivate *priv;
-  GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *out_buf;
   guint32 ssrc;
   guint16 seqnum;
@@ -396,6 +397,7 @@ gst_rtp_base_depayload_handle_buffer (GstRTPBaseDepayload * filter,
   GstRTPBuffer rtp = { NULL };
 
   priv = filter->priv;
+  priv->process_flow_ret = GST_FLOW_OK;
 
   process_func = bclass->process;
   process_rtp_packet_func = bclass->process_rtp_packet;
@@ -511,13 +513,16 @@ gst_rtp_base_depayload_handle_buffer (GstRTPBaseDepayload * filter,
 
   /* let's send it out to processing */
   if (out_buf) {
-    ret = gst_rtp_base_depayload_push (filter, out_buf);
+    if (priv->process_flow_ret == GST_FLOW_OK)
+      priv->process_flow_ret = gst_rtp_base_depayload_push (filter, out_buf);
+    else
+      gst_buffer_unref (out_buf);
   }
 
   gst_buffer_unref (in);
   priv->input_buffer = NULL;
 
-  return ret;
+  return priv->process_flow_ret;
 
   /* ERRORS */
 not_negotiated:
@@ -916,6 +921,9 @@ gst_rtp_base_depayload_push (GstRTPBaseDepayload * filter, GstBuffer * out_buf)
   else
     gst_buffer_unref (out_buf);
 
+  if (res != GST_FLOW_OK)
+    filter->priv->process_flow_ret = res;
+
   return res;
 }
 
@@ -941,6 +949,9 @@ gst_rtp_base_depayload_push_list (GstRTPBaseDepayload * filter,
     res = gst_pad_push_list (filter->srcpad, out_list);
   else
     gst_buffer_list_unref (out_list);
+
+  if (res != GST_FLOW_OK)
+    filter->priv->process_flow_ret = res;
 
   return res;
 }
