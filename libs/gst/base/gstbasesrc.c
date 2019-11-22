@@ -1426,8 +1426,11 @@ gst_base_src_default_prepare_seek_segment (GstBaseSrc * src, GstEvent * event,
   }
 
   /* And finally, configure our output segment in the desired format */
-  gst_segment_do_seek (segment, rate, dest_format, flags, start_type, start,
-      stop_type, stop, &update);
+  if (res) {
+    res =
+        gst_segment_do_seek (segment, rate, dest_format, flags, start_type,
+        start, stop_type, stop, &update);
+  }
 
   if (!res)
     goto no_format;
