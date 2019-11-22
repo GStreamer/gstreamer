@@ -1,9 +1,9 @@
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;
 
-$python_dl_url = 'https://www.python.org/ftp/python/3.7.3/python-3.7.3.exe'
+$python_dl_url = 'https://www.python.org/ftp/python/3.7.4/python-3.7.4.exe'
 $msvc_2017_url = 'https://aka.ms/vs/15/release/vs_buildtools.exe'
-$git_url = 'https://github.com/git-for-windows/git/releases/download/v2.19.1.windows.1/MinGit-2.19.1-64-bit.zip'
-$zip_url = 'https://www.7-zip.org/a/7z1805-x64.exe'
+$git_url = 'https://github.com/git-for-windows/git/releases/download/v2.24.0.windows.2/MinGit-2.24.0.2-64-bit.zip'
+$zip_url = 'https://www.7-zip.org/a/7z1900-x64.exe'
 $msys_url = 'https://ayera.dl.sourceforge.net/project/msys2/Base/x86_64/msys2-base-x86_64-20180531.tar.xz'
 
 Write-Host "Installing VisualStudio"
