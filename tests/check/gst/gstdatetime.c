@@ -131,6 +131,53 @@ GST_START_TEST (test_GstDateTime_new_from_unix_epoch_utc)
 
 GST_END_TEST;
 
+GST_START_TEST (test_GstDateTime_new_from_unix_epoch_local_time_usecs)
+{
+  GstDateTime *dt;
+  struct tm tm;
+  /* 2007-01-01T20:00:00.500000Z */
+  gint64 time = G_GINT64_CONSTANT (1167681600500000);
+  time_t t = (time_t) (time / G_USEC_PER_SEC);
+
+#ifdef HAVE_LOCALTIME_R
+  localtime_r (&t, &tm);
+#else
+  memcpy (&tm, localtime (&t), sizeof (struct tm));
+#endif
+
+  dt = gst_date_time_new_from_unix_epoch_local_time_usecs (time);
+  assert_equals_int (gst_date_time_get_year (dt), 1900 + tm.tm_year);
+  assert_equals_int (gst_date_time_get_month (dt), 1 + tm.tm_mon);
+  assert_equals_int (gst_date_time_get_day (dt), tm.tm_mday);
+  assert_equals_int (gst_date_time_get_hour (dt), tm.tm_hour);
+  assert_equals_int (gst_date_time_get_minute (dt), tm.tm_min);
+  assert_equals_int (gst_date_time_get_second (dt), tm.tm_sec);
+  assert_equals_int (gst_date_time_get_microsecond (dt), 500000);
+  gst_date_time_unref (dt);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_GstDateTime_new_from_unix_epoch_utc_usecs)
+{
+  GstDateTime *dt;
+  /* 2007-01-01T20:00:00.500000Z */
+  gint64 time = G_GINT64_CONSTANT (1167681600500000);
+
+  dt = gst_date_time_new_from_unix_epoch_utc_usecs (time);
+  assert_equals_int (gst_date_time_get_year (dt), 2007);
+  assert_equals_int (gst_date_time_get_month (dt), 1);
+  assert_equals_int (gst_date_time_get_day (dt), 1);
+  assert_equals_int (gst_date_time_get_hour (dt), 20);
+  assert_equals_int (gst_date_time_get_minute (dt), 0);
+  assert_equals_int (gst_date_time_get_second (dt), 0);
+  assert_equals_int (gst_date_time_get_microsecond (dt), 500000);
+  assert_equals_int (gst_date_time_get_time_zone_offset (dt), 0);
+  gst_date_time_unref (dt);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_GstDateTime_get_dmy)
 {
   GstDateTime *dt;
@@ -776,6 +823,9 @@ gst_date_time_suite (void)
   tcase_add_test (tc_chain, test_GstDateTime_get_utc_offset);
   tcase_add_test (tc_chain, test_GstDateTime_new_from_unix_epoch_local_time);
   tcase_add_test (tc_chain, test_GstDateTime_new_from_unix_epoch_utc);
+  tcase_add_test (tc_chain,
+      test_GstDateTime_new_from_unix_epoch_local_time_usecs);
+  tcase_add_test (tc_chain, test_GstDateTime_new_from_unix_epoch_utc_usecs);
   tcase_add_test (tc_chain, test_GstDateTime_new_full);
   tcase_add_test (tc_chain, test_GstDateTime_now);
   tcase_add_test (tc_chain, test_GstDateTime_utc_now);

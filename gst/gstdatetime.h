@@ -106,6 +106,12 @@ GST_API
 GstDateTime *   gst_date_time_new_from_unix_epoch_utc   (gint64 secs) G_GNUC_MALLOC;
 
 GST_API
+GstDateTime *   gst_date_time_new_from_unix_epoch_local_time_usecs (gint64 usecs) G_GNUC_MALLOC;
+
+GST_API
+GstDateTime *   gst_date_time_new_from_unix_epoch_utc_usecs (gint64 usecs) G_GNUC_MALLOC;
+
+GST_API
 GstDateTime *   gst_date_time_new_local_time            (gint year,
                                                          gint month,
                                                          gint day,

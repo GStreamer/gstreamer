@@ -449,6 +449,54 @@ gst_date_time_new_from_unix_epoch_utc (gint64 secs)
   return datetime;
 }
 
+/**
+ * gst_date_time_new_from_unix_epoch_local_time_usecs:
+ * @usecs: microseconds from the Unix epoch
+ *
+ * Creates a new #GstDateTime using the time since Jan 1, 1970 specified by
+ * @usecs. The #GstDateTime is in the local timezone.
+ *
+ * Returns: (transfer full): a newly created #GstDateTime
+ *
+ * Since: 1.18
+ */
+GstDateTime *
+gst_date_time_new_from_unix_epoch_local_time_usecs (gint64 usecs)
+{
+  GDateTime *dt, *datetime;
+  gint64 secs = usecs / G_USEC_PER_SEC;
+  gint64 usec_part = usecs % G_USEC_PER_SEC;
+
+  dt = g_date_time_new_from_unix_local (secs);
+  datetime = g_date_time_add_seconds (dt, (gdouble) usec_part / G_USEC_PER_SEC);
+  g_date_time_unref (dt);
+  return gst_date_time_new_from_g_date_time (datetime);
+}
+
+/**
+ * gst_date_time_new_from_unix_epoch_utc_usecs:
+ * @usecs: microseconds from the Unix epoch
+ *
+ * Creates a new #GstDateTime using the time since Jan 1, 1970 specified by
+ * @usecs. The #GstDateTime is in UTC.
+ *
+ * Returns: (transfer full): a newly created #GstDateTime
+ *
+ * Since: 1.18
+ */
+GstDateTime *
+gst_date_time_new_from_unix_epoch_utc_usecs (gint64 usecs)
+{
+  GDateTime *dt, *datetime;
+  gint64 secs = usecs / G_USEC_PER_SEC;
+  gint64 usec_part = usecs % G_USEC_PER_SEC;
+
+  dt = g_date_time_new_from_unix_utc (secs);
+  datetime = g_date_time_add_seconds (dt, (gdouble) usec_part / G_USEC_PER_SEC);
+  g_date_time_unref (dt);
+  return gst_date_time_new_from_g_date_time (datetime);
+}
+
 static GstDateTimeFields
 gst_date_time_check_fields (gint * year, gint * month, gint * day,
     gint * hour, gint * minute, gdouble * seconds)
