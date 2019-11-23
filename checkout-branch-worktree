@@ -88,9 +88,7 @@ if __name__ == "__main__":
                         help='The directory where to checkout the new worktree')
     parser.add_argument('branch', metavar='branch', type=str,
                         help='The branch to checkout')
-    parser.add_argument("--no-color",
-                        default=False,
-                        action='store_true',
+    parser.add_argument("--no-color", default=False, action='store_true',
                         help="Do not output ansi colors.")
     options = parser.parse_args()
 
