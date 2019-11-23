@@ -13,7 +13,10 @@ from scripts.common import Colors
 SCRIPTDIR = os.path.normpath(os.path.dirname(__file__))
 SUBPROJECTS_DIR = os.path.normpath(os.path.join(SCRIPTDIR, "subprojects"))
 
+
 def repo_has_branch(repo_dir, branch):
+    if not branch:
+        return False
     try:
         git("describe", branch, repository_path=repo_dir)
     except subprocess.CalledProcessError:
@@ -57,7 +60,7 @@ def checkout_worktree(repo_name, repo_dir, worktree_dir, branch, force=False):
             args += ["-f", "-f"]
         args += [worktree_dir, branch]
         git(*args, repository_path=repo_dir)
-    except Exception as e:
+    except subprocess.CalledProcessError as e:
         out = getattr(e, "output", b"").decode()
         print("\nCould not checkout worktree %s, please fix and try again."
               " Error:\n\n%s %s" % (repo_dir, out, e))
@@ -79,24 +82,74 @@ def checkout_subprojects(worktree_dir, branch):
 
     return True
 
+def remove_worktree(worktree_dir):
+    worktree_subdir = os.path.join(worktree_dir, "subprojects")
+
+    for repo_name, _, parent_repo_dir in get_wrap_subprojects(worktree_dir, None):
+        workdir = os.path.normpath(os.path.join(worktree_subdir, repo_name))
+        if not os.path.exists(workdir):
+            continue
+
+        subprojdir = os.path.normpath(os.path.join(SUBPROJECTS_DIR, repo_name))
+        if not os.path.exists(subprojdir):
+            continue
+
+        print('Removing worktree {!r}'.format(workdir))
+        try:
+            git('worktree', 'remove', '-f', workdir, repository_path=subprojdir)
+        except subprocess.CalledProcessError as e:
+            out = getattr(e, "output", b"").decode()
+            print('Ignoring error while removing worktree {!r}:\n\n{}'.format(workdir, out))
+
+    try:
+        git('worktree', 'remove', '-f', worktree_dir, repository_path=SCRIPTDIR)
+    except subprocess.CalledProcessError:
+        print('Failed to remove worktree {!r}'.format(worktree_dir))
+        return False
+    return True
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="gst-worktree")
-
-
-    parser.add_argument('worktree_dir', metavar='worktree_dir', type=str,
-                        help='The directory where to checkout the new worktree')
-    parser.add_argument('branch', metavar='branch', type=str,
-                        help='The branch to checkout')
     parser.add_argument("--no-color", default=False, action='store_true',
-                        help="Do not output ansi colors.")
+                        help="Do not output ANSI colors")
+
+    subparsers = parser.add_subparsers(help='The sub-command to run', dest='command')
+
+    parser_add = subparsers.add_parser('add',
+                                       help='Create a worktree for gst-build and all subprojects')
+    parser_add.add_argument('worktree_dir', type=str,
+                            help='Directory where to create the new worktree')
+    parser_add.add_argument('branch', type=str, default=None,
+                            help='Branch to checkout')
+
+    parser_rm = subparsers.add_parser('rm',
+                                      help='Remove a gst-build worktree and the subproject worktrees inside it')
+    parser_rm.add_argument('worktree_dir', type=str,
+                           help='Worktree directory to remove')
+
     options = parser.parse_args()
 
     if options.no_color or not Colors.can_enable():
         Colors.disable()
 
-    options.worktree_dir = os.path.abspath(options.worktree_dir)
-    if not checkout_worktree('gst-build', SCRIPTDIR, options.worktree_dir, options.branch):
+    if not options.command:
+        parser.print_usage()
         exit(1)
-    if not checkout_subprojects(options.worktree_dir, options.branch):
-        exit(1)
+
+    worktree_dir = os.path.abspath(options.worktree_dir)
+
+    if options.command == 'add':
+        if not checkout_worktree('gst-build', SCRIPTDIR, worktree_dir, options.branch):
+            exit(1)
+        if not checkout_subprojects(worktree_dir, options.branch):
+            exit(1)
+    elif options.command == 'rm':
+        if not os.path.exists(worktree_dir):
+            print('Cannot remove worktree directory {!r}, it does not exist'.format(worktree_dir))
+            exit(1)
+        if not remove_worktree(worktree_dir):
+            exit(1)
+    else:
+        # Unreachable code
+        raise AssertionError
