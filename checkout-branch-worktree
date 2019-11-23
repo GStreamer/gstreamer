@@ -1,45 +1,56 @@
 #!/usr/bin/env python3
 
-import argparse
-import json
 import os
+import glob
+import argparse
 import subprocess
-import xml.etree.ElementTree as ET
-import sys
+import configparser
 
 from scripts.common import git
 from scripts.common import Colors
-from scripts.common import get_meson
-from scripts.common import accept_command
 
 
 SCRIPTDIR = os.path.normpath(os.path.dirname(__file__))
+SUBPROJECTS_DIR = os.path.normpath(os.path.join(SCRIPTDIR, "subprojects"))
 
-
-def checkout_subprojects(worktree_dir, branch):
-    subprojects_dir = os.path.join(SCRIPTDIR, "subprojects")
-    worktree_subdir = os.path.join(worktree_dir, "subprojects")
-
-    meson = get_meson()
-    installed_s = subprocess.check_output(meson + ['introspect', options.builddir, '--projectinfo'])
-    for subproj in json.loads(installed_s.decode())["subprojects"]:
-        repo_name = subproj["name"]
-        if not repo_name.startswith("gst"):
-            continue
-
-        repo_dir = os.path.normpath(os.path.join(SCRIPTDIR, subprojects_dir, repo_name))
-        if not os.path.exists(os.path.join(repo_dir, '.git')):
-            continue
-
-        workdir = os.path.normpath(os.path.join(worktree_subdir, repo_name))
-        if not checkout_worktree(repo_name, repo_dir, workdir, branch):
-            return False
-
+def repo_has_branch(repo_dir, branch):
+    try:
+        git("describe", branch, repository_path=repo_dir)
+    except subprocess.CalledProcessError:
+        return False
     return True
 
+def parse_wrapfile(wrapf):
+    cgp = configparser.ConfigParser()
+    cgp.read(wrapf)
+    if 'wrap-git' not in cgp:
+        return None
+    section = cgp['wrap-git']
+    return section['directory'], section['revision']
+
+def get_wrap_subprojects(srcdir, gst_branch):
+    '''
+    Parses wrap files in the subprojects directory for the specified source
+    tree and gets the revisions for all common repos.
+    '''
+    for wrapf in glob.glob(os.path.join(srcdir, 'subprojects', '*.wrap')):
+        entries = parse_wrapfile(wrapf)
+        if not entries:
+            continue
+
+        repo_name, repo_branch = entries
+        parent_repo_dir = os.path.join(SUBPROJECTS_DIR, repo_name)
+        if not os.path.exists(os.path.join(parent_repo_dir, '.git')):
+            continue
+        # If a branch of the same name exists in the gst subproject, use it
+        if repo_name.startswith('gst') and repo_has_branch(parent_repo_dir, gst_branch):
+            repo_branch = gst_branch
+
+        yield repo_name, repo_branch, parent_repo_dir
 
 def checkout_worktree(repo_name, repo_dir, worktree_dir, branch):
-    print("Checking out worktree %s in %s (branch %s)" % (repo_name, worktree_dir, branch))
+    print('Checking out worktree for project {!r} into {!r} '
+          '(branch {})'.format(repo_name, worktree_dir, branch))
     try:
         git("worktree", "add", worktree_dir, branch, repository_path=repo_dir)
     except Exception as e:
@@ -52,12 +63,21 @@ def checkout_worktree(repo_name, repo_dir, worktree_dir, branch):
     commit_message = git("show", "--shortstat", repository_path=repo_dir).split("\n")
     print(u"  -> %s%s%s - %s" % (Colors.HEADER, repo_dir, Colors.ENDC,
                                     commit_message[4].strip()))
+    return True
+
+def checkout_subprojects(worktree_dir, branch):
+    worktree_subdir = os.path.join(worktree_dir, "subprojects")
+
+    for repo_name, repo_branch, parent_repo_dir in get_wrap_subprojects(worktree_dir, branch):
+        workdir = os.path.normpath(os.path.join(worktree_subdir, repo_name))
+        if not checkout_worktree(repo_name, parent_repo_dir, workdir, repo_branch):
+            return False
 
     return True
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="git-update")
+    parser = argparse.ArgumentParser(prog="git-worktree")
 
 
     parser.add_argument('worktree_dir', metavar='worktree_dir', type=str,
@@ -68,18 +88,10 @@ if __name__ == "__main__":
                         default=False,
                         action='store_true',
                         help="Do not output ansi colors.")
-    parser.add_argument("--builddir", '-C',
-                        default=os.path.join(SCRIPTDIR, "build"),
-                        help="The meson build directory")
     options = parser.parse_args()
 
     if options.no_color or not Colors.can_enable():
         Colors.disable()
-
-    if not os.path.exists(options.builddir):
-        print("GStreamer not built in %s\n\nBuild it and try again" %
-              options.builddir)
-        exit(1)
 
     options.worktree_dir = os.path.abspath(options.worktree_dir)
     if not checkout_worktree('gst-build', SCRIPTDIR, options.worktree_dir, options.branch):
