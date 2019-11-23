@@ -48,11 +48,15 @@ def get_wrap_subprojects(srcdir, gst_branch):
 
         yield repo_name, repo_branch, parent_repo_dir
 
-def checkout_worktree(repo_name, repo_dir, worktree_dir, branch):
+def checkout_worktree(repo_name, repo_dir, worktree_dir, branch, force=False):
     print('Checking out worktree for project {!r} into {!r} '
           '(branch {})'.format(repo_name, worktree_dir, branch))
     try:
-        git("worktree", "add", worktree_dir, branch, repository_path=repo_dir)
+        args = ["worktree", "add"]
+        if force:
+            args += ["-f", "-f"]
+        args += [worktree_dir, branch]
+        git(*args, repository_path=repo_dir)
     except Exception as e:
         out = getattr(e, "output", b"").decode()
         print("\nCould not checkout worktree %s, please fix and try again."
@@ -70,7 +74,7 @@ def checkout_subprojects(worktree_dir, branch):
 
     for repo_name, repo_branch, parent_repo_dir in get_wrap_subprojects(worktree_dir, branch):
         workdir = os.path.normpath(os.path.join(worktree_subdir, repo_name))
-        if not checkout_worktree(repo_name, parent_repo_dir, workdir, repo_branch):
+        if not checkout_worktree(repo_name, parent_repo_dir, workdir, repo_branch, force=True):
             return False
 
     return True
