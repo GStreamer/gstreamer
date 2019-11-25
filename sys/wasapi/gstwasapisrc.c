@@ -555,6 +555,7 @@ gst_wasapi_src_read (GstAudioSrc * asrc, gpointer data, guint length,
   HRESULT hr;
   gint16 *from = NULL;
   guint wanted = length;
+  guint bpf;
   DWORD flags;
 
   GST_OBJECT_LOCK (self);
@@ -564,6 +565,8 @@ gst_wasapi_src_read (GstAudioSrc * asrc, gpointer data, guint length,
         GST_OBJECT_UNLOCK (self); goto err);
     self->client_needs_restart = FALSE;
   }
+
+  bpf = self->mix_format->nBlockAlign;
   GST_OBJECT_UNLOCK (self);
 
   while (wanted > 0) {
@@ -603,7 +606,7 @@ gst_wasapi_src_read (GstAudioSrc * asrc, gpointer data, guint length,
     if (flags & AUDCLNT_BUFFERFLAGS_DATA_DISCONTINUITY)
       GST_WARNING_OBJECT (self, "WASAPI reported glitch in buffer");
 
-    want_frames = wanted / self->mix_format->nBlockAlign;
+    want_frames = wanted / bpf;
 
     /* If GetBuffer is returning more frames than we can handle, all we can do is
      * hope that this is temporary and that things will settle down later. */
@@ -613,14 +616,11 @@ gst_wasapi_src_read (GstAudioSrc * asrc, gpointer data, guint length,
 
     /* Only copy data that will fit into the allocated buffer of size @length */
     n_frames = MIN (have_frames, want_frames);
-    read_len = n_frames * self->mix_format->nBlockAlign;
+    read_len = n_frames * bpf;
 
-    {
-      guint bpf = self->mix_format->nBlockAlign;
-      GST_DEBUG_OBJECT (self, "have: %i (%i bytes), can read: %i (%i bytes), "
-          "will read: %i (%i bytes)", have_frames, have_frames * bpf,
-          want_frames, wanted, n_frames, read_len);
-    }
+    GST_DEBUG_OBJECT (self, "have: %i (%i bytes), can read: %i (%i bytes), "
+        "will read: %i (%i bytes)", have_frames, have_frames * bpf,
+        want_frames, wanted, n_frames, read_len);
 
     memcpy (data, from, read_len);
     wanted -= read_len;
