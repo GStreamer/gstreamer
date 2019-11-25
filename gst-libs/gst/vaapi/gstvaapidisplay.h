@@ -105,6 +105,8 @@ typedef struct _GstVaapiDisplay                 GstVaapiDisplay;
  *   report to support ARGB format, but if it's forced to create a RGBA
  *   surface, it works. Driver issue:
  *   https://github.com/intel/intel-vaapi-driver/issues/500
+ * @GST_VAAPI_DRIVER_QUIRK_JPEG_ENC_SHIFT_VALUE_BY_50: if the driver shifts
+ *   the value by 50 when calculating quantization from quality level
  */
 typedef enum
 {
@@ -112,6 +114,7 @@ typedef enum
   GST_VAAPI_DRIVER_QUIRK_NO_CHECK_VPP_COLOR_STD = (1U << 1),
   GST_VAAPI_DRIVER_QUIRK_NO_RGBYUV_VPP_COLOR_PRIMARY = (1U << 2),
   GST_VAAPI_DRIVER_QUIRK_MISSING_RGBA_IMAGE_FORMAT = (1U << 3),
+  GST_VAAPI_DRIVER_QUIRK_JPEG_ENC_SHIFT_VALUE_BY_50 = (1U << 4),
 } GstVaapiDriverQuirks;
 
 /**

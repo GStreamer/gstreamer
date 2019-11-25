@@ -255,7 +255,7 @@ ensure_picture (GstVaapiEncoderJpeg * encoder, GstVaapiEncPicture * picture,
  * is scaling the QM values using the normalized quality factor */
 static void
 generate_scaled_qm (GstJpegQuantTables * quant_tables,
-    GstJpegQuantTables * scaled_quant_tables, guint quality)
+    GstJpegQuantTables * scaled_quant_tables, guint quality, guint shift)
 {
   guint qt_val, nm_quality, i;
   nm_quality = quality == 0 ? 1 : quality;
@@ -267,11 +267,15 @@ generate_scaled_qm (GstJpegQuantTables * quant_tables,
 
   for (i = 0; i < GST_JPEG_MAX_QUANT_ELEMENTS; i++) {
     /* Luma QM */
-    qt_val = (quant_tables->quant_tables[0].quant_table[i] * nm_quality) / 100;
+    qt_val =
+        (quant_tables->quant_tables[0].quant_table[i] * nm_quality +
+        shift) / 100;
     scaled_quant_tables->quant_tables[0].quant_table[i] =
         CLAMP (qt_val, 1, 255);
     /* Chroma QM */
-    qt_val = (quant_tables->quant_tables[1].quant_table[i] * nm_quality) / 100;
+    qt_val =
+        (quant_tables->quant_tables[1].quant_table[i] * nm_quality +
+        shift) / 100;
     scaled_quant_tables->quant_tables[1].quant_table[i] =
         CLAMP (qt_val, 1, 255);
   }
@@ -294,10 +298,17 @@ fill_quantization_table (GstVaapiEncoderJpeg * encoder,
   q_matrix = picture->q_matrix->param;
 
   if (!encoder->has_quant_tables) {
+    GstVaapiDisplay *const display = GST_VAAPI_ENCODER_DISPLAY (encoder);
+    guint shift = 0;
+
+    if (gst_vaapi_display_has_driver_quirks (display,
+            GST_VAAPI_DRIVER_QUIRK_JPEG_ENC_SHIFT_VALUE_BY_50))
+      shift = 50;
+
     gst_jpeg_get_default_quantization_tables (&encoder->quant_tables);
     encoder->has_quant_tables = TRUE;
     generate_scaled_qm (&encoder->quant_tables, &encoder->scaled_quant_tables,
-        encoder->quality);
+        encoder->quality, shift);
   }
   q_matrix->load_lum_quantiser_matrix = 1;
   for (i = 0; i < GST_JPEG_MAX_QUANT_ELEMENTS; i++) {
@@ -507,9 +518,16 @@ bs_write_jpeg_header (GstBitWriter * bs, GstVaapiEncoderJpeg * encoder,
 
   /* Add  quantization table */
   if (!encoder->has_quant_tables) {
+    GstVaapiDisplay *const display = GST_VAAPI_ENCODER_DISPLAY (encoder);
+    guint shift = 0;
+
+    if (gst_vaapi_display_has_driver_quirks (display,
+            GST_VAAPI_DRIVER_QUIRK_JPEG_ENC_SHIFT_VALUE_BY_50))
+      shift = 50;
+
     gst_jpeg_get_default_quantization_tables (&encoder->quant_tables);
     generate_scaled_qm (&encoder->quant_tables, &encoder->scaled_quant_tables,
-        encoder->quality);
+        encoder->quality, shift);
     encoder->has_quant_tables = TRUE;
   }
 
