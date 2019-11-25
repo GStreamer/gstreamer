@@ -190,6 +190,7 @@ gst_wasapi_src_init (GstWasapiSrc * self)
   self->try_audioclient3 = DEFAULT_AUDIOCLIENT3;
   self->event_handle = CreateEvent (NULL, FALSE, FALSE, NULL);
   self->client_needs_restart = FALSE;
+  self->adapter = gst_adapter_new ();
 
   CoInitializeEx (NULL, COINIT_MULTITHREADED);
 }
@@ -235,6 +236,9 @@ gst_wasapi_src_finalize (GObject * object)
   g_clear_pointer (&self->cached_caps, gst_caps_unref);
   g_clear_pointer (&self->positions, g_free);
   g_clear_pointer (&self->device_strid, g_free);
+
+  g_object_unref (self->adapter);
+  self->adapter = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -566,14 +570,23 @@ gst_wasapi_src_read (GstAudioSrc * asrc, gpointer data, guint length,
     HR_FAILED_ELEMENT_ERROR_AND (hr, IAudioClient::Start, self,
         GST_OBJECT_UNLOCK (self); goto err);
     self->client_needs_restart = FALSE;
+    gst_adapter_clear (self->adapter);
   }
 
   bpf = self->mix_format->nBlockAlign;
   GST_OBJECT_UNLOCK (self);
 
+  /* If we've accumulated enough data, return it immediately */
+  if (gst_adapter_available (self->adapter) >= wanted) {
+    memcpy (data, gst_adapter_map (self->adapter, wanted), wanted);
+    gst_adapter_flush (self->adapter, wanted);
+    GST_DEBUG_OBJECT (self, "Adapter has enough data, returning %i", wanted);
+    goto out;
+  }
+
   while (wanted > 0) {
     DWORD dwWaitResult;
-    guint have_frames, n_frames, want_frames, read_len;
+    guint got_frames, avail_frames, n_frames, want_frames, read_len;
 
     /* Wait for data to become available */
     dwWaitResult = WaitForSingleObject (self->event_handle, INFINITE);
@@ -584,7 +597,7 @@ gst_wasapi_src_read (GstAudioSrc * asrc, gpointer data, guint length,
     }
 
     hr = IAudioCaptureClient_GetBuffer (self->capture_client,
-        (BYTE **) & from, &have_frames, &flags, NULL, NULL);
+        (BYTE **) & from, &got_frames, &flags, NULL, NULL);
     if (hr != S_OK) {
       if (hr == AUDCLNT_S_BUFFER_EMPTY) {
         gchar *msg = gst_wasapi_util_hresult_to_string (hr);
@@ -608,29 +621,36 @@ gst_wasapi_src_read (GstAudioSrc * asrc, gpointer data, guint length,
     if (flags & AUDCLNT_BUFFERFLAGS_DATA_DISCONTINUITY)
       GST_WARNING_OBJECT (self, "WASAPI reported glitch in buffer");
 
-    want_frames = wanted / bpf;
+    /* Copy all the frames we got into the adapter, and then extract at most
+     * @wanted size of frames from it. This helps when ::GetBuffer returns more
+     * data than we can handle right now */
+    {
+      GstBuffer *tmp = gst_buffer_new_allocate (NULL, got_frames * bpf, NULL);
+      gst_buffer_fill (tmp, 0, from, got_frames * bpf);
+      gst_adapter_push (self->adapter, tmp);
+    }
 
-    /* If GetBuffer is returning more frames than we can handle, all we can do is
-     * hope that this is temporary and that things will settle down later. */
-    if (G_UNLIKELY (have_frames > want_frames))
-      GST_WARNING_OBJECT (self, "captured too many frames: have %i, want %i",
-          have_frames, want_frames);
-
-    /* Only copy data that will fit into the allocated buffer of size @length */
-    n_frames = MIN (have_frames, want_frames);
-    read_len = n_frames * bpf;
-
-    GST_DEBUG_OBJECT (self, "have: %i (%i bytes), can read: %i (%i bytes), "
-        "will read: %i (%i bytes)", have_frames, have_frames * bpf,
-        want_frames, wanted, n_frames, read_len);
-
-    memcpy (data, from, read_len);
-    wanted -= read_len;
-
-    /* Always release all captured buffers if we've captured any at all */
-    hr = IAudioCaptureClient_ReleaseBuffer (self->capture_client, have_frames);
+    /* Release all captured buffers; we copied them above */
+    hr = IAudioCaptureClient_ReleaseBuffer (self->capture_client, got_frames);
+    from = NULL;
     HR_FAILED_ELEMENT_ERROR_AND (hr, IAudioCaptureClient::ReleaseBuffer, self,
         goto err);
+
+    want_frames = wanted / bpf;
+    avail_frames = gst_adapter_available (self->adapter) / bpf;
+
+    /* Only copy data that will fit into the allocated buffer of size @length */
+    n_frames = MIN (avail_frames, want_frames);
+    read_len = n_frames * bpf;
+
+    GST_DEBUG_OBJECT (self, "frames captured: %i (%i bytes), "
+        "can read: %i (%i bytes), will read: %i (%i bytes), "
+        "adapter has: %i (%i bytes)", got_frames, got_frames * bpf, want_frames,
+        wanted, n_frames, read_len, avail_frames, avail_frames * bpf);
+
+    memcpy (data, gst_adapter_map (self->adapter, read_len), read_len);
+    gst_adapter_flush (self->adapter, read_len);
+    wanted -= read_len;
   }
 
 
