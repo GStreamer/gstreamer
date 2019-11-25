@@ -609,15 +609,17 @@ gst_wasapi_src_read (GstAudioSrc * asrc, gpointer data, guint length,
           goto err);
     }
 
-    if (flags != 0)
-      GST_INFO_OBJECT (self, "buffer flags=%#08x", (guint) flags);
-
     /* XXX: How do we handle AUDCLNT_BUFFERFLAGS_SILENT? We're supposed to write
      * out silence when that flag is set? See:
      * https://msdn.microsoft.com/en-us/library/windows/desktop/dd370800(v=vs.85).aspx */
 
-    if (flags & AUDCLNT_BUFFERFLAGS_DATA_DISCONTINUITY)
-      GST_WARNING_OBJECT (self, "WASAPI reported glitch in buffer");
+    if (G_UNLIKELY (flags != 0)) {
+      /* https://docs.microsoft.com/en-us/windows/win32/api/audioclient/ne-audioclient-_audclnt_bufferflags */
+      if (flags & AUDCLNT_BUFFERFLAGS_DATA_DISCONTINUITY)
+        GST_DEBUG_OBJECT (self, "WASAPI reported discontinuity (glitch?)");
+      if (flags & AUDCLNT_BUFFERFLAGS_TIMESTAMP_ERROR)
+        GST_DEBUG_OBJECT (self, "WASAPI reported a timestamp error");
+    }
 
     /* Copy all the frames we got into the adapter, and then extract at most
      * @wanted size of frames from it. This helps when ::GetBuffer returns more
