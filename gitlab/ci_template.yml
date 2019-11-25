@@ -95,12 +95,17 @@ gst indent:
   dependencies:
     - "manifest"
   variables:
-    CCACHE_BASEDIR: "${CI_PROJECT_DIR}"
-    CCACHE_DIR: "${CI_PROJECT_DIR}/ccache"
+    CCACHE_COMPILERCHECK: "content"
+    CCACHE_COMPRESS: "true"
+    CCACHE_BASEDIR: "/cache/gstreamer/gst-build"
+    CCACHE_DIR: "/cache/gstreamer/gst-build/ccache/"
+    # shared across everything really
+    CCACHE_MAXSIZE: "10G"
+
     MESON_ARGS: "${DEFAULT_MESON_ARGS} ${MESON_BUILDTYPE_ARGS} --werror"
 
   script:
-    - ccache -z
+    - ccache --show-stats
     - curl -o clone_manifest_ref.py https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/${GST_UPSTREAM_BRANCH}/gitlab/clone_manifest_ref.py
     - chmod +x clone_manifest_ref.py
     - ./clone_manifest_ref.py --manifest manifest.xml --project gst-build --destination gst-build
@@ -110,7 +115,7 @@ gst indent:
     - ./git-update --no-interaction --manifest="${CI_PROJECT_DIR}/manifest.xml"
     - meson build/ $MESON_ARGS
     - ninja -C build/
-    - ccache -s
+    - ccache --show-stats
   after_script:
     - cd gst-build/
     # Clean the artifacts packages to avoid copying "useless" build products.
@@ -118,10 +123,6 @@ gst indent:
     # Clean the .git repos since we won't need them anymore
     - rm -rf subprojects/*/.git/
     - rm -rf build/subprojects/*/.git/
-  cache:
-    key: "${CI_JOB_NAME}"
-    paths:
-      - "${CCACHE_DIR}"
   except:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
@@ -337,9 +338,13 @@ valgrind ges:
   dependencies:
     - "manifest"
   variables:
-    CCACHE_BASEDIR: "${CI_PROJECT_DIR}"
-    CCACHE_DIR: "${CI_PROJECT_DIR}/ccache"
-    CCACHE_MAXSIZE: "1.7G"
+    CCACHE_COMPILERCHECK: "content"
+    CCACHE_COMPRESS: "true"
+    CCACHE_BASEDIR: "/cache/gstreamer/cerbero/"
+    CCACHE_DIR: "/cache/gstreamer/cerbero/ccache/"
+    # shared across everything really
+    CCACHE_MAXSIZE: "50G"
+
     CERBERO_HOME: "cerbero-build"
     CERBERO_SOURCES: "cerbero-sources"
     CERBERO_DEPS: "cerbero-deps.tar.gz"
@@ -365,7 +370,7 @@ valgrind ges:
     - echo "local_sources = \"$(pwd)/${CERBERO_SOURCES}\"" >> localconf.cbc
     - ./cerbero-uninstalled --self-update manifest.xml
   script:
-    - test "x${HAVE_CCACHE}" = "xyes" && ccache -z
+    - test "x${HAVE_CCACHE}" = "xyes" && ccache --show-stats
     - $CERBERO $CERBERO_ARGS show-config
     - $CERBERO $CERBERO_ARGS fetch-bootstrap --build-tools-only
     - $CERBERO $CERBERO_ARGS fetch-package --deps gstreamer-1.0
@@ -385,7 +390,6 @@ valgrind ges:
   cache:
     key: "${CI_JOB_NAME}"
     paths:
-      - "${CCACHE_DIR}"
       - "${CERBERO_SOURCES}"
   artifacts:
     name: "${CI_JOB_NAME}_${CI_COMMIT_SHA}"
