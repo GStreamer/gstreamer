@@ -344,6 +344,8 @@ gst_wl_window_new_in_surface (GstWlDisplay * display,
       window->area_surface, parent);
   wl_subsurface_set_desync (window->area_subsurface);
 
+  wl_surface_commit (parent);
+
   return window;
 }
 
