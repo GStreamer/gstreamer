@@ -81,6 +81,12 @@ hack in there and to rebuild you just need to rerun `ninja -C build/`.
 NOTE: In the development environment, a fully usable prefix is also configured
 in `gst-build/prefix` where you can install any extra dependency/project.
 
+An external script can be run in development environment with:
+
+```
+./gst-env.py external_script.sh
+```
+
 ## Update git subprojects
 
 We added a special `update` target to update subprojects (it uses `git pull
@@ -171,12 +177,16 @@ you can use the `checkout-branch-worktree` script provided by `gst-build`. It al
 to create a new `gst-build` environment with new checkout of all the GStreamer modules as
 [git worktrees](https://git-scm.com/docs/git-worktree).
 
-For example to get a fresh checkout of `gst-1.14` from a `gst-build` in master already
-built in a `build` directory you can simply run:
+For example to get a fresh checkout of `gst-1.14` from a `gst-build` in master **already
+built** in a `build` directory you can simply run:
 
 ```
-./checkout-branch-worktree ../gst-1.14 1.14 -C build/
+./checkout-branch-worktree ../gst-build-1.14 origin/1.14 -C build/
 ```
+
+This will create a new ``gst-build-1.14`` folder at the same level of ``gst-build`` pointing to the given branch ie *1.14*
+for all the subprojects ( gstreamer, gst-plugins-base etc.)
+
 
 ## Add information about GStreamer development environment in your prompt line
 
