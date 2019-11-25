@@ -919,7 +919,9 @@ gst_wasapi_util_initialize_audioclient (GstElement * self,
 
     *ret_devicep_frames = n_frames;
   } else {
-    *ret_devicep_frames = (rate * device_period * 100) / GST_SECOND;
+    /* device_period can be a non-power-of-10 value so round while converting */
+    *ret_devicep_frames =
+        gst_util_uint64_scale_round (device_period, rate * 100, GST_SECOND);
   }
 
   return TRUE;
