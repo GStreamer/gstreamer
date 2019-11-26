@@ -34,19 +34,48 @@ GType gst_vulkan_handle_get_type (void);
 
 VK_DEFINE_NON_DISPATCHABLE_HANDLE(GstVulkanHandleTypedef)
 
+/**
+ * GST_VULKAN_NON_DISPATCHABLE_HANDLE_FORMAT:
+ *
+ * The printf format specifier for raw Vulkan non dispatchable handles.
+ */
 #if GLIB_SIZEOF_VOID_P == 8
 # define GST_VULKAN_NON_DISPATCHABLE_HANDLE_FORMAT "p"
 #else
 # define GST_VULKAN_NON_DISPATCHABLE_HANDLE_FORMAT G_GUINT64_FORMAT
 #endif
 
+/**
+ * GstVulkanHandleDestroyNotify:
+ * @handle: the #GstVulkanHandle
+ * @user_data: callback user data
+ *
+ * Function definition called when the #GstVulkanHandle is no longer in use.
+ * All implementations of this callback must free the internal handle stored
+ * inside @handle.
+ */
 typedef void (*GstVulkanHandleDestroyNotify) (GstVulkanHandle * handle, gpointer user_data);
 
 typedef enum
 {
-  GST_VULKAN_HANDLE_TYPE_DESCRIPTOR_SET_LAYOUT = 1,
+  GST_VULKAN_HANDLE_TYPE_DESCRIPTOR_SET_LAYOUT          = 1,
+  GST_VULKAN_HANDLE_TYPE_PIPELINE_LAYOUT                = 2,
+  GST_VULKAN_HANDLE_TYPE_PIPELINE                       = 3,
+  GST_VULKAN_HANDLE_TYPE_RENDER_PASS                    = 4,
+  GST_VULKAN_HANDLE_TYPE_SAMPLER                        = 5,
+  GST_VULKAN_HANDLE_TYPE_FRAMEBUFFER                    = 6,
+  GST_VULKAN_HANDLE_TYPE_SHADER                         = 7,
 } GstVulkanHandleType;
 
+/**
+ * GstVulkanHandle:
+ * @parent: the parent #GstMiniObject
+ * @device: the #GstVulkanDevice for this handle
+ * @type: the type of handle
+ * @handle: the handle value
+ *
+ * Holds information about a vulkan non dispatchable handle
+ */
 struct _GstVulkanHandle
 {
   GstMiniObject             parent;
@@ -59,15 +88,20 @@ struct _GstVulkanHandle
   /* <protected> */
   GstVulkanHandleDestroyNotify notify;
   gpointer                  user_data;
+
+  /* <private> */
+  gpointer _reserved        [GST_PADDING];
 };
 
 /**
  * gst_vulkan_handle_ref: (skip)
- * @cmd: a #GstVulkanHandle.
+ * @handle: a #GstVulkanHandle.
  *
  * Increases the refcount of the given handle by one.
  *
  * Returns: (transfer full): @buf
+ *
+ * Since: 1.18
  */
 static inline GstVulkanHandle* gst_vulkan_handle_ref(GstVulkanHandle* handle);
 static inline GstVulkanHandle *
@@ -78,10 +112,12 @@ gst_vulkan_handle_ref (GstVulkanHandle * handle)
 
 /**
  * gst_vulkan_handle_unref: (skip)
- * @cmd: (transfer full): a #GstVulkanHandle.
+ * @handle: (transfer full): a #GstVulkanHandle.
  *
  * Decreases the refcount of the buffer. If the refcount reaches 0, the buffer
  * will be freed.
+ *
+ * Since: 1.18
  */
 static inline void gst_vulkan_handle_unref(GstVulkanHandle* handle);
 static inline void
@@ -101,7 +137,7 @@ gst_vulkan_handle_unref (GstVulkanHandle * handle)
  * If the reference is %NULL then this function does nothing. Otherwise, the
  * reference count of the handle is decreased and the pointer is set to %NULL.
  *
- * Since: 1.16
+ * Since: 1.18
  */
 static inline void
 gst_clear_vulkan_handle (GstVulkanHandle ** handle_ptr)
@@ -118,6 +154,24 @@ GstVulkanHandle *       gst_vulkan_handle_new_wrapped       (GstVulkanDevice *de
 
 GST_VULKAN_API
 void                    gst_vulkan_handle_free_descriptor_set_layout (GstVulkanHandle * handle,
+                                                                      gpointer user_data);
+GST_VULKAN_API
+void                    gst_vulkan_handle_free_pipeline_layout       (GstVulkanHandle * handle,
+                                                                      gpointer user_data);
+GST_VULKAN_API
+void                    gst_vulkan_handle_free_pipeline              (GstVulkanHandle * handle,
+                                                                      gpointer user_data);
+GST_VULKAN_API
+void                    gst_vulkan_handle_free_render_pass           (GstVulkanHandle * handle,
+                                                                      gpointer user_data);
+GST_VULKAN_API
+void                    gst_vulkan_handle_free_sampler               (GstVulkanHandle * handle,
+                                                                      gpointer user_data);
+GST_VULKAN_API
+void                    gst_vulkan_handle_free_framebuffer           (GstVulkanHandle * handle,
+                                                                      gpointer user_data);
+GST_VULKAN_API
+void                    gst_vulkan_handle_free_shader                (GstVulkanHandle * handle,
                                                                       gpointer user_data);
 
 G_END_DECLS
