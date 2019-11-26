@@ -611,10 +611,6 @@ gst_wasapi_src_read (GstAudioSrc * asrc, gpointer data, guint length,
           goto err);
     }
 
-    /* XXX: How do we handle AUDCLNT_BUFFERFLAGS_SILENT? We're supposed to write
-     * out silence when that flag is set? See:
-     * https://msdn.microsoft.com/en-us/library/windows/desktop/dd370800(v=vs.85).aspx */
-
     if (G_UNLIKELY (flags != 0)) {
       /* https://docs.microsoft.com/en-us/windows/win32/api/audioclient/ne-audioclient-_audclnt_bufferflags */
       if (flags & AUDCLNT_BUFFERFLAGS_DATA_DISCONTINUITY)
@@ -625,9 +621,14 @@ gst_wasapi_src_read (GstAudioSrc * asrc, gpointer data, guint length,
 
     /* Copy all the frames we got into the adapter, and then extract at most
      * @wanted size of frames from it. This helps when ::GetBuffer returns more
-     * data than we can handle right now */
+     * data than we can handle right now. */
     {
       GstBuffer *tmp = gst_buffer_new_allocate (NULL, got_frames * bpf, NULL);
+      /* If flags has AUDCLNT_BUFFERFLAGS_SILENT, we will ignore the actual
+       * data and write out silence, see:
+       * https://docs.microsoft.com/en-us/windows/win32/api/audioclient/ne-audioclient-_audclnt_bufferflags */
+      if (flags & AUDCLNT_BUFFERFLAGS_SILENT)
+        memset (from, 0, got_frames * bpf);
       gst_buffer_fill (tmp, 0, from, got_frames * bpf);
       gst_adapter_push (self->adapter, tmp);
     }
