@@ -48,7 +48,7 @@
 GST_DEBUG_CATEGORY (gst_debug_vulkan_color_convert);
 #define GST_CAT_DEFAULT gst_debug_vulkan_color_convert
 
-#define N_SHADER_INFO (8*4*4)
+#define N_SHADER_INFO (8*8 + 8*3*2)
 static shader_info shader_infos[N_SHADER_INFO];
 
 static void
@@ -769,7 +769,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE,
-            "{ BGRA, RGBA, ABGR, ARGB, BGRx, RGBx, xBGR, xRGB, AYUV, YUY2, UYVY, NV12 }")));
+            "{ BGRA, RGBA, ABGR, ARGB, BGRx, RGBx, xBGR, xRGB, AYUV, YUY2, NV12 }")));
 
 static GstStaticPadTemplate gst_vulkan_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -777,7 +777,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE,
-            "{ BGRA, RGBA, ABGR, ARGB, BGRx, RGBx, xBGR, xRGB, AYUV, YUY2, UYVY, NV12 }")));
+            "{ BGRA, RGBA, ABGR, ARGB, BGRx, RGBx, xBGR, xRGB, AYUV, YUY2, NV12 }")));
 
 enum
 {
@@ -819,8 +819,8 @@ fill_shader_info (void)
         rgb_to_ayuv_frag, rgb_to_ayuv_frag_size},
     {GST_VIDEO_FORMAT_YUY2, yuy2_to_rgb_frag, yuy2_to_rgb_frag_size,
         rgb_to_yuy2_frag, rgb_to_yuy2_frag_size},
-    {GST_VIDEO_FORMAT_UYVY, yuy2_to_rgb_frag, yuy2_to_rgb_frag_size,
-        rgb_to_yuy2_frag, rgb_to_yuy2_frag_size},
+/*    {GST_VIDEO_FORMAT_UYVY, yuy2_to_rgb_frag, yuy2_to_rgb_frag_size,
+        rgb_to_yuy2_frag, rgb_to_yuy2_frag_size},*/
     {GST_VIDEO_FORMAT_NV12, nv12_to_rgb_frag, nv12_to_rgb_frag_size,
         rgb_to_nv12_frag, rgb_to_nv12_frag_size},
   };
@@ -972,8 +972,8 @@ _init_supported_formats (GstVulkanDevice * device, gboolean output,
   _init_value_string_list (supported_formats, "RGBA", "RGB", "RGBx", "BGR",
       "BGRx", "BGRA", "xRGB", "xBGR", "ARGB", "ABGR", NULL);
 
-  _append_value_string_list (supported_formats, "AYUV", "YUY2", "UYVY", "NV12",
-      NULL);
+  _append_value_string_list (supported_formats, "AYUV", "YUY2", /*"UYVY", */
+      "NV12", NULL);
 }
 
 /* copies the given caps */
