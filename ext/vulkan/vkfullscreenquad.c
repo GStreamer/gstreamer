@@ -627,7 +627,8 @@ clear_descriptor_set (GstVulkanFullScreenQuad * self)
 
   if (self->descriptor_set)
     gst_vulkan_trash_list_add (self->trash_list,
-        gst_vulkan_trash_new_mini_object_unref (last_fence,
+        gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
+            gst_vulkan_trash_mini_object_unref,
             (GstMiniObject *) self->descriptor_set));
   self->descriptor_set = NULL;
 
@@ -642,7 +643,8 @@ clear_framebuffer (GstVulkanFullScreenQuad * self)
 
   if (self->framebuffer)
     gst_vulkan_trash_list_add (self->trash_list,
-        gst_vulkan_trash_new_mini_object_unref (last_fence,
+        gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
+            gst_vulkan_trash_mini_object_unref,
             (GstMiniObject *) self->framebuffer));
   self->framebuffer = NULL;
 
@@ -657,8 +659,8 @@ clear_command_pool (GstVulkanFullScreenQuad * self)
 
   if (self->cmd_pool)
     gst_vulkan_trash_list_add (self->trash_list,
-        gst_vulkan_trash_new_object_unref (last_fence,
-            (GstObject *) self->cmd_pool));
+        gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
+            gst_vulkan_trash_object_unref, (GstObject *) self->cmd_pool));
   self->cmd_pool = NULL;
 
   gst_vulkan_fence_unref (last_fence);
@@ -672,7 +674,8 @@ clear_sampler (GstVulkanFullScreenQuad * self)
 
   if (self->sampler)
     gst_vulkan_trash_list_add (self->trash_list,
-        gst_vulkan_trash_new_mini_object_unref (last_fence,
+        gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
+            gst_vulkan_trash_mini_object_unref,
             (GstMiniObject *) self->sampler));
   self->sampler = NULL;
 
@@ -687,7 +690,8 @@ clear_descriptor_cache (GstVulkanFullScreenQuad * self)
 
   if (self->descriptor_cache)
     gst_vulkan_trash_list_add (self->trash_list,
-        gst_vulkan_trash_new_object_unref (last_fence,
+        gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
+            gst_vulkan_trash_object_unref,
             (GstObject *) self->descriptor_cache));
   self->descriptor_cache = NULL;
 
@@ -703,14 +707,14 @@ clear_shaders (GstVulkanFullScreenQuad * self)
 
   if (priv->vert)
     gst_vulkan_trash_list_add (self->trash_list,
-        gst_vulkan_trash_new_mini_object_unref (last_fence,
-            (GstMiniObject *) priv->vert));
+        gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
+            gst_vulkan_trash_mini_object_unref, (GstMiniObject *) priv->vert));
   priv->vert = NULL;
 
   if (priv->frag)
     gst_vulkan_trash_list_add (self->trash_list,
-        gst_vulkan_trash_new_mini_object_unref (last_fence,
-            (GstMiniObject *) priv->frag));
+        gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
+            gst_vulkan_trash_mini_object_unref, (GstMiniObject *) priv->frag));
   priv->frag = NULL;
 
   gst_vulkan_fence_unref (last_fence);
@@ -725,7 +729,8 @@ clear_uniform_data (GstVulkanFullScreenQuad * self)
 
   if (priv->uniforms)
     gst_vulkan_trash_list_add (self->trash_list,
-        gst_vulkan_trash_new_mini_object_unref (last_fence,
+        gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
+            gst_vulkan_trash_mini_object_unref,
             (GstMiniObject *) priv->uniforms));
   priv->uniforms = NULL;
   priv->uniform_size = 0;
@@ -741,22 +746,26 @@ destroy_pipeline (GstVulkanFullScreenQuad * self)
 
   if (self->render_pass)
     gst_vulkan_trash_list_add (self->trash_list,
-        gst_vulkan_trash_new_mini_object_unref (last_fence,
+        gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
+            gst_vulkan_trash_mini_object_unref,
             (GstMiniObject *) self->render_pass));
   self->render_pass = NULL;
   if (self->pipeline_layout)
     gst_vulkan_trash_list_add (self->trash_list,
-        gst_vulkan_trash_new_mini_object_unref (last_fence,
+        gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
+            gst_vulkan_trash_mini_object_unref,
             (GstMiniObject *) self->pipeline_layout));
   self->pipeline_layout = NULL;
   if (self->graphics_pipeline)
     gst_vulkan_trash_list_add (self->trash_list,
-        gst_vulkan_trash_new_mini_object_unref (last_fence,
+        gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
+            gst_vulkan_trash_mini_object_unref,
             (GstMiniObject *) self->graphics_pipeline));
   self->graphics_pipeline = NULL;
   if (self->descriptor_set_layout)
     gst_vulkan_trash_list_add (self->trash_list,
-        gst_vulkan_trash_new_mini_object_unref (last_fence,
+        gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
+            gst_vulkan_trash_mini_object_unref,
             (GstMiniObject *) self->descriptor_set_layout));
   self->descriptor_set_layout = NULL;
 
@@ -985,7 +994,7 @@ gst_vulkan_full_screen_quad_draw (GstVulkanFullScreenQuad * self,
 
   g_return_val_if_fail (GST_IS_VULKAN_FULL_SCREEN_QUAD (self), FALSE);
 
-  fence = gst_vulkan_fence_new (self->queue->device, 0, error);
+  fence = gst_vulkan_device_create_fence (self->queue->device, error);
   if (!fence)
     goto error;
 
@@ -1073,7 +1082,8 @@ gst_vulkan_full_screen_quad_prepare_draw (GstVulkanFullScreenQuad * self,
       }
       in_views[i] = get_or_create_image_view (img_mem);
       gst_vulkan_trash_list_add (self->trash_list,
-          gst_vulkan_trash_new_mini_object_unref (fence,
+          gst_vulkan_trash_list_acquire (self->trash_list, fence,
+              gst_vulkan_trash_mini_object_unref,
               (GstMiniObject *) in_views[i]));
     }
     if (!(self->descriptor_set =
@@ -1091,7 +1101,8 @@ gst_vulkan_full_screen_quad_prepare_draw (GstVulkanFullScreenQuad * self,
       }
       out_views[i] = get_or_create_image_view (img_mem);
       gst_vulkan_trash_list_add (self->trash_list,
-          gst_vulkan_trash_new_mini_object_unref (fence,
+          gst_vulkan_trash_list_acquire (self->trash_list, fence,
+              gst_vulkan_trash_mini_object_unref,
               (GstMiniObject *) out_views[i]));
     }
     if (!create_framebuffer (self, out_views, error))
@@ -1145,8 +1156,8 @@ gst_vulkan_full_screen_quad_fill_command_buffer (GstVulkanFullScreenQuad * self,
     }
     in_views[i] = get_or_create_image_view (img_mem);
     gst_vulkan_trash_list_add (self->trash_list,
-        gst_vulkan_trash_new_mini_object_unref (fence,
-            (GstMiniObject *) in_views[i]));
+        gst_vulkan_trash_list_acquire (self->trash_list, fence,
+            gst_vulkan_trash_mini_object_unref, (GstMiniObject *) in_views[i]));
   }
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&self->out_info); i++) {
     GstVulkanImageMemory *img_mem = peek_image_from_buffer (priv->outbuf, i);
@@ -1157,7 +1168,8 @@ gst_vulkan_full_screen_quad_fill_command_buffer (GstVulkanFullScreenQuad * self,
     }
     out_views[i] = get_or_create_image_view (img_mem);
     gst_vulkan_trash_list_add (self->trash_list,
-        gst_vulkan_trash_new_mini_object_unref (fence,
+        gst_vulkan_trash_list_acquire (self->trash_list, fence,
+            gst_vulkan_trash_mini_object_unref,
             (GstMiniObject *) out_views[i]));
   }
 
@@ -1309,8 +1321,8 @@ gst_vulkan_full_screen_quad_submit (GstVulkanFullScreenQuad * self,
   }
 
   gst_vulkan_trash_list_add (self->trash_list,
-      gst_vulkan_trash_new_mini_object_unref (fence,
-          GST_MINI_OBJECT_CAST (cmd)));
+      gst_vulkan_trash_list_acquire (self->trash_list, fence,
+          gst_vulkan_trash_mini_object_unref, GST_MINI_OBJECT_CAST (cmd)));
 
   gst_vulkan_trash_list_gc (self->trash_list);
 

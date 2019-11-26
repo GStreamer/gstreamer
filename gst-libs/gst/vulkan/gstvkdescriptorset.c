@@ -32,10 +32,12 @@
 #include "gstvkdescriptorset.h"
 #include "gstvkdescriptorpool.h"
 #include "gstvkdescriptorcache.h"
-#include "gstvkdescriptorcache-private.h"
 
 #define GST_CAT_DEFAULT gst_debug_vulkan_descriptor_set
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
+
+#define gst_vulkan_descriptor_cache_release_set(c,s) \
+    gst_vulkan_handle_pool_release (GST_VULKAN_HANDLE_POOL_CAST (c), s);
 
 static void
 init_debug (void)

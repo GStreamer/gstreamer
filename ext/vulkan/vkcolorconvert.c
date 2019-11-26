@@ -1209,7 +1209,7 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   VkResult err;
   int i;
 
-  fence = gst_vulkan_fence_new (vfilter->device, 0, &error);
+  fence = gst_vulkan_device_create_fence (vfilter->device, &error);
   if (!fence)
     goto error;
 
@@ -1226,7 +1226,8 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     in_img_views[i] =
         get_or_create_image_view ((GstVulkanImageMemory *) img_mem);
     gst_vulkan_trash_list_add (conv->quad->trash_list,
-        gst_vulkan_trash_new_mini_object_unref (fence,
+        gst_vulkan_trash_list_acquire (conv->quad->trash_list, fence,
+            gst_vulkan_trash_mini_object_unref,
             (GstMiniObject *) in_img_views[i]));
   }
 
@@ -1280,7 +1281,8 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
             gst_memory_ref ((GstMemory *) render_img_mems[i]));
       }
       gst_vulkan_trash_list_add (conv->quad->trash_list,
-          gst_vulkan_trash_new_mini_object_unref (fence,
+          gst_vulkan_trash_list_acquire (conv->quad->trash_list, fence,
+              gst_vulkan_trash_mini_object_unref,
               (GstMiniObject *) render_buf));
     } else {
       render_buf = outbuf;
@@ -1296,7 +1298,8 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
       render_img_views[i] =
           get_or_create_image_view ((GstVulkanImageMemory *) img_mem);
       gst_vulkan_trash_list_add (conv->quad->trash_list,
-          gst_vulkan_trash_new_mini_object_unref (fence,
+          gst_vulkan_trash_list_acquire (conv->quad->trash_list, fence,
+              gst_vulkan_trash_mini_object_unref,
               (GstMiniObject *) render_img_views[i]));
     }
   }
@@ -1445,7 +1448,8 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
 
       /* XXX: try to reuse this image later */
       gst_vulkan_trash_list_add (conv->quad->trash_list,
-          gst_vulkan_trash_new_mini_object_unref (fence,
+          gst_vulkan_trash_list_acquire (conv->quad->trash_list, fence,
+              gst_vulkan_trash_mini_object_unref,
               (GstMiniObject *) render_img_mems[i]));
     }
   }

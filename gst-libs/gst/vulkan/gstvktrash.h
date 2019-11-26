@@ -31,10 +31,15 @@ struct _GstVulkanTrash
 {
   GstMiniObject         parent;
 
+  GstVulkanTrashList   *cache;
+
   GstVulkanFence       *fence;
 
   GstVulkanTrashNotify  notify;
   gpointer              user_data;
+
+  /* <private> */
+  gpointer              _padding[GST_PADDING];
 };
 
 #define GST_TYPE_VULKAN_TRASH gst_vulkan_trash_get_type()
@@ -79,18 +84,33 @@ GstVulkanTrash *    gst_vulkan_trash_new                            (GstVulkanFe
                                                                      GstVulkanTrashNotify notify,
                                                                      gpointer user_data);
 GST_VULKAN_API
+void                gst_vulkan_trash_mini_object_unref              (GstVulkanDevice * device,
+                                                                     gpointer user_data);
+GST_VULKAN_API
+void                gst_vulkan_trash_object_unref                   (GstVulkanDevice * device,
+                                                                     gpointer user_data);
+GST_VULKAN_API
 GstVulkanTrash *    gst_vulkan_trash_new_free_semaphore             (GstVulkanFence * fence,
                                                                      VkSemaphore semaphore);
-GST_VULKAN_API
-GstVulkanTrash *    gst_vulkan_trash_new_object_unref               (GstVulkanFence * fence,
-                                                                     GstObject * object);
-GST_VULKAN_API
-GstVulkanTrash *    gst_vulkan_trash_new_mini_object_unref          (GstVulkanFence * fence,
-                                                                     GstMiniObject * object);
 
-#define GST_TYPE_VULKAN_TRASH_LIST gst_vulkan_trash_list_get_type()
+static inline GstVulkanTrash *
+gst_vulkan_trash_new_object_unref (GstVulkanFence * fence, GstObject * object)
+{
+  g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
+  return gst_vulkan_trash_new (fence,
+      (GstVulkanTrashNotify) gst_vulkan_trash_object_unref, (gpointer) object);
+}
+
+static inline GstVulkanTrash *
+gst_vulkan_trash_new_mini_object_unref (GstVulkanFence * fence, GstMiniObject * object)
+{
+  return gst_vulkan_trash_new (fence,
+      (GstVulkanTrashNotify) gst_vulkan_trash_mini_object_unref, (gpointer) object);
+}
+
 GST_VULKAN_API
 GType gst_vulkan_trash_list_get_type (void);
+#define GST_TYPE_VULKAN_TRASH_LIST gst_vulkan_trash_list_get_type()
 #define GST_VULKAN_TRASH_LIST(obj)              (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VULKAN_TRASH_LIST,GstVulkanTrashList))
 #define GST_VULKAN_TRASH_LIST_CLASS(klass)      (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VULKAN_TRASH_LIST,GstVulkanTrashListClass))
 #define GST_VULKAN_TRASH_LIST_GET_CLASS(obj)    (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_VULKAN_TRASH_LIST,GstVulkanTrashListClass))
@@ -103,7 +123,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVulkanTrashList, gst_object_unref)
 
 struct _GstVulkanTrashList
 {
-  GstObject         parent;
+  GstVulkanHandlePool parent;
 };
 
 typedef void        (*GstVulkanTrashListGC)     (GstVulkanTrashList * trash_list);
@@ -112,7 +132,7 @@ typedef gboolean    (*GstVulkanTrashListWait)   (GstVulkanTrashList * trash_list
 
 struct _GstVulkanTrashListClass
 {
-  GstObjectClass            parent_class;
+  GstVulkanHandlePoolClass  parent_class;
 
   GstVulkanTrashListAdd     add_func;
   GstVulkanTrashListGC      gc_func;
@@ -129,6 +149,11 @@ gboolean            gst_vulkan_trash_list_wait                      (GstVulkanTr
 GST_VULKAN_API
 gboolean            gst_vulkan_trash_list_add                       (GstVulkanTrashList * trash_list,
                                                                      GstVulkanTrash * trash);
+GST_VULKAN_API
+GstVulkanTrash *    gst_vulkan_trash_list_acquire                   (GstVulkanTrashList * trash_list,
+                                                                     GstVulkanFence * fence,
+                                                                     GstVulkanTrashNotify notify,
+                                                                     gpointer user_data);
 
 GST_VULKAN_API
 G_DECLARE_FINAL_TYPE (GstVulkanTrashFenceList, gst_vulkan_trash_fence_list, GST, VULKAN_TRASH_FENCE_LIST, GstVulkanTrashList);

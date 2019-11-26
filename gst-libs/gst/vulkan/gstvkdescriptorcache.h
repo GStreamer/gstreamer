@@ -22,6 +22,7 @@
 #define __GST_VULKAN_DESCRIPTOR_CACHE_H__
 
 #include <gst/vulkan/gstvkqueue.h>
+#include <gst/vulkan/gstvkhandlepool.h>
 
 #define GST_TYPE_VULKAN_DESCRIPTOR_CACHE         (gst_vulkan_descriptor_cache_get_type())
 #define GST_VULKAN_DESCRIPTOR_CACHE(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_TYPE_VULKAN_DESCRIPTOR_CACHE, GstVulkanDescriptorCache))
@@ -34,14 +35,14 @@ GType gst_vulkan_descriptor_cache_get_type       (void);
 
 struct _GstVulkanDescriptorCache
 {
-  GstObject                     parent;
+  GstVulkanHandlePool           parent;
 
   GstVulkanDescriptorPool      *pool;
 };
 
 struct _GstVulkanDescriptorCacheClass
 {
-  GstObjectClass parent_class;
+  GstVulkanHandlePoolClass      parent_class;
 };
 
 GST_VULKAN_API

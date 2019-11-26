@@ -1264,7 +1264,7 @@ reacquire:
     };
     /* *INDENT-ON* */
 
-    fence = gst_vulkan_fence_new (swapper->device, 0, error);
+    fence = gst_vulkan_device_create_fence (swapper->device, error);
     if (!fence)
       goto error;
 
@@ -1324,7 +1324,7 @@ reacquire:
     };
     /* *INDENT-ON* */
 
-    fence = gst_vulkan_fence_new (swapper->device, 0, error);
+    fence = gst_vulkan_device_create_fence (swapper->device, error);
     if (!fence)
       goto error;
 

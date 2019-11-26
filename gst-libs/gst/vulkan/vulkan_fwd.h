@@ -69,6 +69,9 @@ typedef struct _GstVulkanWindowPrivate GstVulkanWindowPrivate;
 
 typedef struct _GstVulkanFence GstVulkanFence;
 
+typedef struct _GstVulkanFenceCache GstVulkanFenceCache;
+typedef struct _GstVulkanFenceCacheClass GstVulkanFenceCacheClass;
+
 typedef struct _GstVulkanMemory GstVulkanMemory;
 typedef struct _GstVulkanMemoryAllocator GstVulkanMemoryAllocator;
 typedef struct _GstVulkanMemoryAllocatorClass GstVulkanMemoryAllocatorClass;
@@ -82,6 +85,9 @@ typedef struct _GstVulkanBufferPoolClass GstVulkanBufferPoolClass;
 typedef struct _GstVulkanBufferPoolPrivate GstVulkanBufferPoolPrivate;
 
 typedef struct _GstVulkanHandle GstVulkanHandle;
+
+typedef struct _GstVulkanHandlePool GstVulkanHandlePool;
+typedef struct _GstVulkanHandlePoolClass GstVulkanHandlePoolClass;
 
 typedef struct _GstVulkanImageMemory GstVulkanImageMemory;
 typedef struct _GstVulkanImageMemoryAllocator GstVulkanImageMemoryAllocator;

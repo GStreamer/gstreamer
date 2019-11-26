@@ -23,14 +23,14 @@
 
 #include <gst/vulkan/gstvkqueue.h>
 
+GST_VULKAN_API
+GType gst_vulkan_descriptor_pool_get_type       (void);
 #define GST_TYPE_VULKAN_DESCRIPTOR_POOL         (gst_vulkan_descriptor_pool_get_type())
 #define GST_VULKAN_DESCRIPTOR_POOL(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_TYPE_VULKAN_DESCRIPTOR_POOL, GstVulkanDescriptorPool))
 #define GST_VULKAN_DESCRIPTOR_POOL_CLASS(k)     (G_TYPE_CHECK_CLASS_CAST((k), GST_TYPE_VULKAN_DESCRIPTOR_POOL, GstVulkanDescriptorPoolClass))
 #define GST_IS_VULKAN_DESCRIPTOR_POOL(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_TYPE_VULKAN_DESCRIPTOR_POOL))
 #define GST_IS_VULKAN_DESCRIPTOR_POOL_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_TYPE_VULKAN_DESCRIPTOR_POOL))
 #define GST_VULKAN_DESCRIPTOR_POOL_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_TYPE_VULKAN_DESCRIPTOR_POOL, GstVulkanDescriptorPoolClass))
-GST_VULKAN_API
-GType gst_vulkan_descriptor_pool_get_type       (void);
 
 struct _GstVulkanDescriptorPool
 {

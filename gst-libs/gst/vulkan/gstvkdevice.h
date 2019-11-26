@@ -91,6 +91,10 @@ GST_VULKAN_API
 gboolean            gst_vulkan_device_run_context_query     (GstElement * element,
                                                              GstVulkanDevice ** device);
 
+GST_VULKAN_API
+GstVulkanFence *    gst_vulkan_device_create_fence          (GstVulkanDevice * device,
+                                                             GError ** error);
+
 G_END_DECLS
 
 #endif /* __GST_VULKAN_DEVICE_H__ */

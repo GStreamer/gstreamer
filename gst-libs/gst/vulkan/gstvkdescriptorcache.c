@@ -23,7 +23,6 @@
 #endif
 
 #include "gstvkdescriptorcache.h"
-#include "gstvkdescriptorcache-private.h"
 
 /**
  * SECTION:vkdescriptorcache
@@ -41,41 +40,13 @@ struct _GstVulkanDescriptorCachePrivate
 {
   guint n_layouts;
   GstVulkanHandle **layouts;
-
-  GQueue *available;
-  gsize outstanding;
 };
 
 #define parent_class gst_vulkan_descriptor_cache_parent_class
 G_DEFINE_TYPE_WITH_CODE (GstVulkanDescriptorCache, gst_vulkan_descriptor_cache,
-    GST_TYPE_OBJECT, G_ADD_PRIVATE (GstVulkanDescriptorCache);
+    GST_TYPE_VULKAN_HANDLE_POOL, G_ADD_PRIVATE (GstVulkanDescriptorCache);
     GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT,
         "vulkancommandcache", 0, "Vulkan Command Cache"));
-
-static void gst_vulkan_descriptor_cache_finalize (GObject * object);
-
-static void
-gst_vulkan_descriptor_cache_init (GstVulkanDescriptorCache * cache)
-{
-  GstVulkanDescriptorCachePrivate *priv = GET_PRIV (cache);
-
-  priv->available = g_queue_new ();
-}
-
-static void
-gst_vulkan_descriptor_cache_class_init (GstVulkanDescriptorCacheClass *
-    device_class)
-{
-  GObjectClass *gobject_class = (GObjectClass *) device_class;
-
-  gobject_class->finalize = gst_vulkan_descriptor_cache_finalize;
-}
-
-static void
-do_free_set (GstVulkanHandle * handle)
-{
-  gst_vulkan_handle_unref (handle);
-}
 
 static void
 gst_vulkan_descriptor_cache_finalize (GObject * object)
@@ -84,16 +55,9 @@ gst_vulkan_descriptor_cache_finalize (GObject * object)
   GstVulkanDescriptorCachePrivate *priv = GET_PRIV (cache);
   guint i;
 
-  if (priv->outstanding > 0)
-    g_critical
-        ("Destroying a Vulkan descriptor cache that has outstanding descriptors!");
-
   for (i = 0; i < priv->n_layouts; i++)
     gst_vulkan_handle_unref (priv->layouts[i]);
   g_free (priv->layouts);
-
-  g_queue_free_full (priv->available, (GDestroyNotify) do_free_set);
-  priv->available = NULL;
 
   gst_clear_object (&cache->pool);
 
@@ -114,6 +78,7 @@ GstVulkanDescriptorCache *
 gst_vulkan_descriptor_cache_new (GstVulkanDescriptorPool * pool,
     guint n_layouts, GstVulkanHandle ** layouts)
 {
+  GstVulkanHandlePool *handle_pool;
   GstVulkanDescriptorCache *ret;
   GstVulkanDescriptorCachePrivate *priv;
   guint i;
@@ -129,9 +94,59 @@ gst_vulkan_descriptor_cache_new (GstVulkanDescriptorPool * pool,
   for (i = 0; i < n_layouts; i++)
     priv->layouts[i] = gst_vulkan_handle_ref (layouts[i]);
 
+  handle_pool = GST_VULKAN_HANDLE_POOL (ret);
+  handle_pool->device = gst_object_ref (pool->device);
+
   gst_object_ref_sink (ret);
 
   return ret;
+}
+
+static gpointer
+gst_vulkan_descriptor_cache_acquire_impl (GstVulkanHandlePool * pool,
+    GError ** error)
+{
+  GstVulkanDescriptorSet *set;
+
+  if ((set =
+          GST_VULKAN_HANDLE_POOL_CLASS (parent_class)->acquire (pool, error)))
+    set->cache = gst_object_ref (pool);
+
+  return set;
+}
+
+static gpointer
+gst_vulkan_descriptor_cache_alloc_impl (GstVulkanHandlePool * pool,
+    GError ** error)
+{
+  GstVulkanDescriptorCache *desc = GST_VULKAN_DESCRIPTOR_CACHE (pool);
+  GstVulkanDescriptorCachePrivate *priv = GET_PRIV (desc);
+
+  return gst_vulkan_descriptor_pool_create (desc->pool, priv->n_layouts,
+      priv->layouts, error);
+}
+
+static void
+gst_vulkan_descriptor_cache_release_impl (GstVulkanHandlePool * pool,
+    gpointer handle)
+{
+  GstVulkanDescriptorSet *set = handle;
+
+  GST_VULKAN_HANDLE_POOL_CLASS (parent_class)->release (pool, handle);
+
+  /* decrease the refcount that the set had to us */
+  gst_clear_object (&set->cache);
+}
+
+static void
+gst_vulkan_descriptor_cache_free_impl (GstVulkanHandlePool * pool,
+    gpointer handle)
+{
+  GstVulkanDescriptorSet *set = handle;
+
+  GST_VULKAN_HANDLE_POOL_CLASS (parent_class)->free (pool, handle);
+
+  gst_vulkan_descriptor_set_unref (set);
 }
 
 /**
@@ -147,47 +162,25 @@ GstVulkanDescriptorSet *
 gst_vulkan_descriptor_cache_acquire (GstVulkanDescriptorCache * cache,
     GError ** error)
 {
-  GstVulkanDescriptorSet *set = NULL;
-  GstVulkanDescriptorCachePrivate *priv;
-
-  g_return_val_if_fail (GST_IS_VULKAN_DESCRIPTOR_CACHE (cache), NULL);
-
-  priv = GET_PRIV (cache);
-
-  GST_OBJECT_LOCK (cache);
-  set = g_queue_pop_head (priv->available);
-  GST_OBJECT_UNLOCK (cache);
-
-  if (!set)
-    set = gst_vulkan_descriptor_pool_create (cache->pool, priv->n_layouts,
-        priv->layouts, error);
-  if (!set)
-    return NULL;
-
-  GST_OBJECT_LOCK (cache);
-  priv->outstanding++;
-  GST_OBJECT_UNLOCK (cache);
-
-  set->cache = gst_object_ref (cache);
-  return set;
+  return gst_vulkan_handle_pool_acquire (GST_VULKAN_HANDLE_POOL_CAST (cache),
+      error);
 }
 
-void
-gst_vulkan_descriptor_cache_release_set (GstVulkanDescriptorCache * cache,
-    GstVulkanDescriptorSet * set)
+static void
+gst_vulkan_descriptor_cache_init (GstVulkanDescriptorCache * cache)
 {
-  GstVulkanDescriptorCachePrivate *priv;
+}
 
-  g_return_if_fail (GST_IS_VULKAN_DESCRIPTOR_CACHE (cache));
-  g_return_if_fail (set != NULL);
+static void
+gst_vulkan_descriptor_cache_class_init (GstVulkanDescriptorCacheClass * klass)
+{
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstVulkanHandlePoolClass *handle_class = (GstVulkanHandlePoolClass *) klass;
 
-  priv = GET_PRIV (cache);
+  gobject_class->finalize = gst_vulkan_descriptor_cache_finalize;
 
-  GST_OBJECT_LOCK (cache);
-  g_queue_push_tail (priv->available, set);
-  priv->outstanding--;
-  GST_OBJECT_UNLOCK (cache);
-
-  /* decrease the refcount that the set had to us */
-  gst_clear_object (&set->cache);
+  handle_class->acquire = gst_vulkan_descriptor_cache_acquire_impl;
+  handle_class->alloc = gst_vulkan_descriptor_cache_alloc_impl;
+  handle_class->release = gst_vulkan_descriptor_cache_release_impl;
+  handle_class->free = gst_vulkan_descriptor_cache_free_impl;
 }

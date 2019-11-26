@@ -599,7 +599,7 @@ _buffer_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     };
     /* *INDENT-ON* */
 
-    fence = gst_vulkan_fence_new (raw->upload->device, 0, &error);
+    fence = gst_vulkan_device_create_fence (raw->upload->device, &error);
     if (!fence)
       goto error;
 
@@ -610,7 +610,8 @@ _buffer_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
       goto error;
 
     gst_vulkan_trash_list_add (raw->trash_list,
-        gst_vulkan_trash_new_mini_object_unref (fence,
+        gst_vulkan_trash_list_acquire (raw->trash_list, fence,
+            gst_vulkan_trash_mini_object_unref,
             GST_MINI_OBJECT_CAST (cmd_buf)));
     gst_vulkan_fence_unref (fence);
   }
@@ -983,7 +984,7 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     };
     /* *INDENT-ON* */
 
-    fence = gst_vulkan_fence_new (raw->upload->device, 0, &error);
+    fence = gst_vulkan_device_create_fence (raw->upload->device, &error);
     if (!fence)
       goto error;
 
@@ -996,7 +997,8 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
       goto error;
 
     gst_vulkan_trash_list_add (raw->trash_list,
-        gst_vulkan_trash_new_mini_object_unref (fence,
+        gst_vulkan_trash_list_acquire (raw->trash_list, fence,
+            gst_vulkan_trash_mini_object_unref,
             GST_MINI_OBJECT_CAST (cmd_buf)));
     gst_vulkan_fence_unref (fence);
   }

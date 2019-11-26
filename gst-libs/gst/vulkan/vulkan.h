@@ -50,6 +50,7 @@
 #include <gst/vulkan/gstvkdescriptorset.h>
 #include <gst/vulkan/gstvkdescriptorpool.h>
 #include <gst/vulkan/gstvkhandle.h>
+#include <gst/vulkan/gstvkhandlepool.h>
 #include <gst/vulkan/gstvktrash.h>
 #include <gst/vulkan/gstvkswapper.h>
 

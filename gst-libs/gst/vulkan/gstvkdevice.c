@@ -49,6 +49,7 @@ enum
   PROP_PHYSICAL_DEVICE,
 };
 
+static void gst_vulkan_device_dispose (GObject * object);
 static void gst_vulkan_device_finalize (GObject * object);
 
 struct _GstVulkanDevicePrivate
@@ -56,6 +57,8 @@ struct _GstVulkanDevicePrivate
   gboolean opened;
   guint queue_family_id;
   guint n_queues;
+
+  GstVulkanFenceCache *fence_cache;
 };
 
 static void
@@ -168,6 +171,8 @@ gst_vulkan_device_constructed (GObject * object)
   GstVulkanDevice *device = GST_VULKAN_DEVICE (object);
 
   g_object_get (device->physical_device, "instance", &device->instance, NULL);
+
+  G_OBJECT_CLASS (parent_class)->constructed (object);
 }
 
 static void
@@ -178,6 +183,7 @@ gst_vulkan_device_class_init (GstVulkanDeviceClass * device_class)
   gobject_class->set_property = gst_vulkan_device_set_property;
   gobject_class->get_property = gst_vulkan_device_get_property;
   gobject_class->finalize = gst_vulkan_device_finalize;
+  gobject_class->dispose = gst_vulkan_device_dispose;
   gobject_class->constructed = gst_vulkan_device_constructed;
 
   g_object_class_install_property (gobject_class, PROP_INSTANCE,
@@ -189,6 +195,24 @@ gst_vulkan_device_class_init (GstVulkanDeviceClass * device_class)
           "Associated Vulkan Physical Device",
           GST_TYPE_VULKAN_PHYSICAL_DEVICE,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
+}
+
+static void
+gst_vulkan_device_dispose (GObject * object)
+{
+  GstVulkanDevice *device = GST_VULKAN_DEVICE (object);
+  GstVulkanDevicePrivate *priv = GET_PRIV (device);
+
+  if (priv->fence_cache) {
+    /* clear any outstanding fences */
+    g_object_run_dispose (G_OBJECT (priv->fence_cache));
+
+    /* don't double free this device */
+    priv->fence_cache->parent.device = NULL;
+  }
+  gst_clear_object (&priv->fence_cache);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
@@ -304,6 +328,10 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
       goto error;
     }
   }
+
+  priv->fence_cache = gst_vulkan_fence_cache_new (device);
+  /* avoid reference loops between us and the fence cache */
+  gst_object_unref (device);
 
   priv->opened = TRUE;
   GST_OBJECT_UNLOCK (device);
@@ -589,4 +617,15 @@ gst_vulkan_device_run_context_query (GstElement * element,
     return TRUE;
 
   return FALSE;
+}
+
+GstVulkanFence *
+gst_vulkan_device_create_fence (GstVulkanDevice * device, GError ** error)
+{
+  GstVulkanDevicePrivate *priv;
+
+  g_return_val_if_fail (GST_IS_VULKAN_DEVICE (device), NULL);
+  priv = GET_PRIV (device);
+
+  return gst_vulkan_fence_cache_acquire (priv->fence_cache, error);
 }

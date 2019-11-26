@@ -1915,7 +1915,7 @@ gst_vulkan_view_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
           &error))
     goto error;
 
-  fence = gst_vulkan_fence_new (vfilter->device, 0, &error);
+  fence = gst_vulkan_device_create_fence (vfilter->device, &error);
   if (!fence)
     goto error;
 
@@ -1929,7 +1929,8 @@ gst_vulkan_view_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     in_img_views[i] =
         get_or_create_image_view ((GstVulkanImageMemory *) img_mem);
     gst_vulkan_trash_list_add (conv->quad->trash_list,
-        gst_vulkan_trash_new_mini_object_unref (fence,
+        gst_vulkan_trash_list_acquire (conv->quad->trash_list, fence,
+            gst_vulkan_trash_mini_object_unref,
             (GstMiniObject *) in_img_views[i]));
   }
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&conv->quad->out_info); i++) {
@@ -1941,7 +1942,8 @@ gst_vulkan_view_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     }
     out_img_views[i] = get_or_create_image_view ((GstVulkanImageMemory *) mem);
     gst_vulkan_trash_list_add (conv->quad->trash_list,
-        gst_vulkan_trash_new_mini_object_unref (fence,
+        gst_vulkan_trash_list_acquire (conv->quad->trash_list, fence,
+            gst_vulkan_trash_mini_object_unref,
             (GstMiniObject *) out_img_views[i]));
   }
 
