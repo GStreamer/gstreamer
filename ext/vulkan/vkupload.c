@@ -847,7 +847,7 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
         gsize size = 1;
 
         raw->in_pool = gst_vulkan_buffer_pool_new (raw->upload->device);
-        config = gst_buffer_pool_get_config (raw->pool);
+        config = gst_buffer_pool_get_config (raw->in_pool);
         gst_buffer_pool_config_set_params (config, raw->upload->in_caps, size,
             min, max);
         gst_buffer_pool_set_config (raw->in_pool, config);
