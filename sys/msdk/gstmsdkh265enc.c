@@ -45,11 +45,13 @@ enum
   PROP_LOW_POWER = GST_MSDKENC_PROP_MAX,
   PROP_TILE_ROW,
   PROP_TILE_COL,
+  PROP_MAX_SLICE_SIZE,
 };
 
 #define PROP_LOWPOWER_DEFAULT           FALSE
 #define PROP_TILE_ROW_DEFAULT           1
 #define PROP_TILE_COL_DEFAULT           1
+#define PROP_MAX_SLICE_SIZE_DEFAULT     0
 
 #define RAW_FORMATS "NV12, I420, YV12, YUY2, UYVY, BGRA, P010_10LE, VUYA"
 
@@ -125,6 +127,7 @@ gst_msdkh265enc_configure (GstMsdkEnc * encoder)
   encoder->param.mfx.IdrInterval += 1;
 
   /* Enable Extended coding options */
+  encoder->option2.MaxSliceSize = h265enc->max_slice_size;
   gst_msdkenc_ensure_extended_coding_options (encoder);
 
   if (h265enc->num_tile_rows > 1 || h265enc->num_tile_cols > 1) {
@@ -249,6 +252,10 @@ gst_msdkh265enc_set_property (GObject * object, guint prop_id,
       thiz->num_tile_cols = g_value_get_uint (value);
       break;
 
+    case PROP_MAX_SLICE_SIZE:
+      thiz->max_slice_size = g_value_get_uint (value);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -277,6 +284,10 @@ gst_msdkh265enc_get_property (GObject * object, guint prop_id, GValue * value,
 
     case PROP_TILE_COL:
       g_value_set_uint (value, thiz->num_tile_cols);
+      break;
+
+    case PROP_MAX_SLICE_SIZE:
+      g_value_set_uint (value, thiz->max_slice_size);
       break;
 
     default:
@@ -342,6 +353,12 @@ gst_msdkh265enc_class_init (GstMsdkH265EncClass * klass)
           "number of columns for tiled encoding", 1, 8192,
           PROP_TILE_COL_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_MAX_SLICE_SIZE,
+      g_param_spec_uint ("max-slice-size", "Max Slice Size",
+          "Maximum slice size in bytes (if enabled MSDK will ignore the control over num-slices)",
+          0, G_MAXUINT32, PROP_MAX_SLICE_SIZE_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_set_static_metadata (element_class,
       "Intel MSDK H265 encoder",
       "Codec/Encoder/Video/Hardware",
@@ -359,5 +376,6 @@ gst_msdkh265enc_init (GstMsdkH265Enc * thiz)
   thiz->lowpower = PROP_LOWPOWER_DEFAULT;
   thiz->num_tile_rows = PROP_TILE_ROW_DEFAULT;
   thiz->num_tile_cols = PROP_TILE_COL_DEFAULT;
+  thiz->max_slice_size = PROP_MAX_SLICE_SIZE_DEFAULT;
   msdk_enc->num_extra_frames = 1;
 }

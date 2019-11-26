@@ -57,6 +57,7 @@ struct _GstMsdkH265Enc
   gboolean lowpower;
   gushort num_tile_rows;
   gushort num_tile_cols;
+  guint max_slice_size;
 
   mfxExtHEVCTiles ext_tiles;
   /* roi[0] for current ROI and roi[1] for previous ROI */
