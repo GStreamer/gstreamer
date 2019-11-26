@@ -129,15 +129,7 @@ G_PASTE(gst_vulkan_trash_new_free_,type_name) (GstVulkanFence * fence, \
   return trash; \
 }
 
-FREE_DESTROY_FUNC (vkDestroyDescriptorPool, VkDescriptorPool, descriptor_pool);
-FREE_DESTROY_FUNC (vkDestroyDescriptorSetLayout, VkDescriptorSetLayout,
-    descriptor_set_layout);
-FREE_DESTROY_FUNC (vkDestroyFramebuffer, VkFramebuffer, framebuffer);
-FREE_DESTROY_FUNC (vkDestroyPipeline, VkPipeline, pipeline);
-FREE_DESTROY_FUNC (vkDestroyPipelineLayout, VkPipelineLayout, pipeline_layout);
-FREE_DESTROY_FUNC (vkDestroyRenderPass, VkRenderPass, render_pass);
-FREE_DESTROY_FUNC (vkDestroySemaphore, VkSemaphore, semaphore)
-    FREE_DESTROY_FUNC (vkDestroySampler, VkSampler, sampler);
+FREE_DESTROY_FUNC (vkDestroySemaphore, VkSemaphore, semaphore);
 #define FREE_WITH_VK_PARENT(func, type, type_name, parent_type) \
 struct G_PASTE(free_parent_info_,type_name) \
 { \
@@ -167,11 +159,9 @@ G_PASTE(gst_vulkan_trash_new_free_,type_name) (GstVulkanFence * fence, \
       (GstVulkanTrashNotify) G_PASTE(_free_,type_name), info); \
   return trash; \
 }
-FREE_WITH_VK_PARENT (vkFreeDescriptorSets, VkDescriptorSet, descriptor_set,
-    VkDescriptorPool);
 
-     static void
-         _trash_object_unref (GstVulkanDevice * device, GstObject * object)
+static void
+_trash_object_unref (GstVulkanDevice * device, GstObject * object)
 {
   gst_object_unref (object);
 }

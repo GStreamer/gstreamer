@@ -78,37 +78,9 @@ GST_VULKAN_API
 GstVulkanTrash *    gst_vulkan_trash_new                            (GstVulkanFence * fence,
                                                                      GstVulkanTrashNotify notify,
                                                                      gpointer user_data);
-
-GST_VULKAN_API
-GstVulkanTrash *    gst_vulkan_trash_new_free_descriptor_pool       (GstVulkanFence * fence,
-                                                                     VkDescriptorPool descriptor_pool);
-GST_VULKAN_API
-GstVulkanTrash *    gst_vulkan_trash_new_free_descriptor_set_layout (GstVulkanFence * fence,
-                                                                     VkDescriptorSetLayout descriptor_set_layout);
-GST_VULKAN_API
-GstVulkanTrash *    gst_vulkan_trash_new_free_framebuffer           (GstVulkanFence * fence,
-                                                                     VkFramebuffer framebuffer);
-GST_VULKAN_API
-GstVulkanTrash *    gst_vulkan_trash_new_free_pipeline              (GstVulkanFence * fence,
-                                                                     VkPipeline pipeline);
-GST_VULKAN_API
-GstVulkanTrash *    gst_vulkan_trash_new_free_pipeline_layout       (GstVulkanFence * fence,
-                                                                     VkPipelineLayout pipeline_layout);
-GST_VULKAN_API
-GstVulkanTrash *    gst_vulkan_trash_new_free_render_pass           (GstVulkanFence * fence,
-                                                                     VkRenderPass render_pass);
-GST_VULKAN_API
-GstVulkanTrash *    gst_vulkan_trash_new_free_sampler               (GstVulkanFence * fence,
-                                                                     VkSampler sampler);
 GST_VULKAN_API
 GstVulkanTrash *    gst_vulkan_trash_new_free_semaphore             (GstVulkanFence * fence,
                                                                      VkSemaphore semaphore);
-
-GST_VULKAN_API
-GstVulkanTrash *    gst_vulkan_trash_new_free_descriptor_set        (GstVulkanFence * fence,
-                                                                     VkDescriptorPool parent,
-                                                                     VkDescriptorSet descriptor_set);
-
 GST_VULKAN_API
 GstVulkanTrash *    gst_vulkan_trash_new_object_unref               (GstVulkanFence * fence,
                                                                      GstObject * object);
