@@ -22,14 +22,7 @@
 #include <QtGui/qtgui-config.h>
 #endif
 
-/* qt uses the same trick as us to typedef GLsync on GLES2 but to a different
- * type which confuses the preprocessor. Instead of trying to reconcile the
- * two, we instead use the GLsync definition from Qt from above, and ensure
- * that we don't typedef GLsync in gstglfuncs.h */
 #include <gst/gl/gstglconfig.h>
-#undef GST_GL_HAVE_GLSYNC
-#define GST_GL_HAVE_GLSYNC 1
-#include <gst/gl/gstglfuncs.h>
 
 /* The glext.h guard was renamed in 2018, but some software which
  * includes their own copy of the GL headers (such as qt) might have
@@ -45,6 +38,17 @@
 #endif
 #endif
 #endif
+
+/* pulls in GLsync, see below */
+#include <QtGui/qopengl.h>
+
+/* qt uses the same trick as us to typedef GLsync on GLES2 but to a different
+ * type which confuses the preprocessor. Instead of trying to reconcile the
+ * two, we instead use the GLsync definition from Qt from above, and ensure
+ * that we don't typedef GLsync in gstglfuncs.h */
+#undef GST_GL_HAVE_GLSYNC
+#define GST_GL_HAVE_GLSYNC 1
+#include <gst/gl/gstglfuncs.h>
 
 #if defined(QT_OPENGL_ES_2)
 #include <QtGui/QOpenGLContext>
