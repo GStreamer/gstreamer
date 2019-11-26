@@ -1598,6 +1598,9 @@ GST_START_TEST (test_rtx_original_buffer_does_not_update_rtx_stats)
   fail_unless_equals_int64 (last_rtx_request,
       next_seqnum * TEST_BUF_DURATION + rtx_delay_ms * GST_MSECOND);
 
+  /* make sure the wait has settled before moving on */
+  gst_harness_wait_for_clock_id_waits (h, 1, 1);
+
   /* ORIGINAL seqnum 6 arrives just before it times out and is considered
    * lost. */
   now = 200 * GST_MSECOND;
