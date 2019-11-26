@@ -2340,16 +2340,17 @@ gst_h264_parse_push_codec_buffer (GstH264Parse * h264parse,
     GstBuffer * nal, GstClockTime ts)
 {
   GstMapInfo map;
+  GstBuffer *wrapped_nal;
 
   gst_buffer_map (nal, &map, GST_MAP_READ);
-  nal = gst_h264_parse_wrap_nal (h264parse, h264parse->format,
+  wrapped_nal = gst_h264_parse_wrap_nal (h264parse, h264parse->format,
       map.data, map.size);
   gst_buffer_unmap (nal, &map);
 
-  GST_BUFFER_TIMESTAMP (nal) = ts;
-  GST_BUFFER_DURATION (nal) = 0;
+  GST_BUFFER_TIMESTAMP (wrapped_nal) = ts;
+  GST_BUFFER_DURATION (wrapped_nal) = 0;
 
-  return gst_pad_push (GST_BASE_PARSE_SRC_PAD (h264parse), nal);
+  return gst_pad_push (GST_BASE_PARSE_SRC_PAD (h264parse), wrapped_nal);
 }
 
 static GstEvent *
