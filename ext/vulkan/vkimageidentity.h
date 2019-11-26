@@ -24,7 +24,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/vulkan/vulkan.h>
-#include "vkfullscreenrender.h"
+#include "vkfullscreenquad.h"
 
 G_BEGIN_DECLS
 
@@ -39,20 +39,15 @@ typedef struct _GstVulkanImageIdentityClass GstVulkanImageIdentityClass;
 
 struct _GstVulkanImageIdentity
 {
-  GstVulkanFullScreenRender         parent;
+  GstVulkanVideoFilter              parent;
 
-  GstVulkanCommandPool             *cmd_pool;
-
-  VkSampler                         sampler;
-  GstVulkanDescriptorCache         *descriptor_pool;
-
-  VkDescriptorSetLayoutBinding      sampler_layout_binding;
-  VkDescriptorSetLayoutCreateInfo   layout_info;
+  GstVulkanFullScreenQuad          *quad;
+  GstMemory                        *uniforms;
 };
 
 struct _GstVulkanImageIdentityClass
 {
-  GstVulkanFullScreenRenderClass parent_class;
+  GstVulkanVideoFilterClass parent_class;
 };
 
 GType gst_vulkan_image_identity_get_type(void);

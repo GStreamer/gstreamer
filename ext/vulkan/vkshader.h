@@ -26,6 +26,6 @@
 
 G_BEGIN_DECLS
 
-VkShaderModule _vk_create_shader (GstVulkanDevice * device, gchar * code, gsize size, GError ** error);
+GstVulkanHandle * _vk_create_shader (GstVulkanDevice * device, gchar * code, gsize size, GError ** error);
 
 #endif

@@ -27,11 +27,11 @@
 #define SPIRV_MAGIC_NUMBER_NE 0x07230203
 #define SPIRV_MAGIC_NUMBER_OE 0x03022307
 
-VkShaderModule
+GstVulkanHandle *
 _vk_create_shader (GstVulkanDevice * device, gchar * code, gsize size,
     GError ** error)
 {
-  VkShaderModule ret;
+  VkShaderModule shader;
   VkResult res;
 
   /* *INDENT-OFF* */
@@ -49,7 +49,7 @@ _vk_create_shader (GstVulkanDevice * device, gchar * code, gsize size,
   g_return_val_if_fail (size >= 4, VK_NULL_HANDLE);
   g_return_val_if_fail (size % 4 == 0, VK_NULL_HANDLE);
 
-  first_word = ((guint32 *) code)[0];
+  first_word = code[0] | code[1] << 8 | code[2] << 16 | code[3] << 24;
   g_return_val_if_fail (first_word == SPIRV_MAGIC_NUMBER_NE
       || first_word == SPIRV_MAGIC_NUMBER_OE, VK_NULL_HANDLE);
   if (first_word == SPIRV_MAGIC_NUMBER_OE) {
@@ -78,12 +78,11 @@ _vk_create_shader (GstVulkanDevice * device, gchar * code, gsize size,
     info.pCode = new_code;
   }
 
-  res = vkCreateShaderModule (device->device, &info, NULL, &ret);
+  res = vkCreateShaderModule (device->device, &info, NULL, &shader);
   g_free (new_code);
   if (gst_vulkan_error_to_g_error (res, error, "VkCreateShaderModule") < 0)
-    return VK_NULL_HANDLE;
+    return NULL;
 
-  g_free (new_code);
-
-  return ret;
+  return gst_vulkan_handle_new_wrapped (device, GST_VULKAN_HANDLE_TYPE_SHADER,
+      (GstVulkanHandleTypedef) shader, gst_vulkan_handle_free_shader, NULL);
 }

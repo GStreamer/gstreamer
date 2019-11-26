@@ -5,9 +5,7 @@
 
 layout(location = 0) in vec2 inTexCoord;
 
-layout(set = 0, binding = 0) uniform sampler2D l_tex;
-layout(set = 0, binding = 1) uniform sampler2D r_tex;
-layout(set = 0, binding = 2) uniform ViewConvert {
+layout(set = 0, binding = 0) uniform ViewConvert {
   ivec4 in_reorder_idx;
   ivec4 out_reorder_idx;
   vec4 tex_offset;
@@ -16,6 +14,8 @@ layout(set = 0, binding = 2) uniform ViewConvert {
   int output_type;
   mat3 downmix[2];
 };
+layout(set = 0, binding = 1) uniform sampler2D l_tex;
+layout(set = 0, binding = 2) uniform sampler2D r_tex;
 
 layout(location = 0) out vec4 outColor0;
 

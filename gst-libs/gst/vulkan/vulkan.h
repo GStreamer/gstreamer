@@ -25,6 +25,7 @@
 
 #include <gst/vulkan/gstvkapi.h>
 
+/* helper vulkan objects */
 #include <gst/vulkan/gstvkdebug.h>
 #include <gst/vulkan/gstvkerror.h>
 #include <gst/vulkan/gstvkinstance.h>
@@ -51,5 +52,8 @@
 #include <gst/vulkan/gstvkhandle.h>
 #include <gst/vulkan/gstvktrash.h>
 #include <gst/vulkan/gstvkswapper.h>
+
+/* helper elements */
+#include <gst/vulkan/gstvkvideofilter.h>
 
 #endif /* __GST_VULKAN_H__ */

@@ -24,7 +24,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/vulkan/vulkan.h>
-#include "vkfullscreenrender.h"
+#include "vkfullscreenquad.h"
 
 G_BEGIN_DECLS
 
@@ -46,34 +46,24 @@ typedef enum
 
 struct _GstVulkanViewConvert
 {
-  GstVulkanFullScreenRender         parent;
+  GstVulkanVideoFilter              parent;
 
-  GstVulkanCommandPool             *cmd_pool;
-
-  VkSampler                         sampler;
-  GstVulkanDescriptorCache         *descriptor_pool;
-
-  VkShaderModule                    vert_module;
-  VkShaderModule                    frag_module;
-
-  VkDescriptorSetLayoutBinding      sampler_layout_binding;
-  VkDescriptorSetLayoutCreateInfo   layout_info;
-
-  GstMemory                        *uniform;
-  gboolean                          descriptor_up_to_date;
+  GstVulkanFullScreenQuad          *quad;
 
   /* properties */
-  GstVideoMultiviewMode input_mode_override;
-  GstVideoMultiviewFlags input_flags_override;
-  GstVideoMultiviewMode output_mode_override;
-  GstVideoMultiviewFlags output_flags_override;
+  GstVideoMultiviewMode             input_mode_override;
+  GstVideoMultiviewFlags            input_flags_override;
+  GstVideoMultiviewMode             output_mode_override;
+  GstVideoMultiviewFlags            output_flags_override;
 
-  GstVulkanStereoDownmix downmix_mode;
+  GstVulkanStereoDownmix            downmix_mode;
+
+  GstMemory                        *uniform;
 };
 
 struct _GstVulkanViewConvertClass
 {
-  GstVulkanFullScreenRenderClass parent_class;
+  GstVulkanVideoFilterClass parent_class;
 };
 
 GType gst_vulkan_view_convert_get_type(void);

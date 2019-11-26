@@ -4,11 +4,11 @@
 
 layout(location = 0) in vec2 inTexCoord;
 
-layout(push_constant) uniform reorder {
+layout(set = 0, binding = 0) uniform reorder {
   ivec4 in_reorder_idx;
   ivec4 out_reorder_idx;
 };
-layout(set = 0, binding = 0) uniform sampler2D inTexture0;
+layout(set = 0, binding = 1) uniform sampler2D inTexture0;
 
 layout(location = 0) out vec4 outColor0;
 

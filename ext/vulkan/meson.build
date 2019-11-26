@@ -23,7 +23,7 @@ vulkan_sources = [
   'vkdownload.c',
   'vkdeviceprovider.c',
   'vkelementutils.c',
-  'vkfullscreenrender.c',
+  'vkfullscreenquad.c',
   'vkimageidentity.c',
   'vksink.c',
   'vkshader.c',

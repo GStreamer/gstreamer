@@ -24,7 +24,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/vulkan/vulkan.h>
-#include "vkfullscreenrender.h"
+#include "vkfullscreenquad.h"
 
 G_BEGIN_DECLS
 
@@ -41,16 +41,15 @@ typedef struct _GstVulkanColorConvertClass GstVulkanColorConvertClass;
 
 typedef struct _shader_info shader_info;
 
-typedef gboolean (*CommandStateUpdate) (GstVulkanColorConvert * conv, VkCommandBuffer cmd, shader_info * sinfo, GstVulkanImageView ** src_views, GstVulkanImageView ** dest_views, GstVulkanFence * fence);
+typedef GstMemory * (*CommandCreateUniformMemory) (GstVulkanColorConvert * conv, shader_info * sinfo, GstVulkanImageView ** src_views, GstVulkanImageView ** dest_views);
 
 struct _shader_info
 {
   GstVideoFormat from;
   GstVideoFormat to;
-  CommandStateUpdate cmd_state_update;
+  CommandCreateUniformMemory cmd_create_uniform;
   gchar *frag_code;
   gsize frag_size;
-  VkPushConstantRange push_constant_ranges[MAX_PUSH_CONSTANTS];
   gsize uniform_size;
   GDestroyNotify notify;
   gpointer user_data;
@@ -58,26 +57,16 @@ struct _shader_info
 
 struct _GstVulkanColorConvert
 {
-  GstVulkanFullScreenRender         parent;
+  GstVulkanVideoFilter              parent;
 
-  GstVulkanCommandPool             *cmd_pool;
-
-  VkSampler                         sampler;
-  GstVulkanDescriptorCache         *descriptor_pool;
-
-  VkShaderModule                    vert_module;
-  VkShaderModule                    frag_module;
-
-  VkDescriptorSetLayoutBinding      sampler_layout_binding;
-  VkDescriptorSetLayoutCreateInfo   layout_info;
+  GstVulkanFullScreenQuad          *quad;
 
   shader_info                      *current_shader;
-  GstMemory                        *uniform;
 };
 
 struct _GstVulkanColorConvertClass
 {
-  GstVulkanFullScreenRenderClass parent_class;
+  GstVulkanVideoFilterClass parent_class;
 };
 
 GType gst_vulkan_color_convert_get_type(void);
