@@ -886,6 +886,47 @@ parse_value (AmfParser * parser)
   return node;
 }
 
+GstAmfNode *
+gst_amf_node_parse (const guint8 * data, gsize size, guint8 ** endptr)
+{
+  AmfParser parser = {
+    .data = data,
+    .size = size,
+  };
+  GstAmfNode *node;
+
+  g_return_val_if_fail (data, NULL);
+  g_return_val_if_fail (size, NULL);
+
+  init_static ();
+
+  GST_TRACE ("Starting parse with %" G_GSIZE_FORMAT " bytes", parser.size);
+
+  node = parse_value (&parser);
+  if (gst_amf_node_get_type (node) == GST_AMF_TYPE_INVALID) {
+    GST_ERROR ("invalid value");
+    goto out;
+  }
+
+  if (G_UNLIKELY (GST_LEVEL_LOG <= _gst_debug_min) &&
+      GST_LEVEL_LOG <= gst_debug_category_get_threshold (GST_CAT_DEFAULT)) {
+    GString *string = g_string_new (NULL);
+    gst_amf_node_dump (node, -1, string);
+    GST_LOG ("Parsed value: %s", string->str);
+    g_string_free (string, TRUE);
+  }
+
+  GST_TRACE ("Done parsing; consumed %" G_GSIZE_FORMAT " bytes and left %"
+      G_GSIZE_FORMAT " bytes", parser.offset, parser.size - parser.offset);
+
+out:
+  if (endptr) {
+    *endptr = (guint8 *) parser.data + parser.offset;
+  }
+
+  return node;
+}
+
 GPtrArray *
 gst_amf_parse_command (const guint8 * data, gsize size,
     gdouble * transaction_id, gchar ** command_name)
@@ -1091,6 +1132,30 @@ serialize_value (GByteArray * array, const GstAmfNode * node)
           gst_amf_type_get_nick (node->type));
       break;
   }
+}
+
+GBytes *
+gst_amf_node_serialize (const GstAmfNode * node)
+{
+  GByteArray *array = g_byte_array_new ();
+
+  g_return_val_if_fail (node, NULL);
+
+  init_static ();
+
+  if (G_UNLIKELY (GST_LEVEL_LOG <= _gst_debug_min) &&
+      GST_LEVEL_LOG <= gst_debug_category_get_threshold (GST_CAT_DEFAULT)) {
+    GString *string = g_string_new (NULL);
+    gst_amf_node_dump (node, -1, string);
+    GST_LOG ("Serializing value: %s", string->str);
+    g_string_free (string, TRUE);
+  }
+
+  serialize_value (array, node);
+
+  GST_TRACE ("Done serializing; produced %u bytes", array->len);
+
+  return g_byte_array_free_to_bytes (array);
 }
 
 GBytes *
