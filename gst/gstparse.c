@@ -291,6 +291,9 @@ gst_parse_launchv_full (const gchar ** argv, GstParseContext * context,
  * the @error is set. In this case there was a recoverable parsing error and you
  * can try to play the pipeline.
  *
+ * To create a sub-pipeline (bin) for embedding into an existing pipeline
+ * use gst_parse_bin_from_description().
+ *
  * Returns: (transfer floating) (nullable): a new element on success, %NULL on
  *   failure. If more than one toplevel element is specified by the
  *   @pipeline_description, all elements are put into a #GstPipeline, which
@@ -315,6 +318,9 @@ gst_parse_launch (const gchar * pipeline_description, GError ** error)
  * Please note that you might get a return value that is not %NULL even though
  * the @error is set. In this case there was a recoverable parsing error and you
  * can try to play the pipeline.
+ *
+ * To create a sub-pipeline (bin) for embedding into an existing pipeline
+ * use gst_parse_bin_from_description_full().
  *
  * Returns: (transfer floating) (nullable): a new element on success, %NULL on
  *    failure. If more than one toplevel element is specified by the
