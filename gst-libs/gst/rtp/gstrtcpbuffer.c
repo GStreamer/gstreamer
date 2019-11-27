@@ -555,8 +555,16 @@ gst_rtcp_buffer_add_packet (GstRTCPBuffer * rtcp, GstRTCPType type,
   g_return_val_if_fail (rtcp->map.flags & GST_MAP_WRITE, FALSE);
 
   /* find free space */
-  if (gst_rtcp_buffer_get_first_packet (rtcp, packet))
+  if (gst_rtcp_buffer_get_first_packet (rtcp, packet)) {
     while (gst_rtcp_packet_move_to_next (packet));
+
+    if (packet->padding) {
+      /* Last packet is a padding packet. Let's not replace it silently  */
+      /* and let the application know that it could not be added because */
+      /* it would involve replacing a packet */
+      return FALSE;
+    }
+  }
 
   maxsize = rtcp->map.maxsize;
 

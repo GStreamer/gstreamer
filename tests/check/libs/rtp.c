@@ -1970,6 +1970,188 @@ GST_START_TEST (test_ext_timestamp_wraparound_disordered_cannot_unwrap)
 
 GST_END_TEST;
 
+static gboolean
+set_rtcp_packet (GstBuffer * buffer, GstRTCPPacket * packet)
+{
+  GstMapInfo map = GST_MAP_INFO_INIT;
+  gboolean ret = FALSE;
+  gssize fci_length;
+
+  if (!gst_buffer_map (buffer, &map, GST_MAP_READ)) {
+    GST_WARNING_OBJECT (buffer, "Cannot map feedback buffer");
+    return FALSE;
+  }
+
+  fci_length = (map.size / 4) /* words of 4 bytes */ -3 /* skip RCTP header */ ;
+  if (fci_length <= 0) {
+    GST_WARNING ("Unexpected FCI length");
+    goto end;
+  }
+
+  if (!gst_rtcp_packet_fb_set_fci_length (packet, fci_length)) {
+    /* No enough space in rtcp packet to add this report */
+    GST_WARNING ("Could not set transport feedback FCI length");
+    goto end;
+  }
+  // Copy the rtcp feedback message here
+  memcpy (packet->rtcp->map.data + packet->offset, map.data, map.size);
+
+  ret = TRUE;
+
+end:
+  gst_buffer_unmap (buffer, &map);
+
+  return ret;
+}
+
+static gboolean
+add_rtcp_packet (GstBuffer * rtcp_buffer, GstBuffer * buffer, GstRTCPType type)
+{
+  GstRTCPBuffer rtcp = GST_RTCP_BUFFER_INIT;
+  gboolean rtcp_mapped = FALSE;
+  GstRTCPPacket packet;
+  gboolean ret = FALSE;
+
+  rtcp_mapped = gst_rtcp_buffer_map (rtcp_buffer, GST_MAP_READWRITE, &rtcp);
+  if (!rtcp_mapped) {
+    GST_WARNING_OBJECT (rtcp_buffer, "Cannot map buffer to RTCP");
+    return FALSE;
+  }
+
+  if (!gst_rtcp_buffer_add_packet (&rtcp, type, &packet)) {
+    GST_DEBUG ("Cannot add RTCP packet");
+    goto end;
+  }
+
+  ret = set_rtcp_packet (buffer, &packet);
+
+end:
+  if (rtcp_mapped) {
+    gst_rtcp_buffer_unmap (&rtcp);
+  }
+
+  return ret;
+}
+
+static GstBuffer *
+create_feedback_buffer (gboolean with_padding)
+{
+  if (with_padding) {
+    guint8 transport_wide_cc_padding_buffer[72] = {
+      0xaf, 0xcd, 0x00, 0x11,
+      0x7c, 0xbf, 0x7b, 0x00,
+      0x4c, 0xc1, 0xe4, 0x69,
+      0x00, 0x24, 0x00, 0x30,
+      0x00, 0x00, 0x2c, 0x01,
+      0x20, 0x30, 0x65, 0x0c,
+      0x09, 0x0c, 0x0d, 0x08,
+      0x2a, 0x16, 0x14, 0x14,
+      0x16, 0x14, 0xcc, 0x00,
+      0x14, 0x14, 0xcc, 0x8e,
+      0x01, 0xa3, 0x02, 0x14,
+      0x16, 0x50, 0x00, 0x16,
+      0x7b, 0x01, 0x17, 0x14,
+      0x94, 0x01, 0x15, 0x11,
+      0x18, 0x16, 0x15, 0x90,
+      0x01, 0x13, 0x15, 0x2a,
+      0x00, 0x17, 0x17, 0x4f,
+      0x00, 0x14, 0x00, 0x02,
+    };
+
+    return gst_buffer_new_wrapped (g_memdup (transport_wide_cc_padding_buffer,
+            sizeof (transport_wide_cc_padding_buffer)),
+        sizeof (transport_wide_cc_padding_buffer));
+  } else {
+    guint8 transport_wide_cc_buffer[36] = {
+      0x8f, 0xcd, 0x00, 0x08,
+      0x7c, 0xbf, 0x7b, 0x00,
+      0x4c, 0xc1, 0xe4, 0x69,
+      0x19, 0xbc, 0x00, 0x0e,
+      0x00, 0x02, 0x3c, 0x33,
+      0x20, 0x0e, 0x02, 0x28,
+      0x15, 0x15, 0x14, 0x17,
+      0x14, 0x14, 0x15, 0x29,
+      0x18, 0x12, 0x15, 0x16,
+    };
+    return gst_buffer_new_wrapped (g_memdup (transport_wide_cc_buffer,
+            sizeof (transport_wide_cc_buffer)),
+        sizeof (transport_wide_cc_buffer));
+  }
+}
+
+static GstBuffer *
+create_remb_buffer ()
+{
+  guint8 remb_buffer[20] = {
+    0x8f, 0xce, 0x00, 0x04,
+    0x00, 0x00, 0x00, 0x01,
+    0x00, 0x00, 0x00, 0x00,
+    0x52, 0x45, 0x4d, 0x42,
+    0x00, 0x0b, 0xd0, 0x90,
+  };
+
+  return gst_buffer_new_wrapped (g_memdup (remb_buffer, sizeof (remb_buffer)),
+      sizeof (remb_buffer));
+}
+
+static gboolean
+add_transport_wide_cc (GstBuffer * buffer, gboolean with_padding)
+{
+  GstBuffer *feedback;
+  gboolean ret;
+
+  feedback = create_feedback_buffer (with_padding);
+  ret = add_rtcp_packet (buffer, feedback, GST_RTCP_TYPE_RTPFB);
+  gst_buffer_unref (feedback);
+
+  return ret;
+}
+
+static gboolean
+add_remb (GstBuffer * buffer)
+{
+  GstBuffer *remb;
+  gboolean ret;
+
+  remb = create_remb_buffer ();
+  ret = add_rtcp_packet (buffer, remb, GST_RTCP_TYPE_PSFB);
+  gst_buffer_unref (remb);
+
+  return ret;
+}
+
+GST_START_TEST (test_rtcp_compound_padding)
+{
+  GstRTCPBuffer rtcp = GST_RTCP_BUFFER_INIT;
+  GstRTCPPacket *rtcp_packet = NULL;
+  GstBuffer *rtcp_buffer;
+
+  rtcp_buffer = gst_rtcp_buffer_new (1400);
+
+  fail_unless (gst_rtcp_buffer_map (rtcp_buffer, GST_MAP_READWRITE, &rtcp));
+  rtcp_packet = g_slice_new0 (GstRTCPPacket);
+  fail_unless (gst_rtcp_buffer_add_packet (&rtcp, GST_RTCP_TYPE_RR,
+          rtcp_packet));
+  gst_rtcp_packet_rr_set_ssrc (rtcp_packet, 1);
+  g_slice_free (GstRTCPPacket, rtcp_packet);
+  gst_rtcp_buffer_unmap (&rtcp);
+
+  fail_unless (gst_rtcp_buffer_validate (rtcp_buffer));
+
+  fail_unless (add_remb (rtcp_buffer));
+  fail_unless (add_transport_wide_cc (rtcp_buffer, FALSE));
+  /* Last packet did not have padding so we can add more packets */
+  fail_unless (add_remb (rtcp_buffer));
+
+  fail_unless (add_transport_wide_cc (rtcp_buffer, TRUE));
+  /* Last packet has padding so we are not allow to add more */
+  fail_if (add_remb (rtcp_buffer));
+
+  gst_buffer_unref (rtcp_buffer);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtp_suite (void)
 {
@@ -2021,6 +2203,8 @@ rtp_suite (void)
   tcase_add_test (tc_chain, test_ext_timestamp_wraparound_disordered);
   tcase_add_test (tc_chain,
       test_ext_timestamp_wraparound_disordered_cannot_unwrap);
+
+  tcase_add_test (tc_chain, test_rtcp_compound_padding);
 
   return s;
 }
