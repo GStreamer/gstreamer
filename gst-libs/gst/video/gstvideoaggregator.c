@@ -1389,6 +1389,8 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
 {
   GList *l;
   gboolean eos = TRUE;
+  gboolean repeat_pad_eos = FALSE;
+  gboolean has_no_repeat_pads = FALSE;
   gboolean need_more_data = FALSE;
   gboolean need_reconfigure = FALSE;
 
@@ -1411,6 +1413,8 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
 
     if (!is_eos)
       eos = FALSE;
+    if (!pad->priv->repeat_after_eos)
+      has_no_repeat_pads = TRUE;
     buf = gst_aggregator_pad_peek_buffer (bpad);
     if (buf) {
       GstClockTime start_time, end_time;
@@ -1554,7 +1558,7 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
       }
     } else {
       if (is_eos && pad->priv->repeat_after_eos) {
-        eos = FALSE;
+        repeat_pad_eos = TRUE;
         GST_DEBUG_OBJECT (pad, "ignoring EOS and re-using previous buffer");
         continue;
       }
@@ -1583,6 +1587,8 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
 
   if (need_more_data)
     return GST_AGGREGATOR_FLOW_NEED_DATA;
+  if (eos && !has_no_repeat_pads && repeat_pad_eos)
+    eos = FALSE;
   if (eos)
     return GST_FLOW_EOS;
 
