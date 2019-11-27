@@ -12,6 +12,7 @@ subdir('opencv', if_found: opencv_dep)
 subdir('uvch264')
 subdir('waylandsink')
 subdir('webrtc')
+subdir('msdk')
 
 executable('playout',
   'playout.c',
