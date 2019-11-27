@@ -179,12 +179,30 @@ enum
 
 static guint signals[N_SIGNALS] = { 0, };
 
+/* singletons */
+
+static GstMemory *set_data_frame_value;
+
+static void
+init_set_data_frame_value (void)
+{
+  GstAmfNode *node = gst_amf_node_new_string ("@setDataFrame", -1);
+  GBytes *bytes = gst_amf_node_serialize (node);
+  gsize size;
+  const gchar *data = g_bytes_get_data (bytes, &size);
+
+  set_data_frame_value = gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
+      (gpointer) data, size, 0, size, bytes, (GDestroyNotify) g_bytes_unref);
+  gst_amf_node_free (node);
+}
+
 /* class initialization */
 
 G_DEFINE_TYPE_WITH_CODE (GstRtmpConnection, gst_rtmp_connection,
     G_TYPE_OBJECT,
     GST_DEBUG_CATEGORY_INIT (gst_rtmp_connection_debug_category,
-        "rtmpconnection", 0, "debug category for GstRtmpConnection class"));
+        "rtmpconnection", 0, "debug category for GstRtmpConnection class");
+    init_set_data_frame_value ());
 
 static void
 gst_rtmp_connection_class_init (GstRtmpConnectionClass * klass)
@@ -998,4 +1016,15 @@ gst_rtmp_connection_request_window_size (GstRtmpConnection * connection,
 
   gst_rtmp_connection_queue_message (connection,
       gst_rtmp_message_new_protocol_control (&pc));
+}
+
+void
+gst_rtmp_connection_set_data_frame (GstRtmpConnection * connection,
+    GstBuffer * buffer)
+{
+  g_return_if_fail (GST_IS_RTMP_CONNECTION (connection));
+  g_return_if_fail (GST_IS_BUFFER (buffer));
+
+  gst_buffer_prepend_memory (buffer, gst_memory_ref (set_data_frame_value));
+  gst_rtmp_connection_queue_message (connection, buffer);
 }

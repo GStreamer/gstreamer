@@ -77,6 +77,9 @@ void gst_rtmp_connection_expect_command (GstRtmpConnection * connection,
 void gst_rtmp_connection_request_window_size (GstRtmpConnection * connection,
     guint32 window_ack_size);
 
+void gst_rtmp_connection_set_data_frame (GstRtmpConnection * connection,
+    GstBuffer * buffer);
+
 G_END_DECLS
 
 #endif
