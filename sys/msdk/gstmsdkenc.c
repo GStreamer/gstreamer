@@ -237,6 +237,115 @@ gst_msdkenc_ensure_extended_coding_options (GstMsdkEnc * thiz)
   }
 }
 
+/* Return TRUE if ROI is changed and update ROI parameters in encoder_roi */
+gboolean
+gst_msdkenc_get_roi_params (GstMsdkEnc * thiz,
+    GstVideoCodecFrame * frame, mfxExtEncoderROI * encoder_roi)
+{
+  GstBuffer *input;
+  guint num_roi, i, num_valid_roi = 0;
+  gushort roi_mode = G_MAXUINT16;
+  gpointer state = NULL;
+  mfxExtEncoderROI *curr_roi = encoder_roi;
+  mfxExtEncoderROI *prev_roi = encoder_roi + 1;
+
+  if (!frame || !frame->input_buffer)
+    return FALSE;
+
+  memset (curr_roi, 0, sizeof (mfxExtEncoderROI));
+  input = frame->input_buffer;
+
+  num_roi =
+      gst_buffer_get_n_meta (input, GST_VIDEO_REGION_OF_INTEREST_META_API_TYPE);
+
+  if (num_roi == 0)
+    goto end;
+
+  curr_roi->Header.BufferId = MFX_EXTBUFF_ENCODER_ROI;
+  curr_roi->Header.BufferSz = sizeof (mfxExtEncoderROI);
+
+  for (i = 0; i < num_roi && num_valid_roi < 256; i++) {
+    GstVideoRegionOfInterestMeta *roi;
+    GstStructure *s;
+
+    roi = (GstVideoRegionOfInterestMeta *)
+        gst_buffer_iterate_meta_filtered (input, &state,
+        GST_VIDEO_REGION_OF_INTEREST_META_API_TYPE);
+
+    if (!roi)
+      continue;
+
+    /* ignore roi if overflow */
+    if ((roi->x > G_MAXINT16) || (roi->y > G_MAXINT16)
+        || (roi->w > G_MAXUINT16) || (roi->h > G_MAXUINT16)) {
+      GST_DEBUG_OBJECT (thiz, "Ignoring ROI... ROI overflow");
+      continue;
+    }
+
+    GST_LOG ("Input buffer ROI: type=%s id=%d (%d, %d) %dx%d",
+        g_quark_to_string (roi->roi_type), roi->id, roi->x, roi->y, roi->w,
+        roi->h);
+
+    curr_roi->ROI[num_valid_roi].Left = roi->x;
+    curr_roi->ROI[num_valid_roi].Top = roi->y;
+    curr_roi->ROI[num_valid_roi].Right = roi->x + roi->w;
+    curr_roi->ROI[num_valid_roi].Bottom = roi->y + roi->h;
+
+    s = gst_video_region_of_interest_meta_get_param (roi, "roi/msdk");
+
+    if (s) {
+      int value = 0;
+
+      if (roi_mode == G_MAXUINT16) {
+        if (gst_structure_get_int (s, "delta-qp", &value)) {
+#if (MFX_VERSION >= 1022)
+          roi_mode = MFX_ROI_MODE_QP_DELTA;
+          curr_roi->ROI[num_valid_roi].DeltaQP = CLAMP (value, -51, 51);
+          GST_LOG ("Use delta-qp %d", value);
+#else
+          GST_WARNING
+              ("Ignore delta QP because the MFX doesn't support delta QP mode");
+#endif
+        } else if (gst_structure_get_int (s, "priority", &value)) {
+          roi_mode = MFX_ROI_MODE_PRIORITY;
+          curr_roi->ROI[num_valid_roi].Priority = CLAMP (value, -3, 3);
+          GST_LOG ("Use priority %d", value);
+        } else
+          continue;
+#if (MFX_VERSION >= 1022)
+      } else if (roi_mode == MFX_ROI_MODE_QP_DELTA &&
+          gst_structure_get_int (s, "delta-qp", &value)) {
+        curr_roi->ROI[num_valid_roi].DeltaQP = CLAMP (value, -51, 51);
+#endif
+      } else if (roi_mode == MFX_ROI_MODE_PRIORITY &&
+          gst_structure_get_int (s, "priority", &value)) {
+        curr_roi->ROI[num_valid_roi].Priority = CLAMP (value, -3, 3);
+      } else
+        continue;
+
+      num_valid_roi++;
+    }
+  }
+
+#if (MFX_VERSION >= 1022)
+  curr_roi->ROIMode = roi_mode;
+#endif
+
+  curr_roi->NumROI = num_valid_roi;
+
+end:
+  if (curr_roi->NumROI == 0 && prev_roi->NumROI == 0)
+    return FALSE;
+
+  if (curr_roi->NumROI != prev_roi->NumROI ||
+      memcmp (curr_roi, prev_roi, sizeof (mfxExtEncoderROI)) != 0) {
+    *prev_roi = *curr_roi;
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
 static gboolean
 gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
 {

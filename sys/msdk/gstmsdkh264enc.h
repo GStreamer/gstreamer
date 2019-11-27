@@ -55,6 +55,8 @@ struct _GstMsdkH264Enc
   GstMsdkEnc base;
 
   mfxExtCodingOption option;
+  /* roi[0] for current ROI and roi[1] for previous ROI */
+  mfxExtEncoderROI roi[2];
 
   gint profile;
   gint level;

@@ -480,6 +480,24 @@ gst_msdkh264enc_get_property (GObject * object, guint prop_id, GValue * value,
   GST_OBJECT_UNLOCK (thiz);
 }
 
+static gboolean
+gst_msdkh264enc_need_reconfig (GstMsdkEnc * encoder, GstVideoCodecFrame * frame)
+{
+  GstMsdkH264Enc *h264enc = GST_MSDKH264ENC (encoder);
+
+  return gst_msdkenc_get_roi_params (encoder, frame, h264enc->roi);
+}
+
+static void
+gst_msdkh264enc_set_extra_params (GstMsdkEnc * encoder,
+    GstVideoCodecFrame * frame)
+{
+  GstMsdkH264Enc *h264enc = GST_MSDKH264ENC (encoder);
+
+  if (h264enc->roi[0].NumROI)
+    gst_msdkenc_add_extra_param (encoder, (mfxExtBuffer *) & h264enc->roi[0]);
+}
+
 static void
 gst_msdkh264enc_class_init (GstMsdkH264EncClass * klass)
 {
@@ -501,6 +519,8 @@ gst_msdkh264enc_class_init (GstMsdkH264EncClass * klass)
   encoder_class->set_format = gst_msdkh264enc_set_format;
   encoder_class->configure = gst_msdkh264enc_configure;
   encoder_class->set_src_caps = gst_msdkh264enc_set_src_caps;
+  encoder_class->need_reconfig = gst_msdkh264enc_need_reconfig;
+  encoder_class->set_extra_params = gst_msdkh264enc_set_extra_params;
 
   gst_msdkenc_install_common_properties (encoder_class);
 

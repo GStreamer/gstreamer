@@ -286,6 +286,24 @@ gst_msdkh265enc_get_property (GObject * object, guint prop_id, GValue * value,
   GST_OBJECT_UNLOCK (thiz);
 }
 
+static gboolean
+gst_msdkh265enc_need_reconfig (GstMsdkEnc * encoder, GstVideoCodecFrame * frame)
+{
+  GstMsdkH265Enc *h265enc = GST_MSDKH265ENC (encoder);
+
+  return gst_msdkenc_get_roi_params (encoder, frame, h265enc->roi);
+}
+
+static void
+gst_msdkh265enc_set_extra_params (GstMsdkEnc * encoder,
+    GstVideoCodecFrame * frame)
+{
+  GstMsdkH265Enc *h265enc = GST_MSDKH265ENC (encoder);
+
+  if (h265enc->roi[0].NumROI)
+    gst_msdkenc_add_extra_param (encoder, (mfxExtBuffer *) & h265enc->roi[0]);
+}
+
 static void
 gst_msdkh265enc_class_init (GstMsdkH265EncClass * klass)
 {
@@ -303,6 +321,8 @@ gst_msdkh265enc_class_init (GstMsdkH265EncClass * klass)
   encoder_class->set_format = gst_msdkh265enc_set_format;
   encoder_class->configure = gst_msdkh265enc_configure;
   encoder_class->set_src_caps = gst_msdkh265enc_set_src_caps;
+  encoder_class->need_reconfig = gst_msdkh265enc_need_reconfig;
+  encoder_class->set_extra_params = gst_msdkh265enc_set_extra_params;
 
   gst_msdkenc_install_common_properties (encoder_class);
 

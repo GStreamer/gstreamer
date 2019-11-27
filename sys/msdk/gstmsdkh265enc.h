@@ -59,6 +59,8 @@ struct _GstMsdkH265Enc
   gushort num_tile_cols;
 
   mfxExtHEVCTiles ext_tiles;
+  /* roi[0] for current ROI and roi[1] for previous ROI */
+  mfxExtEncoderROI roi[2];
 };
 
 struct _GstMsdkH265EncClass

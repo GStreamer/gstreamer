@@ -204,6 +204,9 @@ gst_msdkenc_get_common_property (GObject * object, guint prop_id,
 void
 gst_msdkenc_ensure_extended_coding_options (GstMsdkEnc * thiz);
 
+gboolean
+gst_msdkenc_get_roi_params (GstMsdkEnc * thiz,
+    GstVideoCodecFrame * frame, mfxExtEncoderROI * encoder_roi);
 G_END_DECLS
 
 #endif /* __GST_MSDKENC_H__ */
