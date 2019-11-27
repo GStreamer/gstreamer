@@ -41,6 +41,7 @@
 #include "gstrtmp2sink.h"
 
 #include "gstrtmp2locationhandler.h"
+#include "rtmp/amf.h"
 #include "rtmp/rtmpclient.h"
 #include "rtmp/rtmpmessage.h"
 
@@ -620,21 +621,6 @@ buffer_to_message (GstRtmp2Sink * self, GstBuffer * buffer, GstBuffer ** outbuf)
 
   GST_BUFFER_DTS (message) = timestamp * GST_MSECOND;
 
-  if (type == GST_RTMP_MESSAGE_TYPE_DATA_AMF0) {
-    /* FIXME: HACK: Attach a setDataFrame header.
-     *        This should be done using a command. */
-
-    static const guint8 header[] = {
-      0x02, 0x00, 0x0d, 0x40, 0x73, 0x65, 0x74, 0x44,
-      0x61, 0x74, 0x61, 0x46, 0x72, 0x61, 0x6d, 0x65
-    };
-
-    GstMemory *memory = gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
-        (guint8 *) header, sizeof header, 0, sizeof header, NULL, NULL);
-
-    gst_buffer_prepend_memory (message, memory);
-  }
-
   *outbuf = message;
   return TRUE;
 }
@@ -660,10 +646,17 @@ static void
 send_message (GstRtmp2Sink * self, GstBuffer * message)
 {
   GstRtmpMeta *meta = gst_buffer_get_rtmp_meta (message);
+
   g_return_if_fail (meta != NULL);
   g_return_if_fail (self->stream_id != 0);
+
   meta->mstream = self->stream_id;
-  gst_rtmp_connection_queue_message (self->connection, message);
+
+  if (gst_rtmp_message_is_metadata (message)) {
+    gst_rtmp_connection_set_data_frame (self->connection, message);
+  } else {
+    gst_rtmp_connection_queue_message (self->connection, message);
+  }
 }
 
 static void
