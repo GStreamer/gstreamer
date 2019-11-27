@@ -137,6 +137,8 @@ gboolean gst_rtmp_message_parse_user_control (GstBuffer * buffer,
 
 GstBuffer * gst_rtmp_message_new_user_control (GstRtmpUserControl * uc);
 
+gboolean gst_rtmp_message_is_metadata (GstBuffer * buffer);
+
 G_END_DECLS
 
 #endif

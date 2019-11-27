@@ -22,6 +22,7 @@
 #include "config.h"
 #endif
 
+#include "amf.h"
 #include "rtmpmessage.h"
 #include "rtmpchunkstream.h"
 
@@ -492,4 +493,48 @@ gst_rtmp_message_new_user_control (GstRtmpUserControl * uc)
 
   return gst_rtmp_message_new_wrapped (GST_RTMP_MESSAGE_TYPE_USER_CONTROL,
       GST_RTMP_CHUNK_STREAM_PROTOCOL, 0, data, size);
+}
+
+gboolean
+gst_rtmp_message_is_metadata (GstBuffer * buffer)
+{
+  GstRtmpMeta *meta = gst_buffer_get_rtmp_meta (buffer);
+  GstMapInfo map;
+  GstAmfNode *node;
+  gboolean ret = FALSE;
+
+  g_return_val_if_fail (meta, FALSE);
+
+  if (meta->type != GST_RTMP_MESSAGE_TYPE_DATA_AMF0) {
+    return FALSE;
+  }
+
+  if (!gst_buffer_map (buffer, &map, GST_MAP_READ)) {
+    GST_ERROR ("can't map metadata message");
+    return FALSE;
+  }
+
+  node = gst_amf_node_parse (map.data, map.size, NULL);
+  if (!node) {
+    GST_ERROR ("can't read metadata name");
+    goto err;
+  }
+
+  switch (gst_amf_node_get_type (node)) {
+    case GST_AMF_TYPE_STRING:
+    case GST_AMF_TYPE_LONG_STRING:{
+      const gchar *name = gst_amf_node_peek_string (node, NULL);
+      ret = (strcmp (name, "onMetaData") == 0);
+      break;
+    }
+
+    default:
+      break;
+  }
+
+  gst_amf_node_free (node);
+
+err:
+  gst_buffer_unmap (buffer, &map);
+  return ret;
 }
