@@ -1863,7 +1863,7 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
   const gchar *str_playback_time = NULL;
   GstValidateScenarioPrivate *priv = scenario ? scenario->priv : NULL;
   GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_NONE;
-  gboolean optional, needs_parsing;
+  gboolean optional, needs_parsing = FALSE;
 
   action->type = gst_structure_get_name (structure);
   action_type = _find_action_type (action->type);
