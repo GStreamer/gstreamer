@@ -893,7 +893,6 @@ gst_amf_parse_command (const guint8 * data, gsize size,
   AmfParser parser = {
     .data = data,
     .size = size,
-    .recursion_depth = 0,
   };
   GstAmfNode *node1 = NULL, *node2 = NULL;
   GPtrArray *args = NULL;
@@ -1118,6 +1117,8 @@ gst_amf_serialize_command_valist (gdouble transaction_id,
 
   g_return_val_if_fail (command_name, NULL);
   g_return_val_if_fail (argument, NULL);
+
+  init_static ();
 
   GST_LOG ("Serializing command '%s', transid %.0f", command_name,
       transaction_id);

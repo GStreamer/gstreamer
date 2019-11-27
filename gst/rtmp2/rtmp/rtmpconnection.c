@@ -989,6 +989,8 @@ gst_rtmp_connection_request_window_size (GstRtmpConnection * connection,
     .param = window_ack_size,
   };
 
+  g_return_if_fail (GST_IS_RTMP_CONNECTION (connection));
+
   if (connection->out_window_ack_size == window_ack_size)
     return;
 
