@@ -1725,17 +1725,43 @@ _buffer_recvd (GstElement * appsink, gint * buffers_recvd)
   return GST_FLOW_OK;
 }
 
-GST_START_TEST (test_repeat_after_eos)
+static void
+_link_videotestsrc_with_compositor (GstElement * src, GstElement * compositor,
+    gboolean repeat_after_eos)
+{
+  GstPad *srcpad, *sinkpad;
+  GstPadLinkReturn link_res;
+
+  srcpad = gst_element_get_static_pad (src, "src");
+  sinkpad = gst_element_get_request_pad (compositor, "sink_%u");
+  /* When "repeat-after-eos" is set, compositor will keep sending the last buffer even
+   * after EOS, so we will receive more buffers than we sent. */
+  g_object_set (sinkpad, "repeat-after-eos", repeat_after_eos, NULL);
+  link_res = gst_pad_link (srcpad, sinkpad);
+  ck_assert_msg (GST_PAD_LINK_SUCCESSFUL (link_res), "videotestsrc -> "
+      "compositor pad  link failed: %i", link_res);
+  gst_object_unref (sinkpad);
+  gst_object_unref (srcpad);
+}
+
+static void
+run_test_repeat_after_eos (gint num_buffers1, gboolean repeat_after_eos1,
+    gint num_buffers2, gboolean repeat_after_eos2, gint num_buffers3,
+    gboolean repeat_after_eos3, gboolean result_equal)
 {
   gboolean res;
-  gint buffers_recvd;
-  GstPadLinkReturn link_res;
+  gint buffers_recvd, buffers_cnt;
   GstStateChangeReturn state_res;
-  GstElement *bin, *src, *compositor, *appsink;
-  GstPad *srcpad, *sinkpad;
+  GstElement *bin, *src, *src2, *src3, *compositor, *appsink;
   GstBus *bus;
 
   GST_INFO ("preparing test");
+
+  /* _buffer_recvd assumes we don't deal with buffer count larger than 5 */
+  ck_assert_int_le (num_buffers1, 5);
+  ck_assert_int_le (num_buffers2, 5);
+  ck_assert_int_le (num_buffers3, 5);
+  buffers_cnt = MAX (num_buffers1, MAX (num_buffers2, num_buffers3));
 
   /* build pipeline */
   bin = gst_pipeline_new ("pipeline");
@@ -1743,24 +1769,31 @@ GST_START_TEST (test_repeat_after_eos)
   gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
 
   src = gst_element_factory_make ("videotestsrc", NULL);
-  g_object_set (src, "num-buffers", 5, NULL);
+  g_object_set (src, "num-buffers", num_buffers1, NULL);
   compositor = gst_element_factory_make ("compositor", NULL);
   appsink = gst_element_factory_make ("appsink", NULL);
   g_object_set (appsink, "emit-signals", TRUE, NULL);
   gst_bin_add_many (GST_BIN (bin), src, compositor, appsink, NULL);
+  if (num_buffers2) {
+    src2 = gst_element_factory_make ("videotestsrc", NULL);
+    g_object_set (src2, "num-buffers", num_buffers2, NULL);
+    gst_bin_add (GST_BIN (bin), src2);
+  }
+  if (num_buffers3) {
+    src3 = gst_element_factory_make ("videotestsrc", NULL);
+    g_object_set (src3, "num-buffers", num_buffers3, NULL);
+    gst_bin_add (GST_BIN (bin), src3);
+  }
 
   res = gst_element_link (compositor, appsink);
   ck_assert_msg (res == TRUE, "Could not link compositor with appsink");
-  srcpad = gst_element_get_static_pad (src, "src");
-  sinkpad = gst_element_get_request_pad (compositor, "sink_%u");
-  /* When "repeat-after-eos" is set, compositor will keep sending the last buffer even
-   * after EOS, so we will receive more buffers than we sent. */
-  g_object_set (sinkpad, "repeat-after-eos", TRUE, NULL);
-  link_res = gst_pad_link (srcpad, sinkpad);
-  ck_assert_msg (GST_PAD_LINK_SUCCESSFUL (link_res), "videotestsrc -> "
-      "compositor pad  link failed: %i", link_res);
-  gst_object_unref (sinkpad);
-  gst_object_unref (srcpad);
+  _link_videotestsrc_with_compositor (src, compositor, repeat_after_eos1);
+  if (num_buffers2) {
+    _link_videotestsrc_with_compositor (src2, compositor, repeat_after_eos2);
+  }
+  if (num_buffers3) {
+    _link_videotestsrc_with_compositor (src3, compositor, repeat_after_eos3);
+  }
 
   GST_INFO ("pipeline built, connecting signals");
 
@@ -1782,14 +1815,66 @@ GST_START_TEST (test_repeat_after_eos)
   state_res = gst_element_set_state (bin, GST_STATE_NULL);
   ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
 
-  ck_assert_msg (buffers_recvd > 5, "Did not receive more buffers"
-      " than were sent");
+  if (result_equal) {
+    ck_assert_msg (buffers_recvd == buffers_cnt,
+        "Did not receive equal amount of buffers than were sent");
+  } else {
+    ck_assert_msg (buffers_recvd > buffers_cnt,
+        "Did not receive more buffers than were sent");
+  }
 
   /* cleanup */
   g_main_loop_unref (main_loop);
   gst_bus_remove_signal_watch (bus);
   gst_object_unref (bus);
   gst_object_unref (bin);
+}
+
+GST_START_TEST (test_repeat_after_eos_1pad)
+{
+  run_test_repeat_after_eos (5, TRUE, 0, FALSE, 0, FALSE, FALSE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_repeat_after_eos_2pads_repeating_first)
+{
+  run_test_repeat_after_eos (2, TRUE, 5, FALSE, 0, FALSE, TRUE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_repeat_after_eos_2pads_repeating_last)
+{
+  run_test_repeat_after_eos (5, FALSE, 2, TRUE, 0, FALSE, TRUE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_repeat_after_eos_3pads)
+{
+  run_test_repeat_after_eos (5, FALSE, 2, TRUE, 3, FALSE, TRUE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_repeat_after_eos_3pads_repeat_eos_last)
+{
+  run_test_repeat_after_eos (3, FALSE, 2, FALSE, 5, TRUE, TRUE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_repeat_after_eos_3pads_all_repeating)
+{
+  run_test_repeat_after_eos (2, TRUE, 5, TRUE, 3, TRUE, FALSE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_repeat_after_eos_3pads_no_repeating)
+{
+  run_test_repeat_after_eos (2, FALSE, 5, FALSE, 3, FALSE, TRUE);
 }
 
 GST_END_TEST;
@@ -2058,7 +2143,13 @@ compositor_suite (void)
   tcase_add_test (tc_chain, test_loop);
   tcase_add_test (tc_chain, test_segment_base_handling);
   tcase_add_test (tc_chain, test_obscured_skipped);
-  tcase_add_test (tc_chain, test_repeat_after_eos);
+  tcase_add_test (tc_chain, test_repeat_after_eos_1pad);
+  tcase_add_test (tc_chain, test_repeat_after_eos_2pads_repeating_first);
+  tcase_add_test (tc_chain, test_repeat_after_eos_2pads_repeating_last);
+  tcase_add_test (tc_chain, test_repeat_after_eos_3pads);
+  tcase_add_test (tc_chain, test_repeat_after_eos_3pads_repeat_eos_last);
+  tcase_add_test (tc_chain, test_repeat_after_eos_3pads_all_repeating);
+  tcase_add_test (tc_chain, test_repeat_after_eos_3pads_no_repeating);
   tcase_add_test (tc_chain, test_pad_z_order);
   tcase_add_test (tc_chain, test_pad_numbering);
   tcase_add_test (tc_chain, test_start_time_zero_live_drop_0);
