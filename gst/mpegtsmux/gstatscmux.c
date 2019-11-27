@@ -102,6 +102,7 @@ gst_atsc_mux_stream_get_es_descrs (TsMuxStream * stream,
         break;
       case 2:
         *pos++ = 0xC0 | 0x2;    /* 2-channel (stereo) */
+        break;
       case 3:
       case 4:
       case 5:
