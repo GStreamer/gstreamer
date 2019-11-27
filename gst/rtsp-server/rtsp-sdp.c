@@ -295,7 +295,7 @@ gst_rtsp_sdp_make_media (GstSDPMessage * sdp, GstSDPInfo * info,
   }
 
   /* RFC 7273 clock signalling */
-  {
+  if (gst_rtsp_stream_is_sender (stream)) {
     GstBin *joined_bin = gst_rtsp_stream_get_joined_bin (stream);
     GstClock *clock = gst_element_get_clock (GST_ELEMENT_CAST (joined_bin));
     gchar *ts_refclk = NULL;
@@ -305,9 +305,9 @@ gst_rtsp_sdp_make_media (GstSDPMessage * sdp, GstSDPInfo * info,
     GstRTSPPublishClockMode publish_clock_mode =
         gst_rtsp_stream_get_publish_clock_mode (stream);
 
-    if (gst_rtsp_stream_is_sender (stream))
-      gst_rtsp_stream_get_rtpinfo (stream, &rtptime, NULL, &clock_rate,
-          &running_time);
+    if (!gst_rtsp_stream_get_rtpinfo (stream, &rtptime, NULL, &clock_rate,
+            &running_time))
+      goto clock_signalling_cleanup;
     base_time = gst_element_get_base_time (GST_ELEMENT_CAST (joined_bin));
     g_assert (base_time != GST_CLOCK_TIME_NONE);
     clock_time = running_time + base_time;
@@ -374,6 +374,7 @@ gst_rtsp_sdp_make_media (GstSDPMessage * sdp, GstSDPInfo * info,
         }
       }
     }
+  clock_signalling_cleanup:
     if (clock)
       gst_object_unref (clock);
 
