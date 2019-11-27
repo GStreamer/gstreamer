@@ -32,12 +32,6 @@
 #include "gstvaapisurface.h"
 #include "video-format.h"
 
-#if G_BYTE_ORDER == G_BIG_ENDIAN
-# define VIDEO_VA_ENDIANESS VA_MSB_FIRST
-#elif G_BYTE_ORDER == G_LITTLE_ENDIAN
-# define VIDEO_VA_ENDIANESS VA_LSB_FIRST
-#endif
-
 typedef struct _GstVideoFormatMapMap
 {
   GstVideoFormat format;
