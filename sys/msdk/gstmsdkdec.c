@@ -1616,6 +1616,22 @@ gst_msdkdec_postinit_decoder (GstMsdkDec * decoder)
   return TRUE;
 }
 
+static gboolean
+gst_msdkdec_transform_meta (GstVideoDecoder * decoder,
+    GstVideoCodecFrame * frame, GstMeta * meta)
+{
+  const GstMetaInfo *info = meta->info;
+
+  if (GST_VIDEO_DECODER_CLASS (parent_class)->transform_meta (decoder, frame,
+          meta))
+    return TRUE;
+
+  if (!g_strcmp0 (g_type_name (info->type), "GstVideoRegionOfInterestMeta"))
+    return TRUE;
+
+  return FALSE;
+}
+
 static void
 gst_msdkdec_class_init (GstMsdkDecClass * klass)
 {
@@ -1644,6 +1660,8 @@ gst_msdkdec_class_init (GstMsdkDecClass * klass)
       GST_DEBUG_FUNCPTR (gst_msdkdec_decide_allocation);
   decoder_class->flush = GST_DEBUG_FUNCPTR (gst_msdkdec_flush);
   decoder_class->drain = GST_DEBUG_FUNCPTR (gst_msdkdec_drain);
+  decoder_class->transform_meta =
+      GST_DEBUG_FUNCPTR (gst_msdkdec_transform_meta);
 
   klass->post_configure = GST_DEBUG_FUNCPTR (gst_msdkdec_post_configure);
   klass->preinit_decoder = GST_DEBUG_FUNCPTR (gst_msdkdec_preinit_decoder);
