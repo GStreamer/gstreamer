@@ -529,6 +529,7 @@ gst_latency_tracer_constructed (GObject * object)
 
       g_strfreev (split);
     }
+    gst_structure_free (params_struct);
   }
 
   g_free (params);
