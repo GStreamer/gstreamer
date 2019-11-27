@@ -191,12 +191,14 @@ msdk_open_session (mfxIMPL impl)
     goto failed;
   }
 #if (MFX_VERSION >= 1019)
-  mfxPlatform platform = { 0 };
-  status = MFXVideoCORE_QueryPlatform (session, &platform);
-  if (MFX_ERR_NONE == status) {
-    GST_INFO ("Detected MFX platform with device code %d", platform.CodeName);
-  } else {
-    GST_WARNING ("Platform auto-detection failed with MFX status %d", status);
+  {
+    mfxPlatform platform = { 0 };
+    status = MFXVideoCORE_QueryPlatform (session, &platform);
+    if (MFX_ERR_NONE == status) {
+      GST_INFO ("Detected MFX platform with device code %d", platform.CodeName);
+    } else {
+      GST_WARNING ("Platform auto-detection failed with MFX status %d", status);
+    }
   }
 #endif
 
