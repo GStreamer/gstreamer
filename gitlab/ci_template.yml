@@ -94,6 +94,8 @@ gst indent:
     - "manifest"
   dependencies:
     - "manifest"
+  # Taking into account the slowest shared runner + time needed to upload the binaries to artifacts
+  timeout: '30min'
   variables:
     CCACHE_COMPILERCHECK: "content"
     CCACHE_COMPRESS: "true"
@@ -337,6 +339,7 @@ valgrind ges:
     - "manifest"
   dependencies:
     - "manifest"
+  timeout: '3h'
   variables:
     CCACHE_COMPILERCHECK: "content"
     CCACHE_COMPRESS: "true"
@@ -413,6 +416,7 @@ valgrind ges:
     - 'docker'
     - 'windows'
     - '1607'
+  timeout: '10min'
   variables:
     MESON_ARGS: >
       ${DEFAULT_MESON_ARGS}
