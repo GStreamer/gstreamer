@@ -108,7 +108,7 @@ gst_python_plugin_load_file (GstPlugin * plugin, const char *name)
 }
 
 static gboolean
-gst_python_load_directory (GstPlugin * plugin, gchar * path)
+gst_python_load_directory (GstPlugin * plugin, const gchar * path)
 {
   GDir *dir;
   const gchar *file;

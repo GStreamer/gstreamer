@@ -56,7 +56,7 @@ GST_DEBUG_CATEGORY_STATIC (pygst_debug);
 #define GST_CAT_DEFAULT pygst_debug
 
 static PyObject *
-gi_gst_get_type (gchar * type_name)
+gi_gst_get_type (const gchar * type_name)
 {
   PyObject *module, *dict;
 
@@ -483,7 +483,7 @@ fail:
   return -1;
 }
 
-void
+static void
 gi_gst_register_types (PyObject * d)
 {
   pyg_register_gtype_custom (GST_TYPE_FRACTION,
