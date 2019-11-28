@@ -998,7 +998,8 @@ gst_base_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   if (must_approximate_pts) {
     GST_BUFFER_PTS (buffer) = parse->priv->next_pts;
     if (!must_approximate_dts
-        && GST_BUFFER_DTS (buffer) > parse->priv->next_pts) {
+        && GST_BUFFER_DTS (buffer) > parse->priv->next_pts
+        && GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DTS (buffer))) {
       /* Can't present a frame before it's decoded: change the pts! This can
        * happen, for example, when accumulating rounding errors from the
        * buffer durations. Assume DTS is correct because only PTS is
