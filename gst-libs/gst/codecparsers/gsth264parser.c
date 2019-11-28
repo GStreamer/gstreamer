@@ -1189,6 +1189,47 @@ error:
 }
 
 static GstH264ParserResult
+gst_h264_parser_parse_mastering_display_colour_volume (GstH264NalParser *
+    parser, GstH264MasteringDisplayColourVolume * mdcv, NalReader * nr)
+{
+  guint i;
+
+  GST_DEBUG ("parsing \"Mastering display colour volume\"");
+
+  for (i = 0; i < 3; i++) {
+    READ_UINT16 (nr, mdcv->display_primaries_x[i], 16);
+    READ_UINT16 (nr, mdcv->display_primaries_y[i], 16);
+  }
+
+  READ_UINT16 (nr, mdcv->white_point_x, 16);
+  READ_UINT16 (nr, mdcv->white_point_y, 16);
+  READ_UINT32 (nr, mdcv->max_display_mastering_luminance, 32);
+  READ_UINT32 (nr, mdcv->min_display_mastering_luminance, 32);
+
+  return GST_H264_PARSER_OK;
+
+error:
+  GST_WARNING ("error parsing \"Mastering display colour volume\"");
+  return GST_H264_PARSER_ERROR;
+}
+
+static GstH264ParserResult
+gst_h264_parser_parse_content_light_level_info (GstH264NalParser * parser,
+    GstH264ContentLightLevel * cll, NalReader * nr)
+{
+  GST_DEBUG ("parsing \"Content light level\"");
+
+  READ_UINT16 (nr, cll->max_content_light_level, 16);
+  READ_UINT16 (nr, cll->max_pic_average_light_level, 16);
+
+  return GST_H264_PARSER_OK;
+
+error:
+  GST_WARNING ("error parsing \"Content light level\"");
+  return GST_H264_PARSER_ERROR;
+}
+
+static GstH264ParserResult
 gst_h264_parser_parse_sei_message (GstH264NalParser * nalparser,
     NalReader * nr, GstH264SEIMessage * sei)
 {
@@ -1246,6 +1287,14 @@ gst_h264_parser_parse_sei_message (GstH264NalParser * nalparser,
     case GST_H264_SEI_FRAME_PACKING:
       res = gst_h264_parser_parse_frame_packing (nalparser,
           &sei->payload.frame_packing, nr, payload_size);
+      break;
+    case GST_H264_SEI_MASTERING_DISPLAY_COLOUR_VOLUME:
+      res = gst_h264_parser_parse_mastering_display_colour_volume (nalparser,
+          &sei->payload.mastering_display_colour_volume, nr);
+      break;
+    case GST_H264_SEI_CONTENT_LIGHT_LEVEL:
+      res = gst_h264_parser_parse_content_light_level_info (nalparser,
+          &sei->payload.content_light_level, nr);
       break;
     default:
       /* Just consume payloadSize bytes, which does not account for

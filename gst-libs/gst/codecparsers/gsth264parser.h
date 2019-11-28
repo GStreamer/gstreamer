@@ -245,6 +245,8 @@ typedef enum
  * @GST_H264_SEI_STEREO_VIDEO_INFO: stereo video info SEI message (Since: 1.6)
  * @GST_H264_SEI_FRAME_PACKING: Frame Packing Arrangement (FPA) message that
  *     contains the 3D arrangement for stereoscopic 3D video (Since: 1.6)
+ * @GST_H264_SEI_MASTERING_DISPLAY_COLOUR_VOLUME: Mastering display colour volume information SEI message (D.2.29) (Since: 1.18)
+ * @GST_H264_SEI_CONTENT_LIGHT_LEVEL: Content light level information SEI message (D.2.31) (Since: 1.18)
  * ...
  *
  * The type of SEI message.
@@ -256,7 +258,9 @@ typedef enum
   GST_H264_SEI_REGISTERED_USER_DATA = 4,
   GST_H264_SEI_RECOVERY_POINT = 6,
   GST_H264_SEI_STEREO_VIDEO_INFO = 21,
-  GST_H264_SEI_FRAME_PACKING = 45
+  GST_H264_SEI_FRAME_PACKING = 45,
+  GST_H264_SEI_MASTERING_DISPLAY_COLOUR_VOLUME = 137,
+  GST_H264_SEI_CONTENT_LIGHT_LEVEL = 144,
       /* and more...  */
 } GstH264SEIPayloadType;
 
@@ -352,6 +356,8 @@ typedef struct _GstH264BufferingPeriod        GstH264BufferingPeriod;
 typedef struct _GstH264RecoveryPoint          GstH264RecoveryPoint;
 typedef struct _GstH264StereoVideoInfo        GstH264StereoVideoInfo;
 typedef struct _GstH264FramePacking           GstH264FramePacking;
+typedef struct _GstH264MasteringDisplayColourVolume GstH264MasteringDisplayColourVolume;
+typedef struct _GstH264ContentLightLevel        GstH264ContentLightLevel;
 typedef struct _GstH264SEIMessage             GstH264SEIMessage;
 
 /**
@@ -1051,6 +1057,40 @@ struct _GstH264RecoveryPoint
   guint8 changing_slice_group_idc;
 };
 
+/**
+ * GstH264MasteringDisplayColourVolume:
+ * The colour volume (primaries, white point and luminance range) of display
+ * defined by SMPTE ST 2086.
+ *
+ * D.2.29
+ *
+ * Since: 1.18
+ */
+struct _GstH264MasteringDisplayColourVolume
+{
+  guint16 display_primaries_x[3];
+  guint16 display_primaries_y[3];
+  guint16 white_point_x;
+  guint16 white_point_y;
+  guint32 max_display_mastering_luminance;
+  guint32 min_display_mastering_luminance;
+};
+
+/**
+ * GstH264ContentLightLevel:
+ * The upper bounds for the nominal target brightness light level
+ * as specified in CEA-861.3
+ *
+ * D.2.31
+ *
+ * Since: 1.18
+ */
+struct _GstH264ContentLightLevel
+{
+  guint16 max_content_light_level;
+  guint16 max_pic_average_light_level;
+};
+
 struct _GstH264SEIMessage
 {
   GstH264SEIPayloadType payloadType;
@@ -1062,6 +1102,8 @@ struct _GstH264SEIMessage
     GstH264RecoveryPoint recovery_point;
     GstH264StereoVideoInfo stereo_video_info;
     GstH264FramePacking frame_packing;
+    GstH264MasteringDisplayColourVolume mastering_display_colour_volume;
+    GstH264ContentLightLevel content_light_level;
     /* ... could implement more */
   } payload;
 };

@@ -148,6 +148,11 @@ struct _GstH264Parse
 
   GstVideoParseUserData user_data;
 
+  GstVideoMasteringDisplayInfo mastering_display_info;
+  guint mastering_display_info_state;
+
+  GstVideoContentLightLevel content_light_level;
+  guint content_light_level_state;
 
   /* For forward predicted trickmode */
   gboolean discard_bidirectional;

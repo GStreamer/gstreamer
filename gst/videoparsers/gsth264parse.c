@@ -72,6 +72,13 @@ enum
       GST_H264_PARSE_STATE_GOT_SLICE)
 };
 
+enum
+{
+  GST_H264_PARSE_SEI_EXPIRED = 0,
+  GST_H264_PARSE_SEI_ACTIVE = 1,
+  GST_H264_PARSE_SEI_PARSED = 2,
+};
+
 #define GST_H264_PARSE_STATE_VALID(parse, expected_state) \
   (((parse)->state & (expected_state)) == (expected_state))
 
@@ -246,6 +253,12 @@ gst_h264_parse_reset_stream_info (GstH264Parse * h264parse)
     gst_buffer_replace (&h264parse->sps_nals[i], NULL);
   for (i = 0; i < GST_H264_MAX_PPS_COUNT; i++)
     gst_buffer_replace (&h264parse->pps_nals[i], NULL);
+
+  gst_video_mastering_display_info_init (&h264parse->mastering_display_info);
+  h264parse->mastering_display_info_state = GST_H264_PARSE_SEI_EXPIRED;
+
+  gst_video_content_light_level_init (&h264parse->content_light_level);
+  h264parse->content_light_level_state = GST_H264_PARSE_SEI_EXPIRED;
 }
 
 static void
@@ -595,8 +608,8 @@ gst_h264_parse_process_sei (GstH264Parse * h264parse, GstH264NalUnit * nalu)
 
         for (j = 0; j < 3; j++) {
           if (sei.payload.pic_timing.clock_timestamp_flag[j]) {
-            memcpy (&h264parse->clock_timestamp[h264parse->
-                    num_clock_timestamp++],
+            memcpy (&h264parse->
+                clock_timestamp[h264parse->num_clock_timestamp++],
                 &sei.payload.pic_timing.clock_timestamp[j],
                 sizeof (GstH264ClockTimestamp));
           }
@@ -759,6 +772,99 @@ gst_h264_parse_process_sei (GstH264Parse * h264parse, GstH264NalUnit * nalu)
         }
         break;
       }
+      case GST_H264_SEI_MASTERING_DISPLAY_COLOUR_VOLUME:
+      {
+        /* Precision defined by spec.
+         * See D.3.28 Mastering display colour volume SEI message semantics */
+        const guint chroma_den = 50000;
+        const guint luma_den = 10000;
+        GstVideoMasteringDisplayInfo minfo;
+
+        minfo.Gx_n =
+            sei.payload.mastering_display_colour_volume.display_primaries_x[0];
+        minfo.Gy_n =
+            sei.payload.mastering_display_colour_volume.display_primaries_y[0];
+        minfo.Bx_n =
+            sei.payload.mastering_display_colour_volume.display_primaries_x[1];
+        minfo.By_n =
+            sei.payload.mastering_display_colour_volume.display_primaries_y[1];
+        minfo.Rx_n =
+            sei.payload.mastering_display_colour_volume.display_primaries_x[2];
+        minfo.Ry_n =
+            sei.payload.mastering_display_colour_volume.display_primaries_y[2];
+        minfo.Wx_n = sei.payload.mastering_display_colour_volume.white_point_x;
+        minfo.Wy_n = sei.payload.mastering_display_colour_volume.white_point_y;
+        minfo.max_luma_n =
+            sei.payload.
+            mastering_display_colour_volume.max_display_mastering_luminance;
+        minfo.min_luma_n =
+            sei.payload.
+            mastering_display_colour_volume.min_display_mastering_luminance;
+
+        minfo.Gx_d = minfo.Gy_d = minfo.Bx_d = minfo.By_d =
+            minfo.Rx_d = minfo.Ry_d = minfo.Wx_d = minfo.Wy_d = chroma_den;
+
+        minfo.max_luma_d = minfo.min_luma_d = luma_den;
+
+        GST_LOG_OBJECT (h264parse, "mastering display info found: "
+            "Red(%u/%u, %u/%u) "
+            "Green(%u/%u, %u/%u) "
+            "Blue(%u/%u, %u/%u) "
+            "White(%u/%u, %u/%u) "
+            "max_luminance(%u/%u) "
+            "min_luminance(%u/%u) ", minfo.Rx_n, minfo.Rx_d, minfo.Ry_n,
+            minfo.Ry_d, minfo.Gx_n, minfo.Gx_d, minfo.Gy_n, minfo.Gy_d,
+            minfo.Bx_n, minfo.Bx_d, minfo.By_n, minfo.By_d, minfo.Wx_n,
+            minfo.Wx_d, minfo.Wy_n, minfo.Wy_d, minfo.max_luma_n,
+            minfo.max_luma_d, minfo.min_luma_n, minfo.min_luma_d);
+
+        if (h264parse->mastering_display_info_state ==
+            GST_H264_PARSE_SEI_EXPIRED) {
+          h264parse->update_caps = TRUE;
+        } else if (!gst_video_mastering_display_info_is_equal
+            (&h264parse->mastering_display_info, &minfo)) {
+          h264parse->update_caps = TRUE;
+        }
+
+        h264parse->mastering_display_info_state = GST_H264_PARSE_SEI_PARSED;
+        h264parse->mastering_display_info = minfo;
+
+        break;
+      }
+      case GST_H264_SEI_CONTENT_LIGHT_LEVEL:
+      {
+        GstVideoContentLightLevel cll;
+
+        cll.maxCLL_n = sei.payload.content_light_level.max_content_light_level;
+        cll.maxFALL_n =
+            sei.payload.content_light_level.max_pic_average_light_level;
+
+        cll.maxCLL_d = cll.maxFALL_d = 1;
+
+        GST_LOG_OBJECT (h264parse, "content light level found: "
+            "maxCLL:(%u/%u), maxFALL:(%u/%u)", cll.maxCLL_n, cll.maxCLL_d,
+            cll.maxFALL_n, cll.maxFALL_d);
+
+        if (h264parse->content_light_level_state == GST_H264_PARSE_SEI_EXPIRED) {
+          h264parse->update_caps = TRUE;
+        } else if (gst_util_fraction_compare (cll.maxCLL_n, cll.maxCLL_d,
+                h264parse->content_light_level.maxCLL_n,
+                h264parse->content_light_level.maxCLL_d)
+            || gst_util_fraction_compare (cll.maxFALL_n, cll.maxFALL_d,
+                h264parse->content_light_level.maxFALL_n,
+                h264parse->content_light_level.maxFALL_d)) {
+          h264parse->update_caps = TRUE;
+        }
+
+        h264parse->content_light_level_state = GST_H264_PARSE_SEI_PARSED;
+        h264parse->content_light_level = cll;
+
+        break;
+      }
+      default:
+        GST_LOG_OBJECT (h264parse, "Unsupported payload type %u",
+            sei.payloadType);
+        break;
     }
   }
   g_array_free (messages, TRUE);
@@ -943,6 +1049,19 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
         GST_DEBUG_OBJECT (h264parse, "moved IDR mark to SEI position %d",
             h264parse->idr_pos);
       }
+
+      if (h264parse->mastering_display_info_state == GST_H264_PARSE_SEI_PARSED)
+        h264parse->mastering_display_info_state = GST_H264_PARSE_SEI_ACTIVE;
+      else if (h264parse->mastering_display_info_state ==
+          GST_H264_PARSE_SEI_ACTIVE)
+        h264parse->mastering_display_info_state = GST_H264_PARSE_SEI_EXPIRED;
+
+      if (h264parse->content_light_level_state == GST_H264_PARSE_SEI_PARSED)
+        h264parse->content_light_level_state = GST_H264_PARSE_SEI_ACTIVE;
+      else if (h264parse->content_light_level_state ==
+          GST_H264_PARSE_SEI_ACTIVE)
+        h264parse->content_light_level_state = GST_H264_PARSE_SEI_EXPIRED;
+
       break;
     case GST_H264_NAL_AU_DELIMITER:
       /* Just accumulate AU Delimiter, whether it's before SPS or not */
@@ -2076,6 +2195,9 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
   }
 
   if (caps) {
+    const gchar *mdi_str = NULL;
+    const gchar *cll_str = NULL;
+
     gst_caps_set_simple (caps, "parsed", G_TYPE_BOOLEAN, TRUE,
         "stream-format", G_TYPE_STRING,
         gst_h264_parse_get_string (h264parse, TRUE, h264parse->format),
@@ -2096,6 +2218,32 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
 
       /* relax the profile constraint to find a suitable decoder */
       ensure_caps_profile (h264parse, caps, sps);
+    }
+
+    if (s)
+      mdi_str = gst_structure_get_string (s, "mastering-display-info");
+    if (mdi_str) {
+      gst_caps_set_simple (caps, "mastering-display-info", G_TYPE_STRING,
+          mdi_str, NULL);
+    } else if (h264parse->mastering_display_info_state !=
+        GST_H264_PARSE_SEI_EXPIRED &&
+        !gst_video_mastering_display_info_add_to_caps
+        (&h264parse->mastering_display_info, caps)) {
+      GST_WARNING_OBJECT (h264parse,
+          "Couldn't set mastering display info to caps");
+    }
+
+    if (s)
+      cll_str = gst_structure_get_string (s, "content-light-level");
+    if (cll_str) {
+      gst_caps_set_simple (caps, "content-light-level", G_TYPE_STRING, cll_str,
+          NULL);
+    } else if (h264parse->content_light_level_state !=
+        GST_H264_PARSE_SEI_EXPIRED &&
+        !gst_video_content_light_level_add_to_caps
+        (&h264parse->content_light_level, caps)) {
+      GST_WARNING_OBJECT (h264parse,
+          "Couldn't set content light level to caps");
     }
 
     src_caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (h264parse));
