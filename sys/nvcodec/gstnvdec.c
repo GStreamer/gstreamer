@@ -34,8 +34,8 @@
 
 #include <string.h>
 
-GST_DEBUG_CATEGORY_STATIC (gst_nvdec_debug_category);
-#define GST_CAT_DEFAULT gst_nvdec_debug_category
+GST_DEBUG_CATEGORY_EXTERN (gst_nvdec_debug);
+#define GST_CAT_DEFAULT gst_nvdec_debug
 
 #ifdef HAVE_NVCODEC_GST_GL
 #define SUPPORTED_GL_APIS (GST_GL_API_OPENGL | GST_GL_API_OPENGL3 | GST_GL_API_GLES2)
@@ -1544,13 +1544,9 @@ typedef struct
 static void
 gst_nvdec_register (GstPlugin * plugin, GType type, cudaVideoCodec codec_type,
     const gchar * codec, const gchar * sink_caps_string, guint rank,
-    gint device_count)
+    gint device_idx, CUcontext cuda_ctx)
 {
-  gint i;
-
-  for (i = 0; i < device_count; i++) {
-    CUdevice cuda_device;
-    CUcontext cuda_ctx;
+  {
     CUresult cuda_ret;
     gint max_width = 0, min_width = G_MAXINT;
     gint max_height = 0, min_height = G_MAXINT;
@@ -1575,18 +1571,12 @@ gst_nvdec_register (GstPlugin * plugin, GType type, cudaVideoCodec codec_type,
     GValue format = G_VALUE_INIT;
     GValue profile_list = G_VALUE_INIT;
 
-    if (CuDeviceGet (&cuda_device, i) != CUDA_SUCCESS)
-      continue;
-
-    if (CuCtxCreate (&cuda_ctx, 0, cuda_device) != CUDA_SUCCESS)
-      continue;
-
     g_value_init (&format_list, GST_TYPE_LIST);
     g_value_init (&format, G_TYPE_STRING);
     g_value_init (&profile_list, GST_TYPE_LIST);
 
     if (CuCtxPushCurrent (cuda_ctx) != CUDA_SUCCESS)
-      goto cuda_free;
+      goto done;
 
     for (c_idx = 0; c_idx < G_N_ELEMENTS (chroma_list); c_idx++) {
       for (b_idx = 0; b_idx < G_N_ELEMENTS (bitdepth_minus8); b_idx++) {
@@ -1682,7 +1672,7 @@ gst_nvdec_register (GstPlugin * plugin, GType type, cudaVideoCodec codec_type,
 
     if (num_support == 0) {
       GST_INFO ("device can not support %s", codec);
-      goto cuda_free;
+      goto done;
     }
 
     src_templ = gst_caps_new_simple ("video/x-raw",
@@ -1717,16 +1707,14 @@ gst_nvdec_register (GstPlugin * plugin, GType type, cudaVideoCodec codec_type,
 
     CuCtxPopCurrent (NULL);
 
-  cuda_free:
-    CuCtxDestroy (cuda_ctx);
-
+  done:
     g_value_unset (&format_list);
     g_value_unset (&format);
     g_value_unset (&profile_list);
 
     if (sink_templ && src_templ) {
-      gst_nvdec_subclass_register (plugin, type, codec_type, codec, i, rank,
-          sink_templ, src_templ);
+      gst_nvdec_subclass_register (plugin, type, codec_type, codec, device_idx,
+          rank, sink_templ, src_templ);
     }
 
     gst_clear_caps (&sink_templ);
@@ -1773,14 +1761,10 @@ const GstNvCodecMap codec_map[] = {
 };
 
 void
-gst_nvdec_plugin_init (GstPlugin * plugin)
+gst_nvdec_plugin_init (GstPlugin * plugin, guint device_index,
+    CUcontext cuda_ctx)
 {
   gint i;
-  CUresult cuda_ret;
-  gint dev_count = 0;
-
-  GST_DEBUG_CATEGORY_INIT (gst_nvdec_debug_category, "nvdec", 0,
-      "Debug category for the nvdec element");
 
   if (!gst_cuvid_can_get_decoder_caps ()) {
     GstCaps *src_templ;
@@ -1804,27 +1788,16 @@ gst_nvdec_plugin_init (GstPlugin * plugin)
       sink_templ = gst_caps_from_string (codec_map[i].sink_caps_string);
 
       gst_nvdec_subclass_register (plugin, GST_TYPE_NVDEC, codec_map[i].codec,
-          codec_map[i].codec_name, 0, GST_RANK_PRIMARY, sink_templ, src_templ);
+          codec_map[i].codec_name, device_index, GST_RANK_PRIMARY,
+          sink_templ, src_templ);
     }
 
-    return;
-  }
-
-  cuda_ret = CuInit (0);
-  if (cuda_ret != CUDA_SUCCESS) {
-    GST_ERROR ("Failed to initialize CUDA API");
-    return;
-  }
-
-  cuda_ret = CuDeviceGetCount (&dev_count);
-  if (cuda_ret != CUDA_SUCCESS || dev_count == 0) {
-    GST_ERROR ("No CUDA devices detected");
     return;
   }
 
   for (i = 0; i < G_N_ELEMENTS (codec_map); i++) {
     gst_nvdec_register (plugin, GST_TYPE_NVDEC, codec_map[i].codec,
         codec_map[i].codec_name, codec_map[i].sink_caps_string,
-        GST_RANK_PRIMARY, dev_count);
+        GST_RANK_PRIMARY, device_index, cuda_ctx);
   }
 }

@@ -24,6 +24,9 @@
 #include "gstcudaloader.h"
 #include <gmodule.h>
 
+GST_DEBUG_CATEGORY_EXTERN (gst_nvcodec_debug);
+#define GST_CAT_DEFAULT gst_nvcodec_debug
+
 #ifndef G_OS_WIN32
 #define CUDA_LIBNAME "libcuda.so.1"
 #else

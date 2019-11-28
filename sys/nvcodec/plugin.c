@@ -32,17 +32,81 @@
 #include "gstnvdec.h"
 #include "gstnvenc.h"
 
+GST_DEBUG_CATEGORY (gst_nvcodec_debug);
+GST_DEBUG_CATEGORY (gst_nvdec_debug);
+GST_DEBUG_CATEGORY (gst_nvenc_debug);
+
+#define GST_CAT_DEFAULT gst_nvcodec_debug
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_cuda_load_library ())
-    return TRUE;
+  CUresult cuda_ret;
+  gint dev_count = 0;
+  gint i;
+  gboolean nvdec_available = TRUE;
+  gboolean nvenc_available = TRUE;
 
-  if (gst_cuvid_load_library ()) {
-    gst_nvdec_plugin_init (plugin);
+  GST_DEBUG_CATEGORY_INIT (gst_nvcodec_debug, "nvcodec", 0, "nvcodec");
+  GST_DEBUG_CATEGORY_INIT (gst_nvdec_debug, "nvdec", 0, "nvdec");
+  GST_DEBUG_CATEGORY_INIT (gst_nvenc_debug, "nvenc", 0, "nvenc");
+
+  if (!gst_cuda_load_library ()) {
+    GST_WARNING ("Failed to load cuda library");
+    return TRUE;
   }
 
-  gst_nvenc_plugin_init (plugin);
+  if (!gst_cuvid_load_library ()) {
+    GST_WARNING ("Failed to load nvdec library");
+    nvdec_available = FALSE;
+  }
+
+  if (!gst_nvenc_load_library ()) {
+    GST_WARNING ("Failed to load nvenc library");
+    nvenc_available = FALSE;
+  }
+
+  if (!nvdec_available && !nvenc_available)
+    return TRUE;
+
+  cuda_ret = CuInit (0);
+  if (cuda_ret != CUDA_SUCCESS) {
+    GST_WARNING ("Failed to init cuda, ret: 0x%x", (gint) cuda_ret);
+    return TRUE;
+  }
+
+  if (CuDeviceGetCount (&dev_count) != CUDA_SUCCESS || !dev_count) {
+    GST_WARNING ("No available device, ret: 0x%x", (gint) cuda_ret);
+    return TRUE;
+  }
+
+  for (i = 0; i < dev_count; i++) {
+    CUdevice cuda_device;
+    CUcontext cuda_ctx;
+
+    cuda_ret = CuDeviceGet (&cuda_device, i);
+    if (cuda_ret != CUDA_SUCCESS) {
+      GST_WARNING ("Failed to get device handle %d, ret: 0x%x", i,
+          (gint) cuda_ret);
+      continue;
+    }
+
+    cuda_ret = CuCtxCreate (&cuda_ctx, 0, cuda_device);
+    if (cuda_ret != CUDA_SUCCESS) {
+      GST_WARNING ("Failed to create cuda context, ret: 0x%x", (gint) cuda_ret);
+      continue;
+    }
+
+    CuCtxPopCurrent (NULL);
+
+    if (nvdec_available)
+      gst_nvdec_plugin_init (plugin, i, cuda_ctx);
+
+    if (nvenc_available)
+      gst_nvenc_plugin_init (plugin, i, cuda_ctx);
+
+    CuCtxDestroy (cuda_ctx);
+  }
 
   return TRUE;
 }

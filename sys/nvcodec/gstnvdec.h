@@ -101,7 +101,9 @@ struct _GstNvDecClass
 
 GType gst_nvdec_get_type (void);
 
-void gst_nvdec_plugin_init (GstPlugin * plugin);
+void gst_nvdec_plugin_init (GstPlugin * plugin,
+                            guint device_index,
+                            CUcontext cuda_ctx);
 
 G_END_DECLS
 

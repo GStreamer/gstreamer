@@ -26,8 +26,6 @@
 #include "gstcudaloader.h"
 #include "nvEncodeAPI.h"
 
-GST_DEBUG_CATEGORY_EXTERN (gst_nvenc_debug);
-
 G_GNUC_INTERNAL
 gboolean                gst_nvenc_cmp_guid (GUID g1, GUID g2);
 
@@ -48,7 +46,9 @@ GValue *                gst_nvenc_get_supported_codec_profiles (gpointer enc,
                                                                 GUID codec_id);
 
 G_GNUC_INTERNAL
-void                    gst_nvenc_plugin_init (GstPlugin * plugin);
+void                    gst_nvenc_plugin_init (GstPlugin * plugin,
+                                               guint device_index,
+                                               CUcontext cuda_ctx);
 
 G_GNUC_INTERNAL
 guint32                 gst_nvenc_get_api_version (void);
@@ -113,5 +113,7 @@ guint32                 gst_nvenc_get_event_params_version (void);
 G_GNUC_INTERNAL
 guint32                 gst_nvenc_get_open_encode_session_ex_params_version (void);
 
+G_GNUC_INTERNAL
+gboolean                gst_nvenc_load_library (void);
 
 #endif /* __GST_NVENC_H_INCLUDED__ */

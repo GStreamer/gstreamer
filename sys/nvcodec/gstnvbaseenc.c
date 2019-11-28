@@ -28,6 +28,7 @@
 
 #include <string.h>
 
+GST_DEBUG_CATEGORY_EXTERN (gst_nvenc_debug);
 #define GST_CAT_DEFAULT gst_nvenc_debug
 
 #if HAVE_NVCODEC_GST_GL

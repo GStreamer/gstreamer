@@ -44,7 +44,7 @@ typedef NVENCSTATUS NVENCAPI
 tNvEncodeAPICreateInstance (NV_ENCODE_API_FUNCTION_LIST * functionList);
 tNvEncodeAPICreateInstance *nvEncodeAPICreateInstance;
 
-GST_DEBUG_CATEGORY (gst_nvenc_debug);
+GST_DEBUG_CATEGORY_EXTERN (gst_nvenc_debug);
 #define GST_CAT_DEFAULT gst_nvenc_debug
 
 static NV_ENCODE_API_FUNCTION_LIST nvenc_api;
@@ -288,27 +288,6 @@ gst_nvenc_get_nv_buffer_format (GstVideoFormat fmt)
       break;
   }
   return NV_ENC_BUFFER_FORMAT_UNDEFINED;
-}
-
-static gboolean
-load_nvenc_library (void)
-{
-  GModule *module;
-
-  module = g_module_open (NVENC_LIBRARY_NAME, G_MODULE_BIND_LAZY);
-  if (module == NULL) {
-    GST_WARNING ("Could not open library %s, %s",
-        NVENC_LIBRARY_NAME, g_module_error ());
-    return FALSE;
-  }
-
-  if (!g_module_symbol (module, "NvEncodeAPICreateInstance",
-          (gpointer *) & nvEncodeAPICreateInstance)) {
-    GST_ERROR ("%s", g_module_error ());
-    return FALSE;
-  }
-
-  return TRUE;
 }
 
 typedef struct
@@ -603,13 +582,9 @@ gst_nvenc_get_supported_codec_profiles (gpointer enc, GUID codec_id)
 
 static void
 gst_nv_enc_register (GstPlugin * plugin, GUID codec_id, const gchar * codec,
-    guint rank, gint device_count)
+    guint rank, gint device_index, CUcontext cuda_ctx)
 {
-  gint i;
-
-  for (i = 0; i < device_count; i++) {
-    CUdevice cuda_device;
-    CUcontext cuda_ctx, dummy;
+  {
     GValue *formats = NULL;
     GValue *profiles;
     GValue *interlace_modes;
@@ -626,23 +601,17 @@ gst_nv_enc_register (GstPlugin * plugin, GUID codec_id, const gchar * codec,
     gint j;
     GstNvEncDeviceCaps device_caps = { 0, };
 
-    if (CuDeviceGet (&cuda_device, i) != CUDA_SUCCESS)
-      continue;
-
-    if (CuCtxCreate (&cuda_ctx, 0, cuda_device) != CUDA_SUCCESS)
-      continue;
-
-    if (CuCtxPopCurrent (&dummy) != CUDA_SUCCESS) {
-      goto cuda_free;
-    }
-
     params.version = gst_nvenc_get_open_encode_session_ex_params_version ();
     params.apiVersion = gst_nvenc_get_api_version ();
     params.device = cuda_ctx;
     params.deviceType = NV_ENC_DEVICE_TYPE_CUDA;
 
+    if (CuCtxPushCurrent (cuda_ctx) != CUDA_SUCCESS)
+      goto done;
+
     if (NvEncOpenEncodeSessionEx (&params, &enc) != NV_ENC_SUCCESS) {
-      goto cuda_free;
+      CuCtxPopCurrent (NULL);
+      goto done;
     }
 
     if (NvEncGetEncodeGUIDs (enc, guids, G_N_ELEMENTS (guids),
@@ -692,7 +661,7 @@ gst_nv_enc_register (GstPlugin * plugin, GUID codec_id, const gchar * codec,
       device_caps.rc_modes = 0;
     } else {
       GST_DEBUG ("[device-%d %s] rate control modes: 0x%x",
-          i, codec, device_caps.rc_modes);
+          device_index, codec, device_caps.rc_modes);
 #define IS_SUPPORTED_RC(rc_modes,mode) \
       ((((rc_modes) & (mode)) == mode) ? "supported" : "not supported")
 
@@ -744,18 +713,20 @@ gst_nv_enc_register (GstPlugin * plugin, GUID codec_id, const gchar * codec,
       device_caps.bframes = 0;
     }
 
-    DEBUG_DEVICE_CAPS (i,
+    DEBUG_DEVICE_CAPS (device_index,
         codec, "weighted prediction", device_caps.weighted_prediction);
 
-    DEBUG_DEVICE_CAPS (i, codec, "custom vbv-buffer-size",
+    DEBUG_DEVICE_CAPS (device_index, codec, "custom vbv-buffer-size",
         device_caps.custom_vbv_bufsize);
 
-    DEBUG_DEVICE_CAPS (i, codec, "rc-loockahead", device_caps.lookahead);
+    DEBUG_DEVICE_CAPS (device_index, codec, "rc-loockahead",
+        device_caps.lookahead);
 
-    DEBUG_DEVICE_CAPS (i, codec, "temporal adaptive quantization",
+    DEBUG_DEVICE_CAPS (device_index, codec, "temporal adaptive quantization",
         device_caps.temporal_aq);
 
-    GST_DEBUG ("[device-%d %s] max bframes: %d", i, codec, device_caps.bframes);
+    GST_DEBUG ("[device-%d %s] max bframes: %d", device_index, codec,
+        device_caps.bframes);
 
     interlace_modes = gst_nvenc_get_interlace_modes (enc, codec_id);
 
@@ -806,18 +777,17 @@ gst_nv_enc_register (GstPlugin * plugin, GUID codec_id, const gchar * codec,
 
   enc_free:
     NvEncDestroyEncoder (enc);
+    CuCtxPopCurrent (NULL);
     /* fall-through */
 
-  cuda_free:
-    CuCtxDestroy (cuda_ctx);
-
+  done:
     if (sink_templ && src_templ) {
       if (gst_nvenc_cmp_guid (codec_id, NV_ENC_CODEC_H264_GUID)) {
-        gst_nv_h264_enc_register (plugin, i, rank, sink_templ, src_templ,
-            &device_caps);
+        gst_nv_h264_enc_register (plugin, device_index, rank, sink_templ,
+            src_templ, &device_caps);
       } else if (gst_nvenc_cmp_guid (codec_id, NV_ENC_CODEC_HEVC_GUID)) {
-        gst_nv_h265_enc_register (plugin, i, rank, sink_templ, src_templ,
-            &device_caps);
+        gst_nv_h265_enc_register (plugin, device_index, rank, sink_templ,
+            src_templ, &device_caps);
       } else {
         g_assert_not_reached ();
       }
@@ -837,19 +807,26 @@ gst_nv_enc_register (GstPlugin * plugin, GUID codec_id, const gchar * codec,
 
 static guint32 gst_nvenc_api_version = NVENCAPI_VERSION;
 
-void
-gst_nvenc_plugin_init (GstPlugin * plugin)
+gboolean
+gst_nvenc_load_library (void)
 {
-  NVENCSTATUS ret = NV_ENC_SUCCESS;
+  GModule *module;
+  NVENCSTATUS ret;
 
-  GST_DEBUG_CATEGORY_INIT (gst_nvenc_debug, "nvenc", 0, "Nvidia NVENC encoder");
-
-  nvenc_api.version = NV_ENCODE_API_FUNCTION_LIST_VER;
-  if (!load_nvenc_library ()) {
-    GST_INFO ("Failed to load nvenc library");
-    return;
+  module = g_module_open (NVENC_LIBRARY_NAME, G_MODULE_BIND_LAZY);
+  if (module == NULL) {
+    GST_WARNING ("Could not open library %s, %s",
+        NVENC_LIBRARY_NAME, g_module_error ());
+    return FALSE;
   }
 
+  if (!g_module_symbol (module, "NvEncodeAPICreateInstance",
+          (gpointer *) & nvEncodeAPICreateInstance)) {
+    GST_ERROR ("%s", g_module_error ());
+    return FALSE;
+  }
+
+  nvenc_api.version = NV_ENCODE_API_FUNCTION_LIST_VER;
   ret = nvEncodeAPICreateInstance (&nvenc_api);
 
   /* WARNING: Any developers who want to bump SDK version must ensure that
@@ -892,31 +869,17 @@ gst_nvenc_plugin_init (GstPlugin * plugin)
     ret = nvEncodeAPICreateInstance (&nvenc_api);
   }
 
-  if (ret == NV_ENC_SUCCESS) {
-    CUresult cuda_ret;
-    gint dev_count = 0;
+  return ret == NV_ENC_SUCCESS;
+}
 
-    GST_INFO ("Created NVEncodeAPI instance, got function table");
-
-    cuda_ret = CuInit (0);
-    if (cuda_ret != CUDA_SUCCESS) {
-      GST_ERROR ("Failed to initialize CUDA API");
-      return;
-    }
-
-    cuda_ret = CuDeviceGetCount (&dev_count);
-    if (cuda_ret != CUDA_SUCCESS || dev_count == 0) {
-      GST_ERROR ("No CUDA devices detected");
-      return;
-    }
-
-    gst_nv_enc_register (plugin, NV_ENC_CODEC_H264_GUID,
-        "h264", GST_RANK_PRIMARY * 2, dev_count);
-    gst_nv_enc_register (plugin, NV_ENC_CODEC_HEVC_GUID,
-        "h265", GST_RANK_PRIMARY * 2, dev_count);
-  } else {
-    GST_ERROR ("too old driver, could not load api vtable");
-  }
+void
+gst_nvenc_plugin_init (GstPlugin * plugin, guint device_index,
+    CUcontext cuda_ctx)
+{
+  gst_nv_enc_register (plugin, NV_ENC_CODEC_H264_GUID,
+      "h264", GST_RANK_PRIMARY * 2, device_index, cuda_ctx);
+  gst_nv_enc_register (plugin, NV_ENC_CODEC_HEVC_GUID,
+      "h265", GST_RANK_PRIMARY * 2, device_index, cuda_ctx);
 }
 
 guint32
