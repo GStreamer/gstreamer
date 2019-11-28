@@ -1374,22 +1374,17 @@ static GstFlowReturn
 gst_msdkenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
 {
   GstMsdkEnc *thiz = GST_MSDKENC (encoder);
+  GstMsdkEncClass *klass = GST_MSDKENC_GET_CLASS (thiz);
   GstVideoInfo *info = &thiz->input_state->info;
   FrameData *fdata;
   MsdkSurface *surface;
 
-  if (thiz->reconfig) {
-    mfxInfoMFX *mfx = NULL;
-
-    GST_INFO_OBJECT (encoder, "Adjust encoder bitrate before current frame");
+  if (thiz->reconfig || klass->need_reconfig (thiz, frame)) {
     gst_msdkenc_flush_frames (thiz, FALSE);
     gst_msdkenc_close_encoder (thiz);
 
     // This will reinitialized the encoder but keep same input format.
     gst_msdkenc_set_format (encoder, NULL);
-
-    mfx = &thiz->param.mfx;
-    GST_INFO_OBJECT (encoder, "New target bitrate: %u", mfx->TargetKbps);
   }
 
   if (G_UNLIKELY (thiz->context == NULL))
@@ -1682,6 +1677,12 @@ gst_msdkenc_need_conversion (GstMsdkEnc * encoder, GstVideoInfo * info,
   }
 }
 
+static gboolean
+gst_msdkenc_need_reconfig (GstMsdkEnc * encoder, GstVideoCodecFrame * frame)
+{
+  return FALSE;
+}
+
 static void
 gst_msdkenc_class_init (GstMsdkEncClass * klass)
 {
@@ -1694,6 +1695,7 @@ gst_msdkenc_class_init (GstMsdkEncClass * klass)
   gstencoder_class = GST_VIDEO_ENCODER_CLASS (klass);
 
   klass->need_conversion = gst_msdkenc_need_conversion;
+  klass->need_reconfig = gst_msdkenc_need_reconfig;
 
   gobject_class->finalize = gst_msdkenc_finalize;
 

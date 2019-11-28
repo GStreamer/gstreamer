@@ -174,6 +174,9 @@ struct _GstMsdkEncClass
    */
   gboolean (*need_conversion) (GstMsdkEnc * encoder, GstVideoInfo * info,
       GstVideoFormat * out_format);
+
+  /* Return TRUE if sub class requires a recofnig */
+  gboolean (*need_reconfig) (GstMsdkEnc * encoder, GstVideoCodecFrame * frame);
 };
 
 struct _MsdkEncTask
