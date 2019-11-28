@@ -40,6 +40,15 @@
 #define NVENC_LIBRARY_NAME "libnvidia-encode.so.1"
 #endif
 
+/* For backward compatibility */
+#define GST_NVENC_MIN_API_MAJOR_VERSION 8
+#define GST_NVENC_MIN_API_MINOR_VERSION 1
+
+#define GST_NVENCAPI_VERSION(major,minor) ((major) | ((minor) << 24))
+#define GST_NVENCAPI_STRUCT_VERSION(ver,api_ver) ((uint32_t)(api_ver) | ((ver)<<16) | (0x7 << 28))
+
+static guint32 gst_nvenc_api_version = NVENCAPI_VERSION;
+
 typedef NVENCSTATUS NVENCAPI
 tNvEncodeAPICreateInstance (NV_ENCODE_API_FUNCTION_LIST * functionList);
 tNvEncodeAPICreateInstance *nvEncodeAPICreateInstance;
@@ -595,6 +604,8 @@ gst_nv_enc_register (GstPlugin * plugin, GUID codec_id, const gchar * codec,
     guint32 count;
     gint max_width = 0;
     gint max_height = 0;
+    gint min_width = 16;
+    gint min_height = 16;
     GstCaps *sink_templ = NULL;
     GstCaps *src_templ = NULL;
     gchar *name;
@@ -653,6 +664,20 @@ gst_nv_enc_register (GstPlugin * plugin, GUID codec_id, const gchar * codec,
     } else if (max_height < 4096) {
       GST_WARNING ("max height %d is less than expected value", max_height);
       max_height = 4096;
+    }
+
+    caps_param.capsToQuery = NV_ENC_CAPS_WIDTH_MIN;
+    if (NvEncGetEncodeCaps (enc,
+            codec_id, &caps_param, &min_width) != NV_ENC_SUCCESS) {
+      GST_WARNING ("could not query min width");
+      min_width = 16;
+    }
+
+    caps_param.capsToQuery = NV_ENC_CAPS_HEIGHT_MIN;
+    if (NvEncGetEncodeCaps (enc,
+            codec_id, &caps_param, &min_height) != NV_ENC_SUCCESS) {
+      GST_WARNING ("could not query min height");
+      min_height = 16;
     }
 
     caps_param.capsToQuery = NV_ENC_CAPS_SUPPORTED_RATECONTROL_MODES;
@@ -734,8 +759,8 @@ gst_nv_enc_register (GstPlugin * plugin, GUID codec_id, const gchar * codec,
     gst_caps_set_value (sink_templ, "format", formats);
 
     gst_caps_set_simple (sink_templ,
-        "width", GST_TYPE_INT_RANGE, 16, max_width,
-        "height", GST_TYPE_INT_RANGE, 16, max_height,
+        "width", GST_TYPE_INT_RANGE, min_width, max_width,
+        "height", GST_TYPE_INT_RANGE, min_height, max_height,
         "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
 
     if (interlace_modes) {
@@ -754,8 +779,8 @@ gst_nv_enc_register (GstPlugin * plugin, GUID codec_id, const gchar * codec,
 
     name = g_strdup_printf ("video/x-%s", codec);
     src_templ = gst_caps_new_simple (name,
-        "width", GST_TYPE_INT_RANGE, 16, max_width,
-        "height", GST_TYPE_INT_RANGE, 16, max_height,
+        "width", GST_TYPE_INT_RANGE, min_width, max_width,
+        "height", GST_TYPE_INT_RANGE, min_height, max_height,
         "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,
         "stream-format", G_TYPE_STRING, "byte-stream",
         "alignment", G_TYPE_STRING, "au", NULL);
@@ -798,20 +823,23 @@ gst_nv_enc_register (GstPlugin * plugin, GUID codec_id, const gchar * codec,
   }
 }
 
-/* For backward compatibility */
-#define GST_NVENC_API_MAJOR_VERSION 8
-#define GST_NVENC_API_MINOR_VERSION 1
-
-#define GST_NVENCAPI_VERSION (GST_NVENC_API_MAJOR_VERSION | (GST_NVENC_API_MINOR_VERSION << 24))
-#define GST_NVENCAPI_STRUCT_VERSION(ver,api_ver) ((uint32_t)(api_ver) | ((ver)<<16) | (0x7 << 28))
-
-static guint32 gst_nvenc_api_version = NVENCAPI_VERSION;
+typedef struct
+{
+  gint major;
+  gint minor;
+} GstNvEncVersion;
 
 gboolean
 gst_nvenc_load_library (void)
 {
   GModule *module;
-  NVENCSTATUS ret;
+  NVENCSTATUS ret = NV_ENC_SUCCESS;
+  gint i;
+  static const GstNvEncVersion version_list[] = {
+    {NVENCAPI_MAJOR_VERSION, NVENCAPI_MINOR_VERSION},
+    {9, 0},
+    {GST_NVENC_MIN_API_MAJOR_VERSION, GST_NVENC_MIN_API_MINOR_VERSION}
+  };
 
   module = g_module_open (NVENC_LIBRARY_NAME, G_MODULE_BIND_LAZY);
   if (module == NULL) {
@@ -860,13 +888,20 @@ gst_nvenc_load_library (void)
    * NV_ENC_OPEN_ENCODE_SESSION_EX_PARAMS_VER NVENCAPI_STRUCT_VERSION(1)
    * NV_ENCODE_API_FUNCTION_LIST_VER      NVENCAPI_STRUCT_VERSION(2)
    */
-  if (ret != NV_ENC_SUCCESS) {
-    GST_WARNING ("Failed to get the latest NVEncodeAPI function table!");
-    gst_nvenc_api_version = GST_NVENCAPI_VERSION;
-    /* NV_ENCODE_API_FUNCTION_LIST_VER == NVENCAPI_STRUCT_VERSION(2) */
+
+  for (i = 0; i < G_N_ELEMENTS (version_list); i++) {
+    gst_nvenc_api_version =
+        GST_NVENCAPI_VERSION (version_list[i].major, version_list[i].minor);
+
     nvenc_api.version = GST_NVENCAPI_STRUCT_VERSION (2, gst_nvenc_api_version);
 
     ret = nvEncodeAPICreateInstance (&nvenc_api);
+
+    if (ret == NV_ENC_SUCCESS) {
+      GST_INFO ("Supported SDK version %d.%d",
+          version_list[i].major, version_list[i].minor);
+      break;
+    }
   }
 
   return ret == NV_ENC_SUCCESS;
