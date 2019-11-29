@@ -22,11 +22,8 @@ vulkan_sources = [
   'vkcolorconvert.c',
   'vkdownload.c',
   'vkdeviceprovider.c',
-  'vkelementutils.c',
-  'vkfullscreenquad.c',
   'vkimageidentity.c',
   'vksink.c',
-  'vkshader.c',
   'vkupload.c',
   'vkviewconvert.c',
 ]

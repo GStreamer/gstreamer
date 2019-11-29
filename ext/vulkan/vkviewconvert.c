@@ -32,8 +32,6 @@
 #include <string.h>
 
 #include "vkviewconvert.h"
-#include "vkshader.h"
-#include "vkelementutils.h"
 
 #include "shaders/identity.vert.h"
 #include "shaders/view_convert.frag.h"
@@ -1842,12 +1840,12 @@ gst_vulkan_view_convert_start (GstBaseTransform * bt)
   conv->quad = gst_vulkan_full_screen_quad_new (vfilter->queue);
 
   if (!(vert =
-          _vk_create_shader (vfilter->device, identity_vert, identity_vert_size,
-              NULL))) {
+          gst_vulkan_create_shader (vfilter->device, identity_vert,
+              identity_vert_size, NULL))) {
     return FALSE;
   }
   if (!(frag =
-          _vk_create_shader (vfilter->device, view_convert_frag,
+          gst_vulkan_create_shader (vfilter->device, view_convert_frag,
               view_convert_frag_size, NULL))) {
     gst_vulkan_handle_unref (vert);
     return FALSE;
@@ -1927,7 +1925,7 @@ gst_vulkan_view_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
       goto error;
     }
     in_img_views[i] =
-        get_or_create_image_view ((GstVulkanImageMemory *) img_mem);
+        gst_vulkan_get_or_create_image_view ((GstVulkanImageMemory *) img_mem);
     gst_vulkan_trash_list_add (conv->quad->trash_list,
         gst_vulkan_trash_list_acquire (conv->quad->trash_list, fence,
             gst_vulkan_trash_mini_object_unref,
@@ -1940,7 +1938,8 @@ gst_vulkan_view_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
           "Output memory must be a GstVulkanImageMemory");
       goto error;
     }
-    out_img_views[i] = get_or_create_image_view ((GstVulkanImageMemory *) mem);
+    out_img_views[i] =
+        gst_vulkan_get_or_create_image_view ((GstVulkanImageMemory *) mem);
     gst_vulkan_trash_list_add (conv->quad->trash_list,
         gst_vulkan_trash_list_acquire (conv->quad->trash_list, fence,
             gst_vulkan_trash_mini_object_unref,

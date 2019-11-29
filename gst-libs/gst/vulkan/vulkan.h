@@ -24,16 +24,16 @@
 #include <gst/gst.h>
 
 #include <gst/vulkan/gstvkapi.h>
-
-/* helper vulkan objects */
 #include <gst/vulkan/gstvkdebug.h>
 #include <gst/vulkan/gstvkerror.h>
+#include <gst/vulkan/gstvkformat.h>
+
+/* vulkan wrapper objects */
 #include <gst/vulkan/gstvkinstance.h>
 #include <gst/vulkan/gstvkphysicaldevice.h>
 #include <gst/vulkan/gstvkdevice.h>
 #include <gst/vulkan/gstvkqueue.h>
 #include <gst/vulkan/gstvkfence.h>
-#include <gst/vulkan/gstvkformat.h>
 #include <gst/vulkan/gstvkdisplay.h>
 #include <gst/vulkan/gstvkwindow.h>
 #include <gst/vulkan/gstvkmemory.h>
@@ -43,18 +43,22 @@
 #include <gst/vulkan/gstvkimageview.h>
 #include <gst/vulkan/gstvkbufferpool.h>
 #include <gst/vulkan/gstvkimagebufferpool.h>
-#include <gst/vulkan/gstvkutils.h>
 #include <gst/vulkan/gstvkcommandbuffer.h>
 #include <gst/vulkan/gstvkcommandpool.h>
-#include <gst/vulkan/gstvkdescriptorcache.h>
 #include <gst/vulkan/gstvkdescriptorset.h>
 #include <gst/vulkan/gstvkdescriptorpool.h>
 #include <gst/vulkan/gstvkhandle.h>
-#include <gst/vulkan/gstvkhandlepool.h>
-#include <gst/vulkan/gstvktrash.h>
-#include <gst/vulkan/gstvkswapper.h>
 
 /* helper elements */
 #include <gst/vulkan/gstvkvideofilter.h>
+
+/* helper vulkan objects */
+#include <gst/vulkan/gstvkdescriptorcache.h>
+#include <gst/vulkan/gstvktrash.h>
+#include <gst/vulkan/gstvkswapper.h>
+#include <gst/vulkan/gstvkhandlepool.h>
+#include <gst/vulkan/gstvkfullscreenquad.h>
+
+#include <gst/vulkan/gstvkutils.h>
 
 #endif /* __GST_VULKAN_H__ */

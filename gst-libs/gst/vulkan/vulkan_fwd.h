@@ -108,6 +108,10 @@ typedef struct _GstVulkanTrashListClass GstVulkanTrashListClass;
 
 typedef struct _GstVulkanTrash GstVulkanTrash;
 
+typedef struct _GstVulkanFullScreenQuad GstVulkanFullScreenQuad;
+typedef struct _GstVulkanFullScreenQuadClass GstVulkanFullScreenQuadClass;
+typedef struct _GstVulkanFullScreenQuadPrivate GstVulkanFullScreenQuadPrivate;
+
 G_END_DECLS
 
 #endif /* __GST_VULKAN_FWD_H__ */

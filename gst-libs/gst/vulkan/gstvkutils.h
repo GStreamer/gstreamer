@@ -52,6 +52,15 @@ gboolean                gst_vulkan_run_query                    (GstElement * el
                                                                  GstQuery * query,
                                                                  GstPadDirection direction);
 
+GST_VULKAN_API
+GstVulkanImageView *    gst_vulkan_get_or_create_image_view     (GstVulkanImageMemory * image);
+
+GST_VULKAN_API
+GstVulkanHandle *       gst_vulkan_create_shader                (GstVulkanDevice * device,
+                                                                 gchar * code,
+                                                                 gsize size,
+                                                                 GError ** error);
+
 G_END_DECLS
 
 #endif /*_VK_UTILS_H_ */

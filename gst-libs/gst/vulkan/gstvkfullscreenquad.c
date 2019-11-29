@@ -22,13 +22,17 @@
 #include "config.h"
 #endif
 
-#include "vkfullscreenquad.h"
-#include "vkelementutils.h"
+#include "gstvkfullscreenquad.h"
 
 #define GST_CAT_DEFAULT gst_vulkan_full_screen_quad_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-typedef struct _GstVulkanFullScreenQuad GstVulkanFullScreenQuad;
+/* XXX: privatise this on moving to lib */
+struct Vertex
+{
+  float x, y, z;
+  float s, t;
+};
 
 struct _GstVulkanFullScreenQuadPrivate
 {
@@ -40,9 +44,6 @@ struct _GstVulkanFullScreenQuadPrivate
   gsize n_indices;
   GstMemory *uniforms;
   gsize uniform_size;
-
-  GstMemory *push_constants;
-  gsize push_constants_size;
 
   GstVulkanHandle *vert;
   GstVulkanHandle *frag;
@@ -739,7 +740,42 @@ clear_uniform_data (GstVulkanFullScreenQuad * self)
 }
 
 static void
-destroy_pipeline (GstVulkanFullScreenQuad * self)
+clear_index_data (GstVulkanFullScreenQuad * self)
+{
+  GstVulkanFullScreenQuadPrivate *priv = GET_PRIV (self);
+  GstVulkanFence *last_fence =
+      LAST_FENCE_OR_ALWAYS_SIGNALLED (self, self->queue->device);
+
+  if (priv->indices)
+    gst_vulkan_trash_list_add (self->trash_list,
+        gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
+            gst_vulkan_trash_mini_object_unref,
+            (GstMiniObject *) priv->indices));
+  priv->indices = NULL;
+  priv->n_indices = 0;
+
+  gst_vulkan_fence_unref (last_fence);
+}
+
+static void
+clear_vertex_data (GstVulkanFullScreenQuad * self)
+{
+  GstVulkanFullScreenQuadPrivate *priv = GET_PRIV (self);
+  GstVulkanFence *last_fence =
+      LAST_FENCE_OR_ALWAYS_SIGNALLED (self, self->queue->device);
+
+  if (priv->vertices)
+    gst_vulkan_trash_list_add (self->trash_list,
+        gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
+            gst_vulkan_trash_mini_object_unref,
+            (GstMiniObject *) priv->vertices));
+  priv->vertices = NULL;
+
+  gst_vulkan_fence_unref (last_fence);
+}
+
+static void
+clear_render_pass (GstVulkanFullScreenQuad * self)
 {
   GstVulkanFence *last_fence =
       LAST_FENCE_OR_ALWAYS_SIGNALLED (self, self->queue->device);
@@ -750,24 +786,68 @@ destroy_pipeline (GstVulkanFullScreenQuad * self)
             gst_vulkan_trash_mini_object_unref,
             (GstMiniObject *) self->render_pass));
   self->render_pass = NULL;
+
+  gst_vulkan_fence_unref (last_fence);
+}
+
+static void
+clear_pipeline_layout (GstVulkanFullScreenQuad * self)
+{
+  GstVulkanFence *last_fence =
+      LAST_FENCE_OR_ALWAYS_SIGNALLED (self, self->queue->device);
+
   if (self->pipeline_layout)
     gst_vulkan_trash_list_add (self->trash_list,
         gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
             gst_vulkan_trash_mini_object_unref,
             (GstMiniObject *) self->pipeline_layout));
   self->pipeline_layout = NULL;
+
+  gst_vulkan_fence_unref (last_fence);
+}
+
+static void
+clear_graphics_pipeline (GstVulkanFullScreenQuad * self)
+{
+  GstVulkanFence *last_fence =
+      LAST_FENCE_OR_ALWAYS_SIGNALLED (self, self->queue->device);
+
   if (self->graphics_pipeline)
     gst_vulkan_trash_list_add (self->trash_list,
         gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
             gst_vulkan_trash_mini_object_unref,
             (GstMiniObject *) self->graphics_pipeline));
   self->graphics_pipeline = NULL;
+
+  gst_vulkan_fence_unref (last_fence);
+}
+
+static void
+clear_descriptor_set_layout (GstVulkanFullScreenQuad * self)
+{
+  GstVulkanFence *last_fence =
+      LAST_FENCE_OR_ALWAYS_SIGNALLED (self, self->queue->device);
+
   if (self->descriptor_set_layout)
     gst_vulkan_trash_list_add (self->trash_list,
         gst_vulkan_trash_list_acquire (self->trash_list, last_fence,
             gst_vulkan_trash_mini_object_unref,
             (GstMiniObject *) self->descriptor_set_layout));
   self->descriptor_set_layout = NULL;
+
+  gst_vulkan_fence_unref (last_fence);
+}
+
+static void
+destroy_pipeline (GstVulkanFullScreenQuad * self)
+{
+  GstVulkanFence *last_fence =
+      LAST_FENCE_OR_ALWAYS_SIGNALLED (self, self->queue->device);
+
+  clear_render_pass (self);
+  clear_pipeline_layout (self);
+  clear_graphics_pipeline (self);
+  clear_descriptor_set_layout (self);
 
   gst_vulkan_fence_unref (last_fence);
 
@@ -807,13 +887,12 @@ gst_vulkan_full_screen_quad_finalize (GObject * object)
   clear_descriptor_cache (self);
   clear_shaders (self);
   clear_uniform_data (self);
+  clear_index_data (self);
+  clear_vertex_data (self);
 
   gst_vulkan_trash_list_wait (self->trash_list, -1);
   gst_vulkan_trash_list_gc (self->trash_list);
   gst_clear_object (&self->trash_list);
-
-  gst_clear_mini_object (((GstMiniObject **) & priv->vertices));
-  gst_clear_mini_object (((GstMiniObject **) & priv->indices));
 
   gst_clear_mini_object (((GstMiniObject **) & self->last_fence));
 
@@ -923,6 +1002,47 @@ gst_vulkan_full_screen_quad_set_uniform_buffer (GstVulkanFullScreenQuad * self,
   return TRUE;
 }
 
+gboolean
+gst_vulkan_full_screen_quad_set_index_buffer (GstVulkanFullScreenQuad * self,
+    GstMemory * indices, gsize n_indices, GError ** error)
+{
+  GstVulkanFullScreenQuadPrivate *priv;
+
+  g_return_val_if_fail (GST_IS_VULKAN_FULL_SCREEN_QUAD (self), FALSE);
+  g_return_val_if_fail (indices == NULL
+      || gst_is_vulkan_buffer_memory (indices), FALSE);
+
+  priv = GET_PRIV (self);
+
+  clear_index_data (self);
+  if (indices) {
+    priv->indices = gst_memory_ref (indices);
+    priv->n_indices = n_indices;
+  }
+
+  return TRUE;
+}
+
+gboolean
+gst_vulkan_full_screen_quad_set_vertex_buffer (GstVulkanFullScreenQuad * self,
+    GstMemory * vertices, GError ** error)
+{
+  GstVulkanFullScreenQuadPrivate *priv;
+
+  g_return_val_if_fail (GST_IS_VULKAN_FULL_SCREEN_QUAD (self), FALSE);
+  g_return_val_if_fail (vertices == NULL
+      || gst_is_vulkan_buffer_memory (vertices), FALSE);
+
+  priv = GET_PRIV (self);
+
+  clear_vertex_data (self);
+  if (vertices) {
+    priv->vertices = gst_memory_ref (vertices);
+  }
+
+  return TRUE;
+}
+
 static GstVulkanImageMemory *
 peek_image_from_buffer (GstBuffer * buffer, guint i)
 {
@@ -942,34 +1062,34 @@ ensure_vertex_data (GstVulkanFullScreenQuad * self, GError ** error)
         sizeof (vertices), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
         VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-  }
 
-  if (!gst_memory_map (priv->vertices, &map_info, GST_MAP_WRITE)) {
-    g_set_error_literal (error, GST_VULKAN_ERROR, VK_ERROR_MEMORY_MAP_FAILED,
-        "Failed to map memory");
-    goto failure;
-  }
+    if (!gst_memory_map (priv->vertices, &map_info, GST_MAP_WRITE)) {
+      g_set_error_literal (error, GST_VULKAN_ERROR, VK_ERROR_MEMORY_MAP_FAILED,
+          "Failed to map memory");
+      goto failure;
+    }
 
-  memcpy (map_info.data, vertices, map_info.size);
-  gst_memory_unmap (priv->vertices, &map_info);
+    memcpy (map_info.data, vertices, map_info.size);
+    gst_memory_unmap (priv->vertices, &map_info);
+  }
 
   if (!priv->indices) {
     priv->indices = gst_vulkan_buffer_memory_alloc (self->queue->device,
         sizeof (indices), VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
         VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+    if (!gst_memory_map (priv->indices, &map_info, GST_MAP_WRITE)) {
+      g_set_error_literal (error, GST_VULKAN_ERROR, VK_ERROR_MEMORY_MAP_FAILED,
+          "Failed to map memory");
+      goto failure;
+    }
+
+    memcpy (map_info.data, indices, map_info.size);
+    gst_memory_unmap (priv->indices, &map_info);
+
+    priv->n_indices = G_N_ELEMENTS (indices);
   }
-
-  if (!gst_memory_map (priv->indices, &map_info, GST_MAP_WRITE)) {
-    g_set_error_literal (error, GST_VULKAN_ERROR, VK_ERROR_MEMORY_MAP_FAILED,
-        "Failed to map memory");
-    goto failure;
-  }
-
-  memcpy (map_info.data, indices, map_info.size);
-  gst_memory_unmap (priv->indices, &map_info);
-
-  priv->n_indices = G_N_ELEMENTS (indices);
 
   return TRUE;
 
@@ -1080,7 +1200,7 @@ gst_vulkan_full_screen_quad_prepare_draw (GstVulkanFullScreenQuad * self,
             "Input memory must be a GstVulkanImageMemory");
         goto error;
       }
-      in_views[i] = get_or_create_image_view (img_mem);
+      in_views[i] = gst_vulkan_get_or_create_image_view (img_mem);
       gst_vulkan_trash_list_add (self->trash_list,
           gst_vulkan_trash_list_acquire (self->trash_list, fence,
               gst_vulkan_trash_mini_object_unref,
@@ -1099,7 +1219,7 @@ gst_vulkan_full_screen_quad_prepare_draw (GstVulkanFullScreenQuad * self,
             "Output memory must be a GstVulkanImageMemory");
         goto error;
       }
-      out_views[i] = get_or_create_image_view (img_mem);
+      out_views[i] = gst_vulkan_get_or_create_image_view (img_mem);
       gst_vulkan_trash_list_add (self->trash_list,
           gst_vulkan_trash_list_acquire (self->trash_list, fence,
               gst_vulkan_trash_mini_object_unref,
@@ -1154,7 +1274,7 @@ gst_vulkan_full_screen_quad_fill_command_buffer (GstVulkanFullScreenQuad * self,
           "Input memory must be a GstVulkanImageMemory");
       goto error;
     }
-    in_views[i] = get_or_create_image_view (img_mem);
+    in_views[i] = gst_vulkan_get_or_create_image_view (img_mem);
     gst_vulkan_trash_list_add (self->trash_list,
         gst_vulkan_trash_list_acquire (self->trash_list, fence,
             gst_vulkan_trash_mini_object_unref, (GstMiniObject *) in_views[i]));
@@ -1166,7 +1286,7 @@ gst_vulkan_full_screen_quad_fill_command_buffer (GstVulkanFullScreenQuad * self,
           "Output memory must be a GstVulkanImageMemory");
       goto error;
     }
-    out_views[i] = get_or_create_image_view (img_mem);
+    out_views[i] = gst_vulkan_get_or_create_image_view (img_mem);
     gst_vulkan_trash_list_add (self->trash_list,
         gst_vulkan_trash_list_acquire (self->trash_list, fence,
             gst_vulkan_trash_mini_object_unref,

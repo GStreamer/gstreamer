@@ -28,6 +28,7 @@
 
 G_BEGIN_DECLS
 
+GST_VULKAN_API
 GType gst_vulkan_full_screen_quad_get_type (void);
 #define GST_TYPE_VULKAN_FULL_SCREEN_QUAD            (gst_vulkan_full_screen_quad_get_type ())
 #define GST_VULKAN_FULL_SCREEN_QUAD(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VULKAN_FULL_SCREEN_QUAD, GstVulkanFullScreenQuad))
@@ -35,17 +36,6 @@ GType gst_vulkan_full_screen_quad_get_type (void);
 #define GST_IS_VULKAN_FULL_SCREEN_QUAD(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VULKAN_FULL_SCREEN_QUAD))
 #define GST_IS_VULKAN_FULL_SCREEN_QUAD_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_VULKAN_FULL_SCREEN_QUAD))
 #define GST_VULKAN_FULL_SCREEN_QUAD_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VULKAN_FULL_SCREEN_QUAD, GstVulkanFullScreenQuadClass))
-
-/* XXX: privatise this on moving to lib */
-struct Vertex
-{
-  float x, y, z;
-  float s, t;
-};
-
-typedef struct _GstVulkanFullScreenQuad GstVulkanFullScreenQuad;
-typedef struct _GstVulkanFullScreenQuadClass GstVulkanFullScreenQuadClass;
-typedef struct _GstVulkanFullScreenQuadPrivate GstVulkanFullScreenQuadPrivate;
 
 struct _GstVulkanFullScreenQuad
 {
@@ -76,20 +66,35 @@ struct _GstVulkanFullScreenQuadClass
   GstObjectClass                    parent_class;
 };
 
+GST_VULKAN_API
 GstVulkanFullScreenQuad *   gst_vulkan_full_screen_quad_new         (GstVulkanQueue * queue);
 
+GST_VULKAN_API
 gboolean            gst_vulkan_full_screen_quad_set_info            (GstVulkanFullScreenQuad * self, GstVideoInfo *in_info, GstVideoInfo * out_info);
+GST_VULKAN_API
 gboolean            gst_vulkan_full_screen_quad_set_shaders         (GstVulkanFullScreenQuad * self, GstVulkanHandle * vert, GstVulkanHandle * frag);
+GST_VULKAN_API
 gboolean            gst_vulkan_full_screen_quad_set_uniform_buffer  (GstVulkanFullScreenQuad * self, GstMemory * uniforms, GError ** error);
+GST_VULKAN_API
+gboolean            gst_vulkan_full_screen_quad_set_vertex_buffer   (GstVulkanFullScreenQuad * self, GstMemory * vertices, GError ** error);
+GST_VULKAN_API
+gboolean            gst_vulkan_full_screen_quad_set_index_buffer    (GstVulkanFullScreenQuad * self, GstMemory * indices, gsize n_indices, GError ** error);
 
+GST_VULKAN_API
 gboolean            gst_vulkan_full_screen_quad_set_input_buffer    (GstVulkanFullScreenQuad * self, GstBuffer * buffer, GError ** error);
+GST_VULKAN_API
 gboolean            gst_vulkan_full_screen_quad_set_output_buffer   (GstVulkanFullScreenQuad * self, GstBuffer * buffer, GError ** error);
 
+GST_VULKAN_API
 gboolean            gst_vulkan_full_screen_quad_prepare_draw        (GstVulkanFullScreenQuad * self, GstVulkanFence * fence, GError ** error);
+GST_VULKAN_API
 gboolean            gst_vulkan_full_screen_quad_fill_command_buffer (GstVulkanFullScreenQuad * self, GstVulkanCommandBuffer * cmd, GstVulkanFence * fence, GError ** error);
+GST_VULKAN_API
 gboolean            gst_vulkan_full_screen_quad_submit              (GstVulkanFullScreenQuad * self, GstVulkanCommandBuffer * cmd, GstVulkanFence * fence, GError ** error);
+GST_VULKAN_API
 gboolean            gst_vulkan_full_screen_quad_draw                (GstVulkanFullScreenQuad * self, GError ** error);
 
+GST_VULKAN_API
 GstVulkanFence *    gst_vulkan_full_screen_quad_get_last_fence      (GstVulkanFullScreenQuad * self);
 
 G_END_DECLS

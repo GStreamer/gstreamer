@@ -402,3 +402,139 @@ gst_vulkan_handle_context_query (GstElement * element, GstQuery * query,
 
   return FALSE;
 }
+
+static void
+fill_vulkan_image_view_info (VkImage image, VkFormat format,
+    VkImageViewCreateInfo * info)
+{
+  /* *INDENT-OFF* */
+  *info = (VkImageViewCreateInfo) {
+      .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+      .pNext = NULL,
+      .image = image,
+      .format = format,
+      .viewType = VK_IMAGE_VIEW_TYPE_2D,
+      .flags = 0,
+      .components = (VkComponentMapping) {
+          VK_COMPONENT_SWIZZLE_R,
+          VK_COMPONENT_SWIZZLE_G,
+          VK_COMPONENT_SWIZZLE_B,
+          VK_COMPONENT_SWIZZLE_A
+      },
+      .subresourceRange = (VkImageSubresourceRange) {
+          .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+          .baseMipLevel = 0,
+          .levelCount = 1,
+          .baseArrayLayer = 0,
+          .layerCount = 1,
+      }
+  };
+  /* *INDENT-ON* */
+}
+
+static gboolean
+find_compatible_view (GstVulkanImageView * view, VkImageViewCreateInfo * info)
+{
+  return view->create_info.image == info->image
+      && view->create_info.format == info->format
+      && view->create_info.viewType == info->viewType
+      && view->create_info.flags == info->flags
+      && view->create_info.components.r == info->components.r
+      && view->create_info.components.g == info->components.g
+      && view->create_info.components.b == info->components.b
+      && view->create_info.components.a == info->components.a
+      && view->create_info.subresourceRange.aspectMask ==
+      info->subresourceRange.aspectMask
+      && view->create_info.subresourceRange.baseMipLevel ==
+      info->subresourceRange.baseMipLevel
+      && view->create_info.subresourceRange.levelCount ==
+      info->subresourceRange.levelCount
+      && view->create_info.subresourceRange.levelCount ==
+      info->subresourceRange.levelCount
+      && view->create_info.subresourceRange.baseArrayLayer ==
+      info->subresourceRange.baseArrayLayer
+      && view->create_info.subresourceRange.layerCount ==
+      info->subresourceRange.layerCount;
+}
+
+GstVulkanImageView *
+gst_vulkan_get_or_create_image_view (GstVulkanImageMemory * image)
+{
+  VkImageViewCreateInfo create_info;
+  GstVulkanImageView *ret = NULL;
+
+  fill_vulkan_image_view_info (image->image, image->create_info.format,
+      &create_info);
+
+  ret = gst_vulkan_image_memory_find_view (image,
+      (GstVulkanImageMemoryFindViewFunc) find_compatible_view, &create_info);
+  if (!ret) {
+    ret = gst_vulkan_image_view_new (image, &create_info);
+    gst_vulkan_image_memory_add_view (image, ret);
+  }
+
+  return ret;
+}
+
+#define SPIRV_MAGIC_NUMBER_NE 0x07230203
+#define SPIRV_MAGIC_NUMBER_OE 0x03022307
+
+GstVulkanHandle *
+gst_vulkan_create_shader (GstVulkanDevice * device, gchar * code, gsize size,
+    GError ** error)
+{
+  VkShaderModule shader;
+  VkResult res;
+
+  /* *INDENT-OFF* */
+  VkShaderModuleCreateInfo info = {
+      .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+      .pNext = NULL,
+      .flags = 0,
+      .codeSize = size,
+      .pCode = (guint32 *) code
+  };
+  /* *INDENT-ON* */
+  guint32 first_word;
+  guint32 *new_code = NULL;
+
+  g_return_val_if_fail (size >= 4, VK_NULL_HANDLE);
+  g_return_val_if_fail (size % 4 == 0, VK_NULL_HANDLE);
+
+  first_word = code[0] | code[1] << 8 | code[2] << 16 | code[3] << 24;
+  g_return_val_if_fail (first_word == SPIRV_MAGIC_NUMBER_NE
+      || first_word == SPIRV_MAGIC_NUMBER_OE, VK_NULL_HANDLE);
+  if (first_word == SPIRV_MAGIC_NUMBER_OE) {
+    /* endianness swap... */
+    guint32 *old_code = (guint32 *) code;
+    gsize i;
+
+    GST_DEBUG ("performaing endianness conversion on spirv shader of size %"
+        G_GSIZE_FORMAT, size);
+    new_code = g_new0 (guint32, size / 4);
+
+    for (i = 0; i < size / 4; i++) {
+      guint32 old = old_code[i];
+      guint32 new = 0;
+
+      new |= (old & 0xff) << 24;
+      new |= (old & 0xff00) << 8;
+      new |= (old & 0xff0000) >> 8;
+      new |= (old & 0xff000000) >> 24;
+      new_code[i] = new;
+    }
+
+    first_word = ((guint32 *) new_code)[0];
+    g_assert (first_word == SPIRV_MAGIC_NUMBER_NE);
+
+    info.pCode = new_code;
+  }
+
+  res = vkCreateShaderModule (device->device, &info, NULL, &shader);
+  g_free (new_code);
+  if (gst_vulkan_error_to_g_error (res, error, "VkCreateShaderModule") < 0)
+    return NULL;
+
+  return gst_vulkan_handle_new_wrapped (device, GST_VULKAN_HANDLE_TYPE_SHADER,
+      (GstVulkanHandleTypedef) shader, gst_vulkan_handle_free_shader, NULL);
+}

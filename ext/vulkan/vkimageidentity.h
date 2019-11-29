@@ -24,7 +24,6 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/vulkan/vulkan.h>
-#include "vkfullscreenquad.h"
 
 G_BEGIN_DECLS
 

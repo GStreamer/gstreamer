@@ -32,8 +32,6 @@
 #include <string.h>
 
 #include "vkcolorconvert.h"
-#include "vkshader.h"
-#include "vkelementutils.h"
 
 #include "shaders/identity.vert.h"
 #include "shaders/swizzle.frag.h"
@@ -1154,13 +1152,14 @@ gst_vulkan_color_convert_set_caps (GstBaseTransform * bt, GstCaps * in_caps,
   }
 
   if (!(vert =
-          _vk_create_shader (vfilter->device, identity_vert, identity_vert_size,
-              NULL))) {
+          gst_vulkan_create_shader (vfilter->device, identity_vert,
+              identity_vert_size, NULL))) {
     return FALSE;
   }
   if (!(frag =
-          _vk_create_shader (vfilter->device, conv->current_shader->frag_code,
-              conv->current_shader->frag_size, NULL))) {
+          gst_vulkan_create_shader (vfilter->device,
+              conv->current_shader->frag_code, conv->current_shader->frag_size,
+              NULL))) {
     gst_vulkan_handle_unref (vert);
     return FALSE;
   }
@@ -1224,7 +1223,7 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
       goto error;
     }
     in_img_views[i] =
-        get_or_create_image_view ((GstVulkanImageMemory *) img_mem);
+        gst_vulkan_get_or_create_image_view ((GstVulkanImageMemory *) img_mem);
     gst_vulkan_trash_list_add (conv->quad->trash_list,
         gst_vulkan_trash_list_acquire (conv->quad->trash_list, fence,
             gst_vulkan_trash_mini_object_unref,
@@ -1296,7 +1295,8 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
         goto error;
       }
       render_img_views[i] =
-          get_or_create_image_view ((GstVulkanImageMemory *) img_mem);
+          gst_vulkan_get_or_create_image_view ((GstVulkanImageMemory *)
+          img_mem);
       gst_vulkan_trash_list_add (conv->quad->trash_list,
           gst_vulkan_trash_list_acquire (conv->quad->trash_list, fence,
               gst_vulkan_trash_mini_object_unref,

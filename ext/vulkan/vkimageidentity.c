@@ -32,8 +32,6 @@
 #include <string.h>
 
 #include "vkimageidentity.h"
-#include "vkshader.h"
-#include "vkelementutils.h"
 
 #include "shaders/identity.vert.h"
 #include "shaders/identity.frag.h"
@@ -148,10 +146,10 @@ gst_vulkan_image_identity_start (GstBaseTransform * bt)
 
   vk_identity->quad = gst_vulkan_full_screen_quad_new (vfilter->queue);
 
-  if (!(vert = _vk_create_shader (vfilter->device, identity_vert,
+  if (!(vert = gst_vulkan_create_shader (vfilter->device, identity_vert,
               identity_vert_size, &error)))
     goto error;
-  if (!(frag = _vk_create_shader (vfilter->device, identity_frag,
+  if (!(frag = gst_vulkan_create_shader (vfilter->device, identity_frag,
               identity_frag_size, &error))) {
     gst_vulkan_handle_unref (vert);
     goto error;

@@ -26,8 +26,6 @@
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstharness.h>
 #include <gst/vulkan/vulkan.h>
-#include "../../ext/vulkan/vkelementutils.h"
-#include "../../ext/vulkan/vkelementutils.c"
 
 static GstVulkanInstance *instance;
 static GstVulkanDevice *device;
@@ -115,7 +113,7 @@ GST_START_TEST (test_image_view_new)
   gst_video_info_set_format (&v_info, GST_VIDEO_FORMAT_RGBA, 16, 16);
   vk_mem = create_image_mem (&v_info);
 
-  view = get_or_create_image_view (vk_mem);
+  view = gst_vulkan_get_or_create_image_view (vk_mem);
 
   gst_vulkan_image_view_unref (view);
   gst_memory_unref ((GstMemory *) vk_mem);
@@ -132,9 +130,9 @@ GST_START_TEST (test_image_view_get)
   gst_video_info_set_format (&v_info, GST_VIDEO_FORMAT_RGBA, 16, 16);
   vk_mem = create_image_mem (&v_info);
 
-  view = get_or_create_image_view (vk_mem);
+  view = gst_vulkan_get_or_create_image_view (vk_mem);
   gst_vulkan_image_view_unref (view);
-  view = get_or_create_image_view (vk_mem);
+  view = gst_vulkan_get_or_create_image_view (vk_mem);
   gst_vulkan_image_view_unref (view);
 
   gst_memory_unref ((GstMemory *) vk_mem);
@@ -173,7 +171,7 @@ get_unref_image_view (GstHarnessThread * thread, struct view_stress *stress)
   GstVulkanImageView *view;
 
   mem = g_queue_peek_nth (stress->memories, rand);
-  view = get_or_create_image_view (mem);
+  view = gst_vulkan_get_or_create_image_view (mem);
   gst_vulkan_image_view_unref (view);
 
   g_atomic_int_inc (&stress->n_ops);
