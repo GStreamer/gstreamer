@@ -54,7 +54,7 @@ gst_vulkan_trash_dispose (GstVulkanTrash * trash)
 
   /* keep the buffer alive */
   gst_vulkan_trash_ref (trash);
-  /* return the buffer to the pool */
+  /* return the trash object to the pool */
   gst_vulkan_trash_release (cache, trash);
 
   return FALSE;
@@ -299,6 +299,16 @@ gst_vulkan_trash_list_init (GstVulkanTrashList * trash_list)
 {
 }
 
+/**
+ * gst_vulkan_trash_list_acquire:
+ * @trash_list: a #GstVulkanTrashList
+ * @fence: a #GstVulkanFence to wait for signalling
+ * @notify: (scope async): notify function for when @fence is signalled
+ * @user_data: user data for @notify
+ *
+ * Returns: (transfer full): a new or reused #GstVulkanTrash for the provided
+ *          parameters.
+ */
 GstVulkanTrash *
 gst_vulkan_trash_list_acquire (GstVulkanTrashList * trash_list,
     GstVulkanFence * fence, GstVulkanTrashNotify notify, gpointer user_data)

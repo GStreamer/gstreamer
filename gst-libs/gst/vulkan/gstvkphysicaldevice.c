@@ -625,7 +625,7 @@ error:
 }
 
 /**
- * gst_vulkan_physical_device_get_physical_device: (skip)
+ * gst_vulkan_physical_device_get_handle: (skip)
  * @device: a #GstVulkanPhysicalDevice
  *
  * Returns: The associated `VkPhysicalDevice` handle
@@ -638,4 +638,20 @@ gst_vulkan_physical_device_get_handle (GstVulkanPhysicalDevice * device)
   g_return_val_if_fail (GST_IS_VULKAN_PHYSICAL_DEVICE (device), NULL);
 
   return device->device;
+}
+
+/**
+ * gst_vulkan_physical_device_get_instance:
+ * @device: a #GstVulkanPhysicalDevice
+ *
+ * Returns: (transfer full): The #GstVulkanInstance associated with this physical device
+ *
+ * Since: 1.18
+ */
+GstVulkanInstance *
+gst_vulkan_physical_device_get_instance (GstVulkanPhysicalDevice * device)
+{
+  g_return_val_if_fail (GST_IS_VULKAN_PHYSICAL_DEVICE (device), NULL);
+
+  return device->instance ? gst_object_ref (device->instance) : NULL;
 }

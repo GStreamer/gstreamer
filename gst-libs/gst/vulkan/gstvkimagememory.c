@@ -568,8 +568,6 @@ gst_vulkan_image_memory_release_view (GstVulkanImageMemory * image,
  * @image: a #GstVulkanImageMemory
  * @view: a #GstVulkanImageView
  *
- * Return: the height of @image
- *
  * Since: 1.18
  */
 void
@@ -620,8 +618,8 @@ find_view_func (GstVulkanImageView * view, gpointer user_data)
 /**
  * gst_vulkan_image_memory_find_view:
  * @image: a #GstVulkanImageMemory
- * @find_func: #GstVulkanImageMemoryFindViewFunc to search with
- * @data: user data to call @finc_func with
+ * @find_func: (scope call): #GstVulkanImageMemoryFindViewFunc to search with
+ * @user_data: user data to call @finc_func with
  *
  * Return: (transfer full): the first #GstVulkanImageView that @find_func
  * returns %TRUE for, or %NULL
@@ -630,7 +628,7 @@ find_view_func (GstVulkanImageView * view, gpointer user_data)
  */
 GstVulkanImageView *
 gst_vulkan_image_memory_find_view (GstVulkanImageMemory * image,
-    GstVulkanImageMemoryFindViewFunc find_func, gpointer data)
+    GstVulkanImageMemoryFindViewFunc find_func, gpointer user_data)
 {
   GstVulkanImageView *ret = NULL;
   struct view_data view;
@@ -643,7 +641,7 @@ gst_vulkan_image_memory_find_view (GstVulkanImageMemory * image,
   g_mutex_lock (&image->lock);
   view.img = image;
   view.find_func = find_func;
-  view.find_data = data;
+  view.find_data = user_data;
 
   if (g_ptr_array_find_with_equal_func (image->outstanding_views, &view,
           (GEqualFunc) find_view_func, &index)) {
