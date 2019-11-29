@@ -74,7 +74,7 @@ static GstStaticPadTemplate gst_vp9_dec_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ I420, YV12, Y42B, Y444 }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ I420, YV12, Y42B, Y444, GBR }"))
     );
 
 #define parent_class gst_vp9_dec_parent_class
@@ -145,7 +145,10 @@ gst_vp9_dec_get_valid_format (GstVPXDec * dec, vpx_image_t * img,
       return TRUE;
 
     case VPX_IMG_FMT_I444:
-      *fmt = GST_VIDEO_FORMAT_Y444;
+      if (img->cs == VPX_CS_SRGB)
+        *fmt = GST_VIDEO_FORMAT_GBR;
+      else
+        *fmt = GST_VIDEO_FORMAT_Y444;
       return TRUE;
 #ifdef VPX_IMG_FMT_I440
     case VPX_IMG_FMT_I440:
