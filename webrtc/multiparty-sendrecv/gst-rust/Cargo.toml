@@ -1,0 +1,20 @@
+[package]
+name = "webrtc-app"
+version = "0.1.0"
+authors = ["Sebastian Dröge <sebastian@centricular.com>"]
+edition = "2018"
+
+[dependencies]
+futures = "0.3"
+async-std = "1"
+structopt = { version = "0.3", default-features = false }
+anyhow = "1"
+url = "2"
+rand = "0.7"
+async-tungstenite = "0.2"
+gst = { package = "gstreamer", version = "0.14", features = ["v1_14"] }
+gst-webrtc = { package = "gstreamer-webrtc", version = "0.14" }
+gst-sdp = { package = "gstreamer-sdp", version = "0.14", features = ["v1_14"] }
+serde = "1"
+serde_derive = "1"
+serde_json = "1"
