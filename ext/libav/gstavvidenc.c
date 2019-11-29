@@ -654,7 +654,7 @@ gst_ffmpegvidenc_receive_packet (GstFFMpegVidEnc * ffmpegenc,
     ret = GST_FLOW_EOS;
     goto done;
   } else if (res < 0) {
-    res = GST_FLOW_ERROR;
+    ret = GST_FLOW_ERROR;
     goto done;
   }
 
