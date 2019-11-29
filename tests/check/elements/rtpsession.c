@@ -92,6 +92,8 @@ typedef struct
   GObject *internal_session;
   GstTestClock *testclock;
   GstCaps *caps;
+
+  gboolean running;
 } SessionHarness;
 
 static GstCaps *
@@ -1957,6 +1959,46 @@ GST_START_TEST (test_request_late_nack)
 
 GST_END_TEST;
 
+static gpointer
+_push_caps_events (gpointer user_data)
+{
+  SessionHarness *h = user_data;
+  gint payload = 0;
+  while (h->running) {
+
+    GstCaps *caps = gst_caps_new_simple ("application/x-rtp",
+        "payload", G_TYPE_INT, payload,
+        NULL);
+    gst_harness_set_src_caps (h->recv_rtp_h, caps);
+    g_thread_yield ();
+    payload++;
+  }
+
+  return NULL;
+}
+
+GST_START_TEST (test_clear_pt_map_stress)
+{
+  SessionHarness *h = session_harness_new ();
+  GThread *thread;
+  guint i;
+
+  h->running = TRUE;
+  thread = g_thread_new (NULL, _push_caps_events, h);
+
+  for (i = 0; i < 1000; i++) {
+    g_signal_emit_by_name (h->session, "clear-pt-map");
+    g_thread_yield ();
+  }
+
+  h->running = FALSE;
+  g_thread_join (thread);
+
+  session_harness_free (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtpsession_suite (void)
 {
@@ -1988,6 +2030,8 @@ rtpsession_suite (void)
   tcase_add_test (tc_chain, test_on_sending_nacks);
   tcase_add_test (tc_chain, test_disable_probation);
   tcase_add_test (tc_chain, test_request_late_nack);
+  tcase_add_test (tc_chain, test_clear_pt_map_stress);
+
   return s;
 }
 

@@ -1319,7 +1319,9 @@ return_true (gpointer key, gpointer value, gpointer user_data)
 static void
 gst_rtp_session_clear_pt_map (GstRtpSession * rtpsession)
 {
+  GST_RTP_SESSION_LOCK (rtpsession);
   g_hash_table_foreach_remove (rtpsession->priv->ptmap, return_true, NULL);
+  GST_RTP_SESSION_UNLOCK (rtpsession);
 }
 
 /* called when the session manager has an RTP packet or a list of packets
