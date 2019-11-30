@@ -42,6 +42,19 @@ gboolean        gst_d3d11_ensure_element_data       (GstElement * element,
 
 gboolean        gst_d3d11_is_windows_8_or_greater   (void);
 
+GstQuery *      gst_query_new_d3d11_usage           (D3D11_USAGE usage);
+
+void            gst_query_parse_d3d11_usage         (GstQuery * query,
+                                                     D3D11_USAGE *usage);
+
+void            gst_query_set_d3d11_usage_result    (GstQuery * query,
+                                                     gboolean result);
+
+void            gst_query_parse_d3d11_usage_result  (GstQuery * query,
+                                                     gboolean * result);
+
+gboolean        gst_query_is_d3d11_usage            (GstQuery * query);
+
 G_END_DECLS
 
 #endif /* __GST_D3D11_UTILS_H__ */

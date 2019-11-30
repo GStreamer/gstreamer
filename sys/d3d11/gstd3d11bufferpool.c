@@ -151,7 +151,7 @@ gst_d3d11_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   if (!priv->d3d11_params) {
     /* allocate memory with resource format by default */
     priv->d3d11_params = gst_d3d11_allocation_params_new (&info,
-        GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT);
+        GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT, D3D11_USAGE_DEFAULT, 0);
   }
 #ifndef GST_DISABLE_GST_DEBUG
   {

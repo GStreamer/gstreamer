@@ -261,6 +261,8 @@ static GstFlowReturn gst_d3d11_color_convert_transform (GstBaseTransform *
 static gboolean gst_d3d11_color_convert_set_info (GstD3D11BaseFilter * filter,
     GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
     GstVideoInfo * out_info);
+static gboolean gst_d3d11_color_convert_query (GstBaseTransform * trans,
+    GstPadDirection direction, GstQuery * query);
 
 /* copies the given caps */
 static GstCaps *
@@ -458,6 +460,7 @@ gst_d3d11_color_convert_class_init (GstD3D11ColorConvertClass * klass)
   trans_class->transform =
       GST_DEBUG_FUNCPTR (gst_d3d11_color_convert_transform);
   trans_class->start = GST_DEBUG_FUNCPTR (gst_d3d11_color_convert_start);
+  trans_class->query = GST_DEBUG_FUNCPTR (gst_d3d11_color_convert_query);
 
   bfilter_class->set_info =
       GST_DEBUG_FUNCPTR (gst_d3d11_color_convert_set_info);
@@ -740,13 +743,15 @@ gst_d3d11_color_convert_propose_allocation (GstBaseTransform * trans,
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
 
   d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
-  if (!d3d11_params)
+  if (!d3d11_params) {
     d3d11_params = gst_d3d11_allocation_params_new (&info,
-        GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT);
-
-  /* Set bind flag */
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&info); i++) {
-    d3d11_params->desc[i].BindFlags |= D3D11_BIND_SHADER_RESOURCE;
+        GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT, D3D11_USAGE_DEFAULT,
+        D3D11_BIND_SHADER_RESOURCE);
+  } else {
+    /* Set bind flag */
+    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&info); i++) {
+      d3d11_params->desc[i].BindFlags |= D3D11_BIND_SHADER_RESOURCE;
+    }
   }
 
   gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
@@ -817,14 +822,16 @@ gst_d3d11_color_convert_decide_allocation (GstBaseTransform * trans,
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
 
   d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
-  if (!d3d11_params)
+  if (!d3d11_params) {
     d3d11_params = gst_d3d11_allocation_params_new (&info,
-        GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT);
-
-  /* Set bind flag */
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&info); i++) {
-    d3d11_params->desc[i].BindFlags |=
-        (D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
+        GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT, D3D11_USAGE_DEFAULT,
+        D3D11_BIND_RENDER_TARGET);
+  } else {
+    /* Set bind flag */
+    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&info); i++) {
+      d3d11_params->desc[i].BindFlags |=
+          (D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
+    }
   }
 
   gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
@@ -866,6 +873,26 @@ gst_d3d11_color_convert_start (GstBaseTransform * trans)
   }
 
   return TRUE;
+}
+
+static gboolean
+gst_d3d11_color_convert_query (GstBaseTransform * trans,
+    GstPadDirection direction, GstQuery * query)
+{
+  if (gst_query_is_d3d11_usage (query) && direction == GST_PAD_SINK) {
+    D3D11_USAGE usage = D3D11_USAGE_DEFAULT;
+
+    gst_query_parse_d3d11_usage (query, &usage);
+    if (usage == D3D11_USAGE_DEFAULT || usage == D3D11_USAGE_DYNAMIC)
+      gst_query_set_d3d11_usage_result (query, TRUE);
+    else
+      gst_query_set_d3d11_usage_result (query, FALSE);
+
+    return TRUE;
+  }
+
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->query (trans, direction,
+      query);
 }
 
 /* from video-converter.c */
@@ -1897,11 +1924,13 @@ do_convert (GstD3D11Device * device, DoConvertData * data)
 
     g_assert (gst_is_d3d11_memory (mem));
 
-    /* map to transfer pending staging data if any */
-    gst_memory_map (mem, &info, GST_MAP_READ | GST_MAP_D3D11);
-    gst_memory_unmap (mem, &info);
-
     d3d11_mem = (GstD3D11Memory *) mem;
+    /* map to transfer pending staging data if any */
+    if (d3d11_mem->desc.Usage == D3D11_USAGE_DEFAULT) {
+      gst_memory_map (mem, &info, GST_MAP_READ | GST_MAP_D3D11);
+      gst_memory_unmap (mem, &info);
+    }
+
     if (gst_d3d11_memory_ensure_shader_resource_view (mem)) {
       for (j = 0; j < d3d11_mem->num_shader_resource_views; j++) {
         resource_view[view_index] = d3d11_mem->shader_resource_view[j];

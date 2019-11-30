@@ -584,6 +584,19 @@ gst_d3d11_video_sink_query (GstBaseSink * sink, GstQuery * query)
         return TRUE;
       }
       break;
+    case GST_QUERY_CUSTOM:
+      if (gst_query_is_d3d11_usage (query)) {
+        D3D11_USAGE usage = D3D11_USAGE_DEFAULT;
+
+        gst_query_parse_d3d11_usage (query, &usage);
+        if (usage == D3D11_USAGE_DEFAULT || usage == D3D11_USAGE_DYNAMIC)
+          gst_query_set_d3d11_usage_result (query, TRUE);
+        else
+          gst_query_set_d3d11_usage_result (query, FALSE);
+
+        return TRUE;
+      }
+      break;
     default:
       break;
   }
@@ -657,23 +670,28 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
   ID3D11Texture2D *texture;
   GstMapInfo map;
   GstFlowReturn ret;
-  gboolean need_unmap = FALSE;
   GstMemory *mem;
   GstVideoRectangle rect = { 0, };
   GstVideoCropMeta *crop;
 
   if (gst_buffer_n_memory (buf) == 1 && (mem = gst_buffer_peek_memory (buf, 0))
       && gst_memory_is_type (mem, GST_D3D11_MEMORY_NAME)) {
+    GstD3D11Memory *dmem = (GstD3D11Memory *) mem;
+
     /* If this buffer has been allocated using our buffer management we simply
        put the ximage which is in the PRIVATE pointer */
     GST_TRACE_OBJECT (self, "buffer %p from our pool, writing directly", buf);
-    if (!gst_memory_map (mem, &map, (GST_MAP_READ | GST_MAP_D3D11))) {
-      GST_ERROR_OBJECT (self, "cannot map d3d11 memory");
-      return GST_FLOW_ERROR;
+
+    if (dmem->desc.Usage == D3D11_USAGE_DEFAULT) {
+      if (!gst_memory_map (mem, &map, (GST_MAP_READ | GST_MAP_D3D11))) {
+        GST_ERROR_OBJECT (self, "cannot map d3d11 memory");
+        return GST_FLOW_ERROR;
+      }
+
+      gst_memory_unmap (mem, &map);
     }
 
-    texture = (ID3D11Texture2D *) map.data;
-    need_unmap = TRUE;
+    texture = dmem->texture;
   } else {
     if (!gst_video_frame_map (&frame, &self->info, buf, GST_MAP_READ)) {
       GST_ERROR_OBJECT (self, "cannot map video frame");
@@ -713,9 +731,6 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
   }
 
   ret = gst_d3d11_window_render (self->window, texture, &rect);
-
-  if (need_unmap)
-    gst_memory_unmap (mem, &map);
 
   if (ret == GST_D3D11_WINDOW_FLOW_CLOSED) {
     GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
