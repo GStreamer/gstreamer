@@ -427,6 +427,45 @@ static AVCaptureVideoOrientation GstAVFVideoSourceOrientation2AVCaptureVideoOrie
 
   GST_DEBUG_OBJECT (element, "Opening device");
 
+  // Since Mojave, permissions are now supposed to be explicitly granted
+  // before performing anything on a device
+  if (@available(macOS 10.14, *)) {
+    // Check if permission has already been granted (or denied)
+    AVAuthorizationStatus authStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
+    switch (authStatus) {
+      case AVAuthorizationStatusDenied:
+        // The user has explicitly denied permission for media capture.
+        GST_ELEMENT_ERROR (element, RESOURCE, NOT_AUTHORIZED,
+          ("Device video access permission has been explicitly denied before"), ("Authorization status: %d", (int)authStatus));
+          return success;
+      case AVAuthorizationStatusRestricted:
+        // The user is not allowed to access media capture devices.
+        GST_ELEMENT_ERROR (element, RESOURCE, NOT_AUTHORIZED,
+          ("Device video access permission cannot be granted by the user"), ("Authorization status: %d", (int)authStatus));
+        return success;
+      case AVAuthorizationStatusAuthorized:
+        // The user has explicitly granted permission for media capture,
+        // or explicit user permission is not necessary for the media type in question.
+        GST_DEBUG_OBJECT (element, "Device video access permission has already been granted");
+        break;
+      case AVAuthorizationStatusNotDetermined:
+        // Explicit user permission is required for media capture,
+        // but the user has not yet granted or denied such permission.
+        dispatch_sync (mainQueue, ^{
+          [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted) {
+            GST_DEBUG_OBJECT (element, "Device video access permission %s", granted ? "granted" : "not granted");
+          }];
+        });
+        // Check if permission has been granted
+        AVAuthorizationStatus videoAuthorizationStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
+        if (videoAuthorizationStatus != AVAuthorizationStatusAuthorized) {
+          GST_ELEMENT_ERROR (element, RESOURCE, NOT_AUTHORIZED,
+            ("Device video access permission has just been denied"), ("Authorization status: %d", (int)videoAuthorizationStatus));
+          return success;
+        }
+    }
+  }
+
   dispatch_sync (mainQueue, ^{
     BOOL ret;
 
