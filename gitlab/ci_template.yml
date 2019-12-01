@@ -416,7 +416,7 @@ valgrind ges:
     - 'docker'
     - 'windows'
     - '1607'
-  timeout: '10min'
+  timeout: '15min'
   variables:
     MESON_ARGS: >
       ${DEFAULT_MESON_ARGS}
