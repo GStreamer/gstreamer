@@ -59,6 +59,7 @@ struct _GstD3D11ColorConvert
   guint num_output_view;
 
   D3D11_VIEWPORT viewport;
+  gboolean can_convert;
 
   GstD3D11ColorConvertPrivate *priv;
 };
