@@ -864,11 +864,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ENABLE_BITCODE = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = 2;
-				VALID_ARCHS = "armv7 arm64 i386 x86_64";
+				VALID_ARCHS = "arm64 x86_64";
 			};
 			name = Debug;
 		};
@@ -876,11 +876,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ENABLE_BITCODE = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				ONLY_ACTIVE_ARCH = NO;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = 2;
-				VALID_ARCHS = "armv7 arm64 i386 x86_64";
+				VALID_ARCHS = "arm64 x86_64";
 			};
 			name = Release;
 		};
@@ -946,6 +946,10 @@
 					QuartzCore,
 					"-framework",
 					AssetsLibrary,
+					"-framework",
+					Metal,
+					"-framework",
+					IOSurface,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-1";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1010,6 +1014,10 @@
 					QuartzCore,
 					"-framework",
 					AssetsLibrary,
+					"-framework",
+					Metal,
+					"-framework",
+					IOSurface,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-1";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1084,6 +1092,10 @@
 					AssetsLibrary,
 					"-weak_framework",
 					VideoToolBox,
+					"-framework",
+					IOSurface,
+					"-framework",
+					Metal,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-2";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1150,6 +1162,10 @@
 					AssetsLibrary,
 					"-weak_framework",
 					VideoToolBox,
+					"-framework",
+					IOSurface,
+					"-framework",
+					Metal,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-2";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1196,7 +1212,6 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
 				INFOPLIST_FILE = "Tutorial 5/Tutorial 5-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = (
 					"-lresolv",
@@ -1227,6 +1242,10 @@
 					VideoToolBox,
 					"-framework",
 					CoreText,
+					"-framework",
+					Metal,
+					"-framework",
+					IOSurface,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-5";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1265,7 +1284,6 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
 				INFOPLIST_FILE = "Tutorial 5/Tutorial 5-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				OTHER_LDFLAGS = (
 					"-lresolv",
@@ -1296,6 +1314,10 @@
 					VideoToolBox,
 					"-framework",
 					CoreText,
+					"-framework",
+					Metal,
+					"-framework",
+					IOSurface,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-5";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1371,6 +1393,10 @@
 					AssetsLibrary,
 					"-weak_framework",
 					VideoToolBox,
+					"-framework",
+					Metal,
+					"-framework",
+					IOSurface,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-3";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1438,6 +1464,10 @@
 					AssetsLibrary,
 					"-weak_framework",
 					VideoToolBox,
+					"-framework",
+					Metal,
+					"-framework",
+					IOSurface,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-3";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1515,6 +1545,10 @@
 					VideoToolBox,
 					"-framework",
 					CoreText,
+					"-framework",
+					Metal,
+					"-framework",
+					IOSurface,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-4";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1584,6 +1618,10 @@
 					VideoToolBox,
 					"-framework",
 					CoreText,
+					"-framework",
+					Metal,
+					"-framework",
+					IOSurface,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-4";
 				PRODUCT_NAME = "$(TARGET_NAME)";
