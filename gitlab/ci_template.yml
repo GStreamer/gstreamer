@@ -95,7 +95,8 @@ gst indent:
   dependencies:
     - "manifest"
   # Taking into account the slowest shared runner + time needed to upload the binaries to artifacts
-  timeout: '30min'
+  # Also need to take into account I/O of pulling docker images and uploading artifacts
+  timeout: '45min'
   variables:
     CCACHE_COMPILERCHECK: "content"
     CCACHE_COMPRESS: "true"
