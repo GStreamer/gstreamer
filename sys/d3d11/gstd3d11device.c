@@ -776,7 +776,7 @@ gst_d3d11_device_create_texture_internal (GstD3D11Device * device,
   hr = ID3D11Device_CreateTexture2D (priv->device, data->desc,
       data->inital_data, &data->texture);
   if (FAILED (hr)) {
-    GST_ERROR ("Failed to create staging texture (0x%x)", (guint) hr);
+    GST_ERROR ("Failed to create texture (0x%x)", (guint) hr);
     data->texture = NULL;
   }
 }
