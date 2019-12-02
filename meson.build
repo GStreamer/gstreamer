@@ -370,7 +370,6 @@ subdir('gst')
 subdir('sys')
 subdir('ext')
 subdir('tests')
-subdir('pkgconfig')
 subdir('docs')
 
 # xgettext is optional (on Windows for instance)
