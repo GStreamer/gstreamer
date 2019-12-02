@@ -1,6 +1,6 @@
 # escape=`
 
-FROM 'mcr.microsoft.com/windows/servercore:1607'
+FROM 'mcr.microsoft.com/windows/servercore:1809'
 
 # Make sure any failure in PowerShell scripts is fatal
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop';"]

@@ -44,9 +44,7 @@ Write-Host "Installing git-lfs"
 choco install -y git-lfs
 refreshenv
 
-$env:PATH += ";C:\msys64\usr\bin;C:\msys64\mingw64/bin;C:\msys64\mingw32/bin"
-C:\msys64\usr\bin\bash -c "pacman-key --init && pacman-key --populate msys2 && pacman-key --refresh-keys"
-C:\msys64\usr\bin\bash -c "pacman -Syuu --noconfirm"
-C:\msys64\usr\bin\bash -c "pacman -Sy --noconfirm --needed mingw-w64-x86_64-toolchain ninja"
-
+Write-Host "Installing Meson"
 pip install meson
+
+Write-Host "Complete"
