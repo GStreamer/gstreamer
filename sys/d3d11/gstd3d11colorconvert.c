@@ -49,7 +49,6 @@
 #include "gstd3d11bufferpool.h"
 
 #include <string.h>
-#include <d3dcompiler.h>
 
 /* *INDENT-OFF* */
 typedef struct
@@ -480,41 +479,6 @@ clear_shader_resource (GstD3D11Device * device, GstD3D11ColorConvert * self)
 {
   gint i;
 
-  if (self->sampler) {
-    ID3D11SamplerState_Release (self->sampler);
-    self->sampler = NULL;
-  }
-
-  if (self->pixel_shader) {
-    ID3D11PixelShader_Release (self->pixel_shader);
-    self->pixel_shader = NULL;
-  }
-
-  if (self->vertex_shader) {
-    ID3D11VertexShader_Release (self->vertex_shader);
-    self->vertex_shader = NULL;
-  }
-
-  if (self->layout) {
-    ID3D11InputLayout_Release (self->layout);
-    self->layout = NULL;
-  }
-
-  if (self->const_buffer) {
-    ID3D11Buffer_Release (self->const_buffer);
-    self->const_buffer = NULL;
-  }
-
-  if (self->vertex_buffer) {
-    ID3D11Buffer_Release (self->vertex_buffer);
-    self->vertex_buffer = NULL;
-  }
-
-  if (self->index_buffer) {
-    ID3D11Buffer_Release (self->index_buffer);
-    self->index_buffer = NULL;
-  }
-
   for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
     if (self->shader_resource_view[i]) {
       ID3D11ShaderResourceView_Release (self->shader_resource_view[i]);
@@ -538,6 +502,10 @@ clear_shader_resource (GstD3D11Device * device, GstD3D11ColorConvert * self)
       self->out_texture[i] = NULL;
     }
   }
+
+  if (self->quad)
+    gst_d3d11_quad_free (self->quad);
+  self->quad = NULL;
 }
 
 static void
@@ -1198,141 +1166,6 @@ setup_convert_info_yuv_to_yuv (GstD3D11ColorConvert * self,
   return FALSE;
 }
 
-/* called in d3d11 device thread */
-static ID3DBlob *
-compile_shader (GstD3D11ColorConvert * self, const gchar * shader_source,
-    gboolean is_pixel_shader)
-{
-  GstD3D11BaseFilter *filter = GST_D3D11_BASE_FILTER (self);
-  ID3DBlob *ret;
-  ID3DBlob *error = NULL;
-  const gchar *shader_target;
-  D3D_FEATURE_LEVEL feature_level;
-  HRESULT hr;
-
-  feature_level = gst_d3d11_device_get_chosen_feature_level (filter->device);
-
-  if (is_pixel_shader) {
-    if (feature_level >= D3D_FEATURE_LEVEL_10_0)
-      shader_target = "ps_4_0";
-    else if (feature_level >= D3D_FEATURE_LEVEL_9_3)
-      shader_target = "ps_4_0_level_9_3";
-    else
-      shader_target = "ps_4_0_level_9_1";
-  } else {
-    if (feature_level >= D3D_FEATURE_LEVEL_10_0)
-      shader_target = "vs_4_0";
-    else if (feature_level >= D3D_FEATURE_LEVEL_9_3)
-      shader_target = "vs_4_0_level_9_3";
-    else
-      shader_target = "vs_4_0_level_9_1";
-  }
-
-  hr = D3DCompile (shader_source, strlen (shader_source), NULL, NULL, NULL,
-      "main", shader_target, 0, 0, &ret, &error);
-
-  if (FAILED (hr)) {
-    const gchar *err = NULL;
-
-    if (error)
-      err = ID3D10Blob_GetBufferPointer (error);
-
-    GST_ERROR_OBJECT (self,
-        "could not compile source, hr: 0x%x, error detail %s",
-        (guint) hr, GST_STR_NULL (err));
-
-    if (error)
-      ID3D10Blob_Release (error);
-
-    return NULL;
-  }
-
-  return ret;
-}
-
-static gboolean
-create_pixel_shader (GstD3D11ColorConvert * self, const gchar * shader_source,
-    ID3D11PixelShader ** shader)
-{
-  GstD3D11BaseFilter *filter = GST_D3D11_BASE_FILTER (self);
-  ID3DBlob *ps_blob;
-  ID3D11Device *device_handle;
-  HRESULT hr;
-  gboolean ret = TRUE;
-
-  ps_blob = compile_shader (self, shader_source, TRUE);
-  if (!ps_blob) {
-    GST_ERROR_OBJECT (self, "Failed to compile shader code");
-    return FALSE;
-  }
-
-  device_handle = gst_d3d11_device_get_device_handle (filter->device);
-  hr = ID3D11Device_CreatePixelShader (device_handle,
-      (gpointer) ID3D10Blob_GetBufferPointer (ps_blob),
-      ID3D10Blob_GetBufferSize (ps_blob), NULL, shader);
-
-  if (FAILED (hr)) {
-    GST_ERROR_OBJECT (self,
-        "could not create pixel shader, hr: 0x%x", (guint) hr);
-    ret = FALSE;
-  }
-
-  ID3D10Blob_Release (ps_blob);
-
-  return ret;
-}
-
-static gboolean
-create_vertex_shader (GstD3D11ColorConvert * self, const gchar * shader_source,
-    const D3D11_INPUT_ELEMENT_DESC * input_desc,
-    guint desc_size, ID3D11VertexShader ** shader, ID3D11InputLayout ** layout)
-{
-  GstD3D11BaseFilter *filter = GST_D3D11_BASE_FILTER (self);
-  ID3DBlob *vs_blob;
-  ID3D11Device *device_handle;
-  HRESULT hr;
-  ID3D11VertexShader *vshader = NULL;
-  ID3D11InputLayout *in_layout = NULL;
-
-  vs_blob = compile_shader (self, shader_source, FALSE);
-  if (!vs_blob) {
-    GST_ERROR_OBJECT (self, "Failed to compile shader code");
-    return FALSE;
-  }
-
-  device_handle = gst_d3d11_device_get_device_handle (filter->device);
-
-  hr = ID3D11Device_CreateVertexShader (device_handle,
-      (gpointer) ID3D10Blob_GetBufferPointer (vs_blob),
-      ID3D10Blob_GetBufferSize (vs_blob), NULL, &vshader);
-
-  if (FAILED (hr)) {
-    GST_ERROR_OBJECT (self,
-        "could not create vertex shader, hr: 0x%x", (guint) hr);
-    ID3D10Blob_Release (vs_blob);
-    return FALSE;
-  }
-
-  hr = ID3D11Device_CreateInputLayout (device_handle, input_desc,
-      desc_size, (gpointer) ID3D10Blob_GetBufferPointer (vs_blob),
-      ID3D10Blob_GetBufferSize (vs_blob), &in_layout);
-
-  if (FAILED (hr)) {
-    GST_ERROR_OBJECT (self,
-        "could not create input layout shader, hr: 0x%x", (guint) hr);
-    ID3D10Blob_Release (vs_blob);
-    ID3D11VertexShader_Release (vshader);
-    return FALSE;
-  }
-
-  ID3D10Blob_Release (vs_blob);
-
-  *shader = vshader;
-  *layout = in_layout;
-
-  return TRUE;
-}
-
 static gboolean
 create_shader_input_resource (GstD3D11ColorConvert * self,
     GstD3D11Device * device, const GstD3D11Format * format, GstVideoInfo * info)
@@ -1557,6 +1390,14 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Device * device,
   ConvertInfo *convert_info = &self->priv->convert_info;
   GstVideoInfo *in_info = data->in_info;
   GstVideoInfo *out_info = data->out_info;
+  ID3D11PixelShader *ps = NULL;
+  ID3D11VertexShader *vs = NULL;
+  ID3D11InputLayout *layout = NULL;
+  ID3D11SamplerState *sampler = NULL;
+  ID3D11Buffer *const_buffer = NULL;
+  ID3D11Buffer *vertex_buffer = NULL;
+  ID3D11Buffer *index_buffer = NULL;
+  const guint index_count = 2 * 3;
 
   data->ret = TRUE;
 
@@ -1572,12 +1413,12 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Device * device,
   sampler_desc.MinLOD = 0;
   sampler_desc.MaxLOD = D3D11_FLOAT32_MAX;
 
-  hr = ID3D11Device_CreateSamplerState (device_handle,
-      &sampler_desc, &self->sampler);
+  hr = ID3D11Device_CreateSamplerState (device_handle, &sampler_desc, &sampler);
   if (FAILED (hr)) {
     GST_ERROR_OBJECT (self, "Couldn't create sampler state, hr: 0x%x",
         (guint) hr);
-    goto error;
+    data->ret = FALSE;
+    goto clear;
   }
 
   shader_code = g_strdup_printf (templ_pixel_shader,
@@ -1588,10 +1429,15 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Device * device,
 
   GST_LOG_OBJECT (self, "Create Pixel Shader \n%s", shader_code);
 
-  if (!create_pixel_shader (self, shader_code, &self->pixel_shader)) {
+  if (!gst_d3d11_create_pixel_shader (device, shader_code, &ps)) {
     GST_ERROR_OBJECT (self, "Couldn't create pixel shader");
-    goto error;
+
+    g_free (shader_code);
+    data->ret = FALSE;
+    goto clear;
   }
+
+  g_free (shader_code);
 
   if (convert_info->templ->constant_buffer) {
     D3D11_BUFFER_DESC const_buffer_desc = { 0, };
@@ -1604,29 +1450,30 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Device * device,
     const_buffer_desc.StructureByteStride = 0;
 
     hr = ID3D11Device_CreateBuffer (device_handle, &const_buffer_desc, NULL,
-        &self->const_buffer);
+        &const_buffer);
 
     if (FAILED (hr)) {
       GST_ERROR_OBJECT (self, "Couldn't create constant buffer, hr: 0x%x",
           (guint) hr);
-      goto error;
+      data->ret = FALSE;
+      goto clear;
     }
 
     hr = ID3D11DeviceContext_Map (context_handle,
-        (ID3D11Resource *) self->const_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0,
-        &map);
+        (ID3D11Resource *) const_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &map);
 
     if (FAILED (hr)) {
       GST_ERROR_OBJECT (self, "Couldn't map constant buffer, hr: 0x%x",
           (guint) hr);
-      goto error;
+      data->ret = FALSE;
+      goto clear;
     }
 
     memcpy (map.pData, &convert_info->transform,
         sizeof (PixelShaderColorTransform));
 
     ID3D11DeviceContext_Unmap (context_handle,
-        (ID3D11Resource *) self->const_buffer, 0);
+        (ID3D11Resource *) const_buffer, 0);
   }
 
   input_desc[0].SemanticName = "POSITION";
@@ -1645,11 +1492,11 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Device * device,
   input_desc[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
   input_desc[1].InstanceDataStepRate = 0;
 
-  if (!create_vertex_shader (self, templ_vertex_shader,
-          input_desc, G_N_ELEMENTS (input_desc), &self->vertex_shader,
-          &self->layout)) {
+  if (!gst_d3d11_create_vertex_shader (device, templ_vertex_shader,
+          input_desc, G_N_ELEMENTS (input_desc), &vs, &layout)) {
     GST_ERROR_OBJECT (self, "Couldn't vertex pixel shader");
-    goto error;
+    data->ret = FALSE;
+    goto clear;
   }
 
   /* setup vertext buffer and index buffer */
@@ -1659,51 +1506,50 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Device * device,
   buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
   hr = ID3D11Device_CreateBuffer (device_handle, &buffer_desc, NULL,
-      &self->vertex_buffer);
+      &vertex_buffer);
 
   if (FAILED (hr)) {
     GST_ERROR_OBJECT (self, "Couldn't create vertex buffer, hr: 0x%x",
         (guint) hr);
-    goto error;
+    data->ret = FALSE;
+    goto clear;
   }
 
-  /* two triangle */
-  self->index_count = 2 * 3;
-
   buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
-  buffer_desc.ByteWidth = sizeof (WORD) * self->index_count;
+  buffer_desc.ByteWidth = sizeof (WORD) * index_count;
   buffer_desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
   buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
   hr = ID3D11Device_CreateBuffer (device_handle, &buffer_desc, NULL,
-      &self->index_buffer);
+      &index_buffer);
 
   if (FAILED (hr)) {
     GST_ERROR_OBJECT (self, "Couldn't create index buffer, hr: 0x%x",
         (guint) hr);
-    goto error;
+    data->ret = FALSE;
+    goto clear;
   }
 
   hr = ID3D11DeviceContext_Map (context_handle,
-      (ID3D11Resource *) self->vertex_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0,
-      &map);
+      (ID3D11Resource *) vertex_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &map);
 
   if (FAILED (hr)) {
     GST_ERROR_OBJECT (self, "Couldn't map vertex buffer, hr: 0x%x", (guint) hr);
-    goto error;
+    data->ret = FALSE;
+    goto clear;
   }
 
   vertex_data = (VertexData *) map.pData;
 
   hr = ID3D11DeviceContext_Map (context_handle,
-      (ID3D11Resource *) self->index_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0,
-      &map);
+      (ID3D11Resource *) index_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &map);
 
   if (FAILED (hr)) {
     GST_ERROR_OBJECT (self, "Couldn't map index buffer, hr: 0x%x", (guint) hr);
     ID3D11DeviceContext_Unmap (context_handle,
-        (ID3D11Resource *) self->vertex_buffer, 0);
-    goto error;
+        (ID3D11Resource *) vertex_buffer, 0);
+    data->ret = FALSE;
+    goto clear;
   }
 
   indices = (WORD *) map.pData;
@@ -1746,26 +1592,44 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Device * device,
   indices[5] = 2;               /* top right */
 
   ID3D11DeviceContext_Unmap (context_handle,
-      (ID3D11Resource *) self->vertex_buffer, 0);
+      (ID3D11Resource *) vertex_buffer, 0);
   ID3D11DeviceContext_Unmap (context_handle,
-      (ID3D11Resource *) self->index_buffer, 0);
+      (ID3D11Resource *) index_buffer, 0);
 
   /* create output texture */
   if (!create_shader_input_resource (self,
-          device, self->in_d3d11_format, in_info))
-    goto error;
-
+          device, self->in_d3d11_format, in_info)) {
+    data->ret = FALSE;
+    goto clear;
+  }
   if (!create_shader_output_resource (self,
-          device, self->out_d3d11_format, out_info))
-    goto error;
+          device, self->out_d3d11_format, out_info)) {
+    data->ret = FALSE;
+    goto clear;
+  }
 
-  return;
+  self->quad = gst_d3d11_quad_new (device,
+      ps, vs, layout, sampler, const_buffer, vertex_buffer, sizeof (VertexData),
+      index_buffer, DXGI_FORMAT_R16_UINT, index_count);
 
-error:
-  clear_shader_resource (device, self);
+clear:
+  if (ps)
+    ID3D11PixelShader_Release (ps);
+  if (vs)
+    ID3D11VertexShader_Release (vs);
+  if (layout)
+    ID3D11InputLayout_Release (layout);
+  if (sampler)
+    ID3D11SamplerState_AddRef (sampler);
+  if (const_buffer)
+    ID3D11Buffer_Release (const_buffer);
+  if (vertex_buffer)
+    ID3D11Buffer_Release (vertex_buffer);
+  if (index_buffer)
+    ID3D11Buffer_Release (index_buffer);
 
-  g_free (shader_code);
-  data->ret = FALSE;
+  if (!data->ret)
+    clear_shader_resource (device, self);
 
   return;
 }
@@ -1905,9 +1769,6 @@ do_convert (GstD3D11Device * device, DoConvertData * data)
 {
   GstD3D11ColorConvert *self = data->self;
   ID3D11DeviceContext *context_handle;
-  UINT vertex_stride = sizeof (VertexData);
-  UINT offsets = 0;
-  ID3D11ShaderResourceView *clear_view[GST_VIDEO_MAX_PLANES] = { NULL, };
   ID3D11ShaderResourceView *resource_view[GST_VIDEO_MAX_PLANES] = { NULL, };
   ID3D11RenderTargetView *render_view[GST_VIDEO_MAX_PLANES] = { NULL, };
   gint i, j, view_index;
@@ -1932,11 +1793,14 @@ do_convert (GstD3D11Device * device, DoConvertData * data)
     }
 
     if (gst_d3d11_memory_ensure_shader_resource_view (mem)) {
+      GST_TRACE_OBJECT (self, "Use input texture resource without copy");
+
       for (j = 0; j < d3d11_mem->num_shader_resource_views; j++) {
         resource_view[view_index] = d3d11_mem->shader_resource_view[j];
         view_index++;
       }
     } else {
+      GST_TRACE_OBJECT (self, "Render using fallback input texture");
       copy_input = TRUE;
       break;
     }
@@ -1969,66 +1833,24 @@ do_convert (GstD3D11Device * device, DoConvertData * data)
     d3d11_mem = (GstD3D11Memory *) mem;
 
     if (gst_d3d11_memory_ensure_render_target_view (mem)) {
+      GST_TRACE_OBJECT (self, "Render to output texture directly");
+
       for (j = 0; j < d3d11_mem->num_render_target_views; j++) {
         render_view[view_index] = d3d11_mem->render_target_view[j];
         view_index++;
       }
     } else {
+      GST_TRACE_OBJECT (self, "Render to fallback output texture");
       copy_output = TRUE;
       break;
     }
   }
 
-  if (copy_output) {
-    GST_TRACE_OBJECT (self, "Render to fallback output texture");
-
-    ID3D11DeviceContext_OMSetRenderTargets (context_handle,
-        self->num_output_view, self->render_target_view, NULL);
-  } else {
-    GST_TRACE_OBJECT (self, "Render to output texture directly");
-
-    ID3D11DeviceContext_OMSetRenderTargets (context_handle,
-        self->num_output_view, render_view, NULL);
-  }
-
-  ID3D11DeviceContext_IASetPrimitiveTopology (context_handle,
-      D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-  ID3D11DeviceContext_IASetInputLayout (context_handle, self->layout);
-  ID3D11DeviceContext_IASetVertexBuffers (context_handle,
-      0, 1, &self->vertex_buffer, &vertex_stride, &offsets);
-  ID3D11DeviceContext_IASetIndexBuffer (context_handle,
-      self->index_buffer, DXGI_FORMAT_R16_UINT, 0);
-
-  ID3D11DeviceContext_VSSetShader (context_handle,
-      self->vertex_shader, NULL, 0);
-
-  ID3D11DeviceContext_PSSetSamplers (context_handle, 0, 1, &self->sampler);
-
-  if (self->const_buffer) {
-    ID3D11DeviceContext_PSSetConstantBuffers (context_handle,
-        0, 1, &self->const_buffer);
-  }
-
-  if (copy_input) {
-    GST_TRACE_OBJECT (self, "Render using fallback input texture");
-
-    ID3D11DeviceContext_PSSetShaderResources (context_handle,
-        0, self->num_input_view, self->shader_resource_view);
-  } else {
-    GST_TRACE_OBJECT (self, "Use input texture resource without copy");
-
-    ID3D11DeviceContext_PSSetShaderResources (context_handle,
-        0, self->num_input_view, resource_view);
-  }
-
-  /* FIXME: handle multiple shader case */
-  ID3D11DeviceContext_PSSetShader (context_handle, self->pixel_shader, NULL, 0);
-  ID3D11DeviceContext_RSSetViewports (context_handle, 1, &self->viewport);
-  ID3D11DeviceContext_DrawIndexed (context_handle, self->index_count, 0, 0);
-
-  /* unbind resources */
-  ID3D11DeviceContext_PSSetShaderResources (context_handle,
-      0, self->num_input_view, clear_view);
+  gst_d3d11_draw_quad (self->quad, &self->viewport, 1,
+      copy_input ? self->shader_resource_view : resource_view,
+      self->num_input_view,
+      copy_output ? self->render_target_view : render_view,
+      self->num_output_view);
 
   if (copy_output) {
     for (i = 0; i < gst_buffer_n_memory (data->out_buf); i++) {

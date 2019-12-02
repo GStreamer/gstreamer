@@ -23,6 +23,7 @@
 #include <gst/gst.h>
 
 #include "gstd3d11basefilter.h"
+#include "gstd3d11shader.h"
 
 G_BEGIN_DECLS
 
@@ -40,15 +41,7 @@ struct _GstD3D11ColorConvert
   const GstD3D11Format *in_d3d11_format;
   const GstD3D11Format *out_d3d11_format;
 
-  ID3D11PixelShader * pixel_shader;
-  ID3D11VertexShader * vertex_shader;
-  ID3D11InputLayout * layout;
-  ID3D11SamplerState * sampler;
-
-  ID3D11Buffer * const_buffer;
-  ID3D11Buffer * vertex_buffer;
-  ID3D11Buffer * index_buffer;
-  guint index_count;
+  GstD3D11Quad *quad;
 
   ID3D11Texture2D *in_texture[GST_VIDEO_MAX_PLANES];
   ID3D11ShaderResourceView *shader_resource_view[GST_VIDEO_MAX_PLANES];

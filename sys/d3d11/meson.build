@@ -12,6 +12,7 @@ d3d11_sources = [
   'gstd3d11download.c',
   'gstd3d11colorconvert.c',
   'gstd3d11videosinkbin.c',
+  'gstd3d11shader.c',
 ]
 
 have_d3d11 = false
