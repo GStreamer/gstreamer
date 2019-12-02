@@ -82,7 +82,7 @@ static const char gst_vaapidecode_src_caps_str[] =
 #if (USE_GLX || USE_EGL)
     GST_VAAPI_MAKE_GLTEXUPLOAD_CAPS ";"
 #endif
-    GST_VIDEO_CAPS_MAKE("{ NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410, Y444 }") ";"
+    GST_VIDEO_CAPS_MAKE(GST_VAAPI_FORMATS_ALL) ";"
     GST_VAAPI_MAKE_DMABUF_CAPS;
 
 static GstStaticPadTemplate gst_vaapidecode_src_factory =
