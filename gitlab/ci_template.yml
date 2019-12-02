@@ -386,11 +386,6 @@ valgrind ges:
     - $CERBERO $CERBERO_ARGS bootstrap --offline --build-tools-only
     - $CERBERO $CERBERO_ARGS package --offline ${CERBERO_PACKAGE_ARGS} -o $(pwd) gstreamer-1.0
     - test "x${HAVE_CCACHE}" = "xyes" && ccache -s || true    # eat the return value from the failing test
-  except:
-    variables:
-      - $CI_PROJECT_NAME == "gst-build"
-      - $CI_PROJECT_NAME == "gst-docs"
-      - $CI_PROJECT_NAME == "gst-integration-testsuites"
   cache:
     key: "${CI_JOB_NAME}"
     paths:
@@ -595,7 +590,6 @@ build cerbero cross-android universal:
       - $CI_PROJECT_NAME == "gst-build"
       - $CI_PROJECT_NAME == "gst-omx"
       - $CI_PROJECT_NAME == "gstreamer-vaapi"
-      - $CI_PROJECT_NAME == "gst-docs"
       - $CI_PROJECT_NAME == "gst-integration-testsuites"
 
 #
@@ -725,7 +719,6 @@ cross-android universal examples:
       - $CI_PROJECT_NAME == "gst-omx"
       - $CI_PROJECT_NAME == "gst-integration-testsuites"
       - $CI_PROJECT_NAME == "gstreamer-vaapi"
-      - $CI_PROJECT_NAME == "gst-docs"
 
 cerbero cross-android universal examples:
   extends: ".cross-android universal examples"
@@ -851,7 +844,6 @@ build cerbero cross-ios universal:
       - $CI_PROJECT_NAME == "gst-integration-testsuites"
       - $CI_PROJECT_NAME == "gst-omx"
       - $CI_PROJECT_NAME == "gstreamer-vaapi"
-      - $CI_PROJECT_NAME == "gst-docs"
       - $CI_PROJECT_NAME == "gst-sharp"
 
 documentation:
