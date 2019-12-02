@@ -844,7 +844,7 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
         group.add_argument("--validate-gdb-server", dest="validate_gdb_server",
                            help="Run the server in GDB.")
         group.add_argument("--validate-disable-rtsp", dest="disable_rtsp",
-                           help="Disable RTSP tests.")
+                           help="Disable RTSP tests.", default=False, action='store_true')
         group.add_argument("--validate-enable-iqa-tests", dest="validate_enable_iqa_tests",
                            help="Enable Image Quality Assessment validation tests.",
                            default=False, action='store_true')

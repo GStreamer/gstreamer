@@ -71,59 +71,81 @@ Then you will need to write the `testsuite.py` file. You can for example
 implement the following testsuite:
 
 ``` python
+"""
+The GstValidate custom testsuite
+"""
+
 import os
+from launcher.baseclasses import MediaFormatCombination
+from launcher.apps.gstvalidate import *
+TEST_MANAGER = "validate"
 
-# Make sure gst-validate-launcher uses our media files
-options.paths = os.path.dirname(os.path.realpath(__file__))
+KNOWN_ISSUES = {}
 
-# Make sure GstValidate is able to use our scenarios
-# from the testsuite_folder/scenarios folder
-os.environ["GST_VALIDATE_SCENARIOS_PATH"] = \
-    os.path.join(os.path.dirname(os.path.realpath(__file__)), "scenarios")
+def setup_tests(test_manager, options):
+    print("Setting up the custom testsuite")
+    assets_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".", "samples_files"))
+    options.add_paths(assets_dir)
 
-# You can activate the following if you only care about critical issues in
-# the report:
-# os.environ["GST_VALIDATE"] = "print_criticals"
+    # This step will register default data for the test manager:
+    # - scenarios such as `play_15s`, `reverse_playback` etc.
+    # - encoding formats such as "mp4,h264,mp3" etc.
+    # - blacklist such as dash.media_check.*
+    # - test generators:
+    #   - GstValidatePlaybinTestsGenerator
+    #   - GstValidateMediaCheckTestsGenerator
+    #   - GstValidateTranscodingTestsGenerator
+    # This 'defaults' can be found in 'gst-devtools/validate/launcher/apps/gstvalidate.py#register_defaults'
+    # test_manager.register_defaults()
 
-# Make gst-validate use our scenarios
-validate.add_scenarios(["scenario", "scenario1"])
+    # Add scenarios
+    scenarios = []
+    scenarios.append("play_5s")
+    scenarios.append("seek_backward")
+    test_manager.set_scenarios(scenarios)
 
+    # Add encoding formats used by the transcoding generator
+    test_manager.add_encoding_formats([
+            MediaFormatCombination("mp4", "mp3", "h264"),])
 
-# Now add "Theora and Vorbis in OGG container" as a wanted transcoding format. That means
-# that conversion to this format will be tested on all the media files/streams.
-validate.add_encoding_formats([MediaFormatCombination("ogg", "vorbis", "theora")])
+    # Add generators
+    # GstValidatePlaybinTestsGenerator needs at least one media file
+    test_manager.add_generators([GstValidateMediaCheckTestsGenerator(test_manager)])
+    # GstValidatePlaybinTestsGenerator needs at least one scenario
+    test_manager.add_generators([GstValidatePlaybinTestsGenerator(test_manager)])
+    # GstValidateTranscodingTestsGenerator needs at least one MediaFormatCombination
+    test_manager.add_generators([GstValidateTranscodingTestsGenerator(test_manager)])
 
-# Use the GstValidatePlaybinTestsGenerator to generate tests that will use playbin
-# and GstValidateTranscodingTestsGenerator to create media transcoding tests that
-# will use all the media format added with validate.add_encoding_formats
-validate.add_generators([validate.GstValidatePlaybinTestsGenerator(validate),
-                         GstValidateTranscodingTestsGenerator(self)])
+    # list of combo to blacklist tests. Here it blacklists all tests with playback.seek_backward
+    test_manager.set_default_blacklist([
+            ("custom_testsuite.file.playback.seek_backward.*",
+             "Not supported by this testsuite."),])
 
-# Blacklist some tests that are known to fail because a feature is not supported
-# or due to any other reason.
-# The tuple defining those tests is of the form:
-# ("regex defining the test name", "Reason why the test should be disabled")
-validate.set_default_blacklist([
-        ("validate.*.scenario1.*ogv$"
-         "oggdemux does not support some action executed in scenario1")]
-        )
+    # you can even pass known issues to bypass an existing error in your custom testsuite
+    test_manager.add_expected_issues(KNOWN_ISSUES)
+    return True
 ```
 
 Once this is done, you've got a testsuite that will:
 
 -   Run playbin pipelines on `file.mp4`, `file1.mkv` and `file2.ogv`&gt;
-    executing `scenario` and `scenario1` scenarios
+    executing `play_5s` and `seek_backward` scenarios
 
--   Transcode `file.mp4,` `file1.mkv` and `file2.ogv` to Theora and
-    Vorbis in a OGG container
+-   Transcode `file.mp4,` `file1.mkv` and `file2.ogv` to h264 and
+    mp3 in a MP4 container
 
 The only thing to do to run the testsuite is:
 
 
-    gst-validate-launcher --config /path/to/testsuite_folder/testsuite.py
+    gst-validate-launcher --testsuites-dir=/path/to/testsuite_folder/ testsuite
+
 
 # Invocation
 
 You can find detailed information about the launcher by launching it:
 
     gst-validate-launcher --help
+
+You can list all the tests with:
+
+    gst-validate-launcher --testsuites-dir=/path/to/testsuite_folder/ testsuite -L

@@ -59,7 +59,7 @@ been compiled against GstValidate.
 2. Default test suite
 ---------------------
 
-A default suite of tests is provided and is available at: http://cgit.freedesktop.org/gstreamer/gst-integration-testsuites/
+A default suite of tests is provided and is available at: http://gitlab.freedesktop.org/gstreamer/gst-integration-testsuites/
 You can run it pretty simply doing:
 
 .    $gst-validate-launcher --sync
@@ -125,8 +125,11 @@ same way as if they were local files.
 ----------------------------------------
 
 You can activate debug logs setting the environment variable GST_VALIDATE_LAUNCHER_DEBUG.
+
+.   $GST_VALIDATE_LAUNCHER_DEBUG=6 gst-validate-launcher
+
 It uses the same syntax as PITIVI_DEBUG (more information at:
-http://wiki.pitivi.org/wiki/Bug_reporting#Debug_logs).
+https://developer.pitivi.org/Bug_reporting.html#debug-logs).
 ''' % ("\n  * ".join([reporter.name for reporter in
                       utils.get_subclasses(reporters.Reporter, reporters.__dict__)]
                      ),
@@ -145,6 +148,8 @@ DEFAULT_GST_QA_ASSETS_REPO = "https://gitlab.freedesktop.org/gstreamer/gst-integ
 
 def download_assets(options):
     try:
+        printc("About to download assets from %s to %s" % options.remote_assets_url,
+               options.clone_dir)
         launch_command("%s %s %s" % (options.get_assets_command,
                                      options.remote_assets_url,
                                      options.clone_dir),
@@ -311,7 +316,7 @@ class LauncherConfig(Loggable):
             if not self.sync and not os.path.exists(self.clone_dir) and \
                     self.clone_dir == os.path.join(self.clone_dir, MEDIAS_FOLDER):
                 printc("Media path (%s) does not exists. Forgot to run --sync ?"
-                    % self.clone_dir, Colors.FAIL, True)
+                       % self.clone_dir, Colors.FAIL, True)
                 return False
 
         if (self.main_dir != DEFAULT_MAIN_DIR or self.clone_dir != QA_ASSETS):
