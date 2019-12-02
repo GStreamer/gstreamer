@@ -63,7 +63,7 @@ struct _GstD3D11VideoSink
   GstVideoRectangle render_rect;
   gboolean pending_render_rect;
 
-  ID3D11Texture2D *fallback_staging;
+  GstBufferPool *fallback_pool;
 };
 
 struct _GstD3D11VideoSinkClass

@@ -48,7 +48,11 @@ struct _GstD3D11Window
   GstVideoMasteringDisplayInfo mastering_display_info;
   GstVideoContentLightLevel content_light_level;
 
+  /* calculated rect with aspect ratio and window area */
   GstVideoRectangle render_rect;
+
+  /* requested rect via gst_d3d11_window_render */
+  GstVideoRectangle rect;
 
   GMutex lock;
   GCond cond;
@@ -89,6 +93,8 @@ struct _GstD3D11Window
 
   gboolean force_aspect_ratio;
   gboolean enable_navigation_events;
+
+  GstBuffer *cached_buffer;
 };
 
 struct _GstD3D11WindowClass
@@ -123,8 +129,10 @@ gboolean gst_d3d11_window_prepare (GstD3D11Window * window,
                                    GError ** error);
 
 GstFlowReturn gst_d3d11_window_render (GstD3D11Window * window,
-                                       ID3D11Texture2D * texture,
+                                       GstBuffer * buffer,
                                        GstVideoRectangle * src_rect);
+
+gboolean      gst_d3d11_window_flush  (GstD3D11Window * window);
 
 G_END_DECLS
 

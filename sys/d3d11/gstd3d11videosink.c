@@ -74,6 +74,7 @@ static gboolean gst_d3d11_video_sink_propose_allocation (GstBaseSink * sink,
     GstQuery * query);
 static gboolean gst_d3d11_video_sink_query (GstBaseSink * sink,
     GstQuery * query);
+static gboolean gst_d3d11_video_sink_unlock (GstBaseSink * sink);
 
 static GstFlowReturn
 gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf);
@@ -137,6 +138,7 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
   basesink_class->propose_allocation =
       GST_DEBUG_FUNCPTR (gst_d3d11_video_sink_propose_allocation);
   basesink_class->query = GST_DEBUG_FUNCPTR (gst_d3d11_video_sink_query);
+  basesink_class->unlock = GST_DEBUG_FUNCPTR (gst_d3d11_video_sink_unlock);
 
   videosink_class->show_frame =
       GST_DEBUG_FUNCPTR (gst_d3d11_video_sink_show_frame);
@@ -246,10 +248,9 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
   gint video_par_n, video_par_d;        /* video's PAR */
   gint display_par_n = 1, display_par_d = 1;    /* display's PAR */
   guint num, den;
-  D3D11_TEXTURE2D_DESC desc = { 0, };
-  ID3D11Texture2D *staging;
   GError *error = NULL;
   const GstD3D11Format *d3d11_format = NULL;
+  GstStructure *config;
 
   GST_DEBUG_OBJECT (self, "set caps %" GST_PTR_FORMAT, caps);
 
@@ -370,27 +371,16 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
     return FALSE;
   }
 
-  if (self->fallback_staging) {
-    gst_d3d11_device_release_texture (self->device, self->fallback_staging);
-    self->fallback_staging = NULL;
+  if (self->fallback_pool) {
+    gst_buffer_pool_set_active (self->fallback_pool, FALSE);
+    gst_object_unref (self->fallback_pool);
   }
 
-  desc.Width = GST_VIDEO_SINK_WIDTH (self);
-  desc.Height = GST_VIDEO_SINK_HEIGHT (self);
-  desc.MipLevels = 1;
-  desc.Format = self->dxgi_format;
-  desc.SampleDesc.Count = 1;
-  desc.ArraySize = 1;
-  desc.Usage = D3D11_USAGE_STAGING;
-  desc.CPUAccessFlags = (D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE);
-
-  staging = gst_d3d11_device_create_texture (self->device, &desc, NULL);
-  if (!staging) {
-    GST_ERROR_OBJECT (self, "cannot create fallback staging texture");
-    return FALSE;
-  }
-
-  self->fallback_staging = staging;
+  self->fallback_pool = gst_d3d11_buffer_pool_new (self->device);
+  config = gst_buffer_pool_get_config (self->fallback_pool);
+  gst_buffer_pool_config_set_params (config,
+      caps, GST_VIDEO_INFO_SIZE (&self->info), 0, 2);
+  gst_buffer_pool_set_config (self->fallback_pool, config);
 
   return TRUE;
 
@@ -492,9 +482,10 @@ gst_d3d11_video_sink_stop (GstBaseSink * sink)
 
   GST_DEBUG_OBJECT (self, "Stop");
 
-  if (self->fallback_staging) {
-    ID3D11Texture2D_Release (self->fallback_staging);
-    self->fallback_staging = NULL;
+  if (self->fallback_pool) {
+    gst_buffer_pool_set_active (self->fallback_pool, FALSE);
+    gst_object_unref (self->fallback_pool);
+    self->fallback_pool = NULL;
   }
 
   gst_clear_object (&self->device);
@@ -604,75 +595,28 @@ gst_d3d11_video_sink_query (GstBaseSink * sink, GstQuery * query)
   return GST_BASE_SINK_CLASS (parent_class)->query (sink, query);
 }
 
-typedef struct
+static gboolean
+gst_d3d11_video_sink_unlock (GstBaseSink * sink)
 {
-  GstD3D11VideoSink *sink;
+  GstD3D11VideoSink *self = GST_D3D11_VIDEO_SINK (sink);
 
-  GstVideoFrame *frame;
-  ID3D11Resource *resource;
+  if (self->window)
+    gst_d3d11_window_flush (self->window);
 
-  GstFlowReturn ret;
-} FrameUploadData;
-
-static void
-_upload_frame (GstD3D11Device * device, gpointer data)
-{
-  GstD3D11VideoSink *self;
-  HRESULT hr;
-  ID3D11DeviceContext *device_context;
-  FrameUploadData *upload_data = (FrameUploadData *) data;
-  D3D11_MAPPED_SUBRESOURCE d3d11_map;
-  guint i;
-  guint8 *dst;
-
-  self = upload_data->sink;
-
-  device_context = gst_d3d11_device_get_device_context_handle (device);
-
-  hr = ID3D11DeviceContext_Map (device_context,
-      upload_data->resource, 0, D3D11_MAP_WRITE, 0, &d3d11_map);
-
-  if (FAILED (hr)) {
-    GST_ERROR_OBJECT (self, "cannot map d3d11 staging texture");
-    upload_data->ret = GST_FLOW_ERROR;
-    return;
-  }
-
-  dst = d3d11_map.pData;
-  for (i = 0; i < GST_VIDEO_FRAME_N_PLANES (upload_data->frame); i++) {
-    guint w, h;
-    guint j;
-    guint8 *src;
-    gint src_stride;
-
-    w = GST_VIDEO_FRAME_COMP_WIDTH (upload_data->frame, i) *
-        GST_VIDEO_FRAME_COMP_PSTRIDE (upload_data->frame, i);
-    h = GST_VIDEO_FRAME_COMP_HEIGHT (upload_data->frame, i);
-    src = GST_VIDEO_FRAME_PLANE_DATA (upload_data->frame, i);
-    src_stride = GST_VIDEO_FRAME_PLANE_STRIDE (upload_data->frame, i);
-
-    for (j = 0; j < h; j++) {
-      memcpy (dst, src, w);
-      dst += d3d11_map.RowPitch;
-      src += src_stride;
-    }
-  }
-
-  ID3D11DeviceContext_Unmap (device_context, upload_data->resource, 0);
+  return TRUE;
 }
 
 static GstFlowReturn
 gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
 {
   GstD3D11VideoSink *self = GST_D3D11_VIDEO_SINK (sink);
-  GstVideoFrame frame;
-  FrameUploadData data;
-  ID3D11Texture2D *texture;
   GstMapInfo map;
   GstFlowReturn ret;
   GstMemory *mem;
   GstVideoRectangle rect = { 0, };
   GstVideoCropMeta *crop;
+  GstBuffer *render_buf;
+  gboolean need_unref = FALSE;
 
   if (gst_buffer_n_memory (buf) == 1 && (mem = gst_buffer_peek_memory (buf, 0))
       && gst_memory_is_type (mem, GST_D3D11_MEMORY_NAME)) {
@@ -691,30 +635,49 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
       gst_memory_unmap (mem, &map);
     }
 
-    texture = dmem->texture;
+    render_buf = buf;
   } else {
+    GstVideoFrame frame, fallback_frame;
+
+    if (!self->fallback_pool ||
+        !gst_buffer_pool_set_active (self->fallback_pool, TRUE) ||
+        !gst_buffer_pool_acquire_buffer (self->fallback_pool, &render_buf,
+            NULL)) {
+      GST_ERROR_OBJECT (self, "fallback pool is unavailable");
+
+      return GST_FLOW_ERROR;
+    }
+
     if (!gst_video_frame_map (&frame, &self->info, buf, GST_MAP_READ)) {
       GST_ERROR_OBJECT (self, "cannot map video frame");
+      gst_buffer_unref (render_buf);
+
+      return GST_FLOW_ERROR;
+    }
+
+    if (!gst_video_frame_map (&fallback_frame, &self->info, buf, GST_MAP_WRITE)) {
+      GST_ERROR_OBJECT (self, "cannot map fallback frame");
+      gst_video_frame_unmap (&frame);
+      gst_buffer_unref (render_buf);
+
       return GST_FLOW_ERROR;
     }
 
     GST_TRACE_OBJECT (self,
         "buffer %p out of our pool, write to stage buffer", buf);
 
-    data.sink = self;
-    data.frame = &frame;
-    data.resource = (ID3D11Resource *) self->fallback_staging;
-    data.ret = GST_FLOW_OK;
+    if (!gst_video_frame_copy (&fallback_frame, &frame)) {
+      GST_ERROR_OBJECT (self, "cannot copy to fallback frame");
+      gst_video_frame_unmap (&frame);
+      gst_video_frame_unmap (&fallback_frame);
+      gst_buffer_unref (render_buf);
 
-    gst_d3d11_device_thread_add (self->device, (GstD3D11DeviceThreadFunc)
-        _upload_frame, &data);
-
-    if (data.ret != GST_FLOW_OK)
-      return data.ret;
+      return GST_FLOW_ERROR;
+    }
 
     gst_video_frame_unmap (&frame);
-
-    texture = self->fallback_staging;
+    gst_video_frame_unmap (&fallback_frame);
+    need_unref = TRUE;
   }
 
   gst_d3d11_window_show (self->window);
@@ -730,7 +693,9 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
     rect.h = self->video_height;
   }
 
-  ret = gst_d3d11_window_render (self->window, texture, &rect);
+  ret = gst_d3d11_window_render (self->window, render_buf, &rect);
+  if (need_unref)
+    gst_buffer_unref (render_buf);
 
   if (ret == GST_D3D11_WINDOW_FLOW_CLOSED) {
     GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,

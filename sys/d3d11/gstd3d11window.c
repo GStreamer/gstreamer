@@ -26,6 +26,7 @@
 
 #include "gstd3d11window.h"
 #include "gstd3d11device.h"
+#include "gstd3d11memory.h"
 
 #include <windows.h>
 
@@ -66,6 +67,15 @@ GST_DEBUG_CATEGORY_STATIC (gst_d3d11_window_debug);
 #define gst_d3d11_window_parent_class parent_class
 G_DEFINE_TYPE (GstD3D11Window, gst_d3d11_window, GST_TYPE_OBJECT);
 
+typedef struct
+{
+  GstD3D11Window *window;
+  GstVideoRectangle *rect;
+  GstBuffer *buffer;
+
+  GstFlowReturn ret;
+} FramePresentData;
+
 static void gst_d3d11_window_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_d3d11_window_get_property (GObject * object, guint prop_id,
@@ -77,6 +87,8 @@ static gboolean _create_window (GstD3D11Window * self, GError ** error);
 static void _open_window (GstD3D11Window * self);
 static void _close_window (GstD3D11Window * self);
 static void release_external_win_id (GstD3D11Window * self);
+static void _present_on_device_thread (GstD3D11Device * device,
+    FramePresentData * data);
 
 static void
 gst_d3d11_window_class_init (GstD3D11WindowClass * klass)
@@ -246,6 +258,7 @@ gst_d3d11_window_dispose (GObject * object)
         (GstD3D11DeviceThreadFunc) gst_d3d11_window_release_resources, self);
   }
 
+  gst_clear_buffer (&self->cached_buffer);
   gst_clear_object (&self->device);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -580,6 +593,16 @@ gst_d3d11_window_on_resize (GstD3D11Device * device, GstD3D11Window * window)
   }
 
   ID3D11DeviceContext_OMSetRenderTargets (d3d11_context, 1, &window->rtv, NULL);
+  if (window->cached_buffer) {
+    FramePresentData present_data = { 0, };
+
+    present_data.window = window;
+    present_data.rect = &window->rect;
+    present_data.buffer = window->cached_buffer;
+    GST_DEBUG_OBJECT (window, "redraw cached buffer");
+
+    _present_on_device_thread (window->device, &present_data);
+  }
 }
 
 static void
@@ -1032,15 +1055,6 @@ gst_d3d11_window_get_surface_dimensions (GstD3D11Window * window,
     *height = window->surface_height;
 }
 
-typedef struct
-{
-  GstD3D11Window *window;
-  ID3D11Resource *resource;
-  GstVideoRectangle *rect;
-
-  GstFlowReturn ret;
-} FramePresentData;
-
 static void
 _present_on_device_thread (GstD3D11Device * device, FramePresentData * data)
 {
@@ -1050,23 +1064,28 @@ _present_on_device_thread (GstD3D11Device * device, FramePresentData * data)
   float black[] = { 0.0f, 0.0f, 0.0f, 0.0f };
   D3D11_BOX src_box;
 
-  src_box.left = data->rect->x;
-  src_box.right = data->rect->x + data->rect->w;
-  src_box.top = data->rect->y;
-  src_box.bottom = data->rect->y + data->rect->h;
-  src_box.front = 0;
-  src_box.back = 1;
-
   device_context = gst_d3d11_device_get_device_context_handle (device);
+  gst_buffer_replace (&self->cached_buffer, data->buffer);
 
-  if (data->resource) {
+  if (self->cached_buffer) {
+    GstD3D11Memory *mem =
+        (GstD3D11Memory *) gst_buffer_peek_memory (self->cached_buffer, 0);
+
+    self->rect = *data->rect;
+    src_box.left = self->rect.x;
+    src_box.right = self->rect.x + self->rect.w;
+    src_box.top = self->rect.y;
+    src_box.bottom = self->rect.y + self->rect.h;
+    src_box.front = 0;
+    src_box.back = 1;
+
     ID3D11DeviceContext_OMSetRenderTargets (device_context,
         1, &self->rtv, NULL);
     ID3D11DeviceContext_ClearRenderTargetView (device_context, self->rtv,
         black);
     ID3D11DeviceContext_CopySubresourceRegion (device_context,
         (ID3D11Resource *) self->backbuffer, 0, self->render_rect.x,
-        self->render_rect.y, 0, data->resource, 0, &src_box);
+        self->render_rect.y, 0, (ID3D11Resource *) mem->texture, 0, &src_box);
   }
 
   hr = IDXGISwapChain_Present (self->swap_chain, 0, DXGI_PRESENT_DO_NOT_WAIT);
@@ -1080,13 +1099,21 @@ _present_on_device_thread (GstD3D11Device * device, FramePresentData * data)
 }
 
 GstFlowReturn
-gst_d3d11_window_render (GstD3D11Window * window, ID3D11Texture2D * texture,
+gst_d3d11_window_render (GstD3D11Window * window, GstBuffer * buffer,
     GstVideoRectangle * rect)
 {
   FramePresentData data;
+  GstMemory *mem;
 
   g_return_val_if_fail (GST_IS_D3D11_WINDOW (window), GST_FLOW_ERROR);
   g_return_val_if_fail (rect != NULL, GST_FLOW_ERROR);
+
+  mem = gst_buffer_peek_memory (buffer, 0);
+  if (!gst_is_d3d11_memory (mem)) {
+    GST_ERROR_OBJECT (window, "Invalid buffer");
+
+    return GST_FLOW_ERROR;
+  }
 
   if (!window->external_win_id && !window->internal_win_id) {
     GST_ERROR_OBJECT (window, "Output window was closed");
@@ -1105,12 +1132,30 @@ gst_d3d11_window_render (GstD3D11Window * window, ID3D11Texture2D * texture,
   GST_OBJECT_UNLOCK (window);
 
   data.window = window;
-  data.resource = (ID3D11Resource *) texture;
   data.rect = rect;
+  data.buffer = buffer;
   data.ret = GST_FLOW_OK;
 
   gst_d3d11_device_thread_add (window->device,
       (GstD3D11DeviceThreadFunc) _present_on_device_thread, &data);
 
   return data.ret;
+}
+
+static void
+gst_d3d11_window_flush_internal (GstD3D11Device * device,
+    GstD3D11Window * window)
+{
+  gst_clear_buffer (&window->cached_buffer);
+}
+
+gboolean
+gst_d3d11_window_flush (GstD3D11Window * window)
+{
+  g_return_val_if_fail (GST_IS_D3D11_WINDOW (window), FALSE);
+
+  gst_d3d11_device_thread_add (window->device,
+      (GstD3D11DeviceThreadFunc) gst_d3d11_window_flush_internal, window);
+
+  return TRUE;
 }
