@@ -776,7 +776,21 @@ gst_d3d11_device_create_texture_internal (GstD3D11Device * device,
   hr = ID3D11Device_CreateTexture2D (priv->device, data->desc,
       data->inital_data, &data->texture);
   if (FAILED (hr)) {
+    const D3D11_TEXTURE2D_DESC *desc = data->desc;
+
     GST_ERROR ("Failed to create texture (0x%x)", (guint) hr);
+
+    GST_WARNING ("Direct3D11 Allocation params");
+    GST_WARNING ("\t%dx%d, DXGI format %d",
+        desc->Width, desc->Height, desc->Format);
+    GST_WARNING ("\tMipLevel %d, ArraySize %d",
+        desc->MipLevels, desc->ArraySize);
+    GST_WARNING ("\tSampleDesc.Count %d, SampleDesc.Quality %d",
+        desc->SampleDesc.Count, desc->SampleDesc.Quality);
+    GST_WARNING ("\tUsage %d", desc->Usage);
+    GST_WARNING ("\tBindFlags 0x%x", desc->BindFlags);
+    GST_WARNING ("\tCPUAccessFlags 0x%x", desc->CPUAccessFlags);
+    GST_WARNING ("\tMiscFlags 0x%x", desc->MiscFlags);
     data->texture = NULL;
   }
 }
