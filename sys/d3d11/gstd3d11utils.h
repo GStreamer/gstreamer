@@ -55,6 +55,9 @@ void            gst_query_parse_d3d11_usage_result  (GstQuery * query,
 
 gboolean        gst_query_is_d3d11_usage            (GstQuery * query);
 
+GstCaps *       gst_d3d11_caps_fixate_format        (GstCaps * caps,
+                                                     GstCaps * othercaps);
+
 G_END_DECLS
 
 #endif /* __GST_D3D11_UTILS_H__ */

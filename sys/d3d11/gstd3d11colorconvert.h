@@ -23,7 +23,7 @@
 #include <gst/gst.h>
 
 #include "gstd3d11basefilter.h"
-#include "gstd3d11shader.h"
+#include "gstd3d11colorconverter.h"
 
 G_BEGIN_DECLS
 
@@ -41,8 +41,6 @@ struct _GstD3D11ColorConvert
   const GstD3D11Format *in_d3d11_format;
   const GstD3D11Format *out_d3d11_format;
 
-  GstD3D11Quad *quad;
-
   ID3D11Texture2D *in_texture[GST_VIDEO_MAX_PLANES];
   ID3D11ShaderResourceView *shader_resource_view[GST_VIDEO_MAX_PLANES];
   guint num_input_view;
@@ -51,10 +49,9 @@ struct _GstD3D11ColorConvert
   ID3D11RenderTargetView *render_target_view[GST_VIDEO_MAX_PLANES];
   guint num_output_view;
 
-  D3D11_VIEWPORT viewport;
-  gboolean can_convert;
+  GstD3D11ColorConverter *converter;
 
-  GstD3D11ColorConvertPrivate *priv;
+  gboolean can_convert;
 };
 
 struct _GstD3D11ColorConvertClass

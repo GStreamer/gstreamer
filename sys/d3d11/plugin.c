@@ -29,12 +29,15 @@
 #include "gstd3d11videosinkbin.h"
 
 GST_DEBUG_CATEGORY (gst_d3d11_shader_debug);
+GST_DEBUG_CATEGORY (gst_d3d11_colorconverter_debug);
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_shader_debug,
       "d3d11shader", 0, "d3d11shader");
+  GST_DEBUG_CATEGORY_INIT (gst_d3d11_colorconverter_debug,
+      "d3d11colorconverter", 0, "d3d11colorconverter");
 
   gst_element_register (plugin,
       "d3d11upload", GST_RANK_NONE, GST_TYPE_D3D11_UPLOAD);
