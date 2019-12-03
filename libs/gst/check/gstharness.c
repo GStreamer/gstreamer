@@ -277,13 +277,13 @@ gst_harness_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     gst_object_unref (fwdpad);
     HARNESS_LOCK (h);
   } else {
-    g_async_queue_push (priv->sink_event_queue, event);
     if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
       g_mutex_lock (&priv->buf_or_eos_mutex);
       priv->eos_received = TRUE;
       g_cond_signal (&priv->buf_or_eos_cond);
       g_mutex_unlock (&priv->buf_or_eos_mutex);
     }
+    g_async_queue_push (priv->sink_event_queue, event);
   }
   HARNESS_UNLOCK (h);
 
