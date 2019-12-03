@@ -273,7 +273,9 @@ GObject
         GstMXFDemux
         GstMidiParse
         GstModPlug
+        GstMpeg2enc
         GstMpegPSDemux
+        GstMplex
         GstMusepackDec
         GstNetSim
         GstNonstreamAudioDecoder
