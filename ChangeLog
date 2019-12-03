@@ -1,3 +1,51 @@
+=== release 1.16.2 ===
+
+2019-12-03 11:16:06 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	* meson.build:
+	  Release 1.16.2
+
+2019-09-17 13:45:57 +0200  Adam x Nilsson <adamni@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Use lock in gst_rtsp_media_is_receive_only
+	  (cherry picked from commit f1d2a0cae9a791ce07c753faaf82a6cdefecd373)
+
+2019-11-04 12:56:13 +0100  Kristofer Bjorkstrom <kristofer.bjorkstrom@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media.c:
+	* tests/check/gst/client.c:
+	  rtsp-client: RTP Info when completed_sender
+	  Change condition that should be fulfilled regarding RTPInfo.
+	  Replace !gst_rtsp_media_is_receive_only with
+	  gst_rtsp_media_has_completed_sender. It is more correct to actually look
+	  for a sender pipeline that is complete. Only then a RTPInfo should
+	  exist.
+	  gst_rtsp_media_is_receive_only gives different answears depending on
+	  state of server.
+	  If Describe is called wth URL+options for backchannel SDP will give only
+	  audio and only backchannel a=sendonly
+	  If Describe is called on URL+options that gives both audio and video
+	  direction from server to client, pipelines are created. Thus
+	  receive_only will return false, even though Setup only would setup
+	  backchannel.
+	  RTP-Info is only for outgoing streams. Thus one should look if outgoing
+	  streams are complete.
+
+2019-10-17 12:15:42 +0200  Muhammet Ilendemli <mi@tailored-apps.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Generate correct URI for MIKEY in ANNOUNCE responses
+	  Instead of hardcoding the URI, take the actual URI (and especially the correct port)
+	  from the RTSP context.
+	  Fixes #84
+
 === release 1.16.1 ===
 
 2019-09-23 11:17:41 +0100  Tim-Philipp Müller <tim@centricular.com>
