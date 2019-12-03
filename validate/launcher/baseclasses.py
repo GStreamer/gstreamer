@@ -1094,6 +1094,7 @@ class GstValidateTest(Test):
             msg += ' %s(Expected errors occured: %s)%s' % (Colors.OKBLUE,
                                                            self.expected_issues,
                                                            Colors.ENDC)
+            result = Result.KNOWN_ERROR
 
         self.set_result(result, msg.strip())
 

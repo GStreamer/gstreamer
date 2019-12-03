@@ -60,7 +60,8 @@ class Reporter(Loggable):
         self.stats = {'timeout': 0,
                       'failures': 0,
                       'passed': 0,
-                      'skipped': 0
+                      'skipped': 0,
+                      'known_error': 0
                       }
         self.results = []
 
@@ -75,11 +76,15 @@ class Reporter(Loggable):
             self.stats["failures"] += 1
 
     def set_passed(self, test):
-        self.stats["passed"] += 1
+        if test.result == Result.KNOWN_ERROR:
+            self.stats["known_error"] += 1
+        else:
+            self.stats["passed"] += 1
 
     def add_results(self, test):
         self.debug("%s", test)
-        if test.result == Result.PASSED:
+        if test.result == Result.PASSED or \
+                test.result == Result.KNOWN_ERROR:
             self.set_passed(test)
         elif test.result == Result.FAILED or \
                 test.result == Result.TIMEOUT or \
@@ -100,13 +105,15 @@ class Reporter(Loggable):
         printc("Statistics:\n%s" % (lenstat * "-"), Colors.OKBLUE)
         if self._start_time > 0:
             printc("\n%sTotal time spent: %s seconds\n" %
-                ((lenstat * " "), datetime.timedelta(
+                   ((lenstat * " "), datetime.timedelta(
                     seconds=(time.time() - self._start_time))),
-                Colors.OKBLUE)
+                   Colors.OKBLUE)
         printc("%sPassed: %d" %
                (lenstat * " ", self.stats["passed"]), Colors.OKGREEN)
         printc("%sFailed: %d" %
                (lenstat * " ", self.stats["failures"]), Colors.FAIL)
+        printc("%sKnown error: %d" %
+               (lenstat * " ", self.stats["known_error"]), Colors.OKBLUE)
         printc("%s%s" %
                (lenstat * " ", (len("Failed: 0")) * "-"), Colors.OKBLUE)
 
