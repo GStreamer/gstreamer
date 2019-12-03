@@ -1,3 +1,55 @@
+=== release 1.16.2 ===
+
+2019-12-03 11:14:31 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-libav.doap:
+	* meson.build:
+	  Release 1.16.2
+
+2019-12-03 11:14:31 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/inspect/plugin-libav.xml:
+	  Update docs
+
+2019-11-29 09:25:24 +0100  Edward Hervey <edward@centricular.com>
+
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: Fix error propagation
+	  Instead of returning the default return value (GST_FLOW_OK), actually
+	  return an error one (res vs ret).
+
+2019-11-04 15:39:59 +0100  Kevin JOLY <kevin.joly@heig-vd.ch>
+
+	* ext/libav/gstavdemux.c:
+	  avdemux: Fix segmentation fault if long_name is NULL
+	  Some plugins (like libcdio) registers empty long_name field. Calling strncmp on this field leads to a segmentation fault.
+	  Signed-off-by: Kevin Joly <joly.kevin25@gmail.com>
+
+2019-10-29 11:43:05 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Fix huge leak caused by circular reference
+	  AVBufferRef -> GstFFMpegVideoDecVideoFrame -> GstVideoCodecFrame -> AVBufferRef
+	  Instead of holding additional ref there, set read-only which would not be
+	  reused by ff_reget_buffer()
+	  Fixes: https://gitlab.freedesktop.org/gstreamer/gst-libav/issues/63
+
+2019-10-24 00:25:28 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Enforce allocate new AVFrame per input frame
+	  ... if ffmpeg would reuse the allocated AVBuffer. Reused AVFrame by
+	  the ffmpeg seems to break our decoding flow since the reused AVFrame
+	  holds the initial opaque data (GstVideoCodecFrame in this case), so
+	  we couldn't trace the our in/out frames.
+	  To enforce get_buffer() call per output frame, hold another reference
+	  to the AVBuffer in order to mark the AVBuffer as not writable.
+	  Fixes: https://gitlab.freedesktop.org/gstreamer/gst-libav/issues/62
+
 === release 1.16.1 ===
 
 2019-09-23 11:16:14 +0100  Tim-Philipp Müller <tim@centricular.com>
