@@ -1,130 +1,153 @@
 # Hungarian translation for gst-plugins-bad.
-# Copyright (C) 2007, 2008, 2009, 2012, 2014, 2015, 2017 Free Software Foundation, Inc.
+# Copyright (C) 2007, 2008, 2009, 2012, 2014, 2015, 2017, 2019 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-bad package.
 #
 # Gabor Kelemen <kelemeng@gnome.hu>, 2007, 2008, 2009, 2012.
-# Balázs Úr <urbalazs@gmail.com>, 2014, 2015, 2017.
+# Balázs Úr <ur.balazs@fsf.hu>, 2014, 2015, 2017, 2019.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 1.10.0\n"
+"Project-Id-Version: gst-plugins-bad 1.15.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-02-26 11:53+0000\n"
-"PO-Revision-Date: 2017-03-19 00:53+0100\n"
-"Last-Translator: Balázs Úr <urbalazs@gmail.com>\n"
+"POT-Creation-Date: 2019-01-17 02:16+0000\n"
+"PO-Revision-Date: 2019-11-23 21:49+0100\n"
+"Last-Translator: Balázs Úr <ur.balazs@fsf.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
 "Language: hu\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Lokalize 1.2\n"
+"X-Generator: Lokalize 19.04.3\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
+#: ext/curl/gstcurlhttpsrc.c:1265
 msgid "No URL set."
-msgstr ""
+msgstr "Nincs URL beállítva."
 
+#: ext/opencv/gsttemplatematch.cpp:202
 msgid "OpenCV failed to load template image"
 msgstr "Az OpenCV-nek nem sikerült betöltenie a sablonképet"
 
+#: ext/resindvd/resindvdsrc.c:361
 msgid "Could not read title information for DVD."
 msgstr "Nem lehet címinformációkat olvasni a DVD-ről."
 
+#: ext/resindvd/resindvdsrc.c:367
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Nem nyitható meg a DVD eszköz („%s”)."
 
+#: ext/resindvd/resindvdsrc.c:373
 msgid "Failed to set PGC based seeking."
 msgstr "A PGC-alapú keresés beállítása meghiúsult."
 
-msgid ""
-"Could not read DVD. This may be because the DVD is encrypted and a DVD "
-"decryption library is not installed."
-msgstr ""
-"Nem olvasható a DVD. Ezt az okozhatja, hogy a DVD titkosított, és a DVD-"
-"visszafejtő programkönyvtár nincs telepítve."
+#: ext/resindvd/resindvdsrc.c:1164
+msgid "Could not read DVD. This may be because the DVD is encrypted and a DVD decryption library is not installed."
+msgstr "Nem olvasható a DVD. Ezt az okozhatja, hogy a DVD titkosított, és a DVD-visszafejtő programkönyvtár nincs telepítve."
 
+#: ext/resindvd/resindvdsrc.c:1169 ext/resindvd/resindvdsrc.c:1178
 msgid "Could not read DVD."
 msgstr "Nem olvasható a DVD."
 
+#: ext/smoothstreaming/gstmssdemux.c:421
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:731
 msgid "This file contains no playable streams."
 msgstr "Ez a fájl nem tartalmaz lejátszható folyamokat."
 
+#: ext/sndfile/gstsfdec.c:769
 msgid "Could not open sndfile stream for reading."
 msgstr "A hangfájl folyam nem nyitható meg olvasásra."
 
+#: gst/asfmux/gstasfmux.c:1832
 msgid "Generated file has a larger preroll time than its streams duration"
-msgstr ""
-"Az előállított fájlnak nagyobb előtekerési ideje van, mint a folyamának "
-"időtartama"
+msgstr "Az előállított fájlnak nagyobb előtekerési ideje van, mint a folyamának időtartama"
 
+#: gst/camerabin2/camerabingeneral.c:167 gst/camerabin2/gstcamerabin2.c:1859
+#: gst/camerabin2/gstdigitalzoom.c:283 gst/camerabin2/gstviewfinderbin.c:270
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Hiányzó „%s” elem - ellenőrizze a GStreamer telepítését."
 
+#: gst/camerabin2/gstcamerabin2.c:347
 msgid "File location is set to NULL, please set it to a valid filename"
-msgstr ""
-"A fájl helye NULL értékre lett állítva, kérjük állítsa be egy érvényes "
-"fájlnévre"
+msgstr "A fájl helye NULL értékre lett állítva, kérjük állítsa be egy érvényes fájlnévre"
 
+#: gst/camerabin2/gstwrappercamerabinsrc.c:585
 msgid "Digitalzoom element couldn't be created"
 msgstr "A digitális nagyítás elemet nem sikerült létrehozni"
 
+#: gst/dvdspu/gstdvdspu.c:1041
 msgid "Subpicture format was not configured before data flow"
 msgstr "A részkép formátuma nem lett beállítva az adatfolyam előtt"
 
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3564
 msgid "Failed to get fragment URL."
 msgstr "Nem sikerült lekérni a töredék URL-t."
 
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3951
 msgid "Couldn't download fragments"
 msgstr "Nem sikerült letölteni a töredékeket"
 
+#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:4040
+#: gst/mpegtsdemux/mpegtsbase.c:1640
 msgid "Internal data stream error."
 msgstr "Belső adatfolyamhiba."
 
+#: sys/dvb/gstdvbsrc.c:1580 sys/dvb/gstdvbsrc.c:1794
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Az eszköz („%s”) nem létezik."
 
+#: sys/dvb/gstdvbsrc.c:1584
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Nem nyitható meg az előtéteszköz („%s”)."
 
+#: sys/dvb/gstdvbsrc.c:1603
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Nem kérhetők le a beállítások az előtéteszköztől („%s”)."
 
+#: sys/dvb/gstdvbsrc.c:1620
 #, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
-msgstr ""
-"Nem lehet felsorolni a szállító rendszereket a(z) „%s” előtéteszköztől."
+msgstr "Nem lehet felsorolni a szállító rendszereket a(z) „%s” előtéteszköztől."
 
+#: sys/dvb/gstdvbsrc.c:1798
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "A fájl („%s”) nem nyitható meg olvasásra."
 
+#: sys/dvb/parsechannels.c:410
 msgid "Couldn't find channel configuration file"
 msgstr "Nem található csatorna beállítófájl"
 
+#: sys/dvb/parsechannels.c:413 sys/dvb/parsechannels.c:563
 #, c-format
 msgid "Couldn't load channel configuration file: '%s'"
 msgstr "Nem sikerült betölteni a csatorna beállítófájlt: „%s”"
 
+#: sys/dvb/parsechannels.c:421 sys/dvb/parsechannels.c:846
 #, c-format
 msgid "Couldn't find details for channel '%s'"
 msgstr "Nem találhatók a(z) „%s” csatorna részletei"
 
+#: sys/dvb/parsechannels.c:430
 #, c-format
 msgid "No properties for channel '%s'"
 msgstr "Nincsenek tulajdonságok a(z) „%s” csatornához"
 
+#: sys/dvb/parsechannels.c:439
 #, c-format
 msgid "Failed to set properties for channel '%s'"
 msgstr "Nem sikerült beállítani a(z) „%s” csatorna tulajdonságait"
 
+#: sys/dvb/parsechannels.c:560
 #, c-format
 msgid "Couldn't find channel configuration file: '%s'"
 msgstr "Nem található csatorna beállítófájl: „%s”"
 
+#: sys/dvb/parsechannels.c:570
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "A csatorna beállítófájl nem tartalmaz egyetlen csatornát sem"
 
@@ -152,10 +175,8 @@ msgstr "A csatorna beállítófájl nem tartalmaz egyetlen csatornát sem"
 #~ msgid "No file name specified for writing."
 #~ msgstr "Nincs megadva fájlnév az íráshoz."
 
-#~ msgid ""
-#~ "Given file name \"%s\" can't be converted to local file name encoding."
-#~ msgstr ""
-#~ "A kapott „%s” fájlnevet nem lehet átalakítani a helyi fájlnév kódolásra."
+#~ msgid "Given file name \"%s\" can't be converted to local file name encoding."
+#~ msgstr "A kapott „%s” fájlnevet nem lehet átalakítani a helyi fájlnév kódolásra."
 
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "A fájl („%s”) nem nyitható meg írásra."
