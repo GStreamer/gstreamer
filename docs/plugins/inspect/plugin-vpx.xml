@@ -3,7 +3,7 @@
   <description>VP8 plugin</description>
   <filename>../../ext/vpx/.libs/libgstvpx.so</filename>
   <basename>libgstvpx.so</basename>
-  <version>1.16.1</version>
+  <version>1.16.2</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
@@ -68,7 +68,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string){ I420, YV12, Y42B, Y444 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+          <details>video/x-raw, format=(string){ I420, YV12, Y42B, Y444, GBR }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
       </pads>
     </element>
