@@ -177,6 +177,9 @@ struct _GstMsdkEncClass
 
   /* Return TRUE if sub class requires a recofnig */
   gboolean (*need_reconfig) (GstMsdkEnc * encoder, GstVideoCodecFrame * frame);
+
+  /* Allow sub class set extra frame parameters */
+  void (*set_extra_params) (GstMsdkEnc * encoder, GstVideoCodecFrame * frame);
 };
 
 struct _MsdkEncTask

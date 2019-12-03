@@ -1383,6 +1383,8 @@ gst_msdkenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
     gst_msdkenc_flush_frames (thiz, FALSE);
     gst_msdkenc_close_encoder (thiz);
 
+    klass->set_extra_params (thiz, frame);
+
     // This will reinitialized the encoder but keep same input format.
     gst_msdkenc_set_format (encoder, NULL);
   }
@@ -1684,6 +1686,12 @@ gst_msdkenc_need_reconfig (GstMsdkEnc * encoder, GstVideoCodecFrame * frame)
 }
 
 static void
+gst_msdkenc_set_extra_params (GstMsdkEnc * encoder, GstVideoCodecFrame * frame)
+{
+  /* Do nothing */
+}
+
+static void
 gst_msdkenc_class_init (GstMsdkEncClass * klass)
 {
   GObjectClass *gobject_class;
@@ -1696,6 +1704,7 @@ gst_msdkenc_class_init (GstMsdkEncClass * klass)
 
   klass->need_conversion = gst_msdkenc_need_conversion;
   klass->need_reconfig = gst_msdkenc_need_reconfig;
+  klass->set_extra_params = gst_msdkenc_set_extra_params;
 
   gobject_class->finalize = gst_msdkenc_finalize;
 
