@@ -89,6 +89,8 @@ if have_cxx and build_gstgl
     if gst_gl_have_platform_egl
       # Embedded linux (e.g. i.MX6) with or without windowing support
       qt_defines += ['-DHAVE_QT_EGLFS']
+      egl_dep = dependency('egl', required : false)
+      optional_deps += egl_dep
       have_qt_windowing = true
       if have_qpa_include
         # Wayland windowing
