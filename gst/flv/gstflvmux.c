@@ -935,7 +935,7 @@ tags:
   if (!full)
     goto end;
 
-  if (mux->duration == GST_CLOCK_TIME_NONE) {
+  if (!mux->streamable && mux->duration == GST_CLOCK_TIME_NONE) {
     GList *l;
     guint64 dur;
 
