@@ -1,3 +1,44 @@
+=== release 1.16.2 ===
+
+2019-12-03 11:19:22 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gstreamer-vaapi.doap:
+	* meson.build:
+	  Release 1.16.2
+
+2019-12-03 11:19:22 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/inspect/plugin-vaapi.xml:
+	  Update docs
+
+2019-11-03 17:59:01 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h265.c:
+	  libs: decoder: h265: skip all pictures prior the first I-frame
+	  Don't try to decode until the first I-frame is received within the
+	  currently active sequence. i965 H265 decoder don't show any artifact
+	  but it crashes.
+	  Fixes: #98
+
+2019-10-11 17:34:06 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiwindow_x11.c:
+	  libs: window: x11: Avoid usage of deprecated API
+
+2019-10-11 17:13:34 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* meson.build:
+	  build: halt meson configuration if no renderer API
+	  We should halt meson configuration if there is no render API
+	  installed (either DRM, Wayland or X11).
+	  That behavior was already in autotools but missed in meson. This patch
+	  brings it back.
+	  Fixes: #196
+
 === release 1.16.1 ===
 
 2019-09-23 11:20:44 +0100  Tim-Philipp Müller <tim@centricular.com>
