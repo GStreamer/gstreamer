@@ -738,6 +738,10 @@ gst_d3d11_color_convert_set_info (GstD3D11BaseFilter * filter,
   if (!self->can_convert)
     return TRUE;
 
+  /* don't need to create converter */
+  if (GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_INFO_FORMAT (out_info))
+    return TRUE;
+
   self->in_d3d11_format =
       gst_d3d11_format_from_gst (GST_VIDEO_INFO_FORMAT (in_info));
   if (!self->in_d3d11_format) {
