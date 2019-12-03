@@ -867,6 +867,133 @@ GST_START_TEST (test_pb_utils_aac_get_profile)
 
 GST_END_TEST;
 
+#define SPS_LEN 3
+#define SPS_CONSTRAINT_SET_FLAG_0 1 << 7
+#define SPS_CONSTRAINT_SET_FLAG_1 (1 << 6)
+#define SPS_CONSTRAINT_SET_FLAG_2 (1 << 5)
+#define SPS_CONSTRAINT_SET_FLAG_3 (1 << 4)
+#define SPS_CONSTRAINT_SET_FLAG_4 (1 << 3)
+#define SPS_CONSTRAINT_SET_FLAG_5 (1 << 2)
+
+static void
+fill_h264_sps (guint8 * sps,
+    guint8 profile_idc, guint constraint_set_flags, guint8 level_idc)
+{
+  memset (sps, 0x0, SPS_LEN);
+  /*
+   * * Bit 0:7   - Profile indication
+   * * Bit 8     - constraint_set0_flag
+   * * Bit 9     - constraint_set1_flag
+   * * Bit 10    - constraint_set2_flag
+   * * Bit 11    - constraint_set3_flag
+   * * Bit 12    - constraint_set4_flag
+   * * Bit 13    - constraint_set5_flag
+   * * Bit 14:15 - Reserved
+   * * Bit 16:24 - Level indication
+   * */
+  sps[0] = profile_idc;
+  sps[1] |= constraint_set_flags;
+  sps[2] = level_idc;
+}
+
+GST_START_TEST (test_pb_utils_h264_profiles)
+{
+  guint8 sps[SPS_LEN] = { 0, };
+  const gchar *profile;
+
+  fill_h264_sps (sps, 66, 0, 0);
+  profile = gst_codec_utils_h264_get_profile (sps, SPS_LEN);
+  fail_unless_equals_string (profile, "baseline");
+
+  fill_h264_sps (sps, 66, SPS_CONSTRAINT_SET_FLAG_1, 0);
+  profile = gst_codec_utils_h264_get_profile (sps, SPS_LEN);
+  fail_unless_equals_string (profile, "constrained-baseline");
+
+  fill_h264_sps (sps, 77, 0, 0);
+  profile = gst_codec_utils_h264_get_profile (sps, SPS_LEN);
+  fail_unless_equals_string (profile, "main");
+
+  fill_h264_sps (sps, 88, 0, 0);
+  profile = gst_codec_utils_h264_get_profile (sps, SPS_LEN);
+  fail_unless_equals_string (profile, "extended");
+
+  fill_h264_sps (sps, 100, 0, 0);
+  profile = gst_codec_utils_h264_get_profile (sps, SPS_LEN);
+  fail_unless_equals_string (profile, "high");
+
+  fill_h264_sps (sps, 100,
+      SPS_CONSTRAINT_SET_FLAG_4 | SPS_CONSTRAINT_SET_FLAG_5, 0);
+  profile = gst_codec_utils_h264_get_profile (sps, SPS_LEN);
+  fail_unless_equals_string (profile, "constrained-high");
+
+  fill_h264_sps (sps, 100, SPS_CONSTRAINT_SET_FLAG_4, 0);
+  profile = gst_codec_utils_h264_get_profile (sps, SPS_LEN);
+  fail_unless_equals_string (profile, "progressive-high");
+
+  fill_h264_sps (sps, 110, 0, 0);
+  profile = gst_codec_utils_h264_get_profile (sps, SPS_LEN);
+  fail_unless_equals_string (profile, "high-10");
+
+  fill_h264_sps (sps, 110, SPS_CONSTRAINT_SET_FLAG_3, 0);
+  profile = gst_codec_utils_h264_get_profile (sps, SPS_LEN);
+  fail_unless_equals_string (profile, "high-10-intra");
+
+  fill_h264_sps (sps, 110, SPS_CONSTRAINT_SET_FLAG_4, 0);
+  profile = gst_codec_utils_h264_get_profile (sps, SPS_LEN);
+  fail_unless_equals_string (profile, "progressive-high-10");
+
+  fill_h264_sps (sps, 122, 0, 0);
+  profile = gst_codec_utils_h264_get_profile (sps, SPS_LEN);
+  fail_unless_equals_string (profile, "high-4:2:2");
+
+  fill_h264_sps (sps, 122, SPS_CONSTRAINT_SET_FLAG_3, 0);
+  profile = gst_codec_utils_h264_get_profile (sps, SPS_LEN);
+  fail_unless_equals_string (profile, "high-4:2:2-intra");
+
+  fill_h264_sps (sps, 244, 0, 0);
+  profile = gst_codec_utils_h264_get_profile (sps, SPS_LEN);
+  fail_unless_equals_string (profile, "high-4:4:4");
+
+  fill_h264_sps (sps, 244, SPS_CONSTRAINT_SET_FLAG_3, 0);
+  profile = gst_codec_utils_h264_get_profile (sps, SPS_LEN);
+  fail_unless_equals_string (profile, "high-4:4:4-intra");
+
+  fill_h264_sps (sps, 44, 0, 0);
+  profile = gst_codec_utils_h264_get_profile (sps, SPS_LEN);
+  fail_unless_equals_string (profile, "cavlc-4:4:4-intra");
+
+  fill_h264_sps (sps, 118, 0, 0);
+  profile = gst_codec_utils_h264_get_profile (sps, SPS_LEN);
+  fail_unless_equals_string (profile, "multiview-high");
+
+  fill_h264_sps (sps, 128, 0, 0);
+  profile = gst_codec_utils_h264_get_profile (sps, SPS_LEN);
+  fail_unless_equals_string (profile, "stereo-high");
+
+  fill_h264_sps (sps, 83, 0, 0);
+  profile = gst_codec_utils_h264_get_profile (sps, SPS_LEN);
+  fail_unless_equals_string (profile, "scalable-baseline");
+
+  fill_h264_sps (sps, 83, SPS_CONSTRAINT_SET_FLAG_5, 0);
+  profile = gst_codec_utils_h264_get_profile (sps, SPS_LEN);
+  fail_unless_equals_string (profile, "scalable-constrained-baseline");
+
+  fill_h264_sps (sps, 86, 0, 0);
+  profile = gst_codec_utils_h264_get_profile (sps, SPS_LEN);
+  fail_unless_equals_string (profile, "scalable-high");
+
+  fill_h264_sps (sps, 86, SPS_CONSTRAINT_SET_FLAG_3, 0);
+  profile = gst_codec_utils_h264_get_profile (sps, SPS_LEN);
+  fail_unless_equals_string (profile, "scalable-high-intra");
+
+  fill_h264_sps (sps, 86, SPS_CONSTRAINT_SET_FLAG_5, 0);
+  profile = gst_codec_utils_h264_get_profile (sps, SPS_LEN);
+  fail_unless_equals_string (profile, "scalable-constrained-high");
+
+}
+
+GST_END_TEST;
+
 #define PROFILE_TIER_LEVEL_LEN 11
 
 static void
@@ -1175,6 +1302,7 @@ libgstpbutils_suite (void)
   tcase_add_test (tc_chain, test_pb_utils_installer_details);
   tcase_add_test (tc_chain, test_pb_utils_versions);
   tcase_add_test (tc_chain, test_pb_utils_aac_get_profile);
+  tcase_add_test (tc_chain, test_pb_utils_h264_profiles);
   tcase_add_test (tc_chain, test_pb_utils_h265_profiles);
   return s;
 }

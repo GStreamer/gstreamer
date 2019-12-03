@@ -570,7 +570,7 @@ const gchar *
 gst_codec_utils_h264_get_profile (const guint8 * sps, guint len)
 {
   const gchar *profile = NULL;
-  gint csf1, csf3, csf5;
+  gint csf1, csf3, csf4, csf5;
 
   g_return_val_if_fail (sps != NULL, NULL);
 
@@ -581,6 +581,7 @@ gst_codec_utils_h264_get_profile (const guint8 * sps, guint len)
 
   csf1 = (sps[1] & 0x40) >> 6;
   csf3 = (sps[1] & 0x10) >> 4;
+  csf4 = (sps[1] & 0x08) >> 3;
   csf5 = (sps[1] & 0x04) >> 2;
 
   switch (sps[0]) {
@@ -597,11 +598,19 @@ gst_codec_utils_h264_get_profile (const guint8 * sps, guint len)
       profile = "extended";
       break;
     case 100:
-      profile = "high";
+      if (csf4) {
+        if (csf5)
+          profile = "constrained-high";
+        else
+          profile = "progressive-high";
+      } else
+        profile = "high";
       break;
     case 110:
       if (csf3)
         profile = "high-10-intra";
+      else if (csf4)
+        profile = "progressive-high-10";
       else
         profile = "high-10";
       break;
