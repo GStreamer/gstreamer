@@ -899,13 +899,13 @@ gst_interlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     interlace->fields_since_timebase = 0;
   }
 
+  current_fields = format->n_fields[interlace->phase_index];
+  /* increment the phase index */
+  interlace->phase_index++;
   if (!format->n_fields[interlace->phase_index]) {
     interlace->phase_index = 0;
   }
 
-  current_fields = format->n_fields[interlace->phase_index];
-  /* increment the phase index */
-  interlace->phase_index++;
   GST_DEBUG ("incoming buffer assigned %d fields", current_fields);
 
   num_fields = interlace->stored_fields + current_fields;
