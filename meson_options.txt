@@ -23,6 +23,7 @@ option('libunwind', type : 'feature', value : 'auto', description : 'Use libunwi
 option('libdw', type : 'feature', value : 'auto', description : 'Use libdw to generate better backtraces from libunwind')
 option('dbghelp', type : 'feature', value : 'auto', description : 'Use dbghelp to generate backtraces')
 option('bash-completion', type : 'feature', value : 'auto', description : 'Install bash completion files')
+option('coretracers', type : 'feature', value : 'auto', description : 'Build coretracers plugin')
 
 # Common feature options
 option('examples', type : 'feature', value : 'auto', yield : true)

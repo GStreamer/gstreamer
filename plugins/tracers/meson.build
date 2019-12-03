@@ -1,3 +1,10 @@
+if not tracer_hooks
+  if get_option('coretracers').enabled()
+    error('coretracers plugin enabled but not tracer_hooks')
+  endif
+  subdir_done()
+endif
+
 gst_tracers_sources = [
   'gstlatency.c',
   'gstleaks.c',
