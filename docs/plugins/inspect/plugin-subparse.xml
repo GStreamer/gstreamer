@@ -3,7 +3,7 @@
   <description>Subtitle parsing</description>
   <filename>../../gst/subparse/.libs/libgstsubparse.so</filename>
   <basename>libgstsubparse.so</basename>
-  <version>1.16.1</version>
+  <version>1.16.2</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>
