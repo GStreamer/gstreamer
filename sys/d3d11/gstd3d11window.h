@@ -25,6 +25,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include "gstd3d11_fwd.h"
+#include "gstd3d11colorconverter.h"
 
 G_BEGIN_DECLS
 
@@ -45,6 +46,10 @@ struct _GstD3D11Window
   GstObject parent;
 
   GstVideoInfo info;
+  GstVideoInfo render_info;
+  const GstD3D11Format *render_format;
+  GstD3D11ColorConverter *converter;
+
   GstVideoMasteringDisplayInfo mastering_display_info;
   GstVideoContentLightLevel content_light_level;
 
@@ -124,7 +129,6 @@ gboolean gst_d3d11_window_prepare (GstD3D11Window * window,
                                    guint height,
                                    guint aspect_ratio_n,
                                    guint aspect_ratio_d,
-                                   DXGI_FORMAT format,
                                    GstCaps * caps,
                                    GError ** error);
 

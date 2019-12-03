@@ -26,6 +26,7 @@
 #include "gstd3d11utils.h"
 #include "gstd3d11device.h"
 #include "gstd3d11bufferpool.h"
+#include "gstd3d11format.h"
 
 enum
 {
@@ -39,13 +40,11 @@ enum
 #define DEFAULT_FORCE_ASPECT_RATIO        TRUE
 #define DEFAULT_ENABLE_NAVIGATION_EVENTS  TRUE
 
-#define CAPS_FORMAT "{ BGRA, RGBA, RGB10A2_LE }"
-
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, CAPS_FORMAT)
+        (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, GST_D3D11_FORMATS)
     ));
 
 GST_DEBUG_CATEGORY (d3d11_video_sink_debug);
@@ -221,10 +220,9 @@ gst_d3d11_video_sink_get_caps (GstBaseSink * sink, GstCaps * filter)
   GstD3D11VideoSink *self = GST_D3D11_VIDEO_SINK (sink);
   GstCaps *caps = NULL;
 
-  if (self->device)
+  if (self->device && !self->can_convert)
     caps = gst_d3d11_device_get_supported_caps (self->device,
-        D3D11_FORMAT_SUPPORT_TEXTURE2D | D3D11_FORMAT_SUPPORT_DISPLAY |
-        D3D11_FORMAT_SUPPORT_RENDER_TARGET);
+        D3D11_FORMAT_SUPPORT_TEXTURE2D | D3D11_FORMAT_SUPPORT_DISPLAY);
 
   if (!caps)
     caps = gst_pad_get_pad_template_caps (GST_VIDEO_SINK_PAD (sink));
@@ -243,34 +241,18 @@ static gboolean
 gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
 {
   GstD3D11VideoSink *self = GST_D3D11_VIDEO_SINK (sink);
-  GstCaps *sink_caps = NULL;
   gint video_width, video_height;
   gint video_par_n, video_par_d;        /* video's PAR */
   gint display_par_n = 1, display_par_d = 1;    /* display's PAR */
   guint num, den;
   GError *error = NULL;
-  const GstD3D11Format *d3d11_format = NULL;
   GstStructure *config;
+  GstD3D11AllocationParams *d3d11_params;
+  gint i;
 
   GST_DEBUG_OBJECT (self, "set caps %" GST_PTR_FORMAT, caps);
 
-  sink_caps = gst_d3d11_device_get_supported_caps (self->device,
-      D3D11_FORMAT_SUPPORT_TEXTURE2D | D3D11_FORMAT_SUPPORT_DISPLAY |
-      D3D11_FORMAT_SUPPORT_RENDER_TARGET);
-
-  GST_DEBUG_OBJECT (self, "supported caps %" GST_PTR_FORMAT, sink_caps);
-
-  if (!gst_caps_can_intersect (sink_caps, caps))
-    goto incompatible_caps;
-
-  gst_clear_caps (&sink_caps);
-
   if (!gst_video_info_from_caps (&self->info, caps))
-    goto invalid_format;
-
-  d3d11_format =
-      gst_d3d11_format_from_gst (GST_VIDEO_INFO_FORMAT (&self->info));
-  if (!d3d11_format || d3d11_format->dxgi_format == DXGI_FORMAT_UNKNOWN)
     goto invalid_format;
 
   video_width = GST_VIDEO_INFO_WIDTH (&self->info);
@@ -326,8 +308,6 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
   if (GST_VIDEO_SINK_WIDTH (self) <= 0 || GST_VIDEO_SINK_HEIGHT (self) <= 0)
     goto no_display_size;
 
-  self->dxgi_format = d3d11_format->dxgi_format;
-
   if (!self->window_id)
     gst_video_overlay_prepare_window_handle (GST_VIDEO_OVERLAY (self));
 
@@ -359,7 +339,7 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
 
   if (!gst_d3d11_window_prepare (self->window, GST_VIDEO_SINK_WIDTH (self),
           GST_VIDEO_SINK_HEIGHT (self), video_par_n, video_par_d,
-          self->dxgi_format, caps, &error)) {
+          caps, &error)) {
     GstMessage *error_msg;
 
     GST_ERROR_OBJECT (self, "cannot create swapchain");
@@ -380,17 +360,26 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
   config = gst_buffer_pool_get_config (self->fallback_pool);
   gst_buffer_pool_config_set_params (config,
       caps, GST_VIDEO_INFO_SIZE (&self->info), 0, 2);
+
+  d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
+  if (!d3d11_params) {
+    d3d11_params = gst_d3d11_allocation_params_new (&self->info,
+        GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT, D3D11_USAGE_DEFAULT,
+        D3D11_BIND_SHADER_RESOURCE);
+  } else {
+    /* Set bind flag */
+    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&self->info); i++) {
+      d3d11_params->desc[i].BindFlags |= D3D11_BIND_SHADER_RESOURCE;
+    }
+  }
+
+  gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
+  gst_d3d11_allocation_params_free (d3d11_params);
   gst_buffer_pool_set_config (self->fallback_pool, config);
 
   return TRUE;
 
   /* ERRORS */
-incompatible_caps:
-  {
-    GST_ERROR_OBJECT (sink, "caps incompatible");
-    gst_clear_caps (&sink_caps);
-    return FALSE;
-  }
 invalid_format:
   {
     GST_DEBUG_OBJECT (sink,
@@ -447,6 +436,7 @@ static gboolean
 gst_d3d11_video_sink_start (GstBaseSink * sink)
 {
   GstD3D11VideoSink *self = GST_D3D11_VIDEO_SINK (sink);
+  gboolean is_hardware = TRUE;
 
   GST_DEBUG_OBJECT (self, "Start");
 
@@ -460,6 +450,15 @@ gst_d3d11_video_sink_start (GstBaseSink * sink)
   if (!self->window) {
     GST_ERROR_OBJECT (sink, "Cannot create d3d11window");
     return FALSE;
+  }
+
+  g_object_get (self->device, "hardware", &is_hardware, NULL);
+
+  if (!is_hardware) {
+    GST_WARNING_OBJECT (self, "D3D11 device is running on software emulation");
+    self->can_convert = FALSE;
+  } else {
+    self->can_convert = TRUE;
   }
 
   g_object_set (self->window,
@@ -520,12 +519,30 @@ gst_d3d11_video_sink_propose_allocation (GstBaseSink * sink, GstQuery * query)
   size = info.size;
 
   if (need_pool) {
+    GstD3D11AllocationParams *d3d11_params;
+    gint i;
+
     GST_DEBUG_OBJECT (self, "create new pool");
 
     pool = gst_d3d11_buffer_pool_new (self->device);
     config = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_set_params (config, caps, size, 2,
         DXGI_MAX_SWAP_CHAIN_BUFFERS);
+
+    d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
+    if (!d3d11_params) {
+      d3d11_params = gst_d3d11_allocation_params_new (&info,
+          GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT, D3D11_USAGE_DEFAULT,
+          D3D11_BIND_SHADER_RESOURCE);
+    } else {
+      /* Set bind flag */
+      for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&info); i++) {
+        d3d11_params->desc[i].BindFlags |= D3D11_BIND_SHADER_RESOURCE;
+      }
+    }
+
+    gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
+    gst_d3d11_allocation_params_free (d3d11_params);
 
     if (!gst_buffer_pool_set_config (pool, config)) {
       g_object_unref (pool);
@@ -612,19 +629,34 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
   GstD3D11VideoSink *self = GST_D3D11_VIDEO_SINK (sink);
   GstMapInfo map;
   GstFlowReturn ret;
-  GstMemory *mem;
   GstVideoRectangle rect = { 0, };
   GstVideoCropMeta *crop;
   GstBuffer *render_buf;
   gboolean need_unref = FALSE;
+  gint i;
 
-  if (gst_buffer_n_memory (buf) == 1 && (mem = gst_buffer_peek_memory (buf, 0))
-      && gst_memory_is_type (mem, GST_D3D11_MEMORY_NAME)) {
-    GstD3D11Memory *dmem = (GstD3D11Memory *) mem;
+  render_buf = buf;
 
-    /* If this buffer has been allocated using our buffer management we simply
-       put the ximage which is in the PRIVATE pointer */
-    GST_TRACE_OBJECT (self, "buffer %p from our pool, writing directly", buf);
+  for (i = 0; i < gst_buffer_n_memory (buf); i++) {
+    GstMemory *mem;
+    GstD3D11Memory *dmem;
+
+    mem = gst_buffer_peek_memory (buf, i);
+    if (!gst_is_d3d11_memory (mem)) {
+      render_buf = NULL;
+      break;
+    }
+
+    dmem = (GstD3D11Memory *) mem;
+    if (dmem->device != self->device) {
+      render_buf = NULL;
+      break;
+    }
+
+    if (!gst_d3d11_memory_ensure_shader_resource_view (mem)) {
+      render_buf = NULL;
+      break;
+    }
 
     if (dmem->desc.Usage == D3D11_USAGE_DEFAULT) {
       if (!gst_memory_map (mem, &map, (GST_MAP_READ | GST_MAP_D3D11))) {
@@ -634,9 +666,9 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
 
       gst_memory_unmap (mem, &map);
     }
+  }
 
-    render_buf = buf;
-  } else {
+  if (!render_buf) {
     GstVideoFrame frame, fallback_frame;
 
     if (!self->fallback_pool ||

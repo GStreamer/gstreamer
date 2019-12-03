@@ -943,3 +943,17 @@ gst_d3d11_color_converter_convert (GstD3D11ColorConverter * converter,
 
   return data.ret;
 }
+
+gboolean
+gst_d3d11_color_converter_update_rect (GstD3D11ColorConverter * converter,
+    RECT * rect)
+{
+  g_return_val_if_fail (converter != NULL, FALSE);
+
+  converter->viewport.TopLeftX = rect->left;
+  converter->viewport.TopLeftY = rect->top;
+  converter->viewport.Width = rect->right - rect->left;
+  converter->viewport.Height = rect->bottom - rect->top;
+
+  return TRUE;
+}

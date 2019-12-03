@@ -27,6 +27,7 @@
 #include "gstd3d11window.h"
 #include "gstd3d11device.h"
 #include "gstd3d11memory.h"
+#include "gstd3d11utils.h"
 
 #include <windows.h>
 
@@ -256,6 +257,11 @@ gst_d3d11_window_dispose (GObject * object)
   if (self->device) {
     gst_d3d11_device_thread_add (self->device,
         (GstD3D11DeviceThreadFunc) gst_d3d11_window_release_resources, self);
+  }
+
+  if (self->converter) {
+    gst_d3d11_color_converter_free (self->converter);
+    self->converter = NULL;
   }
 
   gst_clear_buffer (&self->cached_buffer);
@@ -521,52 +527,75 @@ gst_d3d11_window_on_resize (GstD3D11Device * device, GstD3D11Window * window)
     window->rtv = NULL;
   }
 
-  /* NOTE: there can be various way to resize texture, but
-   * we just copy incoming texture toward resized swap chain buffer in order to
-   * avoid shader coding.
-   * To keep aspect ratio, required vertical or horizontal padding area
-   * will be calculated in here.
-   */
   width = window->width;
   height = window->height;
 
   if (width != window->surface_width || height != window->surface_height) {
     GstVideoRectangle src_rect, dst_rect;
-    gdouble src_ratio, dst_ratio;
-    gdouble aspect_ratio =
-        (gdouble) window->aspect_ratio_n / (gdouble) window->aspect_ratio_d;
-
-    src_ratio = (gdouble) width / height;
-    dst_ratio =
-        (gdouble) window->surface_width / window->surface_height / aspect_ratio;
 
     src_rect.x = 0;
     src_rect.y = 0;
-    src_rect.w = width;
-    src_rect.h = height;
+    src_rect.w = width * window->aspect_ratio_n;
+    src_rect.h = height * window->aspect_ratio_d;
 
     dst_rect.x = 0;
     dst_rect.y = 0;
+    dst_rect.w = window->surface_width;
+    dst_rect.h = window->surface_height;
 
-    if (window->force_aspect_ratio) {
-      if (src_ratio > dst_ratio) {
-        /* padding top and bottom */
-        dst_rect.w = width;
-        dst_rect.h = width / dst_ratio;
+    if (window->converter) {
+      if (window->force_aspect_ratio) {
+        src_rect.w = width * window->aspect_ratio_n;
+        src_rect.h = height * window->aspect_ratio_d;
+
+        gst_video_sink_center_rect (src_rect, dst_rect, &window->render_rect,
+            TRUE);
       } else {
-        /* padding left and right */
-        dst_rect.w = height * dst_ratio;
+        window->render_rect = dst_rect;
+      }
+
+      width = window->surface_width;
+      height = window->surface_height;
+    } else {
+      /* NOTE: there can be various way to resize texture, but
+       * we just copy incoming texture toward resized swap chain buffer in order to
+       * avoid shader coding.
+       * To keep aspect ratio, required vertical or horizontal padding area
+       * will be calculated in here.
+       */
+      gdouble src_ratio, dst_ratio;
+      gdouble aspect_ratio =
+          (gdouble) window->aspect_ratio_n / (gdouble) window->aspect_ratio_d;
+
+      src_ratio = (gdouble) width / height;
+      dst_ratio =
+          (gdouble) window->surface_width / window->surface_height /
+          aspect_ratio;
+
+      src_rect.w = width;
+      src_rect.h = height;
+
+      if (window->force_aspect_ratio) {
+        if (src_ratio > dst_ratio) {
+          /* padding top and bottom */
+          dst_rect.w = width;
+          dst_rect.h = width / dst_ratio;
+        } else {
+          /* padding left and right */
+          dst_rect.w = height * dst_ratio;
+          dst_rect.h = height;
+        }
+      } else {
+        dst_rect.w = width;
         dst_rect.h = height;
       }
-    } else {
-      dst_rect.w = width;
-      dst_rect.h = height;
+
+      gst_video_sink_center_rect (src_rect, dst_rect, &window->render_rect,
+          TRUE);
+
+      width = dst_rect.w;
+      height = dst_rect.h;
     }
-
-    gst_video_sink_center_rect (src_rect, dst_rect, &window->render_rect, TRUE);
-
-    width = dst_rect.w;
-    height = dst_rect.h;
   }
 
   hr = IDXGISwapChain_ResizeBuffers (window->swap_chain,
@@ -824,21 +853,63 @@ mastering_display_gst_to_dxgi (GstVideoMasteringDisplayInfo * m,
 
 gboolean
 gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
-    guint aspect_ratio_n, guint aspect_ratio_d, DXGI_FORMAT format,
-    GstCaps * caps, GError ** error)
+    guint aspect_ratio_n, guint aspect_ratio_d, GstCaps * caps, GError ** error)
 {
   DXGI_SWAP_CHAIN_DESC desc = { 0, };
   gboolean have_cll = FALSE;
   gboolean have_mastering = FALSE;
   gboolean hdr_api_available = FALSE;
   GstD3D11ThreadFuncData data;
+  GstCaps *render_caps;
 
   g_return_val_if_fail (GST_IS_D3D11_WINDOW (window), FALSE);
   g_return_val_if_fail (aspect_ratio_n > 0, FALSE);
   g_return_val_if_fail (aspect_ratio_d > 0, FALSE);
 
-  GST_DEBUG_OBJECT (window, "Prepare window with %dx%d format %d",
-      width, height, format);
+  GST_DEBUG_OBJECT (window, "Prepare window with %dx%d caps %" GST_PTR_FORMAT,
+      width, height, caps);
+
+  render_caps = gst_d3d11_device_get_supported_caps (window->device,
+      D3D11_FORMAT_SUPPORT_TEXTURE2D | D3D11_FORMAT_SUPPORT_DISPLAY);
+
+  GST_DEBUG_OBJECT (window, "rendering caps %" GST_PTR_FORMAT, render_caps);
+  render_caps = gst_d3d11_caps_fixate_format (caps, render_caps);
+
+  if (!render_caps || gst_caps_is_empty (render_caps)) {
+    GST_ERROR_OBJECT (window, "Couldn't define render caps");
+    gst_clear_caps (&render_caps);
+    return FALSE;
+  }
+
+  render_caps = gst_caps_fixate (render_caps);
+  gst_video_info_from_caps (&window->render_info, render_caps);
+  gst_clear_caps (&render_caps);
+
+  window->render_format =
+      gst_d3d11_format_from_gst (GST_VIDEO_INFO_FORMAT (&window->render_info));
+  if (!window->render_format ||
+      window->render_format->dxgi_format == DXGI_FORMAT_UNKNOWN) {
+    GST_ERROR_OBJECT (window, "Unknown dxgi render format");
+    return FALSE;
+  }
+
+  gst_video_info_from_caps (&window->info, caps);
+
+  if (window->converter)
+    gst_d3d11_color_converter_free (window->converter);
+  window->converter = NULL;
+
+  if (GST_VIDEO_INFO_FORMAT (&window->info) !=
+      GST_VIDEO_INFO_FORMAT (&window->render_info)) {
+    window->converter =
+        gst_d3d11_color_converter_new (window->device, &window->info,
+        &window->render_info);
+
+    if (!window->converter) {
+      GST_ERROR_OBJECT (window, "Cannot create converter");
+      return FALSE;
+    }
+  }
 
   data.self = window;
   data.error = error;
@@ -861,7 +932,6 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
     window->thread = NULL;
   }
 
-  gst_video_info_from_caps (&window->info, caps);
   if (!gst_video_content_light_level_from_caps (&window->content_light_level,
           caps)) {
     gst_video_content_light_level_init (&window->content_light_level);
@@ -897,7 +967,7 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
   /* don't care refresh rate */
   desc.BufferDesc.RefreshRate.Numerator = 0;
   desc.BufferDesc.RefreshRate.Denominator = 1;
-  desc.BufferDesc.Format = format;
+  desc.BufferDesc.Format = window->render_format->dxgi_format;
   desc.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
   desc.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
   desc.SampleDesc.Count = 1;
@@ -925,7 +995,8 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
     return FALSE;
   }
 #ifdef HAVE_DXGI_1_5_H
-  if (hdr_api_available && format == DXGI_FORMAT_R10G10B10A2_UNORM &&
+  if (hdr_api_available &&
+      window->render_format->dxgi_format == DXGI_FORMAT_R10G10B10A2_UNORM &&
       have_cll && have_mastering) {
     UINT can_support = 0;
     HRESULT hr;
@@ -1068,24 +1139,47 @@ _present_on_device_thread (GstD3D11Device * device, FramePresentData * data)
   gst_buffer_replace (&self->cached_buffer, data->buffer);
 
   if (self->cached_buffer) {
-    GstD3D11Memory *mem =
-        (GstD3D11Memory *) gst_buffer_peek_memory (self->cached_buffer, 0);
+    if (self->converter) {
+      ID3D11ShaderResourceView *srv[GST_VIDEO_MAX_PLANES];
+      gint i, j, k;
+      RECT rect;
 
-    self->rect = *data->rect;
-    src_box.left = self->rect.x;
-    src_box.right = self->rect.x + self->rect.w;
-    src_box.top = self->rect.y;
-    src_box.bottom = self->rect.y + self->rect.h;
-    src_box.front = 0;
-    src_box.back = 1;
+      for (i = 0, j = 0; i < gst_buffer_n_memory (self->cached_buffer); i++) {
+        GstD3D11Memory *mem =
+            (GstD3D11Memory *) gst_buffer_peek_memory (self->cached_buffer, i);
+        for (k = 0; k < mem->num_shader_resource_views; k++) {
+          srv[j] = mem->shader_resource_view[k];
+          j++;
+        }
+      }
 
-    ID3D11DeviceContext_OMSetRenderTargets (device_context,
-        1, &self->rtv, NULL);
-    ID3D11DeviceContext_ClearRenderTargetView (device_context, self->rtv,
-        black);
-    ID3D11DeviceContext_CopySubresourceRegion (device_context,
-        (ID3D11Resource *) self->backbuffer, 0, self->render_rect.x,
-        self->render_rect.y, 0, (ID3D11Resource *) mem->texture, 0, &src_box);
+      rect.left = self->render_rect.x;
+      rect.right = self->render_rect.x + self->render_rect.w;
+      rect.top = self->render_rect.y;
+      rect.bottom = self->render_rect.y + self->render_rect.h;
+
+      gst_d3d11_color_converter_update_rect (self->converter, &rect);
+      gst_d3d11_color_converter_convert (self->converter, srv, &self->rtv);
+    } else {
+      GstD3D11Memory *mem =
+          (GstD3D11Memory *) gst_buffer_peek_memory (self->cached_buffer, 0);
+
+      self->rect = *data->rect;
+      src_box.left = self->rect.x;
+      src_box.right = self->rect.x + self->rect.w;
+      src_box.top = self->rect.y;
+      src_box.bottom = self->rect.y + self->rect.h;
+      src_box.front = 0;
+      src_box.back = 1;
+
+      ID3D11DeviceContext_OMSetRenderTargets (device_context,
+          1, &self->rtv, NULL);
+      ID3D11DeviceContext_ClearRenderTargetView (device_context, self->rtv,
+          black);
+      ID3D11DeviceContext_CopySubresourceRegion (device_context,
+          (ID3D11Resource *) self->backbuffer, 0, self->render_rect.x,
+          self->render_rect.y, 0, (ID3D11Resource *) mem->texture, 0, &src_box);
+    }
   }
 
   hr = IDXGISwapChain_Present (self->swap_chain, 0, DXGI_PRESENT_DO_NOT_WAIT);

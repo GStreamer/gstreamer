@@ -50,7 +50,6 @@ struct _GstD3D11VideoSink
   gint video_height;
 
   GstVideoInfo info;
-  DXGI_FORMAT dxgi_format;
 
   guintptr window_id;
 
@@ -64,6 +63,7 @@ struct _GstD3D11VideoSink
   gboolean pending_render_rect;
 
   GstBufferPool *fallback_pool;
+  gboolean can_convert;
 };
 
 struct _GstD3D11VideoSinkClass

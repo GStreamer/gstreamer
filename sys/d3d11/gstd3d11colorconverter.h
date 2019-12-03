@@ -38,6 +38,9 @@ gboolean                 gst_d3d11_color_converter_convert (GstD3D11ColorConvert
                                                             ID3D11ShaderResourceView *srv[GST_VIDEO_MAX_PLANES],
                                                             ID3D11RenderTargetView *rtv[GST_VIDEO_MAX_PLANES]);
 
+gboolean                 gst_d3d11_color_converter_update_rect (GstD3D11ColorConverter * converter,
+                                                                RECT *rect);
+
 G_END_DECLS
 
 #endif /* __GST_D3D11_COLOR_CONVERTER_H__ */
