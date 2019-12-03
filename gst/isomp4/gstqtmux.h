@@ -44,7 +44,7 @@
 #define __GST_QT_MUX_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstcollectpads.h>
+#include <gst/base/gstaggregator.h>
 
 #include "fourcc.h"
 #include "atoms.h"
@@ -63,7 +63,8 @@ G_BEGIN_DECLS
 
 typedef struct _GstQTMux GstQTMux;
 typedef struct _GstQTMuxClass GstQTMuxClass;
-typedef struct _GstQTPad GstQTPad;
+typedef struct _GstQTMuxPad GstQTMuxPad;
+typedef struct _GstQTMuxPadClass GstQTMuxPadClass;
 
 /*
  * GstQTPadPrepareBufferFunc
@@ -75,17 +76,31 @@ typedef struct _GstQTPad GstQTPad;
  * being muxed. (Originally added for image/x-jpc support, for which buffers
  * need to be wrapped into a isom box)
  */
-typedef GstBuffer * (*GstQTPadPrepareBufferFunc) (GstQTPad * pad,
+typedef GstBuffer * (*GstQTPadPrepareBufferFunc) (GstQTMuxPad * pad,
     GstBuffer * buf, GstQTMux * qtmux);
+typedef gboolean (*GstQTPadSetCapsFunc) (GstQTMuxPad * pad, GstCaps * caps);
+typedef GstBuffer * (*GstQTPadCreateEmptyBufferFunc) (GstQTMuxPad * pad, gint64 duration);
 
-typedef gboolean (*GstQTPadSetCapsFunc) (GstQTPad * pad, GstCaps * caps);
-typedef GstBuffer * (*GstQTPadCreateEmptyBufferFunc) (GstQTPad * pad, gint64 duration);
+GType gst_qt_mux_pad_get_type (void);
 
-#define QTMUX_NO_OF_TS   10
+#define GST_TYPE_QT_MUX_PAD \
+  (gst_qt_mux_pad_get_type())
+#define GST_QT_MUX_PAD(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_QT_MUX_PAD, GstQTMuxPad))
+#define GST_QT_MUX_PAD_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_QT_MUX_PAD, GstQTMuxPadClass))
+#define GST_IS_QT_MUX_PAD(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_QT_MUX_PAD))
+#define GST_IS_QT_MUX_PAD_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_QT_MUX_PAD))
+#define GST_QT_MUX_PAD_CAST(obj) \
+  ((GstQTMuxPad *)(obj))
 
-struct _GstQTPad
+struct _GstQTMuxPad
 {
-  GstCollectData collect;       /* we extend the CollectData */
+  GstAggregatorPad parent;
+
+  guint32 trak_timescale;
 
   /* fourcc id of stream */
   guint32 fourcc;
@@ -121,6 +136,8 @@ struct _GstQTPad
   /* subjected to dts adjustment */
   GstClockTime first_ts;
   GstClockTime first_dts;
+
+  gint64 dts; /* the signed version of the DTS converted to running time. */
 
   /* all the atom and chunk book-keeping is delegated here
    * unowned/uncounted reference, parent MOOV owns */
@@ -162,6 +179,13 @@ struct _GstQTPad
   GstFlowReturn flow_status;
 };
 
+struct _GstQTMuxPadClass
+{
+  GstAggregatorPadClass parent;
+};
+
+#define QTMUX_NO_OF_TS   10
+
 typedef enum _GstQTMuxState
 {
   GST_QT_MUX_STATE_NONE,
@@ -181,11 +205,7 @@ typedef enum _GstQtMuxMode {
 
 struct _GstQTMux
 {
-  GstElement element;
-
-  GstPad *srcpad;
-  GstCollectPads *collect;
-  GSList *sinkpads;
+  GstAggregator parent;
 
   /* state */
   GstQTMuxState state;
@@ -215,7 +235,7 @@ struct _GstQTMux
   GstClockTime last_dts;
 
   /* Last pad we used for writing the current chunk */
-  GstQTPad *current_pad;
+  GstQTMuxPad *current_pad;
   guint64 current_chunk_size;
   GstClockTime current_chunk_duration;
   guint64 current_chunk_offset;
@@ -299,7 +319,7 @@ struct _GstQTMux
 
 struct _GstQTMuxClass
 {
-  GstElementClass parent_class;
+  GstAggregatorClass parent_class;
 
   GstQTMuxFormat format;
 };

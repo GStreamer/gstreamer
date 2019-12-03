@@ -126,14 +126,14 @@ setup_src_pad (GstElement * element,
     sinkpad = gst_element_get_request_pad (element, sinkname);
   fail_if (sinkpad == NULL, "Could not get sink pad from %s",
       GST_ELEMENT_NAME (element));
-  /* references are owned by: 1) us, 2) qtmux, 3) collect pads */
-  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 3);
+  /* references are owned by: 1) us, 2) qtmux */
+  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
   fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK,
       "Could not link source and %s sink pads", GST_ELEMENT_NAME (element));
   gst_object_unref (sinkpad);   /* because we got it higher up */
 
-  /* references are owned by: 1) qtmux, 2) collect pads */
-  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
+  /* references are owned by: 1) qtmux */
+  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 1);
 
   return srcpad;
 }
@@ -146,14 +146,14 @@ teardown_src_pad (GstPad * srcpad)
   /* clean up floating src pad */
   sinkpad = gst_pad_get_peer (srcpad);
   fail_if (sinkpad == NULL);
-  /* pad refs held by 1) qtmux 2) collectpads and 3) us (through _get_peer) */
-  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 3);
+  /* pad refs held by 1) qtmux 2) us (through _get_peer) */
+  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
 
   gst_pad_unlink (srcpad, sinkpad);
 
   /* after unlinking, pad refs still held by
-   * 1) qtmux and 2) collectpads and 3) us (through _get_peer) */
-  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 3);
+   * 1) qtmux and 2) us (through _get_peer) */
+  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
   gst_object_unref (sinkpad);
   /* one more ref is held by element itself */
 
@@ -177,6 +177,28 @@ qtmux_sinkpad_query (GstPad * pad, GstObject * parent, GstQuery * query)
   return ret;
 }
 
+static gboolean have_eos;
+static GCond eos_cond;
+static GMutex event_mutex;
+
+static gboolean
+qtmux_sinkpad_event (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  gboolean res = TRUE;
+
+  g_mutex_lock (&event_mutex);
+  if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+    have_eos = TRUE;
+    GST_DEBUG ("signal EOS");
+    g_cond_broadcast (&eos_cond);
+  }
+  g_mutex_unlock (&event_mutex);
+
+  gst_event_unref (event);
+
+  return res;
+}
+
 static GstElement *
 setup_qtmux (GstStaticPadTemplate * srctemplate, const gchar * sinkname,
     gboolean seekable)
@@ -184,18 +206,34 @@ setup_qtmux (GstStaticPadTemplate * srctemplate, const gchar * sinkname,
   GstElement *qtmux;
 
   GST_DEBUG ("setup_qtmux");
+
+  g_cond_init (&eos_cond);
+  g_mutex_init (&event_mutex);
+  have_eos = FALSE;
+
   qtmux = gst_check_setup_element ("qtmux");
   mysrcpad = setup_src_pad (qtmux, srctemplate, sinkname);
   mysinkpad = gst_check_setup_sink_pad (qtmux, &sinktemplate);
 
   downstream_is_seekable = seekable;
   gst_pad_set_query_function (mysinkpad, qtmux_sinkpad_query);
+  gst_pad_set_event_function (mysinkpad, qtmux_sinkpad_event);
 
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 
   return qtmux;
 }
+
+static void
+wait_for_eos (void)
+{
+  g_mutex_lock (&event_mutex);
+  while (!have_eos)
+    g_cond_wait (&eos_cond, &event_mutex);
+  g_mutex_unlock (&event_mutex);
+}
+
 
 static void
 cleanup_qtmux (GstElement * qtmux, const gchar * sinkname)
@@ -249,6 +287,9 @@ check_qtmux_pad (GstStaticPadTemplate * srctemplate, const gchar * sinkname,
 
   /* send eos to have moov written */
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()) == TRUE);
+
+  /* Muxing occurs on the aggregate thread */
+  wait_for_eos ();
 
   num_buffers = g_list_length (buffers);
   /* at least expect ftyp, mdat header, buffer chunk and moov */
@@ -341,6 +382,8 @@ check_qtmux_pad_fragmented (GstStaticPadTemplate * srctemplate,
 
   /* send eos to have all written */
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()) == TRUE);
+
+  wait_for_eos ();
 
   num_buffers = g_list_length (buffers);
   /* at least expect ftyp, moov, moof, mdat header, buffer chunk
@@ -833,6 +876,7 @@ test_average_bitrate_custom (const gchar * elementname,
   gint64 total_bytes = 0;
   GstClockTime total_duration = 0;
   GstSegment segment;
+  GstBus *bus;
 
   location = g_strdup_printf ("%s/%s-%d", g_get_tmp_dir (), "qtmuxtest",
       g_random_int ());
@@ -845,6 +889,9 @@ test_average_bitrate_custom (const gchar * elementname,
   fail_unless (mysrcpad != NULL);
   gst_pad_set_active (mysrcpad, TRUE);
 
+  bus = gst_bus_new ();
+  gst_element_set_bus (filesink, bus);
+  gst_object_unref (bus);
 
   fail_unless (gst_element_set_state (filesink,
           GST_STATE_PLAYING) != GST_STATE_CHANGE_FAILURE,
@@ -878,8 +925,13 @@ test_average_bitrate_custom (const gchar * elementname,
   /* send eos to have moov written */
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()) == TRUE);
 
+  gst_message_unref (gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
+          GST_MESSAGE_EOS));
+
   gst_element_set_state (qtmux, GST_STATE_NULL);
   gst_element_set_state (filesink, GST_STATE_NULL);
+
+  gst_element_set_bus (filesink, NULL);
 
   gst_check_drop_buffers ();
   gst_pad_set_active (mysrcpad, FALSE);
@@ -1212,6 +1264,7 @@ run_muxing_test (struct TestInputData *input1, struct TestInputData *input2)
   gchar *location;
   GstElement *qtmux;
   GstElement *filesink;
+  GstBus *bus;
 
   location = g_strdup_printf ("%s/%s-%d", g_get_tmp_dir (), "qtmuxtest",
       g_random_int ());
@@ -1219,6 +1272,10 @@ run_muxing_test (struct TestInputData *input1, struct TestInputData *input2)
   filesink = gst_element_factory_make ("filesink", NULL);
   g_object_set (filesink, "location", location, NULL);
   gst_element_link (qtmux, filesink);
+
+  bus = gst_bus_new ();
+  gst_element_set_bus (filesink, bus);
+  gst_object_unref (bus);
 
   input1->srcpad = setup_src_pad (qtmux, &srcvideorawtemplate, "video_%u");
   fail_unless (input1->srcpad != NULL);
@@ -1240,15 +1297,18 @@ run_muxing_test (struct TestInputData *input1, struct TestInputData *input2)
   input2->thread =
       g_thread_new ("test-push-data-2", test_input_push_data, input2);
 
-  /* FIXME set a mainloop and wait for EOS */
-
   g_thread_join (input1->thread);
   g_thread_join (input2->thread);
   input1->thread = NULL;
   input2->thread = NULL;
 
+  gst_message_unref (gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
+          GST_MESSAGE_EOS));
+
   gst_element_set_state (qtmux, GST_STATE_NULL);
   gst_element_set_state (filesink, GST_STATE_NULL);
+
+  gst_element_set_bus (filesink, NULL);
 
   check_output (location, input1, input2);
 
