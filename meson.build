@@ -34,6 +34,8 @@ plugins = []
 cc = meson.get_compiler('c')
 cxx = meson.get_compiler('cpp')
 
+have_objc = add_languages('objc', required : false)
+
 cdata = configuration_data()
 
 if cc.get_id() == 'msvc'
@@ -71,6 +73,9 @@ if cc.get_id() == 'msvc'
 elif cc.has_argument('-fvisibility=hidden')
   add_project_arguments('-fvisibility=hidden', language: 'c')
   add_project_arguments('-fvisibility=hidden', language: 'cpp')
+  if have_objc
+    add_project_arguments('-fvisibility=hidden', language: 'objc')
+  endif
   export_define = 'extern __attribute__ ((visibility ("default")))'
 else
   export_define = 'extern'
@@ -342,7 +347,9 @@ else
 endif
 
 if ['darwin', 'ios'].contains(host_system)
-  add_languages('objc')
+  if not have_objc
+    error('Building on MacOS/iOS/etc requires an ObjC compiler')
+  endif
   if host_system == 'ios'
     cdata.set('HAVE_IOS', 1)
   endif
