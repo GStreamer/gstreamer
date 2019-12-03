@@ -98,11 +98,11 @@ struct _GstInterlace
   int src_fps_d;
 
   GstBuffer *stored_frame;
-  gint stored_fields;
-  gint phase_index;
-  int field_index;              /* index of the next field to push, 0=top 1=bottom */
+  guint stored_fields;
+  guint phase_index;
+  guint field_index;            /* index of the next field to push, 0=top 1=bottom */
   GstClockTime timebase;
-  int fields_since_timebase;
+  guint fields_since_timebase;
   guint pattern_offset;         /* initial offset into the pattern */
   gboolean passthrough;
 };
@@ -849,7 +849,7 @@ gst_interlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   GstInterlace *interlace = GST_INTERLACE (parent);
   GstFlowReturn ret = GST_FLOW_OK;
   gint num_fields = 0;
-  int current_fields;
+  guint current_fields;
   const PulldownFormat *format;
   GstClockTime timestamp;
 
@@ -902,6 +902,7 @@ gst_interlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   current_fields = format->n_fields[interlace->phase_index];
   /* increment the phase index */
   interlace->phase_index++;
+  g_assert (interlace->phase_index < G_N_ELEMENTS (format->n_fields));
   if (!format->n_fields[interlace->phase_index]) {
     interlace->phase_index = 0;
   }
@@ -911,7 +912,7 @@ gst_interlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   num_fields = interlace->stored_fields + current_fields;
   while (num_fields >= 2) {
     GstBuffer *output_buffer;
-    int n_output_fields;
+    guint n_output_fields;
     gboolean interlaced = FALSE;
 
     GST_DEBUG ("have %d fields, %d current, %d stored",
@@ -948,6 +949,9 @@ gst_interlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
     gst_interlace_decorate_buffer (interlace, output_buffer, n_output_fields,
         interlaced);
+    /* Guard against overflows here. If this ever happens, resetting the phase
+     * above would never happen because of some bugs */
+    g_assert (interlace->fields_since_timebase <= G_MAXUINT - n_output_fields);
     interlace->fields_since_timebase += n_output_fields;
     interlace->field_index ^= (n_output_fields & 1);
 
