@@ -653,6 +653,28 @@ void
 gst_d3d11_device_thread_add (GstD3D11Device * device,
     GstD3D11DeviceThreadFunc func, gpointer data)
 {
+  gst_d3d11_device_thread_add_full (device,
+      G_PRIORITY_DEFAULT, func, data, NULL);
+}
+
+/**
+ * gst_d3d11_device_thread_add_full:
+ * @device: a #GstD3D11Device
+ * @priority: the priority at which to run @func
+ * @func: (scope call): a #GstD3D11DeviceThreadFunc
+ * @data: (closure): user data to call @func with
+ * @notify: (nullable): a function to call when @data is no longer in use, or %NULL.
+ *
+ * Execute @func in the D3DDevice thread of @device with @data with specified
+ * @priority
+ *
+ * MT-safe
+ */
+void
+gst_d3d11_device_thread_add_full (GstD3D11Device * device,
+    gint priority, GstD3D11DeviceThreadFunc func, gpointer data,
+    GDestroyNotify notify)
+{
   GstD3D11DevicePrivate *priv;
   MessageData msg = { 0, };
 
@@ -671,8 +693,8 @@ gst_d3d11_device_thread_add (GstD3D11Device * device,
   msg.data = data;
   msg.fired = FALSE;
 
-  g_main_context_invoke (priv->main_context,
-      (GSourceFunc) gst_d3d11_device_message_callback, &msg);
+  g_main_context_invoke_full (priv->main_context, priority,
+      (GSourceFunc) gst_d3d11_device_message_callback, &msg, notify);
 
   g_mutex_lock (&priv->lock);
   while (!msg.fired)

@@ -97,6 +97,12 @@ void                  gst_d3d11_device_thread_add         (GstD3D11Device * devi
                                                            GstD3D11DeviceThreadFunc func,
                                                            gpointer data);
 
+void                  gst_d3d11_device_thread_add_full    (GstD3D11Device * device,
+                                                           gint priority,
+                                                           GstD3D11DeviceThreadFunc func,
+                                                           gpointer data,
+                                                           GDestroyNotify notify);
+
 ID3D11Texture2D *     gst_d3d11_device_create_texture     (GstD3D11Device * device,
                                                            const D3D11_TEXTURE2D_DESC * desc,
                                                            const D3D11_SUBRESOURCE_DATA *inital_data);
