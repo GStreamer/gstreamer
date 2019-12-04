@@ -421,6 +421,10 @@ valgrind ges:
       -Dvaapi=disabled
       -Ddevtools=disabled
   script:
+    # Make sure powershell exists on errors
+    # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-6
+    - $ErrorActionPreference = "Stop"
+
     - git clone https://gitlab.freedesktop.org/gstreamer/gst-build.git $env:CI_PROJECT_DIR/gst-build
     - cd $env:CI_PROJECT_DIR/gst-build
     - cp -r C:/subprojects/* subprojects/
@@ -464,6 +468,10 @@ build vs2017 x86:
 build msys2 :
   extends: '.build windows'
   script:
+    # Make sure powershell exists on errors
+    # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-6
+    - $ErrorActionPreference = "Stop"
+
     # For some reason docker build hangs if this is included in the image, needs more troubleshooting
     - $env:PATH += ';C:\msys64\usr\bin;C:\msys64\mingw64\bin;C:\msys64\mingw32\bin'
     - C:\msys64\usr\bin\bash -c "pacman-key --init && pacman-key --populate msys2 && pacman-key --refresh-keys || true"
