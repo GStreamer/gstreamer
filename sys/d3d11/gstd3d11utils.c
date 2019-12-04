@@ -27,22 +27,9 @@
 #include <windows.h>
 #include <versionhelpers.h>
 
-GST_DEBUG_CATEGORY_STATIC (gst_d3d11_utils_debug);
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
-
-static GstDebugCategory *
-_init_d3d11_utils_debug (void)
-{
-  static volatile gsize _init = 0;
-
-  if (g_once_init_enter (&_init)) {
-    GST_DEBUG_CATEGORY_INIT (gst_d3d11_utils_debug, "d3d11utils", 0,
-        "Direct3D11 Utilities");
-    g_once_init_leave (&_init, 1);
-  }
-
-  return gst_d3d11_utils_debug;
-}
+GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_utils_debug);
+#define GST_CAT_DEFAULT gst_d3d11_utils_debug
 
 static void
 _init_context_debug (void)
@@ -54,8 +41,6 @@ _init_context_debug (void)
     g_once_init_leave (&_init, 1);
   }
 }
-
-#define GST_CAT_DEFAULT _init_d3d11_utils_debug()
 
 /**
  * gst_d3d11_handle_set_context:
@@ -79,7 +64,6 @@ gst_d3d11_handle_set_context (GstElement * element, GstContext * context,
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (device != NULL, FALSE);
 
-  _init_d3d11_utils_debug ();
   _init_context_debug ();
 
   if (!context)
@@ -153,7 +137,6 @@ gst_d3d11_handle_context_query (GstElement * element, GstQuery * query,
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (GST_IS_QUERY (query), FALSE);
 
-  _init_d3d11_utils_debug ();
   _init_context_debug ();
 
   GST_LOG_OBJECT (element, "handle context query %" GST_PTR_FORMAT, query);
@@ -298,7 +281,6 @@ gst_d3d11_ensure_element_data (GstElement * element, gint adapter,
   g_return_val_if_fail (element != NULL, FALSE);
   g_return_val_if_fail (device != NULL, FALSE);
 
-  _init_d3d11_utils_debug ();
   _init_context_debug ();
 
   if (*device) {

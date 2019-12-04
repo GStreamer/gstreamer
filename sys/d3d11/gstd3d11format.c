@@ -26,27 +26,8 @@
 #include "gstd3d11device.h"
 #include "gstd3d11memory.h"
 
-#ifndef GST_DISABLE_GST_DEBUG
-#define GST_CAT_DEFAULT ensure_debug_category()
-static GstDebugCategory *
-ensure_debug_category (void)
-{
-  static gsize cat_gonce = 0;
-
-  if (g_once_init_enter (&cat_gonce)) {
-    gsize cat_done;
-
-    cat_done = (gsize) _gst_debug_category_new ("d3d11format", 0,
-        "Direct3D11 Format");
-
-    g_once_init_leave (&cat_gonce, cat_done);
-  }
-
-  return (GstDebugCategory *) cat_gonce;
-}
-#else
-#define ensure_debug_category() /* NOOP */
-#endif /* GST_DISABLE_GST_DEBUG */
+GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_format_debug);
+#define GST_CAT_DEFAULT gst_d3d11_format_debug
 
 /* Following formats were introduced since Windows 8
  * DXGI_FORMAT_AYUV

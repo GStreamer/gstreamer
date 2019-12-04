@@ -29,7 +29,7 @@
 #endif
 
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
-GST_DEBUG_CATEGORY_STATIC (gst_d3d11_device_debug);
+GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_device_debug);
 #define GST_CAT_DEFAULT gst_d3d11_device_debug
 
 #ifdef HAVE_D3D11SDKLAYER_H
@@ -178,8 +178,6 @@ gst_d3d11_device_class_init (GstD3D11DeviceClass * klass)
           "Human readable device description", NULL,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
-  GST_DEBUG_CATEGORY_INIT (gst_d3d11_device_debug,
-      "d3d11device", 0, "d3d11 device");
   GST_DEBUG_CATEGORY_GET (GST_CAT_CONTEXT, "GST_CONTEXT");
 }
 
@@ -542,13 +540,6 @@ gst_d3d11_device_new (guint adapter)
 {
   GstD3D11Device *device = NULL;
   GstD3D11DevicePrivate *priv;
-  static volatile gsize _init = 0;
-
-  if (g_once_init_enter (&_init)) {
-    GST_DEBUG_CATEGORY_INIT (gst_d3d11_device_debug, "d3d11device", 0,
-        "d3d11 device");
-    g_once_init_leave (&_init, 1);
-  }
 
   device = g_object_new (GST_TYPE_D3D11_DEVICE, "adapter", adapter, NULL);
 

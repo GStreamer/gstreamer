@@ -30,6 +30,9 @@
 
 GST_DEBUG_CATEGORY (gst_d3d11_shader_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_colorconverter_debug);
+GST_DEBUG_CATEGORY (gst_d3d11_utils_debug);
+GST_DEBUG_CATEGORY (gst_d3d11_format_debug);
+GST_DEBUG_CATEGORY (gst_d3d11_device_debug);
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -38,6 +41,12 @@ plugin_init (GstPlugin * plugin)
       "d3d11shader", 0, "d3d11shader");
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_colorconverter_debug,
       "d3d11colorconverter", 0, "d3d11colorconverter");
+  GST_DEBUG_CATEGORY_INIT (gst_d3d11_utils_debug,
+      "d3d11utils", 0, "d3d11 utility functions");
+  GST_DEBUG_CATEGORY_INIT (gst_d3d11_format_debug,
+      "d3d11format", 0, "d3d11 specific formats");
+  GST_DEBUG_CATEGORY_INIT (gst_d3d11_device_debug,
+      "d3d11device", 0, "d3d11 device object");
 
   gst_element_register (plugin,
       "d3d11upload", GST_RANK_NONE, GST_TYPE_D3D11_UPLOAD);
