@@ -195,6 +195,8 @@ d3d_format_to_string (D3DFORMAT format)
       CASE (D3DFMT_A32B32G32R32F);
       CASE (D3DFMT_CxV8U8);
       CASE (D3DFMT_FORCE_DWORD);
+    default:
+      break;
   }
 
   return "UNKNOWN";
