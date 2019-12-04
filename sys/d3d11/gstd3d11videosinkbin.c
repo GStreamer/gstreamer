@@ -215,29 +215,21 @@ gst_d3d11_video_sink_bin_init (GstD3D11VideoSinkBin * self)
   GstPad *pad;
 
   self->upload = gst_element_factory_make ("d3d11upload", NULL);
-
   if (!self->upload) {
     GST_ERROR_OBJECT (self, "d3d11upload unavailable");
     return;
   }
 
-  self->convert = gst_element_factory_make ("d3d11colorconvert", NULL);
-
-  if (!self->convert) {
-    GST_ERROR_OBJECT (self, "d3d11colorconvert unavailable");
-    return;
-  }
-
   self->sink = gst_element_factory_make ("d3d11videosinkelement", NULL);
   if (!self->sink) {
+    gst_clear_object (&self->upload);
     GST_ERROR_OBJECT (self, "d3d11videosinkelement unavailable");
     return;
   }
 
-  gst_bin_add_many (GST_BIN (self),
-      self->upload, self->convert, self->sink, NULL);
+  gst_bin_add_many (GST_BIN (self), self->upload, self->sink, NULL);
 
-  gst_element_link_many (self->upload, self->convert, self->sink, NULL);
+  gst_element_link_many (self->upload, self->sink, NULL);
 
   pad = gst_element_get_static_pad (self->upload, "sink");
 

@@ -47,7 +47,6 @@ struct _GstD3D11VideoSinkBin
   GstPad *sinkpad;
 
   GstElement *upload;
-  GstElement *convert;
   GstElement *sink;
 };
 
