@@ -212,11 +212,12 @@ gst_device_create_element (GstDevice * device, const gchar * name)
   if (klass->create_element)
     element = klass->create_element (device, name);
 
-  /* Ensure that the reference is floating. Bindings might have a hard time
-   * making sure that the reference is indeed still floating after returning
-   * here */
-  if (element)
-    g_object_force_floating ((GObject *) element);
+  if (element) {
+    /* The reference we receive here should be floating, but we can't force
+     * it at our level. Simply assert to make the issue obvious to bindings
+     * developers */
+    g_assert (g_object_is_floating ((GObject *) element));
+  }
 
   return element;
 }
