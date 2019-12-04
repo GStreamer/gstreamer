@@ -429,7 +429,7 @@ valgrind ges:
     - cd $env:CI_PROJECT_DIR/gst-build
     - cp -r C:/subprojects/* subprojects/
     # Run the git-update script and feed it the manifest to setup the environment
-    - cd $env:CI_PROJECT_DIR/gst-build && python git-update --no-interaction --manifest=$env:CI_PROJECT_DIR/manifest.xml
+    - cd $env:CI_PROJECT_DIR/gst-build;  python git-update --no-interaction --manifest=$env:CI_PROJECT_DIR/manifest.xml
     # For some reason, options are separated by newline instead of space, so we
     # have to replace them first.
     - $env:MESON_ARGS = $env:MESON_ARGS.replace("`n"," ")
@@ -483,7 +483,7 @@ build msys2 :
     - cp -r C:\subprojects\* subprojects\
 
     # Run the git-update script and feed it the manifest to setup the environment
-    - cd $env:CI_PROJECT_DIR/gst-build && python git-update --no-interaction --manifest=$env:CI_PROJECT_DIR/manifest.xml
+    - cd $env:CI_PROJECT_DIR/gst-build; python git-update --no-interaction --manifest=$env:CI_PROJECT_DIR/manifest.xml
     # For some reason, options are separated by newline instead of space, so we
     # have to replace them first.
     - $env:MESON_ARGS = $env:MESON_ARGS.replace("`n"," ")
