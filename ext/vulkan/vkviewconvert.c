@@ -1877,6 +1877,10 @@ gst_vulkan_view_convert_set_caps (GstBaseTransform * bt, GstCaps * in_caps,
           &vfilter->out_info))
     return FALSE;
 
+  if (conv->uniform)
+    gst_memory_unref (conv->uniform);
+  conv->uniform = NULL;
+
   return TRUE;
 }
 
