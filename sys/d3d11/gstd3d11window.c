@@ -648,8 +648,8 @@ gst_d3d11_window_on_size (GstD3D11Window * self,
   GST_LOG_OBJECT (self, "WM_PAINT, surface %ux%u",
       self->surface_width, self->surface_height);
 
-  gst_d3d11_device_thread_add (self->device,
-      (GstD3D11DeviceThreadFunc) gst_d3d11_window_on_resize, self);
+  gst_d3d11_device_thread_add_full (self->device, G_PRIORITY_HIGH,
+      (GstD3D11DeviceThreadFunc) gst_d3d11_window_on_resize, self, NULL);
 }
 
 static void
