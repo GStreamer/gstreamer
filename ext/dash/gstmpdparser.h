@@ -42,6 +42,7 @@
 #include "gstmpdsegmenttemplatenode.h"
 #include "gstmpdsegmenturlnode.h"
 #include "gstmpdsegmentlistnode.h"
+#include "gstmpdsegmentbasenode.h"
 #include "gstmpdperiodnode.h"
 #include "gstmpdrepresentationnode.h"
 #include "gstmpdsubrepresentationnode.h"
@@ -49,6 +50,12 @@
 #include "gstmpdadaptationsetnode.h"
 #include "gstmpdsubsetnode.h"
 #include "gstmpdprograminformationnode.h"
+#include "gstmpdlocationnode.h"
+#include "gstmpdreportingnode.h"
+#include "gstmpdurltypenode.h"
+#include "gstmpddescriptortypenode.h"
+#include "gstmpdrepresentationbasenode.h"
+#include "gstmpdmultsegmentbasenode.h"
 
 G_BEGIN_DECLS
 
@@ -129,7 +136,7 @@ struct _GstActiveStream
   GstMPDAdaptationSetNode *cur_adapt_set;        /* active adaptation set */
   gint representation_idx;                    /* index of current representation */
   GstMPDRepresentationNode *cur_representation;  /* active representation */
-  GstMPDSegmentBaseType *cur_segment_base;       /* active segment base */
+  GstMPDSegmentBaseNode *cur_segment_base;       /* active segment base */
   GstMPDSegmentListNode *cur_segment_list;       /* active segment list */
   GstMPDSegmentTemplateNode *cur_seg_template;   /* active segment template */
   gint segment_index;                         /* index of next sequence chunk */
@@ -155,7 +162,7 @@ void gst_mpdparser_media_fragment_info_clear (GstMediaFragmentInfo * fragment);
 /* Active stream methods*/
 void gst_mpdparser_init_active_stream_segments (GstActiveStream * stream);
 gchar *gst_mpdparser_get_mediaURL (GstActiveStream * stream, GstMPDSegmentURLNode * segmentURL);
-const gchar *gst_mpdparser_get_initializationURL (GstActiveStream * stream, GstMPDURLType * InitializationURL);
+const gchar *gst_mpdparser_get_initializationURL (GstActiveStream * stream, GstMPDURLTypeNode * InitializationURL);
 gchar *gst_mpdparser_build_URL_from_template (const gchar * url_template, const gchar * id, guint number, guint bandwidth, guint64 time);
 
 G_END_DECLS

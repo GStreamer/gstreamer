@@ -21,8 +21,7 @@
 #include "gstmpdperiodnode.h"
 #include "gstmpdparser.h"
 
-G_DEFINE_TYPE (GstMPDPeriodNode, gst_mpd_period_node, GST_TYPE_OBJECT);
-
+G_DEFINE_TYPE (GstMPDPeriodNode, gst_mpd_period_node, GST_TYPE_MPD_NODE);
 /* GObject VMethods */
 
 static void
@@ -32,7 +31,7 @@ gst_mpd_period_node_finalize (GObject * object)
 
   if (self->id)
     xmlFree (self->id);
-  gst_mpd_helper_segment_base_type_free (self->SegmentBase);
+  gst_mpd_segment_base_node_free (self->SegmentBase);
   gst_mpd_segment_list_node_free (self->SegmentList);
   gst_mpd_segment_template_node_free (self->SegmentTemplate);
   g_list_free_full (self->AdaptationSets,
@@ -45,11 +44,58 @@ gst_mpd_period_node_finalize (GObject * object)
   G_OBJECT_CLASS (gst_mpd_period_node_parent_class)->finalize (object);
 }
 
+/* Base class */
+
+static xmlNodePtr
+gst_mpd_period_get_xml_node (GstMPDNode * node)
+{
+  xmlNodePtr period_xml_node = NULL;
+  GstMPDPeriodNode *self = GST_MPD_PERIOD_NODE (node);
+
+  period_xml_node = xmlNewNode (NULL, (xmlChar *) "Period");
+
+  if (self->id)
+    gst_xml_helper_set_prop_string (period_xml_node, "id", self->id);
+
+  gst_xml_helper_set_prop_duration (period_xml_node, "start", self->start);
+  gst_xml_helper_set_prop_duration (period_xml_node, "duration",
+      self->duration);
+  gst_xml_helper_set_prop_boolean (period_xml_node, "bitstreamSwitching",
+      self->bitstreamSwitching);
+
+  if (self->SegmentBase)
+    gst_mpd_node_add_child_node (GST_MPD_NODE (self->SegmentBase),
+        period_xml_node);
+
+  if (self->SegmentList)
+    gst_mpd_mult_segment_base_node_add_child_node (GST_MPD_NODE
+        (self->SegmentList), period_xml_node);
+
+  if (self->SegmentTemplate)
+    gst_mpd_mult_segment_base_node_add_child_node (GST_MPD_NODE
+        (self->SegmentTemplate), period_xml_node);
+
+  g_list_foreach (self->AdaptationSets,
+      gst_mpd_representation_base_node_get_list_item, period_xml_node);
+  g_list_foreach (self->Subsets, gst_mpd_node_get_list_item, period_xml_node);
+  g_list_foreach (self->BaseURLs, gst_mpd_node_get_list_item, period_xml_node);
+
+
+  return period_xml_node;
+}
+
 static void
 gst_mpd_period_node_class_init (GstMPDPeriodNodeClass * klass)
 {
-  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GObjectClass *object_class;
+  GstMPDNodeClass *m_klass;
+
+  object_class = G_OBJECT_CLASS (klass);
+  m_klass = GST_MPD_NODE_CLASS (klass);
+
   object_class->finalize = gst_mpd_period_node_finalize;
+
+  m_klass->get_xml_node = gst_mpd_period_get_xml_node;
 }
 
 static void

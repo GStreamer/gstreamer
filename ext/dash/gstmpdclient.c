@@ -28,7 +28,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_dash_mpd_client_debug);
 
 G_DEFINE_TYPE (GstMPDClient, gst_mpd_client, GST_TYPE_OBJECT);
 
-static GstMPDSegmentBaseType *gst_mpd_client_get_segment_base (GstMPDPeriodNode
+static GstMPDSegmentBaseNode *gst_mpd_client_get_segment_base (GstMPDPeriodNode
     * Period, GstMPDAdaptationSetNode * AdaptationSet,
     GstMPDRepresentationNode * Representation);
 static GstMPDSegmentListNode *gst_mpd_client_get_segment_list (GstMPDClient *
@@ -202,12 +202,12 @@ gst_mpd_client_fetch_external_segment_list (GstMPDClient * client,
   return new_segment_list;
 }
 
-static GstMPDSegmentBaseType *
+static GstMPDSegmentBaseNode *
 gst_mpd_client_get_segment_base (GstMPDPeriodNode * Period,
     GstMPDAdaptationSetNode * AdaptationSet,
     GstMPDRepresentationNode * Representation)
 {
-  GstMPDSegmentBaseType *SegmentBase = NULL;
+  GstMPDSegmentBaseNode *SegmentBase = NULL;
 
   if (Representation && Representation->SegmentBase) {
     SegmentBase = Representation->SegmentBase;
@@ -219,17 +219,24 @@ gst_mpd_client_get_segment_base (GstMPDPeriodNode * Period,
   /* the SegmentBase element could be encoded also inside a SegmentList element */
   if (SegmentBase == NULL) {
     if (Representation && Representation->SegmentList
-        && Representation->SegmentList->MultSegBaseType
-        && Representation->SegmentList->MultSegBaseType->SegBaseType) {
-      SegmentBase = Representation->SegmentList->MultSegBaseType->SegBaseType;
+        && GST_MPD_MULT_SEGMENT_BASE_NODE (Representation->SegmentList)
+        && GST_MPD_MULT_SEGMENT_BASE_NODE (Representation->
+            SegmentList)->SegmentBase) {
+      SegmentBase =
+          GST_MPD_MULT_SEGMENT_BASE_NODE (Representation->
+          SegmentList)->SegmentBase;
     } else if (AdaptationSet && AdaptationSet->SegmentList
-        && AdaptationSet->SegmentList->MultSegBaseType
-        && AdaptationSet->SegmentList->MultSegBaseType->SegBaseType) {
-      SegmentBase = AdaptationSet->SegmentList->MultSegBaseType->SegBaseType;
+        && GST_MPD_MULT_SEGMENT_BASE_NODE (AdaptationSet->SegmentList)
+        && GST_MPD_MULT_SEGMENT_BASE_NODE (AdaptationSet->
+            SegmentList)->SegmentBase) {
+      SegmentBase =
+          GST_MPD_MULT_SEGMENT_BASE_NODE (AdaptationSet->
+          SegmentList)->SegmentBase;
     } else if (Period && Period->SegmentList
-        && Period->SegmentList->MultSegBaseType
-        && Period->SegmentList->MultSegBaseType->SegBaseType) {
-      SegmentBase = Period->SegmentList->MultSegBaseType->SegBaseType;
+        && GST_MPD_MULT_SEGMENT_BASE_NODE (Period->SegmentList)
+        && GST_MPD_MULT_SEGMENT_BASE_NODE (Period->SegmentList)->SegmentBase) {
+      SegmentBase =
+          GST_MPD_MULT_SEGMENT_BASE_NODE (Period->SegmentList)->SegmentBase;
     }
   }
 
@@ -281,7 +288,7 @@ gst_mpd_client_get_segment_duration (GstMPDClient * client,
     GstActiveStream * stream, guint64 * scale_dur)
 {
   GstStreamPeriod *stream_period;
-  GstMPDMultSegmentBaseType *base = NULL;
+  GstMPDMultSegmentBaseNode *base = NULL;
   GstClockTime duration = 0;
 
   g_return_val_if_fail (stream != NULL, GST_CLOCK_TIME_NONE);
@@ -289,12 +296,12 @@ gst_mpd_client_get_segment_duration (GstMPDClient * client,
   g_return_val_if_fail (stream_period != NULL, GST_CLOCK_TIME_NONE);
 
   if (stream->cur_segment_list) {
-    base = stream->cur_segment_list->MultSegBaseType;
+    base = GST_MPD_MULT_SEGMENT_BASE_NODE (stream->cur_segment_list);
   } else if (stream->cur_seg_template) {
-    base = stream->cur_seg_template->MultSegBaseType;
+    base = GST_MPD_MULT_SEGMENT_BASE_NODE (stream->cur_seg_template);
   }
 
-  if (base == NULL || base->SegBaseType == NULL) {
+  if (base == NULL || base->SegmentBase == NULL) {
     /* this may happen when we have a single segment */
     duration = stream_period->duration;
     if (scale_dur)
@@ -304,7 +311,7 @@ gst_mpd_client_get_segment_duration (GstMPDClient * client,
     duration = base->duration * GST_SECOND;
     if (scale_dur)
       *scale_dur = duration;
-    duration /= base->SegBaseType->timescale;
+    duration /= base->SegmentBase->timescale;
   }
 
   return duration;
@@ -387,6 +394,22 @@ gst_mpd_client_parse (GstMPDClient * client, const gchar * data, gint size)
     gst_mpd_client_check_profiles (client);
     gst_mpd_client_fetch_on_load_external_resources (client);
   }
+
+  return ret;
+}
+
+
+gboolean
+gst_mpd_client_get_xml_content (GstMPDClient * client, gchar ** data,
+    gint * size)
+{
+  gboolean ret = FALSE;
+
+  g_return_val_if_fail (client != NULL, ret);
+  g_return_val_if_fail (client->mpd_root_node != NULL, ret);
+
+  ret = gst_mpd_node_get_xml_buffer (GST_MPD_NODE (client->mpd_root_node),
+      data, (int *) size);
 
   return ret;
 }
@@ -695,13 +718,15 @@ static void
 gst_mpd_client_stream_update_presentation_time_offset (GstMPDClient * client,
     GstActiveStream * stream)
 {
-  GstMPDSegmentBaseType *segbase = NULL;
+  GstMPDSegmentBaseNode *segbase = NULL;
 
   /* Find the used segbase */
   if (stream->cur_segment_list) {
-    segbase = stream->cur_segment_list->MultSegBaseType->SegBaseType;
+    segbase =
+        GST_MPD_MULT_SEGMENT_BASE_NODE (stream->cur_segment_list)->SegmentBase;
   } else if (stream->cur_seg_template) {
-    segbase = stream->cur_seg_template->MultSegBaseType->SegBaseType;
+    segbase =
+        GST_MPD_MULT_SEGMENT_BASE_NODE (stream->cur_seg_template)->SegmentBase;
   } else if (stream->cur_segment_base) {
     segbase = stream->cur_segment_base;
   }
@@ -792,26 +817,32 @@ gst_mpd_client_setup_representation (GstMPDClient * client,
       }
 
       /* build segment list */
-      i = stream->cur_segment_list->MultSegBaseType->startNumber;
+      i = GST_MPD_MULT_SEGMENT_BASE_NODE (stream->
+          cur_segment_list)->startNumber;
       start = 0;
       start_time = PeriodStart;
 
       GST_LOG ("Building media segment list using a SegmentList node");
-      if (stream->cur_segment_list->MultSegBaseType->SegmentTimeline) {
+      if (GST_MPD_MULT_SEGMENT_BASE_NODE (stream->
+              cur_segment_list)->SegmentTimeline) {
         GstMPDSegmentTimelineNode *timeline;
         GstMPDSNode *S;
         GList *list;
         GstClockTime presentationTimeOffset;
-        GstMPDSegmentBaseType *segbase;
+        GstMPDSegmentBaseNode *segbase;
 
-        segbase = stream->cur_segment_list->MultSegBaseType->SegBaseType;
+        segbase =
+            GST_MPD_MULT_SEGMENT_BASE_NODE (stream->
+            cur_segment_list)->SegmentBase;
         presentationTimeOffset =
             gst_util_uint64_scale (segbase->presentationTimeOffset, GST_SECOND,
             segbase->timescale);
         GST_LOG ("presentationTimeOffset = %" G_GUINT64_FORMAT,
             presentationTimeOffset);
 
-        timeline = stream->cur_segment_list->MultSegBaseType->SegmentTimeline;
+        timeline =
+            GST_MPD_MULT_SEGMENT_BASE_NODE (stream->
+            cur_segment_list)->SegmentTimeline;
         for (list = g_queue_peek_head_link (&timeline->S); list;
             list = g_list_next (list)) {
           guint timescale;
@@ -820,7 +851,8 @@ gst_mpd_client_setup_representation (GstMPDClient * client,
           GST_LOG ("Processing S node: d=%" G_GUINT64_FORMAT " r=%d t=%"
               G_GUINT64_FORMAT, S->d, S->r, S->t);
           timescale =
-              stream->cur_segment_list->MultSegBaseType->SegBaseType->timescale;
+              GST_MPD_MULT_SEGMENT_BASE_NODE (stream->
+              cur_segment_list)->SegmentBase->timescale;
           duration = gst_util_uint64_scale (S->d, GST_SECOND, timescale);
 
           if (S->t > 0) {
@@ -873,8 +905,7 @@ gst_mpd_client_setup_representation (GstMPDClient * client,
       stream->cur_seg_template = stream_period->period->SegmentTemplate;
     }
 
-    if (stream->cur_seg_template == NULL
-        || stream->cur_seg_template->MultSegBaseType == NULL) {
+    if (stream->cur_seg_template == NULL) {
 
       gst_mpdparser_init_active_stream_segments (stream);
       /* here we should have a single segment for each representation, whose URL is encoded in the baseURL element */
@@ -884,11 +915,11 @@ gst_mpd_client_setup_representation (GstMPDClient * client,
       }
     } else {
       GstClockTime presentationTimeOffset;
-      GstMPDMultSegmentBaseType *mult_seg =
-          stream->cur_seg_template->MultSegBaseType;
+      GstMPDMultSegmentBaseNode *mult_seg =
+          GST_MPD_MULT_SEGMENT_BASE_NODE (stream->cur_seg_template);
       presentationTimeOffset =
-          gst_util_uint64_scale (mult_seg->SegBaseType->presentationTimeOffset,
-          GST_SECOND, mult_seg->SegBaseType->timescale);
+          gst_util_uint64_scale (mult_seg->SegmentBase->presentationTimeOffset,
+          GST_SECOND, mult_seg->SegmentBase->timescale);
       GST_LOG ("presentationTimeOffset = %" GST_TIME_FORMAT,
           GST_TIME_ARGS (presentationTimeOffset));
       /* build segment list */
@@ -913,7 +944,7 @@ gst_mpd_client_setup_representation (GstMPDClient * client,
           S = (GstMPDSNode *) list->data;
           GST_LOG ("Processing S node: d=%" G_GUINT64_FORMAT " r=%u t=%"
               G_GUINT64_FORMAT, S->d, S->r, S->t);
-          timescale = mult_seg->SegBaseType->timescale;
+          timescale = mult_seg->SegmentBase->timescale;
           duration = gst_util_uint64_scale (S->d, GST_SECOND, timescale);
           if (S->t > 0) {
             start = S->t;
@@ -1625,8 +1656,8 @@ gst_mpd_client_stream_seek (GstMPDClient * client, GstActiveStream * stream,
     guint segments_count = gst_mpd_client_get_segments_counts (client, stream);
     GstClockTime index_time;
 
-    g_return_val_if_fail (stream->cur_seg_template->MultSegBaseType->
-        SegmentTimeline == NULL, FALSE);
+    g_return_val_if_fail (GST_MPD_MULT_SEGMENT_BASE_NODE
+        (stream->cur_seg_template)->SegmentTimeline == NULL, FALSE);
     if (!GST_CLOCK_TIME_IS_VALID (duration)) {
       return FALSE;
     }
@@ -1775,8 +1806,8 @@ gst_mpd_client_get_next_fragment_timestamp (GstMPDClient * client,
         gst_mpd_client_get_segment_duration (client, stream, NULL);
     guint segments_count = gst_mpd_client_get_segments_counts (client, stream);
 
-    g_return_val_if_fail (stream->cur_seg_template->MultSegBaseType->
-        SegmentTimeline == NULL, FALSE);
+    g_return_val_if_fail (GST_MPD_MULT_SEGMENT_BASE_NODE
+        (stream->cur_seg_template)->SegmentTimeline == NULL, FALSE);
     if (!GST_CLOCK_TIME_IS_VALID (duration) || (segments_count > 0
             && stream->segment_index >= segments_count)) {
       return FALSE;
@@ -1878,8 +1909,8 @@ gst_mpd_client_get_next_fragment (GstMPDClient * client,
         stream, NULL);
     guint segments_count = gst_mpd_client_get_segments_counts (client, stream);
 
-    g_return_val_if_fail (stream->cur_seg_template->MultSegBaseType->
-        SegmentTimeline == NULL, FALSE);
+    g_return_val_if_fail (GST_MPD_MULT_SEGMENT_BASE_NODE
+        (stream->cur_seg_template)->SegmentTimeline == NULL, FALSE);
     if (!GST_CLOCK_TIME_IS_VALID (duration) || (segments_count > 0
             && stream->segment_index >= segments_count)) {
       return FALSE;
@@ -1949,7 +1980,8 @@ gst_mpd_client_get_next_fragment (GstMPDClient * client,
           gst_mpdparser_build_URL_from_template (stream->cur_seg_template->
           media, stream->cur_representation->id,
           stream->segment_index +
-          stream->cur_seg_template->MultSegBaseType->startNumber,
+          GST_MPD_MULT_SEGMENT_BASE_NODE (stream->
+              cur_seg_template)->startNumber,
           stream->cur_representation->bandwidth,
           stream->segment_index * fragment->duration);
       if (stream->cur_seg_template->index) {
@@ -1957,7 +1989,8 @@ gst_mpd_client_get_next_fragment (GstMPDClient * client,
             gst_mpdparser_build_URL_from_template (stream->cur_seg_template->
             index, stream->cur_representation->id,
             stream->segment_index +
-            stream->cur_seg_template->MultSegBaseType->startNumber,
+            GST_MPD_MULT_SEGMENT_BASE_NODE (stream->
+                cur_seg_template)->startNumber,
             stream->cur_representation->bandwidth,
             stream->segment_index * fragment->duration);
       }
@@ -2255,8 +2288,8 @@ gst_mpd_client_get_next_fragment_duration (GstMPDClient * client,
         gst_mpd_client_get_segment_duration (client, stream, NULL);
     guint segments_count = gst_mpd_client_get_segments_counts (client, stream);
 
-    g_return_val_if_fail (stream->cur_seg_template->
-        MultSegBaseType->SegmentTimeline == NULL, 0);
+    g_return_val_if_fail (GST_MPD_MULT_SEGMENT_BASE_NODE
+        (stream->cur_seg_template)->SegmentTimeline == NULL, 0);
 
     if (!GST_CLOCK_TIME_IS_VALID (duration) || (segments_count > 0
             && seg_idx >= segments_count)) {
@@ -2440,9 +2473,10 @@ gst_mpd_client_get_rep_idx_with_max_bandwidth (GList * Representations,
     if (!representation)
       continue;
 
-    framerate = representation->RepresentationBase->frameRate;
+    framerate = GST_MPD_REPRESENTATION_BASE_NODE (representation)->frameRate;
     if (!framerate)
-      framerate = representation->RepresentationBase->maxFrameRate;
+      framerate =
+          GST_MPD_REPRESENTATION_BASE_NODE (representation)->maxFrameRate;
 
     if (framerate && max_video_framerate_n > 0) {
       if (gst_util_fraction_compare (framerate->num, framerate->den,
@@ -2451,10 +2485,12 @@ gst_mpd_client_get_rep_idx_with_max_bandwidth (GList * Representations,
     }
 
     if (max_video_width > 0
-        && representation->RepresentationBase->width > max_video_width)
+        && GST_MPD_REPRESENTATION_BASE_NODE (representation)->width >
+        max_video_width)
       continue;
     if (max_video_height > 0
-        && representation->RepresentationBase->height > max_video_height)
+        && GST_MPD_REPRESENTATION_BASE_NODE (representation)->height >
+        max_video_height)
       continue;
 
     if (representation->bandwidth <= max_bandwidth &&
@@ -2495,8 +2531,8 @@ gst_mpd_client_get_segments_counts (GstMPDClient * client,
 
   if (stream->segments)
     return stream->segments->len;
-  g_return_val_if_fail (stream->cur_seg_template->
-      MultSegBaseType->SegmentTimeline == NULL, 0);
+  g_return_val_if_fail (GST_MPD_MULT_SEGMENT_BASE_NODE
+      (stream->cur_seg_template)->SegmentTimeline == NULL, 0);
 
   stream_period = gst_mpd_client_get_stream_period (client);
   if (stream_period->duration != -1)
@@ -2552,16 +2588,20 @@ gst_mpd_client_active_stream_contains_subtitles (GstActiveStream * stream)
   const gchar *adapt_set_codecs;
   const gchar *rep_codecs;
 
-  mimeType = stream->cur_representation->RepresentationBase->mimeType;
+  mimeType =
+      GST_MPD_REPRESENTATION_BASE_NODE (stream->cur_representation)->mimeType;
   if (!mimeType)
-    mimeType = stream->cur_adapt_set->RepresentationBase->mimeType;
+    mimeType =
+        GST_MPD_REPRESENTATION_BASE_NODE (stream->cur_adapt_set)->mimeType;
 
   if (g_strcmp0 (mimeType, "application/ttml+xml") == 0 ||
       g_strcmp0 (mimeType, "text/vtt") == 0)
     return TRUE;
 
-  adapt_set_codecs = stream->cur_adapt_set->RepresentationBase->codecs;
-  rep_codecs = stream->cur_representation->RepresentationBase->codecs;
+  adapt_set_codecs =
+      GST_MPD_REPRESENTATION_BASE_NODE (stream->cur_adapt_set)->codecs;
+  rep_codecs =
+      GST_MPD_REPRESENTATION_BASE_NODE (stream->cur_representation)->codecs;
 
   return (adapt_set_codecs && g_str_has_prefix (adapt_set_codecs, "stpp"))
       || (rep_codecs && g_str_has_prefix (rep_codecs, "stpp"));
@@ -2577,9 +2617,11 @@ gst_mpd_client_get_stream_caps (GstActiveStream * stream)
       || stream->cur_representation == NULL)
     return NULL;
 
-  mimeType = stream->cur_representation->RepresentationBase->mimeType;
+  mimeType =
+      GST_MPD_REPRESENTATION_BASE_NODE (stream->cur_representation)->mimeType;
   if (mimeType == NULL) {
-    mimeType = stream->cur_adapt_set->RepresentationBase->mimeType;
+    mimeType =
+        GST_MPD_REPRESENTATION_BASE_NODE (stream->cur_adapt_set)->mimeType;
   }
 
   caps_string = gst_mpd_helper_mimetype_to_caps (mimeType);
@@ -2612,9 +2654,9 @@ gst_mpd_client_get_video_stream_width (GstActiveStream * stream)
       || stream->cur_representation == NULL)
     return 0;
 
-  width = stream->cur_representation->RepresentationBase->width;
+  width = GST_MPD_REPRESENTATION_BASE_NODE (stream->cur_representation)->width;
   if (width == 0) {
-    width = stream->cur_adapt_set->RepresentationBase->width;
+    width = GST_MPD_REPRESENTATION_BASE_NODE (stream->cur_adapt_set)->width;
   }
 
   return width;
@@ -2629,9 +2671,10 @@ gst_mpd_client_get_video_stream_height (GstActiveStream * stream)
       || stream->cur_representation == NULL)
     return 0;
 
-  height = stream->cur_representation->RepresentationBase->height;
+  height =
+      GST_MPD_REPRESENTATION_BASE_NODE (stream->cur_representation)->height;
   if (height == 0) {
-    height = stream->cur_adapt_set->RepresentationBase->height;
+    height = GST_MPD_REPRESENTATION_BASE_NODE (stream->cur_adapt_set)->height;
   }
 
   return height;
@@ -2645,32 +2688,50 @@ gst_mpd_client_get_video_stream_framerate (GstActiveStream * stream,
     return FALSE;
 
   if (stream->cur_adapt_set &&
-      stream->cur_adapt_set->RepresentationBase->frameRate != NULL) {
-    *fps_num = stream->cur_adapt_set->RepresentationBase->frameRate->num;
-    *fps_den = stream->cur_adapt_set->RepresentationBase->frameRate->den;
+      GST_MPD_REPRESENTATION_BASE_NODE (stream->cur_adapt_set)->frameRate !=
+      NULL) {
+    *fps_num =
+        GST_MPD_REPRESENTATION_BASE_NODE (stream->cur_adapt_set)->
+        frameRate->num;
+    *fps_den =
+        GST_MPD_REPRESENTATION_BASE_NODE (stream->cur_adapt_set)->
+        frameRate->den;
     return TRUE;
   }
 
   if (stream->cur_adapt_set &&
-      stream->cur_adapt_set->RepresentationBase->maxFrameRate != NULL) {
-    *fps_num = stream->cur_adapt_set->RepresentationBase->maxFrameRate->num;
-    *fps_den = stream->cur_adapt_set->RepresentationBase->maxFrameRate->den;
-    return TRUE;
-  }
-
-  if (stream->cur_representation &&
-      stream->cur_representation->RepresentationBase->frameRate != NULL) {
-    *fps_num = stream->cur_representation->RepresentationBase->frameRate->num;
-    *fps_den = stream->cur_representation->RepresentationBase->frameRate->den;
-    return TRUE;
-  }
-
-  if (stream->cur_representation &&
-      stream->cur_representation->RepresentationBase->maxFrameRate != NULL) {
+      GST_MPD_REPRESENTATION_BASE_NODE (stream->cur_adapt_set)->maxFrameRate !=
+      NULL) {
     *fps_num =
-        stream->cur_representation->RepresentationBase->maxFrameRate->num;
+        GST_MPD_REPRESENTATION_BASE_NODE (stream->cur_adapt_set)->
+        maxFrameRate->num;
     *fps_den =
-        stream->cur_representation->RepresentationBase->maxFrameRate->den;
+        GST_MPD_REPRESENTATION_BASE_NODE (stream->cur_adapt_set)->
+        maxFrameRate->den;
+    return TRUE;
+  }
+
+  if (stream->cur_representation &&
+      GST_MPD_REPRESENTATION_BASE_NODE (stream->
+          cur_representation)->frameRate != NULL) {
+    *fps_num =
+        GST_MPD_REPRESENTATION_BASE_NODE (stream->
+        cur_representation)->frameRate->num;
+    *fps_den =
+        GST_MPD_REPRESENTATION_BASE_NODE (stream->
+        cur_representation)->frameRate->den;
+    return TRUE;
+  }
+
+  if (stream->cur_representation &&
+      GST_MPD_REPRESENTATION_BASE_NODE (stream->
+          cur_representation)->maxFrameRate != NULL) {
+    *fps_num =
+        GST_MPD_REPRESENTATION_BASE_NODE (stream->
+        cur_representation)->maxFrameRate->num;
+    *fps_den =
+        GST_MPD_REPRESENTATION_BASE_NODE (stream->
+        cur_representation)->maxFrameRate->den;
     return TRUE;
   }
 
@@ -2686,9 +2747,13 @@ gst_mpd_client_get_audio_stream_rate (GstActiveStream * stream)
       || stream->cur_representation == NULL)
     return 0;
 
-  rate = stream->cur_representation->RepresentationBase->audioSamplingRate;
+  rate =
+      GST_MPD_REPRESENTATION_BASE_NODE (stream->
+      cur_representation)->audioSamplingRate;
   if (rate == NULL) {
-    rate = stream->cur_adapt_set->RepresentationBase->audioSamplingRate;
+    rate =
+        GST_MPD_REPRESENTATION_BASE_NODE (stream->
+        cur_adapt_set)->audioSamplingRate;
   }
 
   return rate ? atoi (rate) : 0;
@@ -2729,10 +2794,10 @@ gst_mpd_client_get_list_and_nb_of_audio_language (GstMPDClient * client,
       rep =
           gst_mpd_client_get_lowest_representation (adapt_set->Representations);
       mimeType = NULL;
-      if (rep->RepresentationBase)
-        mimeType = rep->RepresentationBase->mimeType;
-      if (!mimeType && adapt_set->RepresentationBase) {
-        mimeType = adapt_set->RepresentationBase->mimeType;
+      if (GST_MPD_REPRESENTATION_BASE_NODE (rep))
+        mimeType = GST_MPD_REPRESENTATION_BASE_NODE (rep)->mimeType;
+      if (!mimeType && GST_MPD_REPRESENTATION_BASE_NODE (adapt_set)) {
+        mimeType = GST_MPD_REPRESENTATION_BASE_NODE (adapt_set)->mimeType;
       }
 
       if (gst_mpd_helper_strncmp_ext (mimeType, this_mimeType) == 0) {

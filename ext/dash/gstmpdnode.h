@@ -18,29 +18,31 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef __GSTMPDBASEURLNODE_H__
-#define __GSTMPDBASEURLNODE_H__
+#ifndef __GSTMPDNODE_H__
+#define __GSTMPDNODE_H__
 
 #include <gst/gst.h>
-#include "gstmpdhelper.h"
-
+#include "gstxmlhelper.h"
 G_BEGIN_DECLS
 
-#define GST_TYPE_MPD_BASEURL_NODE gst_mpd_baseurl_node_get_type ()
-G_DECLARE_FINAL_TYPE (GstMPDBaseURLNode, gst_mpd_baseurl_node, GST, MPD_BASEURL_NODE, GstMPDNode)
+#define GST_TYPE_MPD_NODE gst_mpd_node_get_type ()
+G_DECLARE_DERIVABLE_TYPE (GstMPDNode, gst_mpd_node,GST, MPD_NODE, GstObject)
 
-struct _GstMPDBaseURLNode
-{
-  GstObject     parent_instance;
-  gchar *baseURL;
-  gchar *serviceLocation;
-  gchar *byteRange;
-  /* TODO add missing fields such as weight etc.*/
+typedef gboolean (*GstMPDGetXMLBuffer) (GstMPDNode * n, gchar ** doc_content, int *doc_size);
+typedef xmlNodePtr (*GstMPDGetXMLNode) (GstMPDNode * n);
+
+struct _GstMPDNodeClass {
+    GstObjectClass base;
+
+    GstMPDGetXMLBuffer get_xml_buffer;
+    GstMPDGetXMLNode get_xml_node;
 };
 
-GstMPDBaseURLNode * gst_mpd_baseurl_node_new (void);
-void gst_mpd_baseurl_node_free (GstMPDBaseURLNode* self);
+gboolean gst_mpd_node_get_xml_buffer (GstMPDNode * node, gchar ** xml_content, int * xml_size);
+xmlNodePtr gst_mpd_node_get_xml_pointer (GstMPDNode * node);
+
+void gst_mpd_node_get_list_item (gpointer data, gpointer user_data);
+void gst_mpd_node_add_child_node (GstMPDNode* data, xmlNodePtr user_data);
 
 G_END_DECLS
-
-#endif /* __GSTMPDBASEURLNODE_H__ */
+#endif /* __GSTMPDNODE_H__ */

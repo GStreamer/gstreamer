@@ -22,7 +22,7 @@
 #include "gstmpdparser.h"
 
 G_DEFINE_TYPE (GstMPDSegmentTimelineNode, gst_mpd_segment_timeline_node,
-    GST_TYPE_OBJECT);
+    GST_TYPE_MPD_NODE);
 
 /* GObject VMethods */
 
@@ -38,12 +38,35 @@ gst_mpd_segment_timeline_node_finalize (GObject * object)
       (object);
 }
 
+/* Base class */
+
+static xmlNodePtr
+gst_mpd_segment_timeline_get_xml_node (GstMPDNode * node)
+{
+  xmlNodePtr segment_timeline_xml_node = NULL;
+  GstMPDSegmentTimelineNode *self = GST_MPD_SEGMENT_TIMELINE_NODE (node);
+
+  segment_timeline_xml_node = xmlNewNode (NULL, (xmlChar *) "SegmentTimeline");
+
+  g_queue_foreach (&self->S, (GFunc) gst_mpd_node_get_list_item,
+      segment_timeline_xml_node);
+
+  return segment_timeline_xml_node;
+}
+
 static void
 gst_mpd_segment_timeline_node_class_init (GstMPDSegmentTimelineNodeClass *
     klass)
 {
-  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GObjectClass *object_class;
+  GstMPDNodeClass *m_klass;
+
+  object_class = G_OBJECT_CLASS (klass);
+  m_klass = GST_MPD_NODE_CLASS (klass);
+
   object_class->finalize = gst_mpd_segment_timeline_node_finalize;
+
+  m_klass->get_xml_node = gst_mpd_segment_timeline_get_xml_node;
 }
 
 static void

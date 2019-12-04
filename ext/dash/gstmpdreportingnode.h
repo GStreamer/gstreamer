@@ -18,29 +18,25 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef __GSTMPDBASEURLNODE_H__
-#define __GSTMPDBASEURLNODE_H__
+#ifndef __GSTMPDREPORTINGNODE_H__
+#define __GSTMPDREPORTINGNODE_H__
 
 #include <gst/gst.h>
 #include "gstmpdhelper.h"
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_MPD_BASEURL_NODE gst_mpd_baseurl_node_get_type ()
-G_DECLARE_FINAL_TYPE (GstMPDBaseURLNode, gst_mpd_baseurl_node, GST, MPD_BASEURL_NODE, GstMPDNode)
+#define GST_TYPE_MPD_REPORTING_NODE gst_mpd_reporting_node_get_type ()
+G_DECLARE_FINAL_TYPE (GstMPDReportingNode, gst_mpd_reporting_node, GST, MPD_REPORTING_NODE, GstMPDNode)
 
-struct _GstMPDBaseURLNode
+struct _GstMPDReportingNode
 {
   GstObject     parent_instance;
-  gchar *baseURL;
-  gchar *serviceLocation;
-  gchar *byteRange;
-  /* TODO add missing fields such as weight etc.*/
 };
 
-GstMPDBaseURLNode * gst_mpd_baseurl_node_new (void);
-void gst_mpd_baseurl_node_free (GstMPDBaseURLNode* self);
+GstMPDReportingNode * gst_mpd_reporting_node_new (void);
+void gst_mpd_reporting_node_free (GstMPDReportingNode* self);
 
 G_END_DECLS
 
-#endif /* __GSTMPDBASEURLNODE_H__ */
+#endif /* __GSTMPDREPORTINGNODE_H__ */

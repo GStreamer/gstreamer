@@ -22,25 +22,12 @@
 #define __GSTMPDSEGMENTTIMELINENODE_H__
 
 #include <gst/gst.h>
-#include "gstxmlhelper.h"
+#include "gstmpdnode.h"
 
 G_BEGIN_DECLS
 
 #define GST_TYPE_MPD_SEGMENT_TIMELINE_NODE gst_mpd_segment_timeline_node_get_type ()
-#define GST_MPD_SEGMENT_TIMELINE_NODE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_MPD_SEGMENT_TIMELINE_NODE, GstMPDSegmentTimelineNode))
-#define GST_MPD_SEGMENT_TIMELINE_NODE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_MPD_SEGMENT_TIMELINE_NODE, GstMPDSegmentTimelineNodeClass))
-#define GST_IS_MPD_SEGMENT_TIMELINE_NODE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MPD_SEGMENT_TIMELINE_NODE))
-#define GST_IS_MPD_SEGMENT_TIMELINE_NODE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MPD_SEGMENT_TIMELINE_NODE))
-#define GST_MPD_SEGMENT_TIMELINE_NODE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_MPD_SEGMENT_TIMELINE_NODE, GstMPDSegmentTimelineNodeClass))
-
-typedef struct _GstMPDSegmentTimelineNode                GstMPDSegmentTimelineNode;
-typedef struct _GstMPDSegmentTimelineNodeClass           GstMPDSegmentTimelineNodeClass;
-
+G_DECLARE_FINAL_TYPE (GstMPDSegmentTimelineNode, gst_mpd_segment_timeline_node, GST, MPD_SEGMENT_TIMELINE_NODE, GstMPDNode)
 
 struct _GstMPDSegmentTimelineNode
 {
@@ -48,13 +35,6 @@ struct _GstMPDSegmentTimelineNode
   /* list of S nodes */
   GQueue S;
 };
-
-struct _GstMPDSegmentTimelineNodeClass {
-  GstObjectClass parent_class;
-};
-
-
-G_GNUC_INTERNAL GType gst_mpd_segment_timeline_node_get_type (void);
 
 GstMPDSegmentTimelineNode * gst_mpd_segment_timeline_node_new (void);
 void gst_mpd_segment_timeline_node_free (GstMPDSegmentTimelineNode* self);

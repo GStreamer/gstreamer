@@ -27,20 +27,7 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_MPD_PROGRAM_INFORMATION_NODE gst_mpd_program_information_node_get_type ()
-#define GST_MPD_PROGRAM_INFORMATION_NODE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_MPD_PROGRAM_INFORMATION_NODE, GstMPDProgramInformationNode))
-#define GST_MPD_PROGRAM_INFORMATION_NODE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_MPD_PROGRAM_INFORMATION_NODE, GstMPDProgramInformationNodeClass))
-#define GST_IS_MPD_PROGRAM_INFORMATION_NODE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MPD_PROGRAM_INFORMATION_NODE))
-#define GST_IS_MPD_PROGRAM_INFORMATION_NODE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MPD_PROGRAM_INFORMATION_NODE))
-#define GST_MPD_PROGRAM_INFORMATION_NODE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_MPD_PROGRAM_INFORMATION_NODE, GstMPDProgramInformationNodeClass))
-
-typedef struct _GstMPDProgramInformationNode                GstMPDProgramInformationNode;
-typedef struct _GstMPDProgramInformationNodeClass           GstMPDProgramInformationNodeClass;
-
+G_DECLARE_FINAL_TYPE (GstMPDProgramInformationNode, gst_mpd_program_information_node, GST, MPD_PROGRAM_INFORMATION_NODE, GstMPDNode)
 
 struct _GstMPDProgramInformationNode
 {
@@ -52,13 +39,6 @@ struct _GstMPDProgramInformationNode
   gchar *Source;
   gchar *Copyright;
 };
-
-struct _GstMPDProgramInformationNodeClass {
-  GstObjectClass parent_class;
-};
-
-
-G_GNUC_INTERNAL GType gst_mpd_program_information_node_get_type (void);
 
 GstMPDProgramInformationNode * gst_mpd_program_information_node_new (void);
 void gst_mpd_program_information_node_free (GstMPDProgramInformationNode* self);

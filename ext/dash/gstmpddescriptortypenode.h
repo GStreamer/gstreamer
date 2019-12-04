@@ -18,29 +18,29 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef __GSTMPDBASEURLNODE_H__
-#define __GSTMPDBASEURLNODE_H__
+#ifndef __GSTMPDDESCRIPTORTYPENODE_H__
+#define __GSTMPDDESCRIPTORTYPENODE_H__
 
 #include <gst/gst.h>
 #include "gstmpdhelper.h"
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_MPD_BASEURL_NODE gst_mpd_baseurl_node_get_type ()
-G_DECLARE_FINAL_TYPE (GstMPDBaseURLNode, gst_mpd_baseurl_node, GST, MPD_BASEURL_NODE, GstMPDNode)
+#define GST_TYPE_MPD_DESCRIPTOR_TYPE_NODE gst_mpd_descriptor_type_node_get_type ()
+G_DECLARE_FINAL_TYPE (GstMPDDescriptorTypeNode, gst_mpd_descriptor_type_node, GST, MPD_DESCRIPTOR_TYPE_NODE, GstMPDNode)
 
-struct _GstMPDBaseURLNode
+
+struct _GstMPDDescriptorTypeNode
 {
   GstObject     parent_instance;
-  gchar *baseURL;
-  gchar *serviceLocation;
-  gchar *byteRange;
-  /* TODO add missing fields such as weight etc.*/
+  gchar *node_name;
+  gchar *schemeIdUri;
+  gchar *value;
 };
 
-GstMPDBaseURLNode * gst_mpd_baseurl_node_new (void);
-void gst_mpd_baseurl_node_free (GstMPDBaseURLNode* self);
+GstMPDDescriptorTypeNode * gst_mpd_descriptor_type_node_new (const gchar* name);
+void gst_mpd_descriptor_type_node_free (GstMPDDescriptorTypeNode* self);
 
 G_END_DECLS
 
-#endif /* __GSTMPDBASEURLNODE_H__ */
+#endif /* __GSTMPDDESCRIPTORTYPENODE_H__ */

@@ -23,30 +23,18 @@
 
 #include <gst/gst.h>
 #include "gstmpdhelper.h"
+#include "gstmpdrepresentationbasenode.h"
 #include "gstmpdsegmentlistnode.h"
 #include "gstmpdsegmenttemplatenode.h"
 
 G_BEGIN_DECLS
 
 #define GST_TYPE_MPD_ADAPTATION_SET_NODE gst_mpd_adaptation_set_node_get_type ()
-#define GST_MPD_ADAPTATION_SET_NODE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_MPD_ADAPTATION_SET_NODE, GstMPDAdaptationSetNode))
-#define GST_MPD_ADAPTATION_SET_NODE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_MPD_ADAPTATION_SET_NODE, GstMPDAdaptationSetNodeClass))
-#define GST_IS_MPD_ADAPTATION_SET_NODE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MPD_ADAPTATION_SET_NODE))
-#define GST_IS_MPD_ADAPTATION_SET_NODE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MPD_ADAPTATION_SET_NODE))
-#define GST_MPD_ADAPTATION_SET_NODE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_MPD_ADAPTATION_SET_NODE, GstMPDAdaptationSetNodeClass))
-
-typedef struct _GstMPDAdaptationSetNode                GstMPDAdaptationSetNode;
-typedef struct _GstMPDAdaptationSetNodeClass           GstMPDAdaptationSetNodeClass;
-
+G_DECLARE_FINAL_TYPE (GstMPDAdaptationSetNode, gst_mpd_adaptation_set_node, GST, MPD_ADAPTATION_SET_NODE, GstMPDRepresentationBaseNode)
 
 struct _GstMPDAdaptationSetNode
 {
-  GstObject parent_instance;
+  GstMPDRepresentationBaseNode parent_instance;
   guint id;
   guint group;
   gchar *lang;                      /* LangVectorType RFC 5646 */
@@ -70,10 +58,8 @@ struct _GstMPDAdaptationSetNode
   GList *Rating;
   /* list of Viewpoint DescriptorType nodes */
   GList *Viewpoint;
-  /* RepresentationBase extension */
-  GstMPDRepresentationBaseType *RepresentationBase;
   /* SegmentBase node */
-  GstMPDSegmentBaseType *SegmentBase;
+  GstMPDSegmentBaseNode *SegmentBase;
   /* SegmentList node */
   GstMPDSegmentListNode *SegmentList;
   /* SegmentTemplate node */
@@ -88,13 +74,6 @@ struct _GstMPDAdaptationSetNode
   gchar *xlink_href;
   GstMPDXLinkActuate actuate;
 };
-
-struct _GstMPDAdaptationSetNodeClass {
-  GstObjectClass parent_class;
-};
-
-
-G_GNUC_INTERNAL GType gst_mpd_adaptation_set_node_get_type (void);
 
 GstMPDAdaptationSetNode * gst_mpd_adaptation_set_node_new (void);
 void gst_mpd_adaptation_set_node_free (GstMPDAdaptationSetNode* self);

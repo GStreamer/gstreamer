@@ -23,43 +23,23 @@
 
 #include <gst/gst.h>
 #include "gstmpdhelper.h"
+#include "gstmpdrepresentationbasenode.h"
 
 G_BEGIN_DECLS
 
 #define GST_TYPE_MPD_SUB_REPRESENTATION_NODE gst_mpd_sub_representation_node_get_type ()
-#define GST_MPD_SUB_REPRESENTATION_NODE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_MPD_SUB_REPRESENTATION_NODE, GstMPDSubRepresentationNode))
-#define GST_MPD_SUB_REPRESENTATION_NODE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_MPD_SUB_REPRESENTATION_NODE, GstMPDSubRepresentationNodeClass))
-#define GST_IS_MPD_SUB_REPRESENTATION_NODE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MPD_SUB_REPRESENTATION_NODE))
-#define GST_IS_MPD_SUB_REPRESENTATION_NODE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MPD_SUB_REPRESENTATION_NODE))
-#define GST_MPD_SUB_REPRESENTATION_NODE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_MPD_SUB_REPRESENTATION_NODE, GstMPDSubRepresentationNodeClass))
-
-typedef struct _GstMPDSubRepresentationNode                GstMPDSubRepresentationNode;
-typedef struct _GstMPDSubRepresentationNodeClass           GstMPDSubRepresentationNodeClass;
-
+G_DECLARE_FINAL_TYPE (GstMPDSubRepresentationNode, gst_mpd_sub_representation_node, GST, MPD_SUB_REPRESENTATION_NODE, GstMPDRepresentationBaseNode)
 
 struct _GstMPDSubRepresentationNode
 {
-  GstObject parent_instance;
+  GstMPDRepresentationBaseNode parent_instance;
   /* RepresentationBase extension */
-  GstMPDRepresentationBaseType *RepresentationBase;
   guint level;
   guint *dependencyLevel;            /* UIntVectorType */
-  guint size;                        /* size of "dependencyLevel" array */
+  guint dependencyLevel_size;        /* size of "dependencyLevel" array */
   guint bandwidth;
   gchar **contentComponent;          /* StringVectorType */
 };
-
-struct _GstMPDSubRepresentationNodeClass {
-  GstObjectClass parent_class;
-};
-
-
-G_GNUC_INTERNAL GType gst_mpd_sub_representation_node_get_type (void);
 
 GstMPDSubRepresentationNode * gst_mpd_sub_representation_node_new (void);
 void gst_mpd_sub_representation_node_free (GstMPDSubRepresentationNode* self);

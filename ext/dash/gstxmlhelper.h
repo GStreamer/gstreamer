@@ -57,6 +57,8 @@ struct _GstXMLConditionalUintType
 };
 
 GstXMLRange *gst_xml_helper_clone_range (GstXMLRange * range);
+GstXMLRatio *gst_xml_helper_clone_ratio (GstXMLRatio * ratio);
+GstXMLFrameRate *gst_xml_helper_clone_frame_rate (GstXMLFrameRate * frameRate);
 
 /* XML property get method */
 gboolean gst_xml_helper_get_prop_validated_string (xmlNode * a_node,
@@ -108,6 +110,23 @@ gchar *gst_xml_helper_get_node_namespace (xmlNode * a_node,
     const gchar * prefix);
 gboolean gst_xml_helper_get_node_as_string (xmlNode * a_node,
     gchar ** content);
+
+/* XML property set method */
+void gst_xml_helper_set_prop_string (xmlNodePtr node, const gchar * name, gchar* value);
+void gst_xml_helper_set_prop_boolean (xmlNodePtr node, const gchar * name, gboolean value);
+void gst_xml_helper_set_prop_int (xmlNodePtr root, const gchar * name, gint value);
+void gst_xml_helper_set_prop_uint (xmlNodePtr root, const gchar * name, guint value);
+void gst_xml_helper_set_prop_int64 (xmlNodePtr node, const gchar * name, gint64 value);
+void gst_xml_helper_set_prop_uint64 (xmlNodePtr node, const gchar * name, guint64 value);
+void gst_xml_helper_set_prop_uint_vector_type (xmlNode * a_node,  const gchar * name, guint * value, guint value_size);
+void gst_xml_helper_set_prop_double (xmlNodePtr node, const gchar * name, gdouble value);
+void gst_xml_helper_set_prop_date_time (xmlNodePtr node, const gchar * name, GstDateTime* value);
+void gst_xml_helper_set_prop_duration (xmlNode * node, const gchar * name, guint64 value);
+void gst_xml_helper_set_prop_ratio (xmlNodePtr node, const gchar * name, GstXMLRatio* value);
+void gst_xml_helper_set_prop_framerate (xmlNodePtr node, const gchar * name, GstXMLFrameRate* value);
+void gst_xml_helper_set_prop_range (xmlNodePtr node, const gchar * name, GstXMLRange* value);
+void gst_xml_helper_set_prop_cond_uint (xmlNode * a_node, const gchar * property_name, GstXMLConditionalUintType * cond);
+void gst_xml_helper_set_content (xmlNodePtr node, gchar * content);
 
 G_END_DECLS
 #endif /* __GST_XMLHELPER_H__ */

@@ -23,44 +23,25 @@
 
 #include <gst/gst.h>
 #include "gstmpdhelper.h"
+#include "gstmpdmultsegmentbasenode.h"
 #include "gstmpdsegmenturlnode.h"
 
 G_BEGIN_DECLS
 
 #define GST_TYPE_MPD_SEGMENT_LIST_NODE gst_mpd_segment_list_node_get_type ()
-#define GST_MPD_SEGMENT_LIST_NODE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_MPD_SEGMENT_LIST_NODE, GstMPDSegmentListNode))
-#define GST_MPD_SEGMENT_LIST_NODE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_MPD_SEGMENT_LIST_NODE, GstMPDSegmentListNodeClass))
-#define GST_IS_MPD_SEGMENT_LIST_NODE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MPD_SEGMENT_LIST_NODE))
-#define GST_IS_MPD_SEGMENT_LIST_NODE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MPD_SEGMENT_LIST_NODE))
-#define GST_MPD_SEGMENT_LIST_NODE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_MPD_SEGMENT_LIST_NODE, GstMPDSegmentListNodeClass))
-
-typedef struct _GstMPDSegmentListNode                GstMPDSegmentListNode;
-typedef struct _GstMPDSegmentListNodeClass           GstMPDSegmentListNodeClass;
+G_DECLARE_FINAL_TYPE (GstMPDSegmentListNode, gst_mpd_segment_list_node, GST, MPD_SEGMENT_LIST_NODE, GstMPDMultSegmentBaseNode)
 
 
 struct _GstMPDSegmentListNode
 {
-  GstObject parent_instance;
+  GstMPDMultSegmentBaseNode parent_instance;
   /* extension */
-  GstMPDMultSegmentBaseType *MultSegBaseType;
   /* list of SegmentURL nodes */
   GList *SegmentURL;
 
   gchar *xlink_href;
   GstMPDXLinkActuate actuate;
 };
-
-struct _GstMPDSegmentListNodeClass {
-  GstObjectClass parent_class;
-};
-
-
-G_GNUC_INTERNAL GType gst_mpd_segment_list_node_get_type (void);
 
 GstMPDSegmentListNode * gst_mpd_segment_list_node_new (void);
 void gst_mpd_segment_list_node_free (GstMPDSegmentListNode* self);

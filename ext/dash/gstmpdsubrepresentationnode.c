@@ -22,7 +22,7 @@
 #include "gstmpdparser.h"
 
 G_DEFINE_TYPE (GstMPDSubRepresentationNode, gst_mpd_sub_representation_node,
-    GST_TYPE_OBJECT);
+    GST_TYPE_MPD_REPRESENTATION_BASE_NODE);
 
 /* GObject VMethods */
 
@@ -31,7 +31,6 @@ gst_mpd_sub_representation_node_finalize (GObject * object)
 {
   GstMPDSubRepresentationNode *self = GST_MPD_SUB_REPRESENTATION_NODE (object);
 
-  gst_mpd_helper_representation_base_type_free (self->RepresentationBase);
   if (self->dependencyLevel)
     xmlFree (self->dependencyLevel);
   g_strfreev (self->contentComponent);
@@ -40,21 +39,58 @@ gst_mpd_sub_representation_node_finalize (GObject * object)
       (object);
 }
 
+/* Base class */
+
+static xmlNodePtr
+gst_mpd_sub_representation_get_xml_node (GstMPDNode * node)
+{
+  gchar *value = NULL;
+  xmlNodePtr sub_representation_xml_node = NULL;
+  GstMPDSubRepresentationNode *self = GST_MPD_SUB_REPRESENTATION_NODE (node);
+
+  sub_representation_xml_node =
+      xmlNewNode (NULL, (xmlChar *) "SubRepresentation");
+
+  gst_xml_helper_set_prop_uint (sub_representation_xml_node, "level",
+      self->level);
+
+  gst_xml_helper_set_prop_uint_vector_type (sub_representation_xml_node,
+      "dependencyLevel", self->dependencyLevel, self->dependencyLevel_size);
+
+  gst_xml_helper_set_prop_uint (sub_representation_xml_node, "bandwidth",
+      self->level);
+
+  if (self->contentComponent) {
+    value = g_strjoinv (" ", self->contentComponent);
+    gst_xml_helper_set_prop_string (sub_representation_xml_node,
+        "contentComponent", value);
+    g_free (value);
+  }
+
+  return sub_representation_xml_node;
+}
+
 static void
 gst_mpd_sub_representation_node_class_init (GstMPDSubRepresentationNodeClass *
     klass)
 {
-  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GObjectClass *object_class;
+  GstMPDNodeClass *m_klass;
+
+  object_class = G_OBJECT_CLASS (klass);
+  m_klass = GST_MPD_NODE_CLASS (klass);
+
   object_class->finalize = gst_mpd_sub_representation_node_finalize;
+
+  m_klass->get_xml_node = gst_mpd_sub_representation_get_xml_node;
 }
 
 static void
 gst_mpd_sub_representation_node_init (GstMPDSubRepresentationNode * self)
 {
-  self->RepresentationBase = NULL;
   self->level = 0;
   self->dependencyLevel = NULL;
-  self->size = 0;
+  self->dependencyLevel_size = 0;
   self->bandwidth = 0;
   self->contentComponent = NULL;
 }

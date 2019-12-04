@@ -22,7 +22,7 @@
 #include "gstmpdparser.h"
 
 G_DEFINE_TYPE (GstMPDSegmentTemplateNode, gst_mpd_segment_template_node,
-    GST_TYPE_OBJECT);
+    GST_TYPE_MPD_MULT_SEGMENT_BASE_NODE);
 
 /* GObject VMethods */
 
@@ -39,25 +39,58 @@ gst_mpd_segment_template_node_finalize (GObject * object)
     xmlFree (self->initialization);
   if (self->bitstreamSwitching)
     xmlFree (self->bitstreamSwitching);
-  /* MultipleSegmentBaseType extension */
-  gst_mpd_helper_mult_seg_base_type_free (self->MultSegBaseType);
 
   G_OBJECT_CLASS (gst_mpd_segment_template_node_parent_class)->finalize
       (object);
+}
+
+/* Base class */
+
+static xmlNodePtr
+gst_mpd_segment_template_get_xml_node (GstMPDNode * node)
+{
+  xmlNodePtr segment_template_xml_node = NULL;
+  GstMPDSegmentTemplateNode *self = GST_MPD_SEGMENT_TEMPLATE_NODE (node);
+
+  segment_template_xml_node = xmlNewNode (NULL, (xmlChar *) "SegmentTemplate");
+
+  if (self->media)
+    gst_xml_helper_set_prop_string (segment_template_xml_node, "media",
+        self->media);
+
+  if (self->index)
+    gst_xml_helper_set_prop_string (segment_template_xml_node, "index",
+        self->index);
+
+  if (self->initialization)
+    gst_xml_helper_set_prop_string (segment_template_xml_node, "initialization",
+        self->initialization);
+
+  if (self->bitstreamSwitching)
+    gst_xml_helper_set_prop_string (segment_template_xml_node,
+        "bitstreamSwitching", self->bitstreamSwitching);
+
+  return segment_template_xml_node;
 }
 
 static void
 gst_mpd_segment_template_node_class_init (GstMPDSegmentTemplateNodeClass *
     klass)
 {
-  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GObjectClass *object_class;
+  GstMPDNodeClass *m_klass;
+
+  object_class = G_OBJECT_CLASS (klass);
+  m_klass = GST_MPD_NODE_CLASS (klass);
+
   object_class->finalize = gst_mpd_segment_template_node_finalize;
+
+  m_klass->get_xml_node = gst_mpd_segment_template_get_xml_node;
 }
 
 static void
 gst_mpd_segment_template_node_init (GstMPDSegmentTemplateNode * self)
 {
-  self->MultSegBaseType = NULL;
   self->media = NULL;
   self->index = NULL;
   self->initialization = NULL;

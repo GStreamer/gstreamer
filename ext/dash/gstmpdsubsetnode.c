@@ -21,7 +21,7 @@
 #include "gstmpdsubsetnode.h"
 #include "gstmpdparser.h"
 
-G_DEFINE_TYPE (GstMPDSubsetNode, gst_mpd_subset_node, GST_TYPE_OBJECT);
+G_DEFINE_TYPE (GstMPDSubsetNode, gst_mpd_subset_node, GST_TYPE_MPD_NODE);
 
 /* GObject VMethods */
 
@@ -36,17 +36,41 @@ gst_mpd_subset_node_finalize (GObject * object)
   G_OBJECT_CLASS (gst_mpd_subset_node_parent_class)->finalize (object);
 }
 
+/* Base class */
+
+static xmlNodePtr
+gst_mpd_subset_get_xml_node (GstMPDNode * node)
+{
+  xmlNodePtr subset_xml_node = NULL;
+  GstMPDSubsetNode *self = GST_MPD_SUBSET_NODE (node);
+
+  subset_xml_node = xmlNewNode (NULL, (xmlChar *) "Subset");
+
+  if (self->contains)
+    gst_xml_helper_set_prop_uint_vector_type (subset_xml_node, "contains",
+        self->contains, self->contains_size);
+
+  return subset_xml_node;
+}
+
 static void
 gst_mpd_subset_node_class_init (GstMPDSubsetNodeClass * klass)
 {
-  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GObjectClass *object_class;
+  GstMPDNodeClass *m_klass;
+
+  object_class = G_OBJECT_CLASS (klass);
+  m_klass = GST_MPD_NODE_CLASS (klass);
+
   object_class->finalize = gst_mpd_subset_node_finalize;
+
+  m_klass->get_xml_node = gst_mpd_subset_get_xml_node;
 }
 
 static void
 gst_mpd_subset_node_init (GstMPDSubsetNode * self)
 {
-  self->size = 0;
+  self->contains_size = 0;
   self->contains = NULL;
 }
 

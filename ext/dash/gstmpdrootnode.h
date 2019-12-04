@@ -27,20 +27,7 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_MPD_ROOT_NODE gst_mpd_root_node_get_type ()
-#define GST_MPD_ROOT_NODE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_MPD_ROOT_NODE, GstMPDRootNode))
-#define GST_MPD_ROOT_NODE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_MPD_ROOT_NODE, GstMPDRootNodeClass))
-#define GST_IS_MPD_ROOT_NODE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MPD_ROOT_NODE))
-#define GST_IS_MPD_ROOT_NODE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MPD_ROOT_NODE))
-#define GST_MPD_ROOT_NODE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_MPD_ROOT_NODE, GstMPDRootNodeClass))
-
-typedef struct _GstMPDRootNode                GstMPDRootNode;
-typedef struct _GstMPDRootNodeClass           GstMPDRootNodeClass;
-
+G_DECLARE_FINAL_TYPE (GstMPDRootNode, gst_mpd_root_node, GST, MPD_ROOT_NODE, GstMPDNode)
 
 struct _GstMPDRootNode
 {
@@ -74,13 +61,6 @@ struct _GstMPDRootNode
   /* list of GstUTCTimingNode nodes */
   GList *UTCTimings;
 };
-
-struct _GstMPDRootNodeClass {
-  GstObjectClass parent_class;
-};
-
-
-G_GNUC_INTERNAL GType gst_mpd_root_node_get_type (void);
 
 GstMPDRootNode * gst_mpd_root_node_new (void);
 void gst_mpd_root_node_free (GstMPDRootNode* self);

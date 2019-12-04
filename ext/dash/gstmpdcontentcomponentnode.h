@@ -27,20 +27,7 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_MPD_CONTENT_COMPONENT_NODE gst_mpd_content_component_node_get_type ()
-#define GST_MPD_CONTENT_COMPONENT_NODE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_MPD_CONTENT_COMPONENT_NODE, GstMPDContentComponentNode))
-#define GST_MPD_CONTENT_COMPONENT_NODE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_MPD_CONTENT_COMPONENT_NODE, GstMPDContentComponentNodeClass))
-#define GST_IS_MPD_CONTENT_COMPONENT_NODE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MPD_CONTENT_COMPONENT_NODE))
-#define GST_IS_MPD_CONTENT_COMPONENT_NODE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MPD_CONTENT_COMPONENT_NODE))
-#define GST_MPD_CONTENT_COMPONENT_NODE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_MPD_CONTENT_COMPONENT_NODE, GstMPDContentComponentNodeClass))
-
-typedef struct _GstMPDContentComponentNode                GstMPDContentComponentNode;
-typedef struct _GstMPDContentComponentNodeClass           GstMPDContentComponentNodeClass;
-
+G_DECLARE_FINAL_TYPE (GstMPDContentComponentNode, gst_mpd_content_component_node, GST, MPD_CONTENT_COMPONENT_NODE, GstMPDNode)
 
 struct _GstMPDContentComponentNode
 {
@@ -58,13 +45,6 @@ struct _GstMPDContentComponentNode
   /* list of Viewpoint DescriptorType nodes */
   GList *Viewpoint;
 };
-
-struct _GstMPDContentComponentNodeClass {
-  GstObjectClass parent_class;
-};
-
-
-G_GNUC_INTERNAL GType gst_mpd_content_component_node_get_type (void);
 
 GstMPDContentComponentNode * gst_mpd_content_component_node_new (void);
 void gst_mpd_content_component_node_free (GstMPDContentComponentNode* self);

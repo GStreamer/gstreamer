@@ -22,25 +22,12 @@
 #define __GSTMPDSNODE_H__
 
 #include <gst/gst.h>
-#include "gstmpdhelper.h"
+#include "gstmpdnode.h"
 
 G_BEGIN_DECLS
 
 #define GST_TYPE_MPD_S_NODE gst_mpd_s_node_get_type ()
-#define GST_MPD_S_NODE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_MPD_S_NODE, GstMPDSNode))
-#define GST_MPD_S_NODE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_MPD_S_NODE, GstMPDSNodeClass))
-#define GST_IS_MPD_S_NODE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MPD_S_NODE))
-#define GST_IS_MPD_S_NODE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MPD_S_NODE))
-#define GST_MPD_S_NODE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_MPD_S_NODE, GstMPDSNodeClass))
-
-typedef struct _GstMPDSNode                GstMPDSNode;
-typedef struct _GstMPDSNodeClass           GstMPDSNodeClass;
-
+G_DECLARE_FINAL_TYPE (GstMPDSNode, gst_mpd_s_node, GST, MPD_S_NODE, GstMPDNode)
 
 struct _GstMPDSNode
 {
@@ -49,13 +36,6 @@ struct _GstMPDSNode
   guint64 d;
   gint r;
 };
-
-struct _GstMPDSNodeClass {
-  GstObjectClass parent_class;
-};
-
-
-G_GNUC_INTERNAL GType gst_mpd_s_node_get_type (void);
 
 GstMPDSNode * gst_mpd_s_node_new (void);
 void gst_mpd_s_node_free (GstMPDSNode* self);

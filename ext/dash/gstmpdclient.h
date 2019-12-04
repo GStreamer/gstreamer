@@ -57,6 +57,9 @@ void gst_mpd_client_free (GstMPDClient * client);
 /* main mpd parsing methods from xml data */
 gboolean gst_mpd_client_parse (GstMPDClient * client, const gchar * data, gint size);
 
+/* xml generator */
+gboolean gst_mpd_client_get_xml_content (GstMPDClient * client, gchar ** data, gint * size);
+
 void gst_mpd_client_set_uri_downloader (GstMPDClient * client, GstUriDownloader * download);
 void  gst_mpd_client_check_profiles (GstMPDClient * client);
 void gst_mpd_client_fetch_on_load_external_resources (GstMPDClient * client);

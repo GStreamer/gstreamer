@@ -21,7 +21,7 @@
 #include "gstmpdbaseurlnode.h"
 #include "gstmpdparser.h"
 
-G_DEFINE_TYPE (GstMPDBaseURLNode, gst_mpd_baseurl_node, GST_TYPE_OBJECT);
+G_DEFINE_TYPE (GstMPDBaseURLNode, gst_mpd_baseurl_node, GST_TYPE_MPD_NODE);
 
 /* GObject VMethods */
 
@@ -37,11 +37,42 @@ gst_mpd_baseurl_node_finalize (GObject * object)
   G_OBJECT_CLASS (gst_mpd_baseurl_node_parent_class)->finalize (object);
 }
 
+/* Base class */
+
+static xmlNodePtr
+gst_mpd_baseurl_get_xml_node (GstMPDNode * node)
+{
+  xmlNodePtr baseurl_xml_node = NULL;
+  GstMPDBaseURLNode *self = GST_MPD_BASEURL_NODE (node);
+
+  baseurl_xml_node = xmlNewNode (NULL, (xmlChar *) "BaseURL");
+
+  if (self->serviceLocation)
+    gst_xml_helper_set_prop_string (baseurl_xml_node, "serviceLocation",
+        self->serviceLocation);
+
+  if (self->byteRange)
+    gst_xml_helper_set_prop_string (baseurl_xml_node, "byteRange",
+        self->byteRange);
+
+  if (self->baseURL)
+    gst_xml_helper_set_content (baseurl_xml_node, self->baseURL);
+
+  return baseurl_xml_node;
+}
+
 static void
 gst_mpd_baseurl_node_class_init (GstMPDBaseURLNodeClass * klass)
 {
-  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GObjectClass *object_class;
+  GstMPDNodeClass *m_klass;
+
+  object_class = G_OBJECT_CLASS (klass);
+  m_klass = GST_MPD_NODE_CLASS (klass);
+
   object_class->finalize = gst_mpd_baseurl_node_finalize;
+
+  m_klass->get_xml_node = gst_mpd_baseurl_get_xml_node;
 }
 
 static void

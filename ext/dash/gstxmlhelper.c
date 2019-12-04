@@ -21,6 +21,12 @@
 
 #include "gstxmlhelper.h"
 
+#define XML_HELPER_MINUTE_TO_SEC       60
+#define XML_HELPER_HOUR_TO_SEC         (60 * XML_HELPER_MINUTE_TO_SEC)
+#define XML_HELPER_DAY_TO_SEC          (24 * XML_HELPER_HOUR_TO_SEC)
+#define XML_HELPER_MONTH_TO_SEC        (30 * XML_HELPER_DAY_TO_SEC)
+#define XML_HELPER_YEAR_TO_SEC         (365 * XML_HELPER_DAY_TO_SEC)
+#define XML_HELPER_MS_TO_SEC(time)     ((time) / 1000)
 /* static methods */
 /* this function computes decimals * 10 ^ (3 - pos) */
 static guint
@@ -290,6 +296,34 @@ gst_xml_helper_clone_range (GstXMLRange * range)
     clone = g_slice_new0 (GstXMLRange);
     clone->first_byte_pos = range->first_byte_pos;
     clone->last_byte_pos = range->last_byte_pos;
+  }
+
+  return clone;
+}
+
+GstXMLRatio *
+gst_xml_helper_clone_ratio (GstXMLRatio * ratio)
+{
+  GstXMLRatio *clone = NULL;
+
+  if (ratio) {
+    clone = g_slice_new0 (GstXMLRatio);
+    clone->num = ratio->num;
+    clone->den = ratio->den;
+  }
+
+  return clone;
+}
+
+GstXMLFrameRate *
+gst_xml_helper_clone_frame_rate (GstXMLFrameRate * frameRate)
+{
+  GstXMLFrameRate *clone = NULL;
+
+  if (frameRate) {
+    clone = g_slice_new0 (GstXMLFrameRate);
+    clone->num = frameRate->num;
+    clone->den = frameRate->den;
   }
 
   return clone;
@@ -1021,4 +1055,205 @@ gst_xml_helper_get_prop_string_no_whitespace (xmlNode * a_node,
 {
   return gst_xml_helper_get_prop_validated_string (a_node, property_name,
       property_value, _mpd_helper_validate_no_whitespace);
+}
+
+
+/* XML property set method */
+
+void
+gst_xml_helper_set_prop_string (xmlNodePtr node, const gchar * name,
+    gchar * value)
+{
+  if (value)
+    xmlSetProp (node, (xmlChar *) name, (xmlChar *) value);
+}
+
+void
+gst_xml_helper_set_prop_boolean (xmlNodePtr node, const gchar * name,
+    gboolean value)
+{
+  if (value)
+    xmlSetProp (node, (xmlChar *) name, (xmlChar *) "true");
+  else
+    xmlSetProp (node, (xmlChar *) name, (xmlChar *) "false");
+}
+
+void
+gst_xml_helper_set_prop_int (xmlNodePtr node, const gchar * name, gint value)
+{
+  gchar *text;
+  text = g_strdup_printf ("%d", value);
+  xmlSetProp (node, (xmlChar *) name, (xmlChar *) text);
+  g_free (text);
+}
+
+void
+gst_xml_helper_set_prop_uint (xmlNodePtr node, const gchar * name, guint value)
+{
+  gchar *text;
+  text = g_strdup_printf ("%d", value);
+  xmlSetProp (node, (xmlChar *) name, (xmlChar *) text);
+  g_free (text);
+}
+
+void
+gst_xml_helper_set_prop_int64 (xmlNodePtr node, const gchar * name,
+    gint64 value)
+{
+  gchar *text;
+  text = g_strdup_printf ("%" G_GINT64_FORMAT, value);
+  xmlSetProp (node, (xmlChar *) name, (xmlChar *) text);
+  g_free (text);
+}
+
+void
+gst_xml_helper_set_prop_uint64 (xmlNodePtr node, const gchar * name,
+    guint64 value)
+{
+  gchar *text;
+  text = g_strdup_printf ("%" G_GUINT64_FORMAT, value);
+  xmlSetProp (node, (xmlChar *) name, (xmlChar *) text);
+  g_free (text);
+}
+
+void
+gst_xml_helper_set_prop_double (xmlNodePtr node, const gchar * name,
+    gdouble value)
+{
+  gchar *text;
+  text = g_strdup_printf ("%lf", value);
+  xmlSetProp (node, (xmlChar *) name, (xmlChar *) text);
+  g_free (text);
+}
+
+void
+gst_xml_helper_set_prop_uint_vector_type (xmlNode * node, const gchar * name,
+    guint * value, guint value_size)
+{
+  int i;
+  gchar *text = NULL;
+  gchar *prev;
+  gchar *temp;
+
+  for (i = 0; i < value_size; i++) {
+    temp = g_strdup_printf ("%d", value[i]);
+    prev = text;
+    text = g_strjoin (" ", text, prev, NULL);
+    g_free (prev);
+    g_free (temp);
+  }
+
+  if (text) {
+    xmlSetProp (node, (xmlChar *) name, (xmlChar *) text);
+    g_free (text);
+  }
+}
+
+void
+gst_xml_helper_set_prop_date_time (xmlNodePtr node, const gchar * name,
+    GstDateTime * value)
+{
+  gchar *text;
+  if (value) {
+    text = gst_date_time_to_iso8601_string (value);
+    xmlSetProp (node, (xmlChar *) name, (xmlChar *) text);
+    g_free (text);
+  }
+}
+
+void
+gst_xml_helper_set_prop_duration (xmlNode * node, const gchar * name,
+    guint64 value)
+{
+  gchar *text;
+  gint years, months, days, hours, minutes, seconds, milliseconds;
+  if (value) {
+    years = (gint) (XML_HELPER_MS_TO_SEC (value) / (XML_HELPER_YEAR_TO_SEC));
+    months =
+        (gint) ((XML_HELPER_MS_TO_SEC (value) % XML_HELPER_YEAR_TO_SEC) /
+        XML_HELPER_MONTH_TO_SEC);
+    days =
+        (gint) ((XML_HELPER_MS_TO_SEC (value) % XML_HELPER_MONTH_TO_SEC) /
+        XML_HELPER_DAY_TO_SEC);
+    hours =
+        (gint) ((XML_HELPER_MS_TO_SEC (value) % XML_HELPER_DAY_TO_SEC) /
+        XML_HELPER_HOUR_TO_SEC);
+    minutes =
+        (gint) ((XML_HELPER_MS_TO_SEC (value) % XML_HELPER_HOUR_TO_SEC) /
+        XML_HELPER_MINUTE_TO_SEC);
+    seconds = (gint) (XML_HELPER_MS_TO_SEC (value) % XML_HELPER_MINUTE_TO_SEC);
+    milliseconds = value % 1000;
+
+    text =
+        g_strdup_printf ("P%dY%dM%dDT%dH%dM%d.%dS", years, months, days, hours,
+        minutes, seconds, milliseconds);
+    GST_LOG ("duration %" G_GUINT64_FORMAT " -> %s", value, text);
+    xmlSetProp (node, (xmlChar *) name, (xmlChar *) text);
+    g_free (text);
+  }
+}
+
+void
+gst_xml_helper_set_prop_ratio (xmlNodePtr node, const gchar * name,
+    GstXMLRatio * value)
+{
+  gchar *text;
+  if (value) {
+    text = g_strdup_printf ("%d:%d", value->num, value->den);
+    xmlSetProp (node, (xmlChar *) name, (xmlChar *) text);
+    g_free (text);
+  }
+}
+
+
+void
+gst_xml_helper_set_prop_framerate (xmlNodePtr node, const gchar * name,
+    GstXMLFrameRate * value)
+{
+  gchar *text;
+  if (value) {
+    text = g_strdup_printf ("%d/%d", value->num, value->den);
+    xmlSetProp (node, (xmlChar *) name, (xmlChar *) text);
+    g_free (text);
+  }
+}
+
+void
+gst_xml_helper_set_prop_range (xmlNodePtr node, const gchar * name,
+    GstXMLRange * value)
+{
+  gchar *text;
+  if (value) {
+    text =
+        g_strdup_printf ("%" G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT,
+        value->first_byte_pos, value->last_byte_pos);
+    xmlSetProp (node, (xmlChar *) name, (xmlChar *) text);
+    g_free (text);
+  }
+}
+
+void
+gst_xml_helper_set_prop_cond_uint (xmlNodePtr node, const gchar * name,
+    GstXMLConditionalUintType * cond)
+{
+  gchar *text;
+  if (cond) {
+    if (cond->flag)
+      if (cond->value)
+        text = g_strdup_printf ("%d", cond->value);
+      else
+        text = g_strdup_printf ("%s", "true");
+    else
+      text = g_strdup_printf ("%s", "false");
+
+    xmlSetProp (node, (xmlChar *) name, (xmlChar *) text);
+    g_free (text);
+  }
+}
+
+void
+gst_xml_helper_set_content (xmlNodePtr node, gchar * content)
+{
+  if (content)
+    xmlNodeSetContent (node, (xmlChar *) content);
 }

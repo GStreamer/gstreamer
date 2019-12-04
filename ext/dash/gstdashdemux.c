@@ -862,12 +862,13 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
     stream->target_time = GST_CLOCK_TIME_NONE;
     /* Set a default average keyframe download time of a quarter of a second */
     stream->average_download_time = 250 * GST_MSECOND;
+
     if (active_stream->cur_adapt_set &&
-        active_stream->cur_adapt_set->RepresentationBase &&
-        active_stream->cur_adapt_set->RepresentationBase->ContentProtection) {
+        GST_MPD_REPRESENTATION_BASE_NODE (active_stream->
+            cur_adapt_set)->ContentProtection) {
       GST_DEBUG_OBJECT (demux, "Adding ContentProtection events to source pad");
-      g_list_foreach (active_stream->cur_adapt_set->
-          RepresentationBase->ContentProtection,
+      g_list_foreach (GST_MPD_REPRESENTATION_BASE_NODE
+          (active_stream->cur_adapt_set)->ContentProtection,
           gst_dash_demux_send_content_protection_event, stream);
     }
 
@@ -880,7 +881,7 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
 static void
 gst_dash_demux_send_content_protection_event (gpointer data, gpointer userdata)
 {
-  GstMPDDescriptorType *cp = (GstMPDDescriptorType *) data;
+  GstMPDDescriptorTypeNode *cp = (GstMPDDescriptorTypeNode *) data;
   GstDashDemuxStream *stream = (GstDashDemuxStream *) userdata;
   GstEvent *event;
   GstBuffer *pssi;

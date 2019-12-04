@@ -18,29 +18,31 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef __GSTMPDBASEURLNODE_H__
-#define __GSTMPDBASEURLNODE_H__
+#ifndef __GSTMPDMULTSEGMENTBASENODE_H__
+#define __GSTMPDMULTSEGMENTBASENODE_H__
 
 #include <gst/gst.h>
 #include "gstmpdhelper.h"
-
 G_BEGIN_DECLS
 
-#define GST_TYPE_MPD_BASEURL_NODE gst_mpd_baseurl_node_get_type ()
-G_DECLARE_FINAL_TYPE (GstMPDBaseURLNode, gst_mpd_baseurl_node, GST, MPD_BASEURL_NODE, GstMPDNode)
+#define GST_TYPE_MPD_MULT_SEGMENT_BASE_NODE gst_mpd_mult_segment_base_node_get_type ()
+G_DECLARE_FINAL_TYPE (GstMPDMultSegmentBaseNode, gst_mpd_mult_segment_base_node, GST, MPD_MULT_SEGMENT_BASE_NODE, GstMPDNode)
 
-struct _GstMPDBaseURLNode
+struct _GstMPDMultSegmentBaseNode
 {
-  GstObject     parent_instance;
-  gchar *baseURL;
-  gchar *serviceLocation;
-  gchar *byteRange;
-  /* TODO add missing fields such as weight etc.*/
+  GstObject     base;
+  guint duration;                  /* in seconds */
+  guint startNumber;
+  /* SegmentBaseType extension */
+  GstMPDSegmentBaseNode *SegmentBase;
+  /* SegmentTimeline node */
+  GstMPDSegmentTimelineNode *SegmentTimeline;
+  /* BitstreamSwitching node */
+  GstMPDURLTypeNode *BitstreamSwitching;
 };
 
-GstMPDBaseURLNode * gst_mpd_baseurl_node_new (void);
-void gst_mpd_baseurl_node_free (GstMPDBaseURLNode* self);
+
+void gst_mpd_mult_segment_base_node_add_child_node (GstMPDNode* node, xmlNodePtr parent_xml_node);
 
 G_END_DECLS
-
-#endif /* __GSTMPDBASEURLNODE_H__ */
+#endif /* __GSTMPDMULTSEGMENTBASENODE_H__ */

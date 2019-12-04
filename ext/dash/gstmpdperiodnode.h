@@ -31,19 +31,7 @@ G_BEGIN_DECLS
 struct _GstSegmentTemplateNode;
 
 #define GST_TYPE_MPD_PERIOD_NODE gst_mpd_period_node_get_type ()
-#define GST_MPD_PERIOD_NODE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_MPD_PERIOD_NODE, GstMPDPeriodNode))
-#define GST_MPD_PERIOD_NODE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_MPD_PERIOD_NODE, GstMPDPeriodNodeClass))
-#define GST_IS_MPD_PERIOD_NODE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MPD_PERIOD_NODE))
-#define GST_IS_MPD_PERIOD_NODE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MPD_PERIOD_NODE))
-#define GST_MPD_PERIOD_NODE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_MPD_PERIOD_NODE, GstMPDPeriodNodeClass))
-
-typedef struct _GstMPDPeriodNode                GstMPDPeriodNode;
-typedef struct _GstMPDPeriodNodeClass           GstMPDPeriodNodeClass;
+G_DECLARE_FINAL_TYPE (GstMPDPeriodNode, gst_mpd_period_node, GST, MPD_PERIOD_NODE, GstMPDNode)
 
 struct _GstMPDPeriodNode
 {
@@ -53,7 +41,7 @@ struct _GstMPDPeriodNode
   guint64 duration;                  /* [ms] */
   gboolean bitstreamSwitching;
   /* SegmentBase node */
-  GstMPDSegmentBaseType *SegmentBase;
+  GstMPDSegmentBaseNode *SegmentBase;
   /* SegmentList node */
   GstMPDSegmentListNode *SegmentList;
   /* SegmentTemplate node */
@@ -68,13 +56,6 @@ struct _GstMPDPeriodNode
   gchar *xlink_href;
   int actuate;
 };
-
-struct _GstMPDPeriodNodeClass {
-  GstObjectClass parent_class;
-};
-
-
-G_GNUC_INTERNAL GType gst_mpd_period_node_get_type (void);
 
 GstMPDPeriodNode * gst_mpd_period_node_new (void);
 void gst_mpd_period_node_free (GstMPDPeriodNode* self);

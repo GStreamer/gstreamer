@@ -27,20 +27,7 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_MPD_METRICS_RANGE_NODE gst_mpd_metrics_range_node_get_type ()
-#define GST_MPD_METRICS_RANGE_NODE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_MPD_METRICS_RANGE_NODE, GstMPDMetricsRangeNode))
-#define GST_MPD_METRICS_RANGE_NODE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_MPD_METRICS_RANGE_NODE, GstMPDMetricsRangeNodeClass))
-#define GST_IS_MPD_METRICS_RANGE_NODE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MPD_METRICS_RANGE_NODE))
-#define GST_IS_MPD_METRICS_RANGE_NODE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MPD_METRICS_RANGE_NODE))
-#define GST_MPD_METRICS_RANGE_NODE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_MPD_METRICS_RANGE_NODE, GstMPDMetricsRangeNodeClass))
-
-typedef struct _GstMPDMetricsRangeNode                GstMPDMetricsRangeNode;
-typedef struct _GstMPDMetricsRangeNodeClass           GstMPDMetricsRangeNodeClass;
-
+G_DECLARE_FINAL_TYPE (GstMPDMetricsRangeNode, gst_mpd_metrics_range_node, GST, MPD_METRICS_RANGE_NODE, GstMPDNode)
 
 struct _GstMPDMetricsRangeNode
 {
@@ -48,13 +35,6 @@ struct _GstMPDMetricsRangeNode
   guint64 starttime;                 /* [ms] */
   guint64 duration;                  /* [ms] */
 };
-
-struct _GstMPDMetricsRangeNodeClass {
-  GstObjectClass parent_class;
-};
-
-
-G_GNUC_INTERNAL GType gst_mpd_metrics_range_node_get_type (void);
 
 GstMPDMetricsRangeNode * gst_mpd_metrics_range_node_new (void);
 void gst_mpd_metrics_range_node_free (GstMPDMetricsRangeNode* self);

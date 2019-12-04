@@ -23,55 +23,35 @@
 
 #include <gst/gst.h>
 #include "gstmpdhelper.h"
+#include "gstmpdrepresentationbasenode.h"
 #include "gstmpdsegmentlistnode.h"
 #include "gstmpdsegmenttemplatenode.h"
 
 G_BEGIN_DECLS
 
 #define GST_TYPE_MPD_REPRESENTATION_NODE gst_mpd_representation_node_get_type ()
-#define GST_MPD_REPRESENTATION_NODE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_MPD_REPRESENTATION_NODE, GstMPDRepresentationNode))
-#define GST_MPD_REPRESENTATION_NODE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_MPD_REPRESENTATION_NODE, GstMPDRepresentationNodeClass))
-#define GST_IS_MPD_REPRESENTATION_NODE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MPD_REPRESENTATION_NODE))
-#define GST_IS_MPD_REPRESENTATION_NODE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MPD_REPRESENTATION_NODE))
-#define GST_MPD_REPRESENTATION_NODE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_MPD_REPRESENTATION_NODE, GstMPDRepresentationNodeClass))
-
-typedef struct _GstMPDRepresentationNode                GstMPDRepresentationNode;
-typedef struct _GstMPDRepresentationNodeClass           GstMPDRepresentationNodeClass;
-
+G_DECLARE_FINAL_TYPE (GstMPDRepresentationNode, gst_mpd_representation_node, GST, MPD_REPRESENTATION_NODE, GstMPDRepresentationBaseNode)
 
 struct _GstMPDRepresentationNode
 {
-  GstObject parent_instance;
+  GstMPDRepresentationBaseNode parent_instance;
   gchar *id;
   guint bandwidth;
   guint qualityRanking;
   gchar **dependencyId;              /* StringVectorType */
   gchar **mediaStreamStructureId;    /* StringVectorType */
-  /* RepresentationBase extension */
-  GstMPDRepresentationBaseType *RepresentationBase;
   /* list of BaseURL nodes */
   GList *BaseURLs;
   /* list of SubRepresentation nodes */
   GList *SubRepresentations;
   /* SegmentBase node */
-  GstMPDSegmentBaseType *SegmentBase;
+  GstMPDSegmentBaseNode *SegmentBase;
   /* SegmentTemplate node */
   GstMPDSegmentTemplateNode *SegmentTemplate;
   /* SegmentList node */
   GstMPDSegmentListNode *SegmentList;
 };
 
-struct _GstMPDRepresentationNodeClass {
-  GstObjectClass parent_class;
-};
-
-
-G_GNUC_INTERNAL GType gst_mpd_representation_node_get_type (void);
 
 GstMPDRepresentationNode * gst_mpd_representation_node_new (void);
 void gst_mpd_representation_node_free (GstMPDRepresentationNode* self);

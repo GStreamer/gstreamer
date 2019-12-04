@@ -22,13 +22,36 @@
 #include "gstmpdparser.h"
 
 G_DEFINE_TYPE (GstMPDMetricsRangeNode, gst_mpd_metrics_range_node,
-    GST_TYPE_OBJECT);
+    GST_TYPE_MPD_NODE);
 
-/* GObject VMethods */
+/* Base class */
+
+static xmlNodePtr
+gst_mpd_metrics_range_get_xml_node (GstMPDNode * node)
+{
+  xmlNodePtr metrics_range_xml_node = NULL;
+  GstMPDMetricsRangeNode *self = GST_MPD_METRICS_RANGE_NODE (node);
+
+  metrics_range_xml_node = xmlNewNode (NULL, (xmlChar *) "Range");
+
+  if (self->starttime)
+    gst_xml_helper_set_prop_duration (metrics_range_xml_node, "starttime",
+        self->starttime);
+  if (self->duration)
+    gst_xml_helper_set_prop_duration (metrics_range_xml_node, "duration",
+        self->duration);
+
+  return metrics_range_xml_node;
+}
 
 static void
 gst_mpd_metrics_range_node_class_init (GstMPDMetricsRangeNodeClass * klass)
 {
+  GstMPDNodeClass *m_klass;
+
+  m_klass = GST_MPD_NODE_CLASS (klass);
+
+  m_klass->get_xml_node = gst_mpd_metrics_range_get_xml_node;
 }
 
 static void

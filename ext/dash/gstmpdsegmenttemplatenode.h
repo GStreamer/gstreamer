@@ -23,42 +23,22 @@
 
 #include <gst/gst.h>
 #include "gstmpdhelper.h"
+#include "gstmpdmultsegmentbasenode.h"
 
 G_BEGIN_DECLS
 
 #define GST_TYPE_MPD_SEGMENT_TEMPLATE_NODE gst_mpd_segment_template_node_get_type ()
-#define GST_MPD_SEGMENT_TEMPLATE_NODE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_MPD_SEGMENT_TEMPLATE_NODE, GstMPDSegmentTemplateNode))
-#define GST_MPD_SEGMENT_TEMPLATE_NODE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_MPD_SEGMENT_TEMPLATE_NODE, GstMPDSegmentTemplateNodeClass))
-#define GST_IS_MPD_SEGMENT_TEMPLATE_NODE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MPD_SEGMENT_TEMPLATE_NODE))
-#define GST_IS_MPD_SEGMENT_TEMPLATE_NODE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MPD_SEGMENT_TEMPLATE_NODE))
-#define GST_MPD_SEGMENT_TEMPLATE_NODE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_MPD_SEGMENT_TEMPLATE_NODE, GstMPDSegmentTemplateNodeClass))
-
-typedef struct _GstMPDSegmentTemplateNode                GstMPDSegmentTemplateNode;
-typedef struct _GstMPDSegmentTemplateNodeClass           GstMPDSegmentTemplateNodeClass;
-
+G_DECLARE_FINAL_TYPE (GstMPDSegmentTemplateNode, gst_mpd_segment_template_node, GST, MPD_SEGMENT_TEMPLATE_NODE, GstMPDMultSegmentBaseNode)
 
 struct _GstMPDSegmentTemplateNode
 {
-  GstObject     parent_instance;
-  /* extension */
-  GstMPDMultSegmentBaseType *MultSegBaseType;
+  GstMPDMultSegmentBaseNode     parent_instance;
+
   gchar *media;
   gchar *index;
   gchar *initialization;
   gchar *bitstreamSwitching;
 };
-
-struct _GstMPDSegmentTemplateNodeClass {
-    GstObjectClass parent_class;
-};
-
-
-G_GNUC_INTERNAL GType gst_mpd_segment_template_node_get_type (void);
 
 GstMPDSegmentTemplateNode * gst_mpd_segment_template_node_new (void);
 void gst_mpd_segment_template_node_free (GstMPDSegmentTemplateNode* self);

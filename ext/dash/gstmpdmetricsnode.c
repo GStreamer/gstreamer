@@ -21,7 +21,7 @@
 #include "gstmpdmetricsnode.h"
 #include "gstmpdparser.h"
 
-G_DEFINE_TYPE (GstMPDMetricsNode, gst_mpd_metrics_node, GST_TYPE_OBJECT);
+G_DEFINE_TYPE (GstMPDMetricsNode, gst_mpd_metrics_node, GST_TYPE_MPD_NODE);
 
 /* GObject VMethods */
 
@@ -37,11 +37,39 @@ gst_mpd_metrics_node_finalize (GObject * object)
   G_OBJECT_CLASS (gst_mpd_metrics_node_parent_class)->finalize (object);
 }
 
+/* Base class */
+
+static xmlNodePtr
+gst_mpd_metrics_get_xml_node (GstMPDNode * node)
+{
+  xmlNodePtr metrics_xml_node = NULL;
+  GstMPDMetricsNode *self = GST_MPD_METRICS_NODE (node);
+
+  metrics_xml_node = xmlNewNode (NULL, (xmlChar *) "Metrics");
+
+  if (self->metrics)
+    gst_xml_helper_set_prop_string (metrics_xml_node, "metrics", self->metrics);
+
+  g_list_foreach (self->Reportings, gst_mpd_node_get_list_item,
+      metrics_xml_node);
+  g_list_foreach (self->MetricsRanges, gst_mpd_node_get_list_item,
+      metrics_xml_node);
+
+  return metrics_xml_node;
+}
+
 static void
 gst_mpd_metrics_node_class_init (GstMPDMetricsNodeClass * klass)
 {
-  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GObjectClass *object_class;
+  GstMPDNodeClass *m_klass;
+
+  object_class = G_OBJECT_CLASS (klass);
+  m_klass = GST_MPD_NODE_CLASS (klass);
+
   object_class->finalize = gst_mpd_metrics_node_finalize;
+
+  m_klass->get_xml_node = gst_mpd_metrics_get_xml_node;
 }
 
 static void
