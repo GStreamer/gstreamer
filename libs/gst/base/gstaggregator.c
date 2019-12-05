@@ -3460,3 +3460,26 @@ gst_aggregator_simple_get_next_time (GstAggregator * self)
 
   return next_time;
 }
+
+/**
+ * gst_aggregator_update_segment:
+ *
+ * Subclasses should use this to update the segment on their
+ * source pad, instead of directly pushing new segment events
+ * downstream.
+ *
+ * Since: 1.18
+ */
+void
+gst_aggregator_update_segment (GstAggregator * self, GstSegment * segment)
+{
+  g_return_if_fail (GST_IS_AGGREGATOR (self));
+  g_return_if_fail (segment != NULL);
+
+  GST_INFO_OBJECT (self, "Updating srcpad segment: %" GST_PTR_FORMAT, segment);
+
+  GST_OBJECT_LOCK (self);
+  GST_AGGREGATOR_PAD (self->srcpad)->segment = *segment;
+  self->priv->send_segment = TRUE;
+  GST_OBJECT_UNLOCK (self);
+}
