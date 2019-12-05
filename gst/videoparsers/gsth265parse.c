@@ -615,19 +615,17 @@ gst_h265_parse_process_sei (GstH265Parse * h265parse, GstH265NalUnit * nalu)
 
         minfo.max_luma_d = minfo.min_luma_d = luma_den;
 
-        GST_LOG_OBJECT (h265parse, "mastering display info found");
-        GST_LOG_OBJECT (h265parse, "\tRed  (%u/%u, %u/%u)", minfo.Rx_n,
-            minfo.Rx_d, minfo.Ry_n, minfo.Ry_d);
-        GST_LOG_OBJECT (h265parse, "\tGreen(%u/%u, %u/%u)", minfo.Gx_n,
-            minfo.Gx_d, minfo.Gy_n, minfo.Gy_d);
-        GST_LOG_OBJECT (h265parse, "\tBlue (%u/%u, %u/%u)", minfo.Bx_n,
-            minfo.Bx_d, minfo.By_n, minfo.By_d);
-        GST_LOG_OBJECT (h265parse, "\tWhite(%u/%u, %u/%u)", minfo.Wx_n,
-            minfo.Wx_d, minfo.Wy_n, minfo.Wy_d);
-        GST_LOG_OBJECT (h265parse,
-            "\tmax_luminance:(%u/%u), min_luminance:(%u/%u)",
-            minfo.max_luma_n, minfo.max_luma_d, minfo.min_luma_n,
-            minfo.min_luma_d);
+        GST_LOG_OBJECT (h265parse, "mastering display info found: "
+            "Red(%u/%u, %u/%u) "
+            "Green(%u/%u, %u/%u) "
+            "Blue(%u/%u, %u/%u) "
+            "White(%u/%u, %u/%u) "
+            "max_luminance(%u/%u) "
+            "min_luminance(%u/%u) ", minfo.Rx_n, minfo.Rx_d, minfo.Ry_n,
+            minfo.Ry_d, minfo.Gx_n, minfo.Gx_d, minfo.Gy_n, minfo.Gy_d,
+            minfo.Bx_n, minfo.Bx_d, minfo.By_n, minfo.By_d, minfo.Wx_n,
+            minfo.Wx_d, minfo.Wy_n, minfo.Wy_d, minfo.max_luma_n,
+            minfo.max_luma_d, minfo.min_luma_n, minfo.min_luma_d);
 
         if (h265parse->mastering_display_info_state ==
             GST_H265_PARSE_SEI_EXPIRED) {
@@ -652,9 +650,8 @@ gst_h265_parse_process_sei (GstH265Parse * h265parse, GstH265NalUnit * nalu)
 
         cll.maxCLL_d = cll.maxFALL_d = 1;
 
-        GST_LOG_OBJECT (h265parse, "content light level found");
-        GST_LOG_OBJECT (h265parse,
-            "\tmaxCLL:(%u/%u), maxFALL:(%u/%u)", cll.maxCLL_n, cll.maxCLL_d,
+        GST_LOG_OBJECT (h265parse, "content light level found: "
+            "maxCLL:(%u/%u), maxFALL:(%u/%u)", cll.maxCLL_n, cll.maxCLL_d,
             cll.maxFALL_n, cll.maxFALL_d);
 
         if (h265parse->content_light_level_state == GST_H265_PARSE_SEI_EXPIRED) {
@@ -924,14 +921,20 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
       is_irap = ((nal_type >= GST_H265_NAL_SLICE_BLA_W_LP)
           && (nal_type <= GST_H265_NAL_SLICE_CRA_NUT)) ? TRUE : FALSE;
 
-      if (h265parse->mastering_display_info_state != GST_H265_PARSE_SEI_EXPIRED
-          && no_rasl_output_flag && is_irap)
-        h265parse->mastering_display_info_state--;
+      if (no_rasl_output_flag && is_irap) {
+        if (h265parse->mastering_display_info_state ==
+            GST_H265_PARSE_SEI_PARSED)
+          h265parse->mastering_display_info_state = GST_H265_PARSE_SEI_ACTIVE;
+        else if (h265parse->mastering_display_info_state ==
+            GST_H265_PARSE_SEI_ACTIVE)
+          h265parse->mastering_display_info_state = GST_H265_PARSE_SEI_EXPIRED;
 
-      if (h265parse->content_light_level_state != GST_H265_PARSE_SEI_EXPIRED &&
-          no_rasl_output_flag && is_irap)
-        h265parse->content_light_level_state--;
-
+        if (h265parse->content_light_level_state == GST_H265_PARSE_SEI_PARSED)
+          h265parse->content_light_level_state = GST_H265_PARSE_SEI_ACTIVE;
+        else if (h265parse->content_light_level_state ==
+            GST_H265_PARSE_SEI_ACTIVE)
+          h265parse->content_light_level_state = GST_H265_PARSE_SEI_EXPIRED;
+      }
       if (G_LIKELY (!is_irap && !h265parse->push_codec))
         break;
 
@@ -2105,8 +2108,8 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
 
   if (caps) {
     gint par_n, par_d;
-    const gchar *mastering_info_str;
-    const gchar *cll_str;
+    const gchar *mdi_str = NULL;
+    const gchar *cll_str = NULL;
 
     gst_caps_set_simple (caps, "parsed", G_TYPE_BOOLEAN, TRUE,
         "stream-format", G_TYPE_STRING,
@@ -2144,26 +2147,26 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
       ensure_caps_profile (h265parse, caps, sps, p);
     }
 
-    if (s
-        && (mastering_info_str =
-            gst_structure_get_string (s, "mastering-display-info"))) {
+    if (s)
+      mdi_str = gst_structure_get_string (s, "mastering-display-info");
+    if (mdi_str) {
       gst_caps_set_simple (caps, "mastering-display-info", G_TYPE_STRING,
-          mastering_info_str, NULL);
+          mdi_str, NULL);
     } else if (h265parse->mastering_display_info_state !=
-        GST_H265_PARSE_SEI_EXPIRED
-        &&
+        GST_H265_PARSE_SEI_EXPIRED &&
         !gst_video_mastering_display_info_add_to_caps
         (&h265parse->mastering_display_info, caps)) {
       GST_WARNING_OBJECT (h265parse,
           "Couldn't set mastering display info to caps");
     }
 
-    if (s && (cll_str = gst_structure_get_string (s, "content-light-level"))) {
+    if (s)
+      cll_str = gst_structure_get_string (s, "content-light-level");
+    if (cll_str) {
       gst_caps_set_simple (caps, "content-light-level", G_TYPE_STRING, cll_str,
           NULL);
     } else if (h265parse->content_light_level_state !=
-        GST_H265_PARSE_SEI_EXPIRED
-        &&
+        GST_H265_PARSE_SEI_EXPIRED &&
         !gst_video_content_light_level_add_to_caps
         (&h265parse->content_light_level, caps)) {
       GST_WARNING_OBJECT (h265parse,
