@@ -386,12 +386,6 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
     /* This ref will never be dropped as the class is never destroyed */
     GST_OBJECT_FLAG_SET (factory, GST_OBJECT_FLAG_MAY_BE_LEAKED);
 
-  /* Ensure that the reference is floating. Bindings might have a hard time
-   * making sure that the reference is indeed still floating after returning
-   * here */
-  if (element)
-    g_object_force_floating ((GObject *) element);
-
   GST_DEBUG ("created element \"%s\"", GST_OBJECT_NAME (factory));
 
   return element;
