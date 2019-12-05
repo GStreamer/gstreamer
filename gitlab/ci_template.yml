@@ -854,7 +854,6 @@ cerbero cross-ios universal:
 
 build cerbero cross-ios universal:
   extends: '.cerbero cross-ios universal'
-  when: 'manual'
   except:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
@@ -937,7 +936,9 @@ documentation:
 
 cross-ios universal examples:
   extends: ".cross-ios universal examples"
-  when: 'manual'
+  needs:
+    - "build cerbero cross-ios universal"
+    - "manifest"
   dependencies:
     - "build cerbero cross-ios universal"
   except:
