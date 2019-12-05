@@ -513,7 +513,8 @@ gst_audio_base_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
 
   spec = &src->ringbuffer->spec;
 
-  if (G_UNLIKELY (spec->caps && gst_caps_is_equal (spec->caps, caps))) {
+  if (G_UNLIKELY (gst_audio_ring_buffer_is_acquired (src->ringbuffer)
+          && gst_caps_is_equal (spec->caps, caps))) {
     GST_DEBUG_OBJECT (src,
         "Ringbuffer caps haven't changed, skipping reconfiguration");
     return TRUE;
