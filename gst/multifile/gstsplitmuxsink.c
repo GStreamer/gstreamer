@@ -97,6 +97,7 @@ enum
 {
   PROP_0,
   PROP_LOCATION,
+  PROP_START_INDEX,
   PROP_MAX_SIZE_TIME,
   PROP_MAX_SIZE_BYTES,
   PROP_MAX_SIZE_TIMECODE,
@@ -127,6 +128,7 @@ enum
 #define DEFAULT_USE_ROBUST_MUXING FALSE
 #define DEFAULT_RESET_MUXER TRUE
 #define DEFAULT_ASYNC_FINALIZE FALSE
+#define DEFAULT_START_INDEX 0
 
 typedef struct _AsyncEosHelper
 {
@@ -394,6 +396,11 @@ gst_splitmux_sink_class_init (GstSplitMuxSinkClass * klass)
           "Example: {properties,boolean-prop=true,string-prop=\"hi\"}. "
           "Valid only for async-finalize = TRUE",
           GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_START_INDEX,
+      g_param_spec_int ("start-index", "Start Index",
+          "Start value of fragment index.",
+          0, G_MAXINT, DEFAULT_START_INDEX,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstSplitMuxSink::muxer-pad-map
@@ -675,6 +682,11 @@ gst_splitmux_sink_set_property (GObject * object, guint prop_id,
       GST_OBJECT_UNLOCK (splitmux);
       break;
     }
+    case PROP_START_INDEX:
+      GST_OBJECT_LOCK (splitmux);
+      splitmux->start_index = g_value_get_int (value);
+      GST_OBJECT_UNLOCK (splitmux);
+      break;
     case PROP_MAX_SIZE_BYTES:
       GST_OBJECT_LOCK (splitmux);
       splitmux->threshold_bytes = g_value_get_uint64 (value);
@@ -809,6 +821,11 @@ gst_splitmux_sink_get_property (GObject * object, guint prop_id,
     case PROP_LOCATION:
       GST_OBJECT_LOCK (splitmux);
       g_value_set_string (value, splitmux->location);
+      GST_OBJECT_UNLOCK (splitmux);
+      break;
+    case PROP_START_INDEX:
+      GST_OBJECT_LOCK (splitmux);
+      g_value_set_int (value, splitmux->start_index);
       GST_OBJECT_UNLOCK (splitmux);
       break;
     case PROP_MAX_SIZE_BYTES:
@@ -1695,7 +1712,8 @@ start_next_fragment (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
   GST_STATE_LOCK (splitmux);
 
   if (splitmux->async_finalize) {
-    if (splitmux->muxed_out_bytes > 0 || splitmux->fragment_id != 0) {
+    if (splitmux->muxed_out_bytes > 0
+        || splitmux->fragment_id != splitmux->start_index) {
       gchar *newname;
       GstElement *new_sink, *new_muxer;
 
@@ -1783,7 +1801,8 @@ start_next_fragment (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
   }
 
   GST_SPLITMUX_LOCK (splitmux);
-  if (splitmux->muxed_out_bytes > 0 || splitmux->fragment_id == 0)
+  if (splitmux->muxed_out_bytes > 0
+      || splitmux->fragment_id == splitmux->start_index)
     set_next_filename (splitmux, ctx);
   splitmux->muxed_out_bytes = 0;
   GST_SPLITMUX_UNLOCK (splitmux);
@@ -3222,7 +3241,7 @@ gst_splitmux_sink_change_state (GstElement * element, GstStateChange transition)
       g_signal_emit (splitmux, signals[SIGNAL_MUXER_ADDED], 0, splitmux->muxer);
       g_signal_emit (splitmux, signals[SIGNAL_SINK_ADDED], 0, splitmux->sink);
       GST_SPLITMUX_UNLOCK (splitmux);
-      splitmux->fragment_id = 0;
+      splitmux->fragment_id = splitmux->start_index;
       break;
     }
     case GST_STATE_CHANGE_READY_TO_PAUSED:{

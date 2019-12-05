@@ -135,7 +135,7 @@ struct _GstSplitMuxSink
 
   gchar *location;
   guint fragment_id;
-
+  guint start_index;
   GList *contexts;
 
   SplitMuxInputState input_state;
