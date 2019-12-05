@@ -876,11 +876,9 @@ gst_bus_source_finalize (GSource * source)
   GstBusSource *bsource = (GstBusSource *) source;
 #if !GLIB_CHECK_VERSION(2,63,3)
   GstBus *bus = bsource->bus;
-#endif
 
   GST_DEBUG_OBJECT (bus, "finalize source %p", source);
 
-#if !GLIB_CHECK_VERSION(2,63,3)
   GST_OBJECT_LOCK (bus);
   if (bus->priv->signal_watch == source)
     bus->priv->signal_watch = NULL;
