@@ -1590,16 +1590,16 @@ gst_decklink_get_devices (void)
     Device *device = (Device *) g_ptr_array_index (devices, i);
 
     if (device->devices[0])
-      l = g_list_prepend (l, device->devices[0]);
+      l = g_list_prepend (l, g_object_ref (device->devices[0]));
 
     if (device->devices[1])
-      l = g_list_prepend (l, device->devices[1]);
+      l = g_list_prepend (l, g_object_ref (device->devices[1]));
 
     if (device->devices[2])
-      l = g_list_prepend (l, device->devices[2]);
+      l = g_list_prepend (l, g_object_ref (device->devices[2]));
 
     if (device->devices[3])
-      l = g_list_prepend (l, device->devices[3]);
+      l = g_list_prepend (l, g_object_ref (device->devices[3]));
   }
 
   l = g_list_reverse (l);
