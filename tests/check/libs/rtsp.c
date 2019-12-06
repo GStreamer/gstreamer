@@ -51,6 +51,39 @@ GST_START_TEST (test_rtsp_url_basic)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rtsp_url_query)
+{
+  GstRTSPUrl *url = NULL;
+  GstRTSPResult res;
+  gchar *uri;
+  const gchar *original_uri = "rtsp://localhost/foo/bar/?baz=fooo";
+  const gchar *original_uri_with_control =
+      "rtsp://localhost/foo/bar/video/stream1?baz=fooo";
+
+  res = gst_rtsp_url_parse (original_uri, &url);
+  fail_unless (res == GST_RTSP_OK);
+  fail_unless (url != NULL);
+  fail_unless (url->transports & GST_RTSP_LOWER_TRANS_TCP);
+  fail_unless (url->transports & GST_RTSP_LOWER_TRANS_UDP);
+  fail_unless (url->transports & GST_RTSP_LOWER_TRANS_UDP_MCAST);
+  fail_unless (url->family == GST_RTSP_FAM_INET);
+  fail_unless (!url->user);
+  fail_unless (!url->passwd);
+  fail_unless (!strcmp (url->host, "localhost"));
+  fail_unless (!strcmp (url->abspath, "/foo/bar/"));
+  fail_unless (!strcmp (url->query, "baz=fooo"));
+  uri = gst_rtsp_url_get_request_uri (url);
+  fail_unless (!strcmp (uri, original_uri));
+  g_free (uri);
+  uri = gst_rtsp_url_get_request_uri_with_control (url, "/video/stream1");
+  fail_unless (!strcmp (uri, original_uri_with_control));
+  g_free (uri);
+
+  gst_rtsp_url_free (url);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_rtsp_url_components_1)
 {
   GstRTSPUrl *url = NULL;
@@ -975,6 +1008,7 @@ rtsp_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_rtsp_url_basic);
+  tcase_add_test (tc_chain, test_rtsp_url_query);
   tcase_add_test (tc_chain, test_rtsp_url_components_1);
   tcase_add_test (tc_chain, test_rtsp_url_components_2);
   tcase_add_test (tc_chain, test_rtsp_url_components_3);

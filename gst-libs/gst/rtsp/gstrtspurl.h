@@ -102,6 +102,10 @@ GST_RTSP_API
 gchar*             gst_rtsp_url_get_request_uri (const GstRTSPUrl *url);
 
 GST_RTSP_API
+gchar *            gst_rtsp_url_get_request_uri_with_control (const GstRTSPUrl * url,
+                                                              const gchar * control_path);
+
+GST_RTSP_API
 gchar**            gst_rtsp_url_decode_path_components
                                                 (const GstRTSPUrl *url);
 GST_RTSP_API
