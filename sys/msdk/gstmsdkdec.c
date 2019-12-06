@@ -659,6 +659,37 @@ finish_task (GstMsdkDec * thiz, MsdkDecTask * task)
   task->decode_only = FALSE;
 }
 
+static void
+gst_msdkdec_frame_corruption_report (GstMsdkDec * thiz, mfxU16 corruption)
+{
+  if (!thiz->report_error || !corruption)
+    return;
+
+  if (corruption & MFX_CORRUPTION_MINOR)
+    GST_ELEMENT_WARNING (thiz, STREAM, DECODE,
+        ("[Corruption] Minor corruption detected!"), (NULL));
+
+  if (corruption & MFX_CORRUPTION_MAJOR)
+    GST_ELEMENT_WARNING (thiz, STREAM, DECODE,
+        ("[Corruption] Major corruption detected!"), (NULL));
+
+  if (corruption & MFX_CORRUPTION_ABSENT_TOP_FIELD)
+    GST_ELEMENT_WARNING (thiz, STREAM, DECODE,
+        ("[Corruption] Absent top field!"), (NULL));
+
+  if (corruption & MFX_CORRUPTION_ABSENT_BOTTOM_FIELD)
+    GST_ELEMENT_WARNING (thiz, STREAM, DECODE,
+        ("[Corruption] Absent bottom field!"), (NULL));
+
+  if (corruption & MFX_CORRUPTION_REFERENCE_FRAME)
+    GST_ELEMENT_WARNING (thiz, STREAM, DECODE,
+        ("[Corruption] Corrupted reference frame!"), (NULL));
+
+  if (corruption & MFX_CORRUPTION_REFERENCE_LIST)
+    GST_ELEMENT_WARNING (thiz, STREAM, DECODE,
+        ("[Corruption] Corrupted reference list!"), (NULL));
+}
+
 static GstFlowReturn
 gst_msdkdec_finish_task (GstMsdkDec * thiz, MsdkDecTask * task)
 {
@@ -681,6 +712,8 @@ gst_msdkdec_finish_task (GstMsdkDec * thiz, MsdkDecTask * task)
 
   surface = task->surface;
   if (surface) {
+    gst_msdkdec_frame_corruption_report (thiz,
+        surface->surface->Data.Corrupted);
     GST_DEBUG_OBJECT (thiz, "Decoded MFX TimeStamp: %" G_GUINT64_FORMAT,
         (guint64) surface->surface->Data.TimeStamp);
     pts = surface->surface->Data.TimeStamp;
@@ -984,6 +1017,33 @@ find_msdk_surface (GstMsdkDec * thiz, MsdkDecTask * task,
   return TRUE;
 }
 
+static void
+gst_msdkdec_error_report (GstMsdkDec * thiz)
+{
+  if (!thiz->report_error)
+    return;
+
+#if (MFX_VERSION >= 1025)
+  else {
+    if (thiz->error_report.ErrorTypes & MFX_ERROR_SPS)
+      GST_ELEMENT_WARNING (thiz, STREAM, DECODE,
+          ("[Error] SPS Error detected!"), (NULL));
+
+    if (thiz->error_report.ErrorTypes & MFX_ERROR_PPS)
+      GST_ELEMENT_WARNING (thiz, STREAM, DECODE,
+          ("[Error] PPS Error detected!"), (NULL));
+
+    if (thiz->error_report.ErrorTypes & MFX_ERROR_SLICEHEADER)
+      GST_ELEMENT_WARNING (thiz, STREAM, DECODE,
+          ("[Error] SliceHeader Error detected!"), (NULL));
+
+    if (thiz->error_report.ErrorTypes & MFX_ERROR_FRAME_GAP)
+      GST_ELEMENT_WARNING (thiz, STREAM, DECODE,
+          ("[Error] Frame Gap Error detected!"), (NULL));
+  }
+#endif
+}
+
 static GstFlowReturn
 gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
 {
@@ -1093,8 +1153,15 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
      * and this information can't be retrieved from the negotiated caps.
      * So instead of introducing a codecparser dependency to parse the headers
      * inside msdk plugin, we simply use the mfx APIs to extract header information */
+#if (MFX_VERSION >= 1025)
+    if (thiz->report_error)
+      thiz->error_report.ErrorTypes = 0;
+#endif
+
     status = MFXVideoDECODE_DecodeHeader (session, &bitstream, &thiz->param);
     GST_DEBUG_OBJECT (decoder, "DecodeHeader => %d", status);
+    gst_msdkdec_error_report (thiz);
+
     if (status == MFX_ERR_MORE_DATA) {
       flow = GST_FLOW_OK;
       goto done;
@@ -1179,6 +1246,10 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
         }
       }
     }
+#if (MFX_VERSION >= 1025)
+    if (thiz->report_error)
+      thiz->error_report.ErrorTypes = 0;
+#endif
 
     status =
         MFXVideoDECODE_DecodeFrameAsync (session, &bitstream, surface->surface,
@@ -1190,6 +1261,7 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
     }
 
     GST_DEBUG_OBJECT (decoder, "DecodeFrameAsync => %d", status);
+    gst_msdkdec_error_report (thiz);
 
     /* media-sdk requires complete reset since the surface is inadequate
      * for further decoding */
@@ -1199,8 +1271,14 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
        * suitable for the current frame. Call MFXVideoDECODE_DecodeHeader to get
        * the current frame size, then do memory re-allocation, otherwise
        * MFXVideoDECODE_DecodeFrameAsync will still fail on next call */
+#if (MFX_VERSION >= 1025)
+      if (thiz->report_error)
+        thiz->error_report.ErrorTypes = 0;
+#endif
       status = MFXVideoDECODE_DecodeHeader (session, &bitstream, &thiz->param);
       GST_DEBUG_OBJECT (decoder, "DecodeHeader => %d", status);
+      gst_msdkdec_error_report (thiz);
+
       if (status == MFX_ERR_MORE_DATA) {
         flow = GST_FLOW_OK;
         goto done;
@@ -1574,6 +1652,10 @@ gst_msdkdec_drain (GstVideoDecoder * decoder)
       if (!surface)
         return GST_FLOW_ERROR;
     }
+#if (MFX_VERSION >= 1025)
+    if (thiz->report_error)
+      thiz->error_report.ErrorTypes = 0;
+#endif
 
     status =
         MFXVideoDECODE_DecodeFrameAsync (session, NULL, surface->surface,
@@ -1584,6 +1666,8 @@ gst_msdkdec_drain (GstVideoDecoder * decoder)
     }
 
     GST_DEBUG_OBJECT (decoder, "DecodeFrameAsync => %d", status);
+    gst_msdkdec_error_report (thiz);
+
     if (G_LIKELY (status == MFX_ERR_NONE)) {
       thiz->next_task = (thiz->next_task + 1) % thiz->tasks->len;
       surface = NULL;
@@ -1818,6 +1902,7 @@ gst_msdkdec_init (GstMsdkDec * thiz)
   thiz->do_renego = TRUE;
   thiz->do_realloc = TRUE;
   thiz->force_reset_on_res_change = TRUE;
+  thiz->report_error = FALSE;
   thiz->adapter = gst_adapter_new ();
   thiz->input_state = NULL;
   thiz->pool = NULL;

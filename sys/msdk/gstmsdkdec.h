@@ -99,10 +99,15 @@ struct _GstMsdkDec
 
   /* element properties */
   gboolean hardware;
+  gboolean report_error;
   guint async_depth;
 
   mfxExtBuffer *bs_extra_params[MAX_BS_EXTRA_PARAMS];
   guint num_bs_extra_params;
+
+#if (MFX_VERSION >= 1025)
+  mfxExtDecodeErrorReport error_report;
+#endif
 };
 
 struct _GstMsdkDecClass

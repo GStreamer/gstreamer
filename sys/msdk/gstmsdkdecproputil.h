@@ -37,6 +37,7 @@
 G_BEGIN_DECLS
 
 #define PROP_OUTPUT_ORDER_DEFAULT        GST_MSDKDEC_OUTPUT_ORDER_DISPLAY
+#define PROP_ERROR_REPORT_DEFAULT        FALSE
 
 enum
 {
@@ -44,10 +45,14 @@ enum
   GST_MSDKDEC_PROP_HARDWARE,
   GST_MSDKDEC_PROP_ASYNC_DEPTH,
   GST_MSDKDEC_PROP_OUTPUT_ORDER,
+  GST_MSDKDEC_PROP_ERROR_REPORT,
 };
 
 void
 gst_msdkdec_prop_install_output_oder_property(GObjectClass * gobject_class);
+
+void
+gst_msdkdec_prop_install_error_report_property (GObjectClass * gobject_class);
 
 gboolean
 gst_msdkdec_prop_check_state(GstState state, GParamSpec * pspec);

@@ -61,6 +61,17 @@ gst_msdkh264dec_configure (GstMsdkDec * decoder)
    * customers still using this for low-latency streaming of non-b-frame
    * encoded streams */
   decoder->param.mfx.DecodedOrder = h264dec->output_order;
+
+#if (MFX_VERSION >= 1025)
+  if (decoder->report_error) {
+    decoder->error_report.Header.BufferId = MFX_EXTBUFF_DECODE_ERROR_REPORT;
+    decoder->error_report.Header.BufferSz = sizeof (decoder->error_report);
+    decoder->error_report.ErrorTypes = 0;
+    gst_msdkdec_add_bs_extra_param (decoder,
+        (mfxExtBuffer *) & decoder->error_report);
+  }
+#endif
+
   return TRUE;
 }
 
@@ -69,6 +80,9 @@ gst_msdkdec_h264_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstMsdkH264Dec *thiz = GST_MSDKH264DEC (object);
+#if (MFX_VERSION >= 1025)
+  GstMsdkDec *dec = GST_MSDKDEC (object);
+#endif
   GstState state;
 
   GST_OBJECT_LOCK (thiz);
@@ -83,6 +97,11 @@ gst_msdkdec_h264_set_property (GObject * object, guint prop_id,
     case GST_MSDKDEC_PROP_OUTPUT_ORDER:
       thiz->output_order = g_value_get_enum (value);
       break;
+#if (MFX_VERSION >= 1025)
+    case GST_MSDKDEC_PROP_ERROR_REPORT:
+      dec->report_error = g_value_get_boolean (value);
+      break;
+#endif
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -96,12 +115,20 @@ gst_msdkdec_h264_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
   GstMsdkH264Dec *thiz = GST_MSDKH264DEC (object);
+#if (MFX_VERSION >= 1025)
+  GstMsdkDec *dec = GST_MSDKDEC (object);
+#endif
 
   GST_OBJECT_LOCK (thiz);
   switch (prop_id) {
     case GST_MSDKDEC_PROP_OUTPUT_ORDER:
       g_value_set_enum (value, thiz->output_order);
       break;
+#if (MFX_VERSION >= 1025)
+    case GST_MSDKDEC_PROP_ERROR_REPORT:
+      g_value_set_boolean (value, dec->report_error);
+      break;
+#endif
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -132,6 +159,10 @@ gst_msdkh264dec_class_init (GstMsdkH264DecClass * klass)
       "Scott D Phillips <scott.d.phillips@intel.com>");
 
   gst_msdkdec_prop_install_output_oder_property (gobject_class);
+
+#if (MFX_VERSION >= 1025)
+  gst_msdkdec_prop_install_error_report_property (gobject_class);
+#endif
 
   gst_element_class_add_static_pad_template (element_class, &sink_factory);
 }

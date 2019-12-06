@@ -42,6 +42,16 @@ gst_msdkdec_prop_install_output_oder_property (GObjectClass * gobject_class)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
+void
+gst_msdkdec_prop_install_error_report_property (GObjectClass * gobject_class)
+{
+  g_object_class_install_property (gobject_class, GST_MSDKDEC_PROP_ERROR_REPORT,
+      g_param_spec_boolean ("report-error", "report-error",
+          "Report bitstream error information",
+          PROP_ERROR_REPORT_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+}
+
 gboolean
 gst_msdkdec_prop_check_state (GstState state, GParamSpec * pspec)
 {
