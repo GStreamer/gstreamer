@@ -3476,7 +3476,8 @@ gst_aggregator_update_segment (GstAggregator * self, GstSegment * segment)
   g_return_if_fail (GST_IS_AGGREGATOR (self));
   g_return_if_fail (segment != NULL);
 
-  GST_INFO_OBJECT (self, "Updating srcpad segment: %" GST_PTR_FORMAT, segment);
+  GST_INFO_OBJECT (self, "Updating srcpad segment: %" GST_SEGMENT_FORMAT,
+      segment);
 
   GST_OBJECT_LOCK (self);
   GST_AGGREGATOR_PAD (self->srcpad)->segment = *segment;
