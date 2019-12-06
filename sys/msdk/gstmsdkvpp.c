@@ -729,11 +729,17 @@ gst_msdkvpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   if (!in_surface)
     return GST_FLOW_ERROR;
 
+  if (!in_surface->surface) {
+    GST_ERROR_OBJECT (thiz, "mfx surface is NULL for the current input buffer");
+    free_msdk_surface (in_surface);
+    return GST_FLOW_ERROR;
+  }
+
   if (gst_msdk_is_msdk_buffer (outbuf)) {
     out_surface = g_slice_new0 (MsdkSurface);
     out_surface->surface = gst_msdk_get_surface_from_buffer (outbuf);
   } else {
-    GST_ERROR ("Failed to get msdk outsurface!");
+    GST_ERROR_OBJECT (thiz, "Failed to get msdk outsurface!");
     free_msdk_surface (in_surface);
     return GST_FLOW_ERROR;
   }
