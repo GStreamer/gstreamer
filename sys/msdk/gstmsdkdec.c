@@ -660,11 +660,12 @@ gst_msdkdec_finish_task (GstMsdkDec * thiz, MsdkDecTask * task)
 
     if (!frame)
       return GST_FLOW_FLUSHING;
-    gst_video_codec_frame_unref (frame);
 
     if (decode_only)
       GST_VIDEO_CODEC_FRAME_SET_DECODE_ONLY (frame);
     flow = gst_video_decoder_finish_frame (decoder, frame);
+    if (flow == GST_FLOW_ERROR)
+      GST_ERROR_OBJECT (thiz, "Failed to finish frame");
     return flow;
   }
   return GST_FLOW_OK;
@@ -1001,12 +1002,6 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
     if (thiz->force_reset_on_res_change)
       hard_reset = TRUE;
 
-    /* Config changed dynamically and we are going to do a full reset,
-     * this will unref the input frame which has the new configuration.
-     * Keep a ref to the input_frame to keep it alive */
-    if (thiz->initialized && thiz->do_renego)
-      gst_video_codec_frame_ref (frame);
-
     if (!gst_msdkdec_negotiate (thiz, hard_reset)) {
       GST_ELEMENT_ERROR (thiz, CORE, NEGOTIATION,
           ("Could not negotiate the stream"), (NULL));
@@ -1015,13 +1010,21 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
     }
   }
 
+  /* gst_msdkdec_handle_frame owns one ref on input argument |frame|. At this
+   * point this frame is not used so just unref it right away.
+   * gst_msdkdec_finish_task is fetching the frames itself.  */
+  gst_video_codec_frame_unref (frame);
+  frame = NULL;
   for (;;) {
     if (thiz->postpone_free_surface)
       gst_msdkdec_free_unlocked_msdk_surfaces (thiz, surface);
     task = &g_array_index (thiz->tasks, MsdkDecTask, thiz->next_task);
     flow = gst_msdkdec_finish_task (thiz, task);
-    if (flow != GST_FLOW_OK)
+    if (flow != GST_FLOW_OK) {
+      if (flow == GST_FLOW_ERROR)
+        GST_ERROR_OBJECT (thiz, "Failed to finish a task");
       goto error;
+    }
     if (!surface) {
       flow = allocate_output_buffer (thiz, &buffer);
       if (flow == GST_FLOW_CUSTOM_SUCCESS) {
@@ -1165,7 +1168,8 @@ error:
     gst_buffer_unmap (input_buffer, &map_info);
     gst_buffer_unref (input_buffer);
   }
-  gst_video_decoder_drop_frame (decoder, frame);
+  if (frame)
+    gst_video_decoder_drop_frame (decoder, frame);
 
   return flow;
 }
