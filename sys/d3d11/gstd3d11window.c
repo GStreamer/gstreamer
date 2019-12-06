@@ -600,14 +600,14 @@ gst_d3d11_window_on_resize (GstD3D11Device * device, GstD3D11Window * window)
 
   hr = IDXGISwapChain_ResizeBuffers (window->swap_chain,
       0, width, height, DXGI_FORMAT_UNKNOWN, 0);
-  if (FAILED (hr)) {
+  if (!gst_d3d11_result (hr)) {
     GST_ERROR_OBJECT (window, "Couldn't resize buffers, hr: 0x%x", (guint) hr);
     return;
   }
 
   hr = IDXGISwapChain_GetBuffer (window->swap_chain,
       0, &IID_ID3D11Texture2D, (void **) &window->backbuffer);
-  if (FAILED (hr)) {
+  if (!gst_d3d11_result (hr)) {
     GST_ERROR_OBJECT (window,
         "Cannot get backbuffer from swapchain, hr: 0x%x", (guint) hr);
     return;
@@ -615,7 +615,7 @@ gst_d3d11_window_on_resize (GstD3D11Device * device, GstD3D11Window * window)
 
   hr = ID3D11Device_CreateRenderTargetView (d3d11_dev,
       (ID3D11Resource *) window->backbuffer, NULL, &window->rtv);
-  if (FAILED (hr)) {
+  if (!gst_d3d11_result (hr)) {
     GST_ERROR_OBJECT (window, "Cannot create render target view, hr: 0x%x",
         (guint) hr);
     return;
@@ -1023,7 +1023,7 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
         hr = IDXGISwapChain4_SetHDRMetaData ((IDXGISwapChain4 *)
             window->swap_chain, DXGI_HDR_METADATA_TYPE_HDR10,
             sizeof (DXGI_HDR_METADATA_HDR10), &metadata);
-        if (FAILED (hr)) {
+        if (!gst_d3d11_result (hr)) {
           GST_WARNING_OBJECT (window, "Couldn't set HDR metadata, hr 0x%x",
               (guint) hr);
         }
@@ -1184,7 +1184,7 @@ _present_on_device_thread (GstD3D11Device * device, FramePresentData * data)
 
   hr = IDXGISwapChain_Present (self->swap_chain, 0, DXGI_PRESENT_DO_NOT_WAIT);
 
-  if (FAILED (hr)) {
+  if (!gst_d3d11_result (hr)) {
     GST_WARNING_OBJECT (self, "Direct3D cannot present texture, hr: 0x%x",
         (guint) hr);
   }

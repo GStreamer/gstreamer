@@ -22,6 +22,7 @@
 #endif
 
 #include "gstd3d11device.h"
+#include "gstd3d11utils.h"
 #include "gmodule.h"
 
 #ifdef HAVE_D3D11SDKLAYER_H
@@ -124,7 +125,7 @@ gst_d3d11_device_get_message (GstD3D11Device * self)
   for (i = 0; i < num_msg; i++) {
     hr = ID3D11InfoQueue_GetMessage (priv->info_queue, i, NULL, &msg_len);
 
-    if (FAILED (hr) || msg_len == 0) {
+    if (!gst_d3d11_result (hr) || msg_len == 0) {
       return G_SOURCE_CONTINUE;
     }
 
@@ -221,7 +222,7 @@ gst_d3d11_device_constructed (GObject * object)
 
 #ifdef HAVE_DXGI_1_5_H
   hr = CreateDXGIFactory1 (&IID_IDXGIFactory5, (void **) &factory);
-  if (FAILED (hr)) {
+  if (!gst_d3d11_result (hr)) {
     GST_INFO_OBJECT (self, "IDXGIFactory5 was unavailable");
     factory = NULL;
   }
@@ -234,7 +235,7 @@ gst_d3d11_device_constructed (GObject * object)
     hr = CreateDXGIFactory1 (&IID_IDXGIFactory1, (void **) &factory);
   }
 
-  if (FAILED (hr)) {
+  if (!gst_d3d11_result (hr)) {
     GST_ERROR_OBJECT (self, "cannot create dxgi factory, hr: 0x%x", (guint) hr);
     goto error;
   }
@@ -284,7 +285,7 @@ gst_d3d11_device_constructed (GObject * object)
       D3D11_SDK_VERSION, &priv->device, &selected_level, &priv->device_context);
   priv->feature_level = selected_level;
 
-  if (FAILED (hr)) {
+  if (!gst_d3d11_result (hr)) {
     /* Retry if the system could not recognize D3D_FEATURE_LEVEL_11_1 */
     hr = D3D11CreateDevice ((IDXGIAdapter *) adapter, D3D_DRIVER_TYPE_UNKNOWN,
         NULL, d3d11_flags, &feature_levels[1],
@@ -293,7 +294,7 @@ gst_d3d11_device_constructed (GObject * object)
     priv->feature_level = selected_level;
   }
 
-  if (SUCCEEDED (hr)) {
+  if (gst_d3d11_result (hr)) {
     GST_DEBUG_OBJECT (self, "Selected feature level 0x%x", selected_level);
   } else {
     GST_ERROR_OBJECT (self, "cannot create d3d11 device, hr: 0x%x", (guint) hr);
@@ -711,7 +712,7 @@ gst_d3d11_device_create_swap_chain_internal (GstD3D11Device * device,
   hr = IDXGIFactory1_CreateSwapChain (priv->factory, (IUnknown *) priv->device,
       (DXGI_SWAP_CHAIN_DESC *) data->desc, &data->swap_chain);
 
-  if (FAILED (hr)) {
+  if (!gst_d3d11_result (hr)) {
     GST_ERROR_OBJECT (device, "Cannot create SwapChain Object: 0x%x",
         (guint) hr);
     data->swap_chain = NULL;
@@ -788,7 +789,7 @@ gst_d3d11_device_create_texture_internal (GstD3D11Device * device,
 
   hr = ID3D11Device_CreateTexture2D (priv->device, data->desc,
       data->inital_data, &data->texture);
-  if (FAILED (hr)) {
+  if (!gst_d3d11_result (hr)) {
     const D3D11_TEXTURE2D_DESC *desc = data->desc;
 
     GST_ERROR ("Failed to create texture (0x%x)", (guint) hr);

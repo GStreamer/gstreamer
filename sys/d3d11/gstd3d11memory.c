@@ -241,7 +241,7 @@ map_cpu_access_data (GstD3D11Device * device, D3D11MapData * map_data)
   hr = ID3D11DeviceContext_Map (device_context,
       staging, 0, map_data->map_type, 0, &dmem->map);
 
-  if (FAILED (hr)) {
+  if (!gst_d3d11_result (hr)) {
     GST_ERROR_OBJECT (GST_MEMORY_CAST (dmem)->allocator,
         "Failed to map staging texture (0x%x)", (guint) hr);
     map_data->ret = FALSE;
@@ -500,7 +500,7 @@ calculate_mem_size (GstD3D11Device * device, CalSizeData * data)
   hr = ID3D11DeviceContext_Map (device_context,
       data->texture, 0, data->map_mode, 0, &map);
 
-  if (FAILED (hr)) {
+  if (!gst_d3d11_result (hr)) {
     GST_ERROR_OBJECT (device, "Failed to map texture (0x%x)", (guint) hr);
     data->ret = FALSE;
   }
@@ -565,7 +565,7 @@ create_shader_resource_views (GstD3D11Device * device, GstD3D11Memory * mem)
           (ID3D11Resource *) mem->texture, &resource_desc,
           &mem->shader_resource_view[i]);
 
-      if (FAILED (hr)) {
+      if (!gst_d3d11_result (hr)) {
         GST_ERROR_OBJECT (device,
             "Failed to create %dth resource view (0x%x)", i, (guint) hr);
         goto error;
@@ -640,7 +640,7 @@ create_render_target_views (GstD3D11Device * device, GstD3D11Memory * mem)
       hr = ID3D11Device_CreateRenderTargetView (device_handle,
           (ID3D11Resource *) mem->texture, &render_desc,
           &mem->render_target_view[i]);
-      if (FAILED (hr)) {
+      if (!gst_d3d11_result (hr)) {
         GST_ERROR_OBJECT (device,
             "Failed to create %dth render target view (0x%x)", i, (guint) hr);
         goto error;

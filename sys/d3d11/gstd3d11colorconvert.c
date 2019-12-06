@@ -538,7 +538,7 @@ create_shader_input_resource (GstD3D11ColorConvert * self,
 
       hr = ID3D11Device_CreateTexture2D (device_handle,
           &texture_desc, NULL, &tex[i]);
-      if (FAILED (hr)) {
+      if (!gst_d3d11_result (hr)) {
         GST_ERROR_OBJECT (self, "Failed to create texture (0x%x)", (guint) hr);
         goto error;
       }
@@ -550,7 +550,7 @@ create_shader_input_resource (GstD3D11ColorConvert * self,
 
     hr = ID3D11Device_CreateTexture2D (device_handle,
         &texture_desc, NULL, &tex[0]);
-    if (FAILED (hr)) {
+    if (!gst_d3d11_result (hr)) {
       GST_ERROR_OBJECT (self, "Failed to create texture (0x%x)", (guint) hr);
       goto error;
     }
@@ -573,7 +573,7 @@ create_shader_input_resource (GstD3D11ColorConvert * self,
     hr = ID3D11Device_CreateShaderResourceView (device_handle,
         (ID3D11Resource *) tex[i], &view_desc, &view[i]);
 
-    if (FAILED (hr)) {
+    if (!gst_d3d11_result (hr)) {
       GST_ERROR_OBJECT (self,
           "Failed to create resource view (0x%x)", (guint) hr);
       goto error;
@@ -642,7 +642,7 @@ create_shader_output_resource (GstD3D11ColorConvert * self,
 
       hr = ID3D11Device_CreateTexture2D (device_handle,
           &texture_desc, NULL, &tex[i]);
-      if (FAILED (hr)) {
+      if (!gst_d3d11_result (hr)) {
         GST_ERROR_OBJECT (self, "Failed to create texture (0x%x)", (guint) hr);
         goto error;
       }
@@ -654,7 +654,7 @@ create_shader_output_resource (GstD3D11ColorConvert * self,
 
     hr = ID3D11Device_CreateTexture2D (device_handle,
         &texture_desc, NULL, &tex[0]);
-    if (FAILED (hr)) {
+    if (!gst_d3d11_result (hr)) {
       GST_ERROR_OBJECT (self, "Failed to create texture (0x%x)", (guint) hr);
       goto error;
     }
@@ -675,7 +675,7 @@ create_shader_output_resource (GstD3D11ColorConvert * self,
     view_desc.Format = format->resource_format[i];
     hr = ID3D11Device_CreateRenderTargetView (device_handle,
         (ID3D11Resource *) tex[i], &view_desc, &view[i]);
-    if (FAILED (hr)) {
+    if (!gst_d3d11_result (hr)) {
       GST_ERROR_OBJECT (self,
           "Failed to create %dth render target view (0x%x)", i, (guint) hr);
       goto error;

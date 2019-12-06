@@ -350,7 +350,7 @@ upload_transform_dynamic (GstD3D11Device * device, UploadTransformData * data)
     hr = ID3D11DeviceContext_Map (device_context,
         (ID3D11Resource *) dmem->texture, 0, D3D11_MAP_WRITE_DISCARD, 0, &map);
 
-    if (FAILED (hr)) {
+    if (!gst_d3d11_result (hr)) {
       GST_ERROR_OBJECT (filter,
           "Failed to map staging texture (0x%x)", (guint) hr);
       data->ret = GST_FLOW_ERROR;
