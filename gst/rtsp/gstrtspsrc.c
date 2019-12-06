@@ -2300,21 +2300,28 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx,
     if (g_str_has_prefix (control_url, "rtsp://"))
       stream->conninfo.location = g_strdup (control_url);
     else {
-      const gchar *base;
-      gboolean has_slash;
-
       if (g_strcmp0 (control_url, "*") == 0)
         control_url = "";
+      /* handle url with query */
+      if (src->conninfo.url && src->conninfo.url->query) {
+        stream->conninfo.location =
+            gst_rtsp_url_get_request_uri_with_control (src->conninfo.url,
+            control_url);
+      } else {
+        const gchar *base;
+        gboolean has_slash;
 
-      base = get_aggregate_control (src);
+        base = get_aggregate_control (src);
 
-      /* check if the base ends or control starts with / */
-      has_slash = g_str_has_prefix (control_url, "/");
-      has_slash = has_slash || g_str_has_suffix (base, "/");
+        /* check if the base ends or control starts with / */
+        has_slash = g_str_has_prefix (control_url, "/");
+        has_slash = has_slash || g_str_has_suffix (base, "/");
 
-      /* concatenate the two strings, insert / when not present */
-      stream->conninfo.location =
-          g_strdup_printf ("%s%s%s", base, has_slash ? "" : "/", control_url);
+        /* concatenate the two strings, insert / when not present */
+        stream->conninfo.location =
+            g_strdup_printf ("%s%s%s", base, has_slash ? "" : "/", control_url);
+
+      }
     }
   }
   GST_DEBUG_OBJECT (src, " setup: %s",
