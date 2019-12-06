@@ -165,7 +165,7 @@ context_ensure_surfaces (GstVaapiContext * context)
   const guint num_surfaces = cip->ref_frames + SCRATCH_SURFACES_COUNT;
   GstVaapiSurface *surface;
   GstVideoFormat format;
-  guint i;
+  guint i, capacity;
 
   format = get_preferred_format (context);
   for (i = context->surfaces->len; i < num_surfaces; i++) {
@@ -182,7 +182,9 @@ context_ensure_surfaces (GstVaapiContext * context)
     if (!gst_vaapi_video_pool_add_object (context->surfaces_pool, surface))
       return FALSE;
   }
-  gst_vaapi_video_pool_set_capacity (context->surfaces_pool, num_surfaces);
+
+  capacity = cip->usage == GST_VAAPI_CONTEXT_USAGE_DECODE ? 0 : num_surfaces;
+  gst_vaapi_video_pool_set_capacity (context->surfaces_pool, capacity);
   return TRUE;
 }
 
@@ -219,10 +221,12 @@ context_create (GstVaapiContext * context)
   GstVaapiDisplay *const display = GST_VAAPI_CONTEXT_DISPLAY (context);
   VAContextID context_id;
   VASurfaceID surface_id;
+  VASurfaceID *surfaces_data = NULL;
   VAStatus status;
   GArray *surfaces = NULL;
   gboolean success = FALSE;
   guint i;
+  gint num_surfaces = 0;
 
   if (!context->surfaces && !context_create_surfaces (context))
     goto cleanup;
@@ -240,12 +244,22 @@ context_create (GstVaapiContext * context)
     surface_id = GST_VAAPI_SURFACE_ID (surface);
     g_array_append_val (surfaces, surface_id);
   }
+
   g_assert (surfaces->len == context->surfaces->len);
+
+  /* vaCreateContext() doesn't really need an array of VASurfaceIDs (see
+   * https://lists.01.org/pipermail/intel-vaapi-media/2017-July/000052.html and
+   * https://github.com/intel/libva/issues/251); pass a dummy list of valid
+   * (non-null) IDs until the signature gets updated. */
+  if (cip->usage != GST_VAAPI_CONTEXT_USAGE_DECODE) {
+    surfaces_data = (VASurfaceID *) surfaces->data;
+    num_surfaces = surfaces->len;
+  }
 
   GST_VAAPI_DISPLAY_LOCK (display);
   status = vaCreateContext (GST_VAAPI_DISPLAY_VADISPLAY (display),
       context->va_config, cip->width, cip->height, VA_PROGRESSIVE,
-      (VASurfaceID *) surfaces->data, surfaces->len, &context_id);
+      surfaces_data, num_surfaces, &context_id);
   GST_VAAPI_DISPLAY_UNLOCK (display);
   if (!vaapi_check_status (status, "vaCreateContext()"))
     goto cleanup;
@@ -627,6 +641,8 @@ gst_vaapi_context_get_surface_count (GstVaapiContext * context)
 {
   g_return_val_if_fail (context != NULL, 0);
 
+  if (gst_vaapi_video_pool_get_capacity (context->surfaces_pool) == 0)
+    return G_MAXUINT;
   return gst_vaapi_video_pool_get_size (context->surfaces_pool);
 }
 
