@@ -2817,9 +2817,10 @@ gst_rtsp_media_seek_trickmode (GstRTSPMedia * media,
   if (stop != GST_CLOCK_TIME_NONE)
     stop_type = GST_SEEK_TYPE_SET;
 
-  /* we force a seek if any trickmode flag is set, or if the rate
-   * is non-standard, i.e. not 1.0 */
-  force_seek = (flags & TRICKMODE_FLAGS) || rate != 1.0;
+  /* we force a seek if any trickmode flag is set, or if the flush flag is set or
+   * the rate is non-standard, i.e. not 1.0 */
+  force_seek = (flags & TRICKMODE_FLAGS) || (flags & GST_SEEK_FLAG_FLUSH) ||
+      rate != 1.0;
 
   if (start != GST_CLOCK_TIME_NONE || stop != GST_CLOCK_TIME_NONE || force_seek) {
     GST_INFO ("seeking to %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
