@@ -83,6 +83,15 @@ static gboolean gst_msdkdec_drain (GstVideoDecoder * decoder);
 static gboolean gst_msdkdec_flush (GstVideoDecoder * decoder);
 static gboolean gst_msdkdec_negotiate (GstMsdkDec * thiz, gboolean hard_reset);
 
+void
+gst_msdkdec_add_bs_extra_param (GstMsdkDec * thiz, mfxExtBuffer * param)
+{
+  if (thiz->num_bs_extra_params < MAX_BS_EXTRA_PARAMS) {
+    thiz->bs_extra_params[thiz->num_bs_extra_params] = param;
+    thiz->num_bs_extra_params++;
+  }
+}
+
 static GstVideoCodecFrame *
 gst_msdkdec_get_oldest_frame (GstVideoDecoder * decoder)
 {
@@ -288,6 +297,7 @@ gst_msdkdec_close_decoder (GstMsdkDec * thiz, gboolean reset_param)
   if (reset_param)
     memset (&thiz->param, 0, sizeof (thiz->param));
 
+  thiz->num_bs_extra_params = 0;
   thiz->initialized = FALSE;
   gst_adapter_clear (thiz->adapter);
 }
@@ -1033,6 +1043,12 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   }
 
   memset (&bitstream, 0, sizeof (bitstream));
+
+  /* Add extended buffers */
+  if (thiz->num_bs_extra_params) {
+    bitstream.NumExtParam = thiz->num_bs_extra_params;
+    bitstream.ExtParam = thiz->bs_extra_params;
+  }
 
   if (gst_video_decoder_get_packetized (decoder)) {
     /* Packetized stream: we prefer to have a parser as a connected upstream

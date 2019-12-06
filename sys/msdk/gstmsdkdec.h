@@ -54,6 +54,8 @@ G_BEGIN_DECLS
 #define GST_IS_MSDKDEC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MSDKDEC))
 
+#define MAX_BS_EXTRA_PARAMS             8
+
 typedef struct _GstMsdkDec GstMsdkDec;
 typedef struct _GstMsdkDecClass GstMsdkDecClass;
 typedef struct _MsdkDecTask MsdkDecTask;
@@ -98,6 +100,9 @@ struct _GstMsdkDec
   /* element properties */
   gboolean hardware;
   guint async_depth;
+
+  mfxExtBuffer *bs_extra_params[MAX_BS_EXTRA_PARAMS];
+  guint num_bs_extra_params;
 };
 
 struct _GstMsdkDecClass
@@ -116,6 +121,9 @@ struct _GstMsdkDecClass
 };
 
 GType gst_msdkdec_get_type (void);
+
+void
+gst_msdkdec_add_bs_extra_param (GstMsdkDec * thiz, mfxExtBuffer * param);
 
 G_END_DECLS
 
