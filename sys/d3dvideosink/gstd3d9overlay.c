@@ -181,11 +181,13 @@ _is_overlay_in_composition (GstVideoOverlayComposition * composition,
 GstFlowReturn
 gst_d3d9_overlay_prepare (GstD3DVideoSink * sink, GstBuffer * buf)
 {
+  GstD3DVideoSinkClass *klass = GST_D3DVIDEOSINK_GET_CLASS (sink);
   GList *l = NULL;
   GstVideoOverlayComposition *composition = NULL;
   guint num_overlays, i;
   GstVideoOverlayCompositionMeta *composition_meta =
       gst_buffer_get_video_overlay_composition_meta (buf);
+  gboolean found_new_overlay_rectangle = FALSE;
 
   if (!composition_meta) {
     gst_d3d9_overlay_free (sink);
@@ -197,73 +199,94 @@ gst_d3d9_overlay_prepare (GstD3DVideoSink * sink, GstBuffer * buf)
 
   GST_DEBUG_OBJECT (sink, "GstVideoOverlayCompositionMeta found.");
 
-  /* add new overlays to list */
+  /* check for new overlays */
   for (i = 0; i < num_overlays; i++) {
     GstVideoOverlayRectangle *rectangle =
         gst_video_overlay_composition_get_rectangle (composition, i);
 
     if (!_is_rectangle_in_overlays (sink->d3d.overlay, rectangle)) {
-      GstD3DVideoSinkClass *klass = GST_D3DVIDEOSINK_GET_CLASS (sink);
-      GstVideoOverlayFormatFlags flags;
-      gint x, y;
-      guint width, height;
-      HRESULT hr = 0;
-      GstMapInfo info;
-      GstBuffer *from = NULL;
-      GstD3DVideoSinkOverlay *overlay = g_new0 (GstD3DVideoSinkOverlay, 1);
-      overlay->rectangle = gst_video_overlay_rectangle_ref (rectangle);
-      if (!gst_video_overlay_rectangle_get_render_rectangle
-          (overlay->rectangle, &x, &y, &width, &height)) {
-        GST_ERROR_OBJECT (sink,
-            "Failed to get overlay rectangle of dimension (%d,%d)", width,
-            height);
-        g_free (overlay);
-        continue;
-      }
-      hr = IDirect3DDevice9_CreateTexture (klass->d3d.device.d3d_device,
-          width, height, 1, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED,
-          &overlay->texture, NULL);
-      if (hr != D3D_OK) {
-        GST_ERROR_OBJECT (sink,
-            "Failed to create D3D texture of dimensions (%d,%d)", width,
-            height);
-        g_free (overlay);
-        continue;
-      }
-      flags = gst_video_overlay_rectangle_get_flags (rectangle);
-      /* FIXME: investigate support for pre-multiplied vs. non-pre-multiplied alpha */
-      from = gst_video_overlay_rectangle_get_pixels_unscaled_argb
-          (rectangle, flags);
-      if (gst_buffer_map (from, &info, GST_MAP_READ)) {
-        /* 1. lock texture */
-        D3DLOCKED_RECT rect;
-        hr = IDirect3DTexture9_LockRect (overlay->texture, 0, &rect, NULL,
-            D3DUSAGE_WRITEONLY);
-        if (hr != D3D_OK) {
-          GST_ERROR_OBJECT (sink, "Failed to lock D3D texture");
-          gst_buffer_unmap (from, &info);
-          gst_d3d9_overlay_free_overlay (sink, overlay);
-          continue;
-        }
-        /* 2. copy */
-        memcpy (rect.pBits, info.data, info.size);
-        /* 3. unlock texture */
-        hr = IDirect3DTexture9_UnlockRect (overlay->texture, 0);
-        if (hr != D3D_OK) {
-          GST_ERROR_OBJECT (sink, "Failed to unlock D3D texture");
-          gst_buffer_unmap (from, &info);
-          gst_d3d9_overlay_free_overlay (sink, overlay);
-          continue;
-        }
-        gst_buffer_unmap (from, &info);
-        hr = gst_d3d9_overlay_init_vb (sink, overlay);
-        if (FAILED (hr)) {
-          gst_d3d9_overlay_free_overlay (sink, overlay);
-          continue;
-        }
-      }
-      sink->d3d.overlay = g_list_append (sink->d3d.overlay, overlay);
+      found_new_overlay_rectangle = TRUE;
+      break;
     }
+  }
+
+  /* add new overlays to list */
+  if (found_new_overlay_rectangle) {
+    GST_DEBUG_OBJECT (sink, "New overlay composition rectangles found.");
+    LOCK_CLASS (sink, klass);
+    if (!klass->d3d.refs) {
+      GST_ERROR_OBJECT (sink, "Direct3D object ref count = 0");
+      gst_d3d9_overlay_free (sink);
+      UNLOCK_CLASS (sink, klass);
+      return GST_FLOW_ERROR;
+    }
+    for (i = 0; i < num_overlays; i++) {
+      GstVideoOverlayRectangle *rectangle =
+          gst_video_overlay_composition_get_rectangle (composition, i);
+
+      if (!_is_rectangle_in_overlays (sink->d3d.overlay, rectangle)) {
+        GstVideoOverlayFormatFlags flags;
+        gint x, y;
+        guint width, height;
+        HRESULT hr = 0;
+        GstMapInfo info;
+        GstBuffer *from = NULL;
+        GstD3DVideoSinkOverlay *overlay = g_new0 (GstD3DVideoSinkOverlay, 1);
+        overlay->rectangle = gst_video_overlay_rectangle_ref (rectangle);
+        if (!gst_video_overlay_rectangle_get_render_rectangle
+            (overlay->rectangle, &x, &y, &width, &height)) {
+          GST_ERROR_OBJECT (sink,
+              "Failed to get overlay rectangle of dimension (%d,%d)", width,
+              height);
+          g_free (overlay);
+          continue;
+        }
+        hr = IDirect3DDevice9_CreateTexture (klass->d3d.device.d3d_device,
+            width, height, 1, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED,
+            &overlay->texture, NULL);
+        if (hr != D3D_OK) {
+          GST_ERROR_OBJECT (sink,
+              "Failed to create D3D texture of dimensions (%d,%d)", width,
+              height);
+          g_free (overlay);
+          continue;
+        }
+        flags = gst_video_overlay_rectangle_get_flags (rectangle);
+        /* FIXME: investigate support for pre-multiplied vs. non-pre-multiplied alpha */
+        from = gst_video_overlay_rectangle_get_pixels_unscaled_argb
+            (rectangle, flags);
+        if (gst_buffer_map (from, &info, GST_MAP_READ)) {
+          /* 1. lock texture */
+          D3DLOCKED_RECT rect;
+          hr = IDirect3DTexture9_LockRect (overlay->texture, 0, &rect, NULL,
+              D3DUSAGE_WRITEONLY);
+          if (hr != D3D_OK) {
+            GST_ERROR_OBJECT (sink, "Failed to lock D3D texture");
+            gst_buffer_unmap (from, &info);
+            gst_d3d9_overlay_free_overlay (sink, overlay);
+            continue;
+          }
+          /* 2. copy */
+          memcpy (rect.pBits, info.data, info.size);
+          /* 3. unlock texture */
+          hr = IDirect3DTexture9_UnlockRect (overlay->texture, 0);
+          if (hr != D3D_OK) {
+            GST_ERROR_OBJECT (sink, "Failed to unlock D3D texture");
+            gst_buffer_unmap (from, &info);
+            gst_d3d9_overlay_free_overlay (sink, overlay);
+            continue;
+          }
+          gst_buffer_unmap (from, &info);
+          hr = gst_d3d9_overlay_init_vb (sink, overlay);
+          if (FAILED (hr)) {
+            gst_d3d9_overlay_free_overlay (sink, overlay);
+            continue;
+          }
+        }
+        sink->d3d.overlay = g_list_append (sink->d3d.overlay, overlay);
+      }
+    }
+    UNLOCK_CLASS (sink, klass);
   }
   /* remove old overlays from list */
   while (l != NULL) {
