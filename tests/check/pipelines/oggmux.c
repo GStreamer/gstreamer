@@ -46,7 +46,6 @@ typedef struct
   ChainCodec codec;
 } ChainState;
 
-#if (defined (HAVE_THEORA) || defined (HAVE_VORBIS))
 static ogg_sync_state oggsync;
 static GHashTable *eos_chain_states;
 static gulong probe_id;
@@ -310,9 +309,7 @@ test_pipeline (const char *pipeline)
   gst_object_unref (pad);
   gst_object_unref (bin);
 }
-#endif
 
-#ifdef HAVE_VORBIS
 GST_START_TEST (test_vorbis)
 {
   test_pipeline
@@ -344,9 +341,7 @@ GST_START_TEST (test_vorbis_oggmux_unlinked)
 }
 
 GST_END_TEST;
-#endif
 
-#ifdef HAVE_THEORA
 GST_START_TEST (test_theora)
 {
   test_pipeline
@@ -354,9 +349,7 @@ GST_START_TEST (test_theora)
 }
 
 GST_END_TEST;
-#endif
 
-#if (defined (HAVE_THEORA) && defined (HAVE_VORBIS))
 GST_START_TEST (test_theora_vorbis)
 {
   test_pipeline
@@ -374,7 +367,6 @@ GST_START_TEST (test_vorbis_theora)
 }
 
 GST_END_TEST;
-#endif
 
 GST_START_TEST (test_simple_cleanup)
 {
@@ -406,23 +398,35 @@ GST_END_TEST;
 static Suite *
 oggmux_suite (void)
 {
+  gboolean have_vorbisenc;
+  gboolean have_theoraenc;
+
   Suite *s = suite_create ("oggmux");
   TCase *tc_chain = tcase_create ("general");
 
+  have_vorbisenc =
+      gst_registry_check_feature_version (gst_registry_get (), "vorbisenc",
+      GST_VERSION_MAJOR, GST_VERSION_MINOR, 0);
+
+  have_theoraenc =
+      gst_registry_check_feature_version (gst_registry_get (), "theoraenc",
+      GST_VERSION_MAJOR, GST_VERSION_MINOR, 0);
+
   suite_add_tcase (s, tc_chain);
-#ifdef HAVE_VORBIS
-  tcase_add_test (tc_chain, test_vorbis);
-  tcase_add_test (tc_chain, test_vorbis_oggmux_unlinked);
-#endif
 
-#ifdef HAVE_THEORA
-  tcase_add_test (tc_chain, test_theora);
-#endif
+  if (have_vorbisenc) {
+    tcase_add_test (tc_chain, test_vorbis);
+    tcase_add_test (tc_chain, test_vorbis_oggmux_unlinked);
+  }
 
-#if (defined (HAVE_THEORA) && defined (HAVE_VORBIS))
-  tcase_add_test (tc_chain, test_vorbis_theora);
-  tcase_add_test (tc_chain, test_theora_vorbis);
-#endif
+  if (have_theoraenc) {
+    tcase_add_test (tc_chain, test_theora);
+  }
+
+  if (have_vorbisenc && have_theoraenc) {
+    tcase_add_test (tc_chain, test_vorbis_theora);
+    tcase_add_test (tc_chain, test_theora_vorbis);
+  }
 
   tcase_add_test (tc_chain, test_simple_cleanup);
   tcase_add_test (tc_chain, test_request_pad_cleanup);
