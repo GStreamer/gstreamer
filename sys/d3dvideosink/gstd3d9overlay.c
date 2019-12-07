@@ -54,6 +54,11 @@ GST_DEBUG_CATEGORY_EXTERN (gst_d3dvideosink_debug);
           goto end; \
         }
 
+#define CHECK_D3D_DEVICE(klass, sink, goto_label)                       \
+  if(!klass->d3d.d3d || !klass->d3d.device.d3d_device) {                \
+    GST_ERROR_OBJECT(sink, "Direct3D device or object does not exist"); \
+    goto goto_label;                                                    \
+  }
 
 typedef struct _textured_vertex
 {
@@ -362,6 +367,7 @@ gst_d3d9_overlay_init_vb (GstD3DVideoSink * sink,
       GST_ERROR_OBJECT (sink, "Failed to release D3D vertex buffer");
     }
   }
+  CHECK_D3D_DEVICE (klass, sink, error);
   hr = IDirect3DDevice9_CreateVertexBuffer (klass->d3d.device.d3d_device, byte_count,   /* Length */
       D3DUSAGE_WRITEONLY,       /* Usage */
       tri_fvf,                  /* FVF */
@@ -403,6 +409,9 @@ gst_d3d9_overlay_init_vb (GstD3DVideoSink * sink,
   }
 
   return D3D_OK;
+
+error:
+  return hr;
 }
 
 gboolean
