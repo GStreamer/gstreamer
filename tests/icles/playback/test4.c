@@ -19,12 +19,8 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#ifdef HAVE_STDLIB_H
+
 #include <stdlib.h>             /* exit() */
-#endif
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
 
 #include <gst/gst.h>
 

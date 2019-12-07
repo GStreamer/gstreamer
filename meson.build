@@ -115,7 +115,6 @@ check_headers = [
   ['HAVE_PROCESS_H', 'process.h'],
   ['HAVE_SMMINTRIN_H', 'smmintrin.h'],
   ['HAVE_STDINT_H', 'stdint.h'],
-  ['HAVE_STDLIB_H', 'stdlib.h'],
   ['HAVE_STRINGS_H', 'strings.h'],
   ['HAVE_STRING_H', 'string.h'],
   ['HAVE_SYS_SOCKET_H', 'sys/socket.h'],

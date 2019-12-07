@@ -19,9 +19,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#ifdef HAVE_STDLIB_H
 #include <stdlib.h>             /* exit() */
-#endif
 #include <gst/gst.h>
 
 #define UPDATE_INTERVAL 500
