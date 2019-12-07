@@ -2582,7 +2582,7 @@ d3d_class_display_device_create (GstD3DVideoSinkClass * klass, UINT adapter)
   device->present_params.MultiSampleType = D3DMULTISAMPLE_NONE;
   device->present_params.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;    /* D3DPRESENT_INTERVAL_IMMEDIATE; */
 
-  GST_DEBUG ("Creating Direct3D device for hidden window %p", NULL);
+  GST_DEBUG ("Creating Direct3D device for hidden window %p", hwnd);
 
   if ((hr = IDirect3D9_CreateDevice (d3d, adapter, D3DDEVTYPE_HAL, hwnd,
               create_mask, &device->present_params,
