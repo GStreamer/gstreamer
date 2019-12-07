@@ -2698,7 +2698,9 @@ d3d_class_reset_display_device (GstD3DVideoSinkClass * klass)
   g_return_if_fail (klass != NULL);
 
   LOCK_CLASS (NULL, klass);
-  hr = IDirect3DDevice9_Reset (klass->d3d.device.d3d_device,
+  CHECK_REF_COUNT (klass, NULL, end);
+  CHECK_D3D_DEVICE (klass, NULL, end)
+      hr = IDirect3DDevice9_Reset (klass->d3d.device.d3d_device,
       &klass->d3d.device.present_params);
   ERROR_CHECK_HR (hr) {
     CASE_HR_ERR (D3DERR_DEVICELOST);
@@ -2715,7 +2717,7 @@ d3d_class_reset_display_device (GstD3DVideoSinkClass * klass)
   KillTimer (klass->d3d.hidden_window, IDT_DEVICE_RESET_TIMER);
 
   g_list_foreach (klass->d3d.sink_list, (GFunc) d3d_notify_device_reset, NULL);
-end:;
+end:
   UNLOCK_CLASS (NULL, klass);
 }
 
