@@ -950,6 +950,7 @@ d3d_get_render_coordinates (GstD3DVideoSink * sink, gint in_x, gint in_y,
 
   g_return_val_if_fail (out_x != NULL, FALSE);
   g_return_val_if_fail (out_y != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_D3DVIDEOSINK (sink), FALSE);
 
   LOCK_SINK (sink);
   CHECK_WINDOW_HANDLE (sink, end, FALSE);
@@ -1024,6 +1025,7 @@ d3d_window_wndproc_unset (GstD3DVideoSink * sink)
 {
   WNDPROC cur_wnd_proc = NULL;
 
+  g_return_if_fail (GST_IS_D3DVIDEOSINK (sink));
   LOCK_SINK (sink);
 
   GST_DEBUG_OBJECT (sink, " ");
@@ -1066,6 +1068,7 @@ d3d_window_wndproc_set (GstD3DVideoSink * sink)
   WNDPROC cur_wnd_proc;
   gboolean ret = FALSE;
 
+  g_return_val_if_fail (GST_IS_D3DVIDEOSINK (sink), FALSE);
   LOCK_SINK (sink);
 
   cur_wnd_proc =
@@ -1104,6 +1107,7 @@ end:
 static void
 d3d_prepare_render_window (GstD3DVideoSink * sink)
 {
+  g_return_if_fail (GST_IS_D3DVIDEOSINK (sink));
   LOCK_SINK (sink);
 
   if (sink->d3d.window_handle == NULL) {
@@ -1135,6 +1139,7 @@ void
 d3d_set_window_handle (GstD3DVideoSink * sink, guintptr window_id,
     gboolean is_internal)
 {
+  g_return_if_fail (sink != NULL);
   LOCK_SINK (sink);
 
   if (sink->d3d.window_handle == (HWND) window_id) {
@@ -1173,6 +1178,7 @@ end:
 void
 d3d_set_render_rectangle (GstD3DVideoSink * sink)
 {
+  g_return_if_fail (sink != NULL);
   LOCK_SINK (sink);
   /* Setting the pointer lets us know render rect is set */
   sink->d3d.render_rect = &sink->render_rect;
@@ -1194,6 +1200,7 @@ d3d_prepare_window (GstD3DVideoSink * sink)
   HWND hWnd;
   gboolean ret = FALSE;
 
+  g_return_val_if_fail (GST_IS_D3DVIDEOSINK (sink), FALSE);
   LOCK_SINK (sink);
 
   /* if we already had an external window, then use it again */
@@ -1286,6 +1293,7 @@ d3d_notify_device_lost (GstD3DVideoSink * sink)
 static void
 d3d_notify_device_reset (GstD3DVideoSink * sink)
 {
+  g_return_if_fail (GST_IS_D3DVIDEOSINK (sink));
   LOCK_SINK (sink);
 
   if (sink->d3d.device_lost) {
@@ -1318,6 +1326,7 @@ d3d_init_swap_chain (GstD3DVideoSink * sink, HWND hWnd)
 
   LOCK_SINK (sink);
   LOCK_CLASS (sink, klass);
+  CHECK_REF_COUNT (klass, sink, error);
 
   /* We need a display device */
   CHECK_D3D_DEVICE (klass, sink, error);
@@ -1386,15 +1395,14 @@ error:
 static gboolean
 d3d_release_swap_chain (GstD3DVideoSink * sink)
 {
-  GstD3DVideoSinkClass *klass = GST_D3DVIDEOSINK_GET_CLASS (sink);
   int ref_count;
   gboolean ret = FALSE;
 
+  g_return_val_if_fail (GST_IS_D3DVIDEOSINK (sink), FALSE);
   LOCK_SINK (sink);
 
   GST_DEBUG_OBJECT (sink, "Releasing Direct3D swap chain");
 
-  CHECK_D3D_DEVICE (klass, sink, end);
 
   if (!sink->d3d.swapchain) {
     ret = TRUE;
@@ -1453,6 +1461,7 @@ d3d_resize_swap_chain (GstD3DVideoSink * sink)
 
   LOCK_CLASS (sink, klass);
 
+  CHECK_REF_COUNT (klass, sink, end);
   CHECK_WINDOW_HANDLE (sink, end, FALSE);
   CHECK_D3D_DEVICE (klass, sink, end);
   CHECK_D3D_SWAPCHAIN (sink, end);
@@ -1550,6 +1559,7 @@ d3d_copy_buffer (GstD3DVideoSink * sink, GstBuffer * from, GstBuffer * to)
   memset (&from_frame, 0, sizeof (from_frame));
   memset (&to_frame, 0, sizeof (to_frame));
 
+  g_return_val_if_fail (GST_IS_D3DVIDEOSINK (sink), FALSE);
   LOCK_SINK (sink);
 
   if (!sink->d3d.renderable || sink->d3d.device_lost)
@@ -1731,6 +1741,7 @@ d3d_present_swap_chain (GstD3DVideoSink * sink)
   HRESULT hr;
   RECT dstr, srcr, *pDestRect = NULL, *pSrcRect = NULL;
 
+  g_return_val_if_fail (GST_IS_D3DVIDEOSINK (sink), FALSE);
   LOCK_SINK (sink);
 
   if (!sink->d3d.renderable || sink->d3d.device_lost) {
@@ -1740,6 +1751,7 @@ d3d_present_swap_chain (GstD3DVideoSink * sink)
 
   LOCK_CLASS (sink, klass);
 
+  CHECK_REF_COUNT (klass, sink, end);
   CHECK_WINDOW_HANDLE (sink, end, FALSE);
   CHECK_D3D_DEVICE (klass, sink, end);
   CHECK_D3D_SWAPCHAIN (sink, end);
@@ -1846,6 +1858,7 @@ d3d_stretch_and_copy (GstD3DVideoSink * sink, LPDIRECT3DSURFACE9 back_buffer)
   HRESULT hr;
   gboolean ret = FALSE;
 
+  g_return_val_if_fail (GST_IS_D3DVIDEOSINK (sink), FALSE);
   LOCK_SINK (sink);
 
   CHECK_WINDOW_HANDLE (sink, end, FALSE);
@@ -1934,6 +1947,7 @@ d3d_render_buffer (GstD3DVideoSink * sink, GstBuffer * buf)
   LPDIRECT3DSURFACE9 surface = NULL;
   GstVideoCropMeta *crop = NULL;
 
+  g_return_val_if_fail (GST_IS_D3DVIDEOSINK (sink), GST_FLOW_ERROR);
   LOCK_SINK (sink);
 
   if (!sink->d3d.window_handle) {
@@ -2666,6 +2680,7 @@ d3d_class_notify_device_lost_all (GstD3DVideoSinkClass * klass)
   g_return_if_fail (klass != NULL);
 
   LOCK_CLASS (NULL, klass);
+  CHECK_REF_COUNT (klass, NULL, end);
   if (!klass->d3d.device_lost) {
     GList *lst, *clst;
     klass->d3d.device_lost = TRUE;
@@ -2687,6 +2702,7 @@ d3d_class_notify_device_lost_all (GstD3DVideoSinkClass * klass)
     /* Set timer to try reset at given interval */
     SetTimer (klass->d3d.hidden_window, IDT_DEVICE_RESET_TIMER, 500, NULL);
   }
+end:
   UNLOCK_CLASS (NULL, klass);
 }
 
