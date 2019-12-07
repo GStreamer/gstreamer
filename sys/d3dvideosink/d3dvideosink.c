@@ -445,10 +445,13 @@ static gboolean
 gst_d3dvideosink_stop (GstBaseSink * bsink)
 {
   GstD3DVideoSink *sink = GST_D3DVIDEOSINK (bsink);
+  GstD3DVideoSinkClass *klass = GST_D3DVIDEOSINK_GET_CLASS (sink);
 
   GST_DEBUG_OBJECT (bsink, "Stop() called");
+  LOCK_CLASS (sink, klass);
   d3d_stop (sink);
   d3d_class_destroy (sink);
+  UNLOCK_CLASS (sink, klass);
 
   return TRUE;
 }
