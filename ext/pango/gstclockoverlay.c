@@ -79,17 +79,17 @@ gst_clock_overlay_render_time (GstClockOverlay * overlay)
   time_t now;
   gchar buf[256];
 
-#ifdef HAVE_LOCALTIME_R
-  struct tm dummy;
-#endif
-
   now = time (NULL);
 
 #ifdef HAVE_LOCALTIME_R
-  /* Need to call tzset explicitly when calling localtime_r for changes
-     to the timezone between calls to be visible.  */
-  tzset ();
-  t = localtime_r (&now, &dummy);
+  {
+    struct tm dummy;
+
+    /* Need to call tzset explicitly when calling localtime_r for changes
+     * to the timezone between calls to be visible.  */
+    tzset ();
+    t = localtime_r (&now, &dummy);
+  }
 #else
   /* on win32 this apparently returns a per-thread struct which would be fine */
   t = localtime (&now);

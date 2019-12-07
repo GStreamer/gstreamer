@@ -136,6 +136,7 @@ endforeach
 check_functions = [
   ['HAVE_DCGETTEXT', 'dcgettext', '#include<libintl.h>'],
   ['HAVE_GMTIME_R', 'gmtime_r', '#include<time.h>'],
+  ['HAVE_LOCALTIME_R', 'localtime_r', '#include<time.h>'],
   ['HAVE_LRINTF', 'lrintf', '#include<math.h>'],
   ['HAVE_MMAP', 'mmap', '#include<sys/mman.h>'],
   ['HAVE_LOG2', 'log2', '#include<math.h>'],
