@@ -74,6 +74,9 @@ struct _GstD3DVideoSinkClass
   GstVideoSinkClass parent_class;
   GstD3DDataClass   d3d;
   GRecMutex   lock;
+  /* this count is incremented each time the sink is destroyed, so that
+   * old queue events can be ignored */
+  guint create_count;
 };
 
 #define LOCK_SINK(sink) G_STMT_START { \

@@ -57,6 +57,8 @@ static void d3d_class_notify_device_lost (GstD3DVideoSink * sink);
 static void d3d_class_display_device_destroy (GstD3DVideoSinkClass * klass);
 static gboolean d3d_class_display_device_create (GstD3DVideoSinkClass * klass,
     UINT adapter);
+static void d3d_class_hidden_window_message_queue (gpointer data,
+    gpointer user_data);
 
 static LRESULT APIENTRY d3d_wnd_proc_internal (HWND hWnd, UINT message,
     WPARAM wParam, LPARAM lParam);
@@ -71,6 +73,12 @@ static gint WM_D3DVIDEO_NOTIFY_DEVICE_LOST = 0;
 #define IDT_DEVICE_RESET_TIMER 0
 
 #define WM_QUIT_THREAD  WM_USER+0
+
+typedef struct
+{
+  gint window_message_id;
+  guint create_count;
+} GstD3DVideoSinkEvent;
 
 /* Helpers */
 
@@ -2666,7 +2674,13 @@ static void
 d3d_class_notify_device_lost (GstD3DVideoSink * sink)
 {
   GstD3DVideoSinkClass *klass = GST_D3DVIDEOSINK_GET_CLASS (sink);
-  PostMessage (klass->d3d.hidden_window, WM_D3DVIDEO_NOTIFY_DEVICE_LOST, 0, 0);
+  GstD3DVideoSinkEvent *evt = g_new0 (GstD3DVideoSinkEvent, 1);
+
+  evt->window_message_id = IDT_DEVICE_RESET_TIMER;
+  evt->create_count = klass->create_count;
+  gst_element_call_async (GST_ELEMENT (klass),
+      (GstElementCallAsyncFunc) d3d_class_hidden_window_message_queue, evt,
+      g_free);
 }
 
 static void
@@ -2734,29 +2748,61 @@ end:
 
 /* Hidden Window Loop Thread */
 
+static void
+d3d_class_hidden_window_message_queue (gpointer data, gpointer user_data)
+{
+  guint id = 0;
+  GstD3DVideoSinkClass *klass = (GstD3DVideoSinkClass *) data;
+  GstD3DVideoSinkEvent *evt = (GstD3DVideoSinkEvent *) user_data;
+
+  if (!klass || !evt)
+    return;
+
+  switch (evt->window_message_id) {
+    case IDT_DEVICE_RESET_TIMER:
+      LOCK_CLASS (NULL, klass);
+      /* make sure this event does not originate from old class */
+      if (evt->create_count == klass->create_count)
+        d3d_class_reset_display_device (klass);
+      UNLOCK_CLASS (NULL, klass);
+      break;
+    default:
+      if (id == WM_D3DVIDEO_NOTIFY_DEVICE_LOST) {
+        LOCK_CLASS (NULL, klass);
+        /* make sure this event does not originate from old class */
+        if (evt->create_count == klass->create_count)
+          d3d_class_notify_device_lost_all (klass);
+        UNLOCK_CLASS (NULL, klass);
+      }
+      break;
+  }
+}
+
 static LRESULT APIENTRY
 D3DHiddenWndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+  GstD3DVideoSinkClass *klass =
+      (GstD3DVideoSinkClass *) GetWindowLongPtr (hWnd, GWLP_USERDATA);
+  GstD3DVideoSinkEvent *evt;
+
   switch (message) {
     case WM_TIMER:
       switch (wParam) {
         case IDT_DEVICE_RESET_TIMER:
-          d3d_class_reset_display_device ((GstD3DVideoSinkClass *)
-              GetWindowLongPtr (hWnd, GWLP_USERDATA));
+          evt = g_new0 (GstD3DVideoSinkEvent, 1);
+          evt->window_message_id = IDT_DEVICE_RESET_TIMER;
+          evt->create_count = klass->create_count;
+          gst_element_call_async (GST_ELEMENT (klass),
+              (GstElementCallAsyncFunc) d3d_class_hidden_window_message_queue,
+              evt, g_free);
           break;
-        default:;
       }
       return 0;
     case WM_DESTROY:
       PostQuitMessage (0);
       return 0;
     default:
-      /* non constants */
-      if (message == WM_D3DVIDEO_NOTIFY_DEVICE_LOST) {
-        d3d_class_notify_device_lost_all ((GstD3DVideoSinkClass *)
-            GetWindowLongPtr (hWnd, GWLP_USERDATA));
-        return 0;
-      }
+      break;
   }
 
   return DefWindowProc (hWnd, message, wParam, lParam);
