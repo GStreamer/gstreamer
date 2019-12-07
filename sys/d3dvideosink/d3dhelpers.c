@@ -1143,8 +1143,9 @@ d3d_set_window_handle (GstD3DVideoSink * sink, guintptr window_id,
   LOCK_SINK (sink);
 
   if (sink->d3d.window_handle == (HWND) window_id) {
-    GST_WARNING_OBJECT (sink, "Window HWND already set to: %" G_GUINTPTR_FORMAT,
-        window_id);
+    if (window_id)
+      GST_WARNING_OBJECT (sink,
+          "Window HWND already set to: %" G_GUINTPTR_FORMAT, window_id);
     goto end;
   }
 
