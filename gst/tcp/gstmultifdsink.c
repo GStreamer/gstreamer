@@ -119,10 +119,6 @@
 #include <sys/stat.h>
 #include <netinet/in.h>
 
-#ifdef HAVE_FIONREAD_IN_SYS_FILIO
-#include <sys/filio.h>
-#endif
-
 #include "gstmultifdsink.h"
 
 #define NOT_IMPLEMENTED 0

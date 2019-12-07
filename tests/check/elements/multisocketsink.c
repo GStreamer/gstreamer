@@ -24,9 +24,6 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
-#ifdef HAVE_FIONREAD_IN_SYS_FILIO
-#include <sys/filio.h>
-#endif
 
 #include <gio/gio.h>
 #include <gst/check/gstcheck.h>
