@@ -120,12 +120,23 @@ GST_START_TEST (test_element_negotiation)
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
       GST_MESSAGE_UNKNOWN);
 
-#ifdef HAVE_LIBVISUAL
-  s = "audiotestsrc num-buffers=30 ! tee name=t ! alsasink t. ! audioconvert ! "
-      "libvisual_lv_scope ! videoconvert ! xvimagesink";
-  run_pipeline (setup_pipeline (s), s,
-      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
+  /* FIXME: don't use real audio/video outputs */
+#if 0
+  {
+    gboolean have_libvisual_lv_scope;
+
+    have_libvisual_lv_scope =
+        gst_registry_check_feature_version (gst_registry_get (),
+        "libvisual_lv_scope", GST_VERSION_MAJOR, GST_VERSION_MINOR, 0);
+
+    if (have_libvisual_lv_scope) {
+      s = "audiotestsrc num-buffers=30 ! tee name=t ! alsasink t. ! "
+          "audioconvert ! libvisual_lv_scope ! videoconvert ! xvimagesink";
+      run_pipeline (setup_pipeline (s), s,
+          GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+          GST_MESSAGE_UNKNOWN);
+    }
+  }
 #endif
 }
 
