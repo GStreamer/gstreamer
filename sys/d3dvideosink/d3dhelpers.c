@@ -630,10 +630,14 @@ gst_d3dsurface_buffer_pool_set_config (GstBufferPool * bpool,
       caps);
 
   /* Create a surface to get exact buffer size */
+  LOCK_CLASS (sink, klass);
+  CHECK_REF_COUNT (klass, sink, error);
+  CHECK_D3D_DEVICE (klass, sink, error);
   hr = IDirect3DDevice9_CreateOffscreenPlainSurface (klass->d3d.
       device.d3d_device, GST_VIDEO_INFO_WIDTH (&info),
       GST_VIDEO_INFO_HEIGHT (&info), d3dformat, D3DPOOL_DEFAULT, &surface,
       NULL);
+  UNLOCK_CLASS (sink, klass);
   if (hr != D3D_OK) {
     GST_ERROR_OBJECT (sink, "Failed to create D3D surface");
     return FALSE;
@@ -672,6 +676,10 @@ gst_d3dsurface_buffer_pool_set_config (GstBufferPool * bpool,
 
   return GST_BUFFER_POOL_CLASS
       (gst_d3dsurface_buffer_pool_parent_class)->set_config (bpool, config);
+
+error:
+  UNLOCK_CLASS (sink, klass);
+  return FALSE;
 }
 
 static GstFlowReturn
