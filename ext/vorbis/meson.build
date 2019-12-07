@@ -15,15 +15,9 @@ vorbisidec_sources = [
   'gstvorbiscommon.c',
 ]
 
-vorbis_dep = dependency('vorbis', version : '>=1.0', required : get_option('vorbis'))
-vorbisenc_dep = dependency('vorbisenc', version : '>=1.0', required : get_option('vorbis'))
+vorbis_dep = dependency('vorbis', version : '>= 1.3.1', required : get_option('vorbis'))
+vorbisenc_dep = dependency('vorbisenc', version : '>= 1.3.1', required : get_option('vorbis'))
 vorbisidec_dep = dependency('vorbisidec', required : get_option('tremor'))
-
-if vorbis_dep.found() or vorbisidec_dep.found()
-  if cc.has_header_symbol('vorbis/codec.h', 'vorbis_synthesis_restart')
-    core_conf.set('HAVE_VORBIS_SYNTHESIS_RESTART', true)
-  endif
-endif
 
 if vorbis_dep.found()
   vorbis_deps = [vorbis_dep]
