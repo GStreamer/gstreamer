@@ -2365,7 +2365,7 @@ clear:
   return dat.hWnd;
 }
 
-/* D3D Video Class Methdos */
+/* D3D Video Class Methods */
 
 gboolean
 d3d_class_init (GstD3DVideoSink * sink)
