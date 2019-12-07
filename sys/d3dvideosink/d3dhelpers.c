@@ -2402,10 +2402,8 @@ gboolean
 d3d_class_init (GstD3DVideoSink * sink)
 {
   GstD3DVideoSinkClass *klass = GST_D3DVIDEOSINK_GET_CLASS (sink);
-  gulong timeout_interval = 10000;      /* 10 ms interval */
-  gulong intervals = (10000000 / timeout_interval);     /* 10 secs */
   gboolean ret = FALSE;
-  gulong i;
+  gboolean initialized_mutex = FALSE;
 
   g_return_val_if_fail (klass != NULL, FALSE);
 
@@ -2444,44 +2442,48 @@ d3d_class_init (GstD3DVideoSink * sink)
     goto error;
   }
 
-  klass->d3d.running = FALSE;
-  klass->d3d.error_exit = FALSE;
-  UNLOCK_CLASS (sink, klass);
+  klass->d3d.thread_started = FALSE;
+  klass->d3d.thread_error_exit = FALSE;
+  /* TODO: Multi-monitor setup? */
+  if (!d3d_class_display_device_create (klass, D3DADAPTER_DEFAULT)) {
+    GST_ERROR ("Failed to initialize adapter: %u", D3DADAPTER_DEFAULT);
+    goto error;
+  }
+
+  g_mutex_init (&klass->d3d.thread_start_mutex);
+  g_cond_init (&klass->d3d.thread_start_cond);
+  initialized_mutex = TRUE;
+
   klass->d3d.thread =
       g_thread_new ("d3dvideosink-window-thread",
       (GThreadFunc) d3d_hidden_window_thread, klass);
-  LOCK_CLASS (sink, klass);
 
   if (!klass->d3d.thread) {
     GST_ERROR ("Failed to created hidden window thread");
     goto error;
   }
 
-  UNLOCK_CLASS (sink, klass);
-  /* Wait 10 seconds for window proc loop to start up */
-  for (i = 0; klass->d3d.running == FALSE && i < intervals; i++) {
-    g_usleep (timeout_interval);
-  }
-  LOCK_CLASS (sink, klass);
+  g_mutex_lock (&klass->d3d.thread_start_mutex);
+  while (!klass->d3d.thread_started && !klass->d3d.thread_error_exit)
+    g_cond_wait (&klass->d3d.thread_start_cond, &klass->d3d.thread_start_mutex);
+  g_mutex_unlock (&klass->d3d.thread_start_mutex);
 
-  if (klass->d3d.error_exit)
+  if (klass->d3d.thread_error_exit)
     goto error;
-
-  if (!klass->d3d.running) {
-    GST_ERROR ("Waited %lu ms, window proc loop has not started",
-        (timeout_interval * intervals) / 1000);
-    goto error;
-  }
 
   GST_DEBUG ("Hidden window message loop is running..");
 
 end:
   ret = TRUE;
 error:
-  UNLOCK_CLASS (sink, klass);
 
   if (!ret)
     d3d_class_destroy (sink);
+  if (initialized_mutex) {
+    g_mutex_clear (&klass->d3d.thread_start_mutex);
+    g_cond_clear (&klass->d3d.thread_start_cond);
+  }
+  UNLOCK_CLASS (sink, klass);
 
   return ret;
 }
@@ -2504,21 +2506,16 @@ d3d_class_destroy (GstD3DVideoSink * sink)
   if (klass->d3d.refs >= 1)
     goto end;
 
-  UNLOCK_CLASS (sink, klass);
-
-  if (klass->d3d.running) {
+  if (klass->d3d.thread) {
     GST_DEBUG ("Shutting down window proc thread, waiting to join..");
     PostMessage (klass->d3d.hidden_window, WM_QUIT, 0, 0);
     g_thread_join (klass->d3d.thread);
     GST_DEBUG ("Joined..");
   }
 
-  LOCK_CLASS (sink, klass);
-
   d3d_class_display_device_destroy (klass);
   if (klass->d3d.d3d) {
-    int ref_count;
-    ref_count = IDirect3D9_Release (klass->d3d.d3d);
+    int ref_count = IDirect3D9_Release (klass->d3d.d3d);
     GST_DEBUG ("Direct3D object released. Reference count: %d", ref_count);
   }
 
@@ -2697,7 +2694,6 @@ d3d_class_notify_device_lost_all (GstD3DVideoSinkClass * klass)
     GST_DEBUG ("Notifying all instances of device loss");
 
     clst = g_list_copy (klass->d3d.sink_list);
-    UNLOCK_CLASS (NULL, klass);
 
     for (lst = clst; lst != NULL; lst = lst->next) {
       GstD3DVideoSink *sink = (GstD3DVideoSink *) lst->data;
@@ -2706,7 +2702,6 @@ d3d_class_notify_device_lost_all (GstD3DVideoSinkClass * klass)
       d3d_notify_device_lost (sink);
     }
     g_list_free (clst);
-    LOCK_CLASS (NULL, klass);
 
     /* Set timer to try reset at given interval */
     SetTimer (klass->d3d.hidden_window, IDT_DEVICE_RESET_TIMER, 500, NULL);
@@ -2843,18 +2838,16 @@ d3d_hidden_window_thread (GstD3DVideoSinkClass * klass)
 
   klass->d3d.hidden_window = hWnd;
 
-  /* TODO: Multi-monitor setup? */
-  if (!d3d_class_display_device_create (klass, D3DADAPTER_DEFAULT)) {
-    GST_ERROR ("Failed to initiazlize adapter: %u", D3DADAPTER_DEFAULT);
-    goto error;
-  }
-
   /* Attach data to window */
   SetWindowLongPtr (hWnd, GWLP_USERDATA, (LONG_PTR) klass);
 
   GST_DEBUG ("Entering Direct3D hidden window message loop");
 
-  klass->d3d.running = TRUE;
+  /* set running flag and signal calling thread */
+  g_mutex_lock (&klass->d3d.thread_start_mutex);
+  klass->d3d.thread_started = TRUE;
+  g_cond_signal (&klass->d3d.thread_start_cond);
+  g_mutex_unlock (&klass->d3d.thread_start_mutex);
 
   /* Hidden Window Message Loop */
   while (1) {
@@ -2867,15 +2860,12 @@ d3d_hidden_window_thread (GstD3DVideoSinkClass * klass)
       break;
   }
 
-  klass->d3d.running = FALSE;
 
   GST_DEBUG ("Leaving Direct3D hidden window message loop");
 
   ret = TRUE;
 
 error:
-  if (!ret)
-    klass->d3d.error_exit = TRUE;
   if (hWnd) {
     PostMessage (hWnd, WM_DESTROY, 0, 0);
     DestroyWindow (hWnd);
@@ -2883,6 +2873,14 @@ error:
   }
   if (reged)
     UnregisterClass (WndClass.lpszClassName, WndClass.hInstance);
+
+  /* if failed, set error flag and signal calling thread */
+  if (!ret) {
+    g_mutex_lock (&klass->d3d.thread_start_mutex);
+    klass->d3d.thread_error_exit = TRUE;
+    g_cond_signal (&klass->d3d.thread_start_cond);
+    g_mutex_unlock (&klass->d3d.thread_start_mutex);
+  }
 
   return ret;
 }

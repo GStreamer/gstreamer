@@ -71,9 +71,11 @@ typedef struct _GstD3DDataClass {
 
   /* Windows Message Handling */
   GThread *              thread;
+  GMutex                 thread_start_mutex;
+  GCond                  thread_start_cond;
   HWND                   hidden_window;
-  gboolean               running;
-  gboolean               error_exit;
+  gboolean               thread_started;
+  gboolean               thread_error_exit;
 } GstD3DDataClass;
 
 typedef struct _GstD3DData {
