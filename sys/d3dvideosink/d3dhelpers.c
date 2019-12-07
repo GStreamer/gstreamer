@@ -2315,19 +2315,20 @@ d3d_internal_window_thread (D3DInternalWindowDat * dat)
       g_thread_self ());
 
   /* Create internal window */
-  g_mutex_lock (&dat->lock);
   hWnd = _d3d_create_internal_window (sink);
+
+  g_mutex_lock (&dat->lock);
   if (!hWnd) {
     GST_ERROR_OBJECT (sink, "Failed to create internal window");
     dat->error = TRUE;
-    g_cond_signal (&dat->cond);
-    g_mutex_unlock (&dat->lock);
-    goto end;
+  } else {
+    dat->hWnd = hWnd;
   }
-
-  dat->hWnd = hWnd;
   g_cond_signal (&dat->cond);
   g_mutex_unlock (&dat->lock);
+
+  if (dat->error)
+    goto end;
 
   /*
    * Internal window message loop
@@ -2351,8 +2352,6 @@ d3d_create_internal_window (GstD3DVideoSink * sink)
 {
   GThread *thread;
   D3DInternalWindowDat dat;
-  gint64 end_time;
-  gboolean timeout = FALSE;
 
   dat.sink = sink;
   dat.error = FALSE;
@@ -2360,30 +2359,25 @@ d3d_create_internal_window (GstD3DVideoSink * sink)
   g_mutex_init (&dat.lock);
   g_cond_init (&dat.cond);
 
-  g_mutex_lock (&dat.lock);
   thread =
       g_thread_new ("d3dvideosink-window-thread",
       (GThreadFunc) d3d_internal_window_thread, &dat);
   if (!thread) {
-    g_mutex_unlock (&dat.lock);
     GST_ERROR ("Failed to created internal window thread");
     goto clear;
   }
 
   sink->internal_window_thread = thread;
 
-  end_time = g_get_monotonic_time () + 10 * G_TIME_SPAN_SECOND;
-  /* Wait 10 seconds for window proc loop to start up */
+  /* Wait for window proc loop to start up */
+  g_mutex_lock (&dat.lock);
   while (!dat.error && !dat.hWnd) {
-    if (!g_cond_wait_until (&dat.cond, &dat.lock, end_time)) {
-      timeout = TRUE;
-      break;
-    }
+    g_cond_wait (&dat.cond, &dat.lock);
   }
   g_mutex_unlock (&dat.lock);
 
-  GST_DEBUG_OBJECT (sink, "Created window: %p (error: %d, timeout: %d)",
-      dat.hWnd, dat.error, timeout);
+  GST_DEBUG_OBJECT (sink, "Created window: %p (error: %d)",
+      dat.hWnd, dat.error);
 
 clear:
   {
