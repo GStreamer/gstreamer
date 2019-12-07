@@ -90,6 +90,11 @@ static gint WM_D3DVIDEO_NOTIFY_DEVICE_LOST = 0;
 #define CASE_HR_DBG_END(sink, gst_err_msg)          \
   CASE_HR_DBG_ERR_END(sink, gst_err_msg, GST_LEVEL_DEBUG)
 
+#define CHECK_REF_COUNT(klass, sink, goto_label)                        \
+  if(!klass->d3d.refs) {                                                \
+    GST_ERROR_OBJECT(sink, "Direct3D object ref count = 0");            \
+    goto goto_label;                                                    \
+  }
 #define CHECK_D3D_DEVICE(klass, sink, goto_label)                       \
   if(!klass->d3d.d3d || !klass->d3d.device.d3d_device) {                \
     GST_ERROR_OBJECT(sink, "Direct3D device or object does not exist"); \
@@ -693,10 +698,14 @@ gst_d3dsurface_buffer_pool_alloc_buffer (GstBufferPool * bpool,
 
   d3dformat =
       gst_video_format_to_d3d_format (GST_VIDEO_INFO_FORMAT (&pool->info));
+  LOCK_CLASS (sink, klass);
+  CHECK_REF_COUNT (klass, sink, error);
+  CHECK_D3D_DEVICE (klass, sink, error);
   hr = IDirect3DDevice9_CreateOffscreenPlainSurface (klass->d3d.
       device.d3d_device, GST_VIDEO_INFO_WIDTH (&pool->info),
       GST_VIDEO_INFO_HEIGHT (&pool->info), d3dformat, D3DPOOL_DEFAULT, &surface,
       NULL);
+  UNLOCK_CLASS (sink, klass);
   if (hr != D3D_OK) {
     GST_ERROR_OBJECT (sink, "Failed to create D3D surface");
     goto fallback;
@@ -747,6 +756,9 @@ fallback:
         (gst_d3dsurface_buffer_pool_parent_class)->alloc_buffer (bpool, buffer,
         params);
   }
+error:
+  UNLOCK_CLASS (sink, klass);
+  return GST_FLOW_ERROR;
 }
 
 static void
