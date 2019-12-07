@@ -199,8 +199,6 @@ GST_START_TEST (test_glmosaic)
 }
 
 GST_END_TEST
-#ifdef HAVE_PNG
-#ifdef HAVE_JPEG
 GST_START_TEST (test_gloverlay)
 {
   const gchar *s;
@@ -218,8 +216,6 @@ GST_START_TEST (test_gloverlay)
 }
 
 GST_END_TEST
-#endif
-#endif
 #define N_SRCS 13
 GST_START_TEST (test_gltestsrc)
 {
@@ -293,7 +289,6 @@ GST_START_TEST (test_gldeinterlace)
 }
 
 GST_END_TEST
-#ifdef HAVE_PNG
 GST_START_TEST (test_gldifferencematte)
 {
   const gchar *s;
@@ -311,17 +306,27 @@ GST_START_TEST (test_gldifferencematte)
 }
 
 GST_END_TEST
-#endif /* HAVE_PNG */
 #endif /* GST_GL_HAVE_OPENGL */
 #endif /* !GST_DISABLE_PARSE */
 static Suite *
 gl_launch_lines_suite (void)
 {
+  gboolean have_gldifferencematte;
+  gboolean have_gloverlay;
+
   Suite *s = suite_create ("OpenGL pipelines");
   TCase *tc_chain = tcase_create ("linear");
 
   /* time out after 60s, not the default 3 */
   tcase_set_timeout (tc_chain, 60);
+
+  have_gldifferencematte =
+      gst_registry_check_feature_version (gst_registry_get (),
+      "gldifferencematte", GST_VERSION_MAJOR, GST_VERSION_MINOR, 0);
+
+  have_gloverlay =
+      gst_registry_check_feature_version (gst_registry_get (),
+      "gloverlay", GST_VERSION_MAJOR, GST_VERSION_MINOR, 0);
 
   suite_add_tcase (s, tc_chain);
 #ifndef GST_DISABLE_PARSE
@@ -331,22 +336,20 @@ gl_launch_lines_suite (void)
   tcase_add_test (tc_chain, test_glshader);
   tcase_add_test (tc_chain, test_glfilterapp);
   tcase_add_test (tc_chain, test_glmosaic);
-#ifdef HAVE_PNG
-#ifdef HAVE_JPEG
-  tcase_add_test (tc_chain, test_gloverlay);
-#endif
-#endif
+  if (have_gloverlay) {
+    tcase_add_test (tc_chain, test_gloverlay);
+  }
   tcase_add_test (tc_chain, test_gltestsrc);
+
 #if GST_GL_HAVE_OPENGL
   tcase_add_test (tc_chain, test_glfilterglass);
 /*  tcase_add_test (tc_chain, test_glfilterreflectedscreen);*/
   tcase_add_test (tc_chain, test_gldeinterlace);
-#ifdef HAVE_PNG
-  tcase_add_test (tc_chain, test_gldifferencematte);
+
+  if (have_gldifferencematte) {
+    tcase_add_test (tc_chain, test_gldifferencematte);
+  }
 /*  tcase_add_test (tc_chain, test_glbumper);*/
-#ifdef HAVE_JPEG
-#endif /* HAVE_JPEG */
-#endif /* HAVE_PNG */
 #endif /* GST_GL_HAVE_OPENGL */
 #endif /* !GST_DISABLE_PARSE */
   return s;
