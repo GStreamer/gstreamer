@@ -54,6 +54,9 @@ static HWND d3d_create_internal_window (GstD3DVideoSink * sink);
 
 static void d3d_class_notify_device_lost (GstD3DVideoSink * sink);
 
+static void d3d_class_display_device_destroy (GstD3DVideoSinkClass * klass);
+static gboolean d3d_class_display_device_create (GstD3DVideoSinkClass * klass,
+    UINT adapter);
 
 static LRESULT APIENTRY d3d_wnd_proc_internal (HWND hWnd, UINT message,
     WPARAM wParam, LPARAM lParam);
