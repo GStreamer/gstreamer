@@ -448,7 +448,6 @@ gst_d3dvideosink_stop (GstBaseSink * bsink)
 
   GST_DEBUG_OBJECT (bsink, "Stop() called");
   d3d_stop (sink);
-  gst_d3d9_overlay_free (sink);
   d3d_class_destroy (sink);
 
   return TRUE;

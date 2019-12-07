@@ -1427,6 +1427,7 @@ d3d_release_swap_chain (GstD3DVideoSink * sink)
     GST_DEBUG_OBJECT (sink, "D3D surface released. Ref count: %d", ref_count);
   }
 
+  gst_d3d9_overlay_free (sink);
   ret = TRUE;
 
 end:
@@ -2507,6 +2508,7 @@ d3d_class_destroy (GstD3DVideoSink * sink)
 
   LOCK_CLASS (sink, klass);
 
+  d3d_class_display_device_destroy (klass);
   if (klass->d3d.d3d) {
     int ref_count;
     ref_count = IDirect3D9_Release (klass->d3d.d3d);
@@ -2814,7 +2816,6 @@ error:
   }
   if (reged)
     UnregisterClass (WndClass.lpszClassName, WndClass.hInstance);
-  d3d_class_display_device_destroy (klass);
 
   return ret;
 }
