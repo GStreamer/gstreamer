@@ -244,12 +244,13 @@ gst_video_format_to_d3d_format (GstVideoFormat format)
 }
 
 static gboolean
-gst_video_d3d_format_check (GstD3DVideoSink * sink, D3DFORMAT fmt)
+gst_video_d3d_format_check (GstD3DVideoSinkClass * klass, D3DFORMAT fmt)
 {
-  GstD3DVideoSinkClass *klass = GST_D3DVIDEOSINK_GET_CLASS (sink);
   HRESULT hr;
   gboolean ret = FALSE;
 
+  LOCK_CLASS (NULL, klass);
+  CHECK_REF_COUNT (klass, NULL, end);
   hr = IDirect3D9_CheckDeviceFormat (klass->d3d.d3d,
       klass->d3d.device.adapter,
       D3DDEVTYPE_HAL, klass->d3d.device.format, 0, D3DRTYPE_SURFACE, fmt);
@@ -263,25 +264,30 @@ gst_video_d3d_format_check (GstD3DVideoSink * sink, D3DFORMAT fmt)
     if (hr == D3D_OK)
       ret = TRUE;
   }
-  GST_DEBUG_OBJECT (sink, "Checking: %s - %s", d3d_format_to_string (fmt),
+  GST_DEBUG ("Checking: %s - %s", d3d_format_to_string (fmt),
       ret ? "TRUE" : "FALSE");
-
+end:
+  UNLOCK_CLASS (NULL, klass);
   return ret;
 }
 
 static gboolean
-gst_video_query_d3d_format (GstD3DVideoSink * sink, D3DFORMAT d3dformat)
+gst_video_query_d3d_format (GstD3DVideoSinkClass * klass, D3DFORMAT d3dformat)
 {
-  GstD3DVideoSinkClass *klass = GST_D3DVIDEOSINK_GET_CLASS (sink);
+  gboolean ret = FALSE;
 
+  LOCK_CLASS (NULL, klass);
+  CHECK_REF_COUNT (klass, NULL, end);
   /* If it's the display adapter format we don't need to probe */
-  if (d3dformat == klass->d3d.device.format)
-    return TRUE;
+  if (d3dformat == klass->d3d.device.format) {
+    ret = TRUE;
+    goto end;
+  }
+  ret = gst_video_d3d_format_check (klass, d3dformat);
+end:
+  UNLOCK_CLASS (NULL, klass);
 
-  if (gst_video_d3d_format_check (sink, d3dformat))
-    return TRUE;
-
-  return FALSE;
+  return ret;
 }
 
 typedef struct
@@ -794,14 +800,12 @@ GstCaps *
 d3d_supported_caps (GstD3DVideoSink * sink)
 {
   GstD3DVideoSinkClass *klass = GST_D3DVIDEOSINK_GET_CLASS (sink);
-  int i;
-  GList *fmts = NULL, *l;
+  GList *l;
   GstCaps *caps = NULL;
-  GstVideoFormat gst_format;
-  D3DFORMAT d3d_format;
   GValue va = { 0, };
   GValue v = { 0, };
 
+  g_return_val_if_fail (GST_IS_D3DVIDEOSINK (sink), NULL);
   LOCK_SINK (sink);
 
   if (sink->supported_caps) {
@@ -814,29 +818,13 @@ d3d_supported_caps (GstD3DVideoSink * sink)
     UNLOCK_CLASS (sink, klass);
     goto unlock;
   }
-  UNLOCK_CLASS (sink, klass);
-
-  for (i = 0; i < G_N_ELEMENTS (gst_d3d_format_map); i++) {
-    D3DFormatComp *comp;
-
-    gst_format = gst_d3d_format_map[i].gst_format;
-    d3d_format = gst_d3d_format_map[i].d3d_format;
-    if (!gst_video_query_d3d_format (sink, d3d_format))
-      continue;
-
-    comp = g_slice_new0 (D3DFormatComp);
-    comp->fmt = (GstVideoFormat) gst_format;
-    comp->d3d_fmt = d3d_format;
-    comp->display = (d3d_format == klass->d3d.device.format);
-    fmts = g_list_insert_sorted (fmts, comp, d3d_format_comp_compare);
-  }
 
   GST_DEBUG_OBJECT (sink, "Supported Caps:");
 
   g_value_init (&va, GST_TYPE_LIST);
   g_value_init (&v, G_TYPE_STRING);
 
-  for (l = fmts; l; l = g_list_next (l)) {
+  for (l = klass->d3d.supported_formats; l; l = g_list_next (l)) {
     D3DFormatComp *comp = (D3DFormatComp *) l->data;
 
     GST_DEBUG_OBJECT (sink, "%s -> %s %s",
@@ -845,6 +833,7 @@ d3d_supported_caps (GstD3DVideoSink * sink)
     g_value_set_string (&v, gst_video_format_to_string (comp->fmt));
     gst_value_list_append_value (&va, &v);
   }
+  UNLOCK_CLASS (sink, klass);
 
   caps =
       gst_caps_make_writable (gst_pad_get_pad_template_caps (GST_VIDEO_SINK_PAD
@@ -853,7 +842,6 @@ d3d_supported_caps (GstD3DVideoSink * sink)
   gst_caps_set_value (caps, "format", &va);
   g_value_unset (&v);
   g_value_unset (&va);
-  g_list_free_full (fmts, (GDestroyNotify) d3d_format_comp_free);
 
   sink->supported_caps = gst_caps_ref (caps);
 
@@ -872,9 +860,11 @@ unlock:
 gboolean
 d3d_set_render_format (GstD3DVideoSink * sink)
 {
+  GstD3DVideoSinkClass *klass = GST_D3DVIDEOSINK_GET_CLASS (sink);
   D3DFORMAT fmt;
   gboolean ret = FALSE;
 
+  g_return_val_if_fail (GST_IS_D3DVIDEOSINK (sink), FALSE);
   LOCK_SINK (sink);
 
   fmt = gst_video_format_to_d3d_format (sink->format);
@@ -884,7 +874,7 @@ d3d_set_render_format (GstD3DVideoSink * sink)
     goto end;
   }
 
-  if (!gst_video_query_d3d_format (sink, fmt)) {
+  if (!gst_video_query_d3d_format (klass, fmt)) {
     GST_ERROR_OBJECT (sink, "Failed to query a D3D render format for %s",
         gst_video_format_to_string (sink->format));
     goto end;
@@ -2534,6 +2524,7 @@ d3d_class_display_device_create (GstD3DVideoSinkClass * klass, UINT adapter)
   D3DDISPLAYMODE disp_mode;
   DWORD create_mask = 0;
   HRESULT hr;
+  guint i;
   gboolean ret = FALSE;
 
   g_return_val_if_fail (klass != NULL, FALSE);
@@ -2545,6 +2536,7 @@ d3d_class_display_device_create (GstD3DVideoSinkClass * klass, UINT adapter)
   d3d = klass->d3d.d3d;
   device = &klass->d3d.device;
   hwnd = klass->d3d.hidden_window;
+  CHECK_REF_COUNT (klass, NULL, error);
 
   memset (&caps, 0, sizeof (caps));
   memset (&disp_mode, 0, sizeof (disp_mode));
@@ -2615,6 +2607,20 @@ d3d_class_display_device_create (GstD3DVideoSinkClass * klass, UINT adapter)
     GST_ERROR ("Unable to create Direct3D device. Result: %ld (0x%lx)", hr, hr);
     goto error;
   }
+  /* cache d3d formats */
+  for (i = 0; i < G_N_ELEMENTS (gst_d3d_format_map); i++) {
+    D3DFormatComp *fmt;
+    if (!gst_video_query_d3d_format (klass, gst_d3d_format_map[i].d3d_format))
+      continue;
+    fmt = g_slice_new0 (D3DFormatComp);
+    fmt->fmt = gst_d3d_format_map[i].gst_format;
+    fmt->d3d_fmt = gst_d3d_format_map[i].d3d_format;
+    fmt->display = (fmt->d3d_fmt == klass->d3d.device.format);
+    klass->d3d.supported_formats =
+        g_list_insert_sorted (klass->d3d.supported_formats, fmt,
+        d3d_format_comp_compare);
+  }
+
 
   GST_DEBUG ("Display Device format: %s",
       d3d_format_to_string (disp_mode.Format));
@@ -2641,6 +2647,8 @@ d3d_class_display_device_destroy (GstD3DVideoSinkClass * klass)
     GST_DEBUG ("Direct3D device [adapter:%u] released. Reference count: %d",
         klass->d3d.device.adapter, ref_count);
   }
+  g_list_free_full (klass->d3d.supported_formats,
+      (GDestroyNotify) d3d_format_comp_free);
   memset (&klass->d3d.device, 0, sizeof (GstD3DDisplayDevice));
   UNLOCK_CLASS (NULL, klass);
 }

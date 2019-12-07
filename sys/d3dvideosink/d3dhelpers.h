@@ -60,6 +60,7 @@ typedef struct _GstD3DDataClass {
   guint                  refs;
   LPDIRECT3D9            d3d;
   GstD3DDisplayDevice    device;
+  GList                  *supported_formats;
 
   /* Track individual sink instances */
   GList *                sink_list;
