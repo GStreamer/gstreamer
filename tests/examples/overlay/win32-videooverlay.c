@@ -31,7 +31,6 @@
 static GMainLoop *loop = NULL;
 static gboolean visible = FALSE;
 static gboolean test_reuse = FALSE;
-static GIOChannel *msg_io_channel;
 static HWND hwnd = NULL;
 
 #define DEFAULT_VIDEO_SINK "glimagesink"
