@@ -119,9 +119,14 @@ test_defines = [
   '-DGST_USE_UNSTABLE_API',
 ]
 
+valgrind_dep = dependency('valgrind', required: false)
+if valgrind_dep.found()
+  test_defines += ['-DHAVE_VALGRIND']
+endif
+
 test_deps = [gst_dep, gst_base_dep, gst_net_dep, gst_check_dep, audio_dep,
   video_dep, pbutils_dep, rtp_dep, rtsp_dep, tag_dep, allocators_dep, app_dep,
-  fft_dep, riff_dep, sdp_dep, gio_dep] + glib_deps
+  fft_dep, riff_dep, sdp_dep, gio_dep, valgrind_dep] + glib_deps
 
 pluginsdirs = [  ]
 if gst_dep.type_name() == 'pkgconfig'
