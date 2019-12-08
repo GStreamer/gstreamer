@@ -13,7 +13,6 @@ if cc.has_argument ('-Wno-deprecated-declarations')
 endif
 
 xvideo_dep = dependency('xv', required : get_option('xvideo'))
-core_conf.set('HAVE_XVIDEO', x11_dep.found() and xvideo_dep.found())
 
 if xvideo_dep.found()
   gstxvimage = library('gstxvimagesink',
