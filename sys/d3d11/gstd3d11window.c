@@ -1089,6 +1089,11 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
   }
 #endif
 
+  if (window->swap_chain) {
+    gst_d3d11_device_thread_add (window->device,
+        (GstD3D11DeviceThreadFunc) gst_d3d11_window_release_resources, window);
+  }
+
   window->aspect_ratio_n = aspect_ratio_n;
   window->aspect_ratio_d = aspect_ratio_d;
 
