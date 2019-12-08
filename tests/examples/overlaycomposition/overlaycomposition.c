@@ -27,6 +27,7 @@
 #include <math.h>
 
 #include <gio/gio.h>
+#include <stdlib.h>
 
 #define VIDEO_WIDTH 720
 #define VIDEO_HEIGHT 480
@@ -256,7 +257,7 @@ main (int argc, char **argv)
   OverlayState overlay_state = { 0, };
   GOptionContext *option_ctx;
   GError *error = NULL;
-  const gchar *video_sink = "autovideosink";
+  gchar *video_sink = NULL;
   gboolean ret;
   GOptionEntry options[] = {
     {"videosink", 0, 0, G_OPTION_ARG_STRING, &video_sink,
@@ -281,7 +282,12 @@ main (int argc, char **argv)
   capsfilter = gst_element_factory_make ("capsfilter", NULL);
   overlay = gst_element_factory_make ("overlaycomposition", NULL);
   conv = gst_element_factory_make ("videoconvert", NULL);
+
+  if (!video_sink)
+    video_sink = g_strdup ("autovideosink");
+
   sink = gst_element_factory_make (video_sink, NULL);
+  g_free (video_sink);
 
   if (!pipeline || !src || !capsfilter || !overlay || !conv || !sink) {
     g_error ("Failed to create elements");
