@@ -42,7 +42,7 @@
 #include <linux/input.h>
 #include <linux/joystick.h>
 
-#ifdef HAVE_X
+#ifdef HAVE_X11
 #include <gdk/gdkx.h>
 #endif
 #include <gst/video/videooverlay.h>
@@ -2416,7 +2416,7 @@ msg_clock_lost (GstBus * bus, GstMessage * message, GstPipeline * data)
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 }
 
-#ifdef HAVE_X
+#ifdef HAVE_X11
 
 static gulong embed_xid = 0;
 
@@ -2475,7 +2475,7 @@ realize_cb (GtkWidget * widget, gpointer data)
   if (!gdk_window_ensure_native (window))
     g_error ("Couldn't create native window needed for GstVideoOverlay!");
 
-#ifdef HAVE_X
+#ifdef HAVE_X11
   embed_xid = GDK_WINDOW_XID (window);
   g_print ("Window realize: video window XID = %lu\n", embed_xid);
 #endif
@@ -2509,7 +2509,7 @@ connect_bus_signals (GstElement * pipeline)
 {
   GstBus *bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
 
-#ifdef HAVE_X
+#ifdef HAVE_X11
   /* handle prepare-window-handle element message synchronously */
   gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bus_sync_handler,
       pipeline, NULL);
@@ -2998,7 +2998,7 @@ main (int argc, char **argv)
    * asks for the XID of the window to render onto */
   gtk_widget_realize (window);
 
-#ifdef HAVE_X
+#ifdef HAVE_X11
   /* we should have the XID now */
   g_assert (embed_xid != 0);
 #endif

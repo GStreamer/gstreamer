@@ -278,7 +278,7 @@ else
   gtk_quartz_dep = dependency('', required : false)
 endif
 
-core_conf.set('HAVE_X', x11_dep.found())
+core_conf.set('HAVE_X11', x11_dep.found())
 core_conf.set('HAVE_GIO_UNIX_2_0', giounix_dep.found())
 
 if gio_dep.type_name() == 'pkgconfig'
