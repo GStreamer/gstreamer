@@ -14,6 +14,7 @@ subdir('uvch264')
 subdir('va')
 subdir('waylandsink')
 subdir('webrtc')
+subdir('wpe')
 
 executable('playout',
   'playout.c',

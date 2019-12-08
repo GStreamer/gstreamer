@@ -286,7 +286,10 @@ WPEView::WPEView(WebKitWebContext* web_context, GstWpeVideoSrc* src, GstGLContex
     wpe_view_backend_add_activity_state(wpeViewBackend, wpe_view_activity_state_visible | wpe_view_activity_state_focused | wpe_view_activity_state_in_window);
 #endif
 
-    webkit.view = WEBKIT_WEB_VIEW(g_object_new(WEBKIT_TYPE_WEB_VIEW, "web-context", web_context, "backend", viewBackend, nullptr));
+    webkit.view = WEBKIT_WEB_VIEW(g_object_new(WEBKIT_TYPE_WEB_VIEW,
+        "web-context", web_context,
+        "backend", viewBackend,
+        nullptr));
 
     g_signal_connect(webkit.view, "load-failed", G_CALLBACK(s_loadFailed), src);
     g_signal_connect(webkit.view, "load-failed-with-tls-errors", G_CALLBACK(s_loadFailedWithTLSErrors), src);
@@ -515,6 +518,11 @@ void WPEView::setDrawBackground(gboolean drawsBackground)
     WebKitColor color;
     webkit_color_parse(&color, drawsBackground ? "white" : "transparent");
     webkit_web_view_set_background_color(webkit.view, &color);
+}
+
+void WPEView::registerAudioReceiver(const struct wpe_audio_receiver* audioReceiver, gpointer userData)
+{
+    wpe_audio_register_receiver(audioReceiver, userData);
 }
 
 void WPEView::releaseImage(gpointer imagePointer)

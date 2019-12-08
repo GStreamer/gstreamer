@@ -23,6 +23,7 @@
 #include <glib.h>
 #include <gst/gl/gstglfuncs.h>
 #include <gst/gl/egl/gstgldisplay_egl.h>
+#include <wpe/extensions/audio.h>
 #include <wpe/fdo.h>
 #include <wpe/fdo-egl.h>
 #include <wpe/webkit.h>
@@ -50,6 +51,9 @@ public:
     void loadUri(const gchar*);
     void loadData(GBytes*);
     void setDrawBackground(gboolean);
+
+    void registerAudioReceiver(const struct wpe_audio_receiver*, gpointer);
+
     GstEGLImage* image();
     GstBuffer* buffer();
 
@@ -96,7 +100,7 @@ private:
         struct wpe_view_backend_exportable_fdo* exportable;
         int width;
         int height;
-    } wpe { nullptr, 0, 0 };
+    } wpe { nullptr, 0, 0, };
 
     struct {
         gchar* uri;

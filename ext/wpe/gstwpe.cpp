@@ -68,12 +68,14 @@
 
 GST_DEBUG_CATEGORY (wpe_video_src_debug);
 GST_DEBUG_CATEGORY (wpe_view_debug);
+GST_DEBUG_CATEGORY (wpe_src_debug);
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (wpe_video_src_debug, "wpesrc", 0, "WPE Source");
+  GST_DEBUG_CATEGORY_INIT (wpe_video_src_debug, "wpevideosrc", 0, "WPE Video Source");
   GST_DEBUG_CATEGORY_INIT (wpe_view_debug, "wpeview", 0, "WPE Threaded View");
+  GST_DEBUG_CATEGORY_INIT (wpe_src_debug, "wpesrc", 0, "WPE Source");
 
   gboolean result = gst_element_register (plugin, "wpevideosrc", GST_RANK_NONE,
       GST_TYPE_WPE_VIDEO_SRC);
