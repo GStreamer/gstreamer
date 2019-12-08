@@ -849,6 +849,135 @@ mastering_display_gst_to_dxgi (GstVideoMasteringDisplayInfo * m,
   meta->MaxFrameAverageLightLevel =
       fraction_to_uint (c->maxFALL_n, c->maxFALL_d, 1);
 }
+
+/* missing in mingw header... */
+typedef enum
+{
+  GST_DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709 = 0,
+  GST_DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709 = 1,
+  GST_DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P709 = 2,
+  GST_DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P2020 = 3,
+  GST_DXGI_COLOR_SPACE_RESERVED = 4,
+  GST_DXGI_COLOR_SPACE_YCBCR_FULL_G22_NONE_P709_X601 = 5,
+  GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P601 = 6,
+  GST_DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P601 = 7,
+  GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P709 = 8,
+  GST_DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P709 = 9,
+  GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P2020 = 10,
+  GST_DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P2020 = 11,
+  GST_DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020 = 12,
+  GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G2084_LEFT_P2020 = 13,
+  GST_DXGI_COLOR_SPACE_RGB_STUDIO_G2084_NONE_P2020 = 14,
+  GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_TOPLEFT_P2020 = 15,
+  GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G2084_TOPLEFT_P2020 = 16,
+  GST_DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P2020 = 17,
+  GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_GHLG_TOPLEFT_P2020 = 18,
+  GST_DXGI_COLOR_SPACE_YCBCR_FULL_GHLG_TOPLEFT_P2020 = 19,
+  GST_DXGI_COLOR_SPACE_RGB_STUDIO_G24_NONE_P709 = 20,
+  GST_DXGI_COLOR_SPACE_RGB_STUDIO_G24_NONE_P2020 = 21,
+  GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G24_LEFT_P709 = 22,
+  GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G24_LEFT_P2020 = 23,
+  GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G24_TOPLEFT_P2020 = 24,
+  GST_DXGI_COLOR_SPACE_CUSTOM = 0xFFFFFFFF
+} GST_DXGI_COLOR_SPACE_TYPE;
+
+typedef struct
+{
+  GST_DXGI_COLOR_SPACE_TYPE type;
+  GstVideoColorRange range;
+  GstVideoTransferFunction transfer;
+  GstVideoColorPrimaries primaries;
+} DxgiColorSpaceMap;
+
+/* https://docs.microsoft.com/en-us/windows/win32/api/dxgicommon/ne-dxgicommon-dxgi_color_space_type */
+static const DxgiColorSpaceMap colorspace_map[] = {
+  /* RGB, bt709 */
+  {GST_DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709, GST_VIDEO_COLOR_RANGE_0_255,
+      GST_VIDEO_TRANSFER_BT709, GST_VIDEO_COLOR_PRIMARIES_BT709},
+  {GST_DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709, GST_VIDEO_COLOR_RANGE_0_255,
+      GST_VIDEO_TRANSFER_GAMMA10, GST_VIDEO_COLOR_PRIMARIES_BT709},
+  {GST_DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P709, GST_VIDEO_COLOR_RANGE_16_235,
+      GST_VIDEO_TRANSFER_BT709, GST_VIDEO_COLOR_PRIMARIES_BT709},
+  /* RGB, bt2020 */
+  {GST_DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P2020, GST_VIDEO_COLOR_RANGE_0_255,
+      GST_VIDEO_TRANSFER_BT2020_10, GST_VIDEO_COLOR_PRIMARIES_BT2020},
+  {GST_DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P2020, GST_VIDEO_COLOR_RANGE_16_235,
+      GST_VIDEO_TRANSFER_BT2020_10, GST_VIDEO_COLOR_PRIMARIES_BT2020},
+  /* RGB, bt2084 */
+  {GST_DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020, GST_VIDEO_COLOR_RANGE_0_255,
+      GST_VIDEO_TRANSFER_SMPTE2084, GST_VIDEO_COLOR_PRIMARIES_BT2020},
+  {GST_DXGI_COLOR_SPACE_RGB_STUDIO_G2084_NONE_P2020,
+        GST_VIDEO_COLOR_RANGE_16_235,
+      GST_VIDEO_TRANSFER_SMPTE2084, GST_VIDEO_COLOR_PRIMARIES_BT2020},
+  /* RGB, SRGB */
+  {GST_DXGI_COLOR_SPACE_RGB_STUDIO_G24_NONE_P709, GST_VIDEO_COLOR_RANGE_16_235,
+      GST_VIDEO_TRANSFER_SRGB, GST_VIDEO_COLOR_PRIMARIES_BT709},
+  {GST_DXGI_COLOR_SPACE_RGB_STUDIO_G24_NONE_P2020, GST_VIDEO_COLOR_RANGE_16_235,
+      GST_VIDEO_TRANSFER_SRGB, GST_VIDEO_COLOR_PRIMARIES_BT2020},
+};
+
+static gboolean
+gst_d3d11_window_color_space_from_video_info (GstD3D11Window * self,
+    GstVideoInfo * info, IDXGISwapChain4 * swapchain,
+    GST_DXGI_COLOR_SPACE_TYPE * dxgi_colorspace)
+{
+  gint i;
+  gint best_idx = -1;
+  gint best_score = 0;
+
+  g_return_val_if_fail (info != NULL, FALSE);
+  g_return_val_if_fail (dxgi_colorspace != NULL, FALSE);
+
+  /* We render only RGB for now */
+  if (!GST_VIDEO_FORMAT_INFO_IS_RGB (info->finfo))
+    return FALSE;
+
+  /* find the best matching colorspace */
+  for (i = 0; i < G_N_ELEMENTS (colorspace_map); i++) {
+    GstVideoColorimetry *cinfo = &info->colorimetry;
+    UINT can_support = 0;
+    HRESULT hr;
+    gint score = 0;
+    GstVideoTransferFunction transfer = cinfo->transfer;
+
+    if (transfer == GST_VIDEO_TRANSFER_BT2020_12)
+      transfer = GST_VIDEO_TRANSFER_BT2020_10;
+
+    hr = IDXGISwapChain4_CheckColorSpaceSupport (swapchain,
+        colorspace_map[i].type, &can_support);
+
+    if (SUCCEEDED (hr) &&
+        (can_support & DXGI_SWAP_CHAIN_COLOR_SPACE_SUPPORT_FLAG_PRESENT) ==
+        DXGI_SWAP_CHAIN_COLOR_SPACE_SUPPORT_FLAG_PRESENT) {
+      if (cinfo->range == colorspace_map[i].range)
+        score++;
+
+      if (transfer == colorspace_map[i].transfer)
+        score++;
+
+      if (cinfo->primaries == colorspace_map[i].primaries)
+        score++;
+
+      GST_DEBUG_OBJECT (self,
+          "colorspace %d supported, score %d", colorspace_map[i].type, score);
+
+      if (score > best_score) {
+        best_score = score;
+        best_idx = i;
+      }
+    } else {
+      GST_DEBUG_OBJECT (self,
+          "colorspace %d not supported", colorspace_map[i].type);
+    }
+  }
+
+  if (best_idx < 0)
+    return FALSE;
+
+  *dxgi_colorspace = colorspace_map[best_idx].type;
+
+  return TRUE;
+}
 #endif
 
 gboolean
@@ -856,11 +985,13 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
     guint aspect_ratio_n, guint aspect_ratio_d, GstCaps * caps, GError ** error)
 {
   DXGI_SWAP_CHAIN_DESC desc = { 0, };
-  gboolean have_cll = FALSE;
-  gboolean have_mastering = FALSE;
-  gboolean hdr_api_available = FALSE;
   GstD3D11ThreadFuncData data;
   GstCaps *render_caps;
+#if defined(HAVE_DXGI_1_5_H)
+  gboolean have_cll = FALSE;
+  gboolean have_mastering = FALSE;
+  gboolean swapchain4_available = FALSE;
+#endif
 
   g_return_val_if_fail (GST_IS_D3D11_WINDOW (window), FALSE);
   g_return_val_if_fail (aspect_ratio_n > 0, FALSE);
@@ -899,6 +1030,11 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
     gst_d3d11_color_converter_free (window->converter);
   window->converter = NULL;
 
+  /* preserve upstream colorimetry */
+  window->render_info.colorimetry.primaries =
+      window->info.colorimetry.primaries;
+  window->render_info.colorimetry.transfer = window->info.colorimetry.transfer;
+
   if (GST_VIDEO_INFO_FORMAT (&window->info) !=
       GST_VIDEO_INFO_FORMAT (&window->render_info)) {
     window->converter =
@@ -931,7 +1067,7 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
     window->loop = NULL;
     window->thread = NULL;
   }
-
+#if defined(HAVE_DXGI_1_5_H)
   if (!gst_video_content_light_level_from_caps (&window->content_light_level,
           caps)) {
     gst_video_content_light_level_init (&window->content_light_level);
@@ -946,11 +1082,10 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
     have_mastering = TRUE;
   }
 
-#ifdef HAVE_DXGI_1_5_H
   if (gst_d3d11_device_get_chosen_dxgi_factory_version (window->device) >=
       GST_D3D11_DXGI_FACTORY_5) {
     GST_DEBUG_OBJECT (window, "DXGI 1.5 interface is available");
-    hdr_api_available = TRUE;
+    swapchain4_available = TRUE;
   }
 #endif
 
@@ -975,10 +1110,10 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
   desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
   desc.BufferCount = 2;
   desc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
-#ifdef HAVE_DXGI_1_5_H
+#if defined(HAVE_DXGI_1_5_H)
   /* For non-DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709 color space support,
    * DXGI_SWAP_EFFECT_FLIP_DISCARD instead of DXGI_SWAP_EFFECT_DISCARD */
-  if (hdr_api_available)
+  if (swapchain4_available)
     desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 #endif
   desc.OutputWindow =
@@ -994,32 +1129,32 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
     GST_ERROR_OBJECT (window, "Cannot create swapchain");
     return FALSE;
   }
-#ifdef HAVE_DXGI_1_5_H
-  if (hdr_api_available &&
-      window->render_format->dxgi_format == DXGI_FORMAT_R10G10B10A2_UNORM &&
-      have_cll && have_mastering) {
-    UINT can_support = 0;
+#if defined(HAVE_DXGI_1_5_H)
+  if (swapchain4_available) {
     HRESULT hr;
+    GST_DXGI_COLOR_SPACE_TYPE ctype;
 
-    hr = IDXGISwapChain4_CheckColorSpaceSupport ((IDXGISwapChain4 *)
-        window->swap_chain, DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020,
-        &can_support);
-
-    if (SUCCEEDED (hr) &&
-        (can_support & DXGI_SWAP_CHAIN_COLOR_SPACE_SUPPORT_FLAG_PRESENT) ==
-        DXGI_SWAP_CHAIN_COLOR_SPACE_SUPPORT_FLAG_PRESENT) {
-      DXGI_HDR_METADATA_HDR10 metadata = { 0, };
-
-      GST_DEBUG_OBJECT (window,
-          "Swapchain support BT2084 color space, set HDR metadata");
-
-      mastering_display_gst_to_dxgi (&window->mastering_display_info,
-          &window->content_light_level, &metadata);
-
+    if (gst_d3d11_window_color_space_from_video_info (window,
+            &window->render_info, (IDXGISwapChain4 *) window->swap_chain,
+            &ctype)) {
       hr = IDXGISwapChain4_SetColorSpace1 ((IDXGISwapChain4 *)
-          window->swap_chain, DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020);
+          window->swap_chain, (DXGI_COLOR_SPACE_TYPE) ctype);
 
-      if (SUCCEEDED (hr)) {
+      if (!gst_d3d11_result (hr)) {
+        GST_WARNING_OBJECT (window, "Failed to set colorspace %d, hr: 0x%x",
+            ctype, (guint) hr);
+      } else {
+        GST_DEBUG_OBJECT (window, "Set colorspace %d", ctype);
+      }
+
+      if (have_cll && have_mastering) {
+        DXGI_HDR_METADATA_HDR10 metadata = { 0, };
+
+        GST_DEBUG_OBJECT (window, "Have HDR metadata, set to DXGI swapchain");
+
+        mastering_display_gst_to_dxgi (&window->mastering_display_info,
+            &window->content_light_level, &metadata);
+
         hr = IDXGISwapChain4_SetHDRMetaData ((IDXGISwapChain4 *)
             window->swap_chain, DXGI_HDR_METADATA_TYPE_HDR10,
             sizeof (DXGI_HDR_METADATA_HDR10), &metadata);
@@ -1027,13 +1162,10 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
           GST_WARNING_OBJECT (window, "Couldn't set HDR metadata, hr 0x%x",
               (guint) hr);
         }
-      } else {
-        GST_WARNING_OBJECT (window, "Couldn't set colorspace, hr 0x%x",
-            (guint) hr);
       }
     } else {
       GST_DEBUG_OBJECT (window,
-          "Swapchain couldn't support BT2084 color space, hr 0x%x", (guint) hr);
+          "Could not get color space from %" GST_PTR_FORMAT, caps);
     }
   }
 #endif
