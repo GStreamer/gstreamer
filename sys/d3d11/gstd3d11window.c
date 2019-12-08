@@ -982,7 +982,8 @@ gst_d3d11_window_color_space_from_video_info (GstD3D11Window * self,
 
 gboolean
 gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
-    guint aspect_ratio_n, guint aspect_ratio_d, GstCaps * caps, GError ** error)
+    guint aspect_ratio_n, guint aspect_ratio_d, GstCaps * caps,
+    gboolean * do_convert, GError ** error)
 {
   DXGI_SWAP_CHAIN_DESC desc = { 0, };
   GstD3D11ThreadFuncData data;
@@ -996,6 +997,7 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
   g_return_val_if_fail (GST_IS_D3D11_WINDOW (window), FALSE);
   g_return_val_if_fail (aspect_ratio_n > 0, FALSE);
   g_return_val_if_fail (aspect_ratio_d > 0, FALSE);
+  g_return_val_if_fail (do_convert != NULL, FALSE);
 
   GST_DEBUG_OBJECT (window, "Prepare window with %dx%d caps %" GST_PTR_FORMAT,
       width, height, caps);
@@ -1185,6 +1187,8 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
   }
 
   GST_DEBUG_OBJECT (window, "New swap chain 0x%p created", window->swap_chain);
+
+  *do_convert = ! !window->converter;
 
   return TRUE;
 }
