@@ -295,6 +295,9 @@ WPEView::WPEView(WebKitWebContext* web_context, GstWpeVideoSrc* src, GstGLContex
     g_signal_connect(webkit.view, "load-failed-with-tls-errors", G_CALLBACK(s_loadFailedWithTLSErrors), src);
     g_signal_connect(webkit.view, "notify::estimated-load-progress", G_CALLBACK(s_loadProgressChaned), src);
 
+    auto* settings = webkit_web_view_get_settings(webkit.view);
+    webkit_settings_set_enable_webaudio(settings, TRUE);
+
     gst_wpe_video_src_configure_web_view(src, webkit.view);
 
     gchar* location;
