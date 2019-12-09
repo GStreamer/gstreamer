@@ -176,11 +176,17 @@ gst_test_src_bin_chain (GstPad * pad, GstObject * object, GstBuffer * buffer)
   GstTestSrcBin *self = GST_TEST_SRC_BIN (gst_object_get_parent (object));
 
   chain_res = gst_proxy_pad_chain_default (pad, GST_OBJECT (self), buffer);
+  GST_OBJECT_LOCK (self);
   res = gst_flow_combiner_update_pad_flow (self->flow_combiner, pad, chain_res);
+  GST_OBJECT_UNLOCK (self);
   gst_object_unref (self);
 
   if (res == GST_FLOW_FLUSHING)
     return chain_res;
+
+  if (res == GST_FLOW_NOT_LINKED)
+    GST_WARNING_OBJECT (pad,
+        "all testsrcbin pads not linked, returning not-linked.");
 
   return res;
 }
@@ -219,6 +225,13 @@ static gboolean
 gst_test_src_event_function (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_RECONFIGURE:{
+      GstTestSrcBin *self = GST_TEST_SRC_BIN (parent);
+      GST_OBJECT_LOCK (self);
+      gst_flow_combiner_reset (self->flow_combiner);
+      GST_OBJECT_UNLOCK (self);
+      break;
+    }
     case GST_EVENT_SEEK:{
       ForwardEventData data = { event, TRUE, parent };
 
