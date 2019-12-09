@@ -379,6 +379,7 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
     gst_d3d11_allocation_params_free (d3d11_params);
   }
 
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
   gst_buffer_pool_set_config (self->fallback_pool, config);
 
   return TRUE;
@@ -695,8 +696,8 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
 
     if (!self->fallback_pool ||
         !gst_buffer_pool_set_active (self->fallback_pool, TRUE) ||
-        !gst_buffer_pool_acquire_buffer (self->fallback_pool, &render_buf,
-            NULL)) {
+        gst_buffer_pool_acquire_buffer (self->fallback_pool, &render_buf,
+            NULL) != GST_FLOW_OK) {
       GST_ERROR_OBJECT (self, "fallback pool is unavailable");
 
       return GST_FLOW_ERROR;
@@ -709,7 +710,8 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
       return GST_FLOW_ERROR;
     }
 
-    if (!gst_video_frame_map (&fallback_frame, &self->info, buf, GST_MAP_WRITE)) {
+    if (!gst_video_frame_map (&fallback_frame, &self->info, render_buf,
+            GST_MAP_WRITE)) {
       GST_ERROR_OBJECT (self, "cannot map fallback frame");
       gst_video_frame_unmap (&frame);
       gst_buffer_unref (render_buf);
@@ -731,6 +733,28 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
 
     gst_video_frame_unmap (&frame);
     gst_video_frame_unmap (&fallback_frame);
+
+    for (i = 0; i < gst_buffer_n_memory (render_buf); i++) {
+      GstD3D11Memory *dmem;
+      GstMapInfo info;
+
+      /* map and unmap to upload memory */
+      dmem = (GstD3D11Memory *) gst_buffer_peek_memory (render_buf, i);
+      gst_memory_map (GST_MEMORY_CAST (dmem), &info,
+          GST_MAP_READ | GST_MAP_D3D11);
+      gst_memory_unmap (GST_MEMORY_CAST (dmem), &info);
+
+      if (self->need_srv &&
+          !gst_d3d11_memory_ensure_shader_resource_view (GST_MEMORY_CAST
+              (dmem))) {
+        GST_ERROR_OBJECT (self, "shader resource view is not available");
+
+        gst_buffer_unref (render_buf);
+
+        return GST_FLOW_ERROR;
+      }
+    }
+
     need_unref = TRUE;
   }
 
