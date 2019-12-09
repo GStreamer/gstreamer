@@ -611,8 +611,8 @@ get_stream_from_caps (GstSrtpDec * filter, GstCaps * caps, guint32 ssrc)
 
       mki_size = gst_buffer_get_size (mki);
       if (mki_size > SRTP_MAX_MKI_LEN) {
-        GST_WARNING_OBJECT (filter, "MKI is longer than allowed (%zu > %d).",
-            mki_size, SRTP_MAX_MKI_LEN);
+        GST_WARNING_OBJECT (filter, "MKI is longer than allowed (%"
+            G_GSIZE_FORMAT " > %d).", mki_size, SRTP_MAX_MKI_LEN);
         gst_buffer_unref (mki);
         gst_buffer_unref (buf);
         goto error;
@@ -635,8 +635,9 @@ get_stream_from_caps (GstSrtpDec * filter, GstCaps * caps, guint32 ssrc)
                 key_id, GST_TYPE_BUFFER, &buf, NULL)) {
           if (gst_buffer_get_size (mki) != mki_size) {
             GST_WARNING_OBJECT (filter,
-                "MKIs need to all have the same size (first was %zu,"
-                " current is %zu).", mki_size, gst_buffer_get_size (mki));
+                "MKIs need to all have the same size (first was %"
+                G_GSIZE_FORMAT ", current is %" G_GSIZE_FORMAT ").",
+                mki_size, gst_buffer_get_size (mki));
             gst_buffer_unref (mki);
             gst_buffer_unref (buf);
             goto error;
