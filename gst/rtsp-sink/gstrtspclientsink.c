@@ -3360,8 +3360,11 @@ gst_rtsp_client_sink_close (GstRTSPClientSink * sink, gboolean async,
   for (walk = sink->contexts; walk; walk = g_list_next (walk)) {
     GstRTSPStreamContext *context = (GstRTSPStreamContext *) walk->data;
 
-    if (context->stream_transport)
+    if (context->stream_transport) {
       gst_rtsp_stream_transport_set_active (context->stream_transport, FALSE);
+      gst_object_unref (context->stream_transport);
+      context->stream_transport = NULL;
+    }
 
     if (context->joined) {
       gst_rtsp_stream_leave_bin (context->stream, GST_BIN (sink->internal_bin),
