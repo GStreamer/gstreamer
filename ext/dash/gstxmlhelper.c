@@ -982,7 +982,7 @@ gst_xml_helper_get_node_as_string (xmlNode * a_node, gchar ** content)
   out_buf = xmlAllocOutputBuffer (NULL);
   g_assert (out_buf != NULL);
   xmlNodeDumpOutput (out_buf, a_node->doc, a_node, 0, 0, txt_encoding);
-  xmlOutputBufferFlush (out_buf);
+  (void) xmlOutputBufferFlush (out_buf);
 #ifdef LIBXML2_NEW_BUFFER
   if (xmlOutputBufferGetSize (out_buf) > 0) {
     *content =
