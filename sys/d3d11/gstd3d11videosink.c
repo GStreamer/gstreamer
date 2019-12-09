@@ -661,17 +661,21 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
 
     mem = gst_buffer_peek_memory (buf, i);
     if (!gst_is_d3d11_memory (mem)) {
+      GST_LOG_OBJECT (sink, "not a d3d11 memory, need fallback");
       render_buf = NULL;
       break;
     }
 
     dmem = (GstD3D11Memory *) mem;
     if (dmem->device != self->device) {
+      GST_LOG_OBJECT (sink, "different d3d11 device, need fallback");
       render_buf = NULL;
       break;
     }
 
     if (self->need_srv && !gst_d3d11_memory_ensure_shader_resource_view (mem)) {
+      GST_LOG_OBJECT (sink,
+          "shader resource view is unavailable, need fallback");
       render_buf = NULL;
       break;
     }
