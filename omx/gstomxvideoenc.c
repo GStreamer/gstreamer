@@ -2497,6 +2497,8 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
   OMX_PARAM_PORTDEFINITIONTYPE *port_def = &self->enc_in_port->port_def;
   gboolean ret = FALSE;
   GstVideoFrame frame;
+  GstVideoMeta *meta = gst_buffer_get_video_meta (inbuf);
+  gint stride = meta ? meta->stride[0] : info->stride[0];
 
   if (info->width != port_def->format.video.nFrameWidth ||
       info->height != port_def->format.video.nFrameHeight) {
@@ -2546,8 +2548,9 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
   }
 
   /* Same strides and everything */
-  if (gst_buffer_get_size (inbuf) ==
-      outbuf->omx_buf->nAllocLen - outbuf->omx_buf->nOffset) {
+  if ((gst_buffer_get_size (inbuf) ==
+          outbuf->omx_buf->nAllocLen - outbuf->omx_buf->nOffset) &&
+      (stride == port_def->format.video.nStride)) {
     outbuf->omx_buf->nFilledLen = gst_buffer_get_size (inbuf);
 
     GST_LOG_OBJECT (self, "Matched strides - direct copy %u bytes",
