@@ -1077,7 +1077,7 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
 
   {
     time_t secs;
-    struct tm *tm;
+    struct tm tm;
     gchar *s;
     static const gchar *weekdays[] = {
       "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
@@ -1088,11 +1088,15 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
     };
 
     secs = g_get_real_time () / G_USEC_PER_SEC;
-    tm = gmtime (&secs);
+#ifdef HAVE_GMTIME_R
+    gmtime_r (&secs, &tm);
+#else
+    tm = *gmtime (&secs);
+#endif
 
-    s = g_strdup_printf ("%s %s %d %02d:%02d:%02d %d", weekdays[tm->tm_wday],
-        months[tm->tm_mon], tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec,
-        tm->tm_year + 1900);
+    s = g_strdup_printf ("%s %s %d %02d:%02d:%02d %d", weekdays[tm.tm_wday],
+        months[tm.tm_mon], tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec,
+        tm.tm_year + 1900);
 
     _gst_buffer_new_and_alloc (2 + 12 + 1 + 2 + strlen (s), &tmp, &data);
     data[0] = 0;                /* 12 bytes name */

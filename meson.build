@@ -151,6 +151,7 @@ check_functions = [
 # check token HAVE_RDTSC
   ['HAVE_SINH', 'sinh', '#include<math.h>'],
 # check token HAVE_WAVEFORM
+  ['HAVE_GMTIME_R', 'gmtime_r', '#include<time.h>'],
 ]
 
 libm = cc.find_library('m', required : false)
