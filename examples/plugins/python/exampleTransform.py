@@ -38,12 +38,16 @@ class ExampleTransform(GstBase.BaseTransform):
         return True
 
     def do_transform_ip(self, buf):
-        with buf.map(Gst.MapFlags.READ | Gst.MapFlags.WRITE) as info:
-            # Create a NumPy ndarray from the memoryview and modify it in place:
-            A = np.ndarray(shape = (self.height, self.width), dtype = np.uint8, buffer = info.data)
-            A[:] = np.invert(A)
+        try:
+            with buf.map(Gst.MapFlags.READ | Gst.MapFlags.WRITE) as info:
+                # Create a NumPy ndarray from the memoryview and modify it in place:
+                A = np.ndarray(shape = (self.height, self.width), dtype = np.uint8, buffer = info.data)
+                A[:] = np.invert(A)
 
-            return Gst.FlowReturn.OK
+                return Gst.FlowReturn.OK
+        except Gst.MapError as e:
+            Gst.error("Mapping error: %s" % e)
+            return Gst.FlowReturn.ERROR
 
 GObject.type_register(ExampleTransform)
 __gstelementfactory__ = ("ExampleTransform", Gst.Rank.NONE, ExampleTransform)

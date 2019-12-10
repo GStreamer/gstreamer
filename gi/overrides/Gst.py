@@ -225,6 +225,11 @@ class LinkError(Exception):
     pass
 __all__.append('LinkError')
 
+class MapError(Exception):
+    pass
+__all__.append('MapError')
+
+
 class Iterator(Gst.Iterator):
     def __iter__(self):
         while True:
@@ -612,23 +617,22 @@ __all__.append("MapInfo")
 class Buffer(Gst.Buffer):
 
     def map_range(self, idx, length, flags):
-        mapinfo = MapInfo() 
+        mapinfo = MapInfo()
         if (_gi_gst.buffer_override_map_range(self, mapinfo, idx, length, int(flags))):
             mapinfo.__parent__ = self
             return (mapinfo)
-        raise Exception('MappingError','Buffer mapping was not successfull')
-        return None
+        raise MapError('MappingError','Buffer mapping was not successfull')
 
     def map(self, flags):
         mapinfo = MapInfo()
-        if (_gi_gst.buffer_override_map(self, mapinfo, int(flags))):
+        if _gi_gst.buffer_override_map(self, mapinfo, int(flags)):
             mapinfo.__parent__ = self
-            return (mapinfo)
-        raise Exception('MappingError','Buffer mapping was not successfull')
-        return None
+            return mapinfo
+        raise MapError('MappingError','Buffer mapping was not successfull')
 
     def unmap(self, mapinfo):
-        _gi_gst.buffer_override_unmap(self, mapinfo)
+        if _gi_gst.buffer_override_unmap(self, mapinfo) is not True:
+            raise MapError('UnmappingError','Buffer unmapping was not successfull')
 
 Buffer = override(Buffer)
 __all__.append('Buffer')
@@ -640,11 +644,10 @@ class Memory(Gst.Memory):
         if (_gi_gst.memory_override_map(self, mapinfo, int(flags))):
             mapinfo.__parent__ = self
             return (mapinfo)
-        raise Exception('MappingError','Memory mapping was not successfull')
-        return None
+        raise MapError('MappingError','Memory mapping was not successfull')
 
     def unmap(self, mapinfo):
-        _gi_gst.memory_override_unmap(self, mapinfo)
+        return _gi_gst.memory_override_unmap(self, mapinfo)
 
 Memory = override(Memory)
 __all__.append('Memory')

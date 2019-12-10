@@ -805,14 +805,18 @@ _gst_memory_override_unmap (PyObject * self, PyObject * args)
 
   /* Look up Gst.Buffer and Gst.Mapinfo parameters */
   gst_memory_type = pygobject_lookup_class (_gst_memory_type);
-  if (!PyArg_ParseTuple (args, "O!O", gst_memory_type, &py_memory, &py_mapinfo))
+  if (!PyArg_ParseTuple (args, "O!O", gst_memory_type, &py_memory, &py_mapinfo)) {
+    PyErr_BadArgument ();
     return NULL;
+  }
 
   /* Extract attributes from Gst.MapInfo */
   if (!(mview = PyObject_GetAttrString (py_mapinfo, "data")))
     goto err;
+
   if (!PyObject_HasAttrString (py_mapinfo, "__cmapinfo"))
     goto end;
+
   if (!(py_cmapinfo = PyObject_GetAttrString (py_mapinfo, "__cmapinfo")))
     goto err;
 
@@ -835,10 +839,10 @@ _gst_memory_override_unmap (PyObject * self, PyObject * args)
   g_free (mapinfo);
 end:
   Py_DECREF (mview);
-  Py_RETURN_NONE;
+  return Py_True;
 
 err:
-  return NULL;
+  return Py_False;
 }
 
 static PyObject *
@@ -856,7 +860,7 @@ _gst_buffer_override_map_range (PyObject * self, PyObject * args)
   gst_buffer_type = pygobject_lookup_class (_gst_buffer_type);
   if (!PyArg_ParseTuple (args, "O!OIii", gst_buffer_type, &py_buffer,
           &py_mapinfo, &idx, &range, &flags))
-    return NULL;
+    return Py_False;
 
   /* Since Python does only support r/o or r/w it has to be changed to either */
   flags = (flags & GST_MAP_WRITE) ? GST_MAP_READWRITE : GST_MAP_READ;
@@ -893,8 +897,10 @@ _gst_buffer_override_map (PyObject * self, PyObject * args)
   /* Look up Gst.Buffer, Gst.MapInfo, and Gst.MapFlags parameters */
   gst_buffer_type = pygobject_lookup_class (_gst_buffer_type);
   if (!PyArg_ParseTuple (args, "O!Oi", gst_buffer_type, &py_buffer, &py_mapinfo,
-          &flags))
+          &flags)) {
+    PyErr_BadArgument ();
     return NULL;
+  }
 
   /* Since Python does only support r/o or r/w it has to be changed to either */
   flags = (flags & GST_MAP_WRITE) ? GST_MAP_READWRITE : GST_MAP_READ;
@@ -928,14 +934,18 @@ _gst_buffer_override_unmap (PyObject * self, PyObject * args)
 
   /* Look up Gst.Buffer and Gst.Mapinfo parameters */
   gst_buf_type = pygobject_lookup_class (_gst_buffer_type);
-  if (!PyArg_ParseTuple (args, "O!O", gst_buf_type, &py_buffer, &py_mapinfo))
+  if (!PyArg_ParseTuple (args, "O!O", gst_buf_type, &py_buffer, &py_mapinfo)) {
+    PyErr_BadArgument ();
     return NULL;
+  }
 
   /* Extract attributes from Gst.MapInfo */
   if (!(mview = PyObject_GetAttrString (py_mapinfo, "data")))
     goto err;
+
   if (!PyObject_HasAttrString (py_mapinfo, "__cmapinfo"))
     goto end;
+
   if (!(py_cmapinfo = PyObject_GetAttrString (py_mapinfo, "__cmapinfo")))
     goto err;
 
@@ -946,8 +956,11 @@ _gst_buffer_override_unmap (PyObject * self, PyObject * args)
 
   /* Call the memoryview.release() Python method, there is no C API */
   PyObject *ret = PyObject_CallMethod (mview, "release", NULL);
-  if (!ret)
+  if (!ret) {
+    GST_ERROR ("Could not call `.release()` on the memoryview.");
+
     goto err;
+  }
   Py_DECREF (ret);
   Py_DECREF (py_cmapinfo);
   PyObject_SetAttrString (py_mapinfo, "__cmapinfo", NULL);
@@ -957,10 +970,10 @@ _gst_buffer_override_unmap (PyObject * self, PyObject * args)
   g_free (mapinfo);
 end:
   Py_DECREF (mview);
-  Py_RETURN_NONE;
+  return Py_True;
 
 err:
-  return NULL;
+  return Py_False;
 }
 
 static PyMethodDef _gi_gst_functions[] = {
