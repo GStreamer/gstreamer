@@ -265,7 +265,7 @@ final_sinkpad_bufferalloc (GstPad * pad, guint64 offset, guint size,
     GstCaps * caps, GstBuffer ** buf)
 {
   BufferAllocHarness *h;
-  GTimeVal deadline;
+  gint64 deadline;
 
   h = g_object_get_qdata (G_OBJECT (pad),
       g_quark_from_static_string ("buffer-alloc-harness"));
@@ -288,10 +288,10 @@ final_sinkpad_bufferalloc (GstPad * pad, guint64 offset, guint size,
     /* Now wait for it to do that within a second, to avoid deadlocking
      * in the event of future changes to the locking semantics. */
     g_mutex_lock (&check_mutex);
-    g_get_current_time (&deadline);
-    deadline.tv_sec += 1;
+    deadline = g_get_monotonic_time ();
+    deadline += G_USEC_PER_SEC;
     while (h->bufferalloc_blocked) {
-      if (!g_cond_timed_wait (&check_cond, &check_mutex, &deadline))
+      if (!g_cond_wait_until (&check_cond, &check_mutex, deadline))
         break;
     }
     g_mutex_unlock (&check_mutex);

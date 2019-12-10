@@ -589,11 +589,11 @@ gst_system_clock_get_internal_time (GstClock * clock)
 #endif /* G_OS_WIN32 */
 #if !defined HAVE_POSIX_TIMERS || !defined HAVE_CLOCK_GETTIME
   {
-    GTimeVal timeval;
+    gint64 monotime;
 
-    g_get_current_time (&timeval);
+    monotime = g_get_monotonic_time ();
 
-    return GST_TIMEVAL_TO_TIME (timeval);
+    return monotime * 1000;
   }
 #else
   {
