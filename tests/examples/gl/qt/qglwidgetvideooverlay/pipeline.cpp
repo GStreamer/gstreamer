@@ -160,8 +160,8 @@ gboolean Pipeline::drawCallback (GstElement * gl_sink, void *context, GstSample 
     static GLfloat	xrot = 0;
     static GLfloat	yrot = 0;				
     static GLfloat	zrot = 0;
-    static GTimeVal current_time;
-    static glong last_sec = current_time.tv_sec;
+    static gint64 current_time;
+    static glong last_sec = 0;
     static gint nbFrames = 0;  
 
     GstVideoFrame v_frame;
@@ -179,14 +179,14 @@ gboolean Pipeline::drawCallback (GstElement * gl_sink, void *context, GstSample 
 
     texture = *(guint *) v_frame.data[0];
 
-    g_get_current_time (&current_time);
+    current_time = g_get_monotonic_time ();
     nbFrames++ ;
     
-    if ((current_time.tv_sec - last_sec) >= 1)
+    if ((current_time / G_USEC_PER_SEC - last_sec) >= 1)
     {
         qDebug ("GRPHIC FPS = %d", nbFrames);
         nbFrames = 0;
-        last_sec = current_time.tv_sec;
+        last_sec = current_time / G_USEC_PER_SEC;
     }
   
     glEnable(GL_DEPTH_TEST);
