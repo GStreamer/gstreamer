@@ -1550,13 +1550,7 @@ static void
 gst_rtsp_client_sink_set_tcp_timeout (GstRTSPClientSink * rtsp_client_sink,
     guint64 timeout)
 {
-  rtsp_client_sink->tcp_timeout.tv_sec = timeout / G_USEC_PER_SEC;
-  rtsp_client_sink->tcp_timeout.tv_usec = timeout % G_USEC_PER_SEC;
-
-  if (timeout != 0)
-    rtsp_client_sink->ptcp_timeout = &rtsp_client_sink->tcp_timeout;
-  else
-    rtsp_client_sink->ptcp_timeout = NULL;
+  rtsp_client_sink->tcp_timeout = timeout;
 }
 
 static void
@@ -1709,14 +1703,8 @@ gst_rtsp_client_sink_get_property (GObject * object, guint prop_id,
       g_value_set_uint64 (value, rtsp_client_sink->udp_timeout);
       break;
     case PROP_TCP_TIMEOUT:
-    {
-      guint64 timeout;
-
-      timeout = rtsp_client_sink->tcp_timeout.tv_sec * G_USEC_PER_SEC +
-          rtsp_client_sink->tcp_timeout.tv_usec;
-      g_value_set_uint64 (value, timeout);
+      g_value_set_uint64 (value, rtsp_client_sink->tcp_timeout);
       break;
-    }
     case PROP_LATENCY:
       g_value_set_uint (value, rtsp_client_sink->latency);
       break;
@@ -1890,13 +1878,14 @@ gst_rtsp_client_sink_cleanup (GstRTSPClientSink * sink)
 
 static GstRTSPResult
 gst_rtsp_client_sink_connection_send (GstRTSPClientSink * sink,
-    GstRTSPConnInfo * conninfo, GstRTSPMessage * message, GTimeVal * timeout)
+    GstRTSPConnInfo * conninfo, GstRTSPMessage * message, gint64 timeout)
 {
   GstRTSPResult ret;
 
   if (conninfo->connection) {
     g_mutex_lock (&conninfo->send_lock);
-    ret = gst_rtsp_connection_send (conninfo->connection, message, timeout);
+    ret =
+        gst_rtsp_connection_send_usec (conninfo->connection, message, timeout);
     g_mutex_unlock (&conninfo->send_lock);
   } else {
     ret = GST_RTSP_ERROR;
@@ -1908,14 +1897,14 @@ gst_rtsp_client_sink_connection_send (GstRTSPClientSink * sink,
 static GstRTSPResult
 gst_rtsp_client_sink_connection_send_messages (GstRTSPClientSink * sink,
     GstRTSPConnInfo * conninfo, GstRTSPMessage * messages, guint n_messages,
-    GTimeVal * timeout)
+    gint64 timeout)
 {
   GstRTSPResult ret;
 
   if (conninfo->connection) {
     g_mutex_lock (&conninfo->send_lock);
     ret =
-        gst_rtsp_connection_send_messages (conninfo->connection, messages,
+        gst_rtsp_connection_send_messages_usec (conninfo->connection, messages,
         n_messages, timeout);
     g_mutex_unlock (&conninfo->send_lock);
   } else {
@@ -1927,13 +1916,14 @@ gst_rtsp_client_sink_connection_send_messages (GstRTSPClientSink * sink,
 
 static GstRTSPResult
 gst_rtsp_client_sink_connection_receive (GstRTSPClientSink * sink,
-    GstRTSPConnInfo * conninfo, GstRTSPMessage * message, GTimeVal * timeout)
+    GstRTSPConnInfo * conninfo, GstRTSPMessage * message, gint64 timeout)
 {
   GstRTSPResult ret;
 
   if (conninfo->connection) {
     g_mutex_lock (&conninfo->recv_lock);
-    ret = gst_rtsp_connection_receive (conninfo->connection, message, timeout);
+    ret = gst_rtsp_connection_receive_usec (conninfo->connection, message,
+        timeout);
     g_mutex_unlock (&conninfo->recv_lock);
   } else {
     ret = GST_RTSP_ERROR;
@@ -2014,8 +2004,8 @@ gst_rtsp_conninfo_connect (GstRTSPClientSink * sink, GstRTSPConnInfo * info,
           ("Connecting to %s", info->location));
     GST_DEBUG_OBJECT (sink, "connecting (%s)...", info->location);
     if ((res =
-            gst_rtsp_connection_connect (info->connection,
-                sink->ptcp_timeout)) < 0)
+            gst_rtsp_connection_connect_usec (info->connection,
+                sink->tcp_timeout)) < 0)
       goto could_not_connect;
 
     info->connected = TRUE;
@@ -2150,7 +2140,7 @@ gst_rtsp_client_sink_handle_request (GstRTSPClientSink * sink,
   if (sink->debug)
     gst_rtsp_message_dump (&response);
 
-  res = gst_rtsp_client_sink_connection_send (sink, conninfo, &response, NULL);
+  res = gst_rtsp_client_sink_connection_send (sink, conninfo, &response, 0);
   if (res < 0)
     goto send_error;
 
@@ -2201,8 +2191,7 @@ gst_rtsp_client_sink_send_keep_alive (GstRTSPClientSink * sink)
     gst_rtsp_message_dump (&request);
 
   res =
-      gst_rtsp_client_sink_connection_send (sink, &sink->conninfo,
-      &request, NULL);
+      gst_rtsp_client_sink_connection_send (sink, &sink->conninfo, &request, 0);
   if (res < 0)
     goto send_error;
 
@@ -2237,13 +2226,13 @@ gst_rtsp_client_sink_loop_rx (GstRTSPClientSink * sink)
   gint retry = 0;
 
   while (TRUE) {
-    GTimeVal tv_timeout;
+    gint64 timeout;
 
     /* get the next timeout interval */
-    gst_rtsp_connection_next_timeout (sink->conninfo.connection, &tv_timeout);
+    timeout = gst_rtsp_connection_next_timeout_usec (sink->conninfo.connection);
 
     GST_DEBUG_OBJECT (sink, "doing receive with timeout %d seconds",
-        (gint) tv_timeout.tv_sec);
+        (gint) timeout / G_USEC_PER_SEC);
 
     gst_rtsp_message_unset (&message);
 
@@ -2252,7 +2241,7 @@ gst_rtsp_client_sink_loop_rx (GstRTSPClientSink * sink)
      * keep-alive request to keep the session open. */
     res =
         gst_rtsp_client_sink_connection_receive (sink,
-        &sink->conninfo, &message, &tv_timeout);
+        &sink->conninfo, &message, timeout);
 
     switch (res) {
       case GST_RTSP_OK:
@@ -2831,7 +2820,7 @@ again:
 
   res =
       gst_rtsp_client_sink_connection_send_messages (sink, conninfo, requests,
-      n_requests, sink->ptcp_timeout);
+      n_requests, sink->tcp_timeout);
   if (res < 0) {
     g_mutex_unlock (&sink->send_lock);
     goto send_error;
@@ -2847,7 +2836,7 @@ again:
 next:
   res =
       gst_rtsp_client_sink_connection_receive (sink, conninfo, response,
-      sink->ptcp_timeout);
+      sink->tcp_timeout);
 
   g_mutex_unlock (&sink->send_lock);
 

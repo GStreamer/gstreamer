@@ -162,8 +162,7 @@ struct _GstRTSPClientSink {
   gboolean          debug;
   guint             retry;
   guint64           udp_timeout;
-  GTimeVal          tcp_timeout;
-  GTimeVal         *ptcp_timeout;
+  gint64            tcp_timeout;
   guint             latency;
   gboolean          do_rtsp_keep_alive;
   gchar            *proxy_host;

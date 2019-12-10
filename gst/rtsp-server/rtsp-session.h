@@ -117,11 +117,13 @@ gint                   gst_rtsp_session_next_timeout_usec    (GstRTSPSession *se
 GST_RTSP_SERVER_API
 gboolean               gst_rtsp_session_is_expired_usec      (GstRTSPSession *session, gint64 now);
 
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS
 GST_RTSP_SERVER_DEPRECATED_FOR(gst_rtsp_session_next_timeout_usec)
 gint                   gst_rtsp_session_next_timeout         (GstRTSPSession *session, GTimeVal *now);
 
 GST_RTSP_SERVER_DEPRECATED_FOR(gst_rtsp_session_is_expired_usec)
 gboolean               gst_rtsp_session_is_expired           (GstRTSPSession *session, GTimeVal *now);
+G_GNUC_END_IGNORE_DEPRECATIONS
 
 /* handle media in a session */
 
