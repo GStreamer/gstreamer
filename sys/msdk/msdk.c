@@ -199,6 +199,10 @@ msdk_open_session (mfxIMPL impl)
     "HARDWARE3", "HARDWARE4", "RUNTIME"
   };
 
+#if (MFX_VERSION >= 1025)
+  init_par.GPUCopy = 1;
+#endif
+
   status = MFXInitEx (init_par, &session);
   if (status != MFX_ERR_NONE) {
     GST_ERROR ("Intel Media SDK not available (%s)",
