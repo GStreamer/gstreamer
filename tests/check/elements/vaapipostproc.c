@@ -114,9 +114,9 @@ vpp_test_set_orientation (VppTestContext * ctx, GstVideoOrientationMethod m)
 static void
 vpp_test_set_dimensions (VppTestContext * ctx, gint w, gint h)
 {
-  GST_LOG ("%dx%d", w, h);
   GstCaps *caps = gst_caps_new_simple ("video/x-raw",
       "width", G_TYPE_INT, w, "height", G_TYPE_INT, h, NULL);
+  GST_LOG ("%dx%d", w, h);
   g_object_set (ctx->filter, "caps", caps, NULL);
   gst_caps_unref (caps);
 }
