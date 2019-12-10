@@ -1559,13 +1559,7 @@ gst_rtspsrc_set_proxy (GstRTSPSrc * rtsp, const gchar * proxy)
 static void
 gst_rtspsrc_set_tcp_timeout (GstRTSPSrc * rtspsrc, guint64 timeout)
 {
-  rtspsrc->tcp_timeout.tv_sec = timeout / G_USEC_PER_SEC;
-  rtspsrc->tcp_timeout.tv_usec = timeout % G_USEC_PER_SEC;
-
-  if (timeout != 0)
-    rtspsrc->ptcp_timeout = &rtspsrc->tcp_timeout;
-  else
-    rtspsrc->ptcp_timeout = NULL;
+  rtspsrc->tcp_timeout = timeout;
 }
 
 static void
@@ -1772,14 +1766,8 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_uint64 (value, rtspsrc->udp_timeout);
       break;
     case PROP_TCP_TIMEOUT:
-    {
-      guint64 timeout;
-
-      timeout = ((guint64) rtspsrc->tcp_timeout.tv_sec) * G_USEC_PER_SEC +
-          rtspsrc->tcp_timeout.tv_usec;
-      g_value_set_uint64 (value, timeout);
+      g_value_set_uint64 (value, rtspsrc->tcp_timeout);
       break;
-    }
     case PROP_LATENCY:
       g_value_set_uint (value, rtspsrc->latency);
       break;
@@ -2692,13 +2680,14 @@ gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush, gboolean playing,
 
 static GstRTSPResult
 gst_rtspsrc_connection_send (GstRTSPSrc * src, GstRTSPConnInfo * conninfo,
-    GstRTSPMessage * message, GTimeVal * timeout)
+    GstRTSPMessage * message, gint64 timeout)
 {
   GstRTSPResult ret;
 
   if (conninfo->connection) {
     g_mutex_lock (&conninfo->send_lock);
-    ret = gst_rtsp_connection_send (conninfo->connection, message, timeout);
+    ret =
+        gst_rtsp_connection_send_usec (conninfo->connection, message, timeout);
     g_mutex_unlock (&conninfo->send_lock);
   } else {
     ret = GST_RTSP_ERROR;
@@ -2709,13 +2698,14 @@ gst_rtspsrc_connection_send (GstRTSPSrc * src, GstRTSPConnInfo * conninfo,
 
 static GstRTSPResult
 gst_rtspsrc_connection_receive (GstRTSPSrc * src, GstRTSPConnInfo * conninfo,
-    GstRTSPMessage * message, GTimeVal * timeout)
+    GstRTSPMessage * message, gint64 timeout)
 {
   GstRTSPResult ret;
 
   if (conninfo->connection) {
     g_mutex_lock (&conninfo->recv_lock);
-    ret = gst_rtsp_connection_receive (conninfo->connection, message, timeout);
+    ret = gst_rtsp_connection_receive_usec (conninfo->connection, message,
+        timeout);
     g_mutex_unlock (&conninfo->recv_lock);
   } else {
     ret = GST_RTSP_ERROR;
@@ -3188,7 +3178,7 @@ gst_rtspsrc_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   GST_DEBUG_OBJECT (src, "sending %u bytes RTCP",
       (guint) gst_buffer_get_size (buffer));
-  ret = gst_rtspsrc_connection_send (src, conninfo, &message, NULL);
+  ret = gst_rtspsrc_connection_send (src, conninfo, &message, 0);
   GST_DEBUG_OBJECT (src, "sent RTCP, %d", ret);
 
   gst_rtsp_message_unset (&message);
@@ -3234,7 +3224,7 @@ gst_rtspsrc_push_backchannel_buffer (GstRTSPSrc * src, guint id,
 
     GST_DEBUG_OBJECT (src, "sending %u bytes backchannel RTP",
         (guint) gst_buffer_get_size (buffer));
-    ret = gst_rtspsrc_connection_send (src, conninfo, &message, NULL);
+    ret = gst_rtspsrc_connection_send (src, conninfo, &message, 0);
     GST_DEBUG_OBJECT (src, "sent backchannel RTP, %d", ret);
 
     gst_rtsp_message_unset (&message);
@@ -5069,8 +5059,8 @@ gst_rtsp_conninfo_connect (GstRTSPSrc * src, GstRTSPConnInfo * info,
         GST_ELEMENT_PROGRESS (src, CONTINUE, "connect",
             ("Connecting to %s", info->location));
       GST_DEBUG_OBJECT (src, "connecting (%s)...", info->location);
-      res = gst_rtsp_connection_connect_with_response (info->connection,
-          src->ptcp_timeout, &response);
+      res = gst_rtsp_connection_connect_with_response_usec (info->connection,
+          src->tcp_timeout, &response);
 
       if (response.type == GST_RTSP_MESSAGE_HTTP_RESPONSE &&
           response.type_data.response.code == GST_RTSP_STS_UNAUTHORIZED) {
@@ -5221,7 +5211,7 @@ gst_rtspsrc_handle_request (GstRTSPSrc * src, GstRTSPConnInfo * conninfo,
 
     DEBUG_RTSP (src, &response);
 
-    res = gst_rtspsrc_connection_send (src, conninfo, &response, NULL);
+    res = gst_rtspsrc_connection_send (src, conninfo, &response, 0);
     if (res < 0)
       goto send_error;
 
@@ -5272,7 +5262,7 @@ gst_rtspsrc_send_keep_alive (GstRTSPSrc * src)
 
   request.type_data.request.version = src->version;
 
-  res = gst_rtspsrc_connection_send (src, &src->conninfo, &request, NULL);
+  res = gst_rtspsrc_connection_send (src, &src->conninfo, &request, 0);
   if (res < 0)
     goto send_error;
 
@@ -5540,14 +5530,15 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
   GstRTSPMessage message = { 0 };
   GstRTSPResult res;
   GstFlowReturn ret = GST_FLOW_OK;
-  GTimeVal tv_timeout;
+  gint64 timeout;
 
   while (TRUE) {
     /* get the next timeout interval */
-    gst_rtsp_connection_next_timeout (src->conninfo.connection, &tv_timeout);
+    timeout = gst_rtsp_connection_next_timeout_usec (src->conninfo.connection);
 
-    GST_DEBUG_OBJECT (src, "doing receive with timeout %ld seconds, %ld usec",
-        tv_timeout.tv_sec, tv_timeout.tv_usec);
+    GST_DEBUG_OBJECT (src, "doing receive with timeout %" G_GINT64_FORMAT
+        " seconds, %" G_GINT64_FORMAT " usec", timeout / G_USEC_PER_SEC,
+        timeout % G_USEC_PER_SEC);
 
     gst_rtsp_message_unset (&message);
 
@@ -5555,7 +5546,7 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
      * we are finished doing server communication */
     res =
         gst_rtspsrc_connection_receive (src, &src->conninfo,
-        &message, src->ptcp_timeout);
+        &message, src->tcp_timeout);
 
     switch (res) {
       case GST_RTSP_OK:
@@ -5657,21 +5648,21 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
   gint retry = 0;
 
   while (TRUE) {
-    GTimeVal tv_timeout;
+    gint64 timeout;
 
     /* get the next timeout interval */
-    gst_rtsp_connection_next_timeout (src->conninfo.connection, &tv_timeout);
+    timeout = gst_rtsp_connection_next_timeout_usec (src->conninfo.connection);
 
     GST_DEBUG_OBJECT (src, "doing receive with timeout %d seconds",
-        (gint) tv_timeout.tv_sec);
+        (gint) timeout / G_USEC_PER_SEC);
 
     gst_rtsp_message_unset (&message);
 
     /* we should continue reading the TCP socket because the server might
      * send us requests. When the session timeout expires, we need to send a
      * keep-alive request to keep the session open. */
-    res = gst_rtspsrc_connection_receive (src, &src->conninfo,
-        &message, &tv_timeout);
+    res = gst_rtspsrc_connection_receive (src, &src->conninfo, &message,
+        timeout);
 
     switch (res) {
       case GST_RTSP_OK:
@@ -6315,8 +6306,8 @@ gst_rtsp_src_receive_response (GstRTSPSrc * src, GstRTSPConnInfo * conninfo,
 {
   GstRTSPStatusCode thecode;
   gchar *content_base = NULL;
-  GstRTSPResult res = gst_rtspsrc_connection_receive (src, conninfo,
-      response, src->ptcp_timeout);
+  GstRTSPResult res = gst_rtspsrc_connection_receive (src, conninfo, response,
+      src->tcp_timeout);
 
   if (res < 0)
     goto receive_error;
@@ -6437,7 +6428,7 @@ again:
 
   DEBUG_RTSP (src, request);
 
-  res = gst_rtspsrc_connection_send (src, conninfo, request, src->ptcp_timeout);
+  res = gst_rtspsrc_connection_send (src, conninfo, request, src->tcp_timeout);
   if (res < 0)
     goto send_error;
 

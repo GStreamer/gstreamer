@@ -236,8 +236,7 @@ struct _GstRTSPSrc {
   gboolean          debug;
   guint             retry;
   guint64           udp_timeout;
-  GTimeVal          tcp_timeout;
-  GTimeVal         *ptcp_timeout;
+  gint64            tcp_timeout;
   guint             latency;
   gboolean          drop_on_latency;
   guint64           connection_speed;
