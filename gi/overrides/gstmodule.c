@@ -761,7 +761,7 @@ static PyObject *
 _gst_memory_override_map (PyObject * self, PyObject * args)
 {
   PyTypeObject *gst_memory_type;
-  PyObject *py_memory, *py_mapinfo;
+  PyObject *py_memory, *py_mapinfo, *success;
   int flags;
   GstMemory *memory;
   GstMapInfo *mapinfo;
@@ -787,7 +787,7 @@ _gst_memory_override_map (PyObject * self, PyObject * args)
     return Py_False;
   }
 
-  PyObject *success = _remap (mapinfo, py_mapinfo);
+  success = _remap (mapinfo, py_mapinfo);
   if (!success) {
     gst_memory_unmap (memory, mapinfo);
     g_free (mapinfo);
@@ -799,7 +799,7 @@ static PyObject *
 _gst_memory_override_unmap (PyObject * self, PyObject * args)
 {
   PyTypeObject *gst_memory_type;
-  PyObject *py_memory, *py_cmapinfo, *py_mapinfo, *mview;
+  PyObject *py_memory, *py_cmapinfo, *py_mapinfo, *mview, *ret;
   GstMemory *memory;
   GstMapInfo *mapinfo;
 
@@ -826,7 +826,7 @@ _gst_memory_override_unmap (PyObject * self, PyObject * args)
   mapinfo = PyCapsule_GetPointer (py_cmapinfo, "__cmapinfo");
 
   /* Call the memoryview.release() Python method, there is no C API */
-  PyObject *ret = PyObject_CallMethod (mview, "release", NULL);
+  ret = PyObject_CallMethod (mview, "release", NULL);
   if (!ret)
     goto err;
   Py_DECREF (ret);
@@ -849,7 +849,7 @@ static PyObject *
 _gst_buffer_override_map_range (PyObject * self, PyObject * args)
 {
   PyTypeObject *gst_buffer_type;
-  PyObject *py_buffer, *py_mapinfo;
+  PyObject *py_buffer, *py_mapinfo, *success;
   int flags, range;
   unsigned int idx;
   GstBuffer *buffer;
@@ -876,7 +876,7 @@ _gst_buffer_override_map_range (PyObject * self, PyObject * args)
     return Py_False;
   }
 
-  PyObject *success = _remap (mapinfo, py_mapinfo);
+  success = _remap (mapinfo, py_mapinfo);
   if (!success) {
     gst_buffer_unmap (buffer, mapinfo);
     g_free (mapinfo);
@@ -888,7 +888,7 @@ static PyObject *
 _gst_buffer_override_map (PyObject * self, PyObject * args)
 {
   PyTypeObject *gst_buffer_type;
-  PyObject *py_buffer, *py_mapinfo;
+  PyObject *py_buffer, *py_mapinfo, *success;
   int flags;
   GstBuffer *buffer;
   GstMapInfo *mapinfo;
@@ -916,7 +916,7 @@ _gst_buffer_override_map (PyObject * self, PyObject * args)
     return Py_False;
   }
 
-  PyObject *success = _remap (mapinfo, py_mapinfo);
+  success = _remap (mapinfo, py_mapinfo);
   if (!success) {
     gst_buffer_unmap (buffer, mapinfo);
     g_free (mapinfo);
@@ -928,7 +928,7 @@ static PyObject *
 _gst_buffer_override_unmap (PyObject * self, PyObject * args)
 {
   PyTypeObject *gst_buf_type;
-  PyObject *py_buffer, *py_cmapinfo, *py_mapinfo, *mview;
+  PyObject *py_buffer, *py_cmapinfo, *py_mapinfo, *mview, *ret;
   GstBuffer *buffer;
   GstMapInfo *mapinfo;
 
@@ -955,7 +955,7 @@ _gst_buffer_override_unmap (PyObject * self, PyObject * args)
   mapinfo = PyCapsule_GetPointer (py_cmapinfo, "__cmapinfo");
 
   /* Call the memoryview.release() Python method, there is no C API */
-  PyObject *ret = PyObject_CallMethod (mview, "release", NULL);
+  ret = PyObject_CallMethod (mview, "release", NULL);
   if (!ret) {
     GST_ERROR ("Could not call `.release()` on the memoryview.");
 
