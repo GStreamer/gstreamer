@@ -189,6 +189,7 @@ msdk_open_session (mfxIMPL impl)
   mfxSession session = NULL;
   mfxVersion version = { {1, 1}
   };
+  mfxInitParam init_par = { impl, version };
   mfxIMPL implementation;
   mfxStatus status;
   mfxU16 codename;
@@ -198,7 +199,7 @@ msdk_open_session (mfxIMPL impl)
     "HARDWARE3", "HARDWARE4", "RUNTIME"
   };
 
-  status = MFXInit (impl, &version, &session);
+  status = MFXInitEx (init_par, &session);
   if (status != MFX_ERR_NONE) {
     GST_ERROR ("Intel Media SDK not available (%s)",
         msdk_status_to_string (status));
