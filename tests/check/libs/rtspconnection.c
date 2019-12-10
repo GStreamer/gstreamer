@@ -721,7 +721,7 @@ GST_START_TEST (test_rtspconnection_poll)
   GstRTSPEvent event;
   GOutputStream *ostream;
   gsize size;
-  GTimeVal tv;
+  gint64 timeout;
 
   create_connection (&conn1, &conn2);
   sock = g_socket_connection_get_socket (conn1);
@@ -740,10 +740,9 @@ GST_START_TEST (test_rtspconnection_poll)
   fail_unless (event & GST_RTSP_EV_WRITE);
 
   /* but not read, add timeout so that we don't block forever */
-  tv.tv_sec = 1;
-  tv.tv_usec = 0;
-  fail_unless (gst_rtsp_connection_poll (rtsp_conn, GST_RTSP_EV_READ, &event,
-          &tv) == GST_RTSP_ETIMEOUT);
+  timeout = G_USEC_PER_SEC;
+  fail_unless (gst_rtsp_connection_poll_usec (rtsp_conn, GST_RTSP_EV_READ,
+          &event, timeout) == GST_RTSP_ETIMEOUT);
   fail_if (event & GST_RTSP_EV_READ);
 
   /* write on the other end and make sure socket can be read */

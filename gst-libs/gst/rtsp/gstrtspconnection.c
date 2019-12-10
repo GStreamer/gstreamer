@@ -775,7 +775,7 @@ gst_rtsp_connection_set_accept_certificate_func (GstRTSPConnection * conn,
 }
 
 static GstRTSPResult
-setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout, gchar * uri,
+setup_tunneling (GstRTSPConnection * conn, gint64 timeout, gchar * uri,
     GstRTSPMessage * response)
 {
   gint i;
@@ -818,7 +818,8 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout, gchar * uri,
   /* we need to temporarily set conn->tunneled to FALSE to prevent the HTTP
    * request from being base64 encoded */
   conn->tunneled = FALSE;
-  GST_RTSP_CHECK (gst_rtsp_connection_send (conn, msg, timeout), write_failed);
+  GST_RTSP_CHECK (gst_rtsp_connection_send_usec (conn, msg, timeout),
+      write_failed);
   gst_rtsp_message_free (msg);
   conn->tunneled = TRUE;
 
@@ -828,7 +829,7 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout, gchar * uri,
    * failure otherwise */
   old_http = conn->manual_http;
   conn->manual_http = TRUE;
-  GST_RTSP_CHECK (gst_rtsp_connection_receive (conn, response, timeout),
+  GST_RTSP_CHECK (gst_rtsp_connection_receive_usec (conn, response, timeout),
       read_failed);
   conn->manual_http = old_http;
 
@@ -899,7 +900,8 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout, gchar * uri,
   /* we need to temporarily set conn->tunneled to FALSE to prevent the HTTP
    * request from being base64 encoded */
   conn->tunneled = FALSE;
-  GST_RTSP_CHECK (gst_rtsp_connection_send (conn, msg, timeout), write_failed);
+  GST_RTSP_CHECK (gst_rtsp_connection_send_usec (conn, msg, timeout),
+      write_failed);
   gst_rtsp_message_free (msg);
   conn->tunneled = TRUE;
 
@@ -953,13 +955,13 @@ remote_address_failed:
 }
 
 /**
- * gst_rtsp_connection_connect_with_response:
+ * gst_rtsp_connection_connect_with_response_usec:
  * @conn: a #GstRTSPConnection
- * @timeout: a #GTimeVal timeout
+ * @timeout: a timeout in microseconds
  * @response: a #GstRTSPMessage
  *
  * Attempt to connect to the url of @conn made with
- * gst_rtsp_connection_create(). If @timeout is %NULL this function can block
+ * gst_rtsp_connection_create(). If @timeout is 0 this function can block
  * forever. If @timeout contains a valid timeout, this function will return
  * #GST_RTSP_ETIMEOUT after the timeout expired.  If @conn is set to tunneled,
  * @response will contain a response to the tunneling request messages.
@@ -968,11 +970,11 @@ remote_address_failed:
  *
  * Returns: #GST_RTSP_OK when a connection could be made.
  *
- * Since: 1.8
+ * Since: 1.18
  */
 GstRTSPResult
-gst_rtsp_connection_connect_with_response (GstRTSPConnection * conn,
-    GTimeVal * timeout, GstRTSPMessage * response)
+gst_rtsp_connection_connect_with_response_usec (GstRTSPConnection * conn,
+    gint64 timeout, GstRTSPMessage * response)
 {
   GstRTSPResult res;
   GSocketConnection *connection;
@@ -987,7 +989,7 @@ gst_rtsp_connection_connect_with_response (GstRTSPConnection * conn,
   g_return_val_if_fail (conn->url != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (conn->stream0 == NULL, GST_RTSP_EINVAL);
 
-  to = timeout ? GST_TIMEVAL_TO_TIME (*timeout) : 0;
+  to = timeout * 1000;
   g_socket_client_set_timeout (conn->client,
       (to + GST_SECOND - 1) / GST_SECOND);
 
@@ -1146,21 +1148,23 @@ add_auth_header (GstRTSPConnection * conn, GstRTSPMessage * message)
 }
 
 /**
- * gst_rtsp_connection_connect:
+ * gst_rtsp_connection_connect_usec:
  * @conn: a #GstRTSPConnection
- * @timeout: a #GTimeVal timeout
+ * @timeout: a timeout in microseconds
  *
  * Attempt to connect to the url of @conn made with
- * gst_rtsp_connection_create(). If @timeout is %NULL this function can block
+ * gst_rtsp_connection_create(). If @timeout is 0 this function can block
  * forever. If @timeout contains a valid timeout, this function will return
  * #GST_RTSP_ETIMEOUT after the timeout expired.
  *
  * This function can be cancelled with gst_rtsp_connection_flush().
  *
  * Returns: #GST_RTSP_OK when a connection could be made.
+ *
+ * Since: 1.18
  */
 GstRTSPResult
-gst_rtsp_connection_connect (GstRTSPConnection * conn, GTimeVal * timeout)
+gst_rtsp_connection_connect_usec (GstRTSPConnection * conn, gint64 timeout)
 {
   GstRTSPResult result;
   GstRTSPMessage response;
@@ -1168,7 +1172,8 @@ gst_rtsp_connection_connect (GstRTSPConnection * conn, GTimeVal * timeout)
   memset (&response, 0, sizeof (response));
   gst_rtsp_message_init (&response);
 
-  result = gst_rtsp_connection_connect_with_response (conn, timeout, &response);
+  result = gst_rtsp_connection_connect_with_response_usec (conn, timeout,
+      &response);
 
   gst_rtsp_message_unset (&response);
 
@@ -1604,24 +1609,26 @@ read_line (GstRTSPConnection * conn, guint8 * buffer, guint * idx, guint size,
 }
 
 /**
- * gst_rtsp_connection_write:
+ * gst_rtsp_connection_write_usec:
  * @conn: a #GstRTSPConnection
  * @data: the data to write
  * @size: the size of @data
- * @timeout: a timeout value or %NULL
+ * @timeout: a timeout value or 0
  *
  * Attempt to write @size bytes of @data to the connected @conn, blocking up to
- * the specified @timeout. @timeout can be %NULL, in which case this function
+ * the specified @timeout. @timeout can be 0, in which case this function
  * might block forever.
  *
  * This function can be cancelled with gst_rtsp_connection_flush().
  *
  * Returns: #GST_RTSP_OK on success.
+ *
+ * Since: 1.18
  */
 /* FIXME 2.0: This should've been static! */
 GstRTSPResult
-gst_rtsp_connection_write (GstRTSPConnection * conn, const guint8 * data,
-    guint size, GTimeVal * timeout)
+gst_rtsp_connection_write_usec (GstRTSPConnection * conn, const guint8 * data,
+    guint size, gint64 timeout)
 {
   guint offset;
   GstClockTime to;
@@ -1633,7 +1640,7 @@ gst_rtsp_connection_write (GstRTSPConnection * conn, const guint8 * data,
 
   offset = 0;
 
-  to = timeout ? GST_TIMEVAL_TO_TIME (*timeout) : 0;
+  to = timeout * 1000;
 
   g_socket_set_timeout (conn->write_socket, (to + GST_SECOND - 1) / GST_SECOND);
   res =
@@ -1778,49 +1785,51 @@ serialize_message (GstRTSPConnection * conn, GstRTSPMessage * message,
 }
 
 /**
- * gst_rtsp_connection_send:
+ * gst_rtsp_connection_send_usec:
  * @conn: a #GstRTSPConnection
  * @message: the message to send
- * @timeout: a timeout value or %NULL
+ * @timeout: a timeout value in microseconds
  *
  * Attempt to send @message to the connected @conn, blocking up to
- * the specified @timeout. @timeout can be %NULL, in which case this function
+ * the specified @timeout. @timeout can be 0, in which case this function
  * might block forever.
  *
  * This function can be cancelled with gst_rtsp_connection_flush().
  *
  * Returns: #GST_RTSP_OK on success.
+ *
+ * Since: 1.18
  */
 GstRTSPResult
-gst_rtsp_connection_send (GstRTSPConnection * conn, GstRTSPMessage * message,
-    GTimeVal * timeout)
+gst_rtsp_connection_send_usec (GstRTSPConnection * conn,
+    GstRTSPMessage * message, gint64 timeout)
 {
   g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (message != NULL, GST_RTSP_EINVAL);
 
-  return gst_rtsp_connection_send_messages (conn, message, 1, timeout);
+  return gst_rtsp_connection_send_messages_usec (conn, message, 1, timeout);
 }
 
 /**
- * gst_rtsp_connection_send_messages:
+ * gst_rtsp_connection_send_messages_usec:
  * @conn: a #GstRTSPConnection
  * @messages: (array length=n_messages): the messages to send
  * @n_messages: the number of messages to send
- * @timeout: a timeout value or %NULL
+ * @timeout: a timeout value in microseconds
  *
  * Attempt to send @messages to the connected @conn, blocking up to
- * the specified @timeout. @timeout can be %NULL, in which case this function
+ * the specified @timeout. @timeout can be 0, in which case this function
  * might block forever.
  *
  * This function can be cancelled with gst_rtsp_connection_flush().
  *
- * Returns: #GST_RTSP_OK on success.
+ * Returns: #GST_RTSP_OK on Since.
  *
- * Since: 1.16
+ * Since: 1.18
  */
 GstRTSPResult
-gst_rtsp_connection_send_messages (GstRTSPConnection * conn,
-    GstRTSPMessage * messages, guint n_messages, GTimeVal * timeout)
+gst_rtsp_connection_send_messages_usec (GstRTSPConnection * conn,
+    GstRTSPMessage * messages, guint n_messages, gint64 timeout)
 {
   GstClockTime to;
   GstRTSPResult res;
@@ -1944,7 +1953,7 @@ gst_rtsp_connection_send_messages (GstRTSPConnection * conn,
   }
 
   /* write request: this is synchronous */
-  to = timeout ? GST_TIMEVAL_TO_TIME (*timeout) : 0;
+  to = timeout * 1000;
 
   g_socket_set_timeout (conn->write_socket, (to + GST_SECOND - 1) / GST_SECOND);
   res =
@@ -2576,23 +2585,25 @@ invalid_format:
 }
 
 /**
- * gst_rtsp_connection_read:
+ * gst_rtsp_connection_read_usec:
  * @conn: a #GstRTSPConnection
  * @data: the data to read
  * @size: the size of @data
- * @timeout: a timeout value or %NULL
+ * @timeout: a timeout value in microseconds
  *
  * Attempt to read @size bytes into @data from the connected @conn, blocking up to
- * the specified @timeout. @timeout can be %NULL, in which case this function
+ * the specified @timeout. @timeout can be 0, in which case this function
  * might block forever.
  *
  * This function can be cancelled with gst_rtsp_connection_flush().
  *
  * Returns: #GST_RTSP_OK on success.
+ *
+ * Since: 1.18
  */
 GstRTSPResult
-gst_rtsp_connection_read (GstRTSPConnection * conn, guint8 * data, guint size,
-    GTimeVal * timeout)
+gst_rtsp_connection_read_usec (GstRTSPConnection * conn, guint8 * data,
+    guint size, gint64 timeout)
 {
   guint offset;
   GstClockTime to;
@@ -2608,7 +2619,7 @@ gst_rtsp_connection_read (GstRTSPConnection * conn, guint8 * data, guint size,
   offset = 0;
 
   /* configure timeout if any */
-  to = timeout ? GST_TIMEVAL_TO_TIME (*timeout) : 0;
+  to = timeout * 1000;
 
   g_socket_set_timeout (conn->read_socket, (to + GST_SECOND - 1) / GST_SECOND);
   res = read_bytes (conn, data, &offset, size, TRUE);
@@ -2656,22 +2667,24 @@ no_message:
 }
 
 /**
- * gst_rtsp_connection_receive:
+ * gst_rtsp_connection_receive_usec:
  * @conn: a #GstRTSPConnection
  * @message: the message to read
- * @timeout: a timeout value or %NULL
+ * @timeout: a timeout value or 0
  *
  * Attempt to read into @message from the connected @conn, blocking up to
- * the specified @timeout. @timeout can be %NULL, in which case this function
+ * the specified @timeout. @timeout can be 0, in which case this function
  * might block forever.
  *
  * This function can be cancelled with gst_rtsp_connection_flush().
  *
  * Returns: #GST_RTSP_OK on success.
+ *
+ * Since: 1.18
  */
 GstRTSPResult
-gst_rtsp_connection_receive (GstRTSPConnection * conn, GstRTSPMessage * message,
-    GTimeVal * timeout)
+gst_rtsp_connection_receive_usec (GstRTSPConnection * conn,
+    GstRTSPMessage * message, gint64 timeout)
 {
   GstRTSPResult res;
   GstRTSPBuilder builder;
@@ -2682,7 +2695,7 @@ gst_rtsp_connection_receive (GstRTSPConnection * conn, GstRTSPMessage * message,
   g_return_val_if_fail (conn->read_socket != NULL, GST_RTSP_EINVAL);
 
   /* configure timeout if any */
-  to = timeout ? GST_TIMEVAL_TO_TIME (*timeout) : 0;
+  to = timeout * 1000;
 
   g_socket_set_timeout (conn->read_socket, (to + GST_SECOND - 1) / GST_SECOND);
   memset (&builder, 0, sizeof (GstRTSPBuilder));
@@ -2702,7 +2715,7 @@ gst_rtsp_connection_receive (GstRTSPConnection * conn, GstRTSPMessage * message,
 
         /* tunnel GET request, we can reply now */
         response = gen_tunnel_reply (conn, GST_RTSP_STS_OK, message);
-        res = gst_rtsp_connection_send (conn, response, timeout);
+        res = gst_rtsp_connection_send_usec (conn, response, timeout);
         gst_rtsp_message_free (response);
         if (res == GST_RTSP_OK)
           res = GST_RTSP_ETGET;
@@ -2838,26 +2851,28 @@ gst_rtsp_connection_free (GstRTSPConnection * conn)
 }
 
 /**
- * gst_rtsp_connection_poll:
+ * gst_rtsp_connection_poll_usec:
  * @conn: a #GstRTSPConnection
  * @events: a bitmask of #GstRTSPEvent flags to check
  * @revents: location for result flags
- * @timeout: a timeout
+ * @timeout: a timeout in microseconds
  *
  * Wait up to the specified @timeout for the connection to become available for
  * at least one of the operations specified in @events. When the function returns
  * with #GST_RTSP_OK, @revents will contain a bitmask of available operations on
  * @conn.
  *
- * @timeout can be %NULL, in which case this function might block forever.
+ * @timeout can be 0, in which case this function might block forever.
  *
  * This function can be cancelled with gst_rtsp_connection_flush().
  *
  * Returns: #GST_RTSP_OK on success.
+ *
+ * Since: 1.18
  */
 GstRTSPResult
-gst_rtsp_connection_poll (GstRTSPConnection * conn, GstRTSPEvent events,
-    GstRTSPEvent * revents, GTimeVal * timeout)
+gst_rtsp_connection_poll_usec (GstRTSPConnection * conn, GstRTSPEvent events,
+    GstRTSPEvent * revents, gint64 timeout)
 {
   GMainContext *ctx;
   GSource *rs, *ws, *ts;
@@ -2873,7 +2888,7 @@ gst_rtsp_connection_poll (GstRTSPConnection * conn, GstRTSPEvent events,
 
   /* configure timeout if any */
   if (timeout) {
-    ts = g_timeout_source_new (GST_TIMEVAL_TO_TIME (*timeout) / GST_MSECOND);
+    ts = g_timeout_source_new (timeout / 1000);
     g_source_set_dummy_callback (ts);
     g_source_attach (ts, ctx);
     g_source_unref (ts);
@@ -2920,24 +2935,24 @@ gst_rtsp_connection_poll (GstRTSPConnection * conn, GstRTSPEvent events,
 }
 
 /**
- * gst_rtsp_connection_next_timeout:
+ * gst_rtsp_connection_next_timeout_usec:
  * @conn: a #GstRTSPConnection
- * @timeout: a timeout
  *
- * Calculate the next timeout for @conn, storing the result in @timeout.
+ * Calculate the next timeout for @conn
  *
- * Returns: #GST_RTSP_OK.
+ * Returns: #the next timeout in microseconds
+ *
+ * Since: 1.18
  */
-GstRTSPResult
-gst_rtsp_connection_next_timeout (GstRTSPConnection * conn, GTimeVal * timeout)
+gint64
+gst_rtsp_connection_next_timeout_usec (GstRTSPConnection * conn)
 {
   gdouble elapsed;
-  glong sec;
   gulong usec;
   gint ctimeout;
+  gint64 timeout = 0;
 
-  g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
-  g_return_val_if_fail (timeout != NULL, GST_RTSP_EINVAL);
+  g_return_val_if_fail (conn != NULL, 1);
 
   ctimeout = conn->timeout;
   if (ctimeout >= 20) {
@@ -2954,20 +2969,17 @@ gst_rtsp_connection_next_timeout (GstRTSPConnection * conn, GTimeVal * timeout)
 
   elapsed = g_timer_elapsed (conn->timer, &usec);
   if (elapsed >= ctimeout) {
-    sec = 0;
-    usec = 0;
+    timeout = 0;
   } else {
-    sec = ctimeout - elapsed;
+    gint64 sec = ctimeout - elapsed;
     if (usec <= G_USEC_PER_SEC)
       usec = G_USEC_PER_SEC - usec;
     else
       usec = 0;
+    timeout = usec + sec * G_USEC_PER_SEC;
   }
 
-  timeout->tv_sec = sec;
-  timeout->tv_usec = usec;
-
-  return GST_RTSP_OK;
+  return timeout;
 }
 
 /**
@@ -4700,14 +4712,14 @@ error:
 }
 
 /**
- * gst_rtsp_watch_wait_backlog:
+ * gst_rtsp_watch_wait_backlog_usec:
  * @watch: a #GstRTSPWatch
- * @timeout: a #GTimeVal timeout
+ * @timeout: a timeout in microseconds
  *
  * Wait until there is place in the backlog queue, @timeout is reached
  * or @watch is set to flushing.
  *
- * If @timeout is %NULL this function can block forever. If @timeout
+ * If @timeout is 0 this function can block forever. If @timeout
  * contains a valid timeout, this function will return %GST_RTSP_ETIMEOUT
  * after the timeout expired.
  *
@@ -4720,18 +4732,16 @@ error:
  *          %GST_RTSP_EINTR when @watch is flushing
  *          %GST_RTSP_EINVAL when called with invalid parameters.
  *
- * Since: 1.4
+ * Since: 1.18
  */
 GstRTSPResult
-gst_rtsp_watch_wait_backlog (GstRTSPWatch * watch, GTimeVal * timeout)
+gst_rtsp_watch_wait_backlog_usec (GstRTSPWatch * watch, gint64 timeout)
 {
   gint64 end_time;
-  GstClockTime to;
 
   g_return_val_if_fail (watch != NULL, GST_RTSP_EINVAL);
 
-  to = timeout ? GST_TIMEVAL_TO_TIME (*timeout) : 0;
-  end_time = g_get_monotonic_time () + GST_TIME_AS_USECONDS (to);
+  end_time = g_get_monotonic_time () + timeout;
 
   g_mutex_lock (&watch->mutex);
   if (watch->flushing)
@@ -4794,3 +4804,266 @@ gst_rtsp_watch_set_flushing (GstRTSPWatch * watch, gboolean flushing)
   }
   g_mutex_unlock (&watch->mutex);
 }
+
+
+#ifndef GST_DISABLE_DEPRECATED
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS
+/* Deprecated */
+#define TV_TO_USEC(tv) ((tv) ? ((tv)->tv_sec * G_USEC_PER_SEC + (tv)->tv_usec) : 0)
+/**
+ * gst_rtsp_connection_connect:
+ * @conn: a #GstRTSPConnection
+ * @timeout: a #GTimeVal timeout
+ *
+ * Attempt to connect to the url of @conn made with
+ * gst_rtsp_connection_create(). If @timeout is %NULL this function can block
+ * forever. If @timeout contains a valid timeout, this function will return
+ * #GST_RTSP_ETIMEOUT after the timeout expired.
+ *
+ * This function can be cancelled with gst_rtsp_connection_flush().
+ *
+ * Returns: #GST_RTSP_OK when a connection could be made.
+ *
+ * Deprecated: 1.18
+ */
+    GstRTSPResult
+gst_rtsp_connection_connect (GstRTSPConnection * conn, GTimeVal * timeout)
+{
+  return gst_rtsp_connection_connect_usec (conn, TV_TO_USEC (timeout));
+}
+
+/**
+ * gst_rtsp_connection_connect_with_response:
+ * @conn: a #GstRTSPConnection
+ * @timeout: a #GTimeVal timeout
+ * @response: a #GstRTSPMessage
+ *
+ * Attempt to connect to the url of @conn made with
+ * gst_rtsp_connection_create(). If @timeout is %NULL this function can block
+ * forever. If @timeout contains a valid timeout, this function will return
+ * #GST_RTSP_ETIMEOUT after the timeout expired.  If @conn is set to tunneled,
+ * @response will contain a response to the tunneling request messages.
+ *
+ * This function can be cancelled with gst_rtsp_connection_flush().
+ *
+ * Returns: #GST_RTSP_OK when a connection could be made.
+ *
+ * Since: 1.8
+ * Deprecated: 1.18
+ */
+GstRTSPResult
+gst_rtsp_connection_connect_with_response (GstRTSPConnection * conn,
+    GTimeVal * timeout, GstRTSPMessage * response)
+{
+  return gst_rtsp_connection_connect_with_response_usec (conn,
+      TV_TO_USEC (timeout), response);
+}
+
+/**
+ * gst_rtsp_connection_read:
+ * @conn: a #GstRTSPConnection
+ * @data: the data to read
+ * @size: the size of @data
+ * @timeout: a timeout value or %NULL
+ *
+ * Attempt to read @size bytes into @data from the connected @conn, blocking up to
+ * the specified @timeout. @timeout can be %NULL, in which case this function
+ * might block forever.
+ *
+ * This function can be cancelled with gst_rtsp_connection_flush().
+ *
+ * Returns: #GST_RTSP_OK on success.
+ *
+ * Deprecated: 1.18
+ */
+GstRTSPResult
+gst_rtsp_connection_read (GstRTSPConnection * conn, guint8 * data, guint size,
+    GTimeVal * timeout)
+{
+  return gst_rtsp_connection_read_usec (conn, data, size, TV_TO_USEC (timeout));
+}
+
+/**
+ * gst_rtsp_connection_write:
+ * @conn: a #GstRTSPConnection
+ * @data: the data to write
+ * @size: the size of @data
+ * @timeout: a timeout value or %NULL
+ *
+ * Attempt to write @size bytes of @data to the connected @conn, blocking up to
+ * the specified @timeout. @timeout can be %NULL, in which case this function
+ * might block forever.
+ *
+ * This function can be cancelled with gst_rtsp_connection_flush().
+ *
+ * Returns: #GST_RTSP_OK on success.
+ *
+ * Deprecated: 1.18
+ */
+GstRTSPResult
+gst_rtsp_connection_write (GstRTSPConnection * conn, const guint8 * data,
+    guint size, GTimeVal * timeout)
+{
+  return gst_rtsp_connection_write_usec (conn, data, size,
+      TV_TO_USEC (timeout));
+}
+
+/**
+ * gst_rtsp_connection_send:
+ * @conn: a #GstRTSPConnection
+ * @message: the message to send
+ * @timeout: a timeout value or %NULL
+ *
+ * Attempt to send @message to the connected @conn, blocking up to
+ * the specified @timeout. @timeout can be %NULL, in which case this function
+ * might block forever.
+ *
+ * This function can be cancelled with gst_rtsp_connection_flush().
+ *
+ * Returns: #GST_RTSP_OK on success.
+ *
+ * Deprecated: 1.18
+ */
+GstRTSPResult
+gst_rtsp_connection_send (GstRTSPConnection * conn, GstRTSPMessage * message,
+    GTimeVal * timeout)
+{
+  return gst_rtsp_connection_send_usec (conn, message, TV_TO_USEC (timeout));
+}
+
+/**
+ * gst_rtsp_connection_send_messages:
+ * @conn: a #GstRTSPConnection
+ * @messages: (array length=n_messages): the messages to send
+ * @n_messages: the number of messages to send
+ * @timeout: a timeout value or %NULL
+ *
+ * Attempt to send @messages to the connected @conn, blocking up to
+ * the specified @timeout. @timeout can be %NULL, in which case this function
+ * might block forever.
+ *
+ * This function can be cancelled with gst_rtsp_connection_flush().
+ *
+ * Returns: #GST_RTSP_OK on success.
+ *
+ * Since: 1.16
+ * Deprecated: 1.18
+ */
+GstRTSPResult
+gst_rtsp_connection_send_messages (GstRTSPConnection * conn,
+    GstRTSPMessage * messages, guint n_messages, GTimeVal * timeout)
+{
+  return gst_rtsp_connection_send_messages_usec (conn, messages, n_messages,
+      TV_TO_USEC (timeout));
+}
+
+/**
+ * gst_rtsp_connection_receive:
+ * @conn: a #GstRTSPConnection
+ * @message: the message to read
+ * @timeout: a timeout value or %NULL
+ *
+ * Attempt to read into @message from the connected @conn, blocking up to
+ * the specified @timeout. @timeout can be %NULL, in which case this function
+ * might block forever.
+ *
+ * This function can be cancelled with gst_rtsp_connection_flush().
+ *
+ * Returns: #GST_RTSP_OK on success.
+ *
+ * Deprecated: 1.18
+ */
+GstRTSPResult
+gst_rtsp_connection_receive (GstRTSPConnection * conn, GstRTSPMessage * message,
+    GTimeVal * timeout)
+{
+  return gst_rtsp_connection_receive_usec (conn, message, TV_TO_USEC (timeout));
+}
+
+/**
+ * gst_rtsp_connection_poll:
+ * @conn: a #GstRTSPConnection
+ * @events: a bitmask of #GstRTSPEvent flags to check
+ * @revents: location for result flags
+ * @timeout: a timeout
+ *
+ * Wait up to the specified @timeout for the connection to become available for
+ * at least one of the operations specified in @events. When the function returns
+ * with #GST_RTSP_OK, @revents will contain a bitmask of available operations on
+ * @conn.
+ *
+ * @timeout can be %NULL, in which case this function might block forever.
+ *
+ * This function can be cancelled with gst_rtsp_connection_flush().
+ *
+ * Returns: #GST_RTSP_OK on success.
+ *
+ * Deprecated: 1.18
+ */
+GstRTSPResult
+gst_rtsp_connection_poll (GstRTSPConnection * conn, GstRTSPEvent events,
+    GstRTSPEvent * revents, GTimeVal * timeout)
+{
+  return gst_rtsp_connection_poll_usec (conn, events, revents,
+      TV_TO_USEC (timeout));
+}
+
+/**
+ * gst_rtsp_connection_next_timeout:
+ * @conn: a #GstRTSPConnection
+ * @timeout: a timeout
+ *
+ * Calculate the next timeout for @conn, storing the result in @timeout.
+ *
+ * Returns: #GST_RTSP_OK.
+ *
+ * Deprecated: 1.18
+ */
+GstRTSPResult
+gst_rtsp_connection_next_timeout (GstRTSPConnection * conn, GTimeVal * timeout)
+{
+  gint64 tmptimeout = 0;
+
+  g_return_val_if_fail (timeout != NULL, GST_RTSP_EINVAL);
+
+  tmptimeout = gst_rtsp_connection_next_timeout_usec (conn);
+
+  timeout->tv_sec = tmptimeout / G_USEC_PER_SEC;
+  timeout->tv_usec = tmptimeout % G_USEC_PER_SEC;
+
+  return GST_RTSP_OK;
+}
+
+
+/**
+ * gst_rtsp_watch_wait_backlog:
+ * @watch: a #GstRTSPWatch
+ * @timeout: a #GTimeVal timeout
+ *
+ * Wait until there is place in the backlog queue, @timeout is reached
+ * or @watch is set to flushing.
+ *
+ * If @timeout is %NULL this function can block forever. If @timeout
+ * contains a valid timeout, this function will return %GST_RTSP_ETIMEOUT
+ * after the timeout expired.
+ *
+ * The typically use of this function is when gst_rtsp_watch_write_data
+ * returns %GST_RTSP_ENOMEM. The caller then calls this function to wait for
+ * free space in the backlog queue and try again.
+ *
+ * Returns: %GST_RTSP_OK when if there is room in queue.
+ *          %GST_RTSP_ETIMEOUT when @timeout was reached.
+ *          %GST_RTSP_EINTR when @watch is flushing
+ *          %GST_RTSP_EINVAL when called with invalid parameters.
+ *
+ * Since: 1.4
+ * Deprecated: 1.18
+ */
+GstRTSPResult
+gst_rtsp_watch_wait_backlog (GstRTSPWatch * watch, GTimeVal * timeout)
+{
+  return gst_rtsp_watch_wait_backlog_usec (watch, TV_TO_USEC (timeout));
+}
+
+G_GNUC_END_IGNORE_DEPRECATIONS
+#endif /* GST_DISABLE_DEPRECATED */

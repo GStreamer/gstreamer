@@ -76,10 +76,10 @@ GST_RTSP_API
 GstRTSPResult      gst_rtsp_connection_accept                 (GSocket * socket, GstRTSPConnection ** conn, GCancellable * cancellable);
 
 GST_RTSP_API
-GstRTSPResult      gst_rtsp_connection_connect                (GstRTSPConnection * conn, GTimeVal * timeout);
+GstRTSPResult      gst_rtsp_connection_connect_usec           (GstRTSPConnection * conn, gint64 timeout);
 
 GST_RTSP_API
-GstRTSPResult      gst_rtsp_connection_connect_with_response  (GstRTSPConnection * conn, GTimeVal * timeout, GstRTSPMessage * response);
+GstRTSPResult      gst_rtsp_connection_connect_with_response_usec (GstRTSPConnection * conn, gint64 timeout, GstRTSPMessage * response);
 
 GST_RTSP_API
 GstRTSPResult      gst_rtsp_connection_close                  (GstRTSPConnection *conn);
@@ -123,37 +123,37 @@ void                 gst_rtsp_connection_set_accept_certificate_func (GstRTSPCon
 /* sending/receiving raw bytes */
 
 GST_RTSP_API
-GstRTSPResult      gst_rtsp_connection_read           (GstRTSPConnection * conn, guint8 * data,
-                                                       guint size, GTimeVal * timeout);
+GstRTSPResult      gst_rtsp_connection_read_usec      (GstRTSPConnection * conn, guint8 * data,
+                                                       guint size, gint64 timeout);
 
 GST_RTSP_API
-GstRTSPResult      gst_rtsp_connection_write          (GstRTSPConnection * conn, const guint8 * data,
-                                                       guint size, GTimeVal * timeout);
+GstRTSPResult      gst_rtsp_connection_write_usec     (GstRTSPConnection * conn, const guint8 * data,
+                                                       guint size, gint64 timeout);
 
 /* sending/receiving messages */
 
 GST_RTSP_API
-GstRTSPResult      gst_rtsp_connection_send           (GstRTSPConnection *conn, GstRTSPMessage *message,
-                                                       GTimeVal *timeout);
+GstRTSPResult      gst_rtsp_connection_send_usec      (GstRTSPConnection *conn, GstRTSPMessage *message,
+                                                       gint64 timeout);
 
 GST_RTSP_API
-GstRTSPResult      gst_rtsp_connection_send_messages  (GstRTSPConnection *conn, GstRTSPMessage *messages, guint n_messages,
-                                                       GTimeVal *timeout);
+GstRTSPResult      gst_rtsp_connection_send_messages_usec (GstRTSPConnection *conn, GstRTSPMessage *messages, guint n_messages,
+                                                       gint64 timeout);
 
 GST_RTSP_API
-GstRTSPResult      gst_rtsp_connection_receive        (GstRTSPConnection *conn, GstRTSPMessage *message,
-                                                       GTimeVal *timeout);
+GstRTSPResult      gst_rtsp_connection_receive_usec    (GstRTSPConnection *conn, GstRTSPMessage *message,
+                                                       gint64 timeout);
 
 /* status management */
 
 GST_RTSP_API
-GstRTSPResult      gst_rtsp_connection_poll           (GstRTSPConnection *conn, GstRTSPEvent events,
-                                                       GstRTSPEvent *revents, GTimeVal *timeout);
+GstRTSPResult      gst_rtsp_connection_poll_usec      (GstRTSPConnection *conn, GstRTSPEvent events,
+                                                       GstRTSPEvent *revents, gint64 timeout);
 
 /* reset the timeout */
 
 GST_RTSP_API
-GstRTSPResult      gst_rtsp_connection_next_timeout   (GstRTSPConnection *conn, GTimeVal *timeout);
+gint64             gst_rtsp_connection_next_timeout_usec (GstRTSPConnection *conn);
 
 GST_RTSP_API
 GstRTSPResult      gst_rtsp_connection_reset_timeout  (GstRTSPConnection *conn);
@@ -329,12 +329,61 @@ GstRTSPResult      gst_rtsp_watch_send_messages      (GstRTSPWatch *watch,
                                                       guint *id);
 
 GST_RTSP_API
-GstRTSPResult      gst_rtsp_watch_wait_backlog       (GstRTSPWatch * watch,
-                                                      GTimeVal *timeout);
+GstRTSPResult      gst_rtsp_watch_wait_backlog_usec  (GstRTSPWatch * watch,
+                                                      gint64 timeout);
 
 GST_RTSP_API
 void               gst_rtsp_watch_set_flushing       (GstRTSPWatch * watch,
                                                       gboolean flushing);
+
+#ifndef GST_DISABLE_DEPRECATED
+
+/* Deprecated */
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS
+
+GST_RTSP_DEPRECATED_FOR (gst_rtsp_connection_connect_usec)
+GstRTSPResult      gst_rtsp_connection_connect                (GstRTSPConnection * conn, GTimeVal * timeout);
+
+GST_RTSP_DEPRECATED_FOR (gst_rtsp_connection_connect_with_response_usec)
+GstRTSPResult      gst_rtsp_connection_connect_with_response  (GstRTSPConnection * conn, GTimeVal * timeout, GstRTSPMessage * response);
+
+
+GST_RTSP_DEPRECATED_FOR (gst_rtsp_connection_read_usec)
+GstRTSPResult      gst_rtsp_connection_read           (GstRTSPConnection * conn, guint8 * data,
+                                                       guint size, GTimeVal * timeout);
+
+
+GST_RTSP_DEPRECATED_FOR (gst_rtsp_connection_write_usec)
+GstRTSPResult      gst_rtsp_connection_write          (GstRTSPConnection * conn, const guint8 * data,
+                                                       guint size, GTimeVal * timeout);
+
+GST_RTSP_DEPRECATED_FOR (gst_rtsp_connection_send_usec)
+GstRTSPResult      gst_rtsp_connection_send           (GstRTSPConnection *conn, GstRTSPMessage *message,
+                                                       GTimeVal *timeout);
+
+GST_RTSP_DEPRECATED_FOR (gst_rtsp_connection_send_messages_usec)
+GstRTSPResult      gst_rtsp_connection_send_messages  (GstRTSPConnection *conn, GstRTSPMessage *messages, guint n_messages,
+                                                       GTimeVal *timeout);
+
+GST_RTSP_DEPRECATED_FOR (gst_rtsp_connection_receive_usec)
+GstRTSPResult      gst_rtsp_connection_receive        (GstRTSPConnection *conn, GstRTSPMessage *message,
+                                                       GTimeVal *timeout);
+
+GST_RTSP_DEPRECATED_FOR (gst_rtsp_connection_poll_usec)
+GstRTSPResult      gst_rtsp_connection_poll           (GstRTSPConnection *conn, GstRTSPEvent events,
+                                                       GstRTSPEvent *revents, GTimeVal *timeout);
+
+GST_RTSP_DEPRECATED_FOR (gst_rtsp_connection_next_timeout_usec)
+GstRTSPResult      gst_rtsp_connection_next_timeout   (GstRTSPConnection *conn, GTimeVal *timeout);
+
+GST_RTSP_DEPRECATED_FOR (gst_rtsp_watch_wait_backlog_usec)
+GstRTSPResult      gst_rtsp_watch_wait_backlog       (GstRTSPWatch * watch,
+                                                      GTimeVal *timeout);
+
+G_GNUC_END_IGNORE_DEPRECATIONS
+
+#endif /* GST_DISABLE_DEPRECATED */
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_CONNECTION_H__ */
