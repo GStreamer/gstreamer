@@ -168,14 +168,14 @@ start_queue_timer (GstAlsaMidiSrc * alsamidisrc)
 
   ret = snd_seq_start_queue (alsamidisrc->seq, alsamidisrc->queue, NULL);
   if (ret < 0) {
-    GST_ERROR_OBJECT (alsamidisrc, "Timer event output error: %s\n",
+    GST_ERROR_OBJECT (alsamidisrc, "Timer event output error: %s",
         snd_strerror (ret));
     return ret;
   }
 
   ret = snd_seq_drain_output (alsamidisrc->seq);
   if (ret < 0)
-    GST_ERROR_OBJECT (alsamidisrc, "Drain output error: %s\n",
+    GST_ERROR_OBJECT (alsamidisrc, "Drain output error: %s",
         snd_strerror (ret));
 
   return ret;
@@ -203,13 +203,12 @@ schedule_next_tick (GstAlsaMidiSrc * alsamidisrc)
 
   ret = snd_seq_event_output (alsamidisrc->seq, &ev);
   if (ret < 0)
-    GST_ERROR_OBJECT (alsamidisrc, "Event output error: %s\n",
+    GST_ERROR_OBJECT (alsamidisrc, "Event output error: %s",
         snd_strerror (ret));
 
   ret = snd_seq_drain_output (alsamidisrc->seq);
   if (ret < 0)
-    GST_ERROR_OBJECT (alsamidisrc, "Event drain error: %s\n",
-        snd_strerror (ret));
+    GST_ERROR_OBJECT (alsamidisrc, "Event drain error: %s", snd_strerror (ret));
 }
 
 static int
@@ -227,7 +226,7 @@ create_port (GstAlsaMidiSrc * alsamidisrc)
 
   ret = snd_seq_alloc_named_queue (alsamidisrc->seq, DEFAULT_CLIENT_NAME);
   if (ret < 0) {
-    GST_ERROR_OBJECT (alsamidisrc, "Cannot allocate queue: %s\n",
+    GST_ERROR_OBJECT (alsamidisrc, "Cannot allocate queue: %s",
         snd_strerror (ret));
     return ret;
   }

@@ -153,7 +153,7 @@ gst_gl_window_dispmanx_egl_open (GstGLWindow * window, GError ** error)
         GST_GL_WINDOW_ERROR_RESOURCE_UNAVAILABLE, "Can't open display");
     return FALSE;
   }
-  GST_DEBUG ("Got display size: %dx%d\n", window_egl->dp_width,
+  GST_DEBUG ("Got display size: %dx%d", window_egl->dp_width,
       window_egl->dp_height);
 
   window_egl->native.element = 0;

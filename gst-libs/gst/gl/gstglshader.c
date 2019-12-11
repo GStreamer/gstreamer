@@ -710,7 +710,7 @@ gst_gl_shader_link (GstGLShader * shader, GError ** error)
     GST_OBJECT_UNLOCK (shader);
     return ret;
   } else if (len > 1) {
-    GST_FIXME ("shader link log:\n%s\n", info_buffer);
+    GST_FIXME ("shader link log:\n%s", info_buffer);
   }
 
   ret = priv->linked = TRUE;
