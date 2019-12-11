@@ -35,6 +35,13 @@ GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_device_debug);
 
 #ifdef HAVE_D3D11SDKLAYER_H
 static GModule *sdk_layer = NULL;
+
+/* mingw header does not define D3D11_RLDO_IGNORE_INTERNAL
+ * D3D11_RLDO_SUMMARY = 0x1,
+   D3D11_RLDO_DETAIL = 0x2,
+ * D3D11_RLDO_IGNORE_INTERNAL = 0x4
+ */
+#define GST_D3D11_RLDO_FLAGS (0x2 | 0x4)
 #endif
 
 enum
@@ -314,7 +321,8 @@ gst_d3d11_device_constructed (GObject * object)
 
     if (SUCCEEDED (hr)) {
       GST_DEBUG_OBJECT (self, "D3D11Debug interface available");
-      ID3D11Debug_ReportLiveDeviceObjects (debug, D3D11_RLDO_DETAIL);
+      ID3D11Debug_ReportLiveDeviceObjects (debug,
+          (D3D11_RLDO_FLAGS) GST_D3D11_RLDO_FLAGS);
       priv->debug = debug;
     }
 
@@ -415,37 +423,6 @@ gst_d3d11_device_dispose (GObject * object)
 
   GST_LOG_OBJECT (self, "dispose");
 
-  if (priv->loop) {
-    g_main_loop_quit (priv->loop);
-  }
-
-  if (priv->thread) {
-    g_thread_join (priv->thread);
-    priv->thread = NULL;
-  }
-
-  if (priv->loop) {
-    g_main_loop_unref (priv->loop);
-    priv->loop = NULL;
-  }
-
-  if (priv->main_context) {
-    g_main_context_unref (priv->main_context);
-    priv->main_context = NULL;
-  }
-#ifdef HAVE_D3D11SDKLAYER_H
-  if (priv->debug) {
-    ID3D11Debug_Release (priv->debug);
-    priv->debug = NULL;
-  }
-
-  if (priv->info_queue) {
-    ID3D11InfoQueue_ClearStoredMessages (priv->info_queue);
-    ID3D11InfoQueue_Release (priv->info_queue);
-    priv->info_queue = NULL;
-  }
-#endif
-
   if (priv->device) {
     ID3D11Device_Release (priv->device);
     priv->device = NULL;
@@ -470,6 +447,40 @@ gst_d3d11_device_dispose (GObject * object)
     IDXGIFactory1_Release (priv->factory);
     priv->factory = NULL;
   }
+
+  if (priv->loop) {
+    g_main_loop_quit (priv->loop);
+  }
+
+  if (priv->thread) {
+    g_thread_join (priv->thread);
+    priv->thread = NULL;
+  }
+
+  if (priv->loop) {
+    g_main_loop_unref (priv->loop);
+    priv->loop = NULL;
+  }
+
+  if (priv->main_context) {
+    g_main_context_unref (priv->main_context);
+    priv->main_context = NULL;
+  }
+#ifdef HAVE_D3D11SDKLAYER_H
+  if (priv->debug) {
+    ID3D11Debug_ReportLiveDeviceObjects (priv->debug,
+        (D3D11_RLDO_FLAGS) GST_D3D11_RLDO_FLAGS);
+    ID3D11Debug_Release (priv->debug);
+    priv->debug = NULL;
+  }
+
+  if (priv->info_queue) {
+    gst_d3d11_device_get_message (self);
+
+    ID3D11InfoQueue_Release (priv->info_queue);
+    priv->info_queue = NULL;
+  }
+#endif
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
