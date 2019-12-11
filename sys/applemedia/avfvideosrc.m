@@ -430,6 +430,9 @@ static AVCaptureVideoOrientation GstAVFVideoSourceOrientation2AVCaptureVideoOrie
   // Since Mojave, permissions are now supposed to be explicitly granted 
   // before performing anything on a device
   if (@available(macOS 10.14, *)) {
+    if (captureScreen)
+      goto checked;
+
     // Check if permission has already been granted (or denied)
     AVAuthorizationStatus authStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
     switch (authStatus) {
@@ -466,6 +469,7 @@ static AVCaptureVideoOrientation GstAVFVideoSourceOrientation2AVCaptureVideoOrie
     }
   }
 
+checked:
   dispatch_sync (mainQueue, ^{
     BOOL ret;
 
