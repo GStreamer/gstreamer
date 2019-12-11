@@ -67,7 +67,7 @@ amount of desired output:
 |   |         | very often. This is for example is each time the reference     |
 |   |         | count of a GstMiniObject, such as a GstBuffer or GstEvent, is  |
 |   |         | modified.                                                      |
-| 8 | MEMDUMP | Logs all memory dump messages. This is the heaviest logging and|
+| 9 | MEMDUMP | Logs all memory dump messages. This is the heaviest logging and|
 |   |         | may include dumping the content of blocks of memory.           |
 +------------------------------------------------------------------------------+
 ```
