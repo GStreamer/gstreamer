@@ -340,6 +340,9 @@ valgrind ges:
     - "manifest"
   dependencies:
     - "manifest"
+  # Ensure that the runners it will be executed on
+  # will have plenty of space for the cache
+  tags: ['gstreamer']
   timeout: '3h'
   variables:
     CCACHE_COMPILERCHECK: "content"
