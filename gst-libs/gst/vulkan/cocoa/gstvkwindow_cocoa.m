@@ -328,7 +328,7 @@ gst_vulkan_window_cocoa_close (GstVulkanWindow * window)
 
   GstVulkanWindowCocoaPrivate *priv = GET_PRIV (window_cocoa);
   GstVulkanNSWindow *internal_win_id = (__bridge GstVulkanNSWindow *)priv->internal_win_id;
-  GST_DEBUG ("user clicked the close button\n");
+  GST_DEBUG ("user clicked the close button");
   [internal_win_id setClosed];
   return YES;
 }

@@ -2063,7 +2063,7 @@ gst_curl_http_src_get_chunks (void *chunk, size_t size, size_t nmemb, void *src)
   s->buffer =
       g_realloc (s->buffer, (s->buffer_len + chunk_len + 1) * sizeof (char));
   if (s->buffer == NULL) {
-    GST_ERROR_OBJECT (s, "Realloc for cURL response message failed!\n");
+    GST_ERROR_OBJECT (s, "Realloc for cURL response message failed!");
     return 0;
   }
   memcpy (s->buffer + s->buffer_len, chunk, chunk_len);

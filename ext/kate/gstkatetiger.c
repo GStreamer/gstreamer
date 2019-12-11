@@ -88,14 +88,14 @@ GST_DEBUG_CATEGORY_EXTERN (gst_katetiger_debug);
 
 #define GST_KATE_TIGER_MUTEX_LOCK(element) \
   do { \
-    /*GST_LOG_OBJECT ((element), "locking from %s:%d\n",__FILE__,__LINE__);*/ \
+    /*GST_LOG_OBJECT ((element), "locking from %s:%d",__FILE__,__LINE__);*/ \
     g_mutex_lock ((element)->mutex); \
-    /*GST_LOG_OBJECT ((element), "ready from %s:%d\n",__FILE__,__LINE__);*/ \
+    /*GST_LOG_OBJECT ((element), "ready from %s:%d",__FILE__,__LINE__);*/ \
   } while(0)
 
 #define GST_KATE_TIGER_MUTEX_UNLOCK(element) \
   do { \
-    /*GST_LOG_OBJECT ((element), "unlocking from %s:%d\n",__FILE__,__LINE__);*/ \
+    /*GST_LOG_OBJECT ((element), "unlocking from %s:%d",__FILE__,__LINE__);*/ \
     g_mutex_unlock ((element)->mutex); \
   } while(0)
 

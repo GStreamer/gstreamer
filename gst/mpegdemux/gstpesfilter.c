@@ -452,7 +452,7 @@ gst_pes_filter_parse (GstPESFilter * filter)
     datalen--;
   } else {
     /* Data byte wasn't recognised as a flags byte */
-    GST_DEBUG ("Unrecognised flags byte 0x%02x\n", *data);
+    GST_DEBUG ("Unrecognised flags byte 0x%02x", *data);
     goto lost_sync;
   }
 

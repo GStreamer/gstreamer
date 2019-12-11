@@ -507,7 +507,7 @@ gst_handdetect_transform_ip (GstOpencvVideoFilter * transform,
         Point c;
 
         if (filter->display) {
-          GST_DEBUG_OBJECT (filter, "%d PALM gestures detected\n",
+          GST_DEBUG_OBJECT (filter, "%d PALM gestures detected",
               (int) hands.size ());
         }
         /* Go through all detected PALM gestures to get the best one

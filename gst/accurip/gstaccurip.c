@@ -186,7 +186,7 @@ gst_accurip_emit_tags (GstAccurip * accurip)
   tags = gst_tag_list_new (GST_TAG_ACCURIP_CRC, accurip->crc,
       GST_TAG_ACCURIP_CRC_V2, accurip->crc_v2, NULL);
 
-  GST_DEBUG_OBJECT (accurip, "Computed CRC=%08X and CRCv2=0x%08X \n",
+  GST_DEBUG_OBJECT (accurip, "Computed CRC=%08X and CRCv2=0x%08X",
       accurip->crc, accurip->crc_v2);
 
   gst_pad_push_event (GST_BASE_TRANSFORM_SRC_PAD (accurip),

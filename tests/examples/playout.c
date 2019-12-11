@@ -863,7 +863,7 @@ playout_app_activate_item (PlayoutItem * item)
      * fit within the output video size without any cropping */
     gst_video_sink_center_rect (item->video_irect, item->app->video_orect,
         &item->video_orect, TRUE);
-    GST_DEBUG ("%s: w: %i, h: %i, x: %i, y: %i\n", item->fn,
+    GST_DEBUG ("%s: w: %i, h: %i, x: %i, y: %i", item->fn,
         item->video_orect.w, item->video_orect.h, item->video_orect.x,
         item->video_orect.y);
     g_object_set (sinkpad, "width", item->video_orect.w, "height",

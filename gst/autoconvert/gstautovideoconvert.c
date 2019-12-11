@@ -75,7 +75,7 @@ gst_auto_video_convert_element_filter (GstPluginFeature * feature,
   if (strstr (klass, "Filter") &&
       strstr (klass, "Converter") && strstr (klass, "Video")) {
     GST_DEBUG_OBJECT (autovideoconvert,
-        "gst_auto_video_convert_element_filter found %s\n",
+        "gst_auto_video_convert_element_filter found %s",
         gst_plugin_feature_get_name (GST_PLUGIN_FEATURE_CAST (feature)));
     return TRUE;
   }

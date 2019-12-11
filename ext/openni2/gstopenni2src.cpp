@@ -302,7 +302,7 @@ gst_openni2_src_start (GstBaseSrc * bsrc)
   if (src->depth->isValid ()) {
     rc = src->depth->start ();
     if (rc != openni::STATUS_OK) {
-      GST_ERROR_OBJECT (src, "Couldn't start the depth stream\n%s\n",
+      GST_ERROR_OBJECT (src, "Couldn't start the depth stream: %s",
           openni::OpenNI::getExtendedError ());
       return FALSE;
     }
@@ -311,7 +311,7 @@ gst_openni2_src_start (GstBaseSrc * bsrc)
   if (src->color->isValid ()) {
     rc = src->color->start ();
     if (rc != openni::STATUS_OK) {
-      GST_ERROR_OBJECT (src, "Couldn't start the color stream\n%s\n",
+      GST_ERROR_OBJECT (src, "Couldn't start the color stream: %s",
           openni::OpenNI::getExtendedError ());
       return FALSE;
     }
@@ -577,7 +577,7 @@ openni2_initialise_devices (GstOpenni2Src * src)
   }
 
   if (!src->depth->isValid () && !src->color->isValid ()) {
-    GST_ERROR_OBJECT (src, "No valid streams. Exiting\n");
+    GST_ERROR_OBJECT (src, "No valid streams. Exiting");
     openni::OpenNI::shutdown ();
     return FALSE;
   }

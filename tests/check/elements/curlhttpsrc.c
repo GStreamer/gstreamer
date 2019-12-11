@@ -139,7 +139,7 @@ do_get (GioHttpServer * server, const HttpRequest * req, GOutputStream * out)
   }
 
   g_string_append (s, "\r\n");
-  GST_DEBUG ("Response headers: %lu\n%s\n********\n", s->len, s->str);
+  GST_DEBUG ("Response headers: %lu\n%s\n********", s->len, s->str);
   g_output_stream_write_all (out, s->str, s->len, &written, NULL, NULL);
   fail_if (written != s->len);
   g_string_free (s, TRUE);

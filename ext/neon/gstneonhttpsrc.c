@@ -817,7 +817,7 @@ ssl_verify_callback (void *data, int failures, const ne_ssl_certificate * cert)
     GST_ELEMENT_ERROR (src, RESOURCE, READ,
         (NULL), ("Server certificate signer not trusted"));
 
-  GST_DEBUG_OBJECT (src, "failures: %d\n", failures);
+  GST_DEBUG_OBJECT (src, "failures: %d", failures);
 
   return failures;
 }

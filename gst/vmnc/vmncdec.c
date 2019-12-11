@@ -835,7 +835,7 @@ vmnc_handle_packet (GstVMncDec * dec, const guint8 * data, int len,
 
         read = handler (dec, &r, data + offset + 12, len - offset - 12, decode);
         if (read < 0) {
-          GST_DEBUG_OBJECT (dec, "Error calling rectangle handler\n");
+          GST_DEBUG_OBJECT (dec, "Error calling rectangle handler");
           return read;
         }
         offset += 12 + read;

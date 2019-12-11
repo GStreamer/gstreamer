@@ -684,10 +684,9 @@ warning_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg, gpointer user_data)
         g_strdup_printf ("Warning from element %s: %s\n%s", name, message,
         err->message);
 
-  GST_WARNING_OBJECT (self, "WARNING: from element %s: %s\n", name,
-      err->message);
+  GST_WARNING_OBJECT (self, "WARNING: from element %s: %s", name, err->message);
   if (debug != NULL)
-    GST_WARNING_OBJECT (self, "Additional debug info:\n%s\n", debug);
+    GST_WARNING_OBJECT (self, "Additional debug info: %s", debug);
 
   transcoder_err =
       g_error_new_literal (GST_TRANSCODER_ERROR, GST_TRANSCODER_ERROR_FAILED,

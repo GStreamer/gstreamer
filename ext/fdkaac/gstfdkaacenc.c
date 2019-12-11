@@ -348,20 +348,20 @@ gst_fdkaacenc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
 
   err = aacEncOpen (&self->enc, 0, GST_AUDIO_INFO_CHANNELS (info));
   if (err != AACENC_OK) {
-    GST_ERROR_OBJECT (self, "Unable to open encoder: %d\n", err);
+    GST_ERROR_OBJECT (self, "Unable to open encoder: %d", err);
     return FALSE;
   }
 
   aot = AOT_AAC_LC;
 
   if ((err = aacEncoder_SetParam (self->enc, AACENC_AOT, aot)) != AACENC_OK) {
-    GST_ERROR_OBJECT (self, "Unable to set AOT %d: %d\n", aot, err);
+    GST_ERROR_OBJECT (self, "Unable to set AOT %d: %d", aot, err);
     return FALSE;
   }
 
   if ((err = aacEncoder_SetParam (self->enc, AACENC_SAMPLERATE,
               GST_AUDIO_INFO_RATE (info))) != AACENC_OK) {
-    GST_ERROR_OBJECT (self, "Unable to set sample rate %d: %d\n",
+    GST_ERROR_OBJECT (self, "Unable to set sample rate %d: %d",
         GST_AUDIO_INFO_RATE (info), err);
     return FALSE;
   }

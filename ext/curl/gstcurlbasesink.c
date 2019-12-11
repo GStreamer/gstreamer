@@ -901,7 +901,7 @@ gst_curl_base_sink_transfer_check (GstCurlBaseSink * sink)
     }
     if (easy) {
       curl_easy_getinfo (easy, CURLINFO_EFFECTIVE_URL, &eff_url);
-      GST_DEBUG ("transfer done %s (%s-%d)\n", eff_url,
+      GST_DEBUG ("transfer done %s (%s-%d)", eff_url,
           curl_easy_strerror (code), code);
     }
   } while (easy);

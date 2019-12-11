@@ -497,7 +497,7 @@ gst_msdkdec_set_src_caps (GstMsdkDec * thiz, gboolean need_allocation)
       FrameInfo.FourCC);
 
   if (format == GST_VIDEO_FORMAT_UNKNOWN) {
-    GST_WARNING_OBJECT (thiz, "Failed to find a valid video format\n");
+    GST_WARNING_OBJECT (thiz, "Failed to find a valid video format");
     return FALSE;
   }
 

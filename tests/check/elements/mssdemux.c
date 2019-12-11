@@ -363,10 +363,10 @@ testDownloadErrorMessageCallback (GstAdaptiveDemuxTestEngine * engine,
 
   fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
   gst_message_parse_error (msg, &err, &dbg_info);
-  GST_DEBUG ("Error from element %s : %s\n",
+  GST_DEBUG ("Error from element %s : %s",
       GST_OBJECT_NAME (msg->src), err->message);
   fail_unless_equals_string (GST_OBJECT_NAME (msg->src), DEMUX_ELEMENT_NAME);
-  /*GST_DEBUG ("dbg_info=%s\n", dbg_info); */
+  /*GST_DEBUG ("dbg_info=%s", dbg_info); */
   g_error_free (err);
   g_free (dbg_info);
   g_main_loop_quit (engine->loop);

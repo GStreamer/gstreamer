@@ -306,9 +306,9 @@ _bus_watch (GstBus * bus, GstMessage * msg, struct test_webrtc *t)
       }
 
       gst_message_parse_error (msg, &err, &dbg_info);
-      GST_WARNING ("ERROR from element %s: %s\n",
+      GST_WARNING ("ERROR from element %s: %s",
           GST_OBJECT_NAME (msg->src), err->message);
-      GST_WARNING ("Debugging info: %s\n", (dbg_info) ? dbg_info : "none");
+      GST_WARNING ("Debugging info: %s", (dbg_info) ? dbg_info : "none");
       g_error_free (err);
       g_free (dbg_info);
       test_webrtc_signal_state_unlocked (t, STATE_ERROR);
@@ -326,7 +326,7 @@ _bus_watch (GstBus * bus, GstMessage * msg, struct test_webrtc *t)
             GST_DEBUG_GRAPH_SHOW_ALL, dump_name);
         g_free (dump_name);
       }
-      GST_INFO ("EOS received\n");
+      GST_INFO ("EOS received");
       test_webrtc_signal_state_unlocked (t, STATE_EOS);
       break;
     }
