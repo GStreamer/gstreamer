@@ -1104,8 +1104,19 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
   window->render_rect.w = width;
   window->render_rect.h = height;
 
-  desc.BufferDesc.Width = window->width = window->surface_width = width;
-  desc.BufferDesc.Height = window->height = window->surface_height = height;
+  if (window->external_win_id) {
+    RECT client_rect = { 0, };
+    GetClientRect (window->external_win_id, &client_rect);
+
+    window->surface_width = client_rect.right - client_rect.left;
+    window->surface_height = client_rect.bottom - client_rect.top;
+  } else {
+    window->surface_width = width;
+    window->surface_height = height;
+  }
+
+  desc.BufferDesc.Width = window->width = window->surface_width;
+  desc.BufferDesc.Height = window->height = window->surface_height;
   /* don't care refresh rate */
   desc.BufferDesc.RefreshRate.Numerator = 0;
   desc.BufferDesc.RefreshRate.Denominator = 1;
