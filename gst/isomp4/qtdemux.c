@@ -6359,18 +6359,25 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
   /* gap events for subtitle streams */
   for (i = 0; i < QTDEMUX_N_STREAMS (qtdemux); i++) {
     stream = QTDEMUX_NTH_STREAM (qtdemux, i);
-    if (stream->pad && (stream->subtype == FOURCC_subp
-            || stream->subtype == FOURCC_text
-            || stream->subtype == FOURCC_sbtl)) {
-      /* send one second gap events until the stream catches up */
+    if (stream->pad) {
+      GstClockTime gap_threshold;
+
+      /* Only send gap events on non-subtitle streams if lagging way behind. */
+      if (stream->subtype == FOURCC_subp
+          || stream->subtype == FOURCC_text || stream->subtype == FOURCC_sbtl)
+        gap_threshold = 1 * GST_SECOND;
+      else
+        gap_threshold = 3 * GST_SECOND;
+
+      /* send gap events until the stream catches up */
       /* gaps can only be sent after segment is activated (segment.stop is no longer -1) */
       while (GST_CLOCK_TIME_IS_VALID (stream->segment.stop) &&
           GST_CLOCK_TIME_IS_VALID (stream->segment.position) &&
-          stream->segment.position + GST_SECOND < min_time) {
+          stream->segment.position + gap_threshold < min_time) {
         GstEvent *gap =
-            gst_event_new_gap (stream->segment.position, GST_SECOND);
+            gst_event_new_gap (stream->segment.position, gap_threshold);
         gst_pad_push_event (stream->pad, gap);
-        stream->segment.position += GST_SECOND;
+        stream->segment.position += gap_threshold;
       }
     }
   }
