@@ -717,8 +717,7 @@ gst_rtsp_session_next_timeout_usec (GstRTSPSession * session, gint64 now)
  * Deprecated: Use gst_rtsp_session_next_timeout_usec() instead.
  */
 #ifndef GST_REMOVE_DEPRECATED
-G_GNUC_BEGIN_IGNORE_DEPRECATIONS
-gint
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS gint
 gst_rtsp_session_next_timeout (GstRTSPSession * session, GTimeVal * now)
 {
   GstRTSPSessionPrivate *priv;
@@ -756,9 +755,9 @@ gst_rtsp_session_next_timeout (GstRTSPSession * session, GTimeVal * now)
 
   return res;
 }
+
 G_GNUC_END_IGNORE_DEPRECATIONS
 #endif
-
 /**
  * gst_rtsp_session_is_expired_usec:
  * @session: a #GstRTSPSession
@@ -768,7 +767,7 @@ G_GNUC_END_IGNORE_DEPRECATIONS
  *
  * Returns: %TRUE if @session timed out
  */
-gboolean
+    gboolean
 gst_rtsp_session_is_expired_usec (GstRTSPSession * session, gint64 now)
 {
   gboolean res;
@@ -793,8 +792,7 @@ gst_rtsp_session_is_expired_usec (GstRTSPSession * session, gint64 now)
  * Deprecated: Use gst_rtsp_session_is_expired_usec() instead.
  */
 #ifndef GST_REMOVE_DEPRECATED
-G_GNUC_BEGIN_IGNORE_DEPRECATIONS
-gboolean
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS gboolean
 gst_rtsp_session_is_expired (GstRTSPSession * session, GTimeVal * now)
 {
   gboolean res;
@@ -804,5 +802,6 @@ gst_rtsp_session_is_expired (GstRTSPSession * session, GTimeVal * now)
 
   return res;
 }
+
 G_GNUC_END_IGNORE_DEPRECATIONS
 #endif
