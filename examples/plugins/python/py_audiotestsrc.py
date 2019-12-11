@@ -148,7 +148,7 @@ class AudioTestSrc(GstBase.BaseSrc):
 
         return start, end
 
-    def do_create(self, offset, length):
+    def do_fill(self, offset, length, buf):
         if length == -1:
             samples = SAMPLESPERBUFFER
         else:
@@ -162,16 +162,19 @@ class AudioTestSrc(GstBase.BaseSrc):
         next_byte = self.next_byte + bytes_
         next_time = Gst.util_uint64_scale_int(next_sample, Gst.SECOND, self.info.rate)
 
-        if not self.mute:
-            r = np.repeat(
-                    np.arange(self.accumulator, self.accumulator + samples),
-                    self.info.channels)
-            data = ((np.sin(2 * np.pi * r * self.freq / self.info.rate) * self.volume)
-                    .astype(np.float32))
-        else:
-            data = [0] * bytes_
-
-        buf = Gst.Buffer.new_wrapped(bytes(data))
+        try:
+            with buf.map(Gst.MapFlags.WRITE) as info:
+                array = np.ndarray(shape = self.info.channels * samples, dtype = np.float32, buffer = info.data)
+                if not self.mute:
+                    r = np.repeat(np.arange(self.accumulator, self.accumulator + samples),
+                            self.info.channels)
+                    np.sin(2 * np.pi * r * self.freq / self.info.rate, out=array)
+                    array *= self.volume
+                else:
+                    array[:] = 0
+        except Exception as e:
+            Gst.error("Mapping error: %s" % e)
+            return Gst.FlowReturn.ERROR
 
         buf.offset = self.next_sample
         buf.offset_end = next_sample
