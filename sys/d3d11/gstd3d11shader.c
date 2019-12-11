@@ -291,7 +291,7 @@ quad_free (GstD3D11Device * device, GstD3D11Quad * quad)
   if (quad->layout)
     ID3D11InputLayout_Release (quad->layout);
   if (quad->sampler)
-    ID3D11SamplerState_AddRef (quad->sampler);
+    ID3D11SamplerState_Release (quad->sampler);
   if (quad->const_buffer)
     ID3D11Buffer_Release (quad->const_buffer);
   if (quad->vertex_buffer)

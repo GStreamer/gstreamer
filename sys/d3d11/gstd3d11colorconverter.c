@@ -759,7 +759,7 @@ clear:
   if (layout)
     ID3D11InputLayout_Release (layout);
   if (sampler)
-    ID3D11SamplerState_AddRef (sampler);
+    ID3D11SamplerState_Release (sampler);
   if (const_buffer)
     ID3D11Buffer_Release (const_buffer);
   if (vertex_buffer)
