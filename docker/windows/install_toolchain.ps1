@@ -12,9 +12,9 @@ Start-Process C:\vs_buildtools.exe -ArgumentList '--quiet --wait --norestart --n
 Remove-Item C:\vs_buildtools.exe -Force
 
 Write-Host "Installing Python"
-Invoke-WebRequest -Uri $python_dl_url -OutFile C:\python3.exe
-Start-Process C:\python3.exe -ArgumentList '/quiet InstallAllUsers=1 PrependPath=1' -Wait
-Remove-Item C:\python3.exe -Force
+Invoke-WebRequest -Uri $python_dl_url -OutFile C:\python3-installer.exe
+Start-Process C:\python3-installer.exe -ArgumentList '/quiet InstallAllUsers=1 PrependPath=1' -Wait
+Remove-Item C:\python3-installer.exe -Force
 
 Write-Host "Installing Git"
 Invoke-WebRequest -Uri $git_url -OutFile C:\mingit.zip
