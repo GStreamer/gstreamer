@@ -1715,6 +1715,44 @@
         "tracers": {},
         "url": "Unknown package origin"
     },
+    "basedebug": {
+        "description": "elements for testing and debugging",
+        "elements": {
+            "fakevideodec": {
+                "author": "Julien Isorce <julien.isorce@gmail.com>",
+                "description": "Fake video decoder",
+                "hierarchy": [
+                    "GstFakeVideoDec",
+                    "GstVideoDecoder",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Decoder/Video",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-h264:\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 1/1, 2147483647/1 ]\n         parsed: true\nvideo/x-h263:\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 1/1, 2147483647/1 ]\n         parsed: true\nvideo/x-theora:\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 1/1, 2147483647/1 ]\nvideo/x-vp6:\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 1/1, 2147483647/1 ]\nvideo/x-vp6-flash:\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 1/1, 2147483647/1 ]\nvideo/x-vp8:\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 1/1, 2147483647/1 ]\nvideo/x-vp9:\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 1/1, 2147483647/1 ]\nvideo/x-divx:\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 1/1, 2147483647/1 ]\nvideo/x-msmpeg:\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 1/1, 2147483647/1 ]\nvideo/mpeg:\n    mpegversion: { (int)1, (int)2, (int)4 }\n   systemstream: false\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 1/1, 2147483647/1 ]\nvideo/x-flash-video:\n     flvversion: 1\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 1/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { RGBA, RGBx, BGRA, BGRx, RGB16 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 1/1, 2147483647/1 ]\nvideo/x-wmv:\n     wmvversion: { (int)1, (int)2, (int)3 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 1/1, 2147483647/1 ]\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-raw:\n         format: { RGBA, RGBx, BGRA, BGRx, RGB16 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "rank": "none"
+            }
+        },
+        "filename": "gstbasedebug",
+        "license": "LGPL",
+        "other-types": {},
+        "package": "GStreamer Base Plug-ins",
+        "source": "gst-plugins-base",
+        "tracers": {},
+        "url": "Unknown package origin"
+    },
     "cdparanoia": {
         "description": "Read audio from CD in paranoid mode",
         "elements": {
