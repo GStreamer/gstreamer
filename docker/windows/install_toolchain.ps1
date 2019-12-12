@@ -1,10 +1,10 @@
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;
 
-$python_dl_url = 'https://www.python.org/ftp/python/3.7.4/python-3.7.4.exe'
+$python_dl_url = 'https://www.python.org/ftp/python/3.7.5/python-3.7.5.exe'
 $msvc_2017_url = 'https://aka.ms/vs/15/release/vs_buildtools.exe'
-$git_url = 'https://github.com/git-for-windows/git/releases/download/v2.24.0.windows.2/MinGit-2.24.0.2-64-bit.zip'
+$git_url = 'https://github.com/git-for-windows/git/releases/download/v2.24.1.windows.2/MinGit-2.24.1.2-64-bit.zip'
 $zip_url = 'https://www.7-zip.org/a/7z1900-x64.exe'
-$msys_url = 'https://download.sourceforge.net/project/msys2/Base/x86_64/msys2-base-x86_64-20180531.tar.xz'
+$msys_url = 'https://download.sourceforge.net/project/msys2/Base/x86_64/msys2-base-x86_64-20190524.tar.xz'
 
 Write-Host "Installing VisualStudio"
 Invoke-WebRequest -Uri $msvc_2017_url -OutFile C:\vs_buildtools.exe
