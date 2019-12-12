@@ -241,9 +241,16 @@ gst_registry_binary_cache_write (BinaryRegistryCache * cache,
 static gboolean
 gst_registry_binary_cache_finish (BinaryRegistryCache * cache, gboolean success)
 {
+  gint fsync_ret;
+
   /* only fsync if we're actually going to use and rename the file below */
-  if (success && fsync (cache->cache_fd) < 0)
-    goto fsync_failed;
+  if (success) {
+    do {
+      fsync_ret = fsync (cache->cache_fd);
+    } while (fsync_ret < 0 && errno == EINTR);
+    if (fsync_ret)
+      goto fsync_failed;
+  }
 
   if (close (cache->cache_fd) < 0)
     goto close_failed;
