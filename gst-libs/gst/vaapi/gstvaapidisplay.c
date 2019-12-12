@@ -51,11 +51,11 @@ GST_DEBUG_CATEGORY (gst_debug_vaapi_display);
 G_DEFINE_TYPE_WITH_CODE (GstVaapiDisplay, gst_vaapi_display, GST_TYPE_OBJECT,
     _do_init);
 
-typedef struct _GstVaapiConfig GstVaapiConfig;
-struct _GstVaapiConfig
+typedef struct _GstVaapiProfileConfig GstVaapiProfileConfig;
+struct _GstVaapiProfileConfig
 {
   GstVaapiProfile profile;
-  GstVaapiEntrypoint entrypoint;
+  guint32 entrypoints;          /* bits map of GstVaapiEntrypoint */
 };
 
 typedef struct _GstVaapiProperty GstVaapiProperty;
@@ -260,18 +260,18 @@ compare_rgb_formats (gconstpointer a, gconstpointer b)
 
 /* Check if configs array contains profile at entrypoint */
 static inline gboolean
-find_config (GArray * configs,
+find_config (GPtrArray * configs,
     GstVaapiProfile profile, GstVaapiEntrypoint entrypoint)
 {
-  GstVaapiConfig *config;
+  GstVaapiProfileConfig *config;
   guint i;
 
   if (!configs)
     return FALSE;
 
   for (i = 0; i < configs->len; i++) {
-    config = &g_array_index (configs, GstVaapiConfig, i);
-    if (config->profile == profile && config->entrypoint == entrypoint)
+    config = g_ptr_array_index (configs, i);
+    if (config->profile == profile && (config->entrypoints & (1 << entrypoint)))
       return TRUE;
   }
   return FALSE;
@@ -279,21 +279,21 @@ find_config (GArray * configs,
 
 /* HACK: append H.263 Baseline profile if MPEG-4:2 Simple profile is supported */
 static void
-append_h263_config (GArray * configs)
+append_h263_config (GArray * configs, GPtrArray * decoders)
 {
-  GstVaapiConfig *config, tmp_config;
-  GstVaapiConfig *mpeg4_simple_config = NULL;
-  GstVaapiConfig *h263_baseline_config = NULL;
+  GstVaapiProfileConfig *config, tmp_config;
+  GstVaapiProfileConfig *mpeg4_simple_config = NULL;
+  GstVaapiProfileConfig *h263_baseline_config = NULL;
   guint i;
 
   if (!WORKAROUND_H263_BASELINE_DECODE_PROFILE)
     return;
 
-  if (!configs)
+  if (!decoders)
     return;
 
-  for (i = 0; i < configs->len; i++) {
-    config = &g_array_index (configs, GstVaapiConfig, i);
+  for (i = 0; i < decoders->len; i++) {
+    config = g_ptr_array_index (decoders, i);
     if (config->profile == GST_VAAPI_PROFILE_MPEG4_SIMPLE)
       mpeg4_simple_config = config;
     else if (config->profile == GST_VAAPI_PROFILE_H263_BASELINE)
@@ -304,6 +304,8 @@ append_h263_config (GArray * configs)
     tmp_config = *mpeg4_simple_config;
     tmp_config.profile = GST_VAAPI_PROFILE_H263_BASELINE;
     g_array_append_val (configs, tmp_config);
+    g_ptr_array_add (decoders, &g_array_index (configs,
+            GstVaapiProfileConfig, configs->len - 1));
   }
 }
 
@@ -311,20 +313,18 @@ append_h263_config (GArray * configs)
 static gint
 compare_profiles (gconstpointer a, gconstpointer b)
 {
-  const GstVaapiConfig *const config1 = (GstVaapiConfig *) a;
-  const GstVaapiConfig *const config2 = (GstVaapiConfig *) b;
+  const GstVaapiProfileConfig *const config1 = (GstVaapiProfileConfig *) a;
+  const GstVaapiProfileConfig *const config2 = (GstVaapiProfileConfig *) b;
 
-  if (config1->profile == config2->profile)
-    return config1->entrypoint - config2->entrypoint;
-
+  g_assert (config1->profile != config2->profile);
   return config1->profile - config2->profile;
 }
 
 /* Convert configs array to profiles as GstCaps */
 static GArray *
-get_profiles (GArray * configs)
+get_profiles (GPtrArray * configs)
 {
-  GstVaapiConfig *config;
+  GstVaapiProfileConfig *config;
   GArray *out_profiles;
   guint i;
 
@@ -336,7 +336,7 @@ get_profiles (GArray * configs)
     return NULL;
 
   for (i = 0; i < configs->len; i++) {
-    config = &g_array_index (configs, GstVaapiConfig, i);
+    config = g_ptr_array_index (configs, i);
     g_array_append_val (out_profiles, config->profile);
   }
   return out_profiles;
@@ -470,10 +470,14 @@ ensure_profiles (GstVaapiDisplay * display)
     return TRUE;
   }
 
-  priv->decoders = g_array_new (FALSE, FALSE, sizeof (GstVaapiConfig));
+  priv->codecs = g_array_new (FALSE, FALSE, sizeof (GstVaapiProfileConfig));
+  if (!priv->codecs)
+    goto cleanup;
+
+  priv->decoders = g_ptr_array_new ();
   if (!priv->decoders)
     goto cleanup;
-  priv->encoders = g_array_new (FALSE, FALSE, sizeof (GstVaapiConfig));
+  priv->encoders = g_ptr_array_new ();
   if (!priv->encoders)
     goto cleanup;
   priv->has_profiles = TRUE;
@@ -502,7 +506,8 @@ ensure_profiles (GstVaapiDisplay * display)
   }
 
   for (i = 0; i < n; i++) {
-    GstVaapiConfig config;
+    GstVaapiProfileConfig config;
+    memset (&config, 0, sizeof (GstVaapiProfileConfig));
 
     config.profile = gst_vaapi_profile (profiles[i]);
     if (!config.profile)
@@ -513,27 +518,30 @@ ensure_profiles (GstVaapiDisplay * display)
     if (!vaapi_check_status (status, "vaQueryConfigEntrypoints()"))
       continue;
 
-    for (j = 0; j < num_entrypoints; j++) {
-      config.entrypoint = gst_vaapi_entrypoint (entrypoints[j]);
-      switch (config.entrypoint) {
-        case GST_VAAPI_ENTRYPOINT_VLD:
-        case GST_VAAPI_ENTRYPOINT_IDCT:
-        case GST_VAAPI_ENTRYPOINT_MOCO:
-          g_array_append_val (priv->decoders, config);
-          break;
-        case GST_VAAPI_ENTRYPOINT_SLICE_ENCODE:
-        case GST_VAAPI_ENTRYPOINT_PICTURE_ENCODE:
-        case GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_LP:
-        case GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_FEI:
-          g_array_append_val (priv->encoders, config);
-          break;
-      }
-    }
-  }
-  append_h263_config (priv->decoders);
+    for (j = 0; j < num_entrypoints; j++)
+      config.entrypoints |= (1 << gst_vaapi_entrypoint (entrypoints[j]));
 
-  g_array_sort (priv->decoders, compare_profiles);
-  g_array_sort (priv->encoders, compare_profiles);
+    g_array_append_val (priv->codecs, config);
+  }
+
+  for (i = 0; i < priv->codecs->len; i++) {
+    GstVaapiProfileConfig *codec =
+        &g_array_index (priv->codecs, GstVaapiProfileConfig, i);
+    if ((codec->entrypoints & 1 << GST_VAAPI_ENTRYPOINT_VLD)
+        || (codec->entrypoints & 1 << GST_VAAPI_ENTRYPOINT_IDCT)
+        || (codec->entrypoints & 1 << GST_VAAPI_ENTRYPOINT_MOCO))
+      g_ptr_array_add (priv->decoders, codec);
+    if ((codec->entrypoints & 1 << GST_VAAPI_ENTRYPOINT_SLICE_ENCODE)
+        || (codec->entrypoints & 1 << GST_VAAPI_ENTRYPOINT_PICTURE_ENCODE)
+        || (codec->entrypoints & 1 << GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_LP)
+        || (codec->entrypoints & 1 << GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_FEI))
+      g_ptr_array_add (priv->encoders, codec);
+  }
+
+  append_h263_config (priv->codecs, priv->decoders);
+
+  g_ptr_array_sort (priv->decoders, compare_profiles);
+  g_ptr_array_sort (priv->encoders, compare_profiles);
 
   /* Video processing API */
   status = vaQueryConfigEntrypoints (priv->display, VAProfileNone,
@@ -817,13 +825,18 @@ gst_vaapi_display_destroy (GstVaapiDisplay * display)
   GstVaapiDisplayPrivate *const priv = GST_VAAPI_DISPLAY_GET_PRIVATE (display);
 
   if (priv->decoders) {
-    g_array_free (priv->decoders, TRUE);
+    g_ptr_array_free (priv->decoders, TRUE);
     priv->decoders = NULL;
   }
 
   if (priv->encoders) {
-    g_array_free (priv->encoders, TRUE);
+    g_ptr_array_free (priv->encoders, TRUE);
     priv->encoders = NULL;
+  }
+
+  if (priv->codecs) {
+    g_array_free (priv->codecs, TRUE);
+    priv->codecs = NULL;
   }
 
   if (priv->image_formats) {

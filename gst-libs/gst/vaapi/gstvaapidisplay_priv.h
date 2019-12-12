@@ -120,8 +120,9 @@ struct _GstVaapiDisplayPrivate
   guint height_mm;
   guint par_n;
   guint par_d;
-  GArray *decoders;
-  GArray *encoders;
+  GPtrArray *decoders; /* ref element in codecs */
+  GPtrArray *encoders; /* ref element in codecs */
+  GArray *codecs;
   GArray *image_formats;
   GArray *subpicture_formats;
   GArray *properties;
