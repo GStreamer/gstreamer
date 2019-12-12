@@ -750,7 +750,6 @@ gst_qt_mux_reset (GstQTMux * qtmux, gboolean alloc)
 
   GST_OBJECT_LOCK (qtmux);
   gst_tag_setter_reset_tags (GST_TAG_SETTER (qtmux));
-  GST_OBJECT_UNLOCK (qtmux);
 
   /* reset pad data */
   for (l = GST_ELEMENT_CAST (qtmux)->sinkpads; l; l = l->next) {
@@ -772,6 +771,7 @@ gst_qt_mux_reset (GstQTMux * qtmux, gboolean alloc)
       atom_moov_add_trak (qtmux->moov, qtpad->trak);
     }
   }
+  GST_OBJECT_UNLOCK (qtmux);
 
   qtmux->current_pad = NULL;
   qtmux->current_chunk_size = 0;
@@ -1843,6 +1843,7 @@ gst_qt_mux_setup_metadata (GstQTMux * qtmux)
     GST_DEBUG_OBJECT (qtmux, "No new tags received");
   }
 
+  GST_OBJECT_LOCK (qtmux);
   for (l = GST_ELEMENT (qtmux)->sinkpads; l; l = l->next) {
     GstQTMuxPad *qpad = GST_QT_MUX_PAD (l->data);
 
@@ -1856,6 +1857,7 @@ gst_qt_mux_setup_metadata (GstQTMux * qtmux)
       GST_DEBUG_OBJECT (qpad, "No new tags received");
     }
   }
+  GST_OBJECT_UNLOCK (qtmux);
 }
 
 static inline GstBuffer *
@@ -2293,12 +2295,15 @@ gst_qt_mux_send_moov (GstQTMux * qtmux, guint64 * _offset,
 
   /* update modification times */
   qtmux->moov->mvhd.time_info.modification_time = current_time;
+
+  GST_OBJECT_LOCK (qtmux);
   for (l = GST_ELEMENT_CAST (qtmux)->sinkpads; l; l = l->next) {
     GstQTMuxPad *qtpad = (GstQTMuxPad *) l->data;
 
     qtpad->trak->mdia.mdhd.time_info.modification_time = current_time;
     qtpad->trak->tkhd.modification_time = current_time;
   }
+  GST_OBJECT_UNLOCK (qtmux);
 
   /* serialize moov */
   offset = size = 0;
@@ -2431,17 +2436,21 @@ gst_qt_mux_prepare_moov_recovery (GstQTMux * qtmux)
 
   gst_qt_mux_prepare_ftyp (qtmux, &ftyp, &prefix);
 
+  GST_OBJECT_LOCK (qtmux);
   if (!atoms_recov_write_headers (qtmux->moov_recov_file, ftyp, prefix,
           qtmux->moov, qtmux->timescale,
           g_list_length (GST_ELEMENT (qtmux)->sinkpads))) {
     GST_WARNING_OBJECT (qtmux, "Failed to write moov recovery file " "headers");
+    GST_OBJECT_UNLOCK (qtmux);
     goto fail;
   }
+  GST_OBJECT_UNLOCK (qtmux);
 
   atom_ftyp_free (ftyp);
   if (prefix)
     gst_buffer_unref (prefix);
 
+  GST_OBJECT_LOCK (qtmux);
   for (l = GST_ELEMENT_CAST (qtmux)->sinkpads; l; l = l->next) {
     GstQTMuxPad *qpad = (GstQTMuxPad *) l->data;
     /* write info for each stream */
@@ -2452,6 +2461,7 @@ gst_qt_mux_prepare_moov_recovery (GstQTMux * qtmux)
       break;
     }
   }
+  GST_OBJECT_UNLOCK (qtmux);
 
   return;
 
@@ -2692,6 +2702,7 @@ find_video_sample_duration (GstQTMux * qtmux, guint * dur_n, guint * dur_d)
 
   /* Find the (first) video track and assume that we have to output
    * in that size */
+  GST_OBJECT_LOCK (qtmux);
   for (l = GST_ELEMENT_CAST (qtmux)->sinkpads; l; l = l->next) {
     GstQTMuxPad *tmp_qpad = (GstQTMuxPad *) l->data;
 
@@ -2701,6 +2712,7 @@ find_video_sample_duration (GstQTMux * qtmux, guint * dur_n, guint * dur_d)
       break;
     }
   }
+  GST_OBJECT_UNLOCK (qtmux);
 
   if (l == NULL) {
     GST_INFO_OBJECT (qtmux,
@@ -2763,6 +2775,7 @@ find_best_pad_prefill_start (GstQTMux * qtmux)
   /* If interleave limits have been specified and the current pad is within
    * those interleave limits, pick that one, otherwise let's try to figure out
    * the next best one. */
+
   if (qtmux->current_pad &&
       (qtmux->interleave_bytes != 0 || qtmux->interleave_time != 0) &&
       (qtmux->interleave_bytes == 0
@@ -2775,10 +2788,14 @@ find_best_pad_prefill_start (GstQTMux * qtmux)
     if (qtmux->current_pad->total_duration < qtmux->reserved_max_duration) {
       best_pad = qtmux->current_pad;
     }
-  } else if (GST_ELEMENT_CAST (qtmux)->sinkpads->next) {
-    /* Attempt to try another pad if we have one. Otherwise use the only pad
-     * present */
-    best_pad = qtmux->current_pad = NULL;
+  } else {
+    GST_OBJECT_LOCK (qtmux);
+    if (GST_ELEMENT_CAST (qtmux)->sinkpads->next) {
+      /* Attempt to try another pad if we have one. Otherwise use the only pad
+       * present */
+      best_pad = qtmux->current_pad = NULL;
+    }
+    GST_OBJECT_UNLOCK (qtmux);
   }
 
   /* The next best pad is the one which has the lowest timestamp and hasn't
@@ -2787,6 +2804,7 @@ find_best_pad_prefill_start (GstQTMux * qtmux)
     GList *l;
     GstClockTime best_time = GST_CLOCK_TIME_NONE;
 
+    GST_OBJECT_LOCK (qtmux);
     for (l = GST_ELEMENT_CAST (qtmux)->sinkpads; l; l = l->next) {
       GstQTMuxPad *qtpad = (GstQTMuxPad *) l->data;
       GstClockTime timestamp;
@@ -2802,6 +2820,7 @@ find_best_pad_prefill_start (GstQTMux * qtmux)
         best_time = timestamp;
       }
     }
+    GST_OBJECT_UNLOCK (qtmux);
   }
 
   return best_pad;
@@ -2821,17 +2840,22 @@ gst_qt_mux_prefill_samples (GstQTMux * qtmux)
 
   /* Update expected sample sizes/durations as needed, this is for raw
    * audio where samples are actual audio samples. */
+  GST_OBJECT_LOCK (qtmux);
   for (l = GST_ELEMENT_CAST (qtmux)->sinkpads; l; l = l->next) {
     GstQTMuxPad *qpad = (GstQTMuxPad *) l->data;
 
-    if (!prefill_update_sample_size (qtmux, qpad))
+    if (!prefill_update_sample_size (qtmux, qpad)) {
+      GST_OBJECT_UNLOCK (qtmux);
       return FALSE;
+    }
   }
+  GST_OBJECT_UNLOCK (qtmux);
 
   if (qtmux_klass->format == GST_QT_MUX_FORMAT_QT) {
     /* For the first sample check/update timecode as needed. We do that before
      * all actual samples as the code in gst_qt_mux_add_buffer() does it with
      * initial buffer directly, not with last_buf */
+    GST_OBJECT_LOCK (qtmux);
     for (l = GST_ELEMENT_CAST (qtmux)->sinkpads; l; l = l->next) {
       GstQTMuxPad *qpad = (GstQTMuxPad *) l->data;
       GstBuffer *buffer =
@@ -2866,6 +2890,7 @@ gst_qt_mux_prefill_samples (GstQTMux * qtmux)
       if (buffer)
         gst_buffer_unref (buffer);
     }
+    GST_OBJECT_UNLOCK (qtmux);
   }
 
   while ((qpad = find_best_pad_prefill_start (qtmux))) {
@@ -3238,6 +3263,9 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
           FALSE);
       break;
     case GST_QT_MUX_MODE_ROBUST_RECORDING_PREFILL:
+    {
+      guint32 atom_size;
+
       ret = gst_qt_mux_prepare_and_send_ftyp (qtmux);
       if (ret != GST_FLOW_OK)
         break;
@@ -3263,18 +3291,20 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
       if (ret != GST_FLOW_OK)
         return ret;
 
+      GST_OBJECT_LOCK (qtmux);
+      atom_size = 12 * g_list_length (GST_ELEMENT (qtmux)->sinkpads) + 8;
+      GST_OBJECT_UNLOCK (qtmux);
+
       /* last_moov_size now contains the full size of the moov, moov_pos the
        * position. This allows us to rewrite it in the very end as needed */
-      qtmux->reserved_moov_size =
-          qtmux->last_moov_size +
-          12 * g_list_length (GST_ELEMENT (qtmux)->sinkpads) + 8;
+      qtmux->reserved_moov_size = qtmux->last_moov_size + atom_size;
 
       /* Send an additional free atom at the end so we definitely have space
        * to rewrite the moov header at the end and remove the samples that
        * were not actually written */
       ret =
-          gst_qt_mux_send_free_atom (qtmux, &qtmux->header_size,
-          12 * g_list_length (GST_ELEMENT (qtmux)->sinkpads) + 8, FALSE);
+          gst_qt_mux_send_free_atom (qtmux, &qtmux->header_size, atom_size,
+          FALSE);
       if (ret != GST_FLOW_OK)
         return ret;
 
@@ -3317,6 +3347,7 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
       qtmux->current_pad = NULL;
       qtmux->longest_chunk = GST_CLOCK_TIME_NONE;
 
+      GST_OBJECT_LOCK (qtmux);
       for (l = GST_ELEMENT_CAST (qtmux)->sinkpads; l; l = l->next) {
         GstQTMuxPad *qtpad = (GstQTMuxPad *) l->data;
 
@@ -3326,8 +3357,10 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
         qtpad->last_dts = GST_CLOCK_TIME_NONE;
         qtpad->sample_offset = 0;
       }
+      GST_OBJECT_UNLOCK (qtmux);
 
       break;
+    }
     case GST_QT_MUX_MODE_FAST_START:
       GST_OBJECT_LOCK (qtmux);
       qtmux->fast_start_file = g_fopen (qtmux->fast_start_file_path, "wb+");
@@ -3395,9 +3428,14 @@ static GstFlowReturn
 gst_qt_mux_send_last_buffers (GstQTMux * qtmux)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  GList *l;
+  GList *sinkpads, *l;
 
-  for (l = GST_ELEMENT_CAST (qtmux)->sinkpads; l; l = l->next) {
+  GST_OBJECT_LOCK (qtmux);
+  sinkpads = g_list_copy_deep (GST_ELEMENT_CAST (qtmux)->sinkpads,
+      (GCopyFunc) gst_object_ref, NULL);
+  GST_OBJECT_UNLOCK (qtmux);
+
+  for (l = sinkpads; l; l = l->next) {
     GstQTMuxPad *qtpad = (GstQTMuxPad *) l->data;
 
     /* avoid add_buffer complaining if not negotiated
@@ -3418,6 +3456,8 @@ gst_qt_mux_send_last_buffers (GstQTMux * qtmux)
     }
   }
 
+  g_list_free_full (sinkpads, gst_object_unref);
+
   return ret;
 }
 
@@ -3432,6 +3472,7 @@ gst_qt_mux_update_global_statistics (GstQTMux * qtmux)
 
   qtmux->first_ts = qtmux->last_dts = GST_CLOCK_TIME_NONE;
 
+  GST_OBJECT_LOCK (qtmux);
   for (l = GST_ELEMENT_CAST (qtmux)->sinkpads; l; l = l->next) {
     GstQTMuxPad *qtpad = (GstQTMuxPad *) l->data;
 
@@ -3484,9 +3525,11 @@ gst_qt_mux_update_global_statistics (GstQTMux * qtmux)
       atom_trak_update_bitrates (qtpad->trak, avgbitrate, maxbitrate);
     }
   }
+  GST_OBJECT_UNLOCK (qtmux);
 
   /* need to update values on subtitle traks now that we know the
    * max width and height */
+  GST_OBJECT_LOCK (qtmux);
   for (l = GST_ELEMENT_CAST (qtmux)->sinkpads; l; l = l->next) {
     GstQTMuxPad *qtpad = (GstQTMuxPad *) l->data;
 
@@ -3500,6 +3543,7 @@ gst_qt_mux_update_global_statistics (GstQTMux * qtmux)
       atom_trak_tx3g_update_dimension (qtpad->trak, max_width, max_height);
     }
   }
+  GST_OBJECT_UNLOCK (qtmux);
 }
 
 /* Called after gst_qt_mux_update_global_statistics() updates the
@@ -3514,6 +3558,7 @@ gst_qt_mux_update_edit_lists (GstQTMux * qtmux)
   /* add/update EDTSs for late streams. configure_moov will have
    * set the trak durations above by summing the sample tables,
    * here we extend that if needing to insert an empty segment */
+  GST_OBJECT_LOCK (qtmux);
   for (l = GST_ELEMENT_CAST (qtmux)->sinkpads; l; l = l->next) {
     GstQTMuxPad *qtpad = (GstQTMuxPad *) l->data;
 
@@ -3587,6 +3632,7 @@ gst_qt_mux_update_edit_lists (GstQTMux * qtmux)
       }
     }
   }
+  GST_OBJECT_UNLOCK (qtmux);
 }
 
 static GstFlowReturn
@@ -3626,7 +3672,7 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
   gboolean ret = GST_FLOW_OK;
   guint64 offset = 0, size = 0;
   gboolean large_file;
-  GList *l;
+  GList *sinkpads, *l;
 
   GST_DEBUG_OBJECT (qtmux, "Updating remaining values and sending last data");
 
@@ -3641,17 +3687,27 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
   }
 
   gst_qt_mux_update_global_statistics (qtmux);
-  for (l = GST_ELEMENT_CAST (qtmux)->sinkpads; l; l = l->next) {
+
+  GST_OBJECT_LOCK (qtmux);
+  sinkpads = g_list_copy_deep (GST_ELEMENT_CAST (qtmux)->sinkpads,
+      (GCopyFunc) gst_object_ref, NULL);
+  GST_OBJECT_UNLOCK (qtmux);
+
+  for (l = sinkpads; l; l = l->next) {
     GstQTMuxPad *qtpad = (GstQTMuxPad *) l->data;
 
     if (qtpad->tc_pos != -1) {
       /* File is being stopped and timecode hasn't been updated. Update it now
        * with whatever we have */
       ret = gst_qt_mux_update_timecode (qtmux, qtpad);
-      if (ret != GST_FLOW_OK)
+      if (ret != GST_FLOW_OK) {
+        g_list_free_full (sinkpads, gst_object_unref);
         return ret;
+      }
     }
   }
+
+  g_list_free_full (sinkpads, gst_object_unref);
 
   switch (qtmux->mux_mode) {
     case GST_QT_MUX_MODE_FRAGMENTED:{
@@ -3698,6 +3754,7 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
       GList *l;
       guint32 next_track_id = qtmux->moov->mvhd.next_track_id;
 
+      GST_OBJECT_LOCK (qtmux);
       for (l = GST_ELEMENT_CAST (qtmux)->sinkpads; l; l = l->next) {
         GstQTMuxPad *qpad = (GstQTMuxPad *) l->data;
         guint64 block_idx;
@@ -3817,6 +3874,8 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
           qpad->trak->tkhd.track_ID = next_track_id++;
         }
       }
+      GST_OBJECT_UNLOCK (qtmux);
+
       qtmux->moov->mvhd.next_track_id = next_track_id;
 
       gst_qt_mux_update_global_statistics (qtmux);
@@ -3828,6 +3887,7 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
        * reserved for this in the moov and the pre-finalized moov would have
        * broken A/V synchronization. Error out here now
        */
+      GST_OBJECT_LOCK (qtmux);
       for (l = GST_ELEMENT_CAST (qtmux)->sinkpads; l; l = l->next) {
         GstQTMuxPad *qpad = (GstQTMuxPad *) l->data;
 
@@ -3836,9 +3896,12 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
           GST_ELEMENT_ERROR (qtmux, STREAM, MUX, (NULL),
               ("Can't support gaps in prefill mode"));
 
+          GST_OBJECT_UNLOCK (qtmux);
+
           return GST_FLOW_ERROR;
         }
       }
+      GST_OBJECT_UNLOCK (qtmux);
 
       gst_qt_mux_setup_metadata (qtmux);
       atom_moov_chunks_set_offset (qtmux->moov, qtmux->header_size);
@@ -4985,6 +5048,7 @@ find_best_pad (GstQTMux * qtmux)
     guint64 smallest_offset = G_MAXUINT64;
     guint64 chunk_offset = 0;
 
+    GST_OBJECT_LOCK (qtmux);
     for (l = GST_ELEMENT_CAST (qtmux)->sinkpads; l; l = l->next) {
       GstQTMuxPad *qtpad = (GstQTMuxPad *) l->data;
       const TrakBufferEntryInfo *sample_entry;
@@ -5028,6 +5092,7 @@ find_best_pad (GstQTMux * qtmux)
         chunk_offset = sample_entry->chunk_offset;
       }
     }
+    GST_OBJECT_UNLOCK (qtmux);
 
     if (chunk_offset != qtmux->current_chunk_offset) {
       qtmux->current_pad = NULL;
@@ -5054,20 +5119,25 @@ find_best_pad (GstQTMux * qtmux)
       GST_DEBUG_OBJECT (qtmux, "Reusing pad %s:%s",
           GST_DEBUG_PAD_NAME (best_pad));
     }
-  } else if (GST_ELEMENT (qtmux)->sinkpads->next) {
-    /* Only switch pads if we have more than one, otherwise
-     * we can just put everything into a single chunk and save
-     * a few bytes of offsets
-     */
-    if (qtmux->current_pad)
-      GST_DEBUG_OBJECT (qtmux, "Switching from pad %s:%s",
-          GST_DEBUG_PAD_NAME (qtmux->current_pad));
-    best_pad = qtmux->current_pad = NULL;
+  } else {
+    GST_OBJECT_LOCK (qtmux);
+    if (GST_ELEMENT (qtmux)->sinkpads->next) {
+      /* Only switch pads if we have more than one, otherwise
+       * we can just put everything into a single chunk and save
+       * a few bytes of offsets
+       */
+      if (qtmux->current_pad)
+        GST_DEBUG_OBJECT (qtmux, "Switching from pad %s:%s",
+            GST_DEBUG_PAD_NAME (qtmux->current_pad));
+      best_pad = qtmux->current_pad = NULL;
+    }
+    GST_OBJECT_UNLOCK (qtmux);
   }
 
   if (!best_pad) {
     GstClockTime best_time = GST_CLOCK_TIME_NONE;
 
+    GST_OBJECT_LOCK (qtmux);
     for (l = GST_ELEMENT_CAST (qtmux)->sinkpads; l; l = l->next) {
       GstQTMuxPad *qtpad = (GstQTMuxPad *) l->data;
       GstBuffer *tmp_buf;
@@ -5097,6 +5167,7 @@ find_best_pad (GstQTMux * qtmux)
       if (tmp_buf)
         gst_buffer_unref (tmp_buf);
     }
+    GST_OBJECT_UNLOCK (qtmux);
 
     if (best_pad) {
       GST_DEBUG_OBJECT (qtmux, "Choosing pad %s:%s",
@@ -5113,12 +5184,18 @@ static gboolean
 gst_qt_mux_are_all_pads_eos (GstQTMux * mux)
 {
   GList *l;
+  gboolean ret = TRUE;
 
+  GST_OBJECT_LOCK (mux);
   for (l = GST_ELEMENT_CAST (mux)->sinkpads; l; l = l->next) {
-    if (!gst_aggregator_pad_is_eos (GST_AGGREGATOR_PAD (l->data)))
-      return FALSE;
+    if (!gst_aggregator_pad_is_eos (GST_AGGREGATOR_PAD (l->data))) {
+      ret = FALSE;
+      break;
+    }
   }
-  return TRUE;
+  GST_OBJECT_UNLOCK (mux);
+
+  return ret;
 }
 
 static GstFlowReturn
@@ -6351,12 +6428,14 @@ gst_qt_mux_release_pad (GstElement * element, GstPad * pad)
     mux->current_chunk_duration = 0;
   }
 
+  GST_OBJECT_LOCK (mux);
   if (GST_ELEMENT (mux)->sinkpads == NULL) {
     /* No more outstanding request pads, reset our counters */
     mux->video_pads = 0;
     mux->audio_pads = 0;
     mux->subtitle_pads = 0;
   }
+  GST_OBJECT_UNLOCK (mux);
 }
 
 static GstAggregatorPad *
