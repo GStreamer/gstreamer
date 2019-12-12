@@ -214,6 +214,8 @@ gst_rtsp_auth_finalize (GObject * obj)
   g_hash_table_unref (priv->basic);
   g_hash_table_unref (priv->digest);
   g_hash_table_unref (priv->nonces);
+  if (priv->default_token)
+    gst_rtsp_token_unref (priv->default_token);
   g_mutex_clear (&priv->lock);
   g_free (priv->realm);
 
