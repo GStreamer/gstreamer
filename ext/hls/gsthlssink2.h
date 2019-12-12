@@ -21,6 +21,7 @@
 
 #include "gstm3u8playlist.h"
 #include <gst/gst.h>
+#include <gio/gio.h>
 
 G_BEGIN_DECLS
 
@@ -40,6 +41,7 @@ struct _GstHlsSink2
 
   GstElement *splitmuxsink;
   GstPad *audio_sink, *video_sink;
+  GstElement *giostreamsink;
 
   gchar *location;
   gchar *playlist_location;
@@ -61,6 +63,9 @@ struct _GstHlsSink2
 struct _GstHlsSink2Class
 {
   GstBinClass bin_class;
+
+  GOutputStream * (*get_playlist_stream) (GstHlsSink2 * sink, const gchar * location);
+  GOutputStream * (*get_fragment_stream) (GstHlsSink2 * sink, const gchar * location);
 };
 
 GType gst_hls_sink2_get_type (void);

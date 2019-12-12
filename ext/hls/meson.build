@@ -58,7 +58,7 @@ gsthls = library('gsthls',
   include_directories : [configinc],
   dependencies : [gstpbutils_dep, gsttag_dep, gstvideo_dep,
                   gstadaptivedemux_dep, gsturidownloader_dep,
-                  hls_crypto_dep, libm],
+                  hls_crypto_dep, gio_dep, libm],
   install : true,
   install_dir : plugins_install_dir,
 )

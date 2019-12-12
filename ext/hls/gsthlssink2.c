@@ -66,6 +66,16 @@ enum
   PROP_SEND_KEYFRAME_REQUESTS,
 };
 
+enum
+{
+  SIGNAL_GET_PLAYLIST_STREAM,
+  SIGNAL_GET_FRAGMENT_STREAM,
+  SIGNAL_DELETE_FRAGMENT,
+  SIGNAL_LAST
+};
+
+static guint signals[SIGNAL_LAST];
+
 static GstStaticPadTemplate video_template = GST_STATIC_PAD_TEMPLATE ("video",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
@@ -114,6 +124,51 @@ gst_hls_sink2_finalize (GObject * object)
   g_queue_clear (&sink->old_locations);
 
   G_OBJECT_CLASS (parent_class)->finalize ((GObject *) sink);
+}
+
+/* Default implementations for the signal handlers */
+static GOutputStream *
+gst_hls_sink2_get_playlist_stream (GstHlsSink2 * sink, const gchar * location)
+{
+  GFile *file = g_file_new_for_path (location);
+  GOutputStream *ostream;
+  GError *err = NULL;
+
+  ostream =
+      G_OUTPUT_STREAM (g_file_replace (file, NULL, FALSE,
+          G_FILE_CREATE_REPLACE_DESTINATION, NULL, &err));
+  if (!ostream) {
+    GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
+        (("Got no output stream for playlist '%s': %s."), location,
+            err->message), (NULL));
+    g_clear_error (&err);
+  }
+
+  g_object_unref (file);
+
+  return ostream;
+}
+
+static GOutputStream *
+gst_hls_sink2_get_fragment_stream (GstHlsSink2 * sink, const gchar * location)
+{
+  GFile *file = g_file_new_for_path (location);
+  GOutputStream *ostream;
+  GError *err = NULL;
+
+  ostream =
+      G_OUTPUT_STREAM (g_file_replace (file, NULL, FALSE,
+          G_FILE_CREATE_REPLACE_DESTINATION, NULL, &err));
+  if (!ostream) {
+    GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
+        (("Got no output stream for fragment '%s': %s."), location,
+            err->message), (NULL));
+    g_clear_error (&err);
+  }
+
+  g_object_unref (file);
+
+  return ostream;
 }
 
 static void
@@ -185,6 +240,84 @@ gst_hls_sink2_class_init (GstHlsSink2Class * klass)
           "then the input must have keyframes in regular intervals",
           DEFAULT_SEND_KEYFRAME_REQUESTS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstHlsSink2::get-playlist-stream:
+   * @sink: the #GstHlsSink2
+   * @location: Location for the playlist file
+   *
+   * Returns: #GOutputStream for writing the playlist file.
+   *
+   * Since: 1.18
+   */
+  signals[SIGNAL_GET_PLAYLIST_STREAM] =
+      g_signal_new ("get-playlist-stream", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstHlsSink2Class, get_playlist_stream),
+      g_signal_accumulator_first_wins, NULL, NULL, G_TYPE_OUTPUT_STREAM, 1,
+      G_TYPE_STRING);
+
+  /**
+   * GstHlsSink2::get-fragment-stream:
+   * @sink: the #GstHlsSink2
+   * @location: Location for the fragment file
+   *
+   * Returns: #GOutputStream for writing the fragment file.
+   *
+   * Since: 1.18
+   */
+  signals[SIGNAL_GET_FRAGMENT_STREAM] =
+      g_signal_new ("get-fragment-stream", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstHlsSink2Class, get_fragment_stream),
+      g_signal_accumulator_first_wins, NULL, NULL, G_TYPE_OUTPUT_STREAM, 1,
+      G_TYPE_STRING);
+
+  /**
+   * GstHlsSink2::delete-fragment:
+   * @sink: the #GstHlsSink2
+   * @location: Location for the fragment file to delete
+   *
+   * Requests deletion of an old fragment file that is not needed anymore.
+   *
+   * Since: 1.18
+   */
+  signals[SIGNAL_DELETE_FRAGMENT] =
+      g_signal_new ("delete-fragment", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_STRING);
+
+  klass->get_playlist_stream = gst_hls_sink2_get_playlist_stream;
+  klass->get_fragment_stream = gst_hls_sink2_get_fragment_stream;
+}
+
+static gchar *
+on_format_location (GstElement * splitmuxsink, guint fragment_id,
+    GstHlsSink2 * sink)
+{
+  GOutputStream *stream = NULL;
+  gchar *location;
+
+  location = g_strdup_printf (sink->location, fragment_id);
+  g_signal_emit (sink, signals[SIGNAL_GET_FRAGMENT_STREAM], 0, location,
+      &stream);
+
+  if (!stream) {
+    GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
+        (("Got no output stream for fragment '%s'."), location), (NULL));
+    g_free (sink->current_location);
+    sink->current_location = NULL;
+  } else {
+    g_free (sink->current_location);
+    sink->current_location = g_steal_pointer (&location);
+  }
+  g_object_set (sink->giostreamsink, "stream", stream, NULL);
+
+  if (stream)
+    g_object_unref (stream);
+
+  g_free (location);
+
+  return NULL;
 }
 
 static void
@@ -204,10 +337,16 @@ gst_hls_sink2_init (GstHlsSink2 * sink)
   sink->splitmuxsink = gst_element_factory_make ("splitmuxsink", NULL);
   gst_bin_add (GST_BIN (sink), sink->splitmuxsink);
 
+  sink->giostreamsink = gst_element_factory_make ("giostreamsink", NULL);
+
   mux = gst_element_factory_make ("mpegtsmux", NULL);
-  g_object_set (sink->splitmuxsink, "location", sink->location, "max-size-time",
+  g_object_set (sink->splitmuxsink, "location", NULL, "max-size-time",
       ((GstClockTime) sink->target_duration * GST_SECOND),
-      "send-keyframe-requests", TRUE, "muxer", mux, "reset-muxer", FALSE, NULL);
+      "send-keyframe-requests", TRUE, "muxer", mux, "sink", sink->giostreamsink,
+      "reset-muxer", FALSE, NULL);
+
+  g_signal_connect (sink->splitmuxsink, "format-location",
+      G_CALLBACK (on_format_location), sink);
 
   GST_OBJECT_FLAG_SET (sink, GST_ELEMENT_FLAG_SINK);
 
@@ -236,18 +375,31 @@ gst_hls_sink2_write_playlist (GstHlsSink2 * sink)
 {
   char *playlist_content;
   GError *error = NULL;
+  GOutputStream *stream = NULL;
+  gsize bytes_to_write;
+
+  g_signal_emit (sink, signals[SIGNAL_GET_PLAYLIST_STREAM], 0,
+      sink->playlist_location, &stream);
+  if (!stream) {
+    GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
+        (("Got no output stream for playlist '%s'."), sink->playlist_location),
+        (NULL));
+    return;
+  }
 
   playlist_content = gst_m3u8_playlist_render (sink->playlist);
-  if (!g_file_set_contents (sink->playlist_location,
-          playlist_content, -1, &error)) {
+  bytes_to_write = strlen (playlist_content);
+  if (!g_output_stream_write_all (stream, playlist_content, bytes_to_write,
+          NULL, NULL, &error)) {
     GST_ERROR ("Failed to write playlist: %s", error->message);
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
         (("Failed to write playlist '%s'."), error->message), (NULL));
     g_error_free (error);
     error = NULL;
   }
-  g_free (playlist_content);
 
+  g_free (playlist_content);
+  g_object_unref (stream);
 }
 
 static void
@@ -261,17 +413,13 @@ gst_hls_sink2_handle_message (GstBin * bin, GstMessage * message)
       const GstStructure *s = gst_message_get_structure (message);
       if (message->src == GST_OBJECT_CAST (sink->splitmuxsink)) {
         if (gst_structure_has_name (s, "splitmuxsink-fragment-opened")) {
-          g_free (sink->current_location);
-          sink->current_location =
-              g_strdup (gst_structure_get_string (s, "location"));
           gst_structure_get_clock_time (s, "running-time",
               &sink->current_running_time_start);
         } else if (gst_structure_has_name (s, "splitmuxsink-fragment-closed")) {
           GstClockTime running_time;
           gchar *entry_location;
 
-          g_assert (strcmp (sink->current_location, gst_structure_get_string (s,
-                      "location")) == 0);
+          g_assert (sink->current_location != NULL);
 
           gst_structure_get_clock_time (s, "running-time", &running_time);
 
@@ -298,10 +446,31 @@ gst_hls_sink2_handle_message (GstBin * bin, GstMessage * message)
           if (sink->max_files > 0) {
             while (g_queue_get_length (&sink->old_locations) > sink->max_files) {
               gchar *old_location = g_queue_pop_head (&sink->old_locations);
-              g_remove (old_location);
+
+
+              if (g_signal_has_handler_pending (sink,
+                      signals[SIGNAL_DELETE_FRAGMENT], 0, FALSE)) {
+                g_signal_emit (sink, signals[SIGNAL_DELETE_FRAGMENT], 0,
+                    old_location);
+              } else {
+                GFile *file = g_file_new_for_path (old_location);
+                GError *err = NULL;
+
+                if (!g_file_delete (file, NULL, &err)) {
+                  GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
+                      (("Failed to delete fragment file '%s': %s."),
+                          old_location, err->message), (NULL));
+                  g_clear_error (&err);
+                }
+
+                g_object_unref (file);
+              }
               g_free (old_location);
             }
           }
+
+          g_free (sink->current_location);
+          sink->current_location = NULL;
         }
       }
       break;
