@@ -423,8 +423,12 @@ gst_gl_base_src_stop (GstBaseSrc * basesrc)
 
   gst_caps_replace (&src->out_caps, NULL);
 
-  if (src->context)
+  if (src->context) {
+    if (src->priv->gl_started)
+      gst_gl_context_thread_add (src->context, gst_gl_base_src_gl_stop, src);
+
     gst_object_unref (src->context);
+  }
   src->context = NULL;
 
   return TRUE;
