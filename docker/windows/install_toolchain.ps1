@@ -13,7 +13,7 @@ Remove-Item C:\vs_buildtools.exe -Force
 
 Write-Host "Installing Python"
 Invoke-WebRequest -Uri $python_dl_url -OutFile C:\python3-installer.exe
-Start-Process C:\python3-installer.exe -ArgumentList '/quiet InstallAllUsers=1 PrependPath=1' -Wait
+Start-Process C:\python3-installer.exe -ArgumentList '/quiet InstallAllUsers=1 PrependPath=1 TargetDir=C:\Python37' -Wait
 Remove-Item C:\python3-installer.exe -Force
 
 Write-Host "Installing Git"
