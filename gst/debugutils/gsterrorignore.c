@@ -52,12 +52,6 @@ enum
   PROP_CONVERT_TO
 };
 
-enum
-{
-  SIGNAL_CONVERT_ERROR,
-  LAST_SIGNAL
-};
-
 static void gst_error_ignore_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_error_ignore_get_property (GObject * object, guint prop_id,
@@ -82,11 +76,6 @@ static gboolean gst_error_ignore_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 static GstStateChangeReturn gst_error_ignore_change_state (GstElement * element,
     GstStateChange transition);
-
-static GstFlowReturn
-gst_error_ignore_convert_error (GstElement * element, GstFlowReturn value);
-
-static guint signals[LAST_SIGNAL] = { 0 };
 
 static void
 gst_error_ignore_class_init (GstErrorIgnoreClass * klass)
@@ -135,28 +124,6 @@ gst_error_ignore_class_init (GstErrorIgnoreClass * klass)
           "Which GstFlowReturn value we should convert to when ignoring",
           GST_TYPE_FLOW_RETURN,
           GST_FLOW_NOT_LINKED, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  /**
-   * GstErrorIgnore::convert-error:
-   * @errorignore: the errorignore element that emitted the signal
-   * @value: the @GstFlowReturn encountered
-   *
-   * Emitted whenever we get a @GstFlowReturn other than GST_FLOW_OK. The
-   * handler can then decide what to convert that into - for instance, return
-   * the same @GstFlowReturn to not convert it. The default handler will act
-   * according to the ignore-error, ignore-notlinked, ignore-notnegotiated and
-   * convert-to properties. If a handler is connected, these properties are
-   * ignored. Only the first signal handler will ever be called.
-   *
-   * Returns: The @GstFlowReturn to convert into
-   *
-   * Since: 1.18
-   */
-  signals[SIGNAL_CONVERT_ERROR] =
-      g_signal_new_class_handler ("convert-error", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_CALLBACK (gst_error_ignore_convert_error),
-      g_signal_accumulator_first_wins, NULL, NULL, GST_TYPE_FLOW_RETURN, 1,
-      GST_TYPE_FLOW_RETURN);
 }
 
 static void
@@ -194,24 +161,16 @@ gst_error_ignore_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_IGNORE_ERROR:
-      GST_OBJECT_LOCK (self);
       self->ignore_error = g_value_get_boolean (value);
-      GST_OBJECT_UNLOCK (self);
       break;
     case PROP_IGNORE_NOTLINKED:
-      GST_OBJECT_LOCK (self);
       self->ignore_notlinked = g_value_get_boolean (value);
-      GST_OBJECT_UNLOCK (self);
       break;
     case PROP_IGNORE_NOTNEGOTIATED:
-      GST_OBJECT_LOCK (self);
       self->ignore_notnegotiated = g_value_get_boolean (value);
-      GST_OBJECT_UNLOCK (self);
       break;
     case PROP_CONVERT_TO:
-      GST_OBJECT_LOCK (self);
       self->convert_to = g_value_get_enum (value);
-      GST_OBJECT_UNLOCK (self);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -227,24 +186,16 @@ gst_error_ignore_get_property (GObject * object, guint prop_id, GValue * value,
 
   switch (prop_id) {
     case PROP_IGNORE_ERROR:
-      GST_OBJECT_LOCK (self);
       g_value_set_boolean (value, self->ignore_error);
-      GST_OBJECT_UNLOCK (self);
       break;
     case PROP_IGNORE_NOTLINKED:
-      GST_OBJECT_LOCK (self);
       g_value_set_boolean (value, self->ignore_notlinked);
-      GST_OBJECT_UNLOCK (self);
       break;
     case PROP_IGNORE_NOTNEGOTIATED:
-      GST_OBJECT_LOCK (self);
       g_value_set_boolean (value, self->ignore_notnegotiated);
-      GST_OBJECT_UNLOCK (self);
       break;
     case PROP_CONVERT_TO:
-      GST_OBJECT_LOCK (self);
       g_value_set_enum (value, self->convert_to);
-      GST_OBJECT_UNLOCK (self);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -263,9 +214,7 @@ gst_error_ignore_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
     case GST_EVENT_FLUSH_STOP:
-      GST_OBJECT_LOCK (self);
       self->keep_pushing = TRUE;
-      GST_OBJECT_UNLOCK (self);
       /* fall through */
     default:
       ret = gst_pad_event_default (pad, parent, event);
@@ -276,51 +225,28 @@ gst_error_ignore_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 }
 
 static GstFlowReturn
-gst_error_ignore_convert_error (GstElement * element, GstFlowReturn value)
-{
-  GstFlowReturn ret = value;
-  GstErrorIgnore *self = GST_ERROR_IGNORE (element);
-
-  GST_OBJECT_LOCK (self);
-  if ((value == GST_FLOW_ERROR && self->ignore_error) ||
-      (value == GST_FLOW_NOT_LINKED && self->ignore_notlinked) ||
-      (value == GST_FLOW_NOT_NEGOTIATED && self->ignore_notnegotiated)) {
-    ret = self->convert_to;
-  }
-  GST_OBJECT_UNLOCK (self);
-
-  return ret;
-}
-
-static GstFlowReturn
 gst_error_ignore_sink_chain (GstPad * pad, GstObject * parent,
     GstBuffer * inbuf)
 {
   GstErrorIgnore *self = GST_ERROR_IGNORE (parent);
   GstFlowReturn ret = GST_FLOW_OK;
-  GstFlowReturn convert_to;
-  gboolean keep_pushing;
 
-  GST_OBJECT_LOCK (self);
-  keep_pushing = self->keep_pushing || gst_pad_check_reconfigure (pad);
-  GST_OBJECT_UNLOCK (self);
+  if (gst_pad_check_reconfigure (pad))
+    self->keep_pushing = TRUE;
 
-  if (keep_pushing) {
+  if (self->keep_pushing) {
     ret = gst_pad_push (self->srcpad, inbuf);
-    GST_OBJECT_LOCK (self);
     self->keep_pushing = (ret == GST_FLOW_OK);
-    GST_OBJECT_UNLOCK (self);
   } else {
     gst_buffer_unref (inbuf);
   }
 
-  if (ret == GST_FLOW_OK)
+  if ((ret == GST_FLOW_ERROR && self->ignore_error) ||
+      (ret == GST_FLOW_NOT_LINKED && self->ignore_notlinked) ||
+      (ret == GST_FLOW_NOT_NEGOTIATED && self->ignore_notnegotiated))
+    return self->convert_to;
+  else
     return ret;
-
-  g_signal_emit (self, signals[SIGNAL_CONVERT_ERROR], 0, ret, &convert_to);
-  GST_LOG_OBJECT (self, "Encountered flow error %s, converting to %s",
-      gst_flow_get_name (ret), gst_flow_get_name (convert_to));
-  return convert_to;
 }
 
 static GstStateChangeReturn
@@ -335,9 +261,7 @@ gst_error_ignore_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      GST_OBJECT_LOCK (self);
       self->keep_pushing = TRUE;
-      GST_OBJECT_UNLOCK (self);
       break;
     default:
       break;
