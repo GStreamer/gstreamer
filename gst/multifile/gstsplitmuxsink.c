@@ -3175,9 +3175,9 @@ set_next_filename (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
             "location") != NULL)
       g_object_set (splitmux->sink, "location", fname, NULL);
     g_free (fname);
-
-    splitmux->fragment_id++;
   }
+
+  splitmux->fragment_id++;
 }
 
 /* called with GST_SPLITMUX_LOCK */
