@@ -1579,6 +1579,8 @@ gst_msdkdec_finalize (GObject * object)
     GST_ERROR_OBJECT (thiz, "leaking %u surfaces",
         g_list_length (thiz->decoded_msdk_surfaces));
   }
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
