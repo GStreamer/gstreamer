@@ -419,6 +419,7 @@ run_delayed_test (const gchar * pipe_str, const gchar * peer,
 {
   GstElement *pipe, *src, *sink;
   GstPad *srcpad, *sinkpad, *peerpad = NULL;
+  GstStateChangeReturn ret;
 
   pipe = setup_pipeline (pipe_str);
 
@@ -434,11 +435,22 @@ run_delayed_test (const gchar * pipe_str, const gchar * peer,
 
   /* Set the state to PAUSED and wait until the src at least reaches that
    * state */
-  fail_if (gst_element_set_state (pipe, GST_STATE_PAUSED) ==
-      GST_STATE_CHANGE_FAILURE);
+  ret = gst_element_set_state (pipe, GST_STATE_PAUSED);
 
-  fail_if (gst_element_get_state (src, NULL, NULL, GST_CLOCK_TIME_NONE) ==
-      GST_STATE_CHANGE_FAILURE);
+  if (expect_link) {
+    fail_if (ret == GST_STATE_CHANGE_FAILURE);
+  } else {
+    fail_unless (ret == GST_STATE_CHANGE_FAILURE
+        || ret == GST_STATE_CHANGE_ASYNC);
+  }
+
+  ret = gst_element_get_state (pipe, NULL, NULL, GST_CLOCK_TIME_NONE);
+
+  if (expect_link) {
+    fail_if (ret == GST_STATE_CHANGE_FAILURE);
+  } else {
+    fail_unless (ret == GST_STATE_CHANGE_FAILURE);
+  }
 
   /* Now, the source element should have a src pad, and if "peer" was passed, 
    * then the src pad should have gotten linked to the 'sink' pad of that 
