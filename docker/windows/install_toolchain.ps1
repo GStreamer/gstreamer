@@ -5,8 +5,8 @@ $msvc_2017_url = 'https://aka.ms/vs/15/release/vs_buildtools.exe'
 $git_url = 'https://github.com/git-for-windows/git/releases/download/v2.24.1.windows.2/MinGit-2.24.1.2-64-bit.zip'
 $zip_url = 'https://www.7-zip.org/a/7z1900-x64.exe'
 $cmake_url = 'https://github.com/Kitware/CMake/releases/download/v3.16.1/cmake-3.16.1-win64-x64.msi'
-$msys2_url = 'https://download.sourceforge.net/project/msys2/Base/x86_64/msys2-base-x86_64-20190524.tar.xz'
-$msys_mingw_get_url = 'https://osdn.net/projects/mingw/downloads/68260/mingw-get-0.6.3-mingw32-pre-20170905-1-bin.tar.xz'
+$msys2_url = 'https://netcologne.dl.sourceforge.net/project/msys2/Base/x86_64/msys2-base-x86_64-20190524.tar.xz'
+$msys_mingw_get_url = 'https://dotsrc.dl.osdn.net/osdn/mingw/68260/mingw-get-0.6.3-mingw32-pre-20170905-1-bin.tar.xz'
 
 Write-Host "Installing VisualStudio"
 Invoke-WebRequest -Uri $msvc_2017_url -OutFile C:\vs_buildtools.exe
