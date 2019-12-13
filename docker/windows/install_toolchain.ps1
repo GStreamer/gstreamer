@@ -30,7 +30,7 @@ Remove-Item C:\7z-x64.exe -Force
 
 Write-Host "Installing MSYS2 into C:/msys64"
 Invoke-WebRequest -Uri $msys2_url -OutFile C:\msys2-x86_64.tar.xz
-C:\7zip\7z e C:\msys2-x86_64.tar.xz -Wait
+C:\7zip\7z e C:\msys2-x86_64.tar.xz -o"C:\\"
 C:\7zip\7z x C:\msys2-x86_64.tar -o"C:\\"
 Remove-Item C:\msys2-x86_64.tar.xz -Force
 Remove-Item C:\msys2-x86_64.tar -Force
