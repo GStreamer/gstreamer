@@ -4,7 +4,7 @@ $python_dl_url = 'https://www.python.org/ftp/python/3.7.5/python-3.7.5.exe'
 $msvc_2017_url = 'https://aka.ms/vs/15/release/vs_buildtools.exe'
 $git_url = 'https://github.com/git-for-windows/git/releases/download/v2.24.1.windows.2/MinGit-2.24.1.2-64-bit.zip'
 $zip_url = 'https://www.7-zip.org/a/7z1900-x64.exe'
-$msys_url = 'https://download.sourceforge.net/project/msys2/Base/x86_64/msys2-base-x86_64-20190524.tar.xz'
+$msys2_url = 'https://download.sourceforge.net/project/msys2/Base/x86_64/msys2-base-x86_64-20190524.tar.xz'
 
 Write-Host "Installing VisualStudio"
 Invoke-WebRequest -Uri $msvc_2017_url -OutFile C:\vs_buildtools.exe
@@ -28,8 +28,8 @@ Invoke-WebRequest -Uri $zip_url -OutFile C:\7z-x64.exe
 Start-Process C:\7z-x64.exe -ArgumentList '/S /D=C:\7zip\' -Wait
 Remove-Item C:\7z-x64.exe -Force
 
-Write-Host "Installing MSYS2"
-Invoke-WebRequest -Uri $msys_url -OutFile C:\msys2-x86_64.tar.xz
+Write-Host "Installing MSYS2 into C:/msys64"
+Invoke-WebRequest -Uri $msys2_url -OutFile C:\msys2-x86_64.tar.xz
 C:\7zip\7z e C:\msys2-x86_64.tar.xz -Wait
 C:\7zip\7z x C:\msys2-x86_64.tar -o"C:\\"
 Remove-Item C:\msys2-x86_64.tar.xz -Force
