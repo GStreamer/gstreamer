@@ -24,7 +24,14 @@ pygobject_dep = dependency('pygobject-3.0', fallback: ['pygobject', 'pygobject_d
 
 pymod = import('python')
 python = pymod.find_installation(get_option('python'))
-python_dep = python.dependency(required : true)
+pythonver = python.language_version()
+
+# Workaround for https://github.com/mesonbuild/meson/issues/5629
+# https://gitlab.freedesktop.org/gstreamer/gst-python/issues/28
+python_dep = dependency('python-@0@-embed'.format(pythonver), version: '>=3', required: false)
+if not python_dep.found()
+  python_dep = python.dependency(required : true)
+endif
 
 python_abi_flags = python.get_variable('ABIFLAGS', '')
 pylib_loc = get_option('libpython-dir')
