@@ -56,6 +56,7 @@ gst_clock_select_clock_id_get_type (void)
         "monotonic"},
     {GST_CLOCK_SELECT_CLOCK_ID_REALTIME, "System realtime clock", "realtime"},
     {GST_CLOCK_SELECT_CLOCK_ID_PTP, "PTP clock", "ptp"},
+    {GST_CLOCK_SELECT_CLOCK_ID_TAI, "System TAI clock", "tai"},
     {0, NULL, NULL},
   };
 
@@ -194,6 +195,13 @@ gst_clock_select_provide_clock (GstElement * element)
         GST_WARNING_OBJECT (clock_select,
             "Failed to get PTP clock, falling back to pipeline default clock");
       }
+      break;
+    case GST_CLOCK_SELECT_CLOCK_ID_TAI:
+      clock =
+          g_object_new (GST_TYPE_SYSTEM_CLOCK, "name", "DebugGstSystemClock",
+          NULL);
+      gst_object_ref_sink (clock);
+      gst_util_set_object_arg (G_OBJECT (clock), "clock-type", "tai");
       break;
     case GST_CLOCK_SELECT_CLOCK_ID_DEFAULT:
     default:

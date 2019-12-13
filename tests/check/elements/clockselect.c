@@ -22,6 +22,30 @@
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstharness.h>
 
+GST_START_TEST (test_clock_select_tai_clock)
+{
+  GstHarness *h;
+  GstElement *element;
+  GstClock *clock;
+  guint clock_type;
+
+  h = gst_harness_new_parse ("clockselect clock-id=tai");
+
+  /* Check if element provides right clock */
+  element = gst_harness_find_element (h, "clockselect");
+  clock = gst_element_provide_clock (element);
+
+  fail_unless (GST_IS_SYSTEM_CLOCK (clock));
+  g_object_get (G_OBJECT (clock), "clock-type", &clock_type, NULL);
+  fail_unless_equals_uint64 (clock_type, GST_CLOCK_TYPE_TAI);
+
+  gst_object_unref (element);
+  gst_object_unref (clock);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_clock_select_realtime_clock)
 {
   GstHarness *h;
@@ -102,6 +126,7 @@ clock_select_suite (void)
   tcase_add_test (tc_chain, test_clock_select_properties);
   tcase_add_test (tc_chain, test_clock_select_monotonic_clock);
   tcase_add_test (tc_chain, test_clock_select_realtime_clock);
+  tcase_add_test (tc_chain, test_clock_select_tai_clock);
 
   return s;
 }
