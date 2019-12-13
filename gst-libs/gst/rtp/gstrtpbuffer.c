@@ -1510,19 +1510,20 @@ gst_rtp_buffer_get_extension_twobytes_header (GstRTPBuffer * rtp,
   return FALSE;
 }
 
-static guint
-get_onebyte_header_end_offset (guint8 * pdata, guint wordlen)
+static gboolean
+get_onebyte_header_end_offset (guint8 * pdata, guint wordlen, guint *offset)
 {
-  guint offset = 0;
   guint bytelen = wordlen * 4;
   guint paddingcount = 0;
 
-  while (offset + 1 < bytelen) {
+  *offset = 0;
+
+  while (*offset + 1 < bytelen) {
     guint8 read_id, read_len;
 
-    read_id = GST_READ_UINT8 (pdata + offset) >> 4;
-    read_len = (GST_READ_UINT8 (pdata + offset) & 0x0F) + 1;
-    offset += 1;
+    read_id = GST_READ_UINT8 (pdata + *offset) >> 4;
+    read_len = (GST_READ_UINT8 (pdata + *offset) & 0x0F) + 1;
+    *offset += 1;
 
     /* ID 0 means its padding, skip */
     if (read_id == 0) {
@@ -1534,17 +1535,21 @@ get_onebyte_header_end_offset (guint8 * pdata, guint wordlen)
 
     /* ID 15 is special and means we should stop parsing */
     /* It also means we can't add an extra packet */
-    if (read_id == 15)
-      return 0;
+    if (read_id == 15) {
+      return FALSE;
+    }
 
     /* Ignore extension headers where the size does not fit */
-    if (offset + read_len > bytelen)
-      return 0;
+    if (*offset + read_len > bytelen) {
+      return FALSE;
+    }
 
-    offset += read_len;
+    *offset += read_len;
   }
 
-  return offset - paddingcount;
+  *offset -= paddingcount;
+
+  return TRUE;
 }
 
 /**
@@ -1586,8 +1591,7 @@ gst_rtp_buffer_add_extension_onebyte_header (GstRTPBuffer * rtp, guint8 id,
     if (bits != 0xBEDE)
       return FALSE;
 
-    offset = get_onebyte_header_end_offset (pdata, wordlen);
-    if (offset == 0)
+    if (!get_onebyte_header_end_offset (pdata, wordlen, &offset))
       return FALSE;
   }
 
