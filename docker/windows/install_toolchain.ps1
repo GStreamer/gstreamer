@@ -4,6 +4,7 @@ $python_dl_url = 'https://www.python.org/ftp/python/3.7.5/python-3.7.5.exe'
 $msvc_2017_url = 'https://aka.ms/vs/15/release/vs_buildtools.exe'
 $git_url = 'https://github.com/git-for-windows/git/releases/download/v2.24.1.windows.2/MinGit-2.24.1.2-64-bit.zip'
 $zip_url = 'https://www.7-zip.org/a/7z1900-x64.exe'
+$cmake_url = 'https://github.com/Kitware/CMake/releases/download/v3.16.1/cmake-3.16.1-win64-x64.msi'
 $msys2_url = 'https://download.sourceforge.net/project/msys2/Base/x86_64/msys2-base-x86_64-20190524.tar.xz'
 
 Write-Host "Installing VisualStudio"
@@ -22,6 +23,11 @@ Expand-Archive C:\mingit.zip -DestinationPath c:\mingit
 Remove-Item C:\mingit.zip -Force
 $env:PATH = [System.Environment]::GetEnvironmentVariable('PATH', 'Machine') + ';' + 'c:\mingit\cmd'
 [Environment]::SetEnvironmentVariable('PATH', $env:PATH, [EnvironmentVariableTarget]::Machine)
+
+Write-Host "Installing CMake for Cerbero"
+Invoke-WebRequest -Uri $cmake_url -OutFile C:\cmake-x64.msi
+Start-Process msiexec -ArgumentList '-i C:\cmake-x64.msi -quiet -norestart ADD_CMAKE_TO_PATH=System' -Wait
+Remove-Item C:\cmake-x64.msi -Force
 
 Write-Host "Installing 7zip"
 Invoke-WebRequest -Uri $zip_url -OutFile C:\7z-x64.exe
