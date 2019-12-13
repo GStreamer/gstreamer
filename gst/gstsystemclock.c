@@ -560,7 +560,14 @@ clock_type_to_posix_id (GstClockType clock_type)
     return CLOCK_MONOTONIC;
   else
 #endif
-    return CLOCK_REALTIME;
+  if (clock_type == GST_CLOCK_TYPE_TAI)
+#ifdef HAVE_TAI_CLOCK
+    return CLOCK_TAI;
+#else
+    GST_ERROR
+        ("No CLOCK_TAI available on the system. Falling back to CLOCK_REALTIME");
+#endif
+  return CLOCK_REALTIME;
 }
 #endif
 
