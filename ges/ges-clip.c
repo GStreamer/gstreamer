@@ -139,17 +139,16 @@ _set_start (GESTimelineElement * element, GstClockTime start)
   GST_DEBUG_OBJECT (element, "Setting children start, (initiated_move: %"
       GST_PTR_FORMAT ")", container->initiated_move);
 
-  element->start = start;
-  g_object_notify (G_OBJECT (element), "start");
   container->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
   for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
     GESTimelineElement *child = (GESTimelineElement *) tmp->data;
 
-    _set_start0 (GES_TIMELINE_ELEMENT (child), start);
+    if (child != container->initiated_move)
+      _set_start0 (GES_TIMELINE_ELEMENT (child), start);
   }
   container->children_control_mode = GES_CHILDREN_UPDATE;
 
-  return -1;
+  return TRUE;
 }
 
 static gboolean
@@ -162,9 +161,8 @@ _set_inpoint (GESTimelineElement * element, GstClockTime inpoint)
   for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
     GESTimelineElement *child = (GESTimelineElement *) tmp->data;
 
-    if (child != container->initiated_move) {
+    if (child != container->initiated_move)
       _set_inpoint0 (child, inpoint);
-    }
   }
   container->children_control_mode = GES_CHILDREN_UPDATE;
 

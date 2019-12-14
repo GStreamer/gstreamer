@@ -22,6 +22,15 @@
 #include <ges/ges.h>
 #include <gst/check/gstcheck.h>
 
+void count_cb (GObject * obj, GParamSpec * pspec, gint * count);
+void test_children_time_val (GESClip * clip, const gchar * prop,
+    GstClockTime val);
+void test_children_time_setter (GESClip * clip, GESTimelineElement * child,
+    const gchar * prop, gboolean (*setter) (GESTimelineElement *, GstClockTime),
+    GstClockTime val1, GstClockTime val2);
+void test_children_time_setting_on_clip (GESClip * clip,
+    GESTimelineElement * child);
+
 GST_START_TEST (test_object_properties)
 {
   GESClip *clip;
@@ -729,6 +738,120 @@ GST_START_TEST (test_effects_priorities)
 
 GST_END_TEST;
 
+void
+count_cb (GObject * obj, GParamSpec * pspec, gint * count)
+{
+  *count = *count + 1;
+}
+
+void
+test_children_time_val (GESClip * clip, const gchar * prop, GstClockTime val)
+{
+  GList *tmp;
+  GstClockTime read_val;
+
+  g_object_get (clip, prop, &read_val, NULL);
+  assert_equals_uint64 (read_val, val);
+  for (tmp = GES_CONTAINER_CHILDREN (clip); tmp != NULL; tmp = tmp->next) {
+    g_object_get (tmp->data, prop, &read_val, NULL);
+    assert_equals_uint64 (read_val, val);
+  }
+}
+
+void
+test_children_time_setter (GESClip * clip, GESTimelineElement * child,
+    const gchar * prop, gboolean (*setter) (GESTimelineElement *, GstClockTime),
+    GstClockTime val1, GstClockTime val2)
+{
+  gint clip_count = 0;
+  gint child_count = 0;
+  gchar *notify_name = g_strconcat ("notify::", prop, NULL);
+
+  g_signal_connect (clip, notify_name, G_CALLBACK (count_cb), &clip_count);
+  g_signal_connect (child, notify_name, G_CALLBACK (count_cb), &child_count);
+  fail_unless (setter (GES_TIMELINE_ELEMENT (clip), val1));
+  test_children_time_val (clip, prop, val1);
+  assert_equals_int (clip_count, 1);
+  assert_equals_int (child_count, 1);
+  clip_count = 0;
+  child_count = 0;
+  fail_unless (setter (child, val2));
+  test_children_time_val (clip, prop, val2);
+  assert_equals_int (clip_count, 1);
+  assert_equals_int (child_count, 1);
+  assert_equals_int (g_signal_handlers_disconnect_by_func (clip,
+          G_CALLBACK (count_cb), &clip_count), 1);
+  assert_equals_int (g_signal_handlers_disconnect_by_func (child,
+          G_CALLBACK (count_cb), &child_count), 1);
+  g_free (notify_name);
+}
+
+void
+test_children_time_setting_on_clip (GESClip * clip, GESTimelineElement * child)
+{
+  /* FIXME: Don't necessarily want to change the inpoint of all the
+   * children if the clip inpoint changes. Really, we would only expect
+   * the inpoint to change for the source elements within a clip.
+   * Setting the inpoint of an operation may be irrelevant, and for
+   * operations where it *is* relevant, we would ideally want it to be
+   * independent from the source element's inpoint (unlike the start and
+   * duration values).
+   * However, this is the current behaviour, but if this is changed this
+   * test should be changed to only check that source elements have
+   * their inpoint changed, and operation elements have their inpoint
+   * unchanged */
+  test_children_time_setter (clip, child, "in-point",
+      ges_timeline_element_set_inpoint, 23, 52);
+  test_children_time_setter (clip, child, "start",
+      ges_timeline_element_set_start, 43, 72);
+  test_children_time_setter (clip, child, "duration",
+      ges_timeline_element_set_duration, 53, 12);
+}
+
+GST_START_TEST (test_children_time_setters)
+{
+  GESTimeline *timeline;
+  GESTrack *audio_track, *video_track;
+  GESLayer *layer;
+
+  GESTimelineElement *effect;
+  GESClip *clips[] = {
+    GES_CLIP (ges_transition_clip_new (GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE)),  /* operation clip */
+    GES_CLIP (ges_test_clip_new ()),    /* source clip */
+  };
+  gint i;
+
+  ges_init ();
+
+  audio_track = GES_TRACK (ges_audio_track_new ());
+  video_track = GES_TRACK (ges_video_track_new ());
+
+  timeline = ges_timeline_new ();
+  fail_unless (ges_timeline_add_track (timeline, audio_track));
+  fail_unless (ges_timeline_add_track (timeline, video_track));
+
+  layer = ges_timeline_append_layer (timeline);
+
+  effect = GES_TIMELINE_ELEMENT (ges_effect_new ("agingtv"));
+
+  for (i = 0; i < G_N_ELEMENTS (clips); i++) {
+    GESClip *clip = clips[i];
+    fail_unless (ges_container_add (GES_CONTAINER (clip), effect));
+    test_children_time_setting_on_clip (clip, effect);
+    fail_unless (ges_layer_add_clip (layer, clip));
+    test_children_time_setting_on_clip (clip, effect);
+    fail_unless (ges_container_remove (GES_CONTAINER (clip), effect));
+    fail_unless (ges_layer_remove_clip (layer, clip));
+  }
+  gst_object_unref (effect);
+  gst_object_unref (timeline);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
+
 static Suite *
 ges_suite (void)
 {
@@ -745,6 +868,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_clip_refcount_remove_child);
   tcase_add_test (tc_chain, test_clip_find_track_element);
   tcase_add_test (tc_chain, test_effects_priorities);
+  tcase_add_test (tc_chain, test_children_time_setters);
 
   return s;
 }

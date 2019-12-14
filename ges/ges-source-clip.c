@@ -77,9 +77,11 @@ _set_duration (GESTimelineElement * element, GstClockTime duration)
   if (element->timeline
       && !ELEMENT_FLAG_IS_SET (element, GES_TIMELINE_ELEMENT_SET_SIMPLE)
       && !ELEMENT_FLAG_IS_SET (toplevel, GES_TIMELINE_ELEMENT_SET_SIMPLE)) {
-    return !timeline_trim_object (element->timeline, element,
-        GES_TIMELINE_ELEMENT_LAYER_PRIORITY (element), NULL, GES_EDGE_END,
-        element->start + duration);
+    if (!timeline_trim_object (element->timeline, element,
+            GES_TIMELINE_ELEMENT_LAYER_PRIORITY (element), NULL, GES_EDGE_END,
+            element->start + duration))
+      return FALSE;
+    return -1;
   }
 
   return

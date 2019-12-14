@@ -835,7 +835,7 @@ ges_timeline_element_set_inpoint (GESTimelineElement * self,
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
   if (klass->set_inpoint) {
-    gboolean res = klass->set_inpoint (self, inpoint);
+    gint res = klass->set_inpoint (self, inpoint);
     if (res == TRUE) {
       self->inpoint = inpoint;
       g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_INPOINT]);
@@ -913,7 +913,7 @@ ges_timeline_element_set_duration (GESTimelineElement * self,
       GST_TIME_ARGS (duration));
 
   if (klass->set_duration) {
-    gboolean res = klass->set_duration (self, duration);
+    gint res = klass->set_duration (self, duration);
     if (res == TRUE) {
       self->duration = duration;
       g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_DURATION]);

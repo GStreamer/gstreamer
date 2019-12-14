@@ -592,7 +592,7 @@ _child_inpoint_changed_cb (GESTimelineElement * child,
 
   if (container->children_control_mode == GES_CHILDREN_UPDATE_OFFSETS
       || ELEMENT_FLAG_IS_SET (child, GES_TIMELINE_ELEMENT_SET_SIMPLE)) {
-    map->inpoint_offset = _START (container) - _START (child);
+    map->inpoint_offset = _INPOINT (container) - _INPOINT (child);
 
     return;
   }
