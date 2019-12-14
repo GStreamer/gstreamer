@@ -100,7 +100,6 @@ VALGRIND_BLACKLIST = [
 ]
 
 BLACKLIST = [
-    (r'check.gstreamer.pipelines_parse_launch.delayed_link$', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/345'),
     (r'check.gstreamer.gst_gstsystemclock.test_async_sync_interaction$', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/346'),
     (r'check.gstreamer.gst_gstsystemclock.test_periodic_multi', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/347'),
     (r'check.gstreamer.gst_gstsystemclock.test_periodic_shot$', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/348'),
