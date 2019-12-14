@@ -1010,7 +1010,10 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
 
   if (!render_caps || gst_caps_is_empty (render_caps)) {
     GST_ERROR_OBJECT (window, "Couldn't define render caps");
+    g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
+        "Couldn't define render caps");
     gst_clear_caps (&render_caps);
+
     return FALSE;
   }
 
@@ -1023,6 +1026,9 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
   if (!window->render_format ||
       window->render_format->dxgi_format == DXGI_FORMAT_UNKNOWN) {
     GST_ERROR_OBJECT (window, "Unknown dxgi render format");
+    g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
+        "Unknown dxgi render format");
+
     return FALSE;
   }
 
@@ -1045,6 +1051,9 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
 
     if (!window->converter) {
       GST_ERROR_OBJECT (window, "Cannot create converter");
+      g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
+          "Cannot create converter");
+
       return FALSE;
     }
   }
@@ -1145,6 +1154,9 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
 
   if (!window->swap_chain) {
     GST_ERROR_OBJECT (window, "Cannot create swapchain");
+    g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
+        "Cannot create swapchain");
+
     return FALSE;
   }
 #if defined(HAVE_DXGI_1_5_H)
@@ -1194,6 +1206,10 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
   if (!window->rtv) {
     gst_d3d11_device_thread_add (window->device,
         (GstD3D11DeviceThreadFunc) gst_d3d11_window_release_resources, window);
+    GST_ERROR_OBJECT (window, "Failed to setup internal resources");
+    g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
+        "Failed to setup internal resources");
+
     return FALSE;
   }
 
