@@ -2413,7 +2413,7 @@ gst_x264_enc_add_cc (GstBuffer * buffer, x264_picture_t * pic_in)
      */
     pic_in->extra_sei.payloads[i].payload[8] =
         ((cc_meta->size / 3) & 0x1f) | 0x40;
-    pic_in->extra_sei.payloads[i].payload[9] = 255;       /* 8 bits em_data, unused */
+    pic_in->extra_sei.payloads[i].payload[9] = 255;     /* 8 bits em_data, unused */
     pic_in->extra_sei.payloads[i].payload[cc_meta->size + 10] = 255;    /* 8 marker bits */
   }
 }
