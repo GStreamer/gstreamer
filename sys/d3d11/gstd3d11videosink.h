@@ -64,9 +64,6 @@ struct _GstD3D11VideoSink
 
   GstBufferPool *fallback_pool;
   gboolean can_convert;
-
-  /* whether shader resource view is required for direct rendering or not */
-  gboolean need_srv;
 };
 
 struct _GstD3D11VideoSinkClass

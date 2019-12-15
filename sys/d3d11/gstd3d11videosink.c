@@ -338,7 +338,7 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
 
   if (!gst_d3d11_window_prepare (self->window, GST_VIDEO_SINK_WIDTH (self),
           GST_VIDEO_SINK_HEIGHT (self), video_par_n, video_par_d,
-          caps, &self->need_srv, &error)) {
+          caps, &error)) {
     GstMessage *error_msg;
 
     GST_ERROR_OBJECT (self, "cannot create swapchain");
@@ -360,7 +360,7 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
   gst_buffer_pool_config_set_params (config,
       caps, GST_VIDEO_INFO_SIZE (&self->info), 0, 2);
 
-  if (self->need_srv) {
+  {
     GstD3D11AllocationParams *d3d11_params;
 
     d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
@@ -525,7 +525,7 @@ gst_d3d11_video_sink_propose_allocation (GstBaseSink * sink, GstQuery * query)
 
   if (need_pool) {
     gint i;
-    GstCaps *render_caps;
+    GstD3D11AllocationParams *d3d11_params;
 
     GST_DEBUG_OBJECT (self, "create new pool");
 
@@ -534,34 +534,22 @@ gst_d3d11_video_sink_propose_allocation (GstBaseSink * sink, GstQuery * query)
     gst_buffer_pool_config_set_params (config, caps, size, 2,
         DXGI_MAX_SWAP_CHAIN_BUFFERS);
 
-    render_caps = gst_d3d11_device_get_supported_caps (self->device,
-        D3D11_FORMAT_SUPPORT_TEXTURE2D | D3D11_FORMAT_SUPPORT_DISPLAY);
-
-    /* if we need conversion, request shader resource view */
-    if (render_caps && !gst_caps_can_intersect (caps, render_caps)) {
-      GstD3D11AllocationParams *d3d11_params;
-
-      GST_DEBUG_OBJECT (self,
-          "upstream format %s is not display foramt, need shader resource",
-          gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&info)));
-
-      d3d11_params =
-          gst_buffer_pool_config_get_d3d11_allocation_params (config);
-      if (!d3d11_params) {
-        d3d11_params = gst_d3d11_allocation_params_new (&info,
-            GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT, D3D11_USAGE_DEFAULT,
-            D3D11_BIND_SHADER_RESOURCE);
-      } else {
-        /* Set bind flag */
-        for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&info); i++) {
-          d3d11_params->desc[i].BindFlags |= D3D11_BIND_SHADER_RESOURCE;
-        }
+    d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
+    if (!d3d11_params) {
+      d3d11_params = gst_d3d11_allocation_params_new (&info,
+          GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT, D3D11_USAGE_DEFAULT,
+          D3D11_BIND_SHADER_RESOURCE);
+    } else {
+      /* Set bind flag */
+      for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&info); i++) {
+        d3d11_params->desc[i].BindFlags |= D3D11_BIND_SHADER_RESOURCE;
       }
-
-      gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
-      gst_d3d11_allocation_params_free (d3d11_params);
     }
-    gst_clear_caps (&render_caps);
+
+    gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
+    gst_d3d11_allocation_params_free (d3d11_params);
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
 
     if (!gst_buffer_pool_set_config (pool, config)) {
       g_object_unref (pool);
@@ -672,7 +660,7 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
       break;
     }
 
-    if (self->need_srv && !gst_d3d11_memory_ensure_shader_resource_view (dmem)) {
+    if (!gst_d3d11_memory_ensure_shader_resource_view (dmem)) {
       GST_LOG_OBJECT (sink,
           "shader resource view is unavailable, need fallback");
       render_buf = NULL;
@@ -742,8 +730,7 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
           GST_MAP_READ | GST_MAP_D3D11);
       gst_memory_unmap (GST_MEMORY_CAST (dmem), &info);
 
-      if (self->need_srv &&
-          !gst_d3d11_memory_ensure_shader_resource_view (dmem)) {
+      if (!gst_d3d11_memory_ensure_shader_resource_view (dmem)) {
         GST_ERROR_OBJECT (self, "shader resource view is not available");
 
         gst_buffer_unref (render_buf);
