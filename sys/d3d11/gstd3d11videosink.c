@@ -575,7 +575,6 @@ gst_d3d11_video_sink_propose_allocation (GstBaseSink * sink, GstQuery * query)
     g_object_unref (pool);
 
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
-  gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE, NULL);
 
   return TRUE;
 
@@ -649,7 +648,6 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
   GstMapInfo map;
   GstFlowReturn ret;
   GstVideoRectangle rect = { 0, };
-  GstVideoCropMeta *crop;
   GstBuffer *render_buf;
   gboolean need_unref = FALSE;
   gint i;
@@ -760,16 +758,9 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
 
   gst_d3d11_window_show (self->window);
 
-  crop = gst_buffer_get_video_crop_meta (buf);
-  if (crop) {
-    rect.x = crop->x;
-    rect.y = crop->y;
-    rect.w = crop->width;
-    rect.h = crop->height;
-  } else {
-    rect.w = self->video_width;
-    rect.h = self->video_height;
-  }
+  /* FIXME: add support crop meta */
+  rect.w = self->video_width;
+  rect.h = self->video_height;
 
   ret = gst_d3d11_window_render (self->window, render_buf, &rect);
   if (need_unref)
