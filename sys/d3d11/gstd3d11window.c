@@ -41,10 +41,14 @@ enum
   PROP_D3D11_DEVICE,
   PROP_FORCE_ASPECT_RATIO,
   PROP_ENABLE_NAVIGATION_EVENTS,
+  PROP_FULLSCREEN_TOGGLE_MODE,
+  PROP_FULLSCREEN,
 };
 
 #define DEFAULT_ENABLE_NAVIGATION_EVENTS  TRUE
 #define DEFAULT_FORCE_ASPECT_RATIO        TRUE
+#define DEFAULT_FULLSCREEN_TOGGLE_MODE    GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_NONE
+#define DEFAULT_FULLSCREEN                FALSE
 
 enum
 {
@@ -56,8 +60,33 @@ enum
 
 static guint d3d11_window_signals[SIGNAL_LAST] = { 0, };
 
+GType
+gst_d3d11_window_fullscreen_toggle_mode_type (void)
+{
+  static volatile gsize mode_type = 0;
+
+  if (g_once_init_enter (&mode_type)) {
+    static const GFlagsValue mode_types[] = {
+      {GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_NONE,
+          "GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_NONE", "none"},
+      {GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_ALT_ENTER,
+          "GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_ALT_ENTER", "alt-enter"},
+      {GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_PROPERTY,
+          "GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_PROPERTY", "property"},
+      {0, NULL, NULL},
+    };
+    GType tmp = g_flags_register_static ("GstD3D11WindowFullscreenToggleMode",
+        mode_types);
+    g_once_init_leave (&mode_type, tmp);
+  }
+
+  return (GType) mode_type;
+}
+
 #define EXTERNAL_PROC_PROP_NAME "d3d11_window_external_proc"
 #define D3D11_WINDOW_PROP_NAME "gst_d3d11_window_object"
+
+#define WM_GST_D3D11_FULLSCREEN (WM_USER + 1)
 
 static LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam,
     LPARAM lParam);
@@ -83,6 +112,7 @@ static void gst_d3d11_window_close_internal_window (GstD3D11Window * self);
 static void release_external_win_id (GstD3D11Window * self);
 static GstFlowReturn gst_d3d111_window_present (GstD3D11Window * self,
     GstBuffer * buffer);
+static void gst_d3d11_window_change_fullscreen_mode (GstD3D11Window * self);
 
 static void
 gst_d3d11_window_class_init (GstD3D11WindowClass * klass)
@@ -115,6 +145,19 @@ gst_d3d11_window_class_init (GstD3D11WindowClass * klass)
           DEFAULT_ENABLE_NAVIGATION_EVENTS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_FULLSCREEN_TOGGLE_MODE,
+      g_param_spec_flags ("fullscreen-toggle-mode",
+          "Full screen toggle mode",
+          "Full screen toggle mode used to trigger fullscreen mode change",
+          GST_D3D11_WINDOW_TOGGLE_MODE_GET_TYPE, DEFAULT_FULLSCREEN_TOGGLE_MODE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_FULLSCREEN,
+      g_param_spec_boolean ("fullscreen",
+          "fullscreen",
+          "Ignored when \"fullscreen-toggle-mode\" does not include \"property\"",
+          DEFAULT_FULLSCREEN, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   d3d11_window_signals[SIGNAL_KEY_EVENT] =
       g_signal_new ("key-event", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL,
@@ -143,6 +186,8 @@ gst_d3d11_window_init (GstD3D11Window * self)
 
   self->force_aspect_ratio = DEFAULT_FORCE_ASPECT_RATIO;
   self->enable_navigation_events = DEFAULT_ENABLE_NAVIGATION_EVENTS;
+  self->fullscreen_toggle_mode = GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_NONE;
+  self->fullscreen = DEFAULT_FULLSCREEN;
 
   self->aspect_ratio_n = 1;
   self->aspect_ratio_d = 1;
@@ -175,6 +220,18 @@ gst_d3d11_window_set_property (GObject * object, guint prop_id,
     case PROP_ENABLE_NAVIGATION_EVENTS:
       self->enable_navigation_events = g_value_get_boolean (value);
       break;
+    case PROP_FULLSCREEN_TOGGLE_MODE:
+      self->fullscreen_toggle_mode = g_value_get_flags (value);
+      break;
+    case PROP_FULLSCREEN:
+    {
+      self->requested_fullscreen = g_value_get_boolean (value);
+      if (self->swap_chain) {
+        g_atomic_int_add (&self->pending_fullscreen_count, 1);
+        PostMessage (self->internal_win_id, WM_GST_D3D11_FULLSCREEN, 0, 0);
+      }
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -195,6 +252,12 @@ gst_d3d11_window_get_property (GObject * object, guint prop_id,
       break;
     case PROP_FORCE_ASPECT_RATIO:
       g_value_set_boolean (value, self->force_aspect_ratio);
+      break;
+    case PROP_FULLSCREEN_TOGGLE_MODE:
+      g_value_set_flags (value, self->fullscreen_toggle_mode);
+      break;
+    case PROP_FULLSCREEN:
+      g_value_set_boolean (value, self->fullscreen);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -599,6 +662,71 @@ done:
   gst_d3d11_device_unlock (window->device);
 }
 
+/* always called from window thread */
+static void
+gst_d3d11_window_change_fullscreen_mode (GstD3D11Window * self)
+{
+  HWND hwnd = self->external_win_id ? self->external_win_id :
+      self->internal_win_id;
+
+  if (!self->swap_chain)
+    return;
+
+  if (self->requested_fullscreen == self->fullscreen)
+    return;
+
+  GST_DEBUG_OBJECT (self, "Change mode to %s",
+      self->requested_fullscreen ? "fullscreen" : "windowed");
+
+  self->fullscreen = !self->fullscreen;
+
+  if (!self->fullscreen) {
+    /* Restore the window's attributes and size */
+    SetWindowLong (hwnd, GWL_STYLE, self->restore_style);
+
+    SetWindowPos (hwnd, HWND_NOTOPMOST,
+        self->restore_rect.left,
+        self->restore_rect.top,
+        self->restore_rect.right - self->restore_rect.left,
+        self->restore_rect.bottom - self->restore_rect.top,
+        SWP_FRAMECHANGED | SWP_NOACTIVATE);
+
+    ShowWindow (hwnd, SW_NORMAL);
+  } else {
+    IDXGIOutput *output;
+    DXGI_OUTPUT_DESC output_desc;
+
+    /* show window before change style */
+    ShowWindow (hwnd, SW_SHOW);
+
+    /* Save the old window rect so we can restore it when exiting
+     * fullscreen mode */
+    GetWindowRect (hwnd, &self->restore_rect);
+    self->restore_style = GetWindowLong (hwnd, GWL_STYLE);
+
+    /* Make the window borderless so that the client area can fill the screen */
+    SetWindowLong (hwnd, GWL_STYLE,
+        self->restore_style &
+        ~(WS_CAPTION | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SYSMENU |
+            WS_THICKFRAME));
+
+    IDXGISwapChain_GetContainingOutput (self->swap_chain, &output);
+    IDXGIOutput_GetDesc (output, &output_desc);
+    IDXGIOutput_Release (output);
+
+    SetWindowPos (hwnd, HWND_TOPMOST,
+        output_desc.DesktopCoordinates.left,
+        output_desc.DesktopCoordinates.top,
+        output_desc.DesktopCoordinates.right,
+        output_desc.DesktopCoordinates.bottom,
+        SWP_FRAMECHANGED | SWP_NOACTIVATE);
+
+    ShowWindow (hwnd, SW_MAXIMIZE);
+  }
+
+  GST_DEBUG_OBJECT (self, "Fullscreen mode change done");
+}
+
 static void
 gst_d3d11_window_on_keyboard_event (GstD3D11Window * self,
     HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -700,6 +828,28 @@ gst_d3d11_window_handle_window_proc (GstD3D11Window * self,
     case WM_MOUSEMOVE:
       gst_d3d11_window_on_mouse_event (self, hWnd, uMsg, wParam, lParam);
       break;
+    case WM_SYSKEYDOWN:
+      if ((self->fullscreen_toggle_mode &
+              GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_ALT_ENTER)
+          == GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_ALT_ENTER) {
+        WORD state = GetKeyState (VK_RETURN);
+        BYTE high = HIBYTE (state);
+
+        if (high & 0x1) {
+          self->requested_fullscreen = !self->fullscreen;
+          gst_d3d11_window_change_fullscreen_mode (self);
+        }
+      }
+      break;
+    case WM_GST_D3D11_FULLSCREEN:
+      if (g_atomic_int_get (&self->pending_fullscreen_count)) {
+        g_atomic_int_dec_and_test (&self->pending_fullscreen_count);
+        if ((self->fullscreen_toggle_mode &
+                GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_PROPERTY)
+            == GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_PROPERTY)
+          gst_d3d11_window_change_fullscreen_mode (self);
+      }
+      break;
     default:
       break;
   }
@@ -748,7 +898,7 @@ sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
   if (uMsg == WM_SIZE) {
     MoveWindow (self->internal_win_id, 0, 0, LOWORD (lParam), HIWORD (lParam),
         FALSE);
-  } else if (uMsg == WM_CLOSE) {
+  } else if (uMsg == WM_CLOSE || uMsg == WM_DESTROY) {
     g_mutex_lock (&self->lock);
     GST_WARNING_OBJECT (self, "external window is closing");
     release_external_win_id (self);
@@ -971,7 +1121,7 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
 {
   DXGI_SWAP_CHAIN_DESC desc = { 0, };
   GstCaps *render_caps;
-  UINT swapchain_flags = 0;
+  UINT swapchain_flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
   DXGI_SWAP_EFFECT swap_effect = DXGI_SWAP_EFFECT_DISCARD;
 #if (DXGI_HEADER_VERSION >= 5)
   gboolean have_cll = FALSE;
@@ -1228,6 +1378,11 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
         "Failed to setup internal resources");
 
     return FALSE;
+  }
+
+  if (window->requested_fullscreen != window->fullscreen) {
+    g_atomic_int_add (&window->pending_fullscreen_count, 1);
+    PostMessage (window->internal_win_id, WM_GST_D3D11_FULLSCREEN, 0, 0);
   }
 
   GST_DEBUG_OBJECT (window, "New swap chain 0x%p created", window->swap_chain);

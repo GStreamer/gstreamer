@@ -35,6 +35,7 @@ G_BEGIN_DECLS
 #define GST_IS_D3D11_WINDOW(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_D3D11_WINDOW))
 #define GST_IS_D3D11_WINDOW_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_D3D11_WINDOW))
 #define GST_D3D11_WINDOW_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_D3D11_WINDOW, GstD3D11WindowClass))
+#define GST_D3D11_WINDOW_TOGGLE_MODE_GET_TYPE (gst_d3d11_window_fullscreen_toggle_mode_type())
 
 typedef struct _GstD3D11Window        GstD3D11Window;
 typedef struct _GstD3D11WindowClass   GstD3D11WindowClass;
@@ -47,6 +48,15 @@ typedef enum
   GST_D3D11_WINDOW_OVERLAY_STATE_OPENED,
   GST_D3D11_WINDOW_OVERLAY_STATE_CLOSED,
 } GstD3D11WindowOverlayState;
+
+typedef enum
+{
+  GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_NONE = 0,
+  GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_ALT_ENTER = (1 << 1),
+  GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_PROPERTY = (1 << 2),
+} GstD3D11WindowFullscreenToggleMode;
+
+GType gst_d3d11_window_fullscreen_toggle_mode_type (void);
 
 struct _GstD3D11Window
 {
@@ -103,11 +113,22 @@ struct _GstD3D11Window
 
   gboolean pending_resize;
 
+  /* properties */
   gboolean force_aspect_ratio;
   gboolean enable_navigation_events;
+  GstD3D11WindowFullscreenToggleMode fullscreen_toggle_mode;
+  gboolean requested_fullscreen;
+  gboolean fullscreen;
+
+  /* atomic */
+  volatile gint pending_fullscreen_count;
 
   GstBuffer *cached_buffer;
   gboolean allow_tearing;
+
+  /* fullscreen related */
+  RECT restore_rect;
+  LONG restore_style;
 };
 
 struct _GstD3D11WindowClass

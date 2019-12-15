@@ -57,6 +57,8 @@ struct _GstD3D11VideoSink
   gint adapter;
   gboolean force_aspect_ratio;
   gboolean enable_navigation_events;
+  GstD3D11WindowFullscreenToggleMode fullscreen_toggle_mode;
+  gboolean fullscreen;
 
   /* saved render rectangle until we have a window */
   GstVideoRectangle render_rect;

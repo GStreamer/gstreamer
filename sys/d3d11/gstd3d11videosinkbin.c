@@ -53,6 +53,8 @@ enum
   PROP_ADAPTER,
   PROP_FORCE_ASPECT_RATIO,
   PROP_ENABLE_NAVIGATION_EVENTS,
+  PROP_FULLSCREEN_TOGGLE_MODE,
+  PROP_FULLSCREEN,
 };
 
 /* basesink */
@@ -76,6 +78,8 @@ enum
 #define DEFAULT_ADAPTER                   -1
 #define DEFAULT_FORCE_ASPECT_RATIO        TRUE
 #define DEFAULT_ENABLE_NAVIGATION_EVENTS  TRUE
+#define DEFAULT_FULLSCREEN_TOGGLE_MODE    GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_NONE
+#define DEFAULT_FULLSCREEN                FALSE
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -200,6 +204,17 @@ gst_d3d11_video_sink_bin_class_init (GstD3D11VideoSinkBinClass * klass)
           "When enabled, navigation events are sent upstream",
           DEFAULT_ENABLE_NAVIGATION_EVENTS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_FULLSCREEN_TOGGLE_MODE,
+      g_param_spec_flags ("fullscreen-toggle-mode",
+          "Full screen toggle mode",
+          "Full screen toggle mode used to trigger fullscreen mode change",
+          GST_D3D11_WINDOW_TOGGLE_MODE_GET_TYPE, DEFAULT_FULLSCREEN_TOGGLE_MODE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_FULLSCREEN,
+      g_param_spec_boolean ("fullscreen",
+          "fullscreen",
+          "Ignored when \"fullscreen-toggle-mode\" does not include \"property\"",
+          DEFAULT_FULLSCREEN, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (element_class,
       "Direct3D11 video sink bin", "Sink/Video",

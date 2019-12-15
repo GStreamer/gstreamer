@@ -33,12 +33,16 @@ enum
   PROP_0,
   PROP_ADAPTER,
   PROP_FORCE_ASPECT_RATIO,
-  PROP_ENABLE_NAVIGATION_EVENTS
+  PROP_ENABLE_NAVIGATION_EVENTS,
+  PROP_FULLSCREEN_TOGGLE_MODE,
+  PROP_FULLSCREEN,
 };
 
 #define DEFAULT_ADAPTER                   -1
 #define DEFAULT_FORCE_ASPECT_RATIO        TRUE
 #define DEFAULT_ENABLE_NAVIGATION_EVENTS  TRUE
+#define DEFAULT_FULLSCREEN_TOGGLE_MODE    GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_NONE
+#define DEFAULT_FULLSCREEN                FALSE
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -120,6 +124,19 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
           DEFAULT_ENABLE_NAVIGATION_EVENTS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_FULLSCREEN_TOGGLE_MODE,
+      g_param_spec_flags ("fullscreen-toggle-mode",
+          "Full screen toggle mode",
+          "Full screen toggle mode used to trigger fullscreen mode change",
+          GST_D3D11_WINDOW_TOGGLE_MODE_GET_TYPE, DEFAULT_FULLSCREEN_TOGGLE_MODE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_FULLSCREEN,
+      g_param_spec_boolean ("fullscreen",
+          "fullscreen",
+          "Ignored when \"fullscreen-toggle-mode\" does not include \"property\"",
+          DEFAULT_FULLSCREEN, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   element_class->set_context =
       GST_DEBUG_FUNCPTR (gst_d3d11_video_sink_set_context);
 
@@ -149,6 +166,8 @@ gst_d3d11_video_sink_init (GstD3D11VideoSink * self)
   self->adapter = DEFAULT_ADAPTER;
   self->force_aspect_ratio = DEFAULT_FORCE_ASPECT_RATIO;
   self->enable_navigation_events = DEFAULT_ENABLE_NAVIGATION_EVENTS;
+  self->fullscreen_toggle_mode = DEFAULT_FULLSCREEN_TOGGLE_MODE;
+  self->fullscreen = DEFAULT_FULLSCREEN;
 }
 
 static void
@@ -175,6 +194,19 @@ gst_d3d11_videosink_set_property (GObject * object, guint prop_id,
             "enable-navigation-events", self->enable_navigation_events, NULL);
       }
       break;
+    case PROP_FULLSCREEN_TOGGLE_MODE:
+      self->fullscreen_toggle_mode = g_value_get_flags (value);
+      if (self->window) {
+        g_object_set (self->window,
+            "fullscreen-toggle-mode", self->fullscreen_toggle_mode, NULL);
+      }
+      break;
+    case PROP_FULLSCREEN:
+      self->fullscreen = g_value_get_boolean (value);
+      if (self->window) {
+        g_object_set (self->window, "fullscreen", self->fullscreen, NULL);
+      }
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -197,6 +229,16 @@ gst_d3d11_videosink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_ENABLE_NAVIGATION_EVENTS:
       g_value_set_boolean (value, self->enable_navigation_events);
+      break;
+    case PROP_FULLSCREEN_TOGGLE_MODE:
+      g_value_set_flags (value, self->fullscreen_toggle_mode);
+      break;
+    case PROP_FULLSCREEN:
+      if (self->window) {
+        g_object_get_property (G_OBJECT (self->window), pspec->name, value);
+      } else {
+        g_value_set_boolean (value, self->fullscreen);
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -329,10 +371,10 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
       self->render_rect.h);
   self->pending_render_rect = FALSE;
 
-  if (!self->force_aspect_ratio) {
-    g_object_set (self->window,
-        "force-aspect-ratio", self->force_aspect_ratio, NULL);
-  }
+  g_object_set (self->window,
+      "force-aspect-ratio", self->force_aspect_ratio,
+      "fullscreen-toggle-mode", self->fullscreen_toggle_mode,
+      "fullscreen", self->fullscreen, NULL);
 
   GST_OBJECT_UNLOCK (self);
 
