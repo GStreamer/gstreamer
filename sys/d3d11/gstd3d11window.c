@@ -967,12 +967,46 @@ gst_d3d11_window_color_space_from_video_info (GstD3D11Window * self,
 }
 #endif
 
+typedef struct
+{
+  GstD3D11Window *self;
+  HWND hwnd;
+  IDXGISwapChain *swap_chain;
+} MakeWindowAssociationData;
+
+static void
+gst_d3d11_window_disable_alt_enter (GstD3D11Device * device,
+    MakeWindowAssociationData * data)
+{
+  IDXGIFactory1 *factory = NULL;
+  HRESULT hr;
+
+  hr = IDXGISwapChain_GetParent (data->swap_chain, &IID_IDXGIFactory1,
+      (void **) &factory);
+  if (!gst_d3d11_result (hr) || !factory) {
+    GST_WARNING_OBJECT (data->self,
+        "Cannot get parent dxgi factory for swapchain %p, hr: 0x%x",
+        data->swap_chain, (guint) hr);
+    return;
+  }
+
+  hr = IDXGIFactory1_MakeWindowAssociation (factory,
+      data->hwnd, DXGI_MWA_NO_ALT_ENTER);
+  if (!gst_d3d11_result (hr)) {
+    GST_WARNING_OBJECT (data->self,
+        "MakeWindowAssociation failure, hr: 0x%x", (guint) hr);
+  }
+
+  IDXGIFactory1_Release (factory);
+}
+
 gboolean
 gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
     guint aspect_ratio_n, guint aspect_ratio_d, GstCaps * caps, GError ** error)
 {
   DXGI_SWAP_CHAIN_DESC desc = { 0, };
   GstCaps *render_caps;
+  MakeWindowAssociationData mwa_data = { 0, };
 #if defined(HAVE_DXGI_1_5_H)
   gboolean have_cll = FALSE;
   gboolean have_mastering = FALSE;
@@ -1109,7 +1143,7 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
 #endif
   desc.OutputWindow = window->internal_win_id;
   desc.Windowed = TRUE;
-  desc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+  desc.Flags = 0;
 
   window->swap_chain =
       gst_d3d11_device_create_swap_chain (window->device, &desc);
@@ -1121,6 +1155,14 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
 
     return FALSE;
   }
+
+  /* disable alt+enter here. It should be manually handled */
+  mwa_data.self = window;
+  mwa_data.swap_chain = window->swap_chain;
+  mwa_data.hwnd = desc.OutputWindow;
+  gst_d3d11_device_thread_add (window->device,
+      (GstD3D11DeviceThreadFunc) gst_d3d11_window_disable_alt_enter, &mwa_data);
+
 #if defined(HAVE_DXGI_1_5_H)
   if (swapchain4_available) {
     HRESULT hr;
