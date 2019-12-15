@@ -819,7 +819,7 @@ do_convert (GstD3D11Device * device, DoConvertData * data)
       gst_memory_unmap (mem, &info);
     }
 
-    if (gst_d3d11_memory_ensure_shader_resource_view (mem)) {
+    if (gst_d3d11_memory_ensure_shader_resource_view (d3d11_mem)) {
       GST_TRACE_OBJECT (self, "Use input texture resource without copy");
 
       for (j = 0; j < d3d11_mem->num_shader_resource_views; j++) {
@@ -866,7 +866,7 @@ do_convert (GstD3D11Device * device, DoConvertData * data)
 
     d3d11_mem = (GstD3D11Memory *) mem;
 
-    if (gst_d3d11_memory_ensure_render_target_view (mem)) {
+    if (gst_d3d11_memory_ensure_render_target_view (d3d11_mem)) {
       GST_TRACE_OBJECT (self, "Render to output texture directly");
 
       for (j = 0; j < d3d11_mem->num_render_target_views; j++) {

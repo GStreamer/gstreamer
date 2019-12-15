@@ -163,9 +163,9 @@ GstMemory *         gst_d3d11_allocator_alloc     (GstD3D11Allocator * allocator
 
 gboolean            gst_is_d3d11_memory           (GstMemory * mem);
 
-gboolean            gst_d3d11_memory_ensure_shader_resource_view (GstMemory * mem);
+gboolean            gst_d3d11_memory_ensure_shader_resource_view (GstD3D11Memory * mem);
 
-gboolean            gst_d3d11_memory_ensure_render_target_view (GstMemory * mem);
+gboolean            gst_d3d11_memory_ensure_render_target_view (GstD3D11Memory * mem);
 
 G_END_DECLS
 

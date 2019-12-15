@@ -672,7 +672,7 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
       break;
     }
 
-    if (self->need_srv && !gst_d3d11_memory_ensure_shader_resource_view (mem)) {
+    if (self->need_srv && !gst_d3d11_memory_ensure_shader_resource_view (dmem)) {
       GST_LOG_OBJECT (sink,
           "shader resource view is unavailable, need fallback");
       render_buf = NULL;
@@ -743,8 +743,7 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
       gst_memory_unmap (GST_MEMORY_CAST (dmem), &info);
 
       if (self->need_srv &&
-          !gst_d3d11_memory_ensure_shader_resource_view (GST_MEMORY_CAST
-              (dmem))) {
+          !gst_d3d11_memory_ensure_shader_resource_view (dmem)) {
         GST_ERROR_OBJECT (self, "shader resource view is not available");
 
         gst_buffer_unref (render_buf);

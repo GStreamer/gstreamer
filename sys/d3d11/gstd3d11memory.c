@@ -774,51 +774,43 @@ gst_is_d3d11_memory (GstMemory * mem)
 }
 
 gboolean
-gst_d3d11_memory_ensure_shader_resource_view (GstMemory * mem)
+gst_d3d11_memory_ensure_shader_resource_view (GstD3D11Memory * mem)
 {
-  GstD3D11Memory *dmem;
+  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), FALSE);
 
-  g_return_val_if_fail (gst_is_d3d11_memory (mem), FALSE);
-
-  dmem = (GstD3D11Memory *) mem;
-
-  if (dmem->num_shader_resource_views)
+  if (mem->num_shader_resource_views)
     return TRUE;
 
-  if (!(dmem->desc.BindFlags & D3D11_BIND_SHADER_RESOURCE)) {
-    GST_WARNING_OBJECT (mem->allocator,
-        "Need BindFlags, current flag 0x%x", dmem->desc.BindFlags);
+  if (!(mem->desc.BindFlags & D3D11_BIND_SHADER_RESOURCE)) {
+    GST_WARNING_OBJECT (GST_MEMORY_CAST (mem)->allocator,
+        "Need BindFlags, current flag 0x%x", mem->desc.BindFlags);
 
     return FALSE;
   }
 
-  gst_d3d11_device_thread_add (dmem->device,
+  gst_d3d11_device_thread_add (mem->device,
       (GstD3D11DeviceThreadFunc) create_shader_resource_views, mem);
 
-  return ! !dmem->num_shader_resource_views;
+  return ! !mem->num_shader_resource_views;
 }
 
 gboolean
-gst_d3d11_memory_ensure_render_target_view (GstMemory * mem)
+gst_d3d11_memory_ensure_render_target_view (GstD3D11Memory * mem)
 {
-  GstD3D11Memory *dmem;
+  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), FALSE);
 
-  g_return_val_if_fail (gst_is_d3d11_memory (mem), FALSE);
-
-  dmem = (GstD3D11Memory *) mem;
-
-  if (dmem->num_render_target_views)
+  if (mem->num_render_target_views)
     return TRUE;
 
-  if (!(dmem->desc.BindFlags & D3D11_BIND_RENDER_TARGET)) {
-    GST_WARNING_OBJECT (mem->allocator,
-        "Need BindFlags, current flag 0x%x", dmem->desc.BindFlags);
+  if (!(mem->desc.BindFlags & D3D11_BIND_RENDER_TARGET)) {
+    GST_WARNING_OBJECT (GST_MEMORY_CAST (mem)->allocator,
+        "Need BindFlags, current flag 0x%x", mem->desc.BindFlags);
 
     return FALSE;
   }
 
-  gst_d3d11_device_thread_add (dmem->device,
+  gst_d3d11_device_thread_add (mem->device,
       (GstD3D11DeviceThreadFunc) create_render_target_views, mem);
 
-  return ! !dmem->num_render_target_views;
+  return ! !mem->num_render_target_views;
 }
