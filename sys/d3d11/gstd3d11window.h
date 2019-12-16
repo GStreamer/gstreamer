@@ -41,6 +41,13 @@ typedef struct _GstD3D11WindowClass   GstD3D11WindowClass;
 
 #define GST_D3D11_WINDOW_FLOW_CLOSED GST_FLOW_CUSTOM_ERROR
 
+typedef enum
+{
+  GST_D3D11_WINDOW_OVERLAY_STATE_NONE = 0,
+  GST_D3D11_WINDOW_OVERLAY_STATE_OPENED,
+  GST_D3D11_WINDOW_OVERLAY_STATE_CLOSED,
+} GstD3D11WindowOverlayState;
+
 struct _GstD3D11Window
 {
   GstObject parent;
@@ -85,6 +92,7 @@ struct _GstD3D11Window
 
   HWND internal_win_id;
   HWND external_win_id;
+  GstD3D11WindowOverlayState overlay_state;
 
   HDC device_handle;
   IDXGISwapChain *swap_chain;
