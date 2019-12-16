@@ -3346,7 +3346,7 @@ set_context_info (GstVaapiEncoder * base_encoder)
       GST_VAAPI_ENCODER_H264_COMPLIANCE_MODE_RESTRICT_CODED_BUFFER_ALLOC)
     base_encoder->codedbuf_size /= encoder->min_cr;
 
-
+  base_encoder->context_info.profile = base_encoder->profile;
   base_encoder->context_info.entrypoint = encoder->entrypoint;
 
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;

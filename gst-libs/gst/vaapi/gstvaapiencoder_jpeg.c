@@ -197,6 +197,9 @@ set_context_info (GstVaapiEncoder * base_encoder)
   base_encoder->codedbuf_size += MAX_APP_HDR_SIZE + MAX_FRAME_HDR_SIZE +
       MAX_QUANT_TABLE_SIZE + MAX_HUFFMAN_TABLE_SIZE + MAX_SCAN_HDR_SIZE;
 
+  base_encoder->context_info.profile = base_encoder->profile;
+  base_encoder->context_info.entrypoint = GST_VAAPI_ENTRYPOINT_PICTURE_ENCODE;
+
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 }
 

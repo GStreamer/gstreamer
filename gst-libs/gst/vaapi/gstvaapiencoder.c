@@ -713,21 +713,9 @@ get_default_chroma_type (GstVaapiEncoder * encoder,
 }
 
 static void
-init_context_info (GstVaapiEncoder * encoder, GstVaapiContextInfo * cip,
-    GstVaapiProfile profile)
+init_context_info (GstVaapiEncoder * encoder, GstVaapiContextInfo * cip)
 {
-  const GstVaapiEncoderClassData *const cdata =
-      GST_VAAPI_ENCODER_GET_CLASS (encoder)->class_data;
-
   cip->usage = GST_VAAPI_CONTEXT_USAGE_ENCODE;
-  cip->profile = profile;
-  if (cdata->codec == GST_VAAPI_CODEC_JPEG) {
-    cip->entrypoint = GST_VAAPI_ENTRYPOINT_PICTURE_ENCODE;
-  } else {
-    if (cip->entrypoint != GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_LP &&
-        cip->entrypoint != GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_FEI)
-      cip->entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE;
-  }
   cip->chroma_type = get_default_chroma_type (encoder, cip);
   cip->width = 0;
   cip->height = 0;
@@ -744,8 +732,10 @@ set_context_info (GstVaapiEncoder * encoder)
       GST_VIDEO_INFO_FORMAT (GST_VAAPI_ENCODER_VIDEO_INFO (encoder));
   guint fei_function = config->fei_function;
 
-  init_context_info (encoder, cip, get_profile (encoder));
+  g_assert (cip->profile != GST_VAAPI_PROFILE_UNKNOWN);
+  g_assert (cip->entrypoint != GST_VAAPI_ENTRYPOINT_INVALID);
 
+  init_context_info (encoder, cip);
   cip->chroma_type = gst_vaapi_video_format_get_chroma_type (format);
   cip->width = GST_VAAPI_ENCODER_WIDTH (encoder);
   cip->height = GST_VAAPI_ENCODER_HEIGHT (encoder);
@@ -1483,6 +1473,8 @@ gst_vaapi_encoder_class_init (GstVaapiEncoderClass * klass)
 static GstVaapiContext *
 create_test_context_config (GstVaapiEncoder * encoder, GstVaapiProfile profile)
 {
+  const GstVaapiEncoderClassData *const cdata =
+     GST_VAAPI_ENCODER_GET_CLASS (encoder)->class_data;
   GstVaapiContextInfo cip = { 0, };
   GstVaapiContext *ctxt;
 
@@ -1493,7 +1485,11 @@ create_test_context_config (GstVaapiEncoder * encoder, GstVaapiProfile profile)
   if (profile == GST_VAAPI_PROFILE_UNKNOWN)
     profile = get_profile (encoder);
 
-  init_context_info (encoder, &cip, profile);
+  cip.profile = profile;
+  cip.entrypoint = (cdata->codec == GST_VAAPI_CODEC_JPEG) ?
+    GST_VAAPI_ENTRYPOINT_PICTURE_ENCODE : GST_VAAPI_ENTRYPOINT_SLICE_ENCODE;
+
+  init_context_info (encoder, &cip);
   ctxt = gst_vaapi_context_new (encoder->display, &cip);
   return ctxt;
 }

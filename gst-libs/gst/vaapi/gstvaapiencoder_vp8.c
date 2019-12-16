@@ -173,6 +173,9 @@ set_context_info (GstVaapiEncoder * base_encoder)
       MAX_TOKEN_PROB_UPDATE_SIZE + MAX_MV_PROBE_UPDATE_SIZE +
       MAX_REST_OF_FRAME_HDR_SIZE;
 
+  base_encoder->context_info.profile = base_encoder->profile;
+  base_encoder->context_info.entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE;
+
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 }
 
