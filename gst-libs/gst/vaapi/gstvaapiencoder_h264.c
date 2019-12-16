@@ -1301,14 +1301,6 @@ ensure_tuning (GstVaapiEncoderH264 * encoder)
     case GST_VAAPI_ENCODER_TUNE_HIGH_COMPRESSION:
       success = ensure_tuning_high_compression (encoder);
       break;
-    case GST_VAAPI_ENCODER_TUNE_LOW_POWER:
-      /* Set low-power encode entry point. If hardware doesn't have
-       * support, it will fail in ensure_hw_profile() in later stage.
-       * So not duplicating the profile/entrypont query mechanism
-       * here as a part of optimization */
-      encoder->entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_LP;
-      success = TRUE;
-      break;
     default:
       success = TRUE;
       break;
@@ -2737,6 +2729,16 @@ ensure_profile_and_level (GstVaapiEncoderH264 * encoder)
 
   if (!ensure_profile (encoder) || !ensure_profile_limits (encoder))
     return GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
+
+  /* If set low-power encode entry point and hardware doesn't have
+   * support, it will fail in ensure_hw_profile() in later stage. */
+  encoder->entrypoint =
+      gst_vaapi_encoder_get_entrypoint (GST_VAAPI_ENCODER_CAST (encoder),
+      encoder->profile);
+  if (encoder->entrypoint == GST_VAAPI_ENTRYPOINT_INVALID) {
+    GST_WARNING ("Cannot find valid entrypoint");
+    return GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
+  }
 
   /* Check HW constraints */
   if (!ensure_hw_profile_limits (encoder))

@@ -527,8 +527,13 @@ gst_vaapi_encoder_vp9_reconfigure (GstVaapiEncoder * base_encoder)
   if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
     return status;
 
-  if (GST_VAAPI_ENCODER_TUNE (encoder) == GST_VAAPI_ENCODER_TUNE_LOW_POWER)
-    encoder->entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_LP;
+  encoder->entrypoint =
+      gst_vaapi_encoder_get_entrypoint (base_encoder, encoder->profile);
+  if (encoder->entrypoint == GST_VAAPI_ENTRYPOINT_INVALID) {
+    GST_WARNING ("Cannot find valid entrypoint");
+    return GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
+  }
+
   ensure_control_rate_params (encoder);
   return set_context_info (base_encoder);
 }
