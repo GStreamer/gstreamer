@@ -235,6 +235,7 @@ if gl_winsys.contains('auto')
   need_win_win32 = 'auto'
   need_win_winrt = 'auto'
   need_win_cocoa = 'auto'
+  need_win_egl = 'auto'
   need_win_eagl = 'auto'
   need_win_dispmanx = 'auto'
   need_win_viv_fb = 'auto'
@@ -246,6 +247,7 @@ else
   need_win_win32 = 'no'
   need_win_winrt = 'no'
   need_win_cocoa = 'no'
+  need_win_egl = 'no'
   need_win_eagl = 'no'
   need_win_dispmanx = 'no'
   need_win_viv_fb = 'no'
@@ -262,6 +264,8 @@ else
       need_win_winrt = 'yes'
     elif winsys == 'cocoa'
       need_win_cocoa = 'yes'
+    elif winsys == 'egl'
+      need_win_egl = 'yes'
     elif winsys == 'eagl'
       need_win_eagl = 'yes'
     elif winsys == 'dispmanx'
@@ -517,6 +521,17 @@ if need_platform_egl != 'no'
     enabled_gl_platforms += 'egl'
   elif need_platform_egl == 'yes'
     error ('Could not find requested EGL library')
+  endif
+endif
+
+# winsys_egl checks
+if need_win_egl == 'yes'
+  if need_platform_egl == 'no'
+    error('Impossible situation requested: Cannot use Winsys egl without EGL support')
+  elif not egl_dep.found()
+    error ('Could not find EGL libraries for Winsys egl')
+  else
+    enabled_gl_winsys += 'egl'
   endif
 endif
 
