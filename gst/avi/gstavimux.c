@@ -93,7 +93,7 @@ static GstStaticPadTemplate video_sink_factory =
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("video/x-raw, "
-        "format = (string) { YUY2, I420, BGR, BGRx, BGRA, GRAY8, UYVY }, "
+        "format = (string) { YUY2, I420, BGR, BGRx, BGRA, GRAY8, UYVY, v210 }, "
         "width = (int) [ 16, 4096 ], "
         "height = (int) [ 16, 4096 ], "
         "framerate = (fraction) [ 0, MAX ]; "
@@ -492,6 +492,10 @@ gst_avi_mux_vidsink_set_caps (GstPad * pad, GstCaps * vscaps)
       case GST_VIDEO_FORMAT_GRAY8:
         avipad->vids.compression = GST_MAKE_FOURCC ('Y', '8', '0', '0');
         avipad->vids.bit_cnt = 8;
+        break;
+      case GST_VIDEO_FORMAT_v210:
+        avipad->vids.compression = GST_MAKE_FOURCC ('v', '2', '1', '0');
+        avipad->vids.bit_cnt = 20;
         break;
       case GST_VIDEO_FORMAT_BGR:
         avipad->vids.compression = GST_MAKE_FOURCC (0x00, 0x00, 0x00, 0x00);
