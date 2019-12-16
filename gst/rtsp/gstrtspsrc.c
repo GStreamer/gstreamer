@@ -2455,9 +2455,12 @@ gst_rtspsrc_cleanup (GstRTSPSrc * src)
     src->provided_clock = NULL;
   }
 
+  GST_OBJECT_LOCK (src);
   /* free parameter requests queue */
   if (!g_queue_is_empty (&src->set_get_param_q))
     g_queue_free_full (&src->set_get_param_q, free_param_queue);
+
+  GST_OBJECT_UNLOCK (src);
 
 }
 
