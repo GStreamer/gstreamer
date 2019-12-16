@@ -273,6 +273,27 @@ integration testsuites fedora:
       - $CI_PROJECT_NAME == "gst-docs"
       - $CI_PROJECT_NAME == "gst-plugins-rs"
 
+gstreamer-full:
+  extends: 'build static fedora x86_64'
+  stage: integrate
+  variables:
+    MESON_BUILDTYPE_ARGS: >
+      --default-library=static
+      -Dintrospection=disabled
+      -Ddoc=disabled
+      -Dgtk_doc=disabled
+      -Dgst-plugins-rs=disabled
+      -Dpython=disabled
+  after_script:
+  - cd gst-build/
+  - ninja -C build install
+  - export PKG_CONFIG_PATH=/usr/local/lib64/pkgconfig:/usr/local/lib64/gstreamer-1.0/pkgconfig
+  - export LD_LIBRARY_PATH=/usr/local/lib64
+  - cd examples/static-plugins
+  - meson _build
+  - ninja -C _build
+  - meson test -C _build -v
+
 # Valgrind
 .valgrind fedora x86_64:
   extends: '.test fedora x86_64'
