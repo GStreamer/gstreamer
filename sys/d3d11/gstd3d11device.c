@@ -52,6 +52,7 @@ enum
   PROP_VENDER_ID,
   PROP_HARDWARE,
   PROP_DESCRIPTION,
+  PROP_ALLOW_TEARING,
 };
 
 #define DEFAULT_ADAPTER 0
@@ -63,6 +64,7 @@ struct _GstD3D11DevicePrivate
   guint vender_id;
   gboolean hardware;
   gchar *description;
+  gboolean allow_tearing;
 
   ID3D11Device *device;
   ID3D11DeviceContext *device_context;
@@ -186,6 +188,11 @@ gst_d3d11_device_class_init (GstD3D11DeviceClass * klass)
           "Human readable device description", NULL,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_ALLOW_TEARING,
+      g_param_spec_boolean ("allow-tearing", "Allow tearing",
+          "Whether dxgi device supports allow-tearing feature or not", FALSE,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
   GST_DEBUG_CATEGORY_GET (GST_CAT_CONTEXT, "GST_CONTEXT");
 }
 
@@ -232,6 +239,16 @@ gst_d3d11_device_constructed (GObject * object)
   if (!gst_d3d11_result (hr)) {
     GST_INFO_OBJECT (self, "IDXGIFactory5 was unavailable");
     factory = NULL;
+  } else {
+    BOOL allow_tearing;
+
+    hr = IDXGIFactory5_CheckFeatureSupport ((IDXGIFactory5 *) factory,
+        DXGI_FEATURE_PRESENT_ALLOW_TEARING, (void *) &allow_tearing,
+        sizeof (allow_tearing));
+
+    priv->allow_tearing = SUCCEEDED (hr) && allow_tearing;
+
+    hr = S_OK;
   }
 
   priv->factory_ver = GST_D3D11_DXGI_FACTORY_5;
@@ -408,6 +425,9 @@ gst_d3d11_device_get_property (GObject * object, guint prop_id,
       break;
     case PROP_DESCRIPTION:
       g_value_set_string (value, priv->description);
+      break;
+    case PROP_ALLOW_TEARING:
+      g_value_set_boolean (value, priv->allow_tearing);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

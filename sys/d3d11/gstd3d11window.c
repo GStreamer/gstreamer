@@ -1007,6 +1007,7 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
   DXGI_SWAP_CHAIN_DESC desc = { 0, };
   GstCaps *render_caps;
   MakeWindowAssociationData mwa_data = { 0, };
+  UINT swapchain_flags = 0;
 #if defined(HAVE_DXGI_1_5_H)
   gboolean have_cll = FALSE;
   gboolean have_mastering = FALSE;
@@ -1072,6 +1073,8 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
 
     return FALSE;
   }
+
+  window->allow_tearing = FALSE;
 #if defined(HAVE_DXGI_1_5_H)
   if (!gst_video_content_light_level_from_caps (&window->content_light_level,
           caps)) {
@@ -1089,8 +1092,17 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
 
   if (gst_d3d11_device_get_chosen_dxgi_factory_version (window->device) >=
       GST_D3D11_DXGI_FACTORY_5) {
+    gboolean allow_tearing = FALSE;
+
     GST_DEBUG_OBJECT (window, "DXGI 1.5 interface is available");
     swapchain4_available = TRUE;
+
+    g_object_get (window->device, "allow-tearing", &allow_tearing, NULL);
+    if (allow_tearing) {
+      GST_DEBUG_OBJECT (window, "device support tearning");
+      swapchain_flags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
+      window->allow_tearing = TRUE;
+    }
   }
 #endif
 
@@ -1143,7 +1155,7 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
 #endif
   desc.OutputWindow = window->internal_win_id;
   desc.Windowed = TRUE;
-  desc.Flags = 0;
+  desc.Flags = swapchain_flags;
 
   window->swap_chain =
       gst_d3d11_device_create_swap_chain (window->device, &desc);
@@ -1307,6 +1319,7 @@ _present_on_device_thread (GstD3D11Device * device, FramePresentData * data)
   GstD3D11Window *self = data->window;
   ID3D11DeviceContext *device_context;
   HRESULT hr;
+  UINT present_flags = DXGI_PRESENT_DO_NOT_WAIT;
 
   device_context = gst_d3d11_device_get_device_context_handle (device);
   gst_buffer_replace (&self->cached_buffer, data->buffer);
@@ -1333,8 +1346,13 @@ _present_on_device_thread (GstD3D11Device * device, FramePresentData * data)
     gst_d3d11_color_converter_update_rect (self->converter, &rect);
     gst_d3d11_color_converter_convert (self->converter, srv, &self->rtv);
   }
+#ifdef HAVE_DXGI_1_5_H
+  if (self->allow_tearing) {
+    present_flags |= DXGI_PRESENT_ALLOW_TEARING;
+  }
+#endif
 
-  hr = IDXGISwapChain_Present (self->swap_chain, 0, DXGI_PRESENT_DO_NOT_WAIT);
+  hr = IDXGISwapChain_Present (self->swap_chain, 0, present_flags);
 
   if (!gst_d3d11_result (hr)) {
     GST_WARNING_OBJECT (self, "Direct3D cannot present texture, hr: 0x%x",

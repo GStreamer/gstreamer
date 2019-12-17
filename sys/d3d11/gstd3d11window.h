@@ -108,6 +108,7 @@ struct _GstD3D11Window
   gboolean enable_navigation_events;
 
   GstBuffer *cached_buffer;
+  gboolean allow_tearing;
 };
 
 struct _GstD3D11WindowClass
