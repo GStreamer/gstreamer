@@ -103,6 +103,7 @@ struct _GstRTSPClientPrivate
   guint sessions_cookie;
 
   gboolean drop_backlog;
+  gint post_session_timeout;
 
   guint content_length_limit;
 
@@ -130,6 +131,7 @@ static GHashTable *tunnels;     /* protected by tunnels_lock */
 #define DEFAULT_SESSION_POOL            NULL
 #define DEFAULT_MOUNT_POINTS            NULL
 #define DEFAULT_DROP_BACKLOG            TRUE
+#define DEFAULT_POST_SESSION_TIMEOUT    -1
 
 #define RTSP_CTRL_CB_INTERVAL           1
 #define RTSP_CTRL_TIMEOUT_VALUE         60
@@ -140,6 +142,7 @@ enum
   PROP_SESSION_POOL,
   PROP_MOUNT_POINTS,
   PROP_DROP_BACKLOG,
+  PROP_POST_SESSION_TIMEOUT,
   PROP_LAST
 };
 
@@ -254,6 +257,26 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
       g_param_spec_boolean ("drop-backlog", "Drop Backlog",
           "Drop data when the backlog queue is full",
           DEFAULT_DROP_BACKLOG, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstRTSPClient::post-session-timeout:
+   *
+   * An extra tcp timeout ( > 0) after session timeout, in seconds.
+   * The tcp connection will be kept alive until this timeout happens to give
+   * the client a possibility to reuse the connection.
+   * 0 means that the connection will be closed immediately after the session
+   * timeout.
+   *
+   * Default value is -1 seconds, meaning that we let the system close
+   * the connection.
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (gobject_class, PROP_POST_SESSION_TIMEOUT,
+      g_param_spec_int ("post-session-timeout", "Post Session Timeout",
+          "An extra TCP connection timeout after session timeout", G_MININT,
+          G_MAXINT, DEFAULT_POST_SESSION_TIMEOUT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_rtsp_client_signals[SIGNAL_CLOSED] =
       g_signal_new ("closed", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -588,6 +611,7 @@ gst_rtsp_client_init (GstRTSPClient * client)
   priv->close_seq = 0;
   priv->data_seqs = g_array_new (FALSE, FALSE, sizeof (DataSeq));
   priv->drop_backlog = DEFAULT_DROP_BACKLOG;
+  priv->post_session_timeout = DEFAULT_POST_SESSION_TIMEOUT;
   priv->transports =
       g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL,
       g_object_unref);
@@ -807,6 +831,9 @@ gst_rtsp_client_get_property (GObject * object, guint propid,
     case PROP_DROP_BACKLOG:
       g_value_set_boolean (value, priv->drop_backlog);
       break;
+    case PROP_POST_SESSION_TIMEOUT:
+      g_value_set_int (value, priv->post_session_timeout);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
@@ -829,6 +856,11 @@ gst_rtsp_client_set_property (GObject * object, guint propid,
     case PROP_DROP_BACKLOG:
       g_mutex_lock (&priv->lock);
       priv->drop_backlog = g_value_get_boolean (value);
+      g_mutex_unlock (&priv->lock);
+      break;
+    case PROP_POST_SESSION_TIMEOUT:
+      g_mutex_lock (&priv->lock);
+      priv->post_session_timeout = g_value_get_int (value);
       g_mutex_unlock (&priv->lock);
       break;
     default:
@@ -2531,6 +2563,23 @@ rtsp_ctrl_timeout_cb (gpointer user_data)
   return res;
 }
 
+static gboolean
+rtsp_ctrl_connection_timeout_cb (gpointer user_data)
+{
+  GstRTSPClient *client = (GstRTSPClient *) user_data;
+  GstRTSPClientPrivate *priv = client->priv;
+
+  GST_DEBUG ("rtsp control connection timeout id=%u expired, closing client.",
+      priv->rtsp_ctrl_timeout_id);
+  g_mutex_lock (&priv->lock);
+  priv->rtsp_ctrl_timeout_id = 0;
+  priv->rtsp_ctrl_timeout_cnt = 0;
+  g_mutex_unlock (&priv->lock);
+  gst_rtsp_client_close (client);
+
+  return G_SOURCE_REMOVE;
+}
+
 static void
 rtsp_ctrl_timeout_remove (GstRTSPClientPrivate * priv)
 {
@@ -3694,12 +3743,33 @@ client_session_removed (GstRTSPSessionPool * pool, GstRTSPSession * session,
     GstRTSPClient * client)
 {
   GstRTSPClientPrivate *priv = client->priv;
+  GSource *timer_src;
 
   GST_INFO ("client %p: session %p removed", client, session);
 
   g_mutex_lock (&priv->lock);
   client_unwatch_session (client, session, NULL);
   g_mutex_unlock (&priv->lock);
+
+  if (!priv->sessions && priv->rtsp_ctrl_timeout_id == 0) {
+    if (priv->post_session_timeout > 0) {
+      g_mutex_lock (&priv->lock);
+
+      timer_src = g_timeout_source_new_seconds (priv->post_session_timeout);
+      g_source_set_callback (timer_src, rtsp_ctrl_connection_timeout_cb,
+          client, NULL);
+      priv->rtsp_ctrl_timeout_cnt = 0;
+      priv->rtsp_ctrl_timeout_id = g_source_attach (timer_src,
+          priv->watch_context);
+      g_source_unref (timer_src);
+      GST_DEBUG ("rtsp control setting up connection timeout id=%u.",
+          priv->rtsp_ctrl_timeout_id);
+
+      g_mutex_unlock (&priv->lock);
+    } else if (priv->post_session_timeout == 0) {
+      gst_rtsp_client_close (client);
+    }
+  }
 }
 
 /* Check for Require headers. Returns TRUE if there are no Require headers,

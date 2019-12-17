@@ -1643,6 +1643,105 @@ GST_START_TEST (test_play_multithreaded_timeout_session)
 
 GST_END_TEST;
 
+static void
+new_connection_and_session_timeout_one (GstRTSPClient * client,
+    GstRTSPSession * session, gpointer user_data)
+{
+  gint ps_timeout = 0;
+
+  g_object_set (G_OBJECT (client), "post-session-timeout", 1, NULL);
+  g_object_get (G_OBJECT (client), "post-session-timeout", &ps_timeout, NULL);
+  fail_unless_equals_int (ps_timeout, 1);
+
+  g_object_set (G_OBJECT (session), "extra-timeout", 0, NULL);
+  gst_rtsp_session_set_timeout (session, 1);
+
+  g_signal_handlers_disconnect_by_func (client,
+      new_connection_and_session_timeout_one, user_data);
+}
+
+GST_START_TEST (test_play_timeout_connection)
+{
+  GstRTSPConnection *conn;
+  GstSDPMessage *sdp_message = NULL;
+  const GstSDPMedia *sdp_media;
+  const gchar *video_control;
+  GstRTSPRange client_port;
+  gchar *session = NULL;
+  GstRTSPTransport *video_transport = NULL;
+  GstRTSPSessionPool *pool;
+  GstRTSPThreadPool *thread_pool;
+  GstRTSPMessage *request;
+  GstRTSPMessage *response;
+
+  thread_pool = gst_rtsp_server_get_thread_pool (server);
+  g_object_unref (thread_pool);
+
+  pool = gst_rtsp_server_get_session_pool (server);
+  g_signal_connect (server, "client-connected",
+      G_CALLBACK (session_connected_new_session_cb),
+      new_connection_and_session_timeout_one);
+
+  start_server (FALSE);
+
+
+  conn = connect_to_server (test_port, TEST_MOUNT_POINT);
+
+  gst_rtsp_connection_set_remember_session_id (conn, FALSE);
+
+  sdp_message = do_describe (conn, TEST_MOUNT_POINT);
+
+  /* get control strings from DESCRIBE response */
+  fail_unless (gst_sdp_message_medias_len (sdp_message) == 2);
+  sdp_media = gst_sdp_message_get_media (sdp_message, 0);
+  video_control = gst_sdp_media_get_attribute_val (sdp_media, "control");
+
+  get_client_ports (&client_port);
+
+  /* do SETUP for video and audio */
+  fail_unless (do_setup (conn, video_control, &client_port, &session,
+          &video_transport) == GST_RTSP_STS_OK);
+  fail_unless (gst_rtsp_session_pool_get_n_sessions (pool) == 1);
+  /* send PLAY request and check that we get 200 OK */
+  fail_unless (do_simple_request (conn, GST_RTSP_PLAY,
+          session) == GST_RTSP_STS_OK);
+  sleep (2);
+  fail_unless (gst_rtsp_session_pool_cleanup (pool) == 1);
+  sleep (2);
+
+  request = create_request (conn, GST_RTSP_TEARDOWN, NULL);
+
+  /* add headers */
+  if (session) {
+    gst_rtsp_message_add_header (request, GST_RTSP_HDR_SESSION, session);
+  }
+
+  /* send request */
+  fail_unless (send_request (conn, request));
+  gst_rtsp_message_free (request);
+
+  iterate ();
+
+  /* read response */
+  response = read_response (conn);
+  fail_unless (response == NULL);
+
+  if (response) {
+    gst_rtsp_message_free (response);
+  }
+
+  /* clean up and iterate so the clean-up can finish */
+  g_object_unref (pool);
+  g_free (session);
+  gst_rtsp_transport_free (video_transport);
+  gst_sdp_message_free (sdp_message);
+  gst_rtsp_connection_free (conn);
+
+  stop_server ();
+  iterate ();
+}
+
+GST_END_TEST;
 
 GST_START_TEST (test_no_session_timeout)
 {
@@ -2631,6 +2730,7 @@ rtspserver_suite (void)
   tcase_add_test (tc, test_play_multithreaded_block_in_describe);
   tcase_add_test (tc, test_play_multithreaded_timeout_client);
   tcase_add_test (tc, test_play_multithreaded_timeout_session);
+  tcase_add_test (tc, test_play_timeout_connection);
   tcase_add_test (tc, test_no_session_timeout);
   tcase_add_test (tc, test_play_one_active_stream);
   tcase_add_test (tc, test_play_disconnect);
