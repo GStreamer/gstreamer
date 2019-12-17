@@ -1403,7 +1403,6 @@ gst_vaapi_feienc_h264_encode (GstVaapiEncoder * base_encoder,
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 
 error:
-  g_slice_free (GstVaapiFeiInfoToPakH264, info_to_pak);
   return ret;
 }
 

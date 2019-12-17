@@ -2741,7 +2741,7 @@ gst_vaapi_encoder_h264_fei_encode (GstVaapiEncoder * base_encoder,
   GstVaapiEncoderStatus status = GST_VAAPI_ENCODER_STATUS_ERROR_UNKNOWN;
   GstVaapiSurfaceProxy *reconstruct = NULL;
   GstVaapiEncPicture *picture2 = NULL;
-  GstVaapiFeiInfoToPakH264 info_to_pak;
+  GstVaapiFeiInfoToPakH264 info_to_pak = { {0} };
 
   reconstruct = gst_vaapi_encoder_create_surface (base_encoder);
 
