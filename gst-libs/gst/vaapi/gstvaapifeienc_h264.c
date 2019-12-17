@@ -864,7 +864,7 @@ add_slice_headers (GstVaapiFeiEncH264 * feienc, GstVaapiEncPicture * picture,
       slice_param->num_ref_idx_l1_active_minus1 = reflist_1_count - 1;
     else
       slice_param->num_ref_idx_l1_active_minus1 = 0;
-    g_assert (slice_param->num_ref_idx_l0_active_minus1 >= 0);
+    g_assert (slice_param->num_ref_idx_l0_active_minus1 == 0);
     g_assert (slice_param->num_ref_idx_l1_active_minus1 == 0);
 
     i_ref = 0;
