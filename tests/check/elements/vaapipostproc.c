@@ -125,18 +125,23 @@ static GstPadProbeReturn
 cb_mouse_event (GstPad * pad, GstPadProbeInfo * info, gpointer data)
 {
   VppTestCoordinate *coord = data;
+  gdouble x = 0, y = 0;
   GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_NAVIGATION) {
     switch (gst_navigation_event_get_type (event)) {
       case GST_NAVIGATION_EVENT_MOUSE_MOVE:
-        gst_navigation_event_parse_mouse_move_event (event, &coord->x,
-            &coord->y);
+        if (gst_navigation_event_parse_mouse_move_event (event, &x, &y)) {
+          coord->x = x;
+          coord->y = y;
+        }
         break;
       case GST_NAVIGATION_EVENT_MOUSE_BUTTON_PRESS:
       case GST_NAVIGATION_EVENT_MOUSE_BUTTON_RELEASE:
-        gst_navigation_event_parse_mouse_button_event (event, NULL, &coord->x,
-            &coord->y);
+        if (gst_navigation_event_parse_mouse_button_event (event, NULL, &x, &y)) {
+          coord->x = x;
+          coord->y = y;
+        }
         break;
       default:
         break;
@@ -152,7 +157,7 @@ vpp_test_mouse_events (VppTestContext * ctx,
 {
   GstStructure *structure;
   GstEvent *event;
-  VppTestCoordinate probed;
+  VppTestCoordinate probed = { 0, };
   guint i, j;
 
   /* probe mouse events propagated up from vaapipostproc */
