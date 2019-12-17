@@ -2823,8 +2823,7 @@ gst_vaapi_encoder_h264_fei_encode (GstVaapiEncoder * base_encoder,
     }
 
     /* Free the slice array */
-    if (info_to_pak.h264_slice_headers)
-      g_array_free (info_to_pak.h264_slice_headers, TRUE);
+    g_array_free (info_to_pak.h264_slice_headers, TRUE);
 
     gst_vaapi_enc_picture_unref (picture2);
   } else {
@@ -2841,6 +2840,8 @@ error:
         reconstruct);
     if (picture2)
       gst_vaapi_enc_picture_unref (picture2);
+    if (info_to_pak.h264_slice_headers)
+      g_array_free (info_to_pak.h264_slice_headers, TRUE);
     return status;
   }
 }
