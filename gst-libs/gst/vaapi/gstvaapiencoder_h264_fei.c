@@ -2837,9 +2837,8 @@ gst_vaapi_encoder_h264_fei_encode (GstVaapiEncoder * base_encoder,
   /* ERRORS */
 error:
   {
-    if (reconstruct)
-      gst_vaapi_encoder_release_surface (GST_VAAPI_ENCODER (encoder),
-          reconstruct);
+    gst_vaapi_encoder_release_surface (GST_VAAPI_ENCODER (encoder),
+        reconstruct);
     if (picture2)
       gst_vaapi_enc_picture_unref (picture2);
     return status;
