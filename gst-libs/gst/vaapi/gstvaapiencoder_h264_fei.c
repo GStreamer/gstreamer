@@ -2827,7 +2827,9 @@ gst_vaapi_encoder_h264_fei_encode (GstVaapiEncoder * base_encoder,
       g_array_free (info_to_pak.h264_slice_headers, TRUE);
 
     gst_vaapi_enc_picture_unref (picture2);
-
+  } else {
+    GST_ERROR ("invalid FEI mode");
+    goto error;
   }
 
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
