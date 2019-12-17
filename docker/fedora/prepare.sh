@@ -15,11 +15,13 @@ dnf upgrade -y
 
 # install rest of the extra deps
 dnf install -y \
+    aalib-devel \
     aom \
     aom-extra-tools \
     bat \
     libaom \
     libaom-devel \
+    libcaca-devel \
     ccache \
     cmake \
     clang-devel \
