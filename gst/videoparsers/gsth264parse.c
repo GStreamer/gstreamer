@@ -879,6 +879,7 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
   GstH264SPS sps = { 0, };
   GstH264NalParser *nalparser = h264parse->nalparser;
   GstH264ParserResult pres;
+  GstH264SliceHdr slice;
 
   /* nothing to do for broken input */
   if (G_UNLIKELY (nalu->size < 2)) {
@@ -1006,30 +1007,29 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
       GST_DEBUG_OBJECT (h264parse, "frame start: %i", h264parse->frame_start);
       if (nal_type == GST_H264_NAL_SLICE_EXT && !GST_H264_IS_MVC_NALU (nalu))
         break;
-      {
-        GstH264SliceHdr slice;
 
-        pres = gst_h264_parser_parse_slice_hdr (nalparser, nalu, &slice,
-            FALSE, FALSE);
-        GST_DEBUG_OBJECT (h264parse,
-            "parse result %d, first MB: %u, slice type: %u",
-            pres, slice.first_mb_in_slice, slice.type);
-        if (pres == GST_H264_PARSER_OK) {
-          if (GST_H264_IS_I_SLICE (&slice) || GST_H264_IS_SI_SLICE (&slice))
-            h264parse->keyframe = TRUE;
-          else if (GST_H264_IS_P_SLICE (&slice)
-              || GST_H264_IS_SP_SLICE (&slice))
-            h264parse->predicted = TRUE;
-          else if (GST_H264_IS_B_SLICE (&slice))
-            h264parse->bidirectional = TRUE;
+      pres = gst_h264_parser_parse_slice_hdr (nalparser, nalu, &slice,
+          FALSE, FALSE);
+      GST_DEBUG_OBJECT (h264parse,
+          "parse result %d, first MB: %u, slice type: %u",
+          pres, slice.first_mb_in_slice, slice.type);
+      if (pres == GST_H264_PARSER_OK) {
+        if (GST_H264_IS_I_SLICE (&slice) || GST_H264_IS_SI_SLICE (&slice))
+          h264parse->keyframe = TRUE;
+        else if (GST_H264_IS_P_SLICE (&slice)
+            || GST_H264_IS_SP_SLICE (&slice))
+          h264parse->predicted = TRUE;
+        else if (GST_H264_IS_B_SLICE (&slice))
+          h264parse->bidirectional = TRUE;
 
-          h264parse->state |= GST_H264_PARSE_STATE_GOT_SLICE;
-          h264parse->field_pic_flag = slice.field_pic_flag;
-        }
+        h264parse->state |= GST_H264_PARSE_STATE_GOT_SLICE;
+        h264parse->field_pic_flag = slice.field_pic_flag;
       }
+
       if (G_LIKELY (nal_type != GST_H264_NAL_SLICE_IDR &&
               !h264parse->push_codec))
         break;
+
       /* if we need to sneak codec NALs into the stream,
        * this is a good place, so fake it as IDR
        * (which should be at start anyway) */
@@ -1049,19 +1049,21 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
         GST_DEBUG_OBJECT (h264parse, "moved IDR mark to SEI position %d",
             h264parse->idr_pos);
       }
+      /* Reset state only on first IDR slice of CVS D.2.29 */
+      if (slice.first_mb_in_slice == 0) {
+        if (h264parse->mastering_display_info_state ==
+            GST_H264_PARSE_SEI_PARSED)
+          h264parse->mastering_display_info_state = GST_H264_PARSE_SEI_ACTIVE;
+        else if (h264parse->mastering_display_info_state ==
+            GST_H264_PARSE_SEI_ACTIVE)
+          h264parse->mastering_display_info_state = GST_H264_PARSE_SEI_EXPIRED;
 
-      if (h264parse->mastering_display_info_state == GST_H264_PARSE_SEI_PARSED)
-        h264parse->mastering_display_info_state = GST_H264_PARSE_SEI_ACTIVE;
-      else if (h264parse->mastering_display_info_state ==
-          GST_H264_PARSE_SEI_ACTIVE)
-        h264parse->mastering_display_info_state = GST_H264_PARSE_SEI_EXPIRED;
-
-      if (h264parse->content_light_level_state == GST_H264_PARSE_SEI_PARSED)
-        h264parse->content_light_level_state = GST_H264_PARSE_SEI_ACTIVE;
-      else if (h264parse->content_light_level_state ==
-          GST_H264_PARSE_SEI_ACTIVE)
-        h264parse->content_light_level_state = GST_H264_PARSE_SEI_EXPIRED;
-
+        if (h264parse->content_light_level_state == GST_H264_PARSE_SEI_PARSED)
+          h264parse->content_light_level_state = GST_H264_PARSE_SEI_ACTIVE;
+        else if (h264parse->content_light_level_state ==
+            GST_H264_PARSE_SEI_ACTIVE)
+          h264parse->content_light_level_state = GST_H264_PARSE_SEI_EXPIRED;
+      }
       break;
     case GST_H264_NAL_AU_DELIMITER:
       /* Just accumulate AU Delimiter, whether it's before SPS or not */

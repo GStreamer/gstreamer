@@ -921,7 +921,8 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
       is_irap = ((nal_type >= GST_H265_NAL_SLICE_BLA_W_LP)
           && (nal_type <= GST_H265_NAL_SLICE_CRA_NUT)) ? TRUE : FALSE;
 
-      if (no_rasl_output_flag && is_irap) {
+      if (no_rasl_output_flag && is_irap
+          && slice.first_slice_segment_in_pic_flag == 1) {
         if (h265parse->mastering_display_info_state ==
             GST_H265_PARSE_SEI_PARSED)
           h265parse->mastering_display_info_state = GST_H265_PARSE_SEI_ACTIVE;
