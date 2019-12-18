@@ -96,7 +96,6 @@ struct _GstD3D11Window
 
   HDC device_handle;
   IDXGISwapChain *swap_chain;
-  ID3D11Texture2D *backbuffer;
   ID3D11RenderTargetView *rtv;
   DXGI_FORMAT format;
 

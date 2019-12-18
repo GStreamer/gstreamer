@@ -230,11 +230,6 @@ static void
 gst_d3d11_window_release_resources (GstD3D11Device * device,
     GstD3D11Window * window)
 {
-  if (window->backbuffer) {
-    ID3D11Texture2D_Release (window->backbuffer);
-    window->backbuffer = NULL;
-  }
-
   if (window->rtv) {
     ID3D11RenderTargetView_Release (window->rtv);
     window->rtv = NULL;
@@ -535,16 +530,12 @@ gst_d3d11_window_on_resize (GstD3D11Device * device, GstD3D11Window * window)
   guint width, height;
   D3D11_TEXTURE2D_DESC desc;
   DXGI_SWAP_CHAIN_DESC swap_desc;
+  ID3D11Texture2D *backbuffer;
 
   if (!window->swap_chain)
     return;
 
   d3d11_dev = gst_d3d11_device_get_device_handle (device);
-
-  if (window->backbuffer) {
-    ID3D11Texture2D_Release (window->backbuffer);
-    window->backbuffer = NULL;
-  }
 
   if (window->rtv) {
     ID3D11RenderTargetView_Release (window->rtv);
@@ -561,14 +552,14 @@ gst_d3d11_window_on_resize (GstD3D11Device * device, GstD3D11Window * window)
   }
 
   hr = IDXGISwapChain_GetBuffer (window->swap_chain,
-      0, &IID_ID3D11Texture2D, (void **) &window->backbuffer);
+      0, &IID_ID3D11Texture2D, (void **) &backbuffer);
   if (!gst_d3d11_result (hr)) {
     GST_ERROR_OBJECT (window,
         "Cannot get backbuffer from swapchain, hr: 0x%x", (guint) hr);
     return;
   }
 
-  ID3D11Texture2D_GetDesc (window->backbuffer, &desc);
+  ID3D11Texture2D_GetDesc (backbuffer, &desc);
   window->surface_width = desc.Width;
   window->surface_height = desc.Height;
 
@@ -605,11 +596,12 @@ gst_d3d11_window_on_resize (GstD3D11Device * device, GstD3D11Window * window)
       window->render_rect.w, window->render_rect.h);
 
   hr = ID3D11Device_CreateRenderTargetView (d3d11_dev,
-      (ID3D11Resource *) window->backbuffer, NULL, &window->rtv);
+      (ID3D11Resource *) backbuffer, NULL, &window->rtv);
   if (!gst_d3d11_result (hr)) {
     GST_ERROR_OBJECT (window, "Cannot create render target view, hr: 0x%x",
         (guint) hr);
-    return;
+
+    goto done;
   }
 
   if (window->cached_buffer) {
@@ -622,6 +614,9 @@ gst_d3d11_window_on_resize (GstD3D11Device * device, GstD3D11Window * window)
 
     _present_on_device_thread (window->device, &present_data);
   }
+
+done:
+  ID3D11Texture2D_Release (backbuffer);
 }
 
 static void
