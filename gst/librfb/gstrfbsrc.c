@@ -248,17 +248,17 @@ gst_rfb_src_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_HOST:
-      src->host = g_strdup (g_value_get_string (value));
+      src->host = g_value_dup_string (value);;
       break;
     case PROP_PORT:
       src->port = g_value_get_int (value);
       break;
     case PROP_VERSION:
-      gst_rfb_property_set_version (src, g_strdup (g_value_get_string (value)));
+      gst_rfb_property_set_version (src, g_value_dup_string (value));
       break;
     case PROP_PASSWORD:
       g_free (src->decoder->password);
-      src->decoder->password = g_strdup (g_value_get_string (value));
+      src->decoder->password = g_value_dup_string (value);
       break;
     case PROP_OFFSET_X:
       src->decoder->offset_x = g_value_get_int (value);

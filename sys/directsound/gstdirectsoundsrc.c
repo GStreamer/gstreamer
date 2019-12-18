@@ -262,7 +262,7 @@ gst_directsound_src_set_property (GObject * object, guint prop_id,
         src->device_name = NULL;
       }
       if (g_value_get_string (value)) {
-        src->device_name = g_strdup (g_value_get_string (value));
+        src->device_name = g_value_dup_string (value);
       }
       break;
     case PROP_VOLUME:

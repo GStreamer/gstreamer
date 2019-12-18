@@ -220,7 +220,7 @@ gst_dshowaudiosrc_set_property (GObject * object, guint prop_id,
         src->device = NULL;
       }
       if (g_value_get_string (value)) {
-        src->device = g_strdup (g_value_get_string (value));
+        src->device = g_value_dup_string (value);;
       }
       break;
     }
@@ -231,7 +231,7 @@ gst_dshowaudiosrc_set_property (GObject * object, guint prop_id,
         src->device_name = NULL;
       }
       if (g_value_get_string (value)) {
-        src->device_name = g_strdup (g_value_get_string (value));
+        src->device_name = g_value_dup_string (value);;
       }
       break;
     }
