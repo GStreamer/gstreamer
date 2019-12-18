@@ -246,7 +246,7 @@ gst_tcp_server_sink_set_property (GObject * object, guint prop_id,
         break;
       }
       g_free (sink->host);
-      sink->host = g_strdup (g_value_get_string (value));
+      sink->host = g_value_dup_string (value);
       break;
     case PROP_PORT:
       sink->server_port = g_value_get_int (value);

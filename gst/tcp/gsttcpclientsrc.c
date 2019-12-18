@@ -332,7 +332,7 @@ gst_tcp_client_src_set_property (GObject * object, guint prop_id,
         break;
       }
       g_free (tcpclientsrc->host);
-      tcpclientsrc->host = g_strdup (g_value_get_string (value));
+      tcpclientsrc->host = g_value_dup_string (value);
       break;
     case PROP_PORT:
       tcpclientsrc->port = g_value_get_int (value);

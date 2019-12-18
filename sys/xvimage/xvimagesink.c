@@ -1594,7 +1594,7 @@ gst_xv_image_sink_set_property (GObject * object, guint prop_id,
       break;
     case PROP_DISPLAY:
       g_free (xvimagesink->config.display_name);
-      xvimagesink->config.display_name = g_strdup (g_value_get_string (value));
+      xvimagesink->config.display_name = g_value_dup_string (value);
       break;
     case PROP_SYNCHRONOUS:
       xvimagesink->synchronous = g_value_get_boolean (value);

@@ -240,7 +240,7 @@ gst_tcp_client_sink_set_property (GObject * object, guint prop_id,
         break;
       }
       g_free (tcpclientsink->host);
-      tcpclientsink->host = g_strdup (g_value_get_string (value));
+      tcpclientsink->host = g_value_dup_string (value);
       break;
     case PROP_PORT:
       tcpclientsink->port = g_value_get_int (value);
