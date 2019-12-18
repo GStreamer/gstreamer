@@ -252,7 +252,7 @@ gst_net_time_provider_set_property (GObject * object, guint prop_id,
       if (g_value_get_string (value) == NULL)
         self->priv->address = g_strdup (DEFAULT_ADDRESS);
       else
-        self->priv->address = g_strdup (g_value_get_string (value));
+        self->priv->address = g_value_dup_string (value);
       break;
     case PROP_CLOCK:
       gst_object_replace ((GstObject **) clock_p,

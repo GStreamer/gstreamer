@@ -2000,7 +2000,7 @@ gst_event_parse_toc_select (GstEvent * event, gchar ** uid)
   val = gst_structure_id_get_value (structure, GST_QUARK (UID));
 
   if (uid != NULL)
-    *uid = g_strdup (g_value_get_string (val));
+    *uid = g_value_dup_string (val);
 
 }
 
