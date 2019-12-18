@@ -929,7 +929,7 @@ gst_ximage_src_set_property (GObject * object, guint prop_id,
     case PROP_DISPLAY_NAME:
 
       g_free (src->display_name);
-      src->display_name = g_strdup (g_value_get_string (value));
+      src->display_name = g_value_dup_string (value);
       break;
     case PROP_SHOW_POINTER:
       src->show_pointer = g_value_get_boolean (value);
@@ -965,7 +965,7 @@ gst_ximage_src_set_property (GObject * object, guint prop_id,
         break;
       }
       g_free (src->xname);
-      src->xname = g_strdup (g_value_get_string (value));
+      src->xname = g_value_dup_string (value);
       break;
     default:
       break;

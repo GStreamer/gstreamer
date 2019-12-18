@@ -639,7 +639,7 @@ gst_multipart_mux_set_property (GObject * object,
   switch (prop_id) {
     case PROP_BOUNDARY:
       g_free (mux->boundary);
-      mux->boundary = g_strdup (g_value_get_string (value));
+      mux->boundary = g_value_dup_string (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
