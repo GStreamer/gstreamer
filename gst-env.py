@@ -390,6 +390,13 @@ if __name__ == "__main__":
             # like other shells such as bash and zsh.
             # See: https://gitlab.freedesktop.org/gstreamer/gst-build/issues/18
             signal.signal(signal.SIGINT, lambda x, y: True)
+            # Set the prompt
+            args.append('--init-command')
+            prompt_cmd = '''functions --copy fish_prompt original_fish_prompt
+            function fish_prompt
+                echo -n '[gst-{}] '(original_fish_prompt)
+            end'''.format(gst_version)
+            args.append(prompt_cmd)
     try:
         exit(subprocess.call(args, close_fds=False,
                              env=get_subprocess_env(options, gst_version)))
