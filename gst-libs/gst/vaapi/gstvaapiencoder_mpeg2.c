@@ -269,7 +269,7 @@ fill_picture (GstVaapiEncoderMpeg2 * encoder,
 
   pic_param->reconstructed_picture =
       GST_VAAPI_SURFACE_PROXY_SURFACE_ID (surface);
-  pic_param->coded_buf = GST_VAAPI_OBJECT_ID (codedbuf);
+  pic_param->coded_buf = GST_VAAPI_CODED_BUFFER_ID (codedbuf);
   pic_param->picture_type = get_va_enc_picture_type (picture->type);
   pic_param->temporal_reference = picture->frame_num & (1024 - 1);
   pic_param->vbv_delay = 0xFFFF;

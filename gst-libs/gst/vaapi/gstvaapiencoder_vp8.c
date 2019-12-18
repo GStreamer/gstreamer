@@ -304,7 +304,7 @@ fill_picture (GstVaapiEncoderVP8 * encoder,
   memset (pic_param, 0, sizeof (VAEncPictureParameterBufferVP8));
 
   pic_param->reconstructed_frame = GST_VAAPI_SURFACE_PROXY_SURFACE_ID (surface);
-  pic_param->coded_buf = GST_VAAPI_OBJECT_ID (codedbuf);
+  pic_param->coded_buf = GST_VAAPI_CODED_BUFFER_ID (codedbuf);
 
   if (picture->type == GST_VAAPI_PICTURE_TYPE_P) {
     pic_param->pic_flags.bits.frame_type = 1;

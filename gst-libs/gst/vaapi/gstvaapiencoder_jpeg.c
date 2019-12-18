@@ -214,7 +214,7 @@ fill_picture (GstVaapiEncoderJpeg * encoder,
       GST_VAAPI_SURFACE_PROXY_SURFACE_ID (surface);
   pic_param->picture_width = GST_VAAPI_ENCODER_WIDTH (encoder);
   pic_param->picture_height = GST_VAAPI_ENCODER_HEIGHT (encoder);
-  pic_param->coded_buf = GST_VAAPI_OBJECT_ID (codedbuf);
+  pic_param->coded_buf = GST_VAAPI_CODED_BUFFER_ID (codedbuf);
 
   pic_param->pic_flags.bits.profile = 0;        /* Profile = Baseline */
   pic_param->pic_flags.bits.progressive = 0;    /* Sequential encoding */

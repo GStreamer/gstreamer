@@ -42,11 +42,32 @@ typedef struct _GstVaapiCodedBuffer             GstVaapiCodedBuffer;
 typedef struct _GstVaapiCodedBufferProxy        GstVaapiCodedBufferProxy;
 typedef struct _GstVaapiCodedBufferPool         GstVaapiCodedBufferPool;
 
+#define GST_TYPE_VAAPI_CODED_BUFFER (gst_vaapi_coded_buffer_get_type ())
+
+GType
+gst_vaapi_coded_buffer_get_type (void) G_GNUC_CONST;
+
+/**
+ * gst_vaapi_coded_buffer_unref: (skip)
+ * @buf: (transfer full): a #GstVaapiCodedBuffer.
+ *
+ * Decreases the refcount of @buf. If the refcount reaches 0, the
+ * @buf will be freed.
+ */
+static inline void gst_vaapi_coded_buffer_unref(GstVaapiCodedBuffer* buf);
+static inline void
+gst_vaapi_coded_buffer_unref (GstVaapiCodedBuffer * buf)
+{
+  gst_mini_object_unref (GST_MINI_OBJECT_CAST (buf));
+}
+
 gssize
 gst_vaapi_coded_buffer_get_size (GstVaapiCodedBuffer * buf);
 
 gboolean
 gst_vaapi_coded_buffer_copy_into (GstBuffer * dest, GstVaapiCodedBuffer * src);
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiCodedBuffer, gst_vaapi_coded_buffer_unref)
 
 G_END_DECLS
 

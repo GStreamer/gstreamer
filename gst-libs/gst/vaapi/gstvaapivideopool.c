@@ -67,14 +67,16 @@ gst_vaapi_video_pool_init (GstVaapiVideoPool * pool, GstVaapiDisplay * display,
 void
 gst_vaapi_video_pool_finalize (GstVaapiVideoPool * pool)
 {
-  if (pool->object_type == GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_IMAGE) {
+  if (pool->object_type == GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_IMAGE
+      || pool->object_type == GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_CODED_BUFFER) {
     g_list_free_full (pool->used_objects,
         (GDestroyNotify) gst_mini_object_unref);
   } else {
     g_list_free_full (pool->used_objects, gst_vaapi_object_unref);
   }
 
-  if (pool->object_type == GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_IMAGE) {
+  if (pool->object_type == GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_IMAGE
+      || pool->object_type == GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_CODED_BUFFER) {
     g_queue_foreach (&pool->free_objects, (GFunc) gst_mini_object_unref, NULL);
   } else {
     g_queue_foreach (&pool->free_objects, (GFunc) gst_vaapi_object_unref, NULL);
@@ -195,10 +197,12 @@ gst_vaapi_video_pool_get_object_unlocked (GstVaapiVideoPool * pool)
   ++pool->used_count;
   pool->used_objects = g_list_prepend (pool->used_objects, object);
 
-  if (pool->object_type == GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_IMAGE)
+  if (pool->object_type == GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_IMAGE
+      || pool->object_type == GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_CODED_BUFFER) {
     object = gst_mini_object_ref (GST_MINI_OBJECT_CAST (object));
-  else
+  } else {
     object = gst_vaapi_object_ref (object);
+  }
   return object;
 }
 
@@ -235,10 +239,12 @@ gst_vaapi_video_pool_put_object_unlocked (GstVaapiVideoPool * pool,
   if (!elem)
     return;
 
-  if (pool->object_type == GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_IMAGE)
+  if (pool->object_type == GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_IMAGE
+      || pool->object_type == GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_CODED_BUFFER) {
     gst_mini_object_unref (GST_MINI_OBJECT_CAST (object));
-  else
+  } else {
     gst_vaapi_object_unref (object);
+  }
 
   --pool->used_count;
   pool->used_objects = g_list_delete_link (pool->used_objects, elem);
@@ -271,7 +277,8 @@ static inline gboolean
 gst_vaapi_video_pool_add_object_unlocked (GstVaapiVideoPool * pool,
     gpointer object)
 {
-  if (pool->object_type == GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_IMAGE) {
+  if (pool->object_type == GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_IMAGE
+      || pool->object_type == GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_CODED_BUFFER) {
     g_queue_push_tail (&pool->free_objects,
         gst_mini_object_ref (GST_MINI_OBJECT_CAST (object)));
   } else {

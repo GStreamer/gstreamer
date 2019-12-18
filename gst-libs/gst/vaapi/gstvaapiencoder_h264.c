@@ -2236,7 +2236,7 @@ fill_picture (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
   for (; i < 16; ++i) {
     pic_param->ReferenceFrames[i].picture_id = VA_INVALID_ID;
   }
-  pic_param->coded_buf = GST_VAAPI_OBJECT_ID (codedbuf);
+  pic_param->coded_buf = GST_VAAPI_CODED_BUFFER_ID (codedbuf);
 
   pic_param->pic_parameter_set_id = encoder->view_idx;
   pic_param->seq_parameter_set_id = encoder->view_idx ? 1 : 0;

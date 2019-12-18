@@ -1342,7 +1342,7 @@ fill_picture (GstVaapiFEIPakH264 * feipak, GstVaapiEncPicture * picture,
     pic_param->ReferenceFrames[i].picture_id = VA_INVALID_ID;
     pic_param->ReferenceFrames[i].frame_idx = VA_PICTURE_H264_INVALID;
   }
-  pic_param->coded_buf = GST_VAAPI_OBJECT_ID (codedbuf);
+  pic_param->coded_buf = GST_VAAPI_CODED_BUFFER_ID (codedbuf);
 
   return TRUE;
 }

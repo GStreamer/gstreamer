@@ -45,7 +45,7 @@ coded_buffer_proxy_finalize (GstVaapiCodedBufferProxy * proxy)
   if (proxy->buffer) {
     if (proxy->pool)
       gst_vaapi_video_pool_put_object (proxy->pool, proxy->buffer);
-    gst_vaapi_object_unref (proxy->buffer);
+    gst_vaapi_coded_buffer_unref (proxy->buffer);
     proxy->buffer = NULL;
   }
   gst_vaapi_video_pool_replace (&proxy->pool, NULL);
@@ -115,7 +115,7 @@ gst_vaapi_coded_buffer_proxy_new_from_pool (GstVaapiCodedBufferPool * pool)
 #endif
   if (!proxy->buffer)
     goto error;
-  gst_vaapi_object_ref (proxy->buffer);
+  gst_mini_object_ref (GST_MINI_OBJECT_CAST (proxy->buffer));
   return proxy;
 
   /* ERRORS */

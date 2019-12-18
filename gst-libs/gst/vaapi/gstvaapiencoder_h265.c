@@ -1613,7 +1613,7 @@ fill_picture (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
     pic_param->reference_frames[i].picture_id = VA_INVALID_SURFACE;
     pic_param->reference_frames[i].flags = 0;
   }
-  pic_param->coded_buf = GST_VAAPI_OBJECT_ID (codedbuf);
+  pic_param->coded_buf = GST_VAAPI_CODED_BUFFER_ID (codedbuf);
 
   /* slice_temporal_mvp_enable_flag == FALSE */
   pic_param->collocated_ref_pic_index = 0xFF;

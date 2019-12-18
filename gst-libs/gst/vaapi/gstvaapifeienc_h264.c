@@ -766,7 +766,7 @@ fill_picture (GstVaapiFeiEncH264 * feienc, GstVaapiEncPicture * picture,
     pic_param->ReferenceFrames[i].flags = VA_PICTURE_H264_INVALID;
   }
 
-  pic_param->coded_buf = GST_VAAPI_OBJECT_ID (codedbuf);
+  pic_param->coded_buf = GST_VAAPI_CODED_BUFFER_ID (codedbuf);
 
   pic_param->pic_parameter_set_id = feienc->view_idx;
   pic_param->seq_parameter_set_id = feienc->view_idx ? 1 : 0;

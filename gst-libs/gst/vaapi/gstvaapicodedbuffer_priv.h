@@ -26,14 +26,11 @@
 
 #include <gst/vaapi/gstvaapicontext.h>
 #include "gstvaapicodedbuffer.h"
-#include "gstvaapiobject_priv.h"
 
 G_BEGIN_DECLS
 
 #define GST_VAAPI_CODED_BUFFER_CAST(obj) \
     ((GstVaapiCodedBuffer *)(obj))
-
-typedef struct _GstVaapiCodedBufferClass        GstVaapiCodedBufferClass;
 
 /**
  * GstVaapiCodedBuffer:
@@ -43,22 +40,32 @@ typedef struct _GstVaapiCodedBufferClass        GstVaapiCodedBufferClass;
 struct _GstVaapiCodedBuffer
 {
   /*< private >*/
-  GstVaapiObject parent_instance;
+  GstMiniObject         mini_object;
+  GstVaapiDisplay      *display;
+  GstVaapiID            object_id;
 
+  /*< public >*/
   GstVaapiContext      *context;
   VACodedBufferSegment *segment_list;
 };
 
 /**
- * GstVaapiCodedBufferClass:
+ * GST_VAAPI_CODED_BUFFER_DISPLAY:
+ * @buf: a #GstVaapiCodedBuffer
  *
- * A VA coded buffer object wrapper class.
+ * Macro that evaluates to the #GstVaapiDisplay of @buf
  */
-struct _GstVaapiCodedBufferClass
-{
-  /*< private >*/
-  GstVaapiObjectClass parent_class;
-};
+#undef GST_VAAPI_CODED_BUFFER_DISPLAY
+#define GST_VAAPI_CODED_BUFFER_DISPLAY(buf) (GST_VAAPI_CODED_BUFFER (buf)->display)
+
+/**
+ * GST_VAAPI_CODED_BUFFER_ID:
+ * @buf: a #GstVaapiCodedBuffer
+ *
+ * Macro that evaluates to the object ID of @buf
+ */
+#undef GST_VAAPI_CODED_BUFFER_ID
+#define GST_VAAPI_CODED_BUFFER_ID(buf) (GST_VAAPI_CODED_BUFFER (buf)->object_id)
 
 G_GNUC_INTERNAL
 GstVaapiCodedBuffer *
