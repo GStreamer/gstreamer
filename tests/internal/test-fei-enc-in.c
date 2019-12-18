@@ -638,7 +638,7 @@ app_run (App * app)
     ret = EXIT_SUCCESS;
 
   gst_vaapi_video_pool_replace (&pool, NULL);
-  gst_vaapi_object_unref (image);
+  gst_vaapi_image_unref (image);
   return ret;
 }
 

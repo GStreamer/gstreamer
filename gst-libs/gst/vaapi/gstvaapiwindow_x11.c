@@ -39,6 +39,7 @@
 #include "gstvaapisurface_priv.h"
 #include "gstvaapiutils.h"
 #include "gstvaapiutils_x11.h"
+#include "gstvaapisurface_priv.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gst_debug_vaapi_window);
 #define GST_CAT_DEFAULT gst_debug_vaapi_window

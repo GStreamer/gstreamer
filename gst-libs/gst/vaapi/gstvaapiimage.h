@@ -59,7 +59,31 @@ G_BEGIN_DECLS
  */
 #define GST_VAAPI_IMAGE_HEIGHT(image)   gst_vaapi_image_get_height(image)
 
+/**
+ * GST_VAAPI_IMAGE_DISPLAY:
+ * @image: a #GstVaapiImage
+ *
+ * Macro that evaluates to the display of @image
+ */
+#define GST_VAAPI_IMAGE_DISPLAY(image)  gst_vaapi_image_get_display(image)
+
+/**
+ * GST_VAAPI_IMAGE_ID:
+ * @image: a #GstVaapiImage
+ *
+ * Macro that evaluates to the ID of @image
+ */
+#define GST_VAAPI_IMAGE_ID(image)       gst_vaapi_image_get_id(image)
+
+#define GST_TYPE_VAAPI_IMAGE            (gst_vaapi_image_get_type ())
+
 typedef struct _GstVaapiImage                   GstVaapiImage;
+
+GType
+gst_vaapi_image_get_type (void) G_GNUC_CONST;
+
+GstVaapiDisplay *
+gst_vaapi_image_get_display (GstVaapiImage * image);
 
 GstVaapiImage *
 gst_vaapi_image_new(
@@ -71,6 +95,20 @@ gst_vaapi_image_new(
 
 GstVaapiImage *
 gst_vaapi_image_new_with_image(GstVaapiDisplay *display, VAImage *va_image);
+
+/**
+ * gst_vaapi_image_unref: (skip)
+ * @image: (transfer full): a #GstVaapiImage.
+ *
+ * Decreases the refcount of the image. If the refcount reaches 0, the
+ * image will be freed.
+ */
+static inline void gst_vaapi_image_unref(GstVaapiImage* image);
+static inline void
+gst_vaapi_image_unref (GstVaapiImage * image)
+{
+  gst_mini_object_unref (GST_MINI_OBJECT_CAST (image));
+}
 
 GstVaapiID
 gst_vaapi_image_get_id(GstVaapiImage *image);
@@ -130,6 +168,8 @@ gst_vaapi_image_update_from_buffer(
 
 gboolean
 gst_vaapi_image_copy(GstVaapiImage *dst_image, GstVaapiImage *src_image);
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiImage, gst_vaapi_image_unref)
 
 G_END_DECLS
 

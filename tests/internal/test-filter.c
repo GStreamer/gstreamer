@@ -117,7 +117,7 @@ create_test_surface (GstVaapiDisplay * display, guint width, guint height,
   if (!image_upload (image, surface))
     goto error_upload_image;
 
-  gst_vaapi_object_unref (image);
+  gst_vaapi_image_unref (image);
   return surface;
 
   /* ERRORS */
@@ -139,7 +139,7 @@ error_upload_image:
   goto error_cleanup;
 error_cleanup:
   if (image)
-    gst_vaapi_object_unref (image);
+    gst_vaapi_image_unref (image);
   if (surface)
     gst_vaapi_object_unref (surface);
   if (error_ptr)

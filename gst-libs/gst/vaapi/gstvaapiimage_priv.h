@@ -26,11 +26,9 @@
 #define GST_VAAPI_IMAGE_PRIV_H
 
 #include <gst/vaapi/gstvaapiimage.h>
-#include "gstvaapiobject_priv.h"
 
 G_BEGIN_DECLS
 
-typedef struct _GstVaapiImageClass              GstVaapiImageClass;
 typedef struct _GstVaapiImageRaw                GstVaapiImageRaw;
 
 /**
@@ -40,7 +38,9 @@ typedef struct _GstVaapiImageRaw                GstVaapiImageRaw;
  */
 struct _GstVaapiImage {
     /*< private >*/
-    GstVaapiObject      parent_instance;
+    GstMiniObject       mini_object;
+    GstVaapiDisplay    *display;
+    GstVaapiID          object_id;
 
     VAImage             internal_image;
     VAImage             image;
@@ -50,16 +50,6 @@ struct _GstVaapiImage {
     guint               width;
     guint               height;
     guint               is_linear       : 1;
-};
-
-/**
- * GstVaapiImageClass:
- *
- * A VA image wrapper class
- */
-struct _GstVaapiImageClass {
-    /*< private >*/
-    GstVaapiObjectClass parent_class;
 };
 
 /**
@@ -106,6 +96,27 @@ struct _GstVaapiImageRaw {
 #undef  GST_VAAPI_IMAGE_HEIGHT
 #define GST_VAAPI_IMAGE_HEIGHT(image) \
     (GST_VAAPI_IMAGE(image)->height)
+
+/**
+ * GST_VAAPI_IMAGE_DISPLAY:
+ * @image: a #GstVaapiImage
+ *
+ * Macro that evaluates to the @image's display
+ */
+#undef  GST_VAAPI_IMAGE_DISPLAY
+#define GST_VAAPI_IMAGE_DISPLAY(image) \
+    (GST_VAAPI_IMAGE(image)->display)
+
+/**
+ * GST_VAAPI_IMAGE_ID:
+ * @image: a #GstVaapiImage
+ *
+ * Macro that evaluates to the @image's object ID
+ */
+#undef  GST_VAAPI_IMAGE_ID
+#define GST_VAAPI_IMAGE_ID(image) \
+    (GST_VAAPI_IMAGE(image)->object_id)
+
 
 G_GNUC_INTERNAL
 gboolean

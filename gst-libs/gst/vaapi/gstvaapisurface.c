@@ -34,7 +34,6 @@
 #include "gstvaapisurface_priv.h"
 #include "gstvaapicontext.h"
 #include "gstvaapiimage.h"
-#include "gstvaapiimage_priv.h"
 #include "gstvaapibufferproxy_priv.h"
 
 #define DEBUG 1
@@ -558,7 +557,7 @@ gst_vaapi_surface_get_format (GstVaapiSurface * surface)
     GstVaapiImage *const image = gst_vaapi_surface_derive_image (surface);
     if (image) {
       surface->format = GST_VAAPI_IMAGE_FORMAT (image);
-      gst_vaapi_object_unref (image);
+      gst_vaapi_image_unref (image);
     }
     if (surface->format == GST_VIDEO_FORMAT_UNKNOWN)
       surface->format = GST_VIDEO_FORMAT_ENCODED;
@@ -638,7 +637,7 @@ gst_vaapi_surface_get_size (GstVaapiSurface * surface,
  * unreferenced when it's no longer needed. The image and image buffer
  * data structures will be destroyed. However, the surface contents
  * will remain unchanged until destroyed through the last call to
- * gst_vaapi_object_unref().
+ * gst_vaapi_image_unref().
  *
  * Return value: the newly allocated #GstVaapiImage object, or %NULL
  *   on failure
@@ -702,7 +701,7 @@ gst_vaapi_surface_get_image (GstVaapiSurface * surface, GstVaapiImage * image)
   if (width != surface->width || height != surface->height)
     return FALSE;
 
-  image_id = GST_VAAPI_OBJECT_ID (image);
+  image_id = GST_VAAPI_IMAGE_ID (image);
   if (image_id == VA_INVALID_ID)
     return FALSE;
 
@@ -746,7 +745,7 @@ gst_vaapi_surface_put_image (GstVaapiSurface * surface, GstVaapiImage * image)
   if (width != surface->width || height != surface->height)
     return FALSE;
 
-  image_id = GST_VAAPI_OBJECT_ID (image);
+  image_id = GST_VAAPI_IMAGE_ID (image);
   if (image_id == VA_INVALID_ID)
     return FALSE;
 

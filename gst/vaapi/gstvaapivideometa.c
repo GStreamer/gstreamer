@@ -78,8 +78,9 @@ set_display (GstVaapiVideoMeta * meta, GstVaapiDisplay * display)
 static inline void
 set_image (GstVaapiVideoMeta * meta, GstVaapiImage * image)
 {
-  meta->image = gst_vaapi_object_ref (image);
-  set_display (meta, gst_vaapi_object_get_display (GST_VAAPI_OBJECT (image)));
+  meta->image =
+      (GstVaapiImage *) gst_mini_object_ref (GST_MINI_OBJECT_CAST (image));
+  set_display (meta, gst_vaapi_image_get_display (image));
 }
 
 static gboolean
@@ -131,7 +132,7 @@ gst_vaapi_video_meta_destroy_image (GstVaapiVideoMeta * meta)
   if (meta->image) {
     if (meta->image_pool)
       gst_vaapi_video_pool_put_object (meta->image_pool, meta->image);
-    gst_vaapi_object_unref (meta->image);
+    gst_vaapi_image_unref (meta->image);
     meta->image = NULL;
   }
   gst_vaapi_video_pool_replace (&meta->image_pool, NULL);
@@ -228,7 +229,8 @@ gst_vaapi_video_meta_copy (GstVaapiVideoMeta * meta)
   copy->ref_count = 1;
   copy->display = gst_object_ref (meta->display);
   copy->image_pool = NULL;
-  copy->image = meta->image ? gst_vaapi_object_ref (meta->image) : NULL;
+  copy->image = meta->image ? (GstVaapiImage *)
+      gst_mini_object_ref (GST_MINI_OBJECT_CAST (meta->image)) : NULL;
   copy->proxy = meta->proxy ? gst_vaapi_surface_proxy_copy (meta->proxy) : NULL;
   copy->converter = meta->converter;
   copy->render_flags = meta->render_flags;
@@ -462,7 +464,7 @@ gst_vaapi_video_meta_get_display (GstVaapiVideoMeta * meta)
  *
  * Retrieves the #GstVaapiImage bound to the @meta. The @meta owns
  * the #GstVaapiImage so the caller is responsible for calling
- * gst_vaapi_object_ref() when needed.
+ * gst_mini_object_ref() when needed.
  *
  * Return value: the #GstVaapiImage bound to the @meta, or %NULL if
  *   there is none
@@ -526,7 +528,7 @@ gst_vaapi_video_meta_set_image_from_pool (GstVaapiVideoMeta * meta,
  *
  * Retrieves the #GstVaapiSurface bound to the @meta. The @meta
  * owns the #GstVaapiSurface so the caller is responsible for calling
- * gst_vaapi_object_ref() when needed.
+ * gst_mini_object_ref() when needed.
  *
  * Return value: the #GstVaapiSurface bound to the @meta, or %NULL if
  *   there is none

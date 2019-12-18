@@ -89,7 +89,7 @@ create_test_surface (GstVaapiDisplay * display, guint width, guint height)
   if (!gst_vaapi_surface_sync (surface))
     g_error ("could not complete image upload");
 
-  gst_vaapi_object_unref (image);
+  gst_vaapi_image_unref (image);
   return surface;
 }
 

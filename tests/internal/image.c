@@ -87,7 +87,7 @@ image_generate_full (GstVaapiDisplay * display,
   return image;
 
 error:
-  gst_vaapi_object_unref (image);
+  gst_vaapi_image_unref (image);
   return NULL;
 }
 
@@ -321,7 +321,7 @@ image_draw_rectangle (GstVaapiImage * image,
   if (height > image_height - y)
     height = image_height - y;
 
-  display = gst_vaapi_object_get_display (GST_VAAPI_OBJECT (image));
+  display = gst_vaapi_image_get_display (image);
   if (!display)
     return FALSE;
 
@@ -374,7 +374,7 @@ image_upload (GstVaapiImage * image, GstVaapiSurface * surface)
   surface_image = gst_vaapi_surface_derive_image (surface);
   if (surface_image) {
     success = gst_vaapi_image_copy (surface_image, image);
-    gst_vaapi_object_unref (surface_image);
+    gst_vaapi_image_unref (surface_image);
     if (success)
       return TRUE;
   }

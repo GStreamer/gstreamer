@@ -128,7 +128,7 @@ ensure_image (GstVaapiVideoMemory * mem)
       reset_image_usage (&mem->usage_flag);
     } else if (gst_vaapi_surface_get_format (mem->surface) !=
         GST_VIDEO_INFO_FORMAT (mem->image_info)) {
-      gst_vaapi_object_replace (&mem->image, NULL);
+      gst_mini_object_replace ((GstMiniObject **) & mem->image, NULL);
       reset_image_usage (&mem->usage_flag);
     }
   }
@@ -393,7 +393,7 @@ gst_vaapi_video_memory_reset_image (GstVaapiVideoMemory * mem)
       GST_VAAPI_VIDEO_ALLOCATOR_CAST (GST_MEMORY_CAST (mem)->allocator);
 
   if (!use_native_formats (mem->usage_flag))
-    gst_vaapi_object_replace (&mem->image, NULL);
+    gst_mini_object_replace ((GstMiniObject **) & mem->image, NULL);
   else if (mem->image) {
     gst_vaapi_video_pool_put_object (allocator->image_pool, mem->image);
     mem->image = NULL;
@@ -703,7 +703,7 @@ gst_video_info_update_from_surface (GstVideoInfo * vip,
   gst_vaapi_image_unmap (image);
 
 bail:
-  gst_vaapi_object_unref (image);
+  gst_vaapi_image_unref (image);
   return ret;
 
   /* ERRORS */
@@ -912,7 +912,7 @@ allocator_configure_image_info (GstVaapiDisplay * display,
 
 bail:
   if (image)
-    gst_vaapi_object_unref (image);
+    gst_vaapi_image_unref (image);
   return ret;
 
   /* ERRORS */

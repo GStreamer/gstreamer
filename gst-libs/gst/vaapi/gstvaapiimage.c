@@ -32,7 +32,6 @@
 #include "gstvaapiutils.h"
 #include "gstvaapiimage.h"
 #include "gstvaapiimage_priv.h"
-#include "gstvaapiobject_priv.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
@@ -114,15 +113,15 @@ vaapi_image_is_linear (const VAImage * va_image)
 }
 
 static void
-gst_vaapi_image_destroy (GstVaapiImage * image)
+gst_vaapi_image_free (GstVaapiImage * image)
 {
-  GstVaapiDisplay *const display = GST_VAAPI_OBJECT_DISPLAY (image);
+  GstVaapiDisplay *const display = GST_VAAPI_IMAGE_DISPLAY (image);
   VAImageID image_id;
   VAStatus status;
 
   _gst_vaapi_image_unmap (image);
 
-  image_id = GST_VAAPI_OBJECT_ID (image);
+  image_id = GST_VAAPI_IMAGE_ID (image);
   GST_DEBUG ("image %" GST_VAAPI_ID_FORMAT, GST_VAAPI_ID_ARGS (image_id));
 
   if (image_id != VA_INVALID_ID) {
@@ -132,14 +131,18 @@ gst_vaapi_image_destroy (GstVaapiImage * image)
     if (!vaapi_check_status (status, "vaDestroyImage()"))
       GST_WARNING ("failed to destroy image %" GST_VAAPI_ID_FORMAT,
           GST_VAAPI_ID_ARGS (image_id));
-    GST_VAAPI_OBJECT_ID (image) = VA_INVALID_ID;
+    GST_VAAPI_IMAGE_ID (image) = VA_INVALID_ID;
   }
+
+  gst_vaapi_display_replace (&GST_VAAPI_IMAGE_DISPLAY (image), NULL);
+
+  g_slice_free1 (sizeof (GstVaapiImage), image);
 }
 
 static gboolean
 _gst_vaapi_image_create (GstVaapiImage * image, GstVideoFormat format)
 {
-  GstVaapiDisplay *const display = GST_VAAPI_OBJECT_DISPLAY (image);
+  GstVaapiDisplay *const display = GST_VAAPI_IMAGE_DISPLAY (image);
   const VAImageFormat *va_format;
   VAStatus status;
 
@@ -210,30 +213,43 @@ gst_vaapi_image_create (GstVaapiImage * image, GstVideoFormat format,
   image->is_linear = vaapi_image_is_linear (&image->image);
 
   GST_DEBUG ("image %" GST_VAAPI_ID_FORMAT, GST_VAAPI_ID_ARGS (image_id));
-  GST_VAAPI_OBJECT_ID (image) = image_id;
+  GST_VAAPI_IMAGE_ID (image) = image_id;
   return TRUE;
 }
 
 static void
-gst_vaapi_image_init (GstVaapiImage * image)
+gst_vaapi_image_init (GstVaapiImage * image, GstVaapiDisplay * display)
 {
+  /* TODO(victor): implement image copy mechanism, it's almost
+   * there */
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (image), 0,
+      GST_TYPE_VAAPI_IMAGE, NULL, NULL,
+      (GstMiniObjectFreeFunction) gst_vaapi_image_free);
+
+  GST_VAAPI_IMAGE_DISPLAY (image) = gst_object_ref (display);
+  GST_VAAPI_IMAGE_ID (image) = VA_INVALID_ID;
   image->internal_image.image_id = VA_INVALID_ID;
   image->internal_image.buf = VA_INVALID_ID;
   image->image.image_id = VA_INVALID_ID;
   image->image.buf = VA_INVALID_ID;
 }
 
-static void
-gst_vaapi_image_class_init (GstVaapiImageClass * klass)
+GST_DEFINE_MINI_OBJECT_TYPE (GstVaapiImage, gst_vaapi_image);
+
+/**
+ * gst_vaapi_image_get_display:
+ * @image: a #GstVaapiImage
+ *
+ * Returns the #GstVaapiDisplay this @image is bound to.
+ *
+ * Return value: the parent #GstVaapiDisplay object
+ */
+GstVaapiDisplay *
+gst_vaapi_image_get_display (GstVaapiImage * image)
 {
-  GstVaapiObjectClass *const object_class = GST_VAAPI_OBJECT_CLASS (klass);
-
-  object_class->init = (GstVaapiObjectInitFunc) gst_vaapi_image_init;
+  g_return_val_if_fail (image != NULL, NULL);
+  return GST_VAAPI_IMAGE_DISPLAY (image);
 }
-
-#define gst_vaapi_image_finalize gst_vaapi_image_destroy
-GST_VAAPI_OBJECT_DEFINE_CLASS_WITH_CODE (GstVaapiImage,
-    gst_vaapi_image, gst_vaapi_image_class_init (&g_class))
 
 /**
  * gst_vaapi_image_new:
@@ -247,7 +263,8 @@ GST_VAAPI_OBJECT_DEFINE_CLASS_WITH_CODE (GstVaapiImage,
  *
  * Return value: the newly allocated #GstVaapiImage object
  */
-     GstVaapiImage *gst_vaapi_image_new (GstVaapiDisplay * display,
+GstVaapiImage *
+gst_vaapi_image_new (GstVaapiDisplay * display,
     GstVideoFormat format, guint width, guint height)
 {
   GstVaapiImage *image;
@@ -258,9 +275,11 @@ GST_VAAPI_OBJECT_DEFINE_CLASS_WITH_CODE (GstVaapiImage,
   GST_DEBUG ("format %s, size %ux%u", gst_vaapi_video_format_to_string (format),
       width, height);
 
-  image = gst_vaapi_object_new (gst_vaapi_image_class (), display);
+  image = g_slice_new (GstVaapiImage);
   if (!image)
     return NULL;
+
+  gst_vaapi_image_init (image, display);
 
   if (!gst_vaapi_image_create (image, format, width, height))
     goto error;
@@ -269,7 +288,7 @@ GST_VAAPI_OBJECT_DEFINE_CLASS_WITH_CODE (GstVaapiImage,
   /* ERRORS */
 error:
   {
-    gst_vaapi_object_unref (image);
+    gst_vaapi_image_unref (image);
     return NULL;
   }
 }
@@ -300,9 +319,11 @@ gst_vaapi_image_new_with_image (GstVaapiDisplay * display, VAImage * va_image)
       GST_FOURCC_ARGS (va_image->format.fourcc),
       va_image->width, va_image->height);
 
-  image = gst_vaapi_object_new (gst_vaapi_image_class (), display);
+  image = g_slice_new (GstVaapiImage);
   if (!image)
     return NULL;
+
+  gst_vaapi_image_init (image, display);
 
   if (!_gst_vaapi_image_set_image (image, va_image))
     goto error;
@@ -311,7 +332,7 @@ gst_vaapi_image_new_with_image (GstVaapiDisplay * display, VAImage * va_image)
   /* ERRORS */
 error:
   {
-    gst_vaapi_object_unref (image);
+    gst_vaapi_image_unref (image);
     return NULL;
   }
 }
@@ -329,7 +350,7 @@ gst_vaapi_image_get_id (GstVaapiImage * image)
 {
   g_return_val_if_fail (image != NULL, VA_INVALID_ID);
 
-  return GST_VAAPI_OBJECT_ID (image);
+  return GST_VAAPI_IMAGE_ID (image);
 }
 
 /**
@@ -385,7 +406,7 @@ _gst_vaapi_image_set_image (GstVaapiImage * image, const VAImage * va_image)
   image->width = va_image->width;
   image->height = va_image->height;
 
-  GST_VAAPI_OBJECT_ID (image) = va_image->image_id;
+  GST_VAAPI_IMAGE_ID (image) = va_image->image_id;
 
   /* Try to linearize image */
   if (!image->is_linear) {
@@ -554,7 +575,7 @@ _gst_vaapi_image_map (GstVaapiImage * image, GstVaapiImageRaw * raw_image)
   if (_gst_vaapi_image_is_mapped (image))
     goto map_success;
 
-  display = GST_VAAPI_OBJECT_DISPLAY (image);
+  display = GST_VAAPI_IMAGE_DISPLAY (image);
   if (!display)
     return FALSE;
 
@@ -607,7 +628,7 @@ _gst_vaapi_image_unmap (GstVaapiImage * image)
   if (!_gst_vaapi_image_is_mapped (image))
     return TRUE;
 
-  display = GST_VAAPI_OBJECT_DISPLAY (image);
+  display = GST_VAAPI_IMAGE_DISPLAY (image);
   if (!display)
     return FALSE;
 
