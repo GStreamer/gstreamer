@@ -1037,7 +1037,7 @@ gst_dvd_read_src_set_property (GObject * object, guint prop_id,
       if (g_value_get_string (value) == NULL) {
         src->location = g_strdup ("/dev/dvd");
       } else {
-        src->location = g_strdup (g_value_get_string (value));
+        src->location = g_value_dup_string (value);
       }
       break;
     }
