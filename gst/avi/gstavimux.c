@@ -157,7 +157,7 @@ static GstStaticPadTemplate audio_sink_factory =
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("audio/x-raw, "
-        "format = (string) { U8, S16LE }, "
+        "format = (string) { U8, S16LE, S24LE, S32LE }, "
         "rate = (int) [ 1000, 96000 ], "
         "channels = (int) [ 1, 2 ]; "
         "audio/mpeg, "
@@ -804,9 +804,17 @@ gst_avi_mux_audsink_set_caps (GstPad * pad, GstCaps * vscaps)
         avipad->auds.blockalign = 8;
         avipad->auds.bits_per_sample = 8;
         break;
-      case GST_AUDIO_FORMAT_S16:
+      case GST_AUDIO_FORMAT_S16LE:
         avipad->auds.blockalign = 16;
         avipad->auds.bits_per_sample = 16;
+        break;
+      case GST_AUDIO_FORMAT_S24LE:
+        avipad->auds.blockalign = 24;
+        avipad->auds.bits_per_sample = 24;
+        break;
+      case GST_AUDIO_FORMAT_S32LE:
+        avipad->auds.blockalign = 32;
+        avipad->auds.bits_per_sample = 32;
         break;
       default:
         goto refuse_caps;
