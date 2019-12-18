@@ -1016,6 +1016,9 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
   g_return_val_if_fail (aspect_ratio_n > 0, FALSE);
   g_return_val_if_fail (aspect_ratio_d > 0, FALSE);
 
+  if (gst_d3d11_is_windows_8_or_greater ())
+    swap_effect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
+
   GST_DEBUG_OBJECT (window, "Prepare window with %dx%d caps %" GST_PTR_FORMAT,
       width, height, caps);
 
