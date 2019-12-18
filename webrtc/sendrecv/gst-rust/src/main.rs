@@ -186,8 +186,11 @@ impl App {
         app.webrtcbin
             .connect("on-ice-candidate", false, move |values| {
                 let _webrtc = values[0].get::<gst::Element>().expect("Invalid argument");
-                let mlineindex = values[1].get::<u32>().expect("Invalid argument");
-                let candidate = values[2].get::<String>().expect("Invalid argument");
+                let mlineindex = values[1].get_some::<u32>().expect("Invalid argument");
+                let candidate = values[2]
+                    .get::<String>()
+                    .expect("Invalid argument")
+                    .unwrap();
 
                 let app = upgrade_weak!(app_clone, None);
 
@@ -278,10 +281,10 @@ impl App {
         println!("starting negotiation");
 
         let app_clone = self.downgrade();
-        let promise = gst::Promise::new_with_change_func(move |promise| {
+        let promise = gst::Promise::new_with_change_func(move |reply| {
             let app = upgrade_weak!(app_clone);
 
-            if let Err(err) = app.on_offer_created(promise) {
+            if let Err(err) = app.on_offer_created(reply) {
                 gst_element_error!(
                     app.pipeline,
                     gst::LibraryError::Failed,
@@ -299,10 +302,13 @@ impl App {
 
     // Once webrtcbin has create the offer SDP for us, handle it by sending it to the peer via the
     // WebSocket connection
-    fn on_offer_created(&self, promise: &gst::Promise) -> Result<(), anyhow::Error> {
-        let reply = match promise.wait() {
-            gst::PromiseResult::Replied => promise.get_reply().unwrap(),
-            err => {
+    fn on_offer_created(
+        &self,
+        reply: Result<&gst::StructureRef, gst::PromiseError>,
+    ) -> Result<(), anyhow::Error> {
+        let reply = match reply {
+            Ok(reply) => reply,
+            Err(err) => {
                 bail!("Offer creation future got no reponse: {:?}", err);
             }
         };
@@ -311,7 +317,8 @@ impl App {
             .get_value("offer")
             .unwrap()
             .get::<gst_webrtc::WebRTCSessionDescription>()
-            .expect("Invalid argument");
+            .expect("Invalid argument")
+            .unwrap();
         self.webrtcbin
             .emit("set-local-description", &[&offer, &None::<gst::Promise>])
             .unwrap();
@@ -338,10 +345,13 @@ impl App {
 
     // Once webrtcbin has create the answer SDP for us, handle it by sending it to the peer via the
     // WebSocket connection
-    fn on_answer_created(&self, promise: &gst::Promise) -> Result<(), anyhow::Error> {
-        let reply = match promise.wait() {
-            gst::PromiseResult::Replied => promise.get_reply().unwrap(),
-            err => {
+    fn on_answer_created(
+        &self,
+        reply: Result<&gst::StructureRef, gst::PromiseError>,
+    ) -> Result<(), anyhow::Error> {
+        let reply = match reply {
+            Ok(reply) => reply,
+            Err(err) => {
                 bail!("Answer creation future got no reponse: {:?}", err);
             }
         };
@@ -350,7 +360,8 @@ impl App {
             .get_value("answer")
             .unwrap()
             .get::<gst_webrtc::WebRTCSessionDescription>()
-            .expect("Invalid argument");
+            .expect("Invalid argument")
+            .unwrap();
         self.webrtcbin
             .emit("set-local-description", &[&answer, &None::<gst::Promise>])
             .unwrap();
@@ -413,10 +424,10 @@ impl App {
                     .unwrap();
 
                 let app_clone = app.downgrade();
-                let promise = gst::Promise::new_with_change_func(move |promise| {
+                let promise = gst::Promise::new_with_change_func(move |reply| {
                     let app = upgrade_weak!(app_clone);
 
-                    if let Err(err) = app.on_answer_created(promise) {
+                    if let Err(err) = app.on_answer_created(reply) {
                         gst_element_error!(
                             app.pipeline,
                             gst::LibraryError::Failed,
