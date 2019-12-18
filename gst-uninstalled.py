@@ -12,6 +12,7 @@ import subprocess
 import sys
 import tempfile
 import pathlib
+import signal
 
 from distutils.sysconfig import get_python_lib
 from distutils.util import strtobool
@@ -355,6 +356,11 @@ if __name__ == "__main__":
             # Let the GC remove the tmp file
             args.append("--rcfile")
             args.append(tmprc.name)
+        if 'fish' in args[0]:
+            # Ignore SIGINT while using fish as the shell to make it behave
+            # like other shells such as bash and zsh.
+            # See: https://gitlab.freedesktop.org/gstreamer/gst-build/issues/18
+            signal.signal(signal.SIGINT, lambda x, y: True)
     try:
         exit(subprocess.call(args, close_fds=False,
                              env=get_subprocess_env(options, gst_version)))
