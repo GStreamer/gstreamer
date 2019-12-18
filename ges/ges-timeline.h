@@ -52,7 +52,7 @@ G_BEGIN_DECLS
  * ges_timeline_get_project:
  * @obj: The #GESTimeline from which to retrieve the project
  *
- * Helper macro to retrieve the project from which a #GESTimeline as been extracted
+ * Helper macro to retrieve the project from which @obj was extracted
  */
 #define ges_timeline_get_project(obj) (GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE(obj))))
 
@@ -60,9 +60,10 @@ typedef struct _GESTimelinePrivate GESTimelinePrivate;
 
 /**
  * GESTimeline:
- * @layers: (element-type GES.Layer): A list of #GESLayer sorted by priority NOTE: Do not modify.
- * @tracks: Deprecated:1.10: (element-type GES.Track): This is not thread safe, use
- * #ges_timeline_get_tracks instead.
+ * @layers: (element-type GES.Layer): A list of #GESLayer-s sorted by
+ * priority. NOTE: Do not modify.
+ * @tracks: Deprecated:1.10: (element-type GES.Track): This is not thread
+ * safe, use #ges_timeline_get_tracks instead.
  */
 struct _GESTimeline {
   GstBin parent;

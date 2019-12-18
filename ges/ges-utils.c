@@ -40,10 +40,11 @@ static GstElementFactory *compositor_factory = NULL;
 /**
  * ges_timeline_new_audio_video:
  *
- * Creates a new #GESTimeline containing a raw audio and a
- * raw video track.
+ * Creates a new timeline containing a single #GESAudioTrack and a
+ * single #GESVideoTrack.
  *
- * Returns: (transfer floating): The newly created #GESTimeline.
+ * Returns: (transfer floating): The new timeline, or %NULL if the tracks
+ * could not be created and added.
  */
 
 GESTimeline *

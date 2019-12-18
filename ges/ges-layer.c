@@ -23,12 +23,26 @@
 /**
  * SECTION:geslayer
  * @title: GESLayer
- * @short_description: Non-overlapping sequence of GESClip
+ * @short_description: Non-overlapping sequence of #GESClip
  *
- * Responsible for the ordering of the various contained Clip(s). A
- * timeline layer has a "priority" property, which is used to manage the
- * priorities of individual Clips. Two layers should not have the
- * same priority within a given timeline.
+ * #GESLayer-s are responsible for collecting and ordering #GESClip-s.
+ *
+ * A layer within a timeline will have an associated priority,
+ * corresponding to their index within the timeline. A layer with the
+ * index/priority 0 will have the highest priority and the layer with the
+ * largest index will have the lowest priority (the order of priorities,
+ * in this sense, is the _reverse_ of the numerical ordering of the
+ * indices). ges_timeline_move_layer() should be used if you wish to
+ * change how layers are prioritised in a timeline.
+ *
+ * Layers with higher priorities will have their content priorities
+ * over content from lower priority layers, similar to how layers are
+ * used in image editing. For example, if two separate layers both
+ * display video content, then the layer with the higher priority will
+ * have its images shown first. The other layer will only have its image
+ * shown if the higher priority layer has no content at the given
+ * playtime, or is transparent in some way. Audio content in separate
+ * layers will simply play in addition.
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -162,11 +176,11 @@ ges_layer_class_init (GESLayerClass * klass)
    * GESLayer:priority:
    *
    * The priority of the layer in the #GESTimeline. 0 is the highest
-   * priority. Conceptually, a #GESTimeline is a stack of GESLayers,
+   * priority. Conceptually, a timeline is a stack of layers,
    * and the priority of the layer represents its position in the stack. Two
    * layers should not have the same priority within a given GESTimeline.
    *
-   * Note that the timeline needs to be commited (with #ges_timeline_commit)
+   * Note that the timeline needs to be committed (with #ges_timeline_commit)
    * for the change to be taken into account.
    *
    * Deprecated:1.16.0: use #ges_timeline_move_layer instead. This deprecation means
@@ -180,7 +194,29 @@ ges_layer_class_init (GESLayerClass * klass)
   /**
    * GESLayer:auto-transition:
    *
-   * Sets whether transitions are added automagically when clips overlap.
+   * Whether to automatically create a #GESTransitionClip whenever two
+   * #GESClip-s overlap in the layer. Specifically, if this is set to
+   * %TRUE, then wherever two #GESSource-s (that belong to some clip in
+   * the layer) share the same #GESTrackElement:track and the end time of
+   * one source exceeds the #GESTimelineElement:start time of the other,
+   * there will exist a corresponding #GESTransitionClip in the same
+   * layer. These automatic transitions will be created and removed
+   * accordingly. Their temporal extent will cover the overlap of the
+   * two sources (their #GESTimelineElement:start will be set to the
+   * #GESTimelineElement:start of the later source, and their
+   * #GESTimelineElement:duration will be the difference between the
+   * #GESTimelineElement:start of the later source, and the end time of
+   * the earlier source).
+   *
+   * It may be difficult to use this feature if your timeline has multiple
+   * tracks of the same #GESTrack:track-type and you use the
+   * #GESTimeline::select-tracks-for-object signal. You will have to
+   * ensure that any #GESTransition that belongs to a newly created
+   * transition clip is able to arrive in the correct track.
+   *
+   * When a layer is added to a #GESTimeline, if this property is left as
+   * %FALSE, but the timeline's #GESTimeline:auto-transition is %TRUE, it
+   * will be set to %TRUE as well.
    */
   g_object_class_install_property (object_class, PROP_AUTO_TRANSITION,
       g_param_spec_boolean ("auto-transition", "Auto-Transition",
@@ -188,10 +224,10 @@ ges_layer_class_init (GESLayerClass * klass)
 
   /**
    * GESLayer::clip-added:
-   * @layer: the #GESLayer
-   * @clip: the #GESClip that was added.
+   * @layer: The #GESLayer
+   * @clip: The clip that was added
    *
-   * Will be emitted after the clip was added to the layer.
+   * Will be emitted after the clip is added to the layer.
    */
   ges_layer_signals[OBJECT_ADDED] =
       g_signal_new ("clip-added", G_TYPE_FROM_CLASS (klass),
@@ -200,10 +236,10 @@ ges_layer_class_init (GESLayerClass * klass)
 
   /**
    * GESLayer::clip-removed:
-   * @layer: the #GESLayer
-   * @clip: the #GESClip that was removed
+   * @layer: The #GESLayer
+   * @clip: The clip that was removed
    *
-   * Will be emitted after the clip was removed from the layer.
+   * Will be emitted after the clip is removed from the layer.
    */
   ges_layer_signals[OBJECT_REMOVED] =
       g_signal_new ("clip-removed", G_TYPE_FROM_CLASS (klass),
@@ -267,7 +303,7 @@ ges_layer_resync_priorities_by_type (GESLayer * layer,
 
 /**
  * ges_layer_resync_priorities:
- * @layer: a #GESLayer
+ * @layer: The #GESLayer
  *
  * Resyncs the priorities of the clips controlled by @layer.
  */
@@ -356,12 +392,13 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, NewAssetUData * udata)
 
 /**
  * ges_layer_get_duration:
- * @layer: The #GESLayer to get the duration from
+ * @layer: The layer to get the duration from
  *
- * Lets you retrieve the duration of the layer, which means
- * the end time of the last clip inside it
+ * Retrieves the duration of the layer, which is the difference
+ * between the start of the layer (always time 0) and the end (which will
+ * be the end time of the final clip).
  *
- * Returns: The duration of a layer
+ * Returns: The duration of @layer.
  */
 GstClockTime
 ges_layer_get_duration (GESLayer * layer)
@@ -420,16 +457,13 @@ ges_layer_remove_clip_internal (GESLayer * layer, GESClip * clip,
 /* Public methods */
 /**
  * ges_layer_remove_clip:
- * @layer: a #GESLayer
- * @clip: the #GESClip to remove
+ * @layer: The #GESLayer
+ * @clip: The clip to remove
  *
- * Removes the given @clip from the @layer and unparents it.
- * Unparenting it means the reference owned by @layer on the @clip will be
- * removed. If you wish to use the @clip after this function, make sure you
- * call gst_object_ref() before removing it from the @layer.
+ * Removes the given clip from the layer.
  *
- * Returns: %TRUE if the clip could be removed, %FALSE if the layer does
- * not want to remove the clip.
+ * Returns: %TRUE if @clip was removed from @layer, or %FALSE if the
+ * operation failed.
  */
 gboolean
 ges_layer_remove_clip (GESLayer * layer, GESClip * clip)
@@ -442,11 +476,10 @@ ges_layer_remove_clip (GESLayer * layer, GESClip * clip)
 
 /**
  * ges_layer_set_priority:
- * @layer: a #GESLayer
- * @priority: the priority to set
+ * @layer: The #GESLayer
+ * @priority: The priority to set
  *
- * Sets the layer to the given @priority. See the documentation of the
- * priority property for more information.
+ * Sets the layer to the given priority. See #GESLayer:priority.
  *
  * Deprecated:1.16.0: use #ges_timeline_move_layer instead. This deprecation means
  * that you will not need to handle layer priorities at all yourself, GES
@@ -464,12 +497,11 @@ ges_layer_set_priority (GESLayer * layer, guint priority)
 
 /**
  * ges_layer_get_auto_transition:
- * @layer: a #GESLayer
+ * @layer: The #GESLayer
  *
- * Gets whether transitions are automatically added when objects
- * overlap or not.
+ * Gets the #GESLayer:auto-transition of the layer.
  *
- * Returns: %TRUE if transitions are automatically added, else %FALSE.
+ * Returns: %TRUE if transitions are automatically added to @layer.
  */
 gboolean
 ges_layer_get_auto_transition (GESLayer * layer)
@@ -481,11 +513,16 @@ ges_layer_get_auto_transition (GESLayer * layer)
 
 /**
  * ges_layer_set_auto_transition:
- * @layer: a #GESLayer
- * @auto_transition: whether the auto_transition is active
+ * @layer: The #GESLayer
+ * @auto_transition: Whether transitions should be automatically added to
+ * the layer
  *
- * Sets the layer to the given @auto_transition. See the documentation of the
- * property auto_transition for more information.
+ * Sets #GESLayer:auto-transition for the layer. Use
+ * ges_timeline_set_auto_transition() if you want all layers within a
+ * #GESTimeline to have #GESLayer:auto-transition set to %TRUE. Use this
+ * method if you want different values for different layers (and make sure
+ * to keep #GESTimeline:auto-transition as %FALSE for the corresponding
+ * timeline).
  */
 void
 ges_layer_set_auto_transition (GESLayer * layer, gboolean auto_transition)
@@ -502,11 +539,12 @@ ges_layer_set_auto_transition (GESLayer * layer, gboolean auto_transition)
 
 /**
  * ges_layer_get_priority:
- * @layer: a #GESLayer
+ * @layer: The #GESLayer
  *
- * Get the priority of @layer within the timeline.
+ * Get the priority of the layer. When inside a timeline, this is its
+ * index in the timeline. See ges_timeline_move_layer().
  *
- * Returns: The priority of the @layer within the timeline.
+ * Returns: The priority of @layer within its timeline.
  */
 guint
 ges_layer_get_priority (GESLayer * layer)
@@ -518,13 +556,12 @@ ges_layer_get_priority (GESLayer * layer)
 
 /**
  * ges_layer_get_clips:
- * @layer: a #GESLayer
+ * @layer: The #GESLayer
  *
- * Get the clips this layer contains.
+ * Get the #GESClip-s contained in this layer.
  *
- * Returns: (transfer full) (element-type GESClip): a #GList of
- * clips. The user is responsible for
- * unreffing the contained objects and freeing the list.
+ * Returns: (transfer full) (element-type GESClip): A list of clips in
+ * @layer.
  */
 
 GList *
@@ -549,11 +586,11 @@ ges_layer_get_clips (GESLayer * layer)
  * ges_layer_is_empty:
  * @layer: The #GESLayer to check
  *
- * Convenience method to check if @layer is empty (doesn't contain any clip),
- * or not.
+ * Convenience method to check if the layer is empty (doesn't contain
+ * any #GESClip), or not.
  *
- * Returns: %TRUE if @layer is empty, %FALSE if it already contains at least
- * one #GESClip
+ * Returns: %TRUE if @layer is empty, %FALSE if it contains at least
+ * one clip.
  */
 gboolean
 ges_layer_is_empty (GESLayer * layer)
@@ -565,21 +602,18 @@ ges_layer_is_empty (GESLayer * layer)
 
 /**
  * ges_layer_add_clip:
- * @layer: a #GESLayer
- * @clip: (transfer floating): the #GESClip to add.
+ * @layer: The #GESLayer
+ * @clip: (transfer floating): The clip to add
  *
- * Adds the given clip to the layer. Sets the clip's parent, and thus
- * takes ownership of the clip.
+ * Adds the given clip to the layer. If the method succeeds, the layer
+ * will take ownership of the clip.
  *
- * An clip can only be added to one layer.
+ * This method will fail and return %FALSE if @clip already resides in
+ * some layer. It can also fail if the additional clip breaks some
+ * compositional rules (see #GESTimelineElement).
  *
- * Calling this method will construct and properly set all the media related
- * elements on @clip. If you need to know when those objects (actually #GESTrackElement)
- * are constructed, you should connect to the container::child-added signal which
- * is emited right after those elements are ready to be used.
- *
- * Returns: %TRUE if the clip was properly added to the layer, or %FALSE
- * if the @layer refuses to add the clip.
+ * Returns: %TRUE if @clip was properly added to @layer, or %FALSE
+ * if @layer refused to add @clip.
  */
 gboolean
 ges_layer_add_clip (GESLayer * layer, GESClip * clip)
@@ -597,6 +631,8 @@ ges_layer_add_clip (GESLayer * layer, GESClip * clip)
   current_layer = ges_clip_get_layer (clip);
   if (G_UNLIKELY (current_layer)) {
     GST_WARNING ("Clip %p already belongs to another layer", clip);
+    /* FIXME: why are we reffing the clip if it belongs to another
+     * layer? */
     gst_object_ref_sink (clip);
     gst_object_unref (current_layer);
 
@@ -666,6 +702,15 @@ ges_layer_add_clip (GESLayer * layer, GESClip * clip)
       layer->timeline);
 
   /* emit 'clip-added' */
+  /* FIXME: we are emitting the 'clip-added' signal even though we still
+   * might fail. This is because the timeline uses this signal to create
+   * the auto-transitions etc needed for timeline_tree_can_move_element
+   * below, which checks whether the added clip is in a legal position.
+   * However, we should have a way to check that adding a clip will be
+   * legal **before** we actually add it!
+   * A user connecting to 'clip-added' in such a case would receive a
+   * signal saying that the clip was added, but a return value that says
+   * something else! */
   g_signal_emit (layer, ges_layer_signals[OBJECT_ADDED], 0, clip);
 
   if (!ELEMENT_FLAG_IS_SET (clip, GES_CLIP_IS_MOVING) && layer->timeline
@@ -684,18 +729,22 @@ ges_layer_add_clip (GESLayer * layer, GESClip * clip)
 
 /**
  * ges_layer_add_asset:
- * @layer: a #GESLayer
- * @asset: The asset to add to
- * @start: The start value to set on the new #GESClip,
- * if @start == GST_CLOCK_TIME_NONE, it will be set to
- * the current duration of @layer
- * @inpoint: The inpoint value to set on the new #GESClip
- * @duration: The duration value to set on the new #GESClip
- * @track_types: The #GESTrackType to set on the the new #GESClip
+ * @layer: The #GESLayer
+ * @asset: The asset to extract the new clip from
+ * @start: The #GESTimelineElement:start value to set on the new clip
+ * If `start == #GST_CLOCK_TIME_NONE`, it will be added to the end
+ * of @layer, i.e. it will be set to @layer's duration
+ * @inpoint: The #GESTimelineElement:in-point value to set on the new
+ * clip
+ * @duration: The #GESTimelineElement:duration value to set on the new
+ * clip
+ * @track_types: The #GESClip:supported-formats to set on the the new
+ * clip, or #GES_TRACK_TYPE_UNKNOWN to use the default
  *
- * Creates Clip from asset, adds it to layer and returns its pointer.
+ * Extracts a new clip from an asset and adds it to the layer with
+ * the given properties.
  *
- * Returns: (transfer none): Created #GESClip
+ * Returns: (transfer none): The newly created clip.
  */
 GESClip *
 ges_layer_add_asset (GESLayer * layer,
@@ -744,9 +793,9 @@ ges_layer_add_asset (GESLayer * layer,
 /**
  * ges_layer_new:
  *
- * Creates a new #GESLayer.
+ * Creates a new layer.
  *
- * Returns: (transfer floating): A new #GESLayer
+ * Returns: (transfer floating): A new layer.
  */
 GESLayer *
 ges_layer_new (void)
@@ -756,12 +805,13 @@ ges_layer_new (void)
 
 /**
  * ges_layer_get_timeline:
- * @layer: The #GESLayer to get the parent #GESTimeline from
+ * @layer: The #GESLayer
  *
- * Get the #GESTimeline in which #GESLayer currently is.
+ * Gets the timeline that the layer is a part of.
  *
- * Returns: (transfer none) (nullable): the #GESTimeline in which #GESLayer
- * currently is or %NULL if not in any timeline yet.
+ * Returns: (transfer none) (nullable): The timeline that @layer
+ * is currently part of, or %NULL if it is not associated with any
+ * timeline.
  */
 GESTimeline *
 ges_layer_get_timeline (GESLayer * layer)
@@ -789,13 +839,14 @@ ges_layer_set_timeline (GESLayer * layer, GESTimeline * timeline)
 
 /**
  * ges_layer_get_clips_in_interval:
- * @layer: a #GESLayer
- * @start: start of the interval
- * @end: end of the interval
+ * @layer: The #GESLayer
+ * @start: Start of the interval
+ * @end: End of the interval
  *
- * Gets the clips which appear between @start and @end on @layer.
+ * Gets the clips within the layer that appear between @start and @end.
  *
- * Returns: (transfer full) (element-type GESClip): a #GList of clips intersecting [@start, @end) interval on @layer.
+ * Returns: (transfer full) (element-type GESClip): A list of #GESClip-s
+ * that intersect the interval `[start, end)` in @layer.
  */
 GList *
 ges_layer_get_clips_in_interval (GESLayer * layer, GstClockTime start,

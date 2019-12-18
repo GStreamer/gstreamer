@@ -70,7 +70,7 @@ struct _GESLayer {
  * @get_objects: method to get the objects contained in the layer
  *
  * Subclasses can override the @get_objects if they can provide a more
- * efficient way of providing the list of contained #GESClip(s).
+ * efficient way of providing the list of contained #GESClip-s.
  */
 struct _GESLayerClass {
   /*< private >*/
