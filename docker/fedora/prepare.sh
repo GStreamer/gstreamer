@@ -197,6 +197,28 @@ dnf download glib2-doc gdk-pixbuf2-devel*x86_64* gtk3-devel-docs
 rpm -i --reinstall *.rpm
 rm -f *.rpm
 
+# Install Rust
+RUSTUP_VERSION=1.21.0
+RUST_VERSION=1.40.0
+RUST_ARCH="x86_64-unknown-linux-gnu"
+
+# rustup-init uses those variables as install paths
+export RUSTUP_HOME=/usr/local/rustup
+export CARGO_HOME=/usr/local/cargo
+dnf install -y wget
+RUSTUP_URL=https://static.rust-lang.org/rustup/archive/$RUSTUP_VERSION/$RUST_ARCH/rustup-init
+wget $RUSTUP_URL
+dnf remove -y wget
+
+chmod +x rustup-init;
+./rustup-init -y --no-modify-path --profile minimal --default-toolchain $RUST_VERSION;
+rm rustup-init;
+chmod -R a+w $RUSTUP_HOME $CARGO_HOME
+
+rustup --version
+cargo --version
+rustc --version
+
 # get gst-build and make all subprojects available
 git clone git://anongit.freedesktop.org/gstreamer/gst-build /gst-build/
 cd /gst-build

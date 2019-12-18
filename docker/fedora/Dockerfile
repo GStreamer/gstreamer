@@ -1,5 +1,7 @@
 FROM registry.fedoraproject.org/fedora:30
 
+ENV PATH=/usr/local/cargo/bin:$PATH
+
 COPY prepare.sh cleanup.sh /root/
 
 RUN /usr/bin/sh /root/prepare.sh && \
