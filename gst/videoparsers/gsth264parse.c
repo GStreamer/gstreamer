@@ -1579,10 +1579,13 @@ get_compatible_profile_caps (GstH264SPS * sps)
       } else {
         if (sps->constraint_set3_flag) {        /* A.2.9 */
           static const gchar *profile_array[] =
-              { "high-4:2:2", "high-4:4:4", "high-4:4:4-intra", NULL };
+              { "high-4:2:2", "high-4:4:4", "high-4:2:2-intra",
+            "high-4:4:4-intra", NULL
+          };
           profiles = profile_array;
         } else {
-          static const gchar *profile_array[] = { "high-4:4:4", NULL };
+          static const gchar *profile_array[] =
+              { "high-4:2:2", "high-4:4:4", NULL };
           profiles = profile_array;
         }
       }

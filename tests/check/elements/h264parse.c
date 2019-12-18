@@ -25,6 +25,7 @@
 
 #include <gst/check/check.h>
 #include <gst/video/video.h>
+#include "gst-libs/gst/codecparsers/gsth264parser.h"
 #include "parser.h"
 
 #define SRC_CAPS_TMPL   "video/x-h264, parsed=(boolean)false"
@@ -128,6 +129,35 @@ static guint8 garbage_frame[] = {
 /* context to tweak tests */
 static const gchar *ctx_suite;
 static gboolean ctx_codec_data;
+
+#define SPS_LEN 3
+#define SPS_CONSTRAINT_SET_FLAG_0 1 << 7
+#define SPS_CONSTRAINT_SET_FLAG_1 (1 << 6)
+#define SPS_CONSTRAINT_SET_FLAG_2 (1 << 5)
+#define SPS_CONSTRAINT_SET_FLAG_3 (1 << 4)
+#define SPS_CONSTRAINT_SET_FLAG_4 (1 << 3)
+#define SPS_CONSTRAINT_SET_FLAG_5 (1 << 2)
+
+static void
+fill_h264_sps (guint8 * sps, guint8 profile_idc, guint constraint_set_flags,
+    guint level_idc)
+{
+  memset (sps, 0x0, SPS_LEN);
+  /*
+   * * Bit 0:7   - Profile indication
+   * * Bit 8     - constraint_set0_flag
+   * * Bit 9     - constraint_set1_flag
+   * * Bit 10    - constraint_set2_flag
+   * * Bit 11    - constraint_set3_flag
+   * * Bit 12    - constraint_set4_flag
+   * * Bit 13    - constraint_set5_flag
+   * * Bit 14:15 - Reserved
+   * * Bit 16:24 - Level indication
+   * */
+  sps[0] = profile_idc;
+  sps[1] |= constraint_set_flags;
+  sps[2] = level_idc;
+}
 
 static gboolean
 verify_buffer (buffer_verify_data_s * vdata, GstBuffer * buffer)
@@ -259,6 +289,49 @@ verify_buffer_bs_au (buffer_verify_data_s * vdata, GstBuffer * buffer)
 
   gst_buffer_unmap (buffer, &map);
   return TRUE;
+}
+
+static void
+verify_h264parse_compatible_caps (guint profile_idc, guint constraint_set_flags,
+    const char *profile)
+{
+  GstHarness *h;
+  GstBuffer *buf;
+  gchar *sink_caps_str;
+  guint8 *frame_sps;
+  guint frame_sps_len;
+  GstCaps *caps;
+
+  h = gst_harness_new ("h264parse");
+
+  sink_caps_str = g_strdup_printf ("video/x-h264"
+      ", parsed=(boolean)true"
+      ", stream-format=(string){ avc, avc3, byte-stream }"
+      ", alignment=(string){ au, nal }" ", profile=(string)%s", profile);
+
+  /* create and modify sps to the given profile */
+  frame_sps_len = sizeof (h264_sps);
+  frame_sps = g_malloc (frame_sps_len);
+  memcpy (frame_sps, h264_sps, frame_sps_len);
+  fill_h264_sps (&frame_sps[5], profile_idc, constraint_set_flags, 0);
+
+  /* set the peer pad (ie decoder) to the given profile to check the compatibility with the sps */
+  gst_harness_set_caps_str (h, "video/x-h264", sink_caps_str);
+  g_free (sink_caps_str);
+
+
+  /* push sps buffer */
+  buf = gst_buffer_new_and_alloc (frame_sps_len);
+  gst_buffer_fill (buf, 0, frame_sps, frame_sps_len);
+  g_free (frame_sps);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+  fail_unless (gst_harness_push_event (h, gst_event_new_eos ()));
+
+  /* check that the caps have been negociated correctly */
+  fail_unless (caps = gst_pad_get_current_caps (h->sinkpad));
+  gst_caps_unref (caps);
+
+  gst_harness_teardown (h);
 }
 
 GST_START_TEST (test_parse_normal)
@@ -394,6 +467,129 @@ GST_START_TEST (test_sink_caps_reordering)
   gst_object_unref (src);
   gst_object_unref (sink);
   gst_object_unref (parser);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_parse_compatible_caps)
+{
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_BASELINE, 0, "extended");
+
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_BASELINE,
+      SPS_CONSTRAINT_SET_FLAG_1, "baseline");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_BASELINE,
+      SPS_CONSTRAINT_SET_FLAG_1, "main");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_BASELINE,
+      SPS_CONSTRAINT_SET_FLAG_1, "high");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_BASELINE,
+      SPS_CONSTRAINT_SET_FLAG_1, "high-10");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_BASELINE,
+      SPS_CONSTRAINT_SET_FLAG_1, "high-4:2:2");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_BASELINE,
+      SPS_CONSTRAINT_SET_FLAG_1, "high-4:4:4");
+
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_MAIN, 0, "high");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_MAIN, 0, "high-10");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_MAIN, 0, "high-4:2:2");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_MAIN, 0, "high-4:4:4");
+
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_EXTENDED,
+      SPS_CONSTRAINT_SET_FLAG_0, "baseline");
+
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_EXTENDED,
+      SPS_CONSTRAINT_SET_FLAG_0 | SPS_CONSTRAINT_SET_FLAG_1,
+      "constrained-baseline");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_EXTENDED,
+      SPS_CONSTRAINT_SET_FLAG_0 | SPS_CONSTRAINT_SET_FLAG_1, "baseline");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_EXTENDED,
+      SPS_CONSTRAINT_SET_FLAG_0 | SPS_CONSTRAINT_SET_FLAG_1, "main");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_EXTENDED,
+      SPS_CONSTRAINT_SET_FLAG_0 | SPS_CONSTRAINT_SET_FLAG_1, "high");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_EXTENDED,
+      SPS_CONSTRAINT_SET_FLAG_0 | SPS_CONSTRAINT_SET_FLAG_1, "high-10");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_EXTENDED,
+      SPS_CONSTRAINT_SET_FLAG_0 | SPS_CONSTRAINT_SET_FLAG_1, "high-4:2:2");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_EXTENDED,
+      SPS_CONSTRAINT_SET_FLAG_0 | SPS_CONSTRAINT_SET_FLAG_1, "high-4:4:4");
+
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_EXTENDED,
+      SPS_CONSTRAINT_SET_FLAG_1, "main");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_EXTENDED,
+      SPS_CONSTRAINT_SET_FLAG_1, "high");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_EXTENDED,
+      SPS_CONSTRAINT_SET_FLAG_1, "high-10");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_EXTENDED,
+      SPS_CONSTRAINT_SET_FLAG_1, "high-4:2:2");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_EXTENDED,
+      SPS_CONSTRAINT_SET_FLAG_1, "high-4:4:4");
+
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_HIGH, 0, "high-10");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_HIGH, 0, "high-4:2:2");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_HIGH, 0, "high-4:4:4");
+
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_HIGH,
+      SPS_CONSTRAINT_SET_FLAG_1, "main");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_HIGH,
+      SPS_CONSTRAINT_SET_FLAG_1, "high-10");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_HIGH,
+      SPS_CONSTRAINT_SET_FLAG_1, "high-4:2:2");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_HIGH,
+      SPS_CONSTRAINT_SET_FLAG_1, "high-4:4:4");
+
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_HIGH10, 0, "high-4:2:2");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_HIGH10, 0, "high-4:4:4");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_HIGH10,
+      SPS_CONSTRAINT_SET_FLAG_1, "main");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_HIGH10,
+      SPS_CONSTRAINT_SET_FLAG_1, "high");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_HIGH10,
+      SPS_CONSTRAINT_SET_FLAG_1, "high-4:2:2");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_HIGH10,
+      SPS_CONSTRAINT_SET_FLAG_1, "high-4:4:4");
+
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_HIGH10,
+      SPS_CONSTRAINT_SET_FLAG_3, "high-10");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_HIGH10,
+      SPS_CONSTRAINT_SET_FLAG_3, "high-4:2:2");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_HIGH10,
+      SPS_CONSTRAINT_SET_FLAG_3, "high-4:4:4");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_HIGH10,
+      SPS_CONSTRAINT_SET_FLAG_3, "high-4:2:2-intra");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_HIGH10,
+      SPS_CONSTRAINT_SET_FLAG_3, "high-4:4:4-intra");
+
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_HIGH_422, 0, "high-4:2:2");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_HIGH_422, 0, "high-4:4:4");
+
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_HIGH_422,
+      SPS_CONSTRAINT_SET_FLAG_1, "main");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_HIGH_422,
+      SPS_CONSTRAINT_SET_FLAG_1, "high");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_HIGH_422,
+      SPS_CONSTRAINT_SET_FLAG_1, "high-10");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_HIGH_422,
+      SPS_CONSTRAINT_SET_FLAG_1, "high-4:4:4");
+
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_HIGH_422,
+      SPS_CONSTRAINT_SET_FLAG_3, "high-4:2:2");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_HIGH_422,
+      SPS_CONSTRAINT_SET_FLAG_3, "high-4:4:4");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_HIGH_422,
+      SPS_CONSTRAINT_SET_FLAG_3, "high-4:2:2-intra");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_HIGH_422,
+      SPS_CONSTRAINT_SET_FLAG_3, "high-4:4:4-intra");
+
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_HIGH_444,
+      SPS_CONSTRAINT_SET_FLAG_1, "main");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_HIGH_444,
+      SPS_CONSTRAINT_SET_FLAG_1, "high");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_HIGH_444,
+      SPS_CONSTRAINT_SET_FLAG_1, "high-10");
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_HIGH_444,
+      SPS_CONSTRAINT_SET_FLAG_1, "high-4:2:2");
+
+  verify_h264parse_compatible_caps (GST_H264_PROFILE_HIGH_444,
+      SPS_CONSTRAINT_SET_FLAG_3, "high-4:4:4");
 }
 
 GST_END_TEST;
@@ -669,6 +865,7 @@ main (int argc, char **argv)
     s = suite_create ("h264parse");
     suite_add_tcase (s, tc_chain);
     tcase_add_test (tc_chain, test_parse_sei_closedcaptions);
+    tcase_add_test (tc_chain, test_parse_compatible_caps);
     nf += gst_check_run_suite (s, "h264parse", __FILE__);
   }
 
