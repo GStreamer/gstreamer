@@ -783,6 +783,72 @@ gst_d3d11_device_create_swap_chain (GstD3D11Device * device,
   return data.swap_chain;
 }
 
+#if (DXGI_HEADER_VERSION >= 2)
+typedef struct
+{
+  IDXGISwapChain1 *swap_chain;
+  HWND hwnd;
+  const DXGI_SWAP_CHAIN_DESC1 *desc;
+  const DXGI_SWAP_CHAIN_FULLSCREEN_DESC *fullscreen_desc;
+  IDXGIOutput *output;
+} CreateSwapChainForHwndData;
+
+static void
+gst_d3d11_device_create_swap_chain_for_hwnd_internal (GstD3D11Device * device,
+    CreateSwapChainForHwndData * data)
+{
+  GstD3D11DevicePrivate *priv = device->priv;
+  HRESULT hr;
+
+  hr = IDXGIFactory2_CreateSwapChainForHwnd ((IDXGIFactory2 *) priv->factory,
+      (IUnknown *) priv->device, data->hwnd, data->desc, data->fullscreen_desc,
+      data->output, &data->swap_chain);
+
+  if (!gst_d3d11_result (hr)) {
+    GST_ERROR_OBJECT (device, "Cannot create SwapChain Object: 0x%x",
+        (guint) hr);
+    data->swap_chain = NULL;
+  }
+}
+
+/**
+ * gst_d3d11_device_create_swap_chain_for_hwnd:
+ * @device: a #GstD3D11Device
+ * @hwnd: HWND handle
+ * @desc: a DXGI_SWAP_CHAIN_DESC1 structure for swapchain
+ * @fullscreen_desc: (nullable): a DXGI_SWAP_CHAIN_FULLSCREEN_DESC
+ *   structure for swapchain
+ * @output: (nullable): a IDXGIOutput interface for the output to restrict content to
+ *
+ * Create a IDXGISwapChain1 object. Caller must release returned swap chain object
+ * via IDXGISwapChain1_Release()
+ *
+ * Returns: (transfer full) (nullable): a new IDXGISwapChain1 or %NULL
+ * when failed to create swap chain with given @desc
+ */
+IDXGISwapChain1 *
+gst_d3d11_device_create_swap_chain_for_hwnd (GstD3D11Device * device,
+    HWND hwnd, const DXGI_SWAP_CHAIN_DESC1 * desc,
+    const DXGI_SWAP_CHAIN_FULLSCREEN_DESC * fullscreen_desc,
+    IDXGIOutput * output)
+{
+  CreateSwapChainForHwndData data = { 0, };
+
+  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
+
+  data.swap_chain = NULL;
+  data.hwnd = hwnd;
+  data.desc = desc;
+  data.fullscreen_desc = fullscreen_desc;
+  data.output = output;
+
+  gst_d3d11_device_thread_add (device, (GstD3D11DeviceThreadFunc)
+      gst_d3d11_device_create_swap_chain_for_hwnd_internal, &data);
+
+  return data.swap_chain;
+}
+#endif
+
 static void
 gst_d3d11_device_release_swap_chain_internal (GstD3D11Device * device,
     IDXGISwapChain * swap_chain)

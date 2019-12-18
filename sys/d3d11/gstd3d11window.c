@@ -1010,6 +1010,7 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
   GstCaps *render_caps;
   MakeWindowAssociationData mwa_data = { 0, };
   UINT swapchain_flags = 0;
+  DXGI_SWAP_EFFECT swap_effect = DXGI_SWAP_EFFECT_DISCARD;
 #if (DXGI_HEADER_VERSION >= 5)
   gboolean have_cll = FALSE;
   gboolean have_mastering = FALSE;
@@ -1099,6 +1100,10 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
     GST_DEBUG_OBJECT (window, "DXGI 1.5 interface is available");
     swapchain4_available = TRUE;
 
+    /* For non-DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709 color space support,
+     * DXGI_SWAP_EFFECT_FLIP_DISCARD instead of DXGI_SWAP_EFFECT_DISCARD */
+    swap_effect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+
     g_object_get (window->device, "allow-tearing", &allow_tearing, NULL);
     if (allow_tearing) {
       GST_DEBUG_OBJECT (window, "device support tearning");
@@ -1135,32 +1140,63 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
   window->width = width;
   window->height = height;
 
-  /* we will get client area at on_resize */
-  desc.BufferDesc.Width = 0;
-  desc.BufferDesc.Height = 0;
-  /* don't care refresh rate */
-  desc.BufferDesc.RefreshRate.Numerator = 0;
-  desc.BufferDesc.RefreshRate.Denominator = 1;
-  desc.BufferDesc.Format = window->render_format->dxgi_format;
-  desc.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
-  desc.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
-  desc.SampleDesc.Count = 1;
-  desc.SampleDesc.Quality = 0;
-  desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-  desc.BufferCount = 2;
-  desc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
-#if (DXGI_HEADER_VERSION >= 5)
-  /* For non-DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709 color space support,
-   * DXGI_SWAP_EFFECT_FLIP_DISCARD instead of DXGI_SWAP_EFFECT_DISCARD */
-  if (swapchain4_available)
-    desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-#endif
-  desc.OutputWindow = window->internal_win_id;
-  desc.Windowed = TRUE;
-  desc.Flags = swapchain_flags;
+#if (DXGI_HEADER_VERSION >= 2)
+  if (!window->swap_chain) {
+    DXGI_SWAP_CHAIN_DESC1 desc1 = { 0, };
+    desc1.Width = 0;
+    desc1.Height = 0;
+    desc1.Format = window->render_format->dxgi_format;
+    /* FIXME: add support stereo */
+    desc1.Stereo = FALSE;
+    desc1.SampleDesc.Count = 1;
+    desc1.SampleDesc.Quality = 0;
+    desc1.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    desc1.BufferCount = 2;
+    /* NOTE: for UWP app, this should be DXGI_SCALING_ASPECT_RATIO_STRETCH
+     * with CreateSwapChainForComposition or CreateSwapChainForCoreWindow */
+    desc1.Scaling = DXGI_SCALING_STRETCH;
 
-  window->swap_chain =
-      gst_d3d11_device_create_swap_chain (window->device, &desc);
+    /* scaling-stretch would break aspect-ratio so we prefer to use scaling-none,
+     * but Windows7 does not support this method */
+    if (gst_d3d11_is_windows_8_or_greater ())
+      desc1.Scaling = DXGI_SCALING_NONE;
+    desc1.SwapEffect = swap_effect;
+    /* FIXME: might need to define for ovelay composition */
+    desc1.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
+    desc1.Flags = swapchain_flags;
+
+    window->swap_chain = (IDXGISwapChain *)
+        gst_d3d11_device_create_swap_chain_for_hwnd (window->device,
+        window->internal_win_id, &desc1, NULL, NULL);
+
+    if (!window->swap_chain) {
+      GST_WARNING_OBJECT (window, "Failed to create swapchain1");
+    }
+  }
+#endif
+
+  if (!window->swap_chain) {
+    /* we will get client area at on_resize */
+    desc.BufferDesc.Width = 0;
+    desc.BufferDesc.Height = 0;
+    /* don't care refresh rate */
+    desc.BufferDesc.RefreshRate.Numerator = 0;
+    desc.BufferDesc.RefreshRate.Denominator = 1;
+    desc.BufferDesc.Format = window->render_format->dxgi_format;
+    desc.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
+    desc.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
+    desc.SampleDesc.Count = 1;
+    desc.SampleDesc.Quality = 0;
+    desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    desc.BufferCount = 2;
+    desc.SwapEffect = swap_effect;
+    desc.OutputWindow = window->internal_win_id;
+    desc.Windowed = TRUE;
+    desc.Flags = swapchain_flags;
+
+    window->swap_chain =
+        gst_d3d11_device_create_swap_chain (window->device, &desc);
+  }
 
   if (!window->swap_chain) {
     GST_ERROR_OBJECT (window, "Cannot create swapchain");

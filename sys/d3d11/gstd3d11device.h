@@ -90,6 +90,14 @@ D3D_FEATURE_LEVEL     gst_d3d11_device_get_chosen_feature_level (GstD3D11Device 
 IDXGISwapChain *      gst_d3d11_device_create_swap_chain  (GstD3D11Device * device,
                                                            const DXGI_SWAP_CHAIN_DESC * desc);
 
+#if (DXGI_HEADER_VERSION >= 2)
+IDXGISwapChain1 *     gst_d3d11_device_create_swap_chain_for_hwnd (GstD3D11Device * device,
+                                                                   HWND hwnd,
+                                                                   const DXGI_SWAP_CHAIN_DESC1 * desc,
+                                                                   const DXGI_SWAP_CHAIN_FULLSCREEN_DESC * fullscreen_desc,
+                                                                   IDXGIOutput * output);
+#endif
+
 void                  gst_d3d11_device_release_swap_chain (GstD3D11Device * device,
                                                            IDXGISwapChain * swap_chain);
 
