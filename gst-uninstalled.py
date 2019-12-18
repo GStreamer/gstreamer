@@ -13,6 +13,7 @@ import sys
 import tempfile
 import pathlib
 import signal
+from pathlib import PurePath
 
 from distutils.sysconfig import get_python_lib
 from distutils.util import strtobool
@@ -93,6 +94,24 @@ def is_library_target_and_not_plugin(target, filename):
     if GSTPLUGIN_FILEPATH_REG is None:
         GSTPLUGIN_FILEPATH_REG = re.compile(GSTPLUGIN_FILEPATH_REG_TEMPLATE)
     if GSTPLUGIN_FILEPATH_REG.search(install_filename.replace('\\', '/')):
+        return False
+    return True
+
+def is_binary_target_and_in_path(target, filename, bindir):
+    if target['type'] != 'executable':
+        return False
+    if not target['installed']:
+        return False
+    # Check if this file installed by this target is installed to bindir
+    for install_filename in listify(target['install_filename']):
+        if install_filename.endswith(os.path.basename(filename)):
+            break
+    else:
+        # None of the installed files in the target correspond to the built
+        # filename, so skip
+        return False
+    fpath = PurePath(install_filename)
+    if fpath.parent != bindir:
         return False
     return True
 
@@ -182,10 +201,14 @@ def get_subprocess_env(options, gst_version):
     build_options_s = subprocess.check_output(meson + ['introspect', options.builddir, '--buildoptions'])
     build_options = json.loads(build_options_s.decode())
     libdir, = [o['value'] for o in build_options if o['name'] == 'libdir']
-    libdir = libdir.replace('\\', '/')
+    libdir = PurePath(libdir)
+    prefix, = [o['value'] for o in build_options if o['name'] == 'prefix']
+    bindir, = [o['value'] for o in build_options if o['name'] == 'bindir']
+    prefix = PurePath(prefix)
+    bindir = prefix / bindir
 
     global GSTPLUGIN_FILEPATH_REG_TEMPLATE
-    GSTPLUGIN_FILEPATH_REG_TEMPLATE = GSTPLUGIN_FILEPATH_REG_TEMPLATE.format(libdir=libdir)
+    GSTPLUGIN_FILEPATH_REG_TEMPLATE = GSTPLUGIN_FILEPATH_REG_TEMPLATE.format(libdir=libdir.as_posix())
 
     for target in targets:
         filenames = listify(target['filename'])
@@ -203,7 +226,7 @@ def get_subprocess_env(options, gst_version):
                 prepend_env_var(env, lib_path_envvar,
                                 os.path.join(options.builddir, root),
                                 options.sysroot)
-            elif target['type'] == 'executable' and target['installed']:
+            elif is_binary_target_and_in_path(target, filename, bindir):
                 paths.add(os.path.join(options.builddir, root))
             elif SHAREDLIB_REG.search(filename) and target['installed']:
                 if PLUGINPATH_REG.search(os.path.normpath(stringify(target['install_filename']))):
