@@ -374,7 +374,7 @@ if __name__ == "__main__":
                 args += ['/k', 'prompt [gst-{}] $P$G'.format(gst_version)]
         else:
             args = [os.environ.get("SHELL", os.path.realpath("/bin/sh"))]
-        if "bash" in args[0] and not strtobool(os.environ.get("GST_BUILD_DISABLE_PS1_OVERRIDE", r"FALSE")):
+        if args[0].endswith('bash') and not strtobool(os.environ.get("GST_BUILD_DISABLE_PS1_OVERRIDE", r"FALSE")):
             tmprc = tempfile.NamedTemporaryFile(mode='w')
             bashrc = os.path.expanduser('~/.bashrc')
             if os.path.exists(bashrc):
@@ -385,7 +385,7 @@ if __name__ == "__main__":
             # Let the GC remove the tmp file
             args.append("--rcfile")
             args.append(tmprc.name)
-        if 'fish' in args[0]:
+        if args[0].endswith('fish'):
             # Ignore SIGINT while using fish as the shell to make it behave
             # like other shells such as bash and zsh.
             # See: https://gitlab.freedesktop.org/gstreamer/gst-build/issues/18
