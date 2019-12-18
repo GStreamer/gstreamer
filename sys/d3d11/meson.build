@@ -16,9 +16,20 @@ d3d11_sources = [
   'gstd3d11colorconverter.c',
 ]
 
+dxgi_headers = [
+  ['dxgi1_6.h', 6],
+  ['dxgi1_5.h', 5],
+  ['dxgi1_4.h', 4],
+  ['dxgi1_3.h', 3],
+  ['dxgi1_2.h', 2],
+  ['dxgi.h', 1]
+]
+
 have_d3d11 = false
-extra_c_args = []
+extra_c_args = ['-DCOBJMACROS']
+have_dxgi_header = false
 extra_dep = []
+d3d11_conf = configuration_data()
 
 d3d11_option = get_option('d3d11')
 if host_system != 'windows' or d3d11_option.disabled()
@@ -29,7 +40,14 @@ d3d11_lib = cc.find_library('d3d11', required : d3d11_option)
 dxgi_lib = cc.find_library('dxgi', required : d3d11_option)
 d3dcompiler_lib = cc.find_library('d3dcompiler', required: d3d11_option)
 
-have_d3d11 = d3d11_lib.found() and dxgi_lib.found() and cc.has_header('d3d11.h') and cc.has_header('dxgi.h') and cc.has_header('d3dcompiler.h')
+foreach dxgi_h: dxgi_headers
+  if not have_dxgi_header and cc.has_header(dxgi_h[0])
+    d3d11_conf.set('DXGI_HEADER_VERSION', dxgi_h[1])
+    have_dxgi_header = true
+  endif
+endforeach
+
+have_d3d11 = d3d11_lib.found() and dxgi_lib.found() and cc.has_header('d3d11.h') and have_dxgi_header and cc.has_header('d3dcompiler.h')
 if not have_d3d11
   if d3d11_option.enabled()
     error('The d3d11 plugin was enabled explicitly, but required dependencies were not found.')
@@ -37,16 +55,16 @@ if not have_d3d11
   subdir_done()
 endif
 
-# required for HDR metadata
-if cc.has_header('dxgi1_5.h')
-  extra_c_args += ['-DHAVE_DXGI_1_5_H']
-endif
-
 # for enabling debug layer
 if cc.has_header('d3d11sdklayers.h')
-  extra_c_args += ['-DHAVE_D3D11SDKLAYER_H']
+  d3d11_conf.set('HAVE_D3D11SDKLAYER_H', 1)
   extra_dep += [gmodule_dep]
 endif
+
+configure_file(
+  output: 'd3d11config.h',
+  configuration: d3d11_conf,
+)
 
 gstd3d11 = library('gstd3d11',
   d3d11_sources,

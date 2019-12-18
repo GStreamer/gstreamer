@@ -21,19 +21,24 @@
 #define __GST_D3D11_FWD_H__
 
 #include <gst/gst.h>
-
-/* define COBJMACROS to use d3d11 C APIs */
-#ifndef COBJMACROS
-#define COBJMACROS
-#endif
+#include "d3d11config.h"
 
 #ifndef INITGUID
 #include <initguid.h>
 #endif
 
 #include <d3d11.h>
-#ifdef HAVE_DXGI_1_5_H
+
+#if (DXGI_HEADER_VERSION >= 6)
+#include <dxgi1_6.h>
+#elif (DXGI_HEADER_VERSION >= 5)
 #include <dxgi1_5.h>
+#elif (DXGI_HEADER_VERSION >= 4)
+#include <dxgi1_4.h>
+#elif (DXGI_HEADER_VERSION >= 3)
+#include <dxgi1_3.h>
+#elif (DXGI_HEADER_VERSION >= 2)
+#include <dxgi1_2.h>
 #else
 #include <dxgi.h>
 #endif

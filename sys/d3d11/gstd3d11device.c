@@ -21,6 +21,8 @@
 #include "config.h"
 #endif
 
+#include "d3d11config.h"
+
 #include "gstd3d11device.h"
 #include "gstd3d11utils.h"
 #include "gmodule.h"
@@ -234,7 +236,10 @@ gst_d3d11_device_constructed (GObject * object)
   };
   D3D_FEATURE_LEVEL selected_level;
 
-#ifdef HAVE_DXGI_1_5_H
+  GST_DEBUG_OBJECT (self,
+      "Built with DXGI header version %d", DXGI_HEADER_VERSION);
+
+#if (DXGI_HEADER_VERSION >= 5)
   hr = CreateDXGIFactory1 (&IID_IDXGIFactory5, (void **) &factory);
   if (!gst_d3d11_result (hr)) {
     GST_INFO_OBJECT (self, "IDXGIFactory5 was unavailable");

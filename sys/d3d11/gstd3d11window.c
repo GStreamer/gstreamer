@@ -24,6 +24,8 @@
 #include "config.h"
 #endif
 
+#include "d3d11config.h"
+
 #include "gstd3d11window.h"
 #include "gstd3d11device.h"
 #include "gstd3d11memory.h"
@@ -806,7 +808,7 @@ gst_d3d11_window_new (GstD3D11Device * device)
   return window;
 }
 
-#ifdef HAVE_DXGI_1_5_H
+#if (DXGI_HEADER_VERSION >= 5)
 static inline UINT16
 fraction_to_uint (guint num, guint den, guint scale)
 {
@@ -1008,7 +1010,7 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
   GstCaps *render_caps;
   MakeWindowAssociationData mwa_data = { 0, };
   UINT swapchain_flags = 0;
-#if defined(HAVE_DXGI_1_5_H)
+#if (DXGI_HEADER_VERSION >= 5)
   gboolean have_cll = FALSE;
   gboolean have_mastering = FALSE;
   gboolean swapchain4_available = FALSE;
@@ -1075,7 +1077,7 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
   }
 
   window->allow_tearing = FALSE;
-#if defined(HAVE_DXGI_1_5_H)
+#if (DXGI_HEADER_VERSION >= 5)
   if (!gst_video_content_light_level_from_caps (&window->content_light_level,
           caps)) {
     gst_video_content_light_level_init (&window->content_light_level);
@@ -1147,7 +1149,7 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
   desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
   desc.BufferCount = 2;
   desc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
-#if defined(HAVE_DXGI_1_5_H)
+#if (DXGI_HEADER_VERSION >= 5)
   /* For non-DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709 color space support,
    * DXGI_SWAP_EFFECT_FLIP_DISCARD instead of DXGI_SWAP_EFFECT_DISCARD */
   if (swapchain4_available)
@@ -1175,7 +1177,7 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
   gst_d3d11_device_thread_add (window->device,
       (GstD3D11DeviceThreadFunc) gst_d3d11_window_disable_alt_enter, &mwa_data);
 
-#if defined(HAVE_DXGI_1_5_H)
+#if (DXGI_HEADER_VERSION >= 5)
   if (swapchain4_available) {
     HRESULT hr;
     GST_DXGI_COLOR_SPACE_TYPE ctype;
@@ -1346,7 +1348,7 @@ _present_on_device_thread (GstD3D11Device * device, FramePresentData * data)
     gst_d3d11_color_converter_update_rect (self->converter, &rect);
     gst_d3d11_color_converter_convert (self->converter, srv, &self->rtv);
   }
-#ifdef HAVE_DXGI_1_5_H
+#if (DXGI_HEADER_VERSION >= 5)
   if (self->allow_tearing) {
     present_flags |= DXGI_PRESENT_ALLOW_TEARING;
   }
