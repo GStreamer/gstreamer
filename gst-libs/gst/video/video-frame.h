@@ -176,6 +176,8 @@ gboolean    gst_video_frame_copy_plane    (GstVideoFrame *dest, const GstVideoFr
  * @GST_VIDEO_BUFFER_FLAG_BOTTOM_FIELD: The video frame has the bottom field only. This is
  *                                     the same as GST_VIDEO_BUFFER_FLAG_ONEFIELD
  *                                     (GST_VIDEO_BUFFER_FLAG_TFF flag unset) (Since: 1.16).
+ * @GST_VIDEO_BUFFER_FLAG_MARKER:      The #GstBuffer contains the end of a video field or frame
+ *                                     boundary such as the last subframe or packet (Since: 1.18).
  * @GST_VIDEO_BUFFER_FLAG_LAST:        Offset to define more flags
  *
  * Additional video buffer flags. These flags can potentially be used on any
@@ -196,6 +198,8 @@ typedef enum {
   GST_VIDEO_BUFFER_FLAG_TOP_FIELD   = GST_VIDEO_BUFFER_FLAG_TFF |
                                       GST_VIDEO_BUFFER_FLAG_ONEFIELD,
   GST_VIDEO_BUFFER_FLAG_BOTTOM_FIELD = GST_VIDEO_BUFFER_FLAG_ONEFIELD,
+
+  GST_VIDEO_BUFFER_FLAG_MARKER       = GST_BUFFER_FLAG_MARKER,
 
   GST_VIDEO_BUFFER_FLAG_LAST        = (GST_BUFFER_FLAG_LAST << 8)
 } GstVideoBufferFlags;
