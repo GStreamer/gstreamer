@@ -61,7 +61,7 @@ struct _GstVaapiSurfaceClass
 };
 
 /**
- * GST_VAAPI_SURFACE_SURFACE_CHROMA_TYPE:
+ * GST_VAAPI_SURFACE_CHROMA_TYPE:
  * @surface: a #GstVaapiSurface
  *
  * Macro that evaluates to the @surface chroma type.
@@ -73,7 +73,7 @@ struct _GstVaapiSurfaceClass
   (GST_VAAPI_SURFACE (surface)->chroma_type)
 
 /**
- * GST_VAAPI_SURFACE_SURFACE_FORMAT:
+ * GST_VAAPI_SURFACE_FORMAT:
  * @surface: a #GstVaapiSurface
  *
  * Macro that evaluates to the @surface format.
@@ -85,7 +85,7 @@ struct _GstVaapiSurfaceClass
   (GST_VAAPI_SURFACE (surface)->format)
 
 /**
- * GST_VAAPI_SURFACE_SURFACE_WIDTH:
+ * GST_VAAPI_SURFACE_WIDTH:
  * @surface: a #GstVaapiSurface
  *
  * Macro that evaluates to the @surface width in pixels.
@@ -97,7 +97,7 @@ struct _GstVaapiSurfaceClass
   (GST_VAAPI_SURFACE (surface)->width)
 
 /**
- * GST_VAAPI_SURFACE_SURFACE_HEIGHT:
+ * GST_VAAPI_SURFACE_HEIGHT:
  * @surface: a #GstVaapiSurface
  *
  * Macro that evaluates to the @surface height in pixels.
