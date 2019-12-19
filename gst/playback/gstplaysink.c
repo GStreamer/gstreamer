@@ -179,9 +179,9 @@ typedef struct
 #define PENDING_FLAG_IS_SET(playsink, flagtype) \
   ((playsink->pending_blocked_pads) & (1 << flagtype))
 #define PENDING_VIDEO_BLOCK(playsink) \
-  ((playsink->pending_blocked_pads) & (1 << GST_PLAY_SINK_TYPE_VIDEO_RAW | 1 << GST_PLAY_SINK_TYPE_VIDEO))
+  ((playsink->pending_blocked_pads) & (1 << GST_PLAY_SINK_TYPE_VIDEO))
 #define PENDING_AUDIO_BLOCK(playsink) \
-  ((playsink->pending_blocked_pads) & (1 << GST_PLAY_SINK_TYPE_AUDIO_RAW | 1 << GST_PLAY_SINK_TYPE_AUDIO))
+  ((playsink->pending_blocked_pads) & (1 << GST_PLAY_SINK_TYPE_AUDIO))
 #define PENDING_TEXT_BLOCK(playsink) \
   PENDING_FLAG_IS_SET(playsink, GST_PLAY_SINK_TYPE_TEXT)
 
@@ -881,14 +881,12 @@ gst_play_sink_set_sink (GstPlaySink * playsink, GstPlaySinkType type,
   GST_PLAY_SINK_LOCK (playsink);
   switch (type) {
     case GST_PLAY_SINK_TYPE_AUDIO:
-    case GST_PLAY_SINK_TYPE_AUDIO_RAW:
       elem = &playsink->audio_sink;
 #ifndef GST_DISABLE_GST_DEBUG
       sink_type = "audio";
 #endif
       break;
     case GST_PLAY_SINK_TYPE_VIDEO:
-    case GST_PLAY_SINK_TYPE_VIDEO_RAW:
       elem = &playsink->video_sink;
 #ifndef GST_DISABLE_GST_DEBUG
       sink_type = "video";
@@ -941,7 +939,6 @@ gst_play_sink_get_sink (GstPlaySink * playsink, GstPlaySinkType type)
   GST_PLAY_SINK_LOCK (playsink);
   switch (type) {
     case GST_PLAY_SINK_TYPE_AUDIO:
-    case GST_PLAY_SINK_TYPE_AUDIO_RAW:
     {
       GstPlayAudioChain *chain;
       if ((chain = (GstPlayAudioChain *) playsink->audiochain))
@@ -950,7 +947,6 @@ gst_play_sink_get_sink (GstPlaySink * playsink, GstPlaySinkType type)
       break;
     }
     case GST_PLAY_SINK_TYPE_VIDEO:
-    case GST_PLAY_SINK_TYPE_VIDEO_RAW:
     {
       GstPlayVideoChain *chain;
       if ((chain = (GstPlayVideoChain *) playsink->videochain))
@@ -993,11 +989,9 @@ gst_play_sink_set_filter (GstPlaySink * playsink, GstPlaySinkType type,
   GST_PLAY_SINK_LOCK (playsink);
   switch (type) {
     case GST_PLAY_SINK_TYPE_AUDIO:
-    case GST_PLAY_SINK_TYPE_AUDIO_RAW:
       elem = &playsink->audio_filter;
       break;
     case GST_PLAY_SINK_TYPE_VIDEO:
-    case GST_PLAY_SINK_TYPE_VIDEO_RAW:
       elem = &playsink->video_filter;
       break;
     default:
@@ -1028,7 +1022,6 @@ gst_play_sink_get_filter (GstPlaySink * playsink, GstPlaySinkType type)
   GST_PLAY_SINK_LOCK (playsink);
   switch (type) {
     case GST_PLAY_SINK_TYPE_AUDIO:
-    case GST_PLAY_SINK_TYPE_AUDIO_RAW:
     {
       GstPlayAudioChain *chain;
       if ((chain = (GstPlayAudioChain *) playsink->audiochain))
@@ -1037,7 +1030,6 @@ gst_play_sink_get_filter (GstPlaySink * playsink, GstPlaySinkType type)
       break;
     }
     case GST_PLAY_SINK_TYPE_VIDEO:
-    case GST_PLAY_SINK_TYPE_VIDEO_RAW:
     {
       GstPlayVideoChain *chain;
       if ((chain = (GstPlayVideoChain *) playsink->videochain))
@@ -1848,8 +1840,7 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
 
   /* add the video filter first, so everything is working with post-filter
    * samples */
-  chain->filter = gst_play_sink_get_filter (playsink,
-      GST_PLAY_SINK_TYPE_VIDEO_RAW);
+  chain->filter = gst_play_sink_get_filter (playsink, GST_PLAY_SINK_TYPE_VIDEO);
   if (chain->filter) {
     if (!raw) {
       gst_object_unref (chain->filter);
@@ -2733,8 +2724,7 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw)
 
   /* add the audio filter first, so everything is working with post-filter
    * samples */
-  chain->filter = gst_play_sink_get_filter (playsink,
-      GST_PLAY_SINK_TYPE_AUDIO_RAW);
+  chain->filter = gst_play_sink_get_filter (playsink, GST_PLAY_SINK_TYPE_AUDIO);
   if (chain->filter) {
     if (!raw) {
       gst_object_unref (chain->filter);
@@ -4260,7 +4250,6 @@ video_set_blocked (GstPlaySink * playsink, gboolean blocked)
           sinkpad_blocked_cb, playsink, NULL);
     } else if (!blocked && playsink->video_block_id) {
       gst_pad_remove_probe (opad, playsink->video_block_id);
-      PENDING_FLAG_UNSET (playsink, GST_PLAY_SINK_TYPE_VIDEO_RAW);
       PENDING_FLAG_UNSET (playsink, GST_PLAY_SINK_TYPE_VIDEO);
       playsink->video_block_id = 0;
       playsink->video_pad_blocked = FALSE;
@@ -4292,7 +4281,6 @@ audio_set_blocked (GstPlaySink * playsink, gboolean blocked)
       playsink->vis_pad_block_id = 0;
 
       gst_pad_remove_probe (opad, playsink->audio_block_id);
-      PENDING_FLAG_UNSET (playsink, GST_PLAY_SINK_TYPE_AUDIO_RAW);
       PENDING_FLAG_UNSET (playsink, GST_PLAY_SINK_TYPE_AUDIO);
       playsink->audio_block_id = 0;
       playsink->audio_pad_blocked = FALSE;
@@ -4450,13 +4438,11 @@ gst_play_sink_refresh_pad (GstPlaySink * playsink, GstPad * pad,
 
   GST_PLAY_SINK_LOCK (playsink);
   if (pad == playsink->video_pad) {
-    if (type != GST_PLAY_SINK_TYPE_VIDEO_RAW &&
-        type != GST_PLAY_SINK_TYPE_VIDEO)
+    if (type != GST_PLAY_SINK_TYPE_VIDEO)
       goto wrong_type;
     block_id = &playsink->video_block_id;
   } else if (pad == playsink->audio_pad) {
-    if (type != GST_PLAY_SINK_TYPE_AUDIO_RAW &&
-        type != GST_PLAY_SINK_TYPE_AUDIO)
+    if (type != GST_PLAY_SINK_TYPE_AUDIO)
       goto wrong_type;
     block_id = &playsink->audio_block_id;
   } else if (pad == playsink->text_pad) {
@@ -4516,7 +4502,6 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
 
   GST_PLAY_SINK_LOCK (playsink);
   switch (type) {
-    case GST_PLAY_SINK_TYPE_AUDIO_RAW:
     case GST_PLAY_SINK_TYPE_AUDIO:
       pad_name = "audio_sink";
       if (!playsink->audio_tee) {
@@ -4550,7 +4535,6 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
       res = playsink->audio_pad;
       block_id = &playsink->audio_block_id;
       break;
-    case GST_PLAY_SINK_TYPE_VIDEO_RAW:
     case GST_PLAY_SINK_TYPE_VIDEO:
       pad_name = "video_sink";
       if (!playsink->video_pad) {
@@ -4643,14 +4627,11 @@ gst_play_sink_request_new_pad (GstElement * element, GstPadTemplate * templ,
   tplname = GST_PAD_TEMPLATE_NAME_TEMPLATE (templ);
 
   /* Figure out the GstPlaySinkType based on the template */
-  if (!strcmp (tplname, "audio_sink"))
+  if (!strcmp (tplname, "audio_sink") || !strcmp (tplname, "audio_raw_sink"))
     type = GST_PLAY_SINK_TYPE_AUDIO;
-  else if (!strcmp (tplname, "audio_raw_sink"))
-    type = GST_PLAY_SINK_TYPE_AUDIO_RAW;
-  else if (!strcmp (tplname, "video_sink"))
+  else if (!strcmp (tplname, "video_sink") ||
+      !strcmp (tplname, "video_raw_sink"))
     type = GST_PLAY_SINK_TYPE_VIDEO;
-  else if (!strcmp (tplname, "video_raw_sink"))
-    type = GST_PLAY_SINK_TYPE_VIDEO_RAW;
   else if (!strcmp (tplname, "text_sink"))
     type = GST_PLAY_SINK_TYPE_TEXT;
   else

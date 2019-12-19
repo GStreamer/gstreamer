@@ -3110,7 +3110,6 @@ combiner_active_pad_changed (GObject * combiner, GParamSpec * pspec,
 
   switch (combine->type) {
     case GST_PLAY_SINK_TYPE_VIDEO:
-    case GST_PLAY_SINK_TYPE_VIDEO_RAW:
       property = "current-video";
       playbin->current_video = get_current_stream_number (playbin,
           combine, group->video_channels);
@@ -3124,7 +3123,6 @@ combiner_active_pad_changed (GObject * combiner, GParamSpec * pspec,
       }
       break;
     case GST_PLAY_SINK_TYPE_AUDIO:
-    case GST_PLAY_SINK_TYPE_AUDIO_RAW:
       property = "current-audio";
       playbin->current_audio = get_current_stream_number (playbin,
           combine, group->audio_channels);
@@ -3330,11 +3328,9 @@ notify_tags_cb (GObject * object, GParamSpec * pspec, gpointer user_data)
 
   switch (ntdata->type) {
     case GST_PLAY_SINK_TYPE_VIDEO:
-    case GST_PLAY_SINK_TYPE_VIDEO_RAW:
       signal = SIGNAL_VIDEO_TAGS_CHANGED;
       break;
     case GST_PLAY_SINK_TYPE_AUDIO:
-    case GST_PLAY_SINK_TYPE_AUDIO_RAW:
       signal = SIGNAL_AUDIO_TAGS_CHANGED;
       break;
     case GST_PLAY_SINK_TYPE_TEXT:
@@ -3560,11 +3556,9 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
 
     switch (combine->type) {
       case GST_PLAY_SINK_TYPE_VIDEO:
-      case GST_PLAY_SINK_TYPE_VIDEO_RAW:
         signal = SIGNAL_VIDEO_CHANGED;
         break;
       case GST_PLAY_SINK_TYPE_AUDIO:
-      case GST_PLAY_SINK_TYPE_AUDIO_RAW:
         signal = SIGNAL_AUDIO_CHANGED;
         break;
       case GST_PLAY_SINK_TYPE_TEXT:
@@ -3684,11 +3678,9 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
     /* get the correct type-changed signal */
     switch (combine->type) {
       case GST_PLAY_SINK_TYPE_VIDEO:
-      case GST_PLAY_SINK_TYPE_VIDEO_RAW:
         signal = SIGNAL_VIDEO_CHANGED;
         break;
       case GST_PLAY_SINK_TYPE_AUDIO:
-      case GST_PLAY_SINK_TYPE_AUDIO_RAW:
         signal = SIGNAL_AUDIO_CHANGED;
         break;
       case GST_PLAY_SINK_TYPE_TEXT:

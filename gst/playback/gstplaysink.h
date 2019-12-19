@@ -42,25 +42,20 @@ G_BEGIN_DECLS
 /**
  * GstPlaySinkType:
  * @GST_PLAY_SINK_TYPE_AUDIO: an audio pad
- * @GST_PLAY_SINK_TYPE_AUDIO_RAW: a raw audio pad. Deprecated.
  * @GST_PLAY_SINK_TYPE_VIDEO: a video pad
- * @GST_PLAY_SINK_TYPE_VIDEO_RAW: a raw video pad. Deprecated.
  * @GST_PLAY_SINK_TYPE_TEXT: a text pad
- * @GST_PLAY_SINK_TYPE_LAST: the last type
  * @GST_PLAY_SINK_TYPE_FLUSHING: a flushing pad, used when shutting down
+ * @GST_PLAY_SINK_TYPE_LAST: the last type
  *
  * Types of pads that can be requested from the sinks.
  */
 typedef enum {
   GST_PLAY_SINK_TYPE_AUDIO     = 0,
-  GST_PLAY_SINK_TYPE_AUDIO_RAW = 1,
-  GST_PLAY_SINK_TYPE_VIDEO     = 2,
-  GST_PLAY_SINK_TYPE_VIDEO_RAW = 3,
-  GST_PLAY_SINK_TYPE_TEXT      = 4,
-  GST_PLAY_SINK_TYPE_LAST      = 5,
-
+  GST_PLAY_SINK_TYPE_VIDEO     = 1,
+  GST_PLAY_SINK_TYPE_TEXT      = 2,
   /* this is a dummy pad */
-  GST_PLAY_SINK_TYPE_FLUSHING  = 6
+  GST_PLAY_SINK_TYPE_FLUSHING  = 3,
+  GST_PLAY_SINK_TYPE_LAST      = 4
 } GstPlaySinkType;
 
 typedef struct _GstPlaySink GstPlaySink;

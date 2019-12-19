@@ -2628,7 +2628,6 @@ combiner_active_pad_changed (GObject * combiner, GParamSpec * pspec,
 
   switch (combine->type) {
     case GST_PLAY_SINK_TYPE_VIDEO:
-    case GST_PLAY_SINK_TYPE_VIDEO_RAW:
       playbin->current_video = get_current_stream_number (playbin,
           combine, channels);
 
@@ -2640,7 +2639,6 @@ combiner_active_pad_changed (GObject * combiner, GParamSpec * pspec,
       }
       break;
     case GST_PLAY_SINK_TYPE_AUDIO:
-    case GST_PLAY_SINK_TYPE_AUDIO_RAW:
       playbin->current_audio = get_current_stream_number (playbin,
           combine, channels);
 
