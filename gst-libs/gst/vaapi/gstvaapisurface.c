@@ -91,7 +91,7 @@ gst_vaapi_surface_destroy (GstVaapiSurface * surface)
 }
 
 static gboolean
-gst_vaapi_surface_create (GstVaapiSurface * surface,
+gst_vaapi_surface_init (GstVaapiSurface * surface,
     GstVaapiChromaType chroma_type, guint width, guint height)
 {
   GstVaapiDisplay *const display = GST_VAAPI_OBJECT_DISPLAY (surface);
@@ -126,7 +126,7 @@ error_unsupported_chroma_type:
 }
 
 static gboolean
-gst_vaapi_surface_create_full (GstVaapiSurface * surface,
+gst_vaapi_surface_init_full (GstVaapiSurface * surface,
     const GstVideoInfo * vip, guint flags)
 {
   GstVaapiDisplay *const display = GST_VAAPI_OBJECT_DISPLAY (surface);
@@ -218,7 +218,7 @@ error_unsupported_format:
 }
 
 static gboolean
-gst_vaapi_surface_create_from_buffer_proxy (GstVaapiSurface * surface,
+gst_vaapi_surface_init_from_buffer_proxy (GstVaapiSurface * surface,
     GstVaapiBufferProxy * proxy, const GstVideoInfo * vip)
 {
   GstVaapiDisplay *const display = GST_VAAPI_OBJECT_DISPLAY (surface);
@@ -339,7 +339,7 @@ gst_vaapi_surface_new_from_formats (GstVaapiDisplay * display,
   surface = gst_vaapi_object_new (gst_vaapi_surface_class (), display);
   if (!surface)
     return NULL;
-  if (!gst_vaapi_surface_create (surface, chroma_type, width, height))
+  if (!gst_vaapi_surface_init (surface, chroma_type, width, height))
     goto error;
 
   return surface;
@@ -385,10 +385,10 @@ gst_vaapi_surface_new (GstVaapiDisplay * display,
     surface_format = gst_vaapi_video_format_from_chroma (chroma_type);
     gst_video_info_set_format (&vi, surface_format, width, height);
 
-    if (gst_vaapi_surface_create_full (surface, &vi, 0))
+    if (gst_vaapi_surface_init_full (surface, &vi, 0))
       return surface;
   }
-  if (!gst_vaapi_surface_create (surface, chroma_type, width, height))
+  if (!gst_vaapi_surface_init (surface, chroma_type, width, height))
     goto error;
   return surface;
 
@@ -427,7 +427,7 @@ gst_vaapi_surface_new_full (GstVaapiDisplay * display,
   if (!surface)
     return NULL;
 
-  if (!gst_vaapi_surface_create_full (surface, vip, flags))
+  if (!gst_vaapi_surface_init_full (surface, vip, flags))
     goto error;
   return surface;
 
@@ -493,7 +493,7 @@ gst_vaapi_surface_new_from_buffer_proxy (GstVaapiDisplay * display,
   if (!surface)
     return NULL;
 
-  if (!gst_vaapi_surface_create_from_buffer_proxy (surface, proxy, info))
+  if (!gst_vaapi_surface_init_from_buffer_proxy (surface, proxy, info))
     goto error;
   return surface;
 
