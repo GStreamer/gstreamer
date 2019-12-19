@@ -1859,10 +1859,19 @@ free_stream (GstRtpBinStream * stream, GstRtpBin * bin)
 
   GST_DEBUG_OBJECT (bin, "freeing stream %p", stream);
 
+  gst_element_set_locked_state (stream->buffer, TRUE);
+  if (stream->demux)
+    gst_element_set_locked_state (stream->demux, TRUE);
+
+  gst_element_set_state (stream->buffer, GST_STATE_NULL);
+  if (stream->demux)
+    gst_element_set_state (stream->demux, GST_STATE_NULL);
+
   if (stream->demux) {
     g_signal_handler_disconnect (stream->demux, stream->demux_newpad_sig);
     g_signal_handler_disconnect (stream->demux, stream->demux_ptreq_sig);
     g_signal_handler_disconnect (stream->demux, stream->demux_ptchange_sig);
+    g_signal_handler_disconnect (stream->demux, stream->demux_padremoved_sig);
   }
 
   if (stream->buffer_handlesync_sig)
@@ -1873,18 +1882,6 @@ free_stream (GstRtpBinStream * stream, GstRtpBin * bin)
     g_signal_handler_disconnect (stream->buffer, stream->buffer_ntpstop_sig);
 
   gst_object_unref (stream->buffer);
-
-  if (stream->demux)
-    gst_element_set_locked_state (stream->demux, TRUE);
-
-  if (stream->demux)
-    gst_element_set_state (stream->demux, GST_STATE_NULL);
-
-  /* now remove this signal, we need this while going to NULL because it to
-   * do some cleanups */
-  if (stream->demux)
-    g_signal_handler_disconnect (stream->demux, stream->demux_padremoved_sig);
-
   if (stream->demux)
     gst_bin_remove (GST_BIN_CAST (bin), stream->demux);
 
