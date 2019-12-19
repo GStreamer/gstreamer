@@ -22,6 +22,7 @@
 
 #include <gst/check/gstcheck.h>
 #include <gst/check/gsttestclock.h>
+#include <gst/check/gstharness.h>
 
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/rtp/gstrtcpbuffer.h>
@@ -900,6 +901,71 @@ GST_START_TEST (test_sender_eos)
 
 GST_END_TEST;
 
+static GstBuffer *
+generate_rtp_buffer (GstClockTime ts,
+    guint seqnum, guint32 rtp_ts, guint pt, guint ssrc)
+{
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+  GstBuffer *buf = gst_rtp_buffer_new_allocate (0, 0, 0);
+  GST_BUFFER_PTS (buf) = ts;
+  GST_BUFFER_DTS (buf) = ts;
+
+  gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp);
+  gst_rtp_buffer_set_payload_type (&rtp, pt);
+  gst_rtp_buffer_set_seq (&rtp, seqnum);
+  gst_rtp_buffer_set_timestamp (&rtp, rtp_ts);
+  gst_rtp_buffer_set_ssrc (&rtp, ssrc);
+
+  gst_rtp_buffer_unmap (&rtp);
+
+  return buf;
+}
+
+static GstCaps *
+_request_pt_map (G_GNUC_UNUSED GstElement * rtpbin,
+    G_GNUC_UNUSED guint session_id, G_GNUC_UNUSED guint pt,
+    const GstCaps * caps)
+{
+  return gst_caps_copy (caps);
+}
+
+static void
+_pad_added (G_GNUC_UNUSED GstElement * rtpbin, GstPad * pad, GstHarness * h)
+{
+  gst_harness_add_element_src_pad (h, pad);
+}
+
+GST_START_TEST (test_quick_shutdown)
+{
+  guint r;
+
+  for (r = 0; r < 1000; r++) {
+    guint i;
+    GstHarness *h = gst_harness_new_with_padnames ("rtpbin",
+        "recv_rtp_sink_0", NULL);
+    GstCaps *caps = gst_caps_new_simple ("application/x-rtp",
+        "clock-rate", G_TYPE_INT, 8000,
+        "payload", G_TYPE_INT, 100, NULL);
+
+    g_signal_connect (h->element, "request-pt-map",
+        G_CALLBACK (_request_pt_map), caps);
+    g_signal_connect (h->element, "pad-added", G_CALLBACK (_pad_added), h);
+
+    gst_harness_set_src_caps (h, gst_caps_copy (caps));
+
+    for (i = 0; i < 50; i++) {
+      gst_harness_push (h,
+          generate_rtp_buffer (i * GST_MSECOND * 20, i, i * 160, 100, 1234));
+    }
+    gst_harness_crank_single_clock_wait (h);
+
+    gst_caps_unref (caps);
+    gst_harness_teardown (h);
+  }
+}
+
+GST_END_TEST;
+
 static Suite *
 rtpbin_suite (void)
 {
@@ -917,6 +983,7 @@ rtpbin_suite (void)
   tcase_add_test (tc_chain, test_aux_sender);
   tcase_add_test (tc_chain, test_aux_receiver);
   tcase_add_test (tc_chain, test_sender_eos);
+  tcase_add_test (tc_chain, test_quick_shutdown);
 
   return s;
 }
