@@ -110,10 +110,10 @@ gst_vaapi_surface_create (GstVaapiSurface * surface,
   if (!vaapi_check_status (status, "vaCreateSurfaces()"))
     return FALSE;
 
-  surface->format = GST_VIDEO_FORMAT_UNKNOWN;
-  surface->chroma_type = chroma_type;
-  surface->width = width;
-  surface->height = height;
+  GST_VAAPI_SURFACE_FORMAT (surface) = GST_VIDEO_FORMAT_UNKNOWN;
+  GST_VAAPI_SURFACE_CHROMA_TYPE (surface) = chroma_type;
+  GST_VAAPI_SURFACE_WIDTH (surface) = width;
+  GST_VAAPI_SURFACE_HEIGHT (surface) = height;
 
   GST_DEBUG ("surface %" GST_VAAPI_ID_FORMAT, GST_VAAPI_ID_ARGS (surface_id));
   GST_VAAPI_OBJECT_ID (surface) = surface_id;
@@ -201,10 +201,10 @@ gst_vaapi_surface_create_full (GstVaapiSurface * surface,
   if (!vaapi_check_status (status, "vaCreateSurfaces()"))
     return FALSE;
 
-  surface->format = format;
-  surface->chroma_type = chroma_type;
-  surface->width = extbuf.width;
-  surface->height = extbuf.height;
+  GST_VAAPI_SURFACE_FORMAT (surface) = format;
+  GST_VAAPI_SURFACE_CHROMA_TYPE (surface) = chroma_type;
+  GST_VAAPI_SURFACE_WIDTH (surface) = extbuf.width;
+  GST_VAAPI_SURFACE_HEIGHT (surface) = extbuf.height;
 
   GST_DEBUG ("surface %" GST_VAAPI_ID_FORMAT, GST_VAAPI_ID_ARGS (surface_id));
   GST_VAAPI_OBJECT_ID (surface) = surface_id;
@@ -286,10 +286,10 @@ gst_vaapi_surface_create_from_buffer_proxy (GstVaapiSurface * surface,
   if (!vaapi_check_status (status, "vaCreateSurfaces()"))
     return FALSE;
 
-  surface->format = format;
-  surface->chroma_type = chroma_type;
-  surface->width = width;
-  surface->height = height;
+  GST_VAAPI_SURFACE_FORMAT (surface) = format;
+  GST_VAAPI_SURFACE_CHROMA_TYPE (surface) = chroma_type;
+  GST_VAAPI_SURFACE_WIDTH (surface) = width;
+  GST_VAAPI_SURFACE_HEIGHT (surface) = height;
 
   GST_DEBUG ("surface %" GST_VAAPI_ID_FORMAT, GST_VAAPI_ID_ARGS (surface_id));
   GST_VAAPI_OBJECT_ID (surface) = surface_id;
@@ -553,14 +553,14 @@ gst_vaapi_surface_get_format (GstVaapiSurface * surface)
   g_return_val_if_fail (surface != NULL, 0);
 
   /* Try to determine the underlying VA surface format */
-  if (surface->format == GST_VIDEO_FORMAT_UNKNOWN) {
+  if (GST_VAAPI_SURFACE_FORMAT (surface) == GST_VIDEO_FORMAT_UNKNOWN) {
     GstVaapiImage *const image = gst_vaapi_surface_derive_image (surface);
     if (image) {
-      surface->format = GST_VAAPI_IMAGE_FORMAT (image);
+      GST_VAAPI_SURFACE_FORMAT (surface) = GST_VAAPI_IMAGE_FORMAT (image);
       gst_vaapi_image_unref (image);
     }
-    if (surface->format == GST_VIDEO_FORMAT_UNKNOWN)
-      surface->format = GST_VIDEO_FORMAT_ENCODED;
+    if (GST_VAAPI_SURFACE_FORMAT (surface) == GST_VIDEO_FORMAT_UNKNOWN)
+      GST_VAAPI_SURFACE_FORMAT (surface) = GST_VIDEO_FORMAT_ENCODED;
   }
   return GST_VAAPI_SURFACE_FORMAT (surface);
 }
@@ -698,7 +698,8 @@ gst_vaapi_surface_get_image (GstVaapiSurface * surface, GstVaapiImage * image)
 
   width = GST_VAAPI_IMAGE_WIDTH (image);
   height = GST_VAAPI_IMAGE_HEIGHT (image);
-  if (width != surface->width || height != surface->height)
+  if (width != GST_VAAPI_SURFACE_WIDTH (surface)
+      || height != GST_VAAPI_SURFACE_HEIGHT (surface))
     return FALSE;
 
   image_id = GST_VAAPI_IMAGE_ID (image);
@@ -742,7 +743,8 @@ gst_vaapi_surface_put_image (GstVaapiSurface * surface, GstVaapiImage * image)
 
   width = GST_VAAPI_IMAGE_WIDTH (image);
   height = GST_VAAPI_IMAGE_HEIGHT (image);
-  if (width != surface->width || height != surface->height)
+  if (width != GST_VAAPI_SURFACE_WIDTH (surface)
+      || height != GST_VAAPI_SURFACE_HEIGHT (surface))
     return FALSE;
 
   image_id = GST_VAAPI_IMAGE_ID (image);
@@ -844,8 +846,8 @@ _gst_vaapi_surface_associate_subpicture (GstVaapiSurface * surface,
     dst_rect = &dst_rect_default;
     dst_rect_default.x = 0;
     dst_rect_default.y = 0;
-    dst_rect_default.width = surface->width;
-    dst_rect_default.height = surface->height;
+    dst_rect_default.width = GST_VAAPI_SURFACE_WIDTH (surface);
+    dst_rect_default.height = GST_VAAPI_SURFACE_HEIGHT (surface);
   }
 
   GST_VAAPI_DISPLAY_LOCK (display);
@@ -1032,8 +1034,8 @@ gst_vaapi_surface_set_subpictures_from_composition (GstVaapiSurface * surface,
         &sub_rect.width, &sub_rect.height);
 
     /* ensure that the overlay is not bigger than the surface */
-    sub_rect.y = MIN (sub_rect.y, surface->height);
-    sub_rect.width = MIN (sub_rect.width, surface->width);
+    sub_rect.y = MIN (sub_rect.y, GST_VAAPI_SURFACE_HEIGHT (surface));
+    sub_rect.width = MIN (sub_rect.width, GST_VAAPI_SURFACE_WIDTH (surface));
 
     if (!gst_vaapi_surface_associate_subpicture (surface, subpicture,
             NULL, &sub_rect)) {
