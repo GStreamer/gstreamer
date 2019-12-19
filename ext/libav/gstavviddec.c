@@ -494,7 +494,8 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
 
     if (ffmpegdec->max_threads == 0) {
       if (!(oclass->in_plugin->capabilities & AV_CODEC_CAP_AUTO_THREADS))
-        ffmpegdec->context->thread_count = gst_ffmpeg_auto_max_threads ();
+        ffmpegdec->context->thread_count =
+            MIN (gst_ffmpeg_auto_max_threads (), 16);
       else
         ffmpegdec->context->thread_count = 0;
     } else
