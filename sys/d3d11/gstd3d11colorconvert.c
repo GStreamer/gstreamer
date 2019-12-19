@@ -422,7 +422,7 @@ gst_d3d11_color_convert_decide_allocation (GstBaseTransform * trans,
   if (!d3d11_params) {
     d3d11_params = gst_d3d11_allocation_params_new (&info,
         GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT, D3D11_USAGE_DEFAULT,
-        D3D11_BIND_RENDER_TARGET);
+        D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
   } else {
     /* Set bind flag */
     for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&info); i++) {
