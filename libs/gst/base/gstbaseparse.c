@@ -3085,6 +3085,7 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       GST_DEBUG ("All the buffer is skipped");
       parse->priv->offset += bsize;
       parse->priv->sync_offset = parse->priv->offset;
+      gst_buffer_unref (buffer);
       return GST_FLOW_OK;
     }
     buffer = gst_buffer_make_writable (buffer);
