@@ -408,11 +408,13 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
     d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
     if (!d3d11_params) {
       d3d11_params = gst_d3d11_allocation_params_new (&self->info,
-          GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT, D3D11_USAGE_DEFAULT,
+          GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT, D3D11_USAGE_DYNAMIC,
           D3D11_BIND_SHADER_RESOURCE);
     } else {
       /* Set bind flag */
       for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&self->info); i++) {
+        d3d11_params->desc[i].Usage = D3D11_USAGE_DYNAMIC;
+        d3d11_params->desc[i].CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
         d3d11_params->desc[i].BindFlags |= D3D11_BIND_SHADER_RESOURCE;
       }
     }
@@ -671,6 +673,88 @@ gst_d3d11_video_sink_unlock (GstBaseSink * sink)
   return TRUE;
 }
 
+static gboolean
+gst_d3d11_video_sink_upload_frame (GstD3D11VideoSink * self, GstBuffer * inbuf,
+    GstBuffer * outbuf)
+{
+  GstVideoFrame in_frame;
+  gint i, j, k;
+  gboolean ret = TRUE;
+  ID3D11DeviceContext *device_context =
+      gst_d3d11_device_get_device_context_handle (self->device);
+
+  if (!gst_video_frame_map (&in_frame, &self->info, inbuf,
+          GST_MAP_READ | GST_VIDEO_FRAME_MAP_FLAG_NO_REF))
+    goto invalid_buffer;
+
+  gst_d3d11_device_lock (self->device);
+  for (i = 0, j = 0; i < gst_buffer_n_memory (outbuf); i++) {
+    GstD3D11Memory *dmem =
+        (GstD3D11Memory *) gst_buffer_peek_memory (outbuf, i);
+    D3D11_MAPPED_SUBRESOURCE map;
+    HRESULT hr;
+    D3D11_TEXTURE2D_DESC *desc = &dmem->desc;
+    gsize offset[GST_VIDEO_MAX_PLANES];
+    gint stride[GST_VIDEO_MAX_PLANES];
+    gsize dummy;
+
+    if (!gst_d3d11_memory_ensure_shader_resource_view (dmem)) {
+      GST_ERROR_OBJECT (self, "shader resource view unavailable");
+      ret = FALSE;
+      goto done;
+    }
+
+    hr = ID3D11DeviceContext_Map (device_context,
+        (ID3D11Resource *) dmem->texture, 0, D3D11_MAP_WRITE_DISCARD, 0, &map);
+
+    if (!gst_d3d11_result (hr)) {
+      GST_ERROR_OBJECT (self, "Failed to map texture (0x%x)", (guint) hr);
+      gst_d3d11_device_unlock (self->device);
+      ret = FALSE;
+      goto done;
+    }
+
+    gst_d3d11_dxgi_format_get_size (desc->Format, desc->Width, desc->Height,
+        map.RowPitch, offset, stride, &dummy);
+
+    for (k = 0; k < gst_d3d11_dxgi_format_n_planes (dmem->desc.Format); k++) {
+      gint h, width;
+      guint8 *dst, *src;
+
+      dst = (guint8 *) map.pData + offset[k];
+      src = GST_VIDEO_FRAME_PLANE_DATA (&in_frame, j);
+      width = GST_VIDEO_FRAME_COMP_WIDTH (&in_frame, j) *
+          GST_VIDEO_FRAME_COMP_PSTRIDE (&in_frame, j);
+
+      for (h = 0; h < GST_VIDEO_FRAME_COMP_HEIGHT (&in_frame, j); h++) {
+        memcpy (dst, src, width);
+        GST_MEMDUMP_OBJECT (self, "dump", src, width);
+        dst += stride[k];
+        src += GST_VIDEO_FRAME_PLANE_STRIDE (&in_frame, j);
+      }
+
+      j++;
+    }
+
+    ID3D11DeviceContext_Unmap (device_context,
+        (ID3D11Resource *) dmem->texture, 0);
+  }
+  gst_d3d11_device_unlock (self->device);
+
+done:
+  gst_video_frame_unmap (&in_frame);
+
+  return ret;
+
+  /* ERRORS */
+invalid_buffer:
+  {
+    GST_ELEMENT_WARNING (self, CORE, NOT_IMPLEMENTED, (NULL),
+        ("invalid video buffer received"));
+    return FALSE;
+  }
+}
+
 static GstFlowReturn
 gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
 {
@@ -720,8 +804,6 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
   }
 
   if (!render_buf) {
-    GstVideoFrame frame, fallback_frame;
-
     if (!self->fallback_pool ||
         !gst_buffer_pool_set_active (self->fallback_pool, TRUE) ||
         gst_buffer_pool_acquire_buffer (self->fallback_pool, &render_buf,
@@ -731,54 +813,11 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
       return GST_FLOW_ERROR;
     }
 
-    if (!gst_video_frame_map (&frame, &self->info, buf, GST_MAP_READ)) {
-      GST_ERROR_OBJECT (self, "cannot map video frame");
+    if (!gst_d3d11_video_sink_upload_frame (self, buf, render_buf)) {
+      GST_ERROR_OBJECT (self, "cannot upload frame");
       gst_buffer_unref (render_buf);
 
       return GST_FLOW_ERROR;
-    }
-
-    if (!gst_video_frame_map (&fallback_frame, &self->info, render_buf,
-            GST_MAP_WRITE)) {
-      GST_ERROR_OBJECT (self, "cannot map fallback frame");
-      gst_video_frame_unmap (&frame);
-      gst_buffer_unref (render_buf);
-
-      return GST_FLOW_ERROR;
-    }
-
-    GST_TRACE_OBJECT (self,
-        "buffer %p out of our pool, write to stage buffer", buf);
-
-    if (!gst_video_frame_copy (&fallback_frame, &frame)) {
-      GST_ERROR_OBJECT (self, "cannot copy to fallback frame");
-      gst_video_frame_unmap (&frame);
-      gst_video_frame_unmap (&fallback_frame);
-      gst_buffer_unref (render_buf);
-
-      return GST_FLOW_ERROR;
-    }
-
-    gst_video_frame_unmap (&frame);
-    gst_video_frame_unmap (&fallback_frame);
-
-    for (i = 0; i < gst_buffer_n_memory (render_buf); i++) {
-      GstD3D11Memory *dmem;
-      GstMapInfo info;
-
-      /* map and unmap to upload memory */
-      dmem = (GstD3D11Memory *) gst_buffer_peek_memory (render_buf, i);
-      gst_memory_map (GST_MEMORY_CAST (dmem), &info,
-          GST_MAP_READ | GST_MAP_D3D11);
-      gst_memory_unmap (GST_MEMORY_CAST (dmem), &info);
-
-      if (!gst_d3d11_memory_ensure_shader_resource_view (dmem)) {
-        GST_ERROR_OBJECT (self, "shader resource view is not available");
-
-        gst_buffer_unref (render_buf);
-
-        return GST_FLOW_ERROR;
-      }
     }
 
     need_unref = TRUE;
