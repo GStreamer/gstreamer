@@ -895,7 +895,7 @@ gst_auto_convert_load_factories (GstAutoConvert * autoconvert)
 
   g_assert (all_factories);
 
-  if (g_atomic_pointer_compare_and_exchange (&autoconvert->factories, NULL,
+  if (!g_atomic_pointer_compare_and_exchange (&autoconvert->factories, NULL,
           all_factories)) {
     gst_plugin_feature_list_free (all_factories);
   }
