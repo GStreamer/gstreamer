@@ -978,3 +978,13 @@ cerbero cross-ios universal examples:
   only:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
+
+build gst-omx zynq fedora x86_64:
+  extends: 'build fedora x86_64'
+  variables:
+    MESON_ARGS: "-Domx=enabled -Dgst-omx:target=zynqultrascaleplus -Dgst-omx:header_path=${CI_PROJECT_DIR}/vcu-omx-il/omx_header -Dpython=disabled -Dlibav=disabled -Dlibnice=disabled -Dugly=disabled -Dbad=disabled -Ddevtools=disabled -Dges=disabled -Drtsp_server=disabled -Dvaapi=disabled -Dsharp=disabled -Dgst-examples=disabled -Drs=disabled ${MESON_BUILDTYPE_ARGS} --werror"
+  before_script:
+    - git clone https://github.com/Xilinx/vcu-omx-il.git --branch=release-2019.2 ${CI_PROJECT_DIR}/vcu-omx-il
+  only:
+    variables:
+      - $CI_PROJECT_NAME =~ /^(gst-omx|gst-ci)$/
