@@ -70,15 +70,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_d3d11_window_debug);
 #define gst_d3d11_window_parent_class parent_class
 G_DEFINE_TYPE (GstD3D11Window, gst_d3d11_window, GST_TYPE_OBJECT);
 
-typedef struct
-{
-  GstD3D11Window *window;
-  GstVideoRectangle *rect;
-  GstBuffer *buffer;
-
-  GstFlowReturn ret;
-} FramePresentData;
-
 static void gst_d3d11_window_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_d3d11_window_get_property (GObject * object, guint prop_id,
@@ -87,12 +78,11 @@ static void gst_d3d11_window_constructed (GObject * object);
 static void gst_d3d11_window_dispose (GObject * object);
 static void gst_d3d11_window_finalize (GObject * object);
 static gpointer gst_d3d11_window_thread_func (gpointer data);
-static gboolean _create_window (GstD3D11Window * self);
-static void _open_window (GstD3D11Window * self);
-static void _close_window (GstD3D11Window * self);
+static gboolean gst_d3d11_window_create_internal_window (GstD3D11Window * self);
+static void gst_d3d11_window_close_internal_window (GstD3D11Window * self);
 static void release_external_win_id (GstD3D11Window * self);
-static void _present_on_device_thread (GstD3D11Device * device,
-    FramePresentData * data);
+static GstFlowReturn gst_d3d111_window_present (GstD3D11Window * self,
+    GstBuffer * buffer);
 
 static void
 gst_d3d11_window_class_init (GstD3D11WindowClass * klass)
@@ -268,8 +258,7 @@ gst_d3d11_window_dispose (GObject * object)
   }
 
   if (self->device) {
-    gst_d3d11_device_thread_add (self->device,
-        (GstD3D11DeviceThreadFunc) gst_d3d11_window_release_resources, self);
+    gst_d3d11_window_release_resources (self->device, self);
   }
 
   if (self->converter) {
@@ -317,20 +306,16 @@ gst_d3d11_window_thread_func (gpointer data)
   GST_DEBUG_OBJECT (self, "Enter loop");
   g_main_context_push_thread_default (self->main_context);
 
-  self->created = _create_window (self);
+  self->created = gst_d3d11_window_create_internal_window (self);
 
   source = g_idle_source_new ();
   g_source_set_callback (source, (GSourceFunc) running_cb, self, NULL);
   g_source_attach (source, self->main_context);
   g_source_unref (source);
 
-  if (self->created)
-    _open_window (self);
-
   g_main_loop_run (self->loop);
 
-  if (self->created)
-    _close_window (self);
+  gst_d3d11_window_close_internal_window (self);
 
   g_main_context_pop_thread_default (self->main_context);
 
@@ -354,16 +339,7 @@ msg_cb (GIOChannel * source, GIOCondition condition, gpointer data)
 }
 
 static void
-_open_window (GstD3D11Window * self)
-{
-  self->msg_io_channel = g_io_channel_win32_new_messages (0);
-  self->msg_source = g_io_create_watch (self->msg_io_channel, G_IO_IN);
-  g_source_set_callback (self->msg_source, (GSourceFunc) msg_cb, self, NULL);
-  g_source_attach (self->msg_source, self->main_context);
-}
-
-static void
-_close_window (GstD3D11Window * self)
+gst_d3d11_window_close_internal_window (GstD3D11Window * self)
 {
   if (self->internal_win_id) {
     RemoveProp (self->internal_win_id, D3D11_WINDOW_PROP_NAME);
@@ -451,7 +427,7 @@ release_external_win_id (GstD3D11Window * self)
 }
 
 static gboolean
-_create_window (GstD3D11Window * self)
+gst_d3d11_window_create_internal_window (GstD3D11Window * self)
 {
   WNDCLASSEX wc;
   ATOM atom = 0;
@@ -519,28 +495,37 @@ _create_window (GstD3D11Window * self)
   GST_LOG_OBJECT (self,
       "Created a internal d3d11 window %p", self->internal_win_id);
 
+  self->msg_io_channel =
+      g_io_channel_win32_new_messages ((guintptr) self->internal_win_id);
+  self->msg_source = g_io_create_watch (self->msg_io_channel, G_IO_IN);
+  g_source_set_callback (self->msg_source, (GSourceFunc) msg_cb, self, NULL);
+  g_source_attach (self->msg_source, self->main_context);
+
   return TRUE;
 }
 
 static void
-gst_d3d11_window_on_resize (GstD3D11Device * device, GstD3D11Window * window)
+gst_d3d11_window_on_resize (GstD3D11Window * window, gboolean redraw)
 {
   HRESULT hr;
   ID3D11Device *d3d11_dev;
   guint width, height;
   D3D11_TEXTURE2D_DESC desc;
   DXGI_SWAP_CHAIN_DESC swap_desc;
-  ID3D11Texture2D *backbuffer;
+  ID3D11Texture2D *backbuffer = NULL;
 
+  gst_d3d11_device_lock (window->device);
   if (!window->swap_chain)
-    return;
+    goto done;
 
-  d3d11_dev = gst_d3d11_device_get_device_handle (device);
+  d3d11_dev = gst_d3d11_device_get_device_handle (window->device);
 
   if (window->rtv) {
     ID3D11RenderTargetView_Release (window->rtv);
     window->rtv = NULL;
   }
+
+  window->pending_resize = FALSE;
 
   /* Set zero width and height here. dxgi will decide client area by itself */
   IDXGISwapChain_GetDesc (window->swap_chain, &swap_desc);
@@ -548,7 +533,7 @@ gst_d3d11_window_on_resize (GstD3D11Device * device, GstD3D11Window * window)
       0, 0, 0, DXGI_FORMAT_UNKNOWN, swap_desc.Flags);
   if (!gst_d3d11_result (hr)) {
     GST_ERROR_OBJECT (window, "Couldn't resize buffers, hr: 0x%x", (guint) hr);
-    return;
+    goto done;
   }
 
   hr = IDXGISwapChain_GetBuffer (window->swap_chain,
@@ -556,7 +541,7 @@ gst_d3d11_window_on_resize (GstD3D11Device * device, GstD3D11Window * window)
   if (!gst_d3d11_result (hr)) {
     GST_ERROR_OBJECT (window,
         "Cannot get backbuffer from swapchain, hr: 0x%x", (guint) hr);
-    return;
+    goto done;
   }
 
   ID3D11Texture2D_GetDesc (backbuffer, &desc);
@@ -604,27 +589,14 @@ gst_d3d11_window_on_resize (GstD3D11Device * device, GstD3D11Window * window)
     goto done;
   }
 
-  if (window->cached_buffer) {
-    FramePresentData present_data = { 0, };
-
-    present_data.window = window;
-    present_data.rect = &window->rect;
-    present_data.buffer = window->cached_buffer;
-    GST_DEBUG_OBJECT (window, "redraw cached buffer");
-
-    _present_on_device_thread (window->device, &present_data);
-  }
+  if (redraw)
+    gst_d3d111_window_present (window, NULL);
 
 done:
-  ID3D11Texture2D_Release (backbuffer);
-}
+  if (backbuffer)
+    ID3D11Texture2D_Release (backbuffer);
 
-static void
-gst_d3d11_window_on_size (GstD3D11Window * self,
-    HWND hWnd, WPARAM wParam, LPARAM lParam)
-{
-  gst_d3d11_device_thread_add_full (self->device, G_PRIORITY_HIGH,
-      (GstD3D11DeviceThreadFunc) gst_d3d11_window_on_resize, self, NULL);
+  gst_d3d11_device_unlock (window->device);
 }
 
 static void
@@ -707,12 +679,12 @@ gst_d3d11_window_handle_window_proc (GstD3D11Window * self,
 {
   switch (uMsg) {
     case WM_SIZE:
-      gst_d3d11_window_on_size (self, hWnd, wParam, lParam);
+      gst_d3d11_window_on_resize (self, TRUE);
       break;
     case WM_CLOSE:
       if (self->internal_win_id) {
         ShowWindow (self->internal_win_id, SW_HIDE);
-        _close_window (self);
+        gst_d3d11_window_close_internal_window (self);
       }
       break;
     case WM_KEYDOWN:
@@ -759,6 +731,9 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     gst_d3d11_window_handle_window_proc (self, hWnd, uMsg, wParam, lParam);
   }
+
+  if (uMsg == WM_SIZE)
+    return 0;
 
   return DefWindowProc (hWnd, uMsg, wParam, lParam);
 }
@@ -964,33 +939,26 @@ gst_d3d11_window_color_space_from_video_info (GstD3D11Window * self,
 }
 #endif
 
-typedef struct
-{
-  GstD3D11Window *self;
-  HWND hwnd;
-  IDXGISwapChain *swap_chain;
-} MakeWindowAssociationData;
-
 static void
-gst_d3d11_window_disable_alt_enter (GstD3D11Device * device,
-    MakeWindowAssociationData * data)
+gst_d3d11_window_disable_alt_enter (GstD3D11Window * window,
+    IDXGISwapChain * swap_chain, HWND hwnd)
 {
   IDXGIFactory1 *factory = NULL;
   HRESULT hr;
 
-  hr = IDXGISwapChain_GetParent (data->swap_chain, &IID_IDXGIFactory1,
+  hr = IDXGISwapChain_GetParent (swap_chain, &IID_IDXGIFactory1,
       (void **) &factory);
   if (!gst_d3d11_result (hr) || !factory) {
-    GST_WARNING_OBJECT (data->self,
+    GST_WARNING_OBJECT (window,
         "Cannot get parent dxgi factory for swapchain %p, hr: 0x%x",
-        data->swap_chain, (guint) hr);
+        swap_chain, (guint) hr);
     return;
   }
 
   hr = IDXGIFactory1_MakeWindowAssociation (factory,
-      data->hwnd, DXGI_MWA_NO_ALT_ENTER);
+      hwnd, DXGI_MWA_NO_ALT_ENTER);
   if (!gst_d3d11_result (hr)) {
-    GST_WARNING_OBJECT (data->self,
+    GST_WARNING_OBJECT (window,
         "MakeWindowAssociation failure, hr: 0x%x", (guint) hr);
   }
 
@@ -1003,7 +971,6 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
 {
   DXGI_SWAP_CHAIN_DESC desc = { 0, };
   GstCaps *render_caps;
-  MakeWindowAssociationData mwa_data = { 0, };
   UINT swapchain_flags = 0;
   DXGI_SWAP_EFFECT swap_effect = DXGI_SWAP_EFFECT_DISCARD;
 #if (DXGI_HEADER_VERSION >= 5)
@@ -1112,8 +1079,9 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
 #endif
 
   if (window->swap_chain) {
-    gst_d3d11_device_thread_add (window->device,
-        (GstD3D11DeviceThreadFunc) gst_d3d11_window_release_resources, window);
+    gst_d3d11_device_lock (window->device);
+    gst_d3d11_window_release_resources (window->device, window);
+    gst_d3d11_device_unlock (window->device);
   }
 
   window->aspect_ratio_n = aspect_ratio_n;
@@ -1205,11 +1173,10 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
   }
 
   /* disable alt+enter here. It should be manually handled */
-  mwa_data.self = window;
-  mwa_data.swap_chain = window->swap_chain;
-  mwa_data.hwnd = desc.OutputWindow;
-  gst_d3d11_device_thread_add (window->device,
-      (GstD3D11DeviceThreadFunc) gst_d3d11_window_disable_alt_enter, &mwa_data);
+  gst_d3d11_device_lock (window->device);
+  gst_d3d11_window_disable_alt_enter (window,
+      window->swap_chain, desc.OutputWindow);
+  gst_d3d11_device_unlock (window->device);
 
 #if (DXGI_HEADER_VERSION >= 5)
   if (swapchain4_available) {
@@ -1252,12 +1219,10 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
   }
 #endif
 
-  gst_d3d11_device_thread_add (window->device,
-      (GstD3D11DeviceThreadFunc) gst_d3d11_window_on_resize, window);
+  gst_d3d11_window_on_resize (window, FALSE);
 
   if (!window->rtv) {
-    gst_d3d11_device_thread_add (window->device,
-        (GstD3D11DeviceThreadFunc) gst_d3d11_window_release_resources, window);
+    gst_d3d11_window_release_resources (window->device, window);
     GST_ERROR_OBJECT (window, "Failed to setup internal resources");
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
         "Failed to setup internal resources");
@@ -1337,28 +1302,15 @@ gst_d3d11_window_set_render_rectangle (GstD3D11Window * window, gint x, gint y,
   /* TODO: resize window and view */
 }
 
-void
-gst_d3d11_window_get_surface_dimensions (GstD3D11Window * window,
-    guint * width, guint * height)
+static GstFlowReturn
+gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer)
 {
-  g_return_if_fail (GST_IS_D3D11_WINDOW (window));
-
-  if (width)
-    *width = window->surface_width;
-  if (height)
-    *height = window->surface_height;
-}
-
-static void
-_present_on_device_thread (GstD3D11Device * device, FramePresentData * data)
-{
-  GstD3D11Window *self = data->window;
-  ID3D11DeviceContext *device_context;
   HRESULT hr;
-  UINT present_flags = DXGI_PRESENT_DO_NOT_WAIT;
+  UINT present_flags = 0;
 
-  device_context = gst_d3d11_device_get_device_context_handle (device);
-  gst_buffer_replace (&self->cached_buffer, data->buffer);
+  if (buffer) {
+    gst_buffer_replace (&self->cached_buffer, buffer);
+  }
 
   if (self->cached_buffer) {
     ID3D11ShaderResourceView *srv[GST_VIDEO_MAX_PLANES];
@@ -1381,29 +1333,30 @@ _present_on_device_thread (GstD3D11Device * device, FramePresentData * data)
 
     gst_d3d11_color_converter_update_rect (self->converter, &rect);
     gst_d3d11_color_converter_convert (self->converter, srv, &self->rtv);
-  }
+
 #if (DXGI_HEADER_VERSION >= 5)
-  if (self->allow_tearing) {
-    present_flags |= DXGI_PRESENT_ALLOW_TEARING;
-  }
+    if (self->allow_tearing) {
+      present_flags |= DXGI_PRESENT_ALLOW_TEARING;
+    }
 #endif
 
-  hr = IDXGISwapChain_Present (self->swap_chain, 0, present_flags);
+    hr = IDXGISwapChain_Present (self->swap_chain, 0, present_flags);
 
-  if (!gst_d3d11_result (hr)) {
-    GST_WARNING_OBJECT (self, "Direct3D cannot present texture, hr: 0x%x",
-        (guint) hr);
+    if (!gst_d3d11_result (hr)) {
+      GST_WARNING_OBJECT (self, "Direct3D cannot present texture, hr: 0x%x",
+          (guint) hr);
+    }
   }
 
-  data->ret = GST_FLOW_OK;
+  return GST_FLOW_OK;
 }
 
 GstFlowReturn
 gst_d3d11_window_render (GstD3D11Window * window, GstBuffer * buffer,
     GstVideoRectangle * rect)
 {
-  FramePresentData data;
   GstMemory *mem;
+  GstFlowReturn ret;
 
   g_return_val_if_fail (GST_IS_D3D11_WINDOW (window), GST_FLOW_ERROR);
   g_return_val_if_fail (rect != NULL, GST_FLOW_ERROR);
@@ -1428,28 +1381,15 @@ gst_d3d11_window_render (GstD3D11Window * window, GstBuffer * buffer,
 
   GST_OBJECT_LOCK (window);
   if (window->pending_resize) {
-    gst_d3d11_device_thread_add (window->device,
-        (GstD3D11DeviceThreadFunc) gst_d3d11_window_on_resize, window);
-    window->pending_resize = FALSE;
+    gst_d3d11_window_on_resize (window, FALSE);
   }
   GST_OBJECT_UNLOCK (window);
 
-  data.window = window;
-  data.rect = rect;
-  data.buffer = buffer;
-  data.ret = GST_FLOW_OK;
+  gst_d3d11_device_lock (window->device);
+  ret = gst_d3d111_window_present (window, buffer);
+  gst_d3d11_device_unlock (window->device);
 
-  gst_d3d11_device_thread_add (window->device,
-      (GstD3D11DeviceThreadFunc) _present_on_device_thread, &data);
-
-  return data.ret;
-}
-
-static void
-gst_d3d11_window_flush_internal (GstD3D11Device * device,
-    GstD3D11Window * window)
-{
-  gst_clear_buffer (&window->cached_buffer);
+  return ret;
 }
 
 gboolean
@@ -1457,8 +1397,7 @@ gst_d3d11_window_flush (GstD3D11Window * window)
 {
   g_return_val_if_fail (GST_IS_D3D11_WINDOW (window), FALSE);
 
-  gst_d3d11_device_thread_add (window->device,
-      (GstD3D11DeviceThreadFunc) gst_d3d11_window_flush_internal, window);
+  gst_clear_buffer (&window->cached_buffer);
 
   return TRUE;
 }

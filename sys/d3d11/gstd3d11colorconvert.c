@@ -179,7 +179,7 @@ gst_d3d11_color_convert_init (GstD3D11ColorConvert * self)
 }
 
 static void
-clear_shader_resource (GstD3D11Device * device, GstD3D11ColorConvert * self)
+gst_d3d11_color_convert_clear_shader_resource (GstD3D11ColorConvert * self)
 {
   gint i;
 
@@ -213,17 +213,6 @@ clear_shader_resource (GstD3D11Device * device, GstD3D11ColorConvert * self)
   if (self->converter)
     gst_d3d11_color_converter_free (self->converter);
   self->converter = NULL;
-}
-
-static void
-gst_d3d11_color_convert_clear_shader_resource (GstD3D11ColorConvert * self)
-{
-  GstD3D11BaseFilter *filter = GST_D3D11_BASE_FILTER (self);
-
-  if (filter->device) {
-    gst_d3d11_device_thread_add (filter->device,
-        (GstD3D11DeviceThreadFunc) clear_shader_resource, self);
-  }
 }
 
 static void
@@ -781,32 +770,25 @@ format_unknown:
   }
 }
 
-typedef struct
+static GstFlowReturn
+gst_d3d11_color_convert_transform (GstBaseTransform * trans,
+    GstBuffer * inbuf, GstBuffer * outbuf)
 {
-  GstD3D11ColorConvert *self;
-  GstBuffer *in_buf;
-  GstBuffer *out_buf;
-
-  gboolean ret;
-} DoConvertData;
-
-static void
-do_convert (GstD3D11Device * device, DoConvertData * data)
-{
-  GstD3D11ColorConvert *self = data->self;
-  GstD3D11BaseFilter *filter = GST_D3D11_BASE_FILTER (self);
+  GstD3D11BaseFilter *filter = GST_D3D11_BASE_FILTER (trans);
+  GstD3D11ColorConvert *self = GST_D3D11_COLOR_CONVERT (trans);
   ID3D11DeviceContext *context_handle;
   ID3D11ShaderResourceView *resource_view[GST_VIDEO_MAX_PLANES] = { NULL, };
   ID3D11RenderTargetView *render_view[GST_VIDEO_MAX_PLANES] = { NULL, };
   gint i, j, view_index;
   gboolean copy_input = FALSE;
   gboolean copy_output = FALSE;
+  GstD3D11Device *device = filter->device;
 
   context_handle = gst_d3d11_device_get_device_context_handle (device);
 
   view_index = 0;
-  for (i = 0; i < gst_buffer_n_memory (data->in_buf); i++) {
-    GstMemory *mem = gst_buffer_peek_memory (data->in_buf, i);
+  for (i = 0; i < gst_buffer_n_memory (inbuf); i++) {
+    GstMemory *mem = gst_buffer_peek_memory (inbuf, i);
     GstD3D11Memory *d3d11_mem;
     GstMapInfo info;
 
@@ -833,8 +815,7 @@ do_convert (GstD3D11Device * device, DoConvertData * data)
       if (!create_shader_input_resource (self, device,
               self->in_d3d11_format, &filter->in_info)) {
         GST_ERROR_OBJECT (self, "Failed to configure fallback input texture");
-        data->ret = FALSE;
-        return;
+        return GST_FLOW_ERROR;
       }
       break;
     }
@@ -843,8 +824,9 @@ do_convert (GstD3D11Device * device, DoConvertData * data)
   /* if input memory has no resource view,
    * copy texture into our fallback texture */
   if (copy_input) {
-    for (i = 0; i < gst_buffer_n_memory (data->in_buf); i++) {
-      GstMemory *mem = gst_buffer_peek_memory (data->in_buf, i);
+    gst_d3d11_device_lock (device);
+    for (i = 0; i < gst_buffer_n_memory (inbuf); i++) {
+      GstMemory *mem = gst_buffer_peek_memory (inbuf, i);
       GstD3D11Memory *d3d11_mem;
 
       g_assert (gst_is_d3d11_memory (mem));
@@ -855,11 +837,12 @@ do_convert (GstD3D11Device * device, DoConvertData * data)
           (ID3D11Resource *) self->in_texture[i], 0, 0, 0, 0,
           (ID3D11Resource *) d3d11_mem->texture, 0, NULL);
     }
+    gst_d3d11_device_unlock (device);
   }
 
   view_index = 0;
-  for (i = 0; i < gst_buffer_n_memory (data->out_buf); i++) {
-    GstMemory *mem = gst_buffer_peek_memory (data->out_buf, i);
+  for (i = 0; i < gst_buffer_n_memory (outbuf); i++) {
+    GstMemory *mem = gst_buffer_peek_memory (outbuf, i);
     GstD3D11Memory *d3d11_mem;
 
     g_assert (gst_is_d3d11_memory (mem));
@@ -880,20 +863,24 @@ do_convert (GstD3D11Device * device, DoConvertData * data)
       if (!create_shader_output_resource (self, device, self->out_d3d11_format,
               &filter->out_info)) {
         GST_ERROR_OBJECT (self, "Failed to configure fallback output texture");
-        data->ret = FALSE;
-        return;
+        return GST_FLOW_ERROR;
       }
       break;
     }
   }
 
-  data->ret = gst_d3d11_color_converter_convert (self->converter,
-      copy_input ? self->shader_resource_view : resource_view,
-      copy_output ? self->render_target_view : render_view);
+  if (!gst_d3d11_color_converter_convert (self->converter,
+          copy_input ? self->shader_resource_view : resource_view,
+          copy_output ? self->render_target_view : render_view)) {
+    GST_ERROR_OBJECT (self, "Failed to convert");
 
-  if (data->ret && copy_output) {
-    for (i = 0; i < gst_buffer_n_memory (data->out_buf); i++) {
-      GstMemory *mem = gst_buffer_peek_memory (data->out_buf, i);
+    return GST_FLOW_ERROR;
+  }
+
+  if (copy_output) {
+    gst_d3d11_device_lock (device);
+    for (i = 0; i < gst_buffer_n_memory (outbuf); i++) {
+      GstMemory *mem = gst_buffer_peek_memory (outbuf, i);
       GstD3D11Memory *d3d11_mem;
 
       g_assert (gst_is_d3d11_memory (mem));
@@ -904,27 +891,8 @@ do_convert (GstD3D11Device * device, DoConvertData * data)
           (ID3D11Resource *) d3d11_mem->texture, 0, 0, 0, 0,
           (ID3D11Resource *) self->out_texture[i], 0, NULL);
     }
+    gst_d3d11_device_unlock (device);
   }
-}
-
-static GstFlowReturn
-gst_d3d11_color_convert_transform (GstBaseTransform * trans,
-    GstBuffer * inbuf, GstBuffer * outbuf)
-{
-  GstD3D11BaseFilter *filter = GST_D3D11_BASE_FILTER (trans);
-  GstD3D11ColorConvert *self = GST_D3D11_COLOR_CONVERT (trans);
-  DoConvertData data;
-
-  data.self = self;
-  data.in_buf = inbuf;
-  data.out_buf = outbuf;
-  data.ret = TRUE;
-
-  gst_d3d11_device_thread_add (filter->device,
-      (GstD3D11DeviceThreadFunc) do_convert, &data);
-
-  if (!data.ret)
-    return GST_FLOW_ERROR;
 
   return GST_FLOW_OK;
 }

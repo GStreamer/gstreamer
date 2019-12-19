@@ -73,88 +73,68 @@ compile_shader (GstD3D11Device * device, const gchar * shader_source,
   return ret;
 }
 
-typedef struct
-{
-  const gchar *source;
-  ID3D11PixelShader *shader;
-  gboolean ret;
-} CreatePSData;
-
-static void
-create_pixel_shader (GstD3D11Device * device, CreatePSData * data)
+gboolean
+gst_d3d11_create_pixel_shader (GstD3D11Device * device,
+    const gchar * source, ID3D11PixelShader ** shader)
 {
   ID3DBlob *ps_blob;
   ID3D11Device *device_handle;
   HRESULT hr;
 
-  data->ret = TRUE;
+  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), FALSE);
+  g_return_val_if_fail (source != NULL, FALSE);
+  g_return_val_if_fail (shader != NULL, FALSE);
 
-  ps_blob = compile_shader (device, data->source, TRUE);
+  gst_d3d11_device_lock (device);
+  ps_blob = compile_shader (device, source, TRUE);
 
   if (!ps_blob) {
     GST_ERROR ("Failed to compile pixel shader");
-    data->ret = FALSE;
-    return;
+    gst_d3d11_device_unlock (device);
+    return FALSE;
   }
 
   device_handle = gst_d3d11_device_get_device_handle (device);
   hr = ID3D11Device_CreatePixelShader (device_handle,
       (gpointer) ID3D10Blob_GetBufferPointer (ps_blob),
-      ID3D10Blob_GetBufferSize (ps_blob), NULL, &data->shader);
+      ID3D10Blob_GetBufferSize (ps_blob), NULL, shader);
 
   if (!gst_d3d11_result (hr)) {
     GST_ERROR ("could not create pixel shader, hr: 0x%x", (guint) hr);
-    data->ret = FALSE;
+    gst_d3d11_device_unlock (device);
+    return FALSE;
   }
 
   ID3D10Blob_Release (ps_blob);
+  gst_d3d11_device_unlock (device);
+
+  return TRUE;
 }
 
 gboolean
-gst_d3d11_create_pixel_shader (GstD3D11Device * device,
-    const gchar * source, ID3D11PixelShader ** shader)
-{
-  CreatePSData data = { 0, };
-
-  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), FALSE);
-  g_return_val_if_fail (source != NULL, FALSE);
-  g_return_val_if_fail (shader != NULL, FALSE);
-
-  data.source = source;
-
-  gst_d3d11_device_thread_add (device,
-      (GstD3D11DeviceThreadFunc) create_pixel_shader, &data);
-
-  *shader = data.shader;
-  return data.ret;
-}
-
-typedef struct
-{
-  const gchar *source;
-  const D3D11_INPUT_ELEMENT_DESC *input_desc;
-  guint desc_len;
-  ID3D11VertexShader *shader;
-  ID3D11InputLayout *layout;
-  gboolean ret;
-} CreateVSData;
-
-static void
-create_vertex_shader (GstD3D11Device * device, CreateVSData * data)
+gst_d3d11_create_vertex_shader (GstD3D11Device * device, const gchar * source,
+    const D3D11_INPUT_ELEMENT_DESC * input_desc, guint desc_len,
+    ID3D11VertexShader ** shader, ID3D11InputLayout ** layout)
 {
   ID3DBlob *vs_blob;
   ID3D11Device *device_handle;
   HRESULT hr;
   ID3D11VertexShader *vshader = NULL;
   ID3D11InputLayout *in_layout = NULL;
+  gboolean ret = FALSE;
 
-  data->ret = TRUE;
+  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), FALSE);
+  g_return_val_if_fail (source != NULL, FALSE);
+  g_return_val_if_fail (input_desc != NULL, FALSE);
+  g_return_val_if_fail (desc_len > 0, FALSE);
+  g_return_val_if_fail (shader != NULL, FALSE);
+  g_return_val_if_fail (layout != NULL, FALSE);
 
-  vs_blob = compile_shader (device, data->source, FALSE);
+  gst_d3d11_device_lock (device);
+  vs_blob = compile_shader (device, source, FALSE);
   if (!vs_blob) {
     GST_ERROR ("Failed to compile shader code");
-    data->ret = FALSE;
-    return;
+    goto done;
   }
 
   device_handle = gst_d3d11_device_get_device_handle (device);
@@ -166,52 +146,31 @@ create_vertex_shader (GstD3D11Device * device, CreateVSData * data)
   if (!gst_d3d11_result (hr)) {
     GST_ERROR ("could not create vertex shader, hr: 0x%x", (guint) hr);
     ID3D10Blob_Release (vs_blob);
-    data->ret = FALSE;
-    return;
+    goto done;
   }
 
-  hr = ID3D11Device_CreateInputLayout (device_handle, data->input_desc,
-      data->desc_len, (gpointer) ID3D10Blob_GetBufferPointer (vs_blob),
+  hr = ID3D11Device_CreateInputLayout (device_handle, input_desc,
+      desc_len, (gpointer) ID3D10Blob_GetBufferPointer (vs_blob),
       ID3D10Blob_GetBufferSize (vs_blob), &in_layout);
 
   if (!gst_d3d11_result (hr)) {
     GST_ERROR ("could not create input layout shader, hr: 0x%x", (guint) hr);
     ID3D10Blob_Release (vs_blob);
     ID3D11VertexShader_Release (vshader);
-    data->ret = FALSE;
-    return;
+    goto done;
   }
 
   ID3D10Blob_Release (vs_blob);
 
-  data->shader = vshader;
-  data->layout = in_layout;
-}
+  *shader = vshader;
+  *layout = in_layout;
 
-gboolean
-gst_d3d11_create_vertex_shader (GstD3D11Device * device, const gchar * source,
-    const D3D11_INPUT_ELEMENT_DESC * input_desc, guint desc_len,
-    ID3D11VertexShader ** shader, ID3D11InputLayout ** layout)
-{
-  CreateVSData data = { 0, };
+  ret = TRUE;
 
-  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), FALSE);
-  g_return_val_if_fail (source != NULL, FALSE);
-  g_return_val_if_fail (input_desc != NULL, FALSE);
-  g_return_val_if_fail (desc_len > 0, FALSE);
-  g_return_val_if_fail (shader != NULL, FALSE);
-  g_return_val_if_fail (layout != NULL, FALSE);
+done:
+  gst_d3d11_device_unlock (device);
 
-  data.source = source;
-  data.input_desc = input_desc;
-  data.desc_len = desc_len;
-
-  gst_d3d11_device_thread_add (device,
-      (GstD3D11DeviceThreadFunc) create_vertex_shader, &data);
-
-  *shader = data.shader;
-  *layout = data.layout;
-  return data.ret;
+  return ret;
 }
 
 struct _GstD3D11Quad
@@ -281,9 +240,11 @@ gst_d3d11_quad_new (GstD3D11Device * device, ID3D11PixelShader * pixel_shader,
   return quad;
 }
 
-static void
-quad_free (GstD3D11Device * device, GstD3D11Quad * quad)
+void
+gst_d3d11_quad_free (GstD3D11Quad * quad)
 {
+  g_return_if_fail (quad != NULL);
+
   if (quad->ps)
     ID3D11PixelShader_Release (quad->ps);
   if (quad->vs)
@@ -298,43 +259,46 @@ quad_free (GstD3D11Device * device, GstD3D11Quad * quad)
     ID3D11Buffer_Release (quad->vertex_buffer);
   if (quad->index_buffer)
     ID3D11Buffer_Release (quad->index_buffer);
-}
 
-void
-gst_d3d11_quad_free (GstD3D11Quad * quad)
-{
-  g_return_if_fail (quad != NULL);
-
-  if (quad->device) {
-    gst_d3d11_device_thread_add (quad->device,
-        (GstD3D11DeviceThreadFunc) quad_free, quad);
-
-    gst_object_unref (quad->device);
-  }
-
+  gst_clear_object (&quad->device);
   g_free (quad);
 }
 
-typedef struct
+gboolean
+gst_d3d11_draw_quad (GstD3D11Quad * quad,
+    D3D11_VIEWPORT viewport[GST_VIDEO_MAX_PLANES], guint num_viewport,
+    ID3D11ShaderResourceView * srv[GST_VIDEO_MAX_PLANES], guint num_srv,
+    ID3D11RenderTargetView * rtv[GST_VIDEO_MAX_PLANES], guint num_rtv)
 {
-  GstD3D11Quad *quad;
-  D3D11_VIEWPORT viewport[GST_VIDEO_MAX_PLANES];
-  guint num_viewport;
-  ID3D11ShaderResourceView *srv[GST_VIDEO_MAX_PLANES];
-  guint num_srv;
-  ID3D11RenderTargetView *rtv[GST_VIDEO_MAX_PLANES];
-  guint num_rtv;
-
   gboolean ret;
-} DrawQuadData;
 
-static void
-gst_d3d11_draw_quad_internal (GstD3D11Device * device, DrawQuadData * data)
+  g_return_val_if_fail (quad != NULL, FALSE);
+
+  gst_d3d11_device_lock (quad->device);
+  ret = gst_d3d11_draw_quad_unlocked (quad, viewport, num_viewport,
+      srv, num_srv, rtv, num_viewport);
+  gst_d3d11_device_unlock (quad->device);
+
+  return ret;
+}
+
+gboolean
+gst_d3d11_draw_quad_unlocked (GstD3D11Quad * quad,
+    D3D11_VIEWPORT viewport[GST_VIDEO_MAX_PLANES], guint num_viewport,
+    ID3D11ShaderResourceView * srv[GST_VIDEO_MAX_PLANES], guint num_srv,
+    ID3D11RenderTargetView * rtv[GST_VIDEO_MAX_PLANES], guint num_rtv)
 {
   ID3D11DeviceContext *context_handle;
   UINT offsets = 0;
   ID3D11ShaderResourceView *clear_view[GST_VIDEO_MAX_PLANES] = { NULL, };
-  GstD3D11Quad *quad = data->quad;
+
+  g_return_val_if_fail (quad != NULL, FALSE);
+  g_return_val_if_fail (viewport != NULL, FALSE);
+  g_return_val_if_fail (num_viewport <= GST_VIDEO_MAX_PLANES, FALSE);
+  g_return_val_if_fail (srv != NULL, FALSE);
+  g_return_val_if_fail (num_srv <= GST_VIDEO_MAX_PLANES, FALSE);
+  g_return_val_if_fail (rtv != NULL, FALSE);
+  g_return_val_if_fail (num_rtv <= GST_VIDEO_MAX_PLANES, FALSE);
 
   context_handle = gst_d3d11_device_get_device_context_handle (quad->device);
 
@@ -349,60 +313,20 @@ gst_d3d11_draw_quad_internal (GstD3D11Device * device, DrawQuadData * data)
   ID3D11DeviceContext_PSSetSamplers (context_handle, 0, 1, &quad->sampler);
   ID3D11DeviceContext_VSSetShader (context_handle, quad->vs, NULL, 0);
   ID3D11DeviceContext_PSSetShader (context_handle, quad->ps, NULL, 0);
-  ID3D11DeviceContext_RSSetViewports (context_handle,
-      data->num_viewport, data->viewport);
+  ID3D11DeviceContext_RSSetViewports (context_handle, num_viewport, viewport);
 
   if (quad->const_buffer)
     ID3D11DeviceContext_PSSetConstantBuffers (context_handle,
         0, 1, &quad->const_buffer);
 
-  ID3D11DeviceContext_PSSetShaderResources (context_handle,
-      0, data->num_srv, data->srv);
-  ID3D11DeviceContext_OMSetRenderTargets (context_handle,
-      data->num_rtv, data->rtv, NULL);
+  ID3D11DeviceContext_PSSetShaderResources (context_handle, 0, num_srv, srv);
+  ID3D11DeviceContext_OMSetRenderTargets (context_handle, num_rtv, rtv, NULL);
 
   ID3D11DeviceContext_DrawIndexed (context_handle, quad->index_count, 0, 0);
 
   ID3D11DeviceContext_PSSetShaderResources (context_handle,
-      0, data->num_srv, clear_view);
+      0, num_srv, clear_view);
+  ID3D11DeviceContext_OMSetRenderTargets (context_handle, 0, NULL, NULL);
 
-  data->ret = TRUE;
-}
-
-gboolean
-gst_d3d11_draw_quad (GstD3D11Quad * quad,
-    D3D11_VIEWPORT viewport[GST_VIDEO_MAX_PLANES], guint num_viewport,
-    ID3D11ShaderResourceView * srv[GST_VIDEO_MAX_PLANES], guint num_srv,
-    ID3D11RenderTargetView * rtv[GST_VIDEO_MAX_PLANES], guint num_rtv)
-{
-  DrawQuadData data = { 0, };
-  gint i;
-
-  g_return_val_if_fail (quad != NULL, FALSE);
-  g_return_val_if_fail (viewport != NULL, FALSE);
-  g_return_val_if_fail (num_viewport <= GST_VIDEO_MAX_PLANES, FALSE);
-  g_return_val_if_fail (srv != NULL, FALSE);
-  g_return_val_if_fail (num_srv <= GST_VIDEO_MAX_PLANES, FALSE);
-  g_return_val_if_fail (rtv != NULL, FALSE);
-  g_return_val_if_fail (num_rtv <= GST_VIDEO_MAX_PLANES, FALSE);
-
-  data.quad = quad;
-  for (i = 0; i < num_viewport; i++)
-    data.viewport[i] = viewport[i];
-  data.num_viewport = num_viewport;
-
-  for (i = 0; i < num_srv; i++)
-    data.srv[i] = srv[i];
-  data.num_srv = num_srv;
-
-  for (i = 0; i < num_rtv; i++)
-    data.rtv[i] = rtv[i];
-  data.num_rtv = num_rtv;
-
-  data.ret = TRUE;
-
-  gst_d3d11_device_thread_add (quad->device,
-      (GstD3D11DeviceThreadFunc) gst_d3d11_draw_quad_internal, &data);
-
-  return data.ret;
+  return TRUE;
 }

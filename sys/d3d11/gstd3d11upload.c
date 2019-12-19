@@ -314,32 +314,24 @@ gst_d3d11_upload_decide_allocation (GstBaseTransform * trans, GstQuery * query)
       query);
 }
 
-typedef struct
-{
-  GstD3D11BaseFilter *filter;
-  GstBuffer *inbuf;
-  GstBuffer *outbuf;
-  GstFlowReturn ret;
-} UploadTransformData;
-
-static void
-upload_transform_dynamic (GstD3D11Device * device, UploadTransformData * data)
+static GstFlowReturn
+upload_transform_dynamic (GstD3D11BaseFilter * filter,
+    GstD3D11Device * device, GstBuffer * inbuf, GstBuffer * outbuf)
 {
   GstVideoFrame in_frame;
-  GstD3D11BaseFilter *filter = data->filter;
   gint i, j, k;
+  GstFlowReturn ret = GST_FLOW_OK;
   ID3D11DeviceContext *device_context =
       gst_d3d11_device_get_device_context_handle (device);
 
-  data->ret = GST_FLOW_OK;
-
-  if (!gst_video_frame_map (&in_frame, &filter->in_info, data->inbuf,
+  if (!gst_video_frame_map (&in_frame, &filter->in_info, inbuf,
           GST_MAP_READ | GST_VIDEO_FRAME_MAP_FLAG_NO_REF))
     goto invalid_buffer;
 
-  for (i = 0, j = 0; i < gst_buffer_n_memory (data->outbuf); i++) {
+  gst_d3d11_device_lock (device);
+  for (i = 0, j = 0; i < gst_buffer_n_memory (outbuf); i++) {
     GstD3D11Memory *dmem =
-        (GstD3D11Memory *) gst_buffer_peek_memory (data->outbuf, i);
+        (GstD3D11Memory *) gst_buffer_peek_memory (outbuf, i);
     D3D11_MAPPED_SUBRESOURCE map;
     HRESULT hr;
     D3D11_TEXTURE2D_DESC *desc = &dmem->desc;
@@ -353,7 +345,8 @@ upload_transform_dynamic (GstD3D11Device * device, UploadTransformData * data)
     if (!gst_d3d11_result (hr)) {
       GST_ERROR_OBJECT (filter,
           "Failed to map staging texture (0x%x)", (guint) hr);
-      data->ret = GST_FLOW_ERROR;
+      gst_d3d11_device_unlock (device);
+      ret = GST_FLOW_ERROR;
       goto done;
     }
 
@@ -381,35 +374,35 @@ upload_transform_dynamic (GstD3D11Device * device, UploadTransformData * data)
     ID3D11DeviceContext_Unmap (device_context,
         (ID3D11Resource *) dmem->texture, 0);
   }
+  gst_d3d11_device_unlock (device);
 
 done:
   gst_video_frame_unmap (&in_frame);
 
-  data->ret = GST_FLOW_OK;
-  return;
+  return ret;
 
   /* ERRORS */
 invalid_buffer:
   {
     GST_ELEMENT_WARNING (filter, CORE, NOT_IMPLEMENTED, (NULL),
         ("invalid video buffer received"));
-    data->ret = GST_FLOW_ERROR;
-    return;
+    return GST_FLOW_ERROR;
   }
 }
 
-static void
-upload_transform (GstD3D11Device * device, UploadTransformData * data)
+static GstFlowReturn
+upload_transform (GstD3D11BaseFilter * filter, GstBuffer * inbuf,
+    GstBuffer * outbuf)
 {
   GstVideoFrame in_frame, out_frame;
-  GstD3D11BaseFilter *filter = data->filter;
   gint i;
+  GstFlowReturn ret = GST_FLOW_OK;
 
-  if (!gst_video_frame_map (&in_frame, &filter->in_info, data->inbuf,
+  if (!gst_video_frame_map (&in_frame, &filter->in_info, inbuf,
           GST_MAP_READ | GST_VIDEO_FRAME_MAP_FLAG_NO_REF))
     goto invalid_buffer;
 
-  if (!gst_video_frame_map (&out_frame, &filter->out_info, data->outbuf,
+  if (!gst_video_frame_map (&out_frame, &filter->out_info, outbuf,
           GST_MAP_WRITE | GST_VIDEO_FRAME_MAP_FLAG_NO_REF)) {
     gst_video_frame_unmap (&in_frame);
     goto invalid_buffer;
@@ -418,24 +411,22 @@ upload_transform (GstD3D11Device * device, UploadTransformData * data)
   for (i = 0; i < GST_VIDEO_FRAME_N_PLANES (&in_frame); i++) {
     if (!gst_video_frame_copy_plane (&out_frame, &in_frame, i)) {
       GST_ERROR_OBJECT (filter, "Couldn't copy %dth plane", i);
-      data->ret = GST_FLOW_ERROR;
-      return;
+      ret = GST_FLOW_ERROR;
+      break;
     }
   }
 
   gst_video_frame_unmap (&out_frame);
   gst_video_frame_unmap (&in_frame);
 
-  data->ret = GST_FLOW_OK;
-  return;
+  return ret;
 
   /* ERRORS */
 invalid_buffer:
   {
     GST_ELEMENT_WARNING (filter, CORE, NOT_IMPLEMENTED, (NULL),
         ("invalid video buffer received"));
-    data->ret = GST_FLOW_ERROR;
-    return;
+    return GST_FLOW_ERROR;
   }
 }
 
@@ -446,32 +437,16 @@ gst_d3d11_upload_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   GstD3D11BaseFilter *filter = GST_D3D11_BASE_FILTER (trans);
   GstMemory *mem;
   GstD3D11Device *device;
-  UploadTransformData data;
-  gboolean to_dynamic = FALSE;
 
   mem = gst_buffer_peek_memory (outbuf, 0);
   if (gst_is_d3d11_memory (mem)) {
     GstD3D11Memory *dmem = (GstD3D11Memory *) mem;
     device = dmem->device;
 
-    if (dmem->desc.Usage == D3D11_USAGE_DYNAMIC)
-      to_dynamic = TRUE;
-  } else {
-    device = filter->device;
+    if (dmem->desc.Usage == D3D11_USAGE_DYNAMIC) {
+      return upload_transform_dynamic (filter, device, inbuf, outbuf);
+    }
   }
 
-  data.filter = filter;
-  data.inbuf = inbuf;
-  data.outbuf = outbuf;
-  data.ret = GST_FLOW_OK;
-
-  if (to_dynamic) {
-    gst_d3d11_device_thread_add (device,
-        (GstD3D11DeviceThreadFunc) upload_transform_dynamic, &data);
-  } else {
-    gst_d3d11_device_thread_add (device,
-        (GstD3D11DeviceThreadFunc) upload_transform, &data);
-  }
-
-  return data.ret;
+  return upload_transform (filter, inbuf, outbuf);
 }

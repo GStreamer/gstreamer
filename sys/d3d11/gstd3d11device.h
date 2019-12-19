@@ -101,22 +101,16 @@ IDXGISwapChain1 *     gst_d3d11_device_create_swap_chain_for_hwnd (GstD3D11Devic
 void                  gst_d3d11_device_release_swap_chain (GstD3D11Device * device,
                                                            IDXGISwapChain * swap_chain);
 
-void                  gst_d3d11_device_thread_add         (GstD3D11Device * device,
-                                                           GstD3D11DeviceThreadFunc func,
-                                                           gpointer data);
-
-void                  gst_d3d11_device_thread_add_full    (GstD3D11Device * device,
-                                                           gint priority,
-                                                           GstD3D11DeviceThreadFunc func,
-                                                           gpointer data,
-                                                           GDestroyNotify notify);
-
 ID3D11Texture2D *     gst_d3d11_device_create_texture     (GstD3D11Device * device,
                                                            const D3D11_TEXTURE2D_DESC * desc,
                                                            const D3D11_SUBRESOURCE_DATA *inital_data);
 
 void                  gst_d3d11_device_release_texture    (GstD3D11Device * device,
                                                            ID3D11Texture2D * texture);
+
+void                  gst_d3d11_device_lock               (GstD3D11Device * device);
+
+void                  gst_d3d11_device_unlock             (GstD3D11Device * device);
 
 G_END_DECLS
 

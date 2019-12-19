@@ -610,12 +610,14 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Device * device,
       goto clear;
     }
 
+    gst_d3d11_device_lock (device);
     hr = ID3D11DeviceContext_Map (context_handle,
         (ID3D11Resource *) const_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &map);
 
     if (!gst_d3d11_result (hr)) {
       GST_ERROR ("Couldn't map constant buffer, hr: 0x%x", (guint) hr);
       data->ret = FALSE;
+      gst_d3d11_device_unlock (device);
       goto clear;
     }
 
@@ -624,6 +626,7 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Device * device,
 
     ID3D11DeviceContext_Unmap (context_handle,
         (ID3D11Resource *) const_buffer, 0);
+    gst_d3d11_device_unlock (device);
   }
 
   input_desc[0].SemanticName = "POSITION";
@@ -678,12 +681,14 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Device * device,
     goto clear;
   }
 
+  gst_d3d11_device_lock (device);
   hr = ID3D11DeviceContext_Map (context_handle,
       (ID3D11Resource *) vertex_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &map);
 
   if (!gst_d3d11_result (hr)) {
     GST_ERROR ("Couldn't map vertex buffer, hr: 0x%x", (guint) hr);
     data->ret = FALSE;
+    gst_d3d11_device_unlock (device);
     goto clear;
   }
 
@@ -696,6 +701,7 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Device * device,
     GST_ERROR ("Couldn't map index buffer, hr: 0x%x", (guint) hr);
     ID3D11DeviceContext_Unmap (context_handle,
         (ID3D11Resource *) vertex_buffer, 0);
+    gst_d3d11_device_unlock (device);
     data->ret = FALSE;
     goto clear;
   }
@@ -743,6 +749,7 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Device * device,
       (ID3D11Resource *) vertex_buffer, 0);
   ID3D11DeviceContext_Unmap (context_handle,
       (ID3D11Resource *) index_buffer, 0);
+  gst_d3d11_device_unlock (device);
 
   self->quad = gst_d3d11_quad_new (device,
       ps, vs, layout, sampler, const_buffer, vertex_buffer, sizeof (VertexData),
@@ -856,8 +863,7 @@ gst_d3d11_color_converter_new (GstD3D11Device * device,
   data.self = converter;
   data.in_info = in_info;
   data.out_info = out_info;
-  gst_d3d11_device_thread_add (device,
-      (GstD3D11DeviceThreadFunc) gst_d3d11_color_convert_setup_shader, &data);
+  gst_d3d11_color_convert_setup_shader (device, &data);
 
   if (!data.ret || !converter->quad) {
     GST_ERROR ("Couldn't setup shader");
@@ -897,51 +903,17 @@ gst_d3d11_color_converter_free (GstD3D11ColorConverter * converter)
   g_free (converter);
 }
 
-typedef struct
-{
-  GstD3D11ColorConverter *self;
-  ID3D11ShaderResourceView *srv[GST_VIDEO_MAX_PLANES];
-  ID3D11RenderTargetView *rtv[GST_VIDEO_MAX_PLANES];
-
-  gboolean ret;
-} DoConvertData;
-
-static void
-do_convert (GstD3D11Device * device, DoConvertData * data)
-{
-  GstD3D11ColorConverter *self = data->self;
-
-  data->ret =
-      gst_d3d11_draw_quad (self->quad, &self->viewport, 1,
-      data->srv, self->num_input_view, data->rtv, self->num_output_view);
-}
-
 gboolean
 gst_d3d11_color_converter_convert (GstD3D11ColorConverter * converter,
     ID3D11ShaderResourceView * srv[GST_VIDEO_MAX_PLANES],
     ID3D11RenderTargetView * rtv[GST_VIDEO_MAX_PLANES])
 {
-  DoConvertData data = { 0, };
-  gint i;
-
   g_return_val_if_fail (converter != NULL, FALSE);
   g_return_val_if_fail (srv != NULL, FALSE);
   g_return_val_if_fail (rtv != NULL, FALSE);
 
-  data.self = converter;
-
-  for (i = 0; i < converter->num_input_view; i++)
-    data.srv[i] = srv[i];
-
-  for (i = 0; i < converter->num_output_view; i++)
-    data.rtv[i] = rtv[i];
-
-  data.ret = TRUE;
-
-  gst_d3d11_device_thread_add (converter->device,
-      (GstD3D11DeviceThreadFunc) do_convert, &data);
-
-  return data.ret;
+  return gst_d3d11_draw_quad (converter->quad, &converter->viewport, 1,
+      srv, converter->num_input_view, rtv, converter->num_output_view);
 }
 
 gboolean

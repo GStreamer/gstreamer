@@ -128,10 +128,6 @@ void              gst_d3d11_window_set_render_rectangle (GstD3D11Window * window
                                                          gint x, gint y,
                                                          gint width, gint height);
 
-void gst_d3d11_window_get_surface_dimensions (GstD3D11Window * window,
-                                         guint * width,
-                                         guint * height);
-
 gboolean gst_d3d11_window_prepare (GstD3D11Window * window,
                                    guint width,
                                    guint height,

@@ -208,15 +208,18 @@ gst_d3d11_format_from_gst (GstVideoFormat format)
   return NULL;
 }
 
-typedef struct
-{
-  GstCaps *caps;
-  D3D11_FORMAT_SUPPORT flags;
-} SupportCapsData;
-
-static void
-gst_d3d11_device_get_supported_caps_internal (GstD3D11Device * device,
-    SupportCapsData * data)
+/**
+ * gst_d3d11_device_get_supported_caps:
+ * @device: a #GstD3DDevice
+ * @flags: D3D11_FORMAT_SUPPORT flags
+ *
+ * Check supported format with given flags
+ *
+ * Returns: a #GstCaps representing supported format
+ */
+GstCaps *
+gst_d3d11_device_get_supported_caps (GstD3D11Device * device,
+    D3D11_FORMAT_SUPPORT flags)
 {
   ID3D11Device *d3d11_device;
   HRESULT hr;
@@ -224,6 +227,8 @@ gst_d3d11_device_get_supported_caps_internal (GstD3D11Device * device,
   GValue v_list = G_VALUE_INIT;
   GstCaps *supported_caps;
   GstD3D11Format *format_list;
+
+  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
 
   d3d11_device = gst_d3d11_device_get_device_handle (device);
   g_value_init (&v_list, GST_TYPE_LIST);
@@ -241,12 +246,12 @@ gst_d3d11_device_get_supported_caps_internal (GstD3D11Device * device,
     hr = ID3D11Device_CheckFormatSupport (d3d11_device,
         format_list[i].dxgi_format, &format_support);
 
-    if (SUCCEEDED (hr) && ((format_support & data->flags) == data->flags)) {
+    if (SUCCEEDED (hr) && ((format_support & flags) == flags)) {
       GValue v_str = G_VALUE_INIT;
       g_value_init (&v_str, G_TYPE_STRING);
 
       GST_LOG_OBJECT (device, "d3d11 device can support %s with flags 0x%x",
-          gst_video_format_to_string (format), data->flags);
+          gst_video_format_to_string (format), flags);
       g_value_set_string (&v_str, gst_video_format_to_string (format));
       gst_value_list_append_and_take_value (&v_list, &v_str);
     }
@@ -262,31 +267,5 @@ gst_d3d11_device_get_supported_caps_internal (GstD3D11Device * device,
   gst_caps_set_features_simple (supported_caps,
       gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY));
 
-  data->caps = supported_caps;
-}
-
-/**
- * gst_d3d11_device_get_supported_caps:
- * @device: a #GstD3DDevice
- * @flags: D3D11_FORMAT_SUPPORT flags
- *
- * Check supported format with given flags
- *
- * Returns: a #GstCaps representing supported format
- */
-GstCaps *
-gst_d3d11_device_get_supported_caps (GstD3D11Device * device,
-    D3D11_FORMAT_SUPPORT flags)
-{
-  SupportCapsData data;
-
-  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
-
-  data.caps = NULL;
-  data.flags = flags;
-
-  gst_d3d11_device_thread_add (device, (GstD3D11DeviceThreadFunc)
-      gst_d3d11_device_get_supported_caps_internal, &data);
-
-  return data.caps;
+  return supported_caps;
 }

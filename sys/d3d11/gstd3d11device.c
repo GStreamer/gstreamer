@@ -75,15 +75,7 @@ struct _GstD3D11DevicePrivate
   GstD3D11DXGIFactoryVersion factory_ver;
   D3D_FEATURE_LEVEL feature_level;
 
-  ID3D11VideoDevice *video_device;
-  ID3D11VideoContext *video_context;
-
-  GMutex lock;
-  GCond cond;
-  GThread *thread;
-  GThread *active_thread;
-  GMainLoop *loop;
-  GMainContext *main_context;
+  GRecMutex extern_lock;
 
 #ifdef HAVE_D3D11SDKLAYER_H
   ID3D11Debug *debug;
@@ -101,8 +93,6 @@ static void gst_d3d11_device_get_property (GObject * object, guint prop_id,
 static void gst_d3d11_device_constructed (GObject * object);
 static void gst_d3d11_device_dispose (GObject * object);
 static void gst_d3d11_device_finalize (GObject * object);
-
-static gpointer gst_d3d11_device_thread_func (gpointer data);
 
 #ifdef HAVE_D3D11SDKLAYER_H
 static gboolean
@@ -206,11 +196,7 @@ gst_d3d11_device_init (GstD3D11Device * self)
   priv = gst_d3d11_device_get_instance_private (self);
   priv->adapter = DEFAULT_ADAPTER;
 
-  g_mutex_init (&priv->lock);
-  g_cond_init (&priv->cond);
-
-  priv->main_context = g_main_context_new ();
-  priv->loop = g_main_loop_new (priv->main_context, FALSE);
+  g_rec_mutex_init (&priv->extern_lock);
 
   self->priv = priv;
 }
@@ -332,7 +318,6 @@ gst_d3d11_device_constructed (GObject * object)
 
   priv->factory = factory;
 
-
 #ifdef HAVE_D3D11SDKLAYER_H
   if ((d3d11_flags & D3D11_CREATE_DEVICE_DEBUG) == D3D11_CREATE_DEVICE_DEBUG) {
     ID3D11Debug *debug;
@@ -351,29 +336,13 @@ gst_d3d11_device_constructed (GObject * object)
     hr = ID3D11Device_QueryInterface (priv->device,
         &IID_ID3D11InfoQueue, (void **) &info_queue);
     if (SUCCEEDED (hr)) {
-      GSource *source;
-
       GST_DEBUG_OBJECT (self, "D3D11InfoQueue interface available");
       priv->info_queue = info_queue;
-
-      source = g_idle_source_new ();
-      g_source_set_callback (source, (GSourceFunc) gst_d3d11_device_get_message,
-          self, NULL);
-
-      g_source_attach (source, priv->main_context);
-      g_source_unref (source);
     }
   }
 #endif
 
   IDXGIAdapter1_Release (adapter);
-
-  g_mutex_lock (&priv->lock);
-  priv->thread = g_thread_new ("GstD3D11Device",
-      (GThreadFunc) gst_d3d11_device_thread_func, self);
-  while (!g_main_loop_is_running (priv->loop))
-    g_cond_wait (&priv->cond, &priv->lock);
-  g_mutex_unlock (&priv->lock);
 
   G_OBJECT_CLASS (parent_class)->constructed (object);
 
@@ -458,38 +427,9 @@ gst_d3d11_device_dispose (GObject * object)
     priv->device_context = NULL;
   }
 
-  if (priv->video_device) {
-    ID3D11VideoDevice_Release (priv->video_device);
-    priv->video_device = NULL;
-  }
-
-  if (priv->video_context) {
-    ID3D11VideoContext_Release (priv->video_context);
-    priv->video_context = NULL;
-  }
-
   if (priv->factory) {
     IDXGIFactory1_Release (priv->factory);
     priv->factory = NULL;
-  }
-
-  if (priv->loop) {
-    g_main_loop_quit (priv->loop);
-  }
-
-  if (priv->thread) {
-    g_thread_join (priv->thread);
-    priv->thread = NULL;
-  }
-
-  if (priv->loop) {
-    g_main_loop_unref (priv->loop);
-    priv->loop = NULL;
-  }
-
-  if (priv->main_context) {
-    g_main_context_unref (priv->main_context);
-    priv->main_context = NULL;
   }
 #ifdef HAVE_D3D11SDKLAYER_H
   if (priv->debug) {
@@ -518,51 +458,10 @@ gst_d3d11_device_finalize (GObject * object)
 
   GST_LOG_OBJECT (self, "finalize");
 
-  g_mutex_clear (&priv->lock);
-  g_cond_clear (&priv->cond);
+  g_rec_mutex_clear (&priv->extern_lock);
   g_free (priv->description);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
-}
-
-static gboolean
-running_cb (gpointer user_data)
-{
-  GstD3D11Device *self = GST_D3D11_DEVICE (user_data);
-  GstD3D11DevicePrivate *priv = self->priv;
-
-  GST_TRACE_OBJECT (self, "Main loop running now");
-
-  g_mutex_lock (&priv->lock);
-  g_cond_signal (&priv->cond);
-  g_mutex_unlock (&priv->lock);
-
-  return G_SOURCE_REMOVE;
-}
-
-static gpointer
-gst_d3d11_device_thread_func (gpointer data)
-{
-  GstD3D11Device *self = GST_D3D11_DEVICE (data);
-  GstD3D11DevicePrivate *priv = self->priv;
-  GSource *source;
-
-  GST_DEBUG_OBJECT (self, "Enter loop");
-  g_main_context_push_thread_default (priv->main_context);
-
-  source = g_idle_source_new ();
-  g_source_set_callback (source, (GSourceFunc) running_cb, self, NULL);
-  g_source_attach (source, priv->main_context);
-  g_source_unref (source);
-
-  priv->active_thread = g_thread_self ();
-  g_main_loop_run (priv->loop);
-
-  g_main_context_pop_thread_default (priv->main_context);
-
-  GST_DEBUG_OBJECT (self, "Exit loop");
-
-  return NULL;
 }
 
 /**
@@ -642,119 +541,6 @@ gst_d3d11_device_get_chosen_feature_level (GstD3D11Device * device)
   return device->priv->feature_level;
 }
 
-typedef struct
-{
-  GstD3D11Device *device;
-  GstD3D11DeviceThreadFunc func;
-
-  gpointer data;
-  gboolean fired;
-} MessageData;
-
-static gboolean
-gst_d3d11_device_message_callback (MessageData * msg)
-{
-  GstD3D11Device *self = msg->device;
-  GstD3D11DevicePrivate *priv = self->priv;
-
-  msg->func (self, msg->data);
-
-  g_mutex_lock (&priv->lock);
-  msg->fired = TRUE;
-  g_cond_broadcast (&priv->cond);
-  g_mutex_unlock (&priv->lock);
-
-  return G_SOURCE_REMOVE;
-}
-
-/**
- * gst_d3d11_device_thread_add:
- * @device: a #GstD3D11Device
- * @func: (scope call): a #GstD3D11DeviceThreadFunc
- * @data: (closure): user data to call @func with
- *
- * Execute @func in the D3DDevice thread of @device with @data
- *
- * MT-safe
- */
-void
-gst_d3d11_device_thread_add (GstD3D11Device * device,
-    GstD3D11DeviceThreadFunc func, gpointer data)
-{
-  gst_d3d11_device_thread_add_full (device,
-      G_PRIORITY_DEFAULT, func, data, NULL);
-}
-
-/**
- * gst_d3d11_device_thread_add_full:
- * @device: a #GstD3D11Device
- * @priority: the priority at which to run @func
- * @func: (scope call): a #GstD3D11DeviceThreadFunc
- * @data: (closure): user data to call @func with
- * @notify: (nullable): a function to call when @data is no longer in use, or %NULL.
- *
- * Execute @func in the D3DDevice thread of @device with @data with specified
- * @priority
- *
- * MT-safe
- */
-void
-gst_d3d11_device_thread_add_full (GstD3D11Device * device,
-    gint priority, GstD3D11DeviceThreadFunc func, gpointer data,
-    GDestroyNotify notify)
-{
-  GstD3D11DevicePrivate *priv;
-  MessageData msg = { 0, };
-
-  g_return_if_fail (GST_IS_D3D11_DEVICE (device));
-  g_return_if_fail (func != NULL);
-
-  priv = device->priv;
-
-  if (priv->active_thread == g_thread_self ()) {
-    func (device, data);
-    return;
-  }
-
-  msg.device = gst_object_ref (device);
-  msg.func = func;
-  msg.data = data;
-  msg.fired = FALSE;
-
-  g_main_context_invoke_full (priv->main_context, priority,
-      (GSourceFunc) gst_d3d11_device_message_callback, &msg, notify);
-
-  g_mutex_lock (&priv->lock);
-  while (!msg.fired)
-    g_cond_wait (&priv->cond, &priv->lock);
-  g_mutex_unlock (&priv->lock);
-
-  gst_object_unref (device);
-}
-
-typedef struct
-{
-  IDXGISwapChain *swap_chain;
-  const DXGI_SWAP_CHAIN_DESC *desc;
-} CreateSwapChainData;
-
-static void
-gst_d3d11_device_create_swap_chain_internal (GstD3D11Device * device,
-    CreateSwapChainData * data)
-{
-  GstD3D11DevicePrivate *priv = device->priv;
-  HRESULT hr;
-
-  hr = IDXGIFactory1_CreateSwapChain (priv->factory, (IUnknown *) priv->device,
-      (DXGI_SWAP_CHAIN_DESC *) data->desc, &data->swap_chain);
-
-  if (!gst_d3d11_result (hr)) {
-    GST_ERROR_OBJECT (device, "Cannot create SwapChain Object: 0x%x",
-        (guint) hr);
-    data->swap_chain = NULL;
-  }
-}
-
 /**
  * gst_d3d11_device_create_swap_chain:
  * @device: a #GstD3D11Device
@@ -770,47 +556,29 @@ IDXGISwapChain *
 gst_d3d11_device_create_swap_chain (GstD3D11Device * device,
     const DXGI_SWAP_CHAIN_DESC * desc)
 {
-  CreateSwapChainData data = { 0, };
+  GstD3D11DevicePrivate *priv;
+  HRESULT hr;
+  IDXGISwapChain *swap_chain = NULL;
 
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
 
-  data.swap_chain = NULL;
-  data.desc = desc;
+  priv = device->priv;
 
-  gst_d3d11_device_thread_add (device, (GstD3D11DeviceThreadFunc)
-      gst_d3d11_device_create_swap_chain_internal, &data);
-
-  return data.swap_chain;
-}
-
-#if (DXGI_HEADER_VERSION >= 2)
-typedef struct
-{
-  IDXGISwapChain1 *swap_chain;
-  HWND hwnd;
-  const DXGI_SWAP_CHAIN_DESC1 *desc;
-  const DXGI_SWAP_CHAIN_FULLSCREEN_DESC *fullscreen_desc;
-  IDXGIOutput *output;
-} CreateSwapChainForHwndData;
-
-static void
-gst_d3d11_device_create_swap_chain_for_hwnd_internal (GstD3D11Device * device,
-    CreateSwapChainForHwndData * data)
-{
-  GstD3D11DevicePrivate *priv = device->priv;
-  HRESULT hr;
-
-  hr = IDXGIFactory2_CreateSwapChainForHwnd ((IDXGIFactory2 *) priv->factory,
-      (IUnknown *) priv->device, data->hwnd, data->desc, data->fullscreen_desc,
-      data->output, &data->swap_chain);
+  gst_d3d11_device_lock (device);
+  hr = IDXGIFactory1_CreateSwapChain (priv->factory, (IUnknown *) priv->device,
+      (DXGI_SWAP_CHAIN_DESC *) desc, &swap_chain);
+  gst_d3d11_device_unlock (device);
 
   if (!gst_d3d11_result (hr)) {
     GST_ERROR_OBJECT (device, "Cannot create SwapChain Object: 0x%x",
         (guint) hr);
-    data->swap_chain = NULL;
+    swap_chain = NULL;
   }
+
+  return swap_chain;
 }
 
+#if (DXGI_HEADER_VERSION >= 2)
 /**
  * gst_d3d11_device_create_swap_chain_for_hwnd:
  * @device: a #GstD3D11Device
@@ -832,29 +600,29 @@ gst_d3d11_device_create_swap_chain_for_hwnd (GstD3D11Device * device,
     const DXGI_SWAP_CHAIN_FULLSCREEN_DESC * fullscreen_desc,
     IDXGIOutput * output)
 {
-  CreateSwapChainForHwndData data = { 0, };
+  GstD3D11DevicePrivate *priv;
+  IDXGISwapChain1 *swap_chain = NULL;
+  HRESULT hr;
 
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
 
-  data.swap_chain = NULL;
-  data.hwnd = hwnd;
-  data.desc = desc;
-  data.fullscreen_desc = fullscreen_desc;
-  data.output = output;
+  priv = device->priv;
 
-  gst_d3d11_device_thread_add (device, (GstD3D11DeviceThreadFunc)
-      gst_d3d11_device_create_swap_chain_for_hwnd_internal, &data);
+  gst_d3d11_device_lock (device);
+  hr = IDXGIFactory2_CreateSwapChainForHwnd ((IDXGIFactory2 *) priv->factory,
+      (IUnknown *) priv->device, hwnd, desc, fullscreen_desc,
+      output, &swap_chain);
+  gst_d3d11_device_unlock (device);
 
-  return data.swap_chain;
+  if (!gst_d3d11_result (hr)) {
+    GST_ERROR_OBJECT (device, "Cannot create SwapChain Object: 0x%x",
+        (guint) hr);
+    swap_chain = NULL;
+  }
+
+  return swap_chain;
 }
 #endif
-
-static void
-gst_d3d11_device_release_swap_chain_internal (GstD3D11Device * device,
-    IDXGISwapChain * swap_chain)
-{
-  IDXGISwapChain_Release (swap_chain);
-}
 
 /**
  * gst_d3d11_device_release_swap_chain:
@@ -862,38 +630,35 @@ gst_d3d11_device_release_swap_chain_internal (GstD3D11Device * device,
  * @swap_chain: a IDXGISwapChain
  *
  * Release a @swap_chain from device thread
- *
  */
 void
 gst_d3d11_device_release_swap_chain (GstD3D11Device * device,
     IDXGISwapChain * swap_chain)
 {
   g_return_if_fail (GST_IS_D3D11_DEVICE (device));
+  g_return_if_fail (swap_chain != NULL);
 
-  gst_d3d11_device_thread_add (device,
-      (GstD3D11DeviceThreadFunc) gst_d3d11_device_release_swap_chain_internal,
-      swap_chain);
+  gst_d3d11_device_lock (device);
+  IDXGISwapChain_Release (swap_chain);
+  gst_d3d11_device_unlock (device);
 }
 
-typedef struct
+ID3D11Texture2D *
+gst_d3d11_device_create_texture (GstD3D11Device * device,
+    const D3D11_TEXTURE2D_DESC * desc,
+    const D3D11_SUBRESOURCE_DATA * inital_data)
 {
-  ID3D11Texture2D *texture;
-  const D3D11_TEXTURE2D_DESC *desc;
-  const D3D11_SUBRESOURCE_DATA *inital_data;
-} CreateTextureData;
-
-static void
-gst_d3d11_device_create_texture_internal (GstD3D11Device * device,
-    CreateTextureData * data)
-{
-  GstD3D11DevicePrivate *priv = device->priv;
+  GstD3D11DevicePrivate *priv;
   HRESULT hr;
+  ID3D11Texture2D *texture;
 
-  hr = ID3D11Device_CreateTexture2D (priv->device, data->desc,
-      data->inital_data, &data->texture);
+  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
+  g_return_val_if_fail (desc != NULL, NULL);
+
+  priv = device->priv;
+
+  hr = ID3D11Device_CreateTexture2D (priv->device, desc, inital_data, &texture);
   if (!gst_d3d11_result (hr)) {
-    const D3D11_TEXTURE2D_DESC *desc = data->desc;
-
     GST_ERROR ("Failed to create texture (0x%x)", (guint) hr);
 
     GST_WARNING ("Direct3D11 Allocation params");
@@ -907,35 +672,10 @@ gst_d3d11_device_create_texture_internal (GstD3D11Device * device,
     GST_WARNING ("\tBindFlags 0x%x", desc->BindFlags);
     GST_WARNING ("\tCPUAccessFlags 0x%x", desc->CPUAccessFlags);
     GST_WARNING ("\tMiscFlags 0x%x", desc->MiscFlags);
-    data->texture = NULL;
+    texture = NULL;
   }
-}
 
-ID3D11Texture2D *
-gst_d3d11_device_create_texture (GstD3D11Device * device,
-    const D3D11_TEXTURE2D_DESC * desc,
-    const D3D11_SUBRESOURCE_DATA * inital_data)
-{
-  CreateTextureData data;
-
-  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
-  g_return_val_if_fail (desc != NULL, NULL);
-
-  data.texture = NULL;
-  data.desc = desc;
-  data.inital_data = inital_data;
-
-  gst_d3d11_device_thread_add (device, (GstD3D11DeviceThreadFunc)
-      gst_d3d11_device_create_texture_internal, &data);
-
-  return data.texture;
-}
-
-static void
-gst_d3d11_device_release_texture_internal (GstD3D11Device * device,
-    ID3D11Texture2D * texture)
-{
-  ID3D11Texture2D_Release (texture);
+  return texture;
 }
 
 void
@@ -945,6 +685,32 @@ gst_d3d11_device_release_texture (GstD3D11Device * device,
   g_return_if_fail (GST_IS_D3D11_DEVICE (device));
   g_return_if_fail (texture != NULL);
 
-  gst_d3d11_device_thread_add (device, (GstD3D11DeviceThreadFunc)
-      gst_d3d11_device_release_texture_internal, texture);
+  ID3D11Texture2D_Release (texture);
+}
+
+void
+gst_d3d11_device_lock (GstD3D11Device * device)
+{
+  GstD3D11DevicePrivate *priv;
+
+  g_return_if_fail (GST_IS_D3D11_DEVICE (device));
+
+  priv = device->priv;
+
+  GST_TRACE_OBJECT (device, "device locking");
+  g_rec_mutex_lock (&priv->extern_lock);
+  GST_TRACE_OBJECT (device, "device locked");
+}
+
+void
+gst_d3d11_device_unlock (GstD3D11Device * device)
+{
+  GstD3D11DevicePrivate *priv;
+
+  g_return_if_fail (GST_IS_D3D11_DEVICE (device));
+
+  priv = device->priv;
+
+  g_rec_mutex_unlock (&priv->extern_lock);
+  GST_TRACE_OBJECT (device, "device unlocked");
 }

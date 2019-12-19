@@ -63,6 +63,14 @@ gboolean gst_d3d11_draw_quad (GstD3D11Quad * quad,
                               ID3D11RenderTargetView *rtv[GST_VIDEO_MAX_PLANES],
                               guint num_rtv);
 
+gboolean gst_d3d11_draw_quad_unlocked (GstD3D11Quad * quad,
+                                       D3D11_VIEWPORT viewport[GST_VIDEO_MAX_PLANES],
+                                       guint num_viewport,
+                                       ID3D11ShaderResourceView *srv[GST_VIDEO_MAX_PLANES],
+                                       guint num_srv,
+                                       ID3D11RenderTargetView *rtv[GST_VIDEO_MAX_PLANES],
+                                       guint num_rtv);
+
 G_END_DECLS
 
 #endif /* __GST_D3D11_SHADER_H__ */
