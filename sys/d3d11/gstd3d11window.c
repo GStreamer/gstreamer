@@ -211,10 +211,10 @@ gst_d3d11_window_set_property (GObject * object, guint prop_id,
       gboolean force_aspect_ratio;
 
       force_aspect_ratio = g_value_get_boolean (value);
-      if (force_aspect_ratio != self->force_aspect_ratio)
-        self->pending_resize = TRUE;
-
-      self->force_aspect_ratio = force_aspect_ratio;
+      if (force_aspect_ratio != self->force_aspect_ratio) {
+        self->force_aspect_ratio = force_aspect_ratio;
+        PostMessage (self->internal_win_id, WM_SIZE, 0, 0);
+      }
       break;
     }
     case PROP_ENABLE_NAVIGATION_EVENTS:
@@ -587,8 +587,6 @@ gst_d3d11_window_on_resize (GstD3D11Window * window, gboolean redraw)
     ID3D11RenderTargetView_Release (window->rtv);
     window->rtv = NULL;
   }
-
-  window->pending_resize = FALSE;
 
   /* Set zero width and height here. dxgi will decide client area by itself */
   IDXGISwapChain_GetDesc (window->swap_chain, &swap_desc);
@@ -1533,12 +1531,6 @@ gst_d3d11_window_render (GstD3D11Window * window, GstBuffer * buffer,
     return GST_D3D11_WINDOW_FLOW_CLOSED;
   }
   g_mutex_unlock (&window->lock);
-
-  GST_OBJECT_LOCK (window);
-  if (window->pending_resize) {
-    gst_d3d11_window_on_resize (window, FALSE);
-  }
-  GST_OBJECT_UNLOCK (window);
 
   gst_d3d11_device_lock (window->device);
   ret = gst_d3d111_window_present (window, buffer);

@@ -111,8 +111,6 @@ struct _GstD3D11Window
 
   GstD3D11Device *device;
 
-  gboolean pending_resize;
-
   /* properties */
   gboolean force_aspect_ratio;
   gboolean enable_navigation_events;
