@@ -892,6 +892,11 @@ gst_d3d11_color_convert_transform (GstBaseTransform * trans,
           (ID3D11Resource *) self->out_texture[i], 0, NULL);
     }
     gst_d3d11_device_unlock (device);
+  } else {
+    for (i = 0; i < gst_buffer_n_memory (outbuf); i++) {
+      GstMemory *mem = gst_buffer_peek_memory (outbuf, i);
+      GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
+    }
   }
 
   return GST_FLOW_OK;
