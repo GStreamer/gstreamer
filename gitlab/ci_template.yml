@@ -1045,6 +1045,22 @@ build gst-omx zynq fedora x86_64:
     variables:
       - $CI_PROJECT_NAME =~ /^(gst-omx|gst-ci)$/
 
+build gst-omx tizonia fedora x86_64:
+  extends: 'build fedora x86_64'
+  variables:
+    MESON_ARGS: "-Domx=enabled -Dgst-omx:target=tizonia -Dpython=disabled -Dlibav=disabled -Dlibnice=disabled -Dugly=disabled -Dbad=disabled -Ddevtools=disabled -Dges=disabled -Drtsp_server=disabled -Dvaapi=disabled -Dsharp=disabled -Dgst-examples=disabled -Drs=disabled ${MESON_BUILDTYPE_ARGS} --werror"
+    PKG_CONFIG_PATH: ${PKG_CONFIG_PATH}:${CI_PROJECT_DIR}/tizonia-install/lib64/pkgconfig/
+  before_script:
+    - git clone https://github.com/tizonia/tizonia-openmax-il --branch v0.20.2
+    - cd tizonia-openmax-il
+    - meson build -Dclients=false -Dplugins='' -Dplayer=false -Dprefix=${CI_PROJECT_DIR}/tizonia-install
+    - ninja -C build
+    - ninja -C build install
+    - cd ..
+  only:
+    variables:
+      - $CI_PROJECT_NAME =~ /^(gst-omx|gst-ci)$/
+
 build rust fedora x86_64:
   extends: 'build fedora x86_64'
   variables:
