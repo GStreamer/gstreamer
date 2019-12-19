@@ -134,7 +134,7 @@ main (int argc, char *argv[])
     gst_object_unref (window);
   }
 
-  gst_vaapi_object_unref (surface);
+  gst_vaapi_surface_unref (surface);
   gst_object_unref (display);
 #endif
 
@@ -199,7 +199,7 @@ main (int argc, char *argv[])
     XDestroyWindow (dpy, win);
   }
 
-  gst_vaapi_object_unref (surface);
+  gst_vaapi_surface_unref (surface);
   gst_object_unref (display);
 #endif
 
@@ -229,7 +229,7 @@ main (int argc, char *argv[])
     gst_object_unref (window);
   }
 
-  gst_vaapi_object_unref (surface);
+  gst_vaapi_surface_unref (surface);
   gst_object_unref (display);
 #endif
 

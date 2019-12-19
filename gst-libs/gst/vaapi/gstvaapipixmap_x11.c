@@ -124,7 +124,7 @@ gst_vaapi_pixmap_x11_render (GstVaapiPixmap * pixmap, GstVaapiSurface * surface,
   VASurfaceID surface_id;
   VAStatus status;
 
-  surface_id = GST_VAAPI_OBJECT_ID (surface);
+  surface_id = GST_VAAPI_SURFACE_ID (surface);
   if (surface_id == VA_INVALID_ID)
     return FALSE;
 

@@ -789,7 +789,7 @@ allocator_configure_surface_try_specified_format (GstVaapiDisplay * display,
   rinfo = *allocation_info;
 
 out:
-  gst_vaapi_object_unref (surface);
+  gst_vaapi_surface_unref (surface);
 
   *ret_surface_info = rinfo;
   *ret_usage_flag = rflag;
@@ -820,7 +820,7 @@ allocator_configure_surface_try_other_format (GstVaapiDisplay * display,
   surface = gst_vaapi_surface_new_full (display, &sinfo, 0);
   if (!surface)
     goto error_no_surface;
-  gst_vaapi_object_unref (surface);
+  gst_vaapi_surface_unref (surface);
 
   *ret_surface_info = sinfo;
   return TRUE;
@@ -1061,7 +1061,7 @@ gst_vaapi_dmabuf_memory_new (GstAllocator * base_allocator,
 
   if (needs_surface) {
     /* The proxy has incremented the surface ref count.  */
-    gst_vaapi_object_unref (surface);
+    gst_vaapi_surface_unref (surface);
     gst_vaapi_video_meta_set_surface_proxy (meta, proxy);
     gst_vaapi_surface_proxy_unref (proxy);
   }
@@ -1113,14 +1113,14 @@ error_create_surface:
 error_create_surface_proxy:
   {
     GST_ERROR ("failed to create VA surface proxy");
-    gst_vaapi_object_unref (surface);
+    gst_vaapi_surface_unref (surface);
     return NULL;
   }
 error_create_dmabuf_proxy:
   {
     GST_ERROR ("failed to export VA surface to DMABUF");
     if (surface)
-      gst_vaapi_object_unref (surface);
+      gst_vaapi_surface_unref (surface);
     if (proxy)
       gst_vaapi_surface_proxy_unref (proxy);
     return NULL;
@@ -1189,7 +1189,7 @@ gst_vaapi_dmabuf_allocator_new (GstVaapiDisplay * display,
     goto error_no_surface;
   if (!gst_video_info_update_from_surface (&surface_info, surface))
     goto fail;
-  gst_vaapi_object_replace (&surface, NULL);
+  gst_mini_object_replace ((GstMiniObject **) & surface, NULL);
 
   gst_allocator_set_vaapi_video_info (base_allocator, &surface_info,
       surface_alloc_flags);
@@ -1201,7 +1201,7 @@ gst_vaapi_dmabuf_allocator_new (GstVaapiDisplay * display,
   /* ERRORS */
 fail:
   {
-    gst_vaapi_object_replace (&surface, NULL);
+    gst_mini_object_replace ((GstMiniObject **) & surface, NULL);
     gst_object_replace ((GstObject **) & base_allocator, NULL);
     return NULL;
   }

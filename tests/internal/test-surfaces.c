@@ -57,7 +57,7 @@ main (int argc, char *argv[])
   g_print ("created surface %" GST_VAAPI_ID_FORMAT "\n",
       GST_VAAPI_ID_ARGS (surface_id));
 
-  gst_vaapi_object_unref (surface);
+  gst_vaapi_surface_unref (surface);
 
   pool = gst_vaapi_surface_pool_new (display, GST_VIDEO_FORMAT_ENCODED,
       width, height);
@@ -74,7 +74,8 @@ main (int argc, char *argv[])
   }
 
   /* Check the pool doesn't return the last free'd surface */
-  surface = gst_vaapi_object_ref (surfaces[1]);
+  surface = (GstVaapiSurface *)
+      gst_mini_object_ref (GST_MINI_OBJECT_CAST (surfaces[1]));
 
   for (i = 0; i < 2; i++)
     gst_vaapi_video_pool_put_object (pool, surfaces[i]);
@@ -100,7 +101,7 @@ main (int argc, char *argv[])
   /* Unref in random order to check objects are correctly refcounted */
   gst_object_unref (display);
   gst_vaapi_video_pool_unref (pool);
-  gst_vaapi_object_unref (surface);
+  gst_vaapi_surface_unref (surface);
   video_output_exit ();
   return 0;
 }

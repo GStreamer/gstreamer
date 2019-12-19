@@ -386,7 +386,7 @@ gst_vaapi_enc_picture_create (GstVaapiEncPicture * picture,
   if (!picture->surface)
     return FALSE;
 
-  picture->surface_id = GST_VAAPI_OBJECT_ID (picture->surface);
+  picture->surface_id = GST_VAAPI_SURFACE_ID (picture->surface);
   if (picture->surface_id == VA_INVALID_ID)
     return FALSE;
 

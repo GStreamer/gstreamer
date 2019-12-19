@@ -178,8 +178,7 @@ gst_vaapi_texture_upload (GstVideoGLTextureUploadMeta * meta,
   GstVaapiSurfaceProxy *const proxy =
       gst_vaapi_video_meta_get_surface_proxy (vmeta);
   GstVaapiSurface *const surface = gst_vaapi_surface_proxy_get_surface (proxy);
-  GstVaapiDisplay *const dpy =
-      gst_vaapi_object_get_display (GST_VAAPI_OBJECT (surface));
+  GstVaapiDisplay *const dpy = gst_vaapi_surface_get_display (surface);
   GstVaapiTexture *texture = NULL;
 
   if (!gst_vaapi_display_has_opengl (dpy))

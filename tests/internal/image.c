@@ -360,7 +360,7 @@ image_upload (GstVaapiImage * image, GstVaapiSurface * surface)
   GstVaapiSubpicture *subpicture;
   gboolean success;
 
-  display = gst_vaapi_object_get_display (GST_VAAPI_OBJECT (surface));
+  display = gst_vaapi_surface_get_display (surface);
   if (!display)
     return FALSE;
 

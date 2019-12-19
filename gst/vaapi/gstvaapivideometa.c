@@ -107,7 +107,7 @@ set_surface_proxy (GstVaapiVideoMeta * meta, GstVaapiSurfaceProxy * proxy)
     return FALSE;
 
   meta->proxy = gst_vaapi_surface_proxy_ref (proxy);
-  set_display (meta, gst_vaapi_object_get_display (GST_VAAPI_OBJECT (surface)));
+  set_display (meta, gst_vaapi_surface_get_display (surface));
   return TRUE;
 }
 

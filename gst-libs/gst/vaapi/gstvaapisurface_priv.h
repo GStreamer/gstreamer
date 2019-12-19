@@ -23,13 +23,9 @@
 #ifndef GST_VAAPI_SURFACE_PRIV_H
 #define GST_VAAPI_SURFACE_PRIV_H
 
-#include <gst/vaapi/gstvaapicontext.h>
 #include <gst/vaapi/gstvaapisurface.h>
-#include "gstvaapiobject_priv.h"
 
 G_BEGIN_DECLS
-
-typedef struct _GstVaapiSurfaceClass            GstVaapiSurfaceClass;
 
 /**
  * GstVaapiSurface:
@@ -39,7 +35,9 @@ typedef struct _GstVaapiSurfaceClass            GstVaapiSurfaceClass;
 struct _GstVaapiSurface
 {
   /*< private >*/
-  GstVaapiObject parent_instance;
+  GstMiniObject mini_object;
+  GstVaapiDisplay *display;
+  GstVaapiID object_id;
 
   GstVaapiBufferProxy *extbuf_proxy;
   GstVideoFormat format;
@@ -50,15 +48,28 @@ struct _GstVaapiSurface
 };
 
 /**
- * GstVaapiSurfaceClass:
+ * GST_VAAPI_SURFACE_DISPLAY:
+ * @surface: a #GstVaapiSurface
  *
- * A VA surface wrapper class.
+ * Macro that evaluates to the @surface's display.
+ *
+ * This is an internal macro that does not do any run-time type check.
  */
-struct _GstVaapiSurfaceClass
-{
-  /*< private >*/
-  GstVaapiObjectClass parent_class;
-};
+#undef GST_VAAPI_SURFACE_DISPLAY
+#define GST_VAAPI_SURFACE_DISPLAY(surface) \
+  (GST_VAAPI_SURFACE (surface)->display)
+
+/**
+ * GST_VAAPI_SURFACE_ID:
+ * @surface: a #GstVaapiSurface
+ *
+ * Macro that evaluates to the @surface's ID.
+ *
+ * This is an internal macro that does not do any run-time type check.
+ */
+#undef GST_VAAPI_SURFACE_ID
+#define GST_VAAPI_SURFACE_ID(surface) \
+  (GST_VAAPI_SURFACE (surface)->object_id)
 
 /**
  * GST_VAAPI_SURFACE_CHROMA_TYPE:

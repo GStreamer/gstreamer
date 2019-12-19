@@ -1124,7 +1124,7 @@ deint_refs_set (GArray * refs, GstVaapiSurface ** surfaces, guint num_surfaces)
     return FALSE;
 
   for (i = 0; i < num_surfaces; i++)
-    g_array_append_val (refs, GST_VAAPI_OBJECT_ID (surfaces[i]));
+    g_array_append_val (refs, GST_VAAPI_SURFACE_ID (surfaces[i]));
   return TRUE;
 }
 
@@ -1617,7 +1617,7 @@ gst_vaapi_filter_process_unlocked (GstVaapiFilter * filter,
     goto error;
 
   memset (pipeline_param, 0, sizeof (*pipeline_param));
-  pipeline_param->surface = GST_VAAPI_OBJECT_ID (src_surface);
+  pipeline_param->surface = GST_VAAPI_SURFACE_ID (src_surface);
   pipeline_param->surface_region = &src_rect;
   pipeline_param->surface_color_standard = VAProcColorStandardNone;
   pipeline_param->output_region = &dst_rect;
@@ -1662,7 +1662,7 @@ gst_vaapi_filter_process_unlocked (GstVaapiFilter * filter,
   vaapi_unmap_buffer (filter->va_display, pipeline_param_buf_id, NULL);
 
   va_status = vaBeginPicture (filter->va_display, filter->va_context,
-      GST_VAAPI_OBJECT_ID (dst_surface));
+      GST_VAAPI_SURFACE_ID (dst_surface));
   if (!vaapi_check_status (va_status, "vaBeginPicture()"))
     goto error;
 

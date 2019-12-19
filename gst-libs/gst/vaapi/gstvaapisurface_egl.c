@@ -161,7 +161,7 @@ create_surface_from_egl_image (GstVaapiDisplayEGL * display,
   if (filter_status != GST_VAAPI_FILTER_STATUS_SUCCESS)
     goto error_convert_surface;
 
-  gst_vaapi_object_unref (img_surface);
+  gst_vaapi_surface_unref (img_surface);
   gst_object_unref (filter);
   return out_surface;
 
@@ -179,8 +179,8 @@ error_create_filter:
   GST_ERROR ("failed to create video processing filter");
   // fall-through
 error_cleanup:
-  gst_vaapi_object_replace (&img_surface, NULL);
-  gst_vaapi_object_replace (&out_surface, NULL);
+  gst_mini_object_replace ((GstMiniObject **) & img_surface, NULL);
+  gst_mini_object_replace ((GstMiniObject **) & out_surface, NULL);
   gst_vaapi_filter_replace (&filter, NULL);
   return NULL;
 }

@@ -147,7 +147,7 @@ context_create_surfaces (GstVaapiContext * context)
   num_surfaces = cip->ref_frames + SCRATCH_SURFACES_COUNT;
   if (!context->surfaces) {
     context->surfaces = g_ptr_array_new_full (num_surfaces,
-        (GDestroyNotify) gst_vaapi_object_unref);
+        (GDestroyNotify) gst_mini_object_unref);
     if (!context->surfaces)
       return FALSE;
   }
@@ -188,7 +188,7 @@ context_create (GstVaapiContext * context)
     GstVaapiSurface *const surface = g_ptr_array_index (context->surfaces, i);
     if (!surface)
       goto cleanup;
-    surface_id = GST_VAAPI_OBJECT_ID (surface);
+    surface_id = GST_VAAPI_SURFACE_ID (surface);
     g_array_append_val (surfaces, surface_id);
   }
   g_assert (surfaces->len == context->surfaces->len);

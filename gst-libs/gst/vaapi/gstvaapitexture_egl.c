@@ -182,7 +182,7 @@ destroy_objects (GstVaapiTextureEGL * texture)
         texture->egl_image);
     texture->egl_image = EGL_NO_IMAGE_KHR;
   }
-  gst_vaapi_object_replace (&texture->surface, NULL);
+  gst_mini_object_replace ((GstMiniObject **) & texture->surface, NULL);
   gst_vaapi_filter_replace (&texture->filter, NULL);
 }
 

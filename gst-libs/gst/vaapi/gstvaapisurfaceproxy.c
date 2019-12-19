@@ -41,7 +41,7 @@ gst_vaapi_surface_proxy_finalize (GstVaapiSurfaceProxy * proxy)
   if (proxy->surface) {
     if (proxy->pool && !proxy->parent)
       gst_vaapi_video_pool_put_object (proxy->pool, proxy->surface);
-    gst_vaapi_object_unref (proxy->surface);
+    gst_vaapi_surface_unref (proxy->surface);
     proxy->surface = NULL;
   }
   gst_vaapi_video_pool_replace (&proxy->pool, NULL);
@@ -125,7 +125,8 @@ gst_vaapi_surface_proxy_new (GstVaapiSurface * surface)
   proxy->parent = NULL;
   proxy->destroy_func = NULL;
   proxy->pool = NULL;
-  proxy->surface = gst_vaapi_object_ref (surface);
+  proxy->surface =
+      (GstVaapiSurface *) gst_mini_object_ref (GST_MINI_OBJECT_CAST (surface));
   if (!proxy->surface)
     goto error;
   gst_vaapi_surface_proxy_init_properties (proxy);
@@ -168,7 +169,7 @@ gst_vaapi_surface_proxy_new_from_pool (GstVaapiSurfacePool * pool)
   proxy->surface = gst_vaapi_video_pool_get_object (proxy->pool);
   if (!proxy->surface)
     goto error;
-  gst_vaapi_object_ref (proxy->surface);
+  gst_mini_object_ref (GST_MINI_OBJECT_CAST (proxy->surface));
   gst_vaapi_surface_proxy_init_properties (proxy);
   return proxy;
 
@@ -210,7 +211,8 @@ gst_vaapi_surface_proxy_copy (GstVaapiSurfaceProxy * proxy)
   copy->parent = gst_vaapi_surface_proxy_ref (proxy->parent ?
       proxy->parent : proxy);
   copy->pool = proxy->pool ? gst_vaapi_video_pool_ref (proxy->pool) : NULL;
-  copy->surface = gst_vaapi_object_ref (proxy->surface);
+  copy->surface = (GstVaapiSurface *)
+      gst_mini_object_ref (GST_MINI_OBJECT_CAST (proxy->surface));
   copy->view_id = proxy->view_id;
   copy->timestamp = proxy->timestamp;
   copy->duration = proxy->duration;

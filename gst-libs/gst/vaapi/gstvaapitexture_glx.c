@@ -31,6 +31,7 @@
 #include "gstvaapitexture.h"
 #include "gstvaapitexture_glx.h"
 #include "gstvaapitexture_priv.h"
+#include "gstvaapisurface_priv.h"
 #include "gstvaapicompat.h"
 #include "gstvaapiutils.h"
 #include "gstvaapiutils_glx.h"
@@ -344,7 +345,7 @@ gst_vaapi_texture_glx_put_surface_unlocked (GstVaapiTexture * base_texture,
   };
 
   status = vaPutSurface (GST_VAAPI_OBJECT_VADISPLAY (texture),
-      GST_VAAPI_OBJECT_ID (surface), texture->pixo->pixmap,
+      GST_VAAPI_SURFACE_ID (surface), texture->pixo->pixmap,
       crop_rect->x, crop_rect->y, crop_rect->width, crop_rect->height,
       0, 0, base_texture->width, base_texture->height,
       NULL, 0, from_GstVaapiSurfaceRenderFlags (flags));

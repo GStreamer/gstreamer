@@ -141,7 +141,7 @@ error_cleanup:
   if (image)
     gst_vaapi_image_unref (image);
   if (surface)
-    gst_vaapi_object_unref (surface);
+    gst_vaapi_surface_unref (surface);
   if (error_ptr)
     *error_ptr = error;
   else
@@ -441,8 +441,8 @@ main (int argc, char *argv[])
   pause ();
 
   gst_object_unref (filter);
-  gst_vaapi_object_unref (dst_surface);
-  gst_vaapi_object_unref (src_surface);
+  gst_vaapi_surface_unref (dst_surface);
+  gst_vaapi_surface_unref (src_surface);
   gst_object_unref (window);
   gst_object_unref (display);
   video_output_exit ();

@@ -284,7 +284,7 @@ gst_vaapi_window_vpp_convert_internal (GstVaapiWindow * window,
 error_process_filter:
   {
     GST_ERROR ("failed to process surface %" GST_VAAPI_ID_FORMAT " (error %d)",
-        GST_VAAPI_ID_ARGS (GST_VAAPI_OBJECT_ID (surface)), status);
+        GST_VAAPI_ID_ARGS (GST_VAAPI_SURFACE_ID (surface)), status);
     gst_vaapi_video_pool_put_object (window->surface_pool, vpp_surface);
     return NULL;
   }

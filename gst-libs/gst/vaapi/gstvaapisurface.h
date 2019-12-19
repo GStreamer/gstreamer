@@ -178,8 +178,33 @@ typedef enum
 #define GST_VAAPI_SURFACE(obj) \
     ((GstVaapiSurface *)(obj))
 
+#define GST_TYPE_VAAPI_SURFACE (gst_vaapi_surface_get_type ())
+
+#define GST_VAAPI_SURFACE_ID(surface)      (gst_vaapi_surface_get_id (surface))
+#define GST_VAAPI_SURFACE_DISPLAY(surface) (gst_vaapi_surface_get_display (surface))
+
 typedef struct _GstVaapiSurface                 GstVaapiSurface;
 typedef struct _GstVaapiSurfaceProxy            GstVaapiSurfaceProxy;
+
+GType
+gst_vaapi_surface_get_type (void) G_GNUC_CONST;
+
+/**
+ * gst_vaapi_surface_unref: (skip)
+ * @surface: (transfer full): a #GstVaapiSurface.
+ *
+ * Decreases the refcount of the surface. If the refcount reaches 0, the
+ * surface will be freed.
+ */
+static inline void gst_vaapi_surface_unref(GstVaapiSurface* surface);
+static inline void
+gst_vaapi_surface_unref (GstVaapiSurface * surface)
+{
+  gst_mini_object_unref (GST_MINI_OBJECT_CAST (surface));
+}
+
+GstVaapiDisplay *
+gst_vaapi_surface_get_display (GstVaapiSurface * surface);
 
 GstVaapiSurface *
 gst_vaapi_surface_new_from_formats (GstVaapiDisplay * display,
@@ -255,6 +280,8 @@ gst_vaapi_surface_set_buffer_proxy (GstVaapiSurface * surface,
 
 GstVaapiBufferProxy *
 gst_vaapi_surface_peek_buffer_proxy (GstVaapiSurface * surface);
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiSurface, gst_vaapi_surface_unref)
 
 G_END_DECLS
 

@@ -3833,7 +3833,7 @@ create_context_for_enc (GstVaapiEncoder * fei_encoder,
     GstVaapiSurface *const surface = g_ptr_array_index (context->surfaces, i);
     if (!surface)
       goto cleanup;
-    surface_id = GST_VAAPI_OBJECT_ID (surface);
+    surface_id = GST_VAAPI_SURFACE_ID (surface);
     g_array_append_val (surfaces, surface_id);
   }
   g_assert (surfaces->len == context->surfaces->len);

@@ -38,7 +38,7 @@ gst_vaapi_surface_get_drm_buf_handle (GstVaapiSurface * surface, guint type)
 
   /* The proxy takes ownership if the image, even creation failure. */
   proxy =
-      gst_vaapi_buffer_proxy_new_from_object (GST_VAAPI_OBJECT (surface),
+      gst_vaapi_buffer_proxy_new_from_object (GST_MINI_OBJECT_CAST (surface),
       image->internal_image.buf, type, (GDestroyNotify) gst_vaapi_image_unref,
       image);
   if (!proxy)

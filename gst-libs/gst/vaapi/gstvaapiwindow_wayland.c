@@ -28,7 +28,7 @@
 
 #include "sysdeps.h"
 #include "gstvaapicompat.h"
-#include "gstvaapiobject_priv.h"
+#include "gstvaapisurface_priv.h"
 #include "gstvaapiwindow_wayland.h"
 #include "gstvaapiwindow_priv.h"
 #include "gstvaapidisplay_wayland.h"
@@ -555,7 +555,7 @@ gst_vaapi_window_wayland_render (GstVaapiWindow * window,
     GST_VAAPI_WINDOW_LOCK_DISPLAY (window);
     va_flags = from_GstVaapiSurfaceRenderFlags (flags);
     status = vaGetSurfaceBufferWl (GST_VAAPI_DISPLAY_VADISPLAY (display),
-        GST_VAAPI_OBJECT_ID (surface),
+        GST_VAAPI_SURFACE_ID (surface),
         va_flags & (VA_TOP_FIELD | VA_BOTTOM_FIELD), &buffer);
     GST_VAAPI_WINDOW_UNLOCK_DISPLAY (window);
     if (status == VA_STATUS_ERROR_FLAG_NOT_SUPPORTED ||
@@ -583,7 +583,7 @@ gst_vaapi_window_wayland_render (GstVaapiWindow * window,
 
     GST_VAAPI_WINDOW_LOCK_DISPLAY (window);
     status = vaGetSurfaceBufferWl (GST_VAAPI_DISPLAY_VADISPLAY (display),
-        GST_VAAPI_OBJECT_ID (surface), VA_FRAME_PICTURE, &buffer);
+        GST_VAAPI_SURFACE_ID (surface), VA_FRAME_PICTURE, &buffer);
     GST_VAAPI_WINDOW_UNLOCK_DISPLAY (window);
     if (!vaapi_check_status (status, "vaGetSurfaceBufferWl()"))
       return FALSE;

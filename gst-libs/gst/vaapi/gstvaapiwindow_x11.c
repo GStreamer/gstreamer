@@ -39,7 +39,6 @@
 #include "gstvaapisurface_priv.h"
 #include "gstvaapiutils.h"
 #include "gstvaapiutils_x11.h"
-#include "gstvaapisurface_priv.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gst_debug_vaapi_window);
 #define GST_CAT_DEFAULT gst_debug_vaapi_window
@@ -449,7 +448,7 @@ gst_vaapi_window_x11_render (GstVaapiWindow * window,
       GST_VAAPI_WINDOW_X11_GET_PRIVATE (window);
   gboolean ret = FALSE;
 
-  surface_id = GST_VAAPI_OBJECT_ID (surface);
+  surface_id = GST_VAAPI_SURFACE_ID (surface);
   if (surface_id == VA_INVALID_ID)
     return FALSE;
 
@@ -476,7 +475,7 @@ conversion:
     if (G_LIKELY (vpp_surface)) {
       GstVaapiRectangle vpp_src_rect;
 
-      surface_id = GST_VAAPI_OBJECT_ID (vpp_surface);
+      surface_id = GST_VAAPI_SURFACE_ID (vpp_surface);
       vpp_src_rect.x = vpp_src_rect.y = 0;
       vpp_src_rect.width = GST_VAAPI_SURFACE_WIDTH (vpp_surface);
       vpp_src_rect.height = GST_VAAPI_SURFACE_HEIGHT (vpp_surface);
