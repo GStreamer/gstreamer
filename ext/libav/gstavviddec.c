@@ -546,7 +546,8 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
      * to one frame per thread. We thus need to calculate the thread count ourselves */
     if ((!(oclass->in_plugin->capabilities & AV_CODEC_CAP_AUTO_THREADS)) ||
         (ffmpegdec->context->thread_type & FF_THREAD_FRAME))
-      ffmpegdec->context->thread_count = gst_ffmpeg_auto_max_threads ();
+      ffmpegdec->context->thread_count =
+          MIN (gst_ffmpeg_auto_max_threads (), 16);
     else
       ffmpegdec->context->thread_count = 0;
   } else
