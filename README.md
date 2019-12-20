@@ -214,16 +214,6 @@ In your `.zshrc`, you should add something like:
 export PROMPT="$GST_ENV-$PROMPT"
 ```
 
-### Fish prompt
-
-In your `~/.config/fish/functions/fish_prompt.fish`, you should add something like this at the end of the fish_prompt function body:
-
-```
-if set -q GST_ENV
-  echo -n -s (set_color -b blue white) "(" (basename "$GST_ENV") ")" (set_color normal) " "
-end
-```
-
 ### Using powerline
 
 In your powerline theme configuration file (by default in
