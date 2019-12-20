@@ -598,6 +598,11 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
       best_config = &config_list[i];
       break;
     }
+
+    if (codec == GST_D3D11_CODEC_VP9 && config_list[i].ConfigBitstreamRaw == 1) {
+      best_config = &config_list[i];
+      break;
+    }
   }
 
   if (best_config == NULL) {

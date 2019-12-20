@@ -32,6 +32,7 @@
 #ifdef HAVE_DXVA_H
 #include "gstd3d11utils.h"
 #include "gstd3d11h264dec.h"
+#include "gstd3d11vp9dec.h"
 #endif
 
 GST_DEBUG_CATEGORY (gst_d3d11_shader_debug);
@@ -47,6 +48,7 @@ GST_DEBUG_CATEGORY (gst_d3d11_debug_layer_debug);
 
 #ifdef HAVE_DXVA_H
 GST_DEBUG_CATEGORY (gst_d3d11_h264_dec_debug);
+GST_DEBUG_CATEGORY (gst_d3d11_vp9_dec_debug);
 #endif
 
 static gboolean
@@ -87,9 +89,13 @@ plugin_init (GstPlugin * plugin)
   if (gst_d3d11_is_windows_8_or_greater ()) {
     GST_DEBUG_CATEGORY_INIT (gst_d3d11_h264_dec_debug,
         "d3d11h264dec", 0, "Direct3D11 H.264 Video Decoder");
+    GST_DEBUG_CATEGORY_INIT (gst_d3d11_vp9_dec_debug,
+        "d3d11vp9dec", 0, "Direct3D11 VP9 Video Decoder");
 
     gst_element_register (plugin,
         "d3d11h264dec", GST_RANK_SECONDARY, GST_TYPE_D3D11_H264_DEC);
+    gst_element_register (plugin,
+        "d3d11vp9dec", GST_RANK_SECONDARY, GST_TYPE_D3D11_VP9_DEC);
   }
 #endif
 

@@ -57,6 +57,7 @@ typedef enum
 {
   GST_D3D11_CODEC_NONE,
   GST_D3D11_CODEC_H264,
+  GST_D3D11_CODEC_VP9,
 
   /* the last of supported codec */
   GST_D3D11_CODEC_LAST
