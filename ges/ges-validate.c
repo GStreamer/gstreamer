@@ -806,7 +806,12 @@ _copy_element (GstValidateScenario * scenario, GstValidateAction * action)
 
   copied = ges_timeline_element_copy (element, recursive);
   pasted = ges_timeline_element_paste (copied, position);
+  /* `copied` is only used for the single paste operation, and is not
+   * actually in any timeline. We own it (it is actually still floating).
+   * `pasted` is the actual new object in the timeline. We own a
+   * reference to it. */
   gst_object_unref (timeline);
+  gst_object_unref (copied);
 
   if (!pasted) {
     GST_VALIDATE_REPORT_ACTION (scenario, action,
@@ -822,9 +827,11 @@ _copy_element (GstValidateScenario * scenario, GstValidateAction * action)
           g_quark_from_string ("scenario::execution-error"),
           "Could not set element name %s", paste_name);
 
+      gst_object_unref (pasted);
       return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
     }
   }
+  gst_object_unref (pasted);
 
   return GST_VALIDATE_EXECUTE_ACTION_OK;
 }
