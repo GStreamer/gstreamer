@@ -2779,6 +2779,7 @@ ges_timeline_paste_element (GESTimeline * timeline,
   CHECK_THREAD (timeline);
 
   element_class = GES_TIMELINE_ELEMENT_GET_CLASS (element);
+  /* steal ownership of the copied element */
   copied_from = ges_timeline_element_get_copied_from (element);
 
   if (!copied_from) {
@@ -2789,7 +2790,7 @@ ges_timeline_paste_element (GESTimeline * timeline,
 
   if (!element_class->paste) {
     GST_ERROR_OBJECT (element, "No paste vmethod implemented");
-
+    gst_object_unref (copied_from);
     return NULL;
   }
 
@@ -2800,13 +2801,15 @@ ges_timeline_paste_element (GESTimeline * timeline,
   if (layer_priority != -1) {
     GST_WARNING_OBJECT (timeline,
         "Only -1 value for layer priority is supported");
+    gst_object_unref (copied_from);
+    return NULL;
   }
 
   res = element_class->paste (element, copied_from, position);
 
-  g_clear_object (&copied_from);
+  gst_object_unref (copied_from);
 
-  return g_object_ref (res);
+  return res ? g_object_ref (res) : res;
 }
 
 /**
