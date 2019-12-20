@@ -1058,12 +1058,12 @@ GST_START_TEST (test_late_crank)
   clock_id = gst_clock_new_single_shot_id (clock, 5 * GST_SECOND);
   context.clock_id = gst_clock_id_ref (clock_id);
   context.jitter = 0;
-  worker_thread =
-      g_thread_new ("worker_thread_a",
-      test_wait_pending_single_shot_id_sync_worker, &context);
 
   /* crank the clock while the pending clock id is in the past */
   gst_test_clock_set_time (test_clock, 6 * GST_SECOND);
+  worker_thread =
+      g_thread_new ("worker_thread_a",
+      test_wait_pending_single_shot_id_sync_worker, &context);
   gst_test_clock_crank (test_clock);
 
   /* the clock should have advanced and the wait released */
