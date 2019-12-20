@@ -68,7 +68,6 @@ gst_vaapi_pad_private_reset (GstVaapiPadPrivate * priv)
   priv->caps_is_raw = FALSE;
 
   g_clear_object (&priv->other_allocator);
-  priv->can_dmabuf = FALSE;
 }
 
 void
