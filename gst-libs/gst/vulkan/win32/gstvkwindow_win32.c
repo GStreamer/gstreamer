@@ -539,10 +539,6 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       }
       default:
       {
-        /* transmit messages to the parent (ex: mouse/keyboard input) */
-        HWND parent_id = window_win32->parent_win_id;
-        if (parent_id)
-          PostMessage (parent_id, uMsg, wParam, lParam);
         ret = DefWindowProc (hWnd, uMsg, wParam, lParam);
         break;
       }
