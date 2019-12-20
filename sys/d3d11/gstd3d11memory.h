@@ -57,10 +57,12 @@ G_BEGIN_DECLS
  * GstD3D11AllocationFlags:
  * GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT: Allocate texture with resource format
  *                                                per planes instead of the direct use of DXGI format
+ * GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY: Indicates each allocated texture should be array type
  */
 typedef enum
 {
   GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT = (1 << 0),
+  GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY = (1 << 1),
 } GstD3D11AllocationFlags;
 
 /**
@@ -97,6 +99,12 @@ struct _GstD3D11AllocationParams
   gpointer _gst_reserved[GST_PADDING_LARGE];
 };
 
+typedef enum
+{
+  GST_D3D11_MEMORY_TYPE_TEXTURE = 0,
+  GST_D3D11_MEMORY_TYPE_ARRAY = 1,
+} GstD3D11MemoryType;
+
 struct _GstD3D11Memory
 {
   GstMemory mem;
@@ -116,6 +124,10 @@ struct _GstD3D11Memory
   GstVideoInfo info;
 
   guint plane;
+  GstD3D11MemoryType type;
+
+  /* > 0 if this is Array typed memory */
+  guint subresource_index;
 
   D3D11_TEXTURE2D_DESC desc;
   D3D11_MAPPED_SUBRESOURCE map;
@@ -130,6 +142,10 @@ struct _GstD3D11Allocator
   GstAllocator parent;
 
   GstD3D11Device *device;
+
+  /* parent textrure when array typed memory is used */
+  ID3D11Texture2D *texture;
+  guint8 array_in_use [D3D11_REQ_TEXTURE2D_ARRAY_AXIS_DIMENSION];
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];

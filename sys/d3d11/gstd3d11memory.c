@@ -212,7 +212,7 @@ map_cpu_access_data (GstD3D11Memory * dmem, D3D11_MAP map_type)
   gst_d3d11_device_lock (dmem->device);
   if (GST_MEMORY_FLAG_IS_SET (dmem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD)) {
     ID3D11DeviceContext_CopySubresourceRegion (device_context,
-        staging, 0, 0, 0, 0, texture, 0, NULL);
+        staging, 0, 0, 0, 0, texture, dmem->subresource_index, NULL);
   }
 
   hr = ID3D11DeviceContext_Map (device_context,
@@ -249,7 +249,7 @@ gst_d3d11_memory_map (GstMemory * mem, gsize maxsize, GstMapFlags flags)
 
       gst_d3d11_device_lock (dmem->device);
       ID3D11DeviceContext_CopySubresourceRegion (device_context,
-          (ID3D11Resource *) dmem->texture, 0, 0, 0, 0,
+          (ID3D11Resource *) dmem->texture, dmem->subresource_index, 0, 0, 0,
           (ID3D11Resource *) dmem->staging, 0, NULL);
       gst_d3d11_device_unlock (dmem->device);
     }
@@ -395,6 +395,11 @@ static void
 gst_d3d11_allocator_dispose (GObject * object)
 {
   GstD3D11Allocator *alloc = GST_D3D11_ALLOCATOR (object);
+
+  if (alloc->device && alloc->texture) {
+    gst_d3d11_device_release_texture (alloc->device, alloc->texture);
+    alloc->texture = NULL;
+  }
 
   gst_clear_object (&alloc->device);
 
@@ -636,6 +641,8 @@ gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
   gsize *size;
   gboolean is_first = FALSE;
   GstMemoryFlags memory_flags;
+  guint index_to_use = 0;
+  GstD3D11MemoryType type = GST_D3D11_MEMORY_TYPE_TEXTURE;
 
   g_return_val_if_fail (GST_IS_D3D11_ALLOCATOR (allocator), NULL);
   g_return_val_if_fail (params != NULL, NULL);
@@ -657,10 +664,38 @@ gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
   if (*size == 0)
     is_first = TRUE;
 
-  texture = gst_d3d11_device_create_texture (device, desc, NULL);
-  if (!texture) {
-    GST_ERROR_OBJECT (allocator, "Couldn't create texture");
-    goto error;
+  if ((params->flags & GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY)) {
+    gint i;
+    for (i = 0; i < desc->ArraySize; i++) {
+      if (allocator->array_in_use[i] == 0) {
+        index_to_use = i;
+        break;
+      }
+    }
+
+    if (i == desc->ArraySize) {
+      GST_ERROR_OBJECT (allocator, "All elements in array are used now");
+      goto error;
+    }
+
+    if (!allocator->texture) {
+      allocator->texture = gst_d3d11_device_create_texture (device, desc, NULL);
+      if (!allocator->texture) {
+        GST_ERROR_OBJECT (allocator, "Couldn't create texture");
+        goto error;
+      }
+    }
+
+    ID3D11Texture2D_AddRef (allocator->texture);
+    texture = allocator->texture;
+
+    type = GST_D3D11_MEMORY_TYPE_ARRAY;
+  } else {
+    texture = gst_d3d11_device_create_texture (device, desc, NULL);
+    if (!texture) {
+      GST_ERROR_OBJECT (allocator, "Couldn't create texture");
+      goto error;
+    }
   }
 
   /* per plane, allocated staging texture to calculate actual size,
@@ -713,6 +748,10 @@ gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
   mem->texture = texture;
   mem->staging = staging;
   mem->device = gst_object_ref (device);
+  mem->type = type;
+  mem->subresource_index = index_to_use;
+  if (type == GST_D3D11_MEMORY_TYPE_ARRAY)
+    allocator->array_in_use[index_to_use] = 1;
 
   if (staging)
     GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);

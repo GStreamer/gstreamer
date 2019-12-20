@@ -109,6 +109,8 @@ gst_d3d11_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   guint min_buffers, max_buffers;
   GstAllocator *allocator = NULL;
   gboolean ret = TRUE;
+  D3D11_TEXTURE2D_DESC *desc;
+  gint i;
 
   if (!gst_buffer_pool_config_get_params (config, &caps, NULL, &min_buffers,
           &max_buffers))
@@ -155,11 +157,11 @@ gst_d3d11_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   }
 #ifndef GST_DISABLE_GST_DEBUG
   {
-    D3D11_TEXTURE2D_DESC *desc;
-    gint i;
     desc = priv->d3d11_params->desc;
 
     GST_LOG_OBJECT (self, "Direct3D11 Allocation params");
+    GST_LOG_OBJECT (self, "\tD3D11AllocationFlags: 0x%x",
+        priv->d3d11_params->flags);
     for (i = 0; GST_VIDEO_MAX_PLANES; i++) {
       if (desc[i].Format == DXGI_FORMAT_UNKNOWN)
         break;
@@ -180,6 +182,26 @@ gst_d3d11_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     }
   }
 #endif
+
+  if ((priv->d3d11_params->flags & GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY)) {
+    guint max_array_size = 0;
+    desc = priv->d3d11_params->desc;
+
+    for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+      if (desc[i].Format == DXGI_FORMAT_UNKNOWN)
+        break;
+
+      if (desc[i].ArraySize > max_array_size)
+        max_array_size = desc[i].ArraySize;
+    }
+
+    if (max_buffers == 0 || max_buffers > max_array_size) {
+      GST_WARNING_OBJECT (pool,
+          "Array pool is requested but allowed pool size %d > ArraySize %d",
+          max_buffers, max_array_size);
+      max_buffers = max_array_size;
+    }
+  }
 
   gst_d3d11_buffer_pool_alloc (pool, &priv->initial_buffer, NULL);
 
