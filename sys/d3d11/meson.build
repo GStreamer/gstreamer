@@ -28,6 +28,8 @@ dxgi_headers = [
 have_d3d11 = false
 extra_c_args = ['-DCOBJMACROS']
 have_dxgi_header = false
+have_d3d11sdk_h = false
+have_dxgidebug_h = false
 extra_dep = []
 d3d11_conf = configuration_data()
 
@@ -56,10 +58,37 @@ if not have_d3d11
 endif
 
 # for enabling debug layer
-if cc.has_header('d3d11sdklayers.h')
-  d3d11_conf.set('HAVE_D3D11SDKLAYER_H', 1)
-  extra_dep += [gmodule_dep]
+if get_option('buildtype').startswith('debug')
+  d3d11_debug_libs = [
+    ['d3d11sdklayers.h', 'ID3D11Debug', 'ID3D11InfoQueue', 'have_d3d11sdk_h'],
+    ['dxgidebug.h', 'IDXGIDebug', 'IDXGIInfoQueue', 'have_dxgidebug_h'],
+  ]
+
+  foreach f : d3d11_debug_libs
+    header = f.get(0)
+    debug_obj = f.get(1)
+    info_obj = f.get(2)
+    compile_code = '''
+                   #include <d3d11.h>
+                   #include <dxgi.h>
+                   #include <@0@>
+                   int main(int arc, char ** argv) {
+                     @1@ *debug = NULL;
+                     @2@ *info_queue = NULL;
+                     return 0;
+                   }'''.format(header, debug_obj, info_obj)
+    if cc.compiles(compile_code, dependencies: [d3d11_lib, dxgi_lib], name: debug_obj)
+      set_variable(f.get(3), true)
+    endif
+  endforeach
+
+  if have_d3d11sdk_h or have_dxgidebug_h
+    extra_dep += [gmodule_dep]
+  endif
 endif
+
+d3d11_conf.set10('HAVE_D3D11SDKLAYERS_H', have_d3d11sdk_h)
+d3d11_conf.set10('HAVE_DXGIDEBUG_H', have_dxgidebug_h)
 
 configure_file(
   output: 'd3d11config.h',

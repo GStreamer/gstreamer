@@ -707,7 +707,7 @@ gst_d3d11_video_sink_upload_frame (GstD3D11VideoSink * self, GstBuffer * inbuf,
     hr = ID3D11DeviceContext_Map (device_context,
         (ID3D11Resource *) dmem->texture, 0, D3D11_MAP_WRITE_DISCARD, 0, &map);
 
-    if (!gst_d3d11_result (hr)) {
+    if (!gst_d3d11_result (hr, self->device)) {
       GST_ERROR_OBJECT (self, "Failed to map texture (0x%x)", (guint) hr);
       gst_d3d11_device_unlock (self->device);
       ret = FALSE;

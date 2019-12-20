@@ -58,63 +58,21 @@ gboolean        gst_query_is_d3d11_usage            (GstQuery * query);
 GstCaps *       gst_d3d11_caps_fixate_format        (GstCaps * caps,
                                                      GstCaps * othercaps);
 
-static void
-gst_d3d11_format_error (gint error_code, gchar ** str)
-{
-  g_return_if_fail(str);
-
-  FormatMessage (FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-    NULL, error_code,
-    MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
-    (LPTSTR)str, 0, NULL);
-};
-
-#ifndef GST_DISABLE_GST_DEBUG
-static inline gboolean
-_gst_d3d11_debug(HRESULT result, GstDebugCategory * category,
-    const gchar * file, const gchar * function, gint line)
-{
-  if (FAILED(result)) {
-    gchar *error_text = NULL;
-
-    gst_d3d11_format_error(result,&error_text);
-    gst_debug_log (category, GST_LEVEL_WARNING, file, function, line,
-        NULL, "D3D11 call failed: 0x%x, %s", (guint)result, error_text);
-    LocalFree(error_text);
-
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
+gboolean       _gst_d3d11_result                    (HRESULT hr,
+                                                     GstD3D11Device * device,
+                                                     GstDebugCategory * cat,
+                                                     const gchar * file,
+                                                     const gchar * function,
+                                                     gint line);
 /**
  * gst_d3d11_result:
  * @result: D3D11 API return code #HRESULT
+ * @device: (nullable): Associated #GstD3D11Device
  *
  * Returns: %TRUE if D3D11 API call result is SUCCESS
  */
-#define gst_d3d11_result(result) \
-    _gst_d3d11_debug(result, GST_CAT_DEFAULT, __FILE__, GST_FUNCTION, __LINE__)
-#else
-
-static inline gboolean
-_gst_d3d11_debug(HRESULT result, GstDebugCategory * category,
-    const gchar * file, const gchar * function, gint line)
-{
-  return SUCCESS(result);
-}
-
-/**
- * gst_d3d11_result:
- * @result: D3D11 API return code #HRESULT
- *
- * Returns: %TRUE if D3D11 API call result is SUCCESS
- */
-#define gst_d3d11_result(result) \
-  _gst_d3d11_debug(result, NULL, __FILE__, GST_FUNCTION, __LINE__)
-#endif
-
+#define gst_d3d11_result(result,device) \
+    _gst_d3d11_result (result, device, GST_CAT_DEFAULT, __FILE__, GST_FUNCTION, __LINE__)
 
 
 G_END_DECLS

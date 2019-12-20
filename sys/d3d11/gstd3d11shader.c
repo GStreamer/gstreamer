@@ -55,7 +55,7 @@ compile_shader (GstD3D11Device * device, const gchar * shader_source,
   hr = D3DCompile (shader_source, strlen (shader_source), NULL, NULL, NULL,
       "main", shader_target, 0, 0, &ret, &error);
 
-  if (!gst_d3d11_result (hr)) {
+  if (!gst_d3d11_result (hr, device)) {
     const gchar *err = NULL;
 
     if (error)
@@ -99,7 +99,7 @@ gst_d3d11_create_pixel_shader (GstD3D11Device * device,
       (gpointer) ID3D10Blob_GetBufferPointer (ps_blob),
       ID3D10Blob_GetBufferSize (ps_blob), NULL, shader);
 
-  if (!gst_d3d11_result (hr)) {
+  if (!gst_d3d11_result (hr, device)) {
     GST_ERROR ("could not create pixel shader, hr: 0x%x", (guint) hr);
     gst_d3d11_device_unlock (device);
     return FALSE;
@@ -143,7 +143,7 @@ gst_d3d11_create_vertex_shader (GstD3D11Device * device, const gchar * source,
       (gpointer) ID3D10Blob_GetBufferPointer (vs_blob),
       ID3D10Blob_GetBufferSize (vs_blob), NULL, &vshader);
 
-  if (!gst_d3d11_result (hr)) {
+  if (!gst_d3d11_result (hr, device)) {
     GST_ERROR ("could not create vertex shader, hr: 0x%x", (guint) hr);
     ID3D10Blob_Release (vs_blob);
     goto done;
@@ -153,7 +153,7 @@ gst_d3d11_create_vertex_shader (GstD3D11Device * device, const gchar * source,
       desc_len, (gpointer) ID3D10Blob_GetBufferPointer (vs_blob),
       ID3D10Blob_GetBufferSize (vs_blob), &in_layout);
 
-  if (!gst_d3d11_result (hr)) {
+  if (!gst_d3d11_result (hr, device)) {
     GST_ERROR ("could not create input layout shader, hr: 0x%x", (guint) hr);
     ID3D10Blob_Release (vs_blob);
     ID3D11VertexShader_Release (vshader);

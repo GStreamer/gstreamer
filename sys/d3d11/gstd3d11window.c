@@ -592,14 +592,14 @@ gst_d3d11_window_on_resize (GstD3D11Window * window, gboolean redraw)
   IDXGISwapChain_GetDesc (window->swap_chain, &swap_desc);
   hr = IDXGISwapChain_ResizeBuffers (window->swap_chain,
       0, 0, 0, DXGI_FORMAT_UNKNOWN, swap_desc.Flags);
-  if (!gst_d3d11_result (hr)) {
+  if (!gst_d3d11_result (hr, window->device)) {
     GST_ERROR_OBJECT (window, "Couldn't resize buffers, hr: 0x%x", (guint) hr);
     goto done;
   }
 
   hr = IDXGISwapChain_GetBuffer (window->swap_chain,
       0, &IID_ID3D11Texture2D, (void **) &backbuffer);
-  if (!gst_d3d11_result (hr)) {
+  if (!gst_d3d11_result (hr, window->device)) {
     GST_ERROR_OBJECT (window,
         "Cannot get backbuffer from swapchain, hr: 0x%x", (guint) hr);
     goto done;
@@ -643,7 +643,7 @@ gst_d3d11_window_on_resize (GstD3D11Window * window, gboolean redraw)
 
   hr = ID3D11Device_CreateRenderTargetView (d3d11_dev,
       (ID3D11Resource *) backbuffer, NULL, &window->rtv);
-  if (!gst_d3d11_result (hr)) {
+  if (!gst_d3d11_result (hr, window->device)) {
     GST_ERROR_OBJECT (window, "Cannot create render target view, hr: 0x%x",
         (guint) hr);
 
@@ -1096,7 +1096,7 @@ gst_d3d11_window_disable_alt_enter (GstD3D11Window * window,
 
   hr = IDXGISwapChain_GetParent (swap_chain, &IID_IDXGIFactory1,
       (void **) &factory);
-  if (!gst_d3d11_result (hr) || !factory) {
+  if (!gst_d3d11_result (hr, window->device) || !factory) {
     GST_WARNING_OBJECT (window,
         "Cannot get parent dxgi factory for swapchain %p, hr: 0x%x",
         swap_chain, (guint) hr);
@@ -1105,7 +1105,7 @@ gst_d3d11_window_disable_alt_enter (GstD3D11Window * window,
 
   hr = IDXGIFactory1_MakeWindowAssociation (factory,
       hwnd, DXGI_MWA_NO_ALT_ENTER);
-  if (!gst_d3d11_result (hr)) {
+  if (!gst_d3d11_result (hr, window->device)) {
     GST_WARNING_OBJECT (window,
         "MakeWindowAssociation failure, hr: 0x%x", (guint) hr);
   }
@@ -1337,7 +1337,7 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
       hr = IDXGISwapChain4_SetColorSpace1 ((IDXGISwapChain4 *)
           window->swap_chain, (DXGI_COLOR_SPACE_TYPE) ctype);
 
-      if (!gst_d3d11_result (hr)) {
+      if (!gst_d3d11_result (hr, window->device)) {
         GST_WARNING_OBJECT (window, "Failed to set colorspace %d, hr: 0x%x",
             ctype, (guint) hr);
       } else {
@@ -1355,7 +1355,7 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
         hr = IDXGISwapChain4_SetHDRMetaData ((IDXGISwapChain4 *)
             window->swap_chain, DXGI_HDR_METADATA_TYPE_HDR10,
             sizeof (DXGI_HDR_METADATA_HDR10), &metadata);
-        if (!gst_d3d11_result (hr)) {
+        if (!gst_d3d11_result (hr, window->device)) {
           GST_WARNING_OBJECT (window, "Couldn't set HDR metadata, hr 0x%x",
               (guint) hr);
         }
@@ -1495,7 +1495,7 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer)
 
     hr = IDXGISwapChain_Present (self->swap_chain, 0, present_flags);
 
-    if (!gst_d3d11_result (hr)) {
+    if (!gst_d3d11_result (hr, self->device)) {
       GST_WARNING_OBJECT (self, "Direct3D cannot present texture, hr: 0x%x",
           (guint) hr);
     }

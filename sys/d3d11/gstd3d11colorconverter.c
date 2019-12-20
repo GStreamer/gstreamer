@@ -567,7 +567,7 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Device * device,
   sampler_desc.MaxLOD = D3D11_FLOAT32_MAX;
 
   hr = ID3D11Device_CreateSamplerState (device_handle, &sampler_desc, &sampler);
-  if (!gst_d3d11_result (hr)) {
+  if (!gst_d3d11_result (hr, device)) {
     GST_ERROR ("Couldn't create sampler state, hr: 0x%x", (guint) hr);
     data->ret = FALSE;
     goto clear;
@@ -604,7 +604,7 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Device * device,
     hr = ID3D11Device_CreateBuffer (device_handle, &const_buffer_desc, NULL,
         &const_buffer);
 
-    if (!gst_d3d11_result (hr)) {
+    if (!gst_d3d11_result (hr, device)) {
       GST_ERROR ("Couldn't create constant buffer, hr: 0x%x", (guint) hr);
       data->ret = FALSE;
       goto clear;
@@ -614,7 +614,7 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Device * device,
     hr = ID3D11DeviceContext_Map (context_handle,
         (ID3D11Resource *) const_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &map);
 
-    if (!gst_d3d11_result (hr)) {
+    if (!gst_d3d11_result (hr, device)) {
       GST_ERROR ("Couldn't map constant buffer, hr: 0x%x", (guint) hr);
       data->ret = FALSE;
       gst_d3d11_device_unlock (device);
@@ -661,7 +661,7 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Device * device,
   hr = ID3D11Device_CreateBuffer (device_handle, &buffer_desc, NULL,
       &vertex_buffer);
 
-  if (!gst_d3d11_result (hr)) {
+  if (!gst_d3d11_result (hr, device)) {
     GST_ERROR ("Couldn't create vertex buffer, hr: 0x%x", (guint) hr);
     data->ret = FALSE;
     goto clear;
@@ -675,7 +675,7 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Device * device,
   hr = ID3D11Device_CreateBuffer (device_handle, &buffer_desc, NULL,
       &index_buffer);
 
-  if (!gst_d3d11_result (hr)) {
+  if (!gst_d3d11_result (hr, device)) {
     GST_ERROR ("Couldn't create index buffer, hr: 0x%x", (guint) hr);
     data->ret = FALSE;
     goto clear;
@@ -685,7 +685,7 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Device * device,
   hr = ID3D11DeviceContext_Map (context_handle,
       (ID3D11Resource *) vertex_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &map);
 
-  if (!gst_d3d11_result (hr)) {
+  if (!gst_d3d11_result (hr, device)) {
     GST_ERROR ("Couldn't map vertex buffer, hr: 0x%x", (guint) hr);
     data->ret = FALSE;
     gst_d3d11_device_unlock (device);
@@ -697,7 +697,7 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Device * device,
   hr = ID3D11DeviceContext_Map (context_handle,
       (ID3D11Resource *) index_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &map);
 
-  if (!gst_d3d11_result (hr)) {
+  if (!gst_d3d11_result (hr, device)) {
     GST_ERROR ("Couldn't map index buffer, hr: 0x%x", (guint) hr);
     ID3D11DeviceContext_Unmap (context_handle,
         (ID3D11Resource *) vertex_buffer, 0);

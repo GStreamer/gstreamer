@@ -21,6 +21,8 @@
 #include "config.h"
 #endif
 
+#include "d3d11config.h"
+
 #include "gstd3d11utils.h"
 #include "gstd3d11device.h"
 
@@ -617,4 +619,57 @@ gst_d3d11_caps_fixate_format (GstCaps * caps, GstCaps * othercaps)
         GST_VIDEO_FORMAT_INFO_NAME (out_info), NULL);
 
   return result;
+}
+
+static gchar *
+gst_d3d11_hres_to_string (HRESULT hr)
+{
+  DWORD flags;
+  gchar *ret_text;
+  LPTSTR error_text = NULL;
+
+  flags = FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER
+      | FORMAT_MESSAGE_IGNORE_INSERTS;
+  FormatMessage (flags, NULL, hr, MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
+      (LPTSTR) & error_text, 0, NULL);
+
+#ifdef UNICODE
+  /* If UNICODE is defined, LPTSTR is LPWSTR which is UTF-16 */
+  ret_text = g_utf16_to_utf8 (error_text, 0, NULL, NULL, NULL);
+#else
+  ret_text = g_strdup (error_text);
+#endif
+
+  LocalFree (error_text);
+  return ret_text;
+}
+
+gboolean
+_gst_d3d11_result (HRESULT hr, GstD3D11Device * device, GstDebugCategory * cat,
+    const gchar * file, const gchar * function, gint line)
+{
+#ifndef GST_DISABLE_GST_DEBUG
+  gboolean ret = TRUE;
+
+  if (FAILED (hr)) {
+    gchar *error_text = NULL;
+
+    error_text = gst_d3d11_hres_to_string (hr);
+    gst_debug_log (cat, GST_LEVEL_WARNING, file, function, line,
+        NULL, "D3D11 call failed: 0x%x, %s", (guint) hr, error_text);
+    g_free (error_text);
+
+    ret = FALSE;
+  }
+#if (HAVE_D3D11SDKLAYERS_H || HAVE_DXGIDEBUG_H)
+  if (device) {
+    gst_d3d11_device_d3d11_debug (device, file, function, line);
+    gst_d3d11_device_dxgi_debug (device, file, function, line);
+  }
+#endif
+
+  return ret;
+#else
+  return SUCCEEDED (hr);
+#endif
 }

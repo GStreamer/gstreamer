@@ -342,7 +342,7 @@ upload_transform_dynamic (GstD3D11BaseFilter * filter,
     hr = ID3D11DeviceContext_Map (device_context,
         (ID3D11Resource *) dmem->texture, 0, D3D11_MAP_WRITE_DISCARD, 0, &map);
 
-    if (!gst_d3d11_result (hr)) {
+    if (!gst_d3d11_result (hr, device)) {
       GST_ERROR_OBJECT (filter,
           "Failed to map staging texture (0x%x)", (guint) hr);
       gst_d3d11_device_unlock (device);

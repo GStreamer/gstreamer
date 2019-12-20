@@ -21,6 +21,8 @@
 #include "config.h"
 #endif
 
+#include "d3d11config.h"
+
 #include <gst/gst.h>
 #include "gstd3d11videosink.h"
 #include "gstd3d11upload.h"
@@ -33,6 +35,10 @@ GST_DEBUG_CATEGORY (gst_d3d11_colorconverter_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_utils_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_format_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_device_debug);
+
+#if (HAVE_D3D11SDKLAYERS_H || HAVE_DXGIDEBUG_H)
+GST_DEBUG_CATEGORY (gst_d3d11_debug_layer_debug);
+#endif
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -47,6 +53,11 @@ plugin_init (GstPlugin * plugin)
       "d3d11format", 0, "d3d11 specific formats");
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_device_debug,
       "d3d11device", 0, "d3d11 device object");
+#if (HAVE_D3D11SDKLAYERS_H || HAVE_DXGIDEBUG_H)
+  /* NOTE: enabled only for debug build */
+  GST_DEBUG_CATEGORY_INIT (gst_d3d11_debug_layer_debug,
+      "d3d11debuglayer", 0, "native d3d11 and dxgi debug");
+#endif
 
   gst_element_register (plugin,
       "d3d11upload", GST_RANK_NONE, GST_TYPE_D3D11_UPLOAD);
