@@ -76,6 +76,8 @@ struct _GstVaapiFormatInfo
 #define DEFAULT_RENDER_MODE     GST_VAAPI_RENDER_MODE_TEXTURE
 #define DEFAULT_ROTATION        GST_VAAPI_ROTATION_0
 
+#define ENTRY_POINT_FLAG(entry) (1U << G_PASTE(GST_VAAPI_ENTRYPOINT_, entry))
+
 enum
 {
   PROP_RENDER_MODE = 1,
@@ -260,8 +262,8 @@ compare_rgb_formats (gconstpointer a, gconstpointer b)
 
 /* Check if configs array contains profile at entrypoint */
 static inline gboolean
-find_config (GPtrArray * configs,
-    GstVaapiProfile profile, GstVaapiEntrypoint entrypoint)
+find_config (GPtrArray * configs, GstVaapiProfile profile,
+    GstVaapiEntrypoint entrypoint)
 {
   GstVaapiProfileConfig *config;
   guint i;
@@ -271,7 +273,8 @@ find_config (GPtrArray * configs,
 
   for (i = 0; i < configs->len; i++) {
     config = g_ptr_array_index (configs, i);
-    if (config->profile == profile && (config->entrypoints & (1 << entrypoint)))
+    if (config->profile == profile
+        && (config->entrypoints & (1U << entrypoint)))
       return TRUE;
   }
   return FALSE;
@@ -303,6 +306,7 @@ append_h263_config (GArray * configs, GPtrArray * decoders)
   if (mpeg4_simple_config && !h263_baseline_config) {
     tmp_config = *mpeg4_simple_config;
     tmp_config.profile = GST_VAAPI_PROFILE_H263_BASELINE;
+    tmp_config.entrypoints = ENTRY_POINT_FLAG (VLD);
     g_array_append_val (configs, tmp_config);
     g_ptr_array_add (decoders, &g_array_index (configs,
             GstVaapiProfileConfig, configs->len - 1));
@@ -506,8 +510,7 @@ ensure_profiles (GstVaapiDisplay * display)
   }
 
   for (i = 0; i < n; i++) {
-    GstVaapiProfileConfig config;
-    memset (&config, 0, sizeof (GstVaapiProfileConfig));
+    GstVaapiProfileConfig config = { 0, };
 
     config.profile = gst_vaapi_profile (profiles[i]);
     if (!config.profile)
@@ -519,23 +522,25 @@ ensure_profiles (GstVaapiDisplay * display)
       continue;
 
     for (j = 0; j < num_entrypoints; j++)
-      config.entrypoints |= (1 << gst_vaapi_entrypoint (entrypoints[j]));
+      config.entrypoints |= (1U << gst_vaapi_entrypoint (entrypoints[j]));
 
-    g_array_append_val (priv->codecs, config);
+    priv->codecs = g_array_append_val (priv->codecs, config);
   }
 
   for (i = 0; i < priv->codecs->len; i++) {
-    GstVaapiProfileConfig *codec =
-        &g_array_index (priv->codecs, GstVaapiProfileConfig, i);
-    if ((codec->entrypoints & 1 << GST_VAAPI_ENTRYPOINT_VLD)
-        || (codec->entrypoints & 1 << GST_VAAPI_ENTRYPOINT_IDCT)
-        || (codec->entrypoints & 1 << GST_VAAPI_ENTRYPOINT_MOCO))
-      g_ptr_array_add (priv->decoders, codec);
-    if ((codec->entrypoints & 1 << GST_VAAPI_ENTRYPOINT_SLICE_ENCODE)
-        || (codec->entrypoints & 1 << GST_VAAPI_ENTRYPOINT_PICTURE_ENCODE)
-        || (codec->entrypoints & 1 << GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_LP)
-        || (codec->entrypoints & 1 << GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_FEI))
-      g_ptr_array_add (priv->encoders, codec);
+    GstVaapiProfileConfig *cfg;
+
+    cfg = &g_array_index (priv->codecs, GstVaapiProfileConfig, i);
+
+    if ((cfg->entrypoints & ENTRY_POINT_FLAG (VLD))
+        || (cfg->entrypoints & ENTRY_POINT_FLAG (IDCT))
+        || (cfg->entrypoints & ENTRY_POINT_FLAG (MOCO)))
+      g_ptr_array_add (priv->decoders, cfg);
+    if ((cfg->entrypoints & ENTRY_POINT_FLAG (SLICE_ENCODE))
+        || (cfg->entrypoints & ENTRY_POINT_FLAG (PICTURE_ENCODE))
+        || (cfg->entrypoints & ENTRY_POINT_FLAG (SLICE_ENCODE_LP))
+        || (cfg->entrypoints & ENTRY_POINT_FLAG (SLICE_ENCODE_FEI)))
+      g_ptr_array_add (priv->encoders, cfg);
   }
 
   append_h263_config (priv->codecs, priv->decoders);
