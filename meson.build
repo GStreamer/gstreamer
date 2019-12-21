@@ -17,7 +17,7 @@ endif
 
 glib_req = '>= 2.44.0'
 gst_req = '>= @0@.@1@.0'.format(gst_version_major, gst_version_minor)
-tizil_req = '>= 0.1.0'
+tizil_req = '>= 0.19.0'
 api_version = '1.0'
 
 plugins_install_dir = '@0@/gstreamer-1.0'.format(get_option('libdir'))
@@ -207,11 +207,15 @@ elif omx_target == 'zynqultrascaleplus'
     error ('Need Allegro OMX headers to build for Zynq UltraScale+. Use -Dheader_path option to specify the path of those headers.')
   endif
 elif omx_target == 'tizonia'
+  if omx_header_path != ''
+    warning('Ignoring -Dheader_path because path is in tizilheaders.pc')
+  endif
   cdata.set('USE_OMX_TARGET_TIZONIA', 1)
   tizil_dep = dependency('tizilheaders', version : tizil_req)
   cdata.set('TIZONIA_LIBDIR', tizil_dep.get_pkgconfig_variable('libdir'))
   tizil_includedir = tizil_dep.get_pkgconfig_variable('includedir')
   gst_omx_args += ['-I' + tizil_includedir + '/tizonia']
+  omx_inc = []
 else
   error ('Unsupported omx target specified. Use the -Dtarget option')
 endif
