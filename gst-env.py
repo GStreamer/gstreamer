@@ -329,7 +329,7 @@ def get_subprocess_env(options, gst_version):
         prepend_env_var(env, 'PYTHONPATH', mesonpath, options.sysroot)
 
     # For devhelp books
-    if not 'XDG_DATA_DIRS' in env or not env['XDG_DATA_DIRS']:
+    if 'XDG_DATA_DIRS' not in env or not env['XDG_DATA_DIRS']:
         # Preserve default paths when empty
         prepend_env_var(env, 'XDG_DATA_DIRS', '/usr/local/share/:/usr/share/', '')
 
@@ -338,6 +338,13 @@ def get_subprocess_env(options, gst_version):
                                                         'gst-docs',
                                                         'GStreamer-doc'),
                      options.sysroot)
+
+    if 'XDG_CONFIG_DIRS' not in env or not env['XDG_CONFIG_DIRS']:
+        # Preserve default paths when empty
+        prepend_env_var(env, 'XDG_CONFIG_DIRS', '/etc/local/xdg:/etc/xdg', '')
+
+    prepend_env_var(env, "XDG_CONFIG_DIRS", os.path.join(PREFIX_DIR, 'etc', 'xdg'),
+                    options.sysroot)
 
     return env
 
