@@ -225,7 +225,7 @@ print_factory_details_info (GstElementFactory * factory)
 {
   gchar **keys, **k;
   GstRank rank;
-  char s[20];
+  char s[40];
 
   rank = gst_plugin_feature_get_rank (GST_PLUGIN_FEATURE (factory));
   n_print ("%sFactory Details:%s\n", HEADING_COLOR, RESET_COLOR);
@@ -1610,7 +1610,7 @@ print_typefind_info (GstPluginFeature * feature, gboolean print_names)
   GstPlugin *plugin;
   GstCaps *caps;
   GstRank rank;
-  char s[20];
+  char s[40];
   const gchar *const *extensions;
 
   factory = GST_TYPE_FIND_FACTORY (gst_plugin_feature_load (feature));
