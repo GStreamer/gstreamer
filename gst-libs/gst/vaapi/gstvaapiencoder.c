@@ -1345,7 +1345,8 @@ gst_vaapi_encoder_finalize (GObject * object)
 {
   GstVaapiEncoder *encoder = GST_VAAPI_ENCODER (object);
 
-  gst_vaapi_context_unref (encoder->context);
+  if (encoder->context)
+    gst_vaapi_context_unref (encoder->context);
   encoder->context = NULL;
   gst_vaapi_display_replace (&encoder->display, NULL);
   encoder->va_display = NULL;
