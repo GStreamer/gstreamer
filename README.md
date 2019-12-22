@@ -189,15 +189,6 @@ then
   PS1+="[ ${GST_ENV} ]"
 fi
 ...
-
-```
-
-### Zsh prompt
-
-In your `.zshrc`, you should add something like:
-
-```
-export PROMPT="$GST_ENV-$PROMPT"
 ```
 
 ### Using powerline
