@@ -384,6 +384,7 @@ if __name__ == "__main__":
     if options.wine:
         gst_version += '-' + os.path.basename(options.wine)
 
+    env = get_subprocess_env(options, gst_version)
     if not args:
         if os.name == 'nt':
             shell = get_windows_shell()
@@ -398,6 +399,7 @@ if __name__ == "__main__":
         else:
             args = [os.environ.get("SHELL", os.path.realpath("/bin/sh"))]
         if args[0].endswith('bash') and not strtobool(os.environ.get("GST_BUILD_DISABLE_PS1_OVERRIDE", r"FALSE")):
+            # Let the GC remove the tmp file
             tmprc = tempfile.NamedTemporaryFile(mode='w')
             bashrc = os.path.expanduser('~/.bashrc')
             if os.path.exists(bashrc):
@@ -405,10 +407,9 @@ if __name__ == "__main__":
                     shutil.copyfileobj(src, tmprc)
             tmprc.write('\nexport PS1="[gst-%s] $PS1"' % gst_version)
             tmprc.flush()
-            # Let the GC remove the tmp file
             args.append("--rcfile")
             args.append(tmprc.name)
-        if args[0].endswith('fish'):
+        elif args[0].endswith('fish'):
             # Ignore SIGINT while using fish as the shell to make it behave
             # like other shells such as bash and zsh.
             # See: https://gitlab.freedesktop.org/gstreamer/gst-build/issues/18
@@ -420,8 +421,18 @@ if __name__ == "__main__":
                 echo -n '[gst-{}] '(original_fish_prompt)
             end'''.format(gst_version)
             args.append(prompt_cmd)
+        elif args[0].endswith('zsh'):
+            tmpdir = tempfile.TemporaryDirectory()
+            # Let the GC remove the tmp file
+            tmprc = open(os.path.join(tmpdir.name, '.zshrc'), 'w')
+            zshrc = os.path.expanduser('~/.zshrc')
+            if os.path.exists(zshrc):
+                with open(zshrc, 'r') as src:
+                    shutil.copyfileobj(src, tmprc)
+            tmprc.write('\nexport PROMPT="[gst-{}] $PROMPT"'.format(gst_version))
+            tmprc.flush()
+            env['ZDOTDIR'] = tmpdir.name
     try:
-        exit(subprocess.call(args, close_fds=False,
-                             env=get_subprocess_env(options, gst_version)))
+        exit(subprocess.call(args, close_fds=False, env=env))
     except subprocess.CalledProcessError as e:
         exit(e.returncode)
