@@ -441,6 +441,9 @@ ensure_allowed_sinkpad_caps (GstVaapiEncode * encode)
   ret = TRUE;
 
 bail:
+  if (!encode->allowed_sinkpad_caps)
+    encode->allowed_sinkpad_caps = gst_caps_new_empty ();
+
   if (out_caps)
     gst_caps_unref (out_caps);
   if (raw_caps)
