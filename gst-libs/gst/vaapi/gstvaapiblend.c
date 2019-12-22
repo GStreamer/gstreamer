@@ -234,7 +234,7 @@ gst_vaapi_blend_process_begin (GstVaapiBlend * blend, GstVaapiSurface * surface)
   GST_VAAPI_DISPLAY_LOCK (blend->display);
 
   va_status = vaBeginPicture (GST_VAAPI_DISPLAY_VADISPLAY (blend->display),
-      blend->va_context, GST_VAAPI_OBJECT_ID (surface));
+      blend->va_context, GST_VAAPI_SURFACE_ID (surface));
 
   if (!vaapi_check_status (va_status, "vaBeginPicture()")) {
     GST_VAAPI_DISPLAY_UNLOCK (blend->display);
@@ -314,7 +314,7 @@ gst_vaapi_blend_process_render (GstVaapiBlend * blend,
 
   memset (param, 0, sizeof (*param));
 
-  param->surface = GST_VAAPI_OBJECT_ID (surface);
+  param->surface = GST_VAAPI_SURFACE_ID (surface);
   param->surface_region = &src_rect;
   param->output_region = &dst_rect;
   param->output_background_color = 0xff000000;
