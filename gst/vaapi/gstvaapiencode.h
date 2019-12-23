@@ -81,7 +81,9 @@ struct _GstVaapiEncodeClass
   GstFlowReturn       (*alloc_buffer)   (GstVaapiEncode * encode,
                                          GstVaapiCodedBuffer * coded_buf,
                                          GstBuffer ** outbuf_ptr);
-  GstVaapiProfile     (*get_profile)    (GstCaps * caps);
+  /* Get all possible profiles based on allowed caps */
+  GArray *            (*get_allowed_profiles)  (GstVaapiEncode * encode,
+                                                GstCaps * allowed);
 
 #if USE_H264_FEI_ENCODER
 

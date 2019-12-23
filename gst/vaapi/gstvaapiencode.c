@@ -340,30 +340,29 @@ gst_vaapiencode_buffer_loop (GstVaapiEncode * encode)
   gst_pad_pause_task (GST_VAAPI_PLUGIN_BASE_SRC_PAD (encode));
 }
 
-static GstVaapiProfile
-get_profile (GstVaapiEncode * encode)
+static GArray *
+get_profiles (GstVaapiEncode * encode)
 {
   GstVaapiEncodeClass *klass = GST_VAAPIENCODE_GET_CLASS (encode);
+  GArray *profiles = NULL;
 
-  if (klass->get_profile) {
-    GstVaapiProfile profile = GST_VAAPI_PROFILE_UNKNOWN;
+  if (klass->get_allowed_profiles) {
     GstCaps *allowed =
         gst_pad_get_allowed_caps (GST_VAAPI_PLUGIN_BASE_SRC_PAD (encode));
+    GST_LOG_OBJECT (encode,
+        "Get allowed sink caps from downstream %" GST_PTR_FORMAT, allowed);
+    if (allowed && !gst_caps_is_empty (allowed) && !gst_caps_is_any (allowed))
+      profiles = klass->get_allowed_profiles (encode, allowed);
 
-    if (allowed) {
-      if (!gst_caps_is_empty (allowed) && !gst_caps_is_any (allowed))
-        profile = klass->get_profile (allowed);
+    if (allowed)
       gst_caps_unref (allowed);
-    }
 
-    if (profile != GST_VAAPI_PROFILE_UNKNOWN)
-      return profile;
+    if (profiles)
+      return profiles;
   }
 
-  if (encode->encoder)
-    return gst_vaapi_encoder_get_profile (encode->encoder);
-
-  return GST_VAAPI_PROFILE_UNKNOWN;
+  profiles = gst_vaapi_encoder_get_available_profiles (encode->encoder);
+  return profiles;
 }
 
 static gboolean
@@ -374,7 +373,7 @@ ensure_allowed_sinkpad_caps (GstVaapiEncode * encode)
   GstCaps *va_caps, *dma_caps;
   GArray *formats = NULL;
   gboolean ret = FALSE;
-  GstVaapiProfile profile;
+  GArray *profiles = NULL;
   guint i, size;
   GstStructure *structure;
   gint min_width, min_height, max_width, max_height;
@@ -384,11 +383,14 @@ ensure_allowed_sinkpad_caps (GstVaapiEncode * encode)
   if (!encode->encoder)
     return TRUE;
 
-  profile = get_profile (encode);
+  /* First, get all possible profiles. */
+  profiles = get_profiles (encode);
+  if (profiles == NULL)
+    goto failed_get_profiles;
 
-  /* First get all supported formats, all these formats should be recognized
+  /* Then get all supported formats, all these formats should be recognized
      in video-format map. */
-  formats = gst_vaapi_encoder_get_surface_attributes (encode->encoder, profile,
+  formats = gst_vaapi_encoder_get_surface_attributes (encode->encoder, profiles,
       &min_width, &min_height, &max_width, &max_height);
   if (!formats)
     goto failed_get_attributes;
@@ -431,6 +433,8 @@ bail:
   if (!encode->allowed_sinkpad_caps)
     encode->allowed_sinkpad_caps = gst_caps_new_empty ();
 
+  if (profiles)
+    g_array_unref (profiles);
   if (out_caps)
     gst_caps_unref (out_caps);
   if (raw_caps)
@@ -447,6 +451,11 @@ failed_get_attributes:
 failed_create_raw_caps:
   {
     GST_WARNING_OBJECT (encode, "failed to create raw sink caps");
+    goto bail;
+  }
+failed_get_profiles:
+  {
+    GST_WARNING_OBJECT (encode, "failed to get supported profiles");
     goto bail;
   }
 }
