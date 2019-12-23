@@ -1,6 +1,8 @@
 FROM registry.fedoraproject.org/fedora:30
 
-ENV PATH=/usr/local/cargo/bin:$PATH
+ENV RUSTUP_HOME=/usr/local/rustup \
+    CARGO_HOME=/usr/local/cargo \
+    PATH=/usr/local/cargo/bin:$PATH
 
 COPY prepare.sh cleanup.sh /root/
 
