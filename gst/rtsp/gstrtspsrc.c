@@ -2224,7 +2224,7 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx,
     gint n_streams)
 {
   GstRTSPStream *stream;
-  const gchar *control_url;
+  const gchar *control_path;
   const GstSDPMedia *media;
 
   /* get media, should not return NULL */
@@ -2276,51 +2276,64 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx,
   /* get control url to construct the setup url. The setup url is used to
    * configure the transport of the stream and is used to identity the stream in
    * the RTP-Info header field returned from PLAY. */
-  control_url = gst_sdp_media_get_attribute_val (media, "control");
-  if (control_url == NULL)
-    control_url = gst_sdp_message_get_attribute_val_n (sdp, "control", 0);
+  control_path = gst_sdp_media_get_attribute_val (media, "control");
+  if (control_path == NULL)
+    control_path = gst_sdp_message_get_attribute_val_n (sdp, "control", 0);
 
   GST_DEBUG_OBJECT (src, "stream %d, (%p)", stream->id, stream);
   GST_DEBUG_OBJECT (src, " port: %d", stream->port);
   GST_DEBUG_OBJECT (src, " container: %d", stream->container);
-  GST_DEBUG_OBJECT (src, " control: %s", GST_STR_NULL (control_url));
+  GST_DEBUG_OBJECT (src, " control: %s", GST_STR_NULL (control_path));
 
-  /* RFC 2326, C.3: missing control_url permitted in case of a single stream */
-  if (control_url == NULL && n_streams == 1) {
-    control_url = "";
+  /* RFC 2326, C.3: missing control_path permitted in case of a single stream */
+  if (control_path == NULL && n_streams == 1) {
+    control_path = "";
   }
 
-  if (control_url != NULL) {
-    stream->control_url = g_strdup (control_url);
+  if (control_path != NULL) {
+    stream->control_url = g_strdup (control_path);
     /* Build a fully qualified url using the content_base if any or by prefixing
      * the original request.
-     * If the control_url starts with a '/' or a non rtsp: protocol we will most
+     * If the control_path starts with a non rtsp: protocol we will most
      * likely build a URL that the server will fail to understand, this is ok,
      * we will fail then. */
-    if (g_str_has_prefix (control_url, "rtsp://"))
-      stream->conninfo.location = g_strdup (control_url);
+    if (g_str_has_prefix (control_path, "rtsp://"))
+      stream->conninfo.location = g_strdup (control_path);
     else {
-      if (g_strcmp0 (control_url, "*") == 0)
-        control_url = "";
+      if (g_strcmp0 (control_path, "*") == 0)
+        control_path = "";
       /* handle url with query */
       if (src->conninfo.url && src->conninfo.url->query) {
         stream->conninfo.location =
             gst_rtsp_url_get_request_uri_with_control (src->conninfo.url,
-            control_url);
+            control_path);
       } else {
         const gchar *base;
         gboolean has_slash;
+        const gchar *slash;
+        const gchar *actual_control_path = NULL;
 
         base = get_aggregate_control (src);
+        has_slash = g_str_has_suffix (base, "/");
+        /* manage existence or non-existence of / in control path */
+        if (control_path && strlen (control_path) > 0) {
+          gboolean control_has_slash = g_str_has_prefix (control_path, "/");
 
-        /* check if the base ends or control starts with / */
-        has_slash = g_str_has_prefix (control_url, "/");
-        has_slash = has_slash || g_str_has_suffix (base, "/");
-
+          actual_control_path = control_path;
+          if (has_slash && control_has_slash) {
+            if (strlen (control_path) == 1) {
+              actual_control_path = NULL;
+            } else {
+              actual_control_path = control_path + 1;
+            }
+          } else {
+            has_slash = has_slash || control_has_slash;
+          }
+        }
+        slash = (!has_slash && (actual_control_path != NULL)) ? "/" : "";
         /* concatenate the two strings, insert / when not present */
         stream->conninfo.location =
-            g_strdup_printf ("%s%s%s", base, has_slash ? "" : "/", control_url);
-
+            g_strdup_printf ("%s%s%s", base, slash, control_path);
       }
     }
   }
