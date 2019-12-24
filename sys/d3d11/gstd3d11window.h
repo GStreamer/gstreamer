@@ -73,7 +73,7 @@ struct _GstD3D11Window
   GstVideoContentLightLevel content_light_level;
 
   /* calculated rect with aspect ratio and window area */
-  GstVideoRectangle render_rect;
+  RECT render_rect;
 
   /* requested rect via gst_d3d11_window_render */
   GstVideoRectangle rect;
@@ -111,6 +111,7 @@ struct _GstD3D11Window
   ID3D11RenderTargetView *rtv;
   DXGI_FORMAT format;
   gboolean first_present;
+  gboolean have_swapchain1;
 
   GstD3D11Device *device;
 

@@ -581,6 +581,7 @@ gst_d3d11_window_on_resize (GstD3D11Window * window, gboolean redraw)
   D3D11_TEXTURE2D_DESC desc;
   DXGI_SWAP_CHAIN_DESC swap_desc;
   ID3D11Texture2D *backbuffer = NULL;
+  GstVideoRectangle src_rect, dst_rect, rst_rect;
 
   gst_d3d11_device_lock (window->device);
   if (!window->swap_chain)
@@ -618,8 +619,6 @@ gst_d3d11_window_on_resize (GstD3D11Window * window, gboolean redraw)
   height = window->height;
 
   {
-    GstVideoRectangle src_rect, dst_rect;
-
     src_rect.x = 0;
     src_rect.y = 0;
     src_rect.w = width * window->aspect_ratio_n;
@@ -634,17 +633,20 @@ gst_d3d11_window_on_resize (GstD3D11Window * window, gboolean redraw)
       src_rect.w = width * window->aspect_ratio_n;
       src_rect.h = height * window->aspect_ratio_d;
 
-      gst_video_sink_center_rect (src_rect, dst_rect, &window->render_rect,
-          TRUE);
+      gst_video_sink_center_rect (src_rect, dst_rect, &rst_rect, TRUE);
     } else {
-      window->render_rect = dst_rect;
+      rst_rect = dst_rect;
     }
   }
 
+  window->render_rect.left = rst_rect.x;
+  window->render_rect.top = rst_rect.y;
+  window->render_rect.right = rst_rect.x + rst_rect.w;
+  window->render_rect.bottom = rst_rect.y + rst_rect.h;
+
   GST_LOG_OBJECT (window,
       "New client area %dx%d, render rect x: %d, y: %d, %dx%d",
-      desc.Width, desc.Height, window->render_rect.x, window->render_rect.y,
-      window->render_rect.w, window->render_rect.h);
+      desc.Width, desc.Height, rst_rect.x, rst_rect.y, rst_rect.w, rst_rect.h);
 
   hr = ID3D11Device_CreateRenderTargetView (d3d11_dev,
       (ID3D11Resource *) backbuffer, NULL, &window->rtv);
@@ -1126,7 +1128,7 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
 {
   DXGI_SWAP_CHAIN_DESC desc = { 0, };
   GstCaps *render_caps;
-  UINT swapchain_flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+  UINT swapchain_flags = 0;
   DXGI_SWAP_EFFECT swap_effect = DXGI_SWAP_EFFECT_DISCARD;
 #if (DXGI_HEADER_VERSION >= 5)
   gboolean have_cll = FALSE;
@@ -1215,6 +1217,7 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
   }
 
   window->allow_tearing = FALSE;
+  window->have_swapchain1 = FALSE;
 #if (DXGI_HEADER_VERSION >= 5)
   if (!gst_video_content_light_level_from_caps (&window->content_light_level,
           caps)) {
@@ -1237,10 +1240,6 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
     GST_DEBUG_OBJECT (window, "DXGI 1.5 interface is available");
     swapchain4_available = TRUE;
 
-    /* For non-DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709 color space support,
-     * DXGI_SWAP_EFFECT_FLIP_DISCARD instead of DXGI_SWAP_EFFECT_DISCARD */
-    swap_effect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-
     g_object_get (window->device, "allow-tearing", &allow_tearing, NULL);
     if (allow_tearing) {
       GST_DEBUG_OBJECT (window, "device support tearning");
@@ -1259,10 +1258,10 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
   window->aspect_ratio_n = aspect_ratio_n;
   window->aspect_ratio_d = aspect_ratio_d;
 
-  window->render_rect.x = 0;
-  window->render_rect.y = 0;
-  window->render_rect.w = width;
-  window->render_rect.h = height;
+  window->render_rect.left = 0;
+  window->render_rect.top = 0;
+  window->render_rect.right = width;
+  window->render_rect.bottom = height;
 
   if (window->external_win_id) {
     RECT client_rect = { 0, };
@@ -1309,6 +1308,8 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
 
     if (!window->swap_chain) {
       GST_WARNING_OBJECT (window, "Failed to create swapchain1");
+    } else {
+      window->have_swapchain1 = TRUE;
     }
   }
 #endif
@@ -1503,15 +1504,10 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer)
     }
 
     if (self->first_present) {
-      RECT rect;
-
-      rect.left = self->render_rect.x;
-      rect.right = self->render_rect.x + self->render_rect.w;
-      rect.top = self->render_rect.y;
-      rect.bottom = self->render_rect.y + self->render_rect.h;
-
-      gst_d3d11_color_converter_update_rect (self->converter, &rect);
-      gst_d3d11_overlay_compositor_update_rect (self->compositor, &rect);
+      gst_d3d11_color_converter_update_rect (self->converter,
+          &self->render_rect);
+      gst_d3d11_overlay_compositor_update_rect (self->compositor,
+          &self->render_rect);
     }
 
     gst_d3d11_color_converter_convert_unlocked (self->converter,
@@ -1526,7 +1522,25 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer)
     }
 #endif
 
-    hr = IDXGISwapChain_Present (self->swap_chain, 0, present_flags);
+#if (DXGI_HEADER_VERSION >= 2)
+    if (self->have_swapchain1) {
+      DXGI_PRESENT_PARAMETERS present_params = { 0, };
+      if (self->first_present) {
+        /* the first present should not specify dirty-rect */
+        hr = IDXGISwapChain1_Present1 ((IDXGISwapChain1 *) self->swap_chain,
+            0, present_flags, &present_params);
+      } else {
+        present_params.DirtyRectsCount = 1;
+        present_params.pDirtyRects = &self->render_rect;
+        hr = IDXGISwapChain1_Present1 ((IDXGISwapChain1 *) self->swap_chain,
+            0, present_flags, &present_params);
+      }
+    } else
+#endif
+    {
+      hr = IDXGISwapChain_Present (self->swap_chain, 0, present_flags);
+    }
+
     self->first_present = FALSE;
 
     if (!gst_d3d11_result (hr, self->device)) {
