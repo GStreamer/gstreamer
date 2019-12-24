@@ -1811,36 +1811,52 @@ omx_index_type_to_str (OMX_INDEXTYPE index)
       return "OMX_ALG_IndexConfigVideoInsertSuffixSEI";
     case OMX_ALG_IndexConfigVideoQuantizationParameterTable:
       return "OMX_ALG_IndexConfigVideoQuantizationParameterTable";
-    case OMX_ALG_IndexParamVideoTransferCharacteristics:
-      return "OMX_ALG_IndexParamVideoTransferCharacteristics";
-    case OMX_ALG_IndexParamVideoColorMatrix:
-      return "OMX_ALG_IndexParamVideoColorMatrix";
     case OMX_ALG_IndexParamVideoInputParsed:
       return "OMX_ALG_IndexParamVideoInputParsed";
     case OMX_ALG_IndexParamVideoMaxPictureSize:
       return "OMX_ALG_IndexParamVideoMaxPictureSize";
     case OMX_ALG_IndexParamVideoMaxPictureSizes:
       return "OMX_ALG_IndexParamVideoMaxPictureSizes";
-    case OMX_ALG_IndexParamVideoLoopFilterBeta:
-      return "OMX_ALG_IndexParamVideoLoopFilterBeta";
-    case OMX_ALG_IndexParamVideoLoopFilterTc:
-      return "OMX_ALG_IndexParamVideoLoopFilterTc";
-    case OMX_ALG_IndexParamVideoQuantizationTable:
-      return "OMX_ALG_IndexParamVideoQuantizationTable";
-    case OMX_ALG_IndexConfigVideoTransferCharacteristics:
-      return "OMX_ALG_IndexConfigVideoTransferCharacteristics";
-    case OMX_ALG_IndexConfigVideoColorMatrix:
-      return "OMX_ALG_IndexConfigVideoColorMatrix";
     case OMX_ALG_IndexConfigVideoLoopFilterBeta:
       return "OMX_ALG_IndexConfigVideoLoopFilterBeta";
     case OMX_ALG_IndexConfigVideoLoopFilterTc:
       return "OMX_ALG_IndexConfigVideoLoopFilterTc";
+    case OMX_ALG_IndexParamVideoLoopFilterBeta:
+      return "OMX_ALG_IndexParamVideoLoopFilterBeta";
+    case OMX_ALG_IndexParamVideoLoopFilterTc:
+      return "OMX_ALG_IndexParamVideoLoopFilterTc";
+    case OMX_ALG_IndexPortParamEarlyCallback:
+      return "OMX_ALG_IndexPortParamEarlyCallback";
+    case OMX_ALG_IndexParamVideoTransferCharacteristics:
+      return "OMX_ALG_IndexParamVideoTransferCharacteristics";
+    case OMX_ALG_IndexParamVideoColorMatrix:
+      return "OMX_ALG_IndexParamVideoColorMatrix";
+    case OMX_ALG_IndexConfigVideoTransferCharacteristics:
+      return "OMX_ALG_IndexConfigVideoTransferCharacteristics";
+    case OMX_ALG_IndexConfigVideoColorMatrix:
+      return "OMX_ALG_IndexConfigVideoColorMatrix";
     case OMX_ALG_IndexConfigVideoHighDynamicRangeSEI:
       return "OMX_ALG_IndexConfigVideoHighDynamicRangeSEI";
     case OMX_ALG_IndexConfigVideoMaxResolutionChange:
       return "OMX_ALG_IndexConfigVideoMaxResolutionChange";
-    case OMX_ALG_IndexPortParamEarlyCallback:
-      return "OMX_ALG_IndexPortParamEarlyCallback";
+    case OMX_ALG_IndexParamVideoQuantizationTable:
+      return "OMX_ALG_IndexParamVideoQuantizationTable";
+    case OMX_ALG_IndexParamVideoAccessUnitDelimiter:
+      return "OMX_ALG_IndexParamVideoAccessUnitDelimiter";
+    case OMX_ALG_IndexParamVideoBufferingPeriodSEI:
+      return "OMX_ALG_IndexParamVideoBufferingPeriodSEI";
+    case OMX_ALG_IndexParamVideoPictureTimingSEI:
+      return "OMX_ALG_IndexParamVideoPictureTimingSEI";
+    case OMX_ALG_IndexParamVideoRecoveryPointSEI:
+      return "OMX_ALG_IndexParamVideoRecoveryPointSEI";
+    case OMX_ALG_IndexParamVideoMasteringDisplayColourVolumeSEI:
+      return "OMX_ALG_IndexParamVideoMasteringDisplayColourVolumeSEI";
+    case OMX_ALG_IndexParamVideoContentLightLevelSEI:
+      return "OMX_ALG_IndexParamVideoContentLightLevelSEI";
+    case OMX_ALG_IndexConfigVideoRegionOfInterestByValue:
+      return "OMX_ALG_IndexConfigVideoRegionOfInterestByValue";
+    case OMX_ALG_IndexConfigVideoColorPrimaries:
+      return "OMX_ALG_IndexConfigVideoColorPrimaries";
     case OMX_ALG_IndexMaxEnum:
       return "OMX_ALG_IndexMaxEnum";
   }
