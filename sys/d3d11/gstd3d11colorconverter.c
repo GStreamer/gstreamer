@@ -752,8 +752,8 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Device * device,
   gst_d3d11_device_unlock (device);
 
   self->quad = gst_d3d11_quad_new (device,
-      ps, vs, layout, sampler, const_buffer, vertex_buffer, sizeof (VertexData),
-      index_buffer, DXGI_FORMAT_R16_UINT, index_count);
+      ps, vs, layout, sampler, NULL, NULL, const_buffer, vertex_buffer,
+      sizeof (VertexData), index_buffer, DXGI_FORMAT_R16_UINT, index_count);
 
   self->num_input_view = GST_VIDEO_INFO_N_PLANES (data->in_info);
   self->num_output_view = GST_VIDEO_INFO_N_PLANES (data->out_info);
@@ -908,12 +908,30 @@ gst_d3d11_color_converter_convert (GstD3D11ColorConverter * converter,
     ID3D11ShaderResourceView * srv[GST_VIDEO_MAX_PLANES],
     ID3D11RenderTargetView * rtv[GST_VIDEO_MAX_PLANES])
 {
+  gboolean ret;
+
   g_return_val_if_fail (converter != NULL, FALSE);
   g_return_val_if_fail (srv != NULL, FALSE);
   g_return_val_if_fail (rtv != NULL, FALSE);
 
-  return gst_d3d11_draw_quad (converter->quad, &converter->viewport, 1,
-      srv, converter->num_input_view, rtv, converter->num_output_view);
+  gst_d3d11_device_lock (converter->device);
+  ret = gst_d3d11_color_converter_convert_unlocked (converter, srv, rtv);
+  gst_d3d11_device_lock (converter->device);
+
+  return ret;
+}
+
+gboolean
+gst_d3d11_color_converter_convert_unlocked (GstD3D11ColorConverter * converter,
+    ID3D11ShaderResourceView * srv[GST_VIDEO_MAX_PLANES],
+    ID3D11RenderTargetView * rtv[GST_VIDEO_MAX_PLANES])
+{
+  g_return_val_if_fail (converter != NULL, FALSE);
+  g_return_val_if_fail (srv != NULL, FALSE);
+  g_return_val_if_fail (rtv != NULL, FALSE);
+
+  return gst_d3d11_draw_quad_unlocked (converter->quad, &converter->viewport, 1,
+      srv, converter->num_input_view, rtv, converter->num_output_view, NULL);
 }
 
 gboolean
@@ -921,6 +939,7 @@ gst_d3d11_color_converter_update_rect (GstD3D11ColorConverter * converter,
     RECT * rect)
 {
   g_return_val_if_fail (converter != NULL, FALSE);
+  g_return_val_if_fail (rect != NULL, FALSE);
 
   converter->viewport.TopLeftX = rect->left;
   converter->viewport.TopLeftY = rect->top;

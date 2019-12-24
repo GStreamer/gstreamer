@@ -55,14 +55,22 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, GST_D3D11_FORMATS))
+        (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, GST_D3D11_FORMATS) "; "
+        GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+        (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY ","
+            GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
+            GST_D3D11_FORMATS))
     );
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, GST_D3D11_FORMATS))
+        (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, GST_D3D11_FORMATS) "; "
+        GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+        (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY ","
+            GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
+            GST_D3D11_FORMATS))
     );
 
 #define gst_d3d11_color_convert_parent_class parent_class
@@ -361,6 +369,8 @@ gst_d3d11_color_convert_propose_allocation (GstBaseTransform * trans,
     goto config_failed;
 
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+  gst_query_add_allocation_meta (query,
+      GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, NULL);
 
   size = GST_D3D11_BUFFER_POOL (pool)->buffer_size;
   gst_query_add_allocation_pool (query, pool, size, 0, 0);

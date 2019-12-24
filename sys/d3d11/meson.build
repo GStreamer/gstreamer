@@ -14,6 +14,7 @@ d3d11_sources = [
   'gstd3d11videosinkbin.c',
   'gstd3d11shader.c',
   'gstd3d11colorconverter.c',
+  'gstd3d11overlaycompositor.c',
 ]
 
 dxgi_headers = [

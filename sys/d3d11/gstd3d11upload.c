@@ -36,7 +36,14 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_D3D11_FORMATS) "; "
+        GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+        (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY ","
+            GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
+            GST_D3D11_FORMATS) "; "
         GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
+            GST_D3D11_FORMATS) ";"
+        GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY
+            "," GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
             GST_D3D11_FORMATS))
     );
 
@@ -44,7 +51,11 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, GST_D3D11_FORMATS)));
+        (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, GST_D3D11_FORMATS) "; "
+        GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+        (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY ","
+            GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
+            GST_D3D11_FORMATS)));
 
 #define gst_d3d11_upload_parent_class parent_class
 G_DEFINE_TYPE (GstD3D11Upload, gst_d3d11_upload, GST_TYPE_D3D11_BASE_FILTER);
@@ -94,13 +105,52 @@ gst_d3d11_upload_init (GstD3D11Upload * upload)
 static GstCaps *
 _set_caps_features (const GstCaps * caps, const gchar * feature_name)
 {
-  GstCaps *tmp = gst_caps_copy (caps);
-  guint n = gst_caps_get_size (tmp);
-  guint i = 0;
+  guint i, j, m, n;
+  GstCaps *tmp;
+  GstCapsFeatures *overlay_feature =
+      gst_caps_features_from_string
+      (GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
 
-  for (i = 0; i < n; i++)
-    gst_caps_set_features (tmp, i,
-        gst_caps_features_from_string (feature_name));
+  tmp = gst_caps_new_empty ();
+
+  n = gst_caps_get_size (caps);
+  for (i = 0; i < n; i++) {
+    GstCapsFeatures *features, *orig_features;
+    GstStructure *s = gst_caps_get_structure (caps, i);
+
+    orig_features = gst_caps_get_features (caps, i);
+    features = gst_caps_features_new (feature_name, NULL);
+
+    if (gst_caps_features_is_any (orig_features)) {
+      gst_caps_append_structure_full (tmp, gst_structure_copy (s),
+          gst_caps_features_copy (features));
+
+      if (!gst_caps_features_contains (features,
+              GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION))
+        gst_caps_features_add (features,
+            GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
+    } else {
+      m = gst_caps_features_get_size (orig_features);
+      for (j = 0; j < m; j++) {
+        const gchar *feature = gst_caps_features_get_nth (orig_features, j);
+
+        /* if we already have the features */
+        if (gst_caps_features_contains (features, feature))
+          continue;
+
+        if (g_strcmp0 (feature, GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY) == 0)
+          continue;
+
+        if (gst_caps_features_contains (overlay_feature, feature)) {
+          gst_caps_features_add (features, feature);
+        }
+      }
+    }
+
+    gst_caps_append_structure_full (tmp, gst_structure_copy (s), features);
+  }
+
+  gst_caps_features_free (overlay_feature);
 
   return tmp;
 }
@@ -117,13 +167,8 @@ gst_d3d11_upload_transform_caps (GstBaseTransform * trans,
 
   if (direction == GST_PAD_SINK) {
     tmp = _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY);
-    tmp = gst_caps_merge (gst_caps_ref (caps), tmp);
   } else {
-    GstCaps *newcaps;
-    tmp = gst_caps_ref (caps);
-
-    newcaps = _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
-    tmp = gst_caps_merge (tmp, newcaps);
+    tmp = _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
   }
 
   if (filter) {
@@ -197,8 +242,6 @@ gst_d3d11_upload_propose_allocation (GstBaseTransform * trans,
     if (!gst_buffer_pool_set_config (pool, config))
       goto config_failed;
 
-    gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
-
     /* d3d11 buffer pool might update buffer size by self */
     if (is_d3d11)
       size = GST_D3D11_BUFFER_POOL (pool)->buffer_size;
@@ -206,6 +249,10 @@ gst_d3d11_upload_propose_allocation (GstBaseTransform * trans,
     gst_query_add_allocation_pool (query, pool, size, 0, 0);
     gst_object_unref (pool);
   }
+
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+  gst_query_add_allocation_meta (query,
+      GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, NULL);
 
   return TRUE;
 

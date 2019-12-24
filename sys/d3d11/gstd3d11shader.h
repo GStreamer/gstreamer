@@ -46,6 +46,8 @@ GstD3D11Quad * gst_d3d11_quad_new (GstD3D11Device * device,
                                    ID3D11VertexShader * vertex_shader,
                                    ID3D11InputLayout * layout,
                                    ID3D11SamplerState * sampler,
+                                   ID3D11BlendState * blend,
+                                   ID3D11DepthStencilState *depth_stencil,
                                    ID3D11Buffer * const_buffer,
                                    ID3D11Buffer * vertex_buffer,
                                    guint vertex_stride,
@@ -61,7 +63,8 @@ gboolean gst_d3d11_draw_quad (GstD3D11Quad * quad,
                               ID3D11ShaderResourceView *srv[GST_VIDEO_MAX_PLANES],
                               guint num_srv,
                               ID3D11RenderTargetView *rtv[GST_VIDEO_MAX_PLANES],
-                              guint num_rtv);
+                              guint num_rtv,
+                              ID3D11DepthStencilView *dsv);
 
 gboolean gst_d3d11_draw_quad_unlocked (GstD3D11Quad * quad,
                                        D3D11_VIEWPORT viewport[GST_VIDEO_MAX_PLANES],
@@ -69,7 +72,8 @@ gboolean gst_d3d11_draw_quad_unlocked (GstD3D11Quad * quad,
                                        ID3D11ShaderResourceView *srv[GST_VIDEO_MAX_PLANES],
                                        guint num_srv,
                                        ID3D11RenderTargetView *rtv[GST_VIDEO_MAX_PLANES],
-                                       guint num_rtv);
+                                       guint num_rtv,
+                                       ID3D11DepthStencilView *dsv);
 
 G_END_DECLS
 

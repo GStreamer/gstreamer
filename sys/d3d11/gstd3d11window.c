@@ -329,6 +329,11 @@ gst_d3d11_window_dispose (GObject * object)
     self->converter = NULL;
   }
 
+  if (self->compositor) {
+    gst_d3d11_overlay_compositor_free (self->compositor);
+    self->compositor = NULL;
+  }
+
   gst_clear_buffer (&self->cached_buffer);
   gst_clear_object (&self->device);
 
@@ -649,6 +654,8 @@ gst_d3d11_window_on_resize (GstD3D11Window * window, gboolean redraw)
 
     goto done;
   }
+
+  window->first_present = TRUE;
 
   if (redraw)
     gst_d3d111_window_present (window, NULL);
@@ -1173,7 +1180,14 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
     gst_d3d11_color_converter_free (window->converter);
   window->converter = NULL;
 
+  if (window->compositor)
+    gst_d3d11_overlay_compositor_free (window->compositor);
+  window->compositor = NULL;
+
   /* preserve upstream colorimetry */
+  window->render_info.width = width;
+  window->render_info.height = height;
+
   window->render_info.colorimetry.primaries =
       window->info.colorimetry.primaries;
   window->render_info.colorimetry.transfer = window->info.colorimetry.transfer;
@@ -1186,6 +1200,16 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
     GST_ERROR_OBJECT (window, "Cannot create converter");
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
         "Cannot create converter");
+
+    return FALSE;
+  }
+
+  window->compositor =
+      gst_d3d11_overlay_compositor_new (window->device, &window->render_info);
+  if (!window->compositor) {
+    GST_ERROR_OBJECT (window, "Cannot create overlay compositor");
+    g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
+        "Cannot create overlay compositor");
 
     return FALSE;
   }
@@ -1468,7 +1492,6 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer)
   if (self->cached_buffer) {
     ID3D11ShaderResourceView *srv[GST_VIDEO_MAX_PLANES];
     gint i, j, k;
-    RECT rect;
 
     for (i = 0, j = 0; i < gst_buffer_n_memory (self->cached_buffer); i++) {
       GstD3D11Memory *mem =
@@ -1479,13 +1502,23 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer)
       }
     }
 
-    rect.left = self->render_rect.x;
-    rect.right = self->render_rect.x + self->render_rect.w;
-    rect.top = self->render_rect.y;
-    rect.bottom = self->render_rect.y + self->render_rect.h;
+    if (self->first_present) {
+      RECT rect;
 
-    gst_d3d11_color_converter_update_rect (self->converter, &rect);
-    gst_d3d11_color_converter_convert (self->converter, srv, &self->rtv);
+      rect.left = self->render_rect.x;
+      rect.right = self->render_rect.x + self->render_rect.w;
+      rect.top = self->render_rect.y;
+      rect.bottom = self->render_rect.y + self->render_rect.h;
+
+      gst_d3d11_color_converter_update_rect (self->converter, &rect);
+      gst_d3d11_overlay_compositor_update_rect (self->compositor, &rect);
+    }
+
+    gst_d3d11_color_converter_convert_unlocked (self->converter,
+        srv, &self->rtv);
+
+    gst_d3d11_overlay_compositor_upload (self->compositor, self->cached_buffer);
+    gst_d3d11_overlay_compositor_draw_unlocked (self->compositor, &self->rtv);
 
 #if (DXGI_HEADER_VERSION >= 5)
     if (self->allow_tearing) {
@@ -1494,6 +1527,7 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer)
 #endif
 
     hr = IDXGISwapChain_Present (self->swap_chain, 0, present_flags);
+    self->first_present = FALSE;
 
     if (!gst_d3d11_result (hr, self->device)) {
       GST_WARNING_OBJECT (self, "Direct3D cannot present texture, hr: 0x%x",

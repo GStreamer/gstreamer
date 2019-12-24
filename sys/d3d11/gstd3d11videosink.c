@@ -48,7 +48,11 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, GST_D3D11_FORMATS)
+        (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, GST_D3D11_FORMATS) "; "
+        GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+        (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY ","
+            GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
+            GST_D3D11_FORMATS)
     ));
 
 GST_DEBUG_CATEGORY (d3d11_video_sink_debug);
@@ -262,9 +266,18 @@ gst_d3d11_video_sink_get_caps (GstBaseSink * sink, GstCaps * filter)
   GstD3D11VideoSink *self = GST_D3D11_VIDEO_SINK (sink);
   GstCaps *caps = NULL;
 
-  if (self->device && !self->can_convert)
+  if (self->device && !self->can_convert) {
+    GstCaps *overlaycaps;
+    GstCapsFeatures *features;
+
     caps = gst_d3d11_device_get_supported_caps (self->device,
         D3D11_FORMAT_SUPPORT_TEXTURE2D | D3D11_FORMAT_SUPPORT_DISPLAY);
+    overlaycaps = gst_caps_copy (caps);
+    features = gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
+        GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
+    gst_caps_set_features_simple (overlaycaps, features);
+    gst_caps_append (caps, overlaycaps);
+  }
 
   if (!caps)
     caps = gst_pad_get_pad_template_caps (GST_VIDEO_SINK_PAD (sink));
@@ -607,6 +620,8 @@ gst_d3d11_video_sink_propose_allocation (GstBaseSink * sink, GstQuery * query)
     g_object_unref (pool);
 
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+  gst_query_add_allocation_meta (query,
+      GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, NULL);
 
   return TRUE;
 
@@ -743,6 +758,16 @@ gst_d3d11_video_sink_upload_frame (GstD3D11VideoSink * self, GstBuffer * inbuf,
 
 done:
   gst_video_frame_unmap (&in_frame);
+
+  if (ret) {
+    GstVideoOverlayCompositionMeta *overlay_meta;
+
+    overlay_meta = gst_buffer_get_video_overlay_composition_meta (inbuf);
+    if (overlay_meta) {
+      gst_buffer_add_video_overlay_composition_meta (outbuf,
+          overlay_meta->overlay);
+    }
+  }
 
   return ret;
 

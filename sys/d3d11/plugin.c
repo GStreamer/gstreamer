@@ -35,6 +35,7 @@ GST_DEBUG_CATEGORY (gst_d3d11_colorconverter_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_utils_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_format_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_device_debug);
+GST_DEBUG_CATEGORY (gst_d3d11_overlay_compositor_debug);
 
 #if (HAVE_D3D11SDKLAYERS_H || HAVE_DXGIDEBUG_H)
 GST_DEBUG_CATEGORY (gst_d3d11_debug_layer_debug);
@@ -53,6 +54,9 @@ plugin_init (GstPlugin * plugin)
       "d3d11format", 0, "d3d11 specific formats");
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_device_debug,
       "d3d11device", 0, "d3d11 device object");
+  GST_DEBUG_CATEGORY_INIT (gst_d3d11_overlay_compositor_debug,
+      "d3d11overlaycompositor", 0, "d3d11overlaycompositor");
+
 #if (HAVE_D3D11SDKLAYERS_H || HAVE_DXGIDEBUG_H)
   /* NOTE: enabled only for debug build */
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_debug_layer_debug,

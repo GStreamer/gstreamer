@@ -26,6 +26,7 @@
 #include <gst/video/video.h>
 #include "gstd3d11_fwd.h"
 #include "gstd3d11colorconverter.h"
+#include "gstd3d11overlaycompositor.h"
 
 G_BEGIN_DECLS
 
@@ -66,6 +67,7 @@ struct _GstD3D11Window
   GstVideoInfo render_info;
   const GstD3D11Format *render_format;
   GstD3D11ColorConverter *converter;
+  GstD3D11OverlayCompositor *compositor;
 
   GstVideoMasteringDisplayInfo mastering_display_info;
   GstVideoContentLightLevel content_light_level;
@@ -108,6 +110,7 @@ struct _GstD3D11Window
   IDXGISwapChain *swap_chain;
   ID3D11RenderTargetView *rtv;
   DXGI_FORMAT format;
+  gboolean first_present;
 
   GstD3D11Device *device;
 
