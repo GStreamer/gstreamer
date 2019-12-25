@@ -111,7 +111,6 @@ gst_msdkvp9enc_set_format (GstMsdkEnc * encoder)
 static gboolean
 gst_msdkvp9enc_configure (GstMsdkEnc * encoder)
 {
-  GstMsdkVP9Enc *thiz = GST_MSDKVP9ENC (encoder);
   mfxSession session;
 
   if (encoder->hardware) {
@@ -124,7 +123,17 @@ gst_msdkvp9enc_configure (GstMsdkEnc * encoder)
   encoder->num_extra_frames = encoder->async_depth - 1;
   encoder->param.mfx.CodecId = MFX_CODEC_VP9;
   encoder->param.mfx.CodecLevel = 0;
-  encoder->param.mfx.CodecProfile = thiz->profile;
+
+  switch (encoder->param.mfx.FrameInfo.FourCC) {
+    case MFX_FOURCC_P010:
+      encoder->param.mfx.CodecProfile = MFX_PROFILE_VP9_2;
+      break;
+
+    default:
+      encoder->param.mfx.CodecProfile = MFX_PROFILE_VP9_0;
+      break;
+  }
+
   /* As the frame width and height is rounded up to 128 and 32 since commit 8daac1c,
    * so the width, height for initialization should be rounded up to 128 and 32
    * too because VP9 encoder in MSDK will do some check on width and height.
