@@ -22,6 +22,8 @@ dnf install -y \
     libaom \
     libaom-devel \
     libcaca-devel \
+    libdav1d \
+    libdav1d-devel \
     ccache \
     cmake \
     clang-devel \
@@ -122,6 +124,7 @@ dnf debuginfo-install -y gtk3 \
     glib-networking \
     libcurl \
     libsoup \
+    nasm \
     nss \
     nss-softokn \
     nss-softokn-freebl \
