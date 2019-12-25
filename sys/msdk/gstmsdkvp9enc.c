@@ -125,6 +125,15 @@ gst_msdkvp9enc_configure (GstMsdkEnc * encoder)
   encoder->param.mfx.CodecId = MFX_CODEC_VP9;
   encoder->param.mfx.CodecLevel = 0;
   encoder->param.mfx.CodecProfile = thiz->profile;
+  /* As the frame width and height is rounded up to 128 and 32 since commit 8daac1c,
+   * so the width, height for initialization should be rounded up to 128 and 32
+   * too because VP9 encoder in MSDK will do some check on width and height.
+   */
+  encoder->param.mfx.FrameInfo.Width =
+      GST_ROUND_UP_128 (encoder->param.mfx.FrameInfo.CropW);
+  encoder->param.mfx.FrameInfo.Height =
+      GST_ROUND_UP_32 (encoder->param.mfx.FrameInfo.CropH);
+
   /* Always turn on this flag for VP9 */
   encoder->param.mfx.LowPower = MFX_CODINGOPTION_ON;
 
