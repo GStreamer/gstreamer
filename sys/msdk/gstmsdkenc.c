@@ -1097,8 +1097,14 @@ gst_msdkenc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
   GstMsdkEncClass *klass = GST_MSDKENC_GET_CLASS (thiz);
 
   if (state) {
-    if (thiz->input_state)
+    if (thiz->input_state) {
+      if (!gst_video_info_is_equal (&thiz->input_state->info, &state->info)) {
+        GST_INFO_OBJECT (thiz, "Re-init the encoder as info changed");
+        gst_msdkenc_flush_frames (thiz, FALSE);
+        gst_msdkenc_close_encoder (thiz);
+      }
       gst_video_codec_state_unref (thiz->input_state);
+    }
     thiz->input_state = gst_video_codec_state_ref (state);
   }
 
