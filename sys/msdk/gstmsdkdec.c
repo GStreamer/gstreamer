@@ -768,12 +768,12 @@ gst_msdkdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
   GstMsdkDec *thiz = GST_MSDKDEC (decoder);
 
   if (thiz->input_state) {
-    /* mark for re-negotiation if display resolution changes */
-    if ((GST_VIDEO_INFO_WIDTH (&thiz->input_state->info) !=
-            GST_VIDEO_INFO_WIDTH (&state->info)) ||
-        GST_VIDEO_INFO_HEIGHT (&thiz->input_state->info) !=
-        GST_VIDEO_INFO_HEIGHT (&state->info))
+    /* mark for re-negotiation if display resolution or any other video info
+     * changes like framerate. */
+    if (!gst_video_info_is_equal (&thiz->input_state->info, &state->info)) {
+      GST_INFO_OBJECT (thiz, "Schedule renegotiation as video info changed");
       thiz->do_renego = TRUE;
+    }
     gst_video_codec_state_unref (thiz->input_state);
   }
   thiz->input_state = gst_video_codec_state_ref (state);
