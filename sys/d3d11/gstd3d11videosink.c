@@ -660,14 +660,19 @@ gst_d3d11_video_sink_query (GstBaseSink * sink, GstQuery * query)
     case GST_QUERY_CUSTOM:
       if (gst_query_is_d3d11_usage (query)) {
         D3D11_USAGE usage = D3D11_USAGE_DEFAULT;
+        GstD3D11Device *device;
 
-        gst_query_parse_d3d11_usage (query, &usage);
-        if (usage == D3D11_USAGE_DEFAULT || usage == D3D11_USAGE_DYNAMIC)
+        gst_query_parse_d3d11_usage (query, &device, &usage);
+        if (device == self->device &&
+            (usage == D3D11_USAGE_DEFAULT || usage == D3D11_USAGE_DYNAMIC)) {
           gst_query_set_d3d11_usage_result (query, TRUE);
-        else
+          gst_object_unref (device);
+        } else {
           gst_query_set_d3d11_usage_result (query, FALSE);
+          gst_object_unref (device);
 
-        return TRUE;
+          return TRUE;
+        }
       }
       break;
     default:

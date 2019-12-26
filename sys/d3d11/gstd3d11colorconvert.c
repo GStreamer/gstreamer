@@ -96,8 +96,6 @@ static GstFlowReturn gst_d3d11_color_convert_transform (GstBaseTransform *
 static gboolean gst_d3d11_color_convert_set_info (GstD3D11BaseFilter * filter,
     GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
     GstVideoInfo * out_info);
-static gboolean gst_d3d11_color_convert_query (GstBaseTransform * trans,
-    GstPadDirection direction, GstQuery * query);
 
 /* copies the given caps */
 static GstCaps *
@@ -170,7 +168,6 @@ gst_d3d11_color_convert_class_init (GstD3D11ColorConvertClass * klass)
       GST_DEBUG_FUNCPTR (gst_d3d11_color_convert_decide_allocation);
   trans_class->transform =
       GST_DEBUG_FUNCPTR (gst_d3d11_color_convert_transform);
-  trans_class->query = GST_DEBUG_FUNCPTR (gst_d3d11_color_convert_query);
 
   bfilter_class->set_info =
       GST_DEBUG_FUNCPTR (gst_d3d11_color_convert_set_info);
@@ -451,26 +448,6 @@ gst_d3d11_color_convert_decide_allocation (GstBaseTransform * trans,
   gst_object_unref (pool);
 
   return GST_BASE_TRANSFORM_CLASS (parent_class)->decide_allocation (trans,
-      query);
-}
-
-static gboolean
-gst_d3d11_color_convert_query (GstBaseTransform * trans,
-    GstPadDirection direction, GstQuery * query)
-{
-  if (gst_query_is_d3d11_usage (query) && direction == GST_PAD_SINK) {
-    D3D11_USAGE usage = D3D11_USAGE_DEFAULT;
-
-    gst_query_parse_d3d11_usage (query, &usage);
-    if (usage == D3D11_USAGE_DEFAULT || usage == D3D11_USAGE_DYNAMIC)
-      gst_query_set_d3d11_usage_result (query, TRUE);
-    else
-      gst_query_set_d3d11_usage_result (query, FALSE);
-
-    return TRUE;
-  }
-
-  return GST_BASE_TRANSFORM_CLASS (parent_class)->query (trans, direction,
       query);
 }
 

@@ -341,12 +341,15 @@ gst_d3d11_is_windows_8_or_greater (void)
 }
 
 GstQuery *
-gst_query_new_d3d11_usage (D3D11_USAGE usage)
+gst_query_new_d3d11_usage (GstD3D11Device * device, D3D11_USAGE usage)
 {
   GstQuery *query;
   GstStructure *structure;
 
+  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
+
   structure = gst_structure_new ("GstQueryD3D11Usage",
+      "device", GST_TYPE_D3D11_DEVICE, device,
       "usage", G_TYPE_INT, usage, "result", G_TYPE_BOOLEAN, FALSE, NULL);
   query = gst_query_new_custom (GST_QUERY_CUSTOM, structure);
 
@@ -354,7 +357,8 @@ gst_query_new_d3d11_usage (D3D11_USAGE usage)
 }
 
 void
-gst_query_parse_d3d11_usage (GstQuery * query, D3D11_USAGE * usage)
+gst_query_parse_d3d11_usage (GstQuery * query, GstD3D11Device ** device,
+    D3D11_USAGE * usage)
 {
   const GstStructure *structure;
 
@@ -365,7 +369,8 @@ gst_query_parse_d3d11_usage (GstQuery * query, D3D11_USAGE * usage)
 
   structure = gst_query_get_structure (query);
 
-  gst_structure_get (structure, "usage", G_TYPE_INT, usage, NULL);
+  gst_structure_get (structure, "device", GST_TYPE_D3D11_DEVICE, device,
+      "usage", G_TYPE_INT, usage, NULL);
 }
 
 void

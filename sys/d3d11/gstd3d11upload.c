@@ -315,7 +315,8 @@ gst_d3d11_upload_decide_allocation (GstBaseTransform * trans, GstQuery * query)
     GstQuery *usage_query;
     gboolean can_dynamic = FALSE;
 
-    usage_query = gst_query_new_d3d11_usage (D3D11_USAGE_DYNAMIC);
+    usage_query =
+        gst_query_new_d3d11_usage (filter->device, D3D11_USAGE_DYNAMIC);
     gst_pad_peer_query (GST_BASE_TRANSFORM_SRC_PAD (trans), usage_query);
     gst_query_parse_d3d11_usage_result (usage_query, &can_dynamic);
     gst_query_unref (usage_query);
