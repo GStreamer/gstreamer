@@ -82,6 +82,9 @@ typedef struct _GstD3D11H264DecClass GstD3D11H264DecClass;
 typedef struct _GstD3D11Vp9Dec GstD3D11Vp9Dec;
 typedef struct _GstD3D11Vp9DecClass GstD3D11Vp9DecClass;
 
+typedef struct _GstD3D11H265Dec GstD3D11H265Dec;
+typedef struct _GstD3D11H265DecClass GstD3D11H265DecClass;
+
 G_END_DECLS
 
 #endif /* __GST_D3D11_FWD_H__ */

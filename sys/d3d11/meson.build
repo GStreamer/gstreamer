@@ -25,6 +25,9 @@ d3d11_dec_sources = [
   'gstvp9picture.c',
   'gstvp9decoder.c',
   'gstd3d11vp9dec.c',
+  'gsth265picture.c',
+  'gsth265decoder.c',
+  'gstd3d11h265dec.c',
 ]
 
 dxgi_headers = [

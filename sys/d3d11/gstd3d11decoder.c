@@ -599,7 +599,8 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
       break;
     }
 
-    if (codec == GST_D3D11_CODEC_VP9 && config_list[i].ConfigBitstreamRaw == 1) {
+    if ((codec == GST_D3D11_CODEC_VP9 || codec == GST_D3D11_CODEC_H265)
+        && config_list[i].ConfigBitstreamRaw == 1) {
       best_config = &config_list[i];
       break;
     }
