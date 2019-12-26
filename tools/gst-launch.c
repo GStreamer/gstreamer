@@ -711,24 +711,6 @@ bus_handler (GstBus * bus, GstMessage * message, gpointer data)
         g_free (name);
         break;
       }
-      case GST_MESSAGE_ERROR:{
-        /* dump graph on error */
-        GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
-            GST_DEBUG_GRAPH_SHOW_ALL, "gst-launch.error");
-
-        print_error_message (message);
-
-        if (target_state == GST_STATE_PAUSED) {
-          gst_printerr (_("ERROR: pipeline doesn't want to preroll.\n"));
-        } else if (interrupting) {
-          PRINT (_("An error happened while waiting for EOS\n"));
-        }
-
-        /* we have an error */
-        last_launch_code = LEC_ERROR;
-        g_main_loop_quit (loop);
-        break;
-      }
       case GST_MESSAGE_STATE_CHANGED:{
         GstState old, new, pending;
 
@@ -990,6 +972,24 @@ bus_sync_handler (GstBus * bus, GstMessage * message, gpointer data)
         g_free (state_transition_name);
       }
       break;
+    case GST_MESSAGE_ERROR:{
+      /* dump graph on error */
+      GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
+          GST_DEBUG_GRAPH_SHOW_ALL, "gst-launch.error");
+
+      print_error_message (message);
+
+      if (target_state == GST_STATE_PAUSED) {
+        gst_printerr (_("ERROR: pipeline doesn't want to preroll.\n"));
+      } else if (interrupting) {
+        PRINT (_("An error happened while waiting for EOS\n"));
+      }
+
+      /* we have an error */
+      last_launch_code = LEC_ERROR;
+      g_main_loop_quit (loop);
+      break;
+    }
     default:
       break;
   }
@@ -1206,7 +1206,7 @@ main (int argc, char *argv[])
 
     switch (ret) {
       case GST_STATE_CHANGE_FAILURE:
-        gst_printerr (_("ERROR: Pipeline doesn't want to pause.\n"));
+        gst_printerr (_("Failed to set pipeline to PAUSED.\n"));
         last_launch_code = LEC_STATE_CHANGE_FAILURE;
         goto end;
       case GST_STATE_CHANGE_NO_PREROLL:
