@@ -22,6 +22,7 @@ base_tests = [
   [['elements/autovideoconvert.c']],
   [['elements/avwait.c']],
   [['elements/camerabin.c']],
+  [['elements/d3d11colorconvert.c'], host_machine.system() != 'windows', ],
   [['elements/gdpdepay.c']],
   [['elements/gdppay.c']],
   [['elements/h263parse.c'], false, [libparser_dep, gstcodecparsers_dep]],
