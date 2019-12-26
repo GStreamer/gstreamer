@@ -50,8 +50,6 @@ struct _GstD3D11ColorConvert
   guint num_output_view;
 
   GstD3D11ColorConverter *converter;
-
-  gboolean can_convert;
 };
 
 struct _GstD3D11ColorConvertClass

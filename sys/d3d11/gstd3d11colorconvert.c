@@ -90,7 +90,6 @@ gst_d3d11_color_convert_propose_allocation (GstBaseTransform * trans,
 static gboolean
 gst_d3d11_color_convert_decide_allocation (GstBaseTransform * trans,
     GstQuery * query);
-static gboolean gst_d3d11_color_convert_start (GstBaseTransform * trans);
 
 static GstFlowReturn gst_d3d11_color_convert_transform (GstBaseTransform *
     trans, GstBuffer * inbuf, GstBuffer * outbuf);
@@ -171,7 +170,6 @@ gst_d3d11_color_convert_class_init (GstD3D11ColorConvertClass * klass)
       GST_DEBUG_FUNCPTR (gst_d3d11_color_convert_decide_allocation);
   trans_class->transform =
       GST_DEBUG_FUNCPTR (gst_d3d11_color_convert_transform);
-  trans_class->start = GST_DEBUG_FUNCPTR (gst_d3d11_color_convert_start);
   trans_class->query = GST_DEBUG_FUNCPTR (gst_d3d11_color_convert_query);
 
   bfilter_class->set_info =
@@ -237,15 +235,11 @@ static GstCaps *
 gst_d3d11_color_convert_transform_caps (GstBaseTransform *
     trans, GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
-  GstD3D11ColorConvert *self = GST_D3D11_COLOR_CONVERT (trans);
   GstCaps *tmp, *tmp2;
   GstCaps *result;
 
   /* Get all possible caps that we can transform to */
-  if (self->can_convert)
-    tmp = gst_d3d11_color_convert_caps_remove_format_info (caps);
-  else
-    tmp = gst_caps_copy (caps);
+  tmp = gst_d3d11_color_convert_caps_remove_format_info (caps);
 
   if (filter) {
     tmp2 = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
@@ -458,28 +452,6 @@ gst_d3d11_color_convert_decide_allocation (GstBaseTransform * trans,
 
   return GST_BASE_TRANSFORM_CLASS (parent_class)->decide_allocation (trans,
       query);
-}
-
-static gboolean
-gst_d3d11_color_convert_start (GstBaseTransform * trans)
-{
-  GstD3D11BaseFilter *filter = GST_D3D11_BASE_FILTER (trans);
-  GstD3D11ColorConvert *self = GST_D3D11_COLOR_CONVERT (trans);
-  gboolean is_hardware;
-
-  if (!GST_BASE_TRANSFORM_CLASS (parent_class)->start (trans))
-    return FALSE;
-
-  g_object_get (filter->device, "hardware", &is_hardware, NULL);
-
-  if (!is_hardware) {
-    GST_WARNING_OBJECT (trans, "D3D11 device is running on software emulation");
-    self->can_convert = FALSE;
-  } else {
-    self->can_convert = TRUE;
-  }
-
-  return TRUE;
 }
 
 static gboolean
@@ -714,6 +686,9 @@ gst_d3d11_color_convert_set_info (GstD3D11BaseFilter * filter,
   GstD3D11ColorConvert *self = GST_D3D11_COLOR_CONVERT (filter);
   const GstVideoInfo *unknown_info;
 
+  if (gst_base_transform_is_passthrough (GST_BASE_TRANSFORM (filter)))
+    return TRUE;
+
   gst_d3d11_color_convert_clear_shader_resource (self);
 
   GST_DEBUG_OBJECT (self, "Setup convert with format %s -> %s",
@@ -732,10 +707,6 @@ gst_d3d11_color_convert_set_info (GstD3D11BaseFilter * filter,
   /* if present, these must match too */
   if (in_info->interlace_mode != out_info->interlace_mode)
     goto format_mismatch;
-
-  /* do not need to setup converter */
-  if (!self->can_convert)
-    return TRUE;
 
   /* don't need to create converter */
   if (GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_INFO_FORMAT (out_info))
