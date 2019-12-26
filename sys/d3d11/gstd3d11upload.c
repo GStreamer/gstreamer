@@ -167,8 +167,12 @@ gst_d3d11_upload_transform_caps (GstBaseTransform * trans,
 
   if (direction == GST_PAD_SINK) {
     tmp = _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY);
+    tmp = gst_caps_merge (gst_caps_ref (caps), tmp);
   } else {
-    tmp = _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
+    GstCaps *newcaps;
+    tmp = gst_caps_ref (caps);
+    newcaps = _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
+    tmp = gst_caps_merge (tmp, newcaps);
   }
 
   if (filter) {
