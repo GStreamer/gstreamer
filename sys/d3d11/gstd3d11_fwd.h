@@ -72,6 +72,13 @@ typedef struct _GstD3D11DownloadClass GstD3D11DownloadClass;
 typedef struct _GstD3D11ColorConvert GstD3D11ColorConvert;
 typedef struct _GstD3D11ColorConvertClass GstD3D11ColorConvertClass;
 
+typedef struct _GstD3D11Decoder GstD3D11Decoder;
+typedef struct _GstD3D11DecoderClass GstD3D11DecoderClass;
+typedef struct _GstD3D11DecoderPrivate GstD3D11DecoderPrivate;
+
+typedef struct _GstD3D11H264Dec GstD3D11H264Dec;
+typedef struct _GstD3D11H264DecClass GstD3D11H264DecClass;
+
 G_END_DECLS
 
 #endif /* __GST_D3D11_FWD_H__ */

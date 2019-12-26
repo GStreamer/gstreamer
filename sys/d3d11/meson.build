@@ -17,6 +17,13 @@ d3d11_sources = [
   'gstd3d11overlaycompositor.c',
 ]
 
+d3d11_dec_sources = [
+  'gsth264picture.c',
+  'gsth264decoder.c',
+  'gstd3d11decoder.c',
+  'gstd3d11h264dec.c',
+]
+
 dxgi_headers = [
   ['dxgi1_6.h', 6],
   ['dxgi1_5.h', 5],
@@ -90,6 +97,14 @@ endif
 
 d3d11_conf.set10('HAVE_D3D11SDKLAYERS_H', have_d3d11sdk_h)
 d3d11_conf.set10('HAVE_DXGIDEBUG_H', have_dxgidebug_h)
+
+# d3d11 video api uses dxva structure for decoding, and dxva.h needs d3d9 types
+if cc.has_header('dxva.h') and cc.has_header('d3d9.h')
+  d3d11_conf.set('HAVE_DXVA_H', 1)
+  d3d11_sources += d3d11_dec_sources
+  extra_c_args += ['-DGST_USE_UNSTABLE_API']
+  extra_dep += [gstcodecparsers_dep]
+endif
 
 configure_file(
   output: 'd3d11config.h',
