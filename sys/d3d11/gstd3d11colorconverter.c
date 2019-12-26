@@ -916,7 +916,7 @@ gst_d3d11_color_converter_convert (GstD3D11ColorConverter * converter,
 
   gst_d3d11_device_lock (converter->device);
   ret = gst_d3d11_color_converter_convert_unlocked (converter, srv, rtv);
-  gst_d3d11_device_lock (converter->device);
+  gst_d3d11_device_unlock (converter->device);
 
   return ret;
 }
