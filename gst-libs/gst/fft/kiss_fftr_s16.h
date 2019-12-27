@@ -1,5 +1,13 @@
-#ifndef KISS_FTR_S16_H
-#define KISS_FTR_S16_H
+/*
+ *  Copyright (c) 2003-2004, Mark Borgerding. All rights reserved.
+ *  This file is part of KISS FFT - https://github.com/mborgerding/kissfft
+ *
+ *  SPDX-License-Identifier: BSD-3-Clause
+ *  See COPYING file for more information.
+ */
+
+#ifndef KISS_FTR_H
+#define KISS_FTR_H
 
 #include "kiss_fft_s16.h"
 #ifdef __cplusplus
@@ -38,7 +46,7 @@ void kiss_fftri_s16(kiss_fftr_s16_cfg cfg,const kiss_fft_s16_cpx *freqdata,kiss_
  output timedata has nfft scalar points
 */
 
-#define kiss_fftr_s16_free free
+#define kiss_fftr_s16_free KISS_FFT_S16_FREE
 
 #ifdef __cplusplus
 }
