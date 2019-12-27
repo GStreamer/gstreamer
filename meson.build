@@ -256,7 +256,7 @@ if cc.links('''#include <pthread.h>
   cdata.set('HAVE_PTHREAD_SETNAME_NP_WITHOUT_TID', 1)
 endif
 
-# Check for posix timers, monotonic clock and TAI clock
+# Check for posix timers and monotonic clock
 time_prefix = '#include <time.h>\n'
 if cdata.has('HAVE_UNISTD_H')
   time_prefix += '#include <unistd.h>'
@@ -278,15 +278,6 @@ monotonic_clock_src = time_prefix + '''
 '''
 if cc.compiles(monotonic_clock_src, name : 'monotonic clock from time.h')
   cdata.set('HAVE_MONOTONIC_CLOCK', 1)
-endif
-
-tai_clock_src = time_prefix + '''
-#if !defined(CLOCK_TAI)
-#error CLOCK_TAI not defined
-#endif
-'''
-if cc.compiles(tai_clock_src, name : 'TAI clock from time.h')
-  cdata.set('HAVE_TAI_CLOCK', 1)
 endif
 
 # Check for __uint128_t (gcc) by checking for 128-bit division

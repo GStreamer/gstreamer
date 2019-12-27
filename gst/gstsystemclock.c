@@ -561,7 +561,7 @@ clock_type_to_posix_id (GstClockType clock_type)
   else
 #endif
   if (clock_type == GST_CLOCK_TYPE_TAI)
-#ifdef HAVE_TAI_CLOCK
+#ifdef CLOCK_TAI
     return CLOCK_TAI;
 #else
     GST_ERROR
