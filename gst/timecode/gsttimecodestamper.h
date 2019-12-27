@@ -124,6 +124,9 @@ struct _GstTimeCodeStamper
   GstVideoTimeCode *ltc_internal_tc;
   GstClockTime ltc_internal_running_time;
 
+  /* Running time of last video frame we received */
+  GstClockTime video_current_running_time;
+
   /* Protected by mutex above */
   LTCDecoder *ltc_dec;
   ltc_off_t ltc_total;
@@ -135,6 +138,13 @@ struct _GstTimeCodeStamper
   /* Protected by mutex above */
   gboolean ltc_flushing;
   gboolean ltc_eos;
+
+  /* Latency information for LTC audio and video stream */
+  GstClockTime audio_latency, video_latency;
+  gboolean audio_live, video_live;
+  /* Latency we report to downstream */
+  GstClockTime latency;
+  GstClockID video_clock_id;
 
   GstPadActivateModeFunction video_activatemode_default;
 #endif

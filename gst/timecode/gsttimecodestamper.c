@@ -127,6 +127,9 @@ static void gst_timecodestamper_release_pad (GstElement * element,
     GstPad * pad);
 
 #if HAVE_LTC
+static gboolean gst_timecodestamper_query (GstBaseTransform * trans,
+    GstPadDirection direction, GstQuery * query);
+
 static GstFlowReturn gst_timecodestamper_ltcpad_chain (GstPad * pad,
     GstObject * parent, GstBuffer * buffer);
 static gboolean gst_timecodestamper_ltcpad_event (GstPad * pad,
@@ -304,6 +307,9 @@ gst_timecodestamper_class_init (GstTimeCodeStamperClass * klass)
       GST_DEBUG_FUNCPTR (gst_timecodestamper_release_pad);
 
   trans_class->sink_event = GST_DEBUG_FUNCPTR (gst_timecodestamper_sink_event);
+#if HAVE_LTC
+  trans_class->query = GST_DEBUG_FUNCPTR (gst_timecodestamper_query);
+#endif
   trans_class->stop = GST_DEBUG_FUNCPTR (gst_timecodestamper_stop);
   trans_class->start = GST_DEBUG_FUNCPTR (gst_timecodestamper_start);
 
@@ -353,6 +359,12 @@ gst_timecodestamper_init (GstTimeCodeStamper * timecodestamper)
 
   timecodestamper->ltc_eos = TRUE;
   timecodestamper->ltc_flushing = TRUE;
+
+  timecodestamper->audio_live = FALSE;
+  timecodestamper->audio_latency = GST_CLOCK_TIME_NONE;
+  timecodestamper->video_live = FALSE;
+  timecodestamper->video_latency = GST_CLOCK_TIME_NONE;
+  timecodestamper->latency = GST_CLOCK_TIME_NONE;
 
   timecodestamper->video_activatemode_default =
       GST_PAD_ACTIVATEMODEFUNC (GST_BASE_TRANSFORM_SINK_PAD (timecodestamper));
@@ -574,6 +586,9 @@ gst_timecodestamper_stop (GstBaseTransform * trans)
 #if HAVE_LTC
   g_mutex_lock (&timecodestamper->mutex);
   timecodestamper->video_flushing = TRUE;
+  timecodestamper->video_current_running_time = GST_CLOCK_TIME_NONE;
+  if (timecodestamper->video_clock_id)
+    gst_clock_id_unschedule (timecodestamper->video_clock_id);
   timecodestamper->ltc_flushing = TRUE;
   g_cond_signal (&timecodestamper->ltc_cond_video);
   g_cond_signal (&timecodestamper->ltc_cond_audio);
@@ -728,14 +743,14 @@ gst_timecodestamper_update_timecode_framerate (GstTimeCodeStamper *
 }
 
 /* Must be called with object lock */
-static void
+static gboolean
 gst_timecodestamper_update_framerate (GstTimeCodeStamper * timecodestamper,
     const GstVideoInfo * vinfo)
 {
   /* Nothing changed */
   if (vinfo->fps_n == timecodestamper->vinfo.fps_n &&
       vinfo->fps_d == timecodestamper->vinfo.fps_d)
-    return;
+    return FALSE;
 
   gst_timecodestamper_update_timecode_framerate (timecodestamper, vinfo,
       timecodestamper->internal_tc);
@@ -750,13 +765,15 @@ gst_timecodestamper_update_framerate (GstTimeCodeStamper * timecodestamper,
   gst_timecodestamper_update_timecode_framerate (timecodestamper, vinfo,
       timecodestamper->ltc_internal_tc);
 #endif
+
+  return TRUE;
 }
 
 static gboolean
 gst_timecodestamper_sink_event (GstBaseTransform * trans, GstEvent * event)
 {
-  gboolean ret = FALSE;
   GstTimeCodeStamper *timecodestamper = GST_TIME_CODE_STAMPER (trans);
+  gboolean ret = FALSE;
 
   GST_DEBUG_OBJECT (trans, "received event %" GST_PTR_FORMAT, event);
   switch (GST_EVENT_TYPE (event)) {
@@ -776,6 +793,7 @@ gst_timecodestamper_sink_event (GstBaseTransform * trans, GstEvent * event)
     {
       GstCaps *caps;
       GstVideoInfo info;
+      gboolean latency_changed;
 
       GST_OBJECT_LOCK (timecodestamper);
       gst_event_parse_caps (event, &caps);
@@ -792,15 +810,23 @@ gst_timecodestamper_sink_event (GstBaseTransform * trans, GstEvent * event)
         return FALSE;
       }
 
-      gst_timecodestamper_update_framerate (timecodestamper, &info);
+      latency_changed =
+          gst_timecodestamper_update_framerate (timecodestamper, &info);
       timecodestamper->vinfo = info;
       GST_OBJECT_UNLOCK (timecodestamper);
+
+      if (latency_changed)
+        gst_element_post_message (GST_ELEMENT_CAST (timecodestamper),
+            gst_message_new_latency (GST_OBJECT_CAST (timecodestamper)));
       break;
     }
 #if HAVE_LTC
     case GST_EVENT_FLUSH_START:
       g_mutex_lock (&timecodestamper->mutex);
       timecodestamper->video_flushing = TRUE;
+      timecodestamper->video_current_running_time = GST_CLOCK_TIME_NONE;
+      if (timecodestamper->video_clock_id)
+        gst_clock_id_unschedule (timecodestamper->video_clock_id);
       g_cond_signal (&timecodestamper->ltc_cond_video);
       g_mutex_unlock (&timecodestamper->mutex);
       break;
@@ -826,6 +852,60 @@ gst_timecodestamper_sink_event (GstBaseTransform * trans, GstEvent * event)
   return ret;
 }
 
+#if HAVE_LTC
+static gboolean
+gst_timecodestamper_query (GstBaseTransform * trans,
+    GstPadDirection direction, GstQuery * query)
+{
+  GstTimeCodeStamper *timecodestamper = GST_TIME_CODE_STAMPER (trans);
+
+  if (direction == GST_PAD_SINK)
+    return
+        GST_BASE_TRANSFORM_CLASS (gst_timecodestamper_parent_class)->query
+        (trans, direction, query);
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_LATENCY:{
+      gboolean res;
+      gboolean live;
+      GstClockTime min_latency, max_latency;
+      GstClockTime latency;
+
+      res =
+          gst_pad_query_default (GST_BASE_TRANSFORM_SRC_PAD (trans),
+          GST_OBJECT_CAST (trans), query);
+      g_mutex_lock (&timecodestamper->mutex);
+      if (res && timecodestamper->vinfo.fps_n && timecodestamper->vinfo.fps_d) {
+        gst_query_parse_latency (query, &live, &min_latency, &max_latency);
+        if (live) {
+          latency =
+              gst_util_uint64_scale_int_ceil (GST_SECOND,
+              timecodestamper->vinfo.fps_d, timecodestamper->vinfo.fps_n);
+          min_latency += latency;
+          if (max_latency != GST_CLOCK_TIME_NONE)
+            max_latency += latency;
+          timecodestamper->latency = min_latency;
+        } else {
+          timecodestamper->latency = 0;
+        }
+      } else if (res) {
+        GST_ERROR_OBJECT (timecodestamper,
+            "Need a known, non-variable framerate to answer LATENCY query");
+        res = FALSE;
+        timecodestamper->latency = GST_CLOCK_TIME_NONE;
+      }
+      g_mutex_unlock (&timecodestamper->mutex);
+
+      return res;
+    }
+    default:
+      return
+          GST_BASE_TRANSFORM_CLASS (gst_timecodestamper_parent_class)->query
+          (trans, direction, query);
+  }
+}
+#endif
+
 static gboolean
 remove_timecode_meta (GstBuffer * buffer, GstMeta ** meta, gpointer user_data)
 {
@@ -835,6 +915,29 @@ remove_timecode_meta (GstBuffer * buffer, GstMeta ** meta, gpointer user_data)
 
   return TRUE;
 }
+
+#if HAVE_LTC
+static void
+gst_timecodestamper_update_latency (GstTimeCodeStamper * timecodestamper,
+    GstPad * pad, gboolean * live, GstClockTime * latency)
+{
+  GstQuery *query;
+
+  query = gst_query_new_latency ();
+  if (!gst_pad_peer_query (pad, query)) {
+    GST_WARNING_OBJECT (pad, "Failed to query latency");
+    gst_pad_mark_reconfigure (pad);
+    return;
+  }
+
+  g_mutex_lock (&timecodestamper->mutex);
+  gst_query_parse_latency (query, live, latency, NULL);
+  /* If we're not live, consider a latency of 0 */
+  if (!*live)
+    *latency = 0;
+  g_mutex_unlock (&timecodestamper->mutex);
+}
+#endif
 
 static GstFlowReturn
 gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
@@ -856,6 +959,14 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
     gst_buffer_unref (buffer);
     return GST_FLOW_NOT_NEGOTIATED;
   }
+#if HAVE_LTC
+  if (timecodestamper->video_latency == -1
+      || gst_pad_check_reconfigure (GST_BASE_TRANSFORM_SINK_PAD (vfilter))) {
+    gst_timecodestamper_update_latency (timecodestamper,
+        GST_BASE_TRANSFORM_SINK_PAD (vfilter), &timecodestamper->video_live,
+        &timecodestamper->video_latency);
+  }
+#endif
 
   /* Collect all the current times */
   base_time = gst_element_get_base_time (GST_ELEMENT (timecodestamper));
@@ -1066,14 +1177,48 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
 
     g_mutex_lock (&timecodestamper->mutex);
 
+    timecodestamper->video_current_running_time = running_time;
+
     /* Wait until the the audio is at least 2 frame durations ahead of the
      * video to allow for some slack, or the video pad is flushing or the
      * LTC pad is EOS. */
-    while ((timecodestamper->ltc_current_running_time == GST_CLOCK_TIME_NONE
-            || timecodestamper->ltc_current_running_time <
-            running_time + 2 * frame_duration)
-        && !timecodestamper->video_flushing && !timecodestamper->ltc_eos) {
-      g_cond_wait (&timecodestamper->ltc_cond_video, &timecodestamper->mutex);
+    if (timecodestamper->video_live) {
+      GstClock *clock =
+          gst_element_get_clock (GST_ELEMENT_CAST (timecodestamper));
+
+      if (clock) {
+        GstClockID clock_id;
+        GstClockTime base_time =
+            gst_element_get_base_time (GST_ELEMENT_CAST (timecodestamper));
+
+        GST_TRACE_OBJECT (timecodestamper,
+            "Waiting for clock to reach %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (base_time + running_time +
+                timecodestamper->latency));
+        clock_id =
+            gst_clock_new_single_shot_id (clock,
+            base_time + running_time + timecodestamper->latency);
+
+        timecodestamper->video_clock_id = clock_id;
+        g_mutex_unlock (&timecodestamper->mutex);
+        gst_clock_id_wait (clock_id, NULL);
+        g_mutex_lock (&timecodestamper->mutex);
+        timecodestamper->video_clock_id = NULL;
+        gst_clock_id_unref (clock_id);
+        gst_object_unref (clock);
+      } else {
+        GST_WARNING_OBJECT (timecodestamper,
+            "No clock in live mode, not waiting");
+      }
+    } else {
+      while ((timecodestamper->ltc_current_running_time == GST_CLOCK_TIME_NONE
+              || timecodestamper->ltc_current_running_time <
+              running_time + 2 * frame_duration)
+          && !timecodestamper->video_flushing && !timecodestamper->ltc_eos) {
+        GST_TRACE_OBJECT (timecodestamper,
+            "Waiting for LTC audio to advance, EOS or flushing");
+        g_cond_wait (&timecodestamper->ltc_cond_video, &timecodestamper->mutex);
+      }
     }
 
     if (timecodestamper->video_flushing) {
@@ -1382,7 +1527,15 @@ gst_timecodestamper_request_new_pad (GstElement * element,
 
   GST_OBJECT_UNLOCK (timecodestamper);
 
+  g_mutex_lock (&timecodestamper->mutex);
+  timecodestamper->audio_live = FALSE;
+  timecodestamper->audio_latency = GST_CLOCK_TIME_NONE;
+  g_mutex_unlock (&timecodestamper->mutex);
+
   gst_element_add_pad (element, timecodestamper->ltcpad);
+
+  gst_element_post_message (GST_ELEMENT_CAST (timecodestamper),
+      gst_message_new_latency (GST_OBJECT_CAST (timecodestamper)));
 
   return timecodestamper->ltcpad;
 #else
@@ -1442,7 +1595,13 @@ gst_timecodestamper_release_pad (GstElement * element, GstPad * pad)
   }
 
   timecodestamper->ltc_total = 0;
+
+  timecodestamper->audio_live = FALSE;
+  timecodestamper->audio_latency = GST_CLOCK_TIME_NONE;
   g_mutex_unlock (&timecodestamper->mutex);
+
+  gst_element_post_message (GST_ELEMENT_CAST (timecodestamper),
+      gst_message_new_latency (GST_OBJECT_CAST (timecodestamper)));
 
   gst_element_remove_pad (element, pad);
 #endif
@@ -1459,6 +1618,11 @@ gst_timecodestamper_ltcpad_chain (GstPad * pad,
   GstClockTime timestamp, running_time, duration;
   guint nsamples;
   gboolean discont;
+
+  if (timecodestamper->audio_latency == -1 || gst_pad_check_reconfigure (pad)) {
+    gst_timecodestamper_update_latency (timecodestamper, pad,
+        &timecodestamper->audio_live, &timecodestamper->audio_latency);
+  }
 
   g_mutex_lock (&timecodestamper->mutex);
   if (timecodestamper->ltc_flushing) {
@@ -1525,14 +1689,47 @@ gst_timecodestamper_ltcpad_chain (GstPad * pad,
   timecodestamper->ltc_total += map.size;
   gst_buffer_unmap (buffer, &map);
 
+  /* Notify the video streaming thread that new data is available */
   g_cond_signal (&timecodestamper->ltc_cond_video);
 
-  /* Wait until the video caught up if we already queued up a lot of pending
-   * timecodes, or until video is EOS or the LTC pad is flushing. */
-  while (ltc_decoder_queue_length (timecodestamper->ltc_dec) >
-      DEFAULT_LTC_QUEUE / 2 && !timecodestamper->video_eos
-      && !timecodestamper->ltc_flushing) {
-    g_cond_wait (&timecodestamper->ltc_cond_audio, &timecodestamper->mutex);
+  /* Wait until video has caught up, if needed */
+  if (timecodestamper->audio_live) {
+    /* In live-mode, do no waiting but we need to drop things from the LTC
+     * decoder queue as otherwise we'll end up reading old items as new if the
+     * ringbuffer inside it overflows! */
+    while (ltc_decoder_queue_length (timecodestamper->ltc_dec) >
+        3 * DEFAULT_LTC_QUEUE / 4) {
+      LTCFrameExt ltc_frame;
+      GST_WARNING_OBJECT (timecodestamper,
+          "Dropping old LTC timecode because of too slow video");
+      ltc_decoder_read (timecodestamper->ltc_dec, &ltc_frame);
+    }
+  } else {
+    /* If we're ahead of the video, wait until the video has caught up.
+     * Otherwise don't wait and drop any too old items from the ringbuffer */
+    while ((timecodestamper->video_current_running_time == GST_CLOCK_TIME_NONE
+            || timecodestamper->ltc_current_running_time >=
+            timecodestamper->video_current_running_time)
+        && timecodestamper->ltc_dec
+        && ltc_decoder_queue_length (timecodestamper->ltc_dec) >
+        DEFAULT_LTC_QUEUE / 2 && !timecodestamper->video_eos
+        && !timecodestamper->ltc_flushing) {
+      GST_TRACE_OBJECT (timecodestamper,
+          "Waiting for video to advance, EOS or flushing");
+      g_cond_wait (&timecodestamper->ltc_cond_audio, &timecodestamper->mutex);
+    }
+
+    while ((timecodestamper->video_current_running_time == GST_CLOCK_TIME_NONE
+            || timecodestamper->ltc_current_running_time <
+            timecodestamper->video_current_running_time)
+        && timecodestamper->ltc_dec
+        && ltc_decoder_queue_length (timecodestamper->ltc_dec) >
+        3 * DEFAULT_LTC_QUEUE / 4) {
+      LTCFrameExt ltc_frame;
+      GST_WARNING_OBJECT (timecodestamper,
+          "Dropping old LTC timecode because of audio being behind");
+      ltc_decoder_read (timecodestamper->ltc_dec, &ltc_frame);
+    }
   }
 
   if (timecodestamper->ltc_flushing)
@@ -1541,7 +1738,6 @@ gst_timecodestamper_ltcpad_chain (GstPad * pad,
     fr = GST_FLOW_OK;
 
   g_mutex_unlock (&timecodestamper->mutex);
-
 
   gst_buffer_unref (buffer);
   return fr;
@@ -1637,6 +1833,8 @@ gst_timecodestamper_ltcpad_activatemode (GstPad * pad,
     g_mutex_lock (&timecodestamper->mutex);
     timecodestamper->ltc_flushing = FALSE;
     timecodestamper->ltc_eos = FALSE;
+    timecodestamper->audio_live = FALSE;
+    timecodestamper->audio_latency = GST_CLOCK_TIME_NONE;
     g_mutex_unlock (&timecodestamper->mutex);
   } else {
     g_mutex_lock (&timecodestamper->mutex);
@@ -1659,10 +1857,16 @@ gst_timecodestamper_videopad_activatemode (GstPad * pad,
     g_mutex_lock (&timecodestamper->mutex);
     timecodestamper->video_flushing = FALSE;
     timecodestamper->video_eos = FALSE;
+    timecodestamper->video_live = FALSE;
+    timecodestamper->video_latency = GST_CLOCK_TIME_NONE;
+    timecodestamper->video_current_running_time = GST_CLOCK_TIME_NONE;
     g_mutex_unlock (&timecodestamper->mutex);
   } else {
     g_mutex_lock (&timecodestamper->mutex);
     timecodestamper->video_flushing = TRUE;
+    timecodestamper->video_current_running_time = GST_CLOCK_TIME_NONE;
+    if (timecodestamper->video_clock_id)
+      gst_clock_id_unschedule (timecodestamper->video_clock_id);
     g_cond_signal (&timecodestamper->ltc_cond_video);
     g_mutex_unlock (&timecodestamper->mutex);
   }
