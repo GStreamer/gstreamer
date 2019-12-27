@@ -398,31 +398,27 @@ gst_video_aggregator_convert_pad_prepare_frame (GstVideoAggregatorPad * vpad,
       return FALSE;
     pad->priv->converter_config_changed = FALSE;
 
-    if (!pad->priv->conversion_info.finfo
-        || !gst_video_info_is_equal (&conversion_info,
-            &pad->priv->conversion_info)) {
-      pad->priv->conversion_info = conversion_info;
+    pad->priv->conversion_info = conversion_info;
 
-      if (pad->priv->convert)
-        gst_video_converter_free (pad->priv->convert);
-      pad->priv->convert = NULL;
+    if (pad->priv->convert)
+      gst_video_converter_free (pad->priv->convert);
+    pad->priv->convert = NULL;
 
-      if (!gst_video_info_is_equal (&vpad->info, &pad->priv->conversion_info)) {
-        pad->priv->convert =
-            gst_video_converter_new (&vpad->info, &pad->priv->conversion_info,
-            pad->priv->converter_config ? gst_structure_copy (pad->
-                priv->converter_config) : NULL);
-        if (!pad->priv->convert) {
-          GST_WARNING_OBJECT (pad, "No path found for conversion");
-          return FALSE;
-        }
-
-        GST_DEBUG_OBJECT (pad, "This pad will be converted from %d to %d",
-            GST_VIDEO_INFO_FORMAT (&vpad->info),
-            GST_VIDEO_INFO_FORMAT (&pad->priv->conversion_info));
-      } else {
-        GST_DEBUG_OBJECT (pad, "This pad will not need conversion");
+    if (!gst_video_info_is_equal (&vpad->info, &pad->priv->conversion_info)) {
+      pad->priv->convert =
+          gst_video_converter_new (&vpad->info, &pad->priv->conversion_info,
+          pad->priv->converter_config ? gst_structure_copy (pad->
+              priv->converter_config) : NULL);
+      if (!pad->priv->convert) {
+        GST_WARNING_OBJECT (pad, "No path found for conversion");
+        return FALSE;
       }
+
+      GST_DEBUG_OBJECT (pad, "This pad will be converted from %d to %d",
+          GST_VIDEO_INFO_FORMAT (&vpad->info),
+          GST_VIDEO_INFO_FORMAT (&pad->priv->conversion_info));
+    } else {
+      GST_DEBUG_OBJECT (pad, "This pad will not need conversion");
     }
   }
 
