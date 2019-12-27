@@ -188,6 +188,7 @@ typedef enum {
 
 /**
  * GstVaapiEntrypoint:
+ * @GST_VAAPI_ENTRYPOINT_INVALID: Invalid entrypoint
  * @GST_VAAPI_ENTRYPOINT_VLD: Variable Length Decoding
  * @GST_VAAPI_ENTRYPOINT_IDCT: Inverse Decrete Cosine Transform
  * @GST_VAAPI_ENTRYPOINT_MOCO: Motion Compensation
@@ -200,7 +201,8 @@ typedef enum {
  * The set of all entrypoints for #GstVaapiEntrypoint
  */
 typedef enum {
-    GST_VAAPI_ENTRYPOINT_VLD = 1,
+    GST_VAAPI_ENTRYPOINT_INVALID,
+    GST_VAAPI_ENTRYPOINT_VLD,
     GST_VAAPI_ENTRYPOINT_IDCT,
     GST_VAAPI_ENTRYPOINT_MOCO,
     GST_VAAPI_ENTRYPOINT_SLICE_ENCODE,
