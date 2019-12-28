@@ -46,13 +46,6 @@ if USE_ENCODERS
   test_examples += [ 'simple-encoder' ]
 endif
 
-if USE_H264_FEI_ENCODER
-  test_examples += [
-    'test-fei-enc-out',
-    'test-fei-enc-in',
-  ]
-endif
-
 if USE_GLX
   test_examples += [ 'test-textures' ]
 endif

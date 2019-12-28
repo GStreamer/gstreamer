@@ -27,10 +27,6 @@
 #include <gst/vaapi/gstvaapidecoder_objects.h>
 #include <gst/vaapi/gstvaapiencoder.h>
 
-#if USE_H264_FEI_ENCODER
-#include <gst/vaapi/gstvaapifei_objects.h>
-#endif
-
 G_BEGIN_DECLS
 
 typedef struct _GstVaapiEncPicture GstVaapiEncPicture;
@@ -270,14 +266,6 @@ struct _GstVaapiEncPicture
   guint frame_num;
   guint poc;
   guint temporal_id;
-#if USE_H264_FEI_ENCODER
-  GstVaapiEncFeiMbControl *mbcntrl;
-  GstVaapiEncFeiMvPredictor *mvpred;
-  GstVaapiEncFeiQp *qp;
-  GstVaapiEncFeiMbCode *mbcode;
-  GstVaapiEncFeiMv *mv;
-  GstVaapiEncFeiDistortion *dist;
-#endif
 };
 
 G_GNUC_INTERNAL

@@ -538,8 +538,7 @@ ensure_profiles (GstVaapiDisplay * display)
       g_ptr_array_add (priv->decoders, cfg);
     if ((cfg->entrypoints & ENTRY_POINT_FLAG (SLICE_ENCODE))
         || (cfg->entrypoints & ENTRY_POINT_FLAG (PICTURE_ENCODE))
-        || (cfg->entrypoints & ENTRY_POINT_FLAG (SLICE_ENCODE_LP))
-        || (cfg->entrypoints & ENTRY_POINT_FLAG (SLICE_ENCODE_FEI)))
+        || (cfg->entrypoints & ENTRY_POINT_FLAG (SLICE_ENCODE_LP)))
       g_ptr_array_add (priv->encoders, cfg);
   }
 

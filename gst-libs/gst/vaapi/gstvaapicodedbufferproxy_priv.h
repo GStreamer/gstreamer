@@ -26,10 +26,6 @@
 #include "gstvaapicodedbuffer_priv.h"
 #include "gstvaapiminiobject.h"
 
-#if USE_H264_FEI_ENCODER
-#include <gst/vaapi/gstvaapifei_objects.h>
-#endif
-
 G_BEGIN_DECLS
 
 #define GST_VAAPI_CODED_BUFFER_PROXY(proxy) \
@@ -46,12 +42,6 @@ struct _GstVaapiCodedBufferProxy
   gpointer              destroy_data;
   GDestroyNotify        user_data_destroy;
   gpointer              user_data;
-
-#if USE_H264_FEI_ENCODER
-  GstVaapiEncFeiMbCode *mbcode;
-  GstVaapiEncFeiMv *mv;
-  GstVaapiEncFeiDistortion *dist;
-#endif
 };
 
 /**

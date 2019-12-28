@@ -334,9 +334,6 @@ struct _GstVaapiEncoderClass
   GstVaapiEncoderStatus (*get_codec_data) (GstVaapiEncoder * encoder,
                                            GstBuffer ** codec_data);
 
-  /* To create a secondary context for a single base encoder */
-  gboolean              (*ensure_secondary_context) (GstVaapiEncoder * encoder);
-
   /* Iterator that retrieves the pending pictures in the reordered
    * list */
   gboolean              (*get_pending_reordered) (GstVaapiEncoder * encoder,

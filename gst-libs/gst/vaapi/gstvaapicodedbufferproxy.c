@@ -54,19 +54,6 @@ coded_buffer_proxy_finalize (GstVaapiCodedBufferProxy * proxy)
   /* Notify the user function that the object is now destroyed */
   if (proxy->destroy_func)
     proxy->destroy_func (proxy->destroy_data);
-
-#if USE_H264_FEI_ENCODER
-  if (proxy->mbcode)
-    gst_vaapi_fei_codec_object_replace ((GstVaapiFeiCodecObject **) &
-        proxy->mbcode, NULL);
-  if (proxy->mv)
-    gst_vaapi_fei_codec_object_replace ((GstVaapiFeiCodecObject **) &
-        proxy->mv, NULL);
-  if (proxy->dist)
-    gst_vaapi_fei_codec_object_replace ((GstVaapiFeiCodecObject **) &
-        proxy->dist, NULL);
-#endif
-
 }
 
 static inline const GstVaapiMiniObjectClass *
@@ -108,11 +95,6 @@ gst_vaapi_coded_buffer_proxy_new_from_pool (GstVaapiCodedBufferPool * pool)
   proxy->user_data_destroy = NULL;
   proxy->pool = gst_vaapi_video_pool_ref (GST_VAAPI_VIDEO_POOL (pool));
   proxy->buffer = gst_vaapi_video_pool_get_object (proxy->pool);
-#if USE_H264_FEI_ENCODER
-  proxy->mv = NULL;
-  proxy->mbcode = NULL;
-  proxy->dist = NULL;
-#endif
   if (!proxy->buffer)
     goto error;
   gst_mini_object_ref (GST_MINI_OBJECT_CAST (proxy->buffer));
@@ -272,104 +254,3 @@ gst_vaapi_coded_buffer_proxy_set_user_data (GstVaapiCodedBufferProxy * proxy,
 
   coded_buffer_proxy_set_user_data (proxy, user_data, destroy_func);
 }
-
-#if USE_H264_FEI_ENCODER
-
-/**
- * gst_vaapi_coded_buffer_proxy_get_fei_mb_code:
- * @proxy: a #GstVaapiCodedBufferProxy
- *
- * Returns the #GstVaapiEncFeiMbCode stored in the @proxy
- *
- * Return value: the #GstVaapiEncFeiMbcode, or %NULL if none was
- *   associated with the surface proxy
- */
-GstVaapiEncFeiMbCode *
-gst_vaapi_coded_buffer_proxy_get_fei_mbcode (GstVaapiCodedBufferProxy * proxy)
-{
-  g_return_val_if_fail (proxy != NULL, 0);
-  return proxy->mbcode;
-}
-
-/**
- * gst_vaapi_coded_buffer_proxy_get_fei_mv:
- * @proxy: a #GstVaapiCodedBufferProxy
- *
- * Returns the #GstVaapiEncFeiMv stored in the @proxy
- *
- * Return value: the #GstVaapiEncFeiMv, or %NULL if none was
- *   associated with the surface proxy
- */
-GstVaapiEncFeiMv *
-gst_vaapi_coded_buffer_proxy_get_fei_mv (GstVaapiCodedBufferProxy * proxy)
-{
-  g_return_val_if_fail (proxy != NULL, 0);
-  return proxy->mv;
-}
-
-/**
- * gst_vaapi_coded_buffer_proxy_get_fei_distortion:
- * @proxy: a #GstVaapiCodedBufferProxy
- *
- * Returns the #GstVaapiEncFeiDistortion stored in the @proxy
- *
- * Return value: the #GstVaapiEncFeiDistortion, or %NULL if none was
- *   associated with the surface proxy
- */
-GstVaapiEncFeiDistortion *
-gst_vaapi_coded_buffer_proxy_get_fei_distortion (GstVaapiCodedBufferProxy *
-    proxy)
-{
-  g_return_val_if_fail (proxy != NULL, 0);
-  return proxy->dist;
-}
-
-/**
- * gst_vaapi_coded_buffer_proxy_set_fei_mb_code:
- * @proxy: #GstVaapiCodedBufferProxy
- * @mbcode: the #GstVaapiEncFeiMbCode to be stored in @proxy
- *
- * Associates the @mbcode with the @proxy
- */
-void
-gst_vaapi_coded_buffer_proxy_set_fei_mb_code (GstVaapiCodedBufferProxy * proxy,
-    GstVaapiEncFeiMbCode * mbcode)
-{
-  g_return_if_fail (proxy != NULL);
-  gst_vaapi_fei_codec_object_replace ((GstVaapiFeiCodecObject **) &
-      proxy->mbcode, (GstVaapiFeiCodecObject *) mbcode);
-}
-
-/**
- * gst_vaapi_coded_buffer_proxy_set_fei_mv:
- * @proxy: #GstVaapiCodedBufferProxy
- * @mv: the #GstVaapiEncFeiMv to be stored in @proxy
- *
- * Associates the @mv with the @proxy
- */
-void
-gst_vaapi_coded_buffer_proxy_set_fei_mv (GstVaapiCodedBufferProxy * proxy,
-    GstVaapiEncFeiMv * mv)
-{
-  g_return_if_fail (proxy != NULL);
-  gst_vaapi_fei_codec_object_replace ((GstVaapiFeiCodecObject **) &
-      proxy->mv, (GstVaapiFeiCodecObject *) mv);
-}
-
-/**
- * gst_vaapi_coded_buffer_proxy_set_fei_distortion:
- * @proxy: #GstVaapiSurfaceProxy
- * @dist: the #GstVaapiEncFeiDistortion to be stored in @proxy
- *
- * Associates the @dist with the @proxy
- */
-void
-gst_vaapi_coded_buffer_proxy_set_fei_distortion (GstVaapiCodedBufferProxy *
-    proxy, GstVaapiEncFeiDistortion * dist)
-{
-  g_return_if_fail (proxy != NULL);
-  gst_vaapi_fei_codec_object_replace ((GstVaapiFeiCodecObject **) &
-      proxy->dist, (GstVaapiFeiCodecObject *) dist);
-}
-
-#endif

@@ -110,7 +110,6 @@ endif
 
 USE_ENCODERS = get_option('with_encoders') != 'no'
 USE_VP9_ENCODER = USE_ENCODERS and cc.has_header('va/va_enc_vp9.h', dependencies: libva_dep, prefix: '#include <va/va.h>')
-USE_H264_FEI_ENCODER = USE_ENCODERS and cc.has_header('va/va_fei_h264.h', dependencies: libva_dep, prefix: '#include <va/va.h>')
 
 USE_DRM = libva_drm_dep.found() and libdrm_dep.found() and libudev_dep.found() and get_option('with_drm') != 'no'
 USE_EGL = gmodule_dep.found() and egl_dep.found() and GLES_VERSION_MASK != 0 and get_option('with_egl') != 'no'
@@ -141,7 +140,6 @@ cdata.set10('USE_EGL', USE_EGL)
 cdata.set10('USE_ENCODERS', USE_ENCODERS)
 cdata.set10('USE_GLX', USE_GLX)
 cdata.set10('USE_VP9_ENCODER', USE_VP9_ENCODER)
-cdata.set10('USE_H264_FEI_ENCODER', USE_H264_FEI_ENCODER)
 cdata.set10('USE_WAYLAND', USE_WAYLAND)
 cdata.set10('USE_X11', USE_X11)
 cdata.set10('HAVE_XKBLIB', cc.has_header('X11/XKBlib.h', dependencies: x11_dep))

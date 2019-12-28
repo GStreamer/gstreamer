@@ -150,9 +150,6 @@ static const GstVaapiEntrypointMap gst_vaapi_entrypoints[] = {
 #if VA_CHECK_VERSION(0,39,1)
   {GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_LP, VAEntrypointEncSliceLP},
 #endif
-#if USE_H264_FEI_ENCODER
-  {GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_FEI, VAEntrypointFEI},
-#endif
   {0,}
 };
 

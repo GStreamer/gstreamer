@@ -62,7 +62,6 @@ typedef enum {
  * @packed_headers: notify encoder that packed headers are submitted (mask).
  * @roi_capability: if encoder supports regions-of-interest.
  * @roi_num_supported: The number of regions-of-interest supported.
- * @fei_function: The functional mode for FEI Entrypoint (VA_FEI_FUNCTION_*).
  *
  * Extra configuration for encoding.
  */
@@ -72,7 +71,6 @@ struct _GstVaapiConfigInfoEncoder
   guint packed_headers;
   gboolean roi_capability;
   guint roi_num_supported;
-  guint fei_function;
 };
 
 /**
