@@ -79,7 +79,7 @@ gst_vaapi_pixmap_x11_create (GstVaapiPixmap * pixmap)
 {
   GstVaapiDisplayX11 *const display =
       GST_VAAPI_DISPLAY_X11 (GST_VAAPI_OBJECT_DISPLAY (pixmap));
-  Display *const dpy = GST_VAAPI_OBJECT_NATIVE_DISPLAY (display);
+  Display *const dpy = GST_VAAPI_DISPLAY_NATIVE (display);
   Window rootwin;
   Pixmap xid;
   guint depth;
