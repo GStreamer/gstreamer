@@ -42,6 +42,7 @@
 
 #include <gst/video/gstvideometa.h>
 #include "gstaasink.h"
+#include "gstaatv.h"
 
 /* aasink signals and args */
 enum
@@ -585,11 +586,14 @@ plugin_init (GstPlugin * plugin)
   if (!gst_element_register (plugin, "aasink", GST_RANK_NONE, GST_TYPE_AASINK))
     return FALSE;
 
+  if (!gst_element_register (plugin, "aatv", GST_RANK_NONE, GST_TYPE_AATV))
+    return FALSE;
+
   return TRUE;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     aasink,
-    "ASCII Art video sink",
+    "ASCII Art video sink & filter",
     plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
