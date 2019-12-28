@@ -428,8 +428,8 @@ update_ref_list (GstVaapiEncoderVP9 * encoder, GstVaapiEncPicture * picture,
       gst_vaapi_surface_proxy_unref (ref);
       break;
     case GST_VAAPI_ENCODER_VP9_REF_PIC_MODE_1:
-      gst_vaapi_surface_proxy_replace (&encoder->ref_list[encoder->
-              ref_list_idx], ref);
+      i = encoder->ref_list_idx;
+      gst_vaapi_surface_proxy_replace (&encoder->ref_list[i], ref);
       gst_vaapi_surface_proxy_unref (ref);
       encoder->ref_list_idx = (encoder->ref_list_idx + 1) % GST_VP9_REF_FRAMES;
       break;
