@@ -366,19 +366,6 @@ get_profile (GstVaapiEncode * encode)
   return GST_VAAPI_PROFILE_UNKNOWN;
 }
 
-static GstVaapiEntrypoint
-get_entrypoint (GstVaapiEncode * encode, GstVaapiProfile profile)
-{
-  GstVaapiEncoderTune tune = GST_VAAPI_ENCODER_TUNE_NONE;
-
-  g_object_get (encode, "tune", &tune, NULL);
-  if (tune == GST_VAAPI_ENCODER_TUNE_LOW_POWER)
-    return GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_LP;
-  if (profile == GST_VAAPI_PROFILE_JPEG_BASELINE)
-    return GST_VAAPI_ENTRYPOINT_PICTURE_ENCODE;
-  return GST_VAAPI_ENTRYPOINT_SLICE_ENCODE;
-}
-
 static gboolean
 ensure_allowed_sinkpad_caps (GstVaapiEncode * encode)
 {
@@ -390,6 +377,7 @@ ensure_allowed_sinkpad_caps (GstVaapiEncode * encode)
   GstVaapiProfile profile;
   guint i, size;
   GstStructure *structure;
+  gint min_width, min_height, max_width, max_height;
 
   if (encode->allowed_sinkpad_caps)
     return TRUE;
@@ -397,18 +385,27 @@ ensure_allowed_sinkpad_caps (GstVaapiEncode * encode)
     return TRUE;
 
   profile = get_profile (encode);
-  if (profile == GST_VAAPI_PROFILE_UNKNOWN)
-    return TRUE;
 
   /* First get all supported formats, all these formats should be recognized
      in video-format map. */
-  formats = gst_vaapi_encoder_get_surface_formats (encode->encoder, profile);
+  formats = gst_vaapi_encoder_get_surface_attributes (encode->encoder, profile,
+      &min_width, &min_height, &max_width, &max_height);
   if (!formats)
-    goto failed_get_formats;
+    goto failed_get_attributes;
 
   raw_caps = gst_vaapi_video_format_new_template_caps_from_list (formats);
   if (!raw_caps)
     goto failed_create_raw_caps;
+
+  /* Set the width/height info to caps */
+  size = gst_caps_get_size (raw_caps);
+  for (i = 0; i < size; i++) {
+    structure = gst_caps_get_structure (raw_caps, i);
+    if (!structure)
+      continue;
+    gst_structure_set (structure, "width", GST_TYPE_INT_RANGE, min_width,
+        max_width, "height", GST_TYPE_INT_RANGE, min_height, max_height, NULL);
+  }
 
   va_caps = gst_caps_copy (raw_caps);
   gst_caps_set_features_simple (va_caps,
@@ -423,16 +420,6 @@ ensure_allowed_sinkpad_caps (GstVaapiEncode * encode)
   raw_caps = NULL;
   gst_caps_append (out_caps, va_caps);
   gst_caps_append (out_caps, dma_caps);
-
-  /* Last, set the width/height info to caps */
-  size = gst_caps_get_size (out_caps);
-  for (i = 0; i < size; i++) {
-    structure = gst_caps_get_structure (out_caps, i);
-    if (!structure)
-      continue;
-    gst_vaapi_profile_caps_append_encoder (GST_VAAPI_PLUGIN_BASE_DISPLAY
-        (encode), profile, get_entrypoint (encode, profile), structure);
-  }
 
   gst_caps_replace (&encode->allowed_sinkpad_caps, out_caps);
   GST_INFO_OBJECT (encode, "Allowed sink caps %" GST_PTR_FORMAT,
@@ -452,9 +439,9 @@ bail:
     g_array_unref (formats);
   return ret;
 
-failed_get_formats:
+failed_get_attributes:
   {
-    GST_WARNING_OBJECT (encode, "failed to get allowed surface formats");
+    GST_WARNING_OBJECT (encode, "failed to get surface attributes");
     goto bail;
   }
 failed_create_raw_caps:
