@@ -897,7 +897,7 @@ gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event)
 
   /* If the position actually changed, update == TRUE */
   if (update) {
-    GstClockTime target = base->out_segment.start;
+    GstClockTime target = seeksegment.start;
     if (target >= SEEK_TIMESTAMP_OFFSET)
       target -= SEEK_TIMESTAMP_OFFSET;
     else
