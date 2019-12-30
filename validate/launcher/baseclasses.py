@@ -127,8 +127,6 @@ class Test(Loggable):
         self.optional = False
         self.is_parallel = is_parallel
         self.generator = None
-        # String representation of the test number in the testsuite
-        self.number = ""
         self.workdir = workdir
         self.allow_flakiness = False
         self.html_log = None
@@ -672,19 +670,6 @@ class Test(Loggable):
         self.finalize_logfiles()
         message = None
         end = "\n"
-        if self.result != Result.PASSED:
-            if not retry_on_failure:
-                message = str(self)
-                end = "\n"
-        else:
-            if is_tty():
-                message = "%s %s: %s%s" % (self.number, self.classname, self.result,
-                                        " (" + self.message + ")" if self.message else "")
-                end = "\r"
-
-        if message is not None:
-            printc(message, color=utils.get_color_for_result(
-                self.result), end=end)
 
         if self.options.dump_on_failure:
             if self.result is not Result.PASSED:
@@ -1615,6 +1600,7 @@ class _TestsLauncher(Loggable):
         self.queue = queue.Queue()
         self.jobs = []
         self.total_num_tests = 0
+        self.current_progress = -1
         self.server = None
         self.httpsrv = None
         self.vfb_server = None
@@ -1964,6 +1950,20 @@ class _TestsLauncher(Loggable):
 
         return True
 
+    def print_result(self, current_test_num, test, retry_on_failure=False):
+        if test.result != Result.PASSED and not retry_on_failure:
+            printc(str(test), color=utils.get_color_for_result(test.result))
+
+        length = 80
+        progress = int(length * current_test_num // self.total_num_tests)
+        bar = '█' * progress + '-' * (length - progress)
+        if is_tty():
+            printc('\r|%s| [%s/%s]' % (bar, current_test_num, self.total_num_tests), end='\r')
+        else:
+            if progress > self.current_progress:
+                self.current_progress = progress
+                printc('|%s| [%s/%s]' % (bar, current_test_num, self.total_num_tests))
+
     def _run_tests(self, running_tests=None, all_alone=False, retry_on_failures=False):
         if not self.all_tests:
             self.all_tests = self.list_tests()
@@ -2004,8 +2004,6 @@ class _TestsLauncher(Loggable):
             while jobs_running != 0:
                 test = self.tests_wait()
                 jobs_running -= 1
-                test.number = "[%d / %d] " % (current_test_num,
-                                              self.total_num_tests)
                 current_test_num += 1
                 res = test.test_end(retry_on_failure=retry_on_failures)
                 to_report = True
@@ -2021,6 +2019,7 @@ class _TestsLauncher(Loggable):
 
                         # Not adding to final report if flakiness is tolerated
                         to_report = not test.allow_flakiness
+                self.print_result(current_test_num, test, retry_on_failure=retry_on_failures)
                 if to_report:
                     self.reporter.after_test(test)
                 if retry_on_failures:
