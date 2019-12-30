@@ -21,8 +21,6 @@
 #include "config.h"
 #endif
 
-#include "d3d11config.h"
-
 #include "gstd3d11device.h"
 #include "gstd3d11utils.h"
 #include "gmodule.h"
@@ -200,20 +198,39 @@ static gboolean
 gst_d3d11_device_enable_dxgi_debug (void)
 {
   static volatile gsize _init = 0;
+  gboolean ret = FALSE;
 
   /* If all below libraries are unavailable, d3d11 device would fail with
    * D3D11_CREATE_DEVICE_DEBUG flag */
   if (g_once_init_enter (&_init)) {
+#if (!GST_D3D11_WINAPI_ONLY_APP)
     dxgi_debug_module = g_module_open ("dxgidebug.dll", G_MODULE_BIND_LAZY);
 
     if (dxgi_debug_module)
       g_module_symbol (dxgi_debug_module,
           "DXGIGetDebugInterface", (gpointer *) & GstDXGIGetDebugInterface);
-
+    ret = ! !GstDXGIGetDebugInterface;
+#elif (DXGI_HEADER_VERSION >= 3)
+    ret = TRUE;
+#endif
     g_once_init_leave (&_init, 1);
   }
 
-  return ! !GstDXGIGetDebugInterface;
+  return ret;
+}
+
+static HRESULT
+gst_d3d11_device_dxgi_get_device_interface (REFIID riid, void **debug)
+{
+#if (!GST_D3D11_WINAPI_ONLY_APP)
+  if (GstDXGIGetDebugInterface) {
+    return GstDXGIGetDebugInterface (riid, debug);
+  }
+#elif (DXGI_HEADER_VERSION >= 3)
+  return DXGIGetDebugInterface1 (0, riid, debug);
+#endif
+
+  return E_NOINTERFACE;
 }
 
 static inline GstDebugLevel
@@ -374,14 +391,15 @@ gst_d3d11_device_constructed (GObject * object)
 
       GST_CAT_INFO_OBJECT (gst_d3d11_debug_layer_debug, self,
           "dxgi debug library was loaded");
-      hr = GstDXGIGetDebugInterface (&IID_IDXGIDebug, (void **) &debug);
+      hr = gst_d3d11_device_dxgi_get_device_interface (&IID_IDXGIDebug,
+          (void **) &debug);
 
       if (SUCCEEDED (hr)) {
         GST_CAT_INFO_OBJECT (gst_d3d11_debug_layer_debug, self,
             "IDXGIDebug interface available");
         priv->dxgi_debug = debug;
 
-        hr = GstDXGIGetDebugInterface (&IID_IDXGIInfoQueue,
+        hr = gst_d3d11_device_dxgi_get_device_interface (&IID_IDXGIInfoQueue,
             (void **) &info_queue);
         if (SUCCEEDED (hr)) {
           GST_CAT_INFO_OBJECT (gst_d3d11_debug_layer_debug, self,
@@ -762,7 +780,7 @@ gst_d3d11_device_create_swap_chain (GstD3D11Device * device,
   gst_d3d11_device_unlock (device);
 
   if (!gst_d3d11_result (hr, device)) {
-    GST_ERROR_OBJECT (device, "Cannot create SwapChain Object: 0x%x",
+    GST_WARNING_OBJECT (device, "Cannot create SwapChain Object: 0x%x",
         (guint) hr);
     swap_chain = NULL;
   }
@@ -771,6 +789,7 @@ gst_d3d11_device_create_swap_chain (GstD3D11Device * device,
 }
 
 #if (DXGI_HEADER_VERSION >= 2)
+#if (!GST_D3D11_WINAPI_ONLY_APP)
 /**
  * gst_d3d11_device_create_swap_chain_for_hwnd:
  * @device: a #GstD3D11Device
@@ -807,14 +826,96 @@ gst_d3d11_device_create_swap_chain_for_hwnd (GstD3D11Device * device,
   gst_d3d11_device_unlock (device);
 
   if (!gst_d3d11_result (hr, device)) {
-    GST_ERROR_OBJECT (device, "Cannot create SwapChain Object: 0x%x",
+    GST_WARNING_OBJECT (device, "Cannot create SwapChain Object: 0x%x",
         (guint) hr);
     swap_chain = NULL;
   }
 
   return swap_chain;
 }
-#endif
+#endif /* GST_D3D11_WINAPI_ONLY_APP */
+
+#if GST_D3D11_WINAPI_ONLY_APP
+/**
+ * gst_d3d11_device_create_swap_chain_for_core_window:
+ * @device: a #GstD3D11Device
+ * @core_window: CoreWindow handle
+ * @desc: a DXGI_SWAP_CHAIN_DESC1 structure for swapchain
+ * @output: (nullable): a IDXGIOutput interface for the output to restrict content to
+ *
+ * Create a IDXGISwapChain1 object. Caller must release returned swap chain object
+ * via IDXGISwapChain1_Release()
+ *
+ * Returns: (transfer full) (nullable): a new IDXGISwapChain1 or %NULL
+ * when failed to create swap chain with given @desc
+ */
+IDXGISwapChain1 *
+gst_d3d11_device_create_swap_chain_for_core_window (GstD3D11Device * device,
+    guintptr core_window, const DXGI_SWAP_CHAIN_DESC1 * desc,
+    IDXGIOutput * output)
+{
+  GstD3D11DevicePrivate *priv;
+  IDXGISwapChain1 *swap_chain = NULL;
+  HRESULT hr;
+
+  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
+
+  priv = device->priv;
+
+  gst_d3d11_device_lock (device);
+  hr = IDXGIFactory2_CreateSwapChainForCoreWindow ((IDXGIFactory2 *)
+      priv->factory, (IUnknown *) priv->device, (IUnknown *) core_window, desc,
+      output, &swap_chain);
+  gst_d3d11_device_unlock (device);
+
+  if (!gst_d3d11_result (hr, device)) {
+    GST_WARNING_OBJECT (device, "Cannot create SwapChain Object: 0x%x",
+        (guint) hr);
+    swap_chain = NULL;
+  }
+
+  return swap_chain;
+}
+
+/**
+ * gst_d3d11_device_create_swap_chain_for_composition:
+ * @device: a #GstD3D11Device
+ * @desc: a DXGI_SWAP_CHAIN_DESC1 structure for swapchain
+ * @output: (nullable): a IDXGIOutput interface for the output to restrict content to
+ *
+ * Create a IDXGISwapChain1 object. Caller must release returned swap chain object
+ * via IDXGISwapChain1_Release()
+ *
+ * Returns: (transfer full) (nullable): a new IDXGISwapChain1 or %NULL
+ * when failed to create swap chain with given @desc
+ */
+IDXGISwapChain1 *
+gst_d3d11_device_create_swap_chain_for_composition (GstD3D11Device * device,
+    const DXGI_SWAP_CHAIN_DESC1 * desc, IDXGIOutput * output)
+{
+  GstD3D11DevicePrivate *priv;
+  IDXGISwapChain1 *swap_chain = NULL;
+  HRESULT hr;
+
+  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
+
+  priv = device->priv;
+
+  gst_d3d11_device_lock (device);
+  hr = IDXGIFactory2_CreateSwapChainForComposition ((IDXGIFactory2 *)
+      priv->factory, (IUnknown *) priv->device, desc, output, &swap_chain);
+  gst_d3d11_device_unlock (device);
+
+  if (!gst_d3d11_result (hr, device)) {
+    GST_WARNING_OBJECT (device, "Cannot create SwapChain Object: 0x%x",
+        (guint) hr);
+    swap_chain = NULL;
+  }
+
+  return swap_chain;
+}
+#endif /* GST_D3D11_WINAPI_ONLY_APP */
+#endif /* (DXGI_HEADER_VERSION >= 2) */
 
 /**
  * gst_d3d11_device_release_swap_chain:

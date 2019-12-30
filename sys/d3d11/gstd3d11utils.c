@@ -21,8 +21,6 @@
 #include "config.h"
 #endif
 
-#include "d3d11config.h"
-
 #include "gstd3d11utils.h"
 #include "gstd3d11device.h"
 
@@ -331,8 +329,12 @@ gst_d3d11_is_windows_8_or_greater (void)
   static gboolean ret = FALSE;
 
   if (g_once_init_enter (&version_once)) {
+#if (!GST_D3D11_WINAPI_ONLY_APP)
     if (IsWindows8OrGreater ())
       ret = TRUE;
+#else
+    ret = TRUE;
+#endif
 
     g_once_init_leave (&version_once, 1);
   }

@@ -28,6 +28,13 @@
 #include "gstd3d11bufferpool.h"
 #include "gstd3d11format.h"
 
+#if GST_D3D11_WINAPI_ONLY_APP
+#include "gstd3d11window_corewindow.h"
+#include "gstd3d11window_swapchainpanel.h"
+#else
+#include "gstd3d11window_win32.h"
+#endif
+
 enum
 {
   PROP_0,
@@ -82,6 +89,7 @@ static gboolean gst_d3d11_video_sink_propose_allocation (GstBaseSink * sink,
 static gboolean gst_d3d11_video_sink_query (GstBaseSink * sink,
     GstQuery * query);
 static gboolean gst_d3d11_video_sink_unlock (GstBaseSink * sink);
+static gboolean gst_d3d11_video_sink_unlock_stop (GstBaseSink * sink);
 
 static GstFlowReturn
 gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf);
@@ -159,6 +167,8 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
       GST_DEBUG_FUNCPTR (gst_d3d11_video_sink_propose_allocation);
   basesink_class->query = GST_DEBUG_FUNCPTR (gst_d3d11_video_sink_query);
   basesink_class->unlock = GST_DEBUG_FUNCPTR (gst_d3d11_video_sink_unlock);
+  basesink_class->unlock_stop =
+      GST_DEBUG_FUNCPTR (gst_d3d11_video_sink_unlock_stop);
 
   videosink_class->show_frame =
       GST_DEBUG_FUNCPTR (gst_d3d11_video_sink_show_frame);
@@ -362,15 +372,6 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
   if (GST_VIDEO_SINK_WIDTH (self) <= 0 || GST_VIDEO_SINK_HEIGHT (self) <= 0)
     goto no_display_size;
 
-  if (!self->window_id)
-    gst_video_overlay_prepare_window_handle (GST_VIDEO_OVERLAY (self));
-
-  if (self->window_id) {
-    GST_DEBUG_OBJECT (self, "Set external window %" G_GUINTPTR_FORMAT,
-        (guintptr) self->window_id);
-    gst_d3d11_window_set_window_handle (self->window, self->window_id);
-  }
-
   GST_OBJECT_LOCK (self);
   if (!self->pending_render_rect) {
     self->render_rect.x = 0;
@@ -383,12 +384,6 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
       self->render_rect.x, self->render_rect.y, self->render_rect.w,
       self->render_rect.h);
   self->pending_render_rect = FALSE;
-
-  g_object_set (self->window,
-      "force-aspect-ratio", self->force_aspect_ratio,
-      "fullscreen-toggle-mode", self->fullscreen_toggle_mode,
-      "fullscreen", self->fullscreen, NULL);
-
   GST_OBJECT_UNLOCK (self);
 
   if (!gst_d3d11_window_prepare (self->window, GST_VIDEO_SINK_WIDTH (self),
@@ -484,21 +479,12 @@ gst_d3d11_video_mouse_key_event (GstD3D11Window * window, const gchar * event,
   }
 }
 
-static void
-gst_d3d11_video_sink_got_window_handle (GstD3D11Window * window,
-    gpointer window_handle, GstD3D11VideoSink * self)
-{
-  GST_LOG_OBJECT (self,
-      "got window handle %" G_GUINTPTR_FORMAT, (guintptr) window_handle);
-  gst_video_overlay_got_window_handle (GST_VIDEO_OVERLAY (self),
-      (guintptr) window_handle);
-}
-
 static gboolean
 gst_d3d11_video_sink_start (GstBaseSink * sink)
 {
   GstD3D11VideoSink *self = GST_D3D11_VIDEO_SINK (sink);
   gboolean is_hardware = TRUE;
+  GstD3D11WindowNativeType window_type = GST_D3D11_WINDOW_NATIVE_TYPE_HWND;
 
   GST_DEBUG_OBJECT (self, "Start");
 
@@ -508,11 +494,66 @@ gst_d3d11_video_sink_start (GstBaseSink * sink)
     return FALSE;
   }
 
-  self->window = gst_d3d11_window_new (self->device);
+  if (!self->window_id)
+    gst_video_overlay_prepare_window_handle (GST_VIDEO_OVERLAY (self));
+
+  if (self->window_id) {
+    window_type =
+        gst_d3d11_window_get_native_type_from_handle (self->window_id);
+
+    if (window_type != GST_D3D11_WINDOW_NATIVE_TYPE_NONE) {
+      gst_video_overlay_got_window_handle (GST_VIDEO_OVERLAY (self),
+          self->window_id);
+    }
+  }
+
+  GST_DEBUG_OBJECT (self, "Create window (type: %s)",
+      gst_d3d11_window_get_native_type_to_string (window_type));
+
+#if GST_D3D11_WINAPI_ONLY_APP
+  if (window_type != GST_D3D11_WINDOW_NATIVE_TYPE_CORE_WINDOW &&
+      window_type != GST_D3D11_WINDOW_NATIVE_TYPE_SWAP_CHAIN_PANEL) {
+    GST_ERROR_OBJECT (sink, "Overlay handle must be set before READY state");
+    return FALSE;
+  }
+#endif
+
+  switch (window_type) {
+#if (!GST_D3D11_WINAPI_ONLY_APP)
+    case GST_D3D11_WINDOW_NATIVE_TYPE_HWND:
+      self->window = gst_d3d11_window_win32_new (self->device, self->window_id);
+      break;
+#else
+    case GST_D3D11_WINDOW_NATIVE_TYPE_CORE_WINDOW:
+      self->window = gst_d3d11_window_core_window_new (self->device,
+          self->window_id);
+      break;
+    case GST_D3D11_WINDOW_NATIVE_TYPE_SWAP_CHAIN_PANEL:
+      self->window = gst_d3d11_window_swap_chain_panel_new (self->device,
+          self->window_id);
+      break;
+#endif
+    default:
+      break;
+  }
+
   if (!self->window) {
     GST_ERROR_OBJECT (sink, "Cannot create d3d11window");
     return FALSE;
   }
+
+  GST_OBJECT_LOCK (self);
+  g_object_set (self->window,
+      "force-aspect-ratio", self->force_aspect_ratio,
+      "fullscreen-toggle-mode", self->fullscreen_toggle_mode,
+      "fullscreen", self->fullscreen,
+      "enable-navigation-events", self->enable_navigation_events, NULL);
+  GST_OBJECT_UNLOCK (self);
+
+  g_signal_connect (self->window, "key-event",
+      G_CALLBACK (gst_d3d11_video_sink_key_event), self);
+  g_signal_connect (self->window, "mouse-event",
+      G_CALLBACK (gst_d3d11_video_mouse_key_event), self);
 
   g_object_get (self->device, "hardware", &is_hardware, NULL);
 
@@ -522,16 +563,6 @@ gst_d3d11_video_sink_start (GstBaseSink * sink)
   } else {
     self->can_convert = TRUE;
   }
-
-  g_object_set (self->window,
-      "enable-navigation-events", self->enable_navigation_events, NULL);
-
-  g_signal_connect (self->window, "key-event",
-      G_CALLBACK (gst_d3d11_video_sink_key_event), self);
-  g_signal_connect (self->window, "mouse-event",
-      G_CALLBACK (gst_d3d11_video_mouse_key_event), self);
-  g_signal_connect (self->window, "got-window-handle",
-      G_CALLBACK (gst_d3d11_video_sink_got_window_handle), self);
 
   return TRUE;
 }
@@ -688,7 +719,18 @@ gst_d3d11_video_sink_unlock (GstBaseSink * sink)
   GstD3D11VideoSink *self = GST_D3D11_VIDEO_SINK (sink);
 
   if (self->window)
-    gst_d3d11_window_flush (self->window);
+    gst_d3d11_window_unlock (self->window);
+
+  return TRUE;
+}
+
+static gboolean
+gst_d3d11_video_sink_unlock_stop (GstBaseSink * sink)
+{
+  GstD3D11VideoSink *self = GST_D3D11_VIDEO_SINK (sink);
+
+  if (self->window)
+    gst_d3d11_window_unlock_stop (self->window);
 
   return TRUE;
 }

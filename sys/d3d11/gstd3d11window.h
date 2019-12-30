@@ -31,9 +31,9 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_D3D11_WINDOW             (gst_d3d11_window_get_type())
-#define GST_D3D11_WINDOW(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_D3D11_WINDOW, GstD3D11Window))
-#define GST_D3D11_WINDOW_CLASS(klass)     (G_TYPE_CHECK_CLASS((klass), GST_TYPE_D3D11_WINDOW, GstD3D11WindowClass))
-#define GST_IS_D3D11_WINDOW(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_D3D11_WINDOW))
+#define GST_D3D11_WINDOW(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_D3D11_WINDOW, GstD3D11Window))
+#define GST_D3D11_WINDOW_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_D3D11_WINDOW, GstD3D11WindowClass))
+#define GST_IS_D3D11_WINDOW(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_D3D11_WINDOW))
 #define GST_IS_D3D11_WINDOW_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_D3D11_WINDOW))
 #define GST_D3D11_WINDOW_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_D3D11_WINDOW, GstD3D11WindowClass))
 #define GST_D3D11_WINDOW_TOGGLE_MODE_GET_TYPE (gst_d3d11_window_fullscreen_toggle_mode_type())
@@ -45,13 +45,6 @@ typedef struct _GstD3D11WindowClass   GstD3D11WindowClass;
 
 typedef enum
 {
-  GST_D3D11_WINDOW_OVERLAY_STATE_NONE = 0,
-  GST_D3D11_WINDOW_OVERLAY_STATE_OPENED,
-  GST_D3D11_WINDOW_OVERLAY_STATE_CLOSED,
-} GstD3D11WindowOverlayState;
-
-typedef enum
-{
   GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_NONE = 0,
   GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_ALT_ENTER = (1 << 1),
   GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_PROPERTY = (1 << 2),
@@ -59,9 +52,29 @@ typedef enum
 
 GType gst_d3d11_window_fullscreen_toggle_mode_type (void);
 
+typedef enum
+{
+  GST_D3D11_WINDOW_NATIVE_TYPE_NONE = 0,
+  GST_D3D11_WINDOW_NATIVE_TYPE_HWND,
+  GST_D3D11_WINDOW_NATIVE_TYPE_CORE_WINDOW,
+  GST_D3D11_WINDOW_NATIVE_TYPE_SWAP_CHAIN_PANEL,
+} GstD3D11WindowNativeType;
+
 struct _GstD3D11Window
 {
   GstObject parent;
+
+  /*< protected >*/
+  gboolean initialized;
+  GstD3D11Device *device;
+  guintptr external_handle;
+
+  /* properties */
+  gboolean force_aspect_ratio;
+  gboolean enable_navigation_events;
+  GstD3D11WindowFullscreenToggleMode fullscreen_toggle_mode;
+  gboolean requested_fullscreen;
+  gboolean fullscreen;
 
   GstVideoInfo info;
   GstVideoInfo render_info;
@@ -78,12 +91,6 @@ struct _GstD3D11Window
   /* requested rect via gst_d3d11_window_render */
   GstVideoRectangle rect;
 
-  GMutex lock;
-  GCond cond;
-
-  GMainContext *main_context;
-  GMainLoop *loop;
-
   guint width;
   guint height;
 
@@ -93,77 +100,83 @@ struct _GstD3D11Window
   guint aspect_ratio_n;
   guint aspect_ratio_d;
 
-  gboolean visible;
-
-  GSource *msg_source;
-  GIOChannel *msg_io_channel;
-
-  GThread *thread;
-
-  gboolean created;
-
-  HWND internal_win_id;
-  HWND external_win_id;
-  GstD3D11WindowOverlayState overlay_state;
-
-  HDC device_handle;
   IDXGISwapChain *swap_chain;
   ID3D11RenderTargetView *rtv;
-  DXGI_FORMAT format;
-  gboolean first_present;
-  gboolean have_swapchain1;
-
-  GstD3D11Device *device;
-
-  /* properties */
-  gboolean force_aspect_ratio;
-  gboolean enable_navigation_events;
-  GstD3D11WindowFullscreenToggleMode fullscreen_toggle_mode;
-  gboolean requested_fullscreen;
-  gboolean fullscreen;
-
-  /* atomic */
-  volatile gint pending_fullscreen_count;
 
   GstBuffer *cached_buffer;
+  gboolean first_present;
   gboolean allow_tearing;
-
-  /* fullscreen related */
-  RECT restore_rect;
-  LONG restore_style;
 };
 
 struct _GstD3D11WindowClass
 {
   GstObjectClass object_class;
+
+  void          (*show)                   (GstD3D11Window * window);
+
+  void          (*update_swap_chain)      (GstD3D11Window * window);
+
+  void          (*change_fullscreen_mode) (GstD3D11Window * window);
+
+  gboolean      (*create_swap_chain)      (GstD3D11Window * window,
+                                           DXGI_FORMAT format,
+                                           guint width,
+                                           guint height,
+                                           guint swapchain_flags,
+                                           IDXGISwapChain ** swap_chain);
+
+  GstFlowReturn (*present)                (GstD3D11Window * window,
+                                           guint present_flags);
+
+  gboolean      (*unlock)                 (GstD3D11Window * window);
+
+  gboolean      (*unlock_stop)            (GstD3D11Window * window);
 };
 
-GType             gst_d3d11_window_get_type     (void);
+GType         gst_d3d11_window_get_type             (void);
 
-GstD3D11Window *  gst_d3d11_window_new (GstD3D11Device * device);
+void          gst_d3d11_window_show                 (GstD3D11Window * window);
 
-void              gst_d3d11_window_show (GstD3D11Window * window);
+void          gst_d3d11_window_set_render_rectangle (GstD3D11Window * window,
+                                                     gint x, gint y,
+                                                     gint width, gint height);
 
-void              gst_d3d11_window_set_window_handle (GstD3D11Window * window,
-                                                      guintptr id);
+gboolean      gst_d3d11_window_prepare              (GstD3D11Window * window,
+                                                     guint width,
+                                                     guint height,
+                                                     guint aspect_ratio_n,
+                                                     guint aspect_ratio_d,
+                                                     GstCaps * caps,
+                                                     GError ** error);
 
-void              gst_d3d11_window_set_render_rectangle (GstD3D11Window * window,
-                                                         gint x, gint y,
-                                                         gint width, gint height);
+GstFlowReturn gst_d3d11_window_render               (GstD3D11Window * window,
+                                                     GstBuffer * buffer,
+                                                     GstVideoRectangle * src_rect);
 
-gboolean gst_d3d11_window_prepare (GstD3D11Window * window,
-                                   guint width,
-                                   guint height,
-                                   guint aspect_ratio_n,
-                                   guint aspect_ratio_d,
-                                   GstCaps * caps,
-                                   GError ** error);
+gboolean      gst_d3d11_window_unlock               (GstD3D11Window * window);
 
-GstFlowReturn gst_d3d11_window_render (GstD3D11Window * window,
-                                       GstBuffer * buffer,
-                                       GstVideoRectangle * src_rect);
+gboolean      gst_d3d11_window_unlock_stop          (GstD3D11Window * window);
 
-gboolean      gst_d3d11_window_flush  (GstD3D11Window * window);
+void          gst_d3d11_window_on_resize            (GstD3D11Window * window,
+                                                     guint width,
+                                                     guint height);
+
+void          gst_d3d11_window_on_key_event         (GstD3D11Window * window,
+                                                     const gchar * event,
+                                                     const gchar * key);
+
+void          gst_d3d11_window_on_mouse_event       (GstD3D11Window * window,
+                                                     const gchar * event,
+                                                     gint button,
+                                                     gdouble x,
+                                                     gdouble y);
+
+/* utils */
+GstD3D11WindowNativeType gst_d3d11_window_get_native_type_from_handle (guintptr handle);
+
+const gchar *            gst_d3d11_window_get_native_type_to_string   (GstD3D11WindowNativeType type);
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstD3D11Window, gst_object_unref)
 
 G_END_DECLS
 

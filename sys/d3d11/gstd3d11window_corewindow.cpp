@@ -1,0 +1,364 @@
+/*
+ * GStreamer
+ * Copyright (C) 2019 Seungha Yang <seungha.yang@navercorp.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
+ */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include "gstd3d11window.h"
+#include "gstd3d11device.h"
+#include "gstd3d11memory.h"
+#include "gstd3d11utils.h"
+#include "gstd3d11window_corewindow.h"
+
+/* workaround for GetCurrentTime collision */
+#ifdef GetCurrentTime
+#undef GetCurrentTime
+#endif
+#include <windows.ui.xaml.h>
+#include <windows.ui.xaml.media.dxinterop.h>
+#include <windows.applicationmodel.core.h>
+#include <wrl.h>
+#include <wrl/wrappers/corewrappers.h>
+#include <windows.graphics.display.h>
+
+using namespace Microsoft::WRL;
+using namespace Microsoft::WRL::Wrappers;
+using namespace ABI::Windows::UI;
+using namespace ABI::Windows::Foundation;
+using namespace ABI::Windows::Foundation::Collections;
+using namespace ABI::Windows::Graphics;
+
+typedef ABI::Windows::Foundation::
+    __FITypedEventHandler_2_Windows__CUI__CCore__CCoreWindow_Windows__CUI__CCore__CWindowSizeChangedEventArgs_t
+        IWindowSizeChangedEventHandler;
+
+extern "C" {
+GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_window_debug);
+#define GST_CAT_DEFAULT gst_d3d11_window_debug
+}
+
+typedef struct _CoreWindowWinRTStorage
+{
+  ComPtr<Core::ICoreWindow> core_window;
+  EventRegistrationToken event_token;
+} CoreWindowWinRTStorage;
+
+struct _GstD3D11WindowCoreWindow
+{
+  GstD3D11Window parent;
+
+  CoreWindowWinRTStorage *storage;
+};
+
+#define gst_d3d11_window_core_window_parent_class parent_class
+G_DEFINE_TYPE (GstD3D11WindowCoreWindow, gst_d3d11_window_core_window,
+    GST_TYPE_D3D11_WINDOW);
+
+static void gst_d3d11_window_core_window_constructed (GObject * object);
+static void gst_d3d11_window_core_window_dispose (GObject * object);
+static void gst_d3d11_window_core_window_update_swap_chain (GstD3D11Window * window);
+static void
+gst_d3d11_window_core_window_change_fullscreen_mode (GstD3D11Window * window);
+static gboolean
+gst_d3d11_window_core_window_create_swap_chain (GstD3D11Window * window,
+    DXGI_FORMAT format, guint width, guint height, guint swapchain_flags,
+    IDXGISwapChain ** swap_chain);
+static GstFlowReturn
+gst_d3d11_window_core_window_present (GstD3D11Window * window,
+     guint present_flags);
+static void
+gst_d3d11_window_core_window_on_resize (GstD3D11WindowCoreWindow * self,
+    guint width, guint height);
+
+static float
+get_logical_dpi (void)
+{
+  ComPtr<Display::IDisplayPropertiesStatics> properties;
+  HRESULT hr;
+  HStringReference str_ref =
+      HStringReference (RuntimeClass_Windows_Graphics_Display_DisplayProperties);
+
+  hr = GetActivationFactory (str_ref.Get(), properties.GetAddressOf());
+
+  if (gst_d3d11_result (hr, NULL)) {
+    float dpi = 96.0f;
+
+    hr = properties->get_LogicalDpi (&dpi);
+    if (gst_d3d11_result (hr, NULL))
+      return dpi;
+  }
+
+  return 96.0f;
+}
+
+static inline float dip_to_pixel (float dip)
+{
+  /* https://docs.microsoft.com/en-us/windows/win32/learnwin32/dpi-and-device-independent-pixels */
+  return dip * get_logical_dpi() / 96.0f;
+}
+
+class CoreResizeHandler
+    : public RuntimeClass<RuntimeClassFlags<ClassicCom>,
+        IWindowSizeChangedEventHandler>
+{
+public:
+  CoreResizeHandler () {}
+  HRESULT RuntimeClassInitialize (GstD3D11WindowCoreWindow * listener)
+  {
+    if (!listener)
+      return E_INVALIDARG;
+
+    window = listener;
+    return S_OK;
+  }
+
+  IFACEMETHOD(Invoke)
+  (Core::ICoreWindow * sender, Core::IWindowSizeChangedEventArgs * args)
+  {
+    if (window) {
+      Size new_size;
+      HRESULT hr = args->get_Size(&new_size);
+      if (gst_d3d11_result (hr, NULL)) {
+        guint width, height;
+
+        width = (guint) dip_to_pixel (new_size.Width);
+        height = (guint) dip_to_pixel (new_size.Height);
+
+        gst_d3d11_window_core_window_on_resize (window, width, height);
+      }
+    }
+
+    return S_OK;
+  }
+
+private:
+  GstD3D11WindowCoreWindow * window;
+};
+
+static void
+gst_d3d11_window_core_window_class_init (GstD3D11WindowCoreWindowClass * klass)
+{
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstD3D11WindowClass *window_class = GST_D3D11_WINDOW_CLASS (klass);
+
+  gobject_class->constructed = gst_d3d11_window_core_window_constructed;
+  gobject_class->dispose = gst_d3d11_window_core_window_dispose;
+
+  window_class->update_swap_chain =
+      GST_DEBUG_FUNCPTR (gst_d3d11_window_core_window_update_swap_chain);
+  window_class->change_fullscreen_mode =
+      GST_DEBUG_FUNCPTR (gst_d3d11_window_core_window_change_fullscreen_mode);
+  window_class->create_swap_chain =
+      GST_DEBUG_FUNCPTR (gst_d3d11_window_core_window_create_swap_chain);
+  window_class->present =
+      GST_DEBUG_FUNCPTR (gst_d3d11_window_core_window_present);
+}
+
+static void
+gst_d3d11_window_core_window_init (GstD3D11WindowCoreWindow * self)
+{
+  self->storage = new CoreWindowWinRTStorage;
+}
+
+static void
+gst_d3d11_window_core_window_constructed (GObject * object)
+{
+  GstD3D11Window *window = GST_D3D11_WINDOW (object);
+  GstD3D11WindowCoreWindow *self = GST_D3D11_WINDOW_CORE_WINDOW (object);
+  CoreWindowWinRTStorage *storage = self->storage;
+  HRESULT hr;
+  ComPtr<IInspectable> inspectable;
+  ComPtr<IWindowSizeChangedEventHandler> resize_handler;
+  Rect bounds;
+
+  if (!window->external_handle) {
+    GST_ERROR_OBJECT (self, "No external window handle");
+    return;
+  }
+
+  inspectable = reinterpret_cast<IInspectable*> (window->external_handle);
+
+  hr = inspectable.As (&storage->core_window);
+  if (!gst_d3d11_result (hr, NULL))
+    goto error;
+
+  hr = storage->core_window->get_Bounds (&bounds);
+  if (!gst_d3d11_result (hr, NULL))
+    goto error;
+
+  window->surface_width = dip_to_pixel (bounds.Width);
+  window->surface_height = dip_to_pixel (bounds.Height);
+
+  GST_DEBUG_OBJECT (self,
+      "client size %dx%d", window->surface_width, window->surface_height);
+
+  hr = MakeAndInitialize<CoreResizeHandler>(&resize_handler, self);
+  if (!gst_d3d11_result (hr, NULL))
+    goto error;
+
+  hr = storage->core_window->add_SizeChanged (resize_handler.Get(),
+      &storage->event_token);
+  if (!gst_d3d11_result (hr, NULL))
+    goto error;
+
+  window->initialized = TRUE;
+  return;
+
+error:
+  GST_ERROR_OBJECT (self, "Invalid window handle");
+  return;
+}
+
+static void
+gst_d3d11_window_core_window_dispose (GObject * object)
+{
+  GstD3D11WindowCoreWindow *self = GST_D3D11_WINDOW_CORE_WINDOW (object);
+  CoreWindowWinRTStorage *storage = self->storage;
+
+  if (storage) {
+    if (storage->core_window)
+      storage->core_window->remove_SizeChanged (storage->event_token);
+
+    delete storage;
+  }
+
+  self->storage = NULL;
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static gboolean
+gst_d3d11_window_core_window_create_swap_chain (GstD3D11Window * window,
+    DXGI_FORMAT format, guint width, guint height, guint swapchain_flags,
+    IDXGISwapChain ** swap_chain)
+{
+  GstD3D11WindowCoreWindow *self = GST_D3D11_WINDOW_CORE_WINDOW (window);
+  ComPtr<IDXGISwapChain1> new_swapchain;
+  GstD3D11Device *device = window->device;
+  DXGI_SWAP_CHAIN_DESC1 desc1 = { 0, };
+
+  desc1.Width = width;
+  desc1.Height = height;
+  desc1.Format = format;
+  desc1.Stereo = FALSE;
+  desc1.SampleDesc.Count = 1;
+  desc1.SampleDesc.Quality = 0;
+  desc1.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+  desc1.BufferCount = 2;
+  desc1.Scaling = DXGI_SCALING_NONE;
+  desc1.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
+  desc1.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
+  desc1.Flags = swapchain_flags;
+
+  new_swapchain =
+    gst_d3d11_device_create_swap_chain_for_core_window (device,
+    window->external_handle, &desc1, NULL);
+
+  if (!new_swapchain) {
+    GST_ERROR_OBJECT (self, "Cannot create swapchain");
+    return FALSE;
+  }
+
+  new_swapchain.CopyTo (swap_chain);
+
+  gst_d3d11_window_on_resize (GST_D3D11_WINDOW (self),
+      window->surface_width, window->surface_height);
+
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_d3d11_window_core_window_present (GstD3D11Window * window,
+    guint present_flags)
+{
+  GstD3D11WindowCoreWindow *self = GST_D3D11_WINDOW_CORE_WINDOW (window);
+  HRESULT hr;
+  DXGI_PRESENT_PARAMETERS present_params = { 0, };
+  IDXGISwapChain1 *swap_chain = (IDXGISwapChain1 *) window->swap_chain;
+
+  /* the first present should not specify dirty-rect */
+  if (!window->first_present) {
+    present_params.DirtyRectsCount = 1;
+    present_params.pDirtyRects = &window->render_rect;
+  }
+
+  hr = swap_chain->Present1 (0, present_flags, &present_params);
+
+  if (!gst_d3d11_result (hr, window->device)) {
+    GST_WARNING_OBJECT (self, "Direct3D cannot present texture, hr: 0x%x",
+        (guint) hr);
+  }
+
+  return GST_FLOW_OK;
+}
+
+static void
+gst_d3d11_window_core_window_update_swap_chain (GstD3D11Window * window)
+{
+  gst_d3d11_window_on_resize (window,
+      window->surface_width, window->surface_height);
+
+  return;
+}
+
+static void
+gst_d3d11_window_core_window_change_fullscreen_mode (GstD3D11Window * window)
+{
+  GST_FIXME_OBJECT (window, "Implement fullscreen mode change");
+
+  return;
+}
+
+static void
+gst_d3d11_window_core_window_on_resize (GstD3D11WindowCoreWindow * self,
+    guint width, guint height)
+{
+  GstD3D11Window *window = GST_D3D11_WINDOW (self);
+
+  window->surface_width = width;
+  window->surface_height = height;
+
+  GST_LOG_OBJECT (self, "New size %dx%d", width, height);
+
+  gst_d3d11_window_on_resize (GST_D3D11_WINDOW (self), width, height);
+}
+
+GstD3D11Window *
+gst_d3d11_window_core_window_new (GstD3D11Device * device, guintptr handle)
+{
+  GstD3D11Window *window;
+
+  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
+  g_return_val_if_fail (handle, NULL);
+
+  window = (GstD3D11Window *)
+      g_object_new (GST_TYPE_D3D11_WINDOW_CORE_WINDOW,
+      "d3d11device", device, "window-handle", handle, NULL);
+
+  if (!window->initialized) {
+    gst_object_unref (window);
+    return NULL;
+  }
+
+  g_object_ref_sink (window);
+
+  return window;
+}

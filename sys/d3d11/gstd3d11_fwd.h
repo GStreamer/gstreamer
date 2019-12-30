@@ -21,7 +21,7 @@
 #define __GST_D3D11_FWD_H__
 
 #include <gst/gst.h>
-#include "d3d11config.h"
+#include "gstd3d11config.h"
 
 #ifndef INITGUID
 #include <initguid.h>
