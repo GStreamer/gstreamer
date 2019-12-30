@@ -284,8 +284,10 @@ class GstCheckTestsManager(MesonTestsManager):
             child_env['GST_CHECKS'] = check_name
 
         if self.options.valgrind:
-            child_env['CK_TIMEOUT_MULTIPLIER'] = str(VALGRIND_TIMEOUT_FACTOR)
+            child_env['CK_TIMEOUT_MULTIPLIER'] = str(VALGRIND_TIMEOUT_FACTOR * self.options.timeout_factor)
             child_env['ORC_CODE'] = 'backup'
+        else:
+            child_env['CK_TIMEOUT_MULTIPLIER'] = str(self.options.timeout_factor)
 
         if self.options.gdb:
             child_env['CK_FORK'] = "no"
