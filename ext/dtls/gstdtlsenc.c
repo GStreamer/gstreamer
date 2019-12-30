@@ -461,7 +461,7 @@ src_task_loop (GstPad * pad)
   if (check_connection_timeout)
     gst_dtls_connection_check_timeout (self->connection);
 
-  if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+  if (G_UNLIKELY (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS)) {
     GST_WARNING_OBJECT (self, "failed to push buffer on src pad: %s",
         gst_flow_get_name (ret));
   }
