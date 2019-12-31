@@ -636,6 +636,8 @@ static void pad_removed_cb (GstElement * decodebin, GstPad * pad,
 static void gst_play_bin_suburidecodebin_block (GstSourceGroup * group,
     GstElement * suburidecodebin, gboolean block);
 static void gst_play_bin_suburidecodebin_seek_to_start (GstSourceGroup * group);
+static void
+gst_play_bin_update_context (GstPlayBin * playbin, GstContext * context);
 
 static GstElementClass *parent_class;
 
@@ -3066,6 +3068,34 @@ gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
         g_free (uri);
       }
     }
+  } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_NEED_CONTEXT) {
+    const gchar *context_type;
+    GList *iter;
+
+    gst_message_parse_context_type (msg, &context_type);
+    GST_OBJECT_LOCK (playbin);
+    for (iter = playbin->contexts; iter; iter = g_list_next (iter)) {
+      GstContext *tmp = iter->data;
+      const gchar *tmp_type = gst_context_get_context_type (tmp);
+
+      if (strcmp (context_type, tmp_type) == 0) {
+        gst_element_set_context (GST_ELEMENT (GST_MESSAGE_SRC (msg)), tmp);
+        break;
+      }
+    }
+    GST_OBJECT_UNLOCK (playbin);
+
+    /* don't need to post upward this if it's answered by us */
+    if (iter) {
+      gst_message_unref (msg);
+      msg = NULL;
+    }
+  } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_HAVE_CONTEXT) {
+    GstContext *context;
+
+    gst_message_parse_have_context (msg, &context);
+    gst_play_bin_update_context (playbin, context);
+    gst_context_unref (context);
   }
 
   if (msg)
