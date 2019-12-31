@@ -99,7 +99,7 @@ _on_answer_received (GstPromise * promise, gpointer user_data)
   /* this is another way to tell webrtcbin that we don't want to be notified
    * when this task is complete: interrupt the promise */
   promise = gst_promise_new ();
-  g_signal_emit_by_name (webrtc2, "set-local-description", answer, NULL);
+  g_signal_emit_by_name (webrtc2, "set-local-description", answer, promise);
   gst_promise_interrupt (promise);
   gst_promise_unref (promise);
 
