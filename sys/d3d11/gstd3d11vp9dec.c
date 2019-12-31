@@ -56,6 +56,14 @@
 #include "gstd3d11bufferpool.h"
 #include <string.h>
 
+/* HACK: to expose dxva data structure on UWP */
+#ifdef WINAPI_PARTITION_DESKTOP
+#undef WINAPI_PARTITION_DESKTOP
+#endif
+#define WINAPI_PARTITION_DESKTOP 1
+#include <d3d9.h>
+#include <dxva.h>
+
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_vp9_dec_debug);
 #define GST_CAT_DEFAULT gst_d3d11_vp9_dec_debug
 

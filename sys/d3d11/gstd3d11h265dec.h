@@ -39,6 +39,8 @@ G_BEGIN_DECLS
 #define GST_IS_D3D11_H265_DEC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_D3D11_H265_DEC))
 
+typedef struct _GstD3D11H265DecPrivate GstD3D11H265DecPrivate;
+
 struct _GstD3D11H265Dec
 {
   GstH265Decoder parent;
@@ -54,12 +56,6 @@ struct _GstD3D11H265Dec
   guint chroma_format_idc;
   GstVideoFormat out_format;
 
-  DXVA_PicEntry_HEVC ref_pic_list[15];
-  INT pic_order_cnt_val_list[15];
-  UCHAR ref_pic_set_st_curr_before[8];
-  UCHAR ref_pic_set_st_curr_after[8];
-  UCHAR ref_pic_set_lt_curr[8];
-
   /* Array of DXVA_Slice_HEVC_Short */
   GArray *slice_list;
   gboolean submit_iq_data;
@@ -74,6 +70,8 @@ struct _GstD3D11H265Dec
   guint8 * bitstream_buffer_bytes;
 
   gboolean use_d3d11_output;
+
+  GstD3D11H265DecPrivate *priv;
 };
 
 struct _GstD3D11H265DecClass

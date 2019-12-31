@@ -26,6 +26,14 @@
 #include "gstd3d11bufferpool.h"
 #include <string.h>
 
+/* HACK: to expose dxva data structure on UWP */
+#ifdef WINAPI_PARTITION_DESKTOP
+#undef WINAPI_PARTITION_DESKTOP
+#endif
+#define WINAPI_PARTITION_DESKTOP 1
+#include <d3d9.h>
+#include <dxva.h>
+
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_h265_dec_debug);
 #define GST_CAT_DEFAULT gst_d3d11_h265_dec_debug
 
@@ -61,8 +69,18 @@ static GstStaticPadTemplate src_template =
         (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, "{ NV12, P010_10LE }") "; "
         GST_VIDEO_CAPS_MAKE ("{ NV12, P010_10LE }")));
 
+struct _GstD3D11H265DecPrivate
+{
+  DXVA_PicEntry_HEVC ref_pic_list[15];
+  INT pic_order_cnt_val_list[15];
+  UCHAR ref_pic_set_st_curr_before[8];
+  UCHAR ref_pic_set_st_curr_after[8];
+  UCHAR ref_pic_set_lt_curr[8];
+};
+
 #define parent_class gst_d3d11_h265_dec_parent_class
-G_DEFINE_TYPE (GstD3D11H265Dec, gst_d3d11_h265_dec, GST_TYPE_H265_DECODER);
+G_DEFINE_TYPE_WITH_PRIVATE (GstD3D11H265Dec,
+    gst_d3d11_h265_dec, GST_TYPE_H265_DECODER);
 
 static void gst_d3d11_h265_dec_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -157,6 +175,7 @@ gst_d3d11_h265_dec_class_init (GstD3D11H265DecClass * klass)
 static void
 gst_d3d11_h265_dec_init (GstD3D11H265Dec * self)
 {
+  self->priv = gst_d3d11_h265_dec_get_instance_private (self);
   self->slice_list = g_array_new (FALSE, TRUE, sizeof (DXVA_Slice_HEVC_Short));
   self->adapter = DEFAULT_ADAPTER;
 }
@@ -573,9 +592,11 @@ gst_d3d11_h265_dec_get_output_view_from_picture (GstD3D11H265Dec * self,
 static gint
 gst_d3d11_h265_dec_get_ref_index (GstD3D11H265Dec * self, gint view_id)
 {
+  GstD3D11H265DecPrivate *priv = self->priv;
+
   gint i;
-  for (i = 0; i < G_N_ELEMENTS (self->ref_pic_list); i++) {
-    if (self->ref_pic_list[i].Index7Bits == view_id)
+  for (i = 0; i < G_N_ELEMENTS (priv->ref_pic_list); i++) {
+    if (priv->ref_pic_list[i].Index7Bits == view_id)
       return i;
   }
 
@@ -587,6 +608,7 @@ gst_d3d11_h265_dec_start_picture (GstH265Decoder * decoder,
     GstH265Picture * picture, GstH265Slice * slice, GstH265Dpb * dpb)
 {
   GstD3D11H265Dec *self = GST_D3D11_H265_DEC (decoder);
+  GstD3D11H265DecPrivate *priv = self->priv;
   GstD3D11DecoderOutputView *view;
   gint i, j;
   GArray *dpb_array;
@@ -605,21 +627,21 @@ gst_d3d11_h265_dec_start_picture (GstH265Decoder * decoder,
   }
 
   for (i = 0; i < 15; i++) {
-    self->ref_pic_list[i].bPicEntry = 0xff;
-    self->pic_order_cnt_val_list[i] = 0;
+    priv->ref_pic_list[i].bPicEntry = 0xff;
+    priv->pic_order_cnt_val_list[i] = 0;
   }
 
   for (i = 0; i < 8; i++) {
-    self->ref_pic_set_st_curr_before[i] = 0xff;
-    self->ref_pic_set_st_curr_after[i] = 0xff;
-    self->ref_pic_set_lt_curr[i] = 0xff;
+    priv->ref_pic_set_st_curr_before[i] = 0xff;
+    priv->ref_pic_set_st_curr_after[i] = 0xff;
+    priv->ref_pic_set_lt_curr[i] = 0xff;
   }
 
   dpb_array = gst_h265_dpb_get_pictures_all (dpb);
 
   GST_LOG_OBJECT (self, "DPB size %d", dpb_array->len);
 
-  for (i = 0; i < dpb_array->len && i < G_N_ELEMENTS (self->ref_pic_list); i++) {
+  for (i = 0; i < dpb_array->len && i < G_N_ELEMENTS (priv->ref_pic_list); i++) {
     GstH265Picture *other = g_array_index (dpb_array, GstH265Picture *, i);
     GstD3D11DecoderOutputView *other_view;
     gint id = 0xff;
@@ -634,12 +656,12 @@ gst_d3d11_h265_dec_start_picture (GstH265Decoder * decoder,
     if (other_view)
       id = other_view->view_id;
 
-    self->ref_pic_list[i].Index7Bits = id;
-    self->ref_pic_list[i].AssociatedFlag = other->long_term;
-    self->pic_order_cnt_val_list[i] = other->pic_order_cnt;
+    priv->ref_pic_list[i].Index7Bits = id;
+    priv->ref_pic_list[i].AssociatedFlag = other->long_term;
+    priv->pic_order_cnt_val_list[i] = other->pic_order_cnt;
   }
 
-  for (i = 0, j = 0; i < G_N_ELEMENTS (self->ref_pic_set_st_curr_before); i++) {
+  for (i = 0, j = 0; i < G_N_ELEMENTS (priv->ref_pic_set_st_curr_before); i++) {
     GstH265Picture *other = NULL;
     gint id = 0xff;
 
@@ -656,10 +678,10 @@ gst_d3d11_h265_dec_start_picture (GstH265Decoder * decoder,
         id = gst_d3d11_h265_dec_get_ref_index (self, other_view->view_id);
     }
 
-    self->ref_pic_set_st_curr_before[i] = id;
+    priv->ref_pic_set_st_curr_before[i] = id;
   }
 
-  for (i = 0, j = 0; i < G_N_ELEMENTS (self->ref_pic_set_st_curr_after); i++) {
+  for (i = 0, j = 0; i < G_N_ELEMENTS (priv->ref_pic_set_st_curr_after); i++) {
     GstH265Picture *other = NULL;
     gint id = 0xff;
 
@@ -676,10 +698,10 @@ gst_d3d11_h265_dec_start_picture (GstH265Decoder * decoder,
         id = gst_d3d11_h265_dec_get_ref_index (self, other_view->view_id);
     }
 
-    self->ref_pic_set_st_curr_after[i] = id;
+    priv->ref_pic_set_st_curr_after[i] = id;
   }
 
-  for (i = 0, j = 0; i < G_N_ELEMENTS (self->ref_pic_set_lt_curr); i++) {
+  for (i = 0, j = 0; i < G_N_ELEMENTS (priv->ref_pic_set_lt_curr); i++) {
     GstH265Picture *other = NULL;
     gint id = 0xff;
 
@@ -696,7 +718,7 @@ gst_d3d11_h265_dec_start_picture (GstH265Decoder * decoder,
         id = gst_d3d11_h265_dec_get_ref_index (self, other_view->view_id);
     }
 
-    self->ref_pic_set_lt_curr[i] = id;
+    priv->ref_pic_set_lt_curr[i] = id;
   }
 
   g_array_unref (dpb_array);
@@ -1206,6 +1228,7 @@ gst_d3d11_h265_dec_decode_slice (GstH265Decoder * decoder,
     GstH265Picture * picture, GstH265Slice * slice)
 {
   GstD3D11H265Dec *self = GST_D3D11_H265_DEC (decoder);
+  GstD3D11H265DecPrivate *priv = self->priv;
   GstH265PPS *pps;
   DXVA_PicParams_HEVC pic_params = { 0, };
   DXVA_Qmatrix_HEVC iq_matrix = { 0, };
@@ -1231,15 +1254,15 @@ gst_d3d11_h265_dec_decode_slice (GstH265Decoder * decoder,
   pic_params.IntraPicFlag = IS_IRAP (slice->nalu.type);
   pic_params.CurrPicOrderCntVal = picture->pic_order_cnt;
 
-  memcpy (pic_params.RefPicList, self->ref_pic_list,
+  memcpy (pic_params.RefPicList, priv->ref_pic_list,
       sizeof (pic_params.RefPicList));
-  memcpy (pic_params.PicOrderCntValList, self->pic_order_cnt_val_list,
+  memcpy (pic_params.PicOrderCntValList, priv->pic_order_cnt_val_list,
       sizeof (pic_params.PicOrderCntValList));
-  memcpy (pic_params.RefPicSetStCurrBefore, self->ref_pic_set_st_curr_before,
+  memcpy (pic_params.RefPicSetStCurrBefore, priv->ref_pic_set_st_curr_before,
       sizeof (pic_params.RefPicSetStCurrBefore));
-  memcpy (pic_params.RefPicSetStCurrAfter, self->ref_pic_set_st_curr_after,
+  memcpy (pic_params.RefPicSetStCurrAfter, priv->ref_pic_set_st_curr_after,
       sizeof (pic_params.RefPicSetStCurrAfter));
-  memcpy (pic_params.RefPicSetLtCurr, self->ref_pic_set_lt_curr,
+  memcpy (pic_params.RefPicSetLtCurr, priv->ref_pic_set_lt_curr,
       sizeof (pic_params.RefPicSetLtCurr));
 
 #ifndef GST_DISABLE_GST_DEBUG

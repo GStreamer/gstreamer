@@ -39,6 +39,8 @@ G_BEGIN_DECLS
 #define GST_IS_D3D11_H264_DEC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_D3D11_H264_DEC))
 
+typedef struct _GstD3D11H264DecPrivate GstD3D11H264DecPrivate;
+
 struct _GstD3D11H264Dec
 {
   GstH264Decoder parent;
@@ -54,12 +56,6 @@ struct _GstD3D11H264Dec
   guint chroma_format_idc;
   GstVideoFormat out_format;
 
-  DXVA_PicEntry_H264 ref_frame_list[16];
-  INT field_order_cnt_list[16][2];
-  USHORT frame_num_list[16];
-  UINT used_for_reference_flags;
-  USHORT non_existing_frame_flags;
-
   /* Array of DXVA_Slice_H264_Short */
   GArray *slice_list;
 
@@ -73,6 +69,8 @@ struct _GstD3D11H264Dec
   guint8 * bitstream_buffer_bytes;
 
   gboolean use_d3d11_output;
+
+  GstD3D11H264DecPrivate *priv;
 };
 
 struct _GstD3D11H264DecClass

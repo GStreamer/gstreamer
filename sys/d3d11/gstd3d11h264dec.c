@@ -56,6 +56,14 @@
 #include "gstd3d11bufferpool.h"
 #include <string.h>
 
+/* HACK: to expose dxva data structure on UWP */
+#ifdef WINAPI_PARTITION_DESKTOP
+#undef WINAPI_PARTITION_DESKTOP
+#endif
+#define WINAPI_PARTITION_DESKTOP 1
+#include <d3d9.h>
+#include <dxva.h>
+
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_h264_dec_debug);
 #define GST_CAT_DEFAULT gst_d3d11_h264_dec_debug
 
@@ -93,8 +101,19 @@ static GstStaticPadTemplate src_template =
         (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, "{ NV12, P010_10LE }") "; "
         GST_VIDEO_CAPS_MAKE ("{ NV12, P010_10LE }")));
 
+struct _GstD3D11H264DecPrivate
+{
+  /* Need to hide DXVA_PicEntry_H264 structure from header for UWP */
+  DXVA_PicEntry_H264 ref_frame_list[16];
+  INT field_order_cnt_list[16][2];
+  USHORT frame_num_list[16];
+  UINT used_for_reference_flags;
+  USHORT non_existing_frame_flags;
+};
+
 #define parent_class gst_d3d11_h264_dec_parent_class
-G_DEFINE_TYPE (GstD3D11H264Dec, gst_d3d11_h264_dec, GST_TYPE_H264_DECODER);
+G_DEFINE_TYPE_WITH_PRIVATE (GstD3D11H264Dec,
+    gst_d3d11_h264_dec, GST_TYPE_H264_DECODER);
 
 static void gst_d3d11_h264_dec_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -189,6 +208,7 @@ gst_d3d11_h264_dec_class_init (GstD3D11H264DecClass * klass)
 static void
 gst_d3d11_h264_dec_init (GstD3D11H264Dec * self)
 {
+  self->priv = gst_d3d11_h264_dec_get_instance_private (self);
   self->slice_list = g_array_new (FALSE, TRUE, sizeof (DXVA_Slice_H264_Short));
   self->adapter = DEFAULT_ADAPTER;
 }
@@ -610,6 +630,7 @@ gst_d3d11_h264_dec_start_picture (GstH264Decoder * decoder,
     GstH264Picture * picture, GstH264Slice * slice, GstH264Dpb * dpb)
 {
   GstD3D11H264Dec *self = GST_D3D11_H264_DEC (decoder);
+  GstD3D11H264DecPrivate *priv = self->priv;
   GstD3D11DecoderOutputView *view;
   gint i;
   GArray *dpb_array;
@@ -628,13 +649,13 @@ gst_d3d11_h264_dec_start_picture (GstH264Decoder * decoder,
   }
 
   for (i = 0; i < 16; i++) {
-    self->ref_frame_list[i].bPicEntry = 0xFF;
-    self->field_order_cnt_list[i][0] = 0;
-    self->field_order_cnt_list[i][1] = 0;
-    self->frame_num_list[i] = 0;
+    priv->ref_frame_list[i].bPicEntry = 0xFF;
+    priv->field_order_cnt_list[i][0] = 0;
+    priv->field_order_cnt_list[i][1] = 0;
+    priv->frame_num_list[i] = 0;
   }
-  self->used_for_reference_flags = 0;
-  self->non_existing_frame_flags = 0;
+  priv->used_for_reference_flags = 0;
+  priv->non_existing_frame_flags = 0;
 
   dpb_array = gst_h264_dpb_get_pictures_all (dpb);
 
@@ -652,14 +673,14 @@ gst_d3d11_h264_dec_start_picture (GstH264Decoder * decoder,
     if (other_view)
       id = other_view->view_id;
 
-    self->ref_frame_list[i].Index7Bits = id;
-    self->ref_frame_list[i].AssociatedFlag = other->long_term;
-    self->field_order_cnt_list[i][0] = other->top_field_order_cnt;
-    self->field_order_cnt_list[i][1] = other->bottom_field_order_cnt;
-    self->frame_num_list[i] = self->ref_frame_list[i].AssociatedFlag
+    priv->ref_frame_list[i].Index7Bits = id;
+    priv->ref_frame_list[i].AssociatedFlag = other->long_term;
+    priv->field_order_cnt_list[i][0] = other->top_field_order_cnt;
+    priv->field_order_cnt_list[i][1] = other->bottom_field_order_cnt;
+    priv->frame_num_list[i] = priv->ref_frame_list[i].AssociatedFlag
         ? other->long_term_pic_num : other->frame_num;
-    self->used_for_reference_flags |= ref << (2 * i);
-    self->non_existing_frame_flags |= (other->nonexisting) << i;
+    priv->used_for_reference_flags |= ref << (2 * i);
+    priv->non_existing_frame_flags |= (other->nonexisting) << i;
   }
 
   g_array_unref (dpb_array);
@@ -995,6 +1016,7 @@ gst_d3d11_h264_dec_decode_slice (GstH264Decoder * decoder,
     GstH264Picture * picture, GstH264Slice * slice)
 {
   GstD3D11H264Dec *self = GST_D3D11_H264_DEC (decoder);
+  GstD3D11H264DecPrivate *priv = self->priv;
   GstH264SPS *sps;
   GstH264PPS *pps;
   DXVA_PicParams_H264 pic_params = { 0, };
@@ -1031,15 +1053,15 @@ gst_d3d11_h264_dec_decode_slice (GstH264Decoder * decoder,
     pic_params.CurrFieldOrderCnt[1] = picture->bottom_field_order_cnt;
   }
 
-  memcpy (pic_params.RefFrameList, self->ref_frame_list,
+  memcpy (pic_params.RefFrameList, priv->ref_frame_list,
       sizeof (pic_params.RefFrameList));
-  memcpy (pic_params.FieldOrderCntList, self->field_order_cnt_list,
+  memcpy (pic_params.FieldOrderCntList, priv->field_order_cnt_list,
       sizeof (pic_params.FieldOrderCntList));
-  memcpy (pic_params.FrameNumList, self->frame_num_list,
+  memcpy (pic_params.FrameNumList, priv->frame_num_list,
       sizeof (pic_params.FrameNumList));
 
-  pic_params.UsedForReferenceFlags = self->used_for_reference_flags;
-  pic_params.NonExistingFrameFlags = self->non_existing_frame_flags;
+  pic_params.UsedForReferenceFlags = priv->used_for_reference_flags;
+  pic_params.NonExistingFrameFlags = priv->non_existing_frame_flags;
 
   GST_TRACE_OBJECT (self, "Getting picture param decoder buffer");
 

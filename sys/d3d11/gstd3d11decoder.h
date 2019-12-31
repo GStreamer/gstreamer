@@ -22,9 +22,6 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include <d3d9.h>
-#include <dxva.h>
-#include <dxva2api.h>
 #include "gstd3d11_fwd.h"
 #include "gstd3d11device.h"
 #include "gstd3d11utils.h"
