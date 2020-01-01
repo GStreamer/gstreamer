@@ -512,6 +512,7 @@ ensure_pix_fmts (GstVaapiDisplayX11 * display)
       n++;
   }
   priv->pixmap_formats->len = n;
+  XFree (pix_fmts);
   return TRUE;
 }
 
