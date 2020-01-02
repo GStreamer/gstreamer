@@ -1500,8 +1500,11 @@ static gboolean
 gst_msdkdec_flush (GstVideoDecoder * decoder)
 {
   GstMsdkDec *thiz = GST_MSDKDEC (decoder);
+  GstFlowReturn ret;
 
-  return gst_msdkdec_drain (GST_VIDEO_DECODER_CAST (thiz));
+  ret = gst_msdkdec_drain (GST_VIDEO_DECODER_CAST (thiz));
+
+  return ret == GST_FLOW_OK;
 }
 
 static GstFlowReturn
