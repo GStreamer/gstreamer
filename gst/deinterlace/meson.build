@@ -10,7 +10,8 @@ interlace_sources = [
   'tvtime/weave.c',
   'tvtime/linear.c',
   'tvtime/linearblend.c',
-  'tvtime/scalerbob.c'
+  'tvtime/scalerbob.c',
+  'yadif.c'
 ]
 
 orcsrc = 'tvtime'

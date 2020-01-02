@@ -40,6 +40,7 @@
 
 #include "gstdeinterlace.h"
 #include "tvtime/plugins.h"
+#include "yadif.h"
 
 #include <string.h>
 
@@ -157,6 +158,7 @@ static const GEnumValue methods_types[] = {
       "weavetff"},
   {GST_DEINTERLACE_WEAVE_BFF, "Progressive: Bottom Field First (Do Not Use)",
       "weavebff"},
+  {GST_DEINTERLACE_YADIF, "YADIF Adaptive Deinterlacer", "yadif"},
   {0, NULL, NULL},
 };
 
@@ -368,7 +370,8 @@ static const struct
   gst_deinterlace_method_scaler_bob_get_type}, {
   gst_deinterlace_method_weave_get_type}, {
   gst_deinterlace_method_weave_tff_get_type}, {
-  gst_deinterlace_method_weave_bff_get_type}
+  gst_deinterlace_method_weave_bff_get_type}, {
+  gst_deinterlace_method_yadif_get_type}
 };
 
 static void
@@ -538,6 +541,7 @@ gst_deinterlace_class_init (GstDeinterlaceClass * klass)
    * * weave Weave. Bad quality, do not use.
    * * weavetff Progressive: Top Field First.  Bad quality, do not use.
    * * weavebff Progressive: Bottom Field First.  Bad quality, do not use.
+   * * yadif YADIF Adaptive.
    */
   g_object_class_install_property (gobject_class, PROP_METHOD,
       g_param_spec_enum ("method",
