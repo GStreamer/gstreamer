@@ -289,11 +289,15 @@ bs_write_vps_data (GstBitWriter * bs, GstVaapiEncoderH265 * encoder,
   guint32 vps_num_layer_sets_minus1 = 0;
   guint32 vps_timing_info_present_flag = 0;
   guint32 vps_extension_flag = 0;
+  guint32 vps_base_layer_internal_flag = 1;
+  guint32 vps_base_layer_available_flag = 1;
 
   /* video_parameter_set_id */
   WRITE_UINT32 (bs, video_parameter_set_id, 4);
-  /* vps_reserved_three_2bits */
-  WRITE_UINT32 (bs, 3, 2);
+  /* vps_base_layer_internal_flag */
+  WRITE_UINT32 (bs, vps_base_layer_internal_flag, 1);
+  /* vps_base_layer_available_flag */
+  WRITE_UINT32 (bs, vps_base_layer_available_flag, 1);
   /* vps_max_layers_minus1 */
   WRITE_UINT32 (bs, vps_max_layers_minus1, 6);
   /* vps_max_sub_layers_minus1 */
