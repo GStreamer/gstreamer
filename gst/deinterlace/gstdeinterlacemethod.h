@@ -135,19 +135,20 @@ struct _GstDeinterlaceScanlineData {
  const guint8 *tt0, *t0, *m0, *b0, *bb0;
  const guint8 *tt1, *t1, *m1, *b1, *bb1;
  const guint8 *tt2, *t2, *m2, *b2, *bb2;
+ const guint8 *tp2, *bp2;
  gboolean bottom_field;
 };
 
 /*
  * For interpolate_scanline the input is:
  *
- * |   t-3       t-2       t-1       t        t+1
- * | Field 3 | Field 2 | Field 1 | Field 0 | Field -1
- * |  TT3    |         |   TT1   |         |   TTp
- * |         |   T2    |         |   T0    |
- * |   M3    |         |    M1   |         |    Mp
- * |         |   B2    |         |   B0    |
- * |  BB3    |         |   BB1   |         |   BBp
+ * |   t-3       t-2       t-1       t        t+1        t+2
+ * | Field 3 | Field 2 | Field 1 | Field 0 | Field -1 | Field -2
+ * |  TT3    |         |   TT1   |         |   TTp    |
+ * |         |   T2    |         |   T0    |          | Tp2
+ * |   M3    |         |    M1   |         |    Mp    |
+ * |         |   B2    |         |   B0    |          | Bp2
+ * |  BB3    |         |   BB1   |         |   BBp    |
  *
  * For copy_scanline the input is:
  *
