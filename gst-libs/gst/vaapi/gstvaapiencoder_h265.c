@@ -236,19 +236,53 @@ bs_write_profile_tier_level (GstBitWriter * bs,
     const VAEncSequenceParameterBufferHEVC * seq_param)
 {
   guint i;
+
   /* general_profile_space */
   WRITE_UINT32 (bs, 0, 2);
   /* general_tier_flag */
   WRITE_UINT32 (bs, seq_param->general_tier_flag, 1);
   /* general_profile_idc */
   WRITE_UINT32 (bs, seq_param->general_profile_idc, 5);
-  /* general_profile_compatibility_flag[32] */
-  for (i = 0; i < 32; i++) {
-    if (i == 1 || i == 2)
-      WRITE_UINT32 (bs, 1, 1);
-    else
-      WRITE_UINT32 (bs, 0, 1);
+
+  /* general_profile_compatibility_flag[0] */
+  WRITE_UINT32 (bs, 0, 1);
+  /* general_profile_compatibility_flag[1] */
+  if (seq_param->general_profile_idc == 1       /* Main profile */
+      /* In A.3.4, NOTE: When general_profile_compatibility_flag[ 3 ] is equal
+         to 1, general_profile_compatibility_flag[ 1 ] and
+         general_profile_compatibility_flag[ 2 ] should also be equal to 1. */
+      || seq_param->general_profile_idc == 3    /* Main Still Picture profile */
+      ) {
+    WRITE_UINT32 (bs, 1, 1);
+  } else {
+    WRITE_UINT32 (bs, 0, 1);
   }
+  /* general_profile_compatibility_flag[2] */
+  if (
+      /* In A.3.2, NOTE: When general_profile_compatibility_flag[ 1 ] is equal
+         to 1, general_profile_compatibility_flag[ 2 ] should also be equal to
+         1. */
+      seq_param->general_profile_idc == 1       /* Main profile */
+      || seq_param->general_profile_idc == 2    /* Main 10 profile */
+      /* In A.3.4, NOTE: When general_profile_compatibility_flag[ 3 ] is equal
+         to 1, general_profile_compatibility_flag[ 1 ] and
+         general_profile_compatibility_flag[ 2 ] should also be equal to 1. */
+      || seq_param->general_profile_idc == 3    /* Main Still Picture profile */
+      ) {
+    WRITE_UINT32 (bs, 1, 1);
+  } else {
+    WRITE_UINT32 (bs, 0, 1);
+  }
+  /* general_profile_compatibility_flag[3] */
+  if (seq_param->general_profile_idc == 3) {
+    WRITE_UINT32 (bs, 1, 1);
+  } else {
+    WRITE_UINT32 (bs, 0, 1);
+  }
+
+  /* general_profile_compatibility_flag[4~32] */
+  WRITE_UINT32 (bs, 0, 28);
+
   /* general_progressive_source_flag */
   WRITE_UINT32 (bs, 1, 1);
   /* general_interlaced_source_flag */
@@ -257,9 +291,11 @@ bs_write_profile_tier_level (GstBitWriter * bs,
   WRITE_UINT32 (bs, 0, 1);
   /* general_frame_only_constraint_flag */
   WRITE_UINT32 (bs, 1, 1);
-  /* general_reserved_zero_44bits */
-  for (i = 0; i < 44; i++)
+  /* general_reserved_zero_43bits */
+  for (i = 0; i < 43; i++)
     WRITE_UINT32 (bs, 0, 1);
+  /* general_inbld_flag */
+  WRITE_UINT32 (bs, 0, 1);
   /* general_level_idc */
   WRITE_UINT32 (bs, seq_param->general_level_idc, 8);
 
