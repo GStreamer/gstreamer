@@ -157,6 +157,7 @@ build nodebug fedora x86_64:
       - $CI_PROJECT_NAME == "cerbero"
       - $CI_PROJECT_NAME == "gst-docs"
       - $CI_PROJECT_NAME == "gst-integration-testsuites"
+      - $CI_PROJECT_NAME == "gst-plugins-rs"
 
 build static fedora x86_64:
   extends: 'build fedora x86_64'
@@ -167,6 +168,7 @@ build static fedora x86_64:
       - $CI_PROJECT_NAME == "cerbero"
       - $CI_PROJECT_NAME == "gst-docs"
       - $CI_PROJECT_NAME == "gst-integration-testsuites"
+      - $CI_PROJECT_NAME == "gst-plugins-rs"
 
 build static nodebug fedora x86_64:
   extends: 'build nodebug fedora x86_64'
@@ -177,6 +179,7 @@ build static nodebug fedora x86_64:
       - $CI_PROJECT_NAME == "cerbero"
       - $CI_PROJECT_NAME == "gst-docs"
       - $CI_PROJECT_NAME == "gst-integration-testsuites"
+      - $CI_PROJECT_NAME == "gst-plugins-rs"
 
 build clang fedora x86_64:
   extends: 'build fedora x86_64'
@@ -188,6 +191,7 @@ build clang fedora x86_64:
       - $CI_PROJECT_NAME == "cerbero"
       - $CI_PROJECT_NAME == "gst-docs"
       - $CI_PROJECT_NAME == "gst-integration-testsuites"
+      - $CI_PROJECT_NAME == "gst-plugins-rs"
 
 .test:
   stage: 'test'
@@ -251,6 +255,7 @@ check fedora:
       - $CI_PROJECT_NAME == "gst-examples"
       - $CI_PROJECT_NAME == "gst-omx"
       - $CI_PROJECT_NAME == "gst-docs"
+      - $CI_PROJECT_NAME == "gst-plugins-rs"
 
 integration testsuites fedora:
   extends: '.test fedora x86_64'
@@ -262,6 +267,7 @@ integration testsuites fedora:
       - $CI_PROJECT_NAME == "gst-omx"
       - $CI_PROJECT_NAME == "cerbero"
       - $CI_PROJECT_NAME == "gst-docs"
+      - $CI_PROJECT_NAME == "gst-plugins-rs"
 
 # Valgrind
 .valgrind fedora x86_64:
@@ -457,6 +463,7 @@ valgrind ges:
       - $CI_PROJECT_NAME == "gstreamer-vaapi"
       - $CI_PROJECT_NAME == "gst-docs"
       - $CI_PROJECT_NAME == "gst-integration-testsuites"
+      - $CI_PROJECT_NAME == "gst-plugins-rs"
 
 build vs2017 amd64:
   extends: '.build windows'
@@ -577,6 +584,7 @@ build cerbero fedora x86_64:
       - $CI_PROJECT_NAME == "gstreamer-vaapi"
       - $CI_PROJECT_NAME == "gst-docs"
       - $CI_PROJECT_NAME == "gst-integration-testsuites"
+      - $CI_PROJECT_NAME == "gst-plugins-rs"
 
 #
 # Cerbero Android Universal build
@@ -612,6 +620,7 @@ build cerbero cross-android universal:
       - $CI_PROJECT_NAME == "gst-omx"
       - $CI_PROJECT_NAME == "gstreamer-vaapi"
       - $CI_PROJECT_NAME == "gst-integration-testsuites"
+      - $CI_PROJECT_NAME == "gst-plugins-rs"
 
 #
 # Cerbero Cross Windows builds
@@ -648,6 +657,7 @@ build cerbero cross win32:
       - $CI_PROJECT_NAME == "gstreamer-vaapi"
       - $CI_PROJECT_NAME == "gst-docs"
       - $CI_PROJECT_NAME == "gst-integration-testsuites"
+      - $CI_PROJECT_NAME == "gst-plugins-rs"
 
 cerbero deps cross-windows x86_64:
   extends: '.cerbero deps'
@@ -681,6 +691,7 @@ build cerbero cross win64:
       - $CI_PROJECT_NAME == "gstreamer-vaapi"
       - $CI_PROJECT_NAME == "gst-docs"
       - $CI_PROJECT_NAME == "gst-integration-testsuites"
+      - $CI_PROJECT_NAME == "gst-plugins-rs"
 
 #
 # Build an Android App using the android binaries
@@ -740,6 +751,7 @@ cross-android universal examples:
       - $CI_PROJECT_NAME == "gst-omx"
       - $CI_PROJECT_NAME == "gst-integration-testsuites"
       - $CI_PROJECT_NAME == "gstreamer-vaapi"
+      - $CI_PROJECT_NAME == "gst-plugins-rs"
 
 cerbero cross-android universal examples:
   extends: ".cross-android universal examples"
@@ -809,6 +821,7 @@ build cerbero macos x86_64:
       - $CI_PROJECT_NAME == "gstreamer-vaapi"
       - $CI_PROJECT_NAME == "gst-docs"
       - $CI_PROJECT_NAME == "gst-sharp"
+      - $CI_PROJECT_NAME == "gst-plugins-rs"
 
 #
 # Cerbero iOS build
@@ -865,6 +878,7 @@ build cerbero cross-ios universal:
       - $CI_PROJECT_NAME == "gst-omx"
       - $CI_PROJECT_NAME == "gstreamer-vaapi"
       - $CI_PROJECT_NAME == "gst-sharp"
+      - $CI_PROJECT_NAME == "gst-plugins-rs"
 
 documentation:
   image: $FEDORA_IMAGE
@@ -894,6 +908,7 @@ documentation:
       - $CI_PROJECT_NAME == "gst-python"
       - $CI_PROJECT_NAME == "gst-sharp"
       - $CI_PROJECT_NAME == "gst-build"
+      - $CI_PROJECT_NAME == "gst-plugins-rs"
 
 #
 # Build an iOS App using the iOS binaries
@@ -951,6 +966,7 @@ cross-ios universal examples:
       - $CI_PROJECT_NAME == "gst-omx"
       - $CI_PROJECT_NAME == "gst-integration-testsuites"
       - $CI_PROJECT_NAME == "gstreamer-vaapi"
+      - $CI_PROJECT_NAME == "gst-plugins-rs"
 
 cerbero cross-ios universal examples:
   extends: ".cross-ios universal examples"
