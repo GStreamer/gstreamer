@@ -117,32 +117,3 @@ gst_vaapi_profile_caps_append_decoder (GstVaapiDisplay * display,
 
   return append_caps_with_context_info (display, &cip, structure);
 }
-
-/**
- * gst_vaapi_profile_caps_append_encoder:
- * @display: a #GstVaapiDisplay
- * @profile: a #GstVaapiProfile
- * @entrypoint: a #GstVaapiEntryPoint
- * @structure: a #GstStructure
- *
- * Extracts the config's surface attributes, from @profile and
- * @entrypoint, in an encoder context, and transforms it into a caps
- * formats and appended into @structure.
- *
- * Returns: %TRUE if the capabilities could be extracted and appended
- * into @structure; otherwise %FALSE
- **/
-gboolean
-gst_vaapi_profile_caps_append_encoder (GstVaapiDisplay * display,
-    GstVaapiProfile profile, GstVaapiEntrypoint entrypoint,
-    GstStructure * structure)
-{
-  GstVaapiContextInfo cip = {
-    GST_VAAPI_CONTEXT_USAGE_ENCODE, profile, entrypoint, 0,
-  };
-
-  g_return_val_if_fail (display != NULL, FALSE);
-  g_return_val_if_fail (structure != NULL, FALSE);
-
-  return append_caps_with_context_info (display, &cip, structure);
-}

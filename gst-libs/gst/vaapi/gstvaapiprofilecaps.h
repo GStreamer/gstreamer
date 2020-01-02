@@ -33,11 +33,6 @@ gboolean
 gst_vaapi_profile_caps_append_decoder (GstVaapiDisplay * display,
     GstVaapiProfile profile, GstStructure * structure);
 
-gboolean
-gst_vaapi_profile_caps_append_encoder (GstVaapiDisplay * display,
-    GstVaapiProfile profile, GstVaapiEntrypoint entrypoint,
-    GstStructure * structure);
-
 G_END_DECLS
 
 #endif /* GST_VAAPI_PROFILE_CAPS_H */
