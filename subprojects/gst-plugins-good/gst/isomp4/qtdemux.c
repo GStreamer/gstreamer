@@ -469,6 +469,11 @@ gst_qtdemux_finalize (GObject * object)
   GstQTDemux *qtdemux = GST_QTDEMUX (object);
 
   g_free (qtdemux->redirect_location);
+  g_free (qtdemux->cenc_aux_info_sizes);
+  g_mutex_clear (&qtdemux->expose_lock);
+
+  g_ptr_array_free (qtdemux->active_streams, TRUE);
+  g_ptr_array_free (qtdemux->old_streams, TRUE);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -478,21 +483,12 @@ gst_qtdemux_dispose (GObject * object)
 {
   GstQTDemux *qtdemux = GST_QTDEMUX (object);
 
-  if (qtdemux->adapter) {
-    g_object_unref (G_OBJECT (qtdemux->adapter));
-    qtdemux->adapter = NULL;
-  }
-  gst_tag_list_unref (qtdemux->tag_list);
-  gst_flow_combiner_free (qtdemux->flowcombiner);
+  g_clear_object (&qtdemux->adapter);
+  gst_clear_tag_list (&qtdemux->tag_list);
+  g_clear_pointer (&qtdemux->flowcombiner, gst_flow_combiner_unref);
+
   g_queue_clear_full (&qtdemux->protection_event_queue,
       (GDestroyNotify) gst_event_unref);
-
-  g_free (qtdemux->cenc_aux_info_sizes);
-  qtdemux->cenc_aux_info_sizes = NULL;
-  g_mutex_clear (&qtdemux->expose_lock);
-
-  g_ptr_array_free (qtdemux->active_streams, TRUE);
-  g_ptr_array_free (qtdemux->old_streams, TRUE);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
