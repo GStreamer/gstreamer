@@ -357,7 +357,8 @@ _find_request (gconstpointer resp, gconstpointer req)
 
   /* Confirm if it's under the size of the cached response */
   if (_req->Info.Width <= cached_resp->request.Info.Width &&
-      _req->Info.Height <= cached_resp->request.Info.Height) {
+      _req->Info.Height <= cached_resp->request.Info.Height &&
+      _req->NumFrameSuggested <= cached_resp->request.NumFrameSuggested) {
     return _req->Type & cached_resp->
         request.Type & MFX_MEMTYPE_FROM_DECODE ? 0 : -1;
   }
