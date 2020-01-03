@@ -91,6 +91,20 @@ static guint8 h264_sei_buffering_period[] = {
   0x00, 0x00, 0x00, 0x01, 0x06, 0x00, 0x01, 0xc0
 };
 
+/* Content light level information SEI message */
+static guint8 h264_sei_clli[] = {
+  0x00, 0x00, 0x00, 0x01, 0x06, 0x90, 0x04, 0x03, 0xe8, 0x01, 0x90, 0x80
+};
+
+/* Mastering display colour volume information SEI message */
+static guint8 h264_sei_mdcv[] = {
+  0x00, 0x00, 0x00, 0x01, 0x06, 0x89, 0x18, 0x84,
+  0xd0, 0x3e, 0x80, 0x33, 0x90, 0x86, 0xc4, 0x1d,
+  0x4c, 0x0b, 0xb8, 0x3d, 0x13, 0x40, 0x42, 0x00,
+  0x98, 0x96, 0x80, 0x00, 0x00, 0x03, 0x00, 0x01,
+  0x80
+};
+
 /* combines to this codec-data */
 static guint8 h264_avc_codec_data[] = {
   0x01, 0x4d, 0x40, 0x15, 0xff, 0xe1, 0x00, 0x17,
@@ -129,6 +143,7 @@ static guint8 garbage_frame[] = {
 /* context to tweak tests */
 static const gchar *ctx_suite;
 static gboolean ctx_codec_data;
+static gboolean ctx_hdr_sei;
 
 #define SPS_LEN 3
 #define SPS_CONSTRAINT_SET_FLAG_0 1 << 7
@@ -378,6 +393,10 @@ GST_END_TEST;
 #define fail_unless_structure_field_int_equals(s,field,num) \
     fail_unless_equals_int (structure_get_int(s,field), num)
 
+#define structure_get_string(s,f) \
+    (g_value_get_string(gst_structure_get_value(s,f)))
+#define fail_unless_structure_field_string_equals(s,field,name) \
+    fail_unless_equals_string (structure_get_string(s,field), name)
 
 GST_START_TEST (test_parse_detect_stream)
 {
@@ -399,6 +418,8 @@ GST_START_TEST (test_parse_detect_stream)
   fail_unless (gst_structure_has_name (s, "video/x-h264"));
   fail_unless_structure_field_int_equals (s, "width", 32);
   fail_unless_structure_field_int_equals (s, "height", 24);
+  fail_unless_structure_field_string_equals (s, "profile", "main");
+  fail_unless_structure_field_string_equals (s, "level", "2.1");
 
   if (ctx_codec_data) {
     fail_unless (gst_structure_has_field (s, "codec_data"));
@@ -413,6 +434,64 @@ GST_START_TEST (test_parse_detect_stream)
             gst_buffer_get_size (buf)) == 0);
   }
 
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_parse_detect_stream_with_hdr_sei)
+{
+  GstCaps *caps;
+  GstStructure *s;
+  GstBuffer *buf;
+  const GValue *val;
+  guint8 *h264_idr_plus_sei;
+  gsize h264_idr_plus_sei_size;
+
+  h264_idr_plus_sei_size =
+      sizeof (h264_sei_clli) + sizeof (h264_sei_mdcv) + sizeof (h264_idrframe);
+  h264_idr_plus_sei = malloc (h264_idr_plus_sei_size);
+
+  memcpy (h264_idr_plus_sei, h264_sei_clli, sizeof (h264_sei_clli));
+  memcpy (h264_idr_plus_sei + sizeof (h264_sei_clli), h264_sei_mdcv,
+      sizeof (h264_sei_mdcv));
+  memcpy (h264_idr_plus_sei + sizeof (h264_sei_clli) + sizeof (h264_sei_mdcv),
+      h264_idrframe, sizeof (h264_idrframe));
+
+  /* parser does not really care that mpeg1 and mpeg2 frame data
+   * should be a bit different */
+  caps =
+      gst_parser_test_get_output_caps (h264_idr_plus_sei,
+      h264_idr_plus_sei_size, NULL);
+  fail_unless (caps != NULL);
+
+  /* Check that the negotiated caps are as expected */
+  /* When codec_data is present, parser assumes that data is version 4 */
+  GST_LOG ("h264 output caps: %" GST_PTR_FORMAT, caps);
+  s = gst_caps_get_structure (caps, 0);
+  fail_unless (gst_structure_has_name (s, "video/x-h264"));
+  fail_unless_structure_field_int_equals (s, "width", 32);
+  fail_unless_structure_field_int_equals (s, "height", 24);
+  fail_unless_structure_field_string_equals (s, "profile", "main");
+  fail_unless_structure_field_string_equals (s, "level", "2.1");
+
+  fail_unless_structure_field_string_equals (s, "mastering-display-info",
+      "3:20:3:50:17:25:8:25:33:125:69:100:3127:10000:329:1000:1000:1:1:10000");
+  fail_unless_structure_field_string_equals (s, "content-light-level",
+      "1000:1:400:1");
+  if (ctx_codec_data) {
+    fail_unless (gst_structure_has_field (s, "codec_data"));
+
+    /* check codec-data in more detail */
+    val = gst_structure_get_value (s, "codec_data");
+    fail_unless (val != NULL);
+    buf = gst_value_get_buffer (val);
+    fail_unless (buf != NULL);
+    fail_unless (gst_buffer_get_size (buf) == h264_codec_data_size);
+    fail_unless (gst_buffer_memcmp (buf, 0, h264_codec_data,
+            gst_buffer_get_size (buf)) == 0);
+  }
+  g_free (h264_idr_plus_sei);
   gst_caps_unref (caps);
 }
 
@@ -607,6 +686,8 @@ h264parse_suite (void)
   tcase_add_test (tc_chain, test_parse_split);
   tcase_add_test (tc_chain, test_parse_skip_garbage);
   tcase_add_test (tc_chain, test_parse_detect_stream);
+  if (ctx_hdr_sei)
+    tcase_add_test (tc_chain, test_parse_detect_stream_with_hdr_sei);
   tcase_add_test (tc_chain, test_sink_caps_reordering);
 
   return s;
@@ -795,6 +876,7 @@ main (int argc, char **argv)
   /* no timing info to parse */
   ctx_no_metadata = TRUE;
   ctx_codec_data = FALSE;
+  ctx_hdr_sei = FALSE;
 
   h264_codec_data = h264_avc_codec_data;
   h264_codec_data_size = sizeof (h264_avc_codec_data);
@@ -809,7 +891,7 @@ main (int argc, char **argv)
   ctx_verify_buffer = verify_buffer_bs_au;
   ctx_discard = 0;
   ctx_frame_generated = FALSE;
-
+  ctx_hdr_sei = TRUE;
   s = h264parse_suite ();
   nf += gst_check_run_suite (s, ctx_suite, __FILE__ "_to_bs_au.c");
 
@@ -819,6 +901,7 @@ main (int argc, char **argv)
   ctx_verify_buffer = verify_buffer;
   ctx_discard = 0;
   ctx_codec_data = TRUE;
+  ctx_hdr_sei = FALSE;
 
   s = h264parse_suite ();
   sr = srunner_create (s);

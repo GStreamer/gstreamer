@@ -42,7 +42,7 @@ GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 
 /* Data generated with:
  *
- * gst-launch-1.0 videotestsrc num-buffers=1 ! video/x-raw,width=16,height=16 ! x265enc ! h265parse ! fakesink
+ * gst-launch-1.0 videotestsrc num-buffers=1 ! video/x-raw,width=16,height=16 ! x265enc option-string="max-cll=1000,400:master-display=G(13250,34500)B(7500,3000)R(34000,16000)WP(15635,16450)L(10000000,1)" ! h265parse ! fakesink
  *
  * x265enc SEI has been dropped.
  *
@@ -91,6 +91,17 @@ static guint8 h265_idr[] = {
   0x4f, 0xf7, 0x47, 0x60, 0x89, 0x35, 0x6e, 0x08, 0x9a, 0xcf, 0x11, 0x26, 0xc3,
   0xec, 0x31, 0x23, 0xca, 0x51, 0x10, 0x80
 };
+
+/* Content light level information SEI message */
+static guint8 h265_sei_clli[] = {
+  0x00, 0x00, 0x00, 0x01, 0x4e, 0x01, 0x90, 0x04, 0x03, 0xe8, 0x01, 0x90, 0x80
+};
+
+/* Mastering display colour volume information SEI message */
+static guint8 h265_sei_mdcv[] = {
+  0x00, 0x00, 0x00, 0x01, 0x4e, 0x01, 0x89, 0x18, 0x33, 0xc2, 0x86, 0xc4, 0x1d,
+  0x4c, 0x0b, 0xb8, 0x84, 0xd0, 0x3e, 0x80, 0x3d, 0x13, 0x40, 0x42, 0x00, 0x98,
+  0x96, 0x80, 0x00, 0x00, 0x03, 0x00, 0x01, 0x80
 };
 
 static const gchar *ctx_suite;
@@ -194,6 +205,49 @@ GST_START_TEST (test_parse_detect_stream)
 
 GST_END_TEST;
 
+GST_START_TEST (test_parse_detect_stream_with_hdr_sei)
+{
+  GstCaps *caps;
+  GstStructure *s;
+  guint8 *h265_idr_plus_sei;
+  gsize h265_idr_plus_sei_size =
+      sizeof (h265_sei_clli) + sizeof (h265_sei_mdcv) + sizeof (h265_idr);
+
+  h265_idr_plus_sei = malloc (h265_idr_plus_sei_size);
+
+  memcpy (h265_idr_plus_sei, h265_sei_clli, sizeof (h265_sei_clli));
+  memcpy (h265_idr_plus_sei + sizeof (h265_sei_clli), h265_sei_mdcv,
+      sizeof (h265_sei_mdcv));
+  memcpy (h265_idr_plus_sei + sizeof (h265_sei_clli) + sizeof (h265_sei_mdcv),
+      h265_idr, sizeof (h265_idr));
+
+  caps =
+      gst_parser_test_get_output_caps (h265_idr_plus_sei,
+      h265_idr_plus_sei_size, NULL);
+  fail_unless (caps != NULL);
+
+  /* Check that the negotiated caps are as expected */
+  GST_DEBUG ("output caps: %" GST_PTR_FORMAT, caps);
+  s = gst_caps_get_structure (caps, 0);
+  fail_unless (gst_structure_has_name (s, "video/x-h265"));
+  fail_unless_structure_field_int_equals (s, "width", 16);
+  fail_unless_structure_field_int_equals (s, "height", 16);
+  fail_unless_structure_field_string_equals (s, "stream-format", "byte-stream");
+  fail_unless_structure_field_string_equals (s, "alignment", "au");
+  fail_unless_structure_field_string_equals (s, "profile", "main");
+  fail_unless_structure_field_string_equals (s, "tier", "main");
+  fail_unless_structure_field_string_equals (s, "level", "2.1");
+  fail_unless_structure_field_string_equals (s, "mastering-display-info",
+      "17:25:8:25:53:200:69:100:3:20:3:50:3127:10000:329:1000:1000:1:1:10000");
+  fail_unless_structure_field_string_equals (s, "content-light-level",
+      "1000:1:400:1");
+
+  g_free (h265_idr_plus_sei);
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
 static Suite *
 h265parse_suite (void)
 {
@@ -205,6 +259,7 @@ h265parse_suite (void)
   tcase_add_test (tc_chain, test_parse_drain_single);
   tcase_add_test (tc_chain, test_parse_split);
   tcase_add_test (tc_chain, test_parse_detect_stream);
+  tcase_add_test (tc_chain, test_parse_detect_stream_with_hdr_sei);
 
   return s;
 }
