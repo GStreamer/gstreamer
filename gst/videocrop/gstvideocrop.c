@@ -104,6 +104,8 @@ static void gst_video_crop_set_property (GObject * object, guint prop_id,
 static void gst_video_crop_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static void gst_video_crop_before_transform (GstBaseTransform * trans,
+    GstBuffer * in);
 static GstCaps *gst_video_crop_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter_caps);
 static gboolean gst_video_crop_src_event (GstBaseTransform * trans,
@@ -188,22 +190,22 @@ gst_video_crop_class_init (GstVideoCropClass * klass)
       g_param_spec_int ("left", "Left",
           "Pixels to crop at left (-1 to auto-crop)", -1, G_MAXINT, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
-          GST_PARAM_MUTABLE_PLAYING));
+          GST_PARAM_MUTABLE_PLAYING | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (gobject_class, PROP_RIGHT,
       g_param_spec_int ("right", "Right",
           "Pixels to crop at right (-1 to auto-crop)", -1, G_MAXINT, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
-          GST_PARAM_MUTABLE_PLAYING));
+          GST_PARAM_MUTABLE_PLAYING | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (gobject_class, PROP_TOP,
       g_param_spec_int ("top", "Top", "Pixels to crop at top (-1 to auto-crop)",
           -1, G_MAXINT, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
-          GST_PARAM_MUTABLE_PLAYING));
+          GST_PARAM_MUTABLE_PLAYING | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (gobject_class, PROP_BOTTOM,
       g_param_spec_int ("bottom", "Bottom",
           "Pixels to crop at bottom (-1 to auto-crop)", -1, G_MAXINT, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
-          GST_PARAM_MUTABLE_PLAYING));
+          GST_PARAM_MUTABLE_PLAYING | GST_PARAM_CONTROLLABLE));
 
   gst_element_class_add_static_pad_template (element_class, &sink_template);
   gst_element_class_add_static_pad_template (element_class, &src_template);
@@ -212,6 +214,8 @@ gst_video_crop_class_init (GstVideoCropClass * klass)
       "Crops video into a user-defined region",
       "Tim-Philipp Müller <tim centricular net>");
 
+  basetransform_class->before_transform =
+      GST_DEBUG_FUNCPTR (gst_video_crop_before_transform);
   basetransform_class->transform_ip_on_passthrough = FALSE;
   basetransform_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_video_crop_transform_caps);
@@ -502,6 +506,23 @@ gst_video_crop_propose_allocation (GstBaseTransform * trans,
 
   return GST_BASE_TRANSFORM_CLASS (parent_class)->propose_allocation (trans,
       decide_query, query);
+}
+
+static void
+gst_video_crop_before_transform (GstBaseTransform * trans, GstBuffer * in)
+{
+  GstVideoCrop *video_crop = GST_VIDEO_CROP (trans);
+  GstClockTime timestamp, stream_time;
+
+  timestamp = GST_BUFFER_TIMESTAMP (in);
+  stream_time =
+      gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME, timestamp);
+
+  GST_DEBUG_OBJECT (video_crop, "sync to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (timestamp));
+
+  if (GST_CLOCK_TIME_IS_VALID (stream_time))
+    gst_object_sync_values (GST_OBJECT (video_crop), stream_time);
 }
 
 static GstFlowReturn
