@@ -29,9 +29,12 @@ if not os.path.exists(DEFAULT_BUILDDIR):
 
 TYPELIB_REG = re.compile(r'.*\.typelib$')
 SHAREDLIB_REG = re.compile(r'\.so|\.dylib|\.dll')
-GSTPLUGIN_FILEPATH_REG = re.compile(r'.*/lib[^/]*/gstreamer-1.0/[^/]+$')
 PLUGINPATH_REG = re.compile(r'lib.*' + re.escape(os.path.normpath('/gstreamer-1.0/')))
 
+# libdir is expanded from option of the same name listed in the `meson
+# introspect --buildoptions` output.
+GSTPLUGIN_FILEPATH_REG_TEMPLATE = r'.*/{libdir}/gstreamer-1.0/[^/]+$'
+GSTPLUGIN_FILEPATH_REG = None
 
 def listify(o):
     if isinstance(o, str):
@@ -84,6 +87,10 @@ def is_library_target_and_not_plugin(target, filename):
         # None of the installed files in the target correspond to the built
         # filename, so skip
         return False
+
+    global GSTPLUGIN_FILEPATH_REG
+    if GSTPLUGIN_FILEPATH_REG is None:
+        GSTPLUGIN_FILEPATH_REG = re.compile(GSTPLUGIN_FILEPATH_REG_TEMPLATE)
     if GSTPLUGIN_FILEPATH_REG.search(install_filename.replace('\\', '/')):
         return False
     return True
@@ -176,6 +183,15 @@ def get_subprocess_env(options, gst_version):
     paths = set()
     mono_paths = set()
     srcdir_path = pathlib.Path(options.srcdir)
+
+    build_options_s = subprocess.check_output(meson + ['introspect', options.builddir, '--buildoptions'])
+    build_options = json.loads(build_options_s.decode())
+    libdir, = [o['value'] for o in build_options if o['name'] == 'libdir']
+    libdir = libdir.replace('\\', '/')
+
+    global GSTPLUGIN_FILEPATH_REG_TEMPLATE
+    GSTPLUGIN_FILEPATH_REG_TEMPLATE = GSTPLUGIN_FILEPATH_REG_TEMPLATE.format(libdir=libdir)
+
     for target in targets:
         filenames = listify(target['filename'])
         for filename in filenames:
