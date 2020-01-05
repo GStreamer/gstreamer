@@ -644,22 +644,19 @@ def logLevelName(level):
     return format % (_LEVEL_NAMES[level - 1], )
 
 
+def _as_string(string_or_bytes):
+    return string_or_bytes.decode() if isinstance(string_or_bytes, bytes) else string_or_bytes
+
+
 def _preformatLevels(enableColorOutput):
     terminal_controller = TerminalController()
     for level in ERROR, WARN, FIXME, INFO, DEBUG, LOG:
         if enableColorOutput:
-            if isinstance(terminal_controller.BOLD, bytes):
-                formatter = ''.join(
-                    (terminal_controller.BOLD.decode(),
-                     getattr(terminal_controller, COLORS[level]).decode(),
-                     logLevelName(level),
-                     terminal_controller.NORMAL.decode()))
-            else:
-                formatter = ''.join(
-                    (terminal_controller.BOLD,
-                     getattr(terminal_controller, COLORS[level]),
-                     logLevelName(level),
-                     terminal_controller.NORMAL))
+            formatter = ''.join(
+                (_as_string(terminal_controller.BOLD),
+                 _as_string(getattr(terminal_controller, COLORS[level])),
+                 logLevelName(level),
+                 _as_string(terminal_controller.NORMAL)))
         else:
             formatter = logLevelName(level)
         _FORMATTED_LEVELS.append(formatter)
