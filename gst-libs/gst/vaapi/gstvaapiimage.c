@@ -232,6 +232,10 @@ gst_vaapi_image_init (GstVaapiImage * image, GstVaapiDisplay * display)
   image->internal_image.buf = VA_INVALID_ID;
   image->image.image_id = VA_INVALID_ID;
   image->image.buf = VA_INVALID_ID;
+  image->image_data = NULL;
+  image->internal_format = image->format = GST_VIDEO_FORMAT_UNKNOWN;
+  image->width = image->height = 0;
+  image->is_linear = FALSE;
 }
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstVaapiImage, gst_vaapi_image);
