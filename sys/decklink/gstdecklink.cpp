@@ -1586,6 +1586,10 @@ gst_decklink_get_devices (void)
 
   g_once (&devices_once, init_devices, NULL);
 
+  if (!devices) {
+    return NULL;
+  }
+
   for (i = 0; i < devices->len; i++) {
     Device *device = (Device *) g_ptr_array_index (devices, i);
 
