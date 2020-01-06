@@ -85,6 +85,12 @@ GST_START_TEST (test_overlay_position)
   GstVideoFrame frame;
   GstVideoInfo vinfo;
 
+  /* Check if vaapioverlay is available, since it is only available
+   * for iHD vaapi driver */
+  overlay = gst_element_factory_make ("vaapioverlay", "overlay");
+  if (!overlay)
+    return;
+
   /* build pipeline */
   bin = gst_pipeline_new ("pipeline");
   bus = gst_element_get_bus (bin);
@@ -108,7 +114,6 @@ GST_START_TEST (test_overlay_position)
   g_object_set (filter2, "caps", caps, NULL);
   gst_caps_unref (caps);
 
-  overlay = gst_element_factory_make ("vaapioverlay", "overlay");
   sink = gst_element_factory_make ("vaapisink", "sink");
   g_object_set (sink, "display", 4, "signal-handoffs", TRUE, NULL);
   g_signal_connect (sink, "handoff", G_CALLBACK (on_handoff), NULL);
