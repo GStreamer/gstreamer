@@ -7,6 +7,7 @@ import os
 import platform
 import re
 import site
+import shlex
 import shutil
 import subprocess
 import sys
@@ -371,6 +372,10 @@ if __name__ == "__main__":
     parser.add_argument("--winepath",
                         default='',
                         help="Exra path to set to WINEPATH.")
+    parser.add_argument("--only-environment",
+                        action='store_true',
+                        default=False,
+                        help="Do not start a shell, only print required environment.")
     options, args = parser.parse_known_args()
 
     if not os.path.exists(options.builddir):
@@ -440,6 +445,12 @@ if __name__ == "__main__":
             tmprc.flush()
             env['ZDOTDIR'] = tmpdir.name
     try:
-        exit(subprocess.call(args, close_fds=False, env=env))
+        if options.only_environment:
+            for name, value in env.items():
+                print('{}={}'.format(name, shlex.quote(value)))
+                print('export {}'.format(name))
+        else:
+            exit(subprocess.call(args, close_fds=False, env=env))
+
     except subprocess.CalledProcessError as e:
         exit(e.returncode)

@@ -314,6 +314,16 @@ You can get into the development environment the usual way:
 ninja -C $BUILDDIR/ devenv
 ```
 
+Alternatively, if you'd rather not start a shell in your workflow, you
+can mutate the current environment into a suitable state like so:
+
+```
+gst-env.py --only-environment
+```
+
+This will print output suitable for an sh-compatible `eval` function,
+just like `ssh-agent -s`.
+
 After setting up [binfmt] to use wine for windows binaries,
 you can run GStreamer tools under wine by running:
 
