@@ -212,7 +212,10 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
         self._valid_scenarios = valid_scenarios
 
     @staticmethod
-    def create_config(config, private_dir, test_name, extra_data):
+    def get_config_file(config, private_dir, test_name, extra_data):
+        if isinstance(config, str):
+            return config
+
         os.makedirs(private_dir, exist_ok=True)
         config_file = os.path.join(private_dir, test_name + '.config')
         with open(config_file, 'w') as f:
@@ -241,7 +244,7 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
             config = defs.pop('config', None)
             scenario_defs = defs.pop('scenarios', [])
             if not scenario_defs and config:
-                config_files[None] = cls.create_config(config, test_private_dir, test_name, extra_data)
+                config_files[None] = cls.get_config_file(config, test_private_dir, test_name, extra_data)
 
             scenarios = []
             for scenario in scenario_defs:
@@ -266,7 +269,7 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
                     scenarios.append(scenario_file)
 
                 if config:
-                    config_files[scenario_name] = cls.create_config(config, test_private_dir, test_name + '.' + scenario_name, extra_data)
+                    config_files[scenario_name] = cls.get_config_file(config, test_private_dir, test_name + '.' + scenario_name, extra_data)
 
             local_extra_data = extra_data.copy()
             local_extra_data.update(defs)
