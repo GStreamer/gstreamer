@@ -9,15 +9,11 @@
 #include "gstdashdemux.h"
 #include "gstdashsink.h"
 
-GST_DEBUG_CATEGORY (dash_debug);
-
 static gboolean
 dash_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (dash_debug, "DASH", 0, "HTTP Live Streaming (HLS)");
-
   if (!gst_element_register (plugin, "dashdemux", GST_RANK_PRIMARY,
-          GST_TYPE_DASH_DEMUX) || FALSE)
+          GST_TYPE_DASH_DEMUX))
     return FALSE;
 
   if (!gst_dash_sink_plugin_init (plugin))
