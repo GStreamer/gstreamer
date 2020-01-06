@@ -731,18 +731,18 @@ gst_splitmux_sink_set_property (GObject * object, guint prop_id,
       break;
     case PROP_SINK:
       GST_OBJECT_LOCK (splitmux);
-      if (splitmux->provided_sink)
-        gst_object_unref (splitmux->provided_sink);
+      gst_clear_object (&splitmux->provided_sink);
       splitmux->provided_sink = g_value_get_object (value);
-      gst_object_ref_sink (splitmux->provided_sink);
+      if (splitmux->provided_sink)
+        gst_object_ref_sink (splitmux->provided_sink);
       GST_OBJECT_UNLOCK (splitmux);
       break;
     case PROP_MUXER:
       GST_OBJECT_LOCK (splitmux);
-      if (splitmux->provided_muxer)
-        gst_object_unref (splitmux->provided_muxer);
+      gst_clear_object (&splitmux->provided_muxer);
       splitmux->provided_muxer = g_value_get_object (value);
-      gst_object_ref_sink (splitmux->provided_muxer);
+      if (splitmux->provided_muxer)
+        gst_object_ref_sink (splitmux->provided_muxer);
       GST_OBJECT_UNLOCK (splitmux);
       break;
     case PROP_RESET_MUXER:
