@@ -2035,7 +2035,7 @@ class _TestsLauncher(Loggable):
 
                         # Not adding to final report if flakiness is tolerated
                         to_report = not test.allow_flakiness
-                self.print_result(current_test_num, test, retry_on_failure=retry_on_failures)
+                self.print_result(current_test_num - 1, test, retry_on_failure=retry_on_failures)
                 if to_report:
                     self.reporter.after_test(test)
                 if retry_on_failures:
