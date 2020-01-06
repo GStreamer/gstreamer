@@ -171,6 +171,7 @@ static void
 gst_fake_video_sink_init (GstFakeVideoSink * self)
 {
   GstElement *child;
+  GstPadTemplate *template = gst_static_pad_template_get (&sink_factory);
 
   child = gst_element_factory_make ("fakesink", "sink");
 
@@ -184,7 +185,8 @@ gst_fake_video_sink_init (GstFakeVideoSink * self)
 
     gst_bin_add (GST_BIN (self), child);
 
-    ghost_pad = gst_ghost_pad_new ("sink", sink_pad);
+    ghost_pad = gst_ghost_pad_new_from_template ("sink", sink_pad, template);
+    gst_object_unref (template);
     gst_element_add_pad (GST_ELEMENT (self), ghost_pad);
     gst_object_unref (sink_pad);
 
