@@ -751,6 +751,31 @@ done:
   return result;
 }
 
+static gboolean
+gst_validate_convert_string_to_clocktime (const gchar * strtime,
+    GstClockTime * retval)
+{
+  guint h, m, s, ns;
+  gchar *other = g_strdup (strtime);
+  gboolean res = TRUE;
+
+  if (sscanf (strtime, "%" GST_TIME_FORMAT "%s", &h, &m, &s, &ns, other) < 4) {
+    GST_DEBUG ("Can not sscanf %s", strtime);
+
+    goto fail;
+  }
+
+  *retval = (h * 3600 + m * 60 + s) * GST_SECOND + ns;
+
+done:
+  g_free (other);
+  return res;
+
+fail:
+  res = FALSE;
+  goto done;
+}
+
 /**
  * gst_validate_utils_get_clocktime:
  * @structure: A #GstStructure to retrieve @name as a GstClockTime.
@@ -804,6 +829,13 @@ gst_validate_utils_get_clocktime (GstStructure * structure, const gchar * name,
 
     return TRUE;
   }
+
+  if (G_VALUE_TYPE (gvalue) == G_TYPE_STRING) {
+    return
+        gst_validate_convert_string_to_clocktime (g_value_get_string (gvalue),
+        retval);
+  }
+
 
   if (!gst_structure_get_double (structure, name, &val)) {
     return FALSE;
