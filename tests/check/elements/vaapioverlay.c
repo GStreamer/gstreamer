@@ -110,7 +110,7 @@ GST_START_TEST (test_overlay_position)
 
   overlay = gst_element_factory_make ("vaapioverlay", "overlay");
   sink = gst_element_factory_make ("vaapisink", "sink");
-  g_object_set (sink, "signal-handoffs", TRUE, NULL);
+  g_object_set (sink, "display", 4, "signal-handoffs", TRUE, NULL);
   g_signal_connect (sink, "handoff", G_CALLBACK (on_handoff), NULL);
 
   gst_bin_add_many (GST_BIN (bin), src1, filter1, src2, filter2, overlay,
