@@ -306,11 +306,19 @@ _can_attach (GstValidateOverride * override, GstValidateMonitor * monitor)
   pad = GST_PAD (gst_validate_monitor_get_target (monitor));
   element = gst_validate_monitor_get_element (monitor);
   if ((gst_validate_element_has_klass (element, "Converter") ||
-          gst_validate_element_has_klass (element, "Filter")) &&
+          gst_validate_element_has_klass (element, "Filter") ||
+          gst_validate_element_has_klass (element, "Decoder")) &&
       GST_PAD_IS_SINK (pad)) {
-    GST_INFO_OBJECT (override, "Not attaching on filter sinkpads");
+    GST_INFO_OBJECT (override, "Not attaching on filter or decoder sinkpads");
 
     goto fail;
+  }
+
+  if (!GST_PAD_PAD_TEMPLATE (pad)) {
+    GST_INFO_OBJECT (pad,
+        "Doesn't have template, can't use it %" GST_PTR_FORMAT,
+        gst_pad_query_caps (pad, NULL));
+    return FALSE;
   }
 
   template_caps = GST_PAD_TEMPLATE_CAPS (GST_PAD_PAD_TEMPLATE (pad));
