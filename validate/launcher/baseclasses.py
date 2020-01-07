@@ -2481,6 +2481,7 @@ class MediaDescriptor(Loggable):
 
 class GstValidateMediaDescriptor(MediaDescriptor):
     # Some extension file for discovering results
+    SKIPPED_MEDIA_INFO_EXT = "media_info.skipped"
     MEDIA_INFO_EXT = "media_info"
     PUSH_MEDIA_INFO_EXT = "media_info.push"
     STREAM_INFO_EXT = "stream_info"
@@ -2561,14 +2562,14 @@ class GstValidateMediaDescriptor(MediaDescriptor):
 
     def __cleanup_media_info_ext(self):
         for ext in [self.MEDIA_INFO_EXT, self.PUSH_MEDIA_INFO_EXT, self.STREAM_INFO_EXT,
-            ]:
+                self.SKIPPED_MEDIA_INFO_EXT, ]:
             if self._xml_path.endswith(ext):
                return self._xml_path[:len(self._xml_path) - (len(ext) + 1)]
 
         assert "Not reached" is None
 
     @staticmethod
-    def new_from_uri(uri, verbose=False, include_frames=False, is_push=False):
+    def new_from_uri(uri, verbose=False, include_frames=False, is_push=False, is_skipped=False):
         """
             include_frames = 0 # Never
             include_frames = 1 # always
@@ -2577,8 +2578,11 @@ class GstValidateMediaDescriptor(MediaDescriptor):
         """
         media_path = utils.url2path(uri)
 
-        ext = GstValidateMediaDescriptor.PUSH_MEDIA_INFO_EXT if is_push else \
-            GstValidateMediaDescriptor.MEDIA_INFO_EXT
+        ext = GstValidateMediaDescriptor.MEDIA_INFO_EXT
+        if is_push:
+            ext = GstValidateMediaDescriptor.PUSH_MEDIA_INFO_EXT
+        elif is_skipped:
+            ext = GstValidateMediaDescriptor.SKIPPED_MEDIA_INFO_EXT
         descriptor_path = "%s.%s" % (media_path, ext)
         args = GstValidateBaseTestManager.MEDIA_CHECK_COMMAND.split(" ")
         if include_frames == 2:

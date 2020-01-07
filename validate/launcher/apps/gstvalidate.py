@@ -963,22 +963,25 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
 
     def _discover_file(self, uri, fpath):
         for ext in (GstValidateMediaDescriptor.MEDIA_INFO_EXT,
-                GstValidateMediaDescriptor.PUSH_MEDIA_INFO_EXT):
+                GstValidateMediaDescriptor.PUSH_MEDIA_INFO_EXT,
+                GstValidateMediaDescriptor.SKIPPED_MEDIA_INFO_EXT):
             try:
-                is_push = False
+                is_push = ext == GstValidateMediaDescriptor.PUSH_MEDIA_INFO_EXT
+                is_skipped = ext == GstValidateMediaDescriptor.SKIPPED_MEDIA_INFO_EXT
                 media_info = "%s.%s" % (fpath, ext)
-                if ext == GstValidateMediaDescriptor.PUSH_MEDIA_INFO_EXT:
+                if is_push or is_skipped:
                     if not os.path.exists(media_info):
                         continue
-                    is_push = True
-                    uri = "push" + uri
-                args = GstValidateBaseTestManager.MEDIA_CHECK_COMMAND.split(" ")
 
+                if is_push:
+                    uri = "push" + uri
+
+                args = GstValidateBaseTestManager.MEDIA_CHECK_COMMAND.split(" ")
                 args.append(uri)
-                if os.path.isfile(media_info) and not self.options.update_media_info:
+                if os.path.isfile(media_info) and not self.options.update_media_info and not is_skipped:
                     self._add_media(media_info, uri)
                     continue
-                elif fpath.endswith(GstValidateMediaDescriptor.STREAM_INFO_EXT):
+                elif fpath.endswith(GstValidateMediaDescriptor.STREAM_INFO_EXT) and not is_skipped:
                     self._add_media(fpath)
                     continue
                 elif not self.options.generate_info and not self.options.update_media_info and not self.options.validate_uris:
@@ -999,7 +1002,7 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
                     include_frames = 1
 
                 media_descriptor = GstValidateMediaDescriptor.new_from_uri(
-                    uri, True, include_frames, is_push)
+                    uri, True, include_frames, is_push, is_skipped)
                 if media_descriptor:
                     self._add_media(media_descriptor, uri)
                 else:
