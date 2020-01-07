@@ -324,11 +324,12 @@ _pad_obscures_rectangle (GstVideoAggregator * vagg, GstVideoAggregatorPad * pad,
   if (!gst_video_aggregator_pad_has_current_buffer (pad))
     return FALSE;
 
-  /* Can't obscure if it's transparent and if the format has an alpha component
-   * we'd have to inspect every pixel to know if the frame is opaque, so assume
-   * it doesn't obscure. As a bonus, if the rectangle is fully transparent, we
-   * can also obscure it if we have alpha components on the pad */
-  if (!rect_transparent &&
+  /* Can't obscure if it's transparent and if the format has an alpha
+   * component we'd have to inspect every pixel to know if the frame is
+   * opaque, so assume it doesn't obscure unless it uses the SOURCE operator.
+   * As a bonus, if the rectangle is fully transparent, we can also obscure it
+   * if we have alpha components on the pad */
+  if (cpad->op != COMPOSITOR_OPERATOR_SOURCE && !rect_transparent &&
       (cpad->alpha != 1.0 || GST_VIDEO_INFO_HAS_ALPHA (&pad->info)))
     return FALSE;
 
