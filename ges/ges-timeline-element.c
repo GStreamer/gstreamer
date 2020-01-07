@@ -19,12 +19,59 @@
 /**
  * SECTION:gestimelineelement
  * @title: GESTimelineElement
- * @short_description: Base Class for all elements that will be in a way or
- * another inside a GESTimeline.
+ * @short_description: Base Class for all elements with some temporal extent
+ * within a #GESTimeline.
  *
- * The GESTimelineElement base class implements the notion of timing as well
- * as priority. A GESTimelineElement can have a parent object which will be
- * responsible for controlling its timing properties.
+ * A #GESTimelineElement will have some temporal extent in its
+ * corresponding #GESTimelineElement:timeline, controlled by its
+ * #GESTimelineElement:start and #GESTimelineElement:duration. This
+ * determines when its content will be displayed, or its effect applied,
+ * in the timeline. Several objects may overlap within a given
+ * #GESTimeline, in which case their #GESTimelineElement:priority is used
+ * to determine their ordering in the timeline. Priority is mostly handled
+ * internally by #GESLayer-s and #GESClip-s.
+ *
+ * A timeline element can have a #GESTimelineElement:parent,
+ * such as a #GESClip, which is responsible for controlling its timing.
+ *
+ * ## Editing
+ *
+ * Elements can be moved around in their #GESTimelineElement:timeline by
+ * setting their #GESTimelineElement:start and
+ * #GESTimelineElement:duration using ges_timeline_element_set_start()
+ * and ges_timeline_element_set_duration(). Additionally, which parts of
+ * the underlying content are played in the timeline can be adjusted by
+ * setting the #GESTimelineElement:in-point using
+ * ges_timeline_element_set_inpoint(). The library also provides
+ * ges_timeline_element_edit(), with various #GESEditMode-s, which can
+ * adjust these properties in a convenient way, as well as introduce
+ * similar changes in neighbouring or later elements in the timeline.
+ *
+ * However, a timeline may refuse a change in these properties if they
+ * would place the timeline in an unsupported configuration. For example,
+ * it is not possible for three #GESSourceClip-s in the same layer and
+ * with the same track types to overlap at any given position in the
+ * timeline (only two may overlap, which corresponds to a single
+ * #GESTransition). Similarly, a #GESSourceClip may not entirely cover
+ * another #GESSourceClip in the same layer and with the same track types.
+ * Additionally, an edit may be refused if it would place one of the
+ * timing properties out of bounds (such as a negative time value for
+ * #GESTimelineElement:start, or having insufficient internal
+ * content to last for the desired #GESTimelineElement:duration).
+ *
+ * ## Children Properties
+ *
+ * If a timeline element owns another #GstObject and wishes to expose
+ * some of its properties, it can do so by registering the property as one
+ * of the timeline element's children properties using
+ * ges_timeline_element_add_child_property(). The registered property of
+ * the child can then be read and set using the
+ * ges_timeline_element_get_child_property() and
+ * ges_timeline_element_set_child_property() methods, respectively. Some
+ * sub-classed objects will be created with pre-registered children
+ * properties; for example, to expose part of an underlying #GstElement
+ * that is used internally. The registered properties can be listed with
+ * ges_timeline_element_list_children_properties().
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -333,7 +380,7 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
   /**
    * GESTimelineElement:parent:
    *
-   * The parent container of the object
+   * The parent container of the element.
    */
   properties[PROP_PARENT] =
       g_param_spec_object ("parent", "Parent",
@@ -343,7 +390,7 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
   /**
    * GESTimelineElement:timeline:
    *
-   * The timeline in which @element is
+   * The timeline that the element lies within.
    */
   properties[PROP_TIMELINE] =
       g_param_spec_object ("timeline", "Timeline",
@@ -352,19 +399,32 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
   /**
    * GESTimelineElement:start:
    *
-   * The position of the object in the timeline (in nanoseconds).
+   * The starting position of the element in the timeline (in nanoseconds
+   * and in the time coordinates of the timeline). For example, for a
+   * source element, this would determine the time at which it should
+   * start outputting its internal content. For an operation element, this
+   * would determine the time at which it should start applying its effect
+   * to any source content.
    */
   properties[PROP_START] = g_param_spec_uint64 ("start", "Start",
-      "The position in the container", 0, G_MAXUINT64, 0, G_PARAM_READWRITE);
+      "The position in the timeline", 0, G_MAXUINT64, 0, G_PARAM_READWRITE);
 
   /**
    * GESTimelineElement:in-point:
    *
-   * The in-point at which this #GESTimelineElement will start outputting data
-   * from its contents (in nanoseconds).
+   * The initial offset to use internally when outputting content (in
+   * nanoseconds, but in the time coordinates of the internal content).
    *
-   * Ex : an in-point of 5 seconds means that the first outputted buffer will
-   * be the one located 5 seconds in the controlled resource.
+   * For example, for a #GESVideoUriSource that references some media
+   * file, the "internal content" is the media file data, and the
+   * in-point would correspond to some timestamp in the media file.
+   * When playing the timeline, and when the element is first reached at
+   * timeline-time #GESTimelineElement:start, it will begin outputting the
+   * data from the timestamp in-point **onwards**, until it reaches the
+   * end of its #GESTimelineElement:duration in the timeline.
+   *
+   * For elements that have no internal content, this should be kept
+   * as 0.
    */
   properties[PROP_INPOINT] =
       g_param_spec_uint64 ("in-point", "In-point", "The in-point", 0,
@@ -373,16 +433,29 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
   /**
    * GESTimelineElement:duration:
    *
-   * The duration (in nanoseconds) which will be used in the container
+   * The duration that the element is in effect for in the timeline (a
+   * time difference in nanoseconds using the time coordinates of the
+   * timeline). For example, for a source element, this would determine
+   * for how long it should output its internal content for. For an
+   * operation element, this would determine for how long its effect
+   * should be applied to any source content.
    */
   properties[PROP_DURATION] =
-      g_param_spec_uint64 ("duration", "Duration", "The duration to use", 0,
+      g_param_spec_uint64 ("duration", "Duration", "The play duration", 0,
       G_MAXUINT64, GST_CLOCK_TIME_NONE, G_PARAM_READWRITE);
 
   /**
    * GESTimelineElement:max-duration:
    *
-   * The maximum duration (in nanoseconds) of the #GESTimelineElement.
+   * The full duration of internal content that is available (a time
+   * difference in nanoseconds using the time coordinates of the internal
+   * content).
+   *
+   * For example, for a #GESVideoUriSource that references some media
+   * file, this would be the length of the media file.
+   *
+   * For elements that have no internal content, or whose content is
+   * indefinite, this should be kept as #GST_CLOCK_TIME_NONE.
    */
   properties[PROP_MAX_DURATION] =
       g_param_spec_uint64 ("max-duration", "Maximum duration",
@@ -392,10 +465,9 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
   /**
    * GESTimelineElement:priority:
    *
-   * The priority of the object.
+   * The priority of the element.
    *
-   * Setting GESTimelineElement priorities is deprecated
-   * as all priority management is done by GES itself now.
+   * Deprecated: 1.10: Priority management is now done by GES itself.
    */
   properties[PROP_PRIORITY] = g_param_spec_uint ("priority", "Priority",
       "The priority of the object", 0, G_MAXUINT, 0, G_PARAM_READWRITE);
@@ -403,7 +475,7 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
   /**
    * GESTimelineElement:name:
    *
-   * The name of the object
+   * The name of the element. This should be unique within its timeline.
    */
   properties[PROP_NAME] =
       g_param_spec_string ("name", "Name", "The name of the timeline object",
@@ -422,12 +494,14 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
 
   /**
    * GESTimelineElement::deep-notify:
-   * @timeline_element: a #GESTtimelineElement
-   * @prop_object: the object that originated the signal
-   * @prop: the property that changed
+   * @timeline_element: A #GESTtimelineElement
+   * @prop_object: The object that originated the signal
+   * @prop: The specification for the property that changed
    *
-   * The deep notify signal is used to be notified of property changes of all
-   * the childs of @timeline_element
+   * Emitted when a child of @timeline_element has one of its registered
+   * properties set. See ges_timeline_element_add_child_property().
+   * Note that unlike #GObject::notify, a child property name can not be
+   * used as a signal detail.
    */
   ges_timeline_element_signals[DEEP_NOTIFY] =
       g_signal_new ("deep-notify", G_TYPE_FROM_CLASS (klass),
@@ -496,6 +570,13 @@ _set_name (GESTimelineElement * self, const gchar * wanted_name)
     /* If the wanted name uses the same 'namespace' as default, make
      * sure it does not badly interfere with our counting system */
 
+    /* FIXME: should we really be allowing a user to set the name
+     * "uriclip1" for, say, a GESTransition? The below code *does not*
+     * capture this case (because the prefix does not match "transition").
+     * If the user subsequently calls _set_name with name == NULL, on a
+     * GESClip *for the first time*, then the GES library will
+     * automatically choose the *same* name "uriclip1", but this is not
+     * unique! */
     if (g_str_has_prefix (wanted_name, lowcase_type)) {
       guint64 tmpcount =
           g_ascii_strtoull (&wanted_name[strlen (lowcase_type)], NULL, 10);
@@ -505,6 +586,11 @@ _set_name (GESTimelineElement * self, const gchar * wanted_name)
         GST_DEBUG_OBJECT (self, "Using same naming %s but updated count to %i",
             wanted_name, count);
       } else if (tmpcount < count) {
+        /* FIXME: this can unexpectedly change names given by the user
+         * E.g. if "transition2" already exists, and a user then wants to
+         * set a GESTransition to have the name "transition-custom" or
+         * "transition 1 too many" then tmpcount would in fact be 0 or 1,
+         * and the name would then be changed to "transition3"! */
         name = g_strdup_printf ("%s%d", lowcase_type, count);
         count++;
         GST_DEBUG_OBJECT (self, "Name %s already allocated, giving: %s instead"
@@ -693,14 +779,24 @@ ges_timeline_element_add_child_property_full (GESTimelineElement * self,
 
 /**
  * ges_timeline_element_set_parent:
- * @self: a #GESTimelineElement
- * @parent: new parent of self
+ * @self: A #GESTimelineElement
+ * @parent (nullable): New parent of @self
  *
- * Sets the parent of @self to @parent. The parents needs to already
- * own a hard reference on @self.
+ * Sets the #GESTimelineElement:parent for the element.
  *
- * Returns: %TRUE if @parent could be set or %FALSE when @self
- * already had a parent or @self and @parent are the same.
+ * This is used internally and you should normally not call this. A
+ * #GESContainer will set the #GESTimelineElement:parent of its children
+ * in ges_container_add() and ges_container_remove().
+ *
+ * Note, if @parent is not %NULL, @self must not already have a parent
+ * set. Therefore, if you wish to switch parents, you will need to call
+ * this function twice: first to set the parent to %NULL, and then to the
+ * new parent.
+ *
+ * If @parent is not %NULL, you must ensure it already has a
+ * (non-floating) reference to @self before calling this.
+ *
+ * Returns: %TRUE if @parent could be set for @self.
  */
 gboolean
 ges_timeline_element_set_parent (GESTimelineElement * self,
@@ -713,6 +809,8 @@ ges_timeline_element_set_parent (GESTimelineElement * self,
   if (self == parent) {
     GST_INFO_OBJECT (self, "Trying to add %p in itself, not a good idea!",
         self);
+    /* FIXME: why are we sinking and then unreffing self when we do not
+     * own it? */
     gst_object_ref_sink (self);
     gst_object_unref (self);
     return FALSE;
@@ -737,6 +835,8 @@ ges_timeline_element_set_parent (GESTimelineElement * self,
 had_parent:
   {
     GST_WARNING_OBJECT (self, "set parent failed, object already had a parent");
+    /* FIXME: why are we sinking and then unreffing self when we do not
+     * own it? */
     gst_object_ref_sink (self);
     gst_object_unref (self);
     return FALSE;
@@ -745,13 +845,12 @@ had_parent:
 
 /**
  * ges_timeline_element_get_parent:
- * @self: a #GESTimelineElement
+ * @self: A #GESTimelineElement
  *
- * Returns the parent of @self. This function increases the refcount
- * of the parent object so you should gst_object_unref() it after usage.
+ * Gets the #GESTimelineElement:parent for the element.
  *
- * Returns: (transfer full) (nullable): parent of @self, this can be %NULL if
- * @self has no parent. unref after usage.
+ * Returns: (transfer full) (nullable): The parent of @self, or %NULL if
+ * @self has no parent.
  */
 GESTimelineElement *
 ges_timeline_element_get_parent (GESTimelineElement * self)
@@ -769,13 +868,25 @@ ges_timeline_element_get_parent (GESTimelineElement * self)
 
 /**
  * ges_timeline_element_set_timeline:
- * @self: a #GESTimelineElement
- * @timeline: The #GESTimeline @self is in
+ * @self: A #GESTimelineElement
+ * @timeline (nullable): The #GESTimeline @self should be in
  *
- * Sets the timeline of @self to @timeline.
+ * Sets the #GESTimelineElement:timeline of the element.
  *
- * Returns: %TRUE if @timeline could be set or %FALSE when @timeline
- * already had a timeline.
+ * This is used internally and you should normally not call this. A
+ * #GESClip will have its #GESTimelineElement:timeline set through its
+ * #GESLayer. A #GESTrack will similarly take care of setting the
+ * #GESTimelineElement:timeline of its #GESTrackElement-s. A #GESGroup
+ * will adopt the same #GESTimelineElement:timeline as its children.
+ *
+ * If @timeline is %NULL, this will stop its current
+ * #GESTimelineElement:timeline from tracking it, otherwise @timeline will
+ * start tracking @self. Note, in the latter case, @self must not already
+ * have a timeline set. Therefore, if you wish to switch timelines, you
+ * will need to call this function twice: first to set the timeline to
+ * %NULL, and then to the new timeline.
+ *
+ * Returns: %TRUE if @timeline could be set for @self.
  */
 gboolean
 ges_timeline_element_set_timeline (GESTimelineElement * self,
@@ -821,13 +932,12 @@ had_timeline:
 
 /**
  * ges_timeline_element_get_timeline:
- * @self: a #GESTimelineElement
+ * @self: A #GESTimelineElement
  *
- * Returns the timeline of @self. This function increases the refcount
- * of the timeline so you should gst_object_unref() it after usage.
+ * Gets the #GESTimelineElement:timeline for the element.
  *
- * Returns: (transfer full) (nullable): timeline of @self, this can be %NULL if
- * @self has no timeline. unref after usage.
+ * Returns: (transfer full) (nullable): The timeline of @self, or %NULL
+ * if @self has no timeline.
  */
 GESTimeline *
 ges_timeline_element_get_timeline (GESTimelineElement * self)
@@ -845,15 +955,19 @@ ges_timeline_element_get_timeline (GESTimelineElement * self)
 
 /**
  * ges_timeline_element_set_start:
- * @self: a #GESTimelineElement
- * @start: the position in #GstClockTime
+ * @self: A #GESTimelineElement
+ * @start: The desired start position of the element in its timeline
  *
- * Set the position of the object in its containing layer.
+ * Sets #GESTimelineElement:start for the element. This may fail if it
+ * would place the timeline in an unsupported configuration.
  *
- * Note that if the snapping-distance property of the timeline containing
- * @self is set, @self will properly snap to the edges around @start.
+ * Note that if the element's timeline has a
+ * #GESTimeline:snapping-distance set, then the element's
+ * #GESTimelineElement:start may instead be set to the edge of some other
+ * element in the neighbourhood of @start. In such a case, the return
+ * value will still be %TRUE on success.
  *
- * Returns: %TRUE if @start could be set.
+ * Returns: %TRUE if @start could be set for @self.
  */
 gboolean
 ges_timeline_element_set_start (GESTimelineElement * self, GstClockTime start)
@@ -910,13 +1024,14 @@ ges_timeline_element_set_start (GESTimelineElement * self, GstClockTime start)
 
 /**
  * ges_timeline_element_set_inpoint:
- * @self: a #GESTimelineElement
- * @inpoint: the in-point in #GstClockTime
+ * @self: A #GESTimelineElement
+ * @inpoint: The in-point, in internal time coordinates
  *
- * Set the in-point, that is the moment at which the @self will start
- * outputting data from its contents.
+ * Sets #GESTimelineElement:in-point for the element. This may fail if
+ * the element does not have enough internal content to last for the
+ * current #GESTimelineElement:duration after @inpoint.
  *
- * Returns: %TRUE if @inpoint could be set.
+ * Returns: %TRUE if @inpoint could be set for @self.
  */
 gboolean
 ges_timeline_element_set_inpoint (GESTimelineElement * self,
@@ -933,6 +1048,10 @@ ges_timeline_element_set_inpoint (GESTimelineElement * self,
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
   if (klass->set_inpoint) {
+    /* FIXME: Could we instead use g_object_freeze_notify() to prevent
+     * duplicate notify signals? Rather than relying on the return value
+     * being -1 for setting that succeeds but does not want a notify
+     * signal because it will call this method on itself a second time. */
     gint res = klass->set_inpoint (self, inpoint);
     if (res == TRUE) {
       self->inpoint = inpoint;
@@ -951,12 +1070,12 @@ ges_timeline_element_set_inpoint (GESTimelineElement * self,
 
 /**
  * ges_timeline_element_set_max_duration:
- * @self: a #GESTimelineElement
- * @maxduration: the maximum duration in #GstClockTime
+ * @self: A #GESTimelineElement
+ * @maxduration: The maximum duration, in internal time coordinates
  *
- * Set the maximun duration of the object
+ * Sets #GESTimelineElement:max-duration for the element.
  *
- * Returns: %TRUE if @maxduration could be set.
+ * Returns: %TRUE if @maxduration could be set for @self.
  */
 gboolean
 ges_timeline_element_set_max_duration (GESTimelineElement * self,
@@ -985,15 +1104,22 @@ ges_timeline_element_set_max_duration (GESTimelineElement * self,
 
 /**
  * ges_timeline_element_set_duration:
- * @self: a #GESTimelineElement
- * @duration: the duration in #GstClockTime
+ * @self: A #GESTimelineElement
+ * @duration: The desired duration in its timeline
  *
- * Set the duration of the object
+ * Sets #GESTimelineElement:duration for the element. This may fail if it
+ * would place the timeline in an unsupported configuration, or if the
+ * element does not have enough internal content to last for the desired
+ * @duration.
  *
- * Note that if the timeline snap-distance property of the timeline containing
- * @self is set, @self will properly snap to its neighboors.
+ * Note that if the element's timeline has a
+ * #GESTimeline:snapping-distance set, then the element's
+ * #GESTimelineElement:duration may instead be adjusted around @duration
+ * such that the edge of @self matches the edge of some other element in
+ * the neighbourhood. In such a case, the return value will still be %TRUE
+ * on success.
  *
- * Returns: %TRUE if @duration could be set.
+ * Returns: %TRUE if @duration could be set for @self.
  */
 gboolean
 ges_timeline_element_set_duration (GESTimelineElement * self,
@@ -1028,9 +1154,11 @@ ges_timeline_element_set_duration (GESTimelineElement * self,
 
 /**
  * ges_timeline_element_get_start:
- * @self: a #GESTimelineElement
+ * @self: A #GESTimelineElement
  *
- * Returns: The @start of @self
+ * Gets the #GESTimelineElement:start for the element.
+ *
+ * Returns: The start of @self (in nanoseconds).
  */
 GstClockTime
 ges_timeline_element_get_start (GESTimelineElement * self)
@@ -1042,9 +1170,11 @@ ges_timeline_element_get_start (GESTimelineElement * self)
 
 /**
  * ges_timeline_element_get_inpoint:
- * @self: a #GESTimelineElement
+ * @self: A #GESTimelineElement
  *
- * Returns: The @inpoint of @self
+ * Gets the #GESTimelineElement:in-point for the element.
+ *
+ * Returns: The in-point of @self (in nanoseconds).
  */
 GstClockTime
 ges_timeline_element_get_inpoint (GESTimelineElement * self)
@@ -1056,9 +1186,11 @@ ges_timeline_element_get_inpoint (GESTimelineElement * self)
 
 /**
  * ges_timeline_element_get_duration:
- * @self: a #GESTimelineElement
+ * @self: A #GESTimelineElement
  *
- * Returns: The @duration of @self
+ * Gets the #GESTimelineElement:duration for the element.
+ *
+ * Returns: The duration of @self (in nanoseconds).
  */
 GstClockTime
 ges_timeline_element_get_duration (GESTimelineElement * self)
@@ -1070,9 +1202,11 @@ ges_timeline_element_get_duration (GESTimelineElement * self)
 
 /**
  * ges_timeline_element_get_max_duration:
- * @self: a #GESTimelineElement
+ * @self: A #GESTimelineElement
  *
- * Returns: The @maxduration of @self
+ * Gets the #GESTimelineElement:max-duration for the element.
+ *
+ * Returns: The max-duration of @self (in nanoseconds).
  */
 GstClockTime
 ges_timeline_element_get_max_duration (GESTimelineElement * self)
@@ -1084,9 +1218,11 @@ ges_timeline_element_get_max_duration (GESTimelineElement * self)
 
 /**
  * ges_timeline_element_get_priority:
- * @self: a #GESTimelineElement
+ * @self: A #GESTimelineElement
  *
- * Returns: The @priority of @self
+ * Gets the #GESTimelineElement:priority for the element.
+ *
+ * Returns: The priority of @self.
  */
 guint32
 ges_timeline_element_get_priority (GESTimelineElement * self)
@@ -1098,16 +1234,16 @@ ges_timeline_element_get_priority (GESTimelineElement * self)
 
 /**
  * ges_timeline_element_set_priority:
- * @self: a #GESTimelineElement
- * @priority: the priority
+ * @self: A #GESTimelineElement
+ * @priority: The priority
  *
- * Sets the priority of the object within the containing layer
+ * Sets the priority of the element within the containing layer.
  *
  * Deprecated:1.10: All priority management is done by GES itself now.
  * To set #GESEffect priorities #ges_clip_set_top_effect_index should
  * be used.
  *
- * Returns: %TRUE if @priority could be set.
+ * Returns: %TRUE if @priority could be set for @self.
  */
 gboolean
 ges_timeline_element_set_priority (GESTimelineElement * self, guint32 priority)
@@ -1139,15 +1275,20 @@ ges_timeline_element_set_priority (GESTimelineElement * self, guint32 priority)
 
 /**
  * ges_timeline_element_ripple:
- * @self: The #GESTimelineElement to ripple.
- * @start: The new start of @self in ripple mode.
+ * @self: The #GESTimelineElement to ripple
+ * @start: The new start time of @self in ripple mode
  *
- * Edits @self in ripple mode. It allows you to modify the
- * start of @self and move the following neighbours accordingly.
- * This will change the overall timeline duration.
+ * Edits the start time of an element within its timeline in ripple mode.
+ * The element is shifted to @start, and later elements are also shifted
+ * by the same amount (see #GES_EDIT_MODE_RIPPLE). An edit may fail if it
+ * would place the timeline in an unsupported configuration.
  *
- * Returns: %TRUE if the self as been rippled properly, %FALSE if an error
- * occured
+ * Note that if the element's timeline has a
+ * #GESTimeline:snapping-distance set, then the start time may be set
+ * to the edge of some element in the neighbourhood of @start.
+ *
+ * Returns: %TRUE if the ripple edit of @self completed, %FALSE on
+ * failure.
  */
 gboolean
 ges_timeline_element_ripple (GESTimelineElement * self, GstClockTime start)
@@ -1156,6 +1297,9 @@ ges_timeline_element_ripple (GESTimelineElement * self, GstClockTime start)
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
 
+  /* FIXME: why are we calling a vmethod to ripple, when
+   * ges_timeline_element_edit() with a GESEditMode of RIPPLE does not do
+   * so? */
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
   if (klass->ripple)
@@ -1170,16 +1314,22 @@ ges_timeline_element_ripple (GESTimelineElement * self, GstClockTime start)
 
 /**
  * ges_timeline_element_ripple_end:
- * @self: The #GESTimelineElement to ripple.
- * @end: The new end (start + duration) of @self in ripple mode. It will
- *       basically only change the duration of @self.
+ * @self: The #GESTimelineElement to ripple
+ * @end: The new end time of @self in ripple mode
  *
- * Edits @self in ripple mode. It allows you to modify the
- * duration of a @self and move the following neighbours accordingly.
- * This will change the overall timeline duration.
+ * Edits the end time of an element within its timeline in ripple mode.
+ * The element's duration time is shifted until its end time matches @end,
+ * and later elements have their start time shifted by the same amount
+ * (see #GES_EDIT_MODE_RIPPLE). An edit may fail if it would place the
+ * duration time out of bounds, or if it would place the timeline in an
+ * unsupported configuration.
  *
- * Returns: %TRUE if the self as been rippled properly, %FALSE if an error
- * occured
+ * Note that if the element's timeline has a
+ * #GESTimeline:snapping-distance set, then the end time may be set
+ * to the edge of some element in the neighbourhood of @end.
+ *
+ * Returns: %TRUE if the ripple edit of @self completed, %FALSE on
+ * failure.
  */
 gboolean
 ges_timeline_element_ripple_end (GESTimelineElement * self, GstClockTime end)
@@ -1188,6 +1338,9 @@ ges_timeline_element_ripple_end (GESTimelineElement * self, GstClockTime end)
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
 
+  /* FIXME: why are we calling a vmethod to ripple_end, when
+   * ges_timeline_element_edit() with a GESEditMode of RIPPLE does not do
+   * so? */
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
   if (klass->ripple_end) {
@@ -1204,16 +1357,20 @@ ges_timeline_element_ripple_end (GESTimelineElement * self, GstClockTime end)
 /**
  * ges_timeline_element_roll_start:
  * @self: The #GESTimelineElement to roll
- * @start: The new start of @self in roll mode, it will also adapat
- * the in-point of @self according
+ * @start: The new start time of @self in roll mode
  *
- * Edits @self in roll mode. It allows you to modify the
- * start and inpoint of a @self and "resize" (basicly change the duration
- * in this case) of the previous neighbours accordingly.
- * This will not change the overall timeline duration.
+ * Edits the start time of an element within its timeline in roll mode.
+ * The element is trimmed to @start, and any other element whose end edge
+ * matched the start edge of the element is also trimmed to @start (see
+ * #GES_EDIT_MODE_ROLL). An edit may fail if it would place an in-point
+ * time or duration time out of bounds, or if it would place the timeline
+ * in an unsupported configuration.
  *
- * Returns: %TRUE if the self as been roll properly, %FALSE if an error
- * occured
+ * Note that if the element's timeline has a
+ * #GESTimeline:snapping-distance set, then the start time may be set
+ * to the edge of some element in the neighbourhood of @start.
+ *
+ * Returns: %TRUE if the roll edit of @self completed, %FALSE on failure.
  */
 gboolean
 ges_timeline_element_roll_start (GESTimelineElement * self, GstClockTime start)
@@ -1222,6 +1379,9 @@ ges_timeline_element_roll_start (GESTimelineElement * self, GstClockTime start)
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
 
+  /* FIXME: why are we calling a vmethod to roll_start, when
+   * ges_timeline_element_edit() with a GESEditMode of ROLL does not do
+   * so? */
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
   if (klass->roll_start) {
@@ -1237,16 +1397,21 @@ ges_timeline_element_roll_start (GESTimelineElement * self, GstClockTime start)
 
 /**
  * ges_timeline_element_roll_end:
- * @self: The #GESTimelineElement to roll.
- * @end: The new end (start + duration) of @self in roll mode
+ * @self: The #GESTimelineElement to roll
+ * @end: The new end time of @self in roll mode
  *
- * Edits @self in roll mode. It allows you to modify the
- * duration of a @self and trim (basicly change the start + inpoint
- * in this case) the following neighbours accordingly.
- * This will not change the overall timeline duration.
+ * Edits the end time of an element within its timeline in roll mode.
+ * The end of the element is trimmed to @end, and any other element whose
+ * start edge matched the end edge of the element is also trimmed to @end
+ * (see #GES_EDIT_MODE_ROLL). An edit may fail if it would place an
+ * in-point time or duration time out of bounds, or if it would place the
+ * timeline in an unsupported configuration.
  *
- * Returns: %TRUE if the self as been rolled properly, %FALSE if an error
- * occured
+ * Note that if the element's timeline has a
+ * #GESTimeline:snapping-distance set, then the end time may be set
+ * to the edge of some element in the neighbourhood of @end.
+ *
+ * Returns: %TRUE if the roll edit of @self completed, %FALSE on failure.
  */
 gboolean
 ges_timeline_element_roll_end (GESTimelineElement * self, GstClockTime end)
@@ -1255,6 +1420,9 @@ ges_timeline_element_roll_end (GESTimelineElement * self, GstClockTime end)
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
 
+  /* FIXME: why are we calling a vmethod to roll_end, when
+   * ges_timeline_element_edit() with a GESEditMode of ROLL does not do
+   * so? */
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
   if (klass->roll_end)
@@ -1269,20 +1437,21 @@ ges_timeline_element_roll_end (GESTimelineElement * self, GstClockTime end)
 
 /**
  * ges_timeline_element_trim:
- * @self: The #GESTimelineElement to trim.
- * @start: The new start of @self in trim mode, will adapt the inpoint
- * of @self accordingly
+ * @self: The #GESTimelineElement to trim
+ * @start: The new start time of @self in trim mode
  *
- * Edits @self in trim mode. It allows you to modify the
- * inpoint and start of @self.
- * This will not change the overall timeline duration.
+ * Edits the start time of an element within its timeline in trim mode.
+ * The element is shifted to @start, and its in-point time is similarly
+ * shifted to ensure that its internal content will appear at the same
+ * timeline time when it is played (see #GES_EDIT_MODE_TRIM). An edit may
+ * fail if it would place the in-point time out of bounds, or if it would
+ * place the timeline in an unsupported configuration.
  *
- * Note that to trim the end of an self you can just set its duration. The same way
- * as this method, it will take into account the snapping-distance property of the
- * timeline in which @self is.
+ * Note that if the element's timeline has a
+ * #GESTimeline:snapping-distance set, then the start time may be set
+ * to the edge of some element in the neighbourhood of @start.
  *
- * Returns: %TRUE if the self as been trimmed properly, %FALSE if an error
- * occured
+ * Returns: %TRUE if the trim edit of @self completed, %FALSE on failure.
  */
 gboolean
 ges_timeline_element_trim (GESTimelineElement * self, GstClockTime start)
@@ -1291,6 +1460,9 @@ ges_timeline_element_trim (GESTimelineElement * self, GstClockTime start)
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
 
+  /* FIXME: why are we calling a vmethod to trim, when
+   * ges_timeline_element_edit() with a GESEditMode of TRIM does not do
+   * so? */
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
   if (klass->trim)
@@ -1306,11 +1478,24 @@ ges_timeline_element_trim (GESTimelineElement * self, GstClockTime start)
 /**
  * ges_timeline_element_copy:
  * @self: The #GESTimelineElement to copy
- * @deep: whether we want to create the elements @self contains or not
+ * @deep: Whether the copy is needed for pasting
  *
- * Copies @self
+ * Create a copy of @self. All the properties of @self are copied into
+ * a new element, with the exception of #GESTimelineElement:parent,
+ * #GESTimelineElement:timeline and #GESTimelineElement:name. Other data,
+ * such the list of a #GESContainer's children, is **not** copied.
  *
- * Returns: (transfer floating): The newly create #GESTimelineElement, copied from @self
+ * If @deep is %TRUE, then the new element is prepared so that it can be
+ * used in ges_timeline_element_paste() or ges_timeline_paste_element().
+ * In the case of copying a #GESContainer, this ensures that the children
+ * of @self will also be pasted. The new element should not be used for
+ * anything else and can only be used **once** in a pasting operation. In
+ * particular, the new element itself is not an actual 'deep' copy of
+ * @self, but should be thought of as an intermediate object used for a
+ * single paste operation.
+ *
+ * Returns: (transfer floating): The newly create element,
+ * copied from @self.
  */
 G_GNUC_BEGIN_IGNORE_DEPRECATIONS;       /* Start ignoring GParameter deprecation */
 GESTimelineElement *
@@ -1400,9 +1585,9 @@ G_GNUC_END_IGNORE_DEPRECATIONS; /* End ignoring GParameter deprecation */
  * ges_timeline_element_get_toplevel_parent:
  * @self: The #GESTimelineElement to get the toplevel parent from
  *
- * Gets the toplevel #GESTimelineElement controlling @self
+ * Gets the toplevel #GESTimelineElement:parent of the element.
  *
- * Returns: (transfer full): The toplevel controlling parent of @self
+ * Returns: (transfer full): The toplevel parent of @self.
  */
 GESTimelineElement *
 ges_timeline_element_get_toplevel_parent (GESTimelineElement * self)
@@ -1419,12 +1604,11 @@ ges_timeline_element_get_toplevel_parent (GESTimelineElement * self)
 
 /**
  * ges_timeline_element_get_name:
- * @self: a #GESTimelineElement
+ * @self: A #GESTimelineElement
  *
- * Returns a copy of the name of @self.
- * Caller should g_free() the return value after usage.
+ * Gets the #GESTimelineElement:name for the element.
  *
- * Returns: (transfer full): The name of @self
+ * Returns: (transfer full): The name of @self.
  */
 gchar *
 ges_timeline_element_get_name (GESTimelineElement * self)
@@ -1436,12 +1620,28 @@ ges_timeline_element_get_name (GESTimelineElement * self)
 
 /**
  * ges_timeline_element_set_name:
- * @self: a #GESTimelineElement
- * @name: (allow-none): The name @self should take (if avalaible<)
+ * @self: A #GESTimelineElement
+ * @name: (allow-none): The name @self should take
  *
- * Sets the name of object, or gives @self a guaranteed unique name (if name is NULL).
- * This function makes a copy of the provided name, so the caller retains ownership
- * of the name it sent.
+ * Sets the #GESTimelineElement:name for the element. If %NULL is given
+ * for @name, then the library will instead generate a new name based on
+ * the type name of the element, such as the name "uriclip3" for a
+ * #GESUriClip, and will set that name instead.
+ *
+ * If @self already has a #GESTimelineElement:timeline, you should not
+ * call this function with @name set to %NULL.
+ *
+ * You should ensure that, within each #GESTimeline, every element has a
+ * unique name. If you call this function with @name as %NULL, then
+ * the library should ensure that the set generated name is unique from
+ * previously **generated** names. However, if you choose a @name that
+ * interferes with the naming conventions of the library, the library will
+ * attempt to ensure that the generated names will not conflict with the
+ * chosen name, which may lead to a different name being set instead, but
+ * the uniqueness between generated and user-chosen names is not
+ * guaranteed.
+ *
+ * Returns: %TRUE if @name or a generated name for @self could be set.
  */
 gboolean
 ges_timeline_element_set_name (GESTimelineElement * self, const gchar * name)
@@ -1459,6 +1659,8 @@ ges_timeline_element_set_name (GESTimelineElement * self, const gchar * name)
   if (self->timeline != NULL && name) {
     GESTimelineElement *tmp = ges_timeline_get_element (self->timeline, name);
 
+    /* FIXME: if tmp == self then this means that we setting the name of
+     * self to its existing name. There is no need to throw an error */
     if (tmp) {
       gst_object_unref (tmp);
       goto had_timeline;
@@ -1467,9 +1669,15 @@ ges_timeline_element_set_name (GESTimelineElement * self, const gchar * name)
     timeline_remove_element (self->timeline, self);
     readd_to_timeline = TRUE;
   }
+  /* FIXME: if self already has a timeline and name is NULL, then it also
+   * needs to be re-added to the timeline (or, at least its entry in
+   * timeline->priv->all_elements needs its key to be updated) using the
+   * new generated name */
 
   _set_name (self, name);
 
+  /* FIXME: the set name may not always be unique in a given timeline, see
+   * _set_name(). This can cause timeline_add_element to fail! */
   if (readd_to_timeline)
     timeline_add_element (self->timeline, self);
 
@@ -1478,12 +1686,30 @@ ges_timeline_element_set_name (GESTimelineElement * self, const gchar * name)
   /* error */
 had_timeline:
   {
+    /* FIXME: message is misleading. We are here if some other object in
+     * the timeline was added under @name (see above) */
     GST_WARNING ("Object %s already in a timeline can't be renamed to %s",
         self->name, name);
     return FALSE;
   }
 }
 
+/**
+ * ges_timeline_element_add_child_property:
+ * @self: A #GESTimelineElement
+ * @pspec: The specification for the property to add
+ * @child: The #GstObject who the property belongs to
+ *
+ * Register a property of a child of the element to allow it to be
+ * written with ges_timeline_element_set_child_property() and read with
+ * ges_timeline_element_get_child_property(). A change in the property
+ * will also appear in the #GESTimelineElement::deep-notify signal.
+ *
+ * @pspec should be unique from other children properties that have been
+ * registered on @self.
+ *
+ * Returns: %TRUE if the property was successfully registered.
+ */
 gboolean
 ges_timeline_element_add_child_property (GESTimelineElement * self,
     GParamSpec * pspec, GObject * child)
@@ -1494,11 +1720,13 @@ ges_timeline_element_add_child_property (GESTimelineElement * self,
 
 /**
  * ges_timeline_element_get_child_property_by_pspec:
- * @self: a #GESTrackElement
- * @pspec: The #GParamSpec that specifies the property you want to get
- * @value: (out): return location for the value
+ * @self: A #GESTimelineElement
+ * @pspec: The specification of a registered child property to get
+ * @value: (out): The return location for the value
  *
- * Gets a property of a child of @self.
+ * Gets the property of a child of the element. Specifically, the property
+ * corresponding to the @pspec used in
+ * ges_timeline_element_add_child_property() is copied into @value.
  */
 void
 ges_timeline_element_get_child_property_by_pspec (GESTimelineElement * self,
@@ -1525,11 +1753,13 @@ not_found:
 
 /**
  * ges_timeline_element_set_child_property_by_pspec:
- * @self: a #GESTimelineElement
- * @pspec: The #GParamSpec that specifies the property you want to set
- * @value: the value
+ * @self: A #GESTimelineElement
+ * @pspec: The specification of a registered child property to set
+ * @value: The value to set the property to
  *
- * Sets a property of a child of @self.
+ * Sets the property of a child of the element. Specifically, the property
+ * corresponding to the @pspec used in
+ * ges_timeline_element_add_child_property() is set to @value.
  */
 void
 ges_timeline_element_set_child_property_by_pspec (GESTimelineElement * self,
@@ -1542,17 +1772,29 @@ ges_timeline_element_set_child_property_by_pspec (GESTimelineElement * self,
 
 /**
  * ges_timeline_element_set_child_property:
- * @self: The origin #GESTimelineElement
- * @property_name: The name of the property
- * @value: the value
+ * @self: A #GESTimelineElement
+ * @property_name: The name of the child property to set
+ * @value: The value to set the property to
  *
- * Sets a property of a child of @self
+ * Sets the property of a child of the element.
  *
- * Note that #ges_timeline_element_set_child_property is really
- * intended for language bindings, #ges_timeline_element_set_child_properties
- * is much more convenient for C programming.
+ * @property_name can either be in the format "prop-name" or
+ * "TypeName::prop-name", where "prop-name" is the name of the property
+ * to set (as used in g_object_set()), and "TypeName" is the type name of
+ * the child (as returned by G_OBJECT_TYPE_NAME()). The latter format is
+ * useful when two children of different types share the same property
+ * name.
  *
- * Returns: %TRUE if the property was set, %FALSE otherwize
+ * The first child found with the given "prop-name" property that was
+ * registered with ges_timeline_element_add_child_property() (and of the
+ * type "TypeName", if it was given) will have the corresponding
+ * property set to @value. Other children that may have also matched the
+ * property name (and type name) are left unchanged!
+ *
+ * Note that ges_timeline_element_set_child_properties() may be more
+ * convenient for C programming.
+ *
+ * Returns: %TRUE if the property was found and set.
  */
 gboolean
 ges_timeline_element_set_child_property (GESTimelineElement * self,
@@ -1577,24 +1819,30 @@ not_found:
 }
 
 /**
-* ges_timeline_element_get_child_property:
-* @self: The origin #GESTimelineElement
-* @property_name: The name of the property
-* @value: (out): return location for the property value, it will
-* be initialized if it is initialized with 0
-*
-* In general, a copy is made of the property contents and
-* the caller is responsible for freeing the memory by calling
-* g_value_unset().
-*
-* Gets a property of a GstElement contained in @object.
-*
-* Note that #ges_timeline_element_get_child_property is really
-* intended for language bindings, #ges_timeline_element_get_child_properties
-* is much more convenient for C programming.
-*
-* Returns: %TRUE if the property was found, %FALSE otherwize
-*/
+ * ges_timeline_element_get_child_property:
+ * @self: A #GESTimelineElement
+ * @property_name: The name of the child property to get
+ * @value: (out): The return location for the value
+ *
+ * Gets the property of a child of the element.
+ *
+ * @property_name can either be in the format "prop-name" or
+ * "TypeName::prop-name", where "prop-name" is the name of the property
+ * to get (as used in g_object_get()), and "TypeName" is the type name of
+ * the child (as returned by G_OBJECT_TYPE_NAME()). The latter format is
+ * useful when two children of different types share the same property
+ * name.
+ *
+ * The first child found with the given "prop-name" property that was
+ * registered with ges_timeline_element_add_child_property() (and of the
+ * type "TypeName", if it was given) will have the corresponding
+ * property copied into @value.
+ *
+ * Note that ges_timeline_element_get_child_properties() may be more
+ * convenient for C programming.
+ *
+ * Returns: %TRUE if the property was found and copied to @value.
+ */
 gboolean
 ges_timeline_element_get_child_property (GESTimelineElement * self,
     const gchar * property_name, GValue * value)
@@ -1607,6 +1855,8 @@ ges_timeline_element_get_child_property (GESTimelineElement * self,
   if (!ges_timeline_element_lookup_child (self, property_name, &child, &pspec))
     goto not_found;
 
+  /* FIXME: since GLib 2.60, g_object_get_property() will automatically
+   * initialize the type */
   if (G_VALUE_TYPE (value) == G_TYPE_INVALID)
     g_value_init (value, pspec->value_type);
 
@@ -1627,24 +1877,29 @@ not_found:
 
 /**
  * ges_timeline_element_lookup_child:
- * @self: object to lookup the property in
- * @prop_name: name of the property to look up. You can specify the name of the
- *     class as such: "ClassName::property-name", to guarantee that you get the
- *     proper GParamSpec in case various GstElement-s contain the same property
- *     name. If you don't do so, you will get the first element found, having
- *     this property and the and the corresponding GParamSpec.
- * @child: (out) (allow-none) (transfer full): pointer to a #GstElement that
- *     takes the real object to set property on
- * @pspec: (out) (allow-none) (transfer full): pointer to take the #GParamSpec
- *     describing the property
+ * @self: A #GESTimelineElement
+ * @prop_name: The name of a child property
+ * @child: (out) (optional) (transfer full): The return location for the
+ * found child
+ * @pspec: (out) (optional) (transfer full): The return location for the
+ * specification of the child property
  *
- * Looks up which @element and @pspec would be effected by the given @name. If various
- * contained elements have this property name you will get the first one, unless you
- * specify the class name in @name.
+ * Looks up a child property of the element.
  *
- * Returns: TRUE if @element and @pspec could be found. FALSE otherwise. In that
- * case the values for @pspec and @element are not modified. Unref @element after
- * usage.
+ * @prop_name can either be in the format "prop-name" or
+ * "TypeName::prop-name", where "prop-name" is the name of the property
+ * to look up (as used in g_object_get()), and "TypeName" is the type name
+ * of the child (as returned by G_OBJECT_TYPE_NAME()). The latter format is
+ * useful when two children of different types share the same property
+ * name.
+ *
+ * The first child found with the given "prop-name" property that was
+ * registered with ges_timeline_element_add_child_property() (and of the
+ * type "TypeName", if it was given) will be passed to @child, and the
+ * registered specification of this property will be passed to @pspec.
+ *
+ * Returns: %TRUE if a child corresponding to the property was found, in
+ * which case @child and @pspec are set.
  */
 gboolean
 ges_timeline_element_lookup_child (GESTimelineElement * self,
@@ -1661,15 +1916,13 @@ ges_timeline_element_lookup_child (GESTimelineElement * self,
 
 /**
  * ges_timeline_element_set_child_property_valist:
- * @self: The #GESTimelineElement parent object
- * @first_property_name: The name of the first property to set
- * @var_args: value for the first property, followed optionally by more
- * name/return location pairs, followed by NULL
+ * @self: A #GESTimelineElement
+ * @first_property_name: The name of the first child property to set
+ * @var_args: The value for the first property, followed optionally by more
+ * name/value pairs, followed by %NULL
  *
- * Sets a property of a child of @self. If there are various child elements
- * that have the same property name, you can distinguish them using the following
- * syntax: 'ClasseName::property_name' as property name. If you don't, the
- * corresponding property of the first element found will be set.
+ * Sets several of the children properties of the element. See
+ * ges_timeline_element_set_child_property().
  */
 void
 ges_timeline_element_set_child_property_valist (GESTimelineElement * self,
@@ -1726,15 +1979,13 @@ cant_copy:
 
 /**
  * ges_timeline_element_set_child_properties:
- * @self: The #GESTimelineElement parent object
- * @first_property_name: The name of the first property to set
- * @...: value for the first property, followed optionally by more
- * name/return location pairs, followed by NULL
+ * @self: A #GESTimelineElement
+ * @first_property_name: The name of the first child property to set
+ * @...: The value for the first property, followed optionally by more
+ * name/value pairs, followed by %NULL
  *
- * Sets a property of a child of @self. If there are various child elements
- * that have the same property name, you can distinguish them using the following
- * syntax: 'ClasseName::property_name' as property name. If you don't, the
- * corresponding property of the first element found will be set.
+ * Sets several of the children properties of the element. See
+ * ges_timeline_element_set_child_property().
  */
 void
 ges_timeline_element_set_child_properties (GESTimelineElement * self,
@@ -1752,15 +2003,13 @@ ges_timeline_element_set_child_properties (GESTimelineElement * self,
 
 /**
  * ges_timeline_element_get_child_property_valist:
- * @self: The #GESTimelineElement parent object
- * @first_property_name: The name of the first property to get
- * @var_args: value for the first property, followed optionally by more
- * name/return location pairs, followed by NULL
+ * @self: A #GESTimelineElement
+ * @first_property_name: The name of the first child property to get
+ * @var_args: The return location for the first property, followed
+ * optionally by more name/return location pairs, followed by %NULL
  *
- * Gets a property of a child of @self. If there are various child elements
- * that have the same property name, you can distinguish them using the following
- * syntax: 'ClasseName::property_name' as property name. If you don't, the
- * corresponding property of the first element found will be set.
+ * Gets several of the children properties of the element. See
+ * ges_timeline_element_get_child_property().
  */
 void
 ges_timeline_element_get_child_property_valist (GESTimelineElement * self,
@@ -1818,14 +2067,17 @@ compare_gparamspec (GParamSpec ** a, GParamSpec ** b, gpointer udata)
 
 /**
  * ges_timeline_element_list_children_properties:
- * @self: The #GESTimelineElement to get the list of children properties from
- * @n_properties: (out): return location for the length of the returned array
+ * @self: A #GESTimelineElement
+ * @n_properties: (out): The return location for the length of the
+ * returned array
  *
- * Gets an array of #GParamSpec* for all configurable properties of the
- * children of @self.
+ * Get a list of children properties of the element, which is a list of
+ * all the specifications passed to
+ * ges_timeline_element_add_child_property().
  *
- * Returns: (transfer full) (array length=n_properties): an array of #GParamSpec* which should be freed after use or
- * %NULL if something went wrong
+ * Returns: (transfer full) (array length=n_properties): An array of
+ * #GParamSpec corresponding to the child properties of @self, or %NULL if
+ * something went wrong.
  */
 GParamSpec **
 ges_timeline_element_list_children_properties (GESTimelineElement * self,
@@ -1855,12 +2107,13 @@ ges_timeline_element_list_children_properties (GESTimelineElement * self,
 
 /**
  * ges_timeline_element_get_child_properties:
- * @self: The origin #GESTimelineElement
- * @first_property_name: The name of the first property to get
- * @...: return location for the first property, followed optionally by more
- * name/return location pairs, followed by NULL
+ * @self: A #GESTimelineElement
+ * @first_property_name: The name of the first child property to get
+ * @...: The return location for the first property, followed
+ * optionally by more name/return location pairs, followed by %NULL
  *
- * Gets properties of a child of @self.
+ * Gets several of the children properties of the element. See
+ * ges_timeline_element_get_child_property().
  */
 void
 ges_timeline_element_get_child_properties (GESTimelineElement * self,
@@ -1876,6 +2129,18 @@ ges_timeline_element_get_child_properties (GESTimelineElement * self,
   va_end (var_args);
 }
 
+/**
+ * ges_timeline_element_remove_child_property:
+ * @self: A #GESTimelineElement
+ * @pspec: The specification for the property to remove
+ *
+ * Remove a child property from the element. @pspec should be a
+ * specification that was passed to
+ * ges_timeline_element_add_child_property(). The corresponding property
+ * will no longer be registered as a child property for the element.
+ *
+ * Returns: %TRUE if the property was successfully un-registered for @self.
+ */
 gboolean
 ges_timeline_element_remove_child_property (GESTimelineElement * self,
     GParamSpec * pspec)
@@ -1887,7 +2152,10 @@ ges_timeline_element_remove_child_property (GESTimelineElement * self,
  * ges_timeline_element_get_track_types:
  * @self: A #GESTimelineElement
  *
- * Gets all the TrackTypes @self will interact with
+ * Gets the track types that the element can interact with, i.e. the type
+ * of #GESTrack it can exist in, or will create #GESTrackElement-s for.
+ *
+ * Returns: The track types that @self supports.
  *
  * Since: 1.6.0
  */
@@ -1904,15 +2172,29 @@ ges_timeline_element_get_track_types (GESTimelineElement * self)
 /**
  * ges_timeline_element_paste:
  * @self: The #GESTimelineElement to paste
- * @paste_position: The position in the timeline the element should
- * be copied to, meaning it will become the start of @self
+ * @paste_position: The position in the timeline @element should be pasted
+ * to, i.e. the #GESTimelineElement:start value for the pasted element.
  *
- * Paste @self inside the timeline. @self must have been created
- * using ges_timeline_element_copy with recurse=TRUE set,
- * otherwise it will fail.
+ * Paste an element inside the same timeline and layer as @self. @self
+ * **must** be the return of ges_timeline_element_copy() with `deep=TRUE`,
+ * and it should not be changed before pasting.
+ * @self is not placed in the timeline, instead a new element is created,
+ * alike to the originally copied element. Note that the originally
+ * copied element must stay within the same timeline and layer, at both
+ * the point of copying and pasting.
  *
- * Returns: (transfer full): New element resulting of pasting @self
- * or %NULL
+ * Pasting may fail if it would place the timeline in an unsupported
+ * configuration.
+ *
+ * After calling this function @element should not be used. In particular,
+ * @element can **not** be pasted again. Instead, you can copy the
+ * returned element and paste that copy (although, this is only possible
+ * if the paste was successful).
+ *
+ * See also ges_timeline_paste_element().
+ *
+ * Returns: (transfer full) (nullable): The newly created element, or
+ * %NULL if pasting fails.
  *
  * Since: 1.6.0
  */
@@ -1947,9 +2229,13 @@ ges_timeline_element_paste (GESTimelineElement * self,
  * ges_timeline_element_get_layer_priority:
  * @self: A #GESTimelineElement
  *
- * Returns: The priority of the first layer the element is in (note that only
- * groups can span over several layers). %GES_TIMELINE_ELEMENT_NO_LAYER_PRIORITY
- * means that the element is not in a layer.
+ * Gets the priority of the layer the element is in. A #GESGroup may span
+ * several layers, so this would return the highest priority (numerically,
+ * the smallest) amongst them.
+ *
+ * Returns: The priority of the layer @self is in, or
+ * #GES_TIMELINE_ELEMENT_NO_LAYER_PRIORITY if @self does not exist in a
+ * layer.
  *
  * Since: 1.16
  */
@@ -1967,25 +2253,47 @@ ges_timeline_element_get_layer_priority (GESTimelineElement * self)
 
 /**
  * ges_timeline_element_edit:
- * @self: the #GESClip to edit
- * @layers: (element-type GESLayer): The layers you want the edit to
- * happen in, %NULL means that the edition is done in all the
- * #GESLayers contained in the current timeline.
- * @new_layer_priority: The priority of the layer @self should land in.
- * If the layer you're trying to move the element to doesn't exist, it will
- * be created automatically. -1 means no move.
- * @mode: The #GESEditMode in which the editition will happen.
- * @edge: The #GESEdge the edit should happen on.
- * @position: The position at which to edit @self (in nanosecond)
+ * @self: The #GESTimelineElement to edit
+ * @layers: (element-type GESLayer) (nullable): A whitelist of layers
+ * where the edit can be performed, %NULL allows all layers in the
+ * timeline
+ * @new_layer_priority: The priority/index of the layer @self should be
+ * moved to. -1 means no move
+ * @mode: The edit mode
+ * @edge: The edge of @self where the edit should occur
+ * @position: The edit position: a new location for the edge of @self
+ * (in nanoseconds)
  *
- * Edit @self in the different exisiting #GESEditMode modes. In the case of
- * slide, and roll, you need to specify a #GESEdge
+ * Edits the element within its timeline by adjusting its
+ * #GESTimelineElement:start, #GESTimelineElement:duration or
+ * #GESTimelineElement:in-point, and potentially doing the same for
+ * other elements in the timeline. See #GESEditMode for details about each
+ * edit mode. An edit may fail if it would place one of these properties
+ * out of bounds, or if it would place the timeline in an unsupported
+ * configuration.
  *
- * Returns: %TRUE if @self as been edited properly, %FALSE if an error
- * occured
+ * Note that if the element's timeline has a
+ * #GESTimeline:snapping-distance set, then the edit position may be set
+ * to the edge of some element in the neighbourhood of @position.
+ *
+ * @new_layer_priority can be used to switch @self, and other elements
+ * moved by the edit, to a new layer. New layers may be be created if the
+ * the corresponding layer priority/index does not yet exist for the
+ * timeline.
+ *
+ * @layers can be used as a whitelist to limit changes to elements that
+ * exist in the corresponding layers. If you intend to also switch
+ * elements between layers, then you must ensure that all the involved
+ * layers are included for the switch to succeed (with the exception of
+ * layers may be newly created).
+ *
+ * Returns: %TRUE if the edit of @self completed, %FALSE on failure.
  *
  * Since: 1.18
  */
+
+/* FIXME: handle the layers argument. Currently we always treat it as if
+ * it is NULL in the ges-timeline code */
 gboolean
 ges_timeline_element_edit (GESTimelineElement * self, GList * layers,
     gint64 new_layer_priority, GESEditMode mode, GESEdge edge, guint64 position)
@@ -1995,6 +2303,7 @@ ges_timeline_element_edit (GESTimelineElement * self, GList * layers,
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
 
   timeline = GES_TIMELINE_ELEMENT_TIMELINE (self);
+  /* FIXME: handle a NULL timeline! */
   switch (mode) {
     case GES_EDIT_MODE_RIPPLE:
       return timeline_ripple_object (timeline, self,

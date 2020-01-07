@@ -38,56 +38,57 @@ typedef struct _GESTimelineElementPrivate GESTimelineElementPrivate;
 
 /**
  * GES_TIMELINE_ELEMENT_START:
- * @obj: a #GESTimelineElement
+ * @obj: A #GESTimelineElement
  *
- * The start position of the object (in nanoseconds).
+ * The #GESTimelineElement:start of @obj.
  */
 #define GES_TIMELINE_ELEMENT_START(obj) (((GESTimelineElement*)obj)->start)
 
 /**
  * GES_TIMELINE_ELEMENT_END:
- * @obj: a #GESTimelineElement
+ * @obj: A #GESTimelineElement
  *
- * The end position of the object (in nanoseconds).
+ * The end position of @obj: #GESTimelineElement:start +
+ * #GESTimelineElement:duration.
  */
 #define GES_TIMELINE_ELEMENT_END(obj) ((((GESTimelineElement*)obj)->start) + (((GESTimelineElement*)obj)->duration))
 
 /**
  * GES_TIMELINE_ELEMENT_INPOINT:
- * @obj: a #GESTimelineElement
+ * @obj: A #GESTimelineElement
  *
- * The in-point of the object (in nanoseconds).
+ * The #GESTimelineElement:in-point of @obj.
  */
 #define GES_TIMELINE_ELEMENT_INPOINT(obj) (((GESTimelineElement*)obj)->inpoint)
 
 /**
  * GES_TIMELINE_ELEMENT_DURATION:
- * @obj: a #GESTimelineElement
+ * @obj: A #GESTimelineElement
  *
- * The duration of the object (in nanoseconds).
+ * The #GESTimelineElement:duration of @obj.
  */
 #define GES_TIMELINE_ELEMENT_DURATION(obj) (((GESTimelineElement*)obj)->duration)
 
 /**
  * GES_TIMELINE_ELEMENT_MAX_DURATION:
- * @obj: a #GESTimelineElement
+ * @obj: A #GESTimelineElement
  *
- * The maximun duration of the object (in nanoseconds).
+ * The #GESTimelineElement:max-duration of @obj.
  */
 #define GES_TIMELINE_ELEMENT_MAX_DURATION(obj) (((GESTimelineElement*)obj)->maxduration)
 
 /**
  * GES_TIMELINE_ELEMENT_PRIORITY:
- * @obj: a #GESTimelineElement
+ * @obj: A #GESTimelineElement
  *
- * The priority of the object.
+ * The #GESTimelineElement:priority of @obj.
  */
 #define GES_TIMELINE_ELEMENT_PRIORITY(obj) (((GESTimelineElement*)obj)->priority)
 
 /**
  * GES_TIMELINE_ELEMENT_NO_LAYER_PRIORITY:
  *
- * Layer priority when the element is not in a layer
+ * Layer priority when a timeline element is not in any layer.
  */
 #define GES_TIMELINE_ELEMENT_NO_LAYER_PRIORITY ((guint32) -1)
 
@@ -95,47 +96,49 @@ typedef struct _GESTimelineElementPrivate GESTimelineElementPrivate;
  * GES_TIMELINE_ELEMENT_LAYER_PRIORITY:
  * @obj: The object to retrieve the layer priority from
  *
- * See #ges_timeline_element_get_layer_priority
+ * See #ges_timeline_element_get_layer_priority.
  */
 #define GES_TIMELINE_ELEMENT_LAYER_PRIORITY(obj) (ges_timeline_element_get_layer_priority(((GESTimelineElement*)obj)))
 
 /**
  * GES_TIMELINE_ELEMENT_PARENT:
- * @obj: a #GESTimelineElement
+ * @obj: A #GESTimelineElement
  *
- * The parent of the object.
+ * The #GESTimelineElement:parent of @obj.
  */
 #define GES_TIMELINE_ELEMENT_PARENT(obj) (((GESTimelineElement*)obj)->parent)
 
 /**
  * GES_TIMELINE_ELEMENT_TIMELINE:
- * @obj: a #GESTimelineElement
+ * @obj: A #GESTimelineElement
  *
- * The timeline in which the object is.
+ * The #GESTimelineElement:timeline of @obj.
  */
 #define GES_TIMELINE_ELEMENT_TIMELINE(obj) (((GESTimelineElement*)obj)->timeline)
 
 /**
  * GES_TIMELINE_ELEMENT_NAME:
- * @obj: a #GESTimelineElement
+ * @obj: A #GESTimelineElement
  *
- * The name of the object.
+ * The #GESTimelineElement:name of @obj.
  */
 #define GES_TIMELINE_ELEMENT_NAME(obj) (((GESTimelineElement*)obj)->name)
 
 /**
  * GESTimelineElement:
- * @parent: The #GESTimelineElement that controls the object
+ * @parent: The #GESTimelineElement:parent of the element
  * @asset: The #GESAsset from which the object has been extracted
- * @start: position (in time) of the object
- * @inpoint: Position in the media from which the object should be used
- * @duration: duration of the object to be used
- * @maxduration: The maximum duration the object can have
- * @priority: priority of the object in the layer (0:top priority)
+ * @start: The #GESTimelineElement:start of the element
+ * @inpoint: The #GESTimelineElement:in-point of the element
+ * @duration: The #GESTimelineElement:duration of the element
+ * @maxduration: The #GESTimelineElement:max-duration of the element
+ * @priority: The #GESTimelineElement:priority of the element
+ * @name: The #GESTimelineElement:name of the element
+ * @timeline: The #GESTimelineElement:timeline of the element
  *
- * Those filed can be accessed from outside but in no case should
- * be changed from there. Subclasses can write them but should make
- * sure to properly call g_object_notify.
+ * All members can be read freely, but should usually not be written to.
+ * Subclasses may write to them, but should make sure to properly call
+ * g_object_notify().
  */
 struct _GESTimelineElement
 {
@@ -162,32 +165,51 @@ struct _GESTimelineElement
 
 /**
  * GESTimelineElementClass:
- * @set_parent: method to set the parent of a #GESTimelineElement.
- * @set_start: method to set the start of a #GESTimelineElement,
- *  -1 means that the subclass handled emiting the notify signal and
- *  the base class should return TRUE.
- * @set_duration: method to set the duration of a #GESTimelineElement,
- *  -1 means that the subclass handled emiting the notify signal and
- *  the base class should return TRUE.
- * @set_inpoint: method to set the inpoint of a #GESTimelineElement,
- *  -1 means that the subclass handled emiting the notify signal and
- *  the base class should return TRUE.
- * @set_max_duration: method to set the maximun duration of a #GESTimelineElement
- * @set_priority: method to set the priority of a #GESTimelineElement
- * @ripple: method to ripple an object
- * @ripple_end: method to ripple an object on its #GES_EDGE_END edge
- * @roll_start: method to roll an object on its #GES_EDGE_START edge
- * @roll_end: method to roll an object on its #GES_EDGE_END edge
- * @trim: method to trim an object
- * @deep_copy: Copy the children properties of @self into @copy
+ * @set_parent: Method called just before the #GESTimelineElement:parent
+ * is set.
+ * @set_start: Method called just before the #GESTimelineElement:start is
+ * set. A return of -1 means that the subclass handled emitting the notify
+ * signal and the base class should return %TRUE.
+ * @set_duration: Method called just before the
+ * #GESTimelineElement:duration is set. A return of -1 means that the
+ * subclass handled emitting the notify signal and the base class should
+ * return %TRUE.
+ * @set_inpoint: Method called just before the
+ * #GESTimelineElement:in-point is set. A return of -1 means that the
+ * subclass handled emitting the notify signal and the base class should
+ * return %TRUE.
+ * @set_max_duration: Method called just before the
+ * #GESTimelineElement:max-duration is set.
+ * @set_priority:  Method called just before the
+ * #GESTimelineElement:in-point is set.
+ * @ripple_end: Method to ripple an object on its #GES_EDGE_END edge.
+ * @roll_start: Method to roll an object on its #GES_EDGE_START edge.
+ * @roll_end: Method to roll an object on its #GES_EDGE_END edge.
+ * @trim: Method to trim an object.
+ * @deep_copy: Prepare @copy for pasting as a copy of @self. At least by
+ * copying the children properties of @self into @copy.
+ * @paste: Paste @self, which is the @copy prepared by @deep_copy, into
+ * the timeline at the given @paste_position, with @ref_element as a
+ * reference, which is the @self that was passed to @deep_copy.
+ * @lookup-child: Method to find a child with the child property.
+ * @prop_name. The default vmethod will return the first child that
+ * matches. Overwrite this with a call to the parent vmethod if you wish
+ * to redirect property names. Or overwrite to change which child is
+ * returned if multiple children share the same child property name.
+ * @get_track_types: Return a the track types for the element.
+ * @set_child_property: Method for setting the child property given by
+ * @pspec on @child to @value. Default implementation will use
+ * g_object_set_property().
+ * @get_layer_priority: Get the #GESLayer:priority of the layer that this
+ * element is part of.
  *
- * The GESTimelineElement base class. Subclasses should override at least
+ * The #GESTimelineElement base class. Subclasses should override at least
  * @set_start @set_inpoint @set_duration @ripple @ripple_end @roll_start
  * @roll_end and @trim.
  *
  * Vmethods in subclasses should apply all the operation they need to but
  * the real method implementation is in charge of setting the proper field,
- * and emit the notify signal.
+ * and emitting the notify signal.
  */
 struct _GESTimelineElementClass
 {

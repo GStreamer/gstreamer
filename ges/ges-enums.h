@@ -358,27 +358,74 @@ GType ges_pipeline_flags_get_type (void);
 
 /**
  * GESEditMode:
- * @GES_EDIT_MODE_NORMAL: The object is edited the normal way (default).
- * @GES_EDIT_MODE_RIPPLE: The objects are edited in ripple mode.
- *  The Ripple mode allows you to modify the beginning/end of a clip
- *  and move the neighbours accordingly. This will change the overall
- *  timeline duration. In the case of ripple end, the duration of the
- *  clip being rippled can't be superior to its max_duration - inpoint
- *  otherwise the action won't be executed.
- * @GES_EDIT_MODE_ROLL: The object is edited in roll mode.
- *  The Roll mode allows you to modify the position of an editing point
- *  between two clips without modifying the inpoint of the first clip
- *  nor the out-point of the second clip. This will not change the
- *  overall timeline duration.
- * @GES_EDIT_MODE_TRIM: The object is edited in trim mode.
- *  The Trim mode allows you to modify the in-point/duration of a clip
- *  without modifying its position in the timeline.
- * @GES_EDIT_MODE_SLIDE: The object is edited in slide mode.
- *  The Slide mode allows you to modify the position of a clip in a
- *  timeline without modifying its duration or its in-point, but will
- *  modify the duration of the previous clip and in-point of the
- *  following clip so does not modify the overall timeline duration.
- *  (not implemented yet)
+ * @GES_EDIT_MODE_NORMAL: The element is edited the normal way (default).
+ *  This only moves a single element. If acting on the start edge of the
+ *  element, the element's start time is set to the edit position.
+ *  If acting on end edge of the element, the element's duration time
+ *  is set such that its end time matches the edit position.
+ * @GES_EDIT_MODE_RIPPLE: The element is edited in ripple mode. This
+ *  shifts the element and all later elements (those with equal or later
+ *  start times) in the timeline by the same amount. If acting on the
+ *  element as a whole, the element's start time is shifted to the edit
+ *  position, and later elements are also shifted by the same amount. If
+ *  acting on the end edge of the element, the element's **duration time**
+ *  is shifted so that the element's end time matches the edit position,
+ *  and later elements have their **start time** shifted by the same
+ *  amount.
+ * @GES_EDIT_MODE_ROLL: The element is edited in roll mode. This trims
+ *  the edge of an element and neighbouring edges (opposite edges of other
+ *  elements in the timeline with the same corresponding time value), such
+ *  that the edges remain in contact. If acting on the start edge of the
+ *  element, the start edge is trimmed to the edit position (see
+ *  #GES_EDIT_MODE_TRIM), and any other elements in the timeline whose end
+ *  time matches the edited element's start time (evaluated before the
+ *  edit) will have their **end** edge trimmed to the same edit position.
+ *  Similarly, if acting on the end edge of the element, the end edge is
+ *  trimmed to the edit position, and any other elements in the timeline
+ *  whose start time matches the edited element's end time will have
+ *  their start edge trimmed to the same edit position.
+ * @GES_EDIT_MODE_TRIM: The element is edited in trim mode. This shifts
+ *  the edge of a single element while maintaining the timing of
+ *  its internal content in the timeline, so the samples/frames/etc of a
+ *  source would still appear at the same timeline time when it is played.
+ *  If acting on the start edge of the element, the element's start time
+ *  will be shifted to the edit position and the element's in-point time
+ *  will be shifted by the same amount. Additionally, the element's
+ *  duration time will be shifted the other way such that the element's
+ *  end time remains the same. If acting on end edge of the element, the
+ *  element's duration time is set such that its end time matches the edit
+ *  position.
+ * @GES_EDIT_MODE_SLIDE: The element is edited in slide mode (not yet
+ *  implemented). This shifts the element and will trim the edges of
+ *  neighbouring edges on either side accordingly. If acting on the
+ *  element as a whole, the element's start time is shifted to the edit
+ *  position. Any other elements in the timeline whose end time matches
+ *  the edited element's start time (evaluated before the edit) will have
+ *  their end edge trimmed to the same edit position. Additionally, any
+ *  other elements in the timeline whose start time matches the edited
+ *  element's end time will have their start edge trimmed to match the
+ *  edited element's **new** end time.
+ *
+ * When a single timeline element is edited within its timeline, using
+ * ges_timeline_element_edit(), depending on the edit mode, its
+ * #GESTimelineElement:start, #GESTimelineElement:duration or
+ * #GESTimelineElement:in-point will be adjusted accordingly. In addition,
+ * other elements in the timeline may also have their properties adjusted.
+ *
+ * In fact, the edit is actually performed on the toplevel of the edited
+ * element (usually a #GESClip), which is responsible for moving its
+ * children along with it. For simplicity, in the descriptions we will
+ * use "element" to exclusively refer to toplevel elements.
+ *
+ * In the edit mode descriptions, the "start edge", "end edge" and the
+ * "element as a whole" correspond to using #GES_EDGE_START, #GES_EDGE_END
+ * and #GES_EDGE_NONE as part of the edit, respectively. The "start time",
+ * "duration time" and "in-point time" correspond to the
+ * #GESTimelineElement:start, #GESTimelineElement:duration and
+ * #GESTimelineElement:in-point properties, respectively. Moreover, the
+ * "end time" refers to the final time of the element:
+ * #GESTimelineElement:start + #GESTimelineElement:duration. Finally,
+ * the "edit position" is the timeline time used as part of the edit.
  *
  * You can also find more explanation about the behaviour of those modes at:
  * [trim, ripple and roll](http://pitivi.org/manual/trimming.html)
@@ -401,7 +448,7 @@ GType ges_edit_mode_get_type (void);
  * GESEdge:
  * @GES_EDGE_START: Represents the start of an object.
  * @GES_EDGE_END: Represents the end of an object.
- * @GES_EDGE_NONE: Represent the fact we are not workin with any edge of an
+ * @GES_EDGE_NONE: Represent the fact we are not working with any edge of an
  *   object.
  *
  * The edges of an object contain in a #GESTimeline or #GESTrack
