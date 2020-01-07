@@ -640,6 +640,13 @@ def format_config_template(extra_data, config_text, test_name):
                                           test_name.replace('.', os.sep))
         extra_vars['validateflow'] = "validateflow, expectations-dir=\"%s\", actual-results-dir=\"%s\"" % (expectations_dir, actual_results_dir)
 
+    if 'ssim-results-dir' in extra_vars:
+        ssim_results = extra_vars['ssim-results-dir']
+        extra_vars['ssim'] = "validatessim, result-output-dir=\"%s\", output-dir=\"%s\"" % (
+            os.path.join(ssim_results, test_name.replace('.', os.sep), 'diff-images'),
+            os.path.join(ssim_results, test_name.replace('.', os.sep), 'images'),
+        )
+
     return config_text % extra_vars
 
 
