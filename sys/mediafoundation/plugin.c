@@ -30,6 +30,7 @@
 #endif
 #include "gstmfutils.h"
 #include "gstmfh264enc.h"
+#include "gstmfh265enc.h"
 
 GST_DEBUG_CATEGORY (gst_mf_debug);
 GST_DEBUG_CATEGORY (gst_mf_utils_debug);
@@ -71,6 +72,7 @@ plugin_init (GstPlugin * plugin)
 #endif
 
   gst_mf_h264_enc_plugin_init (plugin, GST_RANK_SECONDARY);
+  gst_mf_h265_enc_plugin_init (plugin, GST_RANK_SECONDARY);
 
   return TRUE;
 }

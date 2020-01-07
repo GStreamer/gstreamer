@@ -4,6 +4,7 @@ mf_sources = [
   'gstmftransform.cpp',
   'gstmfvideoenc.cpp',
   'gstmfh264enc.cpp',
+  'gstmfh265enc.cpp',
 ]
 
 mf_desktop_sources = [
