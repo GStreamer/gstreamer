@@ -610,6 +610,7 @@ _data_channel_have_sample (GstWebRTCDataChannel * channel, GstSample * sample,
         ret = GST_FLOW_ERROR;
       } else {
         ret = _parse_control_packet (channel, info.data, info.size, error);
+        gst_buffer_unmap (buffer, &info);
       }
       break;
     }
@@ -625,6 +626,7 @@ _data_channel_have_sample (GstWebRTCDataChannel * channel, GstSample * sample,
         gchar *str = g_strndup ((gchar *) info.data, info.size);
         _channel_enqueue_task (channel, (ChannelTask) _emit_have_string, str,
             g_free);
+        gst_buffer_unmap (buffer, &info);
       }
       break;
     }
