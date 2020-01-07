@@ -220,6 +220,8 @@ else
   error ('Unsupported omx target specified. Use the -Dtarget option')
 endif
 
+message ('OMX target: ' + omx_target)
+
 extra_video_headers = ''
 # Check for optional OpenMAX extension headers
 
