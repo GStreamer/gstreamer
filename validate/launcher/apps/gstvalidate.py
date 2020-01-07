@@ -314,6 +314,14 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
             uri_minfo_special_scenarios, scenarios)
 
     def populate_tests(self, uri_minfo_special_scenarios, scenarios):
+
+        special_scenarios = []
+        for description in self._pipelines_descriptions:
+            for s in description.get('extra_data', {}).get('scenarios', []):
+                if os.path.isabs(s):
+                    special_scenarios.append(s)
+
+        self.test_manager.scenarios_manager.discover_scenarios(special_scenarios)
         for description in self._pipelines_descriptions:
             pipeline = description['pipeline']
             extra_data = description.get('extra_data', {})

@@ -4056,13 +4056,12 @@ static gboolean
 _parse_scenario (GFile * f, GKeyFile * kf)
 {
   gboolean ret = FALSE;
-  gchar *fname = g_file_get_basename (f);
+  gchar *path = g_file_get_path (f);
 
-  if (g_str_has_suffix (fname, GST_VALIDATE_SCENARIO_SUFFIX)) {
+  if (g_str_has_suffix (path, GST_VALIDATE_SCENARIO_SUFFIX)) {
     gboolean needs_clock_sync = FALSE;
     GstStructure *desc = NULL;
 
-    gchar **name = g_strsplit (fname, GST_VALIDATE_SCENARIO_SUFFIX, 0);
     GList *tmp, *structures = gst_validate_structs_parse_from_gfile (f);
 
     for (tmp = structures; tmp; tmp = tmp->next) {
@@ -4088,22 +4087,21 @@ _parse_scenario (GFile * f, GKeyFile * kf)
     if (desc) {
       KeyFileGroupName kfg;
 
-      kfg.group_name = name[0];
+      kfg.group_name = g_file_get_path (f);
       kfg.kf = kf;
 
       gst_structure_foreach (desc,
           (GstStructureForeachFunc) _add_description, &kfg);
       gst_structure_free (desc);
     } else {
-      g_key_file_set_string (kf, name[0], "noinfo", "nothing");
+      g_key_file_set_string (kf, path, "noinfo", "nothing");
     }
     g_list_free_full (structures, (GDestroyNotify) gst_structure_free);
-    g_strfreev (name);
 
     ret = TRUE;
   }
 
-  g_free (fname);
+  g_free (path);
   return ret;
 }
 

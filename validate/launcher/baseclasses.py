@@ -2187,7 +2187,8 @@ class Scenario(object):
 
 class ScenarioManager(Loggable):
     _instance = None
-    all_scenarios = []
+    system_scenarios = []
+    special_scenarios = {}
 
     FILE_EXTENSION = "scenario"
 
@@ -2239,11 +2240,12 @@ class ScenarioManager(Loggable):
         config.readfp(f)
 
         for section in config.sections():
+            name = None
             if scenario_paths:
                 for scenario_path in scenario_paths:
-                    if section in os.path.splitext(os.path.basename(scenario_path))[0]:
+                    if section == scenario_path:
                         if mfile is None:
-                            name = section
+                            name = os.path.basename(section).replace("." + self.FILE_EXTENSION, "")
                             path = scenario_path
                         else:
                             # The real name of the scenario is:
@@ -2251,22 +2253,33 @@ class ScenarioManager(Loggable):
                             name = scenario_path.replace(mfile + ".", "").replace(
                                 "." + self.FILE_EXTENSION, "")
                             path = scenario_path
+                        break
             else:
-                name = section
+                name = os.path.basename(section).replace("." + self.FILE_EXTENSION, "")
                 path = None
 
+            assert name
+
             props = config.items(section)
-            scenarios.append(Scenario(name, props, path))
+            scenario = Scenario(name, props, path)
+            if scenario_paths:
+                self.special_scenarios[path] = scenario
+            scenarios.append(scenario)
 
         if not scenario_paths:
             self.discovered = True
-            self.all_scenarios.extend(scenarios)
+            self.system_scenarios.extend(scenarios)
 
         return scenarios
 
     def get_scenario(self, name):
         if name is not None and os.path.isabs(name) and name.endswith(self.FILE_EXTENSION):
+            scenario = self.special_scenarios.get(name)
+            if scenario:
+                return scenario
+
             scenarios = self.discover_scenarios([name])
+            self.special_scenarios[name] = scenarios
 
             if scenarios:
                 return scenarios[0]
@@ -2275,10 +2288,10 @@ class ScenarioManager(Loggable):
             self.discover_scenarios()
 
         if name is None:
-            return self.all_scenarios
+            return self.system_scenarios
 
         try:
-            return [scenario for scenario in self.all_scenarios if scenario.name == name][0]
+            return [scenario for scenario in self.system_scenarios if scenario.name == name][0]
         except IndexError:
             self.warning("Scenario: %s not found" % name)
             return None
