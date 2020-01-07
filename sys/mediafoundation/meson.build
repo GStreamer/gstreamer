@@ -1,6 +1,12 @@
 mf_sources = [
   'plugin.c',
   'gstmfutils.cpp',
+  'gstmftransform.cpp',
+  'gstmfvideoenc.cpp',
+  'gstmfh264enc.cpp',
+]
+
+mf_desktop_sources = [
   'gstmfvideosrc.c',
   'gstmfsourceobject.c',
   'gstmfsourcereader.cpp',
@@ -13,6 +19,7 @@ mf_header_deps = [
   'mferror.h',
   'strmif.h',
   'mfobjects.h',
+  'codecapi.h',
 ]
 
 winapi_desktop = false
@@ -70,16 +77,13 @@ winapi_desktop = cxx.compiles('''#include <winapifamily.h>
     #endif''',
     dependencies: mf_lib_deps,
     name: 'checking if building for Win32')
-if not winapi_desktop
-  if mf_option.enabled()
-    error('The mediafoundation plugin was enabled explicitly, build target is not desktop app.')
-  endif
-  subdir_done()
-endif
 
-have_capture_engine = cc.has_header('mfcaptureengine.h')
-if have_capture_engine
-  mf_sources += ['gstmfcaptureengine.cpp']
+if winapi_desktop
+  mf_sources += mf_desktop_sources
+  have_capture_engine = cc.has_header('mfcaptureengine.h')
+  if have_capture_engine
+    mf_sources += ['gstmfcaptureengine.cpp']
+  endif
 endif
 
 mf_config.set10('HAVE_CAPTURE_ENGINE', have_capture_engine)
@@ -94,7 +98,7 @@ gstmediafoundation = library('gstmediafoundation',
   c_args : gst_plugins_bad_args + extra_c_args,
   cpp_args : gst_plugins_bad_args,
   include_directories : [configinc],
-  dependencies : [gstbase_dep, gstvideo_dep] + mf_lib_deps,
+  dependencies : [gstbase_dep, gstvideo_dep, gstpbutils_dep] + mf_lib_deps,
   install : true,
   install_dir : plugins_install_dir,
 )

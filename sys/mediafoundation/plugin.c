@@ -22,16 +22,29 @@
 #include "config.h"
 #endif
 
+#include <winapifamily.h>
+
 #include <gst/gst.h>
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
 #include "gstmfvideosrc.h"
+#endif
 #include "gstmfutils.h"
+#include "gstmfh264enc.h"
 
 GST_DEBUG_CATEGORY (gst_mf_debug);
 GST_DEBUG_CATEGORY (gst_mf_utils_debug);
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
 GST_DEBUG_CATEGORY (gst_mf_source_object_debug);
+#endif
+GST_DEBUG_CATEGORY (gst_mf_transform_debug);
 
 #define GST_CAT_DEFAULT gst_mf_debug
 
+/* NOTE: If you want to use this plugin in UWP app, don't try to load/initialize
+ * this plugin on UI thread, since the UI thread would be STA Thread
+ * but this plugin will be initialized with COINIT_MULTITHREADED parameter.
+ * This rule can be applied over all GStreamer plugins which are involved with
+ * COM libraries  */
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
@@ -40,17 +53,24 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (gst_mf_debug, "mf", 0, "media foundation");
   GST_DEBUG_CATEGORY_INIT (gst_mf_utils_debug,
       "mfutils", 0, "media foundation utility functions");
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
   GST_DEBUG_CATEGORY_INIT (gst_mf_source_object_debug,
       "mfsourceobject", 0, "mfsourceobject");
+#endif
+  GST_DEBUG_CATEGORY_INIT (gst_mf_transform_debug,
+      "mftransform", 0, "mftransform");
 
   hr = MFStartup (MF_VERSION, MFSTARTUP_NOSOCKET);
   if (!gst_mf_result (hr)) {
     GST_WARNING ("MFStartup failure, hr: 0x%x", hr);
     return TRUE;
   }
-
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
   gst_element_register (plugin,
       "mfvideosrc", GST_RANK_SECONDARY, GST_TYPE_MF_VIDEO_SRC);
+#endif
+
+  gst_mf_h264_enc_plugin_init (plugin, GST_RANK_SECONDARY);
 
   return TRUE;
 }
