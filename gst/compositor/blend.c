@@ -101,17 +101,26 @@ _overlay_loop_##name (guint8 * dest, const guint8 * src, gint src_height, \
   s_alpha = MIN (255, s_alpha); \
   switch (mode) { \
     case COMPOSITOR_BLEND_MODE_SOURCE:\
-      compositor_orc_source_##name (dest, dest_stride, src, src_stride, \
-        s_alpha, src_width, src_height); \
-        break;\
+      if (s_alpha == 255) { \
+        guint y; \
+        for (y = 0; y < src_height; y++) { \
+          memcpy (dest, src, 4 * src_width); \
+          dest += dest_stride; \
+          src += src_stride; \
+        } \
+      } else { \
+        compositor_orc_source_##name (dest, dest_stride, src, src_stride, \
+          s_alpha, src_width, src_height); \
+      } \
+      break;\
     case COMPOSITOR_BLEND_MODE_OVER:\
       compositor_orc_overlay_##name (dest, dest_stride, src, src_stride, \
         s_alpha, src_width, src_height); \
-        break;\
+      break;\
     case COMPOSITOR_BLEND_MODE_ADD:\
       compositor_orc_overlay_##name##_addition (dest, dest_stride, src, src_stride, \
         s_alpha, src_width, src_height); \
-        break;\
+      break;\
   }\
 }
 
@@ -124,15 +133,24 @@ _blend_loop_##name (guint8 * dest, const guint8 * src, gint src_height, \
   s_alpha = MIN (255, s_alpha); \
   switch (mode) { \
     case COMPOSITOR_BLEND_MODE_SOURCE:\
-      compositor_orc_source_##name (dest, dest_stride, src, src_stride, \
-        s_alpha, src_width, src_height); \
-        break;\
+      if (s_alpha == 255) { \
+        guint y; \
+        for (y = 0; y < src_height; y++) { \
+          memcpy (dest, src, 4 * src_width); \
+          dest += dest_stride; \
+          src += src_stride; \
+        } \
+      } else { \
+        compositor_orc_source_##name (dest, dest_stride, src, src_stride, \
+          s_alpha, src_width, src_height); \
+      } \
+      break;\
     case COMPOSITOR_BLEND_MODE_OVER:\
     case COMPOSITOR_BLEND_MODE_ADD:\
       /* both modes are the same for opaque background */ \
       compositor_orc_blend_##name (dest, dest_stride, src, src_stride, \
         s_alpha, src_width, src_height); \
-        break;\
+      break;\
   }\
 }
 
