@@ -2537,7 +2537,6 @@ class GstValidateMediaDescriptor(MediaDescriptor):
             for stream in streams:
                 self._track_caps.append(
                     (stream.attrib["type"], stream.attrib["caps"]))
-        self._uri = media_xml.attrib["uri"]
         self._skip_parsers = bool(int(media_xml.attrib.get('skip-parsers', 0)))
         self._has_frames = bool(int(media_xml.attrib["frame-detection"]))
         self._duration = int(media_xml.attrib["duration"])
@@ -2682,7 +2681,8 @@ class GstValidateMediaDescriptor(MediaDescriptor):
 
     def get_clean_name(self):
         name = os.path.basename(self.get_path())
-        name = re.sub("\.stream_info|\.media_info", "", name)
+        regex = '|'.join(['\\.%s$' % ext for ext in [self.SKIPPED_MEDIA_INFO_EXT, self.MEDIA_INFO_EXT, self.PUSH_MEDIA_INFO_EXT, self.STREAM_INFO_EXT]])
+        name = re.sub(regex, "", name)
 
         return name.replace('.', "_")
 

@@ -27,7 +27,9 @@ import socket
 import subprocess
 import configparser
 import json
-from launcher.loggable import Loggable
+import glob
+import math
+from launcher.loggable import Loggable, error
 
 from launcher.baseclasses import GstValidateTest, Test, \
     ScenarioManager, NamedDic, GstValidateTestsGenerator, \
@@ -36,7 +38,8 @@ from launcher.baseclasses import GstValidateTest, Test, \
 
 from launcher.utils import path2url, url2path, DEFAULT_TIMEOUT, which, \
     GST_SECOND, Result, Protocols, mkdir, printc, Colors, get_data_file, \
-    kill_subprocess, format_config_template, get_fakesink_for_media_type
+    kill_subprocess, format_config_template, get_fakesink_for_media_type, \
+    parse_gsttimeargs, GstCaps
 
 #
 # Private global variables     #
@@ -337,6 +340,8 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
                 scenarios_to_iterate = scenarios
 
             config_files = extra_data.get('config_files')
+            mediainfo = extra_data.get(
+                'media_info', FakeMediaDescriptor(extra_data, pipeline))
             for scenario in scenarios_to_iterate:
                 if isinstance(scenario, str):
                     tmpscenario = self.test_manager.scenarios_manager.get_scenario(
@@ -345,7 +350,6 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
                         raise RuntimeError("Could not find scenario file: %s" % scenario)
                     scenario = tmpscenario
 
-                mediainfo = FakeMediaDescriptor(extra_data, pipeline)
                 if not mediainfo.is_compatible(scenario):
                     continue
 
@@ -468,6 +472,98 @@ class GstValidatePlaybinTestsGenerator(GstValidatePipelineTestsGenerator):
                         cpipe, uri, scenario=scenario,
                         media_descriptor=rtspminfo.media_descriptor,
                         rtsp2=True))
+
+
+class GstValidateCheckAccurateSeekingTestGenerator(GstValidatePipelineTestsGenerator):
+    def __new__(cls, name, test_manager, media_infos, extra_data=None):
+        pipelines = {}
+
+        for path, reference_frame_dir in media_infos:
+            media_info = GstValidateMediaDescriptor(path)
+            media_info.set_protocol("file")
+            if not media_info:
+                error("GstValidateCheckAccurateSeekingTestGenerator",
+                      "Could not create a media info file from %s" % path)
+                continue
+
+            if media_info.is_image():
+                error("GstValidateCheckAccurateSeekingTestGenerator",
+                      "%s is an image, can't run accurate seeking tests" % path)
+                continue
+
+            if media_info.get_num_tracks("video") < 1:
+                error("GstValidateCheckAccurateSeekingTestGenerator",
+                      "%s is not a video, can't run accurate seeking tests" % path)
+                continue
+
+            if media_info.get_num_tracks("video") < 1:
+                error("GstValidateCheckAccurateSeekingTestGenerator",
+                      "No video track, can't run accurate seeking tests" % path)
+                continue
+
+            if test_manager.options.validate_generate_ssim_reference_files:
+                scenario = None
+                test_name = media_info.get_clean_name() + '.generate_reference_files'
+                config = [
+                    'validatessim, element-name="videoconvert", output-dir="%s"' % reference_frame_dir]
+            else:
+                test_name = media_info.get_clean_name()
+                framerate, scenario = cls.generate_scenario(test_manager.options, reference_frame_dir, media_info)
+                if scenario is None:
+                    error("GstValidateCheckAccurateSeekingTestGenerator",
+                        "Could not generate test for media info: %s" % path)
+                    continue
+
+                config = [
+                    '%(ssim)s, element-name="videoconvert", reference-images-dir="' + \
+                        reference_frame_dir + '", framerate=%d/%d' % (framerate.numerator, framerate.denominator)
+                ]
+
+
+            pipelines[test_name] = {
+                "pipeline": "uridecodebin uri=" + media_info.get_uri() + " ! deinterlace ! video/x-raw,interlace-mode=progressive ! videoconvert name=videoconvert ! %(videosink)s",
+                "media_info": media_info,
+                "config": config,
+            }
+
+            if scenario:
+                pipelines[test_name]["scenarios"] = [scenario]
+
+        return GstValidatePipelineTestsGenerator.from_dict(test_manager, name, pipelines, extra_data=extra_data)
+
+    @classmethod
+    def generate_scenario(cls, options, reference_frame_dir, media_info):
+        actions = [
+            "description, seek=true, handles-states=true, needs_preroll=true",
+            "pause",
+        ]
+
+        framerate = None
+        for track_type, caps in media_info.get_tracks_caps():
+            if track_type == 'video':
+                for struct, _ in GstCaps.new_from_str(caps):
+                    framerate = struct["framerate"]
+            if framerate:
+                break
+        assert framerate
+
+        n_frames = int((media_info.get_duration() * framerate.numerator) / (GST_SECOND * framerate.denominator))
+        frames_timestamps = [math.ceil(i * framerate.denominator * GST_SECOND / framerate.numerator) for i in range(n_frames)]
+        # Ensure tests are not longer than long_limit, empirically considering we take 0.2 secs per frames.
+        acceptable_n_frames = options.long_limit * 5
+        if n_frames > acceptable_n_frames:
+            n_frames_per_groups = int(acceptable_n_frames / 3)
+            frames_timestamps = frames_timestamps[0:n_frames_per_groups] \
+                + frames_timestamps[int(n_frames / 2 - int(n_frames_per_groups / 2)):int(n_frames / 2 + int(n_frames_per_groups / 2))] \
+                + frames_timestamps[-n_frames_per_groups:n_frames]
+
+        actions += ['seek, flags=flush+accurate, start=(guint64)%s' % ts for ts in frames_timestamps]
+        actions += ['stop']
+
+        return framerate, {
+            "name": "check_accurate_seek",
+            "actions": actions,
+        }
 
 
 class GstValidateMixerTestsGenerator(GstValidatePipelineTestsGenerator):
@@ -837,6 +933,7 @@ class GstValidateTestManager(GstValidateBaseTestManager):
     GstValidatePipelineTestsGenerator = GstValidatePipelineTestsGenerator
     GstValidatePlaybinTestsGenerator = GstValidatePlaybinTestsGenerator
     GstValidateMixerTestsGenerator = GstValidateMixerTestsGenerator
+    GstValidateCheckAccurateSeekingTestGenerator = GstValidateCheckAccurateSeekingTestGenerator
     GstValidateLaunchTest = GstValidateLaunchTest
     GstValidateMediaCheckTest = GstValidateMediaCheckTest
     GstValidateTranscodingTest = GstValidateTranscodingTest
@@ -874,6 +971,9 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
                            help="Disable RTSP tests.", default=False, action='store_true')
         group.add_argument("--validate-enable-iqa-tests", dest="validate_enable_iqa_tests",
                            help="Enable Image Quality Assessment validation tests.",
+                           default=False, action='store_true')
+        group.add_argument("--validate-generate-ssim-reference-files",
+                           help="(re)generate ssim reference image files.",
                            default=False, action='store_true')
 
     def print_valgrind_bugs(self):
@@ -972,10 +1072,8 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
                 if is_push or is_skipped:
                     if not os.path.exists(media_info):
                         continue
-
                 if is_push:
                     uri = "push" + uri
-
                 args = GstValidateBaseTestManager.MEDIA_CHECK_COMMAND.split(" ")
                 args.append(uri)
                 if os.path.isfile(media_info) and not self.options.update_media_info and not is_skipped:
@@ -1076,7 +1174,7 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
         except ValueError:
             pass
 
-        if options.validate_uris:
+        if options.validate_uris or options.validate_generate_ssim_reference_files:
             self.check_testslist = False
 
         super(GstValidateTestManager, self).set_settings(
