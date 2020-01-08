@@ -477,19 +477,26 @@ _filename_get_timestamp (GstValidateSsim * self, const gchar * filename,
     GstClockTime * ts)
 {
   guint h, m, s, ns;
-  gchar *other = g_strdup (filename);
+  gchar *bname = g_path_get_basename (filename);
+  gchar *other = g_strdup (bname);
+  gboolean res = TRUE;
 
-  if (sscanf (filename, "%" GST_TIME_FORMAT "%s", &h, &m, &s, &ns, other) < 4) {
-    GST_INFO_OBJECT (self, "Can not sscanf %s", filename);
-    g_free (other);
+  if (sscanf (bname, "%" GST_TIME_FORMAT "%s", &h, &m, &s, &ns, other) < 4) {
+    GST_INFO_OBJECT (self, "Can not sscanf %s", bname);
 
-    return FALSE;
+    goto fail;
   }
 
-  g_free (other);
   *ts = (h * 3600 + m * 60 + s) * GST_SECOND + ns;
 
-  return TRUE;
+done:
+  g_free (other);
+  g_free (bname);
+  return res;
+
+fail:
+  res = FALSE;
+  goto done;
 }
 
 typedef struct
@@ -616,15 +623,13 @@ _get_ref_file_path (GstValidateSsim * self, const gchar * ref_file,
 {
   Frame *frame;
   GArray *frames;
-  gchar *real_ref_file = NULL, *fbname = NULL;
+  gchar *real_ref_file = NULL;
   GstClockTime file_ts;
 
   if (!g_strrstr (ref_file, "*"))
     return g_strdup (ref_file);
 
-  fbname = g_path_get_basename (file);
-  if (!_filename_get_timestamp (self, fbname, &file_ts)) {
-
+  if (!_filename_get_timestamp (self, file, &file_ts)) {
     goto done;
   }
 
@@ -637,7 +642,6 @@ _get_ref_file_path (GstValidateSsim * self, const gchar * ref_file,
   }
 
 done:
-  g_free (fbname);
 
   return real_ref_file;
 }
@@ -679,10 +683,15 @@ gst_validate_ssim_compare_image_file (GstValidateSsim * self,
       poutbuf, mean, lowest, highest);
 
   if (*mean < self->priv->min_avg_similarity) {
+    GstClockTime ref_ts, f_ts;
+
     gst_video_frame_unmap (&ref_frame);
     gst_video_frame_unmap (&frame);
 
-    if (g_strcmp0 (ref_file, real_ref_file)) {
+    _filename_get_timestamp (self, real_ref_file, &ref_ts);
+    _filename_get_timestamp (self, file, &f_ts);
+
+    if (g_strcmp0 (ref_file, real_ref_file) && ref_ts != f_ts) {
       gchar *tmpref = real_ref_file;
 
       real_ref_file = _get_ref_file_path (self, ref_file, file, TRUE);
