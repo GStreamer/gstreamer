@@ -4124,3 +4124,11 @@ gst_vaapi_encoder_h264_get_profile_and_level (GstVaapiEncoderH264 * encoder,
     *out_level_ptr = encoder->level;
   return TRUE;
 }
+
+gboolean
+gst_vaapi_encoder_h264_supports_avc (GstVaapiEncoderH264 * encoder)
+{
+  return ((GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) &
+          (VA_ENC_PACKED_HEADER_SEQUENCE | VA_ENC_PACKED_HEADER_PICTURE)) ==
+      (VA_ENC_PACKED_HEADER_SEQUENCE | VA_ENC_PACKED_HEADER_PICTURE));
+}

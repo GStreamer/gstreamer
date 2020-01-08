@@ -53,6 +53,9 @@ gboolean
 gst_vaapi_encoder_h264_get_profile_and_level (GstVaapiEncoderH264 * encoder,
     GstVaapiProfile * out_profile_ptr, GstVaapiLevelH264 * out_level_ptr);
 
+gboolean
+gst_vaapi_encoder_h264_supports_avc (GstVaapiEncoderH264 * encoder);
+
 G_END_DECLS
 
 #endif /*GST_VAAPI_ENCODER_H264_H */
