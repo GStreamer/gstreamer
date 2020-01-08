@@ -29,6 +29,9 @@
 #include <gst/vaapi/gstvaapisurface.h>
 #include "gstvaapivideomemory.h"
 
+typedef GstVaapiProfile (*GstVaapiStrToProfileFunc) (const gchar * str);
+
+
 G_GNUC_INTERNAL
 gboolean
 gst_vaapi_ensure_display (GstElement * element, GstVaapiDisplayType type);
@@ -151,5 +154,10 @@ gst_vaapi_driver_is_whitelisted (GstVaapiDisplay * display);
 G_GNUC_INTERNAL
 gboolean
 gst_vaapi_codecs_has_codec (GArray * codecs, GstVaapiCodec codec);
+
+G_GNUC_INTERNAL
+GArray *
+gst_vaapi_h26x_encoder_get_profiles_from_caps (GstCaps * caps,
+    GstVaapiStrToProfileFunc func);
 
 #endif /* GST_VAAPI_PLUGIN_UTIL_H */
