@@ -2479,18 +2479,31 @@ class GstValidateMediaDescriptor(MediaDescriptor):
     PUSH_MEDIA_INFO_EXT = "media_info.push"
     STREAM_INFO_EXT = "stream_info"
 
+    __all_descriptors = {}
+
+    @classmethod
+    def get(cls, xml_path):
+        if xml_path in cls.__all_descriptors:
+            return cls.__all_descriptors[xml_path]
+        return GstValidateMediaDescriptor(xml_path)
+
     def __init__(self, xml_path):
         super(GstValidateMediaDescriptor, self).__init__()
 
-        self._xml_path = xml_path
-        try:
-            media_xml = ET.parse(xml_path).getroot()
-        except xml.etree.ElementTree.ParseError:
-            printc("Could not parse %s" % xml_path,
-                   Colors.FAIL)
-            raise
+        main_descriptor = self.__all_descriptors.get(xml_path)
+        if main_descriptor:
+            self._copy_data_from_main(main_descriptor)
+        else:
+            self.__all_descriptors[xml_path] = self
 
-        self._extract_data(media_xml)
+            self._xml_path = xml_path
+            try:
+                media_xml = ET.parse(xml_path).getroot()
+            except xml.etree.ElementTree.ParseError:
+                printc("Could not parse %s" % xml_path,
+                    Colors.FAIL)
+                raise
+            self._extract_data(media_xml)
 
         self.set_protocol(urllib.parse.urlparse(
             urllib.parse.urlparse(self.get_uri()).scheme).scheme)
@@ -2500,6 +2513,10 @@ class GstValidateMediaDescriptor(MediaDescriptor):
 
     def has_frames(self):
         return self._has_frames
+
+    def _copy_data_from_main(self, main_descriptor):
+        for attr in main_descriptor.__dict__.keys():
+            setattr(self, attr, getattr(main_descriptor, attr))
 
     def _extract_data(self, media_xml):
         # Extract the information we need from the xml
