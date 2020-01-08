@@ -116,7 +116,7 @@ fail:
   goto done;
 }
 
-static void
+static gchar *
 gst_validate_ssim_save_out (GstValidateSsim * self, GstBuffer * buffer,
     const gchar * ref_file, const gchar * file, const gchar * outfolder)
 {
@@ -127,7 +127,7 @@ gst_validate_ssim_save_out (GstValidateSsim * self, GstBuffer * buffer,
 
       GST_VALIDATE_REPORT (self, GENERAL_INPUT_ERROR,
           "Could not create output directory %s", outfolder);
-      return;
+      return NULL;
     }
   }
 
@@ -156,7 +156,7 @@ gst_validate_ssim_save_out (GstValidateSsim * self, GstBuffer * buffer,
     GST_VALIDATE_REPORT (self, GENERAL_INPUT_ERROR,
         "Could not map output frame");
 
-    return;
+    return NULL;
   }
 
   if (gst_validate_ssim_convert (self, &self->priv->outconverter_info,
@@ -187,8 +187,10 @@ gst_validate_ssim_save_out (GstValidateSsim * self, GstBuffer * buffer,
     g_free (bn1);
     g_free (bn2);
     g_free (fname);
-    g_free (outfile);
+    return outfile;
   }
+
+  return NULL;
 }
 
 static gboolean
@@ -649,6 +651,7 @@ gst_validate_ssim_compare_image_file (GstValidateSsim * self,
   gboolean res = TRUE;
   GstVideoFrame ref_frame, frame;
   gchar *real_ref_file = NULL;
+  gchar *output_failure_image = NULL, *failure_info = NULL;
 
   real_ref_file = _get_ref_file_path (self, ref_file, file, FALSE);
 
@@ -686,8 +689,8 @@ gst_validate_ssim_compare_image_file (GstValidateSsim * self,
 
       GST_VALIDATE_REPORT (self, SIMILARITY_ISSUE_WITH_PREVIOUS,
           "\nComparing %s with %s failed, (mean %f "
-          " min %f), checking next %s\n", tmpref, file,
-          *mean, *lowest, real_ref_file);
+          " min %f), checking next %s\n",
+          tmpref, file, *mean, *lowest, real_ref_file);
 
       g_free (tmpref);
 
@@ -696,19 +699,39 @@ gst_validate_ssim_compare_image_file (GstValidateSsim * self,
       goto done;
     }
 
+    if (outbuf)
+      output_failure_image =
+          gst_validate_ssim_save_out (self, outbuf, real_ref_file, file,
+          outfolder);
+
+    if (output_failure_image)
+      failure_info =
+          g_strdup_printf (" (See %s to check differences in images)",
+          output_failure_image);
+
     GST_VALIDATE_REPORT (self, SIMILARITY_ISSUE,
         "Average similarity '%f' between %s and %s inferior"
-        " than the minimum average: %f", *mean,
-        real_ref_file, file, self->priv->min_avg_similarity);
+        " than the minimum average: %f%s", *mean,
+        real_ref_file, file, self->priv->min_avg_similarity, failure_info);
 
     goto fail;
   }
 
   if (*lowest < self->priv->min_lowest_similarity) {
+    if (outbuf)
+      output_failure_image =
+          gst_validate_ssim_save_out (self, outbuf, real_ref_file, file,
+          outfolder);
+
+    if (output_failure_image)
+      failure_info =
+          g_strdup_printf (" (See %s to check differences in images)",
+          output_failure_image);
+
     GST_VALIDATE_REPORT (self, SIMILARITY_ISSUE,
         "Lowest similarity '%f' between %s and %s inferior"
-        " than the minimum lowest similarity: %f", *lowest,
-        real_ref_file, file, self->priv->min_lowest_similarity);
+        " than the minimum lowest similarity: %f%s", *lowest,
+        real_ref_file, file, self->priv->min_lowest_similarity, failure_info);
 
     gst_video_frame_unmap (&ref_frame);
     gst_video_frame_unmap (&frame);
@@ -721,6 +744,8 @@ gst_validate_ssim_compare_image_file (GstValidateSsim * self,
 
 done:
 
+  g_free (failure_info);
+  g_free (output_failure_image);
   g_free (real_ref_file);
   if (outbuf)
     gst_buffer_unref (outbuf);
@@ -729,9 +754,6 @@ done:
 
 fail:
   res = FALSE;
-
-  if (outbuf)
-    gst_validate_ssim_save_out (self, outbuf, real_ref_file, file, outfolder);
 
   goto done;
 }
@@ -921,7 +943,7 @@ _register_issues (gpointer data)
           GST_VALIDATE_REPORT_LEVEL_WARNING));
 
   gst_validate_issue_register (gst_validate_issue_new (GENERAL_INPUT_ERROR,
-          "Something went wrong handling image files",
+          "Something went wrong handling image files for ssim comparison",
           "An error occurred when working with input files",
           GST_VALIDATE_REPORT_LEVEL_CRITICAL));
 
