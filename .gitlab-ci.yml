@@ -52,7 +52,7 @@ test manifest:
         docker image tag ${LATEST} ${_UID}-${CI_COMMIT_REF_NAME}
         # Push the tags
         docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
-        docker push ${_UID}
+        docker push ${_UID}-${CI_COMMIT_REF_NAME}
         docker push ${LATEST}
       fi
 
