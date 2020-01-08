@@ -33,6 +33,8 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_colorconverter_debug);
 #define GST_CAT_DEFAULT gst_d3d11_colorconverter_debug
 
+#define CONVERTER_MAX_QUADS 2
+
 /* *INDENT-OFF* */
 typedef struct
 {
@@ -89,17 +91,11 @@ static const PixelShaderTemplate templ_REORDER =
 static const PixelShaderTemplate templ_YUV_to_RGB =
     { COLOR_TRANSFORM_COEFF, HLSL_FUNC_YUV_TO_RGB };
 
-#if 0
 static const PixelShaderTemplate templ_RGB_to_YUV =
     { COLOR_TRANSFORM_COEFF, HLSL_FUNC_RGB_TO_YUV };
-#endif
 
 static const gchar templ_REORDER_BODY[] =
-    "  float4 sample;\n"
-    "  sample  = shaderTexture[0].Sample(samplerState, input.Texture);\n"
-    /* alpha channel */
-    "  %s\n"
-    "  return sample;\n";
+    "  output.Plane_0 = shaderTexture[0].Sample(samplerState, input.Texture);\n";
 
 static const gchar templ_VUYA_to_RGB_BODY[] =
     "  float4 sample, rgba;\n"
@@ -109,37 +105,24 @@ static const gchar templ_VUYA_to_RGB_BODY[] =
     "  sample.a  = shaderTexture[0].Sample(samplerState, input.Texture).a;\n"
     "  rgba.rgb = yuv_to_rgb (sample.xyz);\n"
     "  rgba.a = sample.a;\n"
-    "  return rgba;\n";
+    "  output.Plane_0 = rgba;\n";
 
-#if 0
 static const gchar templ_RGB_to_VUYA_BODY[] =
     "  float4 sample, vuya;\n"
     "  sample = shaderTexture[0].Sample(samplerState, input.Texture);\n"
     "  vuya.zyx = rgb_to_yuv (sample.rgb);\n"
-    "  vuya.a = %s;\n"
-    "  return vuya;\n";
-#endif
+    "  vuya.a = sample.a;\n"
+    "  output.Plane_0 = vuya;\n";
 
 /* YUV to RGB conversion */
 static const gchar templ_PLANAR_YUV_to_RGB_BODY[] =
-    "  float4 sample, rgba;\n"
-    "  sample.x  = shaderTexture[0].Sample(samplerState, input.Texture).x;\n"
-    "  sample.y  = shaderTexture[1].Sample(samplerState, input.Texture).x;\n"
-    "  sample.z  = shaderTexture[2].Sample(samplerState, input.Texture).x;\n"
-    "  rgba.rgb = yuv_to_rgb (sample.xyz);\n"
-    "  rgba.a = 1.0;\n"
-    "  return rgba;\n";
-
-static const gchar templ_PLANAR_YUV_HIGH_to_RGB_BODY[] =
     "  float4 sample, rgba;\n"
     "  sample.x  = shaderTexture[0].Sample(samplerState, input.Texture).x * %d;\n"
     "  sample.y  = shaderTexture[1].Sample(samplerState, input.Texture).x * %d;\n"
     "  sample.z  = shaderTexture[2].Sample(samplerState, input.Texture).x * %d;\n"
     "  rgba.rgb = yuv_to_rgb (sample.xyz);\n"
     "  rgba.a = 1.0;\n"
-    "  return rgba;\n";
-
-/* FIXME: add RGB to planar */
+    "  output.Plane_0 = rgba;\n";
 
 static const gchar templ_SEMI_PLANAR_to_RGB_BODY[] =
     "  float4 sample, rgba;\n"
@@ -147,9 +130,35 @@ static const gchar templ_SEMI_PLANAR_to_RGB_BODY[] =
     "  sample.yz = shaderTexture[1].Sample(samplerState, input.Texture).xy;\n"
     "  rgba.rgb = yuv_to_rgb (sample.xyz);\n"
     "  rgba.a = 1.0;\n"
-    "  return rgba;\n";
+    "  output.Plane_0 = rgba;\n";
 
-/* FIXME: add RGB to semi-planar */
+/* RGB to YUV conversion */
+static const gchar templ_RGB_to_LUMA_BODY[] =
+    "  float4 sample, rgba;\n"
+    "  rgba.rgb = shaderTexture[0].Sample(samplerState, input.Texture).rgb;\n"
+    "  sample.xyz = rgb_to_yuv (rgba.rgb);\n"
+    "  sample.y = 0.0;\n"
+    "  sample.z = 0.0;\n"
+    "  sample.a = 0.0;\n"
+    "  sample.x = sample.x / %d;\n"
+    "  output.Plane_0 = sample;\n";
+
+static const gchar templ_RGB_to_SEMI_PLANAR_CHROMA_BODY[] =
+    "  float4 sample, rgba;\n"
+    "  rgba.rgb = shaderTexture[0].Sample(samplerState, input.Texture).rgb;\n"
+    "  sample.xyz = rgb_to_yuv (rgba.rgb);\n"
+    "  sample.x = sample.y;\n"
+    "  sample.y = sample.z;\n"
+    "  sample.z = 0.0;\n"
+    "  sample.a = 0.0;\n"
+    "  output.Plane_0 = sample;\n";
+
+static const gchar templ_RGB_to_PLANAR_CHROMA_BODY[] =
+    "  float4 sample, rgba;\n"
+    "  rgba.rgb = shaderTexture[0].Sample(samplerState, input.Texture).rgb;\n"
+    "  sample.xyz = rgb_to_yuv (rgba.rgb);\n"
+    "  output.Plane_0 = float4(sample.y / %d, 0.0, 0.0, 0.0);\n"
+    "  output.Plane_1 = float4(sample.z / %d, 0.0, 0.0, 0.0);\n";
 
 static const gchar templ_pixel_shader[] =
     /* constant buffer */
@@ -163,11 +172,19 @@ static const gchar templ_pixel_shader[] =
     "  float3 Texture: TEXCOORD0;\n"
     "};\n"
     "\n"
+    "struct PS_OUTPUT\n"
+    "{\n"
+    "  float4 Plane_0: SV_TARGET0;\n"
+    "  float4 Plane_1: SV_TARGET1;\n"
+    "};\n"
+    "\n"
     /* rgb <-> yuv function */
     "%s\n"
-    "float4 main(PS_INPUT input): SV_TARGET\n"
+    "PS_OUTPUT main(PS_INPUT input)\n"
     "{\n"
+    "  PS_OUTPUT output;\n"
     "%s"
+    "  return output;\n"
     "}\n";
 
 static const gchar templ_vertex_shader[] =
@@ -193,7 +210,7 @@ static const gchar templ_vertex_shader[] =
 typedef struct
 {
   const PixelShaderTemplate *templ;
-  gchar *ps_body;
+  gchar *ps_body[CONVERTER_MAX_QUADS];
   PixelShaderColorTransform transform;
 } ConvertInfo;
 
@@ -209,9 +226,9 @@ struct _GstD3D11ColorConverter
   guint num_input_view;
   guint num_output_view;
 
-  GstD3D11Quad *quad;
+  GstD3D11Quad *quad[CONVERTER_MAX_QUADS];
 
-  D3D11_VIEWPORT viewport;
+  D3D11_VIEWPORT viewport[GST_VIDEO_MAX_PLANES];
 
   ConvertInfo convert_info;
 };
@@ -453,19 +470,9 @@ setup_convert_info_rgb_to_rgb (GstD3D11ColorConverter * self,
     const GstVideoInfo * in_info, const GstVideoInfo * out_info)
 {
   ConvertInfo *convert_info = &self->convert_info;
-  GstVideoFormat in_format = GST_VIDEO_INFO_FORMAT (in_info);
-
-#define IS_RGBX_FORMAT(f) \
-  ((f) == GST_VIDEO_FORMAT_RGBx || \
-   (f) == GST_VIDEO_FORMAT_xRGB || \
-   (f) == GST_VIDEO_FORMAT_BGRx || \
-   (f) == GST_VIDEO_FORMAT_xBGR)
 
   convert_info->templ = &templ_REORDER;
-  convert_info->ps_body = g_strdup_printf (templ_REORDER_BODY,
-      IS_RGBX_FORMAT (in_format) ? "sample.a = 1.0f;" : "");
-
-#undef IS_RGBX_FORMAT
+  convert_info->ps_body[0] = g_strdup_printf (templ_REORDER_BODY);
 
   return TRUE;
 }
@@ -480,18 +487,19 @@ setup_convert_info_yuv_to_rgb (GstD3D11ColorConverter * self,
 
   switch (GST_VIDEO_INFO_FORMAT (in_info)) {
     case GST_VIDEO_FORMAT_VUYA:
-      info->ps_body = g_strdup_printf (templ_VUYA_to_RGB_BODY);
+      info->ps_body[0] = g_strdup_printf (templ_VUYA_to_RGB_BODY);
       break;
     case GST_VIDEO_FORMAT_I420:
-      info->ps_body = g_strdup_printf (templ_PLANAR_YUV_to_RGB_BODY);
+      info->ps_body[0] =
+          g_strdup_printf (templ_PLANAR_YUV_to_RGB_BODY, 1, 1, 1);
       break;
     case GST_VIDEO_FORMAT_I420_10LE:
-      info->ps_body =
-          g_strdup_printf (templ_PLANAR_YUV_HIGH_to_RGB_BODY, 64, 64, 64);
+      info->ps_body[0] =
+          g_strdup_printf (templ_PLANAR_YUV_to_RGB_BODY, 64, 64, 64);
       break;
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_P010_10LE:
-      info->ps_body = g_strdup_printf (templ_SEMI_PLANAR_to_RGB_BODY);
+      info->ps_body[0] = g_strdup_printf (templ_SEMI_PLANAR_to_RGB_BODY);
       break;
     default:
       GST_FIXME_OBJECT (self,
@@ -507,8 +515,37 @@ static gboolean
 setup_convert_info_rgb_to_yuv (GstD3D11ColorConverter * self,
     const GstVideoInfo * in_info, const GstVideoInfo * out_info)
 {
-  GST_FIXME ("Implement RGB to YUV format conversion");
-  return FALSE;
+  ConvertInfo *info = &self->convert_info;
+
+  info->templ = &templ_RGB_to_YUV;
+
+  switch (GST_VIDEO_INFO_FORMAT (out_info)) {
+    case GST_VIDEO_FORMAT_VUYA:
+      info->ps_body[0] = g_strdup_printf (templ_RGB_to_VUYA_BODY);
+      break;
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_P010_10LE:
+      info->ps_body[0] = g_strdup_printf (templ_RGB_to_LUMA_BODY, 1);
+      info->ps_body[1] = g_strdup_printf (templ_RGB_to_SEMI_PLANAR_CHROMA_BODY);
+      break;
+    case GST_VIDEO_FORMAT_I420:
+      info->ps_body[0] = g_strdup_printf (templ_RGB_to_LUMA_BODY, 1);
+      info->ps_body[1] =
+          g_strdup_printf (templ_RGB_to_PLANAR_CHROMA_BODY, 1, 1);
+      break;
+    case GST_VIDEO_FORMAT_I420_10LE:
+      info->ps_body[0] = g_strdup_printf (templ_RGB_to_LUMA_BODY, 64);
+      info->ps_body[1] =
+          g_strdup_printf (templ_RGB_to_PLANAR_CHROMA_BODY, 64, 64);
+      break;
+    default:
+      GST_FIXME_OBJECT (self,
+          "Unhandled output format %s",
+          gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (out_info)));
+      return FALSE;
+  }
+
+  return TRUE;
 }
 
 static gboolean
@@ -519,19 +556,10 @@ setup_convert_info_yuv_to_yuv (GstD3D11ColorConverter * self,
   return FALSE;
 }
 
-typedef struct
+static gboolean
+gst_d3d11_color_convert_setup_shader (GstD3D11ColorConverter * self,
+    GstD3D11Device * device, GstVideoInfo * in_info, GstVideoInfo * out_info)
 {
-  GstD3D11ColorConverter *self;
-  GstVideoInfo *in_info;
-  GstVideoInfo *out_info;
-  gboolean ret;
-} SetupShaderData;
-
-static void
-gst_d3d11_color_convert_setup_shader (GstD3D11Device * device,
-    SetupShaderData * data)
-{
-  GstD3D11ColorConverter *self = data->self;
   HRESULT hr;
   D3D11_SAMPLER_DESC sampler_desc = { 0, };
   D3D11_INPUT_ELEMENT_DESC input_desc[2] = { 0, };
@@ -541,9 +569,8 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Device * device,
   WORD *indices;
   ID3D11Device *device_handle;
   ID3D11DeviceContext *context_handle;
-  gchar *shader_code = NULL;
   ConvertInfo *convert_info = &self->convert_info;
-  ID3D11PixelShader *ps = NULL;
+  ID3D11PixelShader *ps[CONVERTER_MAX_QUADS] = { NULL, NULL };
   ID3D11VertexShader *vs = NULL;
   ID3D11InputLayout *layout = NULL;
   ID3D11SamplerState *sampler = NULL;
@@ -551,8 +578,8 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Device * device,
   ID3D11Buffer *vertex_buffer = NULL;
   ID3D11Buffer *index_buffer = NULL;
   const guint index_count = 2 * 3;
-
-  data->ret = TRUE;
+  gboolean ret = TRUE;
+  gint i;
 
   device_handle = gst_d3d11_device_get_device_handle (device);
   context_handle = gst_d3d11_device_get_device_context_handle (device);
@@ -569,27 +596,28 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Device * device,
   hr = ID3D11Device_CreateSamplerState (device_handle, &sampler_desc, &sampler);
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR ("Couldn't create sampler state, hr: 0x%x", (guint) hr);
-    data->ret = FALSE;
+    ret = FALSE;
     goto clear;
   }
 
-  shader_code = g_strdup_printf (templ_pixel_shader,
-      convert_info->templ->constant_buffer ?
-      convert_info->templ->constant_buffer : "",
-      convert_info->templ->func ? convert_info->templ->func : "",
-      convert_info->ps_body);
+  for (i = 0; i < CONVERTER_MAX_QUADS; i++) {
+    gchar *shader_code = NULL;
 
-  GST_LOG ("Create Pixel Shader \n%s", shader_code);
+    if (convert_info->ps_body[i]) {
+      shader_code = g_strdup_printf (templ_pixel_shader,
+          convert_info->templ->constant_buffer ?
+          convert_info->templ->constant_buffer : "",
+          convert_info->templ->func ? convert_info->templ->func : "",
+          convert_info->ps_body[i]);
 
-  if (!gst_d3d11_create_pixel_shader (device, shader_code, &ps)) {
-    GST_ERROR ("Couldn't create pixel shader");
-
-    g_free (shader_code);
-    data->ret = FALSE;
-    goto clear;
+      ret = gst_d3d11_create_pixel_shader (device, shader_code, &ps[i]);
+      g_free (shader_code);
+      if (!ret) {
+        GST_ERROR ("Couldn't create pixel shader");
+        goto clear;
+      }
+    }
   }
-
-  g_free (shader_code);
 
   if (convert_info->templ->constant_buffer) {
     D3D11_BUFFER_DESC const_buffer_desc = { 0, };
@@ -606,7 +634,7 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Device * device,
 
     if (!gst_d3d11_result (hr, device)) {
       GST_ERROR ("Couldn't create constant buffer, hr: 0x%x", (guint) hr);
-      data->ret = FALSE;
+      ret = FALSE;
       goto clear;
     }
 
@@ -616,8 +644,8 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Device * device,
 
     if (!gst_d3d11_result (hr, device)) {
       GST_ERROR ("Couldn't map constant buffer, hr: 0x%x", (guint) hr);
-      data->ret = FALSE;
       gst_d3d11_device_unlock (device);
+      ret = FALSE;
       goto clear;
     }
 
@@ -648,7 +676,7 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Device * device,
   if (!gst_d3d11_create_vertex_shader (device, templ_vertex_shader,
           input_desc, G_N_ELEMENTS (input_desc), &vs, &layout)) {
     GST_ERROR ("Couldn't vertex pixel shader");
-    data->ret = FALSE;
+    ret = FALSE;
     goto clear;
   }
 
@@ -663,7 +691,7 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Device * device,
 
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR ("Couldn't create vertex buffer, hr: 0x%x", (guint) hr);
-    data->ret = FALSE;
+    ret = FALSE;
     goto clear;
   }
 
@@ -677,7 +705,7 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Device * device,
 
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR ("Couldn't create index buffer, hr: 0x%x", (guint) hr);
-    data->ret = FALSE;
+    ret = FALSE;
     goto clear;
   }
 
@@ -687,8 +715,8 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Device * device,
 
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR ("Couldn't map vertex buffer, hr: 0x%x", (guint) hr);
-    data->ret = FALSE;
     gst_d3d11_device_unlock (device);
+    ret = FALSE;
     goto clear;
   }
 
@@ -702,7 +730,7 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Device * device,
     ID3D11DeviceContext_Unmap (context_handle,
         (ID3D11Resource *) vertex_buffer, 0);
     gst_d3d11_device_unlock (device);
-    data->ret = FALSE;
+    ret = FALSE;
     goto clear;
   }
 
@@ -751,16 +779,24 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Device * device,
       (ID3D11Resource *) index_buffer, 0);
   gst_d3d11_device_unlock (device);
 
-  self->quad = gst_d3d11_quad_new (device,
-      ps, vs, layout, sampler, NULL, NULL, const_buffer, vertex_buffer,
+  self->quad[0] = gst_d3d11_quad_new (device,
+      ps[0], vs, layout, sampler, NULL, NULL, const_buffer, vertex_buffer,
       sizeof (VertexData), index_buffer, DXGI_FORMAT_R16_UINT, index_count);
 
-  self->num_input_view = GST_VIDEO_INFO_N_PLANES (data->in_info);
-  self->num_output_view = GST_VIDEO_INFO_N_PLANES (data->out_info);
+  if (ps[1]) {
+    self->quad[1] = gst_d3d11_quad_new (device,
+        ps[1], vs, layout, sampler, NULL, NULL, const_buffer, vertex_buffer,
+        sizeof (VertexData), index_buffer, DXGI_FORMAT_R16_UINT, index_count);
+  }
+
+  self->num_input_view = GST_VIDEO_INFO_N_PLANES (in_info);
+  self->num_output_view = GST_VIDEO_INFO_N_PLANES (out_info);
 
 clear:
-  if (ps)
-    ID3D11PixelShader_Release (ps);
+  for (i = 0; i < CONVERTER_MAX_QUADS; i++) {
+    if (ps[i])
+      ID3D11PixelShader_Release (ps[i]);
+  }
   if (vs)
     ID3D11VertexShader_Release (vs);
   if (layout)
@@ -774,20 +810,21 @@ clear:
   if (index_buffer)
     ID3D11Buffer_Release (index_buffer);
 
-  return;
+  return ret;
 }
 
 GstD3D11ColorConverter *
 gst_d3d11_color_converter_new (GstD3D11Device * device,
     GstVideoInfo * in_info, GstVideoInfo * out_info)
 {
-  SetupShaderData data;
   const GstVideoInfo *unknown_info;
   const GstD3D11Format *in_d3d11_format;
   const GstD3D11Format *out_d3d11_format;
   gboolean is_supported = FALSE;
   MatrixData matrix;
   GstD3D11ColorConverter *converter = NULL;
+  gboolean ret;
+  gint i;
 
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
   g_return_val_if_fail (in_info != NULL, NULL);
@@ -853,22 +890,25 @@ gst_d3d11_color_converter_new (GstD3D11Device * device,
     transform->trans_matrix[11] = 0;
   }
 
-  converter->viewport.TopLeftX = 0;
-  converter->viewport.TopLeftY = 0;
-  converter->viewport.Width = GST_VIDEO_INFO_WIDTH (out_info);
-  converter->viewport.Height = GST_VIDEO_INFO_HEIGHT (out_info);
-  converter->viewport.MinDepth = 0.0f;
-  converter->viewport.MaxDepth = 1.0f;
+  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (out_info); i++) {
+    converter->viewport[i].TopLeftX = 0;
+    converter->viewport[i].TopLeftY = 0;
+    converter->viewport[i].Width = GST_VIDEO_INFO_COMP_WIDTH (out_info, i);
+    converter->viewport[i].Height = GST_VIDEO_INFO_COMP_HEIGHT (out_info, i);
+    converter->viewport[i].MinDepth = 0.0f;
+    converter->viewport[i].MaxDepth = 1.0f;
+  }
 
-  data.self = converter;
-  data.in_info = in_info;
-  data.out_info = out_info;
-  gst_d3d11_color_convert_setup_shader (device, &data);
+  ret = gst_d3d11_color_convert_setup_shader (converter,
+      device, in_info, out_info);
 
-  if (!data.ret || !converter->quad) {
+  if (!ret) {
     GST_ERROR ("Couldn't setup shader");
     gst_d3d11_color_converter_free (converter);
     converter = NULL;
+  } else {
+    converter->in_info = *in_info;
+    converter->out_info = *out_info;
   }
 
   return converter;
@@ -893,13 +933,18 @@ conversion_not_supported:
 void
 gst_d3d11_color_converter_free (GstD3D11ColorConverter * converter)
 {
+  gint i;
+
   g_return_if_fail (converter != NULL);
 
-  if (converter->quad)
-    gst_d3d11_quad_free (converter->quad);
+  for (i = 0; i < CONVERTER_MAX_QUADS; i++) {
+    if (converter->quad[i])
+      gst_d3d11_quad_free (converter->quad[i]);
+
+    g_free (converter->convert_info.ps_body[i]);
+  }
 
   gst_clear_object (&converter->device);
-  g_free (converter->convert_info.ps_body);
   g_free (converter);
 }
 
@@ -926,12 +971,29 @@ gst_d3d11_color_converter_convert_unlocked (GstD3D11ColorConverter * converter,
     ID3D11ShaderResourceView * srv[GST_VIDEO_MAX_PLANES],
     ID3D11RenderTargetView * rtv[GST_VIDEO_MAX_PLANES])
 {
+  gboolean ret;
+
   g_return_val_if_fail (converter != NULL, FALSE);
   g_return_val_if_fail (srv != NULL, FALSE);
   g_return_val_if_fail (rtv != NULL, FALSE);
 
-  return gst_d3d11_draw_quad_unlocked (converter->quad, &converter->viewport, 1,
-      srv, converter->num_input_view, rtv, converter->num_output_view, NULL);
+  ret = gst_d3d11_draw_quad_unlocked (converter->quad[0], converter->viewport,
+      1, srv, converter->num_input_view, rtv, 1, NULL);
+
+  if (!ret)
+    return FALSE;
+
+  if (converter->quad[1]) {
+    ret = gst_d3d11_draw_quad_unlocked (converter->quad[1],
+        &converter->viewport[1], converter->num_output_view - 1,
+        srv, converter->num_input_view, &rtv[1], converter->num_output_view - 1,
+        NULL);
+
+    if (!ret)
+      return FALSE;
+  }
+
+  return TRUE;
 }
 
 gboolean
@@ -941,10 +1003,32 @@ gst_d3d11_color_converter_update_rect (GstD3D11ColorConverter * converter,
   g_return_val_if_fail (converter != NULL, FALSE);
   g_return_val_if_fail (rect != NULL, FALSE);
 
-  converter->viewport.TopLeftX = rect->left;
-  converter->viewport.TopLeftY = rect->top;
-  converter->viewport.Width = rect->right - rect->left;
-  converter->viewport.Height = rect->bottom - rect->top;
+  converter->viewport[0].TopLeftX = rect->left;
+  converter->viewport[0].TopLeftY = rect->top;
+  converter->viewport[0].Width = rect->right - rect->left;
+  converter->viewport[0].Height = rect->bottom - rect->top;
+
+  switch (GST_VIDEO_INFO_FORMAT (&converter->out_info)) {
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_P010_10LE:
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_I420_10LE:{
+      gint i;
+      converter->viewport[1].TopLeftX = converter->viewport[0].TopLeftX / 2;
+      converter->viewport[1].TopLeftY = converter->viewport[0].TopLeftY / 2;
+      converter->viewport[1].Width = converter->viewport[0].Width / 2;
+      converter->viewport[1].Height = converter->viewport[0].Height / 2;
+
+      for (i = 2; i < GST_VIDEO_INFO_N_PLANES (&converter->out_info); i++)
+        converter->viewport[i] = converter->viewport[1];
+
+      break;
+    }
+    default:
+      if (converter->num_output_view > 1)
+        g_assert_not_reached ();
+      break;
+  }
 
   return TRUE;
 }
