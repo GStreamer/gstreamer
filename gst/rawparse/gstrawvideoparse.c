@@ -93,7 +93,8 @@ enum
   PROP_TOP_FIELD_FIRST,
   PROP_PLANE_STRIDES,
   PROP_PLANE_OFFSETS,
-  PROP_FRAME_SIZE
+  PROP_FRAME_SIZE,
+  PROP_COLORIMETRY,
 };
 
 #define DEFAULT_WIDTH                 320
@@ -308,6 +309,13 @@ gst_raw_video_parse_class_init (GstRawVideoParseClass * klass)
           "Size of a frame (0 = frames are tightly packed together)",
           0, G_MAXUINT,
           DEFAULT_FRAME_STRIDE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
+      );
+  g_object_class_install_property (object_class,
+      PROP_COLORIMETRY,
+      g_param_spec_string ("colorimetry",
+          "Colorimetry",
+          "The video source colorimetry",
+          NULL, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)
       );
 
   gst_element_class_set_static_metadata (element_class,
@@ -606,6 +614,28 @@ gst_raw_video_parse_set_property (GObject * object, guint prop_id,
         gst_base_parse_set_min_frame_size (base_parse,
             gst_raw_video_parse_get_config_frame_size (raw_base_parse,
                 GST_RAW_BASE_PARSE_CONFIG_PROPERTIES));
+      GST_RAW_BASE_PARSE_CONFIG_MUTEX_UNLOCK (object);
+
+      break;
+    }
+    case PROP_COLORIMETRY:
+    {
+      GstVideoColorimetry new_cinfo;
+
+      if (!gst_video_colorimetry_from_string (&new_cinfo,
+              g_value_get_string (value)))
+        break;
+
+      GST_RAW_BASE_PARSE_CONFIG_MUTEX_LOCK (object);
+      if (!gst_video_colorimetry_is_equal (&new_cinfo,
+              &(props_cfg->info.colorimetry))) {
+
+        props_cfg->colorimetry = new_cinfo;
+        gst_raw_video_parse_update_info (props_cfg);
+
+        if (!gst_raw_video_parse_is_using_sink_caps (raw_video_parse))
+          gst_raw_base_parse_invalidate_src_caps (raw_base_parse);
+      }
       GST_RAW_BASE_PARSE_CONFIG_MUTEX_UNLOCK (object);
 
       break;
@@ -1077,6 +1107,8 @@ gst_raw_video_parse_update_info (GstRawVideoParseConfig * config)
 
   gst_video_info_set_format (info, config->format, config->width,
       config->height);
+
+  info->colorimetry = config->colorimetry;
 
   GST_VIDEO_INFO_PAR_N (info) = config->pixel_aspect_ratio_n;
   GST_VIDEO_INFO_PAR_D (info) = config->pixel_aspect_ratio_d;

@@ -62,6 +62,7 @@ struct _GstRawVideoParseConfig
   gboolean interlaced;
   gsize plane_offsets[GST_VIDEO_MAX_PLANES];
   gint plane_strides[GST_VIDEO_MAX_PLANES];
+  GstVideoColorimetry colorimetry;
 
   /* If TRUE, then TFF flags are added to outgoing buffers and
    * their video metadata */
