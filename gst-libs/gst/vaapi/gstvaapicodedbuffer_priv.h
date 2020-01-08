@@ -45,7 +45,6 @@ struct _GstVaapiCodedBuffer
   GstVaapiID            object_id;
 
   /*< public >*/
-  GstVaapiContext      *context;
   VACodedBufferSegment *segment_list;
 };
 
