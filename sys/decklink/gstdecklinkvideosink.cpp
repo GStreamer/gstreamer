@@ -916,8 +916,8 @@ write_vbi (GstDecklinkVideoSink * self, GstBuffer * buffer,
 
   if (self->vbiencoder == NULL) {
     self->vbiencoder =
-        gst_video_vbi_encoder_new (self->info.finfo->format, self->info.width);
-    self->anc_vformat = self->info.finfo->format;
+        gst_video_vbi_encoder_new (GST_VIDEO_FORMAT_v210, self->info.width);
+    self->anc_vformat = GST_VIDEO_FORMAT_v210;
   }
 
   /* Put any closed captions into the configured line */
@@ -1012,7 +1012,7 @@ write_vbi (GstDecklinkVideoSink * self, GstBuffer * buffer,
   }
 
   if ((got_captions || self->afd_bar_line != 0)
-      && self->output->output->CreateAncillaryData (format,
+      && self->output->output->CreateAncillaryData (bmdFormat10BitYUV,
           &vanc_frame) == S_OK) {
     GstVideoAFDMeta *afd_meta = NULL, *afd_meta2 = NULL;
     GstVideoBarMeta *bar_meta = NULL, *bar_meta2 = NULL;
