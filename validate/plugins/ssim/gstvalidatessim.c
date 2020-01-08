@@ -629,12 +629,10 @@ _handle_buffer (GstValidateOverride * override,
   ValidateSsimOverride *o = VALIDATE_SSIM_OVERRIDE (override);
   ValidateSsimOverridePrivate *priv = o->priv;
 
-  GstClockTime running_time, position;
+  GstClockTime position;
 
-  running_time = gst_segment_to_running_time (&pad_monitor->segment,
+  position = gst_segment_to_stream_time (&pad_monitor->segment,
       GST_FORMAT_TIME, GST_BUFFER_PTS (buffer));
-  position = gst_segment_position_from_running_time (&pad_monitor->segment,
-      GST_FORMAT_TIME, running_time);
 
   if (!_should_dump_buffer (o, pad_monitor, position)) {
     GST_LOG_OBJECT (override, "Not dumping buffer: %" GST_TIME_FORMAT,
