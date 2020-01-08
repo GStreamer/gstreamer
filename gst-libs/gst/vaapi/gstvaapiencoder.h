@@ -192,6 +192,9 @@ GstVaapiEntrypoint
 gst_vaapi_encoder_get_entrypoint (GstVaapiEncoder * encoder,
     GstVaapiProfile profile);
 
+GArray *
+gst_vaapi_encoder_get_available_profiles (GstVaapiEncoder * encoder);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_ENCODER_H */

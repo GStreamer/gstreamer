@@ -1764,6 +1764,55 @@ gst_vaapi_encoder_get_entrypoint (GstVaapiEncoder * encoder,
   return GST_VAAPI_ENTRYPOINT_INVALID;
 }
 
+/**
+ * gst_vaapi_encoder_get_available_profiles:
+ * @encoder: a #GstVaapiEncoder
+ *
+ * Collect all supported #GstVaapiProfile of current @encoder's #GstVaapiCodec,
+ * and return them as a #GArray
+ *
+ * Returns: An #GArray of #GstVaapiProfile.
+ **/
+GArray *
+gst_vaapi_encoder_get_available_profiles (GstVaapiEncoder * encoder)
+{
+  GstVaapiCodec codec;
+  GArray *all_profiles = NULL;
+  GArray *profiles = NULL;
+  GstVaapiProfile profile;
+  guint i;
+
+  g_return_val_if_fail (encoder != NULL, 0);
+
+  codec = GST_VAAPI_ENCODER_GET_CLASS (encoder)->class_data->codec;
+
+  all_profiles = gst_vaapi_display_get_encode_profiles
+      (GST_VAAPI_ENCODER_DISPLAY (encoder));
+  if (!all_profiles)
+    goto out;
+
+  /* Add all supported profiles belong to current codec */
+  profiles = g_array_new (FALSE, FALSE, sizeof (GstVaapiProfile));
+  if (!profiles)
+    goto out;
+
+  for (i = 0; i < all_profiles->len; i++) {
+    profile = g_array_index (all_profiles, GstVaapiProfile, i);
+    if (gst_vaapi_profile_get_codec (profile) == codec)
+      g_array_append_val (profiles, profile);
+  }
+
+out:
+  if (all_profiles)
+    g_array_unref (all_profiles);
+  if (profiles && profiles->len == 0) {
+    g_array_unref (profiles);
+    profiles = NULL;
+  }
+
+  return profiles;
+}
+
 /** Returns a GType for the #GstVaapiEncoderTune set */
 GType
 gst_vaapi_encoder_tune_get_type (void)
