@@ -195,6 +195,9 @@ find_best_profile (GstCaps * caps)
 static GstCaps *
 get_available_caps (GstVaapiEncodeH264 * encode)
 {
+  GstVaapiEncode *const base_encode = GST_VAAPIENCODE_CAST (encode);
+  GstVaapiEncoderH264 *const encoder =
+      GST_VAAPI_ENCODER_H264 (base_encode->encoder);
   GstCaps *out_caps;
   GArray *profiles;
   GstVaapiProfile profile;
@@ -231,6 +234,13 @@ get_available_caps (GstVaapiEncodeH264 * encode)
   gst_caps_set_value (out_caps, "profile", &profile_list);
   g_value_unset (&profile_list);
   g_value_unset (&profile_v);
+
+  if (!gst_vaapi_encoder_h264_supports_avc (encoder)) {
+    GST_INFO_OBJECT (encode,
+        "avc requires packed header support, outputting byte-stream");
+    gst_caps_set_simple (out_caps, "stream-format", G_TYPE_STRING,
+        "byte-stream", NULL);
+  }
 
   encode->available_caps = out_caps;
 
@@ -384,7 +394,22 @@ gst_vaapiencode_h264_get_caps (GstVaapiEncode * base_encode)
   GstVaapiEncoderH264 *const encoder =
       GST_VAAPI_ENCODER_H264 (base_encode->encoder);
   GstVaapiProfile profile;
+  GstCaps *available_caps;
+  GstStructure *structure;
+  const char *stream_format;
   GstCaps *caps;
+
+  if (encode->is_avc) {
+    available_caps = get_available_caps (encode);
+    structure = gst_caps_get_structure (available_caps, 0);
+    stream_format = gst_structure_get_string (structure, "stream-format");
+    if (g_strcmp0 (stream_format, "byte-stream") == 0) {
+      GST_WARNING_OBJECT (encode,
+          "downstream prefers avc, but the driver does not support it");
+      encode->is_avc = FALSE;
+      base_encode->need_codec_data = FALSE;
+    }
+  }
 
   caps = gst_caps_from_string (GST_CODEC_CAPS);
 
