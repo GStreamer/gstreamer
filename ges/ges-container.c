@@ -21,8 +21,17 @@
 /**
  * SECTION:gescontainer
  * @title: GESContainer
- * @short_description: Base Class for objects responsible for controlling other
- * GESTimelineElement-s
+ * @short_description: Base Class for elements responsible for controlling
+ * other #GESTimelineElement-s
+ *
+ * A #GESContainer is a timeline element that controls other
+ * #GESTimelineElement-s, which are its children. In particular, it is
+ * responsible for maintaining the relative #GESTimelineElement:start and
+ * #GESTimelineElement:duration times of its children. Therefore, if a
+ * container is temporally adjusted or moved to a new layer, it may
+ * accordingly adjust and move its children. Similarly, a change in one of
+ * its children may prompt the parent to correspondingly change its
+ * siblings.
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -446,7 +455,10 @@ ges_container_class_init (GESContainerClass * klass)
   /**
    * GESContainer:height:
    *
-   * The span of priorities which this container occupies.
+   * The span of the container's children's #GESTimelineElement:priority
+   * values, which is the number of integers that lie between (inclusive)
+   * the minimum and maximum priorities found amongst the container's
+   * children (maximum - minimum + 1).
    */
   properties[PROP_HEIGHT] = g_param_spec_uint ("height", "Height",
       "The span of priorities this container occupies", 0, G_MAXUINT, 1,
@@ -456,13 +468,12 @@ ges_container_class_init (GESContainerClass * klass)
 
   /**
    * GESContainer::child-added:
-   * @container: the #GESContainer
-   * @element: the #GESTimelineElement that was added.
+   * @container: The #GESContainer
+   * @element: The child that was added
    *
-   * Will be emitted after a child was added to @container.
-   * Usually you should connect with #g_signal_connect_after
-   * as in the first emission stage, the signal emission might
-   * get stopped internally.
+   * Will be emitted after a child is added to the container. Usually,
+   * you should connect with g_signal_connect_after() since the signal
+   * may be stopped internally.
    */
   ges_container_signals[CHILD_ADDED_SIGNAL] =
       g_signal_new ("child-added", G_TYPE_FROM_CLASS (klass),
@@ -471,10 +482,10 @@ ges_container_class_init (GESContainerClass * klass)
 
   /**
    * GESContainer::child-removed:
-   * @container: the #GESContainer
-   * @element: the #GESTimelineElement that was removed.
+   * @container: The #GESContainer
+   * @element: The child that was removed
    *
-   * Will be emitted after a child was removed from @container.
+   * Will be emitted after a child is removed from the container.
    */
   ges_container_signals[CHILD_REMOVED_SIGNAL] =
       g_signal_new ("child-removed", G_TYPE_FROM_CLASS (klass),
@@ -715,12 +726,21 @@ _ges_container_set_priority_offset (GESContainer * container,
 
 /**
  * ges_container_add:
- * @container: a #GESContainer
- * @child: the #GESTimelineElement
+ * @container: A #GESContainer
+ * @child: The element to add as a child
  *
- * Add the #GESTimelineElement to the container.
+ * Adds a timeline element to the container. The element will now be a
+ * child of the container (and the container will be the
+ * #GESTimelineElement:parent of the added element), which means that it
+ * is now controlled by the container. This may change the properties of
+ * the child or the container, depending on the subclass.
  *
- * Returns: %TRUE on success, %FALSE on failure.
+ * Additionally, the children properties of the newly added element will
+ * be shared with the container, meaning they can also be read and set
+ * using ges_timeline_element_get_child_property() and
+ * ges_timeline_element_set_child_property() on the container.
+ *
+ * Returns: %TRUE if @child was successfully added to @container.
  */
 gboolean
 ges_container_add (GESContainer * container, GESTimelineElement * child)
@@ -750,6 +770,12 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
   }
   container->children_control_mode = GES_CHILDREN_UPDATE;
 
+  /* FIXME: The following code should probably be in
+   * GESGroupClass->add_child, rather than here! A GESClip will avoid this
+   * since it it sets the start of the child to that of the container in
+   * add_child. However, a user's custom container class may have a good
+   * reason to not want the container's start value to change when adding
+   * a new child */
   if (_START (container) > _START (child)) {
     _START (container) = _START (child);
 
@@ -808,12 +834,13 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
 
 /**
  * ges_container_remove:
- * @container: a #GESContainer
- * @child: the #GESTimelineElement to release
+ * @container: A #GESContainer
+ * @child: The child to remove
  *
- * Release the @child from the control of @container.
+ * Removes a timeline element from the container. The element will no
+ * longer be controlled by the container.
  *
- * Returns: %TRUE if the @child was properly released, else %FALSE.
+ * Returns: %TRUE if @child was successfully removed from @container.
  */
 gboolean
 ges_container_remove (GESContainer * container, GESTimelineElement * child)
@@ -877,15 +904,16 @@ _get_children_recursively (GESContainer * container, GList ** children)
 
 /**
  * ges_container_get_children:
- * @container: a #GESContainer
+ * @container: A #GESContainer
  * @recursive:  Whether to recursively get children in @container
  *
- * Get the list of #GESTimelineElement contained in @container
- * The user is responsible for unreffing the contained objects
- * and freeing the list.
+ * Get the list of timeline elements contained in the container. If
+ * @recursive is %TRUE, and the container contains other containers as
+ * children, then their children will be added to the list, in addition to
+ * themselves, and so on.
  *
  * Returns: (transfer full) (element-type GESTimelineElement): The list of
- * timeline element contained in @container.
+ * #GESTimelineElement-s contained in @container.
  */
 GList *
 ges_container_get_children (GESContainer * container, gboolean recursive)
@@ -904,17 +932,23 @@ ges_container_get_children (GESContainer * container, gboolean recursive)
 
 /**
  * ges_container_ungroup:
- * @container: (transfer full): The #GESContainer to ungroup
- * @recursive: Wether to recursively ungroup @container
+ * @container: (transfer full): The container to ungroup
+ * @recursive: Whether to recursively ungroup @container
  *
- * Ungroups the #GESTimelineElement contained in this GESContainer,
- * creating new #GESContainer containing those #GESTimelineElement
- * apropriately.
+ * Ungroups the container by splitting it into several containers
+ * containing various children of the original. The rules for how the
+ * container splits depends on the subclass. A #GESGroup will simply split
+ * into its children. A #GESClip will split into one #GESClip per
+ * #GESTrackType it overlaps with (so an audio-video clip will split into
+ * an audio clip and a video clip), where each clip contains all the
+ * #GESTrackElement-s from the original clip with a matching
+ * #GESTrackElement:track-type.
+ *
+ * If @recursive is %TRUE, and the container contains other containers as
+ * children, then they will also be ungrouped, and so on.
  *
  * Returns: (transfer full) (element-type GESContainer): The list of
- * #GESContainer resulting from the ungrouping operation
- * The user is responsible for unreffing the contained objects
- * and freeing the list.
+ * new #GESContainer-s created from the splitting of @container.
  */
 GList *
 ges_container_ungroup (GESContainer * container, gboolean recursive)
@@ -937,18 +971,23 @@ ges_container_ungroup (GESContainer * container, gboolean recursive)
 
 /**
  * ges_container_group:
- * @containers: (transfer none)(element-type GESContainer) (allow-none): The
- * #GESContainer to group, they must all be in a same #GESTimeline
+ * @containers: (transfer none)(element-type GESContainer) (allow-none):
+ * The #GESContainer-s to group
  *
- * Groups the #GESContainer-s provided in @containers. It creates a subclass
- * of #GESContainer, depending on the containers provided in @containers.
- * Basically, if all the containers in @containers should be contained in a same
- * clip (all the #GESTrackElement they contain have the exact same
- * start/inpoint/duration and are in the same layer), it will create a #GESClip
- * otherwise a #GESGroup will be created
+ * Groups the containers into a single container by merging them. The
+ * containers must all belong to the same #GESTimelineElement:timeline.
  *
- * Returns: (transfer none): The #GESContainer (subclass) resulting of the
- * grouping
+ * If the elements are all #GESClip-s then this method will attempt to
+ * combine them all into a single #GESClip. This should succeed if they:
+ * share the same #GESTimelineElement:start, #GESTimelineElement:duration
+ * and #GESTimelineElement:in-point; exist in the same layer; and all of
+ * the sources share the same #GESAsset. If this fails, or one of the
+ * elements is not a #GESClip, this method will try to create a #GESGroup
+ * instead.
+ *
+ * Returns: (transfer floating): The container created by merging
+ * @containers, or %NULL if they could not be merged into a single
+ * container.
  */
 GESContainer *
 ges_container_group (GList * containers)
@@ -969,8 +1008,14 @@ ges_container_group (GList * containers)
     g_return_val_if_fail (timeline, NULL);
   }
 
-  if (g_list_length (containers) == 1)
+  if (g_list_length (containers) == 1) {
+    /* FIXME: Should return a floating **copy**. API specifies that the
+     * returned element is created. So users might expect to be able to
+     * freely dispose of the list, without the risk of the returned
+     * element being freed as well.
+     * TODO 2.0: (transfer full) would have been better */
     return containers->data;
+  }
 
   for (tmp = containers; tmp; tmp = tmp->next) {
     g_return_val_if_fail (GES_IS_CONTAINER (tmp->data), NULL);
@@ -980,12 +1025,15 @@ ges_container_group (GList * containers)
         NULL);
   }
 
+  /* FIXME: how can user sub-classes interact with this if
+   * ->grouping_priority is private? */
   children_types = g_type_children (GES_TYPE_CONTAINER, &n_children);
   g_qsort_with_data (children_types, n_children, sizeof (GType),
       (GCompareDataFunc) compare_grouping_prio, NULL);
 
   for (i = 0; i < n_children; i++) {
     clip_class = g_type_class_peek (children_types[i]);
+    /* FIXME: handle NULL ->group */
     ret = GES_CONTAINER_CLASS (clip_class)->group (containers);
 
     if (ret)
@@ -998,22 +1046,20 @@ ges_container_group (GList * containers)
 
 /**
  * ges_container_edit:
- * @container: the #GESClip to edit
- * @layers: (element-type GESLayer): The layers you want the edit to
- *  happen in, %NULL means that the edition is done in all the
- *  #GESLayers contained in the current timeline.
- * @new_layer_priority: The priority of the layer @container should land in.
- *  If the layer you're trying to move the container to doesn't exist, it will
- *  be created automatically. -1 means no move.
- * @mode: The #GESEditMode in which the editition will happen.
- * @edge: The #GESEdge the edit should happen on.
- * @position: The position at which to edit @container (in nanosecond)
+ * @container: The #GESContainer to edit
+ * @layers: (element-type GESLayer) (nullable): A whitelist of layers
+ * where the edit can be performed, %NULL allows all layers in the
+ * timeline
+ * @new_layer_priority: The priority/index of the layer @container should
+ * be moved to. -1 means no move
+ * @mode: The edit mode
+ * @edge: The edge of @container where the edit should occur
+ * @position: The edit position: a new location for the edge of @container
+ * (in nanoseconds)
  *
- * Edit @container in the different exisiting #GESEditMode modes. In the case of
- * slide, and roll, you need to specify a #GESEdge
+ * Edits the container within its timeline.
  *
- * Returns: %TRUE if the container as been edited properly, %FALSE if an error
- * occured
+ * Returns: %TRUE if the edit of @container completed, %FALSE on failure.
  *
  * Deprecated: 1.18: use #ges_timeline_element_edit instead.
  */

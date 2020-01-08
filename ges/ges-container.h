@@ -38,7 +38,12 @@ G_BEGIN_DECLS
 
 typedef struct _GESContainerPrivate GESContainerPrivate;
 
-/* To be used by sublcasses only */
+/**
+ * GESChildrenControlMode:
+ *
+ * To be used by subclasses only. This indicate how to handle a change in
+ * a child.
+ */
 typedef enum
 {
   GES_CHILDREN_UPDATE,
@@ -52,7 +57,7 @@ typedef enum
  * GES_CONTAINER_HEIGHT:
  * @obj: a #GESContainer
  *
- * The span of priorities this object occupies.
+ * The #GESContainer:height of @obj.
  */
 #define GES_CONTAINER_HEIGHT(obj) (((GESContainer*)obj)->height)
 
@@ -60,17 +65,17 @@ typedef enum
  * GES_CONTAINER_CHILDREN:
  * @obj: a #GESContainer
  *
- * A #GList containing the children of @object
+ * The #GList containing the children of @obj.
  */
 #define GES_CONTAINER_CHILDREN(obj) (((GESContainer*)obj)->children)
 
 /**
  * GESContainer:
- * @children: (element-type GES.TimelineElement): A list of TimelineElement
- * controlled by this Container. NOTE: Do not modify.
- * @height: The span of priorities this container occupies
+ * @children: (element-type GES.TimelineElement): The list of
+ * #GESTimelineElement-s controlled by this Container
+ * @height: The #GESContainer:height of @obj
  *
- * The #GESContainer base class.
+ * Note, you may read, but should not modify these properties.
  */
 struct _GESContainer
 {
@@ -102,9 +107,11 @@ struct _GESContainer
  * @child_removed: Virtual method that is called right after a #GESTimelineElement is removed
  * @remove_child: Virtual method to remove a child
  * @add_child: Virtual method to add a child
- * @ungroup: Ungroups the #GESTimelineElement contained in this #GESContainer, creating new
- * @group: Groups the #GESContainers together
- * #GESContainer containing those #GESTimelineElement apropriately.
+ * @ungroup: Virtual method to ungroup a container into a list of
+ * containers
+ * @group: Virtual method to group a list of containers together under a
+ * single container
+ * @edit: Deprecated
  */
 struct _GESContainerClass
 {
