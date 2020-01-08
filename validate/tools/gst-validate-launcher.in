@@ -70,8 +70,10 @@ if "__main__" == __name__:
     if run_profile:
         import cProfile
         prof = cProfile.Profile()
-        res = prof.runcall(main, libsdir)
-        prof.dump_stats('gst-validate-launcher-runstats')
+        try:
+            res = prof.runcall(main, libsdir)
+        finally:
+            prof.dump_stats('gst-validate-launcher-runstats')
         exit(res)
 
     exit(main(libsdir))
