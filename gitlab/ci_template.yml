@@ -247,6 +247,7 @@ build clang fedora x86_64:
 check fedora:
   extends: '.test fedora x86_64'
   variables:
+    EXTRA_VALIDATE_ARGS: "-b check.gst-plugins-rs.*"
     TEST_SUITE: "check.gst*"
   except:
     variables:
