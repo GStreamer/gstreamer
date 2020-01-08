@@ -61,7 +61,12 @@ if gl_dep.found() # have desktop GL
   ]
 endif
 
-graphene_dep = dependency('graphene-1.0', version : '>=1.4.0', required : get_option('gl-graphene'))
+graphene_dep = dependency('graphene-gobject-1.0',
+  version : '>=1.4.0',
+  required : get_option('gl-graphene'),
+  fallback: ['graphene', 'graphene_gobject_dep'],
+  default_options: ['introspection=false', 'installed_tests=false', 'tests=false'])
+
 if graphene_dep.found()
   optional_deps += graphene_dep
   core_conf.set('HAVE_GRAPHENE', true)
