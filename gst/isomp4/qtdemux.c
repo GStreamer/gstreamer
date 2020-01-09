@@ -1614,7 +1614,9 @@ gst_qtdemux_perform_seek (GstQTDemux * qtdemux, GstSegment * segment,
   }
 
   /* and set all streams to the final position */
+  GST_OBJECT_LOCK (qtdemux);
   gst_flow_combiner_reset (qtdemux->flowcombiner);
+  GST_OBJECT_UNLOCK (qtdemux);
   qtdemux->segment_seqnum = seqnum;
   for (i = 0; i < QTDEMUX_N_STREAMS (qtdemux); i++) {
     QtDemuxStream *stream = QTDEMUX_NTH_STREAM (qtdemux, i);
@@ -1780,6 +1782,12 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstObject * parent,
   GstQTDemux *qtdemux = GST_QTDEMUX (parent);
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_RECONFIGURE:
+      GST_OBJECT_LOCK (qtdemux);
+      gst_flow_combiner_reset (qtdemux->flowcombiner);
+      GST_OBJECT_UNLOCK (qtdemux);
+      res = gst_pad_event_default (pad, parent, event);
+      break;
     case GST_EVENT_SEEK:
     {
 #ifndef GST_DISABLE_GST_DEBUG
@@ -2738,7 +2746,9 @@ gst_qtdemux_stream_unref (QtDemuxStream * stream)
     if (stream->pad) {
       GstQTDemux *demux = stream->demux;
       gst_element_remove_pad (GST_ELEMENT_CAST (demux), stream->pad);
+      GST_OBJECT_LOCK (demux);
       gst_flow_combiner_remove_pad (demux->flowcombiner, stream->pad);
+      GST_OBJECT_UNLOCK (demux);
     }
     g_free (stream->stream_id);
     g_free (stream);
@@ -6533,7 +6543,9 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
   }
 
   /* combine flows */
+  GST_OBJECT_LOCK (qtdemux);
   ret = gst_qtdemux_combine_flows (qtdemux, stream, ret);
+  GST_OBJECT_UNLOCK (qtdemux);
   /* ignore unlinked, we will not push on the pad anymore and we will EOS when
    * we have no more data for the pad to push */
   if (ret == GST_FLOW_EOS)
@@ -7563,7 +7575,9 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
           }
 
           /* combine flows */
+          GST_OBJECT_LOCK (demux);
           ret = gst_qtdemux_combine_flows (demux, stream, ret);
+          GST_OBJECT_UNLOCK (demux);
         } else {
           /* skip this data, stream is EOS */
           gst_adapter_flush (demux->adapter, demux->neededbytes);
@@ -8953,7 +8967,9 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
     GST_DEBUG_OBJECT (qtdemux, "adding pad %s %p to qtdemux %p",
         GST_OBJECT_NAME (stream->pad), stream->pad, qtdemux);
     gst_element_add_pad (GST_ELEMENT_CAST (qtdemux), stream->pad);
+    GST_OBJECT_LOCK (qtdemux);
     gst_flow_combiner_add_pad (qtdemux->flowcombiner, stream->pad);
+    GST_OBJECT_UNLOCK (qtdemux);
 
     if (stream->stream_tags)
       gst_tag_list_unref (stream->stream_tags);
