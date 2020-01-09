@@ -1404,8 +1404,8 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
       break;
     case GST_TIME_CODE_STAMPER_SOURCE_LTC:
 #if HAVE_LTC
-      if (timecodestamper->ltc_current_tc)
-        tc = timecodestamper->ltc_current_tc;
+      if (timecodestamper->ltc_internal_tc)
+        tc = timecodestamper->ltc_internal_tc;
 #endif
       if (!tc) {
         tc = gst_video_time_code_new (timecodestamper->vinfo.fps_n,
