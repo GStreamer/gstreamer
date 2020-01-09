@@ -907,9 +907,10 @@ _collate_ice_gathering_states (GstWebRTCBin * webrtc)
       continue;
     }
 
+    /* We only have a mid in the transceiver after we got the SDP answer,
+     * which is usually long after gathering has finished */
     if (!rtp_trans->mid) {
       GST_TRACE_OBJECT (webrtc, "transceiver %p has no mid", rtp_trans);
-      continue;
     }
 
     g_object_get (stream, "rtcp-mux", &rtcp_mux, NULL);
