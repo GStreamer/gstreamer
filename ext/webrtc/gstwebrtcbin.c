@@ -1554,6 +1554,8 @@ _create_webrtc_transceiver (GstWebRTCBin * webrtc,
   rtp_trans = GST_WEBRTC_RTP_TRANSCEIVER (trans);
   rtp_trans->direction = direction;
   rtp_trans->mline = mline;
+  /* FIXME: We don't support stopping transceiver yet so they're always not stopped */
+  rtp_trans->stopped = FALSE;
 
   g_array_append_val (webrtc->priv->transceivers, trans);
 
