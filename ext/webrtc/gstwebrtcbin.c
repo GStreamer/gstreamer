@@ -785,7 +785,9 @@ _collate_ice_connection_states (GstWebRTCBin * webrtc)
 {
 #define STATE(val) GST_WEBRTC_ICE_CONNECTION_STATE_ ## val
   GstWebRTCICEConnectionState any_state = 0;
-  gboolean all_closed = TRUE;
+  gboolean all_new_or_closed = TRUE;
+  gboolean all_completed_or_closed = TRUE;
+  gboolean all_connected_completed_or_closed = TRUE;
   int i;
 
   for (i = 0; i < webrtc->priv->transceivers->len; i++) {
@@ -817,8 +819,14 @@ _collate_ice_connection_states (GstWebRTCBin * webrtc)
     GST_TRACE_OBJECT (webrtc, "transceiver %p state 0x%x", rtp_trans,
         ice_state);
     any_state |= (1 << ice_state);
-    if (ice_state != STATE (CLOSED))
-      all_closed = FALSE;
+
+    if (ice_state != STATE (NEW) && ice_state != STATE (CLOSED))
+      all_new_or_closed = FALSE;
+    if (ice_state != STATE (COMPLETED) && ice_state != STATE (CLOSED))
+      all_completed_or_closed = FALSE;
+    if (ice_state != STATE (CONNECTED) && ice_state != STATE (COMPLETED)
+        && ice_state != STATE (CLOSED))
+      all_connected_completed_or_closed = FALSE;
 
     rtcp_transport =
         webrtc_transceiver_get_rtcp_dtls_transport (rtp_trans)->transport;
@@ -828,8 +836,14 @@ _collate_ice_connection_states (GstWebRTCBin * webrtc)
       GST_TRACE_OBJECT (webrtc, "transceiver %p RTCP state 0x%x", rtp_trans,
           ice_state);
       any_state |= (1 << ice_state);
-      if (ice_state != STATE (CLOSED))
-        all_closed = FALSE;
+
+      if (ice_state != STATE (NEW) && ice_state != STATE (CLOSED))
+        all_new_or_closed = FALSE;
+      if (ice_state != STATE (COMPLETED) && ice_state != STATE (CLOSED))
+        all_completed_or_closed = FALSE;
+      if (ice_state != STATE (CONNECTED) && ice_state != STATE (COMPLETED)
+          && ice_state != STATE (CLOSED))
+        all_connected_completed_or_closed = FALSE;
     }
   }
 
@@ -839,41 +853,34 @@ _collate_ice_connection_states (GstWebRTCBin * webrtc)
     GST_TRACE_OBJECT (webrtc, "returning closed");
     return STATE (CLOSED);
   }
-  /* Any of the RTCIceTransport s are in the failed state. */
+  /* Any of the RTCIceTransports are in the failed state. */
   if (any_state & (1 << STATE (FAILED))) {
     GST_TRACE_OBJECT (webrtc, "returning failed");
     return STATE (FAILED);
   }
-  /* Any of the RTCIceTransport s are in the disconnected state and
-   * none of them are in the failed state. */
+  /* Any of the RTCIceTransports are in the disconnected state. */
   if (any_state & (1 << STATE (DISCONNECTED))) {
     GST_TRACE_OBJECT (webrtc, "returning disconnected");
     return STATE (DISCONNECTED);
   }
-  /* Any of the RTCIceTransport's are in the checking state and none of them
-   * are in the failed or disconnected state. */
-  if (any_state & (1 << STATE (CHECKING))) {
-    GST_TRACE_OBJECT (webrtc, "returning checking");
-    return STATE (CHECKING);
-  }
-  /* Any of the RTCIceTransport s are in the new state and none of them are
-   * in the checking, failed or disconnected state, or all RTCIceTransport's
-   * are in the closed state. */
-  if ((any_state & (1 << STATE (NEW))) || all_closed) {
+  /* All of the RTCIceTransports are in the new or closed state, or there are
+   * no transports. */
+  if (all_new_or_closed || webrtc->priv->transceivers->len == 0) {
     GST_TRACE_OBJECT (webrtc, "returning new");
     return STATE (NEW);
   }
-  /* All RTCIceTransport s are in the connected, completed or closed state
-   * and at least one of them is in the connected state. */
-  if (any_state & (1 << STATE (CONNECTED) | 1 << STATE (COMPLETED) | 1 <<
-          STATE (CLOSED)) && any_state & (1 << STATE (CONNECTED))) {
-    GST_TRACE_OBJECT (webrtc, "returning connected");
-    return STATE (CONNECTED);
+  /* Any of the RTCIceTransports are in the checking or new state. */
+  if ((any_state & (1 << STATE (CHECKING))) || (any_state & (1 << STATE (NEW)))) {
+    GST_TRACE_OBJECT (webrtc, "returning checking");
+    return STATE (CHECKING);
   }
-  /* All RTCIceTransport s are in the completed or closed state and at least
-   * one of them is in the completed state. */
-  if (any_state & (1 << STATE (COMPLETED) | 1 << STATE (CLOSED))
-      && any_state & (1 << STATE (COMPLETED))) {
+  /* All RTCIceTransports are in the completed or closed state. */
+  if (all_completed_or_closed) {
+    GST_TRACE_OBJECT (webrtc, "returning completed");
+    return STATE (COMPLETED);
+  }
+  /* All RTCIceTransports are in the connected, completed or closed state. */
+  if (all_connected_completed_or_closed) {
     GST_TRACE_OBJECT (webrtc, "returning connected");
     return STATE (CONNECTED);
   }
