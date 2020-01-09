@@ -975,6 +975,12 @@ _collate_peer_connection_states (GstWebRTCBin * webrtc)
 #define DTLS_STATE(v) GST_WEBRTC_DTLS_TRANSPORT_STATE_ ## v
   GstWebRTCICEConnectionState any_ice_state = 0;
   GstWebRTCDTLSTransportState any_dtls_state = 0;
+  gboolean ice_all_new_or_closed = TRUE;
+  gboolean dtls_all_new_or_closed = TRUE;
+  gboolean ice_all_new_connecting_or_checking = TRUE;
+  gboolean dtls_all_new_connecting_or_checking = TRUE;
+  gboolean ice_all_connected_completed_or_closed = TRUE;
+  gboolean dtls_all_connected_completed_or_closed = TRUE;
   int i;
 
   for (i = 0; i < webrtc->priv->transceivers->len; i++) {
@@ -984,7 +990,7 @@ _collate_peer_connection_states (GstWebRTCBin * webrtc)
     WebRTCTransceiver *trans = WEBRTC_TRANSCEIVER (rtp_trans);
     TransportStream *stream = trans->stream;
     GstWebRTCDTLSTransport *transport, *rtcp_transport;
-    GstWebRTCICEGatheringState ice_state;
+    GstWebRTCICEConnectionState ice_state;
     GstWebRTCDTLSTransportState dtls_state;
     gboolean rtcp_mux = FALSE;
 
@@ -1005,10 +1011,27 @@ _collate_peer_connection_states (GstWebRTCBin * webrtc)
     GST_TRACE_OBJECT (webrtc, "transceiver %p DTLS state: 0x%x", rtp_trans,
         dtls_state);
     any_dtls_state |= (1 << dtls_state);
+
+    if (dtls_state != DTLS_STATE (NEW) && dtls_state != DTLS_STATE (CLOSED))
+      dtls_all_new_or_closed = FALSE;
+    if (dtls_state != DTLS_STATE (NEW) && dtls_state != DTLS_STATE (CONNECTING))
+      dtls_all_new_connecting_or_checking = FALSE;
+    if (dtls_state != DTLS_STATE (CONNECTED)
+        && dtls_state != DTLS_STATE (CLOSED))
+      dtls_all_connected_completed_or_closed = FALSE;
+
     g_object_get (transport->transport, "state", &ice_state, NULL);
     GST_TRACE_OBJECT (webrtc, "transceiver %p ICE state: 0x%x", rtp_trans,
         ice_state);
     any_ice_state |= (1 << ice_state);
+
+    if (ice_state != ICE_STATE (NEW) && ice_state != ICE_STATE (CLOSED))
+      ice_all_new_or_closed = FALSE;
+    if (ice_state != ICE_STATE (NEW) && ice_state != ICE_STATE (CHECKING))
+      ice_all_new_connecting_or_checking = FALSE;
+    if (ice_state != ICE_STATE (CONNECTED) && ice_state != ICE_STATE (COMPLETED)
+        && ice_state != ICE_STATE (CLOSED))
+      ice_all_connected_completed_or_closed = FALSE;
 
     rtcp_transport = webrtc_transceiver_get_rtcp_dtls_transport (rtp_trans);
 
@@ -1017,10 +1040,29 @@ _collate_peer_connection_states (GstWebRTCBin * webrtc)
       GST_TRACE_OBJECT (webrtc, "transceiver %p RTCP DTLS state: 0x%x",
           rtp_trans, dtls_state);
       any_dtls_state |= (1 << dtls_state);
+
+      if (dtls_state != DTLS_STATE (NEW) && dtls_state != DTLS_STATE (CLOSED))
+        dtls_all_new_or_closed = FALSE;
+      if (dtls_state != DTLS_STATE (NEW)
+          && dtls_state != DTLS_STATE (CONNECTING))
+        dtls_all_new_connecting_or_checking = FALSE;
+      if (dtls_state != DTLS_STATE (CONNECTED)
+          && dtls_state != DTLS_STATE (CLOSED))
+        dtls_all_connected_completed_or_closed = FALSE;
+
       g_object_get (rtcp_transport->transport, "state", &ice_state, NULL);
       GST_TRACE_OBJECT (webrtc, "transceiver %p RTCP ICE state: 0x%x",
           rtp_trans, ice_state);
       any_ice_state |= (1 << ice_state);
+
+      if (ice_state != ICE_STATE (NEW) && ice_state != ICE_STATE (CLOSED))
+        ice_all_new_or_closed = FALSE;
+      if (ice_state != ICE_STATE (NEW) && ice_state != ICE_STATE (CHECKING))
+        ice_all_new_connecting_or_checking = FALSE;
+      if (ice_state != ICE_STATE (CONNECTED)
+          && ice_state != ICE_STATE (COMPLETED)
+          && ice_state != ICE_STATE (CLOSED))
+        ice_all_connected_completed_or_closed = FALSE;
     }
   }
 
@@ -1043,53 +1085,34 @@ _collate_peer_connection_states (GstWebRTCBin * webrtc)
     return STATE (FAILED);
   }
 
-  /* Any of the RTCIceTransport's or RTCDtlsTransport's are in the connecting
-   * or checking state and none of them is in the failed state. */
-  if (any_ice_state & (1 << ICE_STATE (CHECKING))) {
-    GST_TRACE_OBJECT (webrtc, "returning connecting");
-    return STATE (CONNECTING);
-  }
-  if (any_dtls_state & (1 << DTLS_STATE (CONNECTING))) {
-    GST_TRACE_OBJECT (webrtc, "returning connecting");
-    return STATE (CONNECTING);
-  }
-
   /* Any of the RTCIceTransport's or RTCDtlsTransport's are in the disconnected
-   * state and none of them are in the failed or connecting or checking state. */
+   * state. */
   if (any_ice_state & (1 << ICE_STATE (DISCONNECTED))) {
     GST_TRACE_OBJECT (webrtc, "returning disconnected");
     return STATE (DISCONNECTED);
   }
 
-  /* All RTCIceTransport's and RTCDtlsTransport's are in the connected,
-   * completed or closed state and at least of them is in the connected or
-   * completed state. */
-  if (!(any_ice_state & ~(1 << ICE_STATE (CONNECTED) | 1 <<
-              ICE_STATE (COMPLETED) | 1 << ICE_STATE (CLOSED)))
-      && !(any_dtls_state & ~(1 << DTLS_STATE (CONNECTED) | 1 <<
-              DTLS_STATE (CLOSED)))
-      && (any_ice_state & (1 << ICE_STATE (CONNECTED) | 1 <<
-              ICE_STATE (COMPLETED))
-          || any_dtls_state & (1 << DTLS_STATE (CONNECTED)))) {
-    GST_TRACE_OBJECT (webrtc, "returning connected");
-    return STATE (CONNECTED);
+  /* All RTCIceTransports and RTCDtlsTransports are in the new or closed
+   * state, or there are no transports. */
+  if ((dtls_all_new_or_closed && ice_all_new_or_closed)
+      || webrtc->priv->transceivers->len == 0) {
+    GST_TRACE_OBJECT (webrtc, "returning new");
+    return STATE (NEW);
   }
 
-  /* Any of the RTCIceTransport's or RTCDtlsTransport's are in the new state
-   * and none of the transports are in the connecting, checking, failed or
-   * disconnected state, or all transports are in the closed state. */
-  if (!(any_ice_state & ~(1 << ICE_STATE (CLOSED)))) {
-    GST_TRACE_OBJECT (webrtc, "returning new");
-    return STATE (NEW);
+  /* All RTCIceTransports and RTCDtlsTransports are in the new, connecting
+   * or checking state. */
+  if (dtls_all_new_connecting_or_checking && ice_all_new_connecting_or_checking) {
+    GST_TRACE_OBJECT (webrtc, "returning connecting");
+    return STATE (CONNECTING);
   }
-  if ((any_ice_state & (1 << ICE_STATE (NEW))
-          || any_dtls_state & (1 << DTLS_STATE (NEW)))
-      && !(any_ice_state & (1 << ICE_STATE (CHECKING) | 1 << ICE_STATE (FAILED)
-              | (1 << ICE_STATE (DISCONNECTED))))
-      && !(any_dtls_state & (1 << DTLS_STATE (CONNECTING) | 1 <<
-              DTLS_STATE (FAILED)))) {
-    GST_TRACE_OBJECT (webrtc, "returning new");
-    return STATE (NEW);
+
+  /* All RTCIceTransports and RTCDtlsTransports are in the connected,
+   * completed or closed state. */
+  if (dtls_all_connected_completed_or_closed
+      && ice_all_connected_completed_or_closed) {
+    GST_TRACE_OBJECT (webrtc, "returning connected");
+    return STATE (CONNECTED);
   }
 
   GST_FIXME_OBJECT (webrtc, "Undefined situation detected, returning new");
