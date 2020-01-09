@@ -877,7 +877,7 @@ gst_timecodestamper_query (GstBaseTransform * trans,
       g_mutex_lock (&timecodestamper->mutex);
       if (res && timecodestamper->vinfo.fps_n && timecodestamper->vinfo.fps_d) {
         gst_query_parse_latency (query, &live, &min_latency, &max_latency);
-        if (live) {
+        if (live && timecodestamper->ltcpad) {
           /* Introduce additional 8 frames of latency for LTC processing as
            * the LTC library seems to usually lag behind 1-6 frames with the
            * values reported back to us. */
@@ -1171,7 +1171,7 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
 
   /* Update LTC-based timecode as needed */
 #if HAVE_LTC
-  {
+  if (timecodestamper->ltcpad) {
     GstClockTime frame_duration;
     gchar *tc_str;
     LTCFrameExt ltc_frame;
@@ -1516,6 +1516,14 @@ gst_timecodestamper_request_new_pad (GstElement * element,
 
   GST_OBJECT_LOCK (timecodestamper);
   if (timecodestamper->ltcpad) {
+    GST_OBJECT_UNLOCK (timecodestamper);
+    return NULL;
+  }
+
+  if (GST_STATE (timecodestamper) > GST_STATE_READY ||
+      GST_STATE_TARGET (timecodestamper) > GST_STATE_READY) {
+    GST_ERROR_OBJECT (timecodestamper,
+        "LTC audio pad can only be requested in NULL or READY state");
     GST_OBJECT_UNLOCK (timecodestamper);
     return NULL;
   }
