@@ -560,6 +560,7 @@ setup_convert_info_yuv_to_rgb (GstD3D11ColorConverter * self,
       break;
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_P010_10LE:
+    case GST_VIDEO_FORMAT_P016_LE:
       info->ps_body[0] = g_strdup_printf (templ_SEMI_PLANAR_to_RGB_BODY);
       break;
     default:
@@ -586,6 +587,7 @@ setup_convert_info_rgb_to_yuv (GstD3D11ColorConverter * self,
       break;
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_P010_10LE:
+    case GST_VIDEO_FORMAT_P016_LE:
       info->ps_body[0] = g_strdup_printf (templ_RGB_to_LUMA_BODY, 1);
       info->ps_body[1] = g_strdup_printf (templ_RGB_to_SEMI_PLANAR_CHROMA_BODY);
       break;
@@ -1265,6 +1267,7 @@ gst_d3d11_color_converter_update_rect (GstD3D11ColorConverter * converter,
   switch (GST_VIDEO_INFO_FORMAT (&converter->out_info)) {
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_P010_10LE:
+    case GST_VIDEO_FORMAT_P016_LE:
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_I420_10LE:{
       gint i;

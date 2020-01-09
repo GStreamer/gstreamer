@@ -33,6 +33,7 @@ GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_format_debug);
  * DXGI_FORMAT_AYUV
  * DXGI_FORMAT_NV12
  * DXGI_FORMAT_P010
+ * DXGI_FORMAT_P016
  * ...
  */
 static const GstD3D11Format legacy_d3d11_formats[] = {
@@ -52,6 +53,8 @@ static const GstD3D11Format legacy_d3d11_formats[] = {
   {GST_VIDEO_FORMAT_NV12, DXGI_FORMAT_UNKNOWN,
       {DXGI_FORMAT_R8_UNORM, DXGI_FORMAT_R8G8_UNORM}},
   {GST_VIDEO_FORMAT_P010_10LE, DXGI_FORMAT_UNKNOWN,
+      {DXGI_FORMAT_R16_UNORM, DXGI_FORMAT_R16G16_UNORM}},
+  {GST_VIDEO_FORMAT_P016_LE, DXGI_FORMAT_UNKNOWN,
       {DXGI_FORMAT_R16_UNORM, DXGI_FORMAT_R16G16_UNORM}},
 
   /* YUV planner */
@@ -81,6 +84,8 @@ static const GstD3D11Format d3d11_formats[] = {
   {GST_VIDEO_FORMAT_NV12, DXGI_FORMAT_NV12,
       {DXGI_FORMAT_R8_UNORM, DXGI_FORMAT_R8G8_UNORM}},
   {GST_VIDEO_FORMAT_P010_10LE, DXGI_FORMAT_P010,
+      {DXGI_FORMAT_R16_UNORM, DXGI_FORMAT_R16G16_UNORM}},
+  {GST_VIDEO_FORMAT_P016_LE, DXGI_FORMAT_P016,
       {DXGI_FORMAT_R16_UNORM, DXGI_FORMAT_R16G16_UNORM}},
 
   /* YUV planner */
@@ -145,6 +150,7 @@ gst_d3d11_dxgi_format_n_planes (DXGI_FORMAT format)
       return 1;
     case DXGI_FORMAT_NV12:
     case DXGI_FORMAT_P010:
+    case DXGI_FORMAT_P016:
       return 2;
     default:
       break;
@@ -175,6 +181,7 @@ gst_d3d11_dxgi_format_get_size (DXGI_FORMAT format, guint width, guint height,
       break;
     case DXGI_FORMAT_NV12:
     case DXGI_FORMAT_P010:
+    case DXGI_FORMAT_P016:
       offset[0] = 0;
       stride[0] = pitch;
       offset[1] = offset[0] + stride[0] * height;
