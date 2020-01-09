@@ -1367,7 +1367,7 @@ init_devices (gpointer data)
 
   iterator = CreateDeckLinkIteratorInstance ();
   if (iterator == NULL) {
-    GST_ERROR ("no driver");
+    GST_DEBUG ("no driver");
     return NULL;
   }
 

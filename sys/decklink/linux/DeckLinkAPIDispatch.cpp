@@ -58,7 +58,10 @@ static void	InitDeckLinkAPI (void)
 	libraryHandle = dlopen(kDeckLinkAPI_Name, RTLD_NOW|RTLD_GLOBAL);
 	if (!libraryHandle)
 	{
-		fprintf(stderr, "%s\n", dlerror());
+                /* As we install this plugin regardless if there is a
+                 * proprietary library present or not, let's stay silent
+                 * to avoid poluting the logs */
+		// fprintf(stderr, "%s\n", dlerror());
 		return;
 	}
 	
