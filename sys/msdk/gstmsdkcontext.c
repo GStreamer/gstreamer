@@ -349,6 +349,22 @@ _find_response (gconstpointer resp, gconstpointer comp_resp)
   return cached_resp ? cached_resp->response.mids != _resp->mids : -1;
 }
 
+static inline gboolean
+_requested_frame_size_is_equal_or_lower (mfxFrameAllocRequest * _req,
+    GstMsdkAllocResponse * cached_resp)
+{
+  if (((_req->Type & MFX_MEMTYPE_EXPORT_FRAME) &&
+          _req->Info.Width == cached_resp->request.Info.Width &&
+          _req->Info.Height == cached_resp->request.Info.Height) ||
+      (!(_req->Type & MFX_MEMTYPE_EXPORT_FRAME) &&
+          _req->Info.Width <= cached_resp->request.Info.Width &&
+          _req->Info.Height <= cached_resp->request.Info.Height))
+
+    return TRUE;
+
+  return FALSE;
+}
+
 static gint
 _find_request (gconstpointer resp, gconstpointer req)
 {
@@ -356,12 +372,10 @@ _find_request (gconstpointer resp, gconstpointer req)
   mfxFrameAllocRequest *_req = (mfxFrameAllocRequest *) req;
 
   /* Confirm if it's under the size of the cached response */
-  if (_req->Info.Width <= cached_resp->request.Info.Width &&
-      _req->Info.Height <= cached_resp->request.Info.Height &&
-      _req->NumFrameSuggested <= cached_resp->request.NumFrameSuggested) {
+  if (_req->NumFrameSuggested <= cached_resp->request.NumFrameSuggested &&
+      _requested_frame_size_is_equal_or_lower (_req, cached_resp))
     return _req->Type & cached_resp->
         request.Type & MFX_MEMTYPE_FROM_DECODE ? 0 : -1;
-  }
 
   return -1;
 }
