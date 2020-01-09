@@ -798,10 +798,15 @@ _collate_ice_connection_states (GstWebRTCBin * webrtc)
     GstWebRTCICEConnectionState ice_state;
     gboolean rtcp_mux = FALSE;
 
-    if (rtp_trans->stopped)
+    if (rtp_trans->stopped) {
+      GST_TRACE_OBJECT (webrtc, "transceiver %p stopped", rtp_trans);
       continue;
-    if (!rtp_trans->mid)
+    }
+
+    if (!rtp_trans->mid) {
+      GST_TRACE_OBJECT (webrtc, "transceiver %p has no mid", rtp_trans);
       continue;
+    }
 
     g_object_get (stream, "rtcp-mux", &rtcp_mux, NULL);
 
@@ -809,6 +814,8 @@ _collate_ice_connection_states (GstWebRTCBin * webrtc)
 
     /* get transport state */
     g_object_get (transport, "state", &ice_state, NULL);
+    GST_TRACE_OBJECT (webrtc, "transceiver %p state 0x%x", rtp_trans,
+        ice_state);
     any_state |= (1 << ice_state);
     if (ice_state != STATE (CLOSED))
       all_closed = FALSE;
@@ -818,6 +825,8 @@ _collate_ice_connection_states (GstWebRTCBin * webrtc)
 
     if (!rtcp_mux && rtcp_transport && transport != rtcp_transport) {
       g_object_get (rtcp_transport, "state", &ice_state, NULL);
+      GST_TRACE_OBJECT (webrtc, "transceiver %p RTCP state 0x%x", rtp_trans,
+          ice_state);
       any_state |= (1 << ice_state);
       if (ice_state != STATE (CLOSED))
         all_closed = FALSE;
@@ -893,10 +902,15 @@ _collate_ice_gathering_states (GstWebRTCBin * webrtc)
     GstWebRTCICEGatheringState ice_state;
     gboolean rtcp_mux = FALSE;
 
-    if (rtp_trans->stopped)
+    if (rtp_trans->stopped) {
+      GST_TRACE_OBJECT (webrtc, "transceiver %p stopped", rtp_trans);
       continue;
-    if (!rtp_trans->mid)
+    }
+
+    if (!rtp_trans->mid) {
+      GST_TRACE_OBJECT (webrtc, "transceiver %p has no mid", rtp_trans);
       continue;
+    }
 
     g_object_get (stream, "rtcp-mux", &rtcp_mux, NULL);
 
@@ -904,6 +918,8 @@ _collate_ice_gathering_states (GstWebRTCBin * webrtc)
 
     /* get gathering state */
     g_object_get (transport, "gathering-state", &ice_state, NULL);
+    GST_TRACE_OBJECT (webrtc, "transceiver %p gathering state: 0x%x", rtp_trans,
+        ice_state);
     any_state |= (1 << ice_state);
     if (ice_state != STATE (COMPLETE))
       all_completed = FALSE;
@@ -913,6 +929,8 @@ _collate_ice_gathering_states (GstWebRTCBin * webrtc)
 
     if (!rtcp_mux && rtcp_transport && rtcp_transport != transport) {
       g_object_get (rtcp_transport, "gathering-state", &ice_state, NULL);
+      GST_TRACE_OBJECT (webrtc, "transceiver %p RTCP gathering state: 0x%x",
+          rtp_trans, ice_state);
       any_state |= (1 << ice_state);
       if (ice_state != STATE (COMPLETE))
         all_completed = FALSE;
@@ -962,26 +980,38 @@ _collate_peer_connection_states (GstWebRTCBin * webrtc)
     GstWebRTCDTLSTransportState dtls_state;
     gboolean rtcp_mux = FALSE;
 
-    if (rtp_trans->stopped)
+    if (rtp_trans->stopped) {
+      GST_TRACE_OBJECT (webrtc, "transceiver %p stopped", rtp_trans);
       continue;
-    if (!rtp_trans->mid)
+    }
+    if (!rtp_trans->mid) {
+      GST_TRACE_OBJECT (webrtc, "transceiver %p has no mid", rtp_trans);
       continue;
+    }
 
     g_object_get (stream, "rtcp-mux", &rtcp_mux, NULL);
     transport = webrtc_transceiver_get_dtls_transport (rtp_trans);
 
     /* get transport state */
     g_object_get (transport, "state", &dtls_state, NULL);
+    GST_TRACE_OBJECT (webrtc, "transceiver %p DTLS state: 0x%x", rtp_trans,
+        dtls_state);
     any_dtls_state |= (1 << dtls_state);
     g_object_get (transport->transport, "state", &ice_state, NULL);
+    GST_TRACE_OBJECT (webrtc, "transceiver %p ICE state: 0x%x", rtp_trans,
+        ice_state);
     any_ice_state |= (1 << ice_state);
 
     rtcp_transport = webrtc_transceiver_get_rtcp_dtls_transport (rtp_trans);
 
     if (!rtcp_mux && rtcp_transport && rtcp_transport != transport) {
       g_object_get (rtcp_transport, "state", &dtls_state, NULL);
+      GST_TRACE_OBJECT (webrtc, "transceiver %p RTCP DTLS state: 0x%x",
+          rtp_trans, dtls_state);
       any_dtls_state |= (1 << dtls_state);
       g_object_get (rtcp_transport->transport, "state", &ice_state, NULL);
+      GST_TRACE_OBJECT (webrtc, "transceiver %p RTCP ICE state: 0x%x",
+          rtp_trans, ice_state);
       any_ice_state |= (1 << ice_state);
     }
   }
