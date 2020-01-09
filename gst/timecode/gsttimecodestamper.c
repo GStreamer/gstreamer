@@ -878,13 +878,18 @@ gst_timecodestamper_query (GstBaseTransform * trans,
       if (res && timecodestamper->vinfo.fps_n && timecodestamper->vinfo.fps_d) {
         gst_query_parse_latency (query, &live, &min_latency, &max_latency);
         if (live) {
-          latency =
+          /* Introduce additional 8 frames of latency for LTC processing as
+           * the LTC library seems to usually lag behind 1-6 frames with the
+           * values reported back to us. */
+          /* TODO: Figure out how to calculate this numbers */
+          latency = 8 *
               gst_util_uint64_scale_int_ceil (GST_SECOND,
               timecodestamper->vinfo.fps_d, timecodestamper->vinfo.fps_n);
           min_latency += latency;
           if (max_latency != GST_CLOCK_TIME_NONE)
             max_latency += latency;
           timecodestamper->latency = min_latency;
+          gst_query_set_latency (query, live, min_latency, max_latency);
         } else {
           timecodestamper->latency = 0;
         }
@@ -1179,9 +1184,11 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
 
     timecodestamper->video_current_running_time = running_time;
 
-    /* Wait until the the audio is at least 2 frame durations ahead of the
-     * video to allow for some slack, or the video pad is flushing or the
-     * LTC pad is EOS. */
+    /* Wait to compensate for the latency we introduce and to allow the LTC
+     * audio to provide enough audio to extract timecodes, or until the video
+     * pad is flushing or the LTC pad is EOS.
+     * In non-live mode we introduce 4 frames of latency compared to the LTC
+     * audio, see LATENCY query handling for details. */
     if (timecodestamper->video_live) {
       GstClock *clock =
           gst_element_get_clock (GST_ELEMENT_CAST (timecodestamper));
@@ -1213,7 +1220,7 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
     } else {
       while ((timecodestamper->ltc_current_running_time == GST_CLOCK_TIME_NONE
               || timecodestamper->ltc_current_running_time <
-              running_time + 2 * frame_duration)
+              running_time + 8 * frame_duration)
           && !timecodestamper->video_flushing && !timecodestamper->ltc_eos) {
         GST_TRACE_OBJECT (timecodestamper,
             "Waiting for LTC audio to advance, EOS or flushing");
