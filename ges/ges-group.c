@@ -20,16 +20,43 @@
 /**
  * SECTION:gesgroup
  * @title: GESGroup
- * @short_description: Class that permits to group GESClip-s in a timeline,
- * letting the user manage it a single GESTimelineElement
+ * @short_description: Class for a collection of #GESContainer-s within
+ * a single timeline.
  *
- * A #GESGroup is an object which controls one or more
- * #GESClips in one or more #GESLayer(s).
+ * A #GESGroup controls one or more #GESContainer-s (usually #GESClip-s,
+ * but it can also control other #GESGroup-s). Its children must share
+ * the same #GESTimeline, but can otherwise lie in separate #GESLayer-s
+ * and have different timings.
  *
- * To instanciate a group, you should use the ges_container_group method,
- * this will be responsible for deciding what subclass of #GESContainer
- * should be instaciated to group the various #GESTimelineElement passed
- * in parametter.
+ * To initialise a group, you may want to use ges_container_group(),
+ * and similarly use ges_container_ungroup() to dispose of it.
+ *
+ * A group will maintain the relative #GESTimelineElement:start times of
+ * its children, as well as their relative layer #GESLayer:priority.
+ * Therefore, if one of its children has its #GESTimelineElement:start
+ * set, all other children will have their #GESTimelineElement:start
+ * shifted by the same amount. Similarly, if one of its children moves to
+ * a new layer, the other children will also change layers to maintain the
+ * difference in their layer priorities. For example, if a child moves
+ * from a layer with #GESLayer:priority 1 to a layer with priority 3, then
+ * another child that was in a layer with priority 0 will move to the
+ * layer with priority 2.
+ *
+ * The #GESGroup:start of a group refers to the earliest start
+ * time of its children. If the group's #GESGroup:start is set, all the
+ * children will be shifted equally such that the earliest start time
+ * will match the set value. The #GESGroup:duration of a group is the
+ * difference between the earliest start time and latest end time of its
+ * children. If the group's #GESGroup:duration is increased, the children
+ * whose end time matches the end of the group will be extended
+ * accordingly. If it is decreased, then any child whose end time exceeds
+ * the new end time will also have their duration decreased accordingly.
+ *
+ * A group may span several layers, but for methods such as
+ * ges_timeline_element_get_layer_priority() and
+ * ges_timeline_element_edit() a group is considered to have a layer
+ * priority that is the highest #GESLayer:priority (numerically, the
+ * smallest) of all the layers it spans.
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -107,6 +134,9 @@ _update_our_values (GESGroup * group)
       gint32 prio = _PRIORITY (child), height = GES_CONTAINER_HEIGHT (child);
 
       min_layer_prio = MIN (prio, min_layer_prio);
+      /* FIXME: the height of the child = (max-priority - min-priority + 1)
+       * the priority of the child = min-priority
+       * so prio + height = max-priority + 1 */
       max_layer_prio = MAX ((prio + height), max_layer_prio);
     }
   }
@@ -125,6 +155,10 @@ _update_our_values (GESGroup * group)
     }
   }
 
+  /* FIXME: max_layer_prio not used elsewhere
+   * We could use it to inform our parent group when our maximum has
+   * changed (which we don't currently do, to allow it to change its
+   * height) */
   group->priv->max_layer_prio = max_layer_prio;
   _ges_container_set_height (GES_CONTAINER (group),
       max_layer_prio - min_layer_prio + 1);
@@ -147,6 +181,8 @@ _child_priority_changed_cb (GESLayer * layer,
   if (layer_prio + offset == _PRIORITY (container))
     return;
 
+  /* FIXME: we shouldn't be moving our children to a new layer when a
+   * layer changes its priority in a timeline */
   container->initiated_move = clip;
   _set_priority0 (GES_TIMELINE_ELEMENT (container), layer_prio + offset);
   container->initiated_move = NULL;
@@ -290,6 +326,8 @@ _set_priority (GESTimelineElement * element, guint32 priority)
 
     return FALSE;
   }
+
+  /* FIXME: why are we not shifting ->max_layer_prio? */
 
   for (tmp = GES_CONTAINER_CHILDREN (element); tmp; tmp = tmp->next) {
     GESTimelineElement *child = tmp->data;
@@ -445,6 +483,8 @@ _child_added (GESContainer * group, GESTimelineElement * child)
     timeline_emit_group_added (GES_TIMELINE_ELEMENT_TIMELINE (child),
         GES_GROUP (group));
   }
+  /* FIXME: we should otherwise check that the child is part of the same
+   * timeline */
 
   children = GES_CONTAINER_CHILDREN (group);
 
@@ -719,7 +759,9 @@ ges_group_class_init (GESGroupClass * klass)
   /**
    * GESGroup:start:
    *
-   * The position of the object in its container (in nanoseconds).
+   * An overwrite of the #GESTimelineElement:start property. For a
+   * #GESGroup, this is the earliest #GESTimelineElement:start time
+   * amongst its children.
    */
   properties[PROP_START] = g_param_spec_uint64 ("start", "Start",
       "The position in the container", 0, G_MAXUINT64, 0,
@@ -728,11 +770,8 @@ ges_group_class_init (GESGroupClass * klass)
   /**
    * GESGroup:in-point:
    *
-   * The in-point at which this #GESGroup will start outputting data
-   * from its contents (in nanoseconds).
-   *
-   * Ex : an in-point of 5 seconds means that the first outputted buffer will
-   * be the one located 5 seconds in the controlled resource.
+   * An overwrite of the #GESTimelineElement:in-point property. This has
+   * no meaning for a group and should not be set.
    */
   properties[PROP_INPOINT] =
       g_param_spec_uint64 ("in-point", "In-point", "The in-point", 0,
@@ -741,7 +780,11 @@ ges_group_class_init (GESGroupClass * klass)
   /**
    * GESGroup:duration:
    *
-   * The duration (in nanoseconds) which will be used in the container
+   * An overwrite of the #GESTimelineElement:duration property. For a
+   * #GESGroup, this is the difference between the earliest
+   * #GESTimelineElement:start time and the latest end time (given by
+   * #GESTimelineElement:start + #GESTimelineElement:duration) amongst
+   * its children.
    */
   properties[PROP_DURATION] =
       g_param_spec_uint64 ("duration", "Duration", "The duration to use", 0,
@@ -751,7 +794,8 @@ ges_group_class_init (GESGroupClass * klass)
   /**
    * GESGroup:max-duration:
    *
-   * The maximum duration (in nanoseconds) of the #GESGroup.
+   * An overwrite of the #GESTimelineElement:max-duration property. This
+   * has no meaning for a group and should not be set.
    */
   properties[PROP_MAX_DURATION] =
       g_param_spec_uint64 ("max-duration", "Maximum duration",
@@ -759,9 +803,11 @@ ges_group_class_init (GESGroupClass * klass)
       G_PARAM_READWRITE | G_PARAM_CONSTRUCT | GES_PARAM_NO_SERIALIZATION);
 
   /**
-   * GESTGroup:priority:
+   * GESGroup:priority:
    *
-   * The priority of the object.
+   * An overwrite of the #GESTimelineElement:priority property.
+   * Setting #GESTimelineElement priorities is deprecated as all priority
+   * management is now done by GES itself.
    */
   properties[PROP_PRIORITY] = g_param_spec_uint ("priority", "Priority",
       "The priority of the object", 0, G_MAXUINT, 0,
@@ -794,9 +840,9 @@ ges_group_init (GESGroup * self)
 /**
  * ges_group_new:
  *
- * Created a new empty #GESGroup, if you want to group several container
- * together, it is recommanded to use the #ges_container_group method so the
- * proper subclass is selected.
+ * Created a new empty group. You may wish to use
+ * ges_container_group() instead, which can return a different
+ * #GESContainer subclass if possible.
  *
  * Returns: (transfer floating): The new empty group.
  */

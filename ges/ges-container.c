@@ -558,6 +558,8 @@ _child_start_changed_cb (GESTimelineElement * child,
           _START (container->children->data) : _START (container);
 
       if (start != _START (container)) {
+        /* FIXME: this is not the correct duration for a group, because
+         * the start may not be the earliest start */
         _DURATION (container) = _END (container) - start;
         _START (container) = start;
 
@@ -655,6 +657,9 @@ _child_duration_changed_cb (GESTimelineElement * child,
     case GES_CHILDREN_UPDATE:
       /* We update all the children calling our set_duration method */
       container->initiated_move = child;
+      /* FIXME: this is *not* the correct duration for a group!
+       * the ->set_duration method for GESGroup tries to hack around
+       * this by calling set_duration on itself to the actual value */
       _set_duration0 (element, _DURATION (child) + map->duration_offset);
       container->initiated_move = NULL;
       break;
