@@ -41,65 +41,56 @@ typedef struct _GESClipPrivate GESClipPrivate;
 
 /**
  * GESFillTrackElementFunc:
- * @clip: the #GESClip controlling the track elements
- * @track_element: the #GESTrackElement
- * @nleobj: the GNonLin object that needs to be filled.
+ * @clip: The #GESClip controlling the track elements
+ * @track_element: The #GESTrackElement
+ * @nleobj: The nleobject that needs to be filled
  *
- * A function that will be called when the GNonLin object of a corresponding
+ * A function that will be called when the nleobject of a corresponding
  * track element needs to be filled.
  *
  * The implementer of this function shall add the proper #GstElement to @nleobj
  * using gst_bin_add().
  *
- * Returns: TRUE if the implementer succesfully filled the @nleobj, else #FALSE.
+ * Deprecated: 1.18: This method type is no longer used.
+ *
+ * Returns: %TRUE if the implementer successfully filled the @nleobj.
  */
 typedef gboolean (*GESFillTrackElementFunc) (GESClip *clip, GESTrackElement *track_element,
                                              GstElement *nleobj);
 
 /**
  * GESCreateTrackElementFunc:
- * @clip: a #GESClip
- * @type: a #GESTrackType
+ * @clip: A #GESClip
+ * @type: A #GESTrackType to create a #GESTrackElement for
  *
- * Creates the 'primary' track element for this @clip.
+ * A method for creating the core #GESTrackElement of a clip, to be added
+ * to a #GESTrack of the given track type.
  *
- * Subclasses should implement this method if they only provide a
- * single #GESTrackElement per track.
+ * If a clip may produce several track elements per track type,
+ * #GESCreateTrackElementsFunc is more appropriate.
  *
- * If the subclass needs to create more than one #GESTrackElement for a
- * given track, then it should implement the 'create_track_elements'
- * method instead.
- *
- * The implementer of this function shall return the proper #GESTrackElement
- * that should be controlled by @clip for the given @track.
- *
- * The returned #GESTrackElement will be automatically added to the list
- * of objects controlled by the #GESClip.
- *
- * Returns: the #GESTrackElement to be used, or %NULL if it can't provide one
- * for the given @track.
+ * Returns: (transfer floating) (nullable): The #GESTrackElement created
+ * by @clip, or %NULL if @clip can not provide a track element for the
+ * given @type or an error occurred.
  */
 typedef GESTrackElement *(*GESCreateTrackElementFunc) (GESClip * clip, GESTrackType type);
 
 /**
  * GESCreateTrackElementsFunc:
- * @clip: a #GESClip
- * @type: a #GESTrackType
+ * @clip: A #GESClip
+ * @type: A #GESTrackType to create #GESTrackElement-s for
  *
- * Create all track elements this clip handles for this type of track.
+ * A method for creating the core #GESTrackElement-s of a clip, to be
+ * added to #GESTrack-s of the given track type.
  *
- * Subclasses should implement this method if they potentially need to
- * return more than one #GESTrackElement(s) for a given #GESTrack.
- *
- * Returns: %TRUE on success %FALSE on failure.
+ * Returns: (transfer container) (element-type GESTrackElement): A list of
+ * the #GESTrackElement-s created by @clip for the given @type, or %NULL
+ * if no track elements are created or an error occurred.
  */
-
 typedef GList * (*GESCreateTrackElementsFunc) (GESClip * clip, GESTrackType type);
 
 /**
  * GESClip:
- *
- * The #GESClip base class.
  */
 struct _GESClip
 {
@@ -114,11 +105,15 @@ struct _GESClip
 
 /**
  * GESClipClass:
- * @create_track_element: method to create a single #GESTrackElement for a given #GESTrack.
- * @create_track_elements: method to create multiple #GESTrackElements for a
- * #GESTrack.
- *
- * Subclasses can override the @create_track_element.
+ * @create_track_element: Method to create the core #GESTrackElement of
+ * a clip of this class. If a clip of this class may create several track
+ * elements per track type, this should be left as %NULL, and
+ * create_track_elements() should be used instead. Otherwise, you should
+ * implement this class method and leave create_track_elements() as the
+ * default implementation
+ * @create_track_elements: Method to create the (multiple) core
+ * #GESTrackElement-s of a clip of this class. If create_track_element()
+ * is implemented, this should be kept as the default implementation
  */
 struct _GESClipClass
 {

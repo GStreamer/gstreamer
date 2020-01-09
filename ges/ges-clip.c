@@ -23,13 +23,48 @@
 /**
  * SECTION:gesclip
  * @title: GESClip
- * @short_description: Base Class for objects in a GESLayer
+ * @short_description: Base class for elements that occupy a single
+ * #GESLayer and maintain equal timings of their children
  *
- * A #GESClip is a 'natural' object which controls one or more
- * #GESTrackElement(s) in one or more #GESTrack(s).
+ * #GESClip-s are the core objects of a #GESLayer. Each clip may exist in
+ * a single layer but may control several #GESTrackElement-s that span
+ * several #GESTrack-s. A clip will ensure that all its children share the
+ * same #GESTimelineElement:start and #GESTimelineElement:duration in
+ * their tracks, which will match the #GESTimelineElement:start and
+ * #GESTimelineElement:duration of the clip itself. Therefore, changing
+ * the timing of the clip will change the timing of the children, and a
+ * change in the timing of a child will change the timing of the clip and
+ * subsequently all its siblings. As such, a clip can be treated as a
+ * singular object in its layer.
  *
- * Keeps a reference to the #GESTrackElement(s) it created and
- * sets/updates their properties.
+ * For most uses of a #GESTimeline, it is often sufficient to only
+ * interact with #GESClip-s directly, which will take care of creating and
+ * organising the elements of the timeline's tracks.
+ *
+ * Most subclassed clips will be associated with some *core*
+ * #GESTrackElement-s. When such a clip is added to a layer in a timeline,
+ * it will create these children and they will be added to the timeline's
+ * tracks. You can connect to the #GESContainer::child-added signal to be
+ * notified of their creation. If a clip will produce several core
+ * elements of the same #GESTrackElement:track-type but they are destined
+ * for separate tracks, you should connect to the timeline's
+ * #GESTimeline::select-tracks-for-object signal to coordinate which
+ * tracks each element should land in.
+ *
+ * The #GESTimelineElement:in-point of the clip will control the
+ * #GESTimelineElement:in-point of these core elements to be the same
+ * value.
+ *
+ * ## Effects
+ *
+ * For #GESSourceClip-s, you may wish to add additional track elements to
+ * the clip in the form of #GESEffect-s. These can be added to the source
+ * clip using ges_container_add(), which will take care of adding the
+ * effect to the timeline's tracks. The new effect will be placed between
+ * the clip's core track elements and its other effects. As such, the
+ * newly added effect will be applied to any source data **before** the
+ * other existing effects. You can change the ordering of effects using
+ * ges_clip_set_top_effect_index().
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -161,6 +196,9 @@ _set_inpoint (GESTimelineElement * element, GstClockTime inpoint)
   for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
     GESTimelineElement *child = (GESTimelineElement *) tmp->data;
 
+    /* FIXME: we should allow the inpoint to be different for children
+     * that are *not* the core track elements of the clip. E.g. if we
+     * add a GESEffect to a clip, we should not be editing its inpoint */
     if (child != container->initiated_move)
       _set_inpoint0 (child, inpoint);
   }
@@ -333,6 +371,9 @@ _add_child (GESContainer * container, GESTimelineElement * element)
    * making sure the container ignore notifies from the child */
   container->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
   _set_start0 (element, GES_TIMELINE_ELEMENT_START (container));
+  /* FIXME: we should allow the inpoint to be different for children
+   * that are *not* the core track elements of the clip. E.g. if we
+   * add a GESEffect to a clip, we should not be editing its inpoint */
   _set_inpoint0 (element, GES_TIMELINE_ELEMENT_INPOINT (container));
   _set_duration0 (element, GES_TIMELINE_ELEMENT_DURATION (container));
   container->children_control_mode = GES_CHILDREN_UPDATE;
@@ -517,6 +558,9 @@ _group (GList * containers)
         i++;
       }
     } else {
+      /* FIXME: we should allow the inpoint to be different if not a
+       * core track element of the clip.
+       * E.g. a GESEffect on a GESUriClip */
       if (start != _START (tmpcontainer) ||
           inpoint != _INPOINT (tmpcontainer) ||
           duration != _DURATION (tmpcontainer) || clip->priv->layer != layer) {
@@ -763,10 +807,13 @@ ges_clip_class_init (GESClipClass * klass)
   /**
    * GESClip:supported-formats:
    *
-   * The formats supported by the clip.
+   * The #GESTrackType-s that the clip supports, which it can create
+   * #GESTrackElement-s for. Note that this can be a combination of
+   * #GESTrackType flags to indicate support for several
+   * #GESTrackElement:track-type elements.
    */
   properties[PROP_SUPPORTED_FORMATS] = g_param_spec_flags ("supported-formats",
-      "Supported formats", "Formats supported by the file",
+      "Supported formats", "Formats supported by the clip",
       GES_TYPE_TRACK_TYPE, GES_TRACK_TYPE_AUDIO | GES_TRACK_TYPE_VIDEO,
       G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
 
@@ -776,9 +823,11 @@ ges_clip_class_init (GESClipClass * klass)
   /**
    * GESClip:layer:
    *
-   * The GESLayer where this clip is being used. If you want to connect to its
-   * notify signal you should connect to it with g_signal_connect_after as the
-   * signal emission can be stop in the first fase.
+   * The layer this clip lies in.
+   *
+   * If you want to connect to this property's #GObject::notify signal,
+   * you should connect to it with g_signal_connect_after() since the
+   * signal emission may be stopped internally.
    */
   properties[PROP_LAYER] = g_param_spec_object ("layer", "Layer",
       "The GESLayer where this clip is being used.",
@@ -820,15 +869,17 @@ ges_clip_init (GESClip * self)
 
 /**
  * ges_clip_create_track_element:
- * @clip: The origin #GESClip
- * @type: The #GESTrackType to create a #GESTrackElement for.
+ * @clip: A #GESClip
+ * @type: The track to create an element for
  *
- * Creates a #GESTrackElement for the provided @type. The clip
- * keep a reference to the newly created trackelement, you therefore need to
- * call @ges_container_remove when you are done with it.
+ * Creates the core #GESTrackElement of the clip, of the given track type.
  *
- * Returns: (transfer none) (nullable): A #GESTrackElement. Returns NULL if
- * the #GESTrackElement could not be created.
+ * Note, unlike ges_clip_create_track_elements(), this does not add the
+ * created track element to the clip or set their timings.
+ *
+ * Returns: (transfer floating) (nullable): The element created
+ * by @clip, or %NULL if @clip can not provide a track element for the
+ * given @type or an error occurred.
  */
 GESTrackElement *
 ges_clip_create_track_element (GESClip * clip, GESTrackType type)
@@ -860,13 +911,15 @@ ges_clip_create_track_element (GESClip * clip, GESTrackType type)
 
 /**
  * ges_clip_create_track_elements:
- * @clip: The origin #GESClip
- * @type: The #GESTrackType to create each #GESTrackElement for.
+ * @clip: A #GESClip
+ * @type: The track-type to create elements for
  *
- * Creates all #GESTrackElements supported by this clip for the track type.
+ * Creates the core #GESTrackElement-s of the clip, of the given track
+ * type, and adds them to the clip.
  *
- * Returns: (element-type GESTrackElement) (transfer full): A #GList of
- * newly created #GESTrackElement-s
+ * Returns: (transfer container) (element-type GESTrackElement): A list of
+ * the #GESTrackElement-s created by @clip for the given @type, or %NULL
+ * if no track elements are created or an error occurred.
  */
 
 GList *
@@ -904,6 +957,36 @@ ges_clip_create_track_elements (GESClip * clip, GESTrackType type)
   }
   g_list_free_full (children, gst_object_unref);
 
+  /* FIXME: we need something smarter to determine whether we should
+   * create the track elements.
+   * Currently, if the clip contains at least one element with a matching
+   * track-type, not in a track and not a GESBaseEffect, we will not
+   * recreate the track elements! But this is not a reliable indicator.
+   *
+   * For example, consider a uri clip that creates two audio track
+   * elements: El_A and El_B. First, we add the clip to a timeline that
+   * only has a single track: Track_A, and we connect to the timeline's
+   * ::select-tracks-for-object signal to only allow El_A to end up in
+   * Track_A. As such, whilst both El_A and El_B are initially created,
+   * El_B will eventually be removed from the clip since it has no track
+   * (see clip_track_element_added_cb in ges-timeline.c). As such, we now
+   * have a clip that only contains El_A.
+   * Next, we remove Track_A from the timeline. El_A will remain a child
+   * of the clip, but now has its track unset.
+   * Next, we add Track_B to the timeline, and we connect to the
+   * timeline's ::select-tracks-for-object signal to only allow El_B to
+   * end up in Track_B.
+   *
+   * However, since the clip contains an audio track element, that is not
+   * an effect and has no track set: El_A. Therefore, the
+   * create_track_elements method below will not be called, so we will not
+   * have an El_B created for Track_B!
+   *
+   * Moreover, even if we did recreate the track elements, we would be
+   * creating El_A again! We could destroy and recreate El_A instead, or
+   * we would need a way to determine exactly which elements need to be
+   * recreated.
+   */
   if (readding_effects_only) {
     result = g_list_concat (result, klass->create_track_elements (clip, type));
   }
@@ -913,6 +996,8 @@ ges_clip_create_track_elements (GESClip * clip, GESTrackType type)
     GESTimelineElement *elem = tmp->data;
 
     _set_start0 (elem, GES_TIMELINE_ELEMENT_START (clip));
+    /* FIXME: only set the in-point and max-duration for non-core
+     * elements */
     _set_inpoint0 (elem, GES_TIMELINE_ELEMENT_INPOINT (clip));
     _set_duration0 (elem, GES_TIMELINE_ELEMENT_DURATION (clip));
 
@@ -967,9 +1052,9 @@ ges_clip_set_layer (GESClip * clip, GESLayer * layer)
 
 /**
  * ges_clip_set_moving_from_layer:
- * @clip: a #GESClip
+ * @clip: A #GESClip
  * @is_moving: %TRUE if you want to start moving @clip to another layer
- * %FALSE when you finished moving it.
+ * %FALSE when you finished moving it
  *
  * Sets the clip in a moving to layer state. You might rather use the
  * ges_clip_move_to_layer function to move #GESClip-s
@@ -988,14 +1073,14 @@ ges_clip_set_moving_from_layer (GESClip * clip, gboolean is_moving)
 
 /**
  * ges_clip_is_moving_from_layer:
- * @clip: a #GESClip
+ * @clip: A #GESClip
  *
  * Tells you if the clip is currently moving from a layer to another.
  * You might rather use the ges_clip_move_to_layer function to
  * move #GESClip-s from a layer to another.
  *
  * Returns: %TRUE if @clip is currently moving from its current layer
- * %FALSE otherwize
+ * %FALSE otherwize.
  **/
 gboolean
 ges_clip_is_moving_from_layer (GESClip * clip)
@@ -1007,13 +1092,14 @@ ges_clip_is_moving_from_layer (GESClip * clip)
 
 /**
  * ges_clip_move_to_layer:
- * @clip: a #GESClip
- * @layer: the new #GESLayer
+ * @clip: A #GESClip
+ * @layer: The new layer
  *
- * Moves @clip to @layer. If @clip is not in any layer, it adds it to
- * @layer, else, it removes it from its current layer, and adds it to @layer.
+ * Moves a clip to a new layer. If the clip already exists in a layer, it
+ * is first removed from its current layer before being added to the new
+ * layer.
  *
- * Returns: %TRUE if @clip could be moved %FALSE otherwize
+ * Returns: %TRUE if @clip was successfully moved to @layer.
  */
 gboolean
 ges_clip_move_to_layer (GESClip * clip, GESLayer * layer)
@@ -1069,19 +1155,25 @@ ges_clip_move_to_layer (GESClip * clip, GESLayer * layer)
 
 /**
  * ges_clip_find_track_element:
- * @clip: a #GESClip
- * @track: (allow-none): a #GESTrack or NULL
- * @type: a #GType indicating the type of track element you are looking
- * for or %G_TYPE_NONE if you do not care about the track type.
+ * @clip: A #GESClip
+ * @track: (allow-none): The track to search in, or %NULL to search in
+ * all tracks
+ * @type: The type of track element to search for, or `G_TYPE_NONE` to
+ * match any type
  *
- * Finds the #GESTrackElement controlled by @clip that is used in @track. You
- * may optionally specify a GType to further narrow search criteria.
+ * Finds an element controlled by the clip. If @track is given,
+ * then only the track elements in @track are searched for. If @type is
+ * given, then this function searches for a track element of the given
+ * @type.
  *
- * Note: If many objects match, then the one with the highest priority will be
- * returned.
+ * Note, if multiple track elements in the clip match the given criteria,
+ * this will return the element amongst them with the highest
+ * #GESTimelineElement:priority (numerically, the smallest). See
+ * ges_clip_find_track_elements() if you wish to find all such elements.
  *
- * Returns: (transfer full) (nullable): The #GESTrackElement used by @track,
- * else %NULL. Unref after usage
+ * Returns: (transfer full) (nullable): The element controlled by
+ * @clip, in @track, and of the given @type, or %NULL if no such element
+ * could be found.
  */
 
 GESTrackElement *
@@ -1113,13 +1205,12 @@ ges_clip_find_track_element (GESClip * clip, GESTrack * track, GType type)
 
 /**
  * ges_clip_get_layer:
- * @clip: a #GESClip
+ * @clip: A #GESClip
  *
- * Get the #GESLayer to which this clip belongs.
+ * Gets the #GESClip:layer of the clip.
  *
- * Returns: (transfer full) (nullable): The #GESLayer where this @clip is being
- * used, or %NULL if it is not used on any layer. The caller should unref it
- * usage.
+ * Returns: (transfer full) (nullable): The layer @clip is in, or %NULL if
+ * @clip is not in any layer.
  */
 GESLayer *
 ges_clip_get_layer (GESClip * clip)
@@ -1134,14 +1225,14 @@ ges_clip_get_layer (GESClip * clip)
 
 /**
  * ges_clip_get_top_effects:
- * @clip: The origin #GESClip
+ * @clip: A #GESClip
  *
- * Get effects applied on @clip
+ * Gets the #GESBaseEffect-s that have been added to the clip. The
+ * returned list is ordered by their internal index in the clip. See
+ * ges_clip_get_top_effect_index().
  *
- * Returns: (transfer full) (element-type GESTrackElement): a #GList of the
- * #GESBaseEffect that are applied on @clip order by ascendant priorities.
- * The refcount of the objects will be increased. The user will have to
- * unref each #GESBaseEffect and free the #GList.
+ * Returns: (transfer full) (element-type GESTrackElement): A list of all
+ * #GESBaseEffect-s that have been added to @clip.
  */
 GList *
 ges_clip_get_top_effects (GESClip * clip)
@@ -1164,12 +1255,17 @@ ges_clip_get_top_effects (GESClip * clip)
 
 /**
  * ges_clip_get_top_effect_index:
- * @clip: The origin #GESClip
- * @effect: The #GESBaseEffect we want to get the top index from
+ * @clip: A #GESClip
+ * @effect: The effect we want to get the index of
  *
- * Gets the index position of an effect.
+ * Gets the internal index of an effect in the clip. The index of effects
+ * in a clip will run from 0 to n-1, where n is the total number of
+ * effects. If two effects share the same #GESTrackElement:track, the
+ * effect with the numerically lower index will be applied to the source
+ * data **after** the other effect, i.e. output data will always flow from
+ * a higher index effect to a lower index effect.
  *
- * Returns: The top index of the effect, -1 if something went wrong.
+ * Returns: The index of @effect in @clip, or -1 if something went wrong.
  */
 gint
 ges_clip_get_top_effect_index (GESClip * clip, GESBaseEffect * effect)
@@ -1201,14 +1297,17 @@ ges_clip_set_top_effect_priority (GESClip * clip,
 
 /**
  * ges_clip_set_top_effect_index:
- * @clip: The origin #GESClip
- * @effect: The #GESBaseEffect to move
- * @newindex: the new index at which to move the @effect inside this
- * #GESClip
+ * @clip: A #GESClip
+ * @effect: An effect within @clip to move
+ * @newindex: The index for @effect in @clip
  *
- * This is a convenience method that lets you set the index of a top effect.
+ * Set the index of an effect within the clip. See
+ * ges_clip_get_top_effect_index(). The new index must be an existing
+ * index of the clip. The effect is moved to the new index, and the other
+ * effects may be shifted in index accordingly to otherwise maintain the
+ * ordering.
  *
- * Returns: %TRUE if @effect was successfuly moved, %FALSE otherwise.
+ * Returns: %TRUE if @effect was successfully moved to @newindex.
  */
 gboolean
 ges_clip_set_top_effect_index (GESClip * clip, GESBaseEffect * effect,
@@ -1273,28 +1372,39 @@ ges_clip_set_top_effect_index (GESClip * clip, GESBaseEffect * effect,
 
 /**
  * ges_clip_split:
- * @clip: the #GESClip to split
- * @position: a #GstClockTime representing the timeline position at which to split
+ * @clip: The #GESClip to split
+ * @position: The timeline position at which to perform the split
  *
- * The function modifies @clip, and creates another #GESClip so we have two
- * clips at the end, splitted at the time specified by @position, as a position
- * in the timeline (not in the clip to be split). For example, if
- * ges_clip_split is called on a 4-second clip playing from 0:01.00 until
- * 0:05.00, with a split position of 0:02.00, this will result in one clip of 1
- * second and one clip of 3 seconds, not in two clips of 2 seconds.
+ * Splits a clip at the given timeline position into two clips. The clip
+ * must already have a #GESClip:layer.
  *
- * The newly created clip will be added to the same layer as @clip is in. This
- * implies that @clip must be in a #GESLayer for the operation to be possible.
+ * The original clip's #GESTimelineElement:duration is reduced such that
+ * its end point matches the split position. Then a new clip is created in
+ * the same layer, whose #GESTimelineElement:start matches the split
+ * position and #GESTimelineElement:duration will be set such that its end
+ * point matches the old end point of the original clip. Thus, the two
+ * clips together will occupy the same positions in the timeline as the
+ * original clip did.
  *
- * This method supports clips playing at a different tempo than one second per
- * second. For example, splitting a clip with a #GESEffect 'pitch tempo=1.5'
- * four seconds after it starts, will set the inpoint of the new clip to six
- * seconds after that of the clip to split. For this, the rate-changing
- * property must be registered using @ges_effect_class_register_rate_property;
- * for the 'pitch' plugin, this is already done.
+ * The children of the new clip will be new copies of the original clip's
+ * children, so it will share the same sources and use the same
+ * operations.
  *
- * Returns: (transfer none) (nullable): The newly created #GESClip resulting
- * from the splitting or %NULL if the clip can't be split.
+ * The new clip will also have its #GESTimelineElement:in-point set so
+ * that any internal data will appear in the timeline at the same time.
+ * Thus, when the timeline is played, the playback of data should
+ * appear the same. This may be complicated by any additional
+ * #GESEffect-s that have been placed on the original clip that depend on
+ * the playback time or change the data consumption rate of sources. This
+ * method will attempt to translate these effects such that the playback
+ * appears the same. In such complex situations, you may get a better
+ * result if you place the clip in a separate sub #GESProject, which only
+ * contains this clip (and its effects), and in the original layer
+ * create two neighbouring #GESUriClip-s that reference this sub-project,
+ * but at a different #GESTimelineElement:in-point.
+ *
+ * Returns: (transfer none) (nullable): The newly created clip resulting
+ * from the splitting @clip, or %NULL if @clip can't be split.
  */
 GESClip *
 ges_clip_split (GESClip * clip, guint64 position)
@@ -1337,6 +1447,29 @@ ges_clip_split (GESClip * clip, guint64 position)
       inpoint + old_duration * media_duration_factor);
   _set_duration0 (GES_TIMELINE_ELEMENT (new_object), new_duration);
 
+  /* FIXME: this does not check that the new duration of the clip does
+   * not break the allowed configurations of a timeline!
+   * E.g., consider a layer with two clips:
+   *
+   * [  clip0            ]
+   *         [            clip1  ]
+   * 0   1   2   3   4   5   6   7  - timeline time
+   *
+   * If we split clip1 at time 4 then we would have
+   *
+   * [  clip0            ]
+   *         [ clip1 ]
+   *                 [   new-clip]
+   * 0   1   2   3   4   5   6   7  - timeline time
+   *
+   * This means that clip1 is entirely covered by clip0! This is allowed
+   * to occur using ges_clip_split()!
+   *
+   * Note this early setting of the duration does not perform such a
+   * check. Moreover, the later setting of the duration at the end of this
+   * function also does not perform this check because we set the
+   * GES_TIMELINE_ELEMENT_SET_SIMPLE flag!
+   */
   _DURATION (clip) = old_duration;
   g_object_notify (G_OBJECT (clip), "duration");
 
@@ -1359,6 +1492,11 @@ ges_clip_split (GESClip * clip, guint64 position)
 
     /* Set 'new' track element timing propeties */
     _set_start0 (GES_TIMELINE_ELEMENT (new_trackelement), position);
+    /* FIXME: not all track elements should have their inpoint set,
+     * e.g. transitions or most effects. But how can we determine
+     * whether a transition should *always* have a 0 inpoint, or
+     * whether a transition actually uses the inpoint, but it just so
+     * happens to be set to 0? */
     _set_inpoint0 (GES_TIMELINE_ELEMENT (new_trackelement),
         inpoint + old_duration * media_duration_factor);
     _set_duration0 (GES_TIMELINE_ELEMENT (new_trackelement), new_duration);
@@ -1368,10 +1506,16 @@ ges_clip_split (GESClip * clip, guint64 position)
     ges_track_element_copy_properties (GES_TIMELINE_ELEMENT (trackelement),
         GES_TIMELINE_ELEMENT (new_trackelement));
 
+    /* FIXME: is position - start + inpoint always the correct splitting
+     * point for control bindings? What coordinate system are control
+     * bindings given in? */
+    /* NOTE: control bindings that are not registered in GES are not
+     * handled */
     ges_track_element_copy_bindings (trackelement, new_trackelement,
         position - start + inpoint);
   }
 
+  /* FIXME: The below leads to a *second* notify signal for duration */
   ELEMENT_SET_FLAG (clip, GES_TIMELINE_ELEMENT_SET_SIMPLE);
   _DURATION (clip) = duration;
   _set_duration0 (GES_TIMELINE_ELEMENT (clip), old_duration);
@@ -1382,10 +1526,12 @@ ges_clip_split (GESClip * clip, guint64 position)
 
 /**
  * ges_clip_set_supported_formats:
- * @clip: the #GESClip to set supported formats on
- * @supportedformats: the #GESTrackType defining formats supported by @clip
+ * @clip: A #GESClip
+ * @supportedformats: The #GESTrackType-s supported by @clip
  *
- * Sets the formats supported by the file.
+ * Sets the #GESClip:supported-formats of the clip. This should normally
+ * only be called by subclasses, which should be responsible for updating
+ * its value, rather than the user.
  */
 void
 ges_clip_set_supported_formats (GESClip * clip, GESTrackType supportedformats)
@@ -1397,11 +1543,11 @@ ges_clip_set_supported_formats (GESClip * clip, GESTrackType supportedformats)
 
 /**
  * ges_clip_get_supported_formats:
- * @clip: the #GESClip
+ * @clip: A #GESClip
  *
- * Get the formats supported by @clip.
+ * Gets the #GESClip:supported-formats of the clip.
  *
- * Returns: The formats supported by @clip.
+ * Returns: The #GESTrackType-s supported by @clip.
  */
 GESTrackType
 ges_clip_get_supported_formats (GESClip * clip)
@@ -1452,19 +1598,19 @@ _trim (GESTimelineElement * element, GstClockTime start)
 
 /**
  * ges_clip_add_asset:
- * @clip: a #GESClip
- * @asset: a #GESAsset with #GES_TYPE_TRACK_ELEMENT as extractable_type
+ * @clip: A #GESClip
+ * @asset: An asset with #GES_TYPE_TRACK_ELEMENT as its
+ * #GESAsset:extractable-type
  *
- * Extracts a #GESTrackElement from @asset and adds it to the @clip.
- * Should only be called in order to add operations to a #GESClip,
- * ni other cases TrackElement are added automatically when adding the
- * #GESClip/#GESAsset to a layer.
+ * Extracts a #GESTrackElement from an asset and adds it to the clip.
+ * This can be used to add effects that derive from the asset to the
+ * clip, but this method is not intended to be used to create the core
+ * elements of the clip.
  *
- * Takes a reference on @track_element.
- *
- * Returns: (transfer none)(allow-none): Created #GESTrackElement or NULL
- * if an error happened
+ * Returns: (transfer none)(allow-none): The newly created element, or
+ * %NULL if an error occurred.
  */
+/* FIXME: this is not used elsewhere in the GES library */
 GESTrackElement *
 ges_clip_add_asset (GESClip * clip, GESAsset * asset)
 {
@@ -1486,20 +1632,33 @@ ges_clip_add_asset (GESClip * clip, GESAsset * asset)
 
 /**
  * ges_clip_find_track_elements:
- * @clip: a #GESClip
- * @track: (allow-none): a #GESTrack or NULL
- * @track_type: a #GESTrackType indicating the type of tracks in which elements
- * should be searched.
- * @type: a #GType indicating the type of track element you are looking
- * for or %G_TYPE_NONE if you do not care about the track type.
+ * @clip: A #GESClip
+ * @track: (allow-none): The track to search in, or %NULL to search in
+ * all tracks
+ * @track_type: The track-type of the track element to search for, or
+ * #GES_TRACK_TYPE_UNKNOWN to match any track type
+ * @type: The type of track element to search for, or %NULL to match any
+ * type
  *
- * Finds all the #GESTrackElement controlled by @clip that is used in @track. You
- * may optionally specify a GType to further narrow search criteria.
+ * Finds the #GESTrackElement-s controlled by the clip that match the
+ * given criteria. You must give either @track (not %NULL) or @track_type
+ * (not #GES_TRACK_TYPE_UNKNOWN) in order to find any elements. If @track
+ * is given, and @track_type is not, then only the track elements in
+ * @track are searched for. Otherwise, if @track_type is given, and @track
+ * is not, then only the track elements whose #GESTrackElement:track-type
+ * matches @track_type are searched for. If both are given, then the track
+ * elements that match **either** criteria are searched for (so if you
+ * wish to only find all the elements in a given track, you should give
+ * the track as @track, but should not give the track's
+ * #GESTrack:track-type as @track_type because this would also select
+ * elements from other tracks of the same type).
  *
- * Returns: (transfer full) (element-type GESTrackElement): a #GList of the
- * #GESTrackElement contained in @clip.
- * The refcount of the objects will be increased. The user will have to
- * unref each #GESTrackElement and free the #GList.
+ * You may also give @type to further restrict the search to track
+ * elements of the given @type.
+ *
+ * Returns: (transfer full) (element-type GESTrackElement): A list of all
+ * the #GESTrackElement-s controlled by @clip, in @track or of the given
+ * @track_type, and of the given @type.
  */
 
 GList *
@@ -1524,6 +1683,10 @@ ges_clip_find_track_elements (GESClip * clip, GESTrack * track,
       continue;
 
     tmptrack = ges_track_element_get_track (otmp);
+    /* TODO 2.0: an AND condition would have made more sense here */
+    /* FIXME: if neither the track nor the track_type are given, we should
+     * still match the elements that match the given type (currently the
+     * list will be empty if only the type is given) */
     if (((track != NULL && tmptrack == track)) ||
         (track_type != GES_TRACK_TYPE_UNKNOWN
             && ges_track_element_get_track_type (otmp) == track_type)) {
