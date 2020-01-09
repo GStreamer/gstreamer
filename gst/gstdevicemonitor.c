@@ -510,14 +510,13 @@ again:
   while (pending) {
     GstDeviceProvider *provider = pending->data;
 
-    if (gst_device_provider_can_monitor (provider)) {
-      GST_OBJECT_UNLOCK (monitor);
+    GST_OBJECT_UNLOCK (monitor);
 
-      if (!gst_device_provider_start (provider))
-        goto start_failed;
+    if (!gst_device_provider_start (provider))
+      goto start_failed;
 
-      GST_OBJECT_LOCK (monitor);
-    }
+    GST_OBJECT_LOCK (monitor);
+
     started = g_list_prepend (started, provider);
     pending = g_list_delete_link (pending, pending);
 
@@ -579,8 +578,7 @@ gst_device_monitor_stop (GstDeviceMonitor * monitor)
   while (started) {
     GstDeviceProvider *provider = started->data;
 
-    if (gst_device_provider_can_monitor (provider))
-      gst_device_provider_stop (provider);
+    gst_device_provider_stop (provider);
 
     started = g_list_delete_link (started, started);
     gst_object_unref (provider);

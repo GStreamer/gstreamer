@@ -38,11 +38,10 @@ typedef struct _GstTestDeviceClass
 
 GType gst_test_device_get_type (void);
 
+G_DEFINE_TYPE (GstTestDevice, gst_test_device, GST_TYPE_DEVICE);
 
-G_DEFINE_TYPE (GstTestDevice, gst_test_device, GST_TYPE_DEVICE)
-
-     static GstElement *gst_test_device_create_element (GstDevice * device,
-    const gchar * name)
+static GstElement *
+gst_test_device_create_element (GstDevice * device, const gchar * name)
 {
   return gst_bin_new (name);
 }
@@ -140,19 +139,19 @@ typedef struct _GstTestDeviceProviderClass
 
 GType gst_test_device_provider_get_type (void);
 
-
 G_DEFINE_TYPE (GstTestDeviceProvider, gst_test_device_provider,
-    GST_TYPE_DEVICE_PROVIDER)
+    GST_TYPE_DEVICE_PROVIDER);
 
+int num_devices = 1;
 
-     static GList *devices = NULL;
-
-     static GList *gst_test_device_provider_probe (GstDeviceProvider * provider)
+static GList *
+gst_test_device_provider_probe (GstDeviceProvider * provider)
 {
-  GList *devs;
+  int i;
+  GList *devs = NULL;
 
-  devs = g_list_copy (devices);
-  g_list_foreach (devs, (GFunc) gst_object_ref, NULL);
+  for (i = 0; i < num_devices; i++)
+    devs = g_list_prepend (devs, test_device_new ());
 
   return devs;
 }
@@ -233,24 +232,26 @@ GST_START_TEST (test_device_provider)
   register_test_device_provider ();
 
   dp = gst_device_provider_factory_get_by_name ("testdeviceprovider");
+  num_devices = 0;
   fail_unless (dp != NULL);
   fail_unless (gst_device_provider_get_devices (dp) == NULL);
 
-  devices = g_list_append (NULL, test_device_new ());
+  num_devices = 1;
 
   devs = gst_device_provider_get_devices (dp);
   fail_unless (g_list_length (devs) == 1);
-  fail_unless_equals_pointer (devs->data, devices->data);
+  fail_unless (GST_IS_DEVICE (devs->data));
   g_list_free_full (devs, (GDestroyNotify) gst_object_unref);
 
   fail_if (gst_device_provider_can_monitor (dp));
-  fail_if (gst_device_provider_start (dp));
+  fail_unless (gst_device_provider_start (dp));
 
   bus = gst_device_provider_get_bus (dp);
   fail_unless (GST_IS_BUS (bus));
   gst_object_unref (bus);
 
-  g_list_free_full (devices, (GDestroyNotify) gst_object_unref);
+  gst_device_provider_stop (dp);
+
   gst_object_unref (dp);
 }
 
@@ -269,13 +270,11 @@ typedef struct _GstTestDeviceProviderMonitorClass
 
 GType gst_test_device_provider_monitor_get_type (void);
 
-
 G_DEFINE_TYPE (GstTestDeviceProviderMonitor, gst_test_device_provider_monitor,
-    GST_TYPE_DEVICE_PROVIDER)
+    GST_TYPE_DEVICE_PROVIDER);
 
-
-     static gboolean
-         gst_test_device_provider_monitor_start (GstDeviceProvider * monitor)
+static gboolean
+gst_test_device_provider_monitor_start (GstDeviceProvider * monitor)
 {
   return TRUE;
 }
@@ -319,8 +318,6 @@ GST_START_TEST (test_device_provider_monitor)
   GstMessage *msg;
 
   register_test_device_provider_monitor ();
-
-  devices = g_list_append (NULL, test_device_new ());
 
   dp = gst_device_provider_factory_get_by_name ("testdeviceprovidermonitor");
 
@@ -394,8 +391,6 @@ GST_START_TEST (test_device_provider_monitor)
 
   /* Is singleton, so system keeps a ref */
   ASSERT_OBJECT_REFCOUNT (dp, "monitor", 1);
-
-  g_list_free_full (devices, (GDestroyNotify) gst_object_unref);
 }
 
 GST_END_TEST;
@@ -420,8 +415,6 @@ GST_START_TEST (test_device_monitor)
 
   mon = gst_device_monitor_new ();
 
-  devices = g_list_append (NULL, test_device_new ());
-
   devs = gst_device_monitor_get_devices (mon);
   fail_unless (devs == NULL);
 
@@ -440,23 +433,23 @@ GST_START_TEST (test_device_monitor)
   fail_unless (id > 0);
   devs = gst_device_monitor_get_devices (mon);
   fail_unless (g_list_length (devs) == 1);
-  fail_unless_equals_pointer (devs->data, devices->data);
+  fail_unless (GST_IS_DEVICE (devs->data));
   g_list_free_full (devs, (GDestroyNotify) gst_object_unref);
 
   id2 = gst_device_monitor_add_filter (mon, "Test1", NULL);
   fail_unless (id2 > 0);
   devs = gst_device_monitor_get_devices (mon);
   fail_unless (g_list_length (devs) == 2);
-  fail_unless_equals_pointer (devs->data, devices->data);
-  fail_unless_equals_pointer (devs->next->data, devices->data);
+  fail_unless (GST_IS_DEVICE (devs->data));
+  fail_unless (GST_IS_DEVICE (devs->next->data));
   g_list_free_full (devs, (GDestroyNotify) gst_object_unref);
 
   fail_unless (gst_device_monitor_remove_filter (mon, id));
 
   devs = gst_device_monitor_get_devices (mon);
   fail_unless (g_list_length (devs) == 2);
-  fail_unless_equals_pointer (devs->data, devices->data);
-  fail_unless_equals_pointer (devs->next->data, devices->data);
+  fail_unless (GST_IS_DEVICE (devs->data));
+  fail_unless (GST_IS_DEVICE (devs->next->data));
   g_list_free_full (devs, (GDestroyNotify) gst_object_unref);
 
 
@@ -464,7 +457,7 @@ GST_START_TEST (test_device_monitor)
 
   devs = gst_device_monitor_get_devices (mon);
   fail_unless (g_list_length (devs) == 1);
-  fail_unless_equals_pointer (devs->data, devices->data);
+  fail_unless (GST_IS_DEVICE (devs->data));
   g_list_free_full (devs, (GDestroyNotify) gst_object_unref);
 
   gst_device_monitor_stop (mon);
@@ -476,7 +469,7 @@ GST_START_TEST (test_device_monitor)
 
   devs = gst_device_monitor_get_devices (mon);
   fail_unless (g_list_length (devs) == 1);
-  fail_unless_equals_pointer (devs->data, devices->data);
+  fail_unless (GST_IS_DEVICE (devs->data));
   g_list_free_full (devs, (GDestroyNotify) gst_object_unref);
 
   fail_unless (gst_device_monitor_start (mon));
@@ -530,7 +523,6 @@ GST_START_TEST (test_device_monitor)
 
   gst_object_unref (dp);
   gst_object_unref (dp2);
-  g_list_free_full (devices, (GDestroyNotify) gst_object_unref);
 
   /* should work fine without any filters */
   mon = gst_device_monitor_new ();

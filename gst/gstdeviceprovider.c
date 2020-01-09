@@ -389,6 +389,9 @@ gst_device_provider_get_metadata (GstDeviceProvider * provider,
  * Gets a list of devices that this provider understands. This may actually
  * probe the hardware if the provider is not currently started.
  *
+ * If the provider has been started, this will returned the same #GstDevice
+ * objedcts that have been returned by the #GST_MESSAGE_DEVICE_ADDED messages.
+ *
  * Returns: (transfer full) (element-type GstDevice): a #GList of
  *   #GstDevice
  *
@@ -435,6 +438,10 @@ gst_device_provider_get_devices (GstDeviceProvider * provider)
  * user of the object, gst_device_provider_stop() needs to be called the same
  * number of times.
  *
+ * After this function has been called, gst_device_provider_get_devices() will
+ * return the same objects that have been received from the
+ * #GST_MESSAGE_DEVICE_ADDED messages and will no longer probe.
+ *
  * Returns: %TRUE if the device providering could be started
  *
  * Since: 1.4
@@ -459,8 +466,27 @@ gst_device_provider_start (GstDeviceProvider * provider)
 
   gst_bus_set_flushing (provider->priv->bus, FALSE);
 
-  if (klass->start)
+  if (klass->start) {
     ret = klass->start (provider);
+  } else {
+    GList *devices = NULL, *item;
+
+    devices = klass->probe (provider);
+
+    for (item = devices; item; item = item->next) {
+      GstDevice *device = GST_DEVICE (item->data);
+      gboolean was_floating = g_object_is_floating (item->data);
+
+      gst_device_provider_device_add (provider, device);
+
+      if (!was_floating)
+        g_object_unref (item->data);
+    }
+
+    g_list_free (devices);
+
+    ret = TRUE;
+  }
 
   if (ret) {
     provider->priv->started_count++;
@@ -513,7 +539,6 @@ gst_device_provider_stop (GstDeviceProvider * provider)
   provider->priv->started_count--;
   g_mutex_unlock (&provider->priv->start_lock);
 }
-
 
 /**
  * gst_device_provider_get_factory:
