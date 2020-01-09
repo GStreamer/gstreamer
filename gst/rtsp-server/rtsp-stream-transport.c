@@ -296,12 +296,18 @@ gst_rtsp_stream_transport_set_back_pressure_callback (GstRTSPStreamTransport *
 
 gboolean
 gst_rtsp_stream_transport_check_back_pressure (GstRTSPStreamTransport * trans,
-    guint8 channel)
+    gboolean is_rtp)
 {
   GstRTSPStreamTransportPrivate *priv;
   gboolean ret = FALSE;
+  guint8 channel;
 
   priv = trans->priv;
+
+  if (is_rtp)
+    channel = priv->transport->interleaved.min;
+  else
+    channel = priv->transport->interleaved.max;
 
   if (priv->back_pressure_func)
     ret = priv->back_pressure_func (channel, priv->back_pressure_func_data);

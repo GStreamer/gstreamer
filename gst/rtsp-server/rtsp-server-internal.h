@@ -48,7 +48,7 @@ void                     gst_rtsp_stream_transport_set_back_pressure_callback (G
                                                                   GDestroyNotify  notify);
 
 gboolean                 gst_rtsp_stream_transport_check_back_pressure (GstRTSPStreamTransport *trans,
-                                                                  guint8 channel);
+                                                                  gboolean is_rtp);
 
 G_END_DECLS
 

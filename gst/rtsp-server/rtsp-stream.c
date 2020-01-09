@@ -2468,7 +2468,7 @@ clear_tr_cache (GstRTSPStreamPrivate * priv)
 
 /* With lock taken */
 static gboolean
-any_transport_ready (GstRTSPStream * stream, guint8 channel)
+any_transport_ready (GstRTSPStream * stream, gboolean is_rtp)
 {
   gboolean ret = TRUE;
   GstRTSPStreamPrivate *priv = stream->priv;
@@ -2482,7 +2482,7 @@ any_transport_ready (GstRTSPStream * stream, guint8 channel)
 
   for (index = 0; index < transports->len; index++) {
     GstRTSPStreamTransport *tr = g_ptr_array_index (transports, index);
-    if (!gst_rtsp_stream_transport_check_back_pressure (tr, channel)) {
+    if (!gst_rtsp_stream_transport_check_back_pressure (tr, is_rtp)) {
       ret = TRUE;
       break;
     } else {
@@ -2565,7 +2565,9 @@ send_tcp_message (GstRTSPStream * stream, gint idx)
 
   ensure_cached_transports (stream);
 
-  if (!any_transport_ready (stream, idx))
+  is_rtp = (idx == 0);
+
+  if (!any_transport_ready (stream, is_rtp))
     return;
 
   priv->have_buffer[idx] = FALSE;
@@ -2590,8 +2592,6 @@ send_tcp_message (GstRTSPStream * stream, gint idx)
     n_messages += 1;
   if (buffer_list)
     n_messages += 1;
-
-  is_rtp = (idx == 0);
 
   transports = priv->tr_cache;
   g_ptr_array_ref (transports);
