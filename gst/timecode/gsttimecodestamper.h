@@ -114,10 +114,9 @@ struct _GstTimeCodeStamper
   GstClockTime ltc_current_running_time;
 
   /* Protected by object lock */
-  /* Current LTC timecode that we last read close
-   * to our video running time */
-  GstVideoTimeCode *ltc_current_tc;
-  GstClockTime ltc_current_tc_running_time;
+  /* Queue of LTC timecodes we took out of the LTC decoder already
+   * together with their corresponding running times */
+  GQueue ltc_current_tcs;
 
   /* LTC timecode we last synced to and potentially incremented manually since
    * then */

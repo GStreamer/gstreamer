@@ -127,6 +127,12 @@ static void gst_timecodestamper_release_pad (GstElement * element,
     GstPad * pad);
 
 #if HAVE_LTC
+typedef struct
+{
+  GstClockTime running_time;
+  GstVideoTimeCode timecode;
+} TimestampedTimecode;
+
 static gboolean gst_timecodestamper_query (GstBaseTransform * trans,
     GstPadDirection direction, GstQuery * query);
 
@@ -350,8 +356,7 @@ gst_timecodestamper_init (GstTimeCodeStamper * timecodestamper)
   timecodestamper->ltc_first_running_time = GST_CLOCK_TIME_NONE;
   timecodestamper->ltc_current_running_time = GST_CLOCK_TIME_NONE;
 
-  timecodestamper->ltc_current_tc = NULL;
-  timecodestamper->ltc_current_tc_running_time = GST_CLOCK_TIME_NONE;
+  g_queue_init (&timecodestamper->ltc_current_tcs);
   timecodestamper->ltc_internal_tc = NULL;
   timecodestamper->ltc_internal_running_time = GST_CLOCK_TIME_NONE;
   timecodestamper->ltc_dec = NULL;
@@ -409,9 +414,12 @@ gst_timecodestamper_dispose (GObject * object)
   g_cond_clear (&timecodestamper->ltc_cond_video);
   g_cond_clear (&timecodestamper->ltc_cond_audio);
   g_mutex_clear (&timecodestamper->mutex);
-  if (timecodestamper->ltc_current_tc != NULL) {
-    gst_video_time_code_free (timecodestamper->ltc_current_tc);
-    timecodestamper->ltc_current_tc = NULL;
+  {
+    TimestampedTimecode *tc;
+    while ((tc = g_queue_pop_tail (&timecodestamper->ltc_current_tcs))) {
+      gst_video_time_code_clear (&tc->timecode);
+      g_free (tc);
+    }
   }
   if (timecodestamper->ltc_internal_tc != NULL) {
     gst_video_time_code_free (timecodestamper->ltc_internal_tc);
@@ -465,13 +473,18 @@ gst_timecodestamper_set_property (GObject * object, guint prop_id,
       timecodestamper->ltc_daily_jam = g_value_dup_boxed (value);
 
 #if HAVE_LTC
-      if (timecodestamper->ltc_current_tc) {
-        if (timecodestamper->ltc_current_tc->config.latest_daily_jam) {
-          g_date_time_unref (timecodestamper->ltc_current_tc->config.
-              latest_daily_jam);
+      {
+        GList *l;
+
+        for (l = timecodestamper->ltc_current_tcs.head; l; l = l->next) {
+          TimestampedTimecode *tc = l->data;
+
+          if (tc->timecode.config.latest_daily_jam) {
+            g_date_time_unref (tc->timecode.config.latest_daily_jam);
+          }
+          tc->timecode.config.latest_daily_jam =
+              g_date_time_ref (timecodestamper->ltc_daily_jam);
         }
-        timecodestamper->ltc_current_tc->config.latest_daily_jam =
-            g_date_time_ref (timecodestamper->ltc_daily_jam);
       }
 
       if (timecodestamper->ltc_internal_tc) {
@@ -626,11 +639,13 @@ gst_timecodestamper_stop (GstBaseTransform * trans)
   }
   timecodestamper->ltc_internal_running_time = GST_CLOCK_TIME_NONE;
 
-  if (timecodestamper->ltc_current_tc != NULL) {
-    gst_video_time_code_free (timecodestamper->ltc_current_tc);
-    timecodestamper->ltc_current_tc = NULL;
+  {
+    TimestampedTimecode *tc;
+    while ((tc = g_queue_pop_tail (&timecodestamper->ltc_current_tcs))) {
+      gst_video_time_code_clear (&tc->timecode);
+      g_free (tc);
+    }
   }
-  timecodestamper->ltc_current_tc_running_time = GST_CLOCK_TIME_NONE;
 
   if (timecodestamper->ltc_dec) {
     ltc_decoder_free (timecodestamper->ltc_dec);
@@ -678,9 +693,15 @@ gst_timecodestamper_update_drop_frame (GstTimeCodeStamper * timecodestamper)
       timecodestamper->rtc_tc->config.flags |=
           GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME;
 #if HAVE_LTC
-    if (timecodestamper->ltc_current_tc)
-      timecodestamper->ltc_current_tc->config.flags |=
-          GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME;
+    {
+      GList *l;
+
+      for (l = timecodestamper->ltc_current_tcs.head; l; l = l->next) {
+        TimestampedTimecode *tc = l->data;
+
+        tc->timecode.config.flags |= GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME;
+      }
+    }
     if (timecodestamper->ltc_internal_tc)
       timecodestamper->ltc_internal_tc->config.flags |=
           GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME;
@@ -693,9 +714,15 @@ gst_timecodestamper_update_drop_frame (GstTimeCodeStamper * timecodestamper)
       timecodestamper->rtc_tc->config.flags &=
           ~GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME;
 #if HAVE_LTC
-    if (timecodestamper->ltc_current_tc)
-      timecodestamper->ltc_current_tc->config.flags &=
-          ~GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME;
+    {
+      GList *l;
+
+      for (l = timecodestamper->ltc_current_tcs.head; l; l = l->next) {
+        TimestampedTimecode *tc = l->data;
+
+        tc->timecode.config.flags &= ~GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME;
+      }
+    }
     if (timecodestamper->ltc_internal_tc)
       timecodestamper->ltc_internal_tc->config.flags &=
           ~GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME;
@@ -705,7 +732,8 @@ gst_timecodestamper_update_drop_frame (GstTimeCodeStamper * timecodestamper)
 
 static void
 gst_timecodestamper_update_timecode_framerate (GstTimeCodeStamper *
-    timecodestamper, const GstVideoInfo * vinfo, GstVideoTimeCode * timecode)
+    timecodestamper, const GstVideoInfo * vinfo, GstVideoTimeCode * timecode,
+    gboolean is_ltc)
 {
   guint64 nframes;
   GstClockTime time;
@@ -724,22 +752,27 @@ gst_timecodestamper_update_timecode_framerate (GstTimeCodeStamper *
           timecodestamper->vinfo.fps_n == 60000))
     tc_flags |= GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME;
 
-  nframes = gst_video_time_code_frames_since_daily_jam (timecode);
-  time =
-      gst_util_uint64_scale (nframes, GST_SECOND * timecodestamper->vinfo.fps_d,
-      timecodestamper->vinfo.fps_n);
-  jam =
-      timecode->config.latest_daily_jam ? g_date_time_ref (timecode->
-      config.latest_daily_jam) : NULL;
-  gst_video_time_code_clear (timecode);
-  gst_video_time_code_init (timecode, timecodestamper->vinfo.fps_n,
-      timecodestamper->vinfo.fps_d, jam, tc_flags, 0, 0, 0, 0, 0);
-  if (jam)
-    g_date_time_unref (jam);
+  /* If this is an LTC timecode and we have no framerate yet in there then
+   * just do nothing. We're going to set the framerate at a later time */
+  if (timecode->config.fps_d != 0 || !is_ltc) {
+    nframes = gst_video_time_code_frames_since_daily_jam (timecode);
+    time =
+        gst_util_uint64_scale (nframes,
+        GST_SECOND * timecodestamper->vinfo.fps_d,
+        timecodestamper->vinfo.fps_n);
+    jam =
+        timecode->config.latest_daily_jam ? g_date_time_ref (timecode->
+        config.latest_daily_jam) : NULL;
+    gst_video_time_code_clear (timecode);
+    gst_video_time_code_init (timecode, timecodestamper->vinfo.fps_n,
+        timecodestamper->vinfo.fps_d, jam, tc_flags, 0, 0, 0, 0, 0);
+    if (jam)
+      g_date_time_unref (jam);
 
-  nframes =
-      gst_util_uint64_scale (time, vinfo->fps_n, GST_SECOND * vinfo->fps_d);
-  gst_video_time_code_add_frames (timecode, nframes);
+    nframes =
+        gst_util_uint64_scale (time, vinfo->fps_n, GST_SECOND * vinfo->fps_d);
+    gst_video_time_code_add_frames (timecode, nframes);
+  }
 }
 
 /* Must be called with object lock */
@@ -753,17 +786,25 @@ gst_timecodestamper_update_framerate (GstTimeCodeStamper * timecodestamper,
     return FALSE;
 
   gst_timecodestamper_update_timecode_framerate (timecodestamper, vinfo,
-      timecodestamper->internal_tc);
+      timecodestamper->internal_tc, FALSE);
   gst_timecodestamper_update_timecode_framerate (timecodestamper, vinfo,
-      timecodestamper->last_tc);
+      timecodestamper->last_tc, FALSE);
   gst_timecodestamper_update_timecode_framerate (timecodestamper, vinfo,
-      timecodestamper->rtc_tc);
+      timecodestamper->rtc_tc, FALSE);
 
 #if HAVE_LTC
+  {
+    GList *l;
+
+    for (l = timecodestamper->ltc_current_tcs.head; l; l = l->next) {
+      TimestampedTimecode *tc = l->data;
+
+      gst_timecodestamper_update_timecode_framerate (timecodestamper, vinfo,
+          &tc->timecode, TRUE);
+    }
+  }
   gst_timecodestamper_update_timecode_framerate (timecodestamper, vinfo,
-      timecodestamper->ltc_current_tc);
-  gst_timecodestamper_update_timecode_framerate (timecodestamper, vinfo,
-      timecodestamper->ltc_internal_tc);
+      timecodestamper->ltc_internal_tc, FALSE);
 #endif
 
   return TRUE;
@@ -1174,7 +1215,7 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
   if (timecodestamper->ltcpad) {
     GstClockTime frame_duration;
     gchar *tc_str;
-    LTCFrameExt ltc_frame;
+    TimestampedTimecode *ltc_tc;
     gboolean updated_internal = FALSE;
 
     frame_duration = gst_util_uint64_scale_int_ceil (GST_SECOND,
@@ -1236,69 +1277,35 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
 
     GST_OBJECT_LOCK (timecodestamper);
     /* Take timecodes out of the queue until we're at the current video
-     * position, but first check the last timecode we took out of the queue
-     * if any. */
-    while (timecodestamper->ltc_dec && (timecodestamper->ltc_current_tc
-            || ltc_decoder_read (timecodestamper->ltc_dec, &ltc_frame) == 1)) {
-      GstVideoTimeCode ltc_read_tc, *ltc_read_tc_ptr = NULL;
-      GstClockTime ltc_running_time;
-
-      memset (&ltc_read_tc, 0, sizeof (ltc_read_tc));
-
-      if (timecodestamper->ltc_current_tc) {
-        ltc_running_time = timecodestamper->ltc_current_tc_running_time;
-        ltc_read_tc_ptr = timecodestamper->ltc_current_tc;
-
-        tc_str =
-            gst_video_time_code_to_string (timecodestamper->ltc_current_tc);
-        GST_INFO_OBJECT (timecodestamper,
-            "Using previous LTC timecode %s at %" GST_TIME_FORMAT, tc_str,
-            GST_TIME_ARGS (ltc_running_time));
-        g_free (tc_str);
-      } else {
-        SMPTETimecode stc;
-        gint fps_n_div;
-
-        if (ltc_frame.off_start < 0) {
-          GstClockTime offset =
-              gst_util_uint64_scale (GST_SECOND, -ltc_frame.off_start,
-              timecodestamper->ainfo.rate);
-
-          if (offset > timecodestamper->ltc_first_running_time)
-            ltc_running_time = 0;
-          else
-            ltc_running_time = timecodestamper->ltc_first_running_time - offset;
-        } else {
-          ltc_running_time = timecodestamper->ltc_first_running_time +
-              gst_util_uint64_scale (GST_SECOND, ltc_frame.off_start,
-              timecodestamper->ainfo.rate);
-        }
-
-        ltc_frame_to_time (&stc, &ltc_frame.ltc, 0);
-        GST_INFO_OBJECT (timecodestamper,
-            "Got LTC timecode %02d:%02d:%02d:%02d at %" GST_TIME_FORMAT,
-            stc.hours, stc.mins, stc.secs, stc.frame,
-            GST_TIME_ARGS (ltc_running_time));
-        fps_n_div =
+     * position. */
+    while ((ltc_tc = g_queue_pop_head (&timecodestamper->ltc_current_tcs))) {
+      /* First update framerate and flags according to the video stream if not
+       * done yet */
+      if (ltc_tc->timecode.config.fps_d == 0) {
+        gint fps_n_div =
             ((gdouble) timecodestamper->vinfo.fps_n) /
             timecodestamper->vinfo.fps_d > 30 ? 2 : 1;
 
-        gst_video_time_code_clear (&ltc_read_tc);
-        gst_video_time_code_init (&ltc_read_tc,
-            timecodestamper->vinfo.fps_n / fps_n_div,
-            timecodestamper->vinfo.fps_d,
-            timecodestamper->ltc_daily_jam,
-            tc_flags, stc.hours, stc.mins, stc.secs, stc.frame, 0);
-
-        ltc_read_tc_ptr = &ltc_read_tc;
+        ltc_tc->timecode.config.flags = tc_flags;
+        ltc_tc->timecode.config.fps_n =
+            timecodestamper->vinfo.fps_n / fps_n_div;
+        ltc_tc->timecode.config.fps_d = timecodestamper->vinfo.fps_d;
       }
+
+      tc_str = gst_video_time_code_to_string (&ltc_tc->timecode);
+      GST_INFO_OBJECT (timecodestamper,
+          "Retrieved LTC timecode %s at %" GST_TIME_FORMAT
+          " (%u timecodes queued)", tc_str,
+          GST_TIME_ARGS (ltc_tc->running_time),
+          g_queue_get_length (&timecodestamper->ltc_current_tcs));
+      g_free (tc_str);
 
       /* A timecode frame that starts +/- half a frame to the
        * video frame is considered belonging to that video frame.
        *
        * If it's further ahead than half a frame duration, break out of
        * the loop here and reconsider on the next frame. */
-      if (ABSDIFF (running_time, ltc_running_time) <= frame_duration / 2) {
+      if (ABSDIFF (running_time, ltc_tc->running_time) <= frame_duration / 2) {
         /* If we're resyncing LTC in general, directly replace the current
          * LTC timecode with the new one we read. Otherwise we'll continue
          * counting based on the previous timecode we had
@@ -1306,46 +1313,39 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
         if (timecodestamper->ltc_auto_resync) {
           if (timecodestamper->ltc_internal_tc)
             gst_video_time_code_free (timecodestamper->ltc_internal_tc);
-          if (gst_video_time_code_is_valid (ltc_read_tc_ptr)) {
+          if (gst_video_time_code_is_valid (&ltc_tc->timecode)) {
             timecodestamper->ltc_internal_tc =
-                gst_video_time_code_copy (ltc_read_tc_ptr);
-            timecodestamper->ltc_internal_running_time = running_time;
+                gst_video_time_code_copy (&ltc_tc->timecode);
+            timecodestamper->ltc_internal_running_time = ltc_tc->running_time;
             updated_internal = TRUE;
             GST_INFO_OBJECT (timecodestamper, "Resynced internal LTC counter");
           } else {
-            tc_str = gst_video_time_code_to_string (ltc_read_tc_ptr);
+            tc_str = gst_video_time_code_to_string (&ltc_tc->timecode);
             GST_INFO_OBJECT (timecodestamper, "Invalid LTC timecode %s",
                 tc_str);
             g_free (tc_str);
           }
         }
 
-        /* And store it for the next frame in case it has more or less the
-         * same running time */
-        timecodestamper->ltc_current_tc =
-            gst_video_time_code_copy (ltc_read_tc_ptr);
-        timecodestamper->ltc_current_tc_running_time = ltc_running_time;
-        gst_video_time_code_clear (&ltc_read_tc);
+        /* And store it back for the next frame in case it has more or less
+         * the same running time */
+        g_queue_push_head (&timecodestamper->ltc_current_tcs,
+            g_steal_pointer (&ltc_tc));
         break;
-      } else if (ltc_running_time > running_time
-          && ltc_running_time - running_time > frame_duration / 2) {
-        /* Store it for the next frame */
-        timecodestamper->ltc_current_tc =
-            gst_video_time_code_copy (ltc_read_tc_ptr);
-        timecodestamper->ltc_current_tc_running_time = ltc_running_time;
-        gst_video_time_code_clear (&ltc_read_tc);
+      } else if (ltc_tc->running_time > running_time
+          && ltc_tc->running_time - running_time > frame_duration / 2) {
+        /* Store it back for the next frame */
+        g_queue_push_head (&timecodestamper->ltc_current_tcs,
+            g_steal_pointer (&ltc_tc));
+        ltc_tc = NULL;
         break;
       }
 
       /* otherwise it's in the past and we need to consider the next
-       * timecode. Forget the current timecode and read a new one */
-      if (timecodestamper->ltc_current_tc) {
-        gst_video_time_code_free (timecodestamper->ltc_current_tc);
-        timecodestamper->ltc_current_tc = NULL;
-        timecodestamper->ltc_current_tc_running_time = GST_CLOCK_TIME_NONE;
-      }
-
-      gst_video_time_code_clear (&ltc_read_tc);
+       * timecode. Read a new one */
+      gst_video_time_code_clear (&ltc_tc->timecode);
+      g_free (ltc_tc);
+      ltc_tc = NULL;
     }
 
     /* If we didn't update from LTC above, increment our internal timecode
@@ -1578,11 +1578,13 @@ gst_timecodestamper_release_pad (GstElement * element, GstPad * pad)
   }
   timecodestamper->ltc_internal_running_time = GST_CLOCK_TIME_NONE;
 
-  if (timecodestamper->ltc_current_tc != NULL) {
-    gst_video_time_code_free (timecodestamper->ltc_current_tc);
-    timecodestamper->ltc_current_tc = NULL;
+  {
+    TimestampedTimecode *tc;
+    while ((tc = g_queue_pop_tail (&timecodestamper->ltc_current_tcs))) {
+      gst_video_time_code_clear (&tc->timecode);
+      g_free (tc);
+    }
   }
-  timecodestamper->ltc_current_tc_running_time = GST_CLOCK_TIME_NONE;
   GST_OBJECT_UNLOCK (timecodestamper);
 
   gst_pad_set_active (pad, FALSE);
@@ -1685,13 +1687,12 @@ gst_timecodestamper_ltcpad_chain (GstPad * pad,
 
   running_time = gst_segment_to_running_time (&timecodestamper->ltc_segment,
       GST_FORMAT_TIME, timestamp);
-  timecodestamper->ltc_current_running_time = running_time + duration;
 
   GST_DEBUG_OBJECT (timecodestamper,
       "Handling LTC audio buffer at %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT
       " (offset %" G_GUINT64_FORMAT ")",
       GST_TIME_ARGS (running_time),
-      GST_TIME_ARGS (timecodestamper->ltc_current_running_time),
+      GST_TIME_ARGS (running_time + duration),
       (guint64) timecodestamper->ltc_total);
 
   if (timecodestamper->ltc_total == 0) {
@@ -1704,46 +1705,70 @@ gst_timecodestamper_ltcpad_chain (GstPad * pad,
   timecodestamper->ltc_total += map.size;
   gst_buffer_unmap (buffer, &map);
 
+  /* Now read all the timecodes from the decoder that are currently available
+   * and store them in our own queue, which gives us more control over how
+   * things are working. */
+  {
+    LTCFrameExt ltc_frame;
+
+    while (ltc_decoder_read (timecodestamper->ltc_dec, &ltc_frame) == 1) {
+      SMPTETimecode stc;
+      TimestampedTimecode *ltc_tc;
+      GstClockTime ltc_running_time;
+
+      if (ltc_frame.off_start < 0) {
+        GstClockTime offset =
+            gst_util_uint64_scale (GST_SECOND, -ltc_frame.off_start,
+            timecodestamper->ainfo.rate);
+
+        if (offset > timecodestamper->ltc_first_running_time)
+          ltc_running_time = 0;
+        else
+          ltc_running_time = timecodestamper->ltc_first_running_time - offset;
+      } else {
+        ltc_running_time = timecodestamper->ltc_first_running_time +
+            gst_util_uint64_scale (GST_SECOND, ltc_frame.off_start,
+            timecodestamper->ainfo.rate);
+      }
+
+      ltc_frame_to_time (&stc, &ltc_frame.ltc, 0);
+      GST_INFO_OBJECT (timecodestamper,
+          "Got LTC timecode %02d:%02d:%02d:%02d at %" GST_TIME_FORMAT,
+          stc.hours, stc.mins, stc.secs, stc.frame,
+          GST_TIME_ARGS (ltc_running_time));
+
+      ltc_tc = g_new0 (TimestampedTimecode, 1);
+      ltc_tc->running_time = ltc_running_time;
+      /* We fill in the framerate and other metadata later */
+      gst_video_time_code_init (&ltc_tc->timecode,
+          0, 0, timecodestamper->ltc_daily_jam, 0,
+          stc.hours, stc.mins, stc.secs, stc.frame, 0);
+
+      g_queue_push_tail (&timecodestamper->ltc_current_tcs,
+          g_steal_pointer (&ltc_tc));
+    }
+  }
+
   /* Notify the video streaming thread that new data is available */
   g_cond_signal (&timecodestamper->ltc_cond_video);
 
   /* Wait until video has caught up, if needed */
   if (timecodestamper->audio_live) {
-    /* In live-mode, do no waiting but we need to drop things from the LTC
-     * decoder queue as otherwise we'll end up reading old items as new if the
-     * ringbuffer inside it overflows! */
-    while (ltc_decoder_queue_length (timecodestamper->ltc_dec) >
-        3 * DEFAULT_LTC_QUEUE / 4) {
-      LTCFrameExt ltc_frame;
-      GST_WARNING_OBJECT (timecodestamper,
-          "Dropping old LTC timecode because of too slow video");
-      ltc_decoder_read (timecodestamper->ltc_dec, &ltc_frame);
-    }
+    /* In live-mode, do no waiting as we're guaranteed to be more or less in
+     * sync (~latency) with the video */
   } else {
     /* If we're ahead of the video, wait until the video has caught up.
      * Otherwise don't wait and drop any too old items from the ringbuffer */
     while ((timecodestamper->video_current_running_time == GST_CLOCK_TIME_NONE
-            || timecodestamper->ltc_current_running_time >=
+            || running_time + duration >=
             timecodestamper->video_current_running_time)
         && timecodestamper->ltc_dec
-        && ltc_decoder_queue_length (timecodestamper->ltc_dec) >
+        && g_queue_get_length (&timecodestamper->ltc_current_tcs) >
         DEFAULT_LTC_QUEUE / 2 && !timecodestamper->video_eos
         && !timecodestamper->ltc_flushing) {
       GST_TRACE_OBJECT (timecodestamper,
           "Waiting for video to advance, EOS or flushing");
       g_cond_wait (&timecodestamper->ltc_cond_audio, &timecodestamper->mutex);
-    }
-
-    while ((timecodestamper->video_current_running_time == GST_CLOCK_TIME_NONE
-            || timecodestamper->ltc_current_running_time <
-            timecodestamper->video_current_running_time)
-        && timecodestamper->ltc_dec
-        && ltc_decoder_queue_length (timecodestamper->ltc_dec) >
-        3 * DEFAULT_LTC_QUEUE / 4) {
-      LTCFrameExt ltc_frame;
-      GST_WARNING_OBJECT (timecodestamper,
-          "Dropping old LTC timecode because of audio being behind");
-      ltc_decoder_read (timecodestamper->ltc_dec, &ltc_frame);
     }
   }
 
