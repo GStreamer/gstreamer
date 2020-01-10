@@ -102,6 +102,8 @@ mpegts_parse_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
     GstMpegtsSection * section);
 static void mpegts_parse_inspect_packet (MpegTSBase * base,
     MpegTSPacketizerPacket * packet);
+static GstFlowReturn mpegts_parse_have_buffer (MpegTSBase * base,
+    GstBuffer * buffer);
 
 static MpegTSParsePad *mpegts_parse_create_tspad (MpegTSParse2 * parse,
     const gchar * name);
@@ -119,8 +121,6 @@ static gboolean push_event (MpegTSBase * base, GstEvent * event);
 #define mpegts_parse_parent_class parent_class
 G_DEFINE_TYPE (MpegTSParse2, mpegts_parse, GST_TYPE_MPEGTS_BASE);
 static void mpegts_parse_reset (MpegTSBase * base);
-static GstFlowReturn mpegts_parse_input_done (MpegTSBase * base,
-    GstBuffer * buffer);
 static GstFlowReturn
 drain_pending_buffers (MpegTSParse2 * parse, gboolean drain_all);
 
@@ -180,7 +180,6 @@ mpegts_parse_class_init (MpegTSParse2Class * klass)
   ts_class->program_started = GST_DEBUG_FUNCPTR (mpegts_parse_program_started);
   ts_class->program_stopped = GST_DEBUG_FUNCPTR (mpegts_parse_program_stopped);
   ts_class->reset = GST_DEBUG_FUNCPTR (mpegts_parse_reset);
-  ts_class->input_done = GST_DEBUG_FUNCPTR (mpegts_parse_input_done);
   ts_class->inspect_packet = GST_DEBUG_FUNCPTR (mpegts_parse_inspect_packet);
 }
 
@@ -190,9 +189,8 @@ mpegts_parse_init (MpegTSParse2 * parse)
   MpegTSBase *base = (MpegTSBase *) parse;
 
   base->program_size = sizeof (MpegTSParseProgram);
-  /* We will only need to handle data/section if we have request pads */
-  base->push_data = FALSE;
-  base->push_section = FALSE;
+  base->push_data = TRUE;
+  base->push_section = TRUE;
 
   parse->user_pcr_pid = parse->pcr_pid = -1;
 
@@ -426,7 +424,6 @@ static void
 mpegts_parse_pad_removed (GstElement * element, GstPad * pad)
 {
   MpegTSParsePad *tspad;
-  MpegTSBase *base = (MpegTSBase *) element;
   MpegTSParse2 *parse = GST_MPEGTS_PARSE (element);
 
   if (gst_pad_get_direction (pad) == GST_PAD_SINK)
@@ -438,10 +435,6 @@ mpegts_parse_pad_removed (GstElement * element, GstPad * pad)
 
     parse->srcpads = g_list_remove_all (parse->srcpads, pad);
   }
-  if (parse->srcpads == NULL) {
-    base->push_data = FALSE;
-    base->push_section = FALSE;
-  }
 
   if (GST_ELEMENT_CLASS (parent_class)->pad_removed)
     GST_ELEMENT_CLASS (parent_class)->pad_removed (element, pad);
@@ -451,7 +444,6 @@ static GstPad *
 mpegts_parse_request_new_pad (GstElement * element, GstPadTemplate * template,
     const gchar * padname, const GstCaps * caps)
 {
-  MpegTSBase *base = (MpegTSBase *) element;
   MpegTSParse2 *parse;
   MpegTSParsePad *tspad;
   MpegTSParseProgram *parseprogram;
@@ -484,8 +476,6 @@ mpegts_parse_request_new_pad (GstElement * element, GstPadTemplate * template,
 
   pad = tspad->pad;
   parse->srcpads = g_list_append (parse->srcpads, pad);
-  base->push_data = TRUE;
-  base->push_section = TRUE;
 
   gst_pad_set_active (pad, TRUE);
 
@@ -624,6 +614,7 @@ mpegts_parse_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
   MpegTSParsePad *tspad;
   GstFlowReturn ret;
   GList *srcpads;
+  GstBuffer *buf;
 
   GST_OBJECT_LOCK (parse);
   srcpads = parse->srcpads;
@@ -642,6 +633,9 @@ mpegts_parse_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
     g_object_ref (pad);
   }
   GST_OBJECT_UNLOCK (parse);
+
+  buf = mpegts_packet_to_buffer (packet);
+  ret = mpegts_parse_have_buffer (base, buf);
 
   while (pad && !done) {
     tspad = gst_pad_get_element_private (pad);
@@ -864,7 +858,7 @@ drain_pending_buffers (MpegTSParse2 * parse, gboolean drain_all)
 }
 
 static GstFlowReturn
-mpegts_parse_input_done (MpegTSBase * base, GstBuffer * buffer)
+mpegts_parse_have_buffer (MpegTSBase * base, GstBuffer * buffer)
 {
   MpegTSParse2 *parse = GST_MPEGTS_PARSE (base);
   GstFlowReturn ret = GST_FLOW_OK;
