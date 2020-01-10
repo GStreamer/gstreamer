@@ -635,6 +635,9 @@ mpegts_parse_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
   GST_OBJECT_UNLOCK (parse);
 
   buf = mpegts_packet_to_buffer (packet);
+  if (!(packet->afc_flags & MPEGTS_AFC_RANDOM_ACCESS_FLAG)) {
+    gst_buffer_set_flags (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+  }
   ret = mpegts_parse_have_buffer (base, buf);
 
   while (pad && !done) {
