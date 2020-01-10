@@ -20,7 +20,7 @@ if hls_option.disabled()
 endif
 
 if ['auto', 'nettle'].contains(hls_crypto)
-  hls_crypto_dep = dependency('nettle', required : false)
+  hls_crypto_dep = dependency('nettle', version : '>= 3.0', required : false)
   if hls_crypto_dep.found()
     hls_cargs += ['-DHAVE_NETTLE']
   endif
