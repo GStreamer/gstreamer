@@ -124,7 +124,7 @@ gst_d3d11_decoder_constructed (GObject * object)
       (void **) &priv->video_device);
 
   if (!gst_d3d11_result (hr, priv->device) || !priv->video_device) {
-    GST_ERROR_OBJECT (self, "Cannot create VideoDevice Object: 0x%x",
+    GST_WARNING_OBJECT (self, "Cannot create VideoDevice Object: 0x%x",
         (guint) hr);
     priv->video_device = NULL;
 
@@ -135,7 +135,7 @@ gst_d3d11_decoder_constructed (GObject * object)
       &IID_ID3D11VideoContext, (void **) &priv->video_context);
 
   if (!gst_d3d11_result (hr, priv->device) || !priv->video_context) {
-    GST_ERROR_OBJECT (self, "Cannot create VideoContext Object: 0x%x",
+    GST_WARNING_OBJECT (self, "Cannot create VideoContext Object: 0x%x",
         (guint) hr);
     priv->video_context = NULL;
 
@@ -152,7 +152,7 @@ fail:
 
   if (priv->video_context) {
     ID3D11VideoContext_Release (priv->video_context);
-    priv->video_device = NULL;
+    priv->video_context = NULL;
   }
 
   return;
@@ -206,7 +206,7 @@ gst_d3d11_decoder_close (GstD3D11Decoder * self)
 
   if (priv->video_context) {
     ID3D11VideoContext_Release (priv->video_context);
-    priv->video_device = NULL;
+    priv->video_context = NULL;
   }
 
   return TRUE;
@@ -265,13 +265,19 @@ GstD3D11Decoder *
 gst_d3d11_decoder_new (GstD3D11Device * device)
 {
   GstD3D11Decoder *decoder;
+  GstD3D11DecoderPrivate *priv;
 
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
 
   decoder = g_object_new (GST_TYPE_D3D11_DECODER, "device", device, NULL);
+  priv = decoder->priv;
 
-  if (decoder)
-    gst_object_ref_sink (decoder);
+  if (!priv->video_device || !priv->video_context) {
+    gst_object_unref (decoder);
+    return NULL;
+  }
+
+  gst_object_ref_sink (decoder);
 
   return decoder;
 }
