@@ -49,6 +49,10 @@ struct _GstImageFreeze
 
   GMutex lock;
   GstBuffer *buffer;
+  GstCaps *buffer_caps, *current_caps;
+  gboolean buffer_caps_updated;
+
+  gboolean negotiated_framerate;
   gint fps_n, fps_d;
 
   GstSegment segment;
@@ -57,6 +61,8 @@ struct _GstImageFreeze
 
   gint num_buffers;
   gint num_buffers_left;
+
+  gboolean allow_replace;
 
   guint64 offset;
 
