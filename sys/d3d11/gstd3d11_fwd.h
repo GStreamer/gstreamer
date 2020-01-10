@@ -27,7 +27,17 @@
 #include <initguid.h>
 #endif
 
+#if (D3D11_HEADER_VERSION >= 4)
+#include <d3d11_4.h>
+#elif (D3D11_HEADER_VERSION >= 3)
+#include <d3d11_3.h>
+#elif (D3D11_HEADER_VERSION >= 2)
+#include <d3d11_2.h>
+#elif (D3D11_HEADER_VERSION >= 1)
+#include <d3d11_1.h>
+#else
 #include <d3d11.h>
+#endif
 
 #if (DXGI_HEADER_VERSION >= 6)
 #include <dxgi1_6.h>

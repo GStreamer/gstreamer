@@ -43,6 +43,7 @@ GST_DEBUG_CATEGORY (gst_d3d11_format_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_device_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_overlay_compositor_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_window_debug);
+GST_DEBUG_CATEGORY (gst_d3d11_video_processor_debug);
 
 #if (HAVE_D3D11SDKLAYERS_H || HAVE_DXGIDEBUG_H)
 GST_DEBUG_CATEGORY (gst_d3d11_debug_layer_debug);
@@ -71,6 +72,8 @@ plugin_init (GstPlugin * plugin)
       "d3d11overlaycompositor", 0, "d3d11overlaycompositor");
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_window_debug,
       "d3d11window", 0, "d3d11window");
+  GST_DEBUG_CATEGORY_INIT (gst_d3d11_video_processor_debug,
+      "d3d11videoprocessor", 0, "d3d11videoprocessor");
 
 #if (HAVE_D3D11SDKLAYERS_H || HAVE_DXGIDEBUG_H)
   /* NOTE: enabled only for debug build */

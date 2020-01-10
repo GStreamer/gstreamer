@@ -15,6 +15,7 @@ d3d11_sources = [
   'gstd3d11shader.c',
   'gstd3d11colorconverter.c',
   'gstd3d11overlaycompositor.c',
+  'gstd3d11videoprocessor.c',
 ]
 
 d3d11_dec_sources = [
@@ -39,9 +40,18 @@ dxgi_headers = [
   ['dxgi.h', 1]
 ]
 
+d3d11_headers = [
+  ['d3d11_4.h', 4],
+  ['d3d11_3.h', 3],
+  ['d3d11_2.h', 2],
+  ['d3d11_1.h', 1],
+  ['d3d11.h', 0]
+]
+
 have_d3d11 = false
 extra_c_args = ['-DCOBJMACROS']
 have_dxgi_header = false
+have_d3d11_header = false
 have_d3d11sdk_h = false
 have_dxgidebug_h = false
 winapi_desktop = false
@@ -66,7 +76,14 @@ foreach dxgi_h: dxgi_headers
   endif
 endforeach
 
-have_d3d11 = d3d11_lib.found() and dxgi_lib.found() and cc.has_header('d3d11.h') and have_dxgi_header and cc.has_header('d3dcompiler.h')
+foreach d3d11_h: d3d11_headers
+  if not have_d3d11_header and cc.has_header(d3d11_h[0])
+    d3d11_conf.set('D3D11_HEADER_VERSION', d3d11_h[1])
+    have_d3d11_header = true
+  endif
+endforeach
+
+have_d3d11 = d3d11_lib.found() and dxgi_lib.found() and have_d3d11_header and have_dxgi_header and cc.has_header('d3dcompiler.h')
 if not have_d3d11
   if d3d11_option.enabled()
     error('The d3d11 plugin was enabled explicitly, but required dependencies were not found.')
