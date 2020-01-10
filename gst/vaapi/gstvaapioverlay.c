@@ -446,7 +446,7 @@ gst_vaapi_overlay_create_output_buffer (GstVideoAggregator * vagg,
 
   *outbuf = NULL;
   if ((gst_buffer_pool_acquire_buffer (pool, outbuf, NULL) != GST_FLOW_OK)
-      || !outbuf) {
+      || !*outbuf) {
     GST_ERROR_OBJECT (overlay, "failed to create output video buffer");
     return GST_FLOW_ERROR;
   }
