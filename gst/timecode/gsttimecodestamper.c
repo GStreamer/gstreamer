@@ -1659,8 +1659,8 @@ gst_timecodestamper_ltcpad_chain (GstPad * pad,
 
   if (!timecodestamper->stream_align) {
     timecodestamper->stream_align =
-        gst_audio_stream_align_new (timecodestamper->ainfo.rate, GST_SECOND,
-        40 * GST_MSECOND);
+        gst_audio_stream_align_new (timecodestamper->ainfo.rate,
+        500 * GST_MSECOND, 20 * GST_MSECOND);
   }
 
   discont =
@@ -1669,8 +1669,11 @@ gst_timecodestamper_ltcpad_chain (GstPad * pad,
       &timestamp, &duration, NULL);
 
   if (discont) {
-    if (timecodestamper->ltc_dec)
+    if (timecodestamper->ltc_dec) {
+      GST_WARNING_OBJECT (timecodestamper, "Got discont at %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (timestamp));
       ltc_decoder_queue_flush (timecodestamper->ltc_dec);
+    }
     timecodestamper->ltc_total = 0;
   }
 
@@ -1750,8 +1753,26 @@ gst_timecodestamper_ltcpad_chain (GstPad * pad,
           0, 0, timecodestamper->ltc_daily_jam, 0,
           stc.hours, stc.mins, stc.secs, stc.frame, 0);
 
-      g_queue_push_tail (&timecodestamper->ltc_current_tcs,
-          g_steal_pointer (&ltc_tc));
+      /* If we have a discontinuity it might happen that we're getting
+       * timecodes that are in the past relative to timecodes we already have
+       * in our queue. We have to get rid of all the timecodes that are in the
+       * future now. */
+      if (discont) {
+        TimestampedTimecode *tmp;
+
+        while ((tmp = g_queue_peek_tail (&timecodestamper->ltc_current_tcs)) &&
+            tmp->running_time >= ltc_running_time) {
+          gst_video_time_code_clear (&tmp->timecode);
+          g_free (tmp);
+          g_queue_pop_tail (&timecodestamper->ltc_current_tcs);
+        }
+
+        g_queue_push_tail (&timecodestamper->ltc_current_tcs,
+            g_steal_pointer (&ltc_tc));
+      } else {
+        g_queue_push_tail (&timecodestamper->ltc_current_tcs,
+            g_steal_pointer (&ltc_tc));
+      }
     }
   }
 
