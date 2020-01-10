@@ -163,7 +163,6 @@ GType               gst_d3d11_allocation_params_get_type (void);
 
 GstD3D11AllocationParams * gst_d3d11_allocation_params_new (GstVideoInfo * info,
                                                             GstD3D11AllocationFlags flags,
-                                                            D3D11_USAGE usage,
                                                             gint bind_flags);
 
 GstD3D11AllocationParams * gst_d3d11_allocation_params_copy (GstD3D11AllocationParams * src);

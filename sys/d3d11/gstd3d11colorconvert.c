@@ -341,7 +341,7 @@ gst_d3d11_color_convert_propose_allocation (GstBaseTransform * trans,
   d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
   if (!d3d11_params) {
     d3d11_params = gst_d3d11_allocation_params_new (&info,
-        GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT, D3D11_USAGE_DEFAULT,
+        GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT,
         D3D11_BIND_SHADER_RESOURCE);
   } else {
     /* Set bind flag */
@@ -422,7 +422,7 @@ gst_d3d11_color_convert_decide_allocation (GstBaseTransform * trans,
   d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
   if (!d3d11_params) {
     d3d11_params = gst_d3d11_allocation_params_new (&info,
-        GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT, D3D11_USAGE_DEFAULT,
+        GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT,
         D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
   } else {
     /* Set bind flag */

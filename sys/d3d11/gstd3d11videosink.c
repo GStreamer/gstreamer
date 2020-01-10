@@ -416,13 +416,11 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
     d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
     if (!d3d11_params) {
       d3d11_params = gst_d3d11_allocation_params_new (&self->info,
-          GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT, D3D11_USAGE_DYNAMIC,
+          GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT,
           D3D11_BIND_SHADER_RESOURCE);
     } else {
       /* Set bind flag */
       for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&self->info); i++) {
-        d3d11_params->desc[i].Usage = D3D11_USAGE_DYNAMIC;
-        d3d11_params->desc[i].CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
         d3d11_params->desc[i].BindFlags |= D3D11_BIND_SHADER_RESOURCE;
       }
     }
@@ -625,7 +623,7 @@ gst_d3d11_video_sink_propose_allocation (GstBaseSink * sink, GstQuery * query)
     d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
     if (!d3d11_params) {
       d3d11_params = gst_d3d11_allocation_params_new (&info,
-          GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT, D3D11_USAGE_DEFAULT,
+          GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT,
           D3D11_BIND_SHADER_RESOURCE);
     } else {
       /* Set bind flag */
@@ -686,24 +684,6 @@ gst_d3d11_video_sink_query (GstBaseSink * sink, GstQuery * query)
       if (gst_d3d11_handle_context_query (GST_ELEMENT (self), query,
               self->device)) {
         return TRUE;
-      }
-      break;
-    case GST_QUERY_CUSTOM:
-      if (gst_query_is_d3d11_usage (query)) {
-        D3D11_USAGE usage = D3D11_USAGE_DEFAULT;
-        GstD3D11Device *device;
-
-        gst_query_parse_d3d11_usage (query, &device, &usage);
-        if (device == self->device &&
-            (usage == D3D11_USAGE_DEFAULT || usage == D3D11_USAGE_DYNAMIC)) {
-          gst_query_set_d3d11_usage_result (query, TRUE);
-          gst_object_unref (device);
-        } else {
-          gst_query_set_d3d11_usage_result (query, FALSE);
-          gst_object_unref (device);
-
-          return TRUE;
-        }
       }
       break;
     default:

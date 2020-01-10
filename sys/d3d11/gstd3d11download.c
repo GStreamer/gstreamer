@@ -68,8 +68,6 @@ static gboolean gst_d3d11_download_decide_allocation (GstBaseTransform * trans,
     GstQuery * query);
 static GstFlowReturn gst_d3d11_download_transform (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer * outbuf);
-static gboolean gst_d3d11_download_query (GstBaseTransform * trans,
-    GstPadDirection direction, GstQuery * query);
 
 static void
 gst_d3d11_download_class_init (GstD3D11DownloadClass * klass)
@@ -94,7 +92,6 @@ gst_d3d11_download_class_init (GstD3D11DownloadClass * klass)
   trans_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_d3d11_download_decide_allocation);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_d3d11_download_transform);
-  trans_class->query = GST_DEBUG_FUNCPTR (gst_d3d11_download_query);
 
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_download_debug,
       "d3d11download", 0, "d3d11download Element");
@@ -318,29 +315,4 @@ invalid_buffer:
         ("invalid video buffer received"));
     return GST_FLOW_ERROR;
   }
-}
-
-static gboolean
-gst_d3d11_download_query (GstBaseTransform * trans, GstPadDirection direction,
-    GstQuery * query)
-{
-  if (gst_query_is_d3d11_usage (query) && direction == GST_PAD_SINK) {
-    GstD3D11BaseFilter *filter = GST_D3D11_BASE_FILTER (trans);
-    D3D11_USAGE usage = D3D11_USAGE_DEFAULT;
-    GstD3D11Device *device;
-
-    gst_query_parse_d3d11_usage (query, &device, &usage);
-    if (filter->device == device && usage == D3D11_USAGE_DEFAULT) {
-      gst_query_set_d3d11_usage_result (query, TRUE);
-      gst_object_unref (device);
-    } else {
-      gst_query_set_d3d11_usage_result (query, FALSE);
-      gst_object_unref (device);
-
-      return TRUE;
-    }
-  }
-
-  return GST_BASE_TRANSFORM_CLASS (parent_class)->query (trans, direction,
-      query);
 }

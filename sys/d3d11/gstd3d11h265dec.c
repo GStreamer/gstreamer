@@ -410,8 +410,7 @@ gst_d3d11_h265_dec_decide_allocation (GstVideoDecoder * decoder,
   if (self->use_d3d11_output) {
     d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
     if (!d3d11_params)
-      d3d11_params = gst_d3d11_allocation_params_new (&vinfo, 0,
-          D3D11_USAGE_DEFAULT, 0);
+      d3d11_params = gst_d3d11_allocation_params_new (&vinfo, 0, 0);
 
     /* dxva2 decoder uses non-resource format
      * (e.g., use NV12 instead of R8 + R8G8 */

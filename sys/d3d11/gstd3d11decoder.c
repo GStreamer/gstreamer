@@ -394,8 +394,7 @@ gst_d3d11_decoder_prepare_output_view_pool (GstD3D11Decoder * self,
   gst_clear_object (&priv->internal_pool);
 
   alloc_params = gst_d3d11_allocation_params_new (info,
-      GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY, D3D11_USAGE_DEFAULT,
-      D3D11_BIND_DECODER);
+      GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY, D3D11_BIND_DECODER);
 
   if (!alloc_params) {
     GST_ERROR_OBJECT (self, "Failed to create allocation param");

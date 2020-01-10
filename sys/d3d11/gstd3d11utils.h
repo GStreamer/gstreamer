@@ -42,21 +42,6 @@ gboolean        gst_d3d11_ensure_element_data       (GstElement * element,
 
 gboolean        gst_d3d11_is_windows_8_or_greater   (void);
 
-GstQuery *      gst_query_new_d3d11_usage           (GstD3D11Device * device,
-                                                     D3D11_USAGE usage);
-
-void            gst_query_parse_d3d11_usage         (GstQuery * query,
-                                                     GstD3D11Device ** device,
-                                                     D3D11_USAGE *usage);
-
-void            gst_query_set_d3d11_usage_result    (GstQuery * query,
-                                                     gboolean result);
-
-void            gst_query_parse_d3d11_usage_result  (GstQuery * query,
-                                                     gboolean * result);
-
-gboolean        gst_query_is_d3d11_usage            (GstQuery * query);
-
 GstCaps *       gst_d3d11_caps_fixate_format        (GstCaps * caps,
                                                      GstCaps * othercaps);
 

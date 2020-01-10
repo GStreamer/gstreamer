@@ -279,7 +279,6 @@ gst_d3d11_upload_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   GstStructure *config;
   gboolean update_pool = FALSE;
   GstVideoInfo vinfo;
-  gint i;
 
   gst_query_parse_allocation (query, &outcaps, NULL);
 
@@ -311,45 +310,6 @@ gst_d3d11_upload_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
   gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
 
-  {
-    GstQuery *usage_query;
-    gboolean can_dynamic = FALSE;
-
-    usage_query =
-        gst_query_new_d3d11_usage (filter->device, D3D11_USAGE_DYNAMIC);
-    gst_pad_peer_query (GST_BASE_TRANSFORM_SRC_PAD (trans), usage_query);
-    gst_query_parse_d3d11_usage_result (usage_query, &can_dynamic);
-    gst_query_unref (usage_query);
-
-    if (can_dynamic) {
-      GstD3D11AllocationParams *d3d11_params;
-
-      GST_DEBUG_OBJECT (trans, "downstream support dynamic usage");
-
-      d3d11_params =
-          gst_buffer_pool_config_get_d3d11_allocation_params (config);
-      if (!d3d11_params) {
-        /* dynamic usage should have at least one bind flag.
-         * but followings are not allowed in this case
-         * D3D11_BIND_STREAM_OUTPUT
-         * D3D11_BIND_RENDER_TARGET
-         * D3D11_BIND_DEPTH_STENCIL
-         * D3D11_BIND_UNORDERED_ACCESS */
-        d3d11_params = gst_d3d11_allocation_params_new (&vinfo,
-            GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT,
-            D3D11_USAGE_DYNAMIC, D3D11_BIND_SHADER_RESOURCE);
-      } else {
-        for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-          d3d11_params->desc[i].Usage = D3D11_USAGE_DYNAMIC;
-          d3d11_params->desc[i].CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-        }
-      }
-
-      gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
-      gst_d3d11_allocation_params_free (d3d11_params);
-    }
-  }
-
   gst_buffer_pool_set_config (pool, config);
 
   /* update size with calculated one */
@@ -367,85 +327,11 @@ gst_d3d11_upload_decide_allocation (GstBaseTransform * trans, GstQuery * query)
 }
 
 static GstFlowReturn
-upload_transform_dynamic (GstD3D11BaseFilter * filter,
-    GstD3D11Device * device, GstBuffer * inbuf, GstBuffer * outbuf)
-{
-  GstVideoFrame in_frame;
-  gint i, j, k;
-  GstFlowReturn ret = GST_FLOW_OK;
-  ID3D11DeviceContext *device_context =
-      gst_d3d11_device_get_device_context_handle (device);
-
-  if (!gst_video_frame_map (&in_frame, &filter->in_info, inbuf,
-          GST_MAP_READ | GST_VIDEO_FRAME_MAP_FLAG_NO_REF))
-    goto invalid_buffer;
-
-  gst_d3d11_device_lock (device);
-  for (i = 0, j = 0; i < gst_buffer_n_memory (outbuf); i++) {
-    GstD3D11Memory *dmem =
-        (GstD3D11Memory *) gst_buffer_peek_memory (outbuf, i);
-    D3D11_MAPPED_SUBRESOURCE map;
-    HRESULT hr;
-    D3D11_TEXTURE2D_DESC *desc = &dmem->desc;
-    gsize offset[GST_VIDEO_MAX_PLANES];
-    gint stride[GST_VIDEO_MAX_PLANES];
-    gsize dummy;
-
-    hr = ID3D11DeviceContext_Map (device_context,
-        (ID3D11Resource *) dmem->texture, 0, D3D11_MAP_WRITE_DISCARD, 0, &map);
-
-    if (!gst_d3d11_result (hr, device)) {
-      GST_ERROR_OBJECT (filter,
-          "Failed to map staging texture (0x%x)", (guint) hr);
-      gst_d3d11_device_unlock (device);
-      ret = GST_FLOW_ERROR;
-      goto done;
-    }
-
-    gst_d3d11_dxgi_format_get_size (desc->Format, desc->Width, desc->Height,
-        map.RowPitch, offset, stride, &dummy);
-
-    for (k = 0; k < gst_d3d11_dxgi_format_n_planes (dmem->desc.Format); k++) {
-      gint h, width;
-      guint8 *dst, *src;
-
-      dst = (guint8 *) map.pData + offset[k];
-      src = GST_VIDEO_FRAME_PLANE_DATA (&in_frame, j);
-      width = GST_VIDEO_FRAME_COMP_WIDTH (&in_frame, j) *
-          GST_VIDEO_FRAME_COMP_PSTRIDE (&in_frame, j);
-
-      for (h = 0; h < GST_VIDEO_FRAME_COMP_HEIGHT (&in_frame, j); h++) {
-        memcpy (dst, src, width);
-        dst += stride[k];
-        src += GST_VIDEO_FRAME_PLANE_STRIDE (&in_frame, j);
-      }
-
-      j++;
-    }
-
-    ID3D11DeviceContext_Unmap (device_context,
-        (ID3D11Resource *) dmem->texture, 0);
-  }
-  gst_d3d11_device_unlock (device);
-
-done:
-  gst_video_frame_unmap (&in_frame);
-
-  return ret;
-
-  /* ERRORS */
-invalid_buffer:
-  {
-    GST_ELEMENT_WARNING (filter, CORE, NOT_IMPLEMENTED, (NULL),
-        ("invalid video buffer received"));
-    return GST_FLOW_ERROR;
-  }
-}
-
-static GstFlowReturn
-upload_transform (GstD3D11BaseFilter * filter, GstBuffer * inbuf,
+gst_d3d11_upload_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
+  GstD3D11BaseFilter *filter = GST_D3D11_BASE_FILTER (trans);
+
   GstVideoFrame in_frame, out_frame;
   gint i;
   GstFlowReturn ret = GST_FLOW_OK;
@@ -480,25 +366,4 @@ invalid_buffer:
         ("invalid video buffer received"));
     return GST_FLOW_ERROR;
   }
-}
-
-static GstFlowReturn
-gst_d3d11_upload_transform (GstBaseTransform * trans, GstBuffer * inbuf,
-    GstBuffer * outbuf)
-{
-  GstD3D11BaseFilter *filter = GST_D3D11_BASE_FILTER (trans);
-  GstMemory *mem;
-  GstD3D11Device *device;
-
-  mem = gst_buffer_peek_memory (outbuf, 0);
-  if (gst_is_d3d11_memory (mem)) {
-    GstD3D11Memory *dmem = (GstD3D11Memory *) mem;
-    device = dmem->device;
-
-    if (dmem->desc.Usage == D3D11_USAGE_DYNAMIC) {
-      return upload_transform_dynamic (filter, device, inbuf, outbuf);
-    }
-  }
-
-  return upload_transform (filter, inbuf, outbuf);
 }

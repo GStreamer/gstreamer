@@ -31,27 +31,17 @@ GST_DEBUG_CATEGORY_STATIC (gst_d3d11_allocator_debug);
 
 GstD3D11AllocationParams *
 gst_d3d11_allocation_params_new (GstVideoInfo * info,
-    GstD3D11AllocationFlags flags, D3D11_USAGE usage, gint bind_flags)
+    GstD3D11AllocationFlags flags, gint bind_flags)
 {
   GstD3D11AllocationParams *ret;
   const GstD3D11Format *d3d11_format;
   gint i;
-  gint cpu_access_flags;
 
   g_return_val_if_fail (info != NULL, NULL);
 
   d3d11_format = gst_d3d11_format_from_gst (GST_VIDEO_INFO_FORMAT (info));
   if (!d3d11_format) {
     GST_WARNING ("Couldn't get d3d11 format");
-    return NULL;
-  }
-
-  if (usage == D3D11_USAGE_DEFAULT) {
-    cpu_access_flags = 0;
-  } else if (usage == D3D11_USAGE_DYNAMIC) {
-    cpu_access_flags = D3D11_CPU_ACCESS_WRITE;
-  } else {
-    GST_FIXME ("Neither default nor dynamic usage");
     return NULL;
   }
 
@@ -89,9 +79,8 @@ gst_d3d11_allocation_params_new (GstVideoInfo * info,
       ret->desc[i].Format = d3d11_format->resource_format[i];
       ret->desc[i].SampleDesc.Count = 1;
       ret->desc[i].SampleDesc.Quality = 0;
-      ret->desc[i].Usage = usage;
+      ret->desc[i].Usage = D3D11_USAGE_DEFAULT;
       ret->desc[i].BindFlags = bind_flags;
-      ret->desc[i].CPUAccessFlags = cpu_access_flags;
     }
   } else {
     g_assert (d3d11_format->dxgi_format != DXGI_FORMAT_UNKNOWN);
@@ -103,9 +92,8 @@ gst_d3d11_allocation_params_new (GstVideoInfo * info,
     ret->desc[0].Format = d3d11_format->dxgi_format;
     ret->desc[0].SampleDesc.Count = 1;
     ret->desc[0].SampleDesc.Quality = 0;
-    ret->desc[0].Usage = usage;
+    ret->desc[0].Usage = D3D11_USAGE_DEFAULT;
     ret->desc[0].BindFlags = bind_flags;
-    ret->desc[0].CPUAccessFlags = cpu_access_flags;
   }
 
   ret->flags = flags;
@@ -234,12 +222,6 @@ gst_d3d11_memory_map (GstMemory * mem, gsize maxsize, GstMapFlags flags)
 {
   GstD3D11Memory *dmem = (GstD3D11Memory *) mem;
 
-  if (dmem->desc.Usage == D3D11_USAGE_DYNAMIC) {
-    GST_FIXME_OBJECT (mem->allocator,
-        "D3D11_USAGE_DYNAMIC shouldn't be used with gst_memory_map");
-    return NULL;
-  }
-
   g_mutex_lock (&dmem->lock);
   if ((flags & GST_MAP_D3D11) == GST_MAP_D3D11) {
     if (dmem->staging &&
@@ -319,12 +301,6 @@ static void
 gst_d3d11_memory_unmap_full (GstMemory * mem, GstMapInfo * info)
 {
   GstD3D11Memory *dmem = (GstD3D11Memory *) mem;
-
-  if (dmem->desc.Usage == D3D11_USAGE_DYNAMIC) {
-    GST_FIXME_OBJECT (mem->allocator,
-        "D3D11_USAGE_DYNAMIC shouldn't be used with gst_memory_unmap");
-    return;
-  }
 
   g_mutex_lock (&dmem->lock);
   if ((info->flags & GST_MAP_D3D11) == GST_MAP_D3D11) {
@@ -640,7 +616,6 @@ gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
   D3D11_TEXTURE2D_DESC *desc;
   gsize *size;
   gboolean is_first = FALSE;
-  GstMemoryFlags memory_flags;
   guint index_to_use = 0;
   GstD3D11MemoryType type = GST_D3D11_MEMORY_TYPE_TEXTURE;
 
@@ -650,16 +625,6 @@ gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
   device = allocator->device;
   desc = &params->desc[params->plane];
   size = &params->size[params->plane];
-
-  if (desc->Usage == D3D11_USAGE_DEFAULT) {
-    memory_flags = 0;
-  } else if (desc->Usage == D3D11_USAGE_DYNAMIC) {
-    /* FIXME: how we can make D3D11_USAGE_DYNAMIC work with GST_MAP_READWRITE ? */
-    memory_flags = GST_MEMORY_FLAG_NOT_MAPPABLE;
-  } else {
-    GST_FIXME_OBJECT (allocator, "Cannot support usage %d", desc->Usage);
-    return NULL;
-  }
 
   if (*size == 0)
     is_first = TRUE;
@@ -701,30 +666,19 @@ gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
   /* per plane, allocated staging texture to calculate actual size,
    * stride, and offset */
   if (is_first) {
-    ID3D11Texture2D *target;
-    D3D11_MAP map_type;
     gint num_plane;
     gint stride[GST_VIDEO_MAX_PLANES];
     gsize mem_size;
     gint i;
 
-    if (desc->Usage == D3D11_USAGE_DEFAULT) {
-      staging = create_staging_texture (device, desc);
-      if (!staging) {
-        GST_ERROR_OBJECT (allocator, "Couldn't create staging texture");
-        goto error;
-      }
-
-      target = staging;
-      map_type = D3D11_MAP_READ;
-    } else if (desc->Usage == D3D11_USAGE_DYNAMIC) {
-      target = texture;
-      map_type = D3D11_MAP_WRITE_DISCARD;
-    } else {
-      g_assert_not_reached ();
+    staging = create_staging_texture (device, desc);
+    if (!staging) {
+      GST_ERROR_OBJECT (allocator, "Couldn't create staging texture");
+      goto error;
     }
 
-    if (!calculate_mem_size (device, target, desc, map_type, stride, &mem_size))
+    if (!calculate_mem_size (device,
+            staging, desc, D3D11_MAP_READ, stride, &mem_size))
       goto error;
 
     num_plane = gst_d3d11_dxgi_format_n_planes (desc->Format);
@@ -739,7 +693,7 @@ gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
   mem = g_new0 (GstD3D11Memory, 1);
 
   gst_memory_init (GST_MEMORY_CAST (mem),
-      memory_flags, GST_ALLOCATOR_CAST (allocator), NULL, *size, 0, 0, *size);
+      0, GST_ALLOCATOR_CAST (allocator), NULL, *size, 0, 0, *size);
 
   g_mutex_init (&mem->lock);
   mem->info = params->info;
