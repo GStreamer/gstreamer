@@ -67,6 +67,10 @@ struct _GstD3D11Vp9DecClass
 
 GType gst_d3d11_vp9_dec_get_type (void);
 
+void  gst_d3d11_vp9_dec_register (GstPlugin * plugin,
+                                  GstD3D11Device * device,
+                                  guint rank);
+
 G_END_DECLS
 
 #endif /* __GST_D3D11_VP9_DEC_H__ */

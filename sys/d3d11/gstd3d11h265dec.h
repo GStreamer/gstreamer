@@ -81,6 +81,10 @@ struct _GstD3D11H265DecClass
 
 GType gst_d3d11_h265_dec_get_type (void);
 
+void  gst_d3d11_h265_dec_register (GstPlugin * plugin,
+                                   GstD3D11Device * device,
+                                   guint rank);
+
 G_END_DECLS
 
 #endif /* __GST_D3D11_H265_DEC_H__ */

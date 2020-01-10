@@ -1423,3 +1423,38 @@ gst_d3d11_h265_dec_decode_slice (GstH265Decoder * decoder,
 
   return TRUE;
 }
+
+void
+gst_d3d11_h265_dec_register (GstPlugin * plugin, GstD3D11Device * device,
+    guint rank)
+{
+  GstD3D11Decoder *decoder;
+  GstVideoInfo info;
+  gboolean ret;
+  static const GUID *supported_profiles[] = {
+    &GST_GUID_D3D11_DECODER_PROFILE_HEVC_VLD_MAIN,
+  };
+
+  decoder = gst_d3d11_decoder_new (device);
+  if (!decoder) {
+    GST_WARNING_OBJECT (device, "decoder interface unavailable");
+    return;
+  }
+
+  /* FIXME: DXVA does not provide API for query supported resolution
+   * maybe we need some tries per standard resolution (e.g., HD, FullHD ...)
+   * to check supported resolution */
+  gst_video_info_set_format (&info, GST_VIDEO_FORMAT_NV12, 1280, 720);
+
+  ret = gst_d3d11_decoder_open (decoder, GST_D3D11_CODEC_H265,
+      &info, NUM_OUTPUT_VIEW, supported_profiles,
+      G_N_ELEMENTS (supported_profiles));
+  gst_object_unref (decoder);
+
+  if (!ret) {
+    GST_WARNING_OBJECT (device, "cannot open decoder device");
+    return;
+  }
+
+  gst_element_register (plugin, "d3d11h265dec", rank, GST_TYPE_D3D11_H265_DEC);
+}

@@ -92,6 +92,8 @@ plugin_init (GstPlugin * plugin)
 #ifdef HAVE_DXVA_H
   /* DXVA2 API is availble since Windows 8 */
   if (gst_d3d11_is_windows_8_or_greater ()) {
+    GstD3D11Device *device;
+
     GST_DEBUG_CATEGORY_INIT (gst_d3d11_h264_dec_debug,
         "d3d11h264dec", 0, "Direct3D11 H.264 Video Decoder");
     GST_DEBUG_CATEGORY_INIT (gst_d3d11_vp9_dec_debug,
@@ -99,12 +101,14 @@ plugin_init (GstPlugin * plugin)
     GST_DEBUG_CATEGORY_INIT (gst_d3d11_h265_dec_debug,
         "d3d11h265dec", 0, "Direct3D11 H.265 Video Decoder");
 
-    gst_element_register (plugin,
-        "d3d11h264dec", GST_RANK_SECONDARY, GST_TYPE_D3D11_H264_DEC);
-    gst_element_register (plugin,
-        "d3d11vp9dec", GST_RANK_SECONDARY, GST_TYPE_D3D11_VP9_DEC);
-    gst_element_register (plugin,
-        "d3d11h265dec", GST_RANK_SECONDARY, GST_TYPE_D3D11_H265_DEC);
+    device = gst_d3d11_device_new (0);
+    if (device) {
+      gst_d3d11_h264_dec_register (plugin, device, GST_RANK_SECONDARY);
+      gst_d3d11_h265_dec_register (plugin, device, GST_RANK_SECONDARY);
+      gst_d3d11_vp9_dec_register (plugin, device, GST_RANK_SECONDARY);
+
+      gst_object_unref (device);
+    }
   }
 #endif
 
