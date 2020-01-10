@@ -35,6 +35,21 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VAAPI_BLEND))
 
 typedef struct _GstVaapiBlend GstVaapiBlend;
+typedef struct _GstVaapiBlendSurface GstVaapiBlendSurface;
+typedef struct _GstVaapiBlendSurfaceGenerator GstVaapiBlendSurfaceGenerator;
+
+struct _GstVaapiBlendSurface
+{
+  GstVaapiSurface const *surface;
+  const GstVaapiRectangle *crop;
+  GstVaapiRectangle target;
+  gdouble alpha;
+};
+
+struct _GstVaapiBlendSurfaceGenerator
+{
+  GstVaapiBlendSurface* (*next)();
+};
 
 GstVaapiBlend *
 gst_vaapi_blend_new (GstVaapiDisplay * display);
@@ -42,6 +57,10 @@ gst_vaapi_blend_new (GstVaapiDisplay * display);
 void
 gst_vaapi_blend_replace (GstVaapiBlend ** old_blend_ptr,
     GstVaapiBlend * new_blend);
+
+gboolean
+gst_vaapi_blend_process (GstVaapiBlend * blend, GstVaapiSurface * output,
+    GstVaapiBlendSurfaceGenerator * generator);
 
 gboolean
 gst_vaapi_blend_process_begin (GstVaapiBlend * blend,
