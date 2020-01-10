@@ -115,6 +115,9 @@ static void gst_d3d11_window_win32_release_external_handle (GstD3D11WindowWin32
 static void
 gst_d3d11_window_win32_set_window_handle (GstD3D11WindowWin32 * self,
     guintptr handle);
+static void
+gst_d3d11_window_win32_on_resize (GstD3D11Window * window,
+    guint width, guint height);
 
 static void
 gst_d3d11_window_win32_class_init (GstD3D11WindowWin32Class * klass)
@@ -134,6 +137,8 @@ gst_d3d11_window_win32_class_init (GstD3D11WindowWin32Class * klass)
   window_class->create_swap_chain =
       GST_DEBUG_FUNCPTR (gst_d3d11_window_win32_create_swap_chain);
   window_class->present = GST_DEBUG_FUNCPTR (gst_d3d11_window_win32_present);
+  window_class->on_resize =
+      GST_DEBUG_FUNCPTR (gst_d3d11_window_win32_on_resize);
 }
 
 static void
@@ -573,7 +578,7 @@ gst_d3d11_window_win32_handle_window_proc (GstD3D11WindowWin32 * self,
 
   switch (uMsg) {
     case WM_SIZE:
-      gst_d3d11_window_on_resize (window, 0, 0);
+      gst_d3d11_window_win32_on_resize (window, 0, 0);
       break;
     case WM_CLOSE:
       if (self->internal_hwnd) {
@@ -790,9 +795,6 @@ gst_d3d11_window_win32_create_swap_chain (GstD3D11Window * window,
 
   *swap_chain = new_swapchain;
 
-  /* Set zero width and height here. dxgi will decide client area by itself */
-  gst_d3d11_window_on_resize (window, 0, 0);
-
   return TRUE;
 }
 
@@ -881,6 +883,14 @@ gst_d3d11_window_win32_present (GstD3D11Window * window, guint present_flags)
   }
 
   return GST_FLOW_OK;
+}
+
+static void
+gst_d3d11_window_win32_on_resize (GstD3D11Window * window,
+    guint width, guint height)
+{
+  /* Set zero width and height here. dxgi will decide client area by itself */
+  GST_D3D11_WINDOW_CLASS (parent_class)->on_resize (window, 0, 0);
 }
 
 static void

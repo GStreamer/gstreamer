@@ -134,6 +134,10 @@ struct _GstD3D11WindowClass
   gboolean      (*unlock)                 (GstD3D11Window * window);
 
   gboolean      (*unlock_stop)            (GstD3D11Window * window);
+
+  void          (*on_resize)              (GstD3D11Window * window,
+                                           guint width,
+                                           guint height);
 };
 
 GType         gst_d3d11_window_get_type             (void);
@@ -160,10 +164,6 @@ GstFlowReturn gst_d3d11_window_render               (GstD3D11Window * window,
 gboolean      gst_d3d11_window_unlock               (GstD3D11Window * window);
 
 gboolean      gst_d3d11_window_unlock_stop          (GstD3D11Window * window);
-
-void          gst_d3d11_window_on_resize            (GstD3D11Window * window,
-                                                     guint width,
-                                                     guint height);
 
 void          gst_d3d11_window_on_key_event         (GstD3D11Window * window,
                                                      const gchar * event,

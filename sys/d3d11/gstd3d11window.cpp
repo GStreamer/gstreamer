@@ -103,6 +103,8 @@ static void gst_d3d11_window_get_property (GObject * object, guint prop_id,
 static void gst_d3d11_window_dispose (GObject * object);
 static GstFlowReturn gst_d3d111_window_present (GstD3D11Window * self,
     GstBuffer * buffer);
+static void gst_d3d11_window_on_resize_default (GstD3D11Window * window,
+    guint width, guint height);
 
 static void
 gst_d3d11_window_class_init (GstD3D11WindowClass * klass)
@@ -112,6 +114,8 @@ gst_d3d11_window_class_init (GstD3D11WindowClass * klass)
   gobject_class->set_property = gst_d3d11_window_set_property;
   gobject_class->get_property = gst_d3d11_window_get_property;
   gobject_class->dispose = gst_d3d11_window_dispose;
+
+  klass->on_resize = GST_DEBUG_FUNCPTR (gst_d3d11_window_on_resize_default);
 
   g_object_class_install_property (gobject_class, PROP_D3D11_DEVICE,
       g_param_spec_object ("d3d11device", "D3D11 Device",
@@ -283,8 +287,9 @@ gst_d3d11_window_dispose (GObject * object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
-void
-gst_d3d11_window_on_resize (GstD3D11Window * window, guint width, guint height)
+static void
+gst_d3d11_window_on_resize_default (GstD3D11Window * window, guint width,
+    guint height)
 {
   HRESULT hr;
   ID3D11Device *device_handle;
@@ -689,6 +694,9 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
     }
   }
 #endif
+
+  /* call resize to allocated resources */
+  klass->on_resize (window, width, height);
 
   if (window->requested_fullscreen != window->fullscreen) {
     klass->change_fullscreen_mode (window);

@@ -91,16 +91,18 @@ gst_d3d11_window_swap_chain_panel_unlock (GstD3D11Window * window);
 static gboolean
 gst_d3d11_window_swap_chain_panel_unlock_stop (GstD3D11Window * window);
 static void
-gst_d3d11_window_swap_chain_panel_on_resize (GstD3D11WindowSwapChainPanel *
-    self, guint width, guint height);
-
+gst_d3d11_window_swap_chain_panel_on_resize (GstD3D11Window * window,
+    guint width, guint height);
+static void
+gst_d3d11_window_swap_chain_panel_on_resize_sync (GstD3D11Window *
+    window);
 class PanelResizeHandler
     : public RuntimeClass<RuntimeClassFlags<ClassicCom>,
         Xaml::ISizeChangedEventHandler>
 {
 public:
   PanelResizeHandler () {}
-  HRESULT RuntimeClassInitialize (GstD3D11WindowSwapChainPanel * listener)
+  HRESULT RuntimeClassInitialize (GstD3D11Window * listener)
   {
     if (!listener)
       return E_INVALIDARG;
@@ -116,8 +118,9 @@ public:
       Size new_size;
       HRESULT hr = args->get_NewSize(&new_size);
       if (SUCCEEDED(hr)) {
-        gst_d3d11_window_swap_chain_panel_on_resize (window,
-            new_size.Width, new_size.Height);
+        window->surface_width = new_size.Width;
+        window->surface_height = new_size.Height;
+        gst_d3d11_window_swap_chain_panel_on_resize_sync (window);
       }
     }
 
@@ -125,7 +128,7 @@ public:
   }
 
 private:
-  GstD3D11WindowSwapChainPanel * window;
+  GstD3D11Window * window;
 };
 
 template <typename CB>
@@ -219,6 +222,8 @@ gst_d3d11_window_swap_chain_panel_class_init (GstD3D11WindowSwapChainPanelClass
       GST_DEBUG_FUNCPTR (gst_d3d11_window_swap_chain_panel_unlock);
   window_class->unlock_stop =
       GST_DEBUG_FUNCPTR (gst_d3d11_window_swap_chain_panel_unlock_stop);
+  window_class->on_resize =
+      GST_DEBUG_FUNCPTR (gst_d3d11_window_swap_chain_panel_on_resize);
 }
 
 static void
@@ -270,7 +275,7 @@ gst_d3d11_window_swap_chain_panel_constructed (GObject * object)
   window->surface_width = size.Width;
   window->surface_height = size.Height;
 
-  hr = MakeAndInitialize<PanelResizeHandler>(&resize_handler, self);
+  hr = MakeAndInitialize<PanelResizeHandler>(&resize_handler, window);
   if (!gst_d3d11_result (hr, NULL))
     goto error;
 
@@ -378,13 +383,6 @@ gst_d3d11_window_swap_chain_panel_create_swap_chain (GstD3D11Window * window,
 
   new_swapchain.CopyTo (swap_chain);
 
-  run_async (storage->dispatcher, storage->cancellable, DEFAULT_ASYNC_TIMEOUT,
-      [window] {
-        gst_d3d11_window_on_resize (window,
-            window->surface_width, window->surface_height);
-        return S_OK;
-      });
-
   return TRUE;
 }
 
@@ -443,14 +441,9 @@ gst_d3d11_window_swap_chain_panel_update_swap_chain (GstD3D11Window * window)
 {
   GstD3D11WindowSwapChainPanel *self =
       GST_D3D11_WINDOW_SWAP_CHAIN_PANEL (window);
-  SwapChainPanelWinRTStorage *storage = self->storage;
 
-  run_async (storage->dispatcher, storage->cancellable, DEFAULT_ASYNC_TIMEOUT,
-      [window] {
-        gst_d3d11_window_on_resize (window,
-            window->surface_width, window->surface_height);
-        return S_OK;
-      });
+  gst_d3d11_window_swap_chain_panel_on_resize (window, window->surface_width,
+      window->surface_height);
 
   return;
 }
@@ -465,16 +458,28 @@ gst_d3d11_window_swap_chain_panel_change_fullscreen_mode (GstD3D11Window *
 }
 
 static void
-gst_d3d11_window_swap_chain_panel_on_resize (GstD3D11WindowSwapChainPanel *
-    self, guint width, guint height)
+gst_d3d11_window_swap_chain_panel_on_resize (GstD3D11Window * window,
+    guint width, guint height)
 {
-  GstD3D11Window *window = GST_D3D11_WINDOW (self);
-  window->surface_width = width;
-  window->surface_height = height;
+  GstD3D11WindowSwapChainPanel *self =
+      GST_D3D11_WINDOW_SWAP_CHAIN_PANEL (window);
+  SwapChainPanelWinRTStorage *storage = self->storage;
 
-  GST_LOG_OBJECT (self, "New size %dx%d", width, height);
+  run_async (storage->dispatcher, storage->cancellable, DEFAULT_ASYNC_TIMEOUT,
+      [window] {
+        gst_d3d11_window_swap_chain_panel_on_resize_sync (window);
+        return S_OK;
+      });
+}
 
-  gst_d3d11_window_on_resize (GST_D3D11_WINDOW (self), width, height);
+static void
+gst_d3d11_window_swap_chain_panel_on_resize_sync (GstD3D11Window * window)
+{
+  GST_LOG_OBJECT (window,
+      "New size %dx%d", window->surface_width, window->surface_height);
+
+  GST_D3D11_WINDOW_CLASS (parent_class)->on_resize (window,
+      window->surface_width, window->surface_height);
 }
 
 GstD3D11Window *

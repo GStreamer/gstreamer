@@ -94,8 +94,10 @@ gst_d3d11_window_core_window_unlock (GstD3D11Window * window);
 static gboolean
 gst_d3d11_window_core_window_unlock_stop (GstD3D11Window * window);
 static void
-gst_d3d11_window_core_window_on_resize (GstD3D11WindowCoreWindow * self,
+gst_d3d11_window_core_window_on_resize (GstD3D11Window * window,
     guint width, guint height);
+static void
+gst_d3d11_window_core_window_on_resize_sync (GstD3D11Window * window);
 
 static float
 get_logical_dpi (void)
@@ -130,7 +132,7 @@ class CoreResizeHandler
 {
 public:
   CoreResizeHandler () {}
-  HRESULT RuntimeClassInitialize (GstD3D11WindowCoreWindow * listener)
+  HRESULT RuntimeClassInitialize (GstD3D11Window * listener)
   {
     if (!listener)
       return E_INVALIDARG;
@@ -151,7 +153,9 @@ public:
         width = (guint) dip_to_pixel (new_size.Width);
         height = (guint) dip_to_pixel (new_size.Height);
 
-        gst_d3d11_window_core_window_on_resize (window, width, height);
+        window->surface_width = width;
+        window->surface_height = height;
+        gst_d3d11_window_core_window_on_resize_sync (window);
       }
     }
 
@@ -159,7 +163,7 @@ public:
   }
 
 private:
-  GstD3D11WindowCoreWindow * window;
+  GstD3D11Window * window;
 };
 
 template <typename CB>
@@ -253,6 +257,8 @@ gst_d3d11_window_core_window_class_init (GstD3D11WindowCoreWindowClass * klass)
       GST_DEBUG_FUNCPTR (gst_d3d11_window_core_window_unlock);
   window_class->unlock_stop =
       GST_DEBUG_FUNCPTR (gst_d3d11_window_core_window_unlock_stop);
+  window_class->on_resize =
+      GST_DEBUG_FUNCPTR (gst_d3d11_window_core_window_on_resize);
 }
 
 static void
@@ -299,7 +305,7 @@ gst_d3d11_window_core_window_constructed (GObject * object)
   window->surface_width = size.Width;
   window->surface_height = size.Height;
 
-  hr = MakeAndInitialize<CoreResizeHandler>(&resize_handler, self);
+  hr = MakeAndInitialize<CoreResizeHandler>(&resize_handler, window);
   if (!gst_d3d11_result (hr, NULL))
     goto error;
 
@@ -389,13 +395,6 @@ gst_d3d11_window_core_window_create_swap_chain (GstD3D11Window * window,
 
   new_swapchain.CopyTo (swap_chain);
 
-  run_async (storage->dispatcher, storage->cancellable, DEFAULT_ASYNC_TIMEOUT,
-      [window] {
-        gst_d3d11_window_on_resize (window,
-            window->surface_width, window->surface_height);
-        return S_OK;
-      });
-
   return TRUE;
 }
 
@@ -450,14 +449,9 @@ static void
 gst_d3d11_window_core_window_update_swap_chain (GstD3D11Window * window)
 {
   GstD3D11WindowCoreWindow *self = GST_D3D11_WINDOW_CORE_WINDOW (window);
-  CoreWindowWinRTStorage *storage = self->storage;
 
-  run_async (storage->dispatcher, storage->cancellable, DEFAULT_ASYNC_TIMEOUT,
-      [window] {
-        gst_d3d11_window_on_resize (window,
-            window->surface_width, window->surface_height);
-        return S_OK;
-      });
+  gst_d3d11_window_core_window_on_resize (window,
+      window->surface_width, window->surface_height);
 
   return;
 }
@@ -471,17 +465,27 @@ gst_d3d11_window_core_window_change_fullscreen_mode (GstD3D11Window * window)
 }
 
 static void
-gst_d3d11_window_core_window_on_resize (GstD3D11WindowCoreWindow * self,
+gst_d3d11_window_core_window_on_resize (GstD3D11Window * window,
     guint width, guint height)
 {
-  GstD3D11Window *window = GST_D3D11_WINDOW (self);
+  GstD3D11WindowCoreWindow *self = GST_D3D11_WINDOW_CORE_WINDOW (window);
+  CoreWindowWinRTStorage *storage = self->storage;
 
-  window->surface_width = width;
-  window->surface_height = height;
+  run_async (storage->dispatcher, storage->cancellable, DEFAULT_ASYNC_TIMEOUT,
+      [window] {
+        gst_d3d11_window_core_window_on_resize_sync (window);
+        return S_OK;
+      });
+}
 
-  GST_LOG_OBJECT (self, "New size %dx%d", width, height);
+static void
+gst_d3d11_window_core_window_on_resize_sync (GstD3D11Window * window)
+{
+  GST_LOG_OBJECT (window,
+      "New size %dx%d", window->surface_width, window->surface_height);
 
-  gst_d3d11_window_on_resize (GST_D3D11_WINDOW (self), width, height);
+  GST_D3D11_WINDOW_CLASS (parent_class)->on_resize (window,
+      window->surface_width, window->surface_height);
 }
 
 GstD3D11Window *
