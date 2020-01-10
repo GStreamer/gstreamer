@@ -516,6 +516,16 @@ mpegts_parse_request_new_pad (GstElement * element, GstPadTemplate * template,
   return pad;
 }
 
+static GstBuffer *
+mpegts_packet_to_buffer (MpegTSPacketizerPacket * packet)
+{
+  GstBuffer *buf =
+      gst_buffer_new_and_alloc (packet->data_end - packet->data_start);
+  gst_buffer_fill (buf, 0, packet->data_start,
+      packet->data_end - packet->data_start);
+  return buf;
+}
+
 static void
 mpegts_parse_release_pad (GstElement * element, GstPad * pad)
 {
@@ -556,10 +566,7 @@ mpegts_parse_tspad_push_section (MpegTSParse2 * parse, MpegTSParsePad * tspad,
       tspad->program_number, section->table_id);
 
   if (to_push) {
-    GstBuffer *buf =
-        gst_buffer_new_and_alloc (packet->data_end - packet->data_start);
-    gst_buffer_fill (buf, 0, packet->data_start,
-        packet->data_end - packet->data_start);
+    GstBuffer *buf = mpegts_packet_to_buffer (packet);
     ret = gst_pad_push (tspad->pad, buf);
     ret = gst_flow_combiner_update_flow (parse->flowcombiner, ret);
   }
@@ -586,10 +593,7 @@ mpegts_parse_tspad_push (MpegTSParse2 * parse, MpegTSParsePad * tspad,
   if (bp) {
     if (packet->pid == bp->pmt_pid || bp->streams == NULL
         || bp->streams[packet->pid]) {
-      GstBuffer *buf =
-          gst_buffer_new_and_alloc (packet->data_end - packet->data_start);
-      gst_buffer_fill (buf, 0, packet->data_start,
-          packet->data_end - packet->data_start);
+      GstBuffer *buf = mpegts_packet_to_buffer (packet);
       /* push if there's no filter or if the pid is in the filter */
       ret = gst_pad_push (tspad->pad, buf);
       ret = gst_flow_combiner_update_flow (parse->flowcombiner, ret);
