@@ -1238,14 +1238,20 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
         GstClockID clock_id;
         GstClockTime base_time =
             gst_element_get_base_time (GST_ELEMENT_CAST (timecodestamper));
+        GstClockTime wait_time;
+
+        /* If we have no latency yet then wait at least 8 frames durations.
+         * See LATENCY query handling for details. */
+        if (timecodestamper->latency == GST_CLOCK_TIME_NONE) {
+          wait_time = base_time + running_time + 8 * frame_duration;
+        } else {
+          wait_time = base_time + running_time + timecodestamper->latency;
+        }
 
         GST_TRACE_OBJECT (timecodestamper,
             "Waiting for clock to reach %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (base_time + running_time +
-                timecodestamper->latency));
-        clock_id =
-            gst_clock_new_single_shot_id (clock,
-            base_time + running_time + timecodestamper->latency);
+            GST_TIME_ARGS (wait_time));
+        clock_id = gst_clock_new_single_shot_id (clock, wait_time);
 
         timecodestamper->video_clock_id = clock_id;
         g_mutex_unlock (&timecodestamper->mutex);
