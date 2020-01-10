@@ -66,6 +66,15 @@ static GstStaticPadTemplate gst_vaapi_overlay_src_factory =
 G_DEFINE_TYPE (GstVaapiOverlaySinkPad, gst_vaapi_overlay_sink_pad,
     GST_TYPE_VIDEO_AGGREGATOR_PAD);
 
+typedef struct _GstVaapiOverlaySurfaceGenerator GstVaapiOverlaySurfaceGenerator;
+struct _GstVaapiOverlaySurfaceGenerator
+{
+  GstVaapiBlendSurfaceGenerator parent;
+  GstVaapiOverlay *overlay;
+  GList *current;
+  GstVaapiBlendSurface blend_surface;
+};
+
 #define DEFAULT_PAD_XPOS   0
 #define DEFAULT_PAD_YPOS   0
 #define DEFAULT_PAD_ALPHA  1.0
@@ -330,53 +339,64 @@ gst_vaapi_overlay_decide_allocation (GstAggregator * agg, GstQuery * query)
       (GST_VAAPI_PLUGIN_BASE (agg), query);
 }
 
-static gboolean
-gst_vaapi_overlay_process_frames (GstVaapiOverlay * overlay)
+static GstVaapiBlendSurface *
+gst_vaapi_overlay_surface_next (GstVaapiBlendSurfaceGenerator * generator)
 {
-  GList *l;
+  GstVaapiOverlaySurfaceGenerator *ogenerator;
+  GstVideoAggregatorPad *vagg_pad;
+  GstVaapiOverlaySinkPad *pad;
+  GstVideoFrame *inframe;
+  GstBuffer *inbuf;
+  GstBuffer *buf;
+  GstVaapiVideoMeta *inbuf_meta;
+  GstVaapiBlendSurface *blend_surface;
 
-  for (l = GST_ELEMENT (overlay)->sinkpads; l; l = l->next) {
-    GstVideoAggregatorPad *vagg_pad = GST_VIDEO_AGGREGATOR_PAD (l->data);
-    GstVaapiOverlaySinkPad *pad = GST_VAAPI_OVERLAY_SINK_PAD (vagg_pad);
-    GstVideoFrame *inframe =
-        gst_video_aggregator_pad_get_prepared_frame (vagg_pad);
-    GstBuffer *inbuf = NULL;
-    GstBuffer *buf = gst_video_aggregator_pad_get_current_buffer (vagg_pad);
-    GstVaapiVideoMeta *inbuf_meta;
-    GstVaapiRectangle target_rect;
+  ogenerator = (GstVaapiOverlaySurfaceGenerator *) generator;
 
-    if (gst_vaapi_plugin_base_pad_get_input_buffer (GST_VAAPI_PLUGIN_BASE
-            (overlay), GST_PAD (pad), buf, &inbuf) != GST_FLOW_OK)
-      return FALSE;
+  /* at the end of the generator? */
+  if (!ogenerator->current)
+    return NULL;
 
-    /* Current sinkpad may have reached EOS */
-    if (!inframe || !inbuf)
-      continue;
+  /* get the current video aggregator sinkpad */
+  vagg_pad = GST_VIDEO_AGGREGATOR_PAD (ogenerator->current->data);
 
-    target_rect.x = pad->xpos;
-    target_rect.y = pad->ypos;
-    target_rect.width = GST_VIDEO_FRAME_WIDTH (inframe);
-    target_rect.height = GST_VIDEO_FRAME_HEIGHT (inframe);
+  /* increment list pointer */
+  ogenerator->current = ogenerator->current->next;
 
-    inbuf_meta = gst_buffer_get_vaapi_video_meta (inbuf);
+  /* recycle the blend surface from the overlay surface generator */
+  blend_surface = &ogenerator->blend_surface;
+  blend_surface->surface = NULL;
 
-    if (!inbuf_meta) {
-      gst_buffer_unref (inbuf);
-      return FALSE;
-    }
+  inframe = gst_video_aggregator_pad_get_prepared_frame (vagg_pad);
+  buf = gst_video_aggregator_pad_get_current_buffer (vagg_pad);
+  pad = GST_VAAPI_OVERLAY_SINK_PAD (vagg_pad);
 
-    if (!gst_vaapi_blend_process_render (overlay->blend,
-            gst_vaapi_video_meta_get_surface (inbuf_meta),
-            gst_vaapi_video_meta_get_render_rect (inbuf_meta),
-            &target_rect, pad->alpha)) {
-      gst_buffer_unref (inbuf);
-      return FALSE;
-    }
+  if (gst_vaapi_plugin_base_pad_get_input_buffer (GST_VAAPI_PLUGIN_BASE
+          (ogenerator->overlay), GST_PAD (pad), buf, &inbuf) != GST_FLOW_OK)
+    return blend_surface;
 
+  /* Current sinkpad may have reached EOS */
+  if (!inframe || !inbuf)
+    return generator->next (generator);
+
+  inbuf_meta = gst_buffer_get_vaapi_video_meta (inbuf);
+
+  if (!inbuf_meta) {
     gst_buffer_unref (inbuf);
+    return blend_surface;
   }
 
-  return TRUE;
+  blend_surface->surface = gst_vaapi_video_meta_get_surface (inbuf_meta);
+  blend_surface->crop = gst_vaapi_video_meta_get_render_rect (inbuf_meta);
+  blend_surface->target.x = pad->xpos;
+  blend_surface->target.y = pad->ypos;
+  blend_surface->target.width = GST_VIDEO_FRAME_WIDTH (inframe);
+  blend_surface->target.height = GST_VIDEO_FRAME_HEIGHT (inframe);
+  blend_surface->alpha = pad->alpha;
+
+  gst_buffer_unref (inbuf);
+
+  return blend_surface;
 }
 
 static GstFlowReturn
@@ -387,6 +407,7 @@ gst_vaapi_overlay_aggregate_frames (GstVideoAggregator * vagg,
   GstVaapiVideoMeta *outbuf_meta;
   GstVaapiSurface *outbuf_surface;
   GstVaapiSurfaceProxy *proxy;
+  GstVaapiOverlaySurfaceGenerator generator;
 
   if (!overlay->blend_pool) {
     GstVaapiVideoPool *pool =
@@ -414,15 +435,13 @@ gst_vaapi_overlay_aggregate_frames (GstVideoAggregator * vagg,
 
   outbuf_surface = gst_vaapi_video_meta_get_surface (outbuf_meta);
 
-  if (!gst_vaapi_blend_process_begin (overlay->blend, outbuf_surface))
-    return GST_FLOW_ERROR;
+  /* initialize the surface generator */
+  generator.parent.next = gst_vaapi_overlay_surface_next;
+  generator.overlay = overlay;
+  generator.current = GST_ELEMENT (overlay)->sinkpads;
 
-  if (!gst_vaapi_overlay_process_frames (overlay)) {
-    gst_vaapi_blend_process_end (overlay->blend);
-    return GST_FLOW_ERROR;
-  }
-
-  if (!gst_vaapi_blend_process_end (overlay->blend))
+  if (!gst_vaapi_blend_process (overlay->blend, outbuf_surface,
+          (GstVaapiBlendSurfaceGenerator *) & generator))
     return GST_FLOW_ERROR;
 
   return GST_FLOW_OK;
