@@ -1297,7 +1297,7 @@ gst_rtp_h265_pay_send_bundle (GstRtpH265Pay * rtph265pay, gboolean marker)
     }
 
     ap_header[0] = (AP_TYPE_ID << 1) | (layer_id & 0x20);
-    ap_header[1] = ((layer_id & 0x1F) << 3) | (temporal_id | 0x07);
+    ap_header[1] = ((layer_id & 0x1F) << 3) | (temporal_id & 0x07);
 
     gst_buffer_fill (outbuf, 0, &ap_header, sizeof ap_header);
 
