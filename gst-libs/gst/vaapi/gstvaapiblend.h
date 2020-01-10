@@ -62,18 +62,6 @@ gboolean
 gst_vaapi_blend_process (GstVaapiBlend * blend, GstVaapiSurface * output,
     GstVaapiBlendSurfaceGenerator * generator);
 
-gboolean
-gst_vaapi_blend_process_begin (GstVaapiBlend * blend,
-    GstVaapiSurface * surface);
-
-gboolean
-gst_vaapi_blend_process_render (GstVaapiBlend * blend,
-    const GstVaapiSurface * surface, const GstVaapiRectangle * crop_rect,
-    const GstVaapiRectangle * target_rect, gdouble alpha);
-
-gboolean
-gst_vaapi_blend_process_end (GstVaapiBlend * blend);
-
 GType
 gst_vaapi_blend_get_type (void) G_GNUC_CONST;
 
