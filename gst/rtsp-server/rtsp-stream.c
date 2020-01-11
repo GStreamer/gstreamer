@@ -2594,7 +2594,8 @@ send_tcp_message (GstRTSPStream * stream, gint idx)
     n_messages += 1;
 
   transports = priv->tr_cache;
-  g_ptr_array_ref (transports);
+  if (transports)
+    g_ptr_array_ref (transports);
 
   g_mutex_unlock (&priv->lock);
 
