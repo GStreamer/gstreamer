@@ -1,4 +1,15 @@
-if get_option('ipcpipeline').disabled() or not build_ipcpipeline
+if get_option('ipcpipeline').disabled()
+  subdir_done()
+endif
+
+build_ipcpipeline_example = cc.has_header('sys/socket.h')
+foreach f : ['kill', 'socketpair', 'fcntl', 'fork']
+  if build_ipcpipeline_example
+    build_ipcpipeline_example = cc.has_function(f)
+  endif
+endforeach
+
+if not build_ipcpipeline_example
   subdir_done()
 endif
 
