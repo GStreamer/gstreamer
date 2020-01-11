@@ -1090,14 +1090,17 @@ gst_d3d11_color_converter_new (GstD3D11Device * device,
       gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (in_info)),
       gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (out_info)));
 
-  in_d3d11_format = gst_d3d11_format_from_gst (GST_VIDEO_INFO_FORMAT (in_info));
+  in_d3d11_format =
+      gst_d3d11_device_format_from_gst (device,
+      GST_VIDEO_INFO_FORMAT (in_info));
   if (!in_d3d11_format) {
     unknown_info = in_info;
     goto format_unknown;
   }
 
   out_d3d11_format =
-      gst_d3d11_format_from_gst (GST_VIDEO_INFO_FORMAT (out_info));
+      gst_d3d11_device_format_from_gst (device,
+      GST_VIDEO_INFO_FORMAT (out_info));
   if (!out_d3d11_format) {
     unknown_info = out_info;
     goto format_unknown;

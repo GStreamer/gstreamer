@@ -29,112 +29,6 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_format_debug);
 #define GST_CAT_DEFAULT gst_d3d11_format_debug
 
-/* Following formats were introduced since Windows 8
- * DXGI_FORMAT_AYUV
- * DXGI_FORMAT_NV12
- * DXGI_FORMAT_P010
- * DXGI_FORMAT_P016
- * ...
- */
-static const GstD3D11Format legacy_d3d11_formats[] = {
-  /* RGB formats */
-  {GST_VIDEO_FORMAT_BGRA, DXGI_FORMAT_B8G8R8A8_UNORM,
-      {DXGI_FORMAT_B8G8R8A8_UNORM,}},
-  {GST_VIDEO_FORMAT_RGBA, DXGI_FORMAT_R8G8B8A8_UNORM,
-      {DXGI_FORMAT_R8G8B8A8_UNORM,}},
-  {GST_VIDEO_FORMAT_RGB10A2_LE, DXGI_FORMAT_R10G10B10A2_UNORM,
-      {DXGI_FORMAT_R10G10B10A2_UNORM,}},
-
-  /* YUV packed */
-  {GST_VIDEO_FORMAT_VUYA, DXGI_FORMAT_UNKNOWN,
-      {DXGI_FORMAT_R8G8B8A8_UNORM,}},
-
-  /* YUV semi-planner */
-  {GST_VIDEO_FORMAT_NV12, DXGI_FORMAT_UNKNOWN,
-      {DXGI_FORMAT_R8_UNORM, DXGI_FORMAT_R8G8_UNORM}},
-  {GST_VIDEO_FORMAT_P010_10LE, DXGI_FORMAT_UNKNOWN,
-      {DXGI_FORMAT_R16_UNORM, DXGI_FORMAT_R16G16_UNORM}},
-  {GST_VIDEO_FORMAT_P016_LE, DXGI_FORMAT_UNKNOWN,
-      {DXGI_FORMAT_R16_UNORM, DXGI_FORMAT_R16G16_UNORM}},
-
-  /* YUV planner */
-  {GST_VIDEO_FORMAT_I420, DXGI_FORMAT_UNKNOWN,
-      {DXGI_FORMAT_R8_UNORM, DXGI_FORMAT_R8_UNORM, DXGI_FORMAT_R8_UNORM}},
-  {GST_VIDEO_FORMAT_I420_10LE, DXGI_FORMAT_UNKNOWN,
-      {DXGI_FORMAT_R16_UNORM, DXGI_FORMAT_R16_UNORM, DXGI_FORMAT_R16_UNORM}},
-
-  /* LAST */
-  {GST_VIDEO_FORMAT_UNKNOWN,},
-};
-
-static const GstD3D11Format d3d11_formats[] = {
-  /* RGB formats */
-  {GST_VIDEO_FORMAT_BGRA, DXGI_FORMAT_B8G8R8A8_UNORM,
-      {DXGI_FORMAT_B8G8R8A8_UNORM,}},
-  {GST_VIDEO_FORMAT_RGBA, DXGI_FORMAT_R8G8B8A8_UNORM,
-      {DXGI_FORMAT_R8G8B8A8_UNORM,}},
-  {GST_VIDEO_FORMAT_RGB10A2_LE, DXGI_FORMAT_R10G10B10A2_UNORM,
-      {DXGI_FORMAT_R10G10B10A2_UNORM,}},
-
-  /* YUV packed */
-  {GST_VIDEO_FORMAT_VUYA, DXGI_FORMAT_AYUV,
-      {DXGI_FORMAT_R8G8B8A8_UNORM,}},
-
-  /* YUV semi-planner */
-  {GST_VIDEO_FORMAT_NV12, DXGI_FORMAT_NV12,
-      {DXGI_FORMAT_R8_UNORM, DXGI_FORMAT_R8G8_UNORM}},
-  {GST_VIDEO_FORMAT_P010_10LE, DXGI_FORMAT_P010,
-      {DXGI_FORMAT_R16_UNORM, DXGI_FORMAT_R16G16_UNORM}},
-  {GST_VIDEO_FORMAT_P016_LE, DXGI_FORMAT_P016,
-      {DXGI_FORMAT_R16_UNORM, DXGI_FORMAT_R16G16_UNORM}},
-
-  /* YUV planner */
-  {GST_VIDEO_FORMAT_I420, DXGI_FORMAT_UNKNOWN,
-      {DXGI_FORMAT_R8_UNORM, DXGI_FORMAT_R8_UNORM, DXGI_FORMAT_R8_UNORM}},
-  {GST_VIDEO_FORMAT_I420_10LE, DXGI_FORMAT_UNKNOWN,
-      {DXGI_FORMAT_R16_UNORM, DXGI_FORMAT_R16_UNORM, DXGI_FORMAT_R16_UNORM}},
-
-  /* LAST */
-  {GST_VIDEO_FORMAT_UNKNOWN,},
-};
-
-static GstD3D11Format *
-get_supported_d3d11_formats (void)
-{
-  static gsize format_once = 0;
-  static GstD3D11Format *supported_d3d11_formats = NULL;
-
-  if (g_once_init_enter (&format_once)) {
-    if (gst_d3d11_is_windows_8_or_greater ())
-      supported_d3d11_formats = (GstD3D11Format *) d3d11_formats;
-    else
-      supported_d3d11_formats = (GstD3D11Format *) legacy_d3d11_formats;
-
-    g_once_init_leave (&format_once, 1);
-  }
-
-  return supported_d3d11_formats;
-}
-
-GstVideoFormat
-gst_d3d11_dxgi_format_to_gst (DXGI_FORMAT format)
-{
-  gint i;
-  GstD3D11Format *format_list;
-
-  if (format == DXGI_FORMAT_UNKNOWN)
-    return GST_VIDEO_FORMAT_UNKNOWN;
-
-  format_list = get_supported_d3d11_formats ();
-
-  for (i = 0; format_list[i].format != GST_VIDEO_FORMAT_UNKNOWN; i++) {
-    if (format_list[i].dxgi_format == format)
-      return format_list[i].format;
-  }
-
-  return GST_VIDEO_FORMAT_UNKNOWN;
-}
-
 guint
 gst_d3d11_dxgi_format_n_planes (DXGI_FORMAT format)
 {
@@ -199,22 +93,6 @@ gst_d3d11_dxgi_format_get_size (DXGI_FORMAT format, guint width, guint height,
   return TRUE;
 }
 
-const GstD3D11Format *
-gst_d3d11_format_from_gst (GstVideoFormat format)
-{
-  gint i;
-  GstD3D11Format *format_list;
-
-  format_list = get_supported_d3d11_formats ();
-
-  for (i = 0; format_list[i].format != GST_VIDEO_FORMAT_UNKNOWN; i++) {
-    if (format_list[i].format == format)
-      return &format_list[i];
-  }
-
-  return NULL;
-}
-
 /**
  * gst_d3d11_device_get_supported_caps:
  * @device: a #GstD3DDevice
@@ -233,25 +111,35 @@ gst_d3d11_device_get_supported_caps (GstD3D11Device * device,
   gint i;
   GValue v_list = G_VALUE_INIT;
   GstCaps *supported_caps;
-  GstD3D11Format *format_list;
+  static const GstVideoFormat format_list[] = {
+    GST_VIDEO_FORMAT_BGRA,
+    GST_VIDEO_FORMAT_RGBA,
+    GST_VIDEO_FORMAT_RGB10A2_LE,
+    GST_VIDEO_FORMAT_VUYA,
+    GST_VIDEO_FORMAT_NV12,
+    GST_VIDEO_FORMAT_P010_10LE,
+    GST_VIDEO_FORMAT_P016_LE,
+    GST_VIDEO_FORMAT_I420,
+    GST_VIDEO_FORMAT_I420_10LE,
+  };
 
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
 
   d3d11_device = gst_d3d11_device_get_device_handle (device);
   g_value_init (&v_list, GST_TYPE_LIST);
 
-  format_list = get_supported_d3d11_formats ();
-
-  for (i = 0; format_list[i].format != GST_VIDEO_FORMAT_UNKNOWN; i++) {
+  for (i = 0; i < G_N_ELEMENTS (format_list); i++) {
     UINT format_support = 0;
     GstVideoFormat format;
+    const GstD3D11Format *d3d11_format;
 
-    if (format_list[i].dxgi_format == DXGI_FORMAT_UNKNOWN)
+    d3d11_format = gst_d3d11_device_format_from_gst (device, format_list[i]);
+    if (!d3d11_format || d3d11_format->dxgi_format == DXGI_FORMAT_UNKNOWN)
       continue;
 
-    format = format_list[i].format;
+    format = d3d11_format->format;
     hr = ID3D11Device_CheckFormatSupport (d3d11_device,
-        format_list[i].dxgi_format, &format_support);
+        d3d11_format->dxgi_format, &format_support);
 
     if (SUCCEEDED (hr) && ((format_support & flags) == flags)) {
       GValue v_str = G_VALUE_INIT;

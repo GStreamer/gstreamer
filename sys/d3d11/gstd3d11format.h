@@ -27,6 +27,7 @@
 
 #define GST_D3D11_FORMATS \
     "{ BGRA, RGBA, RGB10A2_LE, VUYA, NV12, P010_10LE, P016_LE, I420, I420_10LE }"
+#define GST_D3D11_N_FORMATS 9
 
 G_BEGIN_DECLS
 
@@ -41,8 +42,6 @@ struct _GstD3D11Format
   DXGI_FORMAT resource_format[GST_VIDEO_MAX_COMPONENTS];
 };
 
-GstVideoFormat  gst_d3d11_dxgi_format_to_gst        (DXGI_FORMAT format);
-
 guint           gst_d3d11_dxgi_format_n_planes      (DXGI_FORMAT format);
 
 gboolean        gst_d3d11_dxgi_format_get_size      (DXGI_FORMAT format,
@@ -52,8 +51,6 @@ gboolean        gst_d3d11_dxgi_format_get_size      (DXGI_FORMAT format,
                                                      gsize offset[GST_VIDEO_MAX_PLANES],
                                                      gint stride[GST_VIDEO_MAX_PLANES],
                                                      gsize *size);
-
-const GstD3D11Format * gst_d3d11_format_from_gst    (GstVideoFormat format);
 
 GstCaps *       gst_d3d11_device_get_supported_caps (GstD3D11Device * device,
                                                      D3D11_FORMAT_SUPPORT flags);

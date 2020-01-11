@@ -340,8 +340,7 @@ gst_d3d11_color_convert_propose_allocation (GstBaseTransform * trans,
 
   d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
   if (!d3d11_params) {
-    d3d11_params = gst_d3d11_allocation_params_new (&info,
-        GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT,
+    d3d11_params = gst_d3d11_allocation_params_new (filter->device, &info, 0,
         D3D11_BIND_SHADER_RESOURCE);
   } else {
     /* Set bind flag */
@@ -421,8 +420,7 @@ gst_d3d11_color_convert_decide_allocation (GstBaseTransform * trans,
 
   d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
   if (!d3d11_params) {
-    d3d11_params = gst_d3d11_allocation_params_new (&info,
-        GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT,
+    d3d11_params = gst_d3d11_allocation_params_new (filter->device, &info, 0,
         D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
   } else {
     /* Set bind flag */
@@ -690,14 +688,16 @@ gst_d3d11_color_convert_set_info (GstD3D11BaseFilter * filter,
     return TRUE;
 
   self->in_d3d11_format =
-      gst_d3d11_format_from_gst (GST_VIDEO_INFO_FORMAT (in_info));
+      gst_d3d11_device_format_from_gst (filter->device,
+      GST_VIDEO_INFO_FORMAT (in_info));
   if (!self->in_d3d11_format) {
     unknown_info = in_info;
     goto format_unknown;
   }
 
   self->out_d3d11_format =
-      gst_d3d11_format_from_gst (GST_VIDEO_INFO_FORMAT (out_info));
+      gst_d3d11_device_format_from_gst (filter->device,
+      GST_VIDEO_INFO_FORMAT (out_info));
   if (!self->out_d3d11_format) {
     unknown_info = out_info;
     goto format_unknown;

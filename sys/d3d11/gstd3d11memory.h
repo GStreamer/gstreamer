@@ -55,14 +55,11 @@ G_BEGIN_DECLS
 
 /**
  * GstD3D11AllocationFlags:
- * GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT: Allocate texture with resource format
- *                                                per planes instead of the direct use of DXGI format
  * GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY: Indicates each allocated texture should be array type
  */
 typedef enum
 {
-  GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT = (1 << 0),
-  GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY = (1 << 1),
+  GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY = (1 << 0),
 } GstD3D11AllocationFlags;
 
 /**
@@ -161,7 +158,8 @@ struct _GstD3D11AllocatorClass
 
 GType               gst_d3d11_allocation_params_get_type (void);
 
-GstD3D11AllocationParams * gst_d3d11_allocation_params_new (GstVideoInfo * info,
+GstD3D11AllocationParams * gst_d3d11_allocation_params_new (GstD3D11Device * device,
+                                                            GstVideoInfo * info,
                                                             GstD3D11AllocationFlags flags,
                                                             gint bind_flags);
 

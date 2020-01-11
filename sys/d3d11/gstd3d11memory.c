@@ -30,7 +30,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_d3d11_allocator_debug);
 #define GST_CAT_DEFAULT gst_d3d11_allocator_debug
 
 GstD3D11AllocationParams *
-gst_d3d11_allocation_params_new (GstVideoInfo * info,
+gst_d3d11_allocation_params_new (GstD3D11Device * device, GstVideoInfo * info,
     GstD3D11AllocationFlags flags, gint bind_flags)
 {
   GstD3D11AllocationParams *ret;
@@ -39,7 +39,8 @@ gst_d3d11_allocation_params_new (GstVideoInfo * info,
 
   g_return_val_if_fail (info != NULL, NULL);
 
-  d3d11_format = gst_d3d11_format_from_gst (GST_VIDEO_INFO_FORMAT (info));
+  d3d11_format = gst_d3d11_device_format_from_gst (device,
+      GST_VIDEO_INFO_FORMAT (info));
   if (!d3d11_format) {
     GST_WARNING ("Couldn't get d3d11 format");
     return NULL;
@@ -64,11 +65,7 @@ gst_d3d11_allocation_params_new (GstVideoInfo * info,
    */
 
   /* If corresponding dxgi format is undefined, use resource format instead */
-  if (d3d11_format->dxgi_format == DXGI_FORMAT_UNKNOWN ||
-      (flags & GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT) ==
-      GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT) {
-    flags |= GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT;
-
+  if (d3d11_format->dxgi_format == DXGI_FORMAT_UNKNOWN) {
     for (i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
       g_assert (d3d11_format->resource_format[i] != DXGI_FORMAT_UNKNOWN);
 
@@ -83,8 +80,6 @@ gst_d3d11_allocation_params_new (GstVideoInfo * info,
       ret->desc[i].BindFlags = bind_flags;
     }
   } else {
-    g_assert (d3d11_format->dxgi_format != DXGI_FORMAT_UNKNOWN);
-
     ret->desc[0].Width = GST_VIDEO_INFO_WIDTH (info);
     ret->desc[0].Height = GST_VIDEO_INFO_HEIGHT (info);
     ret->desc[0].MipLevels = 1;
@@ -488,6 +483,7 @@ create_shader_resource_views (GstD3D11Memory * mem)
       formats[1] = DXGI_FORMAT_R8G8_UNORM;
       break;
     case DXGI_FORMAT_P010:
+    case DXGI_FORMAT_P016:
       num_views = 2;
       formats[0] = DXGI_FORMAT_R16_UNORM;
       formats[1] = DXGI_FORMAT_R16G16_UNORM;
@@ -563,6 +559,7 @@ create_render_target_views (GstD3D11Memory * mem)
       formats[1] = DXGI_FORMAT_R8G8_UNORM;
       break;
     case DXGI_FORMAT_P010:
+    case DXGI_FORMAT_P016:
       num_views = 2;
       formats[0] = DXGI_FORMAT_R16_UNORM;
       formats[1] = DXGI_FORMAT_R16G16_UNORM;

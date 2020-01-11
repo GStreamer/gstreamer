@@ -607,7 +607,8 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
   gst_clear_caps (&render_caps);
 
   window->render_format =
-      gst_d3d11_format_from_gst (GST_VIDEO_INFO_FORMAT (&window->render_info));
+      gst_d3d11_device_format_from_gst (window->device,
+      GST_VIDEO_INFO_FORMAT (&window->render_info));
   if (!window->render_format ||
       window->render_format->dxgi_format == DXGI_FORMAT_UNKNOWN) {
     GST_ERROR_OBJECT (window, "Unknown dxgi render format");

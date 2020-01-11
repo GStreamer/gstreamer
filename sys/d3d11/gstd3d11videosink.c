@@ -415,9 +415,8 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
 
     d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
     if (!d3d11_params) {
-      d3d11_params = gst_d3d11_allocation_params_new (&self->info,
-          GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT,
-          D3D11_BIND_SHADER_RESOURCE);
+      d3d11_params = gst_d3d11_allocation_params_new (self->device,
+          &self->info, 0, D3D11_BIND_SHADER_RESOURCE);
     } else {
       /* Set bind flag */
       for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&self->info); i++) {
@@ -622,8 +621,7 @@ gst_d3d11_video_sink_propose_allocation (GstBaseSink * sink, GstQuery * query)
 
     d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
     if (!d3d11_params) {
-      d3d11_params = gst_d3d11_allocation_params_new (&info,
-          GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT,
+      d3d11_params = gst_d3d11_allocation_params_new (self->device, &info, 0,
           D3D11_BIND_SHADER_RESOURCE);
     } else {
       /* Set bind flag */

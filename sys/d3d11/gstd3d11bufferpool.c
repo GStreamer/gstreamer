@@ -152,8 +152,8 @@ gst_d3d11_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
       gst_buffer_pool_config_get_d3d11_allocation_params (config);
   if (!priv->d3d11_params) {
     /* allocate memory with resource format by default */
-    priv->d3d11_params = gst_d3d11_allocation_params_new (&info,
-        GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT, 0);
+    priv->d3d11_params =
+        gst_d3d11_allocation_params_new (priv->device, &info, 0, 0);
   }
 #ifndef GST_DISABLE_GST_DEBUG
   {
@@ -265,9 +265,7 @@ gst_d3d11_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
 
   buf = gst_buffer_new ();
 
-  if ((d3d11_params->flags & GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT) ==
-      GST_D3D11_ALLOCATION_FLAG_USE_RESOURCE_FORMAT) {
-
+  if (d3d11_params->d3d11_format->dxgi_format == DXGI_FORMAT_UNKNOWN) {
     for (n_texture = 0; n_texture < GST_VIDEO_INFO_N_PLANES (info); n_texture++) {
       d3d11_params->plane = n_texture;
       mem = gst_d3d11_allocator_alloc (priv->allocator, d3d11_params);

@@ -393,7 +393,7 @@ gst_d3d11_decoder_prepare_output_view_pool (GstD3D11Decoder * self,
 
   gst_clear_object (&priv->internal_pool);
 
-  alloc_params = gst_d3d11_allocation_params_new (info,
+  alloc_params = gst_d3d11_allocation_params_new (priv->device, info,
       GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY, D3D11_BIND_DECODER);
 
   if (!alloc_params) {
@@ -483,7 +483,8 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
   priv = decoder->priv;
   decoder->opened = FALSE;
 
-  d3d11_format = gst_d3d11_format_from_gst (GST_VIDEO_INFO_FORMAT (info));
+  d3d11_format = gst_d3d11_device_format_from_gst (priv->device,
+      GST_VIDEO_INFO_FORMAT (info));
   if (!d3d11_format || d3d11_format->dxgi_format == DXGI_FORMAT_UNKNOWN) {
     GST_ERROR_OBJECT (decoder, "Could not determine dxgi format from %s",
         gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (info)));

@@ -135,6 +135,10 @@ void                  gst_d3d11_device_dxgi_debug  (GstD3D11Device * device,
                                                     const gchar * file,
                                                     const gchar * function,
                                                     gint line);
+
+const GstD3D11Format * gst_d3d11_device_format_from_gst (GstD3D11Device * device,
+                                                         GstVideoFormat format);
+
 G_END_DECLS
 
 #endif /* __GST_D3D11_DEVICE_H__ */

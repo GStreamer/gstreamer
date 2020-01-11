@@ -23,6 +23,7 @@
 
 #include "gstd3d11device.h"
 #include "gstd3d11utils.h"
+#include "gstd3d11format.h"
 #include "gmodule.h"
 
 #if HAVE_D3D11SDKLAYERS_H
@@ -80,6 +81,7 @@ struct _GstD3D11DevicePrivate
   IDXGIFactory1 *factory;
   GstD3D11DXGIFactoryVersion factory_ver;
   D3D_FEATURE_LEVEL feature_level;
+  GstD3D11Format format_table[GST_D3D11_N_FORMATS];
 
   GRecMutex extern_lock;
 
@@ -358,6 +360,103 @@ gst_d3d11_device_init (GstD3D11Device * self)
   self->priv = priv;
 }
 
+static gboolean
+can_support_format (GstD3D11Device * self, DXGI_FORMAT format)
+{
+  GstD3D11DevicePrivate *priv = self->priv;
+  ID3D11Device *handle = priv->device;
+  HRESULT hr;
+  UINT supported;
+  D3D11_FORMAT_SUPPORT flags =
+      (D3D11_FORMAT_SUPPORT_TEXTURE2D | D3D11_FORMAT_SUPPORT_RENDER_TARGET |
+      D3D11_FORMAT_SUPPORT_SHADER_SAMPLE);
+
+  if (!gst_d3d11_is_windows_8_or_greater ())
+    return FALSE;
+
+  hr = ID3D11Device_CheckFormatSupport (handle, format, &supported);
+  if (!gst_d3d11_result (hr, NULL))
+    return FALSE;
+
+  return (supported & flags) == flags;
+}
+
+static void
+gst_d3d11_device_setup_format_table (GstD3D11Device * self)
+{
+  GstD3D11DevicePrivate *priv = self->priv;
+  guint n_formats = 0;
+
+  /* RGB formats */
+  priv->format_table[n_formats].format = GST_VIDEO_FORMAT_BGRA;
+  priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_B8G8R8A8_UNORM;
+  priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_B8G8R8A8_UNORM;
+  n_formats++;
+
+  priv->format_table[n_formats].format = GST_VIDEO_FORMAT_RGBA;
+  priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+  priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+  n_formats++;
+
+  priv->format_table[n_formats].format = GST_VIDEO_FORMAT_RGB10A2_LE;
+  priv->format_table[n_formats].resource_format[0] =
+      DXGI_FORMAT_R10G10B10A2_UNORM;
+  priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_R10G10B10A2_UNORM;
+  n_formats++;
+
+  /* YUV packed */
+  priv->format_table[n_formats].format = GST_VIDEO_FORMAT_VUYA;
+  priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+  if (can_support_format (self, DXGI_FORMAT_AYUV))
+    priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_AYUV;
+  else
+    priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_UNKNOWN;
+  n_formats++;
+
+  /* YUV semi-planar */
+  priv->format_table[n_formats].format = GST_VIDEO_FORMAT_NV12;
+  priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_R8_UNORM;
+  priv->format_table[n_formats].resource_format[1] = DXGI_FORMAT_R8G8_UNORM;
+  if (can_support_format (self, DXGI_FORMAT_NV12))
+    priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_NV12;
+  else
+    priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_UNKNOWN;
+  n_formats++;
+
+  priv->format_table[n_formats].format = GST_VIDEO_FORMAT_P010_10LE;
+  priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_R16_UNORM;
+  priv->format_table[n_formats].resource_format[1] = DXGI_FORMAT_R16G16_UNORM;
+  if (can_support_format (self, DXGI_FORMAT_P010))
+    priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_P010;
+  else
+    priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_UNKNOWN;
+  n_formats++;
+
+  priv->format_table[n_formats].format = GST_VIDEO_FORMAT_P016_LE;
+  priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_R16_UNORM;
+  priv->format_table[n_formats].resource_format[1] = DXGI_FORMAT_R16G16_UNORM;
+  if (can_support_format (self, DXGI_FORMAT_P016))
+    priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_P016;
+  else
+    priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_UNKNOWN;
+  n_formats++;
+
+  /* YUV plannar */
+  priv->format_table[n_formats].format = GST_VIDEO_FORMAT_I420;
+  priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_R8_UNORM;
+  priv->format_table[n_formats].resource_format[1] = DXGI_FORMAT_R8_UNORM;
+  priv->format_table[n_formats].resource_format[2] = DXGI_FORMAT_R8_UNORM;
+  n_formats++;
+
+  priv->format_table[n_formats].format = GST_VIDEO_FORMAT_I420_10LE;
+  priv->format_table[n_formats].resource_format[0] = DXGI_FORMAT_R16_UNORM;
+  priv->format_table[n_formats].resource_format[1] = DXGI_FORMAT_R16_UNORM;
+  priv->format_table[n_formats].resource_format[2] = DXGI_FORMAT_R16_UNORM;
+  n_formats++;
+
+  g_assert (n_formats == GST_D3D11_N_FORMATS);
+}
+
 static void
 gst_d3d11_device_constructed (GObject * object)
 {
@@ -537,6 +636,7 @@ gst_d3d11_device_constructed (GObject * object)
 #endif
 
   IDXGIAdapter1_Release (adapter);
+  gst_d3d11_device_setup_format_table (self);
 
   G_OBJECT_CLASS (parent_class)->constructed (object);
 
@@ -1006,4 +1106,23 @@ gst_d3d11_device_unlock (GstD3D11Device * device)
 
   g_rec_mutex_unlock (&priv->extern_lock);
   GST_TRACE_OBJECT (device, "device unlocked");
+}
+
+const GstD3D11Format *
+gst_d3d11_device_format_from_gst (GstD3D11Device * device,
+    GstVideoFormat format)
+{
+  GstD3D11DevicePrivate *priv;
+  gint i;
+
+  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
+
+  priv = device->priv;
+
+  for (i = 0; i < G_N_ELEMENTS (priv->format_table); i++) {
+    if (priv->format_table[i].format == format)
+      return &priv->format_table[i];
+  }
+
+  return NULL;
 }
