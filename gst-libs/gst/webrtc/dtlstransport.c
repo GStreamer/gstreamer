@@ -146,6 +146,36 @@ gst_webrtc_dtls_transport_finalize (GObject * object)
 }
 
 static void
+on_connection_state_changed (GObject * obj, GParamSpec * pspec,
+    gpointer user_data)
+{
+  GstWebRTCDTLSTransport *webrtc = GST_WEBRTC_DTLS_TRANSPORT (user_data);
+  gint state;
+
+  g_object_get (obj, "connection-state", &state, NULL);
+  switch (state) {
+    case 0:
+      webrtc->state = GST_WEBRTC_DTLS_TRANSPORT_STATE_NEW;
+      break;
+    case 1:
+      webrtc->state = GST_WEBRTC_DTLS_TRANSPORT_STATE_CLOSED;
+      break;
+    default:
+    case 2:
+      webrtc->state = GST_WEBRTC_DTLS_TRANSPORT_STATE_FAILED;
+      break;
+    case 3:
+      webrtc->state = GST_WEBRTC_DTLS_TRANSPORT_STATE_CONNECTING;
+      break;
+    case 4:
+      webrtc->state = GST_WEBRTC_DTLS_TRANSPORT_STATE_CONNECTED;
+      break;
+  }
+
+  g_object_notify (G_OBJECT (webrtc), "state");
+}
+
+static void
 gst_webrtc_dtls_transport_constructed (GObject * object)
 {
   GstWebRTCDTLSTransport *webrtc = GST_WEBRTC_DTLS_TRANSPORT (object);
@@ -164,6 +194,9 @@ gst_webrtc_dtls_transport_constructed (GObject * object)
   webrtc->dtlssrtpdec = gst_element_factory_make ("dtlssrtpdec", NULL);
   g_object_set (webrtc->dtlssrtpdec, "connection-id", connection_id, NULL);
   g_free (connection_id);
+
+  g_signal_connect (webrtc->dtlssrtpenc, "notify::connection-state",
+      G_CALLBACK (on_connection_state_changed), webrtc);
 
   G_OBJECT_CLASS (parent_class)->constructed (object);
 }
@@ -191,7 +224,6 @@ gst_webrtc_dtls_transport_class_init (GstWebRTCDTLSTransportClass * klass)
           GST_TYPE_WEBRTC_ICE_TRANSPORT,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
-  /* FIXME: implement */
   g_object_class_install_property (gobject_class,
       PROP_STATE,
       g_param_spec_enum ("state", "DTLS state",
