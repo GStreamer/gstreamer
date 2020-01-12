@@ -65,6 +65,18 @@ typedef enum {
 
 #define GST_DTLS_SRTP_MASTER_KEY_LENGTH 30
 
+typedef enum
+{
+  GST_DTLS_CONNECTION_STATE_NEW,
+  GST_DTLS_CONNECTION_STATE_CLOSED,
+  GST_DTLS_CONNECTION_STATE_FAILED,
+  GST_DTLS_CONNECTION_STATE_CONNECTING,
+  GST_DTLS_CONNECTION_STATE_CONNECTED,
+} GstDtlsConnectionState;
+
+GType gst_dtls_connection_state_get_type (void);
+#define GST_DTLS_TYPE_CONNECTION_STATE (gst_dtls_connection_state_get_type ())
+
 /*
  * GstDtlsConnection:
  *

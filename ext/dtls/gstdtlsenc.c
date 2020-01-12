@@ -62,10 +62,10 @@ enum
   PROP_0,
   PROP_CONNECTION_ID,
   PROP_IS_CLIENT,
-
   PROP_ENCODER_KEY,
   PROP_SRTP_CIPHER,
   PROP_SRTP_AUTH,
+  PROP_CONNECTION_STATE,
   NUM_PROPERTIES
 };
 
@@ -159,6 +159,13 @@ gst_dtls_enc_class_init (GstDtlsEncClass * klass)
       "The value will be set to an GstDtlsSrtpAuth.",
       0, GST_DTLS_SRTP_AUTH_HMAC_SHA1_80, DEFAULT_SRTP_AUTH,
       G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+
+  properties[PROP_CONNECTION_STATE] =
+      g_param_spec_enum ("connection-state",
+      "Connection State",
+      "Current connection state",
+      GST_DTLS_TYPE_CONNECTION_STATE,
+      GST_DTLS_CONNECTION_STATE_NEW, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, NUM_PROPERTIES, properties);
 
@@ -269,9 +276,25 @@ gst_dtls_enc_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_SRTP_AUTH:
       g_value_set_uint (value, self->srtp_auth);
       break;
+    case PROP_CONNECTION_STATE:
+      if (self->connection)
+        g_object_get_property (G_OBJECT (self->connection), "connection-state",
+            value);
+      else
+        g_value_set_enum (value, GST_DTLS_CONNECTION_STATE_CLOSED);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);
   }
+}
+
+static void
+on_connection_state_changed (GObject * object, GParamSpec * pspec,
+    gpointer user_data)
+{
+  GstDtlsEnc *self = GST_DTLS_ENC (user_data);
+
+  g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_CONNECTION_STATE]);
 }
 
 static GstStateChangeReturn
@@ -294,6 +317,10 @@ gst_dtls_enc_change_state (GstElement * element, GstStateChange transition)
 
         g_signal_connect_object (self->connection,
             "on-encoder-key", G_CALLBACK (on_key_received), self, 0);
+        g_signal_connect_object (self->connection,
+            "notify::connection-state",
+            G_CALLBACK (on_connection_state_changed), self, 0);
+        on_connection_state_changed (NULL, NULL, self);
 
         gst_dtls_connection_set_send_callback (self->connection,
             (GstDtlsConnectionSendCallback) on_send_data, self, NULL);

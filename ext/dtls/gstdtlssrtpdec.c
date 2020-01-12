@@ -28,7 +28,6 @@
 #endif
 
 #include "gstdtlssrtpdec.h"
-
 #include "gstdtlsconnection.h"
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -69,6 +68,7 @@ enum
   PROP_0,
   PROP_PEM,
   PROP_PEER_PEM,
+  PROP_CONNECTION_STATE,
   NUM_PROPERTIES
 };
 
@@ -132,6 +132,13 @@ gst_dtls_srtp_dec_class_init (GstDtlsSrtpDecClass * klass)
       "The X509 certificate received in the DTLS handshake, in PEM format",
       DEFAULT_PEER_PEM, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
+  properties[PROP_CONNECTION_STATE] =
+      g_param_spec_enum ("connection-state",
+      "Connection State",
+      "Current connection state",
+      GST_DTLS_TYPE_CONNECTION_STATE,
+      GST_DTLS_CONNECTION_STATE_NEW, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+
   g_object_class_install_properties (gobject_class, NUM_PROPERTIES, properties);
 
   gst_element_class_add_static_pad_template (element_class, &sink_template);
@@ -144,6 +151,15 @@ gst_dtls_srtp_dec_class_init (GstDtlsSrtpDecClass * klass)
       "Decoder/Network/DTLS/SRTP",
       "Decodes SRTP packets with a key received from DTLS",
       "Patrik Oldsberg patrik.oldsberg@ericsson.com");
+}
+
+static void
+on_connection_state_changed (GObject * object, GParamSpec * pspec,
+    gpointer user_data)
+{
+  GstDtlsSrtpDec *self = GST_DTLS_SRTP_DEC (user_data);
+
+  g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_CONNECTION_STATE]);
 }
 
 static void
@@ -226,6 +242,8 @@ gst_dtls_srtp_dec_init (GstDtlsSrtpDec * self)
       G_CALLBACK (on_decoder_request_key), self);
   g_signal_connect (self->bin.dtls_element, "notify::peer-pem",
       G_CALLBACK (on_peer_pem), self);
+  g_signal_connect (self->bin.dtls_element, "notify::connection-state",
+      G_CALLBACK (on_connection_state_changed), self);
 }
 
 static void
@@ -268,6 +286,10 @@ gst_dtls_srtp_dec_get_property (GObject * object,
       } else {
         GST_WARNING_OBJECT (self, "tried to get peer-pem after disabling DTLS");
       }
+      break;
+    case PROP_CONNECTION_STATE:
+      g_object_get_property (G_OBJECT (self->bin.dtls_element),
+          "connection-state", value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);

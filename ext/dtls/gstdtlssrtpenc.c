@@ -28,6 +28,7 @@
 #endif
 
 #include "gstdtlssrtpenc.h"
+#include "gstdtlsconnection.h"
 
 #include <stdio.h>
 
@@ -76,6 +77,7 @@ enum
 {
   PROP_0,
   PROP_IS_CLIENT,
+  PROP_CONNECTION_STATE,
   NUM_PROPERTIES
 };
 
@@ -136,6 +138,13 @@ gst_dtls_srtp_enc_class_init (GstDtlsSrtpEncClass * klass)
       DEFAULT_IS_CLIENT,
       GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
+  properties[PROP_CONNECTION_STATE] =
+      g_param_spec_enum ("connection-state",
+      "Connection State",
+      "Current connection state",
+      GST_DTLS_TYPE_CONNECTION_STATE,
+      GST_DTLS_CONNECTION_STATE_NEW, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+
   g_object_class_install_properties (gobject_class, NUM_PROPERTIES, properties);
 
   gst_element_class_add_static_pad_template (element_class, &rtp_sink_template);
@@ -150,6 +159,15 @@ gst_dtls_srtp_enc_class_init (GstDtlsSrtpEncClass * klass)
       "Encoder/Network/DTLS/SRTP",
       "Encodes SRTP packets with a key received from DTLS",
       "Patrik Oldsberg patrik.oldsberg@ericsson.com");
+}
+
+static void
+on_connection_state_changed (GObject * object, GParamSpec * pspec,
+    gpointer user_data)
+{
+  GstDtlsSrtpEnc *self = GST_DTLS_SRTP_ENC (user_data);
+
+  g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_CONNECTION_STATE]);
 }
 
 static void
@@ -214,6 +232,9 @@ gst_dtls_srtp_enc_init (GstDtlsSrtpEnc * self)
   }
 
   g_object_set (self->srtp_enc, "random-key", TRUE, NULL);
+
+  g_signal_connect (self->bin.dtls_element, "notify::connection-state",
+      G_CALLBACK (on_connection_state_changed), self);
 
   g_object_bind_property (G_OBJECT (self), "key", self->srtp_enc, "key",
       G_BINDING_DEFAULT);
@@ -288,6 +309,10 @@ gst_dtls_srtp_enc_get_property (GObject * object,
         GST_WARNING_OBJECT (self,
             "tried to get is-client after disabling DTLS");
       }
+      break;
+    case PROP_CONNECTION_STATE:
+      g_object_get_property (G_OBJECT (self->bin.dtls_element),
+          "connection-state", value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);

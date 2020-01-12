@@ -63,10 +63,10 @@ enum
   PROP_CONNECTION_ID,
   PROP_PEM,
   PROP_PEER_PEM,
-
   PROP_DECODER_KEY,
   PROP_SRTP_CIPHER,
   PROP_SRTP_AUTH,
+  PROP_CONNECTION_STATE,
   NUM_PROPERTIES
 };
 
@@ -170,6 +170,13 @@ gst_dtls_dec_class_init (GstDtlsDecClass * klass)
       "The value will be set to an GstDtlsSrtpAuth.",
       0, GST_DTLS_SRTP_AUTH_HMAC_SHA1_80, DEFAULT_SRTP_AUTH,
       G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+
+  properties[PROP_CONNECTION_STATE] =
+      g_param_spec_enum ("connection-state",
+      "Connection State",
+      "Current connection state",
+      GST_DTLS_TYPE_CONNECTION_STATE,
+      GST_DTLS_CONNECTION_STATE_NEW, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, NUM_PROPERTIES, properties);
 
@@ -300,6 +307,13 @@ gst_dtls_dec_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_SRTP_AUTH:
       g_value_set_uint (value, self->srtp_auth);
+      break;
+    case PROP_CONNECTION_STATE:
+      if (self->connection)
+        g_object_get_property (G_OBJECT (self->connection), "connection-state",
+            value);
+      else
+        g_value_set_enum (value, GST_DTLS_CONNECTION_STATE_CLOSED);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);
@@ -744,12 +758,23 @@ gst_dtls_dec_fetch_connection (gchar * id)
 }
 
 static void
+on_connection_state_changed (GObject * object, GParamSpec * pspec,
+    gpointer user_data)
+{
+  GstDtlsDec *self = GST_DTLS_DEC (user_data);
+
+  g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_CONNECTION_STATE]);
+}
+
+static void
 create_connection (GstDtlsDec * self, gchar * id)
 {
   g_return_if_fail (GST_IS_DTLS_DEC (self));
   g_return_if_fail (GST_IS_DTLS_AGENT (self->agent));
 
   if (self->connection) {
+    g_signal_handlers_disconnect_by_func (self->connection,
+        on_connection_state_changed, self);
     g_object_unref (self->connection);
     self->connection = NULL;
   }
@@ -769,6 +794,10 @@ create_connection (GstDtlsDec * self, gchar * id)
 
   self->connection =
       g_object_new (GST_TYPE_DTLS_CONNECTION, "agent", self->agent, NULL);
+  g_signal_connect_object (self->connection,
+      "notify::connection-state", G_CALLBACK (on_connection_state_changed),
+      self, 0);
+  on_connection_state_changed (NULL, NULL, self);
 
   g_object_weak_ref (G_OBJECT (self->connection),
       (GWeakNotify) connection_weak_ref_notify, g_strdup (id));

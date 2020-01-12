@@ -69,6 +69,7 @@ enum
 {
   PROP_0,
   PROP_AGENT,
+  PROP_CONNECTION_STATE,
   NUM_PROPERTIES
 };
 
@@ -87,9 +88,9 @@ struct _GstDtlsConnectionPrivate
   gboolean is_alive;
   gboolean keys_exported;
 
+  GstDtlsConnectionState connection_state;
   gboolean sent_close_notify;
   gboolean received_close_notify;
-  gboolean fatal_error;
 
   GMutex mutex;
   GCond condition;
@@ -113,12 +114,15 @@ G_DEFINE_TYPE_WITH_CODE (GstDtlsConnection, gst_dtls_connection, G_TYPE_OBJECT,
 static void gst_dtls_connection_finalize (GObject * gobject);
 static void gst_dtls_connection_set_property (GObject *, guint prop_id,
     const GValue *, GParamSpec *);
+static void gst_dtls_connection_get_property (GObject *, guint prop_id,
+    GValue *, GParamSpec *);
 
 static void log_state (GstDtlsConnection *, const gchar * str);
 static void export_srtp_keys (GstDtlsConnection *);
-static GstFlowReturn openssl_poll (GstDtlsConnection *, GError ** err);
+static GstFlowReturn openssl_poll (GstDtlsConnection *, gboolean * notify_state,
+    GError ** err);
 static GstFlowReturn handle_error (GstDtlsConnection * self, int ret,
-    GstResourceError error_type, GError ** err);
+    GstResourceError error_type, gboolean * notify_state, GError ** err);
 static int openssl_verify_callback (int preverify_ok,
     X509_STORE_CTX * x509_ctx);
 
@@ -135,6 +139,7 @@ gst_dtls_connection_class_init (GstDtlsConnectionClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
   gobject_class->set_property = gst_dtls_connection_set_property;
+  gobject_class->get_property = gst_dtls_connection_get_property;
 
   connection_ex_index =
       SSL_get_ex_new_index (0, (gpointer) "gstdtlsagent connection index", NULL,
@@ -160,6 +165,13 @@ gst_dtls_connection_class_init (GstDtlsConnectionClass * klass)
       "Agent to use in creation of the connection",
       GST_TYPE_DTLS_AGENT,
       G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+
+  properties[PROP_CONNECTION_STATE] =
+      g_param_spec_enum ("connection-state",
+      "Connection State",
+      "Current connection state",
+      GST_DTLS_TYPE_CONNECTION_STATE,
+      GST_DTLS_CONNECTION_STATE_NEW, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, NUM_PROPERTIES, properties);
 
@@ -290,12 +302,31 @@ gst_dtls_connection_set_property (GObject * object, guint prop_id,
   }
 }
 
+static void
+gst_dtls_connection_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstDtlsConnection *self = GST_DTLS_CONNECTION (object);
+  GstDtlsConnectionPrivate *priv = self->priv;
+
+  switch (prop_id) {
+    case PROP_CONNECTION_STATE:
+      g_mutex_lock (&priv->mutex);
+      g_value_set_enum (value, priv->connection_state);
+      g_mutex_unlock (&priv->mutex);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);
+  }
+}
+
 gboolean
 gst_dtls_connection_start (GstDtlsConnection * self, gboolean is_client,
     GError ** err)
 {
   GstDtlsConnectionPrivate *priv;
   gboolean ret;
+  gboolean notify_state = FALSE;
 
   priv = self->priv;
 
@@ -313,19 +344,26 @@ gst_dtls_connection_start (GstDtlsConnection * self, gboolean is_client,
   priv->bio_buffer_offset = 0;
   priv->keys_exported = FALSE;
 
-  priv->fatal_error = FALSE;
   priv->sent_close_notify = FALSE;
   priv->received_close_notify = FALSE;
 
+  /* Client immediately starts connecting, the server waits for a client to
+   * start the handshake process */
   priv->is_client = is_client;
   if (priv->is_client) {
+    priv->connection_state = GST_DTLS_CONNECTION_STATE_CONNECTING;
+    notify_state = TRUE;
     SSL_set_connect_state (priv->ssl);
   } else {
+    if (priv->connection_state != GST_DTLS_CONNECTION_STATE_NEW) {
+      priv->connection_state = GST_DTLS_CONNECTION_STATE_NEW;
+      notify_state = TRUE;
+    }
     SSL_set_accept_state (priv->ssl);
   }
   log_state (self, "initial state set");
 
-  ret = openssl_poll (self, err);
+  ret = openssl_poll (self, &notify_state, err);
   if (ret == GST_FLOW_EOS && err) {
     *err =
         g_error_new_literal (GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_OPEN_WRITE,
@@ -337,6 +375,11 @@ gst_dtls_connection_start (GstDtlsConnection * self, gboolean is_client,
   GST_TRACE_OBJECT (self, "unlocking @ start");
   g_mutex_unlock (&priv->mutex);
 
+  if (notify_state) {
+    g_object_notify_by_pspec (G_OBJECT (self),
+        properties[PROP_CONNECTION_STATE]);
+  }
+
   return ret == GST_FLOW_OK;
 }
 
@@ -346,6 +389,7 @@ handle_timeout (gpointer data, gpointer user_data)
   GstDtlsConnection *self = user_data;
   GstDtlsConnectionPrivate *priv;
   gint ret;
+  gboolean notify_state = FALSE;
 
   priv = self->priv;
 
@@ -361,11 +405,16 @@ handle_timeout (gpointer data, gpointer user_data)
       GST_WARNING_OBJECT (self, "handling timeout failed");
     } else if (ret > 0) {
       log_state (self, "handling timeout before poll");
-      openssl_poll (self, NULL);
+      openssl_poll (self, &notify_state, NULL);
       log_state (self, "handling timeout after poll");
     }
   }
   g_mutex_unlock (&priv->mutex);
+
+  if (notify_state) {
+    g_object_notify_by_pspec (G_OBJECT (self),
+        properties[PROP_CONNECTION_STATE]);
+  }
 }
 
 static gboolean
@@ -456,6 +505,8 @@ gst_dtls_connection_check_timeout (GstDtlsConnection * self)
 void
 gst_dtls_connection_stop (GstDtlsConnection * self)
 {
+  gboolean notify_state = FALSE;
+
   g_return_if_fail (GST_IS_DTLS_CONNECTION (self));
   g_return_if_fail (self->priv->ssl);
   g_return_if_fail (self->priv->bio);
@@ -467,6 +518,11 @@ gst_dtls_connection_stop (GstDtlsConnection * self)
   GST_TRACE_OBJECT (self, "locked @ stop");
 
   self->priv->is_alive = FALSE;
+  if (self->priv->connection_state != GST_DTLS_CONNECTION_STATE_FAILED
+      && self->priv->connection_state != GST_DTLS_CONNECTION_STATE_CLOSED) {
+    self->priv->connection_state = GST_DTLS_CONNECTION_STATE_CLOSED;
+    notify_state = TRUE;
+  }
   GST_TRACE_OBJECT (self, "signaling @ stop");
   g_cond_signal (&self->priv->condition);
   GST_TRACE_OBJECT (self, "signaled @ stop");
@@ -475,11 +531,18 @@ gst_dtls_connection_stop (GstDtlsConnection * self)
   g_mutex_unlock (&self->priv->mutex);
 
   GST_DEBUG_OBJECT (self, "stopped connection");
+
+  if (notify_state) {
+    g_object_notify_by_pspec (G_OBJECT (self),
+        properties[PROP_CONNECTION_STATE]);
+  }
 }
 
 void
 gst_dtls_connection_close (GstDtlsConnection * self)
 {
+  gboolean notify_state = FALSE;
+
   g_return_if_fail (GST_IS_DTLS_CONNECTION (self));
   g_return_if_fail (self->priv->ssl);
   g_return_if_fail (self->priv->bio);
@@ -495,10 +558,21 @@ gst_dtls_connection_close (GstDtlsConnection * self)
     g_cond_signal (&self->priv->condition);
   }
 
+  if (self->priv->connection_state != GST_DTLS_CONNECTION_STATE_FAILED
+      && self->priv->connection_state != GST_DTLS_CONNECTION_STATE_CLOSED) {
+    self->priv->connection_state = GST_DTLS_CONNECTION_STATE_CLOSED;
+    notify_state = TRUE;
+  }
+
   GST_TRACE_OBJECT (self, "unlocking @ close");
   g_mutex_unlock (&self->priv->mutex);
 
   GST_DEBUG_OBJECT (self, "closed connection");
+
+  if (notify_state) {
+    g_object_notify_by_pspec (G_OBJECT (self),
+        properties[PROP_CONNECTION_STATE]);
+  }
 }
 
 void
@@ -533,6 +607,7 @@ gst_dtls_connection_process (GstDtlsConnection * self, gpointer data, gsize len,
   GstFlowReturn flow_ret = GST_FLOW_OK;
   GstDtlsConnectionPrivate *priv;
   int ret;
+  gboolean notify_state = FALSE;
 
   g_return_val_if_fail (GST_IS_DTLS_CONNECTION (self), 0);
   g_return_val_if_fail (self->priv->ssl, 0);
@@ -552,7 +627,7 @@ gst_dtls_connection_process (GstDtlsConnection * self, gpointer data, gsize len,
     return GST_FLOW_EOS;
   }
 
-  if (self->priv->fatal_error) {
+  if (self->priv->connection_state == GST_DTLS_CONNECTION_STATE_FAILED) {
     GST_ERROR_OBJECT (self, "Had a fatal error before");
     g_mutex_unlock (&priv->mutex);
     if (err)
@@ -569,7 +644,7 @@ gst_dtls_connection_process (GstDtlsConnection * self, gpointer data, gsize len,
   log_state (self, "process start");
 
   if (SSL_want_write (priv->ssl)) {
-    flow_ret = openssl_poll (self, err);
+    flow_ret = openssl_poll (self, &notify_state, err);
     log_state (self, "process want write, after poll");
     if (flow_ret != GST_FLOW_OK) {
       g_mutex_unlock (&priv->mutex);
@@ -577,33 +652,65 @@ gst_dtls_connection_process (GstDtlsConnection * self, gpointer data, gsize len,
     }
   }
 
+  /* If we're a server and were in new state then by receiving the first data
+   * we would start the connection process */
+  if (!priv->is_client) {
+    if (self->priv->connection_state == GST_DTLS_CONNECTION_STATE_NEW) {
+      priv->connection_state = GST_DTLS_CONNECTION_STATE_CONNECTING;
+      notify_state = TRUE;
+    }
+  }
+
   ret = SSL_read (priv->ssl, data, len);
   *written = ret >= 0 ? ret : 0;
   GST_DEBUG_OBJECT (self, "read result: %d", ret);
 
-  flow_ret = handle_error (self, ret, GST_RESOURCE_ERROR_READ, err);
+  flow_ret =
+      handle_error (self, ret, GST_RESOURCE_ERROR_READ, &notify_state, err);
   if (flow_ret == GST_FLOW_EOS) {
     self->priv->received_close_notify = TRUE;
+    if (self->priv->connection_state != GST_DTLS_CONNECTION_STATE_FAILED
+        && self->priv->connection_state != GST_DTLS_CONNECTION_STATE_CLOSED) {
+      self->priv->connection_state = GST_DTLS_CONNECTION_STATE_CLOSED;
+      notify_state = TRUE;
+    }
     /* Notify about the connection being properly closed now if both
      * sides did so */
     if (self->priv->sent_close_notify && self->priv->send_callback)
       self->priv->send_callback (self, NULL, 0, NULL);
 
     g_mutex_unlock (&priv->mutex);
+
+    if (notify_state) {
+      g_object_notify_by_pspec (G_OBJECT (self),
+          properties[PROP_CONNECTION_STATE]);
+    }
+
     return flow_ret;
   } else if (flow_ret != GST_FLOW_OK) {
     g_mutex_unlock (&priv->mutex);
+
+    if (notify_state) {
+      g_object_notify_by_pspec (G_OBJECT (self),
+          properties[PROP_CONNECTION_STATE]);
+    }
+
     return flow_ret;
   }
 
   log_state (self, "process after read");
 
-  flow_ret = openssl_poll (self, err);
+  flow_ret = openssl_poll (self, &notify_state, err);
 
   log_state (self, "process after poll");
 
   GST_TRACE_OBJECT (self, "unlocking @ process");
   g_mutex_unlock (&priv->mutex);
+
+  if (notify_state) {
+    g_object_notify_by_pspec (G_OBJECT (self),
+        properties[PROP_CONNECTION_STATE]);
+  }
 
   return flow_ret;
 }
@@ -614,6 +721,7 @@ gst_dtls_connection_send (GstDtlsConnection * self, gconstpointer data,
 {
   GstFlowReturn flow_ret;
   int ret = 0;
+  gboolean notify_state = FALSE;
 
   g_return_val_if_fail (GST_IS_DTLS_CONNECTION (self), 0);
 
@@ -624,7 +732,7 @@ gst_dtls_connection_send (GstDtlsConnection * self, gconstpointer data,
   g_mutex_lock (&self->priv->mutex);
   GST_TRACE_OBJECT (self, "locked @ send");
 
-  if (self->priv->fatal_error) {
+  if (self->priv->connection_state == GST_DTLS_CONNECTION_STATE_FAILED) {
     GST_ERROR_OBJECT (self, "Had a fatal error before");
     g_mutex_unlock (&self->priv->mutex);
     if (err)
@@ -644,7 +752,11 @@ gst_dtls_connection_send (GstDtlsConnection * self, gconstpointer data,
       *written = 0;
     GST_DEBUG_OBJECT (self, "Sending close_notify");
     ret = SSL_shutdown (self->priv->ssl);
-    self->priv->sent_close_notify = TRUE;
+    if (self->priv->connection_state != GST_DTLS_CONNECTION_STATE_CLOSED &&
+        self->priv->connection_state != GST_DTLS_CONNECTION_STATE_FAILED) {
+      self->priv->connection_state = GST_DTLS_CONNECTION_STATE_CLOSED;
+      notify_state = TRUE;
+    }
     if (ret == 1) {
       GST_LOG_OBJECT (self, "received peer close_notify already");
       self->priv->received_close_notify = TRUE;
@@ -653,7 +765,9 @@ gst_dtls_connection_send (GstDtlsConnection * self, gconstpointer data,
       GST_LOG_OBJECT (self, "did not receive peer close_notify yet");
       flow_ret = GST_FLOW_OK;
     } else {
-      flow_ret = handle_error (self, ret, GST_RESOURCE_ERROR_WRITE, err);
+      flow_ret =
+          handle_error (self, ret, GST_RESOURCE_ERROR_WRITE, &notify_state,
+          err);
     }
   } else if (SSL_is_init_finished (self->priv->ssl)) {
     GST_DEBUG_OBJECT (self, "sending data of %" G_GSIZE_FORMAT " B", len);
@@ -661,7 +775,9 @@ gst_dtls_connection_send (GstDtlsConnection * self, gconstpointer data,
     if (ret <= 0) {
       if (written)
         *written = 0;
-      flow_ret = handle_error (self, ret, GST_RESOURCE_ERROR_WRITE, err);
+      flow_ret =
+          handle_error (self, ret, GST_RESOURCE_ERROR_WRITE, &notify_state,
+          err);
     } else {
       if (written)
         *written = ret;
@@ -681,6 +797,11 @@ gst_dtls_connection_send (GstDtlsConnection * self, gconstpointer data,
 
   GST_TRACE_OBJECT (self, "unlocking @ send");
   g_mutex_unlock (&self->priv->mutex);
+
+  if (notify_state) {
+    g_object_notify_by_pspec (G_OBJECT (self),
+        properties[PROP_CONNECTION_STATE]);
+  }
 
   return flow_ret;
 }
@@ -829,7 +950,7 @@ ssl_err_cb (const char *str, size_t len, void *u)
 
 static GstFlowReturn
 handle_error (GstDtlsConnection * self, int ret, GstResourceError error_type,
-    GError ** err)
+    gboolean * notify_state, GError ** err)
 {
   int error;
 
@@ -841,7 +962,10 @@ handle_error (GstDtlsConnection * self, int ret, GstResourceError error_type,
       return GST_FLOW_OK;
     case SSL_ERROR_SSL:
       GST_ERROR_OBJECT (self, "Fatal SSL error");
-      self->priv->fatal_error = TRUE;
+      if (self->priv->connection_state != GST_DTLS_CONNECTION_STATE_FAILED) {
+        self->priv->connection_state = GST_DTLS_CONNECTION_STATE_FAILED;
+        *notify_state = TRUE;
+      }
       ERR_print_errors_cb (ssl_err_cb, self);
       if (err)
         *err =
@@ -879,12 +1003,18 @@ handle_error (GstDtlsConnection * self, int ret, GstResourceError error_type,
           *err =
               g_error_new (GST_RESOURCE_ERROR, error_type,
               "Fatal SSL syscall error: errno %d: %s", syserror, message);
-        self->priv->fatal_error = TRUE;
+        if (self->priv->connection_state != GST_DTLS_CONNECTION_STATE_FAILED) {
+          self->priv->connection_state = GST_DTLS_CONNECTION_STATE_FAILED;
+          *notify_state = TRUE;
+        }
         return GST_FLOW_ERROR;
       }
     }
     default:
-      self->priv->fatal_error = TRUE;
+      if (self->priv->connection_state != GST_DTLS_CONNECTION_STATE_FAILED) {
+        self->priv->connection_state = GST_DTLS_CONNECTION_STATE_FAILED;
+        *notify_state = TRUE;
+      }
       GST_ERROR_OBJECT (self, "Unknown SSL error: %d, ret: %d", error, ret);
       if (err)
         *err =
@@ -895,7 +1025,7 @@ handle_error (GstDtlsConnection * self, int ret, GstResourceError error_type,
 }
 
 static GstFlowReturn
-openssl_poll (GstDtlsConnection * self, GError ** err)
+openssl_poll (GstDtlsConnection * self, gboolean * notify_state, GError ** err)
 {
   int ret;
   GstFlowReturn flow_ret;
@@ -913,6 +1043,13 @@ openssl_poll (GstDtlsConnection * self, GError ** err)
         GST_INFO_OBJECT (self,
             "handshake just completed successfully, exporting keys");
         export_srtp_keys (self);
+        if (self->priv->connection_state != GST_DTLS_CONNECTION_STATE_FAILED
+            && self->priv->connection_state != GST_DTLS_CONNECTION_STATE_CLOSED
+            && self->priv->connection_state !=
+            GST_DTLS_CONNECTION_STATE_CONNECTED) {
+          self->priv->connection_state = GST_DTLS_CONNECTION_STATE_CONNECTED;
+          *notify_state = TRUE;
+        }
       } else {
         GST_INFO_OBJECT (self, "handshake is completed");
       }
@@ -928,7 +1065,9 @@ openssl_poll (GstDtlsConnection * self, GError ** err)
       break;
   }
 
-  flow_ret = handle_error (self, ret, GST_RESOURCE_ERROR_OPEN_WRITE, err);
+  flow_ret =
+      handle_error (self, ret, GST_RESOURCE_ERROR_OPEN_WRITE, notify_state,
+      err);
 
   ERR_print_errors_cb (ssl_warn_cb, self);
 
@@ -1160,4 +1299,25 @@ bio_method_free (BIO * bio)
 
   GST_LOG_OBJECT (GST_DTLS_CONNECTION (BIO_get_data (bio)), "BIO free");
   return 0;
+}
+
+GType
+gst_dtls_connection_state_get_type (void)
+{
+  static GType type = 0;
+  static const GEnumValue values[] = {
+    {GST_DTLS_CONNECTION_STATE_NEW, "New connection", "new"},
+    {GST_DTLS_CONNECTION_STATE_CLOSED, "Closed connection on either side",
+        "closed"},
+    {GST_DTLS_CONNECTION_STATE_FAILED, "Failed connection", "failed"},
+    {GST_DTLS_CONNECTION_STATE_CONNECTING, "Connecting", "connecting"},
+    {GST_DTLS_CONNECTION_STATE_CONNECTED, "Successfully connected",
+        "connected"},
+    {0, NULL, NULL},
+  };
+
+  if (!type) {
+    type = g_enum_register_static ("GstDtlsConnectionState", values);
+  }
+  return type;
 }
