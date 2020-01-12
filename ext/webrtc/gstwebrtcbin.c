@@ -885,8 +885,8 @@ _collate_ice_connection_states (GstWebRTCBin * webrtc)
     return STATE (CONNECTED);
   }
 
-  GST_FIXME ("unspecified situation, returning new");
-  return STATE (NEW);
+  GST_FIXME ("unspecified situation, returning old state");
+  return webrtc->ice_connection_state;
 #undef STATE
 }
 
@@ -1115,8 +1115,9 @@ _collate_peer_connection_states (GstWebRTCBin * webrtc)
     return STATE (CONNECTED);
   }
 
-  GST_FIXME_OBJECT (webrtc, "Undefined situation detected, returning new");
-  return STATE (NEW);
+  GST_FIXME_OBJECT (webrtc,
+      "Undefined situation detected, returning old state");
+  return webrtc->peer_connection_state;
 #undef DTLS_STATE
 #undef ICE_STATE
 #undef STATE
