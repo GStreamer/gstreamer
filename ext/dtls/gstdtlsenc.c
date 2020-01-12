@@ -296,7 +296,7 @@ gst_dtls_enc_change_state (GstElement * element, GstStateChange transition)
             "on-encoder-key", G_CALLBACK (on_key_received), self, 0);
 
         gst_dtls_connection_set_send_callback (self->connection,
-            g_cclosure_new (G_CALLBACK (on_send_data), self, NULL));
+            (GstDtlsConnectionSendCallback) on_send_data, self, NULL);
       } else {
         GST_WARNING_OBJECT (self,
             "trying to change state to ready without connection id");
@@ -313,7 +313,8 @@ gst_dtls_enc_change_state (GstElement * element, GstStateChange transition)
 
       if (self->connection) {
         gst_dtls_connection_close (self->connection);
-        gst_dtls_connection_set_send_callback (self->connection, NULL);
+        gst_dtls_connection_set_send_callback (self->connection, NULL, NULL,
+            NULL);
         g_object_unref (self->connection);
         self->connection = NULL;
       }

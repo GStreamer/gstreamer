@@ -98,13 +98,13 @@ void gst_dtls_connection_stop(GstDtlsConnection *);
  */
 void gst_dtls_connection_close(GstDtlsConnection *);
 
+
+typedef void (*GstDtlsConnectionSendCallback) (GstDtlsConnection * connection, gconstpointer data, gsize length, gpointer user_data);
+
 /*
- * Sets the closure that will be called whenever data needs to be sent.
- *
- * The closure will get called with the following arguments:
- * void cb(GstDtlsConnection *, gpointer data, gint length, gpointer user_data)
+ * Sets the callback that will be called whenever data needs to be sent.
  */
-void gst_dtls_connection_set_send_callback(GstDtlsConnection *, GClosure *);
+void gst_dtls_connection_set_send_callback(GstDtlsConnection *, GstDtlsConnectionSendCallback, gpointer, GDestroyNotify);
 
 /*
  * Processes data that has been received, the transformation is done in-place.

@@ -93,7 +93,9 @@ struct _GstDtlsConnectionPrivate
   gint bio_buffer_len;
   gint bio_buffer_offset;
 
-  GClosure *send_closure;
+  GstDtlsConnectionSendCallback send_callback;
+  gpointer send_callback_user_data;
+  GDestroyNotify send_callback_destroy_notify;
 
   gboolean timeout_pending;
   GThreadPool *thread_pool;
@@ -170,8 +172,6 @@ gst_dtls_connection_init (GstDtlsConnection * self)
   priv->ssl = NULL;
   priv->bio = NULL;
 
-  priv->send_closure = NULL;
-
   priv->is_client = FALSE;
   priv->is_alive = TRUE;
   priv->keys_exported = FALSE;
@@ -203,10 +203,8 @@ gst_dtls_connection_finalize (GObject * gobject)
   SSL_free (priv->ssl);
   priv->ssl = NULL;
 
-  if (priv->send_closure) {
-    g_closure_unref (priv->send_closure);
-    priv->send_closure = NULL;
-  }
+  if (priv->send_callback_destroy_notify)
+    priv->send_callback_destroy_notify (priv->send_callback_user_data);
 
   g_mutex_clear (&priv->mutex);
   g_cond_clear (&priv->condition);
@@ -293,7 +291,7 @@ gst_dtls_connection_start (GstDtlsConnection * self, gboolean is_client)
 
   priv = self->priv;
 
-  g_return_if_fail (priv->send_closure);
+  g_return_if_fail (priv->send_callback);
   g_return_if_fail (priv->ssl);
   g_return_if_fail (priv->bio);
 
@@ -486,26 +484,27 @@ gst_dtls_connection_close (GstDtlsConnection * self)
 
 void
 gst_dtls_connection_set_send_callback (GstDtlsConnection * self,
-    GClosure * closure)
+    GstDtlsConnectionSendCallback callback, gpointer user_data,
+    GDestroyNotify destroy_notify)
 {
+  GstDtlsConnectionPrivate *priv;
+
   g_return_if_fail (GST_IS_DTLS_CONNECTION (self));
 
+  priv = self->priv;
+
   GST_TRACE_OBJECT (self, "locking @ set_send_callback");
-  g_mutex_lock (&self->priv->mutex);
+  g_mutex_lock (&priv->mutex);
   GST_TRACE_OBJECT (self, "locked @ set_send_callback");
 
-  if (self->priv->send_closure) {
-    g_closure_unref (self->priv->send_closure);
-    self->priv->send_closure = NULL;
-  }
-  self->priv->send_closure = closure;
-
-  if (closure && G_CLOSURE_NEEDS_MARSHAL (closure)) {
-    g_closure_set_marshal (closure, g_cclosure_marshal_generic);
-  }
+  if (priv->send_callback_destroy_notify)
+    priv->send_callback_destroy_notify (priv->send_callback_user_data);
+  priv->send_callback = callback;
+  priv->send_callback_user_data = user_data;
+  priv->send_callback_destroy_notify = destroy_notify;
 
   GST_TRACE_OBJECT (self, "unlocking @ set_send_callback");
-  g_mutex_unlock (&self->priv->mutex);
+  g_mutex_unlock (&priv->mutex);
 }
 
 gint
@@ -903,22 +902,9 @@ bio_method_write (BIO * bio, const char *data, int size)
 
   GST_LOG_OBJECT (self, "BIO: writing %d", size);
 
-  if (self->priv->send_closure) {
-    GValue values[3] = { G_VALUE_INIT };
-
-    g_value_init (&values[0], GST_TYPE_DTLS_CONNECTION);
-    g_value_set_object (&values[0], self);
-
-    g_value_init (&values[1], G_TYPE_POINTER);
-    g_value_set_pointer (&values[1], (gpointer) data);
-
-    g_value_init (&values[2], G_TYPE_INT);
-    g_value_set_int (&values[2], size);
-
-    g_closure_invoke (self->priv->send_closure, NULL, 3, values, NULL);
-
-    g_value_unset (&values[0]);
-  }
+  if (self->priv->send_callback)
+    self->priv->send_callback (self, data, size,
+        self->priv->send_callback_user_data);
 
   return size;
 }
