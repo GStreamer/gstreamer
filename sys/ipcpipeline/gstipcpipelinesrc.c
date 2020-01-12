@@ -295,8 +295,8 @@ gst_ipc_pipeline_src_log_queue (GstIpcPipelineSrc * src)
     } else if (GST_IS_QUERY (object)) {
       GST_LOG_OBJECT (src, "  #%u: %s query", n, GST_QUERY_TYPE_NAME (object));
     } else if (GST_IS_BUFFER (object)) {
-      GST_LOG_OBJECT (src, "  #%u: %zu bytes buffer", n,
-          (size_t) gst_buffer_get_size (object));
+      GST_LOG_OBJECT (src, "  #%u: %" G_GSIZE_FORMAT " bytes buffer", n,
+          gst_buffer_get_size (object));
     } else {
       GST_LOG_OBJECT (src, "  #%u: unknown item in queue", n);
     }
