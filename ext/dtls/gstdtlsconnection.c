@@ -899,14 +899,15 @@ static int
 bio_method_write (BIO * bio, const char *data, int size)
 {
   GstDtlsConnection *self = GST_DTLS_CONNECTION (BIO_get_data (bio));
+  gboolean ret = TRUE;
 
   GST_LOG_OBJECT (self, "BIO: writing %d", size);
 
   if (self->priv->send_callback)
-    self->priv->send_callback (self, data, size,
+    ret = self->priv->send_callback (self, data, size,
         self->priv->send_callback_user_data);
 
-  return size;
+  return ret ? size : -1;
 }
 
 static int

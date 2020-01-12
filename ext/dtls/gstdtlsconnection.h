@@ -99,7 +99,7 @@ void gst_dtls_connection_stop(GstDtlsConnection *);
 void gst_dtls_connection_close(GstDtlsConnection *);
 
 
-typedef void (*GstDtlsConnectionSendCallback) (GstDtlsConnection * connection, gconstpointer data, gsize length, gpointer user_data);
+typedef gboolean (*GstDtlsConnectionSendCallback) (GstDtlsConnection * connection, gconstpointer data, gsize length, gpointer user_data);
 
 /*
  * Sets the callback that will be called whenever data needs to be sent.
