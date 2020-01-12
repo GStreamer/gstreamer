@@ -40,6 +40,7 @@ import xml
 import random
 import shutil
 import uuid
+from itertools import cycle
 
 from .utils import which
 from . import reporters
@@ -1866,6 +1867,13 @@ class _TestsLauncher(Loggable):
 
         return testlist_changed
 
+    def _split_tests(self, num_groups):
+        groups = [[] for x in range(num_groups)]
+        group = cycle(groups)
+        for test in self.tests:
+            next(group).append(test)
+        return groups
+
     def list_tests(self):
         for tester in self.testers:
             if not self._tester_needed(tester):
@@ -1878,6 +1886,15 @@ class _TestsLauncher(Loggable):
 
             self.tests.extend(tests)
         self.tests.sort(key=lambda test: test.classname)
+
+        if self.options.num_parts < 1:
+            raise RuntimeError("Tests must be split in positive number of parts.")
+        if self.options.num_parts > len(self.tests):
+            raise RuntimeError("Cannot have more parts then there exist tests.")
+        if self.options.part_index < 1 or self.options.part_index > self.options.num_parts:
+            raise RuntimeError("Part index is out of range")
+
+        self.tests = self._split_tests(self.options.num_parts)[self.options.part_index - 1]
         return self.tests
 
     def _tester_needed(self, tester):

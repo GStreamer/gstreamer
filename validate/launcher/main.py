@@ -530,6 +530,13 @@ class LauncherConfig(Loggable):
         dir_group.add_argument("--ignore-numfailures", dest="ignore_numfailures",
                                help="Ignore the number of failed test in exit code",
                                default=False, action='store_true')
+        dir_group.add_argument("--parts", dest="num_parts",
+                               help="Splits the tests in equally distributed parts and only run one part"
+                               " (Defaults to 1 part)",
+                               type=int, default=1)
+        dir_group.add_argument("--part-index", dest="part_index",
+                               help="The index of the part to be run (starts at 1).",
+                               type=int, default=1)
 
         http_server_group = parser.add_argument_group(
             "Handle the HTTP server to be created")
