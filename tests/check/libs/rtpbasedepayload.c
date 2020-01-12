@@ -41,6 +41,13 @@
 #define GST_IS_RTP_DUMMY_DEPAY_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_DUMMY_DEPAY))
 
+typedef enum
+{
+  GST_RTP_DUMMY_RETURN_TO_PUSH,
+  GST_RTP_DUMMY_USE_PUSH_FUNC,
+  GST_RTP_DUMMY_USE_PUSH_LIST_FUNC,
+} GstRtpDummyPushMethod;
+
 typedef struct _GstRtpDummyDepay GstRtpDummyDepay;
 typedef struct _GstRtpDummyDepayClass GstRtpDummyDepayClass;
 
@@ -48,6 +55,8 @@ struct _GstRtpDummyDepay
 {
   GstRTPBaseDepayload depayload;
   guint64 rtptime;
+
+  GstRtpDummyPushMethod push_method;
 };
 
 struct _GstRtpDummyDepayClass
@@ -110,6 +119,7 @@ rtp_dummy_depay_new (void)
 static GstBuffer *
 gst_rtp_dummy_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
+  GstRtpDummyDepay *self = GST_RTP_DUMMY_DEPAY (depayload);
   GstRTPBuffer rtp = { NULL };
   GstBuffer *outbuf;
   guint32 rtptime;
@@ -148,6 +158,22 @@ gst_rtp_dummy_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     GST_LOG ("\tsize=%" G_GSIZE_FORMAT " offset=%" G_GSIZE_FORMAT " maxsize=%"
         G_GSIZE_FORMAT, size, offset, maxsize);
     gst_memory_unref (mem);
+  }
+
+  switch (self->push_method) {
+    case GST_RTP_DUMMY_USE_PUSH_FUNC:
+      gst_rtp_base_depayload_push (depayload, outbuf);
+      outbuf = NULL;
+      break;
+    case GST_RTP_DUMMY_USE_PUSH_LIST_FUNC:{
+      GstBufferList *blist = gst_buffer_list_new ();
+      gst_buffer_list_add (blist, outbuf);
+      outbuf = NULL;
+      gst_rtp_base_depayload_push_list (depayload, blist);
+      break;
+    }
+    case GST_RTP_DUMMY_RETURN_TO_PUSH:
+      break;
   }
 
   return outbuf;
@@ -1466,6 +1492,54 @@ GST_START_TEST (rtp_base_depayload_max_reorder)
 
 GST_END_TEST;
 
+GST_START_TEST (rtp_base_depayload_flow_return_push_func)
+{
+  State *state;
+
+  state = create_depayloader ("application/x-rtp", NULL);
+
+  GST_RTP_DUMMY_DEPAY (state->element)->push_method =
+      GST_RTP_DUMMY_USE_PUSH_LIST_FUNC;
+
+  set_state (state, GST_STATE_PLAYING);
+
+  GST_PAD_SET_FLUSHING (state->sinkpad);
+
+  push_rtp_buffer_fails (state, GST_FLOW_FLUSHING,
+      "pts", 0 * GST_SECOND,
+      "rtptime", G_GUINT64_CONSTANT (0x1234), "seq", 0x4242, NULL);
+
+  set_state (state, GST_STATE_NULL);
+
+  destroy_depayloader (state);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (rtp_base_depayload_flow_return_push_list_func)
+{
+  State *state;
+
+  state = create_depayloader ("application/x-rtp", NULL);
+
+  GST_RTP_DUMMY_DEPAY (state->element)->push_method =
+      GST_RTP_DUMMY_USE_PUSH_FUNC;
+
+  set_state (state, GST_STATE_PLAYING);
+
+  GST_PAD_SET_FLUSHING (state->sinkpad);
+
+  push_rtp_buffer_fails (state, GST_FLOW_FLUSHING,
+      "pts", 0 * GST_SECOND,
+      "rtptime", G_GUINT64_CONSTANT (0x1234), "seq", 0x4242, NULL);
+
+  set_state (state, GST_STATE_NULL);
+
+  destroy_depayloader (state);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtp_basepayloading_suite (void)
 {
@@ -1499,6 +1573,9 @@ rtp_basepayloading_suite (void)
   tcase_add_test (tc_chain, rtp_base_depayload_source_info_test);
   tcase_add_test (tc_chain, rtp_base_depayload_source_info_from_rtp_only);
   tcase_add_test (tc_chain, rtp_base_depayload_max_reorder);
+
+  tcase_add_test (tc_chain, rtp_base_depayload_flow_return_push_func);
+  tcase_add_test (tc_chain, rtp_base_depayload_flow_return_push_list_func);
 
   return s;
 }
