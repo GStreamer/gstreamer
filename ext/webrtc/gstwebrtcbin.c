@@ -1115,6 +1115,15 @@ _collate_peer_connection_states (GstWebRTCBin * webrtc)
     return STATE (CONNECTED);
   }
 
+  /* FIXME: Unspecified state that happens for us */
+  if ((dtls_all_new_connecting_or_checking
+          || dtls_all_connected_completed_or_closed)
+      && (ice_all_new_connecting_or_checking
+          || ice_all_connected_completed_or_closed)) {
+    GST_TRACE_OBJECT (webrtc, "returning connecting");
+    return STATE (CONNECTING);
+  }
+
   GST_FIXME_OBJECT (webrtc,
       "Undefined situation detected, returning old state");
   return webrtc->peer_connection_state;
