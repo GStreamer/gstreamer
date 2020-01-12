@@ -87,6 +87,10 @@ struct _GstDtlsConnectionPrivate
   gboolean is_alive;
   gboolean keys_exported;
 
+  gboolean sent_close_notify;
+  gboolean received_close_notify;
+  gboolean fatal_error;
+
   GMutex mutex;
   GCond condition;
   gpointer bio_buffer;
@@ -112,7 +116,9 @@ static void gst_dtls_connection_set_property (GObject *, guint prop_id,
 
 static void log_state (GstDtlsConnection *, const gchar * str);
 static void export_srtp_keys (GstDtlsConnection *);
-static void openssl_poll (GstDtlsConnection *);
+static GstFlowReturn openssl_poll (GstDtlsConnection *, GError ** err);
+static GstFlowReturn handle_error (GstDtlsConnection * self, int ret,
+    GstResourceError error_type, GError ** err);
 static int openssl_verify_callback (int preverify_ok,
     X509_STORE_CTX * x509_ctx);
 
@@ -284,16 +290,18 @@ gst_dtls_connection_set_property (GObject * object, guint prop_id,
   }
 }
 
-void
-gst_dtls_connection_start (GstDtlsConnection * self, gboolean is_client)
+gboolean
+gst_dtls_connection_start (GstDtlsConnection * self, gboolean is_client,
+    GError ** err)
 {
   GstDtlsConnectionPrivate *priv;
+  gboolean ret;
 
   priv = self->priv;
 
-  g_return_if_fail (priv->send_callback);
-  g_return_if_fail (priv->ssl);
-  g_return_if_fail (priv->bio);
+  g_return_val_if_fail (priv->send_callback, FALSE);
+  g_return_val_if_fail (priv->ssl, FALSE);
+  g_return_val_if_fail (priv->bio, FALSE);
 
   GST_TRACE_OBJECT (self, "locking @ start");
   g_mutex_lock (&priv->mutex);
@@ -305,6 +313,10 @@ gst_dtls_connection_start (GstDtlsConnection * self, gboolean is_client)
   priv->bio_buffer_offset = 0;
   priv->keys_exported = FALSE;
 
+  priv->fatal_error = FALSE;
+  priv->sent_close_notify = FALSE;
+  priv->received_close_notify = FALSE;
+
   priv->is_client = is_client;
   if (priv->is_client) {
     SSL_set_connect_state (priv->ssl);
@@ -313,12 +325,19 @@ gst_dtls_connection_start (GstDtlsConnection * self, gboolean is_client)
   }
   log_state (self, "initial state set");
 
-  openssl_poll (self);
+  ret = openssl_poll (self, err);
+  if (ret == GST_FLOW_EOS && err) {
+    *err =
+        g_error_new_literal (GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_OPEN_WRITE,
+        "Connection closed");
+  }
 
   log_state (self, "first poll done");
 
   GST_TRACE_OBJECT (self, "unlocking @ start");
   g_mutex_unlock (&priv->mutex);
+
+  return ret == GST_FLOW_OK;
 }
 
 static void
@@ -342,7 +361,7 @@ handle_timeout (gpointer data, gpointer user_data)
       GST_WARNING_OBJECT (self, "handling timeout failed");
     } else if (ret > 0) {
       log_state (self, "handling timeout before poll");
-      openssl_poll (self);
+      openssl_poll (self, NULL);
       log_state (self, "handling timeout after poll");
     }
   }
@@ -507,11 +526,13 @@ gst_dtls_connection_set_send_callback (GstDtlsConnection * self,
   g_mutex_unlock (&priv->mutex);
 }
 
-gint
-gst_dtls_connection_process (GstDtlsConnection * self, gpointer data, gint len)
+GstFlowReturn
+gst_dtls_connection_process (GstDtlsConnection * self, gpointer data, gsize len,
+    gsize * written, GError ** err)
 {
+  GstFlowReturn flow_ret = GST_FLOW_OK;
   GstDtlsConnectionPrivate *priv;
-  gint result;
+  int ret;
 
   g_return_val_if_fail (GST_IS_DTLS_CONNECTION (self), 0);
   g_return_val_if_fail (self->priv->ssl, 0);
@@ -525,6 +546,22 @@ gst_dtls_connection_process (GstDtlsConnection * self, gpointer data, gint len)
 
   g_warn_if_fail (!priv->bio_buffer);
 
+  if (self->priv->received_close_notify) {
+    GST_DEBUG_OBJECT (self, "Already received close_notify");
+    g_mutex_unlock (&priv->mutex);
+    return GST_FLOW_EOS;
+  }
+
+  if (self->priv->fatal_error) {
+    GST_ERROR_OBJECT (self, "Had a fatal error before");
+    g_mutex_unlock (&priv->mutex);
+    if (err)
+      *err =
+          g_error_new_literal (GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_READ,
+          "Had fatal error before");
+    return GST_FLOW_ERROR;
+  }
+
   priv->bio_buffer = data;
   priv->bio_buffer_len = len;
   priv->bio_buffer_offset = 0;
@@ -532,29 +569,50 @@ gst_dtls_connection_process (GstDtlsConnection * self, gpointer data, gint len)
   log_state (self, "process start");
 
   if (SSL_want_write (priv->ssl)) {
-    openssl_poll (self);
+    flow_ret = openssl_poll (self, err);
     log_state (self, "process want write, after poll");
+    if (flow_ret != GST_FLOW_OK) {
+      g_mutex_unlock (&priv->mutex);
+      return flow_ret;
+    }
   }
 
-  result = SSL_read (priv->ssl, data, len);
+  ret = SSL_read (priv->ssl, data, len);
+  *written = ret >= 0 ? ret : 0;
+  GST_DEBUG_OBJECT (self, "read result: %d", ret);
+
+  flow_ret = handle_error (self, ret, GST_RESOURCE_ERROR_READ, err);
+  if (flow_ret == GST_FLOW_EOS) {
+    self->priv->received_close_notify = TRUE;
+    /* Notify about the connection being properly closed now if both
+     * sides did so */
+    if (self->priv->sent_close_notify && self->priv->send_callback)
+      self->priv->send_callback (self, NULL, 0, NULL);
+
+    g_mutex_unlock (&priv->mutex);
+    return flow_ret;
+  } else if (flow_ret != GST_FLOW_OK) {
+    g_mutex_unlock (&priv->mutex);
+    return flow_ret;
+  }
 
   log_state (self, "process after read");
 
-  openssl_poll (self);
+  flow_ret = openssl_poll (self, err);
 
   log_state (self, "process after poll");
-
-  GST_DEBUG_OBJECT (self, "read result: %d", result);
 
   GST_TRACE_OBJECT (self, "unlocking @ process");
   g_mutex_unlock (&priv->mutex);
 
-  return result;
+  return flow_ret;
 }
 
-gint
-gst_dtls_connection_send (GstDtlsConnection * self, gpointer data, gint len)
+GstFlowReturn
+gst_dtls_connection_send (GstDtlsConnection * self, gconstpointer data,
+    gsize len, gsize * written, GError ** err)
 {
+  GstFlowReturn flow_ret;
   int ret = 0;
 
   g_return_val_if_fail (GST_IS_DTLS_CONNECTION (self), 0);
@@ -566,20 +624,65 @@ gst_dtls_connection_send (GstDtlsConnection * self, gpointer data, gint len)
   g_mutex_lock (&self->priv->mutex);
   GST_TRACE_OBJECT (self, "locked @ send");
 
-  if (SSL_is_init_finished (self->priv->ssl)) {
+  if (self->priv->fatal_error) {
+    GST_ERROR_OBJECT (self, "Had a fatal error before");
+    g_mutex_unlock (&self->priv->mutex);
+    if (err)
+      *err =
+          g_error_new_literal (GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_WRITE,
+          "Had fatal error before");
+    return GST_FLOW_ERROR;
+  }
+
+  if (self->priv->sent_close_notify) {
+    len = 0;
+    GST_DEBUG_OBJECT (self, "Not sending new data after close_notify");
+  }
+
+  if (len == 0) {
+    if (written)
+      *written = 0;
+    GST_DEBUG_OBJECT (self, "Sending close_notify");
+    ret = SSL_shutdown (self->priv->ssl);
+    self->priv->sent_close_notify = TRUE;
+    if (ret == 1) {
+      GST_LOG_OBJECT (self, "received peer close_notify already");
+      self->priv->received_close_notify = TRUE;
+      flow_ret = GST_FLOW_EOS;
+    } else if (ret == 0) {
+      GST_LOG_OBJECT (self, "did not receive peer close_notify yet");
+      flow_ret = GST_FLOW_OK;
+    } else {
+      flow_ret = handle_error (self, ret, GST_RESOURCE_ERROR_WRITE, err);
+    }
+  } else if (SSL_is_init_finished (self->priv->ssl)) {
+    GST_DEBUG_OBJECT (self, "sending data of %" G_GSIZE_FORMAT " B", len);
     ret = SSL_write (self->priv->ssl, data, len);
-    GST_DEBUG_OBJECT (self, "data sent: input was %d B, output is %d B", len,
-        ret);
+    if (ret <= 0) {
+      if (written)
+        *written = 0;
+      flow_ret = handle_error (self, ret, GST_RESOURCE_ERROR_WRITE, err);
+    } else {
+      if (written)
+        *written = ret;
+      flow_ret = GST_FLOW_OK;
+    }
   } else {
+    if (written)
+      *written = ret;
     GST_WARNING_OBJECT (self,
         "tried to send data before handshake was complete");
-    ret = 0;
+    if (err)
+      *err =
+          g_error_new_literal (GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_WRITE,
+          "Tried to send data before handshake was complete");
+    flow_ret = GST_FLOW_ERROR;
   }
 
   GST_TRACE_OBJECT (self, "unlocking @ send");
   g_mutex_unlock (&self->priv->mutex);
 
-  return ret;
+  return flow_ret;
 }
 
 /*
@@ -724,11 +827,78 @@ ssl_err_cb (const char *str, size_t len, void *u)
   return 0;
 }
 
-static void
-openssl_poll (GstDtlsConnection * self)
+static GstFlowReturn
+handle_error (GstDtlsConnection * self, int ret, GstResourceError error_type,
+    GError ** err)
+{
+  int error;
+
+  error = SSL_get_error (self->priv->ssl, ret);
+
+  switch (error) {
+    case SSL_ERROR_NONE:
+      GST_TRACE_OBJECT (self, "No error");
+      return GST_FLOW_OK;
+    case SSL_ERROR_SSL:
+      GST_ERROR_OBJECT (self, "Fatal SSL error");
+      self->priv->fatal_error = TRUE;
+      ERR_print_errors_cb (ssl_err_cb, self);
+      if (err)
+        *err =
+            g_error_new_literal (GST_RESOURCE_ERROR, error_type,
+            "Fatal SSL error");
+      return GST_FLOW_ERROR;
+    case SSL_ERROR_ZERO_RETURN:
+      GST_LOG_OBJECT (self, "Connection was closed");
+      return GST_FLOW_EOS;
+    case SSL_ERROR_WANT_READ:
+      GST_LOG_OBJECT (self, "SSL wants read");
+      return GST_FLOW_OK;
+    case SSL_ERROR_WANT_WRITE:
+      GST_LOG_OBJECT (self, "SSL wants write");
+      return GST_FLOW_OK;
+    case SSL_ERROR_SYSCALL:{
+      gchar message[1024] = "<unknown>";
+      gint syserror;
+#ifdef G_OS_WIN32
+      syserror = WSAGetLastError ();
+      FormatMessage (FORMAT_MESSAGE_FROM_SYSTEM, NULL, syserror, 0, message,
+          sizeof message, NULL);
+#else
+      syserror = errno;
+      strerror_r (syserror, message, sizeof message);
+#endif
+
+      if (syserror == 0) {
+        GST_TRACE_OBJECT (self, "No error");
+        return GST_FLOW_OK;
+      } else {
+        GST_ERROR_OBJECT (self, "Fatal SSL syscall error: errno %d: %s",
+            syserror, message);
+        if (err)
+          *err =
+              g_error_new (GST_RESOURCE_ERROR, error_type,
+              "Fatal SSL syscall error: errno %d: %s", syserror, message);
+        self->priv->fatal_error = TRUE;
+        return GST_FLOW_ERROR;
+      }
+    }
+    default:
+      self->priv->fatal_error = TRUE;
+      GST_ERROR_OBJECT (self, "Unknown SSL error: %d, ret: %d", error, ret);
+      if (err)
+        *err =
+            g_error_new (GST_RESOURCE_ERROR, error_type,
+            "Unknown SSL error: %d, ret: %d", error, ret);
+      return GST_FLOW_ERROR;
+  }
+}
+
+static GstFlowReturn
+openssl_poll (GstDtlsConnection * self, GError ** err)
 {
   int ret;
-  int error;
+  GstFlowReturn flow_ret;
 
   log_state (self, "poll: before handshake");
 
@@ -746,54 +916,23 @@ openssl_poll (GstDtlsConnection * self)
       } else {
         GST_INFO_OBJECT (self, "handshake is completed");
       }
-      return;
+      return GST_FLOW_OK;
     case 0:
       GST_DEBUG_OBJECT (self, "do_handshake encountered EOF");
       break;
     case -1:
-      GST_DEBUG_OBJECT (self, "do_handshake encountered BIO error");
+      GST_DEBUG_OBJECT (self, "do_handshake encountered potential BIO error");
       break;
     default:
       GST_DEBUG_OBJECT (self, "do_handshake returned %d", ret);
+      break;
   }
 
-  error = SSL_get_error (self->priv->ssl, ret);
-
-  switch (error) {
-    case SSL_ERROR_NONE:
-      GST_WARNING_OBJECT (self, "no error, handshake should be done");
-      break;
-    case SSL_ERROR_SSL:
-      GST_ERROR_OBJECT (self, "SSL error");
-      ERR_print_errors_cb (ssl_err_cb, self);
-      return;
-    case SSL_ERROR_WANT_READ:
-      GST_LOG_OBJECT (self, "SSL wants read");
-      break;
-    case SSL_ERROR_WANT_WRITE:
-      GST_LOG_OBJECT (self, "SSL wants write");
-      break;
-    case SSL_ERROR_SYSCALL:{
-      gchar message[1024] = "<unknown>";
-      gint syserror;
-#ifdef G_OS_WIN32
-      syserror = WSAGetLastError ();
-      FormatMessage (FORMAT_MESSAGE_FROM_SYSTEM, NULL, syserror, 0, message,
-          sizeof message, NULL);
-#else
-      syserror = errno;
-      strerror_r (syserror, message, sizeof message);
-#endif
-      GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT,
-          syserror != 0 ? GST_LEVEL_WARNING : GST_LEVEL_LOG,
-          self, "SSL syscall error: errno %d: %s", syserror, message);
-      break;
-    }
-    default:
-      GST_WARNING_OBJECT (self, "Unknown SSL error: %d, ret: %d", error, ret);
-  }
+  flow_ret = handle_error (self, ret, GST_RESOURCE_ERROR_OPEN_WRITE, err);
 
   ERR_print_errors_cb (ssl_warn_cb, self);
+
+  return flow_ret;
 }
 
 static int

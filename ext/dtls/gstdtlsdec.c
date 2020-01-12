@@ -452,62 +452,105 @@ on_peer_certificate_received (GstDtlsConnection * connection, gchar * pem,
   return TRUE;
 }
 
-static gint
+static GstFlowReturn
 process_buffer (GstDtlsDec * self, GstBuffer * buffer)
 {
+  GstFlowReturn flow_ret;
   GstMapInfo map_info;
-  gint size;
+  GError *err = NULL;
+  gsize written = 0;
 
   if (!gst_buffer_map (buffer, &map_info, GST_MAP_READWRITE))
-    return 0;
+    return GST_FLOW_ERROR;
 
   if (!map_info.size) {
     gst_buffer_unmap (buffer, &map_info);
-    return 0;
+    return GST_FLOW_ERROR;
   }
 
-  size =
+  flow_ret =
       gst_dtls_connection_process (self->connection, map_info.data,
-      map_info.size);
+      map_info.size, &written, &err);
   gst_buffer_unmap (buffer, &map_info);
 
-  if (size <= 0)
-    return size;
+  switch (flow_ret) {
+    case GST_FLOW_OK:
+      GST_LOG_OBJECT (self,
+          "Decoded buffer of size %" G_GSIZE_FORMAT " B to %" G_GSIZE_FORMAT,
+          map_info.size, written);
+      gst_buffer_set_size (buffer, written);
+      break;
+    case GST_FLOW_EOS:
+      gst_buffer_set_size (buffer, written);
+      GST_DEBUG_OBJECT (self, "Peer closed the connection");
+      break;
+    case GST_FLOW_ERROR:
+      GST_ERROR_OBJECT (self, "Error processing buffer: %s", err->message);
+      GST_ELEMENT_ERROR (self, RESOURCE, READ, (NULL), ("%s", err->message));
+      g_clear_error (&err);
+      break;
+    default:
+      g_assert_not_reached ();
+  }
+  g_assert (err == NULL);
 
-  gst_buffer_set_size (buffer, size);
-
-  return size;
+  return flow_ret;
 }
+
+typedef struct
+{
+  GstDtlsDec *self;
+  GstFlowReturn flow_ret;
+  guint processed;
+} ProcessListData;
 
 static gboolean
 process_buffer_from_list (GstBuffer ** buffer, guint idx, gpointer user_data)
 {
-  GstDtlsDec *self = GST_DTLS_DEC (user_data);
-  gint size;
+  ProcessListData *process_list_data = user_data;
+  GstDtlsDec *self = GST_DTLS_DEC (process_list_data->self);
+  GstFlowReturn flow_ret;
 
   *buffer = gst_buffer_make_writable (*buffer);
-  size = process_buffer (self, *buffer);
-  if (size <= 0)
-    gst_buffer_replace (buffer, NULL);
+  flow_ret = process_buffer (self, *buffer);
 
-  return TRUE;
+  process_list_data->flow_ret = flow_ret;
+  if (gst_buffer_get_size (*buffer) == 0)
+    gst_buffer_replace (buffer, NULL);
+  else if (flow_ret != GST_FLOW_ERROR)
+    process_list_data->processed++;
+
+  return flow_ret == GST_FLOW_OK;
 }
 
 static GstFlowReturn
 sink_chain_list (GstPad * pad, GstObject * parent, GstBufferList * list)
 {
   GstDtlsDec *self = GST_DTLS_DEC (parent);
-  GstFlowReturn ret = GST_FLOW_OK;
   GstPad *other_pad;
+  ProcessListData process_list_data = { self, GST_FLOW_OK, 0 };
 
   list = gst_buffer_list_make_writable (list);
-  gst_buffer_list_foreach (list, process_buffer_from_list, self);
+  gst_buffer_list_foreach (list, process_buffer_from_list, &process_list_data);
+
+  /* If we successfully processed at least some buffers then forward those */
+  if (process_list_data.flow_ret != GST_FLOW_OK
+      && process_list_data.processed == 0) {
+    GST_ERROR_OBJECT (self, "Failed to process buffer list: %s",
+        gst_flow_get_name (process_list_data.flow_ret));
+    gst_buffer_list_unref (list);
+    return process_list_data.flow_ret;
+  }
+
+  /* Remove all buffers after the first one that failed to be processed */
+  gst_buffer_list_remove (list, process_list_data.processed,
+      gst_buffer_list_length (list) - process_list_data.processed);
 
   if (gst_buffer_list_length (list) == 0) {
     GST_DEBUG_OBJECT (self, "Not produced any buffers");
     gst_buffer_list_unref (list);
 
-    return GST_FLOW_OK;
+    return process_list_data.flow_ret;
   }
 
   g_mutex_lock (&self->src_mutex);
@@ -517,17 +560,25 @@ sink_chain_list (GstPad * pad, GstObject * parent, GstBufferList * list)
   g_mutex_unlock (&self->src_mutex);
 
   if (other_pad) {
-    GST_LOG_OBJECT (self, "decoded buffer list with length %u, pushing",
+    gboolean was_eos = process_list_data.flow_ret == GST_FLOW_EOS;
+
+    GST_LOG_OBJECT (self, "pushing buffer list with length %u",
         gst_buffer_list_length (list));
-    ret = gst_pad_push_list (other_pad, list);
+    process_list_data.flow_ret = gst_pad_push_list (other_pad, list);
+
+    /* If the peer closed the connection, signal that we're done here now */
+    if (was_eos)
+      gst_pad_push_event (other_pad, gst_event_new_eos ());
+
     gst_object_unref (other_pad);
   } else {
-    GST_LOG_OBJECT (self, "dropped buffer list with length %d, not linked",
+    GST_LOG_OBJECT (self,
+        "dropping buffer list with length %d, have no source pad",
         gst_buffer_list_length (list));
     gst_buffer_list_unref (list);
   }
 
-  return ret;
+  return process_list_data.flow_ret;
 }
 
 static GstFlowReturn
@@ -535,7 +586,6 @@ sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstDtlsDec *self = GST_DTLS_DEC (parent);
   GstFlowReturn ret = GST_FLOW_OK;
-  gint size;
   GstPad *other_pad;
 
   if (!self->agent) {
@@ -548,12 +598,12 @@ sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       self->connection_id, gst_buffer_get_size (buffer));
 
   buffer = gst_buffer_make_writable (buffer);
-  size = process_buffer (self, buffer);
-
-  if (size <= 0) {
+  ret = process_buffer (self, buffer);
+  if (ret == GST_FLOW_ERROR) {
+    GST_ERROR_OBJECT (self, "Failed to process buffer: %s",
+        gst_flow_get_name (ret));
     gst_buffer_unref (buffer);
-
-    return GST_FLOW_OK;
+    return ret;
   }
 
   g_mutex_lock (&self->src_mutex);
@@ -563,11 +613,25 @@ sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   g_mutex_unlock (&self->src_mutex);
 
   if (other_pad) {
-    GST_LOG_OBJECT (self, "decoded buffer with length %d, pushing", size);
-    ret = gst_pad_push (other_pad, buffer);
+    gboolean was_eos = (ret == GST_FLOW_EOS);
+
+    if (gst_buffer_get_size (buffer) > 0) {
+      GST_LOG_OBJECT (self, "pushing buffer");
+      ret = gst_pad_push (other_pad, buffer);
+    } else {
+      gst_buffer_unref (buffer);
+    }
+
+    /* If the peer closed the connection, signal that we're done here now */
+    if (was_eos) {
+      gst_pad_push_event (other_pad, gst_event_new_eos ());
+      if (ret == GST_FLOW_OK)
+        ret = GST_FLOW_EOS;
+    }
+
     gst_object_unref (other_pad);
   } else {
-    GST_LOG_OBJECT (self, "dropped buffer with length %d, not linked", size);
+    GST_LOG_OBJECT (self, "dropping buffer, have no source pad");
     gst_buffer_unref (buffer);
   }
 

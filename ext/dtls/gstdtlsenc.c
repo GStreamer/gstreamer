@@ -101,7 +101,7 @@ static gboolean sink_event (GstPad * pad, GstObject * parent, GstEvent * event);
 static void on_key_received (GstDtlsConnection *, gpointer key, guint cipher,
     guint auth, GstDtlsEnc *);
 static gboolean on_send_data (GstDtlsConnection *, gconstpointer data,
-    gint length, GstDtlsEnc *);
+    gsize length, GstDtlsEnc *);
 
 static void
 gst_dtls_enc_class_init (GstDtlsEncClass * klass)
@@ -326,10 +326,17 @@ gst_dtls_enc_change_state (GstElement * element, GstStateChange transition)
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:{
+      GError *err = NULL;
+
       GST_DEBUG_OBJECT (self, "starting connection %s", self->connection_id);
-      gst_dtls_connection_start (self->connection, self->is_client);
+      if (!gst_dtls_connection_start (self->connection, self->is_client, &err)) {
+        GST_ELEMENT_ERROR (self, RESOURCE, OPEN_WRITE, (NULL), ("%s",
+                err->message));
+        g_clear_error (&err);
+      }
       break;
+    }
     default:
       break;
   }
@@ -460,17 +467,25 @@ src_task_loop (GstPad * pad)
 
   GST_TRACE_OBJECT (self, "src loop: releasing lock");
 
-  ret = gst_pad_push (self->src, buffer);
-  if (check_connection_timeout)
-    gst_dtls_connection_check_timeout (self->connection);
+  if (buffer) {
+    ret = gst_pad_push (self->src, buffer);
+    if (check_connection_timeout)
+      gst_dtls_connection_check_timeout (self->connection);
 
-  if (G_UNLIKELY (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS)) {
-    GST_WARNING_OBJECT (self, "failed to push buffer on src pad: %s",
-        gst_flow_get_name (ret));
+    if (G_UNLIKELY (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS)) {
+      GST_WARNING_OBJECT (self, "failed to push buffer on src pad: %s",
+          gst_flow_get_name (ret));
+    }
+    g_mutex_lock (&self->queue_lock);
+    self->src_ret = ret;
+    g_mutex_unlock (&self->queue_lock);
+  } else {
+    GST_DEBUG_OBJECT (self, "Peer and us closed the connection, sending EOS");
+    gst_pad_push_event (self->src, gst_event_new_eos ());
+    g_mutex_lock (&self->queue_lock);
+    self->src_ret = GST_FLOW_EOS;
+    g_mutex_unlock (&self->queue_lock);
   }
-  g_mutex_lock (&self->queue_lock);
-  self->src_ret = ret;
-  g_mutex_unlock (&self->queue_lock);
 }
 
 static GstFlowReturn
@@ -478,7 +493,9 @@ sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstDtlsEnc *self = GST_DTLS_ENC (parent);
   GstMapInfo map_info;
-  gint ret;
+  GError *err = NULL;
+  gsize to_write, written = 0;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   g_mutex_lock (&self->queue_lock);
   if (self->src_ret != GST_FLOW_OK) {
@@ -495,28 +512,48 @@ sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   gst_buffer_map (buffer, &map_info, GST_MAP_READ);
 
-  if (map_info.size) {
+  to_write = map_info.size;
+
+  while (to_write > 0 && ret == GST_FLOW_OK) {
     ret =
         gst_dtls_connection_send (self->connection, map_info.data,
-        map_info.size);
-    if (ret != map_info.size) {
-      GST_WARNING_OBJECT (self,
-          "error sending data: %d B were written, expected value was %"
-          G_GSIZE_FORMAT " B", ret, map_info.size);
+        map_info.size, &written, &err);
+
+    switch (ret) {
+      case GST_FLOW_OK:
+        GST_DEBUG_OBJECT (self,
+            "Wrote %" G_GSIZE_FORMAT " B of %" G_GSIZE_FORMAT " B", written,
+            map_info.size);
+        g_assert (written <= to_write);
+        to_write -= written;
+        break;
+      case GST_FLOW_EOS:
+        GST_INFO_OBJECT (self, "Received data after the connection was closed");
+        break;
+      case GST_FLOW_ERROR:
+        GST_WARNING_OBJECT (self, "error sending data: %s", err->message);
+        GST_ELEMENT_ERROR (self, RESOURCE, WRITE, (NULL), ("%s", err->message));
+        g_clear_error (&err);
+        break;
+      default:
+        g_assert_not_reached ();
+        break;
     }
+
+    g_assert (err == NULL);
   }
 
   gst_buffer_unmap (buffer, &map_info);
-
   gst_buffer_unref (buffer);
 
-  return GST_FLOW_OK;
+  return ret;
 }
 
 
 static gboolean
 sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
+  GstDtlsEnc *self = GST_DTLS_ENC (parent);
   gboolean ret = FALSE;
 
   switch (GST_EVENT_TYPE (event)) {
@@ -528,6 +565,28 @@ sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gst_event_unref (event);
       ret = TRUE;
       break;
+    case GST_EVENT_EOS:{
+      GstFlowReturn flow_ret;
+
+      /* Close the write side of the connection now */
+      flow_ret =
+          gst_dtls_connection_send (self->connection, NULL, 0, NULL, NULL);
+
+      if (flow_ret != GST_FLOW_OK)
+        GST_ERROR_OBJECT (self, "Failed to send close_notify");
+
+      /* Do not forward the EOS event unless the peer already closed to the
+       * connection itself. If it didn't yet then we'll later get the send
+       * callback called with no data and send EOS from there */
+      if (flow_ret == GST_FLOW_EOS) {
+        ret = gst_pad_event_default (pad, parent, event);
+      } else {
+        gst_event_unref (event);
+        ret = TRUE;
+      }
+
+      break;
+    }
     default:
       ret = gst_pad_event_default (pad, parent, event);
       break;
@@ -567,16 +626,17 @@ on_key_received (GstDtlsConnection * connection, gpointer key, guint cipher,
 }
 
 static gboolean
-on_send_data (GstDtlsConnection * connection, gconstpointer data, gint length,
+on_send_data (GstDtlsConnection * connection, gconstpointer data, gsize length,
     GstDtlsEnc * self)
 {
   GstBuffer *buffer;
   gboolean ret;
 
-  GST_DEBUG_OBJECT (self, "sending data from %s with length %d",
+  GST_DEBUG_OBJECT (self, "sending data from %s with length %" G_GSIZE_FORMAT,
       self->connection_id, length);
 
-  buffer = gst_buffer_new_wrapped (g_memdup (data, length), length);
+  buffer =
+      data ? gst_buffer_new_wrapped (g_memdup (data, length), length) : NULL;
 
   GST_TRACE_OBJECT (self, "send data: acquiring lock");
   g_mutex_lock (&self->queue_lock);
