@@ -9,7 +9,7 @@ foreach example : examples
     install: false,
     include_directories : [configinc],
     dependencies : [glib_dep, gst_dep, gstwebrtc_dep],
-    c_args : ['-DHAVE_CONFIG_H=1', '-DGST_USE_UNSTABLE_API'],
+    c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
   )
 endforeach
 

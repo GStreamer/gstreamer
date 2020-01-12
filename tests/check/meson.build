@@ -139,8 +139,8 @@ foreach t : base_tests
   if not skip_test
     exe = executable(test_name, fnames,
       include_directories : [configinc],
-      c_args : ['-DHAVE_CONFIG_H=1' ] + test_defines,
-      cpp_args : gst_plugins_bad_args,
+      c_args : gst_plugins_bad_args + test_defines,
+      cpp_args : gst_plugins_bad_args + test_defines,
       dependencies : [libm] + test_deps + extra_deps,
     )
 

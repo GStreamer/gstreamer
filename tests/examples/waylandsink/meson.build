@@ -9,7 +9,7 @@ if use_wayland
       install: false,
       include_directories : [configinc],
       dependencies : [gtk_dep, gtk_wayland_dep, gst_dep, gstwayland_dep],
-      c_args : ['-DHAVE_CONFIG_H=1', '-DGST_USE_UNSTABLE_API=1'],
+      c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
     )
   endif
   executable('wayland_threads',
@@ -17,6 +17,6 @@ if use_wayland
     install: false,
     include_directories : [configinc],
     dependencies : [gst_dep, gstwayland_dep, wl_client_dep],
-    c_args : ['-DHAVE_CONFIG_H=1', '-DGST_USE_UNSTABLE_API=1'],
+    c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
   )
 endif
