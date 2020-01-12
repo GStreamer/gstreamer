@@ -24,7 +24,13 @@
 #  include "config.h"
 #endif
 
-#include <unistd.h>
+#ifdef HAVE_UNISTD_H
+#  include <unistd.h>
+#endif
+#ifdef _MSC_VER
+/* ssize_t is not available, so match return value of read()/write() on MSVC */
+#define ssize_t int
+#endif
 #include <errno.h>
 #include <string.h>
 #include <gst/base/gstbytewriter.h>
@@ -219,7 +225,8 @@ write_to_fd_raw (GstIpcPipelineComm * comm, const void *data, size_t size)
   gboolean ret = TRUE;
 
   offset = 0;
-  GST_TRACE_OBJECT (comm->element, "Writing %zu bytes to fdout", size);
+  GST_TRACE_OBJECT (comm->element, "Writing %u bytes to fdout",
+      (unsigned) size);
   while (size) {
     ssize_t written =
         write (comm->fdout, (const unsigned char *) data + offset, size);
