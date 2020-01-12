@@ -3351,6 +3351,36 @@ _add_ice_candidate (GstWebRTCBin * webrtc, IceCandidateItem * item,
   gst_webrtc_ice_add_candidate (webrtc->priv->ice, stream, item->candidate);
 }
 
+static void
+_add_ice_candidates_from_sdp (GstWebRTCBin * webrtc, gint mlineindex,
+    const GstSDPMedia * media)
+{
+  gint a;
+  GstWebRTCICEStream *stream = NULL;
+
+  for (a = 0; a < gst_sdp_media_attributes_len (media); a++) {
+    const GstSDPAttribute *attr = gst_sdp_media_get_attribute (media, a);
+    if (g_strcmp0 (attr->key, "candidate") == 0) {
+      gchar *candidate;
+
+      if (stream == NULL)
+        stream = _find_ice_stream_for_session (webrtc, mlineindex);
+      if (stream == NULL) {
+        GST_WARNING_OBJECT (webrtc,
+            "Unknown mline %u, dropping ICE candidates from SDP", mlineindex);
+        return;
+      }
+
+      candidate = g_strdup_printf ("a=candidate:%s", attr->value);
+      GST_LOG_OBJECT (webrtc, "adding ICE candidate with mline:%u, %s",
+          mlineindex, candidate);
+      gst_webrtc_ice_add_candidate (webrtc->priv->ice, stream, candidate);
+      g_free (candidate);
+    }
+  }
+}
+
+
 static gboolean
 _filter_sdp_fields (GQuark field_id, const GValue * value,
     GstStructure * new_structure)
@@ -4181,8 +4211,19 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
     gst_webrtc_ice_gather_candidates (webrtc->priv->ice, item->stream);
   }
 
+  /* Add any pending trickle ICE candidates if we have both offer and answer */
   if (webrtc->current_local_description && webrtc->current_remote_description) {
     int i;
+
+    GstWebRTCSessionDescription *remote_sdp =
+        webrtc->current_remote_description;
+
+    /* Add any remote ICE candidates from the remote description to
+     * support non-trickle peers first */
+    for (i = 0; i < gst_sdp_message_medias_len (remote_sdp->sdp); i++) {
+      const GstSDPMedia *media = gst_sdp_message_get_media (remote_sdp->sdp, i);
+      _add_ice_candidates_from_sdp (webrtc, i, media);
+    }
 
     for (i = 0; i < webrtc->priv->pending_ice_candidates->len; i++) {
       IceCandidateItem *item =
