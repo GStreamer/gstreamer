@@ -85,6 +85,7 @@ struct _GstTimeCodeStamper
   GDateTime *ltc_daily_jam;
   gboolean ltc_auto_resync;
   GstClockTime ltc_timeout;
+  GstClockTime ltc_extra_latency;
   GstClockTime rtc_max_drift;
   gboolean rtc_auto_resync;
   gint timecode_offset;

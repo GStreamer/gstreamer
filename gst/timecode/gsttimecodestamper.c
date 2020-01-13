@@ -67,6 +67,7 @@ enum
   PROP_SET_INTERNAL_TIMECODE,
   PROP_LTC_DAILY_JAM,
   PROP_LTC_AUTO_RESYNC,
+  PROP_LTC_EXTRA_LATENCY,
   PROP_LTC_TIMEOUT,
   PROP_RTC_MAX_DRIFT,
   PROP_RTC_AUTO_RESYNC,
@@ -83,6 +84,7 @@ enum
 #define DEFAULT_LTC_DAILY_JAM NULL
 #define DEFAULT_LTC_AUTO_RESYNC TRUE
 #define DEFAULT_LTC_TIMEOUT GST_CLOCK_TIME_NONE
+#define DEFAULT_LTC_EXTRA_LATENCY (150 * GST_MSECOND)
 #define DEFAULT_RTC_MAX_DRIFT 250000000
 #define DEFAULT_RTC_AUTO_RESYNC TRUE
 #define DEFAULT_TIMECODE_OFFSET 0
@@ -275,6 +277,11 @@ gst_timecodestamper_class_init (GstTimeCodeStamperClass * klass)
           "If true the LTC timecode will be automatically resynced if it drifts, "
           "otherwise it will only be counted up from the last known one",
           DEFAULT_LTC_AUTO_RESYNC, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_LTC_EXTRA_LATENCY,
+      g_param_spec_uint64 ("ltc-extra-latency", "LTC Extra Latency",
+          "Extra latency to introduce for waiting for LTC timecodes",
+          0, G_MAXUINT64, DEFAULT_LTC_EXTRA_LATENCY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_LTC_TIMEOUT,
       g_param_spec_uint64 ("ltc-timeout", "LTC Timeout",
           "Time out LTC timecode if no new timecode was detected after this time",
@@ -337,6 +344,7 @@ gst_timecodestamper_init (GstTimeCodeStamper * timecodestamper)
   timecodestamper->set_internal_tc = NULL;
   timecodestamper->ltc_daily_jam = DEFAULT_LTC_DAILY_JAM;
   timecodestamper->ltc_auto_resync = DEFAULT_LTC_AUTO_RESYNC;
+  timecodestamper->ltc_extra_latency = DEFAULT_LTC_EXTRA_LATENCY;
   timecodestamper->ltc_timeout = DEFAULT_LTC_TIMEOUT;
   timecodestamper->rtc_max_drift = DEFAULT_RTC_MAX_DRIFT;
   timecodestamper->rtc_auto_resync = DEFAULT_RTC_AUTO_RESYNC;
@@ -520,6 +528,9 @@ gst_timecodestamper_set_property (GObject * object, guint prop_id,
     case PROP_LTC_TIMEOUT:
       timecodestamper->ltc_timeout = g_value_get_uint64 (value);
       break;
+    case PROP_LTC_EXTRA_LATENCY:
+      timecodestamper->ltc_extra_latency = g_value_get_uint64 (value);
+      break;
     case PROP_RTC_MAX_DRIFT:
       timecodestamper->rtc_max_drift = g_value_get_uint64 (value);
       break;
@@ -574,6 +585,9 @@ gst_timecodestamper_get_property (GObject * object, guint prop_id,
       break;
     case PROP_LTC_TIMEOUT:
       g_value_set_uint64 (value, timecodestamper->ltc_timeout);
+      break;
+    case PROP_LTC_EXTRA_LATENCY:
+      g_value_set_uint64 (value, timecodestamper->ltc_extra_latency);
       break;
     case PROP_RTC_MAX_DRIFT:
       g_value_set_uint64 (value, timecodestamper->rtc_max_drift);
@@ -919,11 +933,10 @@ gst_timecodestamper_query (GstBaseTransform * trans,
       if (res && timecodestamper->vinfo.fps_n && timecodestamper->vinfo.fps_d) {
         gst_query_parse_latency (query, &live, &min_latency, &max_latency);
         if (live && timecodestamper->ltcpad) {
-          /* Introduce additional 8 frames of latency for LTC processing as
-           * the LTC library seems to usually lag behind 1-6 frames with the
-           * values reported back to us. */
-          /* TODO: Figure out how to calculate this numbers */
-          latency = 8 *
+          /* Introduce additional LTC for waiting for LTC timecodes. The
+           * LTC library introduces some as well as the encoding of the LTC
+           * signal. */
+          latency = timecodestamper->ltc_extra_latency *
               gst_util_uint64_scale_int_ceil (GST_SECOND,
               timecodestamper->vinfo.fps_d, timecodestamper->vinfo.fps_n);
           min_latency += latency;
@@ -1243,10 +1256,11 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
             gst_element_get_base_time (GST_ELEMENT_CAST (timecodestamper));
         GstClockTime wait_time;
 
-        /* If we have no latency yet then wait at least 8 frames durations.
-         * See LATENCY query handling for details. */
+        /* If we have no latency yet then wait at least for the LTC extra
+         * latency. See LATENCY query handling for details. */
         if (timecodestamper->latency == GST_CLOCK_TIME_NONE) {
-          wait_time = base_time + running_time + 8 * frame_duration;
+          wait_time =
+              base_time + running_time + timecodestamper->ltc_extra_latency;
         } else {
           wait_time = base_time + running_time + timecodestamper->latency;
         }
@@ -1261,8 +1275,8 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
             GST_TIME_ARGS (base_time),
             GST_TIME_ARGS (running_time),
             GST_TIME_ARGS (timecodestamper->latency ==
-                GST_CLOCK_TIME_NONE ? 8 *
-                frame_duration : timecodestamper->latency),
+                GST_CLOCK_TIME_NONE ? timecodestamper->ltc_extra_latency :
+                timecodestamper->latency),
             GST_TIME_ARGS (gst_clock_get_time (clock))
             );
         clock_id = gst_clock_new_single_shot_id (clock, wait_time);
