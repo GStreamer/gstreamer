@@ -981,6 +981,9 @@ gst_timecodestamper_update_latency (GstTimeCodeStamper * timecodestamper,
   /* If we're not live, consider a latency of 0 */
   if (!*live)
     *latency = 0;
+  GST_DEBUG_OBJECT (pad,
+      "Queried latency: live %d, min latency %" GST_TIME_FORMAT, *live,
+      GST_TIME_ARGS (*latency));
   g_mutex_unlock (&timecodestamper->mutex);
 }
 #endif
@@ -1249,8 +1252,19 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
         }
 
         GST_TRACE_OBJECT (timecodestamper,
-            "Waiting for clock to reach %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (wait_time));
+            "Waiting for clock to reach %" GST_TIME_FORMAT
+            " (base time %" GST_TIME_FORMAT
+            " + running time %" GST_TIME_FORMAT
+            " + latency %" GST_TIME_FORMAT
+            "), now %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (wait_time),
+            GST_TIME_ARGS (base_time),
+            GST_TIME_ARGS (running_time),
+            GST_TIME_ARGS (timecodestamper->latency ==
+                GST_CLOCK_TIME_NONE ? 8 *
+                frame_duration : timecodestamper->latency),
+            GST_TIME_ARGS (gst_clock_get_time (clock))
+            );
         clock_id = gst_clock_new_single_shot_id (clock, wait_time);
 
         timecodestamper->video_clock_id = clock_id;
