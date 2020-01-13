@@ -109,7 +109,9 @@ static GstStaticPadTemplate srctemplate =
 static GstStaticPadTemplate sinktemplate =
     GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("image/jp2;image/x-jpc;image/x-j2c"));
+    GST_STATIC_CAPS ("image/jp2;"
+        "image/x-jpc, alignment = (string){frame, stripe};"
+        "image/x-j2c, alignment = (string){frame, stripe}"));
 
 #define parent_class gst_jpeg2000_parse_parent_class
 G_DEFINE_TYPE (GstJPEG2000Parse, gst_jpeg2000_parse, GST_TYPE_BASE_PARSE);
@@ -665,6 +667,20 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
       colorspace = GST_JPEG2000_COLORSPACE_YUV;
     }
   }
+
+  /* use caps height if in sub-frame mode, as encoded frame height will be
+   * strictly less than full frame height */
+  if (current_caps_struct) {
+    gint num_stripes = 1;
+    gint h;
+
+    if (gst_structure_get_int (current_caps_struct, "num-stripes", &num_stripes)
+        && num_stripes > 1) {
+      gst_structure_get_int (current_caps_struct, "height", &h);
+      height = h;
+    }
+  }
+
   /* now we can set the source caps, if something has changed */
   source_sampling =
       sink_sampling !=
@@ -695,6 +711,8 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
     }
 
     if (current_caps_struct) {
+      gint caps_int = 0;
+      gboolean has_num_stripes = FALSE;
       const gchar *caps_string = gst_structure_get_string
           (current_caps_struct, "colorimetry");
       if (caps_string) {
@@ -724,6 +742,41 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
       if (caps_string) {
         gst_caps_set_simple (src_caps, "chroma-site", G_TYPE_STRING,
             caps_string, NULL);
+      }
+      caps_string = gst_structure_get_string (current_caps_struct, "alignment");
+      has_num_stripes =
+          gst_structure_get_int (current_caps_struct, "num-stripes", &caps_int);
+      if ((g_strcmp0 (caps_string, "stripe") == 0)
+          && !has_num_stripes) {
+        GST_ERROR_OBJECT (jpeg2000parse,
+            "Alignment is set to stripe but num-stripes is missing");
+        ret = GST_FLOW_NOT_NEGOTIATED;
+        gst_caps_unref (src_caps);
+        goto beach;
+      }
+
+      /* if there is no alignment or number of strips in caps,
+       * we set alignment to default value : "frame"
+       */
+      if (!caps_string && !has_num_stripes) {
+        gst_caps_set_simple (src_caps, "alignment", G_TYPE_STRING,
+            "frame", NULL);
+      } else {
+        if (caps_string) {
+          gst_caps_set_simple (src_caps, "alignment", G_TYPE_STRING,
+              caps_string, NULL);
+        }
+        if (has_num_stripes) {
+          gst_caps_set_simple (src_caps, "num-stripes", G_TYPE_INT,
+              caps_int, NULL);
+          /* lets deduce the alignment property */
+          if (!caps_string) {
+            GST_WARNING_OBJECT (jpeg2000parse,
+                "num-stripes is set but alignment is missing. We will deduce the correct value for \"alignment\"");
+            gst_caps_set_simple (src_caps, "alignment", G_TYPE_STRING,
+                caps_int > 1 ? "stripe" : "frame", NULL);
+          }
+        }
       }
       if (gst_structure_get_fraction (current_caps_struct, "framerate", &fr_num,
               &fr_denom)) {
