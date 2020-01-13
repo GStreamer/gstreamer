@@ -251,7 +251,7 @@ gstmask_to_wavmask (guint64 gstmask, GstAudioChannelPosition * pos)
     return 0;
 
   for (k = 0; k < G_N_ELEMENTS (wav_pos); ++k) {
-    if (gstmask & wav_pos[k]) {
+    if (gstmask & (G_GUINT64_CONSTANT (1) << wav_pos[k])) {
       ret |= mask;
       pos[chan++] = wav_pos[k];
     }
