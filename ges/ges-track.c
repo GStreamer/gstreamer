@@ -129,6 +129,7 @@ G_DEFINE_TYPE_WITH_CODE (GESTrack, ges_track, GST_TYPE_BIN,
 
 static void composition_duration_cb (GstElement * composition, GParamSpec * arg
     G_GNUC_UNUSED, GESTrack * obj);
+static void ges_track_set_caps (GESTrack * track, const GstCaps * caps);
 
 /* Private methods/functions/callbacks */
 static void

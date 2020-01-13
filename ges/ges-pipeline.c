@@ -442,37 +442,8 @@ static gboolean
 _track_is_compatible_with_profile (GESPipeline * self, GESTrack * track,
     GstEncodingProfile * prof)
 {
-  if (TRACK_COMPATIBLE_PROFILE (track->type, prof)) {
-    if (self->priv->mode == GES_PIPELINE_MODE_SMART_RENDER) {
-      GstCaps *ocaps, *rcaps;
-
-      GST_DEBUG ("Smart Render mode, setting input caps");
-      ocaps = gst_encoding_profile_get_input_caps (prof);
-      ocaps = gst_caps_make_writable (ocaps);
-      if (track->type == GES_TRACK_TYPE_AUDIO)
-        rcaps = gst_caps_new_empty_simple ("audio/x-raw");
-      else
-        rcaps = gst_caps_new_empty_simple ("video/x-raw");
-      gst_caps_append (ocaps, rcaps);
-      ges_track_set_caps (track, ocaps);
-      gst_caps_unref (ocaps);
-    } else {
-      GstCaps *caps = NULL;
-
-      /* Raw preview or rendering mode */
-      if (track->type == GES_TRACK_TYPE_VIDEO)
-        caps = gst_caps_new_empty_simple ("video/x-raw");
-      else if (track->type == GES_TRACK_TYPE_AUDIO)
-        caps = gst_caps_new_empty_simple ("audio/x-raw");
-
-      if (caps) {
-        ges_track_set_caps (track, caps);
-        gst_caps_unref (caps);
-      }
-    }
-
+  if (TRACK_COMPATIBLE_PROFILE (track->type, prof))
     return TRUE;
-  }
 
   return FALSE;
 }
@@ -1253,22 +1224,6 @@ ges_pipeline_set_mode (GESPipeline * pipeline, GESPipelineFlags mode)
   if ((pipeline->priv->mode &
           (GES_PIPELINE_MODE_RENDER | GES_PIPELINE_MODE_SMART_RENDER)) &&
       !(mode & (GES_PIPELINE_MODE_RENDER | GES_PIPELINE_MODE_SMART_RENDER))) {
-    GList *tmp;
-    GstCaps *caps;
-
-    for (tmp = pipeline->priv->timeline->tracks; tmp; tmp = tmp->next) {
-      GESTrackType type = GES_TRACK (tmp->data)->type;
-
-      if (type == GES_TRACK_TYPE_AUDIO)
-        caps = gst_caps_new_empty_simple ("audio/x-raw");
-      else if (type == GES_TRACK_TYPE_VIDEO)
-        caps = gst_caps_new_empty_simple ("video/x-raw");
-      else
-        continue;
-
-      ges_track_set_caps (GES_TRACK (tmp->data), caps);
-      gst_caps_unref (caps);
-    }
 
     /* Disable render bin */
     GST_DEBUG ("Disabling rendering bin");
