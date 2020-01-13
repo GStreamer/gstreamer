@@ -59,8 +59,12 @@ struct _GstOpenJPEGDec
   gint ncomps;
   gint max_threads;  /* atomic */
   gint num_procs;
+  gint num_stripes;
+  GstVideoCodecFrame *current_frame;
+  gboolean drop_subframes;
 
-  void (*fill_frame) (GstVideoFrame *frame, opj_image_t * image);
+  void (*fill_frame) (GstOpenJPEGDec *self,
+                      GstVideoFrame *frame, opj_image_t * image);
 
   opj_dparameters_t params;
 };
