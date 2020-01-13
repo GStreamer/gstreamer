@@ -25,6 +25,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstcollectpads.h>
 #include <gst/riff/riff-ids.h>
+#include <gst/audio/audio.h>
 #include "avi-ids.h"
 
 G_BEGIN_DECLS
@@ -114,6 +115,16 @@ typedef struct _GstAviAudioPad {
 
   /* stream format */
   gst_riff_strf_auds auds;
+  /* additional fields for WAVEFORMATEX */
+  gboolean write_waveformatex;
+  guint16 valid_bits_per_sample;
+  guint32 channel_mask;
+
+  /* for raw audio */
+  gboolean needs_reorder;
+  GstAudioFormat audio_format;
+  GstAudioChannelPosition gst_positions[64], wav_positions[64];
+
   /* audio info for bps calculation */
   guint32 audio_size;
   guint64 audio_time;
