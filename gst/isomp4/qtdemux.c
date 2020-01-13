@@ -322,6 +322,8 @@ struct _QtDemuxStream
                                  * streams which have got exceedingly big
                                  * sample size (such as 24s of raw audio).
                                  * Only used when max_buffer_size is non-NULL */
+  guint32 min_buffer_size;      /* Minimum allowed size for output buffers.
+                                 * Currently only set for raw audio streams*/
   guint32 max_buffer_size;      /* Maximum allowed size for output buffers.
                                  * Currently only set for raw audio streams*/
 
@@ -6314,6 +6316,7 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
   GstClockTime duration = 0;
   gboolean keyframe = FALSE;
   guint sample_size = 0;
+  guint num_samples = 1;
   gboolean empty = 0;
   guint size;
   gint i;
@@ -6457,14 +6460,58 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
   if (G_UNLIKELY (GST_PAD_LAST_FLOW_RETURN (stream->pad) == GST_FLOW_EOS))
     goto next;
 
-  if (stream->max_buffer_size == 0 || sample_size <= stream->max_buffer_size) {
-    size = sample_size;
-  } else {
+  if (stream->max_buffer_size != 0 && sample_size > stream->max_buffer_size) {
     GST_DEBUG_OBJECT (qtdemux,
         "size %d larger than stream max_buffer_size %d, trimming",
         sample_size, stream->max_buffer_size);
     size =
         MIN (sample_size - stream->offset_in_sample, stream->max_buffer_size);
+  } else if (stream->min_buffer_size != 0 && stream->offset_in_sample == 0
+      && sample_size < stream->min_buffer_size) {
+    guint start_sample_index = stream->sample_index;
+    guint accumulated_size = sample_size;
+    guint64 expected_next_offset = offset + sample_size;
+
+    GST_DEBUG_OBJECT (qtdemux,
+        "size %d smaller than stream min_buffer_size %d, combining with the next",
+        sample_size, stream->min_buffer_size);
+
+    while (stream->sample_index < stream->to_sample
+        && stream->sample_index + 1 < stream->n_samples) {
+      const QtDemuxSample *next_sample;
+
+      /* Increment temporarily */
+      stream->sample_index++;
+
+      /* Failed to parse sample so let's go back to the previous one that was
+       * still successful */
+      if (!qtdemux_parse_samples (qtdemux, stream, stream->sample_index)) {
+        stream->sample_index--;
+        break;
+      }
+
+      next_sample = &stream->samples[stream->sample_index];
+
+      /* Not contiguous with the previous sample so let's go back to the
+       * previous one that was still successful */
+      if (next_sample->offset != expected_next_offset) {
+        stream->sample_index--;
+        break;
+      }
+
+      accumulated_size += next_sample->size;
+      expected_next_offset += next_sample->size;
+      if (accumulated_size >= stream->min_buffer_size)
+        break;
+    }
+
+    num_samples = stream->sample_index + 1 - start_sample_index;
+    stream->sample_index = start_sample_index;
+    GST_DEBUG_OBJECT (qtdemux, "Pulling %u samples of size %u at once",
+        num_samples, accumulated_size);
+    size = accumulated_size;
+  } else {
+    size = sample_size;
   }
 
   if (qtdemux->cenc_aux_info_offset > 0) {
@@ -6506,6 +6553,7 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto beach;
 
+  /* Update for both splitting and combining of samples */
   if (size != sample_size) {
     pts += gst_util_uint64_scale_int (GST_SECOND,
         stream->offset_in_sample / CUR_STREAM (stream)->bytes_per_frame,
@@ -6522,7 +6570,7 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
   ret = gst_qtdemux_decorate_and_push_buffer (qtdemux, stream, buf,
       dts, pts, duration, keyframe, min_time, offset);
 
-  if (size != sample_size) {
+  if (size < sample_size) {
     QtDemuxSample *sample = &stream->samples[stream->sample_index];
     QtDemuxSegment *segment = &stream->segments[stream->segment_index];
 
@@ -6540,6 +6588,10 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
        * decode the first sample of the segment. */
       stream->time_position = segment->time;
     }
+  } else if (size > sample_size) {
+    /* Increase to the last sample we already pulled so that advancing
+     * below brings us to the next sample we need to pull */
+    stream->sample_index += num_samples - 1;
   }
 
   /* combine flows */
@@ -15490,8 +15542,10 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
   name = gst_structure_get_name (s);
   if (g_str_has_prefix (name, "audio/x-raw")) {
     stream->need_clip = TRUE;
+    stream->min_buffer_size = 1024 * entry->bytes_per_frame;
     stream->max_buffer_size = 4096 * entry->bytes_per_frame;
-    GST_DEBUG ("setting max buffer size to %d", stream->max_buffer_size);
+    GST_DEBUG ("setting min/max buffer sizes to %d/%d", stream->min_buffer_size,
+        stream->max_buffer_size);
   }
   return caps;
 }
