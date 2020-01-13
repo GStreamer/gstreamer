@@ -618,7 +618,6 @@ gst_openjpeg_enc_set_format (GstVideoEncoder * encoder,
   GstOpenJPEGEnc *self = GST_OPENJPEG_ENC (encoder);
   GstCaps *allowed_caps, *caps;
   GstStructure *s;
-  const gchar *str = NULL;
   const gchar *colorspace = NULL;
   GstJPEG2000Sampling sampling = GST_JPEG2000_SAMPLING_NONE;
   gint ncomps;
@@ -746,16 +745,6 @@ gst_openjpeg_enc_set_format (GstVideoEncoder * encoder,
     colorspace = "GRAY";
   } else
     g_return_val_if_reached (FALSE);
-
-  if (stripe_mode) {
-    str = gst_structure_get_string (s, "alignment");
-    if (!str || strcmp (str, "stripe") != 0) {
-      GST_ERROR_OBJECT (self,
-          "Number of stripes set to %d, but alignment=stripe not supported downstream",
-          self->num_stripes);
-      return FALSE;
-    }
-  }
 
   if (sampling != GST_JPEG2000_SAMPLING_NONE) {
     caps = gst_caps_new_simple (gst_structure_get_name (s),
@@ -941,8 +930,28 @@ gst_openjpeg_enc_handle_frame (GstVideoEncoder * encoder,
   opj_image_t *image;
   GstVideoFrame vframe;
   guint i;
+  GstCaps *current_caps;
+  GstStructure *s;
+  gboolean stripe_mode =
+      self->num_stripes != GST_OPENJPEG_ENC_DEFAULT_NUM_STRIPES;
 
   GST_DEBUG_OBJECT (self, "Handling frame");
+
+  current_caps = gst_pad_get_current_caps (GST_VIDEO_ENCODER_SRC_PAD (encoder));
+  s = gst_caps_get_structure (current_caps, 0);
+
+  if (stripe_mode) {
+    const gchar *str = gst_structure_get_string (s, "alignment");
+    if (g_strcmp0 (str, "stripe") != 0) {
+      GST_ERROR_OBJECT (self,
+          "Number of stripes set to %d, but alignment=stripe not supported downstream",
+          self->num_stripes);
+      gst_video_codec_frame_unref (frame);
+      ret = GST_FLOW_NOT_NEGOTIATED;
+      goto done;
+    }
+  }
+
 
   for (i = 0; i < self->num_stripes; ++i) {
     enc = opj_create_compress (self->codec_format);
@@ -1029,6 +1038,9 @@ gst_openjpeg_enc_handle_frame (GstVideoEncoder * encoder,
 
   }
 
+done:
+  if (current_caps)
+    gst_caps_unref (current_caps);
   return ret;
 
 initialization_error:
