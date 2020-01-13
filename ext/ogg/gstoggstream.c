@@ -677,6 +677,11 @@ setup_vp8_mapper (GstOggStream * pad, ogg_packet * packet)
   pad->n_header_packets = 2;
   pad->frame_size = 1;
 
+  /* PAR of 0:N, N:0 and 0:0 is not explicitely allowed, but the best we can do
+   * here is to map to 1:1 so that caps negotiation doesn't break downstream. */
+  if (par_n == 0 || par_d == 0)
+    par_n = par_d = 1;
+
   pad->caps = gst_caps_new_simple ("video/x-vp8",
       "width", G_TYPE_INT, width,
       "height", G_TYPE_INT, height,
