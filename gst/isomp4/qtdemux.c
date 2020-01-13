@@ -11717,6 +11717,64 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       entry->bytes_per_packet = entry->bytes_per_sample;
 
       offset = 36;
+
+      if (version == 0x00010000) {
+        /* sample description entry (16) + sound sample description v1 (20+16) */
+        if (len < 52)
+          goto corrupt_file;
+
+        /* take information from here over the normal sample description */
+        entry->samples_per_packet = QT_UINT32 (stsd_entry_data + offset);
+        entry->bytes_per_packet = QT_UINT32 (stsd_entry_data + offset + 4);
+        entry->bytes_per_frame = QT_UINT32 (stsd_entry_data + offset + 8);
+        entry->bytes_per_sample = QT_UINT32 (stsd_entry_data + offset + 12);
+
+        GST_LOG_OBJECT (qtdemux, "Sound sample description Version 1");
+        GST_LOG_OBJECT (qtdemux, "samples/packet:   %d",
+            entry->samples_per_packet);
+        GST_LOG_OBJECT (qtdemux, "bytes/packet:     %d",
+            entry->bytes_per_packet);
+        GST_LOG_OBJECT (qtdemux, "bytes/frame:      %d",
+            entry->bytes_per_frame);
+        GST_LOG_OBJECT (qtdemux, "bytes/sample:     %d",
+            entry->bytes_per_sample);
+
+        if (!entry->sampled && entry->bytes_per_packet) {
+          entry->samples_per_frame = (entry->bytes_per_frame /
+              entry->bytes_per_packet) * entry->samples_per_packet;
+          GST_LOG_OBJECT (qtdemux, "samples/frame:    %d",
+              entry->samples_per_frame);
+        }
+      } else if (version == 0x00020000) {
+        /* sample description entry (16) + sound sample description v2 (56) */
+        if (len < 72)
+          goto corrupt_file;
+
+        /* take information from here over the normal sample description */
+        entry->rate = GST_READ_DOUBLE_BE (stsd_entry_data + offset + 4);
+        entry->n_channels = QT_UINT32 (stsd_entry_data + offset + 12);
+        entry->samples_per_frame = entry->n_channels;
+        entry->bytes_per_sample = QT_UINT32 (stsd_entry_data + offset + 20) / 8;
+        entry->bytes_per_packet = QT_UINT32 (stsd_entry_data + offset + 28);
+        entry->samples_per_packet = QT_UINT32 (stsd_entry_data + offset + 32);
+        entry->bytes_per_frame = entry->bytes_per_sample * entry->n_channels;
+
+        GST_LOG_OBJECT (qtdemux, "Sound sample description Version 2");
+        GST_LOG_OBJECT (qtdemux, "sample rate:        %g", entry->rate);
+        GST_LOG_OBJECT (qtdemux, "n_channels:         %d", entry->n_channels);
+        GST_LOG_OBJECT (qtdemux, "bits/channel:       %d",
+            entry->bytes_per_sample * 8);
+        GST_LOG_OBJECT (qtdemux, "format flags:       %X",
+            QT_UINT32 (stsd_entry_data + offset + 24));
+        GST_LOG_OBJECT (qtdemux, "bytes/packet:       %d",
+            entry->bytes_per_packet);
+        GST_LOG_OBJECT (qtdemux, "LPCM frames/packet: %d",
+            entry->samples_per_packet);
+      } else if (version != 0x00000) {
+        GST_WARNING_OBJECT (qtdemux, "unknown audio STSD version %08x",
+            version);
+      }
+
       switch (fourcc) {
           /* Yes, these have to be hard-coded */
         case FOURCC_MAC6:
@@ -11767,74 +11825,6 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         }
         default:
           break;
-      }
-
-      if (version == 0x00010000) {
-        /* sample description entry (16) + sound sample description v1 (20+16) */
-        if (len < 52)
-          goto corrupt_file;
-
-        switch (fourcc) {
-          case FOURCC_twos:
-          case FOURCC_sowt:
-          case FOURCC_raw_:
-          case FOURCC_lpcm:
-            break;
-          default:
-          {
-            /* only parse extra decoding config for non-pcm audio */
-            entry->samples_per_packet = QT_UINT32 (stsd_entry_data + offset);
-            entry->bytes_per_packet = QT_UINT32 (stsd_entry_data + offset + 4);
-            entry->bytes_per_frame = QT_UINT32 (stsd_entry_data + offset + 8);
-            entry->bytes_per_sample = QT_UINT32 (stsd_entry_data + offset + 12);
-
-            GST_LOG_OBJECT (qtdemux, "samples/packet:   %d",
-                entry->samples_per_packet);
-            GST_LOG_OBJECT (qtdemux, "bytes/packet:     %d",
-                entry->bytes_per_packet);
-            GST_LOG_OBJECT (qtdemux, "bytes/frame:      %d",
-                entry->bytes_per_frame);
-            GST_LOG_OBJECT (qtdemux, "bytes/sample:     %d",
-                entry->bytes_per_sample);
-
-            if (!entry->sampled && entry->bytes_per_packet) {
-              entry->samples_per_frame = (entry->bytes_per_frame /
-                  entry->bytes_per_packet) * entry->samples_per_packet;
-              GST_LOG_OBJECT (qtdemux, "samples/frame:    %d",
-                  entry->samples_per_frame);
-            }
-            break;
-          }
-        }
-      } else if (version == 0x00020000) {
-        union
-        {
-          gdouble fp;
-          guint64 val;
-        } qtfp;
-
-        /* sample description entry (16) + sound sample description v2 (56) */
-        if (len < 72)
-          goto corrupt_file;
-
-        qtfp.val = QT_UINT64 (stsd_entry_data + offset + 4);
-        entry->rate = qtfp.fp;
-        entry->n_channels = QT_UINT32 (stsd_entry_data + offset + 12);
-
-        GST_LOG_OBJECT (qtdemux, "Sound sample description Version 2");
-        GST_LOG_OBJECT (qtdemux, "sample rate:        %g", entry->rate);
-        GST_LOG_OBJECT (qtdemux, "n_channels:         %d", entry->n_channels);
-        GST_LOG_OBJECT (qtdemux, "bits/channel:       %d",
-            QT_UINT32 (stsd_entry_data + offset + 20));
-        GST_LOG_OBJECT (qtdemux, "format flags:       %X",
-            QT_UINT32 (stsd_entry_data + offset + 24));
-        GST_LOG_OBJECT (qtdemux, "bytes/packet:       %d",
-            QT_UINT32 (stsd_entry_data + offset + 28));
-        GST_LOG_OBJECT (qtdemux, "LPCM frames/packet: %d",
-            QT_UINT32 (stsd_entry_data + offset + 32));
-      } else if (version != 0x00000) {
-        GST_WARNING_OBJECT (qtdemux, "unknown audio STSD version %08x",
-            version);
       }
 
       if (entry->caps)
