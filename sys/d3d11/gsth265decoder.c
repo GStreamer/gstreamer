@@ -91,6 +91,8 @@ struct _GstH265DecoderPrivate
   gint last_output_poc;
 
   gboolean associated_irap_NoRaslOutputFlag;
+  gboolean new_bitstream;
+  gboolean prev_nal_is_eos;
 };
 
 #define parent_class gst_h265_decoder_parent_class
@@ -143,6 +145,8 @@ gst_h265_decoder_start (GstVideoDecoder * decoder)
 
   priv->parser = gst_h265_parser_new ();
   priv->dpb = gst_h265_dpb_new ();
+  priv->new_bitstream = TRUE;
+  priv->prev_nal_is_eos = FALSE;
 
   return TRUE;
 }
@@ -482,6 +486,16 @@ gst_h265_decoder_parse_nal (GstH265Decoder * self, const guint8 * data,
     case GST_H265_NAL_SLICE_IDR_N_LP:
     case GST_H265_NAL_SLICE_CRA_NUT:
       ret = gst_h265_decoder_parse_slice (self, &nalu, pts);
+      priv->new_bitstream = FALSE;
+      priv->prev_nal_is_eos = FALSE;
+      break;
+    case GST_H265_NAL_EOB:
+      ret = gst_h265_decoder_flush (GST_VIDEO_DECODER (self));
+      priv->new_bitstream = TRUE;
+      break;
+    case GST_H265_NAL_EOS:
+      ret = gst_h265_decoder_flush (GST_VIDEO_DECODER (self));
+      priv->prev_nal_is_eos = TRUE;
       break;
     default:
       break;
@@ -788,7 +802,8 @@ gst_h265_decoder_fill_picture_from_slice (GstH265Decoder * self,
    * 4) first picture that follows an end of sequence NAL unit in decoding order
    * 5) has HandleCraAsBlaFlag == 1 (set by external means, so not considering )
    */
-  if (IS_IDR (nalu->type) || IS_BLA (nalu->type) || IS_CRA (nalu->type)) {
+  if (IS_IDR (nalu->type) || IS_BLA (nalu->type) ||
+      (IS_CRA (nalu->type) && priv->new_bitstream) || priv->prev_nal_is_eos) {
     picture->NoRaslOutputFlag = TRUE;
   }
 
@@ -1225,11 +1240,11 @@ static gboolean
 gst_h265_decoder_dpb_init (GstH265Decoder * self, const GstH265Slice * slice,
     GstH265Picture * picture)
 {
+  GstH265DecoderPrivate *priv = self->priv;
   const GstH265SliceHdr *slice_hdr = &slice->header;
   const GstH265NalUnit *nalu = &slice->nalu;
 
-  if (IS_IRAP (nalu->type) && picture->NoRaslOutputFlag) {
-
+  if (IS_IRAP (nalu->type) && picture->NoRaslOutputFlag && !priv->new_bitstream) {
     if (nalu->type == GST_H265_NAL_SLICE_CRA_NUT)
       picture->NoOutputOfPriorPicsFlag = TRUE;
     else
