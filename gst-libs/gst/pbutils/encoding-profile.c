@@ -649,6 +649,8 @@ gst_encoding_profile_set_allow_dynamic_output (GstEncodingProfile * profile,
  * Returns: #TRUE if the stream represented by @profile should use a single
  * segment before the encoder, #FALSE otherwise. This means that buffers will be retimestamped
  * and segments will be eat so as to appear as one segment.
+ *
+ * Since: 1.18
  */
 gboolean
 gst_encoding_profile_get_single_segment (GstEncodingProfile * profile)
@@ -666,6 +668,8 @@ gst_encoding_profile_get_single_segment (GstEncodingProfile * profile)
  *
  * If using a single segment, buffers will be retimestamped
  * and segments will be eat so as to appear as one segment.
+ *
+ * Since: 1.18
  */
 void
 gst_encoding_profile_set_single_segment (GstEncodingProfile * profile,
