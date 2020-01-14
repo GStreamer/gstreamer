@@ -385,6 +385,11 @@ gst_vaapi_overlay_surface_next (gpointer data)
     blend_surface = &generator->blend_surface;
     blend_surface->surface = NULL;
 
+    /* Current sinkpad may not be queueing buffers yet (e.g. timestamp-offset)
+     * or it may have reached EOS */
+    if (!gst_video_aggregator_pad_has_current_buffer (vagg_pad))
+      continue;
+
     inframe = gst_video_aggregator_pad_get_prepared_frame (vagg_pad);
     buf = gst_video_aggregator_pad_get_current_buffer (vagg_pad);
     pad = GST_VAAPI_OVERLAY_SINK_PAD (vagg_pad);
@@ -392,10 +397,6 @@ gst_vaapi_overlay_surface_next (gpointer data)
     if (gst_vaapi_plugin_base_pad_get_input_buffer (GST_VAAPI_PLUGIN_BASE
             (generator->overlay), GST_PAD (pad), buf, &inbuf) != GST_FLOW_OK)
       return blend_surface;
-
-    /* Current sinkpad may have reached EOS */
-    if (!inframe || !inbuf)
-      continue;
 
     inbuf_meta = gst_buffer_get_vaapi_video_meta (inbuf);
     if (inbuf_meta) {
