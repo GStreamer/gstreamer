@@ -2614,8 +2614,12 @@ gst_deinterlace_do_bufferpool (GstDeinterlace * self, GstCaps * outcaps)
   if (gst_query_get_n_allocation_pools (query) > 0)
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
   else {
+    GstVideoInfo out_info;
+
+    gst_video_info_from_caps (&out_info, outcaps);
+
     pool = NULL;
-    size = GST_VIDEO_INFO_SIZE (&self->vinfo);
+    size = GST_VIDEO_INFO_SIZE (&out_info);
     min =
         MAX ((gst_deinterlace_method_get_fields_required (self->method) +
             1) / 2 + 1, 4);
