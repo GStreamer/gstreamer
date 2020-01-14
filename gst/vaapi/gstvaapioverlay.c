@@ -374,49 +374,45 @@ gst_vaapi_overlay_surface_next (gpointer data)
   generator = (GstVaapiOverlaySurfaceGenerator *) data;
 
   /* at the end of the generator? */
-  if (!generator->current)
-    return NULL;
+  while (generator->current) {
+    /* get the current video aggregator sinkpad */
+    vagg_pad = GST_VIDEO_AGGREGATOR_PAD (generator->current->data);
 
-  /* get the current video aggregator sinkpad */
-  vagg_pad = GST_VIDEO_AGGREGATOR_PAD (generator->current->data);
+    /* increment list pointer */
+    generator->current = generator->current->next;
 
-  /* increment list pointer */
-  generator->current = generator->current->next;
+    /* recycle the blend surface from the overlay surface generator */
+    blend_surface = &generator->blend_surface;
+    blend_surface->surface = NULL;
 
-  /* recycle the blend surface from the overlay surface generator */
-  blend_surface = &generator->blend_surface;
-  blend_surface->surface = NULL;
+    inframe = gst_video_aggregator_pad_get_prepared_frame (vagg_pad);
+    buf = gst_video_aggregator_pad_get_current_buffer (vagg_pad);
+    pad = GST_VAAPI_OVERLAY_SINK_PAD (vagg_pad);
 
-  inframe = gst_video_aggregator_pad_get_prepared_frame (vagg_pad);
-  buf = gst_video_aggregator_pad_get_current_buffer (vagg_pad);
-  pad = GST_VAAPI_OVERLAY_SINK_PAD (vagg_pad);
+    if (gst_vaapi_plugin_base_pad_get_input_buffer (GST_VAAPI_PLUGIN_BASE
+            (generator->overlay), GST_PAD (pad), buf, &inbuf) != GST_FLOW_OK)
+      return blend_surface;
 
-  if (gst_vaapi_plugin_base_pad_get_input_buffer (GST_VAAPI_PLUGIN_BASE
-          (generator->overlay), GST_PAD (pad), buf, &inbuf) != GST_FLOW_OK)
-    return blend_surface;
+    /* Current sinkpad may have reached EOS */
+    if (!inframe || !inbuf)
+      continue;
 
-  /* Current sinkpad may have reached EOS */
-  if (!inframe || !inbuf)
-    return gst_vaapi_overlay_surface_next (generator);
+    inbuf_meta = gst_buffer_get_vaapi_video_meta (inbuf);
+    if (inbuf_meta) {
+      blend_surface->surface = gst_vaapi_video_meta_get_surface (inbuf_meta);
+      blend_surface->crop = gst_vaapi_video_meta_get_render_rect (inbuf_meta);
+      blend_surface->target.x = pad->xpos;
+      blend_surface->target.y = pad->ypos;
+      blend_surface->target.width = GST_VIDEO_FRAME_WIDTH (inframe);
+      blend_surface->target.height = GST_VIDEO_FRAME_HEIGHT (inframe);
+      blend_surface->alpha = pad->alpha;
+    }
 
-  inbuf_meta = gst_buffer_get_vaapi_video_meta (inbuf);
-
-  if (!inbuf_meta) {
     gst_buffer_unref (inbuf);
     return blend_surface;
   }
 
-  blend_surface->surface = gst_vaapi_video_meta_get_surface (inbuf_meta);
-  blend_surface->crop = gst_vaapi_video_meta_get_render_rect (inbuf_meta);
-  blend_surface->target.x = pad->xpos;
-  blend_surface->target.y = pad->ypos;
-  blend_surface->target.width = GST_VIDEO_FRAME_WIDTH (inframe);
-  blend_surface->target.height = GST_VIDEO_FRAME_HEIGHT (inframe);
-  blend_surface->alpha = pad->alpha;
-
-  gst_buffer_unref (inbuf);
-
-  return blend_surface;
+  return NULL;
 }
 
 static GstFlowReturn
