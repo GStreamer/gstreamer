@@ -69,7 +69,6 @@ G_DEFINE_TYPE (GstVaapiOverlaySinkPad, gst_vaapi_overlay_sink_pad,
 typedef struct _GstVaapiOverlaySurfaceGenerator GstVaapiOverlaySurfaceGenerator;
 struct _GstVaapiOverlaySurfaceGenerator
 {
-  GstVaapiBlendSurfaceGenerator parent;
   GstVaapiOverlay *overlay;
   GList *current;
   GstVaapiBlendSurface blend_surface;
@@ -340,9 +339,9 @@ gst_vaapi_overlay_decide_allocation (GstAggregator * agg, GstQuery * query)
 }
 
 static GstVaapiBlendSurface *
-gst_vaapi_overlay_surface_next (GstVaapiBlendSurfaceGenerator * generator)
+gst_vaapi_overlay_surface_next (gpointer data)
 {
-  GstVaapiOverlaySurfaceGenerator *ogenerator;
+  GstVaapiOverlaySurfaceGenerator *generator;
   GstVideoAggregatorPad *vagg_pad;
   GstVaapiOverlaySinkPad *pad;
   GstVideoFrame *inframe;
@@ -351,20 +350,20 @@ gst_vaapi_overlay_surface_next (GstVaapiBlendSurfaceGenerator * generator)
   GstVaapiVideoMeta *inbuf_meta;
   GstVaapiBlendSurface *blend_surface;
 
-  ogenerator = (GstVaapiOverlaySurfaceGenerator *) generator;
+  generator = (GstVaapiOverlaySurfaceGenerator *) data;
 
   /* at the end of the generator? */
-  if (!ogenerator->current)
+  if (!generator->current)
     return NULL;
 
   /* get the current video aggregator sinkpad */
-  vagg_pad = GST_VIDEO_AGGREGATOR_PAD (ogenerator->current->data);
+  vagg_pad = GST_VIDEO_AGGREGATOR_PAD (generator->current->data);
 
   /* increment list pointer */
-  ogenerator->current = ogenerator->current->next;
+  generator->current = generator->current->next;
 
   /* recycle the blend surface from the overlay surface generator */
-  blend_surface = &ogenerator->blend_surface;
+  blend_surface = &generator->blend_surface;
   blend_surface->surface = NULL;
 
   inframe = gst_video_aggregator_pad_get_prepared_frame (vagg_pad);
@@ -372,12 +371,12 @@ gst_vaapi_overlay_surface_next (GstVaapiBlendSurfaceGenerator * generator)
   pad = GST_VAAPI_OVERLAY_SINK_PAD (vagg_pad);
 
   if (gst_vaapi_plugin_base_pad_get_input_buffer (GST_VAAPI_PLUGIN_BASE
-          (ogenerator->overlay), GST_PAD (pad), buf, &inbuf) != GST_FLOW_OK)
+          (generator->overlay), GST_PAD (pad), buf, &inbuf) != GST_FLOW_OK)
     return blend_surface;
 
   /* Current sinkpad may have reached EOS */
   if (!inframe || !inbuf)
-    return generator->next (generator);
+    return gst_vaapi_overlay_surface_next (generator);
 
   inbuf_meta = gst_buffer_get_vaapi_video_meta (inbuf);
 
@@ -436,12 +435,11 @@ gst_vaapi_overlay_aggregate_frames (GstVideoAggregator * vagg,
   outbuf_surface = gst_vaapi_video_meta_get_surface (outbuf_meta);
 
   /* initialize the surface generator */
-  generator.parent.next = gst_vaapi_overlay_surface_next;
   generator.overlay = overlay;
   generator.current = GST_ELEMENT (overlay)->sinkpads;
 
   if (!gst_vaapi_blend_process (overlay->blend, outbuf_surface,
-          (GstVaapiBlendSurfaceGenerator *) & generator))
+          gst_vaapi_overlay_surface_next, &generator))
     return GST_FLOW_ERROR;
 
   return GST_FLOW_OK;

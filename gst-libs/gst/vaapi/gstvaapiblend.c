@@ -210,7 +210,8 @@ gst_vaapi_blend_replace (GstVaapiBlend ** old_blend_ptr,
 
 static gboolean
 gst_vaapi_blend_process_unlocked (GstVaapiBlend * blend,
-    GstVaapiSurface * output, GstVaapiBlendSurfaceGenerator * generator)
+    GstVaapiSurface * output, GstVaapiBlendSurfaceNextFunc next,
+    gpointer user_data)
 {
   VAStatus va_status;
   VADisplay va_display;
@@ -223,8 +224,8 @@ gst_vaapi_blend_process_unlocked (GstVaapiBlend * blend,
   if (!vaapi_check_status (va_status, "vaBeginPicture()"))
     return FALSE;
 
-  current = generator->next (generator);
-  for (; current; current = generator->next (generator)) {
+  current = next (user_data);
+  for (; current; current = next (user_data)) {
     VAProcPipelineParameterBuffer *param = NULL;
     VABufferID id = VA_INVALID_ID;
     VARectangle src_rect = { 0, };
@@ -290,17 +291,16 @@ gst_vaapi_blend_process_unlocked (GstVaapiBlend * blend,
 
 gboolean
 gst_vaapi_blend_process (GstVaapiBlend * blend, GstVaapiSurface * output,
-    GstVaapiBlendSurfaceGenerator * generator)
+    GstVaapiBlendSurfaceNextFunc next, gpointer user_data)
 {
   gboolean result;
 
   g_return_val_if_fail (blend != NULL, FALSE);
   g_return_val_if_fail (output != NULL, FALSE);
-  g_return_val_if_fail (generator != NULL, FALSE);
-  g_return_val_if_fail (generator->next != NULL, FALSE);
+  g_return_val_if_fail (next != NULL, FALSE);
 
   GST_VAAPI_DISPLAY_LOCK (blend->display);
-  result = gst_vaapi_blend_process_unlocked (blend, output, generator);
+  result = gst_vaapi_blend_process_unlocked (blend, output, next, user_data);
   GST_VAAPI_DISPLAY_UNLOCK (blend->display);
 
   return result;

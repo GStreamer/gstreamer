@@ -36,7 +36,6 @@ G_BEGIN_DECLS
 
 typedef struct _GstVaapiBlend GstVaapiBlend;
 typedef struct _GstVaapiBlendSurface GstVaapiBlendSurface;
-typedef struct _GstVaapiBlendSurfaceGenerator GstVaapiBlendSurfaceGenerator;
 
 struct _GstVaapiBlendSurface
 {
@@ -46,10 +45,7 @@ struct _GstVaapiBlendSurface
   gdouble alpha;
 };
 
-struct _GstVaapiBlendSurfaceGenerator
-{
-  GstVaapiBlendSurface* (*next)();
-};
+typedef GstVaapiBlendSurface* (*GstVaapiBlendSurfaceNextFunc)(gpointer data);
 
 GstVaapiBlend *
 gst_vaapi_blend_new (GstVaapiDisplay * display);
@@ -60,7 +56,7 @@ gst_vaapi_blend_replace (GstVaapiBlend ** old_blend_ptr,
 
 gboolean
 gst_vaapi_blend_process (GstVaapiBlend * blend, GstVaapiSurface * output,
-    GstVaapiBlendSurfaceGenerator * generator);
+    GstVaapiBlendSurfaceNextFunc next, gpointer user_data);
 
 GType
 gst_vaapi_blend_get_type (void) G_GNUC_CONST;
