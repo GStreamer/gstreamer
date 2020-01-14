@@ -289,6 +289,19 @@ gst_vaapi_blend_process_unlocked (GstVaapiBlend * blend,
   return TRUE;
 }
 
+/**
+ * gst_vaapi_blend_process:
+ * @blend: a #GstVaapiBlend instance.
+ * @output: a #GstVaapiSurface to be composed.
+ * @next: a function to fetch the next #GstVaapiBlendSurface to
+ *    process.
+ * @data: state storage for @next.
+ *
+ * This function will process all the input surfaces defined through
+ * #GstVaapiBlendSurface and will blend them onto the @output surface.
+ *
+ * Returns: %TRUE if the blend process succeed; otherwise %FALSE.
+ **/
 gboolean
 gst_vaapi_blend_process (GstVaapiBlend * blend, GstVaapiSurface * output,
     GstVaapiBlendSurfaceNextFunc next, gpointer user_data)

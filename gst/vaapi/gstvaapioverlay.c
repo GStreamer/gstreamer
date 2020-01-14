@@ -20,6 +20,27 @@
  *  Boston, MA 02110-1301 USA
 */
 
+/**
+ * SECTION:element-vaapioverlay
+ * @title: vaapioverlay
+ * @short_description: a VA-API base video compositor
+ *
+ * The vaapioverlay element is similar to the base compositor element
+ * but uses VA-API VPP blend functions to accelerate the
+ * overlay/compositing.
+ *
+ * Currently this element only works with iHD driver.
+ *
+ * ## Example launch line
+ *
+ * |[
+ *   gst-launch-1.0 -vf videotestsrc ! vaapipostproc      \
+ *     ! tee name=testsrc ! queue                         \
+ *     ! vaapioverlay sink_1::xpos=300 sink_1::alpha=0.75 \
+ *     name=overlay ! vaapisink testsrc. ! queue ! overlay.
+ * ]|
+ */
+
 #include "gstvaapioverlay.h"
 #include "gstvaapipluginutil.h"
 #include "gstvaapivideobufferpool.h"
