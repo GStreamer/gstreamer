@@ -43,6 +43,7 @@ static GstClockTime _gst_validate_report_start_time = 0;
 static GstValidateDebugFlags _gst_validate_flags = 0;
 static GHashTable *_gst_validate_issues = NULL;
 static FILE **log_files = NULL;
+static gboolean output_is_tty = TRUE;
 
 /* Tcp server for communications with gst-validate-launcher */
 GSocketClient *socket_client = NULL;
@@ -552,6 +553,9 @@ gst_validate_report_init (void)
 
     gst_validate_report_load_issues ();
   }
+#ifdef HAVE_UNISTD_H
+  output_is_tty = isatty (1);
+#endif
 
   server_env = g_getenv ("GST_VALIDATE_SERVER");
   uuid = g_getenv ("GST_VALIDATE_UUID");
@@ -1234,4 +1238,37 @@ gst_validate_report_add_repeated_report (GstValidateReport * report,
   report->repeated_reports =
       g_list_append (report->repeated_reports,
       gst_validate_report_ref (repeated_report));
+}
+
+
+void
+gst_validate_print_position (GstClockTime position, GstClockTime duration,
+    gdouble rate, gchar * extra_info)
+{
+  JsonBuilder *jbuilder;
+
+  gst_validate_printf (NULL,
+      "<position: %" GST_TIME_FORMAT " duration: %" GST_TIME_FORMAT
+      " speed: %f %s/>%c", GST_TIME_ARGS (position), GST_TIME_ARGS (duration),
+      rate, extra_info ? extra_info : "", output_is_tty ? '\r' : '\n');
+
+  if (!server_ostream)
+    return;
+
+  jbuilder = json_builder_new ();
+  json_builder_begin_object (jbuilder);
+  json_builder_set_member_name (jbuilder, "type");
+  json_builder_add_string_value (jbuilder, "position");
+  json_builder_set_member_name (jbuilder, "position");
+  json_builder_add_int_value (jbuilder, position);
+  json_builder_set_member_name (jbuilder, "duration");
+  json_builder_add_int_value (jbuilder, duration);
+  json_builder_set_member_name (jbuilder, "speed");
+  json_builder_add_double_value (jbuilder, rate);
+  json_builder_end_object (jbuilder);
+
+  gst_validate_send (json_builder_get_root (jbuilder));
+  g_object_unref (jbuilder);
+
+  g_free (extra_info);
 }

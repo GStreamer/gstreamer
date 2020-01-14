@@ -309,6 +309,8 @@ GST_VALIDATE_API
 void gst_validate_report_add_repeated_report (GstValidateReport *report, GstValidateReport *repeated_report);
 GST_VALIDATE_API
 GstValidateReportLevel gst_validate_report_level_from_name (const gchar *level_name);
+GST_VALIDATE_API
+void gst_validate_print_position(GstClockTime position, GstClockTime duration, gdouble rate, gchar* extra_info);
 
 G_END_DECLS
 

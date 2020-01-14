@@ -35,8 +35,6 @@
 #include <unistd.h>
 #endif
 
-static gboolean output_is_tty = TRUE;
-
 enum
 {
   PROP_0,
@@ -142,11 +140,6 @@ gst_validate_pipeline_monitor_class_init (GstValidatePipelineMonitorClass *
   object_class->get_property = gst_validate_pipeline_monitor_get_property;
 
   g_object_class_override_property (object_class, PROP_VERBOSITY, "verbosity");
-
-#ifdef HAVE_UNISTD_H
-  output_is_tty = isatty (1);
-#endif
-
 }
 
 static void
@@ -160,7 +153,6 @@ print_position (GstValidateMonitor * monitor)
 {
   GstQuery *query;
   gint64 position, duration;
-  JsonBuilder *jbuilder;
   GstElement *pipeline =
       GST_ELEMENT (gst_validate_monitor_get_pipeline (monitor));
 
@@ -196,25 +188,7 @@ print_position (GstValidateMonitor * monitor)
     gst_query_parse_segment (query, &rate, NULL, NULL, NULL);
   gst_query_unref (query);
 
-  jbuilder = json_builder_new ();
-  json_builder_begin_object (jbuilder);
-  json_builder_set_member_name (jbuilder, "type");
-  json_builder_add_string_value (jbuilder, "position");
-  json_builder_set_member_name (jbuilder, "position");
-  json_builder_add_int_value (jbuilder, position);
-  json_builder_set_member_name (jbuilder, "duration");
-  json_builder_add_int_value (jbuilder, duration);
-  json_builder_set_member_name (jbuilder, "speed");
-  json_builder_add_double_value (jbuilder, rate);
-  json_builder_end_object (jbuilder);
-
-  gst_validate_send (json_builder_get_root (jbuilder));
-  g_object_unref (jbuilder);
-
-  gst_validate_printf (NULL,
-      "<position: %" GST_TIME_FORMAT " duration: %" GST_TIME_FORMAT
-      " speed: %f />%c", GST_TIME_ARGS (position), GST_TIME_ARGS (duration),
-      rate, output_is_tty ? '\r' : '\n');
+  gst_validate_print_position (position, duration, rate, NULL);
 
 done:
   gst_object_unref (pipeline);

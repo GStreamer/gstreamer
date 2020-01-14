@@ -180,13 +180,10 @@ runner_stopping (GstValidateRunner * runner, ValidateSsimOverride * self)
     min_avg = MIN (min_avg, mssim);
     min_min = MIN (lowest, min_min);
     total_avg += mssim;
-    gst_validate_printf (NULL,
-        "<position: %" GST_TIME_FORMAT " duration: %" GST_TIME_FORMAT
-        " %d / %d avg: %f min: %f (Passed: %d failed: %d)/>\n",
-        GST_TIME_ARGS (frame->position), GST_TIME_ARGS (GST_CLOCK_TIME_NONE),
-        i + 1, nfiles, mssim, lowest, npassed, nfailures);
-
-    g_free (bname);
+    gst_validate_print_position(frame->position, GST_CLOCK_TIME_NONE, 1.0,
+        g_strdup_printf(" %d / %d avg: %f min: %f (Passed: %d failed: %d)",
+            i + 1, nfiles, mssim, lowest, npassed, nfailures));
+    g_free(bname);
   }
 
   gst_validate_printf (NULL,
