@@ -144,6 +144,12 @@ typedef enum {
 #define G_LOG_WARNING                            _QUARK("g-log::warning")
 #define G_LOG_CRITICAL                           _QUARK("g-log::critical")
 
+typedef enum {
+  GST_VALIDATE_ISSUE_FLAGS_NONE = 0,
+  GST_VALIDATE_ISSUE_FLAGS_FULL_DETAILS = 1 << 0,
+  GST_VALIDATE_ISSUE_FLAGS_NO_BACKTRACE = 1 << 1,
+} GstValidateIssueFlags;
+
 typedef struct {
   GstValidateIssueId issue_id;
 
@@ -167,6 +173,8 @@ typedef struct {
   GstValidateReportLevel default_level;
 
   gint    refcount;
+
+  GstValidateIssueFlags flags;
 
   gpointer _gst_reserved[GST_PADDING];
 
@@ -238,6 +246,10 @@ GST_VALIDATE_API
 GstValidateIssue  *gst_validate_issue_new (GstValidateIssueId issue_id, const gchar * summary,
 					   const gchar * description,
 					   GstValidateReportLevel default_level);
+GST_VALIDATE_API
+GstValidateIssue* gst_validate_issue_new_full(GstValidateIssueId issue_id, const gchar* summary,
+    const gchar* description, GstValidateReportLevel default_level,
+    GstValidateIssueFlags flags);
 GST_VALIDATE_API
 void gst_validate_issue_set_default_level (GstValidateIssue *issue,
                                            GstValidateReportLevel default_level);

@@ -901,12 +901,14 @@ gst_validate_ssim_finalize (GObject * object)
 static gpointer
 _register_issues (gpointer data)
 {
-  gst_validate_issue_register (gst_validate_issue_new (SIMILARITY_ISSUE,
+  gst_validate_issue_register (gst_validate_issue_new_full (SIMILARITY_ISSUE,
           "Compared images were not similar enough",
           "The images checker detected that the images"
           " it is comparing do not have the similarity"
           " level defined with min-avg-similarity or"
-          " min-lowest-similarity", GST_VALIDATE_REPORT_LEVEL_CRITICAL));
+          " min-lowest-similarity", GST_VALIDATE_REPORT_LEVEL_CRITICAL,
+          GST_VALIDATE_ISSUE_FLAGS_FULL_DETAILS |
+          GST_VALIDATE_ISSUE_FLAGS_NO_BACKTRACE));
 
   gst_validate_issue_register (gst_validate_issue_new
       (SIMILARITY_ISSUE_WITH_PREVIOUS,

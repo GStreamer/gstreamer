@@ -142,6 +142,45 @@ gst_validate_issue_get_id (GstValidateIssue * issue)
 }
 
 /**
+ * gst_validate_issue_new_full:
+ * @issue_id: The ID of the issue, should be a GQuark
+ * @summary: A summary of the issue
+ * @description: A more complete description of the issue
+ * @default_level: The level at which the issue will be reported by default
+ * @flags: The flags to determine behaviour of the issue
+ *
+ * Returns: (transfer full): The newly created #GstValidateIssue
+ */
+GstValidateIssue *
+gst_validate_issue_new_full (GstValidateIssueId issue_id, const gchar * summary,
+    const gchar * description, GstValidateReportLevel default_level,
+    GstValidateIssueFlags flags)
+{
+  GstValidateIssue *issue;
+  gchar **area_name = g_strsplit (g_quark_to_string (issue_id), "::", 2);
+
+  if (!(area_name[0] != NULL && area_name[1] != NULL && area_name[2] == NULL)) {
+    g_warning ("Wrong issue ID: %s (should be in the form: area::name)",
+        g_quark_to_string (issue_id));
+    g_strfreev (area_name);
+
+    return NULL;
+  }
+
+  issue = g_slice_new (GstValidateIssue);
+  issue->issue_id = issue_id;
+  issue->summary = g_strdup (summary);
+  issue->description = g_strdup (description);
+  issue->default_level = default_level;
+  issue->area = area_name[0];
+  issue->name = area_name[1];
+  issue->flags = flags;
+
+  g_free (area_name);
+  return issue;
+}
+
+/**
  * gst_validate_issue_new:
  * @issue_id: The ID of the issue, should be a GQuark
  * @summary: A summary of the issue
@@ -172,6 +211,7 @@ gst_validate_issue_new (GstValidateIssueId issue_id, const gchar * summary,
   issue->default_level = default_level;
   issue->area = area_name[0];
   issue->name = area_name[1];
+  issue->flags = GST_VALIDATE_ISSUE_FLAGS_NONE;
 
   g_free (area_name);
   return issue;
@@ -739,10 +779,11 @@ gst_validate_report_new (GstValidateIssue * issue,
       reporter_details != GST_VALIDATE_SHOW_UNKNOWN)
     return report;
 
-  if (default_details == GST_VALIDATE_SHOW_ALL ||
-      issue_type_details == GST_VALIDATE_SHOW_ALL ||
-      gst_validate_report_check_abort (report) ||
-      report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL)
+  if ((default_details == GST_VALIDATE_SHOW_ALL ||
+          issue_type_details == GST_VALIDATE_SHOW_ALL ||
+          gst_validate_report_check_abort (report) ||
+          report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL) &&
+      (!(issue->flags & GST_VALIDATE_ISSUE_FLAGS_NO_BACKTRACE)))
     report->trace = gst_debug_get_stack_trace (GST_STACK_TRACE_SHOW_FULL);
 
   return report;
@@ -1159,12 +1200,11 @@ gst_validate_report_printf (GstValidateReport * report)
   gst_validate_report_print_level (report);
   gst_validate_report_print_detected_on (report);
   gst_validate_report_print_details (report);
+  for (tmp = report->repeated_reports; tmp; tmp = tmp->next) {
+    gst_validate_report_print_details (tmp->data);
+  }
   gst_validate_report_print_dotfile (report);
   gst_validate_report_print_trace (report);
-
-  for (tmp = report->repeated_reports; tmp; tmp = tmp->next) {
-    gst_validate_report_print_details (report);
-  }
 
   gst_validate_report_print_description (report);
   gst_validate_printf (NULL, "\n");

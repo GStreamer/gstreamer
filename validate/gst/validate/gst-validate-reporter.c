@@ -225,10 +225,13 @@ gst_validate_report_valist (GstValidateReporter * reporter,
     if (runner)
       runner_level = gst_validate_runner_get_default_reporting_level (runner);
 
-    if (reporter_level == GST_VALIDATE_SHOW_ALL ||
-        (runner_level == GST_VALIDATE_SHOW_ALL &&
-            reporter_level == GST_VALIDATE_SHOW_UNKNOWN))
+    if ((reporter_level == GST_VALIDATE_SHOW_ALL ||
+            (runner_level == GST_VALIDATE_SHOW_ALL &&
+                reporter_level == GST_VALIDATE_SHOW_UNKNOWN)) ||
+        (issue->flags & GST_VALIDATE_ISSUE_FLAGS_FULL_DETAILS)) {
+
       gst_validate_report_add_repeated_report (prev_report, report);
+    }
 
     gst_validate_report_unref (report);
     goto done;

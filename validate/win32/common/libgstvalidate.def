@@ -27,6 +27,7 @@ EXPORTS
 	gst_validate_issue_get_id
 	gst_validate_issue_get_type
 	gst_validate_issue_new
+	gst_validate_issue_new_full
 	gst_validate_issue_register
 	gst_validate_issue_set_default_level
 	gst_validate_list_scenarios
