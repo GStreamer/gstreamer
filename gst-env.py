@@ -137,12 +137,17 @@ def get_wine_subprocess_env(options, env):
     return env
 
 def setup_gdb(options):
-    bdir = os.path.realpath(options.builddir)
     python_paths = set()
+
+    if not shutil.which('gdb'):
+        return python_paths
+
+    bdir = os.path.realpath(options.builddir)
     for libpath, gdb_path in [
-            ("subprojects/gstreamer/gst/", "subprojects/gstreamer/libs/gst/helpers/"),
-            ("subprojects/glib/gobject", None),
-            ("subprojects/glib/glib", None)]:
+            (os.path.join("subprojects", "gstreamer", "gst"),
+             os.path.join("subprojects", "gstreamer", "libs", "gst", "helpers")),
+            (os.path.join("subprojects", "glib", "gobject"), None),
+            (os.path.join("subprojects", "glib", "glib"), None)]:
 
         if not gdb_path:
             gdb_path = libpath
