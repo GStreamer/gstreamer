@@ -955,6 +955,7 @@ gst_vaapi_driver_is_whitelisted (GstVaapiDisplay * display)
   static const gchar *whitelist[] = {
     "Intel i965 driver",
     "Intel iHD driver",
+    "Mesa Gallium driver",
     NULL
   };
 
