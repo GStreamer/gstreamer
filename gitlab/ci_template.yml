@@ -136,7 +136,7 @@ build fedora x86_64:
   stage: 'build'
   image: $FEDORA_IMAGE
   variables:
-    MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Domx=enabled -Dgst-omx:target=generic -Ddoc=enabled -Drs=enabled ${MESON_BUILDTYPE_ARGS} --werror"
+    MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Domx=enabled -Dgst-omx:target=generic -Ddoc=enabled -Drs=disabled ${MESON_BUILDTYPE_ARGS} --werror"
   artifacts:
     expire_in: '5 days'
     when: always
@@ -146,13 +146,14 @@ build fedora x86_64:
   except:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
+      - $CI_PROJECT_NAME == "gst-plugins-rs"
 
 build nodebug fedora x86_64:
   extends: '.build'
   stage: 'build'
   image: $FEDORA_IMAGE
   variables:
-    MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Dgstreamer:gst_debug=false -Domx=enabled -Dgst-omx:target=generic -Drs=enabled ${MESON_BUILDTYPE_ARGS} --werror"
+    MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Dgstreamer:gst_debug=false -Domx=enabled -Dgst-omx:target=generic -Drs=disabled ${MESON_BUILDTYPE_ARGS} --werror"
   except:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
@@ -249,7 +250,6 @@ build clang fedora x86_64:
 check fedora:
   extends: '.test fedora x86_64'
   variables:
-    EXTRA_VALIDATE_ARGS: "-b check.gst-plugins-rs.*"
     TEST_SUITE: "check.gst*"
   except:
     variables:
@@ -992,3 +992,11 @@ build gst-omx zynq fedora x86_64:
   only:
     variables:
       - $CI_PROJECT_NAME =~ /^(gst-omx|gst-ci)$/
+
+build rust fedora x86_64:
+  extends: 'build fedora x86_64'
+  variables:
+    MESON_ARGS: "-Domx=disabled -Dpython=disabled -Dlibav=disabled -Dlibnice=disabled -Dugly=disabled -Dbad=disabled -Ddevtools=disabled -Dges=disabled -Drtsp_server=disabled -Dvaapi=disabled -Dsharp=disabled -Dgst-examples=disabled -Drs=enabled ${MESON_BUILDTYPE_ARGS} --werror"
+  only:
+    variables:
+      - $CI_PROJECT_NAME =~ /^(gst-plugins-rs|gstreamer|gst-plugins-base|gst-ci|gst-build)$/
