@@ -55,6 +55,8 @@ struct _GstMsdkVP9Enc
   GstMsdkEnc base;
 
   gint profile;
+
+  mfxExtVP9Param ext_vp9;
 };
 
 struct _GstMsdkVP9EncClass

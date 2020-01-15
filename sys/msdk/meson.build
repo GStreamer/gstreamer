@@ -18,7 +18,6 @@ msdk_sources = [
   'gstmsdkvc1dec.c',
   'gstmsdkvideomemory.c',
   'gstmsdkvp8dec.c',
-  'gstmsdkvp9enc.c',
   'gstmsdkvpp.c',
   'gstmsdkvpputil.c',
   'msdk-enums.c',
@@ -76,6 +75,22 @@ endif
 if cxx.has_header('mfxvp9.h', args: '-I' + mfx_incdir)
   msdk_sources += [ 'gstmsdkvp9dec.c' ]
   cdata.set10('USE_MSDK_VP9_DEC', 1)
+endif
+
+# mfx 1.26+ is required to support raw VP9 stream
+mfx_ver126_check_code = '''
+#include <mfxdefs.h>
+#if MFX_VERSION < 1026
+#error "The current version of mfx doesn't support raw vp9 stream"
+#endif'
+'''
+
+have_mfx_ver126 = cc.compiles(mfx_ver126_check_code,
+                include_directories : [configinc, mfx_inc])
+
+if have_mfx_ver126
+  msdk_sources += [ 'gstmsdkvp9enc.c' ]
+  cdata.set10('USE_MSDK_VP9_ENC', 1)
 endif
 
 if host_machine.system() == 'windows'

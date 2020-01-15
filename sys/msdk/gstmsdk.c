@@ -45,7 +45,9 @@
 #include "gstmsdkmpeg2dec.h"
 #include "gstmsdkmpeg2enc.h"
 #include "gstmsdkvp8dec.h"
+#ifdef USE_MSDK_VP9_ENC
 #include "gstmsdkvp9enc.h"
+#endif
 #include "gstmsdkvc1dec.h"
 #ifdef USE_MSDK_VP9_DEC
 #include "gstmsdkvp9dec.h"
@@ -135,10 +137,10 @@ plugin_init (GstPlugin * plugin)
   ret = gst_element_register (plugin, "msdkvp9dec", GST_RANK_NONE,
       GST_TYPE_MSDKVP9DEC);
 #endif
-
+#ifdef USE_MSDK_VP9_ENC
   ret = gst_element_register (plugin, "msdkvp9enc", GST_RANK_NONE,
       GST_TYPE_MSDKVP9ENC);
-
+#endif
   ret = gst_element_register (plugin, "msdkvpp", GST_RANK_NONE,
       GST_TYPE_MSDKVPP);
 

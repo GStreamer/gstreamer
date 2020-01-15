@@ -111,6 +111,7 @@ gst_msdkvp9enc_set_format (GstMsdkEnc * encoder)
 static gboolean
 gst_msdkvp9enc_configure (GstMsdkEnc * encoder)
 {
+  GstMsdkVP9Enc *vp9enc = GST_MSDKVP9ENC (encoder);
   mfxSession session;
 
   if (encoder->hardware) {
@@ -148,6 +149,13 @@ gst_msdkvp9enc_configure (GstMsdkEnc * encoder)
 
   /* Enable Extended coding options */
   gst_msdkenc_ensure_extended_coding_options (encoder);
+
+  memset (&vp9enc->ext_vp9, 0, sizeof (vp9enc->ext_vp9));
+  vp9enc->ext_vp9.Header.BufferId = MFX_EXTBUFF_VP9_PARAM;
+  vp9enc->ext_vp9.Header.BufferSz = sizeof (vp9enc->ext_vp9);
+  vp9enc->ext_vp9.WriteIVFHeaders = MFX_CODINGOPTION_OFF;
+
+  gst_msdkenc_add_extra_param (encoder, (mfxExtBuffer *) & vp9enc->ext_vp9);
 
   return TRUE;
 }
