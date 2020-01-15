@@ -53,6 +53,7 @@ dnf install -y \
     json-glib-devel \
     libnice \
     libnice-devel \
+    libsodium-devel \
     libunwind \
     libunwind-devel \
     libyaml-devel \
