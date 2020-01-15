@@ -104,6 +104,7 @@ gst indent:
     CCACHE_DIR: "/cache/gstreamer/gst-build/ccache/"
     # shared across everything really
     CCACHE_MAXSIZE: "10G"
+    CARGO_HOME: "/cache/gstreamer/cargo"
 
     MESON_ARGS: "${DEFAULT_MESON_ARGS} ${MESON_BUILDTYPE_ARGS} --werror"
 
@@ -203,6 +204,7 @@ build clang fedora x86_64:
     CI_ARTIFACTS_URL: "${CI_PROJECT_URL}/-/jobs/${CI_JOB_ID}/artifacts/raw/validate-logs/"
     GST_VALIDATE_LAUNCHER_FORCE_COLORS: "true"
     TIMEOUT_FACTOR: "2"
+    CARGO_HOME: "/cache/gstreamer/cargo"
   script:
     - cd gst-build/
     - echo "-> Running ${TEST_SUITE}"
