@@ -1292,6 +1292,13 @@ gst_rtsp_client_close (GstRTSPClient * client)
 
   GST_DEBUG ("client %p: closing connection", client);
 
+  g_mutex_lock (&priv->watch_lock);
+
+  /* Work around the lack of thread safety of gst_rtsp_connection_close */
+  if (priv->watch) {
+    gst_rtsp_watch_set_flushing (priv->watch, TRUE);
+  }
+
   if (priv->connection) {
     if ((tunnelid = gst_rtsp_connection_get_tunnelid (priv->connection))) {
       g_mutex_lock (&tunnels_lock);
@@ -1299,11 +1306,10 @@ gst_rtsp_client_close (GstRTSPClient * client)
       g_hash_table_remove (tunnels, tunnelid);
       g_mutex_unlock (&tunnels_lock);
     }
+    gst_rtsp_connection_flush (priv->connection, TRUE);
     gst_rtsp_connection_close (priv->connection);
   }
 
-  /* connection is now closed, destroy the watch which will also cause the
-   * closed signal to be emitted */
   if (priv->watch) {
     GST_DEBUG ("client %p: destroying watch", client);
     g_source_destroy ((GSource *) priv->watch);
@@ -1314,6 +1320,8 @@ gst_rtsp_client_close (GstRTSPClient * client)
     g_main_context_unref (priv->watch_context);
     priv->watch_context = NULL;
   }
+
+  g_mutex_unlock (&priv->watch_lock);
 }
 
 static gchar *
