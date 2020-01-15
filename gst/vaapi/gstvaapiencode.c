@@ -366,6 +366,7 @@ ensure_allowed_sinkpad_caps (GstVaapiEncode * encode)
   guint i, size;
   GstStructure *structure;
   gint min_width, min_height, max_width, max_height;
+  guint mem_types;
 
   if (encode->allowed_sinkpad_caps)
     return TRUE;
@@ -380,7 +381,7 @@ ensure_allowed_sinkpad_caps (GstVaapiEncode * encode)
   /* Then get all supported formats, all these formats should be recognized
      in video-format map. */
   formats = gst_vaapi_encoder_get_surface_attributes (encode->encoder, profiles,
-      &min_width, &min_height, &max_width, &max_height);
+      &min_width, &min_height, &max_width, &max_height, &mem_types);
   if (!formats)
     goto failed_get_attributes;
 
@@ -398,19 +399,20 @@ ensure_allowed_sinkpad_caps (GstVaapiEncode * encode)
         max_width, "height", GST_TYPE_INT_RANGE, min_height, max_height, NULL);
   }
 
+  out_caps = gst_caps_copy (raw_caps);
+
   va_caps = gst_caps_copy (raw_caps);
   gst_caps_set_features_simple (va_caps,
       gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE));
-
-  dma_caps = gst_caps_copy (raw_caps);
-  gst_caps_set_features_simple (dma_caps,
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_DMABUF));
-
-  /* collect all caps together. */
-  out_caps = raw_caps;
-  raw_caps = NULL;
   gst_caps_append (out_caps, va_caps);
-  gst_caps_append (out_caps, dma_caps);
+
+  if (gst_vaapi_mem_type_supports (mem_types,
+          GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF)) {
+    dma_caps = gst_caps_copy (raw_caps);
+    gst_caps_set_features_simple (dma_caps,
+        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_DMABUF));
+    gst_caps_append (out_caps, dma_caps);
+  }
 
   gst_caps_replace (&encode->allowed_sinkpad_caps, out_caps);
   GST_INFO_OBJECT (encode, "Allowed sink caps %" GST_PTR_FORMAT,

@@ -183,7 +183,7 @@ gst_vaapi_encoder_flush (GstVaapiEncoder * encoder);
 GArray *
 gst_vaapi_encoder_get_surface_attributes (GstVaapiEncoder * encoder,
     GArray * profiles, gint * min_width, gint * min_height,
-    gint * max_width, gint * max_height);
+    gint * max_width, gint * max_height, guint * mem_types);
 
 GstVaapiProfile
 gst_vaapi_encoder_get_profile (GstVaapiEncoder * encoder);

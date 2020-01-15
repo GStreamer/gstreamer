@@ -1533,6 +1533,7 @@ merge_profile_surface_attributes (GstVaapiEncoder * encoder,
   attribs->min_height = MIN (attribs->min_height, attr.min_height);
   attribs->max_width = MAX (attribs->max_width, attr.max_width);
   attribs->max_height = MAX (attribs->max_height, attr.max_height);
+  attribs->mem_types &= attr.mem_types;
 
   return TRUE;
 }
@@ -1553,10 +1554,10 @@ merge_profile_surface_attributes (GstVaapiEncoder * encoder,
 GArray *
 gst_vaapi_encoder_get_surface_attributes (GstVaapiEncoder * encoder,
     GArray * profiles, gint * min_width, gint * min_height,
-    gint * max_width, gint * max_height)
+    gint * max_width, gint * max_height, guint * mem_types)
 {
   GstVaapiConfigSurfaceAttributes attribs = {
-    G_MAXINT, G_MAXINT, 1, 1, 0, NULL
+    G_MAXINT, G_MAXINT, 1, 1, G_MAXUINT, NULL
   };
   GstVaapiProfile profile;
   guint i;
@@ -1586,6 +1587,8 @@ gst_vaapi_encoder_get_surface_attributes (GstVaapiEncoder * encoder,
     *max_width = attribs.max_width;
   if (max_height)
     *max_height = attribs.max_height;
+  if (mem_types)
+    *mem_types = attribs.mem_types;
   return attribs.formats;
 }
 

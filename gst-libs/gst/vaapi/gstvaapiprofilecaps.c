@@ -117,3 +117,19 @@ gst_vaapi_profile_caps_append_decoder (GstVaapiDisplay * display,
 
   return append_caps_with_context_info (display, &cip, structure);
 }
+
+/**
+ * gst_vaapi_mem_type_supports:
+ * @va_mem_types:  memory types from VA surface attributes
+ * @mem_type: the #GstVaapiBufferMemoryType to test
+ *
+ * Test if @va_mem_types handles @mem_type
+ *
+ * Returns: %TRUE if @mem_type is supported in @va_mem_types;
+ *    otherwise %FALSE
+ **/
+gboolean
+gst_vaapi_mem_type_supports (guint va_mem_types, guint mem_type)
+{
+  return ((va_mem_types & from_GstVaapiBufferMemoryType (mem_type)) != 0);
+}
