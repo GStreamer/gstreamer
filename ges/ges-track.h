@@ -39,19 +39,19 @@ typedef struct _GESTrackPrivate GESTrackPrivate;
 
 /**
  * GESCreateElementForGapFunc:
- * @track: the #GESTrack
+ * @track: The #GESTrack
  *
- * A function that will be called to create the #GstElement that will be used
- * as a source to fill the gaps in @track.
+ * A function that creates a #GstElement that can be used as a source to
+ * fill the gaps of the track. A gap is a timeline region where the track
+ * has no #GESTrackElement sources.
  *
- * Returns: A #GstElement (must be a source) that will be used to
- * fill the gaps (periods of time in @track that containes no source).
+ * Returns: A source #GstElement to fill gaps in @track.
  */
 typedef GstElement* (*GESCreateElementForGapFunc) (GESTrack *track);
 
 /**
  * GESTrack:
- * @type: a #GESTrackType indicting the basic type of the track.
+ * @type: The #GESTrack:track-type of the track
  */
 struct _GESTrack
 {

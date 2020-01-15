@@ -21,11 +21,27 @@
 /**
  * SECTION:gestrack
  * @title: GESTrack
- * @short_description: Composition of objects
+ * @short_description: The output source of a #GESTimeline
  *
- * Corresponds to one output format (i.e. audio OR video).
+ * A #GESTrack acts an output source for a #GESTimeline. Each one
+ * essentially provides an additional #GstPad for the timeline, with
+ * #GESTrack:restriction-caps capabilities. Internally, a track
+ * wraps an #nlecomposition filtered by a #capsfilter.
  *
- * Contains the compatible TrackElement(s).
+ * A track will contain a number of #GESTrackElement-s, and its role is
+ * to select and activate these elements according to their timings when
+ * the timeline in played. For example, a track would activate a
+ * #GESSource when its #GESTimelineElement:start is reached by outputting
+ * its data for its #GESTimelineElement:duration. Similarly, a
+ * #GESOperation would be activated by applying its effect to the source
+ * data, starting from its #GESTimelineElement:start time and lasting for
+ * its #GESTimelineElement:duration.
+ *
+ * For most users, it will usually be sufficient to add newly created
+ * tracks to a timeline, but never directly add an element to a track.
+ * Whenever a #GESClip is added to a timeline, the clip adds its
+ * elements to the timeline's tracks and assumes responsibility for
+ * updating them.
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -241,6 +257,9 @@ update_gaps (GESTrack * track)
         priv->gaps = g_list_prepend (priv->gaps, gap);
       }
 
+      /* FIXME: here the duration is set to the duration of the timeline,
+       * but elsewhere it is set to the duration of the composition. Are
+       * these always the same? */
       priv->duration = timeline_duration;
     }
   }
@@ -321,6 +340,9 @@ composition_duration_cb (GstElement * composition,
         GST_TIME_FORMAT, GST_TIME_ARGS (duration),
         GST_TIME_ARGS (track->priv->duration));
 
+    /* FIXME: here the duration is set to the duration of the composition,
+     * but elsewhere it is set to the duration of the timeline. Are these
+     * always the same? */
     track->priv->duration = duration;
 
     g_object_notify_by_pspec (G_OBJECT (track), properties[ARG_DURATION]);
@@ -628,13 +650,26 @@ ges_track_class_init (GESTrackClass * klass)
   /**
    * GESTrack:caps:
    *
-   * Caps used to filter/choose the output stream. This is generally set to
-   * a generic set of caps like 'video/x-raw' for raw video.
+   * The capabilities used to choose the output of the #GESTrack's
+   * elements. Internally, this is used to select output streams when
+   * several may be available, by determining whether its #GstPad is
+   * compatible (see #nlecomposition:caps for #nlecomposition). As such,
+   * this is used as a weaker indication of the desired output type of the
+   * track, **before** the #GESTrack:restriction-caps is applied.
+   * Therefore, this should be set to a *generic* superset of the
+   * #GESTrack:restriction-caps, such as "video/x-raw(ANY)". In addition,
+   * it should match with the track's #GESTrack:track-type.
+   *
+   * Note that when you set this property, the #GstCapsFeatures of all its
+   * #GstStructure-s will be automatically set to #GST_CAPS_FEATURES_ANY.
+   *
+   * Once a track has been added to a #GESTimeline, you should not change
+   * this.
    *
    * Default value: #GST_CAPS_ANY.
    */
   properties[ARG_CAPS] = g_param_spec_boxed ("caps", "Caps",
-      "Caps used to filter/choose the output stream",
+      "Caps used to choose the output stream",
       GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
   g_object_class_install_property (object_class, ARG_CAPS,
       properties[ARG_CAPS]);
@@ -642,13 +677,19 @@ ges_track_class_init (GESTrackClass * klass)
   /**
    * GESTrack:restriction-caps:
    *
-   * Caps used to filter/choose the output stream.
+   * The capabilities that specifies the final output format of the
+   * #GESTrack. For example, for a video track, it would specify the
+   * height, width, framerate and other properties of the stream.
+   *
+   * You may change this property after the track has been added to a
+   * #GESTimeline, but it must remain compatible with the track's
+   * #GESTrack:caps.
    *
    * Default value: #GST_CAPS_ANY.
    */
   properties[ARG_RESTRICTION_CAPS] =
       g_param_spec_boxed ("restriction-caps", "Restriction caps",
-      "Caps used to filter/choose the output stream", GST_TYPE_CAPS,
+      "Caps used as a final filter on the output stream", GST_TYPE_CAPS,
       G_PARAM_READWRITE);
   g_object_class_install_property (object_class, ARG_RESTRICTION_CAPS,
       properties[ARG_RESTRICTION_CAPS]);
@@ -660,6 +701,8 @@ ges_track_class_init (GESTrackClass * klass)
    *
    * Default value: O
    */
+  /* FIXME: is duration the duration of the timeline or the duration of
+   * the underlying composition? */
   properties[ARG_DURATION] = g_param_spec_uint64 ("duration", "Duration",
       "The current duration of the track", 0, G_MAXUINT64, GST_SECOND,
       G_PARAM_READABLE);
@@ -669,12 +712,12 @@ ges_track_class_init (GESTrackClass * klass)
   /**
    * GESTrack:track-type:
    *
-   * Type of stream the track outputs. This is used when creating the #GESTrack
-   * to specify in generic terms what type of content will be outputted.
+   * The track type of the track. This controls the type of
+   * #GESTrackElement-s that can be added to the track. This should
+   * match with the track's #GESTrack:caps.
    *
-   * It also serves as a 'fast' way to check what type of data will be outputted
-   * from the #GESTrack without having to actually check the #GESTrack's caps
-   * property.
+   * Once a track has been added to a #GESTimeline, you should not change
+   * this.
    */
   properties[ARG_TYPE] = g_param_spec_flags ("track-type", "TrackType",
       "Type of stream the track outputs",
@@ -686,7 +729,11 @@ ges_track_class_init (GESTrackClass * klass)
   /**
    * GESTrack:mixing:
    *
-   * Whether layer mixing is activated or not on the track.
+   * Whether the track should support the mixing of #GESLayer data, such
+   * as composing the video data of each layer (when part of the video
+   * data is transparent, the next layer will become visible) or adding
+   * together the audio data. As such, for audio and video tracks, you'll
+   * likely want to keep this set to %TRUE.
    */
   properties[ARG_MIXING] = g_param_spec_boolean ("mixing", "Mixing",
       "Whether layer mixing is activated on the track or not",
@@ -695,9 +742,9 @@ ges_track_class_init (GESTrackClass * klass)
       properties[ARG_MIXING]);
 
   /**
-   * GESTrack::id:
+   * GESTrack:id:
    *
-   * The stream-id of the underlying composition
+   * The #nlecomposition:id of the underlying #nlecomposition.
    *
    * Since: 1.18
    */
@@ -711,10 +758,10 @@ ges_track_class_init (GESTrackClass * klass)
 
   /**
    * GESTrack::track-element-added:
-   * @object: the #GESTrack
-   * @effect: the #GESTrackElement that was added.
+   * @object: The #GESTrack
+   * @effect: The element that was added
    *
-   * Will be emitted after a track element was added to the track.
+   * Will be emitted after a track element is added to the track.
    */
   ges_track_signals[TRACK_ELEMENT_ADDED] =
       g_signal_new ("track-element-added", G_TYPE_FROM_CLASS (klass),
@@ -723,10 +770,10 @@ ges_track_class_init (GESTrackClass * klass)
 
   /**
    * GESTrack::track-element-removed:
-   * @object: the #GESTrack
-   * @effect: the #GESTrackElement that was removed.
+   * @object: The #GESTrack
+   * @effect: The element that was removed
    *
-   * Will be emitted after a track element was removed from the track.
+   * Will be emitted after a track element is removed from the track.
    */
   ges_track_signals[TRACK_ELEMENT_REMOVED] =
       g_signal_new ("track-element-removed", G_TYPE_FROM_CLASS (klass),
@@ -735,7 +782,12 @@ ges_track_class_init (GESTrackClass * klass)
 
   /**
    * GESTrack::commited:
-   * @track: the #GESTrack
+   * @track: The #GESTrack
+   *
+   * This signal will be emitted once the changes initiated by
+   * ges_track_commit() have been executed in the backend. In particular,
+   * this will be emitted whenever the underlying #nlecomposition has been
+   * committed (see #nlecomposition::commited).
    */
   ges_track_signals[COMMITED] =
       g_signal_new ("commited", G_TYPE_FROM_CLASS (klass),
@@ -770,15 +822,29 @@ ges_track_init (GESTrack * self)
 
 /**
  * ges_track_new:
- * @type: The type of track
- * @caps: (transfer full): The caps to restrict the output of the track to.
+ * @type: The #GESTrack:track-type for the track
+ * @caps: (transfer full): The #GESTrack:caps for the track
  *
- * Creates a new #GESTrack with the given @type and @caps.
+ * Creates a new track with the given track-type and caps.
  *
- * The newly created track will steal a reference to the caps. If you wish to
- * use those caps elsewhere, you will have to take an extra reference.
+ * If @type is #GES_TRACK_TYPE_VIDEO, and @caps is a subset of
+ * "video/x-raw(ANY)", then a #GESVideoTrack is created. This will
+ * automatically choose a gap creation method suitable for video data. You
+ * will likely want to set #GESTrack:restriction-caps separately. You may
+ * prefer to use the ges_video_track_new() method instead.
  *
- * Returns: (transfer floating): A new #GESTrack.
+ * If @type is #GES_TRACK_TYPE_AUDIO, and @caps is a subset of
+ * "audio/x-raw(ANY)", then a #GESAudioTrack is created. This will
+ * automatically choose a gap creation method suitable for audio data, and
+ * will set the #GESTrack:restriction-caps to the default for
+ * #GESAudioTrack. You may prefer to use the ges_audio_track_new() method
+ * instead.
+ *
+ * Otherwise, a plain #GESTrack is returned. You will likely want to set
+ * the #GESTrack:restriction-caps and call
+ * ges_track_set_create_element_for_gap_func() on the returned track.
+ *
+ * Returns: (transfer floating): A new track.
  */
 GESTrack *
 ges_track_new (GESTrackType type, GstCaps * caps)
@@ -796,6 +862,8 @@ ges_track_new (GESTrackType type, GstCaps * caps)
       ges_track_set_caps (track, caps);
 
       gst_caps_unref (tmpcaps);
+      /* FIXME: ges_track_set_caps does not take ownership of caps,
+       * so we also need to unref caps */
       return track;
     }
     gst_caps_unref (tmpcaps);
@@ -808,6 +876,8 @@ ges_track_new (GESTrackType type, GstCaps * caps)
       ges_track_set_caps (track, caps);
 
       gst_caps_unref (tmpcaps);
+      /* FIXME: ges_track_set_caps does not take ownership of caps,
+       * so we also need to unref caps */
       return track;
     }
 
@@ -823,11 +893,16 @@ ges_track_new (GESTrackType type, GstCaps * caps)
 
 /**
  * ges_track_set_timeline:
- * @track: a #GESTrack
- * @timeline: a #GESTimeline
+ * @track: A #GESTrack
+ * @timeline (nullable): A #GESTimeline
  *
- * Sets @timeline as the timeline controlling @track.
+ * Informs the track that it belongs to the given timeline. Calling this
+ * does not actually add the track to the timeline. For that, you should
+ * use ges_timeline_add_track(), which will also take care of informing
+ * the track that it belongs to the timeline. As such, there is no need
+ * for you to call this method.
  */
+/* FIXME: this should probably be deprecated and only used internally */
 void
 ges_track_set_timeline (GESTrack * track, GESTimeline * timeline)
 {
@@ -839,13 +914,12 @@ ges_track_set_timeline (GESTrack * track, GESTimeline * timeline)
 
 /**
  * ges_track_set_caps:
- * @track: a #GESTrack
- * @caps: the #GstCaps to set
+ * @track: A #GESTrack
+ * @caps: The new caps for @track
  *
- * Sets the given @caps on the track.
- * Note that the capsfeatures of @caps will always be set
- * to ANY. If you want to restrict them, you should
- * do it in #ges_track_set_restriction_caps.
+ * Sets the #GESTrack:caps for the track. The new #GESTrack:caps of the
+ * track will be a copy of @caps, except its #GstCapsFeatures will be
+ * automatically set to #GST_CAPS_FEATURES_ANY.
  */
 void
 ges_track_set_caps (GESTrack * track, const GstCaps * caps)
@@ -874,10 +948,10 @@ ges_track_set_caps (GESTrack * track, const GstCaps * caps)
 
 /**
  * ges_track_set_restriction_caps:
- * @track: a #GESTrack
- * @caps: the #GstCaps to set
+ * @track: A #GESTrack
+ * @caps: The new restriction-caps for @track
  *
- * Sets the given @caps as the caps the track has to output.
+ * Sets the #GESTrack:restriction-caps for the track.
  */
 void
 ges_track_set_restriction_caps (GESTrack * track, const GstCaps * caps)
@@ -903,16 +977,25 @@ ges_track_set_restriction_caps (GESTrack * track, const GstCaps * caps)
 
 /**
  * ges_track_update_restriction_caps:
- * @track: a #GESTrack
- * @caps: the #GstCaps to update with
+ * @track: A #GESTrack
+ * @caps: The caps to update the restriction-caps with
  *
- * Updates the restriction caps by modifying all the fields present in @caps
- * in the original restriction caps. If for example the current restriction caps
- * are video/x-raw, format=I420, width=360 and @caps is video/x-raw, format=RGB,
- * the restriction caps will be updated to video/x-raw, format=RGB, width=360.
+ * Updates the #GESTrack:restriction-caps of the track using the fields
+ * found in the given caps. Each of the #GstStructure-s in @caps is
+ * compared against the existing structure with the same index in the
+ * current #GESTrack:restriction-caps. If there is no corresponding
+ * existing structure at that index, then the new structure is simply
+ * copied to that index. Otherwise, any fields in the new structure are
+ * copied into the existing structure. This will replace existing values,
+ * and may introduce new ones, but any fields 'missing' in the new
+ * structure are left unchanged in the existing structure.
  *
- * Modification happens for each structure in the new caps, and
- * one can add new fields or structures through that function.
+ * For example, if the existing #GESTrack:restriction-caps are
+ * "video/x-raw, width=480, height=360", and the updating caps is
+ * "video/x-raw, format=I420, width=500; video/x-bayer, width=400", then
+ * the new #GESTrack:restriction-caps after calling this will be
+ * "video/x-raw, width=500, height=360, format=I420; video/x-bayer,
+ * width=400".
  */
 void
 ges_track_update_restriction_caps (GESTrack * self, const GstCaps * caps)
@@ -939,6 +1022,8 @@ ges_track_update_restriction_caps (GESTrack * self, const GstCaps * caps)
     } else
       gst_caps_append_structure (new_restriction_caps,
           gst_structure_copy (new));
+    /* FIXME: maybe appended structure should also have its CapsFeatures
+     * copied over? */
   }
 
   ges_track_set_restriction_caps (self, new_restriction_caps);
@@ -947,10 +1032,10 @@ ges_track_update_restriction_caps (GESTrack * self, const GstCaps * caps)
 
 /**
  * ges_track_set_mixing:
- * @track: a #GESTrack
- * @mixing: TRUE if the track should be mixing, FALSE otherwise.
+ * @track: A #GESTrack
+ * @mixing: Whether @track should be mixing
  *
- * Sets if the #GESTrack should be mixing.
+ * Sets the #GESTrack:mixing for the track.
  */
 void
 ges_track_set_mixing (GESTrack * track, gboolean mixing)
@@ -990,16 +1075,15 @@ ges_track_set_mixing (GESTrack * track, gboolean mixing)
 
 /**
  * ges_track_add_element:
- * @track: a #GESTrack
- * @object: (transfer floating): the #GESTrackElement to add
+ * @track: A #GESTrack
+ * @object: (transfer floating): The element to add
  *
- * Adds the given object to the track. Sets the object's controlling track,
- * and thus takes ownership of the @object.
+ * Adds the given track element to the track, which takes ownership of the
+ * element.
  *
- * An object can only be added to one track.
+ * Note that a #GESTrackElement can only be added to one track.
  *
- * Returns: #TRUE if the object was properly added. #FALSE if the track does not
- * want to accept the object.
+ * Returns: %TRUE if @object was successfully added to @track.
  */
 gboolean
 ges_track_add_element (GESTrack * track, GESTrackElement * object)
@@ -1051,12 +1135,14 @@ ges_track_add_element (GESTrack * track, GESTrackElement * object)
 
 /**
  * ges_track_get_elements:
- * @track: a #GESTrack
+ * @track: A #GESTrack
  *
- * Gets the #GESTrackElement contained in @track
+ * Gets the track elements contained in the track. The returned list is
+ * sorted by the element's #GESTimelineElement:priority and
+ * #GESTimelineElement:start.
  *
- * Returns: (transfer full) (element-type GESTrackElement): the list of
- * #GESTrackElement present in the Track sorted by priority and start.
+ * Returns: (transfer full) (element-type GESTrackElement): A list of
+ * all the #GESTrackElement-s in @track.
  */
 GList *
 ges_track_get_elements (GESTrack * track)
@@ -1075,16 +1161,13 @@ ges_track_get_elements (GESTrack * track)
 
 /**
  * ges_track_remove_element:
- * @track: a #GESTrack
- * @object: the #GESTrackElement to remove
+ * @track: A #GESTrack
+ * @object: The element to remove
  *
- * Removes the object from the track and unparents it.
- * Unparenting it means the reference owned by @track on the @object will be
- * removed. If you wish to use the @object after this function, make sure you
- * call gst_object_ref() before removing it from the @track.
+ * Removes the given track element from the track, which revokes
+ * ownership of the element.
  *
- * Returns: #TRUE if the object was removed, else #FALSE if the track
- * could not remove the object (like if it didn't belong to the track).
+ * Returns: %TRUE if @object was successfully removed from @track.
  */
 gboolean
 ges_track_remove_element (GESTrack * track, GESTrackElement * object)
@@ -1118,11 +1201,11 @@ ges_track_remove_element (GESTrack * track, GESTrackElement * object)
 
 /**
  * ges_track_get_caps:
- * @track: a #GESTrack
+ * @track: A #GESTrack
  *
- * Get the #GstCaps this track is configured to output.
+ * Get the #GESTrack:caps of the track.
  *
- * Returns: The #GstCaps this track is configured to output.
+ * Returns: The caps of @track.
  */
 const GstCaps *
 ges_track_get_caps (GESTrack * track)
@@ -1135,11 +1218,12 @@ ges_track_get_caps (GESTrack * track)
 
 /**
  * ges_track_get_timeline:
- * @track: a #GESTrack
+ * @track: A #GESTrack
  *
- * Get the #GESTimeline this track belongs to. Can be %NULL.
+ * Get the timeline this track belongs to.
  *
- * Returns: (nullable): The #GESTimeline this track belongs to. Can be %NULL.
+ * Returns: (nullable): The timeline that @track belongs to, or %NULL if
+ * it does not belong to a timeline.
  */
 const GESTimeline *
 ges_track_get_timeline (GESTrack * track)
@@ -1152,11 +1236,11 @@ ges_track_get_timeline (GESTrack * track)
 
 /**
  * ges_track_get_mixing:
- * @track: a #GESTrack
+ * @track: A #GESTrack
  *
- *  Gets if the underlying #NleComposition contains an expandable mixer.
+ * Gets the #GESTrack:mixing of the track.
  *
- * Returns: #True if there is a mixer, #False otherwise.
+ * Returns: Whether @track is mixing.
  */
 gboolean
 ges_track_get_mixing (GESTrack * track)
@@ -1168,18 +1252,24 @@ ges_track_get_mixing (GESTrack * track)
 
 /**
  * ges_track_commit:
- * @track: a #GESTrack
+ * @track: A #GESTrack
  *
- * Commits all the pending changes of the TrackElement contained in the
+ * Commits all the pending changes for the elements contained in the
  * track.
  *
- * When timing changes happen in a timeline, the changes are not
- * directly done inside NLE. This method needs to be called so any changes
- * on a clip contained in the timeline actually happen at the media
- * processing level.
+ * When changes are made to the timing or priority of elements within a
+ * track, they are not directly executed for the underlying
+ * #nlecomposition and its children. This method will finally execute
+ * these changes so they are reflected in the data output of the track.
  *
- * Returns: %TRUE if something as been commited %FALSE if nothing needed
- * to be commited
+ * Any pending changes will be executed in the backend. The
+ * #GESTimeline::commited signal will be emitted once this has completed.
+ *
+ * Note that ges_timeline_commit() will call this method on all of its
+ * tracks, so you are unlikely to need to use this directly.
+ *
+ * Returns: %TRUE if pending changes were committed, or %FALSE if nothing
+ * needed to be committed.
  */
 gboolean
 ges_track_commit (GESTrack * track)
@@ -1195,13 +1285,19 @@ ges_track_commit (GESTrack * track)
 
 /**
  * ges_track_set_create_element_for_gap_func:
- * @track: a #GESTrack
- * @func: (scope notified): The #GESCreateElementForGapFunc that will be used
- * to create #GstElement to fill gaps
+ * @track: A #GESTrack
+ * @func: (scope notified): The function to be used to create a source
+ * #GstElement that can fill gaps in @track
  *
- * Sets the function that should be used to create the GstElement used to fill gaps.
- * To avoid to provide such a function we advice you to use the
- * #ges_audio_track_new and #ges_video_track_new constructor when possible.
+ * Sets the function that will be used to create a #GstElement that can be
+ * used as a source to fill the gaps of the track. A gap is a timeline
+ * region where the track has no #GESTrackElement sources. Therefore, you
+ * are likely to want the #GstElement returned by the function to always
+ * produce 'empty' content, defined relative to the stream type, such as
+ * transparent frames for a video, or mute samples for audio.
+ *
+ * #GESAudioTrack and #GESVideoTrack objects are created with such a
+ * function already set appropriately.
  */
 void
 ges_track_set_create_element_for_gap_func (GESTrack * track,
@@ -1215,9 +1311,11 @@ ges_track_set_create_element_for_gap_func (GESTrack * track,
 
 /**
  * ges_track_get_restriction_caps:
- * @track: a #GESTrack
+ * @track: A #GESTrack
  *
- * Returns: (transfer full): The currently set restriction caps
+ * Gets the #GESTrack:restriction-caps of the track.
+ *
+ * Returns: (transfer full): The restriction-caps of @track.
  *
  * Since: 1.18
  */
