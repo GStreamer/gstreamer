@@ -2322,6 +2322,11 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
           gst_ff_aud_caps_new (context, NULL, codec_id, encode, "audio/aptx-hd",
           NULL);
       break;
+    case AV_CODEC_ID_AV1:
+      caps =
+          gst_ff_vid_caps_new (context, NULL, codec_id, encode, "video/x-av1",
+          NULL);
+      break;
     default:
       GST_DEBUG ("Unknown codec ID %d, please add mapping here", codec_id);
       break;
@@ -3750,6 +3755,19 @@ gst_ffmpeg_formatid_get_codecids (const gchar * format_name,
 
     *video_codec_list = pga_video_list;
     *audio_codec_list = pga_audio_list;
+  } else if ((!strcmp (format_name, "ivf"))) {
+    static enum AVCodecID ivf_video_list[] = {
+      AV_CODEC_ID_VP8,
+      AV_CODEC_ID_VP9,
+      AV_CODEC_ID_AV1,
+      AV_CODEC_ID_NONE
+    };
+    static enum AVCodecID ivf_audio_list[] = {
+      AV_CODEC_ID_NONE
+    };
+
+    *video_codec_list = ivf_video_list;
+    *audio_codec_list = ivf_audio_list;
   } else if ((plugin->audio_codec != AV_CODEC_ID_NONE) ||
       (plugin->video_codec != AV_CODEC_ID_NONE)) {
     tmp_vlist[0] = plugin->video_codec;
