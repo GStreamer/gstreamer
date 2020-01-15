@@ -1524,9 +1524,10 @@ gst_omx_video_enc_handle_output_frame (GstOMXVideoEnc * self, GstOMXPort * port,
         frame->output_buffer = outbuf;
         flow_ret =
             gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (self), frame);
-        if (buf->omx_buf->nFlags | ~OMX_BUFFERFLAG_ENDOFFRAME)
+        if (!(buf->omx_buf->nFlags & OMX_BUFFERFLAG_ENDOFFRAME))
           GST_WARNING_OBJECT (self,
-              "OMX_BUFFERFLAG_ENDOFFRAME is missing flags");
+              "OMX_BUFFERFLAG_ENDOFFRAME is missing in flags 0x%x",
+              (guint) buf->omx_buf->nFlags);
       } else {
         flow_ret =
             gst_video_encoder_finish_subframe (GST_VIDEO_ENCODER (self), frame);
