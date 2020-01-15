@@ -53,7 +53,7 @@ typedef struct _GESTrackElementPrivate GESTrackElementPrivate;
 /**
  * GESTrackElement:
  *
- * The GESTrackElement base class.
+ * The #GESTrackElement base class.
  */
 struct _GESTrackElement {
   GESTimelineElement parent;
@@ -71,30 +71,20 @@ struct _GESTrackElement {
 
 /**
  * GESTrackElementClass:
- * @nleobject_factorytype: name of the GNonLin GStElementFactory type to use.
- * @create_gnl_object: method to create the GNonLin container object.
- * @create_element: method to return the GstElement to put in the nleobject.
- * @active_changed: active property of nleobject has changed
- * @list_children_properties: method to get children properties that user could
- *                            like to configure.
- *                            The default implementation will create an object
- *                            of type @nleobject_factorytype and call
- *                            @create_element.
- *                            DeprecatedUse: GESTimelineElement.list_children_properties instead
- * @lookup_child: method letting subclasses look for a child, overriding the
- *                simple standard behaviour. This vmethod can be used for example
- *                in the case where you want the name of a child property to be
- *                'overriden'. A good example of where it is usefull is the
- *                GESTitleSource where we have a videotestsrc which has a
- *                'foreground-color' property that is used in the TitleSource to
- *                set the background color of the title, in that case, this method
- *                has been overriden so that we tweak the name passed has parametter
- *                to rename "background" to "foreground-backend" making our API
- *                understandable.
- *                Deprecated: use GESTimelineElement.lookup_child instead
- *
- * Subclasses can override the @create_gnl_object method to override what type
- * of GNonLin object will be created.
+ * @nleobject_factorytype: The name of the #GstElementFactory to use to
+ * create the underlying nleobject of a track element
+ * @create_gnl_object: Method to create the underlying nleobject of the
+ * track element. The default implementation will use the factory given by
+ * @nleobject_factorytype to created the nleobject and will give it
+ * the #GstElement returned by @create_element.
+ * @create_element: Method to create the #GstElement that the underlying
+ * nleobject controls.
+ * @active_changed: Method to be called when the #GESTrackElement:active
+ * property changes.
+ * @list_children_properties: Deprecated: Listing children properties is
+ * handled by ges_timeline_element_list_children_properties() instead.
+ * @lookup_child: Deprecated: Use #GESTimelineElement.lookup_child()
+ * instead.
  */
 struct _GESTrackElementClass {
   /*< private >*/

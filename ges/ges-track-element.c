@@ -21,14 +21,25 @@
 /**
  * SECTION:gestrackelement
  * @title: GESTrackElement
- * @short_description: Base Class for objects contained in a GESTrack
+ * @short_description: Base Class for the elements of a #GESTrack
  *
- * #GESTrackElement is the Base Class for any object that can be contained in a
- * #GESTrack.
+ * A #GESTrackElement is a #GESTimelineElement that specifically belongs
+ * to a single #GESTrack of its #GESTimelineElement:timeline. Its
+ * #GESTimelineElement:start and #GESTimelineElement:duration specify its
+ * temporal extent in the track. Specifically, a track element wraps some
+ * nleobject, such as an #nlesource or #nleoperation, which can be
+ * retrieved with ges_track_element_get_nleobject(), and its
+ * #GESTimelineElement:start, #GESTimelineElement:duration,
+ * #GESTimelineElement:in-point, #GESTimelineElement:priority and
+ * #GESTrackElement:active properties expose the corresponding nleobject
+ * properties. When a track element is added to a track, its nleobject is
+ * added to the corresponding #nlecomposition that the track wraps.
  *
- * It contains the basic information as to the location of the object within
- * its container, like the start position, the inpoint, the duration and the
- * priority.
+ * Most users will not have to work directly with track elements since a
+ * #GESClip will automatically create track elements for its timeline's
+ * tracks and take responsibility for updating them. The only track
+ * elements that are not automatically created by clips, but a user is
+ * likely to want to create, are #GESEffect-s.
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -267,8 +278,9 @@ ges_track_element_class_init (GESTrackElementClass * klass)
   /**
    * GESTrackElement:active:
    *
-   * Whether the object should be taken into account in the #GESTrack output.
-   * If #FALSE, then its contents will not be used in the resulting track.
+   * Whether the effect of the element should be applied in its
+   * #GESTrackElement:track. If set to %FALSE, it will not be used in
+   * the output of the track.
    */
   properties[PROP_ACTIVE] =
       g_param_spec_boolean ("active", "Active", "Use object in output", TRUE,
@@ -276,12 +288,26 @@ ges_track_element_class_init (GESTrackElementClass * klass)
   g_object_class_install_property (object_class, PROP_ACTIVE,
       properties[PROP_ACTIVE]);
 
+  /**
+   * GESTrackElement:track-type:
+   *
+   * The track type of the element, which determines the type of track the
+   * element can be added to (see #GESTrack:track-type). This should
+   * correspond to the type of data that the element can produce or
+   * process.
+   */
   properties[PROP_TRACK_TYPE] = g_param_spec_flags ("track-type", "Track Type",
       "The track type of the object", GES_TYPE_TRACK_TYPE,
       GES_TRACK_TYPE_UNKNOWN, G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
   g_object_class_install_property (object_class, PROP_TRACK_TYPE,
       properties[PROP_TRACK_TYPE]);
 
+  /**
+   * GESTrackElement:track:
+   *
+   * The track that this element belongs to, or %NULL if it does not
+   * belong to a track.
+   */
   properties[PROP_TRACK] = g_param_spec_object ("track", "Track",
       "The track the object is in", GES_TYPE_TRACK, G_PARAM_READABLE);
   g_object_class_install_property (object_class, PROP_TRACK,
@@ -289,11 +315,11 @@ ges_track_element_class_init (GESTrackElementClass * klass)
 
   /**
    * GESTrackElement::control-binding-added:
-   * @track_element: a #GESTrackElement
-   * @control_binding: the #GstControlBinding that has been added
+   * @track_element: A #GESTrackElement
+   * @control_binding: The control binding that has been added
    *
-   * The control-binding-added signal is emitted each time a control binding
-   * is added for a child property of @track_element
+   * This is emitted when a control binding is added to a child property
+   * of the track element.
    */
   ges_track_element_signals[CONTROL_BINDING_ADDED] =
       g_signal_new ("control-binding-added", G_TYPE_FROM_CLASS (klass),
@@ -302,11 +328,11 @@ ges_track_element_class_init (GESTrackElementClass * klass)
 
   /**
    * GESTrackElement::control-binding-removed:
-   * @track_element: a #GESTrackElement
-   * @control_binding: the #GstControlBinding that has been removed
+   * @track_element: A #GESTrackElement
+   * @control_binding: The control binding that has been removed
    *
-   * The control-binding-removed signal is emitted each time a control binding
-   * is removed for a child property of @track_element
+   * This is emitted when a control binding is removed from a child
+   * property of the track element.
    */
   ges_track_element_signals[CONTROL_BINDING_REMOVED] =
       g_signal_new ("control-binding-removed", G_TYPE_FROM_CLASS (klass),
@@ -557,13 +583,12 @@ _get_track_types (GESTimelineElement * object)
 
 /**
  * ges_track_element_set_active:
- * @object: a #GESTrackElement
- * @active: visibility
+ * @object: A #GESTrackElement
+ * @active: Whether @object should be active in its track
  *
- * Sets the usage of the @object. If @active is %TRUE, the object will be used for
- * playback and rendering, else it will be ignored.
+ * Sets #GESTrackElement:active for the element.
  *
- * Returns: %TRUE if the property was toggled, else %FALSE
+ * Returns: %TRUE if the property was *toggled*.
  */
 gboolean
 ges_track_element_set_active (GESTrackElement * object, gboolean active)
@@ -578,6 +603,7 @@ ges_track_element_set_active (GESTrackElement * object, gboolean active)
 
   g_object_set (object->priv->nleobject, "active", active, NULL);
 
+  /* FIXME: no need to check again at this point */
   if (active != object->active) {
     object->active = active;
     if (GES_TRACK_ELEMENT_GET_CLASS (object)->active_changed)
@@ -587,6 +613,13 @@ ges_track_element_set_active (GESTrackElement * object, gboolean active)
   return TRUE;
 }
 
+/**
+ * ges_track_element_set_track_type:
+ * @object: A #GESTrackElement
+ * @type: The new track-type for @object
+ *
+ * Sets the #GESTrackElement:track-type for the element.
+ */
 void
 ges_track_element_set_track_type (GESTrackElement * object, GESTrackType type)
 {
@@ -598,6 +631,14 @@ ges_track_element_set_track_type (GESTrackElement * object, GESTrackType type)
   }
 }
 
+/**
+ * ges_track_element_get_track_type:
+ * @object: A #GESTrackElement
+ *
+ * Gets the #GESTrackElement:track-type for the element.
+ *
+ * Returns: The track-type of @object.
+ */
 GESTrackType
 ges_track_element_get_track_type (GESTrackElement * object)
 {
@@ -699,6 +740,7 @@ ges_track_element_add_child_props (GESTrackElement * self,
   guint i;
 
   factory = gst_element_get_factory (child);
+  /* FIXME: handle NULL factory */
   klass = gst_element_factory_get_metadata (factory,
       GST_ELEMENT_METADATA_KLASS);
 
@@ -740,20 +782,28 @@ ges_track_element_add_child_props (GESTrackElement * self,
 
 /**
  * ges_track_element_add_children_props:
- * @self: The #GESTrackElement to set chidlren props on
- * @element: The GstElement to retrieve properties from
+ * @self: A #GESTrackElement
+ * @element: The child object to retrieve properties from
  * @wanted_categories: (array zero-terminated=1) (transfer none) (allow-none):
- * An array of categories of GstElement to
- * take into account (as defined in the factory meta "klass" field)
+ * An array of element factory "klass" categories to whitelist, or %NULL
+ * to accept all categories
  * @blacklist: (array zero-terminated=1) (transfer none) (allow-none): A
- * blacklist of elements factory names to not take into account
- * @whitelist: (array zero-terminated=1) (transfer none) (allow-none): A list
- * of propery names to add as children properties
+ * blacklist of element factory names, or %NULL to not blacklist any
+ * element factory
+ * @whitelist: (array zero-terminated=1) (transfer none) (allow-none): A
+ * whitelist of element property names, or %NULL to whitelist all
+ * writeable properties
  *
- * Looks for the properties defines with the various parametters and add
- * them to the hashtable of children properties.
+ * Adds all the properties of a #GstElement that match the criteria as
+ * children properties of the track element. If the name of @element's
+ * #GstElementFactory is not in @blacklist, and the factory's
+ * #GST_ELEMENT_METADATA_KLASS contains at least one member of
+ * @wanted_categories (e.g. #GST_ELEMENT_FACTORY_KLASS_DECODER), then
+ * all the properties of @element that are also in @whitelist are added as
+ * child properties of @self using
+ * ges_timeline_element_add_child_property().
  *
- * To be used by subclasses only
+ * This is intended to be used by subclasses when constructing.
  */
 void
 ges_track_element_add_children_props (GESTrackElement * self,
@@ -827,10 +877,18 @@ ges_track_element_set_track (GESTrackElement * object, GESTrack * track)
 
 /**
  * ges_track_element_get_all_control_bindings
- * @trackelement: The #GESTrackElement from which to get all set bindings
+ * @trackelement: A #GESTrackElement
+ *
+ * Get all the control bindings that have been created for the children
+ * properties of the track element using
+ * ges_track_element_set_control_source(). The keys used in the returned
+ * hash table are the child property names that were passed to
+ * ges_track_element_set_control_source(), and their values are the
+ * corresponding created #GstControlBinding.
  *
  * Returns: (element-type gchar* GstControlBinding)(transfer none): A
- * #GHashTable containing all property_name: GstControlBinding
+ * hash table containing all child-property-name/control-binding pairs
+ * for @trackelement.
  */
 GHashTable *
 ges_track_element_get_all_control_bindings (GESTrackElement * trackelement)
@@ -842,12 +900,12 @@ ges_track_element_get_all_control_bindings (GESTrackElement * trackelement)
 
 /**
  * ges_track_element_get_track:
- * @object: a #GESTrackElement
+ * @object: A #GESTrackElement
  *
- * Get the #GESTrack to which this object belongs.
+ * Get the #GESTrackElement:track for the element.
  *
- * Returns: (transfer none) (nullable): The #GESTrack to which this object
- * belongs. Can be %NULL if it is not in any track
+ * Returns: (transfer none) (nullable): The track that @object belongs to,
+ * or %NULL if it does not belong to a track.
  */
 GESTrack *
 ges_track_element_get_track (GESTrackElement * object)
@@ -859,11 +917,11 @@ ges_track_element_get_track (GESTrackElement * object)
 
 /**
  * ges_track_element_get_gnlobject:
- * @object: a #GESTrackElement
+ * @object: A #GESTrackElement
  *
- * Get the NleObject object this object is controlling.
+ * Get the GNonLin object this object is controlling.
  *
- * Returns: (transfer none): the NleObject object this object is controlling.
+ * Returns: (transfer none): The GNonLin object this object is controlling.
  *
  * Deprecated: use #ges_track_element_get_nleobject instead.
  */
@@ -877,11 +935,11 @@ ges_track_element_get_gnlobject (GESTrackElement * object)
 
 /**
  * ges_track_element_get_nleobject:
- * @object: a #GESTrackElement
+ * @object: A #GESTrackElement
  *
- * Get the GNonLin object this object is controlling.
+ * Get the nleobject that this element wraps.
  *
- * Returns: (transfer none): the GNonLin object this object is controlling.
+ * Returns: (transfer none): The nleobject that @object wraps.
  *
  * Since: 1.6
  */
@@ -895,12 +953,13 @@ ges_track_element_get_nleobject (GESTrackElement * object)
 
 /**
  * ges_track_element_get_element:
- * @object: a #GESTrackElement
+ * @object: A #GESTrackElement
  *
- * Get the #GstElement this track element is controlling within GNonLin.
+ * Get the #GstElement that the track element's underlying nleobject
+ * controls.
  *
- * Returns: (transfer none): the #GstElement this track element is controlling
- * within GNonLin.
+ * Returns: (transfer none): The #GstElement being controlled by the
+ * nleobject that @object wraps.
  */
 GstElement *
 ges_track_element_get_element (GESTrackElement * object)
@@ -912,12 +971,11 @@ ges_track_element_get_element (GESTrackElement * object)
 
 /**
  * ges_track_element_is_active:
- * @object: a #GESTrackElement
+ * @object: A #GESTrackElement
  *
- * Lets you know if @object will be used for playback and rendering,
- * or not.
+ * Gets #GESTrackElement:active for the element.
  *
- * Returns: %TRUE if @object is active, %FALSE otherwize
+ * Returns: %TRUE if @object is active in its track.
  */
 gboolean
 ges_track_element_is_active (GESTrackElement * object)
@@ -930,15 +988,15 @@ ges_track_element_is_active (GESTrackElement * object)
 
 /**
  * ges_track_element_lookup_child:
- * @object: object to lookup the property in
- * @prop_name: name of the property to look up. You can specify the name of the
+ * @object: Object to lookup the property in
+ * @prop_name: Name of the property to look up. You can specify the name of the
  *     class as such: "ClassName::property-name", to guarantee that you get the
  *     proper GParamSpec in case various GstElement-s contain the same property
  *     name. If you don't do so, you will get the first element found, having
  *     this property and the and the corresponding GParamSpec.
  * @element: (out) (allow-none) (transfer full): pointer to a #GstElement that
  *     takes the real object to set property on
- * @pspec: (out) (allow-none) (transfer full): pointer to take the #GParamSpec
+ * @pspec: (out) (allow-none) (transfer full): pointer to take the specification
  *     describing the property
  *
  * Looks up which @element and @pspec would be effected by the given @name. If various
@@ -961,9 +1019,9 @@ ges_track_element_lookup_child (GESTrackElement * object,
 
 /**
  * ges_track_element_set_child_property_by_pspec: (skip):
- * @object: a #GESTrackElement
+ * @object: A #GESTrackElement
  * @pspec: The #GParamSpec that specifies the property you want to set
- * @value: the value
+ * @value: The value
  *
  * Sets a property of a child of @object.
  *
@@ -985,7 +1043,7 @@ ges_track_element_set_child_property_by_pspec (GESTrackElement * object,
  * ges_track_element_set_child_property_valist: (skip):
  * @object: The #GESTrackElement parent object
  * @first_property_name: The name of the first property to set
- * @var_args: value for the first property, followed optionally by more
+ * @var_args: Value for the first property, followed optionally by more
  * name/return location pairs, followed by NULL
  *
  * Sets a property of a child of @object. If there are various child elements
@@ -1035,7 +1093,7 @@ ges_track_element_set_child_properties (GESTrackElement * object,
  * ges_track_element_get_child_property_valist: (skip):
  * @object: The #GESTrackElement parent object
  * @first_property_name: The name of the first property to get
- * @var_args: value for the first property, followed optionally by more
+ * @var_args: Value for the first property, followed optionally by more
  * name/return location pairs, followed by NULL
  *
  * Gets a property of a child of @object. If there are various child elements
@@ -1061,8 +1119,8 @@ ges_track_element_get_child_property_valist (GESTrackElement * object,
  * Gets an array of #GParamSpec* for all configurable properties of the
  * children of @object.
  *
- * Returns: (transfer full) (array length=n_properties): an array of #GParamSpec* which should be freed after use or
- * %NULL if something went wrong
+ * Returns: (transfer full) (array length=n_properties): An array of #GParamSpec* which should be freed after use or
+ * %NULL if something went wrong.
  *
  * Deprecated: Use #ges_timeline_element_list_children_properties
  */
@@ -1102,7 +1160,7 @@ ges_track_element_get_child_properties (GESTrackElement * object,
 
 /**
  * ges_track_element_get_child_property_by_pspec: (skip):
- * @object: a #GESTrackElement
+ * @object: A #GESTrackElement
  * @pspec: The #GParamSpec that specifies the property you want to get
  * @value: (out): return location for the value
  *
@@ -1122,7 +1180,7 @@ ges_track_element_get_child_property_by_pspec (GESTrackElement * object,
  * ges_track_element_set_child_property: (skip):
  * @object: The origin #GESTrackElement
  * @property_name: The name of the property
- * @value: the value
+ * @value: The value
  *
  * Sets a property of a GstElement contained in @object.
  *
@@ -1130,7 +1188,7 @@ ges_track_element_get_child_property_by_pspec (GESTrackElement * object,
  * intended for language bindings, #ges_track_element_set_child_properties
  * is much more convenient for C programming.
  *
- * Returns: %TRUE if the property was set, %FALSE otherwize
+ * Returns: %TRUE if the property was set, %FALSE otherwize.
  *
  * Deprecated: use #ges_timeline_element_set_child_property instead
  */
@@ -1159,7 +1217,7 @@ ges_track_element_set_child_property (GESTrackElement * object,
  * intended for language bindings, #ges_track_element_get_child_properties
  * is much more convenient for C programming.
  *
- * Returns: %TRUE if the property was found, %FALSE otherwize
+ * Returns: %TRUE if the property was found, %FALSE otherwize.
  *
  * Deprecated: Use #ges_timeline_element_get_child_property
  */
@@ -1331,20 +1389,18 @@ ges_track_element_copy_bindings (GESTrackElement * element,
 
 /**
  * ges_track_element_edit:
- * @object: the #GESTrackElement to edit
- * @layers: (element-type GESLayer): The layers you want the edit to
- *  happen in, %NULL means that the edition is done in all the
- *  #GESLayers contained in the current timeline.
- *      FIXME: This is not implemented yet.
- * @mode: The #GESEditMode in which the edition will happen.
- * @edge: The #GESEdge the edit should happen on.
- * @position: The position at which to edit @object (in nanosecond)
+ * @object: The #GESTrackElement to edit
+ * @layers: (element-type GESLayer) (nullable): A whitelist of layers
+ * where the edit can be performed, %NULL allows all layers in the
+ * timeline
+ * @mode: The edit mode
+ * @edge: The edge of @object where the edit should occur
+ * @position: The edit position: a new location for the edge of @object
+ * (in nanoseconds)
  *
- * Edit @object in the different exisiting #GESEditMode modes. In the case of
- * slide, and roll, you need to specify a #GESEdge
+ * Edits the element within its track.
  *
- * Returns: %TRUE if the object as been edited properly, %FALSE if an error
- * occured
+ * Returns: %TRUE if the edit of @object completed, %FALSE on failure.
  *
  * Deprecated: 1.18: use #ges_timeline_element_edit instead.
  */
@@ -1360,13 +1416,18 @@ ges_track_element_edit (GESTrackElement * object,
 
 /**
  * ges_track_element_remove_control_binding:
- * @object: the #GESTrackElement on which to set a control binding
- * @property_name: The name of the property to control.
+ * @object: A #GESTrackElement
+ * @property_name: The name of the child property to remove the control
+ * binding from
  *
- * Removes a #GstControlBinding from @object.
+ * Removes the #GstControlBinding that was created for the specified child
+ * property of the track element using
+ * ges_track_element_set_control_source(). The given @property_name must
+ * be the same name of the child property that was passed to
+ * ges_track_element_set_control_source().
  *
- * Returns: %TRUE if the binding could be removed, %FALSE if an error
- * occured
+ * Returns: %TRUE if the control binding was removed from the specified
+ * child property of @object, or %FALSE if an error occurred.
  */
 gboolean
 ges_track_element_remove_control_binding (GESTrackElement * object,
@@ -1406,19 +1467,24 @@ ges_track_element_remove_control_binding (GESTrackElement * object,
 
 /**
  * ges_track_element_set_control_source:
- * @object: the #GESTrackElement on which to set a control binding
- * @source: the #GstControlSource to set on the binding.
- * @property_name: The name of the property to control.
- * @binding_type: The type of binding to create. Currently the following values are valid:
- *   - "direct": See #gst_direct_control_binding_new
- *   - "direct-absolute": See #gst_direct_control_binding_new_absolute
+ * @object: A #GESTrackElement
+ * @source: The control source to bind the child property to
+ * @property_name: The name of the child property to control
+ * @binding_type: The type of binding to create ("direct" or
+ * "direct-absolute")
  *
- * Creates a #GstControlBinding and adds it to the #GstElement concerned by the
- * property. Use the same syntax as #ges_track_element_lookup_child for
- * the property name.
+ * Creates a #GstControlBinding for the specified child property of the
+ * track element using the given control source. The given @property_name
+ * should refer to an existing child property of the track element, as
+ * used in ges_timeline_element_lookup_child().
  *
- * Returns: %TRUE if the binding could be created and added, %FALSE if an error
- * occured
+ * If @binding_type is "direct", then the control binding is created with
+ * gst_direct_control_binding_new() using the given control source. If
+ * @binding_type is "direct-absolute", it is created with
+ * gst_direct_control_binding_new_absolute() instead.
+ *
+ * Returns: %TRUE if the specified child property could be bound to
+ * @source, or %FALSE if an error occurred.
  */
 gboolean
 ges_track_element_set_control_source (GESTrackElement * object,
@@ -1465,6 +1531,13 @@ ges_track_element_set_control_source (GESTrackElement * object,
           source);
 
     gst_object_add_control_binding (GST_OBJECT (element), binding);
+    /* FIXME: maybe we should force the
+     * "ChildTypeName:property-name"
+     * format convention for child property names in bindings_hashtable.
+     * Currently the table may also contain
+     * "property-name"
+     * as keys.
+     */
     g_hash_table_insert (priv->bindings_hashtable, g_strdup (property_name),
         binding);
     g_signal_emit (object, ges_track_element_signals[CONTROL_BINDING_ADDED],
@@ -1479,14 +1552,19 @@ ges_track_element_set_control_source (GESTrackElement * object,
 
 /**
  * ges_track_element_get_control_binding:
- * @object: the #GESTrackElement in which to lookup the bindings.
- * @property_name: The property_name to which the binding is associated.
+ * @object: A #GESTrackElement
+ * @property_name: The name of the child property to return the control
+ * binding of
  *
- * Looks up the various controlled properties for that #GESTrackElement,
- * and returns the #GstControlBinding which controls @property_name.
+ * Gets the control binding that was created for the specified child
+ * property of the track element using
+ * ges_track_element_set_control_source(). The given @property_name must
+ * be the same name of the child property that was passed to
+ * ges_track_element_set_control_source().
  *
- * Returns: (transfer none) (nullable): the #GstControlBinding associated with
- * @property_name, or %NULL if that property is not controlled.
+ * Returns: (transfer none) (nullable): The control binding that was
+ * created for the specified child property of @object, or %NULL if
+ * @property_name does not correspond to any control binding.
  */
 GstControlBinding *
 ges_track_element_get_control_binding (GESTrackElement * object,
