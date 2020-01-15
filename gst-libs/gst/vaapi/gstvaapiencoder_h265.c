@@ -233,7 +233,7 @@ bs_error:
 /* Write profile_tier_level()  */
 static gboolean
 bs_write_profile_tier_level (GstBitWriter * bs,
-    const VAEncSequenceParameterBufferHEVC * seq_param)
+    const VAEncSequenceParameterBufferHEVC * seq_param, GstVaapiProfile profile)
 {
   guint i;
 
@@ -280,8 +280,15 @@ bs_write_profile_tier_level (GstBitWriter * bs,
     WRITE_UINT32 (bs, 0, 1);
   }
 
-  /* general_profile_compatibility_flag[4~32] */
-  WRITE_UINT32 (bs, 0, 28);
+  /* general_profile_compatibility_flag[4] */
+  if (seq_param->general_profile_idc == 4) {    /* format range extensions profiles */
+    WRITE_UINT32 (bs, 1, 1);
+  } else {
+    WRITE_UINT32 (bs, 0, 1);
+  }
+
+  /* general_profile_compatibility_flag[5~32] */
+  WRITE_UINT32 (bs, 0, 27);
 
   /* general_progressive_source_flag */
   WRITE_UINT32 (bs, 1, 1);
@@ -291,9 +298,47 @@ bs_write_profile_tier_level (GstBitWriter * bs,
   WRITE_UINT32 (bs, 0, 1);
   /* general_frame_only_constraint_flag */
   WRITE_UINT32 (bs, 1, 1);
-  /* general_reserved_zero_43bits */
-  for (i = 0; i < 43; i++)
-    WRITE_UINT32 (bs, 0, 1);
+
+  /* additional indications specified for general_profile_idc from 4~10 */
+  if (seq_param->general_profile_idc == 4) {
+    /* In A.3.5, Format range extensions profiles.
+       Just support main444 profile now, may add more profiles when needed. */
+    switch (profile) {
+      case GST_VAAPI_PROFILE_H265_MAIN_444:
+        /* max_12bit_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
+        /* max_10bit_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
+        /* max_8bit_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
+        /* max_422chroma_constraint_flag */
+        WRITE_UINT32 (bs, 0, 1);
+        /* max_420chroma_constraint_flag */
+        WRITE_UINT32 (bs, 0, 1);
+        /* max_monochrome_constraint_flag */
+        WRITE_UINT32 (bs, 0, 1);
+        /* intra_constraint_flag */
+        WRITE_UINT32 (bs, 0, 1);
+        /* one_picture_only_constraint_flag */
+        WRITE_UINT32 (bs, 0, 1);
+        /* lower_bit_rate_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
+        break;
+      default:
+        GST_WARNING ("do not support the profile: %s of range extensions",
+            gst_vaapi_profile_get_va_name (profile));
+        goto bs_error;
+    }
+
+    /* general_reserved_zero_34bits */
+    for (i = 0; i < 34; i++)
+      WRITE_UINT32 (bs, 0, 1);
+  } else {
+    /* general_reserved_zero_43bits */
+    for (i = 0; i < 43; i++)
+      WRITE_UINT32 (bs, 0, 1);
+  }
+
   /* general_inbld_flag */
   WRITE_UINT32 (bs, 0, 1);
   /* general_level_idc */
@@ -344,7 +389,7 @@ bs_write_vps_data (GstBitWriter * bs, GstVaapiEncoderH265 * encoder,
   WRITE_UINT32 (bs, 0xffff, 16);
 
   /* profile_tier_level */
-  bs_write_profile_tier_level (bs, seq_param);
+  bs_write_profile_tier_level (bs, seq_param, profile);
 
   /* vps_sub_layer_ordering_info_present_flag */
   WRITE_UINT32 (bs, vps_sub_layer_ordering_info_present_flag, 1);
@@ -397,6 +442,7 @@ bs_write_sps_data (GstBitWriter * bs, GstVaapiEncoderH265 * encoder,
   guint32 video_parameter_set_id = 0;
   guint32 max_sub_layers_minus1 = 0;
   guint32 temporal_id_nesting_flag = 1;
+  guint32 separate_colour_plane_flag = 0;
   guint32 seq_parameter_set_id = 0;
   guint32 sps_sub_layer_ordering_info_present_flag = 0;
   guint32 sps_max_latency_increase_plus1 = 0;
@@ -415,12 +461,15 @@ bs_write_sps_data (GstBitWriter * bs, GstVaapiEncoderH265 * encoder,
   WRITE_UINT32 (bs, temporal_id_nesting_flag, 1);
 
   /* profile_tier_level */
-  bs_write_profile_tier_level (bs, seq_param);
+  bs_write_profile_tier_level (bs, seq_param, profile);
 
   /* seq_parameter_set_id */
   WRITE_UE (bs, seq_parameter_set_id);
   /* chroma_format_idc  = 1, 4:2:0 */
   WRITE_UE (bs, seq_param->seq_fields.bits.chroma_format_idc);
+  if (seq_param->seq_fields.bits.chroma_format_idc == 3)
+    /* if( chroma_format_idc == 3 )  separate_colour_plane_flag */
+    WRITE_UINT32 (bs, separate_colour_plane_flag, 1);
   /* pic_width_in_luma_samples */
   WRITE_UE (bs, seq_param->pic_width_in_luma_samples);
   /* pic_height_in_luma_samples */
@@ -1561,7 +1610,13 @@ fill_sequence (GstVaapiEncoderH265 * encoder, GstVaapiEncSequence * sequence)
 
   /*sequence field values */
   seq_param->seq_fields.value = 0;
-  seq_param->seq_fields.bits.chroma_format_idc = 1;
+  seq_param->seq_fields.bits.chroma_format_idc =
+      gst_vaapi_utils_h265_get_chroma_format_idc
+      (gst_vaapi_video_format_get_chroma_type (GST_VIDEO_INFO_FORMAT
+          (GST_VAAPI_ENCODER_VIDEO_INFO (encoder))));
+  /* the 4:4:4 chrome format */
+  if (seq_param->seq_fields.bits.chroma_format_idc == 3)
+    seq_param->seq_fields.bits.separate_colour_plane_flag = 0;
   seq_param->seq_fields.bits.separate_colour_plane_flag = 0;
   seq_param->seq_fields.bits.bit_depth_luma_minus8 = bits_depth_luma_minus8;
   seq_param->seq_fields.bits.bit_depth_chroma_minus8 = bits_depth_luma_minus8;
