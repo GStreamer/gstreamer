@@ -1064,3 +1064,37 @@ gst_validate_set_globals (GstStructure * structure)
   gst_structure_foreach (structure,
       (GstStructureForeachFunc) _set_vars_func, global_vars);
 }
+
+/**
+ * gst_validate_utils_get_strv:
+ * @str: A GstStructure
+ * @fieldname: A fieldname containing a GstValueList or is not defined
+ *
+ * Returns: An array of strings from the GstValueList defined in @fieldname
+ */
+gchar **
+gst_validate_utils_get_strv (GstStructure * str, const gchar * fieldname)
+{
+  const GValue *list;
+  gchar **parsed_list;
+  guint i, size;
+
+  list = gst_structure_get_value (str, fieldname);
+  if (!list)
+    return NULL;
+
+  if (!GST_VALUE_HOLDS_LIST (list)) {
+    g_error
+        ("%s must have type list of string, e.g. %s={ val1, val2 }, got: \"%s\"",
+        fieldname, fieldname, gst_value_serialize (list));
+    return NULL;
+  }
+
+  size = gst_value_list_get_size (list);
+  parsed_list = g_malloc_n (size + 1, sizeof (gchar *));
+  for (i = 0; i < size; i++)
+    parsed_list[i] = g_value_dup_string (gst_value_list_get_value (list, i));
+  parsed_list[i] = NULL;
+  return parsed_list;
+
+}

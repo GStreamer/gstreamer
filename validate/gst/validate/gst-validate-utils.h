@@ -45,6 +45,8 @@ GST_VALIDATE_API
 gboolean gst_validate_utils_enum_from_str   (GType type,
                                              const gchar * str_enum,
                                              guint * enum_value);
+GST_VALIDATE_API
+gchar ** gst_validate_utils_get_strv       (GstStructure *str, const gchar *fieldname);
 
 GST_VALIDATE_API
 GList * gst_validate_utils_structs_parse_from_filename         (const gchar * scenario_file,

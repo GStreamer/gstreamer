@@ -61,6 +61,9 @@ struct _ValidateFlowOverride
   gchar **caps_properties;
   GstStructure *ignored_event_fields;
 
+  gchar **logged_event_types;
+  gchar **ignored_event_types;
+
   gchar *expectations_file_path;
   gchar *actual_results_file_path;
   ValidateFlowMode mode;
@@ -160,9 +163,14 @@ validate_flow_override_event_handler (GstValidateOverride * override,
 
   event_string = validate_flow_format_event (event,
       (const gchar * const *) flow->caps_properties,
-      flow->ignored_event_fields);
-  validate_flow_override_printf (flow, "event %s\n", event_string);
-  g_free (event_string);
+      flow->ignored_event_fields,
+      (const gchar * const *) flow->ignored_event_types,
+      (const gchar * const *) flow->logged_event_types);
+
+  if (event_string) {
+    validate_flow_override_printf (flow, "event %s\n", event_string);
+    g_free (event_string);
+  }
 }
 
 static void
@@ -178,32 +186,6 @@ validate_flow_override_buffer_handler (GstValidateOverride * override,
   buffer_str = validate_flow_format_buffer (buffer, flow->buffers_checksum);
   validate_flow_override_printf (flow, "buffer: %s\n", buffer_str);
   g_free (buffer_str);
-}
-
-static gchar **
-parse_caps_properties_setting (const ValidateFlowOverride * flow,
-    GstStructure * config)
-{
-  const GValue *list;
-  gchar **parsed_list;
-  guint i, size;
-
-  list = gst_structure_get_value (config, "caps-properties");
-  if (!list)
-    return NULL;
-
-  if (!GST_VALUE_HOLDS_LIST (list)) {
-    GST_ERROR_OBJECT (flow,
-        "caps-properties must have type list of string, e.g. caps-properties={ width, height };");
-    return NULL;
-  }
-
-  size = gst_value_list_get_size (list);
-  parsed_list = g_malloc_n (size + 1, sizeof (gchar *));
-  for (i = 0; i < size; i++)
-    parsed_list[i] = g_value_dup_string (gst_value_list_get_value (list, i));
-  parsed_list[i] = NULL;
-  return parsed_list;
 }
 
 static gchar *
@@ -260,7 +242,13 @@ validate_flow_override_new (GstStructure * config)
   /* caps-properties: Caps events can include many dfferent properties, but
    * many of these may be irrelevant for some tests. If this option is set,
    * only the listed properties will be written to the expectation log. */
-  flow->caps_properties = parse_caps_properties_setting (flow, config);
+  flow->caps_properties =
+      gst_validate_utils_get_strv (config, "caps-properties");
+
+  flow->logged_event_types =
+      gst_validate_utils_get_strv (config, "logged-event-types");
+  flow->ignored_event_types =
+      gst_validate_utils_get_strv (config, "ignored-event-types");
 
   ignored_event_fields =
       (gchar *) gst_structure_get_string (config, "ignored-event-fields");
@@ -274,12 +262,12 @@ validate_flow_override_new (GstStructure * config)
     g_free (ignored_event_fields);
   } else {
     flow->ignored_event_fields =
-        gst_structure_new_from_string ("ignored,stream-start=stream-id");
+        gst_structure_new_from_string ("ignored,stream-start={stream-id}");
   }
 
   if (!gst_structure_has_field (flow->ignored_event_fields, "stream-start"))
     gst_structure_set (flow->ignored_event_fields, "stream-start",
-        G_TYPE_STRING, "stream-id", NULL);
+        G_TYPE_STRING, "{stream-id}", NULL);
 
 
 
@@ -501,13 +489,9 @@ validate_flow_override_finalize (GObject * object)
   g_free (flow->output_file_path);
   if (flow->output_file)
     fclose (flow->output_file);
-  if (flow->caps_properties) {
-    gchar **str_pointer;
-    for (str_pointer = flow->caps_properties; *str_pointer != NULL;
-        str_pointer++)
-      g_free (*str_pointer);
-    g_free (flow->caps_properties);
-  }
+  g_strfreev (flow->caps_properties);
+  g_strfreev (flow->logged_event_types);
+  g_strfreev (flow->ignored_event_types);
   if (flow->ignored_event_fields)
     gst_structure_free (flow->ignored_event_fields);
 

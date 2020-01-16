@@ -169,6 +169,7 @@ EXPORTS
 	gst_validate_utils_enum_from_str
 	gst_validate_utils_flags_from_str
 	gst_validate_utils_get_clocktime
+	gst_validate_utils_get_strv
 	gst_validate_utils_parse_expression
 	gst_validate_utils_structs_parse_from_filename
 	gst_validate_verbosity_flags_get_type

@@ -33,6 +33,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "../../gst/validate/gst-validate-utils.h"
+
 typedef void (*Uint64Formatter) (gchar * dest, guint64 time);
 
 void
@@ -255,14 +257,22 @@ validate_flow_format_buffer (GstBuffer * buffer, gboolean add_checksum)
 
 gchar *
 validate_flow_format_event (GstEvent * event,
-    const gchar * const *caps_properties, GstStructure * ignored_event_fields)
+    const gchar * const *caps_properties, GstStructure * ignored_event_fields,
+    const gchar * const *ignored_event_types,
+    const gchar * const *logged_event_types)
 {
   const gchar *event_type;
   gchar *structure_string;
   gchar *event_string;
-  const gchar *ignored_fields;
+  gchar **ignored_fields;
 
   event_type = gst_event_type_get_name (GST_EVENT_TYPE (event));
+
+  if (logged_event_types && !g_strv_contains (logged_event_types, event_type))
+    return NULL;
+
+  if (ignored_event_types && g_strv_contains (ignored_event_types, event_type))
+    return NULL;
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
     const GstSegment *segment;
@@ -279,14 +289,14 @@ validate_flow_format_event (GstEvent * event,
         gst_structure_copy (gst_event_get_structure (event));
 
     ignored_fields =
-        gst_structure_get_string (ignored_event_fields, event_type);
+        gst_validate_utils_get_strv (ignored_event_fields, event_type);
     if (ignored_fields) {
       gint i = 0;
-      gchar *field, **fields = g_strsplit (ignored_fields, ",", -1);
+      gchar *field;
 
-      for (field = fields[i]; field; field = fields[++i])
+      for (field = ignored_fields[i]; field; field = ignored_fields[++i])
         gst_structure_remove_field (printable, field);
-      g_strfreev (fields);
+      g_strfreev (ignored_fields);
     }
 
     structure_string = gst_structure_to_string (printable);

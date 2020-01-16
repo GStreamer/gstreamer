@@ -33,6 +33,6 @@ gchar* validate_flow_format_caps (const GstCaps* caps, const gchar * const *keys
 
 gchar* validate_flow_format_buffer (GstBuffer *buffer, gboolean add_checksum);
 
-gchar* validate_flow_format_event (GstEvent *event, const gchar * const *caps_properties, GstStructure *ignored_event_fields);
+gchar* validate_flow_format_event(GstEvent* event, const gchar* const* caps_properties, GstStructure* ignored_event_fields, const gchar* const* ignored_event_types, const gchar* const* logged_event_types);
 
 #endif // __GST_VALIDATE_FLOW_FORMATTING_H__
