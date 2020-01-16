@@ -186,6 +186,7 @@ gst_rtp_L8_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
             GST_STR_NULL (channel_order), channels));
     /* create default NONE layout */
     gst_rtp_channels_create_default (channels, info->position);
+    info->flags |= GST_AUDIO_FLAG_UNPOSITIONED;
   }
 
   srccaps = gst_audio_info_to_caps (info);
