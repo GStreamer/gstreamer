@@ -131,6 +131,7 @@ struct _GstVaapiDisplayPrivate
   guint has_vpp:1;
   guint has_profiles:1;
   guint got_scrres:1;
+  guint driver_quirks;
 };
 
 /**

@@ -88,6 +88,17 @@ typedef struct _GstVaapiDisplayInfo             GstVaapiDisplayInfo;
 typedef struct _GstVaapiDisplay                 GstVaapiDisplay;
 
 /**
+ * GstVaapiDriverQuirks:
+ * @GST_VAAPI_DRIVER_QUIRK_NO_CHECK_SURFACE_PUT_IMAGE: if driver
+ *   crashes when try to put an image in a reused surface.
+ *   https://gitlab.freedesktop.org/mesa/mesa/merge_requests/2016
+ */
+typedef enum
+{
+  GST_VAAPI_DRIVER_QUIRK_NO_CHECK_SURFACE_PUT_IMAGE = (1U << 0),
+} GstVaapiDriverQuirks;
+
+/**
  * GstVaapiDisplayType:
  * @GST_VAAPI_DISPLAY_TYPE_ANY: Automatic detection of the display type.
  * @GST_VAAPI_DISPLAY_TYPE_X11: VA/X11 display.
@@ -250,6 +261,9 @@ gst_vaapi_display_has_opengl (GstVaapiDisplay * display);
 
 void
 gst_vaapi_display_reset_texture_map (GstVaapiDisplay * display);
+
+gboolean
+gst_vaapi_display_has_driver_quirks (GstVaapiDisplay * display, guint quirks);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiDisplay, gst_object_unref)

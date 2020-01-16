@@ -755,6 +755,55 @@ cleanup:
   return success;
 }
 
+/* Ensures the VA driver vendor string was copied */
+static gboolean
+ensure_vendor_string (GstVaapiDisplay * display)
+{
+  GstVaapiDisplayPrivate *const priv = GST_VAAPI_DISPLAY_GET_PRIVATE (display);
+  const gchar *vendor_string;
+
+  GST_VAAPI_DISPLAY_LOCK (display);
+  if (!priv->vendor_string) {
+    vendor_string = vaQueryVendorString (priv->display);
+    if (vendor_string)
+      priv->vendor_string = g_strdup (vendor_string);
+  }
+  GST_VAAPI_DISPLAY_UNLOCK (display);
+  return priv->vendor_string != NULL;
+}
+
+static void
+set_driver_quirks (GstVaapiDisplay * display)
+{
+  GstVaapiDisplayPrivate *const priv = GST_VAAPI_DISPLAY_GET_PRIVATE (display);
+  guint i;
+
+  /* *INDENT-OFF* */
+  static const struct
+  {
+    const char *match_string;
+    guint quirks;
+  } vaapi_driver_quirks_table[] = {
+    /* @XXX(victor): is this string enough to identify it */
+    { "AMD", GST_VAAPI_DRIVER_QUIRK_NO_CHECK_SURFACE_PUT_IMAGE },
+  };
+  /* *INDENT-ON* */
+
+  if (!ensure_vendor_string (display))
+    return;
+
+  for (i = 0; i < G_N_ELEMENTS (vaapi_driver_quirks_table); i++) {
+    const char *match_str = vaapi_driver_quirks_table[i].match_string;
+    if (g_strstr_len (priv->vendor_string, strlen (priv->vendor_string),
+            match_str) != NULL) {
+      GST_INFO_OBJECT (display, "Matched driver string \"%s\", setting quirks "
+          "(%#x)", priv->vendor_string, vaapi_driver_quirks_table[i].quirks);
+      priv->driver_quirks |= vaapi_driver_quirks_table[i].quirks;
+      break;
+    }
+  }
+}
+
 static void
 gst_vaapi_display_calculate_pixel_aspect_ratio (GstVaapiDisplay * display)
 {
@@ -928,6 +977,8 @@ gst_vaapi_display_create (GstVaapiDisplay * display,
   GST_INFO_OBJECT (display, "new display addr=%p", display);
   g_free (priv->display_name);
   priv->display_name = g_strdup (info.display_name);
+
+  set_driver_quirks (display);
 
   if (!ensure_image_formats (display)) {
     gst_vaapi_display_destroy (display);
@@ -2033,23 +2084,6 @@ set_color_balance (GstVaapiDisplay * display, guint prop_id, gfloat v)
   return TRUE;
 }
 
-/* Ensures the VA driver vendor string was copied */
-static gboolean
-ensure_vendor_string (GstVaapiDisplay * display)
-{
-  GstVaapiDisplayPrivate *const priv = GST_VAAPI_DISPLAY_GET_PRIVATE (display);
-  const gchar *vendor_string;
-
-  GST_VAAPI_DISPLAY_LOCK (display);
-  if (!priv->vendor_string) {
-    vendor_string = vaQueryVendorString (priv->display);
-    if (vendor_string)
-      priv->vendor_string = g_strdup (vendor_string);
-  }
-  GST_VAAPI_DISPLAY_UNLOCK (display);
-  return priv->vendor_string != NULL;
-}
-
 /**
  * gst_vaapi_display_get_vendor_string:
  * @display: a #GstVaapiDisplay
@@ -2118,4 +2152,19 @@ gst_vaapi_display_reset_texture_map (GstVaapiDisplay * display)
     return;
   if ((map = klass->get_texture_map (display)))
     gst_vaapi_texture_map_reset (map);
+}
+
+/**
+ * gst_vaapi_display_get_driver_quirks:
+ * @display: a #GstVaapiDisplay
+ * @quirks: the #GstVaapiDriverQuirks bitwise to check
+ *
+ * Returns: %TRUE if @quirks are set in @display's driver
+ **/
+gboolean
+gst_vaapi_display_has_driver_quirks (GstVaapiDisplay * display, guint quirks)
+{
+  g_return_val_if_fail (display != NULL, FALSE);
+
+  return (GST_VAAPI_DISPLAY_GET_PRIVATE (display)->driver_quirks & quirks);
 }

@@ -1456,7 +1456,12 @@ extract_allowed_surface_formats (GstVaapiDisplay * display,
     if (direction == GST_PAD_SRC) {
       res = gst_vaapi_surface_get_image (surface, image);
     } else {
-      res = gst_vaapi_surface_put_image (surface, image);
+      if (!gst_vaapi_display_has_driver_quirks (display,
+              GST_VAAPI_DRIVER_QUIRK_NO_CHECK_SURFACE_PUT_IMAGE))
+        res = gst_vaapi_surface_put_image (surface, image);
+      else
+        res = TRUE;             /* Let's say it's possible to upload
+                                 * all formats */
     }
     if (res)
       g_array_append_val (out_formats, img_format);
