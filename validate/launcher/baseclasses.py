@@ -2230,8 +2230,8 @@ class ScenarioManager(Loggable):
         """
         scenarios = []
         scenario_defs = os.path.join(self.config.main_dir, "scenarios.def")
-        logs = open(os.path.join(self.config.logsdir,
-                                 "scenarios_discovery.log"), 'w')
+        log_path = os.path.join(self.config.logsdir, "scenarios_discovery.log")
+        logs = open(log_path, 'w')
 
         try:
             command = [GstValidateBaseTestManager.COMMAND,
@@ -2240,6 +2240,7 @@ class ScenarioManager(Loggable):
             subprocess.check_call(command, stdout=logs, stderr=logs)
         except subprocess.CalledProcessError as e:
             self.error(e)
+            self.error('See %s' % log_path)
             pass
 
         config = configparser.RawConfigParser()

@@ -610,7 +610,7 @@ _get_lines (const gchar * scenario_file, gchar ** file_path)
 
 /* Returns: (transfer full): a #GList of #GstStructure */
 static GList *
-_lines_get_structures (gchar ** lines)
+_lines_get_structures (gchar ** lines, gchar ** err)
 {
   gint i;
   GList *structures = NULL;
@@ -626,8 +626,17 @@ _lines_get_structures (gchar ** lines)
 
     structure = gst_structure_from_string (lines[i], NULL);
     if (structure == NULL) {
-      GST_ERROR ("Could not parse action %s", lines[i]);
-      goto failed;
+      GST_ERROR ("Could not parse structure %s", lines[i]);
+      if (err) {
+        gchar *tmp = *err;
+        *err =
+            g_strdup_printf ("%s\n -Invalid structure: `%s`", tmp ? tmp : "",
+            lines[i]);
+        g_free (tmp);
+        continue;
+      } else {
+        goto failed;
+      }
     }
 
     structures = g_list_append (structures, structure);
@@ -653,7 +662,8 @@ GList *
 gst_validate_utils_structs_parse_from_filename (const gchar * scenario_file,
     gchar ** file_path)
 {
-  gchar **lines;
+  GList *res;
+  gchar **lines, *err = NULL;
 
   lines = _get_lines (scenario_file, file_path);
 
@@ -662,7 +672,12 @@ gst_validate_utils_structs_parse_from_filename (const gchar * scenario_file,
     return NULL;
   }
 
-  return _lines_get_structures (lines);
+  res = _lines_get_structures (lines, &err);
+
+  if (err)
+    g_error ("Could not get structures from %s: %s", scenario_file, err);
+
+  return res;
 }
 
 /**
@@ -671,26 +686,21 @@ gst_validate_utils_structs_parse_from_filename (const gchar * scenario_file,
 GList *
 gst_validate_structs_parse_from_gfile (GFile * scenario_file)
 {
-  gchar **lines;
+  gchar **lines, *err = NULL;
+  GList *res;
 
   lines = _file_get_lines (scenario_file);
 
   if (lines == NULL)
     return NULL;
 
-  return _lines_get_structures (lines);
-}
+  res = _lines_get_structures (lines, &err);
 
-static gboolean
-strv_contains (GStrv strv, const gchar * str)
-{
-  guint i;
+  if (err)
+    g_error ("Could not get structures from %s: %s",
+        g_file_get_uri (scenario_file), err);
 
-  for (i = 0; strv[i] != NULL; i++)
-    if (g_strcmp0 (strv[i], str) == 0)
-      return TRUE;
-
-  return FALSE;
+  return res;
 }
 
 gboolean
@@ -709,7 +719,7 @@ gst_validate_element_has_klass (GstElement * element, const gchar * klass)
 
   /* All the elements in 'a' have to be in 'b' */
   for (i = 0; a[i] != NULL; i++)
-    if (!strv_contains (b, a[i]))
+    if (!g_strv_contains ((const char *const *) b, a[i]))
       goto done;
   result = TRUE;
 
