@@ -773,7 +773,6 @@ gst_nv_base_enc_getcaps (GstVideoEncoder * enc, GstCaps * filter)
   GST_OBJECT_LOCK (nvenc);
 
   if (nvenc->input_formats != NULL) {
-    GValue *val;
     gboolean has_profile = FALSE;
     guint max_chroma_index = 0;
     guint max_bit_minus8 = 0;
@@ -813,10 +812,15 @@ gst_nv_base_enc_getcaps (GstVideoEncoder * enc, GstCaps * filter)
       gst_caps_set_value (supported_incaps, "format", nvenc->input_formats);
     }
 
-    val = gst_nvenc_get_interlace_modes (nvenc->encoder, klass->codec_id);
-    gst_caps_set_value (supported_incaps, "interlace-mode", val);
-    g_value_unset (val);
-    g_free (val);
+    if (nvenc->encoder) {
+      GValue *interlace_mode;
+
+      interlace_mode =
+          gst_nvenc_get_interlace_modes (nvenc->encoder, klass->codec_id);
+      gst_caps_set_value (supported_incaps, "interlace-mode", interlace_mode);
+      g_value_unset (interlace_mode);
+      g_free (interlace_mode);
+    }
 
     GST_LOG_OBJECT (enc, "codec input caps %" GST_PTR_FORMAT, supported_incaps);
     GST_LOG_OBJECT (enc, "   template caps %" GST_PTR_FORMAT, template_caps);
@@ -1514,6 +1518,12 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
 
   g_atomic_int_set (&nvenc->reconfig, FALSE);
 
+  if (!nvenc->encoder && !gst_nv_base_enc_open_encode_session (nvenc)) {
+    GST_ELEMENT_ERROR (nvenc, LIBRARY, INIT, (NULL),
+        ("Failed to open encode session"));
+    return FALSE;
+  }
+
   if (old_state) {
     gboolean larger_resolution;
     gboolean format_changed;
@@ -1696,6 +1706,8 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
   if (nv_ret != NV_ENC_SUCCESS) {
     GST_ELEMENT_ERROR (nvenc, LIBRARY, SETTINGS, (NULL),
         ("Failed to %sinit encoder: %d", reconfigure ? "re" : "", nv_ret));
+    NvEncDestroyEncoder (nvenc->encoder);
+    nvenc->encoder = NULL;
     return FALSE;
   }
 
@@ -2393,6 +2405,11 @@ gst_nv_base_enc_drain_encoder (GstNvBaseEnc * nvenc)
 
   if (nvenc->input_state == NULL) {
     GST_DEBUG_OBJECT (nvenc, "no input state, nothing to do");
+    return TRUE;
+  }
+
+  if (!nvenc->encoder) {
+    GST_DEBUG_OBJECT (nvenc, "no configured encode session");
     return TRUE;
   }
 
