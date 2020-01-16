@@ -239,6 +239,7 @@ class Test(Loggable):
             self.out = open(path, 'w+')
 
     def finalize_logfiles(self):
+        self.out.write("\n**Duration**: %s" % self.time_taken)
         if not self.options.redirect_logs:
             self.out.flush()
             for logfile in self.extra_logfiles:
