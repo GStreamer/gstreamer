@@ -319,7 +319,12 @@ gst_vaapiencode_h264_set_config (GstVaapiEncode * base_encode)
     stream_format = gst_structure_get_string (structure, "stream-format");
     encode->is_avc = (g_strcmp0 (stream_format, "avc") == 0);
 
-    if (profile != GST_VAAPI_PROFILE_UNKNOWN) {
+    if (gst_structure_has_field (structure, "level")) {
+      /* @TODO(victor): add a mechansim for user set a specific
+       * level */
+      GST_WARNING_OBJECT (encode, "cannot set level configuration");
+      ret = FALSE;
+    } else if (profile != GST_VAAPI_PROFILE_UNKNOWN) {
       GST_INFO ("using %s profile as target decoder constraints",
           gst_vaapi_utils_h264_get_profile_string (profile));
       ret = gst_vaapi_encoder_h264_set_max_profile (encoder, profile);
@@ -346,7 +351,7 @@ fail:
 
 static void
 set_compatible_profile (GstVaapiEncodeH264 * encode, GstCaps * caps,
-    GstVaapiProfile profile)
+    GstVaapiProfile profile, GstVaapiLevelH264 level)
 {
   GstCaps *allowed_caps, *tmp_caps;
   gboolean ret = FALSE;
@@ -380,7 +385,9 @@ retry:
     }
   } else {
     gst_caps_set_simple (caps, "profile", G_TYPE_STRING,
-        gst_vaapi_utils_h264_get_profile_string (profile), NULL);
+        gst_vaapi_utils_h264_get_profile_string (profile),
+        "level", G_TYPE_STRING, gst_vaapi_utils_h264_get_level_string (level),
+        NULL);
     ret = TRUE;
   }
 
@@ -399,6 +406,7 @@ gst_vaapiencode_h264_get_caps (GstVaapiEncode * base_encode)
   GstVaapiEncoderH264 *const encoder =
       GST_VAAPI_ENCODER_H264 (base_encode->encoder);
   GstVaapiProfile profile;
+  GstVaapiLevelH264 level;
   GstCaps *caps;
 
   caps = gst_caps_from_string (GST_CODEC_CAPS);
@@ -407,13 +415,11 @@ gst_vaapiencode_h264_get_caps (GstVaapiEncode * base_encode)
       encode->is_avc ? "avc" : "byte-stream", NULL);
 
   /* Update profile determined by encoder */
-  gst_vaapi_encoder_h264_get_profile_and_level (encoder, &profile, NULL);
+  gst_vaapi_encoder_h264_get_profile_and_level (encoder, &profile, &level);
   if (profile != GST_VAAPI_PROFILE_UNKNOWN)
-    set_compatible_profile (encode, caps, profile);
+    set_compatible_profile (encode, caps, profile, level);
 
   GST_INFO_OBJECT (base_encode, "out caps %" GST_PTR_FORMAT, caps);
-
-  /* XXX: update level information */
   return caps;
 }
 
