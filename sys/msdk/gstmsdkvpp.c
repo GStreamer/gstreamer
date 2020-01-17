@@ -154,35 +154,56 @@ gst_msdkvpp_add_extra_param (GstMsdkVPP * thiz, mfxExtBuffer * param)
 }
 
 static gboolean
+gst_msdkvpp_context_prepare (GstMsdkVPP * thiz)
+{
+  /* Try to find an existing context from the pipeline. This may (indirectly)
+   * invoke gst_msdkvpp_set_context, which will set thiz->context. */
+  if (!gst_msdk_context_find (GST_ELEMENT_CAST (thiz), &thiz->context))
+    return FALSE;
+
+  GST_INFO_OBJECT (thiz, "Found context %" GST_PTR_FORMAT " from neighbour",
+      thiz->context);
+
+  /* Check GST_MSDK_JOB_VPP and GST_MSDK_JOB_ENCODER together to avoid sharing context
+   * between VPP and ENCODER
+   * Example:
+   * gst-launch-1.0 videotestsrc ! msdkvpp ! video/x-raw,format=YUY2 ! msdkh264enc ! fakesink
+   */
+  if (!gst_msdk_context_get_job_type (thiz->context) & (GST_MSDK_JOB_VPP |
+          GST_MSDK_JOB_ENCODER)) {
+    gst_msdk_context_add_job_type (thiz->context, GST_MSDK_JOB_VPP);
+    return TRUE;
+  }
+
+  /* Found an existing context that's already being used as VPP, so clone the
+   * MFX session inside it to create a new one */
+  {
+    GstMsdkContext *parent_context, *msdk_context;
+
+    GST_INFO_OBJECT (thiz, "Creating new context %" GST_PTR_FORMAT " with "
+        "joined session", thiz->context);
+    parent_context = thiz->context;
+    msdk_context = gst_msdk_context_new_with_parent (parent_context);
+
+    if (!msdk_context) {
+      GST_ERROR_OBJECT (thiz, "Failed to create a context with parent context "
+          "as %" GST_PTR_FORMAT, parent_context);
+      return FALSE;
+    }
+
+    thiz->context = msdk_context;
+    gst_object_unref (parent_context);
+  }
+
+  return TRUE;
+}
+
+static gboolean
 ensure_context (GstBaseTransform * trans)
 {
   GstMsdkVPP *thiz = GST_MSDKVPP (trans);
 
-  if (gst_msdk_context_prepare (GST_ELEMENT_CAST (thiz), &thiz->context)) {
-    GST_INFO_OBJECT (thiz, "Found context from neighbour %" GST_PTR_FORMAT,
-        thiz->context);
-
-    if (gst_msdk_context_get_job_type (thiz->context) & GST_MSDK_JOB_VPP) {
-      GstMsdkContext *parent_context, *msdk_context;
-
-      parent_context = thiz->context;
-      msdk_context = gst_msdk_context_new_with_parent (parent_context);
-
-      if (!msdk_context) {
-        GST_ERROR_OBJECT (thiz, "Context creation failed");
-        return FALSE;
-      }
-
-      thiz->context = msdk_context;
-      gst_object_unref (parent_context);
-
-      GST_INFO_OBJECT (thiz,
-          "Creating new context %" GST_PTR_FORMAT " with joined session",
-          thiz->context);
-    } else {
-      gst_msdk_context_add_job_type (thiz->context, GST_MSDK_JOB_VPP);
-    }
-  } else {
+  if (!gst_msdkvpp_context_prepare (thiz)) {
     if (!gst_msdk_context_ensure_context (GST_ELEMENT_CAST (thiz),
             thiz->hardware, GST_MSDK_JOB_VPP))
       return FALSE;
