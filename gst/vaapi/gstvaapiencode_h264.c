@@ -261,9 +261,7 @@ gst_vaapiencode_h264_set_config (GstVaapiEncode * base_encode)
     encode->is_avc = FALSE;
   } else if (gst_caps_is_empty (allowed_caps)) {
     GST_INFO_OBJECT (encode, "downstream has EMPTY caps");
-    gst_caps_unref (template_caps);
-    gst_caps_unref (allowed_caps);
-    return FALSE;
+    goto fail;
   } else {
     const char *stream_format = NULL;
     GstStructure *structure;
@@ -272,11 +270,9 @@ gst_vaapiencode_h264_set_config (GstVaapiEncode * base_encode)
     GstCaps *available_caps;
 
     available_caps = get_available_caps (encode);
-    if (!available_caps) {
-      gst_caps_unref (template_caps);
-      gst_caps_unref (allowed_caps);
-      return FALSE;
-    }
+    if (!available_caps)
+      goto fail;
+
     if (!gst_caps_can_intersect (allowed_caps, available_caps)) {
       GST_INFO_OBJECT (encode, "downstream requested an unsupported profile, "
           "but encoder will try to output a compatible one");
@@ -319,6 +315,13 @@ gst_vaapiencode_h264_set_config (GstVaapiEncode * base_encode)
   base_encode->need_codec_data = encode->is_avc;
 
   return ret;
+
+fail:
+  {
+    gst_caps_unref (template_caps);
+    gst_caps_unref (allowed_caps);
+    return FALSE;
+  }
 }
 
 static void
