@@ -1784,6 +1784,66 @@ _on_sctp_state_notify (GstWebRTCSCTPTransport * sctp, GParamSpec * pspec,
   }
 }
 
+/* Forward declaration so we can easily disconnect the signal handler */
+static void _on_sctp_notify_dtls_state (GstWebRTCDTLSTransport * transport,
+    GParamSpec * pspec, GstWebRTCBin * webrtc);
+
+static void
+_sctp_check_dtls_state_task (GstWebRTCBin * webrtc, gpointer unused)
+{
+  TransportStream *stream;
+  GstWebRTCDTLSTransport *transport;
+  GstWebRTCDTLSTransportState dtls_state;
+  GstWebRTCSCTPTransport *sctp_transport;
+
+  stream = webrtc->priv->data_channel_transport;
+  transport = stream->transport;
+
+  g_object_get (transport, "state", &dtls_state, NULL);
+  /* Not connected yet so just return */
+  if (dtls_state != GST_WEBRTC_DTLS_TRANSPORT_STATE_CONNECTED) {
+    GST_DEBUG_OBJECT (webrtc,
+        "Data channel DTLS connection is not ready yet: %d", dtls_state);
+    return;
+  }
+
+  GST_DEBUG_OBJECT (webrtc, "Data channel DTLS connection is now ready");
+  sctp_transport = webrtc->priv->sctp_transport;
+
+  /* Not locked state anymore so this was already taken care of before */
+  if (!gst_element_is_locked_state (sctp_transport->sctpdec))
+    return;
+
+  /* Start up the SCTP elements now that the DTLS connection is established */
+  gst_element_set_locked_state (sctp_transport->sctpdec, FALSE);
+  gst_element_set_locked_state (sctp_transport->sctpenc, FALSE);
+
+  gst_element_sync_state_with_parent (GST_ELEMENT (sctp_transport->sctpdec));
+  gst_element_sync_state_with_parent (GST_ELEMENT (sctp_transport->sctpenc));
+
+  g_signal_handlers_disconnect_by_func (transport, _on_sctp_notify_dtls_state,
+      webrtc);
+}
+
+static void
+_on_sctp_notify_dtls_state (GstWebRTCDTLSTransport * transport,
+    GParamSpec * pspec, GstWebRTCBin * webrtc)
+{
+  GstWebRTCDTLSTransportState dtls_state;
+
+  g_object_get (transport, "state", &dtls_state, NULL);
+
+  GST_TRACE_OBJECT (webrtc, "Data channel DTLS state changed to %d",
+      dtls_state);
+
+  /* Connected now, so schedule a task to update the state of the SCTP
+   * elements */
+  if (dtls_state == GST_WEBRTC_DTLS_TRANSPORT_STATE_CONNECTED) {
+    gst_webrtc_bin_enqueue_task (webrtc,
+        (GstWebRTCBinFunc) _sctp_check_dtls_state_task, NULL, NULL);
+  }
+}
+
 static TransportStream *
 _get_or_create_data_channel_transports (GstWebRTCBin * webrtc, guint session_id)
 {
@@ -1810,6 +1870,11 @@ _get_or_create_data_channel_transports (GstWebRTCBin * webrtc, guint session_id)
       sctp_transport->transport =
           g_object_ref (webrtc->priv->data_channel_transport->transport);
       sctp_transport->webrtcbin = webrtc;
+
+      /* Don't automatically start SCTP elements as part of webrtcbin. We
+       * need to delay this until the DTLS transport is fully connected! */
+      gst_element_set_locked_state (sctp_transport->sctpdec, TRUE);
+      gst_element_set_locked_state (sctp_transport->sctpenc, TRUE);
 
       gst_bin_add (GST_BIN (webrtc), sctp_transport->sctpdec);
       gst_bin_add (GST_BIN (webrtc), sctp_transport->sctpenc);
@@ -1843,10 +1908,16 @@ _get_or_create_data_channel_transports (GstWebRTCBin * webrtc, guint session_id)
     gst_element_sync_state_with_parent (GST_ELEMENT (stream->receive_bin));
 
     if (!webrtc->priv->sctp_transport) {
-      gst_element_sync_state_with_parent (GST_ELEMENT
-          (sctp_transport->sctpdec));
-      gst_element_sync_state_with_parent (GST_ELEMENT
-          (sctp_transport->sctpenc));
+      /* Connect to the notify::state signal to get notified when the DTLS
+       * connection is established. Only then can we start the SCTP elements */
+      g_signal_connect (stream->transport, "notify::state",
+          G_CALLBACK (_on_sctp_notify_dtls_state), webrtc);
+
+      /* As this would be racy otherwise, also schedule a task that checks the
+       * current state of the connection already without getting the signal
+       * called */
+      gst_webrtc_bin_enqueue_task (webrtc,
+          (GstWebRTCBinFunc) _sctp_check_dtls_state_task, NULL, NULL);
     }
 
     webrtc->priv->sctp_transport = sctp_transport;
