@@ -93,144 +93,107 @@ EOF
 
 cat >$basedir/README <<EOF
 README for your project.
+
+NOTE:
+plugins can be installed locally by using "\$HOME" as prefix:
+
+  $ meson --prefix="\$HOME" build/
+  $ ninja -C build/ install
+
+However be advised that the automatic scan of plugins in the user home
+directory won't work under gst-build devenv.
 EOF
 
-cat >$basedir/autogen.sh <<EOF
-#!/bin/sh
-# you can either set the environment variables AUTOCONF, AUTOHEADER, AUTOMAKE,
-# ACLOCAL, AUTOPOINT and/or LIBTOOLIZE to the right versions, or leave them
-# unset and get the defaults
+cat >$basedir/meson.build <<EOF
+project('${gst__replace}', 'c',
+  version : '0.1.0',
+  default_options : [ 'warning_level=1',
+                      'buildtype=debugoptimized' ])
 
-autoreconf --verbose --force --install --make || {
- echo 'autogen.sh failed';
- exit 1;
-}
+core_conf = configuration_data()
+core_conf.set('PACKAGE', '"@0@"'.format(meson.project_name()))
+core_conf.set('VERSION', '"@0@"'.format(meson.project_version()))
 
-./configure || {
- echo 'configure failed';
- exit 1;
-}
+configure_file(output : 'config.h', configuration : core_conf)
 
-echo
-echo "Now type 'make' to compile this module."
-echo
-EOF
-chmod 755 $basedir/autogen.sh
+configinc = include_directories('.')
 
-cat >$basedir/configure.ac <<EOF
-dnl required version of autoconf
-AC_PREREQ([2.53])
+common_args = ['-DHAVE_CONFIG_H']
 
-dnl TODO: fill in your package name and package version here
-AC_INIT([${gst__replace}],[1.0.0])
+gst_req = '>= 1.0.0'
 
-dnl required versions of gstreamer and plugins-base
-GST_REQUIRED=1.0.0
-GSTPB_REQUIRED=1.0.0
+# Check for the required version of GStreamer core (and gst-plugins-base)
+#
+# If you need libraries from gst-plugins-base here, also add:
+# for libgstaudio-1.0: gstreamer-audio-1.0
+# for libgstvideo-1.0: gstreamer-video-1.0
+# for libgsttag-1.0: gstreamer-tag-1.0
+# for libgstpbutils-1.0: gstreamer-pbutils-1.0
+# for libgstfft-1.0: gstreamer-fft-1.0
+# for libgstinterfaces-1.0: gstreamer-interfaces-1.0
+# for libgstrtp-1.0: gstreamer-rtp-1.0
+# for libgstrtsp-1.0: gstreamer-rtsp-1.0
+# etc.
+gst_dep = dependency('gstreamer-1.0', version : gst_req,
+  fallback : ['gstreamer', 'gst_dep'])
+gst_base_dep = dependency('gstreamer-base-1.0', version : gst_req,
+  fallback : ['gstreamer', 'gst_base_dep'])
 
-AC_CONFIG_SRCDIR([plugins/${gstreplace}.c])
-AC_CONFIG_HEADERS([config.h])
-
-dnl required version of automake
-AM_INIT_AUTOMAKE([1.10])
-AC_CONFIG_MACRO_DIR([m4])
-
-dnl enable mainainer mode by default
-AM_MAINTAINER_MODE([enable])
-
-dnl check for tools (compiler etc.)
-AC_PROG_CC
-AM_PROG_CC_C_O
-
-dnl required version of libtool
-LT_PREREQ([2.2.6])
-LT_INIT
-
-dnl give error and exit if we don't have pkgconfig
-AC_CHECK_PROG(HAVE_PKGCONFIG, pkg-config, [ ], [
-  AC_MSG_ERROR([You need to have pkg-config installed!])
-])
-
-dnl Check for the required version of GStreamer core (and gst-plugins-base)
-dnl This will export GST_CFLAGS and GST_LIBS variables for use in Makefile.am
-dnl
-dnl If you need libraries from gst-plugins-base here, also add:
-dnl for libgstaudio-1.0: gstreamer-audio-1.0 >= \$GST_REQUIRED
-dnl for libgstvideo-1.0: gstreamer-video-1.0 >= \$GST_REQUIRED
-dnl for libgsttag-1.0: gstreamer-tag-1.0 >= \$GST_REQUIRED
-dnl for libgstpbutils-1.0: gstreamer-pbutils-1.0 >= \$GST_REQUIRED
-dnl for libgstfft-1.0: gstreamer-fft-1.0 >= \$GST_REQUIRED
-dnl for libgstinterfaces-1.0: gstreamer-interfaces-1.0 >= \$GST_REQUIRED
-dnl for libgstrtp-1.0: gstreamer-rtp-1.0 >= \$GST_REQUIRED
-dnl for libgstrtsp-1.0: gstreamer-rtsp-1.0 >= \$GST_REQUIRED
-dnl etc.
-PKG_CHECK_MODULES(GST, [
-  gstreamer-1.0 >= \$GST_REQUIRED
-  gstreamer-base-1.0 >= \$GST_REQUIRED
-  gstreamer-controller-1.0 >= \$GST_REQUIRED
-], [
-  AC_SUBST(GST_CFLAGS)
-  AC_SUBST(GST_LIBS)
-], [
-  AC_MSG_ERROR([
-      You need to install or upgrade the GStreamer development
-      packages on your system. On debian-based systems these are
-      libgstreamer1.0-dev and libgstreamer-plugins-base1.0-dev.
-      on RPM-based systems gstreamer1.0-devel, libgstreamer1.0-devel
-      or similar. The minimum version required is \$GST_REQUIRED.
-  ])
-])
-
-dnl check if compiler understands -Wall (if yes, add -Wall to GST_CFLAGS)
-AC_MSG_CHECKING([to see if compiler understands -Wall])
-save_CFLAGS="\$CFLAGS"
-CFLAGS="\$CFLAGS -Wall"
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([ ], [ ])], [
-  GST_CFLAGS="\$GST_CFLAGS -Wall"
-  AC_MSG_RESULT([yes])
-], [
-  AC_MSG_RESULT([no])
-])
-
-dnl set the plugindir where plugins should be installed (for plugins/Makefile.am)
-if test "x\${prefix}" = "x\$HOME"; then
-  plugindir="\$HOME/.gstreamer-1.0/plugins"
+# Set the directory where plugins should be installed.
+#
+# If the prefix is the user home directory, adjust the plugin installation
+# path so that GStreamer can find it. Requires meson >= 0.53.0
+fs = import('fs')
+if fs.is_samepath(get_option('prefix'), '~')
+  plugins_install_dir = '@0@/.local/share/gstreamer-1.0/plugins'.format(get_option('prefix'))
 else
-  plugindir="\\\$(libdir)/gstreamer-1.0"
-fi
-AC_SUBST(plugindir)
+  plugins_install_dir = '@0@/gstreamer-1.0'.format(get_option('libdir'))
+endif
 
-dnl set proper LDFLAGS for plugins
-GST_PLUGIN_LDFLAGS='-module -avoid-version -export-symbols-regex [_]*\(gst_\|Gst\|GST_\).*'
-AC_SUBST(GST_PLUGIN_LDFLAGS)
+plugin_deps = [gst_dep, gst_base_dep]
+tool_deps = [gst_dep]
 
-AC_CONFIG_FILES([Makefile plugins/Makefile tools/Makefile])
-AC_OUTPUT
+subdir('plugins')
+subdir('tools')
 EOF
 
-cat >$basedir/Makefile.am <<EOF
-SUBDIRS = plugins tools
-
-EXTRA_DIST = autogen.sh
-
-ACLOCAL_AMFLAGS = -I m4
-EOF
-
-mkdir -p $basedir/m4
 
 mkdir -p $basedir/plugins
 
-cat >$basedir/plugins/Makefile.am <<EOF
-plugin_LTLIBRARIES = lib$gstreplace.la
+cat >$basedir/plugins/meson.build <<EOF
+lib_args = common_args + []
 
 # sources used to compile this plug-in
-lib${gstreplace}_la_SOURCES = ${gstreplace}plugin.c ${gstreplace}.c ${gstreplace}.h
+plugin_sources = [
+  '${gstreplace}plugin.c',
+  '${gstreplace}.c',
+  '${gstreplace}.h'
+]
 
-# compiler and linker flags used to compile this plugin, set in configure.ac
-lib${gstreplace}_la_CFLAGS = \$(GST_CFLAGS)
-lib${gstreplace}_la_LIBADD = \$(GST_LIBS)
-lib${gstreplace}_la_LDFLAGS = \$(GST_PLUGIN_LDFLAGS)
+shlib = shared_library('${gstreplace}',
+  plugin_sources,
+  c_args : lib_args,
+  include_directories: [configinc],
+  dependencies : plugin_deps,
+  gnu_symbol_visibility : 'hidden',
+  install : true,
+  install_dir : plugins_install_dir,
+)
 
+# Make this library usable as a Meson subproject.
+gst_${replace}_dep = declare_dependency(
+  include_directories: include_directories('.'),
+  link_with : shlib)
+
+pkg_mod = import('pkgconfig')
+pkg_mod.generate(
+  name : '${gst__replace}',
+  filebase : '${gst__replace}',
+  description : 'Meson sample project.',
+  subdirs : 'src',
+  libraries : shlib,
+  version : '"@0@"'.format(meson.project_version()),
+)
 EOF
 
 
@@ -240,7 +203,7 @@ cat <<EOF
 /*
  * GStreamer
  * Copyright (C) $(date +%Y) $REAL_NAME <$EMAIL_ADDRESS>
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
@@ -323,7 +286,7 @@ generate | sed \
   -e "s/gstreplace/$gstreplace/g" \
   -e "s/replace/$replace/g" >$basedir/plugins/${gstreplace}plugin.c
 
-gst-indent $basedir/plugins/${gstreplace}plugin.c
+gst-indent $basedir/plugins/${gstreplace}plugin.c || echo "Warning: could not run gst-indent on the generated code." 1>&2
 rm -f $basedir/plugins/${gstreplace}plugin.c~
 
 cat >$basedir/plugins/${gstreplace}.c <<EOF
@@ -360,16 +323,21 @@ EOF
 
 mkdir -p $basedir/tools
 
-cat >$basedir/tools/Makefile.am <<EOF
-bin_PROGRAMS = ${gst__replace}
+cat >$basedir/tools/meson.build <<EOF
+exe_args = common_args + []
 
 # sources used to compile this program
-${gst_replace}_SOURCES = ${gstreplace}.c
+tool_sources = [
+  '${gstreplace}.c',
+]
 
-# compiler and linker flags used to compile the program, set in configure.ac
-${gst_replace}_CFLAGS = \$(GST_CFLAGS)
-${gst_replace}_LDADD = \$(GST_LIBS)
-
+executable('${gstreplace}',
+  tool_sources,
+  install: true,
+  c_args : exe_args,
+  include_directories: [configinc],
+  dependencies : tool_deps,
+)
 EOF
 
 cat >$basedir/tools/${gstreplace}.c <<EOF
@@ -385,5 +353,3 @@ cat >$basedir/tools/${gstreplace}.c <<EOF
 #include <stdio.h>
 int main (void) { printf ("FIXME\n"); return 0; }
 EOF
-
-
