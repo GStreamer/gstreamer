@@ -89,6 +89,7 @@ struct _GstMsdkVPP
 
   /* MFX context */
   GstMsdkContext *context;
+  GstMsdkContext *old_context;
   mfxVideoParam param;
   guint in_num_surfaces;
   guint out_num_surfaces;

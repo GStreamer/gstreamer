@@ -99,6 +99,7 @@ struct _GstMsdkEnc
 
   /* MFX context */
   GstMsdkContext *context;
+  GstMsdkContext *old_context;
   mfxVideoParam param;
   guint num_surfaces;
   guint num_tasks;

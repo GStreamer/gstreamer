@@ -161,6 +161,7 @@ gst_msdk_context_find (GstElement * element, GstMsdkContext ** context_ptr)
     return TRUE;
   }
 
+  /* This may indirectly set *context_ptr, see function body */
   _gst_context_query (element, GST_MSDK_CONTEXT_TYPE_NAME);
 
   if (*context_ptr)
