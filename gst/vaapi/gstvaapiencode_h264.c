@@ -274,6 +274,8 @@ gst_vaapiencode_h264_set_config (GstVaapiEncode * base_encode)
       goto fail;
 
     if (!gst_caps_can_intersect (allowed_caps, available_caps)) {
+      GstCaps *tmp_caps;
+
       GST_INFO_OBJECT (encode, "downstream may have requested an unsupported "
           "profile. Encoder will try to output a compatible one");
 
@@ -283,9 +285,15 @@ gst_vaapiencode_h264_set_config (GstVaapiEncode * base_encode)
       if (profile == GST_VAAPI_PROFILE_UNKNOWN)
         goto fail;
 
-      profile_caps = gst_caps_from_string (GST_CODEC_CAPS);
-      gst_caps_set_simple (profile_caps, "profile", G_TYPE_STRING,
+      tmp_caps = gst_caps_from_string (GST_CODEC_CAPS);
+      gst_caps_set_simple (tmp_caps, "profile", G_TYPE_STRING,
           gst_vaapi_profile_get_name (profile), NULL);
+      profile_caps = gst_caps_intersect (available_caps, tmp_caps);
+      gst_caps_unref (tmp_caps);
+      if (gst_caps_is_empty (profile_caps)) {
+        gst_caps_unref (profile_caps);
+        goto fail;
+      }
     } else {
       profile_caps = gst_caps_intersect (allowed_caps, available_caps);
       profile = find_best_profile (profile_caps);
