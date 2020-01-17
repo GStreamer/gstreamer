@@ -540,8 +540,8 @@ gst_msdkenc_close_encoder (GstMsdkEnc * thiz)
   GST_DEBUG_OBJECT (thiz, "Closing encoder with context %" GST_PTR_FORMAT,
       thiz->context);
 
-  gst_object_replace ((GstObject **) & thiz->msdk_pool, NULL);
-  gst_object_replace ((GstObject **) & thiz->msdk_converted_pool, NULL);
+  gst_clear_object (&thiz->msdk_pool);
+  gst_clear_object (&thiz->msdk_converted_pool);
 
   if (thiz->use_video_memory)
     gst_msdk_frame_free (thiz->context, &thiz->alloc_resp);
@@ -1452,7 +1452,7 @@ gst_msdkenc_stop (GstVideoEncoder * encoder)
     gst_video_codec_state_unref (thiz->input_state);
   thiz->input_state = NULL;
 
-  gst_object_replace ((GstObject **) & thiz->context, NULL);
+  gst_clear_object (&thiz->context);
 
   return TRUE;
 }
@@ -1548,8 +1548,8 @@ gst_msdkenc_finalize (GObject * object)
     gst_video_codec_state_unref (thiz->input_state);
   thiz->input_state = NULL;
 
-  gst_object_replace ((GstObject **) & thiz->msdk_pool, NULL);
-  gst_object_replace ((GstObject **) & thiz->msdk_converted_pool, NULL);
+  gst_clear_object (&thiz->msdk_pool);
+  gst_clear_object (&thiz->msdk_converted_pool);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

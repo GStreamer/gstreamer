@@ -692,8 +692,7 @@ gst_msdkdec_close (GstVideoDecoder * decoder)
 {
   GstMsdkDec *thiz = GST_MSDKDEC (decoder);
 
-  if (thiz->context)
-    gst_object_replace ((GstObject **) & thiz->context, NULL);
+  gst_clear_object (&thiz->context);
 
   return TRUE;
 }
@@ -1232,8 +1231,7 @@ gst_msdkdec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   /* Decoder always use its own pool. So we create a pool if msdk apis
    * previously requested for allocation (do_realloc = TRUE) */
   if (thiz->do_realloc || !thiz->pool) {
-    if (thiz->pool)
-      gst_object_replace ((GstObject **) & thiz->pool, NULL);
+    gst_clear_object (&thiz->pool);
     GST_INFO_OBJECT (decoder, "create new MSDK bufferpool");
     thiz->pool =
         gst_msdkdec_create_buffer_pool (thiz, &thiz->output_info, min_buffers);
@@ -1457,7 +1455,10 @@ gst_msdkdec_finalize (GObject * object)
   GstMsdkDec *thiz = GST_MSDKDEC (object);
 
   g_array_unref (thiz->tasks);
-  g_object_unref (thiz->adapter);
+  thiz->tasks = NULL;
+  g_clear_object (&thiz->adapter);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean

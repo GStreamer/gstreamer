@@ -781,17 +781,12 @@ gst_msdkvpp_close (GstMsdkVPP * thiz)
         msdk_status_to_string (status));
   }
 
-  if (thiz->context)
-    gst_object_replace ((GstObject **) & thiz->context, NULL);
+  gst_clear_object (&thiz->context);
 
   memset (&thiz->param, 0, sizeof (thiz->param));
 
-  if (thiz->sinkpad_buffer_pool)
-    gst_object_unref (thiz->sinkpad_buffer_pool);
-  thiz->sinkpad_buffer_pool = NULL;
-  if (thiz->srcpad_buffer_pool)
-    gst_object_unref (thiz->srcpad_buffer_pool);
-  thiz->srcpad_buffer_pool = NULL;
+  gst_clear_object (&thiz->sinkpad_buffer_pool);
+  gst_clear_object (&thiz->srcpad_buffer_pool);
 
   thiz->buffer_duration = GST_CLOCK_TIME_NONE;
   gst_video_info_init (&thiz->sinkpad_info);
@@ -1031,8 +1026,7 @@ gst_msdkvpp_initialize (GstMsdkVPP * thiz)
 
 no_vpp:
   GST_OBJECT_UNLOCK (thiz);
-  if (thiz->context)
-    gst_object_replace ((GstObject **) & thiz->context, NULL);
+  gst_clear_object (&thiz->context);
   return FALSE;
 }
 
