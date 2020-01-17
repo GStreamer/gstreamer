@@ -21,16 +21,22 @@
 /**
  * SECTION: gesasset
  * @title: GESAsset
- * @short_description: Represents usable resources inside the GStreamer Editing Services
+ * @short_description: Represents usable resources inside the GStreamer
+ * Editing Services
  *
- * The Assets in the GStreamer Editing Services represent the resources
- * that can be used. You can create assets for any type that implements the #GESExtractable
- * interface, for example #GESClips, #GESFormatter, and #GESTrackElement do implement it.
- * This means that assets will represent for example a #GESUriClips, #GESBaseEffect etc,
- * and then you can extract objects of those types with the appropriate parameters from the asset
- * using the #ges_asset_extract method:
+ * A #GESAsset in the GStreamer Editing Services represents a resources
+ * that can be used. In particular, any class that implements the
+ * #GESExtractable interface may have some associated assets with a
+ * corresponding #GESAsset:extractable-type, from which its objects can be
+ * extracted using ges_asset_extract(). Some examples would be
+ * #GESClip, #GESFormatter and #GESTrackElement.
  *
- * |[
+ * All assets that are created within GES are stored in a cache; one per
+ * each #GESAsset:id and #GESAsset:extractable-type pair. These assets can
+ * be fetched, and initialized if they do not yet exist in the cache,
+ * using ges_asset_request().
+ *
+ * ``` c
  * GESAsset *effect_asset;
  * GESEffect *effect;
  *
@@ -40,27 +46,22 @@
  * // And now you can extract an instance of GESEffect from that asset
  * effect = GES_EFFECT (ges_asset_extract (effect_asset));
  *
- * ]|
+ * ```
  *
- * In that example, the advantages of having a #GESAsset are that you can know what effects
- * you are working with and let your user know about the avalaible ones, you can add metadata
- * to the #GESAsset through the #GESMetaContainer interface and you have a model for your
- * custom effects. Note that #GESAsset management is making easier thanks to the #GESProject class.
+ * The advantage of using assets, rather than simply creating the object
+ * directly, is that the currently loaded resources can be listed with
+ * ges_list_assets() and displayed to an end user. For example, to show
+ * which media files have been loaded, and a standard list of effects. In
+ * fact, the GES library already creates assets for #GESTransitionClip and
+ * #GESFormatter, which you can use to list all the available transition
+ * types and supported formats.
  *
- * Each asset is represented by a pair of @extractable_type and @id (string). Actually the @extractable_type
- * is the type that implements the #GESExtractable interface, that means that for example for a #GESUriClip,
- * the type that implements the #GESExtractable interface is #GESClip.
- * The identifier represents different things depending on the @extractable_type and you should check
- * the documentation of each type to know what the ID of #GESAsset actually represents for that type. By default,
- * we only have one #GESAsset per type, and the @id is the name of the type, but this behaviour is overriden
- * to be more useful. For example, for GESTransitionClips, the ID is the vtype of the transition
- * you will extract from it (ie crossfade, box-wipe-rc etc..) For #GESEffect the ID is the
- * @bin-description property of the extracted objects (ie the gst-launch style description of the bin that
- * will be used).
+ * The other advantage is that #GESAsset implements #GESMetaContainer, so
+ * metadata can be set on the asset, with some subclasses automatically
+ * creating this metadata on initiation.
  *
- * Each and every #GESAsset is cached into GES, and you can query those with the #ges_list_assets function.
- * Also the system will automatically register #GESAssets for #GESFormatters and #GESTransitionClips
- * and standard effects (actually not implemented yet) and you can simply query those calling:
+ * For example, to display information about the supported formats, you
+ * could do the following:
  * |[
  *    GList *formatter_assets, *tmp;
  *
@@ -70,17 +71,52 @@
  *    // Print some infos about the formatter GESAsset
  *    for (tmp = formatter_assets; tmp; tmp = tmp->next) {
  *      g_print ("Name of the formatter: %s, file extension it produces: %s",
- *        ges_meta_container_get_string (GES_META_CONTAINER (tmp->data), GES_META_FORMATTER_NAME),
- *        ges_meta_container_get_string (GES_META_CONTAINER (tmp->data), GES_META_FORMATTER_EXTENSION));
+ *        ges_meta_container_get_string (
+ *          GES_META_CONTAINER (tmp->data), GES_META_FORMATTER_NAME),
+ *        ges_meta_container_get_string (
+ *          GES_META_CONTAINER (tmp->data), GES_META_FORMATTER_EXTENSION));
  *    }
  *
  *    g_list_free (transition_assets);
  *
  * ]|
  *
- * You can request the creation of #GESAssets using either ges_asset_request() or
- * ges_asset_request_async(). All the #GESAssets are cached and thus any asset that has already
- * been created can be requested again without overhead.
+ * ## ID
+ *
+ * Each asset is uniquely defined in the cache by its
+ * #GESAsset:extractable-type and #GESAsset:id. Depending on the
+ * #GESAsset:extractable-type, the #GESAsset:id can be used to parametrise
+ * the creation of the object upon extraction. By default, a class that
+ * implements #GESExtractable will only have a single associated asset,
+ * with an #GESAsset:id set to the type name of its objects. However, this
+ * is overwritten by some implementations, which allow a class to have
+ * multiple associated assets. For example, for #GESTransitionClip the
+ * #GESAsset:id will be a nickname of the #GESTransitionClip:vtype. You
+ * should check the documentation for each extractable type to see if they
+ * differ from the default.
+ *
+ * Moreover, each #GESAsset:extractable-type may also associate itself
+ * with a specific asset subclass. In such cases, when their asset is
+ * requested, an asset of this subclass will be returned instead.
+ *
+ * ## Managing
+ *
+ * You can use a #GESProject to easily manage the assets of a
+ * #GESTimeline.
+ *
+ * ## Proxies
+ *
+ * Some assets can (temporarily) act as the #GESAsset:proxy of another
+ * asset. When the original asset is requested from the cache, the proxy
+ * will be returned in its place. This can be useful if, say, you want
+ * to substitute a #GESUriClipAsset corresponding to a high resolution
+ * media file with the asset of a lower resolution stand in.
+ *
+ * An asset may even have several proxies, the first of which will act as
+ * its default and be returned on requests, but the others will be ordered
+ * to take its place once it is removed. You can add a proxy to an asset,
+ * or set its default, using ges_asset_set_proxy(), and you can remove
+ * them with ges_asset_unproxy().
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -206,6 +242,9 @@ _check_and_update_parameters (GType * extractable_type, const gchar * id,
   return real_id;
 }
 
+/* FIXME: why are we not accepting a GError ** error argument, which we
+ * could pass to ges_asset_cache_set_loaded ()? Which would allow the
+ * error to be set for the GInitable init method below */
 static gboolean
 start_loading (GESAsset * asset)
 {
@@ -218,6 +257,8 @@ static gboolean
 initable_init (GInitable * initable, GCancellable * cancellable,
     GError ** error)
 {
+  /* FIXME: Is there actually a reason to be freeing the GError that
+   * error points to? */
   g_clear_error (error);
 
   return start_loading (GES_ASSET (initable));
@@ -257,6 +298,10 @@ async_initable_init_async (GAsyncInitable * initable, gint io_priority,
     }
     case GES_ASSET_LOADING_ASYNC:
       /* If Async....  let it go */
+      /* FIXME: how are user subclasses that implement ->start_loading
+       * to return GES_ASSET_LOADING_ASYNC meant to invoke the private
+       * method ges_asset_cache_set_loaded once they finish initializing?
+       */
       break;
   }
 }
@@ -374,6 +419,8 @@ ges_asset_set_property (GObject * object, guint property_id,
   switch (property_id) {
     case PROP_TYPE:
       asset->priv->extractable_type = g_value_get_gtype (value);
+      /* NOTE: we calling this in the setter so metadata is set on the
+       * asset upon initiation, but before it has been loaded. */
       ges_extractable_register_metas (asset->priv->extractable_type, asset);
       break;
     case PROP_ID:
@@ -383,6 +430,8 @@ ges_asset_set_property (GObject * object, guint property_id,
       ges_asset_set_proxy (asset, g_value_get_object (value));
       break;
     case PROP_PROXY_TARGET:
+      /* FIXME: Need to remove self as a proxy from the previous target
+       * and only call the below when the new target is not NULL */
       ges_asset_set_proxy (g_value_get_object (value), asset);
       break;
     default:
@@ -421,20 +470,54 @@ ges_asset_class_init (GESAssetClass * klass)
   object_class->set_property = ges_asset_set_property;
   object_class->finalize = ges_asset_finalize;
 
+  /**
+   * GESAsset:extractable-type:
+   *
+   * The #GESExtractable object type that can be extracted from the asset.
+   */
   _properties[PROP_TYPE] =
       g_param_spec_gtype ("extractable-type", "Extractable type",
       "The type of the Object that can be extracted out of the asset",
       G_TYPE_OBJECT, G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
 
+  /**
+   * GESAsset:id:
+   *
+   * The ID of the asset. This should be unique amongst all assets with
+   * the same #GESAsset:extractable-type. Depending on the associated
+   * #GESExtractable implementation, this id may convey some information
+   * about the #GObject that should be extracted. Note that, as such, the
+   * ID will have an expected format, and you can not choose this value
+   * arbitrarily. By default, this will be set to the type name of the
+   * #GESAsset:extractable-type, but you should check the documentation
+   * of the extractable type to see whether they differ from the
+   * default behaviour.
+   */
   _properties[PROP_ID] =
       g_param_spec_string ("id", "Identifier",
-      "The unic identifier of the asset", NULL,
+      "The unique identifier of the asset", NULL,
       G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
 
+  /**
+   * GESAsset:proxy:
+   *
+   * The default proxy for this asset, or %NULL if it has no proxy. A
+   * proxy will act as a substitute for the original asset when the
+   * original is requested (see ges_asset_request()).
+   *
+   * Setting this property will not remove the existing proxy, but will
+   * replace it as the default (see ges_asset_set_proxy()).
+   */
   _properties[PROP_PROXY] =
       g_param_spec_object ("proxy", "Proxy",
       "The asset default proxy.", GES_TYPE_ASSET, G_PARAM_READWRITE);
 
+  /**
+   * GESAsset:proxy-target:
+   *
+   * The asset that this asset is a proxy of, or %NULL if it is not a
+   * proxy for another asset.
+   */
   _properties[PROP_PROXY_TARGET] =
       g_param_spec_object ("proxy-target", "Proxy target",
       "The target of a proxy asset.", GES_TYPE_ASSET, G_PARAM_READWRITE);
@@ -445,6 +528,7 @@ ges_asset_class_init (GESAssetClass * klass)
   klass->extract = ges_asset_extract_default;
   klass->request_id_update = ges_asset_request_id_update_default;
   klass->inform_proxy = NULL;
+  /* FIXME: ->proxied vmethod unset */
 
   GST_DEBUG_CATEGORY_INIT (ges_asset_debug, "ges-asset",
       GST_DEBUG_FG_BLUE | GST_DEBUG_BOLD, "GES Asset");
@@ -715,6 +799,9 @@ ges_asset_try_proxy (GESAsset * asset, const gchar * new_id)
   asset->priv->state = ASSET_PROXIED;
   asset->priv->proxied_asset_id = g_strdup (new_id);
 
+  /* FIXME: inform_proxy is not used consistently. For example, it is
+   * not called in set_proxy. However, it is still used by GESUriAsset.
+   * We should find some other method */
   class = GES_ASSET_GET_CLASS (asset);
   if (class->inform_proxy)
     GES_ASSET_GET_CLASS (asset)->inform_proxy (asset, new_id);
@@ -733,17 +820,24 @@ _lookup_proxied_asset (const gchar * id, GESAssetCacheEntry * entry,
 
 /**
  * ges_asset_set_proxy:
- * @asset: The #GESAsset to set proxy on
- * @proxy: (allow-none): The #GESAsset that should be used as default proxy for @asset or
- * %NULL if you want to use the currently set proxy. Note that an asset can proxy one and only
- * one other asset.
+ * @asset: The #GESAsset to proxy
+ * @proxy: (allow-none): A new default proxy for @asset
  *
- * A proxying asset is an asset that can substitue the real @asset. For example if you
- * have a full HD #GESUriClipAsset you might want to set a lower resolution (HD version
- * of the same file) as proxy. Note that when an asset is proxied, calling
- * #ges_asset_request will actually return the proxy asset.
+ * Sets one asset as the default #GESAsset:proxy of another (the
+ * original asset).
  *
- * Returns: %TRUE if @proxy has been set on @asset, %FALSE otherwise.
+ * If the given proxy is among the existing proxies of the asset (see
+ * ges_asset_list_proxies()) it will be moved to become the default
+ * proxy. Otherwise, the proxy will be added to the list of proxies, as
+ * the new default. The previous default proxy will become 'next in line'
+ * for if the new one is removed, and so on. As such, this method will
+ * **not** actually remove the previous default proxy
+ * (use ges_asset_unproxy() for that).
+ *
+ * Note that an asset can only act as a proxy for one other asset.
+ *
+ * Returns: %TRUE if @proxy was successfully set as the default for
+ * @asset.
  */
 gboolean
 ges_asset_set_proxy (GESAsset * asset, GESAsset * proxy)
@@ -776,6 +870,8 @@ ges_asset_set_proxy (GESAsset * asset, GESAsset * proxy)
     return TRUE;
   }
 
+  /* FIXME: why are we allowing for a NULL asset? What is the desired
+   * behaviour? */
   if (asset == NULL) {
     GHashTable *entries_table;
     GESAssetCacheEntry *entry;
@@ -837,18 +933,26 @@ ges_asset_set_proxy (GESAsset * asset, GESAsset * proxy)
   asset->priv->state = ASSET_PROXIED;
   g_object_notify_by_pspec (G_OBJECT (asset), _properties[PROP_PROXY]);
 
+  /* FIXME: ->inform_proxy is not called. We should figure out what the
+   * purpose of ->inform_proxy should be generically. Currently, it is
+   * only called in ges_asset_try_proxy! */
+
   return TRUE;
 }
 
 /**
  * ges_asset_unproxy:
- * @asset: The #GESAsset to stop proxying with @proxy
- * @proxy: The #GESAsset to stop considering as a proxy for @asset
+ * @asset: The #GESAsset to no longer proxy with @proxy
+ * @proxy: An existing proxy of @asset
  *
- * Removes @proxy from the list of known proxies for @asset.
- * If @proxy was the current proxy for @asset, stop using it.
+ * Removes the proxy from the available list of proxies for the asset. If
+ * the given proxy is the default proxy of the list, then the next proxy
+ * in the available list (see ges_asset_list_proxies()) will become the
+ * default. If there are no other proxies, then the asset will no longer
+ * have a default #GESAsset:proxy.
  *
- * Returns: %TRUE if @proxy was a known proxy for @asset, %FALSE otherwise.
+ * Returns: %TRUE if @proxy was successfully removed from @asset's proxy
+ * list.
  */
 gboolean
 ges_asset_unproxy (GESAsset * asset, GESAsset * proxy)
@@ -873,10 +977,14 @@ ges_asset_unproxy (GESAsset * asset, GESAsset * proxy)
 
 /**
  * ges_asset_list_proxies:
- * @asset: The #GESAsset to get proxies from
+ * @asset: A #GESAsset
  *
- * Returns: (element-type GESAsset) (transfer none): The list of proxies @asset has. Note that the default asset to be
- * used is always the first in that list.
+ * Get all the proxies that the asset has. The first item of the list will
+ * be the default #GESAsset:proxy. The second will be the proxy that is
+ * 'next in line' to be default, and so on.
+ *
+ * Returns: (element-type GESAsset) (transfer none): The list of proxies
+ * that @asset has.
  */
 GList *
 ges_asset_list_proxies (GESAsset * asset)
@@ -888,9 +996,11 @@ ges_asset_list_proxies (GESAsset * asset)
 
 /**
  * ges_asset_get_proxy:
- * @asset: The #GESAsset to get currenlty used proxy
+ * @asset: A #GESAsset
  *
- * Returns: (transfer none) (nullable): The proxy in use for @asset
+ * Gets the default #GESAsset:proxy of the asset.
+ *
+ * Returns: (transfer none) (nullable): The default proxy of @asset.
  */
 GESAsset *
 ges_asset_get_proxy (GESAsset * asset)
@@ -906,9 +1016,15 @@ ges_asset_get_proxy (GESAsset * asset)
 
 /**
  * ges_asset_get_proxy_target:
- * @proxy: The #GESAsset from which to get the the asset it proxies.
+ * @proxy: A #GESAsset
  *
- * Returns: (transfer none) (nullable): The #GESAsset that is proxied by @proxy
+ * Gets the #GESAsset:proxy-target of the asset.
+ *
+ * Note that the proxy target may have loaded with an error, so you should
+ * call ges_asset_get_error() on the returned target.
+ *
+ * Returns: (transfer none) (nullable): The asset that @proxy is a proxy
+ * of.
  */
 GESAsset *
 ges_asset_get_proxy_target (GESAsset * proxy)
@@ -993,9 +1109,9 @@ _ensure_asset_for_wrong_id (const gchar * wrong_id, GType extractable_type,
  * ges_asset_get_extractable_type:
  * @self: The #GESAsset
  *
- * Gets the type of object that can be extracted from @self
+ * Gets the #GESAsset:extractable-type of the asset.
  *
- * Returns: the type of object that can be extracted from @self
+ * Returns: The extractable type of @self.
  */
 GType
 ges_asset_get_extractable_type (GESAsset * self)
@@ -1007,18 +1123,46 @@ ges_asset_get_extractable_type (GESAsset * self)
 
 /**
  * ges_asset_request:
- * @extractable_type: The #GType of the object that can be extracted from the new asset.
- * @id: (allow-none): The Identifier or %NULL
- * @error: (allow-none): An error to be set in case something wrong happens or %NULL
+ * @extractable_type: The #GESAsset:extractable-type of the asset
+ * @id: (allow-none): The #GESAsset:id of the asset
+ * @error: (allow-none): An error to be set if the requested asset has
+ * loaded with an error, or %NULL to ignore
  *
- * Create a #GESAsset in the most simple cases, you should look at the @extractable_type
- * documentation to see if that constructor can be called for this particular type
+ * Returns an asset with the given properties. If such an asset already
+ * exists in the cache (it has been previously created in GES), then a
+ * reference to the existing asset is returned. Otherwise, a newly created
+ * asset is returned, and also added to the cache.
  *
- * As it is recommanded not to instanciate assets for GESUriClip synchronously,
- * it will not work with this method, but you can instead use the specific
- * #ges_uri_clip_asset_request_sync method if you really want to.
+ * If the requested asset has been loaded with an error, then @error is
+ * set, if given, and %NULL will be returned instead.
  *
- * Returns: (transfer full) (allow-none): A reference to the wanted #GESAsset or %NULL
+ * Note that the given @id may not be exactly the #GESAsset:id that is
+ * set on the returned asset. For instance, it may be adjusted into a
+ * standard format. Or, if a #GESExtractable type does not have its
+ * extraction parametrised, as is the case by default, then the given @id
+ * may be ignored entirely and the #GESAsset:id set to some standard, in
+ * which case a %NULL @id can be given.
+ *
+ * Similarly, the given @extractable_type may not be exactly the
+ * #GESAsset:extractable-type that is set on the returned asset. Instead,
+ * the actual extractable type may correspond to a subclass of the given
+ * @extractable_type, depending on the given @id.
+ *
+ * Moreover, depending on the given @extractable_type, the returned asset
+ * may belong to a subclass of #GESAsset.
+ *
+ * Finally, if the requested asset has a #GESAsset:proxy, then the proxy
+ * that is found at the end of the chain of proxies is returned (a proxy's
+ * proxy will take its place, and so on, unless it has no proxy).
+ *
+ * Some asset subclasses only support asynchronous construction of its
+ * assets, such as #GESUriClip. For such assets this method will fail, and
+ * you should use ges_asset_request_async() instead. In the case of
+ * #GESUriClip, you can use ges_uri_clip_asset_request_sync() if you only
+ * want to wait for the request to finish.
+ *
+ * Returns: (transfer full) (allow-none): A reference to the requested
+ * asset, or %NULL if an error occurred.
  */
 GESAsset *
 ges_asset_request (GType extractable_type, const gchar * id, GError ** error)
@@ -1091,6 +1235,8 @@ ges_asset_request (GType extractable_type, const gchar * id, GError ** error)
     iface = g_type_interface_peek (klass, G_TYPE_INITABLE);
 
     if (iface->init) {
+      /* FIXME: allow the error to be set, which GInitable is designed
+       * for! */
       asset = g_initable_new (asset_type,
           NULL, NULL, "id", real_id, "extractable-type",
           extractable_type, NULL);
@@ -1111,32 +1257,32 @@ done:
 
 /**
  * ges_asset_request_async:
- * @extractable_type: The #GType of the object that can be extracted from the
- *    new asset. The class must implement the #GESExtractable interface.
- * @id: The Identifier of the asset we want to create. This identifier depends of the extractable,
- * type you want. By default it is the name of the class itself (or %NULL), but for example for a
- * GESEffect, it will be the pipeline description, for a GESUriClip it
- * will be the name of the file, etc... You should refer to the documentation of the #GESExtractable
- * type you want to create a #GESAsset for.
- * @cancellable: (allow-none): optional %GCancellable object, %NULL to ignore.
- * @callback: a #GAsyncReadyCallback to call when the initialization is finished,
- * Note that the @source of the callback will be the #GESAsset, but you need to
- * make sure that the asset is properly loaded using the #ges_asset_request_finish
- * method. This asset can not be used as is.
- * @user_data: The user data to pass when @callback is called
+ * @extractable_type: The #GESAsset:extractable-type of the asset
+ * @id: (allow-none): The #GESAsset:id of the asset
+ * @cancellable: (allow-none): An object to allow cancellation of the
+ * asset request, or %NULL to ignore
+ * @callback: A function to call when the initialization is finished
+ * @user_data: Data to be passed to @callback
  *
- * The @callback will be called from a running #GMainLoop which is iterating a #GMainContext.
- * Note that, users should ensure the #GMainContext, since this method will notify
- * @callback from the thread which was associated with a thread default
- * #GMainContext at calling ges_init().
- * For example, if a user wants non-default #GMainContext to be associated
- * with @callback, ges_init() must be called after g_main_context_push_thread_default ()
- * with custom #GMainContext.
+ * Requests an asset with the given properties asynchronously (see
+ * ges_asset_request()). When the asset has been initialized or fetched
+ * from the cache, the given callback function will be called. The
+ * asset can then be retrieved in the callback using the
+ * ges_asset_request_finish() method on the given #GAsyncResult.
  *
- * Request a new #GESAsset asyncronously, @callback will be called when the materail is
- * ready to be used or if an error occured.
+ * Note that the source object passed to the callback will be the
+ * #GESAsset corresponding to the request, but it may not have loaded
+ * correctly and therefore can not be used as is. Instead,
+ * ges_asset_request_finish() should be used to fetch a usable asset, or
+ * indicate that an error occurred in the asset's creation.
  *
- * Example of request of a GESAsset async:
+ * Note that the callback will be called in the #GMainLoop running under
+ * the same #GMainContext that ges_init() was called in. So, if you wish
+ * the callback to be invoked outside the default #GMainContext, you can
+ * call g_main_context_push_thread_default() in a new thread before
+ * calling ges_init().
+ *
+ * Example of an asynchronous asset request:
  * |[
  * // The request callback
  * static void
@@ -1255,21 +1401,23 @@ done:
 
 /**
  * ges_asset_needs_reload
- * @extractable_type: The #GType of the object that can be extracted from the
- *  asset to be reloaded.
- * @id: The identifier of the asset to mark as needing reload
+ * @extractable_type: The #GESAsset:extractable-type of the asset that
+ * needs reloading
+ * @id: (allow-none): The #GESAsset:id of the asset asset that needs
+ * reloading
  *
- * Sets an asset from the internal cache as needing reload. An asset needs reload
- * in the case where, for example, we were missing a GstPlugin to use it and that
- * plugin has been installed, or, that particular asset content as changed
- * meanwhile (in the case of the usage of proxies).
+ * Indicate that an existing #GESAsset in the cache should be reloaded
+ * upon the next request. This can be used when some condition has
+ * changed, which may require that an existing asset should be updated.
+ * For example, if an external resource has changed or now become
+ * available.
  *
- * Once an asset has been set as "needs reload", requesting that asset again
- * will lead to it being re discovered, and reloaded as if it was not in the
- * cache before.
+ * Note, the asset is not immediately changed, but will only actually
+ * reload on the next call to ges_asset_request() or
+ * ges_asset_request_async().
  *
- * Returns: %TRUE if the asset was in the cache and could be set as needing reload,
- * %FALSE otherwise.
+ * Returns: %TRUE if the specified asset exists in the cache and could be
+ * marked for reloading.
  */
 gboolean
 ges_asset_needs_reload (GType extractable_type, const gchar * id)
@@ -1305,11 +1453,11 @@ ges_asset_needs_reload (GType extractable_type, const gchar * id)
 
 /**
  * ges_asset_get_id:
- * @self: The #GESAsset to get ID from
+ * @self: A #GESAsset
  *
- * Gets the ID of a #GESAsset
+ * Gets the #GESAsset:id of the asset.
  *
- * Returns: The ID of @self
+ * Returns: The ID of @self.
  */
 const gchar *
 ges_asset_get_id (GESAsset * self)
@@ -1321,15 +1469,16 @@ ges_asset_get_id (GESAsset * self)
 
 /**
  * ges_asset_extract:
- * @self: The #GESAsset to get extract an object from
- * @error: (allow-none): An error to be set in case something wrong happens or %NULL
+ * @self: The #GESAsset to extract an object from
+ * @error: (allow-none): An error to be set in case something goes wrong,
+ * or %NULL to ignore
  *
- * Extracts a new #GObject from @asset. The type of the object is
- * defined by the extractable-type of @asset, you can check what
- * type will be extracted from @asset using
- * #ges_asset_get_extractable_type
+ * Extracts a new #GESAsset:extractable-type object from the asset. The
+ * #GESAsset:id of the asset may determine the properties and state of the
+ * newly created object.
  *
- * Returns: (transfer floating) (allow-none): A newly created #GESExtractable
+ * Returns: (transfer floating): A newly created object, or %NULL if an
+ * error occurred.
  */
 GESExtractable *
 ges_asset_extract (GESAsset * self, GError ** error)
@@ -1354,13 +1503,15 @@ ges_asset_extract (GESAsset * self, GError ** error)
 
 /**
  * ges_asset_request_finish:
- * @res: The #GAsyncResult from which to get the newly created #GESAsset
+ * @res: The task result to fetch the asset from
  * @error: (out) (allow-none) (transfer full): An error to be set in case
- * something wrong happens or %NULL
+ * something goes wrong, or %NULL to ignore
  *
- * Finalize the request of an async #GESAsset
+ * Fetches an asset requested by ges_asset_request_async(), which
+ * finalises the request.
  *
- * Returns: (transfer full)(allow-none): The #GESAsset previously requested
+ * Returns: (transfer full): The requested asset, or %NULL if an error
+ * occurred.
  */
 GESAsset *
 ges_asset_request_finish (GAsyncResult * res, GError ** error)
@@ -1383,14 +1534,19 @@ ges_asset_request_finish (GAsyncResult * res, GError ** error)
 
 /**
  * ges_list_assets:
- * @filter: Type of assets to list, `GES_TYPE_EXTRACTABLE`  will list
- * all assets
+ * @filter: The type of object that can be extracted from the asset
  *
- * List all @asset filtering per filter as defined by @filter.
- * It copies the asset and thus will not be updated in time.
+ * List all the assets in the current cache whose
+ * #GESAsset:extractable-type are of the given type (including
+ * subclasses).
  *
- * Returns: (transfer container) (element-type GESAsset): The list of
- * #GESAsset the object contains
+ * Note that, since only a #GESExtractable can be extracted from an asset,
+ * using `GES_TYPE_EXTRACTABLE` as @filter will return all the assets in
+ * the current cache.
+ *
+ * Returns: (transfer container) (element-type GESAsset): A list of all
+ * #GESAsset-s currently in the cache whose #GESAsset:extractable-type is
+ * of the @filter type.
  */
 GList *
 ges_list_assets (GType filter)
@@ -1423,10 +1579,12 @@ ges_list_assets (GType filter)
 
 /**
  * ges_asset_get_error:
- * @self: The asset to retrieve the error from
+ * @self: A #GESAsset
  *
- * Returns: (transfer none) (nullable): The #GError of the asset or %NULL if
- * the asset was loaded without issue
+ * Retrieve the error that was set on the asset when it was loaded.
+ *
+ * Returns: (transfer none) (nullable): The error set on @asset, or
+ * %NULL if no error occurred when @asset was loaded.
  *
  * Since: 1.8
  */

@@ -42,6 +42,14 @@ G_BEGIN_DECLS
 #define GES_ASSET_GET_CLASS(obj) \
     (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_ASSET, GESAssetClass))
 
+/**
+ * GESAssetLoadingReturn:
+ * @GES_ASSET_LOADING_ERROR: Indicates that an error occurred
+ * @GES_ASSET_LOADING_ASYNC: Indicates that the loading is being performed
+ * asynchronously
+ * @GES_ASSET_LOADING_OK: Indicates that the loading is complete, without
+ * error
+ */
 typedef enum
 {
   GES_ASSET_LOADING_ERROR,
@@ -65,6 +73,26 @@ struct _GESAsset
   gpointer _ges_reserved[GES_PADDING];
 };
 
+/**
+ * GESAssetClass:
+ * @start_loading: A method to be called when an asset is being requested
+ * asynchronously. This will be after the properties of the asset have
+ * been set, so it is tasked with (re)loading the 'state' of the asset.
+ * The return value should indicated whether the loading is complete, is
+ * carrying on asynchronously, or an error occurred. The default
+ * implementation will simply return that loading is already complete (the
+ * asset is already in a usable state after the properties have been set).
+ * @extract: A method that returns a new object of the asset's
+ * #GESAsset:extractable-type, or %NULL if an error occurs. The default
+ * implementation will fetch the properties of the #GESExtractable from
+ * its get_parameters_from_id() class method and set them on a new
+ * #GESAsset:extractable-type #GObject, which is returned.
+ * @request_id_update: A method called by a #GESProject when an asset has
+ * failed to load. @error is the error given by
+ * ges_asset_request_finish (). Returns: %TRUE if a new id for @self was
+ * passed to @proposed_new_id.
+ */
+/* FIXME: add documentation for inform_proxy when it is used properly */
 struct _GESAssetClass
 {
   GObjectClass parent;
