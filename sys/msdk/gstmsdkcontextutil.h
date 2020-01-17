@@ -44,7 +44,7 @@
 G_BEGIN_DECLS
 
 gboolean
-gst_msdk_context_prepare (GstElement * element, GstMsdkContext ** context_ptr);
+gst_msdk_context_find (GstElement * element, GstMsdkContext ** context_ptr);
 
 gboolean
 gst_msdk_context_get_context (GstContext * context, GstMsdkContext ** msdk_context);

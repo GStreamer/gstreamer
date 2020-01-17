@@ -703,47 +703,61 @@ gst_msdkdec_finish_task (GstMsdkDec * thiz, MsdkDecTask * task)
 }
 
 static gboolean
+gst_msdkdec_context_prepare (GstMsdkDec * thiz)
+{
+  /* Try to find an existing context from the pipeline. This may (indirectly)
+   * invoke gst_msdkdec_set_context, which will set thiz->context. */
+  if (!gst_msdk_context_find (GST_ELEMENT_CAST (thiz), &thiz->context))
+    return FALSE;
+
+  /* TODO: Currently d3d allocator is not implemented.
+   * So decoder uses system memory by default on Windows.
+   */
+#ifndef _WIN32
+  thiz->use_video_memory = TRUE;
+#else
+  thiz->use_video_memory = FALSE;
+#endif
+
+  GST_INFO_OBJECT (thiz, "Found context %" GST_PTR_FORMAT " from neighbour",
+      thiz->context);
+
+  if (!gst_msdk_context_get_job_type (thiz->context) & GST_MSDK_JOB_DECODER) {
+    gst_msdk_context_add_job_type (thiz->context, GST_MSDK_JOB_DECODER);
+    return TRUE;
+  }
+
+  /* Found an existing context that's already being used as a decoder, clone
+   * the MFX session inside it to create a new one */
+  {
+    GstMsdkContext *parent_context, *msdk_context;
+
+    GST_INFO_OBJECT (thiz, "Creating new context %" GST_PTR_FORMAT " with "
+        "joined session", thiz->context);
+    parent_context = thiz->context;
+    msdk_context = gst_msdk_context_new_with_parent (parent_context);
+
+    if (!msdk_context) {
+      GST_ERROR_OBJECT (thiz, "Failed to create a context with parent context "
+          "as %" GST_PTR_FORMAT, parent_context);
+      return FALSE;
+    }
+
+    thiz->context = msdk_context;
+    gst_msdk_context_add_shared_async_depth (thiz->context,
+        gst_msdk_context_get_shared_async_depth (parent_context));
+    gst_object_unref (parent_context);
+  }
+
+  return TRUE;
+}
+
+static gboolean
 gst_msdkdec_start (GstVideoDecoder * decoder)
 {
   GstMsdkDec *thiz = GST_MSDKDEC (decoder);
 
-  if (gst_msdk_context_prepare (GST_ELEMENT_CAST (thiz), &thiz->context)) {
-    GST_INFO_OBJECT (thiz, "Found context %" GST_PTR_FORMAT " from neighbour",
-        thiz->context);
-
-    /* TODO: Currently d3d allocator is not implemented.
-     * So decoder uses system memory by default on Windows.
-     */
-#ifndef _WIN32
-    thiz->use_video_memory = TRUE;
-#else
-    thiz->use_video_memory = FALSE;
-#endif
-
-    if (gst_msdk_context_get_job_type (thiz->context) & GST_MSDK_JOB_DECODER) {
-      GstMsdkContext *parent_context, *msdk_context;
-
-      parent_context = thiz->context;
-      msdk_context = gst_msdk_context_new_with_parent (parent_context);
-
-      if (!msdk_context) {
-        GST_ERROR_OBJECT (thiz, "Context creation failed");
-        return FALSE;
-      }
-
-      thiz->context = msdk_context;
-
-      gst_msdk_context_add_shared_async_depth (thiz->context,
-          gst_msdk_context_get_shared_async_depth (parent_context));
-      gst_object_unref (parent_context);
-
-      GST_INFO_OBJECT (thiz,
-          "Creating new context %" GST_PTR_FORMAT " with joined session",
-          thiz->context);
-    } else {
-      gst_msdk_context_add_job_type (thiz->context, GST_MSDK_JOB_DECODER);
-    }
-  } else {
+  if (!gst_msdkdec_context_prepare (thiz)) {
     if (!gst_msdk_context_ensure_context (GST_ELEMENT_CAST (thiz),
             thiz->hardware, GST_MSDK_JOB_DECODER))
       return FALSE;

@@ -147,7 +147,7 @@ found:
 }
 
 gboolean
-gst_msdk_context_prepare (GstElement * element, GstMsdkContext ** context_ptr)
+gst_msdk_context_find (GstElement * element, GstMsdkContext ** context_ptr)
 {
   g_return_val_if_fail (element != NULL, FALSE);
   g_return_val_if_fail (context_ptr != NULL, FALSE);
