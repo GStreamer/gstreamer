@@ -21,9 +21,25 @@
 /**
  * SECTION: gesextractable
  * @title: GESExtractable Interface
- * @short_description: An interface for objects which can be extracted from a GESAsset
+ * @short_description: An interface for objects which can be extracted
+ * from a #GESAsset
  *
- * FIXME: Long description needed
+ * A #GObject that implements the #GESExtractable interface can be
+ * extracted from a #GESAsset using ges_asset_extract().
+ *
+ * Each extractable type will have its own way of interpreting the
+ * #GESAsset:id of an asset (or, if it is associated with a specific
+ * subclass of #GESAsset, the asset subclass may handle the
+ * interpretation of the #GESAsset:id). By default, the requested asset
+ * #GESAsset:id will be ignored by a #GESExtractable and will be set to
+ * the type name of the extractable instead. Also by default, when the
+ * requested asset is extracted, the returned object will simply be a
+ * newly created default object of that extractable type. You should check
+ * the documentation for each extractable type to see if they differ from
+ * the default.
+ *
+ * After the object is extracted, it will have a reference to the asset it
+ * came from, which you can retrieve using ges_extractable_get_asset().
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -86,12 +102,12 @@ ges_extractable_default_init (GESExtractableInterface * iface)
 
 /**
  * ges_extractable_get_asset:
- * @self: The #GESExtractable from which to retrieve a #GESAsset
+ * @self: A #GESExtractable
  *
- * Method for getting an asset from a #GESExtractable
+ * Get the asset that has been set on the extractable object.
  *
- * Returns: (transfer none) (nullable): The #GESAsset or %NULL if none has
- * been set
+ * Returns: (transfer none) (nullable): The asset set on @self, or %NULL
+ * if no asset has been set.
  */
 GESAsset *
 ges_extractable_get_asset (GESExtractable * self)
@@ -103,12 +119,22 @@ ges_extractable_get_asset (GESExtractable * self)
 
 /**
  * ges_extractable_set_asset:
- * @self: Target object
- * @asset: (transfer none): The #GESAsset to set
+ * @self: A #GESExtractable
+ * @asset: (transfer none): The asset to set
  *
- * Method to set the asset which instantiated the specified object
+ * Sets the asset for this extractable object.
  *
- * Return: %TRUE if @asset could be set %FALSE otherwize
+ * When an object is extracted from an asset using ges_asset_extract() its
+ * asset will be automatically set. Note that many classes that implement
+ * #GESExtractable will automatically create their objects using assets
+ * when you call their @new methods. However, you can use this method to
+ * associate an object with a compatible asset if it was created by other
+ * means and does not yet have an asset. Or, for some implementations of
+ * #GESExtractable, you can use this to change the asset of the given
+ * extractable object, which will lead to a change in its state to
+ * match the new asset #GESAsset:id.
+ *
+ * Returns: %TRUE if @asset could be successfully set on @self.
  */
 gboolean
 ges_extractable_set_asset (GESExtractable * self, GESAsset * asset)
@@ -123,15 +149,19 @@ ges_extractable_set_asset (GESExtractable * self, GESAsset * asset)
   if (iface->can_update_asset == FALSE &&
       g_object_get_qdata (G_OBJECT (self), ges_asset_key)) {
     GST_WARNING_OBJECT (self, "Can not reset asset on object");
+    /* FIXME: do not fail if the same asset */
 
     return FALSE;
   }
+  /* FIXME: shouldn't we check that the extractable-type of the asset
+   * matches our type? */
 
   g_object_set_qdata_full (G_OBJECT (self), ges_asset_key,
       gst_object_ref (asset), gst_object_unref);
 
   /* Let classes that implement the interface know that a asset has been set */
   if (iface->set_asset_full)
+    /* FIXME: return to the previous asset if the setting fails */
     return iface->set_asset_full (self, asset);
 
   if (iface->set_asset)
@@ -142,9 +172,18 @@ ges_extractable_set_asset (GESExtractable * self, GESAsset * asset)
 
 /**
  * ges_extractable_get_id:
- * @self: The #GESExtractable
+ * @self: A #GESExtractable
  *
- * Returns: (transfer full): The #id of the associated #GESAsset, free with #g_free
+ * Gets the #GESAsset:id of some associated asset. It may be the case
+ * that the object has no set asset, or even that such an asset does not
+ * yet exist in the GES cache. Instead, this will return the asset
+ * #GESAsset:id that is _compatible_ with the current state of the object,
+ * as determined by the #GESExtractable implementer. If it was indeed
+ * extracted from an asset, this should return the same as its
+ * corresponding asset #GESAsset:id.
+ *
+ * Returns: (transfer full): The #GESAsset:id of some associated #GESAsset
+ * that is compatible with @self's current state.
  */
 gchar *
 ges_extractable_get_id (GESExtractable * self)
