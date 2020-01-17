@@ -131,19 +131,11 @@ static GstFlowReturn
 drain_pending_buffers (MpegTSParse2 * parse, gboolean drain_all);
 
 static void
-mpegts_parse_dispose (GObject * object)
+mpegts_parse_finalize (GObject * object)
 {
   MpegTSParse2 *parse = (MpegTSParse2 *) object;
 
   gst_flow_combiner_free (parse->flowcombiner);
-
-  GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
-}
-
-static void
-mpegts_parse_finalize (GObject * object)
-{
-  MpegTSParse2 *parse = (MpegTSParse2 *) object;
 
   gst_adapter_clear (parse->ts_adapter.adapter);
   g_object_unref (parse->ts_adapter.adapter);
@@ -160,7 +152,6 @@ mpegts_parse_class_init (MpegTSParse2Class * klass)
 
   gobject_class->set_property = mpegts_parse_set_property;
   gobject_class->get_property = mpegts_parse_get_property;
-  gobject_class->dispose = mpegts_parse_dispose;
   gobject_class->finalize = mpegts_parse_finalize;
 
   g_object_class_install_property (gobject_class, PROP_SET_TIMESTAMPS,
