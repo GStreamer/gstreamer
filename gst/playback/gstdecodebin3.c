@@ -777,7 +777,7 @@ parsebin_drained_cb (GstElement * parsebin, DecodebinInput * input)
   gboolean all_drained;
   GList *tmp;
 
-  GST_WARNING_OBJECT (dbin, "input %p drained", input);
+  GST_INFO_OBJECT (dbin, "input %p drained", input);
   input->drained = TRUE;
 
   all_drained = dbin->main_input->drained;
@@ -788,7 +788,7 @@ parsebin_drained_cb (GstElement * parsebin, DecodebinInput * input)
   }
 
   if (all_drained) {
-    GST_WARNING_OBJECT (dbin, "All inputs drained. Posting about-to-finish");
+    GST_INFO_OBJECT (dbin, "All inputs drained. Posting about-to-finish");
     g_signal_emit (dbin, gst_decodebin3_signals[SIGNAL_ABOUT_TO_FINISH], 0,
         NULL);
   }
