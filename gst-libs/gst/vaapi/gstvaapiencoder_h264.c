@@ -4125,6 +4125,15 @@ gst_vaapi_encoder_h264_get_profile_and_level (GstVaapiEncoderH264 * encoder,
   return TRUE;
 }
 
+/**
+ * gst_vaapi_encoder_h264_supports_avc:
+ * @encoder: a #GstVaapiEncoderH264
+ *
+ * Queries the H.264 @encoder if it supports the generation of avC
+ * stream format.
+ *
+ * Returns: %TRUE if @encoder supports avC; %FALSE otherwise
+ **/
 gboolean
 gst_vaapi_encoder_h264_supports_avc (GstVaapiEncoderH264 * encoder)
 {
