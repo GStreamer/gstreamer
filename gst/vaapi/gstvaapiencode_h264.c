@@ -295,6 +295,12 @@ gst_vaapiencode_h264_set_config (GstVaapiEncode * base_encode)
       if (profile == GST_VAAPI_PROFILE_UNKNOWN)
         goto fail;
 
+      /* if allwed caps request baseline (which is deprecated), the
+       * encoder will try with constrained baseline which is
+       * compatible. */
+      if (profile == GST_VAAPI_PROFILE_H264_BASELINE)
+        profile = GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE;
+
       tmp_caps = gst_caps_from_string (GST_CODEC_CAPS);
       gst_caps_set_simple (tmp_caps, "profile", G_TYPE_STRING,
           gst_vaapi_profile_get_name (profile), NULL);
@@ -381,6 +387,8 @@ retry:
   if (!gst_caps_can_intersect (allowed_caps, tmp_caps)) {
     if (profile == GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE) {
       profile = GST_VAAPI_PROFILE_H264_BASELINE;
+      GST_INFO ("user might requested baseline profile, "
+          "trying constrained-baseline instead");
       goto retry;
     }
   } else {

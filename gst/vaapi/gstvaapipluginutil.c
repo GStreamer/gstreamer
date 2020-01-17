@@ -1043,6 +1043,8 @@ gst_vaapi_h26x_encoder_get_profiles_from_caps (GstCaps * caps,
       const gchar *str = g_value_get_string (value);
       if (str) {
         profile = func (str);
+        if (profile == GST_VAAPI_PROFILE_H264_BASELINE)
+          profile = GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE;
         if (profile != GST_VAAPI_PROFILE_UNKNOWN)
           g_array_append_val (profiles, profile);
       }
