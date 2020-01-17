@@ -361,8 +361,6 @@ retry:
     ret = TRUE;
   }
 
-  GST_INFO_OBJECT (encode, "out caps %" GST_PTR_FORMAT, caps);
-
   if (!ret)
     GST_LOG ("There is no compatible profile in the requested caps.");
 
@@ -389,6 +387,8 @@ gst_vaapiencode_h264_get_caps (GstVaapiEncode * base_encode)
   gst_vaapi_encoder_h264_get_profile_and_level (encoder, &profile, NULL);
   if (profile != GST_VAAPI_PROFILE_UNKNOWN)
     set_compatible_profile (encode, caps, profile);
+
+  GST_INFO_OBJECT (base_encode, "out caps %" GST_PTR_FORMAT, caps);
 
   /* XXX: update level information */
   return caps;
