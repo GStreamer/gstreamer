@@ -1577,8 +1577,10 @@ gst_vaapi_encoder_get_surface_attributes (GstVaapiEncoder * encoder,
     }
   }
 
-  if (!attribs.formats)
+  if (attribs.formats->len == 0) {
+    g_array_unref (attribs.formats);
     return NULL;
+  }
 
   if (min_width)
     *min_width = attribs.min_width;
