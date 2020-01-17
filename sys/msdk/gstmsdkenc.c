@@ -1402,6 +1402,12 @@ gst_msdkenc_context_prepare (GstMsdkEnc * thiz)
   if (!gst_msdk_context_find (GST_ELEMENT_CAST (thiz), &thiz->context))
     return FALSE;
 
+  if (thiz->context == thiz->old_context) {
+    GST_INFO_OBJECT (thiz, "Found old context %" GST_PTR_FORMAT
+        ", reusing as-is", thiz->context);
+    return TRUE;
+  }
+
   GST_INFO_OBJECT (thiz, "Found context %" GST_PTR_FORMAT " from neighbour",
       thiz->context);
 
@@ -1452,6 +1458,11 @@ gst_msdkenc_start (GstVideoEncoder * encoder)
     GST_INFO_OBJECT (thiz, "Creating new context %" GST_PTR_FORMAT,
         thiz->context);
   }
+
+  /* Save the current context in a separate field so that we know whether it
+   * has changed between calls to _start() */
+  gst_object_replace ((GstObject **) & thiz->old_context,
+      (GstObject *) thiz->context);
 
   gst_msdk_context_add_shared_async_depth (thiz->context, thiz->async_depth);
 
@@ -1574,6 +1585,7 @@ gst_msdkenc_finalize (GObject * object)
 
   gst_clear_object (&thiz->msdk_pool);
   gst_clear_object (&thiz->msdk_converted_pool);
+  gst_clear_object (&thiz->old_context);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

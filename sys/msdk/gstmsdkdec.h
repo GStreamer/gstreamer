@@ -91,6 +91,7 @@ struct _GstMsdkDec
 
   /* MFX context */
   GstMsdkContext *context;
+  GstMsdkContext *old_context;
   mfxVideoParam param;
   GArray *tasks;
   guint next_task;

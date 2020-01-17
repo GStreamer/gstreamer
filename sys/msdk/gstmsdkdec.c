@@ -649,6 +649,12 @@ gst_msdkdec_context_prepare (GstMsdkDec * thiz)
   if (!gst_msdk_context_find (GST_ELEMENT_CAST (thiz), &thiz->context))
     return FALSE;
 
+  if (thiz->context == thiz->old_context) {
+    GST_INFO_OBJECT (thiz, "Found old context %" GST_PTR_FORMAT
+        ", reusing as-is", thiz->context);
+    return TRUE;
+  }
+
   thiz->use_video_memory = TRUE;
 
   GST_INFO_OBJECT (thiz, "Found context %" GST_PTR_FORMAT " from neighbour",
@@ -696,6 +702,11 @@ gst_msdkdec_start (GstVideoDecoder * decoder)
     GST_INFO_OBJECT (thiz, "Creating new context %" GST_PTR_FORMAT,
         thiz->context);
   }
+
+  /* Save the current context in a separate field so that we know whether it
+   * has changed between calls to _start() */
+  gst_object_replace ((GstObject **) & thiz->old_context,
+      (GstObject *) thiz->context);
 
   gst_msdk_context_add_shared_async_depth (thiz->context, thiz->async_depth);
 

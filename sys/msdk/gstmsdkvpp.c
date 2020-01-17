@@ -161,6 +161,12 @@ gst_msdkvpp_context_prepare (GstMsdkVPP * thiz)
   if (!gst_msdk_context_find (GST_ELEMENT_CAST (thiz), &thiz->context))
     return FALSE;
 
+  if (thiz->context == thiz->old_context) {
+    GST_INFO_OBJECT (thiz, "Found old context %" GST_PTR_FORMAT
+        ", reusing as-is", thiz->context);
+    return TRUE;
+  }
+
   GST_INFO_OBJECT (thiz, "Found context %" GST_PTR_FORMAT " from neighbour",
       thiz->context);
 
@@ -210,6 +216,11 @@ ensure_context (GstBaseTransform * trans)
     GST_INFO_OBJECT (thiz, "Creating new context %" GST_PTR_FORMAT,
         thiz->context);
   }
+
+  /* Save the current context in a separate field so that we know whether it
+   * has changed between calls to _start() */
+  gst_object_replace ((GstObject **) & thiz->old_context,
+      (GstObject *) thiz->context);
 
   gst_msdk_context_add_shared_async_depth (thiz->context, thiz->async_depth);
 
@@ -1359,6 +1370,10 @@ gst_msdkvpp_get_property (GObject * object, guint prop_id,
 static void
 gst_msdkvpp_finalize (GObject * object)
 {
+  GstMsdkVPP *thiz = GST_MSDKVPP (object);
+
+  gst_clear_object (&thiz->old_context);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
