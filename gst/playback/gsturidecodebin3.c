@@ -264,7 +264,6 @@ static GstStaticCaps raw_video_caps = GST_STATIC_CAPS ("video/x-raw(ANY)");
 /* properties */
 #define DEFAULT_PROP_URI            NULL
 #define DEFAULT_PROP_SUBURI            NULL
-#define DEFAULT_PROP_SOURCE         NULL
 #define DEFAULT_CONNECTION_SPEED    0
 #define DEFAULT_CAPS                (gst_static_caps_get (&default_raw_caps))
 #define DEFAULT_BUFFER_DURATION     -1
@@ -624,7 +623,15 @@ gst_uri_decode_bin3_init (GstURIDecodeBin3 * dec)
 {
   g_mutex_init (&dec->lock);
 
-  dec->caps = gst_static_caps_get (&default_raw_caps);
+  dec->uri = DEFAULT_PROP_URI;
+  dec->suburi = DEFAULT_PROP_SUBURI;
+  dec->connection_speed = DEFAULT_CONNECTION_SPEED;
+  dec->caps = DEFAULT_CAPS;
+  dec->buffer_duration = DEFAULT_BUFFER_DURATION;
+  dec->buffer_size = DEFAULT_BUFFER_SIZE;
+  dec->download = DEFAULT_DOWNLOAD;
+  dec->use_buffering = DEFAULT_USE_BUFFERING;
+  dec->ring_buffer_max_size = DEFAULT_RING_BUFFER_MAX_SIZE;
 
   dec->decodebin = gst_element_factory_make ("decodebin3", NULL);
   gst_bin_add (GST_BIN_CAST (dec), dec->decodebin);
