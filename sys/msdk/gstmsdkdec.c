@@ -761,8 +761,7 @@ gst_msdkdec_close (GstVideoDecoder * decoder)
 {
   GstMsdkDec *thiz = GST_MSDKDEC (decoder);
 
-  if (thiz->context)
-    gst_object_replace ((GstObject **) & thiz->context, NULL);
+  gst_clear_object (&thiz->context);
 
   return TRUE;
 }
@@ -1375,8 +1374,7 @@ gst_msdkdec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   if (thiz->do_realloc || !thiz->pool) {
     GstVideoCodecState *output_state =
         gst_video_decoder_get_output_state (GST_VIDEO_DECODER (thiz));
-    if (thiz->pool)
-      gst_object_replace ((GstObject **) & thiz->pool, NULL);
+    gst_clear_object (&thiz->pool);
     GST_INFO_OBJECT (decoder, "create new MSDK bufferpool");
     thiz->pool =
         gst_msdkdec_create_buffer_pool (thiz, &output_state->info, min_buffers);
@@ -1612,7 +1610,8 @@ gst_msdkdec_finalize (GObject * object)
   GstMsdkDec *thiz = GST_MSDKDEC (object);
 
   g_array_unref (thiz->tasks);
-  g_object_unref (thiz->adapter);
+  thiz->tasks = NULL;
+  g_clear_object (&thiz->adapter);
 
   /* NULL is the empty list. */
   if (G_UNLIKELY (thiz->decoded_msdk_surfaces != NULL)) {
