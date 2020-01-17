@@ -2929,6 +2929,8 @@ gst_decodebin3_change_state (GstElement * element, GstStateChange transition)
       dbin->slots = NULL;
       dbin->current_group_id = GST_GROUP_ID_INVALID;
       /* Free inputs */
+      /* Reset the main input group id since it will get a new id on a new stream */
+      dbin->main_input->group_id = GST_GROUP_ID_INVALID;
     }
       break;
     default:
