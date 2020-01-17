@@ -650,7 +650,9 @@ get_msdk_surface_from_input_buffer (GstMsdkVPP * thiz, GstBuffer * inbuf)
 {
   GstVideoFrame src_frame, out_frame;
   MsdkSurface *msdk_surface;
+#ifndef _WIN32
   GstMemory *mem = NULL;
+#endif
 
   if (gst_msdk_is_msdk_buffer (inbuf)) {
     msdk_surface = g_slice_new0 (MsdkSurface);

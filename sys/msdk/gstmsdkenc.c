@@ -1411,7 +1411,9 @@ gst_msdkenc_get_surface_from_frame (GstMsdkEnc * thiz,
   GstVideoFrame src_frame, out_frame;
   MsdkSurface *msdk_surface;
   GstBuffer *inbuf;
+#ifndef _WIN32
   GstMemory *mem = NULL;
+#endif
 
   inbuf = frame->input_buffer;
   if (gst_msdk_is_msdk_buffer (inbuf)) {
