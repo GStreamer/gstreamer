@@ -35,84 +35,71 @@ G_BEGIN_DECLS
 /**
  * GES_META_FORMATTER_NAME:
  *
- * Name of a formatter it is used as ID of Formater assets (string)
- *
- * The name of the formatter
+ * The name of a formatter, used as the #GESAsset:id for #GESFormatter
+ * assets (string).
  */
 #define GES_META_FORMATTER_NAME                       "name"
 
 /**
  * GES_META_DESCRIPTION:
  *
- * The description of an object, can be used in various context (string)
- *
- * The description
+ * The description of the object, to be used in various contexts (string).
  */
 #define GES_META_DESCRIPTION                         "description"
 
 /**
  * GES_META_FORMATTER_MIMETYPE:
  *
- * Mimetype used for the file produced by a  formatter (string)
- *
- * The mime type
+ * The mimetype used for the file produced by a #GESFormatter (string).
  */
 #define GES_META_FORMATTER_MIMETYPE                   "mimetype"
 
 /**
  * GES_META_FORMATTER_EXTENSION:
  *
- * The extension of the files produced by a formatter (string)
+ * The file extension of files produced by a #GESFormatter (string).
  */
 #define GES_META_FORMATTER_EXTENSION                  "extension"
 
 /**
  * GES_META_FORMATTER_VERSION:
  *
- * The version of a formatter (double)
- *
- * The formatter version
+ * The version of a #GESFormatter (double).
  */
 #define GES_META_FORMATTER_VERSION                    "version"
 
 /**
  * GES_META_FORMATTER_RANK:
  *
- * The rank of a formatter (GstRank)
- *
- * The rank of a formatter
+ * The rank of a #GESFormatter (a #GstRank).
  */
 #define GES_META_FORMATTER_RANK                       "rank"
 
 /**
  * GES_META_VOLUME:
  *
- * The volume, can be used for audio track or layers
- *
- * The volume for a track or a layer, it is register as a float
+ * The volume for a #GESTrack or a #GESLayer (float).
  */
 #define GES_META_VOLUME                              "volume"
 
 /**
  * GES_META_VOLUME_DEFAULT:
  *
- * The default volume
- *
- * The default volume for a track or a layer as a float
+ * The default volume for a #GESTrack or a #GESLayer as a float.
  */
 #define GES_META_VOLUME_DEFAULT                       1.0
 
 /**
  * GES_META_FORMAT_VERSION:
  *
- * The version of the format in which a project is serialized
+ * The version of the format in which a project is serialized (string).
  */
 #define GES_META_FORMAT_VERSION                       "format-version"
 
 /**
  * GES_META_MARKER_COLOR:
  *
- * The ARGB color of a #GESMarker (an AARRGGBB hex as a guint)
+ * The ARGB color of a #GESMarker (an AARRGGBB hex as a uint).
  */
 #define GES_META_MARKER_COLOR                         "marker-color"
 
@@ -322,7 +309,15 @@ ges_meta_container_get_marker_list (GESMetaContainer * container,
 GES_API const GValue *
 ges_meta_container_get_meta            (GESMetaContainer * container,
                                         const gchar * key);
-
+/**
+ * GESMetaForeachFunc:
+ * @container: A #GESMetaContainer
+ * @key: The key for one of @container's fields
+ * @value: The set value under @key
+ * @user_data: User data
+ *
+ * A method to be called on all of a meta container's fields.
+ */
 typedef void
 (*GESMetaForeachFunc)                  (const GESMetaContainer *container,
                                         const gchar *key,

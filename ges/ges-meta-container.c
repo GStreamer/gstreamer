@@ -28,11 +28,34 @@
 #include "ges-marker-list.h"
 
 /**
-* SECTION: gesmetacontainer
-* @short_description: An interface for storing meta
-*
-* Interface that allows reading and writing meta
-*/
+ * SECTION: gesmetacontainer
+ * @title: GESMetaContainer Interface
+ * @short_description: An interface for storing metadata
+ *
+ * A #GObject that implements #GESMetaContainer can have metadata set on
+ * it, that is data that is unimportant to its function within GES, but
+ * may hold some useful information. In particular,
+ * ges_meta_container_set_meta() can be used to store any #GValue under
+ * any generic field (specified by a string key). The same method can also
+ * be used to remove the field by passing %NULL. A number of convenience
+ * methods are also provided to make it easier to set common value types.
+ * The metadata can then be read with ges_meta_container_get_meta() and
+ * similar convenience methods.
+ *
+ * ## Registered Fields
+ *
+ * By default, any #GValue can be set for a metadata field. However, you
+ * can register some fields as static, that is they only allow values of a
+ * specific type to be set under them, using
+ * ges_meta_container_register_meta() or
+ * ges_meta_container_register_static_meta(). The set #GESMetaFlag will
+ * determine whether the value can be changed, but even if it can be
+ * changed, it must be changed to a value of the same type.
+ *
+ * Internally, some GES objects will be initialized with static metadata
+ * fields. These will correspond to some standard keys, such as
+ * #GES_META_VOLUME.
+ */
 
 static GQuark ges_meta_key;
 
@@ -65,13 +88,14 @@ ges_meta_container_default_init (GESMetaContainerInterface * iface)
 {
 
   /**
-   * GESMetaContainer::notify:
-   * @container: a #GESMetaContainer
-   * @prop: the key of the value that changed
-   * @value: the #GValue containing the new value
+   * GESMetaContainer::notify-meta:
+   * @container: A #GESMetaContainer
+   * @key: The key for the @container field that changed
+   * @value: (nullable): The new value under @key
    *
-   * The notify signal is used to be notify of changes of values
-   * of some metadatas
+   * This is emitted for a meta container whenever the metadata under one
+   * of its fields changes, is set for the first time, or is removed. In
+   * the latter case, @value will be %NULL.
    */
   _signals[NOTIFY_SIGNAL] =
       g_signal_new ("notify-meta", G_TYPE_FROM_INTERFACE (iface),
@@ -147,12 +171,13 @@ _append_foreach (GQuark field_id, const GValue * value, GESMetaContainer * self)
 
 /**
  * ges_meta_container_foreach:
- * @container: container to iterate over
- * @func: (scope call): function to be called for each metadata
- * @user_data: (closure): user specified data
+ * @container: A #GESMetaContainer
+ * @func: (scope call): A function to call on each of @container's set
+ * metadata fields
+ * @user_data: (closure): User data to send to @func
  *
- * Calls the given function for each metadata inside the meta container. Note
- * that if there is no metadata, the function won't be called at all.
+ * Calls the given function on each of the meta container's set metadata
+ * fields.
  */
 void
 ges_meta_container_foreach (GESMetaContainer * container,
@@ -284,133 +309,146 @@ ges_meta_container_set_ ## name (GESMetaContainer *container,      \
 
 /**
  * ges_meta_container_set_boolean:
- * @container: Target container
- * @meta_item: Name of the meta item to set
- * @value: Value to set
+ * @container: A #GESMetaContainer
+ * @meta_item: The key for the @container field to set
+ * @value: The value to set under @meta_item
  *
- * Sets the value of a given meta item
+ * Sets the value of the specified field of the meta container to the
+ * given boolean value.
  *
- * Return: %TRUE if the meta could be added, %FALSE otherwise
+ * Returns: %TRUE if @value was set under @meta_item for @container.
  */
 CREATE_SETTER (boolean, gboolean, G_TYPE_BOOLEAN, boolean);
 
 /**
  * ges_meta_container_set_int:
- * @container: Target container
- * @meta_item: Name of the meta item to set
- * @value: Value to set
+ * @container: A #GESMetaContainer
+ * @meta_item: The key for the @container field to set
+ * @value: The value to set under @meta_item
  *
- * Sets the value of a given meta item
+ * Sets the value of the specified field of the meta container to the
+ * given int value.
  *
- * Return: %TRUE if the meta could be added, %FALSE otherwise
+ * Returns: %TRUE if @value was set under @meta_item for @container.
  */
 CREATE_SETTER (int, gint, G_TYPE_INT, int);
 
 /**
  * ges_meta_container_set_uint:
- * @container: Target container
- * @meta_item: Name of the meta item to set
- * @value: Value to set
+ * @container: A #GESMetaContainer
+ * @meta_item: The key for the @container field to set
+ * @value: The value to set under @meta_item
  *
- * Sets the value of a given meta item
+ * Sets the value of the specified field of the meta container to the
+ * given uint value.
  *
- * Return: %TRUE if the meta could be added, %FALSE otherwise
+ * Returns: %TRUE if @value was set under @meta_item for @container.
  */
 CREATE_SETTER (uint, guint, G_TYPE_UINT, uint);
 
 /**
  * ges_meta_container_set_int64:
- * @container: Target container
- * @meta_item: Name of the meta item to set
- * @value: Value to set
+ * @container: A #GESMetaContainer
+ * @meta_item: The key for the @container field to set
+ * @value: The value to set under @meta_item
  *
- * Sets the value of a given meta item
+ * Sets the value of the specified field of the meta container to the
+ * given int64 value.
  *
- * Return: %TRUE if the meta could be added, %FALSE otherwise
+ * Returns: %TRUE if @value was set under @meta_item for @container.
  */
 CREATE_SETTER (int64, gint64, G_TYPE_INT64, int64);
 
 /**
  * ges_meta_container_set_uint64:
- * @container: Target container
- * @meta_item: Name of the meta item to set
- * @value: Value to set
+ * @container: A #GESMetaContainer
+ * @meta_item: The key for the @container field to set
+ * @value: The value to set under @meta_item
  *
- * Sets the value of a given meta item
+ * Sets the value of the specified field of the meta container to the
+ * given uint64 value.
  *
- * Return: %TRUE if the meta could be added, %FALSE otherwise
+ * Returns: %TRUE if @value was set under @meta_item for @container.
  */
 CREATE_SETTER (uint64, guint64, G_TYPE_UINT64, uint64);
 
 /**
  * ges_meta_container_set_float:
- * @container: Target container
- * @meta_item: Name of the meta item to set
- * @value: Value to set
+ * @container: A #GESMetaContainer
+ * @meta_item: The key for the @container field to set
+ * @value: The value to set under @meta_item
  *
- * Sets the value of a given meta item
+ * Sets the value of the specified field of the meta container to the
+ * given float value.
  *
- * Return: %TRUE if the meta could be added, %FALSE otherwise
+ * Returns: %TRUE if @value was set under @meta_item for @container.
  */
 CREATE_SETTER (float, float, G_TYPE_FLOAT, float);
 
 /**
  * ges_meta_container_set_double:
- * @container: Target container
- * @meta_item: Name of the meta item to set
- * @value: Value to set
+ * @container: A #GESMetaContainer
+ * @meta_item: The key for the @container field to set
+ * @value: The value to set under @meta_item
  *
- * Sets the value of a given meta item
+ * Sets the value of the specified field of the meta container to the
+ * given double value.
  *
- * Return: %TRUE if the meta could be added, %FALSE otherwise
+ * Returns: %TRUE if @value was set under @meta_item for @container.
  */
 CREATE_SETTER (double, double, G_TYPE_DOUBLE, double);
 
 /**
  * ges_meta_container_set_date:
- * @container: Target container
- * @meta_item: Name of the meta item to set
- * @value: Value to set
+ * @container: A #GESMetaContainer
+ * @meta_item: The key for the @container field to set
+ * @value: The value to set under @meta_item
  *
- * Sets the value of a given meta item
+ * Sets the value of the specified field of the meta container to the
+ * given date value.
  *
- * Return: %TRUE if the meta could be added, %FALSE otherwise
+ * Returns: %TRUE if @value was set under @meta_item for @container.
  */
 CREATE_SETTER (date, const GDate *, G_TYPE_DATE, boxed);
 
 /**
  * ges_meta_container_set_date_time:
- * @container: Target container
- * @meta_item: Name of the meta item to set
- * @value: Value to set
+ * @container: A #GESMetaContainer
+ * @meta_item: The key for the @container field to set
+ * @value: The value to set under @meta_item
  *
- * Sets the value of a given meta item
+ * Sets the value of the specified field of the meta container to the
+ * given date time value.
  *
- * Return: %TRUE if the meta could be added, %FALSE otherwise
+ * Returns: %TRUE if @value was set under @meta_item for @container.
  */
 CREATE_SETTER (date_time, const GstDateTime *, GST_TYPE_DATE_TIME, boxed);
 
 /**
-* ges_meta_container_set_string:
-* @container: Target container
-* @meta_item: Name of the meta item to set
-* @value: Value to set
-*
-* Sets the value of a given meta item
-*
-* Return: %TRUE if the meta could be added, %FALSE otherwise
-*/
+ * ges_meta_container_set_string:
+ * @container: A #GESMetaContainer
+ * @meta_item: The key for the @container field to set
+ * @value: The value to set under @meta_item
+ *
+ * Sets the value of the specified field of the meta container to the
+ * given string value.
+ *
+ * Returns: %TRUE if @value was set under @meta_item for @container.
+ */
 CREATE_SETTER (string, const gchar *, G_TYPE_STRING, string);
 
 /**
  * ges_meta_container_set_meta:
- * @container: Target container
- * @meta_item: Name of the meta item to set
- * @value: (allow-none): Value to set
+ * @container: A #GESMetaContainer
+ * @meta_item: The key for the @container field to set
+ * @value: (nullable): The value to set under @meta_item, or %NULL to
+ * remove the corresponding field
  *
- * Sets the value of a given meta item
+ * Sets the value of the specified field of the meta container to a
+ * copy of the given value. If the given @value is %NULL, the field
+ * given by @meta_item is removed and %TRUE is returned.
  *
- * Return: %TRUE if the meta could be added, %FALSE otherwise
+ * Returns: %TRUE if @value was set under @meta_item for @container.
  */
 gboolean
 ges_meta_container_set_meta (GESMetaContainer * container,
@@ -436,13 +474,15 @@ ges_meta_container_set_meta (GESMetaContainer * container,
 
 /**
  * ges_meta_container_set_marker_list:
- * @container: Target container
- * @meta_item: Name of the meta item to set
- * @list: (allow-none) (transfer none): List to set
+ * @container: A #GESMetaContainer
+ * @meta_item: The key for the @container field to set
+ * @list: The value to set under @meta_item
  *
- * Associates a marker list with the given meta item
+ * Sets the value of the specified field of the meta container to the
+ * given marker list value.
  *
- * Return: %TRUE if the meta could be added, %FALSE otherwise
+ * Returns: %TRUE if @value was set under @meta_item for @container.
+ *
  * Since: 1.18
  */
 gboolean
@@ -479,12 +519,12 @@ ges_meta_container_set_marker_list (GESMetaContainer * container,
 
 /**
  * ges_meta_container_metas_to_string:
- * @container: a #GESMetaContainer
+ * @container: A #GESMetaContainer
  *
- * Serializes a meta container to a string.
+ * Serializes the set metadata fields of the meta container to a string.
  *
- * Returns: (nullable): a newly-allocated string, or NULL in case of an error.
- * The string must be freed with g_free() when no longer needed.
+ * Returns: (transfer full): A serialized @container, or %NULL if an error
+ * occurred.
  */
 gchar *
 ges_meta_container_metas_to_string (GESMetaContainer * container)
@@ -500,12 +540,15 @@ ges_meta_container_metas_to_string (GESMetaContainer * container)
 
 /**
  * ges_meta_container_add_metas_from_string:
- * @container: Target container
- * @str: a string created with ges_meta_container_metas_to_string()
+ * @container: A #GESMetaContainer
+ * @str: A string to deserialize and add to @container
  *
- * Deserializes a meta container.
+ * Deserializes the given string, and adds and sets the found fields and
+ * their values on the container. The string should be the return of
+ * ges_meta_container_metas_to_string().
  *
- * Returns: TRUE on success, FALSE if there was an error.
+ * Returns: %TRUE if the fields in @str was successfully deserialized
+ * and added to @container.
  */
 gboolean
 ges_meta_container_add_metas_from_string (GESMetaContainer * container,
@@ -530,23 +573,27 @@ ges_meta_container_add_metas_from_string (GESMetaContainer * container,
 
 /**
  * ges_meta_container_register_static_meta:
- * @container: Target container
- * @flags: The #GESMetaFlag to be used
- * @meta_item: Name of the meta item to register
- * @type: The required data type for this meta
+ * @container: A #GESMetaContainer
+ * @flags: Flags to be used for the registered field
+ * @meta_item: The key for the @container field to register
+ * @type: The required value type for the registered field
  *
- * Registers a static meta on @container. This method lets you define a
- * static metadata, which means that @type will be the only type accepted
- * for this meta on this particular @container. Unlike
- * #ges_meta_container_register_meta, no initial value is set for this
- * meta, which means you can use this method to reserve the meta under
- * @meta_item to be optionally set later. Note, if a meta has already been
- * set, but not registered, under @meta_item before calling this method,
- * then its type must match @type, and its value will be left in place.
- * Otherwise, you'll likely want to include #GES_META_WRITABLE in @flags
- * to allow the value to be later set for this meta.
+ * Registers a static metadata field on the container to only hold the
+ * specified type. After calling this, setting a value under this field
+ * can only succeed if its type matches the registered type of the field.
  *
- * Return: %TRUE if the meta could be registered, %FALSE otherwise
+ * Unlike ges_meta_container_register_meta(), no (initial) value is set
+ * for this field, which means you can use this method to reserve the
+ * space to be _optionally_ set later.
+ *
+ * Note that if a value has already been set for the field being
+ * registered, then its type must match the registering type, and its
+ * value will be left in place. If the field has no set value, then
+ * you will likely want to include #GES_META_WRITABLE in @flags to allow
+ * the value to be set later.
+ *
+ * Returns: %TRUE if the @meta_item field was successfully registered on
+ * @container to only hold @type values, with the given @flags.
  */
 gboolean
 ges_meta_container_register_static_meta (GESMetaContainer * container,
@@ -602,167 +649,211 @@ ges_meta_container_register_meta_ ## name (GESMetaContainer *container,\
 
 /**
  * ges_meta_container_register_meta_boolean:
- * @container: Target container
- * @flags: The #GESMetaFlag to be used
- * @meta_item: Name of the meta item to set
- * @value: Value to set
+ * @container: A #GESMetaContainer
+ * @flags: Flags to be used for the registered field
+ * @meta_item: The key for the @container field to register
+ * @value: The value to set for the registered field
  *
- * Sets a static meta on @container. This method lets you define static
- * metadatas, which means that the type of the registered will be the only
- * type accepted for this meta on that particular @container.
+ * Sets the value of the specified field of the meta container to the
+ * given boolean value, and registers the field to only hold a boolean
+ * typed value. After calling this, only boolean values can be set for
+ * this field. The given flags can be set to make this field only
+ * readable after calling this method.
  *
- * Return: %TRUE if the meta could be registered, %FALSE otherwise
+ * Returns: %TRUE if the @meta_item field was successfully registered on
+ * @container to only hold boolean typed values, with the given @flags,
+ * and the field was successfully set to @value.
  */
 CREATE_REGISTER_STATIC (boolean, gboolean, G_TYPE_BOOLEAN, boolean);
 
 /**
  * ges_meta_container_register_meta_int:
- * @container: Target container
- * @flags: The #GESMetaFlag to be used
- * @meta_item: Name of the meta item to set
- * @value: Value to set
+ * @container: A #GESMetaContainer
+ * @flags: Flags to be used for the registered field
+ * @meta_item: The key for the @container field to register
+ * @value: The value to set for the registered field
  *
- * Sets a static meta on @container. This method lets you define static
- * metadatas, which means that the type of the registered will be the only
- * type accepted for this meta on that particular @container.
+ * Sets the value of the specified field of the meta container to the
+ * given int value, and registers the field to only hold an int
+ * typed value. After calling this, only int values can be set for
+ * this field. The given flags can be set to make this field only
+ * readable after calling this method.
  *
- * Return: %TRUE if the meta could be registered, %FALSE otherwise
+ * Returns: %TRUE if the @meta_item field was successfully registered on
+ * @container to only hold int typed values, with the given @flags,
+ * and the field was successfully set to @value.
  */
 CREATE_REGISTER_STATIC (int, gint, G_TYPE_INT, int);
 
 /**
  * ges_meta_container_register_meta_uint:
- * @container: Target container
- * @flags: The #GESMetaFlag to be used
- * @meta_item: Name of the meta item to set
- * @value: Value to set
+ * @container: A #GESMetaContainer
+ * @flags: Flags to be used for the registered field
+ * @meta_item: The key for the @container field to register
+ * @value: The value to set for the registered field
  *
- * Sets a static meta on @container. This method lets you define static
- * metadatas, which means that the type of the registered will be the only
- * type accepted for this meta on that particular @container.
+ * Sets the value of the specified field of the meta container to the
+ * given uint value, and registers the field to only hold a uint
+ * typed value. After calling this, only uint values can be set for
+ * this field. The given flags can be set to make this field only
+ * readable after calling this method.
  *
- * Return: %TRUE if the meta could be registered, %FALSE otherwise
+ * Returns: %TRUE if the @meta_item field was successfully registered on
+ * @container to only hold uint typed values, with the given @flags,
+ * and the field was successfully set to @value.
  */
 CREATE_REGISTER_STATIC (uint, guint, G_TYPE_UINT, uint);
 
 /**
  * ges_meta_container_register_meta_int64:
- * @container: Target container
- * @flags: The #GESMetaFlag to be used
- * @meta_item: Name of the meta item to set
- * @value: Value to set
+ * @container: A #GESMetaContainer
+ * @flags: Flags to be used for the registered field
+ * @meta_item: The key for the @container field to register
+ * @value: The value to set for the registered field
  *
- * Sets a static meta on @container. This method lets you define static
- * metadatas, which means that the type of the registered will be the only
- * type accepted for this meta on that particular @container.
+ * Sets the value of the specified field of the meta container to the
+ * given int64 value, and registers the field to only hold an int64
+ * typed value. After calling this, only int64 values can be set for
+ * this field. The given flags can be set to make this field only
+ * readable after calling this method.
  *
- * Return: %TRUE if the meta could be registered, %FALSE otherwise
+ * Returns: %TRUE if the @meta_item field was successfully registered on
+ * @container to only hold int64 typed values, with the given @flags,
+ * and the field was successfully set to @value.
  */
 CREATE_REGISTER_STATIC (int64, gint64, G_TYPE_INT64, int64);
 
 /**
  * ges_meta_container_register_meta_uint64:
- * @container: Target container
- * @flags: The #GESMetaFlag to be used
- * @meta_item: Name of the meta item to set
- * @value: Value to set
+ * @container: A #GESMetaContainer
+ * @flags: Flags to be used for the registered field
+ * @meta_item: The key for the @container field to register
+ * @value: The value to set for the registered field
  *
- * Sets a static meta on @container. This method lets you define static
- * metadatas, which means that the type of the registered will be the only
- * type accepted for this meta on that particular @container.
+ * Sets the value of the specified field of the meta container to the
+ * given uint64 value, and registers the field to only hold a uint64
+ * typed value. After calling this, only uint64 values can be set for
+ * this field. The given flags can be set to make this field only
+ * readable after calling this method.
  *
- * Return: %TRUE if the meta could be registered, %FALSE otherwise
+ * Returns: %TRUE if the @meta_item field was successfully registered on
+ * @container to only hold uint64 typed values, with the given @flags,
+ * and the field was successfully set to @value.
  */
 CREATE_REGISTER_STATIC (uint64, guint64, G_TYPE_UINT64, uint64);
 
 /**
  * ges_meta_container_register_meta_float:
- * @container: Target container
- * @flags: The #GESMetaFlag to be used
- * @meta_item: Name of the meta item to set
- * @value: Value to set
+ * @container: A #GESMetaContainer
+ * @flags: Flags to be used for the registered field
+ * @meta_item: The key for the @container field to register
+ * @value: The value to set for the registered field
  *
- * Sets a static meta on @container. This method lets you define static
- * metadatas, which means that the type of the registered will be the only
- * type accepted for this meta on that particular @container.
+ * Sets the value of the specified field of the meta container to the
+ * given float value, and registers the field to only hold a float
+ * typed value. After calling this, only float values can be set for
+ * this field. The given flags can be set to make this field only
+ * readable after calling this method.
  *
- * Return: %TRUE if the meta could be registered, %FALSE otherwise
+ * Returns: %TRUE if the @meta_item field was successfully registered on
+ * @container to only hold float typed values, with the given @flags,
+ * and the field was successfully set to @value.
 */
 CREATE_REGISTER_STATIC (float, float, G_TYPE_FLOAT, float);
 
 /**
  * ges_meta_container_register_meta_double:
- * @container: Target container
- * @flags: The #GESMetaFlag to be used
- * @meta_item: Name of the meta item to set
- * @value: Value to set
+ * @container: A #GESMetaContainer
+ * @flags: Flags to be used for the registered field
+ * @meta_item: The key for the @container field to register
+ * @value: The value to set for the registered field
  *
- * Sets a static meta on @container. This method lets you define static
- * metadatas, which means that the type of the registered will be the only
- * type accepted for this meta on that particular @container.
+ * Sets the value of the specified field of the meta container to the
+ * given double value, and registers the field to only hold a double
+ * typed value. After calling this, only double values can be set for
+ * this field. The given flags can be set to make this field only
+ * readable after calling this method.
  *
- * Return: %TRUE if the meta could be registered, %FALSE otherwise
+ * Returns: %TRUE if the @meta_item field was successfully registered on
+ * @container to only hold double typed values, with the given @flags,
+ * and the field was successfully set to @value.
  */
 CREATE_REGISTER_STATIC (double, double, G_TYPE_DOUBLE, double);
 
 /**
  * ges_meta_container_register_meta_date:
- * @container: Target container
- * @flags: The #GESMetaFlag to be used
- * @meta_item: Name of the meta item to set
- * @value: (allow-none): Value to set
+ * @container: A #GESMetaContainer
+ * @flags: Flags to be used for the registered field
+ * @meta_item: The key for the @container field to register
+ * @value: The value to set for the registered field
  *
- * Sets a static meta on @container. This method lets you define static
- * metadatas, which means that the type of the registered will be the only
- * type accepted for this meta on that particular @container.
+ * Sets the value of the specified field of the meta container to the
+ * given date value, and registers the field to only hold a date
+ * typed value. After calling this, only date values can be set for
+ * this field. The given flags can be set to make this field only
+ * readable after calling this method.
  *
- * Return: %TRUE if the meta could be registered, %FALSE otherwise
+ * Returns: %TRUE if the @meta_item field was successfully registered on
+ * @container to only hold date typed values, with the given @flags,
+ * and the field was successfully set to @value.
  */
 CREATE_REGISTER_STATIC (date, const GDate *, G_TYPE_DATE, boxed);
 
 /**
  * ges_meta_container_register_meta_date_time:
- * @container: Target container
- * @flags: The #GESMetaFlag to be used
- * @meta_item: Name of the meta item to set
- * @value: (allow-none): Value to set
+ * @container: A #GESMetaContainer
+ * @flags: Flags to be used for the registered field
+ * @meta_item: The key for the @container field to register
+ * @value: The value to set for the registered field
  *
- * Sets a static meta on @container. This method lets you define static
- * metadatas, which means that the type of the registered will be the only
- * type accepted for this meta on that particular @container.
+ * Sets the value of the specified field of the meta container to the
+ * given date time value, and registers the field to only hold a date time
+ * typed value. After calling this, only date time values can be set for
+ * this field. The given flags can be set to make this field only
+ * readable after calling this method.
  *
- * Return: %TRUE if the meta could be registered, %FALSE otherwise
+ * Returns: %TRUE if the @meta_item field was successfully registered on
+ * @container to only hold date time typed values, with the given @flags,
+ * and the field was successfully set to @value.
  */
 CREATE_REGISTER_STATIC (date_time, const GstDateTime *, GST_TYPE_DATE_TIME,
     boxed);
 
 /**
  * ges_meta_container_register_meta_string:
- * @container: Target container
- * @flags: The #GESMetaFlag to be used
- * @meta_item: Name of the meta item to set
- * @value: (allow-none): Value to set
+ * @container: A #GESMetaContainer
+ * @flags: Flags to be used for the registered field
+ * @meta_item: The key for the @container field to register
+ * @value: The value to set for the registered field
  *
- * Sets a static meta on @container. This method lets you define static
- * metadatas, which means that the type of the registered will be the only
- * type accepted for this meta on that particular @container.
+ * Sets the value of the specified field of the meta container to the
+ * given string value, and registers the field to only hold a string
+ * typed value. After calling this, only string values can be set for
+ * this field. The given flags can be set to make this field only
+ * readable after calling this method.
  *
- * Return: %TRUE if the meta could be registered, %FALSE otherwise
+ * Returns: %TRUE if the @meta_item field was successfully registered on
+ * @container to only hold string typed values, with the given @flags,
+ * and the field was successfully set to @value.
  */
 CREATE_REGISTER_STATIC (string, const gchar *, G_TYPE_STRING, string);
 
 /**
  * ges_meta_container_register_meta:
- * @container: Target container
- * @flags: The #GESMetaFlag to be used
- * @meta_item: Name of the meta item to set
- * @value: Value to set
+ * @container: A #GESMetaContainer
+ * @flags: Flags to be used for the registered field
+ * @meta_item: The key for the @container field to register
+ * @value: The value to set for the registered field
  *
- * Sets a static meta on @container. This method lets you define static
- * metadatas, which means that the type of the registered will be the only
- * type accepted for this meta on that particular @container.
+ * Sets the value of the specified field of the meta container to the
+ * given value, and registers the field to only hold a value of the
+ * same type. After calling this, only values of the same type as @value
+ * can be set for this field. The given flags can be set to make this
+ * field only readable after calling this method.
  *
- * Return: %TRUE if the static meta could be added, %FALSE otherwise
+ * Returns: %TRUE if the @meta_item field was successfully registered on
+ * @container to only hold @value types, with the given @flags, and the
+ * field was successfully set to @value.
  */
 gboolean
 ges_meta_container_register_meta (GESMetaContainer * container,
@@ -777,6 +868,23 @@ ges_meta_container_register_meta (GESMetaContainer * container,
   return _set_value (container, meta_item, value);
 }
 
+/**
+ * ges_meta_container_check_meta_registered:
+ * @container: A #GESMetaContainer
+ * @meta_item: The key for the @container field to check
+ * @flags: (out) (nullable): A destination to get the registered flags of
+ * the field, or %NULL to ignore
+ * @type: (out) (nullable): A destination to get the registered type of
+ * the field, or %NULL to ignore
+ *
+ * Checks whether the specified field has been registered as static, and
+ * gets the registered type and flags of the field, as used in
+ * ges_meta_container_register_meta() and
+ * ges_meta_container_register_static_meta().
+ *
+ * Returns: %TRUE if the @meta_item field has been registered on
+ * @container.
+ */
 gboolean
 ges_meta_container_check_meta_registered (GESMetaContainer * container,
     const gchar * meta_item, GESMetaFlag * flags, GType * type)
@@ -826,56 +934,81 @@ ges_meta_container_get_ ## name (GESMetaContainer *container,    \
 
 /**
  * ges_meta_container_get_boolean:
- * @container: Target container
- * @meta_item: Name of the meta item to get
- * @dest: (out): Destination to which value of meta item will be copied
+ * @container: A #GESMetaContainer
+ * @meta_item: The key for the @container field to get
+ * @dest: (out): Destination into which the value under @meta_item
+ * should be copied.
  *
- * Gets the value of a given meta item, returns NULL if @meta_item
- * can not be found.
+ * Gets the current boolean value of the specified field of the meta
+ * container. If the field does not have a set value, or it is of the
+ * wrong type, the method will fail.
+ *
+ * Returns: %TRUE if the boolean value under @meta_item was copied
+ * to @dest.
  */
 CREATE_GETTER (boolean, gboolean *);
 
 /**
  * ges_meta_container_get_int:
- * @container: Target container
- * @meta_item: Name of the meta item to get
- * @dest: (out): Destination to which value of meta item will be copied
+ * @container: A #GESMetaContainer
+ * @meta_item: The key for the @container field to get
+ * @dest: (out): Destination into which the value under @meta_item
+ * should be copied.
  *
- * Gets the value of a given meta item, returns NULL if @meta_item
- * can not be found.
+ * Gets the current int value of the specified field of the meta
+ * container. If the field does not have a set value, or it is of the
+ * wrong type, the method will fail.
+ *
+ * Returns: %TRUE if the int value under @meta_item was copied
+ * to @dest.
  */
 CREATE_GETTER (int, gint *);
 
 /**
  * ges_meta_container_get_uint:
- * @container: Target container
- * @meta_item: Name of the meta item to get
- * @dest: (out): Destination to which value of meta item will be copied
+ * @container: A #GESMetaContainer
+ * @meta_item: The key for the @container field to get
+ * @dest: (out): Destination into which the value under @meta_item
+ * should be copied.
  *
- * Gets the value of a given meta item, returns NULL if @meta_item
- * can not be found.
+ * Gets the current uint value of the specified field of the meta
+ * container. If the field does not have a set value, or it is of the
+ * wrong type, the method will fail.
+ *
+ * Returns: %TRUE if the uint value under @meta_item was copied
+ * to @dest.
  */
 CREATE_GETTER (uint, guint *);
 
 /**
  * ges_meta_container_get_double:
- * @container: Target container
- * @meta_item: Name of the meta item to get
- * @dest: (out): Destination to which value of meta item will be copied
+ * @container: A #GESMetaContainer
+ * @meta_item: The key for the @container field to get
+ * @dest: (out): Destination into which the value under @meta_item
+ * should be copied.
  *
- * Gets the value of a given meta item, returns NULL if @meta_item
- * can not be found.
+ * Gets the current double value of the specified field of the meta
+ * container. If the field does not have a set value, or it is of the
+ * wrong type, the method will fail.
+ *
+ * Returns: %TRUE if the double value under @meta_item was copied
+ * to @dest.
  */
 CREATE_GETTER (double, gdouble *);
 
 /**
  * ges_meta_container_get_int64:
- * @container: Target container
- * @meta_item: Name of the meta item to get
- * @dest: (out): Destination to which value of meta item will be copied
+ * @container: A #GESMetaContainer
+ * @meta_item: The key for the @container field to get
+ * @dest: (out): Destination into which the value under @meta_item
+ * should be copied.
  *
- * Gets the value of a given meta item, returns %FALSE if @meta_item
- * can not be found.
+ * Gets the current int64 value of the specified field of the meta
+ * container. If the field does not have a set value, or it is of the
+ * wrong type, the method will fail.
+ *
+ * Returns: %TRUE if the int64 value under @meta_item was copied
+ * to @dest.
  */
 gboolean
 ges_meta_container_get_int64 (GESMetaContainer * container,
@@ -901,12 +1034,17 @@ ges_meta_container_get_int64 (GESMetaContainer * container,
 
 /**
  * ges_meta_container_get_uint64:
- * @container: Target container
- * @meta_item: Name of the meta item to get
- * @dest: (out): Destination to which value of meta item will be copied
+ * @container: A #GESMetaContainer
+ * @meta_item: The key for the @container field to get
+ * @dest: (out): Destination into which the value under @meta_item
+ * should be copied.
  *
- * Gets the value of a given meta item, returns %FALSE if @meta_item
- * can not be found.
+ * Gets the current uint64 value of the specified field of the meta
+ * container. If the field does not have a set value, or it is of the
+ * wrong type, the method will fail.
+ *
+ * Returns: %TRUE if the uint64 value under @meta_item was copied
+ * to @dest.
  */
 gboolean
 ges_meta_container_get_uint64 (GESMetaContainer * container,
@@ -932,12 +1070,17 @@ ges_meta_container_get_uint64 (GESMetaContainer * container,
 
 /**
  * ges_meta_container_get_float:
- * @container: Target container
- * @meta_item: Name of the meta item to get
- * @dest: (out): Destination to which value of meta item will be copied
+ * @container: A #GESMetaContainer
+ * @meta_item: The key for the @container field to get
+ * @dest: (out): Destination into which the value under @meta_item
+ * should be copied.
  *
- * Gets the value of a given meta item, returns %FALSE if @meta_item
- * can not be found.
+ * Gets the current float value of the specified field of the meta
+ * container. If the field does not have a set value, or it is of the
+ * wrong type, the method will fail.
+ *
+ * Returns: %TRUE if the float value under @meta_item was copied
+ * to @dest.
  */
 gboolean
 ges_meta_container_get_float (GESMetaContainer * container,
@@ -963,11 +1106,15 @@ ges_meta_container_get_float (GESMetaContainer * container,
 
 /**
  * ges_meta_container_get_string:
- * @container: Target container
- * @meta_item: Name of the meta item to get
+ * @container: A #GESMetaContainer
+ * @meta_item: The key for the @container field to get
  *
- * Gets the value of a given meta item, returns NULL if @meta_item
- * can not be found.
+ * Gets the current string value of the specified field of the meta
+ * container. If the field does not have a set value, or it is of the
+ * wrong type, the method will fail.
+ *
+ * Returns: (transfer none): The string value under @meta_item, or %NULL
+ * if it could not be fetched.
  */
 const gchar *
 ges_meta_container_get_string (GESMetaContainer * container,
@@ -985,13 +1132,13 @@ ges_meta_container_get_string (GESMetaContainer * container,
 
 /**
  * ges_meta_container_get_meta:
- * @container: Target container
- * @key: The key name of the meta to retrieve
+ * @container: A #GESMetaContainer
+ * @key: The key for the @container field to get
  *
- * Gets the value of a given meta item, returns NULL if @key
- * can not be found.
+ * Gets the current value of the specified field of the meta container.
  *
- * Returns: the #GValue corresponding to the meta with the given @key.
+ * Returns: (transfer none): The value under @key, or %NULL if @container
+ * does not have the field set.
  */
 const GValue *
 ges_meta_container_get_meta (GESMetaContainer * container, const gchar * key)
@@ -1008,13 +1155,15 @@ ges_meta_container_get_meta (GESMetaContainer * container, const gchar * key)
 
 /**
  * ges_meta_container_get_marker_list:
- * @container: Target container
- * @key: The key name of the list to retrieve
+ * @container: A #GESMetaContainer
+ * @key: The key for the @container field to get
  *
- * Gets the value of a given meta item, returns NULL if @key
- * can not be found.
+ * Gets the current marker list value of the specified field of the meta
+ * container. If the field does not have a set value, or it is of the
+ * wrong type, the method will fail.
  *
- * Returns: (transfer full): the #GESMarkerList corresponding to the meta with the given @key.
+ * Returns: (transfer full): A copy of the marker list value under @key,
+ * or %NULL if it could not be fetched.
  * Since: 1.18
  */
 GESMarkerList *
@@ -1040,22 +1189,32 @@ ges_meta_container_get_marker_list (GESMetaContainer * container,
 
 /**
  * ges_meta_container_get_date:
- * @container: Target container
- * @meta_item: Name of the meta item to get
- * @dest: (out): Destination to which value of meta item will be copied
+ * @container: A #GESMetaContainer
+ * @meta_item: The key for the @container field to get
+ * @dest: (out): Destination into which the value under @meta_item
+ * should be copied.
  *
- * Gets the value of a given meta item, returns NULL if @meta_item
- * can not be found.
+ * Gets the current date value of the specified field of the meta
+ * container. If the field does not have a set value, or it is of the
+ * wrong type, the method will fail.
+ *
+ * Returns: %TRUE if the date value under @meta_item was copied
+ * to @dest.
  */
 CREATE_GETTER (date, GDate **);
 
 /**
  * ges_meta_container_get_date_time:
- * @container: Target container
- * @meta_item: Name of the meta item to get
- * @dest: (out): Destination to which value of meta item will be copied
+ * @container: A #GESMetaContainer
+ * @meta_item: The key for the @container field to get
+ * @dest: (out): Destination into which the value under @meta_item
+ * should be copied.
  *
- * Gets the value of a given meta item, returns NULL if @meta_item
- * can not be found.
+ * Gets the current date time value of the specified field of the meta
+ * container. If the field does not have a set value, or it is of the
+ * wrong type, the method will fail.
+ *
+ * Returns: %TRUE if the date time value under @meta_item was copied
+ * to @dest.
  */
 CREATE_GETTER (date_time, GstDateTime **);
