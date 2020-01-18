@@ -2,6 +2,10 @@ project('win-nasm', version : '2.14.02')
 
 py3 = import('python3').find_python()
 
+if host_machine.system() != 'windows'
+  error('Can only download nasm for Windows, sorry')
+endif
+
 message('Downloading and extracting nasm binaries for Windows...')
 
 arch = host_machine.cpu_family()
