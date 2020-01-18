@@ -6,6 +6,7 @@ import ssl
 import zipfile
 import hashlib
 import urllib.request
+import urllib.error
 
 # Disable certificate checking because it always fails on Windows
 # We verify the checksum anyway.
@@ -13,11 +14,14 @@ ctx = ssl.create_default_context()
 ctx.check_hostname = False
 ctx.verify_mode = ssl.CERT_NONE
 
-base_url = 'https://github.com/lexxmark/winflexbison/releases/download/v{0}/win_flex_bison-{0}.zip'
-url = base_url.format(sys.argv[1])
+BASENAME = 'win_flex_bison-{}.zip'
+UPSTREAM_URL = 'https://github.com/lexxmark/winflexbison/releases/download/v{}/{}'
+GSTREAMER_URL = 'https://gstreamer.freedesktop.org/src/mirror/{}'
+
+version = sys.argv[1]
 zip_sha256 = sys.argv[2]
 source_dir = os.path.join(os.environ['MESON_SOURCE_ROOT'], os.environ['MESON_SUBDIR'])
-dest = os.path.basename(url)
+dest = BASENAME.format(version)
 dest_path = os.path.join(source_dir, dest)
 
 def get_sha256(zipf):
@@ -34,10 +38,21 @@ if os.path.isfile(dest_path):
     else:
         print('{} checksum mismatch, redownloading'.format(dest))
 
-print('Downloading {} to {}'.format(url, dest))
-with open(dest_path, 'wb') as d:
-    f = urllib.request.urlopen(url, context=ctx)
-    d.write(f.read())
+for url in (GSTREAMER_URL.format(dest), UPSTREAM_URL.format(version, dest)):
+    print('Downloading {} to {}'.format(url, dest))
+    try:
+        with open(dest_path, 'wb') as d:
+            f = urllib.request.urlopen(url, context=ctx)
+            d.write(f.read())
+        break
+    except urllib.error.URLError as ex:
+        print(ex)
+        print('Failed to download from {!r}, trying mirror...'.format(url))
+        continue
+else:
+    curdir = os.path.dirname(sys.argv[0])
+    print('Couldn\'t download {!r}! Try downloading it manually and '
+          'placing it into {!r}'.format(dest, curdir))
 
 found_sha256 = get_sha256(dest_path)
 if found_sha256 != zip_sha256:
