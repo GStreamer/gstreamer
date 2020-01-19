@@ -116,7 +116,7 @@ FILTER}
 #endif
 
 void yadif_filter (GstYadif * yadif, int parity, int tff);
-#ifdef HAVE_CPU_X86_64
+#if HAVE_CPU_X86_64 && (defined(__GNUC__) || defined(__clang__))
 void filter_line_x86_64 (guint8 * dst,
     guint8 * prev, guint8 * cur, guint8 * next,
     int w, int prefs, int mrefs, int parity, int mode);
@@ -146,7 +146,7 @@ yadif_filter (GstYadif * yadif, int parity, int tff)
         guint8 *next = next_data + y * refs;
         guint8 *dst = dest_data + y * refs;
         int mode = ((y == 1) || (y + 2 == h)) ? 2 : yadif->mode;
-#if HAVE_CPU_X86_64
+#if HAVE_CPU_X86_64 && (defined(__GNUC__) || defined(__clang__))
         if (0) {
           filter_line_c (dst, prev, cur, next, w,
               y + 1 < h ? refs : -refs, y ? -refs : refs, parity ^ tff, mode);

@@ -23,14 +23,22 @@
 #include <glib.h>
 
 #if HAVE_CPU_X86_64
+/* The inline asm is not MSVC compatible */
+#if defined(__GNUC__) || defined(__clang__)
 
 typedef struct xmm_reg
 {
   guint64 a, b;
 } xmm_reg;
 typedef gint64 x86_reg;
+
+#if defined(_MSC_VER)
+#define DECLARE_ALIGNED(n,t,v)      __declspec(align(n)) t v
+#define DECLARE_ASM_CONST(n,t,v)    static const __declspec(align(n)) t v
+#else
 #define DECLARE_ALIGNED(n,t,v)      t __attribute__ ((aligned (n))) v
 #define DECLARE_ASM_CONST(n,t,v)    static const t __attribute__((used)) __attribute__ ((aligned (n))) v
+#endif
 
 #if defined(__APPLE__)
 #    define EXTERN_PREFIX "_"
@@ -104,4 +112,5 @@ filter_line_x86_64 (guint8 * dst,
   yadif_filter_line_sse2 (dst, prev, cur, next, w, prefs, mrefs, parity, mode);
 }
 
+#endif
 #endif
