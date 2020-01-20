@@ -668,6 +668,7 @@ gst_deinterlace_init (GstDeinterlace * self)
   self->mode = DEFAULT_MODE;
   self->user_set_method_id = DEFAULT_METHOD;
   gst_video_info_init (&self->vinfo);
+  gst_video_info_init (&self->vinfo_out);
   gst_deinterlace_set_method (self, self->user_set_method_id);
   self->fields = DEFAULT_FIELDS;
   self->user_set_fields = DEFAULT_FIELDS;
@@ -830,6 +831,7 @@ gst_deinterlace_reset (GstDeinterlace * self)
   GST_DEBUG_OBJECT (self, "Resetting internal state");
 
   gst_video_info_init (&self->vinfo);
+  gst_video_info_init (&self->vinfo_out);
 
   self->passthrough = FALSE;
 
@@ -1866,7 +1868,7 @@ restart:
       /* map the frame so the deinterlace methods can write the data to the
        * correct memory locations */
       outframe =
-          gst_video_frame_new_and_map (&self->vinfo, outbuf, GST_MAP_WRITE);
+          gst_video_frame_new_and_map (&self->vinfo_out, outbuf, GST_MAP_WRITE);
 
       /* do magic calculus */
       gst_deinterlace_method_deinterlace_frame (self->method,
@@ -2027,7 +2029,7 @@ restart:
       /* map the frame so the deinterlace methods can write the data to the
        * correct memory locations */
       outframe =
-          gst_video_frame_new_and_map (&self->vinfo, outbuf, GST_MAP_WRITE);
+          gst_video_frame_new_and_map (&self->vinfo_out, outbuf, GST_MAP_WRITE);
 
       /* do magic calculus */
       gst_deinterlace_method_deinterlace_frame (self->method,
@@ -2704,6 +2706,12 @@ gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
 
   if (!gst_video_info_from_caps (&self->vinfo, caps))
     goto invalid_caps;
+
+  gst_video_info_set_interlaced_format (&self->vinfo_out,
+      GST_VIDEO_INFO_FORMAT (&self->vinfo),
+      GST_VIDEO_INTERLACE_MODE_PROGRESSIVE,
+      GST_VIDEO_INFO_WIDTH (&self->vinfo),
+      GST_VIDEO_INFO_HEIGHT (&self->vinfo));
 
   fps_n = GST_VIDEO_INFO_FPS_N (&self->vinfo);
   fps_d = GST_VIDEO_INFO_FPS_D (&self->vinfo);

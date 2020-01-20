@@ -136,6 +136,7 @@ struct _GstDeinterlace
   GstDeinterlaceMethod *method;
 
   GstVideoInfo vinfo;
+  GstVideoInfo vinfo_out;
   GstBufferPool *pool;
   GstAllocator *allocator;
   GstAllocationParams params;
