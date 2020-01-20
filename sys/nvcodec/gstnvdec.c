@@ -220,7 +220,7 @@ get_cuda_surface_format_from_gst (GstVideoFormat format)
   return cudaVideoSurfaceFormat_NV12;
 }
 
-static gboolean
+static gboolean CUDAAPI
 parser_sequence_callback (GstNvDec * nvdec, CUVIDEOFORMAT * format)
 {
   guint width, height;
@@ -508,7 +508,7 @@ gst_nvdec_negotiate (GstVideoDecoder * decoder)
   return ret;
 }
 
-static gboolean
+static gboolean CUDAAPI
 parser_decode_callback (GstNvDec * nvdec, CUVIDPICPARAMS * params)
 {
   GList *iter, *pending_frames;
@@ -572,7 +572,7 @@ error:
   return FALSE;
 }
 
-static gboolean
+static gboolean CUDAAPI
 parser_display_callback (GstNvDec * nvdec, CUVIDPARSERDISPINFO * dispinfo)
 {
   GList *iter, *pending_frames;
