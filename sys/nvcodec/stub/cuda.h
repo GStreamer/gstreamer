@@ -19,7 +19,7 @@
 #ifndef __GST_CUDA_STUB_H__
 #define __GST_CUDA_STUB_H__
 
-#include <gst/gst.h>
+#include <glib.h>
 
 G_BEGIN_DECLS
 

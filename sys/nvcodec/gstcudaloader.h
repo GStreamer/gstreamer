@@ -20,8 +20,9 @@
 #ifndef __GST_CUDA_LOADER_H__
 #define __GST_CUDA_LOADER_H__
 
+#include "stub/cuda.h"
+
 #include <gst/gst.h>
-#include <cuda.h>
 
 G_BEGIN_DECLS
 
