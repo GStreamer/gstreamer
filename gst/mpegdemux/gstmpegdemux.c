@@ -663,26 +663,17 @@ gst_ps_demux_send_data (GstPsDemux * demux, GstPsStream * stream,
   GST_BUFFER_DTS (buf) = dts;
 
   /* update position in the segment */
-  gst_segment_set_position (&demux->src_segment, GST_FORMAT_TIME,
-      MPEGTIME_TO_GSTTIME (demux->current_scr - demux->first_scr));
-
-  GST_LOG_OBJECT (demux, "last stop position is now %" GST_TIME_FORMAT
-      " current scr is %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (demux->src_segment.position),
-      GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (demux->current_scr)));
-
-  if (demux->src_segment.position != GST_CLOCK_TIME_NONE &&
-      demux->base_time != GST_CLOCK_TIME_NONE) {
-    GstClockTime new_time = demux->base_time + demux->src_segment.position;
-
-    if (stream->last_ts == GST_CLOCK_TIME_NONE || stream->last_ts < new_time) {
-      GST_LOG_OBJECT (demux,
-          "last_ts update on pad %s to time %" GST_TIME_FORMAT,
-          GST_PAD_NAME (stream->pad), GST_TIME_ARGS (new_time));
-      stream->last_ts = new_time;
-    }
-
-    gst_ps_demux_send_gap_updates (demux, new_time);
+  if (stream->last_ts == GST_CLOCK_TIME_NONE || stream->last_ts < dts) {
+    GST_LOG_OBJECT (demux,
+        "last_ts update on pad %s to time %" GST_TIME_FORMAT
+        ", current scr is %" GST_TIME_FORMAT, GST_PAD_NAME (stream->pad),
+        GST_TIME_ARGS (dts),
+        GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (demux->current_scr)));
+    stream->last_ts = dts;
+    if (demux->src_segment.position == GST_CLOCK_TIME_NONE
+        || stream->last_ts > demux->src_segment.position)
+      gst_segment_set_position (&demux->src_segment, GST_FORMAT_TIME,
+          stream->last_ts);
   }
 
   /* Set the buffer discont flag, and clear discont state on the stream */
@@ -944,6 +935,9 @@ gst_ps_demux_send_gap_updates (GstPsDemux * demux, GstClockTime new_start)
   gint i, count = demux->found_count;
   GstEvent *event = NULL;
 
+  if (new_start == GST_CLOCK_TIME_NONE)
+    return;
+
   /* Advance all lagging streams by sending a gap event */
   if ((base_time = demux->base_time) == GST_CLOCK_TIME_NONE)
     base_time = 0;
@@ -969,8 +963,9 @@ gst_ps_demux_send_gap_updates (GstPsDemux * demux, GstClockTime new_start)
         gst_ps_demux_send_segment (demux, stream, GST_CLOCK_TIME_NONE);
 
         GST_LOG_OBJECT (demux,
-            "Sending gap update to pad %s time %" GST_TIME_FORMAT,
-            GST_PAD_NAME (stream->pad), GST_TIME_ARGS (new_start));
+            "Sending gap update to pad %s from time %" GST_TIME_FORMAT " to %"
+            GST_TIME_FORMAT, GST_PAD_NAME (stream->pad),
+            GST_TIME_ARGS (stream->last_ts), GST_TIME_ARGS (new_start));
         event =
             gst_event_new_gap (stream->last_ts, new_start - stream->last_ts);
         gst_pad_push_event (stream->pad, event);
@@ -1851,6 +1846,12 @@ gst_ps_demux_parse_pack_start (GstPsDemux * demux)
   gst_adapter_unmap (demux->adapter);
   gst_adapter_flush (demux->adapter, length);
   ADAPTER_OFFSET_FLUSH (length);
+
+  /* Now check for all streams if they're behind the new SCR and if
+   * they are then move them forward to the SCR position */
+  gst_ps_demux_send_gap_updates (demux,
+      MPEGTIME_TO_GSTTIME (demux->current_scr - demux->first_scr));
+
   return GST_FLOW_OK;
 
 lost_sync:
