@@ -21,6 +21,7 @@
 #define __GST_CUVID_LOADER_H__
 
 #include <gst/gst.h>
+#include "stub/cuda.h"
 #include "nvcuvid.h"
 
 G_BEGIN_DECLS
@@ -33,53 +34,54 @@ G_GNUC_INTERNAL
 gboolean gst_cuvid_can_get_decoder_caps (void);
 
 G_GNUC_INTERNAL
-CUresult CuvidCtxLockCreate         (CUvideoctxlock * pLock, CUcontext ctx);
+CUresult CUDAAPI CuvidCtxLockCreate         (CUvideoctxlock * pLock,
+                                             CUcontext ctx);
 
 G_GNUC_INTERNAL
-CUresult CuvidCtxLockDestroy        (CUvideoctxlock lck);
+CUresult CUDAAPI CuvidCtxLockDestroy        (CUvideoctxlock lck);
 
 G_GNUC_INTERNAL
-CUresult CuvidCtxLock               (CUvideoctxlock lck,
-                                     unsigned int reserved_flags);
+CUresult CUDAAPI CuvidCtxLock               (CUvideoctxlock lck,
+                                             unsigned int reserved_flags);
 
 G_GNUC_INTERNAL
-CUresult CuvidCtxUnlock             (CUvideoctxlock lck,
-                                     unsigned int reserved_flags);
+CUresult CUDAAPI CuvidCtxUnlock             (CUvideoctxlock lck,
+                                             unsigned int reserved_flags);
 
 G_GNUC_INTERNAL
-CUresult CuvidCreateDecoder         (CUvideodecoder * phDecoder,
-                                     CUVIDDECODECREATEINFO * pdci);
+CUresult CUDAAPI CuvidCreateDecoder         (CUvideodecoder * phDecoder,
+                                             CUVIDDECODECREATEINFO * pdci);
 
 G_GNUC_INTERNAL
-CUresult CuvidDestroyDecoder        (CUvideodecoder hDecoder);
+CUresult CUDAAPI CuvidDestroyDecoder        (CUvideodecoder hDecoder);
 
 G_GNUC_INTERNAL
-CUresult CuvidDecodePicture         (CUvideodecoder hDecoder,
-                                     CUVIDPICPARAMS * pPicParams);
+CUresult CUDAAPI CuvidDecodePicture         (CUvideodecoder hDecoder,
+                                             CUVIDPICPARAMS * pPicParams);
 
 G_GNUC_INTERNAL
-CUresult CuvidCreateVideoParser     (CUvideoparser * pObj,
-                                     CUVIDPARSERPARAMS * pParams);
+CUresult CUDAAPI CuvidCreateVideoParser     (CUvideoparser * pObj,
+                                             CUVIDPARSERPARAMS * pParams);
 
 G_GNUC_INTERNAL
-CUresult CuvidParseVideoData        (CUvideoparser obj,
-                                     CUVIDSOURCEDATAPACKET * pPacket);
+CUresult CUDAAPI CuvidParseVideoData        (CUvideoparser obj,
+                                             CUVIDSOURCEDATAPACKET * pPacket);
 
 G_GNUC_INTERNAL
-CUresult CuvidDestroyVideoParser    (CUvideoparser obj);
+CUresult CUDAAPI CuvidDestroyVideoParser    (CUvideoparser obj);
 
 G_GNUC_INTERNAL
-CUresult CuvidMapVideoFrame         (CUvideodecoder hDecoder,
-                                     int nPicIdx,
-                                     guintptr * pDevPtr,
-                                     unsigned int *pPitch,
-                                     CUVIDPROCPARAMS * pVPP);
+CUresult CUDAAPI CuvidMapVideoFrame         (CUvideodecoder hDecoder,
+                                             int nPicIdx,
+                                             guintptr * pDevPtr,
+                                             unsigned int *pPitch,
+                                             CUVIDPROCPARAMS * pVPP);
 
 G_GNUC_INTERNAL
-CUresult CuvidUnmapVideoFrame       (CUvideodecoder hDecoder,
-                                     guintptr DevPtr);
+CUresult CUDAAPI CuvidUnmapVideoFrame       (CUvideodecoder hDecoder,
+                                             guintptr DevPtr);
 G_GNUC_INTERNAL
-CUresult CuvidGetDecoderCaps        (CUVIDDECODECAPS * pdc);
+CUresult CUDAAPI CuvidGetDecoderCaps        (CUVIDDECODECAPS * pdc);
 
 G_END_DECLS
 #endif /* __GST_CUVID_LOADER_H__ */

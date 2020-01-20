@@ -93,7 +93,12 @@ typedef struct
 } CUDA_MEMCPY2D;
 
 #define CUDA_VERSION 10000
+
+#ifdef _WIN32
+#define CUDAAPI __stdcall
+#else
 #define CUDAAPI
+#endif
 
 #define cuCtxCreate cuCtxCreate_v2
 #define cuCtxDestroy cuCtxDestroy_v2

@@ -44,25 +44,29 @@ typedef struct _GstnvdecCuvidVTable
 {
   gboolean loaded;
 
-    CUresult (*CuvidCtxLockCreate) (CUvideoctxlock * pLock, CUcontext ctx);
-    CUresult (*CuvidCtxLockDestroy) (CUvideoctxlock lck);
-    CUresult (*CuvidCtxLock) (CUvideoctxlock lck, unsigned int reserved_flags);
-    CUresult (*CuvidCtxUnlock) (CUvideoctxlock lck,
+    CUresult (CUDAAPI * CuvidCtxLockCreate) (CUvideoctxlock * pLock,
+      CUcontext ctx);
+    CUresult (CUDAAPI * CuvidCtxLockDestroy) (CUvideoctxlock lck);
+    CUresult (CUDAAPI * CuvidCtxLock) (CUvideoctxlock lck,
       unsigned int reserved_flags);
-    CUresult (*CuvidCreateDecoder) (CUvideodecoder * phDecoder,
+    CUresult (CUDAAPI * CuvidCtxUnlock) (CUvideoctxlock lck,
+      unsigned int reserved_flags);
+    CUresult (CUDAAPI * CuvidCreateDecoder) (CUvideodecoder * phDecoder,
       CUVIDDECODECREATEINFO * pdci);
-    CUresult (*CuvidDestroyDecoder) (CUvideodecoder hDecoder);
-    CUresult (*CuvidDecodePicture) (CUvideodecoder hDecoder,
+    CUresult (CUDAAPI * CuvidDestroyDecoder) (CUvideodecoder hDecoder);
+    CUresult (CUDAAPI * CuvidDecodePicture) (CUvideodecoder hDecoder,
       CUVIDPICPARAMS * pPicParams);
-    CUresult (*CuvidCreateVideoParser) (CUvideoparser * pObj,
+    CUresult (CUDAAPI * CuvidCreateVideoParser) (CUvideoparser * pObj,
       CUVIDPARSERPARAMS * pParams);
-    CUresult (*CuvidParseVideoData) (CUvideoparser obj,
+    CUresult (CUDAAPI * CuvidParseVideoData) (CUvideoparser obj,
       CUVIDSOURCEDATAPACKET * pPacket);
-    CUresult (*CuvidDestroyVideoParser) (CUvideoparser obj);
-    CUresult (*CuvidMapVideoFrame) (CUvideodecoder hDecoder, int nPicIdx,
-      guintptr * pDevPtr, unsigned int *pPitch, CUVIDPROCPARAMS * pVPP);
-    CUresult (*CuvidUnmapVideoFrame) (CUvideodecoder hDecoder, guintptr DevPtr);
-    CUresult (*CuvidGetDecoderCaps) (CUVIDDECODECAPS * pdc);
+    CUresult (CUDAAPI * CuvidDestroyVideoParser) (CUvideoparser obj);
+    CUresult (CUDAAPI * CuvidMapVideoFrame) (CUvideodecoder hDecoder,
+      int nPicIdx, guintptr * pDevPtr, unsigned int *pPitch,
+      CUVIDPROCPARAMS * pVPP);
+    CUresult (CUDAAPI * CuvidUnmapVideoFrame) (CUvideodecoder hDecoder,
+      guintptr DevPtr);
+    CUresult (CUDAAPI * CuvidGetDecoderCaps) (CUVIDDECODECAPS * pdc);
 } GstnvdecCuvidVTable;
 
 static GstnvdecCuvidVTable gst_cuvid_vtable = { 0, };
@@ -115,7 +119,7 @@ gst_cuvid_can_get_decoder_caps (void)
   return ! !gst_cuvid_vtable.CuvidGetDecoderCaps;
 }
 
-CUresult
+CUresult CUDAAPI
 CuvidCtxLockCreate (CUvideoctxlock * pLock, CUcontext ctx)
 {
   g_assert (gst_cuvid_vtable.CuvidCtxLockCreate != NULL);
@@ -123,7 +127,7 @@ CuvidCtxLockCreate (CUvideoctxlock * pLock, CUcontext ctx)
   return gst_cuvid_vtable.CuvidCtxLockCreate (pLock, ctx);
 }
 
-CUresult
+CUresult CUDAAPI
 CuvidCtxLockDestroy (CUvideoctxlock lck)
 {
   g_assert (gst_cuvid_vtable.CuvidCtxLockDestroy != NULL);
@@ -131,7 +135,7 @@ CuvidCtxLockDestroy (CUvideoctxlock lck)
   return gst_cuvid_vtable.CuvidCtxLockDestroy (lck);
 }
 
-CUresult
+CUresult CUDAAPI
 CuvidCtxLock (CUvideoctxlock lck, unsigned int reserved_flags)
 {
   g_assert (gst_cuvid_vtable.CuvidCtxLock != NULL);
@@ -139,7 +143,7 @@ CuvidCtxLock (CUvideoctxlock lck, unsigned int reserved_flags)
   return gst_cuvid_vtable.CuvidCtxLock (lck, reserved_flags);
 }
 
-CUresult
+CUresult CUDAAPI
 CuvidCtxUnlock (CUvideoctxlock lck, unsigned int reserved_flags)
 {
   g_assert (gst_cuvid_vtable.CuvidCtxLockDestroy != NULL);
@@ -147,7 +151,7 @@ CuvidCtxUnlock (CUvideoctxlock lck, unsigned int reserved_flags)
   return gst_cuvid_vtable.CuvidCtxUnlock (lck, reserved_flags);
 }
 
-CUresult
+CUresult CUDAAPI
 CuvidCreateDecoder (CUvideodecoder * phDecoder, CUVIDDECODECREATEINFO * pdci)
 {
   g_assert (gst_cuvid_vtable.CuvidCreateDecoder != NULL);
@@ -155,7 +159,7 @@ CuvidCreateDecoder (CUvideodecoder * phDecoder, CUVIDDECODECREATEINFO * pdci)
   return gst_cuvid_vtable.CuvidCreateDecoder (phDecoder, pdci);
 }
 
-CUresult
+CUresult CUDAAPI
 CuvidDestroyDecoder (CUvideodecoder hDecoder)
 {
   g_assert (gst_cuvid_vtable.CuvidDestroyDecoder != NULL);
@@ -163,7 +167,7 @@ CuvidDestroyDecoder (CUvideodecoder hDecoder)
   return gst_cuvid_vtable.CuvidDestroyDecoder (hDecoder);
 }
 
-CUresult
+CUresult CUDAAPI
 CuvidDecodePicture (CUvideodecoder hDecoder, CUVIDPICPARAMS * pPicParams)
 {
   g_assert (gst_cuvid_vtable.CuvidDecodePicture != NULL);
@@ -171,7 +175,7 @@ CuvidDecodePicture (CUvideodecoder hDecoder, CUVIDPICPARAMS * pPicParams)
   return gst_cuvid_vtable.CuvidDecodePicture (hDecoder, pPicParams);
 }
 
-CUresult
+CUresult CUDAAPI
 CuvidCreateVideoParser (CUvideoparser * pObj, CUVIDPARSERPARAMS * pParams)
 {
   g_assert (gst_cuvid_vtable.CuvidCreateVideoParser != NULL);
@@ -179,7 +183,7 @@ CuvidCreateVideoParser (CUvideoparser * pObj, CUVIDPARSERPARAMS * pParams)
   return gst_cuvid_vtable.CuvidCreateVideoParser (pObj, pParams);
 }
 
-CUresult
+CUresult CUDAAPI
 CuvidParseVideoData (CUvideoparser obj, CUVIDSOURCEDATAPACKET * pPacket)
 {
   g_assert (gst_cuvid_vtable.CuvidParseVideoData != NULL);
@@ -187,7 +191,7 @@ CuvidParseVideoData (CUvideoparser obj, CUVIDSOURCEDATAPACKET * pPacket)
   return gst_cuvid_vtable.CuvidParseVideoData (obj, pPacket);
 }
 
-CUresult
+CUresult CUDAAPI
 CuvidDestroyVideoParser (CUvideoparser obj)
 {
   g_assert (gst_cuvid_vtable.CuvidDestroyVideoParser != NULL);
@@ -195,7 +199,7 @@ CuvidDestroyVideoParser (CUvideoparser obj)
   return gst_cuvid_vtable.CuvidDestroyVideoParser (obj);
 }
 
-CUresult
+CUresult CUDAAPI
 CuvidMapVideoFrame (CUvideodecoder hDecoder, int nPicIdx,
     guintptr * pDevPtr, unsigned int *pPitch, CUVIDPROCPARAMS * pVPP)
 {
@@ -205,7 +209,7 @@ CuvidMapVideoFrame (CUvideodecoder hDecoder, int nPicIdx,
       pPitch, pVPP);
 }
 
-CUresult
+CUresult CUDAAPI
 CuvidUnmapVideoFrame (CUvideodecoder hDecoder, guintptr DevPtr)
 {
   g_assert (gst_cuvid_vtable.CuvidUnmapVideoFrame != NULL);
@@ -213,7 +217,7 @@ CuvidUnmapVideoFrame (CUvideodecoder hDecoder, guintptr DevPtr)
   return gst_cuvid_vtable.CuvidUnmapVideoFrame (hDecoder, DevPtr);
 }
 
-CUresult
+CUresult CUDAAPI
 CuvidGetDecoderCaps (CUVIDDECODECAPS * pdc)
 {
   g_assert (gst_cuvid_vtable.CuvidGetDecoderCaps != NULL);

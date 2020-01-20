@@ -44,48 +44,53 @@ typedef struct _GstNvCodecCudaVTable
 {
   gboolean loaded;
 
-    CUresult (*CuInit) (unsigned int Flags);
-    CUresult (*CuGetErrorName) (CUresult error, const char **pStr);
-    CUresult (*CuGetErrorString) (CUresult error, const char **pStr);
+    CUresult (CUDAAPI * CuInit) (unsigned int Flags);
+    CUresult (CUDAAPI * CuGetErrorName) (CUresult error, const char **pStr);
+    CUresult (CUDAAPI * CuGetErrorString) (CUresult error, const char **pStr);
 
-    CUresult (*CuCtxCreate) (CUcontext * pctx, unsigned int flags,
+    CUresult (CUDAAPI * CuCtxCreate) (CUcontext * pctx, unsigned int flags,
       CUdevice dev);
-    CUresult (*CuCtxDestroy) (CUcontext ctx);
-    CUresult (*CuCtxPopCurrent) (CUcontext * pctx);
-    CUresult (*CuCtxPushCurrent) (CUcontext ctx);
+    CUresult (CUDAAPI * CuCtxDestroy) (CUcontext ctx);
+    CUresult (CUDAAPI * CuCtxPopCurrent) (CUcontext * pctx);
+    CUresult (CUDAAPI * CuCtxPushCurrent) (CUcontext ctx);
 
-    CUresult (*CuGraphicsMapResources) (unsigned int count,
+    CUresult (CUDAAPI * CuGraphicsMapResources) (unsigned int count,
       CUgraphicsResource * resources, CUstream hStream);
-    CUresult (*CuGraphicsUnmapResources) (unsigned int count,
+    CUresult (CUDAAPI * CuGraphicsUnmapResources) (unsigned int count,
       CUgraphicsResource * resources, CUstream hStream);
-    CUresult (*CuGraphicsSubResourceGetMappedArray) (CUarray * pArray,
+    CUresult (CUDAAPI * CuGraphicsSubResourceGetMappedArray) (CUarray * pArray,
       CUgraphicsResource resource, unsigned int arrayIndex,
       unsigned int mipLevel);
-    CUresult (*CuGraphicsResourceGetMappedPointer) (CUdeviceptr * pDevPtr,
-      size_t * pSize, CUgraphicsResource resource);
-    CUresult (*CuGraphicsUnregisterResource) (CUgraphicsResource resource);
+    CUresult (CUDAAPI * CuGraphicsResourceGetMappedPointer) (CUdeviceptr *
+      pDevPtr, size_t * pSize, CUgraphicsResource resource);
+    CUresult (CUDAAPI *
+      CuGraphicsUnregisterResource) (CUgraphicsResource resource);
 
-    CUresult (*CuMemAlloc) (CUdeviceptr * dptr, unsigned int bytesize);
-    CUresult (*CuMemAllocPitch) (CUdeviceptr * dptr, size_t * pPitch,
+    CUresult (CUDAAPI * CuMemAlloc) (CUdeviceptr * dptr, unsigned int bytesize);
+    CUresult (CUDAAPI * CuMemAllocPitch) (CUdeviceptr * dptr, size_t * pPitch,
       size_t WidthInBytes, size_t Height, unsigned int ElementSizeBytes);
-    CUresult (*CuMemcpy2D) (const CUDA_MEMCPY2D * pCopy);
-    CUresult (*CuMemcpy2DAsync) (const CUDA_MEMCPY2D * pCopy, CUstream hStream);
-    CUresult (*CuMemFree) (CUdeviceptr dptr);
-    CUresult (*CuStreamCreate) (CUstream * phStream, unsigned int Flags);
-    CUresult (*CuStreamDestroy) (CUstream hStream);
-    CUresult (*CuStreamSynchronize) (CUstream hStream);
+    CUresult (CUDAAPI * CuMemcpy2D) (const CUDA_MEMCPY2D * pCopy);
+    CUresult (CUDAAPI * CuMemcpy2DAsync) (const CUDA_MEMCPY2D * pCopy,
+      CUstream hStream);
+    CUresult (CUDAAPI * CuMemFree) (CUdeviceptr dptr);
+    CUresult (CUDAAPI * CuStreamCreate) (CUstream * phStream,
+      unsigned int Flags);
+    CUresult (CUDAAPI * CuStreamDestroy) (CUstream hStream);
+    CUresult (CUDAAPI * CuStreamSynchronize) (CUstream hStream);
 
-    CUresult (*CuDeviceGet) (CUdevice * device, int ordinal);
-    CUresult (*CuDeviceGetCount) (int *count);
-    CUresult (*CuDeviceGetName) (char *name, int len, CUdevice dev);
-    CUresult (*CuDeviceGetAttribute) (int *pi, CUdevice_attribute attrib,
-      CUdevice dev);
+    CUresult (CUDAAPI * CuDeviceGet) (CUdevice * device, int ordinal);
+    CUresult (CUDAAPI * CuDeviceGetCount) (int *count);
+    CUresult (CUDAAPI * CuDeviceGetName) (char *name, int len, CUdevice dev);
+    CUresult (CUDAAPI * CuDeviceGetAttribute) (int *pi,
+      CUdevice_attribute attrib, CUdevice dev);
 
-    CUresult (*CuGraphicsGLRegisterImage) (CUgraphicsResource * pCudaResource,
-      unsigned int image, unsigned int target, unsigned int Flags);
-    CUresult (*CuGraphicsGLRegisterBuffer) (CUgraphicsResource * pCudaResource,
-      unsigned int buffer, unsigned int Flags);
-    CUresult (*CuGraphicsResourceSetMapFlags) (CUgraphicsResource resource,
+    CUresult (CUDAAPI * CuGraphicsGLRegisterImage) (CUgraphicsResource *
+      pCudaResource, unsigned int image, unsigned int target,
+      unsigned int Flags);
+    CUresult (CUDAAPI * CuGraphicsGLRegisterBuffer) (CUgraphicsResource *
+      pCudaResource, unsigned int buffer, unsigned int Flags);
+    CUresult (CUDAAPI *
+      CuGraphicsResourceSetMapFlags) (CUgraphicsResource resource,
       unsigned int flags);
 } GstNvCodecCudaVTable;
 
@@ -156,7 +161,7 @@ error:
   return FALSE;
 }
 
-CUresult
+CUresult CUDAAPI
 CuInit (unsigned int Flags)
 {
   g_assert (gst_cuda_vtable.CuInit != NULL);
@@ -164,7 +169,7 @@ CuInit (unsigned int Flags)
   return gst_cuda_vtable.CuInit (Flags);
 }
 
-CUresult
+CUresult CUDAAPI
 CuGetErrorName (CUresult error, const char **pStr)
 {
   g_assert (gst_cuda_vtable.CuGetErrorName != NULL);
@@ -172,7 +177,7 @@ CuGetErrorName (CUresult error, const char **pStr)
   return gst_cuda_vtable.CuGetErrorName (error, pStr);
 }
 
-CUresult
+CUresult CUDAAPI
 CuGetErrorString (CUresult error, const char **pStr)
 {
   g_assert (gst_cuda_vtable.CuGetErrorString != NULL);
@@ -180,7 +185,7 @@ CuGetErrorString (CUresult error, const char **pStr)
   return gst_cuda_vtable.CuGetErrorString (error, pStr);
 }
 
-CUresult
+CUresult CUDAAPI
 CuCtxCreate (CUcontext * pctx, unsigned int flags, CUdevice dev)
 {
   g_assert (gst_cuda_vtable.CuCtxCreate != NULL);
@@ -188,7 +193,7 @@ CuCtxCreate (CUcontext * pctx, unsigned int flags, CUdevice dev)
   return gst_cuda_vtable.CuCtxCreate (pctx, flags, dev);
 }
 
-CUresult
+CUresult CUDAAPI
 CuCtxDestroy (CUcontext ctx)
 {
   g_assert (gst_cuda_vtable.CuCtxDestroy != NULL);
@@ -196,7 +201,7 @@ CuCtxDestroy (CUcontext ctx)
   return gst_cuda_vtable.CuCtxDestroy (ctx);
 }
 
-CUresult
+CUresult CUDAAPI
 CuCtxPopCurrent (CUcontext * pctx)
 {
   g_assert (gst_cuda_vtable.CuCtxPopCurrent != NULL);
@@ -204,7 +209,7 @@ CuCtxPopCurrent (CUcontext * pctx)
   return gst_cuda_vtable.CuCtxPopCurrent (pctx);
 }
 
-CUresult
+CUresult CUDAAPI
 CuCtxPushCurrent (CUcontext ctx)
 {
   g_assert (gst_cuda_vtable.CuCtxPushCurrent != NULL);
@@ -212,7 +217,7 @@ CuCtxPushCurrent (CUcontext ctx)
   return gst_cuda_vtable.CuCtxPushCurrent (ctx);
 }
 
-CUresult
+CUresult CUDAAPI
 CuGraphicsMapResources (unsigned int count, CUgraphicsResource * resources,
     CUstream hStream)
 {
@@ -221,7 +226,7 @@ CuGraphicsMapResources (unsigned int count, CUgraphicsResource * resources,
   return gst_cuda_vtable.CuGraphicsMapResources (count, resources, hStream);
 }
 
-CUresult
+CUresult CUDAAPI
 CuGraphicsUnmapResources (unsigned int count, CUgraphicsResource * resources,
     CUstream hStream)
 {
@@ -230,7 +235,7 @@ CuGraphicsUnmapResources (unsigned int count, CUgraphicsResource * resources,
   return gst_cuda_vtable.CuGraphicsUnmapResources (count, resources, hStream);
 }
 
-CUresult
+CUresult CUDAAPI
 CuGraphicsSubResourceGetMappedArray (CUarray * pArray,
     CUgraphicsResource resource, unsigned int arrayIndex, unsigned int mipLevel)
 {
@@ -240,7 +245,7 @@ CuGraphicsSubResourceGetMappedArray (CUarray * pArray,
       arrayIndex, mipLevel);
 }
 
-CUresult
+CUresult CUDAAPI
 CuGraphicsResourceGetMappedPointer (CUdeviceptr * pDevPtr, size_t * pSize,
     CUgraphicsResource resource)
 {
@@ -250,7 +255,7 @@ CuGraphicsResourceGetMappedPointer (CUdeviceptr * pDevPtr, size_t * pSize,
       resource);
 }
 
-CUresult
+CUresult CUDAAPI
 CuGraphicsUnregisterResource (CUgraphicsResource resource)
 {
   g_assert (gst_cuda_vtable.CuGraphicsUnregisterResource != NULL);
@@ -258,7 +263,7 @@ CuGraphicsUnregisterResource (CUgraphicsResource resource)
   return gst_cuda_vtable.CuGraphicsUnregisterResource (resource);
 }
 
-CUresult
+CUresult CUDAAPI
 CuMemAlloc (CUdeviceptr * dptr, unsigned int bytesize)
 {
   g_assert (gst_cuda_vtable.CuMemAlloc != NULL);
@@ -266,7 +271,7 @@ CuMemAlloc (CUdeviceptr * dptr, unsigned int bytesize)
   return gst_cuda_vtable.CuMemAlloc (dptr, bytesize);
 }
 
-CUresult
+CUresult CUDAAPI
 CuMemAllocPitch (CUdeviceptr * dptr, size_t * pPitch, size_t WidthInBytes,
     size_t Height, unsigned int ElementSizeBytes)
 {
@@ -276,7 +281,7 @@ CuMemAllocPitch (CUdeviceptr * dptr, size_t * pPitch, size_t WidthInBytes,
       ElementSizeBytes);
 }
 
-CUresult
+CUresult CUDAAPI
 CuMemcpy2D (const CUDA_MEMCPY2D * pCopy)
 {
   g_assert (gst_cuda_vtable.CuMemcpy2D != NULL);
@@ -284,7 +289,7 @@ CuMemcpy2D (const CUDA_MEMCPY2D * pCopy)
   return gst_cuda_vtable.CuMemcpy2D (pCopy);
 }
 
-CUresult
+CUresult CUDAAPI
 CuMemcpy2DAsync (const CUDA_MEMCPY2D * pCopy, CUstream hStream)
 {
   g_assert (gst_cuda_vtable.CuMemcpy2DAsync != NULL);
@@ -292,7 +297,7 @@ CuMemcpy2DAsync (const CUDA_MEMCPY2D * pCopy, CUstream hStream)
   return gst_cuda_vtable.CuMemcpy2DAsync (pCopy, hStream);
 }
 
-CUresult
+CUresult CUDAAPI
 CuMemFree (CUdeviceptr dptr)
 {
   g_assert (gst_cuda_vtable.CuMemFree != NULL);
@@ -300,7 +305,7 @@ CuMemFree (CUdeviceptr dptr)
   return gst_cuda_vtable.CuMemFree (dptr);
 }
 
-CUresult
+CUresult CUDAAPI
 CuStreamCreate (CUstream * phStream, unsigned int Flags)
 {
   g_assert (gst_cuda_vtable.CuStreamCreate != NULL);
@@ -308,7 +313,7 @@ CuStreamCreate (CUstream * phStream, unsigned int Flags)
   return gst_cuda_vtable.CuStreamCreate (phStream, Flags);
 }
 
-CUresult
+CUresult CUDAAPI
 CuStreamDestroy (CUstream hStream)
 {
   g_assert (gst_cuda_vtable.CuStreamDestroy != NULL);
@@ -316,7 +321,7 @@ CuStreamDestroy (CUstream hStream)
   return gst_cuda_vtable.CuStreamDestroy (hStream);
 }
 
-CUresult
+CUresult CUDAAPI
 CuStreamSynchronize (CUstream hStream)
 {
   g_assert (gst_cuda_vtable.CuStreamSynchronize != NULL);
@@ -324,7 +329,7 @@ CuStreamSynchronize (CUstream hStream)
   return gst_cuda_vtable.CuStreamSynchronize (hStream);
 }
 
-CUresult
+CUresult CUDAAPI
 CuDeviceGet (CUdevice * device, int ordinal)
 {
   g_assert (gst_cuda_vtable.CuDeviceGet != NULL);
@@ -332,7 +337,7 @@ CuDeviceGet (CUdevice * device, int ordinal)
   return gst_cuda_vtable.CuDeviceGet (device, ordinal);
 }
 
-CUresult
+CUresult CUDAAPI
 CuDeviceGetCount (int *count)
 {
   g_assert (gst_cuda_vtable.CuDeviceGetCount != NULL);
@@ -340,7 +345,7 @@ CuDeviceGetCount (int *count)
   return gst_cuda_vtable.CuDeviceGetCount (count);
 }
 
-CUresult
+CUresult CUDAAPI
 CuDeviceGetName (char *name, int len, CUdevice dev)
 {
   g_assert (gst_cuda_vtable.CuDeviceGetName != NULL);
@@ -348,7 +353,7 @@ CuDeviceGetName (char *name, int len, CUdevice dev)
   return gst_cuda_vtable.CuDeviceGetName (name, len, dev);
 }
 
-CUresult
+CUresult CUDAAPI
 CuDeviceGetAttribute (int *pi, CUdevice_attribute attrib, CUdevice dev)
 {
   g_assert (gst_cuda_vtable.CuDeviceGetAttribute != NULL);
@@ -357,7 +362,7 @@ CuDeviceGetAttribute (int *pi, CUdevice_attribute attrib, CUdevice dev)
 }
 
 /* cudaGL.h */
-CUresult
+CUresult CUDAAPI
 CuGraphicsGLRegisterImage (CUgraphicsResource * pCudaResource,
     unsigned int image, unsigned int target, unsigned int Flags)
 {
@@ -367,7 +372,7 @@ CuGraphicsGLRegisterImage (CUgraphicsResource * pCudaResource,
       target, Flags);
 }
 
-CUresult
+CUresult CUDAAPI
 CuGraphicsGLRegisterBuffer (CUgraphicsResource * pCudaResource,
     unsigned int buffer, unsigned int Flags)
 {
@@ -377,7 +382,7 @@ CuGraphicsGLRegisterBuffer (CUgraphicsResource * pCudaResource,
       Flags);
 }
 
-CUresult
+CUresult CUDAAPI
 CuGraphicsResourceSetMapFlags (CUgraphicsResource resource, unsigned int flags)
 {
   g_assert (gst_cuda_vtable.CuGraphicsResourceSetMapFlags != NULL);
