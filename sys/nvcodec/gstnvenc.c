@@ -589,6 +589,8 @@ gst_nvenc_get_supported_codec_profiles (gpointer enc, GUID codec_id)
   GST_DEBUG ("[device-%d %s] %s: %s", \
       d, c, caps, s ? "supported" : "not supported");
 
+#define ERROR_DETAILS "codec %s, device %i, error code %i"
+
 static void
 gst_nv_enc_register (GstPlugin * plugin, GUID codec_id, const gchar * codec,
     guint rank, gint device_index, CUcontext cuda_ctx)
@@ -611,22 +613,31 @@ gst_nv_enc_register (GstPlugin * plugin, GUID codec_id, const gchar * codec,
     gchar *name;
     gint j;
     GstNvEncDeviceCaps device_caps = { 0, };
+    NVENCSTATUS status;
+    CUresult cu_res;
 
     params.version = gst_nvenc_get_open_encode_session_ex_params_version ();
     params.apiVersion = gst_nvenc_get_api_version ();
     params.device = cuda_ctx;
     params.deviceType = NV_ENC_DEVICE_TYPE_CUDA;
 
-    if (CuCtxPushCurrent (cuda_ctx) != CUDA_SUCCESS)
-      goto done;
-
-    if (NvEncOpenEncodeSessionEx (&params, &enc) != NV_ENC_SUCCESS) {
-      CuCtxPopCurrent (NULL);
+    if ((cu_res = CuCtxPushCurrent (cuda_ctx)) != CUDA_SUCCESS) {
+      GST_ERROR ("CuCtxPushCurrent failed: " ERROR_DETAILS, codec,
+          device_index, cu_res);
       goto done;
     }
 
-    if (NvEncGetEncodeGUIDs (enc, guids, G_N_ELEMENTS (guids),
-            &count) != NV_ENC_SUCCESS) {
+    if ((status = NvEncOpenEncodeSessionEx (&params, &enc)) != NV_ENC_SUCCESS) {
+      CuCtxPopCurrent (NULL);
+      GST_ERROR ("NvEncOpenEncodeSessionEx failed: " ERROR_DETAILS, codec,
+          device_index, status);
+      goto done;
+    }
+
+    if ((status = NvEncGetEncodeGUIDs (enc, guids, G_N_ELEMENTS (guids),
+                &count)) != NV_ENC_SUCCESS) {
+      GST_ERROR ("NvEncGetEncodeGUIDs failed: " ERROR_DETAILS, codec,
+          device_index, status);
       goto enc_free;
     }
 
@@ -647,19 +658,21 @@ gst_nv_enc_register (GstPlugin * plugin, GUID codec_id, const gchar * codec,
 
     caps_param.version = gst_nvenc_get_caps_param_version ();
     caps_param.capsToQuery = NV_ENC_CAPS_WIDTH_MAX;
-    if (NvEncGetEncodeCaps (enc,
-            codec_id, &caps_param, &max_width) != NV_ENC_SUCCESS) {
-      GST_WARNING ("could not query max width");
+    if ((status = NvEncGetEncodeCaps (enc,
+                codec_id, &caps_param, &max_width)) != NV_ENC_SUCCESS) {
       max_width = 4096;
+      GST_WARNING ("could not query max width, setting as %i: "
+          ERROR_DETAILS, max_width, codec, device_index, status);
     } else if (max_width < 4096) {
       GST_WARNING ("max width %d is less than expected value", max_width);
       max_width = 4096;
     }
 
     caps_param.capsToQuery = NV_ENC_CAPS_HEIGHT_MAX;
-    if (NvEncGetEncodeCaps (enc,
-            codec_id, &caps_param, &max_height) != NV_ENC_SUCCESS) {
-      GST_WARNING ("could not query max height");
+    if ((status = NvEncGetEncodeCaps (enc,
+                codec_id, &caps_param, &max_height)) != NV_ENC_SUCCESS) {
+      GST_WARNING ("could not query max height, setting as %i: "
+          ERROR_DETAILS, max_height, codec, device_index, status);
       max_height = 4096;
     } else if (max_height < 4096) {
       GST_WARNING ("max height %d is less than expected value", max_height);
@@ -667,16 +680,18 @@ gst_nv_enc_register (GstPlugin * plugin, GUID codec_id, const gchar * codec,
     }
 
     caps_param.capsToQuery = NV_ENC_CAPS_WIDTH_MIN;
-    if (NvEncGetEncodeCaps (enc,
-            codec_id, &caps_param, &min_width) != NV_ENC_SUCCESS) {
-      GST_WARNING ("could not query min width");
+    if ((status = NvEncGetEncodeCaps (enc,
+                codec_id, &caps_param, &min_width)) != NV_ENC_SUCCESS) {
+      GST_WARNING ("could not query min width, setting as %i: "
+          ERROR_DETAILS, min_width, codec, device_index, status);
       min_width = 16;
     }
 
     caps_param.capsToQuery = NV_ENC_CAPS_HEIGHT_MIN;
-    if (NvEncGetEncodeCaps (enc,
-            codec_id, &caps_param, &min_height) != NV_ENC_SUCCESS) {
-      GST_WARNING ("could not query min height");
+    if ((status = NvEncGetEncodeCaps (enc,
+                codec_id, &caps_param, &min_height)) != NV_ENC_SUCCESS) {
+      GST_WARNING ("could not query min height, setting as %i: "
+          ERROR_DETAILS, min_height, codec, device_index, status);
       min_height = 16;
     }
 
