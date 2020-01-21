@@ -387,8 +387,8 @@ retry:
   if (!gst_caps_can_intersect (allowed_caps, tmp_caps)) {
     if (profile == GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE) {
       profile = GST_VAAPI_PROFILE_H264_BASELINE;
-      GST_INFO ("user might requested baseline profile, "
-          "trying constrained-baseline instead");
+      GST_WARNING_OBJECT (GST_VAAPIENCODE_CAST (encode), "user might requested "
+          "baseline profile, trying constrained-baseline instead");
       goto retry;
     }
   } else {
