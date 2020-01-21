@@ -55,9 +55,14 @@ GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_window_debug);
 #define GST_CAT_DEFAULT gst_d3d11_window_debug
 }
 
+/* timeout to wait busy UI thread */
+#define DEFAULT_ASYNC_TIMEOUT (5 * 1000)
+
 typedef struct _CoreWindowWinRTStorage
 {
   ComPtr<Core::ICoreWindow> core_window;
+  ComPtr<Core::ICoreDispatcher> dispatcher;
+  HANDLE cancellable;
   EventRegistrationToken event_token;
 } CoreWindowWinRTStorage;
 
@@ -84,6 +89,10 @@ gst_d3d11_window_core_window_create_swap_chain (GstD3D11Window * window,
 static GstFlowReturn
 gst_d3d11_window_core_window_present (GstD3D11Window * window,
      guint present_flags);
+static gboolean
+gst_d3d11_window_core_window_unlock (GstD3D11Window * window);
+static gboolean
+gst_d3d11_window_core_window_unlock_stop (GstD3D11Window * window);
 static void
 gst_d3d11_window_core_window_on_resize (GstD3D11WindowCoreWindow * self,
     guint width, guint height);
@@ -153,6 +162,76 @@ private:
   GstD3D11WindowCoreWindow * window;
 };
 
+template <typename CB>
+static HRESULT
+run_async (const ComPtr<Core::ICoreDispatcher> &dispatcher, HANDLE cancellable,
+    DWORD timeout, CB &&cb)
+{
+  ComPtr<IAsyncAction> async_action;
+  HRESULT hr;
+  HRESULT async_hr;
+  boolean can_now;
+  DWORD wait_ret;
+  HANDLE event_handle[2];
+
+  hr = dispatcher->get_HasThreadAccess (&can_now);
+
+  if (!gst_d3d11_result (hr, NULL))
+    return hr;
+
+  if (can_now)
+    return cb ();
+
+  Event event (CreateEventEx (NULL, NULL, CREATE_EVENT_MANUAL_RESET,
+      EVENT_ALL_ACCESS));
+
+  if (!event.IsValid())
+    return E_FAIL;
+
+  auto handler =
+      Callback<Implements<RuntimeClassFlags<ClassicCom>,
+          Core::IDispatchedHandler, FtmBase>>([&async_hr, &cb, &event] {
+        async_hr = cb ();
+        SetEvent (event.Get());
+        return S_OK;
+      });
+
+  hr = dispatcher->RunAsync (Core::CoreDispatcherPriority_Normal, handler.Get(),
+      async_action.GetAddressOf());
+
+  if (!gst_d3d11_result (hr, NULL))
+    return hr;
+
+  event_handle[0] = event.Get();
+  event_handle[1] = cancellable;
+
+  wait_ret = WaitForMultipleObjects (2, event_handle, FALSE, timeout);
+  if (wait_ret != WAIT_OBJECT_0)
+    return E_FAIL;
+
+  return async_hr;
+}
+
+static HRESULT
+get_window_size (const ComPtr<Core::ICoreDispatcher> &dispatcher,
+    HANDLE cancellable,
+    const ComPtr<Core::ICoreWindow> &window, Size *size)
+{
+  return run_async (dispatcher, cancellable, DEFAULT_ASYNC_TIMEOUT,
+      [window, size] {
+        HRESULT hr;
+        Rect bounds;
+
+        hr = window->get_Bounds (&bounds);
+        if (gst_d3d11_result (hr, NULL)) {
+          size->Width = dip_to_pixel (bounds.Width);
+          size->Height = dip_to_pixel (bounds.Height);
+        }
+
+        return hr;
+      });
+}
+
 static void
 gst_d3d11_window_core_window_class_init (GstD3D11WindowCoreWindowClass * klass)
 {
@@ -170,12 +249,17 @@ gst_d3d11_window_core_window_class_init (GstD3D11WindowCoreWindowClass * klass)
       GST_DEBUG_FUNCPTR (gst_d3d11_window_core_window_create_swap_chain);
   window_class->present =
       GST_DEBUG_FUNCPTR (gst_d3d11_window_core_window_present);
+  window_class->unlock =
+      GST_DEBUG_FUNCPTR (gst_d3d11_window_core_window_unlock);
+  window_class->unlock_stop =
+      GST_DEBUG_FUNCPTR (gst_d3d11_window_core_window_unlock_stop);
 }
 
 static void
 gst_d3d11_window_core_window_init (GstD3D11WindowCoreWindow * self)
 {
   self->storage = new CoreWindowWinRTStorage;
+  self->storage->cancellable = CreateEvent (NULL, TRUE, FALSE, NULL);
 }
 
 static void
@@ -187,7 +271,8 @@ gst_d3d11_window_core_window_constructed (GObject * object)
   HRESULT hr;
   ComPtr<IInspectable> inspectable;
   ComPtr<IWindowSizeChangedEventHandler> resize_handler;
-  Rect bounds;
+  Size size;
+  ComPtr<Core::ICoreWindow> core_window;
 
   if (!window->external_handle) {
     GST_ERROR_OBJECT (self, "No external window handle");
@@ -200,22 +285,34 @@ gst_d3d11_window_core_window_constructed (GObject * object)
   if (!gst_d3d11_result (hr, NULL))
     goto error;
 
-  hr = storage->core_window->get_Bounds (&bounds);
+  hr = storage->core_window->get_Dispatcher (&storage->dispatcher);
   if (!gst_d3d11_result (hr, NULL))
     goto error;
 
-  window->surface_width = dip_to_pixel (bounds.Width);
-  window->surface_height = dip_to_pixel (bounds.Height);
+  hr = get_window_size (storage->dispatcher, storage->cancellable,
+      storage->core_window, &size);
+  if (!gst_d3d11_result (hr, NULL))
+    goto error;
 
   GST_DEBUG_OBJECT (self,
       "client size %dx%d", window->surface_width, window->surface_height);
+  window->surface_width = size.Width;
+  window->surface_height = size.Height;
 
   hr = MakeAndInitialize<CoreResizeHandler>(&resize_handler, self);
   if (!gst_d3d11_result (hr, NULL))
     goto error;
 
-  hr = storage->core_window->add_SizeChanged (resize_handler.Get(),
-      &storage->event_token);
+  hr = storage->core_window.As (&core_window);
+  if (!gst_d3d11_result (hr, NULL))
+    goto error;
+
+  hr = run_async (storage->dispatcher,
+      storage->cancellable, DEFAULT_ASYNC_TIMEOUT,
+      [self, core_window, resize_handler] {
+        return core_window->add_SizeChanged (resize_handler.Get(),
+            &self->storage->event_token);
+      });
   if (!gst_d3d11_result (hr, NULL))
     goto error;
 
@@ -234,9 +331,21 @@ gst_d3d11_window_core_window_dispose (GObject * object)
   CoreWindowWinRTStorage *storage = self->storage;
 
   if (storage) {
-    if (storage->core_window)
-      storage->core_window->remove_SizeChanged (storage->event_token);
+    if (storage->core_window && storage->dispatcher) {
+      ComPtr<Core::ICoreWindow> window;
+      HRESULT hr;
 
+      hr = storage->core_window.As (&window);
+      if (SUCCEEDED (hr)) {
+        run_async (storage->dispatcher,
+            storage->cancellable, DEFAULT_ASYNC_TIMEOUT,
+            [self, window] {
+              return window->remove_SizeChanged (self->storage->event_token);
+            });
+      }
+    }
+
+    CloseHandle (storage->cancellable);
     delete storage;
   }
 
@@ -251,6 +360,7 @@ gst_d3d11_window_core_window_create_swap_chain (GstD3D11Window * window,
     IDXGISwapChain ** swap_chain)
 {
   GstD3D11WindowCoreWindow *self = GST_D3D11_WINDOW_CORE_WINDOW (window);
+  CoreWindowWinRTStorage *storage = self->storage;
   ComPtr<IDXGISwapChain1> new_swapchain;
   GstD3D11Device *device = window->device;
   DXGI_SWAP_CHAIN_DESC1 desc1 = { 0, };
@@ -279,8 +389,12 @@ gst_d3d11_window_core_window_create_swap_chain (GstD3D11Window * window,
 
   new_swapchain.CopyTo (swap_chain);
 
-  gst_d3d11_window_on_resize (GST_D3D11_WINDOW (self),
-      window->surface_width, window->surface_height);
+  run_async (storage->dispatcher, storage->cancellable, DEFAULT_ASYNC_TIMEOUT,
+      [window] {
+        gst_d3d11_window_on_resize (window,
+            window->surface_width, window->surface_height);
+        return S_OK;
+      });
 
   return TRUE;
 }
@@ -310,11 +424,40 @@ gst_d3d11_window_core_window_present (GstD3D11Window * window,
   return GST_FLOW_OK;
 }
 
+static gboolean
+gst_d3d11_window_core_window_unlock (GstD3D11Window * window)
+{
+  GstD3D11WindowCoreWindow *self = GST_D3D11_WINDOW_CORE_WINDOW (window);
+  CoreWindowWinRTStorage *storage = self->storage;
+
+  SetEvent (storage->cancellable);
+
+  return TRUE;
+}
+
+static gboolean
+gst_d3d11_window_core_window_unlock_stop (GstD3D11Window * window)
+{
+  GstD3D11WindowCoreWindow *self = GST_D3D11_WINDOW_CORE_WINDOW (window);
+  CoreWindowWinRTStorage *storage = self->storage;
+
+  ResetEvent (storage->cancellable);
+
+  return TRUE;
+}
+
 static void
 gst_d3d11_window_core_window_update_swap_chain (GstD3D11Window * window)
 {
-  gst_d3d11_window_on_resize (window,
-      window->surface_width, window->surface_height);
+  GstD3D11WindowCoreWindow *self = GST_D3D11_WINDOW_CORE_WINDOW (window);
+  CoreWindowWinRTStorage *storage = self->storage;
+
+  run_async (storage->dispatcher, storage->cancellable, DEFAULT_ASYNC_TIMEOUT,
+      [window] {
+        gst_d3d11_window_on_resize (window,
+            window->surface_width, window->surface_height);
+        return S_OK;
+      });
 
   return;
 }
