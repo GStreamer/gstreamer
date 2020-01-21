@@ -4027,12 +4027,12 @@ _update_transceivers_from_sdp (GstWebRTCBin * webrtc, SDPSource source,
     bundle_stream = _get_or_create_transport_stream (webrtc, bundle_idx,
         _message_media_is_datachannel (sdp->sdp, bundle_idx));
 
-    _connect_rtpfunnel (webrtc, bundle_idx);
-
     g_array_set_size (bundle_stream->ptmap, 0);
     for (i = 0; i < gst_sdp_message_medias_len (sdp->sdp); i++) {
       _update_transport_ptmap_from_media (webrtc, bundle_stream, sdp->sdp, i);
     }
+
+    _connect_rtpfunnel (webrtc, bundle_idx);
   }
 
   for (i = 0; i < gst_sdp_message_medias_len (sdp->sdp); i++) {
