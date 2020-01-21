@@ -37,14 +37,29 @@
 #include "gstvaapivideopool_priv.h"
 #include "gstvaapiutils.h"
 
-#define DEBUG 1
-#include "gstvaapidebug.h"
-
 /* Define default VA surface chroma format to YUV 4:2:0 */
 #define DEFAULT_CHROMA_TYPE (GST_VAAPI_CHROMA_TYPE_YUV420)
 
 /* Number of scratch surfaces beyond those used as reference */
 #define SCRATCH_SURFACES_COUNT (4)
+
+/* Debug category for GstVaapiContext */
+GST_DEBUG_CATEGORY (gst_debug_vaapi_context);
+#define GST_CAT_DEFAULT gst_debug_vaapi_context
+
+static void
+_init_vaapi_context_debug (void)
+{
+#ifndef GST_DISABLE_GST_DEBUG
+  static volatile gsize _init = 0;
+
+  if (g_once_init_enter (&_init)) {
+    GST_DEBUG_CATEGORY_INIT (gst_debug_vaapi_context, "vaapicontext", 0,
+        "VA-API context");
+    g_once_init_leave (&_init, 1);
+  }
+#endif
+}
 
 static gboolean
 ensure_attributes (GstVaapiContext * context)
@@ -84,7 +99,7 @@ context_destroy (GstVaapiContext * context)
   VAStatus status;
 
   context_id = GST_VAAPI_CONTEXT_ID (context);
-  GST_DEBUG ("context 0x%08x", context_id);
+  GST_DEBUG ("context 0x%08x / config 0x%08x", context_id, context->va_config);
 
   if (context_id != VA_INVALID_ID) {
     GST_VAAPI_DISPLAY_LOCK (display);
@@ -201,7 +216,6 @@ context_create (GstVaapiContext * context)
   if (!vaapi_check_status (status, "vaCreateContext()"))
     goto cleanup;
 
-  GST_DEBUG ("context 0x%08x", context_id);
   GST_VAAPI_CONTEXT_ID (context) = context_id;
   success = TRUE;
 
@@ -404,6 +418,8 @@ gst_vaapi_context_new (GstVaapiDisplay * display,
 
   g_return_val_if_fail (display, NULL);
 
+  _init_vaapi_context_debug ();
+
   if (cip->profile == GST_VAAPI_PROFILE_UNKNOWN
       || cip->entrypoint == GST_VAAPI_ENTRYPOINT_INVALID)
     return NULL;
@@ -435,6 +451,8 @@ gst_vaapi_context_new (GstVaapiDisplay * display,
     goto error;
 
 done:
+  GST_DEBUG ("context 0x%08lx / config 0x%08x",
+      GST_VAAPI_CONTEXT_ID (context), context->va_config);
   return context;
 
   /* ERRORS */
