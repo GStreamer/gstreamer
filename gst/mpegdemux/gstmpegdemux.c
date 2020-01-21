@@ -646,6 +646,7 @@ gst_ps_demux_send_data (GstPsDemux * demux, GstPsStream * stream,
 {
   GstFlowReturn result;
   GstClockTime pts = GST_CLOCK_TIME_NONE, dts = GST_CLOCK_TIME_NONE;
+  GstClockTime ts;
 
   if (stream == NULL)
     goto no_stream;
@@ -662,14 +663,21 @@ gst_ps_demux_send_data (GstPsDemux * demux, GstPsStream * stream,
   GST_BUFFER_PTS (buf) = pts;
   GST_BUFFER_DTS (buf) = dts;
 
+  /* If we have no DTS but a PTS that means both are the same,
+   * if we have neither than we don't know the current position */
+  ts = dts;
+  if (ts == GST_CLOCK_TIME_NONE)
+    ts = pts;
+
   /* update position in the segment */
-  if (stream->last_ts == GST_CLOCK_TIME_NONE || stream->last_ts < dts) {
+  if (ts != GST_CLOCK_TIME_NONE && (stream->last_ts == GST_CLOCK_TIME_NONE
+          || stream->last_ts < ts)) {
     GST_LOG_OBJECT (demux,
         "last_ts update on pad %s to time %" GST_TIME_FORMAT
         ", current scr is %" GST_TIME_FORMAT, GST_PAD_NAME (stream->pad),
-        GST_TIME_ARGS (dts),
+        GST_TIME_ARGS (ts),
         GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (demux->current_scr)));
-    stream->last_ts = dts;
+    stream->last_ts = ts;
     if (demux->src_segment.position == GST_CLOCK_TIME_NONE
         || stream->last_ts > demux->src_segment.position)
       gst_segment_set_position (&demux->src_segment, GST_FORMAT_TIME,
