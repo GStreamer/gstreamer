@@ -334,13 +334,20 @@ GType ges_video_test_pattern_get_type (void);
 
 /**
  * GESPipelineFlags:
- * @GES_PIPELINE_MODE_PREVIEW_AUDIO: output audio to the soundcard
- * @GES_PIPELINE_MODE_PREVIEW_VIDEO: output video to the screen
- * @GES_PIPELINE_MODE_PREVIEW: output audio/video to soundcard/screen (default)
- * @GES_PIPELINE_MODE_RENDER: render timeline (forces decoding)
- * @GES_PIPELINE_MODE_SMART_RENDER: render timeline (tries to avoid decoding/reencoding)
+ * @GES_PIPELINE_MODE_PREVIEW_AUDIO: Output the #GESPipeline:timeline's
+ * audio to the soundcard
+ * @GES_PIPELINE_MODE_PREVIEW_VIDEO: Output the #GESPipeline:timeline's
+ * video to the screen
+ * @GES_PIPELINE_MODE_PREVIEW: Output both the #GESPipeline:timeline's
+ * audio and video to the soundcard and screen (default)
+ * @GES_PIPELINE_MODE_RENDER: Render the #GESPipeline:timeline with
+ * forced decoding (the underlying #encodebin has its
+ * #encodebin:avoid-reencoding property set to %FALSE)
+ * @GES_PIPELINE_MODE_SMART_RENDER: Render the #GESPipeline:timeline,
+ * avoiding decoding/reencoding (the underlying #encodebin has its
+ * #encodebin:avoid-reencoding property set to %TRUE)
  *
- * The various modes the #GESPipeline can be configured to.
+ * The various modes a #GESPipeline can be configured to.
  */
 typedef enum {
   GES_PIPELINE_MODE_PREVIEW_AUDIO	= 1 << 0,

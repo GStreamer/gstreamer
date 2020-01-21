@@ -25,9 +25,17 @@
  * @symbols:
  * - ges_play_sink_convert_frame
  *
- * #GESPipeline allows developers to view and render #GESTimeline
- * in a simple fashion.
- * Its usage is inspired by the 'playbin' element from gst-plugins-base.
+ * A #GESPipeline can take an audio-video #GESTimeline and conveniently
+ * link its #GESTrack-s to an internal #playsink element, for
+ * preview/playback, and an internal #encodebin element, for rendering.
+ * You can switch between these modes using ges_pipeline_set_mode().
+ *
+ * You can choose the specific audio and video sinks used for previewing
+ * the timeline by setting the #GESPipeline:audio-sink and
+ * #GESPipeline:video-sink properties.
+ *
+ * You can set the encoding and save location used in rendering by calling
+ * ges_pipeline_set_render_settings().
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -300,7 +308,8 @@ ges_pipeline_class_init (GESPipelineClass * klass)
   /**
    * GESPipeline:audio-sink:
    *
-   * Audio sink for the preview.
+   * The audio sink used for preview. This exposes the
+   * #playsink:audio-sink property of the internal #playsink.
    */
   properties[PROP_AUDIO_SINK] = g_param_spec_object ("audio-sink", "Audio Sink",
       "Audio sink for the preview.",
@@ -309,7 +318,8 @@ ges_pipeline_class_init (GESPipelineClass * klass)
   /**
    * GESPipeline:video-sink:
    *
-   * Video sink for the preview.
+   * The video sink used for preview. This exposes the
+   * #playsink:video-sink property of the internal #playsink.
    */
   properties[PROP_VIDEO_SINK] = g_param_spec_object ("video-sink", "Video Sink",
       "Video sink for the preview.",
@@ -318,29 +328,35 @@ ges_pipeline_class_init (GESPipelineClass * klass)
   /**
    * GESPipeline:timeline:
    *
-   * Timeline to use in this pipeline. See also
-   * ges_pipeline_set_timeline() for more info.
+   * The timeline used by this pipeline, whose content it will play and
+   * render, or %NULL if the pipeline does not yet have a timeline.
+   *
+   * Note that after you set the timeline for the first time, subsequent
+   * calls to change the timeline will fail.
    */
   properties[PROP_TIMELINE] = g_param_spec_object ("timeline", "Timeline",
-      "Timeline to use in this pipeline. See also "
-      "ges_pipeline_set_timeline() for more info.",
+      "The timeline to use in this pipeline.",
       GES_TYPE_TIMELINE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   /**
    * GESPipeline:mode:
    *
-   * Pipeline mode. See ges_pipeline_set_mode() for more
-   * info.
+   * The pipeline's mode. In preview mode (for audio or video, or both)
+   * the pipeline can display the timeline's content to an end user. In
+   * rendering mode the pipeline can encode the timeline's content and
+   * save it to a file.
    */
   properties[PROP_MODE] = g_param_spec_flags ("mode", "Mode",
-      "Pipeline mode. See ges_pipeline_set_mode() for more info.",
+      "The pipeline's mode.",
       GES_TYPE_PIPELINE_FLAGS, DEFAULT_TIMELINE_MODE,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   /**
-   * GESPipeline::audio-filter
+   * GESPipeline:audio-filter:
    *
-   * The audio filter(s) to apply during playback right before the audio sink
+   * The audio filter(s) to apply during playback in preview mode,
+   * immediately before the #GESPipeline:audio-sink. This exposes the
+   * #playsink:audio-filter property of the internal #playsink.
    *
    * Since: 1.6.0
    */
@@ -350,9 +366,11 @@ ges_pipeline_class_init (GESPipelineClass * klass)
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   /**
-   * GESPipeline::video-filter
+   * GESPipeline:video-filter:
    *
-   * The video filter(s) to apply during playback right before the video sink
+   * The video filter(s) to apply during playback in preview mode,
+   * immediately before the #GESPipeline:video-sink. This exposes the
+   * #playsink:video-filter property of the internal #playsink.
    *
    * Since: 1.6.0
    */
@@ -406,9 +424,9 @@ no_encodebin:
 /**
  * ges_pipeline_new:
  *
- * Creates a new conveninence #GESPipeline.
+ * Creates a new pipeline.
  *
- * Returns: (transfer floating): the new #GESPipeline.
+ * Returns: (transfer floating): The newly created pipeline.
  */
 GESPipeline *
 ges_pipeline_new (void)
@@ -776,19 +794,26 @@ _link_track (GESPipeline * self, GESTrack * track)
       GST_DEBUG_PAD_NAME (pad), caps);
   gst_caps_unref (caps);
 
+  /* FIXME: provide a way for the user to select which audio, video or
+   * text track to use in preview mode when a timeline has multiple audio,
+   * video or text tracks. Also provide a way to switch between these. */
+
   /* Don't connect track if it's not going to be used */
   if (track->type == GES_TRACK_TYPE_VIDEO &&
       !(self->priv->mode & GES_PIPELINE_MODE_PREVIEW_VIDEO) &&
       !(self->priv->mode & GES_PIPELINE_MODE_RENDER) &&
       !(self->priv->mode & GES_PIPELINE_MODE_SMART_RENDER)) {
     GST_DEBUG_OBJECT (self, "Video track... but we don't need it. Not linking");
+    /* FIXME: why are we not returning early at this point? */
   }
   if (track->type == GES_TRACK_TYPE_AUDIO &&
       !(self->priv->mode & GES_PIPELINE_MODE_PREVIEW_AUDIO) &&
       !(self->priv->mode & GES_PIPELINE_MODE_RENDER) &&
       !(self->priv->mode & GES_PIPELINE_MODE_SMART_RENDER)) {
     GST_DEBUG_OBJECT (self, "Audio track... but we don't need it. Not linking");
+    /* FIXME: why are we not returning early at this point? */
   }
+  /* FIXME: what about text and custom tracks? */
 
   /* Get an existing chain or create it */
   if (!(chain = get_output_chain_for_track (self, track)))
@@ -982,16 +1007,23 @@ _unlink_track (GESPipeline * self, GESTrack * track)
 
 /**
  * ges_pipeline_set_timeline:
- * @pipeline: a #GESPipeline
- * @timeline: (transfer full): the #GESTimeline to set on the @pipeline.
+ * @pipeline: A #GESPipeline
+ * @timeline: (transfer full): The timeline to set for @pipeline
  *
- * Sets the timeline to use in this pipeline.
+ * Takes the given timeline and sets it as the #GESPipeline:timeline for
+ * the pipeline.
  *
- * The reference to the @timeline will be stolen by the @pipeline.
+ * Note that you should only call this method once on a given pipeline
+ * because a pipeline can not have its #GESPipeline:timeline changed after
+ * it has been set.
  *
- * Returns: %TRUE if the @timeline could be successfully set on the @pipeline,
- * else %FALSE.
+ * Returns: %TRUE if @timeline was successfully given to @pipeline.
  */
+/* FIXME: allow us to set a new timeline and a NULL timeline */
+/* FIXME 2.0: since the method can fail, (transfer none) would be more
+ * appropriate for the timeline argument (currently, it is only
+ * transferred if the method is successful, which makes the memory
+ * transfer mixed!) */
 gboolean
 ges_pipeline_set_timeline (GESPipeline * pipeline, GESTimeline * timeline)
 {
@@ -1021,19 +1053,18 @@ ges_pipeline_set_timeline (GESPipeline * pipeline, GESTimeline * timeline)
 
 /**
  * ges_pipeline_set_render_settings:
- * @pipeline: a #GESPipeline
- * @output_uri: the URI to which the timeline will be rendered
- * @profile: the #GstEncodingProfile to use to render the timeline.
+ * @pipeline: A #GESPipeline
+ * @output_uri: The URI to save the #GESPipeline:timeline rendering
+ * result to
+ * @profile: The encoding to use for rendering the #GESPipeline:timeline
  *
- * Specify where the pipeline shall be rendered and with what settings.
+ * Specifies the encoding to be used by the pipeline to render its
+ * #GESPipeline:timeline, and where the result should be written to.
  *
- * A copy of @profile and @output_uri will be done internally, the caller can
- * safely free those values afterwards.
+ * This method **must** be called before setting the pipeline mode to
+ * #GES_PIPELINE_MODE_RENDER.
  *
- * This method must be called before setting the pipeline mode to
- * #GES_PIPELINE_MODE_RENDER
- *
- * Returns: %TRUE if the settings were aknowledged properly, else %FALSE
+ * Returns: %TRUE if the settings were successfully set on @pipeline.
  */
 gboolean
 ges_pipeline_set_render_settings (GESPipeline * pipeline,
@@ -1121,9 +1152,11 @@ ges_pipeline_set_render_settings (GESPipeline * pipeline,
 
 /**
  * ges_pipeline_get_mode:
- * @pipeline: a #GESPipeline
+ * @pipeline: A #GESPipeline
  *
- * Returns: the #GESPipelineFlags currently in use.
+ * Gets the #GESPipeline:mode of the pipeline.
+ *
+ * Returns: The current mode of @pipeline.
  **/
 GESPipelineFlags
 ges_pipeline_get_mode (GESPipeline * pipeline)
@@ -1133,17 +1166,16 @@ ges_pipeline_get_mode (GESPipeline * pipeline)
 
 /**
  * ges_pipeline_set_mode:
- * @pipeline: a #GESPipeline
- * @mode: the #GESPipelineFlags to use
+ * @pipeline: A #GESPipeline
+ * @mode: The mode to set for @pipeline
  *
- * switches the @pipeline to the specified @mode. The default mode when
- * creating a #GESPipeline is #GES_PIPELINE_MODE_PREVIEW.
+ * Sets the #GESPipeline:mode of the pipeline.
  *
- * Note: The @pipeline will be set to #GST_STATE_NULL during this call due to
- * the internal changes that happen. The caller will therefore have to
- * set the @pipeline to the requested state after calling this method.
+ * Note that the pipeline will be set to #GST_STATE_NULL during this call
+ * to perform the necessary changes. You will need to set the state again
+ * yourself after calling this.
  *
- * Returns: %TRUE if the mode was properly set, else %FALSE.
+ * Returns: %TRUE if the mode of @pipeline was successfully set to @mode.
  **/
 gboolean
 ges_pipeline_set_mode (GESPipeline * pipeline, GESPipelineFlags mode)
@@ -1259,17 +1291,20 @@ ges_pipeline_set_mode (GESPipeline * pipeline, GESPipelineFlags mode)
 
 /**
  * ges_pipeline_get_thumbnail:
- * @self: a #GESPipeline in %GST_STATE_PLAYING or %GST_STATE_PAUSED
- * @caps: (transfer none): caps specifying current format. Use %GST_CAPS_ANY
- * for native size.
+ * @self: A #GESPipeline in #GST_STATE_PLAYING or #GST_STATE_PAUSED
+ * @caps: (transfer none): Some caps to specifying the desired format, or
+ * #GST_CAPS_ANY to use the native format
  *
- * Returns a #GstSample with the currently playing image in the format specified by
- * caps. The caller should free the sample with #gst_sample_unref when finished. If ANY
- * caps are specified, the information will be returned in the whatever format
- * is currently used by the sink. This information can be retrieve from caps
- * associated with the buffer.
+ * Gets a sample from the pipeline of the currently displayed image in
+ * preview, in the specified format.
  *
- * Returns: (transfer full) (nullable): a #GstSample or %NULL
+ * Note that if you use "ANY" caps for @caps, then the current format of
+ * the image is used. You can retrieve these caps from the returned sample
+ * with gst_sample_get_caps().
+ *
+ * Returns: (transfer full): A sample of @self's current image preview in
+ * the format given by @caps, or %NULL if an error prevented fetching the
+ * sample.
  */
 
 GstSample *
@@ -1292,18 +1327,21 @@ ges_pipeline_get_thumbnail (GESPipeline * self, GstCaps * caps)
 
 /**
  * ges_pipeline_save_thumbnail:
- * @self: a #GESPipeline in %GST_STATE_PLAYING or %GST_STATE_PAUSED
- * @width: the requested width or -1 for native size
- * @height: the requested height or -1 for native size
- * @format: a string specifying the desired mime type (for example,
- * image/jpeg)
- * @location: the path to save the thumbnail
+ * @self: A #GESPipeline in %GST_STATE_PLAYING or %GST_STATE_PAUSED
+ * @width: The requested pixel width of the image, or -1 to use the native
+ * size
+ * @height: The requested pixel height of the image, or -1 to use the
+ * native size
+ * @format: The desired mime type (for example, "image/jpeg")
+ * @location: The path to save the thumbnail to
  * @error: (out) (allow-none) (transfer full): An error to be set in case
- * something wrong happens or %NULL
+ * something goes wrong, or %NULL to ignore
  *
- * Saves the current frame to the specified @location.
+ * Saves the currently displayed image of the pipeline in preview to the
+ * given location, in the specified dimensions and format.
  *
- * Returns: %TRUE if the thumbnail was properly save, else %FALSE.
+ * Returns: %TRUE if @self's current image preview was successfully saved
+ * to @location using the given @format, @height and @width.
  */
 gboolean
 ges_pipeline_save_thumbnail (GESPipeline * self, int width, int
@@ -1350,20 +1388,21 @@ ges_pipeline_save_thumbnail (GESPipeline * self, int width, int
 
 /**
  * ges_pipeline_get_thumbnail_rgb24:
- * @self: a #GESPipeline in %GST_STATE_PLAYING or %GST_STATE_PAUSED
- * @width: the requested width or -1 for native size
- * @height: the requested height or -1 for native size
+ * @self: A #GESPipeline in %GST_STATE_PLAYING or %GST_STATE_PAUSED
+ * @width: The requested pixel width of the image, or -1 to use the native
+ * size
+ * @height: The requested pixel height of the image, or -1 to use the
+ * native size
  *
- * A convenience method for @ges_pipeline_get_thumbnail which
- * returns a buffer in 24-bit RGB, optionally scaled to the specified width
- * and height. If -1 is specified for either dimension, it will be left at
- * native size. You can retreive this information from the caps associated
- * with the buffer.
+ * Gets a sample from the pipeline of the currently displayed image in
+ * preview, in the 24-bit "RGB" format and of the desired width and
+ * height.
  *
- * The caller is responsible for unreffing the returned sample with
- * #gst_sample_unref.
+ * See ges_pipeline_get_thumbnail().
  *
- * Returns: (transfer full) (nullable): a #GstSample or %NULL
+ * Returns: (transfer full): A sample of @self's current image preview in
+ * the "RGB" format, scaled to @width and @height, or %NULL if an error
+ * prevented fetching the sample.
  */
 
 GstSample *
@@ -1391,15 +1430,11 @@ ges_pipeline_get_thumbnail_rgb24 (GESPipeline * self, gint width, gint height)
 
 /**
  * ges_pipeline_preview_get_video_sink:
- * @self: a #GESPipeline
+ * @self: A #GESPipeline
  *
- * Obtains a pointer to playsink's video sink element that is used for
- * displaying video when the #GESPipeline is in %GES_PIPELINE_MODE_PREVIEW
+ * Gets the #GESPipeline:video-sink of the pipeline.
  *
- * The caller is responsible for unreffing the returned element with
- * #gst_object_unref.
- *
- * Returns: (transfer full): a pointer to the playsink video sink #GstElement
+ * Returns: (transfer full): The video sink used by @self for preview.
  */
 GstElement *
 ges_pipeline_preview_get_video_sink (GESPipeline * self)
@@ -1416,11 +1451,10 @@ ges_pipeline_preview_get_video_sink (GESPipeline * self)
 
 /**
  * ges_pipeline_preview_set_video_sink:
- * @self: a #GESPipeline in %GST_STATE_NULL
- * @sink: (transfer none): a video sink #GstElement
+ * @self: A #GESPipeline in #GST_STATE_NULL
+ * @sink: (transfer none): A video sink for @self to use for preview
  *
- * Sets playsink's video sink element that is used for displaying video when
- * the #GESPipeline is in %GES_PIPELINE_MODE_PREVIEW
+ * Sets the #GESPipeline:video-sink of the pipeline.
  */
 void
 ges_pipeline_preview_set_video_sink (GESPipeline * self, GstElement * sink)
@@ -1433,15 +1467,11 @@ ges_pipeline_preview_set_video_sink (GESPipeline * self, GstElement * sink)
 
 /**
  * ges_pipeline_preview_get_audio_sink:
- * @self: a #GESPipeline
+ * @self: A #GESPipeline
  *
- * Obtains a pointer to playsink's audio sink element that is used for
- * displaying audio when the #GESPipeline is in %GES_PIPELINE_MODE_PREVIEW
+ * Gets the #GESPipeline:audio-sink of the pipeline.
  *
- * The caller is responsible for unreffing the returned element with
- * #gst_object_unref.
- *
- * Returns: (transfer full): a pointer to the playsink audio sink #GstElement
+ * Returns: (transfer full): The audio sink used by @self for preview.
  */
 GstElement *
 ges_pipeline_preview_get_audio_sink (GESPipeline * self)
@@ -1458,11 +1488,10 @@ ges_pipeline_preview_get_audio_sink (GESPipeline * self)
 
 /**
  * ges_pipeline_preview_set_audio_sink:
- * @self: a #GESPipeline in %GST_STATE_NULL
- * @sink: (transfer none): a audio sink #GstElement
+ * @self: A #GESPipeline in #GST_STATE_NULL
+ * @sink: (transfer none): A audio sink for @self to use for preview
  *
- * Sets playsink's audio sink element that is used for displaying audio when
- * the #GESPipeline is in %GES_PIPELINE_MODE_PREVIEW
+ * Sets the #GESPipeline:audio-sink of the pipeline.
  */
 void
 ges_pipeline_preview_set_audio_sink (GESPipeline * self, GstElement * sink)
