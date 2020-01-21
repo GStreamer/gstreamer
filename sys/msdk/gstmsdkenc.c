@@ -1620,8 +1620,8 @@ gst_msdkenc_context_prepare (GstMsdkEnc * thiz)
    * gst-launch-1.0 videotestsrc ! video/x-raw,format=I420 ! msdkh264enc ! \
    * msdkh264dec ! msdkvpp ! video/x-raw,format=YUY2 ! fakesink
    */
-  if (!gst_msdk_context_get_job_type (thiz->context) & (GST_MSDK_JOB_VPP |
-          GST_MSDK_JOB_ENCODER)) {
+  if (!(gst_msdk_context_get_job_type (thiz->context) & (GST_MSDK_JOB_VPP |
+              GST_MSDK_JOB_ENCODER))) {
     gst_msdk_context_add_job_type (thiz->context, GST_MSDK_JOB_ENCODER);
     return TRUE;
   }

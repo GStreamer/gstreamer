@@ -211,8 +211,8 @@ gst_msdkvpp_context_prepare (GstMsdkVPP * thiz)
    * Example:
    * gst-launch-1.0 videotestsrc ! msdkvpp ! video/x-raw,format=YUY2 ! msdkh264enc ! fakesink
    */
-  if (!gst_msdk_context_get_job_type (thiz->context) & (GST_MSDK_JOB_VPP |
-          GST_MSDK_JOB_ENCODER)) {
+  if (!(gst_msdk_context_get_job_type (thiz->context) & (GST_MSDK_JOB_VPP |
+              GST_MSDK_JOB_ENCODER))) {
     gst_msdk_context_add_job_type (thiz->context, GST_MSDK_JOB_VPP);
     return TRUE;
   }
