@@ -9,7 +9,8 @@ ENV ErrorActionPreference='Stop'
 COPY install_choco.ps1 C:\
 RUN C:\install_choco.ps1
 
-COPY install_toolchain.ps1 prepare_gst_env.ps1 C:\
+COPY install_toolchain.ps1 C:\
 RUN C:\install_toolchain.ps1
 
+COPY prepare_gst_env.ps1 C:\
 RUN C:\prepare_gst_env.ps1
