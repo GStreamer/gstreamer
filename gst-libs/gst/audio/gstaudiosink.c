@@ -623,9 +623,9 @@ gst_audio_sink_ring_buffer_clear_all (GstAudioRingBuffer * buf)
   sink = GST_AUDIO_SINK (GST_OBJECT_PARENT (buf));
   csink = GST_AUDIO_SINK_GET_CLASS (sink);
 
-  if (csink->clear_all) {
+  if (csink->extension->clear_all) {
     GST_DEBUG_OBJECT (sink, "clear all");
-    csink->clear_all (sink);
+    csink->extension->clear_all (sink);
   }
 
   /* chain up to the parent implementation */
@@ -645,7 +645,9 @@ enum
 };
 
 #define _do_init \
-    GST_DEBUG_CATEGORY_INIT (gst_audio_sink_debug, "audiosink", 0, "audiosink element");
+    GST_DEBUG_CATEGORY_INIT (gst_audio_sink_debug, "audiosink", 0, "audiosink element"); \
+    g_type_add_class_private (g_define_type_id, \
+        sizeof (GstAudioSinkClassExtension));
 #define gst_audio_sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstAudioSink, gst_audio_sink,
     GST_TYPE_AUDIO_BASE_SINK, _do_init);
@@ -664,6 +666,9 @@ gst_audio_sink_class_init (GstAudioSinkClass * klass)
       GST_DEBUG_FUNCPTR (gst_audio_sink_create_ringbuffer);
 
   g_type_class_ref (GST_TYPE_AUDIO_SINK_RING_BUFFER);
+
+  klass->extension = G_TYPE_CLASS_GET_PRIVATE (klass,
+      GST_TYPE_AUDIO_SINK, GstAudioSinkClassExtension);
 }
 
 static void

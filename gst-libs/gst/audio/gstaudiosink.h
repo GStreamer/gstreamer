@@ -41,6 +41,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstAudioSink GstAudioSink;
 typedef struct _GstAudioSinkClass GstAudioSinkClass;
+typedef struct _GstAudioSinkClassExtension GstAudioSinkClassExtension;
 
 /**
  * GstAudioSink:
@@ -76,13 +77,13 @@ struct _GstAudioSink {
  *         This vmethod is deprecated. Please provide pause and stop instead.
  * @pause: Pause the device and unblock write as fast as possible.
  *         For retro compatibility, the audio sink will fallback
- *         to calling reset if this vmethod is not provided.
- * @resume: Resume the device.
+ *         to calling reset if this vmethod is not provided. Since: 1.18
+ * @resume: Resume the device. Since: 1.18
  * @stop: Stop the device and unblock write as fast as possible.
  *        Pending samples are flushed from the device.
  *        For retro compatibility, the audio sink will fallback
- *        to calling reset if this vmethod is not provided.
- * @clear-all: Clear the device.
+ *        to calling reset if this vmethod is not provided. Since: 1.18
+ * @extension: class extension structure. Since: 1.18
  */
 struct _GstAudioSinkClass {
   GstAudioBaseSinkClass parent_class;
@@ -109,11 +110,20 @@ struct _GstAudioSinkClass {
   void     (*resume)    (GstAudioSink *sink);
   /* stop the audio device, unblock from a write */
   void     (*stop)      (GstAudioSink *sink);
+
+  GstAudioSinkClassExtension *extension;
+};
+
+/**
+ * GstAudioSinkClassExtension:
+ * @clear-all: Clear the device. Since: 1.18
+ */
+struct _GstAudioSinkClassExtension
+{
   /* clear the audio device */
   void     (*clear_all) (GstAudioSink *sink);
 
-  /*< private >*/
-  gpointer _gst_reserved[GST_PADDING - 4];
+  /* no padding needed  */
 };
 
 GST_AUDIO_API
