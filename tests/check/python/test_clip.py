@@ -218,6 +218,42 @@ class TestTrackElements(common.GESSimpleTimelineTest):
         test_clip.remove(effect1)
         self.assert_effects(test_clip, effect2)
 
+    def test_effects_index(self):
+        timeline = GES.Timeline.new_audio_video()
+        layer = timeline.append_layer()
+
+        test_clip = GES.TestClip.new()
+        layer.add_clip(test_clip)
+        self.assert_effects(test_clip)
+
+        ref_effects_list = []
+
+        def add_effect(effect):
+            test_clip.add(effect)
+            ref_effects_list.append(effect)
+
+            self.assert_effects(test_clip, *ref_effects_list)
+
+        def move_effect(old_index, new_index):
+            effect = ref_effects_list[old_index]
+            self.assertTrue(test_clip.set_top_effect_index(effect, new_index))
+
+            ref_effects_list.insert(new_index, ref_effects_list.pop(old_index))
+
+            self.assert_effects(test_clip, *ref_effects_list)
+
+        effects = ["agingtv", "dicetv", "burn", "gamma", "edgetv", "alpha",
+            "exclusion", "chromahold", "coloreffects", "videobalance"]
+
+        for effect in effects:
+            add_effect(GES.Effect.new(effect))
+
+        move_effect(3, 8)
+        move_effect(5, 6)
+        move_effect(0, 9)
+
+        self.assert_effects(test_clip, *ref_effects_list)
+
     def test_signal_order_when_removing_effect(self):
         timeline = GES.Timeline.new_audio_video()
         layer = timeline.append_layer()
