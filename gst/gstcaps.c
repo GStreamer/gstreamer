@@ -1182,6 +1182,12 @@ gst_caps_is_fixed (const GstCaps * caps)
   if (GST_CAPS_LEN (caps) != 1)
     return FALSE;
 
+  /* an ANY caps can have length 1 (rather than the usual 0) if it
+   * has had a structure appended, or if it was created from a merge
+   * or append of caps */
+  if (CAPS_IS_ANY (caps))
+    return FALSE;
+
   features = gst_caps_get_features_unchecked (caps, 0);
   if (features && gst_caps_features_is_any (features))
     return FALSE;
@@ -1426,6 +1432,14 @@ gst_caps_is_strictly_equal (const GstCaps * caps1, const GstCaps * caps2)
 
   if (G_UNLIKELY (caps1 == caps2))
     return TRUE;
+
+  /* if both are ANY caps, consider them strictly equal, even if
+   * internally they contain differing structures from
+   * gst_caps_append, gst_caps_merge or gst_caps_append_structure */
+  if (CAPS_IS_ANY (caps1))
+    return (CAPS_IS_ANY (caps2));
+  else if (CAPS_IS_ANY (caps2))
+    return FALSE;
 
   if (GST_CAPS_LEN (caps1) != GST_CAPS_LEN (caps2))
     return FALSE;

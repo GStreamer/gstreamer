@@ -1408,6 +1408,202 @@ GST_START_TEST (test_filter_and_map_in_place)
 
 GST_END_TEST;
 
+GST_START_TEST (test_equality)
+{
+  GstCaps *empty1, *empty2, *any1, *any2, *caps1, *caps2, *caps3, *caps4,
+      *caps5, *caps6, *caps7, *caps8, *caps9;
+  GstStructure *s;
+
+  empty1 = gst_caps_new_empty ();
+
+  empty2 = gst_caps_new_empty ();
+
+  any1 = gst_caps_new_any ();
+
+  any2 = gst_caps_new_any ();
+  s = gst_structure_new ("structure", "int", G_TYPE_INT, 4, "float",
+      G_TYPE_FLOAT, 5.7, NULL);
+  fail_unless (s);
+  gst_caps_append_structure (any2, s);
+
+  caps1 = gst_caps_new_simple ("structure", "int", G_TYPE_INT, 4, "float",
+      G_TYPE_FLOAT, 5.7, NULL);
+  fail_unless (caps1);
+
+  caps2 = gst_caps_new_simple ("structure", "int", G_TYPE_INT, 4, "float",
+      G_TYPE_FLOAT, 5.7, NULL);
+  fail_unless (caps2);
+  /* append an identical structure */
+  s = gst_structure_new ("structure", "int", G_TYPE_INT, 4, "float",
+      G_TYPE_FLOAT, 5.7, NULL);
+  fail_unless (s);
+  gst_caps_append_structure (caps2, s);
+
+  /* change field name */
+  caps3 = gst_caps_new_simple ("structure", "intX", G_TYPE_INT, 4, "float",
+      G_TYPE_FLOAT, 5.7, NULL);
+  fail_unless (caps3);
+
+  /* change field type */
+  caps4 = gst_caps_new_simple ("structure", "int", G_TYPE_UINT, 4, "float",
+      G_TYPE_FLOAT, 5.7, NULL);
+  fail_unless (caps4);
+
+  /* change structure name */
+  caps5 = gst_caps_new_simple ("structureX", "int", G_TYPE_INT, 4, "float",
+      G_TYPE_FLOAT, 5.7, NULL);
+  fail_unless (caps5);
+
+  /* change field value */
+  caps6 = gst_caps_new_simple ("structure", "int", G_TYPE_INT, 3, "float",
+      G_TYPE_FLOAT, 5.7, NULL);
+  fail_unless (caps6);
+
+  /* change caps features */
+  caps7 = gst_caps_new_simple ("structure", "int", G_TYPE_INT, 4, "float",
+      G_TYPE_FLOAT, 5.7, NULL);
+  fail_unless (caps6);
+  gst_caps_set_features (caps7, 0, gst_caps_features_new_any ());
+
+  /* add structure */
+  caps8 = gst_caps_new_simple ("structure", "int", G_TYPE_INT, 4, "float",
+      G_TYPE_FLOAT, 5.7, NULL);
+  fail_unless (caps8);
+  s = gst_structure_new ("structure2", "string", G_TYPE_STRING, "val", NULL);
+  fail_unless (s);
+  gst_caps_append_structure (caps8, s);
+
+  /* reverse the order of the structures */
+  caps9 = gst_caps_new_simple ("structure2", "string", G_TYPE_STRING, "val",
+      NULL);
+  fail_unless (caps9);
+  s = gst_structure_new ("structure", "int", G_TYPE_INT, 4, "float",
+      G_TYPE_FLOAT, 5.7, NULL);
+  fail_unless (s);
+  gst_caps_append_structure (caps9, s);
+
+  fail_unless (gst_caps_is_equal (empty1, empty2) == TRUE);
+  fail_unless (gst_caps_is_strictly_equal (empty1, empty2) == TRUE);
+  fail_unless (gst_caps_is_equal (empty1, any1) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (empty1, any1) == FALSE);
+  fail_unless (gst_caps_is_equal (empty1, any2) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (empty1, any2) == FALSE);
+  fail_unless (gst_caps_is_equal (empty1, caps1) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (empty1, caps1) == FALSE);
+  fail_unless (gst_caps_is_equal (empty1, caps2) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (empty1, caps2) == FALSE);
+  fail_unless (gst_caps_is_equal (empty1, caps3) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (empty1, caps3) == FALSE);
+  fail_unless (gst_caps_is_equal (empty1, caps4) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (empty1, caps4) == FALSE);
+  fail_unless (gst_caps_is_equal (empty1, caps5) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (empty1, caps5) == FALSE);
+  fail_unless (gst_caps_is_equal (empty1, caps6) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (empty1, caps6) == FALSE);
+  fail_unless (gst_caps_is_equal (empty1, caps7) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (empty1, caps7) == FALSE);
+  fail_unless (gst_caps_is_equal (empty1, caps8) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (empty1, caps8) == FALSE);
+  fail_unless (gst_caps_is_equal (empty1, caps9) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (empty1, caps9) == FALSE);
+
+  fail_unless (gst_caps_is_equal (any1, any2) == TRUE);
+  fail_unless (gst_caps_is_strictly_equal (any1, any2) == TRUE);
+  fail_unless (gst_caps_is_equal (any1, caps1) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (any1, caps1) == FALSE);
+  fail_unless (gst_caps_is_equal (any1, caps2) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (any1, caps2) == FALSE);
+  fail_unless (gst_caps_is_equal (any1, caps3) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (any1, caps3) == FALSE);
+  fail_unless (gst_caps_is_equal (any1, caps4) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (any1, caps4) == FALSE);
+  fail_unless (gst_caps_is_equal (any1, caps5) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (any1, caps5) == FALSE);
+  fail_unless (gst_caps_is_equal (any1, caps6) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (any1, caps6) == FALSE);
+  fail_unless (gst_caps_is_equal (any1, caps7) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (any1, caps7) == FALSE);
+  fail_unless (gst_caps_is_equal (any1, caps8) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (any1, caps8) == FALSE);
+  fail_unless (gst_caps_is_equal (any1, caps9) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (any1, caps9) == FALSE);
+
+  fail_unless (gst_caps_is_equal (any2, caps1) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (any2, caps1) == FALSE);
+  fail_unless (gst_caps_is_equal (any2, caps2) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (any2, caps2) == FALSE);
+  fail_unless (gst_caps_is_equal (any2, caps3) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (any2, caps3) == FALSE);
+  fail_unless (gst_caps_is_equal (any2, caps4) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (any2, caps4) == FALSE);
+  fail_unless (gst_caps_is_equal (any2, caps5) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (any2, caps5) == FALSE);
+  fail_unless (gst_caps_is_equal (any2, caps6) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (any2, caps6) == FALSE);
+  fail_unless (gst_caps_is_equal (any2, caps7) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (any2, caps7) == FALSE);
+  fail_unless (gst_caps_is_equal (any2, caps8) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (any2, caps8) == FALSE);
+  fail_unless (gst_caps_is_equal (any2, caps9) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (any2, caps9) == FALSE);
+
+  /* caps1 and caps2 are equal, but not strictly equal because one has
+   * two copies of the same structure */
+  fail_unless (gst_caps_is_equal (caps1, caps2) == TRUE);
+  fail_unless (gst_caps_is_strictly_equal (caps1, caps2) == FALSE);
+  fail_unless (gst_caps_is_equal (caps1, caps3) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (caps1, caps3) == FALSE);
+  fail_unless (gst_caps_is_equal (caps1, caps4) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (caps1, caps4) == FALSE);
+  fail_unless (gst_caps_is_equal (caps1, caps5) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (caps1, caps5) == FALSE);
+  fail_unless (gst_caps_is_equal (caps1, caps6) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (caps1, caps6) == FALSE);
+  fail_unless (gst_caps_is_equal (caps1, caps7) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (caps1, caps7) == FALSE);
+  fail_unless (gst_caps_is_equal (caps1, caps8) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (caps1, caps8) == FALSE);
+  fail_unless (gst_caps_is_equal (caps1, caps9) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (caps1, caps9) == FALSE);
+
+  fail_unless (gst_caps_is_equal (caps2, caps3) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (caps2, caps3) == FALSE);
+  fail_unless (gst_caps_is_equal (caps2, caps4) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (caps2, caps4) == FALSE);
+  fail_unless (gst_caps_is_equal (caps2, caps5) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (caps2, caps5) == FALSE);
+  fail_unless (gst_caps_is_equal (caps2, caps6) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (caps2, caps6) == FALSE);
+  fail_unless (gst_caps_is_equal (caps2, caps7) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (caps2, caps7) == FALSE);
+  fail_unless (gst_caps_is_equal (caps2, caps8) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (caps2, caps8) == FALSE);
+  fail_unless (gst_caps_is_equal (caps2, caps9) == FALSE);
+  fail_unless (gst_caps_is_strictly_equal (caps2, caps9) == FALSE);
+
+  /* caps8 and caps9 are equal, but not strictly equal because their
+   * order of structures is different */
+  fail_unless (gst_caps_is_equal (caps8, caps9) == TRUE);
+  fail_unless (gst_caps_is_strictly_equal (caps8, caps9) == FALSE);
+
+  gst_caps_unref (empty1);
+  gst_caps_unref (empty2);
+  gst_caps_unref (any1);
+  gst_caps_unref (any2);
+  gst_caps_unref (caps1);
+  gst_caps_unref (caps2);
+  gst_caps_unref (caps3);
+  gst_caps_unref (caps4);
+  gst_caps_unref (caps5);
+  gst_caps_unref (caps6);
+  gst_caps_unref (caps7);
+  gst_caps_unref (caps8);
+  gst_caps_unref (caps9);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 gst_caps_suite (void)
 {
@@ -1442,6 +1638,7 @@ gst_caps_suite (void)
   tcase_add_test (tc_chain, test_foreach);
   tcase_add_test (tc_chain, test_map_in_place);
   tcase_add_test (tc_chain, test_filter_and_map_in_place);
+  tcase_add_test (tc_chain, test_equality);
 
   return s;
 }
