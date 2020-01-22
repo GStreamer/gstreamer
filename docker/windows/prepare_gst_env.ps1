@@ -3,6 +3,11 @@
 git config --global user.email "gst-build@gstreamer.net"
 git config --global user.name "Gstbuild Runner"
 
+# FIXME: Python fails to validate github.com SSL certificate, unless we first
+# run a dummy download to force refreshing Windows' CA database.
+# See: https://bugs.python.org/issue36137
+(New-Object System.Net.WebClient).DownloadString("https://github.com") >$null
+
 # Download gst-build and all its subprojects
 git clone https://gitlab.freedesktop.org/gstreamer/gst-build.git C:\gst-build
 
