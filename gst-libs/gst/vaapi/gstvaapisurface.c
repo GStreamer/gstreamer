@@ -131,7 +131,7 @@ error_unsupported_chroma_type:
 
 static gboolean
 gst_vaapi_surface_init_full (GstVaapiSurface * surface,
-    const GstVideoInfo * vip, guint flags)
+    const GstVideoInfo * vip, guint surface_allocation_flags)
 {
   GstVaapiDisplay *const display = GST_VAAPI_SURFACE_DISPLAY (surface);
   const GstVideoFormat format = GST_VIDEO_INFO_FORMAT (vip);
@@ -159,18 +159,18 @@ gst_vaapi_surface_init_full (GstVaapiSurface * surface,
   extbuf.pixel_format = va_format->fourcc;
   extbuf.width = GST_VIDEO_INFO_WIDTH (vip);
   extbuf.height = GST_VIDEO_INFO_HEIGHT (vip);
-  if (flags & GST_VAAPI_SURFACE_ALLOC_FLAG_LINEAR_STORAGE) {
+  if (surface_allocation_flags & GST_VAAPI_SURFACE_ALLOC_FLAG_LINEAR_STORAGE) {
     extbuf.flags &= ~VA_SURFACE_EXTBUF_DESC_ENABLE_TILING;
     extbuf_needed = TRUE;
   }
 
   extbuf.num_planes = GST_VIDEO_INFO_N_PLANES (vip);
-  if (flags & GST_VAAPI_SURFACE_ALLOC_FLAG_FIXED_STRIDES) {
+  if (surface_allocation_flags & GST_VAAPI_SURFACE_ALLOC_FLAG_FIXED_STRIDES) {
     for (i = 0; i < extbuf.num_planes; i++)
       extbuf.pitches[i] = GST_VIDEO_INFO_PLANE_STRIDE (vip, i);
     extbuf_needed = TRUE;
   }
-  if (flags & GST_VAAPI_SURFACE_ALLOC_FLAG_FIXED_OFFSETS) {
+  if (surface_allocation_flags & GST_VAAPI_SURFACE_ALLOC_FLAG_FIXED_OFFSETS) {
     for (i = 0; i < extbuf.num_planes; i++)
       extbuf.offsets[i] = GST_VIDEO_INFO_PLANE_OFFSET (vip, i);
     extbuf_needed = TRUE;
@@ -385,7 +385,7 @@ error:
  * gst_vaapi_surface_new_full:
  * @display: a #GstVaapiDisplay
  * @vip: the pointer to a #GstVideoInfo
- * @flags: (optional) allocation flags
+ * @surface_allocation_flags: (optional) allocation flags
  *
  * Creates a new #GstVaapiSurface with the specified video information
  * and optional #GstVaapiSurfaceAllocFlags
@@ -395,20 +395,21 @@ error:
  *   supported or failed.
  */
 GstVaapiSurface *
-gst_vaapi_surface_new_full (GstVaapiDisplay * display,
-    const GstVideoInfo * vip, guint flags)
+gst_vaapi_surface_new_full (GstVaapiDisplay * display, const GstVideoInfo * vip,
+    guint surface_allocation_flags)
 {
   GstVaapiSurface *surface;
 
   GST_DEBUG ("size %ux%u, format %s, flags 0x%08x", GST_VIDEO_INFO_WIDTH (vip),
       GST_VIDEO_INFO_HEIGHT (vip),
-      gst_vaapi_video_format_to_string (GST_VIDEO_INFO_FORMAT (vip)), flags);
+      gst_vaapi_video_format_to_string (GST_VIDEO_INFO_FORMAT (vip)),
+      surface_allocation_flags);
 
   surface = gst_vaapi_surface_create (display);
   if (!surface)
     return NULL;
 
-  if (!gst_vaapi_surface_init_full (surface, vip, flags))
+  if (!gst_vaapi_surface_init_full (surface, vip, surface_allocation_flags))
     goto error;
   return surface;
 

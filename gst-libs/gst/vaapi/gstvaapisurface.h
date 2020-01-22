@@ -212,7 +212,7 @@ gst_vaapi_surface_new (GstVaapiDisplay * display,
 
 GstVaapiSurface *
 gst_vaapi_surface_new_full (GstVaapiDisplay * display,
-    const GstVideoInfo * vip, guint flags);
+    const GstVideoInfo * vip, guint surface_allocation_flags);
 
 GstVaapiSurface *
 gst_vaapi_surface_new_with_format (GstVaapiDisplay * display,

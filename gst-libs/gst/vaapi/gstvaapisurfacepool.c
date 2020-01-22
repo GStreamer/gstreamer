@@ -51,12 +51,12 @@ struct _GstVaapiSurfacePool
 
 static gboolean
 surface_pool_init (GstVaapiSurfacePool * pool, const GstVideoInfo * vip,
-    guint flags)
+    guint surface_allocation_flags)
 {
   const GstVideoFormat format = GST_VIDEO_INFO_FORMAT (vip);
 
   pool->video_info = *vip;
-  pool->alloc_flags = flags;
+  pool->alloc_flags = surface_allocation_flags;
 
   if (format == GST_VIDEO_FORMAT_UNKNOWN)
     return FALSE;
@@ -134,7 +134,7 @@ gst_vaapi_surface_pool_new (GstVaapiDisplay * display, GstVideoFormat format,
  * gst_vaapi_surface_pool_new_full:
  * @display: a #GstVaapiDisplay
  * @vip: a #GstVideoInfo
- * @flags: (optional) allocation flags
+ * @surface_allocation_flags: (optional) allocation flags
  *
  * Creates a new #GstVaapiVideoPool of #GstVaapiSurface with the
  * specified format and dimensions in @vip.
@@ -143,7 +143,7 @@ gst_vaapi_surface_pool_new (GstVaapiDisplay * display, GstVideoFormat format,
  */
 GstVaapiVideoPool *
 gst_vaapi_surface_pool_new_full (GstVaapiDisplay * display,
-    const GstVideoInfo * vip, guint flags)
+    const GstVideoInfo * vip, guint surface_allocation_flags)
 {
   GstVaapiVideoPool *pool;
 
@@ -157,7 +157,8 @@ gst_vaapi_surface_pool_new_full (GstVaapiDisplay * display,
 
   gst_vaapi_video_pool_init (pool, display,
       GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_SURFACE);
-  if (!surface_pool_init (GST_VAAPI_SURFACE_POOL (pool), vip, flags))
+  if (!surface_pool_init (GST_VAAPI_SURFACE_POOL (pool), vip,
+          surface_allocation_flags))
     goto error;
   return pool;
 
