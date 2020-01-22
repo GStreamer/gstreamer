@@ -881,6 +881,18 @@ gst_nvdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
       GstBuffer *codec_data = gst_value_get_buffer (codec_data_value);
       gst_buffer_replace (&nvdec->codec_data, codec_data);
     }
+
+    /* For all CODEC we get completre picture ... */
+    nvdec->recv_complete_picture = TRUE;
+
+    /* Except for JPEG, for which it depends on the caps */
+    if (klass->codec_type == cudaVideoCodec_JPEG) {
+      gboolean parsed;
+      if (gst_structure_get_boolean (str, "parsed", &parsed))
+        nvdec->recv_complete_picture = parsed;
+      else
+        nvdec->recv_complete_picture = FALSE;
+    }
   }
 
   return ret;
@@ -1122,6 +1134,9 @@ gst_nvdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   packet.payload = map_info.data;
   packet.timestamp = frame->pts;
   packet.flags |= CUVID_PKT_TIMESTAMP;
+
+  if (nvdec->recv_complete_picture)
+    packet.flags |= CUVID_PKT_ENDOFPICTURE;
 
   nvdec->state = GST_NVDEC_STATE_PARSE;
   nvdec->last_ret = GST_FLOW_OK;

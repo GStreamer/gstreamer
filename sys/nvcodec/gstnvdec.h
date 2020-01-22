@@ -89,6 +89,7 @@ struct _GstNvDec
   GstNvDecMemType mem_type;
 
   GstBuffer *codec_data;
+  gboolean recv_complete_picture;
 };
 
 struct _GstNvDecClass
