@@ -362,6 +362,18 @@ gst_ffmpegviddec_context_set_flags (AVCodecContext * context, guint flags,
     context->flags &= ~flags;
 }
 
+static void
+gst_ffmpegviddec_context_set_flags2 (AVCodecContext * context, guint flags,
+    gboolean enable)
+{
+  g_return_if_fail (context != NULL);
+
+  if (enable)
+    context->flags2 |= flags;
+  else
+    context->flags2 &= ~flags;
+}
+
 /* with LOCK */
 static gboolean
 gst_ffmpegviddec_close (GstFFMpegVidDec * ffmpegdec, gboolean reset)
@@ -575,6 +587,24 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
   } else
     ffmpegdec->context->thread_count = ffmpegdec->max_threads;
 
+  if (oclass->in_plugin->id == AV_CODEC_ID_H264) {
+    GstStructure *s = gst_caps_get_structure (state->caps, 0);
+    const char *alignment;
+    gboolean nal_aligned;
+
+    alignment = gst_structure_get_string (s, "alignment");
+    nal_aligned = !g_strcmp0 (alignment, "nal");
+    if (nal_aligned) {
+      if (ffmpegdec->context->thread_type == FF_THREAD_FRAME)
+        goto nal_only_slice;
+      ffmpegdec->context->thread_type = FF_THREAD_SLICE;
+    }
+
+    gst_ffmpegviddec_context_set_flags2 (ffmpegdec->context,
+        AV_CODEC_FLAG2_CHUNKS, nal_aligned);
+    gst_video_decoder_set_subframe_mode (decoder, nal_aligned);
+  }
+
   /* open codec - we don't select an output pix_fmt yet,
    * simply because we don't know! We only get it
    * during playback... */
@@ -612,6 +642,12 @@ done:
 open_failed:
   {
     GST_DEBUG_OBJECT (ffmpegdec, "Failed to open");
+    goto done;
+  }
+nal_only_slice:
+  {
+    GST_ERROR_OBJECT (ffmpegdec,
+        "Can't do NAL aligned H.264 with frame threading.");
     goto done;
   }
 }
@@ -1825,6 +1861,10 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
   if (frame)
     GST_VIDEO_CODEC_FRAME_FLAG_UNSET (frame,
         GST_FFMPEG_VIDEO_CODEC_FRAME_FLAG_ALLOCATED);
+
+  if (gst_video_decoder_get_subframe_mode (GST_VIDEO_DECODER (ffmpegdec)))
+    gst_video_decoder_have_last_subframe (GST_VIDEO_DECODER (ffmpegdec),
+        out_frame);
 
   /* FIXME: Ideally we would remap the buffer read-only now before pushing but
    * libav might still have a reference to it!

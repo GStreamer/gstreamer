@@ -1291,6 +1291,11 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
         g_value_unset (&item);
         gst_caps_set_value (caps, "stream-format", &arr);
         g_value_unset (&arr);
+
+        gst_caps_append (caps, gst_ff_vid_caps_new (context, NULL, codec_id,
+                encode, "video/x-h264", "alignment", G_TYPE_STRING, "nal",
+                "stream-format", G_TYPE_STRING, "byte-stream", NULL));
+
       } else if (context) {
         /* FIXME: ffmpeg currently assumes AVC if there is extradata and
          * byte-stream otherwise. See for example the MOV or MPEG-TS code.
