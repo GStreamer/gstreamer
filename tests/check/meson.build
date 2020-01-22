@@ -7,6 +7,7 @@ base_tests = [
   [ 'libs/audiocdsrc.c' ],
   [ 'libs/audiodecoder.c' ],
   [ 'libs/audioencoder.c' ],
+  [ 'libs/audiosink.c' ],
   [ 'libs/baseaudiovisualizer.c' ],
   [ 'libs/discoverer.c' ],
   [ 'libs/fft.c' ],
