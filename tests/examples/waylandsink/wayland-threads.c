@@ -80,6 +80,7 @@ bus_sync_handler (GstBus * bus, GstMessage * message, gpointer user_data)
     GstContext *context;
     context = gst_wayland_display_handle_context_new (app->display);
     gst_element_set_context (GST_ELEMENT (GST_MESSAGE_SRC (message)), context);
+    gst_context_unref (context);
 
     goto drop;
   }

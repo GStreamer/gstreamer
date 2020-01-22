@@ -95,6 +95,7 @@ bus_sync_handler (GstBus * bus, GstMessage * message, gpointer user_data)
     display_handle = gdk_wayland_display_get_wl_display (display);
     context = gst_wayland_display_handle_context_new (display_handle);
     gst_element_set_context (GST_ELEMENT (GST_MESSAGE_SRC (message)), context);
+    gst_context_unref (context);
 
     goto drop;
   } else if (gst_is_video_overlay_prepare_window_handle_message (message)) {
