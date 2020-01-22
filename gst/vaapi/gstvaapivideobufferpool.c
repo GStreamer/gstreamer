@@ -438,6 +438,11 @@ gst_vaapi_video_buffer_pool_acquire_buffer (GstBufferPool * pool,
    * the one associated with the current surface. */
   g_assert (gst_buffer_n_memory (buffer) == 1);
 
+  /* Update the underlying surface proxy */
+  meta = gst_buffer_get_vaapi_video_meta (buffer);
+  if (meta)
+    gst_vaapi_video_meta_set_surface_proxy (meta, priv_params->proxy);
+
   /* Find the cached memory associated with the given surface. */
   surface = GST_VAAPI_SURFACE_PROXY_SURFACE (priv_params->proxy);
   dmabuf_proxy = gst_vaapi_surface_peek_buffer_proxy (surface);
@@ -449,13 +454,7 @@ gst_vaapi_video_buffer_pool_acquire_buffer (GstBufferPool * pool,
       mem = gst_memory_ref (mem);
   } else {
     /* The given surface has not been exported yet. */
-    meta = gst_buffer_get_vaapi_video_meta (buffer);
-    if (gst_vaapi_video_meta_get_surface_proxy (meta))
-      gst_vaapi_video_meta_set_surface_proxy (meta, priv_params->proxy);
-
-    mem =
-        gst_vaapi_dmabuf_memory_new (priv->allocator,
-        gst_buffer_get_vaapi_video_meta (buffer));
+    mem = gst_vaapi_dmabuf_memory_new (priv->allocator, meta);
   }
 
   /* Attach the GstFdMemory to the output buffer. */
@@ -475,10 +474,16 @@ gst_vaapi_video_buffer_pool_reset_buffer (GstBufferPool * pool,
     GstBuffer * buffer)
 {
   GstMemory *const mem = gst_buffer_peek_memory (buffer, 0);
+  GstVaapiVideoMeta *meta;
 
   /* Release the underlying surface proxy */
-  if (GST_VAAPI_IS_VIDEO_MEMORY (mem))
+  if (GST_VAAPI_IS_VIDEO_MEMORY (mem)) {
     gst_vaapi_video_memory_reset_surface (GST_VAAPI_VIDEO_MEMORY_CAST (mem));
+  } else {
+    meta = gst_buffer_get_vaapi_video_meta (buffer);
+    if (meta)
+      gst_vaapi_video_meta_set_surface_proxy (meta, NULL);
+  }
 
   GST_BUFFER_POOL_CLASS (gst_vaapi_video_buffer_pool_parent_class)->reset_buffer
       (pool, buffer);
