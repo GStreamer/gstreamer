@@ -197,10 +197,33 @@ gst_vaapidecode_update_sink_caps (GstVaapiDecode * decode, GstCaps * caps)
   return TRUE;
 }
 
+static inline void
+caps_set_width_and_height_range (GstCaps * caps, gint min_width,
+    gint min_height, gint max_width, gint max_height)
+{
+  guint size, i;
+  GstStructure *structure;
+
+  /* Set the width/height info to caps */
+  size = gst_caps_get_size (caps);
+  for (i = 0; i < size; i++) {
+    structure = gst_caps_get_structure (caps, i);
+    if (!structure)
+      continue;
+    gst_structure_set (structure, "width", GST_TYPE_INT_RANGE, min_width,
+        max_width, "height", GST_TYPE_INT_RANGE, min_height, max_height,
+        "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+  }
+}
+
 static gboolean
 gst_vaapidecode_ensure_allowed_srcpad_caps (GstVaapiDecode * decode)
 {
-  GstCaps *out_caps, *raw_caps;
+  GstCaps *out_caps, *raw_caps, *va_caps, *dma_caps, *gltexup_caps, *base_caps;
+  GArray *formats;
+  gint min_width, min_height, max_width, max_height;
+  guint mem_types;
+  gboolean ret = FALSE;
 
   if (decode->allowed_srcpad_caps)
     return TRUE;
@@ -208,40 +231,74 @@ gst_vaapidecode_ensure_allowed_srcpad_caps (GstVaapiDecode * decode)
   if (!GST_VAAPI_PLUGIN_BASE_DISPLAY (decode))
     return FALSE;
 
-  /* Create VA caps */
-  out_caps = gst_caps_from_string (GST_VAAPI_MAKE_SURFACE_CAPS);
-  if (!out_caps) {
-    GST_WARNING_OBJECT (decode, "failed to create VA/GL source caps");
+  if (!decode->decoder)
     return FALSE;
-  }
-#if (USE_GLX || USE_EGL)
-  if (!GST_VAAPI_PLUGIN_BASE_SRC_PAD_CAN_DMABUF (decode) &&
-      gst_vaapi_display_has_opengl (GST_VAAPI_PLUGIN_BASE_DISPLAY (decode))) {
-    out_caps = gst_caps_make_writable (out_caps);
-    gst_caps_append (out_caps,
-        gst_caps_from_string (GST_VAAPI_MAKE_GLTEXUPLOAD_CAPS));
-  }
-#endif
-  out_caps = gst_caps_make_writable (out_caps);
-  gst_caps_append (out_caps, gst_caps_from_string (GST_VAAPI_MAKE_DMABUF_CAPS));
+
+  out_caps = base_caps = raw_caps = va_caps = dma_caps = gltexup_caps = NULL;
+
+  formats = gst_vaapi_decoder_get_surface_attributes (decode->decoder,
+      &min_width, &min_height, &max_width, &max_height, &mem_types);
+  if (!formats)
+    return FALSE;
+
+  base_caps = gst_vaapi_video_format_new_template_caps_from_list (formats);
+  if (!base_caps)
+    goto bail;
+  caps_set_width_and_height_range (base_caps, min_width, min_height, max_width,
+      max_height);
 
   raw_caps = gst_vaapi_plugin_base_get_allowed_srcpad_raw_caps
       (GST_VAAPI_PLUGIN_BASE (decode),
       GST_VIDEO_INFO_FORMAT (&decode->decoded_info));
-  if (!raw_caps) {
-    gst_caps_unref (out_caps);
-    GST_WARNING_OBJECT (decode, "failed to create raw sink caps");
-    return FALSE;
-  }
+  if (!raw_caps)
+    goto bail;
+  raw_caps = gst_caps_copy (raw_caps);
+  caps_set_width_and_height_range (raw_caps, min_width, min_height,
+      max_width, max_height);
 
-  out_caps = gst_caps_make_writable (out_caps);
-  gst_caps_append (out_caps, gst_caps_copy (raw_caps));
+  va_caps = gst_caps_copy (base_caps);
+  gst_caps_set_features_simple (va_caps,
+      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE));
+
+  if (GST_VAAPI_PLUGIN_BASE_SRC_PAD_CAN_DMABUF (decode)
+      && gst_vaapi_mem_type_supports (mem_types,
+          GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF)) {
+    dma_caps = gst_caps_from_string (GST_VAAPI_MAKE_DMABUF_CAPS);
+    caps_set_width_and_height_range (dma_caps, min_width, min_height, max_width,
+        max_height);
+  }
+#if (USE_GLX || USE_EGL)
+  if (!GST_VAAPI_PLUGIN_BASE_SRC_PAD_CAN_DMABUF (decode)
+      && gst_vaapi_display_has_opengl (GST_VAAPI_PLUGIN_BASE_DISPLAY (decode))) {
+    gltexup_caps = gst_caps_from_string (GST_VAAPI_MAKE_GLTEXUPLOAD_CAPS);
+    if (gltexup_caps) {
+      caps_set_width_and_height_range (base_caps, min_width, min_height,
+          max_width, max_height);
+    }
+  }
+#endif
+
+  out_caps = va_caps;
+  if (dma_caps)
+    gst_caps_append (out_caps, dma_caps);
+  if (gltexup_caps)
+    gst_caps_append (out_caps, gltexup_caps);
+  if (raw_caps)
+    gst_caps_append (out_caps, raw_caps);
+
   decode->allowed_srcpad_caps = out_caps;
 
   GST_INFO_OBJECT (decode, "allowed srcpad caps: %" GST_PTR_FORMAT,
       decode->allowed_srcpad_caps);
 
-  return TRUE;
+  ret = TRUE;
+
+bail:
+  if (formats)
+    g_array_unref (formats);
+  if (base_caps)
+    gst_caps_unref (base_caps);
+  return ret;
 }
 
 static GstCaps *
@@ -963,6 +1020,8 @@ gst_vaapidecode_destroy (GstVaapiDecode * decode)
   gst_vaapidecode_purge (decode);
 
   gst_vaapi_decoder_replace (&decode->decoder, NULL);
+  /* srcpad caps are decoder's context dependant */
+  gst_caps_replace (&decode->allowed_srcpad_caps, NULL);
 }
 
 static gboolean

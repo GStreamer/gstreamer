@@ -1125,24 +1125,6 @@ gst_vaapi_decoder_decode_codec_data (GstVaapiDecoder * decoder)
 }
 
 /**
- * gst_vaapi_decoder_get_surface_formats:
- * @decoder: a #GstVaapiDecoder
- *
- * Retrieves an array of #GstVideoFormat which the output surfaces of
- * the @decoder can handle.
- *
- * Return value: (transfer full): a #GArray of #GstVideoFormat or
- * %NULL
- */
-GArray *
-gst_vaapi_decoder_get_surface_formats (GstVaapiDecoder * decoder)
-{
-  if (decoder && decoder->context)
-    return gst_vaapi_context_get_surface_formats (decoder->context);
-  return NULL;
-}
-
-/**
  * gst_vaapi_decoder_update_caps:
  * @decoder: a #GstVaapiDecoder
  * @caps: a #GstCaps
@@ -1188,4 +1170,51 @@ gst_vaapi_decoder_update_caps (GstVaapiDecoder * decoder, GstCaps * caps)
   }
 
   return FALSE;
+}
+
+/**
+ * gst_vaapi_decoder_get_surface_attributres:
+ * @decoder: a #GstVaapiDecoder instances
+ * @min_width (out): the minimal surface width
+ * @min_height (out): the minimal surface height
+ * @max_width (out): the maximal surface width
+ * @max_height (out): the maximal surface height
+ *
+ * Fetches the valid surface's attributes for the current context.
+ *
+ * Returns: a #GArray of valid formats we get or %NULL if failed.
+ **/
+GArray *
+gst_vaapi_decoder_get_surface_attributes (GstVaapiDecoder * decoder,
+    gint * min_width, gint * min_height, gint * max_width, gint * max_height,
+    guint * mem_types)
+{
+  gboolean ret;
+  GstVaapiConfigSurfaceAttributes attribs = { 0, };
+
+  g_return_val_if_fail (decoder != NULL, FALSE);
+
+  if (!decoder->context)
+    return NULL;
+
+  ret = gst_vaapi_context_get_surface_attributes (decoder->context, &attribs);
+  if (ret)
+    attribs.formats = gst_vaapi_context_get_surface_formats (decoder->context);
+
+  if (attribs.formats->len == 0) {
+    g_array_unref (attribs.formats);
+    return NULL;
+  }
+
+  if (min_width)
+    *min_width = attribs.min_width;
+  if (min_height)
+    *min_height = attribs.min_height;
+  if (max_width)
+    *max_width = attribs.max_width;
+  if (max_height)
+    *max_height = attribs.max_height;
+  if (mem_types)
+    *mem_types = attribs.mem_types;
+  return attribs.formats;
 }

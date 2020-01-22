@@ -103,9 +103,6 @@ gst_vaapi_decoder_set_codec_state_changed_func (GstVaapiDecoder * decoder,
 GstCaps *
 gst_vaapi_decoder_get_caps (GstVaapiDecoder * decoder);
 
-GArray *
-gst_vaapi_decoder_get_surface_formats (GstVaapiDecoder * decoder);
-
 gboolean
 gst_vaapi_decoder_put_buffer (GstVaapiDecoder * decoder, GstBuffer * buf);
 
@@ -138,6 +135,11 @@ gst_vaapi_decoder_reset (GstVaapiDecoder * decoder);
 
 gboolean
 gst_vaapi_decoder_update_caps (GstVaapiDecoder * decoder, GstCaps * caps);
+
+GArray *
+gst_vaapi_decoder_get_surface_attributes (GstVaapiDecoder * decoder,
+    gint * min_width, gint * min_height, gint * max_width, gint * max_height,
+    guint * mem_types);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiDecoder, gst_object_unref)
 
