@@ -175,12 +175,14 @@ gst_vaapi_blend_initialize (GstVaapiBlend * blend)
       (blend->display), blend->va_context, NULL, 0, &pipeline_caps);
   if (vaapi_check_status (status, "vaQueryVideoProcPipelineCaps()"))
     blend->flags = pipeline_caps.blend_flags;
-#endif
 
   if (!(blend->flags & VA_BLEND_GLOBAL_ALPHA)) {
     GST_WARNING_OBJECT (blend, "VPP does not support global alpha blending");
     return FALSE;
   }
+#else
+  return FALSE;
+#endif
 
   return TRUE;
 }
