@@ -46,6 +46,11 @@ G_BEGIN_DECLS
 typedef struct _MpegTSParse2 MpegTSParse2;
 typedef struct _MpegTSParse2Class MpegTSParse2Class;
 
+typedef struct _MpegTSParse2Adapter {
+  GstAdapter *adapter;
+  guint packets_in_adapter;
+} MpegTSParse2Adapter;
+
 struct _MpegTSParse2 {
   MpegTSBase parent;
 
@@ -66,7 +71,7 @@ struct _MpegTSParse2 {
   GList *srcpads;
 
   GstFlowCombiner *flowcombiner;
-  
+
   /* state */
   gboolean first;
   gboolean set_timestamps;
@@ -75,6 +80,12 @@ struct _MpegTSParse2 {
   GList *pending_buffers;
   GstClockTime previous_pcr;
   guint bytes_since_pcr;
+
+  /* Combine several packets into a larger buffer */
+  MpegTSParse2Adapter ts_adapter;
+  guint alignment;
+  gboolean is_eos;
+  guint32 header;
 };
 
 struct _MpegTSParse2Class {
