@@ -88,6 +88,7 @@ enum
   PROP_SMOOTHING_LATENCY,
   PROP_PCR_PID,
   PROP_ALIGNMENT,
+  PROP_SPLIT_ON_RAI,
   /* FILL ME */
 };
 
@@ -172,6 +173,11 @@ mpegts_parse_class_init (MpegTSParse2Class * klass)
       g_param_spec_uint ("alignment", "Alignment",
           "Number of packets per buffer (padded with dummy packets on EOS) (0 = auto)",
           0, G_MAXUINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_SPLIT_ON_RAI,
+      g_param_spec_boolean ("split-on-rai", "Split on RAI",
+          "If set, buffers sized smaller than the alignment will be sent "
+          "so that RAI packets are at the start of a new buffer", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   element_class = GST_ELEMENT_CLASS (klass);
   element_class->pad_removed = mpegts_parse_pad_removed;
@@ -222,9 +228,11 @@ mpegts_parse_init (MpegTSParse2 * parse)
 
   parse->ts_adapter.adapter = gst_adapter_new ();
   parse->ts_adapter.packets_in_adapter = 0;
+  parse->ts_adapter.first_is_keyframe = TRUE;
   parse->alignment = 0;
   parse->is_eos = FALSE;
   parse->header = 0;
+  parse->split_on_rai = FALSE;
 }
 
 static void
@@ -271,6 +279,7 @@ mpegts_parse_reset (MpegTSBase * base)
 
   gst_adapter_clear (parse->ts_adapter.adapter);
   parse->ts_adapter.packets_in_adapter = 0;
+  parse->ts_adapter.first_is_keyframe = TRUE;
   parse->is_eos = FALSE;
   parse->header = 0;
 }
@@ -296,6 +305,9 @@ mpegts_parse_set_property (GObject * object, guint prop_id,
     case PROP_ALIGNMENT:
       parse->alignment = g_value_get_uint (value);
       break;
+    case PROP_SPLIT_ON_RAI:
+      parse->split_on_rai = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
   }
@@ -319,6 +331,9 @@ mpegts_parse_get_property (GObject * object, guint prop_id,
       break;
     case PROP_ALIGNMENT:
       g_value_set_uint (value, parse->alignment);
+      break;
+    case PROP_SPLIT_ON_RAI:
+      g_value_set_boolean (value, parse->split_on_rai);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -484,6 +499,7 @@ mpegts_parse_create_tspad (MpegTSParse2 * parse, const gchar * pad_name)
   tspad->flow_return = GST_FLOW_NOT_LINKED;
   tspad->ts_adapter.adapter = gst_adapter_new ();
   tspad->ts_adapter.packets_in_adapter = 0;
+  tspad->ts_adapter.first_is_keyframe = TRUE;
   gst_pad_set_element_private (pad, tspad);
   gst_flow_combiner_add_pad (parse->flowcombiner, pad);
 
@@ -623,6 +639,8 @@ empty_adapter_into_pad (MpegTSParse2Adapter * ts_adapter, GstPad * pad)
 
   if (buf) {
     GST_BUFFER_PTS (buf) = ts;
+    if (!ts_adapter->first_is_keyframe)
+      gst_buffer_set_flags (buf, GST_BUFFER_FLAG_DELTA_UNIT);
     ret = gst_pad_push (pad, buf);
   }
 
@@ -640,8 +658,17 @@ enqueue_and_maybe_push_buffer (MpegTSParse2 * parse, GstPad * pad,
       ret = gst_pad_push (pad, buffer);
       ret = gst_flow_combiner_update_flow (parse->flowcombiner, ret);
     } else {
+      if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT)
+          && parse->split_on_rai) {
+        ret = empty_adapter_into_pad (ts_adapter, pad);
+        ret = gst_flow_combiner_update_flow (parse->flowcombiner, ret);
+      }
       gst_adapter_push (ts_adapter->adapter, buffer);
       ts_adapter->packets_in_adapter++;
+      if (ts_adapter->packets_in_adapter == 1 && parse->split_on_rai) {
+        ts_adapter->first_is_keyframe =
+            !GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+      }
 
       if (ts_adapter->packets_in_adapter == parse->alignment
           && ts_adapter->packets_in_adapter > 0) {
@@ -763,6 +790,10 @@ mpegts_parse_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
   GST_OBJECT_UNLOCK (parse);
 
   buf = mpegts_packet_to_buffer (packet);
+  if (parse->split_on_rai
+      && !(packet->afc_flags & MPEGTS_AFC_RANDOM_ACCESS_FLAG)) {
+    gst_buffer_set_flags (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+  }
   ret = mpegts_parse_have_buffer (base, buf);
 
   while (pad && !done) {

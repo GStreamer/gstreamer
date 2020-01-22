@@ -49,6 +49,7 @@ typedef struct _MpegTSParse2Class MpegTSParse2Class;
 typedef struct _MpegTSParse2Adapter {
   GstAdapter *adapter;
   guint packets_in_adapter;
+  gboolean first_is_keyframe;
 } MpegTSParse2Adapter;
 
 struct _MpegTSParse2 {
@@ -84,6 +85,7 @@ struct _MpegTSParse2 {
   /* Combine several packets into a larger buffer */
   MpegTSParse2Adapter ts_adapter;
   guint alignment;
+  gboolean split_on_rai;
   gboolean is_eos;
   guint32 header;
 };
