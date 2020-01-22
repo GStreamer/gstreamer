@@ -35,6 +35,8 @@
 
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
 
+#define GST_FFMPEG_VIDEO_CODEC_FRAME_FLAG_ALLOCATED (1<<15)
+
 #define MAX_TS_MASK 0xff
 
 #define DEFAULT_LOWRES			0
@@ -647,6 +649,8 @@ gst_ffmpegviddec_video_frame_free (GstFFMpegVidDec * ffmpegdec,
 
   if (frame->mapped)
     gst_video_frame_unmap (&frame->vframe);
+  GST_VIDEO_CODEC_FRAME_FLAG_UNSET (frame->frame,
+      GST_FFMPEG_VIDEO_CODEC_FRAME_FLAG_ALLOCATED);
   gst_video_decoder_release_frame (GST_VIDEO_DECODER (ffmpegdec), frame->frame);
   gst_buffer_replace (&frame->buffer, NULL);
   if (frame->avbuffer) {
@@ -840,6 +844,8 @@ gst_ffmpegviddec_get_buffer2 (AVCodecContext * context, AVFrame * picture,
 
   /* now it has a buffer allocated, so it is real and will also
    * be _released */
+  GST_VIDEO_CODEC_FRAME_FLAG_SET (frame,
+      GST_FFMPEG_VIDEO_CODEC_FRAME_FLAG_ALLOCATED);
   GST_VIDEO_CODEC_FRAME_FLAG_UNSET (frame,
       GST_VIDEO_CODEC_FRAME_FLAG_DECODE_ONLY);
 
@@ -1802,6 +1808,8 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
             GST_TIME_FORMAT, tmp, tmp->system_frame_number,
             GST_TIME_ARGS (tmp->pts), GST_TIME_ARGS (tmp->dts));
         /* drop extra ref and remove from frame list */
+        GST_VIDEO_CODEC_FRAME_FLAG_UNSET (tmp,
+            GST_FFMPEG_VIDEO_CODEC_FRAME_FLAG_ALLOCATED);
         gst_video_decoder_release_frame (dec, tmp);
       } else {
         /* drop extra ref we got */
@@ -1813,6 +1821,10 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
   }
 
   av_frame_unref (ffmpegdec->picture);
+
+  if (frame)
+    GST_VIDEO_CODEC_FRAME_FLAG_UNSET (frame,
+        GST_FFMPEG_VIDEO_CODEC_FRAME_FLAG_ALLOCATED);
 
   /* FIXME: Ideally we would remap the buffer read-only now before pushing but
    * libav might still have a reference to it!
@@ -1838,6 +1850,8 @@ beach:
 no_output:
   {
     GST_DEBUG_OBJECT (ffmpegdec, "no output buffer");
+    GST_VIDEO_CODEC_FRAME_FLAG_UNSET (frame,
+        GST_FFMPEG_VIDEO_CODEC_FRAME_FLAG_ALLOCATED);
     gst_video_decoder_drop_frame (GST_VIDEO_DECODER (ffmpegdec), out_frame);
     goto beach;
   }
@@ -1940,8 +1954,10 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
   }
 
   /* treat frame as void until a buffer is requested for it */
-  GST_VIDEO_CODEC_FRAME_FLAG_SET (frame,
-      GST_VIDEO_CODEC_FRAME_FLAG_DECODE_ONLY);
+  if (!GST_VIDEO_CODEC_FRAME_FLAG_IS_SET (frame,
+          GST_FFMPEG_VIDEO_CODEC_FRAME_FLAG_ALLOCATED))
+    GST_VIDEO_CODEC_FRAME_FLAG_SET (frame,
+        GST_VIDEO_CODEC_FRAME_FLAG_DECODE_ONLY);
 
   data = minfo.data;
   size = minfo.size;
