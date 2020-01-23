@@ -127,6 +127,9 @@ static GstStaticCaps gst_video_scale_format_caps =
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS) ";"
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("ANY", GST_VIDEO_FORMATS));
 
+GQuark _size_quark;
+GQuark _scale_quark;
+
 #define GST_TYPE_VIDEO_SCALE_METHOD (gst_video_scale_method_get_type())
 static GType
 gst_video_scale_method_get_type (void)
@@ -191,6 +194,8 @@ static GstCaps *gst_video_scale_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static GstCaps *gst_video_scale_fixate_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
+static gboolean gst_video_scale_transform_meta (GstBaseTransform * trans,
+    GstBuffer * inbuf, GstMeta * meta, GstBuffer * outbuf);
 
 static gboolean gst_video_scale_set_info (GstVideoFilter * filter,
     GstCaps * in, GstVideoInfo * in_info, GstCaps * out,
@@ -283,10 +288,15 @@ gst_video_scale_class_init (GstVideoScaleClass * klass)
       GST_DEBUG_FUNCPTR (gst_video_scale_transform_caps);
   trans_class->fixate_caps = GST_DEBUG_FUNCPTR (gst_video_scale_fixate_caps);
   trans_class->src_event = GST_DEBUG_FUNCPTR (gst_video_scale_src_event);
+  trans_class->transform_meta =
+      GST_DEBUG_FUNCPTR (gst_video_scale_transform_meta);
 
   filter_class->set_info = GST_DEBUG_FUNCPTR (gst_video_scale_set_info);
   filter_class->transform_frame =
       GST_DEBUG_FUNCPTR (gst_video_scale_transform_frame);
+
+  _size_quark = g_quark_from_static_string (GST_META_TAG_VIDEO_SIZE_STR);
+  _scale_quark = gst_video_meta_transform_scale_get_quark ();
 }
 
 static void
@@ -488,6 +498,57 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
 }
 
 static gboolean
+gst_video_scale_transform_meta (GstBaseTransform * trans, GstBuffer * inbuf,
+    GstMeta * meta, GstBuffer * outbuf)
+{
+  GstVideoFilter *videofilter = GST_VIDEO_FILTER (trans);
+  const GstMetaInfo *info = meta->info;
+  const gchar *const *tags;
+  const gchar *const *curr = NULL;
+  gboolean should_copy = TRUE;
+  const gchar *const valid_tags[] = { GST_META_TAG_VIDEO_STR,
+    GST_META_TAG_VIDEO_COLORSPACE_STR,
+    GST_META_TAG_VIDEO_ORIENTATION_STR,
+    GST_META_TAG_VIDEO_SIZE_STR
+  };
+
+  tags = gst_meta_api_type_get_tags (info->api);
+
+  /* No specific tags, we are good to copy */
+  if (!tags) {
+    return TRUE;
+  }
+
+  /* We are only changing size, we can preserve other metas tagged as
+     orientation and colorspace */
+  for (curr = tags; *curr; ++curr) {
+
+    /* We dont handle any other tag */
+    if (!g_strv_contains (valid_tags, *curr)) {
+      should_copy = FALSE;
+      break;
+    }
+  }
+
+  /* Cant handle the tags in this meta, let the parent class handle it */
+  if (!should_copy) {
+    return GST_BASE_TRANSFORM_CLASS (parent_class)->transform_meta (trans,
+        inbuf, meta, outbuf);
+  }
+
+  /* This meta is size sensitive, try to transform it accordingly */
+  if (gst_meta_api_type_has_tag (info->api, _size_quark)) {
+    GstVideoMetaTransform trans =
+        { &videofilter->in_info, &videofilter->out_info };
+
+    return info->transform_func (outbuf, meta, inbuf, _scale_quark, &trans);
+  }
+
+  /* No need to transform, we can safely copy this meta */
+  return TRUE;
+}
+
+static gboolean
 gst_video_scale_set_info (GstVideoFilter * filter, GstCaps * in,
     GstVideoInfo * in_info, GstCaps * out, GstVideoInfo * out_info)
 {
@@ -659,7 +720,8 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
   GstStructure *ins, *outs;
   const GValue *from_par, *to_par;
   GValue fpar = { 0, }, tpar = {
-  0,};
+    0,
+  };
 
   othercaps = gst_caps_truncate (othercaps);
   othercaps = gst_caps_make_writable (othercaps);
