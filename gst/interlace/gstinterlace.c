@@ -851,6 +851,24 @@ src_map_failed:
 
 
 static GstFlowReturn
+gst_interlace_push_buffer (GstInterlace * interlace, GstBuffer * buffer)
+{
+  GST_DEBUG_OBJECT (interlace, "output timestamp %" GST_TIME_FORMAT
+      " duration %" GST_TIME_FORMAT " flags %04x %s %s %s",
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)),
+      GST_BUFFER_FLAGS (buffer),
+      (GST_BUFFER_FLAGS (buffer) & GST_VIDEO_BUFFER_FLAG_TFF) ? "tff" :
+      "",
+      (GST_BUFFER_FLAGS (buffer) & GST_VIDEO_BUFFER_FLAG_RFF) ? "rff" :
+      "",
+      (GST_BUFFER_FLAGS (buffer) & GST_VIDEO_BUFFER_FLAG_ONEFIELD) ?
+      "onefield" : "");
+
+  return gst_pad_push (interlace->srcpad, buffer);
+}
+
+static GstFlowReturn
 gst_interlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstInterlace *interlace = GST_INTERLACE (parent);
@@ -963,19 +981,7 @@ gst_interlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     interlace->fields_since_timebase += n_output_fields;
     interlace->field_index ^= (n_output_fields & 1);
 
-    GST_DEBUG_OBJECT (interlace, "output timestamp %" GST_TIME_FORMAT
-        " duration %" GST_TIME_FORMAT " flags %04x %s %s %s",
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (output_buffer)),
-        GST_TIME_ARGS (GST_BUFFER_DURATION (output_buffer)),
-        GST_BUFFER_FLAGS (output_buffer),
-        (GST_BUFFER_FLAGS (output_buffer) & GST_VIDEO_BUFFER_FLAG_TFF) ? "tff" :
-        "",
-        (GST_BUFFER_FLAGS (output_buffer) & GST_VIDEO_BUFFER_FLAG_RFF) ? "rff" :
-        "",
-        (GST_BUFFER_FLAGS (output_buffer) & GST_VIDEO_BUFFER_FLAG_ONEFIELD) ?
-        "onefield" : "");
-
-    ret = gst_pad_push (interlace->srcpad, output_buffer);
+    ret = gst_interlace_push_buffer (interlace, output_buffer);
     if (ret != GST_FLOW_OK) {
       GST_DEBUG_OBJECT (interlace, "Failed to push buffer %p", output_buffer);
       break;
