@@ -1,18 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<component type="desktop">
+<component type="desktop-application">
   <id>org.freedesktop.GstDebugViewer</id>
-  <launchable type="desktop">gst-debug-viewer.desktop</launchable>
+  <launchable type="desktop">org.freedesktop.GstDebugViewer.desktop</launchable>
   <metadata_license>CC-BY-3.0</metadata_license>
   <project_license>GPL-3.0+</project_license>
-  <_name>GStreamer Debug Viewer</_name>
-  <_summary>Examine GStreamer debug log information</_summary>
+  <name>GStreamer Debug Viewer</name>
+  <summary>Examine GStreamer debug log information</summary>
   <description>
-    <_p>View and read GStreamer debug logs in an efficient way</_p>
+    <p>View and read GStreamer debug logs in an efficient way</p>
   </description>
   <url type="homepage">https://gstreamer.freedesktop.org/</url>
-  <url type="bugtracker">http://bugzilla.gnome.org/</url>
+  <url type="bugtracker">https://gitlab.freedesktop.org/gstreamer/gst-devtools/issues/</url>
   <update_contact>tsaunier@gnome.org</update_contact>
   <project_group>GStreamer</project_group>
   <translation type="gettext">GStreamer</translation>
-  <_developer_name>The GStreamer Team</_developer_name>
+  <developer_name>The GStreamer Team</developer_name>
+  <content_rating type="oars-1.0" />
+  <releases>
+    <release version="1.16.2" date="2019-12-03" />
+    <release version="1.16.1" date="2019-09-23" />
+  <releases>
 </component>
