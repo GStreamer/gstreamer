@@ -333,8 +333,8 @@ static const PulldownFormat formats[] = {
 };
 
 static void
-gst_interlace_decorate_buffer (GstInterlace * interlace, GstBuffer * buf,
-    int n_fields, gboolean interlaced)
+gst_interlace_decorate_buffer_ts (GstInterlace * interlace, GstBuffer * buf,
+    int n_fields)
 {
   /* field duration = src_fps_d / (2 * src_fps_n) */
   if (interlace->src_fps_n == 0) {
@@ -352,6 +352,13 @@ gst_interlace_decorate_buffer (GstInterlace * interlace, GstBuffer * buf,
         gst_util_uint64_scale (GST_SECOND, interlace->src_fps_d * n_fields,
         interlace->src_fps_n * 2);
   }
+}
+
+static void
+gst_interlace_decorate_buffer (GstInterlace * interlace, GstBuffer * buf,
+    int n_fields, gboolean interlaced)
+{
+  gst_interlace_decorate_buffer_ts (interlace, buf, n_fields);
 
   if (interlace->field_index == 0) {
     GST_BUFFER_FLAG_SET (buf, GST_VIDEO_BUFFER_FLAG_TFF);
