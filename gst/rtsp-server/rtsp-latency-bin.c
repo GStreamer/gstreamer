@@ -23,9 +23,6 @@
 #include <gst/gst.h>
 #include "rtsp-latency-bin.h"
 
-#define GST_RTSP_LATENCY_BIN_GET_PRIVATE(obj)  \
-     (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_RTSP_LATENCY_BIN_TYPE, GstRTSPLatencyBinPrivate))
-
 struct _GstRTSPLatencyBinPrivate
 {
   GstPad *sinkpad;
@@ -106,7 +103,7 @@ gst_rtsp_latency_bin_get_property (GObject * object, guint propid,
 {
   GstRTSPLatencyBin *latency_bin = GST_RTSP_LATENCY_BIN (object);
   GstRTSPLatencyBinPrivate *priv =
-      GST_RTSP_LATENCY_BIN_GET_PRIVATE (latency_bin);
+      gst_rtsp_latency_bin_get_instance_private (latency_bin);
 
   switch (propid) {
     case PROP_ELEMENT:
@@ -140,7 +137,7 @@ gst_rtsp_latency_bin_add_element (GstRTSPLatencyBin * latency_bin,
     GstElement * element)
 {
   GstRTSPLatencyBinPrivate *priv =
-      GST_RTSP_LATENCY_BIN_GET_PRIVATE (latency_bin);
+      gst_rtsp_latency_bin_get_instance_private (latency_bin);
   GstPad *pad;
   GstPadTemplate *templ;
 
@@ -250,7 +247,7 @@ static gboolean
 gst_rtsp_latency_bin_recalculate_latency (GstRTSPLatencyBin * latency_bin)
 {
   GstRTSPLatencyBinPrivate *priv =
-      GST_RTSP_LATENCY_BIN_GET_PRIVATE (latency_bin);
+      gst_rtsp_latency_bin_get_instance_private (latency_bin);
   GstEvent *latency;
   GstQuery *query;
   GstClockTime min_latency;
