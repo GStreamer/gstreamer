@@ -1218,6 +1218,8 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
   GstTagList *tags;
   GstEvent *event;
   GList *cached_events;
+  GstQuery *query;
+  gchar *uri = NULL;
 
   /* to be sure... */
   gst_ffmpegdemux_close (demux);
@@ -1231,9 +1233,32 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
   if (res < 0)
     goto beach;
 
+  query = gst_query_new_uri ();
+  if (gst_pad_peer_query (demux->sinkpad, query)) {
+    gchar *query_uri, *redirect_uri;
+    gboolean permanent;
+
+    gst_query_parse_uri (query, &query_uri);
+    gst_query_parse_uri_redirection (query, &redirect_uri);
+    gst_query_parse_uri_redirection_permanent (query, &permanent);
+
+    if (permanent && redirect_uri) {
+      uri = redirect_uri;
+      g_free (query_uri);
+    } else {
+      uri = query_uri;
+      g_free (redirect_uri);
+    }
+  }
+  gst_query_unref (query);
+
+  GST_DEBUG_OBJECT (demux, "Opening context with URI %s", GST_STR_NULL (uri));
+
   demux->context = avformat_alloc_context ();
   demux->context->pb = iocontext;
-  res = avformat_open_input (&demux->context, NULL, oclass->in_plugin, NULL);
+  res = avformat_open_input (&demux->context, uri, oclass->in_plugin, NULL);
+
+  g_free (uri);
 
   GST_DEBUG_OBJECT (demux, "av_open_input returned %d", res);
   if (res < 0)
