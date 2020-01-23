@@ -661,7 +661,7 @@ thread_func (gpointer data)
     struct sockaddr_storage ss;
     struct sockaddr sa;
   } caller_sa;
-  int caller_sa_len;
+  int caller_sa_len = sizeof (caller_sa);
 
   gint poll_timeout;
 
