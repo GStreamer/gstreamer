@@ -1116,7 +1116,6 @@ gst_nvdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
 
   in_buffer = gst_buffer_ref (frame->input_buffer);
   if (GST_BUFFER_IS_DISCONT (frame->input_buffer)) {
-    packet.flags = CUVID_PKT_DISCONTINUITY;
     if (nvdec->codec_data && klass->codec_type == cudaVideoCodec_MPEG4) {
       in_buffer = gst_buffer_append (gst_buffer_ref (nvdec->codec_data),
           in_buffer);
