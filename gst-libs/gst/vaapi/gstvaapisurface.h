@@ -207,10 +207,6 @@ GstVaapiDisplay *
 gst_vaapi_surface_get_display (GstVaapiSurface * surface);
 
 GstVaapiSurface *
-gst_vaapi_surface_new_from_formats (GstVaapiDisplay * display,
-    GstVaapiChromaType chroma_type, guint width, guint height, GArray * formts);
-
-GstVaapiSurface *
 gst_vaapi_surface_new (GstVaapiDisplay * display,
     GstVaapiChromaType chroma_type, guint width, guint height);
 

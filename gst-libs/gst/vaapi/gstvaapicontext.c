@@ -73,6 +73,33 @@ ensure_attributes (GstVaapiContext * context)
   return (context->attribs != NULL);
 }
 
+/* looks for the (very arbritrary) preferred format from the requested
+ * context chroma type, in the context attributes */
+static GstVideoFormat
+get_preferred_format (GstVaapiContext * context)
+{
+  const GstVaapiContextInfo *const cip = &context->info;
+  GArray *formats;
+  guint i;
+
+  if (context->preferred_format != GST_VIDEO_FORMAT_UNKNOWN)
+    return context->preferred_format;
+
+  if (!ensure_attributes (context) || !context->attribs->formats)
+    return GST_VIDEO_FORMAT_UNKNOWN;
+
+  formats = context->attribs->formats;
+  for (i = 0; i < formats->len; i++) {
+    GstVideoFormat format = g_array_index (formats, GstVideoFormat, i);
+    if (format == gst_vaapi_video_format_from_chroma (cip->chroma_type)) {
+      context->preferred_format = format;
+      break;
+    }
+  }
+
+  return context->preferred_format;
+}
+
 static inline gboolean
 context_get_attribute (GstVaapiContext * context, VAConfigAttribType type,
     guint * out_value_ptr)
@@ -88,6 +115,9 @@ context_destroy_surfaces (GstVaapiContext * context)
     g_ptr_array_unref (context->surfaces);
     context->surfaces = NULL;
   }
+
+  context->preferred_format = GST_VIDEO_FORMAT_UNKNOWN;
+
   gst_vaapi_video_pool_replace (&context->surfaces_pool, NULL);
 }
 
@@ -130,18 +160,22 @@ context_destroy (GstVaapiContext * context)
 static gboolean
 context_ensure_surfaces (GstVaapiContext * context)
 {
+  GstVaapiDisplay *display = GST_VAAPI_CONTEXT_DISPLAY (context);
   const GstVaapiContextInfo *const cip = &context->info;
   const guint num_surfaces = cip->ref_frames + SCRATCH_SURFACES_COUNT;
   GstVaapiSurface *surface;
+  GstVideoFormat format;
   guint i;
 
-  if (!ensure_attributes (context))
-    return FALSE;
-
+  format = get_preferred_format (context);
   for (i = context->surfaces->len; i < num_surfaces; i++) {
-    surface =
-        gst_vaapi_surface_new_from_formats (GST_VAAPI_CONTEXT_DISPLAY (context),
-        cip->chroma_type, cip->width, cip->height, context->attribs->formats);
+    if (format != GST_VIDEO_FORMAT_UNKNOWN) {
+      surface = gst_vaapi_surface_new_with_format (display, format, cip->width,
+          cip->height);
+    } else {
+      surface = gst_vaapi_surface_new (display, cip->chroma_type, cip->width,
+          cip->height);
+    }
     if (!surface)
       return FALSE;
     g_ptr_array_add (context->surfaces, surface);
@@ -397,6 +431,7 @@ gst_vaapi_context_init (GstVaapiContext * context,
   context->reset_on_resize = TRUE;
 
   context->attribs = NULL;
+  context->preferred_format = GST_VIDEO_FORMAT_UNKNOWN;
 }
 
 /**

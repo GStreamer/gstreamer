@@ -343,53 +343,6 @@ gst_vaapi_surface_get_display (GstVaapiSurface * surface)
 }
 
 /**
- * gst_vaapi_surface_new_from_formats:
- * @display: a #GstVaapiDisplay
- * @chroma_type: the surface chroma format
- * @width: the requested surface width
- * @height: the requested surface height
- * @formats: the limited format list
- *
- * Creates a new #GstVaapiSurface with a @chroma_type valid for any
- * format in @formats; If there aren't any, the returned surface is
- * created forcing the passed @chroma_type.
- *
- * Return value: the newly allocated #GstVaapiSurface object
- */
-GstVaapiSurface *
-gst_vaapi_surface_new_from_formats (GstVaapiDisplay * display,
-    GstVaapiChromaType chroma_type, guint width, guint height, GArray * formats)
-{
-  GstVaapiSurface *surface;
-  guint i;
-
-  if (formats) {
-    for (i = 0; i < formats->len; i++) {
-      GstVideoFormat format = g_array_index (formats, GstVideoFormat, i);
-      if (format == gst_vaapi_video_format_from_chroma (chroma_type))
-        return gst_vaapi_surface_new (display, chroma_type, width, height);
-    }
-  }
-
-  /* Fallback: if there's no format valid for the chroma type let's
-   * just use the passed chroma */
-  surface = gst_vaapi_surface_create (display);
-  if (!surface)
-    return NULL;
-  if (!gst_vaapi_surface_init (surface, chroma_type, width, height))
-    goto error;
-
-  return surface;
-
-  /* ERRORS */
-error:
-  {
-    gst_vaapi_surface_unref (surface);
-    return NULL;
-  }
-}
-
-/**
  * gst_vaapi_surface_new:
  * @display: a #GstVaapiDisplay
  * @chroma_type: the surface chroma format
@@ -398,6 +351,9 @@ error:
  *
  * Creates a new #GstVaapiSurface with the specified chroma format and
  * dimensions.
+ *
+ * NOTE: this method for creating surfaces uses deprecated VA API,
+ * which is still used by drivers (v.gr. i965 for jpeg decoding).
  *
  * Return value: the newly allocated #GstVaapiSurface object
  */
@@ -413,18 +369,6 @@ gst_vaapi_surface_new (GstVaapiDisplay * display,
   if (!surface)
     return NULL;
 
-  /* first try a recent version of vaCreateSurface, and later use as
-   * fallback its old version */
-  {
-    GstVideoInfo vi;
-    GstVideoFormat surface_format;
-
-    surface_format = gst_vaapi_video_format_from_chroma (chroma_type);
-    gst_video_info_set_format (&vi, surface_format, width, height);
-
-    if (gst_vaapi_surface_init_full (surface, &vi, 0))
-      return surface;
-  }
   if (!gst_vaapi_surface_init (surface, chroma_type, width, height))
     goto error;
   return surface;

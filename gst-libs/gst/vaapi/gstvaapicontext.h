@@ -115,6 +115,7 @@ struct _GstVaapiContext
   GstVaapiVideoPool *surfaces_pool;
   gboolean reset_on_resize;
   GstVaapiConfigSurfaceAttributes *attribs;
+  GstVideoFormat preferred_format;
 };
 
 #define GST_VAAPI_CONTEXT_ID(context)        (((GstVaapiContext *)(context))->object_id)
