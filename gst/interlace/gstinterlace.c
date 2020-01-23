@@ -786,7 +786,7 @@ gst_interlace_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 }
 
 static void
-copy_field (GstInterlace * interlace, GstBuffer * dest, GstBuffer * src,
+copy_fields (GstInterlace * interlace, GstBuffer * dest, GstBuffer * src,
     int field_index)
 {
   GstVideoInfo *info = &interlace->info;
@@ -923,11 +923,12 @@ gst_interlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
       output_buffer = gst_buffer_new_and_alloc (gst_buffer_get_size (buffer));
       /* take the first field from the stored frame */
-      copy_field (interlace, output_buffer, interlace->stored_frame,
+      copy_fields (interlace, output_buffer, interlace->stored_frame,
           interlace->field_index);
       interlace->stored_fields--;
       /* take the second field from the incoming buffer */
-      copy_field (interlace, output_buffer, buffer, interlace->field_index ^ 1);
+      copy_fields (interlace, output_buffer, buffer,
+          interlace->field_index ^ 1);
       current_fields--;
       n_output_fields = 2;
       interlaced = TRUE;
