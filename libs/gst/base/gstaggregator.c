@@ -519,6 +519,9 @@ gst_aggregator_reset_flow_values (GstAggregator * self)
   self->priv->send_segment = TRUE;
   gst_segment_init (&GST_AGGREGATOR_PAD (self->srcpad)->segment,
       GST_FORMAT_TIME);
+  /* Initialize to -1 so we set it to the start position once the first buffer
+   * is handled in gst_aggregator_pad_chain_internal() */
+  GST_AGGREGATOR_PAD (self->srcpad)->segment.position = -1;
   self->priv->first_buffer = TRUE;
   GST_OBJECT_UNLOCK (self);
 }
