@@ -191,15 +191,9 @@ impl App {
             .get_by_name("audio-mixer")
             .expect("can't find audio-mixer");
 
+        // Create a stream for handling the GStreamer message asynchronously
         let bus = pipeline.get_bus().unwrap();
-
-        // Send our bus messages via a futures channel to be handled asynchronously
-        let (send_gst_msg_tx, send_gst_msg_rx) = mpsc::unbounded::<gst::Message>();
-        let send_gst_msg_tx = Mutex::new(send_gst_msg_tx);
-        bus.set_sync_handler(move |_, msg| {
-            let _ = send_gst_msg_tx.lock().unwrap().unbounded_send(msg.clone());
-            gst::BusSyncReply::Drop
-        });
+        let send_gst_msg_rx = gst::BusStream::new(&bus);
 
         // Channel for outgoing WebSocket messages from other threads
         let (send_ws_msg_tx, send_ws_msg_rx) = mpsc::unbounded::<WsMessage>();
