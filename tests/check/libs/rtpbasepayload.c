@@ -1925,6 +1925,51 @@ GST_START_TEST (rtp_base_payload_max_framerate_attribute)
 
 GST_END_TEST;
 
+GST_START_TEST (rtp_base_payload_segment_time)
+{
+  State *state;
+  guint32 timestamp_base = 0;
+  guint segment_time = 10;
+  GstEvent *event;
+  GstSegment *segment = gst_segment_new ();
+
+  state =
+      create_payloader
+      ("application/x-rtp",
+      &sinktmpl, "onvif-no-rate-control", TRUE, "timestamp-offset",
+      timestamp_base, NULL);
+
+  set_state (state, GST_STATE_PLAYING);
+
+  gst_segment_init (segment, GST_FORMAT_TIME);
+  segment->time = segment_time * GST_SECOND;
+  event = gst_event_new_segment (segment);
+  fail_unless (gst_pad_push_event (state->srcpad, event));
+
+  push_buffer (state, "pts", 0 * GST_SECOND, NULL);
+  push_buffer (state, "pts", 1 * GST_SECOND, NULL);
+  push_buffer (state, "pts", 2 * GST_SECOND, NULL);
+  push_buffer (state, "pts", 3 * GST_SECOND, NULL);
+
+  set_state (state, GST_STATE_NULL);
+
+  validate_buffers_received (4);
+
+  validate_buffer (0, "rtptime",
+      timestamp_base + (segment_time) * DEFAULT_CLOCK_RATE, NULL);
+  validate_buffer (1, "rtptime",
+      timestamp_base + (1 + segment_time) * DEFAULT_CLOCK_RATE, NULL);
+  validate_buffer (2, "rtptime",
+      timestamp_base + (2 + segment_time) * DEFAULT_CLOCK_RATE, NULL);
+  validate_buffer (3, "rtptime",
+      timestamp_base + (3 + segment_time) * DEFAULT_CLOCK_RATE, NULL);
+
+  destroy_payloader (state);
+  gst_segment_free (segment);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtp_basepayloading_suite (void)
 {
@@ -1962,6 +2007,8 @@ rtp_basepayloading_suite (void)
 
   tcase_add_test (tc_chain, rtp_base_payload_framerate_attribute);
   tcase_add_test (tc_chain, rtp_base_payload_max_framerate_attribute);
+
+  tcase_add_test (tc_chain, rtp_base_payload_segment_time);
 
   return s;
 }

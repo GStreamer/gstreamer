@@ -1285,7 +1285,8 @@ gst_rtp_base_payload_prepare_push (GstRTPBasePayload * payload,
 
     /* no offset, use the gstreamer pts */
     if (priv->onvif_no_rate_control)
-      rtime_ns = data.pts;
+      rtime_ns = gst_segment_to_stream_time (&payload->segment,
+          GST_FORMAT_TIME, data.pts);
     else
       rtime_ns =
           gst_segment_to_running_time (&payload->segment, GST_FORMAT_TIME,
