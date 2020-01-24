@@ -1000,3 +1000,6 @@ build rust fedora x86_64:
   only:
     variables:
       - $CI_PROJECT_NAME =~ /^(gst-plugins-rs|gstreamer|gst-plugins-base|gst-ci|gst-build)$/
+  except:
+    variables:
+      - $CI_PROJECT_NAME == "cerbero"
