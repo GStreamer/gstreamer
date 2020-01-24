@@ -690,6 +690,8 @@ gst_event_new_stream_group_done (guint group_id)
 {
   GstStructure *s;
 
+  g_return_val_if_fail (group_id != GST_GROUP_ID_INVALID, NULL);
+
   s = gst_structure_new_id (GST_QUARK (EVENT_STREAM_GROUP_DONE),
       GST_QUARK (GROUP_ID), G_TYPE_UINT, group_id, NULL);
 
@@ -1810,6 +1812,7 @@ gst_event_set_group_id (GstEvent * event, guint group_id)
   g_return_if_fail (event != NULL);
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START);
   g_return_if_fail (gst_event_is_writable (event));
+  g_return_if_fail (group_id != GST_GROUP_ID_INVALID);
 
   gst_structure_id_set (GST_EVENT_STRUCTURE (event),
       GST_QUARK (GROUP_ID), G_TYPE_UINT, group_id, NULL);
