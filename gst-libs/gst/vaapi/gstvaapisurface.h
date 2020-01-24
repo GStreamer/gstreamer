@@ -165,6 +165,9 @@ typedef enum
  *   the supplied strides information from #GstVideoInfo
  * @GST_VAAPI_SURFACE_ALLOC_FLAG_FIXED_OFFSETS: force allocation with
  *   the supplied offsets information from #GstVideoInfo
+ * @GST_VAAPI_SURFACE_ALLOC_FLAG_HINT_DECODER: Surface used by video
+ *   decoder
+ * @GST_VAAPI_SURFACE_ALLOC_FLAG_HINT_ENCODER: Surface used by encoder
  *
  * The set of optional allocation flags for gst_vaapi_surface_new_full().
  */
@@ -173,6 +176,8 @@ typedef enum
   GST_VAAPI_SURFACE_ALLOC_FLAG_LINEAR_STORAGE   = 1 << 0,
   GST_VAAPI_SURFACE_ALLOC_FLAG_FIXED_STRIDES    = 1 << 1,
   GST_VAAPI_SURFACE_ALLOC_FLAG_FIXED_OFFSETS    = 1 << 2,
+  GST_VAAPI_SURFACE_ALLOC_FLAG_HINT_DECODER     = 1 << 3,
+  GST_VAAPI_SURFACE_ALLOC_FLAG_HINT_ENCODER     = 1 << 4,
 } GstVaapiSurfaceAllocFlags;
 
 #define GST_VAAPI_SURFACE(obj) \

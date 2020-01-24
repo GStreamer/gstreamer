@@ -129,6 +129,21 @@ error_unsupported_chroma_type:
   return FALSE;
 }
 
+static guint
+get_usage_hint (guint alloc_flags)
+{
+  guint usage_hints = VA_SURFACE_ATTRIB_USAGE_HINT_GENERIC;
+
+  /* XXX(victor): So far, only media-driver uses hints for encoders
+   * and it doesn't test it as bitwise */
+  if (alloc_flags & GST_VAAPI_SURFACE_ALLOC_FLAG_HINT_DECODER)
+    usage_hints = VA_SURFACE_ATTRIB_USAGE_HINT_DECODER;
+  else if (alloc_flags & GST_VAAPI_SURFACE_ALLOC_FLAG_HINT_ENCODER)
+    usage_hints = VA_SURFACE_ATTRIB_USAGE_HINT_ENCODER;
+
+  return usage_hints;
+}
+
 static gboolean
 gst_vaapi_surface_init_full (GstVaapiSurface * surface,
     const GstVideoInfo * vip, guint surface_allocation_flags)
@@ -139,7 +154,7 @@ gst_vaapi_surface_init_full (GstVaapiSurface * surface,
   VAStatus status;
   guint chroma_type, va_chroma_format, i;
   const VAImageFormat *va_format;
-  VASurfaceAttrib attribs[3], *attrib;
+  VASurfaceAttrib attribs[4], *attrib;
   VASurfaceAttribExternalBuffers extbuf = { 0, };
   gboolean extbuf_needed = FALSE;
 
@@ -180,6 +195,12 @@ gst_vaapi_surface_init_full (GstVaapiSurface * surface,
   attrib->type = VASurfaceAttribPixelFormat;
   attrib->value.type = VAGenericValueTypeInteger;
   attrib->value.value.i = va_format->fourcc;
+  attrib++;
+
+  attrib->flags = VA_SURFACE_ATTRIB_SETTABLE;
+  attrib->type = VASurfaceAttribUsageHint;
+  attrib->value.type = VAGenericValueTypeInteger;
+  attrib->value.value.i = get_usage_hint (surface_allocation_flags);
   attrib++;
 
   if (extbuf_needed) {
