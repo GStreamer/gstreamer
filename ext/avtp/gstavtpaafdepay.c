@@ -295,9 +295,8 @@ gst_avtp_aaf_depay_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     goto discard;
 
   if (seqnum != avtpbasedepayload->seqnum) {
-    GST_INFO_OBJECT (avtpaafdepay, "Sequence number mismatch: expected %"
-        G_GUINT16_FORMAT " received %" G_GUINT64_FORMAT,
-        avtpbasedepayload->seqnum, seqnum);
+    GST_INFO_OBJECT (avtpaafdepay, "Sequence number mismatch: expected %u"
+        " received %" G_GUINT64_FORMAT, avtpbasedepayload->seqnum, seqnum);
     avtpbasedepayload->seqnum = seqnum;
   }
   avtpbasedepayload->seqnum++;
