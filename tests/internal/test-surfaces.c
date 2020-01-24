@@ -60,7 +60,7 @@ main (int argc, char *argv[])
   gst_vaapi_surface_unref (surface);
 
   pool = gst_vaapi_surface_pool_new (display, GST_VIDEO_FORMAT_ENCODED,
-      width, height);
+      width, height, 0);
   if (!pool)
     g_error ("could not create Gst/VA surface pool");
 

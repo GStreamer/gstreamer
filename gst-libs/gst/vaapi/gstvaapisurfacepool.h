@@ -38,7 +38,7 @@ typedef struct _GstVaapiSurfacePool GstVaapiSurfacePool;
 
 GstVaapiVideoPool *
 gst_vaapi_surface_pool_new (GstVaapiDisplay * display, GstVideoFormat format,
-    guint width, guint height);
+    guint width, guint height, guint surface_allocation_flags);
 
 GstVaapiVideoPool *
 gst_vaapi_surface_pool_new_full (GstVaapiDisplay * display,
@@ -46,7 +46,8 @@ gst_vaapi_surface_pool_new_full (GstVaapiDisplay * display,
 
 GstVaapiVideoPool *
 gst_vaapi_surface_pool_new_with_chroma_type (GstVaapiDisplay * display,
-    GstVaapiChromaType chroma_type, guint width, guint height);
+    GstVaapiChromaType chroma_type, guint width, guint height,
+    guint surface_allocation_flags);
 
 G_END_DECLS
 

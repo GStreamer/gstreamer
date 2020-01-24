@@ -426,6 +426,7 @@ error:
  * @format: the surface format
  * @width: the requested surface width
  * @height: the requested surface height
+ * @surface_allocation_flags: (optional) allocation flags
  *
  * Creates a new #GstVaapiSurface with the specified pixel format and
  * dimensions.
@@ -436,12 +437,13 @@ error:
  */
 GstVaapiSurface *
 gst_vaapi_surface_new_with_format (GstVaapiDisplay * display,
-    GstVideoFormat format, guint width, guint height)
+    GstVideoFormat format, guint width, guint height,
+    guint surface_allocation_flags)
 {
   GstVideoInfo vi;
 
   gst_video_info_set_format (&vi, format, width, height);
-  return gst_vaapi_surface_new_full (display, &vi, 0);
+  return gst_vaapi_surface_new_full (display, &vi, surface_allocation_flags);
 }
 
 /**

@@ -147,7 +147,7 @@ create_surface_from_egl_image (GstVaapiDisplayEGL * display,
         GST_VAAPI_CHROMA_TYPE_YUV420, width, height);
   } else {
     out_surface = gst_vaapi_surface_new_with_format (base_display,
-        GST_VIDEO_INFO_FORMAT (vip), width, height);
+        GST_VIDEO_INFO_FORMAT (vip), width, height, 0);
   }
   if (!out_surface)
     goto error_create_surface;

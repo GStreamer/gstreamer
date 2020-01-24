@@ -171,7 +171,7 @@ context_ensure_surfaces (GstVaapiContext * context)
   for (i = context->surfaces->len; i < num_surfaces; i++) {
     if (format != GST_VIDEO_FORMAT_UNKNOWN) {
       surface = gst_vaapi_surface_new_with_format (display, format, cip->width,
-          cip->height);
+          cip->height, 0);
     } else {
       surface = gst_vaapi_surface_new (display, cip->chroma_type, cip->width,
           cip->height);
@@ -204,7 +204,7 @@ context_create_surfaces (GstVaapiContext * context)
   if (!context->surfaces_pool) {
     context->surfaces_pool =
         gst_vaapi_surface_pool_new_with_chroma_type (display, cip->chroma_type,
-        cip->width, cip->height);
+        cip->width, cip->height, 0);
 
     if (!context->surfaces_pool)
       return FALSE;

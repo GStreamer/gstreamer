@@ -216,7 +216,8 @@ gst_vaapi_surface_new_full (GstVaapiDisplay * display,
 
 GstVaapiSurface *
 gst_vaapi_surface_new_with_format (GstVaapiDisplay * display,
-    GstVideoFormat format, guint width, guint height);
+    GstVideoFormat format, guint width, guint height,
+    guint surface_allocation_flags);
 
 GstVaapiSurface *
 gst_vaapi_surface_new_from_buffer_proxy (GstVaapiDisplay * display,

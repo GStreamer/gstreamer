@@ -108,6 +108,7 @@ gst_vaapi_surface_pool_class (void)
  * @format: a #GstVideoFormat
  * @width: the desired width, in pixels
  * @height: the desired height, in pixels
+ * @surface_allocation_flags: (optional) allocation flags
  *
  * Creates a new #GstVaapiVideoPool of #GstVaapiSurface with the specified
  * format and dimensions. If @format is GST_VIDEO_FORMAT_ENCODED, then
@@ -118,7 +119,7 @@ gst_vaapi_surface_pool_class (void)
  */
 GstVaapiVideoPool *
 gst_vaapi_surface_pool_new (GstVaapiDisplay * display, GstVideoFormat format,
-    guint width, guint height)
+    guint width, guint height, guint surface_allocation_flags)
 {
   GstVideoInfo vi;
 
@@ -127,7 +128,8 @@ gst_vaapi_surface_pool_new (GstVaapiDisplay * display, GstVideoFormat format,
   g_return_val_if_fail (height > 0, NULL);
 
   gst_video_info_set_format (&vi, format, width, height);
-  return gst_vaapi_surface_pool_new_full (display, &vi, 0);
+  return gst_vaapi_surface_pool_new_full (display, &vi,
+      surface_allocation_flags);
 }
 
 /**
@@ -176,6 +178,7 @@ error:
  * @chroma_type: a #GstVaapiChromatype
  * @width: the desired width, in pixels
  * @height: the desired height, in pixels
+ * @surface_allocation_flags: (optional) allocation flags
  *
  * Creates a new #GstVaapiVideoPool of #GstVaapiSurface with the specified
  * chroma type and dimensions. The underlying format of the surfaces is
@@ -185,7 +188,8 @@ error:
  */
 GstVaapiVideoPool *
 gst_vaapi_surface_pool_new_with_chroma_type (GstVaapiDisplay * display,
-    GstVaapiChromaType chroma_type, guint width, guint height)
+    GstVaapiChromaType chroma_type, guint width, guint height,
+    guint surface_allocation_flags)
 {
   GstVaapiVideoPool *pool;
   GstVideoInfo vi;
@@ -197,7 +201,8 @@ gst_vaapi_surface_pool_new_with_chroma_type (GstVaapiDisplay * display,
 
   gst_video_info_set_format (&vi, GST_VIDEO_FORMAT_ENCODED, width, height);
 
-  pool = gst_vaapi_surface_pool_new_full (display, &vi, 0);
+  pool =
+      gst_vaapi_surface_pool_new_full (display, &vi, surface_allocation_flags);
   if (!pool)
     return NULL;
 

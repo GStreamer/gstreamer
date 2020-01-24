@@ -109,7 +109,7 @@ ensure_filter_surface_pool (GstVaapiWindow * window)
   /* Ensure VA surface pool is created */
   /* XXX: optimize the surface format to use. e.g. YUY2 */
   window->surface_pool = gst_vaapi_surface_pool_new (display,
-      GST_VIDEO_FORMAT_NV12, window->width, window->height);
+      GST_VIDEO_FORMAT_NV12, window->width, window->height, 0);
   if (!window->surface_pool) {
     GST_WARNING ("failed to create surface pool for conversion");
     return FALSE;

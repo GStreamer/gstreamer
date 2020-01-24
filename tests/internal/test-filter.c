@@ -106,7 +106,8 @@ create_test_surface (GstVaapiDisplay * display, guint width, guint height,
       goto error_invalid_format;
   }
 
-  surface = gst_vaapi_surface_new_with_format (display, format, width, height);
+  surface =
+      gst_vaapi_surface_new_with_format (display, format, width, height, 0);
   if (!surface)
     goto error_create_surface;
 
