@@ -1300,6 +1300,9 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
         gst_caps_set_value (caps, "stream-format", &arr);
         g_value_unset (&arr);
       } else if (context) {
+        /* FIXME: ffmpeg currently assumes AVC if there is extradata and
+         * byte-stream otherwise. See for example the MOV or MPEG-TS code.
+         * ffmpeg does not distinguish the different types of AVC. */
         if (context->extradata_size > 0) {
           gst_caps_set_simple (caps, "stream-format", G_TYPE_STRING, "avc",
               NULL);
@@ -1329,8 +1332,10 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
         gst_caps_set_value (caps, "stream-format", &arr);
         g_value_unset (&arr);
       } else if (context) {
+        /* FIXME: ffmpeg currently assumes HVC1 if there is extradata and
+         * byte-stream otherwise. See for example the MOV or MPEG-TS code.
+         * ffmpeg does not distinguish the different types: HVC1/HEV1/etc. */
         if (context->extradata_size > 0) {
-          /* FIXME: Assume hvc1 */
           gst_caps_set_simple (caps, "stream-format", G_TYPE_STRING, "hvc1",
               NULL);
         } else {
@@ -1467,13 +1472,14 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
         gst_caps_set_simple (caps, "mpegversion", G_TYPE_INT, 4,
             "base-profile", G_TYPE_STRING, "lc", NULL);
 
+        /* FIXME: ffmpeg currently assumes raw if there is extradata and
+         * ADTS otherwise. See for example the FDK AAC encoder. */
         if (context && context->extradata_size > 0) {
           gst_caps_set_simple (caps, "stream-format", G_TYPE_STRING, "raw",
               NULL);
           gst_codec_utils_aac_caps_set_level_and_profile (caps,
               context->extradata, context->extradata_size);
         } else if (context) {
-          /* FIXME: Assume adts */
           gst_caps_set_simple (caps, "stream-format", G_TYPE_STRING, "adts",
               NULL);
         }
