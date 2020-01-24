@@ -45,6 +45,8 @@ check_nal_filling (GstBuffer * buffer, guint8 first)
     }
   }
 
+  gst_buffer_unmap (buffer, &map);
+
   return result;
 }
 
@@ -541,6 +543,7 @@ GST_START_TEST (test_depayloader_invalid_avtpdu)
   avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_H264_TIMESTAMP, 2000000);
   avtp_cvf_pdu_set (pdu, AVTP_CVF_FIELD_STREAM_DATA_LEN, sizeof (guint32) + 1);
   map.data[AVTP_CVF_H264_HEADER_SIZE] = 28;
+  gst_buffer_unmap (small, &map);
 
   gst_harness_push (h, small);
   fail_unless_equals_uint64 (gst_harness_buffers_received (h), 0);
@@ -672,6 +675,7 @@ GST_START_TEST (test_depayloader_lost_fragments)
   fail_unless_equals_uint64 (nal_size (nal), 17);
   fail_unless (check_nal_filling (nal, 40) == TRUE);
   fail_unless_equals_uint64 (nal_type (nal), 4);
+  gst_buffer_unref (nal);
 
   /* Ensure no other NAL units are present */
   nal = fetch_nal (out, &offset);
@@ -756,10 +760,13 @@ GST_START_TEST (test_depayloader_lost_packet)
   fail_unless_equals_uint64 (nal_size (nal), 4);
   fail_unless (check_nal_filling (nal, 0) == TRUE);
   fail_unless_equals_uint64 (nal_type (nal), 7);
+  gst_buffer_unref (nal);
+
   nal = fetch_nal (out, &offset);
   fail_unless_equals_uint64 (nal_size (nal), 4);
   fail_unless (check_nal_filling (nal, 0) == TRUE);
   fail_unless_equals_uint64 (nal_type (nal), 7);
+  gst_buffer_unref (nal);
 
   /* Ensure no other NAL units are present */
   nal = fetch_nal (out, &offset);
@@ -833,6 +840,7 @@ GST_START_TEST (test_depayloader_single_and_messed_fragments)
   fail_unless_equals_uint64 (nal_size (nal), 4);
   fail_unless_equals_uint64 (nal_type (nal), 1);
   fail_unless (check_nal_filling (nal, 0) == TRUE);
+  gst_buffer_unref (nal);
 
   /* Ensure no other NAL units are present */
   nal = fetch_nal (out, &offset);
@@ -905,6 +913,7 @@ GST_START_TEST (test_depayloader_single_and_messed_fragments_2)
   fail_unless_equals_uint64 (nal_size (nal), 4);
   fail_unless_equals_uint64 (nal_type (nal), 2);
   fail_unless (check_nal_filling (nal, 5) == TRUE);
+  gst_buffer_unref (nal);
 
   /* Ensure no other NAL units are present */
   nal = fetch_nal (out, &offset);
@@ -1007,6 +1016,7 @@ GST_START_TEST (test_depayloader_single_and_messed_fragments_3)
   fail_unless_equals_uint64 (nal_size (nal), 4);
   fail_unless_equals_uint64 (nal_type (nal), 2);
   fail_unless (check_nal_filling (nal, 0) == TRUE);
+  gst_buffer_unref (nal);
 
   /* Ensure no other NAL units are present */
   nal = fetch_nal (out, &offset);
@@ -1022,6 +1032,7 @@ GST_START_TEST (test_depayloader_single_and_messed_fragments_3)
   fail_unless_equals_uint64 (nal_size (nal), 4);
   fail_unless_equals_uint64 (nal_type (nal), 3);
   fail_unless (check_nal_filling (nal, 7) == TRUE);
+  gst_buffer_unref (nal);
 
   /* Ensure no other NAL units are present */
   nal = fetch_nal (out, &offset);
@@ -1062,6 +1073,7 @@ GST_START_TEST (test_depayloader_property)
   g_object_get (G_OBJECT (element), "streamid", &streamid, NULL);
   fail_unless_equals_uint64 (streamid, 0xAABBCCDDEEFF0001);
 
+  gst_object_unref (element);
   gst_harness_teardown (h);
 }
 
@@ -1137,10 +1149,12 @@ GST_START_TEST (test_depayloader_single_and_fragmented)
   fail_unless_equals_uint64 (nal_size (nal), 4);
   fail_unless (check_nal_filling (nal, 0) == TRUE);
   fail_unless_equals_uint64 (nal_type (nal), 1);
+  gst_buffer_unref (nal);
   nal = fetch_nal (out, &offset);
   fail_unless_equals_uint64 (nal_size (nal), 5);
   fail_unless (check_nal_filling (nal, 0) == TRUE);
   fail_unless_equals_uint64 (nal_type (nal), 4);
+  gst_buffer_unref (nal);
 
   /* Ensure no other NAL units are present */
   nal = fetch_nal (out, &offset);
@@ -1223,6 +1237,7 @@ GST_START_TEST (test_depayloader_fragmented)
   fail_unless_equals_uint64 (nal_size (nal), 25);
   fail_unless (check_nal_filling (nal, 0) == TRUE);
   fail_unless_equals_uint64 (nal_type (nal), 4);
+  gst_buffer_unref (nal);
 
   gst_buffer_unref (out);
   gst_buffer_unref (in);
@@ -1310,6 +1325,7 @@ GST_START_TEST (test_depayloader_fragmented_big)
   fail_unless_equals_uint64 (nal_size (nal), (DATA_LEN - 2) * nal_count + 1);
   fail_unless (check_nal_filling (nal, 0) == TRUE);
   fail_unless_equals_uint64 (nal_type (nal), 4);
+  gst_buffer_unref (nal);
 
   gst_buffer_unref (out);
   gst_buffer_unref (in);
@@ -1386,14 +1402,17 @@ GST_START_TEST (test_depayloader_multiple_single)
   fail_unless_equals_uint64 (nal_size (nal), 4);
   fail_unless (check_nal_filling (nal, 0) == TRUE);
   fail_unless_equals_uint64 (nal_type (nal), 7);
+  gst_buffer_unref (nal);
   nal = fetch_nal (out, &offset);
   fail_unless_equals_uint64 (nal_size (nal), 4);
   fail_unless (check_nal_filling (nal, 0) == TRUE);
   fail_unless_equals_uint64 (nal_type (nal), 7);
+  gst_buffer_unref (nal);
   nal = fetch_nal (out, &offset);
   fail_unless_equals_uint64 (nal_size (nal), 4);
   fail_unless (check_nal_filling (nal, 0) == TRUE);
   fail_unless_equals_uint64 (nal_type (nal), 1);
+  gst_buffer_unref (nal);
 
   /* Ensure no other NAL units are present */
   nal = fetch_nal (out, &offset);

@@ -84,6 +84,8 @@ check_nal_filling (GstBuffer * buffer, guint8 first)
     }
   }
 
+  gst_buffer_unmap (buffer, &map);
+
   return result;
 }
 
@@ -271,6 +273,8 @@ GST_START_TEST (test_payloader_invalid_caps)
   fail_unless (gst_pad_get_current_caps (sinkpad) == NULL);
   gst_caps_unref (caps);
 
+  gst_object_unref (sinkpad);
+  gst_object_unref (element);
   gst_harness_teardown (h);
 }
 
@@ -310,6 +314,7 @@ GST_START_TEST (test_payloader_incomplete_nal)
   map.data[4] = 1;              /* Some dummy vcl NAL type */
   map.data[5] = 0x0;
   map.data[6] = 0x1;
+  gst_buffer_unmap (in, &map);
 
   out = gst_harness_push_and_pull (h, in);
 
@@ -352,6 +357,7 @@ GST_START_TEST (test_payloader_properties)
       NULL);
   fail_unless_equals_uint64 (processing_deadline, 5000);
 
+  gst_object_unref (element);
   gst_harness_teardown (h);
 }
 

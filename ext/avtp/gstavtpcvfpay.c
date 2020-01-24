@@ -584,13 +584,16 @@ gst_avtp_cvf_pay_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   GstCaps *caps;
   GstAvtpBasePayload *avtpbasepayload = GST_AVTP_BASE_PAYLOAD (parent);
   GstAvtpCvfPay *avtpcvfpay = GST_AVTP_CVF_PAY (avtpbasepayload);
+  gboolean ret;
 
   GST_DEBUG_OBJECT (avtpcvfpay, "Sink event %s", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
       gst_event_parse_caps (event, &caps);
-      return gst_avtp_cvf_pay_new_caps (avtpcvfpay, caps);
+      ret = gst_avtp_cvf_pay_new_caps (avtpcvfpay, caps);
+      gst_event_unref (event);
+      return ret;
     default:
       break;
   }

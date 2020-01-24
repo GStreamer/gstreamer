@@ -277,6 +277,7 @@ GST_START_TEST (test_property)
   g_object_get (G_OBJECT (element), "streamid", &val, NULL);
   fail_unless (val == streamid);
 
+  gst_object_unref (element);
   gst_harness_teardown (h);
 }
 

@@ -51,6 +51,8 @@ GST_DEBUG_CATEGORY_STATIC (avtpcvfdepay_debug);
 
 static GstFlowReturn gst_avtp_cvf_depay_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer);
+static GstStateChangeReturn gst_avtp_cvf_depay_change_state (GstElement *
+    element, GstStateChange transition);
 
 #define AVTP_CVF_H264_HEADER_SIZE (sizeof(struct avtp_stream_pdu) + sizeof(guint32))
 #define FU_A_HEADER_SIZE (sizeof(guint16))
@@ -78,6 +80,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
         "  stream-format = (string) avc, alignment = (string) au")
     );
 
+#define gst_avtp_cvf_depay_parent_class parent_class
 G_DEFINE_TYPE (GstAvtpCvfDepay, gst_avtp_cvf_depay,
     GST_TYPE_AVTP_BASE_DEPAYLOAD);
 
@@ -96,6 +99,9 @@ gst_avtp_cvf_depay_class_init (GstAvtpCvfDepayClass * klass)
       "Extracts compressed video from CVF AVTPDUs",
       "Ederson de Souza <ederson.desouza@intel.com>");
 
+  element_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_avtp_cvf_depay_change_state);
+
   avtpbasedepayload_class->chain = GST_DEBUG_FUNCPTR (gst_avtp_cvf_depay_chain);
 
   GST_DEBUG_CATEGORY_INIT (avtpcvfdepay_debug, "avtpcvfdepay",
@@ -108,6 +114,28 @@ gst_avtp_cvf_depay_init (GstAvtpCvfDepay * avtpcvfdepay)
   avtpcvfdepay->out_buffer = NULL;
   avtpcvfdepay->fragments = NULL;
   avtpcvfdepay->seqnum = 0;
+}
+
+static GstStateChangeReturn
+gst_avtp_cvf_depay_change_state (GstElement *
+    element, GstStateChange transition)
+{
+  GstAvtpCvfDepay *avtpcvfdepay = GST_AVTP_CVF_DEPAY (element);
+  GstStateChangeReturn ret;
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE) {
+    return ret;
+  }
+
+  if (transition == GST_STATE_CHANGE_READY_TO_NULL) {
+    if (avtpcvfdepay->out_buffer) {
+      gst_buffer_unref (avtpcvfdepay->out_buffer);
+      avtpcvfdepay->out_buffer = NULL;
+    }
+  }
+
+  return ret;
 }
 
 static gboolean

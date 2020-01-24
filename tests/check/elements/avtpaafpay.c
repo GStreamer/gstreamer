@@ -110,6 +110,7 @@ GST_START_TEST (test_properties)
   g_object_get (G_OBJECT (element), "processing-deadline", &val_uint64, NULL);
   fail_unless (val_uint64 == processing_deadline);
 
+  gst_object_unref (element);
   gst_harness_teardown (h);
 }
 

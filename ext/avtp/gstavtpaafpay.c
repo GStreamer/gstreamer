@@ -196,7 +196,7 @@ gst_avtp_aaf_pay_change_state (GstElement * element, GstStateChange transition)
         GST_ERROR_OBJECT (avtpaafpay, "Failed to allocate GstMemory");
         return GST_STATE_CHANGE_FAILURE;
       }
-      avtpaafpay->header = gst_memory_ref (mem);
+      avtpaafpay->header = mem;
       break;
     }
     case GST_STATE_CHANGE_READY_TO_PAUSED:{
@@ -366,13 +366,16 @@ gst_avtp_aaf_pay_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstCaps *caps;
   GstAvtpAafPay *avtpaafpay = GST_AVTP_AAF_PAY (parent);
+  gboolean ret;
 
   GST_DEBUG_OBJECT (avtpaafpay, "event %s", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
       gst_event_parse_caps (event, &caps);
-      return gst_avtp_aaf_pay_new_caps (avtpaafpay, caps);
+      ret = gst_avtp_aaf_pay_new_caps (avtpaafpay, caps);
+      gst_event_unref (event);
+      return ret;
     default:
       return GST_AVTP_BASE_PAYLOAD_CLASS (parent_class)->sink_event (pad,
           parent, event);
