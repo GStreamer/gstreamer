@@ -1016,11 +1016,12 @@ is_stream_start (GstBin * bin, guint32 * seqnum, gboolean * have_group_id,
   gboolean result;
   GList *walk, *msgs;
   guint tmp_group_id;
-  gboolean first = TRUE, same_group_id = TRUE;
+  gboolean first_stream_start = TRUE, first_group_id = TRUE;
+  gboolean same_group_id = TRUE;
 
-  *have_group_id = TRUE;
+  *have_group_id = FALSE;
   *group_id = 0;
-  result = TRUE;
+  result = FALSE;
   for (walk = bin->children; walk; walk = g_list_next (walk)) {
     GstElement *element;
 
@@ -1030,12 +1031,24 @@ is_stream_start (GstBin * bin, guint32 * seqnum, gboolean * have_group_id,
       if ((msgs =
               find_message (bin, GST_OBJECT_CAST (element),
                   GST_MESSAGE_STREAM_START))) {
+        /* Only initialize to TRUE if we have any stream-start messages at
+         * all, otherwise it should be FALSE. */
+        if (first_stream_start) {
+          /* If any stream-start message do not contain a group id then we
+           * will set it to FALSE below */
+          *have_group_id = TRUE;
+          /* Similarly if any sinks did not post stream-start then we will
+           * set it to FALSE afterwards */
+          result = TRUE;
+          first_stream_start = FALSE;
+        }
+
         GST_DEBUG ("sink '%s' posted STREAM_START", GST_ELEMENT_NAME (element));
         *seqnum = gst_message_get_seqnum (GST_MESSAGE_CAST (msgs->data));
         if (gst_message_parse_group_id (GST_MESSAGE_CAST (msgs->data),
                 &tmp_group_id)) {
-          if (first) {
-            first = FALSE;
+          if (first_group_id) {
+            first_group_id = FALSE;
             *group_id = tmp_group_id;
           } else {
             if (tmp_group_id != *group_id)
