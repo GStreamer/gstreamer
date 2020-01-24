@@ -440,8 +440,11 @@ gst_vaapi_video_buffer_pool_acquire_buffer (GstBufferPool * pool,
 
   /* Update the underlying surface proxy */
   meta = gst_buffer_get_vaapi_video_meta (buffer);
-  if (meta)
-    gst_vaapi_video_meta_set_surface_proxy (meta, priv_params->proxy);
+  if (!meta) {
+    *out_buffer_ptr = buffer;
+    return GST_FLOW_ERROR;
+  }
+  gst_vaapi_video_meta_set_surface_proxy (meta, priv_params->proxy);
 
   /* Find the cached memory associated with the given surface. */
   surface = GST_VAAPI_SURFACE_PROXY_SURFACE (priv_params->proxy);
