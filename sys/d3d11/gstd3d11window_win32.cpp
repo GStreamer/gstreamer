@@ -790,7 +790,8 @@ gst_d3d11_window_win32_create_swap_chain (GstD3D11Window * window,
 
   *swap_chain = new_swapchain;
 
-  gst_d3d11_window_on_resize (window, width, height);
+  /* Set zero width and height here. dxgi will decide client area by itself */
+  gst_d3d11_window_on_resize (window, 0, 0);
 
   return TRUE;
 }

@@ -306,7 +306,6 @@ gst_d3d11_window_on_resize (GstD3D11Window * window, guint width, guint height)
     window->rtv = NULL;
   }
 
-  /* Set zero width and height here. dxgi will decide client area by itself */
   swap_chain->GetDesc (&swap_desc);
   hr = swap_chain->ResizeBuffers (0, width, height, DXGI_FORMAT_UNKNOWN,
       swap_desc.Flags);
