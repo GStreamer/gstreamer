@@ -106,7 +106,7 @@ if have_ptp
   elif with_ptp_helper_permissions == 'capabilities'
     if not setcap_prog.found()
       error('capabilities-based ptp-helper-permissions requested, but could not find setcap tool.')
-          elif not cap_dep.found()
+    elif not cap_dep.found()
       error('capabilities-based ptp-helper-permissions requested, but could not find libcap.')
     endif
     cdata.set('HAVE_PTP_HELPER_CAPABILITIES', 1,
