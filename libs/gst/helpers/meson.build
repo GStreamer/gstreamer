@@ -1,3 +1,10 @@
+link_args_gst_plugin_scanner = {}
+if host_system == 'darwin'
+  link_args_gst_plugin_scanner = { 
+    'link_args': ['-Wl,-framework,CoreFoundation', '-Wl,-framework,CoreServices']
+  }
+endif
+
 executable('gst-plugin-scanner',
   'gst-plugin-scanner.c',
   c_args : gst_c_args,
@@ -5,6 +12,7 @@ executable('gst-plugin-scanner',
   dependencies : [gobject_dep, gmodule_dep, glib_dep, mathlib, gst_dep],
   install_dir : helpers_install_dir,
   install: true,
+  kwargs : link_args_gst_plugin_scanner
 )
 
 # Used in test env setup to make tests find plugin scanner in build tree
@@ -98,7 +106,7 @@ if have_ptp
   elif with_ptp_helper_permissions == 'capabilities'
     if not setcap_prog.found()
       error('capabilities-based ptp-helper-permissions requested, but could not find setcap tool.')
-    elif not cap_dep.found()
+          elif not cap_dep.found()
       error('capabilities-based ptp-helper-permissions requested, but could not find libcap.')
     endif
     cdata.set('HAVE_PTP_HELPER_CAPABILITIES', 1,
@@ -107,12 +115,20 @@ if have_ptp
     error('Unexpected ptp helper permissions value: ' + with_ptp_helper_permissions)
   endif
 
+  link_args_gst_ptp_helper = {}
+  if host_system == 'darwin'
+    link_args_gst_ptp_helper = { 
+      'link_args': ['-Wl,-framework,CoreFoundation', '-Wl,-framework,Foundation', '-Wl,-framework,CoreServices'] 
+    }
+  endif
+
   executable('gst-ptp-helper', 'gst-ptp-helper.c',
     c_args : gst_c_args,
     include_directories : [configinc, libsinc],
     dependencies : [gio_dep, gobject_dep, glib_dep, mathlib, gst_dep, cap_dep],
     install_dir : helpers_install_dir,
-    install : true)
+    install : true,
+    kwargs : link_args_gst_ptp_helper)
 
   meson.add_install_script('ptp_helper_post_install.sh',
       helpers_install_dir, with_ptp_helper_permissions,
