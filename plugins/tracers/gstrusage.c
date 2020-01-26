@@ -60,10 +60,14 @@ static GstTracerRecord *tr_proc, *tr_thread;
 
 typedef struct
 {
-  /* time spend in this thread */
+  /* time spent in this thread */
   GstClockTime tthread;
   GstTraceValues *tvs_thread;
 } GstThreadStats;
+
+static void free_thread_stats (gpointer data);
+
+static GPrivate thread_stats_key = G_PRIVATE_INIT (free_thread_stats);
 
 /* data helper */
 
@@ -140,12 +144,13 @@ update_trace_value (GstTraceValues * self, GstClockTime nts,
   return ret;
 }
 
-
 static void
 free_thread_stats (gpointer data)
 {
-  free_trace_values (((GstThreadStats *) data)->tvs_thread);
-  g_slice_free (GstThreadStats, data);
+  GstThreadStats *stats = data;
+
+  free_trace_values (stats->tvs_thread);
+  g_free (stats);
 }
 
 static void
@@ -199,10 +204,10 @@ do_stats (GstTracer * obj, guint64 ts)
 #endif
 #endif
   /* get stats record for current thread */
-  if (!(stats = g_hash_table_lookup (self->threads, thread_id))) {
-    stats = g_slice_new0 (GstThreadStats);
+  if (!(stats = g_private_get (&thread_stats_key))) {
+    stats = g_new0 (GstThreadStats, 1);
     stats->tvs_thread = make_trace_values (GST_SECOND);
-    g_hash_table_insert (self->threads, thread_id, stats);
+    g_private_set (&thread_stats_key, stats);
   }
   stats->tthread = tthread;
 
@@ -288,7 +293,6 @@ gst_rusage_tracer_finalize (GObject * obj)
 {
   GstRUsageTracer *self = GST_RUSAGE_TRACER (obj);
 
-  g_hash_table_destroy (self->threads);
   free_trace_values (self->tvs_proc);
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
@@ -399,7 +403,6 @@ gst_rusage_tracer_init (GstRUsageTracer * self)
     gst_tracing_register_hook (tracer, hooks[i], G_CALLBACK (do_stats));
   }
 
-  self->threads = g_hash_table_new_full (NULL, NULL, NULL, free_thread_stats);
   self->tvs_proc = make_trace_values (GST_SECOND);
   self->main_thread_id = g_thread_self ();
 
