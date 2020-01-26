@@ -270,6 +270,7 @@ gst_rusage_tracer_constructed (GObject * object)
     return;
 
   tmp = g_strdup_printf ("rusage,%s", params);
+  g_free (params);
   params_struct = gst_structure_from_string (tmp, NULL);
   g_free (tmp);
   if (!params_struct)
