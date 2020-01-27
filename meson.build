@@ -156,9 +156,9 @@ gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
     fallback : ['gstreamer', 'gst_check_dep'])
 
 libm = cc.find_library('m', required : false)
-glib_dep = dependency('glib-2.0', version : glib_req)
-gio_dep = dependency('gio-2.0', version : glib_req)
-gmodule_dep = dependency('gmodule-2.0', version : glib_req)
+glib_dep = dependency('glib-2.0', version : glib_req, fallback: ['glib', 'libglib_dep'])
+gio_dep = dependency('gio-2.0', version : glib_req, fallback: ['glib', 'libgio_dep'] )
+gmodule_dep = dependency('gmodule-2.0', version : glib_req, fallback: ['glib', 'libgmodule_dep'])
 
 gst_omx_args = ['-DHAVE_CONFIG_H']
 configinc = include_directories('.')
