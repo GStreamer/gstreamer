@@ -62,7 +62,8 @@ enum
   PROP_MAX_SIZE_TIME,
   PROP_MAX_SIZE_PACKETS,
   PROP_NUM_RTX_REQUESTS,
-  PROP_NUM_RTX_PACKETS
+  PROP_NUM_RTX_PACKETS,
+  PROP_CLOCK_RATE_MAP,
 };
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
@@ -74,7 +75,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/x-rtp, " "clock-rate = (int) [1, MAX]")
+    GST_STATIC_CAPS ("application/x-rtp")
     );
 
 static gboolean gst_rtp_rtx_send_queue_check_full (GstDataQueue * queue,
@@ -192,6 +193,11 @@ gst_rtp_rtx_send_class_init (GstRtpRtxSendClass * klass)
           " Number of retransmission packets sent", 0, G_MAXUINT,
           0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_CLOCK_RATE_MAP,
+      g_param_spec_boxed ("clock-rate-map", "Clock Rate Map",
+          "Map of payload types to their clock rates",
+          GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_static_pad_template (gstelement_class, &src_factory);
   gst_element_class_add_static_pad_template (gstelement_class, &sink_factory);
 
@@ -228,6 +234,9 @@ gst_rtp_rtx_send_finalize (GObject * object)
   g_hash_table_unref (rtx->rtx_pt_map);
   if (rtx->rtx_pt_map_structure)
     gst_structure_free (rtx->rtx_pt_map_structure);
+  g_hash_table_unref (rtx->clock_rate_map);
+  if (rtx->clock_rate_map_structure)
+    gst_structure_free (rtx->clock_rate_map_structure);
   g_object_unref (rtx->queue);
 
   G_OBJECT_CLASS (gst_rtp_rtx_send_parent_class)->finalize (object);
@@ -268,6 +277,7 @@ gst_rtp_rtx_send_init (GstRtpRtxSend * rtx)
       NULL, (GDestroyNotify) ssrc_rtx_data_free);
   rtx->rtx_ssrcs = g_hash_table_new (g_direct_hash, g_direct_equal);
   rtx->rtx_pt_map = g_hash_table_new (g_direct_hash, g_direct_equal);
+  rtx->clock_rate_map = g_hash_table_new (g_direct_hash, g_direct_equal);
 
   rtx->max_size_time = DEFAULT_MAX_SIZE_TIME;
   rtx->max_size_packets = DEFAULT_MAX_SIZE_PACKETS;
@@ -625,6 +635,9 @@ gst_rtp_rtx_send_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       if (!gst_structure_get_int (s, "payload", &payload))
         payload = -1;
 
+      if (payload == -1 || ssrc == G_MAXUINT)
+        break;
+
       if (payload == -1)
         GST_WARNING_OBJECT (rtx, "No payload in caps");
 
@@ -722,6 +735,12 @@ process_buffer (GstRtpRtxSend * rtx, GstBuffer * buffer)
   /* do not store the buffer if it's payload type is unknown */
   if (g_hash_table_contains (rtx->rtx_pt_map, GUINT_TO_POINTER (payload_type))) {
     data = gst_rtp_rtx_send_get_ssrc_data (rtx, ssrc);
+
+    if (data->clock_rate == 0 && rtx->clock_rate_map_structure) {
+      data->clock_rate =
+          GPOINTER_TO_INT (g_hash_table_lookup (rtx->clock_rate_map,
+              GUINT_TO_POINTER (payload_type)));
+    }
 
     /* add current rtp buffer to queue history */
     item = g_slice_new0 (BufferQueueItem);
@@ -871,6 +890,11 @@ gst_rtp_rtx_send_get_property (GObject * object,
       g_value_set_uint (value, rtx->num_rtx_packets);
       GST_OBJECT_UNLOCK (rtx);
       break;
+    case PROP_CLOCK_RATE_MAP:
+      GST_OBJECT_LOCK (rtx);
+      g_value_set_boxed (value, rtx->clock_rate_map_structure);
+      GST_OBJECT_UNLOCK (rtx);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -925,6 +949,16 @@ gst_rtp_rtx_send_set_property (GObject * object,
     case PROP_MAX_SIZE_PACKETS:
       GST_OBJECT_LOCK (rtx);
       rtx->max_size_packets = g_value_get_uint (value);
+      GST_OBJECT_UNLOCK (rtx);
+      break;
+    case PROP_CLOCK_RATE_MAP:
+      GST_OBJECT_LOCK (rtx);
+      if (rtx->clock_rate_map_structure)
+        gst_structure_free (rtx->clock_rate_map_structure);
+      rtx->clock_rate_map_structure = g_value_dup_boxed (value);
+      g_hash_table_remove_all (rtx->clock_rate_map);
+      gst_structure_foreach (rtx->clock_rate_map_structure,
+          structure_to_hash_table, rtx->clock_rate_map);
       GST_OBJECT_UNLOCK (rtx);
       break;
     default:
