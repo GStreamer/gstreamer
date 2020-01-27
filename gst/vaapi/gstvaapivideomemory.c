@@ -987,6 +987,9 @@ gst_vaapi_video_allocator_new (GstVaapiDisplay * display,
     return NULL;
   }
 
+  gst_allocator_set_vaapi_video_info (GST_ALLOCATOR_CAST (allocator),
+      alloc_info, surface_alloc_flags);
+
   return GST_ALLOCATOR_CAST (allocator);
 }
 
