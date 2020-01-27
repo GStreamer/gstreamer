@@ -162,8 +162,14 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
   if (allocator
       && (g_strcmp0 (allocator->mem_type, GST_VAAPI_VIDEO_MEMORY_NAME) != 0
           && g_strcmp0 (allocator->mem_type,
-              GST_VAAPI_DMABUF_ALLOCATOR_NAME) != 0))
-    allocator = NULL;
+              GST_VAAPI_DMABUF_ALLOCATOR_NAME) != 0)) {
+    /* if pool has already an allocator, try it and ignore the one in
+     * configuration */
+    if (priv->allocator)
+      allocator = priv->allocator;
+    else
+      allocator = NULL;
+  }
 
   /* get the allocator properties */
   if (allocator) {
