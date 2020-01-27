@@ -650,7 +650,7 @@ process_leak (Leak * leak, GValue * ret_leaks)
           leak->obj, refinfo->reffed ? "reffed" : "unreffed",
           refinfo->new_refcount, refinfo->trace ? refinfo->trace : "");
     } else {
-      GValue r_value;
+      GValue r_value = G_VALUE_INIT;
       r = gst_structure_new_empty ("object-refings");
       gst_structure_set (r, "ts", GST_TYPE_CLOCK_TIME, refinfo->ts,
           "desc", G_TYPE_STRING, refinfo->reffed ? "reffed" : "unreffed",
