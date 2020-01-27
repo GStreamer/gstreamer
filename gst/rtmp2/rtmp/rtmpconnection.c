@@ -323,7 +323,7 @@ cancel_all_commands (GstRtmpConnection * self)
 
   for (l = self->transactions; l; l = g_list_next (l)) {
     Transaction *cc = l->data;
-    GST_LOG ("calling transaction callback %s",
+    GST_LOG_OBJECT (self, "calling transaction callback %s",
         GST_DEBUG_FUNCPTR_NAME (cc->func));
     cc->func ("<cancelled>", NULL, cc->user_data);
   }
@@ -332,7 +332,7 @@ cancel_all_commands (GstRtmpConnection * self)
 
   for (l = self->expected_commands; l; l = g_list_next (l)) {
     ExpectedCommand *cc = l->data;
-    GST_LOG ("calling expected command callback %s",
+    GST_LOG_OBJECT (self, "calling expected command callback %s",
         GST_DEBUG_FUNCPTR_NAME (cc->func));
     cc->func ("<cancelled>", NULL, cc->user_data);
   }
@@ -344,7 +344,7 @@ void
 gst_rtmp_connection_close (GstRtmpConnection * self)
 {
   if (self->thread != g_thread_self ()) {
-    GST_ERROR ("Called from wrong thread");
+    GST_ERROR_OBJECT (self, "Called from wrong thread");
   }
 
   g_cancellable_cancel (self->cancellable);
@@ -409,7 +409,7 @@ gst_rtmp_connection_input_ready (GInputStream * is, gpointer user_data)
   guint oldsize;
   GError *error = NULL;
 
-  GST_TRACE ("input ready");
+  GST_TRACE_OBJECT (sc, "input ready");
 
   oldsize = sc->input_bytes->len;
   g_byte_array_set_size (sc->input_bytes, oldsize + READ_SIZE);
@@ -424,16 +424,17 @@ gst_rtmp_connection_input_ready (GInputStream * is, gpointer user_data)
     if (error->domain == G_IO_ERROR && (code == G_IO_ERROR_WOULD_BLOCK ||
             code == G_IO_ERROR_TIMED_OUT || code == G_IO_ERROR_AGAIN)) {
       /* should retry */
-      GST_DEBUG ("read IO error %d %s, continuing", code, error->message);
+      GST_DEBUG_OBJECT (sc, "read IO error %d %s, continuing",
+          code, error->message);
       g_error_free (error);
       return G_SOURCE_CONTINUE;
     }
 
-    GST_ERROR ("read error: %s %d %s", g_quark_to_string (error->domain),
-        code, error->message);
+    GST_ERROR_OBJECT (sc, "read error: %s %d %s",
+        g_quark_to_string (error->domain), code, error->message);
     g_error_free (error);
   } else if (ret == 0) {
-    GST_INFO ("read EOF");
+    GST_INFO_OBJECT (sc, "read EOF");
   }
 
   if (ret <= 0) {
@@ -441,7 +442,7 @@ gst_rtmp_connection_input_ready (GInputStream * is, gpointer user_data)
     return G_SOURCE_REMOVE;
   }
 
-  GST_TRACE ("read %" G_GSIZE_FORMAT " bytes", ret);
+  GST_TRACE_OBJECT (sc, "read %" G_GSIZE_FORMAT " bytes", ret);
 
   sc->total_input_bytes += ret;
   sc->bytes_since_ack += ret;
@@ -487,7 +488,7 @@ gst_rtmp_connection_emit_error (GstRtmpConnection * self)
     return;
   }
 
-  GST_INFO ("connection error");
+  GST_INFO_OBJECT (self, "connection error");
   self->error = TRUE;
 
   cancel_all_commands (self);
@@ -509,9 +510,9 @@ gst_rtmp_connection_write_bytes_done (GObject * obj,
   res = gst_rtmp_output_stream_write_all_bytes_finish (os, result, &error);
   if (!res) {
     if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
-      GST_INFO ("write cancelled");
+      GST_INFO_OBJECT (self, "write cancelled");
     } else {
-      GST_ERROR ("write error: %s", error->message);
+      GST_ERROR_OBJECT (self, "write error: %s", error->message);
     }
     gst_rtmp_connection_emit_error (self);
     g_error_free (error);
@@ -519,7 +520,7 @@ gst_rtmp_connection_write_bytes_done (GObject * obj,
     return;
   }
 
-  GST_LOG ("write completed");
+  GST_LOG_OBJECT (self, "write completed");
   gst_rtmp_connection_start_write (self);
   g_object_unref (self);
 }
@@ -540,11 +541,11 @@ gst_rtmp_connection_try_read (GstRtmpConnection * connection)
       len = connection->input_bytes->len;
 
   if (len < need) {
-    GST_TRACE ("got %u < %u bytes, need more", len, need);
+    GST_TRACE_OBJECT (connection, "got %u < %u bytes, need more", len, need);
     return;
   }
 
-  GST_TRACE ("got %u >= %u bytes, proceeding", len, need);
+  GST_TRACE_OBJECT (connection, "got %u >= %u bytes, proceeding", len, need);
   gst_rtmp_connection_do_read (connection);
 }
 
@@ -646,44 +647,47 @@ gst_rtmp_connection_handle_protocol_control (GstRtmpConnection * connection,
   GstRtmpProtocolControl pc;
 
   if (!gst_rtmp_message_parse_protocol_control (buffer, &pc)) {
-    GST_ERROR ("can't parse protocol control message");
+    GST_ERROR_OBJECT (connection, "can't parse protocol control message");
     return;
   }
 
-  GST_LOG ("got protocol control message %d:%s", pc.type,
+  GST_LOG_OBJECT (connection, "got protocol control message %d:%s", pc.type,
       gst_rtmp_message_type_get_nick (pc.type));
 
   switch (pc.type) {
     case GST_RTMP_MESSAGE_TYPE_SET_CHUNK_SIZE:
-      GST_INFO ("new chunk size %" G_GUINT32_FORMAT, pc.param);
+      GST_INFO_OBJECT (connection, "new chunk size %" G_GUINT32_FORMAT,
+          pc.param);
       connection->in_chunk_size = pc.param;
       break;
 
     case GST_RTMP_MESSAGE_TYPE_ABORT_MESSAGE:
-      GST_ERROR ("unimplemented: chunk abort, stream_id = %" G_GUINT32_FORMAT,
-          pc.param);
+      GST_ERROR_OBJECT (connection, "unimplemented: chunk abort, stream_id = %"
+          G_GUINT32_FORMAT, pc.param);
       break;
 
     case GST_RTMP_MESSAGE_TYPE_ACKNOWLEDGEMENT:
       /* We don't really send ack requests that we care about, so ignore */
-      GST_DEBUG ("acknowledgement %" G_GUINT32_FORMAT, pc.param);
+      GST_DEBUG_OBJECT (connection, "acknowledgement %" G_GUINT32_FORMAT,
+          pc.param);
       break;
 
     case GST_RTMP_MESSAGE_TYPE_WINDOW_ACK_SIZE:
-      GST_INFO ("window ack size: %" G_GUINT32_FORMAT, pc.param);
+      GST_INFO_OBJECT (connection, "window ack size: %" G_GUINT32_FORMAT,
+          pc.param);
       connection->in_window_ack_size = pc.param;
       break;
 
     case GST_RTMP_MESSAGE_TYPE_SET_PEER_BANDWIDTH:
-      GST_FIXME ("set peer bandwidth: %" G_GUINT32_FORMAT ", %"
-          G_GUINT32_FORMAT, pc.param, pc.param2);
+      GST_FIXME_OBJECT (connection, "set peer bandwidth: %" G_GUINT32_FORMAT
+          ", %" G_GUINT32_FORMAT, pc.param, pc.param2);
       /* FIXME this is not correct, but close enough */
       gst_rtmp_connection_request_window_size (connection, pc.param);
       break;
 
     default:
-      GST_ERROR ("unimplemented protocol control type %d:%s", pc.type,
-          gst_rtmp_message_type_get_nick (pc.type));
+      GST_ERROR_OBJECT (connection, "unimplemented protocol control type %d:%s",
+          pc.type, gst_rtmp_message_type_get_nick (pc.type));
       break;
   }
 }
@@ -695,11 +699,11 @@ gst_rtmp_connection_handle_user_control (GstRtmpConnection * connection,
   GstRtmpUserControl uc;
 
   if (!gst_rtmp_message_parse_user_control (buffer, &uc)) {
-    GST_ERROR ("can't parse user control message");
+    GST_ERROR_OBJECT (connection, "can't parse user control message");
     return;
   }
 
-  GST_LOG ("got user control message %d:%s", uc.type,
+  GST_LOG_OBJECT (connection, "got user control message %d:%s", uc.type,
       gst_rtmp_user_control_type_get_nick (uc.type));
 
   switch (uc.type) {
@@ -707,37 +711,41 @@ gst_rtmp_connection_handle_user_control (GstRtmpConnection * connection,
     case GST_RTMP_USER_CONTROL_TYPE_STREAM_EOF:
     case GST_RTMP_USER_CONTROL_TYPE_STREAM_DRY:
     case GST_RTMP_USER_CONTROL_TYPE_STREAM_IS_RECORDED:
-      GST_INFO ("stream %u got %s", uc.param,
+      GST_INFO_OBJECT (connection, "stream %u got %s", uc.param,
           gst_rtmp_user_control_type_get_nick (uc.type));
       g_signal_emit (connection, signals[SIGNAL_STREAM_CONTROL], 0,
           uc.type, uc.param);
       break;
 
     case GST_RTMP_USER_CONTROL_TYPE_SET_BUFFER_LENGTH:
-      GST_FIXME ("ignoring set buffer length: %" G_GUINT32_FORMAT ", %"
-          G_GUINT32_FORMAT " ms", uc.param, uc.param2);
+      GST_FIXME_OBJECT (connection, "ignoring set buffer length: %"
+          G_GUINT32_FORMAT ", %" G_GUINT32_FORMAT " ms", uc.param, uc.param2);
       break;
 
     case GST_RTMP_USER_CONTROL_TYPE_PING_REQUEST:
-      GST_DEBUG ("ping request: %" G_GUINT32_FORMAT, uc.param);
+      GST_DEBUG_OBJECT (connection, "ping request: %" G_GUINT32_FORMAT,
+          uc.param);
       gst_rtmp_connection_send_ping_response (connection, uc.param);
       break;
 
     case GST_RTMP_USER_CONTROL_TYPE_PING_RESPONSE:
-      GST_DEBUG ("ignoring ping response: %" G_GUINT32_FORMAT, uc.param);
+      GST_DEBUG_OBJECT (connection,
+          "ignoring ping response: %" G_GUINT32_FORMAT, uc.param);
       break;
 
     case GST_RTMP_USER_CONTROL_TYPE_BUFFER_EMPTY:
-      GST_LOG ("ignoring buffer empty: %" G_GUINT32_FORMAT, uc.param);
+      GST_LOG_OBJECT (connection, "ignoring buffer empty: %" G_GUINT32_FORMAT,
+          uc.param);
       break;
 
     case GST_RTMP_USER_CONTROL_TYPE_BUFFER_READY:
-      GST_LOG ("ignoring buffer ready: %" G_GUINT32_FORMAT, uc.param);
+      GST_LOG_OBJECT (connection, "ignoring buffer ready: %" G_GUINT32_FORMAT,
+          uc.param);
       break;
 
     default:
-      GST_ERROR ("unimplemented user control type %d:%s", uc.type,
-          gst_rtmp_user_control_type_get_nick (uc.type));
+      GST_ERROR_OBJECT (connection, "unimplemented user control type %d:%s",
+          uc.type, gst_rtmp_user_control_type_get_nick (uc.type));
       break;
   }
 }
@@ -774,16 +782,18 @@ gst_rtmp_connection_handle_cm (GstRtmpConnection * sc, GstBuffer * buffer)
 
   if (!isfinite (transaction_id) || transaction_id < 0 ||
       transaction_id > G_MAXUINT) {
-    GST_WARNING ("Server sent command \"%s\" with extreme transaction ID %.0f",
+    GST_WARNING_OBJECT (sc,
+        "Server sent command \"%s\" with extreme transaction ID %.0f",
         GST_STR_NULL (command_name), transaction_id);
   } else if (transaction_id > sc->transaction_count) {
-    GST_WARNING ("Server sent command \"%s\" with unused transaction ID "
-        "(%.0f > %u)", GST_STR_NULL (command_name), transaction_id,
-        sc->transaction_count);
+    GST_WARNING_OBJECT (sc,
+        "Server sent command \"%s\" with unused transaction ID (%.0f > %u)",
+        GST_STR_NULL (command_name), transaction_id, sc->transaction_count);
     sc->transaction_count = transaction_id;
   }
 
-  GST_DEBUG ("got control message \"%s\" transaction %.0f size %"
+  GST_DEBUG_OBJECT (sc,
+      "got control message \"%s\" transaction %.0f size %"
       G_GUINT32_FORMAT, GST_STR_NULL (command_name), transaction_id,
       meta->size);
 
@@ -798,7 +808,7 @@ gst_rtmp_connection_handle_cm (GstRtmpConnection * sc, GstBuffer * buffer)
           continue;
         }
 
-        GST_LOG ("calling transaction callback %s",
+        GST_LOG_OBJECT (sc, "calling transaction callback %s",
             GST_DEBUG_FUNCPTR_NAME (t->func));
         sc->transactions = g_list_remove_link (sc->transactions, l);
         t->func (command_name, args, t->user_data);
@@ -806,14 +816,14 @@ gst_rtmp_connection_handle_cm (GstRtmpConnection * sc, GstBuffer * buffer)
         break;
       }
     } else {
-      GST_WARNING ("Server sent response \"%s\" without transaction",
+      GST_WARNING_OBJECT (sc, "Server sent response \"%s\" without transaction",
           GST_STR_NULL (command_name));
     }
   } else {
     GList *l;
 
     if (transaction_id != 0) {
-      GST_FIXME ("Server sent command \"%s\" expecting reply",
+      GST_FIXME_OBJECT (sc, "Server sent command \"%s\" expecting reply",
           GST_STR_NULL (command_name));
     }
 
@@ -828,7 +838,7 @@ gst_rtmp_connection_handle_cm (GstRtmpConnection * sc, GstBuffer * buffer)
         continue;
       }
 
-      GST_LOG ("calling expected command callback %s",
+      GST_LOG_OBJECT (sc, "calling expected command callback %s",
           GST_DEBUG_FUNCPTR_NAME (ec->func));
       sc->expected_commands = g_list_remove_link (sc->expected_commands, l);
       ec->func (command_name, args, ec->user_data);
@@ -917,10 +927,11 @@ gst_rtmp_connection_send_command (GstRtmpConnection * connection,
   gsize size;
 
   if (connection->thread != g_thread_self ()) {
-    GST_ERROR ("Called from wrong thread");
+    GST_ERROR_OBJECT (connection, "Called from wrong thread");
   }
 
-  GST_DEBUG ("Sending command '%s' on stream id %" G_GUINT32_FORMAT,
+  GST_DEBUG_OBJECT (connection,
+      "Sending command '%s' on stream id %" G_GUINT32_FORMAT,
       command_name, stream_id);
 
   if (response_command) {
@@ -928,7 +939,7 @@ gst_rtmp_connection_send_command (GstRtmpConnection * connection,
 
     transaction_id = ++connection->transaction_count;
 
-    GST_LOG ("Registering %s for transid %.0f",
+    GST_LOG_OBJECT (connection, "Registering %s for transid %.0f",
         GST_DEBUG_FUNCPTR_NAME (response_command), transaction_id);
 
     t = transaction_new (transaction_id, response_command, user_data);
@@ -960,9 +971,9 @@ gst_rtmp_connection_expect_command (GstRtmpConnection * connection,
   g_return_if_fail (command_name);
   g_return_if_fail (!is_command_response (command_name));
 
-  GST_LOG ("Registering %s for stream id %" G_GUINT32_FORMAT
-      " name \"%s\"", GST_DEBUG_FUNCPTR_NAME (response_command),
-      stream_id, command_name);
+  GST_LOG_OBJECT (connection,
+      "Registering %s for stream id %" G_GUINT32_FORMAT " name \"%s\"",
+      GST_DEBUG_FUNCPTR_NAME (response_command), stream_id, command_name);
 
   ec = expected_command_new (stream_id, command_name, response_command,
       user_data);
