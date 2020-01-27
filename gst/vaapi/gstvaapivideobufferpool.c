@@ -131,8 +131,8 @@ static gboolean
 gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
     GstStructure * config)
 {
-  GstVaapiVideoBufferPoolPrivate *const priv =
-      GST_VAAPI_VIDEO_BUFFER_POOL (pool)->priv;
+  GstVaapiVideoBufferPool *const base_pool = GST_VAAPI_VIDEO_BUFFER_POOL (pool);
+  GstVaapiVideoBufferPoolPrivate *const priv = base_pool->priv;
   GstCaps *caps;
   GstVideoInfo new_allocation_vinfo;
   const GstVideoInfo *allocator_vinfo;
@@ -143,7 +143,7 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
   guint size, min_buffers, max_buffers;
   guint surface_alloc_flags;
 
-  GST_DEBUG_OBJECT (pool, "config %" GST_PTR_FORMAT, config);
+  GST_DEBUG_OBJECT (base_pool, "config %" GST_PTR_FORMAT, config);
 
   caps = NULL;
   if (!gst_buffer_pool_config_get_params (config, &caps, &size, &min_buffers,
@@ -214,7 +214,8 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
           negotiated_vinfo);
     }
 
-    GST_INFO_OBJECT (pool, "created new allocator %" GST_PTR_FORMAT, allocator);
+    GST_INFO_OBJECT (base_pool, "created new allocator %" GST_PTR_FORMAT,
+        allocator);
     gst_buffer_pool_config_set_allocator (config, allocator, NULL);
     gst_object_unref (allocator);
   }
@@ -255,7 +256,7 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
           GST_VIDEO_INFO_PLANE_STRIDE (&priv->vmeta_vinfo, i)) {
         priv->options |= GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_VIDEO_META;
         priv->forced_video_meta = TRUE;
-        GST_INFO_OBJECT (pool, "adding unrequested video meta");
+        GST_INFO_OBJECT (base_pool, "adding unrequested video meta");
         break;
       }
     }
@@ -279,32 +280,32 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
   /* ERRORS */
 error_invalid_config:
   {
-    GST_ERROR_OBJECT (pool, "invalid config");
+    GST_ERROR_OBJECT (base_pool, "invalid config");
     return FALSE;
   }
 error_no_caps:
   {
-    GST_ERROR_OBJECT (pool, "no caps in config");
+    GST_ERROR_OBJECT (base_pool, "no caps in config");
     return FALSE;
   }
 error_invalid_caps:
   {
-    GST_ERROR_OBJECT (pool, "invalid caps %" GST_PTR_FORMAT, caps);
+    GST_ERROR_OBJECT (base_pool, "invalid caps %" GST_PTR_FORMAT, caps);
     return FALSE;
   }
 error_invalid_allocator:
   {
-    GST_ERROR_OBJECT (pool, "no allocator in config");
+    GST_ERROR_OBJECT (base_pool, "no allocator in config");
     return FALSE;
   }
 error_no_vaapi_video_meta_option:
   {
-    GST_ERROR_OBJECT (pool, "no GstVaapiVideoMeta option in config");
+    GST_ERROR_OBJECT (base_pool, "no GstVaapiVideoMeta option in config");
     return FALSE;
   }
 error_no_allocator:
   {
-    GST_ERROR_OBJECT (pool, "no allocator defined");
+    GST_ERROR_OBJECT (base_pool, "no allocator defined");
     return FALSE;
   }
 }
@@ -313,8 +314,8 @@ static GstFlowReturn
 gst_vaapi_video_buffer_pool_alloc_buffer (GstBufferPool * pool,
     GstBuffer ** out_buffer_ptr, GstBufferPoolAcquireParams * params)
 {
-  GstVaapiVideoBufferPoolPrivate *const priv =
-      GST_VAAPI_VIDEO_BUFFER_POOL (pool)->priv;
+  GstVaapiVideoBufferPool *const base_pool = GST_VAAPI_VIDEO_BUFFER_POOL (pool);
+  GstVaapiVideoBufferPoolPrivate *const priv = base_pool->priv;
   GstVaapiVideoBufferPoolAcquireParams *const priv_params =
       (GstVaapiVideoBufferPoolAcquireParams *) params;
   GstVaapiVideoMeta *meta;
@@ -378,23 +379,23 @@ gst_vaapi_video_buffer_pool_alloc_buffer (GstBufferPool * pool,
   /* ERRORS */
 error_no_allocator:
   {
-    GST_ERROR_OBJECT (pool, "no GstAllocator in buffer pool");
+    GST_ERROR_OBJECT (base_pool, "no GstAllocator in buffer pool");
     return GST_FLOW_ERROR;
   }
 error_create_meta:
   {
-    GST_ERROR_OBJECT (pool, "failed to allocate vaapi video meta");
+    GST_ERROR_OBJECT (base_pool, "failed to allocate vaapi video meta");
     return GST_FLOW_ERROR;
   }
 error_create_buffer:
   {
-    GST_ERROR_OBJECT (pool, "failed to create video buffer");
+    GST_ERROR_OBJECT (base_pool, "failed to create video buffer");
     gst_vaapi_video_meta_unref (meta);
     return GST_FLOW_ERROR;
   }
 error_create_memory:
   {
-    GST_ERROR_OBJECT (pool, "failed to create video memory");
+    GST_ERROR_OBJECT (base_pool, "failed to create video memory");
     gst_buffer_unref (buffer);
     gst_vaapi_video_meta_unref (meta);
     return GST_FLOW_ERROR;
@@ -405,8 +406,8 @@ static GstFlowReturn
 gst_vaapi_video_buffer_pool_acquire_buffer (GstBufferPool * pool,
     GstBuffer ** out_buffer_ptr, GstBufferPoolAcquireParams * params)
 {
-  GstVaapiVideoBufferPoolPrivate *const priv =
-      GST_VAAPI_VIDEO_BUFFER_POOL (pool)->priv;
+  GstVaapiVideoBufferPool *const base_pool = GST_VAAPI_VIDEO_BUFFER_POOL (pool);
+  GstVaapiVideoBufferPoolPrivate *const priv = base_pool->priv;
   GstVaapiVideoBufferPoolAcquireParams *const priv_params =
       (GstVaapiVideoBufferPoolAcquireParams *) params;
   GstFlowReturn ret;
@@ -460,8 +461,8 @@ gst_vaapi_video_buffer_pool_acquire_buffer (GstBufferPool * pool,
 
   /* Attach the GstFdMemory to the output buffer. */
   if (mem) {
-    GST_DEBUG_OBJECT (pool, "assigning memory %p to acquired buffer %p", mem,
-        buffer);
+    GST_DEBUG_OBJECT (base_pool, "assigning memory %p to acquired buffer %p",
+        mem, buffer);
     gst_buffer_replace_memory (buffer, 0, mem);
     gst_buffer_unset_flags (buffer, GST_BUFFER_FLAG_TAG_MEMORY);
   }
