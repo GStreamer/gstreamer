@@ -76,7 +76,7 @@ gi.require_version('GstSdp', '1.0')
 from gi.repository import GstSdp
 
 if DO_VP8:
-    ( encoder, payloader, rtp_encoding) = ( "vp8enc target-bitrate=500000", "rtpvp8pay", "VP8" )
+    ( encoder, payloader, rtp_encoding) = ( "vp8enc target-bitrate=100000 overshoot=25 undershoot=100 deadline=33000 keyframe-max-dist=1", "rtpvp8pay picture-id-mode=2", "VP8" )
 else:
     ( encoder, payloader, rtp_encoding) = ( "x264enc", "rtph264pay", "H264" )
 
