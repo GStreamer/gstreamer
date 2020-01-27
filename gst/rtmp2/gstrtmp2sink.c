@@ -66,6 +66,7 @@ typedef struct
   gboolean async_connect;
   guint peak_kbps;
   guint32 chunk_size;
+  GstStructure *stats;
 
   /* If both self->lock and OBJECT_LOCK are needed,
    * self->lock must be taken first */
@@ -123,6 +124,8 @@ static void connect_task_done (GObject * object, GAsyncResult * result,
 static void set_pacing_rate (GstRtmp2Sink * self);
 static void set_chunk_size (GstRtmp2Sink * self);
 
+static GstStructure *gst_rtmp2_sink_get_stats (GstRtmp2Sink * self);
+
 enum
 {
   PROP_0,
@@ -141,6 +144,7 @@ enum
   PROP_ASYNC_CONNECT,
   PROP_PEAK_KBPS,
   PROP_CHUNK_SIZE,
+  PROP_STATS,
 };
 
 /* pad templates */
@@ -214,6 +218,10 @@ gst_rtmp2_sink_class_init (GstRtmp2SinkClass * klass)
           GST_RTMP_MINIMUM_CHUNK_SIZE, GST_RTMP_MAXIMUM_CHUNK_SIZE,
           GST_RTMP_DEFAULT_CHUNK_SIZE, G_PARAM_READWRITE |
           G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_PLAYING));
+
+  g_object_class_install_property (gobject_class, PROP_STATS,
+      g_param_spec_boxed ("stats", "Stats", "Retrieve a statistics structure",
+          GST_TYPE_STRUCTURE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (gst_rtmp2_sink_debug_category, "rtmp2sink", 0,
       "debug category for rtmp2sink element");
@@ -429,6 +437,9 @@ gst_rtmp2_sink_get_property (GObject * object, guint property_id,
       g_value_set_uint (value, self->chunk_size);
       GST_OBJECT_UNLOCK (self);
       break;
+    case PROP_STATS:
+      g_value_take_boxed (value, gst_rtmp2_sink_get_stats (self));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -451,6 +462,7 @@ gst_rtmp2_sink_finalize (GObject * object)
   g_mutex_clear (&self->lock);
   g_cond_clear (&self->cond);
 
+  g_clear_pointer (&self->stats, gst_structure_free);
   gst_rtmp_location_clear (&self->location);
 
   G_OBJECT_CLASS (gst_rtmp2_sink_parent_class)->finalize (object);
@@ -873,6 +885,8 @@ gst_rtmp2_sink_task_func (gpointer user_data)
   loop = self->loop = g_main_loop_new (context, TRUE);
   connector = g_task_new (self, self->cancellable, connect_task_done, NULL);
 
+  g_clear_pointer (&self->stats, gst_structure_free);
+
   GST_OBJECT_LOCK (self);
   gst_rtmp_client_connect_async (&self->location, self->cancellable,
       client_connect_done, connector);
@@ -882,6 +896,8 @@ gst_rtmp2_sink_task_func (gpointer user_data)
   g_mutex_unlock (&self->lock);
   g_main_loop_run (loop);
   g_mutex_lock (&self->lock);
+
+  self->stats = gst_rtmp_connection_get_stats (self->connection);
 
   g_clear_pointer (&self->loop, g_main_loop_unref);
   g_clear_pointer (&self->connection, gst_rtmp_connection_close_and_unref);
@@ -1102,4 +1118,24 @@ set_chunk_size (GstRtmp2Sink * self)
 
   gst_rtmp_connection_set_chunk_size (self->connection, chunk_size);
   GST_INFO_OBJECT (self, "Set chunk size to %" G_GUINT32_FORMAT, chunk_size);
+}
+
+static GstStructure *
+gst_rtmp2_sink_get_stats (GstRtmp2Sink * self)
+{
+  GstStructure *s;
+
+  g_mutex_lock (&self->lock);
+
+  if (self->connection) {
+    s = gst_rtmp_connection_get_stats (self->connection);
+  } else if (self->stats) {
+    s = gst_structure_copy (self->stats);
+  } else {
+    s = gst_rtmp_connection_get_null_stats ();
+  }
+
+  g_mutex_unlock (&self->lock);
+
+  return s;
 }

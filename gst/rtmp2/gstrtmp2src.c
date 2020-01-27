@@ -59,6 +59,7 @@ typedef struct
   /* properties */
   GstRtmpLocation location;
   gboolean async_connect;
+  GstStructure *stats;
 
   /* If both self->lock and OBJECT_LOCK are needed,
    * self->lock must be taken first */
@@ -112,6 +113,8 @@ static void start_play_done (GObject * object, GAsyncResult * result,
 static void connect_task_done (GObject * object, GAsyncResult * result,
     gpointer user_data);
 
+static GstStructure *gst_rtmp2_src_get_stats (GstRtmp2Src * self);
+
 enum
 {
   PROP_0,
@@ -128,6 +131,7 @@ enum
   PROP_TIMEOUT,
   PROP_TLS_VALIDATION_FLAGS,
   PROP_ASYNC_CONNECT,
+  PROP_STATS,
 };
 
 /* pad templates */
@@ -188,6 +192,10 @@ gst_rtmp2_src_class_init (GstRtmp2SrcClass * klass)
       g_param_spec_boolean ("async-connect", "Async connect",
           "Connect on READY, otherwise on first push", TRUE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_STATS,
+      g_param_spec_boxed ("stats", "Stats", "Retrieve a statistics structure",
+          GST_TYPE_STRUCTURE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (gst_rtmp2_src_debug_category, "rtmp2src", 0,
       "debug category for rtmp2src element");
@@ -368,6 +376,9 @@ gst_rtmp2_src_get_property (GObject * object, guint property_id,
       g_value_set_boolean (value, self->async_connect);
       GST_OBJECT_UNLOCK (self);
       break;
+    case PROP_STATS:
+      g_value_take_boxed (value, gst_rtmp2_src_get_stats (self));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -390,6 +401,7 @@ gst_rtmp2_src_finalize (GObject * object)
   g_mutex_clear (&self->lock);
   g_cond_clear (&self->cond);
 
+  g_clear_pointer (&self->stats, gst_structure_free);
   gst_rtmp_location_clear (&self->location);
 
   G_OBJECT_CLASS (gst_rtmp2_src_parent_class)->finalize (object);
@@ -608,6 +620,8 @@ gst_rtmp2_src_task_func (gpointer user_data)
   loop = self->loop = g_main_loop_new (context, TRUE);
   connector = g_task_new (self, self->cancellable, connect_task_done, NULL);
 
+  g_clear_pointer (&self->stats, gst_structure_free);
+
   GST_OBJECT_LOCK (self);
   gst_rtmp_client_connect_async (&self->location, self->cancellable,
       client_connect_done, connector);
@@ -617,6 +631,8 @@ gst_rtmp2_src_task_func (gpointer user_data)
   g_mutex_unlock (&self->lock);
   g_main_loop_run (loop);
   g_mutex_lock (&self->lock);
+
+  self->stats = gst_rtmp_connection_get_stats (self->connection);
 
   g_clear_pointer (&self->loop, g_main_loop_unref);
   g_clear_pointer (&self->connection, gst_rtmp_connection_close_and_unref);
@@ -840,4 +856,24 @@ connect_task_done (GObject * object, GAsyncResult * result, gpointer user_data)
 
   g_cond_broadcast (&self->cond);
   g_mutex_unlock (&self->lock);
+}
+
+static GstStructure *
+gst_rtmp2_src_get_stats (GstRtmp2Src * self)
+{
+  GstStructure *s;
+
+  g_mutex_lock (&self->lock);
+
+  if (self->connection) {
+    s = gst_rtmp_connection_get_stats (self->connection);
+  } else if (self->stats) {
+    s = gst_structure_copy (self->stats);
+  } else {
+    s = gst_rtmp_connection_get_null_stats ();
+  }
+
+  g_mutex_unlock (&self->lock);
+
+  return s;
 }
