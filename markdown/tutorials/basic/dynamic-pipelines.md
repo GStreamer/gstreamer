@@ -279,6 +279,7 @@ This is a forward reference, to be used later.
 /* Create the elements */
 data.source = gst_element_factory_make ("uridecodebin", "source");
 data.convert = gst_element_factory_make ("audioconvert", "convert");
+data.resample = gst_element_factory_make ("audioresample", "resample");
 data.sink = gst_element_factory_make ("autoaudiosink", "sink");
 ```
 
@@ -292,6 +293,11 @@ not initially available and we will need to link to them on the fly.
 making sure that this example will work on any platform, since the
 format produced by the audio decoder might not be the same that the
 audio sink expects.
+
+`audioresample` is useful for converting between different audio sample rates,
+similarly making sure that this example will work on any platform, since the
+audio sample rate produced by the audio decoder might not be one that the audio
+sink supports.
 
 The `autoaudiosink` is the equivalent of `autovideosink` seen in the
 previous tutorial, for audio. It will render the audio stream to the
@@ -401,11 +407,11 @@ if (!g_str_has_prefix (new_pad_type, "audio/x-raw")) {
 }
 ```
 
-Now we will check the type of data this new pad is going to output,
-because we are only interested in pads producing audio. We have
-previously created a piece of pipeline which deals with audio (an
-`audioconvert` linked with an `autoaudiosink`), and we will not be able
-to link it to a pad producing video, for example.
+Now we will check the type of data this new pad is going to output, because we
+are only interested in pads producing audio. We have previously created a
+piece of pipeline which deals with audio (an `audioconvert` linked with an
+`audioresample` and an `autoaudiosink`), and we will not be able to link it to
+a pad producing video, for example.
 
 `gst_pad_get_current_caps()` retrieves the current *capabilities* of the pad
 (that is, the kind of data it currently outputs), wrapped in a `GstCaps`
