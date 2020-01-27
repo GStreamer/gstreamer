@@ -329,6 +329,14 @@ get_line (LinesGetter * lg, gint field_offset, guint plane, gint line,
   frame = lg->history[idx].frame;
   g_assert (frame);
 
+  if (GST_VIDEO_FRAME_FLAG_IS_SET (frame, GST_VIDEO_FRAME_FLAG_TOP_FIELD) ||
+      GST_VIDEO_FRAME_FLAG_IS_SET (frame, GST_VIDEO_FRAME_FLAG_BOTTOM_FIELD)) {
+    /* Alternate frame containing a single field, adjust the line index */
+    line /= 2;
+    if (line_offset != 1)
+      line_offset /= 2;
+  }
+
   frame_height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, plane);
   line += line_offset;
 
