@@ -66,9 +66,10 @@ gst_video_parse_user_data (GstElement * elt, GstVideoParseUserData * user_data,
   guint8 temp = 0;
   guint8 cc_count;
   guint cc_size;
-  guint bar_size = 0;
+  guint data_size = 0;
   const guint8 *data = NULL;
   guint8 directv_size = 0;
+  guint16 provider_oriented_code;
 
 
   /* https://en.wikipedia.org/wiki/CEA-708#Picture_User_Data */
@@ -101,6 +102,15 @@ gst_video_parse_user_data (GstElement * elt, GstVideoParseUserData * user_data,
       break;
     case ITU_T_T35_MANUFACTURER_UK_LCEVC:
       user_data_id = USER_DATA_ID_LCEVC_ENHANCEMENT;
+      break;
+    case ITU_T_T35_MANUFACTURER_US_ST2094_40:
+      if (!gst_byte_reader_peek_uint16_be (br, &provider_oriented_code)) {
+        GST_WARNING_OBJECT (elt, "Missing provider oriented code, ignoring");
+        return;
+      }
+      if (provider_oriented_code ==
+          ITU_T_T35_MANUFACTURER_US_PROVIDER_ORIENTED_CODE_ST2094_40)
+        user_data_id = ITU_T_T35_MANUFACTURER_US_ST2094_40;
       break;
     default:
       GST_LOG_OBJECT (elt, "Unsupported provider code %d", provider_code);
@@ -213,22 +223,22 @@ gst_video_parse_user_data (GstElement * elt, GstVideoParseUserData * user_data,
           GST_DEBUG_OBJECT (elt, "Unsupported SCTE 21 closed captions");
           break;
         case A53_USER_DATA_TYPE_CODE_BAR_DATA:
-          bar_size = gst_byte_reader_get_remaining (br);
-          if (bar_size == 0) {
+          data_size = gst_byte_reader_get_remaining (br);
+          if (data_size == 0) {
             GST_WARNING_OBJECT (elt, "Bar data packet too short, ignoring");
             break;
           }
-          if (bar_size > GST_VIDEO_BAR_MAX_BYTES) {
+          if (data_size > GST_VIDEO_BAR_MAX_BYTES) {
             GST_WARNING_OBJECT (elt,
-                "Bar data packet of size %d is too long, ignoring", bar_size);
+                "Bar data packet of size %d is too long, ignoring", data_size);
             break;
           }
-          if (!gst_byte_reader_get_data (br, bar_size, &data))
+          if (!gst_byte_reader_get_data (br, data_size, &data))
             break;
-          memcpy (user_data->bar_data, data, bar_size);
-          user_data->bar_data_size = bar_size;
+          memcpy (user_data->bar_data, data, data_size);
+          user_data->bar_data_size = data_size;
           user_data->field = field;
-          GST_DEBUG_OBJECT (elt, "Bar data, %u bytes", bar_size);
+          GST_DEBUG_OBJECT (elt, "Bar data, %u bytes", data_size);
           break;
         default:
           GST_DEBUG_OBJECT (elt,
@@ -242,16 +252,29 @@ gst_video_parse_user_data (GstElement * elt, GstVideoParseUserData * user_data,
         GST_WARNING_OBJECT (elt, "Missing user data type code, ignoring");
         break;
       }
-      bar_size = gst_byte_reader_get_remaining (br);
-      if (bar_size == 0) {
+      data_size = gst_byte_reader_get_remaining (br);
+      if (data_size == 0) {
         GST_WARNING_OBJECT (elt, "Bar data packet too short, ignoring");
         break;
       }
-      if (!gst_byte_reader_get_data (br, bar_size, &data))
+      if (!gst_byte_reader_get_data (br, data_size, &data))
         break;
       g_clear_pointer (&user_data->lcevc_enhancement_data, gst_buffer_unref);
       user_data->lcevc_enhancement_data =
-          gst_buffer_new_memdup (data, bar_size);
+          gst_buffer_new_memdup (data, data_size);
+      break;
+    case ITU_T_T35_MANUFACTURER_US_ST2094_40:
+      data_size = gst_byte_reader_get_remaining (br);
+      if (data_size == 0 || data_size >= GST_VIDEO_HDR10_PLUS_MAX_BYTES) {
+        GST_WARNING_OBJECT (elt,
+            "ST2094-40 data packet has invalid size=%d, max=%d, ignoring.",
+            data_size, GST_VIDEO_HDR10_PLUS_MAX_BYTES);
+        break;
+      }
+      gst_byte_reader_get_data (br, data_size, &data);
+      memcpy (user_data->hdr10_plus_data, data, data_size);
+      user_data->hdr10_plus_data_size = data_size;
+      user_data->has_hdr10_plus_data = TRUE;
       break;
     default:
       GST_DEBUG_OBJECT (elt,
@@ -320,6 +343,18 @@ gst_video_push_user_data (GstElement * elt, GstVideoParseUserData * user_data,
 
     g_clear_pointer (&user_data->lcevc_enhancement_data, gst_buffer_unref);
   }
+
+  /* 5. handle HDR10+ data */
+  if (user_data->has_hdr10_plus_data) {
+    gst_buffer_add_video_hdr_meta (buf, GST_VIDEO_HDR_FORMAT_HDR10_PLUS,
+        user_data->hdr10_plus_data, user_data->hdr10_plus_data_size);
+  } else if (user_data->hdr10_plus_data_size) {
+    /* hdr10+ data was present, but now it is no longer present */
+    GST_DEBUG_OBJECT (elt,
+        "HDR10+ data was present in previous frame, now no longer present");
+    user_data->hdr10_plus_data_size = 0;
+  }
+  user_data->has_hdr10_plus_data = FALSE;
 }
 
 /*
