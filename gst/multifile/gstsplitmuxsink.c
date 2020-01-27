@@ -990,7 +990,7 @@ send_fragment_opened_closed_msg (GstSplitMuxSink * splitmux, gboolean opened,
       running_time = *rtime;
   }
 
-  if (g_object_class_find_property (G_OBJECT_GET_CLASS (splitmux->sink),
+  if (g_object_class_find_property (G_OBJECT_GET_CLASS (sink),
           "location") != NULL)
     g_object_get (sink, "location", &location, NULL);
 
