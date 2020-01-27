@@ -140,7 +140,7 @@ gst_vaapi_surface_init_full (GstVaapiSurface * surface,
   guint chroma_type, va_chroma_format, i;
   const VAImageFormat *va_format;
   VASurfaceAttrib attribs[3], *attrib;
-  VASurfaceAttribExternalBuffers extbuf;
+  VASurfaceAttribExternalBuffers extbuf = { 0, };
   gboolean extbuf_needed = FALSE;
 
   va_format = gst_vaapi_video_format_to_va_format (format);
@@ -155,7 +155,6 @@ gst_vaapi_surface_init_full (GstVaapiSurface * surface,
   if (!va_chroma_format)
     goto error_unsupported_format;
 
-  memset (&extbuf, 0, sizeof (extbuf));
   extbuf.pixel_format = va_format->fourcc;
   extbuf.width = GST_VIDEO_INFO_WIDTH (vip);
   extbuf.height = GST_VIDEO_INFO_HEIGHT (vip);
@@ -232,7 +231,7 @@ gst_vaapi_surface_init_from_buffer_proxy (GstVaapiSurface * surface,
   guint chroma_type, va_chroma_format;
   const VAImageFormat *va_format;
   VASurfaceAttrib attribs[2], *attrib;
-  VASurfaceAttribExternalBuffers extbuf;
+  VASurfaceAttribExternalBuffers extbuf = { 0, };
   unsigned long extbuf_handle;
   guint i, width, height;
 
