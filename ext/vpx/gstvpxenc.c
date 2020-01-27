@@ -88,7 +88,10 @@ GST_DEBUG_CATEGORY_STATIC (gst_vpxenc_debug);
 #define DEFAULT_DEADLINE VPX_DL_BEST_QUALITY
 #define DEFAULT_NOISE_SENSITIVITY 0
 #define DEFAULT_SHARPNESS 0
-#define DEFAULT_STATIC_THRESHOLD 0
+
+/* Use same default value as Chromium/webrtc. */
+#define DEFAULT_STATIC_THRESHOLD 1
+
 #define DEFAULT_TOKEN_PARTITIONS 0
 #define DEFAULT_ARNR_MAXFRAMES 0
 #define DEFAULT_ARNR_STRENGTH 3
@@ -582,8 +585,8 @@ gst_vpx_enc_class_init (GstVPXEncClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_STATIC_THRESHOLD,
       g_param_spec_int ("static-threshold", "Static Threshold",
-          "Motion detection threshold",
-          0, G_MAXINT, DEFAULT_STATIC_THRESHOLD,
+          "Motion detection threshold. Recommendation is to set 100 for "
+          "screen/window sharing", 0, G_MAXINT, DEFAULT_STATIC_THRESHOLD,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_TOKEN_PARTITIONS,
