@@ -501,6 +501,9 @@ static enum AVStereo3DType
 stereo_gst_to_av (GstVideoMultiviewMode mview_mode)
 {
   switch (mview_mode) {
+    case GST_VIDEO_MULTIVIEW_MODE_MONO:
+      /* Video is not stereoscopic (and metadata has to be there). */
+      return AV_STEREO3D_2D;
     case GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE:
       return AV_STEREO3D_SIDEBYSIDE;
     case GST_VIDEO_MULTIVIEW_MODE_TOP_BOTTOM:
