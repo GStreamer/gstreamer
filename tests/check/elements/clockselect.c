@@ -39,8 +39,6 @@ GST_START_TEST (test_clock_select_realtime_clock)
   g_object_get (G_OBJECT (clock), "clock-type", &clock_type, NULL);
   fail_unless_equals_uint64 (clock_type, GST_CLOCK_TYPE_REALTIME);
 
-  /* Unref this element to shut up valgrind. But it looks weird, maybe
-   * some funny harness bug due clockselect being a bin? */
   gst_object_unref (element);
   gst_object_unref (clock);
   gst_harness_teardown (h);
@@ -65,7 +63,6 @@ GST_START_TEST (test_clock_select_monotonic_clock)
   g_object_get (G_OBJECT (clock), "clock-type", &clock_type, NULL);
   fail_unless_equals_uint64 (clock_type, GST_CLOCK_TYPE_MONOTONIC);
 
-  /* See comment on test_clock_select_realtime_clock about this unref */
   gst_object_unref (element);
   gst_object_unref (clock);
   gst_harness_teardown (h);
@@ -89,7 +86,6 @@ GST_START_TEST (test_clock_select_properties)
   g_object_get (G_OBJECT (element), "ptp-domain", &domain, NULL);
   fail_unless_equals_uint64 (domain, 2);
 
-  /* See comment on test_clock_select_realtime_clock about this unref */
   gst_object_unref (element);
   gst_harness_teardown (h);
 }
