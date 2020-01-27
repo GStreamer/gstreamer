@@ -165,14 +165,14 @@ gst_vaapi_surface_init_full (GstVaapiSurface * surface,
   }
 
   extbuf.num_planes = GST_VIDEO_INFO_N_PLANES (vip);
-  if (surface_allocation_flags & GST_VAAPI_SURFACE_ALLOC_FLAG_FIXED_STRIDES) {
-    for (i = 0; i < extbuf.num_planes; i++)
-      extbuf.pitches[i] = GST_VIDEO_INFO_PLANE_STRIDE (vip, i);
-    extbuf_needed = TRUE;
-  }
-  if (surface_allocation_flags & GST_VAAPI_SURFACE_ALLOC_FLAG_FIXED_OFFSETS) {
-    for (i = 0; i < extbuf.num_planes; i++)
-      extbuf.offsets[i] = GST_VIDEO_INFO_PLANE_OFFSET (vip, i);
+  if (surface_allocation_flags & (GST_VAAPI_SURFACE_ALLOC_FLAG_FIXED_STRIDES |
+          GST_VAAPI_SURFACE_ALLOC_FLAG_FIXED_OFFSETS)) {
+    for (i = 0; i < extbuf.num_planes; i++) {
+      if (surface_allocation_flags & GST_VAAPI_SURFACE_ALLOC_FLAG_FIXED_STRIDES)
+        extbuf.pitches[i] = GST_VIDEO_INFO_PLANE_STRIDE (vip, i);
+      if (surface_allocation_flags & GST_VAAPI_SURFACE_ALLOC_FLAG_FIXED_OFFSETS)
+        extbuf.offsets[i] = GST_VIDEO_INFO_PLANE_OFFSET (vip, i);
+    }
     extbuf_needed = TRUE;
   }
 
