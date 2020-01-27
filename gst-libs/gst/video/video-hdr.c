@@ -390,3 +390,109 @@ gst_video_content_light_level_add_to_caps (const GstVideoContentLightLevel *
 
   return TRUE;
 }
+
+/* Dynamic HDR Meta implementation */
+
+GType
+gst_video_hdr_meta_api_get_type (void)
+{
+  static volatile GType type = 0;
+
+  if (g_once_init_enter (&type)) {
+    static const gchar *tags[] = {
+      GST_META_TAG_VIDEO_STR,
+      NULL
+    };
+    GType _type = gst_meta_api_type_register ("GstVideoHDRMetaAPI", tags);
+    g_once_init_leave (&type, _type);
+  }
+  return type;
+}
+
+static gboolean
+gst_video_hdr_meta_transform (GstBuffer * dest, GstMeta * meta,
+    GstBuffer * buffer, GQuark type, gpointer data)
+{
+  GstVideoHDRMeta *dmeta, *smeta;
+
+  /* We always copy over the caption meta */
+  smeta = (GstVideoHDRMeta *) meta;
+
+  GST_DEBUG ("copy HDR metadata");
+  dmeta =
+      gst_buffer_add_video_hdr_meta (dest, smeta->format, smeta->data,
+      smeta->size);
+  if (!dmeta)
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
+gst_video_hdr_meta_init (GstMeta * meta, gpointer params, GstBuffer * buffer)
+{
+  GstVideoHDRMeta *emeta = (GstVideoHDRMeta *) meta;
+
+  emeta->data = NULL;
+
+  return TRUE;
+}
+
+static void
+gst_video_hdr_meta_free (GstMeta * meta, GstBuffer * buffer)
+{
+  GstVideoHDRMeta *emeta = (GstVideoHDRMeta *) meta;
+
+  g_free (emeta->data);
+}
+
+const GstMetaInfo *
+gst_video_hdr_meta_get_info (void)
+{
+  static const GstMetaInfo *meta_info = NULL;
+
+  if (g_once_init_enter ((GstMetaInfo **) & meta_info)) {
+    const GstMetaInfo *mi = gst_meta_register (GST_VIDEO_HDR_META_API_TYPE,
+        "GstVideoHDRMeta",
+        sizeof (GstVideoHDRMeta),
+        gst_video_hdr_meta_init,
+        gst_video_hdr_meta_free,
+        gst_video_hdr_meta_transform);
+    g_once_init_leave ((GstMetaInfo **) & meta_info, (GstMetaInfo *) mi);
+  }
+  return meta_info;
+}
+
+/**
+ * gst_buffer_add_video_hdr_meta:
+ * @buffer: a #GstBuffer
+ * @format: The type of dynamic HDR contained in the meta.
+ * @data: contains the dynamic HDR data
+ * @size: The size in bytes of @data
+ *
+ * Attaches #GstVideoHDRMeta metadata to @buffer with the given
+ * parameters.
+ *
+ * Returns: (transfer none): the #GstVideoHDRMeta on @buffer.
+ *
+ * Since: 1.20
+ */
+GstVideoHDRMeta *
+gst_buffer_add_video_hdr_meta (GstBuffer * buffer,
+    GstVideoHDRFormat format, const guint8 * data, gsize size)
+{
+  GstVideoHDRMeta *meta;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
+  g_return_val_if_fail (data != NULL, NULL);
+
+  meta = (GstVideoHDRMeta *) gst_buffer_add_meta (buffer,
+      GST_VIDEO_HDR_META_INFO, NULL);
+  g_assert (meta != NULL);
+
+  meta->format = format;
+  meta->data = g_memdup (data, size);
+  meta->size = size;
+
+  return meta;
+}
