@@ -739,14 +739,16 @@ gst_vaapi_image_usage_flags_to_string (GstVaapiImageUsageFlags usage_flag)
 static inline gboolean
 allocator_configure_surface_try_specified_format (GstVaapiDisplay * display,
     const GstVideoInfo * allocation_info, GstVaapiImageUsageFlags usage_flag,
-    GstVideoInfo * ret_surface_info, GstVaapiImageUsageFlags * ret_usage_flag)
+    guint surface_alloc_flag, GstVideoInfo * ret_surface_info,
+    GstVaapiImageUsageFlags * ret_usage_flag)
 {
   GstVaapiImageUsageFlags rflag;
   GstVaapiSurface *surface;
   GstVideoInfo sinfo, rinfo;
 
   /* Try to create a surface with the given allocation info */
-  surface = gst_vaapi_surface_new_full (display, allocation_info, 0);
+  surface =
+      gst_vaapi_surface_new_full (display, allocation_info, surface_alloc_flag);
   if (!surface)
     return FALSE;
 
@@ -841,7 +843,8 @@ error_no_surface:
 
 static inline gboolean
 allocator_configure_surface_info (GstVaapiDisplay * display,
-    GstVaapiVideoAllocator * allocator, GstVaapiImageUsageFlags req_usage_flag)
+    GstVaapiVideoAllocator * allocator, GstVaapiImageUsageFlags req_usage_flag,
+    guint surface_alloc_flags)
 {
   GstVaapiImageUsageFlags usage_flag;
   GstVideoInfo allocation_info, surface_info;
@@ -853,7 +856,8 @@ allocator_configure_surface_info (GstVaapiDisplay * display,
   /* Step1: Try the specified format and flag. May fallback to native if
      direct upload/rendering is unavailable. */
   if (allocator_configure_surface_try_specified_format (display,
-          &allocation_info, req_usage_flag, &surface_info, &usage_flag)) {
+          &allocation_info, req_usage_flag, surface_alloc_flags,
+          &surface_info, &usage_flag)) {
     allocator->usage_flag = usage_flag;
     allocator->surface_info = surface_info;
     goto success;
@@ -935,7 +939,8 @@ allocator_params_init (GstVaapiVideoAllocator * allocator,
 {
   allocator->allocation_info = *alloc_info;
 
-  if (!allocator_configure_surface_info (display, allocator, req_usage_flag))
+  if (!allocator_configure_surface_info (display, allocator, req_usage_flag,
+          surface_alloc_flags))
     return FALSE;
   allocator->surface_pool = gst_vaapi_surface_pool_new_full (display,
       &allocator->surface_info, surface_alloc_flags);
