@@ -643,7 +643,7 @@ gst_rtmp_chunk_stream_serialize_start (GstRtmpChunkStream * cstream,
   gst_rtmp_buffer_dump (buffer, ">>> message");
 
   chunk_stream_clear (cstream);
-  chunk_stream_take_buffer (cstream, buffer);
+  chunk_stream_take_buffer (cstream, gst_buffer_ref (buffer));
 
   return serialize_next (cstream, chunk_size, type);
 }
