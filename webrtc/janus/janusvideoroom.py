@@ -15,6 +15,15 @@ from websockets.exceptions import ConnectionClosed
 
 import attr
 
+# Set to False to send H.264
+DO_VP8 = True
+# Set to False to disable RTX (lost packet retransmission)
+DO_RTX = True
+# Choose the video source:
+VIDEO_SRC="videotestsrc pattern=ball"
+# VIDEO_SRC="v4l2src"
+
+
 @attr.s
 class JanusEvent:
     sender = attr.ib(validator=attr.validators.instance_of(int))
@@ -66,8 +75,6 @@ from gi.repository import GstWebRTC
 gi.require_version('GstSdp', '1.0')
 from gi.repository import GstSdp
 
-DO_VP8 = True
-
 if DO_VP8:
     ( encoder, payloader, rtp_encoding) = ( "vp8enc target-bitrate=500000", "rtpvp8pay", "VP8" )
 else:
@@ -75,9 +82,9 @@ else:
 
 PIPELINE_DESC = '''
  webrtcbin name=sendrecv stun-server=stun://stun.l.google.com:19302
- videotestsrc pattern=ball ! video/x-raw,width=320,height=240 ! videoconvert ! queue !
+ {} ! video/x-raw,width=640,height=480 ! videoconvert ! queue !
  {} ! {} !  queue ! application/x-rtp,media=video,encoding-name={},payload=96 ! sendrecv.
-'''.format(encoder, payloader, rtp_encoding)
+'''.format(VIDEO_SRC, encoder, payloader, rtp_encoding)
 
 def transaction_id():
     return ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(8))
@@ -328,6 +335,10 @@ class WebRTCClient:
         self.webrtc.connect('on-negotiation-needed', self.on_negotiation_needed)
         self.webrtc.connect('on-ice-candidate', self.send_ice_candidate_message)
         self.webrtc.connect('pad-added', self.on_incoming_stream)
+
+        trans = self.webrtc.emit('get-transceiver', 0)
+        if DO_RTX:
+            trans.set_property ('do-nack', True)
         self.pipe.set_state(Gst.State.PLAYING)
 
     def extract_ice_from_sdp(self, sdp):
