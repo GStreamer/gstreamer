@@ -65,6 +65,7 @@ typedef struct
   GstRtmpLocation location;
   gboolean async_connect;
   guint peak_kbps;
+  guint32 chunk_size;
 
   /* If both self->lock and OBJECT_LOCK are needed,
    * self->lock must be taken first */
@@ -120,6 +121,7 @@ static void connect_task_done (GObject * object, GAsyncResult * result,
     gpointer user_data);
 
 static void set_pacing_rate (GstRtmp2Sink * self);
+static void set_chunk_size (GstRtmp2Sink * self);
 
 enum
 {
@@ -138,6 +140,7 @@ enum
   PROP_TLS_VALIDATION_FLAGS,
   PROP_ASYNC_CONNECT,
   PROP_PEAK_KBPS,
+  PROP_CHUNK_SIZE,
 };
 
 /* pad templates */
@@ -206,6 +209,12 @@ gst_rtmp2_sink_class_init (GstRtmp2SinkClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_PLAYING));
 
+  g_object_class_install_property (gobject_class, PROP_CHUNK_SIZE,
+      g_param_spec_uint ("chunk-size", "Chunk size", "RTMP chunk size",
+          GST_RTMP_MINIMUM_CHUNK_SIZE, GST_RTMP_MAXIMUM_CHUNK_SIZE,
+          GST_RTMP_DEFAULT_CHUNK_SIZE, G_PARAM_READWRITE |
+          G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_PLAYING));
+
   GST_DEBUG_CATEGORY_INIT (gst_rtmp2_sink_debug_category, "rtmp2sink", 0,
       "debug category for rtmp2sink element");
 }
@@ -215,6 +224,7 @@ gst_rtmp2_sink_init (GstRtmp2Sink * self)
 {
   self->location.flash_ver = g_strdup ("FMLE/3.0 (compatible; FMSc/1.0)");
   self->async_connect = TRUE;
+  self->chunk_size = GST_RTMP_DEFAULT_CHUNK_SIZE;
 
   g_mutex_init (&self->lock);
   g_cond_init (&self->cond);
@@ -320,6 +330,16 @@ gst_rtmp2_sink_set_property (GObject * object, guint property_id,
       set_pacing_rate (self);
       g_mutex_unlock (&self->lock);
       break;
+    case PROP_CHUNK_SIZE:
+      g_mutex_lock (&self->lock);
+
+      GST_OBJECT_LOCK (self);
+      self->chunk_size = g_value_get_uint (value);
+      GST_OBJECT_UNLOCK (self);
+
+      set_chunk_size (self);
+      g_mutex_unlock (&self->lock);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -402,6 +422,11 @@ gst_rtmp2_sink_get_property (GObject * object, guint property_id,
     case PROP_PEAK_KBPS:
       GST_OBJECT_LOCK (self);
       g_value_set_uint (value, self->peak_kbps);
+      GST_OBJECT_UNLOCK (self);
+      break;
+    case PROP_CHUNK_SIZE:
+      GST_OBJECT_LOCK (self);
+      g_value_set_uint (value, self->chunk_size);
       GST_OBJECT_UNLOCK (self);
       break;
     default:
@@ -1006,6 +1031,7 @@ connect_task_done (GObject * object, GAsyncResult * result, gpointer user_data)
   self->connection = g_task_propagate_pointer (task, &error);
   if (self->connection) {
     set_pacing_rate (self);
+    set_chunk_size (self);
     gst_rtmp_connection_set_output_handler (self->connection,
         put_chunk, g_object_ref (self), g_object_unref);
     g_signal_connect_object (self->connection, "error",
@@ -1060,4 +1086,20 @@ set_pacing_rate (GstRtmp2Sink * self)
     GST_WARNING_OBJECT (self, "Could not set pacing rate: %s", error->message);
 
   g_clear_error (&error);
+}
+
+static void
+set_chunk_size (GstRtmp2Sink * self)
+{
+  guint32 chunk_size;
+
+  if (!self->connection)
+    return;
+
+  GST_OBJECT_LOCK (self);
+  chunk_size = self->chunk_size;
+  GST_OBJECT_UNLOCK (self);
+
+  gst_rtmp_connection_set_chunk_size (self->connection, chunk_size);
+  GST_INFO_OBJECT (self, "Set chunk size to %" G_GUINT32_FORMAT, chunk_size);
 }
