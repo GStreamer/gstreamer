@@ -510,6 +510,20 @@ gst_caps_remove_and_get_structure (GstCaps * caps, guint idx)
   return s;
 }
 
+static void
+gst_caps_make_any (GstCaps * caps)
+{
+  guint i;
+  GstStructure *s;
+
+  /* empty out residual structures */
+  for (i = GST_CAPS_LEN (caps); i; i--) {
+    s = gst_caps_remove_and_get_structure (caps, 0);
+    gst_structure_free (s);
+  }
+  GST_CAPS_FLAGS (caps) |= GST_CAPS_FLAG_ANY;
+}
+
 /**
  * gst_caps_steal_structure:
  * @caps: the #GstCaps to retrieve from
@@ -554,7 +568,7 @@ gst_caps_append (GstCaps * caps1, GstCaps * caps2)
   g_return_if_fail (IS_WRITABLE (caps1));
 
   if (G_UNLIKELY (CAPS_IS_ANY (caps1) || CAPS_IS_ANY (caps2))) {
-    GST_CAPS_FLAGS (caps1) |= GST_CAPS_FLAG_ANY;
+    gst_caps_make_any (caps1);
     gst_caps_unref (caps2);
   } else {
     caps2 = gst_caps_make_writable (caps2);
@@ -636,6 +650,13 @@ gst_caps_append_structure (GstCaps * caps, GstStructure * structure)
   g_return_if_fail (GST_IS_CAPS (caps));
   g_return_if_fail (IS_WRITABLE (caps));
 
+  if (CAPS_IS_ANY (caps)) {
+    /* ANY caps will stay as ANY caps */
+    if (structure)
+      gst_structure_free (structure);
+    return;
+  }
+
   if (G_LIKELY (structure)) {
     gst_caps_append_structure_unchecked (caps, structure, NULL);
   }
@@ -658,6 +679,15 @@ gst_caps_append_structure_full (GstCaps * caps, GstStructure * structure,
 {
   g_return_if_fail (GST_IS_CAPS (caps));
   g_return_if_fail (IS_WRITABLE (caps));
+
+  if (CAPS_IS_ANY (caps)) {
+    /* ANY caps will stay as ANY caps */
+    if (structure)
+      gst_structure_free (structure);
+    if (features)
+      gst_caps_features_free (features);
+    return;
+  }
 
   if (G_LIKELY (structure)) {
     gst_caps_append_structure_unchecked (caps, structure, features);
@@ -706,6 +736,12 @@ gst_caps_merge_structure (GstCaps * caps, GstStructure * structure)
 
   if (G_UNLIKELY (structure == NULL))
     return caps;
+
+  if (CAPS_IS_ANY (caps)) {
+    /* ANY caps will stay as ANY caps */
+    gst_structure_free (structure);
+    return caps;
+  }
 
   /* check each structure */
   for (i = GST_CAPS_LEN (caps) - 1; i >= 0; i--) {
@@ -757,6 +793,14 @@ gst_caps_merge_structure_full (GstCaps * caps, GstStructure * structure,
 
   if (G_UNLIKELY (structure == NULL))
     return caps;
+
+  if (CAPS_IS_ANY (caps)) {
+    /* ANY caps will stay as ANY caps */
+    gst_structure_free (structure);
+    if (features)
+      gst_caps_features_free (features);
+    return caps;
+  }
 
   /* To make comparisons easier below */
   features_tmp = features ? features : GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY;
@@ -950,6 +994,13 @@ gst_caps_set_features_simple (GstCaps * caps, GstCapsFeatures * features)
   g_return_if_fail (IS_WRITABLE (caps));
 
   n = gst_caps_get_size (caps);
+
+  if (n == 0) {
+    /* features will not be set on any structure */
+    if (features)
+      gst_caps_features_free (features);
+    return;
+  }
 
   for (i = 0; i < n; i++) {
     GstCapsFeatures *f;
@@ -1182,9 +1233,7 @@ gst_caps_is_fixed (const GstCaps * caps)
   if (GST_CAPS_LEN (caps) != 1)
     return FALSE;
 
-  /* an ANY caps can have length 1 (rather than the usual 0) if it
-   * has had a structure appended, or if it was created from a merge
-   * or append of caps */
+  /* double check not ANY, even though ANY caps should have 0 length */
   if (CAPS_IS_ANY (caps))
     return FALSE;
 
@@ -1433,9 +1482,7 @@ gst_caps_is_strictly_equal (const GstCaps * caps1, const GstCaps * caps2)
   if (G_UNLIKELY (caps1 == caps2))
     return TRUE;
 
-  /* if both are ANY caps, consider them strictly equal, even if
-   * internally they contain differing structures from
-   * gst_caps_append, gst_caps_merge or gst_caps_append_structure */
+  /* if both are ANY caps, consider them strictly equal */
   if (CAPS_IS_ANY (caps1))
     return (CAPS_IS_ANY (caps2));
   else if (CAPS_IS_ANY (caps2))

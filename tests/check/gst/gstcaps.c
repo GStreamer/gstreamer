@@ -60,7 +60,7 @@ GST_START_TEST (test_double_append)
   GstStructure *s1;
   GstCaps *c1;
 
-  c1 = gst_caps_new_any ();
+  c1 = gst_caps_new_empty ();
   s1 = gst_structure_from_string ("audio/x-raw,rate=44100", NULL);
   gst_caps_append_structure (c1, s1);
   ASSERT_CRITICAL (gst_caps_append_structure (c1, s1));
@@ -76,7 +76,7 @@ GST_START_TEST (test_mutability)
   GstCaps *c1;
   gint ret;
 
-  c1 = gst_caps_new_any ();
+  c1 = gst_caps_new_empty ();
   s1 = gst_structure_from_string ("audio/x-raw,rate=44100", NULL);
   gst_structure_set (s1, "rate", G_TYPE_INT, 48000, NULL);
   gst_caps_append_structure (c1, s1);
@@ -1259,6 +1259,18 @@ GST_START_TEST (test_features)
   fail_unless (gst_caps_features_is_equal (f1, f2));
 
   gst_caps_unref (c1);
+
+  c1 = gst_caps_new_any ();
+  fail_unless_equals_int (gst_caps_get_size (c1), 0);
+
+  f1 = gst_caps_features_new ("memory:EGLImage", NULL);
+  /* Nothing to set the features on, but method should still take
+   * ownership of the given features */
+  gst_caps_set_features_simple (c1, f1);
+  fail_unless_equals_int (gst_caps_get_size (c1), 0);
+  fail_unless (gst_caps_is_any (c1));
+
+  gst_caps_unref (c1);
 }
 
 GST_END_TEST;
@@ -1425,6 +1437,7 @@ GST_START_TEST (test_equality)
       G_TYPE_FLOAT, 5.7, NULL);
   fail_unless (s);
   gst_caps_append_structure (any2, s);
+  /* should still be ANY after append */
 
   caps1 = gst_caps_new_simple ("structure", "int", G_TYPE_INT, 4, "float",
       G_TYPE_FLOAT, 5.7, NULL);
@@ -1603,6 +1616,83 @@ GST_START_TEST (test_equality)
 
 GST_END_TEST;
 
+GST_START_TEST (test_remains_any)
+{
+  GstCaps *any, *caps;
+  GstStructure *s;
+
+  /* test append structure to ANY */
+  any = gst_caps_new_any ();
+  fail_unless (gst_caps_is_any (any));
+  fail_if (gst_caps_get_size (any));
+  s = gst_structure_new ("structure", "int", G_TYPE_INT, 4, NULL);
+  fail_unless (s);
+  gst_caps_append_structure (any, s);
+  fail_unless (gst_caps_is_any (any));
+  fail_if (gst_caps_get_size (any));
+  ASSERT_CRITICAL (gst_caps_get_structure (any, 0));
+
+  s = gst_structure_new ("structure", "int", G_TYPE_INT, 4, NULL);
+  fail_unless (s);
+  gst_caps_append_structure_full (any, s, gst_caps_features_new_any ());
+  fail_unless (gst_caps_is_any (any));
+  fail_if (gst_caps_get_size (any));
+  ASSERT_CRITICAL (gst_caps_get_structure (any, 0));
+
+  /* test merge structure with ANY */
+  s = gst_structure_new ("structure", "int", G_TYPE_INT, 4, NULL);
+  fail_unless (s);
+  any = gst_caps_merge_structure (any, s);
+  fail_unless (gst_caps_is_any (any));
+  fail_if (gst_caps_get_size (any));
+  ASSERT_CRITICAL (gst_caps_get_structure (any, 0));
+
+  s = gst_structure_new ("structure", "int", G_TYPE_INT, 4, NULL);
+  fail_unless (s);
+  any = gst_caps_merge_structure_full (any, s, gst_caps_features_new_any ());
+  fail_unless (gst_caps_is_any (any));
+  fail_if (gst_caps_get_size (any));
+  ASSERT_CRITICAL (gst_caps_get_structure (any, 0));
+
+  /* test appending non-ANY to ANY */
+  caps = gst_caps_new_simple ("structure", "int", G_TYPE_INT, 4, NULL);
+  fail_unless (caps);
+  gst_caps_append (any, caps);
+  fail_unless (gst_caps_is_any (any));
+  fail_if (gst_caps_get_size (any));
+  ASSERT_CRITICAL (gst_caps_get_structure (any, 0));
+
+  /* test merging non-ANY with ANY */
+  caps = gst_caps_new_simple ("structure", "int", G_TYPE_INT, 4, NULL);
+  fail_unless (caps);
+  any = gst_caps_merge (any, caps);
+  fail_unless (gst_caps_is_any (any));
+  fail_if (gst_caps_get_size (any));
+  ASSERT_CRITICAL (gst_caps_get_structure (any, 0));
+
+  caps = gst_caps_new_simple ("structure", "int", G_TYPE_INT, 4, NULL);
+  fail_unless (caps);
+  any = gst_caps_merge (caps, any);
+  fail_unless (gst_caps_is_any (any));
+  fail_if (gst_caps_get_size (any));
+  ASSERT_CRITICAL (gst_caps_get_structure (any, 0));
+
+  gst_caps_unref (any);
+
+  /* test appending ANY to non-ANY */
+  caps = gst_caps_new_simple ("structure", "int", G_TYPE_INT, 4, NULL);
+  fail_unless (caps);
+  fail_unless_equals_int (gst_caps_get_size (caps), 1);
+  fail_unless (gst_caps_get_structure (caps, 0));
+  gst_caps_append (caps, gst_caps_new_any ());
+  fail_unless (gst_caps_is_any (caps));
+  fail_if (gst_caps_get_size (caps));
+  ASSERT_CRITICAL (gst_caps_get_structure (caps, 0));
+
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
 
 static Suite *
 gst_caps_suite (void)
@@ -1639,6 +1729,7 @@ gst_caps_suite (void)
   tcase_add_test (tc_chain, test_map_in_place);
   tcase_add_test (tc_chain, test_filter_and_map_in_place);
   tcase_add_test (tc_chain, test_equality);
+  tcase_add_test (tc_chain, test_remains_any);
 
   return s;
 }
