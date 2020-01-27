@@ -1001,7 +1001,8 @@ send_fragment_opened_closed_msg (GstSplitMuxSink * splitmux, gboolean opened,
     msg = gst_message_new_element (GST_OBJECT (splitmux),
         gst_structure_new (msg_name,
             "location", G_TYPE_STRING, location,
-            "running-time", GST_TYPE_CLOCK_TIME, running_time, NULL));
+            "running-time", GST_TYPE_CLOCK_TIME, running_time,
+            "sink", GST_TYPE_ELEMENT, sink, NULL));
     gst_element_post_message (GST_ELEMENT_CAST (splitmux), msg);
   }
 
