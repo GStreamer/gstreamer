@@ -68,6 +68,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace/boxed[@cname='GstSample']" name="opaque">true</attr>
 	<attr path="/api/namespace/boxed[@cname='GstSample']" name="parent">GstMiniObject</attr>
 
+	<!-- GstVideoOverlayComposition fixes -->
+	<attr path="/api/namespace/boxed[@cname='GstVideoOverlayComposition']" name="opaque">true</attr>
+	<attr path="/api/namespace/boxed[@cname='GstVideoOverlayComposition']" name="parent">GstMiniObject</attr>
+	<attr path="/api/namespace/boxed[@cname='GstVideoOverlayRectangle']" name="opaque">true</attr>
+	<attr path="/api/namespace/boxed[@cname='GstVideoOverlayRectangle']" name="parent">GstMiniObject</attr>
+
 	<attr path="/api/namespace/boxed[@cname='GstAudioInfo']" name="opaque">true</attr>
 	<attr path="/api/namespace/boxed[@cname='GstVideoInfo']" name="opaque">true</attr>
 	<attr path="/api/namespace/boxed[@cname='GstAtomicQueue']" name="opaque">true</attr>

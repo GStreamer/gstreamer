@@ -52,15 +52,13 @@ namespace Gst.Video {
 		static extern IntPtr gst_buffer_add_video_overlay_composition_meta(IntPtr buf, IntPtr comp);
 
 		public static Gst.Video.VideoOverlayCompositionMeta BufferAddVideoOverlayCompositionMeta(Gst.Buffer buf, Gst.Video.VideoOverlayComposition comp) {
-			IntPtr native_comp = GLib.Marshaller.StructureToPtrAlloc (comp);
-			IntPtr raw_ret = gst_buffer_add_video_overlay_composition_meta(buf == null ? IntPtr.Zero : buf.Handle, native_comp);
+			IntPtr raw_ret = gst_buffer_add_video_overlay_composition_meta(buf == null ? IntPtr.Zero : buf.Handle, comp == null ? IntPtr.Zero : comp.Handle);
 			Gst.Video.VideoOverlayCompositionMeta ret = Gst.Video.VideoOverlayCompositionMeta.New (raw_ret);
-			Marshal.FreeHGlobal (native_comp);
 			return ret;
 		}
 
 		public static Gst.Video.VideoOverlayCompositionMeta BufferAddVideoOverlayCompositionMeta(Gst.Buffer buf) {
-			return BufferAddVideoOverlayCompositionMeta (buf, Gst.Video.VideoOverlayComposition.Zero);
+			return BufferAddVideoOverlayCompositionMeta (buf, null);
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

@@ -28472,7 +28472,7 @@
         <return-type type="guint32" />
       </method>
     </struct>
-    <boxed name="VideoOverlayComposition" cname="GstVideoOverlayComposition" opaque="false" hidden="false">
+    <boxed name="VideoOverlayComposition" cname="GstVideoOverlayComposition" opaque="true" hidden="false" parent="GstMiniObject">
       <method name="GetType" cname="gst_video_overlay_composition_get_type" shared="true">
         <return-type type="GType" />
       </method>
@@ -28541,7 +28541,7 @@
         </return-type>
       </method>
     </struct>
-    <boxed name="VideoOverlayRectangle" cname="GstVideoOverlayRectangle" opaque="true" hidden="false">
+    <boxed name="VideoOverlayRectangle" cname="GstVideoOverlayRectangle" opaque="true" hidden="false" parent="GstMiniObject">
       <method name="GetType" cname="gst_video_overlay_rectangle_get_type" shared="true">
         <return-type type="GType" />
       </method>
