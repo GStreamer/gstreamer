@@ -228,6 +228,14 @@ gboolean       gst_rtp_buffer_add_extension_twobytes_header (GstRTPBuffer *rtp,
                                                              gconstpointer data,
                                                              guint size);
 
+GST_RTP_API
+gboolean gst_rtp_buffer_get_extension_onebyte_header_from_bytes (GBytes * bytes,
+                                                                 guint16 bit_pattern,
+                                                                 guint8 id,
+                                                                 guint nth,
+                                                                 gpointer * data,
+                                                                 guint * size);
+
 /**
  * GstRTPBufferFlags:
  * @GST_RTP_BUFFER_FLAG_RETRANSMISSION: The #GstBuffer was once wrapped

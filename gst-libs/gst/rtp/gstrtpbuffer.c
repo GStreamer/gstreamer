@@ -1314,6 +1314,94 @@ gst_rtp_buffer_ext_timestamp (guint64 * exttimestamp, guint32 timestamp)
   return result;
 }
 
+
+static gboolean
+_get_extension_onebyte_header (const guint8 * pdata, guint len,
+    guint16 bit_pattern, guint8 id, guint nth, gpointer * data, guint * size)
+{
+  gulong offset = 0;
+  guint count = 0;
+
+  g_return_val_if_fail (id > 0 && id < 15, FALSE);
+
+  if (bit_pattern != 0xBEDE)
+    return FALSE;
+
+  for (;;) {
+    guint8 read_id, read_len;
+
+    if (offset + 1 >= len)
+      break;
+
+    read_id = GST_READ_UINT8 (pdata + offset) >> 4;
+    read_len = (GST_READ_UINT8 (pdata + offset) & 0x0F) + 1;
+    offset += 1;
+
+    /* ID 0 means its padding, skip */
+    if (read_id == 0)
+      continue;
+
+    /* ID 15 is special and means we should stop parsing */
+    if (read_id == 15)
+      break;
+
+    /* Ignore extension headers where the size does not fit */
+    if (offset + read_len > len)
+      break;
+
+    /* If we have the right one */
+    if (id == read_id) {
+      if (nth == count) {
+        if (data)
+          *data = (gpointer) & pdata[offset];
+        if (size)
+          *size = read_len;
+
+        return TRUE;
+      }
+
+      count++;
+    }
+    offset += read_len;
+
+    if (offset >= len)
+      break;
+  }
+
+  return FALSE;
+}
+
+
+/**
+ * gst_rtp_buffer_get_extension_onebyte_header_from_bytes:
+ * @bytes: #GBytes
+ * @bit_pattern: The bit-pattern. Anything but 0xBEDE is rejected.
+ * @id: The ID of the header extension to be read (between 1 and 14).
+ * @nth: Read the nth extension packet with the requested ID
+ * @data: (out) (array length=size) (element-type guint8) (transfer none):
+ *   location for data
+ * @size: (out): the size of the data in bytes
+ *
+ * Similar to gst_rtp_buffer_get_extension_onebyte_header, but working
+ * on the #GBytes you get from gst_rtp_buffer_get_extension_bytes.
+ * Parses RFC 5285 style header extensions with a one byte header. It will
+ * return the nth extension with the requested id.
+ *
+ * Returns: TRUE if @bytes had the requested header extension
+ *
+ * Since: 1.18
+ */
+gboolean
+gst_rtp_buffer_get_extension_onebyte_header_from_bytes (GBytes * bytes,
+    guint16 bit_pattern, guint8 id, guint nth, gpointer * data, guint * size)
+{
+  const guint8 *pdata = g_bytes_get_data (bytes, NULL);
+  gsize len = g_bytes_get_size (bytes);
+  return _get_extension_onebyte_header (pdata, len, bit_pattern, id, nth, data,
+      size);
+}
+
+
 /**
  * gst_rtp_buffer_get_extension_onebyte_header:
  * @rtp: the RTP packet
@@ -1333,64 +1421,18 @@ gboolean
 gst_rtp_buffer_get_extension_onebyte_header (GstRTPBuffer * rtp, guint8 id,
     guint nth, gpointer * data, guint * size)
 {
-  guint16 bits;
+  guint16 bit_pattern;
   guint8 *pdata;
   guint wordlen;
-  gulong offset = 0;
-  guint count = 0;
 
-  g_return_val_if_fail (id > 0 && id < 15, FALSE);
-
-  if (!gst_rtp_buffer_get_extension_data (rtp, &bits, (gpointer) & pdata,
+  if (!gst_rtp_buffer_get_extension_data (rtp, &bit_pattern, (gpointer) & pdata,
           &wordlen))
     return FALSE;
 
-  if (bits != 0xBEDE)
-    return FALSE;
-
-  for (;;) {
-    guint8 read_id, read_len;
-
-    if (offset + 1 >= wordlen * 4)
-      break;
-
-    read_id = GST_READ_UINT8 (pdata + offset) >> 4;
-    read_len = (GST_READ_UINT8 (pdata + offset) & 0x0F) + 1;
-    offset += 1;
-
-    /* ID 0 means its padding, skip */
-    if (read_id == 0)
-      continue;
-
-    /* ID 15 is special and means we should stop parsing */
-    if (read_id == 15)
-      break;
-
-    /* Ignore extension headers where the size does not fit */
-    if (offset + read_len > wordlen * 4)
-      break;
-
-    /* If we have the right one */
-    if (id == read_id) {
-      if (nth == count) {
-        if (data)
-          *data = pdata + offset;
-        if (size)
-          *size = read_len;
-
-        return TRUE;
-      }
-
-      count++;
-    }
-    offset += read_len;
-
-    if (offset >= wordlen * 4)
-      break;
-  }
-
-  return FALSE;
+  return _get_extension_onebyte_header (pdata, wordlen * 4, bit_pattern, id,
+      nth, data, size);
 }
+
 
 /**
  * gst_rtp_buffer_get_extension_twobytes_header:
