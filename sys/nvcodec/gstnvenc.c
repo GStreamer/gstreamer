@@ -53,6 +53,10 @@ typedef NVENCSTATUS NVENCAPI
 tNvEncodeAPICreateInstance (NV_ENCODE_API_FUNCTION_LIST * functionList);
 tNvEncodeAPICreateInstance *nvEncodeAPICreateInstance;
 
+typedef NVENCSTATUS NVENCAPI
+tNvEncodeAPIGetMaxSupportedVersion (uint32_t * version);
+tNvEncodeAPIGetMaxSupportedVersion *nvEncodeAPIGetMaxSupportedVersion;
+
 GST_DEBUG_CATEGORY_EXTERN (gst_nvenc_debug);
 #define GST_CAT_DEFAULT gst_nvenc_debug
 
@@ -849,6 +853,8 @@ gst_nvenc_load_library (void)
 {
   GModule *module;
   NVENCSTATUS ret = NV_ENC_SUCCESS;
+  uint32_t max_supported_version;
+  gint major_ver, minor_ver;
   gint i;
   static const GstNvEncVersion version_list[] = {
     {NVENCAPI_MAJOR_VERSION, NVENCAPI_MINOR_VERSION},
@@ -869,8 +875,11 @@ gst_nvenc_load_library (void)
     return FALSE;
   }
 
-  nvenc_api.version = NV_ENCODE_API_FUNCTION_LIST_VER;
-  ret = nvEncodeAPICreateInstance (&nvenc_api);
+  if (!g_module_symbol (module, "NvEncodeAPIGetMaxSupportedVersion",
+          (gpointer *) & nvEncodeAPIGetMaxSupportedVersion)) {
+    GST_ERROR ("NvEncodeAPIGetMaxSupportedVersion unavailable");
+    return FALSE;
+  }
 
   /* WARNING: Any developers who want to bump SDK version must ensure that
    * following macro values were not changed and also need to check ABI compatibility.
@@ -904,16 +913,37 @@ gst_nvenc_load_library (void)
    * NV_ENCODE_API_FUNCTION_LIST_VER      NVENCAPI_STRUCT_VERSION(2)
    */
 
+  ret = nvEncodeAPIGetMaxSupportedVersion (&max_supported_version);
+
+  if (ret != NV_ENC_SUCCESS) {
+    GST_ERROR ("Could not query max supported api version, ret %d", ret);
+    return FALSE;
+  }
+
+  /* 4 LSB: minor version
+   * the rest: major version */
+  major_ver = max_supported_version >> 4;
+  minor_ver = max_supported_version & 0xf;
+
+  GST_INFO ("Maximum supported API version by driver: %d.%d",
+      major_ver, minor_ver);
+
+  ret = NV_ENC_ERR_INVALID_VERSION;
   for (i = 0; i < G_N_ELEMENTS (version_list); i++) {
+    if (version_list[i].major > major_ver ||
+        (version_list[i].major == major_ver
+            && version_list[i].minor > minor_ver)) {
+      continue;
+    }
+
     gst_nvenc_api_version =
         GST_NVENCAPI_VERSION (version_list[i].major, version_list[i].minor);
 
     nvenc_api.version = GST_NVENCAPI_STRUCT_VERSION (2, gst_nvenc_api_version);
-
     ret = nvEncodeAPICreateInstance (&nvenc_api);
 
     if (ret == NV_ENC_SUCCESS) {
-      GST_INFO ("Supported SDK version %d.%d",
+      GST_INFO ("API version %d.%d load done",
           version_list[i].major, version_list[i].minor);
       break;
     }
