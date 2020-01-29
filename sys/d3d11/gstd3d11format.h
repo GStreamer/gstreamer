@@ -55,6 +55,21 @@ gboolean        gst_d3d11_dxgi_format_get_size      (DXGI_FORMAT format,
 GstCaps *       gst_d3d11_device_get_supported_caps (GstD3D11Device * device,
                                                      D3D11_FORMAT_SUPPORT flags);
 
+#if (DXGI_HEADER_VERSION >= 5)
+gboolean        gst_d3d11_hdr_meta_data_to_dxgi     (GstVideoMasteringDisplayInfo * minfo,
+                                                     GstVideoContentLightLevel * cll,
+                                                     DXGI_HDR_METADATA_HDR10 * dxgi_hdr10);
+#endif
+
+#if (DXGI_HEADER_VERSION >= 4)
+gboolean        gst_d3d11_video_info_to_dxgi_color_space (GstVideoInfo * info,
+                                                          DXGI_COLOR_SPACE_TYPE * colorspace);
+
+gboolean        gst_d3d11_find_swap_chain_color_space (GstVideoInfo * info,
+                                                       IDXGISwapChain3 * swapchain,
+                                                       DXGI_COLOR_SPACE_TYPE * colorspace);
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_D3D11_FORMAT_H__ */

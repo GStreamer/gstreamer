@@ -82,9 +82,6 @@ struct _GstD3D11Window
   GstD3D11ColorConverter *converter;
   GstD3D11OverlayCompositor *compositor;
 
-  GstVideoMasteringDisplayInfo mastering_display_info;
-  GstVideoContentLightLevel content_light_level;
-
   /* calculated rect with aspect ratio and window area */
   RECT render_rect;
 
