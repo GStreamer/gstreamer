@@ -1,4 +1,6 @@
-FROM registry.fedoraproject.org/fedora:30
+FROM registry.fedoraproject.org/fedora:31
+
+ENV TERM="dumb"
 
 # System setup
 RUN echo "fastestmirror=true" >>  /etc/dnf/dnf.conf && \

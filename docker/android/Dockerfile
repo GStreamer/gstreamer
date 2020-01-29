@@ -1,4 +1,4 @@
-FROM registry.fedoraproject.org/fedora:29
+FROM registry.fedoraproject.org/fedora:31
 
 ENV ANDROID_HOME=/android/sdk
 ENV ANDROID_NDK_HOME=/android/ndk
