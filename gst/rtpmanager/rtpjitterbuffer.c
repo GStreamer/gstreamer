@@ -899,12 +899,12 @@ rtp_jitter_buffer_calculate_pts (RTPJitterBuffer * jbuf, GstClockTime dts,
 
     if (ntprtptime > rtptime_tmp)
       ntptime -=
-          gst_util_uint64_scale (ntprtptime - rtptime_tmp, jbuf->clock_rate,
-          GST_SECOND);
+          gst_util_uint64_scale (ntprtptime - rtptime_tmp, GST_SECOND,
+          jbuf->clock_rate);
     else
       ntptime +=
-          gst_util_uint64_scale (rtptime_tmp - ntprtptime, jbuf->clock_rate,
-          GST_SECOND);
+          gst_util_uint64_scale (rtptime_tmp - ntprtptime, GST_SECOND,
+          jbuf->clock_rate);
 
     rtpsystime =
         gst_clock_adjust_with_calibration (media_clock, ntptime, internal,
