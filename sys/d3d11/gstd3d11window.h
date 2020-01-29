@@ -27,6 +27,7 @@
 #include "gstd3d11_fwd.h"
 #include "gstd3d11colorconverter.h"
 #include "gstd3d11overlaycompositor.h"
+#include "gstd3d11videoprocessor.h"
 
 G_BEGIN_DECLS
 
@@ -79,11 +80,15 @@ struct _GstD3D11Window
   GstVideoInfo info;
   GstVideoInfo render_info;
   const GstD3D11Format *render_format;
+  GstD3D11VideoProcessor *processor;
   GstD3D11ColorConverter *converter;
   GstD3D11OverlayCompositor *compositor;
 
   /* calculated rect with aspect ratio and window area */
   RECT render_rect;
+
+  /* input resolution */
+  RECT input_rect;
 
   /* requested rect via gst_d3d11_window_render */
   GstVideoRectangle rect;
@@ -99,6 +104,7 @@ struct _GstD3D11Window
 
   IDXGISwapChain *swap_chain;
   ID3D11RenderTargetView *rtv;
+  ID3D11VideoProcessorOutputView *pov;
 
   GstBuffer *cached_buffer;
   gboolean first_present;
@@ -144,6 +150,7 @@ gboolean      gst_d3d11_window_prepare              (GstD3D11Window * window,
                                                      guint aspect_ratio_n,
                                                      guint aspect_ratio_d,
                                                      GstCaps * caps,
+                                                     gboolean * video_processor_available,
                                                      GError ** error);
 
 GstFlowReturn gst_d3d11_window_render               (GstD3D11Window * window,

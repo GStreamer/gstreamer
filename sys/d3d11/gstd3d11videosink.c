@@ -27,6 +27,7 @@
 #include "gstd3d11device.h"
 #include "gstd3d11bufferpool.h"
 #include "gstd3d11format.h"
+#include "gstd3d11videoprocessor.h"
 
 #if GST_D3D11_WINAPI_ONLY_APP
 #include "gstd3d11window_corewindow.h"
@@ -386,9 +387,10 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
   self->pending_render_rect = FALSE;
   GST_OBJECT_UNLOCK (self);
 
+  self->have_video_processor = FALSE;
   if (!gst_d3d11_window_prepare (self->window, GST_VIDEO_SINK_WIDTH (self),
           GST_VIDEO_SINK_HEIGHT (self), video_par_n, video_par_d,
-          caps, &error)) {
+          caps, &self->have_video_processor, &error)) {
     GstMessage *error_msg;
 
     GST_ERROR_OBJECT (self, "cannot create swapchain");
@@ -412,15 +414,30 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
 
   {
     GstD3D11AllocationParams *d3d11_params;
+    gint bind_flags = D3D11_BIND_SHADER_RESOURCE;
+
+    if (self->have_video_processor) {
+      /* To create video processor input view, one of following bind flags
+       * is required
+       * NOTE: Any texture arrays which were created with D3D11_BIND_DECODER flag
+       * cannot be used for shader input.
+       *
+       * D3D11_BIND_DECODER
+       * D3D11_BIND_VIDEO_ENCODER
+       * D3D11_BIND_RENDER_TARGET
+       * D3D11_BIND_UNORDERED_ACCESS_VIEW
+       */
+      bind_flags |= D3D11_BIND_RENDER_TARGET;
+    }
 
     d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
     if (!d3d11_params) {
       d3d11_params = gst_d3d11_allocation_params_new (self->device,
-          &self->info, 0, D3D11_BIND_SHADER_RESOURCE);
+          &self->info, 0, bind_flags);
     } else {
       /* Set bind flag */
       for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&self->info); i++) {
-        d3d11_params->desc[i].BindFlags |= D3D11_BIND_SHADER_RESOURCE;
+        d3d11_params->desc[i].BindFlags |= bind_flags;
       }
     }
 
@@ -836,13 +853,6 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
       break;
     }
 
-    if (!gst_d3d11_memory_ensure_shader_resource_view (dmem)) {
-      GST_LOG_OBJECT (sink,
-          "shader resource view is unavailable, need fallback");
-      render_buf = NULL;
-      break;
-    }
-
     if (dmem->desc.Usage == D3D11_USAGE_DEFAULT) {
       if (!gst_memory_map (mem, &map, (GST_MAP_READ | GST_MAP_D3D11))) {
         GST_ERROR_OBJECT (self, "cannot map d3d11 memory");
@@ -850,6 +860,19 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
       }
 
       gst_memory_unmap (mem, &map);
+    }
+
+    if (gst_buffer_n_memory (buf) == 1 && self->have_video_processor &&
+        gst_d3d11_video_processor_check_bind_flags_for_input_view
+        (dmem->desc.BindFlags)) {
+      break;
+    }
+
+    if (!gst_d3d11_memory_ensure_shader_resource_view (dmem)) {
+      GST_LOG_OBJECT (sink,
+          "shader resource view is unavailable, need fallback");
+      render_buf = NULL;
+      break;
     }
   }
 

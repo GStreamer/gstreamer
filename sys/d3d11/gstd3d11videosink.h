@@ -66,6 +66,7 @@ struct _GstD3D11VideoSink
 
   GstBufferPool *fallback_pool;
   gboolean can_convert;
+  gboolean have_video_processor;
 };
 
 struct _GstD3D11VideoSinkClass
