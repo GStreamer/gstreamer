@@ -767,6 +767,7 @@ ensure_vendor_string (GstVaapiDisplay * display)
     vendor_string = vaQueryVendorString (priv->display);
     if (vendor_string)
       priv->vendor_string = g_strdup (vendor_string);
+    GST_INFO_OBJECT (display, "vendor: %s", priv->vendor_string);
   }
   GST_VAAPI_DISPLAY_UNLOCK (display);
   return priv->vendor_string != NULL;
