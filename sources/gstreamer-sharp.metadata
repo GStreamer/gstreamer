@@ -321,8 +321,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="//method[@cname='gst_tag_list_copy_value']/parameters/parameter[@name='dest']" name="pass_as">ref</attr>
 	<attr path="//object/field[@cname='parent']" name="hidden">true</attr>
     <!-- buffer fixes -->
-	<attr path="//constructor[@cname='gst_buffer_new_wrapped']/parameters/parameter[@name='data']" name="type">guint8*</attr>
-	<attr path="//constructor[@cname='gst_buffer_new_wrapped']/parameters/parameter[@name='size']" name="name">n_length</attr>
+	<attr path="//constructor[@cname='gst_buffer_new_wrapped']" name="hidden">true</attr>
 	<attr path="//constructor[@cname='gst_buffer_new_wrapped_full']/parameters/parameter[@name='data']" name="type">guint8*</attr>
 	<attr path="//constructor[@cname='gst_memory_new_wrapped']/parameters/parameter[@name='data']" name="type">guint8*</attr>
 	<attr path="//method[@cname='gst_buffer_fill']/parameters/parameter[@name='src']" name="type">guint8*</attr>

@@ -46,5 +46,15 @@ namespace Gst {
 
 			return (ulong) native_dest_size;
 		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_buffer_new_wrapped(IntPtr data, UIntPtr n_length);
+
+		public Buffer (byte[] data)
+		{
+			IntPtr ptr = GLib.Marshaller.Malloc((ulong) data.Length);
+			Marshal.Copy(data, 0, ptr, data.Length);
+			Raw = gst_buffer_new_wrapped(ptr, new UIntPtr((ulong) data.Length));
+		}
 	}
 }

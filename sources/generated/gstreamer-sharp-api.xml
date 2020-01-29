@@ -6150,10 +6150,10 @@
           </parameter>
         </parameters>
       </constructor>
-      <constructor cname="gst_buffer_new_wrapped">
+      <constructor cname="gst_buffer_new_wrapped" hidden="true">
         <parameters>
-          <parameter name="data" type="guint8*" owned="true" array="true" array_length_param_index="1" />
-          <parameter name="n_length" type="gsize" />
+          <parameter name="data" type="gpointer*" owned="true" array="true" array_length_param_index="1" />
+          <parameter name="size" type="gsize" />
         </parameters>
       </constructor>
       <constructor cname="gst_buffer_new_wrapped_bytes" version="1.16">
