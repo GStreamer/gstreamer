@@ -1778,9 +1778,8 @@ gst_msdkenc_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
       query);
 }
 
-
 static void
-gst_msdkenc_finalize (GObject * object)
+gst_msdkenc_dispose (GObject * object)
 {
   GstMsdkEnc *thiz = GST_MSDKENC (object);
 
@@ -1792,7 +1791,7 @@ gst_msdkenc_finalize (GObject * object)
   gst_clear_object (&thiz->msdk_converted_pool);
   gst_clear_object (&thiz->old_context);
 
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static gboolean
@@ -1844,7 +1843,7 @@ gst_msdkenc_class_init (GstMsdkEncClass * klass)
   klass->need_reconfig = gst_msdkenc_need_reconfig;
   klass->set_extra_params = gst_msdkenc_set_extra_params;
 
-  gobject_class->finalize = gst_msdkenc_finalize;
+  gobject_class->dispose = gst_msdkenc_dispose;
 
   element_class->set_context = gst_msdkenc_set_context;
 
