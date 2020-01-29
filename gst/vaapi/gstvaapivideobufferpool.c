@@ -154,6 +154,10 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
   if (!gst_video_info_from_caps (&new_allocation_vinfo, caps))
     goto error_invalid_caps;
 
+  if (!gst_buffer_pool_config_has_option (config,
+          GST_BUFFER_POOL_OPTION_VAAPI_VIDEO_META))
+    goto error_no_vaapi_video_meta_option;
+
   allocator = NULL;
   if (!gst_buffer_pool_config_get_allocator (config, &allocator, NULL))
     goto error_invalid_allocator;
@@ -197,10 +201,6 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
       allocator = NULL;
     }
   }
-
-  if (!gst_buffer_pool_config_has_option (config,
-          GST_BUFFER_POOL_OPTION_VAAPI_VIDEO_META))
-    goto error_no_vaapi_video_meta_option;
 
   /* create a new allocator if needed */
   if (!allocator) {
