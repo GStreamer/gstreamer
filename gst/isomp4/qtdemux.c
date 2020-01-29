@@ -53,6 +53,7 @@
 #include "gst/gst-i18n-plugin.h"
 
 #include <glib/gprintf.h>
+#include <gst/base/base.h>
 #include <gst/tag/tag.h>
 #include <gst/audio/audio.h>
 #include <gst/video/video.h>
@@ -9174,6 +9175,133 @@ flow_failed:
   }
 }
 
+static void
+qtdemux_merge_sample_table (GstQTDemux * qtdemux, QtDemuxStream * stream)
+{
+  guint i;
+  guint32 num_chunks;
+  gint32 stts_duration;
+  GstByteWriter stsc, stts, stsz;
+
+  /* Each sample has a different size, which we don't support for merging */
+  if (stream->sample_size == 0) {
+    GST_DEBUG_OBJECT (qtdemux,
+        "Not all samples have the same size, not merging");
+    return;
+  }
+
+  /* The stream has a ctts table, we don't support that */
+  if (stream->ctts_present) {
+    GST_DEBUG_OBJECT (qtdemux, "Have ctts, not merging");
+    return;
+  }
+
+  /* If there's a sync sample table also ignore this stream */
+  if (stream->stps_present || stream->stss_present) {
+    GST_DEBUG_OBJECT (qtdemux, "Have stss/stps, not merging");
+    return;
+  }
+
+  /* If chunks are considered samples already ignore this stream */
+  if (stream->chunks_are_samples) {
+    GST_DEBUG_OBJECT (qtdemux, "Chunks are samples, not merging");
+    return;
+  }
+
+  /* Require that all samples have the same duration */
+  if (stream->n_sample_times > 1) {
+    GST_DEBUG_OBJECT (qtdemux, "Not all samples have the same duration");
+    return;
+  }
+
+  /* Parse the stts to get the sample duration and number of samples */
+  gst_byte_reader_skip_unchecked (&stream->stts, 4);
+  stts_duration = gst_byte_reader_get_uint32_be_unchecked (&stream->stts);
+
+  /* Parse the number of chunks from the stco manually because the
+   * reader is already behind that */
+  num_chunks = GST_READ_UINT32_BE (stream->stco.data + 4);
+
+  GST_DEBUG_OBJECT (qtdemux, "sample_duration %d, num_chunks %u", stts_duration,
+      num_chunks);
+
+  /* Now parse stsc, convert chunks into single samples and generate a
+   * new stsc, stts and stsz from this information */
+  gst_byte_writer_init (&stsc);
+  gst_byte_writer_init (&stts);
+  gst_byte_writer_init (&stsz);
+
+  /* Note: we skip fourccs, size, version, flags and other fields of the new
+   * atoms as the byte readers with them are already behind that position
+   * anyway and only update the values of those inside the stream directly.
+   */
+  stream->n_sample_times = 0;
+  stream->n_samples = 0;
+  for (i = 0; i < stream->n_samples_per_chunk; i++) {
+    guint j;
+    guint32 first_chunk, last_chunk, samples_per_chunk, sample_description_id;
+
+    first_chunk = gst_byte_reader_get_uint32_be_unchecked (&stream->stsc);
+    samples_per_chunk = gst_byte_reader_get_uint32_be_unchecked (&stream->stsc);
+    sample_description_id =
+        gst_byte_reader_get_uint32_be_unchecked (&stream->stsc);
+
+    if (i == stream->n_samples_per_chunk - 1) {
+      /* +1 because first_chunk is 1-based */
+      last_chunk = num_chunks + 1;
+    } else {
+      last_chunk = gst_byte_reader_peek_uint32_be_unchecked (&stream->stsc);
+    }
+
+    GST_DEBUG_OBJECT (qtdemux,
+        "Merging first_chunk: %u, last_chunk: %u, samples_per_chunk: %u, sample_description_id: %u",
+        first_chunk, last_chunk, samples_per_chunk, sample_description_id);
+
+    gst_byte_writer_put_uint32_be (&stsc, first_chunk);
+    /* One sample in this chunk */
+    gst_byte_writer_put_uint32_be (&stsc, 1);
+    gst_byte_writer_put_uint32_be (&stsc, sample_description_id);
+
+    /* For each chunk write a stts and stsz entry now */
+    gst_byte_writer_put_uint32_be (&stts, last_chunk - first_chunk);
+    gst_byte_writer_put_uint32_be (&stts, stts_duration * samples_per_chunk);
+    for (j = first_chunk; j < last_chunk; j++) {
+      gst_byte_writer_put_uint32_be (&stsz,
+          stream->sample_size * samples_per_chunk);
+    }
+
+    stream->n_sample_times += 1;
+    stream->n_samples += last_chunk - first_chunk;
+  }
+
+  g_assert_cmpint (stream->n_samples, ==, num_chunks);
+
+  GST_DEBUG_OBJECT (qtdemux, "Have %u samples and %u sample times",
+      stream->n_samples, stream->n_sample_times);
+
+  /* We don't have a fixed sample size anymore */
+  stream->sample_size = 0;
+
+  /* Free old data for the atoms */
+  g_free ((gpointer) stream->stsz.data);
+  stream->stsz.data = NULL;
+  g_free ((gpointer) stream->stsc.data);
+  stream->stsc.data = NULL;
+  g_free ((gpointer) stream->stts.data);
+  stream->stts.data = NULL;
+
+  /* Store new data and replace byte readers */
+  stream->stsz.size = gst_byte_writer_get_size (&stsz);
+  stream->stsz.data = gst_byte_writer_reset_and_get_data (&stsz);
+  gst_byte_reader_init (&stream->stsz, stream->stsz.data, stream->stsz.size);
+  stream->stts.size = gst_byte_writer_get_size (&stts);
+  stream->stts.data = gst_byte_writer_reset_and_get_data (&stts);
+  gst_byte_reader_init (&stream->stts, stream->stts.data, stream->stts.size);
+  stream->stsc.size = gst_byte_writer_get_size (&stsc);
+  stream->stsc.data = gst_byte_writer_reset_and_get_data (&stsc);
+  gst_byte_reader_init (&stream->stsc, stream->stsc.data, stream->stsc.size);
+}
+
 /* initialise bytereaders for stbl sub-atoms */
 static gboolean
 qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
@@ -9322,26 +9450,6 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
     }
   }
 
-  GST_DEBUG_OBJECT (qtdemux, "allocating n_samples %u * %u (%.2f MB)",
-      stream->n_samples, (guint) sizeof (QtDemuxSample),
-      stream->n_samples * sizeof (QtDemuxSample) / (1024.0 * 1024.0));
-
-  if (stream->n_samples >=
-      QTDEMUX_MAX_SAMPLE_INDEX_SIZE / sizeof (QtDemuxSample)) {
-    GST_WARNING_OBJECT (qtdemux, "not allocating index of %d samples, would "
-        "be larger than %uMB (broken file?)", stream->n_samples,
-        QTDEMUX_MAX_SAMPLE_INDEX_SIZE >> 20);
-    return FALSE;
-  }
-
-  g_assert (stream->samples == NULL);
-  stream->samples = g_try_new0 (QtDemuxSample, stream->n_samples);
-  if (!stream->samples) {
-    GST_WARNING_OBJECT (qtdemux, "failed to allocate %d samples",
-        stream->n_samples);
-    return FALSE;
-  }
-
   /* composition time-to-sample */
   if ((stream->ctts_present =
           ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_ctts,
@@ -9394,7 +9502,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
 
           stream->cslg_shift = 0;
           stream->ctts_present = FALSE;
-          return TRUE;
+          goto done;
         }
 
         if (offset < cslg_least)
@@ -9413,6 +9521,35 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
     /* Ensure the cslg_shift value is consistent so we can use it
      * unconditionally to produce TS and Segment */
     stream->cslg_shift = 0;
+  }
+
+  /* For raw audio streams especially we might want to merge the samples
+   * to not output one audio sample per buffer. We're doing this here
+   * before allocating the sample tables so that from this point onwards
+   * the number of container samples are static */
+  if (stream->min_buffer_size > 0) {
+    qtdemux_merge_sample_table (qtdemux, stream);
+  }
+
+done:
+  GST_DEBUG_OBJECT (qtdemux, "allocating n_samples %u * %u (%.2f MB)",
+      stream->n_samples, (guint) sizeof (QtDemuxSample),
+      stream->n_samples * sizeof (QtDemuxSample) / (1024.0 * 1024.0));
+
+  if (stream->n_samples >=
+      QTDEMUX_MAX_SAMPLE_INDEX_SIZE / sizeof (QtDemuxSample)) {
+    GST_WARNING_OBJECT (qtdemux, "not allocating index of %d samples, would "
+        "be larger than %uMB (broken file?)", stream->n_samples,
+        QTDEMUX_MAX_SAMPLE_INDEX_SIZE >> 20);
+    return FALSE;
+  }
+
+  g_assert (stream->samples == NULL);
+  stream->samples = g_try_new0 (QtDemuxSample, stream->n_samples);
+  if (!stream->samples) {
+    GST_WARNING_OBJECT (qtdemux, "failed to allocate %d samples",
+        stream->n_samples);
+    return FALSE;
   }
 
   return TRUE;
