@@ -1368,13 +1368,13 @@ gst_msdkvpp_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_msdkvpp_finalize (GObject * object)
+gst_msdkvpp_dispose (GObject * object)
 {
   GstMsdkVPP *thiz = GST_MSDKVPP (object);
 
   gst_clear_object (&thiz->old_context);
 
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
@@ -1406,7 +1406,7 @@ gst_msdkvpp_class_init (GstMsdkVPPClass * klass)
 
   gobject_class->set_property = gst_msdkvpp_set_property;
   gobject_class->get_property = gst_msdkvpp_get_property;
-  gobject_class->finalize = gst_msdkvpp_finalize;
+  gobject_class->dispose = gst_msdkvpp_dispose;
 
   element_class->set_context = gst_msdkvpp_set_context;
 
