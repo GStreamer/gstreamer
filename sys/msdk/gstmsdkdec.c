@@ -1635,6 +1635,8 @@ gst_msdkdec_dispose (GObject * object)
   GstMsdkDec *thiz = GST_MSDKDEC (object);
 
   g_clear_object (&thiz->adapter);
+  gst_clear_object (&thiz->context);
+  gst_clear_object (&thiz->old_context);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
