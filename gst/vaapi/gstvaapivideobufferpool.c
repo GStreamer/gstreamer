@@ -286,32 +286,32 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
   /* ERRORS */
 error_invalid_config:
   {
-    GST_ERROR_OBJECT (base_pool, "invalid config");
+    GST_WARNING_OBJECT (base_pool, "invalid config");
     return FALSE;
   }
 error_no_caps:
   {
-    GST_ERROR_OBJECT (base_pool, "no caps in config");
+    GST_WARNING_OBJECT (base_pool, "no caps in config");
     return FALSE;
   }
 error_invalid_caps:
   {
-    GST_ERROR_OBJECT (base_pool, "invalid caps %" GST_PTR_FORMAT, caps);
+    GST_WARNING_OBJECT (base_pool, "invalid caps %" GST_PTR_FORMAT, caps);
     return FALSE;
   }
 error_invalid_allocator:
   {
-    GST_ERROR_OBJECT (base_pool, "no allocator in config");
+    GST_INFO_OBJECT (base_pool, "no allocator in config");
     return FALSE;
   }
 error_no_vaapi_video_meta_option:
   {
-    GST_ERROR_OBJECT (base_pool, "no GstVaapiVideoMeta option in config");
+    GST_WARNING_OBJECT (base_pool, "no GstVaapiVideoMeta option in config");
     return FALSE;
   }
 error_no_allocator:
   {
-    GST_ERROR_OBJECT (base_pool, "no allocator defined");
+    GST_WARNING_OBJECT (base_pool, "no allocator defined");
     return FALSE;
   }
 }
