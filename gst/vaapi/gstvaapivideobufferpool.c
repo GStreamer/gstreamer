@@ -194,6 +194,8 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
       && gst_video_info_changed (allocator_vinfo, &new_allocation_vinfo)) {
     gst_object_replace ((GstObject **) & priv->allocator, NULL);
 
+    /* dmabuf allocator can change its parameters: no need to create a
+     * new one */
     if (allocator && priv->use_dmabuf_memory) {
       gst_allocator_set_vaapi_video_info (allocator, &new_allocation_vinfo,
           surface_alloc_flags);
