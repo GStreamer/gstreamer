@@ -121,6 +121,7 @@ dnf debuginfo-install -y gtk3 \
     python3 \
     python3-libs \
     python3-gobject \
+    libappstream-glib-devel \
     libjpeg-turbo \
     glib-networking \
     libcurl \
