@@ -34,6 +34,9 @@
 #include <errno.h>
 #include <stdlib.h>
 
+GST_DEBUG_CATEGORY_STATIC (gst_sctp_association_debug_category);
+#define GST_CAT_DEFAULT gst_sctp_association_debug_category
+
 #define GST_SCTP_ASSOCIATION_STATE_TYPE (gst_sctp_association_state_get_type())
 static GType
 gst_sctp_association_state_get_type (void)
@@ -233,7 +236,7 @@ gst_sctp_association_set_property (GObject * object, guint prop_id,
     switch (prop_id) {
       case PROP_LOCAL_PORT:
       case PROP_REMOTE_PORT:
-        g_warning ("These properties cannot be set in this state");
+        GST_ERROR_OBJECT (self, "These properties cannot be set in this state");
         goto error;
     }
   }
@@ -329,6 +332,9 @@ gst_sctp_association_get (guint32 association_id)
   GstSctpAssociation *association;
 
   G_LOCK (associations_lock);
+  GST_DEBUG_CATEGORY_INIT (gst_sctp_association_debug_category,
+      "sctpassociation", 0, "debug category for sctpassociation");
+
   if (!associations) {
     associations =
         g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, NULL);
@@ -356,7 +362,8 @@ gst_sctp_association_start (GstSctpAssociation * self)
 
   g_rec_mutex_lock (&self->association_mutex);
   if (self->state != GST_SCTP_ASSOCIATION_STATE_READY) {
-    g_warning ("SCTP association is in wrong state and cannot be started");
+    GST_WARNING_OBJECT (self,
+        "SCTP association is in wrong state and cannot be started");
     goto configure_required;
   }
 
@@ -548,11 +555,17 @@ create_sctp_socket (GstSctpAssociation * self)
 
   if ((sock =
           usrsctp_socket (AF_CONN, sock_type, IPPROTO_SCTP, receive_cb, NULL, 0,
-              (void *) self)) == NULL)
+              (void *) self)) == NULL) {
+    GST_ERROR_OBJECT (self, "Could not open SCTP socket: (%u) %s", errno,
+        g_strerror (errno));
     goto error;
+  }
 
+  /* Properly return errors */
   if (usrsctp_set_non_blocking (sock, 1) < 0) {
-    g_warning ("Could not set non-blocking mode on SCTP socket");
+    GST_ERROR_OBJECT (self,
+        "Could not set non-blocking mode on SCTP socket: (%u) %s", errno,
+        g_strerror (errno));
     goto error;
   }
 
@@ -561,13 +574,15 @@ create_sctp_socket (GstSctpAssociation * self)
   l.l_linger = 0;
   if (usrsctp_setsockopt (sock, SOL_SOCKET, SO_LINGER, (const void *) &l,
           (socklen_t) sizeof (struct linger)) < 0) {
-    g_warning ("Could not set SO_LINGER on SCTP socket");
+    GST_ERROR_OBJECT (self, "Could not set SO_LINGER on SCTP socket: (%u) %s",
+        errno, g_strerror (errno));
     goto error;
   }
 
   if (usrsctp_setsockopt (sock, IPPROTO_SCTP, SCTP_NODELAY, &value,
           sizeof (int))) {
-    g_warning ("Could not set SCTP_NODELAY");
+    GST_ERROR_OBJECT (self, "Could not set SCTP_NODELAY: (%u) %s", errno,
+        g_strerror (errno));
     goto error;
   }
 
@@ -576,7 +591,8 @@ create_sctp_socket (GstSctpAssociation * self)
   stream_reset.assoc_value = 1;
   if (usrsctp_setsockopt (sock, IPPROTO_SCTP, SCTP_ENABLE_STREAM_RESET,
           &stream_reset, sizeof (stream_reset))) {
-    g_warning ("Could not set SCTP_ENABLE_STREAM_RESET");
+    GST_ERROR_OBJECT (self, "Could not set SCTP_ENABLE_STREAM_RESET: (%u) %s",
+        errno, g_strerror (errno));
     goto error;
   }
 
@@ -587,19 +603,15 @@ create_sctp_socket (GstSctpAssociation * self)
     event.se_type = event_types[i];
     if (usrsctp_setsockopt (sock, IPPROTO_SCTP, SCTP_EVENT,
             &event, sizeof (event)) < 0) {
-      g_warning ("Failed to register event %u", event_types[i]);
+      GST_ERROR_OBJECT (self, "Failed to register event %u: (%u) %s",
+          event_types[i], errno, g_strerror (errno));
     }
   }
 
   return sock;
 error:
-  if (sock) {
+  if (sock)
     usrsctp_close (sock);
-    g_warning ("Could not create socket. Error: (%u) %s", errno,
-        strerror (errno));
-    errno = 0;
-    sock = NULL;
-  }
   return NULL;
 }
 
@@ -640,7 +652,8 @@ client_role_connect (GstSctpAssociation * self)
       usrsctp_bind (self->sctp_ass_sock, (struct sockaddr *) &addr,
       sizeof (struct sockaddr_conn));
   if (ret < 0) {
-    g_warning ("usrsctp_bind() error: (%u) %s", errno, strerror (errno));
+    GST_ERROR_OBJECT (self, "usrsctp_bind() error: (%u) %s", errno,
+        g_strerror (errno));
     goto error;
   }
 
@@ -649,7 +662,8 @@ client_role_connect (GstSctpAssociation * self)
       usrsctp_connect (self->sctp_ass_sock, (struct sockaddr *) &addr,
       sizeof (struct sockaddr_conn));
   if (ret < 0 && errno != EINPROGRESS) {
-    g_warning ("usrsctp_connect() error: (%u) %s", errno, strerror (errno));
+    GST_ERROR_OBJECT (self, "usrsctp_connect() error: (%u) %s", errno,
+        g_strerror (errno));
     goto error;
   }
   g_rec_mutex_unlock (&self->association_mutex);
@@ -682,7 +696,7 @@ receive_cb (struct socket *sock, union sctp_sockstore addr, void *data,
 
   if (!data) {
     /* Not sure if this can happend. */
-    g_warning ("Received empty data buffer");
+    GST_WARNING_OBJECT (self, "Received empty data buffer");
   } else {
     if (flags & MSG_NOTIFICATION) {
       handle_notification (self, (const union sctp_notification *) data,
@@ -710,52 +724,48 @@ handle_notification (GstSctpAssociation * self,
 
   switch (notification->sn_header.sn_type) {
     case SCTP_ASSOC_CHANGE:
-      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_INFO, "Event: SCTP_ASSOC_CHANGE");
+      GST_DEBUG_OBJECT (self, "Event: SCTP_ASSOC_CHANGE");
       handle_association_changed (self, &notification->sn_assoc_change);
       break;
     case SCTP_PEER_ADDR_CHANGE:
-      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_INFO, "Event: SCTP_PEER_ADDR_CHANGE");
+      GST_DEBUG_OBJECT (self, "Event: SCTP_PEER_ADDR_CHANGE");
       break;
     case SCTP_REMOTE_ERROR:
-      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_INFO, "Event: SCTP_REMOTE_ERROR");
+      GST_ERROR_OBJECT (self, "Event: SCTP_REMOTE_ERROR");
       break;
     case SCTP_SEND_FAILED:
-      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_INFO, "Event: SCTP_SEND_FAILED");
+      GST_ERROR_OBJECT (self, "Event: SCTP_SEND_FAILED");
       break;
     case SCTP_SHUTDOWN_EVENT:
-      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_INFO, "Event: SCTP_SHUTDOWN_EVENT");
+      GST_DEBUG_OBJECT (self, "Event: SCTP_SHUTDOWN_EVENT");
       break;
     case SCTP_ADAPTATION_INDICATION:
-      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_INFO,
-          "Event: SCTP_ADAPTATION_INDICATION");
+      GST_DEBUG_OBJECT (self, "Event: SCTP_ADAPTATION_INDICATION");
       break;
     case SCTP_PARTIAL_DELIVERY_EVENT:
-      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_INFO,
-          "Event: SCTP_PARTIAL_DELIVERY_EVENT");
+      GST_DEBUG_OBJECT (self, "Event: SCTP_PARTIAL_DELIVERY_EVENT");
       break;
     case SCTP_AUTHENTICATION_EVENT:
-      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_INFO,
-          "Event: SCTP_AUTHENTICATION_EVENT");
+      GST_DEBUG_OBJECT (self, "Event: SCTP_AUTHENTICATION_EVENT");
       break;
     case SCTP_STREAM_RESET_EVENT:
-      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_INFO, "Event: SCTP_STREAM_RESET_EVENT");
+      GST_DEBUG_OBJECT (self, "Event: SCTP_STREAM_RESET_EVENT");
       handle_stream_reset_event (self, &notification->sn_strreset_event);
       break;
     case SCTP_SENDER_DRY_EVENT:
-      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_INFO, "Event: SCTP_SENDER_DRY_EVENT");
+      GST_DEBUG_OBJECT (self, "Event: SCTP_SENDER_DRY_EVENT");
       break;
     case SCTP_NOTIFICATIONS_STOPPED_EVENT:
-      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_INFO,
-          "Event: SCTP_NOTIFICATIONS_STOPPED_EVENT");
+      GST_DEBUG_OBJECT (self, "Event: SCTP_NOTIFICATIONS_STOPPED_EVENT");
       break;
     case SCTP_ASSOC_RESET_EVENT:
-      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_INFO, "Event: SCTP_ASSOC_RESET_EVENT");
+      GST_DEBUG_OBJECT (self, "Event: SCTP_ASSOC_RESET_EVENT");
       break;
     case SCTP_STREAM_CHANGE_EVENT:
-      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_INFO, "Event: SCTP_STREAM_CHANGE_EVENT");
+      GST_DEBUG_OBJECT (self, "Event: SCTP_STREAM_CHANGE_EVENT");
       break;
     case SCTP_SEND_FAILED_EVENT:
-      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_INFO, "Event: SCTP_SEND_FAILED_EVENT");
+      GST_ERROR_OBJECT (self, "Event: SCTP_SEND_FAILED_EVENT");
       break;
     default:
       break;
@@ -771,33 +781,32 @@ handle_association_changed (GstSctpAssociation * self,
 
   switch (sac->sac_state) {
     case SCTP_COMM_UP:
-      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_INFO, "SCTP_COMM_UP()");
+      GST_DEBUG_OBJECT (self, "SCTP_COMM_UP");
       g_rec_mutex_lock (&self->association_mutex);
       if (self->state == GST_SCTP_ASSOCIATION_STATE_CONNECTING) {
         change_state = TRUE;
         new_state = GST_SCTP_ASSOCIATION_STATE_CONNECTED;
-        g_log (G_LOG_DOMAIN, G_LOG_LEVEL_INFO, "SCTP association connected!");
+        GST_DEBUG_OBJECT (self, "SCTP association connected!");
       } else if (self->state == GST_SCTP_ASSOCIATION_STATE_CONNECTED) {
-        g_warning ("SCTP association already open");
+        GST_FIXME_OBJECT (self, "SCTP association already open");
       } else {
-        g_warning ("SCTP association in unexpected state");
+        GST_WARNING_OBJECT (self, "SCTP association in unexpected state");
       }
       g_rec_mutex_unlock (&self->association_mutex);
       break;
     case SCTP_COMM_LOST:
-      g_warning ("SCTP event SCTP_COMM_LOST received");
+      GST_WARNING_OBJECT (self, "SCTP event SCTP_COMM_LOST received");
       /* TODO: Tear down association and signal that this has happend */
       break;
     case SCTP_RESTART:
-      g_log (G_LOG_DOMAIN, G_LOG_LEVEL_INFO,
-          "SCTP event SCTP_RESTART received");
+      GST_DEBUG_OBJECT (self, "SCTP event SCTP_RESTART received");
       break;
     case SCTP_SHUTDOWN_COMP:
-      g_warning ("SCTP event SCTP_SHUTDOWN_COMP received");
+      GST_WARNING_OBJECT (self, "SCTP event SCTP_SHUTDOWN_COMP received");
       /* TODO: Tear down association and signal that this has happend */
       break;
     case SCTP_CANT_STR_ASSOC:
-      g_warning ("SCTP event SCTP_CANT_STR_ASSOC received");
+      GST_WARNING_OBJECT (self, "SCTP event SCTP_CANT_STR_ASSOC received");
       break;
   }
 
