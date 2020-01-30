@@ -62,6 +62,7 @@ dnf install -y \
     libxml2-devel \
     libxslt-devel \
     llvm-devel \
+    log4c-devel \
     make \
     neon \
     neon-devel \
