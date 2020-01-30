@@ -41,6 +41,10 @@
 #define orc_memcpy memcpy
 #endif
 
+#ifdef HAVE_JNI_H
+#include "gstjniutils.h"
+#endif
+
 #include "gstamcvideoenc.h"
 #include "gstamc-constants.h"
 
@@ -95,7 +99,8 @@ enum
 {
   PROP_0,
   PROP_BIT_RATE,
-  PROP_I_FRAME_INTERVAL
+  PROP_I_FRAME_INTERVAL,
+  PROP_I_FRAME_INTERVAL_FLOAT
 };
 
 /* class initialization */
@@ -263,8 +268,22 @@ create_amc_format (GstAmcVideoEnc * encoder, GstVideoCodecState * input_state,
     /* gst_amc_format_set_int (format, amc_level.key, amc_level.id); */
   }
 
-  gst_amc_format_set_int (format, "i-frame-interval", encoder->i_frame_int,
-      &err);
+  /* On Android N_MR1 and higher, i-frame-interval can be a float value */
+#ifdef HAVE_JNI_H
+  if (gst_amc_jni_get_android_level () >= 25) {
+    GST_LOG_OBJECT (encoder, "Setting i-frame-interval to %f",
+        encoder->i_frame_int);
+    gst_amc_format_set_float (format, "i-frame-interval", encoder->i_frame_int,
+        &err);
+  } else
+#endif
+  {
+    int i_frame_int = encoder->i_frame_int;
+    /* Round a fractional interval to 1 per sec on older Android */
+    if (encoder->i_frame_int > 0 && encoder->i_frame_int < 1.0)
+      i_frame_int = 1;
+    gst_amc_format_set_int (format, "i-frame-interval", i_frame_int, &err);
+  }
   if (err)
     GST_ELEMENT_WARNING_FROM_ERROR (encoder, err);
 
@@ -501,6 +520,11 @@ gst_amc_video_enc_set_property (GObject * object, guint prop_id,
       if (codec_active)
         goto wrong_state;
       break;
+    case PROP_I_FRAME_INTERVAL_FLOAT:
+      encoder->i_frame_int = g_value_get_float (value);
+      if (codec_active)
+        goto wrong_state;
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -531,6 +555,9 @@ gst_amc_video_enc_get_property (GObject * object, guint prop_id,
       break;
     case PROP_I_FRAME_INTERVAL:
       g_value_set_uint (value, encoder->i_frame_int);
+      break;
+    case PROP_I_FRAME_INTERVAL_FLOAT:
+      g_value_set_float (value, encoder->i_frame_int);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -581,6 +608,13 @@ gst_amc_video_enc_class_init (GstAmcVideoEncClass * klass)
       g_param_spec_uint ("i-frame-interval", "I-frame interval",
           "The frequency of I frames expressed in seconds between I frames (0 for automatic)",
           0, G_MAXINT, I_FRAME_INTERVAL_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_I_FRAME_INTERVAL_FLOAT,
+      g_param_spec_float ("i-frame-interval-float", "I-frame interval",
+          "The frequency of I frames expressed in seconds between I frames (0 for automatic). "
+          "Fractional intervals work on Android >= 25",
+          0, G_MAXFLOAT, I_FRAME_INTERVAL_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 

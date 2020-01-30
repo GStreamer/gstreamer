@@ -63,7 +63,7 @@ struct _GstAmcVideoEnc
   GstAmcColorFormatInfo color_format_info;
 
   guint bitrate;
-  guint i_frame_int;
+  gfloat i_frame_int;
 
   /* TRUE if the component is configured and saw
    * the first buffer */

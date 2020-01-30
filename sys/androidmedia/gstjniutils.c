@@ -43,6 +43,28 @@ static gboolean started_java_vm = FALSE;
 static pthread_key_t current_jni_env;
 static jobject (*get_class_loader) (void);
 
+gint
+gst_amc_jni_get_android_level ()
+{
+  JNIEnv *env;
+  gint ret = __ANDROID_API__;
+  jfieldID sdkIntFieldID = NULL;
+
+  env = gst_amc_jni_get_env ();
+
+  jclass versionClass = (*env)->FindClass (env, "android/os/Build$VERSION");
+  if (versionClass == NULL)
+    goto done;
+
+  sdkIntFieldID = (*env)->GetStaticFieldID (env, versionClass, "SDK_INT", "I");
+  if (sdkIntFieldID == NULL)
+    goto done;
+
+  ret = (*env)->GetStaticIntField (env, versionClass, sdkIntFieldID);
+done:
+  return ret;
+}
+
 jclass
 gst_amc_jni_get_class (JNIEnv * env, GError ** err, const gchar * name)
 {
