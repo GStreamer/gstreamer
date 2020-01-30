@@ -734,82 +734,23 @@ static gboolean
 gst_d3d11_video_sink_upload_frame (GstD3D11VideoSink * self, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
-  GstVideoFrame in_frame;
-  gint i, j, k;
-  gboolean ret = TRUE;
-  ID3D11DeviceContext *device_context =
-      gst_d3d11_device_get_device_context_handle (self->device);
+  GstVideoFrame in_frame, out_frame;
+  gboolean ret;
 
   if (!gst_video_frame_map (&in_frame, &self->info, inbuf,
           GST_MAP_READ | GST_VIDEO_FRAME_MAP_FLAG_NO_REF))
     goto invalid_buffer;
 
-  gst_d3d11_device_lock (self->device);
-  for (i = 0, j = 0; i < gst_buffer_n_memory (outbuf); i++) {
-    GstD3D11Memory *dmem =
-        (GstD3D11Memory *) gst_buffer_peek_memory (outbuf, i);
-    D3D11_MAPPED_SUBRESOURCE map;
-    HRESULT hr;
-    D3D11_TEXTURE2D_DESC *desc = &dmem->desc;
-    gsize offset[GST_VIDEO_MAX_PLANES];
-    gint stride[GST_VIDEO_MAX_PLANES];
-    gsize dummy;
-
-    if (!gst_d3d11_memory_ensure_shader_resource_view (dmem)) {
-      GST_ERROR_OBJECT (self, "shader resource view unavailable");
-      ret = FALSE;
-      goto done;
-    }
-
-    hr = ID3D11DeviceContext_Map (device_context,
-        (ID3D11Resource *) dmem->texture, 0, D3D11_MAP_WRITE_DISCARD, 0, &map);
-
-    if (!gst_d3d11_result (hr, self->device)) {
-      GST_ERROR_OBJECT (self, "Failed to map texture (0x%x)", (guint) hr);
-      gst_d3d11_device_unlock (self->device);
-      ret = FALSE;
-      goto done;
-    }
-
-    gst_d3d11_dxgi_format_get_size (desc->Format, desc->Width, desc->Height,
-        map.RowPitch, offset, stride, &dummy);
-
-    for (k = 0; k < gst_d3d11_dxgi_format_n_planes (dmem->desc.Format); k++) {
-      gint h, width;
-      guint8 *dst, *src;
-
-      dst = (guint8 *) map.pData + offset[k];
-      src = GST_VIDEO_FRAME_PLANE_DATA (&in_frame, j);
-      width = GST_VIDEO_FRAME_COMP_WIDTH (&in_frame, j) *
-          GST_VIDEO_FRAME_COMP_PSTRIDE (&in_frame, j);
-
-      for (h = 0; h < GST_VIDEO_FRAME_COMP_HEIGHT (&in_frame, j); h++) {
-        memcpy (dst, src, width);
-        GST_MEMDUMP_OBJECT (self, "dump", src, width);
-        dst += stride[k];
-        src += GST_VIDEO_FRAME_PLANE_STRIDE (&in_frame, j);
-      }
-
-      j++;
-    }
-
-    ID3D11DeviceContext_Unmap (device_context,
-        (ID3D11Resource *) dmem->texture, 0);
+  if (!gst_video_frame_map (&out_frame, &self->info, outbuf,
+          GST_MAP_WRITE | GST_VIDEO_FRAME_MAP_FLAG_NO_REF)) {
+    gst_video_frame_unmap (&in_frame);
+    goto invalid_buffer;
   }
-  gst_d3d11_device_unlock (self->device);
 
-done:
+  ret = gst_video_frame_copy (&out_frame, &in_frame);
+
   gst_video_frame_unmap (&in_frame);
-
-  if (ret) {
-    GstVideoOverlayCompositionMeta *overlay_meta;
-
-    overlay_meta = gst_buffer_get_video_overlay_composition_meta (inbuf);
-    if (overlay_meta) {
-      gst_buffer_add_video_overlay_composition_meta (outbuf,
-          overlay_meta->overlay);
-    }
-  }
+  gst_video_frame_unmap (&out_frame);
 
   return ret;
 
