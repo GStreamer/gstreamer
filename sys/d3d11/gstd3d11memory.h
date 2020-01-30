@@ -140,11 +140,8 @@ struct _GstD3D11Allocator
 
   GstD3D11Device *device;
 
-  /* parent textrure when array typed memory is used */
-  ID3D11Texture2D *texture;
-  guint8 array_in_use [D3D11_REQ_TEXTURE2D_ARRAY_AXIS_DIMENSION];
-
   /*< private >*/
+  GstD3D11AllocatorPrivate *priv;
   gpointer _gst_reserved[GST_PADDING];
 };
 
@@ -173,6 +170,9 @@ GstD3D11Allocator * gst_d3d11_allocator_new       (GstD3D11Device *device);
 
 GstMemory *         gst_d3d11_allocator_alloc     (GstD3D11Allocator * allocator,
                                                    GstD3D11AllocationParams * params);
+
+void                gst_d3d11_allocator_set_flushing (GstD3D11Allocator * allocator,
+                                                      gboolean flushing);
 
 gboolean            gst_is_d3d11_memory           (GstMemory * mem);
 

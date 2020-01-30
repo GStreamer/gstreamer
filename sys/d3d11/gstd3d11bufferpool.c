@@ -50,6 +50,8 @@ static gboolean gst_d3d11_buffer_pool_set_config (GstBufferPool * pool,
     GstStructure * config);
 static GstFlowReturn gst_d3d11_buffer_pool_alloc (GstBufferPool * pool,
     GstBuffer ** buffer, GstBufferPoolAcquireParams * params);
+static void gst_d3d11_buffer_pool_flush_start (GstBufferPool * pool);
+static void gst_d3d11_buffer_pool_flush_stop (GstBufferPool * pool);
 
 static void
 gst_d3d11_buffer_pool_class_init (GstD3D11BufferPoolClass * klass)
@@ -62,6 +64,8 @@ gst_d3d11_buffer_pool_class_init (GstD3D11BufferPoolClass * klass)
   bufferpool_class->get_options = gst_d3d11_buffer_pool_get_options;
   bufferpool_class->set_config = gst_d3d11_buffer_pool_set_config;
   bufferpool_class->alloc_buffer = gst_d3d11_buffer_pool_alloc;
+  bufferpool_class->flush_start = gst_d3d11_buffer_pool_flush_start;
+  bufferpool_class->flush_stop = gst_d3d11_buffer_pool_flush_stop;
 
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_buffer_pool_debug, "d3d11bufferpool", 0,
       "d3d11bufferpool object");
@@ -309,6 +313,26 @@ error:
   GST_ERROR_OBJECT (self, "cannot create texture memory");
 
   return GST_FLOW_ERROR;
+}
+
+static void
+gst_d3d11_buffer_pool_flush_start (GstBufferPool * pool)
+{
+  GstD3D11BufferPool *self = GST_D3D11_BUFFER_POOL (pool);
+  GstD3D11BufferPoolPrivate *priv = self->priv;
+
+  if (priv->allocator)
+    gst_d3d11_allocator_set_flushing (priv->allocator, TRUE);
+}
+
+static void
+gst_d3d11_buffer_pool_flush_stop (GstBufferPool * pool)
+{
+  GstD3D11BufferPool *self = GST_D3D11_BUFFER_POOL (pool);
+  GstD3D11BufferPoolPrivate *priv = self->priv;
+
+  if (priv->allocator)
+    gst_d3d11_allocator_set_flushing (priv->allocator, FALSE);
 }
 
 GstBufferPool *

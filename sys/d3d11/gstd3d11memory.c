@@ -146,8 +146,21 @@ G_DEFINE_BOXED_TYPE_WITH_CODE (GstD3D11AllocationParams,
     (GBoxedFreeFunc) gst_d3d11_allocation_params_free,
     _init_alloc_params (g_define_type_id));
 
+struct _GstD3D11AllocatorPrivate
+{
+  /* parent textrure when array typed memory is used */
+  ID3D11Texture2D *texture;
+  guint8 array_in_use[D3D11_REQ_TEXTURE2D_ARRAY_AXIS_DIMENSION];
+
+  GMutex lock;
+  GCond cond;
+
+  gboolean flushing;
+};
+
 #define gst_d3d11_allocator_parent_class parent_class
-G_DEFINE_TYPE (GstD3D11Allocator, gst_d3d11_allocator, GST_TYPE_ALLOCATOR);
+G_DEFINE_TYPE_WITH_PRIVATE (GstD3D11Allocator,
+    gst_d3d11_allocator, GST_TYPE_ALLOCATOR);
 
 static inline D3D11_MAP
 gst_map_flags_to_d3d11 (GstMapFlags flags)
@@ -337,8 +350,15 @@ gst_d3d11_allocator_dummy_alloc (GstAllocator * allocator, gsize size,
 static void
 gst_d3d11_allocator_free (GstAllocator * allocator, GstMemory * mem)
 {
+  GstD3D11Allocator *self = GST_D3D11_ALLOCATOR (allocator);
+  GstD3D11AllocatorPrivate *priv = self->priv;
   GstD3D11Memory *dmem = (GstD3D11Memory *) mem;
   gint i;
+
+  g_mutex_lock (&priv->lock);
+  priv->array_in_use[dmem->subresource_index] = 0;
+  g_cond_broadcast (&priv->cond);
+  g_mutex_unlock (&priv->lock);
 
   for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
     if (dmem->render_target_view[i])
@@ -366,15 +386,28 @@ static void
 gst_d3d11_allocator_dispose (GObject * object)
 {
   GstD3D11Allocator *alloc = GST_D3D11_ALLOCATOR (object);
+  GstD3D11AllocatorPrivate *priv = alloc->priv;
 
-  if (alloc->device && alloc->texture) {
-    gst_d3d11_device_release_texture (alloc->device, alloc->texture);
-    alloc->texture = NULL;
+  if (alloc->device && priv->texture) {
+    gst_d3d11_device_release_texture (alloc->device, priv->texture);
+    priv->texture = NULL;
   }
 
   gst_clear_object (&alloc->device);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_d3d11_allocator_finalize (GObject * object)
+{
+  GstD3D11Allocator *alloc = GST_D3D11_ALLOCATOR (object);
+  GstD3D11AllocatorPrivate *priv = alloc->priv;
+
+  g_mutex_clear (&priv->lock);
+  g_cond_clear (&priv->cond);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -384,6 +417,7 @@ gst_d3d11_allocator_class_init (GstD3D11AllocatorClass * klass)
   GstAllocatorClass *allocator_class = GST_ALLOCATOR_CLASS (klass);
 
   gobject_class->dispose = gst_d3d11_allocator_dispose;
+  gobject_class->finalize = gst_d3d11_allocator_finalize;
 
   allocator_class->alloc = gst_d3d11_allocator_dummy_alloc;
   allocator_class->free = gst_d3d11_allocator_free;
@@ -396,6 +430,7 @@ static void
 gst_d3d11_allocator_init (GstD3D11Allocator * allocator)
 {
   GstAllocator *alloc = GST_ALLOCATOR_CAST (allocator);
+  GstD3D11AllocatorPrivate *priv;
 
   alloc->mem_type = GST_D3D11_MEMORY_NAME;
   alloc->mem_map = gst_d3d11_memory_map;
@@ -404,6 +439,12 @@ gst_d3d11_allocator_init (GstD3D11Allocator * allocator)
   /* fallback copy */
 
   GST_OBJECT_FLAG_SET (alloc, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
+
+  priv = gst_d3d11_allocator_get_instance_private (allocator);
+  g_mutex_init (&priv->lock);
+  g_cond_init (&priv->cond);
+
+  allocator->priv = priv;
 }
 
 GstD3D11Allocator *
@@ -614,11 +655,13 @@ gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
   gsize *size;
   gboolean is_first = FALSE;
   guint index_to_use = 0;
+  GstD3D11AllocatorPrivate *priv;
   GstD3D11MemoryType type = GST_D3D11_MEMORY_TYPE_TEXTURE;
 
   g_return_val_if_fail (GST_IS_D3D11_ALLOCATOR (allocator), NULL);
   g_return_val_if_fail (params != NULL, NULL);
 
+  priv = allocator->priv;
   device = allocator->device;
   desc = &params->desc[params->plane];
   size = &params->size[params->plane];
@@ -628,28 +671,44 @@ gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
 
   if ((params->flags & GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY)) {
     gint i;
+
+  do_again:
+    g_mutex_lock (&priv->lock);
+    if (priv->flushing) {
+      GST_DEBUG_OBJECT (allocator, "we are flushing");
+      g_mutex_unlock (&priv->lock);
+
+      return NULL;
+    }
+
     for (i = 0; i < desc->ArraySize; i++) {
-      if (allocator->array_in_use[i] == 0) {
+      if (priv->array_in_use[i] == 0) {
         index_to_use = i;
         break;
       }
     }
 
     if (i == desc->ArraySize) {
-      GST_ERROR_OBJECT (allocator, "All elements in array are used now");
-      goto error;
+      GST_DEBUG_OBJECT (allocator, "All elements in array are used now");
+      g_cond_wait (&priv->cond, &priv->lock);
+      g_mutex_unlock (&priv->lock);
+      goto do_again;
     }
 
-    if (!allocator->texture) {
-      allocator->texture = gst_d3d11_device_create_texture (device, desc, NULL);
-      if (!allocator->texture) {
+    priv->array_in_use[index_to_use] = 1;
+
+    g_mutex_unlock (&priv->lock);
+
+    if (!priv->texture) {
+      priv->texture = gst_d3d11_device_create_texture (device, desc, NULL);
+      if (!priv->texture) {
         GST_ERROR_OBJECT (allocator, "Couldn't create texture");
         goto error;
       }
     }
 
-    ID3D11Texture2D_AddRef (allocator->texture);
-    texture = allocator->texture;
+    ID3D11Texture2D_AddRef (priv->texture);
+    texture = priv->texture;
 
     type = GST_D3D11_MEMORY_TYPE_ARRAY;
   } else {
@@ -701,8 +760,6 @@ gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
   mem->device = gst_object_ref (device);
   mem->type = type;
   mem->subresource_index = index_to_use;
-  if (type == GST_D3D11_MEMORY_TYPE_ARRAY)
-    allocator->array_in_use[index_to_use] = 1;
 
   if (staging)
     GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
@@ -717,6 +774,22 @@ error:
     gst_d3d11_device_release_texture (device, texture);
 
   return NULL;
+}
+
+void
+gst_d3d11_allocator_set_flushing (GstD3D11Allocator * allocator,
+    gboolean flushing)
+{
+  GstD3D11AllocatorPrivate *priv;
+
+  g_return_if_fail (GST_IS_D3D11_ALLOCATOR (allocator));
+
+  priv = allocator->priv;
+
+  g_mutex_lock (&priv->lock);
+  priv->flushing = flushing;
+  g_cond_broadcast (&priv->cond);
+  g_mutex_unlock (&priv->lock);
 }
 
 gboolean
