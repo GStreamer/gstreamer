@@ -614,6 +614,10 @@ _set_colorimetry (GstVaapiPostproc * postproc, GstVideoFormat format,
         gst_video_chroma_to_string (GST_VIDEO_INFO_CHROMA_SITE (&vinfo)), NULL);
   }
 
+  /* if outs structure already specifies colorimetry, use it */
+  if (gst_structure_has_field (outs, "colorimetry"))
+    return TRUE;
+
   /* make sure we set the RGB matrix for RGB formats */
   colorimetry = GST_VIDEO_INFO_COLORIMETRY (&vinfo);
   if (GST_VIDEO_FORMAT_INFO_IS_RGB (vinfo.finfo) &&
@@ -733,7 +737,7 @@ _get_preferred_caps (GstVaapiPostproc * postproc, GstVideoInfo * vinfo,
     postproc->format = format;
   }
 
-  return outcaps;
+  return gst_caps_fixate (outcaps);
 
   /* ERRORS */
 fixate_failed:
