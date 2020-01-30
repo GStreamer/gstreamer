@@ -1654,7 +1654,11 @@ gst_vaapipostproc_set_caps (GstBaseTransform * trans, GstCaps * caps,
     gst_vaapipostproc_set_passthrough (trans);
   }
 
-  ret = TRUE;
+  ret = gst_vaapi_filter_set_colorimetry (postproc->filter,
+      &GST_VIDEO_INFO_COLORIMETRY (GST_VAAPI_PLUGIN_BASE_SINK_PAD_INFO
+          (postproc)),
+      &GST_VIDEO_INFO_COLORIMETRY (GST_VAAPI_PLUGIN_BASE_SRC_PAD_INFO
+          (postproc)));
 
 done:
   g_mutex_unlock (&postproc->postproc_lock);
