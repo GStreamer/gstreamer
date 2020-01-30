@@ -1426,6 +1426,16 @@ gst_amc_video_enc_handle_frame (GstVideoEncoder * encoder,
   timestamp = frame->pts;
   duration = frame->duration;
 
+  if (GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame)) {
+    if (gst_amc_codec_request_key_frame (self->codec, &err)) {
+      GST_DEBUG_OBJECT (self, "Passed keyframe request to MediaCodec");
+    }
+    if (err) {
+      GST_ELEMENT_WARNING_FROM_ERROR (self, err);
+      g_clear_error (&err);
+    }
+  }
+
 again:
   /* Make sure to release the base class stream lock, otherwise
    * _loop() can't call _finish_frame() and we might block forever

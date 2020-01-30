@@ -30,6 +30,8 @@
 #include "gstamcsurfacetexture-jni.h"
 #include "gstamcsurface.h"
 
+#define PARAMETER_KEY_REQUEST_SYNC_FRAME "request-sync"
+
 struct _GstAmcCodec
 {
   jobject object;               /* global reference */
@@ -58,6 +60,7 @@ static struct
   jmethodID release_output_buffer;
   jmethodID start;
   jmethodID stop;
+  jmethodID setParameters;
 } media_codec;
 
 static struct
@@ -69,6 +72,13 @@ static struct
   jfieldID presentation_time_us;
   jfieldID size;
 } media_codec_buffer_info;
+
+static struct
+{
+  jclass klass;
+  jmethodID constructor;
+  jmethodID putInt;
+} bundle_class;
 
 static struct
 {
@@ -263,6 +273,11 @@ gst_amc_codec_static_init (void)
     }
     goto done;
   }
+  media_codec.setParameters =
+      (*env)->GetMethodID (env, media_codec.klass, "setParameters",
+      "(Landroid/os/Bundle;)V");
+  if ((*env)->ExceptionCheck (env))
+    (*env)->ExceptionClear (env);
 
   /* Android >= 21 */
   media_codec.get_output_buffer =
@@ -277,6 +292,47 @@ gst_amc_codec_static_init (void)
       "(I)Ljava/nio/ByteBuffer;");
   if ((*env)->ExceptionCheck (env))
     (*env)->ExceptionClear (env);
+
+  if (media_codec.setParameters != NULL) {
+    /* Bundle needed for parameter setting on Android >= 19 */
+    tmp = (*env)->FindClass (env, "android/os/Bundle");
+    if (!tmp) {
+      ret = FALSE;
+      GST_ERROR ("Failed to get Bundle class");
+      if ((*env)->ExceptionCheck (env)) {
+        (*env)->ExceptionDescribe (env);
+        (*env)->ExceptionClear (env);
+      }
+      goto done;
+    }
+    bundle_class.klass = (*env)->NewGlobalRef (env, tmp);
+    if (!bundle_class.klass) {
+      ret = FALSE;
+      GST_ERROR ("Failed to get Bundle class global reference");
+      if ((*env)->ExceptionCheck (env)) {
+        (*env)->ExceptionDescribe (env);
+        (*env)->ExceptionClear (env);
+      }
+      goto done;
+    }
+    (*env)->DeleteLocalRef (env, tmp);
+    tmp = NULL;
+
+    bundle_class.constructor =
+        (*env)->GetMethodID (env, bundle_class.klass, "<init>", "()V");
+    bundle_class.putInt =
+        (*env)->GetMethodID (env, bundle_class.klass, "putInt",
+        "(Ljava/lang/String;I)V");
+    if (!bundle_class.constructor || !bundle_class.putInt) {
+      ret = FALSE;
+      GST_ERROR ("Failed to get Bundle methods");
+      if ((*env)->ExceptionCheck (env)) {
+        (*env)->ExceptionDescribe (env);
+        (*env)->ExceptionClear (env);
+      }
+      goto done;
+    }
+  }
 
 done:
   if (tmp)
@@ -692,6 +748,52 @@ gst_amc_codec_flush (GstAmcCodec * codec, GError ** err)
   env = gst_amc_jni_get_env ();
   return gst_amc_jni_call_void_method (env, err, codec->object,
       media_codec.flush);
+}
+
+static gboolean
+gst_amc_codec_set_parameter (GstAmcCodec * codec, JNIEnv * env,
+    GError ** err, const gchar * key, int value)
+{
+  gboolean ret = FALSE;
+  jobject bundle = NULL;
+  jstring jkey = NULL;
+
+  if (media_codec.setParameters == NULL)
+    goto done;                  // Not available means we're on Android < 19
+
+  bundle = gst_amc_jni_new_object (env, err, FALSE, bundle_class.klass,
+      bundle_class.constructor);
+  if (!bundle)
+    goto done;
+
+  jkey = (*env)->NewStringUTF (env, key);
+  if (!gst_amc_jni_call_void_method (env, err,
+          bundle, bundle_class.putInt, jkey, value))
+    goto done;
+
+  if (!gst_amc_jni_call_void_method (env, err, codec->object,
+          media_codec.setParameters, bundle))
+    goto done;
+
+  ret = TRUE;
+done:
+  if (jkey)
+    (*env)->DeleteLocalRef (env, jkey);
+  if (bundle)
+    (*env)->DeleteLocalRef (env, bundle);
+  return ret;
+}
+
+gboolean
+gst_amc_codec_request_key_frame (GstAmcCodec * codec, GError ** err)
+{
+  JNIEnv *env;
+
+  g_return_val_if_fail (codec != NULL, FALSE);
+
+  env = gst_amc_jni_get_env ();
+  return gst_amc_codec_set_parameter (codec, env, err,
+      PARAMETER_KEY_REQUEST_SYNC_FRAME, 0);
 }
 
 gboolean

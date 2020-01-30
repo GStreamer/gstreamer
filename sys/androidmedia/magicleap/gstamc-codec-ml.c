@@ -193,6 +193,15 @@ gst_amc_codec_flush (GstAmcCodec * codec, GError ** err)
 }
 
 gboolean
+gst_amc_codec_request_key_frame (GstAmcCodec * codec, GError ** err)
+{
+  /* If MagicLeap adds an API for requesting a keyframe, call it here */
+  g_set_error (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+      "Keyframe requests are not available on MagicLeap");
+  return FALSE;
+}
+
+gboolean
 gst_amc_codec_release (GstAmcCodec * codec, GError ** err)
 {
   g_return_val_if_fail (codec != NULL, FALSE);
