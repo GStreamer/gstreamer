@@ -3058,7 +3058,9 @@ gst_v4l2_object_extrapolate_info (GstV4l2Object * v4l2object,
 
   g_return_if_fail (v4l2object->n_v4l2_planes == 1);
 
-  padded_height = info->height + align->padding_top + align->padding_bottom;
+  padded_height =
+      GST_VIDEO_INFO_FIELD_HEIGHT (info) + align->padding_top +
+      align->padding_bottom;
 
   for (i = 0; i < finfo->n_planes; i++) {
     estride = gst_v4l2_object_extrapolate_stride (finfo, i, stride);
@@ -3134,7 +3136,8 @@ gst_v4l2_object_save_format (GstV4l2Object * v4l2object,
     padded_height = GST_ROUND_UP_N (padded_height, tile_height);
   }
 
-  align->padding_bottom = padded_height - info->height - align->padding_top;
+  align->padding_bottom =
+      padded_height - GST_VIDEO_INFO_FIELD_HEIGHT (info) - align->padding_top;
 
   /* setup the strides and offset */
   if (V4L2_TYPE_IS_MULTIPLANAR (v4l2object->type)) {
@@ -3314,7 +3317,7 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
 
   pixelformat = fmtdesc->pixelformat;
   width = GST_VIDEO_INFO_WIDTH (&info);
-  height = GST_VIDEO_INFO_HEIGHT (&info);
+  height = GST_VIDEO_INFO_FIELD_HEIGHT (&info);
   fps_n = GST_VIDEO_INFO_FPS_N (&info);
   fps_d = GST_VIDEO_INFO_FPS_D (&info);
 
@@ -3462,7 +3465,7 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
         transfer = V4L2_XFER_FUNC_SRGB;
       } else {
         /* SD streams likely use SMPTE170M and HD streams REC709 */
-        if (width <= 720 && height <= 576)
+        if (width <= 720 && GST_VIDEO_INFO_HEIGHT (&info) <= 576)
           colorspace = V4L2_COLORSPACE_SMPTE170M;
         else
           colorspace = V4L2_COLORSPACE_REC709;
@@ -4073,7 +4076,7 @@ gst_v4l2_object_set_crop (GstV4l2Object * obj)
   sel.r.left = obj->align.padding_left;
   sel.r.top = obj->align.padding_top;
   sel.r.width = obj->info.width;
-  sel.r.height = obj->info.height;
+  sel.r.height = GST_VIDEO_INFO_FIELD_HEIGHT (&obj->info);
 
   crop.type = obj->type;
   crop.c = sel.r;
@@ -4379,7 +4382,7 @@ gst_v4l2_object_match_buffer_layout (GstV4l2Object * obj, guint n_planes,
       GST_DEBUG_OBJECT (obj->dbg_obj, "Padded height %u", padded_height);
 
       obj->align.padding_bottom =
-          padded_height - GST_VIDEO_INFO_HEIGHT (&obj->info);
+          padded_height - GST_VIDEO_INFO_FIELD_HEIGHT (&obj->info);
     } else {
       GST_WARNING_OBJECT (obj->dbg_obj,
           "Failed to compute padded height; keep the default one");
