@@ -27,6 +27,7 @@
 #define __GST_SCTP_DEC_H__
 
 #include <gst/gst.h>
+#include <gst/base/base.h>
 
 #include "sctpassociation.h"
 
@@ -43,6 +44,8 @@ typedef struct _GstSctpDecClass GstSctpDecClass;
 struct _GstSctpDec
 {
   GstElement element;
+
+  GstFlowCombiner *flow_combiner;
 
   GstPad *sink_pad;
   guint sctp_association_id;
