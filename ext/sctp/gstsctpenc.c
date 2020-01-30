@@ -625,19 +625,21 @@ gst_sctp_enc_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   g_mutex_lock (&sctpenc_pad->lock);
   while (!sctpenc_pad->flushing) {
-    gint32 bytes_sent;
+    guint32 bytes_sent;
 
     g_mutex_unlock (&sctpenc_pad->lock);
 
-    bytes_sent =
+    flow_ret =
         gst_sctp_association_send_data (self->sctp_association, data,
-        length, sctpenc_pad->stream_id, ppid, ordered, pr, pr_param);
+        length, sctpenc_pad->stream_id, ppid, ordered, pr, pr_param,
+        &bytes_sent);
 
     g_mutex_lock (&sctpenc_pad->lock);
-    if (bytes_sent < 0) {
-      GST_ELEMENT_ERROR (self, RESOURCE, WRITE, (NULL),
-          ("Failed to send data"));
-      flow_ret = GST_FLOW_ERROR;
+    if (flow_ret != GST_FLOW_OK) {
+      if (flow_ret != GST_FLOW_EOS) {
+        GST_ELEMENT_ERROR (self, RESOURCE, WRITE, (NULL),
+            ("Failed to send data"));
+      }
       goto out;
     } else if (bytes_sent < length && !sctpenc_pad->flushing) {
       gint64 end_time = g_get_monotonic_time () + BUFFER_FULL_SLEEP_TIME;

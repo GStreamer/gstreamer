@@ -27,6 +27,7 @@
 #define __GST_SCTP_ASSOCIATION_H__
 
 #include <glib-object.h>
+#include <gst/gst.h>
 #define INET
 #define INET6
 #include <usrsctp.h>
@@ -112,10 +113,10 @@ void gst_sctp_association_set_on_packet_received (GstSctpAssociation * self,
     GstSctpAssociationPacketReceivedCb packet_received_cb, gpointer user_data, GDestroyNotify destroy_notify);
 void gst_sctp_association_incoming_packet (GstSctpAssociation * self,
     const guint8 * buf, guint32 length);
-gint32 gst_sctp_association_send_data (GstSctpAssociation * self,
+GstFlowReturn gst_sctp_association_send_data (GstSctpAssociation * self,
     const guint8 * buf, guint32 length, guint16 stream_id, guint32 ppid,
     gboolean ordered, GstSctpAssociationPartialReliability pr,
-    guint32 reliability_param);
+    guint32 reliability_param, guint32 *bytes_sent);
 void gst_sctp_association_reset_stream (GstSctpAssociation * self,
     guint16 stream_id);
 void gst_sctp_association_force_close (GstSctpAssociation * self);
