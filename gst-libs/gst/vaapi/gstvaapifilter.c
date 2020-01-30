@@ -71,6 +71,9 @@ struct _GstVaapiFilter
   guint use_target_rect:1;
   guint32 mirror_flags;
   guint32 rotation_flags;
+
+  GstVideoColorimetry input_colorimetry;
+  GstVideoColorimetry output_colorimetry;
 };
 
 typedef struct _GstVaapiFilterClass GstVaapiFilterClass;
@@ -1216,6 +1219,10 @@ gst_vaapi_filter_initialize (GstVaapiFilter * filter)
       NULL, 0, &filter->va_context);
   if (!vaapi_check_status (va_status, "vaCreateContext() [VPP]"))
     return FALSE;
+
+  gst_video_colorimetry_from_string (&filter->input_colorimetry, NULL);
+  gst_video_colorimetry_from_string (&filter->output_colorimetry, NULL);
+
   return TRUE;
 }
 
@@ -1519,6 +1526,21 @@ gst_vaapi_filter_set_operation (GstVaapiFilter * filter, GstVaapiFilterOp op,
   return FALSE;
 }
 
+static void
+fill_color_standard (GstVideoColorimetry * colorimetry,
+    VAProcColorStandardType * type, VAProcColorProperties * properties)
+{
+  *type = from_GstVideoColorimetry (colorimetry);
+  if (*type == VAProcColorStandardExplicit) {
+    properties->colour_primaries =
+        gst_video_color_primaries_to_iso (colorimetry->primaries);
+    properties->transfer_characteristics =
+        gst_video_color_transfer_to_iso (colorimetry->transfer);
+    properties->matrix_coefficients =
+        gst_video_color_matrix_to_iso (colorimetry->matrix);
+  }
+}
+
 /**
  * gst_vaapi_filter_process:
  * @filter: a #GstVaapiFilter
@@ -1619,9 +1641,16 @@ gst_vaapi_filter_process_unlocked (GstVaapiFilter * filter,
   memset (pipeline_param, 0, sizeof (*pipeline_param));
   pipeline_param->surface = GST_VAAPI_SURFACE_ID (src_surface);
   pipeline_param->surface_region = &src_rect;
-  pipeline_param->surface_color_standard = VAProcColorStandardNone;
+
+  fill_color_standard (&filter->input_colorimetry,
+      &pipeline_param->surface_color_standard,
+      &pipeline_param->input_color_properties);
+
+  fill_color_standard (&filter->output_colorimetry,
+      &pipeline_param->output_color_standard,
+      &pipeline_param->output_color_properties);
+
   pipeline_param->output_region = &dst_rect;
-  pipeline_param->output_color_standard = VAProcColorStandardNone;
   pipeline_param->output_background_color = 0xff000000;
   pipeline_param->filter_flags = from_GstVaapiSurfaceRenderFlags (flags) |
       from_GstVaapiScaleMethod (filter->scale_method);
@@ -2200,4 +2229,84 @@ GstVideoOrientationMethod
 gst_vaapi_filter_get_video_direction_default (GstVaapiFilter * filter)
 {
   OP_RET_DEFAULT_VALUE (enum, filter, GST_VAAPI_FILTER_OP_VIDEO_DIRECTION);
+}
+
+static gboolean
+gst_vaapi_filter_set_colorimetry_unlocked (GstVaapiFilter * filter,
+    GstVideoColorimetry * input, GstVideoColorimetry * output)
+{
+  gchar *in_color, *out_color;
+
+  if (input)
+    filter->input_colorimetry = *input;
+  else
+    gst_video_colorimetry_from_string (&filter->input_colorimetry, NULL);
+
+  if (output)
+    filter->output_colorimetry = *output;
+  else
+    gst_video_colorimetry_from_string (&filter->output_colorimetry, NULL);
+
+  in_color = gst_video_colorimetry_to_string (&filter->input_colorimetry);
+  GST_DEBUG_OBJECT (filter, " input colorimetry '%s'", in_color);
+
+  out_color = gst_video_colorimetry_to_string (&filter->output_colorimetry);
+  GST_DEBUG_OBJECT (filter, "output colorimetry '%s'", out_color);
+
+  if (!gst_vaapi_display_has_driver_quirks (filter->display,
+          GST_VAAPI_DRIVER_QUIRK_NO_CHECK_VPP_COLOR_STD)) {
+    VAProcPipelineCaps pipeline_caps = { 0, };
+    VAProcColorStandardType type;
+    guint32 i;
+
+    VAStatus va_status = vaQueryVideoProcPipelineCaps (filter->va_display,
+        filter->va_context, NULL, 0, &pipeline_caps);
+
+    if (!vaapi_check_status (va_status, "vaQueryVideoProcPipelineCaps()"))
+      return FALSE;
+
+    type = from_GstVideoColorimetry (&filter->input_colorimetry);
+    for (i = 0; i < pipeline_caps.num_input_color_standards; i++)
+      if (type == pipeline_caps.input_color_standards[i])
+        break;
+    if ((i == pipeline_caps.num_input_color_standards)
+        && (type != VAProcColorStandardNone))
+      GST_WARNING_OBJECT (filter,
+          "driver does not support '%s' input colorimetry."
+          " vpp may fail or produce unexpected results.", in_color);
+
+    type = from_GstVideoColorimetry (&filter->output_colorimetry);
+    for (i = 0; i < pipeline_caps.num_output_color_standards; i++)
+      if (type == pipeline_caps.output_color_standards[i])
+        break;
+    if ((i == pipeline_caps.num_output_color_standards)
+        && (type != VAProcColorStandardNone))
+      GST_WARNING_OBJECT (filter,
+          "driver does not support '%s' output colorimetry."
+          " vpp may fail or produce unexpected results.", out_color);
+  } else {
+    GST_WARNING_OBJECT (filter,
+        "driver does not report the supported input/output colorimetry."
+        " vpp may fail or produce unexpected results.");
+  }
+
+  g_free (in_color);
+  g_free (out_color);
+
+  return TRUE;
+}
+
+gboolean
+gst_vaapi_filter_set_colorimetry (GstVaapiFilter * filter,
+    GstVideoColorimetry * input, GstVideoColorimetry * output)
+{
+  gboolean result;
+
+  g_return_val_if_fail (filter != NULL, FALSE);
+
+  GST_VAAPI_DISPLAY_LOCK (filter->display);
+  result = gst_vaapi_filter_set_colorimetry_unlocked (filter, input, output);
+  GST_VAAPI_DISPLAY_UNLOCK (filter->display);
+
+  return result;
 }

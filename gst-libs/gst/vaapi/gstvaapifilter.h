@@ -304,6 +304,10 @@ gst_vaapi_filter_get_skintone_default (GstVaapiFilter * filter);
 guint
 gst_vaapi_filter_get_skintone_level_default (GstVaapiFilter * filter);
 
+gboolean
+gst_vaapi_filter_set_colorimetry (GstVaapiFilter * filter,
+    GstVideoColorimetry * input, GstVideoColorimetry * output);
+
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiFilter, gst_object_unref)
 #endif
