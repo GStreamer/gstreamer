@@ -810,7 +810,8 @@ on_sctp_association_state_changed (GstSctpAssociation * sctp_association,
     case GST_SCTP_ASSOCIATION_STATE_CONNECTING:
       break;
     case GST_SCTP_ASSOCIATION_STATE_CONNECTED:
-      g_signal_emit_by_name (self, "sctp-association-established", TRUE);
+      g_signal_emit (self, signals[SIGNAL_SCTP_ASSOCIATION_ESTABLISHED], 0,
+          TRUE);
       break;
     case GST_SCTP_ASSOCIATION_STATE_DISCONNECTING:
       g_signal_emit (self, signals[SIGNAL_SCTP_ASSOCIATION_ESTABLISHED], 0,
