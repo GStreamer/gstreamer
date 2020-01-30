@@ -1622,6 +1622,13 @@ prepare_frames (GstElement * agg, GstPad * pad, gpointer user_data)
   if (vpad->priv->buffer == NULL || !vaggpad_class->prepare_frame)
     return TRUE;
 
+  /* GAP event, nothing to do */
+  if (vpad->priv->buffer &&
+      gst_buffer_get_size (vpad->priv->buffer) == 0 &&
+      GST_BUFFER_FLAG_IS_SET (vpad->priv->buffer, GST_BUFFER_FLAG_GAP)) {
+    return TRUE;
+  }
+
   return vaggpad_class->prepare_frame (vpad, GST_VIDEO_AGGREGATOR_CAST (agg),
       vpad->priv->buffer, &vpad->priv->prepared_frame);
 }

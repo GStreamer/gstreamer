@@ -31,6 +31,7 @@
 
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstconsistencychecker.h>
+#include <gst/check/gstharness.h>
 #include <gst/video/gstvideometa.h>
 #include <gst/base/gstbasesrc.h>
 
@@ -2120,6 +2121,51 @@ GST_START_TEST (test_start_time_first_live_drop_3_unlinked_1)
 
 GST_END_TEST;
 
+GST_START_TEST (test_gap_events)
+{
+  GstBuffer *buf;
+  GstElement *comp = gst_element_factory_make ("compositor", NULL);
+  GstHarness *h = gst_harness_new_with_element (comp, "sink_%u", "src");
+  GstMapInfo info;
+
+  g_object_set (comp, "background", 1, NULL);
+
+  gst_harness_set_src_caps_str (h,
+      "video/x-raw, format=RGBA, width=1, height=1, framerate=25/1");
+
+  gst_harness_play (h);
+
+  gst_harness_push_event (h, gst_event_new_gap (0, 40 * GST_MSECOND));
+
+  buf = gst_buffer_new_allocate (NULL, 4, NULL);
+
+  gst_buffer_map (buf, &info, GST_MAP_WRITE);
+  memset (info.data, 42, info.size);
+  info.data[3] = 255;
+  gst_buffer_unmap (buf, &info);
+
+  GST_BUFFER_PTS (buf) = 40 * GST_MSECOND;
+  GST_BUFFER_DURATION (buf) = 40 * GST_MSECOND;
+  gst_harness_push (h, buf);
+
+  buf = gst_harness_pull (h);
+  gst_buffer_map (buf, &info, GST_MAP_READ);
+  fail_unless (info.data[0] == 0);
+  gst_buffer_unmap (buf, &info);
+  gst_buffer_unref (buf);
+
+  buf = gst_harness_pull (h);
+  gst_buffer_map (buf, &info, GST_MAP_READ);
+  fail_unless (info.data[0] == 42);
+  gst_buffer_unmap (buf, &info);
+  gst_buffer_unref (buf);
+
+  gst_harness_teardown (h);
+  gst_object_unref (comp);
+}
+
+GST_END_TEST;
+
 static Suite *
 compositor_suite (void)
 {
@@ -2158,6 +2204,7 @@ compositor_suite (void)
   tcase_add_test (tc_chain, test_start_time_first_live_drop_0);
   tcase_add_test (tc_chain, test_start_time_first_live_drop_3);
   tcase_add_test (tc_chain, test_start_time_first_live_drop_3_unlinked_1);
+  tcase_add_test (tc_chain, test_gap_events);
 
   return s;
 }
