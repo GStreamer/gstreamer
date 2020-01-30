@@ -52,6 +52,7 @@ struct _GstAmcVideoEnc
   GstVideoEncoder parent;
 
   /* < private > */
+  GMutex codec_lock; // Protect creation / destruction of the codec
   GstAmcCodec *codec;
   GstAmcFormat *amc_format;
 

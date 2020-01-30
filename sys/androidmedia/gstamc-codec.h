@@ -61,6 +61,8 @@ gboolean gst_amc_codec_stop (GstAmcCodec * codec, GError **err);
 gboolean gst_amc_codec_flush (GstAmcCodec * codec, GError **err);
 gboolean gst_amc_codec_release (GstAmcCodec * codec, GError **err);
 gboolean gst_amc_codec_request_key_frame (GstAmcCodec * codec, GError **err);
+gboolean gst_amc_codec_have_dynamic_bitrate (void);
+gboolean gst_amc_codec_set_dynamic_bitrate (GstAmcCodec * codec, GError **err, gint bitrate);
 
 GstAmcBuffer * gst_amc_codec_get_output_buffer (GstAmcCodec * codec, gint index, GError **err);
 GstAmcBuffer * gst_amc_codec_get_input_buffer (GstAmcCodec * codec, gint index, GError **err);

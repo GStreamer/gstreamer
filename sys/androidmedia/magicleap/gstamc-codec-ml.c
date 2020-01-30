@@ -202,6 +202,22 @@ gst_amc_codec_request_key_frame (GstAmcCodec * codec, GError ** err)
 }
 
 gboolean
+gst_amc_codec_set_dynamic_bitrate (GstAmcCodec * codec, GError ** err,
+    gint bitrate)
+{
+  g_set_error (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
+      "Dynamic bitrate control isn't available on MagicLeap");
+  return FALSE;
+}
+
+gboolean
+gst_amc_codec_have_dynamic_bitrate ()
+{
+  /* If MagicLeap ever provides an API for scaling bitrate, change this to TRUE */
+  return FALSE;
+}
+
+gboolean
 gst_amc_codec_release (GstAmcCodec * codec, GError ** err)
 {
   g_return_val_if_fail (codec != NULL, FALSE);

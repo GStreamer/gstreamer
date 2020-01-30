@@ -466,21 +466,40 @@ gst_amc_video_enc_set_property (GObject * object, guint prop_id,
 {
   GstAmcVideoEnc *encoder;
   GstState state;
+  gboolean codec_active;
+  GError *err = NULL;
 
   encoder = GST_AMC_VIDEO_ENC (object);
 
   GST_OBJECT_LOCK (encoder);
 
   state = GST_STATE (encoder);
-  if (state != GST_STATE_READY && state != GST_STATE_NULL)
-    goto wrong_state;
+  codec_active = (encoder->codec && state != GST_STATE_READY
+      && state != GST_STATE_NULL);
 
   switch (prop_id) {
     case PROP_BIT_RATE:
       encoder->bitrate = g_value_get_uint (value);
+
+      g_mutex_lock (&encoder->codec_lock);
+      if (encoder->codec) {
+        if (!gst_amc_codec_set_dynamic_bitrate (encoder->codec, &err,
+                encoder->bitrate)) {
+          g_mutex_unlock (&encoder->codec_lock);
+          goto wrong_state;
+        }
+      }
+      g_mutex_unlock (&encoder->codec_lock);
+      if (err) {
+        GST_ELEMENT_WARNING_FROM_ERROR (encoder, err);
+        g_clear_error (&err);
+      }
+
       break;
     case PROP_I_FRAME_INTERVAL:
       encoder->i_frame_int = g_value_get_uint (value);
+      if (codec_active)
+        goto wrong_state;
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -527,6 +546,7 @@ gst_amc_video_enc_class_init (GstAmcVideoEncClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstVideoEncoderClass *videoenc_class = GST_VIDEO_ENCODER_CLASS (klass);
+  GParamFlags dynamic_flag = 0;
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -547,10 +567,15 @@ gst_amc_video_enc_class_init (GstAmcVideoEncClass * klass)
       GST_DEBUG_FUNCPTR (gst_amc_video_enc_handle_frame);
   videoenc_class->finish = GST_DEBUG_FUNCPTR (gst_amc_video_enc_finish);
 
+  // On Android >= 19, we can set bitrate dynamically
+  // so add the flag so apps can detect it.
+  if (gst_amc_codec_have_dynamic_bitrate ())
+    dynamic_flag = GST_PARAM_MUTABLE_PLAYING;
+
   g_object_class_install_property (gobject_class, PROP_BIT_RATE,
       g_param_spec_uint ("bitrate", "Bitrate", "Bitrate in bit/sec", 1,
           G_MAXINT, BIT_RATE_DEFAULT,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          dynamic_flag | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_I_FRAME_INTERVAL,
       g_param_spec_uint ("i-frame-interval", "I-frame interval",
@@ -562,6 +587,7 @@ gst_amc_video_enc_class_init (GstAmcVideoEncClass * klass)
 static void
 gst_amc_video_enc_init (GstAmcVideoEnc * self)
 {
+  g_mutex_init (&self->codec_lock);
   g_mutex_init (&self->drain_lock);
   g_cond_init (&self->drain_cond);
 
@@ -578,11 +604,14 @@ gst_amc_video_enc_open (GstVideoEncoder * encoder)
 
   GST_DEBUG_OBJECT (self, "Opening encoder");
 
+  g_mutex_lock (&self->codec_lock);
   self->codec = gst_amc_codec_new (klass->codec_info->name, TRUE, &err);
   if (!self->codec) {
+    g_mutex_unlock (&self->codec_lock);
     GST_ELEMENT_ERROR_FROM_ERROR (self, err);
     return FALSE;
   }
+  g_mutex_unlock (&self->codec_lock);
   self->started = FALSE;
   self->flushing = TRUE;
 
@@ -598,6 +627,7 @@ gst_amc_video_enc_close (GstVideoEncoder * encoder)
 
   GST_DEBUG_OBJECT (self, "Closing encoder");
 
+  g_mutex_lock (&self->codec_lock);
   if (self->codec) {
     GError *err = NULL;
 
@@ -608,6 +638,7 @@ gst_amc_video_enc_close (GstVideoEncoder * encoder)
     gst_amc_codec_free (self->codec);
   }
   self->codec = NULL;
+  g_mutex_unlock (&self->codec_lock);
 
   self->started = FALSE;
   self->flushing = TRUE;
@@ -622,6 +653,7 @@ gst_amc_video_enc_finalize (GObject * object)
 {
   GstAmcVideoEnc *self = GST_AMC_VIDEO_ENC (object);
 
+  g_mutex_clear (&self->codec_lock);
   g_mutex_clear (&self->drain_lock);
   g_cond_clear (&self->drain_cond);
 

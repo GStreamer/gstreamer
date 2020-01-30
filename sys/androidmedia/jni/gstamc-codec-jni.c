@@ -31,6 +31,7 @@
 #include "gstamcsurface.h"
 
 #define PARAMETER_KEY_REQUEST_SYNC_FRAME "request-sync"
+#define PARAMETER_KEY_VIDEO_BITRATE "video-bitrate"
 
 struct _GstAmcCodec
 {
@@ -794,6 +795,27 @@ gst_amc_codec_request_key_frame (GstAmcCodec * codec, GError ** err)
   env = gst_amc_jni_get_env ();
   return gst_amc_codec_set_parameter (codec, env, err,
       PARAMETER_KEY_REQUEST_SYNC_FRAME, 0);
+}
+
+gboolean
+gst_amc_codec_have_dynamic_bitrate ()
+{
+  /* Dynamic bitrate scaling is supported on Android >= 19,
+   * where the setParameters() call is available */
+  return (media_codec.setParameters != NULL);
+}
+
+gboolean
+gst_amc_codec_set_dynamic_bitrate (GstAmcCodec * codec, GError ** err,
+    gint bitrate)
+{
+  JNIEnv *env;
+
+  g_return_val_if_fail (codec != NULL, FALSE);
+
+  env = gst_amc_jni_get_env ();
+  return gst_amc_codec_set_parameter (codec, env, err,
+      PARAMETER_KEY_VIDEO_BITRATE, bitrate);
 }
 
 gboolean
