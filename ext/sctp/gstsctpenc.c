@@ -516,6 +516,8 @@ gst_sctp_enc_srcpad_loop (GstPad * pad)
   if (gst_data_queue_pop (self->outbound_sctp_packet_queue, &item)) {
     GstBuffer *buffer = GST_BUFFER (item->object);
 
+    GST_DEBUG_OBJECT (self, "Forwarding buffer %" GST_PTR_FORMAT, buffer);
+
     flow_ret = gst_pad_push (self->src_pad, buffer);
     item->object = NULL;
 
@@ -608,8 +610,13 @@ gst_sctp_enc_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     }
   }
 
+  GST_DEBUG_OBJECT (pad,
+      "Sending buffer %" GST_PTR_FORMAT
+      " with ppid %u ordered %d pr %d pr_param %u", buffer, ppid, ordered, pr,
+      pr_param);
+
   if (!gst_buffer_map (buffer, &map, GST_MAP_READ)) {
-    g_warning ("Could not map GstBuffer");
+    GST_ERROR_OBJECT (pad, "Could not map GstBuffer");
     goto error;
   }
 
@@ -635,6 +642,9 @@ gst_sctp_enc_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     } else if (bytes_sent < length && !sctpenc_pad->flushing) {
       gint64 end_time = g_get_monotonic_time () + BUFFER_FULL_SLEEP_TIME;
 
+      GST_TRACE_OBJECT (pad, "Sent only %u of %u remaining bytes, waiting",
+          bytes_sent, length);
+
       sctpenc_pad->bytes_sent += bytes_sent;
       data += bytes_sent;
       length -= bytes_sent;
@@ -650,6 +660,7 @@ gst_sctp_enc_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       g_queue_remove (&self->pending_pads, sctpenc_pad);
       GST_OBJECT_UNLOCK (self);
     } else if (bytes_sent == length) {
+      GST_DEBUG_OBJECT (pad, "Successfully sent buffer");
       sctpenc_pad->bytes_sent += bytes_sent;
       break;
     }
@@ -678,6 +689,7 @@ gst_sctp_enc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GstCaps *caps;
 
       gst_event_parse_caps (event, &caps);
+      GST_DEBUG_OBJECT (pad, "Received new caps %" GST_PTR_FORMAT, caps);
       get_config_from_caps (caps, &sctpenc_pad->ordered,
           &sctpenc_pad->reliability, &sctpenc_pad->reliability_param, &new_ppid,
           &is_new_ppid);
@@ -828,6 +840,9 @@ on_sctp_association_state_changed (GstSctpAssociation * sctp_association,
   gint state;
 
   g_object_get (sctp_association, "state", &state, NULL);
+
+  GST_DEBUG_OBJECT (self, "Association state changed to %d", state);
+
   switch (state) {
     case GST_SCTP_ASSOCIATION_STATE_NEW:
       break;
@@ -868,6 +883,9 @@ on_sctp_packet_out (GstSctpAssociation * _association, const guint8 * buf,
   GstDataQueueItem *item;
   GList *pending_pads, *l;
   GstSctpEncPad *sctpenc_pad;
+
+  GST_DEBUG_OBJECT (self, "Received output packet of size %" G_GSIZE_FORMAT,
+      length);
 
   gstbuf = gst_buffer_new_wrapped (g_memdup (buf, length), length);
 

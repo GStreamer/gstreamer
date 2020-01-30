@@ -318,8 +318,10 @@ gst_sctp_dec_packet_chain (GstPad * pad, GstSctpDec * self, GstBuffer * buf)
   GstFlowReturn flow_ret;
   GstMapInfo map;
 
+  GST_DEBUG_OBJECT (self, "Processing received buffer %" GST_PTR_FORMAT, buf);
+
   if (!gst_buffer_map (buf, &map, GST_MAP_READ)) {
-    GST_WARNING_OBJECT (self, "Could not map GstBuffer");
+    GST_ERROR_OBJECT (self, "Could not map GstBuffer");
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }
@@ -412,6 +414,7 @@ gst_sctp_data_srcpad_loop (GstPad * pad)
     GstFlowReturn flow_ret;
 
     buffer = GST_BUFFER (item->object);
+    GST_DEBUG_OBJECT (pad, "Forwarding buffer %" GST_PTR_FORMAT, buffer);
 
     flow_ret = gst_pad_push (pad, buffer);
     item->object = NULL;
@@ -606,6 +609,8 @@ on_gst_sctp_association_stream_reset (GstSctpAssociation * gst_sctp_association,
   gchar *pad_name;
   GstPad *srcpad;
 
+  GST_DEBUG_OBJECT (self, "Stream %u reset", stream_id);
+
   pad_name = g_strdup_printf ("src_%hu", stream_id);
   srcpad = gst_element_get_static_pad (GST_ELEMENT (self), pad_name);
   g_free (pad_name);
@@ -637,6 +642,10 @@ on_receive (GstSctpAssociation * sctp_association, guint8 * buf,
 
   src_pad = get_pad_for_stream_id (self, stream_id);
   g_assert (src_pad);
+
+  GST_DEBUG_OBJECT (src_pad,
+      "Received incoming packet of size %" G_GSIZE_FORMAT
+      " with stream id %u ppid %u", length, stream_id, ppid);
 
   sctpdec_pad = GST_SCTP_DEC_PAD (src_pad);
   gstbuf =
