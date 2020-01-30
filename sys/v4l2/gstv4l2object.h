@@ -43,7 +43,7 @@ typedef struct _GstV4l2ObjectClassHelper GstV4l2ObjectClassHelper;
 #include <gstv4l2bufferpool.h>
 
 /* size of v4l2 buffer pool in streaming case */
-#define GST_V4L2_MIN_BUFFERS 2
+#define GST_V4L2_MIN_BUFFERS(obj) 2
 
 /* max frame width/height */
 #define GST_V4L2_MAX_SIZE (1<<15) /* 2^15 == 32768 */

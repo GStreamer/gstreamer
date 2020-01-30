@@ -551,9 +551,9 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
         | GST_V4L2_ALLOCATOR_FLAG_DMABUF_CREATE_BUFS);
   }
 
-  if (min_buffers < GST_V4L2_MIN_BUFFERS) {
+  if (min_buffers < GST_V4L2_MIN_BUFFERS (obj)) {
     updated = TRUE;
-    min_buffers = GST_V4L2_MIN_BUFFERS;
+    min_buffers = GST_V4L2_MIN_BUFFERS (obj);
     GST_INFO_OBJECT (pool, "increasing minimum buffers to %u", min_buffers);
   }
 
@@ -766,7 +766,7 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
           &max_buffers))
     goto wrong_config;
 
-  min_latency = MAX (GST_V4L2_MIN_BUFFERS, obj->min_buffers);
+  min_latency = MAX (GST_V4L2_MIN_BUFFERS (obj), obj->min_buffers);
 
   switch (obj->mode) {
     case GST_V4L2_IO_RW:
@@ -795,7 +795,7 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
           V4L2_MEMORY_MMAP);
       pool->num_allocated = count;
 
-      if (count < GST_V4L2_MIN_BUFFERS) {
+      if (count < GST_V4L2_MIN_BUFFERS (obj)) {
         min_buffers = count;
         goto no_buffers;
       }
@@ -908,7 +908,7 @@ no_buffers:
   {
     GST_ERROR_OBJECT (pool,
         "we received %d buffer from device '%s', we want at least %d",
-        min_buffers, obj->videodev, GST_V4L2_MIN_BUFFERS);
+        min_buffers, obj->videodev, GST_V4L2_MIN_BUFFERS (obj));
     gst_structure_free (config);
     return FALSE;
   }

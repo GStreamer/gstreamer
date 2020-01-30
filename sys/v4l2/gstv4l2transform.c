@@ -893,7 +893,8 @@ gst_v4l2_transform_prepare_output_buffer (GstBaseTransform * trans,
   /* Ensure input internal pool is active */
   if (!gst_buffer_pool_is_active (pool)) {
     GstStructure *config = gst_buffer_pool_get_config (pool);
-    gint min = MAX (GST_V4L2_MIN_BUFFERS, self->v4l2output->min_buffers);
+    gint min = MAX (GST_V4L2_MIN_BUFFERS (self->v4l2output),
+        self->v4l2output->min_buffers);
 
     if (self->v4l2output->mode == GST_V4L2_IO_USERPTR ||
         self->v4l2output->mode == GST_V4L2_IO_DMABUF_IMPORT) {

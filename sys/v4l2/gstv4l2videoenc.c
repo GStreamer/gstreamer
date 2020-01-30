@@ -739,7 +739,8 @@ gst_v4l2_video_enc_handle_frame (GstVideoEncoder * encoder,
     /* Ensure input internal pool is active */
     if (!gst_buffer_pool_is_active (pool)) {
       GstStructure *config = gst_buffer_pool_get_config (pool);
-      guint min = MAX (self->v4l2output->min_buffers, GST_V4L2_MIN_BUFFERS);
+      guint min = MAX (self->v4l2output->min_buffers,
+          GST_V4L2_MIN_BUFFERS (self->v4l2output));
 
       gst_buffer_pool_config_set_params (config, self->input_state->caps,
           self->v4l2output->info.size, min, min);

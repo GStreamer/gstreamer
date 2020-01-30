@@ -4701,12 +4701,12 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
     /* In this case we'll have to configure two buffer pool. For our buffer
      * pool, we'll need what the driver one, and one more, so we can dequeu */
     own_min = obj->min_buffers + 1;
-    own_min = MAX (own_min, GST_V4L2_MIN_BUFFERS);
+    own_min = MAX (own_min, GST_V4L2_MIN_BUFFERS (obj));
 
     /* for the downstream pool, we keep what downstream wants, though ensure
      * at least a minimum if downstream didn't suggest anything (we are
      * expecting the base class to create a default one for the context) */
-    min = MAX (min, GST_V4L2_MIN_BUFFERS);
+    min = MAX (min, GST_V4L2_MIN_BUFFERS (obj));
 
     /* To import we need the other pool to hold at least own_min */
     if (obj->pool == pool)
@@ -4844,7 +4844,7 @@ gst_v4l2_object_propose_allocation (GstV4l2Object * obj, GstQuery * query)
 
   /* Set defaults allocation parameters */
   size = obj->info.size;
-  min = GST_V4L2_MIN_BUFFERS;
+  min = GST_V4L2_MIN_BUFFERS (obj);
   max = VIDEO_MAX_FRAME;
 
   gst_query_parse_allocation (query, &caps, &need_pool);
@@ -4882,7 +4882,7 @@ gst_v4l2_object_propose_allocation (GstV4l2Object * obj, GstQuery * query)
   }
   gst_v4l2_get_driver_min_buffers (obj);
 
-  min = MAX (obj->min_buffers, GST_V4L2_MIN_BUFFERS);
+  min = MAX (obj->min_buffers, GST_V4L2_MIN_BUFFERS (obj));
 
   gst_query_add_allocation_pool (query, pool, size, min, max);
 
