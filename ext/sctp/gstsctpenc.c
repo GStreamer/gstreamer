@@ -564,6 +564,8 @@ gst_sctp_enc_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   GstMeta *meta;
   const GstMetaInfo *meta_info = GST_SCTP_SEND_META_INFO;
   GstFlowReturn flow_ret = GST_FLOW_ERROR;
+  const guint8 *data;
+  guint32 length;
 
   GST_OBJECT_LOCK (self);
   if (self->src_ret != GST_FLOW_OK) {
@@ -611,22 +613,31 @@ gst_sctp_enc_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     goto error;
   }
 
+  data = map.data;
+  length = map.size;
+
   g_mutex_lock (&sctpenc_pad->lock);
   while (!sctpenc_pad->flushing) {
-    gboolean data_sent = FALSE;
+    gint32 bytes_sent;
 
     g_mutex_unlock (&sctpenc_pad->lock);
 
-    data_sent =
-        gst_sctp_association_send_data (self->sctp_association, map.data,
-        map.size, sctpenc_pad->stream_id, ppid, ordered, pr, pr_param);
+    bytes_sent =
+        gst_sctp_association_send_data (self->sctp_association, data,
+        length, sctpenc_pad->stream_id, ppid, ordered, pr, pr_param);
 
     g_mutex_lock (&sctpenc_pad->lock);
-    if (data_sent) {
-      sctpenc_pad->bytes_sent += map.size;
-      break;
-    } else if (!sctpenc_pad->flushing) {
+    if (bytes_sent < 0) {
+      GST_ELEMENT_ERROR (self, RESOURCE, WRITE, (NULL),
+          ("Failed to send data"));
+      flow_ret = GST_FLOW_ERROR;
+      goto out;
+    } else if (bytes_sent < length && !sctpenc_pad->flushing) {
       gint64 end_time = g_get_monotonic_time () + BUFFER_FULL_SLEEP_TIME;
+
+      sctpenc_pad->bytes_sent += bytes_sent;
+      data += bytes_sent;
+      length -= bytes_sent;
 
       /* The buffer was probably full. Retry in a while */
       GST_OBJECT_LOCK (self);
@@ -638,9 +649,14 @@ gst_sctp_enc_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       GST_OBJECT_LOCK (self);
       g_queue_remove (&self->pending_pads, sctpenc_pad);
       GST_OBJECT_UNLOCK (self);
+    } else if (bytes_sent == length) {
+      sctpenc_pad->bytes_sent += bytes_sent;
+      break;
     }
   }
   flow_ret = sctpenc_pad->flushing ? GST_FLOW_FLUSHING : GST_FLOW_OK;
+
+out:
   g_mutex_unlock (&sctpenc_pad->lock);
 
   gst_buffer_unmap (buffer, &map);

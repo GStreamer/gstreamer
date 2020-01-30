@@ -29,6 +29,7 @@
 
 #include "sctpassociation.h"
 
+#include <gst/gst.h>
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -430,19 +431,20 @@ gst_sctp_association_incoming_packet (GstSctpAssociation * self,
   usrsctp_conninput ((void *) self, (const void *) buf, (size_t) length, 0);
 }
 
-gboolean
+gint32
 gst_sctp_association_send_data (GstSctpAssociation * self, const guint8 * buf,
     guint32 length, guint16 stream_id, guint32 ppid, gboolean ordered,
     GstSctpAssociationPartialReliability pr, guint32 reliability_param)
 {
   struct sctp_sendv_spa spa;
-  gint32 bytes_sent;
-  gboolean result = FALSE;
+  gint32 bytes_sent = -1;
   struct sockaddr_conn remote_addr;
 
   g_rec_mutex_lock (&self->association_mutex);
-  if (self->state != GST_SCTP_ASSOCIATION_STATE_CONNECTED)
+  if (self->state != GST_SCTP_ASSOCIATION_STATE_CONNECTED) {
+    GST_ERROR_OBJECT (self, "Association not connected yet");
     goto end;
+  }
 
   memset (&spa, 0, sizeof (spa));
 
@@ -470,19 +472,19 @@ gst_sctp_association_send_data (GstSctpAssociation * self, const guint8 * buf,
       (socklen_t) sizeof (struct sctp_sendv_spa), SCTP_SENDV_SPA, 0);
   if (bytes_sent < 0) {
     if (errno == EAGAIN || errno == EWOULDBLOCK) {
+      bytes_sent = 0;
       /* Resending this buffer is taken care of by the gstsctpenc */
       goto end;
     } else {
-      g_warning ("Error sending data on stream %u: (%u) %s", stream_id, errno,
-          strerror (errno));
+      GST_ERROR_OBJECT (self, "Error sending data on stream %u: (%u) %s",
+          stream_id, errno, g_strerror (errno));
       goto end;
     }
   }
 
-  result = TRUE;
 end:
   g_rec_mutex_unlock (&self->association_mutex);
-  return result;
+  return bytes_sent;
 }
 
 
