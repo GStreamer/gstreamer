@@ -570,11 +570,14 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
     swapchain_flags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
   }
 
-  if (window->swap_chain) {
-    gst_d3d11_device_lock (window->device);
+  /* release swapchain if render format is being changed */
+  gst_d3d11_device_lock (window->device);
+  if (window->swap_chain &&
+      window->render_format->dxgi_format != window->dxgi_format) {
     gst_d3d11_window_release_resources (window->device, window);
-    gst_d3d11_device_unlock (window->device);
   }
+
+  window->dxgi_format = window->render_format->dxgi_format;
 
   window->aspect_ratio_n = aspect_ratio_n;
   window->aspect_ratio_d = aspect_ratio_d;
@@ -590,14 +593,17 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
   window->height = height;
 
   klass = GST_D3D11_WINDOW_GET_CLASS (window);
-  if (!klass->create_swap_chain (window, window->render_format->dxgi_format,
+  if (!window->swap_chain &&
+      !klass->create_swap_chain (window, window->dxgi_format,
           width, height, swapchain_flags, &window->swap_chain)) {
     GST_ERROR_OBJECT (window, "Cannot create swapchain");
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
         "Cannot create swapchain");
+    gst_d3d11_device_unlock (window->device);
 
     return FALSE;
   }
+  gst_d3d11_device_unlock (window->device);
 
 #if (DXGI_HEADER_VERSION >= 4)
   {

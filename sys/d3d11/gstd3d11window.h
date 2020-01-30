@@ -105,6 +105,7 @@ struct _GstD3D11Window
   IDXGISwapChain *swap_chain;
   ID3D11RenderTargetView *rtv;
   ID3D11VideoProcessorOutputView *pov;
+  DXGI_FORMAT dxgi_format;
 
   GstBuffer *cached_buffer;
   gboolean first_present;
