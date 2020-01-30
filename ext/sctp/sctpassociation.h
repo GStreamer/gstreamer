@@ -111,9 +111,9 @@ void gst_sctp_association_set_on_packet_out (GstSctpAssociation * self,
 void gst_sctp_association_set_on_packet_received (GstSctpAssociation * self,
     GstSctpAssociationPacketReceivedCb packet_received_cb, gpointer user_data, GDestroyNotify destroy_notify);
 void gst_sctp_association_incoming_packet (GstSctpAssociation * self,
-    guint8 * buf, guint32 length);
-gboolean gst_sctp_association_send_data (GstSctpAssociation * self,
-    guint8 * buf, guint32 length, guint16 stream_id, guint32 ppid,
+    const guint8 * buf, guint32 length);
+gint32 gst_sctp_association_send_data (GstSctpAssociation * self,
+    const guint8 * buf, guint32 length, guint16 stream_id, guint32 ppid,
     gboolean ordered, GstSctpAssociationPartialReliability pr,
     guint32 reliability_param);
 void gst_sctp_association_reset_stream (GstSctpAssociation * self,

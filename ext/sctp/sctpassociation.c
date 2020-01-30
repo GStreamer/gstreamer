@@ -424,14 +424,14 @@ gst_sctp_association_set_on_packet_received (GstSctpAssociation * self,
 }
 
 void
-gst_sctp_association_incoming_packet (GstSctpAssociation * self, guint8 * buf,
-    guint32 length)
+gst_sctp_association_incoming_packet (GstSctpAssociation * self,
+    const guint8 * buf, guint32 length)
 {
   usrsctp_conninput ((void *) self, (const void *) buf, (size_t) length, 0);
 }
 
 gboolean
-gst_sctp_association_send_data (GstSctpAssociation * self, guint8 * buf,
+gst_sctp_association_send_data (GstSctpAssociation * self, const guint8 * buf,
     guint32 length, guint16 stream_id, guint32 ppid, gboolean ordered,
     GstSctpAssociationPartialReliability pr, guint32 reliability_param)
 {
@@ -685,6 +685,7 @@ receive_cb (struct socket *sock, union sctp_sockstore addr, void *data,
     if (flags & MSG_NOTIFICATION) {
       handle_notification (self, (const union sctp_notification *) data,
           datalen);
+
       /* We use this instead of a bare `free()` so that we use the `free` from
        * the C runtime that usrsctp was built with. This makes a difference on
        * Windows where libusrstcp and GStreamer can be linked to two different
@@ -826,8 +827,15 @@ handle_message (GstSctpAssociation * self, guint8 * data, guint32 datalen,
 {
   g_rec_mutex_lock (&self->association_mutex);
   if (self->packet_received_cb) {
+    /* It's the callbacks job to free the data correctly */
     self->packet_received_cb (self, data, datalen, stream_id, ppid,
         self->packet_received_user_data);
+  } else {
+    /* We use this instead of a bare `free()` so that we use the `free` from
+     * the C runtime that usrsctp was built with. This makes a difference on
+     * Windows where libusrstcp and GStreamer can be linked to two different
+     * CRTs. */
+    usrsctp_freedumpbuffer ((gchar *) data);
   }
   g_rec_mutex_unlock (&self->association_mutex);
 }

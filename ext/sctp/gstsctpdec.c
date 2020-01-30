@@ -155,8 +155,9 @@ static void gst_sctp_data_srcpad_loop (GstPad * pad);
 static gboolean configure_association (GstSctpDec * self);
 static void on_gst_sctp_association_stream_reset (GstSctpAssociation *
     gst_sctp_association, guint16 stream_id, GstSctpDec * self);
-static void on_receive (GstSctpAssociation * gst_sctp_association, guint8 * buf,
-    gsize length, guint16 stream_id, guint ppid, gpointer user_data);
+static void on_receive (GstSctpAssociation * gst_sctp_association,
+    guint8 * buf, gsize length, guint16 stream_id, guint ppid,
+    gpointer user_data);
 static void stop_srcpad_task (GstPad * pad);
 static void stop_all_srcpad_tasks (GstSctpDec * self);
 static void sctpdec_cleanup (GstSctpDec * self);
@@ -324,7 +325,7 @@ gst_sctp_dec_packet_chain (GstPad * pad, GstSctpDec * self, GstBuffer * buf)
   }
 
   gst_sctp_association_incoming_packet (self->sctp_association,
-      (guint8 *) map.data, (guint32) map.size);
+      (const guint8 *) map.data, (guint32) map.size);
   gst_buffer_unmap (buf, &map);
   gst_buffer_unref (buf);
 
@@ -625,8 +626,8 @@ data_queue_item_free (GstDataQueueItem * item)
 }
 
 static void
-on_receive (GstSctpAssociation * sctp_association, guint8 * buf, gsize length,
-    guint16 stream_id, guint ppid, gpointer user_data)
+on_receive (GstSctpAssociation * sctp_association, guint8 * buf,
+    gsize length, guint16 stream_id, guint ppid, gpointer user_data)
 {
   GstSctpDec *self = user_data;
   GstSctpDecPad *sctpdec_pad;
@@ -638,7 +639,9 @@ on_receive (GstSctpAssociation * sctp_association, guint8 * buf, gsize length,
   g_assert (src_pad);
 
   sctpdec_pad = GST_SCTP_DEC_PAD (src_pad);
-  gstbuf = gst_buffer_new_wrapped (buf, length);
+  gstbuf =
+      gst_buffer_new_wrapped_full (0, buf, length, 0, length, buf,
+      (GDestroyNotify) usrsctp_freedumpbuffer);
   gst_sctp_buffer_add_receive_meta (gstbuf, ppid);
 
   item = g_new0 (GstDataQueueItem, 1);
