@@ -52,13 +52,15 @@ android {
 }
 
 afterEvaluate {
-    compileDebugJavaWithJavac.dependsOn 'externalNativeBuildDebug'
-    compileReleaseJavaWithJavac.dependsOn 'externalNativeBuildRelease'
+    if (project.hasProperty('compileDebugJavaWithJavac'))
+        compileDebugJavaWithJavac.dependsOn 'externalNativeBuildDebug'
+    if (project.hasProperty('compileReleaseJavaWithJavac'))
+        compileReleaseJavaWithJavac.dependsOn 'externalNativeBuildRelease'
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    testCompile 'junit:junit:4.12'
-    compile 'com.android.support:appcompat-v7:23.1.1'
+    api fileTree(dir: 'libs', include: ['*.jar'])
+    testImplementation 'junit:junit:4.12'
+    implementation 'com.android.support:appcompat-v7:23.1.1'
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'
 }
