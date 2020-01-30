@@ -128,7 +128,7 @@ static void handle_message (GstSctpAssociation * self, guint8 * data,
     guint32 datalen, guint16 stream_id, guint32 ppid);
 
 static void maybe_set_state_to_ready (GstSctpAssociation * self);
-static void gst_sctp_association_change_state (GstSctpAssociation * self,
+static gboolean gst_sctp_association_change_state (GstSctpAssociation * self,
     GstSctpAssociationState new_state, gboolean notify);
 
 static void
@@ -281,18 +281,14 @@ maybe_set_state_to_ready (GstSctpAssociation * self)
   if ((self->state == GST_SCTP_ASSOCIATION_STATE_NEW) &&
       (self->local_port != 0 && self->remote_port != 0)
       && (self->packet_out_cb != NULL) && (self->packet_received_cb != NULL)) {
-    signal_ready_state = TRUE;
-    gst_sctp_association_change_state (self, GST_SCTP_ASSOCIATION_STATE_READY,
-        FALSE);
+    signal_ready_state =
+        gst_sctp_association_change_state (self,
+        GST_SCTP_ASSOCIATION_STATE_READY, FALSE);
   }
   g_rec_mutex_unlock (&self->association_mutex);
 
-  /* The reason the state is changed twice is that we do not want to change state with
-   * notification while the association_mutex is locked. If someone listens
-   * on property change and call this object a deadlock might occur.*/
   if (signal_ready_state)
-    gst_sctp_association_change_state (self, GST_SCTP_ASSOCIATION_STATE_READY,
-        TRUE);
+    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_STATE]);
 
 }
 
@@ -359,6 +355,7 @@ gboolean
 gst_sctp_association_start (GstSctpAssociation * self)
 {
   gchar *thread_name;
+  gboolean signal_state = FALSE;
 
   g_rec_mutex_lock (&self->association_mutex);
   if (self->state != GST_SCTP_ASSOCIATION_STATE_READY) {
@@ -370,20 +367,17 @@ gst_sctp_association_start (GstSctpAssociation * self)
   if ((self->sctp_ass_sock = create_sctp_socket (self)) == NULL)
     goto error;
 
-  gst_sctp_association_change_state (self,
+  signal_state |= gst_sctp_association_change_state (self,
       GST_SCTP_ASSOCIATION_STATE_CONNECTING, FALSE);
   g_rec_mutex_unlock (&self->association_mutex);
-
-  /* The reason the state is changed twice is that we do not want to change state with
-   * notification while the association_mutex is locked. If someone listens
-   * on property change and call this object a deadlock might occur.*/
-  gst_sctp_association_change_state (self,
-      GST_SCTP_ASSOCIATION_STATE_CONNECTING, TRUE);
 
   thread_name = g_strdup_printf ("connection_thread_%u", self->association_id);
   self->connection_thread = g_thread_new (thread_name,
       (GThreadFunc) connection_thread_func, self);
   g_free (thread_name);
+
+  if (signal_state)
+    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_STATE]);
 
   return TRUE;
 error:
@@ -525,6 +519,8 @@ gst_sctp_association_force_close (GstSctpAssociation * self)
 
   }
   g_rec_mutex_unlock (&self->association_mutex);
+  gst_sctp_association_change_state (self,
+      GST_SCTP_ASSOCIATION_STATE_DISCONNECTED, TRUE);
 }
 
 static struct socket *
@@ -636,7 +632,10 @@ static gpointer
 connection_thread_func (GstSctpAssociation * self)
 {
   /* TODO: Support both server and client role */
-  client_role_connect (self);
+  if (!client_role_connect (self))
+    gst_sctp_association_change_state (self, GST_SCTP_ASSOCIATION_STATE_ERROR,
+        TRUE);
+
   return NULL;
 }
 
@@ -731,13 +730,16 @@ handle_notification (GstSctpAssociation * self,
       GST_DEBUG_OBJECT (self, "Event: SCTP_PEER_ADDR_CHANGE");
       break;
     case SCTP_REMOTE_ERROR:
-      GST_ERROR_OBJECT (self, "Event: SCTP_REMOTE_ERROR");
+      GST_ERROR_OBJECT (self, "Event: SCTP_REMOTE_ERROR (%u)",
+          notification->sn_remote_error.sre_error);
       break;
     case SCTP_SEND_FAILED:
       GST_ERROR_OBJECT (self, "Event: SCTP_SEND_FAILED");
       break;
     case SCTP_SHUTDOWN_EVENT:
       GST_DEBUG_OBJECT (self, "Event: SCTP_SHUTDOWN_EVENT");
+      gst_sctp_association_change_state (self,
+          GST_SCTP_ASSOCIATION_STATE_DISCONNECTING, TRUE);
       break;
     case SCTP_ADAPTATION_INDICATION:
       GST_DEBUG_OBJECT (self, "Event: SCTP_ADAPTATION_INDICATION");
@@ -765,7 +767,8 @@ handle_notification (GstSctpAssociation * self,
       GST_DEBUG_OBJECT (self, "Event: SCTP_STREAM_CHANGE_EVENT");
       break;
     case SCTP_SEND_FAILED_EVENT:
-      GST_ERROR_OBJECT (self, "Event: SCTP_SEND_FAILED_EVENT");
+      GST_ERROR_OBJECT (self, "Event: SCTP_SEND_FAILED_EVENT (%u)",
+          notification->sn_send_failed_event.ssfe_error);
       break;
     default:
       break;
@@ -796,17 +799,21 @@ handle_association_changed (GstSctpAssociation * self,
       break;
     case SCTP_COMM_LOST:
       GST_WARNING_OBJECT (self, "SCTP event SCTP_COMM_LOST received");
-      /* TODO: Tear down association and signal that this has happend */
+      change_state = TRUE;
+      new_state = GST_SCTP_ASSOCIATION_STATE_ERROR;
       break;
     case SCTP_RESTART:
       GST_DEBUG_OBJECT (self, "SCTP event SCTP_RESTART received");
       break;
     case SCTP_SHUTDOWN_COMP:
-      GST_WARNING_OBJECT (self, "SCTP event SCTP_SHUTDOWN_COMP received");
-      /* TODO: Tear down association and signal that this has happend */
+      GST_DEBUG_OBJECT (self, "SCTP event SCTP_SHUTDOWN_COMP received");
+      change_state = TRUE;
+      new_state = GST_SCTP_ASSOCIATION_STATE_DISCONNECTED;
       break;
     case SCTP_CANT_STR_ASSOC:
       GST_WARNING_OBJECT (self, "SCTP event SCTP_CANT_STR_ASSOC received");
+      change_state = TRUE;
+      new_state = GST_SCTP_ASSOCIATION_STATE_ERROR;
       break;
   }
 
@@ -851,11 +858,21 @@ handle_message (GstSctpAssociation * self, guint8 * data, guint32 datalen,
   g_rec_mutex_unlock (&self->association_mutex);
 }
 
-static void
+/* Returns TRUE if notify==FALSE and notification is needed later */
+static gboolean
 gst_sctp_association_change_state (GstSctpAssociation * self,
     GstSctpAssociationState new_state, gboolean notify)
 {
-  self->state = new_state;
-  if (notify)
-    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_STATE]);
+  if (self->state != new_state
+      && self->state != GST_SCTP_ASSOCIATION_STATE_ERROR) {
+    self->state = new_state;
+    if (notify) {
+      g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_STATE]);
+      return FALSE;
+    } else {
+      return TRUE;
+    }
+  } else {
+    return FALSE;
+  }
 }

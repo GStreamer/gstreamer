@@ -856,12 +856,13 @@ on_sctp_association_state_changed (GstSctpAssociation * sctp_association,
           TRUE);
       break;
     case GST_SCTP_ASSOCIATION_STATE_DISCONNECTING:
+    case GST_SCTP_ASSOCIATION_STATE_DISCONNECTED:
       g_signal_emit (self, signals[SIGNAL_SCTP_ASSOCIATION_ESTABLISHED], 0,
           FALSE);
       break;
-    case GST_SCTP_ASSOCIATION_STATE_DISCONNECTED:
-      break;
     case GST_SCTP_ASSOCIATION_STATE_ERROR:
+      GST_ELEMENT_ERROR (self, RESOURCE, WRITE, (NULL),
+          ("SCTP association went into error state"));
       break;
   }
 }
