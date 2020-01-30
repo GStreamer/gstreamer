@@ -67,6 +67,8 @@ struct _GstVp9DecoderPrivate
   GstVp9Parser *parser;
   GstVp9Dpb *dpb;
 
+  GstVp9Picture *current_picture;
+
   guint num_frames;             /* number of frames in a super frame */
   gsize frame_sizes[8];         /* size of frames in a super frame */
   guint frame_cnt;              /* frame count variable for super frame */
@@ -85,6 +87,8 @@ static GstFlowReturn gst_vp9_decoder_parse (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame, GstAdapter * adapter, gboolean at_eos);
 static gboolean gst_vp9_decoder_set_format (GstVideoDecoder * decoder,
     GstVideoCodecState * state);
+static GstFlowReturn gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
+    GstVideoCodecFrame * frame);
 
 static GstVp9Picture *gst_vp9_decoder_duplicate_picture_default (GstVp9Decoder *
     decoder, GstVp9Picture * picture);
@@ -98,6 +102,8 @@ gst_vp9_decoder_class_init (GstVp9DecoderClass * klass)
   decoder_class->stop = GST_DEBUG_FUNCPTR (gst_vp9_decoder_stop);
   decoder_class->parse = GST_DEBUG_FUNCPTR (gst_vp9_decoder_parse);
   decoder_class->set_format = GST_DEBUG_FUNCPTR (gst_vp9_decoder_set_format);
+  decoder_class->handle_frame =
+      GST_DEBUG_FUNCPTR (gst_vp9_decoder_handle_frame);
 
   klass->duplicate_picture =
       GST_DEBUG_FUNCPTR (gst_vp9_decoder_duplicate_picture_default);
@@ -309,6 +315,9 @@ gst_vp9_decoder_parse (GstVideoDecoder * decoder,
     picture->size = buf_size;
 
     gst_video_decoder_add_to_frame (GST_VIDEO_DECODER (self), picture->size);
+
+    /* hold pointer to picture. default handle_frame implementation uses it */
+    priv->current_picture = picture;
     flow_ret = gst_video_decoder_have_frame (GST_VIDEO_DECODER (self));
 
     if (flow_ret == GST_FLOW_OK) {
@@ -317,6 +326,7 @@ gst_vp9_decoder_parse (GstVideoDecoder * decoder,
     }
 
     gst_vp9_picture_unref (picture);
+    priv->current_picture = NULL;
 
     return flow_ret;
   }
@@ -368,6 +378,9 @@ gst_vp9_decoder_parse (GstVideoDecoder * decoder,
   gst_adapter_unmap (adapter);
 
   gst_video_decoder_add_to_frame (GST_VIDEO_DECODER (self), picture->size);
+
+  /* hold pointer to picture. default handle_frame implementation uses it */
+  priv->current_picture = picture;
   flow_ret = gst_video_decoder_have_frame (GST_VIDEO_DECODER (self));
 
   if (flow_ret == GST_FLOW_OK && klass->output_picture) {
@@ -377,6 +390,7 @@ gst_vp9_decoder_parse (GstVideoDecoder * decoder,
   picture->data = NULL;
 
   gst_vp9_dpb_add (priv->dpb, picture);
+  priv->current_picture = NULL;
 
   return flow_ret;
 
@@ -431,4 +445,33 @@ gst_vp9_decoder_duplicate_picture_default (GstVp9Decoder * decoder,
   new_picture->frame_hdr = picture->frame_hdr;
 
   return new_picture;
+}
+
+static GstFlowReturn
+gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
+    GstVideoCodecFrame * frame)
+{
+  GstVp9Decoder *self = GST_VP9_DECODER (decoder);
+  GstVp9DecoderPrivate *priv = self->priv;
+  GstBuffer *in_buf = frame->input_buffer;
+
+  GST_LOG_OBJECT (self,
+      "handle frame, PTS: %" GST_TIME_FORMAT ", DTS: %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_PTS (in_buf)),
+      GST_TIME_ARGS (GST_BUFFER_DTS (in_buf)));
+
+  if (!priv->current_picture) {
+    GST_ERROR_OBJECT (self, "No current picture");
+    gst_video_decoder_drop_frame (decoder, frame);
+
+    return GST_FLOW_ERROR;
+  }
+
+  gst_video_codec_frame_set_user_data (frame,
+      gst_vp9_picture_ref (priv->current_picture),
+      (GDestroyNotify) gst_vp9_picture_unref);
+
+  gst_video_codec_frame_unref (frame);
+
+  return GST_FLOW_OK;
 }

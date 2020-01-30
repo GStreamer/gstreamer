@@ -62,8 +62,6 @@ struct _GstD3D11H265Dec
 
   GstD3D11Decoder *d3d11_decoder;
 
-  GstH265Picture *current_picture;
-
   /* Pointing current bitstream buffer */
   guint current_offset;
   guint bitstream_buffer_size;

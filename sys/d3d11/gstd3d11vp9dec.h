@@ -50,8 +50,6 @@ struct _GstD3D11Vp9Dec
 
   GstD3D11Decoder *d3d11_decoder;
 
-  GstVp9Picture *current_picture;
-
   guint width, height;
   GstVP9Profile profile;
 

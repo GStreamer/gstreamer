@@ -108,6 +108,8 @@ static gboolean gst_h265_decoder_set_format (GstVideoDecoder * decoder,
 static GstFlowReturn gst_h265_decoder_finish (GstVideoDecoder * decoder);
 static gboolean gst_h265_decoder_flush (GstVideoDecoder * decoder);
 static GstFlowReturn gst_h265_decoder_drain (GstVideoDecoder * decoder);
+static GstFlowReturn gst_h265_decoder_handle_frame (GstVideoDecoder * decoder,
+    GstVideoCodecFrame * frame);
 
 static gboolean gst_h265_decoder_finish_current_picture (GstH265Decoder * self);
 static void gst_h265_decoder_clear_dpb (GstH265Decoder * self);
@@ -127,6 +129,8 @@ gst_h265_decoder_class_init (GstH265DecoderClass * klass)
   decoder_class->finish = GST_DEBUG_FUNCPTR (gst_h265_decoder_finish);
   decoder_class->flush = GST_DEBUG_FUNCPTR (gst_h265_decoder_flush);
   decoder_class->drain = GST_DEBUG_FUNCPTR (gst_h265_decoder_drain);
+  decoder_class->handle_frame =
+      GST_DEBUG_FUNCPTR (gst_h265_decoder_handle_frame);
 }
 
 static void
@@ -1442,31 +1446,60 @@ gst_h265_decoder_finish_current_picture (GstH265Decoder * self)
 {
   GstH265DecoderPrivate *priv = self->priv;
   GstH265DecoderClass *klass;
-  GstH265Picture *picture;
   gboolean ret = TRUE;
 
   if (!priv->current_picture)
     return TRUE;
 
-  picture = priv->current_picture;
-  priv->current_picture = NULL;
-
   klass = GST_H265_DECODER_GET_CLASS (self);
 
   if (klass->end_picture)
-    ret = klass->end_picture (self, picture);
+    ret = klass->end_picture (self, priv->current_picture);
 
-  if (picture->output_flag) {
+  if (priv->current_picture->output_flag) {
     gst_video_decoder_have_frame (GST_VIDEO_DECODER (self));
   } else {
-    GST_DEBUG_OBJECT (self, "Skip have_frame for picture %p", picture);
+    GST_DEBUG_OBJECT (self, "Skip have_frame for picture %p",
+        priv->current_picture);
   }
 
   /* finish picture takes ownership of the picture */
-  if (!gst_h265_decoder_finish_picture (self, picture)) {
+  ret = gst_h265_decoder_finish_picture (self, priv->current_picture);
+  priv->current_picture = NULL;
+
+  if (!ret) {
     GST_ERROR_OBJECT (self, "Failed to finish picture");
     return FALSE;
   }
 
-  return ret;
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_h265_decoder_handle_frame (GstVideoDecoder * decoder,
+    GstVideoCodecFrame * frame)
+{
+  GstH265Decoder *self = GST_H265_DECODER (decoder);
+  GstH265DecoderPrivate *priv = self->priv;
+  GstBuffer *in_buf = frame->input_buffer;
+
+  GST_LOG_OBJECT (self,
+      "handle frame, PTS: %" GST_TIME_FORMAT ", DTS: %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_PTS (in_buf)),
+      GST_TIME_ARGS (GST_BUFFER_DTS (in_buf)));
+
+  if (!priv->current_picture) {
+    GST_ERROR_OBJECT (self, "No current picture");
+    gst_video_decoder_drop_frame (decoder, frame);
+
+    return GST_FLOW_ERROR;
+  }
+
+  gst_video_codec_frame_set_user_data (frame,
+      gst_h265_picture_ref (priv->current_picture),
+      (GDestroyNotify) gst_h265_picture_unref);
+
+  gst_video_codec_frame_unref (frame);
+
+  return GST_FLOW_OK;
 }

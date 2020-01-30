@@ -134,6 +134,8 @@ static gboolean gst_h264_decoder_set_format (GstVideoDecoder * decoder,
 static GstFlowReturn gst_h264_decoder_finish (GstVideoDecoder * decoder);
 static gboolean gst_h264_decoder_flush (GstVideoDecoder * decoder);
 static GstFlowReturn gst_h264_decoder_drain (GstVideoDecoder * decoder);
+static GstFlowReturn gst_h264_decoder_handle_frame (GstVideoDecoder * decoder,
+    GstVideoCodecFrame * frame);
 
 /* codec spcific functions */
 static gboolean gst_h264_decoder_process_sps (GstH264Decoder * self,
@@ -163,6 +165,8 @@ gst_h264_decoder_class_init (GstH264DecoderClass * klass)
   decoder_class->finish = GST_DEBUG_FUNCPTR (gst_h264_decoder_finish);
   decoder_class->flush = GST_DEBUG_FUNCPTR (gst_h264_decoder_flush);
   decoder_class->drain = GST_DEBUG_FUNCPTR (gst_h264_decoder_drain);
+  decoder_class->handle_frame =
+      GST_DEBUG_FUNCPTR (gst_h264_decoder_handle_frame);
 }
 
 static void
@@ -251,6 +255,35 @@ static GstFlowReturn
 gst_h264_decoder_finish (GstVideoDecoder * decoder)
 {
   return gst_h264_decoder_drain (decoder);
+}
+
+static GstFlowReturn
+gst_h264_decoder_handle_frame (GstVideoDecoder * decoder,
+    GstVideoCodecFrame * frame)
+{
+  GstH264Decoder *self = GST_H264_DECODER (decoder);
+  GstH264DecoderPrivate *priv = self->priv;
+  GstBuffer *in_buf = frame->input_buffer;
+
+  GST_LOG_OBJECT (self,
+      "handle frame, PTS: %" GST_TIME_FORMAT ", DTS: %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_PTS (in_buf)),
+      GST_TIME_ARGS (GST_BUFFER_DTS (in_buf)));
+
+  if (!priv->current_picture) {
+    GST_ERROR_OBJECT (self, "No current picture");
+    gst_video_decoder_drop_frame (decoder, frame);
+
+    return GST_FLOW_ERROR;
+  }
+
+  gst_video_codec_frame_set_user_data (frame,
+      gst_h264_picture_ref (priv->current_picture),
+      (GDestroyNotify) gst_h264_picture_unref);
+
+  gst_video_codec_frame_unref (frame);
+
+  return GST_FLOW_OK;
 }
 
 static gboolean
@@ -1197,29 +1230,28 @@ gst_h264_decoder_finish_current_picture (GstH264Decoder * self)
 {
   GstH264DecoderPrivate *priv = self->priv;
   GstH264DecoderClass *klass;
-  GstH264Picture *picture;
   gboolean ret = TRUE;
 
   if (!priv->current_picture)
     return TRUE;
 
-  picture = priv->current_picture;
-  priv->current_picture = NULL;
-
   klass = GST_H264_DECODER_GET_CLASS (self);
 
   if (klass->end_picture)
-    ret = klass->end_picture (self, picture);
+    ret = klass->end_picture (self, priv->current_picture);
 
   gst_video_decoder_have_frame (GST_VIDEO_DECODER (self));
 
   /* finish picture takes ownership of the picture */
-  if (!gst_h264_decoder_finish_picture (self, picture)) {
+  ret = gst_h264_decoder_finish_picture (self, priv->current_picture);
+  priv->current_picture = NULL;
+
+  if (!ret) {
     GST_ERROR_OBJECT (self, "Failed to finish picture");
     return FALSE;
   }
 
-  return ret;
+  return TRUE;
 }
 
 static gint

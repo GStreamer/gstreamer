@@ -109,10 +109,6 @@ static void gst_d3d11_vp9_dec_set_context (GstElement * element,
 
 static gboolean gst_d3d11_vp9_dec_open (GstVideoDecoder * decoder);
 static gboolean gst_d3d11_vp9_dec_close (GstVideoDecoder * decoder);
-static gboolean gst_d3d11_vp9_dec_start (GstVideoDecoder * decoder);
-static gboolean gst_d3d11_vp9_dec_stop (GstVideoDecoder * decoder);
-static GstFlowReturn gst_d3d11_vp9_dec_handle_frame (GstVideoDecoder *
-    decoder, GstVideoCodecFrame * frame);
 static gboolean gst_d3d11_vp9_dec_negotiate (GstVideoDecoder * decoder);
 static gboolean gst_d3d11_vp9_dec_decide_allocation (GstVideoDecoder *
     decoder, GstQuery * query);
@@ -167,10 +163,6 @@ gst_d3d11_vp9_dec_class_init (GstD3D11Vp9DecClass * klass)
 
   decoder_class->open = GST_DEBUG_FUNCPTR (gst_d3d11_vp9_dec_open);
   decoder_class->close = GST_DEBUG_FUNCPTR (gst_d3d11_vp9_dec_close);
-  decoder_class->start = GST_DEBUG_FUNCPTR (gst_d3d11_vp9_dec_start);
-  decoder_class->stop = GST_DEBUG_FUNCPTR (gst_d3d11_vp9_dec_stop);
-  decoder_class->handle_frame =
-      GST_DEBUG_FUNCPTR (gst_d3d11_vp9_dec_handle_frame);
   decoder_class->negotiate = GST_DEBUG_FUNCPTR (gst_d3d11_vp9_dec_negotiate);
   decoder_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_d3d11_vp9_dec_decide_allocation);
@@ -271,50 +263,6 @@ gst_d3d11_vp9_dec_close (GstVideoDecoder * decoder)
   gst_clear_object (&self->device);
 
   return TRUE;
-}
-
-static gboolean
-gst_d3d11_vp9_dec_start (GstVideoDecoder * decoder)
-{
-  return GST_VIDEO_DECODER_CLASS (parent_class)->start (decoder);
-}
-
-static gboolean
-gst_d3d11_vp9_dec_stop (GstVideoDecoder * decoder)
-{
-  GstD3D11Vp9Dec *self = GST_D3D11_VP9_DEC (decoder);
-
-  gst_vp9_picture_replace (&self->current_picture, NULL);
-
-  return GST_VIDEO_DECODER_CLASS (parent_class)->stop (decoder);
-}
-
-static GstFlowReturn
-gst_d3d11_vp9_dec_handle_frame (GstVideoDecoder * decoder,
-    GstVideoCodecFrame * frame)
-{
-  GstD3D11Vp9Dec *self = GST_D3D11_VP9_DEC (decoder);
-  GstBuffer *in_buf = frame->input_buffer;
-
-  GST_LOG_OBJECT (self,
-      "handle frame, PTS: %" GST_TIME_FORMAT ", DTS: %"
-      GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_PTS (in_buf)),
-      GST_TIME_ARGS (GST_BUFFER_DTS (in_buf)));
-
-  if (!self->current_picture) {
-    GST_ERROR_OBJECT (self, "No current picture");
-    gst_video_decoder_drop_frame (decoder, frame);
-
-    return GST_FLOW_ERROR;
-  }
-
-  gst_video_codec_frame_set_user_data (frame,
-      self->current_picture, (GDestroyNotify) gst_vp9_picture_unref);
-  self->current_picture = NULL;
-
-  gst_video_codec_frame_unref (frame);
-
-  return GST_FLOW_OK;
 }
 
 static gboolean
@@ -550,8 +498,6 @@ gst_d3d11_vp9_dec_new_picture (GstVp9Decoder * decoder, GstVp9Picture * picture)
 
   GST_LOG_OBJECT (self, "New VP9 picture %p", picture);
 
-  gst_vp9_picture_replace (&self->current_picture, picture);
-
   return TRUE;
 }
 
@@ -581,8 +527,6 @@ gst_d3d11_vp9_dec_duplicate_picture (GstVp9Decoder * decoder,
 
   gst_vp9_picture_set_user_data (new_picture,
       gst_buffer_ref (view_buffer), (GDestroyNotify) gst_buffer_unref);
-
-  gst_vp9_picture_replace (&self->current_picture, new_picture);
 
   return new_picture;
 }
