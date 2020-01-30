@@ -393,25 +393,32 @@ gst_sctp_enc_request_new_pad (GstElement * element, GstPadTemplate * template,
   g_object_get (self->sctp_association, "state", &state, NULL);
 
   if (state != GST_SCTP_ASSOCIATION_STATE_CONNECTED) {
-    g_warning
-        ("The SCTP association must be established before a new stream can be created");
+    GST_ERROR_OBJECT
+        (self,
+        "The SCTP association must be established before a new stream can be created");
     goto invalid_state;
   }
 
   if (!template)
     goto invalid_parameter;
 
+  /* 65535 is not a valid stream id */
   if (!new_pad_name || (sscanf (new_pad_name, "sink_%u", &stream_id) != 1)
-      || stream_id > 65534)     /* 65535 is not a valid stream id */
+      || stream_id > 65534) {
+    GST_ERROR_OBJECT
+        (self, "Invalid sink pad name %s", GST_STR_NULL (new_pad_name));
     goto invalid_parameter;
+  }
 
   new_pad = gst_element_get_static_pad (element, new_pad_name);
   if (new_pad) {
     gst_object_unref (new_pad);
     new_pad = NULL;
+    GST_ERROR_OBJECT (self, "Pad %s already exists", new_pad_name);
     goto invalid_parameter;
   }
 
+  GST_DEBUG_OBJECT (self, "Creating new pad %s", new_pad_name);
   new_pad =
       g_object_new (GST_TYPE_SCTP_ENC_PAD, "name", new_pad_name, "direction",
       template->direction, "template", template, NULL);
@@ -425,6 +432,8 @@ gst_sctp_enc_request_new_pad (GstElement * element, GstPadTemplate * template,
   sctpenc_pad->ppid = DEFAULT_SCTP_PPID;
 
   if (caps) {
+    GST_DEBUG_OBJECT (self, "Pad %s requested with caps %" GST_PTR_FORMAT,
+        new_pad_name, caps);
     get_config_from_caps (caps, &sctpenc_pad->ordered,
         &sctpenc_pad->reliability, &sctpenc_pad->reliability_param, &new_ppid,
         &is_new_ppid);
@@ -439,11 +448,13 @@ gst_sctp_enc_request_new_pad (GstElement * element, GstPadTemplate * template,
     goto error_cleanup;
 
   if (!gst_element_add_pad (element, new_pad))
-    goto error_cleanup;
+    goto error_add_pad;
 
 invalid_state:
 invalid_parameter:
   return new_pad;
+error_add_pad:
+  gst_pad_set_active (new_pad, FALSE);
 error_cleanup:
   gst_object_unref (new_pad);
   return NULL;

@@ -539,10 +539,12 @@ get_pad_for_stream_id (GstSctpDec * self, guint16 stream_id)
   g_object_get (self->sctp_association, "state", &state, NULL);
 
   if (state != GST_SCTP_ASSOCIATION_STATE_CONNECTED) {
-    GST_WARNING_OBJECT (self,
+    GST_ERROR_OBJECT (self,
         "The SCTP association must be established before a new stream can be created");
     return NULL;
   }
+
+  GST_DEBUG_OBJECT (self, "Creating new pad for stream id %u", stream_id);
 
   if (stream_id > MAX_STREAM_ID)
     return NULL;
@@ -566,7 +568,7 @@ get_pad_for_stream_id (GstSctpDec * self, guint16 stream_id)
   gst_pad_sticky_events_foreach (self->sink_pad, copy_sticky_events, new_pad);
 
   if (!gst_element_add_pad (GST_ELEMENT (self), new_pad))
-    goto error_cleanup;
+    goto error_add;
 
   GST_OBJECT_LOCK (self);
   gst_flow_combiner_add_pad (self->flow_combiner, new_pad);
@@ -578,7 +580,8 @@ get_pad_for_stream_id (GstSctpDec * self, guint16 stream_id)
   gst_object_ref (new_pad);
 
   return new_pad;
-
+error_add:
+  gst_pad_set_active (new_pad, FALSE);
 error_cleanup:
   gst_object_unref (new_pad);
   return NULL;
