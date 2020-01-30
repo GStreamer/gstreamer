@@ -474,7 +474,7 @@ configure_association (GstSctpDec * self)
       "local-port", G_BINDING_SYNC_CREATE);
 
   gst_sctp_association_set_on_packet_received (self->sctp_association,
-      on_receive, self);
+      on_receive, gst_object_ref (self), gst_object_unref);
 
   return TRUE;
 error:
@@ -688,9 +688,8 @@ static void
 sctpdec_cleanup (GstSctpDec * self)
 {
   if (self->sctp_association) {
-    /* FIXME: make this threadsafe */
-    /* gst_sctp_association_set_on_packet_received (self->sctp_association, NULL,
-       NULL); */
+    gst_sctp_association_set_on_packet_received (self->sctp_association, NULL,
+        NULL, NULL);
     g_signal_handler_disconnect (self->sctp_association,
         self->signal_handler_stream_reset);
     stop_all_srcpad_tasks (self);
