@@ -21,11 +21,11 @@
 #include <config.h>
 #endif
 
-#include "gsth265decoder.h"
-#include "gsth265picture.h"
 #include "gstd3d11h265dec.h"
 #include "gstd3d11memory.h"
 #include "gstd3d11bufferpool.h"
+
+#include <gst/codecs/gsth265decoder.h>
 #include <string.h>
 
 /* HACK: to expose dxva data structure on UWP */

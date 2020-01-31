@@ -25,8 +25,8 @@
 
 #include "gsth265decoder.h"
 
-GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_h265_dec_debug);
-#define GST_CAT_DEFAULT gst_d3d11_h265_dec_debug
+GST_DEBUG_CATEGORY (gst_h265_decoder_debug);
+#define GST_CAT_DEFAULT gst_h265_decoder_debug
 
 typedef enum
 {
@@ -97,8 +97,11 @@ struct _GstH265DecoderPrivate
 };
 
 #define parent_class gst_h265_decoder_parent_class
-G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GstH265Decoder, gst_h265_decoder,
-    GST_TYPE_VIDEO_DECODER);
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstH265Decoder, gst_h265_decoder,
+    GST_TYPE_VIDEO_DECODER,
+    G_ADD_PRIVATE (GstH265Decoder);
+    GST_DEBUG_CATEGORY_INIT (gst_h265_decoder_debug, "h265decoder", 0,
+        "H.265 Video Decoder"));
 
 static gboolean gst_h265_decoder_start (GstVideoDecoder * decoder);
 static gboolean gst_h265_decoder_stop (GstVideoDecoder * decoder);

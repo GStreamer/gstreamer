@@ -19,15 +19,9 @@ d3d11_sources = [
 ]
 
 d3d11_dec_sources = [
-  'gsth264picture.c',
-  'gsth264decoder.c',
   'gstd3d11decoder.c',
   'gstd3d11h264dec.c',
-  'gstvp9picture.c',
-  'gstvp9decoder.c',
   'gstd3d11vp9dec.c',
-  'gsth265picture.c',
-  'gsth265decoder.c',
   'gstd3d11h265dec.c',
 ]
 
@@ -129,7 +123,7 @@ if cc.has_header('dxva.h') and cc.has_header('d3d9.h')
   d3d11_conf.set('HAVE_DXVA_H', 1)
   d3d11_sources += d3d11_dec_sources
   extra_c_args += ['-DGST_USE_UNSTABLE_API']
-  extra_dep += [gstcodecparsers_dep]
+  extra_dep += [gstcodecs_dep]
 endif
 
 winapi_desktop = cxx.compiles('''#include <winapifamily.h>

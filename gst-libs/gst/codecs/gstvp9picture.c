@@ -23,8 +23,8 @@
 
 #include "gstvp9picture.h"
 
-GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_vp9_dec_debug);
-#define GST_CAT_DEFAULT gst_d3d11_vp9_dec_debug
+GST_DEBUG_CATEGORY_EXTERN (gst_vp9_decoder_debug);
+#define GST_CAT_DEFAULT gst_vp9_decoder_debug
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstVp9Picture, gst_vp9_picture);
 

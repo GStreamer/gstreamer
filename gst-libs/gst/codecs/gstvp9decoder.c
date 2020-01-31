@@ -53,8 +53,8 @@
 
 #include "gstvp9decoder.h"
 
-GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_vp9_dec_debug);
-#define GST_CAT_DEFAULT gst_d3d11_vp9_dec_debug
+GST_DEBUG_CATEGORY (gst_vp9_decoder_debug);
+#define GST_CAT_DEFAULT gst_vp9_decoder_debug
 
 struct _GstVp9DecoderPrivate
 {
@@ -71,8 +71,11 @@ struct _GstVp9DecoderPrivate
 };
 
 #define parent_class gst_vp9_decoder_parent_class
-G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GstVp9Decoder, gst_vp9_decoder,
-    GST_TYPE_VIDEO_DECODER);
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstVp9Decoder, gst_vp9_decoder,
+    GST_TYPE_VIDEO_DECODER,
+    G_ADD_PRIVATE (GstVp9Decoder);
+    GST_DEBUG_CATEGORY_INIT (gst_vp9_decoder_debug, "vp9decoder", 0,
+        "VP9 Video Decoder"));
 
 static gboolean gst_vp9_decoder_start (GstVideoDecoder * decoder);
 static gboolean gst_vp9_decoder_stop (GstVideoDecoder * decoder);

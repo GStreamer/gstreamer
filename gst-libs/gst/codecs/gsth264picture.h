@@ -20,7 +20,8 @@
 #ifndef __GST_H264_PICTURE_H__
 #define __GST_H264_PICTURE_H__
 
-#include <gst/gst.h>
+#include <gst/codecs/codecs-prelude.h>
+
 #include <gst/codecparsers/gsth264parser.h>
 
 G_BEGIN_DECLS
@@ -94,27 +95,24 @@ struct _GstH264Picture
   GDestroyNotify notify;
 };
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 GType gst_h264_picture_get_type (void);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 GstH264Picture * gst_h264_picture_new (void);
 
-G_GNUC_INTERNAL
 static inline GstH264Picture *
 gst_h264_picture_ref (GstH264Picture * picture)
 {
   return (GstH264Picture *) gst_mini_object_ref (GST_MINI_OBJECT_CAST (picture));
 }
 
-G_GNUC_INTERNAL
 static inline void
 gst_h264_picture_unref (GstH264Picture * picture)
 {
   gst_mini_object_unref (GST_MINI_OBJECT_CAST (picture));
 }
 
-G_GNUC_INTERNAL
 static inline gboolean
 gst_h264_picture_replace (GstH264Picture ** old_picture,
     GstH264Picture * new_picture)
@@ -123,7 +121,6 @@ gst_h264_picture_replace (GstH264Picture ** old_picture,
       (GstMiniObject *) new_picture);
 }
 
-G_GNUC_INTERNAL
 static inline void
 gst_h264_picture_clear (GstH264Picture ** picture)
 {
@@ -133,12 +130,12 @@ gst_h264_picture_clear (GstH264Picture ** picture)
   }
 }
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 void gst_h264_picture_set_user_data (GstH264Picture * picture,
                                      gpointer user_data,
                                      GDestroyNotify notify);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 gpointer gst_h264_picture_get_user_data (GstH264Picture * picture);
 
 /*******************
@@ -146,69 +143,69 @@ gpointer gst_h264_picture_get_user_data (GstH264Picture * picture);
  *******************/
 typedef struct _GstH264Dpb GstH264Dpb;
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 GstH264Dpb * gst_h264_dpb_new (void);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 void  gst_h264_dpb_set_max_num_pics (GstH264Dpb * dpb,
                                      gint max_num_pics);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 gint gst_h264_dpb_get_max_num_pics  (GstH264Dpb * dpb);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 void  gst_h264_dpb_free             (GstH264Dpb * dpb);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 void  gst_h264_dpb_clear            (GstH264Dpb * dpb);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 void  gst_h264_dpb_add              (GstH264Dpb * dpb,
                                      GstH264Picture * picture);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 void  gst_h264_dpb_delete_unused    (GstH264Dpb * dpb);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 void  gst_h264_dpb_delete_by_poc    (GstH264Dpb * dpb,
                                      gint poc);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 gint  gst_h264_dpb_num_ref_pictures (GstH264Dpb * dpb);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 void  gst_h264_dpb_mark_all_non_ref (GstH264Dpb * dpb);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 GstH264Picture * gst_h264_dpb_get_short_ref_by_pic_num (GstH264Dpb * dpb,
                                                         gint pic_num);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 GstH264Picture * gst_h264_dpb_get_long_ref_by_pic_num  (GstH264Dpb * dpb,
                                                         gint pic_num);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 GstH264Picture * gst_h264_dpb_get_lowest_frame_num_short_ref (GstH264Dpb * dpb);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 void  gst_h264_dpb_get_pictures_not_outputted  (GstH264Dpb * dpb,
                                                 GList ** out);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 void  gst_h264_dpb_get_pictures_short_term_ref (GstH264Dpb * dpb,
                                                 GList ** out);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 void  gst_h264_dpb_get_pictures_long_term_ref  (GstH264Dpb * dpb,
                                                 GList ** out);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 GArray * gst_h264_dpb_get_pictures_all         (GstH264Dpb * dpb);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 gint  gst_h264_dpb_get_size   (GstH264Dpb * dpb);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 gboolean gst_h264_dpb_is_full (GstH264Dpb * dpb);
 
 G_END_DECLS

@@ -51,11 +51,11 @@
 #include <config.h>
 #endif
 
-#include "gsth264decoder.h"
-#include "gsth264picture.h"
 #include "gstd3d11h264dec.h"
 #include "gstd3d11memory.h"
 #include "gstd3d11bufferpool.h"
+
+#include <gst/codecs/gsth264decoder.h>
 #include <string.h>
 
 /* HACK: to expose dxva data structure on UWP */

@@ -52,10 +52,10 @@
 #endif
 
 #include "gstd3d11vp9dec.h"
-#include "gstvp9decoder.h"
-#include "gstvp9picture.h"
 #include "gstd3d11memory.h"
 #include "gstd3d11bufferpool.h"
+
+#include <gst/codecs/gstvp9decoder.h>
 #include <string.h>
 
 /* HACK: to expose dxva data structure on UWP */

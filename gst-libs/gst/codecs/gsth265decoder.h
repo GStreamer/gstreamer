@@ -20,10 +20,11 @@
 #ifndef __GST_H265_DECODER_H__
 #define __GST_H265_DECODER_H__
 
-#include <gst/gst.h>
+#include <gst/codecs/codecs-prelude.h>
+
 #include <gst/video/video.h>
 #include <gst/codecparsers/gsth265parser.h>
-#include "gsth265picture.h"
+#include <gst/codecs/gsth265picture.h>
 
 G_BEGIN_DECLS
 
@@ -136,6 +137,7 @@ struct _GstH265DecoderClass
   gpointer padding[GST_PADDING_LARGE];
 };
 
+GST_CODECS_API
 GType gst_h265_decoder_get_type (void);
 
 G_END_DECLS

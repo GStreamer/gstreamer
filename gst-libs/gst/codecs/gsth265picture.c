@@ -23,8 +23,8 @@
 
 #include "gsth265picture.h"
 
-GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_h265_dec_debug);
-#define GST_CAT_DEFAULT gst_d3d11_h265_dec_debug
+GST_DEBUG_CATEGORY_EXTERN (gst_h265_decoder_debug);
+#define GST_CAT_DEFAULT gst_h265_decoder_debug
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstH265Picture, gst_h265_picture);
 

@@ -53,8 +53,8 @@
 
 #include "gsth264decoder.h"
 
-GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_h264_dec_debug);
-#define GST_CAT_DEFAULT gst_d3d11_h264_dec_debug
+GST_DEBUG_CATEGORY (gst_h264_decoder_debug);
+#define GST_CAT_DEFAULT gst_h264_decoder_debug
 
 typedef enum
 {
@@ -123,8 +123,11 @@ struct _GstH264DecoderPrivate
 };
 
 #define parent_class gst_h264_decoder_parent_class
-G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GstH264Decoder, gst_h264_decoder,
-    GST_TYPE_VIDEO_DECODER);
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstH264Decoder, gst_h264_decoder,
+    GST_TYPE_VIDEO_DECODER,
+    G_ADD_PRIVATE (GstH264Decoder);
+    GST_DEBUG_CATEGORY_INIT (gst_h264_decoder_debug, "h264decoder", 0,
+        "H.264 Video Decoder"));
 
 static gboolean gst_h264_decoder_start (GstVideoDecoder * decoder);
 static gboolean gst_h264_decoder_stop (GstVideoDecoder * decoder);

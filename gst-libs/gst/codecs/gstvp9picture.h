@@ -20,7 +20,7 @@
 #ifndef __GST_VP9_PICTURE_H__
 #define __GST_VP9_PICTURE_H__
 
-#include <gst/gst.h>
+#include <gst/codecs/codecs-prelude.h>
 #include <gst/codecparsers/gstvp9parser.h>
 
 G_BEGIN_DECLS
@@ -53,27 +53,24 @@ struct _GstVp9Picture
   GDestroyNotify notify;
 };
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 GType gst_vp9_picture_get_type (void);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 GstVp9Picture * gst_vp9_picture_new (void);
 
-G_GNUC_INTERNAL
 static inline GstVp9Picture *
 gst_vp9_picture_ref (GstVp9Picture * picture)
 {
   return (GstVp9Picture *) gst_mini_object_ref (GST_MINI_OBJECT_CAST (picture));
 }
 
-G_GNUC_INTERNAL
 static inline void
 gst_vp9_picture_unref (GstVp9Picture * picture)
 {
   gst_mini_object_unref (GST_MINI_OBJECT_CAST (picture));
 }
 
-G_GNUC_INTERNAL
 static inline gboolean
 gst_vp9_picture_replace (GstVp9Picture ** old_picture,
     GstVp9Picture * new_picture)
@@ -82,7 +79,6 @@ gst_vp9_picture_replace (GstVp9Picture ** old_picture,
       (GstMiniObject *) new_picture);
 }
 
-G_GNUC_INTERNAL
 static inline void
 gst_vp9_picture_clear (GstVp9Picture ** picture)
 {
@@ -92,12 +88,12 @@ gst_vp9_picture_clear (GstVp9Picture ** picture)
   }
 }
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 void gst_vp9_picture_set_user_data (GstVp9Picture * picture,
                                     gpointer user_data,
                                     GDestroyNotify notify);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 gpointer gst_vp9_picture_get_user_data (GstVp9Picture * picture);
 
 /*******************
@@ -110,16 +106,16 @@ struct _GstVp9Dpb
   GstVp9Picture *pic_list[GST_VP9_REF_FRAMES];
 };
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 GstVp9Dpb * gst_vp9_dpb_new (void);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 void  gst_vp9_dpb_free             (GstVp9Dpb * dpb);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 void  gst_vp9_dpb_clear            (GstVp9Dpb * dpb);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 void  gst_vp9_dpb_add              (GstVp9Dpb * dpb,
                                     GstVp9Picture * picture);
 

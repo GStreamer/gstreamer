@@ -20,10 +20,11 @@
 #ifndef __GST_VP9_DECODER_H__
 #define __GST_VP9_DECODER_H__
 
-#include <gst/gst.h>
+#include <gst/codecs/codecs-prelude.h>
+
 #include <gst/video/video.h>
 #include <gst/codecparsers/gstvp9parser.h>
-#include "gstvp9picture.h"
+#include <gst/codecs/gstvp9picture.h>
 
 G_BEGIN_DECLS
 
@@ -107,6 +108,7 @@ struct _GstVp9DecoderClass
   gpointer padding[GST_PADDING_LARGE];
 };
 
+GST_CODECS_API
 GType gst_vp9_decoder_get_type (void);
 
 G_END_DECLS

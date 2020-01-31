@@ -20,7 +20,14 @@
 #ifndef __GST_H265_PICTURE_H__
 #define __GST_H265_PICTURE_H__
 
+#ifndef GST_USE_UNSTABLE_API
+#warning "The CODECs library is unstable API and may change in future."
+#warning "You can define GST_USE_UNSTABLE_API to avoid this warning."
+#endif
+
 #include <gst/gst.h>
+#include <gst/codecs/codecs-prelude.h>
+
 #include <gst/codecparsers/gsth265parser.h>
 
 G_BEGIN_DECLS
@@ -80,27 +87,24 @@ struct _GstH265Picture
   GDestroyNotify notify;
 };
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 GType gst_h265_picture_get_type (void);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 GstH265Picture * gst_h265_picture_new (void);
 
-G_GNUC_INTERNAL
 static inline GstH265Picture *
 gst_h265_picture_ref (GstH265Picture * picture)
 {
   return (GstH265Picture *) gst_mini_object_ref (GST_MINI_OBJECT_CAST (picture));
 }
 
-G_GNUC_INTERNAL
 static inline void
 gst_h265_picture_unref (GstH265Picture * picture)
 {
   gst_mini_object_unref (GST_MINI_OBJECT_CAST (picture));
 }
 
-G_GNUC_INTERNAL
 static inline gboolean
 gst_h265_picture_replace (GstH265Picture ** old_picture,
     GstH265Picture * new_picture)
@@ -109,7 +113,6 @@ gst_h265_picture_replace (GstH265Picture ** old_picture,
       (GstMiniObject *) new_picture);
 }
 
-G_GNUC_INTERNAL
 static inline void
 gst_h265_picture_clear (GstH265Picture ** picture)
 {
@@ -119,12 +122,12 @@ gst_h265_picture_clear (GstH265Picture ** picture)
   }
 }
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 void gst_h265_picture_set_user_data (GstH265Picture * picture,
                                      gpointer user_data,
                                      GDestroyNotify notify);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 gpointer gst_h265_picture_get_user_data (GstH265Picture * picture);
 
 /*******************
@@ -132,66 +135,66 @@ gpointer gst_h265_picture_get_user_data (GstH265Picture * picture);
  *******************/
 typedef struct _GstH265Dpb GstH265Dpb;
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 GstH265Dpb * gst_h265_dpb_new (void);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 void  gst_h265_dpb_set_max_num_pics (GstH265Dpb * dpb,
                                      gint max_num_pics);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 gint gst_h265_dpb_get_max_num_pics  (GstH265Dpb * dpb);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 void  gst_h265_dpb_free             (GstH265Dpb * dpb);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 void  gst_h265_dpb_clear            (GstH265Dpb * dpb);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 void  gst_h265_dpb_add              (GstH265Dpb * dpb,
                                      GstH265Picture * picture);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 void  gst_h265_dpb_delete_unused    (GstH265Dpb * dpb);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 void  gst_h265_dpb_delete_by_poc    (GstH265Dpb * dpb,
                                      gint poc);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 gint  gst_h265_dpb_num_ref_pictures (GstH265Dpb * dpb);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 void  gst_h265_dpb_mark_all_non_ref (GstH265Dpb * dpb);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 GstH265Picture * gst_h265_dpb_get_ref_by_poc       (GstH265Dpb * dpb,
                                                     gint poc);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 GstH265Picture * gst_h265_dpb_get_ref_by_poc_lsb   (GstH265Dpb * dpb,
                                                     gint poc_lsb);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 GstH265Picture * gst_h265_dpb_get_short_ref_by_poc (GstH265Dpb * dpb,
                                                     gint poc);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 GstH265Picture * gst_h265_dpb_get_long_ref_by_poc  (GstH265Dpb * dpb,
                                                     gint poc);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 void  gst_h265_dpb_get_pictures_not_outputted  (GstH265Dpb * dpb,
                                                 GList ** out);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 GArray * gst_h265_dpb_get_pictures_all         (GstH265Dpb * dpb);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 gint  gst_h265_dpb_get_size   (GstH265Dpb * dpb);
 
-G_GNUC_INTERNAL
+GST_CODECS_API
 gboolean gst_h265_dpb_is_full (GstH265Dpb * dpb);
 
 G_END_DECLS
