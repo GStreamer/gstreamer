@@ -51,7 +51,7 @@ def get_wrap_subprojects(srcdir, gst_branch):
 
         yield repo_name, repo_branch, parent_repo_dir
 
-def checkout_worktree(repo_name, repo_dir, worktree_dir, branch, force=False):
+def checkout_worktree(repo_name, repo_dir, worktree_dir, branch, new_branch, force=False):
     print('Checking out worktree for project {!r} into {!r} '
           '(branch {})'.format(repo_name, worktree_dir, branch))
     try:
@@ -59,6 +59,8 @@ def checkout_worktree(repo_name, repo_dir, worktree_dir, branch, force=False):
         if force:
             args += ["-f", "-f"]
         args += [worktree_dir, branch]
+        if new_branch:
+            args += ["-b", new_branch]
         git(*args, repository_path=repo_dir)
     except subprocess.CalledProcessError as e:
         out = getattr(e, "output", b"").decode()
@@ -72,12 +74,12 @@ def checkout_worktree(repo_name, repo_dir, worktree_dir, branch, force=False):
                                     commit_message[4].strip()))
     return True
 
-def checkout_subprojects(worktree_dir, branch):
+def checkout_subprojects(worktree_dir, branch, new_branch):
     worktree_subdir = os.path.join(worktree_dir, "subprojects")
 
     for repo_name, repo_branch, parent_repo_dir in get_wrap_subprojects(worktree_dir, branch):
         workdir = os.path.normpath(os.path.join(worktree_subdir, repo_name))
-        if not checkout_worktree(repo_name, parent_repo_dir, workdir, repo_branch, force=True):
+        if not checkout_worktree(repo_name, parent_repo_dir, workdir, repo_branch, new_branch, force=True):
             return False
 
     return True
@@ -122,6 +124,8 @@ if __name__ == "__main__":
                             help='Directory where to create the new worktree')
     parser_add.add_argument('branch', type=str, default=None,
                             help='Branch to checkout')
+    parser_add.add_argument('-b', '--new-branch', type=str, default=None,
+                            help='Branch to create')
 
     parser_rm = subparsers.add_parser('rm',
                                       help='Remove a gst-build worktree and the subproject worktrees inside it')
@@ -140,9 +144,9 @@ if __name__ == "__main__":
     worktree_dir = os.path.abspath(options.worktree_dir)
 
     if options.command == 'add':
-        if not checkout_worktree('gst-build', SCRIPTDIR, worktree_dir, options.branch):
+        if not checkout_worktree('gst-build', SCRIPTDIR, worktree_dir, options.branch, options.new_branch):
             exit(1)
-        if not checkout_subprojects(worktree_dir, options.branch):
+        if not checkout_subprojects(worktree_dir, options.branch, options.new_branch):
             exit(1)
     elif options.command == 'rm':
         if not os.path.exists(worktree_dir):
