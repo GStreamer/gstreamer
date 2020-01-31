@@ -415,6 +415,14 @@ get_drm_caps (GstKMSSink * self)
   return TRUE;
 }
 
+static void
+ensure_kms_allocator (GstKMSSink * self)
+{
+  if (self->allocator)
+    return;
+  self->allocator = gst_kms_allocator_new (self->fd);
+}
+
 static gboolean
 configure_mode_setting (GstKMSSink * self, GstVideoInfo * vinfo)
 {
@@ -436,6 +444,7 @@ configure_mode_setting (GstKMSSink * self, GstVideoInfo * vinfo)
 
   GST_INFO_OBJECT (self, "configuring mode setting");
 
+  ensure_kms_allocator (self);
   kmsmem = (GstKMSMemory *) gst_kms_allocator_bo_alloc (self->allocator, vinfo);
   if (!kmsmem)
     goto bo_failed;
@@ -1006,14 +1015,6 @@ gst_kms_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
   }
 
   return out_caps;
-}
-
-static void
-ensure_kms_allocator (GstKMSSink * self)
-{
-  if (self->allocator)
-    return;
-  self->allocator = gst_kms_allocator_new (self->fd);
 }
 
 static GstBufferPool *
