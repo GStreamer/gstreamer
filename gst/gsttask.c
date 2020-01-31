@@ -657,33 +657,14 @@ start_task (GstTask * task)
   return res;
 }
 
-
-/**
- * gst_task_set_state:
- * @task: a #GstTask
- * @state: the new task state
- *
- * Sets the state of @task to @state.
- *
- * The @task must have a lock associated with it using
- * gst_task_set_lock() when going to GST_TASK_STARTED or GST_TASK_PAUSED or
- * this function will return %FALSE.
- *
- * MT safe.
- *
- * Returns: %TRUE if the state could be changed.
- */
-gboolean
-gst_task_set_state (GstTask * task, GstTaskState state)
+static inline gboolean
+gst_task_set_state_unlocked (GstTask * task, GstTaskState state)
 {
   GstTaskState old;
   gboolean res = TRUE;
 
-  g_return_val_if_fail (GST_IS_TASK (task), FALSE);
-
   GST_DEBUG_OBJECT (task, "Changing task %p to state %d", task, state);
 
-  GST_OBJECT_LOCK (task);
   if (state != GST_TASK_STOPPED)
     if (G_UNLIKELY (GST_TASK_GET_LOCK (task) == NULL))
       goto no_lock;
@@ -709,7 +690,6 @@ gst_task_set_state (GstTask * task, GstTaskState state)
         break;
     }
   }
-  GST_OBJECT_UNLOCK (task);
 
   return res;
 
@@ -717,10 +697,39 @@ gst_task_set_state (GstTask * task, GstTaskState state)
 no_lock:
   {
     GST_WARNING_OBJECT (task, "state %d set on task without a lock", state);
-    GST_OBJECT_UNLOCK (task);
     g_warning ("task without a lock can't be set to state %d", state);
     return FALSE;
   }
+}
+
+
+/**
+ * gst_task_set_state:
+ * @task: a #GstTask
+ * @state: the new task state
+ *
+ * Sets the state of @task to @state.
+ *
+ * The @task must have a lock associated with it using
+ * gst_task_set_lock() when going to GST_TASK_STARTED or GST_TASK_PAUSED or
+ * this function will return %FALSE.
+ *
+ * MT safe.
+ *
+ * Returns: %TRUE if the state could be changed.
+ */
+gboolean
+gst_task_set_state (GstTask * task, GstTaskState state)
+{
+  gboolean res = TRUE;
+
+  g_return_val_if_fail (GST_IS_TASK (task), FALSE);
+
+  GST_OBJECT_LOCK (task);
+  res = gst_task_set_state_unlocked (task, state);
+  GST_OBJECT_UNLOCK (task);
+
+  return res;
 }
 
 /**
@@ -775,6 +784,32 @@ gboolean
 gst_task_pause (GstTask * task)
 {
   return gst_task_set_state (task, GST_TASK_PAUSED);
+}
+
+/**
+ * gst_task_resume:
+ * @task: The #GstTask to resume
+ *
+ * Resume @task in case it was paused. If the task was stopped, it will
+ * remain in that state and this function will return %FALSE.
+ *
+ * Returns: %TRUE if the task could be resumed.
+ *
+ * MT safe.
+ * Since: 1.18
+ */
+gboolean
+gst_task_resume (GstTask * task)
+{
+  gboolean res = FALSE;
+  g_return_val_if_fail (GST_IS_TASK (task), FALSE);
+
+  GST_OBJECT_LOCK (task);
+  if (GET_TASK_STATE (task) != GST_TASK_STOPPED)
+    res = gst_task_set_state_unlocked (task, GST_TASK_STARTED);
+  GST_OBJECT_UNLOCK (task);
+
+  return res;
 }
 
 /**

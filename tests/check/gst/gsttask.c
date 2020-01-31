@@ -32,6 +32,48 @@ static GRecMutex task_mutex;
 #define TEST_RACE_ITERATIONS 1000
 
 static void
+task_resume_func (void *data)
+{
+  g_mutex_lock (&task_lock);
+  g_cond_signal (&task_cond);
+  g_mutex_unlock (&task_lock);
+}
+
+GST_START_TEST (test_resume)
+{
+  GstTask *t;
+
+  t = gst_task_new (task_resume_func, &t, NULL);
+  fail_if (t == NULL);
+
+  g_rec_mutex_init (&task_mutex);
+  gst_task_set_lock (t, &task_mutex);
+
+  g_cond_init (&task_cond);
+  g_mutex_init (&task_lock);
+
+  g_mutex_lock (&task_lock);
+
+  /* Pause the task, and resume it. */
+  fail_unless (gst_task_pause (t));
+  fail_unless (gst_task_resume (t));
+
+  while (GST_TASK_STATE (t) != GST_TASK_STARTED)
+    g_cond_wait (&task_cond, &task_lock);
+
+  fail_unless (gst_task_stop (t));
+  g_mutex_unlock (&task_lock);
+  fail_unless (gst_task_join (t));
+
+  /* Make sure we cannot resume from stopped. */
+  fail_if (gst_task_resume (t));
+
+  gst_object_unref (t);
+}
+
+GST_END_TEST;
+
+static void
 task_signal_pause_func (void *data)
 {
   GstTask **t = data;
@@ -265,6 +307,7 @@ gst_task_suite (void)
   tcase_add_test (tc_chain, test_lock_start);
   tcase_add_test (tc_chain, test_join);
   tcase_add_test (tc_chain, test_pause_stop_race);
+  tcase_add_test (tc_chain, test_resume);
 
   return s;
 }
