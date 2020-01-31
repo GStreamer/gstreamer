@@ -384,6 +384,7 @@ error:
   g_rec_mutex_unlock (&self->association_mutex);
   gst_sctp_association_change_state (self, GST_SCTP_ASSOCIATION_STATE_ERROR,
       TRUE);
+  return FALSE;
 configure_required:
   g_rec_mutex_unlock (&self->association_mutex);
   return FALSE;
