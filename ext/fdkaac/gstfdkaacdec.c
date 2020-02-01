@@ -43,7 +43,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/mpeg, "
-        "mpegversion = (int) 4, "
+        "mpegversion = (int) {2, 4}, "
         "stream-format = (string) { adts, adif, raw }, " CHANNELS_CAPS_STR)
     );
 
