@@ -164,6 +164,10 @@ struct _MpegTSBase {
   /* Whether the parent bin is streams-aware, meaning we can
    * add/remove streams at any point in time */
   gboolean streams_aware;
+
+  /* Do not use the PCR stream for timestamp calculation. Useful for
+   * streams with broken/invalid PCR streams. */
+  gboolean ignore_pcr;
 };
 
 struct _MpegTSBaseClass {

@@ -59,10 +59,13 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("video/mpegts, " "systemstream = (boolean) true ")
     );
 
+#define DEFAULT_IGNORE_PCR FALSE
+
 enum
 {
   PROP_0,
   PROP_PARSE_PRIVATE_SECTIONS,
+  PROP_IGNORE_PCR,
   /* FILL ME */
 };
 
@@ -142,6 +145,19 @@ mpegts_base_class_init (MpegTSBaseClass * klass)
           "Parse private sections", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstMpegtsBase:ignore-pcr:
+   *
+   * Ignore PCR (Program Clock Reference) data from MPEG-TS PSI.
+   * This can help with playback of some broken files.
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (gobject_class, PROP_IGNORE_PCR,
+      g_param_spec_boolean ("ignore-pcr", "Ignore PCR stream for timing",
+          "Ignore PCR stream for timing", DEFAULT_IGNORE_PCR,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   klass->sink_query = GST_DEBUG_FUNCPTR (mpegts_base_default_sink_query);
 }
 
@@ -154,6 +170,9 @@ mpegts_base_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_PARSE_PRIVATE_SECTIONS:
       base->parse_private_sections = g_value_get_boolean (value);
+      break;
+    case PROP_IGNORE_PCR:
+      base->ignore_pcr = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -169,6 +188,9 @@ mpegts_base_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_PARSE_PRIVATE_SECTIONS:
       g_value_set_boolean (value, base->parse_private_sections);
+      break;
+    case PROP_IGNORE_PCR:
+      g_value_set_boolean (value, base->ignore_pcr);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -250,6 +272,7 @@ mpegts_base_init (MpegTSBase * base)
 
   base->push_data = TRUE;
   base->push_section = TRUE;
+  base->ignore_pcr = DEFAULT_IGNORE_PCR;
 
   mpegts_base_reset (base);
 }
@@ -741,7 +764,7 @@ mpegts_base_is_same_program (MpegTSBase * base, MpegTSBaseProgram * oldprogram,
     return FALSE;
   }
 
-  if (oldprogram->pcr_pid != new_pmt->pcr_pid) {
+  if (!base->ignore_pcr && oldprogram->pcr_pid != new_pmt->pcr_pid) {
     GST_DEBUG ("Different pcr_pid (new:0x%04x, old:0x%04x)",
         new_pmt->pcr_pid, oldprogram->pcr_pid);
     return FALSE;
@@ -908,7 +931,10 @@ mpegts_base_activate_program (MpegTSBase * base, MpegTSBaseProgram * program,
 
   program->pmt = pmt;
   program->pmt_pid = pmt_pid;
-  program->pcr_pid = pmt->pcr_pid;
+  if (!base->ignore_pcr)
+    program->pcr_pid = pmt->pcr_pid;
+  else
+    program->pcr_pid = 0x1fff;
 
   /* extract top-level registration_id if present */
   program->registration_id =
@@ -939,8 +965,8 @@ mpegts_base_activate_program (MpegTSBase * base, MpegTSBaseProgram * program,
   }
   /* We add the PCR pid last. If that PID is already used by one of the media
    * streams above, no new stream will be created */
-  mpegts_base_program_add_stream (base, program, pmt->pcr_pid, -1, NULL);
-  MPEGTS_BIT_SET (base->is_pes, pmt->pcr_pid);
+  mpegts_base_program_add_stream (base, program, program->pcr_pid, -1, NULL);
+  MPEGTS_BIT_SET (base->is_pes, program->pcr_pid);
 
   program->active = TRUE;
   program->initial_program = initial_program;
