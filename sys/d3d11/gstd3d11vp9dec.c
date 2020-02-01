@@ -596,6 +596,7 @@ gst_d3d11_vp9_dec_output_picture (GstVp9Decoder * decoder,
   GstBuffer *output_buffer = NULL;
   GstFlowReturn ret;
   GstBuffer *view_buffer;
+  gboolean do_copy;
 
   GST_LOG_OBJECT (self, "Outputting picture %p", picture);
 
@@ -642,39 +643,45 @@ gst_d3d11_vp9_dec_output_picture (GstVp9Decoder * decoder,
     }
   }
 
+  /* if downstream is d3d11 element and forward playback case,
+   * expose our decoder view without copy. In case of reverse playback, however,
+   * we cannot do that since baseclass will store the decoded buffer
+   * up to gop size but our dpb pool cannot be increased */
+  if (self->use_d3d11_output &&
+      GST_VIDEO_DECODER (self)->input_segment.rate > 0) {
+    GstMemory *mem;
+
+    output_buffer = gst_buffer_ref (view_buffer);
+    mem = gst_buffer_peek_memory (output_buffer, 0);
+    GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
+    do_copy = FALSE;
+  } else {
+    output_buffer =
+        gst_video_decoder_allocate_output_buffer (GST_VIDEO_DECODER (self));
+    do_copy = TRUE;
+  }
+
+  if (!output_buffer) {
+    GST_ERROR_OBJECT (self, "Couldn't allocate output buffer");
+    return GST_FLOW_ERROR;
+  }
+
   if (!frame) {
     GST_WARNING_OBJECT (self,
         "Failed to find codec frame for picture %p", picture);
-
-    output_buffer =
-        gst_video_decoder_allocate_output_buffer (GST_VIDEO_DECODER (self));
-
-    if (!output_buffer) {
-      GST_ERROR_OBJECT (self, "Couldn't allocate output buffer");
-      return GST_FLOW_ERROR;
-    }
 
     GST_BUFFER_PTS (output_buffer) = picture->pts;
     GST_BUFFER_DTS (output_buffer) = GST_CLOCK_TIME_NONE;
     GST_BUFFER_DURATION (output_buffer) = GST_CLOCK_TIME_NONE;
   } else {
-    ret =
-        gst_video_decoder_allocate_output_frame (GST_VIDEO_DECODER (self),
-        frame);
-
-    if (ret != GST_FLOW_OK) {
-      GST_ERROR_OBJECT (self, "failed to allocate output frame");
-      return ret;
-    }
-
-    output_buffer = frame->output_buffer;
-    GST_BUFFER_PTS (output_buffer) = picture->pts;
+    frame->output_buffer = output_buffer;
+    GST_BUFFER_PTS (output_buffer) = GST_BUFFER_PTS (frame->input_buffer);
     GST_BUFFER_DTS (output_buffer) = GST_CLOCK_TIME_NONE;
     GST_BUFFER_DURATION (output_buffer) =
         GST_BUFFER_DURATION (frame->input_buffer);
   }
 
-  if (!gst_d3d11_decoder_copy_decoder_buffer (self->d3d11_decoder,
+  if (do_copy && !gst_d3d11_decoder_copy_decoder_buffer (self->d3d11_decoder,
           &self->output_state->info, view_buffer, output_buffer)) {
     GST_ERROR_OBJECT (self, "Failed to copy buffer");
     if (frame)
