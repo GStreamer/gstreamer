@@ -1010,8 +1010,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
     let args = Args::from_args();
 
     // Connect to the given server
-    let url = url::Url::parse(&args.server)?;
-    let (mut ws, _) = async_tungstenite::async_std::connect_async(url).await?;
+    let (mut ws, _) = async_tungstenite::async_std::connect_async(&args.server).await?;
 
     println!("connected");
 
