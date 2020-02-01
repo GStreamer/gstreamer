@@ -215,13 +215,14 @@ transport_receive_bin_change_state (GstElement * element,
       receive->rtp_block =
           _create_pad_block (GST_ELEMENT (receive), pad, 0, NULL, NULL);
       receive->rtp_block->block_id =
-          gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_ALL_BOTH,
+          gst_pad_add_probe (pad,
+          GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
           (GstPadProbeCallback) pad_block, receive, NULL);
       gst_object_unref (pad);
 
       receive->rtp_src_probe_id = gst_pad_add_probe (receive->rtp_src,
-          GST_PAD_PROBE_TYPE_ALL_BOTH, (GstPadProbeCallback) src_probe_cb,
-          receive, NULL);
+          GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
+          (GstPadProbeCallback) src_probe_cb, receive, NULL);
 
       transport = receive->stream->rtcp_transport;
       dtlssrtpdec = transport->dtlssrtpdec;
@@ -229,13 +230,14 @@ transport_receive_bin_change_state (GstElement * element,
       receive->rtcp_block =
           _create_pad_block (GST_ELEMENT (receive), pad, 0, NULL, NULL);
       receive->rtcp_block->block_id =
-          gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_ALL_BOTH,
+          gst_pad_add_probe (pad,
+          GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
           (GstPadProbeCallback) pad_block, receive, NULL);
       gst_object_unref (pad);
 
       receive->rtcp_src_probe_id = gst_pad_add_probe (receive->rtcp_src,
-          GST_PAD_PROBE_TYPE_ALL_BOTH, (GstPadProbeCallback) src_probe_cb,
-          receive, NULL);
+          GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
+          (GstPadProbeCallback) src_probe_cb, receive, NULL);
 
       /* XXX: because nice needs the nicesrc internal main loop running in order
        * correctly STUN... */
@@ -448,6 +450,7 @@ transport_receive_bin_class_init (TransportReceiveBinClass * klass)
 static void
 transport_receive_bin_init (TransportReceiveBin * receive)
 {
+  receive->receive_state = RECEIVE_STATE_BLOCK;
   g_mutex_init (&receive->pad_block_lock);
   g_cond_init (&receive->pad_block_cond);
 }
