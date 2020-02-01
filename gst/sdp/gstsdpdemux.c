@@ -410,9 +410,16 @@ gst_sdp_demux_create_stream (GstSDPDemux * demux, GstSDPMessage * sdp, gint idx)
       }
     }
   }
-  if (!(conn = gst_sdp_media_get_connection (media, 0))) {
-    if (!(conn = gst_sdp_message_get_connection (sdp)))
+
+  if (gst_sdp_media_connections_len (media) > 0) {
+    if (!(conn = gst_sdp_media_get_connection (media, 0))) {
+      /* We should not reach this based on the check above */
       goto no_connection;
+    }
+  } else {
+    if (!(conn = gst_sdp_message_get_connection (sdp))) {
+      goto no_connection;
+    }
   }
 
   if (!conn->address)
