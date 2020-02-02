@@ -8,7 +8,7 @@ stages:
 
 variables:
   ANDROID_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/android:2019-10-23-793480'
-  CERBERO_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/cerbero-fedora:2019-11-10-917246'
+  CERBERO_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/cerbero-fedora:2020-02-03-1534422-master'
   FEDORA_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora:2019-12-23-1224753'
   INDENT_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/gst-indent:6f7e01e1e30a73efa880acdc8e911f1f20c58dbb'
   MANIFEST_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/build-manifest:2019-10-23-793475'
@@ -368,6 +368,8 @@ valgrind ges:
     CERBERO_ARGS: "${DEFAULT_CERBERO_ARGS}"
     CERBERO: "./cerbero-uninstalled -c config/${CONFIG} -c localconf.cbc -m manifest.xml"
     CERBERO_PACKAGE_ARGS: "-t"
+    CERBERO_RUN_WRAPPER: "" # 'wine' on cross-winXX
+    CERBERO_RUN_SUFFIX: "" # '.exe' on cross-winXX
     HAVE_CCACHE: "yes"
     # used by macos packages as we only ever install to a fixed directory
     CERBERO_OVERRIDDEN_DIST_DIR: ""
@@ -398,6 +400,11 @@ valgrind ges:
           && rsync -aH ${CERBERO_HOME}/dist/${ARCH}/ ${CERBERO_OVERRIDDEN_DIST_DIR}
     - $CERBERO $CERBERO_ARGS bootstrap --offline --build-tools-only
     - $CERBERO $CERBERO_ARGS package --offline ${CERBERO_PACKAGE_ARGS} -o $(pwd) gstreamer-1.0
+    # Run gst-inspect-1.0 for some basic checks. Can't do this for cross-(android|ios)-universal, of course.
+    - |-
+        [[ $CONFIG == *universal* ]] || $CERBERO $CERBERO_ARGS run $CERBERO_RUN_WRAPPER gst-inspect-1.0$CERBERO_RUN_SUFFIX --version
+    - |-
+        [[ $CONFIG == *universal* ]] || $CERBERO $CERBERO_ARGS run $CERBERO_RUN_WRAPPER gst-inspect-1.0$CERBERO_RUN_SUFFIX
     - test "x${HAVE_CCACHE}" = "xyes" && ccache -s || true    # eat the return value from the failing test
   cache:
     key: "${CI_JOB_NAME}"
@@ -639,6 +646,8 @@ cerbero deps cross-windows x86:
   extends: '.cerbero'
   variables:
     CONFIG: "cross-win32.cbc"
+    CERBERO_RUN_WRAPPER: "wine"
+    CERBERO_RUN_SUFFIX: ".exe"
 
 cerbero cross win32:
   extends: '.cerbero cross win32'
@@ -673,6 +682,8 @@ cerbero deps cross-windows x86_64:
   extends: '.cerbero'
   variables:
     CONFIG: "cross-win64.cbc"
+    CERBERO_RUN_WRAPPER: "wine"
+    CERBERO_RUN_SUFFIX: ".exe"
 
 cerbero cross win64:
   extends: '.cerbero cross win64'
