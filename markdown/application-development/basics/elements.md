@@ -55,7 +55,7 @@ Decoders, on the other hand, will only have one source and sink pads.
 
 [Visualisation of a filter element](#visualisation-of-a-filter-element)
 shows how we will visualise a filter-like element. This specific element
-has one source and one sink element. Sink pads, receiving input data,
+has one source pad and one sink pad. Sink pads, receiving input data,
 are depicted at the left of the element; source pads are still on the
 right.
 
