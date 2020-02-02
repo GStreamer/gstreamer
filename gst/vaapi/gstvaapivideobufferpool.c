@@ -190,7 +190,7 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
 
     /* dmabuf allocator can change its parameters: no need to create a
      * new one */
-    if (allocator && priv->use_dmabuf_memory) {
+    if (priv->use_dmabuf_memory) {
       gst_allocator_set_vaapi_video_info (allocator, &new_allocation_vinfo,
           surface_alloc_flags);
     } else {
@@ -200,14 +200,9 @@ gst_vaapi_video_buffer_pool_set_config (GstBufferPool * pool,
 
   /* create a new allocator if needed */
   if (!allocator) {
-    if (priv->use_dmabuf_memory) {
-      allocator = gst_vaapi_dmabuf_allocator_new (priv->display,
-          &new_allocation_vinfo, /* FIXME: */ 0, GST_PAD_SRC);
-    } else {
-      allocator = gst_vaapi_video_allocator_new (priv->display,
-          &new_allocation_vinfo, surface_alloc_flags, 0);
-    }
-
+    /* if no allocator set, let's create a VAAPI one */
+    allocator = gst_vaapi_video_allocator_new (priv->display,
+        &new_allocation_vinfo, surface_alloc_flags, 0);
     if (!allocator)
       goto error_no_allocator;
 
