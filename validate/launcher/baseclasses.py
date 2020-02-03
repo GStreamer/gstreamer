@@ -2025,6 +2025,8 @@ class _TestsLauncher(Loggable):
                 to_report = True
                 if res != Result.PASSED:
                     if self.options.forever or self.options.fatal_error:
+                        self.print_result(current_test_num - 1, test, retry_on_failure=retry_on_failures)
+                        self.reporter.after_test(test)
                         return False
 
                     if retry_on_failures:
