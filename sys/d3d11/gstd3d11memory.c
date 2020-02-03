@@ -49,6 +49,7 @@ gst_d3d11_allocation_params_new (GstD3D11Device * device, GstVideoInfo * info,
   ret = g_new0 (GstD3D11AllocationParams, 1);
 
   ret->info = *info;
+  ret->aligned_info = *info;
   ret->d3d11_format = d3d11_format;
 
   /* Usage Flag
@@ -94,6 +95,41 @@ gst_d3d11_allocation_params_new (GstD3D11Device * device, GstVideoInfo * info,
   ret->flags = flags;
 
   return ret;
+}
+
+gboolean
+gst_d3d11_allocation_params_alignment (GstD3D11AllocationParams * params,
+    GstVideoAlignment * align)
+{
+  gint i;
+  guint padding_width, padding_height;
+  GstVideoInfo *info;
+  GstVideoInfo new_info;
+
+  g_return_val_if_fail (params != NULL, FALSE);
+  g_return_val_if_fail (align != NULL, FALSE);
+
+  /* d3d11 does not support stride align. Consider padding only */
+  padding_width = align->padding_left + align->padding_right;
+  padding_height = align->padding_top + align->padding_bottom;
+
+  info = &params->info;
+
+  if (!gst_video_info_set_format (&new_info, GST_VIDEO_INFO_FORMAT (info),
+          GST_VIDEO_INFO_WIDTH (info) + padding_width,
+          GST_VIDEO_INFO_HEIGHT (info) + padding_height)) {
+    GST_WARNING ("Set format fail");
+    return FALSE;
+  }
+
+  params->aligned_info = new_info;
+
+  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
+    params->desc[i].Width = GST_VIDEO_INFO_COMP_WIDTH (&new_info, i);
+    params->desc[i].Height = GST_VIDEO_INFO_COMP_HEIGHT (&new_info, i);
+  }
+
+  return TRUE;
 }
 
 GstD3D11AllocationParams *

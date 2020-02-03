@@ -81,6 +81,7 @@ struct _GstD3D11AllocationParams
   D3D11_TEXTURE2D_DESC desc[GST_VIDEO_MAX_PLANES];
 
   GstVideoInfo info;
+  GstVideoInfo aligned_info;
   const GstD3D11Format *d3d11_format;
 
   /* size and stride of staging texture, set by allocator */
@@ -162,7 +163,10 @@ GstD3D11AllocationParams * gst_d3d11_allocation_params_new (GstD3D11Device * dev
 
 GstD3D11AllocationParams * gst_d3d11_allocation_params_copy (GstD3D11AllocationParams * src);
 
-void                       gst_d3d11_allocation_params_free (GstD3D11AllocationParams * parms);
+void                       gst_d3d11_allocation_params_free (GstD3D11AllocationParams * params);
+
+gboolean                   gst_d3d11_allocation_params_alignment (GstD3D11AllocationParams * parms,
+                                                                  GstVideoAlignment * align);
 
 GType               gst_d3d11_allocator_get_type  (void);
 

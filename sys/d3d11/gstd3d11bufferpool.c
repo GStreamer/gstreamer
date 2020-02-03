@@ -255,6 +255,7 @@ gst_d3d11_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   GstBuffer *buf;
   GstD3D11AllocationParams *d3d11_params = priv->d3d11_params;
   GstVideoInfo *info = &d3d11_params->info;
+  GstVideoInfo *aligned_info = &d3d11_params->aligned_info;
   gint n_texture = 0;
   gint i;
   gsize offset[GST_VIDEO_MAX_PLANES] = { 0, };
@@ -292,7 +293,7 @@ gst_d3d11_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   /* calculate offset */
   for (i = 0; i < n_texture && i < GST_VIDEO_MAX_PLANES - 1; i++) {
     offset[i + 1] = offset[i] +
-        d3d11_params->stride[i] * GST_VIDEO_INFO_COMP_HEIGHT (info, i);
+        d3d11_params->stride[i] * GST_VIDEO_INFO_COMP_HEIGHT (aligned_info, i);
   }
 
   if (priv->add_videometa) {
