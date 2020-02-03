@@ -56,14 +56,14 @@ struct _GstD3D11DecoderPrivate
 static GQuark
 _decoder_output_view_get (void)
 {
-  static gsize g_quark;
+  static volatile gsize g_quark = 0;
 
   if (g_once_init_enter (&g_quark)) {
     gsize quark =
         (gsize) g_quark_from_static_string ("GstD3D11DecoderOutputView");
     g_once_init_leave (&g_quark, quark);
   }
-  return g_quark;
+  return (GQuark) g_quark;
 }
 
 static void gst_d3d11_decoder_constructed (GObject * object);
