@@ -365,6 +365,7 @@ gst_validate_ssim_get_frame_from_png (GstValidateSsim * self, const char *file,
       cairo_image_surface_get_width (surface),
       cairo_image_surface_get_height (surface));
 
+  cairo_surface_flush (surface);
   data = cairo_image_surface_get_data (surface);
   buf = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
       data, info.size, 0, info.size, surface,
@@ -602,6 +603,7 @@ _get_ref_frame_cache (GstValidateSsim * self, const gchar * ref_file)
     }
     g_array_append_val (frames, iframe);
   }
+  g_object_unref (fenum);
 
   if (frames) {
     g_array_sort (frames, (GCompareFunc) _sort_frames);
