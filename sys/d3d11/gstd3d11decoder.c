@@ -50,6 +50,8 @@ struct _GstD3D11DecoderPrivate
   /* for staging */
   ID3D11Texture2D *staging;
   D3D11_TEXTURE2D_DESC staging_desc;
+
+  GUID decoder_profile;
 };
 
 #define OUTPUT_VIEW_QUARK _decoder_output_view_get()
@@ -298,86 +300,48 @@ gst_d3d11_decoder_output_view_free (GstD3D11DecoderOutputView * view)
 }
 
 static gboolean
-gst_d3d11_decoder_prepare_output_view (GstD3D11Decoder * self,
-    GstBufferPool * pool, guint pool_size, const GUID * decoder_profile)
+gst_d3d11_decoder_ensure_output_view (GstD3D11Decoder * self,
+    GstBuffer * buffer)
 {
   GstD3D11DecoderPrivate *priv = self->priv;
-  GstBuffer **list = NULL;
   D3D11_VIDEO_DECODER_OUTPUT_VIEW_DESC view_desc = { 0, };
-  guint i;
+  GstD3D11Memory *mem;
+  GstD3D11DecoderOutputView *view;
+  ID3D11VideoDecoderOutputView *view_handle;
+  HRESULT hr;
 
-  view_desc.DecodeProfile = *decoder_profile;
+  mem = (GstD3D11Memory *) gst_buffer_peek_memory (buffer, 0);
+
+  view = (GstD3D11DecoderOutputView *)
+      gst_mini_object_get_qdata (GST_MINI_OBJECT_CAST (mem), OUTPUT_VIEW_QUARK);
+
+  if (view)
+    return TRUE;
+
+  view_desc.DecodeProfile = priv->decoder_profile;
   view_desc.ViewDimension = D3D11_VDOV_DIMENSION_TEXTURE2D;
+  view_desc.Texture2D.ArraySlice = mem->subresource_index;
 
-  list = g_newa (GstBuffer *, pool_size);
-  memset (list, 0, sizeof (GstBuffer *) * pool_size);
+  GST_LOG_OBJECT (self,
+      "Create decoder output view with index %d", mem->subresource_index);
 
-  /* create output view here */
-  for (i = 0; i < pool_size; i++) {
-    GstFlowReturn ret;
-    GstBuffer *buf = NULL;
-    GstD3D11Memory *mem;
-    GstD3D11DecoderOutputView *view;
-    ID3D11VideoDecoderOutputView *view_handle;
-    HRESULT hr;
-    ID3D11Texture2D *texture;
-    GstD3D11Allocator *allocator;
-
-    ret = gst_buffer_pool_acquire_buffer (pool, &buf, NULL);
-
-    if (ret != GST_FLOW_OK || !buf) {
-      GST_ERROR_OBJECT (self, "Could acquire buffer from pool");
-      goto error;
-    }
-
-    list[i] = buf;
-    mem = (GstD3D11Memory *) gst_buffer_peek_memory (buf, 0);
-
-    allocator = GST_D3D11_ALLOCATOR (GST_MEMORY_CAST (mem)->allocator);
-    texture = allocator->texture;
-
-    if (!texture) {
-      GST_ERROR_OBJECT (self, "D3D11 allocator does not have texture");
-      goto error;
-    }
-
-    view_desc.Texture2D.ArraySlice = mem->subresource_index;
-    GST_LOG_OBJECT (self,
-        "Create decoder output view with index %d", mem->subresource_index);
-
-    hr = ID3D11VideoDevice_CreateVideoDecoderOutputView (priv->video_device,
-        (ID3D11Resource *) texture, &view_desc, &view_handle);
-    if (!gst_d3d11_result (hr, priv->device)) {
-      GST_ERROR_OBJECT (self,
-          "Could not create decoder output view, hr: 0x%x", (guint) hr);
-      goto error;
-    }
-
-    view = g_new0 (GstD3D11DecoderOutputView, 1);
-    view->device = gst_object_ref (priv->device);
-    view->handle = view_handle;
-    view->view_id = mem->subresource_index;
-
-    gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (mem), OUTPUT_VIEW_QUARK,
-        view, (GDestroyNotify) gst_d3d11_decoder_output_view_free);
+  hr = ID3D11VideoDevice_CreateVideoDecoderOutputView (priv->video_device,
+      (ID3D11Resource *) mem->texture, &view_desc, &view_handle);
+  if (!gst_d3d11_result (hr, priv->device)) {
+    GST_ERROR_OBJECT (self,
+        "Could not create decoder output view, hr: 0x%x", (guint) hr);
+    return FALSE;
   }
 
-  /* return buffers to pool */
-  for (i = 0; i < pool_size; i++) {
-    gst_buffer_unref (list[i]);
-  }
+  view = g_new0 (GstD3D11DecoderOutputView, 1);
+  view->device = gst_object_ref (priv->device);
+  view->handle = view_handle;
+  view->view_id = mem->subresource_index;
+
+  gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (mem), OUTPUT_VIEW_QUARK,
+      view, (GDestroyNotify) gst_d3d11_decoder_output_view_free);
 
   return TRUE;
-
-error:
-  if (list) {
-    for (i = 0; i < pool_size; i++) {
-      if (list[i])
-        gst_buffer_unref (list[i]);
-    }
-  }
-
-  return FALSE;
 }
 
 /* Must be called from D3D11Device thread */
@@ -431,11 +395,6 @@ gst_d3d11_decoder_prepare_output_view_pool (GstD3D11Decoder * self,
 
   if (!gst_buffer_pool_set_active (pool, TRUE)) {
     GST_ERROR_OBJECT (self, "Couldn't activate pool");
-    goto error;
-  }
-
-  if (!gst_d3d11_decoder_prepare_output_view (self,
-          pool, pool_size, decoder_profile)) {
     goto error;
   }
 
@@ -651,6 +610,7 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
     goto error;
   }
 
+  priv->decoder_profile = *selected_profile;
   decoder->opened = TRUE;
   gst_d3d11_device_unlock (priv->device);
 
@@ -827,7 +787,14 @@ gst_d3d11_decoder_get_output_view_buffer (GstD3D11Decoder * decoder)
   if (ret != GST_FLOW_OK || !buf) {
     GST_ERROR_OBJECT (decoder, "Couldn't get buffer from pool, ret %s",
         gst_flow_get_name (ret));
-    return FALSE;
+    return NULL;
+  }
+
+  if (!gst_d3d11_decoder_ensure_output_view (decoder, buf)) {
+    GST_ERROR_OBJECT (decoder, "Output view unavailable");
+    gst_buffer_unref (buf);
+
+    return NULL;
   }
 
   return buf;
