@@ -512,7 +512,8 @@ gst_d3d11_vp9_dec_new_sequence (GstVp9Decoder * decoder,
 
     gst_d3d11_decoder_reset (self->d3d11_decoder);
     if (!gst_d3d11_decoder_open (self->d3d11_decoder, GST_D3D11_CODEC_VP9,
-            &info, NUM_OUTPUT_VIEW, &profile_guid, 1)) {
+            &info, self->width, self->height,
+            NUM_OUTPUT_VIEW, &profile_guid, 1)) {
       GST_ERROR_OBJECT (self, "Failed to create decoder");
       return FALSE;
     }
@@ -1217,7 +1218,7 @@ gst_d3d11_vp9_dec_register (GstPlugin * plugin, GstD3D11Device * device,
   gst_video_info_set_format (&info, GST_VIDEO_FORMAT_NV12, 1280, 720);
 
   ret = gst_d3d11_decoder_open (decoder, GST_D3D11_CODEC_VP9,
-      &info, NUM_OUTPUT_VIEW, supported_profiles,
+      &info, 1280, 720, NUM_OUTPUT_VIEW, supported_profiles,
       G_N_ELEMENTS (supported_profiles));
   gst_object_unref (decoder);
 

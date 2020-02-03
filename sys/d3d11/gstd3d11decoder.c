@@ -347,13 +347,15 @@ gst_d3d11_decoder_ensure_output_view (GstD3D11Decoder * self,
 /* Must be called from D3D11Device thread */
 static gboolean
 gst_d3d11_decoder_prepare_output_view_pool (GstD3D11Decoder * self,
-    GstVideoInfo * info, guint pool_size, const GUID * decoder_profile)
+    GstVideoInfo * info, guint coded_width, guint coded_height,
+    guint pool_size, const GUID * decoder_profile)
 {
   GstD3D11DecoderPrivate *priv = self->priv;
   GstD3D11AllocationParams *alloc_params = NULL;
   GstBufferPool *pool = NULL;
   GstStructure *config = NULL;
   GstCaps *caps = NULL;
+  GstVideoAlignment align;
 
   gst_clear_object (&priv->internal_pool);
 
@@ -366,6 +368,14 @@ gst_d3d11_decoder_prepare_output_view_pool (GstD3D11Decoder * self,
   }
 
   alloc_params->desc[0].ArraySize = pool_size;
+  gst_video_alignment_reset (&align);
+
+  align.padding_right = coded_width - GST_VIDEO_INFO_WIDTH (info);
+  align.padding_bottom = coded_height - GST_VIDEO_INFO_HEIGHT (info);
+  if (!gst_d3d11_allocation_params_alignment (alloc_params, &align)) {
+    GST_ERROR_OBJECT (self, "Cannot set alignment");
+    return FALSE;
+  }
 
   pool = gst_d3d11_buffer_pool_new (priv->device);
   if (!pool) {
@@ -415,8 +425,8 @@ error:
 
 gboolean
 gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
-    GstVideoInfo * info, guint pool_size, const GUID ** decoder_profiles,
-    guint profile_size)
+    GstVideoInfo * info, guint coded_width, guint coded_height,
+    guint pool_size, const GUID ** decoder_profiles, guint profile_size)
 {
   GstD3D11DecoderPrivate *priv;
   const GstD3D11Format *d3d11_format;
@@ -435,6 +445,8 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
   g_return_val_if_fail (codec > GST_D3D11_CODEC_NONE, FALSE);
   g_return_val_if_fail (codec < GST_D3D11_CODEC_LAST, FALSE);
   g_return_val_if_fail (info != NULL, FALSE);
+  g_return_val_if_fail (coded_width >= GST_VIDEO_INFO_WIDTH (info), FALSE);
+  g_return_val_if_fail (coded_height >= GST_VIDEO_INFO_HEIGHT (info), FALSE);
   g_return_val_if_fail (pool_size > 0, FALSE);
   g_return_val_if_fail (decoder_profiles != NULL, FALSE);
   g_return_val_if_fail (profile_size > 0, FALSE);
@@ -531,8 +543,8 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
 
   gst_d3d11_decoder_reset_unlocked (decoder);
 
-  decoder_desc.SampleWidth = GST_VIDEO_INFO_WIDTH (info);
-  decoder_desc.SampleHeight = GST_VIDEO_INFO_HEIGHT (info);
+  decoder_desc.SampleWidth = coded_width;
+  decoder_desc.SampleHeight = coded_height;
   decoder_desc.OutputFormat = d3d11_format->dxgi_format;
   decoder_desc.Guid = *selected_profile;
 
@@ -577,7 +589,7 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
   }
 
   if (!gst_d3d11_decoder_prepare_output_view_pool (decoder,
-          info, pool_size, selected_profile)) {
+          info, coded_width, coded_height, pool_size, selected_profile)) {
     GST_ERROR_OBJECT (decoder, "Couldn't prepare output view pool");
     goto error;
   }
