@@ -377,7 +377,7 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
   g_object_class_install_property (gobject_class, PROP_LATENCY,
       g_param_spec_uint ("latency", "Latency",
           "Latency used for receiving media in milliseconds", 0, G_MAXUINT,
-          DEFAULT_BUFFER_SIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_LATENCY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_TRANSPORT_MODE,
       g_param_spec_flags ("transport-mode", "Transport Mode",
@@ -2853,14 +2853,14 @@ gst_rtsp_media_seek_trickmode (GstRTSPMedia * media,
       gboolean unblock = FALSE;
 
       /* Handle expected async-done before waiting on next async-done.
-       * 
+       *
        * Since the seek further down in code will cause a preroll and
        * a async-done will be generated it's important to wait on async-done
        * if that is expected. Otherwise there is the risk that the waiting
        * for async-done after the seek is detecting the expected async-done
        * instead of the one that corresponds to the seek. Then execution
        * continue and act as if the pipeline is prerolled, but it's not.
-       * 
+       *
        * During wait_preroll message GST_MESSAGE_ASYNC_DONE will come
        * and then the state will change from preparing to prepared */
       if (priv->expected_async_done) {
