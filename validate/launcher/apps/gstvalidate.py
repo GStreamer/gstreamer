@@ -521,7 +521,7 @@ class GstValidateCheckAccurateSeekingTestGenerator(GstValidatePipelineTestsGener
 
 
             pipelines[test_name] = {
-                "pipeline": "uridecodebin uri=" + media_info.get_uri() + " ! deinterlace ! video/x-raw,interlace-mode=progressive ! videoconvert name=videoconvert ! %(videosink)s",
+                "pipeline": "uridecodebin uri=" + media_info.get_uri() + " ! deinterlace ! videoconvert ! video/x-raw,interlace-mode=progressive,format=I420 ! videoconvert name=videoconvert ! %(videosink)s",
                 "media_info": media_info,
                 "config": config,
             }
