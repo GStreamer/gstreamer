@@ -719,8 +719,8 @@ _get_preferred_caps (GstVaapiPostproc * postproc, GstVideoInfo * vinfo,
     goto fixate_failed;
   _set_multiview_mode (postproc, vinfo, structure);
 
-  if (f == GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY)
-    _set_colorimetry (postproc, format, structure);
+  if (!_set_colorimetry (postproc, format, structure))
+    goto fixate_failed;
 
   if (!_set_interlace_mode (postproc, vinfo, structure))
     goto interlace_mode_failed;
