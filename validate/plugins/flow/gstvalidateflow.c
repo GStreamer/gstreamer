@@ -59,8 +59,8 @@ struct _ValidateFlowOverride
   gchar *actual_results_dir;
   gboolean error_writing_file;
   gchar **caps_properties;
-  GstStructure *ignored_event_fields;
-  GstStructure *logged_event_fields;
+  GstStructure *ignored_fields;
+  GstStructure *logged_fields;
 
   gchar **logged_event_types;
   gchar **ignored_event_types;
@@ -164,8 +164,8 @@ validate_flow_override_event_handler (GstValidateOverride * override,
 
   event_string = validate_flow_format_event (event,
       (const gchar * const *) flow->caps_properties,
-      flow->logged_event_fields,
-      flow->ignored_event_fields,
+      flow->logged_fields,
+      flow->ignored_fields,
       (const gchar * const *) flow->ignored_event_types,
       (const gchar * const *) flow->logged_event_types);
 
@@ -185,7 +185,9 @@ validate_flow_override_buffer_handler (GstValidateOverride * override,
   if (flow->error_writing_file || !flow->record_buffers)
     return;
 
-  buffer_str = validate_flow_format_buffer (buffer, flow->buffers_checksum);
+  buffer_str =
+      validate_flow_format_buffer (buffer, flow->buffers_checksum,
+      flow->logged_fields, flow->ignored_fields);
   validate_flow_override_printf (flow, "buffer: %s\n", buffer_str);
   g_free (buffer_str);
 }
@@ -218,7 +220,7 @@ validate_flow_override_new (GstStructure * config)
 {
   ValidateFlowOverride *flow;
   GstValidateOverride *override;
-  gchar *ignored_event_fields, *logged_event_fields;
+  gchar *ignored_fields, *logged_fields;
 
   flow = g_object_new (VALIDATE_TYPE_FLOW_OVERRIDE, NULL);
   override = GST_VALIDATE_OVERRIDE (flow);
@@ -252,39 +254,35 @@ validate_flow_override_new (GstStructure * config)
   flow->ignored_event_types =
       gst_validate_utils_get_strv (config, "ignored-event-types");
 
-  ignored_event_fields =
-      (gchar *) gst_structure_get_string (config, "ignored-event-fields");
-  if (ignored_event_fields) {
-    ignored_event_fields = g_strdup_printf ("ignored,%s", ignored_event_fields);
-    flow->ignored_event_fields =
-        gst_structure_new_from_string (ignored_event_fields);
-    if (!flow->ignored_event_fields)
+  ignored_fields =
+      (gchar *) gst_structure_get_string (config, "ignored-fields");
+  if (ignored_fields) {
+    ignored_fields = g_strdup_printf ("ignored,%s", ignored_fields);
+    flow->ignored_fields = gst_structure_new_from_string (ignored_fields);
+    if (!flow->ignored_fields)
       g_error ("Could not parse 'ignored-event-fields' %s in %s",
-          ignored_event_fields, gst_structure_to_string (config));
-    g_free (ignored_event_fields);
+          ignored_fields, gst_structure_to_string (config));
+    g_free (ignored_fields);
   } else {
-    flow->ignored_event_fields =
+    flow->ignored_fields =
         gst_structure_new_from_string ("ignored,stream-start={stream-id}");
   }
 
-  if (!gst_structure_has_field (flow->ignored_event_fields, "stream-start"))
-    gst_structure_set (flow->ignored_event_fields, "stream-start",
-        G_TYPE_STRING, "{stream-id}", NULL);
+  if (!gst_structure_has_field (flow->ignored_fields, "stream-start"))
+    gst_structure_set (flow->ignored_fields, "stream-start",
+        G_TYPE_STRING, "stream-id", NULL);
 
-  logged_event_fields =
-      (gchar *) gst_structure_get_string (config, "logged-event-fields");
-  if (logged_event_fields) {
-    logged_event_fields = g_strdup_printf ("logged,%s", logged_event_fields);
-    flow->logged_event_fields =
-        gst_structure_new_from_string (logged_event_fields);
-    if (!flow->logged_event_fields)
-      g_error ("Could not parse 'logged-event-fields' %s in %s",
-          logged_event_fields, gst_structure_to_string (config));
-    g_free (logged_event_fields);
+  logged_fields = (gchar *) gst_structure_get_string (config, "logged-fields");
+  if (logged_fields) {
+    logged_fields = g_strdup_printf ("logged,%s", logged_fields);
+    flow->logged_fields = gst_structure_new_from_string (logged_fields);
+    if (!flow->logged_fields)
+      g_error ("Could not parse 'logged-fields' %s in %s",
+          logged_fields, gst_structure_to_string (config));
+    g_free (logged_fields);
   } else {
-    flow->logged_event_fields = NULL;
+    flow->logged_fields = NULL;
   }
-
 
   /* expectations-dir: Path to the directory where the expectations will be
    * written if they don't exist, relative to the current working directory.
@@ -507,8 +505,8 @@ validate_flow_override_finalize (GObject * object)
   g_strfreev (flow->caps_properties);
   g_strfreev (flow->logged_event_types);
   g_strfreev (flow->ignored_event_types);
-  if (flow->ignored_event_fields)
-    gst_structure_free (flow->ignored_event_fields);
+  if (flow->ignored_fields)
+    gst_structure_free (flow->ignored_fields);
 
   G_OBJECT_CLASS (validate_flow_override_parent_class)->finalize (object);
 }

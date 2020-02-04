@@ -37,6 +37,21 @@
 
 typedef void (*Uint64Formatter) (gchar * dest, guint64 time);
 
+#define CONSTIFY(strv) ((const gchar * const *) strv)
+
+static gboolean
+use_field (const gchar * field, gchar ** logged, gchar ** ignored)
+{
+  if (logged)
+    return g_strv_contains (CONSTIFY (logged), field);
+
+  if (ignored)
+    return !g_strv_contains (CONSTIFY (ignored), field);
+
+  return TRUE;
+}
+
+
 void
 format_time (gchar * dest_str, guint64 time)
 {
@@ -54,11 +69,12 @@ format_number (gchar * dest_str, guint64 number)
 }
 
 gchar *
-validate_flow_format_segment (const GstSegment * segment)
+validate_flow_format_segment (const GstSegment * segment,
+    gchar ** logged_fields, gchar ** ignored_fields)
 {
   Uint64Formatter uint64_format;
   gchar *segment_str;
-  gchar *parts[7];
+  gchar *parts[10];
   GString *format;
   gchar start_str[32], offset_str[32], stop_str[32], time_str[32], base_str[32],
       position_str[32], duration_str[32];
@@ -76,9 +92,19 @@ validate_flow_format_segment (const GstSegment * segment)
 
   format = g_string_new (gst_format_get_name (segment->format));
   format = g_string_ascii_up (format);
-  parts[parts_index++] =
-      g_strdup_printf ("format=%s, start=%s, offset=%s, stop=%s", format->str,
-      start_str, offset_str, stop_str);
+
+  if (use_field ("format", logged_fields, ignored_fields))
+    parts[parts_index++] = g_strdup_printf ("format=%s", format->str);
+
+  if (use_field ("start", logged_fields, ignored_fields))
+    parts[parts_index++] = g_strdup_printf ("start=%s", start_str);
+
+  if (use_field ("offset", logged_fields, ignored_fields))
+    parts[parts_index++] = g_strdup_printf ("offset=%s", offset_str);
+
+  if (use_field ("stop", logged_fields, ignored_fields))
+    parts[parts_index++] = g_strdup_printf ("stop=%s", stop_str);
+
   if (segment->rate != 1.0)
     parts[parts_index++] = g_strdup_printf ("rate=%f", segment->rate);
   if (segment->applied_rate != 1.0)
@@ -193,15 +219,23 @@ buffer_get_meta_string (GstBuffer * buffer)
 }
 
 gchar *
-validate_flow_format_buffer (GstBuffer * buffer, gboolean add_checksum)
+validate_flow_format_buffer (GstBuffer * buffer, gboolean add_checksum,
+    GstStructure * logged_fields_struct, GstStructure * ignored_fields_struct)
 {
   gchar *flags_str, *meta_str, *buffer_str;
   gchar *buffer_parts[7];
   int buffer_parts_index = 0;
   gchar *sum;
   GstMapInfo map;
+  gchar **logged_fields =
+      logged_fields_struct ? gst_validate_utils_get_strv (logged_fields_struct,
+      "buffer") : NULL;
+  gchar **ignored_fields =
+      ignored_fields_struct ?
+      gst_validate_utils_get_strv (ignored_fields_struct, "buffer") : NULL;
 
-  if (add_checksum) {
+  if (add_checksum || (logged_fields
+          && g_strv_contains (CONSTIFY (logged_fields), "checksum"))) {
     if (!gst_buffer_map (buffer, &map, GST_MAP_READ)) {
       GST_ERROR ("Buffer could not be mapped.");
     } else {
@@ -213,32 +247,35 @@ validate_flow_format_buffer (GstBuffer * buffer, gboolean add_checksum)
     }
   }
 
-  if (GST_CLOCK_TIME_IS_VALID (buffer->dts)) {
+  if (GST_CLOCK_TIME_IS_VALID (buffer->dts)
+      && use_field ("dts", logged_fields, ignored_fields)) {
     gchar time_str[32];
     format_time (time_str, buffer->dts);
     buffer_parts[buffer_parts_index++] = g_strdup_printf ("dts=%s", time_str);
   }
 
-  if (GST_CLOCK_TIME_IS_VALID (buffer->pts)) {
+  if (GST_CLOCK_TIME_IS_VALID (buffer->pts)
+      && use_field ("pts", logged_fields, ignored_fields)) {
     gchar time_str[32];
     format_time (time_str, buffer->pts);
     buffer_parts[buffer_parts_index++] = g_strdup_printf ("pts=%s", time_str);
   }
 
-  if (GST_CLOCK_TIME_IS_VALID (buffer->duration)) {
+  if (GST_CLOCK_TIME_IS_VALID (buffer->duration)
+      && use_field ("dur", logged_fields, ignored_fields)) {
     gchar time_str[32];
     format_time (time_str, buffer->duration);
     buffer_parts[buffer_parts_index++] = g_strdup_printf ("dur=%s", time_str);
   }
 
   flags_str = buffer_get_flags_string (buffer);
-  if (flags_str) {
+  if (flags_str && use_field ("flags", logged_fields, ignored_fields)) {
     buffer_parts[buffer_parts_index++] =
         g_strdup_printf ("flags=%s", flags_str);
   }
 
   meta_str = buffer_get_meta_string (buffer);
-  if (meta_str)
+  if (meta_str && use_field ("meta", logged_fields, ignored_fields))
     buffer_parts[buffer_parts_index++] = g_strdup_printf ("meta=%s", meta_str);
 
   buffer_parts[buffer_parts_index] = NULL;
@@ -257,8 +294,8 @@ validate_flow_format_buffer (GstBuffer * buffer, gboolean add_checksum)
 gchar *
 validate_flow_format_event (GstEvent * event,
     const gchar * const *caps_properties,
-    GstStructure * logged_event_fields,
-    GstStructure * ignored_event_fields,
+    GstStructure * logged_fields_struct,
+    GstStructure * ignored_fields_struct,
     const gchar * const *ignored_event_types,
     const gchar * const *logged_event_types)
 {
@@ -276,11 +313,17 @@ validate_flow_format_event (GstEvent * event,
   if (ignored_event_types && g_strv_contains (ignored_event_types, event_type))
     return NULL;
 
-  logged_fields = gst_validate_utils_get_strv (logged_event_fields, event_type);
+  logged_fields =
+      logged_fields_struct ? gst_validate_utils_get_strv (logged_fields_struct,
+      event_type) : NULL;
+  ignored_fields =
+      ignored_fields_struct ?
+      gst_validate_utils_get_strv (ignored_fields_struct, event_type) : NULL;
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
     const GstSegment *segment;
     gst_event_parse_segment (event, &segment);
-    structure_string = validate_flow_format_segment (segment);
+    structure_string =
+        validate_flow_format_segment (segment, logged_fields, ignored_fields);
   } else if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS) {
     GstCaps *caps;
     gst_event_parse_caps (event, &caps);
@@ -298,8 +341,6 @@ validate_flow_format_event (GstEvent * event,
       gst_structure_filter_and_map_in_place (printable,
           (GstStructureFilterMapFunc) structure_only_given_keys, logged_fields);
     } else {
-      ignored_fields =
-          gst_validate_utils_get_strv (ignored_event_fields, event_type);
       if (ignored_fields) {
         gint i = 0;
         gchar *field;
