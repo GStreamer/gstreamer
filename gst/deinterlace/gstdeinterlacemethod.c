@@ -362,31 +362,31 @@ gst_deinterlace_simple_method_deinterlace_frame_packed (GstDeinterlaceMethod *
       scanlines.tp = LINE2 (framep, i - 1);
       scanlines.bp = LINE2 (framep, i + 1);
 
-      scanlines.tt0 = LINE2 (frame0, (i - 2 >= 0) ? i - 2 : i);
+      scanlines.tt0 = LINE2 (frame0, i - 2);
       scanlines.m0 = LINE2 (frame0, i);
-      scanlines.bb0 = LINE2 (frame0, (i + 2 < frame_height ? i + 2 : i));
+      scanlines.bb0 = LINE2 (frame0, i + 2);
 
       scanlines.t1 = LINE2 (frame1, i - 1);
       scanlines.b1 = LINE2 (frame1, i + 1);
 
-      scanlines.tt2 = LINE2 (frame2, (i - 2 >= 0) ? i - 2 : i);
+      scanlines.tt2 = LINE2 (frame2, i - 2);
       scanlines.m2 = LINE2 (frame2, i);
-      scanlines.bb2 = LINE2 (frame2, (i + 2 < frame_height ? i + 2 : i));
+      scanlines.bb2 = LINE2 (frame2, i + 2);
 
       self->copy_scanline_packed (self, LINE (outframe, i), &scanlines,
           frame_width);
     } else {
       /* interpolating */
-      scanlines.ttp = LINE2 (framep, (i - 2 >= 0) ? i - 2 : i);
+      scanlines.ttp = LINE2 (framep, i - 2);
       scanlines.mp = LINE2 (framep, i);
-      scanlines.bbp = LINE2 (framep, (i + 2 < frame_height ? i + 2 : i));
+      scanlines.bbp = LINE2 (framep, i + 2);
 
       scanlines.t0 = LINE2 (frame0, i - 1);
       scanlines.b0 = LINE2 (frame0, i + 1);
 
-      scanlines.tt1 = LINE2 (frame1, (i - 2 >= 0) ? i - 2 : i);
+      scanlines.tt1 = LINE2 (frame1, i - 2);
       scanlines.m1 = LINE2 (frame1, i);
-      scanlines.bb1 = LINE2 (frame1, (i + 2 < frame_height ? i + 2 : i));
+      scanlines.bb1 = LINE2 (frame1, i + 2);
 
       scanlines.t2 = LINE2 (frame2, i - 1);
       scanlines.b2 = LINE2 (frame2, i + 1);
@@ -480,30 +480,30 @@ static void
       scanlines.tp = LINE2 (framep, i - 1);
       scanlines.bp = LINE2 (framep, i + 1);
 
-      scanlines.tt0 = LINE2 (frame0, (i - 2 >= 0) ? i - 2 : i);
+      scanlines.tt0 = LINE2 (frame0, i - 2);
       scanlines.m0 = LINE2 (frame0, i);
-      scanlines.bb0 = LINE2 (frame0, (i + 2 < frame_height ? i + 2 : i));
+      scanlines.bb0 = LINE2 (frame0, i + 2);
 
       scanlines.t1 = LINE2 (frame1, i - 1);
       scanlines.b1 = LINE2 (frame1, i + 1);
 
-      scanlines.tt2 = LINE2 (frame2, (i - 2 >= 0) ? i - 2 : i);
+      scanlines.tt2 = LINE2 (frame2, i - 2);
       scanlines.m2 = LINE2 (frame2, i);
-      scanlines.bb2 = LINE2 (frame2, (i + 2 < frame_height ? i + 2 : i));
+      scanlines.bb2 = LINE2 (frame2, i + 2);
 
       copy_scanline (self, LINE (dest, i), &scanlines, frame_width);
     } else {
       /* interpolating */
-      scanlines.ttp = LINE2 (framep, (i - 2 >= 0) ? i - 2 : i);
+      scanlines.ttp = LINE2 (framep, i - 2);
       scanlines.mp = LINE2 (framep, i);
-      scanlines.bbp = LINE2 (framep, (i + 2 < frame_height ? i + 2 : i));
+      scanlines.bbp = LINE2 (framep, i + 2);
 
       scanlines.t0 = LINE2 (frame0, i - 1);
       scanlines.b0 = LINE2 (frame0, i + 1);
 
-      scanlines.tt1 = LINE2 (frame1, (i - 2 >= 0) ? i - 2 : i);
+      scanlines.tt1 = LINE2 (frame1, i - 2);
       scanlines.m1 = LINE2 (frame1, i);
-      scanlines.bb1 = LINE2 (frame1, (i + 2 < frame_height ? i + 2 : i));
+      scanlines.bb1 = LINE2 (frame1, i + 2);
 
       scanlines.t2 = LINE2 (frame2, i - 1);
       scanlines.b2 = LINE2 (frame2, i + 1);
