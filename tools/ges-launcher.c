@@ -32,30 +32,6 @@
 #include "ges-validate.h"
 #include "utils.h"
 
-typedef struct
-{
-  gboolean mute;
-  gboolean disable_mixing;
-  gchar *save_path;
-  gchar *save_only_path;
-  gchar *load_path;
-  GESTrackType track_types;
-  gboolean needs_set_state;
-  gboolean smartrender;
-  gchar *scenario;
-  gchar *format;
-  gchar *outputuri;
-  gchar *encoding_profile;
-  gchar *videosink;
-  gchar *audiosink;
-  gboolean list_transitions;
-  gboolean inspect_action_type;
-  gchar *sanitized_timeline;
-  const gchar *video_track_caps;
-  const gchar *audio_track_caps;
-  gboolean embed_nesteds;
-} ParsedOptions;
-
 struct _GESLauncherPrivate
 {
   GESTimeline *timeline;
@@ -64,7 +40,7 @@ struct _GESLauncherPrivate
 #ifdef G_OS_UNIX
   guint signal_watch_id;
 #endif
-  ParsedOptions parsed_options;
+  GESLauncherParsedOptions parsed_options;
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE (GESLauncher, ges_launcher, G_TYPE_APPLICATION);
@@ -82,10 +58,8 @@ static const gchar *HELP_SUMMARY =
 
 static gboolean
 _parse_track_type (const gchar * option_name, const gchar * value,
-    GESLauncher * self, GError ** error)
+    GESLauncherParsedOptions * opts, GError ** error)
 {
-  ParsedOptions *opts = &self->priv->parsed_options;
-
   if (!get_flags_from_string (GES_TYPE_TRACK_TYPE, value, &opts->track_types))
     return FALSE;
 
@@ -116,7 +90,7 @@ _set_track_restriction_caps (GESTrack * track, const gchar * caps_str)
 }
 
 static void
-_set_restriction_caps (GESTimeline * timeline, ParsedOptions * opts)
+_set_restriction_caps (GESTimeline * timeline, GESLauncherParsedOptions * opts)
 {
   GList *tmp, *tracks = ges_timeline_get_tracks (timeline);
 
@@ -138,7 +112,7 @@ _timeline_set_user_options (GESLauncher * self, GESTimeline * timeline,
   GList *tmp;
   GESTrack *tracka, *trackv;
   gboolean has_audio = FALSE, has_video = FALSE;
-  ParsedOptions *opts = &self->priv->parsed_options;
+  GESLauncherParsedOptions *opts = &self->priv->parsed_options;
 
 retry:
   for (tmp = timeline->tracks; tmp; tmp = tmp->next) {
@@ -205,7 +179,7 @@ _project_loaded_cb (GESProject * project, GESTimeline * timeline,
     GESLauncher * self)
 {
   gchar *project_uri = NULL;
-  ParsedOptions *opts = &self->priv->parsed_options;
+  GESLauncherParsedOptions *opts = &self->priv->parsed_options;
   GST_INFO ("Project loaded, playing it");
 
   if (opts->save_path) {
@@ -237,8 +211,7 @@ _project_loaded_cb (GESProject * project, GESTimeline * timeline,
 
   if (self->priv->parsed_options.load_path && project_uri
       && ges_validate_activate (GST_PIPELINE (self->priv->pipeline),
-          &opts->track_types, opts->scenario,
-          &opts->needs_set_state) == FALSE) {
+          opts) == FALSE) {
     g_error ("Could not activate scenario %s", opts->scenario);
     self->priv->seenerrors = TRUE;
     g_application_quit (G_APPLICATION (self));
@@ -325,7 +298,7 @@ _set_sink (GESLauncher * self, const gchar * sink_desc,
 static gboolean
 _set_playback_details (GESLauncher * self)
 {
-  ParsedOptions *opts = &self->priv->parsed_options;
+  GESLauncherParsedOptions *opts = &self->priv->parsed_options;
 
   if (!_set_sink (self, opts->videosink, ges_pipeline_preview_set_video_sink) ||
       !_set_sink (self, opts->audiosink, ges_pipeline_preview_set_audio_sink))
@@ -409,7 +382,7 @@ intr_handler (GESLauncher * self)
 static gboolean
 _save_timeline (GESLauncher * self)
 {
-  ParsedOptions *opts = &self->priv->parsed_options;
+  GESLauncherParsedOptions *opts = &self->priv->parsed_options;
 
 
   if (opts->embed_nesteds) {
@@ -464,12 +437,11 @@ static gboolean
 _run_pipeline (GESLauncher * self)
 {
   GstBus *bus;
-  ParsedOptions *opts = &self->priv->parsed_options;
+  GESLauncherParsedOptions *opts = &self->priv->parsed_options;
 
   if (!opts->load_path) {
     if (ges_validate_activate (GST_PIPELINE (self->priv->pipeline),
-            &opts->track_types, opts->scenario,
-            &opts->needs_set_state) == FALSE) {
+            opts) == FALSE) {
       g_error ("Could not activate scenario %s", opts->scenario);
       return FALSE;
     }
@@ -500,7 +472,7 @@ _run_pipeline (GESLauncher * self)
 static gboolean
 _set_rendering_details (GESLauncher * self)
 {
-  ParsedOptions *opts = &self->priv->parsed_options;
+  GESLauncherParsedOptions *opts = &self->priv->parsed_options;
 
   /* Setup profile/encoding if needed */
   if (opts->outputuri) {
@@ -567,7 +539,7 @@ _create_pipeline (GESLauncher * self, const gchar * serialized_timeline)
 {
   gchar *uri = NULL;
   gboolean res = TRUE;
-  ParsedOptions *opts = &self->priv->parsed_options;
+  GESLauncherParsedOptions *opts = &self->priv->parsed_options;
 
   /* Timeline creation */
   if (opts->load_path) {
@@ -642,10 +614,9 @@ _print_transition_list (void)
 }
 
 static GOptionGroup *
-ges_launcher_get_project_option_group (GESLauncher * self)
+ges_launcher_get_project_option_group (GESLauncherParsedOptions * opts)
 {
   GOptionGroup *group;
-  ParsedOptions *opts = &self->priv->parsed_options;
 
   GOptionEntry options[] = {
     {"load", 'l', 0, G_OPTION_ARG_STRING, &opts->load_path,
@@ -671,10 +642,9 @@ ges_launcher_get_project_option_group (GESLauncher * self)
 }
 
 static GOptionGroup *
-ges_launcher_get_info_option_group (GESLauncher * self)
+ges_launcher_get_info_option_group (GESLauncherParsedOptions * opts)
 {
   GOptionGroup *group;
-  ParsedOptions *opts = &self->priv->parsed_options;
 
   GOptionEntry options[] = {
 #ifdef HAVE_GST_VALIDATE
@@ -700,10 +670,9 @@ ges_launcher_get_info_option_group (GESLauncher * self)
 }
 
 static GOptionGroup *
-ges_launcher_get_rendering_option_group (GESLauncher * self)
+ges_launcher_get_rendering_option_group (GESLauncherParsedOptions * opts)
 {
   GOptionGroup *group;
-  ParsedOptions *opts = &self->priv->parsed_options;
 
   GOptionEntry options[] = {
     {"outputuri", 'o', 0, G_OPTION_ARG_STRING, &opts->outputuri,
@@ -734,10 +703,9 @@ ges_launcher_get_rendering_option_group (GESLauncher * self)
 }
 
 static GOptionGroup *
-ges_launcher_get_playback_option_group (GESLauncher * self)
+ges_launcher_get_playback_option_group (GESLauncherParsedOptions * opts)
 {
   GOptionGroup *group;
-  ParsedOptions *opts = &self->priv->parsed_options;
 
   GOptionEntry options[] = {
     {"videosink", 'v', 0, G_OPTION_ARG_STRING, &opts->videosink,
@@ -757,30 +725,43 @@ ges_launcher_get_playback_option_group (GESLauncher * self)
   return group;
 }
 
-static gboolean
-_local_command_line (GApplication * application, gchar ** arguments[],
-    gint * exit_status)
+gboolean
+ges_launcher_parse_options (GESLauncherParsedOptions * opts, gchar ** arguments,
+    gint * argc, GOptionContext * ctx, GError ** error)
 {
-  GESLauncher *self = GES_LAUNCHER (application);
-  GError *error = NULL;
+  gboolean res;
   gchar **argv;
-  gint argc;
-  GOptionContext *ctx;
-  ParsedOptions *opts = &self->priv->parsed_options;
   GOptionGroup *main_group;
-  gint nargs = 0;
+  gint nargs = 0, tmpargc;
   gchar **commands = NULL, *help, *tmp;
+  GError *err = NULL;
   GOptionEntry options[] = {
     {"disable-mixing", 0, 0, G_OPTION_ARG_NONE, &opts->disable_mixing,
-        "Do not use mixing elements to mix layers together.", NULL},
+        "Do not use mixing elements to mix layers together.", NULL}
+    ,
     {"track-types", 't', 0, G_OPTION_ARG_CALLBACK, &_parse_track_type,
           "Specify the track types to be created. "
           "When loading a project, only relevant tracks will be added to the timeline.",
-        "<track-types>"},
-    {"video-caps", 0, 0, G_OPTION_ARG_STRING, &opts->video_track_caps,
-        "Specify the track restriction caps of the video track.",},
-    {"audio-caps", 0, 0, G_OPTION_ARG_STRING, &opts->audio_track_caps,
-        "Specify the track restriction caps of the audio track.",},
+        "<track-types>"}
+    ,
+    {
+          "video-caps",
+          0,
+          0,
+          G_OPTION_ARG_STRING,
+          &opts->video_track_caps,
+          "Specify the track restriction caps of the video track.",
+        }
+    ,
+    {
+          "audio-caps",
+          0,
+          0,
+          G_OPTION_ARG_STRING,
+          &opts->audio_track_caps,
+          "Specify the track restriction caps of the audio track.",
+        }
+    ,
 #ifdef HAVE_GST_VALIDATE
     {"set-scenario", 0, 0, G_OPTION_ARG_STRING, &opts->scenario,
           "ges-launch-1.0 exposes gst-validate functionalities, such as scenarios."
@@ -788,19 +769,28 @@ _local_command_line (GApplication * application, gchar ** arguments[],
           "GES implements editing-specific actions such as adding or removing clips. "
           "See gst-validate-1.0 --help for more info about validate and scenarios, "
           "and --inspect-action-type.",
-        "<scenario_name>"},
+        "<scenario_name>"}
+    ,
 #endif
-    {"embed-nesteds", 0, 0, G_OPTION_ARG_NONE, &opts->embed_nesteds,
-        "Embed nested timelines when saving.",},
+    {
+          "embed-nesteds",
+          0,
+          0,
+          G_OPTION_ARG_NONE,
+          &opts->embed_nesteds,
+          "Embed nested timelines when saving.",
+        }
+    ,
     {NULL}
   };
 
-  ctx = g_option_context_new ("- plays or renders a timeline.");
-  argv = *arguments;
-  argc = g_strv_length (argv);
+  if (!ctx)
+    ctx = g_option_context_new ("- plays or renders a timeline.");
+  argv = arguments;
+  tmpargc = g_strv_length (argv);
 
-  if (argc > 2) {
-    nargs = argc - 2;
+  if (tmpargc > 2) {
+    nargs = tmpargc - 2;
     commands = &argv[2];
   }
 
@@ -814,24 +804,47 @@ _local_command_line (GApplication * application, gchar ** arguments[],
 
   main_group =
       g_option_group_new ("launcher", "launcher options",
-      "Main launcher options", self, NULL);
+      "Main launcher options", opts, NULL);
   g_option_group_add_entries (main_group, options);
   g_option_context_set_main_group (ctx, main_group);
   g_option_context_add_group (ctx, gst_init_get_option_group ());
   g_option_context_add_group (ctx, ges_init_get_option_group ());
   g_option_context_add_group (ctx,
-      ges_launcher_get_project_option_group (self));
+      ges_launcher_get_project_option_group (opts));
   g_option_context_add_group (ctx,
-      ges_launcher_get_rendering_option_group (self));
+      ges_launcher_get_rendering_option_group (opts));
   g_option_context_add_group (ctx,
-      ges_launcher_get_playback_option_group (self));
-  g_option_context_add_group (ctx, ges_launcher_get_info_option_group (self));
+      ges_launcher_get_playback_option_group (opts));
+  g_option_context_add_group (ctx, ges_launcher_get_info_option_group (opts));
   g_option_context_set_ignore_unknown_options (ctx, TRUE);
 
+  res = g_option_context_parse (ctx, &tmpargc, &argv, &err);
+  if (argc)
+    *argc = tmpargc;
+
+  if (err)
+    g_propagate_error (error, err);
+
+  return res;
+}
+
+static gboolean
+_local_command_line (GApplication * application, gchar ** arguments[],
+    gint * exit_status)
+{
+  gchar **argv;
+  gint argc;
+  GError *error = NULL;
+  GESLauncher *self = GES_LAUNCHER (application);
+  GESLauncherParsedOptions *opts = &self->priv->parsed_options;
+  GOptionContext *ctx = g_option_context_new ("- plays or renders a timeline.");
+
   *exit_status = 0;
+  argv = *arguments;
+  argc = g_strv_length (argv);
 
   gst_init (&argc, &argv);
-  if (!g_option_context_parse (ctx, &argc, &argv, &error)) {
+  if (!ges_launcher_parse_options (opts, *arguments, &argc, ctx, &error)) {
     gst_init (NULL, NULL);
     printerr ("Error initializing: %s\n", error->message);
     g_option_context_free (ctx);
@@ -870,7 +883,7 @@ static void
 _startup (GApplication * application)
 {
   GESLauncher *self = GES_LAUNCHER (application);
-  ParsedOptions *opts = &self->priv->parsed_options;
+  GESLauncherParsedOptions *opts = &self->priv->parsed_options;
 
 #ifdef G_OS_UNIX
   self->priv->signal_watch_id =
@@ -919,7 +932,7 @@ _shutdown (GApplication * application)
 {
   gint validate_res = 0;
   GESLauncher *self = GES_LAUNCHER (application);
-  ParsedOptions *opts = &self->priv->parsed_options;
+  GESLauncherParsedOptions *opts = &self->priv->parsed_options;
 
   _save_timeline (self);
 

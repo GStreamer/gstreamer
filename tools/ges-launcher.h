@@ -45,6 +45,30 @@ typedef struct _GESLauncherPrivate GESLauncherPrivate;
 typedef struct _GESLauncher GESLauncher;
 typedef struct _GESLauncherClass GESLauncherClass;
 
+typedef struct
+{
+  gboolean mute;
+  gboolean disable_mixing;
+  gchar *save_path;
+  gchar *save_only_path;
+  gchar *load_path;
+  GESTrackType track_types;
+  gboolean needs_set_state;
+  gboolean smartrender;
+  gchar *scenario;
+  gchar *format;
+  gchar *outputuri;
+  gchar *encoding_profile;
+  gchar *videosink;
+  gchar *audiosink;
+  gboolean list_transitions;
+  gboolean inspect_action_type;
+  gchar *sanitized_timeline;
+  const gchar *video_track_caps;
+  const gchar *audio_track_caps;
+  gboolean embed_nesteds;
+} GESLauncherParsedOptions;
+
 struct _GESLauncher {
   GApplication parent;
 
@@ -67,6 +91,7 @@ GType ges_launcher_get_type (void);
 
 GESLauncher* ges_launcher_new (void);
 gint ges_launcher_get_exit_status (GESLauncher *self);
+gboolean ges_launcher_parse_options(GESLauncherParsedOptions* opts, gchar** arguments, gint *argc, GOptionContext* ctx, GError** error);
 
 G_END_DECLS
 

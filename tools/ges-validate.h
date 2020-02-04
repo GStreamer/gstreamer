@@ -25,12 +25,13 @@
 #include <gst/gst.h>
 #include <ges/ges.h>
 
+#include "ges-launcher.h"
+
 G_BEGIN_DECLS
 
 gboolean
-ges_validate_activate (GstPipeline *pipeline, GESTrackType *track_types,
-                       const gchar *scenario, gboolean *needs_set_state);
-void ges_launch_validate_uri (const gchar *nid);
+ges_validate_activate(GstPipeline* pipeline, GESLauncherParsedOptions* opts);
+void ges_launch_validate_uri(const gchar* nid);
 
 gint
 ges_validate_clean (GstPipeline *pipeline);

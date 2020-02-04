@@ -101,8 +101,7 @@ ges_validate_register_issues (void)
 }
 
 gboolean
-ges_validate_activate (GstPipeline * pipeline, GESTrackType * track_types,
-    const gchar * scenario, gboolean * needs_setting_state)
+ges_validate_activate (GstPipeline * pipeline, GESLauncherParsedOptions * opts)
 {
   GstValidateRunner *runner = NULL;
   GstValidateMonitor *monitor = NULL;
@@ -110,9 +109,10 @@ ges_validate_activate (GstPipeline * pipeline, GESTrackType * track_types,
   ges_validate_register_action_types ();
   ges_validate_register_issues ();
 
-  if (scenario) {
-    if (g_strcmp0 (scenario, "none")) {
-      gchar *scenario_name = g_strconcat (scenario, "->gespipeline*", NULL);
+  if (opts->scenario) {
+    if (g_strcmp0 (opts->scenario, "none")) {
+      gchar *scenario_name =
+          g_strconcat (opts->scenario, "->gespipeline*", NULL);
       g_setenv ("GST_VALIDATE_SCENARIO", scenario_name, TRUE);
       g_free (scenario_name);
     }
@@ -131,24 +131,28 @@ ges_validate_activate (GstPipeline * pipeline, GESTrackType * track_types,
         GST_VALIDATE_BIN_MONITOR (monitor)->scenario->description;
 
     if (metas) {
-      const gchar *track_types_str;
+      gchar **ges_options = gst_validate_utils_get_strv (metas, "ges-options");
 
-      if ((track_types_str =
-              gst_structure_get_string (metas, "ges-track-types"))) {
-        if (!get_flags_from_string (GES_TYPE_TRACK_TYPE, track_types_str,
-                track_types)) {
-          GST_ERROR_OBJECT (pipeline, "Scenario track types: %s no valid",
-              track_types_str);
-          return FALSE;
-        }
+      if (ges_options) {
+        gint i;
+        gchar **ges_options_full =
+            g_new0 (gchar *, g_strv_length (ges_options) + 2);
+
+        ges_options_full[0] = g_strdup ("something");
+        for (i = 0; ges_options[i]; i++)
+          ges_options_full[i + 1] = ges_options[i];
+
+        ges_launcher_parse_options (opts, ges_options_full, NULL, NULL, NULL);
+        g_free (ges_options);
+        g_strfreev (ges_options_full);
       }
     }
   }
 
   gst_validate_reporter_set_handle_g_logs (GST_VALIDATE_REPORTER (monitor));
 
-  g_object_get (monitor, "handles-states", needs_setting_state, NULL);
-  *needs_setting_state = !*needs_setting_state;
+  g_object_get (monitor, "handles-states", &opts->needs_set_state, NULL);
+  opts->needs_set_state = !opts->needs_set_state;
   g_object_set_data (G_OBJECT (pipeline), MONITOR_ON_PIPELINE, monitor);
   g_object_set_data (G_OBJECT (pipeline), RUNNER_ON_PIPELINE, runner);
 
@@ -188,7 +192,7 @@ ges_validate_handle_request_state_change (GstMessage * message,
   if (GST_IS_VALIDATE_SCENARIO (GST_MESSAGE_SRC (message))
       && state == GST_STATE_NULL) {
     gst_validate_printf (GST_MESSAGE_SRC (message),
-        "State change request NULL, " "quiting application\n");
+        "State change request NULL, " "quitting application\n");
     g_application_quit (application);
   }
 }
@@ -226,12 +230,11 @@ _print_position (GstElement * pipeline)
 }
 
 gboolean
-ges_validate_activate (GstPipeline * pipeline, GESTrackType * track_types,
-    const gchar * scenario, gboolean * needs_setting_state)
+ges_validate_activate (GstPipeline * pipeline, GESLauncherParsedOptions * opts)
 {
-  if (scenario) {
+  if (opts->scenario) {
     GST_WARNING ("Trying to run scenario %s, but gst-validate not supported",
-        scenario);
+        opts->scenario);
 
     return FALSE;
   }
@@ -240,7 +243,7 @@ ges_validate_activate (GstPipeline * pipeline, GESTrackType * track_types,
       GUINT_TO_POINTER (g_timeout_add (200,
               (GSourceFunc) _print_position, pipeline)));
 
-  *needs_setting_state = TRUE;
+  opts->needs_set_state = TRUE;
 
   return TRUE;
 }
