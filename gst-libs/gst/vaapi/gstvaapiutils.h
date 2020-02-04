@@ -26,6 +26,7 @@
 #define GST_VAAPI_UTILS_H
 
 #include <glib.h>
+#include <gst/video/video.h>
 #include <va/va.h>
 
 /** calls vaInitialize() redirecting the logging mechanism */
@@ -165,5 +166,9 @@ from_GstVaapiBufferMemoryType (guint type);
 G_GNUC_INTERNAL
 guint
 to_GstVaapiBufferMemoryType (guint va_type);
+
+G_GNUC_INTERNAL
+guint
+from_GstVideoColorimetry (const GstVideoColorimetry *const colorimetry);
 
 #endif /* GST_VAAPI_UTILS_H */

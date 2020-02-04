@@ -951,3 +951,39 @@ to_GstVaapiBufferMemoryType (guint va_type)
     return GST_VAAPI_BUFFER_MEMORY_TYPE_USER_PTR;
   return 0;
 }
+
+/**
+ * from_GstVideoColorimetry:
+ * @colorimetry: a #GstVideoColorimetry type
+ *
+ * VPP: maps the #GstVideoColorimetry type to the VAProcColorStandardType.  If
+ * @colorimetry is NULL or colorimetry->primaries are unknown, then returns
+ * VAProcColorStandardNone.  If there is no 1:1 correlation, then returns
+ * VAProcColorStandardExplicit.  Otherwise, the correlating
+ * VAProcColorStandardType is returned.
+ *
+ * Returns: a VAProcColorStandardType.
+ **/
+guint
+from_GstVideoColorimetry (const GstVideoColorimetry * const colorimetry)
+{
+  if (!colorimetry
+      || colorimetry->primaries == GST_VIDEO_COLOR_PRIMARIES_UNKNOWN)
+    return VAProcColorStandardNone;
+  if (gst_video_colorimetry_matches (colorimetry, GST_VIDEO_COLORIMETRY_BT709))
+    return VAProcColorStandardBT709;
+  /* NOTE: VAProcColorStandardBT2020 in VAAPI is the same as
+   * GST_VIDEO_COLORIMETRY_BT2020_10 in gstreamer. */
+  if (gst_video_colorimetry_matches (colorimetry,
+          GST_VIDEO_COLORIMETRY_BT2020_10))
+    return VAProcColorStandardBT2020;
+  if (gst_video_colorimetry_matches (colorimetry, GST_VIDEO_COLORIMETRY_BT601))
+    return VAProcColorStandardBT601;
+  if (gst_video_colorimetry_matches (colorimetry,
+          GST_VIDEO_COLORIMETRY_SMPTE240M))
+    return VAProcColorStandardSMPTE240M;
+  if (gst_video_colorimetry_matches (colorimetry, GST_VIDEO_COLORIMETRY_SRGB))
+    return VAProcColorStandardSRGB;
+
+  return VAProcColorStandardExplicit;
+}
