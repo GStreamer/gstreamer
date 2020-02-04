@@ -595,8 +595,8 @@ _set_multiview_mode (GstVaapiPostproc * postproc, GstVideoInfo * vinfo,
 }
 
 static gboolean
-_set_colorimetry (GstVaapiPostproc * postproc, GstVideoFormat format,
-    GstStructure * outs)
+_set_colorimetry (GstVaapiPostproc * postproc, GstVideoInfo * sinkinfo,
+    GstVideoFormat format, GstStructure * outs)
 {
   GstVideoInfo vinfo;
   GstVideoColorimetry colorimetry;
@@ -607,7 +607,10 @@ _set_colorimetry (GstVaapiPostproc * postproc, GstVideoFormat format,
       || !gst_structure_get_int (outs, "height", &height))
     return FALSE;
 
-  gst_video_info_set_format (&vinfo, format, width, height);
+  /* Use the sink resolution and the src format to correctly determine the
+   * default src colorimetry. */
+  gst_video_info_set_format (&vinfo, format, GST_VIDEO_INFO_WIDTH (sinkinfo),
+      GST_VIDEO_INFO_HEIGHT (sinkinfo));
 
   if (GST_VIDEO_INFO_CHROMA_SITE (&vinfo) != GST_VIDEO_CHROMA_SITE_UNKNOWN) {
     gst_structure_set (outs, "chroma-site", G_TYPE_STRING,
@@ -719,7 +722,7 @@ _get_preferred_caps (GstVaapiPostproc * postproc, GstVideoInfo * vinfo,
     goto fixate_failed;
   _set_multiview_mode (postproc, vinfo, structure);
 
-  if (!_set_colorimetry (postproc, format, structure))
+  if (!_set_colorimetry (postproc, vinfo, format, structure))
     goto fixate_failed;
 
   if (!_set_interlace_mode (postproc, vinfo, structure))
