@@ -18,25 +18,26 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#ifndef _GST_V4L2_CODEC_DEVICE_H_
+#define _GST_V4L2_CODEC_DEVICE_H_
 
 #include <gst/gst.h>
 
-#define GST_CAT_DEFAULT gstv4l2codecs_debug
-GST_DEBUG_CATEGORY (gstv4l2codecs_debug);
+#define GST_TYPE_V4L2_CODEC_DEVICE     (_gst_v4l2_codec_device_type)
+#define GST_IS_V4L2_CODEC_DEVICE(obj)  (GST_IS_MINI_OBJECT_TYPE(obj, GST_TYPE_V4L2_CODEC_DEVICE))
+#define GST_V4L2_CODEC_DEVICE(obj)     ((GstV4l2CodecDevice *)(obj))
 
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gstv4l2codecs_debug, "v4l2codecs", 0,
-      "V4L2 CODECs general debug");
-  return TRUE;
-}
+typedef struct {
+  GstMiniObject mini_object;
 
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    v4l2codecs,
-    "V4L2 CODEC Accelerators plugin",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+  gchar *name;
+  guint32 function;
+  gchar *media_device_path;
+  gchar *video_device_path;
+} GstV4l2CodecDevice;
+
+GType  gst_v4l2_codec_device_get_type (void);
+GList *gst_v4l2_codec_find_devices (void);
+void   gst_v4l2_codec_device_list_free (GList *devices);
+
+#endif /* _GST_V4L2_CODECS_DEVICE_H_ */

@@ -1,15 +1,20 @@
 v4l2codecs_sources = [
   'plugin.c',
+  'gstv4l2codecdevice.c',
 ]
 
-gstv4l2codecs = library('gstv4l2codecs',
-  v4l2codecs_sources,
-  c_args : gst_plugins_bad_args,
-  cpp_args: gst_plugins_bad_args,
-  include_directories : [configinc],
-  dependencies : [gstbase_dep, gstcodecs_dep],
-  install : true,
-  install_dir : plugins_install_dir,
-)
-pkgconfig.generate(gstv4l2codecs, install_dir : plugins_pkgconfig_install_dir)
-plugins += [gstv4l2codecs]
+libgudev_dep = dependency('gudev-1.0', required: get_option('v4l2codecs'))
+
+if libgudev_dep.found()
+  gstv4l2codecs = library('gstv4l2codecs',
+    v4l2codecs_sources,
+    c_args : gst_plugins_bad_args,
+    cpp_args: gst_plugins_bad_args,
+    include_directories : [configinc],
+    dependencies : [gstbase_dep, gstcodecs_dep, libgudev_dep],
+    install : true,
+    install_dir : plugins_install_dir,
+  )
+  pkgconfig.generate(gstv4l2codecs, install_dir : plugins_pkgconfig_install_dir)
+  plugins += [gstv4l2codecs]
+endif
