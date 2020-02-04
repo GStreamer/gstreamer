@@ -1804,7 +1804,11 @@ gst_nvdec_plugin_init (GstPlugin * plugin, guint device_index,
       gst_nvdec_subclass_register (plugin, GST_TYPE_NVDEC, codec_map[i].codec,
           codec_map[i].codec_name, device_index, GST_RANK_PRIMARY,
           sink_templ, src_templ);
+
+      gst_clear_caps (&sink_templ);
     }
+
+    gst_clear_caps (&src_templ);
 
     return;
   }
