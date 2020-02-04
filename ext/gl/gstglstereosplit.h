@@ -50,6 +50,8 @@ struct _GstGLStereoSplit
   GstGLContext      *other_context;
 
   GstGLViewConvert    *viewconvert;
+
+  GRecMutex            context_lock;
 };
 
 struct _GstGLStereoSplitClass
