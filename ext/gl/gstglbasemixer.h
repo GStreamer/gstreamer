@@ -89,10 +89,15 @@ struct _GstGLBaseMixerClass
   GstVideoAggregatorClass parent_class;
   GstGLAPI supported_gl_api;
 
+  gboolean      (*gl_start)     (GstGLBaseMixer * mix);
+  void          (*gl_stop)      (GstGLBaseMixer * mix);
+
   gpointer _padding[GST_PADDING];
 };
 
 GType gst_gl_base_mixer_get_type(void);
+
+GstGLContext *      gst_gl_base_mixer_get_gl_context        (GstGLBaseMixer * mix);
 
 G_END_DECLS
 #endif /* __GST_GL_BASE_MIXER_H__ */
