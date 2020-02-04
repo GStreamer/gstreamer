@@ -324,6 +324,27 @@ gst_gl_view_convert_new (void)
   return convert;
 }
 
+static void
+_reset_gl (GstGLContext * context, GstGLViewConvert * viewconvert)
+{
+  const GstGLFuncs *gl = context->gl_vtable;
+
+  if (viewconvert->priv->vao) {
+    gl->DeleteVertexArrays (1, &viewconvert->priv->vao);
+    viewconvert->priv->vao = 0;
+  }
+
+  if (viewconvert->priv->vertex_buffer) {
+    gl->DeleteBuffers (1, &viewconvert->priv->vertex_buffer);
+    viewconvert->priv->vertex_buffer = 0;
+  }
+
+  if (viewconvert->priv->vbo_indices) {
+    gl->DeleteBuffers (1, &viewconvert->priv->vbo_indices);
+    viewconvert->priv->vbo_indices = 0;
+  }
+}
+
 /**
  * gst_gl_view_convert_set_context:
  * @viewconvert: a #GstGLViewConvert
@@ -1336,13 +1357,14 @@ void
 gst_gl_view_convert_reset (GstGLViewConvert * viewconvert)
 {
   g_return_if_fail (GST_IS_GL_VIEW_CONVERT (viewconvert));
-  if (viewconvert->shader)
-    gst_object_unref (viewconvert->shader);
-  viewconvert->shader = NULL;
 
-  if (viewconvert->fbo)
-    gst_object_unref (viewconvert->fbo);
-  viewconvert->fbo = NULL;
+  gst_clear_object (&viewconvert->shader);
+  gst_clear_object (&viewconvert->fbo);
+
+  if (viewconvert->context) {
+    gst_gl_context_thread_add (viewconvert->context,
+        (GstGLContextThreadFunc) _reset_gl, viewconvert);
+  }
 
   viewconvert->initted = FALSE;
   viewconvert->reconfigure = FALSE;
