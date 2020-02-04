@@ -320,6 +320,13 @@ gst_qt_sink_change_state (GstElement * element, GstStateChange transition)
             (NULL));
         return GST_STATE_CHANGE_FAILURE;
       }
+
+      GST_OBJECT_LOCK (qt_sink->display);
+      gst_gl_display_add_context (qt_sink->display, qt_sink->context);
+      GST_OBJECT_UNLOCK (qt_sink->display);
+
+      gst_gl_element_propagate_display_context (GST_ELEMENT (qt_sink), qt_sink->display);
+
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
