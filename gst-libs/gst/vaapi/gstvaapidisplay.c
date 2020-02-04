@@ -787,6 +787,7 @@ set_driver_quirks (GstVaapiDisplay * display)
   } vaapi_driver_quirks_table[] = {
     /* @XXX(victor): is this string enough to identify it */
     { "AMD", GST_VAAPI_DRIVER_QUIRK_NO_CHECK_SURFACE_PUT_IMAGE },
+    { "i965", GST_VAAPI_DRIVER_QUIRK_NO_CHECK_VPP_COLOR_STD },
   };
   /* *INDENT-ON* */
 

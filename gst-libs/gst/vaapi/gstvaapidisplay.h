@@ -92,10 +92,13 @@ typedef struct _GstVaapiDisplay                 GstVaapiDisplay;
  * @GST_VAAPI_DRIVER_QUIRK_NO_CHECK_SURFACE_PUT_IMAGE: if driver
  *   crashes when try to put an image in a reused surface.
  *   https://gitlab.freedesktop.org/mesa/mesa/merge_requests/2016
+ * @GST_VAAPI_DRIVER_QUIRK_NO_CHECK_VPP_COLOR_STD: if driver does not
+ *   properly report supported vpp color standards.
  */
 typedef enum
 {
   GST_VAAPI_DRIVER_QUIRK_NO_CHECK_SURFACE_PUT_IMAGE = (1U << 0),
+  GST_VAAPI_DRIVER_QUIRK_NO_CHECK_VPP_COLOR_STD = (1U << 1),
 } GstVaapiDriverQuirks;
 
 /**
