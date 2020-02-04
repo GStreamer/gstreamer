@@ -82,6 +82,7 @@
 #include <gst/video/gstvideofilter.h>
 #include <string.h>
 #include "gstscenechange.h"
+#include "gstscenechangeorc.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_scene_change_debug_category);
 #define GST_CAT_DEFAULT gst_scene_change_debug_category
@@ -143,23 +144,14 @@ gst_scene_change_init (GstSceneChange * scenechange)
 static double
 get_frame_score (GstVideoFrame * f1, GstVideoFrame * f2)
 {
-  int i;
-  int j;
-  int score = 0;
+  guint32 score = 0;
   int width, height;
-  guint8 *s1;
-  guint8 *s2;
 
   width = f1->info.width;
   height = f1->info.height;
 
-  for (j = 0; j < height; j++) {
-    s1 = (guint8 *) f1->data[0] + f1->info.stride[0] * j;
-    s2 = (guint8 *) f2->data[0] + f2->info.stride[0] * j;
-    for (i = 0; i < width; i++) {
-      score += ABS (s1[i] - s2[i]);
-    }
-  }
+  orc_sad_nxm_u8 (&score, f1->data[0], f1->info.stride[0],
+      f2->data[0], f2->info.stride[0], width, height);
 
   return ((double) score) / (width * height);
 }
