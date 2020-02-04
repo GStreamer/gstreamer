@@ -118,8 +118,7 @@ gpointer_free (gpointer pointer_location)
 }
 
 gchar *
-validate_flow_format_caps (const GstCaps * caps,
-    const gchar * const *keys_to_print)
+validate_flow_format_caps (const GstCaps * caps, gchar ** keys_to_print)
 {
   guint i;
   GArray *structures_strv = g_array_new (TRUE, FALSE, sizeof (gchar *));
@@ -257,7 +256,9 @@ validate_flow_format_buffer (GstBuffer * buffer, gboolean add_checksum)
 
 gchar *
 validate_flow_format_event (GstEvent * event,
-    const gchar * const *caps_properties, GstStructure * ignored_event_fields,
+    const gchar * const *caps_properties,
+    GstStructure * logged_event_fields,
+    GstStructure * ignored_event_fields,
     const gchar * const *ignored_event_types,
     const gchar * const *logged_event_types)
 {
@@ -265,6 +266,7 @@ validate_flow_format_event (GstEvent * event,
   gchar *structure_string;
   gchar *event_string;
   gchar **ignored_fields;
+  gchar **logged_fields;
 
   event_type = gst_event_type_get_name (GST_EVENT_TYPE (event));
 
@@ -274,6 +276,7 @@ validate_flow_format_event (GstEvent * event,
   if (ignored_event_types && g_strv_contains (ignored_event_types, event_type))
     return NULL;
 
+  logged_fields = gst_validate_utils_get_strv (logged_event_fields, event_type);
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
     const GstSegment *segment;
     gst_event_parse_segment (event, &segment);
@@ -281,22 +284,30 @@ validate_flow_format_event (GstEvent * event,
   } else if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS) {
     GstCaps *caps;
     gst_event_parse_caps (event, &caps);
-    structure_string = validate_flow_format_caps (caps, caps_properties);
+
+    structure_string =
+        validate_flow_format_caps (caps,
+        logged_fields ? logged_fields : (gchar **) caps_properties);
   } else if (!gst_event_get_structure (event)) {
     structure_string = g_strdup ("(no structure)");
   } else {
     GstStructure *printable =
         gst_structure_copy (gst_event_get_structure (event));
 
-    ignored_fields =
-        gst_validate_utils_get_strv (ignored_event_fields, event_type);
-    if (ignored_fields) {
-      gint i = 0;
-      gchar *field;
+    if (logged_fields) {
+      gst_structure_filter_and_map_in_place (printable,
+          (GstStructureFilterMapFunc) structure_only_given_keys, logged_fields);
+    } else {
+      ignored_fields =
+          gst_validate_utils_get_strv (ignored_event_fields, event_type);
+      if (ignored_fields) {
+        gint i = 0;
+        gchar *field;
 
-      for (field = ignored_fields[i]; field; field = ignored_fields[++i])
-        gst_structure_remove_field (printable, field);
-      g_strfreev (ignored_fields);
+        for (field = ignored_fields[i]; field; field = ignored_fields[++i])
+          gst_structure_remove_field (printable, field);
+        g_strfreev (ignored_fields);
+      }
     }
 
     structure_string = gst_structure_to_string (printable);
@@ -304,6 +315,7 @@ validate_flow_format_event (GstEvent * event,
   }
 
   event_string = g_strdup_printf ("%s: %s", event_type, structure_string);
+  g_strfreev (logged_fields);
   g_free (structure_string);
   return event_string;
 }

@@ -86,6 +86,7 @@ In order to use the plugin a validate configuration file must be provided, conta
  * `record-buffers`: Default: false. Whether buffers will be logged. By default only events are logged.
  * `buffers-checksum`: Default: false. Whether a checkum of the buffer data is logged. Implies `record-buffers`.
  * `ignored-event-fields`: Default: `"stream-start={ stream-id }"` (as they are often non reproducible). Key with a serialized GstValueList(str) of fields to not record.
+ * `logged-event-fields`: Default: `NULL` Key with a serialized GstValueList(str) of fields to record, eg. `logged-event-fields="stream-start={flags}, caps={width, height, framerate}"`. Overrides `ignored-event-fields` for specified event types.
  * `ignored-event-types`: Default: `{ }`. List of event type names to not record
  * `logged-event-types`: Default: `NULL`. List of event type names to not record, if noone provided, all events are logged, except the ones defined in the `ignored-event-types`.
  * `expectations-dir`: Path to the directory where the expectations will be written if they don't exist, relative to the current working directory. By default the current working directory is used, but this setting is usually set automatically as part of the `%(validateflow)s` expansion to a correct path like `~/gst-validate/gst-integration-testsuites/flow-expectations/<test name>`.

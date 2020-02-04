@@ -29,10 +29,10 @@ void format_time(gchar* dest_str, guint64 time);
 
 gchar* validate_flow_format_segment (const GstSegment *segment);
 
-gchar* validate_flow_format_caps (const GstCaps* caps, const gchar * const *keys_to_print);
+gchar* validate_flow_format_caps (const GstCaps* caps, gchar **keys_to_print);
 
 gchar* validate_flow_format_buffer (GstBuffer *buffer, gboolean add_checksum);
 
-gchar* validate_flow_format_event(GstEvent* event, const gchar* const* caps_properties, GstStructure* ignored_event_fields, const gchar* const* ignored_event_types, const gchar* const* logged_event_types);
+gchar* validate_flow_format_event(GstEvent* event, const gchar* const* caps_properties, GstStructure* logged_event_fields, GstStructure* ignored_event_fields, const gchar* const* ignored_event_types, const gchar* const* logged_event_types);
 
 #endif // __GST_VALIDATE_FLOW_FORMATTING_H__
