@@ -1982,7 +1982,6 @@ _gen_buffer (GstGLViewConvert * viewconvert, GstBuffer ** target)
     gst_object_unref (allocator);
     return FALSE;
   }
-  gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
   gst_object_unref (allocator);
 
   meta = gst_buffer_add_video_meta_full (*target, 0,
@@ -1994,6 +1993,8 @@ _gen_buffer (GstGLViewConvert * viewconvert, GstBuffer ** target)
 
   if (params->valign)
     gst_video_meta_set_alignment (meta, *params->valign);
+
+  gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
 
   return TRUE;
 }
