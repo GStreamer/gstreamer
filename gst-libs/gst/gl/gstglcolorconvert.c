@@ -2366,6 +2366,14 @@ _do_convert_one_view (GstGLContext * context, GstGLColorConvert * convert,
       res = FALSE;
       goto out;
     }
+    if (convert->context != convert->priv->in_tex[i]->mem.context) {
+      GST_ERROR_OBJECT (convert, "input memory OpenGL context is different. "
+          "we have %" GST_PTR_FORMAT " memory has %" GST_PTR_FORMAT,
+          convert->context, convert->priv->in_tex[i]->mem.context);
+      res = FALSE;
+      goto out;
+    }
+
     if (!gst_memory_map ((GstMemory *) convert->priv->in_tex[i], &in_info[i],
             GST_MAP_READ | GST_MAP_GL)) {
       GST_ERROR_OBJECT (convert, "failed to map input memory %p",
@@ -2383,6 +2391,13 @@ _do_convert_one_view (GstGLContext * context, GstGLColorConvert * convert,
 
     if (!gst_is_gl_memory ((GstMemory *) out_tex)) {
       GST_ERROR_OBJECT (convert, "output must be GstGLMemory");
+      res = FALSE;
+      goto out;
+    }
+    if (convert->context != out_tex->mem.context) {
+      GST_ERROR_OBJECT (convert, "output memory OpenGL context is different. "
+          "we have %" GST_PTR_FORMAT " memory has %" GST_PTR_FORMAT,
+          convert->context, out_tex->mem.context);
       res = FALSE;
       goto out;
     }
