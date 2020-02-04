@@ -1148,25 +1148,33 @@ gst_validate_set_globals (GstStructure * structure)
 gchar **
 gst_validate_utils_get_strv (GstStructure * str, const gchar * fieldname)
 {
-  const GValue *list;
+  const GValue *value;
   gchar **parsed_list;
   guint i, size;
 
-  list = gst_structure_get_value (str, fieldname);
-  if (!list)
+  value = gst_structure_get_value (str, fieldname);
+  if (!value)
     return NULL;
 
-  if (!GST_VALUE_HOLDS_LIST (list)) {
+  if (G_VALUE_HOLDS_STRING (value)) {
+    parsed_list = g_new0 (gchar *, 2);
+    parsed_list[0] = g_value_dup_string (value);
+
+    return parsed_list;
+  }
+
+  if (!GST_VALUE_HOLDS_LIST (value)) {
     g_error
-        ("%s must have type list of string, e.g. %s={ val1, val2 }, got: \"%s\"",
-        fieldname, fieldname, gst_value_serialize (list));
+        ("%s must have type list of string (or a string), e.g. %s={ val1, val2 }, got: \"%s\" in %s",
+        fieldname, fieldname, gst_value_serialize (value),
+        gst_structure_to_string (str));
     return NULL;
   }
 
-  size = gst_value_list_get_size (list);
+  size = gst_value_list_get_size (value);
   parsed_list = g_malloc_n (size + 1, sizeof (gchar *));
   for (i = 0; i < size; i++)
-    parsed_list[i] = g_value_dup_string (gst_value_list_get_value (list, i));
+    parsed_list[i] = g_value_dup_string (gst_value_list_get_value (value, i));
   parsed_list[i] = NULL;
   return parsed_list;
 
