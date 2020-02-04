@@ -358,11 +358,20 @@ void
 gst_gl_view_convert_set_context (GstGLViewConvert * viewconvert,
     GstGLContext * context)
 {
+  GstGLContext *old_context = NULL;
+
   g_return_if_fail (GST_IS_GL_VIEW_CONVERT (viewconvert));
 
-  if (gst_object_replace ((GstObject **) & viewconvert->context,
-          GST_OBJECT (context)))
+  GST_OBJECT_LOCK (viewconvert);
+  if (context != viewconvert->context) {
     gst_gl_view_convert_reset (viewconvert);
+    if (viewconvert->context)
+      old_context = viewconvert->context;
+    viewconvert->context = context ? gst_object_ref (context) : NULL;
+  }
+  GST_OBJECT_UNLOCK (viewconvert);
+
+  gst_clear_object (&old_context);
 }
 
 static gboolean
