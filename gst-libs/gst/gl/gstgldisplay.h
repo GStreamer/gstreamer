@@ -141,8 +141,11 @@ GST_GL_API
 GstGLContext * gst_gl_display_get_gl_context_for_thread (GstGLDisplay * display,
     GThread * thread);
 GST_GL_API
-gboolean gst_gl_display_add_context (GstGLDisplay * display,
-    GstGLContext * context);
+gboolean        gst_gl_display_add_context      (GstGLDisplay * display,
+                                                 GstGLContext * context);
+GST_GL_API
+void            gst_gl_display_remove_context   (GstGLDisplay * display,
+                                                 GstGLContext * context);
 
 GST_GL_API
 GstGLWindow *   gst_gl_display_create_window    (GstGLDisplay * display);

@@ -874,3 +874,46 @@ out:
 
   return ret;
 }
+
+/**
+ * gst_gl_display_remove_context:
+ * @display: a #GstGLDisplay
+ * @context: (transfer none): the #GstGLContext to remove
+ *
+ * Must be called with the object lock held.
+ *
+ * Since: 1.18
+ */
+void
+gst_gl_display_remove_context (GstGLDisplay * display, GstGLContext * needle)
+{
+  GstGLContext *context;
+  GList *prev = NULL, *l;
+
+  g_return_if_fail (GST_IS_GL_DISPLAY (display));
+  g_return_if_fail (GST_IS_GL_CONTEXT (needle));
+
+  l = display->priv->contexts;
+
+  while (l) {
+    GWeakRef *ref = l->data;
+
+    context = g_weak_ref_get (ref);
+    if (!context || context == needle) {
+      /* remove dead contexts */
+      g_weak_ref_clear (l->data);
+      g_free (l->data);
+      display->priv->contexts = g_list_delete_link (display->priv->contexts, l);
+      l = prev ? prev->next : display->priv->contexts;
+      if (context) {
+        GST_INFO_OBJECT (display, "removed context %" GST_PTR_FORMAT
+            " from internal list", context);
+        return;
+      } else
+        continue;
+    }
+  }
+
+  GST_WARNING_OBJECT (display, "%" GST_PTR_FORMAT " was not found in this "
+      "display", needle);
+}
