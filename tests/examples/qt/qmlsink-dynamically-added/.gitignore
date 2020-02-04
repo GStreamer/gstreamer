@@ -1,0 +1,4 @@
+deployment.pri
+play
+qrc_qmlsink.cpp
+*.o
