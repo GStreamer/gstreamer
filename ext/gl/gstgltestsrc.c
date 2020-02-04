@@ -532,6 +532,7 @@ gst_gl_test_src_gl_stop (GstGLContext * context, GstGLTestSrc * src)
   if (src->src_impl)
     src->src_funcs->free (src->src_impl);
   src->src_impl = NULL;
+  src->src_funcs = NULL;
 }
 
 static gboolean
