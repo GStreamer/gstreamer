@@ -42,6 +42,10 @@ gboolean                 gst_rtsp_stream_transport_backlog_pop   (GstRTSPStreamT
 
 gboolean                 gst_rtsp_stream_transport_backlog_is_empty (GstRTSPStreamTransport *trans);
 
+void                     gst_rtsp_stream_transport_lock_backlog  (GstRTSPStreamTransport * trans);
+
+void                     gst_rtsp_stream_transport_unlock_backlog (GstRTSPStreamTransport * trans);
+
 void                     gst_rtsp_stream_transport_set_back_pressure_callback (GstRTSPStreamTransport *trans,
                                                                   GstRTSPBackPressureFunc back_pressure_func,
                                                                   gpointer user_data,

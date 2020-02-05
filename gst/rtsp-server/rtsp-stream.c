@@ -202,6 +202,7 @@ struct _GstRTSPStreamPrivate
 
   GstRTSPPublishClockMode publish_clock_mode;
   GThreadPool *send_pool;
+  guint32 last_seqnum;
 };
 
 #define DEFAULT_CONTROL         NULL
@@ -2605,14 +2606,14 @@ send_tcp_message (GstRTSPStream * stream, gint idx)
     for (index = 0; index < transports->len; index++) {
       GstRTSPStreamTransport *tr = g_ptr_array_index (transports, index);
 
+      gst_rtsp_stream_transport_lock_backlog (tr);
+
       if (gst_rtsp_stream_transport_backlog_is_empty (tr)
           && !gst_rtsp_stream_transport_check_back_pressure (tr, idx)) {
         push_data (stream, tr, buffer, buffer_list, is_rtp);
       } else {
         GstBuffer *buf_ref = NULL;
         GstBufferList *buflist_ref = NULL;
-
-        g_mutex_lock (&priv->lock);
 
         if (buffer)
           buf_ref = gst_buffer_ref (buffer);
@@ -2623,11 +2624,13 @@ send_tcp_message (GstRTSPStream * stream, gint idx)
                 buf_ref, buflist_ref, is_rtp)) {
           GST_WARNING_OBJECT (stream,
               "Dropping slow transport %" GST_PTR_FORMAT, tr);
+          g_mutex_lock (&priv->lock);
           update_transport (stream, tr, FALSE);
+          g_mutex_unlock (&priv->lock);
         }
-
-        g_mutex_unlock (&priv->lock);
       }
+
+      gst_rtsp_stream_transport_unlock_backlog (tr);
     }
     g_ptr_array_unref (transports);
   }
@@ -4561,7 +4564,7 @@ on_message_sent (GstRTSPStreamTransport * trans, gpointer user_data)
 
   GST_DEBUG_OBJECT (stream, "message send complete");
 
-  g_mutex_lock (&priv->lock);
+  gst_rtsp_stream_transport_lock_backlog (trans);
 
   if (!gst_rtsp_stream_transport_backlog_is_empty (trans)) {
     GstBuffer *buffer;
@@ -4575,13 +4578,12 @@ on_message_sent (GstRTSPStreamTransport * trans, gpointer user_data)
 
     g_assert (popped == TRUE);
 
-    g_mutex_unlock (&priv->lock);
-
     push_data (stream, trans, buffer, buffer_list, is_rtp);
 
     gst_clear_buffer (&buffer);
     gst_clear_buffer_list (&buffer_list);
   } else {
+    g_mutex_lock (&priv->lock);
     /* iterate from 1 and down, so we prioritize RTCP over RTP */
     for (i = 1; i >= 0; i--) {
       if (priv->have_buffer[i]) {
@@ -4602,6 +4604,8 @@ on_message_sent (GstRTSPStreamTransport * trans, gpointer user_data)
 
     g_mutex_unlock (&priv->lock);
   }
+
+  gst_rtsp_stream_transport_unlock_backlog (trans);
 }
 
 /**

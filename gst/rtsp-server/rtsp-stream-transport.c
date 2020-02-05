@@ -85,6 +85,7 @@ struct _GstRTSPStreamTransportPrivate
   /* TCP backlog */
   GstClockTime first_rtp_timestamp;
   GstQueueArray *items;
+  GRecMutex backlog_lock;
 };
 
 #define MAX_BACKLOG_DURATION (10 * GST_SECOND)
@@ -140,6 +141,7 @@ gst_rtsp_stream_transport_init (GstRTSPStreamTransport * trans)
   trans->priv->first_rtp_timestamp = GST_CLOCK_TIME_NONE;
   gst_queue_array_set_clear_func (trans->priv->items,
       (GDestroyNotify) clear_backlog_item);
+  g_rec_mutex_init (&trans->priv->backlog_lock);
 }
 
 static void
@@ -166,6 +168,8 @@ gst_rtsp_stream_transport_finalize (GObject * obj)
     gst_rtsp_url_free (priv->url);
 
   gst_queue_array_free (priv->items);
+
+  g_rec_mutex_clear (&priv->backlog_lock);
 
   G_OBJECT_CLASS (gst_rtsp_stream_transport_parent_class)->finalize (obj);
 }
@@ -832,7 +836,8 @@ get_first_backlog_timestamp (GstRTSPStreamTransport * trans)
   return ret;
 }
 
-/* Not MT-safe, caller should ensure consistent locking. Ownership
+/* Not MT-safe, caller should ensure consistent locking (see
+ * gst_rtsp_stream_transport_lock_backlog()). Ownership
  * of @buffer and @buffer_list is transfered to the transport */
 gboolean
 gst_rtsp_stream_transport_backlog_push (GstRTSPStreamTransport * trans,
@@ -875,7 +880,8 @@ gst_rtsp_stream_transport_backlog_push (GstRTSPStreamTransport * trans,
   return ret;
 }
 
-/* Not MT-safe, caller should ensure consistent locking. Ownership
+/* Not MT-safe, caller should ensure consistent locking (see
+ * gst_rtsp_stream_transport_lock_backlog()). Ownership
  * of @buffer and @buffer_list is transfered back to the caller */
 gboolean
 gst_rtsp_stream_transport_backlog_pop (GstRTSPStreamTransport * trans,
@@ -900,9 +906,25 @@ gst_rtsp_stream_transport_backlog_pop (GstRTSPStreamTransport * trans,
   return TRUE;
 }
 
-/* Not MT-safe, caller should ensure consistent locking. */
+/* Not MT-safe, caller should ensure consistent locking.
+ * See gst_rtsp_stream_transport_lock_backlog() */
 gboolean
 gst_rtsp_stream_transport_backlog_is_empty (GstRTSPStreamTransport * trans)
 {
   return gst_queue_array_is_empty (trans->priv->items);
+}
+
+/* Internal API, protects access to the TCP backlog. Safe to
+ * call recursively */
+void
+gst_rtsp_stream_transport_lock_backlog (GstRTSPStreamTransport * trans)
+{
+  g_rec_mutex_lock (&trans->priv->backlog_lock);
+}
+
+/* See gst_rtsp_stream_transport_lock_backlog() */
+void
+gst_rtsp_stream_transport_unlock_backlog (GstRTSPStreamTransport * trans)
+{
+  g_rec_mutex_unlock (&trans->priv->backlog_lock);
 }
