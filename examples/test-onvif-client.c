@@ -634,24 +634,27 @@ int
 main (int argc, char **argv)
 {
   GOptionContext *optctx;
-  Context ctx;
+  Context ctx = { 0, };
   GstBus *bus;
   gint ret = 1;
   GError *error = NULL;
-  const gchar *range;
-  const gchar *frames;
-  const gchar *rate_control;
+  const gchar *range = NULL;
+  const gchar *frames = NULL;
+  const gchar *rate_control = NULL;
+  gchar *default_speed =
+      g_strdup_printf ("Speed to request (default: %.1f)", DEFAULT_SPEED);
   SeekParameters seek_params =
       { NULL, DEFAULT_SPEED, NULL, NULL, DEFAULT_REVERSE };
   GOptionEntry entries[] = {
     {"range", 0, 0, G_OPTION_ARG_STRING, &range,
         "Range to seek (default: " DEFAULT_RANGE ")", "RANGE"},
     {"speed", 0, 0, G_OPTION_ARG_DOUBLE, &seek_params.speed,
-        "Speed to request (default: 1.0)", "SPEED"},
+        default_speed, "SPEED"},
     {"frames", 0, 0, G_OPTION_ARG_STRING, &frames,
-        "Frames to request (default: none)", "FRAMES"},
+        "Frames to request (default: " DEFAULT_FRAMES ")", "FRAMES"},
     {"rate-control", 0, 0, G_OPTION_ARG_STRING, &rate_control,
-        "Apply rate control on the client side (default: yes)", "RATE_CONTROL"},
+        "Apply rate control on the client side (default: "
+          DEFAULT_RATE_CONTROL ")", "RATE_CONTROL"},
     {"reverse", 0, 0, G_OPTION_ARG_NONE, &seek_params.reverse,
         "Playback direction", ""},
     {NULL}
@@ -721,5 +724,6 @@ done:
   g_free (seek_params.range);
   g_free (seek_params.frames);
   g_free (seek_params.rate_control);
+  g_free (default_speed);
   return ret;
 }
