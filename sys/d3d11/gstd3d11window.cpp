@@ -443,6 +443,8 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
   GST_DEBUG_OBJECT (window, "Prepare window with %dx%d caps %" GST_PTR_FORMAT,
       width, height, caps);
 
+  gst_clear_buffer (&window->cached_buffer);
+
   render_caps = gst_d3d11_device_get_supported_caps (window->device,
       (D3D11_FORMAT_SUPPORT) (D3D11_FORMAT_SUPPORT_TEXTURE2D |
           D3D11_FORMAT_SUPPORT_DISPLAY));
