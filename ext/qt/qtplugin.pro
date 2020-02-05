@@ -21,7 +21,10 @@ android:DEFINES += HAVE_QT_ANDROID
 win32:DEFINES += HAVE_QT_WIN32
 macx:DEFINES += HAVE_QT_MAC
 
-versionAtLeast(QT_VERSION, "5.5"):win32-msvc: LIBS += opengl32.lib
+versionAtLeast(QT_VERSION, "5.5") {
+    win32-msvc: LIBS += opengl32.lib
+    win32-g++: LIBS += -lopengl32
+}
 
 SOURCES += \
     gstplugin.cc \
