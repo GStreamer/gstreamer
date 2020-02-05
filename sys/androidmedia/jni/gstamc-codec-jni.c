@@ -523,7 +523,8 @@ gst_amc_codec_configure (GstAmcCodec * codec, GstAmcFormat * format,
 
   g_return_val_if_fail (codec != NULL, FALSE);
   g_return_val_if_fail (format != NULL, FALSE);
-  g_return_val_if_fail (GST_IS_AMC_SURFACE_TEXTURE_JNI (surface), FALSE);
+  g_return_val_if_fail (surface == NULL
+      || GST_IS_AMC_SURFACE_TEXTURE_JNI (surface), FALSE);
 
   env = gst_amc_jni_get_env ();
 
@@ -539,8 +540,8 @@ gst_amc_codec_configure (GstAmcCodec * codec, GstAmcFormat * format,
     flags = 1;
 
   return gst_amc_jni_call_void_method (env, err, codec->object,
-      media_codec.configure, format->object, codec->surface->jobject, NULL,
-      flags);
+      media_codec.configure, format->object,
+      codec->surface ? codec->surface->jobject : NULL, NULL, flags);
 }
 
 GstAmcFormat *
