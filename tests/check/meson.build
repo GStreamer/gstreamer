@@ -100,6 +100,7 @@ if build_gstgl and host_machine.system() != 'windows'
     [ 'elements/glimagesink.c', not build_gstgl, [gstgl_dep]],
     [ 'elements/glbin.c', not build_gstgl ],
     [ 'pipelines/gl-launch-lines.c', not build_gstgl ],
+    [ 'elements/glfilter.c', not build_gstgl, [gstgl_dep]],
   ]
 endif
 

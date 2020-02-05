@@ -70,6 +70,8 @@ struct _GstGLBaseFilter
  * @gl_start: called in the GL thread to setup the element GL state.
  * @gl_stop: called in the GL thread to setup the element GL state.
  * @gl_set_caps: called in the GL thread when caps are set on @filter.
+ *               Note: this will also be called when changing OpenGL contexts
+ *               where #GstBaseTransform::set_caps may not.
  *
  * The base class for GStreamer GL Filter.
  */
@@ -90,6 +92,8 @@ struct _GstGLBaseFilterClass
 
 GST_GL_API
 gboolean        gst_gl_base_filter_find_gl_context          (GstGLBaseFilter * filter);
+GST_GL_API
+GstGLContext *  gst_gl_base_filter_get_gl_context           (GstGLBaseFilter * filter);
 
 G_END_DECLS
 

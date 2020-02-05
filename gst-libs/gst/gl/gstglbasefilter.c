@@ -48,6 +48,9 @@ struct _GstGLBaseFilterPrivate
 
   gboolean gl_result;
   gboolean gl_started;
+
+  GRecMutex context_lock;
+  gboolean new_gl_context;
 };
 
 /* Properties */
@@ -91,6 +94,8 @@ static void gst_gl_base_filter_gl_stop (GstGLContext * context, gpointer data);
 static gboolean gst_gl_base_filter_default_gl_start (GstGLBaseFilter * filter);
 static void gst_gl_base_filter_default_gl_stop (GstGLBaseFilter * filter);
 
+static gboolean gst_gl_base_filter_find_gl_context_unlocked (GstGLBaseFilter *
+    filter);
 static void
 gst_gl_base_filter_class_init (GstGLBaseFilterClass * klass)
 {
@@ -131,6 +136,8 @@ gst_gl_base_filter_init (GstGLBaseFilter * filter)
   gst_base_transform_set_qos_enabled (GST_BASE_TRANSFORM (filter), TRUE);
 
   filter->priv = gst_gl_base_filter_get_instance_private (filter);
+
+  g_rec_mutex_init (&filter->priv->context_lock);
 }
 
 static void
@@ -140,6 +147,8 @@ gst_gl_base_filter_finalize (GObject * object)
 
   gst_caps_replace (&filter->in_caps, NULL);
   gst_caps_replace (&filter->out_caps, NULL);
+
+  g_rec_mutex_clear (&filter->priv->context_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -171,32 +180,30 @@ gst_gl_base_filter_get_property (GObject * object, guint prop_id,
   }
 }
 
-static void
-gst_gl_base_filter_set_context (GstElement * element, GstContext * context)
-{
-  GstGLBaseFilter *filter = GST_GL_BASE_FILTER (element);
-  GstGLBaseFilterClass *filter_class = GST_GL_BASE_FILTER_GET_CLASS (filter);
-
-  GST_OBJECT_LOCK (filter);
-  gst_gl_handle_set_context (element, context, &filter->display,
-      &filter->priv->other_context);
-  if (filter->display)
-    gst_gl_display_filter_gl_api (filter->display,
-        filter_class->supported_gl_api);
-  GST_OBJECT_UNLOCK (filter);
-
-  GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
-}
-
 static gboolean
 _find_local_gl_context (GstGLBaseFilter * filter)
 {
+  GstGLContext *context = filter->context;
+
   if (gst_gl_query_local_gl_context (GST_ELEMENT (filter), GST_PAD_SRC,
-          &filter->context))
-    return TRUE;
+          &context)) {
+    if (context->display == filter->display) {
+      filter->context = context;
+      return TRUE;
+    }
+    if (context != filter->context)
+      gst_clear_object (&context);
+  }
+  context = filter->context;
   if (gst_gl_query_local_gl_context (GST_ELEMENT (filter), GST_PAD_SINK,
-          &filter->context))
-    return TRUE;
+          &context)) {
+    if (context->display == filter->display) {
+      filter->context = context;
+      return TRUE;
+    }
+    if (context != filter->context)
+      gst_clear_object (&context);
+  }
   return FALSE;
 }
 
@@ -211,7 +218,9 @@ gst_gl_base_filter_query (GstBaseTransform * trans, GstPadDirection direction,
     {
       if (direction == GST_PAD_SINK
           && gst_base_transform_is_passthrough (trans)) {
+        g_rec_mutex_lock (&filter->priv->context_lock);
         _find_local_gl_context (filter);
+        g_rec_mutex_unlock (&filter->priv->context_lock);
 
         return gst_pad_peer_query (GST_BASE_TRANSFORM_SRC_PAD (trans), query);
       }
@@ -220,10 +229,10 @@ gst_gl_base_filter_query (GstBaseTransform * trans, GstPadDirection direction,
     case GST_QUERY_CONTEXT:
     {
       gboolean ret;
-      GST_OBJECT_LOCK (filter);
+      g_rec_mutex_lock (&filter->priv->context_lock);
       ret = gst_gl_handle_context_query ((GstElement *) filter, query,
           filter->display, filter->context, filter->priv->other_context);
-      GST_OBJECT_UNLOCK (filter);
+      g_rec_mutex_unlock (&filter->priv->context_lock);
       if (ret)
         return TRUE;
       break;
@@ -239,17 +248,14 @@ gst_gl_base_filter_query (GstBaseTransform * trans, GstPadDirection direction,
 static void
 gst_gl_base_filter_reset (GstGLBaseFilter * filter)
 {
-  GstGLBaseFilterClass *filter_class = GST_GL_BASE_FILTER_GET_CLASS (filter);
-
+  g_rec_mutex_lock (&filter->priv->context_lock);
   if (filter->context) {
-    if (filter_class->gl_stop != NULL) {
-      gst_gl_context_thread_add (filter->context, gst_gl_base_filter_gl_stop,
-          filter);
-    }
-
+    gst_gl_context_thread_add (filter->context, gst_gl_base_filter_gl_stop,
+        filter);
     gst_object_unref (filter->context);
     filter->context = NULL;
   }
+  g_rec_mutex_unlock (&filter->priv->context_lock);
 }
 
 static gboolean
@@ -280,6 +286,7 @@ gst_gl_base_filter_gl_start (GstGLContext * context, gpointer data)
   GstGLBaseFilter *filter = GST_GL_BASE_FILTER (data);
   GstGLBaseFilterClass *filter_class = GST_GL_BASE_FILTER_GET_CLASS (filter);
 
+  GST_INFO_OBJECT (filter, "starting");
   gst_gl_insert_debug_marker (filter->context,
       "starting element %s", GST_OBJECT_NAME (filter));
 
@@ -297,6 +304,7 @@ gst_gl_base_filter_gl_stop (GstGLContext * context, gpointer data)
   GstGLBaseFilter *filter = GST_GL_BASE_FILTER (data);
   GstGLBaseFilterClass *filter_class = GST_GL_BASE_FILTER_GET_CLASS (filter);
 
+  GST_INFO_OBJECT (filter, "stopping");
   gst_gl_insert_debug_marker (filter->context,
       "stopping element %s", GST_OBJECT_NAME (filter));
 
@@ -311,9 +319,28 @@ _gl_set_caps (GstGLContext * context, GstGLBaseFilter * filter)
 {
   GstGLBaseFilterClass *filter_class = GST_GL_BASE_FILTER_GET_CLASS (filter);
 
+  GST_INFO_OBJECT (filter, "set GL caps input %" GST_PTR_FORMAT,
+      filter->in_caps);
+  GST_INFO_OBJECT (filter, "set GL caps output %" GST_PTR_FORMAT,
+      filter->out_caps);
+
   if (filter_class->gl_set_caps)
     filter->priv->gl_result =
         filter_class->gl_set_caps (filter, filter->in_caps, filter->out_caps);
+}
+
+static gboolean
+gl_set_caps_unlocked (GstGLBaseFilter * filter)
+{
+  GstGLBaseFilterClass *filter_class = GST_GL_BASE_FILTER_GET_CLASS (filter);
+
+  if (filter_class->gl_set_caps) {
+    gst_gl_context_thread_add (filter->context,
+        (GstGLContextThreadFunc) _gl_set_caps, filter);
+    return filter->priv->gl_result;
+  }
+
+  return TRUE;
 }
 
 static gboolean
@@ -321,23 +348,24 @@ gst_gl_base_filter_decide_allocation (GstBaseTransform * trans,
     GstQuery * query)
 {
   GstGLBaseFilter *filter = GST_GL_BASE_FILTER (trans);
-  GstGLBaseFilterClass *filter_class = GST_GL_BASE_FILTER_GET_CLASS (filter);
 
-  if (!gst_gl_base_filter_find_gl_context (filter))
+  g_rec_mutex_lock (&filter->priv->context_lock);
+  if (!gst_gl_base_filter_find_gl_context_unlocked (filter)) {
+    g_rec_mutex_unlock (&filter->priv->context_lock);
     return FALSE;
-
-  if (filter_class->gl_set_caps) {
-    gst_gl_context_thread_add (filter->context,
-        (GstGLContextThreadFunc) _gl_set_caps, filter);
-    if (!filter->priv->gl_result)
-      goto error;
   }
+
+  if (!gl_set_caps_unlocked (filter))
+    goto error;
+
+  g_rec_mutex_unlock (&filter->priv->context_lock);
 
   return GST_BASE_TRANSFORM_CLASS (parent_class)->decide_allocation (trans,
       query);
 
 error:
   {
+    g_rec_mutex_unlock (&filter->priv->context_lock);
     GST_ELEMENT_ERROR (trans, LIBRARY, INIT,
         ("Subclass failed to initialize."), (NULL));
     return FALSE;
@@ -389,6 +417,7 @@ gst_gl_base_filter_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
+      g_rec_mutex_lock (&filter->priv->context_lock);
       if (filter->priv->other_context) {
         gst_object_unref (filter->priv->other_context);
         filter->priv->other_context = NULL;
@@ -403,6 +432,7 @@ gst_gl_base_filter_change_state (GstElement * element,
         gst_object_unref (filter->context);
         filter->context = NULL;
       }
+      g_rec_mutex_unlock (&filter->priv->context_lock);
       break;
     default:
       break;
@@ -411,20 +441,48 @@ gst_gl_base_filter_change_state (GstElement * element,
   return ret;
 }
 
-/**
- * gst_gl_base_filter_find_gl_context:
- * @filter: a #GstGLBaseFilter
- *
- * Returns: Whether an OpenGL context could be retrieved or created successfully
- *
- * Since: 1.16
- */
-gboolean
-gst_gl_base_filter_find_gl_context (GstGLBaseFilter * filter)
+static void
+gst_gl_base_filter_set_context (GstElement * element, GstContext * context)
+{
+  GstGLBaseFilter *filter = GST_GL_BASE_FILTER (element);
+  GstGLBaseFilterClass *filter_class = GST_GL_BASE_FILTER_GET_CLASS (filter);
+  GstGLDisplay *old_display, *new_display;
+
+  g_rec_mutex_lock (&filter->priv->context_lock);
+  old_display = filter->display ? gst_object_ref (filter->display) : NULL;
+  gst_gl_handle_set_context (element, context, &filter->display,
+      &filter->priv->other_context);
+  if (filter->display)
+    gst_gl_display_filter_gl_api (filter->display,
+        filter_class->supported_gl_api);
+  new_display = filter->display ? gst_object_ref (filter->display) : NULL;
+
+  if (old_display && new_display) {
+    if (old_display != new_display) {
+      gst_clear_object (&filter->context);
+      if (gst_gl_base_filter_find_gl_context_unlocked (filter)) {
+        if (filter->in_caps && filter->out_caps) {
+          gl_set_caps_unlocked (filter);
+        }
+      }
+    }
+  }
+  g_rec_mutex_unlock (&filter->priv->context_lock);
+  gst_clear_object (&old_display);
+  gst_clear_object (&new_display);
+
+  GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
+}
+
+static gboolean
+gst_gl_base_filter_find_gl_context_unlocked (GstGLBaseFilter * filter)
 {
   GstGLBaseFilterClass *filter_class = GST_GL_BASE_FILTER_GET_CLASS (filter);
   GError *error = NULL;
   gboolean new_context = FALSE;
+
+  GST_DEBUG_OBJECT (filter, "attempting to find an OpenGL context, existing %"
+      GST_PTR_FORMAT, filter->context);
 
   if (!filter->context)
     new_context = TRUE;
@@ -449,6 +507,8 @@ gst_gl_base_filter_find_gl_context (GstGLBaseFilter * filter)
     } while (!gst_gl_display_add_context (filter->display, filter->context));
     GST_OBJECT_UNLOCK (filter->display);
   }
+  GST_INFO_OBJECT (filter, "found OpenGL context %" GST_PTR_FORMAT,
+      filter->context);
 
   if (new_context || !filter->priv->gl_started) {
     if (filter->priv->gl_started)
@@ -498,4 +558,43 @@ error:
         ("Subclass failed to initialize."), (NULL));
     return FALSE;
   }
+}
+
+/**
+ * gst_gl_base_filter_find_gl_context:
+ * @filter: a #GstGLBaseFilter
+ *
+ * Returns: Whether an OpenGL context could be retrieved or created successfully
+ *
+ * Since: 1.16
+ */
+gboolean
+gst_gl_base_filter_find_gl_context (GstGLBaseFilter * filter)
+{
+  gboolean ret;
+  g_rec_mutex_lock (&filter->priv->context_lock);
+  ret = gst_gl_base_filter_find_gl_context_unlocked (filter);
+  g_rec_mutex_unlock (&filter->priv->context_lock);
+  return ret;
+}
+
+/**
+ * gst_gl_base_filter_get_gl_context:
+ * @filter: a #GstGLBaseFilter
+ *
+ * Returns: (transfer full) (nullable): the #GstGLContext found by @filter
+ *
+ * Since: 1.18
+ */
+GstGLContext *
+gst_gl_base_filter_get_gl_context (GstGLBaseFilter * filter)
+{
+  GstGLContext *ret;
+
+  g_return_val_if_fail (GST_IS_GL_BASE_FILTER (filter), NULL);
+
+  g_rec_mutex_lock (&filter->priv->context_lock);
+  ret = filter->context ? gst_object_ref (filter->context) : NULL;
+  g_rec_mutex_unlock (&filter->priv->context_lock);
+  return ret;
 }
