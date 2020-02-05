@@ -363,9 +363,9 @@ gst_svtav1enc_set_property (GObject * object, guint property_id,
     case PROP_PRED_STRUCTURE:
         svtav1enc->svt_config->pred_structure = g_value_get_uint(value);
         break;
-    case PROP_P_FRAMES:
-      svtav1enc->svt_config->base_layer_switch_mode = g_value_get_boolean (value);
-      break;
+
+
+
     case PROP_QP:
       svtav1enc->svt_config->qp = g_value_get_uint (value);
       break;
@@ -426,10 +426,10 @@ gst_svtav1enc_get_property (GObject * object, guint property_id,
     case PROP_B_PYRAMID:
       g_value_set_uint (value, svtav1enc->svt_config->hierarchical_levels);
       break;
-    case PROP_P_FRAMES:
-      g_value_set_boolean (value,
-          svtav1enc->svt_config->base_layer_switch_mode == 1);
-      break;
+
+
+
+
     case PROP_PRED_STRUCTURE:
       g_value_set_uint (value, svtav1enc->svt_config->pred_structure);
       break;
@@ -616,7 +616,7 @@ set_default_svt_configuration (EbSvtAv1EncConfiguration * svt_config)
   svt_config->frame_rate_denominator = 1;
   svt_config->frame_rate_numerator = 25;
   svt_config->hierarchical_levels = PROP_HIERARCHICAL_LEVEL_DEFAULT;
-  svt_config->base_layer_switch_mode = PROP_P_FRAMES_DEFAULT;
+
   svt_config->pred_structure = PROP_PRED_STRUCTURE_DEFAULT;
   svt_config->scene_change_detection = PROP_SCD_DEFAULT;
   svt_config->look_ahead_distance = (uint32_t)~0;
