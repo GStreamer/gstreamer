@@ -3784,6 +3784,9 @@ invalid_caps:
   {
     GST_DEBUG_OBJECT (v4l2object->dbg_obj, "can't parse caps %" GST_PTR_FORMAT,
         caps);
+
+    GST_V4L2_ERROR (error, RESOURCE, SETTINGS,
+        (_("Invalid caps")), ("Can't parse caps %" GST_PTR_FORMAT, caps));
     return FALSE;
   }
 try_fmt_failed:
