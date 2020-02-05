@@ -231,6 +231,11 @@ gst_fluid_dec_init (GstFluidDec * filter)
   filter->synth_polyphony = DEFAULT_SYNTH_POLYPHONY;
 
   filter->settings = new_fluid_settings ();
+
+  /* http://www.fluidsynth.org/api/fluidsettings.xml */
+  fluid_settings_setnum (filter->settings, "synth.sample-rate", FLUID_DEC_RATE);
+
+  /* FIXME: Initialize after caps negotiation so we can support more rates */
   filter->synth = new_fluid_synth (filter->settings);
   filter->sf = -1;
 
@@ -318,8 +323,6 @@ gst_fluid_dec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
           "rate", G_TYPE_INT, FLUID_DEC_RATE,
           "channels", G_TYPE_INT, 2,
           "layout", G_TYPE_STRING, "interleaved", NULL);
-
-      fluid_synth_set_sample_rate (fluiddec->synth, FLUID_DEC_RATE);
 
       res = gst_pad_push_event (fluiddec->srcpad, gst_event_new_caps (caps));
       gst_caps_unref (caps);
