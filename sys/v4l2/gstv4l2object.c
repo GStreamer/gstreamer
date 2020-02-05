@@ -3277,6 +3277,35 @@ gst_v4l2_video_colorimetry_matches (const GstVideoColorimetry * cinfo,
   return FALSE;
 }
 
+static const gchar *
+field_to_str (enum v4l2_field f)
+{
+  switch (f) {
+    case V4L2_FIELD_ANY:
+      return "any";
+    case V4L2_FIELD_NONE:
+      return "none";
+    case V4L2_FIELD_TOP:
+      return "top";
+    case V4L2_FIELD_BOTTOM:
+      return "bottom";
+    case V4L2_FIELD_INTERLACED:
+      return "interlaced";
+    case V4L2_FIELD_SEQ_TB:
+      return "seq-tb";
+    case V4L2_FIELD_SEQ_BT:
+      return "seq-bt";
+    case V4L2_FIELD_ALTERNATE:
+      return "alternate";
+    case V4L2_FIELD_INTERLACED_TB:
+      return "interlaced-tb";
+    case V4L2_FIELD_INTERLACED_BT:
+      return "interlaced-bt";
+  }
+
+  return "unknown";
+}
+
 static gboolean
 gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
     gboolean try_only, GstV4l2Error * error)
@@ -3580,11 +3609,11 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
   }
 
   GST_DEBUG_OBJECT (v4l2object->dbg_obj, "Got format of %dx%d, format "
-      "%" GST_FOURCC_FORMAT ", nb planes %d, colorspace %d:%d:%d:%d",
+      "%" GST_FOURCC_FORMAT ", nb planes %d, colorspace %d:%d:%d:%d field: %s",
       format.fmt.pix.width, format.fmt.pix_mp.height,
       GST_FOURCC_ARGS (format.fmt.pix.pixelformat),
       is_mplane ? format.fmt.pix_mp.num_planes : 1,
-      colorspace, range, matrix, transfer);
+      colorspace, range, matrix, transfer, field_to_str (format.fmt.pix.field));
 
 #ifndef GST_DISABLE_GST_DEBUG
   if (is_mplane) {
