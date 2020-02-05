@@ -658,8 +658,7 @@ gst_d3d11_video_sink_propose_allocation (GstBaseSink * sink, GstQuery * query)
     }
   }
 
-  gst_query_add_allocation_pool (query, pool, size, 2,
-      DXGI_MAX_SWAP_CHAIN_BUFFERS);
+  gst_query_add_allocation_pool (query, pool, size, 2, 0);
   if (pool)
     g_object_unref (pool);
 
