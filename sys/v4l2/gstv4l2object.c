@@ -1787,6 +1787,10 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
       case GST_VIDEO_FORMAT_GRAY16_BE:
         fourcc = V4L2_PIX_FMT_Y16_BE;
         break;
+      case GST_VIDEO_FORMAT_BGR15:
+        fourcc = V4L2_PIX_FMT_RGB555X;
+        fourcc_nc = V4L2_PIX_FMT_XRGB555X;
+        break;
       default:
         break;
     }
