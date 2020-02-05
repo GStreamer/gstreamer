@@ -380,8 +380,10 @@ gst_ladspa_object_class_get_param_spec (GstLADSPAClass * ladspa_class,
 
   if (LADSPA_IS_HINT_SAMPLE_RATE (hintdesc)) {
     /* FIXME:! (*= ladspa->rate?, *= GST_AUDIO_DEF_RATE?) */
-    lower *= 44100;
-    upper *= 44100;
+    if (LADSPA_IS_HINT_BOUNDED_BELOW (hintdesc))
+      lower *= 44100;
+    if (LADSPA_IS_HINT_BOUNDED_ABOVE (hintdesc))
+      upper *= 44100;
   }
 
   if (LADSPA_IS_HINT_INTEGER (hintdesc)) {
