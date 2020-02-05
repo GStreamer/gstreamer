@@ -2552,8 +2552,10 @@ gst_video_encoder_finish_subframe (GstVideoEncoder * encoder,
   gst_video_encoder_transform_meta_unlocked (encoder, frame);
 
   if (ret == GST_FLOW_OK) {
+    GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
     ret = gst_pad_push (encoder->srcpad, subframe_buffer);
     subframe_buffer = NULL;
+    GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
   }
 
 done:
