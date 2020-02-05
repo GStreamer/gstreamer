@@ -346,7 +346,7 @@ gst_ladspa_object_class_get_param_spec (GstLADSPAClass * ladspa_class,
   GParamSpec *ret;
   gchar *name;
   gint hintdesc, perms;
-  gfloat lower, upper, def;
+  gdouble lower, upper, def;
 
   name =
       gst_ladspa_object_class_get_param_name (ladspa_class, object_class,
