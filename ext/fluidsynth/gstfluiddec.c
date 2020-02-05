@@ -54,6 +54,11 @@
 
 #include "gstfluiddec.h"
 
+#define GST_HAVE_FLUIDSYNTH_VERSION(major,minor,micro) \
+  (FLUIDSYNTH_VERSION_MAJOR > (major) || \
+  (FLUIDSYNTH_VERSION_MAJOR == (major) && FLUIDSYNTH_VERSION_MINOR > (minor)) || \
+  (FLUIDSYNTH_VERSION_MAJOR == (major) && FLUIDSYNTH_VERSION_MINOR == (minor) && FLUIDSYNTH_VERSION_MICRO >= (micro)))
+
 GST_DEBUG_CATEGORY_STATIC (gst_fluid_dec_debug);
 #define GST_CAT_DEFAULT gst_fluid_dec_debug
 
@@ -726,6 +731,17 @@ plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_fluid_dec_debug, "fluiddec",
       0, "Fluidsynth MIDI decoder plugin");
+
+#if GST_HAVE_FLUIDSYNTH_VERSION(1, 1, 9)
+  {
+    /* Disable all audio drivers so new_fluid_settings() does not probe them.
+     * This can crash if FluidSynth is already in use. */
+    const char *empty[] = { NULL };
+    if (fluid_audio_driver_register (empty) != FLUID_OK) {
+      GST_WARNING ("Failed to clear audio drivers");
+    }
+  }
+#endif
 
   return gst_element_register (plugin, "fluiddec",
       GST_RANK_SECONDARY, GST_TYPE_FLUID_DEC);
