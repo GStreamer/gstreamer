@@ -82,6 +82,19 @@
  * should use GstSytemClock with GST_CLOCK_TYPE_REALTIME as the pipeline
  * clock.
  *
+ * ### Clock Reference Format (CRF)
+ *
+ * Even though the systems are synchronized by PTP, it is possible that
+ * different talkers can send media streams which are out of phase or the
+ * frequencies do not exactly match. This is partcularly important when there
+ * is a single listener processing data from multiple talkers. The systems in
+ * this scenario can benefit if a common clock is distributed among the
+ * systems.
+ *
+ * This can be achieved by using the avtpcrfsync element which implements CRF
+ * as described in Chapter 10 of IEEE 1722-2016. For further details, look at
+ * the documentation for avtpcrfsync.
+ *
  * ### Traffic Control Setup
  *
  * FQTSS (Forwarding and Queuing Enhancements for Time-Sensitive Streams) can be
@@ -133,11 +146,11 @@
  * Each element has its own configuration properties, with some being common
  * to several elements. Basic properties are:
  *
- *   * streamid (avtpaafpay, avtpcvfpay, avtpaafdepay, avtpcvfdepay): Stream ID
- *     associated with the stream.
+ *   * streamid (avtpaafpay, avtpcvfpay, avtpaafdepay, avtpcvfdepay,
+ *     avtpcrfsync): Stream ID associated with the stream.
  *
- *   * ifname (avtpsink, avtpsrc): Network interface used to send/receive
- *     AVTP packets.
+ *   * ifname (avtpsink, avtpsrc, avtpcrfsync): Network interface
+ *     used to send/receive AVTP packets.
  *
  *   * dst-macaddr (avtpsink, avtpsrc): Destination MAC address for the stream.
  *
@@ -177,7 +190,7 @@
  *
  *     $ gst-launch-1.0 -k ptp videotestsrc is-live=true ! clockoverlay ! \
  *         x264enc ! avtpcvfpay processing-deadline=20000000 ! \
- *         avtpsink ifname=$IFNAME
+ *         avtpcrfsync ifname=$IFNAME ! avtpsink ifname=$IFNAME
  *
  * On the AVTP listener host, the following pipeline can be used to get the
  * AVTP stream, depacketize it and show it on the screen:
@@ -223,6 +236,7 @@
 #include "gstavtpcvfpay.h"
 #include "gstavtpsink.h"
 #include "gstavtpsrc.h"
+#include "gstavtpcrfsync.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -238,6 +252,8 @@ plugin_init (GstPlugin * plugin)
   if (!gst_avtp_cvf_pay_plugin_init (plugin))
     return FALSE;
   if (!gst_avtp_cvf_depay_plugin_init (plugin))
+    return FALSE;
+  if (!gst_avtp_crf_sync_plugin_init (plugin))
     return FALSE;
 
   return TRUE;

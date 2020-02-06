@@ -8,6 +8,9 @@ avtp_sources = [
   'gstavtpbasepayload.c',
   'gstavtpsink.c',
   'gstavtpsrc.c',
+  'gstavtpcrfutil.c',
+  'gstavtpcrfbase.c',
+  'gstavtpcrfsync.c',
 ]
 
 avtp_dep = dependency('avtp', required: get_option('avtp'))
@@ -17,7 +20,7 @@ if avtp_dep.found() and cc.has_type('struct sock_txtime', prefix : '#include <li
     avtp_sources,
     c_args : gst_plugins_bad_args,
     include_directories : [configinc],
-    dependencies : [gstaudio_dep, gstvideo_dep, avtp_dep],
+    dependencies : [gstaudio_dep, gstvideo_dep, avtp_dep, libm],
     install : true,
     install_dir : plugins_install_dir,
   )
