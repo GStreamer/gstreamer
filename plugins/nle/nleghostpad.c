@@ -492,7 +492,7 @@ ghostpad_event_function (GstPad * ghostpad, GstObject * parent,
 
           event = nle_object_translate_incoming_seek (object, event);
           if (!(target = gst_ghost_pad_get_target (GST_GHOST_PAD (ghostpad)))) {
-            g_assert ("Seeked a pad with not target SHOULD NOT HAPPEND");
+            g_assert ("Seeked a pad with no target SHOULD NOT HAPPEN");
             ret = FALSE;
             gst_event_unref (event);
             event = NULL;

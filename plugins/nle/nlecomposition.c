@@ -43,7 +43,7 @@ GST_DEBUG_CATEGORY_STATIC (nlecomposition_debug);
 #define GST_CAT_DEFAULT nlecomposition_debug
 
 #define _do_init              \
-  GST_DEBUG_CATEGORY_INIT (nlecomposition_debug,"nlecomposition", GST_DEBUG_FG_BLUE | GST_DEBUG_BOLD, "GNonLin Composition");
+  GST_DEBUG_CATEGORY_INIT (nlecomposition_debug,"nlecomposition", GST_DEBUG_FG_BLUE | GST_DEBUG_BOLD, "NLE Composition");
 #define nle_composition_parent_class parent_class
 
 enum
