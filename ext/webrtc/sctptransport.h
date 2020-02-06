@@ -47,6 +47,7 @@ struct _GstWebRTCSCTPTransport
 
   gboolean                      association_established;
 
+  gulong                        sctpdec_block_id;
   GstElement                   *sctpdec;
   GstElement                   *sctpenc;
 

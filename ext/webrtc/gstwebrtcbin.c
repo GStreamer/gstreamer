@@ -1821,6 +1821,18 @@ _sctp_check_dtls_state_task (GstWebRTCBin * webrtc, gpointer unused)
   gst_element_sync_state_with_parent (GST_ELEMENT (sctp_transport->sctpdec));
   gst_element_sync_state_with_parent (GST_ELEMENT (sctp_transport->sctpenc));
 
+  if (sctp_transport->sctpdec_block_id) {
+    GstPad *receive_srcpad;
+
+    receive_srcpad =
+        gst_element_get_static_pad (GST_ELEMENT (stream->receive_bin),
+        "data_src");
+    gst_pad_remove_probe (receive_srcpad, sctp_transport->sctpdec_block_id);
+
+    sctp_transport->sctpdec_block_id = 0;
+    gst_object_unref (receive_srcpad);
+  }
+
   g_signal_handlers_disconnect_by_func (transport, _on_sctp_notify_dtls_state,
       webrtc);
 }
@@ -1842,6 +1854,14 @@ _on_sctp_notify_dtls_state (GstWebRTCDTLSTransport * transport,
     gst_webrtc_bin_enqueue_task (webrtc,
         (GstWebRTCBinFunc) _sctp_check_dtls_state_task, NULL, NULL);
   }
+}
+
+static GstPadProbeReturn
+pad_block (GstPad * pad, GstPadProbeInfo * info, gpointer unused)
+{
+  GST_LOG_OBJECT (pad, "blocking pad with data %" GST_PTR_FORMAT, info->data);
+
+  return GST_PAD_PROBE_OK;
 }
 
 static TransportStream *
@@ -1884,6 +1904,19 @@ _get_or_create_data_channel_transports (GstWebRTCBin * webrtc, guint session_id)
         G_CALLBACK (_on_sctpdec_pad_added), webrtc);
     g_signal_connect (sctp_transport, "notify::state",
         G_CALLBACK (_on_sctp_state_notify), webrtc);
+
+    if (sctp_transport->sctpdec_block_id == 0) {
+      GstPad *receive_srcpad;
+      receive_srcpad =
+          gst_element_get_static_pad (GST_ELEMENT (stream->receive_bin),
+          "data_src");
+      sctp_transport->sctpdec_block_id =
+          gst_pad_add_probe (receive_srcpad,
+          GST_PAD_PROBE_TYPE_BLOCK |
+          GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
+          (GstPadProbeCallback) pad_block, NULL, NULL);
+      gst_object_unref (receive_srcpad);
+    }
 
     if (!gst_element_link_pads (GST_ELEMENT (stream->receive_bin), "data_src",
             GST_ELEMENT (sctp_transport->sctpdec), "sink"))
@@ -5422,14 +5455,6 @@ gst_webrtc_bin_change_state (GstElement * element, GstStateChange transition)
   }
 
   return ret;
-}
-
-static GstPadProbeReturn
-pad_block (GstPad * pad, GstPadProbeInfo * info, gpointer unused)
-{
-  GST_LOG_OBJECT (pad, "blocking pad with data %" GST_PTR_FORMAT, info->data);
-
-  return GST_PAD_PROBE_OK;
 }
 
 static GstPad *
