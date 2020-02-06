@@ -1642,7 +1642,29 @@ get_new_seek_event (NleComposition * comp, gboolean initial,
       priv->segment->format, flags, starttype, start, GST_SEEK_TYPE_SET, stop);
 }
 
-/* OBJECTS LOCK must be taken when calling this ! */
+static gboolean
+nle_composition_needs_topelevel_initializing_seek (NleComposition * comp)
+{
+  GstObject *parent;
+
+  parent = gst_object_get_parent (GST_OBJECT (comp));
+  while (parent) {
+    if (NLE_IS_COMPOSITION (parent)
+        && NLE_COMPOSITION (parent)->priv->stack_initialization_seek) {
+      gst_object_unref (parent);
+      GST_INFO_OBJECT (comp,
+          "Not sending an initializing seek as %" GST_PTR_FORMAT
+          "is gonna seek anyway!", parent);
+      return FALSE;
+    }
+
+    gst_object_unref (parent);
+    parent = gst_object_get_parent (parent);
+  }
+
+  return TRUE;
+}
+
 static GstClockTime
 get_current_position (NleComposition * comp)
 {
@@ -3099,7 +3121,15 @@ _activate_new_stack (NleComposition * comp, GstEvent * toplevel_seek)
   /* The stack is entirely ready, stack initializing seek once ready */
   GST_INFO_OBJECT (comp, "Activating stack with seek: %" GST_PTR_FORMAT,
       toplevel_seek);
-  comp->priv->stack_initialization_seek = toplevel_seek;
+
+  if (!toplevel_seek) {
+    GST_INFO_OBJECT (comp,
+        "This is a sub composition, not seeking to initialize stack");
+    g_atomic_int_set (&priv->send_stream_start, TRUE);
+  } else {
+    GST_INFO_OBJECT (comp, "Needs seeking to initialize stack");
+    comp->priv->stack_initialization_seek = toplevel_seek;
+  }
 
   topelement = GST_ELEMENT (priv->current->data);
   /* Get toplevel object source pad */
@@ -3113,7 +3143,8 @@ _activate_new_stack (NleComposition * comp, GstEvent * toplevel_seek)
   GST_DEBUG_OBJECT (comp, "New stack activated!");
 
 resync_state:
-  g_atomic_int_set (&priv->stack_initialization_seek_sent, FALSE);
+  if (toplevel_seek)
+    g_atomic_int_set (&priv->stack_initialization_seek_sent, FALSE);
   gst_element_set_locked_state (priv->current_bin, FALSE);
 
   GST_DEBUG ("going back to parent state");
@@ -3365,9 +3396,23 @@ update_pipeline (NleComposition * comp, GstClockTime currenttime, gint32 seqnum,
     comp->priv->updating_reason = update_reason;
     comp->priv->seqnum_to_restart_task = seqnum;
 
-    if (!_pause_task (comp)) {
+    /* Subcomposition can preroll without sending initializing seeks
+     * as the toplevel composition will send it anyway.
+     *
+     * This avoid seeking round trips (otherwise we get 1 extra seek
+     * per level of nesting)
+     */
+
+    if (tear_down && !nle_composition_needs_topelevel_initializing_seek (comp))
+      gst_clear_event (&toplevel_seek);
+
+    if (toplevel_seek) {
+      if (!_pause_task (comp)) {
         gst_event_unref (toplevel_seek);
         return FALSE;
+      }
+    } else {
+      GST_INFO_OBJECT (comp, "Not pausing composition when first initializing");
     }
   }
 
