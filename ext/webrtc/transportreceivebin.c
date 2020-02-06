@@ -101,14 +101,8 @@ _receive_state_to_string (ReceiveState state)
 static GstPadProbeReturn
 pad_block (GstPad * pad, GstPadProbeInfo * info, TransportReceiveBin * receive)
 {
-  g_mutex_lock (&receive->pad_block_lock);
-  while (receive->receive_state == RECEIVE_STATE_BLOCK) {
-    g_cond_wait (&receive->pad_block_cond, &receive->pad_block_lock);
-    GST_DEBUG_OBJECT (pad, "probe waited. new state %s",
-        _receive_state_to_string (receive->receive_state));
-  }
 
-  g_mutex_unlock (&receive->pad_block_lock);
+  GST_LOG_OBJECT (pad, "blocking pad with data %" GST_PTR_FORMAT, info->data);
 
   return GST_PAD_PROBE_OK;
 }
@@ -136,11 +130,23 @@ void
 transport_receive_bin_set_receive_state (TransportReceiveBin * receive,
     ReceiveState state)
 {
+  /* We currently don't support going into BLOCK again and the current code
+   * can't possible do that */
+  g_assert (state != RECEIVE_STATE_BLOCK);
+
   g_mutex_lock (&receive->pad_block_lock);
   receive->receive_state = state;
   GST_DEBUG_OBJECT (receive, "changing receive state to %s",
       _receive_state_to_string (state));
-  g_cond_signal (&receive->pad_block_cond);
+
+  if (receive->rtp_block)
+    _free_pad_block (receive->rtp_block);
+  receive->rtp_block = NULL;
+
+  if (receive->rtcp_block)
+    _free_pad_block (receive->rtcp_block);
+  receive->rtcp_block = NULL;
+
   g_mutex_unlock (&receive->pad_block_lock);
 }
 
@@ -187,7 +193,6 @@ transport_receive_bin_finalize (GObject * object)
   TransportReceiveBin *receive = TRANSPORT_RECEIVE_BIN (object);
 
   g_mutex_clear (&receive->pad_block_lock);
-  g_cond_clear (&receive->pad_block_cond);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -216,6 +221,7 @@ transport_receive_bin_change_state (GstElement * element,
           _create_pad_block (GST_ELEMENT (receive), pad, 0, NULL, NULL);
       receive->rtp_block->block_id =
           gst_pad_add_probe (pad,
+          GST_PAD_PROBE_TYPE_BLOCK |
           GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
           (GstPadProbeCallback) pad_block, receive, NULL);
       gst_object_unref (pad);
@@ -231,6 +237,7 @@ transport_receive_bin_change_state (GstElement * element,
           _create_pad_block (GST_ELEMENT (receive), pad, 0, NULL, NULL);
       receive->rtcp_block->block_id =
           gst_pad_add_probe (pad,
+          GST_PAD_PROBE_TYPE_BLOCK |
           GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
           (GstPadProbeCallback) pad_block, receive, NULL);
       gst_object_unref (pad);
@@ -452,5 +459,4 @@ transport_receive_bin_init (TransportReceiveBin * receive)
 {
   receive->receive_state = RECEIVE_STATE_BLOCK;
   g_mutex_init (&receive->pad_block_lock);
-  g_cond_init (&receive->pad_block_cond);
 }

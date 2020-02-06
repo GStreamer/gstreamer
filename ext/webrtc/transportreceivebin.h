@@ -52,7 +52,6 @@ struct _TransportReceiveBin
   struct pad_block          *rtp_block;
   struct pad_block          *rtcp_block;
   GMutex                     pad_block_lock;
-  GCond                      pad_block_cond;
   ReceiveState               receive_state;
 };
 
