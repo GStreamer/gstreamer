@@ -173,9 +173,11 @@ gboolean    gst_video_frame_copy_plane    (GstVideoFrame *dest, const GstVideoFr
  * @GST_VIDEO_BUFFER_FLAG_TOP_FIELD:   The video frame has the top field only. This is the
  *                                     same as GST_VIDEO_BUFFER_FLAG_TFF |
  *                                     GST_VIDEO_BUFFER_FLAG_ONEFIELD (Since: 1.16).
+ *                                     Use GST_VIDEO_BUFFER_IS_TOP_FIELD() to check for this flag.
  * @GST_VIDEO_BUFFER_FLAG_BOTTOM_FIELD: The video frame has the bottom field only. This is
  *                                     the same as GST_VIDEO_BUFFER_FLAG_ONEFIELD
  *                                     (GST_VIDEO_BUFFER_FLAG_TFF flag unset) (Since: 1.16).
+ *                                     Use GST_VIDEO_BUFFER_IS_BOTTOM_FIELD() to check for this flag.
  * @GST_VIDEO_BUFFER_FLAG_MARKER:      The #GstBuffer contains the end of a video field or frame
  *                                     boundary such as the last subframe or packet (Since: 1.18).
  * @GST_VIDEO_BUFFER_FLAG_LAST:        Offset to define more flags
@@ -203,6 +205,26 @@ typedef enum {
 
   GST_VIDEO_BUFFER_FLAG_LAST        = (GST_BUFFER_FLAG_LAST << 8)
 } GstVideoBufferFlags;
+
+/* GST_VIDEO_BUFFER_FLAG_TOP_FIELD is a subset of
+ * GST_VIDEO_BUFFER_FLAG_BOTTOM_FIELD so needs to be checked accordingly. */
+#define _GST_VIDEO_BUFFER_FLAG_FIELD_MASK GST_VIDEO_BUFFER_FLAG_TOP_FIELD
+
+/**
+ * GST_VIDEO_BUFFER_IS_TOP_FIELD:
+ * @buf: a #GstBuffer
+ *
+ * Check if GST_VIDEO_BUFFER_FLAG_TOP_FIELD is set on @buf (Since: 1.18).
+ */
+#define GST_VIDEO_BUFFER_IS_TOP_FIELD(buf) ((GST_BUFFER_FLAGS (buf) & _GST_VIDEO_BUFFER_FLAG_FIELD_MASK) == GST_VIDEO_BUFFER_FLAG_TOP_FIELD)
+
+/**
+ * GST_VIDEO_BUFFER_IS_BOTTOM_FIELD:
+ * @buf: a #GstBuffer
+ *
+ * Check if GST_VIDEO_BUFFER_FLAG_BOTTOM_FIELD is set on @buf (Since: 1.18).
+ */
+#define GST_VIDEO_BUFFER_IS_BOTTOM_FIELD(buf) ((GST_BUFFER_FLAGS (buf) & _GST_VIDEO_BUFFER_FLAG_FIELD_MASK) == GST_VIDEO_BUFFER_FLAG_BOTTOM_FIELD)
 
 /**
  * GstVideoFrameMapFlags:
