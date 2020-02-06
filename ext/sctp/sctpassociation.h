@@ -83,8 +83,6 @@ struct _GstSctpAssociation
 
   GstSctpAssociationState state;
 
-  GThread *connection_thread;
-
   GstSctpAssociationPacketReceivedCb packet_received_cb;
   gpointer packet_received_user_data;
   GDestroyNotify packet_received_destroy_notify;

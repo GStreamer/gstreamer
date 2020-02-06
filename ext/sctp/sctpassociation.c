@@ -111,7 +111,6 @@ static struct socket *create_sctp_socket (GstSctpAssociation *
     gst_sctp_association);
 static struct sockaddr_conn get_sctp_socket_address (GstSctpAssociation *
     gst_sctp_association, guint16 port);
-static gpointer connection_thread_func (GstSctpAssociation * self);
 static gboolean client_role_connect (GstSctpAssociation * self);
 static int sctp_packet_out (void *addr, void *buffer, size_t length, guint8 tos,
     guint8 set_df);
@@ -193,7 +192,6 @@ gst_sctp_association_init (GstSctpAssociation * self)
   self->remote_port = DEFAULT_REMOTE_SCTP_PORT;
   self->sctp_ass_sock = NULL;
 
-  self->connection_thread = NULL;
   g_mutex_init (&self->association_mutex);
 
   self->state = GST_SCTP_ASSOCIATION_STATE_NEW;
@@ -218,9 +216,6 @@ gst_sctp_association_finalize (GObject * object)
     usrsctp_finish ();
   }
   G_UNLOCK (associations_lock);
-
-  if (self->connection_thread)
-    g_thread_join (self->connection_thread);
 
   G_OBJECT_CLASS (gst_sctp_association_parent_class)->finalize (object);
 }
@@ -354,8 +349,6 @@ gst_sctp_association_get (guint32 association_id)
 gboolean
 gst_sctp_association_start (GstSctpAssociation * self)
 {
-  gchar *thread_name;
-
   if (self->state != GST_SCTP_ASSOCIATION_STATE_READY) {
     GST_WARNING_OBJECT (self,
         "SCTP association is in wrong state and cannot be started");
@@ -365,13 +358,15 @@ gst_sctp_association_start (GstSctpAssociation * self)
   if ((self->sctp_ass_sock = create_sctp_socket (self)) == NULL)
     goto error;
 
+  /* TODO: Support both server and client role */
+  if (!client_role_connect (self)) {
+    gst_sctp_association_change_state (self, GST_SCTP_ASSOCIATION_STATE_ERROR,
+        TRUE);
+    goto error;
+  }
+
   gst_sctp_association_change_state (self,
       GST_SCTP_ASSOCIATION_STATE_CONNECTING, TRUE);
-
-  thread_name = g_strdup_printf ("connection_thread_%u", self->association_id);
-  self->connection_thread = g_thread_new (thread_name,
-      (GThreadFunc) connection_thread_func, self);
-  g_free (thread_name);
 
   return TRUE;
 error:
@@ -526,11 +521,6 @@ gst_sctp_association_force_close (GstSctpAssociation * self)
     usrsctp_close (s);
   }
 
-  if (self->connection_thread) {
-    g_thread_join (self->connection_thread);
-    self->connection_thread = NULL;
-  }
-
   gst_sctp_association_change_state (self,
       GST_SCTP_ASSOCIATION_STATE_DISCONNECTED, TRUE);
 }
@@ -638,17 +628,6 @@ get_sctp_socket_address (GstSctpAssociation * gst_sctp_association,
   addr.sconn_addr = (void *) gst_sctp_association;
 
   return addr;
-}
-
-static gpointer
-connection_thread_func (GstSctpAssociation * self)
-{
-  /* TODO: Support both server and client role */
-  if (!client_role_connect (self))
-    gst_sctp_association_change_state (self, GST_SCTP_ASSOCIATION_STATE_ERROR,
-        TRUE);
-
-  return NULL;
 }
 
 static gboolean
