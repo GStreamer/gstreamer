@@ -81,7 +81,6 @@ enum
 #define TSB_UNLOCK(tsb) (g_mutex_unlock (TSB_GET_LOCK(tsb)))
 
 static void cleanup_blocks (TransportSendBin * send);
-static void tsb_remove_probe (struct pad_block *block);
 
 static void
 _set_rtcp_mux (TransportSendBin * send, gboolean rtcp_mux)
@@ -174,15 +173,6 @@ block_peer_pad (GstElement * elem, const gchar * pad_name)
   return block;
 }
 
-static void
-tsb_remove_probe (struct pad_block *block)
-{
-  if (block && block->block_id) {
-    gst_pad_remove_probe (block->pad, block->block_id);
-    block->block_id = 0;
-  }
-}
-
 static GstStateChangeReturn
 transport_send_bin_change_state (GstElement * element,
     GstStateChange transition)
@@ -247,12 +237,7 @@ transport_send_bin_change_state (GstElement * element,
        * if they still exist, without accidentally feeding data to the
        * dtlssrtpenc elements */
       TSB_LOCK (send);
-      tsb_remove_probe (send->rtp_ctx.rtp_block);
-      tsb_remove_probe (send->rtp_ctx.rtcp_block);
-      tsb_remove_probe (send->rtp_ctx.nice_block);
-
-      tsb_remove_probe (send->rtcp_ctx.rtcp_block);
-      tsb_remove_probe (send->rtcp_ctx.nice_block);
+      cleanup_blocks (send);
       TSB_UNLOCK (send);
       break;
     }
