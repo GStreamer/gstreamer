@@ -2486,6 +2486,8 @@ gst_video_encoder_finish_subframe (GstVideoEncoder * encoder,
   g_return_val_if_fail (frame->output_buffer, GST_FLOW_ERROR);
 
   subframe_buffer = frame->output_buffer;
+
+  GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
   discont = (frame->presentation_frame_number == 0
       && frame->abidata.ABI.num_subframes == 0);
 
@@ -2496,8 +2498,6 @@ gst_video_encoder_finish_subframe (GstVideoEncoder * encoder,
       GST_TIME_FORMAT " sync point: %d", frame->abidata.ABI.num_subframes,
       frame->presentation_frame_number, GST_TIME_ARGS (frame->pts),
       GST_TIME_ARGS (frame->dts), GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame));
-
-  GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
 
   ret = gst_video_encoder_can_push_unlocked (encoder);
   if (ret != GST_FLOW_OK)
