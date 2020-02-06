@@ -211,6 +211,16 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
                 self._pipelines_descriptions.append(description)
         self._valid_scenarios = valid_scenarios
 
+    @staticmethod
+    def create_config(config, private_dir, test_name, extra_data):
+        os.makedirs(private_dir, exist_ok=True)
+        config_file = os.path.join(private_dir, test_name + '.config')
+        with open(config_file, 'w') as f:
+            f.write(format_config_template(extra_data,
+                    '\n'.join(config) + '\n', test_name))
+
+        return config_file
+
     @classmethod
     def from_dict(cls, test_manager, name, descriptions, extra_data=None):
         """
@@ -227,23 +237,25 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
             test_private_dir = os.path.join(test_manager.options.privatedir,
                                             name, test_name)
 
-            config_file = None
-            if 'config' in defs:
-                os.makedirs(test_private_dir, exist_ok=True)
-                config_file = os.path.join(test_private_dir,
-                                           test_name + '.config')
-                with open(config_file, 'w') as f:
-                    f.write(format_config_template(extra_data,
-                            '\n'.join(defs.pop('config')) + '\n', test_name))
+            config_files = {}
+            config = defs.pop('config', None)
+            scenario_defs = defs.pop('scenarios', [])
+            if not scenario_defs and config:
+                config_files[None] = cls.create_config(config, test_private_dir, test_name, extra_data)
 
             scenarios = []
-            for scenario in defs.pop('scenarios', []):
+            for scenario in scenario_defs:
                 if isinstance(scenario, str):
                     # Path to a scenario file
                     scenarios.append(scenario)
+                    scenario_name = os.path.basename(scenario).replace('.scenario', '')
+                    test_private_dir = os.path.join(test_manager.options.privatedir,
+                                                    name, test_name, scenario_name)
                 else:
                     # Dictionary defining a new scenario in-line
                     scenario_name = scenario_file = scenario['name']
+                    test_private_dir = os.path.join(test_manager.options.privatedir,
+                                                    name, test_name, scenario_name)
                     actions = scenario.get('actions')
                     if actions:
                         os.makedirs(test_private_dir, exist_ok=True)
@@ -253,12 +265,15 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
                             f.write('\n'.join(action % extra_data for action in actions) + '\n')
                     scenarios.append(scenario_file)
 
+                if config:
+                    config_files[scenario_name] = cls.create_config(config, test_private_dir, test_name + '.' + scenario_name, extra_data)
+
             local_extra_data = extra_data.copy()
             local_extra_data.update(defs)
             envvars = defs.pop('extra_env_vars', {})
             local_extra_data.update({
                 'scenarios': scenarios,
-                'config_file': config_file,
+                'config_files': config_files,
                 'plays-reverse': True,
                 'extra_env_vars': envvars,
             })
@@ -310,6 +325,7 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
             else:
                 scenarios_to_iterate = scenarios
 
+            config_files = extra_data.get('config_files')
             for scenario in scenarios_to_iterate:
                 if isinstance(scenario, str):
                     tmpscenario = self.test_manager.scenarios_manager.get_scenario(
@@ -347,8 +363,8 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
                                              media_descriptor=mediainfo,
                                              expected_issues=expected_issues,
                                              extra_env_variables=extra_env_vars)
-                if extra_data.get('config_file'):
-                    test.add_validate_config(extra_data['config_file'])
+                if config_files:
+                    test.add_validate_config(config_files[scenario.name if scenario is not None else None])
                 self.add_test(test)
 
 
