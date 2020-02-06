@@ -539,11 +539,12 @@ gst_omx_video_dec_fill_buffer (GstOMXVideoDec * self,
   GstVideoFrame frame;
 
   if (vinfo->width != port_def->format.video.nFrameWidth ||
-      vinfo->height != port_def->format.video.nFrameHeight) {
+      GST_VIDEO_INFO_FIELD_HEIGHT (vinfo) !=
+      port_def->format.video.nFrameHeight) {
     GST_ERROR_OBJECT (self, "Resolution do not match: port=%ux%u vinfo=%dx%d",
         (guint) port_def->format.video.nFrameWidth,
         (guint) port_def->format.video.nFrameHeight,
-        vinfo->width, vinfo->height);
+        vinfo->width, GST_VIDEO_INFO_FIELD_HEIGHT (vinfo));
     goto done;
   }
 
@@ -572,7 +573,7 @@ gst_omx_video_dec_fill_buffer (GstOMXVideoDec * self,
     guint src_size[GST_VIDEO_MAX_PLANES] = { nstride * nslice, 0, };
     gint dst_width[GST_VIDEO_MAX_PLANES] = { 0, };
     gint dst_height[GST_VIDEO_MAX_PLANES] =
-        { GST_VIDEO_INFO_HEIGHT (vinfo), 0, };
+        { GST_VIDEO_INFO_FIELD_HEIGHT (vinfo), 0, };
     const guint8 *src;
     guint p;
 
@@ -596,25 +597,25 @@ gst_omx_video_dec_fill_buffer (GstOMXVideoDec * self,
         src_stride[1] = nstride / 2;
         src_size[1] = (src_stride[1] * nslice) / 2;
         dst_width[1] = GST_VIDEO_INFO_WIDTH (vinfo) / 2;
-        dst_height[1] = GST_VIDEO_INFO_HEIGHT (vinfo) / 2;
+        dst_height[1] = GST_VIDEO_INFO_FIELD_HEIGHT (vinfo) / 2;
         src_stride[2] = nstride / 2;
         src_size[2] = (src_stride[1] * nslice) / 2;
         dst_width[2] = GST_VIDEO_INFO_WIDTH (vinfo) / 2;
-        dst_height[2] = GST_VIDEO_INFO_HEIGHT (vinfo) / 2;
+        dst_height[2] = GST_VIDEO_INFO_FIELD_HEIGHT (vinfo) / 2;
         break;
       case GST_VIDEO_FORMAT_NV12:
         dst_width[0] = GST_VIDEO_INFO_WIDTH (vinfo);
         src_stride[1] = nstride;
         src_size[1] = src_stride[1] * nslice / 2;
         dst_width[1] = GST_VIDEO_INFO_WIDTH (vinfo);
-        dst_height[1] = GST_VIDEO_INFO_HEIGHT (vinfo) / 2;
+        dst_height[1] = GST_VIDEO_INFO_FIELD_HEIGHT (vinfo) / 2;
         break;
       case GST_VIDEO_FORMAT_NV16:
         dst_width[0] = GST_VIDEO_INFO_WIDTH (vinfo);
         src_stride[1] = nstride;
         src_size[1] = src_stride[1] * nslice;
         dst_width[1] = GST_VIDEO_INFO_WIDTH (vinfo);
-        dst_height[1] = GST_VIDEO_INFO_HEIGHT (vinfo);
+        dst_height[1] = GST_VIDEO_INFO_FIELD_HEIGHT (vinfo);
         break;
       case GST_VIDEO_FORMAT_NV12_10LE32:
         /* Need ((width + 2) / 3) 32-bits words */
@@ -622,7 +623,7 @@ gst_omx_video_dec_fill_buffer (GstOMXVideoDec * self,
         dst_width[1] = dst_width[0];
         src_stride[1] = nstride;
         src_size[1] = src_stride[1] * nslice / 2;
-        dst_height[1] = GST_VIDEO_INFO_HEIGHT (vinfo) / 2;
+        dst_height[1] = GST_VIDEO_INFO_FIELD_HEIGHT (vinfo) / 2;
         break;
       case GST_VIDEO_FORMAT_NV16_10LE32:
         /* Need ((width + 2) / 3) 32-bits words */
@@ -630,7 +631,7 @@ gst_omx_video_dec_fill_buffer (GstOMXVideoDec * self,
         dst_width[1] = dst_width[0];
         src_stride[1] = nstride;
         src_size[1] = src_stride[1] * nslice;
-        dst_height[1] = GST_VIDEO_INFO_HEIGHT (vinfo);
+        dst_height[1] = GST_VIDEO_INFO_FIELD_HEIGHT (vinfo);
         break;
       default:
         g_assert_not_reached ();
@@ -2559,7 +2560,8 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
    * parts of the caps have changed or nothing at all.
    */
   is_format_change |= port_def.format.video.nFrameWidth != info->width;
-  is_format_change |= port_def.format.video.nFrameHeight != info->height;
+  is_format_change |=
+      port_def.format.video.nFrameHeight != GST_VIDEO_INFO_FIELD_HEIGHT (info);
   is_format_change |= (port_def.format.video.xFramerate == 0
       && info->fps_n != 0)
       || !gst_omx_video_is_equal_framerate_q16 (port_def.format.
@@ -2596,7 +2598,7 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
   }
 
   port_def.format.video.nFrameWidth = info->width;
-  port_def.format.video.nFrameHeight = info->height;
+  port_def.format.video.nFrameHeight = GST_VIDEO_INFO_FIELD_HEIGHT (info);
   port_def.format.video.xFramerate = framerate_q16;
 
   if (klass->cdata.hacks & GST_OMX_HACK_PASS_COLOR_FORMAT_TO_DECODER) {

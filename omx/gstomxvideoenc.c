@@ -1989,7 +1989,7 @@ gst_omx_video_enc_configure_input_buffer (GstOMXVideoEnc * self,
         "input buffer doesn't provide video meta, can't adjust stride and slice height");
 
     stride = info->stride[0];
-    slice_height = info->height;
+    slice_height = GST_VIDEO_INFO_FIELD_HEIGHT (info);
   }
 
   if (port_def.nBufferAlignment)
@@ -2454,7 +2454,7 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
   }
 
   port_def.format.video.nFrameWidth = info->width;
-  port_def.format.video.nFrameHeight = info->height;
+  port_def.format.video.nFrameHeight = GST_VIDEO_INFO_FIELD_HEIGHT (info);
 
   if (G_UNLIKELY (klass->cdata.hacks & GST_OMX_HACK_VIDEO_FRAMERATE_INTEGER))
     port_def.format.video.xFramerate =
@@ -2660,7 +2660,8 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
   gint stride = meta ? meta->stride[0] : info->stride[0];
 
   if (info->width != port_def->format.video.nFrameWidth ||
-      info->height != port_def->format.video.nFrameHeight) {
+      GST_VIDEO_INFO_FIELD_HEIGHT (info) !=
+      port_def->format.video.nFrameHeight) {
     GST_ERROR_OBJECT (self, "Width or height do not match");
     goto done;
   }
