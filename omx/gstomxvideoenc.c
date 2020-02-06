@@ -2349,10 +2349,12 @@ gst_omx_video_enc_framerate_changed (GstOMXVideoEnc * self,
 
     GST_OMX_INIT_STRUCT (&config);
     config.nPortIndex = self->enc_in_port->index;
-    if (klass->cdata.hacks & GST_OMX_HACK_VIDEO_FRAMERATE_INTEGER)
-      config.xEncodeFramerate = info->fps_n ? (info->fps_n) / (info->fps_d) : 0;
-    else
+    if (klass->cdata.hacks & GST_OMX_HACK_VIDEO_FRAMERATE_INTEGER) {
+      config.xEncodeFramerate =
+          info->fps_d ? GST_VIDEO_INFO_FIELD_RATE_N (info) / (info->fps_d) : 0;
+    } else {
       config.xEncodeFramerate = gst_omx_video_calculate_framerate_q16 (info);
+    }
 
     err = gst_omx_component_set_config (self->enc,
         OMX_IndexConfigVideoFramerate, &config);
@@ -2456,12 +2458,13 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
   port_def.format.video.nFrameWidth = info->width;
   port_def.format.video.nFrameHeight = GST_VIDEO_INFO_FIELD_HEIGHT (info);
 
-  if (G_UNLIKELY (klass->cdata.hacks & GST_OMX_HACK_VIDEO_FRAMERATE_INTEGER))
+  if (G_UNLIKELY (klass->cdata.hacks & GST_OMX_HACK_VIDEO_FRAMERATE_INTEGER)) {
     port_def.format.video.xFramerate =
-        info->fps_n ? (info->fps_n) / (info->fps_d) : 0;
-  else
+        info->fps_d ? GST_VIDEO_INFO_FIELD_RATE_N (info) / (info->fps_d) : 0;
+  } else {
     port_def.format.video.xFramerate =
         gst_omx_video_calculate_framerate_q16 (info);
+  }
 
   GST_DEBUG_OBJECT (self, "Setting inport port definition");
   if (gst_omx_port_update_port_definition (self->enc_in_port,

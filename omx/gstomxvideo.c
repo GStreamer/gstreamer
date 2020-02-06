@@ -238,7 +238,13 @@ gst_omx_video_calculate_framerate_q16 (GstVideoInfo * info)
 {
   g_assert (info);
 
-  return gst_util_uint64_scale_int (1 << 16, info->fps_n, info->fps_d);
+  if (!info->fps_d)
+    return 0;
+
+  /* OMX API expects frame rate to actually be the field rate, so twice
+   * the frame rate in interlace mode. */
+  return gst_util_uint64_scale_int (1 << 16, GST_VIDEO_INFO_FIELD_RATE_N (info),
+      info->fps_d);
 }
 
 gboolean
