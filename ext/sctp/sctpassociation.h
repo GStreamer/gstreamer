@@ -79,7 +79,7 @@ struct _GstSctpAssociation
   gboolean use_sock_stream;
   struct socket *sctp_ass_sock;
 
-  GRecMutex association_mutex;
+  GMutex association_mutex;
 
   GstSctpAssociationState state;
 
