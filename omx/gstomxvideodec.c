@@ -189,6 +189,11 @@ gst_omx_video_dec_class_init (GstOMXVideoDecClass * klass)
       GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
       "RGBA") "; "
 #endif
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+      GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_FORMAT_INTERLACED,
+      GST_OMX_VIDEO_SUPPORTED_FORMATS)
+      ", interlace-mode = (string) alternate ; "
+#endif
       GST_VIDEO_CAPS_MAKE (GST_OMX_VIDEO_SUPPORTED_FORMATS);
 }
 
@@ -1233,6 +1238,76 @@ gst_omx_video_dec_deallocate_output_buffers (GstOMXVideoDec * self)
   return TRUE;
 }
 
+static GstVideoInterlaceMode
+gst_omx_video_dec_get_output_interlace_info (GstOMXVideoDec * self)
+{
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+  OMX_ERRORTYPE err;
+  OMX_ALG_COMMON_PARAM_SEQUENCE_PICTURE_MODE seq_pic_mode;
+
+  GST_OMX_INIT_STRUCT (&seq_pic_mode);
+  seq_pic_mode.nPortIndex = self->dec_out_port->index;
+
+  err = gst_omx_component_get_parameter (self->dec,
+      (OMX_INDEXTYPE) OMX_ALG_IndexParamCommonSequencePictureModeCurrent,
+      &seq_pic_mode);
+
+  if (err != OMX_ErrorNone) {
+    if (err == OMX_ErrorUnsupportedIndex) {
+      GST_WARNING_OBJECT (self,
+          "Picture sequence mode not supported by the component");
+    } else {
+      GST_DEBUG_OBJECT (self,
+          "Failed to get picture sequence mode: %s (0x%08x)",
+          gst_omx_error_to_string (err), err);
+    }
+
+    return GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+  }
+
+  if (seq_pic_mode.eMode == OMX_ALG_SEQUENCE_PICTURE_FIELD) {
+    GST_DEBUG_OBJECT (self, "Decoding interlaced video frames");
+    return GST_VIDEO_INTERLACE_MODE_ALTERNATE;
+  } else if (seq_pic_mode.eMode == OMX_ALG_SEQUENCE_PICTURE_FRAME) {
+    GST_DEBUG_OBJECT (self, "Decoding progressive video frames");
+    return GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+  } else {
+    GST_ERROR_OBJECT (self, "Unsupported interlace format: (0x%08x)",
+        seq_pic_mode.eMode);
+    return GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+  }
+
+#endif
+  return GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+}
+
+#if defined (HAVE_GST_GL)
+static void
+add_caps_gl_memory_feature (GstCaps * caps)
+{
+  GstCapsFeatures *old, *features;
+
+  features = gst_caps_features_new_empty ();
+  old = gst_caps_get_features (caps, 0);
+
+  if (old) {
+    guint i;
+
+    /* Copy the existing features ignoring memory ones as we are changing
+     * it to GL. */
+    for (i = 0; i < gst_caps_features_get_size (old); i++) {
+      const gchar *f = gst_caps_features_get_nth (old, i);
+
+      if (!g_str_has_prefix (f, "memory:"))
+        gst_caps_features_add (features, f);
+    }
+  }
+
+  gst_caps_features_add (features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
+  gst_caps_set_features (caps, 0, features);
+}
+#endif
+
 static OMX_ERRORTYPE
 gst_omx_video_dec_reconfigure_output_port (GstOMXVideoDec * self)
 {
@@ -1241,8 +1316,11 @@ gst_omx_video_dec_reconfigure_output_port (GstOMXVideoDec * self)
   GstVideoCodecState *state;
   OMX_PARAM_PORTDEFINITIONTYPE port_def;
   GstVideoFormat format;
+  GstVideoInterlaceMode interlace_mode;
+  guint frame_height;
 
   /* At this point the decoder output port is disabled */
+  interlace_mode = gst_omx_video_dec_get_output_interlace_info (self);
 
 #if defined (HAVE_GST_GL)
   {
@@ -1266,16 +1344,23 @@ gst_omx_video_dec_reconfigure_output_port (GstOMXVideoDec * self)
 
       gst_omx_port_get_port_definition (self->dec_out_port, &port_def);
       GST_VIDEO_DECODER_STREAM_LOCK (self);
-      state = gst_video_decoder_set_output_state (GST_VIDEO_DECODER (self),
-          GST_VIDEO_FORMAT_RGBA, port_def.format.video.nFrameWidth,
-          port_def.format.video.nFrameHeight, self->input_state);
+
+      frame_height = port_def.format.video.nFrameHeight;
+      /* OMX's frame height is actually the field height in alternate mode
+       * while it's always the full frame height in gst. */
+      if (interlace_mode == GST_VIDEO_INTERLACE_MODE_ALTERNATE)
+        frame_height *= 2;
+
+      state =
+          gst_video_decoder_set_interlaced_output_state (GST_VIDEO_DECODER
+          (self), GST_VIDEO_FORMAT_RGBA, interlace_mode,
+          port_def.format.video.nFrameWidth, frame_height, self->input_state);
 
       /* at this point state->caps is NULL */
       if (state->caps)
         gst_caps_unref (state->caps);
       state->caps = gst_video_info_to_caps (&state->info);
-      gst_caps_set_features (state->caps, 0,
-          gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, NULL));
+      add_caps_gl_memory_feature (state->caps);
 
       /* try to negotiate with caps feature */
       if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
@@ -1462,16 +1547,22 @@ gst_omx_video_dec_reconfigure_output_port (GstOMXVideoDec * self)
     goto done;
   }
 
+  frame_height = port_def.format.video.nFrameHeight;
+  /* OMX's frame height is actually the field height in alternate mode
+   * while it's always the full frame height in gst. */
+  if (interlace_mode == GST_VIDEO_INTERLACE_MODE_ALTERNATE)
+    frame_height *= 2;
+
   GST_DEBUG_OBJECT (self,
       "Setting output state: format %s (%d), width %u, height %u",
       gst_video_format_to_string (format),
       port_def.format.video.eColorFormat,
-      (guint) port_def.format.video.nFrameWidth,
-      (guint) port_def.format.video.nFrameHeight);
+      (guint) port_def.format.video.nFrameWidth, frame_height);
 
-  state = gst_video_decoder_set_output_state (GST_VIDEO_DECODER (self),
-      format, port_def.format.video.nFrameWidth,
-      port_def.format.video.nFrameHeight, self->input_state);
+  state =
+      gst_video_decoder_set_interlaced_output_state (GST_VIDEO_DECODER (self),
+      format, interlace_mode, port_def.format.video.nFrameWidth,
+      frame_height, self->input_state);
 
   if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
     gst_video_codec_state_unref (state);
@@ -1564,6 +1655,9 @@ gst_omx_video_dec_clean_older_frames (GstOMXVideoDec * self,
   g_list_free (frames);
 }
 
+/* copy_frame() will consume @outpuf resulting in the buffer being released to
+ * the pool and so reset fields such as outbuf->omx_buf->nFlags.
+ * Make sure to handle them all before. */
 static GstBuffer *
 copy_frame (const GstVideoInfo * info, GstBuffer * outbuf)
 {
@@ -1581,6 +1675,11 @@ copy_frame (const GstVideoInfo * info, GstBuffer * outbuf)
   gst_video_frame_copy (&tmp_frame, &out_frame);
   gst_video_frame_unmap (&out_frame);
   gst_video_frame_unmap (&tmp_frame);
+
+  /* Use gst_video_frame_copy() to copy the content of the buffer so it
+   * will handle the stride/offset/etc from the source buffer.
+   * It doesn't copy buffer flags so do it manually. */
+  gst_buffer_copy_into (tmpbuf, outbuf, GST_BUFFER_COPY_FLAGS, 0, -1);
 
   gst_buffer_unref (outbuf);
 
@@ -1600,6 +1699,18 @@ gst_omx_video_dec_pause_loop (GstOMXVideoDec * self, GstFlowReturn flow_ret)
   self->started = FALSE;
   g_mutex_unlock (&self->drain_lock);
 }
+
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+static void
+set_outbuffer_interlace_flags (GstOMXBuffer * buf, GstBuffer * outbuf)
+{
+  if (buf->omx_buf->nFlags & OMX_ALG_BUFFERFLAG_TOP_FIELD) {
+    GST_BUFFER_FLAG_SET (outbuf, GST_VIDEO_BUFFER_FLAG_TOP_FIELD);
+  } else if (buf->omx_buf->nFlags & OMX_ALG_BUFFERFLAG_BOT_FIELD) {
+    GST_BUFFER_FLAG_SET (outbuf, GST_VIDEO_BUFFER_FLAG_BOTTOM_FIELD);
+  }
+}
+#endif // USE_OMX_TARGET_ZYNQ_USCALE_PLUS
 
 static void
 gst_omx_video_dec_loop (GstOMXVideoDec * self)
@@ -1659,6 +1770,8 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
       if (err != OMX_ErrorNone)
         goto reconfigure_error;
     } else {
+      GstVideoInterlaceMode interlace_mode;
+
       /* Just update caps */
       GST_VIDEO_DECODER_STREAM_LOCK (self);
 
@@ -1685,9 +1798,11 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
           port_def.format.video.eColorFormat,
           (guint) port_def.format.video.nFrameWidth,
           (guint) port_def.format.video.nFrameHeight);
+      interlace_mode = gst_omx_video_dec_get_output_interlace_info (self);
 
-      state = gst_video_decoder_set_output_state (GST_VIDEO_DECODER (self),
-          format, port_def.format.video.nFrameWidth,
+      state =
+          gst_video_decoder_set_interlaced_output_state (GST_VIDEO_DECODER
+          (self), format, interlace_mode, port_def.format.video.nFrameWidth,
           port_def.format.video.nFrameHeight, self->input_state);
 
       /* Take framerate and pixel-aspect-ratio from sinkpad caps */
@@ -1770,6 +1885,9 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
         gst_omx_port_release_buffer (port, buf);
         goto invalid_buffer;
       }
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+      set_outbuffer_interlace_flags (buf, outbuf);
+#endif
 
       if (GST_OMX_BUFFER_POOL (self->out_port_pool)->need_copy)
         outbuf =
@@ -1785,6 +1903,9 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
         gst_omx_port_release_buffer (port, buf);
         goto invalid_buffer;
       }
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+      set_outbuffer_interlace_flags (buf, outbuf);
+#endif
     }
 
     flow_ret = gst_pad_push (GST_VIDEO_DECODER_SRC_PAD (self), outbuf);
@@ -1814,6 +1935,9 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
         gst_omx_port_release_buffer (port, buf);
         goto invalid_buffer;
       }
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+      set_outbuffer_interlace_flags (buf, outbuf);
+#endif
 
       if (GST_OMX_BUFFER_POOL (self->out_port_pool)->need_copy)
         outbuf =
@@ -1842,6 +1966,10 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
           gst_omx_port_release_buffer (port, buf);
           goto invalid_buffer;
         }
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+        set_outbuffer_interlace_flags (buf, frame->output_buffer);
+#endif
+
         flow_ret =
             gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
         frame = NULL;
@@ -2529,6 +2657,69 @@ out:
   return OMX_COLOR_FormatUnused;
 }
 
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+static gboolean
+gst_omx_video_dec_set_interlacing_parameters (GstOMXVideoDec * self,
+    GstVideoInfo * info)
+{
+  OMX_ERRORTYPE err;
+  OMX_ALG_COMMON_PARAM_SEQUENCE_PICTURE_MODE seq_pic_mode;
+
+  GST_OMX_INIT_STRUCT (&seq_pic_mode);
+  seq_pic_mode.nPortIndex = self->dec_in_port->index;
+
+  err = gst_omx_component_get_parameter (self->dec,
+      (OMX_INDEXTYPE) OMX_ALG_IndexParamCommonSequencePictureModeCurrent,
+      &seq_pic_mode);
+
+  if (err != OMX_ErrorNone) {
+    if (err == OMX_ErrorUnsupportedIndex) {
+      GST_WARNING_OBJECT (self,
+          "Picture sequence mode not supported by the component");
+    } else {
+      GST_DEBUG_OBJECT (self,
+          "Failed to get picture sequence mode: %s (0x%08x)",
+          gst_omx_error_to_string (err), err);
+    }
+
+    return FALSE;
+  }
+
+  if (info->interlace_mode == GST_VIDEO_INTERLACE_MODE_ALTERNATE)
+    seq_pic_mode.eMode = OMX_ALG_SEQUENCE_PICTURE_FIELD;
+  else if (info->interlace_mode == GST_VIDEO_INTERLACE_MODE_PROGRESSIVE)
+    seq_pic_mode.eMode = OMX_ALG_SEQUENCE_PICTURE_FRAME;
+  else {
+    /* Caps templates should ensure this doesn't happen but just to be safe.. */
+    GST_ERROR_OBJECT (self, "Video interlacing mode %s not supported",
+        gst_video_interlace_mode_to_string (info->interlace_mode));
+    return FALSE;
+  }
+
+  err = gst_omx_component_set_parameter (self->dec,
+      (OMX_INDEXTYPE) OMX_ALG_IndexParamCommonSequencePictureModeCurrent,
+      &seq_pic_mode);
+
+  if (err == OMX_ErrorUnsupportedIndex) {
+    GST_WARNING_OBJECT (self,
+        "Setting picture sequence mode not supported by the component");
+  } else if (err == OMX_ErrorUnsupportedSetting) {
+    GST_WARNING_OBJECT (self,
+        "Interlaced picture sequence mode not supported by the component");
+  } else if (err != OMX_ErrorNone) {
+    GST_ERROR_OBJECT (self,
+        "Failed to set picture sequence mode: %s (0x%08x)",
+        gst_omx_error_to_string (err), err);
+    return FALSE;
+  } else {
+    GST_DEBUG_OBJECT (self, "Video interlacing mode %s set on component",
+        gst_video_interlace_mode_to_string (info->interlace_mode));
+  }
+
+  return TRUE;
+}
+#endif // USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+
 static gboolean
 gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
     GstVideoCodecState * state)
@@ -2632,6 +2823,10 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
           "Input color format info not present in caps, can't pass them to decoder");
     }
   }
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+  if (!gst_omx_video_dec_set_interlacing_parameters (self, info))
+    return FALSE;
+#endif
 
   GST_DEBUG_OBJECT (self, "Setting inport port definition");
 
