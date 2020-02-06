@@ -183,6 +183,16 @@ gst_sctp_association_init (GstSctpAssociation * self)
     /* Explicit Congestion Notification */
     usrsctp_sysctl_set_sctp_ecn_enable (0);
 
+    /* Do not send ABORTs in response to INITs (1).
+     * Do not send ABORTs for received Out of the Blue packets (2).
+     */
+    usrsctp_sysctl_set_sctp_blackhole (2);
+
+    /* Enable interleaving messages for different streams (incoming)
+     * See: https://tools.ietf.org/html/rfc6458#section-8.1.20
+     */
+    usrsctp_sysctl_set_sctp_default_frag_interleave (2);
+
     usrsctp_sysctl_set_sctp_nr_outgoing_streams_default
         (DEFAULT_NUMBER_OF_SCTP_STREAMS);
   }
@@ -449,11 +459,15 @@ gst_sctp_association_send_data (GstSctpAssociation * self, const guint8 * buf,
   remote_addr = get_sctp_socket_address (self, self->remote_port);
   g_mutex_unlock (&self->association_mutex);
 
+  /* TODO: We probably want to split too large chunks into multiple packets
+   * and only set the SCTP_EOR flag on the last one. Firefox is using 0x4000
+   * as the maximum packet size
+   */
   memset (&spa, 0, sizeof (spa));
 
   spa.sendv_sndinfo.snd_ppid = g_htonl (ppid);
   spa.sendv_sndinfo.snd_sid = stream_id;
-  spa.sendv_sndinfo.snd_flags = ordered ? 0 : SCTP_UNORDERED;
+  spa.sendv_sndinfo.snd_flags = SCTP_EOR | (ordered ? 0 : SCTP_UNORDERED);
   spa.sendv_sndinfo.snd_context = 0;
   spa.sendv_sndinfo.snd_assoc_id = 0;
   spa.sendv_flags = SCTP_SEND_SNDINFO_VALID;
@@ -532,15 +546,17 @@ create_sctp_socket (GstSctpAssociation * self)
   struct linger l;
   struct sctp_event event;
   struct sctp_assoc_value stream_reset;
+  int buf_size = 1024 * 1024;
   int value = 1;
   guint16 event_types[] = {
     SCTP_ASSOC_CHANGE,
     SCTP_PEER_ADDR_CHANGE,
     SCTP_REMOTE_ERROR,
     SCTP_SEND_FAILED,
+    SCTP_SEND_FAILED_EVENT,
     SCTP_SHUTDOWN_EVENT,
     SCTP_ADAPTATION_INDICATION,
-    /*SCTP_PARTIAL_DELIVERY_EVENT, */
+    SCTP_PARTIAL_DELIVERY_EVENT,
     /*SCTP_AUTHENTICATION_EVENT, */
     SCTP_STREAM_RESET_EVENT,
     /*SCTP_SENDER_DRY_EVENT, */
@@ -556,6 +572,19 @@ create_sctp_socket (GstSctpAssociation * self)
               (void *) self)) == NULL) {
     GST_ERROR_OBJECT (self, "Could not open SCTP socket: (%u) %s", errno,
         g_strerror (errno));
+    goto error;
+  }
+
+  if (usrsctp_setsockopt (sock, SOL_SOCKET, SO_RCVBUF,
+          (const void *) &buf_size, sizeof (buf_size)) < 0) {
+    GST_ERROR_OBJECT (self, "Could not change receive buffer size: (%u) %s",
+        errno, g_strerror (errno));
+    goto error;
+  }
+  if (usrsctp_setsockopt (sock, SOL_SOCKET, SO_SNDBUF,
+          (const void *) &buf_size, sizeof (buf_size)) < 0) {
+    GST_ERROR_OBJECT (self, "Could not change send buffer size: (%u) %s",
+        errno, g_strerror (errno));
     goto error;
   }
 
@@ -577,19 +606,34 @@ create_sctp_socket (GstSctpAssociation * self)
     goto error;
   }
 
+  if (usrsctp_setsockopt (sock, IPPROTO_SCTP, SCTP_REUSE_PORT, &value,
+          sizeof (int))) {
+    GST_DEBUG_OBJECT (self, "Could not set SCTP_REUSE_PORT: (%u) %s", errno,
+        g_strerror (errno));
+  }
+
   if (usrsctp_setsockopt (sock, IPPROTO_SCTP, SCTP_NODELAY, &value,
           sizeof (int))) {
-    GST_ERROR_OBJECT (self, "Could not set SCTP_NODELAY: (%u) %s", errno,
+    GST_DEBUG_OBJECT (self, "Could not set SCTP_NODELAY: (%u) %s", errno,
+        g_strerror (errno));
+    goto error;
+  }
+
+  if (usrsctp_setsockopt (sock, IPPROTO_SCTP, SCTP_EXPLICIT_EOR, &value,
+          sizeof (int))) {
+    GST_ERROR_OBJECT (self, "Could not set SCTP_EXPLICIT_EOR: (%u) %s", errno,
         g_strerror (errno));
     goto error;
   }
 
   memset (&stream_reset, 0, sizeof (stream_reset));
   stream_reset.assoc_id = SCTP_ALL_ASSOC;
-  stream_reset.assoc_value = 1;
+  stream_reset.assoc_value =
+      SCTP_ENABLE_RESET_STREAM_REQ | SCTP_ENABLE_CHANGE_ASSOC_REQ;
   if (usrsctp_setsockopt (sock, IPPROTO_SCTP, SCTP_ENABLE_STREAM_RESET,
           &stream_reset, sizeof (stream_reset))) {
-    GST_ERROR_OBJECT (self, "Could not set SCTP_ENABLE_STREAM_RESET: (%u) %s",
+    GST_ERROR_OBJECT (self,
+        "Could not set SCTP_ENABLE_STREAM_RESET | SCTP_ENABLE_CHANGE_ASSOC_REQ: (%u) %s",
         errno, g_strerror (errno));
     goto error;
   }
@@ -634,6 +678,8 @@ static gboolean
 client_role_connect (GstSctpAssociation * self)
 {
   struct sockaddr_conn local_addr, remote_addr;
+  struct sctp_paddrparams paddrparams;
+  socklen_t opt_len;
   gint ret;
 
   g_mutex_lock (&self->association_mutex);
@@ -658,6 +704,36 @@ client_role_connect (GstSctpAssociation * self)
         g_strerror (errno));
     goto error;
   }
+
+  memset (&paddrparams, 0, sizeof (struct sctp_paddrparams));
+  memcpy (&paddrparams.spp_address, &remote_addr,
+      sizeof (struct sockaddr_conn));
+  opt_len = (socklen_t) sizeof (struct sctp_paddrparams);
+  ret =
+      usrsctp_getsockopt (self->sctp_ass_sock, IPPROTO_SCTP,
+      SCTP_PEER_ADDR_PARAMS, &paddrparams, &opt_len);
+  if (ret < 0) {
+    GST_WARNING_OBJECT (self,
+        "usrsctp_getsockopt(SCTP_PEER_ADDR_PARAMS) error: (%u) %s", errno,
+        g_strerror (errno));
+  } else {
+    /* draft-ietf-rtcweb-data-channel-13 section 5: max initial MTU IPV4 1200, IPV6 1280 */
+    paddrparams.spp_pathmtu = 1200;
+    paddrparams.spp_flags &= ~SPP_PMTUD_ENABLE;
+    paddrparams.spp_flags |= SPP_PMTUD_DISABLE;
+    opt_len = (socklen_t) sizeof (struct sctp_paddrparams);
+    ret = usrsctp_setsockopt (self->sctp_ass_sock, IPPROTO_SCTP,
+        SCTP_PEER_ADDR_PARAMS, &paddrparams, opt_len);
+    if (ret < 0) {
+      GST_WARNING_OBJECT (self,
+          "usrsctp_setsockopt(SCTP_PEER_ADDR_PARAMS) error: (%u) %s", errno,
+          g_strerror (errno));
+    } else {
+      GST_DEBUG_OBJECT (self, "PMTUD disabled, MTU set to %u",
+          paddrparams.spp_pathmtu);
+    }
+  }
+
   return TRUE;
 error:
   return FALSE;
