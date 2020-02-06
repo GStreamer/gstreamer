@@ -2374,6 +2374,75 @@ gst_omx_video_enc_framerate_changed (GstOMXVideoEnc * self,
   return FALSE;
 }
 
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+static gboolean
+gst_omx_video_enc_set_interlacing_parameters (GstOMXVideoEnc * self,
+    GstVideoInfo * info)
+{
+  OMX_ERRORTYPE err;
+  OMX_INTERLACEFORMATTYPE interlace_format_param;
+
+  GST_OMX_INIT_STRUCT (&interlace_format_param);
+  interlace_format_param.nPortIndex = self->enc_in_port->index;
+
+  err = gst_omx_component_get_parameter (self->enc,
+      (OMX_INDEXTYPE) OMX_ALG_IndexParamVideoInterlaceFormatCurrent,
+      &interlace_format_param);
+
+  if (err != OMX_ErrorNone) {
+    GST_ERROR_OBJECT (self,
+        "Failed to get interlace format: %s (0x%08x)",
+        gst_omx_error_to_string (err), err);
+    return FALSE;
+  }
+
+  if (info->interlace_mode == GST_VIDEO_INTERLACE_MODE_PROGRESSIVE)
+    interlace_format_param.nFormat = OMX_InterlaceFrameProgressive;
+  else if (info->interlace_mode == GST_VIDEO_INTERLACE_MODE_ALTERNATE) {
+    if (GST_VIDEO_INFO_FIELD_ORDER (info) ==
+        GST_VIDEO_FIELD_ORDER_BOTTOM_FIELD_FIRST)
+      interlace_format_param.nFormat =
+          OMX_ALG_InterlaceAlternateBottomFieldFirst;
+    else if (GST_VIDEO_INFO_FIELD_ORDER (info) ==
+        GST_VIDEO_FIELD_ORDER_BOTTOM_FIELD_FIRST)
+      interlace_format_param.nFormat = OMX_ALG_InterlaceAlternateTopFieldFirst;
+    else {
+      GST_INFO_OBJECT (self,
+          "input field-order unspecified, assume top-field-first");
+      interlace_format_param.nFormat = OMX_ALG_InterlaceAlternateTopFieldFirst;
+    }
+  } else {
+    /* Caps templates should ensure this doesn't happen but just to be safe.. */
+    GST_ERROR_OBJECT (self, "Video interlacing mode %s not supported",
+        gst_video_interlace_mode_to_string (info->interlace_mode));
+    return FALSE;
+  }
+
+  err = gst_omx_component_set_parameter (self->enc,
+      (OMX_INDEXTYPE) OMX_ALG_IndexParamVideoInterlaceFormatCurrent,
+      &interlace_format_param);
+
+  if (err != OMX_ErrorNone) {
+    GST_ERROR_OBJECT (self,
+        "Failed to set interlacing mode %s (%s) format: %s (0x%08x)",
+        gst_video_interlace_mode_to_string (info->interlace_mode),
+        interlace_format_param.nFormat ==
+        OMX_ALG_InterlaceAlternateTopFieldFirst ? "top-field-first" :
+        "bottom-field-first", gst_omx_error_to_string (err), err);
+    return FALSE;
+  } else {
+    GST_DEBUG_OBJECT (self,
+        "Video interlacing mode %s (%s) set on component",
+        gst_video_interlace_mode_to_string (info->interlace_mode),
+        interlace_format_param.nFormat ==
+        OMX_ALG_InterlaceAlternateTopFieldFirst ? "top-field-first" :
+        "bottom-field-first");
+  }
+
+  return TRUE;
+}
+#endif // USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+
 static gboolean
 gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
     GstVideoCodecState * state)
@@ -2457,6 +2526,11 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
 
   port_def.format.video.nFrameWidth = info->width;
   port_def.format.video.nFrameHeight = GST_VIDEO_INFO_FIELD_HEIGHT (info);
+
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+  if (!gst_omx_video_enc_set_interlacing_parameters (self, info))
+    return FALSE;
+#endif
 
   if (G_UNLIKELY (klass->cdata.hacks & GST_OMX_HACK_VIDEO_FRAMERATE_INTEGER)) {
     port_def.format.video.xFramerate =
@@ -3101,6 +3175,13 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
       buf->omx_buf->nTickCount = 0;
     }
 
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+    if (GST_VIDEO_BUFFER_IS_TOP_FIELD (frame->input_buffer))
+      buf->omx_buf->nFlags |= OMX_ALG_BUFFERFLAG_TOP_FIELD;
+    else if (GST_VIDEO_BUFFER_IS_BOTTOM_FIELD (frame->input_buffer))
+      buf->omx_buf->nFlags |= OMX_ALG_BUFFERFLAG_BOT_FIELD;
+#endif
+
     self->started = TRUE;
     err = gst_omx_port_release_buffer (port, buf);
     if (err != OMX_ErrorNone)
@@ -3428,6 +3509,50 @@ filter_supported_formats (GList * negotiation_map)
 }
 
 static GstCaps *
+add_interlace_to_caps (GstOMXVideoEnc * self, GstCaps * caps)
+{
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+  OMX_ERRORTYPE err;
+  OMX_INTERLACEFORMATTYPE interlace_format_param;
+  GstCaps *caps_alternate;
+
+  if (gst_caps_is_empty (caps))
+    /* No caps to add to */
+    return caps;
+
+  GST_OMX_INIT_STRUCT (&interlace_format_param);
+  interlace_format_param.nPortIndex = self->enc_in_port->index;
+
+  err = gst_omx_component_get_parameter (self->enc,
+      OMX_ALG_IndexParamVideoInterlaceFormatSupported, &interlace_format_param);
+
+  if (err != OMX_ErrorNone) {
+    GST_WARNING_OBJECT (self,
+        "Failed to get OMX_ALG_IndexParamVideoInterlaceFormatSupported %s (0x%08x)",
+        gst_omx_error_to_string (err), err);
+    return caps;
+  }
+
+  if (!(interlace_format_param.nFormat &
+          OMX_ALG_InterlaceAlternateTopFieldFirst)
+      && !(interlace_format_param.nFormat &
+          OMX_ALG_InterlaceAlternateBottomFieldFirst))
+    return caps;
+
+  /* Alternate mode is supported, create an 'alternate' variant of the caps
+   * with the caps feature. */
+  caps_alternate = gst_caps_copy (caps);
+
+  gst_caps_set_features_simple (caps_alternate,
+      gst_caps_features_new (GST_CAPS_FEATURE_FORMAT_INTERLACED, NULL));
+
+  caps = gst_caps_merge (caps, caps_alternate);
+#endif // USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+
+  return caps;
+}
+
+static GstCaps *
 gst_omx_video_enc_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
 {
   GstOMXVideoEnc *self = GST_OMX_VIDEO_ENC (encoder);
@@ -3446,6 +3571,8 @@ gst_omx_video_enc_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
   comp_supported_caps = gst_omx_video_get_caps_for_map (negotiation_map);
   g_list_free_full (negotiation_map,
       (GDestroyNotify) gst_omx_video_negotiation_map_free);
+
+  comp_supported_caps = add_interlace_to_caps (self, comp_supported_caps);
 
   if (!gst_caps_is_empty (comp_supported_caps)) {
     ret =

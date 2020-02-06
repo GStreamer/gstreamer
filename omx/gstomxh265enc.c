@@ -27,6 +27,7 @@
 
 #include "gstomxh265enc.h"
 #include "gstomxh265utils.h"
+#include "gstomxvideo.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_omx_h265_enc_debug_category);
 #define GST_CAT_DEFAULT gst_omx_h265_enc_debug_category
@@ -193,6 +194,14 @@ gst_omx_h265_enc_class_init (GstOMXH265EncClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
 #endif
+
+  videoenc_class->cdata.default_sink_template_caps =
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+      GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_FORMAT_INTERLACED,
+      GST_OMX_VIDEO_SUPPORTED_FORMATS)
+      ", interlace-mode = (string) alternate ; "
+#endif
+      GST_VIDEO_CAPS_MAKE (GST_OMX_VIDEO_SUPPORTED_FORMATS);
 
   videoenc_class->cdata.default_src_template_caps = "video/x-h265, "
       "width=(int) [ 1, MAX ], " "height=(int) [ 1, MAX ], "
