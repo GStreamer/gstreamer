@@ -1338,6 +1338,9 @@ reacquire:
 
     gst_vulkan_trash_list_add (priv->trash_list,
         gst_vulkan_trash_new_free_semaphore (fence, present_semaphore));
+    gst_vulkan_trash_list_add (priv->trash_list,
+        gst_vulkan_trash_new_mini_object_unref (fence,
+            (GstMiniObject *) gst_buffer_ref (buffer)));
     gst_vulkan_fence_unref (fence);
     fence = NULL;
   }
