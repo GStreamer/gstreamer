@@ -443,7 +443,7 @@ nle_source_send_event (GstElement * element, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
       g_mutex_lock (&source->priv->seek_lock);
-      source->priv->seek_event = event;
+      gst_event_replace (&source->priv->seek_event, event);
       g_mutex_unlock (&source->priv->seek_lock);
       break;
     default:
@@ -459,6 +459,7 @@ ghost_seek_pad (GstElement * source, gpointer user_data)
 {
   NleSourcePrivate *priv = NLE_SOURCE (source)->priv;
 
+  g_assert (!NLE_OBJECT (source)->in_composition);
   g_mutex_lock (&priv->seek_lock);
   if (priv->seek_event) {
     GstEvent *seek_event = priv->seek_event;
@@ -482,7 +483,7 @@ pad_brobe_cb (GstPad * pad, GstPadProbeInfo * info, NleSource * source)
   GstPadProbeReturn res = GST_PAD_PROBE_OK;
 
   GST_OBJECT_LOCK (source);
-  if (!priv->areblocked) {
+  if (!priv->areblocked && priv->seek_event) {
     GST_INFO_OBJECT (pad, "Blocked now, launching seek");
     priv->areblocked = TRUE;
     gst_element_call_async (GST_ELEMENT (source), ghost_seek_pad, NULL, NULL);
@@ -492,9 +493,6 @@ pad_brobe_cb (GstPad * pad, GstPadProbeInfo * info, NleSource * source)
   }
 
   if (priv->probeid && GST_EVENT_SEQNUM (info->data) == priv->flush_seqnum) {
-    GST_INFO_OBJECT (source, "Seeking now done: %" GST_PTR_FORMAT
-        " - %d ? %d", info->data, GST_EVENT_SEQNUM (info->data),
-        priv->flush_seqnum);
     priv->flush_seqnum = GST_SEQNUM_INVALID;
     priv->areblocked = FALSE;
     priv->probeid = 0;
@@ -526,33 +524,35 @@ nle_source_prepare (NleObject * object)
     return FALSE;
   }
 
-  if (object->in_composition == FALSE) {
-    gst_element_send_event (GST_ELEMENT_CAST (parent),
-        gst_event_new_seek (1.0, GST_FORMAT_TIME,
-            GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_FLUSH,
-            GST_SEEK_TYPE_SET, object->start, GST_SEEK_TYPE_SET, object->stop));
-  }
-
-  GST_LOG_OBJECT (source, "srcpad:%p, dynamicpads:%d",
-      object->srcpad, priv->dynamicpads);
-
   if (!priv->staticpad && !(get_valid_src_pad (source, source->element, &pad))) {
     GST_DEBUG_OBJECT (source, "Couldn't find a valid source pad");
     gst_object_unref (parent);
     return FALSE;
-  } else {
-    if (priv->staticpad)
-      pad = gst_object_ref (priv->staticpad);
-    priv->ghostedpad = pad;
+  }
+
+  if (priv->staticpad)
+    pad = gst_object_ref (priv->staticpad);
+  priv->ghostedpad = pad;
+
+  if (object->in_composition == FALSE) {
+    g_mutex_lock (&source->priv->seek_lock);
+    source->priv->seek_event =
+        gst_event_new_seek (1.0, GST_FORMAT_TIME,
+        GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_FLUSH,
+        GST_SEEK_TYPE_SET, object->start, GST_SEEK_TYPE_SET, object->stop);
+    g_mutex_unlock (&source->priv->seek_lock);
     GST_OBJECT_LOCK (source);
     priv->probeid = gst_pad_add_probe (pad,
         GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM | GST_PAD_PROBE_TYPE_EVENT_FLUSH |
         GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, (GstPadProbeCallback) pad_brobe_cb,
         source, NULL);
     GST_OBJECT_UNLOCK (source);
-    gst_object_unref (pad);
   }
 
+  GST_LOG_OBJECT (source, "srcpad:%p, dynamicpads:%d",
+      object->srcpad, priv->dynamicpads);
+
+  gst_object_unref (pad);
   gst_object_unref (parent);
 
   return TRUE;
