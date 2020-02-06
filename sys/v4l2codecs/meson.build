@@ -1,6 +1,7 @@
 v4l2codecs_sources = [
   'plugin.c',
   'gstv4l2codecdevice.c',
+  'gstv4l2decoder.c',
 ]
 
 libgudev_dep = dependency('gudev-1.0', required: get_option('v4l2codecs'))
