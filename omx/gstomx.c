@@ -3716,6 +3716,10 @@ struct BufferFlagString buffer_flags_map[] = {
 #ifdef OMX_BUFFERFLAG_SKIPFRAME
   {OMX_BUFFERFLAG_SKIPFRAME, "skip-frame"},
 #endif
+#ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+  {OMX_ALG_BUFFERFLAG_TOP_FIELD, "top-field"},
+  {OMX_ALG_BUFFERFLAG_BOT_FIELD, "bottom-field"},
+#endif
   {0, NULL},
 };
 
