@@ -1857,8 +1857,19 @@ _on_sctp_notify_dtls_state (GstWebRTCDTLSTransport * transport,
 }
 
 static GstPadProbeReturn
-pad_block (GstPad * pad, GstPadProbeInfo * info, gpointer unused)
+sctp_pad_block (GstPad * pad, GstPadProbeInfo * info, gpointer unused)
 {
+  /* Drop all events: we don't care about them and don't want to block on
+   * them. Sticky events would be forwarded again later once we unblock
+   * and we don't want to forward them here already because that might
+   * cause a spurious GST_FLOW_FLUSHING */
+  if (GST_IS_EVENT (info->data))
+    return GST_PAD_PROBE_DROP;
+
+  /* But block on any actual data-flow so we don't accidentally send that
+   * to a pad that is not ready yet, causing GST_FLOW_FLUSHING and everything
+   * to silently stop.
+   */
   GST_LOG_OBJECT (pad, "blocking pad with data %" GST_PTR_FORMAT, info->data);
 
   return GST_PAD_PROBE_OK;
@@ -1912,9 +1923,8 @@ _get_or_create_data_channel_transports (GstWebRTCBin * webrtc, guint session_id)
           "data_src");
       sctp_transport->sctpdec_block_id =
           gst_pad_add_probe (receive_srcpad,
-          GST_PAD_PROBE_TYPE_BLOCK |
-          GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
-          (GstPadProbeCallback) pad_block, NULL, NULL);
+          GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
+          (GstPadProbeCallback) sctp_pad_block, NULL, NULL);
       gst_object_unref (receive_srcpad);
     }
 
@@ -5457,6 +5467,14 @@ gst_webrtc_bin_change_state (GstElement * element, GstStateChange transition)
   return ret;
 }
 
+static GstPadProbeReturn
+sink_pad_block (GstPad * pad, GstPadProbeInfo * info, gpointer unused)
+{
+  GST_LOG_OBJECT (pad, "blocking pad with data %" GST_PTR_FORMAT, info->data);
+
+  return GST_PAD_PROBE_OK;
+}
+
 static GstPad *
 gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
     const gchar * name, const GstCaps * caps)
@@ -5494,7 +5512,7 @@ gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
 
     pad->block_id = gst_pad_add_probe (GST_PAD (pad), GST_PAD_PROBE_TYPE_BLOCK |
         GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
-        (GstPadProbeCallback) pad_block, NULL, NULL);
+        (GstPadProbeCallback) sink_pad_block, NULL, NULL);
     webrtc->priv->pending_sink_transceivers =
         g_list_append (webrtc->priv->pending_sink_transceivers,
         gst_object_ref (pad));

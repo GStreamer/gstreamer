@@ -101,7 +101,17 @@ _receive_state_to_string (ReceiveState state)
 static GstPadProbeReturn
 pad_block (GstPad * pad, GstPadProbeInfo * info, TransportReceiveBin * receive)
 {
+  /* Drop all events: we don't care about them and don't want to block on
+   * them. Sticky events would be forwarded again later once we unblock
+   * and we don't want to forward them here already because that might
+   * cause a spurious GST_FLOW_FLUSHING */
+  if (GST_IS_EVENT (info->data))
+    return GST_PAD_PROBE_DROP;
 
+  /* But block on any actual data-flow so we don't accidentally send that
+   * to a pad that is not ready yet, causing GST_FLOW_FLUSHING and everything
+   * to silently stop.
+   */
   GST_LOG_OBJECT (pad, "blocking pad with data %" GST_PTR_FORMAT, info->data);
 
   return GST_PAD_PROBE_OK;
@@ -222,7 +232,7 @@ transport_receive_bin_change_state (GstElement * element,
       receive->rtp_block->block_id =
           gst_pad_add_probe (pad,
           GST_PAD_PROBE_TYPE_BLOCK |
-          GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
+          GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
           (GstPadProbeCallback) pad_block, receive, NULL);
       gst_object_unref (pad);
 
@@ -238,7 +248,7 @@ transport_receive_bin_change_state (GstElement * element,
       receive->rtcp_block->block_id =
           gst_pad_add_probe (pad,
           GST_PAD_PROBE_TYPE_BLOCK |
-          GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
+          GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
           (GstPadProbeCallback) pad_block, receive, NULL);
       gst_object_unref (pad);
 
