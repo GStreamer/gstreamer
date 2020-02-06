@@ -539,7 +539,8 @@ nle_source_prepare (NleObject * object)
     source->priv->seek_event =
         gst_event_new_seek (1.0, GST_FORMAT_TIME,
         GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_FLUSH,
-        GST_SEEK_TYPE_SET, object->start, GST_SEEK_TYPE_SET, object->stop);
+        GST_SEEK_TYPE_SET, object->inpoint, GST_SEEK_TYPE_SET,
+        object->inpoint + object->duration);
     g_mutex_unlock (&source->priv->seek_lock);
     GST_OBJECT_LOCK (source);
     priv->probeid = gst_pad_add_probe (pad,
