@@ -34,6 +34,7 @@
 
 #include "gstrtph265pay.h"
 #include "gstrtputils.h"
+#include "gstbuffermemory.h"
 
 #define AP_TYPE_ID  48
 #define FU_TYPE_ID  49
@@ -1424,7 +1425,6 @@ gst_rtp_h265_pay_handle_buffer (GstRTPBasePayload * basepayload,
   GstFlowReturn ret;
   gsize size;
   guint nal_len, i;
-  GstMapInfo map;
   const guint8 *data;
   GstClockTime dts, pts;
   GArray *nal_queue;
@@ -1446,13 +1446,6 @@ gst_rtp_h265_pay_handle_buffer (GstRTPBasePayload * basepayload,
     /* In hevc mode, there is no adapter, so nothing to drain */
     if (draining)
       return GST_FLOW_OK;
-    gst_buffer_map (buffer, &map, GST_MAP_READ);
-    data = map.data;
-    size = map.size;
-    pts = GST_BUFFER_PTS (buffer);
-    dts = GST_BUFFER_DTS (buffer);
-    marker = GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_MARKER);
-    GST_DEBUG_OBJECT (basepayload, "got %" G_GSIZE_FORMAT " bytes", size);
   } else {
     if (buffer) {
       if (gst_adapter_available (rtph265pay->adapter) == 0)
@@ -1478,6 +1471,8 @@ gst_rtp_h265_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
   /* now loop over all NAL units and put them in a packet */
   if (hevc) {
+    GstBufferMemoryMap memory;
+    gsize remaining_buffer_size;
     guint nal_length_size;
     gsize offset = 0;
     GPtrArray *paybufs;
@@ -1485,23 +1480,32 @@ gst_rtp_h265_pay_handle_buffer (GstRTPBasePayload * basepayload,
     paybufs = g_ptr_array_new ();
     nal_length_size = rtph265pay->nal_length_size;
 
-    while (size > nal_length_size) {
+    gst_buffer_memory_map (buffer, &memory);
+    remaining_buffer_size = gst_buffer_get_size (buffer);
+
+    pts = GST_BUFFER_PTS (buffer);
+    dts = GST_BUFFER_DTS (buffer);
+    marker = GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_MARKER);
+    GST_DEBUG_OBJECT (basepayload, "got %" G_GSIZE_FORMAT " bytes",
+        remaining_buffer_size);
+
+    while (remaining_buffer_size > nal_length_size) {
       gint i;
 
       nal_len = 0;
       for (i = 0; i < nal_length_size; i++) {
-        nal_len = ((nal_len << 8) + data[i]);
+        nal_len = (nal_len << 8) + *memory.data;
+        if (!gst_buffer_memory_advance_bytes (&memory, 1))
+          break;
       }
 
-      /* skip the length bytes, make sure we don't run past the buffer size */
-      data += nal_length_size;
       offset += nal_length_size;
-      size -= nal_length_size;
+      remaining_buffer_size -= nal_length_size;
 
-      if (size >= nal_len) {
+      if (remaining_buffer_size >= nal_len) {
         GST_DEBUG_OBJECT (basepayload, "got NAL of size %u", nal_len);
       } else {
-        nal_len = size;
+        nal_len = remaining_buffer_size;
         GST_DEBUG_OBJECT (basepayload, "got incomplete NAL of size %u",
             nal_len);
       }
@@ -1514,7 +1518,7 @@ gst_rtp_h265_pay_handle_buffer (GstRTPBasePayload * basepayload,
        * access unit
        */
       GST_BUFFER_FLAG_UNSET (paybuf, GST_BUFFER_FLAG_MARKER);
-      if (size - nal_len <= nal_length_size) {
+      if (remaining_buffer_size - nal_len <= nal_length_size) {
         if (rtph265pay->alignment == GST_H265_ALIGNMENT_AU || marker)
           GST_BUFFER_FLAG_SET (paybuf, GST_BUFFER_FLAG_MARKER);
       }
@@ -1525,11 +1529,19 @@ gst_rtp_h265_pay_handle_buffer (GstRTPBasePayload * basepayload,
         discont = FALSE;
       }
 
-      data += nal_len;
+      /* Skip current nal. If it is split over multiple GstMemory
+       * advance_bytes () will switch to the correct GstMemory. The payloader
+       * does not access those bytes directly but uses gst_buffer_copy_region ()
+       * to create a sub-buffer referencing the nal instead */
+      if (!gst_buffer_memory_advance_bytes (&memory, nal_len))
+        break;
       offset += nal_len;
-      size -= nal_len;
+      remaining_buffer_size -= nal_len;
     }
     ret = gst_rtp_h265_pay_payload_nal (basepayload, paybufs, dts, pts);
+
+    gst_buffer_memory_unmap (&memory);
+    gst_buffer_unref (buffer);
   } else {
     guint next;
     gboolean update = FALSE;
@@ -1658,10 +1670,7 @@ gst_rtp_h265_pay_handle_buffer (GstRTPBasePayload * basepayload,
   }
 
 done:
-  if (hevc) {
-    gst_buffer_unmap (buffer, &map);
-    gst_buffer_unref (buffer);
-  } else {
+  if (!hevc) {
     gst_adapter_unmap (rtph265pay->adapter);
   }
 

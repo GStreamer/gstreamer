@@ -199,6 +199,53 @@ c_mem_app_sink_class_init (CMemAppSinkClass * klass)
 
 #define RTP_H264_FILE GST_TEST_FILES_PATH G_DIR_SEPARATOR_S "h264.rtp"
 
+static GstBuffer *
+create_codec_data (guint8 * sps, gsize sps_size, guint8 * pps, gsize pps_size)
+{
+  unsigned int offset = 0;
+  GstBuffer *codec_data_buffer;
+  GstMemory *mem;
+  GstMapInfo map_info;
+  guint8 *codec_data;
+
+  codec_data_buffer =
+      gst_buffer_new_allocate (NULL, sps_size + pps_size + 11, NULL);
+  mem = gst_buffer_peek_memory (codec_data_buffer, 0);
+  gst_memory_map (mem, &map_info, GST_MAP_WRITE);
+
+  codec_data = map_info.data;
+
+  codec_data[offset++] = 0x01;  /* Configuration Version */
+  codec_data[offset++] = sps[1];        /* AVCProfileIndication */
+  codec_data[offset++] = sps[2];        /* profile_compatibility */
+  codec_data[offset++] = sps[3];        /* AVCLevelIndication */
+  codec_data[offset++] = 0xff;  /* lengthSizeMinusOne == 3 -> length == 4 byte */
+
+  /* SPS */
+  codec_data[offset++] = 0xe1;  /* numOfSequenceParameterSets | b11100000 -> numSPS == 1 */
+
+  g_assert (sps_size <= 0xffff);
+  codec_data[offset++] = (sps_size >> 8) & 0xff;        /* numOfSequenceParameterSets high 8bit */
+  codec_data[offset++] = sps_size & 0xff;       /* numOfSequenceParameterSets low 8bit */
+  memcpy (codec_data + offset, sps, sps_size);
+  offset += sps_size;
+
+  /* PPS */
+  codec_data[offset++] = 0x1;   /* numOfPictureParameterSets == 1 */
+
+  g_assert (pps_size <= 0xffff);
+  codec_data[offset++] = (pps_size >> 8) & 0xff;
+  codec_data[offset++] = pps_size & 0xff;
+  memcpy (codec_data + offset, pps, pps_size);
+  offset += pps_size;
+
+  gst_memory_unmap (mem, &map_info);
+
+  g_assert (offset == gst_buffer_get_size (codec_data_buffer));
+
+  return codec_data_buffer;
+}
+
 GST_START_TEST (test_rtph264depay_with_downstream_allocator)
 {
   GstElement *pipeline, *src, *depay, *sink;
@@ -298,21 +345,36 @@ GST_END_TEST;
 
 
 static GstBuffer *
-wrap_static_buffer_with_pts (guint8 * buf, gsize size, GstClockTime pts)
+wrap_static_buffer_with_pts_full (guint8 * buf, gsize size, GstClockTime pts,
+    gpointer user_data, GDestroyNotify notify)
 {
   GstBuffer *buffer;
 
   buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
-      buf, size, 0, size, NULL, NULL);
+      buf, size, 0, size, user_data, notify);
   GST_BUFFER_PTS (buffer) = pts;
 
   return buffer;
 }
 
 static GstBuffer *
+wrap_static_buffer_full (guint8 * buf, gsize size, gpointer user_data,
+    GDestroyNotify notify)
+{
+  return wrap_static_buffer_with_pts_full (buf, size, GST_CLOCK_TIME_NONE,
+      user_data, notify);
+}
+
+static GstBuffer *
+wrap_static_buffer_with_pts (guint8 * buf, gsize size, GstClockTime pts)
+{
+  return wrap_static_buffer_with_pts_full (buf, size, pts, NULL, NULL);
+}
+
+static GstBuffer *
 wrap_static_buffer (guint8 * buf, gsize size)
 {
-  return wrap_static_buffer_with_pts (buf, size, GST_CLOCK_TIME_NONE);
+  return wrap_static_buffer_full (buf, size, NULL, NULL);
 }
 
 /* This was generated using pipeline:
@@ -519,6 +581,40 @@ static guint8 h264_idr_slice_1[] = {
 /* IDR Slice 2 */
 static guint8 h264_idr_slice_2[] = {
   0x00, 0x00, 0x00, 0x01, 0x65, 0x04, 0x2e, 0x00,
+  0x01, 0x00, 0x00, 0x04, 0x7f, 0xff, 0xfe, 0x08,
+  0xa2, 0x87, 0xc7, 0x00, 0x01, 0x02, 0x98, 0xe0,
+  0x00, 0x20, 0x7b, 0x26, 0xa4, 0xe4, 0xe4, 0xe4,
+  0xe4, 0xe4, 0xeb, 0x55, 0xd7, 0x5d, 0x75, 0xd7,
+  0x5d, 0x75, 0xd7, 0x5d, 0x75, 0xd7, 0x5d, 0x75,
+  0xd7, 0x5d, 0x75, 0xd7, 0x5e
+};
+
+/* SPS */
+static guint8 h264_sps_avc[] = {
+  0x00, 0x00, 0x00, 0x0E, 0x67, 0x42, 0xc0, 0x29,
+  0x8c, 0x8d, 0x41, 0x02, 0x24, 0x03, 0xc2, 0x21,
+  0x1a, 0x80
+};
+
+/* PPS */
+static guint8 h264_pps_avc[] = {
+  0x00, 0x00, 0x00, 0x04, 0x68, 0xce, 0x3c, 0x80
+};
+
+/* IDR Slice 1 */
+static guint8 h264_idr_slice_1_avc[] = {
+  0x00, 0x00, 0x00, 0x30, 0x65, 0xb8, 0x00, 0x04,
+  0x00, 0x00, 0x11, 0xff, 0xff, 0xf8, 0x22, 0x8a,
+  0x1f, 0x1c, 0x00, 0x04, 0x0a, 0x63, 0x80, 0x00,
+  0x81, 0xec, 0x9a, 0x93, 0x93, 0x93, 0x93, 0x93,
+  0x93, 0xad, 0x57, 0x5d, 0x75, 0xd7, 0x5d, 0x75,
+  0xd7, 0x5d, 0x75, 0xd7, 0x5d, 0x75, 0xd7, 0x5d,
+  0x75, 0xd7, 0x5d, 0x78
+};
+
+/* IDR Slice 2 */
+static guint8 h264_idr_slice_2_avc[] = {
+  0x00, 0x00, 0x00, 0x31, 0x65, 0x04, 0x2e, 0x00,
   0x01, 0x00, 0x00, 0x04, 0x7f, 0xff, 0xfe, 0x08,
   0xa2, 0x87, 0xc7, 0x00, 0x01, 0x02, 0x98, 0xe0,
   0x00, 0x20, 0x7b, 0x26, 0xa4, 0xe4, 0xe4, 0xe4,
@@ -1092,6 +1188,144 @@ GST_START_TEST (test_rtph264pay_aggregate_until_vcl)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rtph264pay_avc)
+{
+  GstHarness *h = gst_harness_new_parse ("rtph264pay timestamp-offset=123");
+  GstFlowReturn ret;
+  GstBuffer *buffer;
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+  GstCaps *caps;
+  GstBuffer *codec_data;
+
+  codec_data = create_codec_data (h264_sps_avc, sizeof (h264_sps_avc) - 4,
+      h264_pps_avc, sizeof (h264_pps_avc) - 4);
+  caps = gst_caps_from_string ("video/x-h264,alignment=au,stream-format=avc");
+  gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, codec_data, NULL);
+  gst_buffer_unref (codec_data);
+
+  GST_DEBUG ("caps are %" GST_PTR_FORMAT, caps);
+
+  gst_harness_set_src_caps (h, caps);
+
+  ret = gst_harness_push (h, wrap_static_buffer (h264_idr_slice_1_avc,
+          sizeof (h264_idr_slice_1_avc)));
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  buffer =
+      wrap_static_buffer (h264_idr_slice_2_avc, sizeof (h264_idr_slice_2_avc));
+  GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_MARKER);
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 2);
+
+  buffer = gst_harness_pull (h);
+  fail_unless (gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp));
+  fail_unless (gst_rtp_buffer_get_marker (&rtp));
+  gst_rtp_buffer_unmap (&rtp);
+  gst_buffer_unref (buffer);
+
+  buffer = gst_harness_pull (h);
+  fail_unless (gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp));
+  fail_unless (gst_rtp_buffer_get_marker (&rtp));
+  gst_rtp_buffer_unmap (&rtp);
+  gst_buffer_unref (buffer);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+/*
+ *  +------------------------------------------------+
+ *  | GstBuffer                                      |
+ *  +------------------------------------------------+
+ *  | GstMemory 1         | GstMemory 2              |
+ *  +------------------------------------------------+
+ *  | Slice 1 Part 1      | Slice 1 Part2, Slice 2   |
+ *  +------------------------------------------------+
+ *
+ *  "Slice 1 Part 1" is of size @memory1_len
+ *
+ */
+static void
+test_rtph264pay_avc_two_slices (gsize memory1_len, guint num_slices)
+{
+  GstHarness *h = gst_harness_new_parse ("rtph264pay timestamp-offset=123");
+  GstFlowReturn ret;
+  GstBuffer *slice1;
+  GstBuffer *slice2;
+  GstBuffer *buffer;
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+  GstCaps *caps;
+  GstBuffer *codec_data;
+  guint8 *rest_of_image;
+  gsize rest_of_slice_1_size;
+  gsize rest_of_image_size;
+
+  fail_unless (num_slices <= 2);
+
+  codec_data = create_codec_data (h264_sps_avc, sizeof (h264_sps_avc) - 4,
+      h264_pps_avc, sizeof (h264_pps_avc) - 4);
+  caps = gst_caps_from_string ("video/x-h264,alignment=au,stream-format=avc");
+  gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, codec_data, NULL);
+  gst_buffer_unref (codec_data);
+
+  GST_DEBUG ("caps are %" GST_PTR_FORMAT, caps);
+
+  gst_harness_set_src_caps (h, caps);
+
+  slice1 = wrap_static_buffer (h264_idr_slice_1_avc, memory1_len);
+  rest_of_slice_1_size = sizeof (h264_idr_slice_1_avc) - memory1_len;
+
+  if (num_slices == 2) {
+    rest_of_image_size = rest_of_slice_1_size + sizeof (h264_idr_slice_2_avc);
+    rest_of_image = g_malloc (rest_of_image_size);
+
+    memcpy (rest_of_image, h264_idr_slice_1_avc + memory1_len,
+        rest_of_slice_1_size);
+    memcpy (rest_of_image + rest_of_slice_1_size, h264_idr_slice_2_avc,
+        sizeof (h264_idr_slice_2_avc));
+
+    slice2 =
+        wrap_static_buffer_full (rest_of_image, rest_of_image_size,
+        rest_of_image, g_free);
+    buffer = gst_buffer_append (slice1, slice2);
+  } else
+    buffer = slice1;
+
+  GST_DEBUG ("number of memories: %d", gst_buffer_n_memory (buffer));
+
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+
+  buffer = gst_harness_pull (h);
+
+  fail_unless (gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp));
+  gst_rtp_buffer_unmap (&rtp);
+  gst_buffer_unref (buffer);
+
+  gst_harness_teardown (h);
+}
+
+GST_START_TEST (test_rtph264pay_avc_two_slices_per_buffer)
+{
+  test_rtph264pay_avc_two_slices (1, 2);
+  test_rtph264pay_avc_two_slices (2, 2);
+  test_rtph264pay_avc_two_slices (sizeof (h264_idr_slice_1_avc) - 10, 2);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_rtph264pay_avc_incomplete_nal)
+{
+  test_rtph264pay_avc_two_slices (sizeof (h264_idr_slice_1_avc) - 10, 1);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtph264_suite (void)
 {
@@ -1117,6 +1351,10 @@ rtph264_suite (void)
   tcase_add_test (tc_chain, test_rtph264pay_aggregate_with_ts_change);
   tcase_add_test (tc_chain, test_rtph264pay_aggregate_with_discont);
   tcase_add_test (tc_chain, test_rtph264pay_aggregate_until_vcl);
+
+  tcase_add_test (tc_chain, test_rtph264pay_avc);
+  tcase_add_test (tc_chain, test_rtph264pay_avc_two_slices_per_buffer);
+  tcase_add_test (tc_chain, test_rtph264pay_avc_incomplete_nal);
 
   return s;
 }
