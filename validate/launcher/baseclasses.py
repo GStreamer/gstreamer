@@ -718,7 +718,7 @@ class GstValidateListener(socketserver.BaseRequestHandler, Loggable):
 
             try:
                 obj = json.loads(msg)
-            except json.decoder.JSONDecodeError:
+            except json.decoder.JSONDecodeError as e:
                 self.error("Could not deserialize: %s - %s" % (msg, e))
                 continue
 
