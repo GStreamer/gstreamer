@@ -1433,10 +1433,9 @@ gst_vaapidecode_src_query (GstVideoDecoder * vdec, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CAPS:{
       GstCaps *caps, *filter = NULL;
-      GstPad *pad = GST_VIDEO_DECODER_SRC_PAD (vdec);
 
       gst_query_parse_caps (query, &filter);
-      caps = gst_pad_get_pad_template_caps (pad);
+      caps = gst_vaapidecode_get_allowed_srcpad_caps (GST_VAAPIDECODE (vdec));
 
       if (filter) {
         GstCaps *tmp = caps;
