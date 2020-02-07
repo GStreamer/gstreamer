@@ -327,13 +327,6 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
       GstStructure *structure = gst_caps_get_structure (state->caps, 0);
       if (!structure)
         break;
-
-      /* Remove chroma-site and colorimetry from src caps,
-       * which is unnecessary on downstream if using VASurface
-       */
-      gst_structure_remove_fields (structure, "chroma-site", "colorimetry",
-          NULL);
-
       feature_str = gst_vaapi_caps_feature_to_string (feature);
       features = gst_caps_features_new (feature_str, NULL);
       gst_caps_set_features (state->caps, 0, features);
