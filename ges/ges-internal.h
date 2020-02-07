@@ -198,9 +198,12 @@ ges_extractable_type_get_asset_type              (GType type);
 G_GNUC_INTERNAL gchar *
 ges_extractable_type_check_id                    (GType type, const gchar *id, GError **error);
 
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
 G_GNUC_INTERNAL GParameter *
 ges_extractable_type_get_parameters_from_id      (GType type, const gchar *id,
                                                   guint *n_params);
+G_GNUC_END_IGNORE_DEPRECATIONS;
+
 G_GNUC_INTERNAL GType
 ges_extractable_get_real_extractable_type_for_id (GType type, const gchar * id);
 

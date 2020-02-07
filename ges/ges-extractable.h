@@ -55,6 +55,7 @@ typedef gchar* (*GESExtractableCheckId) (GType type, const gchar *id,
 /**
  * GESExtractable:
  */
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS
 struct _GESExtractableInterface
 {
   GTypeInterface parent;
@@ -84,6 +85,7 @@ struct _GESExtractableInterface
 
   gpointer _ges_reserved[GES_PADDING];
 };
+G_GNUC_END_IGNORE_DEPRECATIONS
 
 GES_API
 GESAsset* ges_extractable_get_asset      (GESExtractable *self);

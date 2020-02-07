@@ -63,6 +63,7 @@ static void ges_effect_clip_finalize (GObject * object);
 static GESTrackElement *_create_track_element (GESClip * self,
     GESTrackType type);
 
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS;       /* Start ignoring GParameter deprecation */
 static GParameter *
 extractable_get_parameters_from_id (const gchar * id, guint * n_params)
 {
@@ -102,6 +103,8 @@ extractable_get_parameters_from_id (const gchar * id, guint * n_params)
   g_strfreev (effects_desc);
   return params;
 }
+
+G_GNUC_END_IGNORE_DEPRECATIONS; /* End ignoring GParameter deprecation */
 
 static gchar *
 extractable_check_id (GType type, const gchar * id, GError ** error)

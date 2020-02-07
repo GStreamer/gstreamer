@@ -52,6 +52,7 @@ ges_extractable_get_real_extractable_type_default (GType type, const gchar * id)
   return type;
 }
 
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS;       /* Start ignoring GParameter deprecation */
 static GParameter *
 extractable_get_parameters_from_id (const gchar * id, guint * n_params)
 {
@@ -60,6 +61,7 @@ extractable_get_parameters_from_id (const gchar * id, guint * n_params)
   return NULL;
 }
 
+G_GNUC_END_IGNORE_DEPRECATIONS; /* End ignoring GParameter deprecation */
 static gchar *
 extractable_get_id (GESExtractable * self)
 {
@@ -152,6 +154,7 @@ ges_extractable_get_id (GESExtractable * self)
   return GES_EXTRACTABLE_GET_INTERFACE (self)->get_id (self);
 }
 
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS;       /* Start ignoring GParameter deprecation */
 /**
  * ges_extractable_type_get_parameters_for_id:
  * @type: The #GType implementing #GESExtractable
@@ -182,6 +185,8 @@ ges_extractable_type_get_parameters_from_id (GType type, const gchar * id,
 
   return ret;
 }
+
+G_GNUC_END_IGNORE_DEPRECATIONS; /* End ignoring GParameter deprecation */
 
 /**
  * ges_extractable_type_get_asset_type:

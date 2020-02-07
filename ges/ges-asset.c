@@ -286,6 +286,7 @@ ges_asset_start_loading_default (GESAsset * asset, GError ** error)
   return GES_ASSET_LOADING_OK;
 }
 
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
 static GESExtractable *
 ges_asset_extract_default (GESAsset * asset, GError ** error)
 {
@@ -329,6 +330,8 @@ ges_asset_extract_default (GESAsset * asset, GError ** error)
 
   return n_extractable;
 }
+
+G_GNUC_END_IGNORE_DEPRECATIONS;
 
 static gboolean
 ges_asset_request_id_update_default (GESAsset * self, gchar ** proposed_new_id,

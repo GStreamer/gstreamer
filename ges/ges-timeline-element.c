@@ -1214,6 +1214,7 @@ ges_timeline_element_trim (GESTimelineElement * self, GstClockTime start)
  *
  * Returns: (transfer floating): The newly create #GESTimelineElement, copied from @self
  */
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS;       /* Start ignoring GParameter deprecation */
 GESTimelineElement *
 ges_timeline_element_copy (GESTimelineElement * self, gboolean deep)
 {
@@ -1294,6 +1295,8 @@ ges_timeline_element_copy (GESTimelineElement * self, gboolean deep)
 
   return ret;
 }
+
+G_GNUC_END_IGNORE_DEPRECATIONS; /* End ignoring GParameter deprecation */
 
 /**
  * ges_timeline_element_get_toplevel_parent:

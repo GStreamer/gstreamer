@@ -108,12 +108,14 @@ ges_transition_clip_update_vtype_internal (GESClip *
 }
 
 /* GESExtractable interface overrides */
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS;       /* Start ignoring GParameter deprecation */
 static GParameter *
 extractable_get_parameters_from_id (const gchar * id, guint * n_params)
 {
   GEnumClass *enum_class =
       g_type_class_peek (GES_VIDEO_STANDARD_TRANSITION_TYPE_TYPE);
   GParameter *params = g_new0 (GParameter, 1);
+
   GEnumValue *value = g_enum_get_value_by_nick (enum_class, id);
 
   params[0].name = "vtype";
@@ -124,6 +126,7 @@ extractable_get_parameters_from_id (const gchar * id, guint * n_params)
   return params;
 }
 
+G_GNUC_END_IGNORE_DEPRECATIONS; /* End ignoring GParameter deprecation */
 static gchar *
 extractable_check_id (GType type, const gchar * id)
 {
