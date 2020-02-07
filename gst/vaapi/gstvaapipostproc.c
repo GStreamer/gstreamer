@@ -1790,7 +1790,7 @@ gst_vaapipostproc_src_event (GstBaseTransform * trans, GstEvent * event)
   GstStructure *structure;
   gboolean ret;
 
-  GST_DEBUG_OBJECT (postproc, "handling %s event", GST_EVENT_TYPE_NAME (event));
+  GST_TRACE_OBJECT (postproc, "handling %s event", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NAVIGATION:
