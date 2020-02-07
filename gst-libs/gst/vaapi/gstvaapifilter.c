@@ -1539,6 +1539,8 @@ fill_color_standard (GstVideoColorimetry * colorimetry,
     properties->matrix_coefficients =
         gst_video_color_matrix_to_iso (colorimetry->matrix);
   }
+
+  properties->color_range = from_GstVideoColorRange (colorimetry->range);
 }
 
 /**
