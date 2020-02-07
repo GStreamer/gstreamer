@@ -171,4 +171,8 @@ G_GNUC_INTERNAL
 guint
 from_GstVideoColorimetry (const GstVideoColorimetry *const colorimetry);
 
+G_GNUC_INTERNAL
+guint
+from_GstVideoColorRange (const GstVideoColorRange value);
+
 #endif /* GST_VAAPI_UTILS_H */

@@ -987,3 +987,24 @@ from_GstVideoColorimetry (const GstVideoColorimetry * const colorimetry)
 
   return VAProcColorStandardExplicit;
 }
+
+/**
+ * from_GstVideoColorRange:
+ * @value: a #GstVideoColorRange
+ *
+ * VPP: maps the #GstVideoColorRange to the VA value.
+ *
+ * Returns: the VA color range.
+ **/
+guint
+from_GstVideoColorRange (const GstVideoColorRange value)
+{
+  switch (value) {
+    case GST_VIDEO_COLOR_RANGE_0_255:
+      return VA_SOURCE_RANGE_FULL;
+    case GST_VIDEO_COLOR_RANGE_16_235:
+      return VA_SOURCE_RANGE_REDUCED;
+    default:
+      return VA_SOURCE_RANGE_UNKNOWN;
+  }
+}
