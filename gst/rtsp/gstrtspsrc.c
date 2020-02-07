@@ -8976,7 +8976,9 @@ gst_rtspsrc_thread (GstRTSPSrc * src)
       src->pending_cmd = CMD_LOOP;
     } else {
       ParameterRequest *next_req;
-      req = g_queue_pop_head (&src->set_get_param_q);
+      if (cmd == CMD_GET_PARAMETER || cmd == CMD_SET_PARAMETER) {
+        req = g_queue_pop_head (&src->set_get_param_q);
+      }
       next_req = g_queue_peek_head (&src->set_get_param_q);
       src->pending_cmd = next_req ? next_req->cmd : CMD_LOOP;
     }
@@ -9369,6 +9371,8 @@ gst_rtspsrc_get_parameter (GstRTSPSrc * src, ParameterRequest * req)
 
   GST_DEBUG_OBJECT (src, "creating server get_parameter");
 
+  g_assert (req);
+
   if ((res = gst_rtspsrc_ensure_open (src, FALSE)) < 0)
     goto open_failed;
 
@@ -9485,6 +9489,8 @@ gst_rtspsrc_set_parameter (GstRTSPSrc * src, ParameterRequest * req)
   const gchar *control;
 
   GST_DEBUG_OBJECT (src, "creating server set_parameter");
+
+  g_assert (req);
 
   if ((res = gst_rtspsrc_ensure_open (src, FALSE)) < 0)
     goto open_failed;
