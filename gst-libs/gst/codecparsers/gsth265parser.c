@@ -1144,7 +1144,7 @@ gst_h265_parser_parse_pic_timing (GstH265Parser * parser,
         tim->du_cpb_removal_delay_increment_minus1 =
             g_new0 (guint8, (tim->num_decoding_units_minus1 + 1));
 
-        for (i = 0; i <= (tim->num_decoding_units_minus1 + 1); i++) {
+        for (i = 0; i <= tim->num_decoding_units_minus1; i++) {
           READ_UE (nr, tim->num_nalus_in_du_minus1[i]);
 
           if (!tim->du_common_cpb_removal_delay_flag
