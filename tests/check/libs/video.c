@@ -3051,6 +3051,42 @@ GST_START_TEST (test_video_formats_pstrides)
 
 GST_END_TEST;
 
+GST_START_TEST (test_video_flags)
+{
+  GstBuffer *buf;
+  GstVideoInfo info;
+  GstVideoFrame frame;
+
+  gst_video_info_init (&info);
+  fail_unless (gst_video_info_set_interlaced_format (&info,
+          GST_VIDEO_FORMAT_RGB, GST_VIDEO_INTERLACE_MODE_ALTERNATE, 4, 4));
+
+  buf = gst_buffer_new_and_alloc (GST_VIDEO_INFO_SIZE (&info));
+  fail_unless (gst_video_frame_map (&frame, &info, buf, GST_MAP_READ));
+  fail_unless (!GST_VIDEO_FRAME_IS_TOP_FIELD (&frame));
+  fail_unless (!GST_VIDEO_FRAME_IS_BOTTOM_FIELD (&frame));
+  gst_video_frame_unmap (&frame);
+  gst_buffer_unref (buf);
+
+  buf = gst_buffer_new_and_alloc (GST_VIDEO_INFO_SIZE (&info));
+  GST_BUFFER_FLAG_SET (buf, GST_VIDEO_BUFFER_FLAG_TOP_FIELD);
+  fail_unless (gst_video_frame_map (&frame, &info, buf, GST_MAP_READ));
+  fail_unless (GST_VIDEO_FRAME_IS_TOP_FIELD (&frame));
+  fail_unless (!GST_VIDEO_FRAME_IS_BOTTOM_FIELD (&frame));
+  gst_video_frame_unmap (&frame);
+  gst_buffer_unref (buf);
+
+  buf = gst_buffer_new_and_alloc (GST_VIDEO_INFO_SIZE (&info));
+  GST_BUFFER_FLAG_SET (buf, GST_VIDEO_BUFFER_FLAG_BOTTOM_FIELD);
+  fail_unless (gst_video_frame_map (&frame, &info, buf, GST_MAP_READ));
+  fail_unless (!GST_VIDEO_FRAME_IS_TOP_FIELD (&frame));
+  fail_unless (GST_VIDEO_FRAME_IS_BOTTOM_FIELD (&frame));
+  gst_video_frame_unmap (&frame);
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
 static Suite *
 video_suite (void)
 {
@@ -3096,6 +3132,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_overlay_composition_over_transparency);
   tcase_add_test (tc_chain, test_video_format_enum_stability);
   tcase_add_test (tc_chain, test_video_formats_pstrides);
+  tcase_add_test (tc_chain, test_video_flags);
 
   return s;
 }
