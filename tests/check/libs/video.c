@@ -3750,22 +3750,40 @@ GST_END_TEST;
 GST_START_TEST (test_video_flags)
 {
   GstBuffer *buf;
+  GstVideoInfo info;
+  GstVideoFrame frame;
 
-  buf = gst_buffer_new ();
+  gst_video_info_init (&info);
+  fail_unless (gst_video_info_set_interlaced_format (&info,
+          GST_VIDEO_FORMAT_RGB, GST_VIDEO_INTERLACE_MODE_ALTERNATE, 4, 4));
+
+  buf = gst_buffer_new_and_alloc (GST_VIDEO_INFO_SIZE (&info));
   fail_unless (!GST_VIDEO_BUFFER_IS_TOP_FIELD (buf));
   fail_unless (!GST_VIDEO_BUFFER_IS_BOTTOM_FIELD (buf));
+  fail_unless (gst_video_frame_map (&frame, &info, buf, GST_MAP_READ));
+  fail_unless (!GST_VIDEO_FRAME_IS_TOP_FIELD (&frame));
+  fail_unless (!GST_VIDEO_FRAME_IS_BOTTOM_FIELD (&frame));
+  gst_video_frame_unmap (&frame);
   gst_buffer_unref (buf);
 
-  buf = gst_buffer_new ();
+  buf = gst_buffer_new_and_alloc (GST_VIDEO_INFO_SIZE (&info));
   GST_BUFFER_FLAG_SET (buf, GST_VIDEO_BUFFER_FLAG_TOP_FIELD);
   fail_unless (GST_VIDEO_BUFFER_IS_TOP_FIELD (buf));
   fail_unless (!GST_VIDEO_BUFFER_IS_BOTTOM_FIELD (buf));
+  fail_unless (gst_video_frame_map (&frame, &info, buf, GST_MAP_READ));
+  fail_unless (GST_VIDEO_FRAME_IS_TOP_FIELD (&frame));
+  fail_unless (!GST_VIDEO_FRAME_IS_BOTTOM_FIELD (&frame));
+  gst_video_frame_unmap (&frame);
   gst_buffer_unref (buf);
 
-  buf = gst_buffer_new ();
+  buf = gst_buffer_new_and_alloc (GST_VIDEO_INFO_SIZE (&info));
   GST_BUFFER_FLAG_SET (buf, GST_VIDEO_BUFFER_FLAG_BOTTOM_FIELD);
   fail_unless (!GST_VIDEO_BUFFER_IS_TOP_FIELD (buf));
   fail_unless (GST_VIDEO_BUFFER_IS_BOTTOM_FIELD (buf));
+  fail_unless (gst_video_frame_map (&frame, &info, buf, GST_MAP_READ));
+  fail_unless (!GST_VIDEO_FRAME_IS_TOP_FIELD (&frame));
+  fail_unless (GST_VIDEO_FRAME_IS_BOTTOM_FIELD (&frame));
+  gst_video_frame_unmap (&frame);
   gst_buffer_unref (buf);
 }
 
