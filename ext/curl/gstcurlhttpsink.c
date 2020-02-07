@@ -335,10 +335,14 @@ gst_curl_http_sink_set_header_unlocked (GstCurlBaseSink * bcsink)
   if (sink->use_content_length) {
     /* if content length is used we assume that every buffer is one
      * entire file, which is the case when uploading several jpegs */
-    tmp =
-        g_strdup_printf ("Content-Length: %d", (int) bcsink->transfer_buf->len);
-    sink->header_list = curl_slist_append (sink->header_list, tmp);
-    g_free (tmp);
+    res =
+        curl_easy_setopt (bcsink->curl, CURLOPT_POSTFIELDSIZE,
+        (long) bcsink->transfer_buf->len);
+    if (res != CURLE_OK) {
+      bcsink->error = g_strdup_printf ("failed to set HTTP content-length: %s",
+          curl_easy_strerror (res));
+      return FALSE;
+    }
   } else {
     /* when sending a POST request to a HTTP 1.1 server, you can send data
      * without knowing the size before starting the POST if you use chunked
