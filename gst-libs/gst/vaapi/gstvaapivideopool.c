@@ -179,6 +179,13 @@ gst_vaapi_video_pool_get_object_unlocked (GstVaapiVideoPool * pool)
     g_mutex_lock (&pool->mutex);
     if (!object)
       return NULL;
+
+    /* Others already allocated a new one before us during we
+       release the mutex */
+    if (pool->capacity && pool->used_count >= pool->capacity) {
+      gst_mini_object_unref (object);
+      return NULL;
+    }
   }
 
   ++pool->used_count;
