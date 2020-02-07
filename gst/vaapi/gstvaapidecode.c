@@ -78,12 +78,12 @@ static const char gst_vaapidecode_sink_caps_str[] =
     ;
 
 static const char gst_vaapidecode_src_caps_str[] =
-    GST_VAAPI_MAKE_SURFACE_CAPS ";"
+    GST_VAAPI_MAKE_SURFACE_CAPS "; "
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES(GST_CAPS_FEATURE_MEMORY_DMABUF, GST_VAAPI_FORMATS_ALL) " ;"
 #if (USE_GLX || USE_EGL)
-    GST_VAAPI_MAKE_GLTEXUPLOAD_CAPS ";"
+    GST_VAAPI_MAKE_GLTEXUPLOAD_CAPS "; "
 #endif
-    GST_VIDEO_CAPS_MAKE(GST_VAAPI_FORMATS_ALL) ";"
-    GST_VAAPI_MAKE_DMABUF_CAPS;
+    GST_VIDEO_CAPS_MAKE(GST_VAAPI_FORMATS_ALL);
 
 static GstStaticPadTemplate gst_vaapidecode_src_factory =
     GST_STATIC_PAD_TEMPLATE(
