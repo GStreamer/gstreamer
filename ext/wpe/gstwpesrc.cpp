@@ -24,12 +24,23 @@
  * The wpesrc element is used to produce a video texture representing a web page
  * rendered off-screen by WPE.
  *
- * ## Example launch line
+ * Starting from WPEBackend-FDO 1.6.x, software rendering support is available. This
+ * features allows wpesrc to be used on machines without GPU, and/or for testing
+ * purpose. To enable it, set the `LIBGL_ALWAYS_SOFTWARE=true` environment
+ * variable and make sure `video/x-raw, format=BGRA` caps are negotiated by the
+ * wpesrc element.
+ *
+ * ## Example launch lines
  *
  * |[
  * gst-launch-1.0 -v wpesrc location="https://gstreamer.freedesktop.org" ! queue ! glimagesink
  * ]|
  * Shows the GStreamer website homepage
+ *
+ * |[
+ * LIBGL_ALWAYS_SOFTWARE=true gst-launch-1.0 -v wpesrc num-buffers=50 location="https://gstreamer.freedesktop.org" ! videoconvert ! pngenc ! multifilesink location=/tmp/snapshot-%05d.png
+ * ]|
+ * Saves the first 50 video frames generated for the GStreamer website as PNG files in /tmp.
  *
  * |[
  * gst-play-1.0 --videosink gtkglsink wpe://https://gstreamer.freedesktop.org
@@ -102,6 +113,7 @@ struct _GstWpeSrc
   gboolean draw_background;
 
   GBytes *bytes;
+  gboolean gl_enabled;
 };
 
 static void gst_wpe_src_uri_handler_init (gpointer iface, gpointer data);
@@ -118,8 +130,40 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "width = " GST_VIDEO_SIZE_RANGE ", "
         "height = " GST_VIDEO_SIZE_RANGE ", "
         "framerate = " GST_VIDEO_FPS_RANGE ", "
-        "pixel-aspect-ratio = (fraction)1/1," "texture-target = (string)2D")
+        "pixel-aspect-ratio = (fraction)1/1, texture-target = (string)2D;"
+#if ENABLE_SHM_BUFFER_SUPPORT
+        "video/x-raw, "
+        "format = (string) BGRA, "
+        "width = " GST_VIDEO_SIZE_RANGE ", "
+        "height = " GST_VIDEO_SIZE_RANGE ", "
+        "framerate = " GST_VIDEO_FPS_RANGE ", "
+        "pixel-aspect-ratio = (fraction)1/1"
+#endif
+        )
     );
+
+static GstFlowReturn
+gst_wpe_src_create (GstBaseSrc * bsrc, guint64 offset, guint length, GstBuffer ** buf)
+{
+  GstWpeSrc *src = GST_WPE_SRC (bsrc);
+  GstFlowReturn ret = GST_FLOW_ERROR;
+  GstBuffer *locked_buffer;
+
+  GST_OBJECT_LOCK (src);
+  if (src->gl_enabled) {
+    GST_OBJECT_UNLOCK (src);
+    return GST_CALL_PARENT_WITH_DEFAULT (GST_BASE_SRC_CLASS, create, (bsrc, offset, length, buf), ret);
+  }
+
+  locked_buffer = src->view->buffer ();
+
+  if (locked_buffer != NULL) {
+    *buf = gst_buffer_ref (locked_buffer);
+    ret = GST_FLOW_OK;
+  }
+  GST_OBJECT_UNLOCK (src);
+  return ret;
+}
 
 static gboolean
 gst_wpe_src_fill_memory (GstGLBaseSrc * bsrc, GstGLMemory * memory)
@@ -160,13 +204,28 @@ gst_wpe_src_gl_start (GstGLBaseSrc * base_src)
 {
   GstWpeSrc *src = GST_WPE_SRC (base_src);
   gboolean result = TRUE;
+  GstCapsFeatures *caps_features;
+  GstGLContext *context = NULL;
+  GstGLDisplay *display = NULL;
 
   GST_INFO_OBJECT (src, "Starting up");
   GST_OBJECT_LOCK (src);
+
+  caps_features = gst_caps_get_features (base_src->out_caps, 0);
+  if (caps_features != NULL && gst_caps_features_contains (caps_features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
+    src->gl_enabled = TRUE;
+    context = base_src->context;
+    display = base_src->display;
+  } else {
+    src->gl_enabled = FALSE;
+  }
+
+  GST_DEBUG_OBJECT (src, "Will fill GLMemories: %d\n", src->gl_enabled);
+
   src->view = new WPEThreadedView;
-  result = src->view->initialize (src, base_src->context, base_src->display,
-      GST_VIDEO_INFO_WIDTH (&base_src->out_info),
-      GST_VIDEO_INFO_HEIGHT (&base_src->out_info));
+  result = src->view->initialize (src, context, display,
+    GST_VIDEO_INFO_WIDTH (&base_src->out_info),
+    GST_VIDEO_INFO_HEIGHT (&base_src->out_info));
 
   if (src->bytes != NULL) {
     src->view->loadData (src->bytes);
@@ -484,6 +543,7 @@ gst_wpe_src_class_init (GstWpeSrcClass * klass)
   gst_element_class_add_static_pad_template (gstelement_class, &src_factory);
 
   base_src_class->fixate = GST_DEBUG_FUNCPTR (gst_wpe_src_fixate);
+  base_src_class->create = GST_DEBUG_FUNCPTR (gst_wpe_src_create);
 
   gl_base_src_class->supported_gl_api =
       static_cast < GstGLAPI >

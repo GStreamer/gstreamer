@@ -26,6 +26,7 @@
 #include <gst/gl/gl.h>
 #include <gst/gl/egl/gsteglimage.h>
 #include <gst/gl/egl/gstgldisplay_egl.h>
+#include <wayland-server.h>
 
 #include <cstdio>
 #include <mutex>
@@ -64,7 +65,7 @@ WPEThreadedView::WPEThreadedView()
     g_mutex_init(&threading.ready_mutex);
     g_cond_init(&threading.ready_cond);
 
-    g_mutex_init(&images.mutex);
+    g_mutex_init(&images_mutex);
 
     {
         GMutexHolder lock(threading.mutex);
@@ -78,15 +79,15 @@ WPEThreadedView::WPEThreadedView()
 WPEThreadedView::~WPEThreadedView()
 {
     {
-        GMutexHolder lock(images.mutex);
+        GMutexHolder lock(images_mutex);
 
-        if (images.pending) {
-            gst_egl_image_unref(images.pending);
-            images.pending = nullptr;
+        if (egl.pending) {
+            gst_egl_image_unref(egl.pending);
+            egl.pending = nullptr;
         }
-        if (images.committed) {
-            gst_egl_image_unref(images.committed);
-            images.committed = nullptr;
+        if (egl.committed) {
+            gst_egl_image_unref(egl.committed);
+            egl.committed = nullptr;
         }
     }
 
@@ -114,7 +115,7 @@ WPEThreadedView::~WPEThreadedView()
     g_cond_clear(&threading.cond);
     g_mutex_clear(&threading.ready_mutex);
     g_cond_clear(&threading.ready_cond);
-    g_mutex_clear(&images.mutex);
+    g_mutex_clear(&images_mutex);
 }
 
 gpointer WPEThreadedView::s_viewThread(gpointer data)
@@ -186,8 +187,18 @@ bool WPEThreadedView::initialize(GstWpeSrc* src, GstGLContext* context, GstGLDis
 #endif
         });
 
-    EGLDisplay eglDisplay = gst_gl_display_egl_get_from_native(GST_GL_DISPLAY_TYPE_WAYLAND,
-        gst_gl_display_get_handle(display));
+    EGLDisplay eglDisplay;
+    if (context && display)
+      eglDisplay = gst_gl_display_egl_get_from_native(GST_GL_DISPLAY_TYPE_WAYLAND,
+                                                      gst_gl_display_get_handle(display));
+    else {
+      eglDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+      if (eglDisplay == EGL_NO_DISPLAY)
+        return false;
+
+      if (!eglInitialize(eglDisplay, nullptr, nullptr) || !eglBindAPI(EGL_OPENGL_ES_API))
+        return false;
+    }
     GST_DEBUG("eglDisplay %p", eglDisplay);
 
     struct InitializeContext {
@@ -210,8 +221,10 @@ bool WPEThreadedView::initialize(GstWpeSrc* src, GstGLContext* context, GstGLDis
 
             GMutexHolder lock(view.threading.mutex);
 
-            view.gst.context = GST_GL_CONTEXT(gst_object_ref(initializeContext.context));
-            view.gst.display = GST_GL_DISPLAY(gst_object_ref(initializeContext.display));
+            if (initializeContext.context)
+              view.gst.context = GST_GL_CONTEXT(gst_object_ref(initializeContext.context));
+            if (initializeContext.display)
+              view.gst.display = GST_GL_DISPLAY(gst_object_ref(initializeContext.display));
 
             view.wpe.width = initializeContext.width;
             view.wpe.height = initializeContext.height;
@@ -273,25 +286,58 @@ GstEGLImage* WPEThreadedView::image()
     bool dispatchFrameComplete = false;
 
     {
-        GMutexHolder lock(images.mutex);
+        GMutexHolder lock(images_mutex);
 
-        GST_TRACE("pending %" GST_PTR_FORMAT " (%d) committed %" GST_PTR_FORMAT " (%d)", images.pending,
-                  GST_IS_EGL_IMAGE(images.pending) ? GST_MINI_OBJECT_REFCOUNT_VALUE(GST_MINI_OBJECT_CAST(images.pending)) : 0,
-                  images.committed,
-                  GST_IS_EGL_IMAGE(images.committed) ? GST_MINI_OBJECT_REFCOUNT_VALUE(GST_MINI_OBJECT_CAST(images.committed)) : 0);
+        GST_TRACE("pending %" GST_PTR_FORMAT " (%d) committed %" GST_PTR_FORMAT " (%d)", egl.pending,
+                  GST_IS_EGL_IMAGE(egl.pending) ? GST_MINI_OBJECT_REFCOUNT_VALUE(GST_MINI_OBJECT_CAST(egl.pending)) : 0,
+                  egl.committed,
+                  GST_IS_EGL_IMAGE(egl.committed) ? GST_MINI_OBJECT_REFCOUNT_VALUE(GST_MINI_OBJECT_CAST(egl.committed)) : 0);
 
-        if (images.pending) {
-            auto* previousImage = images.committed;
-            images.committed = images.pending;
-            images.pending = nullptr;
+        if (egl.pending) {
+            auto* previousImage = egl.committed;
+            egl.committed = egl.pending;
+            egl.pending = nullptr;
 
             if (previousImage)
                 gst_egl_image_unref(previousImage);
             dispatchFrameComplete = true;
         }
 
-        if (images.committed)
-            ret = images.committed;
+        if (egl.committed)
+            ret = egl.committed;
+    }
+
+    if (dispatchFrameComplete)
+        frameComplete();
+
+    return ret;
+}
+
+GstBuffer* WPEThreadedView::buffer()
+{
+    GstBuffer* ret = nullptr;
+    bool dispatchFrameComplete = false;
+
+    {
+        GMutexHolder lock(images_mutex);
+
+        GST_TRACE("pending %" GST_PTR_FORMAT " (%d) committed %" GST_PTR_FORMAT " (%d)", shm.pending,
+                  GST_IS_BUFFER(shm.pending) ? GST_MINI_OBJECT_REFCOUNT_VALUE(GST_MINI_OBJECT_CAST(shm.pending)) : 0,
+                  shm.committed,
+                  GST_IS_BUFFER(shm.committed) ? GST_MINI_OBJECT_REFCOUNT_VALUE(GST_MINI_OBJECT_CAST(shm.committed)) : 0);
+
+        if (shm.pending) {
+            auto* previousImage = shm.committed;
+            shm.committed = shm.pending;
+            shm.pending = nullptr;
+
+            if (previousImage)
+                gst_buffer_unref(previousImage);
+            dispatchFrameComplete = true;
+        }
+
+        if (shm.committed)
+            ret = shm.committed;
     }
 
     if (dispatchFrameComplete)
@@ -504,12 +550,92 @@ void WPEThreadedView::handleExportedImage(gpointer image)
 
     auto* gstImage = gst_egl_image_new_wrapped(gst.context, eglImage, GST_GL_RGBA, imageContext, s_releaseImage);
     {
-      GMutexHolder lock(images.mutex);
+      GMutexHolder lock(images_mutex);
 
       GST_TRACE("EGLImage %p wrapped in GstEGLImage %" GST_PTR_FORMAT, eglImage, gstImage);
-      images.pending = gstImage;
+      egl.pending = gstImage;
     }
 }
+
+#if ENABLE_SHM_BUFFER_SUPPORT
+struct SHMBufferContext {
+  WPEThreadedView* view;
+  struct wpe_fdo_shm_exported_buffer* buffer;
+};
+
+void WPEThreadedView::releaseSHMBuffer(gpointer data)
+{
+    SHMBufferContext* context = static_cast<SHMBufferContext*>(data);
+    struct ReleaseBufferContext {
+        WPEThreadedView& view;
+        SHMBufferContext* context;
+    } releaseImageContext{ *this, context };
+
+    GSource* source = g_idle_source_new();
+    g_source_set_callback(source,
+        [](gpointer data) -> gboolean {
+            auto& releaseBufferContext = *static_cast<ReleaseBufferContext*>(data);
+            auto& view = releaseBufferContext.view;
+            GMutexHolder lock(view.threading.mutex);
+
+            struct wpe_fdo_shm_exported_buffer* buffer = static_cast<struct wpe_fdo_shm_exported_buffer*>(releaseBufferContext.context->buffer);
+            GST_TRACE("Dispatch release exported buffer %p", buffer);
+            wpe_view_backend_exportable_fdo_dispatch_release_shm_exported_buffer(view.wpe.exportable, buffer);
+            g_cond_signal(&view.threading.cond);
+            return G_SOURCE_REMOVE;
+        },
+        &releaseImageContext, nullptr);
+    g_source_set_priority(source, WPE_GLIB_SOURCE_PRIORITY);
+
+    {
+        GMutexHolder lock(threading.mutex);
+        g_source_attach(source, glib.context);
+        g_cond_wait(&threading.cond, &threading.mutex);
+    }
+
+    g_source_unref(source);
+}
+
+void WPEThreadedView::s_releaseSHMBuffer(gpointer data)
+{
+    SHMBufferContext* context = static_cast<SHMBufferContext*>(data);
+    context->view->releaseSHMBuffer(data);
+    g_slice_free(SHMBufferContext, context);
+}
+
+void WPEThreadedView::handleExportedBuffer(struct wpe_fdo_shm_exported_buffer* buffer)
+{
+    struct wl_shm_buffer* shmBuffer = wpe_fdo_shm_exported_buffer_get_shm_buffer(buffer);
+    auto format = wl_shm_buffer_get_format(shmBuffer);
+    if (format != WL_SHM_FORMAT_ARGB8888 && format != WL_SHM_FORMAT_XRGB8888) {
+        GST_ERROR("Unsupported pixel format: %d", format);
+        return;
+    }
+
+    int32_t width = wl_shm_buffer_get_width(shmBuffer);
+    int32_t height = wl_shm_buffer_get_height(shmBuffer);
+    gint stride = wl_shm_buffer_get_stride(shmBuffer);
+    gsize size = width * height * 4;
+    auto* data = static_cast<uint8_t*>(wl_shm_buffer_get_data(shmBuffer));
+
+    SHMBufferContext* bufferContext = g_slice_new(SHMBufferContext);
+    bufferContext->view = this;
+    bufferContext->buffer = buffer;
+
+    auto* gstBuffer = gst_buffer_new_wrapped_full(GST_MEMORY_FLAG_READONLY, data, size, 0, size, bufferContext, s_releaseSHMBuffer);
+    gsize offsets[1];
+    gint strides[1];
+    offsets[0] = 0;
+    strides[0] = stride;
+    gst_buffer_add_video_meta_full(gstBuffer, GST_VIDEO_FRAME_FLAG_NONE, GST_VIDEO_FORMAT_BGRA, width, height, 1, offsets, strides);
+
+    {
+        GMutexHolder lock(images_mutex);
+        GST_TRACE("SHM buffer %p wrapped in buffer %" GST_PTR_FORMAT, buffer, gstBuffer);
+        shm.pending = gstBuffer;
+    }
+}
+#endif
 
 struct wpe_view_backend_exportable_fdo_egl_client WPEThreadedView::s_exportableClient = {
 #if USE_DEPRECATED_FDO_EGL_IMAGE
@@ -518,7 +644,7 @@ struct wpe_view_backend_exportable_fdo_egl_client WPEThreadedView::s_exportableC
         auto& view = *static_cast<WPEThreadedView*>(data);
         view.handleExportedImage(static_cast<gpointer>(image));
     },
-    nullptr,
+    nullptr, nullptr,
 #else
     // export_egl_image
     nullptr,
@@ -526,9 +652,18 @@ struct wpe_view_backend_exportable_fdo_egl_client WPEThreadedView::s_exportableC
         auto& view = *static_cast<WPEThreadedView*>(data);
         view.handleExportedImage(static_cast<gpointer>(image));
     },
-#endif
+#if ENABLE_SHM_BUFFER_SUPPORT
+    // export_shm_buffer
+    [](void* data, struct wpe_fdo_shm_exported_buffer* buffer) {
+        auto& view = *static_cast<WPEThreadedView*>(data);
+        view.handleExportedBuffer(buffer);
+    },
+#else
+    nullptr,
+#endif // ENABLE_SHM_BUFFER_SUPPORT
+#endif // USE_DEPRECATED_FDO_EGL_IMAGE
     // padding
-    nullptr, nullptr, nullptr
+    nullptr, nullptr
 };
 
 void WPEThreadedView::s_releaseImage(GstEGLImage* image, gpointer data)

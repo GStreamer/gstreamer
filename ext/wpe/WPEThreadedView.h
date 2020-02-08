@@ -31,6 +31,12 @@ typedef struct _GstGLContext GstGLContext;
 typedef struct _GstGLDisplay GstGLDisplay;
 typedef struct _GstEGLImage GstEGLImage;
 
+#if defined(WPE_FDO_CHECK_VERSION) && WPE_FDO_CHECK_VERSION(1, 5, 0)
+#define ENABLE_SHM_BUFFER_SUPPORT 1
+#else
+#define ENABLE_SHM_BUFFER_SUPPORT 0
+#endif
+
 class WPEThreadedView {
 public:
     WPEThreadedView();
@@ -44,17 +50,25 @@ public:
     void setDrawBackground(gboolean);
 
     GstEGLImage* image();
+    GstBuffer* buffer();
 
     struct wpe_view_backend* backend() const;
 
 protected:
     void handleExportedImage(gpointer);
+#if ENABLE_SHM_BUFFER_SUPPORT
+    void handleExportedBuffer(struct wpe_fdo_shm_exported_buffer*);
+#endif
 
 private:
     void frameComplete();
     void loadUriUnlocked(const gchar*);
 
     void releaseImage(gpointer);
+#if ENABLE_SHM_BUFFER_SUPPORT
+    void releaseSHMBuffer(gpointer);
+    static void s_releaseSHMBuffer(gpointer);
+#endif
 
     static void s_loadEvent(WebKitWebView*, WebKitLoadEvent, gpointer);
 
@@ -90,9 +104,17 @@ private:
         WebKitWebView* view;
     } webkit = { nullptr, nullptr };
 
+    // This mutex guards access to either egl or shm resources declared below,
+    // depending on the runtime behavior.
+    GMutex images_mutex;
+
     struct {
-        GMutex mutex;
-        GstEGLImage* pending { nullptr };
-        GstEGLImage* committed { nullptr };
-    } images;
+        GstEGLImage* pending;
+        GstEGLImage* committed;
+    } egl { nullptr, nullptr };
+
+    struct {
+        GstBuffer* pending;
+        GstBuffer* committed;
+    } shm { nullptr, nullptr };
 };

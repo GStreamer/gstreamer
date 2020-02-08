@@ -10,6 +10,7 @@ wpe_dep = dependency('wpe-webkit-1.0', version : '>= 2.24', required : get_optio
 wpe_fdo_dep = dependency('wpebackend-fdo-1.0', required : get_option('wpe'))
 egl_dep = dependency('egl', required : get_option('wpe'))
 xkbcommon_dep = dependency('xkbcommon', version : '>= 0.8', required : get_option('wpe'))
+wl_server_dep = dependency('wayland-server', required : get_option('wpe'))
 
 if not wpe_dep.found() or not wpe_fdo_dep.found() or not egl_dep.found() or not xkbcommon_dep.found()
   subdir_done()
@@ -17,7 +18,7 @@ endif
 
 gstwpe = library('gstwpe',
   ['WPEThreadedView.cpp', 'gstwpesrc.cpp'],
-  dependencies : [egl_dep, wpe_dep, wpe_fdo_dep, gstvideo_dep, gstbase_dep, gstgl_dep, xkbcommon_dep],
+  dependencies : [egl_dep, wpe_dep, wpe_fdo_dep, gstvideo_dep, gstbase_dep, gstgl_dep, xkbcommon_dep, wl_server_dep],
   cpp_args : gst_plugins_bad_args + ['-DHAVE_CONFIG_H=1'],
   include_directories : [configinc],
   install : true,
