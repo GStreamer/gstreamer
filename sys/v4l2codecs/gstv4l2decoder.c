@@ -128,7 +128,7 @@ gst_v4l2_decoder_open (GstV4l2Decoder * self)
 }
 
 gboolean
-gst_v4l2_decoder_enum_input_fmt (GstV4l2Decoder * self, gint i,
+gst_v4l2_decoder_enum_sink_fmt (GstV4l2Decoder * self, gint i,
     guint32 * out_fmt)
 {
   struct v4l2_fmtdesc fmtdesc = { i, V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE, };

@@ -22,16 +22,61 @@
 #include "config.h"
 #endif
 
-#include <gst/gst.h>
+#include "gstv4l2codecdevice.h"
+#include "gstv4l2codech264dec.h"
+#include "gstv4l2decoder.h"
+#include "linux/h264-ctrls.h"
+#include "linux/media.h"
 
 #define GST_CAT_DEFAULT gstv4l2codecs_debug
 GST_DEBUG_CATEGORY (gstv4l2codecs_debug);
 
+static void
+register_video_decoder (GstPlugin * plugin, GstV4l2CodecDevice * device)
+{
+  GstV4l2Decoder *decoder = gst_v4l2_decoder_new (device);
+  gint i;
+  guint32 fmt;
+
+  if (!gst_v4l2_decoder_open (decoder)) {
+    g_object_unref (decoder);
+    return;
+  }
+
+  for (i = 0; gst_v4l2_decoder_enum_sink_fmt (decoder, i, &fmt); i++) {
+    switch (fmt) {
+      case V4L2_PIX_FMT_H264_SLICE:
+        GST_INFO_OBJECT (decoder, "Registering %s as H264 Decoder",
+            device->name);
+        gst_v4l2_codec_h264_dec_register (plugin, device, GST_RANK_PRIMARY + 1);
+        break;
+      default:
+        GST_FIXME_OBJECT (decoder, "%" GST_FOURCC_FORMAT " is not supported.",
+            GST_FOURCC_ARGS (fmt));
+        break;
+    }
+  }
+
+  g_object_unref (decoder);
+}
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GList *devices, *d;
+
   GST_DEBUG_CATEGORY_INIT (gstv4l2codecs_debug, "v4l2codecs", 0,
       "V4L2 CODECs general debug");
+
+  devices = gst_v4l2_codec_find_devices ();
+  for (d = devices; d; d = g_list_next (d)) {
+    GstV4l2CodecDevice *device = d->data;
+
+    if (device->function == MEDIA_ENT_F_PROC_VIDEO_DECODER)
+      register_video_decoder (plugin, device);
+  }
+
+  gst_v4l2_codec_device_list_free (devices);
   return TRUE;
 }
 

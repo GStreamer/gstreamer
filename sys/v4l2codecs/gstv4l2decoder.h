@@ -34,8 +34,8 @@ GstV4l2Decoder *  gst_v4l2_decoder_new (GstV4l2CodecDevice * device);
 
 gboolean          gst_v4l2_decoder_open (GstV4l2Decoder * decoder);
 
-gboolean          gst_v4l2_decoder_enum_input_fmt (GstV4l2Decoder * self,
-                                                   gint i, guint32 * out_fmt);
+gboolean          gst_v4l2_decoder_enum_sink_fmt (GstV4l2Decoder * self,
+                                                  gint i, guint32 * out_fmt);
 
 void              gst_v4l2_decoder_install_properties (GObjectClass * gobject_class,
                                                        gint prop_offset,

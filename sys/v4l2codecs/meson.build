@@ -1,6 +1,7 @@
 v4l2codecs_sources = [
   'plugin.c',
   'gstv4l2codecdevice.c',
+  'gstv4l2codech264dec.c',
   'gstv4l2decoder.c',
 ]
 
