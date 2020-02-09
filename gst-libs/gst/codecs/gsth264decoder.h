@@ -106,6 +106,8 @@ struct _GstH264DecoderClass
   gpointer padding[GST_PADDING_LARGE];
 };
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstH264Decoder, gst_object_unref)
+
 GST_CODECS_API
 GType gst_h264_decoder_get_type (void);
 

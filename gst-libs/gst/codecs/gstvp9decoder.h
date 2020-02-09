@@ -108,6 +108,8 @@ struct _GstVp9DecoderClass
   gpointer padding[GST_PADDING_LARGE];
 };
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVp9Decoder, gst_object_unref)
+
 GST_CODECS_API
 GType gst_vp9_decoder_get_type (void);
 

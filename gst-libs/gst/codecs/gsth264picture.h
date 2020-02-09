@@ -208,6 +208,8 @@ gint  gst_h264_dpb_get_size   (GstH264Dpb * dpb);
 GST_CODECS_API
 gboolean gst_h264_dpb_is_full (GstH264Dpb * dpb);
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstH264Picture, gst_h264_picture_unref)
+
 G_END_DECLS
 
 #endif /* __GST_H264_PICTURE_H__ */

@@ -119,6 +119,8 @@ GST_CODECS_API
 void  gst_vp9_dpb_add              (GstVp9Dpb * dpb,
                                     GstVp9Picture * picture);
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVp9Picture, gst_vp9_picture_unref)
+
 G_END_DECLS
 
 #endif /* __GST_VP9_PICTURE_H__ */
