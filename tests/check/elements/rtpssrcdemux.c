@@ -102,7 +102,7 @@ rtpssrcdemux_pad_added (G_GNUC_UNUSED GstElement * demux, GstPad * src_pad,
 
 GST_START_TEST (test_event_forwarding)
 {
-  TestContext ctx = { NULL, };
+  TestContext ctx = { NULL, NULL, NULL, NULL };
   GstHarness *h;
   GstEvent *event;
   GstCaps *caps;
@@ -182,8 +182,8 @@ typedef struct
 } LockTestContext;
 
 static void
-new_ssrc_pad_cb (GstElement * element, guint ssrc, GstPad * pad,
-    LockTestContext * ctx)
+new_ssrc_pad_cb (G_GNUC_UNUSED GstElement * element, G_GNUC_UNUSED guint ssrc,
+    G_GNUC_UNUSED GstPad * pad, LockTestContext * ctx)
 {
   g_message ("Signalling ready");
   g_atomic_int_set (&ctx->ready, 1);
@@ -207,9 +207,10 @@ push_buffer_func (gpointer user_data)
 GST_START_TEST (test_oob_event_locking)
 {
   GstHarness *h = gst_harness_new_with_padnames ("rtpssrcdemux", "sink", NULL);
-  LockTestContext ctx = { FALSE, };
+  LockTestContext ctx;
   GThread *thread;
 
+  memset (&ctx, 0, sizeof (LockTestContext));
   g_mutex_init (&ctx.mutex);
   g_cond_init (&ctx.cond);
 
