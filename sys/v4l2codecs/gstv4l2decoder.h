@@ -34,8 +34,16 @@ GstV4l2Decoder *  gst_v4l2_decoder_new (GstV4l2CodecDevice * device);
 
 gboolean          gst_v4l2_decoder_open (GstV4l2Decoder * decoder);
 
+gboolean          gst_v4l2_decoder_close (GstV4l2Decoder * decoder);
+
 gboolean          gst_v4l2_decoder_enum_sink_fmt (GstV4l2Decoder * self,
                                                   gint i, guint32 * out_fmt);
+
+gboolean          gst_v4l2_decoder_set_sink_fmt (GstV4l2Decoder * self, guint32 fmt,
+                                                 gint width, gint height);
+
+gboolean          gst_v4l2_decoder_select_src_format (GstV4l2Decoder * self,
+                                                      GstVideoInfo * info);
 
 void              gst_v4l2_decoder_install_properties (GObjectClass * gobject_class,
                                                        gint prop_offset,

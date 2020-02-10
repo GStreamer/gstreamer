@@ -22,6 +22,7 @@
 #endif
 
 #include "gstv4l2decoder.h"
+#include "gstv4l2format.h"
 #include "linux/media.h"
 #include "linux/videodev2.h"
 
@@ -62,10 +63,7 @@ gst_v4l2_decoder_finalize (GObject * obj)
 {
   GstV4l2Decoder *self = GST_V4L2_DECODER (obj);
 
-  if (self->media_fd)
-    close (self->media_fd);
-  if (self->video_fd)
-    close (self->media_fd);
+  gst_v4l2_decoder_close (self);
 
   g_free (self->media_device);
   g_free (self->video_device);
@@ -128,6 +126,21 @@ gst_v4l2_decoder_open (GstV4l2Decoder * self)
 }
 
 gboolean
+gst_v4l2_decoder_close (GstV4l2Decoder * self)
+{
+  if (self->media_fd)
+    close (self->media_fd);
+  if (self->video_fd)
+    close (self->media_fd);
+
+  self->media_fd = 0;
+  self->video_fd = 0;
+  self->opened = FALSE;
+
+  return TRUE;
+}
+
+gboolean
 gst_v4l2_decoder_enum_sink_fmt (GstV4l2Decoder * self, gint i,
     guint32 * out_fmt)
 {
@@ -146,6 +159,65 @@ gst_v4l2_decoder_enum_sink_fmt (GstV4l2Decoder * self, gint i,
   GST_DEBUG_OBJECT (self, "Found format %" GST_FOURCC_FORMAT " (%s)",
       GST_FOURCC_ARGS (fmtdesc.pixelformat), fmtdesc.description);
   *out_fmt = fmtdesc.pixelformat;
+
+  return TRUE;
+}
+
+gboolean
+gst_v4l2_decoder_set_sink_fmt (GstV4l2Decoder * self, guint32 pix_fmt,
+    gint width, gint height)
+{
+  struct v4l2_format format = (struct v4l2_format) {
+    .type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE,
+    .fmt.pix_mp = (struct v4l2_pix_format_mplane) {
+          .pixelformat = pix_fmt,
+          .width = width,
+          .height = height,
+        },
+  };
+  gint ret;
+
+  ret = ioctl (self->video_fd, VIDIOC_S_FMT, &format);
+  if (ret < 0) {
+    GST_ERROR_OBJECT (self, "VIDIOC_S_FMT failed: %s", g_strerror (errno));
+    return FALSE;
+  }
+
+  if (format.fmt.pix_mp.pixelformat != pix_fmt
+      || format.fmt.pix_mp.width != width
+      || format.fmt.pix_mp.height != height) {
+    GST_WARNING_OBJECT (self, "Failed to set sink format to %"
+        GST_FOURCC_FORMAT " %ix%i", GST_FOURCC_ARGS (pix_fmt), width, height);
+    errno = EINVAL;
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+gboolean
+gst_v4l2_decoder_select_src_format (GstV4l2Decoder * self, GstVideoInfo * info)
+{
+  gint ret;
+  struct v4l2_format fmt = {
+    .type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE,
+  };
+
+  ret = ioctl (self->video_fd, VIDIOC_G_FMT, &fmt);
+  if (ret < 0) {
+    GST_ERROR_OBJECT (self, "VIDIOC_S_FMT failed: %s", g_strerror (errno));
+    return FALSE;
+  }
+
+  if (!gst_v4l2_format_to_video_info (&fmt, info)) {
+    GST_ERROR_OBJECT (self, "Unsupported V4L2 pixelformat %" GST_FOURCC_FORMAT,
+        GST_FOURCC_ARGS (fmt.fmt.pix_mp.pixelformat));
+    return FALSE;
+  }
+
+  GST_INFO_OBJECT (self, "Selected format %s %ix%i",
+      gst_video_format_to_string (info->finfo->format),
+      info->width, info->height);
 
   return TRUE;
 }

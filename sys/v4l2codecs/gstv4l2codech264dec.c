@@ -22,6 +22,7 @@
 #endif
 
 #include "gstv4l2codech264dec.h"
+#include "linux/h264-ctrls.h"
 
 GST_DEBUG_CATEGORY_STATIC (v4l2_h264dec_debug);
 #define GST_CAT_DEFAULT v4l2_h264dec_debug
@@ -49,9 +50,13 @@ struct _GstV4l2CodecH264Dec
   GstH264Decoder parent;
   GstV4l2Decoder *decoder;
   GstVideoCodecState *output_state;
-  GstVideoFormat out_format;
-  gint width;
-  gint height;
+  GstVideoInfo vinfo;
+  gint display_width;
+  gint display_height;
+  gint coded_width;
+  gint coded_height;
+  guint bitdepth;
+  guint chroma_format_idc;
 };
 
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstV4l2CodecH264Dec,
@@ -63,12 +68,23 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstV4l2CodecH264Dec,
 static gboolean
 gst_v4l2_codec_h264_dec_open (GstVideoDecoder * decoder)
 {
+  GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
+
+  if (!gst_v4l2_decoder_open (self->decoder)) {
+    GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ_WRITE,
+        ("Failed to open H264 decoder"),
+        ("gst_v4l2_decoder_open() failed: %s", g_strerror (errno)));
+    return FALSE;
+  }
+
   return TRUE;
 }
 
 static gboolean
 gst_v4l2_codec_h264_dec_close (GstVideoDecoder * decoder)
 {
+  GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
+  gst_v4l2_decoder_close (self->decoder);
   return TRUE;
 }
 
@@ -90,14 +106,39 @@ gst_v4l2_codec_h264_dec_negotiate (GstVideoDecoder * decoder)
   GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
   GstH264Decoder *h264dec = GST_H264_DECODER (decoder);
 
-  GST_DEBUG_OBJECT (self, "negotiate");
+  GST_DEBUG_OBJECT (self, "Negotiate");
+
+  /* TODO drain / reset */
+
+  if (!gst_v4l2_decoder_set_sink_fmt (self->decoder, V4L2_PIX_FMT_H264_SLICE,
+          self->coded_width, self->coded_height)) {
+    GST_ELEMENT_ERROR (self, CORE, NEGOTIATION,
+        ("Failed to configure H264 decoder"),
+        ("gst_v4l2_decoder_set_sink_fmt() failed: %s", g_strerror (errno)));
+    gst_v4l2_decoder_close (self->decoder);
+    return FALSE;
+  }
+
+  /* TODO set sequence parameter control, this is needed to negotiate a
+   * format with the help of the driver */
+
+  if (!gst_v4l2_decoder_select_src_format (self->decoder, &self->vinfo)) {
+    GST_ELEMENT_ERROR (self, CORE, NEGOTIATION,
+        ("Unsupported bitdepth/chroma format"),
+        ("No support for %ux%u %ubit chroma IDC %i", self->coded_width,
+            self->coded_height, self->bitdepth, self->chroma_format_idc));
+    return FALSE;
+  }
+
+  /* TODO some decoders supports color convertion and scaling */
 
   if (self->output_state)
     gst_video_codec_state_unref (self->output_state);
 
   self->output_state =
       gst_video_decoder_set_output_state (GST_VIDEO_DECODER (self),
-      self->out_format, self->width, self->height, h264dec->input_state);
+      self->vinfo.finfo->format, self->display_width,
+      self->display_height, h264dec->input_state);
 
   self->output_state->caps = gst_video_info_to_caps (&self->output_state->info);
 
@@ -116,7 +157,51 @@ static gboolean
 gst_v4l2_codec_h264_dec_new_sequence (GstH264Decoder * decoder,
     const GstH264SPS * sps, gint max_dpb_size)
 {
-  /* TODO check if we need to setup a new format */
+  GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
+  gint crop_width = sps->width;
+  gint crop_height = sps->height;
+  gboolean negotiation_needed = FALSE;
+
+  if (self->vinfo.finfo->format == GST_VIDEO_FORMAT_UNKNOWN)
+    negotiation_needed = TRUE;
+
+  if (sps->frame_cropping_flag) {
+    crop_width = sps->crop_rect_width;
+    crop_height = sps->crop_rect_height;
+  }
+
+  if (self->display_width != crop_width || self->display_height != crop_height
+      || self->coded_width != sps->width || self->coded_height != sps->height) {
+    self->display_width = crop_width;
+    self->display_height = crop_height;
+    self->coded_width = sps->width;
+    self->coded_height = sps->height;
+    negotiation_needed = TRUE;
+    GST_INFO_OBJECT (self, "Resolution changed to %dx%d (%ix%i)",
+        self->display_width, self->display_height,
+        self->coded_width, self->coded_height);
+  }
+
+  if (self->bitdepth != sps->bit_depth_luma_minus8 + 8) {
+    self->bitdepth = sps->bit_depth_luma_minus8 + 8;
+    negotiation_needed = TRUE;
+    GST_INFO_OBJECT (self, "Bitdepth changed to %u", self->bitdepth);
+  }
+
+  if (self->chroma_format_idc != sps->chroma_format_idc) {
+    self->chroma_format_idc = sps->chroma_format_idc;
+    negotiation_needed = TRUE;
+    GST_INFO_OBJECT (self, "Chroma format changed to %i",
+        self->chroma_format_idc);
+  }
+
+  if (negotiation_needed) {
+    if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
+      GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
+      return FALSE;
+    }
+  }
+
   return TRUE;
 }
 
@@ -124,6 +209,7 @@ static gboolean
 gst_v4l2_codec_h264_dec_start_picture (GstH264Decoder * decoder,
     GstH264Picture * picture, GstH264Slice * slice, GstH264Dpb * dpb)
 {
+  /* Fill v4l2_ctrl_h264_decode_params */
   return FALSE;
 }
 
@@ -131,6 +217,7 @@ static GstFlowReturn
 gst_v4l2_codec_h264_dec_output_picture (GstH264Decoder * decoder,
     GstH264Picture * picture)
 {
+  /* Fill vl2_ctrl_h264_slice_params */
   return GST_FLOW_ERROR;
 }
 
@@ -186,6 +273,7 @@ gst_v4l2_codec_h264_dec_subinit (GstV4l2CodecH264Dec * self,
     GstV4l2CodecH264DecClass * klass)
 {
   self->decoder = gst_v4l2_decoder_new (klass->device);
+  gst_video_info_init (&self->vinfo);
 }
 
 static void
