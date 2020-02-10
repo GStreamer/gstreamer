@@ -482,7 +482,8 @@ _filename_get_timestamp (GstValidateSsim * self, const gchar * filename,
   gchar *other = g_strdup (bname);
   gboolean res = TRUE;
 
-  if (sscanf (bname, "%" GST_TIME_FORMAT "%s", &h, &m, &s, &ns, other) < 4) {
+  if (sscanf (bname, "%" GST_VALIDATE_SSIM_TIME_FORMAT "%s", &h, &m, &s, &ns,
+          other) < 4) {
     GST_INFO_OBJECT (self, "Can not sscanf %s", bname);
 
     goto fail;

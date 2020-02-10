@@ -523,10 +523,10 @@ _get_filename (ValidateSsimOverride * self, GstValidatePadMonitor * monitor,
   gchar *outname = NULL, *s;
 
   if (self->priv->save_format == GST_VIDEO_FORMAT_ENCODED)
-    s = g_strdup_printf ("%" GST_TIME_FORMAT ".%s", GST_TIME_ARGS (position),
-        self->priv->ext);
+    s = g_strdup_printf ("%" GST_VALIDATE_SSIM_TIME_FORMAT ".%s",
+        GST_TIME_ARGS (position), self->priv->ext);
   else
-    s = g_strdup_printf ("%" GST_TIME_FORMAT ".%dx%d.%s",
+    s = g_strdup_printf ("%" GST_VALIDATE_SSIM_TIME_FORMAT ".%dx%d.%s",
         GST_TIME_ARGS (position),
         self->priv->out_info.width,
         self->priv->out_info.height, self->priv->ext);
@@ -537,10 +537,10 @@ _get_filename (ValidateSsimOverride * self, GstValidatePadMonitor * monitor,
   while (has_frame (self, outname)) {
     g_free (outname);
     if (self->priv->save_format == GST_VIDEO_FORMAT_ENCODED)
-      s = g_strdup_printf ("%" GST_TIME_FORMAT "-%d.%s",
+      s = g_strdup_printf ("%" GST_VALIDATE_SSIM_TIME_FORMAT "-%d.%s",
           GST_TIME_ARGS (position), i++, self->priv->ext);
     else
-      s = g_strdup_printf ("%" GST_TIME_FORMAT "-%d.%dx%d.%s",
+      s = g_strdup_printf ("%" GST_VALIDATE_SSIM_TIME_FORMAT "-%d.%dx%d.%s",
           GST_TIME_ARGS (position), i++, self->priv->out_info.width,
           self->priv->out_info.height, self->priv->ext);
 

@@ -47,6 +47,8 @@ typedef struct {
   GstObjectClass parent;
 } GstValidateSsimClass;
 
+#define GST_VALIDATE_SSIM_TIME_FORMAT "u-%02u-%02u.%09u"
+
 #define GST_VALIDATE_SSIM_TYPE (gst_validate_ssim_get_type ())
 #define GST_VALIDATE_SSIM(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_VALIDATE_SSIM_TYPE, GstValidateSsim))
 #define GST_VALIDATE_SSIM_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), GST_VALIDATE_SSIM_TYPE, GstValidateSsimClass))
