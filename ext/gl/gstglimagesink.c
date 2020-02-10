@@ -444,6 +444,30 @@ _display_size_to_stream_size (GstGLImageSink * gl_sink, gdouble x,
   GST_TRACE ("transform %fx%f into %fx%f", x, y, *stream_x, *stream_y);
 }
 
+static void
+_display_scroll_value_to_stream_scroll_value (GstGLImageSink * gl_sink,
+    gdouble delta_x, gdouble delta_y, gdouble * stream_delta_x,
+    gdouble * stream_delta_y)
+{
+  gdouble stream_width, stream_height;
+
+  stream_width = (gdouble) GST_VIDEO_INFO_WIDTH (&gl_sink->out_info);
+  stream_height = (gdouble) GST_VIDEO_INFO_HEIGHT (&gl_sink->out_info);
+
+  if (delta_x != 0 && gl_sink->display_rect.w > 0)
+    *stream_delta_x = delta_x * (stream_width / gl_sink->display_rect.w);
+  else
+    *stream_delta_x = delta_x;
+
+  if (delta_y != 0 && gl_sink->display_rect.h > 0)
+    *stream_delta_y = delta_y * (stream_height / gl_sink->display_rect.h);
+  else
+    *stream_delta_y = delta_y;
+
+  GST_TRACE_OBJECT (gl_sink, "transform %fx%f into %fx%f", delta_x, delta_y,
+      *stream_delta_x, *stream_delta_y);
+}
+
 /* rotate 90 */
 static const gfloat clockwise_matrix[] = {
   0.0f, -1.0f, 0.0f, 0.0f,
@@ -596,6 +620,19 @@ gst_glimage_sink_navigation_send_event (GstNavigation * navigation, GstStructure
 
     gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE,
         stream_x, "pointer_y", G_TYPE_DOUBLE, stream_y, NULL);
+  }
+
+  /* Converting pointer scroll coordinates to the non scaled geometry */
+  if (width != 0 && gst_structure_get_double (structure, "delta_pointer_x", &x)
+      && height != 0
+      && gst_structure_get_double (structure, "delta_pointer_y", &y)) {
+    gdouble stream_x, stream_y;
+
+    _display_scroll_value_to_stream_scroll_value (sink, x, y, &stream_x,
+        &stream_y);
+
+    gst_structure_set (structure, "delta_pointer_x", G_TYPE_DOUBLE,
+        stream_x, "delta_pointer_y", G_TYPE_DOUBLE, stream_y, NULL);
   }
 
   event = gst_event_new_navigation (structure);

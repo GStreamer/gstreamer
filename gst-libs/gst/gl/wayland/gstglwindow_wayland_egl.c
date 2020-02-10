@@ -25,7 +25,9 @@
 #include "config.h"
 #endif
 
-#include <linux/input.h>
+#include <locale.h>
+#include <sys/mman.h>
+#include <unistd.h>
 
 #include "wayland_event_source.h"
 
@@ -60,7 +62,6 @@ static gboolean gst_gl_window_wayland_egl_set_render_rectangle (GstGLWindow *
 static void gst_gl_window_wayland_egl_set_preferred_size (GstGLWindow * window,
     gint width, gint height);
 
-#if 0
 static void
 pointer_handle_enter (void *data, struct wl_pointer *pointer, uint32_t serial,
     struct wl_surface *surface, wl_fixed_t sx_w, wl_fixed_t sy_w)
@@ -71,6 +72,7 @@ pointer_handle_enter (void *data, struct wl_pointer *pointer, uint32_t serial,
 
   window_egl->display.serial = serial;
 
+  /* FIXME: Not sure how useful this is */
   if (window_egl->display.default_cursor) {
     image = window_egl->display.default_cursor->images[0];
     buffer = wl_cursor_image_get_buffer (image);
@@ -96,62 +98,44 @@ pointer_handle_motion (void *data, struct wl_pointer *pointer, uint32_t time,
     wl_fixed_t sx_w, wl_fixed_t sy_w)
 {
   GstGLWindowWaylandEGL *window_egl = data;
+  GstGLWindow *window = GST_GL_WINDOW (window_egl);
 
   window_egl->display.pointer_x = wl_fixed_to_double (sx_w);
   window_egl->display.pointer_y = wl_fixed_to_double (sy_w);
-}
-
-enum wl_edges
-{
-  WL_EDGE_NONE = 0,
-  WL_EDGE_TOP = 1,
-  WL_EDGE_BOTTOM = 2,
-  WL_EDGE_LEFT = 4,
-  WL_EDGE_RIGHT = 8,
-};
-
-static guint
-_get_closest_pointer_corner (GstGLWindowWaylandEGL * window_egl)
-{
-  guint edges = 0;
-  gdouble win_width, win_height;
-  gdouble p_x, p_y;
-
-  win_width = (gdouble) window_egl->window.window_width;
-  win_height = (gdouble) window_egl->window.window_height;
-  p_x = window_egl->display.pointer_x;
-  p_y = window_egl->display.pointer_y;
-
-  if (win_width == 0.0 || win_height == 0.0)
-    return WL_EDGE_NONE;
-
-  edges |= win_width / 2.0 - p_x < 0.0 ? WL_EDGE_RIGHT : WL_EDGE_LEFT;
-  edges |= win_height / 2.0 - p_y < 0.0 ? WL_EDGE_BOTTOM : WL_EDGE_TOP;
-
-  return edges;
+  gst_gl_window_send_mouse_event (window, "mouse-move", 0,
+      window_egl->display.pointer_x, window_egl->display.pointer_y);
 }
 
 static void
 pointer_handle_button (void *data, struct wl_pointer *pointer, uint32_t serial,
-    uint32_t time, uint32_t button, uint32_t state_w)
+    uint32_t time, uint32_t button, uint32_t state)
 {
   GstGLWindowWaylandEGL *window_egl = data;
-  guint edges = _get_closest_pointer_corner (window_egl);
-  window_egl->display.serial = serial;
+  GstGLWindow *window = GST_GL_WINDOW (window_egl);
+  const char *event_type;
 
-  if (button == BTN_LEFT && state_w == WL_POINTER_BUTTON_STATE_PRESSED)
-    wl_shell_surface_move (window_egl->window.wl_shell_surface,
-        window_egl->display.seat, serial);
-
-  if (button == BTN_RIGHT && state_w == WL_POINTER_BUTTON_STATE_PRESSED)
-    wl_shell_surface_resize (window_egl->window.wl_shell_surface,
-        window_egl->display.seat, serial, edges);
+  event_type = state == 1 ? "mouse-button-press" : "mouse-button-release";
+  gst_gl_window_send_mouse_event (window, event_type, button,
+      window_egl->display.pointer_x, window_egl->display.pointer_y);
 }
 
 static void
 pointer_handle_axis (void *data, struct wl_pointer *pointer, uint32_t time,
     uint32_t axis, wl_fixed_t value)
 {
+  GstGLWindowWaylandEGL *window_egl = data;
+  GstGLWindow *window = GST_GL_WINDOW (window_egl);
+  gdouble delta_x, delta_y;
+  gdouble delta = -wl_fixed_to_double (value);
+  if (axis == 1) {
+    delta_x = delta;
+    delta_y = 0;
+  } else {
+    delta_x = 0;
+    delta_y = delta;
+  }
+  gst_gl_window_send_scroll_event (window, window_egl->display.pointer_x,
+      window_egl->display.pointer_y, delta_x, delta_y);
 }
 
 static const struct wl_pointer_listener pointer_listener = {
@@ -189,10 +173,19 @@ seat_handle_capabilities (void *data, struct wl_seat *seat,
 #endif
 }
 
+static void
+seat_name (void *data, struct wl_seat *seat, const char *name)
+{
+  GstGLWindowWaylandEGL *window_egl = data;
+
+  GST_TRACE_OBJECT (window_egl, "seat %p has name %s", seat, name);
+}
+
 static const struct wl_seat_listener seat_listener = {
   seat_handle_capabilities,
+  seat_name
 };
-#endif
+
 static void
 handle_ping (void *data, struct wl_shell_surface *wl_shell_surface,
     uint32_t serial)
@@ -461,11 +454,18 @@ gst_gl_window_wayland_egl_new (GstGLDisplay * display)
 }
 
 static void
-gst_gl_window_wayland_egl_close (GstGLWindow * window)
+gst_gl_window_wayland_egl_close (GstGLWindow * gl_window)
 {
   GstGLWindowWaylandEGL *window_egl;
+  struct display *display;
 
-  window_egl = GST_GL_WINDOW_WAYLAND_EGL (window);
+  window_egl = GST_GL_WINDOW_WAYLAND_EGL (gl_window);
+  display = &window_egl->display;
+
+  if (display->pointer != NULL) {
+    wl_pointer_destroy (display->pointer);
+    display->pointer = NULL;
+  }
 
   destroy_surfaces (window_egl);
 
@@ -473,7 +473,7 @@ gst_gl_window_wayland_egl_close (GstGLWindow * window)
   g_source_unref (window_egl->wl_source);
   window_egl->wl_source = NULL;
 
-  GST_GL_WINDOW_CLASS (parent_class)->close (window);
+  GST_GL_WINDOW_CLASS (parent_class)->close (gl_window);
 }
 
 static void
@@ -510,6 +510,11 @@ registry_handle_global (void *data, struct wl_registry *registry,
   } else if (g_strcmp0 (interface, "wl_shell") == 0) {
     window_wayland->display.shell =
         wl_registry_bind (registry, name, &wl_shell_interface, 1);
+  } else if (g_strcmp0 (interface, "wl_seat") == 0) {
+    window_wayland->display.seat =
+        wl_registry_bind (registry, name, &wl_seat_interface, 4);
+    wl_seat_add_listener (window_wayland->display.seat, &seat_listener,
+        window_wayland);
   }
 }
 
