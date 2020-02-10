@@ -284,9 +284,9 @@ GstVideoFieldOrder gst_video_field_order_from_string  (const gchar * order);
  * @chroma_site: a #GstVideoChromaSite.
  * @colorimetry: the colorimetry info
  * @par_n: the pixel-aspect-ratio numerator
- * @par_d: the pixel-aspect-ratio demnominator
+ * @par_d: the pixel-aspect-ratio denominator
  * @fps_n: the framerate numerator
- * @fps_d: the framerate demnominator
+ * @fps_d: the framerate denominator
  * @offset: offsets of the planes
  * @stride: strides of the planes
  * @multiview_mode: delivery mode for multiple views. (Since: 1.6)
