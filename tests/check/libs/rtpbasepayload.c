@@ -239,12 +239,12 @@ validate_event (guint index, const gchar * name, const gchar * field, ...)
       gdouble expected = va_arg (var_args, gdouble);
       const GstSegment *segment;
       gst_event_parse_segment (event, &segment);
-      fail_unless_equals_uint64 (segment->applied_rate, expected);
+      fail_unless_equals_float (segment->applied_rate, expected);
     } else if (!g_strcmp0 (field, "rate")) {
       gdouble expected = va_arg (var_args, gdouble);
       const GstSegment *segment;
       gst_event_parse_segment (event, &segment);
-      fail_unless_equals_uint64 (segment->rate, expected);
+      fail_unless_equals_float (segment->rate, expected);
     } else if (!g_strcmp0 (field, "media-type")) {
       const gchar *expected = va_arg (var_args, const gchar *);
       GstCaps *caps;
@@ -330,7 +330,7 @@ push_buffer_full (State * state, GstFlowReturn expected,
     const gchar * field, ...)
 {
   GstBuffer *buf = gst_rtp_buffer_new_allocate (0, 0, 0);
-  GstRTPBuffer rtp = { NULL };
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
   gboolean mapped = FALSE;
   va_list var_args;
 
@@ -385,7 +385,7 @@ static void
 push_buffer_list (State * state, const gchar * field, ...)
 {
   GstBuffer *buf = gst_rtp_buffer_new_allocate (0, 0, 0);
-  GstRTPBuffer rtp = { NULL };
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
   gboolean mapped = FALSE;
   GstBufferList *list;
   va_list var_args;
@@ -448,7 +448,7 @@ validate_buffers_received (guint received_buffers)
 static void
 validate_buffer_valist (GstBuffer * buf, const gchar * field, va_list var_args)
 {
-  GstRTPBuffer rtp = { NULL };
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
   gboolean mapped = FALSE;
 
   while (field) {
@@ -533,7 +533,7 @@ static void
 get_buffer_field (guint index, const gchar * field, ...)
 {
   GstBuffer *buf;
-  GstRTPBuffer rtp = { NULL };
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
   gboolean mapped = FALSE;
   va_list var_args;
 
@@ -1322,8 +1322,7 @@ GST_START_TEST (rtp_base_payload_property_timestamp_offset_test)
       "pts", 5 * GST_SECOND, "rtptime", 0 + 5 * DEFAULT_CLOCK_RATE, NULL);
 
   validate_buffer (6,
-      "pts", 6 * GST_SECOND,
-      "rtptime", G_MAXUINT32 + 6 * DEFAULT_CLOCK_RATE, NULL);
+      "pts", 6 * GST_SECOND, "rtptime", 6 * DEFAULT_CLOCK_RATE - 1, NULL);
 
   validate_buffer (7,
       "pts", 7 * GST_SECOND, "rtptime", 7 * DEFAULT_CLOCK_RATE - 1, NULL);
@@ -1477,9 +1476,9 @@ GST_START_TEST (rtp_base_payload_property_max_ptime_test)
   validate_would_be_filled (state, mtu + 1, GST_SECOND - 1);
   validate_would_be_filled (state, mtu + 1, GST_SECOND);
 
-  g_object_set (state->element, "max-ptime", G_GUINT64_CONSTANT (-1), NULL);
+  g_object_set (state->element, "max-ptime", G_MAXUINT64, NULL);
   g_object_get (state->element, "max-ptime", &max_ptime, NULL);
-  fail_unless_equals_int64 (max_ptime, G_GUINT64_CONSTANT (-1));
+  fail_unless_equals_int64 (max_ptime, G_MAXUINT64);
   validate_would_not_be_filled (state, mtu, G_MAXINT64 - 1);
   validate_would_be_filled (state, mtu + 1, G_MAXINT64 - 1);
 
