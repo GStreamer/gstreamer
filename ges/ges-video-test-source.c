@@ -64,8 +64,9 @@ ges_video_test_source_create_source (GESTrackElement * self)
 {
   GstCaps *caps;
   gint pattern;
-  GstElement *testsrc, *capsfilter;
+  GstElement *testsrc, *capsfilter, *res;
   const gchar *props[] = { "pattern", NULL };
+  GPtrArray *elements;
 
   testsrc = gst_element_factory_make ("videotestsrc", NULL);
   capsfilter = gst_element_factory_make ("capsfilter", NULL);
@@ -73,13 +74,18 @@ ges_video_test_source_create_source (GESTrackElement * self)
 
   g_object_set (testsrc, "pattern", pattern, NULL);
 
+  elements = g_ptr_array_new ();
+  g_ptr_array_add (elements, capsfilter);
   caps = gst_caps_new_empty_simple ("video/x-raw");
   g_object_set (capsfilter, "caps", caps, NULL);
   gst_caps_unref (caps);
 
   ges_track_element_add_children_props (self, testsrc, NULL, NULL, props);
 
-  return ges_source_create_topbin ("videotestsrc", testsrc, capsfilter, NULL);
+  res = ges_source_create_topbin ("videotestsrc", testsrc, elements);
+  g_ptr_array_free (elements, TRUE);
+
+  return res;
 }
 
 /**

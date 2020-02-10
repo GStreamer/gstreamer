@@ -403,9 +403,9 @@ G_GNUC_INTERNAL void ges_track_element_copy_bindings (GESTrackElement *element,
 						       GESTrackElement *new_element,
 						       guint64 position);
 
-G_GNUC_INTERNAL GstElement *ges_source_create_topbin (const gchar * bin_name, GstElement * sub_element, ...);
-G_GNUC_INTERNAL void ges_track_set_caps                (GESTrack *track,
-                                                        const GstCaps *caps);
+G_GNUC_INTERNAL GstElement* ges_source_create_topbin(const gchar* bin_name, GstElement* sub_element, GPtrArray* elements);
+G_GNUC_INTERNAL void ges_track_set_caps(GESTrack* track,
+    const GstCaps* caps);
 G_GNUC_INTERNAL GstElement * ges_track_get_composition (GESTrack *track);
 
 

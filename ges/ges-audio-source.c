@@ -125,6 +125,7 @@ ges_audio_source_create_element (GESTrackElement * trksrc)
   GstElement *volume, *vbin;
   GstElement *topbin;
   GstElement *sub_element;
+  GPtrArray *elements;
   GESAudioSourceClass *source_class = GES_AUDIO_SOURCE_GET_CLASS (trksrc);
   const gchar *props[] = { "volume", "mute", NULL };
   GESAudioSource *self = GES_AUDIO_SOURCE (trksrc);
@@ -139,7 +140,10 @@ ges_audio_source_create_element (GESTrackElement * trksrc)
       gst_parse_bin_from_description
       ("audioconvert ! audioresample ! volume name=v ! capsfilter name=audio-track-caps-filter",
       TRUE, NULL);
-  topbin = ges_source_create_topbin ("audiosrcbin", sub_element, vbin, NULL);
+  elements = g_ptr_array_new ();
+  g_ptr_array_add (elements, vbin);
+  topbin = ges_source_create_topbin ("audiosrcbin", sub_element, elements);
+  g_ptr_array_free (elements, TRUE);
   volume = gst_bin_get_by_name (GST_BIN (vbin), "v");
   self->priv->capsfilter = gst_bin_get_by_name (GST_BIN (vbin),
       "audio-track-caps-filter");

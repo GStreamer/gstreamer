@@ -91,6 +91,28 @@ ges_video_uri_source_create_source (GESTrackElement * trksrc)
   return decodebin;
 }
 
+static gboolean
+ges_video_uri_source_needs_converters (GESVideoSource * source)
+{
+  GESTrack *track = ges_track_element_get_track (GES_TRACK_ELEMENT (source));
+
+  if (!track || ges_track_get_mixing (track)) {
+    GESAsset *asset = ges_asset_request (GES_TYPE_URI_CLIP,
+        GES_VIDEO_URI_SOURCE (source)->uri, NULL);
+    gboolean is_nested = FALSE;
+
+    g_assert (asset);
+
+    g_object_get (asset, "is-nested-timeline", &is_nested, NULL);
+    gst_object_unref (asset);
+
+    return !is_nested;
+  }
+
+
+  return FALSE;
+}
+
 /* Extractable interface implementation */
 
 static gchar *
@@ -100,14 +122,14 @@ ges_extractable_check_id (GType type, const gchar * id, GError ** error)
 }
 
 static void
-extractable_set_asset (GESExtractable * self, GESAsset * asset)
+extractable_set_asset (GESExtractable * extractable, GESAsset * asset)
 {
   /* FIXME That should go into #GESTrackElement, but
    * some work is needed to make sure it works properly */
 
-  if (ges_track_element_get_track_type (GES_TRACK_ELEMENT (self)) ==
+  if (ges_track_element_get_track_type (GES_TRACK_ELEMENT (extractable)) ==
       GES_TRACK_TYPE_UNKNOWN) {
-    ges_track_element_set_track_type (GES_TRACK_ELEMENT (self),
+    ges_track_element_set_track_type (GES_TRACK_ELEMENT (extractable),
         ges_track_element_asset_get_track_type (GES_TRACK_ELEMENT_ASSET
             (asset)));
   }
@@ -194,6 +216,8 @@ ges_video_uri_source_class_init (GESVideoUriSourceClass * klass)
           NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
   source_class->create_source = ges_video_uri_source_create_source;
+  source_class->ABI.abi.needs_converters =
+      ges_video_uri_source_needs_converters;
 }
 
 static void

@@ -80,21 +80,21 @@ _ghost_pad_added_cb (GstElement * element, GstPad * srcpad, GstElement * bin)
 }
 
 GstElement *
-ges_source_create_topbin (const gchar * bin_name, GstElement * sub_element, ...)
+ges_source_create_topbin (const gchar * bin_name, GstElement * sub_element,
+    GPtrArray * elements)
 {
-  va_list argp;
-
   GstElement *element;
   GstElement *prev = NULL;
   GstElement *first = NULL;
   GstElement *bin;
   GstPad *sub_srcpad;
+  gint i;
 
-  va_start (argp, sub_element);
   bin = gst_bin_new (bin_name);
   gst_bin_add (GST_BIN (bin), sub_element);
 
-  while ((element = va_arg (argp, GstElement *)) != NULL) {
+  for (i = 0; i < elements->len; i++) {
+    element = elements->pdata[i];
     gst_bin_add (GST_BIN (bin), element);
     if (prev) {
       if (!gst_element_link_pads_full (prev, "src", element, "sink",
@@ -102,14 +102,11 @@ ges_source_create_topbin (const gchar * bin_name, GstElement * sub_element, ...)
         g_error ("Could not link %s and %s",
             GST_OBJECT_NAME (prev), GST_OBJECT_NAME (element));
       }
-
     }
     prev = element;
     if (first == NULL)
       first = element;
   }
-
-  va_end (argp);
 
   sub_srcpad = gst_element_get_static_pad (sub_element, "src");
 

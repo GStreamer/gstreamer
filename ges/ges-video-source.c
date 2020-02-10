@@ -96,15 +96,15 @@ ges_video_source_create_element (GESTrackElement * trksrc)
 {
   GstElement *topbin;
   GstElement *sub_element;
-  GstElement *queue = gst_element_factory_make ("queue", NULL);
   GESVideoSourceClass *source_class = GES_VIDEO_SOURCE_GET_CLASS (trksrc);
   GESVideoSource *self;
-  GstElement *positioner, *videoflip, *videoscale, *videorate, *capsfilter,
-      *videoconvert, *deinterlace;
+  GstElement *positioner, *videoflip, *capsfilter, *deinterlace;
   const gchar *positioner_props[] =
       { "alpha", "posx", "posy", "width", "height", NULL };
   const gchar *deinterlace_props[] = { "mode", "fields", "tff", NULL };
   const gchar *videoflip_props[] = { "video-direction", NULL };
+  gboolean needs_converters = TRUE;
+  GPtrArray *elements;
 
   if (!source_class->create_source)
     return NULL;
@@ -112,26 +112,36 @@ ges_video_source_create_element (GESTrackElement * trksrc)
   sub_element = source_class->create_source (trksrc);
 
   self = (GESVideoSource *) trksrc;
+  if (source_class->ABI.abi.needs_converters)
+    needs_converters = source_class->ABI.abi.needs_converters (self);
+
+  elements = g_ptr_array_new ();
+  g_ptr_array_add (elements, gst_element_factory_make ("queue", NULL));
 
   /* That positioner will add metadata to buffers according to its
      properties, acting like a proxy for our smart-mixer dynamic pads. */
   positioner = gst_element_factory_make ("framepositioner", "frame_tagger");
   g_object_set (positioner, "zorder",
       G_MAXUINT - GES_TIMELINE_ELEMENT_PRIORITY (self), NULL);
+  g_ptr_array_add (elements, positioner);
 
   /* If there's image-orientation tag, make sure the image is correctly oriented
    * before we scale it. */
   videoflip = gst_element_factory_make ("videoflip", "track-element-videoflip");
   g_object_set (videoflip, "video-direction", GST_VIDEO_ORIENTATION_AUTO, NULL);
+  g_ptr_array_add (elements, videoflip);
 
-  videoscale =
-      gst_element_factory_make ("videoscale", "track-element-videoscale");
-  videoconvert =
-      gst_element_factory_make ("videoconvert", "track-element-videoconvert");
-  videorate = gst_element_factory_make ("videorate", "track-element-videorate");
-  deinterlace = gst_element_factory_make ("deinterlace", "deinterlace");
+  if (needs_converters) {
+    g_ptr_array_add (elements, gst_element_factory_make ("videoscale",
+            "track-element-videoscale"));
+    g_ptr_array_add (elements, gst_element_factory_make ("videoconvert",
+            "track-element-videoconvert"));
+  }
+  g_ptr_array_add (elements, gst_element_factory_make ("videorate",
+          "track-element-videorate"));
   capsfilter =
       gst_element_factory_make ("capsfilter", "track-element-capsfilter");
+  g_ptr_array_add (elements, capsfilter);
 
   ges_frame_positioner_set_source_and_filter (GST_FRAME_POSITIONNER
       (positioner), trksrc, capsfilter);
@@ -141,24 +151,20 @@ ges_video_source_create_element (GESTrackElement * trksrc)
   ges_track_element_add_children_props (trksrc, videoflip, NULL, NULL,
       videoflip_props);
 
+  deinterlace = gst_element_factory_make ("deinterlace", "deinterlace");
   if (deinterlace == NULL) {
     post_missing_element_message (sub_element, "deinterlace");
 
     GST_ELEMENT_WARNING (sub_element, CORE, MISSING_PLUGIN,
         ("Missing element '%s' - check your GStreamer installation.",
             "deinterlace"), ("deinterlacing won't work"));
-    topbin =
-        ges_source_create_topbin ("videosrcbin", sub_element, queue,
-        videoconvert, positioner, videoflip, videoscale, videorate, capsfilter,
-        NULL);
   } else {
+    g_ptr_array_add (elements, deinterlace);
     ges_track_element_add_children_props (trksrc, deinterlace, NULL, NULL,
         deinterlace_props);
-    topbin =
-        ges_source_create_topbin ("videosrcbin", sub_element, queue,
-        videoconvert, deinterlace, positioner, videoflip, videoscale, videorate,
-        capsfilter, NULL);
   }
+  topbin = ges_source_create_topbin ("videosrcbin", sub_element, elements);
+  g_ptr_array_free (elements, TRUE);
 
   self->priv->positioner = GST_FRAME_POSITIONNER (positioner);
   self->priv->positioner->scale_in_compositor =

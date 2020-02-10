@@ -84,6 +84,7 @@ struct _GESVideoSourceClass {
     gpointer _ges_reserved[GES_PADDING];
     struct {
       gboolean disable_scale_in_compositor;
+      gboolean (*needs_converters)(GESVideoSource *self);
     } abi;
   } ABI;
 };
