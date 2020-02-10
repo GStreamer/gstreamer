@@ -138,7 +138,7 @@ GST_START_TEST (test_rtxsend_rtxreceive)
   GstBuffer *inbufs[5];
   GstHarness *hrecv = gst_harness_new ("rtprtxreceive");
   GstHarness *hsend = gst_harness_new ("rtprtxsend");
-  gint i;
+  guint i;
 
   pt_map = gst_structure_new ("application/x-rtp-pt-map",
       "96", G_TYPE_UINT, rtx_pt, NULL);
@@ -155,7 +155,7 @@ GST_START_TEST (test_rtxsend_rtxreceive)
       "encoding-name = (string)RAW");
 
   /* Push 'packets_num' packets through rtxsend to rtxreceive */
-  for (i = 0; i < packets_num; ++i) {
+  for (i = 0; i < packets_num; i++) {
     inbufs[i] = create_rtp_buffer (master_ssrc, master_pt, 100 + i);
     gst_harness_push (hsend, gst_buffer_ref (inbufs[i]));
     gst_harness_push (hrecv, gst_harness_pull (hsend));
@@ -170,7 +170,7 @@ GST_START_TEST (test_rtxsend_rtxreceive)
      Push RTX packets from rtxsend to rtxreceive and
      check that the packet produced out of RTX packet is the same
      as an original packet */
-  for (i = 0; i < packets_num; ++i) {
+  for (i = 0; i < packets_num; i++) {
     GstBuffer *outbuf;
     gst_harness_push_upstream_event (hrecv,
         create_rtx_event (master_ssrc, master_pt, 100 + i));
@@ -222,7 +222,7 @@ GST_START_TEST (test_rtxsend_rtxreceive_with_packet_loss)
   GstStructure *pt_map;
   GstHarness *hrecv = gst_harness_new ("rtprtxreceive");
   GstHarness *hsend = gst_harness_new ("rtprtxsend");
-  gint drop_nth_packet, i;
+  guint drop_nth_packet, i;
 
   pt_map = gst_structure_new ("application/x-rtp-pt-map",
       "96", G_TYPE_UINT, rtx_pt, NULL);
@@ -246,8 +246,8 @@ GST_START_TEST (test_rtxsend_rtxreceive_with_packet_loss)
   /* Push 'packets_num' packets through rtxsend to rtxreceive losing every
      'drop_every_n_packets' packet. When we loose the packet we send RTX event
      through rtxreceive to rtxsend, and verify the packet was retransmitted */
-  for (drop_nth_packet = 2; drop_nth_packet < 10; ++drop_nth_packet) {
-    for (i = 0; i < packets_num; ++i, ++seqnum) {
+  for (drop_nth_packet = 2; drop_nth_packet < 10; drop_nth_packet++) {
+    for (i = 0; i < packets_num; i++, seqnum++) {
       GstBuffer *outbuf;
       GstBuffer *inbuf = create_rtp_buffer (master_ssrc, master_pt, seqnum);
       gboolean drop_this_packet = ((i + 1) % drop_nth_packet) == 0;
@@ -263,7 +263,7 @@ GST_START_TEST (test_rtxsend_rtxreceive_with_packet_loss)
             gst_harness_pull_upstream_event (hrecv));
         /* Pushing RTX packet to rtxreceive */
         gst_harness_push (hrecv, gst_harness_pull (hsend));
-        ++expected_rtx_packets;
+        expected_rtx_packets++;
       } else {
         gst_harness_push (hrecv, gst_harness_pull (hsend));
       }
@@ -328,9 +328,9 @@ create_rtxsenders (RtxSender * senders, guint senders_num)
 {
   GstStructure *recv_pt_map =
       gst_structure_new_empty ("application/x-rtp-pt-map");
-  gint i;
+  guint i;
 
-  for (i = 0; i < senders_num; ++i) {
+  for (i = 0; i < senders_num; i++) {
     gchar *master_pt_str;
     gchar *master_caps_str;
     GstStructure *send_pt_map;
@@ -369,9 +369,9 @@ static guint
 check_rtxsenders_stats_and_teardown (RtxSender * senders, guint senders_num)
 {
   guint total_pakets_num = 0;
-  gint i;
+  guint i;
 
-  for (i = 0; i < senders_num; ++i) {
+  for (i = 0; i < senders_num; i++) {
     guint rtx_requests;
     guint rtx_packets;
     g_object_get (G_OBJECT (senders[i].h->element),
@@ -395,7 +395,7 @@ GST_START_TEST (test_multi_rtxsend_rtxreceive_with_packet_loss)
   RtxSender senders[5];
   GstStructure *pt_map;
   GstHarness *hrecv = gst_harness_new ("rtprtxreceive");
-  gint drop_nth_packet, i, j;
+  guint drop_nth_packet, i, j;
 
   pt_map = create_rtxsenders (senders, 5);
   g_object_set (hrecv->element, "payload-type-map", pt_map, NULL);
@@ -416,8 +416,8 @@ GST_START_TEST (test_multi_rtxsend_rtxreceive_with_packet_loss)
      We need to make sure that all other senders will ignore the RTX event they
      can't act upon.
    */
-  for (drop_nth_packet = 2; drop_nth_packet < 5; ++drop_nth_packet) {
-    for (i = 0; i < total_pakets_num; ++i) {
+  for (drop_nth_packet = 2; drop_nth_packet < 5; drop_nth_packet++) {
+    for (i = 0; i < total_pakets_num; i++) {
       RtxSender *sender = &senders[i % senders_num];
       gboolean drop_this_packet = ((i + 1) % drop_nth_packet) == 0;
       GstBuffer *outbuf, *inbuf;
@@ -438,15 +438,15 @@ GST_START_TEST (test_multi_rtxsend_rtxreceive_with_packet_loss)
         rtxevent = gst_harness_pull_upstream_event (hrecv);
 
         /* ... to all the senders */
-        for (j = 0; j < senders_num; ++j)
+        for (j = 0; j < senders_num; j++)
           gst_harness_push_upstream_event (senders[j].h,
               gst_event_ref (rtxevent));
         gst_event_unref (rtxevent);
 
         /* Pushing RTX packet to rtxreceive */
         gst_harness_push (hrecv, gst_harness_pull (sender->h));
-        ++sender->expected_rtx_packets;
-        ++total_dropped_packets;
+        sender->expected_rtx_packets++;
+        total_dropped_packets++;
       } else {
         gst_harness_push (hrecv, gst_harness_pull (sender->h));
       }
@@ -463,10 +463,10 @@ GST_START_TEST (test_multi_rtxsend_rtxreceive_with_packet_loss)
          We should not have any packets in the harness queue by this point. It
          means our senders didn't produce the packets for the unknown RTX event.
        */
-      for (j = 0; j < senders_num; ++j)
+      for (j = 0; j < senders_num; j++)
         fail_unless_equals_int (gst_harness_buffers_in_queue (senders[j].h), 0);
 
-      ++sender->seqnum;
+      sender->seqnum++;
     }
   }
 
@@ -605,9 +605,9 @@ test_rtxqueue_packet_retention (gboolean test_with_time)
    * Note that rtprtxqueue sends retransmissions in chain(), just before
    * pushing out the chained buffer, a differentiation from rtprtxsend above
    */
-  for (i = 0; i < num_buffers; ++i, timestamp += timestamp_delta) {
+  for (i = 0; i < num_buffers; i++, timestamp += timestamp_delta) {
     /* Request to retransmit all the previous ones */
-    for (j = 0; j < i; ++j) {
+    for (j = 0; j < i; j++) {
       guint rtx_seqnum = 0x100 + j;
       gst_harness_push_upstream_event (h,
           create_rtx_event (ssrc, pt, rtx_seqnum));
@@ -619,7 +619,7 @@ test_rtxqueue_packet_retention (gboolean test_with_time)
     gst_harness_push (h, buf);
 
     /* Pull the ones supposed to be retransmitted */
-    for (j = 0; j < i; ++j) {
+    for (j = 0; j < i; j++) {
       guint rtx_seqnum = 0x100 + j;
       if (j >= i - half_buffers)
         pull_and_verify (h, FALSE, ssrc, pt, rtx_seqnum);
