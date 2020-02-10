@@ -386,7 +386,7 @@ gst_wpe_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
   if (GST_EVENT_TYPE (event) == GST_EVENT_NAVIGATION) {
     const gchar *key;
     gint button;
-    gdouble x, y;
+    gdouble x, y, delta_x, delta_y;
 
     GST_DEBUG_OBJECT (src, "Processing event %" GST_PTR_FORMAT, event);
     if (!src->view) {
@@ -415,6 +415,7 @@ gst_wpe_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         if (gst_navigation_event_parse_mouse_button_event (event, &button, &x,
                 &y)) {
           struct wpe_input_pointer_event wpe_event;
+          wpe_event.time = GST_TIME_AS_MSECONDS (GST_EVENT_TIMESTAMP (event));
           wpe_event.type = wpe_input_pointer_event_type_button;
           wpe_event.x = (int) x;
           wpe_event.y = (int) y;
@@ -430,7 +431,6 @@ gst_wpe_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
             wpe_event.modifiers = wpe_input_pointer_modifier_button5;
           }
           wpe_event.button = button;
-          wpe_event.state = 1;
           wpe_event.state =
               gst_navigation_event_get_type (event) ==
               GST_NAVIGATION_EVENT_MOUSE_BUTTON_PRESS;
@@ -442,11 +442,50 @@ gst_wpe_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       case GST_NAVIGATION_EVENT_MOUSE_MOVE:
         if (gst_navigation_event_parse_mouse_move_event (event, &x, &y)) {
           struct wpe_input_pointer_event wpe_event;
+          wpe_event.time = GST_TIME_AS_MSECONDS (GST_EVENT_TIMESTAMP (event));
           wpe_event.type = wpe_input_pointer_event_type_motion;
           wpe_event.x = (int) x;
           wpe_event.y = (int) y;
           wpe_view_backend_dispatch_pointer_event (src->view->backend (),
               &wpe_event);
+          ret = TRUE;
+        }
+        break;
+      case GST_NAVIGATION_EVENT_MOUSE_SCROLL:
+        if (gst_navigation_event_parse_mouse_scroll_event (event, &x, &y,
+                &delta_x, &delta_y)) {
+#if WPE_CHECK_VERSION(1, 6, 0)
+          struct wpe_input_axis_2d_event wpe_event;
+          if (delta_x) {
+            wpe_event.x_axis = delta_x;
+          } else {
+            wpe_event.y_axis = delta_y;
+          }
+          wpe_event.base.time =
+              GST_TIME_AS_MSECONDS (GST_EVENT_TIMESTAMP (event));
+          wpe_event.base.type =
+              static_cast<wpe_input_axis_event_type>(wpe_input_axis_event_type_mask_2d |
+              wpe_input_axis_event_type_motion_smooth);
+          wpe_event.base.x = (int) x;
+          wpe_event.base.y = (int) y;
+          wpe_view_backend_dispatch_axis_event (src->view->backend (),
+              &wpe_event.base);
+#else
+          struct wpe_input_axis_event wpe_event;
+          if (delta_x) {
+            wpe_event.axis = 1;
+            wpe_event.value = delta_x;
+          } else {
+            wpe_event.axis = 0;
+            wpe_event.value = delta_y;
+          }
+          wpe_event.time = GST_TIME_AS_MSECONDS (GST_EVENT_TIMESTAMP (event));
+          wpe_event.type = wpe_input_axis_event_type_motion;
+          wpe_event.x = (int) x;
+          wpe_event.y = (int) y;
+          wpe_view_backend_dispatch_axis_event (src->view->backend (),
+              &wpe_event);
+#endif
           ret = TRUE;
         }
         break;
