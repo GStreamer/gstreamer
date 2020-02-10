@@ -3795,6 +3795,8 @@ void
 gst_base_parse_set_duration (GstBaseParse * parse,
     GstFormat fmt, gint64 duration, gint interval)
 {
+  gint64 old_duration;
+
   g_return_if_fail (parse != NULL);
 
   if (parse->priv->upstream_has_duration) {
@@ -3802,14 +3804,8 @@ gst_base_parse_set_duration (GstBaseParse * parse,
     goto exit;
   }
 
-  if (duration != parse->priv->duration) {
-    GstMessage *m;
+  old_duration = parse->priv->duration;
 
-    m = gst_message_new_duration_changed (GST_OBJECT (parse));
-    gst_element_post_message (GST_ELEMENT (parse), m);
-
-    /* TODO: what about duration tag? */
-  }
   parse->priv->duration = duration;
   parse->priv->duration_fmt = fmt;
   GST_DEBUG_OBJECT (parse, "set duration: %" G_GINT64_FORMAT, duration);
@@ -3821,6 +3817,14 @@ gst_base_parse_set_duration (GstBaseParse * parse,
   }
   GST_DEBUG_OBJECT (parse, "set update interval: %d", interval);
   parse->priv->update_interval = interval;
+  if (duration != old_duration) {
+    GstMessage *m;
+
+    m = gst_message_new_duration_changed (GST_OBJECT (parse));
+    gst_element_post_message (GST_ELEMENT (parse), m);
+
+    /* TODO: what about duration tag? */
+  }
 exit:
   return;
 }
