@@ -42,6 +42,7 @@ struct TestElement
   GstNavigationEventType sent_type;
   const gchar *sent_key;
   gdouble sent_x, sent_y;
+  gdouble sent_delta_x, sent_delta_y;
   gint sent_button;
   GstNavigationCommand sent_command;
 };
@@ -127,6 +128,16 @@ nav_send_event (GstNavigation * navigation, GstStructure * structure)
       fail_unless (y == self->sent_y);
       break;
     }
+    case GST_NAVIGATION_EVENT_MOUSE_SCROLL:{
+      gdouble x, y, delta_x, delta_y;
+      fail_unless (gst_navigation_event_parse_mouse_scroll_event (event, &x, &y,
+              &delta_x, &delta_y));
+      fail_unless (x == self->sent_x);
+      fail_unless (y == self->sent_y);
+      fail_unless (delta_x == self->sent_delta_x);
+      fail_unless (delta_y == self->sent_delta_y);
+      break;
+    }
     case GST_NAVIGATION_EVENT_COMMAND:{
       GstNavigationCommand cmd;
       fail_unless (gst_navigation_event_parse_command (event, &cmd));
@@ -171,6 +182,14 @@ GST_START_TEST (test_events)
   test_element->sent_y = 100;
   gst_navigation_send_mouse_event (GST_NAVIGATION (test_element), "mouse-move",
       0, 50, 100);
+
+  test_element->sent_type = GST_NAVIGATION_EVENT_MOUSE_SCROLL;
+  test_element->sent_x = 60;
+  test_element->sent_y = 120;
+  test_element->sent_delta_x = 2;
+  test_element->sent_delta_y = 3;
+  gst_navigation_send_mouse_scroll_event (GST_NAVIGATION (test_element),
+      60, 120, 2, 3);
 
   test_element->sent_type = GST_NAVIGATION_EVENT_MOUSE_BUTTON_PRESS;
   test_element->sent_x = 10;
