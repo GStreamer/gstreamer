@@ -2033,10 +2033,13 @@ start_discovering (GstDiscoverer * dc)
 
   if (dc->priv->async) {
     if (ready) {
-      g_idle_add_full (G_PRIORITY_DEFAULT_IDLE,
+      GSource *source;
+
+      source = g_idle_source_new ();
+      g_source_set_callback (source,
           (GSourceFunc) emit_discovererd_and_next, gst_object_ref (dc),
           gst_object_unref);
-
+      g_source_attach (source, dc->priv->ctx);
       goto beach;
     }
 
