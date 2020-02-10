@@ -916,6 +916,17 @@ gst_glimage_sink_mouse_event_cb (GstGLWindow * window, char *event_name,
       event_name, button, posx, posy);
 }
 
+
+static void
+gst_glimage_sink_mouse_scroll_event_cb (GstGLWindow * window,
+    double posx, double posy, double delta_x, double delta_y,
+    GstGLImageSink * gl_sink)
+{
+  GST_DEBUG_OBJECT (gl_sink, "event scroll at %g, %g", posx, posy);
+  gst_navigation_send_mouse_scroll_event (GST_NAVIGATION (gl_sink),
+      posx, posy, delta_x, delta_y);
+}
+
 static gboolean
 _ensure_gl_setup (GstGLImageSink * gl_sink)
 {
@@ -991,6 +1002,9 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
       gl_sink->mouse_sig_id =
           g_signal_connect (window, "mouse-event",
           G_CALLBACK (gst_glimage_sink_mouse_event_cb), gl_sink);
+      gl_sink->mouse_scroll_sig_id =
+          g_signal_connect (window, "scroll-event",
+          G_CALLBACK (gst_glimage_sink_mouse_scroll_event_cb), gl_sink);
 
       gst_gl_window_set_render_rectangle (window, gl_sink->x, gl_sink->y,
           gl_sink->width, gl_sink->height);
@@ -1241,6 +1255,10 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
         if (glimage_sink->mouse_sig_id)
           g_signal_handler_disconnect (window, glimage_sink->mouse_sig_id);
         glimage_sink->mouse_sig_id = 0;
+        if (glimage_sink->mouse_scroll_sig_id)
+          g_signal_handler_disconnect (window,
+              glimage_sink->mouse_scroll_sig_id);
+        glimage_sink->mouse_scroll_sig_id = 0;
 
         gst_object_unref (window);
         gst_object_unref (glimage_sink->context);
@@ -2353,6 +2371,9 @@ gst_glimage_sink_on_close (GstGLImageSink * gl_sink)
   if (gl_sink->mouse_sig_id)
     g_signal_handler_disconnect (window, gl_sink->mouse_sig_id);
   gl_sink->mouse_sig_id = 0;
+  if (gl_sink->mouse_scroll_sig_id)
+    g_signal_handler_disconnect (window, gl_sink->mouse_scroll_sig_id);
+  gl_sink->mouse_scroll_sig_id = 0;
 
   g_atomic_int_set (&gl_sink->to_quit, 1);
 

@@ -128,6 +128,7 @@ enum
   SIGNAL_0,
   EVENT_MOUSE_SIGNAL,
   EVENT_KEY_SIGNAL,
+  EVENT_SCROLL_SIGNAL,
   LAST_SIGNAL
 };
 
@@ -235,6 +236,24 @@ gst_gl_window_class_init (GstGLWindowClass * klass)
       g_signal_new ("key-event", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 2, G_TYPE_STRING,
       G_TYPE_STRING);
+
+  /**
+   * GstGLWindow::scroll-event:
+   * @object: the #GstGLWindow
+   * @x: the x coordinate of the mouse event
+   * @y: the y coordinate of the mouse event
+   * @delta_x: the x offset of the scroll event
+   * @delta_y: the y offset of the scroll event
+   *
+   * Will be emitted when a mouse scroll event is received by the GstGLwindow.
+   *
+   * Since: 1.18
+   */
+  gst_gl_window_signals[EVENT_SCROLL_SIGNAL] =
+      g_signal_new ("scroll-event", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
+      G_TYPE_NONE, 4, G_TYPE_DOUBLE, G_TYPE_DOUBLE, G_TYPE_DOUBLE,
+      G_TYPE_DOUBLE);
 
   _init_debug ();
 }
@@ -920,6 +939,15 @@ gst_gl_window_send_mouse_event (GstGLWindow * window, const char *event_type,
   g_signal_emit (window, gst_gl_window_signals[EVENT_MOUSE_SIGNAL], 0,
       event_type, button, posx, posy);
 }
+
+void
+gst_gl_window_send_scroll_event (GstGLWindow * window,
+    double posx, double posy, double delta_x, double delta_y)
+{
+  g_signal_emit (window, gst_gl_window_signals[EVENT_SCROLL_SIGNAL], 0,
+      posx, posy, delta_x, delta_y);
+}
+
 
 /**
  * gst_gl_window_handle_events:

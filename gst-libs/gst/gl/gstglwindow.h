@@ -234,6 +234,13 @@ void     gst_gl_window_send_mouse_event     (GstGLWindow * window,
                                              double posx,
                                              double posy);
 
+GST_GL_API
+void     gst_gl_window_send_scroll_event    (GstGLWindow * window,
+                                             double posx,
+                                             double posy,
+                                             double delta_x,
+                                             double delta_y);
+
 /* surfaces/rendering */
 GST_GL_API
 void     gst_gl_window_queue_resize         (GstGLWindow *window);

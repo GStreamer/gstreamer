@@ -69,6 +69,7 @@ struct _GstGLImageSink
     guintptr new_window_id;
     gulong mouse_sig_id;
     gulong key_sig_id;
+    gulong mouse_scroll_sig_id;
 
     /* GstVideoOverlay::set_render_rectangle() cache */
     gint x;
