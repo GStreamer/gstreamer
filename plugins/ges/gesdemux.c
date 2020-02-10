@@ -271,75 +271,40 @@ static gboolean
 ges_demux_src_probe (GstPad * pad, GstPadProbeInfo * info, GstElement * parent)
 {
   GESDemux *self = GES_DEMUX (parent);
-  GstEvent *event;
+  GstStructure *structure =
+      (GstStructure *) gst_query_get_structure (info->data);
 
-  if (info->type & (GST_PAD_PROBE_TYPE_QUERY_UPSTREAM)) {
-    GstQuery *query = info->data;
+  if (gst_structure_has_name (structure, "NleCompositionQueryNeedsTearDown")) {
+    GstQuery *uri_query = gst_query_new_uri ();
 
-    if (GST_QUERY_TYPE (query) == GST_QUERY_CUSTOM) {
-      GstStructure *structure =
-          (GstStructure *) gst_query_get_structure (query);
+    if (gst_pad_peer_query (self->sinkpad, uri_query)) {
+      gchar *upstream_uri = NULL;
+      GStatBuf stats;
+      gst_query_parse_uri (uri_query, &upstream_uri);
 
-      if (gst_structure_has_name (structure,
-              "NleCompositionQueryNeedsTearDown")) {
-        GstQuery *uri_query = gst_query_new_uri ();
+      if (gst_uri_has_protocol (upstream_uri, "file")) {
+        gchar *location = gst_uri_get_location (upstream_uri);
 
-        if (gst_pad_peer_query (self->sinkpad, uri_query)) {
-          gchar *upstream_uri = NULL;
-          GStatBuf stats;
-          gst_query_parse_uri (uri_query, &upstream_uri);
-
-          if (gst_uri_has_protocol (upstream_uri, "file")) {
-            gchar *location = gst_uri_get_location (upstream_uri);
-
-            g_stat (location, &stats);
-            g_free (location);
-            GST_OBJECT_LOCK (self);
-            if (g_strcmp0 (upstream_uri, self->upstream_uri)
-                || stats.st_mtime != self->stats.st_mtime
-                || stats.st_size != self->stats.st_size) {
-              GST_INFO_OBJECT (self,
-                  "Underlying file changed, asking for an update");
-              gst_structure_set (structure, "result", G_TYPE_BOOLEAN, TRUE,
-                  NULL);
-              g_free (self->upstream_uri);
-              self->upstream_uri = upstream_uri;
-              self->stats = stats;
-            } else {
-              g_free (upstream_uri);
-            }
-            GST_OBJECT_UNLOCK (self);
-          }
+        g_stat (location, &stats);
+        g_free (location);
+        GST_OBJECT_LOCK (self);
+        if (g_strcmp0 (upstream_uri, self->upstream_uri)
+            || stats.st_mtime != self->stats.st_mtime
+            || stats.st_size != self->stats.st_size) {
+          GST_INFO_OBJECT (self,
+              "Underlying file changed, asking for an update");
+          gst_structure_set (structure, "result", G_TYPE_BOOLEAN, TRUE, NULL);
+          g_free (self->upstream_uri);
+          self->upstream_uri = upstream_uri;
+          self->stats = stats;
+        } else {
+          g_free (upstream_uri);
         }
-        gst_query_unref (uri_query);
+        GST_OBJECT_UNLOCK (self);
       }
     }
-
-    return GST_PAD_PROBE_OK;
+    gst_query_unref (uri_query);
   }
-  event = info->data;
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_STREAM_START:
-    {
-      const gchar *stream_id;
-      gchar *new_stream_id;
-      guint stream_group;
-
-      gst_event_parse_stream_start (event, &stream_id);
-      gst_event_parse_group_id (event, &stream_group);
-      new_stream_id =
-          gst_pad_create_stream_id (pad, GST_ELEMENT (parent), stream_id);
-      gst_event_unref (event);
-
-      event = gst_event_new_stream_start (new_stream_id);
-      gst_event_set_group_id (event, stream_group);
-      g_free (new_stream_id);
-      break;
-    }
-    default:
-      break;
-  }
-  info->data = event;
 
   return GST_PAD_PROBE_OK;
 }
@@ -348,14 +313,9 @@ static gboolean
 ges_demux_set_srcpad_probe (GstElement * element, GstPad * pad,
     gpointer user_data)
 {
-  GstTagList *tlist = gst_tag_list_new ("is-ges-timeline", TRUE, NULL);
-
   gst_pad_add_probe (pad,
-      GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM | GST_PAD_PROBE_TYPE_QUERY_UPSTREAM,
+      GST_PAD_PROBE_TYPE_QUERY_UPSTREAM,
       (GstPadProbeCallback) ges_demux_src_probe, element, NULL);
-
-  gst_tag_list_set_scope (tlist, GST_TAG_SCOPE_GLOBAL);
-  gst_pad_push_event (pad, gst_event_new_tag (tlist));
   return TRUE;
 }
 

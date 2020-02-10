@@ -145,6 +145,43 @@ ges_base_bin_init (GESBaseBin * self)
   priv->flow_combiner = gst_flow_combiner_new ();
 }
 
+static gboolean
+ges_base_bin_event (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_STREAM_START:
+    {
+      const gchar *stream_id;
+      gchar *new_stream_id;
+      guint stream_group;
+      GstTagList *tlist = gst_tag_list_new ("is-ges-timeline", TRUE, NULL);
+      GstPad *peer = gst_pad_get_peer (pad);
+
+      gst_event_parse_stream_start (event, &stream_id);
+      gst_event_parse_group_id (event, &stream_group);
+      new_stream_id =
+          gst_pad_create_stream_id (peer,
+          GST_ELEMENT (GST_OBJECT_PARENT (parent)), stream_id);
+      gst_event_unref (event);
+      gst_object_unref (peer);
+
+      event = gst_event_new_stream_start (new_stream_id);
+      gst_event_set_group_id (event, stream_group);
+      g_free (new_stream_id);
+
+      gst_pad_event_default (pad, parent, event);
+
+      gst_tag_list_set_scope (tlist, GST_TAG_SCOPE_GLOBAL);
+
+      return gst_pad_send_event (pad, gst_event_new_tag (tlist));
+    }
+    default:
+      break;
+  }
+
+  return gst_pad_event_default (pad, parent, event);
+}
+
 static GstFlowReturn
 ges_base_bin_src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
@@ -242,6 +279,7 @@ ges_base_bin_set_timeline (GESBaseBin * self, GESTimeline * timeline)
     proxy_pad = GST_PAD (gst_proxy_pad_get_internal (GST_PROXY_PAD (gpad)));
     gst_flow_combiner_add_pad (priv->flow_combiner, proxy_pad);
     gst_pad_set_chain_function (proxy_pad, ges_base_bin_src_chain);
+    gst_pad_set_event_function (proxy_pad, ges_base_bin_event);
     gst_object_unref (proxy_pad);
     GST_DEBUG_OBJECT (sbin, "Adding pad: %" GST_PTR_FORMAT, gpad);
   }
