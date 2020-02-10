@@ -982,8 +982,6 @@ from_GstVideoColorimetry (const GstVideoColorimetry * const colorimetry)
   if (gst_video_colorimetry_matches (colorimetry,
           GST_VIDEO_COLORIMETRY_SMPTE240M))
     return VAProcColorStandardSMPTE240M;
-  if (gst_video_colorimetry_matches (colorimetry, GST_VIDEO_COLORIMETRY_SRGB))
-    return VAProcColorStandardSRGB;
 
   return VAProcColorStandardExplicit;
 }
