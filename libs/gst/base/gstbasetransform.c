@@ -1402,7 +1402,7 @@ gst_base_transform_default_propose_allocation (GstBaseTransform * trans,
 }
 
 static gboolean
-gst_base_transform_reconfigure (GstBaseTransform * trans)
+gst_base_transform_reconfigure_unlocked (GstBaseTransform * trans)
 {
   gboolean reconfigure, ret = TRUE;
 
@@ -1436,6 +1436,45 @@ done:
   return ret;
 }
 
+/**
+ * gst_base_transform_reconfigure:
+ * @trans: the #GstBaseTransform to set
+ *
+ * Negotiates src pad caps with downstream elements if the source pad is
+ * marked as needing reconfiguring. Unmarks GST_PAD_FLAG_NEED_RECONFIGURE in
+ * any case. But marks it again if negotiation fails.
+ *
+ * Do not call this in the #GstBaseTransformClass.transform() or
+ * #GstBaseTransformClass.transform_ip() vmethod. Call this in
+ * #GstBaseTransformClass.submit_input_buffer(),
+ * #GstBaseTransformClass.prepare_output_buffer() or in
+ * #GstBaseTransformClass.generate_output() _before_ any output buffer is
+ * allocated.
+ *
+ * It will be default be called when handling an ALLOCATION query or at the
+ * very beginning of the default #GstBaseTransformClass.submit_input_buffer()
+ * implementation.
+ *
+ * Returns: %TRUE if the negotiation succeeded, else %FALSE.
+ *
+ * Since: 1.18
+ */
+gboolean
+gst_base_transform_reconfigure (GstBaseTransform * trans)
+{
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_BASE_TRANSFORM (trans), FALSE);
+
+  GST_PAD_STREAM_LOCK (trans->sinkpad);
+  ret = gst_base_transform_reconfigure_unlocked (trans);
+  if (!ret)
+    gst_pad_mark_reconfigure (trans->srcpad);
+  GST_PAD_STREAM_UNLOCK (trans->sinkpad);
+
+  return ret;
+}
+
 static gboolean
 gst_base_transform_default_query (GstBaseTransform * trans,
     GstPadDirection direction, GstQuery * query)
@@ -1464,7 +1503,7 @@ gst_base_transform_default_query (GstBaseTransform * trans,
       if (direction != GST_PAD_SINK)
         goto done;
 
-      ret = gst_base_transform_reconfigure (trans);
+      ret = gst_base_transform_reconfigure_unlocked (trans);
       if (G_UNLIKELY (!ret))
         goto done;
 
@@ -1984,7 +2023,7 @@ default_submit_input_buffer (GstBaseTransform * trans, gboolean is_discont,
   GstClockTime running_time;
   GstClockTime timestamp;
 
-  if (G_UNLIKELY (!gst_base_transform_reconfigure (trans)))
+  if (G_UNLIKELY (!gst_base_transform_reconfigure_unlocked (trans)))
     goto not_negotiated;
 
   if (GST_BUFFER_OFFSET_IS_VALID (inbuf))

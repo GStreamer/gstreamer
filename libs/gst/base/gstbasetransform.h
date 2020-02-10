@@ -350,6 +350,9 @@ GST_BASE_API
 gboolean gst_base_transform_update_src_caps (GstBaseTransform *trans,
                                              GstCaps *updated_caps);
 
+GST_BASE_API
+gboolean gst_base_transform_reconfigure (GstBaseTransform * trans);
+
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstBaseTransform, gst_object_unref)
 
 G_END_DECLS
