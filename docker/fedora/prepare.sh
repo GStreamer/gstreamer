@@ -223,6 +223,6 @@ cargo --version
 rustc --version
 
 # get gst-build and make all subprojects available
-git clone git://anongit.freedesktop.org/gstreamer/gst-build /gst-build/
+git clone -b ${DEFAULT_BRANCH} https://gitlab.freedesktop.org/gstreamer/gst-build.git /gst-build/
 cd /gst-build
 meson subprojects download

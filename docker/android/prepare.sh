@@ -37,11 +37,11 @@ mkdir $GSTREAMER_ROOT_ANDROID
 tar -xvf /android/sources/gstreamer-android.tar.xz -C $GSTREAMER_ROOT_ANDROID
 ls $GSTREAMER_ROOT_ANDROID
 
-git clone https://gitlab.freedesktop.org/gstreamer/gst-examples.git /android/sources/gst-examples
+git clone -b ${DEFAULT_BRANCH} https://gitlab.freedesktop.org/gstreamer/gst-examples.git /android/sources/gst-examples
 chmod +x /android/sources/gst-examples/playback/player/android/gradlew
 /android/sources/gst-examples/playback/player/android/gradlew --no-search-upward --no-daemon --project-dir /android/sources/gst-examples/playback/player/android dependencies --refresh-dependencies
 
-git clone https://gitlab.freedesktop.org/gstreamer/gst-docs.git /android/sources/gst-docs
+git clone -b ${DEFAULT_BRANCH} https://gitlab.freedesktop.org/gstreamer/gst-docs.git /android/sources/gst-docs
 chmod +x /android/sources/gst-docs/examples/tutorials/android/gradlew
 /android/sources/gst-docs/examples/tutorials/android/gradlew --no-search-upward --no-daemon --project-dir /android/sources/gst-docs/examples/tutorials/android dependencies --refresh-dependencies
 

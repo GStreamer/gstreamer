@@ -1,3 +1,5 @@
+include: "gitlab/ci_template.yml"
+
 stages:
   - "build docker"
   - "preparation"
@@ -36,7 +38,7 @@ test manifest:
     - export _UID="${IMAGE}:${DATE}-${CI_JOB_ID}"
     - export LATEST="${IMAGE}:latest"
 
-    - docker build --pull -f ${DOCKERFILE} -t ${LATEST} ${CONTEXT_DIR}
+    - docker build --pull --build-arg DEFAULT_BRANCH=${GST_UPSTREAM_BRANCH} -f ${DOCKERFILE} -t ${LATEST} ${CONTEXT_DIR}
 
     # If we are in a fork, push the image to the reigstry regardless the branch
     - |
@@ -109,8 +111,6 @@ android docker:
     CONTEXT_DIR: "docker/android/"
     DOCKERFILE: "docker/android/Dockerfile"
   extends: .base
-
-include: "gitlab/ci_template.yml"
 
 .build local:
   extends: '.build'
