@@ -1531,6 +1531,8 @@ fill_color_standard (GstVideoColorimetry * colorimetry,
     VAProcColorStandardType * type, VAProcColorProperties * properties)
 {
   *type = from_GstVideoColorimetry (colorimetry);
+
+#if VA_CHECK_VERSION(1,2,0)
   if (*type == VAProcColorStandardExplicit) {
     properties->colour_primaries =
         gst_video_color_primaries_to_iso (colorimetry->primaries);
@@ -1539,6 +1541,7 @@ fill_color_standard (GstVideoColorimetry * colorimetry,
     properties->matrix_coefficients =
         gst_video_color_matrix_to_iso (colorimetry->matrix);
   }
+#endif
 
   properties->color_range = from_GstVideoColorRange (colorimetry->range);
 }

@@ -983,7 +983,11 @@ from_GstVideoColorimetry (const GstVideoColorimetry * const colorimetry)
           GST_VIDEO_COLORIMETRY_SMPTE240M))
     return VAProcColorStandardSMPTE240M;
 
+#if VA_CHECK_VERSION(1,2,0)
   return VAProcColorStandardExplicit;
+#else
+  return VAProcColorStandardNone;
+#endif
 }
 
 /**
