@@ -1413,6 +1413,9 @@ gst_nvdec_subclass_register (GstPlugin * plugin, GType type,
   cdata->codec_type = codec_type;
   cdata->codec = g_strdup (codec);
   cdata->cuda_device_id = device_id;
+  /* class data will be leaked if the element never gets instantiated */
+  GST_MINI_OBJECT_FLAG_SET (sink_caps, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
+  GST_MINI_OBJECT_FLAG_SET (src_caps, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
 
   g_type_query (type, &type_query);
   memset (&type_info, 0, sizeof (type_info));

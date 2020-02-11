@@ -643,6 +643,9 @@ gst_nv_h264_enc_register (GstPlugin * plugin, guint device_id, guint rank,
   cdata->sink_caps = gst_caps_ref (sink_caps);
   cdata->src_caps = gst_caps_ref (src_caps);
   type_info.class_data = cdata;
+  /* class data will be leaked if the element never gets instantiated */
+  GST_MINI_OBJECT_FLAG_SET (sink_caps, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
+  GST_MINI_OBJECT_FLAG_SET (src_caps, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
 
   type_name = g_strdup ("GstNvH264Enc");
   feature_name = g_strdup ("nvh264enc");
