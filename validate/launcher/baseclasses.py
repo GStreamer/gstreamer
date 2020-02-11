@@ -708,18 +708,25 @@ class GstValidateListener(socketserver.BaseRequestHandler, Loggable):
             if raw_len == b'':
                 return
             msglen = struct.unpack('>I', raw_len)[0]
-            try:
-                msg = self.request.recv(msglen).decode('utf-8', 'ignore')
-            except UnicodeDecodeError as e:
-                self.error("Could not decode message: %s - %s" % (msg, e))
+            e = None
+            raw_msg = bytes()
+            while msglen != len(raw_msg):
+                raw_msg += self.request.recv(msglen - len(raw_msg))
+            if e is not None:
                 continue
+            try:
+                msg = raw_msg.decode('utf-8', 'ignore')
+            except UnicodeDecodeError as e:
+                self.error("%s Could not decode message: %s - %s" % (test.classname if test else "unknown", msg, e))
+                continue
+
             if msg == '':
                 return
 
             try:
                 obj = json.loads(msg)
             except json.decoder.JSONDecodeError as e:
-                self.error("Could not deserialize: %s - %s" % (msg, e))
+                self.error("%s Could not decode message: %s - %s" % (test.classname if test else "unknown", msg, e))
                 continue
 
             if test is None:
