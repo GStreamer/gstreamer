@@ -79,6 +79,7 @@ class Protocols(object):
     HLS = "hls"
     DASH = "dash"
     RTSP = "rtsp"
+    IMAGESEQUENCE = "imagesequence"
 
     @staticmethod
     def needs_clock_sync(protocol):

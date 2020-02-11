@@ -305,6 +305,7 @@ stream_id_is_equal (const gchar * uri, const gchar * rid, const gchar * cid)
 
   /* If it's not from file or from our local http server, it should have been the same */
   if (!g_str_has_prefix (uri, "file://")
+      && !g_str_has_prefix (uri, "imagesequence:/")
       && !g_str_has_prefix (uri, "http://127.0.0.1"))
     return FALSE;
 

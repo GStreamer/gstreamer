@@ -937,7 +937,7 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
         try:
             # Just testing that the vairous mandatory infos are present
             caps = media_descriptor.get_caps()
-            if uri is None:
+            if uri is None or media_descriptor.get_protocol() == Protocols.IMAGESEQUENCE:
                 uri = media_descriptor.get_uri()
 
             # Adjust local http uri
@@ -1052,10 +1052,11 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
                 uri = test.media_descriptor.get_uri()
                 uri_requires_http_server = False
                 if uri:
-                    expanded_uri = uri % {
-                        'http-server-port': self.options.http_server_port}
-                    uri_requires_http_server = expanded_uri.find(
-                        "127.0.0.1:%s" % self.options.http_server_port) != -1
+                    if 'http-server-port' in uri:
+                        expanded_uri = uri % {
+                            'http-server-port': self.options.http_server_port}
+                        uri_requires_http_server = expanded_uri.find(
+                            "127.0.0.1:%s" % self.options.http_server_port) != -1
                 if protocol in [Protocols.HTTP, Protocols.HLS, Protocols.DASH] or uri_requires_http_server:
                     return True
         return False

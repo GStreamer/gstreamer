@@ -2492,6 +2492,7 @@ class GstValidateMediaDescriptor(MediaDescriptor):
     def __init__(self, xml_path):
         super(GstValidateMediaDescriptor, self).__init__()
 
+        self._media_file_path = None
         main_descriptor = self.__all_descriptors.get(xml_path)
         if main_descriptor:
             self._copy_data_from_main(main_descriptor)
@@ -2507,8 +2508,7 @@ class GstValidateMediaDescriptor(MediaDescriptor):
                 raise
             self._extract_data(media_xml)
 
-        self.set_protocol(urllib.parse.urlparse(
-            urllib.parse.urlparse(self.get_uri()).scheme).scheme)
+        self.set_protocol(urllib.parse.urlparse(self.get_uri()).scheme)
 
     def skip_parsers(self):
         return self._skip_parsers
@@ -2536,7 +2536,15 @@ class GstValidateMediaDescriptor(MediaDescriptor):
         self._skip_parsers = bool(int(media_xml.attrib.get('skip-parsers', 0)))
         self._has_frames = bool(int(media_xml.attrib["frame-detection"]))
         self._duration = int(media_xml.attrib["duration"])
-        self._protocol = media_xml.get("protocol", None)
+        self._uri = media_xml.attrib["uri"]
+        parsed_uri = urllib.parse.urlparse(self.get_uri())
+        self._protocol = media_xml.get("protocol", parsed_uri.scheme)
+        if parsed_uri.scheme == "file":
+            if not os.path.exists(parsed_uri.path) and os.path.exists(self.get_media_filepath()):
+                self._uri = "file://" + self.get_media_filepath()
+        elif parsed_uri.scheme == Protocols.IMAGESEQUENCE:
+            self._media_file_path = os.path.join(os.path.dirname(self.__cleanup_media_info_ext()), os.path.basename(parsed_uri.path))
+            self._uri = parsed_uri._replace(path=os.path.join(os.path.dirname(self.__cleanup_media_info_ext()), os.path.basename(self._media_file_path))).geturl()
         self._is_seekable = media_xml.attrib["seekable"].lower() == "true"
         self._is_live = media_xml.get("live", "false").lower() == "true"
         self._is_image = False
@@ -2546,6 +2554,14 @@ class GstValidateMediaDescriptor(MediaDescriptor):
         self._track_types = []
         for stream in media_xml.findall("streams")[0].findall("stream"):
             self._track_types.append(stream.attrib["type"])
+
+    def __cleanup_media_info_ext(self):
+        for ext in [self.MEDIA_INFO_EXT, self.PUSH_MEDIA_INFO_EXT, self.STREAM_INFO_EXT,
+            ]:
+            if self._xml_path.endswith(ext):
+               return self._xml_path[:len(self._xml_path) - (len(ext) + 1)]
+
+        assert "Not reached" is None
 
     @staticmethod
     def new_from_uri(uri, verbose=False, include_frames=False, is_push=False):
@@ -2561,11 +2577,13 @@ class GstValidateMediaDescriptor(MediaDescriptor):
             GstValidateMediaDescriptor.MEDIA_INFO_EXT
         descriptor_path = "%s.%s" % (media_path, ext)
         args = GstValidateBaseTestManager.MEDIA_CHECK_COMMAND.split(" ")
-        args.append(uri)
         if include_frames == 2:
             try:
                 media_xml = ET.parse(descriptor_path).getroot()
-
+                prev_uri = urllib.parse.urlparse(media_xml.attrib['uri'])
+                if prev_uri.scheme == Protocols.IMAGESEQUENCE:
+                    parsed_uri = urllib.parse.urlparse(uri)
+                    uri = prev_uri._replace(path=os.path.join(os.path.dirname(parsed_uri.path), os.path.basename(prev_uri.path))).geturl()
                 include_frames = bool(int(media_xml.attrib["frame-detection"]))
                 if bool(int(media_xml.attrib.get("skip-parsers", 0))):
                     args.append("--skip-parsers")
@@ -2573,6 +2591,7 @@ class GstValidateMediaDescriptor(MediaDescriptor):
                 pass
         else:
             include_frames = bool(include_frames)
+        args.append(uri)
 
         args.extend(["--output-file", descriptor_path])
         if include_frames:
@@ -2608,12 +2627,9 @@ class GstValidateMediaDescriptor(MediaDescriptor):
         return Protocols.needs_clock_sync(self.get_protocol())
 
     def get_media_filepath(self):
-        if self.get_protocol() == Protocols.FILE:
-            return self._xml_path.replace("." + self.MEDIA_INFO_EXT, "")
-        elif self.get_protocol() == Protocols.PUSHFILE:
-            return self._xml_path.replace("." + self.PUSH_MEDIA_INFO_EXT, "")
-        else:
-            return self._xml_path.replace("." + self.STREAM_INFO_EXT, "")
+        if self._media_file_path is None:
+            self._media_file_path = self.__cleanup_media_info_ext()
+        return self._media_file_path
 
     def get_caps(self):
         return self._caps
