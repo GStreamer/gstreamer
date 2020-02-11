@@ -84,11 +84,29 @@ static const guint8 h265_pps_with_range_extension[] = {
   0xce, 0x25, 0x04, 0x83, 0x21, 0x96, 0x3b, 0x80,
 };
 
+static guint8 h265_sps[] = {
+  0x00, 0x00, 0x00, 0x01, 0x42, 0x01, 0x01, 0x21, 0x60, 0x00, 0x00, 0x03,
+  0x00, 0xb0, 0x00, 0x00, 0x03, 0x00, 0x00, 0x03, 0x00, 0x99, 0xa0, 0x01,
+  0xe0, 0x20, 0x02, 0x1c, 0x59, 0x4b, 0x92, 0x42, 0x96, 0x11, 0x80, 0xb5,
+  0x01, 0x01, 0x01, 0x14, 0x00, 0x00, 0x03, 0x00, 0x04, 0x00, 0x00, 0x03,
+  0x00, 0xf3, 0xf2, 0x00, 0x6e, 0x00, 0x17, 0xbd, 0xf8, 0x00, 0x02, 0x94,
+  0xb4, 0x00, 0x06, 0x9b, 0x60, 0x00, 0xd3, 0x6c, 0x00, 0x01, 0x4a, 0x5a,
+  0x40, 0x00, 0x14, 0xa5, 0xa0, 0x00, 0x34, 0xdb, 0x00, 0x06, 0x9b, 0x60,
+  0x00, 0x0a, 0x52, 0xd0, 0x40,
+};
+
+static guint8 h265_sei_pic_timing[] = {
+  0x00, 0x00, 0x00, 0x01, 0x4e, 0x01, 0x01, 0x10, 0x04, 0x00, 0x00, 0x03, 0x00,
+  0x00, 0x03, 0x00, 0x00, 0x03, 0x00, 0x00, 0x03, 0x00, 0x08, 0xaf, 0xff, 0xff,
+  0xff, 0xfe, 0x80
+};
+
+
 GST_START_TEST (test_h265_parse_slice_eos_slice_eob)
 {
   GstH265ParserResult res;
   GstH265NalUnit nalu;
-  GstH265Parser *const parser = gst_h265_parser_new ();
+  GstH265Parser *parser = gst_h265_parser_new ();
   const guint8 *buf = slice_eos_slice_eob;
   guint n, buf_size = sizeof (slice_eos_slice_eob);
 
@@ -96,7 +114,7 @@ GST_START_TEST (test_h265_parse_slice_eos_slice_eob)
 
   assert_equals_int (res, GST_H265_PARSER_OK);
   assert_equals_int (nalu.type, GST_H265_NAL_SLICE_IDR_W_RADL);
-  assert_equals_int (nalu.size, 43);
+  assert_equals_int (nalu.size, buf_size / 2 - 10);     /* 2 slices, 1 start code(4) and EOx(6) */
 
   n = nalu.offset + nalu.size;
   buf += n;
@@ -128,6 +146,56 @@ GST_START_TEST (test_h265_parse_slice_eos_slice_eob)
   assert_equals_int (nalu.type, GST_H265_NAL_EOB);
   assert_equals_int (nalu.size, 2);
 
+  gst_h265_parser_free (parser);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_h265_parse_pic_timing)
+{
+  GstH265NalUnit nalu;
+  GstH265Parser *parser = gst_h265_parser_new ();
+  const guint8 *buf = h265_sps;
+  guint i, buf_size = sizeof (h265_sps);
+  GArray *messages;
+  GstH265SEIMessage sei;
+  GstH265SPS sps;
+
+  assert_equals_int (gst_h265_parser_identify_nalu (parser, buf, 0, buf_size,
+          &nalu), GST_H265_PARSER_NO_NAL_END);
+  assert_equals_int (nalu.type, GST_H265_NAL_SPS);
+  assert_equals_int (nalu.size, buf_size - 4);  /* 4 for start_code */
+
+  assert_equals_int (gst_h265_parser_parse_sps (parser, &nalu, &sps, TRUE),
+      GST_H265_PARSER_OK);
+
+  buf = h265_sei_pic_timing;
+  buf_size = sizeof (h265_sei_pic_timing);
+
+  assert_equals_int (gst_h265_parser_identify_nalu (parser, buf, 0, buf_size,
+          &nalu), GST_H265_PARSER_NO_NAL_END);
+  assert_equals_int (nalu.type, GST_H265_NAL_PREFIX_SEI);
+  assert_equals_int (nalu.size, buf_size - 4);  /* 4 for start_code size */
+
+  assert_equals_int (gst_h265_parser_parse_sei (parser, &nalu, &messages),
+      GST_H265_PARSER_OK);
+
+  for (i = 0; i < messages->len; i++) {
+    sei = g_array_index (messages, GstH265SEIMessage, i);
+    assert_equals_int (sei.payloadType, GST_H265_SEI_PIC_TIMING);
+    assert_equals_int (sei.payload.pic_timing.pic_struct, 0);
+    assert_equals_int (sei.payload.pic_timing.source_scan_type, 1);
+    assert_equals_int (sei.payload.pic_timing.duplicate_flag, 0);
+    assert_equals_int (sei.payload.pic_timing.au_cpb_removal_delay_minus1, 0);
+    assert_equals_int (sei.payload.pic_timing.pic_dpb_output_delay, 0);
+    assert_equals_int (sei.payload.pic_timing.pic_dpb_output_du_delay, 0);
+    assert_equals_int (sei.payload.pic_timing.num_decoding_units_minus1, 33);
+    assert_equals_int (sei.payload.pic_timing.du_common_cpb_removal_delay_flag,
+        1);
+    assert_equals_int (sei.payload.
+        pic_timing.du_common_cpb_removal_delay_increment_minus1, 0);
+  }
+  g_array_free (messages, TRUE);
   gst_h265_parser_free (parser);
 }
 
@@ -465,6 +533,7 @@ h265parser_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_h265_parse_slice_eos_slice_eob);
+  tcase_add_test (tc_chain, test_h265_parse_pic_timing);
   tcase_add_test (tc_chain, test_h265_parse_slice_6bytes);
   tcase_add_test (tc_chain, test_h265_base_profiles);
   tcase_add_test (tc_chain, test_h265_base_profiles_compat);
