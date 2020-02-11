@@ -8378,10 +8378,20 @@ gen_range_header (GstRTSPSrc * src, GstSegment * segment)
     g_date_time_unref (prime_epoch);
   } else {
     range.unit = GST_RTSP_RANGE_NPT;
-    range.min.type = GST_RTSP_TIME_SECONDS;
-    range.min.seconds = begin_seconds;
-    range.max.type = GST_RTSP_TIME_SECONDS;
-    range.max.seconds = end_seconds;
+
+    if (src->range && src->range->min.type == GST_RTSP_TIME_NOW) {
+      range.min.type = GST_RTSP_TIME_NOW;
+    } else {
+      range.min.type = GST_RTSP_TIME_SECONDS;
+      range.min.seconds = begin_seconds;
+    }
+
+    if (src->range && src->range->max.type == GST_RTSP_TIME_END) {
+      range.max.type = GST_RTSP_TIME_END;
+    } else {
+      range.max.type = GST_RTSP_TIME_SECONDS;
+      range.max.seconds = end_seconds;
+    }
   }
 
   /* Don't set end bounds when not required to */
