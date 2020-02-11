@@ -117,33 +117,6 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 #define parent_class gst_fluid_dec_parent_class
 G_DEFINE_TYPE (GstFluidDec, gst_fluid_dec, GST_TYPE_ELEMENT);
 
-/* fluid_synth log handler */
-static void
-gst_fluid_synth_error_log_function (int level, const char *message, void *data)
-{
-  GST_ERROR ("%s", message);
-}
-
-static void
-gst_fluid_synth_warning_log_function (int level, const char *message,
-    void *data)
-{
-  GST_WARNING ("%s", message);
-}
-
-static void
-gst_fluid_synth_info_log_function (int level, const char *message, void *data)
-{
-  GST_INFO ("%s", message);
-}
-
-static void
-gst_fluid_synth_debug_log_function (int level, const char *message, void *data)
-{
-  GST_DEBUG ("%s", message);
-}
-
-
 /* initialize the plugin's class */
 static void
 gst_fluid_dec_class_init (GstFluidDecClass * klass)
@@ -191,25 +164,6 @@ gst_fluid_dec_class_init (GstFluidDecClass * klass)
       "Midi Synthesizer Element", "Wim Taymans <wim.taymans@gmail.com>");
 
   gstelement_class->change_state = gst_fluid_dec_change_state;
-
-#ifndef GST_DISABLE_GST_DEBUG
-  fluid_set_log_function (FLUID_PANIC,
-      (fluid_log_function_t) gst_fluid_synth_error_log_function, NULL);
-  fluid_set_log_function (FLUID_ERR,
-      (fluid_log_function_t) gst_fluid_synth_warning_log_function, NULL);
-  fluid_set_log_function (FLUID_WARN,
-      (fluid_log_function_t) gst_fluid_synth_warning_log_function, NULL);
-  fluid_set_log_function (FLUID_INFO,
-      (fluid_log_function_t) gst_fluid_synth_info_log_function, NULL);
-  fluid_set_log_function (FLUID_DBG,
-      (fluid_log_function_t) gst_fluid_synth_debug_log_function, NULL);
-#else
-  fluid_set_log_function (FLUID_PANIC, NULL, NULL);
-  fluid_set_log_function (FLUID_ERR, NULL, NULL);
-  fluid_set_log_function (FLUID_WARN, NULL, NULL);
-  fluid_set_log_function (FLUID_INFO, NULL, NULL);
-  fluid_set_log_function (FLUID_DBG, NULL, NULL);
-#endif
 }
 
 /* initialize the new element
@@ -726,11 +680,59 @@ gst_fluid_dec_get_property (GObject * object, guint prop_id,
   }
 }
 
+/* fluid_synth log handler */
+static void
+gst_fluid_synth_error_log_function (int level, const char *message, void *data)
+{
+  GST_ERROR ("%s", message);
+}
+
+static void
+gst_fluid_synth_warning_log_function (int level, const char *message,
+    void *data)
+{
+  GST_WARNING ("%s", message);
+}
+
+static void
+gst_fluid_synth_info_log_function (int level, const char *message, void *data)
+{
+  GST_INFO ("%s", message);
+}
+
+static void
+gst_fluid_synth_debug_log_function (int level, const char *message, void *data)
+{
+  GST_DEBUG ("%s", message);
+}
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_fluid_dec_debug, "fluiddec",
       0, "Fluidsynth MIDI decoder plugin");
+
+  /* We modify FluidSynth's global state here; let's hope nobody tries to use
+   * it natively alongside this plugin. */
+
+#ifndef GST_DISABLE_GST_DEBUG
+  fluid_set_log_function (FLUID_PANIC,
+      (fluid_log_function_t) gst_fluid_synth_error_log_function, NULL);
+  fluid_set_log_function (FLUID_ERR,
+      (fluid_log_function_t) gst_fluid_synth_warning_log_function, NULL);
+  fluid_set_log_function (FLUID_WARN,
+      (fluid_log_function_t) gst_fluid_synth_warning_log_function, NULL);
+  fluid_set_log_function (FLUID_INFO,
+      (fluid_log_function_t) gst_fluid_synth_info_log_function, NULL);
+  fluid_set_log_function (FLUID_DBG,
+      (fluid_log_function_t) gst_fluid_synth_debug_log_function, NULL);
+#else
+  fluid_set_log_function (FLUID_PANIC, NULL, NULL);
+  fluid_set_log_function (FLUID_ERR, NULL, NULL);
+  fluid_set_log_function (FLUID_WARN, NULL, NULL);
+  fluid_set_log_function (FLUID_INFO, NULL, NULL);
+  fluid_set_log_function (FLUID_DBG, NULL, NULL);
+#endif
 
 #if GST_HAVE_FLUIDSYNTH_VERSION(1, 1, 9)
   {
