@@ -589,7 +589,10 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
   window->render_rect.right = width;
   window->render_rect.bottom = height;
 
-  window->input_rect = window->render_rect;
+  window->input_rect.left = 0;
+  window->input_rect.top = 0;
+  window->input_rect.right = GST_VIDEO_INFO_WIDTH (&window->info);
+  window->input_rect.bottom = GST_VIDEO_INFO_HEIGHT (&window->info);
 
   window->width = width;
   window->height = height;
