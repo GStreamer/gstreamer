@@ -822,9 +822,7 @@ fill_picture (GstVaapiDecoderVC1 * decoder, GstVaapiPicture * picture)
   pic_param->backward_reference_picture = VA_INVALID_ID;
   pic_param->inloop_decoded_picture = VA_INVALID_ID;
   pic_param->sequence_fields.value = 0;
-#if VA_CHECK_VERSION(0,32,0)
   pic_param->sequence_fields.bits.profile = seq_hdr->profile;
-#endif
   pic_param->coded_width = priv->width;
   pic_param->coded_height = priv->height;
   pic_param->entrypoint_fields.value = 0;

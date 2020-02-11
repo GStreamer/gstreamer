@@ -501,11 +501,8 @@ ensure_profiles (GstVaapiDisplay * display)
 
   GST_DEBUG ("%d profiles", n);
   for (i = 0; i < n; i++) {
-#if VA_CHECK_VERSION(0,34,0)
-    /* Introduced in VA/VPP API */
     if (profiles[i] == VAProfileNone)
       continue;
-#endif
     GST_DEBUG ("  %s", string_of_VAProfile (profiles[i]));
   }
 
@@ -602,11 +599,6 @@ ensure_properties (GstVaapiDisplay * display)
     GST_DEBUG ("  %s", string_of_VADisplayAttributeType (attr->type));
 
     switch (attr->type) {
-#if !VA_CHECK_VERSION(0,34,0)
-      case VADisplayAttribDirectSurface:
-        prop.name = GST_VAAPI_DISPLAY_PROP_RENDER_MODE;
-        break;
-#endif
       case VADisplayAttribRenderMode:
         prop.name = GST_VAAPI_DISPLAY_PROP_RENDER_MODE;
         break;
@@ -1849,26 +1841,6 @@ get_render_mode_VADisplayAttribRenderMode (GstVaapiDisplay * display,
 }
 
 static gboolean
-get_render_mode_VADisplayAttribDirectSurface (GstVaapiDisplay * display,
-    GstVaapiRenderMode * pmode)
-{
-#if VA_CHECK_VERSION(0,34,0)
-  /* VADisplayAttribDirectsurface was removed in VA-API >= 0.34.0 */
-  return FALSE;
-#else
-  gint direct_surface;
-
-  if (!get_attribute (display, VADisplayAttribDirectSurface, &direct_surface))
-    return FALSE;
-  if (direct_surface)
-    *pmode = GST_VAAPI_RENDER_MODE_OVERLAY;
-  else
-    *pmode = GST_VAAPI_RENDER_MODE_TEXTURE;
-  return TRUE;
-#endif
-}
-
-static gboolean
 get_render_mode_default (GstVaapiDisplay * display, GstVaapiRenderMode * pmode)
 {
   switch (GST_VAAPI_DISPLAY_VADISPLAY_TYPE (display)) {
@@ -1909,10 +1881,6 @@ gst_vaapi_display_get_render_mode (GstVaapiDisplay * display,
 
   /* Try with render-mode attribute */
   if (get_render_mode_VADisplayAttribRenderMode (display, pmode))
-    return TRUE;
-
-  /* Try with direct-surface attribute */
-  if (get_render_mode_VADisplayAttribDirectSurface (display, pmode))
     return TRUE;
 
   /* Default: determine from the display type */

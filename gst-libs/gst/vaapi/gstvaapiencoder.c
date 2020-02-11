@@ -38,7 +38,6 @@ gboolean
 gst_vaapi_encoder_ensure_param_quality_level (GstVaapiEncoder * encoder,
     GstVaapiEncPicture * picture)
 {
-#if VA_CHECK_VERSION(0,36,0)
   GstVaapiEncMiscParam *misc;
 
   /* quality level param is not supported */
@@ -52,7 +51,6 @@ gst_vaapi_encoder_ensure_param_quality_level (GstVaapiEncoder * encoder,
       sizeof (encoder->va_quality_level));
   gst_vaapi_enc_picture_add_misc_param (picture, misc);
   gst_vaapi_codec_object_replace (&misc, NULL);
-#endif
   return TRUE;
 }
 
@@ -621,15 +619,6 @@ get_packed_headers (GstVaapiEncoder * encoder)
   encoder->got_packed_headers = TRUE;
   encoder->packed_headers = cdata->packed_headers & value;
 
-  if (cdata->codec == GST_VAAPI_CODEC_JPEG) {
-#if !VA_CHECK_VERSION(0,37,1)
-    encoder->packed_headers = VA_ENC_PACKED_HEADER_RAW_DATA;
-    GST_DEBUG ("Hard coding the packed header flag value to "
-        "VA_ENC_PACKED_HEADER_RAW_DATA. This is a work around for the driver "
-        "bug");
-#endif
-  }
-
   return encoder->packed_headers;
 }
 
@@ -791,9 +780,7 @@ gst_vaapi_encoder_reconfigure_internal (GstVaapiEncoder * encoder)
   GstVaapiVideoPool *pool;
   guint codedbuf_size, target_percentage;
   guint fps_d, fps_n;
-#if VA_CHECK_VERSION(0,36,0)
   guint quality_level_max = 0;
-#endif
 
   fps_d = GST_VIDEO_INFO_FPS_D (vip);
   fps_n = GST_VIDEO_INFO_FPS_N (vip);
@@ -826,7 +813,6 @@ gst_vaapi_encoder_reconfigure_internal (GstVaapiEncoder * encoder)
   if (!gst_vaapi_encoder_ensure_context (encoder))
     goto error_reset_context;
 
-#if VA_CHECK_VERSION(0,36,0)
   if (get_config_attribute (encoder, VAConfigAttribEncQualityRange,
           &quality_level_max) && quality_level_max > 0) {
     GST_VAAPI_ENCODER_QUALITY_LEVEL (encoder) =
@@ -836,7 +822,6 @@ gst_vaapi_encoder_reconfigure_internal (GstVaapiEncoder * encoder)
   }
   GST_INFO ("Quality level is fixed to %d",
       GST_VAAPI_ENCODER_QUALITY_LEVEL (encoder));
-#endif
 
   if (encoder->trellis) {
 #if VA_CHECK_VERSION(1,0,0)
