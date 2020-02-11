@@ -630,7 +630,6 @@ gst_validate_action_get_clocktime (GstValidateScenario * scenario,
       *retval = GST_CLOCK_TIME_NONE;
     } else {
       *retval = val * GST_SECOND;
-      *retval = GST_ROUND_UP_4 (*retval);
     }
     gst_structure_set (action->structure, name, G_TYPE_UINT64, *retval, NULL);
     g_free (strval);
