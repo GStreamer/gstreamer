@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2019 Cesar Fabian Orccon Chipana
+ * Copyright (C) 2020 Thibault Saunier <tsaunier@igalia.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -25,44 +26,29 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_IMAGE_SEQUENCE_SRC \
-  (gst_image_sequence_src_get_type())
-#define GST_IMAGE_SEQUENCE_SRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_IMAGE_SEQUENCE_SRC,GstImageSequenceSrc))
-#define GST_IMAGE_SEQUENCE_SRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_IMAGE_SEQUENCE_SRC,GstImageSequenceSrcClass))
-#define GST_IS_IMAGE_SEQUENCE_SRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_IMAGE_SEQUENCE_SRC))
-#define GST_IS_IMAGE_SEQUENCE_SRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_IMAGE_SEQUENCE_SRC))
-
-typedef struct _GstImageSequenceSrc GstImageSequenceSrc;
-typedef struct _GstImageSequenceSrcClass GstImageSequenceSrcClass;
+#define GST_TYPE_IMAGE_SEQUENCE_SRC (gst_image_sequence_src_get_type())
+G_DECLARE_FINAL_TYPE(GstImageSequenceSrc, gst_image_sequence_src, GST, IMAGE_SEQUENCE_SRC, GstPushSrc)
 
 struct _GstImageSequenceSrc
 {
   GstPushSrc parent;
 
-  gchar *filename;
-  int start_index;
-  int stop_index;
-  int index;
-  int count_frames;
+  GRecMutex fields_lock;
+  gchar* path;
+  GstUri *uri;
+  gint start_index;
+  gint stop_index;
+  gint index;
+  gint n_frames;
 
   guint64 duration;
-  guint64 buffer_duration;
+  gboolean reverse;
 
   GstCaps *caps;
 
   gint fps_n, fps_d;
 };
 
-struct _GstImageSequenceSrcClass
-{
-  GstPushSrcClass parent_class;
-};
-
-GType gst_image_sequence_src_get_type (void);
 
 G_END_DECLS
 

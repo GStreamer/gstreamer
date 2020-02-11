@@ -12630,6 +12630,105 @@
     "multifile": {
         "description": "Reads/Writes buffers from/to sequentially named files",
         "elements": {
+            "imagesequencesrc": {
+                "author": "Cesar Fabian Orccon Chipana <cfoch.fabian@gmail.com>\nThibault Saunier <tsaunier@igalia.com>",
+                "description": "Create a video stream from a sequence of image files",
+                "hierarchy": [
+                    "GstImageSequenceSrc",
+                    "GstPushSrc",
+                    "GstBaseSrc",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Source/File/Video",
+                "long-name": "Image Sequence Source",
+                "pad-templates": {
+                    "src": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "blocksize": {
+                        "blurb": "Size in bytes to read per buffer (-1 = default)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "4096",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "do-timestamp": {
+                        "blurb": "Apply current stream time to buffers",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "framerate": {
+                        "blurb": "The output framerate.",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "30/1",
+                        "max": "2147483647/1",
+                        "min": "1/1",
+                        "type-name": "GstFraction",
+                        "writable": true
+                    },
+                    "location": {
+                        "blurb": "Pattern to create file names of input files.  File names are created by calling sprintf() with the pattern and the current index.",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "num-buffers": {
+                        "blurb": "Number of buffers to output before sending EOS (-1 = unlimited)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "-1",
+                        "max": "2147483647",
+                        "min": "-1",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "start-index": {
+                        "blurb": "Start value of index.  The initial value of index can be set either by setting index or start-index.  When the end of the loop is reached, the index will be set to the value start-index.",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "stop-index": {
+                        "blurb": "Stop value of index.  The special value -1 means no stop.",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "-1",
+                        "max": "2147483647",
+                        "min": "-1",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "typefind": {
+                        "blurb": "Run typefind before negotiating (deprecated, non-functional)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            },
             "multifilesink": {
                 "author": "David Schleef <ds@schleef.org>",
                 "description": "Write buffers to a sequentially named set of files",

@@ -8,6 +8,7 @@ multifile_sources = [
   'gstsplitmuxsrc.c',
   'gstsplitutils.c',
   'patternspec.c',
+  'gstimagesequencesrc.c',
 ]
 
 gstmultifile = library('gstmultifile',
