@@ -109,14 +109,40 @@ static void gst_bus_finalize (GObject * object);
 
 static guint gst_bus_signals[LAST_SIGNAL] = { 0 };
 
+typedef struct
+{
+  GstBusSyncHandler handler;
+  gpointer user_data;
+  GDestroyNotify destroy_notify;
+  gint ref_count;
+} SyncHandler;
+
+static SyncHandler *
+sync_handler_ref (SyncHandler * handler)
+{
+  g_atomic_int_inc (&handler->ref_count);
+
+  return handler;
+}
+
+static void
+sync_handler_unref (SyncHandler * handler)
+{
+  if (!g_atomic_int_dec_and_test (&handler->ref_count))
+    return;
+
+  if (handler->destroy_notify)
+    handler->destroy_notify (handler->user_data);
+
+  g_free (handler);
+}
+
 struct _GstBusPrivate
 {
   GstAtomicQueue *queue;
   GMutex queue_lock;
 
-  GstBusSyncHandler sync_handler;
-  gpointer sync_handler_data;
-  GDestroyNotify sync_handler_notify;
+  SyncHandler *sync_handler;
 
   guint num_signal_watchers;
 
@@ -262,8 +288,8 @@ gst_bus_finalize (GObject * object)
 {
   GstBus *bus = GST_BUS (object);
 
-  if (bus->priv->sync_handler_notify)
-    bus->priv->sync_handler_notify (bus->priv->sync_handler_data);
+  if (bus->priv->sync_handler)
+    sync_handler_unref (g_steal_pointer (&bus->priv->sync_handler));
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -305,9 +331,8 @@ gboolean
 gst_bus_post (GstBus * bus, GstMessage * message)
 {
   GstBusSyncReply reply = GST_BUS_PASS;
-  GstBusSyncHandler handler;
   gboolean emit_sync_message;
-  gpointer handler_data;
+  SyncHandler *sync_handler = NULL;
 
   g_return_val_if_fail (GST_IS_BUS (bus), FALSE);
   g_return_val_if_fail (GST_IS_MESSAGE (message), FALSE);
@@ -324,20 +349,23 @@ gst_bus_post (GstBus * bus, GstMessage * message)
   if (GST_OBJECT_FLAG_IS_SET (bus, GST_BUS_FLUSHING))
     goto is_flushing;
 
-  handler = bus->priv->sync_handler;
-  handler_data = bus->priv->sync_handler_data;
+  if (bus->priv->sync_handler)
+    sync_handler = sync_handler_ref (bus->priv->sync_handler);
   emit_sync_message = bus->priv->num_sync_message_emitters > 0;
   GST_OBJECT_UNLOCK (bus);
 
   /* first call the sync handler if it is installed */
-  if (handler)
-    reply = handler (bus, message, handler_data);
+  if (sync_handler)
+    reply = sync_handler->handler (bus, message, sync_handler->user_data);
 
   /* emit sync-message if requested to do so via
      gst_bus_enable_sync_message_emission. terrible but effective */
   if (emit_sync_message && reply != GST_BUS_DROP
-      && handler != gst_bus_sync_signal_handler)
+      && (!sync_handler
+          || sync_handler->handler != gst_bus_sync_signal_handler))
     gst_bus_sync_signal_handler (bus, message, NULL);
+
+  g_clear_pointer (&sync_handler, sync_handler_unref);
 
   /* If this is a bus without async message delivery
    * always drop the message */
@@ -716,47 +744,31 @@ gst_bus_peek (GstBus * bus)
  * should handle messages asynchronously using the gst_bus watch and poll
  * functions.
  *
- * You cannot replace an existing sync_handler. You can pass %NULL to this
- * function, which will clear the existing handler.
+ * Before 1.16.3 it was not possible to replace an existing handler and
+ * clearing an existing handler with %NULL was not thread-safe.
  */
 void
 gst_bus_set_sync_handler (GstBus * bus, GstBusSyncHandler func,
     gpointer user_data, GDestroyNotify notify)
 {
-  GDestroyNotify old_notify;
+  SyncHandler *old_handler, *new_handler = NULL;
 
   g_return_if_fail (GST_IS_BUS (bus));
 
-  GST_OBJECT_LOCK (bus);
-  /* Assert if the user attempts to replace an existing sync_handler,
-   * other than to clear it */
-  if (func != NULL && bus->priv->sync_handler != NULL)
-    goto no_replace;
-
-  if ((old_notify = bus->priv->sync_handler_notify)) {
-    gpointer old_data = bus->priv->sync_handler_data;
-
-    bus->priv->sync_handler_data = NULL;
-    bus->priv->sync_handler_notify = NULL;
-    GST_OBJECT_UNLOCK (bus);
-
-    old_notify (old_data);
-
-    GST_OBJECT_LOCK (bus);
+  if (func) {
+    new_handler = g_new0 (SyncHandler, 1);
+    new_handler->handler = func;
+    new_handler->user_data = user_data;
+    new_handler->destroy_notify = notify;
+    new_handler->ref_count = 1;
   }
-  bus->priv->sync_handler = func;
-  bus->priv->sync_handler_data = user_data;
-  bus->priv->sync_handler_notify = notify;
+
+  GST_OBJECT_LOCK (bus);
+  old_handler = g_steal_pointer (&bus->priv->sync_handler);
+  bus->priv->sync_handler = g_steal_pointer (&new_handler);
   GST_OBJECT_UNLOCK (bus);
 
-  return;
-
-no_replace:
-  {
-    GST_OBJECT_UNLOCK (bus);
-    g_warning ("cannot replace existing sync handler");
-    return;
-  }
+  g_clear_pointer (&old_handler, sync_handler_unref);
 }
 
 /**
