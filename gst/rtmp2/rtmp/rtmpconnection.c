@@ -926,6 +926,8 @@ gst_rtmp_connection_send_command (GstRtmpConnection * connection,
   guint8 *data;
   gsize size;
 
+  g_return_val_if_fail (GST_IS_RTMP_CONNECTION (connection), 0);
+
   if (connection->thread != g_thread_self ()) {
     GST_ERROR_OBJECT (connection, "Called from wrong thread");
   }
