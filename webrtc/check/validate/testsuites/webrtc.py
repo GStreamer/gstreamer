@@ -1,6 +1,4 @@
-#*- vi:si:et:sw=4:sts=4:ts=4:syntax=python
-#
-# Copyright (c) 2018 Matthew Waters <matthew@centricular.com>
+# Copyright (c) 2020 Matthew Waters <matthew@centricular.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -25,12 +23,9 @@ import os
 
 TEST_MANAGER = "webrtc"
 
-BLACKLIST = [
-    ]
 
 def setup_tests(test_manager, options):
     print("Setting up webrtc tests")
-#    test_manager.set_default_blacklist(BLACKLIST)
 
     return True
 

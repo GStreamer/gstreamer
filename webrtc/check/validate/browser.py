@@ -1,6 +1,4 @@
-#!/usr/bin/env python3
-#
-# Copyright (c) 2018, Matthew Waters <matthew@centricular.com>
+# Copyright (c) 2020, Matthew Waters <matthew@centricular.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -17,10 +15,13 @@
 # Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
 # Boston, MA 02110-1301, USA.
 
+import logging
 from selenium import webdriver
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 from selenium.webdriver.chrome.options import Options as COptions
+
+l = logging.getLogger(__name__)
 
 def create_firefox_driver():
     capabilities = webdriver.DesiredCapabilities().FIREFOX.copy()
@@ -39,6 +40,9 @@ def create_chrome_driver():
     copts.add_argument('--use-fake-ui-for-media-stream')
     copts.add_argument('--use-fake-device-for-media-stream')
     copts.add_argument('--enable-blink-features=RTCUnifiedPlanByDefault')
+    # XXX: until libnice can deal with mdns candidates
+    local_state = {"enabled_labs_experiments" : ["enable-webrtc-hide-local-ips-with-mdns@2"] }
+    copts.add_experimental_option("localState", {"browser" : local_state})
 
     return webdriver.Chrome(options=copts, desired_capabilities=capabilities)
 
@@ -48,7 +52,7 @@ def create_driver(name):
     elif name == 'chrome':
         return create_chrome_driver()
     else:
-        raise ValueError("Unknown browser name " + name)
+        raise ValueError("Unknown browser name \'" + name + "\'")
 
 def valid_int(n):
     if isinstance(n, int):
@@ -62,18 +66,23 @@ def valid_int(n):
     return False
 
 class Browser(object):
-    def __init__(self, driver, html_source):
+    """
+    A browser as connected through selenium.
+    """
+    def __init__(self, driver):
+        l.info('Using driver \'' + driver.name + '\' with capabilities ' + str(driver.capabilities))
         self.driver = driver
-        self.html_source = html_source
+
+    def open(self, html_source):
+        self.driver.get(html_source)
 
     def get_peer_id(self):
-        self.driver.get(self.html_source)
-        peer_id = WebDriverWait(self.driver, 10).until(
+        peer_id = WebDriverWait(self.driver, 5).until(
             lambda x: x.find_element_by_id('peer-id'),
             message='Peer-id element was never seen'
         )
-        WebDriverWait (self.driver, 10).until(
+        WebDriverWait (self.driver, 5).until(
             lambda x: valid_int(peer_id.text),
             message='Peer-id never became a number'
         )
-        return int(peer_id.text)        
+        return int(peer_id.text)

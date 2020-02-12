@@ -21,12 +21,13 @@ import os
 import sys
 import argparse
 import json
+import logging
 
-from signalling import WebRTCSignallingClient
-from actions import register_action_types, ActionObserver
+from signalling import WebRTCSignallingClient, RemoteWebRTCObserver
+from actions import ActionObserver
 from client import WebRTCClient
 from browser import Browser, create_driver
-from enums import SignallingState, NegotiationState, RemoteState
+from enums import SignallingState, NegotiationState, DataChannelState, Actions
 
 import gi
 gi.require_version("GLib", "2.0")
@@ -40,14 +41,20 @@ from gi.repository import GstSdp
 gi.require_version("GstValidate", "1.0")
 from gi.repository import GstValidate
 
+FORMAT = '%(asctime)-23s %(levelname)-7s  %(thread)d   %(name)-24s\t%(funcName)-24s %(message)s'
+LEVEL = os.environ.get("LOGLEVEL", "DEBUG")
+logging.basicConfig(level=LEVEL, format=FORMAT)
+l = logging.getLogger(__name__)
+
 class WebRTCApplication(object):
-    def __init__(self, server, id_, peerid, scenario_name, browser_name, html_source):
+    def __init__(self, server, id_, peerid, scenario_name, browser_name, html_source, test_name=None):
         self.server = server
         self.peerid = peerid
         self.html_source = html_source
         self.id = id_
         self.scenario_name = scenario_name
         self.browser_name = browser_name
+        self.test_name = test_name
 
     def _init_validate(self, scenario_file):
         self.runner = GstValidate.Runner.new()
@@ -61,24 +68,79 @@ class WebRTCApplication(object):
             self.client.pipeline.set_state(Gst.State.PLAYING)
 
     def _on_scenario_done(self, scenario):
-        self.quit()
+        l.error ('scenario done')
+        GLib.idle_add(self.quit)
 
-    def _connect_actions(self):
-        def create_offer():
-            self.client.create_offer(None)
-            return GstValidate.ActionReturn.OK
-        self.actions.create_offer.connect(create_offer)
+    def _connect_actions(self, actions):
+        def on_action(atype, action):
+            """
+            From a validate action, perform the action as required
+            """
+            if atype == Actions.CREATE_OFFER:
+                assert action.structure["which"] in ("local", "remote")
+                c = self.client if action.structure["which"] == "local" else self.remote_client
+                c.create_offer()
+                return GstValidate.ActionReturn.OK
+            elif atype == Actions.CREATE_ANSWER:
+                assert action.structure["which"] in ("local", "remote")
+                c = self.client if action.structure["which"] == "local" else self.remote_client
+                c.create_answer()
+                return GstValidate.ActionReturn.OK
+            elif atype == Actions.WAIT_FOR_NEGOTIATION_STATE:
+                states = [NegotiationState(action.structure["state"]), NegotiationState.ERROR]
+                assert action.structure["which"] in ("local", "remote")
+                c = self.client if action.structure["which"] == "local" else self.remote_client
+                state = c.wait_for_negotiation_states(states)
+                return GstValidate.ActionReturn.OK if state != NegotiationState.ERROR else GstValidate.ActionReturn.ERROR
+            elif atype == Actions.ADD_STREAM:
+                self.client.add_stream(action.structure["pipeline"])
+                return GstValidate.ActionReturn.OK
+            elif atype == Actions.ADD_DATA_CHANNEL:
+                assert action.structure["which"] in ("local", "remote")
+                c = self.client if action.structure["which"] == "local" else self.remote_client
+                c.add_data_channel(action.structure["id"])
+                return GstValidate.ActionReturn.OK
+            elif atype == Actions.SEND_DATA_CHANNEL_STRING:
+                assert action.structure["which"] in ("local", "remote")
+                c = self.client if action.structure["which"] == "local" else self.remote_client
+                channel = c.find_channel (action.structure["id"])
+                channel.send_string (action.structure["msg"])
+                return GstValidate.ActionReturn.OK
+            elif atype == Actions.WAIT_FOR_DATA_CHANNEL_STATE:
+                assert action.structure["which"] in ("local", "remote")
+                c = self.client if action.structure["which"] == "local" else self.remote_client
+                states = [DataChannelState(action.structure["state"]), DataChannelState.ERROR]
+                channel = c.find_channel (action.structure["id"])
+                state = channel.wait_for_states(states)
+                return GstValidate.ActionReturn.OK if state != DataChannelState.ERROR else GstValidate.ActionReturn.ERROR
+            elif atype == Actions.CLOSE_DATA_CHANNEL:
+                assert action.structure["which"] in ("local", "remote")
+                c = self.client if action.structure["which"] == "local" else self.remote_client
+                channel = c.find_channel (action.structure["id"])
+                channel.close()
+                return GstValidate.ActionReturn.OK
+            elif atype == Actions.WAIT_FOR_DATA_CHANNEL:
+                assert action.structure["which"] in ("local", "remote")
+                c = self.client if action.structure["which"] == "local" else self.remote_client
+                state = c.wait_for_data_channel(action.structure["id"])
+                return GstValidate.ActionReturn.OK
+            elif atype == Actions.WAIT_FOR_DATA_CHANNEL_STRING:
+                assert action.structure["which"] in ("local", "remote")
+                c = self.client if action.structure["which"] == "local" else self.remote_client
+                channel = c.find_channel (action.structure["id"])
+                channel.wait_for_message(action.structure["msg"])
+                return GstValidate.ActionReturn.OK
+            elif atype == Actions.WAIT_FOR_NEGOTIATION_NEEDED:
+                self.client.wait_for_negotiation_needed(action.structure["generation"])
+                return GstValidate.ActionReturn.OK
+            elif atype == Actions.SET_WEBRTC_OPTIONS:
+                self.client.set_options (action.structure)
+                self.remote_client.set_options (action.structure)
+                return GstValidate.ActionReturn.OK
+            else:
+                assert "Not reached" == ""
 
-        def wait_for_negotiation_state(state):
-            states = [state, NegotiationState.ERROR]
-            state = self.client.wait_for_negotiation_states(states)
-            return GstValidate.ActionReturn.OK if state != RemoteState.ERROR else GstValidate.ActionReturn.ERROR
-        self.actions.wait_for_negotiation_state.connect(wait_for_negotiation_state)
-
-        def add_stream(pipeline):
-            self.client.add_stream(pipeline)
-            return GstValidate.ActionReturn.OK
-        self.actions.add_stream.connect(add_stream)
+        actions.action.connect (on_action)
 
     def _connect_client_observer(self):
         def on_offer_created(offer):
@@ -86,6 +148,12 @@ class WebRTCApplication(object):
             msg = json.dumps({'sdp': {'type': 'offer', 'sdp': text}})
             self.signalling.send(msg)
         self.client.on_offer_created.connect(on_offer_created)
+
+        def on_answer_created(answer):
+            text = answer.sdp.as_text()
+            msg = json.dumps({'sdp': {'type': 'answer', 'sdp': text}})
+            self.signalling.send(msg)
+        self.client.on_answer_created.connect(on_answer_created)
 
         def on_ice_candidate(mline, candidate):
             msg = json.dumps({'ice': {'sdpMLineIndex': str(mline), 'candidate' : candidate}})
@@ -116,6 +184,7 @@ class WebRTCApplication(object):
 
         def error(msg):
             # errors are unexpected
+            l.error ('Unexpected error: ' + msg)
             GLib.idle_add(self.quit)
             GLib.idle_add(sys.exit, -20)
         self.signalling.error.connect(error)
@@ -126,37 +195,50 @@ class WebRTCApplication(object):
         self.client = WebRTCClient()
         self._connect_client_observer()
 
-        self.actions = ActionObserver()
-        register_action_types(self.actions)
-        self._connect_actions()
-
         self.signalling = WebRTCSignallingClient(self.server, self.id)
+        self.remote_client = RemoteWebRTCObserver (self.signalling)
         self._connect_signalling_observer()
+
+        actions = ActionObserver()
+        actions.register_action_types()
+        self._connect_actions(actions)
+
+        # wait for the signalling server to start up before creating the browser
         self.signalling.wait_for_states([SignallingState.OPEN])
         self.signalling.hello()
 
-        self.browser = Browser(create_driver(self.browser_name), self.html_source)
+        self.browser = Browser(create_driver(self.browser_name))
+        self.browser.open(self.html_source)
 
         browser_id = self.browser.get_peer_id ()
         assert browser_id == self.peerid
 
         self.signalling.create_session(self.peerid)
+        test_name = self.test_name if self.test_name else self.scenario_name
+        self.remote_client.set_title (test_name)
 
         self._init_validate(self.scenario_name)
-        print("app initialized")
 
     def quit(self):
         # Stop signalling first so asyncio doesn't keep us alive on weird failures
+        l.info('quiting')
         self.signalling.stop()
-        self.browser.driver.quit()
-        self.client.stop()
+        l.info('signalling stopped')
         self.main_loop.quit()
+        l.info('main loop stopped')
+        self.client.stop()
+        l.info('client stopped')
+        self.browser.driver.quit()
+        l.info('browser exitted')
 
     def run(self):
         try:
             self._init()
+            l.info("app initialized")
             self.main_loop.run()
+            l.info("loop exited")
         except:
+            l.exception("Fatal error")
             self.quit()
             raise
 
@@ -168,6 +250,7 @@ def parse_options():
     parser.add_argument('--html-source', help='HTML page to open in the browser', default=None)
     parser.add_argument('--scenario', help='Scenario file to execute', default=None)
     parser.add_argument('--browser', help='Browser name to use', default=None)
+    parser.add_argument('--name', help='Name of the test', default=None)
     return parser.parse_args()
 
 def init():
@@ -196,7 +279,7 @@ def init():
 
 def run():
     args = init()
-    w = WebRTCApplication (args.server, args.id, args.peer_id, args.scenario, args.browser, args.html_source)
+    w = WebRTCApplication (args.server, args.id, args.peer_id, args.scenario, args.browser, args.html_source, test_name=args.name)
     return w.run()
 
 if __name__ == "__main__":

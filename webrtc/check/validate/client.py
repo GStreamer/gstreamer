@@ -1,6 +1,4 @@
-#!/usr/bin/env python3
-#
-# Copyright (c) 2018, Matthew Waters <matthew@centricular.com>
+# Copyright (c) 2020, Matthew Waters <matthew@centricular.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -20,8 +18,8 @@
 import threading
 import copy
 
-from observer import Signal
-from enums import NegotiationState
+from observer import Signal, WebRTCObserver, DataChannelObserver, StateObserver
+from enums import NegotiationState, DataChannelState
 
 import gi
 gi.require_version("Gst", "1.0")
@@ -33,10 +31,13 @@ from gi.repository import GstSdp
 gi.require_version("GstValidate", "1.0")
 from gi.repository import GstValidate
 
-class WebRTCBinObserver(object):
+
+class WebRTCBinObserver(WebRTCObserver):
+    """
+    Observe a webrtcbin element.
+    """
     def __init__(self, element):
-        self.state = NegotiationState.NEW
-        self.state_cond = threading.Condition()
+        WebRTCObserver.__init__(self)
         self.element = element
         self.signal_handlers = []
         self.signal_handlers.append(element.connect("on-negotiation-needed", self._on_negotiation_needed))
@@ -44,17 +45,16 @@ class WebRTCBinObserver(object):
         self.signal_handlers.append(element.connect("pad-added", self._on_pad_added))
         self.signal_handlers.append(element.connect("on-new-transceiver", self._on_new_transceiver))
         self.signal_handlers.append(element.connect("on-data-channel", self._on_data_channel))
-        self.on_offer_created = Signal()
-        self.on_answer_created = Signal()
+        self.negotiation_needed = 0
+        self._negotiation_needed_observer = StateObserver(self, "negotiation_needed", threading.Condition())
         self.on_negotiation_needed = Signal()
         self.on_ice_candidate = Signal()
         self.on_pad_added = Signal()
         self.on_new_transceiver = Signal()
-        self.on_data_channel = Signal()
-        self.on_local_description_set = Signal()
-        self.on_remote_description_set = Signal()
 
     def _on_negotiation_needed(self, element):
+        self.negotiation_needed += 1
+        self._negotiation_needed_observer.update(self.negotiation_needed)
         self.on_negotiation_needed.fire()
 
     def _on_ice_candidate(self, element, mline, candidate):
@@ -63,35 +63,19 @@ class WebRTCBinObserver(object):
     def _on_pad_added(self, element, pad):
         self.on_pad_added.fire(pad)
 
-    def _on_local_description_set(self, promise, desc):
-        self._update_negotiation_from_description_state(desc)
-        self.on_local_description_set.fire(desc)
-
-    def _on_remote_description_set(self, promise, desc):
-        self._update_negotiation_from_description_state(desc)
-        self.on_remote_description_set.fire(desc)
+    def _on_description_set(self, promise, desc):
+        new_state = self._update_negotiation_from_description_state(desc)
+        if new_state == NegotiationState.OFFER_SET:
+            self.on_offer_set.fire (desc)
+        elif new_state == NegotiationState.ANSWER_SET:
+            self.on_answer_set.fire (desc)
 
     def _on_new_transceiver(self, element, transceiver):
         self.on_new_transceiver.fire(transceiver)
 
-    def _on_data_channel(self, element):
-        self.on_data_channel.fire(desc)
-
-    def _update_negotiation_state(self, new_state):
-        with self.state_cond:
-            old_state = self.state
-            self.state = new_state
-            self.state_cond.notify_all()
-            print ("observer updated state to", new_state)
-
-    def wait_for_negotiation_states(self, states):
-        ret = None
-        with self.state_cond:
-            while self.state not in states:
-                self.state_cond.wait()
-            print ("observer waited for", states)
-            ret = self.state
-        return ret
+    def _on_data_channel(self, element, channel):
+        observer = WebRTCBinDataChannelObserver(channel, channel.props.label, 'remote')
+        self.add_channel(observer)
 
     def _update_negotiation_from_description_state(self, desc):
         new_state = None
@@ -101,6 +85,7 @@ class WebRTCBinObserver(object):
             new_state = NegotiationState.ANSWER_SET
         assert new_state is not None
         self._update_negotiation_state(new_state)
+        return new_state
 
     def _deepcopy_session_description(self, desc):
         # XXX: passing 'offer' to both a promise and an action signal without
@@ -115,11 +100,10 @@ class WebRTCBinObserver(object):
         offer = reply['offer']
 
         new_offer = self._deepcopy_session_description(offer)
-        promise = Gst.Promise.new_with_change_func(self._on_local_description_set, new_offer)
+        promise = Gst.Promise.new_with_change_func(self._on_description_set, new_offer)
 
         new_offer = self._deepcopy_session_description(offer)
         self.element.emit('set-local-description', new_offer, promise)
-
         self.on_offer_created.fire(offer)
 
     def _on_answer_created(self, promise, element):
@@ -128,11 +112,10 @@ class WebRTCBinObserver(object):
         offer = reply['answer']
 
         new_offer = self._deepcopy_session_description(offer)
-        promise = Gst.Promise.new_with_change_func(self._on_local_description_set, new_offer)
+        promise = Gst.Promise.new_with_change_func(self._on_description_set, new_offer)
 
         new_offer = self._deepcopy_session_description(offer)
         self.element.emit('set-local-description', new_offer, promise)
-
         self.on_answer_created.fire(offer)
 
     def create_offer(self, options=None):
@@ -144,13 +127,24 @@ class WebRTCBinObserver(object):
         self.element.emit('create-answer', options, promise)
 
     def set_remote_description(self, desc):
-        promise = Gst.Promise.new_with_change_func(self._on_remote_description_set, desc)
+        promise = Gst.Promise.new_with_change_func(self._on_description_set, desc)
         self.element.emit('set-remote-description', desc, promise)
 
     def add_ice_candidate(self, mline, candidate):
         self.element.emit('add-ice-candidate', mline, candidate)
 
+    def add_data_channel(self, ident):
+        channel = self.element.emit('create-data-channel', ident, None)
+        observer = WebRTCBinDataChannelObserver(channel, ident, 'local')
+        self.add_channel(observer)
+
+    def wait_for_negotiation_needed(self, generation):
+        self._negotiation_needed_observer.wait_for ((generation,))
+
 class WebRTCStream(object):
+    """
+    An stream attached to a webrtcbin element
+    """
     def __init__(self):
         self.bin = None
 
@@ -189,6 +183,10 @@ class WebRTCStream(object):
         self.bin.sync_state_with_parent()
 
 class WebRTCClient(WebRTCBinObserver):
+    """
+    Client for performing webrtc operations.  Controls the pipeline that
+    contains a webrtcbin element.
+    """
     def __init__(self):
         self.pipeline = Gst.Pipeline(None)
         self.webrtcbin = Gst.ElementFactory.make("webrtcbin")
@@ -210,3 +208,42 @@ class WebRTCClient(WebRTCBinObserver):
         stream.set_description(desc)
         stream.add_and_link_to (self.pipeline, self.webrtcbin, pad)
         self._streams.append(stream)
+
+    def set_options (self, opts):
+        if opts.has_field("local-bundle-policy"):
+            self.webrtcbin.props.bundle_policy = opts["local-bundle-policy"]
+
+
+class WebRTCBinDataChannelObserver(DataChannelObserver):
+    """
+    Data channel observer for a webrtcbin data channel.
+    """
+    def __init__(self, target, ident, location):
+        super().__init__(ident, location)
+        self.target = target
+        self.signal_handlers = []
+        self.signal_handlers.append(target.connect("on-open", self._on_open))
+        self.signal_handlers.append(target.connect("on-close", self._on_close))
+        self.signal_handlers.append(target.connect("on-error", self._on_error))
+        self.signal_handlers.append(target.connect("on-message-data", self._on_message_data))
+        self.signal_handlers.append(target.connect("on-message-string", self._on_message_string))
+        self.signal_handlers.append(target.connect("on-buffered-amount-low", self._on_buffered_amount_low))
+
+    def _on_open(self, channel):
+        self._update_state (DataChannelState.OPEN)
+    def _on_close(self, channel):
+        self._update_state (DataChannelState.CLOSED)
+    def _on_error(self, channel):
+        self._update_state (DataChannelState.ERROR)
+    def _on_message_data(self, channel, data):
+        self.data.append(msg)
+    def _on_message_string(self, channel, msg):
+        self.got_message (msg)
+    def _on_buffered_amount_low(self, channel):
+        pass
+
+    def close(self):
+        self.target.emit('close')
+
+    def send_string (self, msg):
+        self.target.emit('send-string', msg)

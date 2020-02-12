@@ -1,0 +1,21 @@
+description, summary="Send data over a data channel"
+include,location=negotiation_initiator.scenario
+include,location=bundle_policy.scenario
+
+set-webrtc-options, local-bundle-policy="$(local_bundle_policy)", remote-bundle-policy="$(remote_bundle_policy)"
+
+add-data-channel, which="$(negotiation_initiator)", id="gstreamer";
+
+create-offer, which="$(negotiation_initiator)";
+wait-for-negotiation-state, which="$(negotiation_responder)", state="offer-set"
+create-answer, which="$(negotiation_responder)";
+wait-for-negotiation-state, which="$(negotiation_initiator)", state="answer-set"
+
+# wait for the data channel to appear
+wait-for-data-channel, which="$(negotiation_initiator)", id="gstreamer";
+wait-for-data-channel, which="$(negotiation_responder)", id="gstreamer";
+wait-for-data-channel-state, which="$(negotiation_initiator)", id="gstreamer", state="open";
+
+# send something
+send-data-channel-string, which="local", id="gstreamer", msg="some data";
+wait-for-data-channel-string, which="remote", id="gstreamer", msg="some data";
