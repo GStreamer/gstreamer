@@ -700,6 +700,10 @@ gst_gl_stereo_mix_process_frames (GstGLStereoMix * mixer)
   else
     views = 1;
 
+  /* We can configure the view_converter now */
+  gst_gl_view_convert_set_context (mixer->viewconvert,
+      GST_GL_BASE_MIXER (mixer)->context);
+
   if (gst_gl_view_convert_submit_input_buffer (mixer->viewconvert,
           FALSE, inbuf) != GST_FLOW_OK)
     return FALSE;
