@@ -74,12 +74,13 @@ struct _GstRtmpConnection
   gboolean writing;
 
   /* RTMP configuration */
-  gsize in_chunk_size;
-  gsize out_chunk_size;
-  gsize in_window_ack_size;
-  gsize out_window_ack_size;
-  gsize total_input_bytes;
-  gsize bytes_since_ack;
+  guint32 in_chunk_size;
+  guint32 out_chunk_size;
+  guint32 in_window_ack_size;
+  guint32 out_window_ack_size;
+
+  guint64 in_bytes_total;
+  guint64 in_bytes_unacked;
 };
 
 
@@ -444,9 +445,9 @@ gst_rtmp_connection_input_ready (GInputStream * is, gpointer user_data)
 
   GST_TRACE_OBJECT (sc, "read %" G_GSIZE_FORMAT " bytes", ret);
 
-  sc->total_input_bytes += ret;
-  sc->bytes_since_ack += ret;
-  if (sc->bytes_since_ack >= sc->in_window_ack_size) {
+  sc->in_bytes_total += ret;
+  sc->in_bytes_unacked += ret;
+  if (sc->in_bytes_unacked >= sc->in_window_ack_size) {
     gst_rtmp_connection_send_ack (sc);
   }
 
@@ -989,13 +990,13 @@ gst_rtmp_connection_send_ack (GstRtmpConnection * connection)
 {
   GstRtmpProtocolControl pc = {
     .type = GST_RTMP_MESSAGE_TYPE_ACKNOWLEDGEMENT,
-    .param = (guint32) connection->total_input_bytes,
+    .param = (guint32) connection->in_bytes_total,
   };
 
   gst_rtmp_connection_queue_message (connection,
       gst_rtmp_message_new_protocol_control (&pc));
 
-  connection->bytes_since_ack = 0;
+  connection->in_bytes_unacked = 0;
 }
 
 static void
