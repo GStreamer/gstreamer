@@ -106,6 +106,7 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
     num_attribs = 1;
 
     /* set VA_SURFACE_ATTRIB_USAGE_HINT_ENCODER flag for encoding */
+#if (MFX_VERSION >= 1025)
     if ((req->Type & MFX_MEMTYPE_VIDEO_MEMORY_ENCODER_TARGET) &&
         (req->Type & MFX_MEMTYPE_FROM_ENCODE)) {
       attribs[1].type = VASurfaceAttribUsageHint;
@@ -114,6 +115,7 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
       attribs[1].value.value.i = VA_SURFACE_ATTRIB_USAGE_HINT_ENCODER;
       num_attribs = 2;
     }
+#endif
 
     format =
         gst_msdk_get_va_rt_format_from_mfx_rt_format (req->Info.ChromaFormat);
