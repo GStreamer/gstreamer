@@ -54,6 +54,7 @@ G_DEFINE_TYPE_WITH_CODE (GstGLWindowWin32, gst_gl_window_win32,
 static void gst_gl_window_win32_set_window_handle (GstGLWindow * window,
     guintptr handle);
 static guintptr gst_gl_window_win32_get_display (GstGLWindow * window);
+static guintptr gst_gl_window_win32_get_window_handle (GstGLWindow * window);
 static void gst_gl_window_win32_set_preferred_size (GstGLWindow * window,
     gint width, gint height);
 static void gst_gl_window_win32_show (GstGLWindow * window);
@@ -74,6 +75,8 @@ gst_gl_window_win32_class_init (GstGLWindowWin32Class * klass)
   window_class->draw = GST_DEBUG_FUNCPTR (gst_gl_window_win32_draw);
   window_class->get_display =
       GST_DEBUG_FUNCPTR (gst_gl_window_win32_get_display);
+  window_class->get_window_handle =
+      GST_DEBUG_FUNCPTR (gst_gl_window_win32_get_window_handle);
   window_class->set_preferred_size =
       GST_DEBUG_FUNCPTR (gst_gl_window_win32_set_preferred_size);
   window_class->show = GST_DEBUG_FUNCPTR (gst_gl_window_win32_show);
@@ -322,6 +325,16 @@ gst_gl_window_win32_get_display (GstGLWindow * window)
   window_win32 = GST_GL_WINDOW_WIN32 (window);
 
   return (guintptr) window_win32->device;
+}
+
+static guintptr
+gst_gl_window_win32_get_window_handle (GstGLWindow * window)
+{
+  GstGLWindowWin32 *window_win32;
+
+  window_win32 = GST_GL_WINDOW_WIN32 (window);
+
+  return (guintptr) window_win32->internal_win_id;
 }
 
 static void
