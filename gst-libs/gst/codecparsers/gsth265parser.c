@@ -2534,17 +2534,28 @@ error:
   return GST_H265_PARSER_ERROR;
 }
 
+static gboolean
+nal_reader_has_more_data_in_payload (NalReader * nr,
+    guint32 payload_start_pos_bit, guint32 payloadSize)
+{
+  if (nal_reader_is_byte_aligned (nr) &&
+      (nal_reader_get_pos (nr) == (payload_start_pos_bit + 8 * payloadSize)))
+    return FALSE;
+
+  return TRUE;
+}
+
 static GstH265ParserResult
 gst_h265_parser_parse_sei_message (GstH265Parser * parser,
     guint8 nal_type, NalReader * nr, GstH265SEIMessage * sei)
 {
-  guint32 payloadSizeBytes;
+  guint32 payloadSize;
   guint8 payload_type_byte, payload_size_byte;
-  guint32 remaining, payload_size_bits, next;
+  guint remaining, payload_size;
+  guint32 payload_start_pos_bit;
   GstH265ParserResult res = GST_H265_PARSER_OK;
 
-  GST_DEBUG ("parsing \"SEI message\" %u bits available",
-      nal_reader_get_remaining (nr));
+  GST_DEBUG ("parsing \"Sei message\"");
 
   memset (sei, 0, sizeof (*sei));
 
@@ -2552,21 +2563,20 @@ gst_h265_parser_parse_sei_message (GstH265Parser * parser,
     READ_UINT8 (nr, payload_type_byte, 8);
     sei->payloadType += payload_type_byte;
   } while (payload_type_byte == 0xff);
-  payloadSizeBytes = 0;
+  payloadSize = 0;
   do {
     READ_UINT8 (nr, payload_size_byte, 8);
-    payloadSizeBytes += payload_size_byte;
+    payloadSize += payload_size_byte;
   }
   while (payload_size_byte == 0xff);
 
   remaining = nal_reader_get_remaining (nr);
-  payload_size_bits =
-      payloadSizeBytes * 8 < remaining ? payloadSizeBytes * 8 : remaining;
-  next = nal_reader_get_pos (nr) + payload_size_bits;
+  payload_size = payloadSize * 8 < remaining ? payloadSize * 8 : remaining;
 
+  payload_start_pos_bit = nal_reader_get_pos (nr);
   GST_DEBUG
-      ("SEI message received: payloadType  %u, payloadSize = %u bits",
-      sei->payloadType, payload_size_bits);
+      ("SEI message received: payloadType  %u, payloadSize = %u bytes",
+      sei->payloadType, payload_size);
 
   if (nal_type == GST_H265_NAL_PREFIX_SEI) {
     switch (sei->payloadType) {
@@ -2582,7 +2592,7 @@ gst_h265_parser_parse_sei_message (GstH265Parser * parser,
         break;
       case GST_H265_SEI_REGISTERED_USER_DATA:
         res = gst_h265_parser_parse_registered_user_data (parser,
-            &sei->payload.registered_user_data, nr, payloadSizeBytes);
+            &sei->payload.registered_user_data, nr, payloadSize);
         break;
       case GST_H265_SEI_RECOVERY_POINT:
         res = gst_h265_parser_parse_recovery_point (parser,
@@ -2603,7 +2613,7 @@ gst_h265_parser_parse_sei_message (GstH265Parser * parser,
       default:
         /* Just consume payloadSize bytes, which does not account for
            emulation prevention bytes */
-        if (!nal_reader_skip_long (nr, payload_size_bits))
+        if (!nal_reader_skip_long (nr, payload_size))
           goto error;
         res = GST_H265_PARSER_OK;
         break;
@@ -2613,7 +2623,7 @@ gst_h265_parser_parse_sei_message (GstH265Parser * parser,
       default:
         /* Just consume payloadSize bytes, which does not account for
            emulation prevention bytes */
-        if (!nal_reader_skip_long (nr, payload_size_bits))
+        if (!nal_reader_skip_long (nr, payload_size))
           goto error;
         res = GST_H265_PARSER_OK;
         break;
@@ -2626,18 +2636,19 @@ gst_h265_parser_parse_sei_message (GstH265Parser * parser,
    * it is present, the size will be less than total PayloadSize since the
    * size of reserved_payload_extension is supposed to be
    * 8 * payloadSize - nEarlierBits - nPayloadZeroBits -1 which means the
-   * the current implementation will still skip all unnecessary bits correctly. */
-
-  /* Always make sure all the advertised SEI bits
-   * were consumed during parsing. This is sufficient to skip to the next
-   * byte aligned position after the SEI payload because we start
-   * at a byte-aligned position and calculate the 'next' position as a
-   * multiple of 8 bits, and this correctly skips any three-byte emulation
-   * bytes encountered without getting confused. */
-  if (next > nal_reader_get_pos (nr)) {
-    GST_LOG ("Skipping %u unused SEI bits", next - nal_reader_get_pos (nr));
-    if (!nal_reader_skip_long (nr, next - nal_reader_get_pos (nr)))
+   * the current implementation will still skip all unnecessary bits correctly.
+   * In theory, we can have a more optimized implementation by skipping the
+   * data left in PayLoadSize without out individually checking for each bits,
+   * since the totoal size will be always less than payloadSize*/
+  if (nal_reader_has_more_data_in_payload (nr, payload_start_pos_bit,
+          payloadSize)) {
+    /* Skip the byte alignment bits */
+    if (!nal_reader_skip (nr, 1))
       goto error;
+    while (!nal_reader_is_byte_aligned (nr)) {
+      if (!nal_reader_skip (nr, 1))
+        goto error;
+    }
   }
 
   return res;
