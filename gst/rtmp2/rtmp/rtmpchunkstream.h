@@ -45,6 +45,8 @@ GstBuffer * gst_rtmp_chunk_stream_serialize_start (GstRtmpChunkStream * cstream,
     GstBuffer * buffer, guint32 chunk_size);
 GstBuffer * gst_rtmp_chunk_stream_serialize_next (GstRtmpChunkStream * cstream,
     guint32 chunk_size);
+GstBuffer * gst_rtmp_chunk_stream_serialize_all (GstRtmpChunkStream * cstream,
+    GstBuffer * buffer, guint32 chunk_size);
 
 GstRtmpChunkStreams * gst_rtmp_chunk_streams_new (void);
 void gst_rtmp_chunk_streams_free (gpointer ptr);

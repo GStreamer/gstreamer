@@ -666,6 +666,23 @@ gst_rtmp_chunk_stream_serialize_next (GstRtmpChunkStream * cstream,
   return serialize_next (cstream, chunk_size, CHUNK_TYPE_3);
 }
 
+GstBuffer *
+gst_rtmp_chunk_stream_serialize_all (GstRtmpChunkStream * cstream,
+    GstBuffer * buffer, guint32 chunk_size)
+{
+  GstBuffer *outbuf, *nextbuf;
+
+  outbuf = gst_rtmp_chunk_stream_serialize_start (cstream, buffer, chunk_size);
+  nextbuf = gst_rtmp_chunk_stream_serialize_next (cstream, chunk_size);
+
+  while (nextbuf) {
+    outbuf = gst_buffer_append (outbuf, nextbuf);
+    nextbuf = gst_rtmp_chunk_stream_serialize_next (cstream, chunk_size);
+  }
+
+  return outbuf;
+}
+
 GstRtmpChunkStreams *
 gst_rtmp_chunk_streams_new (void)
 {
