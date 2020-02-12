@@ -222,18 +222,20 @@ transport_receive_bin_change_state (GstElement * element,
     case GST_STATE_CHANGE_NULL_TO_READY:{
       GstWebRTCDTLSTransport *transport;
       GstElement *elem, *dtlssrtpdec;
-      GstPad *pad;
+      GstPad *pad, *peer_pad;
 
       transport = receive->stream->transport;
       dtlssrtpdec = transport->dtlssrtpdec;
       pad = gst_element_get_static_pad (dtlssrtpdec, "sink");
+      peer_pad = gst_pad_get_peer (pad);
       receive->rtp_block =
-          _create_pad_block (GST_ELEMENT (receive), pad, 0, NULL, NULL);
+          _create_pad_block (GST_ELEMENT (receive), peer_pad, 0, NULL, NULL);
       receive->rtp_block->block_id =
-          gst_pad_add_probe (pad,
+          gst_pad_add_probe (peer_pad,
           GST_PAD_PROBE_TYPE_BLOCK |
           GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
           (GstPadProbeCallback) pad_block, receive, NULL);
+      gst_object_unref (peer_pad);
       gst_object_unref (pad);
 
       receive->rtp_src_probe_id = gst_pad_add_probe (receive->rtp_src,
@@ -243,13 +245,15 @@ transport_receive_bin_change_state (GstElement * element,
       transport = receive->stream->rtcp_transport;
       dtlssrtpdec = transport->dtlssrtpdec;
       pad = gst_element_get_static_pad (dtlssrtpdec, "sink");
+      peer_pad = gst_pad_get_peer (pad);
       receive->rtcp_block =
-          _create_pad_block (GST_ELEMENT (receive), pad, 0, NULL, NULL);
+          _create_pad_block (GST_ELEMENT (receive), peer_pad, 0, NULL, NULL);
       receive->rtcp_block->block_id =
-          gst_pad_add_probe (pad,
+          gst_pad_add_probe (peer_pad,
           GST_PAD_PROBE_TYPE_BLOCK |
           GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
           (GstPadProbeCallback) pad_block, receive, NULL);
+      gst_object_unref (peer_pad);
       gst_object_unref (pad);
 
       receive->rtcp_src_probe_id = gst_pad_add_probe (receive->rtcp_src,
