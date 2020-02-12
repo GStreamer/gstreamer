@@ -856,7 +856,6 @@ start_write (gpointer user_data)
 {
   GstRtmpConnection *sc = user_data;
   gst_rtmp_connection_start_write (sc);
-  g_object_unref (sc);
   return G_SOURCE_REMOVE;
 }
 
@@ -904,7 +903,8 @@ gst_rtmp_connection_queue_message (GstRtmpConnection * self, GstBuffer * buffer)
   }
 
   g_async_queue_push (self->output_queue, g_byte_array_free_to_bytes (out_ba));
-  g_main_context_invoke (self->main_context, start_write, g_object_ref (self));
+  g_main_context_invoke_full (self->main_context, G_PRIORITY_DEFAULT,
+      start_write, g_object_ref (self), g_object_unref);
 }
 
 guint
