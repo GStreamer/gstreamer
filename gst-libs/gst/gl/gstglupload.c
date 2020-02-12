@@ -494,6 +494,7 @@ struct DmabufUpload
   guint n_mem;
 
   gboolean direct;
+  GstGLTextureTarget target;
   GstVideoInfo out_info;
   /* only used for pointer comparison */
   gpointer out_caps;
@@ -654,14 +655,16 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
     dmabuf->out_caps = out_caps;
     if (!gst_video_info_from_caps (out_info, out_caps))
       return FALSE;
+    dmabuf->target = _caps_get_texture_target (out_caps,
+        GST_GL_TEXTURE_TARGET_2D);
   }
 
   if (dmabuf->params)
     gst_gl_allocation_params_free ((GstGLAllocationParams *) dmabuf->params);
   if (!(dmabuf->params =
           gst_gl_video_allocation_params_new_wrapped_gl_handle (dmabuf->
-              upload->context, NULL, out_info, -1, NULL,
-              GST_GL_TEXTURE_TARGET_2D, 0, NULL, NULL, NULL)))
+              upload->context, NULL, out_info, -1, NULL, dmabuf->target, 0,
+              NULL, NULL, NULL)))
     return FALSE;
 
   /* Find and validate all memories */
@@ -710,8 +713,8 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
     /* otherwise create one and cache it */
     if (dmabuf->direct)
       dmabuf->eglimage[i] =
-          gst_egl_image_from_dmabuf_direct (dmabuf->upload->context, fd, offset,
-          in_info);
+          gst_egl_image_from_dmabuf_direct_target (dmabuf->upload->context, fd,
+          offset, in_info, dmabuf->target);
     else
       dmabuf->eglimage[i] = gst_egl_image_from_dmabuf (dmabuf->upload->context,
           fd[i], in_info, i, offset[i]);
@@ -800,6 +803,7 @@ _direct_dma_buf_upload_new (GstGLUpload * upload)
 {
   struct DmabufUpload *dmabuf = _dma_buf_upload_new (upload);
   dmabuf->direct = TRUE;
+  dmabuf->target = GST_GL_TEXTURE_TARGET_2D;
   gst_video_info_init (&dmabuf->out_info);
   return dmabuf;
 }
@@ -817,6 +821,7 @@ _direct_dma_buf_upload_transform_caps (gpointer impl, GstGLContext * context,
   if (direction == GST_PAD_SINK) {
     gint i, n;
     GstCaps *tmp;
+    GstGLTextureTarget target_mask;
 
     ret =
         _set_caps_features_with_passthrough (caps,
@@ -831,7 +836,9 @@ _direct_dma_buf_upload_transform_caps (gpointer impl, GstGLContext * context,
       gst_structure_remove_fields (s, "chroma-site", NULL);
       gst_structure_remove_fields (s, "colorimetry", NULL);
     }
-    tmp = _caps_intersect_texture_target (ret, 1 << GST_GL_TEXTURE_TARGET_2D);
+    target_mask = 1 << GST_GL_TEXTURE_TARGET_2D |
+        1 << GST_GL_TEXTURE_TARGET_EXTERNAL_OES;
+    tmp = _caps_intersect_texture_target (ret, target_mask);
     gst_caps_unref (ret);
     ret = tmp;
   } else {
