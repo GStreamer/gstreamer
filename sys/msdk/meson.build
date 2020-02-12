@@ -77,12 +77,16 @@ if cxx.has_header('mfxvp9.h', args: '-I' + mfx_incdir)
   cdata.set10('USE_MSDK_VP9_DEC', 1)
 endif
 
-# mfx 1.26+ is required to support raw VP9 stream
+# Usually MFX_VERSION 1026+ is required to support raw VP9 stream, however Fedora 30 has MFX_VERSION==1026
+# but without support for raw VP9 stream, so mfxExtVP9Param is checked as well.
+# See https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/merge_requests/988#note_408093
 mfx_ver126_check_code = '''
 #include <mfxdefs.h>
+#include <mfxstructures.h>
 #if MFX_VERSION < 1026
 #error "The current version of mfx doesn't support raw vp9 stream"
-#endif'
+#endif
+mfxExtVP9Param ext;
 '''
 
 have_mfx_ver126 = cc.compiles(mfx_ver126_check_code,
