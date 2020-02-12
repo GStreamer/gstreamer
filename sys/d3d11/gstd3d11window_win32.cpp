@@ -717,12 +717,8 @@ gst_d3d11_window_win32_create_swap_chain (GstD3D11Window * window,
 {
   GstD3D11WindowWin32 *self = GST_D3D11_WINDOW_WIN32 (window);
   DXGI_SWAP_CHAIN_DESC desc = { 0, };
-  DXGI_SWAP_EFFECT swap_effect = DXGI_SWAP_EFFECT_DISCARD;
   IDXGISwapChain *new_swapchain = NULL;
   GstD3D11Device *device = window->device;
-
-  if (gst_d3d11_is_windows_8_or_greater ())
-    swap_effect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
 
   self->have_swapchain1 = FALSE;
 
@@ -744,7 +740,7 @@ gst_d3d11_window_win32_create_swap_chain (GstD3D11Window * window,
      * but Windows7 does not support this method */
     if (gst_d3d11_is_windows_8_or_greater ())
       desc1.Scaling = DXGI_SCALING_NONE;
-    desc1.SwapEffect = swap_effect;
+    desc1.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
     desc1.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
     desc1.Flags = swapchain_flags;
 
@@ -761,6 +757,11 @@ gst_d3d11_window_win32_create_swap_chain (GstD3D11Window * window,
 #endif
 
   if (!new_swapchain) {
+    DXGI_SWAP_EFFECT swap_effect = DXGI_SWAP_EFFECT_DISCARD;
+
+    if (gst_d3d11_is_windows_8_or_greater ())
+      swap_effect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
+
     /* we will get client area at on_resize */
     desc.BufferDesc.Width = 0;
     desc.BufferDesc.Height = 0;
