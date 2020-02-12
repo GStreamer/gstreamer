@@ -20,6 +20,7 @@
 #ifndef _GST_RTMP_UTILS_H_
 #define _GST_RTMP_UTILS_H_
 
+#include <gst/gst.h>
 #include <gio/gio.h>
 
 G_BEGIN_DECLS
@@ -38,7 +39,13 @@ void gst_rtmp_output_stream_write_all_bytes_async (GOutputStream * stream,
 gboolean gst_rtmp_output_stream_write_all_bytes_finish (GOutputStream * stream,
     GAsyncResult * result, GError ** error);
 
-void gst_rtmp_string_print_escaped (GString * string, const gchar *data,
+void gst_rtmp_output_stream_write_all_buffer_async (GOutputStream * stream,
+    GstBuffer * buffer, int io_priority, GCancellable * cancellable,
+    GAsyncReadyCallback callback, gpointer user_data);
+gboolean gst_rtmp_output_stream_write_all_buffer_finish (GOutputStream * stream,
+    GAsyncResult * result, gsize * bytes_written, GError ** error);
+
+void gst_rtmp_string_print_escaped (GString * string, const gchar * data,
     gssize size);
 
 G_END_DECLS
