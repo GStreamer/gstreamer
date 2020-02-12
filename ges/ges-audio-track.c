@@ -20,21 +20,26 @@
 /**
  * SECTION: gesaudiotrack
  * @title: GESAudioTrack
- * @short_description: A standard GESTrack for raw audio
+ * @short_description: A standard #GESTrack for raw audio
  *
- * Sane default properties to specify and fixate the output stream are
- * set as restriction-caps.
- * It is advised, to modify these properties, to use
- * #ges_track_update_restriction_caps, setting them directly is
- * possible through #ges_track_set_restriction_caps, but not specifying
- * one of them can lead to negotiation issues, only use that function
- * if you actually know what you're doing :)
+ * A #GESAudioTrack is a default audio #GESTrack, with a
+ * #GES_TRACK_TYPE_AUDIO #GESTrack:track-type and "audio/x-raw(ANY)"
+ * #GESTrack:caps.
  *
- * The default properties are:
- * - format: S32LE
+ * By default, an audio track will have its #GESTrack:restriction-caps
+ * set to "audio/x-raw" with the following properties:
+ *
+ * - format: "S32LE"
  * - channels: 2
  * - rate: 44100
- * - layout: interleaved
+ * - layout: "interleaved"
+ *
+ * These fields are needed for negotiation purposes, but you can change
+ * their values if you wish. It is advised that you do so using
+ * ges_track_update_restriction_caps() with new values for the fields you
+ * wish to change, and any additional fields you may want to add. Unlike
+ * using ges_track_set_restriction_caps(), this will ensure that these
+ * default fields will at least have some value set.
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -112,10 +117,19 @@ ges_audio_track_class_init (GESAudioTrackClass * klass)
 /**
  * ges_audio_track_new:
  *
- * Creates a new #GESAudioTrack of type #GES_TRACK_TYPE_AUDIO and with generic
- * raw audio caps ("audio/x-raw");
+ * Creates a new audio track, with a #GES_TRACK_TYPE_AUDIO
+ * #GESTrack:track-type, "audio/x-raw(ANY)" #GESTrack:caps, and
+ * "audio/x-raw" #GESTrack:restriction-caps with the properties:
  *
- * Returns: (transfer floating): A new #GESTrack
+ * - format: "S32LE"
+ * - channels: 2
+ * - rate: 44100
+ * - layout: "interleaved"
+ *
+ * You should use ges_track_update_restriction_caps() if you wish to
+ * modify these fields, or add additional ones.
+ *
+ * Returns: (transfer floating): The newly created audio track.
  */
 GESAudioTrack *
 ges_audio_track_new (void)

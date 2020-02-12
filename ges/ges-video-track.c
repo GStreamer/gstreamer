@@ -22,16 +22,23 @@
  * @title: GESVideoTrack
  * @short_description: A standard GESTrack for raw video
  *
- * Sane default properties to specify and fixate the output stream are
- * set as restriction-caps.
- * It is advised, to modify these properties, to use
- * #ges_track_update_restriction_caps, setting them directly is
- * possible through #ges_track_set_restriction_caps.
+ * A #GESVideoTrack is a default video #GESTrack, with a
+ * #GES_TRACK_TYPE_VIDEO #GESTrack:track-type and "video/x-raw(ANY)"
+ * #GESTrack:caps.
  *
- * The default properties are:
- * - width: 1920
- * - height: 1080
+ * By default, a video track will have its #GESTrack:restriction-caps
+ * set to "video/x-raw" with the following properties:
+ *
+ * - width: 1280
+ * - height: 720
  * - framerate: 30/1
+ *
+ * These fields are needed for negotiation purposes, but you can change
+ * their values if you wish. It is advised that you do so using
+ * ges_track_update_restriction_caps() with new values for the fields you
+ * wish to change, and any additional fields you may want to add. Unlike
+ * using ges_track_set_restriction_caps(), this will ensure that these
+ * default fields will at least have some value set.
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -148,10 +155,18 @@ ges_video_track_class_init (GESVideoTrackClass * klass)
 /**
  * ges_video_track_new:
  *
- * Creates a new #GESVideoTrack of type #GES_TRACK_TYPE_VIDEO and with generic
- * raw video caps ("video/x-raw");
+ * Creates a new video track, with a #GES_TRACK_TYPE_VIDEO
+ * #GESTrack:track-type and "video/x-raw(ANY)" #GESTrack:caps, and
+ * "video/x-raw" #GESTrack:restriction-caps with the properties:
  *
- * Returns: (transfer floating): A new #GESTrack.
+ * - width: 1280
+ * - height: 720
+ * - framerate: 30/1
+ *
+ * You should use ges_track_update_restriction_caps() if you wish to
+ * modify these fields, or add additional ones.
+ *
+ * Returns: (transfer floating): The newly created video track.
  */
 GESVideoTrack *
 ges_video_track_new (void)
