@@ -714,7 +714,8 @@ _drm_direct_fourcc_from_info (GstVideoInfo * info)
 }
 
 static gboolean
-_gst_egl_image_check_dmabuf_direct (GstGLContext * context, int fourcc)
+_gst_egl_image_check_dmabuf_direct (GstGLContext * context, int fourcc,
+    GstGLTextureTarget target)
 {
   EGLDisplay egl_display = EGL_DEFAULT_DISPLAY;
   GstGLDisplayEGL *display_egl;
@@ -800,7 +801,7 @@ _gst_egl_image_check_dmabuf_direct (GstGLContext * context, int fourcc)
         GST_DEBUG ("driver only supports external import of fourcc %"
             GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
       }
-      ret = !external_only[i];
+      ret = !external_only[i] || (target == GST_GL_TEXTURE_TARGET_EXTERNAL_OES);
       g_free (modifiers);
       g_free (external_only);
       return ret;
@@ -814,11 +815,12 @@ _gst_egl_image_check_dmabuf_direct (GstGLContext * context, int fourcc)
 }
 
 /**
- * gst_egl_image_from_dmabuf_direct:
+ * gst_egl_image_from_dmabuf_direct_target:
  * @context: a #GstGLContext (must be an EGL context)
  * @fd: Array of DMABuf file descriptors
  * @offset: Array of offsets, relative to the DMABuf
  * @in_info: the #GstVideoInfo
+ * @target: GL texture target this GstEGLImage is intended for
  *
  * Creates an EGL image that imports the dmabuf FD. The dmabuf data
  * is passed directly as the format described in in_info. This is
@@ -831,10 +833,13 @@ _gst_egl_image_check_dmabuf_direct (GstGLContext * context, int fourcc)
  * a single plane.
  *
  * Returns: a #GstEGLImage wrapping @dmabuf or %NULL on failure
+ *
+ * Since: 1.18
  */
 GstEGLImage *
-gst_egl_image_from_dmabuf_direct (GstGLContext * context,
-    gint * fd, gsize * offset, GstVideoInfo * in_info)
+gst_egl_image_from_dmabuf_direct_target (GstGLContext * context,
+    gint * fd, gsize * offset, GstVideoInfo * in_info,
+    GstGLTextureTarget target)
 {
 
   EGLImageKHR img;
@@ -856,7 +861,7 @@ gst_egl_image_from_dmabuf_direct (GstGLContext * context,
   if (fourcc == -1)
     return NULL;
 
-  if (!_gst_egl_image_check_dmabuf_direct (context, fourcc))
+  if (!_gst_egl_image_check_dmabuf_direct (context, fourcc, target))
     return NULL;
 
   with_modifiers = gst_gl_context_check_feature (context,
@@ -978,6 +983,33 @@ gst_egl_image_from_dmabuf_direct (GstGLContext * context,
 
   return gst_egl_image_new_wrapped (context, img, GST_GL_RGBA, NULL,
       (GstEGLImageDestroyNotify) _destroy_egl_image);
+}
+
+/**
+ * gst_egl_image_from_dmabuf_direct:
+ * @context: a #GstGLContext (must be an EGL context)
+ * @fd: Array of DMABuf file descriptors
+ * @offset: Array of offsets, relative to the DMABuf
+ * @in_info: the #GstVideoInfo
+ *
+ * Creates an EGL image that imports the dmabuf FD. The dmabuf data
+ * is passed directly as the format described in in_info. This is
+ * useful if the hardware is capable of performing color space conversions
+ * internally. The appropriate DRM format is picked, and the EGL image
+ * is created with this DRM format.
+ *
+ * Another notable difference to gst_egl_image_from_dmabuf()
+ * is that this function creates one EGL image for all planes, not one for
+ * a single plane.
+ *
+ * Returns: a #GstEGLImage wrapping @dmabuf or %NULL on failure
+ */
+GstEGLImage *
+gst_egl_image_from_dmabuf_direct (GstGLContext * context,
+    gint * fd, gsize * offset, GstVideoInfo * in_info)
+{
+  return gst_egl_image_from_dmabuf_direct_target (context, fd, offset, in_info,
+      GST_GL_TEXTURE_TARGET_2D);
 }
 
 gboolean

@@ -147,12 +147,14 @@ _gl_mem_egl_alloc (GstGLBaseMemoryAllocator * allocator,
 
   mem = g_new0 (GstGLMemoryEGL, 1);
   if (alloc_flags & GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_GPU_HANDLE) {
-    if (params->target != GST_GL_TEXTURE_TARGET_2D) {
+    if (params->target != GST_GL_TEXTURE_TARGET_2D &&
+        params->target != GST_GL_TEXTURE_TARGET_EXTERNAL_OES) {
       g_free (mem);
       GST_CAT_ERROR (GST_CAT_GL_MEMORY, "GstGLMemoryEGL only supports wrapping "
-          "2D textures");
+          "2D and external-oes textures");
       return NULL;
     }
+    mem->mem.tex_target = params->target;
     mem->image = gst_egl_image_ref (params->parent.gl_handle);
   }
 
@@ -197,9 +199,11 @@ _gl_mem_create (GstGLMemoryEGL * gl_mem, GError ** error)
       return FALSE;
     }
   } else {
+    guint gl_target = gst_gl_texture_target_to_gl (gl_mem->mem.tex_target);
+
     gl->ActiveTexture (GL_TEXTURE0 + gl_mem->mem.plane);
-    gl->BindTexture (GL_TEXTURE_2D, gl_mem->mem.tex_id);
-    gl->EGLImageTargetTexture2D (GL_TEXTURE_2D,
+    gl->BindTexture (gl_target, gl_mem->mem.tex_id);
+    gl->EGLImageTargetTexture2D (gl_target,
         gst_egl_image_get_image (GST_EGL_IMAGE (gl_mem->image)));
   }
 
