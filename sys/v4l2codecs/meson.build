@@ -1,7 +1,9 @@
 v4l2codecs_sources = [
   'plugin.c',
+  'gstv4l2codecallocator.c',
   'gstv4l2codecdevice.c',
   'gstv4l2codech264dec.c',
+  'gstv4l2codecpool.c',
   'gstv4l2decoder.c',
   'gstv4l2format.c',
 ]
@@ -14,7 +16,7 @@ if libgudev_dep.found()
     c_args : gst_plugins_bad_args,
     cpp_args: gst_plugins_bad_args,
     include_directories : [configinc],
-    dependencies : [gstbase_dep, gstcodecs_dep, libgudev_dep],
+    dependencies : [gstbase_dep, gstcodecs_dep, gstallocators_dep, libgudev_dep],
     install : true,
     install_dir : plugins_install_dir,
   )
