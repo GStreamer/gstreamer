@@ -129,11 +129,36 @@ enum
   PROP_CROP_RIGHT,
   PROP_CROP_TOP,
   PROP_CROP_BOTTOM,
+  PROP_HDR_TONE_MAP,
 #ifndef GST_REMOVE_DEPRECATED
   PROP_SKIN_TONE_ENHANCEMENT,
 #endif
   PROP_SKIN_TONE_ENHANCEMENT_LEVEL,
 };
+
+#define GST_VAAPI_TYPE_HDR_TONE_MAP \
+    gst_vaapi_hdr_tone_map_get_type()
+
+static GType
+gst_vaapi_hdr_tone_map_get_type (void)
+{
+  static gsize g_type = 0;
+
+  static const GEnumValue enum_values[] = {
+    {GST_VAAPI_HDR_TONE_MAP_AUTO,
+        "Auto detection", "auto"},
+    {GST_VAAPI_HDR_TONE_MAP_DISABLED,
+        "Disable HDR tone mapping", "disabled"},
+    {0, NULL, NULL},
+  };
+
+  if (g_once_init_enter (&g_type)) {
+    const GType type =
+        g_enum_register_static ("GstVaapiHDRToneMap", enum_values);
+    g_once_init_leave (&g_type, type);
+  }
+  return g_type;
+}
 
 #define GST_VAAPI_TYPE_DEINTERLACE_MODE \
     gst_vaapi_deinterlace_mode_get_type()
@@ -513,6 +538,61 @@ set_best_deint_method (GstVaapiPostproc * postproc, guint flags,
   }
   *deint_method_ptr = deint_method;
   return success;
+}
+
+static gboolean
+should_hdr_tone_map (GstVaapiPostproc * const postproc, const GstCaps * caps)
+{
+  switch (postproc->hdr_tone_map) {
+    case GST_VAAPI_HDR_TONE_MAP_AUTO:
+    {
+      GstVideoMasteringDisplayInfo minfo;
+      return gst_video_mastering_display_info_from_caps (&minfo, caps);
+    }
+    case GST_VAAPI_HDR_TONE_MAP_DISABLED:
+      return FALSE;
+    default:
+      GST_ERROR_OBJECT (postproc, "unhandled \"hdr-tone-map\" option");
+      break;
+  }
+  return FALSE;
+}
+
+static gboolean
+configure_hdr_tone_map (GstVaapiPostproc * const postproc, const GstCaps * caps)
+{
+  gboolean enable;
+
+  g_return_val_if_fail (postproc->has_vpp, FALSE);
+
+  enable = should_hdr_tone_map (postproc, caps);
+
+  if (!gst_vaapi_filter_set_hdr_tone_map (postproc->filter, enable))
+    goto fail_configure_hdr_tone_map;
+
+  if (enable) {
+    GstVideoMasteringDisplayInfo minfo;
+    GstVideoContentLightLevel linfo;
+
+    gst_video_mastering_display_info_from_caps (&minfo, caps);
+    gst_video_content_light_level_from_caps (&linfo, caps);
+
+    if (!gst_vaapi_filter_set_hdr_tone_map_meta (postproc->filter, &minfo,
+            &linfo))
+      goto fail_configure_hdr_tone_map;
+
+    postproc->flags |= GST_VAAPI_POSTPROC_FLAG_HDR_TONE_MAP;
+  } else {
+    postproc->flags &= ~(GST_VAAPI_POSTPROC_FLAG_HDR_TONE_MAP);
+  }
+
+  return TRUE;
+
+fail_configure_hdr_tone_map:
+  {
+    postproc->flags &= ~(GST_VAAPI_POSTPROC_FLAG_HDR_TONE_MAP);
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -1650,6 +1730,21 @@ gst_vaapipostproc_set_caps (GstBaseTransform * trans, GstCaps * caps,
       goto done;
   }
 
+  if (postproc->has_vpp) {
+    if (!gst_vaapi_filter_set_colorimetry (postproc->filter,
+            &GST_VIDEO_INFO_COLORIMETRY (GST_VAAPI_PLUGIN_BASE_SINK_PAD_INFO
+                (postproc)),
+            &GST_VIDEO_INFO_COLORIMETRY (GST_VAAPI_PLUGIN_BASE_SRC_PAD_INFO
+                (postproc))))
+      goto done;
+
+    if (!configure_hdr_tone_map (postproc,
+            GST_VAAPI_PLUGIN_BASE_SINK_PAD_CAPS (postproc)))
+      GST_WARNING_OBJECT (postproc,
+          "Failed to configure HDR tone mapping."
+          "  The driver may not support it.");
+  }
+
   if (!ensure_srcpad_buffer_pool (postproc, out_caps))
     goto done;
 
@@ -1659,13 +1754,6 @@ gst_vaapipostproc_set_caps (GstBaseTransform * trans, GstCaps * caps,
     /* set passthrough according to caps changes or filter changes */
     gst_vaapipostproc_set_passthrough (trans);
   }
-
-  if (postproc->has_vpp && !gst_vaapi_filter_set_colorimetry (postproc->filter,
-          &GST_VIDEO_INFO_COLORIMETRY (GST_VAAPI_PLUGIN_BASE_SINK_PAD_INFO
-              (postproc)),
-          &GST_VIDEO_INFO_COLORIMETRY (GST_VAAPI_PLUGIN_BASE_SRC_PAD_INFO
-              (postproc))))
-    goto done;
 
   ret = TRUE;
 
@@ -2037,6 +2125,9 @@ gst_vaapipostproc_set_property (GObject * object,
       postproc->crop_bottom = g_value_get_uint (value);
       postproc->flags |= GST_VAAPI_POSTPROC_FLAG_CROP;
       break;
+    case PROP_HDR_TONE_MAP:
+      postproc->hdr_tone_map = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2119,6 +2210,9 @@ gst_vaapipostproc_get_property (GObject * object,
     case PROP_CROP_BOTTOM:
       g_value_set_uint (value, postproc->crop_bottom);
       break;
+    case PROP_HDR_TONE_MAP:
+      g_value_set_enum (value, postproc->hdr_tone_map);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2172,6 +2266,22 @@ gst_vaapipostproc_class_init (GstVaapiPostprocClass * klass)
   /* src pad */
   gst_element_class_add_static_pad_template (element_class,
       &gst_vaapipostproc_src_factory);
+
+  /**
+   * GstVaapiPostproc:hdr-tone-map:
+   *
+   * Selects whether HDR tone mapping should not be applied or if it
+   * should be only applied on content that has the HDR meta on the caps.
+   */
+  g_object_class_install_property
+      (object_class,
+      PROP_HDR_TONE_MAP,
+      g_param_spec_enum ("hdr-tone-map",
+          "HDR Tone Map",
+          "Apply HDR tone mapping algorithm",
+          GST_VAAPI_TYPE_HDR_TONE_MAP,
+          GST_VAAPI_HDR_TONE_MAP_AUTO,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstVaapiPostproc:deinterlace-mode:
@@ -2487,6 +2597,7 @@ gst_vaapipostproc_init (GstVaapiPostproc * postproc)
 
   g_mutex_init (&postproc->postproc_lock);
   postproc->format = DEFAULT_FORMAT;
+  postproc->hdr_tone_map = GST_VAAPI_HDR_TONE_MAP_AUTO;
   postproc->deinterlace_mode = DEFAULT_DEINTERLACE_MODE;
   postproc->deinterlace_method = DEFAULT_DEINTERLACE_METHOD;
   postproc->field_duration = GST_CLOCK_TIME_NONE;

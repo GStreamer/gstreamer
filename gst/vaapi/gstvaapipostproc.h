@@ -50,6 +50,17 @@ typedef struct _GstVaapiPostprocClass GstVaapiPostprocClass;
 typedef struct _GstVaapiDeinterlaceState GstVaapiDeinterlaceState;
 
 /**
+ * GstVaapiHDRToneMap:
+ * @GST_VAAPI_TYPE_HDR_TONE_MAP_AUTO: Auto detect need for hdr tone map.
+ * @GST_VAAPI_TYPE_HDR_TONE_MAP_DISABLED: Never perform hdr tone map.
+ */
+typedef enum
+{
+  GST_VAAPI_HDR_TONE_MAP_AUTO = 0,
+  GST_VAAPI_HDR_TONE_MAP_DISABLED,
+} GstVaapiHDRToneMap;
+
+/**
  * GstVaapiDeinterlaceMode:
  * @GST_VAAPI_DEINTERLACE_MODE_AUTO: Auto detect needs for deinterlacing.
  * @GST_VAAPI_DEINTERLACE_MODE_INTERLACED: Force deinterlacing.
@@ -87,6 +98,7 @@ typedef enum
  * @GST_VAAPI_POSTPROC_FLAG_SIZE: Video scaling.
  * @GST_VAAPI_POSTPROC_FLAG_SCALE: Video scaling mode.
  * @GST_VAAPI_POSTPROC_FLAG_VIDEO_DIRECTION: Video rotation and flip/mirroring.
+ * @GST_VAAPI_POSTPROC_FLAG_HDR_TONE_MAP: HDR tone mapping.
  * @GST_VAAPI_POSTPROC_FLAG_SKINTONE: Skin tone enhancement.
  * @GST_VAAPI_POSTPROC_FLAG_SKINTONE_LEVEL: Skin tone enhancement with value.
  *
@@ -106,6 +118,7 @@ typedef enum
   GST_VAAPI_POSTPROC_FLAG_VIDEO_DIRECTION =
       1 << GST_VAAPI_FILTER_OP_VIDEO_DIRECTION,
   GST_VAAPI_POSTPROC_FLAG_CROP        = 1 << GST_VAAPI_FILTER_OP_CROP,
+  GST_VAAPI_POSTPROC_FLAG_HDR_TONE_MAP = 1 << GST_VAAPI_FILTER_OP_HDR_TONE_MAP,
 #ifndef GST_REMOVE_DEPRECATED
   GST_VAAPI_POSTPROC_FLAG_SKINTONE    = 1 << GST_VAAPI_FILTER_OP_SKINTONE,
 #endif
@@ -158,6 +171,9 @@ struct _GstVaapiPostproc
   GstVideoInfo sinkpad_info;
   GstCaps *allowed_srcpad_caps;
   GstVideoInfo srcpad_info;
+
+  /* HDR Tone Mapping */
+  GstVaapiHDRToneMap hdr_tone_map;
 
   /* Deinterlacing */
   GstVaapiDeinterlaceMode deinterlace_mode;
