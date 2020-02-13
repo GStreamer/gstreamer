@@ -221,9 +221,7 @@ gst_webrtc_nice_transport_constructed (GObject * object)
   if (ice->sink) {
     g_object_set (ice->sink, "agent", agent, "stream", our_stream_id,
         "component", component, "async", FALSE, "enable-last-sample", FALSE,
-        NULL);
-    if (ice->component == GST_WEBRTC_ICE_COMPONENT_RTCP)
-      g_object_set (ice->sink, "sync", FALSE, NULL);
+        "sync", FALSE, NULL);
   }
 
   g_object_unref (agent);

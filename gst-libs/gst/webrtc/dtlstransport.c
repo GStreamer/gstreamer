@@ -189,7 +189,7 @@ gst_webrtc_dtls_transport_constructed (GObject * object)
 
   webrtc->dtlssrtpenc = gst_element_factory_make ("dtlssrtpenc", NULL);
   g_object_set (webrtc->dtlssrtpenc, "connection-id", connection_id,
-      "is-client", webrtc->client, NULL);
+      "is-client", webrtc->client, "rtp-sync", TRUE, NULL);
 
   webrtc->dtlssrtpdec = gst_element_factory_make ("dtlssrtpdec", NULL);
   g_object_set (webrtc->dtlssrtpdec, "connection-id", connection_id, NULL);
