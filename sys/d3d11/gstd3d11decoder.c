@@ -50,6 +50,7 @@ struct _GstD3D11DecoderPrivate
   /* for staging */
   ID3D11Texture2D *staging;
   D3D11_TEXTURE2D_DESC staging_desc;
+  D3D11_BOX staging_box;
 
   GUID decoder_profile;
 };
@@ -622,6 +623,18 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
     goto error;
   }
 
+  /* This D3D11_BOX structure is used to copy decoder view to staging texture,
+   * in case of system memory downstream.
+   * Since resolution of decoder view might be larger than this staging texture,
+   * this D3D11_BOX structure will guide the target area which need to be copied.
+   */
+  priv->staging_box.left = 0;
+  priv->staging_box.top = 0;
+  priv->staging_box.front = 0;
+  priv->staging_box.back = 1;
+  priv->staging_box.right = GST_VIDEO_INFO_WIDTH (info);
+  priv->staging_box.bottom = GST_VIDEO_INFO_HEIGHT (info);
+
   priv->decoder_profile = *selected_profile;
   decoder->opened = TRUE;
   gst_d3d11_device_unlock (priv->device);
@@ -879,7 +892,8 @@ copy_to_system (GstD3D11Decoder * self, GstVideoInfo * info,
   gst_d3d11_device_lock (priv->device);
   ID3D11DeviceContext_CopySubresourceRegion (device_context,
       (ID3D11Resource *) priv->staging, 0, 0, 0, 0,
-      (ID3D11Resource *) in_mem->texture, in_mem->subresource_index, NULL);
+      (ID3D11Resource *) in_mem->texture, in_mem->subresource_index,
+      &priv->staging_box);
 
   hr = ID3D11DeviceContext_Map (device_context,
       (ID3D11Resource *) priv->staging, 0, D3D11_MAP_READ, 0, &map);
