@@ -29,6 +29,8 @@ GST_DEBUG_CATEGORY_STATIC (allocator_debug);
 typedef struct _GstV4l2CodecBuffer GstV4l2CodecBuffer;
 struct _GstV4l2CodecBuffer
 {
+  gint index;
+
   GstMemory *mem[GST_VIDEO_MAX_PLANES];
   guint num_mems;
 
@@ -82,6 +84,7 @@ gst_v4l2_codec_buffer_new (GstAllocator * allocator, GstV4l2Decoder * decoder,
     return NULL;
 
   buf = g_new0 (GstV4l2CodecBuffer, 1);
+  buf->index = index;
   buf->num_mems = num_mems;
   for (i = 0; i < buf->num_mems; i++) {
     GstMemory *mem = gst_dmabuf_allocator_alloc (allocator, fds[i], sizes[i]);
