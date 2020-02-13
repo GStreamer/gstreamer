@@ -413,13 +413,16 @@ object_created_cb (GstTracer * tracer, GstClockTime ts, GstObject * object)
 }
 
 static void
-handle_object_reffed (GstLeaksTracer * self, gpointer object, gint new_refcount,
-    gboolean reffed, GstClockTime ts)
+handle_object_reffed (GstLeaksTracer * self, gpointer object, GType type,
+    gint new_refcount, gboolean reffed, GstClockTime ts)
 {
   ObjectRefingInfos *infos;
   ObjectRefingInfo *refinfo;
 
   if (!self->check_refs)
+    return;
+
+  if (!should_handle_object_type (self, type))
     return;
 
   GST_OBJECT_LOCK (self);
@@ -446,7 +449,8 @@ object_reffed_cb (GstTracer * tracer, GstClockTime ts, GstObject * object,
 {
   GstLeaksTracer *self = GST_LEAKS_TRACER_CAST (tracer);
 
-  handle_object_reffed (self, object, new_refcount, TRUE, ts);
+  handle_object_reffed (self, object, G_OBJECT_TYPE (object), new_refcount,
+      TRUE, ts);
 }
 
 static void
@@ -455,7 +459,8 @@ object_unreffed_cb (GstTracer * tracer, GstClockTime ts, GstObject * object,
 {
   GstLeaksTracer *self = GST_LEAKS_TRACER_CAST (tracer);
 
-  handle_object_reffed (self, object, new_refcount, FALSE, ts);
+  handle_object_reffed (self, object, G_OBJECT_TYPE (object), new_refcount,
+      FALSE, ts);
 }
 
 static void
@@ -464,7 +469,8 @@ mini_object_reffed_cb (GstTracer * tracer, GstClockTime ts,
 {
   GstLeaksTracer *self = GST_LEAKS_TRACER_CAST (tracer);
 
-  handle_object_reffed (self, object, new_refcount, TRUE, ts);
+  handle_object_reffed (self, object, GST_MINI_OBJECT_TYPE (object),
+      new_refcount, TRUE, ts);
 }
 
 static void
@@ -473,7 +479,8 @@ mini_object_unreffed_cb (GstTracer * tracer, GstClockTime ts,
 {
   GstLeaksTracer *self = GST_LEAKS_TRACER_CAST (tracer);
 
-  handle_object_reffed (self, object, new_refcount, FALSE, ts);
+  handle_object_reffed (self, object, GST_MINI_OBJECT_TYPE (object),
+      new_refcount, FALSE, ts);
 }
 
 static void
