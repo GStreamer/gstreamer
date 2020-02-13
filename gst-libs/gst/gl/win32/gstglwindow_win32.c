@@ -407,6 +407,72 @@ gst_gl_window_win32_draw (GstGLWindow * window)
       RDW_NOERASE | RDW_INTERNALPAINT | RDW_INVALIDATE);
 }
 
+static void
+gst_gl_window_win32_handle_key_event (GstGLWindow * window, UINT uMsg,
+    LPARAM lParam)
+{
+  gunichar2 wcrep[128];
+  const gchar *event;
+
+  if (GetKeyNameTextW (lParam, (LPWSTR) wcrep, 128)) {
+    gchar *utfrep = g_utf16_to_utf8 (wcrep, 128, NULL, NULL, NULL);
+    if (utfrep) {
+      if (uMsg == WM_KEYDOWN)
+        event = "key-press";
+      else
+        event = "key-release";
+
+      gst_gl_window_send_key_event (window, event, utfrep);
+      g_free (utfrep);
+    }
+  }
+}
+
+static void
+gst_gl_window_win32_handle_mouse_event (GstGLWindow * window, UINT uMsg,
+    LPARAM lParam)
+{
+  gint button;
+  const gchar *event = NULL;
+
+  switch (uMsg) {
+    case WM_MOUSEMOVE:
+      button = 0;
+      event = "mouse-move";
+      break;
+    case WM_LBUTTONDOWN:
+      button = 1;
+      event = "mouse-button-press";
+      break;
+    case WM_LBUTTONUP:
+      button = 1;
+      event = "mouse-button-release";
+      break;
+    case WM_RBUTTONDOWN:
+      button = 2;
+      event = "mouse-button-press";
+      break;
+    case WM_RBUTTONUP:
+      button = 2;
+      event = "mouse-button-release";
+      break;
+    case WM_MBUTTONDOWN:
+      button = 3;
+      event = "mouse-button-press";
+      break;
+    case WM_MBUTTONUP:
+      button = 3;
+      event = "mouse-button-release";
+      break;
+    default:
+      break;
+  }
+
+  if (event)
+    gst_gl_window_send_mouse_event (window, event, button,
+        (double) LOWORD (lParam), (double) HIWORD (lParam));
+}
+
 /* PRIVATE */
 
 LRESULT CALLBACK
@@ -487,6 +553,21 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         ret = TRUE;
         break;
       }
+      case WM_KEYDOWN:
+      case WM_KEYUP:
+        gst_gl_window_win32_handle_key_event (window, uMsg, lParam);
+        ret = DefWindowProc (hWnd, uMsg, wParam, lParam);
+        break;
+      case WM_LBUTTONDOWN:
+      case WM_LBUTTONUP:
+      case WM_RBUTTONDOWN:
+      case WM_RBUTTONUP:
+      case WM_MBUTTONDOWN:
+      case WM_MBUTTONUP:
+      case WM_MOUSEMOVE:
+        gst_gl_window_win32_handle_mouse_event (window, uMsg, lParam);
+        ret = DefWindowProc (hWnd, uMsg, wParam, lParam);
+        break;
       default:
       {
         ret = DefWindowProc (hWnd, uMsg, wParam, lParam);
