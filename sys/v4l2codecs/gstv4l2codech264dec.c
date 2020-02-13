@@ -21,7 +21,9 @@
 #include <config.h>
 #endif
 
+#include "gstv4l2codecallocator.h"
 #include "gstv4l2codech264dec.h"
+#include "gstv4l2codecpool.h"
 #include "linux/h264-ctrls.h"
 
 GST_DEBUG_CATEGORY_STATIC (v4l2_h264dec_debug);
@@ -57,6 +59,12 @@ struct _GstV4l2CodecH264Dec
   gint coded_height;
   guint bitdepth;
   guint chroma_format_idc;
+
+  GstV4l2CodecAllocator *sink_allocator;
+  GstV4l2CodecAllocator *src_allocator;
+  GstV4l2CodecPool *src_pool;
+  gint min_pool_size;
+  gboolean has_videometa;
 };
 
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstV4l2CodecH264Dec,
@@ -93,6 +101,17 @@ gst_v4l2_codec_h264_dec_stop (GstVideoDecoder * decoder)
 {
   GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
 
+  if (self->sink_allocator) {
+    gst_v4l2_codec_allocator_detach (self->sink_allocator);
+    g_clear_object (&self->sink_allocator);
+  }
+
+  if (self->src_allocator) {
+    gst_v4l2_codec_allocator_detach (self->src_allocator);
+    g_clear_object (&self->src_allocator);
+    g_clear_object (&self->src_pool);
+  }
+
   if (self->output_state)
     gst_video_codec_state_unref (self->output_state);
   self->output_state = NULL;
@@ -108,7 +127,11 @@ gst_v4l2_codec_h264_dec_negotiate (GstVideoDecoder * decoder)
 
   GST_DEBUG_OBJECT (self, "Negotiate");
 
-  /* TODO drain / reset */
+  if (self->sink_allocator)
+    gst_v4l2_codec_allocator_detach (self->sink_allocator);
+
+  if (self->src_allocator)
+    gst_v4l2_codec_allocator_detach (self->src_allocator);
 
   if (!gst_v4l2_decoder_set_sink_fmt (self->decoder, V4L2_PIX_FMT_H264_SLICE,
           self->coded_width, self->coded_height)) {
@@ -149,6 +172,29 @@ static gboolean
 gst_v4l2_codec_h264_dec_decide_allocation (GstVideoDecoder * decoder,
     GstQuery * query)
 {
+  GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
+  guint min = 0;
+
+  self->has_videometa = gst_query_find_allocation_meta (query,
+      GST_VIDEO_META_API_TYPE, NULL);
+
+  g_clear_object (&self->src_pool);
+  g_clear_object (&self->src_allocator);
+
+  if (gst_query_get_n_allocation_pools (query) > 0)
+    gst_query_parse_nth_allocation_pool (query, 0, NULL, NULL, &min, NULL);
+
+  min = MAX (2, min);
+
+  self->sink_allocator = gst_v4l2_codec_allocator_new (self->decoder,
+      GST_PAD_SINK, self->min_pool_size + 2);
+  self->src_allocator = gst_v4l2_codec_allocator_new (self->decoder,
+      GST_PAD_SRC, self->min_pool_size + min + 4);
+  self->src_pool = gst_v4l2_codec_pool_new (self->src_allocator, &self->vinfo);
+
+  /* Our buffer pool is internal, we will let the base class create a video
+   * pool, and use it if we are running out of buffers or if downstream does
+   * not support GstVideoMeta */
   return GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation
       (decoder, query);
 }
@@ -165,11 +211,18 @@ gst_v4l2_codec_h264_dec_new_sequence (GstH264Decoder * decoder,
   if (self->vinfo.finfo->format == GST_VIDEO_FORMAT_UNKNOWN)
     negotiation_needed = TRUE;
 
+  /* TODO check if CREATE_BUFS is supported, and simply grow the pool */
+  if (self->min_pool_size < max_dpb_size) {
+    self->min_pool_size = max_dpb_size;
+    negotiation_needed = TRUE;
+  }
+
   if (sps->frame_cropping_flag) {
     crop_width = sps->crop_rect_width;
     crop_height = sps->crop_rect_height;
   }
 
+  /* TODO Check if current buffers are large enough, and reuse them */
   if (self->display_width != crop_width || self->display_height != crop_height
       || self->coded_width != sps->width || self->coded_height != sps->height) {
     self->display_width = crop_width;
