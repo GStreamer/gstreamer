@@ -131,7 +131,7 @@ hand.
 Since GStreamer 1.2 it is also possible to specify debug levels by name,
 e.g. `GST_DEBUG=*:WARNING,*audio*:LOG`
 
-**`GST_DEBUG_NO_COLOR.*`*
+**`GST_DEBUG_NO_COLOR.`**
 
 Set this environment variable to any value ("1" typically) to switch
 off colouring in `GST_DEBUG` output. This has the same effect as
