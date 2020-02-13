@@ -45,6 +45,18 @@ gboolean          gst_v4l2_decoder_set_sink_fmt (GstV4l2Decoder * self, guint32 
 gboolean          gst_v4l2_decoder_select_src_format (GstV4l2Decoder * self,
                                                       GstVideoInfo * info);
 
+gint              gst_v4l2_decoder_request_buffers (GstV4l2Decoder * self,
+                                                    GstPadDirection direction,
+                                                    guint num_buffers);
+
+gboolean          gst_v4l2_decoder_export_buffer (GstV4l2Decoder * self,
+                                                  GstPadDirection directon,
+                                                  gint index,
+                                                  gint * fds,
+                                                  gsize * sizes,
+                                                  gsize * offsets,
+                                                  guint *num_fds);
+
 void              gst_v4l2_decoder_install_properties (GObjectClass * gobject_class,
                                                        gint prop_offset,
                                                        GstV4l2CodecDevice * device);

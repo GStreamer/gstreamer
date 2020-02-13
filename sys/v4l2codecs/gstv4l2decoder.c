@@ -222,6 +222,86 @@ gst_v4l2_decoder_select_src_format (GstV4l2Decoder * self, GstVideoInfo * info)
   return TRUE;
 }
 
+static guint32
+direction_to_buffer_type (GstPadDirection direction)
+{
+  if (direction == GST_PAD_SRC)
+    return V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
+  else
+    return V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
+}
+
+gint
+gst_v4l2_decoder_request_buffers (GstV4l2Decoder * self,
+    GstPadDirection direction, guint num_buffers)
+{
+  gint ret;
+  struct v4l2_requestbuffers reqbufs = {
+    .count = num_buffers,
+    .memory = V4L2_MEMORY_MMAP,
+    .type = direction_to_buffer_type (direction),
+  };
+
+  GST_DEBUG_OBJECT (self, "Requesting %u buffers", num_buffers);
+
+  ret = ioctl (self->video_fd, VIDIOC_REQBUFS, &reqbufs);
+  if (ret < 0) {
+    GST_ERROR_OBJECT (self, "VIDIOC_REQBUFS failed: %s", g_strerror (errno));
+    return ret;
+  }
+
+  return reqbufs.count;
+}
+
+gboolean
+gst_v4l2_decoder_export_buffer (GstV4l2Decoder * self,
+    GstPadDirection direction, gint index, gint * fds, gsize * sizes,
+    gsize * offsets, guint * num_fds)
+{
+  gint i, ret;
+  struct v4l2_plane planes[GST_VIDEO_MAX_PLANES] = { {0} };
+  struct v4l2_buffer v4l2_buf = {
+    .index = 0,
+    .type = direction_to_buffer_type (direction),
+    .length = GST_VIDEO_MAX_PLANES,
+    .m.planes = planes,
+  };
+
+  ret = ioctl (self->video_fd, VIDIOC_QUERYBUF, &v4l2_buf);
+  if (ret < 0) {
+    GST_ERROR_OBJECT (self, "VIDIOC_QUERYBUF failed: %s", g_strerror (errno));
+    return FALSE;
+  }
+
+  *num_fds = v4l2_buf.length;
+  for (i = 0; i < v4l2_buf.length; i++) {
+    struct v4l2_plane *plane = v4l2_buf.m.planes + i;
+    struct v4l2_exportbuffer expbuf = {
+      .type = direction_to_buffer_type (direction),
+      .index = index,
+      .plane = i,
+      .flags = O_CLOEXEC | O_RDWR,
+    };
+
+    ret = ioctl (self->video_fd, VIDIOC_EXPBUF, &expbuf);
+    if (ret < 0) {
+      gint j;
+      GST_ERROR_OBJECT (self, "VIDIOC_EXPBUF failed: %s", g_strerror (errno));
+
+      for (j = i - 1; j >= 0; j--)
+        close (fds[j]);
+
+      return FALSE;
+    }
+
+    fds[i] = expbuf.fd;
+    sizes[i] = plane->length;
+    offsets[i] = plane->data_offset;
+  }
+
+  return TRUE;
+}
+
 void
 gst_v4l2_decoder_install_properties (GObjectClass * gobject_class,
     gint prop_offset, GstV4l2CodecDevice * device)
