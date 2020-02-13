@@ -162,7 +162,7 @@ main (int argc, gchar ** argv)
 
 out:
   if (runner)
-    ret = gst_validate_runner_exit (runner, TRUE);
+    ret += gst_validate_runner_exit (runner, TRUE);
 
   g_free (output_file);
   g_free (expected_file);
