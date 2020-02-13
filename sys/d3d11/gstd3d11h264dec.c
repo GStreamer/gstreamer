@@ -154,7 +154,7 @@ static gboolean gst_d3d11_h264_dec_src_query (GstVideoDecoder * decoder,
 
 /* GstH264Decoder */
 static gboolean gst_d3d11_h264_dec_new_sequence (GstH264Decoder * decoder,
-    const GstH264SPS * sps);
+    const GstH264SPS * sps, gint max_dpb_size);
 static gboolean gst_d3d11_h264_dec_new_picture (GstH264Decoder * decoder,
     GstH264Picture * picture);
 static GstFlowReturn gst_d3d11_h264_dec_output_picture (GstH264Decoder *
@@ -476,7 +476,7 @@ gst_d3d11_h264_dec_src_query (GstVideoDecoder * decoder, GstQuery * query)
 
 static gboolean
 gst_d3d11_h264_dec_new_sequence (GstH264Decoder * decoder,
-    const GstH264SPS * sps)
+    const GstH264SPS * sps, gint max_dpb_size)
 {
   GstD3D11H264Dec *self = GST_D3D11_H264_DEC (decoder);
   gint crop_width, crop_height;

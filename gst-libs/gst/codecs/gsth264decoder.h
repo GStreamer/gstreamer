@@ -82,7 +82,8 @@ struct _GstH264DecoderClass
   GstVideoDecoderClass parent_class;
 
   gboolean      (*new_sequence)     (GstH264Decoder * decoder,
-                                     const GstH264SPS * sps);
+                                     const GstH264SPS * sps,
+                                     gint max_dpb_size);
 
   gboolean      (*new_picture)      (GstH264Decoder * decoder,
                                      GstH264Picture * picture);

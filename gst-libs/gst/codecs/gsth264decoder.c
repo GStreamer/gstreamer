@@ -1698,7 +1698,7 @@ gst_h264_decoder_process_sps (GstH264Decoder * self, GstH264SPS * sps)
 
     g_assert (klass->new_sequence);
 
-    if (!klass->new_sequence (self, sps)) {
+    if (!klass->new_sequence (self, sps, max_dpb_size)) {
       GST_ERROR_OBJECT (self, "subclass does not want accept new sequence");
       return FALSE;
     }
