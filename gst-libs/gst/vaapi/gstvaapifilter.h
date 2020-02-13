@@ -50,6 +50,7 @@ typedef struct _GstVaapiFilterOpInfo            GstVaapiFilterOpInfo;
  * @GST_VAAPI_FILTER_OP_SCALING: Change scaling method (#GstVaapiScaleMethod).
  * @GST_VAAPI_FILTER_OP_VIDEO_DIRECTION: Change video direction
  *   (#GstVideoOrientationMethod).
+ * @GST_VAAPI_FILTER_OP_HDR_TONE_MAP: HDR tone mapping (bool).
  * @GST_VAAPI_FILTER_OP_SKINTONE: Skin tone enhancement (bool).
  * @GST_VAAPI_FILTER_OP_SKINTONE_LEVEL: Skin tone enhancement (uint).
  *
@@ -67,6 +68,7 @@ typedef enum {
   GST_VAAPI_FILTER_OP_DEINTERLACING,
   GST_VAAPI_FILTER_OP_SCALING,
   GST_VAAPI_FILTER_OP_VIDEO_DIRECTION,
+  GST_VAAPI_FILTER_OP_HDR_TONE_MAP,
 #ifndef GST_REMOVE_DEPRECATED
   GST_VAAPI_FILTER_OP_SKINTONE,
 #endif
@@ -262,6 +264,13 @@ gst_vaapi_filter_set_video_direction (GstVaapiFilter * filter,
 
 GstVideoOrientationMethod
 gst_vaapi_filter_get_video_direction (GstVaapiFilter * filter);
+
+gboolean
+gst_vaapi_filter_set_hdr_tone_map (GstVaapiFilter * filter, gboolean value);
+
+gboolean
+gst_vaapi_filter_set_hdr_tone_map_meta (GstVaapiFilter * filter,
+    GstVideoMasteringDisplayInfo * minfo, GstVideoContentLightLevel * linfo);
 
 #ifndef GST_REMOVE_DEPRECATED
 gboolean

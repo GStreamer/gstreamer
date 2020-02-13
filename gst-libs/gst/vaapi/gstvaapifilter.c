@@ -74,6 +74,10 @@ struct _GstVaapiFilter
 
   GstVideoColorimetry input_colorimetry;
   GstVideoColorimetry output_colorimetry;
+
+#if VA_CHECK_VERSION(1,4,0)
+  VAHdrMetaDataHDR10 hdr_meta;
+#endif
 };
 
 typedef struct _GstVaapiFilterClass GstVaapiFilterClass;
@@ -340,6 +344,7 @@ enum
   PROP_DEINTERLACING = GST_VAAPI_FILTER_OP_DEINTERLACING,
   PROP_SCALING = GST_VAAPI_FILTER_OP_SCALING,
   PROP_VIDEO_DIRECTION = GST_VAAPI_FILTER_OP_VIDEO_DIRECTION,
+  PROP_HDR_TONE_MAP = GST_VAAPI_FILTER_OP_HDR_TONE_MAP,
 #ifndef GST_REMOVE_DEPRECATED
   PROP_SKINTONE = GST_VAAPI_FILTER_OP_SKINTONE,
 #endif
@@ -480,6 +485,16 @@ init_properties (void)
       GST_VIDEO_ORIENTATION_IDENTITY,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
+  /**
+   * GstVaapiFilter:tone-map:
+   *
+   * Apply HDR tone mapping
+   **/
+  g_properties[PROP_HDR_TONE_MAP] = g_param_spec_boolean ("hdr-tone-map",
+      "HDR Tone Mapping",
+      "Apply HDR tone mapping",
+      FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
 #ifndef GST_REMOVE_DEPRECATED
   /**
    * GstVaapiFilter:skin-tone-enhancement:
@@ -535,6 +550,18 @@ op_data_new (GstVaapiFilterOp op, GParamSpec * pspec)
   op_data->va_buffer = VA_INVALID_ID;
 
   switch (op) {
+    case GST_VAAPI_FILTER_OP_HDR_TONE_MAP:
+#if VA_CHECK_VERSION(1,4,0)
+      /* Only HDR10 tone mapping is supported */
+      op_data->va_type = VAProcFilterHighDynamicRangeToneMapping;
+      op_data->va_subtype = VAProcHighDynamicRangeMetadataHDR10;
+      op_data->va_cap_size = sizeof (VAProcFilterCapHighDynamicRange);
+      op_data->va_buffer_size =
+          sizeof (VAProcFilterParameterBufferHDRToneMapping);
+      break;
+#else
+      /* fall-through */
+#endif
     case GST_VAAPI_FILTER_OP_FORMAT:
     case GST_VAAPI_FILTER_OP_CROP:
     case GST_VAAPI_FILTER_OP_SCALING:
@@ -1119,6 +1146,53 @@ op_set_skintone (GstVaapiFilter * filter, GstVaapiFilterOpData * op_data,
 #endif
 
 static gboolean
+op_set_hdr_tone_map_unlocked (GstVaapiFilter * filter,
+    GstVaapiFilterOpData * op_data, gboolean value)
+{
+#if VA_CHECK_VERSION(1,4,0)
+  const VAProcFilterCapHighDynamicRange *filter_caps;
+  guint i;
+
+  if (!op_data)
+    return !value;
+
+  if (!value) {
+    op_data->is_enabled = 0;
+    return TRUE;
+  }
+
+  if (!op_ensure_buffer (filter, op_data))
+    return FALSE;
+
+  for (i = 0, filter_caps = op_data->va_caps; i < op_data->va_num_caps; i++) {
+    if (filter_caps[i].metadata_type == op_data->va_subtype &&
+        (filter_caps[i].caps_flag & VA_TONE_MAPPING_HDR_TO_SDR))
+      break;
+  }
+  if (i == op_data->va_num_caps)
+    return FALSE;
+
+  op_data->is_enabled = 1;
+
+  return TRUE;
+#else
+  return !value;
+#endif
+}
+
+static inline gboolean
+op_set_hdr_tone_map (GstVaapiFilter * filter, GstVaapiFilterOpData * op_data,
+    gboolean value)
+{
+  gboolean success = FALSE;
+  GST_VAAPI_DISPLAY_LOCK (filter->display);
+  success = op_set_hdr_tone_map_unlocked (filter, op_data, value);
+  GST_VAAPI_DISPLAY_UNLOCK (filter->display);
+
+  return success;
+}
+
+static gboolean
 deint_refs_set (GArray * refs, GstVaapiSurface ** surfaces, guint num_surfaces)
 {
   guint i;
@@ -1524,6 +1598,10 @@ gst_vaapi_filter_set_operation (GstVaapiFilter * filter, GstVaapiFilterOp op,
       return gst_vaapi_filter_set_video_direction (filter,
           (value ? g_value_get_enum (value) :
               OP_DATA_DEFAULT_VALUE (enum, op_data)));
+    case GST_VAAPI_FILTER_OP_HDR_TONE_MAP:
+      return op_set_hdr_tone_map (filter, op_data,
+          (value ? g_value_get_boolean (value) :
+              OP_DATA_DEFAULT_VALUE (boolean, op_data)));
     default:
       break;
   }
@@ -2344,4 +2422,100 @@ gst_vaapi_filter_set_colorimetry (GstVaapiFilter * filter,
   GST_VAAPI_DISPLAY_UNLOCK (filter->display);
 
   return result;
+}
+
+/**
+ * gst_vaapi_filter_set_hdr_tone_map:
+ * @filter: a #GstVaapiFilter
+ * @value: %TRUE to enable hdr tone map algorithm
+ *
+ * Applies HDR tone mapping algorithm.
+ *
+ * Return value: %TRUE if the operation is supported, %FALSE otherwise.
+ */
+gboolean
+gst_vaapi_filter_set_hdr_tone_map (GstVaapiFilter * filter, gboolean value)
+{
+  g_return_val_if_fail (filter != NULL, FALSE);
+
+  return op_set_hdr_tone_map (filter,
+      find_operation (filter, GST_VAAPI_FILTER_OP_HDR_TONE_MAP), value);
+}
+
+static gboolean
+gst_vaapi_filter_set_hdr_tone_map_meta_unlocked (GstVaapiFilter * filter,
+    GstVideoMasteringDisplayInfo * minfo, GstVideoContentLightLevel * linfo)
+{
+#if VA_CHECK_VERSION(1,4,0)
+  GstVaapiFilterOpData *op_data;
+  VAProcFilterParameterBufferHDRToneMapping *buf;
+  VAHdrMetaDataHDR10 *meta = &filter->hdr_meta;
+
+  op_data = find_operation (filter, GST_VAAPI_FILTER_OP_HDR_TONE_MAP);
+
+  if (!op_data)
+    return FALSE;
+
+  meta->display_primaries_x[0] = minfo->display_primaries[1].x;
+  meta->display_primaries_x[1] = minfo->display_primaries[2].x;
+  meta->display_primaries_x[2] = minfo->display_primaries[0].x;
+
+  meta->display_primaries_y[0] = minfo->display_primaries[1].y;
+  meta->display_primaries_y[1] = minfo->display_primaries[2].y;
+  meta->display_primaries_y[2] = minfo->display_primaries[0].y;
+
+  meta->white_point_x = minfo->white_point.x;
+  meta->white_point_y = minfo->white_point.y;
+
+  meta->max_display_mastering_luminance =
+      minfo->max_display_mastering_luminance;
+  meta->min_display_mastering_luminance =
+      minfo->min_display_mastering_luminance;
+
+  meta->max_content_light_level = linfo->max_content_light_level;
+  meta->max_pic_average_light_level = linfo->max_frame_average_light_level;
+
+  buf = vaapi_map_buffer (filter->va_display, op_data->va_buffer);
+  if (!buf)
+    return FALSE;
+
+  buf->type = op_data->va_type;
+  buf->data.metadata_type = op_data->va_subtype;
+  buf->data.metadata = meta;
+  buf->data.metadata_size = sizeof (meta);
+
+  vaapi_unmap_buffer (filter->va_display, op_data->va_buffer, NULL);
+
+  return TRUE;
+#else
+  return FALSE;
+#endif
+}
+
+/**
+ * gst_vaapi_filter_set_hdr_tone_map_meta:
+ * @filter: a #GstVaapiFilter
+ * @minfo: a #GstVideoMasteringDisplayInfo
+ * @linfo: a #GstVideoContentLightLevel
+ *
+ * Sets the input HDR meta data used for tone mapping.
+ *
+ * Return value: %TRUE if the operation is supported, %FALSE otherwise.
+ */
+gboolean
+gst_vaapi_filter_set_hdr_tone_map_meta (GstVaapiFilter * filter,
+    GstVideoMasteringDisplayInfo * minfo, GstVideoContentLightLevel * linfo)
+{
+  gboolean status = FALSE;
+
+  g_return_val_if_fail (filter != NULL, FALSE);
+  g_return_val_if_fail (minfo != NULL, FALSE);
+  g_return_val_if_fail (linfo != NULL, FALSE);
+
+  GST_VAAPI_DISPLAY_LOCK (filter->display);
+  status =
+      gst_vaapi_filter_set_hdr_tone_map_meta_unlocked (filter, minfo, linfo);
+  GST_VAAPI_DISPLAY_UNLOCK (filter->display);
+
+  return status;
 }
