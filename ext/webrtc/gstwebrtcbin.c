@@ -3567,6 +3567,31 @@ _add_ice_candidates_from_sdp (GstWebRTCBin * webrtc, gint mlineindex,
   }
 }
 
+static void
+_add_ice_candidate_to_sdp (GstWebRTCBin * webrtc,
+    GstSDPMessage * sdp, gint mline_index, const gchar * candidate)
+{
+  GstSDPMedia *media = NULL;
+
+  if (mline_index < sdp->medias->len) {
+    media = &g_array_index (sdp->medias, GstSDPMedia, mline_index);
+  }
+
+  if (media == NULL) {
+    GST_WARNING_OBJECT (webrtc, "Couldn't find mline %d to merge ICE candidate",
+        mline_index);
+    return;
+  }
+  // Add the candidate as an attribute, first stripping off the existing
+  // candidate: key from the string description
+  if (strlen (candidate) < 10) {
+    GST_WARNING_OBJECT (webrtc,
+        "Dropping invalid ICE candidate for mline %d: %s", mline_index,
+        candidate);
+    return;
+  }
+  gst_sdp_media_add_attribute (media, "candidate", candidate + 10);
+}
 
 static gboolean
 _filter_sdp_fields (GQuark field_id, const GValue * value,
@@ -4580,6 +4605,20 @@ _on_ice_candidate_task (GstWebRTCBin * webrtc, IceCandidateItem * item)
 
   GST_TRACE_OBJECT (webrtc, "produced ICE candidate for mline:%u and %s",
       item->mlineindex, cand);
+
+  /* First, merge this ice candidate into the appropriate mline
+   * in the local-description SDP.
+   * Second, emit the on-ice-candidate signal for the app.
+   *
+   * FIXME: This ICE candidate should be stored somewhere with
+   * the associated mid and also merged back into any subsequent
+   * local descriptions on renegotiation */
+  if (webrtc->current_local_description)
+    _add_ice_candidate_to_sdp (webrtc, webrtc->current_local_description->sdp,
+        item->mlineindex, cand);
+  if (webrtc->pending_local_description)
+    _add_ice_candidate_to_sdp (webrtc, webrtc->pending_local_description->sdp,
+        item->mlineindex, cand);
 
   PC_UNLOCK (webrtc);
   g_signal_emit (webrtc, gst_webrtc_bin_signals[ON_ICE_CANDIDATE_SIGNAL],
