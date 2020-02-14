@@ -188,6 +188,8 @@ select_chunk_type (GstRtmpChunkStream * cstream, GstBuffer * buffer)
   meta->size = gst_buffer_get_size (buffer);
   meta->cstream = cstream->id;
 
+  g_return_val_if_fail (meta->size <= GST_RTMP_MAXIMUM_MESSAGE_SIZE, -1);
+
   if (!old_buffer) {
     GST_TRACE ("Picking header 0: no previous header");
     meta->ts_delta = dts_to_abs_ts (buffer);
