@@ -1065,6 +1065,21 @@ gst_rtmp_connection_send_ping_response (GstRtmpConnection * connection,
 }
 
 void
+gst_rtmp_connection_set_chunk_size (GstRtmpConnection * connection,
+    guint32 chunk_size)
+{
+  GstRtmpProtocolControl pc = {
+    .type = GST_RTMP_MESSAGE_TYPE_SET_CHUNK_SIZE,
+    .param = chunk_size,
+  };
+
+  g_return_if_fail (GST_IS_RTMP_CONNECTION (connection));
+
+  gst_rtmp_connection_queue_message (connection,
+      gst_rtmp_message_new_protocol_control (&pc));
+}
+
+void
 gst_rtmp_connection_request_window_size (GstRtmpConnection * connection,
     guint32 window_ack_size)
 {

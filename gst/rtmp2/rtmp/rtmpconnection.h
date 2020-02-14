@@ -81,6 +81,8 @@ void gst_rtmp_connection_expect_command (GstRtmpConnection * connection,
     GstRtmpCommandCallback response_command, gpointer user_data,
     guint32 stream_id, const gchar * command_name);
 
+void gst_rtmp_connection_set_chunk_size (GstRtmpConnection * connection,
+    guint32 chunk_size);
 void gst_rtmp_connection_request_window_size (GstRtmpConnection * connection,
     guint32 window_ack_size);
 
