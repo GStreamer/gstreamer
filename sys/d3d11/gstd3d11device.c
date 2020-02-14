@@ -545,7 +545,7 @@ gst_d3d11_device_constructed (GObject * object)
 
   if (IDXGIFactory1_EnumAdapters1 (factory, priv->adapter,
           &adapter) == DXGI_ERROR_NOT_FOUND) {
-    GST_ERROR_OBJECT (self, "No adapter for index %d", priv->adapter);
+    GST_WARNING_OBJECT (self, "No adapter for index %d", priv->adapter);
     goto error;
   } else {
     DXGI_ADAPTER_DESC1 desc;
@@ -792,7 +792,7 @@ gst_d3d11_device_new (guint adapter)
   priv = device->priv;
 
   if (!priv->device || !priv->device_context) {
-    GST_ERROR ("Cannot create d3d11 device");
+    GST_WARNING ("Cannot create d3d11 device with adapter %d", adapter);
     g_object_unref (device);
     device = NULL;
   }
