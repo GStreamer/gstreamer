@@ -32,6 +32,13 @@ G_BEGIN_DECLS
 #define GST_RTMP_CONNECTION(obj)   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTMP_CONNECTION,GstRtmpConnection))
 #define GST_IS_RTMP_CONNECTION(obj)   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTMP_CONNECTION))
 
+#define GST_RTMP_DEFAULT_CHUNK_SIZE 128
+#define GST_RTMP_MINIMUM_CHUNK_SIZE 1
+#define GST_RTMP_MAXIMUM_CHUNK_SIZE 0x7FFFFFFF
+
+/* Matches librtmp */
+#define GST_RTMP_DEFAULT_WINDOW_ACK_SIZE 2500000
+
 typedef struct _GstRtmpConnection GstRtmpConnection;
 
 typedef void (*GstRtmpConnectionFunc)

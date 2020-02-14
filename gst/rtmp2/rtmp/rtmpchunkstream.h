@@ -25,7 +25,6 @@
 
 G_BEGIN_DECLS
 
-#define GST_RTMP_DEFAULT_CHUNK_SIZE 128
 #define GST_RTMP_CHUNK_STREAM_PROTOCOL 2
 
 typedef struct _GstRtmpChunkStream GstRtmpChunkStream;

@@ -111,6 +111,10 @@ static void gst_rtmp_connection_handle_user_control (GstRtmpConnection * sc,
     GstBuffer * buffer);
 static void gst_rtmp_connection_handle_message (GstRtmpConnection * sc,
     GstBuffer * buffer);
+static void gst_rtmp_connection_handle_set_chunk_size (GstRtmpConnection * self,
+    guint32 in_chunk_size);
+static void gst_rtmp_connection_handle_window_ack_size (GstRtmpConnection *
+    self, guint32 in_chunk_size);
 
 static void gst_rtmp_connection_send_ack (GstRtmpConnection * connection);
 static void
@@ -658,9 +662,9 @@ gst_rtmp_connection_handle_protocol_control (GstRtmpConnection * connection,
 
   switch (pc.type) {
     case GST_RTMP_MESSAGE_TYPE_SET_CHUNK_SIZE:
-      GST_INFO_OBJECT (connection, "new chunk size %" G_GUINT32_FORMAT,
+      GST_INFO_OBJECT (connection, "incoming chunk size %" G_GUINT32_FORMAT,
           pc.param);
-      connection->in_chunk_size = pc.param;
+      gst_rtmp_connection_handle_set_chunk_size (connection, pc.param);
       break;
 
     case GST_RTMP_MESSAGE_TYPE_ABORT_MESSAGE:
@@ -675,9 +679,9 @@ gst_rtmp_connection_handle_protocol_control (GstRtmpConnection * connection,
       break;
 
     case GST_RTMP_MESSAGE_TYPE_WINDOW_ACK_SIZE:
-      GST_INFO_OBJECT (connection, "window ack size: %" G_GUINT32_FORMAT,
-          pc.param);
-      connection->in_window_ack_size = pc.param;
+      GST_INFO_OBJECT (connection,
+          "incoming window ack size: %" G_GUINT32_FORMAT, pc.param);
+      gst_rtmp_connection_handle_window_ack_size (connection, pc.param);
       break;
 
     case GST_RTMP_MESSAGE_TYPE_SET_PEER_BANDWIDTH:
@@ -750,6 +754,45 @@ gst_rtmp_connection_handle_user_control (GstRtmpConnection * connection,
           uc.type, gst_rtmp_user_control_type_get_nick (uc.type));
       break;
   }
+}
+
+static void
+gst_rtmp_connection_handle_set_chunk_size (GstRtmpConnection * self,
+    guint32 chunk_size)
+{
+  if (chunk_size < GST_RTMP_MINIMUM_CHUNK_SIZE) {
+    GST_ERROR_OBJECT (self,
+        "peer requested chunk size %" G_GUINT32_FORMAT "; too small",
+        chunk_size);
+    return;
+  }
+
+  if (chunk_size > GST_RTMP_MAXIMUM_CHUNK_SIZE) {
+    GST_ERROR_OBJECT (self,
+        "peer requested chunk size %" G_GUINT32_FORMAT "; too large",
+        chunk_size);
+    return;
+  }
+
+  if (chunk_size < GST_RTMP_DEFAULT_CHUNK_SIZE) {
+    GST_WARNING_OBJECT (self,
+        "peer requested small chunk size %" G_GUINT32_FORMAT, chunk_size);
+  }
+
+  self->in_chunk_size = chunk_size;
+}
+
+static void
+gst_rtmp_connection_handle_window_ack_size (GstRtmpConnection * self,
+    guint32 window_ack_size)
+{
+  if (window_ack_size < GST_RTMP_DEFAULT_WINDOW_ACK_SIZE) {
+    GST_WARNING_OBJECT (self,
+        "peer requested small window ack size %" G_GUINT32_FORMAT,
+        window_ack_size);
+  }
+
+  self->in_window_ack_size = window_ack_size;
 }
 
 static gboolean

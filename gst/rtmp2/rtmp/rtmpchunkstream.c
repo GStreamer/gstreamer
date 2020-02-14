@@ -111,6 +111,7 @@ chunk_stream_next_size (GstRtmpChunkStream * cstream, guint32 chunk_size)
   size = cstream->meta->size;
   offset = cstream->offset;
 
+  g_return_val_if_fail (chunk_size, 0);
   g_return_val_if_fail (offset <= size, 0);
   return MIN (size - offset, chunk_size);
 }
