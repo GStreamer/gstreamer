@@ -2539,7 +2539,7 @@ nal_reader_has_more_data_in_payload (NalReader * nr,
     guint32 payload_start_pos_bit, guint32 payloadSize)
 {
   if (nal_reader_is_byte_aligned (nr) &&
-      (nal_reader_get_pos (nr) == (payload_start_pos_bit + 8 * payloadSize)))
+      (nal_reader_get_pos (nr) >= (payload_start_pos_bit + 8 * payloadSize)))
     return FALSE;
 
   return TRUE;
@@ -2640,7 +2640,7 @@ gst_h265_parser_parse_sei_message (GstH265Parser * parser,
    * In theory, we can have a more optimized implementation by skipping the
    * data left in PayLoadSize without out individually checking for each bits,
    * since the totoal size will be always less than payloadSize*/
-  if (nal_reader_has_more_data_in_payload (nr, payload_start_pos_bit,
+  while (nal_reader_has_more_data_in_payload (nr, payload_start_pos_bit,
           payloadSize)) {
     /* Skip the byte alignment bits */
     if (!nal_reader_skip (nr, 1))
