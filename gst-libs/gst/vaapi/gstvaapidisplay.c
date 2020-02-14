@@ -791,12 +791,12 @@ set_driver_quirks (GstVaapiDisplay * display)
     const char *match_str = vaapi_driver_quirks_table[i].match_string;
     if (g_strstr_len (priv->vendor_string, strlen (priv->vendor_string),
             match_str) != NULL) {
-      GST_INFO_OBJECT (display, "Matched driver string \"%s\", setting quirks "
-          "(%#x)", priv->vendor_string, vaapi_driver_quirks_table[i].quirks);
       priv->driver_quirks |= vaapi_driver_quirks_table[i].quirks;
-      break;
     }
   }
+
+  GST_INFO_OBJECT (display, "Matched driver string \"%s\", setting quirks "
+      "(%#x)", priv->vendor_string, priv->driver_quirks);
 }
 
 static void
