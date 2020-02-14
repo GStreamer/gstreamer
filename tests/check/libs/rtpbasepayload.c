@@ -1969,6 +1969,53 @@ GST_START_TEST (rtp_base_payload_segment_time)
 
 GST_END_TEST;
 
+#define TWCC_EXTMAP_STR "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01"
+
+GST_START_TEST (rtp_base_payload_property_twcc_ext_id_test)
+{
+  GstHarness *h;
+  GstRtpDummyPay *pay;
+  GstBuffer *buf;
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+  guint8 ext_id = 10;
+  gpointer data;
+  guint size;
+  guint16 seqnum, twcc_seqnum;
+  GstCaps *caps, *expected_caps;
+
+  pay = rtp_dummy_pay_new ();
+  g_object_set (pay, "twcc-ext-id", ext_id, NULL);
+
+  h = gst_harness_new_with_element (GST_ELEMENT_CAST (pay), "sink", "src");
+  gst_harness_set_src_caps_str (h, "application/x-rtp");
+
+  /* verify the presence of the twcc-seqnum */
+  buf = gst_harness_push_and_pull (h, gst_buffer_new ());
+  gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp);
+  fail_unless (gst_rtp_buffer_get_extension_onebyte_header (&rtp, ext_id,
+          0, &data, &size));
+  fail_unless_equals_int (2, size);
+  twcc_seqnum = GST_READ_UINT16_BE (data);
+  seqnum = gst_rtp_buffer_get_seq (&rtp);
+  fail_unless_equals_int (twcc_seqnum, seqnum);
+  gst_rtp_buffer_unmap (&rtp);
+  gst_buffer_unref (buf);
+
+  /* verify the presence of the twcc in caps */
+  caps = gst_pad_get_current_caps (GST_PAD_PEER (h->sinkpad));
+  expected_caps = gst_caps_from_string ("application/x-rtp, "
+      "extmap-10=" TWCC_EXTMAP_STR "");
+  fail_unless (gst_caps_is_subset (caps, expected_caps));
+  gst_caps_unref (caps);
+  gst_caps_unref (expected_caps);
+
+  g_object_unref (pay);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 rtp_basepayloading_suite (void)
 {
@@ -2003,6 +2050,7 @@ rtp_basepayloading_suite (void)
   tcase_add_test (tc_chain, rtp_base_payload_property_ptime_multiple_test);
   tcase_add_test (tc_chain, rtp_base_payload_property_stats_test);
   tcase_add_test (tc_chain, rtp_base_payload_property_source_info_test);
+  tcase_add_test (tc_chain, rtp_base_payload_property_twcc_ext_id_test);
 
   tcase_add_test (tc_chain, rtp_base_payload_framerate_attribute);
   tcase_add_test (tc_chain, rtp_base_payload_max_framerate_attribute);

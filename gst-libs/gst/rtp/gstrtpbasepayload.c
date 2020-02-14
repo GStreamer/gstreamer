@@ -47,6 +47,7 @@ struct _GstRTPBasePayloadPrivate
 
   gboolean source_info;
   GstBuffer *input_meta_buffer;
+  guint8 twcc_ext_id;
 
   guint64 base_offset;
   gint64 base_rtime;
@@ -92,6 +93,7 @@ enum
 #define DEFAULT_RUNNING_TIME            GST_CLOCK_TIME_NONE
 #define DEFAULT_SOURCE_INFO             FALSE
 #define DEFAULT_ONVIF_NO_RATE_CONTROL   FALSE
+#define DEFAULT_TWCC_EXT_ID             0
 
 enum
 {
@@ -110,6 +112,7 @@ enum
   PROP_STATS,
   PROP_SOURCE_INFO,
   PROP_ONVIF_NO_RATE_CONTROL,
+  PROP_TWCC_EXT_ID,
   PROP_LAST
 };
 
@@ -336,6 +339,28 @@ gst_rtp_base_payload_class_init (GstRTPBasePayloadClass * klass)
           "Enable ONVIF Rate-Control=no timestamping mode",
           DEFAULT_ONVIF_NO_RATE_CONTROL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstRTPBasePayload:twcc-ext-id:
+   *
+   * The RTP header-extension ID used for tagging buffers with Transport-Wide
+   * Congestion Control sequence-numbers.
+   * 
+   * To use this across multiple bundled streams (transport wide), the
+   * GstRTPFunnel can mux TWCC sequence-numbers together.
+   * 
+   * This is experimental, as it is still a draft and not yet a standard.
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (gobject_class, PROP_TWCC_EXT_ID,
+      g_param_spec_uint ("twcc-ext-id",
+          "Transport-wide Congestion Control Extension ID (experimental)",
+          "The RTP header-extension ID to use for tagging buffers with "
+          "Transport-wide Congestion Control sequencenumbers (0 = disable)",
+          0, 15, DEFAULT_TWCC_EXT_ID,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
 
   gstelement_class->change_state = gst_rtp_base_payload_change_state;
 
@@ -1115,6 +1140,16 @@ gst_rtp_base_payload_negotiate (GstRTPBasePayload * payload)
 
   update_max_ptime (payload);
 
+
+  if (payload->priv->twcc_ext_id > 0) {
+    /* TODO: put this as a separate utility-function for RTP extensions */
+    gchar *name = g_strdup_printf ("extmap-%u", payload->priv->twcc_ext_id);
+    gst_caps_set_simple (srccaps, name, G_TYPE_STRING,
+        "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01",
+        NULL);
+    g_free (name);
+  }
+
   res = gst_pad_set_caps (GST_RTP_BASE_PAYLOAD_SRCPAD (payload), srccaps);
   gst_caps_unref (srccaps);
   gst_caps_unref (templ);
@@ -1162,6 +1197,7 @@ typedef struct
   GstClockTime pts;
   guint64 offset;
   guint32 rtptime;
+  guint8 twcc_ext_id;
 } HeaderData;
 
 static gboolean
@@ -1180,6 +1216,16 @@ find_timestamp (GstBuffer ** buffer, guint idx, gpointer user_data)
     return TRUE;
 }
 
+static void
+_set_twcc_seq (GstRTPBuffer * rtp, guint16 seq, guint8 ext_id)
+{
+  guint16 data;
+  if (ext_id == 0 || ext_id > 14)
+    return;
+  GST_WRITE_UINT16_BE (&data, seq);
+  gst_rtp_buffer_add_extension_onebyte_header (rtp, ext_id, &data, 2);
+}
+
 static gboolean
 set_headers (GstBuffer ** buffer, guint idx, gpointer user_data)
 {
@@ -1193,6 +1239,7 @@ set_headers (GstBuffer ** buffer, guint idx, gpointer user_data)
   gst_rtp_buffer_set_payload_type (&rtp, data->pt);
   gst_rtp_buffer_set_seq (&rtp, data->seqnum);
   gst_rtp_buffer_set_timestamp (&rtp, data->rtptime);
+  _set_twcc_seq (&rtp, data->seqnum, data->twcc_ext_id);
   gst_rtp_buffer_unmap (&rtp);
 
   /* increment the seqnum for each buffer */
@@ -1249,6 +1296,7 @@ gst_rtp_base_payload_prepare_push (GstRTPBasePayload * payload,
   data.seqnum = payload->seqnum;
   data.ssrc = payload->current_ssrc;
   data.pt = payload->pt;
+  data.twcc_ext_id = priv->twcc_ext_id;
 
   /* find the first buffer with a timestamp */
   if (is_list) {
@@ -1566,6 +1614,9 @@ gst_rtp_base_payload_set_property (GObject * object, guint prop_id,
     case PROP_ONVIF_NO_RATE_CONTROL:
       priv->onvif_no_rate_control = g_value_get_boolean (value);
       break;
+    case PROP_TWCC_EXT_ID:
+      priv->twcc_ext_id = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1635,6 +1686,9 @@ gst_rtp_base_payload_get_property (GObject * object, guint prop_id,
       break;
     case PROP_ONVIF_NO_RATE_CONTROL:
       g_value_set_boolean (value, priv->onvif_no_rate_control);
+      break;
+    case PROP_TWCC_EXT_ID:
+      g_value_set_uint (value, priv->twcc_ext_id);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
