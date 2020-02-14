@@ -89,6 +89,9 @@ void gst_rtmp_connection_request_window_size (GstRtmpConnection * connection,
 void gst_rtmp_connection_set_data_frame (GstRtmpConnection * connection,
     GstBuffer * buffer);
 
+GstStructure * gst_rtmp_connection_get_null_stats (void);
+GstStructure * gst_rtmp_connection_get_stats (GstRtmpConnection * connection);
+
 G_END_DECLS
 
 #endif
