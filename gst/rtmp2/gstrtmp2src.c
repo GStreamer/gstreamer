@@ -60,10 +60,12 @@ typedef struct
   GstRtmpLocation location;
   gboolean async_connect;
 
-  /* stuff */
-  gboolean running, flushing;
+  /* If both self->lock and OBJECT_LOCK are needed,
+   * self->lock must be taken first */
   GMutex lock;
   GCond cond;
+
+  gboolean running, flushing;
 
   GstTask *task;
   GRecMutex task_lock;
@@ -599,38 +601,40 @@ gst_rtmp2_src_task_func (gpointer user_data)
   GTask *connector;
 
   GST_DEBUG_OBJECT (self, "gst_rtmp2_src_task starting");
-
   g_mutex_lock (&self->lock);
+
   context = self->context = g_main_context_new ();
   g_main_context_push_thread_default (context);
   loop = self->loop = g_main_loop_new (context, TRUE);
   connector = g_task_new (self, self->cancellable, connect_task_done, NULL);
+
   GST_OBJECT_LOCK (self);
   gst_rtmp_client_connect_async (&self->location, self->cancellable,
       client_connect_done, connector);
   GST_OBJECT_UNLOCK (self);
+
+  /* Run loop */
   g_mutex_unlock (&self->lock);
-
   g_main_loop_run (loop);
-
   g_mutex_lock (&self->lock);
+
   g_clear_pointer (&self->loop, g_main_loop_unref);
   g_clear_pointer (&self->connection, gst_rtmp_connection_close_and_unref);
   g_cond_broadcast (&self->cond);
-  g_mutex_unlock (&self->lock);
 
+  /* Run loop cleanup */
+  g_mutex_unlock (&self->lock);
   while (g_main_context_pending (context)) {
     GST_DEBUG_OBJECT (self, "iterating main context to clean up");
     g_main_context_iteration (context, FALSE);
   }
-
   g_main_context_pop_thread_default (context);
-
   g_mutex_lock (&self->lock);
+
   g_clear_pointer (&self->context, g_main_context_unref);
   gst_buffer_replace (&self->message, NULL);
-  g_mutex_unlock (&self->lock);
 
+  g_mutex_unlock (&self->lock);
   GST_DEBUG_OBJECT (self, "gst_rtmp2_src_task exiting");
 }
 
