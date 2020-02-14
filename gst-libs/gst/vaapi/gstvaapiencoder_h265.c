@@ -1640,8 +1640,14 @@ fill_sequence (GstVaapiEncoderH265 * encoder, GstVaapiEncSequence * sequence)
     seq_param->log2_diff_max_min_luma_coding_block_size = 2;
   seq_param->log2_min_transform_block_size_minus2 = 0;
   seq_param->log2_diff_max_min_transform_block_size = 3;
-  seq_param->max_transform_hierarchy_depth_inter = 3;
-  seq_param->max_transform_hierarchy_depth_intra = 3;
+  /*
+   * Intel HW supports up to 2, we can provide a quirk for other HWs in future
+   * if other HW may support other values
+   *
+   * Refer to https://01.org/sites/default/files/documentation/intel-gfx-prm-osrc-kbl-vol10-hevc.pdf
+   */
+  seq_param->max_transform_hierarchy_depth_inter = 2;
+  seq_param->max_transform_hierarchy_depth_intra = 2;
 
   seq_param->pcm_sample_bit_depth_luma_minus1 = 0;
   seq_param->pcm_sample_bit_depth_chroma_minus1 = 0;
