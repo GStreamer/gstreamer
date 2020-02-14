@@ -2516,11 +2516,10 @@ done:
 }
 
 /* Must be called *without* priv->lock */
-static void
+static gboolean
 push_data (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
     GstBuffer * buffer, GstBufferList * buffer_list, gboolean is_rtp)
 {
-  GstRTSPStreamPrivate *priv = stream->priv;
   gboolean send_ret = TRUE;
 
   if (is_rtp) {
@@ -2535,12 +2534,7 @@ push_data (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
       send_ret = gst_rtsp_stream_transport_send_rtcp_list (trans, buffer_list);
   }
 
-  if (!send_ret) {
-    /* remove transport on send error */
-    g_mutex_lock (&priv->lock);
-    update_transport (stream, trans, FALSE);
-    g_mutex_unlock (&priv->lock);
-  }
+  return send_ret;
 }
 
 /* With priv->lock */
@@ -2572,6 +2566,9 @@ ensure_cached_transports (GstRTSPStream * stream)
 static void
 check_transport_backlog (GstRTSPStream * stream, GstRTSPStreamTransport * trans)
 {
+  GstRTSPStreamPrivate *priv = stream->priv;
+  gboolean send_ret = TRUE;
+
   gst_rtsp_stream_transport_lock_backlog (trans);
 
   if (!gst_rtsp_stream_transport_backlog_is_empty (trans)) {
@@ -2586,13 +2583,20 @@ check_transport_backlog (GstRTSPStream * stream, GstRTSPStreamTransport * trans)
 
     g_assert (popped == TRUE);
 
-    push_data (stream, trans, buffer, buffer_list, is_rtp);
+    send_ret = push_data (stream, trans, buffer, buffer_list, is_rtp);
 
     gst_clear_buffer (&buffer);
     gst_clear_buffer_list (&buffer_list);
   }
 
   gst_rtsp_stream_transport_unlock_backlog (trans);
+
+  if (!send_ret) {
+    /* remove transport on send error */
+    g_mutex_lock (&priv->lock);
+    update_transport (stream, trans, FALSE);
+    g_mutex_unlock (&priv->lock);
+  }
 }
 
 /* Must be called with priv->lock */
