@@ -1704,7 +1704,7 @@ fill_picture (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
   }
   for (; i < 15; ++i) {
     pic_param->reference_frames[i].picture_id = VA_INVALID_SURFACE;
-    pic_param->reference_frames[i].flags = 0;
+    pic_param->reference_frames[i].flags = VA_PICTURE_HEVC_INVALID;
   }
   pic_param->coded_buf = GST_VAAPI_CODED_BUFFER_ID (codedbuf);
 
@@ -1839,7 +1839,7 @@ add_slice_headers (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
     }
     for (; i_ref < G_N_ELEMENTS (slice_param->ref_pic_list0); ++i_ref) {
       slice_param->ref_pic_list0[i_ref].picture_id = VA_INVALID_SURFACE;
-      slice_param->ref_pic_list0[i_ref].flags = 0;
+      slice_param->ref_pic_list0[i_ref].flags = VA_PICTURE_HEVC_INVALID;
     }
 
     i_ref = 0;
@@ -1859,7 +1859,7 @@ add_slice_headers (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
     }
     for (; i_ref < G_N_ELEMENTS (slice_param->ref_pic_list1); ++i_ref) {
       slice_param->ref_pic_list1[i_ref].picture_id = VA_INVALID_SURFACE;
-      slice_param->ref_pic_list1[i_ref].flags = 0;
+      slice_param->ref_pic_list1[i_ref].flags = VA_PICTURE_HEVC_INVALID;
     }
 
     slice_param->max_num_merge_cand = 5;        /* MaxNumMergeCand  */
