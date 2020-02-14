@@ -51,6 +51,8 @@
 #include <config.h>
 #endif
 
+#include "gsth264decoder.h"
+#include "gsth264picture.h"
 #include "gstd3d11h264dec.h"
 #include "gstd3d11memory.h"
 #include "gstd3d11bufferpool.h"
@@ -70,10 +72,10 @@ GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_h264_dec_debug);
 enum
 {
   PROP_0,
-  PROP_ADAPTER
+  PROP_ADAPTER,
+  PROP_DEVICE_ID,
+  PROP_VENDOR_ID,
 };
-
-#define DEFAULT_ADAPTER -1
 
 /* copied from d3d11.h since mingw header doesn't define them */
 DEFINE_GUID (GST_GUID_D3D11_DECODER_PROFILE_H264_IDCT_FGT, 0x1b81be67, 0xa0c7,
@@ -86,37 +88,53 @@ DEFINE_GUID (GST_GUID_D3D11_DECODER_PROFILE_H264_VLD_FGT, 0x1b81be69, 0xa0c7,
 /* worst case 16 (non-interlaced) + 4 margin */
 #define NUM_OUTPUT_VIEW 20
 
-static GstStaticPadTemplate sink_template =
-GST_STATIC_PAD_TEMPLATE (GST_VIDEO_DECODER_SINK_NAME,
-    GST_PAD_SINK, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-h264, "
-        "stream-format=(string) { avc, avc3, byte-stream }, "
-        "alignment=(string) au, profile = (string) { high, main }")
-    );
-
-static GstStaticPadTemplate src_template =
-    GST_STATIC_PAD_TEMPLATE (GST_VIDEO_DECODER_SRC_NAME,
-    GST_PAD_SRC, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, "{ NV12, P010_10LE }") "; "
-        GST_VIDEO_CAPS_MAKE ("{ NV12, P010_10LE }")));
-
-struct _GstD3D11H264DecPrivate
+typedef struct _GstD3D11H264Dec
 {
-  /* Need to hide DXVA_PicEntry_H264 structure from header for UWP */
+  GstH264Decoder parent;
+
+  GstVideoCodecState *output_state;
+
+  GstD3D11Device *device;
+
+  guint width, height;
+  guint coded_width, coded_height;
+  guint bitdepth;
+  guint chroma_format_idc;
+  GstVideoFormat out_format;
+
+  /* Array of DXVA_Slice_H264_Short */
+  GArray *slice_list;
+
+  GstD3D11Decoder *d3d11_decoder;
+
+  /* Pointing current bitstream buffer */
+  guint current_offset;
+  guint bitstream_buffer_size;
+  guint8 *bitstream_buffer_bytes;
+
+  gboolean use_d3d11_output;
+
   DXVA_PicEntry_H264 ref_frame_list[16];
   INT field_order_cnt_list[16][2];
   USHORT frame_num_list[16];
   UINT used_for_reference_flags;
   USHORT non_existing_frame_flags;
-};
+} GstD3D11H264Dec;
 
-#define parent_class gst_d3d11_h264_dec_parent_class
-G_DEFINE_TYPE_WITH_PRIVATE (GstD3D11H264Dec,
-    gst_d3d11_h264_dec, GST_TYPE_H264_DECODER);
+typedef struct _GstD3D11H264DecClass
+{
+  GstH264DecoderClass parent_class;
+  guint adapter;
+  guint device_id;
+  guint vendor_id;
+} GstD3D11H264DecClass;
 
-static void gst_d3d11_h264_dec_set_property (GObject * object,
-    guint prop_id, const GValue * value, GParamSpec * pspec);
+static GstElementClass *parent_class = NULL;
+
+#define GST_D3D11_H264_DEC(object) ((GstD3D11H264Dec *) (object))
+#define GST_D3D11_H264_DEC_GET_CLASS(object) \
+    (G_TYPE_INSTANCE_GET_CLASS ((object),G_TYPE_FROM_INSTANCE (object),GstD3D11H264DecClass))
+
 static void gst_d3d11_h264_dec_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 static void gst_d3d11_h264_dec_dispose (GObject * object);
@@ -146,35 +164,56 @@ static gboolean gst_d3d11_h264_dec_end_picture (GstH264Decoder * decoder,
     GstH264Picture * picture);
 
 static void
-gst_d3d11_h264_dec_class_init (GstD3D11H264DecClass * klass)
+gst_d3d11_h264_dec_class_init (GstD3D11H264DecClass * klass, gpointer data)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstVideoDecoderClass *decoder_class = GST_VIDEO_DECODER_CLASS (klass);
   GstH264DecoderClass *h264decoder_class = GST_H264_DECODER_CLASS (klass);
+  GstD3D11DecoderClassData *cdata = (GstD3D11DecoderClassData *) data;
+  gchar *long_name;
 
-  gobject_class->set_property = gst_d3d11_h264_dec_set_property;
   gobject_class->get_property = gst_d3d11_h264_dec_get_property;
   gobject_class->dispose = gst_d3d11_h264_dec_dispose;
 
   g_object_class_install_property (gobject_class, PROP_ADAPTER,
-      g_param_spec_int ("adapter", "Adapter",
-          "Adapter index for creating device (-1 for default)",
-          -1, G_MAXINT32, DEFAULT_ADAPTER,
-          G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
-          G_PARAM_STATIC_STRINGS));
+      g_param_spec_uint ("adapter", "Adapter",
+          "DXGI Adapter index for creating device",
+          0, G_MAXUINT32, cdata->adapter,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_DEVICE_ID,
+      g_param_spec_uint ("device-id", "Device Id",
+          "DXGI Device ID", 0, G_MAXUINT32, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_VENDOR_ID,
+      g_param_spec_uint ("vendor-id", "Vendor Id",
+          "DXGI Vendor ID", 0, G_MAXUINT32, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  parent_class = g_type_class_peek_parent (klass);
+
+  klass->adapter = cdata->adapter;
+  klass->device_id = cdata->device_id;
+  klass->vendor_id = cdata->vendor_id;
 
   element_class->set_context =
       GST_DEBUG_FUNCPTR (gst_d3d11_h264_dec_set_context);
 
-  gst_element_class_set_static_metadata (element_class,
-      "Direct3D11 H.264 Video Decoder",
+  long_name = g_strdup_printf ("Direct3D11 H.264 %s Decoder",
+      cdata->description);
+  gst_element_class_set_metadata (element_class, long_name,
       "Codec/Decoder/Video/Hardware",
       "A Direct3D11 based H.264 video decoder",
       "Seungha Yang <seungha.yang@navercorp.com>");
+  g_free (long_name);
 
-  gst_element_class_add_static_pad_template (element_class, &sink_template);
-  gst_element_class_add_static_pad_template (element_class, &src_template);
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+          cdata->sink_caps));
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+          cdata->src_caps));
+  gst_d3d11_decoder_class_data_free (cdata);
 
   decoder_class->open = GST_DEBUG_FUNCPTR (gst_d3d11_h264_dec_open);
   decoder_class->close = GST_DEBUG_FUNCPTR (gst_d3d11_h264_dec_close);
@@ -200,36 +239,24 @@ gst_d3d11_h264_dec_class_init (GstD3D11H264DecClass * klass)
 static void
 gst_d3d11_h264_dec_init (GstD3D11H264Dec * self)
 {
-  self->priv = gst_d3d11_h264_dec_get_instance_private (self);
   self->slice_list = g_array_new (FALSE, TRUE, sizeof (DXVA_Slice_H264_Short));
-  self->adapter = DEFAULT_ADAPTER;
-}
-
-static void
-gst_d3d11_h264_dec_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstD3D11H264Dec *self = GST_D3D11_H264_DEC (object);
-
-  switch (prop_id) {
-    case PROP_ADAPTER:
-      self->adapter = g_value_get_int (value);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
 }
 
 static void
 gst_d3d11_h264_dec_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstD3D11H264Dec *self = GST_D3D11_H264_DEC (object);
+  GstD3D11H264DecClass *klass = GST_D3D11_H264_DEC_GET_CLASS (object);
 
   switch (prop_id) {
     case PROP_ADAPTER:
-      g_value_set_int (value, self->adapter);
+      g_value_set_uint (value, klass->adapter);
+      break;
+    case PROP_DEVICE_ID:
+      g_value_set_uint (value, klass->device_id);
+      break;
+    case PROP_VENDOR_ID:
+      g_value_set_uint (value, klass->vendor_id);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -254,8 +281,10 @@ static void
 gst_d3d11_h264_dec_set_context (GstElement * element, GstContext * context)
 {
   GstD3D11H264Dec *self = GST_D3D11_H264_DEC (element);
+  GstD3D11H264DecClass *klass = GST_D3D11_H264_DEC_GET_CLASS (self);
 
-  gst_d3d11_handle_set_context (element, context, self->adapter, &self->device);
+  gst_d3d11_handle_set_context (element, context, klass->adapter,
+      &self->device);
 
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
@@ -264,8 +293,9 @@ static gboolean
 gst_d3d11_h264_dec_open (GstVideoDecoder * decoder)
 {
   GstD3D11H264Dec *self = GST_D3D11_H264_DEC (decoder);
+  GstD3D11H264DecClass *klass = GST_D3D11_H264_DEC_GET_CLASS (self);
 
-  if (!gst_d3d11_ensure_element_data (GST_ELEMENT_CAST (self), self->adapter,
+  if (!gst_d3d11_ensure_element_data (GST_ELEMENT_CAST (self), klass->adapter,
           &self->device)) {
     GST_ERROR_OBJECT (self, "Cannot create d3d11device");
     return FALSE;
@@ -577,7 +607,6 @@ gst_d3d11_h264_dec_start_picture (GstH264Decoder * decoder,
     GstH264Picture * picture, GstH264Slice * slice, GstH264Dpb * dpb)
 {
   GstD3D11H264Dec *self = GST_D3D11_H264_DEC (decoder);
-  GstD3D11H264DecPrivate *priv = self->priv;
   GstD3D11DecoderOutputView *view;
   gint i;
   GArray *dpb_array;
@@ -596,13 +625,13 @@ gst_d3d11_h264_dec_start_picture (GstH264Decoder * decoder,
   }
 
   for (i = 0; i < 16; i++) {
-    priv->ref_frame_list[i].bPicEntry = 0xFF;
-    priv->field_order_cnt_list[i][0] = 0;
-    priv->field_order_cnt_list[i][1] = 0;
-    priv->frame_num_list[i] = 0;
+    self->ref_frame_list[i].bPicEntry = 0xFF;
+    self->field_order_cnt_list[i][0] = 0;
+    self->field_order_cnt_list[i][1] = 0;
+    self->frame_num_list[i] = 0;
   }
-  priv->used_for_reference_flags = 0;
-  priv->non_existing_frame_flags = 0;
+  self->used_for_reference_flags = 0;
+  self->non_existing_frame_flags = 0;
 
   dpb_array = gst_h264_dpb_get_pictures_all (dpb);
 
@@ -620,14 +649,14 @@ gst_d3d11_h264_dec_start_picture (GstH264Decoder * decoder,
     if (other_view)
       id = other_view->view_id;
 
-    priv->ref_frame_list[i].Index7Bits = id;
-    priv->ref_frame_list[i].AssociatedFlag = other->long_term;
-    priv->field_order_cnt_list[i][0] = other->top_field_order_cnt;
-    priv->field_order_cnt_list[i][1] = other->bottom_field_order_cnt;
-    priv->frame_num_list[i] = priv->ref_frame_list[i].AssociatedFlag
+    self->ref_frame_list[i].Index7Bits = id;
+    self->ref_frame_list[i].AssociatedFlag = other->long_term;
+    self->field_order_cnt_list[i][0] = other->top_field_order_cnt;
+    self->field_order_cnt_list[i][1] = other->bottom_field_order_cnt;
+    self->frame_num_list[i] = self->ref_frame_list[i].AssociatedFlag
         ? other->long_term_pic_num : other->frame_num;
-    priv->used_for_reference_flags |= ref << (2 * i);
-    priv->non_existing_frame_flags |= (other->nonexisting) << i;
+    self->used_for_reference_flags |= ref << (2 * i);
+    self->non_existing_frame_flags |= (other->nonexisting) << i;
   }
 
   g_array_unref (dpb_array);
@@ -968,7 +997,6 @@ gst_d3d11_h264_dec_decode_slice (GstH264Decoder * decoder,
     GstH264Picture * picture, GstH264Slice * slice)
 {
   GstD3D11H264Dec *self = GST_D3D11_H264_DEC (decoder);
-  GstD3D11H264DecPrivate *priv = self->priv;
   GstH264SPS *sps;
   GstH264PPS *pps;
   DXVA_PicParams_H264 pic_params = { 0, };
@@ -1005,15 +1033,15 @@ gst_d3d11_h264_dec_decode_slice (GstH264Decoder * decoder,
     pic_params.CurrFieldOrderCnt[1] = picture->bottom_field_order_cnt;
   }
 
-  memcpy (pic_params.RefFrameList, priv->ref_frame_list,
+  memcpy (pic_params.RefFrameList, self->ref_frame_list,
       sizeof (pic_params.RefFrameList));
-  memcpy (pic_params.FieldOrderCntList, priv->field_order_cnt_list,
+  memcpy (pic_params.FieldOrderCntList, self->field_order_cnt_list,
       sizeof (pic_params.FieldOrderCntList));
-  memcpy (pic_params.FrameNumList, priv->frame_num_list,
+  memcpy (pic_params.FrameNumList, self->frame_num_list,
       sizeof (pic_params.FrameNumList));
 
-  pic_params.UsedForReferenceFlags = priv->used_for_reference_flags;
-  pic_params.NonExistingFrameFlags = priv->non_existing_frame_flags;
+  pic_params.UsedForReferenceFlags = self->used_for_reference_flags;
+  pic_params.NonExistingFrameFlags = self->non_existing_frame_flags;
 
   GST_TRACE_OBJECT (self, "Getting picture param decoder buffer");
 
@@ -1159,39 +1187,133 @@ gst_d3d11_h264_dec_decode_slice (GstH264Decoder * decoder,
   return TRUE;
 }
 
+typedef struct
+{
+  guint width;
+  guint height;
+} GstD3D11H264DecResolution;
+
 void
 gst_d3d11_h264_dec_register (GstPlugin * plugin, GstD3D11Device * device,
-    guint rank)
+    GstD3D11Decoder * decoder, guint rank, gboolean legacy)
 {
-  GstD3D11Decoder *decoder;
-  GstVideoInfo info;
+  GType type;
+  gchar *type_name;
+  gchar *feature_name;
+  guint index = 0;
+  guint i;
   gboolean ret;
+  GUID profile;
+  GTypeInfo type_info = {
+    sizeof (GstD3D11H264DecClass),
+    NULL,
+    NULL,
+    (GClassInitFunc) gst_d3d11_h264_dec_class_init,
+    NULL,
+    NULL,
+    sizeof (GstD3D11H264Dec),
+    0,
+    (GInstanceInitFunc) gst_d3d11_h264_dec_init,
+  };
   static const GUID *supported_profiles[] = {
     &GST_GUID_D3D11_DECODER_PROFILE_H264_IDCT_FGT,
     &GST_GUID_D3D11_DECODER_PROFILE_H264_VLD_NOFGT,
     &GST_GUID_D3D11_DECODER_PROFILE_H264_VLD_FGT
   };
+  /* values were taken from chromium. See supported_profile_helper.cc */
+  GstD3D11H264DecResolution resolutions_to_check[] = {
+    {1920, 1088}, {2560, 1440}, {3840, 2160}, {4096, 2160},
+    {4096, 2304}
+  };
+  GstCaps *sink_caps = NULL;
+  GstCaps *src_caps = NULL;
+  guint max_width = 0;
+  guint max_height = 0;
+  guint resolution;
 
-  decoder = gst_d3d11_decoder_new (device);
-  if (!decoder) {
-    GST_WARNING_OBJECT (device, "decoder interface unavailable");
-    return;
-  }
-
-  /* FIXME: DXVA does not provide API for query supported resolution
-   * maybe we need some tries per standard resolution (e.g., HD, FullHD ...)
-   * to check supported resolution */
-  gst_video_info_set_format (&info, GST_VIDEO_FORMAT_NV12, 1280, 720);
-
-  ret = gst_d3d11_decoder_open (decoder, GST_D3D11_CODEC_H264,
-      &info, 1280, 720, NUM_OUTPUT_VIEW, supported_profiles,
-      G_N_ELEMENTS (supported_profiles));
-  gst_object_unref (decoder);
+  ret = gst_d3d11_decoder_get_supported_decoder_profile (decoder,
+      supported_profiles, G_N_ELEMENTS (supported_profiles), &profile);
 
   if (!ret) {
-    GST_WARNING_OBJECT (device, "cannot open decoder device");
+    GST_WARNING_OBJECT (device, "decoder profile unavailable");
     return;
   }
 
-  gst_element_register (plugin, "d3d11h264dec", rank, GST_TYPE_D3D11_H264_DEC);
+  ret = gst_d3d11_decoder_supports_format (decoder, &profile, DXGI_FORMAT_NV12);
+  if (!ret) {
+    GST_FIXME_OBJECT (device, "device does not support NV12 format");
+    return;
+  }
+
+  /* we will not check the maximum resolution for legacy devices.
+   * it might cause crash */
+  if (legacy) {
+    max_width = resolutions_to_check[0].width;
+    max_height = resolutions_to_check[0].height;
+  } else {
+    for (i = 0; i < G_N_ELEMENTS (resolutions_to_check); i++) {
+      if (gst_d3d11_decoder_supports_resolution (decoder, &profile,
+              DXGI_FORMAT_NV12, resolutions_to_check[i].width,
+              resolutions_to_check[i].height)) {
+        max_width = resolutions_to_check[i].width;
+        max_height = resolutions_to_check[i].height;
+
+        GST_DEBUG_OBJECT (device,
+            "device support resolution %dx%d", max_width, max_height);
+      } else {
+        break;
+      }
+    }
+  }
+
+  if (max_width == 0 || max_height == 0) {
+    GST_WARNING_OBJECT (device, "Couldn't query supported resolution");
+    return;
+  }
+
+  sink_caps = gst_caps_from_string ("video/x-h264, "
+      "stream-format= (string) { avc, avc3, byte-stream }, "
+      "alignment= (string) au, profile = (string) { high, main }, "
+      "framerate = " GST_VIDEO_FPS_RANGE);
+  src_caps = gst_caps_from_string ("video/x-raw("
+      GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY "), format = (string) NV12, "
+      "framerate = " GST_VIDEO_FPS_RANGE ";"
+      "video/x-raw, format = (string) NV12, "
+      "framerate = " GST_VIDEO_FPS_RANGE);
+
+  /* To cover both landscape and portrait, select max value */
+  resolution = MAX (max_width, max_height);
+  gst_caps_set_simple (sink_caps,
+      "width", GST_TYPE_INT_RANGE, 64, resolution,
+      "height", GST_TYPE_INT_RANGE, 64, resolution, NULL);
+  gst_caps_set_simple (src_caps,
+      "width", GST_TYPE_INT_RANGE, 64, resolution,
+      "height", GST_TYPE_INT_RANGE, 64, resolution, NULL);
+
+  type_info.class_data =
+      gst_d3d11_decoder_class_data_new (device, sink_caps, src_caps);
+
+  type_name = g_strdup ("GstD3D11H264Dec");
+  feature_name = g_strdup ("d3d11h264dec");
+
+  while (g_type_from_name (type_name)) {
+    index++;
+    g_free (type_name);
+    g_free (feature_name);
+    type_name = g_strdup_printf ("GstD3D11H264Device%dDec", index);
+    feature_name = g_strdup_printf ("d3d11h264device%ddec", index);
+  }
+
+  type = g_type_register_static (GST_TYPE_H264_DECODER,
+      type_name, &type_info, 0);
+
+  /* make lower rank than default device */
+  if (rank > 0 && index != 0)
+    rank--;
+
+  if (!gst_element_register (plugin, feature_name, rank, type))
+    GST_WARNING ("Failed to register plugin '%s'", type_name);
+
+  g_free (type_name);
+  g_free (feature_name);
 }

@@ -95,7 +95,8 @@ plugin_init (GstPlugin * plugin)
 #ifdef HAVE_DXVA_H
   /* DXVA2 API is availble since Windows 8 */
   if (gst_d3d11_is_windows_8_or_greater ()) {
-    GstD3D11Device *device;
+    GstD3D11Device *device = NULL;
+    gint i = 0;
 
     GST_DEBUG_CATEGORY_INIT (gst_d3d11_h264_dec_debug,
         "d3d11h264dec", 0, "Direct3D11 H.264 Video Decoder");
@@ -104,13 +105,34 @@ plugin_init (GstPlugin * plugin)
     GST_DEBUG_CATEGORY_INIT (gst_d3d11_h265_dec_debug,
         "d3d11h265dec", 0, "Direct3D11 H.265 Video Decoder");
 
-    device = gst_d3d11_device_new (0);
-    if (device) {
-      gst_d3d11_h264_dec_register (plugin, device, GST_RANK_SECONDARY);
-      gst_d3d11_h265_dec_register (plugin, device, GST_RANK_SECONDARY);
-      gst_d3d11_vp9_dec_register (plugin, device, GST_RANK_SECONDARY);
+    while ((device = gst_d3d11_device_new (i)) != NULL) {
+      GstD3D11Decoder *decoder = NULL;
+      gboolean legacy;
+      gboolean hardware;
 
-      gst_object_unref (device);
+      g_object_get (device, "hardware", &hardware, NULL);
+      if (!hardware)
+        goto clear;
+
+      decoder = gst_d3d11_decoder_new (device);
+      if (!decoder)
+        goto clear;
+
+      legacy = gst_d3d11_decoder_util_is_legacy_device (device);
+
+      gst_d3d11_h264_dec_register (plugin,
+          device, decoder, GST_RANK_SECONDARY, legacy);
+      if (!legacy) {
+        gst_d3d11_h265_dec_register (plugin, device, decoder,
+            GST_RANK_SECONDARY);
+        gst_d3d11_vp9_dec_register (plugin, device, decoder,
+            GST_RANK_SECONDARY);
+      }
+
+    clear:
+      gst_clear_object (&device);
+      gst_clear_object (&decoder);
+      i++;
     }
   }
 #endif

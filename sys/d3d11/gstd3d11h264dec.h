@@ -20,67 +20,15 @@
 #ifndef __GST_D3D11_H264_DEC_H__
 #define __GST_D3D11_H264_DEC_H__
 
-#include "gsth264decoder.h"
-#include "gsth264picture.h"
 #include "gstd3d11decoder.h"
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_D3D11_H264_DEC \
-  (gst_d3d11_h264_dec_get_type())
-#define GST_D3D11_H264_DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_D3D11_H264_DEC,GstD3D11H264Dec))
-#define GST_D3D11_H264_DEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_D3D11_H264_DEC,GstD3D11H264DecClass))
-#define GST_D3D11_H264_DEC_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_D3D11_H264_DEC,GstD3D11H264DecClass))
-#define GST_IS_D3D11_H264_DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_D3D11_H264_DEC))
-#define GST_IS_D3D11_H264_DEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_D3D11_H264_DEC))
-
-typedef struct _GstD3D11H264DecPrivate GstD3D11H264DecPrivate;
-
-struct _GstD3D11H264Dec
-{
-  GstH264Decoder parent;
-
-  GstVideoCodecState *output_state;
-
-  GstD3D11Device *device;
-  gint adapter;
-
-  guint width, height;
-  guint coded_width, coded_height;
-  guint bitdepth;
-  guint chroma_format_idc;
-  GstVideoFormat out_format;
-
-  /* Array of DXVA_Slice_H264_Short */
-  GArray *slice_list;
-
-  GstD3D11Decoder *d3d11_decoder;
-
-  /* Pointing current bitstream buffer */
-  guint current_offset;
-  guint bitstream_buffer_size;
-  guint8 * bitstream_buffer_bytes;
-
-  gboolean use_d3d11_output;
-
-  GstD3D11H264DecPrivate *priv;
-};
-
-struct _GstD3D11H264DecClass
-{
-  GstH264DecoderClass parent_class;
-};
-
-GType gst_d3d11_h264_dec_get_type (void);
-
 void  gst_d3d11_h264_dec_register (GstPlugin * plugin,
                                    GstD3D11Device * device,
-                                   guint rank);
+                                   GstD3D11Decoder * decoder,
+                                   guint rank,
+                                   gboolean legacy);
 
 G_END_DECLS
 

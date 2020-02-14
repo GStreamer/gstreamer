@@ -20,53 +20,13 @@
 #ifndef __GST_D3D11_VP9_DEC_H__
 #define __GST_D3D11_VP9_DEC_H__
 
-#include "gstvp9decoder.h"
-#include "gstvp9picture.h"
 #include "gstd3d11decoder.h"
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_D3D11_VP9_DEC \
-  (gst_d3d11_vp9_dec_get_type())
-#define GST_D3D11_VP9_DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_D3D11_VP9_DEC,GstD3D11Vp9Dec))
-#define GST_D3D11_VP9_DEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_D3D11_VP9_DEC,GstD3D11Vp9DecClass))
-#define GST_D3D11_VP9_DEC_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_D3D11_VP9_DEC,GstD3D11Vp9DecClass))
-#define GST_IS_D3D11_VP9_DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_D3D11_VP9_DEC))
-#define GST_IS_D3D11_VP9_DEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_D3D11_VP9_DEC))
-
-struct _GstD3D11Vp9Dec
-{
-  GstVp9Decoder parent;
-
-  GstVideoCodecState *output_state;
-
-  GstD3D11Device *device;
-  gint adapter;
-
-  GstD3D11Decoder *d3d11_decoder;
-
-  guint width, height;
-  GstVP9Profile profile;
-
-  GstVideoFormat out_format;
-
-  gboolean use_d3d11_output;
-};
-
-struct _GstD3D11Vp9DecClass
-{
-  GstVp9DecoderClass parent_class;
-};
-
-GType gst_d3d11_vp9_dec_get_type (void);
-
 void  gst_d3d11_vp9_dec_register (GstPlugin * plugin,
                                   GstD3D11Device * device,
+                                  GstD3D11Decoder * decoder,
                                   guint rank);
 
 G_END_DECLS

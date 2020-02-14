@@ -52,6 +52,8 @@
 #endif
 
 #include "gstd3d11vp9dec.h"
+#include "gstvp9decoder.h"
+#include "gstvp9picture.h"
 #include "gstd3d11memory.h"
 #include "gstd3d11bufferpool.h"
 #include <string.h>
@@ -70,10 +72,10 @@ GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_vp9_dec_debug);
 enum
 {
   PROP_0,
-  PROP_ADAPTER
+  PROP_ADAPTER,
+  PROP_DEVICE_ID,
+  PROP_VENDOR_ID,
 };
-
-#define DEFAULT_ADAPTER -1
 
 /* copied from d3d11.h since mingw header doesn't define them */
 DEFINE_GUID (GST_GUID_D3D11_DECODER_PROFILE_VP9_VLD_PROFILE0,
@@ -84,24 +86,38 @@ DEFINE_GUID (GST_GUID_D3D11_DECODER_PROFILE_VP9_VLD_10BIT_PROFILE2,
 /* reference list 8 + 4 margin */
 #define NUM_OUTPUT_VIEW 12
 
-static GstStaticPadTemplate sink_template =
-GST_STATIC_PAD_TEMPLATE (GST_VIDEO_DECODER_SINK_NAME,
-    GST_PAD_SINK, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-vp9")
-    );
+typedef struct _GstD3D11Vp9Dec
+{
+  GstVp9Decoder parent;
 
-static GstStaticPadTemplate src_template =
-    GST_STATIC_PAD_TEMPLATE (GST_VIDEO_DECODER_SRC_NAME,
-    GST_PAD_SRC, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, "{ NV12, P010_10LE }") "; "
-        GST_VIDEO_CAPS_MAKE ("{ NV12, P010_10LE }")));
+  GstVideoCodecState *output_state;
 
-#define parent_class gst_d3d11_vp9_dec_parent_class
-G_DEFINE_TYPE (GstD3D11Vp9Dec, gst_d3d11_vp9_dec, GST_TYPE_VP9_DECODER);
+  GstD3D11Device *device;
 
-static void gst_d3d11_vp9_dec_set_property (GObject * object,
-    guint prop_id, const GValue * value, GParamSpec * pspec);
+  GstD3D11Decoder *d3d11_decoder;
+
+  guint width, height;
+  GstVP9Profile profile;
+
+  GstVideoFormat out_format;
+
+  gboolean use_d3d11_output;
+} GstD3D11Vp9Dec;
+
+typedef struct _GstD3D11Vp9DecClass
+{
+  GstVp9DecoderClass parent_class;
+  guint adapter;
+  guint device_id;
+  guint vendor_id;
+} GstD3D11Vp9DecClass;
+
+static GstElementClass *parent_class = NULL;
+
+#define GST_D3D11_VP9_DEC(object) ((GstD3D11Vp9Dec *) (object))
+#define GST_D3D11_VP9_DEC_GET_CLASS(object) \
+    (G_TYPE_INSTANCE_GET_CLASS ((object),G_TYPE_FROM_INSTANCE (object),GstD3D11Vp9DecClass))
+
 static void gst_d3d11_vp9_dec_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 static void gst_d3d11_vp9_dec_set_context (GstElement * element,
@@ -132,34 +148,54 @@ static gboolean gst_d3d11_vp9_dec_end_picture (GstVp9Decoder * decoder,
     GstVp9Picture * picture);
 
 static void
-gst_d3d11_vp9_dec_class_init (GstD3D11Vp9DecClass * klass)
+gst_d3d11_vp9_dec_class_init (GstD3D11Vp9DecClass * klass, gpointer data)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstVideoDecoderClass *decoder_class = GST_VIDEO_DECODER_CLASS (klass);
   GstVp9DecoderClass *vp9decoder_class = GST_VP9_DECODER_CLASS (klass);
+  GstD3D11DecoderClassData *cdata = (GstD3D11DecoderClassData *) data;
+  gchar *long_name;
 
-  gobject_class->set_property = gst_d3d11_vp9_dec_set_property;
   gobject_class->get_property = gst_d3d11_vp9_dec_get_property;
 
   g_object_class_install_property (gobject_class, PROP_ADAPTER,
-      g_param_spec_int ("adapter", "Adapter",
-          "Adapter index for creating device (-1 for default)",
-          -1, G_MAXINT32, DEFAULT_ADAPTER,
-          G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
-          G_PARAM_STATIC_STRINGS));
+      g_param_spec_uint ("adapter", "Adapter",
+          "DXGI Adapter index for creating device",
+          0, G_MAXUINT32, cdata->adapter,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_DEVICE_ID,
+      g_param_spec_uint ("device-id", "Device Id",
+          "DXGI Device ID", 0, G_MAXUINT32, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_VENDOR_ID,
+      g_param_spec_uint ("vendor-id", "Vendor Id",
+          "DXGI Vendor ID", 0, G_MAXUINT32, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  parent_class = g_type_class_peek_parent (klass);
+
+  klass->adapter = cdata->adapter;
+  klass->device_id = cdata->device_id;
+  klass->vendor_id = cdata->vendor_id;
 
   element_class->set_context =
       GST_DEBUG_FUNCPTR (gst_d3d11_vp9_dec_set_context);
 
-  gst_element_class_set_static_metadata (element_class,
-      "Direct3D11 VP9 Video Decoder",
+  long_name = g_strdup_printf ("Direct3D11 VP9 %s Decoder", cdata->description);
+  gst_element_class_set_metadata (element_class, long_name,
       "Codec/Decoder/Video/Hardware",
       "A Direct3D11 based VP9 video decoder",
       "Seungha Yang <seungha.yang@navercorp.com>");
+  g_free (long_name);
 
-  gst_element_class_add_static_pad_template (element_class, &sink_template);
-  gst_element_class_add_static_pad_template (element_class, &src_template);
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+          cdata->sink_caps));
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+          cdata->src_caps));
+  gst_d3d11_decoder_class_data_free (cdata);
 
   decoder_class->open = GST_DEBUG_FUNCPTR (gst_d3d11_vp9_dec_open);
   decoder_class->close = GST_DEBUG_FUNCPTR (gst_d3d11_vp9_dec_close);
@@ -187,34 +223,23 @@ gst_d3d11_vp9_dec_class_init (GstD3D11Vp9DecClass * klass)
 static void
 gst_d3d11_vp9_dec_init (GstD3D11Vp9Dec * self)
 {
-  self->adapter = DEFAULT_ADAPTER;
-}
-
-static void
-gst_d3d11_vp9_dec_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstD3D11Vp9Dec *self = GST_D3D11_VP9_DEC (object);
-
-  switch (prop_id) {
-    case PROP_ADAPTER:
-      self->adapter = g_value_get_int (value);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
 }
 
 static void
 gst_d3d11_vp9_dec_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstD3D11Vp9Dec *self = GST_D3D11_VP9_DEC (object);
+  GstD3D11Vp9DecClass *klass = GST_D3D11_VP9_DEC_GET_CLASS (object);
 
   switch (prop_id) {
     case PROP_ADAPTER:
-      g_value_set_int (value, self->adapter);
+      g_value_set_uint (value, klass->adapter);
+      break;
+    case PROP_DEVICE_ID:
+      g_value_set_uint (value, klass->device_id);
+      break;
+    case PROP_VENDOR_ID:
+      g_value_set_uint (value, klass->vendor_id);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -226,8 +251,10 @@ static void
 gst_d3d11_vp9_dec_set_context (GstElement * element, GstContext * context)
 {
   GstD3D11Vp9Dec *self = GST_D3D11_VP9_DEC (element);
+  GstD3D11Vp9DecClass *klass = GST_D3D11_VP9_DEC_GET_CLASS (self);
 
-  gst_d3d11_handle_set_context (element, context, self->adapter, &self->device);
+  gst_d3d11_handle_set_context (element, context, klass->adapter,
+      &self->device);
 
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
@@ -236,8 +263,9 @@ static gboolean
 gst_d3d11_vp9_dec_open (GstVideoDecoder * decoder)
 {
   GstD3D11Vp9Dec *self = GST_D3D11_VP9_DEC (decoder);
+  GstD3D11Vp9DecClass *klass = GST_D3D11_VP9_DEC_GET_CLASS (self);
 
-  if (!gst_d3d11_ensure_element_data (GST_ELEMENT_CAST (self), self->adapter,
+  if (!gst_d3d11_ensure_element_data (GST_ELEMENT_CAST (self), klass->adapter,
           &self->device)) {
     GST_ERROR_OBJECT (self, "Cannot create d3d11device");
     return FALSE;
@@ -1139,37 +1167,170 @@ gst_d3d11_vp9_dec_end_picture (GstVp9Decoder * decoder, GstVp9Picture * picture)
   return TRUE;
 }
 
+typedef struct
+{
+  guint width;
+  guint height;
+} GstD3D11Vp9DecResolution;
+
 void
 gst_d3d11_vp9_dec_register (GstPlugin * plugin, GstD3D11Device * device,
-    guint rank)
+    GstD3D11Decoder * decoder, guint rank)
 {
-  GstD3D11Decoder *decoder;
-  GstVideoInfo info;
-  gboolean ret;
-  static const GUID *supported_profiles[] = {
-    &GST_GUID_D3D11_DECODER_PROFILE_VP9_VLD_PROFILE0,
+  GType type;
+  gchar *type_name;
+  gchar *feature_name;
+  guint index = 0;
+  guint i;
+  GUID profile;
+  GTypeInfo type_info = {
+    sizeof (GstD3D11Vp9DecClass),
+    NULL,
+    NULL,
+    (GClassInitFunc) gst_d3d11_vp9_dec_class_init,
+    NULL,
+    NULL,
+    sizeof (GstD3D11Vp9Dec),
+    0,
+    (GInstanceInitFunc) gst_d3d11_vp9_dec_init,
   };
+  static const GUID *profile2_guid =
+      &GST_GUID_D3D11_DECODER_PROFILE_VP9_VLD_10BIT_PROFILE2;
+  static const GUID *profile0_guid =
+      &GST_GUID_D3D11_DECODER_PROFILE_VP9_VLD_PROFILE0;
+  /* values were taken from chromium. See supported_profile_helper.cc */
+  GstD3D11Vp9DecResolution resolutions_to_check[] = {
+    {4096, 2160}, {4096, 2304}, {7680, 4320}, {8192, 4320}, {8192, 8192}
+  };
+  GstCaps *sink_caps = NULL;
+  GstCaps *src_caps = NULL;
+  guint max_width = 0;
+  guint max_height = 0;
+  guint resolution;
+  gboolean have_profile2 = FALSE;
+  gboolean have_profile0 = FALSE;
+  DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN;
 
-  decoder = gst_d3d11_decoder_new (device);
-  if (!decoder) {
-    GST_WARNING_OBJECT (device, "decoder interface unavailable");
+  have_profile2 = gst_d3d11_decoder_get_supported_decoder_profile (decoder,
+      &profile2_guid, 1, &profile);
+  if (!have_profile2) {
+    GST_DEBUG_OBJECT (device,
+        "decoder does not support VP9_VLD_10BIT_PROFILE2");
+  } else {
+    have_profile2 &=
+        gst_d3d11_decoder_supports_format (decoder, &profile, DXGI_FORMAT_P010);
+    have_profile2 &=
+        gst_d3d11_decoder_supports_format (decoder, &profile, DXGI_FORMAT_NV12);
+    if (!have_profile2) {
+      GST_FIXME_OBJECT (device,
+          "device does not support P010 and/or NV12 format");
+    }
+  }
+
+  have_profile0 = gst_d3d11_decoder_get_supported_decoder_profile (decoder,
+      &profile0_guid, 1, &profile);
+  if (!have_profile0) {
+    GST_DEBUG_OBJECT (device, "decoder does not support VP9_VLD_PROFILE0");
+  } else {
+    have_profile0 =
+        gst_d3d11_decoder_supports_format (decoder, &profile, DXGI_FORMAT_NV12);
+    if (!have_profile0) {
+      GST_FIXME_OBJECT (device, "device does not support NV12 format");
+    }
+  }
+
+  if (!have_profile2 && !have_profile0) {
+    GST_INFO_OBJECT (device, "device does not support VP9 decoding");
     return;
   }
 
-  /* FIXME: DXVA does not provide API for query supported resolution
-   * maybe we need some tries per standard resolution (e.g., HD, FullHD ...)
-   * to check supported resolution */
-  gst_video_info_set_format (&info, GST_VIDEO_FORMAT_NV12, 1280, 720);
+  if (have_profile0) {
+    profile = *profile0_guid;
+    format = DXGI_FORMAT_NV12;
+  } else {
+    profile = *profile2_guid;
+    format = DXGI_FORMAT_P010;
+  }
 
-  ret = gst_d3d11_decoder_open (decoder, GST_D3D11_CODEC_VP9,
-      &info, 1280, 720, NUM_OUTPUT_VIEW, supported_profiles,
-      G_N_ELEMENTS (supported_profiles));
-  gst_object_unref (decoder);
+  for (i = 0; i < G_N_ELEMENTS (resolutions_to_check); i++) {
+    if (gst_d3d11_decoder_supports_resolution (decoder, &profile,
+            format, resolutions_to_check[i].width,
+            resolutions_to_check[i].height)) {
+      max_width = resolutions_to_check[i].width;
+      max_height = resolutions_to_check[i].height;
 
-  if (!ret) {
-    GST_WARNING_OBJECT (device, "cannot open decoder device");
+      GST_DEBUG_OBJECT (device,
+          "device support resolution %dx%d", max_width, max_height);
+    } else {
+      break;
+    }
+  }
+
+  if (max_width == 0 || max_height == 0) {
+    GST_WARNING_OBJECT (device, "Couldn't query supported resolution");
     return;
   }
 
-  gst_element_register (plugin, "d3d11vp9dec", rank, GST_TYPE_D3D11_VP9_DEC);
+  sink_caps = gst_caps_from_string ("video/x-vp9, "
+      "framerate = " GST_VIDEO_FPS_RANGE);
+  src_caps = gst_caps_from_string ("video/x-raw("
+      GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY "), "
+      "framerate = " GST_VIDEO_FPS_RANGE ";"
+      "video/x-raw, " "framerate = " GST_VIDEO_FPS_RANGE);
+
+  if (have_profile2) {
+    GValue format_list = G_VALUE_INIT;
+    GValue format_value = G_VALUE_INIT;
+
+    g_value_init (&format_list, GST_TYPE_LIST);
+
+    g_value_init (&format_value, G_TYPE_STRING);
+    g_value_set_string (&format_value, "NV12");
+    gst_value_list_append_and_take_value (&format_list, &format_value);
+
+    g_value_init (&format_value, G_TYPE_STRING);
+    g_value_set_string (&format_value, "P010_10LE");
+    gst_value_list_append_and_take_value (&format_list, &format_value);
+
+    gst_caps_set_value (src_caps, "format", &format_list);
+    g_value_unset (&format_list);
+  } else {
+    gst_caps_set_simple (src_caps, "format", G_TYPE_STRING, "NV12", NULL);
+  }
+
+  /* To cover both landscape and portrait, select max value */
+  resolution = MAX (max_width, max_height);
+  gst_caps_set_simple (sink_caps,
+      "width", GST_TYPE_INT_RANGE, 64, resolution,
+      "height", GST_TYPE_INT_RANGE, 64, resolution, NULL);
+  gst_caps_set_simple (src_caps,
+      "width", GST_TYPE_INT_RANGE, 64, resolution,
+      "height", GST_TYPE_INT_RANGE, 64, resolution, NULL);
+
+  type_info.class_data =
+      gst_d3d11_decoder_class_data_new (device, sink_caps, src_caps);
+
+  type_name = g_strdup ("GstD3D11Vp9Dec");
+  feature_name = g_strdup ("d3d11vp9dec");
+
+  while (g_type_from_name (type_name)) {
+    index++;
+    g_free (type_name);
+    g_free (feature_name);
+    type_name = g_strdup_printf ("GstD3D11Vp9Device%dDec", index);
+    feature_name = g_strdup_printf ("d3d11vp9device%ddec", index);
+  }
+
+  type = g_type_register_static (GST_TYPE_VP9_DECODER,
+      type_name, &type_info, 0);
+
+  /* make lower rank than default device */
+  if (rank > 0 && index != 0)
+    rank--;
+
+  if (!gst_element_register (plugin, feature_name, rank, type))
+    GST_WARNING ("Failed to register plugin '%s'", type_name);
+
+  g_free (type_name);
+  g_free (feature_name);
 }

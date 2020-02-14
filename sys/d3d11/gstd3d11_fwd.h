@@ -87,15 +87,6 @@ typedef struct _GstD3D11Decoder GstD3D11Decoder;
 typedef struct _GstD3D11DecoderClass GstD3D11DecoderClass;
 typedef struct _GstD3D11DecoderPrivate GstD3D11DecoderPrivate;
 
-typedef struct _GstD3D11H264Dec GstD3D11H264Dec;
-typedef struct _GstD3D11H264DecClass GstD3D11H264DecClass;
-
-typedef struct _GstD3D11Vp9Dec GstD3D11Vp9Dec;
-typedef struct _GstD3D11Vp9DecClass GstD3D11Vp9DecClass;
-
-typedef struct _GstD3D11H265Dec GstD3D11H265Dec;
-typedef struct _GstD3D11H265DecClass GstD3D11H265DecClass;
-
 G_END_DECLS
 
 #endif /* __GST_D3D11_FWD_H__ */

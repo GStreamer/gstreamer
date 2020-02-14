@@ -15,6 +15,36 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
+ *
+ * NOTE: some of implementations are copied/modified from Chromium code
+ *
+ * Copyright 2015 The Chromium Authors. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ *    * Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ *    * Redistributions in binary form must reproduce the above
+ * copyright notice, this list of conditions and the following disclaimer
+ * in the documentation and/or other materials provided with the
+ * distribution.
+ *    * Neither the name of Google Inc. nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -425,51 +455,29 @@ error:
 }
 
 gboolean
-gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
-    GstVideoInfo * info, guint coded_width, guint coded_height,
-    guint pool_size, const GUID ** decoder_profiles, guint profile_size)
+gst_d3d11_decoder_get_supported_decoder_profile (GstD3D11Decoder * decoder,
+    const GUID ** decoder_profiles, guint profile_size, GUID * selected_profile)
 {
   GstD3D11DecoderPrivate *priv;
-  const GstD3D11Format *d3d11_format;
-  HRESULT hr;
-  BOOL can_support = FALSE;
-  guint config_count;
-  D3D11_VIDEO_DECODER_CONFIG *config_list;
-  D3D11_VIDEO_DECODER_CONFIG *best_config = NULL;
-  D3D11_VIDEO_DECODER_DESC decoder_desc = { 0, };
-  const GUID *selected_profile = NULL;
   GUID *guid_list = NULL;
+  const GUID *profile = NULL;
   guint available_profile_count;
   gint i, j;
+  HRESULT hr;
 
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
-  g_return_val_if_fail (codec > GST_D3D11_CODEC_NONE, FALSE);
-  g_return_val_if_fail (codec < GST_D3D11_CODEC_LAST, FALSE);
-  g_return_val_if_fail (info != NULL, FALSE);
-  g_return_val_if_fail (coded_width >= GST_VIDEO_INFO_WIDTH (info), FALSE);
-  g_return_val_if_fail (coded_height >= GST_VIDEO_INFO_HEIGHT (info), FALSE);
-  g_return_val_if_fail (pool_size > 0, FALSE);
   g_return_val_if_fail (decoder_profiles != NULL, FALSE);
   g_return_val_if_fail (profile_size > 0, FALSE);
+  g_return_val_if_fail (selected_profile != NULL, FALSE);
 
   priv = decoder->priv;
-  decoder->opened = FALSE;
 
-  d3d11_format = gst_d3d11_device_format_from_gst (priv->device,
-      GST_VIDEO_INFO_FORMAT (info));
-  if (!d3d11_format || d3d11_format->dxgi_format == DXGI_FORMAT_UNKNOWN) {
-    GST_ERROR_OBJECT (decoder, "Could not determine dxgi format from %s",
-        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (info)));
-    return FALSE;
-  }
-
-  gst_d3d11_device_lock (priv->device);
   available_profile_count =
       ID3D11VideoDevice_GetVideoDecoderProfileCount (priv->video_device);
 
   if (available_profile_count == 0) {
-    GST_ERROR_OBJECT (decoder, "No available decoder profile");
-    goto error;
+    GST_WARNING_OBJECT (decoder, "No available decoder profile");
+    return FALSE;
   }
 
   GST_DEBUG_OBJECT (decoder,
@@ -480,8 +488,8 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
     hr = ID3D11VideoDevice_GetVideoDecoderProfile (priv->video_device,
         i, &guid_list[i]);
     if (!gst_d3d11_result (hr, priv->device)) {
-      GST_ERROR_OBJECT (decoder, "Failed to get %d th decoder profile", i);
-      goto error;
+      GST_WARNING_OBJECT (decoder, "Failed to get %d th decoder profile", i);
+      return FALSE;
     }
   }
 
@@ -512,29 +520,77 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
   for (i = 0; i < profile_size; i++) {
     for (j = 0; j < available_profile_count; j++) {
       if (IsEqualGUID (decoder_profiles[i], &guid_list[j])) {
-        selected_profile = decoder_profiles[i];
+        profile = decoder_profiles[i];
         break;
       }
     }
   }
 
-  if (!selected_profile) {
-    GST_ERROR_OBJECT (decoder, "No supported decoder profile");
+  if (!profile) {
+    GST_WARNING_OBJECT (decoder, "No supported decoder profile");
+    return FALSE;
+  }
+
+  *selected_profile = *profile;
+
+  GST_DEBUG_OBJECT (decoder,
+      "Selected guid "
+      "{ %8.8x-%4.4x-%4.4x-%2.2x%2.2x-%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x }",
+      (guint) selected_profile->Data1, (guint) selected_profile->Data2,
+      (guint) selected_profile->Data3,
+      selected_profile->Data4[0], selected_profile->Data4[1],
+      selected_profile->Data4[2], selected_profile->Data4[3],
+      selected_profile->Data4[4], selected_profile->Data4[5],
+      selected_profile->Data4[6], selected_profile->Data4[7]);
+
+  return TRUE;
+}
+
+gboolean
+gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
+    GstVideoInfo * info, guint coded_width, guint coded_height,
+    guint pool_size, const GUID ** decoder_profiles, guint profile_size)
+{
+  GstD3D11DecoderPrivate *priv;
+  const GstD3D11Format *d3d11_format;
+  HRESULT hr;
+  BOOL can_support = FALSE;
+  guint config_count;
+  D3D11_VIDEO_DECODER_CONFIG *config_list;
+  D3D11_VIDEO_DECODER_CONFIG *best_config = NULL;
+  D3D11_VIDEO_DECODER_DESC decoder_desc = { 0, };
+  GUID selected_profile;
+  gint i;
+
+  g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
+  g_return_val_if_fail (codec > GST_D3D11_CODEC_NONE, FALSE);
+  g_return_val_if_fail (codec < GST_D3D11_CODEC_LAST, FALSE);
+  g_return_val_if_fail (info != NULL, FALSE);
+  g_return_val_if_fail (coded_width >= GST_VIDEO_INFO_WIDTH (info), FALSE);
+  g_return_val_if_fail (coded_height >= GST_VIDEO_INFO_HEIGHT (info), FALSE);
+  g_return_val_if_fail (pool_size > 0, FALSE);
+  g_return_val_if_fail (decoder_profiles != NULL, FALSE);
+  g_return_val_if_fail (profile_size > 0, FALSE);
+
+  priv = decoder->priv;
+  decoder->opened = FALSE;
+
+  d3d11_format = gst_d3d11_device_format_from_gst (priv->device,
+      GST_VIDEO_INFO_FORMAT (info));
+  if (!d3d11_format || d3d11_format->dxgi_format == DXGI_FORMAT_UNKNOWN) {
+    GST_ERROR_OBJECT (decoder, "Could not determine dxgi format from %s",
+        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (info)));
+    return FALSE;
+  }
+
+  gst_d3d11_device_lock (priv->device);
+  if (!gst_d3d11_decoder_get_supported_decoder_profile (decoder,
+          decoder_profiles, profile_size, &selected_profile)) {
     goto error;
-  } else {
-    GST_DEBUG_OBJECT (decoder,
-        "Selected guid "
-        "{ %8.8x-%4.4x-%4.4x-%2.2x%2.2x-%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x }",
-        (guint) selected_profile->Data1, (guint) selected_profile->Data2,
-        (guint) selected_profile->Data3,
-        selected_profile->Data4[0], selected_profile->Data4[1],
-        selected_profile->Data4[2], selected_profile->Data4[3],
-        selected_profile->Data4[4], selected_profile->Data4[5],
-        selected_profile->Data4[6], selected_profile->Data4[7]);
   }
 
   hr = ID3D11VideoDevice_CheckVideoDecoderFormat (priv->video_device,
-      selected_profile, d3d11_format->dxgi_format, &can_support);
+      &selected_profile, d3d11_format->dxgi_format, &can_support);
   if (!gst_d3d11_result (hr, priv->device) || !can_support) {
     GST_ERROR_OBJECT (decoder,
         "VideoDevice could not support dxgi format %d, hr: 0x%x",
@@ -547,7 +603,7 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
   decoder_desc.SampleWidth = coded_width;
   decoder_desc.SampleHeight = coded_height;
   decoder_desc.OutputFormat = d3d11_format->dxgi_format;
-  decoder_desc.Guid = *selected_profile;
+  decoder_desc.Guid = selected_profile;
 
   hr = ID3D11VideoDevice_GetVideoDecoderConfigCount (priv->video_device,
       &decoder_desc, &config_count);
@@ -590,7 +646,7 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
   }
 
   if (!gst_d3d11_decoder_prepare_output_view_pool (decoder,
-          info, coded_width, coded_height, pool_size, selected_profile)) {
+          info, coded_width, coded_height, pool_size, &selected_profile)) {
     GST_ERROR_OBJECT (decoder, "Couldn't prepare output view pool");
     goto error;
   }
@@ -635,7 +691,7 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
   priv->staging_box.right = GST_VIDEO_INFO_WIDTH (info);
   priv->staging_box.bottom = GST_VIDEO_INFO_HEIGHT (info);
 
-  priv->decoder_profile = *selected_profile;
+  priv->decoder_profile = selected_profile;
   decoder->opened = TRUE;
   gst_d3d11_device_unlock (priv->device);
 
@@ -1016,4 +1072,200 @@ gst_d3d11_decoder_copy_decoder_buffer (GstD3D11Decoder * decoder,
   }
 
   return copy_to_system (decoder, info, decoder_buffer, output);
+}
+
+/* Keep sync with chromium and keep in sorted order.
+ * See supported_profile_helpers.cc in chromium */
+static const guint legacy_amd_list[] = {
+  0x130f, 0x6700, 0x6701, 0x6702, 0x6703, 0x6704, 0x6705, 0x6706, 0x6707,
+  0x6708, 0x6709, 0x6718, 0x6719, 0x671c, 0x671d, 0x671f, 0x6720, 0x6721,
+  0x6722, 0x6723, 0x6724, 0x6725, 0x6726, 0x6727, 0x6728, 0x6729, 0x6738,
+  0x6739, 0x673e, 0x6740, 0x6741, 0x6742, 0x6743, 0x6744, 0x6745, 0x6746,
+  0x6747, 0x6748, 0x6749, 0x674a, 0x6750, 0x6751, 0x6758, 0x6759, 0x675b,
+  0x675d, 0x675f, 0x6760, 0x6761, 0x6762, 0x6763, 0x6764, 0x6765, 0x6766,
+  0x6767, 0x6768, 0x6770, 0x6771, 0x6772, 0x6778, 0x6779, 0x677b, 0x6798,
+  0x67b1, 0x6821, 0x683d, 0x6840, 0x6841, 0x6842, 0x6843, 0x6849, 0x6850,
+  0x6858, 0x6859, 0x6880, 0x6888, 0x6889, 0x688a, 0x688c, 0x688d, 0x6898,
+  0x6899, 0x689b, 0x689c, 0x689d, 0x689e, 0x68a0, 0x68a1, 0x68a8, 0x68a9,
+  0x68b0, 0x68b8, 0x68b9, 0x68ba, 0x68be, 0x68bf, 0x68c0, 0x68c1, 0x68c7,
+  0x68c8, 0x68c9, 0x68d8, 0x68d9, 0x68da, 0x68de, 0x68e0, 0x68e1, 0x68e4,
+  0x68e5, 0x68e8, 0x68e9, 0x68f1, 0x68f2, 0x68f8, 0x68f9, 0x68fa, 0x68fe,
+  0x9400, 0x9401, 0x9402, 0x9403, 0x9405, 0x940a, 0x940b, 0x940f, 0x9440,
+  0x9441, 0x9442, 0x9443, 0x9444, 0x9446, 0x944a, 0x944b, 0x944c, 0x944e,
+  0x9450, 0x9452, 0x9456, 0x945a, 0x945b, 0x945e, 0x9460, 0x9462, 0x946a,
+  0x946b, 0x947a, 0x947b, 0x9480, 0x9487, 0x9488, 0x9489, 0x948a, 0x948f,
+  0x9490, 0x9491, 0x9495, 0x9498, 0x949c, 0x949e, 0x949f, 0x94a0, 0x94a1,
+  0x94a3, 0x94b1, 0x94b3, 0x94b4, 0x94b5, 0x94b9, 0x94c0, 0x94c1, 0x94c3,
+  0x94c4, 0x94c5, 0x94c6, 0x94c7, 0x94c8, 0x94c9, 0x94cb, 0x94cc, 0x94cd,
+  0x9500, 0x9501, 0x9504, 0x9505, 0x9506, 0x9507, 0x9508, 0x9509, 0x950f,
+  0x9511, 0x9515, 0x9517, 0x9519, 0x9540, 0x9541, 0x9542, 0x954e, 0x954f,
+  0x9552, 0x9553, 0x9555, 0x9557, 0x955f, 0x9580, 0x9581, 0x9583, 0x9586,
+  0x9587, 0x9588, 0x9589, 0x958a, 0x958b, 0x958c, 0x958d, 0x958e, 0x958f,
+  0x9590, 0x9591, 0x9593, 0x9595, 0x9596, 0x9597, 0x9598, 0x9599, 0x959b,
+  0x95c0, 0x95c2, 0x95c4, 0x95c5, 0x95c6, 0x95c7, 0x95c9, 0x95cc, 0x95cd,
+  0x95ce, 0x95cf, 0x9610, 0x9611, 0x9612, 0x9613, 0x9614, 0x9615, 0x9616,
+  0x9640, 0x9641, 0x9642, 0x9643, 0x9644, 0x9645, 0x9647, 0x9648, 0x9649,
+  0x964a, 0x964b, 0x964c, 0x964e, 0x964f, 0x9710, 0x9711, 0x9712, 0x9713,
+  0x9714, 0x9715, 0x9802, 0x9803, 0x9804, 0x9805, 0x9806, 0x9807, 0x9808,
+  0x9809, 0x980a, 0x9830, 0x983d, 0x9850, 0x9851, 0x9874, 0x9900, 0x9901,
+  0x9903, 0x9904, 0x9905, 0x9906, 0x9907, 0x9908, 0x9909, 0x990a, 0x990b,
+  0x990c, 0x990d, 0x990e, 0x990f, 0x9910, 0x9913, 0x9917, 0x9918, 0x9919,
+  0x9990, 0x9991, 0x9992, 0x9993, 0x9994, 0x9995, 0x9996, 0x9997, 0x9998,
+  0x9999, 0x999a, 0x999b, 0x999c, 0x999d, 0x99a0, 0x99a2, 0x99a4
+};
+
+static const guint legacy_intel_list[] = {
+  0x102, 0x106, 0x116, 0x126, 0x152, 0x156, 0x166,
+  0x402, 0x406, 0x416, 0x41e, 0xa06, 0xa16, 0xf31,
+};
+
+static gint
+binary_search_compare (const guint * a, const guint * b)
+{
+  return *a - *b;
+}
+
+/* Certain AMD GPU drivers like R600, R700, Evergreen and Cayman and some second
+ * generation Intel GPU drivers crash if we create a video device with a
+ * resolution higher then 1920 x 1088. This function checks if the GPU is in
+ * this list and if yes returns true. */
+gboolean
+gst_d3d11_decoder_util_is_legacy_device (GstD3D11Device * device)
+{
+  const guint amd_id[] = { 0x1002, 0x1022 };
+  const guint intel_id = 0x8086;
+  guint device_id = 0;
+  guint vendor_id = 0;
+  guint *match = NULL;
+
+  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), FALSE);
+
+  g_object_get (device, "device-id", &device_id, "vendor-id", &vendor_id, NULL);
+
+  if (vendor_id == amd_id[0] || vendor_id == amd_id[1]) {
+    match =
+        (guint *) gst_util_array_binary_search ((gpointer) legacy_amd_list,
+        G_N_ELEMENTS (legacy_amd_list), sizeof (guint),
+        (GCompareDataFunc) binary_search_compare,
+        GST_SEARCH_MODE_EXACT, &device_id, NULL);
+  } else if (vendor_id == intel_id) {
+    match =
+        (guint *) gst_util_array_binary_search ((gpointer) legacy_intel_list,
+        G_N_ELEMENTS (legacy_intel_list), sizeof (guint),
+        (GCompareDataFunc) binary_search_compare,
+        GST_SEARCH_MODE_EXACT, &device_id, NULL);
+  }
+
+  if (match) {
+    GST_DEBUG_OBJECT (device, "it's legacy device");
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+gboolean
+gst_d3d11_decoder_supports_format (GstD3D11Decoder * decoder,
+    const GUID * decoder_profile, DXGI_FORMAT format)
+{
+  GstD3D11DecoderPrivate *priv;
+  HRESULT hr;
+  BOOL can_support = FALSE;
+
+  g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
+  g_return_val_if_fail (decoder_profile != NULL, FALSE);
+  g_return_val_if_fail (format != DXGI_FORMAT_UNKNOWN, FALSE);
+
+  priv = decoder->priv;
+
+  hr = ID3D11VideoDevice_CheckVideoDecoderFormat (priv->video_device,
+      decoder_profile, format, &can_support);
+  if (!gst_d3d11_result (hr, priv->device) || !can_support) {
+    GST_DEBUG_OBJECT (decoder,
+        "VideoDevice could not support dxgi format %d, hr: 0x%x",
+        format, (guint) hr);
+
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+/* Don't call this method with legacy device */
+gboolean
+gst_d3d11_decoder_supports_resolution (GstD3D11Decoder * decoder,
+    const GUID * decoder_profile, DXGI_FORMAT format, guint width, guint height)
+{
+  D3D11_VIDEO_DECODER_DESC desc;
+  GstD3D11DecoderPrivate *priv;
+  HRESULT hr;
+  UINT config_count;
+
+  g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
+  g_return_val_if_fail (decoder_profile != NULL, FALSE);
+  g_return_val_if_fail (format != DXGI_FORMAT_UNKNOWN, FALSE);
+
+  priv = decoder->priv;
+
+  desc.SampleWidth = width;
+  desc.SampleHeight = height;
+  desc.OutputFormat = format;
+  desc.Guid = *decoder_profile;
+
+  hr = ID3D11VideoDevice_GetVideoDecoderConfigCount (priv->video_device,
+      &desc, &config_count);
+  if (!gst_d3d11_result (hr, priv->device) || config_count == 0) {
+    GST_DEBUG_OBJECT (decoder, "Could not get decoder config count, hr: 0x%x",
+        (guint) hr);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
+ * gst_d3d11_decoder_class_data_new:
+ * @device: (transfer none): a #GstD3D11Device
+ * @sink_caps: (transfer full): a #GstCaps
+ * @src_caps: (transfer full): a #GstCaps
+ *
+ * Create new #GstD3D11DecoderClassData
+ *
+ * Returns: (transfer full): the new #GstD3D11DecoderClassData
+ */
+GstD3D11DecoderClassData *
+gst_d3d11_decoder_class_data_new (GstD3D11Device * device,
+    GstCaps * sink_caps, GstCaps * src_caps)
+{
+  GstD3D11DecoderClassData *ret;
+
+  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
+  g_return_val_if_fail (sink_caps != NULL, NULL);
+  g_return_val_if_fail (src_caps != NULL, NULL);
+
+  ret = g_new0 (GstD3D11DecoderClassData, 1);
+
+  /* class data will be leaked if the element never gets instantiated */
+  GST_MINI_OBJECT_FLAG_SET (sink_caps, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
+  GST_MINI_OBJECT_FLAG_SET (src_caps, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
+
+  g_object_get (device, "adapter", &ret->adapter,
+      "device-id", &ret->device_id, "vendor-id", &ret->vendor_id,
+      "description", &ret->description, NULL);
+  ret->sink_caps = sink_caps;
+  ret->src_caps = src_caps;
+
+  return ret;
+}
+
+void
+gst_d3d11_decoder_class_data_free (GstD3D11DecoderClassData * data)
+{
+  if (!data)
+    return;
+
+  gst_clear_caps (&data->sink_caps);
+  gst_clear_caps (&data->src_caps);
+  g_free (data->description);
+  g_free (data);
 }

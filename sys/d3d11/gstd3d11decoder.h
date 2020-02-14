@@ -61,6 +61,16 @@ typedef enum
   GST_D3D11_CODEC_LAST
 } GstD3D11Codec;
 
+typedef struct
+{
+  GstCaps *sink_caps;
+  GstCaps *src_caps;
+  guint adapter;
+  guint device_id;
+  guint vendor_id;
+  gchar *description;
+} GstD3D11DecoderClassData;
+
 struct _GstD3D11Decoder
 {
   GstObject parent;
@@ -124,6 +134,30 @@ gboolean          gst_d3d11_decoder_copy_decoder_buffer (GstD3D11Decoder * decod
                                                          GstVideoInfo * info,
                                                          GstBuffer * decoder_buffer,
                                                          GstBuffer * output);
+
+/* Utils for class registration */
+gboolean          gst_d3d11_decoder_util_is_legacy_device (GstD3D11Device * device);
+
+gboolean          gst_d3d11_decoder_get_supported_decoder_profile (GstD3D11Decoder * decoder,
+                                                                   const GUID ** decoder_profiles,
+                                                                   guint profile_size,
+                                                                   GUID * selected_profile);
+
+gboolean          gst_d3d11_decoder_supports_format (GstD3D11Decoder * decoder,
+                                                     const GUID * decoder_profile,
+                                                     DXGI_FORMAT format);
+
+gboolean          gst_d3d11_decoder_supports_resolution (GstD3D11Decoder * decoder,
+                                                         const GUID * decoder_profile,
+                                                         DXGI_FORMAT format,
+                                                         guint width,
+                                                         guint height);
+
+GstD3D11DecoderClassData * gst_d3d11_decoder_class_data_new (GstD3D11Device * device,
+                                                             GstCaps * sink_caps,
+                                                             GstCaps * src_caps);
+
+void              gst_d3d11_decoder_class_data_free (GstD3D11DecoderClassData * data);
 
 G_END_DECLS
 
