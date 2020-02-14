@@ -42,7 +42,12 @@
 GST_DEBUG_CATEGORY_STATIC (dmabuf_debug);
 #define GST_CAT_DEFAULT dmabuf_debug
 
-G_DEFINE_TYPE (GstDmaBufAllocator, gst_dmabuf_allocator, GST_TYPE_FD_ALLOCATOR);
+#define _do_init                                        \
+    GST_DEBUG_CATEGORY_INIT (dmabuf_debug,              \
+    "dmabuf", 0, "dmabuf memory");
+
+G_DEFINE_TYPE_WITH_CODE (GstDmaBufAllocator, gst_dmabuf_allocator,
+    GST_TYPE_FD_ALLOCATOR, _do_init);
 
 static gpointer
 gst_dmabuf_mem_map (GstMemory * gmem, GstMapInfo * info, gsize maxsize)
@@ -126,8 +131,6 @@ GstAllocator *
 gst_dmabuf_allocator_new (void)
 {
   GstAllocator *alloc;
-
-  GST_DEBUG_CATEGORY_INIT (dmabuf_debug, "dmabuf", 0, "dmabuf memory");
 
   alloc = g_object_new (GST_TYPE_DMABUF_ALLOCATOR, NULL);
   gst_object_ref_sink (alloc);
