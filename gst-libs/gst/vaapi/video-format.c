@@ -32,6 +32,9 @@
 #include "gstvaapisurface.h"
 #include "video-format.h"
 
+#define DEBUG 1
+#include "gst/vaapi/gstvaapidebug.h"
+
 typedef struct _GstVideoFormatMapMap
 {
   GstVideoFormat format;
