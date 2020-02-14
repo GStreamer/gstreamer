@@ -22,6 +22,7 @@
  */
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstharness.h>
+#include <gst/rtp/gstrtpbuffer.h>
 
 GST_START_TEST (rtpfunnel_ssrc_demuxing)
 {
@@ -81,7 +82,8 @@ GST_START_TEST (rtpfunnel_ssrc_demuxing)
   gst_harness_teardown (h1);
 }
 
-GST_END_TEST
+GST_END_TEST;
+
 GST_START_TEST (rtpfunnel_ssrc_downstream_not_leaking_through)
 {
   GstHarness *h = gst_harness_new_with_padnames ("rtpfunnel",
@@ -100,7 +102,8 @@ GST_START_TEST (rtpfunnel_ssrc_downstream_not_leaking_through)
   gst_harness_teardown (h);
 }
 
-GST_END_TEST
+GST_END_TEST;
+
 GST_START_TEST (rtpfunnel_common_ts_offset)
 {
   GstHarness *h = gst_harness_new_with_padnames ("rtpfunnel",
@@ -122,7 +125,8 @@ GST_START_TEST (rtpfunnel_common_ts_offset)
   gst_harness_teardown (h);
 }
 
-GST_END_TEST
+GST_END_TEST;
+
 GST_START_TEST (rtpfunnel_stress)
 {
   GstHarness *h = gst_harness_new_with_padnames ("rtpfunnel",
@@ -173,6 +177,226 @@ GST_START_TEST (rtpfunnel_stress)
 
 GST_END_TEST;
 
+#define TWCC_EXTMAP_STR "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01"
+
+GST_START_TEST (rtpfunnel_twcc_caps)
+{
+  GstHarness *h, *h0, *h1;
+  GstCaps *caps, *expected_caps;
+
+  h = gst_harness_new_with_padnames ("rtpfunnel", NULL, "src");
+
+  /* request a sinkpad, set caps with twcc extmap */
+  h0 = gst_harness_new_with_element (h->element, "sink_0", NULL);
+  gst_harness_set_src_caps_str (h0, "application/x-rtp, "
+      "ssrc=(uint)123, extmap-5=" TWCC_EXTMAP_STR "");
+
+  /* request a second sinkpad, and verify the extmap is
+     present in the caps when doing a caps-query downstream */
+  h1 = gst_harness_new_with_element (h->element, "sink_1", NULL);
+  caps = gst_pad_query_caps (GST_PAD_PEER (h1->srcpad), NULL);
+  expected_caps = gst_caps_from_string ("application/x-rtp, "
+      "extmap-5=" TWCC_EXTMAP_STR "");
+  fail_unless (gst_caps_is_equal (expected_caps, caps));
+  gst_caps_unref (caps);
+  gst_caps_unref (expected_caps);
+
+  /* now try and set a different extmap (4) on the other sinkpad,
+     and verify this does not work */
+  gst_harness_set_src_caps_str (h1, "application/x-rtp, "
+      "ssrc=(uint)456, extmap-4=" TWCC_EXTMAP_STR "");
+  caps = gst_pad_get_current_caps (GST_PAD_PEER (h1->srcpad));
+  fail_unless (caps == NULL);
+
+  /* ...but setting the right extmap (5) will work just fine */
+  expected_caps = gst_caps_from_string ("application/x-rtp, "
+      "ssrc=(uint)456, extmap-5=" TWCC_EXTMAP_STR "");
+  gst_harness_set_src_caps (h1, gst_caps_ref (expected_caps));
+  caps = gst_pad_get_current_caps (GST_PAD_PEER (h1->srcpad));
+  fail_unless (gst_caps_is_equal (expected_caps, caps));
+  gst_caps_unref (caps);
+  gst_caps_unref (expected_caps);
+
+  gst_harness_teardown (h);
+  gst_harness_teardown (h0);
+  gst_harness_teardown (h1);
+}
+
+GST_END_TEST;
+
+static GstBuffer *
+generate_test_buffer (guint seqnum, guint ssrc, guint8 twcc_ext_id)
+{
+  GstBuffer *buf;
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+
+  buf = gst_rtp_buffer_new_allocate (0, 0, 0);
+  GST_BUFFER_PTS (buf) = seqnum * 20 * GST_MSECOND;
+  GST_BUFFER_DTS (buf) = GST_BUFFER_PTS (buf);
+
+  gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp);
+  gst_rtp_buffer_set_payload_type (&rtp, 100);
+  gst_rtp_buffer_set_seq (&rtp, seqnum);
+  gst_rtp_buffer_set_timestamp (&rtp, seqnum * 160);
+  gst_rtp_buffer_set_ssrc (&rtp, ssrc);
+
+  if (twcc_ext_id > 0) {
+    guint16 data;
+    GST_WRITE_UINT16_BE (&data, seqnum);
+    gst_rtp_buffer_add_extension_onebyte_header (&rtp, twcc_ext_id,
+        &data, sizeof (guint16));
+  }
+
+  gst_rtp_buffer_unmap (&rtp);
+
+  return buf;
+}
+
+static gint32
+get_twcc_seqnum (GstBuffer * buf, guint8 ext_id)
+{
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+  gint32 val = -1;
+  gpointer data;
+
+  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
+  if (gst_rtp_buffer_get_extension_onebyte_header (&rtp, ext_id,
+          0, &data, NULL)) {
+    val = GST_READ_UINT16_BE (data);
+  }
+  gst_rtp_buffer_unmap (&rtp);
+
+  return val;
+}
+
+static guint32
+get_ssrc (GstBuffer * buf)
+{
+  guint32 ssrc;
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
+  ssrc = gst_rtp_buffer_get_ssrc (&rtp);
+  gst_rtp_buffer_unmap (&rtp);
+  return ssrc;
+}
+
+GST_START_TEST (rtpfunnel_twcc_passthrough)
+{
+  GstHarness *h, *h0;
+  GstBuffer *buf;
+  guint16 offset = 65530;
+  guint packets = 40;
+  guint i;
+
+  h = gst_harness_new_with_padnames ("rtpfunnel", NULL, "src");
+  h0 = gst_harness_new_with_element (h->element, "sink_0", NULL);
+  gst_harness_set_src_caps_str (h0, "application/x-rtp, "
+      "ssrc=(uint)123, extmap-5=" TWCC_EXTMAP_STR "");
+
+  /* push some packets with twcc seqnum */
+  for (i = 0; i < packets; i++) {
+    guint16 seqnum = i + offset;
+    fail_unless_equals_int (GST_FLOW_OK,
+        gst_harness_push (h0, generate_test_buffer (seqnum, 123, 5)));
+  }
+
+  /* and verify the seqnums stays unchanged through the funnel */
+  for (i = 0; i < packets; i++) {
+    guint16 seqnum = i + offset;
+    buf = gst_harness_pull (h);
+    fail_unless_equals_int (seqnum, get_twcc_seqnum (buf, 5));
+    gst_buffer_unref (buf);
+  }
+
+  gst_harness_teardown (h);
+  gst_harness_teardown (h0);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (rtpfunnel_twcc_mux)
+{
+  GstHarness *h, *h0, *h1;
+  GstBuffer *buf;
+
+  h = gst_harness_new_with_padnames ("rtpfunnel", NULL, "src");
+  h0 = gst_harness_new_with_element (h->element, "sink_0", NULL);
+  h1 = gst_harness_new_with_element (h->element, "sink_1", NULL);
+  gst_harness_set_src_caps_str (h0, "application/x-rtp, "
+      "ssrc=(uint)123, extmap-5=" TWCC_EXTMAP_STR "");
+  gst_harness_set_src_caps_str (h1, "application/x-rtp, "
+      "ssrc=(uint)456, extmap-5=" TWCC_EXTMAP_STR "");
+
+  /* push buffers on both pads with different twcc-seqnums on them (500 and 60000) */
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h0, generate_test_buffer (500, 123, 5)));
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h1, generate_test_buffer (60000, 321, 5)));
+
+  /* verify they are muxed continuously (0 -> 1) */
+  buf = gst_harness_pull (h);
+  fail_unless_equals_int (123, get_ssrc (buf));
+  fail_unless_equals_int (0, get_twcc_seqnum (buf, 5));
+  gst_buffer_unref (buf);
+
+  buf = gst_harness_pull (h);
+  fail_unless_equals_int (321, get_ssrc (buf));
+  fail_unless_equals_int (1, get_twcc_seqnum (buf, 5));
+  gst_buffer_unref (buf);
+
+  gst_harness_teardown (h);
+  gst_harness_teardown (h0);
+  gst_harness_teardown (h1);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (rtpfunnel_twcc_passthrough_then_mux)
+{
+  GstHarness *h, *h0, *h1;
+  GstBuffer *buf;
+  guint offset0 = 500;
+  guint offset1 = 45678;
+  guint i;
+
+  h = gst_harness_new_with_padnames ("rtpfunnel", NULL, "src");
+  h0 = gst_harness_new_with_element (h->element, "sink_0", NULL);
+  gst_harness_set_src_caps_str (h0, "application/x-rtp, "
+      "ssrc=(uint)123, extmap-5=" TWCC_EXTMAP_STR "");
+
+  /* push one packet with twcc seqnum 100 on pad0 */
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h0, generate_test_buffer (offset0, 123, 5)));
+
+  /* add pad1 to the funnel, also with twcc */
+  h1 = gst_harness_new_with_element (h->element, "sink_1", NULL);
+  gst_harness_set_src_caps_str (h1, "application/x-rtp, "
+      "ssrc=(uint)456, extmap-5=" TWCC_EXTMAP_STR "");
+
+  /* push one buffer on both pads, with pad1 starting at a different
+     offset */
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h0, generate_test_buffer (offset0 + 1, 123, 5)));
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h1, generate_test_buffer (offset1, 321, 5)));
+
+  /* and verify the seqnums are continuous for all 3 packets, using
+     the inital offset from pad0 */
+  for (i = 0; i < 3; i++) {
+    guint16 seqnum = i + offset0;
+    buf = gst_harness_pull (h);
+    fail_unless_equals_int (seqnum, get_twcc_seqnum (buf, 5));
+    gst_buffer_unref (buf);
+  }
+
+  gst_harness_teardown (h);
+  gst_harness_teardown (h0);
+  gst_harness_teardown (h1);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtpfunnel_suite (void)
 {
@@ -186,6 +410,11 @@ rtpfunnel_suite (void)
   tcase_add_test (tc_chain, rtpfunnel_common_ts_offset);
 
   tcase_add_test (tc_chain, rtpfunnel_stress);
+
+  tcase_add_test (tc_chain, rtpfunnel_twcc_caps);
+  tcase_add_test (tc_chain, rtpfunnel_twcc_passthrough);
+  tcase_add_test (tc_chain, rtpfunnel_twcc_mux);
+  tcase_add_test (tc_chain, rtpfunnel_twcc_passthrough_then_mux);
 
   return s;
 }
