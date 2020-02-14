@@ -4607,6 +4607,11 @@ update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
       } else {
         GST_INFO ("removing TCP %s", tr->destination);
         priv->transports = g_list_delete_link (priv->transports, tr_element);
+
+        gst_rtsp_stream_transport_lock_backlog (trans);
+        gst_rtsp_stream_transport_clear_backlog (trans);
+        gst_rtsp_stream_transport_unlock_backlog (trans);
+
         priv->n_tcp_transports--;
       }
       priv->transports_cookie++;

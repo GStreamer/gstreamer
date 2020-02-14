@@ -882,7 +882,8 @@ gst_rtsp_stream_transport_backlog_push (GstRTSPStreamTransport * trans,
 
 /* Not MT-safe, caller should ensure consistent locking (see
  * gst_rtsp_stream_transport_lock_backlog()). Ownership
- * of @buffer and @buffer_list is transfered back to the caller */
+ * of @buffer and @buffer_list is transfered back to the caller,
+ * if either of those is NULL the underlying object is unreffed */
 gboolean
 gst_rtsp_stream_transport_backlog_pop (GstRTSPStreamTransport * trans,
     GstBuffer ** buffer, GstBufferList ** buffer_list, gboolean * is_rtp)
@@ -899,9 +900,18 @@ gst_rtsp_stream_transport_backlog_pop (GstRTSPStreamTransport * trans,
 
   priv->first_rtp_timestamp = get_first_backlog_timestamp (trans);
 
-  *buffer = item->buffer;
-  *buffer_list = item->buffer_list;
-  *is_rtp = item->is_rtp;
+  if (buffer)
+    *buffer = item->buffer;
+  else if (item->buffer)
+    gst_buffer_unref (item->buffer);
+
+  if (buffer_list)
+    *buffer_list = item->buffer_list;
+  else if (item->buffer_list)
+    gst_buffer_list_unref (item->buffer_list);
+
+  if (is_rtp)
+    *is_rtp = item->is_rtp;
 
   return TRUE;
 }
@@ -912,6 +922,16 @@ gboolean
 gst_rtsp_stream_transport_backlog_is_empty (GstRTSPStreamTransport * trans)
 {
   return gst_queue_array_is_empty (trans->priv->items);
+}
+
+/* Not MT-safe, caller should ensure consistent locking.
+ * See gst_rtsp_stream_transport_lock_backlog() */
+void
+gst_rtsp_stream_transport_clear_backlog (GstRTSPStreamTransport * trans)
+{
+  while (!gst_rtsp_stream_transport_backlog_is_empty (trans)) {
+    gst_rtsp_stream_transport_backlog_pop (trans, NULL, NULL, NULL);
+  }
 }
 
 /* Internal API, protects access to the TCP backlog. Safe to

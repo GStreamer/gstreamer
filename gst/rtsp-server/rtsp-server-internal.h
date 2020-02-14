@@ -42,6 +42,8 @@ gboolean                 gst_rtsp_stream_transport_backlog_pop   (GstRTSPStreamT
 
 gboolean                 gst_rtsp_stream_transport_backlog_is_empty (GstRTSPStreamTransport *trans);
 
+void                     gst_rtsp_stream_transport_clear_backlog (GstRTSPStreamTransport * trans);
+
 void                     gst_rtsp_stream_transport_lock_backlog  (GstRTSPStreamTransport * trans);
 
 void                     gst_rtsp_stream_transport_unlock_backlog (GstRTSPStreamTransport * trans);
