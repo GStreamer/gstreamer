@@ -727,6 +727,7 @@ struct _GstH264SPS
   guint8 num_ref_frames_in_pic_order_cnt_cycle;
   gint32 offset_for_ref_frame[255];
 
+  /* FIXME rename according to spec, max_num_ref_frames */
   guint32 num_ref_frames;
   guint8 gaps_in_frame_num_value_allowed_flag;
   guint32 pic_width_in_mbs_minus1;
@@ -795,6 +796,7 @@ struct _GstH264PPS
   guint32 pic_size_in_map_units_minus1;
   guint8 *slice_group_id;
 
+  /* FIXME rename to num_ref_idx_l{0,1}_default_active_minus1 */
   guint8 num_ref_idx_l0_active_minus1;
   guint8 num_ref_idx_l1_active_minus1;
   guint8 weighted_pred_flag;
