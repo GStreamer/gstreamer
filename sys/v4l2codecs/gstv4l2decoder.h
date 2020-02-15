@@ -24,11 +24,14 @@
 #include <gst/video/video.h>
 
 #include "gstv4l2codecdevice.h"
+#include "linux/videodev2.h"
 
 G_BEGIN_DECLS
 
 #define GST_TYPE_V4L2_DECODER gst_v4l2_decoder_get_type ()
 G_DECLARE_FINAL_TYPE (GstV4l2Decoder, gst_v4l2_decoder, GST, V4L2_DECODER, GstObject);
+
+typedef struct _GstV4l2Request GstV4l2Request;
 
 GstV4l2Decoder *  gst_v4l2_decoder_new (GstV4l2CodecDevice * device);
 
@@ -57,6 +60,20 @@ gboolean          gst_v4l2_decoder_export_buffer (GstV4l2Decoder * self,
                                                   gsize * offsets,
                                                   guint *num_fds);
 
+gboolean          gst_v4l2_decoder_queue_sink_mem (GstV4l2Decoder * self,
+                                                   GstV4l2Request * request,
+                                                   GstMemory * mem,
+                                                   guint32 frame_num);
+
+gboolean          gst_v4l2_decoder_queue_src_buffer (GstV4l2Decoder * self,
+                                                     GstBuffer * buffer,
+                                                     guint32 frame_num);
+
+gboolean          gst_v4l2_decoder_set_controls (GstV4l2Decoder * self,
+                                                 GstV4l2Request * request,
+                                                 struct v4l2_ext_control *control,
+                                                 guint count);
+
 void              gst_v4l2_decoder_install_properties (GObjectClass * gobject_class,
                                                        gint prop_offset,
                                                        GstV4l2CodecDevice * device);
@@ -66,6 +83,12 @@ void              gst_v4l2_decoder_set_property (GObject * object, guint prop_id
 
 void              gst_v4l2_decoder_get_property (GObject * object, guint prop_id,
                                                  GValue * value, GParamSpec * pspec);
+
+GstV4l2Request   *gst_v4l2_decoder_alloc_request (GstV4l2Decoder * self);
+
+void              gst_v4l2_request_free (GstV4l2Request * request);
+
+gboolean          gst_v4l2_request_queue (GstV4l2Request * request);
 
 G_END_DECLS
 
