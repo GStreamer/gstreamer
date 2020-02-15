@@ -64,6 +64,8 @@ struct _GstH265Picture
   GstH265SliceType type;
 
   GstClockTime pts;
+  /* From GstVideoCodecFrame */
+  guint32 system_frame_number;
 
   gint pic_order_cnt;
   gint pic_order_cnt_msb;

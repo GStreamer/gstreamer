@@ -396,6 +396,15 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
       picture->subsampling_y = priv->parser->subsampling_y;
       picture->bit_depth = priv->parser->bit_depth;
 
+      if (i == frame_idx_to_consume) {
+        /* This allows accessing the frame from the picture. */
+        picture->system_frame_number = frame->system_frame_number;
+        gst_video_codec_frame_set_user_data (frame,
+            gst_vp9_picture_ref (picture),
+            (GDestroyNotify) gst_vp9_picture_unref);
+      }
+
+
       if (klass->new_picture) {
         if (!klass->new_picture (self, picture)) {
           GST_ERROR_OBJECT (self, "new picture error");
@@ -422,12 +431,6 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
           GST_ERROR_OBJECT (self, "end picture error");
           goto unmap_and_error;
         }
-      }
-
-      if (i == frame_idx_to_consume) {
-        gst_video_codec_frame_set_user_data (frame,
-            gst_vp9_picture_ref (picture),
-            (GDestroyNotify) gst_vp9_picture_unref);
       }
 
       if (klass->output_picture)

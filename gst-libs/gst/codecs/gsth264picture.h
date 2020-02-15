@@ -58,6 +58,8 @@ struct _GstH264Picture
   GstH264SliceType type;
 
   GstClockTime pts;
+  /* From GstVideoCodecFrame */
+  guint32 system_frame_number;
 
   guint8 pic_order_cnt_type;  /* SPS */
   gint32 top_field_order_cnt;

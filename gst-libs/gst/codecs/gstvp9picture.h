@@ -37,6 +37,8 @@ struct _GstVp9Picture
   GstMiniObject parent;
 
   GstClockTime pts;
+  /* From GstVideoCodecFrame */
+  guint32 system_frame_number;
 
   GstVp9FrameHdr frame_hdr;
 

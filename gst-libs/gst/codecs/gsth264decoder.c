@@ -661,6 +661,8 @@ gst_h264_decoder_parse_slice (GstH264Decoder * self, GstH264NalUnit * nalu,
       return FALSE;
     }
 
+    /* This allows accessing the frame from the picture. */
+    picture->system_frame_number = priv->current_frame->system_frame_number;
     priv->current_picture = picture;
     gst_video_codec_frame_set_user_data (priv->current_frame,
         gst_h264_picture_ref (priv->current_picture),
