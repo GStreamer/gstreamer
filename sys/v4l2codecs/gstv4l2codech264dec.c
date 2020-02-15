@@ -474,13 +474,118 @@ static GstFlowReturn
 gst_v4l2_codec_h264_dec_output_picture (GstH264Decoder * decoder,
     GstH264Picture * picture)
 {
+  /* We dequeue frames, until the system_frame_number matches, this ensure
+   * that the frame we want to output is actually decoded now */
+  /* TODO implement */
   return GST_FLOW_OK;
+}
+
+static void
+gst_v4l2_codec_h264_dec_reset_picture (GstV4l2CodecH264Dec * self)
+{
+  if (self->bitstream) {
+    gst_memory_unmap (self->bitstream, &self->bitstream_map);
+    g_clear_pointer (&self->bitstream, gst_memory_unref);
+    self->bitstream_map = (GstMapInfo) GST_MAP_INFO_INIT;
+  }
+
+  self->decode_params.num_slices = 0;
 }
 
 static gboolean
 gst_v4l2_codec_h264_dec_end_picture (GstH264Decoder * decoder,
     GstH264Picture * picture)
 {
+  GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
+  GstVideoCodecFrame *frame;
+  GstV4l2Request *request;
+  GstBuffer *buffer;
+  GstFlowReturn flow_ret;
+
+  /* *INDENT-OFF* */
+  struct v4l2_ext_control control[] = {
+    {
+      .id = V4L2_CID_MPEG_VIDEO_H264_SPS,
+      .ptr = &self->sps,
+      .size = sizeof (self->sps),
+    },
+    {
+      .id = V4L2_CID_MPEG_VIDEO_H264_PPS,
+      .ptr = &self->pps,
+      .size = sizeof (self->pps),
+    },
+    {
+      .id = V4L2_CID_MPEG_VIDEO_H264_SCALING_MATRIX,
+      .ptr = &self->scaling_matrix,
+      .size = sizeof (self->scaling_matrix),
+    },
+    {
+      .id = V4L2_CID_MPEG_VIDEO_H264_SLICE_PARAMS,
+      .ptr = self->slice_params->data,
+      .size = g_array_get_element_size (self->slice_params)
+              * self->decode_params.num_slices,
+    },
+    {
+      .id = V4L2_CID_MPEG_VIDEO_H264_DECODE_PARAMS,
+      .ptr = &self->decode_params,
+      .size = sizeof (self->decode_params),
+    },
+  };
+  /* *INDENT-ON* */
+
+  request = gst_v4l2_decoder_alloc_request (self->decoder);
+  if (!request) {
+    GST_ELEMENT_ERROR (decoder, RESOURCE, NO_SPACE_LEFT,
+        ("Failed to allocate a media request object."), (NULL));
+    return FALSE;
+  }
+
+  gst_h264_picture_set_user_data (picture, request,
+      (GDestroyNotify) gst_v4l2_request_free);
+
+  if (!gst_v4l2_decoder_set_controls (self->decoder, request, control,
+          G_N_ELEMENTS (control))) {
+    GST_ELEMENT_ERROR (decoder, RESOURCE, WRITE,
+        ("Driver did not accept the bitstream parameters."), (NULL));
+    return FALSE;
+  }
+
+  if (!gst_v4l2_decoder_queue_sink_mem (self->decoder, request, self->bitstream,
+          picture->system_frame_number)) {
+    GST_ELEMENT_ERROR (decoder, RESOURCE, WRITE,
+        ("Driver did not accept the bitstream data."), (NULL));
+    return FALSE;
+  }
+
+  flow_ret = gst_buffer_pool_acquire_buffer (GST_BUFFER_POOL (self->src_pool),
+      &buffer, NULL);
+  if (flow_ret != GST_FLOW_OK) {
+    /* FIXME our pool does not wait */
+    GST_ELEMENT_ERROR (decoder, RESOURCE, WRITE,
+        ("No more picture buffer available."), (NULL));
+    gst_v4l2_codec_h264_dec_reset_picture (self);
+    return FALSE;
+  }
+
+  frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
+      picture->system_frame_number);
+  g_return_val_if_fail (frame, FALSE);
+  frame->output_buffer = buffer;
+
+  if (!gst_v4l2_decoder_queue_src_buffer (self->decoder, buffer,
+          picture->system_frame_number)) {
+    GST_ELEMENT_ERROR (decoder, RESOURCE, WRITE,
+        ("Driver did not accept the picture buffer."), (NULL));
+    return FALSE;
+  }
+
+  if (!gst_v4l2_request_queue (request)) {
+    GST_ELEMENT_ERROR (decoder, RESOURCE, WRITE,
+        ("Driver did not accept the decode request."), (NULL));
+    return FALSE;
+  }
+
+  gst_v4l2_codec_h264_dec_reset_picture (self);
   return TRUE;
 }
 
