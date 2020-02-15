@@ -1007,6 +1007,17 @@ gst_vaapi_buffer_proxy_quark_get (void)
   return g_quark;
 }
 
+/* Whether @mem holds an internal VA surface proxy created at
+ * gst_vaapi_dmabuf_memory_new(). */
+gboolean
+gst_vaapi_dmabuf_memory_holds_surface (GstMemory * mem)
+{
+  g_return_val_if_fail (mem != NULL, FALSE);
+
+  return gst_mini_object_get_qdata (GST_MINI_OBJECT_CAST (mem),
+      GST_VAAPI_BUFFER_PROXY_QUARK) != NULL;
+}
+
 GstMemory *
 gst_vaapi_dmabuf_memory_new (GstAllocator * base_allocator,
     GstVaapiVideoMeta * meta)

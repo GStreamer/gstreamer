@@ -216,6 +216,10 @@ GstMemory *
 gst_vaapi_dmabuf_memory_new (GstAllocator * allocator,
     GstVaapiVideoMeta * meta);
 
+G_GNUC_INTERNAL
+gboolean
+gst_vaapi_dmabuf_memory_holds_surface (GstMemory * mem);
+
 /* ------------------------------------------------------------------------ */
 /* --- GstVaapiDmaBufAllocator                                          --- */
 /* ------------------------------------------------------------------------ */

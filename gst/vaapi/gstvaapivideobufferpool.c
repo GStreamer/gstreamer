@@ -480,7 +480,10 @@ gst_vaapi_video_buffer_pool_reset_buffer (GstBufferPool * pool,
   /* Release the underlying surface proxy */
   if (GST_VAAPI_IS_VIDEO_MEMORY (mem)) {
     gst_vaapi_video_memory_reset_surface (GST_VAAPI_VIDEO_MEMORY_CAST (mem));
-  } else {
+  } else if (!gst_vaapi_dmabuf_memory_holds_surface (mem)) {
+    /* If mem holds an internally created surface, don't reset it!
+     * While surface is passed, we should clear it to avoid wrong
+     * reference. */
     meta = gst_buffer_get_vaapi_video_meta (buffer);
     if (meta)
       gst_vaapi_video_meta_set_surface_proxy (meta, NULL);
