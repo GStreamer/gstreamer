@@ -969,6 +969,7 @@ to_GstVaapiBufferMemoryType (guint va_type)
 guint
 from_GstVideoColorimetry (const GstVideoColorimetry * const colorimetry)
 {
+#if VA_CHECK_VERSION(1,2,0)
   if (!colorimetry
       || colorimetry->primaries == GST_VIDEO_COLOR_PRIMARIES_UNKNOWN)
     return VAProcColorStandardNone;
@@ -985,7 +986,6 @@ from_GstVideoColorimetry (const GstVideoColorimetry * const colorimetry)
           GST_VIDEO_COLORIMETRY_SMPTE240M))
     return VAProcColorStandardSMPTE240M;
 
-#if VA_CHECK_VERSION(1,2,0)
   return VAProcColorStandardExplicit;
 #else
   return VAProcColorStandardNone;
@@ -1003,6 +1003,7 @@ from_GstVideoColorimetry (const GstVideoColorimetry * const colorimetry)
 guint
 from_GstVideoColorRange (const GstVideoColorRange value)
 {
+#if VA_CHECK_VERSION(1,2,0)
   switch (value) {
     case GST_VIDEO_COLOR_RANGE_0_255:
       return VA_SOURCE_RANGE_FULL;
@@ -1011,4 +1012,7 @@ from_GstVideoColorRange (const GstVideoColorRange value)
     default:
       return VA_SOURCE_RANGE_UNKNOWN;
   }
+#else
+  return 0;
+#endif
 }

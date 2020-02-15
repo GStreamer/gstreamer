@@ -1526,13 +1526,13 @@ gst_vaapi_filter_set_operation (GstVaapiFilter * filter, GstVaapiFilterOp op,
   return FALSE;
 }
 
+#if VA_CHECK_VERSION(1,2,0)
 static void
 fill_color_standard (GstVideoColorimetry * colorimetry,
     VAProcColorStandardType * type, VAProcColorProperties * properties)
 {
   *type = from_GstVideoColorimetry (colorimetry);
 
-#if VA_CHECK_VERSION(1,2,0)
   if (*type == VAProcColorStandardExplicit) {
     properties->colour_primaries =
         gst_video_color_primaries_to_iso (colorimetry->primaries);
@@ -1541,10 +1541,10 @@ fill_color_standard (GstVideoColorimetry * colorimetry,
     properties->matrix_coefficients =
         gst_video_color_matrix_to_iso (colorimetry->matrix);
   }
-#endif
 
   properties->color_range = from_GstVideoColorRange (colorimetry->range);
 }
+#endif
 
 /**
  * gst_vaapi_filter_process:
@@ -1647,6 +1647,7 @@ gst_vaapi_filter_process_unlocked (GstVaapiFilter * filter,
   pipeline_param->surface = GST_VAAPI_SURFACE_ID (src_surface);
   pipeline_param->surface_region = &src_rect;
 
+#if VA_CHECK_VERSION(1,2,0)
   fill_color_standard (&filter->input_colorimetry,
       &pipeline_param->surface_color_standard,
       &pipeline_param->input_color_properties);
@@ -1654,6 +1655,10 @@ gst_vaapi_filter_process_unlocked (GstVaapiFilter * filter,
   fill_color_standard (&filter->output_colorimetry,
       &pipeline_param->output_color_standard,
       &pipeline_param->output_color_properties);
+#else
+  pipeline_param->surface_color_standard = VAProcColorStandardNone;
+  pipeline_param->output_color_standard = VAProcColorStandardNone;
+#endif
 
   pipeline_param->output_region = &dst_rect;
   pipeline_param->output_background_color = 0xff000000;
