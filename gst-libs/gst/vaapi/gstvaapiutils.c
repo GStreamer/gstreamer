@@ -269,7 +269,9 @@ string_of_VAEntrypoint (VAEntrypoint entrypoint)
       MAP (Deblocking);
       MAP (EncSlice);
       MAP (EncPicture);
+#if VA_CHECK_VERSION(0,39,1)
       MAP (EncSliceLP);
+#endif
       MAP (VideoProc);
 #if VA_CHECK_VERSION(1,0,0)
       MAP (FEI);
