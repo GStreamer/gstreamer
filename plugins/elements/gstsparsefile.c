@@ -191,10 +191,6 @@ gst_sparse_file_clear (GstSparseFile * file)
 {
   g_return_if_fail (file != NULL);
 
-  if (file->file) {
-    fclose (file->file);
-    file->file = fdopen (file->fd, "wb+");
-  }
   g_slice_free_chain (GstSparseRange, file->ranges, next);
   file->current_pos = 0;
   file->ranges = NULL;
