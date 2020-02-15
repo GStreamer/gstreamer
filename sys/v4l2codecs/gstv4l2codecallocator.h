@@ -45,4 +45,6 @@ guint                   gst_v4l2_codec_allocator_get_pool_size (GstV4l2CodecAllo
 
 void                    gst_v4l2_codec_allocator_detach (GstV4l2CodecAllocator * self);
 
+guint32                 gst_v4l2_codec_memory_get_index (GstMemory * mem);
+
 #endif /* _GST_V4L2_CODECS_ALLOCATOR_H_ */

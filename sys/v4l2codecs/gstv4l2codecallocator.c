@@ -323,3 +323,15 @@ gst_v4l2_codec_allocator_detach (GstV4l2CodecAllocator * self)
   }
   GST_OBJECT_UNLOCK (self);
 }
+
+guint32
+gst_v4l2_codec_memory_get_index (GstMemory * mem)
+{
+  GstV4l2CodecBuffer *buf;
+
+  buf = gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
+      gst_v4l2_codec_buffer_quark ());
+  g_return_val_if_fail (buf, G_MAXUINT32);
+
+  return buf->index;
+}

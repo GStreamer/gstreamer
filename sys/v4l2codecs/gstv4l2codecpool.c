@@ -114,3 +114,10 @@ gst_v4l2_codec_pool_new (GstV4l2CodecAllocator * allocator)
 
   return pool;
 }
+
+guint32
+gst_v4l2_codec_buffer_get_index (GstBuffer * buffer)
+{
+  GstMemory *mem = gst_buffer_peek_memory (buffer, 0);
+  return gst_v4l2_codec_memory_get_index (mem);
+}
