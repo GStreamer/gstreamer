@@ -354,11 +354,12 @@ gst_v4l2_decoder_export_buffer (GstV4l2Decoder * self,
 
 gboolean
 gst_v4l2_decoder_queue_sink_mem (GstV4l2Decoder * self,
-    GstV4l2Request * request, GstMemory * mem, guint32 frame_num)
+    GstV4l2Request * request, GstMemory * mem, guint32 frame_num,
+    gsize bytesused)
 {
   gint ret;
   struct v4l2_plane plane = {
-    .bytesused = gst_memory_get_sizes (mem, NULL, NULL),
+    .bytesused = bytesused,
   };
   struct v4l2_buffer buf = {
     .type = direction_to_buffer_type (GST_PAD_SINK),

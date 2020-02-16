@@ -559,7 +559,8 @@ static void
 gst_v4l2_codec_h264_dec_reset_picture (GstV4l2CodecH264Dec * self)
 {
   if (self->bitstream) {
-    gst_memory_unmap (self->bitstream, &self->bitstream_map);
+    if (self->bitstream_map.memory)
+      gst_memory_unmap (self->bitstream, &self->bitstream_map);
     g_clear_pointer (&self->bitstream, gst_memory_unref);
     self->bitstream_map = (GstMapInfo) GST_MAP_INFO_INIT;
   }
@@ -576,6 +577,7 @@ gst_v4l2_codec_h264_dec_end_picture (GstH264Decoder * decoder,
   GstV4l2Request *request;
   GstBuffer *buffer;
   GstFlowReturn flow_ret;
+  gsize bytesused;
 
   /* *INDENT-OFF* */
   struct v4l2_ext_control control[] = {
@@ -625,8 +627,12 @@ gst_v4l2_codec_h264_dec_end_picture (GstH264Decoder * decoder,
     return FALSE;
   }
 
+  bytesused = self->bitstream_map.size;
+  gst_memory_unmap (self->bitstream, &self->bitstream_map);
+  self->bitstream_map = (GstMapInfo) GST_MAP_INFO_INIT;
+
   if (!gst_v4l2_decoder_queue_sink_mem (self->decoder, request, self->bitstream,
-          picture->system_frame_number)) {
+          picture->system_frame_number, bytesused)) {
     GST_ELEMENT_ERROR (decoder, RESOURCE, WRITE,
         ("Driver did not accept the bitstream data."), (NULL));
     return FALSE;
