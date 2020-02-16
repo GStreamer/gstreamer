@@ -48,6 +48,9 @@ struct _GstV4l2Request
   GstV4l2Decoder *decoder;
   gint fd;
   GstMemory *bitstream;
+  GstPoll *poll;
+  GstPollFD pollfd;
+  gboolean pending;
 };
 
 struct _GstV4l2Decoder
@@ -67,6 +70,15 @@ struct _GstV4l2Decoder
 G_DEFINE_TYPE_WITH_CODE (GstV4l2Decoder, gst_v4l2_decoder, GST_TYPE_OBJECT,
     GST_DEBUG_CATEGORY_INIT (v4l2_decoder_debug, "v4l2codecs-decoder", 0,
         "V4L2 stateless decoder helper"));
+
+static guint32
+direction_to_buffer_type (GstPadDirection direction)
+{
+  if (direction == GST_PAD_SRC)
+    return V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
+  else
+    return V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
+}
 
 static void
 gst_v4l2_decoder_finalize (GObject * obj)
@@ -125,7 +137,7 @@ gst_v4l2_decoder_open (GstV4l2Decoder * self)
     return FALSE;
   }
 
-  self->video_fd = open (self->video_device, 0);
+  self->video_fd = open (self->video_device, O_NONBLOCK);
   if (self->video_fd < 0) {
     GST_ERROR_OBJECT (self, "Failed to open '%s': %s",
         self->video_device, g_strerror (errno));
@@ -153,6 +165,36 @@ gst_v4l2_decoder_close (GstV4l2Decoder * self)
   self->media_fd = 0;
   self->video_fd = 0;
   self->opened = FALSE;
+
+  return TRUE;
+}
+
+gboolean
+gst_v4l2_decoder_streamon (GstV4l2Decoder * self, GstPadDirection direction)
+{
+  gint ret;
+  guint32 type = direction_to_buffer_type (direction);
+
+  ret = ioctl (self->video_fd, VIDIOC_STREAMON, &type);
+  if (ret < 0) {
+    GST_ERROR_OBJECT (self, "VIDIOC_STREAMON failed: %s", g_strerror (errno));
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+gboolean
+gst_v4l2_decoder_streamoff (GstV4l2Decoder * self, GstPadDirection direction)
+{
+  gint ret;
+  guint32 type = direction_to_buffer_type (direction);
+
+  ret = ioctl (self->video_fd, VIDIOC_STREAMOFF, &type);
+  if (ret < 0) {
+    GST_ERROR_OBJECT (self, "VIDIOC_STREAMOFF failed: %s", g_strerror (errno));
+    return FALSE;
+  }
 
   return TRUE;
 }
@@ -237,15 +279,6 @@ gst_v4l2_decoder_select_src_format (GstV4l2Decoder * self, GstVideoInfo * info)
       info->width, info->height);
 
   return TRUE;
-}
-
-static guint32
-direction_to_buffer_type (GstPadDirection direction)
-{
-  if (direction == GST_PAD_SRC)
-    return V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
-  else
-    return V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
 }
 
 gint
@@ -382,6 +415,49 @@ gst_v4l2_decoder_queue_src_buffer (GstV4l2Decoder * self, GstBuffer * buffer,
 }
 
 gboolean
+gst_v4l2_decoder_dequeue_sink (GstV4l2Decoder * self)
+{
+  gint ret;
+  struct v4l2_plane plane[GST_VIDEO_MAX_PLANES] = { {0} };
+  struct v4l2_buffer buf = {
+    .type = direction_to_buffer_type (GST_PAD_SINK),
+    .memory = V4L2_MEMORY_MMAP,
+    .length = GST_VIDEO_MAX_PLANES,
+    .m.planes = plane,
+  };
+
+  ret = ioctl (self->video_fd, VIDIOC_DQBUF, &buf);
+  if (ret < 0) {
+    GST_ERROR_OBJECT (self, "VIDIOC_DQBUF failed: %s", g_strerror (errno));
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+gboolean
+gst_v4l2_decoder_dequeue_src (GstV4l2Decoder * self, guint32 * out_frame_num)
+{
+  gint ret;
+  struct v4l2_plane plane[GST_VIDEO_MAX_PLANES] = { {0} };
+  struct v4l2_buffer buf = {
+    .type = direction_to_buffer_type (GST_PAD_SRC),
+    .memory = V4L2_MEMORY_MMAP,
+    .length = GST_VIDEO_MAX_PLANES,
+    .m.planes = plane,
+  };
+
+  ret = ioctl (self->video_fd, VIDIOC_DQBUF, &buf);
+  if (ret < 0) {
+    GST_ERROR_OBJECT (self, "VIDIOC_DQBUF failed: %s", g_strerror (errno));
+    return FALSE;
+  }
+
+  *out_frame_num = buf.timestamp.tv_usec;
+  return TRUE;
+}
+
+gboolean
 gst_v4l2_decoder_set_controls (GstV4l2Decoder * self, GstV4l2Request * request,
     struct v4l2_ext_control * control, guint count)
 {
@@ -481,6 +557,12 @@ gst_v4l2_decoder_alloc_request (GstV4l2Decoder * self)
           g_strerror (errno));
       return NULL;
     }
+
+    request->poll = gst_poll_new (FALSE);
+    gst_poll_fd_init (&request->pollfd);
+    request->pollfd.fd = request->fd;
+    gst_poll_add_fd (request->poll, &request->pollfd);
+    gst_poll_fd_ctl_pri (request->poll, &request->pollfd, TRUE);
   }
 
   request->decoder = g_object_ref (self);
@@ -490,29 +572,34 @@ gst_v4l2_decoder_alloc_request (GstV4l2Decoder * self)
 void
 gst_v4l2_request_free (GstV4l2Request * request)
 {
-  GstV4l2Decoder *decoder;
+  GstV4l2Decoder *decoder = request->decoder;
   gint ret;
 
-  if (!request->decoder) {
+  if (!decoder) {
     close (request->fd);
+    gst_poll_free (request->poll);
     g_free (request);
     return;
   }
 
-  if (request->bitstream)
-    g_clear_pointer (&request->bitstream, gst_memory_unref);
+  g_clear_pointer (&request->bitstream, gst_memory_unref);
+  request->decoder = NULL;
+
+  if (request->pending) {
+    gst_v4l2_request_free (request);
+    g_object_unref (decoder);
+    return;
+  }
 
   ret = ioctl (request->fd, MEDIA_REQUEST_IOC_REINIT, NULL);
   if (ret < 0) {
     GST_ERROR_OBJECT (request->decoder, "MEDIA_REQUEST_IOC_REINIT failed: %s",
         g_strerror (errno));
-    request->decoder = NULL;
     gst_v4l2_request_free (request);
+    g_object_unref (decoder);
     return;
   }
 
-  decoder = request->decoder;
-  request->decoder = NULL;
   gst_atomic_queue_push (decoder->request_pool, request);
   g_object_unref (decoder);
 }
@@ -529,5 +616,30 @@ gst_v4l2_request_queue (GstV4l2Request * request)
     return FALSE;
   }
 
+  request->pending = TRUE;
+
   return TRUE;
+}
+
+gint
+gst_v4l2_request_poll (GstV4l2Request * request, GstClockTime timeout)
+{
+  return gst_poll_wait (request->poll, timeout);
+}
+
+void
+gst_v4l2_request_set_done (GstV4l2Request * request)
+{
+  if (request->bitstream) {
+    gst_v4l2_decoder_dequeue_sink (request->decoder);
+    g_clear_pointer (&request->bitstream, gst_memory_unref);
+  }
+
+  request->pending = FALSE;
+}
+
+gboolean
+gst_v4l2_request_is_done (GstV4l2Request * request)
+{
+  return !request->pending;
 }
