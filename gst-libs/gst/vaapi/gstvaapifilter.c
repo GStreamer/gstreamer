@@ -1232,6 +1232,9 @@ gst_vaapi_filter_finalize (GObject * object)
   GstVaapiFilter *const filter = GST_VAAPI_FILTER (object);
   guint i;
 
+  if (!filter->display)
+    goto bail;
+
   GST_VAAPI_DISPLAY_LOCK (filter->display);
   if (filter->operations) {
     for (i = 0; i < filter->operations->len; i++) {
@@ -1255,6 +1258,7 @@ gst_vaapi_filter_finalize (GObject * object)
   GST_VAAPI_DISPLAY_UNLOCK (filter->display);
   gst_vaapi_display_replace (&filter->display, NULL);
 
+bail:
   if (filter->forward_references) {
     g_array_unref (filter->forward_references);
     filter->forward_references = NULL;

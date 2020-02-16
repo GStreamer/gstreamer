@@ -202,7 +202,8 @@ plugin_init (GstPlugin * plugin)
     g_array_unref (decoders);
   }
 
-  gst_vaapioverlay_register (plugin, display);
+  if (_gst_vaapi_has_video_processing)
+    gst_vaapioverlay_register (plugin, display);
 
   gst_element_register (plugin, "vaapipostproc",
       GST_RANK_PRIMARY, GST_TYPE_VAAPIPOSTPROC);

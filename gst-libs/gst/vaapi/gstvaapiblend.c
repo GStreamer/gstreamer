@@ -105,6 +105,9 @@ gst_vaapi_blend_finalize (GObject * object)
 {
   GstVaapiBlend *const blend = GST_VAAPI_BLEND (object);
 
+  if (!blend->display)
+    goto bail;
+
   GST_VAAPI_DISPLAY_LOCK (blend->display);
 
   if (blend->va_context != VA_INVALID_ID) {
@@ -123,6 +126,7 @@ gst_vaapi_blend_finalize (GObject * object)
 
   gst_vaapi_display_replace (&blend->display, NULL);
 
+bail:
   G_OBJECT_CLASS (gst_vaapi_blend_parent_class)->finalize (object);
 }
 
