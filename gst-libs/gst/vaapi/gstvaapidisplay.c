@@ -652,7 +652,7 @@ ensure_image_formats (GstVaapiDisplay * display)
   GstVaapiDisplayPrivate *const priv = GST_VAAPI_DISPLAY_GET_PRIVATE (display);
   VAImageFormat *formats = NULL;
   VAStatus status;
-  gint i, n;
+  gint i, n, max_images;
   gboolean success = FALSE;
 
   GST_VAAPI_DISPLAY_LOCK (display);
@@ -666,7 +666,8 @@ ensure_image_formats (GstVaapiDisplay * display)
     goto cleanup;
 
   /* VA image formats */
-  formats = g_new (VAImageFormat, vaMaxNumImageFormats (priv->display));
+  max_images = vaMaxNumImageFormats (priv->display);
+  formats = g_new (VAImageFormat, max_images);
   if (!formats)
     goto cleanup;
 
@@ -674,6 +675,29 @@ ensure_image_formats (GstVaapiDisplay * display)
   status = vaQueryImageFormats (priv->display, formats, &n);
   if (!vaapi_check_status (status, "vaQueryImageFormats()"))
     goto cleanup;
+
+  /* XXX(victor): Force RGBA in i965 display formats.
+   *
+   * This is required for GLTextureUploadMeta since it only negotiates
+   * RGBA, nevertheless i965 driver only reports RGBx breaking back
+   * compatibility.
+   *
+   * Side effects are not expected since it worked before commit
+   * 32bf6f1e */
+  if (gst_vaapi_display_has_driver_quirks (display,
+          GST_VAAPI_DRIVER_QUIRK_MISSING_RGBA_IMAGE_FORMAT)) {
+    formats = g_renew (VAImageFormat, formats, max_images + 1);
+
+    formats[n].fourcc = VA_FOURCC_RGBA;
+    formats[n].byte_order = VA_LSB_FIRST;
+    formats[n].bits_per_pixel = 32;
+    formats[n].depth = 32;
+    formats[n].red_mask = 0x000000ff;
+    formats[n].green_mask = 0x0000ff00;
+    formats[n].blue_mask = 0x00ff0000;
+    formats[n].alpha_mask = 0xff000000;
+    n++;
+  }
 
   GST_DEBUG ("%d image formats", n);
   for (i = 0; i < n; i++)
@@ -781,6 +805,7 @@ set_driver_quirks (GstVaapiDisplay * display)
     { "AMD", GST_VAAPI_DRIVER_QUIRK_NO_CHECK_SURFACE_PUT_IMAGE },
     { "i965", GST_VAAPI_DRIVER_QUIRK_NO_CHECK_VPP_COLOR_STD },
     { "iHD", GST_VAAPI_DRIVER_QUIRK_NO_RGBYUV_VPP_COLOR_PRIMARY },
+    { "i965", GST_VAAPI_DRIVER_QUIRK_MISSING_RGBA_IMAGE_FORMAT },
   };
   /* *INDENT-ON* */
 
