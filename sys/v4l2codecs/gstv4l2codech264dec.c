@@ -110,6 +110,9 @@ gst_v4l2_codec_h264_dec_stop (GstVideoDecoder * decoder)
 {
   GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
 
+  gst_v4l2_decoder_streamoff (self->decoder, GST_PAD_SINK);
+  gst_v4l2_decoder_streamoff (self->decoder, GST_PAD_SRC);
+
   if (self->sink_allocator) {
     gst_v4l2_codec_allocator_detach (self->sink_allocator);
     g_clear_object (&self->sink_allocator);
@@ -141,6 +144,9 @@ gst_v4l2_codec_h264_dec_negotiate (GstVideoDecoder * decoder)
 
   if (self->src_allocator)
     gst_v4l2_codec_allocator_detach (self->src_allocator);
+
+  gst_v4l2_decoder_streamoff (self->decoder, GST_PAD_SINK);
+  gst_v4l2_decoder_streamoff (self->decoder, GST_PAD_SRC);
 
   if (!gst_v4l2_decoder_set_sink_fmt (self->decoder, V4L2_PIX_FMT_H264_SLICE,
           self->coded_width, self->coded_height)) {
@@ -174,7 +180,25 @@ gst_v4l2_codec_h264_dec_negotiate (GstVideoDecoder * decoder)
 
   self->output_state->caps = gst_video_info_to_caps (&self->output_state->info);
 
-  return GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);
+  if (GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder)) {
+    if (!gst_v4l2_decoder_streamon (self->decoder, GST_PAD_SINK)) {
+      GST_ELEMENT_ERROR (self, RESOURCE, FAILED,
+          ("Could not enable the decoder driver."),
+          ("VIDIOC_STREAMON(SINK) failed: %s", g_strerror (errno)));
+      return FALSE;
+    }
+
+    if (!gst_v4l2_decoder_streamon (self->decoder, GST_PAD_SRC)) {
+      GST_ELEMENT_ERROR (self, RESOURCE, FAILED,
+          ("Could not enable the decoder driver."),
+          ("VIDIOC_STREAMON(SRC) failed: %s", g_strerror (errno)));
+      return FALSE;
+    }
+
+    return TRUE;
+  }
+
+  return FALSE;
 }
 
 static gboolean
@@ -440,6 +464,10 @@ gst_v4l2_codec_h264_dec_start_picture (GstH264Decoder * decoder,
 {
   GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
 
+  /* FIXME base class should not call us if negotiation failed */
+  if (!self->sink_allocator)
+    return FALSE;
+
   /* Ensure we have a bitstream to write into */
   if (!self->bitstream) {
     self->bitstream = gst_v4l2_codec_allocator_alloc (self->sink_allocator);
@@ -474,10 +502,57 @@ static GstFlowReturn
 gst_v4l2_codec_h264_dec_output_picture (GstH264Decoder * decoder,
     GstH264Picture * picture)
 {
-  /* We dequeue frames, until the system_frame_number matches, this ensure
-   * that the frame we want to output is actually decoded now */
-  /* TODO implement */
-  return GST_FLOW_OK;
+  GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
+  GstV4l2Request *request = gst_h264_picture_get_user_data (picture);
+  gint ret;
+  guint32 frame_num;
+  GstVideoCodecFrame *frame, *other_frame;
+  GstH264Picture *other_pic;
+  GstV4l2Request *other_request;
+
+  if (gst_v4l2_request_is_done (request))
+    goto finish_frame;
+
+  ret = gst_v4l2_request_poll (request, GST_SECOND);
+  if (ret == 0) {
+    GST_ELEMENT_ERROR (self, STREAM, DECODE,
+        ("Decoding frame took too long"), (NULL));
+    return GST_FLOW_ERROR;
+  } else if (ret < 0) {
+    GST_ELEMENT_ERROR (self, STREAM, DECODE,
+        ("Decoding request failed: %s", g_strerror (errno)), (NULL));
+    return GST_FLOW_ERROR;
+  }
+
+  while (TRUE) {
+    if (!gst_v4l2_decoder_dequeue_src (self->decoder, &frame_num)) {
+      GST_ELEMENT_ERROR (self, STREAM, DECODE,
+          ("Decoder did not produce a frame"), (NULL));
+      return GST_FLOW_ERROR;
+    }
+
+    if (frame_num == picture->system_frame_number)
+      break;
+
+    other_frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
+        frame_num);
+    g_return_val_if_fail (other_frame, GST_FLOW_ERROR);
+
+    other_pic = gst_video_codec_frame_get_user_data (other_frame);
+    other_request = gst_h264_picture_get_user_data (other_pic);
+    gst_v4l2_request_set_done (other_request);
+    gst_video_codec_frame_unref (other_frame);
+  }
+
+finish_frame:
+  gst_v4l2_request_set_done (request);
+  frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
+      picture->system_frame_number);
+
+  g_return_val_if_fail (frame, GST_FLOW_ERROR);
+
+  gst_h264_picture_set_user_data (picture, NULL, NULL);
+  return gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
 }
 
 static void
@@ -570,7 +645,9 @@ gst_v4l2_codec_h264_dec_end_picture (GstH264Decoder * decoder,
   frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
       picture->system_frame_number);
   g_return_val_if_fail (frame, FALSE);
+  g_warn_if_fail (frame->output_buffer == NULL);
   frame->output_buffer = buffer;
+  gst_video_codec_frame_unref (frame);
 
   if (!gst_v4l2_decoder_queue_src_buffer (self->decoder, buffer,
           picture->system_frame_number)) {
