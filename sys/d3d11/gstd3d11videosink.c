@@ -735,6 +735,7 @@ gst_d3d11_video_sink_upload_frame (GstD3D11VideoSink * self, GstBuffer * inbuf,
 {
   GstVideoFrame in_frame, out_frame;
   gboolean ret;
+  gint i;
 
   if (!gst_video_frame_map (&in_frame, &self->info, inbuf,
           GST_MAP_READ | GST_VIDEO_FRAME_MAP_FLAG_NO_REF))
@@ -750,6 +751,22 @@ gst_d3d11_video_sink_upload_frame (GstD3D11VideoSink * self, GstBuffer * inbuf,
 
   gst_video_frame_unmap (&in_frame);
   gst_video_frame_unmap (&out_frame);
+
+  if (ret) {
+    /* map to upload staging texture to render texture */
+    for (i = 0; i < gst_buffer_n_memory (outbuf); i++) {
+      GstMemory *mem;
+      GstMapInfo map;
+
+      mem = gst_buffer_peek_memory (outbuf, i);
+      if (!gst_memory_map (mem, &map, (GST_MAP_READ | GST_MAP_D3D11))) {
+        GST_ERROR_OBJECT (self, "cannot upload staging texture");
+        ret = FALSE;
+        break;
+      }
+      gst_memory_unmap (mem, &map);
+    }
+  }
 
   return ret;
 
