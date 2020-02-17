@@ -82,6 +82,9 @@ struct _GstVulkanSwapperPrivate
   /* source sizes accounting for all aspect ratios */
   guint dar_width;
   guint dar_height;
+
+  GstVideoRectangle surface_location;
+  GstVideoRectangle display_rect;
 };
 
 enum
@@ -738,6 +741,8 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
     swapchain_dims = priv->surf_props.currentExtent;
     priv->any_current_extent = FALSE;
   }
+  priv->surface_location.w = swapchain_dims.width;
+  priv->surface_location.h = swapchain_dims.height;
 
   /* If mailbox mode is available, use it, as is the lowest-latency non-
    * tearing mode.  If not, try IMMEDIATE which will usually be available,
@@ -1007,7 +1012,7 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
   GstMemory *in_mem;
   GstVulkanImageMemory *swap_img;
   GstVulkanCommandBuffer *cmd_buf;
-  GstVideoRectangle src, dst, rslt;
+  GstVideoRectangle src;
   VkResult err;
 
   g_return_val_if_fail (swap_idx < priv->n_swap_chain_images, FALSE);
@@ -1063,15 +1068,18 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
   src.w = priv->dar_width;
   src.h = priv->dar_height;
 
-  dst.x = dst.y = 0;
-  dst.w = gst_vulkan_image_memory_get_width (swap_img);
-  dst.h = gst_vulkan_image_memory_get_height (swap_img);
+  g_assert (priv->surface_location.w ==
+      gst_vulkan_image_memory_get_width (swap_img));
+  g_assert (priv->surface_location.h ==
+      gst_vulkan_image_memory_get_height (swap_img));
 
-  gst_video_sink_center_rect (src, dst, &rslt, priv->force_aspect_ratio);
+  gst_video_sink_center_rect (src, priv->surface_location, &priv->display_rect,
+      priv->force_aspect_ratio);
 
   GST_TRACE_OBJECT (swapper, "rendering into result rectangle %ux%u+%u,%u "
-      "src %ux%u dst %ux%u", rslt.w, rslt.h, rslt.x, rslt.y, src.w, src.h,
-      dst.w, dst.h);
+      "src %ux%u dst %ux%u", priv->display_rect.w, priv->display_rect.h,
+      priv->display_rect.x, priv->display_rect.y, src.w, src.h,
+      priv->surface_location.w, priv->surface_location.h);
 
   in_mem = gst_buffer_peek_memory (buffer, 0);
   {
@@ -1095,8 +1103,8 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
             .layerCount = 1,
         },
         .dstOffsets = {
-            {rslt.x, rslt.y, 0},
-            {rslt.x + rslt.w, rslt.y + rslt.h, 1},
+            {priv->display_rect.x, priv->display_rect.y, 0},
+            {priv->display_rect.x + priv->display_rect.w, priv->display_rect.y + priv->display_rect.h, 1},
         },
     };
     VkImageMemoryBarrier image_memory_barrier = {
@@ -1421,6 +1429,44 @@ _on_window_resize (GstVulkanWindow * window, guint width, guint height,
       GST_ERROR_OBJECT (swapper, "Failed to resize swapchain: %s",
           error->message);
     g_clear_error (&error);
+  }
+  RENDER_UNLOCK (swapper);
+}
+
+/**
+ * gst_vulkan_swapper_get_surface_rectangles:
+ * @swapper: a #GstVulkanSwapper
+ * @input_image: (out) (nullable): The #GstVideoRectangle for the configured
+ *      caps modified for DAR.
+ * @surface_location: (out) (nullable): The #GstVideoRectangle for where the
+ *      output surface is located relative to its parent
+ * @display_rect: (out) (nullable): The #GstVideoRectangle for where the input
+ *      images are placed inside @surface_location
+ */
+void
+gst_vulkan_swapper_get_surface_rectangles (GstVulkanSwapper * swapper,
+    GstVideoRectangle * input_image, GstVideoRectangle * surface_location,
+    GstVideoRectangle * display_rect)
+{
+  GstVulkanSwapperPrivate *priv;
+
+  g_return_if_fail (GST_IS_VULKAN_SWAPPER (swapper));
+
+  priv = GET_PRIV (swapper);
+
+  RENDER_LOCK (swapper);
+  if (input_image) {
+    input_image->x = input_image->y = 0;
+    input_image->w = priv->dar_width;
+    input_image->h = priv->dar_height;
+  }
+
+  if (surface_location) {
+    *display_rect = priv->surface_location;
+  }
+
+  if (display_rect) {
+    *display_rect = priv->display_rect;
   }
   RENDER_UNLOCK (swapper);
 }

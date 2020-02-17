@@ -77,6 +77,12 @@ gboolean            gst_vulkan_swapper_render_buffer            (GstVulkanSwappe
                                                                  GstBuffer * buffer,
                                                                  GError ** error);
 
+GST_VULKAN_API
+void                gst_vulkan_swapper_get_surface_rectangles   (GstVulkanSwapper *swapper,
+                                                                 GstVideoRectangle *input_image,
+                                                                 GstVideoRectangle *surface_location,
+                                                                 GstVideoRectangle *display_rect);
+
 G_END_DECLS
 
 #endif /* __GST_VULKAN_SWAPPER_H__ */
