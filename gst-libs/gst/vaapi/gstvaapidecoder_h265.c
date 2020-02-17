@@ -2867,6 +2867,9 @@ gst_vaapi_decoder_h265_decode_codec_data (GstVaapiDecoder *
         goto cleanup;
       }
 
+      pi->state = priv->parser_state;
+      pi->flags = 0;
+
       switch (pi->nalu.type) {
         case GST_H265_NAL_VPS:
           status = parse_vps (decoder, &unit);
