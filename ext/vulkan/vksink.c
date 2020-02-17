@@ -67,6 +67,14 @@ static GstFlowReturn gst_vulkan_sink_show_frame (GstVideoSink * bsink,
 static void gst_vulkan_sink_video_overlay_init (GstVideoOverlayInterface *
     iface);
 
+static void gst_vulkan_sink_navigation_interface_init (GstNavigationInterface *
+    iface);
+static void gst_vulkan_sink_key_event_cb (GstVulkanWindow * window,
+    char *event_name, char *key_string, GstVulkanSink * vk_sink);
+static void gst_vulkan_sink_mouse_event_cb (GstVulkanWindow * window,
+    char *event_name, int button, double posx, double posy,
+    GstVulkanSink * vk_sink);
+
 
 static GstStaticPadTemplate gst_vulkan_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -97,7 +105,9 @@ G_DEFINE_TYPE_WITH_CODE (GstVulkanSink, gst_vulkan_sink,
     GST_TYPE_VIDEO_SINK, GST_DEBUG_CATEGORY_INIT (gst_debug_vulkan_sink,
         "vulkansink", 0, "Vulkan Video Sink");
     G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_OVERLAY,
-        gst_vulkan_sink_video_overlay_init));
+        gst_vulkan_sink_video_overlay_init);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_NAVIGATION,
+        gst_vulkan_sink_navigation_interface_init));
 
 static void
 gst_vulkan_sink_class_init (GstVulkanSinkClass * klass)
@@ -337,6 +347,14 @@ gst_vulkan_sink_change_state (GstElement * element, GstStateChange transition)
           return GST_STATE_CHANGE_FAILURE;
         }
       }
+
+      vk_sink->key_sig_id =
+          g_signal_connect (vk_sink->window, "key-event",
+          G_CALLBACK (gst_vulkan_sink_key_event_cb), vk_sink);
+      vk_sink->mouse_sig_id =
+          g_signal_connect (vk_sink->window, "mouse-event",
+          G_CALLBACK (gst_vulkan_sink_mouse_event_cb), vk_sink);
+
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -357,6 +375,14 @@ gst_vulkan_sink_change_state (GstElement * element, GstStateChange transition)
       vk_sink->swapper = NULL;
       if (vk_sink->window) {
         gst_vulkan_window_close (vk_sink->window);
+
+        if (vk_sink->key_sig_id)
+          g_signal_handler_disconnect (vk_sink->window, vk_sink->key_sig_id);
+        vk_sink->key_sig_id = 0;
+        if (vk_sink->mouse_sig_id)
+          g_signal_handler_disconnect (vk_sink->window, vk_sink->mouse_sig_id);
+        vk_sink->mouse_sig_id = 0;
+
         gst_object_unref (vk_sink->window);
       }
       vk_sink->window = NULL;
@@ -568,4 +594,104 @@ static void
 gst_vulkan_sink_video_overlay_init (GstVideoOverlayInterface * iface)
 {
   iface->set_window_handle = gst_vulkan_sink_set_window_handle;
+}
+
+static void
+_display_size_to_stream_size (GstVulkanSink * vk_sink,
+    GstVideoRectangle * display_rect, gdouble x, gdouble y, gdouble * stream_x,
+    gdouble * stream_y)
+{
+  gdouble stream_width, stream_height;
+
+  stream_width = (gdouble) GST_VIDEO_INFO_WIDTH (&vk_sink->v_info);
+  stream_height = (gdouble) GST_VIDEO_INFO_HEIGHT (&vk_sink->v_info);
+
+  /* from display coordinates to stream coordinates */
+  if (display_rect->w > 0)
+    *stream_x = (x - display_rect->x) / display_rect->w * stream_width;
+  else
+    *stream_x = 0.;
+
+  /* clip to stream size */
+  *stream_x = CLAMP (*stream_x, 0., stream_width);
+
+  /* same for y-axis */
+  if (display_rect->h > 0)
+    *stream_y = (y - display_rect->y) / display_rect->h * stream_height;
+  else
+    *stream_y = 0.;
+
+  *stream_y = CLAMP (*stream_y, 0., stream_height);
+
+  GST_TRACE_OBJECT (vk_sink, "transform %fx%f into %fx%f", x, y, *stream_x,
+      *stream_y);
+}
+
+static void
+gst_vulkan_sink_navigation_send_event (GstNavigation * navigation,
+    GstStructure * structure)
+{
+  GstVulkanSink *vk_sink = GST_VULKAN_SINK (navigation);
+  GstVideoRectangle display_rect;
+  GstEvent *event = NULL;
+  gdouble x, y;
+
+  if (!vk_sink->swapper || !vk_sink->swapper->window) {
+    gst_structure_free (structure);
+    return;
+  }
+
+  gst_vulkan_swapper_get_surface_rectangles (vk_sink->swapper, NULL, NULL,
+      &display_rect);
+
+  /* Converting pointer coordinates to the non scaled geometry */
+  if (display_rect.w != 0 && display_rect.h != 0
+      && gst_structure_get_double (structure, "pointer_x", &x)
+      && gst_structure_get_double (structure, "pointer_y", &y)) {
+    gdouble stream_x, stream_y;
+
+    _display_size_to_stream_size (vk_sink, &display_rect, x, y, &stream_x,
+        &stream_y);
+
+    gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE,
+        stream_x, "pointer_y", G_TYPE_DOUBLE, stream_y, NULL);
+  }
+
+  event = gst_event_new_navigation (structure);
+  if (event) {
+    gboolean handled;
+
+    gst_event_ref (event);
+    handled = gst_pad_push_event (GST_VIDEO_SINK_PAD (vk_sink), event);
+
+    if (!handled)
+      gst_element_post_message ((GstElement *) vk_sink,
+          gst_navigation_message_new_event ((GstObject *) vk_sink, event));
+
+    gst_event_unref (event);
+  }
+}
+
+static void
+gst_vulkan_sink_navigation_interface_init (GstNavigationInterface * iface)
+{
+  iface->send_event = gst_vulkan_sink_navigation_send_event;
+}
+
+static void
+gst_vulkan_sink_key_event_cb (GstVulkanWindow * window, char *event_name, char
+    *key_string, GstVulkanSink * vk_sink)
+{
+  GST_DEBUG_OBJECT (vk_sink, "event %s key %s pressed", event_name, key_string);
+  gst_navigation_send_key_event (GST_NAVIGATION (vk_sink),
+      event_name, key_string);
+}
+
+static void
+gst_vulkan_sink_mouse_event_cb (GstVulkanWindow * window, char *event_name,
+    int button, double posx, double posy, GstVulkanSink * vk_sink)
+{
+  GST_DEBUG_OBJECT (vk_sink, "event %s at %g, %g", event_name, posx, posy);
+  gst_navigation_send_mouse_event (GST_NAVIGATION (vk_sink),
+      event_name, button, posx, posy);
 }

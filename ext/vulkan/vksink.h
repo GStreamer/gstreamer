@@ -59,6 +59,9 @@ struct _GstVulkanSink
 
   /* the currently set window handle */
   guintptr set_window_handle;
+
+  gulong key_sig_id;
+  gulong mouse_sig_id;
 };
 
 struct _GstVulkanSinkClass
