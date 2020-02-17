@@ -45,8 +45,6 @@ _init_debug (void)
   }
 }
 
-gboolean gst_vulkan_window_xcb_handle_event (GstVulkanWindowXCB * window_xcb);
-
 enum
 {
   PROP_0,
@@ -61,6 +59,7 @@ struct _GstVulkanWindowXCBPrivate
   gint preferred_height;
 
   xcb_intern_atom_reply_t *atom_wm_delete_window;
+  gboolean handle_events;
 };
 
 #define gst_vulkan_window_xcb_parent_class parent_class
@@ -74,6 +73,8 @@ static gboolean gst_vulkan_window_xcb_get_presentation_support (GstVulkanWindow
 static gboolean gst_vulkan_window_xcb_open (GstVulkanWindow * window,
     GError ** error);
 static void gst_vulkan_window_xcb_close (GstVulkanWindow * window);
+static void gst_vulkan_window_xcb_handle_events (GstVulkanWindow * window,
+    gboolean handle_events);
 
 static void
 gst_vulkan_window_xcb_finalize (GObject * object)
@@ -92,6 +93,7 @@ gst_vulkan_window_xcb_class_init (GstVulkanWindowXCBClass * klass)
   window_class->open = GST_DEBUG_FUNCPTR (gst_vulkan_window_xcb_open);
   window_class->close = GST_DEBUG_FUNCPTR (gst_vulkan_window_xcb_close);
   window_class->get_surface = gst_vulkan_window_xcb_get_surface;
+  window_class->handle_events = gst_vulkan_window_xcb_handle_events;
   window_class->get_presentation_support =
       gst_vulkan_window_xcb_get_presentation_support;
 }
@@ -99,6 +101,9 @@ gst_vulkan_window_xcb_class_init (GstVulkanWindowXCBClass * klass)
 static void
 gst_vulkan_window_xcb_init (GstVulkanWindowXCB * window)
 {
+  GstVulkanWindowXCBPrivate *priv = GET_PRIV (window);
+
+  priv->handle_events = TRUE;
 }
 
 /* Must be called in the gl thread */
@@ -155,6 +160,7 @@ gst_vulkan_window_xcb_hide (GstVulkanWindow * window)
 gboolean
 gst_vulkan_window_xcb_create_window (GstVulkanWindowXCB * window_xcb)
 {
+  GstVulkanWindowXCBPrivate *priv = GET_PRIV (window_xcb);
   GstVulkanDisplayXCB *display_xcb;
   xcb_connection_t *connection;
   xcb_screen_t *screen;
@@ -182,6 +188,9 @@ gst_vulkan_window_xcb_create_window (GstVulkanWindowXCB * window_xcb)
   xcb_create_window (connection, XCB_COPY_FROM_PARENT, window_xcb->win_id,
       root_window, x, y, width, height, 0, XCB_WINDOW_CLASS_INPUT_OUTPUT,
       screen->root_visual, value_mask, value_list);
+
+  gst_vulkan_window_xcb_handle_events (GST_VULKAN_WINDOW (window_xcb),
+      priv->handle_events);
 
   GST_LOG_OBJECT (window_xcb, "vulkan window id: %p",
       (gpointer) (guintptr) window_xcb->win_id);
@@ -315,4 +324,140 @@ gst_vulkan_window_xcb_close (GstVulkanWindow * window)
   }
 
   GST_VULKAN_WINDOW_CLASS (parent_class)->close (window);
+}
+
+G_GNUC_INTERNAL
+    gboolean
+gst_vulkan_window_xcb_handle_event (GstVulkanWindowXCB * window_xcb,
+    xcb_generic_event_t * event);
+
+gboolean
+gst_vulkan_window_xcb_handle_event (GstVulkanWindowXCB * window_xcb,
+    xcb_generic_event_t * event)
+{
+  GstVulkanDisplayXCB *display_xcb =
+      GST_VULKAN_DISPLAY_XCB (window_xcb->parent.display);
+  xcb_connection_t *connection =
+      GST_VULKAN_DISPLAY_XCB_CONNECTION (display_xcb);
+  uint8_t event_code = event->response_type & 0x7f;
+
+  switch (event_code) {
+    case XCB_CLIENT_MESSAGE:{
+      xcb_client_message_event_t *client_event;
+      xcb_intern_atom_cookie_t cookie;
+      xcb_intern_atom_reply_t *reply;
+
+      client_event = (xcb_client_message_event_t *) event;
+      cookie = xcb_intern_atom (connection, 0, 16, "WM_DELETE_WINDOW");
+      reply = xcb_intern_atom_reply (connection, cookie, 0);
+
+      if (client_event->data.data32[0] == reply->atom) {
+        GST_INFO_OBJECT (window_xcb, "Close requested");
+
+        gst_vulkan_window_close (GST_VULKAN_WINDOW (window_xcb));
+        gst_vulkan_display_remove_window (GST_VULKAN_DISPLAY (display_xcb),
+            GST_VULKAN_WINDOW (window_xcb));
+      }
+
+      g_free (reply);
+      break;
+    }
+    case XCB_CONFIGURE_NOTIFY:{
+      xcb_configure_notify_event_t *configure_event;
+
+      configure_event = (xcb_configure_notify_event_t *) event;
+
+      gst_vulkan_window_resize (GST_VULKAN_WINDOW (window_xcb),
+          configure_event->width, configure_event->height);
+      break;
+    }
+    case XCB_EXPOSE:{
+      xcb_expose_event_t *expose_event = (xcb_expose_event_t *) event;
+
+      /* non-zero means that other Expose follows
+       * so just wait for the last one
+       * in theory we should not receive non-zero because
+       * we have no sub areas here but just in case */
+      if (expose_event->count != 0)
+        break;
+
+      gst_vulkan_window_redraw (GST_VULKAN_WINDOW (window_xcb));
+      break;
+    }
+#if 0
+    case XCB_KEY_PRESS:
+    case XCB_KEY_RELEASE:{
+      xcb_key_press_event_t *kp = (xcb_key_press_event_t *) event;
+      const gchar *event_type_str;
+      gchar *key_str;
+      KeySym keysym;
+
+      keysym = XkbKeycodeToKeysym (connection, kp->detail, 0, 0);
+      key_str = XKeysymToString (keysym);
+
+      if (event_code == XCB_KEY_PRESS)
+        event_type_str = "key-press";
+      else
+        event_type_str = "key-release";
+
+      gst_vulkan_window_send_key_event (window, event_type_str, key_str);
+      break;
+    }
+#endif
+    case XCB_BUTTON_PRESS:
+    case XCB_BUTTON_RELEASE:{
+      xcb_button_press_event_t *bp = (xcb_button_press_event_t *) event;
+      const gchar *event_type_str;
+
+      if (event_code == XCB_BUTTON_PRESS)
+        event_type_str = "mouse-button-press";
+      else
+        event_type_str = "mouse-button-release";
+
+      gst_vulkan_window_send_mouse_event (GST_VULKAN_WINDOW (window_xcb),
+          event_type_str, bp->detail, (double) bp->event_x,
+          (double) bp->event_y);
+      break;
+    }
+    case XCB_MOTION_NOTIFY:{
+      xcb_motion_notify_event_t *motion = (xcb_motion_notify_event_t *) event;
+
+      gst_vulkan_window_send_mouse_event (GST_VULKAN_WINDOW (window_xcb),
+          "mouse-move", 0, (double) motion->event_x, (double) motion->event_y);
+      break;
+    }
+    default:
+      GST_DEBUG ("unhandled XCB type: %u", event_code);
+      break;
+  }
+
+  return TRUE;
+}
+
+static void
+gst_vulkan_window_xcb_handle_events (GstVulkanWindow * window,
+    gboolean handle_events)
+{
+  GstVulkanDisplayXCB *display_xcb = GST_VULKAN_DISPLAY_XCB (window->display);
+  xcb_connection_t *connection =
+      GST_VULKAN_DISPLAY_XCB_CONNECTION (display_xcb);
+  GstVulkanWindowXCB *window_xcb = GST_VULKAN_WINDOW_XCB (window);
+  GstVulkanWindowXCBPrivate *priv = GET_PRIV (window_xcb);
+
+  priv->handle_events = handle_events;
+
+  if (window_xcb->win_id) {
+    guint32 events;
+
+    events = XCB_EVENT_MASK_STRUCTURE_NOTIFY | XCB_EVENT_MASK_EXPOSURE
+        | XCB_EVENT_MASK_VISIBILITY_CHANGE;
+    if (handle_events) {
+      events |= XCB_EVENT_MASK_STRUCTURE_NOTIFY | XCB_EVENT_MASK_EXPOSURE
+          | XCB_EVENT_MASK_VISIBILITY_CHANGE | XCB_EVENT_MASK_POINTER_MOTION
+          | XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE
+          | XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE;
+    }
+    xcb_change_window_attributes (connection,
+        window_xcb->win_id, XCB_CW_EVENT_MASK, &events);
+  }
 }

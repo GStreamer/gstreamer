@@ -33,20 +33,14 @@
 #include "xcb_event_source.h"
 
 static gint
-_compare_xcb_window (GWeakRef * ref, xcb_window_t * window_id)
+_compare_xcb_window (GstVulkanWindowXCB * window_xcb, xcb_window_t * window_id)
 {
-  GstVulkanWindowXCB *window_xcb;
   gint ret;
-
-  window_xcb = g_weak_ref_get (ref);
-  if (!window_xcb)
-    return -1;
 
   g_return_val_if_fail (GST_IS_VULKAN_WINDOW_XCB (window_xcb), -1);
   g_return_val_if_fail (window_id != 0, -1);
 
   ret = window_xcb->win_id - *window_id;
-  gst_object_unref (window_xcb);
 
   return ret;
 }
@@ -56,22 +50,46 @@ _find_window_from_xcb_window (GstVulkanDisplayXCB * display_xcb,
     xcb_window_t window_id)
 {
   GstVulkanDisplay *display = GST_VULKAN_DISPLAY (display_xcb);
-  GstVulkanWindowXCB *ret = NULL;
-  GList *l;
 
   if (!window_id)
     return NULL;
 
-  GST_OBJECT_LOCK (display);
-  l = g_list_find_custom (display->windows, &window_id,
-      (GCompareFunc) _compare_xcb_window);
-  if (l) {
-    ret = g_weak_ref_get (l->data);
-  }
-  GST_OBJECT_UNLOCK (display);
-
-  return ret;
+  return (GstVulkanWindowXCB *) gst_vulkan_display_find_window (display,
+      &window_id, (GCompareFunc) _compare_xcb_window);
 }
+
+static GstVulkanWindowXCB *
+_window_from_event (GstVulkanDisplayXCB * display_xcb,
+    xcb_generic_event_t * event)
+{
+  uint8_t event_code = event->response_type & 0x7f;
+
+  switch (event_code) {
+/* *INDENT-OFF* */
+#define WIN_FROM_EVENT(case_val,event_type,window_field) \
+    case case_val:{ \
+      event_type * real_event = (event_type *) event; \
+      return _find_window_from_xcb_window (display_xcb, real_event->window_field); \
+    }
+    WIN_FROM_EVENT (XCB_CLIENT_MESSAGE, xcb_client_message_event_t, window)
+    WIN_FROM_EVENT (XCB_CONFIGURE_NOTIFY, xcb_configure_notify_event_t, window)
+    WIN_FROM_EVENT (XCB_EXPOSE, xcb_expose_event_t, window)
+    WIN_FROM_EVENT (XCB_KEY_PRESS, xcb_key_press_event_t, event)
+    WIN_FROM_EVENT (XCB_KEY_RELEASE, xcb_key_release_event_t, event)
+    WIN_FROM_EVENT (XCB_BUTTON_PRESS, xcb_button_press_event_t, event)
+    WIN_FROM_EVENT (XCB_BUTTON_RELEASE, xcb_button_release_event_t, event)
+    WIN_FROM_EVENT (XCB_MOTION_NOTIFY, xcb_motion_notify_event_t, event)
+#undef WIN_FROM_EVENT
+/* *INDENT-ON* */
+    default:
+      return NULL;
+  }
+}
+
+G_GNUC_INTERNAL
+    extern gboolean
+gst_vulkan_window_xcb_handle_event (GstVulkanWindowXCB * window_xcb,
+    xcb_generic_event_t * event);
 
 static gboolean
 _xcb_handle_event (GstVulkanDisplayXCB * display_xcb)
@@ -81,123 +99,13 @@ _xcb_handle_event (GstVulkanDisplayXCB * display_xcb)
   xcb_generic_event_t *event;
   gboolean ret = TRUE;
 
-  while ((event = xcb_poll_for_event (connection))) {
-    uint8_t event_code = event->response_type & 0x7f;
+  while (ret && (event = xcb_poll_for_event (connection))) {
+    GstVulkanWindowXCB *window_xcb;
 
-    switch (event_code) {
-      case XCB_CLIENT_MESSAGE:{
-        xcb_client_message_event_t *client_event;
-        xcb_intern_atom_cookie_t cookie;
-        xcb_intern_atom_reply_t *reply;
-
-        client_event = (xcb_client_message_event_t *) event;
-        cookie = xcb_intern_atom (connection, 0, 16, "WM_DELETE_WINDOW");
-        reply = xcb_intern_atom_reply (connection, cookie, 0);
-
-        if (client_event->data.data32[0] == reply->atom) {
-          GstVulkanWindowXCB *window_xcb;
-
-          window_xcb =
-              _find_window_from_xcb_window (display_xcb, client_event->window);
-
-          if (window_xcb) {
-            GST_INFO_OBJECT (window_xcb, "Close requested");
-
-            gst_vulkan_window_close (GST_VULKAN_WINDOW (window_xcb));
-            gst_vulkan_display_remove_window (GST_VULKAN_DISPLAY (display_xcb),
-                GST_VULKAN_WINDOW (window_xcb));
-            gst_object_unref (window_xcb);
-          }
-        }
-
-        g_free (reply);
-        break;
-      }
-      case XCB_CONFIGURE_NOTIFY:{
-        xcb_configure_notify_event_t *configure_event;
-        GstVulkanWindowXCB *window_xcb;
-
-        configure_event = (xcb_configure_notify_event_t *) event;
-        window_xcb =
-            _find_window_from_xcb_window (display_xcb, configure_event->window);
-
-        if (window_xcb) {
-          gst_vulkan_window_resize (GST_VULKAN_WINDOW (window_xcb),
-              configure_event->width, configure_event->height);
-
-          gst_object_unref (window_xcb);
-        }
-        break;
-      }
-      case XCB_EXPOSE:{
-        xcb_expose_event_t *expose_event = (xcb_expose_event_t *) event;
-        GstVulkanWindowXCB *window_xcb;
-
-        /* non-zero means that other Expose follows
-         * so just wait for the last one
-         * in theory we should not receive non-zero because
-         * we have no sub areas here but just in case */
-        if (expose_event->count != 0)
-          break;
-
-        window_xcb =
-            _find_window_from_xcb_window (display_xcb, expose_event->window);
-
-        if (window_xcb) {
-          gst_vulkan_window_redraw (GST_VULKAN_WINDOW (window_xcb));
-          gst_object_unref (window_xcb);
-        }
-        break;
-      }
-#if 0
-      case KeyPress:
-      case KeyRelease:
-        keysym = XkbKeycodeToKeysym (window_xcb->device,
-            event.xkey.keycode, 0, 0);
-        key_str = XKeysymToString (keysym);
-        key_data = g_slice_new (struct key_event);
-        key_data->window = window;
-        key_data->key_str = XKeysymToString (keysym);
-        key_data->event_type =
-            event.type == KeyPress ? "key-press" : "key-release";
-        GST_DEBUG ("input event key %d pressed over window at %d,%d (%s)",
-            event.xkey.keycode, event.xkey.x, event.xkey.y, key_str);
-        g_main_context_invoke (window->navigation_context,
-            (GSourceFunc) gst_vulkan_window_key_event_cb, key_data);
-        break;
-      case ButtonPress:
-      case ButtonRelease:
-        GST_DEBUG ("input event mouse button %d pressed over window at %d,%d",
-            event.xbutton.button, event.xbutton.x, event.xbutton.y);
-        mouse_data = g_slice_new (struct mouse_event);
-        mouse_data->window = window;
-        mouse_data->event_type =
-            event.type ==
-            ButtonPress ? "mouse-button-press" : "mouse-button-release";
-        mouse_data->button = event.xbutton.button;
-        mouse_data->posx = (double) event.xbutton.x;
-        mouse_data->posy = (double) event.xbutton.y;
-
-        g_main_context_invoke (window->navigation_context,
-            (GSourceFunc) gst_vulkan_window_mouse_event_cb, mouse_data);
-        break;
-      case MotionNotify:
-        GST_DEBUG ("input event pointer moved over window at %d,%d",
-            event.xmotion.x, event.xmotion.y);
-        mouse_data = g_slice_new (struct mouse_event);
-        mouse_data->window = window;
-        mouse_data->event_type = "mouse-move";
-        mouse_data->button = 0;
-        mouse_data->posx = (double) event.xbutton.x;
-        mouse_data->posy = (double) event.xbutton.y;
-
-        g_main_context_invoke (window->navigation_context, (GSourceFunc)
-            gst_vulkan_window_mouse_event_cb, mouse_data);
-        break;
-#endif
-      default:
-        GST_DEBUG ("unhandled XCB type: %u", event_code);
-        break;
+    window_xcb = _window_from_event (display_xcb, event);
+    if (window_xcb) {
+      ret = gst_vulkan_window_xcb_handle_event (window_xcb, event);
+      gst_object_unref (window_xcb);
     }
 
     g_free (event);
