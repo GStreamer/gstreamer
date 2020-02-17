@@ -99,6 +99,8 @@ enum
   SIGNAL_CLOSE,
   SIGNAL_DRAW,
   SIGNAL_RESIZE,
+  SIGNAL_MOUSE_EVENT,
+  SIGNAL_KEY_EVENT,
   LAST_SIGNAL
 };
 
@@ -201,6 +203,38 @@ gst_vulkan_window_class_init (GstVulkanWindowClass * klass)
   gst_vulkan_window_signals[SIGNAL_RESIZE] =
       g_signal_new ("resize", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, 0,
       NULL, NULL, NULL, G_TYPE_NONE, 2, G_TYPE_UINT, G_TYPE_UINT);
+
+  /**
+   * GstVulkanWindow::mouse-event:
+   * @object: the #GstVulkanWindow
+   * @id: the name of the event
+   * @button: the id of the button
+   * @x: the x coordinate of the mouse event
+   * @y: the y coordinate of the mouse event
+   *
+   * Will be emitted when a mouse event is received by the #GstVulkanWindow.
+   *
+   * Since: 1.18
+   */
+  gst_vulkan_window_signals[SIGNAL_MOUSE_EVENT] =
+      g_signal_new ("mouse-event", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 4, G_TYPE_STRING,
+      G_TYPE_INT, G_TYPE_DOUBLE, G_TYPE_DOUBLE);
+
+  /**
+   * GstVulkanWindow::key-event:
+   * @object: the #GstVulkanWindow
+   * @id: the name of the event
+   * @key: the id of the key pressed
+   *
+   * Will be emitted when a key event is received by the #GstVulkanWindow.
+   *
+   * Since: 1.18
+   */
+  gst_vulkan_window_signals[SIGNAL_KEY_EVENT] =
+      g_signal_new ("key-event", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 2, G_TYPE_STRING,
+      G_TYPE_STRING);
 
   gobject_class->set_property = gst_vulkan_window_set_property;
   gobject_class->get_property = gst_vulkan_window_get_property;
@@ -469,6 +503,50 @@ gst_vulkan_window_get_surface_dimensions (GstVulkanWindow * window,
     *width = priv->surface_width;
     *height = priv->surface_height;
   }
+}
+
+void
+gst_vulkan_window_send_key_event (GstVulkanWindow * window,
+    const char *event_type, const char *key_str)
+{
+  g_return_if_fail (GST_IS_VULKAN_WINDOW (window));
+
+  g_signal_emit (window, gst_vulkan_window_signals[SIGNAL_KEY_EVENT], 0,
+      event_type, key_str);
+}
+
+void
+gst_vulkan_window_send_mouse_event (GstVulkanWindow * window,
+    const char *event_type, int button, double posx, double posy)
+{
+  g_return_if_fail (GST_IS_VULKAN_WINDOW (window));
+
+  g_signal_emit (window, gst_vulkan_window_signals[SIGNAL_MOUSE_EVENT], 0,
+      event_type, button, posx, posy);
+}
+
+/**
+ * gst_vulkan_window_handle_events:
+ * @window: a #GstVulkanWindow
+ * @handle_events: a #gboolean indicating if events should be handled or not.
+ *
+ * Tell a @window that it should handle events from the window system. These
+ * events are forwarded upstream as navigation events. In some window systems
+ * events are not propagated in the window hierarchy if a client is listening
+ * for them. This method allows you to disable events handling completely
+ * from the @window.
+ */
+void
+gst_vulkan_window_handle_events (GstVulkanWindow * window,
+    gboolean handle_events)
+{
+  GstVulkanWindowClass *window_class;
+
+  g_return_if_fail (GST_IS_VULKAN_WINDOW (window));
+  window_class = GST_VULKAN_WINDOW_GET_CLASS (window);
+
+  if (window_class->handle_events)
+    window_class->handle_events (window, handle_events);
 }
 
 GType gst_vulkan_dummy_window_get_type (void);

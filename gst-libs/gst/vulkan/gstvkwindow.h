@@ -91,6 +91,8 @@ struct _GstVulkanWindowClass {
   void          (*get_surface_dimensions)       (GstVulkanWindow *window,
                                                  guint * width,
                                                  guint * height);
+  void          (*handle_events)                (GstVulkanWindow *window,
+                                                 gboolean handle_events);
 
   /*< private >*/
   gpointer _reserved[GST_PADDING];
@@ -115,6 +117,20 @@ void               gst_vulkan_window_get_surface_dimensions         (GstVulkanWi
 GST_VULKAN_API
 void               gst_vulkan_window_set_window_handle              (GstVulkanWindow *window,
                                                                      guintptr handle);
+
+GST_VULKAN_API
+void                gst_vulkan_window_handle_events                 (GstVulkanWindow * window,
+                                                                     gboolean handle_events);
+GST_VULKAN_API
+void                gst_vulkan_window_send_key_event                (GstVulkanWindow * window,
+                                                                     const char * event_type,
+                                                                     const char * key_str);
+GST_VULKAN_API
+void                gst_vulkan_window_send_mouse_event              (GstVulkanWindow * window,
+                                                                     const char * event_type,
+                                                                     int button,
+                                                                     double posx,
+                                                                     double posy);
 
 GST_VULKAN_API
 gboolean           gst_vulkan_window_open                           (GstVulkanWindow *window,
