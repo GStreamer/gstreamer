@@ -58,7 +58,7 @@ enum
   PROP_0,
   PROP_ADAPTER,
   PROP_DEVICE_ID,
-  PROP_VENDER_ID,
+  PROP_VENDOR_ID,
   PROP_HARDWARE,
   PROP_DESCRIPTION,
   PROP_ALLOW_TEARING,
@@ -70,7 +70,7 @@ struct _GstD3D11DevicePrivate
 {
   guint adapter;
   guint device_id;
-  guint vender_id;
+  guint vendor_id;
   gboolean hardware;
   gchar *description;
   gboolean allow_tearing;
@@ -326,9 +326,9 @@ gst_d3d11_device_class_init (GstD3D11DeviceClass * klass)
           "DXGI Device ID", 0, G_MAXUINT32, 0,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, PROP_VENDER_ID,
-      g_param_spec_uint ("vender-id", "Vender Id",
-          "DXGI Vender ID", 0, G_MAXUINT32, 0,
+  g_object_class_install_property (gobject_class, PROP_VENDOR_ID,
+      g_param_spec_uint ("vendor-id", "Vendor Id",
+          "DXGI Vendor ID", 0, G_MAXUINT32, 0,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_HARDWARE,
@@ -566,7 +566,7 @@ gst_d3d11_device_constructed (GObject * object)
           "Flags: 0x%x, %s",
           priv->adapter, desc.VendorId, desc.DeviceId, desc.Flags, description);
 
-      priv->vender_id = desc.VendorId;
+      priv->vendor_id = desc.VendorId;
       priv->device_id = desc.DeviceId;
       priv->hardware = is_hardware;
       priv->description = description;
@@ -685,8 +685,8 @@ gst_d3d11_device_get_property (GObject * object, guint prop_id,
     case PROP_DEVICE_ID:
       g_value_set_uint (value, priv->device_id);
       break;
-    case PROP_VENDER_ID:
-      g_value_set_uint (value, priv->vender_id);
+    case PROP_VENDOR_ID:
+      g_value_set_uint (value, priv->vendor_id);
       break;
     case PROP_HARDWARE:
       g_value_set_boolean (value, priv->hardware);
