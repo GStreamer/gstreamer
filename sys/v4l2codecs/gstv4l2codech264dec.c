@@ -138,6 +138,16 @@ gst_v4l2_codec_h264_dec_negotiate (GstVideoDecoder * decoder)
 {
   GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
   GstH264Decoder *h264dec = GST_H264_DECODER (decoder);
+  /* *INDENT-OFF* */
+  struct v4l2_ext_control control[] = {
+    {
+      .id = V4L2_CID_MPEG_VIDEO_H264_SPS,
+      .ptr = &self->sps,
+      .size = sizeof (self->sps),
+    },
+  };
+  /* *INDENT-ON* */
+  GstCaps *filter, *caps;
 
   /* Ignore downstream renegotiation request. */
   if (!self->need_negotiation)
@@ -164,18 +174,29 @@ gst_v4l2_codec_h264_dec_negotiate (GstVideoDecoder * decoder)
     return FALSE;
   }
 
-  /* TODO set sequence parameter control, this is needed to negotiate a
-   * format with the help of the driver */
+  if (!gst_v4l2_decoder_set_controls (self->decoder, NULL, control,
+          G_N_ELEMENTS (control))) {
+    GST_ELEMENT_ERROR (decoder, RESOURCE, WRITE,
+        ("Driver does not support the selected stream."), (NULL));
+    return FALSE;
+  }
 
-  if (!gst_v4l2_decoder_select_src_format (self->decoder, &self->vinfo)) {
+  filter = gst_v4l2_decoder_enum_src_formats (self->decoder);
+  GST_DEBUG_OBJECT (self, "Supported output formats: %" GST_PTR_FORMAT, filter);
+
+  caps = gst_pad_peer_query_caps (decoder->srcpad, filter);
+  gst_caps_unref (filter);
+  GST_DEBUG_OBJECT (self, "Peer supported formats: %" GST_PTR_FORMAT, caps);
+
+  if (!gst_v4l2_decoder_select_src_format (self->decoder, caps, &self->vinfo)) {
     GST_ELEMENT_ERROR (self, CORE, NEGOTIATION,
         ("Unsupported bitdepth/chroma format"),
         ("No support for %ux%u %ubit chroma IDC %i", self->coded_width,
             self->coded_height, self->bitdepth, self->chroma_format_idc));
+    gst_caps_unref (caps);
     return FALSE;
   }
-
-  /* TODO some decoders supports color convertion and scaling */
+  gst_caps_unref (caps);
 
   if (self->output_state)
     gst_video_codec_state_unref (self->output_state);

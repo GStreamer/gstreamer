@@ -51,7 +51,10 @@ gboolean          gst_v4l2_decoder_enum_sink_fmt (GstV4l2Decoder * self,
 gboolean          gst_v4l2_decoder_set_sink_fmt (GstV4l2Decoder * self, guint32 fmt,
                                                  gint width, gint height);
 
+GstCaps *         gst_v4l2_decoder_enum_src_formats (GstV4l2Decoder * self);
+
 gboolean          gst_v4l2_decoder_select_src_format (GstV4l2Decoder * self,
+                                                      GstCaps * caps,
                                                       GstVideoInfo * info);
 
 gint              gst_v4l2_decoder_request_buffers (GstV4l2Decoder * self,

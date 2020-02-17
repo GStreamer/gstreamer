@@ -254,18 +254,107 @@ gst_v4l2_decoder_set_sink_fmt (GstV4l2Decoder * self, guint32 pix_fmt,
   return TRUE;
 }
 
-gboolean
-gst_v4l2_decoder_select_src_format (GstV4l2Decoder * self, GstVideoInfo * info)
+GstCaps *
+gst_v4l2_decoder_enum_src_formats (GstV4l2Decoder * self)
 {
   gint ret;
   struct v4l2_format fmt = {
     .type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE,
   };
+  GstVideoFormat format;
+  GstCaps *caps;
+  GValue list = G_VALUE_INIT;
+  GValue value = G_VALUE_INIT;
+  gint i;
+
+  g_return_val_if_fail (self->opened, FALSE);
 
   ret = ioctl (self->video_fd, VIDIOC_G_FMT, &fmt);
   if (ret < 0) {
-    GST_ERROR_OBJECT (self, "VIDIOC_S_FMT failed: %s", g_strerror (errno));
+    GST_ERROR_OBJECT (self, "VIDIOC_G_FMT failed: %s", g_strerror (errno));
     return FALSE;
+  }
+
+  /* We first place a structure with the default pixel format */
+  if (gst_v4l2_format_to_video_format (fmt.fmt.pix_mp.pixelformat, &format))
+    caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING,
+        gst_video_format_to_string (format), NULL);
+  else
+    caps = gst_caps_new_empty ();
+
+  /* And then enumerate other possible formats and place that as a second
+   * structure in the caps */
+  g_value_init (&list, GST_TYPE_LIST);
+  g_value_init (&value, G_TYPE_STRING);
+
+  for (i = 0; ret >= 0; i++) {
+    struct v4l2_fmtdesc fmtdesc = { i, V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE, };
+
+    ret = ioctl (self->video_fd, VIDIOC_ENUM_FMT, &fmtdesc);
+    if (ret < 0) {
+      if (errno != EINVAL)
+        GST_ERROR_OBJECT (self, "VIDIOC_ENUM_FMT failed: %s",
+            g_strerror (errno));
+      continue;
+    }
+
+    if (gst_v4l2_format_to_video_format (fmtdesc.pixelformat, &format)) {
+      g_value_set_static_string (&value, gst_video_format_to_string (format));
+      gst_value_list_append_value (&list, &value);
+    }
+  }
+  g_value_reset (&value);
+
+  if (gst_value_list_get_size (&list) > 0) {
+    GstStructure *str = gst_structure_new_empty ("video/x-raw");
+    gst_structure_take_value (str, "format", &list);
+    gst_caps_append_structure (caps, str);
+  } else {
+    g_value_reset (&list);
+  }
+
+  return caps;
+}
+
+gboolean
+gst_v4l2_decoder_select_src_format (GstV4l2Decoder * self, GstCaps * caps,
+    GstVideoInfo * info)
+{
+  gint ret;
+  struct v4l2_format fmt = {
+    .type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE,
+  };
+  GstStructure *str;
+  const gchar *format_str;
+  GstVideoFormat format;
+  guint32 pix_fmt;
+
+  if (gst_caps_is_empty (caps))
+    return FALSE;
+
+  ret = ioctl (self->video_fd, VIDIOC_G_FMT, &fmt);
+  if (ret < 0) {
+    GST_ERROR_OBJECT (self, "VIDIOC_G_FMT failed: %s", g_strerror (errno));
+    return FALSE;
+  }
+
+  caps = gst_caps_make_writable (caps);
+  str = gst_caps_get_structure (caps, 0);
+  gst_structure_fixate_field (str, "format");
+
+  format_str = gst_structure_get_string (str, "format");
+  format = gst_video_format_from_string (format_str);
+
+  if (gst_v4l2_format_from_video_format (format, &pix_fmt) &&
+      pix_fmt != fmt.fmt.pix_mp.pixelformat) {
+    GST_DEBUG_OBJECT (self, "Trying to use peer format: %s ", format_str);
+    fmt.fmt.pix_mp.pixelformat = pix_fmt;
+
+    ret = ioctl (self->video_fd, VIDIOC_S_FMT, &fmt);
+    if (ret < 0) {
+      GST_ERROR_OBJECT (self, "VIDIOC_S_FMT failed: %s", g_strerror (errno));
+      return FALSE;
+    }
   }
 
   if (!gst_v4l2_format_to_video_info (&fmt, info)) {
@@ -466,8 +555,8 @@ gst_v4l2_decoder_set_controls (GstV4l2Decoder * self, GstV4l2Request * request,
   struct v4l2_ext_controls controls = {
     .controls = control,
     .count = count,
-    .request_fd = request->fd,
-    .which = V4L2_CTRL_WHICH_REQUEST_VAL,
+    .request_fd = request ? request->fd : 0,
+    .which = request ? V4L2_CTRL_WHICH_REQUEST_VAL : 0,
   };
 
   ret = ioctl (self->video_fd, VIDIOC_S_EXT_CTRLS, &controls);

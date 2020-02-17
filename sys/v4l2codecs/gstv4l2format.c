@@ -33,6 +33,7 @@ struct FormatEntry
 
 static struct FormatEntry format_map[] = {
   {V4L2_PIX_FMT_NV12, 1, GST_VIDEO_FORMAT_NV12, 8, 420},
+  {V4L2_PIX_FMT_YUYV, 1, GST_VIDEO_FORMAT_YUY2, 8, 422},
   {0,}
 };
 
