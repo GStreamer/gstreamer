@@ -4102,7 +4102,7 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
       }
 
       if (ret != GST_CLOCK_UNSCHEDULED) {
-        now = timer->timeout + MAX (clock_jitter, 0);
+        now = priv->timer_timeout + MAX (clock_jitter, 0);
         GST_DEBUG_OBJECT (jitterbuffer,
             "sync done, %d, #%d, %" GST_STIME_FORMAT, ret, priv->timer_seqnum,
             GST_STIME_ARGS (clock_jitter));
