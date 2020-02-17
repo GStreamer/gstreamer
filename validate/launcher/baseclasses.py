@@ -1664,7 +1664,7 @@ class _TestsLauncher(Loggable):
         return (None, exceptions)
 
     def _load_testsuites(self):
-        testsuites = set()
+        testsuites = {}
         for testsuite in self.options.testsuites:
             if testsuite.endswith('.py') and os.path.exists(testsuite):
                 testsuite = os.path.abspath(os.path.expanduser(testsuite))
@@ -1686,13 +1686,17 @@ class _TestsLauncher(Loggable):
                         testsuite, loaded_module[1]), Colors.FAIL)
                 continue
 
-            testsuites.add(module)
+            if module.__name__ in testsuites:
+                self.info("Trying to load testsuite '%s' a second time?", module.__name__)
+                continue
+
+            testsuites[module.__name__] = module
             if not hasattr(module, "TEST_MANAGER"):
                 module.TEST_MANAGER = [tester.name for tester in self.testers]
             elif not isinstance(module.TEST_MANAGER, list):
                 module.TEST_MANAGER = [module.TEST_MANAGER]
 
-        self.options.testsuites = list(testsuites)
+        self.options.testsuites = list(testsuites.values())
 
     def _setup_testsuites(self):
         for testsuite in self.options.testsuites:
