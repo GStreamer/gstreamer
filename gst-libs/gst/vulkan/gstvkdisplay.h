@@ -131,7 +131,8 @@ gboolean                gst_vulkan_display_run_context_query        (GstElement 
 /* GstVulkanWindow usage only */
 GST_VULKAN_API
 gboolean                gst_vulkan_display_remove_window            (GstVulkanDisplay * display, GstVulkanWindow * window);
-
+GST_VULKAN_API
+GstVulkanWindow *       gst_vulkan_display_find_window              (GstVulkanDisplay * display, gpointer data, GCompareFunc compare_func);
 
 G_END_DECLS
 

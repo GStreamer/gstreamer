@@ -373,18 +373,58 @@ _compare_vulkan_window (GWeakRef * ref, GstVulkanWindow * window)
   return !equal;
 }
 
-static GList *
-_find_window_list_item (GstVulkanDisplay * display, GstVulkanWindow * window)
+static void
+prepend_window_weakref_item (GWeakRef * ref, GList ** new)
 {
-  GList *l;
+  GstVulkanWindow *window = g_weak_ref_get (ref);
+  if (window) {
+    *new = g_list_prepend (*new, window);
+  }
+}
 
-  if (!window)
-    return NULL;
+static GList *
+window_weak_list_to_strong (GstVulkanDisplay * display)
+{
+  GList *new = NULL;
+  g_list_foreach (display->windows, (GFunc) prepend_window_weakref_item, &new);
+  return new;
+}
 
-  l = g_list_find_custom (display->windows, window,
-      (GCompareFunc) _compare_vulkan_window);
+/**
+ * gst_vulkan_display_find_window:
+ * @display: a #GstVulkanDisplay
+ * @data: (closure): some data to pass to @compare_func
+ * @compare_func: (scope call): a comparison function to run
+ *
+ * Execute @compare_func over the list of windows stored by @display.  The
+ * first argument to @compare_func is the #GstVulkanWindow being checked and the
+ * second argument is @data.
+ *
+ * Returns: (transfer full): The first #GstVulkanWindow that causes a match
+ *          from @compare_func
+ *
+ * Since: 1.18
+ */
+GstVulkanWindow *
+gst_vulkan_display_find_window (GstVulkanDisplay * display, gpointer data,
+    GCompareFunc compare_func)
+{
+  GstVulkanWindow *ret = NULL;
+  GList *l, *windows;
 
-  return l;
+  GST_OBJECT_LOCK (display);
+  windows = window_weak_list_to_strong (display);
+  l = g_list_find_custom (windows, data, (GCompareFunc) compare_func);
+  if (l)
+    ret = gst_object_ref (l->data);
+
+  GST_DEBUG_OBJECT (display, "Found window %" GST_PTR_FORMAT
+      " (%p) in internal list", ret, ret);
+  GST_OBJECT_UNLOCK (display);
+
+  g_list_free_full (windows, gst_object_unref);
+
+  return ret;
 }
 
 /**
@@ -404,7 +444,8 @@ gst_vulkan_display_remove_window (GstVulkanDisplay * display,
   GList *l;
 
   GST_OBJECT_LOCK (display);
-  l = _find_window_list_item (display, window);
+  l = g_list_find_custom (display->windows, window,
+      (GCompareFunc) _compare_vulkan_window);
   if (l) {
     GWeakRef *ref = l->data;
     display->windows = g_list_delete_link (display->windows, l);
