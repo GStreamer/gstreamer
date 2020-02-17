@@ -12,7 +12,7 @@ namespace GstreamerSharp
 	class Playback
 	{
 		static Element Playbin;
-		static Range Slider;
+		static Gtk.Range Slider;
 		static TextView StreamsList;
 		static ulong silderUpdateSignalID;
 
@@ -22,7 +22,7 @@ namespace GstreamerSharp
 
 		static void HandleValueChanged (object sender, EventArgs e)
 		{
-			var range = (Range)sender;
+			var range = (Gtk.Range)sender;
 			var value = range.Value;
 			Playbin.SeekSimple (Format.Time, SeekFlags.Flush | SeekFlags.KeyUnit, (long)(value * Gst.Constants.SECOND));
 		}
