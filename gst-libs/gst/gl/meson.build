@@ -658,26 +658,39 @@ if need_platform_wgl == 'yes'
   endif
 endif
 
-if need_platform_wgl != 'no' and need_win_win32 != 'no'
+if host_system == 'windows' and need_win_win32 != 'no'
   gdi_dep = cc.find_library('gdi32', required : false)
-  wglext_h = cc.has_header('GL/wglext.h',
-                           prefix : '''#include <windows.h>
-                                       #include <GL/gl.h>''',
-                           include_directories : compat_includes)
+  if gdi_dep.found()
+    have_wgl = false
+    have_egl_win32 = false
+    if need_platform_wgl != 'no'
+      wglext_h = cc.has_header('GL/wglext.h',
+                               prefix : '''#include <windows.h>
+                                           #include <GL/gl.h>''',
+                               include_directories : compat_includes)
+      have_wgl = wglext_h and gl_dep.found()
+    endif
 
-  if wglext_h and gdi_dep.found() and gl_dep.found()
-    gl_includes += [compat_includes]
-    gl_platform_deps += gdi_dep
-    gl_sources += [
-      'win32/gstglwindow_win32.c',
-      'win32/gstglwindow_win32.c',
-      'wgl/gstglcontext_wgl.c',
-    ]
-    enabled_gl_winsys += 'win32'
-    gl_winsys_deps += gdi_dep
-    enabled_gl_platforms += 'wgl'
-    glconf.set('GST_GL_HAVE_WINDOW_WIN32', 1)
-    glconf.set('GST_GL_HAVE_PLATFORM_WGL', 1)
+    have_egl_win32 = enabled_gl_platforms.contains('egl') and gles2_dep.found()
+    if have_wgl or have_egl_win32
+      gl_includes += [compat_includes]
+      gl_platform_deps += gdi_dep
+      gl_sources += [
+        'win32/gstglwindow_win32.c',
+        'win32/gstglwindow_win32.c',
+      ]
+      enabled_gl_winsys += 'win32'
+      gl_winsys_deps += gdi_dep
+      glconf.set('GST_GL_HAVE_WINDOW_WIN32', 1)
+    endif
+
+    if have_wgl
+      gl_sources += [
+        'wgl/gstglcontext_wgl.c',
+      ]
+      enabled_gl_platforms += 'wgl'
+      glconf.set('GST_GL_HAVE_PLATFORM_WGL', 1)
+    endif
   endif
 endif
 
