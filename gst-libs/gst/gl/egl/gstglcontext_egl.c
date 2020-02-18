@@ -805,7 +805,8 @@ gst_gl_context_egl_create_context (GstGLContext * context,
 #endif
 #if GST_GL_HAVE_WINDOW_WIN32
     if (GST_IS_GL_WINDOW_WIN32 (context->window)) {
-      gst_gl_window_win32_create_window ((GstGLWindowWin32 *) context->window);
+      gst_gl_window_win32_create_window ((GstGLWindowWin32 *) context->window,
+          NULL);
     }
 #endif
 #if GST_GL_HAVE_WINDOW_DISPMANX

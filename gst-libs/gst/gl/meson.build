@@ -976,7 +976,7 @@ if build_gstgl
   gstgl_dep = declare_dependency(link_with : gstgl,
     include_directories : [libsinc, compat_includes],
     sources: gen_sources,
-    dependencies : [video_dep, gst_base_dep] + gl_winsys_deps)
+    dependencies : [video_dep, gst_base_dep] + gl_lib_deps + gl_winsys_deps)
 
 elif get_option('gl').enabled()
   error('GStreamer OpenGL integration required via options, but needed dependencies not found.')
