@@ -631,9 +631,8 @@ ges_layer_add_clip (GESLayer * layer, GESClip * clip)
   current_layer = ges_clip_get_layer (clip);
   if (G_UNLIKELY (current_layer)) {
     GST_WARNING ("Clip %p already belongs to another layer", clip);
-    /* FIXME: why are we reffing the clip if it belongs to another
-     * layer? */
     gst_object_ref_sink (clip);
+    gst_object_unref (clip);
     gst_object_unref (current_layer);
 
     return FALSE;
