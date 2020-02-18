@@ -1030,7 +1030,7 @@ class TestTransitions(common.GESSimpleTimelineTest):
             mainloop.run()
 
             layers = timeline.get_layers()
-            self.assertEqual(len(layers), 2)
+            self.assertEqual(len(layers), 1)
 
             self.assertTrue(layers[0].props.auto_transition)
 
