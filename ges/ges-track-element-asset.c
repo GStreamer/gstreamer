@@ -143,3 +143,31 @@ ges_track_element_asset_get_track_type (GESTrackElementAsset * asset)
 
   return asset->priv->type;
 }
+
+/**
+ * ges_track_element_asset_get_natural_framerate:
+ * @self: A #GESAsset
+ * @framerate_n: The framerate numerator
+ * @framerate_d: The framerate denominator
+ *
+ * Result: %TRUE if @self has a natural framerate %FALSE otherwise
+ */
+gboolean
+ges_track_element_asset_get_natural_framerate (GESTrackElementAsset * self,
+    gint * framerate_n, gint * framerate_d)
+{
+  GESTrackElementAssetClass *klass;
+
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT_ASSET (self), FALSE);
+  g_return_val_if_fail (framerate_n && framerate_d, FALSE);
+
+  klass = GES_TRACK_ELEMENT_ASSET_GET_CLASS (self);
+
+  *framerate_n = 0;
+  *framerate_d = -1;
+
+  if (klass->get_natural_framerate)
+    return klass->get_natural_framerate (self, framerate_n, framerate_d);
+
+  return FALSE;
+}

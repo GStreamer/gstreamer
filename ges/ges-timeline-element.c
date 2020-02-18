@@ -358,6 +358,15 @@ _child_prop_handler_free (ChildPropHandler * handler)
   g_slice_free (ChildPropHandler, handler);
 }
 
+static gboolean
+_get_natural_framerate (GESTimelineElement * self, gint * framerate_n,
+    gint * framerate_d)
+{
+  GST_INFO_OBJECT (self, "No natural framerate");
+
+  return FALSE;
+}
+
 static void
 ges_timeline_element_init (GESTimelineElement * self)
 {
@@ -571,6 +580,7 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
       ges_timeline_element_get_children_properties;
   klass->lookup_child = _lookup_child;
   klass->set_child_property = _set_child_property;
+  klass->get_natural_framerate = _get_natural_framerate;
 }
 
 static void
@@ -2491,4 +2501,42 @@ ges_timeline_element_edit (GESTimelineElement * self, GList * layers,
       return FALSE;
   }
   return FALSE;
+}
+
+/**
+ * ges_timeline_element_get_natural_framerate:
+ * @self: The #GESTimelineElement to get "natural" framerate from
+ * @framerate_n: (out): The framerate numerator
+ * @framerate_d: (out): The framerate denominator
+ *
+ * Get the "natural" framerate of @self. This is to say, for example
+ * for a #GESVideoUriSource the framerate of the source.
+ *
+ * Note that a #GESAudioSource may also have a natural framerate if it derives
+ * from the same #GESSourceClip asset as a #GESVideoSource, and its value will
+ * be that of the video source. For example, if the uri of a #GESUriClip points
+ * to a file that contains both a video and audio stream, then the corresponding
+ * #GESAudioUriSource will share the natural framerate of the corresponding
+ * #GESVideoUriSource.
+ *
+ * Returns: Whether @self has a natural framerate or not, @framerate_n
+ * and @framerate_d will be set to, respectively, 0 and -1 if it is
+ * not the case.
+ *
+ * Since: 1.18
+ */
+gboolean
+ges_timeline_element_get_natural_framerate (GESTimelineElement * self,
+    gint * framerate_n, gint * framerate_d)
+{
+  GESTimelineElementClass *klass;
+
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
+  g_return_val_if_fail (framerate_n && framerate_d, FALSE);
+
+  klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
+
+  *framerate_n = 0;
+  *framerate_d = -1;
+  return klass->get_natural_framerate (self, framerate_n, framerate_d);
 }

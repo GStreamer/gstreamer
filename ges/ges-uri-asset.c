@@ -220,6 +220,52 @@ _request_id_update (GESAsset * self, gchar ** proposed_new_id, GError * error)
   return FALSE;
 }
 
+static gboolean
+ges_uri_source_asset_get_natural_framerate (GESTrackElementAsset * asset,
+    gint * framerate_n, gint * framerate_d)
+{
+  GESUriSourceAssetPrivate *priv = GES_URI_SOURCE_ASSET (asset)->priv;
+
+  if (!GST_IS_DISCOVERER_VIDEO_INFO (priv->sinfo))
+    return FALSE;
+
+  *framerate_d =
+      gst_discoverer_video_info_get_framerate_denom (GST_DISCOVERER_VIDEO_INFO
+      (priv->sinfo));
+  *framerate_n =
+      gst_discoverer_video_info_get_framerate_num (GST_DISCOVERER_VIDEO_INFO
+      (priv->sinfo));
+
+  if ((*framerate_n == 0 && *framerate_d == 1) || *framerate_d == 0
+      || *framerate_d == G_MAXINT) {
+    GST_INFO_OBJECT (asset, "No framerate information about the file.");
+
+    *framerate_n = 0;
+    *framerate_d = -1;
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+_get_natural_framerate (GESClipAsset * self, gint * framerate_n,
+    gint * framerate_d)
+{
+  GList *tmp;
+
+  for (tmp = (GList *)
+      ges_uri_clip_asset_get_stream_assets (GES_URI_CLIP_ASSET (self)); tmp;
+      tmp = tmp->next) {
+
+    if (ges_track_element_asset_get_natural_framerate (tmp->data, framerate_n,
+            framerate_d))
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
 static void
 _asset_proxied (GESAsset * self, const gchar * new_uri)
 {
@@ -263,6 +309,8 @@ ges_uri_clip_asset_class_init (GESUriClipAssetClass * klass)
   GES_ASSET_CLASS (klass)->start_loading = _start_loading;
   GES_ASSET_CLASS (klass)->request_id_update = _request_id_update;
   GES_ASSET_CLASS (klass)->inform_proxy = _asset_proxied;
+
+  GES_CLIP_ASSET_CLASS (klass)->get_natural_framerate = _get_natural_framerate;
 
   klass->discovered = discoverer_discovered_cb;
 
@@ -802,6 +850,8 @@ ges_uri_source_asset_class_init (GESUriSourceAssetClass * klass)
   object_class->dispose = ges_uri_source_asset_dispose;
 
   GES_ASSET_CLASS (klass)->extract = _extract;
+  GES_TRACK_ELEMENT_ASSET_CLASS (klass)->get_natural_framerate =
+      ges_uri_source_asset_get_natural_framerate;
 }
 
 static void

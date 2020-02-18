@@ -114,6 +114,29 @@ ges_video_uri_source_needs_converters (GESVideoSource * source)
   return FALSE;
 }
 
+static GstDiscovererVideoInfo *
+_get_video_stream_info (GESVideoUriSource * self)
+{
+  GstDiscovererStreamInfo *info;
+  GESAsset *asset = ges_extractable_get_asset (GES_EXTRACTABLE (self));
+
+  if (!asset) {
+    GST_DEBUG_OBJECT (self, "No asset set yet");
+    return NULL;
+  }
+
+  info = ges_uri_source_asset_get_stream_info (GES_URI_SOURCE_ASSET (asset));
+
+  if (!GST_IS_DISCOVERER_VIDEO_INFO (info)) {
+    GST_ERROR_OBJECT (self, "Doesn't have a video info (%" GST_PTR_FORMAT
+        ")", info);
+    return NULL;
+  }
+
+  return GST_DISCOVERER_VIDEO_INFO (info);
+}
+
+
 gboolean
 ges_video_uri_source_get_natural_size (GESVideoSource * source, gint * width,
     gint * height)
@@ -121,27 +144,14 @@ ges_video_uri_source_get_natural_size (GESVideoSource * source, gint * width,
   const GstTagList *tags = NULL;
   gchar *rotation_info = NULL;
   gint videoflip_method, rotate_angle;
-  GstDiscovererStreamInfo *info;
-  GESAsset *asset = ges_extractable_get_asset (GES_EXTRACTABLE (source));
+  GstDiscovererVideoInfo *info =
+      _get_video_stream_info (GES_VIDEO_URI_SOURCE (source));
 
-  if (!asset) {
-    GST_DEBUG_OBJECT (source, "No asset set yet");
+  if (!info)
     return FALSE;
-  }
 
-  info = ges_uri_source_asset_get_stream_info (GES_URI_SOURCE_ASSET (asset));
-
-  if (!GST_IS_DISCOVERER_VIDEO_INFO (info)) {
-    GST_ERROR_OBJECT (source, "Doesn't have a video info (%" GST_PTR_FORMAT
-        ")", info);
-    return FALSE;
-  }
-
-  *width =
-      gst_discoverer_video_info_get_width (GST_DISCOVERER_VIDEO_INFO (info));
-  *height =
-      gst_discoverer_video_info_get_height (GST_DISCOVERER_VIDEO_INFO (info));
-
+  *width = gst_discoverer_video_info_get_width (info);
+  *height = gst_discoverer_video_info_get_height (info);
   if (!ges_timeline_element_lookup_child (GES_TIMELINE_ELEMENT (source),
           "GstVideoFlip::video-direction", NULL, NULL))
     goto done;

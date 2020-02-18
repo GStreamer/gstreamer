@@ -31,6 +31,8 @@
 #endif
 
 #include "ges-clip-asset.h"
+#include "ges-source-clip.h"
+#include "ges-internal.h"
 
 #define GES_CLIP_ASSET_GET_PRIVATE(o)\
   (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_CLIP_ASSET, \
@@ -171,4 +173,39 @@ ges_clip_asset_get_supported_formats (GESClipAsset * self)
   g_return_val_if_fail (GES_IS_CLIP_ASSET (self), GES_TRACK_TYPE_UNKNOWN);
 
   return self->priv->supportedformats;
+}
+
+/**
+ * ges_clip_asset_get_natural_framerate:
+ * @self: The object from which to retrieve the natural framerate
+ * @framerate_n: The framerate numerator
+ * @framerate_d: The framerate denominator
+ *
+ * Result: %TRUE if @self has a natural framerate %FALSE otherwise
+ */
+gboolean
+ges_clip_asset_get_natural_framerate (GESClipAsset * self,
+    gint * framerate_n, gint * framerate_d)
+{
+  GESClipAssetClass *klass;
+  g_return_val_if_fail (GES_IS_CLIP_ASSET (self), FALSE);
+  g_return_val_if_fail (framerate_n && framerate_d, FALSE);
+
+  klass = GES_CLIP_ASSET_GET_CLASS (self);
+
+  *framerate_n = 0;
+  *framerate_d = -1;
+
+  if (klass->get_natural_framerate)
+    return klass->get_natural_framerate (self, framerate_n, framerate_d);
+
+  if (g_type_is_a (ges_asset_get_extractable_type (GES_ASSET (self)),
+          GES_TYPE_SOURCE_CLIP)) {
+    *framerate_n = DEFAULT_FRAMERATE_N;
+    *framerate_d = DEFAULT_FRAMERATE_D;
+
+    return TRUE;
+  }
+
+  return FALSE;
 }

@@ -128,6 +128,17 @@ G_DEFINE_TYPE_WITH_CODE (GESAudioUriSource, ges_audio_uri_source,
 
 /* GObject VMethods */
 
+static gboolean
+_get_natural_framerate (GESTimelineElement * self, gint * framerate_n,
+    gint * framerate_d)
+{
+  if (self->parent)
+    return ges_timeline_element_get_natural_framerate (self->parent,
+        framerate_n, framerate_d);
+
+  return FALSE;
+}
+
 static void
 ges_audio_uri_source_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
@@ -177,6 +188,7 @@ static void
 ges_audio_uri_source_class_init (GESAudioUriSourceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GESTimelineElementClass *element_class = GES_TIMELINE_ELEMENT_CLASS (klass);
   GESAudioSourceClass *source_class = GES_AUDIO_SOURCE_CLASS (klass);
 
   object_class->get_property = ges_audio_uri_source_get_property;
@@ -191,6 +203,8 @@ ges_audio_uri_source_class_init (GESAudioUriSourceClass * klass)
   g_object_class_install_property (object_class, PROP_URI,
       g_param_spec_string ("uri", "URI", "uri of the resource",
           NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+
+  element_class->get_natural_framerate = _get_natural_framerate;
 
   source_class->create_source = ges_audio_uri_source_create_source;
 }

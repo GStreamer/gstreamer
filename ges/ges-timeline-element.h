@@ -265,8 +265,9 @@ struct _GESTimelineElementClass
   guint32      (*get_layer_priority)       (GESTimelineElement *self);
 
   /*< private > */
+  gboolean (*get_natural_framerate) (GESTimelineElement * self, gint *framerate_n, gint *framerate_d);
   /* Padding for API extension */
-  gpointer _ges_reserved[GES_PADDING_LARGE - 4];
+  gpointer _ges_reserved[GES_PADDING_LARGE - 5];
 };
 
 GES_API
@@ -379,6 +380,10 @@ GESTimelineElement * ges_timeline_element_paste                       (GESTimeli
                                                                        GstClockTime paste_position);
 GES_API
 GESTrackType         ges_timeline_element_get_track_types             (GESTimelineElement * self);
+GES_API
+gboolean             ges_timeline_element_get_natural_framerate       (GESTimelineElement *self,
+                                                                       gint *framerate_n,
+                                                                       gint *framerate_d);
 
 GES_API
 guint32 ges_timeline_element_get_layer_priority                       (GESTimelineElement * self);

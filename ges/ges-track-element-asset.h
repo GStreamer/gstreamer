@@ -44,12 +44,18 @@ struct _GESTrackElementAssetClass
 {
   GESAssetClass parent_class;
 
-  gpointer _ges_reserved[GES_PADDING];
+  gboolean (*get_natural_framerate)        (GESTrackElementAsset *self, gint *framerate_n, gint *framerate_d);
+
+  gpointer _ges_reserved[GES_PADDING - 1];
 };
 
 GES_API
 const GESTrackType ges_track_element_asset_get_track_type (GESTrackElementAsset *asset);
 GES_API
 void ges_track_element_asset_set_track_type               (GESTrackElementAsset * asset, GESTrackType type);
+GES_API
+gboolean ges_track_element_asset_get_natural_framerate    (GESTrackElementAsset *self,
+                                                           gint *framerate_n,
+                                                           gint *framerate_d);
 
 G_END_DECLS

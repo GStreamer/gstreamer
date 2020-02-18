@@ -144,6 +144,25 @@ _get_layer_priority (GESTimelineElement * element)
   return ges_timeline_element_get_layer_priority (element->parent);
 }
 
+static gboolean
+_get_natural_framerate (GESTimelineElement * self, gint * framerate_n,
+    gint * framerate_d)
+{
+  GESAsset *asset = ges_extractable_get_asset (GES_EXTRACTABLE (self));
+
+  /* FIXME: asset should **never** be NULL */
+  if (asset &&
+      ges_track_element_asset_get_natural_framerate (GES_TRACK_ELEMENT_ASSET
+          (asset), framerate_n, framerate_d))
+    return TRUE;
+
+  if (self->parent)
+    return ges_timeline_element_get_natural_framerate (self->parent,
+        framerate_n, framerate_d);
+
+  return FALSE;
+}
+
 static void
 ges_track_element_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
@@ -430,6 +449,7 @@ ges_track_element_class_init (GESTrackElementClass * klass)
   element_class->get_track_types = _get_track_types;
   element_class->deep_copy = ges_track_element_copy_properties;
   element_class->get_layer_priority = _get_layer_priority;
+  element_class->get_natural_framerate = _get_natural_framerate;
 
   klass->create_gnl_object = ges_track_element_create_gnl_object_func;
   klass->lookup_child = _lookup_child;

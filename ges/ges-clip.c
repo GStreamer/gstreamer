@@ -508,6 +508,22 @@ _get_layer_priority (GESTimelineElement * element)
   return ges_layer_get_priority (clip->priv->layer);
 }
 
+static gboolean
+_get_natural_framerate (GESTimelineElement * self, gint * framerate_n,
+    gint * framerate_d)
+{
+  GESAsset *asset = ges_extractable_get_asset (GES_EXTRACTABLE (self));
+
+  if (!asset) {
+    GST_WARNING_OBJECT (self, "No asset set?");
+
+    return FALSE;
+  }
+
+  return ges_clip_asset_get_natural_framerate (GES_CLIP_ASSET (asset),
+      framerate_n, framerate_d);
+}
+
 /****************************************************
  *                                                  *
  *  GESContainer virtual methods implementation     *
@@ -1138,6 +1154,7 @@ ges_clip_class_init (GESClipClass * klass)
   element_class->deep_copy = _deep_copy;
   element_class->lookup_child = _lookup_child;
   element_class->get_layer_priority = _get_layer_priority;
+  element_class->get_natural_framerate = _get_natural_framerate;
 
   container_class->add_child = _add_child;
   container_class->remove_child = _remove_child;

@@ -45,7 +45,9 @@ struct _GESClipAssetClass
 {
   GESAssetClass parent;
 
-  gpointer _ges_reserved[GES_PADDING];
+  gboolean (*get_natural_framerate)        (GESClipAsset *self, gint *framerate_n, gint *framerate_d);
+
+  gpointer _ges_reserved[GES_PADDING - 1];
 };
 
 GES_API
@@ -53,5 +55,7 @@ void ges_clip_asset_set_supported_formats         (GESClipAsset *self,
                                                               GESTrackType supportedformats);
 GES_API
 GESTrackType ges_clip_asset_get_supported_formats (GESClipAsset *self);
+GES_API
+gboolean ges_clip_asset_get_natural_framerate (GESClipAsset* self, gint* framerate_n, gint* framerate_d);
 
 G_END_DECLS
