@@ -61,6 +61,11 @@ GstDebugCategory * _ges_debug (void);
 #define _set_duration0 ges_timeline_element_set_duration
 #define _set_priority0 ges_timeline_element_set_priority
 
+#define DEFAULT_FRAMERATE_N 30
+#define DEFAULT_FRAMERATE_D 1
+#define DEFAULT_WIDTH 1280
+#define DEFAULT_HEIGHT 720
+
 #define GES_TIMELINE_ELEMENT_FORMAT \
     "s<%p>" \
     " [ %" GST_TIME_FORMAT \

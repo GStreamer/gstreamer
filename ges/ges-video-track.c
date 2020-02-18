@@ -21,6 +21,17 @@
  * SECTION: gesvideotrack
  * @title: GESVideoTrack
  * @short_description: A standard GESTrack for raw video
+ *
+ * Sane default properties to specify and fixate the output stream are
+ * set as restriction-caps.
+ * It is advised, to modify these properties, to use
+ * #ges_track_update_restriction_caps, setting them directly is
+ * possible through #ges_track_set_restriction_caps.
+ *
+ * The default properties are:
+ * - width: 1920
+ * - height: 1080
+ * - framerate: 30/1
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -28,6 +39,9 @@
 
 #include "ges-video-track.h"
 #include "ges-smart-video-mixer.h"
+#include "ges-internal.h"
+
+#define DEFAULT_RESTRICTION_CAPS "video/x-raw(ANY), framerate=" G_STRINGIFY(DEFAULT_FRAMERATE_N) "/" G_STRINGIFY(DEFAULT_FRAMERATE_D) ", width=" G_STRINGIFY(DEFAULT_WIDTH) ", height=" G_STRINGIFY(DEFAULT_HEIGHT)
 
 struct _GESVideoTrackPrivate
 {
@@ -144,14 +158,17 @@ ges_video_track_new (void)
 {
   GESVideoTrack *ret;
   GstCaps *caps = gst_caps_new_empty_simple ("video/x-raw");
+  GstCaps *restriction_caps = gst_caps_from_string (DEFAULT_RESTRICTION_CAPS);
 
   ret = g_object_new (GES_TYPE_VIDEO_TRACK, "track-type", GES_TRACK_TYPE_VIDEO,
       "caps", caps, NULL);
 
   ges_track_set_create_element_for_gap_func (GES_TRACK (ret),
       create_element_for_raw_video_gap);
+  ges_track_set_restriction_caps (GES_TRACK (ret), restriction_caps);
 
   gst_caps_unref (caps);
+  gst_caps_unref (restriction_caps);
 
   return ret;
 }
