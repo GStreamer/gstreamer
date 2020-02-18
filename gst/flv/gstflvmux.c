@@ -833,7 +833,7 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
   const GstTagList *tags;
   GstBuffer *script_tag, *tmp;
   GstMapInfo map;
-  guint32 dts;
+  guint64 dts;
   guint8 *data;
   gint i, n_tags, tags_written = 0;
 
@@ -846,8 +846,15 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
     dts -= mux->first_timestamp / GST_MSECOND;
   }
 
-  GST_DEBUG_OBJECT (mux, "Creating metadata, dts %i, tags = %" GST_PTR_FORMAT,
+  GST_DEBUG_OBJECT (mux,
+      "Creating metadata, dts %" G_GUINT64_FORMAT ", tags = %" GST_PTR_FORMAT,
       dts, tags);
+
+  if (dts > G_MAXUINT32) {
+    GST_LOG_OBJECT (mux,
+        "Detected rollover, timestamp will be truncated (previous:%"
+        G_GUINT64_FORMAT ", new:%u)", dts, (guint32) dts);
+  }
 
   /* FIXME perhaps some bytewriter'ing here ... */
 
@@ -1158,7 +1165,7 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
   GstBuffer *tag;
   GstMapInfo map;
   guint size;
-  guint32 pts, dts, cts;
+  guint64 pts, dts, cts;
   guint8 *data, *bdata = NULL;
   gsize bsize = 0;
 
@@ -1194,7 +1201,15 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
     pts = dts + cts;
   }
 
-  GST_LOG_OBJECT (mux, "got pts %i dts %i cts %i", pts, dts, cts);
+  GST_LOG_OBJECT (mux,
+      "got pts %" G_GUINT64_FORMAT " dts %" G_GUINT64_FORMAT " cts %"
+      G_GUINT64_FORMAT, pts, dts, cts);
+
+  if (dts > G_MAXUINT32) {
+    GST_LOG_OBJECT (mux,
+        "Detected rollover, timestamp will be truncated (previous:%"
+        G_GUINT64_FORMAT ", new:%u)", dts, (guint32) dts);
+  }
 
   if (buffer != NULL) {
     gst_buffer_map (buffer, &map, GST_MAP_READ);
