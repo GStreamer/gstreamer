@@ -144,7 +144,10 @@ if not vulkan_dep.found() and get_option('vulkan').enabled()
 endif
 
 xcb_dep = dependency('xcb', version : '>=1.10', required : get_option('x11'))
-if xcb_dep.found() and cc.has_header('vulkan/vulkan_xcb.h', dependencies : vulkan_dep)
+xkbcommon_dep = dependency('xkbcommon', required : get_option('x11'))
+xkbcommon_x11_dep = dependency('xkbcommon-x11', required : get_option('x11'))
+
+if xcb_dep.found() and xkbcommon_dep.found() and xkbcommon_x11_dep.found() and cc.has_header('vulkan/vulkan_xcb.h', dependencies : vulkan_dep)
   vulkan_sources += [
     'xcb/gstvkdisplay_xcb.c',
     'xcb/gstvkwindow_xcb.c',
@@ -154,10 +157,10 @@ if xcb_dep.found() and cc.has_header('vulkan/vulkan_xcb.h', dependencies : vulka
     'xcb/gstvkdisplay_xcb.h'
   ]
 
-  optional_deps += xcb_dep
+  optional_deps += [xcb_dep, xkbcommon_dep, xkbcommon_x11_dep]
   vulkan_windowing = true
   vulkan_conf.set10('GST_VULKAN_HAVE_WINDOW_XCB', 1)
-  endif
+endif
 
 wayland_client_dep = dependency('wayland-client', version : '>=1.4', required : get_option('wayland'))
 if wayland_client_dep.found() and cc.has_header('vulkan/vulkan_wayland.h', dependencies : vulkan_dep)

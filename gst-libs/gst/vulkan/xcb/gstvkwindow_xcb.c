@@ -28,6 +28,9 @@
 #include "gstvkwindow_xcb.h"
 #include "gstvkdisplay_xcb.h"
 
+#include <xkbcommon/xkbcommon.h>
+#include <xkbcommon/xkbcommon-x11.h>
+
 #define GET_PRIV(o) gst_vulkan_window_xcb_get_instance_private (o)
 
 #define GST_CAT_DEFAULT gst_vulkan_window_xcb_debug
@@ -60,6 +63,12 @@ struct _GstVulkanWindowXCBPrivate
 
   xcb_intern_atom_reply_t *atom_wm_delete_window;
   gboolean handle_events;
+
+  guint8 first_xkb_event;
+  gint32 kbd_device_id;
+  struct xkb_context *xkb_ctx;
+  struct xkb_keymap *xkb_keymap;
+  struct xkb_state *xkb_state;
 };
 
 #define gst_vulkan_window_xcb_parent_class parent_class
@@ -157,6 +166,44 @@ gst_vulkan_window_xcb_hide (GstVulkanWindow * window)
   }
 }
 
+static gboolean
+init_keyboard (GstVulkanWindowXCB * window_xcb)
+{
+  GstVulkanWindowXCBPrivate *priv = GET_PRIV (window_xcb);
+  GstVulkanWindow *window = GST_VULKAN_WINDOW (window_xcb);
+  GstVulkanDisplayXCB *display_xcb = GST_VULKAN_DISPLAY_XCB (window->display);
+  xcb_connection_t *connection =
+      GST_VULKAN_DISPLAY_XCB_CONNECTION (display_xcb);
+  int ret;
+
+  ret = xkb_x11_setup_xkb_extension (connection,
+      XKB_X11_MIN_MAJOR_XKB_VERSION,
+      XKB_X11_MIN_MINOR_XKB_VERSION,
+      XKB_X11_SETUP_XKB_EXTENSION_NO_FLAGS,
+      NULL, NULL, &priv->first_xkb_event, NULL);
+  if (!ret) {
+    GST_ERROR_OBJECT (window_xcb, "Couldn't setup XKB extension\n");
+    return FALSE;;
+  }
+
+  priv->xkb_ctx = xkb_context_new (0);
+  if (!priv->xkb_ctx)
+    return FALSE;
+
+  priv->kbd_device_id = xkb_x11_get_core_keyboard_device_id (connection);
+
+  priv->xkb_keymap = xkb_x11_keymap_new_from_device (priv->xkb_ctx,
+      connection, priv->kbd_device_id, XKB_KEYMAP_COMPILE_NO_FLAGS);
+  if (!priv->xkb_keymap)
+    return FALSE;
+  priv->xkb_state = xkb_x11_state_new_from_device (priv->xkb_keymap,
+      connection, priv->kbd_device_id);
+  if (!priv->xkb_state)
+    return FALSE;
+
+  return TRUE;
+}
+
 gboolean
 gst_vulkan_window_xcb_create_window (GstVulkanWindowXCB * window_xcb)
 {
@@ -207,6 +254,8 @@ gst_vulkan_window_xcb_create_window (GstVulkanWindowXCB * window_xcb)
       reply->atom, 4, 32, 1, &reply2->atom);
   g_free (reply);
   g_free (reply2);
+
+  init_keyboard (window_xcb);
 
   gst_vulkan_window_xcb_show (GST_VULKAN_WINDOW (window_xcb));
 
@@ -323,6 +372,16 @@ gst_vulkan_window_xcb_close (GstVulkanWindow * window)
     GST_DEBUG ("display receiver closed");
   }
 
+  if (priv->xkb_state)
+    xkb_state_unref (priv->xkb_state);
+  priv->xkb_state = NULL;
+  if (priv->xkb_keymap)
+    xkb_keymap_unref (priv->xkb_keymap);
+  priv->xkb_keymap = NULL;
+  if (priv->xkb_ctx)
+    xkb_context_unref (priv->xkb_ctx);
+  priv->xkb_ctx = NULL;
+
   GST_VULKAN_WINDOW_CLASS (parent_class)->close (window);
 }
 
@@ -335,6 +394,7 @@ gboolean
 gst_vulkan_window_xcb_handle_event (GstVulkanWindowXCB * window_xcb,
     xcb_generic_event_t * event)
 {
+  GstVulkanWindowXCBPrivate *priv = GET_PRIV (window_xcb);
   GstVulkanDisplayXCB *display_xcb =
       GST_VULKAN_DISPLAY_XCB (window_xcb->parent.display);
   xcb_connection_t *connection =
@@ -384,26 +444,36 @@ gst_vulkan_window_xcb_handle_event (GstVulkanWindowXCB * window_xcb,
       gst_vulkan_window_redraw (GST_VULKAN_WINDOW (window_xcb));
       break;
     }
-#if 0
     case XCB_KEY_PRESS:
     case XCB_KEY_RELEASE:{
       xcb_key_press_event_t *kp = (xcb_key_press_event_t *) event;
-      const gchar *event_type_str;
-      gchar *key_str;
-      KeySym keysym;
+      int nsyms;
+      const xkb_keysym_t *syms;
+      const char *event_type_str;
 
-      keysym = XkbKeycodeToKeysym (connection, kp->detail, 0, 0);
-      key_str = XKeysymToString (keysym);
+      if (!priv->xkb_state)
+        /* no xkb support. What year is this?! */
+        break;
+
+      nsyms = xkb_state_key_get_syms (priv->xkb_state, kp->detail, &syms);
 
       if (event_code == XCB_KEY_PRESS)
         event_type_str = "key-press";
       else
         event_type_str = "key-release";
 
-      gst_vulkan_window_send_key_event (window, event_type_str, key_str);
+      /* TODO: compose states, keymap changes */
+      if (nsyms <= 0)
+        break;
+
+      for (int i = 0; i < nsyms; i++) {
+        char s[64];
+        xkb_keysym_get_name (syms[i], s, sizeof (s));
+        gst_vulkan_window_send_key_event (GST_VULKAN_WINDOW (window_xcb),
+            event_type_str, s);
+      }
       break;
     }
-#endif
     case XCB_BUTTON_PRESS:
     case XCB_BUTTON_RELEASE:{
       xcb_button_press_event_t *bp = (xcb_button_press_event_t *) event;
