@@ -140,6 +140,7 @@ gboolean
 ges_extractable_set_asset (GESExtractable * self, GESAsset * asset)
 {
   GESExtractableInterface *iface;
+  GType extract_type;
 
   g_return_val_if_fail (GES_IS_EXTRACTABLE (self), FALSE);
 
@@ -153,8 +154,15 @@ ges_extractable_set_asset (GESExtractable * self, GESAsset * asset)
 
     return FALSE;
   }
-  /* FIXME: shouldn't we check that the extractable-type of the asset
-   * matches our type? */
+
+  extract_type = ges_asset_get_extractable_type (asset);
+  if (G_OBJECT_TYPE (self) != extract_type) {
+    GST_WARNING_OBJECT (self, "Can not set the asset to %" GST_PTR_FORMAT
+        " because its extractable-type is %s, rather than %s",
+        asset, g_type_name (extract_type), G_OBJECT_TYPE_NAME (self));
+
+    return FALSE;
+  }
 
   g_object_set_qdata_full (G_OBJECT (self), ges_asset_key,
       gst_object_ref (asset), gst_object_unref);
