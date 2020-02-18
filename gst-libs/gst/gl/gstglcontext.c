@@ -66,7 +66,7 @@
 #include "cocoa/gstglcontext_cocoa.h"
 #endif
 #if GST_GL_HAVE_PLATFORM_WGL
-#include "win32/gstglcontext_wgl.h"
+#include "wgl/gstglcontext_wgl.h"
 #endif
 #if GST_GL_HAVE_PLATFORM_EAGL
 #include "eagl/gstglcontext_eagl.h"

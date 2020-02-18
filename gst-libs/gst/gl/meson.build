@@ -671,7 +671,7 @@ if need_platform_wgl != 'no' and need_win_win32 != 'no'
     gl_sources += [
       'win32/gstglwindow_win32.c',
       'win32/gstglwindow_win32.c',
-      'win32/gstglcontext_wgl.c',
+      'wgl/gstglcontext_wgl.c',
     ]
     enabled_gl_winsys += 'win32'
     gl_winsys_deps += gdi_dep

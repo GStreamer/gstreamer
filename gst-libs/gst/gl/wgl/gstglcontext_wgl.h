@@ -21,7 +21,7 @@
 #ifndef __GST_GL_CONTEXT_WGL_H__
 #define __GST_GL_CONTEXT_WGL_H__
 
-#include "gstglwindow_win32.h"
+#include "../win32/gstglwindow_win32.h"
 
 G_BEGIN_DECLS
 
