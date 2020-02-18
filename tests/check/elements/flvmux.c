@@ -935,8 +935,8 @@ GST_END_TEST;
 typedef struct
 {
   guint media_type;
-  gint ts;                      /* timestamp in ms */
-  gint rt;                      /* running_time in ms */
+  guint64 ts;                   /* timestamp in ms */
+  guint64 rt;                   /* running_time in ms */
 } InputData;
 
 GST_START_TEST (test_incrementing_timestamps)
@@ -1034,6 +1034,110 @@ GST_START_TEST (test_incrementing_timestamps)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rollover_timestamps)
+{
+  GstPad *audio_sink, *video_sink, *audio_src, *video_src;
+  GstHarness *h, *audio, *video, *audio_q, *video_q;
+  GstTestClock *tclock;
+  guint i;
+  guint64 rollover_pts = (guint64) G_MAXUINT32 + 100;
+  InputData input[] = {
+    {AUDIO, 0, 1}
+    ,
+    {VIDEO, 0, 2}
+    ,
+    {VIDEO, (guint64) G_MAXUINT32 - 100, (guint64) G_MAXUINT32 - 99}
+    ,
+    {AUDIO, (guint64) G_MAXUINT32 - 95, (guint64) G_MAXUINT32 - 90}
+    ,
+    {AUDIO, rollover_pts, (guint64) G_MAXUINT32 + 110}
+    ,
+  };
+
+  /* setup flvmuxer with queues in front */
+  h = gst_harness_new_with_padnames ("flvmux", NULL, "src");
+  audio = gst_harness_new_with_element (h->element, "audio", NULL);
+  video = gst_harness_new_with_element (h->element, "video", NULL);
+  audio_q = gst_harness_new ("queue");
+  video_q = gst_harness_new ("queue");
+  audio_sink = GST_PAD_PEER (audio->srcpad);
+  video_sink = GST_PAD_PEER (video->srcpad);
+  audio_src = GST_PAD_PEER (audio_q->sinkpad);
+  video_src = GST_PAD_PEER (video_q->sinkpad);
+  gst_pad_unlink (audio->srcpad, audio_sink);
+  gst_pad_unlink (video->srcpad, video_sink);
+  gst_pad_unlink (audio_src, audio_q->sinkpad);
+  gst_pad_unlink (video_src, video_q->sinkpad);
+  gst_pad_link (audio_src, audio_sink);
+  gst_pad_link (video_src, video_sink);
+  g_object_set (h->element, "streamable", TRUE, NULL);
+
+  gst_harness_set_src_caps_str (audio_q,
+      "audio/mpeg, mpegversion=(int)4, "
+      "rate=(int)44100, channels=(int)1, "
+      "stream-format=(string)raw, codec_data=(buffer)1208");
+
+  gst_harness_set_src_caps_str (video_q,
+      "video/x-h264, stream-format=(string)avc, alignment=(string)au, "
+      "codec_data=(buffer)0142c00dffe1000d6742c00d95a0507c807844235001000468ce3c80");
+
+  tclock = gst_harness_get_testclock (h);
+
+  for (i = 0; i < G_N_ELEMENTS (input); i++) {
+    InputData *d = &input[i];
+    GstBuffer *buf = gst_buffer_new ();
+    GstClockTime now = d->rt * GST_MSECOND;
+    GstClockID pending, res;
+
+    GST_BUFFER_DTS (buf) = GST_BUFFER_PTS (buf) = d->ts * GST_MSECOND;
+    GST_DEBUG ("Push media=%u, pts=%" G_GUINT64_FORMAT " (%" GST_TIME_FORMAT
+        ")", d->media_type, d->ts, GST_TIME_ARGS (GST_BUFFER_PTS (buf)));
+    gst_test_clock_set_time (tclock, now);
+
+    if (d->media_type == AUDIO)
+      gst_harness_push (audio_q, buf);
+    else
+      gst_harness_push (video_q, buf);
+
+    gst_test_clock_wait_for_next_pending_id (tclock, &pending);
+    res = gst_test_clock_process_next_clock_id (tclock);
+    gst_clock_id_unref (pending);
+    gst_clock_id_unref (res);
+  }
+
+  /* pull the flv metadata */
+  gst_buffer_unref (gst_harness_pull (h));
+  gst_buffer_unref (gst_harness_pull (h));
+  gst_buffer_unref (gst_harness_pull (h));
+  gst_buffer_unref (gst_harness_pull (h));
+
+  /* verify rollover pts in the flvheader is handled */
+  for (i = 0; i < G_N_ELEMENTS (input); i++) {
+    GstBuffer *buf = gst_harness_pull (h);
+    GstMapInfo map;
+    guint32 pts, pts_ext;
+    gst_buffer_map (buf, &map, GST_MAP_READ);
+    pts = GST_READ_UINT24_BE (map.data + 4);
+    pts_ext = GST_READ_UINT8 (map.data + 7);
+    pts |= pts_ext << 24;
+    GST_DEBUG ("media=%u, pts=%u (%" GST_TIME_FORMAT ")",
+        map.data[0], pts, GST_TIME_ARGS (pts * GST_MSECOND));
+    fail_unless (pts == (guint32) input[i].ts);
+    gst_buffer_unmap (buf, &map);
+    gst_buffer_unref (buf);
+  }
+
+  /* teardown */
+  gst_object_unref (tclock);
+  gst_harness_teardown (h);
+  gst_harness_teardown (audio);
+  gst_harness_teardown (video);
+  gst_harness_teardown (audio_q);
+  gst_harness_teardown (video_q);
+}
+
+GST_END_TEST;
+
 static Suite *
 flvmux_suite (void)
 {
@@ -1059,6 +1163,7 @@ flvmux_suite (void)
   tcase_add_test (tc_chain, test_audio_caps_change_streamable_single);
   tcase_add_test (tc_chain, test_video_caps_change_streamable_single);
   tcase_add_test (tc_chain, test_incrementing_timestamps);
+  tcase_add_test (tc_chain, test_rollover_timestamps);
 
   return s;
 }
