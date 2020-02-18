@@ -97,8 +97,8 @@ gst_gl_window_win32_new (GstGLDisplay * display)
 {
   GstGLWindowWin32 *window;
 
-  if ((gst_gl_display_get_handle_type (display) & GST_GL_DISPLAY_TYPE_WIN32) ==
-      0)
+  if ((gst_gl_display_get_handle_type (display) &
+          (GST_GL_DISPLAY_TYPE_WIN32 | GST_GL_DISPLAY_TYPE_EGL)) == 0)
     /* we require an win32 display to create win32 windows */
     return NULL;
 
