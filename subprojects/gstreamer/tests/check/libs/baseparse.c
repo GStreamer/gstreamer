@@ -722,6 +722,47 @@ GST_START_TEST (parser_initial_gap_prefer_upstream_caps)
 
 GST_END_TEST;
 
+GST_START_TEST (parser_convert_duration)
+{
+  static const gint64 seconds = 45 * 60;
+  gint64 value, expect;
+  gboolean ret;
+
+  have_eos = FALSE;
+  have_data = FALSE;
+  loop = g_main_loop_new (NULL, FALSE);
+
+  setup_parsertester ();
+  gst_pad_set_getrange_function (mysrcpad, _src_getrange);
+  gst_pad_set_query_function (mysrcpad, _src_query);
+  gst_pad_set_chain_function (mysinkpad, _sink_chain);
+  gst_pad_set_event_function (mysinkpad, _sink_event);
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_element_set_state (parsetest, GST_STATE_PLAYING);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  g_main_loop_run (loop);
+  fail_unless (have_eos == TRUE);
+  fail_unless (have_data == TRUE);
+
+  ret = gst_base_parse_convert_default (GST_BASE_PARSE (parsetest),
+      GST_FORMAT_TIME, seconds * GST_SECOND, GST_FORMAT_BYTES, &value);
+  fail_unless (ret == TRUE);
+  expect = gst_util_uint64_scale_round (seconds * sizeof (guint64),
+      TEST_VIDEO_FPS_N, TEST_VIDEO_FPS_D);
+  fail_unless_equals_int (value, expect);
+  gst_element_set_state (parsetest, GST_STATE_NULL);
+
+  check_no_error_received ();
+  cleanup_parsertest ();
+
+  g_main_loop_unref (loop);
+  loop = NULL;
+}
+
+GST_END_TEST;
+
 
 static void
 baseparse_setup (void)
@@ -755,6 +796,7 @@ gst_baseparse_suite (void)
   tcase_add_test (tc, parser_pull_short_read);
   tcase_add_test (tc, parser_pull_frame_growth);
   tcase_add_test (tc, parser_initial_gap_prefer_upstream_caps);
+  tcase_add_test (tc, parser_convert_duration);
 
   return s;
 }
