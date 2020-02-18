@@ -61,7 +61,8 @@ typedef struct _GESTimelinePrivate GESTimelinePrivate;
 /**
  * GESTimeline:
  * @layers: (element-type GES.Layer): A list of #GESLayer sorted by priority NOTE: Do not modify.
- * @tracks: (element-type GES.Track): A list of #GESTrack sorted by priority NOTE: Do not modify.
+ * @tracks: Deprecated:1.10: (element-type GES.Track): This is not thread safe, use
+ * #ges_timeline_get_tracks instead.
  */
 struct _GESTimeline {
   GstBin parent;
