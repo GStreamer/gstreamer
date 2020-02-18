@@ -1637,23 +1637,26 @@ ges_clip_add_asset (GESClip * clip, GESAsset * asset)
  * all tracks
  * @track_type: The track-type of the track element to search for, or
  * #GES_TRACK_TYPE_UNKNOWN to match any track type
- * @type: The type of track element to search for, or %NULL to match any
- * type
+ * @type: The type of track element to search for, or %G_TYPE_NONE to
+ * match any type
  *
  * Finds the #GESTrackElement-s controlled by the clip that match the
- * given criteria. You must give either @track (not %NULL) or @track_type
- * (not #GES_TRACK_TYPE_UNKNOWN) in order to find any elements. If @track
- * is given, and @track_type is not, then only the track elements in
- * @track are searched for. Otherwise, if @track_type is given, and @track
- * is not, then only the track elements whose #GESTrackElement:track-type
- * matches @track_type are searched for. If both are given, then the track
- * elements that match **either** criteria are searched for (so if you
- * wish to only find all the elements in a given track, you should give
- * the track as @track, but should not give the track's
- * #GESTrack:track-type as @track_type because this would also select
- * elements from other tracks of the same type).
+ * given criteria. If @track is given as %NULL and @track_type is given as
+ * #GES_TRACK_TYPE_UNKNOWN, then the search will match all elements in any
+ * track, including those with no track, and of any
+ * #GESTrackElement:track-type. Otherwise, if @track is not %NULL, but
+ * @track_type is #GES_TRACK_TYPE_UNKNOWN, then only the track elements in
+ * @track are searched for. Otherwise, if @track_type is not
+ * #GES_TRACK_TYPE_UNKNOWN, but @track is %NULL, then only the track
+ * elements whose #GESTrackElement:track-type matches @track_type are
+ * searched for. Otherwise, when both are given, the track elements that
+ * match **either** criteria are searched for. Therefore, if you wish to
+ * only find elements in a specific track, you should give the track as
+ * @track, but you should not give the track's #GESTrack:track-type as
+ * @track_type because this would also select elements from other tracks
+ * of the same type.
  *
- * You may also give @type to further restrict the search to track
+ * You may also give @type to _further_ restrict the search to track
  * elements of the given @type.
  *
  * Returns: (transfer full) (element-type GESTrackElement): A list of all
@@ -1666,9 +1669,7 @@ ges_clip_find_track_elements (GESClip * clip, GESTrack * track,
     GESTrackType track_type, GType type)
 {
   GList *tmp;
-  GESTrack *tmptrack;
   GESTrackElement *otmp;
-  GESTrackElement *foundElement;
 
   GList *ret = NULL;
 
@@ -1682,19 +1683,14 @@ ges_clip_find_track_elements (GESClip * clip, GESTrack * track,
     if ((type != G_TYPE_NONE) && !G_TYPE_CHECK_INSTANCE_TYPE (tmp->data, type))
       continue;
 
-    tmptrack = ges_track_element_get_track (otmp);
-    /* TODO 2.0: an AND condition would have made more sense here */
-    /* FIXME: if neither the track nor the track_type are given, we should
-     * still match the elements that match the given type (currently the
-     * list will be empty if only the type is given) */
-    if (((track != NULL && tmptrack == track)) ||
+    /* TODO 2.0: an AND condition, using a condition like the above type
+     * check would have made more sense here. Especially when both
+     * track != NULL and track_type != GES_TRACK_TYPE_UNKNOWN are given */
+    if ((track == NULL && track_type == GES_TRACK_TYPE_UNKNOWN) ||
+        (track != NULL && ges_track_element_get_track (otmp) == track) ||
         (track_type != GES_TRACK_TYPE_UNKNOWN
-            && ges_track_element_get_track_type (otmp) == track_type)) {
-
-      foundElement = GES_TRACK_ELEMENT (tmp->data);
-
-      ret = g_list_append (ret, gst_object_ref (foundElement));
-    }
+            && ges_track_element_get_track_type (otmp) == track_type))
+      ret = g_list_append (ret, gst_object_ref (otmp));
   }
 
   return ret;
