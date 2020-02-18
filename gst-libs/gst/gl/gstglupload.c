@@ -511,6 +511,7 @@ _dma_buf_upload_new (GstGLUpload * upload)
 {
   struct DmabufUpload *dmabuf = g_new0 (struct DmabufUpload, 1);
   dmabuf->upload = upload;
+  dmabuf->target = GST_GL_TEXTURE_TARGET_2D;
   return dmabuf;
 }
 
@@ -655,8 +656,6 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
     dmabuf->out_caps = out_caps;
     if (!gst_video_info_from_caps (out_info, out_caps))
       return FALSE;
-    dmabuf->target = _caps_get_texture_target (out_caps,
-        GST_GL_TEXTURE_TARGET_2D);
   }
 
   if (dmabuf->params)
@@ -803,7 +802,6 @@ _direct_dma_buf_upload_new (GstGLUpload * upload)
 {
   struct DmabufUpload *dmabuf = _dma_buf_upload_new (upload);
   dmabuf->direct = TRUE;
-  dmabuf->target = GST_GL_TEXTURE_TARGET_2D;
   gst_video_info_init (&dmabuf->out_info);
   return dmabuf;
 }
@@ -813,10 +811,21 @@ _direct_dma_buf_upload_transform_caps (gpointer impl, GstGLContext * context,
     GstPadDirection direction, GstCaps * caps)
 {
   struct DmabufUpload *dmabuf = impl;
-  GstCapsFeatures *passthrough =
-      gst_caps_features_from_string
-      (GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
+  GstCapsFeatures *passthrough;
   GstCaps *ret;
+
+  if (context) {
+    /* Don't propose direct DMABuf caps feature unless it can be supported */
+    if (gst_gl_context_get_gl_platform (context) != GST_GL_PLATFORM_EGL)
+      return NULL;
+
+    if (dmabuf->target == GST_GL_TEXTURE_TARGET_EXTERNAL_OES &&
+        !gst_gl_context_check_feature (context, "GL_OES_EGL_image_external"))
+      return NULL;
+  }
+
+  passthrough = gst_caps_features_from_string
+      (GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
 
   if (direction == GST_PAD_SINK) {
     gint i, n;
@@ -836,8 +845,8 @@ _direct_dma_buf_upload_transform_caps (gpointer impl, GstGLContext * context,
       gst_structure_remove_fields (s, "chroma-site", NULL);
       gst_structure_remove_fields (s, "colorimetry", NULL);
     }
-    target_mask = 1 << GST_GL_TEXTURE_TARGET_2D |
-        1 << GST_GL_TEXTURE_TARGET_EXTERNAL_OES;
+
+    target_mask = 1 << dmabuf->target;
     tmp = _caps_intersect_texture_target (ret, target_mask);
     gst_caps_unref (ret);
     ret = tmp;
@@ -884,6 +893,28 @@ static const UploadMethod _direct_dma_buf_upload = {
   0,
   &_dma_buf_upload_caps,
   &_direct_dma_buf_upload_new,
+  &_direct_dma_buf_upload_transform_caps,
+  &_dma_buf_upload_accept,
+  &_dma_buf_upload_propose_allocation,
+  &_dma_buf_upload_perform,
+  &_dma_buf_upload_free
+};
+
+/* a variant of the direct DMABuf uploader that uses external OES textures */
+
+static gpointer
+_direct_dma_buf_external_upload_new (GstGLUpload * upload)
+{
+  struct DmabufUpload *dmabuf = _direct_dma_buf_upload_new (upload);
+  dmabuf->target = GST_GL_TEXTURE_TARGET_EXTERNAL_OES;
+  return dmabuf;
+}
+
+static const UploadMethod _direct_dma_buf_external_upload = {
+  "DirectDmabufExternal",
+  0,
+  &_dma_buf_upload_caps,
+  &_direct_dma_buf_external_upload_new,
   &_direct_dma_buf_upload_transform_caps,
   &_dma_buf_upload_accept,
   &_dma_buf_upload_propose_allocation,
@@ -1669,6 +1700,7 @@ static const UploadMethod _directviv_upload = {
 static const UploadMethod *upload_methods[] = { &_gl_memory_upload,
 #if GST_GL_HAVE_DMABUF
   &_direct_dma_buf_upload,
+  &_direct_dma_buf_external_upload,
   &_dma_buf_upload,
 #endif
 #if GST_GL_HAVE_VIV_DIRECTVIV
