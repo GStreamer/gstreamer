@@ -826,7 +826,7 @@ gst_gl_context_egl_create_context (GstGLContext * context,
     window_handle = gst_gl_window_get_window_handle (window);
 
   if (window_handle) {
-#if GST_GL_HAVE_WINDOW_WINRT
+#if GST_GL_HAVE_WINDOW_WINRT && defined (EGL_ANGLE_SURFACE_RENDER_TO_BACK_BUFFER)
     const EGLint attrs[] = {
       /* EGL_ANGLE_SURFACE_RENDER_TO_BACK_BUFFER is an optimization that can
        * have large performance benefits on mobile devices. */
@@ -939,7 +939,7 @@ gst_gl_context_egl_activate (GstGLContext * context, gboolean activate)
       gst_object_unref (window);
     }
     if (handle && handle != egl->window_handle) {
-#if GST_GL_HAVE_WINDOW_WINRT
+#if GST_GL_HAVE_WINDOW_WINRT && defined (EGL_ANGLE_SURFACE_RENDER_TO_BACK_BUFFER)
       const EGLint attrs[] = {
         /* EGL_ANGLE_SURFACE_RENDER_TO_BACK_BUFFER is an optimization that can
          * have large performance benefits on mobile devices. */
