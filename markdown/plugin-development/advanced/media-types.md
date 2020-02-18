@@ -116,7 +116,7 @@ functions.
 Autoplugging has been discussed in great detail in the Application
 Development Manual.
 
-## List of Defined Media Types
+## List of Defined Types
 
 Below is a list of all the defined types in GStreamer. They are split up
 in separate tables for audio, video, container, subtitle and other
@@ -152,6 +152,7 @@ would not. A decoder needing this data would require a stream parser in
 between two extract this from the header or calculate it from the
 stream.
 
+### Table of Audio Types
 <table>
 <caption>Table of Audio Types</caption>
 <colgroup>
@@ -301,6 +302,7 @@ stream.
 </tbody>
 </table>
 
+### Table of Video Types
 <table>
 <caption>Table of Video Types</caption>
 <colgroup>
@@ -489,6 +491,7 @@ stream.
 </tbody>
 </table>
 
+### Table of Container Types
 <table>
 <caption>Table of Container Types</caption>
 <colgroup>
@@ -541,6 +544,7 @@ stream.
 </tbody>
 </table>
 
+### Table of Subtitle Types
 <table>
 <caption>Table of Subtitle Types</caption>
 <colgroup>
@@ -561,6 +565,7 @@ stream.
 </tbody>
 </table>
 
+### Table of Other Types
 <table>
 <caption>Table of Other Types</caption>
 <colgroup>
