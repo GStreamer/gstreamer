@@ -220,8 +220,8 @@ _ges_container_add_child_properties (GESContainer * container,
         child_props[i]->name);
 
     if (ges_timeline_element_lookup_child (child, prop_name, &prop_child, NULL)) {
-      ges_timeline_element_add_child_property (GES_TIMELINE_ELEMENT (container),
-          child_props[i], prop_child);
+      ges_timeline_element_add_child_property_full (GES_TIMELINE_ELEMENT
+          (container), child, child_props[i], prop_child);
       gst_object_unref (prop_child);
 
     }

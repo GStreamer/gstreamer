@@ -27,6 +27,7 @@
 import sys
 from ..overrides import override
 from ..importer import modules
+from gi.repository import GObject
 
 
 if sys.version_info >= (3, 0):
@@ -60,12 +61,15 @@ class TimelineElement(GES.TimelineElement):
         )
 
     def set_child_property(self, prop_name, prop_value):
-        res, child, unused_pspec = GES.TimelineElement.lookup_child(self, prop_name)
+        res, _, pspec = GES.TimelineElement.lookup_child(self, prop_name)
         if not res:
             return res
 
-        child.set_property(prop_name, prop_value)
-        return res
+        v = GObject.Value()
+        v.init(pspec.value_type)
+        v.set_value(prop_value)
+
+        return GES.TimelineElement.set_child_property(self, prop_name, v)
 
 
 TimelineElement = override(TimelineElement)

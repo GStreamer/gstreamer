@@ -437,6 +437,10 @@ G_GNUC_INTERNAL gdouble ges_timeline_element_get_media_duration_factor(GESTimeli
 G_GNUC_INTERNAL GESTimelineElement * ges_timeline_element_get_copied_from (GESTimelineElement *self);
 G_GNUC_INTERNAL GESTimelineElementFlags ges_timeline_element_flags (GESTimelineElement *self);
 G_GNUC_INTERNAL void                ges_timeline_element_set_flags (GESTimelineElement *self, GESTimelineElementFlags flags);
+G_GNUC_INTERNAL gboolean             ges_timeline_element_add_child_property_full (GESTimelineElement *self,
+                                                                                   GESTimelineElement *owner,
+                                                                                   GParamSpec *pspec,
+                                                                                   GObject *child);
 
 #define ELEMENT_FLAGS(obj)             (ges_timeline_element_flags (GES_TIMELINE_ELEMENT(obj)))
 #define ELEMENT_SET_FLAG(obj,flag)     (ges_timeline_element_set_flags(GES_TIMELINE_ELEMENT(obj), (ELEMENT_FLAGS(obj) | (flag))))
