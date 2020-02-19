@@ -919,6 +919,7 @@ gst_soup_http_src_session_open (GstSoupHTTPSrc * src)
   if (!src->session) {
     GstQuery *query;
     gboolean can_share = (src->timeout == DEFAULT_TIMEOUT)
+        && (src->cookies == NULL)
         && (src->ssl_strict == DEFAULT_SSL_STRICT)
         && (src->tls_interaction == NULL) && (src->proxy == NULL)
         && (src->tls_database == DEFAULT_TLS_DATABASE)
@@ -1502,6 +1503,8 @@ gst_soup_http_src_build_message (GstSoupHTTPSrc * src, const gchar * method)
       soup_message_headers_append (src->msg->request_headers, "Cookie",
           *cookie);
     }
+
+    soup_message_disable_feature (src->msg, SOUP_TYPE_COOKIE_JAR);
   }
 
   if (!src->compress)
