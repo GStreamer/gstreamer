@@ -487,6 +487,7 @@ gst_rtp_sink_start (GstRtpSink * self)
 
     g_object_set (self->rtcp_src, "address", any_addr, "port", 0, NULL);
   }
+  g_free (remote_addr);
   g_object_unref (iaddr);
 
   gst_element_set_locked_state (self->rtcp_src, FALSE);
@@ -508,6 +509,7 @@ dns_resolve_failed:
       ("Could not resolve hostname '%s'", GST_STR_NULL (remote_addr)),
       ("DNS resolver reported: %s", error->message));
   g_free (remote_addr);
+  g_object_unref (iaddr);
   g_error_free (error);
   return FALSE;
 }
