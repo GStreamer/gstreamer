@@ -535,12 +535,18 @@ nle_source_prepare (NleObject * object)
   priv->ghostedpad = pad;
 
   if (object->in_composition == FALSE) {
+    GstClockTime start =
+        GST_CLOCK_TIME_IS_VALID (object->inpoint) ? object->inpoint : 0;
+    GstClockTime stop = GST_CLOCK_TIME_NONE;
+
+    if (GST_CLOCK_TIME_IS_VALID (object->inpoint)
+        && GST_CLOCK_TIME_IS_VALID (object->duration) && object->duration)
+      stop = object->inpoint + object->duration;
+
     g_mutex_lock (&source->priv->seek_lock);
-    source->priv->seek_event =
-        gst_event_new_seek (1.0, GST_FORMAT_TIME,
+    source->priv->seek_event = gst_event_new_seek (1.0, GST_FORMAT_TIME,
         GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_FLUSH,
-        GST_SEEK_TYPE_SET, object->inpoint, GST_SEEK_TYPE_SET,
-        object->inpoint + object->duration);
+        GST_SEEK_TYPE_SET, start, GST_SEEK_TYPE_SET, stop);
     g_mutex_unlock (&source->priv->seek_lock);
     GST_OBJECT_LOCK (source);
     priv->probeid = gst_pad_add_probe (pad,
