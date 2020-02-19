@@ -6,7 +6,9 @@ description, handles-states=true,
 
 add-clip, name=clip, asset-id=GESTestClip, layer-priority=0, type=GESTestClip, duration=1.0
 
-check-child-properties, element-name=clip, width=0, height=0
+# VideoTestSource natural size is 1280x720, so keeping aspect ratio, mean
+# that it will be scaled to 1200x675 (placed at x=0, y=163)
+check-child-properties, element-name=clip, width=1200, height=675, posx=0, posy=163
 
 set-child-properties, element-name=clip, width=1024, height=768
 check-child-properties, element-name=clip, width=1024, height=768

@@ -81,6 +81,56 @@ _weak_notify_cb (GstFramePositioner * pos, GObject * old)
   pos->current_track = NULL;
 }
 
+static gboolean
+auto_position (GstFramePositioner * self)
+{
+  gint scaled_width = -1, scaled_height = -1, x, y;
+
+  if (self->user_positioned) {
+    GST_DEBUG_OBJECT (self, "Was positioned by the user, not touching anymore");
+    return FALSE;
+  }
+
+  if (!self->natural_width || !self->natural_height)
+    return FALSE;
+
+  if (!self->track_width || !self->track_height) {
+    GST_INFO_OBJECT (self, "Track doesn't have a proper size, not "
+        "positioning the source");
+    return FALSE;
+  }
+
+  if (self->track_width == self->natural_width &&
+      self->track_height == self->natural_height)
+    return TRUE;
+
+  scaled_height =
+      gst_util_uint64_scale_int (self->natural_height, self->track_width,
+      self->natural_width);
+  scaled_width = self->track_width;
+  if (scaled_height > self->track_height) {
+    scaled_height = self->track_height;
+    scaled_width =
+        gst_util_uint64_scale_int (self->natural_width, self->track_height,
+        self->natural_height);
+  }
+
+  x = MAX (0, gst_util_uint64_scale_int_round (1,
+          self->track_width - scaled_width, 2));
+  y = MAX (0, gst_util_uint64_scale_int_round (1,
+          self->track_height - scaled_height, 2));
+
+  GST_INFO_OBJECT (self, "Scalling video to match track size from "
+      "%dx%d to %dx%d",
+      self->natural_width, self->natural_height, scaled_width, scaled_height);
+  self->width = scaled_width;
+  self->height = scaled_height;
+  self->posx = x;
+  self->posy = y;
+
+  return TRUE;
+}
+
 static void
 gst_frame_positioner_update_properties (GstFramePositioner * pos,
     gboolean track_mixing, gint old_track_width, gint old_track_height)
@@ -107,18 +157,22 @@ gst_frame_positioner_update_properties (GstFramePositioner * pos,
     gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
         pos->par_n, pos->par_d, NULL);
 
-  if (old_track_width && pos->width == old_track_width &&
-      old_track_height && pos->height == old_track_height &&
-      pos->track_height && pos->track_width &&
-      ((float) old_track_width / (float) old_track_height) ==
-      ((float) pos->track_width / (float) pos->track_height)) {
+  if (!auto_position (pos)) {
 
-    GST_DEBUG_OBJECT (pos, "Following track size width old_track: %d -- pos: %d"
-        " || height, old_track %d -- pos: %d",
-        old_track_width, pos->width, old_track_height, pos->height);
+    if (old_track_width && pos->width == old_track_width &&
+        old_track_height && pos->height == old_track_height &&
+        pos->track_height && pos->track_width &&
+        ((float) old_track_width / (float) old_track_height) ==
+        ((float) pos->track_width / (float) pos->track_height)) {
 
-    pos->width = pos->track_width;
-    pos->height = pos->track_height;
+      GST_DEBUG_OBJECT (pos,
+          "Following track size width old_track: %d -- pos: %d"
+          " || height, old_track %d -- pos: %d", old_track_width, pos->width,
+          old_track_height, pos->height);
+
+      pos->width = pos->track_width;
+      pos->height = pos->track_height;
+    }
   }
 
   GST_DEBUG_OBJECT (caps, "setting caps");
@@ -263,6 +317,9 @@ gst_frame_positioner_class_init (GstFramePositionerClass * klass)
   GstBaseTransformClass *base_transform_class =
       GST_BASE_TRANSFORM_CLASS (klass);
 
+  GST_DEBUG_CATEGORY_INIT (framepositioner, "framepositioner",
+      GST_DEBUG_FG_YELLOW, "ges frame positioner");
+
   gst_element_class_add_static_pad_template (GST_ELEMENT_CLASS (klass),
       &gst_frame_positioner_src_template);
   gst_element_class_add_static_pad_template (GST_ELEMENT_CLASS (klass),
@@ -379,19 +436,23 @@ gst_frame_positioner_set_property (GObject * object, guint property_id,
       break;
     case PROP_POSX:
       framepositioner->posx = g_value_get_int (value);
+      framepositioner->user_positioned = TRUE;
       break;
     case PROP_POSY:
       framepositioner->posy = g_value_get_int (value);
+      framepositioner->user_positioned = TRUE;
       break;
     case PROP_ZORDER:
       framepositioner->zorder = g_value_get_uint (value);
       break;
     case PROP_WIDTH:
+      framepositioner->user_positioned = TRUE;
       framepositioner->width = g_value_get_int (value);
       gst_frame_positioner_update_properties (framepositioner, track_mixing,
           0, 0);
       break;
     case PROP_HEIGHT:
+      framepositioner->user_positioned = TRUE;
       framepositioner->height = g_value_get_int (value);
       gst_frame_positioner_update_properties (framepositioner, track_mixing,
           0, 0);

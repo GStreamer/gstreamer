@@ -51,7 +51,9 @@ struct _GstFramePositioner
   gint posy;
   guint zorder;
   gint width;
+  gint natural_width;
   gint height;
+  gint natural_height;
   gint track_width;
   gint track_height;
   gint fps_n;
@@ -59,6 +61,8 @@ struct _GstFramePositioner
 
   gint par_n;
   gint par_d;
+
+  gboolean user_positioned;
 
   /*  This should never be made public, no padding needed */
 };

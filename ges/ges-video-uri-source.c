@@ -124,7 +124,11 @@ ges_video_uri_source_get_natural_size (GESVideoSource * source, gint * width,
   GstDiscovererStreamInfo *info;
   GESAsset *asset = ges_extractable_get_asset (GES_EXTRACTABLE (source));
 
-  g_assert (GES_IS_URI_SOURCE_ASSET (asset));
+  if (!asset) {
+    GST_DEBUG_OBJECT (source, "No asset set yet");
+    return FALSE;
+  }
+
   info = ges_uri_source_asset_get_stream_info (GES_URI_SOURCE_ASSET (asset));
 
   if (!GST_IS_DISCOVERER_VIDEO_INFO (info)) {
@@ -173,7 +177,7 @@ done:
   return TRUE;
 
 rotate:
-  GST_INFO_OBJECT (self, "Stream is rotated, taking that into account");
+  GST_INFO_OBJECT (source, "Stream is rotated, taking that into account");
   *width =
       gst_discoverer_video_info_get_height (GST_DISCOVERER_VIDEO_INFO (info));
   *height =
@@ -193,6 +197,7 @@ ges_extractable_check_id (GType type, const gchar * id, GError ** error)
 static void
 extractable_set_asset (GESExtractable * extractable, GESAsset * asset)
 {
+  GESExtractableInterface *piface, *iface;
   /* FIXME That should go into #GESTrackElement, but
    * some work is needed to make sure it works properly */
 
@@ -202,6 +207,11 @@ extractable_set_asset (GESExtractable * extractable, GESAsset * asset)
         ges_track_element_asset_get_track_type (GES_TRACK_ELEMENT_ASSET
             (asset)));
   }
+
+  iface = G_TYPE_INSTANCE_GET_INTERFACE (extractable, GES_TYPE_EXTRACTABLE,
+      GESExtractableInterface);
+  piface = g_type_interface_peek_parent (iface);
+  piface->set_asset (extractable, asset);
 }
 
 static void

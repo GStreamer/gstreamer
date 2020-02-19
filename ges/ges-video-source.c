@@ -27,7 +27,7 @@
  *
  * You can use the following children properties through the
  * #ges_track_element_set_child_property and alike set of methods:
- * 
+ *
  * - #gdouble `alpha`: The desired alpha for the stream.
  * - #gint `posx`: The desired x position for the stream.
  * - #gint `posy`: The desired y position for the stream
@@ -53,6 +53,7 @@
 #include "ges-video-source.h"
 #include "ges-layer.h"
 #include "gstframepositioner.h"
+#include "ges-extractable.h"
 
 #define parent_class ges_video_source_parent_class
 
@@ -62,8 +63,26 @@ struct _GESVideoSourcePrivate
   GstElement *capsfilter;
 };
 
-G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GESVideoSource, ges_video_source,
-    GES_TYPE_SOURCE);
+static void
+ges_video_source_set_asset (GESExtractable * extractable, GESAsset * asset)
+{
+  GESVideoSource *self = GES_VIDEO_SOURCE (extractable);
+
+  ges_video_source_get_natural_size (self,
+      &self->priv->positioner->natural_width,
+      &self->priv->positioner->natural_height);
+}
+
+static void
+ges_extractable_interface_init (GESExtractableInterface * iface)
+{
+  iface->set_asset = ges_video_source_set_asset;
+}
+
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GESVideoSource, ges_video_source,
+    GES_TYPE_SOURCE, G_ADD_PRIVATE (GESVideoSource)
+    G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
+        ges_extractable_interface_init));
 
 /* TrackElement VMethods */
 
@@ -169,6 +188,10 @@ ges_video_source_create_element (GESTrackElement * trksrc)
   self->priv->positioner = GST_FRAME_POSITIONNER (positioner);
   self->priv->positioner->scale_in_compositor =
       !GES_VIDEO_SOURCE_GET_CLASS (self)->ABI.abi.disable_scale_in_compositor;
+  ges_video_source_get_natural_size (self,
+      &self->priv->positioner->natural_width,
+      &self->priv->positioner->natural_height);
+
   self->priv->capsfilter = capsfilter;
 
   return topbin;
@@ -226,7 +249,6 @@ ges_video_source_init (GESVideoSource * self)
   self->priv = ges_video_source_get_instance_private (self);
   self->priv->positioner = NULL;
   self->priv->capsfilter = NULL;
-
 }
 
 /**
