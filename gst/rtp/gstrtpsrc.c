@@ -389,7 +389,8 @@ gst_rtp_src_class_init (GstRtpSrcClass * klass)
           G_MAXUINT, DEFAULT_PROP_LATENCY,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  /* GstRtpSink:multicast-iface:
+  /**
+   * GstRtpSink:multicast-iface:
    *
    * The networkinterface on which to join the multicast group
    */
