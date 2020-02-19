@@ -43,12 +43,22 @@ G_DEFINE_TYPE_WITH_PRIVATE (GESVideoTestSource, ges_video_test_source,
 
 static GstElement *ges_video_test_source_create_source (GESTrackElement * self);
 
+static gboolean
+get_natural_size (GESVideoSource * source, gint * width, gint * height)
+{
+  *width = DEFAULT_WIDTH;
+  *height = DEFAULT_HEIGHT;
+
+  return TRUE;
+}
+
 static void
 ges_video_test_source_class_init (GESVideoTestSourceClass * klass)
 {
   GESVideoSourceClass *source_class = GES_VIDEO_SOURCE_CLASS (klass);
 
   source_class->create_source = ges_video_test_source_create_source;
+  source_class->ABI.abi.get_natural_size = get_natural_size;
 }
 
 static void
@@ -76,7 +86,11 @@ ges_video_test_source_create_source (GESTrackElement * self)
 
   elements = g_ptr_array_new ();
   g_ptr_array_add (elements, capsfilter);
-  caps = gst_caps_new_empty_simple ("video/x-raw");
+  caps = gst_caps_new_simple ("video/x-raw",
+      "width", G_TYPE_INT, DEFAULT_WIDTH,
+      "height", G_TYPE_INT, DEFAULT_HEIGHT,
+      "framerate", GST_TYPE_FRACTION, DEFAULT_FRAMERATE_N, DEFAULT_FRAMERATE_D,
+      NULL);
   g_object_set (capsfilter, "caps", caps, NULL);
   gst_caps_unref (caps);
 

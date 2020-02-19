@@ -226,4 +226,33 @@ ges_video_source_init (GESVideoSource * self)
   self->priv = ges_video_source_get_instance_private (self);
   self->priv->positioner = NULL;
   self->priv->capsfilter = NULL;
+
+}
+
+/**
+ * ges_video_source_get_natural_size:
+ * @self: A #GESVideoSource
+ * @width: (out): The natural width of the underlying source
+ * @height: (out): The natural height of the underlying source
+ *
+ * Retrieves the natural size of the video stream. The natural size, is
+ * the size at which it will be displayed if no scaling is being applied.
+ *
+ * NOTE: The sources take into account the potential video rotation applied
+ * by the #videoflip element that is inside the source, effects applied on
+ * the clip which potentially also rotate the element are not taken into
+ * account.
+ *
+ * Returns: %TRUE if the object has a natural size, %FALSE otherwise.
+ */
+gboolean
+ges_video_source_get_natural_size (GESVideoSource * self, gint * width,
+    gint * height)
+{
+  GESVideoSourceClass *klass = GES_VIDEO_SOURCE_GET_CLASS (self);
+
+  if (!klass->ABI.abi.get_natural_size)
+    return FALSE;
+
+  return klass->ABI.abi.get_natural_size (self, width, height);
 }

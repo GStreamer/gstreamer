@@ -459,6 +459,12 @@ typedef struct GESMultiFileURI
 
 G_GNUC_INTERNAL GESMultiFileURI * ges_multi_file_uri_new (const gchar * uri);
 
+/******************************
+ *  GESUriSource internal API *
+ ******************************/
+G_GNUC_INTERNAL gboolean
+ges_video_uri_source_get_natural_size(GESVideoSource* source, gint* width, gint* height);
+
 /************************
  * Our property masks   *
  ************************/

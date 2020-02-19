@@ -27,8 +27,9 @@
 #include "config.h"
 #endif
 
-#include <gst/pbutils/missing-plugins.h>
+#include <stdio.h>
 
+#include <gst/pbutils/missing-plugins.h>
 #include "ges-utils.h"
 #include "ges-internal.h"
 #include "ges-track-element.h"
@@ -111,6 +112,74 @@ ges_video_uri_source_needs_converters (GESVideoSource * source)
 
 
   return FALSE;
+}
+
+gboolean
+ges_video_uri_source_get_natural_size (GESVideoSource * source, gint * width,
+    gint * height)
+{
+  const GstTagList *tags = NULL;
+  gchar *rotation_info = NULL;
+  gint videoflip_method, rotate_angle;
+  GstDiscovererStreamInfo *info;
+  GESAsset *asset = ges_extractable_get_asset (GES_EXTRACTABLE (source));
+
+  g_assert (GES_IS_URI_SOURCE_ASSET (asset));
+  info = ges_uri_source_asset_get_stream_info (GES_URI_SOURCE_ASSET (asset));
+
+  if (!GST_IS_DISCOVERER_VIDEO_INFO (info)) {
+    GST_ERROR_OBJECT (source, "Doesn't have a video info (%" GST_PTR_FORMAT
+        ")", info);
+    return FALSE;
+  }
+
+  *width =
+      gst_discoverer_video_info_get_width (GST_DISCOVERER_VIDEO_INFO (info));
+  *height =
+      gst_discoverer_video_info_get_height (GST_DISCOVERER_VIDEO_INFO (info));
+
+  if (!ges_timeline_element_lookup_child (GES_TIMELINE_ELEMENT (source),
+          "GstVideoFlip::video-direction", NULL, NULL))
+    goto done;
+
+  ges_timeline_element_get_child_properties (GES_TIMELINE_ELEMENT (source),
+      "GstVideoFlip::video-direction", &videoflip_method, NULL);
+
+  /* Rotating 90 degrees, either way, rotate */
+  if (videoflip_method == 1 || videoflip_method == 3)
+    goto rotate;
+
+  if (videoflip_method != 8)
+    goto done;
+
+  /* Rotation is automatic, we need to check if the media file is naturally
+     rotated */
+  tags =
+      gst_discoverer_stream_info_get_tags (GST_DISCOVERER_STREAM_INFO (info));
+  if (!tags)
+    goto done;
+
+  if (!gst_tag_list_get_string (tags, GST_TAG_IMAGE_ORIENTATION,
+          &rotation_info))
+    goto done;
+
+  if (sscanf (rotation_info, "rotate-%d", &rotate_angle) == 1) {
+    if (rotate_angle == 90 || rotate_angle == 270)
+      goto rotate;
+  }
+
+done:
+  g_free (rotation_info);
+  return TRUE;
+
+rotate:
+  GST_INFO_OBJECT (self, "Stream is rotated, taking that into account");
+  *width =
+      gst_discoverer_video_info_get_height (GST_DISCOVERER_VIDEO_INFO (info));
+  *height =
+      gst_discoverer_video_info_get_width (GST_DISCOVERER_VIDEO_INFO (info));
+
+  goto done;
 }
 
 /* Extractable interface implementation */
@@ -218,6 +287,8 @@ ges_video_uri_source_class_init (GESVideoUriSourceClass * klass)
   source_class->create_source = ges_video_uri_source_create_source;
   source_class->ABI.abi.needs_converters =
       ges_video_uri_source_needs_converters;
+  source_class->ABI.abi.get_natural_size =
+      ges_video_uri_source_get_natural_size;
 }
 
 static void

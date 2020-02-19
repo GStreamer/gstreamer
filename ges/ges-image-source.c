@@ -171,6 +171,8 @@ ges_image_source_class_init (GESImageSourceClass * klass)
 
   GES_TIMELINE_ELEMENT_CLASS (klass)->set_inpoint = NULL;
   source_class->create_source = ges_image_source_create_source;
+  source_class->ABI.abi.get_natural_size =
+      ges_video_uri_source_get_natural_size;
 }
 
 static void

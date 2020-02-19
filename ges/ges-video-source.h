@@ -85,12 +85,15 @@ struct _GESVideoSourceClass {
     struct {
       gboolean disable_scale_in_compositor;
       gboolean (*needs_converters)(GESVideoSource *self);
+      gboolean (*get_natural_size)(GESVideoSource* self, gint* width, gint* height);
     } abi;
   } ABI;
 };
 
 GES_API
 GType ges_video_source_get_type (void);
+GES_API
+gboolean ges_video_source_get_natural_size(GESVideoSource* self, gint* width, gint* height);
 
 G_END_DECLS
 
