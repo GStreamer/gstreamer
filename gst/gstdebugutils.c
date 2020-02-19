@@ -118,7 +118,8 @@ debug_dump_get_object_params (GObject * object,
       /* skip some properties */
       if (!(property->flags & G_PARAM_READABLE))
         continue;
-      if (!strcmp (property->name, "name"))
+      if (!strcmp (property->name, "name")
+          || !strcmp (property->name, "parent"))
         continue;
 
       if (ignored_propnames)
@@ -230,8 +231,7 @@ debug_dump_pad (GstPad * pad, const gchar * color_name,
   GstPadPresence presence;
   gchar *pad_name, *param_name = NULL;
   const gchar *style_name;
-  static const char *const ignore_propnames[] =
-      { "parent", "direction", "template",
+  static const char *const ignore_propnames[] = { "direction", "template",
     "caps", NULL
   };
   const gchar *spc = MAKE_INDENT (indent);
