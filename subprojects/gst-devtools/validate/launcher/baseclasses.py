@@ -2631,7 +2631,7 @@ class MediaDescriptor(Loggable):
     def can_play_reverse(self):
         raise NotImplemented
 
-    def prerrols(self):
+    def prerolls(self):
         return True
 
     def is_compatible(self, scenario):
@@ -2649,6 +2649,8 @@ class MediaDescriptor(Loggable):
             return False
 
         if not self.can_play_reverse() and scenario.does_reverse_playback():
+            self.debug("Do not run %s as %s can not play reverse ",
+                       scenario, self.get_uri())
             return False
 
         if not self.is_live() and scenario.needs_live_content():
@@ -2661,7 +2663,9 @@ class MediaDescriptor(Loggable):
                        scenario, self.get_uri())
             return False
 
-        if not self.prerrols() and getattr(scenario, 'needs_preroll', False):
+        if not self.prerolls() and getattr(scenario, 'needs_preroll', False):
+            self.debug("Do not run %s as %s does not support preroll",
+                       scenario, self.get_uri())
             return False
 
         if self.get_duration() and self.get_duration() / GST_SECOND < scenario.get_min_media_duration():
@@ -2674,7 +2678,7 @@ class MediaDescriptor(Loggable):
 
         for track_type in ['audio', 'subtitle', 'video']:
             if self.get_num_tracks(track_type) < scenario.get_min_tracks(track_type):
-                self.debug("%s -- %s | At least %s %s track needed  < %s"
+                self.debug("Do not run %s -- %s | At least %s %s track needed  < %s"
                            % (scenario, self.get_uri(), track_type,
                               scenario.get_min_tracks(track_type),
                               self.get_num_tracks(track_type)))

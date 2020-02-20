@@ -466,11 +466,12 @@ class GstValidatePlaybinTestsGenerator(GstValidatePipelineTestsGenerator):
 
             for scenario in special_scenarios + scenarios:
                 cpipe = pipe
-                if not minfo.media_descriptor.is_compatible(scenario):
-                    continue
-
                 cpipe = self._set_sinks(minfo, cpipe, scenario)
                 fname = self._get_name(scenario, protocol, minfo)
+
+                if not minfo.media_descriptor.is_compatible(scenario):
+                    self.debug("Skipping (media descriptor is not compatible): %s", fname)
+                    continue
 
                 self.debug("Adding: %s", fname)
 
@@ -490,6 +491,7 @@ class GstValidatePlaybinTestsGenerator(GstValidatePipelineTestsGenerator):
                     rtspminfo = NamedDic({"path": minfo.media_descriptor.get_path(),
                                           "media_descriptor": GstValidateRTSPMediaDescriptor(minfo.media_descriptor.get_path())})
                     if not rtspminfo.media_descriptor.is_compatible(scenario):
+                        self.debug("Skipping (media descriptor is not compatible for rtsp test): %s", fname)
                         continue
 
                     cpipe = self._set_sinks(rtspminfo, "%s uri=rtsp://127.0.0.1:<RTSPPORTNUMBER>/test"
@@ -989,7 +991,7 @@ class GstValidateRTSPMediaDescriptor(GstValidateMediaDescriptor):
     def get_protocol(self):
         return Protocols.RTSP
 
-    def prerrols(self):
+    def prerolls(self):
         return False
 
 
