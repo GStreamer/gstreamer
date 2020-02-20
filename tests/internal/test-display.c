@@ -205,7 +205,7 @@ int
 main (int argc, char *argv[])
 {
   GstVaapiDisplay *display;
-#if USE_X11 || USE_WAYLAND
+#if USE_GLX || USE_WAYLAND
   guint width, height;
   guint par_n, par_d;
 #endif
