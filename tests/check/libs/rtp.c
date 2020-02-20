@@ -1814,6 +1814,78 @@ GST_START_TEST (test_rtp_buffer_empty_payload)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rtp_buffer_extension_onebyte_header_full_padding)
+{
+  GstBuffer *buffer;
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+  guint8 *mem;
+  guint size;
+  guint8 *data_out;
+  guint16 bits;
+  guint8 *pdata;
+  guint wordlen = 0;
+  guint8 hdr_buffer_1[2] = { 0x1, 0x1 };
+
+  guint8 rtp_test_buffer[] = {
+    0x90, 0x7c, 0x18, 0xa6,     /* |V=2|P|X|CC|M|PT|sequence number| */
+    0x7a, 0x62, 0x17, 0x0f,     /* |timestamp| */
+    0x70, 0x23, 0x91, 0x38,     /* |synchronization source (SSRC) identifier| */
+    0xbe, 0xde, 0x00, 0x02,     /* |0xBE|0xDE|length=2| */
+    0x00, 0x00, 0x00, 0x00,     /* |0 (pad)|0 (pad)|0 (pad)|0 (pad)| */
+    0x00, 0x00, 0x00, 0x00,     /* |0 (pad)|0 (pad)|0 (pad)|0 (pad)| */
+    0xff, 0xff, 0xff, 0xff      /* |dummy payload| */
+  };
+
+  mem = malloc (sizeof (rtp_test_buffer));
+  fail_unless (mem != NULL);
+  memcpy (mem, rtp_test_buffer, sizeof (rtp_test_buffer));
+  fail_unless_equals_int (memcmp (mem, rtp_test_buffer,
+          sizeof (rtp_test_buffer)), 0);
+
+  buffer = gst_buffer_new_wrapped (mem, sizeof (rtp_test_buffer));
+
+  fail_unless (gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp));
+
+  fail_unless (gst_rtp_buffer_get_extension_data (&rtp, &bits,
+          (gpointer) & pdata, &wordlen));
+  fail_unless_equals_int (bits, 0xBEDE);
+  fail_unless_equals_int (wordlen, 2);
+  fail_unless_equals_int (pdata[0], 0x0);
+  fail_unless_equals_int (pdata[1], 0x0);
+  fail_unless_equals_int (pdata[2], 0x0);
+  fail_unless_equals_int (pdata[3], 0x0);
+  fail_unless_equals_int (pdata[4], 0x0);
+  fail_unless_equals_int (pdata[5], 0x0);
+  fail_unless_equals_int (pdata[6], 0x0);
+  fail_unless_equals_int (pdata[7], 0x0);
+
+  fail_unless (gst_rtp_buffer_add_extension_onebyte_header (&rtp, 1,
+          hdr_buffer_1, 2));
+  fail_unless (gst_rtp_buffer_get_extension_onebyte_header (&rtp, 1, 0,
+          (gpointer *) & data_out, &size));
+  fail_unless_equals_int (size, 2);
+  fail_unless_equals_int (data_out[0], 0x1);
+  fail_unless_equals_int (data_out[1], 0x1);
+  fail_unless (gst_rtp_buffer_get_extension_data (&rtp, &bits,
+          (gpointer) & pdata, &wordlen));
+  fail_unless_equals_int (bits, 0xBEDE);
+  fail_unless_equals_int (wordlen, 2);
+  fail_unless_equals_int (pdata[0], 0x11);
+  fail_unless_equals_int (pdata[1], 0x1);
+  fail_unless_equals_int (pdata[2], 0x1);
+  fail_unless_equals_int (pdata[3], 0x0);
+  fail_unless_equals_int (pdata[4], 0x0);
+  fail_unless_equals_int (pdata[5], 0x0);
+  fail_unless_equals_int (pdata[6], 0x0);
+  fail_unless_equals_int (pdata[7], 0x0);
+
+  gst_rtp_buffer_unmap (&rtp);
+
+  gst_buffer_unref (buffer);
+}
+
+GST_END_TEST;
+
 
 GST_START_TEST (test_ext_timestamp_basic)
 {
@@ -1938,6 +2010,9 @@ rtp_suite (void)
   tcase_add_test (tc_chain, test_rtp_buffer_get_payload_bytes);
   tcase_add_test (tc_chain, test_rtp_buffer_get_extension_bytes);
   tcase_add_test (tc_chain, test_rtp_buffer_empty_payload);
+
+  tcase_add_test (tc_chain,
+      test_rtp_buffer_extension_onebyte_header_full_padding);
 
   //tcase_add_test (tc_chain, test_rtp_buffer_list);
 

@@ -1511,7 +1511,7 @@ gst_rtp_buffer_get_extension_twobytes_header (GstRTPBuffer * rtp,
 }
 
 static gboolean
-get_onebyte_header_end_offset (guint8 * pdata, guint wordlen, guint *offset)
+get_onebyte_header_end_offset (guint8 * pdata, guint wordlen, guint * offset)
 {
   guint bytelen = wordlen * 4;
   guint paddingcount = 0;
@@ -1576,7 +1576,8 @@ gst_rtp_buffer_add_extension_onebyte_header (GstRTPBuffer * rtp, guint8 id,
 {
   guint16 bits;
   guint8 *pdata = 0;
-  guint wordlen;
+  guint wordlen = 0;
+  guint wordlen_new;
   gboolean has_bit;
   guint extlen, offset = 0;
 
@@ -1598,9 +1599,10 @@ gst_rtp_buffer_add_extension_onebyte_header (GstRTPBuffer * rtp, guint8 id,
   /* the required size of the new extension data */
   extlen = offset + size + 1;
   /* calculate amount of words */
-  wordlen = extlen / 4 + ((extlen % 4) ? 1 : 0);
+  wordlen_new = extlen / 4 + ((extlen % 4) ? 1 : 0);
+  wordlen_new = MAX (wordlen_new, wordlen);
 
-  gst_rtp_buffer_set_extension_data (rtp, 0xBEDE, wordlen);
+  gst_rtp_buffer_set_extension_data (rtp, 0xBEDE, wordlen_new);
   gst_rtp_buffer_get_extension_data (rtp, &bits, (gpointer) & pdata, &wordlen);
 
   pdata += offset;
