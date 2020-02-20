@@ -46,6 +46,7 @@
 #define PARSER_MAX_ARGUMENT_COUNT 10
 
 static GRegex *_clean_structs_lines = NULL;
+static GRegex *_line_breaking_char = NULL;
 static GRegex *_variables_regex = NULL;
 static GstStructure *global_vars = NULL;
 
@@ -550,7 +551,7 @@ _file_get_lines (GFile * file)
   gsize size;
 
   GError *err = NULL;
-  gchar *content = NULL, *escaped_content = NULL, **lines = NULL;
+  gchar *content = NULL, *escaped_content = NULL, **lines = NULL, *tmp;
 
   /* TODO Handle GCancellable */
   if (!g_file_load_contents (file, NULL, &content, &size, NULL, &err)) {
@@ -563,16 +564,24 @@ _file_get_lines (GFile * file)
     return NULL;
   }
 
-  if (_clean_structs_lines == NULL)
+  if (_clean_structs_lines == NULL) {
     _clean_structs_lines =
         g_regex_new ("\\\\\n|#.*\n", G_REGEX_CASELESS, 0, NULL);
+    _line_breaking_char = g_regex_new (",\\n", G_REGEX_CASELESS, 0, NULL);
+
+  }
 
   escaped_content =
       g_regex_replace (_clean_structs_lines, content, -1, 0, "", 0, NULL);
-  g_free (content);
+  tmp =
+      g_regex_replace (_line_breaking_char, escaped_content, -1, 0, ",", 0,
+      NULL);
+  g_free (escaped_content);
+  escaped_content = tmp;
 
   lines = g_strsplit (escaped_content, "\n", 0);
   g_free (escaped_content);
+  g_free (content);
 
   return lines;
 }
