@@ -1783,7 +1783,7 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
   if (g_object_class_find_property (jb_class, "max-dropout-time"))
     g_object_set (buffer, "max-dropout-time", rtpbin->max_dropout_time, NULL);
   if (g_object_class_find_property (jb_class, "max-misorder-time"))
-    g_object_set (buffer, "max-dropout-time", rtpbin->max_misorder_time, NULL);
+    g_object_set (buffer, "max-misorder-time", rtpbin->max_misorder_time, NULL);
   if (g_object_class_find_property (jb_class, "rfc7273-sync"))
     g_object_set (buffer, "rfc7273-sync", rtpbin->rfc7273_sync, NULL);
   if (g_object_class_find_property (jb_class, "max-ts-offset-adjustment"))
