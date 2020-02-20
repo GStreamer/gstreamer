@@ -119,7 +119,11 @@ static void
 _set_child_property (GESTimelineElement * self G_GNUC_UNUSED, GObject * child,
     GParamSpec * pspec, GValue * value)
 {
-  g_object_set_property (child, pspec->name, value);
+  if (G_VALUE_TYPE (value) != pspec->value_type
+      && G_VALUE_TYPE (value) == G_TYPE_STRING)
+    gst_util_set_object_arg (child, pspec->name, g_value_get_string (value));
+  else
+    g_object_set_property (child, pspec->name, value);
 }
 
 static gboolean
