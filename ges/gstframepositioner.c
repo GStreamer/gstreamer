@@ -26,6 +26,10 @@
 
 #include "gstframepositioner.h"
 
+GST_DEBUG_CATEGORY_STATIC (framepositioner);
+#undef GST_CAT_DEFAULT
+#define GST_CAT_DEFAULT framepositioner
+
 /* We  need to define a max number of pixel so we can interpolate them */
 #define MAX_PIXELS 100000
 #define MIN_PIXELS -100000
@@ -422,12 +426,20 @@ gst_frame_positioner_get_property (GObject * object, guint property_id,
       g_value_set_uint (value, pos->zorder);
       break;
     case PROP_WIDTH:
-      real_width = (pos->width > 0) ? pos->width : pos->track_width;
-      g_value_set_int (value, real_width);
+      if (pos->scale_in_compositor) {
+        g_value_set_int (value, pos->width);
+      } else {
+        real_width = pos->width > 0 ? pos->width : pos->track_width;
+        g_value_set_int (value, real_width);
+      }
       break;
     case PROP_HEIGHT:
-      real_height = (pos->height > 0) ? pos->height : pos->track_height;
-      g_value_set_int (value, real_height);
+      if (pos->scale_in_compositor) {
+        g_value_set_int (value, pos->height);
+      } else {
+        real_height = pos->height > 0 ? pos->height : pos->track_height;
+        g_value_set_int (value, real_height);
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);

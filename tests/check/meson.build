@@ -71,6 +71,15 @@ foreach t : ges_tests
   endif
 endforeach
 
+if gstvalidate_dep.found()
+  scenarios = ['check_video_track_restriction_scale']
+
+  foreach scenario: scenarios
+    scenario_file = join_paths(meson.current_source_dir(), 'scenarios', scenario + '.scenario')
+    test(scenario, ges_launch, env: env, args: ['--set-scenario', scenario_file])
+  endforeach
+endif
+
 if build_gir
   # Make sure to use the subproject gst-validate-launcher if avalaible.
   if gstvalidate_dep.found() and gstvalidate_dep.type_name() == 'internal'

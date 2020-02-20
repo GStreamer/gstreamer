@@ -1,0 +1,35 @@
+description, handles-states=true,
+    ges-options={\
+        --track-types, video,
+        --video-caps, "video/x-raw,width=1200,height=1000" \
+    }
+
+add-clip, name=clip, asset-id=GESTestClip, layer-priority=0, type=GESTestClip, duration=1.0
+
+check-child-properties, element-name=clip, width=0, height=0
+
+set-child-properties, element-name=clip, width=1024, height=768
+check-child-properties, element-name=clip, width=1024, height=768
+
+set-track-restriction-caps, track-type=video, caps="video/x-raw,width=1400,height=1200"
+check-child-properties, element-name=clip, width=1024, height=768
+
+set-child-properties, element-name=clip, width=0
+check-child-properties, element-name=clip, width=0, height=768
+
+set-child-properties, element-name=clip, height=0
+check-child-properties, element-name=clip, width=0, height=0
+
+set-child-properties, element-name=clip, width=1400, height=1200
+check-child-properties, element-name=clip, width=1400, height=1200
+
+# Changing track size, keeping aspect ratio should scale the video source
+set-track-restriction-caps, track-type=video, caps="video/x-raw,width=700,height=600"
+check-child-properties, element-name=clip, width=700, height=600
+
+# The video source has the same size as the track restriction caps but we
+# are changing the aspect ratio, the video should thus not be rescaled. */
+set-track-restriction-caps, track-type=video, caps="video/x-raw,width=1920,height=1080"
+check-child-properties, element-name=clip, width=700, height=600
+
+stop

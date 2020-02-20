@@ -6,7 +6,7 @@ if gstvalidate_dep.found()
   ges_tool_args += ['-DGST_USE_UNSTABLE_API']
 endif
 
-executable('ges-launch-@0@'.format(apiversion),
+ges_launch = executable('ges-launch-@0@'.format(apiversion),
     'ges-validate.c', 'ges-launch.c', 'ges-launcher.c', 'utils.c',
     c_args : [ges_tool_args],
     dependencies : deps,
