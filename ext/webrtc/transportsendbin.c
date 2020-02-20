@@ -511,6 +511,85 @@ transport_send_bin_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static gboolean
+gst_transport_send_bin_element_query (GstElement * element, GstQuery * query)
+{
+  gboolean ret = TRUE;
+  GstClockTime min_latency;
+
+  GST_LOG_OBJECT (element, "got query %s", GST_QUERY_TYPE_NAME (query));
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_LATENCY:
+      /* when latency is queried, use the result to configure our
+       * own latency internally, piggybacking off the global
+       * latency configuration sequence. */
+      GST_DEBUG_OBJECT (element, "handling latency query");
+
+      /* Call the parent query handler to actually get the query
+       * sent upstream */
+      ret =
+          GST_ELEMENT_CLASS (transport_send_bin_parent_class)->query
+          (GST_ELEMENT (element), query);
+      if (!ret)
+        break;
+
+      gst_query_parse_latency (query, NULL, &min_latency, NULL);
+
+      GST_DEBUG_OBJECT (element,
+          "got min latency %" GST_TIME_FORMAT, GST_TIME_ARGS (min_latency));
+
+      /* configure latency on elements */
+      /* Call the parent event handler, because our sub-class handler
+       * will drop the LATENCY event. We also don't need to that
+       * the latency configuration is valid (min < max), because
+       * the pipeline will do it when checking the query results */
+      if (GST_ELEMENT_CLASS (transport_send_bin_parent_class)->send_event
+          (GST_ELEMENT (element), gst_event_new_latency (min_latency))) {
+        GST_INFO_OBJECT (element, "configured latency of %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (min_latency));
+      } else {
+        GST_WARNING_OBJECT (element,
+            "did not really configure latency of %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (min_latency));
+      }
+
+      break;
+    default:
+      ret =
+          GST_ELEMENT_CLASS (transport_send_bin_parent_class)->query
+          (GST_ELEMENT (element), query);
+      break;
+  }
+
+  return ret;
+}
+
+static gboolean
+gst_transport_send_bin_element_event (GstElement * element, GstEvent * event)
+{
+  gboolean ret = TRUE;
+
+  GST_LOG_OBJECT (element, "got event %s", GST_EVENT_TYPE_NAME (event));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_LATENCY:
+      /* Ignore the pipeline configured latency, we choose our own
+       * instead when the latency query happens, so that sending
+       * isn't affected by other parts of the pipeline */
+      GST_DEBUG_OBJECT (element, "Ignoring latency event from parent");
+      gst_event_unref (event);
+      break;
+    default:
+      ret =
+          GST_ELEMENT_CLASS (transport_send_bin_parent_class)->send_event
+          (GST_ELEMENT (element), event);
+      break;
+  }
+
+  return ret;
+}
+
 static void
 transport_send_bin_class_init (TransportSendBinClass * klass)
 {
@@ -534,6 +613,9 @@ transport_send_bin_class_init (TransportSendBinClass * klass)
   gobject_class->get_property = transport_send_bin_get_property;
   gobject_class->set_property = transport_send_bin_set_property;
   gobject_class->finalize = transport_send_bin_finalize;
+
+  element_class->send_event = gst_transport_send_bin_element_event;
+  element_class->query = gst_transport_send_bin_element_query;
 
   g_object_class_install_property (gobject_class,
       PROP_STREAM,
