@@ -332,7 +332,7 @@ valgrind ges:
     TEST_SUITE: "check.gst-editing-services\\..*"
   only:
     variables:
-      - $CI_PROJECT_NAME =~ /^(gstreamer|gst-plugins-base|gst-plugins-good|gst-editing-services|gst-ci)$/
+      - $CI_PROJECT_NAME =~ /^(gstreamer|gst-plugins-base|gst-plugins-good|gst-editing-services|gst-ci|gst-devtools)$/
 
 # Template for Cerbero GStreamer Build
 #
