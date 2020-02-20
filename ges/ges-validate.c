@@ -449,6 +449,185 @@ _split_clip (GstValidateScenario * scenario, GstValidateAction * action)
   return (ges_clip_split (GES_CLIP (element), position) != NULL);
 }
 
+typedef struct
+{
+  GstValidateScenario *scenario;
+  GESTimelineElement *element;
+  GstValidateActionReturn res;
+  GstClockTime time;
+  gboolean check_children;
+  GstValidateAction *action;
+} PropertyData;
+
+static gboolean
+check_property (GQuark field_id, GValue * expected_value, PropertyData * data)
+{
+  GValue cvalue = G_VALUE_INIT, *tvalue = NULL, comparable_value = G_VALUE_INIT,
+      *observed_value;
+  const gchar *property = g_quark_to_string (field_id);
+  GstControlBinding *binding = NULL;
+
+  if (!data->check_children) {
+    g_object_get_property (G_OBJECT (data->element), property, &cvalue);
+    goto compare;
+  }
+
+  if (GST_CLOCK_TIME_IS_VALID (data->time)) {
+    if (!GES_IS_TRACK_ELEMENT (data->element)) {
+      GST_VALIDATE_REPORT_ACTION (data->scenario, data->action,
+          SCENARIO_ACTION_EXECUTION_ERROR,
+          "Could not get property at time for type %s - only GESTrackElement supported",
+          G_OBJECT_TYPE_NAME (data->element));
+      data->res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+
+      return FALSE;
+    }
+
+    binding =
+        ges_track_element_get_control_binding (GES_TRACK_ELEMENT
+        (data->element), property);
+    if (binding) {
+      tvalue = gst_control_binding_get_value (binding, data->time);
+
+      if (!tvalue) {
+        GST_VALIDATE_REPORT_ACTION (data->scenario, data->action,
+            SCENARIO_ACTION_EXECUTION_ERROR,
+            "Could not get property: %s at %" GST_TIME_FORMAT, property,
+            GST_TIME_ARGS (data->time));
+        data->res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+
+        return FALSE;
+      }
+    }
+  }
+
+  if (!tvalue
+      && !ges_timeline_element_get_child_property (data->element, property,
+          &cvalue)) {
+    GST_VALIDATE_REPORT_ACTION (data->scenario, data->action,
+        SCENARIO_ACTION_EXECUTION_ERROR, "Could not get property: %s:",
+        property);
+    data->res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+
+    return FALSE;
+  }
+
+compare:
+  observed_value = tvalue ? tvalue : &cvalue;
+
+  if (G_VALUE_TYPE (observed_value) != G_VALUE_TYPE (expected_value)) {
+    g_value_init (&comparable_value, G_VALUE_TYPE (observed_value));
+
+    if (G_VALUE_TYPE (observed_value) == GST_TYPE_CLOCK_TIME) {
+      GstClockTime t;
+
+      if (gst_validate_utils_get_clocktime (data->action->structure, property,
+              &t)) {
+        g_value_set_uint64 (&comparable_value, t);
+        expected_value = &comparable_value;
+      }
+    } else if (g_value_transform (expected_value, &comparable_value)) {
+      expected_value = &comparable_value;
+    }
+  }
+
+  if (gst_value_compare (observed_value, expected_value) != GST_VALUE_EQUAL) {
+    gchar *expected = gst_value_serialize (expected_value), *observed =
+        gst_value_serialize (observed_value);
+
+    GST_VALIDATE_REPORT_ACTION (data->scenario, data->action,
+        SCENARIO_ACTION_CHECK_ERROR,
+        "%s:%s expected value: '(%s)%s' different than observed: '(%s)%s'",
+        GES_TIMELINE_ELEMENT_NAME (data->element), property,
+        G_VALUE_TYPE_NAME (observed_value), expected,
+        G_VALUE_TYPE_NAME (expected_value), observed);
+
+    g_free (expected);
+    g_free (observed);
+    data->res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+  }
+
+  if (G_VALUE_TYPE (&comparable_value) != G_TYPE_NONE)
+    g_value_unset (&comparable_value);
+
+  if (tvalue) {
+    g_value_unset (tvalue);
+    g_free (tvalue);
+  } else
+    g_value_reset (&cvalue);
+  return TRUE;
+}
+
+static gboolean
+set_property (GQuark field_id, const GValue * value, PropertyData * data)
+{
+  const gchar *property = g_quark_to_string (field_id);
+
+  if (!ges_timeline_element_set_child_property (data->element, property, value)) {
+    gchar *v = gst_value_serialize (value);
+
+    GST_VALIDATE_REPORT_ACTION (data->scenario, data->action,
+        SCENARIO_ACTION_EXECUTION_ERROR,
+        "Could not set %s child property %s to %s",
+        GES_TIMELINE_ELEMENT_NAME (data->element), property, v);
+
+    data->res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+    g_free (v);
+
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+set_or_check_properties (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  GESTimelineElement *element;
+  GstStructure *structure;
+  const gchar *element_name;
+  PropertyData data = {
+    .scenario = scenario,
+    .element = NULL,
+    .res = GST_VALIDATE_EXECUTE_ACTION_OK,
+    .time = GST_CLOCK_TIME_NONE,
+    .check_children =
+        !gst_structure_has_name (action->structure, "check-ges-properties"),
+    .action = action,
+  };
+
+  DECLARE_AND_GET_TIMELINE (scenario, action);
+
+  gst_validate_action_get_clocktime (scenario, action, "at-time", &data.time);
+
+  structure = gst_structure_copy (action->structure);
+  element_name = gst_structure_get_string (structure, "element-name");
+  element = ges_timeline_get_element (timeline, element_name);
+  if (!element) {
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
+        SCENARIO_ACTION_EXECUTION_ERROR,
+        "Can not find element: %s", element_name);
+
+    data.res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+    goto done;
+  }
+  g_object_unref (timeline);
+
+  data.element = element;
+  gst_structure_remove_fields (structure, "element-name", "at-time", NULL);
+  gst_structure_foreach (structure,
+      gst_structure_has_name (action->structure,
+          "set-child-properties") ? (GstStructureForeachFunc) set_property
+      : (GstStructureForeachFunc) check_property, &data);
+  gst_object_unref (element);
+
+done:
+  gst_structure_free (structure);
+
+  return data.res;
+}
+
 static gboolean
 _set_track_restriction_caps (GstValidateScenario * scenario,
     GstValidateAction * action)
@@ -1125,6 +1304,52 @@ ges_validate_register_action_types (void)
         },
         {NULL}
       }, "Allows to change child property of an object", GST_VALIDATE_ACTION_TYPE_NONE);
+
+  gst_validate_register_action_type ("check-ges-properties", "ges", set_or_check_properties,
+      (GstValidateActionParameter []) {
+        {
+          .name = "element-name",
+          .description = "The name of the element on which to check properties",
+          .types = "string",
+          .mandatory = TRUE,
+        },
+        {NULL}
+      }, "Check `element-name` properties values defined by the"
+         " fields in the following format: `property_name=expected-value`",
+        GST_VALIDATE_ACTION_TYPE_NONE);
+
+  gst_validate_register_action_type ("check-child-properties", "ges", set_or_check_properties,
+      (GstValidateActionParameter []) {
+        {
+          .name = "element-name",
+          .description = "The name of the element on which to check children properties",
+          .types = "string",
+          .mandatory = TRUE,
+        },
+        {
+          .name = "at-time",
+          .description = "The time at which to check the values, taking into"
+            " account the ControlBinding if any set.",
+          .types = "string",
+          .mandatory = FALSE,
+        },
+        {NULL}
+      }, "Check `element-name` children properties values defined by the"
+         " fields in the following format: `property_name=expected-value`",
+        GST_VALIDATE_ACTION_TYPE_NONE);
+
+  gst_validate_register_action_type ("set-child-properties", "ges", set_or_check_properties,
+      (GstValidateActionParameter []) {
+        {
+          .name = "element-name",
+          .description = "The name of the element on which to modify child properties",
+          .types = "string",
+          .mandatory = TRUE,
+        },
+        {NULL}
+      }, "Sets `element-name` children properties values defined by the"
+         " fields in the following format: `property-name=new-value`",
+        GST_VALIDATE_ACTION_TYPE_NONE);
 
   gst_validate_register_action_type ("split-clip", "ges", _split_clip,
       (GstValidateActionParameter []) {
