@@ -561,6 +561,8 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
   D3D11_VIDEO_DECODER_DESC decoder_desc = { 0, };
   GUID selected_profile;
   gint i;
+  guint aligned_width, aligned_height;
+  guint alignment;
 
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
   g_return_val_if_fail (codec > GST_D3D11_CODEC_NONE, FALSE);
@@ -600,8 +602,30 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
 
   gst_d3d11_decoder_reset_unlocked (decoder);
 
-  decoder_desc.SampleWidth = coded_width;
-  decoder_desc.SampleHeight = coded_height;
+  /* NOTE: other dxva implementations (ffmpeg and vlc) do this
+   * and they say the required alignment were mentioned by dxva spec.
+   * See ff_dxva2_common_frame_params() in dxva.c of ffmpeg and
+   * directx_va_Setup() in directx_va.c of vlc.
+   * But... where it is? */
+  switch (codec) {
+    case GST_D3D11_CODEC_H265:
+      alignment = 128;
+      break;
+    default:
+      alignment = 16;
+      break;
+  }
+
+  aligned_width = GST_ROUND_UP_N (coded_width, alignment);
+  aligned_height = GST_ROUND_UP_N (coded_height, alignment);
+  if (aligned_width != coded_width || aligned_height != coded_height) {
+    GST_DEBUG_OBJECT (decoder,
+        "coded resolution %dx%d is not aligned to %d, adjust to %dx%d",
+        coded_width, coded_height, alignment, aligned_width, aligned_height);
+  }
+
+  decoder_desc.SampleWidth = aligned_width;
+  decoder_desc.SampleHeight = aligned_height;
   decoder_desc.OutputFormat = d3d11_format->dxgi_format;
   decoder_desc.Guid = selected_profile;
 
@@ -646,7 +670,7 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
   }
 
   if (!gst_d3d11_decoder_prepare_output_view_pool (decoder,
-          info, coded_width, coded_height, pool_size, &selected_profile)) {
+          info, aligned_width, aligned_height, pool_size, &selected_profile)) {
     GST_ERROR_OBJECT (decoder, "Couldn't prepare output view pool");
     goto error;
   }
