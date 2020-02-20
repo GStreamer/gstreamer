@@ -146,17 +146,40 @@ seek_pipeline (GstElement * pipeline, gdouble rate, GstClockTime start,
   current_rate = rate;
 };
 
-static void
-receive_handoff (GstElement * object G_GNUC_UNUSED, GstBuffer * buf,
-    GstPad * arg1 G_GNUC_UNUSED, gpointer user_data G_GNUC_UNUSED)
+static GstFlowReturn
+receive_sample (GstAppSink * appsink, gpointer user_data G_GNUC_UNUSED)
 {
-  GstClockTime start = GST_BUFFER_TIMESTAMP (buf);
-  GstClockTime end = start;
+  GstSample *sample;
+  GstSegment *seg;
+  GstBuffer *buf;
+  GstClockTime start;
+  GstClockTime end;
 
-  if (GST_BUFFER_DURATION_IS_VALID (buf))
-    end += GST_BUFFER_DURATION (buf);
+  g_signal_emit_by_name (appsink, "pull-sample", &sample);
+  fail_unless (sample != NULL);
 
-  GST_LOG ("Got buffer %" GST_TIME_FORMAT " to %" GST_TIME_FORMAT,
+  seg = gst_sample_get_segment (sample);
+  fail_unless (seg != NULL);
+
+  buf = gst_sample_get_buffer (sample);
+  fail_unless (buf != NULL);
+
+  GST_LOG ("Got buffer %" GST_PTR_FORMAT, buf);
+
+  start = GST_BUFFER_PTS (buf);
+  end = start;
+
+  if (GST_CLOCK_TIME_IS_VALID (start))
+    start = gst_segment_to_stream_time (seg, GST_FORMAT_TIME, start);
+
+  if (GST_CLOCK_TIME_IS_VALID (end)) {
+    if (GST_BUFFER_DURATION_IS_VALID (buf))
+      end += GST_BUFFER_DURATION (buf);
+
+    end = gst_segment_to_stream_time (seg, GST_FORMAT_TIME, end);
+  }
+
+  GST_DEBUG ("Got buffer stream time %" GST_TIME_FORMAT " to %" GST_TIME_FORMAT,
       GST_TIME_ARGS (start), GST_TIME_ARGS (end));
 
   /* Check time is moving in the right direction */
@@ -184,6 +207,10 @@ receive_handoff (GstElement * object G_GNUC_UNUSED, GstBuffer * buf,
     first_ts = start;
   if (!GST_CLOCK_TIME_IS_VALID (last_ts) || end > last_ts)
     last_ts = end;
+
+  gst_sample_unref (sample);
+
+  return GST_FLOW_OK;
 }
 
 static void
@@ -192,16 +219,19 @@ test_playback (const gchar * in_pattern, GstClockTime exp_first_time,
 {
   GstMessage *msg;
   GstElement *pipeline;
-  GstElement *fakesink;
+  GstElement *appsink;
   GstElement *fakesink2;
+  GstAppSinkCallbacks callbacks = { NULL };
   gchar *uri;
+
+  GST_DEBUG ("Playing back files matching %s", in_pattern);
 
   pipeline = gst_element_factory_make ("playbin", NULL);
   fail_if (pipeline == NULL);
 
-  fakesink = gst_element_factory_make ("fakesink", NULL);
-  fail_if (fakesink == NULL);
-  g_object_set (G_OBJECT (pipeline), "video-sink", fakesink, NULL);
+  appsink = gst_element_factory_make ("appsink", NULL);
+  fail_if (appsink == NULL);
+  g_object_set (G_OBJECT (pipeline), "video-sink", appsink, NULL);
   fakesink2 = gst_element_factory_make ("fakesink", NULL);
   fail_if (fakesink2 == NULL);
   g_object_set (G_OBJECT (pipeline), "audio-sink", fakesink2, NULL);
@@ -211,8 +241,8 @@ test_playback (const gchar * in_pattern, GstClockTime exp_first_time,
   g_object_set (G_OBJECT (pipeline), "uri", uri, NULL);
   g_free (uri);
 
-  g_signal_connect (fakesink, "handoff", (GCallback) receive_handoff, NULL);
-  g_object_set (G_OBJECT (fakesink), "signal-handoffs", TRUE, NULL);
+  callbacks.new_sample = receive_sample;
+  gst_app_sink_set_callbacks (GST_APP_SINK (appsink), &callbacks, NULL, NULL);
 
   /* test forwards */
   seek_pipeline (pipeline, 1.0, 0, -1);
@@ -223,11 +253,12 @@ test_playback (const gchar * in_pattern, GstClockTime exp_first_time,
 
   /* Check we saw the entire range of values */
   fail_unless (first_ts == exp_first_time,
-      "Expected start of playback range 0, got %" GST_TIME_FORMAT,
+      "Expected start of playback range %" GST_TIME_FORMAT ", got %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (exp_first_time),
       GST_TIME_ARGS (first_ts));
   fail_unless (last_ts == exp_last_time,
-      "Expected end of playback range 3s, got %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (last_ts));
+      "Expected end of playback range %" GST_TIME_FORMAT ", got %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (exp_last_time), GST_TIME_ARGS (last_ts));
 
   if (test_reverse) {
     /* Test backwards */

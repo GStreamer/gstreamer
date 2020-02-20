@@ -55,6 +55,8 @@
 GST_DEBUG_CATEGORY (splitmux_debug);
 #define GST_CAT_DEFAULT splitmux_debug
 
+#define FIXED_TS_OFFSET (1000*GST_SECOND)
+
 enum
 {
   PROP_0,
@@ -642,14 +644,14 @@ gst_splitmux_handle_event (GstSplitMuxSrc * splitmux,
        * seg or play_segment */
       if (splitmux->play_segment.rate > 0.0) {
         if (splitmux->play_segment.stop != -1)
-          seg.stop = splitmux->play_segment.stop;
+          seg.stop = splitmux->play_segment.stop + FIXED_TS_OFFSET;
         else
           seg.stop = splitpad->segment.stop;
       } else {
         /* Reverse playback from stop time to start time */
         /* See if an end point was requested in the seek */
         if (splitmux->play_segment.start != -1) {
-          seg.start = splitmux->play_segment.start;
+          seg.start = splitmux->play_segment.start + FIXED_TS_OFFSET;
           seg.time = splitmux->play_segment.time;
         } else {
           seg.start = splitpad->segment.start;
@@ -858,7 +860,7 @@ gst_splitmux_src_prepare_next_part (GstSplitMuxSrc * splitmux)
       splitmux->parts[idx]->path, idx);
 
   gst_splitmux_part_reader_set_start_offset (splitmux->parts[idx],
-      splitmux->end_offset);
+      splitmux->end_offset, FIXED_TS_OFFSET);
   if (!gst_splitmux_part_reader_prepare (splitmux->parts[idx])) {
     GST_WARNING_OBJECT (splitmux,
         "Failed to prepare file part %s. Cannot play past there.",

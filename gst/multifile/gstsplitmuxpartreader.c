@@ -149,6 +149,9 @@ handle_buffer_measuring (GstSplitMuxPartReader * reader,
   /* Adjust buffer timestamps */
   offset = reader->start_offset + part_pad->segment.base;
   offset -= part_pad->initial_ts_offset;
+  /* We don't add the ts_offset here, because we
+   * want to measure the logical length of the stream,
+   * not to generate output timestamps */
 
   /* Update the stored max duration on the pad,
    * always preferring making DTS contiguous
@@ -159,8 +162,8 @@ handle_buffer_measuring (GstSplitMuxPartReader * reader,
     ts = GST_BUFFER_PTS (buf) + offset;
 
   GST_DEBUG_OBJECT (reader, "Pad %" GST_PTR_FORMAT
-      " incoming PTS %" GST_TIME_FORMAT
-      " DTS %" GST_TIME_FORMAT " offset by %" GST_STIME_FORMAT
+      " incoming DTS %" GST_TIME_FORMAT
+      " PTS %" GST_TIME_FORMAT " offset by %" GST_STIME_FORMAT
       " to %" GST_STIME_FORMAT, part_pad,
       GST_TIME_ARGS (GST_BUFFER_DTS (buf)),
       GST_TIME_ARGS (GST_BUFFER_PTS (buf)),
@@ -228,6 +231,7 @@ splitmux_part_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   /* Adjust buffer timestamps */
   offset = reader->start_offset + part_pad->segment.base;
   offset -= part_pad->initial_ts_offset;
+  offset += reader->ts_offset;
 
   if (GST_BUFFER_PTS_IS_VALID (buf))
     GST_BUFFER_PTS (buf) += offset;
@@ -356,20 +360,21 @@ splitmux_part_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
         goto wrong_segment;
 
       /* Adjust segment */
-      /* Adjust start/stop so the overall file is 0 + start_offset based */
+      /* Adjust start/stop so the overall file is 0 + start_offset based,
+       * adding a fixed offset so that DTS is never negative */
       if (seg->stop != -1) {
         seg->stop -= seg->start;
-        seg->stop += seg->time + reader->start_offset;
+        seg->stop += seg->time + reader->start_offset + reader->ts_offset;
       }
-      seg->start = seg->time + reader->start_offset;
+      seg->start = seg->time + reader->start_offset + reader->ts_offset;
       seg->time += reader->start_offset;
       seg->position += reader->start_offset;
-
-      GST_LOG_OBJECT (pad, "Adjusted segment now %" GST_PTR_FORMAT, event);
 
       /* Replace event */
       gst_event_unref (event);
       event = gst_event_new_segment (seg);
+
+      GST_LOG_OBJECT (pad, "Adjusted segment now %" GST_PTR_FORMAT, event);
 
       if (reader->prep_state != PART_STATE_PREPARING_COLLECT_STREAMS
           && reader->prep_state != PART_STATE_PREPARING_MEASURE_STREAMS)
@@ -1246,12 +1251,13 @@ gst_splitmux_part_reader_get_end_offset (GstSplitMuxPartReader * reader)
 
 void
 gst_splitmux_part_reader_set_start_offset (GstSplitMuxPartReader * reader,
-    GstClockTime offset)
+    GstClockTime time_offset, GstClockTime ts_offset)
 {
   SPLITMUX_PART_LOCK (reader);
-  reader->start_offset = offset;
-  GST_INFO_OBJECT (reader, "TS offset now %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (offset));
+  reader->start_offset = time_offset;
+  reader->ts_offset = ts_offset;
+  GST_INFO_OBJECT (reader, "Time offset now %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (time_offset));
   SPLITMUX_PART_UNLOCK (reader);
 }
 
