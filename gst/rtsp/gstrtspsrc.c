@@ -5557,16 +5557,8 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
   GstRTSPMessage message = { 0 };
   GstRTSPResult res;
   GstFlowReturn ret = GST_FLOW_OK;
-  gint64 timeout;
 
   while (TRUE) {
-    /* get the next timeout interval */
-    timeout = gst_rtsp_connection_next_timeout_usec (src->conninfo.connection);
-
-    GST_DEBUG_OBJECT (src, "doing receive with timeout %" G_GINT64_FORMAT
-        " seconds, %" G_GINT64_FORMAT " usec", timeout / G_USEC_PER_SEC,
-        timeout % G_USEC_PER_SEC);
-
     gst_rtsp_message_unset (&message);
 
     /* protect the connection with the connection lock so that we can see when
