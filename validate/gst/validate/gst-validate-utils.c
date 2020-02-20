@@ -380,7 +380,11 @@ _read_builtin (MathParser * parser)
         v1 = _read_argument (parser);
         v0 = MAX (v0, v1);
       } else {
-        _error (parser, "Tried to call unknown built-in function!");
+        gchar *tmp =
+            g_strdup_printf ("Tried to call unknown built-in function: %s",
+            token);
+        _error (parser, tmp);
+        g_free (tmp);
       }
 
       if (_next (parser) != ')')
