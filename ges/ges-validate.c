@@ -698,6 +698,7 @@ _set_control_source (GstValidateScenario * scenario, GstValidateAction * action)
       source, property_name, binding_type);
 
 done:
+  g_free (property_name);
   g_free (element_name);
   g_free (binding_type);
   g_free (source_type);

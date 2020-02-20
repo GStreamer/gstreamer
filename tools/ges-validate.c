@@ -140,11 +140,11 @@ ges_validate_activate (GstPipeline * pipeline, GESLauncherParsedOptions * opts)
 
         ges_options_full[0] = g_strdup ("something");
         for (i = 0; ges_options[i]; i++)
-          ges_options_full[i + 1] = ges_options[i];
+          ges_options_full[i + 1] = g_strdup (ges_options[i]);
 
-        ges_launcher_parse_options (opts, ges_options_full, NULL, NULL, NULL);
-        g_free (ges_options);
+        ges_launcher_parse_options (opts, &ges_options_full, NULL, NULL, NULL);
         g_strfreev (ges_options_full);
+        g_strfreev (ges_options);
       }
     }
   }

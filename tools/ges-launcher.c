@@ -726,15 +726,15 @@ ges_launcher_get_playback_option_group (GESLauncherParsedOptions * opts)
 }
 
 gboolean
-ges_launcher_parse_options (GESLauncherParsedOptions * opts, gchar ** arguments,
-    gint * argc, GOptionContext * ctx, GError ** error)
+ges_launcher_parse_options (GESLauncherParsedOptions * opts,
+    gchar ** arguments[], gint * argc, GOptionContext * ctx, GError ** error)
 {
   gboolean res;
-  gchar **argv;
   GOptionGroup *main_group;
   gint nargs = 0, tmpargc;
   gchar **commands = NULL, *help, *tmp;
   GError *err = NULL;
+  gboolean owns_ctx = ctx == NULL;
   GOptionEntry options[] = {
     {"disable-mixing", 0, 0, G_OPTION_ARG_NONE, &opts->disable_mixing,
         "Do not use mixing elements to mix layers together.", NULL}
@@ -786,12 +786,11 @@ ges_launcher_parse_options (GESLauncherParsedOptions * opts, gchar ** arguments,
 
   if (!ctx)
     ctx = g_option_context_new ("- plays or renders a timeline.");
-  argv = arguments;
-  tmpargc = g_strv_length (argv);
+  tmpargc = argc ? *argc : g_strv_length (*arguments);
 
   if (tmpargc > 2) {
     nargs = tmpargc - 2;
-    commands = &argv[2];
+    commands = &(*arguments)[2];
   }
 
   tmp = ges_command_line_formatter_get_help (nargs, commands);
@@ -818,12 +817,16 @@ ges_launcher_parse_options (GESLauncherParsedOptions * opts, gchar ** arguments,
   g_option_context_add_group (ctx, ges_launcher_get_info_option_group (opts));
   g_option_context_set_ignore_unknown_options (ctx, TRUE);
 
-  res = g_option_context_parse (ctx, &tmpargc, &argv, &err);
+  res = g_option_context_parse_strv (ctx, arguments, &err);
   if (argc)
     *argc = tmpargc;
 
   if (err)
     g_propagate_error (error, err);
+
+  if (owns_ctx) {
+    g_option_context_free (ctx);
+  }
 
   return res;
 }
@@ -832,7 +835,7 @@ static gboolean
 _local_command_line (GApplication * application, gchar ** arguments[],
     gint * exit_status)
 {
-  gchar **argv;
+  gboolean res = TRUE;
   gint argc;
   GError *error = NULL;
   GESLauncher *self = GES_LAUNCHER (application);
@@ -840,22 +843,22 @@ _local_command_line (GApplication * application, gchar ** arguments[],
   GOptionContext *ctx = g_option_context_new ("- plays or renders a timeline.");
 
   *exit_status = 0;
-  argv = *arguments;
-  argc = g_strv_length (argv);
+  argc = g_strv_length (*arguments);
 
-  gst_init (&argc, &argv);
-  if (!ges_launcher_parse_options (opts, *arguments, &argc, ctx, &error)) {
+  gst_init (&argc, arguments);
+  if (!ges_launcher_parse_options (opts, arguments, &argc, ctx, &error)) {
     gst_init (NULL, NULL);
     printerr ("Error initializing: %s\n", error->message);
     g_option_context_free (ctx);
     g_error_free (error);
     *exit_status = 1;
-    return TRUE;
+    goto done;
   }
 
   if (opts->inspect_action_type) {
-    ges_validate_print_action_types ((const gchar **) argv + 1, argc - 1);
-    return TRUE;
+    ges_validate_print_action_types ((const gchar **) &((*arguments)[1]),
+        argc - 1);
+    goto done;
   }
 
   if (!opts->load_path && !opts->scenario && !opts->list_transitions
@@ -863,20 +866,21 @@ _local_command_line (GApplication * application, gchar ** arguments[],
     g_printf ("%s", g_option_context_get_help (ctx, TRUE, NULL));
     g_option_context_free (ctx);
     *exit_status = 1;
-    return TRUE;
+    goto done;
   }
 
   g_option_context_free (ctx);
 
-  opts->sanitized_timeline = sanitize_timeline_description (argc, argv);
+  opts->sanitized_timeline = sanitize_timeline_description (*arguments);
 
   if (!g_application_register (application, NULL, &error)) {
     *exit_status = 1;
     g_clear_error (&error);
-    return FALSE;
+    res = FALSE;
   }
 
-  return TRUE;
+done:
+  return res;
 }
 
 static void
@@ -954,11 +958,34 @@ _shutdown (GApplication * application)
 }
 
 static void
+_finalize (GObject * object)
+{
+  GESLauncher *self = GES_LAUNCHER (object);
+  GESLauncherParsedOptions *opts = &self->priv->parsed_options;
+
+  g_free (opts->load_path);
+  g_free (opts->save_path);
+  g_free (opts->save_only_path);
+  g_free (opts->outputuri);
+  g_free (opts->format);
+  g_free (opts->encoding_profile);
+  g_free (opts->videosink);
+  g_free (opts->audiosink);
+  g_free (opts->video_track_caps);
+  g_free (opts->audio_track_caps);
+  g_free (opts->scenario);
+
+  G_OBJECT_CLASS (ges_launcher_parent_class)->finalize (object);
+}
+
+static void
 ges_launcher_class_init (GESLauncherClass * klass)
 {
   G_APPLICATION_CLASS (klass)->local_command_line = _local_command_line;
   G_APPLICATION_CLASS (klass)->startup = _startup;
   G_APPLICATION_CLASS (klass)->shutdown = _shutdown;
+
+  G_OBJECT_CLASS (klass)->finalize = _finalize;
 }
 
 static void

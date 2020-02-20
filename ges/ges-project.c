@@ -877,6 +877,7 @@ ges_project_create_asset_sync (GESProject * project, const gchar * id,
 
     return NULL;
   }
+  g_free (internal_id);
 
   /* TODO Add a GCancellable somewhere in our API */
   while (retry) {

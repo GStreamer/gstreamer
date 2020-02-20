@@ -64,15 +64,15 @@ _sanitize_argument (gchar * arg)
 }
 
 gchar *
-sanitize_timeline_description (int argc, char **argv)
+sanitize_timeline_description (gchar ** args)
 {
   gint i;
 
   gchar *string = g_strdup (" ");
 
-  for (i = 1; i < argc; i++) {
+  for (i = 1; args[i]; i++) {
     gchar *new_string;
-    gchar *sanitized = _sanitize_argument (argv[i]);
+    gchar *sanitized = _sanitize_argument (args[i]);
 
     new_string = g_strconcat (string, " ", sanitized, NULL);
 
