@@ -179,20 +179,22 @@ _fixate_frame_size (GstVaapiPostproc * postproc, GstVideoInfo * vinfo,
     from_w = GST_VIDEO_INFO_WIDTH (vinfo);
     from_h = GST_VIDEO_INFO_HEIGHT (vinfo);
 
-    /* adjust for crop settings */
-    from_w -= postproc->crop_left + postproc->crop_right;
-    from_h -= postproc->crop_top + postproc->crop_bottom;
+    if (postproc->has_vpp) {
+      /* adjust for crop settings */
+      from_w -= postproc->crop_left + postproc->crop_right;
+      from_h -= postproc->crop_top + postproc->crop_bottom;
 
-    /* compensate for rotation if needed */
-    switch (gst_vaapi_filter_get_video_direction (postproc->filter)) {
-      case GST_VIDEO_ORIENTATION_90R:
-      case GST_VIDEO_ORIENTATION_90L:
-      case GST_VIDEO_ORIENTATION_UL_LR:
-      case GST_VIDEO_ORIENTATION_UR_LL:
-        G_PRIMITIVE_SWAP (gint, from_w, from_h);
-        G_PRIMITIVE_SWAP (gint, from_par_n, from_par_d);
-      default:
-        break;
+      /* compensate for rotation if needed */
+      switch (gst_vaapi_filter_get_video_direction (postproc->filter)) {
+        case GST_VIDEO_ORIENTATION_90R:
+        case GST_VIDEO_ORIENTATION_90L:
+        case GST_VIDEO_ORIENTATION_UL_LR:
+        case GST_VIDEO_ORIENTATION_UR_LL:
+          G_PRIMITIVE_SWAP (gint, from_w, from_h);
+          G_PRIMITIVE_SWAP (gint, from_par_n, from_par_d);
+        default:
+          break;
+      }
     }
 
     gst_structure_get_int (outs, "width", &w);

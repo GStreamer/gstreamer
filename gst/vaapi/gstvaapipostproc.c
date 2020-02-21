@@ -718,6 +718,8 @@ rotate_crop_meta (GstVaapiPostproc * const postproc, const GstVideoMeta * vmeta,
 {
   guint tmp;
 
+  g_return_if_fail (postproc->has_vpp);
+
   /* The video meta is required since the caps width/height are smaller,
    * which would not result in a usable GstVideoInfo for mapping the
    * buffer. */
@@ -1559,15 +1561,17 @@ gst_vaapipostproc_prepare_output_buffer (GstBaseTransform * trans,
     info.width = video_meta->width;
     info.height = video_meta->height;
 
-    /* compensate for rotation if needed */
-    switch (gst_vaapi_filter_get_video_direction (postproc->filter)) {
-      case GST_VIDEO_ORIENTATION_90R:
-      case GST_VIDEO_ORIENTATION_UL_LR:
-      case GST_VIDEO_ORIENTATION_90L:
-      case GST_VIDEO_ORIENTATION_UR_LL:
-        G_PRIMITIVE_SWAP (guint, info.width, info.height);
-      default:
-        break;
+    if (postproc->has_vpp) {
+      /* compensate for rotation if needed */
+      switch (gst_vaapi_filter_get_video_direction (postproc->filter)) {
+        case GST_VIDEO_ORIENTATION_90R:
+        case GST_VIDEO_ORIENTATION_UL_LR:
+        case GST_VIDEO_ORIENTATION_90L:
+        case GST_VIDEO_ORIENTATION_UR_LL:
+          G_PRIMITIVE_SWAP (guint, info.width, info.height);
+        default:
+          break;
+      }
     }
 
     ensure_buffer_pool (postproc, &info);
@@ -1765,6 +1769,8 @@ get_scale_factor (GstVaapiPostproc * const postproc, gdouble * w_factor,
   gdouble wd = GST_VIDEO_INFO_WIDTH (&postproc->srcpad_info);
   gdouble hd = GST_VIDEO_INFO_HEIGHT (&postproc->srcpad_info);
 
+  g_return_if_fail (postproc->has_vpp);
+
   switch (gst_vaapi_filter_get_video_direction (postproc->filter)) {
     case GST_VIDEO_ORIENTATION_90R:
     case GST_VIDEO_ORIENTATION_90L:
@@ -1801,8 +1807,9 @@ gst_vaapipostproc_src_event (GstBaseTransform * trans, GstEvent * event)
           GST_EVENT (gst_mini_object_make_writable (GST_MINI_OBJECT (event)));
 
       structure = (GstStructure *) gst_event_get_structure (event);
-      if (gst_structure_get_double (structure, "pointer_x", &x) &&
-          gst_structure_get_double (structure, "pointer_y", &y)) {
+      if (postproc->has_vpp
+          && gst_structure_get_double (structure, "pointer_x", &x)
+          && gst_structure_get_double (structure, "pointer_y", &y)) {
         GST_DEBUG_OBJECT (postproc, "converting %fx%f", x, y);
 
         /* video-direction compensation */
