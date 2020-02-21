@@ -129,7 +129,16 @@ enum
 
 static GParamSpec *properties[PROP_LAST];
 
-G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GESClip, ges_clip, GES_TYPE_CONTAINER);
+static void
+ges_extractable_interface_init (GESExtractableInterface * iface)
+{
+  iface->asset_type = GES_TYPE_CLIP_ASSET;
+}
+
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GESClip, ges_clip,
+    GES_TYPE_CONTAINER, G_ADD_PRIVATE (GESClip)
+    G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
+        ges_extractable_interface_init));
 
 /****************************************************
  *              Listen to our children              *
