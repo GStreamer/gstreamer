@@ -575,6 +575,7 @@ gst_rist_sink_setup_rtcp_socket (GstRistSink * sink, RistSenderBond * bond)
 
     g_object_set (bond->rtcp_src, "address", any_addr, "port", 0, NULL);
   }
+  g_free (remote_addr);
   g_object_unref (iaddr);
 
   gst_element_set_locked_state (bond->rtcp_src, FALSE);
@@ -596,6 +597,7 @@ dns_resolve_failed:
       ("Could not resolve hostname '%s'", GST_STR_NULL (remote_addr)),
       ("DNS resolver reported: %s", error->message));
   g_free (remote_addr);
+  g_object_unref (iaddr);
   g_error_free (error);
   return GST_STATE_CHANGE_FAILURE;
 }
