@@ -275,6 +275,11 @@ _convert_to_clocktime (GstStructure * structure, const gchar * name,
     goto done;
   }
 
+  if (G_VALUE_TYPE (gvalue) == G_TYPE_STRING) {
+    const gchar *v = g_value_get_string (gvalue);
+    return v && v[0] == 'f';
+  }
+
   if (G_VALUE_TYPE (gvalue) == GST_TYPE_CLOCK_TIME)
     return 1;
 

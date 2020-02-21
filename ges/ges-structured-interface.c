@@ -22,6 +22,7 @@
 #endif
 
 #include "ges-structured-interface.h"
+#include "ges-internal.h"
 
 #include <string.h>
 
@@ -29,51 +30,11 @@
 #define LAST_CONTAINER_QDATA g_quark_from_string("ges-structured-last-container")
 #define LAST_CHILD_QDATA g_quark_from_string("ges-structured-last-child")
 
-static gboolean
-_get_clocktime (GstStructure * structure, const gchar * name, gpointer var)
-{
-  gboolean found = FALSE;
-  GstClockTime *val = (GstClockTime *) var;
-
-  const GValue *gvalue = gst_structure_get_value (structure, name);
-
-  if (gvalue) {
-    if (G_VALUE_TYPE (gvalue) == GST_TYPE_CLOCK_TIME) {
-      *val = (GstClockTime) g_value_get_uint64 (gvalue);
-      found = TRUE;
-    } else if (G_VALUE_TYPE (gvalue) == G_TYPE_UINT64) {
-      *val = (GstClockTime) g_value_get_uint64 (gvalue);
-      found = TRUE;
-    } else if (G_VALUE_TYPE (gvalue) == G_TYPE_UINT) {
-      *val = (GstClockTime) g_value_get_uint (gvalue);
-      found = TRUE;
-    } else if (G_VALUE_TYPE (gvalue) == G_TYPE_INT) {
-      *val = (GstClockTime) g_value_get_int (gvalue);
-      found = TRUE;
-    } else if (G_VALUE_TYPE (gvalue) == G_TYPE_INT64) {
-      *val = (GstClockTime) g_value_get_int64 (gvalue);
-      found = TRUE;
-    } else if (G_VALUE_TYPE (gvalue) == G_TYPE_DOUBLE) {
-      gdouble d = g_value_get_double (gvalue);
-
-      found = TRUE;
-      if (d == -1.0)
-        *val = GST_CLOCK_TIME_NONE;
-      else {
-        *val = d * GST_SECOND;
-        *val = GST_ROUND_UP_4 (*val);
-      }
-    }
-  }
-
-  return found;
-}
-
 #define GET_AND_CHECK(name,type,var,label) G_STMT_START {\
   gboolean found = FALSE; \
 \
   if (type == GST_TYPE_CLOCK_TIME) {\
-    found = _get_clocktime(structure,name,var);\
+    found = ges_util_structure_get_clocktime (structure,name, (GstClockTime*)var,NULL);\
   }\
   else { \
     found = gst_structure_get (structure, name, type, var, NULL); \
@@ -94,13 +55,17 @@ _get_clocktime (GstStructure * structure, const gchar * name, gpointer var)
     *var = def; \
 } G_STMT_END
 
-#define TRY_GET(name,type,var,def) G_STMT_START {\
-  if (type == GST_TYPE_CLOCK_TIME) {\
-    if (!_get_clocktime(structure,name,var))\
-      *var = def; \
-  } else if  (!gst_structure_get (structure, name, type, var, NULL)) {\
-    *var = def; \
-  } \
+#define TRY_GET_TIME(name, var, var_frames, def) G_STMT_START  {       \
+  if (!ges_util_structure_get_clocktime (structure, name, var, var_frames)) { \
+      *var = def;                                          \
+      *var_frames = GES_FRAME_NUMBER_NONE;                            \
+  }                                                        \
+} G_STMT_END
+
+#define TRY_GET(name, type, var, def) G_STMT_START {\
+  g_assert (type != GST_TYPE_CLOCK_TIME);                      \
+  if (!gst_structure_get (structure, name, type, var, NULL))\
+    *var = def;                                             \
 } G_STMT_END
 
 typedef struct
@@ -418,6 +383,8 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
   gboolean res = FALSE;
   GESTrackType track_types = GES_TRACK_TYPE_UNKNOWN;
 
+  GESFrameNumber start_frame = GES_FRAME_NUMBER_NONE, inpoint_frame =
+      GES_FRAME_NUMBER_NONE, duration_frame = GES_FRAME_NUMBER_NONE;
   GstClockTime duration = 1 * GST_SECOND, inpoint = 0, start =
       GST_CLOCK_TIME_NONE;
 
@@ -441,9 +408,9 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
   if (layer_priority == -1)
     TRY_GET ("layer", G_TYPE_INT, &layer_priority, -1);
   TRY_GET_STRING ("type", &type_string, "GESUriClip");
-  TRY_GET ("start", GST_TYPE_CLOCK_TIME, &start, GST_CLOCK_TIME_NONE);
-  TRY_GET ("inpoint", GST_TYPE_CLOCK_TIME, &inpoint, 0);
-  TRY_GET ("duration", GST_TYPE_CLOCK_TIME, &duration, GST_CLOCK_TIME_NONE);
+  TRY_GET_TIME ("start", &start, &start_frame, GST_CLOCK_TIME_NONE);
+  TRY_GET_TIME ("inpoint", &inpoint, &inpoint_frame, 0);
+  TRY_GET_TIME ("duration", &duration, &duration_frame, GST_CLOCK_TIME_NONE);
   TRY_GET_STRING ("track-types", &track_types_str, NULL);
   TRY_GET_STRING ("project-uri", &nested_timeline_id, NULL);
 
@@ -497,6 +464,24 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
     *error =
         g_error_new (GES_ERROR, 0, "No layer with priority %d", layer_priority);
     goto beach;
+  }
+
+  if (GES_FRAME_NUMBER_IS_VALID (start_frame))
+    start = ges_timeline_get_frame_time (timeline, start_frame);
+
+  if (GES_FRAME_NUMBER_IS_VALID (inpoint_frame)) {
+    inpoint =
+        ges_clip_asset_get_frame_time (GES_CLIP_ASSET (asset), inpoint_frame);
+    if (!GST_CLOCK_TIME_IS_VALID (inpoint)) {
+      *error =
+          g_error_new (GES_ERROR, 0, "Could not get inpoint from frame %"
+          G_GINT64_FORMAT, inpoint_frame);
+      goto beach;
+    }
+  }
+
+  if (GES_FRAME_NUMBER_IS_VALID (duration_frame)) {
+    duration = ges_timeline_get_frame_time (timeline, duration_frame);
   }
 
   if (GES_IS_URI_CLIP_ASSET (asset) && !GST_CLOCK_TIME_IS_VALID (duration)) {

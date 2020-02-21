@@ -185,4 +185,9 @@ gboolean ges_clip_set_top_effect_index   (GESClip *clip, GESBaseEffect *effect,
 GES_API
 GESClip* ges_clip_split  (GESClip *clip, guint64  position);
 
+GES_API
+GstClockTime ges_clip_get_timeline_time_from_source_frame (GESClip * clip,
+                                                           GESFrameNumber frame_number,
+                                                           GError ** err);
+
 G_END_DECLS

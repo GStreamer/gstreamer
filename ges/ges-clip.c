@@ -2027,3 +2027,59 @@ ges_clip_find_track_elements (GESClip * clip, GESTrack * track,
 
   return ret;
 }
+
+/**
+ * ges_clip_get_timeline_time_from_source_frame:
+ * @clip: A #GESClip
+ * @frame_number: The frame number to get the corresponding timestamp in the
+ *                timeline coordinates
+ * @err: A #GError set on errors
+ *
+ * This method allows you to convert a frame number into a #GstClockTime, this
+ * can be used to either seek to a particular frame in the timeline or to later
+ * on edit @self with that timestamp.
+ *
+ * This method should be use specifically in the case where you want to trim the
+ * clip to a particular frame.
+ *
+ * The returned timestamp is in the global #GESTimeline time coordinates of @self, not
+ * in the internal time coordinates. In practice, this means that you can not use
+ * that time to set the clip #GESTimelineElement:in-point but it can be used in
+ * the timeline editing API, for example as the @position argument of the
+ * #ges_timeline_element_edit method.
+ *
+ * Note that you can get the frame timestamp of a particular clip asset with
+ * #ges_clip_asset_get_frame_time.
+ *
+ * Returns: The timestamp corresponding to @frame_number in the element source
+ * in the timeline coordinates.
+ */
+GstClockTime
+ges_clip_get_timeline_time_from_source_frame (GESClip * clip,
+    GESFrameNumber frame_number, GError ** err)
+{
+  GstClockTime frame_ts;
+  GESClipAsset *asset;
+  GstClockTimeDiff inpoint_diff;
+
+  g_return_val_if_fail (GES_IS_CLIP (clip), GST_CLOCK_TIME_NONE);
+  g_return_val_if_fail (!err || !*err, GST_CLOCK_TIME_NONE);
+
+  if (!GES_FRAME_NUMBER_IS_VALID (frame_number))
+    return GST_CLOCK_TIME_NONE;
+
+  asset = GES_CLIP_ASSET (ges_extractable_get_asset (GES_EXTRACTABLE (clip)));
+  frame_ts = ges_clip_asset_get_frame_time (asset, frame_number);
+  if (!GST_CLOCK_TIME_IS_VALID (frame_ts))
+    return GST_CLOCK_TIME_NONE;
+
+  inpoint_diff = GST_CLOCK_DIFF (frame_ts, GES_TIMELINE_ELEMENT_INPOINT (clip));
+  if (GST_CLOCK_DIFF (inpoint_diff, _START (clip)) < 0) {
+    g_set_error (err, GES_ERROR, GES_ERROR_INVALID_FRAME_NUMBER,
+        "Requested frame %" G_GINT64_FORMAT
+        " would be outside the timeline.", frame_number);
+    return GST_CLOCK_TIME_NONE;
+  }
+
+  return GST_CLOCK_DIFF (inpoint_diff, _START (clip));
+}

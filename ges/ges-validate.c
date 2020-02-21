@@ -40,6 +40,40 @@ typedef struct
   GError *error;
 } LoadTimelineData;
 
+static gboolean
+_get_clocktime (GstStructure * structure, const gchar * name,
+    GstClockTime * val, GESFrameNumber * frames)
+{
+  const GValue *gvalue = gst_structure_get_value (structure, name);
+
+  if (!gvalue)
+    return FALSE;
+
+  if (frames && G_VALUE_TYPE (gvalue) == G_TYPE_STRING) {
+    const gchar *str = g_value_get_string (gvalue);
+
+    if (str && str[0] == 'f') {
+      GValue v = G_VALUE_INIT;
+
+      g_value_init (&v, G_TYPE_UINT64);
+      if (gst_value_deserialize (&v, &str[1])) {
+        *frames = g_value_get_uint64 (&v);
+        if (val)
+          *val = GST_CLOCK_TIME_NONE;
+        g_value_reset (&v);
+
+        return TRUE;
+      }
+      g_value_reset (&v);
+    }
+  }
+
+  if (!val)
+    return FALSE;
+
+  return gst_validate_utils_get_clocktime (structure, name, val);
+}
+
 static void
 project_loaded_cb (GESProject * project, GESTimeline * timeline,
     LoadTimelineData * data)
@@ -332,8 +366,11 @@ _edit (GstValidateScenario * scenario, GstValidateAction * action)
 {
   GList *layers = NULL;
   GESTimelineElement *element;
+  GESFrameNumber fposition = GES_FRAME_NUMBER_NONE;
   GstClockTime position;
   gboolean res = FALSE;
+  GError *err = NULL;
+  gboolean source_position = FALSE;
 
   gint new_layer_priority = -1;
   guint edge = GES_EDGE_NONE;
@@ -356,20 +393,85 @@ _edit (GstValidateScenario * scenario, GstValidateAction * action)
     return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
   }
 
-  if (!gst_validate_action_get_clocktime (scenario, action,
-          "position", &position)) {
-    GST_WARNING ("Could not get position");
-    goto beach;
+  if (!_get_clocktime (action->structure, "position", &position, &fposition)) {
+    fposition = 0;
+    if (!gst_structure_get_int (action->structure, "source-frame",
+            (gint *) & fposition)
+        && !gst_structure_get_int64 (action->structure, "source-frame",
+            &fposition)) {
+      gchar *structstr = gst_structure_to_string (action->structure);
+
+      GST_VALIDATE_REPORT_ACTION (scenario, action,
+          SCENARIO_ACTION_EXECUTION_ERROR,
+          "could not find `position` or `source-frame` in %s", structstr);
+      g_free (structstr);
+      res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+      goto beach;
+    }
+
+    source_position = TRUE;
+    position = GST_CLOCK_TIME_NONE;
   }
 
   if ((edit_mode_str =
-          gst_structure_get_string (action->structure, "edit-mode")))
-    g_return_val_if_fail (gst_validate_utils_enum_from_str (GES_TYPE_EDIT_MODE,
-            edit_mode_str, &mode), FALSE);
+          gst_structure_get_string (action->structure, "edit-mode"))) {
+    if (!gst_validate_utils_enum_from_str (GES_TYPE_EDIT_MODE, edit_mode_str,
+            &mode)) {
+      GST_VALIDATE_REPORT_ACTION (scenario, action,
+          SCENARIO_ACTION_EXECUTION_ERROR, "Could not get enum from %s",
+          edit_mode_str);
 
-  if ((edge_str = gst_structure_get_string (action->structure, "edge")))
-    g_return_val_if_fail (gst_validate_utils_enum_from_str (GES_TYPE_EDGE,
-            edge_str, &edge), FALSE);
+      res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+      goto beach;
+    }
+  }
+
+  if ((edge_str = gst_structure_get_string (action->structure, "edge"))) {
+    if (!gst_validate_utils_enum_from_str (GES_TYPE_EDGE, edge_str, &edge)) {
+      GST_VALIDATE_REPORT_ACTION (scenario, action,
+          SCENARIO_ACTION_EXECUTION_ERROR,
+          "Could not get enum from %s", edge_str);
+
+      res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+      goto beach;
+    }
+  }
+
+  if (GES_FRAME_NUMBER_IS_VALID (fposition)) {
+    if (source_position) {
+      GESClip *clip = NULL;
+
+      if (GES_IS_CLIP (element))
+        clip = GES_CLIP (element);
+      else if (GES_IS_TRACK_ELEMENT (element))
+        clip = GES_CLIP (element->parent);
+
+      if (!clip) {
+        GST_VALIDATE_REPORT_ACTION (scenario, action,
+            SCENARIO_ACTION_EXECUTION_ERROR,
+            "Could not get find element to edit using source frame for %"
+            GST_PTR_FORMAT, action->structure);
+
+        res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+        goto beach;
+      }
+
+      position = ges_clip_get_timeline_time_from_source_frame (clip, fposition,
+          &err);
+    } else {
+      position = ges_timeline_get_frame_time (timeline, fposition);
+    }
+
+    if (!GST_CLOCK_TIME_IS_VALID (position)) {
+      GST_VALIDATE_REPORT_ACTION (scenario, action,
+          SCENARIO_ACTION_EXECUTION_ERROR,
+          "Invalid frame number '%" G_GINT64_FORMAT "': %s", fposition,
+          err->message);
+
+      res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+      goto beach;
+    }
+  }
 
   gst_structure_get_int (action->structure, "new-layer-priority",
       &new_layer_priority);
@@ -383,13 +485,30 @@ _edit (GstValidateScenario * scenario, GstValidateAction * action)
 
   if (!(res = ges_timeline_element_edit (element, layers,
               new_layer_priority, mode, edge, position))) {
-    gst_object_unref (element);
+
+    gchar *fpositionstr = GES_FRAME_NUMBER_IS_VALID (fposition)
+        ? g_strdup_printf ("(%" G_GINT64_FORMAT ")", fposition)
+        : NULL;
+
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
+        SCENARIO_ACTION_EXECUTION_ERROR,
+        "Could not edit '%s' to %" GST_TIME_FORMAT
+        "%s in %s mode, edge: %s "
+        "with new layer prio: %d",
+        element_name, GST_TIME_ARGS (position),
+        fpositionstr ? fpositionstr : "",
+        edit_mode_str ? edit_mode_str : "normal",
+        edge_str ? edge_str : "None", new_layer_priority);
+    g_free (fpositionstr);
+    res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
     goto beach;
   }
-  gst_object_unref (element);
 
   SAVE_TIMELINE_IF_NEEDED (scenario, timeline, action);
+
 beach:
+  gst_clear_object (&element);
+  g_clear_error (&err);
   g_object_unref (timeline);
   return res;
 }
@@ -1089,7 +1208,7 @@ ges_validate_register_action_types (void)
         {
           .name = "position",
           .description = "The new position of the GESContainer",
-          .mandatory = TRUE,
+          .mandatory = FALSE,
           .types = "double or string",
           .possible_variables = "position: The current position in the stream\n"
             "duration: The duration of the stream",
@@ -1143,10 +1262,18 @@ ges_validate_register_action_types (void)
         {
           .name = "position",
           .description = "The new position of the element",
-          .mandatory = TRUE,
+          .mandatory = FALSE,
           .types = "double or string",
           .possible_variables = "position: The current position in the stream\n"
             "duration: The duration of the stream",
+           NULL
+        },
+        {
+          .name = "source-frame",
+          .description = "The new frame of the element, computed from the @element-name"
+            "clip's source frame.",
+          .mandatory = FALSE,
+          .types = "double or string",
            NULL
         },
         {

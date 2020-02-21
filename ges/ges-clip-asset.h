@@ -57,5 +57,7 @@ GES_API
 GESTrackType ges_clip_asset_get_supported_formats (GESClipAsset *self);
 GES_API
 gboolean ges_clip_asset_get_natural_framerate (GESClipAsset* self, gint* framerate_n, gint* framerate_d);
+GES_API
+GstClockTime ges_clip_asset_get_frame_time (GESClipAsset* self, GESFrameNumber frame_number);
 
 G_END_DECLS

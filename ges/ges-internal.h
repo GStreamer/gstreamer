@@ -152,6 +152,9 @@ timeline_fill_gaps            (GESTimeline *timeline);
 G_GNUC_INTERNAL void
 timeline_create_transitions (GESTimeline * timeline, GESTrackElement * track_element);
 
+G_GNUC_INTERNAL void timeline_get_framerate(GESTimeline *self, gint *fps_n,
+                                            gint *fps_d);
+
 G_GNUC_INTERNAL
 void
 track_resort_and_fill_gaps    (GESTrack *track);
@@ -370,6 +373,10 @@ ges_get_compositor_factory                                (void);
 
 G_GNUC_INTERNAL void
 ges_idle_add (GSourceFunc func, gpointer udata, GDestroyNotify notify);
+
+G_GNUC_INTERNAL gboolean
+ges_util_structure_get_clocktime (GstStructure *structure, const gchar *name,
+                                  GstClockTime *val, GESFrameNumber *frames);
 
 
 /****************************************************

@@ -148,4 +148,12 @@ GESTimelineElement * ges_timeline_paste_element (GESTimeline * timeline,
 GES_API
 gboolean ges_timeline_move_layer (GESTimeline *timeline, GESLayer *layer, guint new_layer_priority);
 
+GES_API
+GstClockTime ges_timeline_get_frame_time(GESTimeline *self,
+                                         GESFrameNumber frame_number);
+
+GES_API
+GESFrameNumber ges_timeline_get_frame_at (GESTimeline *self,
+                                          GstClockTime timestamp);
+
 G_END_DECLS

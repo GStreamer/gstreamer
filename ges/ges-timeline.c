@@ -1012,6 +1012,55 @@ ges_timeline_emit_snapping (GESTimeline * timeline, GESTimelineElement * elem1,
 
 }
 
+/* Accept @self == NULL, making it use default framerate */
+void
+timeline_get_framerate (GESTimeline * self, gint * fps_n, gint * fps_d)
+{
+  GList *tmp;
+
+  if (!self)
+    goto done;
+
+  *fps_n = *fps_d = -1;
+  LOCK_DYN (self);
+  for (tmp = self->tracks; tmp; tmp = tmp->next) {
+    if (GES_IS_VIDEO_TRACK (tmp->data)) {
+      GstCaps *restriction = ges_track_get_restriction_caps (tmp->data);
+      gint i;
+
+      for (i = 0; i < gst_caps_get_size (restriction); i++) {
+        gint n, d;
+
+        if (!gst_structure_get_fraction (gst_caps_get_structure (restriction,
+                    i), "framerate", &n, &d))
+          continue;
+
+        if (*fps_n != -1 && *fps_d != -1 && !(n == *fps_n && d == *fps_d)) {
+          GST_WARNING_OBJECT (self,
+              "Various framerates specified, this is not supported"
+              " First one will be used.");
+          continue;
+        }
+
+        *fps_n = n;
+        *fps_d = d;
+      }
+      gst_caps_unref (restriction);
+    }
+  }
+  UNLOCK_DYN (self);
+
+done:
+  if (*fps_n == -1 && *fps_d == -1) {
+    GST_INFO_OBJECT (self,
+        "No framerate found, using default " G_STRINGIFY (FRAMERATE_N) "/ "
+        G_STRINGIFY (FRAMERATE_D));
+    *fps_n = DEFAULT_FRAMERATE_N;
+    *fps_d = DEFAULT_FRAMERATE_D;
+  }
+}
+
+
 gboolean
 ges_timeline_trim_object_simple (GESTimeline * timeline,
     GESTimelineElement * element, guint32 new_layer_priority,
@@ -2853,4 +2902,56 @@ ges_timeline_move_layer (GESTimeline * timeline, GESLayer * layer,
   _resync_layers (timeline);
 
   return TRUE;
+}
+
+/**
+ * ges_timeline_get_frame_time:
+ * @self: The self on which to retrieve the timestamp for @frame_number
+ * @frame_number: The frame number to get the corresponding timestamp of in the
+ *                timeline coordinates
+ *
+ * This method allows you to convert a timeline output frame number into a
+ * timeline #GstClockTime. For example, this time could be used to seek to a
+ * particular frame in the timeline's output, or as the edit position for
+ * an element within the timeline.
+ *
+ * Returns: The timestamp corresponding to @frame_number in the output of @self.
+ */
+GstClockTime
+ges_timeline_get_frame_time (GESTimeline * self, GESFrameNumber frame_number)
+{
+  gint fps_n, fps_d;
+
+  g_return_val_if_fail (GES_IS_TIMELINE (self), GST_CLOCK_TIME_NONE);
+  g_return_val_if_fail (GES_FRAME_NUMBER_IS_VALID (frame_number),
+      GST_CLOCK_TIME_NONE);
+
+  timeline_get_framerate (self, &fps_n, &fps_d);
+
+  return gst_util_uint64_scale_int_ceil (frame_number,
+      fps_d * GST_SECOND, fps_n);
+}
+
+/**
+ * ges_timeline_get_frame_at:
+ * @self: A #GESTimeline
+ * @timestamp: The timestamp to get the corresponding frame number of
+ *
+ * This method allows you to convert a timeline #GstClockTime into its
+ * corresponding #GESFrameNumber in the timeline's output.
+ *
+ * Returns: The frame number @timestamp corresponds to.
+ */
+GESFrameNumber
+ges_timeline_get_frame_at (GESTimeline * self, GstClockTime timestamp)
+{
+  gint fps_n, fps_d;
+
+  g_return_val_if_fail (GES_IS_TIMELINE (self), GES_FRAME_NUMBER_NONE);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp),
+      GES_FRAME_NUMBER_NONE);
+
+  timeline_get_framerate (self, &fps_n, &fps_d);
+
+  return gst_util_uint64_scale (timestamp, fps_n, fps_d * GST_SECOND);
 }

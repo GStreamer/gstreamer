@@ -209,3 +209,36 @@ ges_clip_asset_get_natural_framerate (GESClipAsset * self,
 
   return FALSE;
 }
+
+/**
+ * ges_clip_asset_get_frame_time:
+ * @self: The object for which to compute timestamp for specifed frame
+ * @frame_number: The frame number we want the timestamp for the frame number
+ * inside the media scale of @self
+ *
+ * Converts the given frame number into a timestamp, using the "natural" frame
+ * rate of the asset.
+ *
+ * You can use this to reference a specific frame in a media file and use this
+ * as, for example, the `in-point` or `max-duration` of a #GESClip.
+ *
+ * Returns: The timestamp corresponding to @frame_number in the element source
+ * in the media scale, or #GST_CLOCK_TIME_NONE if the clip asset does not have a
+ * natural frame rate.
+ */
+GstClockTime
+ges_clip_asset_get_frame_time (GESClipAsset * self, GESFrameNumber frame_number)
+{
+  gint fps_n, fps_d;
+
+  g_return_val_if_fail (GES_IS_CLIP_ASSET (self), GST_CLOCK_TIME_NONE);
+  g_return_val_if_fail (GES_FRAME_NUMBER_IS_VALID (frame_number),
+      GST_CLOCK_TIME_NONE);
+
+
+  if (!ges_clip_asset_get_natural_framerate (self, &fps_n, &fps_d))
+    return GST_CLOCK_TIME_NONE;
+
+  return gst_util_uint64_scale_int_ceil (frame_number, fps_d * GST_SECOND,
+      fps_n);
+}

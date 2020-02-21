@@ -144,6 +144,65 @@ find_compositor (GstPluginFeatureFilter * feature, gpointer udata)
   return (strstr (klass, "Compositor") != NULL);
 }
 
+gboolean
+ges_util_structure_get_clocktime (GstStructure * structure, const gchar * name,
+    GstClockTime * val, GESFrameNumber * frames)
+{
+  gboolean found = FALSE;
+
+  const GValue *gvalue;
+
+  if (!val && !frames)
+    return FALSE;
+
+  gvalue = gst_structure_get_value (structure, name);
+  if (!gvalue)
+    return FALSE;
+
+  if (frames)
+    *frames = GES_FRAME_NUMBER_NONE;
+
+  found = TRUE;
+  if (val && G_VALUE_TYPE (gvalue) == GST_TYPE_CLOCK_TIME) {
+    *val = (GstClockTime) g_value_get_uint64 (gvalue);
+  } else if (val && G_VALUE_TYPE (gvalue) == G_TYPE_UINT64) {
+    *val = (GstClockTime) g_value_get_uint64 (gvalue);
+  } else if (val && G_VALUE_TYPE (gvalue) == G_TYPE_UINT) {
+    *val = (GstClockTime) g_value_get_uint (gvalue);
+  } else if (val && G_VALUE_TYPE (gvalue) == G_TYPE_INT) {
+    *val = (GstClockTime) g_value_get_int (gvalue);
+  } else if (val && G_VALUE_TYPE (gvalue) == G_TYPE_INT64) {
+    *val = (GstClockTime) g_value_get_int64 (gvalue);
+  } else if (val && G_VALUE_TYPE (gvalue) == G_TYPE_DOUBLE) {
+    gdouble d = g_value_get_double (gvalue);
+
+    if (d == -1.0)
+      *val = GST_CLOCK_TIME_NONE;
+    else
+      *val = d * GST_SECOND;
+  } else if (frames && G_VALUE_TYPE (gvalue) == G_TYPE_STRING) {
+    const gchar *str = g_value_get_string (gvalue);
+
+    found = FALSE;
+    if (str && str[0] == 'f') {
+      GValue v = G_VALUE_INIT;
+
+      g_value_init (&v, G_TYPE_UINT64);
+      if (gst_value_deserialize (&v, &str[1])) {
+        *frames = g_value_get_uint64 (&v);
+        if (val)
+          *val = GST_CLOCK_TIME_NONE;
+        found = TRUE;
+      }
+      g_value_reset (&v);
+    }
+  } else {
+    found = FALSE;
+
+  }
+
+  return found;
+}
 
 
 GstElementFactory *
