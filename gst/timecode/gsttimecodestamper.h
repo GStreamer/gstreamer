@@ -99,6 +99,11 @@ struct _GstTimeCodeStamper
   /* Internal state */
   GstVideoInfo vinfo; /* protected by object lock, changed only from video streaming thread */
 
+  /* Seek handling, protected by the object lock */
+  guint32 prev_seek_seqnum;
+  gboolean reset_internal_tc_from_seek;
+  gint64 seeked_frames;
+
   /* LTC specific fields */
 #if HAVE_LTC
   GMutex mutex;

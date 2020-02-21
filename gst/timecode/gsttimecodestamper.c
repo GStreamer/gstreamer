@@ -119,6 +119,8 @@ static void gst_timecodestamper_get_property (GObject * object, guint prop_id,
 static void gst_timecodestamper_dispose (GObject * object);
 static gboolean gst_timecodestamper_sink_event (GstBaseTransform * trans,
     GstEvent * event);
+static gboolean gst_timecodestamper_src_event (GstBaseTransform * trans,
+    GstEvent * event);
 static GstFlowReturn gst_timecodestamper_transform_ip (GstBaseTransform *
     vfilter, GstBuffer * buffer);
 static gboolean gst_timecodestamper_stop (GstBaseTransform * trans);
@@ -320,6 +322,7 @@ gst_timecodestamper_class_init (GstTimeCodeStamperClass * klass)
       GST_DEBUG_FUNCPTR (gst_timecodestamper_release_pad);
 
   trans_class->sink_event = GST_DEBUG_FUNCPTR (gst_timecodestamper_sink_event);
+  trans_class->src_event = GST_DEBUG_FUNCPTR (gst_timecodestamper_src_event);
 #if HAVE_LTC
   trans_class->query = GST_DEBUG_FUNCPTR (gst_timecodestamper_query);
 #endif
@@ -354,6 +357,8 @@ gst_timecodestamper_init (GstTimeCodeStamper * timecodestamper)
   timecodestamper->last_tc = NULL;
   timecodestamper->last_tc_running_time = GST_CLOCK_TIME_NONE;
   timecodestamper->rtc_tc = NULL;
+
+  timecodestamper->seeked_frames = -1;
 
 #if HAVE_LTC
   g_mutex_init (&timecodestamper->mutex);
@@ -842,6 +847,15 @@ gst_timecodestamper_sink_event (GstBaseTransform * trans, GstEvent * event)
         gst_event_unref (event);
         return FALSE;
       }
+
+      GST_OBJECT_LOCK (timecodestamper);
+      if (timecodestamper->tc_source == GST_TIME_CODE_STAMPER_SOURCE_INTERNAL
+          && GST_EVENT_SEQNUM (event) == timecodestamper->prev_seek_seqnum) {
+        timecodestamper->reset_internal_tc_from_seek = TRUE;
+        timecodestamper->prev_seek_seqnum = GST_SEQNUM_INVALID;
+      }
+      GST_OBJECT_UNLOCK (timecodestamper);
+
       break;
     }
     case GST_EVENT_CAPS:
@@ -905,6 +919,53 @@ gst_timecodestamper_sink_event (GstBaseTransform * trans, GstEvent * event)
       GST_BASE_TRANSFORM_CLASS (gst_timecodestamper_parent_class)->sink_event
       (trans, event);
   return ret;
+}
+
+static gboolean
+gst_timecodestamper_src_event (GstBaseTransform * trans, GstEvent * event)
+{
+  GstTimeCodeStamper *timecodestamper = GST_TIME_CODE_STAMPER (trans);
+
+  GST_DEBUG_OBJECT (trans, "received event %" GST_PTR_FORMAT, event);
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:
+    {
+      gdouble rate;
+      GstSeekType start_type;
+      gint64 start;
+      GstFormat format;
+
+      gst_event_parse_seek (event, &rate, &format, NULL, &start_type, &start,
+          NULL, NULL);
+
+      if (rate < 0) {
+        GST_ERROR_OBJECT (timecodestamper, "Reverse playback is not supported");
+        return FALSE;
+      }
+
+      if (format != GST_FORMAT_TIME) {
+        GST_ERROR_OBJECT (timecodestamper,
+            "Seeking is only supported in TIME format");
+        return FALSE;
+      }
+
+      GST_OBJECT_LOCK (timecodestamper);
+      if (timecodestamper->vinfo.fps_d && timecodestamper->vinfo.fps_n) {
+        timecodestamper->prev_seek_seqnum = GST_EVENT_SEQNUM (event);
+        timecodestamper->seeked_frames = gst_util_uint64_scale (start,
+            timecodestamper->vinfo.fps_n,
+            timecodestamper->vinfo.fps_d * GST_SECOND);
+      }
+      GST_OBJECT_UNLOCK (timecodestamper);
+      break;
+    }
+    default:
+      break;
+  }
+
+  return
+      GST_BASE_TRANSFORM_CLASS (gst_timecodestamper_parent_class)->src_event
+      (trans, event);
 }
 
 #if HAVE_LTC
@@ -1082,24 +1143,34 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
   /* If we don't have an internal timecode yet then either a new one was just
    * set via the property or we just started. Initialize it here, otherwise
    * increment it by one */
-  if (!timecodestamper->internal_tc) {
+  if (!timecodestamper->internal_tc
+      || timecodestamper->reset_internal_tc_from_seek) {
     gchar *tc_str;
 
-    if (timecodestamper->set_internal_tc)
+    timecodestamper->reset_internal_tc_from_seek = FALSE;
+    if (timecodestamper->set_internal_tc) {
       timecodestamper->internal_tc =
           gst_video_time_code_new (timecodestamper->vinfo.fps_n,
           timecodestamper->vinfo.fps_d,
-          timecodestamper->set_internal_tc->config.latest_daily_jam,
-          tc_flags,
+          timecodestamper->set_internal_tc->config.latest_daily_jam, tc_flags,
           timecodestamper->set_internal_tc->hours,
           timecodestamper->set_internal_tc->minutes,
           timecodestamper->set_internal_tc->seconds,
           timecodestamper->set_internal_tc->frames,
           timecodestamper->set_internal_tc->field_count);
-    else
+    } else {
       timecodestamper->internal_tc =
           gst_video_time_code_new (timecodestamper->vinfo.fps_n,
           timecodestamper->vinfo.fps_d, dt_frame, tc_flags, 0, 0, 0, 0, 0);
+      if (timecodestamper->seeked_frames > 0) {
+        GST_DEBUG_OBJECT (timecodestamper,
+            "Adding %" G_GINT64_FORMAT " frames that were seeked",
+            timecodestamper->seeked_frames);
+        gst_video_time_code_add_frames (timecodestamper->internal_tc,
+            timecodestamper->seeked_frames);
+        timecodestamper->seeked_frames = -1;
+      }
+    }
 
     tc_str = gst_video_time_code_to_string (timecodestamper->internal_tc);
     GST_DEBUG_OBJECT (timecodestamper, "Initialized internal timecode to %s",
