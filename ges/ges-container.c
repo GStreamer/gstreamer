@@ -271,20 +271,6 @@ _ges_container_remove_child_properties (GESContainer * container,
   g_free (child_props);
 }
 
-static GParamSpec **
-_list_children_properties (GESTimelineElement * self, guint * n_properties)
-{
-  GList *tmp;
-
-  for (tmp = GES_CONTAINER_CHILDREN (self); tmp; tmp = tmp->next)
-    _ges_container_add_child_properties (GES_CONTAINER (self), tmp->data);
-
-  return
-      GES_TIMELINE_ELEMENT_CLASS
-      (ges_container_parent_class)->list_children_properties (self,
-      n_properties);
-}
-
 static gboolean
 _lookup_child (GESTimelineElement * self, const gchar * prop_name,
     GObject ** child, GParamSpec ** pspec)
@@ -496,7 +482,6 @@ ges_container_class_init (GESContainerClass * klass)
   element_class->set_start = _set_start;
   element_class->set_duration = _set_duration;
   element_class->set_inpoint = _set_inpoint;
-  element_class->list_children_properties = _list_children_properties;
   element_class->lookup_child = _lookup_child;
   element_class->get_track_types = _get_track_types;
   element_class->paste = _paste;

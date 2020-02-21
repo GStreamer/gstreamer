@@ -202,6 +202,16 @@ struct _GESTimelineElement
  * g_object_set_property().
  * @get_layer_priority: Get the #GESLayer:priority of the layer that this
  * element is part of.
+ * @list_children_properties: List the children properties that have been
+ * registered for the element. The default implementation is able to fetch
+ * all of these, so should be sufficient. If you overwrite this, you
+ * should still call the default implementation to get the full list, and
+ * then edit its content.
+ * @lookup_child: Find @child, and its registered child property @pspec,
+ * corresponding to the child property specified by @prop_name. The
+ * default implementation will search for the first child that matches. If
+ * you overwrite this, you will likely still want to call the default
+ * vmethod, which has access to the registered parameter specifications.
  *
  * The #GESTimelineElement base class. Subclasses should override at least
  * @set_start @set_inpoint @set_duration @ripple @ripple_end @roll_start

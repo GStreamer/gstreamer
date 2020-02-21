@@ -101,9 +101,6 @@ static gboolean _set_duration (GESTimelineElement * element,
 static gboolean _set_priority (GESTimelineElement * element, guint32 priority);
 GESTrackType _get_track_types (GESTimelineElement * object);
 
-static GParamSpec **default_list_children_properties (GESTrackElement * object,
-    guint * n_properties);
-
 static void
 _update_control_bindings (GESTimelineElement * element, GstClockTime inpoint,
     GstClockTime duration);
@@ -348,7 +345,6 @@ ges_track_element_class_init (GESTrackElementClass * klass)
   element_class->get_layer_priority = _get_layer_priority;
 
   klass->create_gnl_object = ges_track_element_create_gnl_object_func;
-  klass->list_children_properties = default_list_children_properties;
   klass->lookup_child = _lookup_child;
 }
 
@@ -1227,15 +1223,6 @@ ges_track_element_get_child_property (GESTrackElement * object,
 {
   return ges_timeline_element_get_child_property (GES_TIMELINE_ELEMENT (object),
       property_name, value);
-}
-
-static GParamSpec **
-default_list_children_properties (GESTrackElement * object,
-    guint * n_properties)
-{
-  return
-      GES_TIMELINE_ELEMENT_GET_CLASS (object)->list_children_properties
-      (GES_TIMELINE_ELEMENT (object), n_properties);
 }
 
 void
