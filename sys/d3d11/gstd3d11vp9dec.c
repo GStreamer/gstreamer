@@ -1024,10 +1024,12 @@ gst_d3d11_vp9_dec_submit_picture_data (GstD3D11Vp9Dec * self,
       picture->size);
 
   while (buffer_offset < picture->size) {
-    gsize copy_size = picture->size - buffer_offset;
+    gsize bytes_to_copy = picture->size - buffer_offset;
+    gsize written_buffer_size;
     gboolean is_last = TRUE;
     DXVA_Slice_VPx_Short slice_short = { 0, };
     D3D11_VIDEO_DECODER_BUFFER_DESC buffer_desc[3] = { 0, };
+    gboolean bad_aligned_bitstream_buffer = FALSE;
 
     GST_TRACE_OBJECT (self, "Getting bitstream buffer");
     if (!gst_d3d11_decoder_get_decoder_buffer (self->d3d11_decoder,
@@ -1037,12 +1039,40 @@ gst_d3d11_vp9_dec_submit_picture_data (GstD3D11Vp9Dec * self,
       goto error;
     }
 
-    if (copy_size > d3d11_buffer_size) {
-      copy_size = d3d11_buffer_size;
+    if ((d3d11_buffer_size & 127) != 0) {
+      GST_WARNING_OBJECT (self,
+          "The size of bitstream buffer is not 128 bytes aligned");
+      bad_aligned_bitstream_buffer = TRUE;
+    }
+
+    if (bytes_to_copy > d3d11_buffer_size) {
+      /* if the size of this slice is larger than the size of remaining d3d11
+       * decoder bitstream memory, write the data up to the remaining d3d11
+       * decoder bitstream memory size and the rest would be written to the
+       * next d3d11 bitstream memory */
+      bytes_to_copy = d3d11_buffer_size;
       is_last = FALSE;
     }
 
-    memcpy (d3d11_buffer, picture->data + buffer_offset, copy_size);
+    memcpy (d3d11_buffer, picture->data + buffer_offset, bytes_to_copy);
+    written_buffer_size = bytes_to_copy;
+
+    /* DXVA2 spec is saying that written bitstream data must be 128 bytes
+     * aligned if the bitstream buffer contains end of frame
+     * (i.e., wBadSliceChopping == 0 or 2) */
+    if (is_last) {
+      guint padding = MIN (GST_ROUND_UP_128 (bytes_to_copy) - bytes_to_copy,
+          d3d11_buffer_size - bytes_to_copy);
+
+      if (padding) {
+        GST_TRACE_OBJECT (self,
+            "Written bitstream buffer size %" G_GSIZE_FORMAT
+            " is not 128 bytes aligned, add padding %d bytes",
+            bytes_to_copy, padding);
+        memset ((guint8 *) d3d11_buffer + bytes_to_copy, 0, padding);
+        written_buffer_size += padding;
+      }
+    }
 
     GST_TRACE_OBJECT (self, "Release bitstream buffer");
     if (!gst_d3d11_decoder_release_decoder_buffer (self->d3d11_decoder,
@@ -1053,7 +1083,8 @@ gst_d3d11_vp9_dec_submit_picture_data (GstD3D11Vp9Dec * self,
     }
 
     slice_short.BSNALunitDataLocation = 0;
-    slice_short.SliceBytesInBuffer = (UINT) copy_size;
+    slice_short.SliceBytesInBuffer = (UINT) written_buffer_size;
+
     /* wBadSliceChopping: (dxva spec.)
      * 0: All bits for the slice are located within the corresponding
      *    bitstream data buffer
@@ -1104,9 +1135,15 @@ gst_d3d11_vp9_dec_submit_picture_data (GstD3D11Vp9Dec * self,
     buffer_desc[1].DataOffset = 0;
     buffer_desc[1].DataSize = sizeof (DXVA_Slice_VPx_Short);
 
+    if (!bad_aligned_bitstream_buffer && (written_buffer_size & 127) != 0) {
+      GST_WARNING_OBJECT (self,
+          "Written bitstream buffer size %" G_GSIZE_FORMAT
+          " is not 128 bytes aligned", written_buffer_size);
+    }
+
     buffer_desc[2].BufferType = D3D11_VIDEO_DECODER_BUFFER_BITSTREAM;
     buffer_desc[2].DataOffset = 0;
-    buffer_desc[2].DataSize = copy_size;
+    buffer_desc[2].DataSize = written_buffer_size;
 
     if (!gst_d3d11_decoder_submit_decoder_buffers (self->d3d11_decoder,
             3, buffer_desc)) {
@@ -1114,7 +1151,7 @@ gst_d3d11_vp9_dec_submit_picture_data (GstD3D11Vp9Dec * self,
       goto error;
     }
 
-    buffer_offset += copy_size;
+    buffer_offset += bytes_to_copy;
     is_first = FALSE;
   }
 

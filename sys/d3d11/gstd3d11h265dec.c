@@ -77,9 +77,10 @@ typedef struct _GstD3D11H265Dec
   GstD3D11Decoder *d3d11_decoder;
 
   /* Pointing current bitstream buffer */
-  guint current_offset;
-  guint bitstream_buffer_size;
-  guint8 *bitstream_buffer_bytes;
+  gboolean bad_aligned_bitstream_buffer;
+  guint written_buffer_size;
+  guint remaining_buffer_size;
+  guint8 *bitstream_buffer_data;
 
   gboolean use_d3d11_output;
 
@@ -536,15 +537,22 @@ gst_d3d11_h265_dec_get_bitstream_buffer (GstD3D11H265Dec * self)
 {
   GST_TRACE_OBJECT (self, "Getting bitstream buffer");
   if (!gst_d3d11_decoder_get_decoder_buffer (self->d3d11_decoder,
-          D3D11_VIDEO_DECODER_BUFFER_BITSTREAM, &self->bitstream_buffer_size,
-          (gpointer *) & self->bitstream_buffer_bytes)) {
+          D3D11_VIDEO_DECODER_BUFFER_BITSTREAM, &self->remaining_buffer_size,
+          (gpointer *) & self->bitstream_buffer_data)) {
     GST_ERROR_OBJECT (self, "Faild to get bitstream buffer");
     return FALSE;
   }
 
   GST_TRACE_OBJECT (self, "Got bitstream buffer %p with size %d",
-      self->bitstream_buffer_bytes, self->bitstream_buffer_size);
-  self->current_offset = 0;
+      self->bitstream_buffer_data, self->remaining_buffer_size);
+  self->written_buffer_size = 0;
+  if ((self->remaining_buffer_size & 127) != 0) {
+    GST_WARNING_OBJECT (self,
+        "The size of bitstream buffer is not 128 bytes aligned");
+    self->bad_aligned_bitstream_buffer = TRUE;
+  } else {
+    self->bad_aligned_bitstream_buffer = FALSE;
+  }
 
   return TRUE;
 }
@@ -852,10 +860,32 @@ gst_d3d11_h265_dec_submit_slice_data (GstD3D11H265Dec * self)
   D3D11_VIDEO_DECODER_BUFFER_DESC buffer_desc[4] = { 0, };
   gboolean ret;
   guint buffer_count = 0;
+  DXVA_Slice_HEVC_Short *slice_data;
 
   if (self->slice_list->len < 1) {
     GST_WARNING_OBJECT (self, "Nothing to submit");
     return FALSE;
+  }
+
+  slice_data = &g_array_index (self->slice_list, DXVA_Slice_HEVC_Short,
+      self->slice_list->len - 1);
+
+  /* DXVA2 spec is saying that written bitstream data must be 128 bytes
+   * aligned if the bitstream buffer contains end of slice
+   * (i.e., wBadSliceChopping == 0 or 2) */
+  if (slice_data->wBadSliceChopping == 0 || slice_data->wBadSliceChopping == 2) {
+    guint padding =
+        MIN (GST_ROUND_UP_128 (self->written_buffer_size) -
+        self->written_buffer_size, self->remaining_buffer_size);
+
+    if (padding) {
+      GST_TRACE_OBJECT (self,
+          "Written bitstream buffer size %u is not 128 bytes aligned, "
+          "add padding %u bytes", self->written_buffer_size, padding);
+      memset (self->bitstream_buffer_data, 0, padding);
+      self->written_buffer_size += padding;
+      slice_data->SliceBytesInBuffer += padding;
+    }
   }
 
   GST_TRACE_OBJECT (self, "Getting slice control buffer");
@@ -868,8 +898,7 @@ gst_d3d11_h265_dec_submit_slice_data (GstD3D11H265Dec * self)
 
   data = buffer;
   for (i = 0; i < self->slice_list->len; i++) {
-    DXVA_Slice_HEVC_Short *slice_data =
-        &g_array_index (self->slice_list, DXVA_Slice_HEVC_Short, i);
+    slice_data = &g_array_index (self->slice_list, DXVA_Slice_HEVC_Short, i);
 
     memcpy (data + offset, slice_data, sizeof (DXVA_Slice_HEVC_Short));
     offset += sizeof (DXVA_Slice_HEVC_Short);
@@ -909,17 +938,24 @@ gst_d3d11_h265_dec_submit_slice_data (GstD3D11H265Dec * self)
       sizeof (DXVA_Slice_HEVC_Short) * self->slice_list->len;
   buffer_count++;
 
+  if (!self->bad_aligned_bitstream_buffer
+      && (self->written_buffer_size & 127) != 0) {
+    GST_WARNING_OBJECT (self,
+        "Written bitstream buffer size %u is not 128 bytes aligned",
+        self->written_buffer_size);
+  }
+
   buffer_desc[buffer_count].BufferType = D3D11_VIDEO_DECODER_BUFFER_BITSTREAM;
   buffer_desc[buffer_count].DataOffset = 0;
-  buffer_desc[buffer_count].DataSize = self->current_offset;
+  buffer_desc[buffer_count].DataSize = self->written_buffer_size;
   buffer_count++;
 
   ret = gst_d3d11_decoder_submit_decoder_buffers (self->d3d11_decoder,
       buffer_count, buffer_desc);
 
-  self->current_offset = 0;
-  self->bitstream_buffer_bytes = NULL;
-  self->bitstream_buffer_size = 0;
+  self->written_buffer_size = 0;
+  self->bitstream_buffer_data = NULL;
+  self->remaining_buffer_size = 0;
   g_array_set_size (self->slice_list, 0);
 
   return ret;
@@ -1339,7 +1375,7 @@ gst_d3d11_h265_dec_decode_slice (GstH265Decoder * decoder,
       gboolean is_last = TRUE;
       DXVA_Slice_HEVC_Short slice_short = { 0, };
 
-      if (self->bitstream_buffer_size < to_write && self->slice_list->len > 0) {
+      if (self->remaining_buffer_size < to_write && self->slice_list->len > 0) {
         if (!gst_d3d11_h265_dec_submit_slice_data (self)) {
           GST_ERROR_OBJECT (self, "Failed to submit bitstream buffers");
           return FALSE;
@@ -1351,28 +1387,55 @@ gst_d3d11_h265_dec_decode_slice (GstH265Decoder * decoder,
         }
       }
 
+      /* remaining_buffer_size: the size of remaining d3d11 decoder
+       *                        bitstream memory allowed to write more
+       * written_buffer_size: the size of written bytes to this d3d11 decoder
+       *                      bitstream memory
+       * bytes_to_copy: the size of which we would write to d3d11 decoder
+       *                bitstream memory in this loop
+       */
+
       bytes_to_copy = to_write;
 
-      if (bytes_to_copy > self->bitstream_buffer_size) {
-        bytes_to_copy = self->bitstream_buffer_size;
+      if (bytes_to_copy > self->remaining_buffer_size) {
+        /* if the size of this slice is larger than the size of remaining d3d11
+         * decoder bitstream memory, write the data up to the remaining d3d11
+         * decoder bitstream memory size and the rest would be written to the
+         * next d3d11 bitstream memory */
+        bytes_to_copy = self->remaining_buffer_size;
         is_last = FALSE;
       }
 
       if (bytes_to_copy >= 3 && is_first) {
         /* normal case */
-        self->bitstream_buffer_bytes[0] = 0;
-        self->bitstream_buffer_bytes[1] = 0;
-        self->bitstream_buffer_bytes[2] = 1;
-        memcpy (self->bitstream_buffer_bytes + 3,
+        self->bitstream_buffer_data[0] = 0;
+        self->bitstream_buffer_data[1] = 0;
+        self->bitstream_buffer_data[2] = 1;
+        memcpy (self->bitstream_buffer_data + 3,
             slice->nalu.data + slice->nalu.offset, bytes_to_copy - 3);
       } else {
         /* when this nal unit date is splitted into two buffer */
-        memcpy (self->bitstream_buffer_bytes,
+        memcpy (self->bitstream_buffer_data,
             slice->nalu.data + slice->nalu.offset, bytes_to_copy);
       }
 
-      slice_short.BSNALunitDataLocation = self->current_offset;
+      /* For wBadSliceChopping value 0 or 1, BSNALunitDataLocation means
+       * the offset of the first start code of this slice in this d3d11
+       * memory buffer.
+       * 1) If this is the first slice of picture, it should be zero
+       *    since we write start code at offset 0 (written size before this
+       *    slice also must be zero).
+       * 2) If this is not the first slice of picture but this is the first
+       *    d3d11 bitstream buffer (meaning that one bitstream buffer contains
+       *    multiple slices), then this is the written size of buffer
+       *    excluding this loop.
+       * And for wBadSliceChopping value 2 or 3, this should be zero by spec */
+      if (is_first)
+        slice_short.BSNALunitDataLocation = self->written_buffer_size;
+      else
+        slice_short.BSNALunitDataLocation = 0;
       slice_short.SliceBytesInBuffer = bytes_to_copy;
+
       /* wBadSliceChopping: (dxva h265 spec.)
        * 0: All bits for the slice are located within the corresponding
        *    bitstream data buffer
@@ -1397,9 +1460,9 @@ gst_d3d11_h265_dec_decode_slice (GstH265Decoder * decoder,
       }
 
       g_array_append_val (self->slice_list, slice_short);
-      self->bitstream_buffer_size -= bytes_to_copy;
-      self->current_offset += bytes_to_copy;
-      self->bitstream_buffer_bytes += bytes_to_copy;
+      self->remaining_buffer_size -= bytes_to_copy;
+      self->written_buffer_size += bytes_to_copy;
+      self->bitstream_buffer_data += bytes_to_copy;
       is_first = FALSE;
       to_write -= bytes_to_copy;
     }
