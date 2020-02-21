@@ -99,8 +99,10 @@ ges_source_create_topbin (const gchar * bin_name, GstElement * sub_element,
     if (prev) {
       if (!gst_element_link_pads_full (prev, "src", element, "sink",
               GST_PAD_LINK_CHECK_NOTHING)) {
-        g_error ("Could not link %s and %s",
-            GST_OBJECT_NAME (prev), GST_OBJECT_NAME (element));
+        if (!gst_element_link (prev, element)) {
+          g_error ("Could not link %s and %s",
+              GST_OBJECT_NAME (prev), GST_OBJECT_NAME (element));
+        }
       }
     }
     prev = element;
