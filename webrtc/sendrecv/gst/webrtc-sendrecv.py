@@ -16,7 +16,7 @@ gi.require_version('GstSdp', '1.0')
 from gi.repository import GstSdp
 
 PIPELINE_DESC = '''
-webrtcbin name=sendrecv bundle-policy=max-bundle
+webrtcbin name=sendrecv bundle-policy=max-bundle stun-server=stun://stun.l.google.com:19302
  videotestsrc is-live=true pattern=ball ! videoconvert ! queue ! vp8enc deadline=1 ! rtpvp8pay !
  queue ! application/x-rtp,media=video,encoding-name=VP8,payload=97 ! sendrecv.
  audiotestsrc is-live=true wave=red-noise ! audioconvert ! audioresample ! queue ! opusenc ! rtpopuspay !
