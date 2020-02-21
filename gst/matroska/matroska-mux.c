@@ -3798,6 +3798,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
   GstBuffer *hdr;
   guint64 blockgroup;
   gboolean write_duration;
+  guint64 cluster_time_scaled;
   gint16 relative_timestamp;
   gint64 relative_timestamp64;
   guint64 block_duration, duration_diff = 0;
@@ -3910,6 +3911,8 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
         gst_pad_push_event (mux->srcpad, mux->force_key_unit_event);
         mux->force_key_unit_event = NULL;
       }
+      cluster_time_scaled =
+          gst_util_uint64_scale (buffer_timestamp, 1, mux->time_scale);
 
       mux->prev_cluster_size = ebml->pos - mux->cluster_pos;
       mux->cluster_pos = ebml->pos;
@@ -3917,25 +3920,44 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
       mux->cluster =
           gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_CLUSTER);
       gst_ebml_write_uint (ebml, GST_MATROSKA_ID_CLUSTERTIMECODE,
-          gst_util_uint64_scale (buffer_timestamp, 1, mux->time_scale));
+          cluster_time_scaled);
       GST_LOG_OBJECT (mux, "cluster timestamp %" G_GUINT64_FORMAT,
           gst_util_uint64_scale (buffer_timestamp, 1, mux->time_scale));
       gst_ebml_write_flush_cache (ebml, is_video_keyframe
           || is_audio_only, buffer_timestamp);
-      mux->cluster_time = buffer_timestamp;
       gst_ebml_write_uint (ebml, GST_MATROSKA_ID_PREVSIZE,
           mux->prev_cluster_size);
+      /* cluster_time needs to be identical in value to what's stored in the
+       * matroska so we need to have it with the same precision as what's
+       * possible with the set timecodescale rather than just using the
+       * buffer_timestamp.
+       * If this is not done the rounding of relative_timestamp will be
+       * incorrect and possibly making the timestamps get out of order if tw
+       * buffers arrive at the same millisecond (assuming default timecodescale
+       * of 1ms) */
+      mux->cluster_time =
+          gst_util_uint64_scale (cluster_time_scaled, mux->time_scale, 1);
     }
   } else {
     /* first cluster */
-
+    cluster_time_scaled =
+        gst_util_uint64_scale (buffer_timestamp, 1, mux->time_scale);
     mux->cluster_pos = ebml->pos;
     gst_ebml_write_set_cache (ebml, 0x20);
     mux->cluster = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_CLUSTER);
     gst_ebml_write_uint (ebml, GST_MATROSKA_ID_CLUSTERTIMECODE,
-        gst_util_uint64_scale (buffer_timestamp, 1, mux->time_scale));
+        cluster_time_scaled);
     gst_ebml_write_flush_cache (ebml, TRUE, buffer_timestamp);
-    mux->cluster_time = buffer_timestamp;
+    /* cluster_time needs to be identical in value to what's stored in the
+     * matroska so we need to have it with the same precision as what's
+     * possible with the set timecodescale rather than just using the
+     * buffer_timestamp.
+     * If this is not done the rounding of relative_timestamp will be
+     * incorrect and possibly making the timestamps get out of order if tw
+     * buffers arrive at the same millisecond (assuming default timecodescale
+     * of 1ms) */
+    mux->cluster_time =
+        gst_util_uint64_scale (cluster_time_scaled, mux->time_scale, 1);
   }
 
   /* We currently write index entries for all video tracks or for the audio
