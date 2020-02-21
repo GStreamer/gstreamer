@@ -956,7 +956,7 @@ gst_rtsp_media_get_element (GstRTSPMedia * media)
 /**
  * gst_rtsp_media_take_pipeline:
  * @media: a #GstRTSPMedia
- * @pipeline: (transfer full): a #GstPipeline
+ * @pipeline: (transfer floating): a #GstPipeline
  *
  * Set @pipeline as the #GstPipeline for @media. Ownership is
  * taken of @pipeline.
@@ -976,7 +976,7 @@ gst_rtsp_media_take_pipeline (GstRTSPMedia * media, GstPipeline * pipeline)
 
   g_mutex_lock (&priv->lock);
   old = priv->pipeline;
-  priv->pipeline = GST_ELEMENT_CAST (pipeline);
+  priv->pipeline = gst_object_ref_sink (GST_ELEMENT_CAST (pipeline));
   nettime = priv->nettime;
   priv->nettime = NULL;
   g_mutex_unlock (&priv->lock);
