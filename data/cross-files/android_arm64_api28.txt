@@ -5,12 +5,16 @@ cpu = 'aarch64'
 endian = 'little'
 
 [properties]
-c_args = ['--sysroot', '/opt/android-arm64-api28/sysroot']
-cpp_args = ['--sysroot', '/opt/android-arm64-api28/sysroot']
+sys_root = '/path/to/android-ndk-r21/sysroot'
+c_link_args = ['-fuse-ld=gold']
+cpp_link_args = ['-fuse-ld=gold']
+# Starting with 0.53.1, you can replace the above *_link_args:
+# c_ld = 'gold'
+# cpp_ld = 'gold'
 
 [binaries]
-c = '/opt/android-arm64-api28/bin/aarch64-linux-android-clang'
-cpp = '/opt/android-arm64-api28/bin/aarch64-linux-android-clang++'
-ar = '/opt/android-arm64-api28/bin/aarch64-linux-android-ar'
-strip = '/opt/android-arm64-api28/bin/aarch64-linux-android-strip'
+c =     '/path/to/android-ndk-r21/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang'
+cpp =   '/path/to/android-ndk-r21/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang++'
+ar =    '/path/to/android-ndk-r21/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android-ar'
+strip = '/path/to/android-ndk-r21/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android-strip'
 pkgconfig = 'false'
