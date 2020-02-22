@@ -117,7 +117,7 @@ USE_WAYLAND = libva_wayland_dep.found() and wayland_client_dep.found() and wayla
 USE_X11 = libva_x11_dep.found() and x11_dep.found() and get_option('with_x11') != 'no'
 USE_GLX = libva_x11_dep.found() and x11_dep.found() and gl_dep.found() and libdl_dep.found() and get_option('with_glx') != 'no' and USE_X11
 
-if not (USE_DRM or USE_X11 or USE_EGL or USE_GLX or USE_WAYLAND)
+if not (USE_DRM or USE_X11 or USE_WAYLAND)
   error('No renderer API found (it is requried either DRM, X11 and/or WAYLAND)')
 endif
 
