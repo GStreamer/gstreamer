@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include <math.h>
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
@@ -55,8 +56,11 @@ enum
   PROP_POSY,
   PROP_ZORDER,
   PROP_WIDTH,
-  PROP_HEIGHT
+  PROP_HEIGHT,
+  PROP_LAST,
 };
+
+static GParamSpec *properties[PROP_LAST];
 
 static GstStaticPadTemplate gst_frame_positioner_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -82,23 +86,44 @@ _weak_notify_cb (GstFramePositioner * pos, GObject * old)
 }
 
 static gboolean
+is_user_positionned (GstFramePositioner * self)
+{
+  gint i;
+  GParamSpec *positioning_props[] = {
+    properties[PROP_WIDTH],
+    properties[PROP_HEIGHT],
+    properties[PROP_POSX],
+    properties[PROP_POSY],
+  };
+
+  if (self->user_positioned)
+    return TRUE;
+
+  for (i = 0; i < G_N_ELEMENTS (positioning_props); i++) {
+    GstControlBinding *b = gst_object_get_control_binding (GST_OBJECT (self),
+        positioning_props[i]->name);
+
+    if (b) {
+      gst_object_unref (b);
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+static gboolean
 auto_position (GstFramePositioner * self)
 {
   gint scaled_width = -1, scaled_height = -1, x, y;
 
-  if (self->user_positioned) {
-    GST_DEBUG_OBJECT (self, "Was positioned by the user, not touching anymore");
+  if (is_user_positionned (self)) {
+    GST_DEBUG_OBJECT (self, "Was positioned by the user, not auto positioning");
     return FALSE;
   }
 
   if (!self->natural_width || !self->natural_height)
     return FALSE;
-
-  if (!self->track_width || !self->track_height) {
-    GST_INFO_OBJECT (self, "Track doesn't have a proper size, not "
-        "positioning the source");
-    return FALSE;
-  }
 
   if (self->track_width == self->natural_width &&
       self->track_height == self->natural_height)
@@ -131,6 +156,80 @@ auto_position (GstFramePositioner * self)
   return TRUE;
 }
 
+typedef struct
+{
+  gint *value;
+  gint old_track_value;
+  gint track_value;
+  GParamSpec *pspec;
+} RepositionPropertyData;
+
+static void
+reposition_properties (GstFramePositioner * pos, gint old_track_width,
+    gint old_track_height)
+{
+  gint i;
+  RepositionPropertyData props_data[] = {
+    {&pos->width, old_track_width, pos->track_width, properties[PROP_WIDTH]},
+    {&pos->height, old_track_height, pos->track_height,
+        properties[PROP_HEIGHT]},
+    {&pos->posx, old_track_width, pos->track_width, properties[PROP_POSX]},
+    {&pos->posy, old_track_height, pos->track_height, properties[PROP_POSY]},
+  };
+
+  for (i = 0; i < G_N_ELEMENTS (props_data); i++) {
+    GList *values, *tmp;
+    gboolean absolute;
+    GstTimedValueControlSource *source = NULL;
+
+    RepositionPropertyData d = props_data[i];
+    GstControlBinding *binding =
+        gst_object_get_control_binding (GST_OBJECT (pos), d.pspec->name);
+
+    *(d.value) = gst_util_uint64_scale_int (*(d.value), d.track_value,
+        d.old_track_value);
+
+    if (!binding)
+      continue;
+
+    if (!GST_IS_DIRECT_CONTROL_BINDING (binding)) {
+      GST_FIXME_OBJECT (pos, "Implement support for control binding type: %s",
+          G_OBJECT_TYPE_NAME (binding));
+
+      goto next;
+    }
+
+    g_object_get (binding, "control_source", &source, NULL);
+    if (!GST_IS_TIMED_VALUE_CONTROL_SOURCE (source)) {
+      GST_FIXME_OBJECT (pos, "Implement support for control source type: %s",
+          G_OBJECT_TYPE_NAME (source));
+
+      goto next;
+    }
+
+    values =
+        gst_timed_value_control_source_get_all (GST_TIMED_VALUE_CONTROL_SOURCE
+        (source));
+
+    if (!values)
+      goto next;
+
+    g_object_get (binding, "absolute", &absolute, NULL);
+    for (tmp = values; tmp; tmp = tmp->next) {
+      GstTimedValue *value = tmp->data;
+
+      gst_timed_value_control_source_set (source, value->timestamp,
+          value->value * d.track_value / d.old_track_value);
+    }
+
+    g_list_free (values);
+
+  next:
+    gst_clear_object (&source);
+    gst_object_unref (binding);
+  }
+}
+
 static void
 gst_frame_positioner_update_properties (GstFramePositioner * pos,
     gboolean track_mixing, gint old_track_width, gint old_track_height)
@@ -157,24 +256,40 @@ gst_frame_positioner_update_properties (GstFramePositioner * pos,
     gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
         pos->par_n, pos->par_d, NULL);
 
-  if (!auto_position (pos)) {
+  if (!pos->track_width || !pos->track_height) {
+    GST_INFO_OBJECT (pos, "Track doesn't have a proper size, not "
+        "positioning the source");
+    goto done;
+  } else if (auto_position (pos))
+    goto done;
 
-    if (old_track_width && pos->width == old_track_width &&
-        old_track_height && pos->height == old_track_height &&
-        pos->track_height && pos->track_width &&
-        ((float) old_track_width / (float) old_track_height) ==
-        ((float) pos->track_width / (float) pos->track_height)) {
-
-      GST_DEBUG_OBJECT (pos,
-          "Following track size width old_track: %d -- pos: %d"
-          " || height, old_track %d -- pos: %d", old_track_width, pos->width,
-          old_track_height, pos->height);
-
-      pos->width = pos->track_width;
-      pos->height = pos->track_height;
-    }
+  if (!old_track_height || !old_track_height) {
+    GST_DEBUG_OBJECT (pos, "No old track size, can not properly reposition");
+    goto done;
   }
 
+  if ((!pos->natural_width || !pos->natural_height) &&
+      (!pos->width || !pos->height)) {
+    GST_DEBUG_OBJECT (pos, "No natural aspect ratio and no user set "
+        " image size, can't not reposition.");
+    goto done;
+  }
+
+  if (gst_util_fraction_compare (old_track_width, old_track_height,
+          pos->track_width, pos->track_height)) {
+    GST_INFO_OBJECT (pos, "Not repositioning as track size change didn't"
+        " keep the same aspect ratio (previous %dx%d("
+        "ratio=%f), new: %dx%d(ratio=%f)",
+        old_track_width, old_track_height,
+        (gdouble) old_track_width / (gdouble) old_track_height,
+        pos->track_width, pos->track_height,
+        (gdouble) pos->track_width / (gdouble) pos->track_height);
+    goto done;
+  }
+
+  reposition_properties (pos, old_track_width, old_track_height);
+
+done:
   GST_DEBUG_OBJECT (caps, "setting caps");
 
   g_object_set (pos->capsfilter, "caps", caps, NULL);
@@ -336,19 +451,18 @@ gst_frame_positioner_class_init (GstFramePositionerClass * klass)
    *
    * The desired alpha for the stream.
    */
-  g_object_class_install_property (gobject_class, PROP_ALPHA,
-      g_param_spec_double ("alpha", "alpha", "alpha of the stream",
-          0.0, 1.0, 1.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+  properties[PROP_ALPHA] =
+      g_param_spec_double ("alpha", "alpha", "alpha of the stream", 0.0, 1.0,
+      1.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE);
 
   /**
    * gstframepositioner:posx:
    *
    * The desired x position for the stream.
    */
-  g_object_class_install_property (gobject_class, PROP_POSX,
-      g_param_spec_int ("posx", "posx", "x position of the stream",
-          MIN_PIXELS, MAX_PIXELS, 0,
-          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+  properties[PROP_POSX] =
+      g_param_spec_int ("posx", "posx", "x position of the stream", MIN_PIXELS,
+      MAX_PIXELS, 0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE);
 
 
   /**
@@ -356,19 +470,18 @@ gst_frame_positioner_class_init (GstFramePositionerClass * klass)
    *
    * The desired y position for the stream.
    */
-  g_object_class_install_property (gobject_class, PROP_POSY,
-      g_param_spec_int ("posy", "posy", "y position of the stream",
-          MIN_PIXELS, MAX_PIXELS, 0,
-          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+  properties[PROP_POSY] =
+      g_param_spec_int ("posy", "posy", "y position of the stream", MIN_PIXELS,
+      MAX_PIXELS, 0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE);
 
   /**
    * gstframepositioner:zorder:
    *
    * The desired z order for the stream.
    */
-  g_object_class_install_property (gobject_class, PROP_ZORDER,
-      g_param_spec_uint ("zorder", "zorder", "z order of the stream",
-          0, G_MAXUINT, 0, G_PARAM_READWRITE));
+  properties[PROP_ZORDER] =
+      g_param_spec_uint ("zorder", "zorder", "z order of the stream", 0,
+      G_MAXUINT, 0, G_PARAM_READWRITE);
 
   /**
    * gesframepositioner:width:
@@ -376,9 +489,9 @@ gst_frame_positioner_class_init (GstFramePositionerClass * klass)
    * The desired width for that source.
    * Set to 0 if size is not mandatory, will be set to width of the current track.
    */
-  g_object_class_install_property (gobject_class, PROP_WIDTH,
-      g_param_spec_int ("width", "width", "width of the source",
-          0, MAX_PIXELS, 0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+  properties[PROP_WIDTH] =
+      g_param_spec_int ("width", "width", "width of the source", 0, MAX_PIXELS,
+      0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE);
 
   /**
    * gesframepositioner:height:
@@ -386,9 +499,11 @@ gst_frame_positioner_class_init (GstFramePositionerClass * klass)
    * The desired height for that source.
    * Set to 0 if size is not mandatory, will be set to height of the current track.
    */
-  g_object_class_install_property (gobject_class, PROP_HEIGHT,
-      g_param_spec_int ("height", "height", "height of the source",
-          0, MAX_PIXELS, 0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+  properties[PROP_HEIGHT] =
+      g_param_spec_int ("height", "height", "height of the source", 0,
+      MAX_PIXELS, 0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE);
+
+  g_object_class_install_properties (gobject_class, PROP_LAST, properties);
 
   gst_element_class_set_static_metadata (GST_ELEMENT_CLASS (klass),
       "frame positioner", "Metadata",
@@ -470,8 +585,6 @@ gst_frame_positioner_get_property (GObject * object, guint property_id,
 {
   GstFramePositioner *pos = GST_FRAME_POSITIONNER (object);
   gint real_width, real_height;
-
-  GST_DEBUG_OBJECT (pos, "get_property");
 
   switch (property_id) {
     case PROP_ALPHA:

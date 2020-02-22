@@ -72,7 +72,7 @@ foreach t : ges_tests
 endforeach
 
 if gstvalidate_dep.found()
-  scenarios = ['check_video_track_restriction_scale']
+  scenarios = ['check_video_track_restriction_scale', 'check_video_track_restriction_scale_with_keyframes']
 
   foreach scenario: scenarios
     scenario_file = join_paths(meson.current_source_dir(), 'scenarios', scenario + '.scenario')

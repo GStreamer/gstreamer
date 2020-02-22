@@ -34,4 +34,9 @@ check-child-properties, element-name=clip, width=700, height=600
 set-track-restriction-caps, track-type=video, caps="video/x-raw,width=1920,height=1080"
 check-child-properties, element-name=clip, width=700, height=600
 
+set-child-properties, element-name=clip, width=1280, height=720, posx=320, posy=240
+check-child-properties, element-name=clip, width=1280, height=720, posx=320, posy=240
+set-track-restriction-caps, track-type=video, caps="video/x-raw,width=960,height=540"
+check-child-properties, element-name=clip, width=640, height=360, posx=160, posy=120
+
 stop
