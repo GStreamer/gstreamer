@@ -155,6 +155,7 @@ static void
 gst_rtp_funnel_send_sticky (GstRtpFunnel * funnel, GstPad * pad)
 {
   GstEvent *stream_start;
+  GstCaps *caps;
   GstEvent *caps_ev;
 
   if (!funnel->send_sticky_events)
@@ -166,7 +167,9 @@ gst_rtp_funnel_send_sticky (GstRtpFunnel * funnel, GstPad * pad)
     goto done;
   }
 
-  caps_ev = gst_event_new_caps (funnel->srccaps);
+  caps = gst_caps_copy (funnel->srccaps);
+  caps_ev = gst_event_new_caps (caps);
+  gst_caps_unref (caps);
   if (caps_ev && !gst_pad_push_event (funnel->srcpad, caps_ev)) {
     GST_ERROR_OBJECT (funnel, "Could not push caps");
     goto done;
