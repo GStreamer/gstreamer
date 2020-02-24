@@ -567,6 +567,7 @@ _child_start_changed_cb (GESTimelineElement * child,
             GES_ARGS (container));
 
         g_object_notify (G_OBJECT (container), "start");
+        g_object_notify (G_OBJECT (container), "duration");
       }
 
       /* Falltrough! */
@@ -652,7 +653,7 @@ _child_duration_changed_cb (GESTimelineElement * child,
       }
       /* Falltrough */
     case GES_CHILDREN_UPDATE_OFFSETS:
-      map->inpoint_offset = _START (container) - _START (child);
+      map->duration_offset = _DURATION (container) - _DURATION (child);
       break;
     case GES_CHILDREN_UPDATE:
       /* We update all the children calling our set_duration method */
