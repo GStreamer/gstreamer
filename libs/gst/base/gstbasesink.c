@@ -570,8 +570,8 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_PROCESSING_DEADLINE,
       g_param_spec_uint64 ("processing-deadline", "Processing deadline",
-          "Maximum processing deadline in nanoseconds", 0, G_MAXUINT64,
-          DEFAULT_PROCESSING_DEADLINE,
+          "Maximum processing time for a buffer in nanoseconds", 0,
+          G_MAXUINT64, DEFAULT_PROCESSING_DEADLINE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
 
@@ -1222,6 +1222,8 @@ gst_base_sink_query_latency (GstBaseSink * sink, gboolean * live,
   min = 0;
   max = -1;
   us_live = FALSE;
+  us_min = 0;
+  us_max = 0;
 
   if (have_latency) {
     GST_DEBUG_OBJECT (sink, "we are ready for LATENCY query");
@@ -1283,8 +1285,14 @@ gst_base_sink_query_latency (GstBaseSink * sink, gboolean * live,
 
   if (res) {
     GST_DEBUG_OBJECT (sink, "latency query: live: %d, have_latency %d,"
-        " upstream: %d, min %" GST_TIME_FORMAT ", max %" GST_TIME_FORMAT, l,
-        have_latency, us_live, GST_TIME_ARGS (min), GST_TIME_ARGS (max));
+        " upstream_live %d, min(%" GST_TIME_FORMAT ")=upstream(%"
+        GST_TIME_FORMAT ")+processing_deadline(%" GST_TIME_FORMAT
+        ")+render_delay(%" GST_TIME_FORMAT "), max(%" GST_TIME_FORMAT
+        ")=upstream(%" GST_TIME_FORMAT ")+render_delay(%" GST_TIME_FORMAT ")",
+        l, have_latency, us_live, GST_TIME_ARGS (min), GST_TIME_ARGS (us_min),
+        GST_TIME_ARGS (processing_deadline), GST_TIME_ARGS (render_delay),
+        GST_TIME_ARGS (max), GST_TIME_ARGS (us_max),
+        GST_TIME_ARGS (render_delay));
 
     if (live)
       *live = l;
