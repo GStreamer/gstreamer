@@ -112,6 +112,8 @@ check_headers = [
   ['HAVE_EMMINTRIN_H', 'emmintrin.h'],
   ['HAVE_INTTYPES_H', 'inttypes.h'],
   ['HAVE_MEMORY_H', 'memory.h'],
+  ['HAVE_NETINET_IN_H', 'netinet/in.h'],
+  ['HAVE_NETINET_TCP_H', 'netinet/tcp.h'],
   ['HAVE_PROCESS_H', 'process.h'],
   ['HAVE_SMMINTRIN_H', 'smmintrin.h'],
   ['HAVE_STDINT_H', 'stdint.h'],

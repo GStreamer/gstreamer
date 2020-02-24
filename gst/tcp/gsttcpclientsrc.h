@@ -60,6 +60,9 @@ struct _GstTCPClientSrc {
   /* socket */
   GSocket *socket;
   GCancellable *cancellable;
+
+  guint64 bytes_received;
+  GstStructure *stats;
 };
 
 struct _GstTCPClientSrcClass {
