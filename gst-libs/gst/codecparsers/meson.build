@@ -15,6 +15,7 @@ codecparser_sources = files([
   'dboolhuff.c',
   'vp8utils.c',
   'gstmpegvideometa.c',
+  'gstav1parser.c'
 ])
 codecparser_headers = [
   'codecparsers-prelude.h',
@@ -29,6 +30,7 @@ codecparser_headers = [
   'gstjpegparser.h',
   'gstmpegvideometa.h',
   'gstvp9parser.h',
+  'gstav1parser.h'
 ]
 install_headers(codecparser_headers, subdir : 'gstreamer-1.0/gst/codecparsers')
 
