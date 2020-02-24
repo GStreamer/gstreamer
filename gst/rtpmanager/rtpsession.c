@@ -2173,7 +2173,8 @@ packet_info_get_twcc_seqnum (RTPPacketInfo * pinfo, guint8 ext_id)
   gpointer data;
   guint size;
 
-  if (gst_rtp_buffer_get_extension_onebyte_header_from_bytes (pinfo->header_ext,
+  if (pinfo->header_ext &&
+      gst_rtp_buffer_get_extension_onebyte_header_from_bytes (pinfo->header_ext,
           pinfo->header_ext_bit_pattern, ext_id, 0, &data, &size)) {
     if (size == 2)
       val = GST_READ_UINT16_BE (data);

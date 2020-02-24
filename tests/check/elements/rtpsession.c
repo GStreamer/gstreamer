@@ -3540,6 +3540,20 @@ GST_START_TEST (test_twcc_recv_rtcp_reordered)
 
 GST_END_TEST;
 
+GST_START_TEST (test_twcc_no_exthdr_in_buffer)
+{
+  SessionHarness *h = session_harness_new ();
+
+  session_harness_set_twcc_recv_ext_id (h, TEST_TWCC_EXT_ID);
+
+  fail_unless_equals_int (GST_FLOW_OK,
+      session_harness_recv_rtp (h, generate_test_buffer (0, 1234)));
+  session_harness_free (h);
+}
+
+GST_END_TEST;
+
+
 GST_START_TEST (test_twcc_send_and_recv)
 {
   SessionHarness *h_send = session_harness_new ();
@@ -3667,6 +3681,7 @@ rtpsession_suite (void)
   tcase_add_test (tc_chain, test_twcc_double_gap);
   tcase_add_test (tc_chain, test_twcc_recv_packets_reordered);
   tcase_add_test (tc_chain, test_twcc_recv_rtcp_reordered);
+  tcase_add_test (tc_chain, test_twcc_no_exthdr_in_buffer);
   tcase_add_test (tc_chain, test_twcc_send_and_recv);
 
   return s;
