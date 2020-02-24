@@ -83,6 +83,74 @@
                 },
                 "rank": "none"
             },
+            "clocksync": {
+                "author": "Jan Schmidt <jan@centricular.com>",
+                "description": "Synchronise buffers to the clock",
+                "hierarchy": [
+                    "GstClockSync",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Generic",
+                "long-name": "ClockSync",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "ANY",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "signal-handoffs": {
+                        "blurb": "Send a signal before pushing the buffer",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "sync": {
+                        "blurb": "Synchronize to pipeline clock",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "ts-offset": {
+                        "blurb": "Timestamp offset in nanoseconds for synchronisation, negative for earlier sync",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "9223372036854775807",
+                        "min": "-9223372036854775808",
+                        "type-name": "gint64",
+                        "writable": true
+                    }
+                },
+                "rank": "none",
+                "signals": {
+                    "handoff": {
+                        "args": [
+                            "GstBuffer"
+                        ],
+                        "retval": "void"
+                    },
+                    "handoff-list": {
+                        "args": [
+                            "GstBufferList"
+                        ],
+                        "retval": "void"
+                    }
+                }
+            },
             "concat": {
                 "author": "Sebastian Dr\u00f6ge <sebastian@centricular.com>",
                 "description": "Concatenate multiple streams",

@@ -78,6 +78,7 @@ core_tests = [
   [ 'libs/typefindhelper.c' ],
   [ 'libs/queuearray.c' ],
   [ 'elements/capsfilter.c', not gst_registry ],
+  [ 'elements/clocksync.c', not gst_registry or not gst_parse ],
   [ 'elements/concat.c', not gst_registry ],
   [ 'elements/dataurisrc.c', not gst_registry ],
   [ 'elements/fakesrc.c', not gst_registry ],
