@@ -1797,16 +1797,19 @@ gst_gl_upload_transform_caps (GstGLUpload * upload, GstGLContext * context,
   if (upload->priv->method) {
     tmp = upload->priv->method->transform_caps (upload->priv->method_impl,
         context, direction, caps);
-    if (filter) {
-      result = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
-      gst_caps_unref (tmp);
-    } else {
-      result = tmp;
+    if (tmp) {
+      if (filter) {
+        result =
+            gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
+        gst_caps_unref (tmp);
+      } else {
+        result = tmp;
+      }
+      if (!gst_caps_is_empty (result))
+        return result;
+      else
+        gst_caps_unref (result);
     }
-    if (!gst_caps_is_empty (result))
-      return result;
-    else
-      gst_caps_unref (result);
   }
 
   tmp = gst_caps_new_empty ();
