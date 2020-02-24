@@ -2508,8 +2508,10 @@ prefill_get_sample_size (GstQTMux * qtmux, GstQTMuxPad * qpad)
         return 525000;
       } else if (((SampleTableEntryMP4V *) qpad->trak_ste)->height <= 1080) {
         return 1050000;
-      } else {
+      } else if (((SampleTableEntryMP4V *) qpad->trak_ste)->height <= 2160) {
         return 4150000;
+      } else {
+        return 16600000;
       }
       break;
     case FOURCC_apcn:
@@ -2521,8 +2523,10 @@ prefill_get_sample_size (GstQTMux * qtmux, GstQTMuxPad * qpad)
         return 350000;
       } else if (((SampleTableEntryMP4V *) qpad->trak_ste)->height <= 1080) {
         return 700000;
-      } else {
+      } else if (((SampleTableEntryMP4V *) qpad->trak_ste)->height <= 2160) {
         return 2800000;
+      } else {
+        return 11200000;
       }
       break;
     case FOURCC_apcs:
@@ -2534,8 +2538,10 @@ prefill_get_sample_size (GstQTMux * qtmux, GstQTMuxPad * qpad)
         return 250000;
       } else if (((SampleTableEntryMP4V *) qpad->trak_ste)->height <= 1080) {
         return 500000;
-      } else {
+      } else if (((SampleTableEntryMP4V *) qpad->trak_ste)->height <= 2160) {
         return 2800000;
+      } else {
+        return 11200000;
       }
       break;
     case FOURCC_apco:
@@ -2547,8 +2553,10 @@ prefill_get_sample_size (GstQTMux * qtmux, GstQTMuxPad * qpad)
         return 150000;
       } else if (((SampleTableEntryMP4V *) qpad->trak_ste)->height <= 1080) {
         return 250000;
-      } else {
+      } else if (((SampleTableEntryMP4V *) qpad->trak_ste)->height <= 2160) {
         return 900000;
+      } else {
+        return 3600000;
       }
       break;
     case FOURCC_c608:
