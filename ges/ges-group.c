@@ -134,10 +134,7 @@ _update_our_values (GESGroup * group)
       gint32 prio = _PRIORITY (child), height = GES_CONTAINER_HEIGHT (child);
 
       min_layer_prio = MIN (prio, min_layer_prio);
-      /* FIXME: the height of the child = (max-priority - min-priority + 1)
-       * the priority of the child = min-priority
-       * so prio + height = max-priority + 1 */
-      max_layer_prio = MAX ((prio + height), max_layer_prio);
+      max_layer_prio = MAX ((prio + height - 1), max_layer_prio);
     }
   }
 
