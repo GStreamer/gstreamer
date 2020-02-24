@@ -12,3 +12,5 @@ option('python', type : 'feature', value : 'auto', yield: true,
        description: 'Enable python formatters.')
 option('libpython-dir', type : 'string', value : '',
         description: 'Path to find libpythonXX.so')
+option('validate', type : 'feature', value : 'auto', yield: true,
+       description: 'Enable GstValidate integration.')
