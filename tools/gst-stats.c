@@ -822,14 +822,16 @@ static gboolean
 init (void)
 {
   /* compile the parser regexps */
-  /* 0:00:00.004925027 31586      0x1c5c600 DEBUG           GST_REGISTRY gstregistry.c:463:gst_registry_add_plugin:<registry0> adding plugin 0x1c79160 for filename "/usr/lib/gstreamer-1.0/libgstxxx.so" */
+  /* 0:00:00.004925027 31586      0x1c5c600 DEBUG           GST_REGISTRY gstregistry.c:463:gst_registry_add_plugin:<registry0> adding plugin 0x1c79160 for filename "/usr/lib/gstreamer-1.0/libgstxxx.so"
+   * 0:00:02.719599000 35292 000001C031A49C60 DEBUG             GST_TRACER gsttracer.c:162:gst_tracer_register:<registry0> update existing feature 000001C02F9843C0 (latency)
+   */
   raw_log = g_regex_new (
       /* 1: ts */
       "^([0-9:.]+) +"
       /* 2: pid */
       "([0-9]+) +"
       /* 3: thread */
-      "(0x[0-9a-fA-F]+) +"
+      "(0?x?[0-9a-fA-F]+) +"
       /* 4: level */
       "([A-Z]+) +"
       /* 5: category */
