@@ -1147,6 +1147,20 @@ gst_h265_decoder_output_all_remaining_pics (GstH265Decoder * self)
   return TRUE;
 }
 
+static gboolean
+gst_h265_decoder_check_latency_count (GList * list, guint32 max_latency)
+{
+  GList *iter;
+
+  for (iter = list; iter; iter = g_list_next (iter)) {
+    GstH265Picture *pic = (GstH265Picture *) iter->data;
+    if (!pic->outputted && pic->pic_latency_cnt >= max_latency)
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
 /* C.5.2.2 */
 static gboolean
 gst_h265_decoder_dpb_init (GstH265Decoder * self, const GstH265Slice * slice,
@@ -1168,6 +1182,9 @@ gst_h265_decoder_dpb_init (GstH265Decoder * self, const GstH265Slice * slice,
       GST_DEBUG_OBJECT (self, "Clear dpb");
       gst_h265_decoder_drain (GST_VIDEO_DECODER (self));
     }
+  } else {
+    /* C 3.2 */
+    gst_h265_dpb_delete_unused (priv->dpb);
   }
 
   return TRUE;
@@ -1227,31 +1244,22 @@ gst_h265_decoder_finish_picture (GstH265Decoder * self,
   gint i;
 #endif
 
-  /* Remove unused (for reference or later output) pictures from DPB, marking
-   * them as such */
-  gst_h265_dpb_delete_unused (priv->dpb);
-
   GST_LOG_OBJECT (self,
       "Finishing picture %p (poc %d), entries in DPB %d",
       picture, picture->pic_order_cnt, gst_h265_dpb_get_size (priv->dpb));
-
-  /* The ownership of pic will either be transferred to DPB - if the picture is
-   * still needed (for output and/or reference) - or we will release it
-   * immediately if we manage to output it here and won't have to store it for
-   * future reference */
 
   /* Get all pictures that haven't been outputted yet */
   gst_h265_dpb_get_pictures_not_outputted (priv->dpb, &not_outputted);
 
   /* C.5.2.3 */
-  for (iter = not_outputted; iter; iter = g_list_next (iter)) {
-    GstH265Picture *other = GST_H265_PICTURE (iter->data);
-
-    if (!other->outputted)
-      other->pic_latency_cnt++;
-  }
-
   if (picture->output_flag) {
+    for (iter = not_outputted; iter; iter = g_list_next (iter)) {
+      GstH265Picture *other = GST_H265_PICTURE (iter->data);
+
+      if (!other->outputted)
+        other->pic_latency_cnt++;
+    }
+
     picture->outputted = FALSE;
     picture->pic_latency_cnt = 0;
   } else {
@@ -1263,7 +1271,13 @@ gst_h265_decoder_finish_picture (GstH265Decoder * self,
   picture->long_term = FALSE;
 
   /* Include the one we've just decoded */
-  not_outputted = g_list_append (not_outputted, picture);
+  if (picture->output_flag) {
+    not_outputted =
+        g_list_append (not_outputted, gst_h265_picture_ref (picture));
+  }
+
+  /* Add to dpb and transfer ownership */
+  gst_h265_dpb_add (priv->dpb, picture);
 
   /* for debugging */
 #ifndef GST_DISABLE_GST_DEBUG
@@ -1305,9 +1319,8 @@ gst_h265_decoder_finish_picture (GstH265Decoder * self,
   while (num_remaining > sps->max_num_reorder_pics[sps->max_sub_layers_minus1]
       || (num_remaining &&
           sps->max_latency_increase_plus1[sps->max_sub_layers_minus1] &&
-          !GST_H265_PICTURE (iter->data)->outputted &&
-          GST_H265_PICTURE (iter->data)->pic_latency_cnt >=
-          priv->SpsMaxLatencyPictures)) {
+          gst_h265_decoder_check_latency_count (iter,
+              priv->SpsMaxLatencyPictures))) {
     GstH265Picture *to_output = GST_H265_PICTURE (iter->data);
 
     GST_LOG_OBJECT (self,
@@ -1326,22 +1339,6 @@ gst_h265_decoder_finish_picture (GstH265Decoder * self,
 
     iter = g_list_next (iter);
     num_remaining--;
-  }
-
-  /* If we haven't managed to output the picture that we just decoded, or if
-   * it's a reference picture, we have to store it in DPB */
-  if (!picture->outputted || picture->ref) {
-    if (gst_h265_dpb_is_full (priv->dpb)) {
-      /* If we haven't managed to output anything to free up space in DPB
-       * to store this picture, it's an error in the stream */
-      GST_WARNING_OBJECT (self, "Could not free up space in DPB");
-      return FALSE;
-    }
-
-    GST_TRACE_OBJECT (self,
-        "Put picture %p (outputted %d, ref %d, poc %d) to dpb",
-        picture, picture->outputted, picture->ref, picture->pic_order_cnt);
-    gst_h265_dpb_add (priv->dpb, gst_h265_picture_ref (picture));
   }
 
   if (not_outputted)
