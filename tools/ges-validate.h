@@ -30,7 +30,7 @@
 G_BEGIN_DECLS
 
 gboolean
-ges_validate_activate(GstPipeline* pipeline, GESLauncherParsedOptions* opts);
+ges_validate_activate(GstPipeline* pipeline, GESLauncher *launcher, GESLauncherParsedOptions* opts);
 void ges_launch_validate_uri(const gchar* nid);
 
 gint

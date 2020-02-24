@@ -91,7 +91,7 @@ GType ges_launcher_get_type (void);
 
 GESLauncher* ges_launcher_new (void);
 gint ges_launcher_get_exit_status (GESLauncher *self);
-gboolean ges_launcher_parse_options(GESLauncherParsedOptions* opts, gchar*** arguments, gint *argc, GOptionContext* ctx, GError** error);
+gboolean ges_launcher_parse_options(GESLauncher* self, gchar*** arguments, gint *argc, GOptionContext* ctx, GError** error);
 
 G_END_DECLS
 

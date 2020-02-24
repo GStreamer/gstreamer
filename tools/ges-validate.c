@@ -101,7 +101,8 @@ ges_validate_register_issues (void)
 }
 
 gboolean
-ges_validate_activate (GstPipeline * pipeline, GESLauncherParsedOptions * opts)
+ges_validate_activate (GstPipeline * pipeline, GESLauncher * launcher,
+    GESLauncherParsedOptions * opts)
 {
   GstValidateRunner *runner = NULL;
   GstValidateMonitor *monitor = NULL;
@@ -142,7 +143,8 @@ ges_validate_activate (GstPipeline * pipeline, GESLauncherParsedOptions * opts)
         for (i = 0; ges_options[i]; i++)
           ges_options_full[i + 1] = g_strdup (ges_options[i]);
 
-        ges_launcher_parse_options (opts, &ges_options_full, NULL, NULL, NULL);
+        ges_launcher_parse_options (launcher, &ges_options_full, NULL, NULL,
+            NULL);
         g_strfreev (ges_options_full);
         g_strfreev (ges_options);
       }
@@ -230,7 +232,8 @@ _print_position (GstElement * pipeline)
 }
 
 gboolean
-ges_validate_activate (GstPipeline * pipeline, GESLauncherParsedOptions * opts)
+ges_validate_activate (GstPipeline * pipeline, GESLauncher * launcher,
+    GESLauncherParsedOptions * opts)
 {
   if (opts->scenario) {
     GST_WARNING ("Trying to run scenario %s, but gst-validate not supported",

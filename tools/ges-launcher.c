@@ -211,7 +211,7 @@ _project_loaded_cb (GESProject * project, GESTimeline * timeline,
 
   if (self->priv->parsed_options.load_path && project_uri
       && ges_validate_activate (GST_PIPELINE (self->priv->pipeline),
-          opts) == FALSE) {
+          self, opts) == FALSE) {
     g_error ("Could not activate scenario %s", opts->scenario);
     self->priv->seenerrors = TRUE;
     g_application_quit (G_APPLICATION (self));
@@ -441,7 +441,7 @@ _run_pipeline (GESLauncher * self)
 
   if (!opts->load_path) {
     if (ges_validate_activate (GST_PIPELINE (self->priv->pipeline),
-            opts) == FALSE) {
+            self, opts) == FALSE) {
       g_error ("Could not activate scenario %s", opts->scenario);
       return FALSE;
     }
@@ -726,7 +726,7 @@ ges_launcher_get_playback_option_group (GESLauncherParsedOptions * opts)
 }
 
 gboolean
-ges_launcher_parse_options (GESLauncherParsedOptions * opts,
+ges_launcher_parse_options (GESLauncher * self,
     gchar ** arguments[], gint * argc, GOptionContext * ctx, GError ** error)
 {
   gboolean res;
@@ -735,6 +735,7 @@ ges_launcher_parse_options (GESLauncherParsedOptions * opts,
   gchar **commands = NULL, *help, *tmp;
   GError *err = NULL;
   gboolean owns_ctx = ctx == NULL;
+  GESLauncherParsedOptions *opts = &self->priv->parsed_options;
   GOptionEntry options[] = {
     {"disable-mixing", 0, 0, G_OPTION_ARG_NONE, &opts->disable_mixing,
         "Do not use mixing elements to mix layers together.", NULL}
@@ -826,6 +827,7 @@ ges_launcher_parse_options (GESLauncherParsedOptions * opts,
 
   if (owns_ctx) {
     g_option_context_free (ctx);
+    _set_playback_details (self);
   }
 
   return res;
@@ -846,7 +848,7 @@ _local_command_line (GApplication * application, gchar ** arguments[],
   argc = g_strv_length (*arguments);
 
   gst_init (&argc, arguments);
-  if (!ges_launcher_parse_options (opts, arguments, &argc, ctx, &error)) {
+  if (!ges_launcher_parse_options (self, arguments, &argc, ctx, &error)) {
     gst_init (NULL, NULL);
     printerr ("Error initializing: %s\n", error->message);
     g_option_context_free (ctx);
