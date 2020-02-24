@@ -1294,10 +1294,13 @@ ges_track_element_copy_bindings (GESTrackElement * element,
     if (!binding)
       continue;
 
-    /* FIXME : this should work as well with other types of control sources */
     g_object_get (binding, "control_source", &source, NULL);
-    if (!GST_IS_TIMED_VALUE_CONTROL_SOURCE (source))
+    if (!GST_IS_TIMED_VALUE_CONTROL_SOURCE (source)) {
+      GST_FIXME_OBJECT (element,
+          "Implement support for control source type: %s",
+          G_OBJECT_TYPE_NAME (source));
       continue;
+    }
 
     g_object_get (binding, "absolute", &absolute, NULL);
     g_object_get (source, "mode", &mode, NULL);

@@ -82,7 +82,7 @@ _get_clocktime (GstStructure * structure, const gchar * name, gpointer var)
     gchar *struct_str = gst_structure_to_string (structure); \
     *error = g_error_new (GES_ERROR, 0, \
         "Could not get the mandatory field '%s'" \
-        " fields in %s", name, struct_str); \
+        " of type %s - fields in %s", name, g_type_name (type), struct_str); \
     g_free (struct_str); \
     goto label;\
   } \
@@ -181,6 +181,7 @@ _ges_add_remove_keyframe_from_struct (GESTimeline * timeline,
 {
   GESTrackElement *element;
 
+  gboolean absolute;
   gdouble value;
   GstClockTime timestamp;
   GstControlBinding *binding = NULL;
@@ -201,7 +202,6 @@ _ges_add_remove_keyframe_from_struct (GESTimeline * timeline,
 
   GET_AND_CHECK ("element-name", G_TYPE_STRING, &element_name, done);
   GET_AND_CHECK ("property-name", G_TYPE_STRING, &property_name, done);
-  GET_AND_CHECK ("value", G_TYPE_DOUBLE, &value, done);
   GET_AND_CHECK ("timestamp", GST_TYPE_CLOCK_TIME, &timestamp, done);
 
   element =
@@ -241,6 +241,48 @@ _ges_add_remove_keyframe_from_struct (GESTimeline * timeline,
 
     goto done;
   }
+
+  g_object_get (binding, "absolute", &absolute, NULL);
+  if (absolute) {
+    GParamSpec *pspec;
+    const GValue *v;
+    GValue v2 = G_VALUE_INIT;
+
+    if (!ges_timeline_element_lookup_child (GES_TIMELINE_ELEMENT (element),
+            property_name, NULL, &pspec)) {
+      *error =
+          g_error_new (GES_ERROR, 0, "Could not get property %s for %s",
+          property_name, GES_TIMELINE_ELEMENT_NAME (element));
+      goto done;
+    }
+
+    v = gst_structure_get_value (structure, "value");
+    if (!v) {
+      gchar *struct_str = gst_structure_to_string (structure);
+
+      *error = g_error_new (GES_ERROR, 0,
+          "Could not get the mandatory field 'value'"
+          " of type %s - fields in %s", g_type_name (pspec->value_type),
+          struct_str);
+      g_free (struct_str);
+      goto done;
+    }
+
+    g_value_init (&v2, G_TYPE_DOUBLE);
+    if (!g_value_transform (v, &v2)) {
+      gchar *struct_str = gst_structure_to_string (structure);
+
+      *error = g_error_new (GES_ERROR, 0,
+          "Could not get the mandatory field 'value'"
+          " of type %s - fields in %s", g_type_name (pspec->value_type),
+          struct_str);
+      g_free (struct_str);
+      goto done;
+    }
+    value = g_value_get_double (&v2);
+    g_value_reset (&v2);
+  } else
+    GET_AND_CHECK ("value", G_TYPE_DOUBLE, &value, done);
 
   if (!g_strcmp0 (gst_structure_get_name (structure), "add-keyframe"))
     ret = gst_timed_value_control_source_set (source, timestamp, value);

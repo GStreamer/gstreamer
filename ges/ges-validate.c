@@ -127,6 +127,12 @@ done:
         }                                                                                                    \
     }
 
+#define TRY_GET(name,type,var,def) G_STMT_START {\
+  if  (!gst_structure_get (action->structure, name, type, var, NULL)) {\
+    *var = def; \
+  } \
+} G_STMT_END
+
 static gboolean
 _serialize_project (GstValidateScenario * scenario, GstValidateAction * action)
 {
@@ -837,15 +843,14 @@ _set_control_source (GstValidateScenario * scenario, GstValidateAction * action)
 
   g_return_val_if_fail (gst_structure_get (action->structure,
           "element-name", G_TYPE_STRING, &element_name,
-          "property-name", G_TYPE_STRING, &property_name,
-          "binding-type", G_TYPE_STRING, &binding_type,
-          "source-type", G_TYPE_STRING, &source_type,
-          "interpolation-mode", G_TYPE_STRING, &interpolation_mode, NULL),
-      FALSE);
+          "property-name", G_TYPE_STRING, &property_name, NULL), FALSE);
+
+  TRY_GET ("binding-type", G_TYPE_STRING, &binding_type, NULL);
+  TRY_GET ("source-type", G_TYPE_STRING, &source_type, NULL);
+  TRY_GET ("interpolation-mode", G_TYPE_STRING, &interpolation_mode, NULL);
 
   element =
       GES_TRACK_ELEMENT (ges_timeline_get_element (timeline, element_name));
-
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (element), FALSE);
 
   if (!binding_type)
