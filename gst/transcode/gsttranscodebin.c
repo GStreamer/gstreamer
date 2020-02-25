@@ -293,14 +293,16 @@ make_decodebin (GstTranscodeBin * self)
           gst_encoding_container_profile_get_profiles
           (GST_ENCODING_CONTAINER_PROFILE (self->profile)); tmp;
           tmp = tmp->next) {
-        GstCaps *encodecaps = gst_encoding_profile_get_format (tmp->data);
         GstCaps *restrictions =
             gst_encoding_profile_get_restriction (tmp->data);
 
-        if (!restrictions)
+        if (!restrictions) {
+          GstCaps *encodecaps = gst_encoding_profile_get_format (tmp->data);
+
           gst_caps_append (decodecaps, encodecaps);
-        else
+        } else {
           gst_caps_unref (restrictions);
+        }
       }
     }
     g_object_set (self->decodebin, "caps", decodecaps, NULL);
