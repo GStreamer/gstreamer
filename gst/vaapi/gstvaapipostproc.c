@@ -109,9 +109,11 @@ enum
 {
   PROP_0,
 
+#ifndef GST_REMOVE_DEPRECATED
   PROP_FORMAT,
   PROP_WIDTH,
   PROP_HEIGHT,
+#endif
   PROP_FORCE_ASPECT_RATIO,
   PROP_DEINTERLACE_MODE,
   PROP_DEINTERLACE_METHOD,
@@ -1949,6 +1951,7 @@ gst_vaapipostproc_set_property (GObject * object,
 
   g_mutex_lock (&postproc->postproc_lock);
   switch (prop_id) {
+#ifndef GST_REMOVE_DEPRECATED
     case PROP_FORMAT:
       postproc->format = g_value_get_enum (value);
       break;
@@ -1966,6 +1969,7 @@ gst_vaapipostproc_set_property (GObject * object,
       do_reconf = (prev_height != postproc->height);
       break;
     }
+#endif
     case PROP_FORCE_ASPECT_RATIO:
       postproc->keep_aspect = g_value_get_boolean (value);
       break;
@@ -2051,6 +2055,7 @@ gst_vaapipostproc_get_property (GObject * object,
 
   g_mutex_lock (&postproc->postproc_lock);
   switch (prop_id) {
+#ifndef GST_REMOVE_DEPRECATED
     case PROP_FORMAT:
       g_value_set_enum (value, postproc->format);
       break;
@@ -2060,6 +2065,7 @@ gst_vaapipostproc_get_property (GObject * object,
     case PROP_HEIGHT:
       g_value_set_uint (value, postproc->height);
       break;
+#endif
     case PROP_FORCE_ASPECT_RATIO:
       g_value_set_boolean (value, postproc->keep_aspect);
       break;
@@ -2203,6 +2209,7 @@ gst_vaapipostproc_class_init (GstVaapiPostprocClass * klass)
   if (!filter_ops)
     return;
 
+#ifndef GST_REMOVE_DEPRECATED
   /**
    * GstVaapiPostproc:format:
    *
@@ -2242,6 +2249,7 @@ gst_vaapipostproc_class_init (GstVaapiPostprocClass * klass)
           "Height",
           "Forced output height",
           0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+#endif
 
   /**
    * GstVaapiPostproc:crop-left:
