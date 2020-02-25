@@ -441,6 +441,12 @@ valgrind ges:
       -Dvaapi=disabled
       -Ddevtools=disabled
   script:
+    # Sometimes there's seems to be an existing gst-build clone that comes either from the ether or
+    # from a previous job due to some gitlab bug or implicit behavior?
+    # So let's always check and clear it out if its there
+    # https://gitlab.freedesktop.org/tpm/gstreamer-sharp/-/jobs/1672137
+    - if (Test-Path $env:CI_PROJECT_DIR/gst-build) { Remove-Item -Recurse -Force $env:CI_PROJECT_DIR/gst-build }
+
     # Make sure powershell exists on errors
     # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-6
     - $ErrorActionPreference = "Stop"
@@ -490,6 +496,12 @@ build msys2 :
   extends: '.build windows'
   timeout: '60min'
   script:
+    # Sometimes there's seems to be an existing gst-build clone that comes either from the ether or
+    # from a previous job due to some gitlab bug or implicit behavior?
+    # So let's always check and clear it out if its there
+    # https://gitlab.freedesktop.org/tpm/gstreamer-sharp/-/jobs/1672137
+    - if (Test-Path $env:CI_PROJECT_DIR/gst-build) { Remove-Item -Recurse -Force $env:CI_PROJECT_DIR/gst-build }
+
     # Make sure powershell exists on errors
     # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-6
     - $ErrorActionPreference = "Stop"
