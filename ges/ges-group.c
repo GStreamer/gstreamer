@@ -214,6 +214,7 @@ _child_clip_changed_layer_cb (GESTimelineElement * clip,
         g_signal_connect (new_layer, "notify::priority",
         (GCallback) _child_priority_changed_cb, clip);
   }
+  /* sigids takes ownership of new_layer, we take ownership of old_layer */
   sigids->layer = new_layer;
 
   if (container->children_control_mode != GES_CHILDREN_UPDATE) {
@@ -221,6 +222,7 @@ _child_clip_changed_layer_cb (GESTimelineElement * clip,
       container->children_control_mode = GES_CHILDREN_UPDATE;
       g_signal_stop_emission_by_name (clip, "notify::layer");
     }
+    gst_clear_object (&old_layer);
     return;
   }
 
@@ -238,18 +240,20 @@ _child_clip_changed_layer_cb (GESTimelineElement * clip,
     ges_clip_move_to_layer (GES_CLIP (clip), old_layer);
     g_signal_stop_emission_by_name (clip, "notify::layer");
 
+    gst_clear_object (&old_layer);
     return;
   }
 
   if (!new_layer || !old_layer) {
     _update_our_values (group);
-
+    gst_clear_object (&old_layer);
     return;
   }
 
   container->initiated_move = clip;
   _set_priority0 (GES_TIMELINE_ELEMENT (group), layer_prio + offset);
   container->initiated_move = NULL;
+  gst_clear_object (&old_layer);
 }
 
 static void
@@ -554,6 +558,7 @@ _disconnect_signals (GESGroup * group, GESTimelineElement * child,
         sigids->child_priority_changed_sid);
     sigids->child_priority_changed_sid = 0;
   }
+  gst_clear_object (&(sigids->layer));
 }
 
 
