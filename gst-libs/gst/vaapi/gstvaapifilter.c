@@ -1537,18 +1537,50 @@ fill_color_standard (GstVideoColorimetry * colorimetry,
 {
   *type = from_GstVideoColorimetry (colorimetry);
 
-  if (*type == VAProcColorStandardExplicit) {
-    properties->colour_primaries =
-        gst_video_color_primaries_to_iso (colorimetry->primaries);
-    properties->transfer_characteristics =
-        gst_video_color_transfer_to_iso (colorimetry->transfer);
-    properties->matrix_coefficients =
-        gst_video_color_matrix_to_iso (colorimetry->matrix);
-  }
+  properties->colour_primaries =
+      gst_video_color_primaries_to_iso (colorimetry->primaries);
+  properties->transfer_characteristics =
+      gst_video_color_transfer_to_iso (colorimetry->transfer);
+  properties->matrix_coefficients =
+      gst_video_color_matrix_to_iso (colorimetry->matrix);
 
   properties->color_range = from_GstVideoColorRange (colorimetry->range);
 }
 #endif
+
+static void
+gst_vaapi_filter_fill_color_standards (GstVaapiFilter * filter,
+    VAProcPipelineParameterBuffer * pipeline_param)
+{
+#if VA_CHECK_VERSION(1,2,0)
+  fill_color_standard (&filter->input_colorimetry,
+      &pipeline_param->surface_color_standard,
+      &pipeline_param->input_color_properties);
+
+  fill_color_standard (&filter->output_colorimetry,
+      &pipeline_param->output_color_standard,
+      &pipeline_param->output_color_properties);
+
+  /* Handle RGB <-> YUV color primary driver quirk */
+  if (gst_vaapi_display_has_driver_quirks (filter->display,
+          GST_VAAPI_DRIVER_QUIRK_NO_RGBYUV_VPP_COLOR_PRIMARY)) {
+    gboolean src_is_rgb = gst_video_colorimetry_matches
+        (&filter->input_colorimetry, GST_VIDEO_COLORIMETRY_SRGB);
+    gboolean dst_is_rgb = gst_video_colorimetry_matches
+        (&filter->output_colorimetry, GST_VIDEO_COLORIMETRY_SRGB);
+
+    if ((!src_is_rgb && dst_is_rgb) || (src_is_rgb && !dst_is_rgb)) {
+      pipeline_param->output_color_standard = VAProcColorStandardExplicit;
+      pipeline_param->output_color_properties.colour_primaries =
+          gst_video_color_primaries_to_iso (filter->
+          input_colorimetry.primaries);
+    }
+  }
+#else
+  pipeline_param->surface_color_standard = VAProcColorStandardNone;
+  pipeline_param->output_color_standard = VAProcColorStandardNone;
+#endif
+}
 
 /**
  * gst_vaapi_filter_process:
@@ -1651,18 +1683,7 @@ gst_vaapi_filter_process_unlocked (GstVaapiFilter * filter,
   pipeline_param->surface = GST_VAAPI_SURFACE_ID (src_surface);
   pipeline_param->surface_region = &src_rect;
 
-#if VA_CHECK_VERSION(1,2,0)
-  fill_color_standard (&filter->input_colorimetry,
-      &pipeline_param->surface_color_standard,
-      &pipeline_param->input_color_properties);
-
-  fill_color_standard (&filter->output_colorimetry,
-      &pipeline_param->output_color_standard,
-      &pipeline_param->output_color_properties);
-#else
-  pipeline_param->surface_color_standard = VAProcColorStandardNone;
-  pipeline_param->output_color_standard = VAProcColorStandardNone;
-#endif
+  gst_vaapi_filter_fill_color_standards (filter, pipeline_param);
 
   pipeline_param->output_region = &dst_rect;
   pipeline_param->output_background_color = 0xff000000;
