@@ -56,7 +56,8 @@ error_loading_asset_cb (GESProject * project, GError * err,
 }
 
 static GESTimeline *
-_ges_load_timeline (GstValidateScenario * scenario, const gchar * project_uri)
+_ges_load_timeline (GstValidateScenario * scenario, GstValidateAction * action,
+    const gchar * project_uri)
 {
   GESProject *project = ges_project_new (project_uri);
   GESTimeline *timeline;
@@ -78,9 +79,9 @@ _ges_load_timeline (GstValidateScenario * scenario, const gchar * project_uri)
 
 done:
   if (data.error) {
-    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
-        "Can not load timeline from: %s (%s)", project_uri,
-        data.error->message);
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
+        SCENARIO_ACTION_EXECUTION_ERROR, "Can not load timeline from: %s (%s)",
+        project_uri, data.error->message);
     g_clear_error (&data.error);
     gst_clear_object (&timeline);
   }
@@ -97,7 +98,7 @@ done:
     if (!project_uri) {                                                                    \
         pipeline = gst_validate_scenario_get_pipeline(scenario);                                  \
         if (pipeline == NULL) {                                                                   \
-            GST_VALIDATE_REPORT(scenario, SCENARIO_ACTION_EXECUTION_ERROR,                        \
+            GST_VALIDATE_REPORT_ACTION (scenario, action, SCENARIO_ACTION_EXECUTION_ERROR,        \
                 "Can't execute a '%s' action after the pipeline "                                 \
                 "has been destroyed.",                                                            \
                 action->type);                                                                    \
@@ -105,7 +106,7 @@ done:
         }                                                                                         \
         g_object_get(pipeline, "timeline", &timeline, NULL);                                      \
     } else {                                                                                      \
-        timeline = _ges_load_timeline(scenario, project_uri);                              \
+        timeline = _ges_load_timeline(scenario, action, project_uri);                             \
         if (!timeline)                                                                            \
             return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;                                    \
     }
@@ -118,7 +119,7 @@ done:
 #define SAVE_TIMELINE_IF_NEEDED(scenario, timeline, action)                                                  \
     {                                                                                                        \
         if (!_ges_save_timeline_if_needed(timeline, action->structure, NULL)) {                              \
-            GST_VALIDATE_REPORT(scenario,                                                                    \
+            GST_VALIDATE_REPORT_ACTION(scenario, action,                                                     \
                 g_quark_from_string("scenario::execution-error"),                                            \
                 "Could not save timeline to %s", gst_structure_get_string(action->structure, "project-id")); \
             gst_object_unref(timeline);                                                                      \
@@ -341,8 +342,8 @@ _edit_container (GstValidateScenario * scenario, GstValidateAction * action)
 
   container = ges_timeline_get_element (timeline, clip_name);
   if (!container) {
-    GST_VALIDATE_REPORT (scenario,
-        g_quark_from_string ("scenario::execution-error"),
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
+        SCENARIO_ACTION_EXECUTION_ERROR,
         "Could not find container %s", clip_name);
     return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
   }
@@ -623,7 +624,7 @@ _copy_element (GstValidateScenario * scenario, GstValidateAction * action)
   gst_object_unref (timeline);
 
   if (!pasted) {
-    GST_VALIDATE_REPORT (scenario,
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
         g_quark_from_string ("scenario::execution-error"),
         "Could not paste clip %s", element_name);
     return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
@@ -632,7 +633,7 @@ _copy_element (GstValidateScenario * scenario, GstValidateAction * action)
   paste_name = gst_structure_get_string (action->structure, "paste-name");
   if (paste_name) {
     if (!ges_timeline_element_set_name (pasted, paste_name)) {
-      GST_VALIDATE_REPORT (scenario,
+      GST_VALIDATE_REPORT_ACTION (scenario, action,
           g_quark_from_string ("scenario::execution-error"),
           "Could not set element name %s", paste_name);
 
@@ -732,7 +733,7 @@ _validate_action_execute (GstValidateScenario * scenario,
   }
 
   if (!func (timeline, action->structure, &err)) {
-    GST_VALIDATE_REPORT (scenario,
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
         g_quark_from_string ("scenario::execution-error"),
         "Could not execute %s (error: %s)",
         gst_structure_get_name (action->structure),
@@ -775,7 +776,7 @@ _load_project (GstValidateScenario * scenario, GstValidateAction * action)
   gst_validate_printf (action, "Loading project from serialized content\n");
 
   if (!GES_IS_PIPELINE (pipeline)) {
-    GST_VALIDATE_REPORT (scenario,
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
         g_quark_from_string ("scenario::execution-error"),
         "Not a GES pipeline, can't work with it");
 
@@ -789,7 +790,7 @@ _load_project (GstValidateScenario * scenario, GstValidateAction * action)
 
     g_file_set_contents (tmpfile, content, -1, &error);
     if (error) {
-      GST_VALIDATE_REPORT (scenario,
+      GST_VALIDATE_REPORT_ACTION (scenario, action,
           g_quark_from_string ("scenario::execution-error"),
           "Could not set XML content: %s", error->message);
 
@@ -798,7 +799,7 @@ _load_project (GstValidateScenario * scenario, GstValidateAction * action)
 
     uri = gst_filename_to_uri (tmpfile, &error);
     if (error) {
-      GST_VALIDATE_REPORT (scenario,
+      GST_VALIDATE_REPORT_ACTION (scenario, action,
           g_quark_from_string ("scenario::execution-error"),
           "Could not set filename to URI: %s", error->message);
 
@@ -808,7 +809,7 @@ _load_project (GstValidateScenario * scenario, GstValidateAction * action)
     uri = g_strdup (gst_structure_get_string (action->structure, "uri"));
 
     if (!uri) {
-      GST_VALIDATE_REPORT (scenario,
+      GST_VALIDATE_REPORT_ACTION (scenario, action,
           g_quark_from_string ("scenario::execution-error"),
           "None of 'uri' or 'content' passed as parametter"
           " can't load any timeline!");
@@ -830,7 +831,7 @@ _load_project (GstValidateScenario * scenario, GstValidateAction * action)
   g_signal_connect (project, "loaded", G_CALLBACK (_project_loaded_cb), action);
   ges_project_load (project, timeline, &error);
   if (error) {
-    GST_VALIDATE_REPORT (scenario,
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
         g_quark_from_string ("scenario::execution-error"),
         "Could not load timeline: %s", error->message);
 
