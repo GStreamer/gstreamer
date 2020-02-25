@@ -247,6 +247,10 @@ gst_validate_issue_register (GstValidateIssue * issue)
 #define REGISTER_VALIDATE_ISSUE(lvl,id,sum,desc)			\
   gst_validate_issue_register (gst_validate_issue_new (id, \
 						       sum, desc, GST_VALIDATE_REPORT_LEVEL_##lvl))
+
+#define REGISTER_VALIDATE_ISSUE_FULL(lvl,id,sum,desc,flags)			\
+  gst_validate_issue_register (gst_validate_issue_new_full (id, \
+						       sum, desc, GST_VALIDATE_REPORT_LEVEL_##lvl, flags))
 static void
 gst_validate_report_load_issues (void)
 {
@@ -435,8 +439,14 @@ gst_validate_report_load_issues (void)
       "The execution of an action timed out", NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, SCENARIO_FILE_MALFORMED,
       "The scenario file was malformed", NULL);
-  REGISTER_VALIDATE_ISSUE (CRITICAL, SCENARIO_ACTION_EXECUTION_ERROR,
-      "The execution of an action did not properly happen", NULL);
+  REGISTER_VALIDATE_ISSUE_FULL (CRITICAL, SCENARIO_ACTION_EXECUTION_ERROR,
+      "The execution of an action did not properly happen", NULL,
+      GST_VALIDATE_ISSUE_FLAGS_NO_BACKTRACE |
+      GST_VALIDATE_ISSUE_FLAGS_FULL_DETAILS);
+  REGISTER_VALIDATE_ISSUE_FULL (CRITICAL, SCENARIO_ACTION_CHECK_ERROR,
+      "A check action failed", NULL,
+      GST_VALIDATE_ISSUE_FLAGS_NO_BACKTRACE |
+      GST_VALIDATE_ISSUE_FLAGS_FULL_DETAILS);
   REGISTER_VALIDATE_ISSUE (ISSUE, SCENARIO_ACTION_EXECUTION_ISSUE,
       "An issue happened during the execution of a scenario", NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, CONFIG_LATENCY_TOO_HIGH,
