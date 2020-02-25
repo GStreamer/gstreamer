@@ -134,6 +134,7 @@ typedef struct
   GObject *child;
   GESTimelineElement *owner;
   gulong handler_id;
+  GESTimelineElement *self;
 } ChildPropHandler;
 
 struct _GESTimelineElementPrivate
@@ -354,7 +355,10 @@ _child_prop_handler_free (ChildPropHandler * handler)
   if (handler->handler_id)
     g_signal_handler_disconnect (handler->child, handler->handler_id);
   g_object_thaw_notify (handler->child);
-  gst_object_unref (handler->child);
+
+  if (handler->child != (GObject *) handler->self &&
+      handler->child != (GObject *) handler->owner)
+    gst_object_unref (handler->child);
   g_slice_free (ChildPropHandler, handler);
 }
 
@@ -821,7 +825,11 @@ ges_timeline_element_add_child_property_full (GESTimelineElement * self,
 
   signame = g_strconcat ("notify::", pspec->name, NULL);
   handler = (ChildPropHandler *) g_slice_new0 (ChildPropHandler);
-  handler->child = gst_object_ref (child);
+  handler->self = self;
+  if (child == G_OBJECT (self) || child == G_OBJECT (owner))
+    handler->child = child;
+  else
+    handler->child = gst_object_ref (child);
   handler->owner = owner;
   handler->handler_id =
       g_signal_connect (child, signame, G_CALLBACK (child_prop_changed_cb),
