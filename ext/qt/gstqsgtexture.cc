@@ -99,8 +99,6 @@ GstQSGTexture::bind ()
   if (!this->qt_context_)
     return;
 
-  gst_gl_context_activate (this->qt_context_, TRUE);
-
   if (!this->buffer_)
     goto out;
   if (GST_VIDEO_INFO_FORMAT (&this->v_info) == GST_VIDEO_FORMAT_UNKNOWN)
@@ -174,8 +172,6 @@ out:
 
     funcs->glBindTexture (GL_TEXTURE_2D, this->dummy_tex_id_);
   }
-
-  gst_gl_context_activate (this->qt_context_, FALSE);
 }
 
 /* can be called from any thread */

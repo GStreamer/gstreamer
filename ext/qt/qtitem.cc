@@ -199,7 +199,9 @@ QtGLVideoItem::updatePaintNode(QSGNode * oldNode,
   GstQSGTexture *tex;
 
   g_mutex_lock (&this->priv->lock);
-  gst_gl_context_activate (this->priv->other_context, TRUE);
+
+  if (gst_gl_context_get_current() == NULL)
+    gst_gl_context_activate (this->priv->other_context, TRUE);
 
   GST_TRACE ("%p updatePaintNode", this);
 
@@ -238,7 +240,6 @@ QtGLVideoItem::updatePaintNode(QSGNode * oldNode,
 
   texNode->setRect (QRectF (result.x, result.y, result.w, result.h));
 
-  gst_gl_context_activate (this->priv->other_context, FALSE);
   g_mutex_unlock (&this->priv->lock);
 
   return texNode;
