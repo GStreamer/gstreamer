@@ -328,10 +328,10 @@ _remove_clip (GstValidateScenario * scenario, GstValidateAction * action)
 
 
 static gboolean
-_edit_container (GstValidateScenario * scenario, GstValidateAction * action)
+_edit (GstValidateScenario * scenario, GstValidateAction * action)
 {
   GList *layers = NULL;
-  GESTimelineElement *container;
+  GESTimelineElement *element;
   GstClockTime position;
   gboolean res = FALSE;
 
@@ -340,17 +340,19 @@ _edit_container (GstValidateScenario * scenario, GstValidateAction * action)
   guint mode = GES_EDIT_MODE_NORMAL;
 
   const gchar *edit_mode_str = NULL, *edge_str = NULL;
-  const gchar *clip_name;
+  const gchar *element_name;
 
   DECLARE_AND_GET_TIMELINE (scenario, action);
 
-  clip_name = gst_structure_get_string (action->structure, "container-name");
+  element_name = gst_structure_get_string (action->structure,
+      gst_structure_has_name (action->structure, "edit-container") ?
+      "container-name" : "element-name");
 
-  container = ges_timeline_get_element (timeline, clip_name);
-  if (!container) {
+  element = ges_timeline_get_element (timeline, element_name);
+  if (!element) {
     GST_VALIDATE_REPORT_ACTION (scenario, action,
         SCENARIO_ACTION_EXECUTION_ERROR,
-        "Could not find container %s", clip_name);
+        "Could not find element %s", element_name);
     return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
   }
 
@@ -375,17 +377,16 @@ _edit_container (GstValidateScenario * scenario, GstValidateAction * action)
   gst_validate_printf (action, "Editing %s to %" GST_TIME_FORMAT
       " in %s mode, edge: %s "
       "with new layer prio: %d \n\n",
-      clip_name, GST_TIME_ARGS (position),
+      element_name, GST_TIME_ARGS (position),
       edit_mode_str ? edit_mode_str : "normal",
       edge_str ? edge_str : "None", new_layer_priority);
 
-  if (!(res = ges_container_edit (GES_CONTAINER (container), layers,
+  if (!(res = ges_timeline_element_edit (element, layers,
               new_layer_priority, mode, edge, position))) {
-    gst_object_unref (container);
-    GST_ERROR ("HERE");
+    gst_object_unref (element);
     goto beach;
   }
-  gst_object_unref (container);
+  gst_object_unref (element);
 
   SAVE_TIMELINE_IF_NEEDED (scenario, timeline, action);
 beach:
@@ -1077,7 +1078,7 @@ ges_validate_register_action_types (void)
   gst_validate_init ();
 
   /*  *INDENT-OFF* */
-  gst_validate_register_action_type ("edit-container", "ges", _edit_container,
+  gst_validate_register_action_type ("edit-container", "ges", _edit,
       (GstValidateActionParameter [])  {
         {
          .name = "container-name",
@@ -1104,10 +1105,10 @@ ges_validate_register_action_types (void)
         {
           .name = "edge",
           .description = "The GESEdge to use to edit @container-name\n"
-                         "should be in [ edge_start, edge_end, edge_none ] ",
+                         "should be in [ start, end, none ] ",
           .mandatory = FALSE,
           .types = "string",
-          .def = "edge_none",
+          .def = "none",
         },
         {
           .name = "new-layer-priority",
@@ -1127,7 +1128,61 @@ ges_validate_register_action_types (void)
         {NULL}
        },
        "Allows to edit a container (like a GESClip), for more details, have a look at:\n"
-       "ges_container_edit documentation, Note that the timeline will\n"
+       "ges_timeline_element_edit documentation, Note that the timeline will\n"
+       "be commited, and flushed so that the edition is taken into account",
+       GST_VALIDATE_ACTION_TYPE_NONE);
+
+  gst_validate_register_action_type ("edit", "ges", _edit,
+      (GstValidateActionParameter [])  {
+        {
+         .name = "element-name",
+         .description = "The name of the element to edit",
+         .mandatory = TRUE,
+         .types = "string",
+        },
+        {
+          .name = "position",
+          .description = "The new position of the element",
+          .mandatory = TRUE,
+          .types = "double or string",
+          .possible_variables = "position: The current position in the stream\n"
+            "duration: The duration of the stream",
+           NULL
+        },
+        {
+          .name = "edit-mode",
+          .description = "The GESEditMode to use to edit @element-name",
+          .mandatory = FALSE,
+          .types = "string",
+          .def = "normal",
+        },
+        {
+          .name = "edge",
+          .description = "The GESEdge to use to edit @element-name\n"
+                         "should be in [ start, end, none ] ",
+          .mandatory = FALSE,
+          .types = "string",
+          .def = "none",
+        },
+        {
+          .name = "new-layer-priority",
+          .description = "The priority of the layer @element should land in.\n"
+                         "If the layer you're trying to move the element to doesn't exist, it will\n"
+                         "be created automatically. -1 means no move.",
+          .mandatory = FALSE,
+          .types = "int",
+          .def = "-1",
+        },
+        {
+          .name = "project-uri",
+          .description = "The project URI with the serialized timeline to execute the action on",
+          .types = "string",
+          .mandatory = FALSE,
+        },
+        {NULL}
+       },
+       "Allows to edit a element (like a GESClip), for more details, have a look at:\n"
+       "ges_timeline_element_edit documentation, Note that the timeline will\n"
        "be commited, and flushed so that the edition is taken into account",
        GST_VALIDATE_ACTION_TYPE_NONE);
 
