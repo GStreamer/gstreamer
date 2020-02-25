@@ -4024,14 +4024,23 @@ plugin_init (GstPlugin * plugin)
   config = g_key_file_new ();
   if (!g_key_file_load_from_dirs (config, *config_name,
           (const gchar **) config_dirs, NULL, G_KEY_FILE_NONE, &err)) {
-    gchar *paths;
+#ifdef USE_OMX_TARGET_GENERIC
+    GST_INFO ("No configuration file found; "
+        "ignore as gst-omx has been built with the generic target used only for testing");
+#else
+    {
+      gchar *paths;
 
-    paths = g_strjoinv (":", config_dirs);
-    GST_ERROR ("Failed to load configuration file: %s (searched in: %s as per "
-        "GST_OMX_CONFIG_DIR environment variable, the xdg user config "
-        "directory (or XDG_CONFIG_HOME) and the system config directory "
-        "(or XDG_CONFIG_DIRS)", err->message, paths);
-    g_free (paths);
+      paths = g_strjoinv (":", config_dirs);
+      GST_ERROR
+          ("Failed to load configuration file: %s (searched in: %s as per "
+          "GST_OMX_CONFIG_DIR environment variable, the xdg user config "
+          "directory (or XDG_CONFIG_HOME) and the system config directory "
+          "(or XDG_CONFIG_DIRS)", err->message, paths);
+      g_free (paths);
+    }
+#endif /* USE_OMX_TARGET_GENERIC */
+
     g_error_free (err);
     goto done;
   }
