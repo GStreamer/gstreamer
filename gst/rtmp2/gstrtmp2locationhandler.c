@@ -33,6 +33,7 @@
 #define DEFAULT_PASSWORD NULL
 #define DEFAULT_AUTHMOD  GST_RTMP_AUTHMOD_AUTO
 #define DEFAULT_TIMEOUT 5
+#define DEFAULT_FLASH_VERSION "LNX 10,0,32,18"
 
 G_DEFINE_INTERFACE (GstRtmpLocationHandler, gst_rtmp_location_handler, 0);
 
@@ -87,6 +88,10 @@ gst_rtmp_location_handler_default_init (GstRtmpLocationHandlerInterface * iface)
       g_param_spec_flags ("tls-validation-flags", "TLS validation flags",
           "TLS validation flags to use", G_TYPE_TLS_CERTIFICATE_FLAGS,
           G_TLS_CERTIFICATE_VALIDATE_ALL,
+          G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_interface_install_property (iface,
+      g_param_spec_string ("flash-version", "Flash version",
+          "Flash version reported to the server", DEFAULT_FLASH_VERSION,
           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 

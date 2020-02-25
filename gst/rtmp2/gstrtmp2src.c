@@ -130,6 +130,7 @@ enum
   PROP_AUTHMOD,
   PROP_TIMEOUT,
   PROP_TLS_VALIDATION_FLAGS,
+  PROP_FLASH_VERSION,
   PROP_ASYNC_CONNECT,
   PROP_STATS,
 };
@@ -187,6 +188,8 @@ gst_rtmp2_src_class_init (GstRtmp2SrcClass * klass)
   g_object_class_override_property (gobject_class, PROP_TIMEOUT, "timeout");
   g_object_class_override_property (gobject_class, PROP_TLS_VALIDATION_FLAGS,
       "tls-validation-flags");
+  g_object_class_override_property (gobject_class, PROP_FLASH_VERSION,
+      "flash-version");
 
   g_object_class_install_property (gobject_class, PROP_ASYNC_CONNECT,
       g_param_spec_boolean ("async-connect", "Async connect",
@@ -292,6 +295,12 @@ gst_rtmp2_src_set_property (GObject * object, guint property_id,
       self->location.tls_flags = g_value_get_flags (value);
       GST_OBJECT_UNLOCK (self);
       break;
+    case PROP_FLASH_VERSION:
+      GST_OBJECT_LOCK (self);
+      g_free (self->location.flash_ver);
+      self->location.flash_ver = g_value_dup_string (value);
+      GST_OBJECT_UNLOCK (self);
+      break;
     case PROP_ASYNC_CONNECT:
       GST_OBJECT_LOCK (self);
       self->async_connect = g_value_get_boolean (value);
@@ -369,6 +378,11 @@ gst_rtmp2_src_get_property (GObject * object, guint property_id,
     case PROP_TLS_VALIDATION_FLAGS:
       GST_OBJECT_LOCK (self);
       g_value_set_flags (value, self->location.tls_flags);
+      GST_OBJECT_UNLOCK (self);
+      break;
+    case PROP_FLASH_VERSION:
+      GST_OBJECT_LOCK (self);
+      g_value_set_string (value, self->location.flash_ver);
       GST_OBJECT_UNLOCK (self);
       break;
     case PROP_ASYNC_CONNECT:

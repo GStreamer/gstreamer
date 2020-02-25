@@ -513,7 +513,10 @@ send_connect (GTask * task)
   }
 
   if (!flash_ver) {
-    flash_ver = "LNX 10,0,32,18";
+    g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_NOT_INITIALIZED,
+        "Flash version is not set");
+    g_object_unref (task);
+    goto out;
   }
 
   if (data->auth_query) {
