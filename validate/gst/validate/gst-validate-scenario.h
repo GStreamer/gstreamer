@@ -89,6 +89,9 @@ typedef gboolean (*GstValidatePrepareAction) (GstValidateAction * action);
 
 typedef struct _GstValidateActionPrivate          GstValidateActionPrivate;
 
+#define GST_VALIDATE_ACTION_LINENO(action) (action->ABI.abi.lineno)
+#define GST_VALIDATE_ACTION_FILENAME(action) (action->ABI.abi.filename)
+
 /**
  * GstValidateAction:
  * @type: The type of the #GstValidateAction, which is the name of the
@@ -121,7 +124,13 @@ struct _GstValidateAction
 
   GstValidateActionPrivate *priv;
 
-  gpointer _gst_reserved[GST_PADDING_LARGE - 1]; /* ->priv */
+  union {
+    gpointer _gst_reserved[GST_PADDING_LARGE - 1]; /* ->priv */
+    struct {
+      gint lineno;
+      gchar *filename;
+    } abi;
+  } ABI;
 };
 
 GST_VALIDATE_API

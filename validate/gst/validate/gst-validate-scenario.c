@@ -79,7 +79,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_validate_scenario_debug);
 #define DECLARE_AND_GET_PIPELINE(s,a) \
   GstElement * pipeline = gst_validate_scenario_get_pipeline (s); \
   if (pipeline == NULL) { \
-    GST_VALIDATE_REPORT (s, SCENARIO_ACTION_EXECUTION_ERROR, \
+    GST_VALIDATE_REPORT_ACTION (s, a, SCENARIO_ACTION_EXECUTION_ERROR, \
             "Can't execute a '%s' action after the pipeline " \
             "has been destroyed.", a->type); \
     return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED; \
@@ -348,6 +348,9 @@ _action_copy (GstValidateAction * act)
   copy->action_number = act->action_number;
   copy->playback_time = act->playback_time;
   copy->priv->timeout = act->priv->timeout;
+  GST_VALIDATE_ACTION_LINENO (copy) = GST_VALIDATE_ACTION_LINENO (act);
+  GST_VALIDATE_ACTION_FILENAME (copy) =
+      g_strdup (GST_VALIDATE_ACTION_FILENAME (act));
 
   return copy;
 }
@@ -362,6 +365,7 @@ _action_free (GstValidateAction * action)
     gst_structure_free (action->priv->main_structure);
 
   g_weak_ref_clear (&action->priv->scenario);
+  g_free (GST_VALIDATE_ACTION_FILENAME (action));
 
   g_slice_free (GstValidateActionPrivate, action->priv);
   g_slice_free (GstValidateAction, action);
@@ -403,6 +407,11 @@ gst_validate_action_new (GstValidateScenario * scenario,
   action->priv->timeout = GST_CLOCK_TIME_NONE;
   action->type = action_type->name;
   action->repeat = -1;
+  gst_structure_get (structure,
+      "__lineno__", G_TYPE_INT, &GST_VALIDATE_ACTION_LINENO (action),
+      "__filename__", G_TYPE_STRING, &GST_VALIDATE_ACTION_FILENAME (action),
+      NULL);
+  gst_structure_remove_fields (structure, "__lineno__", "__filename__", NULL);
 
   g_weak_ref_set (&action->priv->scenario, scenario);
   if (structure)
@@ -676,7 +685,8 @@ gst_validate_scenario_execute_seek (GstValidateScenario * scenario,
       stop_type, stop);
 
   if (format != GST_FORMAT_TIME && format != GST_FORMAT_DEFAULT) {
-    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
+        SCENARIO_ACTION_EXECUTION_ERROR,
         "Trying to seek in format %d, but not support yet!", format);
 
   }
@@ -689,7 +699,7 @@ gst_validate_scenario_execute_seek (GstValidateScenario * scenario,
   } else {
     switch (format) {
       case GST_FORMAT_TIME:
-        GST_VALIDATE_REPORT (scenario, EVENT_SEEK_NOT_HANDLED,
+        GST_VALIDATE_REPORT_ACTION (scenario, action, EVENT_SEEK_NOT_HANDLED,
             "Could not execute seek: '(position %" GST_TIME_FORMAT
             "), %s (num %u, missing repeat: %i), seeking to: %" GST_TIME_FORMAT
             " stop: %" GST_TIME_FORMAT " Rate %lf'",
@@ -701,7 +711,7 @@ gst_validate_scenario_execute_seek (GstValidateScenario * scenario,
       {
         gchar *format_str = g_enum_to_string (GST_TYPE_FORMAT, format);
 
-        GST_VALIDATE_REPORT (scenario, EVENT_SEEK_NOT_HANDLED,
+        GST_VALIDATE_REPORT_ACTION (scenario, action, EVENT_SEEK_NOT_HANDLED,
             "Could not execute seek in format %s '(position %" GST_TIME_FORMAT
             "), %s (num %u, missing repeat: %i), seeking to: %" G_GINT64_FORMAT
             " stop: %" G_GINT64_FORMAT " Rate %lf'", format_str,
@@ -825,7 +835,7 @@ _execute_set_state (GstValidateScenario * scenario, GstValidateAction * action)
   ret = gst_element_set_state (pipeline, state);
   if (ret == GST_STATE_CHANGE_FAILURE) {
     scenario->priv->changing_state = FALSE;
-    GST_VALIDATE_REPORT (scenario, STATE_CHANGE_FAILURE,
+    GST_VALIDATE_REPORT_ACTION (scenario, action, STATE_CHANGE_FAILURE,
         "Failed to set state to %s", str_state);
 
     /* Nothing async on failure, action will be removed automatically */
@@ -1235,7 +1245,8 @@ execute_switch_track_pb (GstValidateScenario * scenario,
 
   if (relative) {               /* We are changing track relatively to current track */
     if (n == 0) {
-      GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+      GST_VALIDATE_REPORT_ACTION (scenario, action,
+          SCENARIO_ACTION_EXECUTION_ERROR,
           "Trying to execute a relative %s for %s track when there"
           " is no track of this type available on current stream.",
           action->type, type);
@@ -1404,7 +1415,7 @@ execute_switch_track_pb3 (GstValidateScenario * scenario,
           pipeline, "validate-monitor"));
 
   if (!monitor->stream_collection) {
-    GST_VALIDATE_REPORT (scenario,
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
         SCENARIO_ACTION_EXECUTION_ERROR,
         "No stream collection message received on the bus, "
         "can not switch track.");
@@ -1413,7 +1424,7 @@ execute_switch_track_pb3 (GstValidateScenario * scenario,
   }
 
   if (!monitor->streams_selected) {
-    GST_VALIDATE_REPORT (scenario,
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
         SCENARIO_ACTION_EXECUTION_ERROR,
         "No streams selected message received on the bus");
     res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
@@ -1449,7 +1460,7 @@ execute_switch_track_pb3 (GstValidateScenario * scenario,
 
   if (!gst_element_send_event (pipeline,
           gst_event_new_select_streams (new_streams))) {
-    GST_VALIDATE_REPORT (scenario,
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
         SCENARIO_ACTION_EXECUTION_ERROR, "select-streams event not handled");
     res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
     goto done;
@@ -1645,7 +1656,7 @@ _check_position (GstValidateScenario * scenario, GstValidateAction * act,
           && *position < start_with_tolerance
           && priv->seek_format == GST_FORMAT_TIME)) {
 
-    GST_VALIDATE_REPORT (scenario, QUERY_POSITION_OUT_OF_SEGMENT,
+    GST_VALIDATE_REPORT_ACTION (scenario, act, QUERY_POSITION_OUT_OF_SEGMENT,
         "Current position %" GST_TIME_FORMAT " not in the expected range [%"
         GST_TIME_FORMAT " -- %" GST_TIME_FORMAT, GST_TIME_ARGS (*position),
         GST_TIME_ARGS (start_with_tolerance),
@@ -1671,7 +1682,8 @@ _check_position (GstValidateScenario * scenario, GstValidateAction * act,
         && (GstClockTime) ABS (GST_CLOCK_DIFF (*position,
                 priv->segment_start)) > priv->seek_pos_tol) {
       priv->seeked_in_pause = FALSE;
-      GST_VALIDATE_REPORT (scenario, EVENT_SEEK_RESULT_POSITION_WRONG,
+      GST_VALIDATE_REPORT_ACTION (scenario, act,
+          EVENT_SEEK_RESULT_POSITION_WRONG,
           "Reported position after accurate seek in PAUSED state should be exactly"
           " what the user asked for. Position %" GST_TIME_FORMAT
           " is not not the expected one:  %" GST_TIME_FORMAT,
@@ -1708,19 +1720,21 @@ _should_execute_action (GstValidateScenario * scenario, GstValidateAction * act,
 
     if (!(GST_VALIDATE_ACTION_GET_TYPE (act)->flags &
             GST_VALIDATE_ACTION_TYPE_DOESNT_NEED_PIPELINE)) {
-      GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+      GST_VALIDATE_REPORT_ACTION (scenario, act,
+          SCENARIO_ACTION_EXECUTION_ERROR,
           "Trying to execute an %s action after the pipeline has been destroyed"
           " but the type has not been marked as "
           "GST_VALIDATE_ACTION_TYPE_DOESNT_NEED_PIPELINE", act->type);
 
       return FALSE;
     } else if (GST_CLOCK_TIME_IS_VALID (act->playback_time)) {
-      GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+      GST_VALIDATE_REPORT_ACTION (scenario, act,
+          SCENARIO_ACTION_EXECUTION_ERROR,
           "Trying to execute action %s with playback time %" GST_TIME_FORMAT
           " after the pipeline has been destroyed. It is impossible"
           " to execute an action with a playback time specified"
-          " after the pipeline has been destroyed",
-          act->type, GST_TIME_ARGS (act->playback_time));
+          " after the pipeline has been destroyed", act->type,
+          GST_TIME_ARGS (act->playback_time));
 
       goto no;
     }
@@ -1983,7 +1997,7 @@ _execute_sub_action_action (GstValidateAction * action)
     subaction_struct = gst_structure_from_string (subaction_str, NULL);
 
     if (subaction_struct == NULL) {
-      GST_VALIDATE_REPORT (scenario, SCENARIO_FILE_MALFORMED,
+      GST_VALIDATE_REPORT_ACTION (scenario, action, SCENARIO_FILE_MALFORMED,
           "Sub action %s could not be parsed", subaction_str);
 
       res = GST_VALIDATE_EXECUTE_ACTION_ERROR;
@@ -2003,7 +2017,8 @@ _execute_sub_action_action (GstValidateAction * action)
 
     res = _fill_action (scenario, action, subaction_struct, FALSE);
     if (res == GST_VALIDATE_EXECUTE_ACTION_ERROR) {
-      GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+      GST_VALIDATE_REPORT_ACTION (scenario, action,
+          SCENARIO_ACTION_EXECUTION_ERROR,
           "Sub action %" GST_PTR_FORMAT " could not be filled",
           subaction_struct);
 
@@ -2099,7 +2114,7 @@ execute_next_action_full (GstValidateScenario * scenario, GstMessage * message)
         if (etime > act->priv->timeout) {
           gchar *str = gst_structure_to_string (act->structure);
 
-          GST_VALIDATE_REPORT (scenario,
+          GST_VALIDATE_REPORT_ACTION (scenario, act,
               SCENARIO_ACTION_EXECUTION_ERROR,
               "Action %s timed out after: %" GST_TIME_FORMAT, str,
               GST_TIME_ARGS (etime));
@@ -2142,7 +2157,7 @@ execute_next_action_full (GstValidateScenario * scenario, GstMessage * message)
   if (act->priv->state == GST_VALIDATE_EXECUTE_ACTION_ERROR) {
     gchar *str = gst_structure_to_string (act->structure);
 
-    GST_VALIDATE_REPORT (scenario,
+    GST_VALIDATE_REPORT_ACTION (scenario, act,
         SCENARIO_ACTION_EXECUTION_ERROR, "Could not execute %s", str);
 
     g_free (str);
@@ -2560,7 +2575,8 @@ _execute_set_or_check_property (GstValidateScenario * scenario,
 
   targets = _find_elements_defined_in_action (scenario, action);
   if (!targets) {
-    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
+        SCENARIO_ACTION_EXECUTION_ERROR,
         "No element found for action: %" GST_PTR_FORMAT, action->structure);
 
     return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
@@ -2590,7 +2606,8 @@ _execute_set_or_check_property (GstValidateScenario * scenario,
         gchar *expected = gst_value_serialize (property_value), *observed =
             gst_value_serialize (&cvalue);
 
-        GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+        GST_VALIDATE_REPORT_ACTION (scenario, action,
+            SCENARIO_ACTION_EXECUTION_ERROR,
             "%s::%s expected value: '%s' different than observed: '%s'",
             GST_OBJECT_NAME (l->data), property, expected, observed);
 
@@ -2778,8 +2795,9 @@ _execute_appsrc_push (GstValidateScenario * scenario,
   target = _get_target_element (scenario, action);
   if (target == NULL) {
     gchar *structure_string = gst_structure_to_string (action->structure);
-    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
-        "No element found for action: %s", structure_string);
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
+        SCENARIO_ACTION_EXECUTION_ERROR, "No element found for action: %s",
+        structure_string);
     g_free (structure_string);
     return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
   }
@@ -2788,8 +2806,9 @@ _execute_appsrc_push (GstValidateScenario * scenario,
       g_strdup (gst_structure_get_string (action->structure, "file-name"));
   if (file_name == NULL) {
     gchar *structure_string = gst_structure_to_string (action->structure);
-    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
-        "Missing file-name property: %s", structure_string);
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
+        SCENARIO_ACTION_EXECUTION_ERROR, "Missing file-name property: %s",
+        structure_string);
     g_free (structure_string);
     return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
   }
@@ -2800,7 +2819,8 @@ _execute_appsrc_push (GstValidateScenario * scenario,
   g_file_get_contents (file_name, &file_contents, &file_length, &error);
   if (error != NULL) {
     gchar *structure_string = gst_structure_to_string (action->structure);
-    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
+        SCENARIO_ACTION_EXECUTION_ERROR,
         "Could not open file for action: %s. Error: %s", structure_string,
         error->message);
     g_free (structure_string);
@@ -2823,8 +2843,9 @@ _execute_appsrc_push (GstValidateScenario * scenario,
     GstPad *peer_pad = gst_pad_get_peer (appsrc_pad);
     if (!peer_pad) {
       gchar *structure_string = gst_structure_to_string (action->structure);
-      GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
-          "Action failed, pad not linked: %s", structure_string);
+      GST_VALIDATE_REPORT_ACTION (scenario, action,
+          SCENARIO_ACTION_EXECUTION_ERROR, "Action failed, pad not linked: %s",
+          structure_string);
       g_free (structure_string);
       return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
     }
@@ -2841,7 +2862,8 @@ _execute_appsrc_push (GstValidateScenario * scenario,
   g_signal_emit_by_name (target, "push-buffer", buffer, &push_buffer_ret);
   if (push_buffer_ret != GST_FLOW_OK) {
     gchar *structure_string = gst_structure_to_string (action->structure);
-    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
+        SCENARIO_ACTION_EXECUTION_ERROR,
         "push-buffer signal failed in action: %s", structure_string);
     g_free (structure_string);
     return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
@@ -2868,8 +2890,9 @@ _execute_appsrc_eos (GstValidateScenario * scenario, GstValidateAction * action)
   target = _get_target_element (scenario, action);
   if (target == NULL) {
     gchar *structure_string = gst_structure_to_string (action->structure);
-    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
-        "No element found for action: %s", structure_string);
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
+        SCENARIO_ACTION_EXECUTION_ERROR, "No element found for action: %s",
+        structure_string);
     g_free (structure_string);
     return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
   }
@@ -2877,7 +2900,8 @@ _execute_appsrc_eos (GstValidateScenario * scenario, GstValidateAction * action)
   g_signal_emit_by_name (target, "end-of-stream", &eos_ret);
   if (eos_ret != GST_FLOW_OK) {
     gchar *structure_string = gst_structure_to_string (action->structure);
-    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
+        SCENARIO_ACTION_EXECUTION_ERROR,
         "Failed to emit end-of-stream signal for action: %s", structure_string);
     g_free (structure_string);
     return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
@@ -2897,8 +2921,9 @@ _execute_flush (GstValidateScenario * scenario, GstValidateAction * action)
   target = _get_target_element (scenario, action);
   if (target == NULL) {
     gchar *structure_string = gst_structure_to_string (action->structure);
-    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
-        "No element found for action: %s", structure_string);
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
+        SCENARIO_ACTION_EXECUTION_ERROR, "No element found for action: %s",
+        structure_string);
     g_free (structure_string);
     return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
   }
@@ -2907,15 +2932,15 @@ _execute_flush (GstValidateScenario * scenario, GstValidateAction * action)
 
   event = gst_event_new_flush_start ();
   if (!gst_element_send_event (target, event)) {
-    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
-        "FLUSH_START event was not handled");
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
+        SCENARIO_ACTION_EXECUTION_ERROR, "FLUSH_START event was not handled");
     return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
   }
 
   event = gst_event_new_flush_stop (reset_time);
   if (!gst_element_send_event (target, event)) {
-    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
-        "FLUSH_STOP event was not handled");
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
+        SCENARIO_ACTION_EXECUTION_ERROR, "FLUSH_STOP event was not handled");
     return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
   }
 
@@ -2934,8 +2959,9 @@ _execute_disable_plugin (GstValidateScenario * scenario,
   plugin = gst_registry_find_plugin (gst_registry_get (), plugin_name);
 
   if (plugin == NULL) {
-    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
-        "Could not find plugin to disable: %s", plugin_name);
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
+        SCENARIO_ACTION_EXECUTION_ERROR, "Could not find plugin to disable: %s",
+        plugin_name);
 
     return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
   }
@@ -3324,7 +3350,8 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
             (priv->pending_switch_track), ACTION_EXPECTED_STREAM_QUARK);
 
         if (g_list_length (expected) != g_list_length (streams_selected)) {
-          GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+          GST_VALIDATE_REPORT_ACTION (scenario, priv->pending_switch_track,
+              SCENARIO_ACTION_EXECUTION_ERROR,
               "Was expecting %d selected streams but got %d",
               g_list_length (expected), g_list_length (streams_selected));
           goto action_done;
@@ -3334,7 +3361,7 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
           const gchar *stream_id = l->data;
 
           if (!streams_list_contain (streams_selected, stream_id)) {
-            GST_VALIDATE_REPORT (scenario,
+            GST_VALIDATE_REPORT_ACTION (scenario, priv->pending_switch_track,
                 SCENARIO_ACTION_EXECUTION_ERROR,
                 "Stream %s has not be activated", stream_id);
             goto action_done;
@@ -4043,6 +4070,7 @@ _parse_scenario (GFile * f, GKeyFile * kf)
       GstValidateActionType *type =
           _find_action_type (gst_structure_get_name (_struct));
 
+      gst_structure_remove_fields (_struct, "__lineno__", "__filename__", NULL);
       if (!desc && gst_structure_has_name (_struct, "description"))
         desc = gst_structure_copy (_struct);
       else if (type && type->flags & GST_VALIDATE_ACTION_TYPE_NEEDS_CLOCK)
@@ -4207,7 +4235,8 @@ check_last_sample_internal (GstValidateScenario * scenario,
 
   g_object_get (sink, "last-sample", &sample, NULL);
   if (sample == NULL) {
-    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
+        SCENARIO_ACTION_EXECUTION_ERROR,
         "Could not \"check-last-sample\" as %" GST_PTR_FORMAT
         " 'last-sample' property is NULL"
         ". MAKE SURE THE 'enable-last-sample' PROPERTY IS SET TO 'TRUE'!",
@@ -4247,7 +4276,7 @@ sink_last_sample_notify_cb (GstElement * sink, GParamSpec * arg G_GNUC_UNUSED,
   GstValidateScenario *scenario = gst_validate_action_get_scenario (action);
 
   if (!scenario) {
-    GST_VALIDATE_REPORT (scenario,
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
         SCENARIO_ACTION_EXECUTION_ERROR,
         "No pipeline anymore, can't check last sample");
     goto done;
@@ -4264,7 +4293,7 @@ done:
 }
 
 static GstValidateExecuteActionReturn
-_check_last_sample_checksum (GstValidateScenario * scenario,
+_check_last_sample_value (GstValidateScenario * scenario,
     GstValidateAction * action, GstElement * sink)
 {
   GstSample *sample;
@@ -4366,10 +4395,11 @@ _execute_check_last_sample (GstValidateScenario * scenario,
                     GST_OBJECT (sink))) {
               gchar *tmp = gst_structure_to_string (action->structure);
 
-              GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+              GST_VALIDATE_REPORT_ACTION (scenario, action,
+                  SCENARIO_ACTION_EXECUTION_ERROR,
                   "Could not \"check-last-sample\" as several elements were found "
-                  "from describing string: '%s' (%s and %s match)",
-                  tmp, GST_OBJECT_NAME (sink), GST_OBJECT_NAME (tmpelement));
+                  "from describing string: '%s' (%s and %s match)", tmp,
+                  GST_OBJECT_NAME (sink), GST_OBJECT_NAME (tmpelement));
 
               g_free (tmp);
             }
@@ -4397,14 +4427,15 @@ _execute_check_last_sample (GstValidateScenario * scenario,
     gst_caps_unref (caps);
 
   if (!sink) {
-    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
+        SCENARIO_ACTION_EXECUTION_ERROR,
         "Could not \"check-last-sample\" as no sink was found from description: '%"
         GST_PTR_FORMAT "'", action->structure);
 
     goto error;
   }
 
-  return _check_last_sample_checksum (scenario, action, sink);
+  return _check_last_sample_value (scenario, action, sink);
 
 error:
   g_clear_object (&sink);
@@ -4455,7 +4486,7 @@ _check_is_key_unit_cb (GstPad * pad, GstPadProbeInfo * info,
     if (GST_BUFFER_FLAG_IS_SET (GST_PAD_PROBE_INFO_BUFFER (info),
             GST_BUFFER_FLAG_DELTA_UNIT)) {
       if (count_bufs >= NOT_KF_AFTER_FORCE_KF_EVT_TOLERANCE) {
-        GST_VALIDATE_REPORT (scenario,
+        GST_VALIDATE_REPORT_ACTION (scenario, action,
             SCENARIO_ACTION_EXECUTION_ERROR,
             "Did not receive a key frame after requested one, "
             "at running_time %" GST_TIME_FORMAT " (with a %i "
@@ -4526,7 +4557,8 @@ _execute_request_key_unit (GstValidateScenario * scenario,
   }
 
   if (!targets) {
-    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
+        SCENARIO_ACTION_EXECUTION_ERROR,
         "Could not find any element from action: %" GST_PTR_FORMAT,
         action->structure);
     goto fail;
@@ -4547,8 +4579,9 @@ _execute_request_key_unit (GstValidateScenario * scenario,
     video_encoder = tmp->data;
     encoder_srcpad = gst_element_get_static_pad (video_encoder, srcpad_name);
     if (!encoder_srcpad) {
-      GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
-          "Could not find pad %s", srcpad_name);
+      GST_VALIDATE_REPORT_ACTION (scenario, action,
+          SCENARIO_ACTION_EXECUTION_ERROR, "Could not find pad %s",
+          srcpad_name);
 
       goto fail;
     }
@@ -4558,8 +4591,9 @@ _execute_request_key_unit (GstValidateScenario * scenario,
 
       pad = gst_element_get_static_pad (video_encoder, srcpad_name);
       if (!pad) {
-        GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
-            "Could not find pad %s", srcpad_name);
+        GST_VALIDATE_REPORT_ACTION (scenario, action,
+            SCENARIO_ACTION_EXECUTION_ERROR, "Could not find pad %s",
+            srcpad_name);
 
         goto fail;
       }
@@ -4578,8 +4612,8 @@ _execute_request_key_unit (GstValidateScenario * scenario,
 
       pad = gst_element_get_static_pad (video_encoder, pad_name);
       if (!pad) {
-        GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
-            "Could not find pad %s", pad_name);
+        GST_VALIDATE_REPORT_ACTION (scenario, action,
+            SCENARIO_ACTION_EXECUTION_ERROR, "Could not find pad %s", pad_name);
 
         goto fail;
       }
@@ -4600,7 +4634,8 @@ _execute_request_key_unit (GstValidateScenario * scenario,
           gst_validate_action_ref (action),
           (GDestroyNotify) gst_validate_action_unref);
     } else {
-      GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+      GST_VALIDATE_REPORT_ACTION (scenario, action,
+          SCENARIO_ACTION_EXECUTION_ERROR,
           "request keyunit direction %s invalid (should be in"
           " [downstrean, upstream]", direction);
 
@@ -5607,7 +5642,7 @@ init_scenarios (void)
         },
         {NULL}
       }),
-      "Checks the last-sample checksum on declared Sink element."
+      "Checks the last-sample checksum or embedded frame number on declared Sink element."
       " This allows checking the checksum of a buffer after a 'seek' or after a GESTimeline 'commit'"
       " for example",
       GST_VALIDATE_ACTION_TYPE_INTERLACED);

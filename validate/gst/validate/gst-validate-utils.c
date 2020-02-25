@@ -45,8 +45,6 @@
 #define PARSER_MAX_TOKEN_SIZE 256
 #define PARSER_MAX_ARGUMENT_COUNT 10
 
-static GRegex *_clean_structs_lines = NULL;
-static GRegex *_line_breaking_char = NULL;
 static GRegex *_variables_regex = NULL;
 static GstStructure *global_vars = NULL;
 
@@ -544,19 +542,33 @@ gst_validate_utils_enum_from_str (GType type, const gchar * str_enum,
   return TRUE;
 }
 
+
+static gchar *
+skip_spaces (gchar * c)
+{
+  /* For some reason newlines are considered as space, we do not want that! */
+  while (g_ascii_isspace (*c) && *c != '\n')
+    c++;
+
+  return c;
+}
+
 /* Parse file that contains a list of GStructures */
-static gchar **
-_file_get_lines (GFile * file)
+static GList *
+_file_get_structures (GFile * file, gchar ** err)
 {
   gsize size;
 
-  GError *err = NULL;
-  gchar *content = NULL, *escaped_content = NULL, **lines = NULL, *tmp;
+  GError *error = NULL;
+  gchar *content = NULL, *tmp;
+  gchar *filename = NULL;
+  gint lineno = 1, current_lineno;
+  GList *structures = NULL;
 
   /* TODO Handle GCancellable */
-  if (!g_file_load_contents (file, NULL, &content, &size, NULL, &err)) {
-    GST_WARNING ("Failed to load contents: %d %s", err->code, err->message);
-    g_error_free (err);
+  if (!g_file_load_contents (file, NULL, &content, &size, NULL, &error)) {
+    GST_WARNING ("Failed to load contents: %d %s", error->code, error->message);
+    g_error_free (error);
     return NULL;
   }
   if (g_strcmp0 (content, "") == 0) {
@@ -564,87 +576,83 @@ _file_get_lines (GFile * file)
     return NULL;
   }
 
-  if (_clean_structs_lines == NULL) {
-    _clean_structs_lines =
-        g_regex_new ("\\\\\n|#.*\n", G_REGEX_CASELESS, 0, NULL);
-    _line_breaking_char = g_regex_new (",\\n", G_REGEX_CASELESS, 0, NULL);
-
-  }
-
-  escaped_content =
-      g_regex_replace (_clean_structs_lines, content, -1, 0, "", 0, NULL);
-  tmp =
-      g_regex_replace (_line_breaking_char, escaped_content, -1, 0, ",", 0,
-      NULL);
-  g_free (escaped_content);
-  escaped_content = tmp;
-
-  lines = g_strsplit (escaped_content, "\n", 0);
-  g_free (escaped_content);
-  g_free (content);
-
-  return lines;
-}
-
-static gchar **
-_get_lines (const gchar * scenario_file, gchar ** file_path)
-{
-  GFile *file = NULL;
-  gchar **lines = NULL;
-
-  GST_DEBUG ("Trying to load %s", scenario_file);
-  if ((file = g_file_new_for_path (scenario_file)) == NULL) {
-    GST_WARNING ("%s wrong uri", scenario_file);
-    return NULL;
-  }
-
-  if (file_path)
-    *file_path = g_file_get_path (file);
-
-  lines = _file_get_lines (file);
-
-  g_object_unref (file);
-
-  return lines;
-}
-
-/* Returns: (transfer full): a #GList of #GstStructure */
-static GList *
-_lines_get_structures (gchar ** lines, gchar ** err)
-{
-  gint i;
-  GList *structures = NULL;
-
-  if (lines == NULL)
-    return NULL;
-
-  for (i = 0; lines[i]; i++) {
+  filename = g_file_get_path (file);
+  tmp = content;
+  while (*tmp) {
+    GString *l;
     GstStructure *structure;
 
-    if (g_strcmp0 (lines[i], "") == 0)
-      continue;
+    tmp = skip_spaces (tmp);
 
-    structure = gst_structure_from_string (lines[i], NULL);
+    if (*tmp == '\n') {
+      tmp++;
+      lineno++;
+      continue;
+    }
+
+    if (*tmp == '#') {
+      while (*tmp && *tmp != '\n')
+        tmp++;
+      if (*tmp)
+        tmp++;
+      lineno++;
+      continue;
+    }
+
+    l = g_string_new (NULL);
+    current_lineno = lineno;
+    while (*tmp != '\n' && *tmp) {
+      gchar next = *(tmp + 1);
+
+      /* ',' and '\\' are line continuation indicators */
+      if (next && next == '\n' && (*tmp == ',' || *tmp == '\\')) {
+        if (*tmp == ',')
+          g_string_append_c (l, *tmp);
+
+        tmp += 2;
+        lineno++;
+        continue;
+      }
+
+      g_string_append_c (l, *tmp);
+      tmp += 1;
+    }
+
+    /* Blank lines at EOF */
+    if (!*l->str) {
+      g_string_free (l, TRUE);
+      continue;
+    }
+
+    structure = gst_structure_from_string (l->str, NULL);
     if (structure == NULL) {
-      GST_ERROR ("Could not parse structure %s", lines[i]);
+      GST_ERROR ("Could not parse structure at %s:%d\n     %s", filename,
+          current_lineno, l->str);
       if (err) {
         gchar *tmp = *err;
         *err =
-            g_strdup_printf ("%s\n -Invalid structure: `%s`", tmp ? tmp : "",
-            lines[i]);
+            g_strdup_printf ("%s\n%s:%d: Invalid structure\n  %d | %s\n   %*c|",
+            tmp ? tmp : "", filename, current_lineno, current_lineno, l->str,
+            (gint) floor (log10 (abs ((current_lineno)))) + 1, ' ');
         g_free (tmp);
-        continue;
       } else {
+        g_string_free (l, TRUE);
         goto failed;
       }
     }
+    g_string_free (l, TRUE);
 
+    gst_structure_set (structure,
+        "__lineno__", G_TYPE_INT, current_lineno,
+        "__filename__", G_TYPE_STRING, filename, NULL);
     structures = g_list_append (structures, structure);
+    lineno++;
+    if (*tmp)
+      tmp++;
   }
 
 done:
-  g_strfreev (lines);
-
+  g_free (filename);
   return structures;
 
 failed:
@@ -655,6 +663,30 @@ failed:
   goto done;
 }
 
+static GList *
+_get_structures (const gchar * scenario_file, gchar ** file_path, gchar ** err)
+{
+  GFile *file = NULL;
+  GList *structs = NULL;
+
+  GST_DEBUG ("Trying to load %s", scenario_file);
+  if ((file = g_file_new_for_path (scenario_file)) == NULL) {
+    GST_WARNING ("%s wrong uri", scenario_file);
+    if (err)
+      *err = g_strdup_printf ("%s wrong uri", scenario_file);
+    return NULL;
+  }
+
+  if (file_path)
+    *file_path = g_file_get_path (file);
+
+  structs = _file_get_structures (file, err);
+
+  g_object_unref (file);
+
+  return structs;
+}
+
 /**
  * gst_validate_utils_structs_parse_from_filename: (skip):
  */
@@ -663,19 +695,12 @@ gst_validate_utils_structs_parse_from_filename (const gchar * scenario_file,
     gchar ** file_path)
 {
   GList *res;
-  gchar **lines, *err = NULL;
+  gchar *err = NULL;
 
-  lines = _get_lines (scenario_file, file_path);
-
-  if (lines == NULL) {
-    GST_DEBUG ("Got no line for file: %s", scenario_file);
-    return NULL;
-  }
-
-  res = _lines_get_structures (lines, &err);
+  res = _get_structures (scenario_file, file_path, &err);
 
   if (err)
-    g_error ("Could not get structures from %s: %s", scenario_file, err);
+    g_error ("Could not get structures from %s:\n%s\n", scenario_file, err);
 
   return res;
 }
@@ -686,18 +711,12 @@ gst_validate_utils_structs_parse_from_filename (const gchar * scenario_file,
 GList *
 gst_validate_structs_parse_from_gfile (GFile * scenario_file)
 {
-  gchar **lines, *err = NULL;
+  gchar *err = NULL;
   GList *res;
 
-  lines = _file_get_lines (scenario_file);
-
-  if (lines == NULL)
-    return NULL;
-
-  res = _lines_get_structures (lines, &err);
-
+  res = _file_get_structures (scenario_file, &err);
   if (err)
-    g_error ("Could not get structures from %s: %s",
+    g_error ("Could not get structures from %s:\n%s\n",
         g_file_get_uri (scenario_file), err);
 
   return res;

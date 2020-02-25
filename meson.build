@@ -116,7 +116,6 @@ warning_flags = [
   '-Wundef',
   '-Wwrite-strings',
   '-Wformat',
-  '-Wformat-nonliteral',
   '-Wformat-security',
   '-Winit-self',
   '-Wmissing-include-dirs',

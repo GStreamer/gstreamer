@@ -145,6 +145,12 @@ typedef enum {
 #define G_LOG_WARNING                            _QUARK("g-log::warning")
 #define G_LOG_CRITICAL                           _QUARK("g-log::critical")
 
+/**
+ * GstValidateIssueFlags:
+ * GST_VALIDATE_ISSUE_FLAGS_NONE: No special flags for the issue type
+ * GST_VALIDATE_ISSUE_FLAGS_FULL_DETAILS: Always show all accurences of the issue in full details
+ * GST_VALIDATE_ISSUE_FLAGS_NO_BACKTRACE: Do not generate backtrace for the issue type
+ */
 typedef enum {
   GST_VALIDATE_ISSUE_FLAGS_NONE = 0,
   GST_VALIDATE_ISSUE_FLAGS_FULL_DETAILS = 1 << 0,

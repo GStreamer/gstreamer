@@ -30,6 +30,7 @@
 #  include "config.h"
 #endif
 
+#include <math.h>
 #include "gst-validate-internal.h"
 #include "gst-validate-reporter.h"
 #include "gst-validate-report.h"
@@ -308,8 +309,7 @@ gst_validate_reporter_g_log_func (const gchar * log_domain,
  *       format followed by the parameters.
  * @...: Substitution arguments for @format
  *
- * Reports a new issue in the GstValidate reporting system with @m
- * as the source of that issue.
+ * Reports a new issue in the GstValidate reporting system.
  *
  * You can also use #GST_VALIDATE_REPORT instead.
  */
@@ -322,6 +322,40 @@ gst_validate_report (GstValidateReporter * reporter,
   va_start (var_args, format);
   gst_validate_report_valist (reporter, issue_id, format, var_args);
   va_end (var_args);
+}
+
+/**
+ * gst_validate_report_action:
+ * @reporter: The source of the new report
+ * @action: The action reporting the issue
+ * @issue_id: The #GstValidateIssueId of the issue
+ * @format: The format of the message describing the issue in a printf
+ *       format followed by the parameters.
+ * @...: Substitution arguments for @format
+ *
+ * Reports a new issue in the GstValidate reporting system specifying @action
+ * as failling action .
+ *
+ * You can also use #GST_VALIDATE_REPORT instead.
+ */
+void
+gst_validate_report_action (GstValidateReporter * reporter,
+    GstValidateAction * action, GstValidateIssueId issue_id,
+    const gchar * format, ...)
+{
+  va_list var_args;
+  gchar *f = g_strdup_printf ("\n> %s:%d\n> %d | %s\n>  %*c|\n",
+      GST_VALIDATE_ACTION_FILENAME (action),
+      GST_VALIDATE_ACTION_LINENO (action), GST_VALIDATE_ACTION_LINENO (action),
+      format,
+      (gint) floor (log10 (abs ((GST_VALIDATE_ACTION_LINENO (action))))) + 1,
+      ' ');
+
+  va_start (var_args, format);
+  gst_validate_report_valist (reporter, issue_id, f, var_args);
+  va_end (var_args);
+
+  g_free (f);
 }
 
 void
