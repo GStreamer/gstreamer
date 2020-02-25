@@ -693,22 +693,22 @@ print_element_stats (gpointer value, gpointer user_data)
 
     printf ("  %-45s:", fullname);
     if (stats->recv_buffers)
-      printf (" buffers in/out %7u", stats->recv_buffers);
+      g_print (" buffers in/out %7u", stats->recv_buffers);
     else
-      printf (" buffers in/out %7s", "-");
+      g_print (" buffers in/out %7s", "-");
     if (stats->sent_buffers)
-      printf ("/%7u", stats->sent_buffers);
+      g_print ("/%7u", stats->sent_buffers);
     else
-      printf ("/%7s", "-");
+      g_print ("/%7s", "-");
     if (stats->recv_bytes)
-      printf (" bytes in/out %12" G_GUINT64_FORMAT, stats->recv_bytes);
+      g_print (" bytes in/out %12" G_GUINT64_FORMAT, stats->recv_bytes);
     else
-      printf (" bytes in/out %12s", "-");
+      g_print (" bytes in/out %12s", "-");
     if (stats->sent_bytes)
-      printf ("/%12" G_GUINT64_FORMAT, stats->sent_bytes);
+      g_print ("/%12" G_GUINT64_FORMAT, stats->sent_bytes);
     else
       printf ("/%12s", "-");
-    printf (" first activity %" GST_TIME_FORMAT ", "
+    g_print (" first activity %" GST_TIME_FORMAT ", "
         " ev/msg/qry sent %5u/%5u/%5u\n", GST_TIME_ARGS (stats->first_ts),
         stats->num_events, stats->num_messages, stats->num_queries);
   }
@@ -912,21 +912,21 @@ print_stats (void)
   guint num_threads = g_hash_table_size (threads);
 
   /* print overall stats */
-  puts ("\nOverall Statistics:");
-  printf ("Number of Threads: %u\n", num_threads);
-  printf ("Number of Elements: %u\n", num_elements - num_bins);
-  printf ("Number of Bins: %u\n", num_bins);
-  printf ("Number of Pads: %u\n", num_pads - num_ghostpads);
-  printf ("Number of GhostPads: %u\n", num_ghostpads);
-  printf ("Number of Buffers passed: %" G_GUINT64_FORMAT "\n", num_buffers);
-  printf ("Number of Events sent: %" G_GUINT64_FORMAT "\n", num_events);
-  printf ("Number of Message sent: %" G_GUINT64_FORMAT "\n", num_messages);
-  printf ("Number of Queries sent: %" G_GUINT64_FORMAT "\n", num_queries);
-  printf ("Time: %" GST_TIME_FORMAT "\n", GST_TIME_ARGS (last_ts));
+  g_print ("\nOverall Statistics:\n");
+  g_print ("Number of Threads: %u\n", num_threads);
+  g_print ("Number of Elements: %u\n", num_elements - num_bins);
+  g_print ("Number of Bins: %u\n", num_bins);
+  g_print ("Number of Pads: %u\n", num_pads - num_ghostpads);
+  g_print ("Number of GhostPads: %u\n", num_ghostpads);
+  g_print ("Number of Buffers passed: %" G_GUINT64_FORMAT "\n", num_buffers);
+  g_print ("Number of Events sent: %" G_GUINT64_FORMAT "\n", num_events);
+  g_print ("Number of Message sent: %" G_GUINT64_FORMAT "\n", num_messages);
+  g_print ("Number of Queries sent: %" G_GUINT64_FORMAT "\n", num_queries);
+  g_print ("Time: %" GST_TIME_FORMAT "\n", GST_TIME_ARGS (last_ts));
   if (have_cpuload) {
-    printf ("Avg CPU load: %4.1f %%\n", (gfloat) total_cpuload / 10.0);
+    g_print ("Avg CPU load: %4.1f %%\n", (gfloat) total_cpuload / 10.0);
   }
-  puts ("");
+  g_print ("\n");
 
   /* thread stats */
   if (num_threads) {

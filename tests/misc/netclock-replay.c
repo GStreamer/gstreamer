@@ -48,6 +48,41 @@ static GOptionEntry entries[] = {
   {NULL,}
 };
 
+static gboolean
+parse_time_values (const gchar * line, GstClockTime * local_1,
+    GstClockTime * remote_1, GstClockTime * remote_2, GstClockTime * local_2)
+{
+  gchar **split;
+  gboolean ret = FALSE;
+
+  if (!line)
+    return FALSE;
+
+  split = g_strsplit (line, " ", -1);
+
+  if (g_strv_length (split) != 4)
+    goto out;
+
+  if (!g_ascii_string_to_unsigned (split[0], 10, 0, G_MAXUINT64, local_1, NULL))
+    goto out;
+
+  if (!g_ascii_string_to_unsigned (split[1], 10, 0, G_MAXUINT64, remote_1,
+          NULL))
+    goto out;
+
+  if (!g_ascii_string_to_unsigned (split[2], 10, 0, G_MAXUINT64, remote_2,
+          NULL))
+    goto out;
+
+  if (!g_ascii_string_to_unsigned (split[3], 10, 0, G_MAXUINT64, local_2, NULL))
+    goto out;
+
+  ret = TRUE;
+out:
+  g_strfreev (split);
+  return ret;
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -92,12 +127,10 @@ main (int argc, char *argv[])
 
   while ((status = g_io_channel_read_line (channel, &line, NULL, NULL,
               &error)) == G_IO_STATUS_NORMAL) {
-    GstClockTime local_1, local_2, remote_1, remote_2;
+    GstClockTime local_1, remote_1, remote_2, local_2;
     GstMessage *message;
 
-    if (sscanf (line, "%" G_GUINT64_FORMAT " %" G_GUINT64_FORMAT " %"
-            G_GUINT64_FORMAT " %" G_GUINT64_FORMAT, &local_1, &remote_1,
-            &remote_2, &local_2) != 4) {
+    if (!parse_time_values (line, &local_1, &remote_1, &remote_2, &local_2)) {
       g_print ("Failed to get local/remote time values from: %s\n", line);
       goto done;
     }
