@@ -1098,6 +1098,90 @@ gst_d3d11_decoder_copy_decoder_buffer (GstD3D11Decoder * decoder,
   return copy_to_system (decoder, info, decoder_buffer, output);
 }
 
+static const gchar *
+gst_d3d11_decoder_status_code_to_verbose_string (guint status_code)
+{
+  const gchar *status = NULL;
+
+  switch (status_code) {
+    case 0:
+      status = "The operation succeeded";
+      break;
+    case 1:
+      status = "Minor problem in the data format. "
+          "The host decoder should continue processing";
+      break;
+    case 2:
+      status = "Significant problem in the data format. The host decoder may "
+          "continue executing or skip the display of the output picture";
+      break;
+    case 3:
+      status = "Severe problem in the data format. The host decoder should "
+          "restart the entire decoding process, starting at a sequence or "
+          "random-access entry point";
+      break;
+    case 4:
+      status =
+          "Other severe problem. The host decoder should restart the entire "
+          "decoding process, starting at a sequence or random-access entry point";
+      break;
+    default:
+      status = "Unknown status";
+      break;
+  }
+
+  return status;
+}
+
+gboolean
+gst_d3d11_decoder_get_status_report (GstD3D11Decoder * decoder,
+    GstDXVAStatus * status, GError ** err)
+{
+  GstD3D11DecoderPrivate *priv;
+  HRESULT hr;
+  D3D11_VIDEO_DECODER_EXTENSION extension = { 0, };
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
+  g_return_val_if_fail (status != NULL, FALSE);
+
+  priv = decoder->priv;
+
+  /* For status report */
+  extension.Function = 7;
+  extension.pPrivateOutputData = (PVOID) status;
+  extension.PrivateOutputDataSize = sizeof (GstDXVAStatus);
+
+  gst_d3d11_device_lock (priv->device);
+  hr = ID3D11VideoContext_DecoderExtension (priv->video_context, priv->decoder,
+      &extension);
+  gst_d3d11_device_unlock (priv->device);
+
+  ret = gst_d3d11_result (hr, priv->device);
+
+  if (ret && status->bStatus != 0) {
+    /* TODO: if status code is 3 or 4, we might need to restart decoding
+     * from new keyframe */
+    GST_WARNING_OBJECT (decoder,
+        "Status code: %d, StatusReportFeedbackNumber: %d, "
+        "CurrPic.Index7Bits: %d, CurrPic.AssociatedFlag: %d, bBufType: %d, "
+        "wNumMbsAffected: %d", status->bStatus,
+        status->StatusReportFeedbackNumber,
+        status->CurrPic.Index7Bits, status->CurrPic.AssociatedFlag,
+        status->bBufType, status->wNumMbsAffected);
+
+    if (status->bStatus > 1) {
+      const gchar *status_str =
+          gst_d3d11_decoder_status_code_to_verbose_string (status->bStatus);
+
+      g_set_error_literal (err, GST_STREAM_ERROR,
+          GST_STREAM_ERROR_DECODE, status_str);
+    }
+  }
+
+  return ret;
+}
+
 /* Keep sync with chromium and keep in sorted order.
  * See supported_profile_helpers.cc in chromium */
 static const guint legacy_amd_list[] = {

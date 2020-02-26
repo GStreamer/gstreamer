@@ -89,6 +89,8 @@ typedef struct _GstD3D11H265Dec
   UCHAR ref_pic_set_st_curr_before[8];
   UCHAR ref_pic_set_st_curr_after[8];
   UCHAR ref_pic_set_lt_curr[8];
+
+  guint status_report_feedback_number;
 } GstD3D11H265Dec;
 
 typedef struct _GstD3D11H265DecClass
@@ -527,6 +529,8 @@ gst_d3d11_h265_dec_new_sequence (GstH265Decoder * decoder,
       GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
       return FALSE;
     }
+
+    self->status_report_feedback_number = 0;
   }
 
   return TRUE;
@@ -966,6 +970,8 @@ gst_d3d11_h265_dec_end_picture (GstH265Decoder * decoder,
     GstH265Picture * picture)
 {
   GstD3D11H265Dec *self = GST_D3D11_H265_DEC (decoder);
+  GError *err = NULL;
+  GstDXVAStatus status = { 0, };
 
   GST_LOG_OBJECT (self, "end picture %p, (poc %d)",
       picture, picture->pic_order_cnt);
@@ -978,6 +984,11 @@ gst_d3d11_h265_dec_end_picture (GstH265Decoder * decoder,
   if (!gst_d3d11_decoder_end_frame (self->d3d11_decoder)) {
     GST_ERROR_OBJECT (self, "Failed to EndFrame");
     return FALSE;
+  }
+
+  if (gst_d3d11_decoder_get_status_report (self->d3d11_decoder,
+          &status, &err) && err) {
+    GST_D3D11_VIDEO_DECODER_ERROR_FROM_ERROR (self, err);
   }
 
   return TRUE;
@@ -1126,7 +1137,9 @@ gst_d3d11_h265_dec_fill_picture_params (GstD3D11H265Dec * self,
   params->NoPicReorderingFlag = 0;
   params->NoBiPredFlag = 0;
   params->ReservedBits1 = 0;
-  params->StatusReportFeedbackNumber = 1;
+  /* StatusReportFeedbackNumber should be non-zero */
+  params->StatusReportFeedbackNumber = 1 + self->status_report_feedback_number;
+  self->status_report_feedback_number++;
 
   gst_d3d11_h265_dec_picture_params_from_sps (self, sps, params);
   gst_d3d11_h265_dec_picture_params_from_pps (self, pps, params);

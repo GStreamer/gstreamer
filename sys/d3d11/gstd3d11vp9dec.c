@@ -102,6 +102,8 @@ typedef struct _GstD3D11Vp9Dec
   GstVideoFormat out_format;
 
   gboolean use_d3d11_output;
+
+  guint status_report_feedback_number;
 } GstD3D11Vp9Dec;
 
 typedef struct _GstD3D11Vp9DecClass
@@ -498,6 +500,8 @@ gst_d3d11_vp9_dec_new_sequence (GstVp9Decoder * decoder,
       GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
       return FALSE;
     }
+
+    self->status_report_feedback_number = 0;
   }
 
   return TRUE;
@@ -1179,7 +1183,10 @@ gst_d3d11_vp9_dec_decode_picture (GstVp9Decoder * decoder,
   pic_params.uncompressed_header_size_byte_aligned =
       picture->frame_hdr.frame_header_length_in_bytes;
   pic_params.first_partition_size = picture->frame_hdr.first_partition_size;
-  pic_params.StatusReportFeedbackNumber = 1;
+  /* StatusReportFeedbackNumber should be non-zero */
+  pic_params.StatusReportFeedbackNumber =
+      1 + self->status_report_feedback_number;
+  self->status_report_feedback_number++;
 
   gst_d3d11_vp9_dec_copy_frame_params (self, picture, &pic_params);
   gst_d3d11_vp9_dec_copy_reference_frames (self, picture, dpb, &pic_params);
@@ -1195,10 +1202,17 @@ static gboolean
 gst_d3d11_vp9_dec_end_picture (GstVp9Decoder * decoder, GstVp9Picture * picture)
 {
   GstD3D11Vp9Dec *self = GST_D3D11_VP9_DEC (decoder);
+  GError *err = NULL;
+  GstDXVAStatus status = { 0, };
 
   if (!gst_d3d11_decoder_end_frame (self->d3d11_decoder)) {
     GST_ERROR_OBJECT (self, "Failed to EndFrame");
     return FALSE;
+  }
+
+  if (gst_d3d11_decoder_get_status_report (self->d3d11_decoder,
+          &status, &err) && err) {
+    GST_D3D11_VIDEO_DECODER_ERROR_FROM_ERROR (self, err);
   }
 
   return TRUE;
