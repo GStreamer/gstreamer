@@ -451,7 +451,7 @@ valgrind ges:
     # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-6
     - $ErrorActionPreference = "Stop"
 
-    - git clone https://gitlab.freedesktop.org/gstreamer/gst-build.git $env:CI_PROJECT_DIR/gst-build
+    - git clone -b $GST_UPSTREAM_BRANCH https://gitlab.freedesktop.org/gstreamer/gst-build.git $env:CI_PROJECT_DIR\gst-build
     - cd $env:CI_PROJECT_DIR/gst-build
     - cp -r C:/subprojects/* subprojects/
     # Run the git-update script and feed it the manifest to setup the environment
@@ -512,7 +512,7 @@ build msys2 :
     - C:\msys64\usr\bin\bash -c "pacman -Syuu --noconfirm"
     - C:\msys64\usr\bin\bash -c "pacman -Sy --noconfirm --needed mingw-w64-x86_64-toolchain ninja"
 
-    - git clone https://gitlab.freedesktop.org/gstreamer/gst-build.git $env:CI_PROJECT_DIR\gst-build
+    - git clone -b $GST_UPSTREAM_BRANCH https://gitlab.freedesktop.org/gstreamer/gst-build.git $env:CI_PROJECT_DIR\gst-build
     - cd $env:CI_PROJECT_DIR\gst-build
     - cp -r C:\subprojects\* subprojects\
 
