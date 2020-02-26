@@ -179,12 +179,24 @@ gst_dtls_certificate_get_property (GObject * object, guint prop_id,
   }
 }
 
+static const gchar base64_alphabet[64] = {
+  'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+  'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+  'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+  'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'
+};
+
 static void
 init_generated (GstDtlsCertificate * self)
 {
   GstDtlsCertificatePrivate *priv = self->priv;
   RSA *rsa;
+  BIGNUM *serial_number;
+  ASN1_INTEGER *asn1_serial_number;
   X509_NAME *name = NULL;
+  gchar common_name[9] = { 0, };
+  gint i;
 
   g_return_if_fail (!priv->x509);
   g_return_if_fail (!priv->private_key);
@@ -244,18 +256,29 @@ init_generated (GstDtlsCertificate * self)
   rsa = NULL;
 
   X509_set_version (priv->x509, 2);
-  ASN1_INTEGER_set (X509_get_serialNumber (priv->x509), 0);
+
+  /* Set a random 64 bit integer as serial number */
+  serial_number = BN_new ();
+  BN_pseudo_rand (serial_number, 64, 0, 0);
+  asn1_serial_number = X509_get_serialNumber (priv->x509);
+  BN_to_ASN1_INTEGER (serial_number, asn1_serial_number);
+  BN_free (serial_number);
+
+  /* Set a random 8 byte base64 string as issuer/subject */
+  name = X509_NAME_new ();
+  for (i = 0; i < 8; i++)
+    common_name[i] =
+        base64_alphabet[g_random_int_range (0, G_N_ELEMENTS (base64_alphabet))];
+  X509_NAME_add_entry_by_NID (name, NID_commonName, MBSTRING_ASC,
+      (const guchar *) common_name, -1, -1, 0);
+  X509_set_subject_name (priv->x509, name);
+  X509_set_issuer_name (priv->x509, name);
+  X509_NAME_free (name);
+
+  /* Set expiry in a year */
   X509_gmtime_adj (X509_getm_notBefore (priv->x509), 0);
   X509_gmtime_adj (X509_getm_notAfter (priv->x509), 31536000L); /* A year */
   X509_set_pubkey (priv->x509, priv->private_key);
-
-  name = X509_get_subject_name (priv->x509);
-  X509_NAME_add_entry_by_txt (name, "C", MBSTRING_ASC, (unsigned char *) "SE",
-      -1, -1, 0);
-  X509_NAME_add_entry_by_txt (name, "CN", MBSTRING_ASC,
-      (unsigned char *) "OpenWebRTC", -1, -1, 0);
-  X509_set_issuer_name (priv->x509, name);
-  name = NULL;
 
   if (!X509_sign (priv->x509, priv->private_key, EVP_sha256 ())) {
     GST_WARNING_OBJECT (self, "failed to sign certificate");
