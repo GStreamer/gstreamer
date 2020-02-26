@@ -735,6 +735,32 @@ struct _GstH265VPS {
  *  the value of the variable deltaRps.
  * @abs_delta_rps_minus1: delta_rps_sign and abs_delta_rps_minus1 together specify
  *  the value of the variable deltaRps
+ * @NumDeltaPocs: sum of @NumNegativePics and @NumPositivePics.
+ * @NumNegativePics: Derived value depending on inter_ref_pic_set_prediction_flag.
+ *  If inter_ref_pic_set_prediction_flag is equal to 0, this specifies
+ *  the number of entries in the stRpsIdx-th candidate
+ *  short-term RPS that have poc values less than the poc of the current picture.
+ * @NumPositivePics: Derived value depending on inter_ref_pic_set_prediction_flag.
+ *  If inter_ref_pic_set_prediction_flag is equal to 0, this specifies
+ *  the number of entires in the stRpsIdx-th candidate
+ *  short-term RPS that have poc values greater than the poc value of the current picture.
+ * @UsedByCurrPicS0: Derived value depending on inter_ref_pic_set_prediction_flag.
+ *  If inter_ref_pic_set_prediction_flag is equal to 0,
+ *  equal to zero specifies that the i-th entry in the stRpsIdx-th
+ *  candidate short-term RPS that has poc value less than of the current picture
+ *  is not used for reference by the current picture
+ * @UsedByCurrPicS1: Derived value depending on inter_ref_pic_set_prediction_flag.
+ *  If inter_ref_pic_set_prediction_flag is equal to 0,
+ *  equal to zero specifies that the i-th entry in the current
+ *  candidate short-term RPS that has poc value greater than that of the current picture
+ *  is not used for reference by the current picture.
+ * @DeltaPocS0: Derived value depending on inter_ref_pic_set_prediction_flag.
+ *  See 7.4.8 Short-term reference picture set semantics
+ * @DeltaPocS1: Derived value depending on inter_ref_pic_set_prediction_flag.
+ *  See 7.4.8 Short-term reference picture set semantics
+ * @NumDeltaPocsOfRefRpsIdx: The value of NumDeltaPocs[RefRpsIdx].
+ *  If inter_ref_pic_set_prediction_flag is equal to 0,
+ *  this value should be ignored (Since: 1.18)
  *
  * Defines the #GstH265ShortTermRefPicSet params
  */
@@ -753,6 +779,7 @@ struct _GstH265ShortTermRefPicSet
   guint8 UsedByCurrPicS1[16];
   gint32 DeltaPocS0[16];
   gint32 DeltaPocS1[16];
+  guint8 NumDeltaPocsOfRefRpsIdx;
 };
 
 /**

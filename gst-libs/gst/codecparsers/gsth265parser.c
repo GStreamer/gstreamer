@@ -805,6 +805,7 @@ gst_h265_parser_parse_short_term_ref_pic_sets (GstH265ShortTermRefPicSet *
     deltaRps = (1 - 2 * stRPS->delta_rps_sign) * (stRPS->abs_delta_rps_minus1 + 1);     /* 7-46 */
 
     RefRPS = &sps->short_term_ref_pic_set[RefRpsIdx];
+    stRPS->NumDeltaPocsOfRefRpsIdx = RefRPS->NumDeltaPocs;
 
     for (j = 0; j <= RefRPS->NumDeltaPocs; j++) {
       READ_UINT8 (nr, used_by_curr_pic_flag[j], 1);
