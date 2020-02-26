@@ -849,7 +849,7 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer)
     gst_d3d11_overlay_compositor_draw_unlocked (self->compositor, &self->rtv);
 
 #if (DXGI_HEADER_VERSION >= 5)
-    if (self->allow_tearing) {
+    if (self->allow_tearing && self->fullscreen) {
       present_flags |= DXGI_PRESENT_ALLOW_TEARING;
     }
 #endif
