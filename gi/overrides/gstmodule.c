@@ -754,6 +754,7 @@ _remap (GstMapInfo * mapinfo, PyObject * py_mapinfo)
   if (PyObject_SetAttrString (py_mapinfo, "__cmapinfo", PyCapsule_New (mapinfo,
               "__cmapinfo", NULL)) == -1)
     return NULL;
+  Py_INCREF (Py_True);
   return Py_True;
 }
 
@@ -784,7 +785,7 @@ _gst_memory_override_map (PyObject * self, PyObject * args)
   ok = gst_memory_map (memory, mapinfo, flags);
   if (!ok) {
     g_free (mapinfo);
-    return Py_False;
+    goto err;
   }
 
   success = _remap (mapinfo, py_mapinfo);
@@ -793,6 +794,10 @@ _gst_memory_override_map (PyObject * self, PyObject * args)
     g_free (mapinfo);
   }
   return success;
+
+err:
+  Py_INCREF (Py_False);
+  return Py_False;
 }
 
 static PyObject *
@@ -839,9 +844,11 @@ _gst_memory_override_unmap (PyObject * self, PyObject * args)
   g_free (mapinfo);
 end:
   Py_DECREF (mview);
+  Py_INCREF (Py_True);
   return Py_True;
 
 err:
+  Py_INCREF (Py_False);
   return Py_False;
 }
 
@@ -860,7 +867,7 @@ _gst_buffer_override_map_range (PyObject * self, PyObject * args)
   gst_buffer_type = pygobject_lookup_class (_gst_buffer_type);
   if (!PyArg_ParseTuple (args, "O!OIii", gst_buffer_type, &py_buffer,
           &py_mapinfo, &idx, &range, &flags))
-    return Py_False;
+    goto err;
 
   /* Since Python does only support r/o or r/w it has to be changed to either */
   flags = (flags & GST_MAP_WRITE) ? GST_MAP_READWRITE : GST_MAP_READ;
@@ -873,7 +880,7 @@ _gst_buffer_override_map_range (PyObject * self, PyObject * args)
   ok = gst_buffer_map_range (buffer, idx, range, mapinfo, flags);
   if (!ok) {
     g_free (mapinfo);
-    return Py_False;
+    goto err;
   }
 
   success = _remap (mapinfo, py_mapinfo);
@@ -882,6 +889,10 @@ _gst_buffer_override_map_range (PyObject * self, PyObject * args)
     g_free (mapinfo);
   }
   return success;
+
+err:
+  Py_INCREF (Py_False);
+  return Py_False;
 }
 
 static PyObject *
@@ -913,7 +924,7 @@ _gst_buffer_override_map (PyObject * self, PyObject * args)
   ok = gst_buffer_map (buffer, mapinfo, flags);
   if (!ok) {
     g_free (mapinfo);
-    return Py_False;
+    goto err;
   }
 
   success = _remap (mapinfo, py_mapinfo);
@@ -922,6 +933,10 @@ _gst_buffer_override_map (PyObject * self, PyObject * args)
     g_free (mapinfo);
   }
   return success;
+
+err:
+  Py_INCREF (Py_False);
+  return Py_False;
 }
 
 static PyObject *
@@ -970,9 +985,11 @@ _gst_buffer_override_unmap (PyObject * self, PyObject * args)
   g_free (mapinfo);
 end:
   Py_DECREF (mview);
+  Py_INCREF (Py_True);
   return Py_True;
 
 err:
+  Py_INCREF (Py_False);
   return Py_False;
 }
 
