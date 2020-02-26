@@ -159,9 +159,7 @@ foreach t : base_tests
     )
 
     env = environment()
-    env.set('GST_PLUGIN_PATH_1_0',
-        meson.build_root(), join_paths(get_option('prefix'), plugins_install_dir),
-        pluginsdirs)
+    env.set('GST_PLUGIN_PATH_1_0', meson.build_root(), pluginsdirs)
     env.set('GST_PLUGIN_SYSTEM_PATH_1_0', '')
     env.set('GST_STATE_IGNORE_ELEMENTS', 'cdio cdparanoiasrc libvisual_ alsasrc alsasink')
     env.set('CK_DEFAULT_TIMEOUT', '20')
@@ -183,9 +181,7 @@ foreach group : [1, 2, 3, 4, 5, 6]
 
   # TODO Use env.copy when it is in meson
   env = environment()
-  env.set('GST_PLUGIN_PATH_1_0',
-      meson.build_root(), join_paths(get_option('prefix'), plugins_install_dir),
-      pluginsdirs)
+  env.set('GST_PLUGIN_PATH_1_0', meson.build_root(), pluginsdirs)
   env.set('GST_PLUGIN_SYSTEM_PATH_1_0', '')
   env.set('GST_STATE_IGNORE_ELEMENTS', 'cdio cdparanoiasrc libvisual_ alsasrc alsasink')
   env.set('CK_DEFAULT_TIMEOUT', '20')
