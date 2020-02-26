@@ -1240,15 +1240,18 @@ gst_d3d11_h265_dec_decode_slice (GstH265Decoder * decoder,
     GstH265Picture * picture, GstH265Slice * slice)
 {
   GstD3D11H265Dec *self = GST_D3D11_H265_DEC (decoder);
+  GstH265SPS *sps;
   GstH265PPS *pps;
   DXVA_PicParams_HEVC pic_params = { 0, };
   DXVA_Qmatrix_HEVC iq_matrix = { 0, };
   guint d3d11_buffer_size = 0;
   gpointer d3d11_buffer = NULL;
-  gint i, j;
+  gint i;
   GstD3D11DecoderOutputView *view;
+  GstH265ScalingList *scaling_list = NULL;
 
   pps = slice->header.pps;
+  sps = pps->sps;
 
   view = gst_d3d11_h265_dec_get_output_view_from_picture (self, picture);
 
@@ -1300,39 +1303,34 @@ gst_d3d11_h265_dec_decode_slice (GstH265Decoder * decoder,
     return FALSE;
   }
 
-  if (pps->scaling_list_data_present_flag) {
+  if (pps->scaling_list_data_present_flag ||
+      (sps->scaling_list_enabled_flag
+          && !sps->scaling_list_data_present_flag)) {
+    scaling_list = &pps->scaling_list;
+  } else if (sps->scaling_list_enabled_flag &&
+      sps->scaling_list_data_present_flag) {
+    scaling_list = &sps->scaling_list;
+  }
+
+  if (scaling_list) {
     self->submit_iq_data = TRUE;
 
-    for (i = 0; i < 6; i++) {
-      for (j = 0; j < 16; j++) {
-        iq_matrix.ucScalingLists0[i][j] =
-            pps->scaling_list.scaling_lists_4x4[i][j];
-      }
-    }
-
-    for (i = 0; i < 6; i++) {
-      for (j = 0; j < 64; j++) {
-        iq_matrix.ucScalingLists1[i][j] =
-            pps->scaling_list.scaling_lists_8x8[i][j];
-        iq_matrix.ucScalingLists2[i][j] =
-            pps->scaling_list.scaling_lists_16x16[i][j];
-      }
-    }
-
-    for (i = 0; i < 2; i++) {
-      for (j = 0; j < 64; j++) {
-        iq_matrix.ucScalingLists3[i][j] =
-            pps->scaling_list.scaling_lists_32x32[i][j];
-      }
-    }
+    memcpy (iq_matrix.ucScalingLists0, scaling_list->scaling_lists_4x4,
+        sizeof (iq_matrix.ucScalingLists0));
+    memcpy (iq_matrix.ucScalingLists1, scaling_list->scaling_lists_8x8,
+        sizeof (iq_matrix.ucScalingLists1));
+    memcpy (iq_matrix.ucScalingLists2, scaling_list->scaling_lists_16x16,
+        sizeof (iq_matrix.ucScalingLists2));
+    memcpy (iq_matrix.ucScalingLists3, scaling_list->scaling_lists_32x32,
+        sizeof (iq_matrix.ucScalingLists3));
 
     for (i = 0; i < 6; i++)
       iq_matrix.ucScalingListDCCoefSizeID2[i] =
-          pps->scaling_list.scaling_list_dc_coef_minus8_16x16[i];
+          scaling_list->scaling_list_dc_coef_minus8_16x16[i] + 8;
 
     for (i = 0; i < 2; i++)
       iq_matrix.ucScalingListDCCoefSizeID3[i] =
-          pps->scaling_list.scaling_list_dc_coef_minus8_32x32[i];
+          scaling_list->scaling_list_dc_coef_minus8_32x32[i] + 8;
 
     GST_TRACE_OBJECT (self, "Getting inverse quantization maxtirx buffer");
 
