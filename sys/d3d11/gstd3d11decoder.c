@@ -749,16 +749,15 @@ gst_d3d11_decoder_begin_frame (GstD3D11Decoder * decoder,
         priv->decoder, output_view->handle, content_key_size, content_key);
     gst_d3d11_device_unlock (priv->device);
 
-    if (gst_d3d11_result (hr, priv->device)) {
-      GST_LOG_OBJECT (decoder, "Success with retry %d", retry_count);
-      break;
-    } else if (hr == E_PENDING && retry_count < 50) {
+    if (hr == E_PENDING && retry_count < 50) {
       GST_LOG_OBJECT (decoder, "GPU busy, try again");
 
       /* HACK: no better idea other than sleep...
        * 1ms waiting like msdkdec */
       g_usleep (1000);
     } else {
+      if (gst_d3d11_result (hr, priv->device))
+        GST_LOG_OBJECT (decoder, "Success with retry %d", retry_count);
       break;
     }
 
