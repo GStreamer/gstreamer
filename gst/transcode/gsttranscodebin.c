@@ -296,7 +296,7 @@ make_decodebin (GstTranscodeBin * self)
         GstCaps *restrictions =
             gst_encoding_profile_get_restriction (tmp->data);
 
-        if (!restrictions) {
+        if (!restrictions || gst_caps_is_any (restrictions)) {
           GstCaps *encodecaps = gst_encoding_profile_get_format (tmp->data);
 
           gst_caps_append (decodecaps, encodecaps);
