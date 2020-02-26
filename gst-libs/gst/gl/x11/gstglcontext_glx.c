@@ -121,27 +121,236 @@ gst_gl_context_glx_new (GstGLDisplay * display)
   return context;
 }
 
-static inline void
-_describe_fbconfig (Display * display, GLXFBConfig config)
+static void
+gst_gl_context_glx_dump_fb_config (GstGLContextGLX * glx,
+    Display * dpy, GLXFBConfig fbconfig)
 {
-  int val;
 
-  glXGetFBConfigAttrib (display, config, GLX_FBCONFIG_ID, &val);
-  GST_DEBUG ("ID: %d", val);
-  glXGetFBConfigAttrib (display, config, GLX_DOUBLEBUFFER, &val);
-  GST_DEBUG ("double buffering: %d", val);
-  glXGetFBConfigAttrib (display, config, GLX_RED_SIZE, &val);
-  GST_DEBUG ("red: %d", val);
-  glXGetFBConfigAttrib (display, config, GLX_GREEN_SIZE, &val);
-  GST_DEBUG ("green: %d", val);
-  glXGetFBConfigAttrib (display, config, GLX_BLUE_SIZE, &val);
-  GST_DEBUG ("blue: %d", val);
-  glXGetFBConfigAttrib (display, config, GLX_ALPHA_SIZE, &val);
-  GST_DEBUG ("alpha: %d", val);
-  glXGetFBConfigAttrib (display, config, GLX_DEPTH_SIZE, &val);
-  GST_DEBUG ("depth: %d", val);
-  glXGetFBConfigAttrib (display, config, GLX_STENCIL_SIZE, &val);
-  GST_DEBUG ("stencil: %d", val);
+#define SIMPLE_STRING_ASSIGN(res_str,value,to_check,str) \
+    if (res_str == NULL && value == to_check) \
+      res_str = str
+
+  int fb_id, render_type;
+  {
+    int visual_id;
+    if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_FBCONFIG_ID,
+            &fb_id))
+      return;
+    if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_VISUAL_ID,
+            &visual_id))
+      return;
+    if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_RENDER_TYPE,
+            &render_type))
+      return;
+
+    GST_DEBUG_OBJECT (glx, "dumping GLXFBConfig %p with id 0x%x and "
+        "visual id 0x%x", fbconfig, fb_id, visual_id);
+  }
+
+  {
+#define MAX_RENDER_TYPE 8
+#define MAX_DRAWABLE_TYPE 8
+    int x_renderable, visual_type, drawable_type, caveat, i = 0;
+    const char *render_values[MAX_RENDER_TYPE] = { NULL, };
+    const char *drawable_values[MAX_DRAWABLE_TYPE] = { NULL, };
+    const char *caveat_str = NULL;
+    const char *visual_type_str = NULL;
+    char *render_type_str = NULL;
+    char *drawable_type_str = NULL;
+    if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_X_RENDERABLE,
+            &x_renderable))
+      return;
+    if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_CONFIG_CAVEAT,
+            &caveat))
+      return;
+    if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_X_VISUAL_TYPE,
+            &visual_type))
+      return;
+    if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_DRAWABLE_TYPE,
+            &drawable_type))
+      return;
+
+    SIMPLE_STRING_ASSIGN (visual_type_str, visual_type, GLX_TRUE_COLOR,
+        "TrueColor");
+    SIMPLE_STRING_ASSIGN (visual_type_str, visual_type, GLX_DIRECT_COLOR,
+        "DirectColor");
+    SIMPLE_STRING_ASSIGN (visual_type_str, visual_type, GLX_PSEUDO_COLOR,
+        "PseudoColor");
+    SIMPLE_STRING_ASSIGN (visual_type_str, visual_type, GLX_STATIC_COLOR,
+        "StaticColor");
+    SIMPLE_STRING_ASSIGN (visual_type_str, visual_type, GLX_GRAY_SCALE,
+        "GrayScale");
+    SIMPLE_STRING_ASSIGN (visual_type_str, visual_type, GLX_STATIC_GRAY,
+        "StaticGray");
+    SIMPLE_STRING_ASSIGN (visual_type_str, visual_type, GLX_NONE, "None");
+
+    SIMPLE_STRING_ASSIGN (caveat_str, caveat, GLX_NONE, "None");
+    SIMPLE_STRING_ASSIGN (caveat_str, caveat, GLX_SLOW_CONFIG, "SlowConfig");
+    SIMPLE_STRING_ASSIGN (caveat_str, caveat, GLX_NON_CONFORMANT_CONFIG,
+        "NonConformantConfig");
+
+    i = 0;
+    if (render_type & GLX_RGBA_BIT)
+      render_values[i++] = "RGBA";
+    if (render_type & GLX_COLOR_INDEX_BIT)
+      render_values[i++] = "Color Index";
+
+    /* bad things have happened if this fails: we haven't allocated enough
+     * space to hold all the values */
+    g_assert (i < MAX_RENDER_TYPE);
+
+    i = 0;
+    if (drawable_type & GLX_WINDOW_BIT)
+      drawable_values[i++] = "Window";
+    if (drawable_type & GLX_PIXMAP_BIT)
+      drawable_values[i++] = "Pixmap";
+    if (drawable_type & GLX_PBUFFER_BIT)
+      drawable_values[i++] = "PBuffer";
+
+    /* bad things have happened if this fails: we haven't allocated enough
+     * space to hold all the values */
+    g_assert (i < MAX_DRAWABLE_TYPE);
+
+    render_type_str = g_strjoinv ("|", (char **) render_values);
+    drawable_type_str = g_strjoinv ("|", (char **) drawable_values);
+    GST_DEBUG_OBJECT (glx, "Is XRenderable?: %s, visual type: (0x%x) %s, "
+        "render type: (0x%x) %s, drawable type: (0x%x) %s, caveat: (0x%x) %s",
+        x_renderable ? "YES" : "NO", visual_type, visual_type_str, render_type,
+        render_type_str, drawable_type, drawable_type_str, caveat, caveat_str);
+    g_free (render_type_str);
+    g_free (drawable_type_str);
+#undef MAX_RENDER_TYPE
+#undef MAX_DRAWABLE_TYPE
+  }
+
+  {
+    int buffer_size, level, double_buffered, stereo, aux_buffers;
+    if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_BUFFER_SIZE,
+            &buffer_size))
+      return;
+    if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_LEVEL, &level))
+      return;
+    if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_DOUBLEBUFFER,
+            &double_buffered))
+      return;
+    if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_STEREO, &stereo))
+      return;
+    if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_AUX_BUFFERS,
+            &aux_buffers))
+      return;
+    GST_DEBUG_OBJECT (glx, "Level: %i, buffer size: %i, double buffered: %i, "
+        "stereo: %i, aux buffers: %i", level, buffer_size, double_buffered,
+        stereo, aux_buffers);
+  }
+
+  if (render_type & GLX_RGBA_BIT) {
+    int r, g, b, a;
+    if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_RED_SIZE, &r))
+      return;
+    if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_GREEN_SIZE, &g))
+      return;
+    if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_BLUE_SIZE, &b))
+      return;
+    if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_ALPHA_SIZE, &a))
+      return;
+    GST_DEBUG_OBJECT (glx, "[R, G, B, A] = [%i, %i, %i, %i]", r, g, b, a);
+  }
+
+  {
+    int d, s;
+    if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_DEPTH_SIZE, &d))
+      return;
+    if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_STENCIL_SIZE, &s))
+      return;
+
+    GST_DEBUG_OBJECT (glx, "[D, S] = [%i, %i]", d, s);
+  }
+
+  {
+    int r, g, b, a;
+    if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_ACCUM_RED_SIZE, &r))
+      return;
+    if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_ACCUM_GREEN_SIZE,
+            &g))
+      return;
+    if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_ACCUM_BLUE_SIZE,
+            &b))
+      return;
+    if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_ACCUM_ALPHA_SIZE,
+            &a))
+      return;
+    GST_DEBUG_OBJECT (glx, "Accumulation [R, G, B, A] = [%i, %i, %i, %i]", r, g,
+        b, a);
+  }
+
+  {
+    int transparent_type;
+    if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_TRANSPARENT_TYPE,
+            &transparent_type))
+      return;
+
+    if (transparent_type == GLX_NONE) {
+      GST_DEBUG_OBJECT (glx, "Is opaque");
+    } else if (transparent_type == GLX_TRANSPARENT_INDEX) {
+      int transparent_index;
+      if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_TRANSPARENT_INDEX,
+              &transparent_index))
+        return;
+      GST_DEBUG_OBJECT (glx, "Is transparent for index value 0x%x",
+          transparent_index);
+    } else if (transparent_type == GLX_TRANSPARENT_RGB) {
+      int r, g, b, a;
+      if (Success != glXGetFBConfigAttrib (dpy, fbconfig,
+              GLX_TRANSPARENT_RED_VALUE, &r))
+        return;
+      if (Success != glXGetFBConfigAttrib (dpy, fbconfig,
+              GLX_TRANSPARENT_GREEN_VALUE, &g))
+        return;
+      if (Success != glXGetFBConfigAttrib (dpy, fbconfig,
+              GLX_TRANSPARENT_BLUE_VALUE, &b))
+        return;
+      if (Success != glXGetFBConfigAttrib (dpy, fbconfig,
+              GLX_TRANSPARENT_ALPHA_VALUE, &a))
+        return;
+      GST_DEBUG_OBJECT (glx, "Is transparent for value [R, G, B, A] = "
+          "[0x%x, 0x%x, 0x%x, 0x%x]", r, g, b, a);
+    } else {
+      GST_DEBUG_OBJECT (glx, "Unknown transparent type 0x%x", transparent_type);
+    }
+  }
+
+  {
+    int w, h, pixels;
+    if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_MAX_PBUFFER_WIDTH,
+            &w))
+      return;
+    if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_MAX_PBUFFER_HEIGHT,
+            &h))
+      return;
+    if (Success != glXGetFBConfigAttrib (dpy, fbconfig, GLX_MAX_PBUFFER_PIXELS,
+            &pixels))
+      return;
+    GST_DEBUG_OBJECT (glx,
+        "PBuffer maximum dimensions are [%i, %i]. Max pixels are %i", w,
+        h, pixels);
+  }
+#undef SIMPLE_STRING_ASSIGN
+}
+
+static void
+gst_gl_context_glx_dump_all_fb_configs (GstGLContextGLX * glx,
+    Display * dpy, int screen)
+{
+  int i, n;
+  GLXFBConfig *configs;
+
+  configs = glXGetFBConfigs (dpy, screen, &n);
+
+  for (i = 0; i < n; i++) {
+    gst_gl_context_glx_dump_fb_config (glx, dpy, configs[i]);
+  }
+
+  XFree (configs);
 }
 
 static GLXContext
@@ -400,6 +609,9 @@ gst_gl_context_glx_choose_format (GstGLContext * context, GError ** error)
     };
     int fbcount;
 
+    gst_gl_context_glx_dump_all_fb_configs (context_glx, device,
+        DefaultScreen (device));
+
     context_glx->priv->fbconfigs = glXChooseFBConfig (device,
         DefaultScreen (device), attribs, &fbcount);
 
@@ -410,7 +622,9 @@ gst_gl_context_glx_choose_format (GstGLContext * context, GError ** error)
       goto failure;
     }
 
-    _describe_fbconfig (device, context_glx->priv->fbconfigs[0]);
+    GST_DEBUG_OBJECT (context_glx, "Chosen GLXFBConfig:");
+    gst_gl_context_glx_dump_fb_config (context_glx, device,
+        context_glx->priv->fbconfigs[0]);
 
     window_x11->visual_info = glXGetVisualFromFBConfig (device,
         context_glx->priv->fbconfigs[0]);
