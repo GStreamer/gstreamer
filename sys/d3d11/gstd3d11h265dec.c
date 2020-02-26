@@ -1090,7 +1090,7 @@ gst_d3d11_h265_dec_picture_params_from_slice_header (GstD3D11H265Dec *
 {
   if (slice_header->short_term_ref_pic_set_sps_flag == 0) {
     params->ucNumDeltaPocsOfRefRpsIdx =
-        slice_header->short_term_ref_pic_sets.NumDeltaPocs;
+        slice_header->short_term_ref_pic_sets.NumDeltaPocsOfRefRpsIdx;
     params->wNumBitsForShortTermRPSInSlice =
         slice_header->short_term_ref_pic_set_size;
   }
