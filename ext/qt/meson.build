@@ -2,8 +2,10 @@ sources = [
   'gstplugin.cc',
   'gstqsgtexture.cc',
   'gstqtglutility.cc',
+  'gstqtoverlay.cc',
   'gstqtsink.cc',
   'gstqtsrc.cc',
+  'qtglrenderer.cc',
   'qtitem.cc',
   'qtwindow.cc',
 ]
@@ -12,6 +14,7 @@ moc_headers = [
   'qtitem.h',
   'qtwindow.h',
   'gstqsgtexture.h',
+  'qtglrenderer.h',
 ]
 
 # FIXME: -Dqt5=enabled is silently ignored if a c++ compiler is not found
