@@ -238,6 +238,9 @@ gst_qt_overlay_gl_stop (GstGLBaseFilter * bfilter)
 {
   GstQtOverlay *qt_overlay = GST_QT_OVERLAY (bfilter);
 
+  if (qt_overlay->widget)
+    qt_overlay->widget->setBuffer (NULL);
+
   if (qt_overlay->renderer) {
     qt_overlay->renderer->cleanup();
     delete qt_overlay->renderer;
@@ -272,6 +275,7 @@ gst_qt_overlay_prepare_output_buffer (GstBaseTransform * btrans,
   GstGLFilter *filter = GST_GL_FILTER (btrans);
   GstQtOverlay *qt_overlay = GST_QT_OVERLAY (btrans);
   GstGLMemory *out_mem;
+  GstGLSyncMeta *sync_meta;
 
   if (qt_overlay->widget) {
     qt_overlay->widget->setCaps (bfilter->in_caps); 
@@ -291,6 +295,9 @@ gst_qt_overlay_prepare_output_buffer (GstBaseTransform * btrans,
       GST_VIDEO_INFO_FORMAT (&filter->out_info),
       GST_VIDEO_INFO_WIDTH (&filter->in_info),
       GST_VIDEO_INFO_HEIGHT (&filter->out_info));
+
+  sync_meta = gst_buffer_add_gl_sync_meta (bfilter->context, *outbuf);
+  gst_gl_sync_meta_set_sync_point (sync_meta, bfilter->context);
 
   bclass->copy_metadata (btrans, buffer, *outbuf);
 

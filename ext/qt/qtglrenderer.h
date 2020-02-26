@@ -80,8 +80,8 @@ private:
     static void initialize_gst_gl_c (GstGLContext * context, GstQuickRenderer * self) { self->initializeGstGL (); }
     void initializeGstGL ();
 
-    static void stop_c (GstGLContext * context, GstQuickRenderer * self) { self->stop (); }
-    void stop ();
+    static void stop_c (GstGLContext * context, GstQuickRenderer * self) { self->stopGL (); }
+    void stopGL ();
 
     static void activate_context_c (GstGLContext * context, GstQuickRenderer * self) { self->activateContext (); }
     void activateContext ();
@@ -90,16 +90,12 @@ private:
     void deactivateContext ();
 
     GstGLContext *gl_context;
-    QOpenGLContext *m_context;
-    QThread *m_renderThread;
-    GstBackingSurface *m_surface;
     QOpenGLFramebufferObject *m_fbo;
     QQuickWindow *m_quickWindow;
     QQuickRenderControl *m_renderControl;
     QQmlEngine *m_qmlEngine;
     QQmlComponent *m_qmlComponent;
     QQuickItem *m_rootItem;
-    GstAnimationDriver *m_animationDriver;
 
     GstGLBaseMemoryAllocator *gl_allocator;
     GstGLAllocationParams *gl_params;
@@ -107,6 +103,7 @@ private:
     GstGLMemory *gl_mem;
 
     QString m_errorString;
+    struct SharedRenderData *m_sharedRenderData;
 };
 
 #endif /* __QT_QUICK_RENDER_H__ */

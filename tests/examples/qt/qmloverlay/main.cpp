@@ -60,12 +60,13 @@ int main(int argc, char *argv[])
     /* the plugin must be loaded before loading the qml file to register the
      * GstGLVideoItem qml item */
     GstElement *overlay = gst_element_factory_make ("qmlgloverlay", NULL);
+    GstElement *overlay2 = gst_element_factory_make ("qmlgloverlay", NULL);
     GstElement *sink = gst_element_factory_make ("qmlglsink", NULL);
 
     g_assert (src && glupload && overlay && sink);
 
-    gst_bin_add_many (GST_BIN (pipeline), src, glupload, overlay, sink, NULL);
-    gst_element_link_many (src, glupload, overlay, sink, NULL);
+    gst_bin_add_many (GST_BIN (pipeline), src, glupload, overlay, overlay2, sink, NULL);
+    gst_element_link_many (src, glupload, overlay, overlay2, sink, NULL);
 
     /* load qmlglsink output */
     QQmlApplicationEngine engine;
@@ -93,9 +94,20 @@ int main(int argc, char *argv[])
     QByteArray overlay_scene = f.readAll();
     qDebug() << overlay_scene;
 
+    QFile f2(":/overlay2.qml");
+    if(!f2.open(QIODevice::ReadOnly)) {
+        qWarning() << "error: " << f2.errorString();
+        return 1;
+    }
+    QByteArray overlay_scene2 = f2.readAll();
+    qDebug() << overlay_scene2;
+
     /* load qmlgloverlay contents */
     g_signal_connect (overlay, "qml-scene-initialized", G_CALLBACK (on_overlay_scene_initialized), NULL);
     g_object_set (overlay, "qml-scene", overlay_scene.data(), NULL);
+
+    g_signal_connect (overlay2, "qml-scene-initialized", G_CALLBACK (on_overlay_scene_initialized), NULL);
+    g_object_set (overlay2, "qml-scene", overlay_scene2.data(), NULL);
 
     rootObject->scheduleRenderJob (new SetPlaying (pipeline),
         QQuickWindow::BeforeSynchronizingStage);

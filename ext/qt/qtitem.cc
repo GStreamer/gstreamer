@@ -135,7 +135,7 @@ QtGLVideoItem::~QtGLVideoItem()
    * no qmlglsink's will call in again, and that
    * any ongoing calls are done by invalidating the proxy
    * pointer */
-  GST_INFO ("Destroying QtGLVideoItem and invalidating the proxy");
+  GST_INFO ("%p Destroying QtGLVideoItem and invalidating the proxy %p", this, proxy.get());
   proxy->invalidateRef();
   proxy.clear();
 
@@ -146,6 +146,8 @@ QtGLVideoItem::~QtGLVideoItem()
     gst_object_unref(this->priv->other_context);
   if (this->priv->display)
     gst_object_unref(this->priv->display);
+
+  gst_buffer_replace (&this->priv->buffer, NULL);
 
   gst_caps_replace (&this->priv->caps, NULL);
   g_free (this->priv);
@@ -261,11 +263,13 @@ QtGLVideoItemInterface::setBuffer (GstBuffer * buffer)
 {
   QMutexLocker locker(&lock);
 
-  if (qt_item == NULL)
+  if (qt_item == NULL) {
+    GST_WARNING ("%p actual item is NULL. setBuffer call ignored", this);
     return;
+  }
 
   if (!qt_item->priv->negotiated) {
-    GST_WARNING ("Got buffer on unnegotiated QtGLVideoItem. Dropping");
+    GST_WARNING ("%p Got buffer on unnegotiated QtGLVideoItem. Dropping", this);
     return;
   }
 
@@ -281,7 +285,7 @@ QtGLVideoItemInterface::setBuffer (GstBuffer * buffer)
 void
 QtGLVideoItem::onSceneGraphInitialized ()
 {
-  GST_DEBUG ("scene graph initialization with Qt GL context %p",
+  GST_DEBUG ("%p scene graph initialization with Qt GL context %p", this,
       this->window()->openglContext ());
 
   if (this->priv->qt_context == this->window()->openglContext ())
@@ -308,6 +312,10 @@ QtGLVideoItem::onSceneGraphInvalidated ()
   GST_FIXME ("%p scene graph invalidated", this);
 }
 
+/**
+ * Retrieve and populate the GL context information from the current
+ * OpenGL context.
+ */
 gboolean
 QtGLVideoItemInterface::initWinSys ()
 {
@@ -408,27 +416,28 @@ _calculate_par (QtGLVideoItem * widget, GstVideoInfo * info)
   if (!ok)
     return FALSE;
 
-  GST_LOG ("PAR: %u/%u DAR:%u/%u", par_n, par_d, display_par_n, display_par_d);
+  GST_LOG ("%p PAR: %u/%u DAR:%u/%u", widget, par_n, par_d, display_par_n,
+      display_par_d);
 
   if (height % display_ratio_den == 0) {
-    GST_DEBUG ("keeping video height");
+    GST_DEBUG ("%p keeping video height", widget);
     widget->priv->display_width = (guint)
         gst_util_uint64_scale_int (height, display_ratio_num,
         display_ratio_den);
     widget->priv->display_height = height;
   } else if (width % display_ratio_num == 0) {
-    GST_DEBUG ("keeping video width");
+    GST_DEBUG ("%p keeping video width", widget);
     widget->priv->display_width = width;
     widget->priv->display_height = (guint)
         gst_util_uint64_scale_int (width, display_ratio_den, display_ratio_num);
   } else {
-    GST_DEBUG ("approximating while keeping video height");
+    GST_DEBUG ("%p approximating while keeping video height", widget);
     widget->priv->display_width = (guint)
         gst_util_uint64_scale_int (height, display_ratio_num,
         display_ratio_den);
     widget->priv->display_height = height;
   }
-  GST_DEBUG ("scaling to %dx%d", widget->priv->display_width,
+  GST_DEBUG ("%p scaling to %dx%d", widget, widget->priv->display_width,
       widget->priv->display_height);
 
   return TRUE;

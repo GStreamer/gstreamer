@@ -104,6 +104,62 @@ void GstAnimationDriver::setNextTime(qint64 ms)
     m_next = ms;
 }
 
+struct SharedRenderData
+{
+  volatile int refcount;
+  GMutex lock;
+  GstAnimationDriver *m_animationDriver;
+  QOpenGLContext *m_context;
+  GstBackingSurface *m_surface;
+};
+
+static struct SharedRenderData *
+shared_render_data_new (void)
+{
+  struct SharedRenderData *ret = g_new0 (struct SharedRenderData, 1);
+
+  ret->refcount = 1;
+  g_mutex_init (&ret->lock);
+
+  return ret;
+}
+
+static void
+shared_render_data_free (struct SharedRenderData * data)
+{
+  GST_DEBUG ("%p freeing shared render data", data);
+
+  g_mutex_clear (&data->lock);
+
+  if (data->m_animationDriver) {
+    data->m_animationDriver->uninstall();
+    delete data->m_animationDriver;
+  }
+  data->m_animationDriver = nullptr;
+  if (data->m_context)
+    delete data->m_context;
+  data->m_context = nullptr;
+  if (data->m_surface)
+    delete data->m_surface;
+  data->m_surface = nullptr;
+}
+
+static struct SharedRenderData *
+shared_render_data_ref (struct SharedRenderData * data)
+{
+  GST_TRACE ("%p reffing shared render data", data);
+  g_atomic_int_inc (&data->refcount);
+  return data;
+}
+
+static void
+shared_render_data_unref (struct SharedRenderData * data)
+{
+  GST_TRACE ("%p unreffing shared render data", data);
+  if (g_atomic_int_dec_and_test (&data->refcount))
+    shared_render_data_free (data);
+}
+
 void
 GstQuickRenderer::deactivateContext ()
 {
@@ -123,25 +179,34 @@ delete_cxx (QOpenGLFramebufferObject * cxx)
 
 GstQuickRenderer::GstQuickRenderer()
     : gl_context(NULL),
-      m_context(nullptr),
-      m_renderThread(nullptr),
-      m_surface(nullptr),
       m_fbo(nullptr),
       m_quickWindow(nullptr),
       m_renderControl(nullptr),
       m_qmlEngine(nullptr),
       m_qmlComponent(nullptr),
       m_rootItem(nullptr),
-      m_animationDriver(nullptr),
       gl_allocator(NULL),
       gl_params(NULL),
-      gl_mem(NULL)
+      gl_mem(NULL),
+      m_sharedRenderData(NULL)
 {
     init_debug ();
 }
 
+static gpointer
+dup_shared_render_data (gpointer data, gpointer user_data)
+{
+    struct SharedRenderData *render_data = (struct SharedRenderData *) data;
+
+    if (render_data)
+      return shared_render_data_ref (render_data);
+
+    return NULL;
+}
+
 bool GstQuickRenderer::init (GstGLContext * context, GError ** error)
 {
+    g_return_val_if_fail (GST_IS_GL_CONTEXT (context), false);
     g_return_val_if_fail (gst_gl_context_get_current () == context, false);
 
     QVariant qt_native_context = qt_opengl_native_context_from_gst_gl_context (context);
@@ -152,40 +217,63 @@ bool GstQuickRenderer::init (GstGLContext * context, GError ** error)
             "native context");
         return false;
     }
+    QThread *renderThread = QThread::currentThread();
 
-    m_context = new QOpenGLContext;
-    m_context->setNativeHandle(qt_native_context);
+    struct SharedRenderData *render_data = NULL, *old_render_data;
+    do {
+        if (render_data)
+            shared_render_data_unref (render_data);
 
-    m_surface = new GstBackingSurface;
-    m_surface->create();  /* FIXME: may need to be called on Qt's main thread */
+        old_render_data = render_data = (struct SharedRenderData *)
+                g_object_dup_data (G_OBJECT (context),
+                "qt.gl.render.shared.data", dup_shared_render_data, NULL);
+        if (!render_data)
+            render_data = shared_render_data_new ();
+    } while (old_render_data != render_data
+            && !g_object_replace_data (G_OBJECT (context),
+                "qt.gl.render.shared.data", old_render_data, render_data,
+                NULL, NULL));
+    m_sharedRenderData = render_data;
 
-    m_renderThread = QThread::currentThread();
-    gst_gl_context_activate (context, FALSE);
+    g_mutex_lock (&m_sharedRenderData->lock);
+    if (!m_sharedRenderData->m_context) {
+        m_sharedRenderData->m_context = new QOpenGLContext;
+        GST_TRACE ("%p new QOpenGLContext %p", this, m_sharedRenderData->m_context);
+        m_sharedRenderData->m_context->setNativeHandle(qt_native_context);
 
-    /* Qt does some things that it may require the OpenGL context current in
-     * ->create() so that it has the necessry information to create the
-     * QOpenGLContext from the native handle. This may fail if the OpenGL
-     * context is already current in another thread so we need to deactivate
-     * the context from GStreamer's thread before asking Qt to create the
-     * QOpenGLContext with ->create().
-     */
-    m_context->create();
-    m_context->doneCurrent();
+        m_sharedRenderData->m_surface = new GstBackingSurface;
+        m_sharedRenderData->m_surface->create();  /* FIXME: may need to be called on Qt's main thread */
 
-    m_context->moveToThread (m_renderThread);
-    if (!m_context->makeCurrent(m_surface)) {
-        g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_NOT_FOUND,
-            "Could not make Qt OpenGL context current");
-        /* try to keep the same OpenGL context state */
-        gst_gl_context_activate (context, TRUE);
-        return false;
+        gst_gl_context_activate (context, FALSE);
+
+        /* Qt does some things that it may require the OpenGL context current in
+         * ->create() so that it has the necessry information to create the
+         * QOpenGLContext from the native handle. This may fail if the OpenGL
+         * context is already current in another thread so we need to deactivate
+         * the context from GStreamer's thread before asking Qt to create the
+         * QOpenGLContext with ->create().
+         */
+        m_sharedRenderData->m_context->create();
+        m_sharedRenderData->m_context->doneCurrent();
+
+        m_sharedRenderData->m_context->moveToThread (renderThread);
+        if (!m_sharedRenderData->m_context->makeCurrent(m_sharedRenderData->m_surface)) {
+            g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_NOT_FOUND,
+                "Could not make Qt OpenGL context current");
+            /* try to keep the same OpenGL context state */
+            gst_gl_context_activate (context, TRUE);
+            g_mutex_unlock (&m_sharedRenderData->lock);
+            return false;
+        }
+
+        if (!gst_gl_context_activate (context, TRUE)) {
+            g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_NOT_FOUND,
+                "Could not make OpenGL context current again");
+            g_mutex_unlock (&m_sharedRenderData->lock);
+            return false;
+        }
     }
-
-    if (!gst_gl_context_activate (context, TRUE)) {
-        g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_NOT_FOUND,
-            "Could not make OpenGL context current again");
-        return false;
-    }
+    g_mutex_unlock (&m_sharedRenderData->lock);
 
     m_renderControl = new QQuickRenderControl();
     /* Create a QQuickWindow that is associated with our render control. Note that this
@@ -194,7 +282,7 @@ bool GstQuickRenderer::init (GstGLContext * context, GError ** error)
      */
     m_quickWindow = new QQuickWindow(m_renderControl);
     /* after QQuickWindow creation as QQuickRenderControl requires it */
-    m_renderControl->prepareThread (m_renderThread);
+    m_renderControl->prepareThread (renderThread);
 
     /* Create a QML engine. */
     m_qmlEngine = new QQmlEngine;
@@ -203,9 +291,47 @@ bool GstQuickRenderer::init (GstGLContext * context, GError ** error)
 
     gl_context = static_cast<GstGLContext*>(gst_object_ref (context));
     gl_allocator = (GstGLBaseMemoryAllocator *) gst_gl_memory_allocator_get_default (gl_context);
-    gl_params = (GstGLAllocationParams *) (gst_gl_video_allocation_params_new_wrapped_texture (gl_context,
-        NULL, &this->v_info, 0, NULL, GST_GL_TEXTURE_TARGET_2D, GST_GL_RGBA8,
-        0, NULL, (GDestroyNotify) delete_cxx));
+    gl_params = (GstGLAllocationParams *)
+        gst_gl_video_allocation_params_new_wrapped_texture (gl_context,
+            NULL, &this->v_info, 0, NULL, GST_GL_TEXTURE_TARGET_2D, GST_GL_RGBA8,
+            0, NULL, (GDestroyNotify) delete_cxx);
+
+    /* This is a gross hack relying on the internals of Qt and GStreamer
+     * however it's the only way to remove this warning on shutdown of all
+     * resources.
+     *
+     * GLib-CRITICAL **: 17:35:24.988: g_main_context_pop_thread_default: assertion 'g_queue_peek_head (stack) == context' failed
+     *
+     * The reason is that libgstgl has a GMainContext that it pushes as the
+     * thread default context.  Then later, Qt pushes a thread default main
+     * context.  The detruction order of the GMainContext's is reversed as
+     * GStreamer will explicitly pop the thread default main context however
+     * Qt pops when the thread is about to be destroyed.  GMainContext is
+     * unhappy with the ordering of the pops.
+     */
+    GMainContext *gst_main_context = g_main_context_ref_thread_default ();
+
+    /* make Qt allocate and push a thread-default GMainContext if it is
+     * going to */
+    QEventLoop loop;
+    if (loop.processEvents())
+        GST_LOG ("pending QEvents processed");
+
+    GMainContext *qt_main_context = g_main_context_ref_thread_default ();
+
+    if (qt_main_context == gst_main_context) {
+        g_main_context_unref (qt_main_context);
+        g_main_context_unref (gst_main_context);
+    } else {
+        /* We flip the order of the GMainContext's so that the destruction
+         * order can be preserved. */
+        g_main_context_pop_thread_default (qt_main_context);
+        g_main_context_pop_thread_default (gst_main_context);
+        g_main_context_push_thread_default (qt_main_context);
+        g_main_context_push_thread_default (gst_main_context);
+        g_main_context_unref (qt_main_context);
+        g_main_context_unref (gst_main_context);
+    }
 
     return true;
 }
@@ -213,11 +339,14 @@ bool GstQuickRenderer::init (GstGLContext * context, GError ** error)
 GstQuickRenderer::~GstQuickRenderer()
 {
     gst_gl_allocation_params_free (gl_params);
+    gst_clear_object (&gl_allocator);
 }
 
-void GstQuickRenderer::stop ()
+void GstQuickRenderer::stopGL ()
 {
-    g_assert (QOpenGLContext::currentContext() == m_context);
+    GST_DEBUG ("%p stop QOpenGLContext curent: %p stored: %p", this,
+        QOpenGLContext::currentContext(), m_sharedRenderData->m_context);
+    g_assert (QOpenGLContext::currentContext() == m_sharedRenderData->m_context);
 
     if (m_renderControl)
         m_renderControl->invalidate();
@@ -226,10 +355,13 @@ void GstQuickRenderer::stop ()
         delete m_fbo;
     m_fbo = nullptr;
 
-    m_context->doneCurrent();
-    if (m_animationDriver)
-        delete m_animationDriver;
-    m_animationDriver = nullptr;
+    QEventLoop loop;
+    if (loop.processEvents())
+        GST_LOG ("%p pending QEvents processed", this);
+
+    if (m_sharedRenderData)
+        shared_render_data_unref (m_sharedRenderData);
+    m_sharedRenderData = NULL;
 }
 
 void GstQuickRenderer::cleanup()
@@ -253,28 +385,27 @@ void GstQuickRenderer::cleanup()
     if (m_qmlEngine)
         delete m_qmlEngine;
     m_qmlEngine = nullptr;
+    if (m_rootItem)
+        delete m_rootItem;
+    m_rootItem = nullptr;
 
     gst_clear_object (&gl_context);
-
-    if (m_context)
-        delete m_context;
-    m_context = nullptr;
 }
 
 void GstQuickRenderer::ensureFbo()
 {
-    if (m_fbo && m_fbo->size() != m_surface->size()) {
-        GST_INFO ("removing old framebuffer created with size %ix%i",
-            m_fbo->size().width(), m_fbo->size().height());
+    if (m_fbo && m_fbo->size() != m_sharedRenderData->m_surface->size()) {
+        GST_INFO ("%p removing old framebuffer created with size %ix%i",
+            this, m_fbo->size().width(), m_fbo->size().height());
         delete m_fbo;
         m_fbo = nullptr;
     }
 
     if (!m_fbo) {
-        m_fbo = new QOpenGLFramebufferObject(m_surface->size(),
-                                             QOpenGLFramebufferObject::CombinedDepthStencil);
+        m_fbo = new QOpenGLFramebufferObject(m_sharedRenderData->m_surface->size(),
+                QOpenGLFramebufferObject::CombinedDepthStencil);
         m_quickWindow->setRenderTarget(m_fbo);
-        GST_DEBUG ("new framebuffer created with size %ix%i",
+        GST_DEBUG ("%p new framebuffer created with size %ix%i", this,
             m_fbo->size().width(), m_fbo->size().height());
     }
 }
@@ -282,14 +413,17 @@ void GstQuickRenderer::ensureFbo()
 void
 GstQuickRenderer::renderGstGL ()
 {
-    GST_DEBUG ("current QOpenGLContext %p", QOpenGLContext::currentContext());
+    GST_TRACE ("%p current QOpenGLContext %p", this,
+        QOpenGLContext::currentContext());
     m_quickWindow->resetOpenGLState();
 
-    m_animationDriver->advance();
+    m_sharedRenderData->m_animationDriver->advance();
 
     QEventLoop loop;
     if (loop.processEvents())
         GST_LOG ("pending QEvents processed");
+
+    loop.exit();
 
     ensureFbo();
 
@@ -310,7 +444,7 @@ GstQuickRenderer::renderGstGL ()
 
 GstGLMemory *GstQuickRenderer::generateOutput(GstClockTime input_ns)
 {
-    m_animationDriver->setNextTime(input_ns / GST_MSECOND);
+    m_sharedRenderData->m_animationDriver->setNextTime(input_ns / GST_MSECOND);
 
     /* run an event loop to update any changed values for rendering */
     QEventLoop loop;
@@ -326,7 +460,8 @@ GstGLMemory *GstQuickRenderer::generateOutput(GstClockTime input_ns)
     m_renderControl->polishItems();
 
     /* TODO: an async version could be used where */
-    gst_gl_context_thread_add (gl_context, (GstGLContextThreadFunc) GstQuickRenderer::render_gst_gl_c, this);
+    gst_gl_context_thread_add (gl_context,
+            (GstGLContextThreadFunc) GstQuickRenderer::render_gst_gl_c, this);
 
     GstGLMemory *tmp = gl_mem;
     gl_mem = NULL;
@@ -337,12 +472,12 @@ GstGLMemory *GstQuickRenderer::generateOutput(GstClockTime input_ns)
 void GstQuickRenderer::initializeGstGL ()
 {
     GST_TRACE ("current QOpenGLContext %p", QOpenGLContext::currentContext());
-    if (!m_context->makeCurrent(m_surface)) {
+    if (!m_sharedRenderData->m_context->makeCurrent(m_sharedRenderData->m_surface)) {
         m_errorString = "Failed to make Qt's wrapped OpenGL context current";
         return;
     }
     GST_INFO ("current QOpenGLContext %p", QOpenGLContext::currentContext());
-    m_renderControl->initialize(m_context);
+    m_renderControl->initialize(m_sharedRenderData->m_context);
 
     /* 1. QAnimationDriver's are thread-specific
      * 2. QAnimationDriver controls the 'animation time' that the Qml scene is
@@ -350,13 +485,18 @@ void GstQuickRenderer::initializeGstGL ()
      */
     /* FIXME: what happens with multiple qmlgloverlay elements?  Do we need a 
      * shared animation driver? */
-    m_animationDriver = new GstAnimationDriver;
-    m_animationDriver->install();
+    g_mutex_lock (&m_sharedRenderData->lock);
+    if (m_sharedRenderData->m_animationDriver == nullptr) {
+        m_sharedRenderData->m_animationDriver = new GstAnimationDriver;
+        m_sharedRenderData->m_animationDriver->install();
+    }
+    g_mutex_unlock (&m_sharedRenderData->lock);
 }
 
 void GstQuickRenderer::initializeQml()
 {
-    disconnect(m_qmlComponent, &QQmlComponent::statusChanged, this, &GstQuickRenderer::initializeQml);
+    disconnect(m_qmlComponent, &QQmlComponent::statusChanged, this,
+            &GstQuickRenderer::initializeQml);
 
     if (m_qmlComponent->isError()) {
         const QList<QQmlError> errorList = m_qmlComponent->errors();
@@ -388,12 +528,14 @@ void GstQuickRenderer::initializeQml()
     updateSizes();
 
     /* Initialize the render control and our OpenGL resources. */
-    gst_gl_context_thread_add (gl_context, (GstGLContextThreadFunc) GstQuickRenderer::initialize_gst_gl_c, this);
+    gst_gl_context_thread_add (gl_context,
+            (GstGLContextThreadFunc) GstQuickRenderer::initialize_gst_gl_c, this);
 }
 
 void GstQuickRenderer::updateSizes()
 {
-    GstBackingSurface *surface = static_cast<GstBackingSurface *>(m_surface);
+    GstBackingSurface *surface =
+            static_cast<GstBackingSurface *>(m_sharedRenderData->m_surface);
     /* Behave like SizeRootObjectToView. */
     QSize size = surface->size();
 
@@ -411,7 +553,7 @@ void GstQuickRenderer::updateSizes()
 
 void GstQuickRenderer::setSize(int w, int h)
 {
-    static_cast<GstBackingSurface *>(m_surface)->setSize(w, h);
+    static_cast<GstBackingSurface *>(m_sharedRenderData->m_surface)->setSize(w, h);
     updateSizes();
 }
 
@@ -427,7 +569,8 @@ bool GstQuickRenderer::setQmlScene (const gchar * scene, GError ** error)
     m_qmlComponent->setData(QByteArray (scene), QUrl(""));
     if (m_qmlComponent->isLoading())
         /* TODO: handle async properly */
-        connect(m_qmlComponent, &QQmlComponent::statusChanged, this, &GstQuickRenderer::initializeQml);
+        connect(m_qmlComponent, &QQmlComponent::statusChanged, this,
+                &GstQuickRenderer::initializeQml);
     else
         initializeQml();
 
