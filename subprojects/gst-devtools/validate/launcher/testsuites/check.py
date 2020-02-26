@@ -26,7 +26,7 @@ import os
 
 TEST_MANAGER = "check"
 
-KNOWN_NOT_LEAKY = r'^check.gst-devtools.*|^check.gstreamer.*|^check-gst-plugins-base|^check.gst-plugins-ugly|^check.gst-plugins-good'
+KNOWN_NOT_LEAKY = r'^gst-devtools.*|^gstreamer.*|^gst-plugins-base|^gst-plugins-ugly|^gst-plugins-good'
 
 # These tests take very long compared to what they add, so let's skip them.
 LONG_VALGRIND_TESTS = [
