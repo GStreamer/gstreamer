@@ -568,6 +568,7 @@ _file_get_structures (GFile * file, gchar ** err)
   /* TODO Handle GCancellable */
   if (!g_file_load_contents (file, NULL, &content, &size, NULL, &error)) {
     GST_WARNING ("Failed to load contents: %d %s", error->code, error->message);
+    g_free (content);
     g_error_free (error);
     return NULL;
   }
@@ -652,10 +653,12 @@ _file_get_structures (GFile * file, gchar ** err)
   }
 
 done:
+  g_free (content);
   g_free (filename);
   return structures;
 
 failed:
+  g_free (content);
   if (structures)
     g_list_free_full (structures, (GDestroyNotify) gst_structure_free);
   structures = NULL;
