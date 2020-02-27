@@ -1,5 +1,5 @@
 /* -LICENSE-START-
-** Copyright (c) 2016 Blackmagic Design
+** Copyright (c) 2018 Blackmagic Design
 **
 ** Permission is hereby granted, free of charge, to any person or organization
 ** obtaining a copy of the software and accompanying documentation covered by
@@ -37,6 +37,10 @@
     #endif
 #endif
 
+#ifndef BMD_PUBLIC
+	#define BMD_PUBLIC
+#endif
+
 // Type Declarations
 
 
@@ -50,7 +54,7 @@ class IDeckLink;
 
 /* Interface IDeckLink - represents a DeckLink device */
 
-class IDeckLink : public IUnknown
+class BMD_PUBLIC IDeckLink : public IUnknown
 {
 public:
     virtual HRESULT GetModelName (/* out */ const char **modelName) = 0;

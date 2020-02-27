@@ -1,5 +1,5 @@
 /* -LICENSE-START-
-** Copyright (c) 2016 Blackmagic Design
+** Copyright (c) 2018 Blackmagic Design
 **
 ** Permission is hereby granted, free of charge, to any person or organization
 ** obtaining a copy of the software and accompanying documentation covered by
@@ -37,6 +37,10 @@
     #endif
 #endif
 
+#ifndef BMD_PUBLIC
+	#define BMD_PUBLIC
+#endif
+
 // Type Declarations
 
 typedef int64_t BMDTimeValue;
@@ -54,7 +58,8 @@ typedef uint32_t BMDTimecodeFlags;
 enum _BMDTimecodeFlags {
     bmdTimecodeFlagDefault                                       = 0,
     bmdTimecodeIsDropFrame                                       = 1 << 0,
-    bmdTimecodeFieldMark                                         = 1 << 1
+    bmdTimecodeFieldMark                                         = 1 << 1,
+    bmdTimecodeColorFrame                                        = 1 << 2
 };
 
 /* Enum BMDVideoConnection - Video connection types */
@@ -96,7 +101,7 @@ class IDeckLinkTimecode;
 
 /* Interface IDeckLinkTimecode - Used for video frame timecode representation. */
 
-class IDeckLinkTimecode : public IUnknown
+class BMD_PUBLIC IDeckLinkTimecode : public IUnknown
 {
 public:
     virtual BMDTimecodeBCD GetBCD (void) = 0;

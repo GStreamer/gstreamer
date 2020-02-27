@@ -1,5 +1,5 @@
 /* -LICENSE-START-
-** Copyright (c) 2016 Blackmagic Design
+** Copyright (c) 2018 Blackmagic Design
 **
 ** Permission is hereby granted, free of charge, to any person or organization
 ** obtaining a copy of the software and accompanying documentation covered by
@@ -37,12 +37,16 @@
     #endif
 #endif
 
+#ifndef BMD_PUBLIC
+	#define BMD_PUBLIC
+#endif
+
 // Type Declarations
 
 
 // Interface ID Declarations
 
-BMD_CONST REFIID IID_IDeckLinkConfiguration                       = /* CB71734A-FE37-4E8D-8E13-802133A1C3F2 */ {0xCB,0x71,0x73,0x4A,0xFE,0x37,0x4E,0x8D,0x8E,0x13,0x80,0x21,0x33,0xA1,0xC3,0xF2};
+BMD_CONST REFIID IID_IDeckLinkConfiguration                       = /* EF90380B-4AE5-4346-9077-E288E149F129 */ {0xEF,0x90,0x38,0x0B,0x4A,0xE5,0x43,0x46,0x90,0x77,0xE2,0x88,0xE1,0x49,0xF1,0x29};
 BMD_CONST REFIID IID_IDeckLinkEncoderConfiguration                = /* 138050E5-C60A-4552-BF3F-0F358049327E */ {0x13,0x80,0x50,0xE5,0xC6,0x0A,0x45,0x52,0xBF,0x3F,0x0F,0x35,0x80,0x49,0x32,0x7E};
 
 /* Enum BMDDeckLinkConfigurationID - DeckLink Configuration ID */
@@ -53,10 +57,6 @@ enum _BMDDeckLinkConfigurationID {
     /* Serial port Flags */
 
     bmdDeckLinkConfigSwapSerialRxTx                              = 'ssrt',
-
-    /* Video Input/Output Flags */
-
-    bmdDeckLinkConfigUse1080pNotPsF                              = 'fpro',
 
     /* Video Input/Output Integers */
 
@@ -78,6 +78,12 @@ enum _BMDDeckLinkConfigurationID {
     bmdDeckLinkConfigLowLatencyVideoOutput                       = 'llvo',
     bmdDeckLinkConfigDownConversionOnAllAnalogOutput             = 'caao',
     bmdDeckLinkConfigSMPTELevelAOutput                           = 'smta',
+    bmdDeckLinkConfigRec2020Output                               = 'rec2',	// Ensure output is Rec.2020 colorspace
+    bmdDeckLinkConfigQuadLinkSDIVideoOutputSquareDivisionSplit   = 'SDQS',
+
+    /* Video Output Flags */
+
+    bmdDeckLinkConfigOutput1080pAsPsF                            = 'pfpr',
 
     /* Video Output Integers */
 
@@ -105,6 +111,10 @@ enum _BMDDeckLinkConfigurationID {
     bmdDeckLinkConfigVideoInputScanning                          = 'visc',	// Applicable to H264 Pro Recorder only
     bmdDeckLinkConfigUseDedicatedLTCInput                        = 'dltc',	// Use timecode from LTC input instead of SDI stream
     bmdDeckLinkConfigSDIInput3DPayloadOverride                   = '3dds',
+
+    /* Video Input Flags */
+
+    bmdDeckLinkConfigCapture1080pAsPsF                           = 'cfpr',
 
     /* Video Input Integers */
 
@@ -206,7 +216,7 @@ class IDeckLinkEncoderConfiguration;
 
 /* Interface IDeckLinkConfiguration - DeckLink Configuration interface */
 
-class IDeckLinkConfiguration : public IUnknown
+class BMD_PUBLIC IDeckLinkConfiguration : public IUnknown
 {
 public:
     virtual HRESULT SetFlag (/* in */ BMDDeckLinkConfigurationID cfgID, /* in */ bool value) = 0;
@@ -225,7 +235,7 @@ protected:
 
 /* Interface IDeckLinkEncoderConfiguration - DeckLink Encoder Configuration interface. Obtained from IDeckLinkEncoderInput */
 
-class IDeckLinkEncoderConfiguration : public IUnknown
+class BMD_PUBLIC IDeckLinkEncoderConfiguration : public IUnknown
 {
 public:
     virtual HRESULT SetFlag (/* in */ BMDDeckLinkEncoderConfigurationID cfgID, /* in */ bool value) = 0;
