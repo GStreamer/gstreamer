@@ -936,22 +936,21 @@ typedef struct
 {
   guint media_type;
   guint64 ts;                   /* timestamp in ms */
-  guint64 rt;                   /* running_time in ms */
 } InputData;
 
 GST_START_TEST (test_incrementing_timestamps)
 {
   GstPad *audio_sink, *video_sink, *audio_src, *video_src;
   GstHarness *h, *audio, *video, *audio_q, *video_q;
-  GstTestClock *tclock;
   guint i;
+  GstEvent *event;
   guint32 prev_pts;
   InputData input[] = {
-    {AUDIO, 155, 175},
-    {VIDEO, 156, 191},
-    {VIDEO, 190, 191},
-    {AUDIO, 176, 195},
-    {AUDIO, 197, 215},
+    {AUDIO, 155},
+    {VIDEO, 156},
+    {VIDEO, 190},
+    {AUDIO, 176},
+    {AUDIO, 197},
   };
 
   /* setup flvmuxer with queues in front */
@@ -981,26 +980,27 @@ GST_START_TEST (test_incrementing_timestamps)
       "video/x-h264, stream-format=(string)avc, alignment=(string)au, "
       "codec_data=(buffer)0142c00dffe1000d6742c00d95a0507c807844235001000468ce3c80");
 
-  tclock = gst_harness_get_testclock (h);
-
   for (i = 0; i < G_N_ELEMENTS (input); i++) {
     InputData *d = &input[i];
     GstBuffer *buf = gst_buffer_new ();
-    GstClockTime now = d->rt * GST_MSECOND;
-    GstClockID pending, res;
 
     GST_BUFFER_DTS (buf) = GST_BUFFER_PTS (buf) = d->ts * GST_MSECOND;
-    gst_test_clock_set_time (tclock, now);
 
     if (d->media_type == AUDIO)
       gst_harness_push (audio_q, buf);
     else
       gst_harness_push (video_q, buf);
+  }
 
-    gst_test_clock_wait_for_next_pending_id (tclock, &pending);
-    res = gst_test_clock_process_next_clock_id (tclock);
-    gst_clock_id_unref (pending);
-    gst_clock_id_unref (res);
+  gst_harness_push_event (audio_q, gst_event_new_eos ());
+  gst_harness_push_event (video_q, gst_event_new_eos ());
+
+  while ((event = gst_harness_pull_event (h)) != NULL) {
+    GstEventType event_type = GST_EVENT_TYPE (event);
+    gst_event_unref (event);
+
+    if (event_type == GST_EVENT_EOS)
+      break;
   }
 
   /* pull the flv metadata */
@@ -1014,6 +1014,9 @@ GST_START_TEST (test_incrementing_timestamps)
     GstBuffer *buf = gst_harness_pull (h);
     GstMapInfo map;
     guint32 pts;
+
+    fail_unless (buf != NULL);
+
     gst_buffer_map (buf, &map, GST_MAP_READ);
     pts = GST_READ_UINT24_BE (map.data + 4);
     GST_DEBUG ("media=%u, pts = %u\n", map.data[0], pts);
@@ -1024,7 +1027,6 @@ GST_START_TEST (test_incrementing_timestamps)
   }
 
   /* teardown */
-  gst_object_unref (tclock);
   gst_harness_teardown (h);
   gst_harness_teardown (audio);
   gst_harness_teardown (video);
@@ -1038,19 +1040,19 @@ GST_START_TEST (test_rollover_timestamps)
 {
   GstPad *audio_sink, *video_sink, *audio_src, *video_src;
   GstHarness *h, *audio, *video, *audio_q, *video_q;
-  GstTestClock *tclock;
+  GstEvent *event;
   guint i;
   guint64 rollover_pts = (guint64) G_MAXUINT32 + 100;
   InputData input[] = {
-    {AUDIO, 0, 1}
+    {AUDIO, 0}
     ,
-    {VIDEO, 0, 2}
+    {VIDEO, 0}
     ,
-    {VIDEO, (guint64) G_MAXUINT32 - 100, (guint64) G_MAXUINT32 - 99}
+    {VIDEO, (guint64) G_MAXUINT32 - 100}
     ,
-    {AUDIO, (guint64) G_MAXUINT32 - 95, (guint64) G_MAXUINT32 - 90}
+    {AUDIO, (guint64) G_MAXUINT32 - 95}
     ,
-    {AUDIO, rollover_pts, (guint64) G_MAXUINT32 + 110}
+    {AUDIO, rollover_pts}
     ,
   };
 
@@ -1081,28 +1083,29 @@ GST_START_TEST (test_rollover_timestamps)
       "video/x-h264, stream-format=(string)avc, alignment=(string)au, "
       "codec_data=(buffer)0142c00dffe1000d6742c00d95a0507c807844235001000468ce3c80");
 
-  tclock = gst_harness_get_testclock (h);
-
   for (i = 0; i < G_N_ELEMENTS (input); i++) {
     InputData *d = &input[i];
     GstBuffer *buf = gst_buffer_new ();
-    GstClockTime now = d->rt * GST_MSECOND;
-    GstClockID pending, res;
 
     GST_BUFFER_DTS (buf) = GST_BUFFER_PTS (buf) = d->ts * GST_MSECOND;
     GST_DEBUG ("Push media=%u, pts=%" G_GUINT64_FORMAT " (%" GST_TIME_FORMAT
         ")", d->media_type, d->ts, GST_TIME_ARGS (GST_BUFFER_PTS (buf)));
-    gst_test_clock_set_time (tclock, now);
 
     if (d->media_type == AUDIO)
       gst_harness_push (audio_q, buf);
     else
       gst_harness_push (video_q, buf);
 
-    gst_test_clock_wait_for_next_pending_id (tclock, &pending);
-    res = gst_test_clock_process_next_clock_id (tclock);
-    gst_clock_id_unref (pending);
-    gst_clock_id_unref (res);
+  }
+  gst_harness_push_event (audio_q, gst_event_new_eos ());
+  gst_harness_push_event (video_q, gst_event_new_eos ());
+
+  while ((event = gst_harness_pull_event (h)) != NULL) {
+    GstEventType event_type = GST_EVENT_TYPE (event);
+    gst_event_unref (event);
+
+    if (event_type == GST_EVENT_EOS)
+      break;
   }
 
   /* pull the flv metadata */
@@ -1116,6 +1119,9 @@ GST_START_TEST (test_rollover_timestamps)
     GstBuffer *buf = gst_harness_pull (h);
     GstMapInfo map;
     guint32 pts, pts_ext;
+
+    fail_unless (buf != NULL);
+
     gst_buffer_map (buf, &map, GST_MAP_READ);
     pts = GST_READ_UINT24_BE (map.data + 4);
     pts_ext = GST_READ_UINT8 (map.data + 7);
@@ -1128,7 +1134,6 @@ GST_START_TEST (test_rollover_timestamps)
   }
 
   /* teardown */
-  gst_object_unref (tclock);
   gst_harness_teardown (h);
   gst_harness_teardown (audio);
   gst_harness_teardown (video);
