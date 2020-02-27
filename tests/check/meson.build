@@ -131,10 +131,14 @@ test_deps = [gst_dep, gst_base_dep, gst_net_dep, gst_check_dep, audio_dep,
   video_dep, pbutils_dep, rtp_dep, rtsp_dep, tag_dep, allocators_dep, app_dep,
   fft_dep, riff_dep, sdp_dep, gio_dep, valgrind_dep] + glib_deps
 
-pluginsdirs = [  ]
+pluginsdirs = []
 if gst_dep.type_name() == 'pkgconfig'
   pluginsdirs = [gst_dep.get_pkgconfig_variable('pluginsdir')]
+  gst_plugin_scanner_dir = gst_dep.get_pkgconfig_variable('pluginscannerdir')
+else
+  gst_plugin_scanner_dir = gst_proj.get_variable('gst_scanner_dir')
 endif
+gst_plugin_scanner_path = join_paths(gst_plugin_scanner_dir, 'gst-plugin-scanner')
 
 foreach t : base_tests
   fname = t.get(0)
@@ -167,6 +171,7 @@ foreach t : base_tests
     env.set('GST_PLUGIN_LOADING_WHITELIST', 'gstreamer',
         'gst-plugins-base@' + meson.build_root())
     env.set('GST_REGISTRY', join_paths(meson.current_build_dir(), '@0@.registry'.format(test_name)))
+    env.set('GST_PLUGIN_SCANNER_1_0', gst_plugin_scanner_path)
     test(test_name, exe, env: env, timeout: 3 * 60)
   endif
 endforeach
@@ -189,6 +194,7 @@ foreach group : [1, 2, 3, 4, 5, 6]
   env.set('GST_PLUGIN_LOADING_WHITELIST', 'gstreamer',
       'gst-plugins-base@' + meson.build_root())
   env.set('GST_REGISTRY', join_paths(meson.current_build_dir(), '@0@.registry'.format(test_name)))
+  env.set('GST_PLUGIN_SCANNER_1_0', gst_plugin_scanner_path)
 
   test(vscale_test_name, exe, env: env, timeout: 3 * 60)
 endforeach
