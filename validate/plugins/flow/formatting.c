@@ -32,6 +32,7 @@
 #include <gst/gst.h>
 #include <string.h>
 #include <stdio.h>
+#include <glib/gprintf.h>
 
 #include "../../gst/validate/gst-validate-utils.h"
 
@@ -56,7 +57,7 @@ void
 format_time (gchar * dest_str, guint64 time)
 {
   if (GST_CLOCK_TIME_IS_VALID (time)) {
-    sprintf (dest_str, "%" GST_TIME_FORMAT, GST_TIME_ARGS (time));
+    g_sprintf (dest_str, "%" GST_TIME_FORMAT, GST_TIME_ARGS (time));
   } else {
     strcpy (dest_str, "none");
   }
@@ -65,7 +66,7 @@ format_time (gchar * dest_str, guint64 time)
 static void
 format_number (gchar * dest_str, guint64 number)
 {
-  sprintf (dest_str, "%" G_GUINT64_FORMAT, number);
+  g_sprintf (dest_str, "%" G_GUINT64_FORMAT, number);
 }
 
 gchar *
