@@ -2,6 +2,7 @@
  * Copyright (C) 2011 David Schleef <ds@schleef.org>
  * Copyright (C) 2014 Sebastian Dröge <sebastian@centricular.com>
  * Copyright (C) 2015 Florian Langlois <florian.langlois@fr.thalesgroup.com>
+ * Copyright (C) 2020 Sohonet <dev@sohonet.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -74,6 +75,15 @@ gst_decklink_mode_get_type (void)
     {GST_DECKLINK_MODE_1556p2398, "2k 23.98p", "1556p2398"},
     {GST_DECKLINK_MODE_1556p24, "2k 24p", "1556p24"},
     {GST_DECKLINK_MODE_1556p25, "2k 25p", "1556p25"},
+
+    {GST_DECKLINK_MODE_2KDCI2398, "2k dci 23.98p", "2kdcip2398"},
+    {GST_DECKLINK_MODE_2KDCI24, "2k dci 24p", "2kdcip24"},
+    {GST_DECKLINK_MODE_2KDCI25, "2k dci 25p", "2kdcip25"},
+    {GST_DECKLINK_MODE_2KDCI2997, "2k dci 29.97p", "2kdcip2997"},
+    {GST_DECKLINK_MODE_2KDCI30, "2k dci 30p", "2kdcip30"},
+    {GST_DECKLINK_MODE_2KDCI50, "2k dci 50p", "2kdcip50"},
+    {GST_DECKLINK_MODE_2KDCI5994, "2k dci 59.94p", "2kdcip5994"},
+    {GST_DECKLINK_MODE_2KDCI60, "2k dci 60p", "2kdcip60"},
 
     {GST_DECKLINK_MODE_2160p2398, "4k 23.98p", "2160p2398"},
     {GST_DECKLINK_MODE_2160p24, "4k 24p", "2160p24"},
@@ -301,6 +311,15 @@ static const GstDecklinkMode modes[] = {
   {bmdMode2k24, 2048, 1556, 24, 1, false, HD},
   {bmdMode2k25, 2048, 1556, 25, 1, false, HD},
 
+  {bmdMode2kDCI2398, 2048, 1080, 2400, 1001, false, HD},
+  {bmdMode2kDCI24, 2048, 1080, 24, 1, false, HD},
+  {bmdMode2kDCI25, 2048, 1080, 25, 1, false, HD},
+  {bmdMode2kDCI2997, 2048, 1080, 30000, 1001, false, HD},
+  {bmdMode2kDCI30, 2048, 1080, 30, 1, false, HD},
+  {bmdMode2kDCI50, 2048, 1080, 50, 1, false, HD},
+  {bmdMode2kDCI5994, 2048, 1080, 60000, 1001, false, HD},
+  {bmdMode2kDCI60, 2048, 1080, 60, 1, false, HD},
+
   {bmdMode4K2160p2398, 3840, 2160, 24000, 1001, false, UHD},
   {bmdMode4K2160p24, 3840, 2160, 24, 1, false, UHD},
   {bmdMode4K2160p25, 3840, 2160, 25, 1, false, UHD},
@@ -456,6 +475,30 @@ gst_decklink_get_mode_enum_from_bmd (BMDDisplayMode mode)
       break;
     case bmdMode2k25:
       displayMode = GST_DECKLINK_MODE_1556p25;
+      break;
+    case bmdMode2kDCI2398:
+      displayMode = GST_DECKLINK_MODE_2KDCI2398;
+      break;
+    case bmdMode2kDCI24:
+      displayMode = GST_DECKLINK_MODE_2KDCI24;
+      break;
+    case bmdMode2kDCI25:
+      displayMode = GST_DECKLINK_MODE_2KDCI25;
+      break;
+    case bmdMode2kDCI2997:
+      displayMode = GST_DECKLINK_MODE_2KDCI2997;
+      break;
+    case bmdMode2kDCI30:
+      displayMode = GST_DECKLINK_MODE_2KDCI30;
+      break;
+    case bmdMode2kDCI50:
+      displayMode = GST_DECKLINK_MODE_2KDCI50;
+      break;
+    case bmdMode2kDCI5994:
+      displayMode = GST_DECKLINK_MODE_2KDCI5994;
+      break;
+    case bmdMode2kDCI60:
+      displayMode = GST_DECKLINK_MODE_2KDCI60;
       break;
     case bmdMode4K2160p2398:
       displayMode = GST_DECKLINK_MODE_2160p2398;

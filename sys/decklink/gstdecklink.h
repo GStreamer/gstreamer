@@ -2,6 +2,7 @@
  * Copyright (C) 2011 David Schleef <ds@schleef.org>
  * Copyright (C) 2014 Sebastian Dröge <sebastian@centricular.com>
  * Copyright (C) 2015 Florian Langlois <florian.langlois@fr.thalesgroup.com>
+ * Copyright (C) 2020 Sohonet <dev@sohonet.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -90,6 +91,15 @@ typedef enum {
   GST_DECKLINK_MODE_1556p2398,
   GST_DECKLINK_MODE_1556p24,
   GST_DECKLINK_MODE_1556p25,
+
+  GST_DECKLINK_MODE_2KDCI2398,
+  GST_DECKLINK_MODE_2KDCI24,
+  GST_DECKLINK_MODE_2KDCI25,
+  GST_DECKLINK_MODE_2KDCI2997,
+  GST_DECKLINK_MODE_2KDCI30,
+  GST_DECKLINK_MODE_2KDCI50,
+  GST_DECKLINK_MODE_2KDCI5994,
+  GST_DECKLINK_MODE_2KDCI60,
 
   GST_DECKLINK_MODE_2160p2398,
   GST_DECKLINK_MODE_2160p24,
