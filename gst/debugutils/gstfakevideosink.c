@@ -180,8 +180,9 @@ gst_fake_video_sink_init (GstFakeVideoSink * self)
     GstPad *ghost_pad;
 
     /* mimic GstVideoSink base class */
-    g_object_set (child, "max-lateness", G_GINT64_CONSTANT (20000000), "qos",
-        TRUE, "sync", TRUE, NULL);
+    g_object_set (child, "max-lateness", 5 * GST_MSECOND,
+        "processing-deadline", 15 * GST_MSECOND, "qos", TRUE, "sync", TRUE,
+        NULL);
 
     gst_bin_add (GST_BIN (self), child);
 
