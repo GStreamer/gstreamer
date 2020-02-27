@@ -69,10 +69,8 @@ struct _GstVp9DecoderPrivate
 
   GstVp9Picture *current_picture;
 
-  guint num_frames;             /* number of frames in a super frame */
-  gsize frame_sizes[8];         /* size of frames in a super frame */
+  GstVp9SuperframeInfo superframe_info;
   guint frame_cnt;              /* frame count variable for super frame */
-  guint total_idx_size;         /* super frame index size (full block size) */
   gboolean had_superframe_hdr;  /* indicate the presense of super frame */
 };
 
@@ -187,56 +185,6 @@ gst_vp9_decoder_check_codec_change (GstVp9Decoder * self,
   return ret;
 }
 
-static gboolean
-gst_vp9_decoder_parse_super_frame (GstVp9Decoder * self, const guint8 * data,
-    gsize size, gsize * frame_sizes, guint * frame_count,
-    guint * total_idx_size)
-{
-  guint8 marker;
-  guint32 num_frames = 1, frame_size_length, total_index_size;
-  guint i, j;
-
-  if (size <= 0)
-    return FALSE;
-
-  marker = data[size - 1];
-
-  if ((marker & 0xe0) == 0xc0) {
-
-    GST_DEBUG_OBJECT (self, "Got VP9-Super Frame, size %" G_GSIZE_FORMAT, size);
-
-    num_frames = (marker & 0x7) + 1;
-    frame_size_length = ((marker >> 3) & 0x3) + 1;
-    total_index_size = 2 + num_frames * frame_size_length;
-
-    if ((size >= total_index_size)
-        && (data[size - total_index_size] == marker)) {
-      const guint8 *x = &data[size - total_index_size + 1];
-
-      for (i = 0; i < num_frames; i++) {
-        guint32 cur_frame_size = 0;
-
-        for (j = 0; j < frame_size_length; j++)
-          cur_frame_size |= (*x++) << (j * 8);
-
-        frame_sizes[i] = cur_frame_size;
-      }
-
-      *frame_count = num_frames;
-      *total_idx_size = total_index_size;
-    } else {
-      GST_ERROR_OBJECT (self, "Failed to parse Super-frame");
-      return FALSE;
-    }
-  } else {
-    *frame_count = num_frames;
-    frame_sizes[0] = size;
-    *total_idx_size = 0;
-  }
-
-  return TRUE;
-}
-
 static GstFlowReturn
 gst_vp9_decoder_parse (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame, GstAdapter * adapter, gboolean at_eos)
@@ -264,25 +212,26 @@ gst_vp9_decoder_parse (GstVideoDecoder * decoder,
   data = (const guint8 *) gst_adapter_map (adapter, size);
 
   if (!priv->had_superframe_hdr) {
-    if (!gst_vp9_decoder_parse_super_frame (self, data, size, priv->frame_sizes,
-            &priv->num_frames, &priv->total_idx_size)) {
-      goto unmap_and_error;
-    }
+    pres =
+        gst_vp9_parser_parse_superframe_info (priv->parser,
+        &(priv->superframe_info), data, size);
 
-    if (priv->num_frames > 1)
+    if (pres == GST_VP9_PARSER_ERROR)
+      goto unmap_and_error;
+
+    if (priv->superframe_info.frames_in_superframe > 0)
       priv->had_superframe_hdr = TRUE;
   }
 
-  buf_size = priv->frame_sizes[priv->frame_cnt++];
+  buf_size = priv->superframe_info.frame_sizes[priv->frame_cnt++];
 
   pres = gst_vp9_parser_parse_frame_header (priv->parser, &frame_hdr,
       data, buf_size);
 
-  if (priv->frame_cnt == priv->num_frames) {
-    priv->num_frames = 0;
+  if (priv->frame_cnt == priv->superframe_info.frames_in_superframe) {
     priv->frame_cnt = 0;
     priv->had_superframe_hdr = FALSE;
-    buf_size += priv->total_idx_size;
+    buf_size += priv->superframe_info.superframe_index_size;
   }
 
   if (pres != GST_VP9_PARSER_OK) {
