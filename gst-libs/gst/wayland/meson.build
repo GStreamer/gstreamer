@@ -15,7 +15,7 @@ if use_wayland
     soversion : soversion,
   darwin_versions : osxversion,
     install : true,
-    dependencies : [gst_dep, gstvideo_dep]
+    dependencies : [gst_dep, gstvideo_dep, wl_client_dep]
   )
 
   gstwayland_dep = declare_dependency(link_with : gstwayland,
