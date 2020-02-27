@@ -37,6 +37,7 @@ G_BEGIN_DECLS
 
 #define GST_VP9_FRAME_MARKER 0x02
 #define GST_VP9_SYNC_CODE 0x498342
+#define GST_VP9_SUPERFRAME_MARKER 0x06
 
 #define GST_VP9_MAX_LOOP_FILTER    63
 #define GST_VP9_MAX_PROB           255
@@ -61,6 +62,8 @@ G_BEGIN_DECLS
 
 #define GST_VP9_PREDICTION_PROBS   3
 
+#define GST_VP9_MAX_FRAMES_IN_SUPERFRAME 8
+
 typedef struct _GstVp9Parser               GstVp9Parser;
 typedef struct _GstVp9FrameHdr             GstVp9FrameHdr;
 typedef struct _GstVp9LoopFilter           GstVp9LoopFilter;
@@ -68,6 +71,7 @@ typedef struct _GstVp9QuantIndices         GstVp9QuantIndices;
 typedef struct _GstVp9Segmentation         GstVp9Segmentation;
 typedef struct _GstVp9SegmentationInfo     GstVp9SegmentationInfo;
 typedef struct _GstVp9SegmentationInfoData GstVp9SegmentationInfoData;
+typedef struct _GstVp9SuperframeInfo       GstVp9SuperframeInfo;
 
 /**
  * GstVp9ParseResult:
@@ -422,6 +426,24 @@ struct _GstVp9FrameHdr
 };
 
 /**
+ * GstVp9SuperframeInfo:
+ * @bytes_per_framesize: indicates the number of bytes needed to code each frame size
+ * @frames_in_superframe: indicates the number of frames within this superframe
+ * @frame_sizes: specifies the size in bytes of frame number i (zero indexed) within this superframe
+ * @superframe_index_size: indicates the total size of the superframe_index
+ *
+ * Superframe info
+ *
+ * Since: 1.18
+ */
+struct _GstVp9SuperframeInfo {
+  guint32 bytes_per_framesize;
+  guint32 frames_in_superframe;
+  guint32 frame_sizes[GST_VP9_MAX_FRAMES_IN_SUPERFRAME];
+  guint32 superframe_index_size;
+};
+
+/**
  * GstVp9Segmentation:
  * @filter_level: loop filter level
  * @luma_ac_quant_scale: AC quant scale for luma(Y) component
@@ -488,6 +510,9 @@ GstVp9Parser *     gst_vp9_parser_new (void);
 
 GST_CODEC_PARSERS_API
 GstVp9ParserResult gst_vp9_parser_parse_frame_header (GstVp9Parser* parser, GstVp9FrameHdr * frame_hdr, const guint8 * data, gsize size);
+
+GST_CODEC_PARSERS_API
+GstVp9ParserResult gst_vp9_parser_parse_superframe_info (GstVp9Parser* parser, GstVp9SuperframeInfo * superframe_info, const guint8 * data, gsize size);
 
 GST_CODEC_PARSERS_API
 void               gst_vp9_parser_free (GstVp9Parser * parser);

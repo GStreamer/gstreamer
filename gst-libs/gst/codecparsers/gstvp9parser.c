@@ -104,6 +104,12 @@ verify_sync_code (GstBitReader * const br)
 }
 
 static gboolean
+verify_superframe_marker (GstBitReader * br)
+{
+  return gst_vp9_read_bits (br, 3) == GST_VP9_SUPERFRAME_MARKER;
+}
+
+static gboolean
 parse_bitdepth_colorspace_sampling (GstVp9Parser * parser,
     GstBitReader * const br, GstVp9FrameHdr * frame_hdr)
 {
@@ -812,5 +818,80 @@ gst_vp9_parser_parse_frame_header (GstVp9Parser * parser,
   return gst_vp9_parser_update (parser, frame_hdr);
 
 error:
+  return GST_VP9_PARSER_ERROR;
+}
+
+/**
+ * gst_vp9_parser_parse_superframe_info:
+ * @parser: The #GstVp9Parser
+ * @superframe_info: The #GstVp9SuperframeInfo to fill
+ * @data: The data to parse
+ * @size: The size of the @data to parse
+ *
+ * Parses the VP9 bitstream contained in @data, and fills in @superframe_info
+ * with the information. The @size argument represent the whole superframe size.
+ * If @data is not superframe but normal frame, the parser returns
+ * GST_VP9_PARSER_OK, frame_size[0] is set to @size and frames_in_superframe is
+ * set to 1. Also this method does not validate vp9frame header and verifying
+ * the frame header is caller's responsibility.
+ *
+ * Returns: a #GstVp9ParserResult
+ *
+ * Since: 1.18
+ */
+GstVp9ParserResult
+gst_vp9_parser_parse_superframe_info (GstVp9Parser * parser,
+    GstVp9SuperframeInfo * superframe_info, const guint8 * data, gsize size)
+{
+  GstBitReader header_bit_reader, index_bit_reader;
+  GstBitReader *hbr = &header_bit_reader, *ibr = &index_bit_reader;
+  guint i, j;
+
+  g_return_val_if_fail (parser != NULL, GST_VP9_PARSER_ERROR);
+  g_return_val_if_fail (superframe_info != NULL, GST_VP9_PARSER_ERROR);
+  g_return_val_if_fail (data != NULL, GST_VP9_PARSER_ERROR);
+  g_return_val_if_fail (size > 0, GST_VP9_PARSER_ERROR);
+
+  gst_bit_reader_init (hbr, data + size - 1, 1);
+  memset (superframe_info, 0, sizeof (GstVp9SuperframeInfo));
+
+  /* Parsing Superframe Data Chunk */
+
+  if (!verify_superframe_marker (hbr)) {
+    superframe_info->frame_sizes[0] = size;
+    superframe_info->frames_in_superframe = 1;
+    return GST_VP9_PARSER_OK;
+  }
+
+  GST_DEBUG ("Parsing VP9 superframe, size %" G_GSIZE_FORMAT, size);
+
+  superframe_info->bytes_per_framesize = gst_vp9_read_bits (hbr, 2) + 1;
+  superframe_info->frames_in_superframe = gst_vp9_read_bits (hbr, 3) + 1;
+
+  if (superframe_info->frames_in_superframe > GST_VP9_MAX_FRAMES_IN_SUPERFRAME)
+    goto error;
+
+  superframe_info->superframe_index_size =
+      2 +
+      superframe_info->frames_in_superframe *
+      superframe_info->bytes_per_framesize;
+
+  gst_bit_reader_init (ibr,
+      data + size - superframe_info->superframe_index_size,
+      superframe_info->superframe_index_size);
+
+  /* Checking that the first byte of the superframe_index matches the final byte */
+  if (gst_vp9_read_bits (ibr, 8) != data[size - 1])
+    goto error;
+
+  for (i = 0; i < superframe_info->frames_in_superframe; i++) {
+    for (j = 0; j < superframe_info->bytes_per_framesize; j++)
+      superframe_info->frame_sizes[i] |= gst_vp9_read_bits (ibr, 8) << (j * 8);
+  }
+
+  return GST_VP9_PARSER_OK;
+
+error:
+  GST_ERROR ("Failed to parse superframe");
   return GST_VP9_PARSER_ERROR;
 }
