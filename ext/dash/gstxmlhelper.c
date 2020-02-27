@@ -460,6 +460,32 @@ gst_xml_helper_get_prop_unsigned_integer (xmlNode * a_node,
   return exists;
 }
 
+/* g_ascii_string_to_unsigned is available since 2.54. Get rid of this wrapper
+ * when we bump the version in 1.18 */
+#if !GLIB_CHECK_VERSION(2,54,0)
+#define g_ascii_string_to_unsigned gst_xml_helper_ascii_string_to_unsigned
+static gboolean
+gst_xml_helper_ascii_string_to_unsigned (const gchar * str, guint base,
+    guint64 min, guint64 max, guint64 * out_num, GError ** error)
+{
+  guint64 number;
+  gchar *endptr = NULL;
+
+  number = g_ascii_strtoull (str, &endptr, base);
+
+  /* Be as strict as the implementation of g_ascii_string_to_unsigned in glib */
+  if (errno)
+    return FALSE;
+  if (g_ascii_isspace (str[0]) || str[0] == '-' || str[0] == '+')
+    return FALSE;
+  if (*endptr != '\0' || endptr == NULL)
+    return FALSE;
+
+  *out_num = number;
+  return TRUE;
+}
+#endif
+
 gboolean
 gst_xml_helper_get_prop_unsigned_integer_64 (xmlNode * a_node,
     const gchar * property_name, guint64 default_val, guint64 * property_value)
@@ -470,17 +496,14 @@ gst_xml_helper_get_prop_unsigned_integer_64 (xmlNode * a_node,
   *property_value = default_val;
   prop_string = xmlGetProp (a_node, (const xmlChar *) property_name);
   if (prop_string) {
-    if (sscanf ((gchar *) prop_string, "%" G_GUINT64_FORMAT,
-            property_value) == 1 &&
-        strstr ((gchar *) prop_string, "-") == NULL) {
+    if (g_ascii_string_to_unsigned ((gchar *) prop_string, 10, 0, G_MAXUINT64,
+            property_value, NULL)) {
       exists = TRUE;
       GST_LOG (" - %s: %" G_GUINT64_FORMAT, property_name, *property_value);
     } else {
       GST_WARNING
           ("failed to parse unsigned integer property %s from xml string %s",
           property_name, prop_string);
-      /* sscanf might have written to *property_value. Restore to default */
-      *property_value = default_val;
     }
     xmlFree (prop_string);
   }
@@ -605,35 +628,36 @@ gst_xml_helper_get_prop_range (xmlNode * a_node,
     str = (gchar *) prop_string;
     GST_TRACE ("range: %s, len %d", str, len);
 
-    /* read "-" */
+    /* find "-" */
     pos = strcspn (str, "-");
     if (pos >= len) {
       GST_TRACE ("pos %d >= len %d", pos, len);
       goto error;
     }
+    if (pos == 0) {
+      GST_TRACE ("pos == 0, but first_byte_pos is not optional");
+      goto error;
+    }
+
     /* read first_byte_pos */
-    if (pos != 0) {
-      /* replace str[pos] with '\0' to allow sscanf to not be confused by
-       * the minus sign (eg " -1" (observe the space before -) would otherwise
-       * be interpreted as range -1 to 1)
-       */
-      str[pos] = 0;
-      if (sscanf (str, "%" G_GUINT64_FORMAT, &first_byte_pos) != 1 ||
-          strstr (str, "-") != NULL) {
-        /* sscanf failed or it found a negative number */
-        /* restore the '-' sign */
-        str[pos] = '-';
-        goto error;
-      }
+
+    /* replace str[pos] with '\0' since we only want to read the
+     * first_byte_pos, and g_ascii_string_to_unsigned requires the entire
+     * string to be a single number, which is exactly what we want */
+    str[pos] = '\0';
+    if (!g_ascii_string_to_unsigned (str, 10, 0, G_MAXUINT64, &first_byte_pos,
+            NULL)) {
       /* restore the '-' sign */
       str[pos] = '-';
+      goto error;
     }
-    /* read last_byte_pos */
-    if (pos < (len - 1)) {
-      if (sscanf (str + pos + 1, "%" G_GUINT64_FORMAT, &last_byte_pos) != 1 ||
-          strstr (str + pos + 1, "-") != NULL) {
-        goto error;
-      }
+    /* restore the '-' sign */
+    str[pos] = '-';
+
+    /* read last_byte_pos, which is optional */
+    if (pos < (len - 1) && !g_ascii_string_to_unsigned (str + pos + 1, 10, 0,
+            G_MAXUINT64, &last_byte_pos, NULL)) {
+      goto error;
     }
     /* malloc return data structure */
     *property_value = g_slice_new0 (GstXMLRange);
