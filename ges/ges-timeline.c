@@ -1140,9 +1140,9 @@ timeline_trim_object (GESTimeline * timeline, GESTimelineElement * object,
   }
 
   return timeline_tree_trim (timeline->priv->tree,
-      GES_TIMELINE_ELEMENT (object), new_layer_priority > 0 ? (gint64)
+      GES_TIMELINE_ELEMENT (object), new_layer_priority < 0 ? 0 : (gint64)
       ges_timeline_element_get_layer_priority (GES_TIMELINE_ELEMENT (object)) -
-      new_layer_priority : 0, edge == GES_EDGE_END ? GST_CLOCK_DIFF (position,
+      new_layer_priority, edge == GES_EDGE_END ? GST_CLOCK_DIFF (position,
           _START (object) + _DURATION (object)) : GST_CLOCK_DIFF (position,
           GES_TIMELINE_ELEMENT_START (object)), edge,
       timeline->priv->snapping_distance);
