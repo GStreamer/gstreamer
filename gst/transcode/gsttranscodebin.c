@@ -306,13 +306,29 @@ make_decodebin (GstTranscodeBin * self)
           gst_encoding_container_profile_get_profiles
           (GST_ENCODING_CONTAINER_PROFILE (self->profile)); tmp;
           tmp = tmp->next) {
-        GstCaps *restrictions =
-            gst_encoding_profile_get_restriction (tmp->data);
+        GstEncodingProfile *profile = tmp->data;
+        GstCaps *restrictions;
+
+        restrictions = gst_encoding_profile_get_restriction (profile);
 
         if (!restrictions || gst_caps_is_any (restrictions)) {
-          GstCaps *encodecaps = gst_encoding_profile_get_format (tmp->data);
+          GstCaps *encodecaps = gst_encoding_profile_get_format (profile);
+          GstElement *filter = NULL;
 
-          gst_caps_append (decodecaps, encodecaps);
+          /* Filter operates on raw data so don't allow decodebin to produce
+           * encoded data if one is defined. */
+          if (GST_IS_ENCODING_VIDEO_PROFILE (profile) && self->video_filter)
+            filter = self->video_filter;
+          else if (GST_IS_ENCODING_AUDIO_PROFILE (profile)
+              && self->audio_filter)
+            filter = self->audio_filter;
+
+          if (!filter) {
+            GST_DEBUG_OBJECT (self,
+                "adding %" GST_PTR_FORMAT " as output caps to decodebin",
+                encodecaps);
+            gst_caps_append (decodecaps, encodecaps);
+          }
         } else {
           gst_caps_unref (restrictions);
         }
