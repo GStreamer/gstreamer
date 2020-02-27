@@ -69,7 +69,7 @@ def repo_status(commit_message):
       if message.startswith('??'):
         status = "%sclean but untracked files%s" % (Colors.WARNING,Colors.ENDC)
       elif message.startswith(' M'):
-        status = "%shas local modificationss%s" % (Colors.WARNING,Colors.ENDC)
+        status = "%shas local modifications%s" % (Colors.WARNING,Colors.ENDC)
         break;
     return status
 
