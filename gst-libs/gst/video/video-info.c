@@ -1088,6 +1088,8 @@ fill_planes (GstVideoInfo * info, gsize plane_size[GST_VIDEO_MAX_PLANES])
     case GST_VIDEO_FORMAT_P010_10BE:
     case GST_VIDEO_FORMAT_P016_LE:
     case GST_VIDEO_FORMAT_P016_BE:
+    case GST_VIDEO_FORMAT_P012_LE:
+    case GST_VIDEO_FORMAT_P012_BE:
       info->stride[0] = GST_ROUND_UP_4 (width * 2);
       info->stride[1] = info->stride[0];
       info->offset[0] = 0;
