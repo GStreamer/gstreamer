@@ -566,7 +566,8 @@ gst_transcode_bin_class_init (GstTranscodeBinClass * klass)
   g_object_class_install_property (object_class, PROP_PROFILE,
       g_param_spec_object ("profile", "Profile",
           "The GstEncodingProfile to use", GST_TYPE_ENCODING_PROFILE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
 
   /**
    * GstTranscodeBin:avoid-reencoding:
@@ -577,7 +578,8 @@ gst_transcode_bin_class_init (GstTranscodeBinClass * klass)
       g_param_spec_boolean ("avoid-reencoding", "Avoid re-encoding",
           "Whether to re-encode portions of compatible video streams that lay on segment boundaries",
           DEFAULT_AVOID_REENCODING,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
 
   /**
    * GstTranscodeBin:video-filter:
@@ -587,7 +589,8 @@ gst_transcode_bin_class_init (GstTranscodeBinClass * klass)
   g_object_class_install_property (object_class, PROP_VIDEO_FILTER,
       g_param_spec_object ("video-filter", "Video filter",
           "the video filter(s) to apply, if possible",
-          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
   /**
    * GstTranscodeBin:audio-filter:
    *
@@ -596,7 +599,8 @@ gst_transcode_bin_class_init (GstTranscodeBinClass * klass)
   g_object_class_install_property (object_class, PROP_AUDIO_FILTER,
       g_param_spec_object ("audio-filter", "Audio filter",
           "the audio filter(s) to apply, if possible",
-          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
 }
 
 static void
