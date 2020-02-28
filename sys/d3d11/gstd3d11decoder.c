@@ -723,16 +723,24 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
 
     /* FIXME: need support DXVA_Slice_H264_Long ?? */
     /* this config uses DXVA_Slice_H264_Short */
-    if (codec == GST_D3D11_CODEC_H264 && config_list[i].ConfigBitstreamRaw == 2) {
-      best_config = &config_list[i];
-      break;
+    switch (codec) {
+      case GST_D3D11_CODEC_H264:
+        if (config_list[i].ConfigBitstreamRaw == 2)
+          best_config = &config_list[i];
+        break;
+      case GST_D3D11_CODEC_H265:
+      case GST_D3D11_CODEC_VP9:
+      case GST_D3D11_CODEC_VP8:
+        if (config_list[i].ConfigBitstreamRaw == 1)
+          best_config = &config_list[i];
+        break;
+      default:
+        g_assert_not_reached ();
+        goto error;
     }
 
-    if ((codec == GST_D3D11_CODEC_VP9 || codec == GST_D3D11_CODEC_H265)
-        && config_list[i].ConfigBitstreamRaw == 1) {
-      best_config = &config_list[i];
+    if (best_config)
       break;
-    }
   }
 
   if (best_config == NULL) {

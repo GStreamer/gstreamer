@@ -34,6 +34,7 @@
 #include "gstd3d11h264dec.h"
 #include "gstd3d11h265dec.h"
 #include "gstd3d11vp9dec.h"
+#include "gstd3d11vp8dec.h"
 #endif
 
 GST_DEBUG_CATEGORY (gst_d3d11_shader_debug);
@@ -53,6 +54,7 @@ GST_DEBUG_CATEGORY (gst_d3d11_debug_layer_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_h264_dec_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_h265_dec_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_vp9_dec_debug);
+GST_DEBUG_CATEGORY (gst_d3d11_vp8_dec_debug);
 #endif
 
 static gboolean
@@ -104,6 +106,8 @@ plugin_init (GstPlugin * plugin)
         "d3d11vp9dec", 0, "Direct3D11 VP9 Video Decoder");
     GST_DEBUG_CATEGORY_INIT (gst_d3d11_h265_dec_debug,
         "d3d11h265dec", 0, "Direct3D11 H.265 Video Decoder");
+    GST_DEBUG_CATEGORY_INIT (gst_d3d11_vp8_dec_debug,
+        "d3d11vp8dec", 0, "Direct3D11 VP8 Decoder");
 
     while ((device = gst_d3d11_device_new (i)) != NULL) {
       GstD3D11Decoder *decoder = NULL;
@@ -126,6 +130,8 @@ plugin_init (GstPlugin * plugin)
         gst_d3d11_h265_dec_register (plugin, device, decoder,
             GST_RANK_SECONDARY);
         gst_d3d11_vp9_dec_register (plugin, device, decoder,
+            GST_RANK_SECONDARY);
+        gst_d3d11_vp8_dec_register (plugin, device, decoder,
             GST_RANK_SECONDARY);
       }
 
