@@ -200,9 +200,9 @@ reposition_properties (GstFramePositioner * pos, gint old_track_width,
     }
 
     g_object_get (binding, "control_source", &source, NULL);
-    if (!GST_IS_TIMED_VALUE_CONTROL_SOURCE (source)) {
+    if (!source || !GST_IS_TIMED_VALUE_CONTROL_SOURCE (source)) {
       GST_FIXME_OBJECT (pos, "Implement support for control source type: %s",
-          G_OBJECT_TYPE_NAME (source));
+          source ? G_OBJECT_TYPE_NAME (source) : "NULL");
 
       goto next;
     }
