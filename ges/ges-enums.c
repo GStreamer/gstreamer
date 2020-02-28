@@ -111,17 +111,32 @@ register_ges_edit_mode (GType * id)
     {C_ENUM (GES_EDIT_MODE_NORMAL), "GES_EDIT_MODE_NORMAL",
         "edit_normal"},
 
+    {C_ENUM (GES_EDIT_MODE_NORMAL), "GES_EDIT_MODE_NORMAL",
+        "normal"},
+
     {C_ENUM (GES_EDIT_MODE_RIPPLE), "GES_EDIT_MODE_RIPPLE",
         "edit_ripple"},
+
+    {C_ENUM (GES_EDIT_MODE_RIPPLE), "GES_EDIT_MODE_RIPPLE",
+        "ripple"},
 
     {C_ENUM (GES_EDIT_MODE_ROLL), "GES_EDIT_MODE_ROLL",
         "edit_roll"},
 
+    {C_ENUM (GES_EDIT_MODE_ROLL), "GES_EDIT_MODE_ROLL",
+        "roll"},
+
     {C_ENUM (GES_EDIT_MODE_TRIM), "GES_EDIT_MODE_TRIM",
         "edit_trim"},
 
+    {C_ENUM (GES_EDIT_MODE_TRIM), "GES_EDIT_MODE_TRIM",
+        "trim"},
+
     {C_ENUM (GES_EDIT_MODE_SLIDE), "GES_EDIT_MODE_SLIDE",
         "edit_slide"},
+
+    {C_ENUM (GES_EDIT_MODE_SLIDE), "GES_EDIT_MODE_SLIDE",
+        "slide"},
 
     {0, NULL, NULL}
   };
@@ -144,8 +159,11 @@ register_ges_edge (GType * id)
 {
   static const GEnumValue edges[] = {
     {C_ENUM (GES_EDGE_START), "GES_EDGE_START", "edge_start"},
+    {C_ENUM (GES_EDGE_START), "GES_EDGE_START", "start"},
     {C_ENUM (GES_EDGE_END), "GES_EDGE_END", "edge_end"},
+    {C_ENUM (GES_EDGE_END), "GES_EDGE_END", "end"},
     {C_ENUM (GES_EDGE_NONE), "GES_EDGE_NONE", "edge_none"},
+    {C_ENUM (GES_EDGE_NONE), "GES_EDGE_NONE", "none"},
     {0, NULL, NULL}
   };
 
