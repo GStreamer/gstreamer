@@ -533,6 +533,7 @@ ges_track_dispose (GObject * object)
   g_list_free_full (priv->gaps, (GDestroyNotify) free_gap);
   ges_nle_object_commit (track->priv->composition, TRUE);
 
+  gst_clear_object (&track->priv->mixing_operation);
   if (priv->composition) {
     gst_element_remove_pad (GST_ELEMENT (track), priv->srcpad);
     gst_bin_remove (GST_BIN (object), priv->composition);
@@ -623,7 +624,7 @@ ges_track_constructed (GObject * object)
       }
     }
 
-    self->priv->mixing_operation = nleobject;
+    self->priv->mixing_operation = gst_object_ref (nleobject);
 
   } else {
     GST_INFO_OBJECT (self, "No way to create a main mixer");
@@ -737,7 +738,7 @@ ges_track_class_init (GESTrackClass * klass)
    */
   properties[ARG_MIXING] = g_param_spec_boolean ("mixing", "Mixing",
       "Whether layer mixing is activated on the track or not",
-      TRUE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
+      TRUE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_EXPLICIT_NOTIFY);
   g_object_class_install_property (object_class, ARG_MIXING,
       properties[ARG_MIXING]);
 
@@ -1043,14 +1044,15 @@ ges_track_set_mixing (GESTrack * track, gboolean mixing)
   g_return_if_fail (GES_IS_TRACK (track));
   CHECK_THREAD (track);
 
-  if (!track->priv->mixing_operation) {
-    GST_DEBUG_OBJECT (track, "Track will be set to mixing = %d", mixing);
-    track->priv->mixing = mixing;
+  if (mixing == track->priv->mixing) {
+    GST_DEBUG_OBJECT (track, "Mixing is already set to the same value");
+
     return;
   }
 
-  if (mixing == track->priv->mixing) {
-    GST_DEBUG_OBJECT (track, "Mixing is already set to the same value");
+  if (!track->priv->mixing_operation) {
+    GST_DEBUG_OBJECT (track, "Track will be set to mixing = %d", mixing);
+    goto notify;
   }
 
   if (mixing) {
@@ -1068,7 +1070,10 @@ ges_track_set_mixing (GESTrack * track, gboolean mixing)
     }
   }
 
+notify:
   track->priv->mixing = mixing;
+
+  g_object_notify_by_pspec (G_OBJECT (track), properties[ARG_MIXING]);
 
   GST_DEBUG_OBJECT (track, "The track has been set to mixing = %d", mixing);
 }
