@@ -12722,6 +12722,11 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
             break;
           }
           case FOURCC_lpcm:
+          case FOURCC_in24:
+          case FOURCC_in32:
+          case FOURCC_fl32:
+          case FOURCC_fl64:
+          case FOURCC_s16l:
             /* Fully handled elsewhere */
             break;
           default:
