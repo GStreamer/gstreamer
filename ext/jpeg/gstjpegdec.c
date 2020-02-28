@@ -990,6 +990,9 @@ gst_jpeg_dec_negotiate (GstJpegDec * dec, gint width, gint height, gint clrspc,
     case JCS_GRAYSCALE:
       break;
     default:
+      /* aka JPEG chroma siting */
+      outstate->info.chroma_site = GST_VIDEO_CHROMA_SITE_NONE;
+
       outstate->info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
       outstate->info.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
       outstate->info.colorimetry.transfer = GST_VIDEO_TRANSFER_UNKNOWN;
