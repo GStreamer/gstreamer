@@ -1188,15 +1188,75 @@ fail:
 
 }
 
+static gboolean
+prepare_seek_action (GstValidateAction * action)
+{
+  GESFrameNumber fstart, fstop;
+  GstValidateScenario *scenario = gst_validate_action_get_scenario (action);
+  GstValidateActionType *type = gst_validate_get_action_type (action->type);
+  GError *err = NULL;
+
+  DECLARE_AND_GET_TIMELINE (scenario, action);
+
+  if (timeline
+      && ges_util_structure_get_clocktime (action->structure, "start", NULL,
+          &fstart)) {
+    GstClockTime start = ges_timeline_get_frame_time (timeline, fstart);
+
+    if (err) {
+      GST_VALIDATE_REPORT_ACTION (scenario, action,
+          SCENARIO_ACTION_EXECUTION_ERROR,
+          "Invalid seeking frame number '%" G_GINT64_FORMAT "': %s", fstart,
+          err->message);
+      goto err;
+    }
+    gst_structure_set (action->structure, "start", G_TYPE_UINT64, start, NULL);
+  }
+
+  if (timeline
+      && ges_util_structure_get_clocktime (action->structure, "stop", NULL,
+          &fstop)) {
+    GstClockTime stop = ges_timeline_get_frame_time (timeline, fstop);
+
+    if (err) {
+      GST_VALIDATE_REPORT_ACTION (scenario, action,
+          SCENARIO_ACTION_EXECUTION_ERROR,
+          "Invalid seeking frame number '%" G_GINT64_FORMAT "': %s", fstop,
+          err->message);
+      goto err;
+    }
+    gst_structure_set (action->structure, "stop", G_TYPE_UINT64, stop, NULL);
+  }
+
+  gst_object_unref (scenario);
+  gst_object_unref (timeline);
+  return type->overriden_type->prepare (action);
+
+err:
+  gst_object_unref (scenario);
+  gst_object_unref (timeline);
+  return FALSE;
+}
+
 #endif
 
 gboolean
 ges_validate_register_action_types (void)
 {
 #ifdef HAVE_GST_VALIDATE
+  GstValidateActionType *validate_seek, *seek_override;
+
+
   gst_validate_init ();
+  validate_seek = gst_validate_get_action_type ("seek");
 
   /*  *INDENT-OFF* */
+  seek_override = gst_validate_register_action_type("seek", "ges", validate_seek->execute,
+                                    validate_seek->parameters, validate_seek->description,
+                                    validate_seek->flags);
+  gst_mini_object_unref(GST_MINI_OBJECT(validate_seek));
+  seek_override->prepare = prepare_seek_action;
+
   gst_validate_register_action_type ("edit-container", "ges", _edit,
       (GstValidateActionParameter [])  {
         {
