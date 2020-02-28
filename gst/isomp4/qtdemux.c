@@ -12204,23 +12204,44 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
       switch (fourcc) {
         case FOURCC_in24:
+        case FOURCC_in32:
+        case FOURCC_fl32:
+        case FOURCC_fl64:
         {
           GNode *enda;
-          GNode *in24;
+          GNode *fmt;
 
-          in24 = qtdemux_tree_get_child_by_type (stsd, FOURCC_in24);
+          fmt = qtdemux_tree_get_child_by_type (stsd, fourcc);
 
-          enda = qtdemux_tree_get_child_by_type (in24, FOURCC_enda);
+          enda = qtdemux_tree_get_child_by_type (fmt, FOURCC_enda);
           if (!enda) {
-            wave = qtdemux_tree_get_child_by_type (in24, FOURCC_wave);
+            wave = qtdemux_tree_get_child_by_type (fmt, FOURCC_wave);
             if (wave)
               enda = qtdemux_tree_get_child_by_type (wave, FOURCC_enda);
           }
           if (enda) {
             int enda_value = QT_UINT16 ((guint8 *) enda->data + 8);
+            const gchar *format_str;
+
+            switch (fourcc) {
+              case FOURCC_in24:
+                format_str = (enda_value) ? "S24LE" : "S24BE";
+                break;
+              case FOURCC_in32:
+                format_str = (enda_value) ? "S32LE" : "S32BE";
+                break;
+              case FOURCC_fl32:
+                format_str = (enda_value) ? "F32LE" : "F32BE";
+                break;
+              case FOURCC_fl64:
+                format_str = (enda_value) ? "F64LE" : "F64BE";
+                break;
+              default:
+                g_assert_not_reached ();
+                break;
+            }
             gst_caps_set_simple (entry->caps,
-                "format", G_TYPE_STRING, (enda_value) ? "S24LE" : "S24BE",
-                NULL);
+                "format", G_TYPE_STRING, format_str, NULL);
           }
           break;
         }
@@ -15592,6 +15613,8 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     }
     case FOURCC_fl64:
       _codec ("Raw 64-bit floating-point audio");
+      /* we assume BIG ENDIAN, an enda box will tell us to change this to little
+       * endian later */
       caps = gst_caps_new_simple ("audio/x-raw",
           "format", G_TYPE_STRING, "F64BE",
           "layout", G_TYPE_STRING, "interleaved", NULL);
@@ -15599,6 +15622,8 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       break;
     case FOURCC_fl32:
       _codec ("Raw 32-bit floating-point audio");
+      /* we assume BIG ENDIAN, an enda box will tell us to change this to little
+       * endian later */
       caps = gst_caps_new_simple ("audio/x-raw",
           "format", G_TYPE_STRING, "F32BE",
           "layout", G_TYPE_STRING, "interleaved", NULL);
@@ -15615,6 +15640,8 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       break;
     case FOURCC_in32:
       _codec ("Raw 32-bit PCM audio");
+      /* we assume BIG ENDIAN, an enda box will tell us to change this to little
+       * endian later */
       caps = gst_caps_new_simple ("audio/x-raw",
           "format", G_TYPE_STRING, "S32BE",
           "layout", G_TYPE_STRING, "interleaved", NULL);
