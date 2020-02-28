@@ -15555,14 +15555,14 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       stream->alignment = round_up_pow2 (stream->alignment);
       break;
     }
-    case GST_MAKE_FOURCC ('f', 'l', '6', '4'):
+    case FOURCC_fl64:
       _codec ("Raw 64-bit floating-point audio");
       caps = gst_caps_new_simple ("audio/x-raw",
           "format", G_TYPE_STRING, "F64BE",
           "layout", G_TYPE_STRING, "interleaved", NULL);
       stream->alignment = 8;
       break;
-    case GST_MAKE_FOURCC ('f', 'l', '3', '2'):
+    case FOURCC_fl32:
       _codec ("Raw 32-bit floating-point audio");
       caps = gst_caps_new_simple ("audio/x-raw",
           "format", G_TYPE_STRING, "F32BE",
@@ -15578,14 +15578,14 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
           "layout", G_TYPE_STRING, "interleaved", NULL);
       stream->alignment = 4;
       break;
-    case GST_MAKE_FOURCC ('i', 'n', '3', '2'):
+    case FOURCC_in32:
       _codec ("Raw 32-bit PCM audio");
       caps = gst_caps_new_simple ("audio/x-raw",
           "format", G_TYPE_STRING, "S32BE",
           "layout", G_TYPE_STRING, "interleaved", NULL);
       stream->alignment = 4;
       break;
-    case GST_MAKE_FOURCC ('s', '1', '6', 'l'):
+    case FOURCC_s16l:
       _codec ("Raw 16-bit PCM audio");
       caps = gst_caps_new_simple ("audio/x-raw",
           "format", G_TYPE_STRING, "S16LE",
