@@ -375,6 +375,15 @@ gst_interlace_decorate_buffer (GstInterlace * interlace, GstBuffer * buf,
   }
 }
 
+static const gchar *
+interlace_mode_from_pattern (GstInterlace * interlace)
+{
+  if (interlace->pattern > GST_INTERLACE_PATTERN_2_2)
+    return "mixed";
+  else
+    return "interleaved";
+}
+
 static gboolean
 gst_interlace_setcaps (GstInterlace * interlace, GstCaps * caps)
 {
@@ -394,13 +403,8 @@ gst_interlace_setcaps (GstInterlace * interlace, GstCaps * caps)
   interlace->src_fps_n = info.fps_n * pdformat->ratio_n;
   interlace->src_fps_d = info.fps_d * pdformat->ratio_d;
 
-  if (interlace->pattern > GST_INTERLACE_PATTERN_2_2) {
-    gst_caps_set_simple (othercaps, "interlace-mode", G_TYPE_STRING, "mixed",
-        NULL);
-  } else {
-    gst_caps_set_simple (othercaps, "interlace-mode", G_TYPE_STRING,
-        "interleaved", NULL);
-  }
+  gst_caps_set_simple (othercaps, "interlace-mode", G_TYPE_STRING,
+      interlace_mode_from_pattern (interlace), NULL);
 
   if (gst_caps_can_intersect (caps, othercaps)) {
     interlace->passthrough = TRUE;
@@ -714,11 +718,7 @@ gst_interlace_getcaps (GstPad * pad, GstInterlace * interlace, GstCaps * filter)
 
   icaps = gst_caps_make_writable (icaps);
   tcaps = gst_caps_copy (icaps);
-  if (interlace->pattern > GST_INTERLACE_PATTERN_2_2) {
-    mode = "mixed";
-  } else {
-    mode = "interleaved";
-  }
+  mode = interlace_mode_from_pattern (interlace);
   gst_caps_set_simple (icaps, "interlace-mode", G_TYPE_STRING,
       pad == interlace->srcpad ? mode : "progressive", NULL);
   if (pad == interlace->sinkpad) {
