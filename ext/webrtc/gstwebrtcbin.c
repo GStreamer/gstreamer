@@ -3859,10 +3859,8 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
         _add_pad_to_list (webrtc, pad);
       }
 
-      receive_state = RECEIVE_STATE_PASS;
-    } else if (!bundled) {
-      receive_state = RECEIVE_STATE_DROP;
     }
+    receive_state = RECEIVE_STATE_PASS;
 
     rtp_trans->mline = media_idx;
     rtp_trans->current_direction = new_dir;
