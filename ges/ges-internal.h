@@ -83,6 +83,8 @@ GstDebugCategory * _ges_debug (void);
 #define GES_FORMAT GES_TIMELINE_ELEMENT_FORMAT
 #define GES_ARGS GES_TIMELINE_ELEMENT_ARGS
 
+#define SUPRESS_UNUSED_WARNING(a) (void)a
+
 G_GNUC_INTERNAL gboolean
 timeline_ripple_object         (GESTimeline *timeline, GESTimelineElement *obj,
                                 gint new_layer_priority,
@@ -488,6 +490,13 @@ G_GNUC_INTERNAL GESMultiFileURI * ges_multi_file_uri_new (const gchar * uri);
  ******************************/
 G_GNUC_INTERNAL gboolean
 ges_video_uri_source_get_natural_size(GESVideoSource* source, gint* width, gint* height);
+
+/**********************************
+ *  GESTestClipAsset internal API *
+ **********************************/
+G_GNUC_INTERNAL gboolean ges_test_clip_asset_get_natural_size(GESAsset *self,
+                                                              gint *width,
+                                                              gint *height);
 
 /************************
  * Our property masks   *

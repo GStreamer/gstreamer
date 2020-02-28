@@ -40,12 +40,12 @@ struct _GESVideoTestSourcePrivate
 
   gboolean use_overlay;
   GstElement *overlay;
-
   GstPad *is_passthrough_pad;
   GstPad *os_passthrough_pad;
-
   GstPad *is_overlay_pad;
   GstPad *os_overlay_pad;
+
+  GstElement *capsfilter;
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE (GESVideoTestSource, ges_video_test_source,
@@ -56,8 +56,20 @@ static GstElement *ges_video_test_source_create_source (GESTrackElement * self);
 static gboolean
 get_natural_size (GESVideoSource * source, gint * width, gint * height)
 {
-  *width = DEFAULT_WIDTH;
-  *height = DEFAULT_HEIGHT;
+  gboolean res = FALSE;
+  GESTimelineElement *parent = GES_TIMELINE_ELEMENT_PARENT (source);
+
+  if (parent) {
+    GESAsset *asset = ges_extractable_get_asset (GES_EXTRACTABLE (parent));
+
+    if (asset)
+      res = ges_test_clip_asset_get_natural_size (asset, width, height);
+  }
+
+  if (!res) {
+    *width = DEFAULT_WIDTH;
+    *height = DEFAULT_HEIGHT;
+  }
 
   return TRUE;
 }
@@ -157,6 +169,65 @@ done:
       ->set_child_property (self, child, pspec, value);
 }
 
+static gboolean
+_set_parent (GESTimelineElement * element, GESTimelineElement * parent)
+{
+  GESVideoTestSource *self = GES_VIDEO_TEST_SOURCE (element);
+
+
+  if (parent) {
+    gint width, height, fps_n, fps_d;
+    GstCaps *caps;
+
+    g_assert (self->priv->capsfilter);
+    /* Setting the parent ourself as we need it to get the natural size */
+    element->parent = parent;
+    if (!ges_video_source_get_natural_size (GES_VIDEO_SOURCE (self), &width,
+            &height)) {
+      width = DEFAULT_WIDTH;
+      height = DEFAULT_HEIGHT;
+    }
+    if (!ges_timeline_element_get_natural_framerate (parent, &fps_n, &fps_d)) {
+      fps_n = DEFAULT_FRAMERATE_N;
+      fps_d = DEFAULT_FRAMERATE_D;
+    }
+
+    caps = gst_caps_new_simple ("video/x-raw",
+        "width", G_TYPE_INT, width,
+        "height", G_TYPE_INT, height,
+        "framerate", GST_TYPE_FRACTION, fps_n, fps_d, NULL);
+    g_object_set (self->priv->capsfilter, "caps", caps, NULL);
+    gst_caps_unref (caps);
+  }
+
+  return TRUE;
+}
+
+static gboolean
+_get_natural_framerate (GESTimelineElement * element, gint * fps_n,
+    gint * fps_d)
+{
+  gboolean res = FALSE;
+  GESTimelineElement *parent = GES_TIMELINE_ELEMENT_PARENT (element);
+
+  if (parent) {
+    GESAsset *asset = ges_extractable_get_asset (GES_EXTRACTABLE (parent));
+
+    if (asset) {
+      res =
+          ges_clip_asset_get_natural_framerate (GES_CLIP_ASSET (asset), fps_n,
+          fps_d);
+    }
+  }
+
+  if (!res) {
+    *fps_n = DEFAULT_FRAMERATE_N;
+    *fps_d = DEFAULT_FRAMERATE_D;
+  }
+
+  return TRUE;
+}
+
 static void
 dispose (GObject * object)
 {
@@ -192,14 +263,18 @@ ges_video_test_source_class_init (GESVideoTestSourceClass * klass)
    */
   properties[PROP_USE_TIME_OVERLAY] =
       g_param_spec_boolean ("use-time-overlay", "Use-time-overlay",
-      "Use time overlay, setting a child property corresponding to GstTimeOverlay will switch this on"
-      " by default.", FALSE, G_PARAM_READWRITE);
+      "Use time overlay, setting a child property corresponding to"
+      "GstTimeOverlay will switch this on by default.", FALSE,
+      G_PARAM_READWRITE);
 
   object_class->get_property = get_property;
   object_class->set_property = set_property;
   object_class->dispose = dispose;
 
   GES_TIMELINE_ELEMENT_CLASS (klass)->set_child_property = _set_child_property;
+  GES_TIMELINE_ELEMENT_CLASS (klass)->set_parent = _set_parent;
+  GES_TIMELINE_ELEMENT_CLASS (klass)->get_natural_framerate =
+      _get_natural_framerate;
 
   g_object_class_install_properties (object_class, PROP_LAST, properties);
 }
@@ -275,25 +350,26 @@ ges_video_test_source_create_source (GESTrackElement * element)
 {
   GstCaps *caps;
   gint pattern;
-  GstElement *testsrc, *capsfilter, *res;
+  GstElement *testsrc, *res;
   const gchar *props[] = { "pattern", NULL };
   GPtrArray *elements;
   GESVideoTestSource *self = GES_VIDEO_TEST_SOURCE (element);
 
+  g_assert (!GES_TIMELINE_ELEMENT_PARENT (element));
   testsrc = gst_element_factory_make ("videotestsrc", NULL);
-  capsfilter = gst_element_factory_make ("capsfilter", NULL);
+  self->priv->capsfilter = gst_element_factory_make ("capsfilter", NULL);
   pattern = self->priv->pattern;
 
   g_object_set (testsrc, "pattern", pattern, NULL);
 
   elements = g_ptr_array_new ();
-  g_ptr_array_add (elements, capsfilter);
+  g_ptr_array_add (elements, self->priv->capsfilter);
   caps = gst_caps_new_simple ("video/x-raw",
       "width", G_TYPE_INT, DEFAULT_WIDTH,
       "height", G_TYPE_INT, DEFAULT_HEIGHT,
       "framerate", GST_TYPE_FRACTION, DEFAULT_FRAMERATE_N, DEFAULT_FRAMERATE_D,
       NULL);
-  g_object_set (capsfilter, "caps", caps, NULL);
+  g_object_set (self->priv->capsfilter, "caps", caps, NULL);
   gst_caps_unref (caps);
 
   self->priv->overlay = ges_video_test_source_create_overlay (self);

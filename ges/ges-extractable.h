@@ -91,8 +91,9 @@ typedef gchar* (*GESExtractableCheckId) (GType type, const gchar *id,
  * set, or even that an asset with such an #GESAsset:id does not exist in
  * the GES cache. Instead, this should return the #GESAsset:id that is
  * _compatible_ with the current state of the object. The default
- * implementation simply returns the type name of the object, which is
- * what is used as the #GESAsset:id by default.
+ * implementation simply returns the currently set asset ID, or the type name
+ * of the object, which is what is used as the #GESAsset:id by default,
+ * if no asset is set.
  * @get_real_extractable_type: The method to call to get the actual
  * #GESAsset:extractable-type an asset should have set, given the
  * requested #GESAsset:id. The default implementation simply returns the

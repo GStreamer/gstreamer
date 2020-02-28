@@ -81,6 +81,11 @@ G_GNUC_END_IGNORE_DEPRECATIONS; /* End ignoring GParameter deprecation */
 static gchar *
 extractable_get_id (GESExtractable * self)
 {
+  GESAsset *asset;
+
+  if ((asset = ges_extractable_get_asset (self)))
+    return g_strdup (ges_asset_get_id (asset));
+
   return g_strdup (g_type_name (G_OBJECT_TYPE (self)));
 
 }

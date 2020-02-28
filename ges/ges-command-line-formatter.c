@@ -386,8 +386,10 @@ _ges_command_line_formatter_add_test_clip (GESTimeline * timeline,
     return FALSE;
 
   gst_structure_set (structure, "type", G_TYPE_STRING, "GESTestClip", NULL);
-  gst_structure_set (structure, "asset-id", G_TYPE_STRING,
-      gst_structure_get_string (structure, "pattern"), NULL);
+
+  if (!gst_structure_has_field_typed (structure, "asset-id", G_TYPE_STRING))
+    gst_structure_set (structure, "asset-id", G_TYPE_STRING, "GESTestClip",
+        NULL);
 
   return _ges_add_clip_from_struct (timeline, structure, error);
 }

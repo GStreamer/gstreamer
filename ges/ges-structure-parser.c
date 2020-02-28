@@ -185,6 +185,5 @@ ges_structure_parser_get_error (GESStructureParser * self)
   error = g_error_new_literal (GES_ERROR, 0, msg->str);
   g_string_free (msg, TRUE);
 
-  GST_ERROR ("BoOOOM ");
   return error;
 }

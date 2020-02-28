@@ -200,6 +200,28 @@ class TestTimeline(common.GESSimpleTimelineTest):
             ]
         ])
 
+    def test_frame_info(self):
+        self.track_types = [GES.TrackType.VIDEO]
+        super().setUp()
+
+        vtrack, = self.timeline.get_tracks()
+        vtrack.update_restriction_caps(Gst.Caps("video/x-raw,framerate=60/1"))
+        self.assertEqual(self.timeline.get_frame_time(60), Gst.SECOND)
+
+        layer = self.timeline.append_layer()
+        asset = GES.Asset.request(GES.TestClip, "framerate=120/1,height=500,width=500,max-duration=f120")
+        clip = layer.add_asset( asset, 0, 0, Gst.SECOND, GES.TrackType.UNKNOWN)
+        self.assertEqual(clip.get_id(), "GESTestClip, framerate=(fraction)120/1, height=(int)500, width=(int)500, max-duration=(string)f120;")
+
+        test_source, = clip.get_children(True)
+        self.assertEqual(test_source.get_natural_size(), (True, 500, 500))
+        self.assertEqual(test_source.get_natural_framerate(), (True, 120, 1))
+        self.assertEqual(test_source.props.max_duration, Gst.SECOND)
+        self.assertEqual(clip.get_natural_framerate(), (True, 120, 1))
+
+        self.assertEqual(self.timeline.get_frame_at(Gst.SECOND), 60)
+        self.assertEqual(clip.props.max_duration, Gst.SECOND)
+
 
 class TestEditing(common.GESSimpleTimelineTest):
 
