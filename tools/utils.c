@@ -232,7 +232,7 @@ get_file_extension (gchar * uri)
   if (find <= 0)
     return NULL;
 
-  return &uri[find + 1];
+  return g_strdup (&uri[find + 1]);
 }
 
 static const gchar *

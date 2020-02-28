@@ -477,8 +477,6 @@ _set_rendering_details (GESLauncher * self)
   /* Setup profile/encoding if needed */
   if (opts->outputuri) {
     GstEncodingProfile *prof = NULL;
-    gchar *format = NULL;
-
     if (!opts->format) {
       GESProject *proj =
           GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE (self->
@@ -496,18 +494,25 @@ _set_rendering_details (GESLauncher * self)
     }
 
     if (!prof) {
-      if (opts->format == NULL)
+      if (opts->format == NULL) {
         opts->format = get_file_extension (opts->outputuri);
 
-      prof = parse_encoding_profile (opts->format);
+        prof = parse_encoding_profile (opts->format);
+      } else {
+        prof = parse_encoding_profile (opts->format);
+        if (!prof)
+          g_error ("Invalid format specified: %s", opts->format);
+      }
+
       if (!prof) {
         warn ("No format specified and couldn't find one from output file extension, " "falling back to theora+vorbis in ogg.");
-        format = opts->format =
+        g_free (opts->format);
+
+        opts->format =
             g_strdup ("application/ogg:video/x-theora:audio/x-vorbis");
         prof = parse_encoding_profile (opts->format);
       }
 
-      g_free (format);
       if (!prof) {
         printerr ("Could not find any encoding format for %s\n", opts->format);
         return FALSE;
