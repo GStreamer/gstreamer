@@ -4226,10 +4226,11 @@ check_last_sample_internal (GstValidateScenario * scenario,
 {
   GstSample *sample;
   gchar *sum;
-  GstMapInfo map;
   GstBuffer *buffer;
   const gchar *target_sum;
+  guint64 frame_number;
   GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
+  GstVideoTimeCodeMeta *tc_meta;
 
   g_object_get (sink, "last-sample", &sample, NULL);
   if (sample == NULL) {
@@ -4244,24 +4245,68 @@ check_last_sample_internal (GstValidateScenario * scenario,
   }
 
   buffer = gst_sample_get_buffer (sample);
-  if (!gst_buffer_map (buffer, &map, GST_MAP_READ)) {
-    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
-        "Last sample buffer could not be mapped, action can't run.");
+  target_sum = gst_structure_get_string (action->structure, "checksum");
+  if (target_sum) {
+    GstMapInfo map;
+
+    if (!gst_buffer_map (buffer, &map, GST_MAP_READ)) {
+      GST_VALIDATE_REPORT_ACTION (scenario, action,
+          SCENARIO_ACTION_EXECUTION_ERROR,
+          "Last sample buffer could not be mapped, action can't run.");
+      res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+      goto done;
+    }
+    sum = g_compute_checksum_for_data (G_CHECKSUM_SHA1, map.data, map.size);
+    gst_buffer_unmap (buffer, &map);
+
+    if (g_strcmp0 (sum, target_sum)) {
+      GST_VALIDATE_REPORT_ACTION (scenario, action,
+          SCENARIO_ACTION_EXECUTION_ERROR,
+          "Last buffer checksum '%s' is different than the expected one: '%s'",
+          sum, target_sum);
+
+      res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+    }
+    g_free (sum);
+
     goto done;
   }
 
-  sum = g_compute_checksum_for_data (G_CHECKSUM_SHA1, map.data, map.size);
-  gst_buffer_unmap (buffer, &map);
+  if (!gst_structure_get_uint64 (action->structure, "timecode-frame-number",
+          &frame_number)) {
+    gint iframe_number;
 
-  target_sum = gst_structure_get_string (action->structure, "checksum");
-  if (g_strcmp0 (sum, target_sum)) {
+    if (!gst_structure_get_int (action->structure, "timecode-frame-number",
+            &iframe_number)) {
+      GST_VALIDATE_REPORT_ACTION (scenario, action,
+          SCENARIO_ACTION_EXECUTION_ERROR,
+          "The 'checksum' or 'time-code-frame-number' parametters of the "
+          "`check-last-sample` action type needs to be specified, none found");
+
+      res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+      goto done;
+    }
+
+    frame_number = (guint64) iframe_number;
+  }
+
+  tc_meta = gst_buffer_get_video_time_code_meta (buffer);
+  if (!tc_meta) {
     GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
-        "Last buffer checksum '%s' is different than the expected one: '%s'",
-        sum, target_sum);
+        "Could not \"check-last-sample\" as the buffer doesn' contain a TimeCode"
+        " meta");
+    res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+    goto done;
+  }
 
+  if (gst_video_time_code_frames_since_daily_jam (&tc_meta->tc) != frame_number) {
+    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+        "Last buffer frame number '%" G_GINT64_FORMAT
+        "' is different than the expected one: '%" G_GINT64_FORMAT "'",
+        gst_video_time_code_frames_since_daily_jam (&tc_meta->tc),
+        frame_number);
     res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
   }
-  g_free (sum);
 
 done:
   return res;
@@ -4660,7 +4705,8 @@ _execute_request_key_unit (GstValidateScenario * scenario,
 
 
     if (!gst_pad_send_event (pad, event)) {
-      GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+      GST_VALIDATE_REPORT_ACTION (scenario, action,
+          SCENARIO_ACTION_EXECUTION_ERROR,
           "Could not send \"force key unit\" event %s", direction);
       goto fail;
     }
@@ -5634,14 +5680,24 @@ init_scenarios (void)
         {
           .name = "checksum",
           .description = "The reference checksum of the buffer.",
-          .mandatory = TRUE,
+          .mandatory = FALSE,
+          .types = "string",
+          NULL
+        },
+        {
+          .name = "timecode-frame-number",
+          .description = "The frame number of the buffer as specified on its"
+                         " GstVideoTimeCodeMeta",
+          .mandatory = FALSE,
           .types = "string",
           NULL
         },
         {NULL}
       }),
-      "Checks the last-sample checksum or embedded frame number on declared Sink element."
-      " This allows checking the checksum of a buffer after a 'seek' or after a GESTimeline 'commit'"
+      "Checks the last-sample checksum or frame number (set on its "
+      " GstVideoTimeCodeMeta) on declared Sink element."
+      " This allows checking the checksum of a buffer after a 'seek' or after a"
+      " GESTimeline 'commit'"
       " for example",
       GST_VALIDATE_ACTION_TYPE_INTERLACED);
 
