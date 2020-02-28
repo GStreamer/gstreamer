@@ -12162,6 +12162,36 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           entry->samples_per_frame = 160 * entry->n_channels;
           break;
         }
+          /* fix up any invalid header information from above */
+        case FOURCC_in24:
+        case FOURCC_in32:
+        case FOURCC_fl32:
+        case FOURCC_fl64:
+        case FOURCC_s16l:{
+          switch (fourcc) {
+            case FOURCC_in24:
+              entry->bytes_per_sample = 3;
+              break;
+            case FOURCC_in32:
+            case FOURCC_fl32:
+              entry->bytes_per_sample = 4;
+              break;
+            case FOURCC_fl64:
+              entry->bytes_per_sample = 8;
+              break;
+            case FOURCC_s16l:
+              entry->bytes_per_sample = 2;
+              break;
+            default:
+              g_assert_not_reached ();
+              break;
+          }
+          entry->samples_per_frame = entry->n_channels;
+          entry->bytes_per_frame = entry->n_channels * entry->bytes_per_sample;
+          entry->samples_per_packet = entry->samples_per_frame;
+          entry->bytes_per_packet = entry->bytes_per_sample;
+          break;
+        }
         default:
           break;
       }
