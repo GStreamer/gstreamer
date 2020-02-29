@@ -241,7 +241,7 @@ compare_gst_log_func (GstDebugCategory * category, GstDebugLevel level,
   log_line = gst_debug_log_get_line (category, level, file, function, line,
       object, message);
 
-  match = g_pattern_match_simple ("*:*:*.*0x*DEBUG*check*gstinfo.c:*"
+  match = g_pattern_match_simple ("*:*:*.*0*DEBUG*check*gstinfo.c:*"
       ":info_log_handler_get_line: test message\n", log_line);
   fail_unless_equals_int (match, TRUE);
   g_free (log_line);
