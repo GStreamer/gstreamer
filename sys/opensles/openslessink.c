@@ -57,10 +57,7 @@ enum
 
 
 /* According to Android's NDK doc the following are the supported rates */
-#define RATES "8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100"
-/* 48000 Hz is also claimed to be supported but the AudioFlinger downsampling
- * doesn't seems to work properly so we relay GStreamer audioresample element
- * to cope with this samplerate. */
+#define RATES "8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000"
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
