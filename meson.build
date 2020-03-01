@@ -51,7 +51,7 @@ if not meson.is_subproject() and cc.get_id() == 'msvc'
       '/w14101', # 'identifier' : unreferenced local variable
       '/w14189', # 'identifier' : local variable is initialized but not referenced
       cc.get_supported_arguments(['/utf-8']), # set the input encoding to utf-8
-      language: 'c')
+      language: ['c', 'cpp'])
 endif
 
 # Ordered list of subprojects (dict has no ordering guarantees)
