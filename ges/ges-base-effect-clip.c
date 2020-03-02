@@ -20,11 +20,21 @@
 /**
  * SECTION: gesbaseeffectclip
  * @title: GESBaseEffectClip
- * @short_description: An effect in a GESLayer
+ * @short_description: An effect in a #GESLayer
  *
- * The effect will be applied on the sources that have lower priorities
- * (higher number) between the inpoint and the end of it.
+ * #GESBaseEffectClip-s are clips whose core elements are
+ * #GESBaseEffect-s.
+ *
+ * ## Effects
+ *
+ * #GESBaseEffectClip-s can have **additional** #GESBaseEffect-s added as
+ * non-core elements. These additional effects are applied to the output
+ * of the core effects of the clip that they share a #GESTrack with. See
+ * #GESClip for how to add and move these effects from the clip.
  */
+
+/* FIXME: properly handle the priority of the children. How should we sort
+ * the priority of effects when two #GESBaseEffectClip's overlap? */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -44,6 +54,7 @@ G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GESBaseEffectClip, ges_base_effect_clip,
 static void
 ges_base_effect_clip_class_init (GESBaseEffectClipClass * klass)
 {
+  GES_CLIP_CLASS_CAN_ADD_EFFECTS (klass) = TRUE;
 }
 
 static void

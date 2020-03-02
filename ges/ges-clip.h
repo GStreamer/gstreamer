@@ -40,6 +40,15 @@ G_BEGIN_DECLS
 typedef struct _GESClipPrivate GESClipPrivate;
 
 /**
+ * GES_CLIP_CLASS_CAN_ADD_EFFECTS:
+ * @klass: A #GESClipClass
+ *
+ * Whether the class allows for the user to add additional non-core
+ * #GESBaseEffect-s to clips from this class.
+ */
+#define GES_CLIP_CLASS_CAN_ADD_EFFECTS(klass) ((GES_CLIP_CLASS (klass))->ABI.abi.can_add_effects)
+
+/**
  * GESFillTrackElementFunc:
  * @clip: The #GESClip controlling the track elements
  * @track_element: The #GESTrackElement
@@ -114,6 +123,9 @@ struct _GESClip
  * @create_track_elements: Method to create the (multiple) core
  * #GESTrackElement-s of a clip of this class. If create_track_element()
  * is implemented, this should be kept as the default implementation
+ * @can_add_effects: Whether the user can add additional non-core
+ * #GESBaseEffect-s to clips from this class, to be applied to the output
+ * data of the core elements.
  */
 struct _GESClipClass
 {
@@ -126,7 +138,12 @@ struct _GESClipClass
 
   /*< private >*/
   /* Padding for API extension */
-  gpointer _ges_reserved[GES_PADDING_LARGE];
+  union {
+    gpointer _ges_reserved[GES_PADDING_LARGE];
+    struct {
+      gboolean can_add_effects;
+    } abi;
+  } ABI;
 };
 
 /****************************************************

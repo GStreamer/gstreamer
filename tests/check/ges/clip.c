@@ -22,15 +22,6 @@
 #include <ges/ges.h>
 #include <gst/check/gstcheck.h>
 
-void count_cb (GObject * obj, GParamSpec * pspec, gint * count);
-void test_children_time_val (GESClip * clip, const gchar * prop,
-    GstClockTime val);
-void test_children_time_setter (GESClip * clip, GESTimelineElement * child,
-    const gchar * prop, gboolean (*setter) (GESTimelineElement *, GstClockTime),
-    GstClockTime val1, GstClockTime val2);
-void test_children_time_setting_on_clip (GESClip * clip,
-    GESTimelineElement * child);
-
 GST_START_TEST (test_object_properties)
 {
   GESClip *clip;
@@ -738,56 +729,70 @@ GST_START_TEST (test_effects_priorities)
 
 GST_END_TEST;
 
-void
-count_cb (GObject * obj, GParamSpec * pspec, gint * count)
+static void
+_count_cb (GObject * obj, GParamSpec * pspec, gint * count)
 {
   *count = *count + 1;
 }
 
-void
-test_children_time_val (GESClip * clip, const gchar * prop, GstClockTime val)
-{
-  GList *tmp;
-  GstClockTime read_val;
-
-  g_object_get (clip, prop, &read_val, NULL);
-  assert_equals_uint64 (read_val, val);
-  for (tmp = GES_CONTAINER_CHILDREN (clip); tmp != NULL; tmp = tmp->next) {
-    g_object_get (tmp->data, prop, &read_val, NULL);
-    assert_equals_uint64 (read_val, val);
-  }
+#define _assert_children_time_setter(clip, child, prop, setter, val1, val2) \
+{ \
+  gint clip_count = 0; \
+  gint child_count = 0; \
+  gchar *notify_name = g_strconcat ("notify::", prop, NULL); \
+  gchar *clip_name = GES_TIMELINE_ELEMENT_NAME (clip); \
+  gchar *child_name = NULL; \
+  g_signal_connect (clip, notify_name, G_CALLBACK (_count_cb), \
+      &clip_count); \
+  if (child) { \
+    child_name = GES_TIMELINE_ELEMENT_NAME (child); \
+    g_signal_connect (child, notify_name, G_CALLBACK (_count_cb), \
+        &child_count); \
+  } \
+  \
+  fail_unless (setter (GES_TIMELINE_ELEMENT (clip), val1), \
+      "Failed to set the %s property for clip %s", prop, clip_name); \
+  assert_clip_children_time_val (clip, prop, val1); \
+  \
+  fail_unless (clip_count == 1, "The callback for the %s property was " \
+      "called %i times for clip %s, rather than once", \
+      prop, clip_count, clip_name); \
+  if (child) { \
+    fail_unless (child_count == 1, "The callback for the %s property " \
+        "was called %i times for the child %s of clip %s, rather than " \
+        "once", prop, child_count, child_name, clip_name); \
+  } \
+  \
+  clip_count = 0; \
+  if (child) { \
+    child_count = 0; \
+    fail_unless (setter (GES_TIMELINE_ELEMENT (child), val2), \
+        "Failed to set the %s property for the child %s of clip %s", \
+        prop, child_name, clip_name); \
+    fail_unless (child_count == 1, "The callback for the %s property " \
+        "was called %i more times for the child %s of clip %s, rather " \
+        "than once more", prop, child_count, child_name, clip_name); \
+  } else { \
+    fail_unless (setter (GES_TIMELINE_ELEMENT (clip), val2), \
+      "Failed to set the %s property for clip %s", prop, clip_name); \
+  } \
+  assert_clip_children_time_val (clip, prop, val2); \
+  \
+  fail_unless (clip_count == 1, "The callback for the %s property " \
+      "was called %i more times for clip %s, rather than once more", \
+      prop, clip_count, clip_name); \
+  assert_equals_int (g_signal_handlers_disconnect_by_func (clip, \
+          G_CALLBACK (_count_cb), &clip_count), 1); \
+  if (child) { \
+    assert_equals_int (g_signal_handlers_disconnect_by_func (child, \
+            G_CALLBACK (_count_cb), &child_count), 1); \
+  } \
+  \
+  g_free (notify_name); \
 }
 
-void
-test_children_time_setter (GESClip * clip, GESTimelineElement * child,
-    const gchar * prop, gboolean (*setter) (GESTimelineElement *, GstClockTime),
-    GstClockTime val1, GstClockTime val2)
-{
-  gint clip_count = 0;
-  gint child_count = 0;
-  gchar *notify_name = g_strconcat ("notify::", prop, NULL);
-
-  g_signal_connect (clip, notify_name, G_CALLBACK (count_cb), &clip_count);
-  g_signal_connect (child, notify_name, G_CALLBACK (count_cb), &child_count);
-  fail_unless (setter (GES_TIMELINE_ELEMENT (clip), val1));
-  test_children_time_val (clip, prop, val1);
-  assert_equals_int (clip_count, 1);
-  assert_equals_int (child_count, 1);
-  clip_count = 0;
-  child_count = 0;
-  fail_unless (setter (child, val2));
-  test_children_time_val (clip, prop, val2);
-  assert_equals_int (clip_count, 1);
-  assert_equals_int (child_count, 1);
-  assert_equals_int (g_signal_handlers_disconnect_by_func (clip,
-          G_CALLBACK (count_cb), &clip_count), 1);
-  assert_equals_int (g_signal_handlers_disconnect_by_func (child,
-          G_CALLBACK (count_cb), &child_count), 1);
-  g_free (notify_name);
-}
-
-void
-test_children_time_setting_on_clip (GESClip * clip, GESTimelineElement * child)
+static void
+_test_children_time_setting_on_clip (GESClip * clip, GESTimelineElement * child)
 {
   /* FIXME: Don't necessarily want to change the inpoint of all the
    * children if the clip inpoint changes. Really, we would only expect
@@ -800,50 +805,66 @@ test_children_time_setting_on_clip (GESClip * clip, GESTimelineElement * child)
    * test should be changed to only check that source elements have
    * their inpoint changed, and operation elements have their inpoint
    * unchanged */
-  test_children_time_setter (clip, child, "in-point",
-      ges_timeline_element_set_inpoint, 23, 52);
-  test_children_time_setter (clip, child, "start",
-      ges_timeline_element_set_start, 43, 72);
-  test_children_time_setter (clip, child, "duration",
-      ges_timeline_element_set_duration, 53, 12);
+  _assert_children_time_setter (clip, child, "in-point",
+      ges_timeline_element_set_inpoint, 11, 101);
+  _assert_children_time_setter (clip, child, "in-point",
+      ges_timeline_element_set_inpoint, 51, 1);
+  _assert_children_time_setter (clip, child, "start",
+      ges_timeline_element_set_start, 12, 102);
+  _assert_children_time_setter (clip, child, "start",
+      ges_timeline_element_set_start, 52, 2);
+  _assert_children_time_setter (clip, child, "duration",
+      ges_timeline_element_set_duration, 13, 103);
+  _assert_children_time_setter (clip, child, "duration",
+      ges_timeline_element_set_duration, 53, 3);
 }
 
 GST_START_TEST (test_children_time_setters)
 {
   GESTimeline *timeline;
-  GESTrack *audio_track, *video_track;
   GESLayer *layer;
-
-  GESTimelineElement *effect;
-  GESClip *clips[] = {
-    GES_CLIP (ges_transition_clip_new (GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE)),  /* operation clip */
-    GES_CLIP (ges_test_clip_new ()),    /* source clip */
-  };
+  GESClip *clips[] = { NULL, NULL };
   gint i;
 
   ges_init ();
 
-  audio_track = GES_TRACK (ges_audio_track_new ());
-  video_track = GES_TRACK (ges_video_track_new ());
-
-  timeline = ges_timeline_new ();
-  fail_unless (ges_timeline_add_track (timeline, audio_track));
-  fail_unless (ges_timeline_add_track (timeline, video_track));
+  timeline = ges_timeline_new_audio_video ();
+  fail_unless (timeline);
 
   layer = ges_timeline_append_layer (timeline);
 
-  effect = GES_TIMELINE_ELEMENT (ges_effect_new ("agingtv"));
+  clips[0] =
+      GES_CLIP (ges_transition_clip_new
+      (GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE));
+  clips[1] = GES_CLIP (ges_test_clip_new ());
 
   for (i = 0; i < G_N_ELEMENTS (clips); i++) {
     GESClip *clip = clips[i];
-    fail_unless (ges_container_add (GES_CONTAINER (clip), effect));
-    test_children_time_setting_on_clip (clip, effect);
+    GESContainer *group = GES_CONTAINER (ges_group_new ());
+    GList *children;
+    GESTimelineElement *child;
+    /* no children */
+    _test_children_time_setting_on_clip (clip, NULL);
+    /* child in timeline */
     fail_unless (ges_layer_add_clip (layer, clip));
-    test_children_time_setting_on_clip (clip, effect);
-    fail_unless (ges_container_remove (GES_CONTAINER (clip), effect));
+    children = GES_CONTAINER_CHILDREN (clip);
+    fail_unless (children);
+    child = GES_TIMELINE_ELEMENT (children->data);
+    _test_children_time_setting_on_clip (clip, child);
+    /* clip in a group */
+    ges_container_add (group, GES_TIMELINE_ELEMENT (clip));
+    _test_children_time_setting_on_clip (clip, child);
+    /* group is removed from the timeline and destroyed when empty */
+    ges_container_remove (group, GES_TIMELINE_ELEMENT (clip));
+    /* child not in timeline */
+    gst_object_ref (clip);
     fail_unless (ges_layer_remove_clip (layer, clip));
+    children = GES_CONTAINER_CHILDREN (clip);
+    fail_unless (children);
+    child = GES_TIMELINE_ELEMENT (children->data);
+    _test_children_time_setting_on_clip (clip, child);
+    gst_object_unref (clip);
   }
-  gst_object_unref (effect);
   gst_object_unref (timeline);
 
   ges_deinit ();
@@ -851,6 +872,59 @@ GST_START_TEST (test_children_time_setters)
 
 GST_END_TEST;
 
+GST_START_TEST (test_can_add_effect)
+{
+  struct CanAddEffectData
+  {
+    GESClip *clip;
+    gboolean can_add_effect;
+  } clips[6];
+  guint i;
+  gchar *uri;
+
+  ges_init ();
+
+  uri = ges_test_get_audio_video_uri ();
+
+  clips[0] = (struct CanAddEffectData) {
+  GES_CLIP (ges_test_clip_new ()), TRUE};
+  clips[1] = (struct CanAddEffectData) {
+  GES_CLIP (ges_uri_clip_new (uri)), TRUE};
+  clips[2] = (struct CanAddEffectData) {
+  GES_CLIP (ges_title_clip_new ()), TRUE};
+  clips[3] = (struct CanAddEffectData) {
+  GES_CLIP (ges_effect_clip_new ("agingtv", "audioecho")), TRUE};
+  clips[4] = (struct CanAddEffectData) {
+  GES_CLIP (ges_transition_clip_new
+        (GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE)), FALSE};
+  clips[5] = (struct CanAddEffectData) {
+  GES_CLIP (ges_text_overlay_clip_new ()), FALSE};
+
+  g_free (uri);
+
+  for (i = 0; i < G_N_ELEMENTS (clips); i++) {
+    GESClip *clip = clips[i].clip;
+    GESTimelineElement *effect =
+        GES_TIMELINE_ELEMENT (ges_effect_new ("agingtv"));
+    gst_object_ref_sink (effect);
+    gst_object_ref_sink (clip);
+    fail_unless (clip);
+    if (clips[i].can_add_effect)
+      fail_unless (ges_container_add (GES_CONTAINER (clip), effect),
+          "Could not add an effect to clip %s",
+          GES_TIMELINE_ELEMENT_NAME (clip));
+    else
+      fail_if (ges_container_add (GES_CONTAINER (clip), effect),
+          "Could add an effect to clip %s, but we expect this to fail",
+          GES_TIMELINE_ELEMENT_NAME (clip));
+    gst_object_unref (effect);
+    gst_object_unref (clip);
+  }
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
 
 static Suite *
 ges_suite (void)
@@ -869,6 +943,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_clip_find_track_element);
   tcase_add_test (tc_chain, test_effects_priorities);
   tcase_add_test (tc_chain, test_children_time_setters);
+  tcase_add_test (tc_chain, test_can_add_effect);
 
   return s;
 }

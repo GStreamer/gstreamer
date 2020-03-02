@@ -21,7 +21,16 @@
 /**
  * SECTION:gessourceclip
  * @title: GESSourceClip
- * @short_description: Base Class for sources of a GESLayer
+ * @short_description: Base Class for sources of a #GESLayer
+ *
+ * #GESSourceClip-s are clips whose core elements are #GESSource-s.
+ *
+ * ## Effects
+ *
+ * #GESSourceClip-s can also have #GESBaseEffect-s added as non-core
+ * elements. These effects are applied to the core sources of the clip
+ * that they share a #GESTrack with. See #GESClip for how to add and move
+ * these effects from the clip.
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -80,6 +89,8 @@ ges_source_clip_class_init (GESSourceClipClass * klass)
   object_class->get_property = ges_source_clip_get_property;
   object_class->set_property = ges_source_clip_set_property;
   object_class->finalize = ges_source_clip_finalize;
+
+  GES_CLIP_CLASS_CAN_ADD_EFFECTS (klass) = TRUE;
 }
 
 static void

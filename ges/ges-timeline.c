@@ -1433,9 +1433,7 @@ clip_track_element_added_cb (GESClip * clip,
     /* FIXME: in both cases track_element is removed from the clip! */
     g_clear_object (&existing_src);
 
-    track_element_copy =
-        GES_TRACK_ELEMENT (ges_timeline_element_copy (GES_TIMELINE_ELEMENT
-            (track_element), TRUE));
+    track_element_copy = ges_track_element_copy_core (track_element, TRUE);
 
     GST_LOG_OBJECT (timeline, "Trying to add %p to track %p",
         track_element_copy, track);

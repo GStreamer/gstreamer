@@ -410,8 +410,10 @@ G_GNUC_INTERNAL void ges_track_element_copy_properties          (GESTimelineElem
                                                                  GESTimelineElement * elementcopy);
 
 G_GNUC_INTERNAL void ges_track_element_copy_bindings (GESTrackElement *element,
-						       GESTrackElement *new_element,
-						       guint64 position);
+                                                      GESTrackElement *new_element,
+                                                      guint64 position);
+G_GNUC_INTERNAL GESTrackElement * ges_track_element_copy_core   (GESTrackElement * self,
+                                                                 gboolean deep);
 
 G_GNUC_INTERNAL GstElement* ges_source_create_topbin(const gchar* bin_name, GstElement* sub_element, GPtrArray* elements);
 G_GNUC_INTERNAL void ges_track_set_caps(GESTrack* track,
@@ -436,6 +438,7 @@ typedef enum
 {
   GES_CLIP_IS_MOVING = (1 << 0),
   GES_TIMELINE_ELEMENT_SET_SIMPLE = (1 << 1),
+  GES_TRACK_ELEMENT_IS_CORE = (1 << 2),
 } GESTimelineElementFlags;
 
 G_GNUC_INTERNAL gdouble ges_timeline_element_get_media_duration_factor(GESTimelineElement *self);

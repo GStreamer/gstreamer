@@ -94,6 +94,29 @@ G_STMT_START {                                          \
   fail_unless (_DURATION (obj) == duration, "%s duration is %" GST_TIME_FORMAT " != %" GST_TIME_FORMAT, GES_TIMELINE_ELEMENT_NAME(obj), GST_TIME_ARGS (_DURATION(obj)), GST_TIME_ARGS (duration));\
 }
 
+/* assert that the time property (start, duration or in-point) is the
+ * same as @cmp for the clip and all its children */
+#define assert_clip_children_time_val(clip, property, cmp) \
+{ \
+  GList *tmp; \
+  GstClockTime read_val; \
+  gchar *name = GES_TIMELINE_ELEMENT (clip)->name; \
+  g_object_get (clip, property, &read_val, NULL); \
+  fail_unless (read_val == cmp, "The %s property for clip %s is %" \
+      GST_TIME_FORMAT ", rather than the expected value of %" \
+      GST_TIME_FORMAT, property, name, GST_TIME_ARGS (read_val), \
+      GST_TIME_ARGS (cmp)); \
+  for (tmp = GES_CONTAINER_CHILDREN (clip); tmp != NULL; \
+      tmp = tmp->next) { \
+    GESTimelineElement *child = tmp->data; \
+    g_object_get (child, property, &read_val, NULL); \
+    fail_unless (read_val == cmp, "The %s property for the child %s " \
+        "of clip %s is %" GST_TIME_FORMAT ", rather than the expected " \
+        "value of %" GST_TIME_FORMAT, property, child->name, name, \
+        GST_TIME_ARGS (read_val), GST_TIME_ARGS (cmp)); \
+  } \
+}
+
 #define check_layer(clip, layer_prio) {                                      \
   fail_unless (GES_TIMELINE_ELEMENT_LAYER_PRIORITY (clip) ==  (layer_prio),  \
     "%s in layer %d instead of %d", GES_TIMELINE_ELEMENT_NAME (clip),        \

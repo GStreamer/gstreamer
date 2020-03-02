@@ -1250,6 +1250,19 @@ ges_track_element_copy_properties (GESTimelineElement * element,
   g_free (specs);
 }
 
+/* copy an element, as well as its GES_TRACK_ELEMENT_IS_CORE flag */
+GESTrackElement *
+ges_track_element_copy_core (GESTrackElement * self, gboolean deep)
+{
+  GESTimelineElement *copy =
+      ges_timeline_element_copy (GES_TIMELINE_ELEMENT (self), deep);
+  if (!copy)
+    return NULL;
+  if (ELEMENT_FLAG_IS_SET (self, GES_TRACK_ELEMENT_IS_CORE))
+    ELEMENT_SET_FLAG (copy, GES_TRACK_ELEMENT_IS_CORE);
+  return GES_TRACK_ELEMENT (copy);
+}
+
 static void
 _split_binding (GESTrackElement * element, GESTrackElement * new_element,
     guint64 position, GstTimedValueControlSource * source,

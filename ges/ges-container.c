@@ -755,7 +755,7 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
   if (class->add_child) {
     if (class->add_child (container, child) == FALSE) {
       container->children_control_mode = GES_CHILDREN_UPDATE;
-      GST_WARNING_OBJECT (container, "Erreur adding child %p", child);
+      GST_WARNING_OBJECT (container, "Error adding child %p", child);
       return FALSE;
     }
   }

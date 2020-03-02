@@ -1543,7 +1543,7 @@ ges_timeline_element_copy (GESTimelineElement * self, gboolean deep)
 
   GESTimelineElement *ret = NULL;
 
-  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), NULL);
 
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
