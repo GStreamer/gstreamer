@@ -97,6 +97,8 @@ struct _GESClipPrivate
 
   GList *copied_track_elements;
   GESLayer *copied_layer;
+  gboolean prevent_priority_offset_update;
+  gboolean prevent_resort;
 
   /* The formats supported by this Clip */
   GESTrackType supportedformats;
@@ -128,37 +130,52 @@ G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GESClip, ges_clip, GES_TYPE_CONTAINER);
  * @max_priority: The absolute maximum priority a child of @container should have
  */
 static void
-_get_priority_range (GESContainer * container, guint32 * min_priority,
-    guint32 * max_priority)
+_get_priority_range_full (GESContainer * container, guint32 * min_priority,
+    guint32 * max_priority, guint32 priority_base)
 {
   GESLayer *layer = GES_CLIP (container)->priv->layer;
 
   if (layer) {
-    *min_priority = _PRIORITY (container) + layer->min_nle_priority;
+    *min_priority = priority_base + layer->min_nle_priority;
     *max_priority = layer->max_nle_priority;
   } else {
-    *min_priority = _PRIORITY (container) + MIN_NLE_PRIO;
+    *min_priority = priority_base + MIN_NLE_PRIO;
     *max_priority = G_MAXUINT32;
   }
+}
+
+static void
+_get_priority_range (GESContainer * container, guint32 * min_priority,
+    guint32 * max_priority)
+{
+  _get_priority_range_full (container, min_priority, max_priority,
+      _PRIORITY (container));
 }
 
 static void
 _child_priority_changed_cb (GESTimelineElement * child,
     GParamSpec * arg G_GNUC_UNUSED, GESContainer * container)
 {
+  /* we do not change the rest of the clip in response to a change in
+   * the child priority */
   guint32 min_prio, max_prio;
+  GESClipPrivate *priv = GES_CLIP (container)->priv;
 
-  GST_DEBUG_OBJECT (container, "TimelineElement %p priority changed to %i",
-      child, _PRIORITY (child));
+  GST_DEBUG_OBJECT (container, "TimelineElement %" GES_FORMAT
+      " priority changed to %u", GES_ARGS (child), _PRIORITY (child));
 
-  if (container->children_control_mode == GES_CHILDREN_IGNORE_NOTIFIES)
-    return;
+  if (!priv->prevent_priority_offset_update) {
+    /* Update mapping */
+    _get_priority_range (container, &min_prio, &max_prio);
 
-  /* Update mapping */
-  _get_priority_range (container, &min_prio, &max_prio);
+    _ges_container_set_priority_offset (container, child,
+        min_prio - _PRIORITY (child));
+  }
 
-  _ges_container_set_priority_offset (container, child,
-      min_prio - _PRIORITY (child));
+  if (!priv->prevent_resort) {
+    _ges_container_sort_children (container);
+    _compute_height (container);
+  }
 }
 
 /*****************************************************
@@ -246,19 +263,23 @@ _set_max_duration (GESTimelineElement * element, GstClockTime maxduration)
 static gboolean
 _set_priority (GESTimelineElement * element, guint32 priority)
 {
+  GESClipPrivate *priv = GES_CLIP (element)->priv;
   GList *tmp;
   guint32 min_prio, max_prio;
 
   GESContainer *container = GES_CONTAINER (element);
 
-  _get_priority_range (container, &min_prio, &max_prio);
+  /* send the new 'priority' to determine what the new 'min_prio' should
+   * be for the clip */
+  _get_priority_range_full (container, &min_prio, &max_prio, priority);
 
-  container->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
+  /* offsets will remain constant for the children */
+  priv->prevent_resort = TRUE;
+  priv->prevent_priority_offset_update = TRUE;
   for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
     guint32 track_element_prio;
     GESTimelineElement *child = (GESTimelineElement *) tmp->data;
     gint off = _ges_container_get_priority_offset (container, child);
-
 
     if (off >= LAYER_HEIGHT) {
       GST_ERROR ("%s child %s as a priority offset %d >= LAYER_HEIGHT %d"
@@ -267,24 +288,25 @@ _set_priority (GESTimelineElement * element, guint32 priority)
       off = 0;
     }
 
-    /* We need to remove our current priority from @min_prio
-     * as it is the absolute minimum priority @child could have
-     * before we set @container to @priority.
+    /* Want the priority offset 'off' of each child to stay the same with
+     * the new priority. The offset is calculated from
+     *   offset = min_priority - child_priority
      */
-    track_element_prio = min_prio - _PRIORITY (container) + priority - off;
+    track_element_prio = min_prio - off;
 
     if (track_element_prio > max_prio) {
       GST_WARNING ("%p priority of %i, is outside of the its containing "
           "layer space. (%d/%d) setting it to the maximum it can be",
-          container, priority, min_prio - _PRIORITY (container) + priority,
-          max_prio);
+          container, priority, min_prio, max_prio);
 
       track_element_prio = max_prio;
     }
     _set_priority0 (child, track_element_prio);
   }
-  container->children_control_mode = GES_CHILDREN_UPDATE;
-  _compute_height (container);
+  /* no need to re-sort the container since we maintained the relative
+   * offsets. As such, the height remains the same as well. */
+  priv->prevent_resort = FALSE;
+  priv->prevent_priority_offset_update = FALSE;
 
   return TRUE;
 }
@@ -341,8 +363,6 @@ _add_child (GESContainer * container, GESTimelineElement * element)
 
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (element), FALSE);
 
-  /* First make sure we work with a sorted list of GESTimelineElement-s */
-  _ges_container_sort_children (container);
   _get_priority_range (container, &min_prio, &max_prio);
   if (ELEMENT_FLAG_IS_SET (element, GES_TRACK_ELEMENT_IS_CORE)) {
     /* NOTE: we are assuming that the core element is **our** core element
@@ -369,6 +389,7 @@ _add_child (GESContainer * container, GESTimelineElement * element)
         min_prio + priv->nb_effects);
 
     /* changing priorities, and updating their offset */
+    priv->prevent_resort = TRUE;
     tmp = g_list_nth (GES_CONTAINER_CHILDREN (container), priv->nb_effects);
     for (; tmp; tmp = tmp->next)
       ges_timeline_element_set_priority (GES_TIMELINE_ELEMENT (tmp->data),
@@ -376,6 +397,7 @@ _add_child (GESContainer * container, GESTimelineElement * element)
 
     _set_priority0 (element, min_prio + priv->nb_effects);
     priv->nb_effects++;
+    priv->prevent_resort = FALSE;
     /* no need to call _ges_container_sort_children (container) since
      * there is no change to the ordering yet (this happens after the
      * child is actually added) */
@@ -435,39 +457,36 @@ _child_added (GESContainer * container, GESTimelineElement * element)
       G_CALLBACK (_child_priority_changed_cb), container);
 
   _child_priority_changed_cb (element, NULL, container);
-  _compute_height (container);
 }
 
 static void
 _child_removed (GESContainer * container, GESTimelineElement * element)
 {
+  GESClipPrivate *priv = GES_CLIP (element)->priv;
+
   g_signal_handlers_disconnect_by_func (element, _child_priority_changed_cb,
       container);
 
   if (!ELEMENT_FLAG_IS_SET (element, GES_TRACK_ELEMENT_IS_CORE)
       && GES_IS_BASE_EFFECT (element)) {
     GList *tmp;
-    guint32 priority;
-    GESChildrenControlMode mode = container->children_control_mode;
-
     GST_DEBUG_OBJECT (container, "Resyncing effects priority.");
 
-    container->children_control_mode = GES_CHILDREN_UPDATE_OFFSETS;
-    tmp = GES_CONTAINER_CHILDREN (container);
-    priority =
-        ges_timeline_element_get_priority (GES_TIMELINE_ELEMENT (element));
-    for (; tmp; tmp = tmp->next) {
-      if (ges_timeline_element_get_priority (GES_TIMELINE_ELEMENT (tmp->data)) >
-          priority) {
+    /* changing priorities, so preventing a re-sort */
+    priv->prevent_resort = TRUE;
+    for (tmp = GES_CONTAINER_CHILDREN (container); tmp; tmp = tmp->next) {
+      guint32 sibling_prio = GES_TIMELINE_ELEMENT_PRIORITY (tmp->data);
+      if (sibling_prio > element->priority)
         ges_timeline_element_set_priority (GES_TIMELINE_ELEMENT (tmp->data),
-            GES_TIMELINE_ELEMENT_PRIORITY (tmp->data) - 1);
-      }
+            sibling_prio - 1);
     }
-
-    container->children_control_mode = mode;
+    priv->prevent_resort = FALSE;
+    /* no need to re-sort the children since the rest keep the same
+     * relative priorities */
+    /* height may have changed */
+    _compute_height (container);
   }
 
-  _compute_height (container);
 }
 
 static void
@@ -1298,7 +1317,9 @@ ges_clip_get_top_effects (GESClip * clip)
       ret = g_list_append (ret, gst_object_ref (child));
   }
 
-  return g_list_sort (ret, (GCompareFunc) element_start_compare);
+  /* list is already sorted by index because the list of children is
+   * sorted by priority */
+  return ret;
 }
 
 static gboolean
@@ -1411,15 +1432,16 @@ ges_clip_set_top_effect_index (GESClip * clip, GESBaseEffect * effect,
     return FALSE;
   }
 
-  _ges_container_sort_children (GES_CONTAINER (clip));
-  if (_PRIORITY (track_element) < newindex)
+  GST_DEBUG_OBJECT (clip, "Setting top effect %" GST_PTR_FORMAT "priority: %i",
+      effect, newindex);
+
+  if (current_prio < newindex)
     inc = -1;
   else
     inc = +1;
 
-  GST_DEBUG_OBJECT (clip, "Setting top effect %" GST_PTR_FORMAT "priority: %i",
-      effect, newindex);
-
+  /* prevent a re-sort of the list whilst we are traversing it! */
+  clip->priv->prevent_resort = TRUE;
   for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
     GESTrackElement *tmpo = GES_TRACK_ELEMENT (tmp->data);
     guint tck_priority = _PRIORITY (tmpo);
@@ -1427,12 +1449,19 @@ ges_clip_set_top_effect_index (GESClip * clip, GESBaseEffect * effect,
     if (tmpo == track_element)
       continue;
 
-    if ((inc == +1 && tck_priority >= newindex) ||
-        (inc == -1 && tck_priority <= newindex)) {
+    /* only need to change the priority for those between the new and old
+     * index */
+    if ((inc == +1 && tck_priority >= newindex && tck_priority < current_prio)
+        || (inc == -1 && tck_priority <= newindex
+            && tck_priority > current_prio)) {
       _set_priority0 (GES_TIMELINE_ELEMENT (tmpo), tck_priority + inc);
     }
   }
   _set_priority0 (GES_TIMELINE_ELEMENT (track_element), newindex);
+
+  clip->priv->prevent_resort = FALSE;
+  _ges_container_sort_children (GES_CONTAINER (clip));
+  /* height should have stayed the same */
 
   return TRUE;
 }
