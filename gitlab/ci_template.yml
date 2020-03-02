@@ -681,7 +681,7 @@ cerbero deps cross-windows x86:
   extends: '.cerbero deps'
   variables:
     CONFIG: "cross-win32.cbc"
-    ARCH: "windows_x86"
+    ARCH: "mingw_x86"
 
 .cerbero cross win32:
   extends: '.cerbero'
@@ -717,7 +717,7 @@ cerbero deps cross-windows x86_64:
   extends: '.cerbero deps'
   variables:
     CONFIG: "cross-win64.cbc"
-    ARCH: "windows_x86_64"
+    ARCH: "mingw_x86_64"
 
 .cerbero cross win64:
   extends: '.cerbero'
