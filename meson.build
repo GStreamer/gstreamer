@@ -6,8 +6,6 @@ project('All GStreamer modules', 'c',
 gst_version = '>= @0@'.format(meson.project_version())
 gst_branch = 'master'
 
-glib_req = '>= 2.44.0'
-
 build_system = build_machine.system()
 cc = meson.get_compiler('c')
 
