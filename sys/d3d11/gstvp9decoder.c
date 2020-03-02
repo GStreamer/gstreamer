@@ -67,11 +67,7 @@ struct _GstVp9DecoderPrivate
   GstVp9Parser *parser;
   GstVp9Dpb *dpb;
 
-  GstVp9Picture *current_picture;
-
-  GstVp9SuperframeInfo superframe_info;
-  guint frame_cnt;              /* frame count variable for super frame */
-  gboolean had_superframe_hdr;  /* indicate the presense of super frame */
+  gboolean wait_keyframe;
 };
 
 #define parent_class gst_vp9_decoder_parent_class
@@ -80,11 +76,11 @@ G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GstVp9Decoder, gst_vp9_decoder,
 
 static gboolean gst_vp9_decoder_start (GstVideoDecoder * decoder);
 static gboolean gst_vp9_decoder_stop (GstVideoDecoder * decoder);
-
-static GstFlowReturn gst_vp9_decoder_parse (GstVideoDecoder * decoder,
-    GstVideoCodecFrame * frame, GstAdapter * adapter, gboolean at_eos);
 static gboolean gst_vp9_decoder_set_format (GstVideoDecoder * decoder,
     GstVideoCodecState * state);
+static GstFlowReturn gst_vp9_decoder_finish (GstVideoDecoder * decoder);
+static gboolean gst_vp9_decoder_flush (GstVideoDecoder * decoder);
+static GstFlowReturn gst_vp9_decoder_drain (GstVideoDecoder * decoder);
 static GstFlowReturn gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
 
@@ -98,8 +94,10 @@ gst_vp9_decoder_class_init (GstVp9DecoderClass * klass)
 
   decoder_class->start = GST_DEBUG_FUNCPTR (gst_vp9_decoder_start);
   decoder_class->stop = GST_DEBUG_FUNCPTR (gst_vp9_decoder_stop);
-  decoder_class->parse = GST_DEBUG_FUNCPTR (gst_vp9_decoder_parse);
   decoder_class->set_format = GST_DEBUG_FUNCPTR (gst_vp9_decoder_set_format);
+  decoder_class->finish = GST_DEBUG_FUNCPTR (gst_vp9_decoder_finish);
+  decoder_class->flush = GST_DEBUG_FUNCPTR (gst_vp9_decoder_flush);
+  decoder_class->drain = GST_DEBUG_FUNCPTR (gst_vp9_decoder_drain);
   decoder_class->handle_frame =
       GST_DEBUG_FUNCPTR (gst_vp9_decoder_handle_frame);
 
@@ -110,7 +108,7 @@ gst_vp9_decoder_class_init (GstVp9DecoderClass * klass)
 static void
 gst_vp9_decoder_init (GstVp9Decoder * self)
 {
-  gst_video_decoder_set_packetized (GST_VIDEO_DECODER (self), FALSE);
+  gst_video_decoder_set_packetized (GST_VIDEO_DECODER (self), TRUE);
 
   self->priv = gst_vp9_decoder_get_instance_private (self);
 }
@@ -123,6 +121,7 @@ gst_vp9_decoder_start (GstVideoDecoder * decoder)
 
   priv->parser = gst_vp9_parser_new ();
   priv->dpb = gst_vp9_dpb_new ();
+  priv->wait_keyframe = TRUE;
 
   return TRUE;
 }
@@ -185,185 +184,6 @@ gst_vp9_decoder_check_codec_change (GstVp9Decoder * self,
   return ret;
 }
 
-static GstFlowReturn
-gst_vp9_decoder_parse (GstVideoDecoder * decoder,
-    GstVideoCodecFrame * frame, GstAdapter * adapter, gboolean at_eos)
-{
-  GstVp9Decoder *self = GST_VP9_DECODER (decoder);
-  GstVp9DecoderClass *klass = GST_VP9_DECODER_GET_CLASS (self);
-  GstVp9DecoderPrivate *priv = self->priv;
-  GstVp9ParserResult pres;
-  GstFlowReturn flow_ret = GST_FLOW_OK;
-  GstVp9FrameHdr frame_hdr;
-  GstVp9Picture *picture = NULL;
-  const guint8 *data;
-  gsize size;
-  guint buf_size;
-  GstClockTime pts;
-
-  size = gst_adapter_available (adapter);
-
-  if (size < 1) {
-    GST_LOG_OBJECT (self, "need more data");
-    return GST_VIDEO_DECODER_FLOW_NEED_DATA;
-  }
-
-  pts = gst_adapter_prev_pts (adapter, NULL);
-  data = (const guint8 *) gst_adapter_map (adapter, size);
-
-  if (!priv->had_superframe_hdr) {
-    pres =
-        gst_vp9_parser_parse_superframe_info (priv->parser,
-        &(priv->superframe_info), data, size);
-
-    if (pres == GST_VP9_PARSER_ERROR)
-      goto unmap_and_error;
-
-    if (priv->superframe_info.frames_in_superframe > 0)
-      priv->had_superframe_hdr = TRUE;
-  }
-
-  buf_size = priv->superframe_info.frame_sizes[priv->frame_cnt++];
-
-  pres = gst_vp9_parser_parse_frame_header (priv->parser, &frame_hdr,
-      data, buf_size);
-
-  if (priv->frame_cnt == priv->superframe_info.frames_in_superframe) {
-    priv->frame_cnt = 0;
-    priv->had_superframe_hdr = FALSE;
-    buf_size += priv->superframe_info.superframe_index_size;
-  }
-
-  if (pres != GST_VP9_PARSER_OK) {
-    GST_ERROR_OBJECT (self, "Failed to parsing frame header");
-    goto unmap_and_error;
-  }
-
-  if (frame_hdr.show_existing_frame) {
-    GstVp9Picture *pic_to_dup;
-
-    gst_adapter_unmap (adapter);
-
-    if (frame_hdr.frame_to_show >= GST_VP9_REF_FRAMES ||
-        !priv->dpb->pic_list[frame_hdr.frame_to_show]) {
-      GST_ERROR_OBJECT (self, "Invalid frame_to_show %d",
-          frame_hdr.frame_to_show);
-      goto error;
-    }
-
-    g_assert (klass->duplicate_picture);
-    pic_to_dup = priv->dpb->pic_list[frame_hdr.frame_to_show];
-    picture = klass->duplicate_picture (self, pic_to_dup);
-
-    if (!picture) {
-      GST_ERROR_OBJECT (self, "subclass didn't provide duplicated picture");
-      goto error;
-    }
-
-    picture->pts = pts;
-    picture->size = buf_size;
-
-    gst_video_decoder_add_to_frame (GST_VIDEO_DECODER (self), picture->size);
-
-    /* hold pointer to picture. default handle_frame implementation uses it */
-    priv->current_picture = picture;
-    flow_ret = gst_video_decoder_have_frame (GST_VIDEO_DECODER (self));
-
-    if (flow_ret == GST_FLOW_OK) {
-      if (klass->output_picture)
-        flow_ret = klass->output_picture (self, picture);
-    }
-
-    gst_vp9_picture_unref (picture);
-    priv->current_picture = NULL;
-
-    return flow_ret;
-  }
-
-  if (!gst_vp9_decoder_check_codec_change (self, &frame_hdr)) {
-    GST_ERROR_OBJECT (self, "codec change error");
-    goto unmap_and_error;
-  }
-
-  picture = gst_vp9_picture_new ();
-  picture->frame_hdr = frame_hdr;
-  picture->pts = pts;
-
-  picture->data = data;
-  picture->size = buf_size;
-
-  picture->subsampling_x = priv->parser->subsampling_x;
-  picture->subsampling_y = priv->parser->subsampling_y;
-  picture->bit_depth = priv->parser->bit_depth;
-
-  if (klass->new_picture) {
-    if (!klass->new_picture (self, picture)) {
-      GST_ERROR_OBJECT (self, "new picture error");
-      goto unmap_and_error;
-    }
-  }
-
-  if (klass->start_picture) {
-    if (!klass->start_picture (self, picture)) {
-      GST_ERROR_OBJECT (self, "start picture error");
-      goto unmap_and_error;
-    }
-  }
-
-  if (klass->decode_picture) {
-    if (!klass->decode_picture (self, picture, priv->dpb)) {
-      GST_ERROR_OBJECT (self, "decode picture error");
-      goto unmap_and_error;
-    }
-  }
-
-  if (klass->end_picture) {
-    if (!klass->end_picture (self, picture)) {
-      GST_ERROR_OBJECT (self, "end picture error");
-      goto unmap_and_error;
-    }
-  }
-
-  gst_adapter_unmap (adapter);
-
-  gst_video_decoder_add_to_frame (GST_VIDEO_DECODER (self), picture->size);
-
-  /* hold pointer to picture. default handle_frame implementation uses it */
-  priv->current_picture = picture;
-  flow_ret = gst_video_decoder_have_frame (GST_VIDEO_DECODER (self));
-
-  if (flow_ret == GST_FLOW_OK && klass->output_picture) {
-    flow_ret = klass->output_picture (self, picture);
-  }
-
-  picture->data = NULL;
-
-  gst_vp9_dpb_add (priv->dpb, picture);
-  priv->current_picture = NULL;
-
-  return flow_ret;
-
-unmap_and_error:
-  {
-    gst_adapter_unmap (adapter);
-    goto error;
-  }
-
-error:
-  {
-    if (picture)
-      gst_vp9_picture_unref (picture);
-
-    if (size)
-      gst_adapter_flush (adapter, size);
-
-    GST_VIDEO_DECODER_ERROR (self, 1, STREAM, DECODE,
-        ("Failed to decode data"), (NULL), flow_ret);
-
-    return flow_ret;
-  }
-}
-
 static gboolean
 gst_vp9_decoder_set_format (GstVideoDecoder * decoder,
     GstVideoCodecState * state)
@@ -384,6 +204,47 @@ gst_vp9_decoder_set_format (GstVideoDecoder * decoder,
   return TRUE;
 }
 
+static void
+gst_vp9_decoder_reset (GstVp9Decoder * self)
+{
+  GstVp9DecoderPrivate *priv = self->priv;
+
+  if (priv->dpb)
+    gst_vp9_dpb_clear (priv->dpb);
+
+  priv->wait_keyframe = TRUE;
+}
+
+static GstFlowReturn
+gst_vp9_decoder_finish (GstVideoDecoder * decoder)
+{
+  GST_DEBUG_OBJECT (decoder, "finish");
+
+  gst_vp9_decoder_reset (GST_VP9_DECODER (decoder));
+
+  return GST_FLOW_OK;
+}
+
+static gboolean
+gst_vp9_decoder_flush (GstVideoDecoder * decoder)
+{
+  GST_DEBUG_OBJECT (decoder, "flush");
+
+  gst_vp9_decoder_reset (GST_VP9_DECODER (decoder));
+
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_vp9_decoder_drain (GstVideoDecoder * decoder)
+{
+  GST_DEBUG_OBJECT (decoder, "drain");
+
+  gst_vp9_decoder_reset (GST_VP9_DECODER (decoder));
+
+  return GST_FLOW_OK;
+}
+
 static GstVp9Picture *
 gst_vp9_decoder_duplicate_picture_default (GstVp9Decoder * decoder,
     GstVp9Picture * picture)
@@ -401,26 +262,205 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame)
 {
   GstVp9Decoder *self = GST_VP9_DECODER (decoder);
+  GstVp9DecoderClass *klass = GST_VP9_DECODER_GET_CLASS (self);
   GstVp9DecoderPrivate *priv = self->priv;
   GstBuffer *in_buf = frame->input_buffer;
+  GstVp9FrameHdr frame_hdr[GST_VP9_MAX_FRAMES_IN_SUPERFRAME];
+  GstVp9Picture *picture = NULL;
+  GstVp9FrameHdr *cur_hdr;
+  GstVp9ParserResult pres;
+  GstVp9SuperframeInfo superframe_info;
+  GstMapInfo map;
+  GstFlowReturn ret = GST_FLOW_OK;
+  gint i;
+  gsize offset = 0;
+  gint frame_idx_to_consume = 0;
 
-  GST_LOG_OBJECT (self,
-      "handle frame, PTS: %" GST_TIME_FORMAT ", DTS: %"
-      GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_PTS (in_buf)),
-      GST_TIME_ARGS (GST_BUFFER_DTS (in_buf)));
+  GST_LOG_OBJECT (self, "handle frame %" GST_PTR_FORMAT, in_buf);
 
-  if (!priv->current_picture) {
-    GST_ERROR_OBJECT (self, "No current picture");
-    gst_video_decoder_drop_frame (decoder, frame);
-
-    return GST_FLOW_ERROR;
+  if (!gst_buffer_map (in_buf, &map, GST_MAP_READ)) {
+    GST_ERROR_OBJECT (self, "Cannot map input buffer");
+    goto error;
   }
 
-  gst_video_codec_frame_set_user_data (frame,
-      gst_vp9_picture_ref (priv->current_picture),
-      (GDestroyNotify) gst_vp9_picture_unref);
+  pres = gst_vp9_parser_parse_superframe_info (priv->parser,
+      &superframe_info, map.data, map.size);
+  if (pres != GST_VP9_PARSER_OK) {
+    GST_ERROR_OBJECT (self, "Failed to parse superframe header");
+    goto unmap_and_error;
+  }
 
+  if (superframe_info.frames_in_superframe > 1) {
+    GST_LOG_OBJECT (self,
+        "Have %d frames in superframe", superframe_info.frames_in_superframe);
+  }
+
+  for (i = 0; i < superframe_info.frames_in_superframe; i++) {
+    pres = gst_vp9_parser_parse_frame_header (priv->parser, &frame_hdr[i],
+        map.data + offset, superframe_info.frame_sizes[i]);
+
+    if (pres != GST_VP9_PARSER_OK) {
+      GST_ERROR_OBJECT (self, "Failed to parsing frame header %d", i);
+      goto unmap_and_error;
+    }
+
+    offset += superframe_info.frame_sizes[i];
+  }
+
+  /* if we have multiple frames in superframe here,
+   * decide which frame should consume given GstVideoCodecFrame.
+   * In practice, superframe consists of two frame, one is decode-only frame
+   * and the other is normal frame. If it's not the case, any other vp9 decoder
+   * implementations (nvdec, libvpx) including this d3d11 decoder would
+   * show mismatched number of input and output buffers.
+   * To handle it in generic manner, we need vp9parse element to
+   * split frames from superframe. */
+  if (superframe_info.frames_in_superframe > 1) {
+    for (i = 0; i < superframe_info.frames_in_superframe; i++) {
+      if (frame_hdr[i].show_frame) {
+        frame_idx_to_consume = i;
+        break;
+      }
+    }
+
+    /* if all frames are decode-only, choose the first one
+     * (seems to be no possibility) */
+    if (i == superframe_info.frames_in_superframe)
+      frame_idx_to_consume = 0;
+  }
+
+  if (priv->wait_keyframe && frame_hdr[0].frame_type != GST_VP9_KEY_FRAME) {
+    GST_DEBUG_OBJECT (self, "Drop frame before initial keyframe");
+    gst_buffer_unmap (in_buf, &map);
+
+    return gst_video_decoder_drop_frame (decoder, frame);;
+  }
+
+  priv->wait_keyframe = FALSE;
+
+  offset = 0;
+  for (i = 0; i < superframe_info.frames_in_superframe; i++) {
+    cur_hdr = &frame_hdr[i];
+
+    if (cur_hdr->show_existing_frame) {
+      GstVp9Picture *pic_to_dup;
+
+      if (cur_hdr->frame_to_show >= GST_VP9_REF_FRAMES ||
+          !priv->dpb->pic_list[cur_hdr->frame_to_show]) {
+        GST_ERROR_OBJECT (self, "Invalid frame_to_show %d",
+            cur_hdr->frame_to_show);
+        goto unmap_and_error;
+      }
+
+      g_assert (klass->duplicate_picture);
+      pic_to_dup = priv->dpb->pic_list[cur_hdr->frame_to_show];
+      picture = klass->duplicate_picture (self, pic_to_dup);
+
+      if (!picture) {
+        GST_ERROR_OBJECT (self, "subclass didn't provide duplicated picture");
+        goto unmap_and_error;
+      }
+
+      picture->pts = GST_BUFFER_PTS (in_buf);
+      picture->size = 0;
+
+      if (i == frame_idx_to_consume) {
+        gst_video_codec_frame_set_user_data (frame,
+            gst_vp9_picture_ref (picture),
+            (GDestroyNotify) gst_vp9_picture_unref);
+      }
+
+      if (klass->output_picture)
+        ret = klass->output_picture (self, picture);
+
+      gst_vp9_picture_unref (picture);
+      picture = NULL;
+    } else {
+      if (cur_hdr->frame_type == GST_VP9_KEY_FRAME &&
+          !gst_vp9_decoder_check_codec_change (self, cur_hdr)) {
+        GST_ERROR_OBJECT (self, "codec change error");
+        goto unmap_and_error;
+      }
+
+      picture = gst_vp9_picture_new ();
+      picture->frame_hdr = *cur_hdr;
+      picture->pts = GST_BUFFER_PTS (in_buf);
+
+      picture->data = map.data + offset;
+      picture->size = superframe_info.frame_sizes[i];
+
+      picture->subsampling_x = priv->parser->subsampling_x;
+      picture->subsampling_y = priv->parser->subsampling_y;
+      picture->bit_depth = priv->parser->bit_depth;
+
+      if (klass->new_picture) {
+        if (!klass->new_picture (self, picture)) {
+          GST_ERROR_OBJECT (self, "new picture error");
+          goto unmap_and_error;
+        }
+      }
+
+      if (klass->start_picture) {
+        if (!klass->start_picture (self, picture)) {
+          GST_ERROR_OBJECT (self, "start picture error");
+          goto unmap_and_error;
+        }
+      }
+
+      if (klass->decode_picture) {
+        if (!klass->decode_picture (self, picture, priv->dpb)) {
+          GST_ERROR_OBJECT (self, "decode picture error");
+          goto unmap_and_error;
+        }
+      }
+
+      if (klass->end_picture) {
+        if (!klass->end_picture (self, picture)) {
+          GST_ERROR_OBJECT (self, "end picture error");
+          goto unmap_and_error;
+        }
+      }
+
+      if (i == frame_idx_to_consume) {
+        gst_video_codec_frame_set_user_data (frame,
+            gst_vp9_picture_ref (picture),
+            (GDestroyNotify) gst_vp9_picture_unref);
+      }
+
+      if (klass->output_picture)
+        ret = klass->output_picture (self, picture);
+
+      /* transfer ownership of picture */
+      gst_vp9_dpb_add (priv->dpb, picture);
+      picture = NULL;
+    }
+
+    if (ret != GST_FLOW_OK)
+      break;
+
+    offset += superframe_info.frame_sizes[i];
+  }
+
+  gst_buffer_unmap (in_buf, &map);
   gst_video_codec_frame_unref (frame);
 
-  return GST_FLOW_OK;
+  return ret;
+
+unmap_and_error:
+  {
+    gst_buffer_unmap (in_buf, &map);
+    goto error;
+  }
+
+error:
+  {
+    if (picture)
+      gst_vp9_picture_unref (picture);
+
+    gst_video_decoder_drop_frame (decoder, frame);
+    GST_VIDEO_DECODER_ERROR (self, 1, STREAM, DECODE,
+        ("Failed to decode data"), (NULL), ret);
+
+    return ret;
+  }
 }
