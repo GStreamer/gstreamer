@@ -3718,7 +3718,7 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
   const GstSDPMedia *media = gst_sdp_message_get_media (sdp, media_idx);
   GstWebRTCDTLSSetup new_setup;
   gboolean new_rtcp_mux, new_rtcp_rsize;
-  ReceiveState receive_state = 0;
+  ReceiveState receive_state = RECEIVE_STATE_UNSET;
   int i;
 
   rtp_trans->mline = media_idx;
@@ -3804,7 +3804,20 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
         gst_object_unref (pad);
       }
 
+      if (!bundled) {
+        /* Not a bundled stream means this entire transport is inactive,
+         * so set the receive state to BLOCK below */
+        stream->active = FALSE;
+        receive_state = RECEIVE_STATE_BLOCK;
+      }
+
       /* XXX: send eos event up the sink pad as well? */
+    } else {
+      /* If this transceiver is active for sending or receiving,
+       * we still need receive at least RTCP, so need to unblock
+       * the receive bin below. */
+      receive_state = RECEIVE_STATE_PASS;
+      stream->active = TRUE;
     }
 
     if (new_dir == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY ||
@@ -3860,7 +3873,6 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
       }
 
     }
-    receive_state = RECEIVE_STATE_PASS;
 
     rtp_trans->mline = media_idx;
     rtp_trans->current_direction = new_dir;
@@ -3878,7 +3890,7 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
   /* Must be after setting the "dtls-client" so that data is not pushed into
    * the dtlssrtp elements before the ssl direction has been set which will
    * throw SSL errors */
-  if (receive_state > 0)
+  if (receive_state != RECEIVE_STATE_UNSET)
     transport_receive_bin_set_receive_state (stream->receive_bin,
         receive_state);
 }
@@ -4079,6 +4091,8 @@ _update_transceivers_from_sdp (GstWebRTCBin * webrtc, SDPSource source,
   guint bundle_idx = 0;
   TransportStream *bundle_stream = NULL;
 
+  /* FIXME: With some peers, it's possible we could have
+   * multiple bundles to deal with, although I've never seen one yet */
   if (!_parse_bundle (sdp->sdp, &bundled))
     goto done;
 
@@ -4092,9 +4106,15 @@ _update_transceivers_from_sdp (GstWebRTCBin * webrtc, SDPSource source,
 
     bundle_stream = _get_or_create_transport_stream (webrtc, bundle_idx,
         _message_media_is_datachannel (sdp->sdp, bundle_idx));
+    /* Mark the bundle stream as inactive to start. It will be set to TRUE
+     * by any bundled mline that is active, and at the end we set the
+     * receivebin to BLOCK if all mlines were inactive. */
+    bundle_stream->active = FALSE;
 
     g_array_set_size (bundle_stream->ptmap, 0);
     for (i = 0; i < gst_sdp_message_medias_len (sdp->sdp); i++) {
+      /* When bundling, we need to do this up front, or else RTX
+       * parameters aren't set up properly for the bundled streams */
       _update_transport_ptmap_from_media (webrtc, bundle_stream, sdp->sdp, i);
     }
 
@@ -4121,6 +4141,8 @@ _update_transceivers_from_sdp (GstWebRTCBin * webrtc, SDPSource source,
     stream = _get_or_create_transport_stream (webrtc, transport_idx,
         _message_media_is_datachannel (sdp->sdp, transport_idx));
     if (!bundled) {
+      /* When bundling, these were all set up above, but when not
+       * bundling we need to do it now */
       g_array_set_size (stream->ptmap, 0);
       _update_transport_ptmap_from_media (webrtc, stream, sdp->sdp, i);
     }
@@ -4134,30 +4156,40 @@ _update_transceivers_from_sdp (GstWebRTCBin * webrtc, SDPSource source,
     } else {
       if (g_strcmp0 (gst_sdp_media_get_media (media), "audio") == 0 ||
           g_strcmp0 (gst_sdp_media_get_media (media), "video") == 0) {
-        if (trans) {
-          _update_transceiver_from_sdp_media (webrtc, sdp->sdp, i, stream,
-              trans, bundled, bundle_idx);
-        } else {
+        /* No existing transceiver, find an unused one */
+        if (!trans) {
           trans = _find_transceiver (webrtc, NULL,
               (FindTransceiverFunc) _find_compatible_unassociated_transceiver);
-          /* XXX: default to the advertised direction in the sdp for new
-           * transceviers.  The spec doesn't actually say what happens here, only
-           * that calls to setDirection will change the value.  Nothing about
-           * a default value when the transceiver is created internally */
-          if (!trans) {
-            trans =
-                GST_WEBRTC_RTP_TRANSCEIVER (_create_webrtc_transceiver (webrtc,
-                    _get_direction_from_media (media), i));
-          }
-          _update_transceiver_from_sdp_media (webrtc, sdp->sdp, i, stream,
-              trans, bundled, bundle_idx);
         }
+
+        /* Still no transceiver? Create one */
+        /* XXX: default to the advertised direction in the sdp for new
+         * transceivers.  The spec doesn't actually say what happens here, only
+         * that calls to setDirection will change the value.  Nothing about
+         * a default value when the transceiver is created internally */
+        if (!trans) {
+          trans =
+              GST_WEBRTC_RTP_TRANSCEIVER (_create_webrtc_transceiver (webrtc,
+                  _get_direction_from_media (media), i));
+        }
+
+        _update_transceiver_from_sdp_media (webrtc, sdp->sdp, i, stream,
+            trans, bundled, bundle_idx);
       } else if (_message_media_is_datachannel (sdp->sdp, i)) {
         _update_data_channel_from_sdp_media (webrtc, sdp->sdp, i, stream);
       } else {
         GST_ERROR_OBJECT (webrtc, "Unknown media type in SDP at index %u", i);
       }
     }
+  }
+
+  if (bundle_stream && bundle_stream->active == FALSE) {
+    /* No bundled mline marked the bundle as active, so block the receive bin, as
+     * this bundle is completely inactive */
+    GST_LOG_OBJECT (webrtc,
+        "All mlines in bundle %u are inactive. Blocking receiver", bundle_idx);
+    transport_receive_bin_set_receive_state (bundle_stream->receive_bin,
+        RECEIVE_STATE_BLOCK);
   }
 
   ret = TRUE;

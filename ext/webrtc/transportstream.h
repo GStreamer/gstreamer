@@ -52,6 +52,7 @@ struct _TransportStream
   gboolean                  rtcp_mux;
   gboolean                  rtcp_rsize;
   gboolean                  dtls_client;
+  gboolean                  active;                 /* TRUE if any mline in the bundle/transport is active */
   TransportSendBin         *send_bin;               /* bin containing all the sending transport elements */
   TransportReceiveBin      *receive_bin;            /* bin containing all the receiving transport elements */
   GstWebRTCICEStream       *stream;
