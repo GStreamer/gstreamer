@@ -114,7 +114,7 @@ static gchar *
 _log_time (gpointer user_data)
 {
   GstGLQuery *query = user_data;
-  gint64 result;
+  guint64 result = 0;
 
   result = gst_gl_query_result (query);
 
@@ -338,10 +338,11 @@ gst_gl_query_result (GstGLQuery * query)
 
   gl = query->context->gl_vtable;
   if (gl->GetQueryObjectui64v) {
-    gl->GetQueryObjectui64v (query->query_id, GL_QUERY_RESULT,
-        (GLuint64 *) & ret);
+    GLuint64 tmp = 0;
+    gl->GetQueryObjectui64v (query->query_id, GL_QUERY_RESULT, &tmp);
+    ret = tmp;
   } else {
-    guint tmp;
+    guint tmp = 0;
     gl->GetQueryObjectuiv (query->query_id, GL_QUERY_RESULT, &tmp);
     ret = tmp;
   }
