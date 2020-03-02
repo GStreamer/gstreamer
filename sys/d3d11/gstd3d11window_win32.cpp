@@ -824,8 +824,8 @@ gst_d3d11_window_win32_show (GstD3D11Window * window)
   GstD3D11WindowWin32 *self = GST_D3D11_WINDOW_WIN32 (window);
   gint width, height;
 
-  width = window->width;
-  height = window->height;
+  width = GST_VIDEO_INFO_WIDTH (&window->render_info);
+  height = GST_VIDEO_INFO_HEIGHT (&window->render_info);
 
   if (!self->visible) {
     /* if no parent the real size has to be set now because this has not been done

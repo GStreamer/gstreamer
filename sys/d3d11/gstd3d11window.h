@@ -93,14 +93,8 @@ struct _GstD3D11Window
   /* requested rect via gst_d3d11_window_render */
   GstVideoRectangle rect;
 
-  guint width;
-  guint height;
-
   guint surface_width;
   guint surface_height;
-
-  guint aspect_ratio_n;
-  guint aspect_ratio_d;
 
   IDXGISwapChain *swap_chain;
   ID3D11RenderTargetView *rtv;
@@ -150,10 +144,8 @@ void          gst_d3d11_window_set_render_rectangle (GstD3D11Window * window,
                                                      gint width, gint height);
 
 gboolean      gst_d3d11_window_prepare              (GstD3D11Window * window,
-                                                     guint width,
-                                                     guint height,
-                                                     guint aspect_ratio_n,
-                                                     guint aspect_ratio_d,
+                                                     guint display_width,
+                                                     guint display_height,
                                                      GstCaps * caps,
                                                      gboolean * video_processor_available,
                                                      GError ** error);

@@ -176,9 +176,6 @@ gst_d3d11_window_init (GstD3D11Window * self)
   self->enable_navigation_events = DEFAULT_ENABLE_NAVIGATION_EVENTS;
   self->fullscreen_toggle_mode = GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_NONE;
   self->fullscreen = DEFAULT_FULLSCREEN;
-
-  self->aspect_ratio_n = 1;
-  self->aspect_ratio_d = 1;
 }
 
 static void
@@ -335,23 +332,17 @@ gst_d3d11_window_on_resize_default (GstD3D11Window * window, guint width,
   window->surface_width = desc.Width;
   window->surface_height = desc.Height;
 
-  width = window->width;
-  height = window->height;
-
   {
-    src_rect.x = 0;
-    src_rect.y = 0;
-    src_rect.w = width * window->aspect_ratio_n;
-    src_rect.h = height * window->aspect_ratio_d;
-
     dst_rect.x = 0;
     dst_rect.y = 0;
     dst_rect.w = window->surface_width;
     dst_rect.h = window->surface_height;
 
     if (window->force_aspect_ratio) {
-      src_rect.w = width * window->aspect_ratio_n;
-      src_rect.h = height * window->aspect_ratio_d;
+      src_rect.x = 0;
+      src_rect.y = 0;
+      src_rect.w = GST_VIDEO_INFO_WIDTH (&window->render_info);
+      src_rect.h = GST_VIDEO_INFO_HEIGHT (&window->render_info);
 
       gst_video_sink_center_rect (src_rect, dst_rect, &rst_rect, TRUE);
     } else {
@@ -426,9 +417,9 @@ gst_d3d11_window_on_mouse_event (GstD3D11Window * window, const gchar * event,
 }
 
 gboolean
-gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
-    guint aspect_ratio_n, guint aspect_ratio_d, GstCaps * caps,
-    gboolean * video_processor_available, GError ** error)
+gst_d3d11_window_prepare (GstD3D11Window * window, guint display_width,
+    guint display_height, GstCaps * caps, gboolean * video_processor_available,
+    GError ** error)
 {
   GstD3D11WindowClass *klass;
   GstCaps *render_caps;
@@ -437,11 +428,9 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
   gboolean need_processor_input_configure = FALSE;
 
   g_return_val_if_fail (GST_IS_D3D11_WINDOW (window), FALSE);
-  g_return_val_if_fail (aspect_ratio_n > 0, FALSE);
-  g_return_val_if_fail (aspect_ratio_d > 0, FALSE);
 
-  GST_DEBUG_OBJECT (window, "Prepare window with %dx%d caps %" GST_PTR_FORMAT,
-      width, height, caps);
+  GST_DEBUG_OBJECT (window, "Prepare window, display resolution %dx%d, caps %"
+      GST_PTR_FORMAT, display_width, display_height, caps);
 
   gst_clear_buffer (&window->cached_buffer);
 
@@ -492,16 +481,18 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
   window->compositor = NULL;
 
   /* preserve upstream colorimetry */
-  window->render_info.width = width;
-  window->render_info.height = height;
+  window->render_info.width = display_width;
+  window->render_info.height = display_height;
 
   window->render_info.colorimetry.primaries =
       window->info.colorimetry.primaries;
   window->render_info.colorimetry.transfer = window->info.colorimetry.transfer;
 
   window->processor =
-      gst_d3d11_video_processor_new (window->device, width, height, width,
-      height);
+      gst_d3d11_video_processor_new (window->device,
+      GST_VIDEO_INFO_WIDTH (&window->info),
+      GST_VIDEO_INFO_HEIGHT (&window->info),
+      display_width, display_height);
   if (window->processor) {
     const GstD3D11Format *in_format;
     const GstD3D11Format *out_format;
@@ -581,26 +572,20 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
 
   window->dxgi_format = window->render_format->dxgi_format;
 
-  window->aspect_ratio_n = aspect_ratio_n;
-  window->aspect_ratio_d = aspect_ratio_d;
-
   window->render_rect.left = 0;
   window->render_rect.top = 0;
-  window->render_rect.right = width;
-  window->render_rect.bottom = height;
+  window->render_rect.right = display_width;
+  window->render_rect.bottom = display_height;
 
   window->input_rect.left = 0;
   window->input_rect.top = 0;
   window->input_rect.right = GST_VIDEO_INFO_WIDTH (&window->info);
   window->input_rect.bottom = GST_VIDEO_INFO_HEIGHT (&window->info);
 
-  window->width = width;
-  window->height = height;
-
   klass = GST_D3D11_WINDOW_GET_CLASS (window);
   if (!window->swap_chain &&
       !klass->create_swap_chain (window, window->dxgi_format,
-          width, height, swapchain_flags, &window->swap_chain)) {
+          display_width, display_height, swapchain_flags, &window->swap_chain)) {
     GST_ERROR_OBJECT (window, "Cannot create swapchain");
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
         "Cannot create swapchain");
@@ -707,7 +692,7 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
 #endif
 
   /* call resize to allocated resources */
-  klass->on_resize (window, width, height);
+  klass->on_resize (window, display_width, display_height);
 
   if (window->requested_fullscreen != window->fullscreen) {
     klass->change_fullscreen_mode (window);

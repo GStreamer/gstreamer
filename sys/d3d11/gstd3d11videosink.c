@@ -389,8 +389,8 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
 
   self->have_video_processor = FALSE;
   if (!gst_d3d11_window_prepare (self->window, GST_VIDEO_SINK_WIDTH (self),
-          GST_VIDEO_SINK_HEIGHT (self), video_par_n, video_par_d,
-          caps, &self->have_video_processor, &error)) {
+          GST_VIDEO_SINK_HEIGHT (self), caps, &self->have_video_processor,
+          &error)) {
     GstMessage *error_msg;
 
     GST_ERROR_OBJECT (self, "cannot create swapchain");
