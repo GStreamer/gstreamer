@@ -528,7 +528,7 @@ static void
 child_removed_cb (GESClip * clip, GESTimelineElement * effect,
     gboolean * called)
 {
-  ASSERT_OBJECT_REFCOUNT (effect, "Keeping alive ref + emission ref", 2);
+  ASSERT_OBJECT_REFCOUNT (effect, "2 keeping alive ref + emission ref", 3);
   *called = TRUE;
 }
 
@@ -551,7 +551,7 @@ GST_START_TEST (test_clip_refcount_remove_child)
   ASSERT_OBJECT_REFCOUNT (effect, "1 for the container + 1 for the track", 2);
 
   fail_unless (ges_track_remove_element (track, effect));
-  ASSERT_OBJECT_REFCOUNT (effect, "1 for the container + 1 for the track", 1);
+  ASSERT_OBJECT_REFCOUNT (effect, "1 for the container", 1);
 
   g_signal_connect (clip, "child-removed", G_CALLBACK (child_removed_cb),
       &called);

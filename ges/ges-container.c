@@ -737,8 +737,9 @@ gboolean
 ges_container_add (GESContainer * container, GESTimelineElement * child)
 {
   ChildMapping *mapping;
-  gboolean notify_start = FALSE;
+  gboolean ret = FALSE;
   GESContainerClass *class;
+  GList *current_children, *tmp;
   GESContainerPrivate *priv;
 
   g_return_val_if_fail (GES_IS_CONTAINER (container), FALSE);
@@ -751,15 +752,22 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
   GST_DEBUG_OBJECT (container, "adding timeline element %" GST_PTR_FORMAT,
       child);
 
-  container->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
+  /* freeze all notifies */
+  g_object_freeze_notify (G_OBJECT (container));
+  /* copy to use at end, since container->children may have child
+   * added to it */
+  current_children = g_list_copy_deep (container->children,
+      (GCopyFunc) gst_object_ref, NULL);
+  for (tmp = current_children; tmp; tmp = tmp->next)
+    g_object_freeze_notify (G_OBJECT (tmp->data));
+  g_object_freeze_notify (G_OBJECT (child));
+
   if (class->add_child) {
     if (class->add_child (container, child) == FALSE) {
-      container->children_control_mode = GES_CHILDREN_UPDATE;
       GST_WARNING_OBJECT (container, "Error adding child %p", child);
-      return FALSE;
+      goto done;
     }
   }
-  container->children_control_mode = GES_CHILDREN_UPDATE;
 
   /* FIXME: The following code should probably be in
    * GESGroupClass->add_child, rather than here! A GESClip will avoid this
@@ -772,7 +780,7 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
 
     g_hash_table_foreach (priv->mappings, (GHFunc) _resync_start_offsets,
         container);
-    notify_start = TRUE;
+    g_object_notify (G_OBJECT (container), "start");
   }
 
   mapping = g_slice_new0 (ChildMapping);
@@ -807,7 +815,7 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
     container->children = g_list_remove (container->children, child);
     _ges_container_sort_children (container);
 
-    return FALSE;
+    goto done;
   }
 
   _ges_container_add_child_properties (container, child);
@@ -817,10 +825,20 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
       child);
   priv->adding_children = g_list_remove (priv->adding_children, child);
 
-  if (notify_start)
-    g_object_notify (G_OBJECT (container), "start");
+  ret = TRUE;
 
-  return TRUE;
+done:
+  /* thaw all notifies */
+  /* Ignore notifies for the start and duration since the child should
+   * already be correctly set up */
+  container->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
+  g_object_thaw_notify (G_OBJECT (container));
+  for (tmp = current_children; tmp; tmp = tmp->next)
+    g_object_thaw_notify (G_OBJECT (tmp->data));
+  g_object_thaw_notify (G_OBJECT (child));
+  g_list_free_full (current_children, gst_object_unref);
+  container->children_control_mode = GES_CHILDREN_UPDATE;
+  return ret;
 }
 
 /**
@@ -838,6 +856,8 @@ ges_container_remove (GESContainer * container, GESTimelineElement * child)
 {
   GESContainerClass *klass;
   GESContainerPrivate *priv;
+  GList *current_children, *tmp;
+  gboolean ret = FALSE;
 
   g_return_val_if_fail (GES_IS_CONTAINER (container), FALSE);
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (child), FALSE);
@@ -853,9 +873,22 @@ ges_container_remove (GESContainer * container, GESTimelineElement * child)
     return FALSE;
   }
 
+  /* ref the container since it might be destroyed when the child is
+   * removed! (see GESGroup ->child_removed) */
+  gst_object_ref (container);
+  /* freeze all notifies */
+  g_object_freeze_notify (G_OBJECT (container));
+  /* copy to use at end, since container->children may have child
+   * removed from it */
+  current_children = g_list_copy_deep (container->children,
+      (GCopyFunc) gst_object_ref, NULL);
+  for (tmp = current_children; tmp; tmp = tmp->next)
+    g_object_freeze_notify (G_OBJECT (tmp->data));
+
+
   if (klass->remove_child) {
     if (klass->remove_child (container, child) == FALSE)
-      return FALSE;
+      goto done;
   }
 
   container->children = g_list_remove (container->children, child);
@@ -873,7 +906,18 @@ ges_container_remove (GESContainer * container, GESTimelineElement * child)
   }
   gst_object_unref (child);
 
-  return TRUE;
+  ret = TRUE;
+
+done:
+  /* thaw all notifies */
+  g_object_thaw_notify (G_OBJECT (container));
+  for (tmp = current_children; tmp; tmp = tmp->next)
+    g_object_thaw_notify (G_OBJECT (tmp->data));
+  g_list_free_full (current_children, gst_object_unref);
+
+  gst_object_unref (container);
+
+  return ret;
 }
 
 static void

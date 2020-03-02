@@ -187,20 +187,23 @@ _child_priority_changed_cb (GESTimelineElement * child,
 static gboolean
 _set_start (GESTimelineElement * element, GstClockTime start)
 {
-  GList *tmp;
+  GList *tmp, *children;
   GESContainer *container = GES_CONTAINER (element);
 
   GST_DEBUG_OBJECT (element, "Setting children start, (initiated_move: %"
       GST_PTR_FORMAT ")", container->initiated_move);
 
+  /* get copy of children, since GESContainer may resort the clip */
+  children = ges_container_get_children (container, FALSE);
   container->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
-  for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
+  for (tmp = children; tmp; tmp = g_list_next (tmp)) {
     GESTimelineElement *child = (GESTimelineElement *) tmp->data;
 
     if (child != container->initiated_move)
       _set_start0 (GES_TIMELINE_ELEMENT (child), start);
   }
   container->children_control_mode = GES_CHILDREN_UPDATE;
+  g_list_free_full (children, gst_object_unref);
 
   return TRUE;
 }
@@ -208,11 +211,12 @@ _set_start (GESTimelineElement * element, GstClockTime start)
 static gboolean
 _set_inpoint (GESTimelineElement * element, GstClockTime inpoint)
 {
-  GList *tmp;
+  GList *tmp, *children;
   GESContainer *container = GES_CONTAINER (element);
 
+  children = ges_container_get_children (container, FALSE);
   container->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
-  for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
+  for (tmp = children; tmp; tmp = g_list_next (tmp)) {
     GESTimelineElement *child = (GESTimelineElement *) tmp->data;
 
     /* FIXME: we should allow the inpoint to be different for children
@@ -222,6 +226,7 @@ _set_inpoint (GESTimelineElement * element, GstClockTime inpoint)
       _set_inpoint0 (child, inpoint);
   }
   container->children_control_mode = GES_CHILDREN_UPDATE;
+  g_list_free_full (children, gst_object_unref);
 
   return TRUE;
 }
@@ -229,10 +234,12 @@ _set_inpoint (GESTimelineElement * element, GstClockTime inpoint)
 static gboolean
 _set_duration (GESTimelineElement * element, GstClockTime duration)
 {
-  GList *tmp;
+  GList *tmp, *children;
 
   GESContainer *container = GES_CONTAINER (element);
 
+  /* get copy of children, since GESContainer may resort the clip */
+  children = ges_container_get_children (container, FALSE);
   container->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
   for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
     GESTimelineElement *child = (GESTimelineElement *) tmp->data;
@@ -244,6 +251,7 @@ _set_duration (GESTimelineElement * element, GstClockTime duration)
     }
   }
   container->children_control_mode = GES_CHILDREN_UPDATE;
+  g_list_free_full (children, gst_object_unref);
 
   return TRUE;
 }
@@ -358,11 +366,11 @@ _add_child (GESContainer * container, GESTimelineElement * element)
 {
   GESClipClass *klass = GES_CLIP_GET_CLASS (GES_CLIP (container));
   guint max_prio, min_prio;
-  GESChildrenControlMode mode = container->children_control_mode;
   GESClipPrivate *priv = GES_CLIP (container)->priv;
 
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (element), FALSE);
 
+  /* NOTE: notifies are currently frozen by ges_container_add */
   _get_priority_range (container, &min_prio, &max_prio);
   if (ELEMENT_FLAG_IS_SET (element, GES_TRACK_ELEMENT_IS_CORE)) {
     /* NOTE: we are assuming that the core element is **our** core element
@@ -376,7 +384,6 @@ _add_child (GESContainer * container, GESTimelineElement * element)
 
     /* Set the core element to have the same in-point, which we don't
      * apply to effects */
-    container->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
     _set_inpoint0 (element, GES_TIMELINE_ELEMENT_INPOINT (container));
   } else if (GES_CLIP_CLASS_CAN_ADD_EFFECTS (klass)
       && GES_IS_BASE_EFFECT (element)) {
@@ -420,12 +427,8 @@ _add_child (GESContainer * container, GESTimelineElement * element)
     return FALSE;
   }
 
-  /* We set the timing value of the child to ours, we avoid infinite loop
-   * making sure the container ignore notifies from the child */
-  container->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
   _set_start0 (element, GES_TIMELINE_ELEMENT_START (container));
   _set_duration0 (element, GES_TIMELINE_ELEMENT_DURATION (container));
-  container->children_control_mode = mode;
 
   return TRUE;
 }
@@ -435,6 +438,7 @@ _remove_child (GESContainer * container, GESTimelineElement * element)
 {
   GESClipPrivate *priv = GES_CLIP (container)->priv;
 
+  /* NOTE: notifies are currently frozen by ges_container_add */
   if (!ELEMENT_FLAG_IS_SET (element, GES_TRACK_ELEMENT_IS_CORE)
       && GES_IS_BASE_EFFECT (element)) {
     GList *tmp;
