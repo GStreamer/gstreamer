@@ -433,13 +433,28 @@ _add_child (GESContainer * container, GESTimelineElement * element)
 static gboolean
 _remove_child (GESContainer * container, GESTimelineElement * element)
 {
+  GESClipPrivate *priv = GES_CLIP (container)->priv;
+
   if (!ELEMENT_FLAG_IS_SET (element, GES_TRACK_ELEMENT_IS_CORE)
       && GES_IS_BASE_EFFECT (element)) {
-    GES_CLIP (container)->priv->nb_effects--;
+    GList *tmp;
+    GST_DEBUG_OBJECT (container, "Resyncing effects priority.");
+
+    /* changing priorities, so preventing a re-sort */
+    priv->prevent_resort = TRUE;
+    for (tmp = GES_CONTAINER_CHILDREN (container); tmp; tmp = tmp->next) {
+      guint32 sibling_prio = GES_TIMELINE_ELEMENT_PRIORITY (tmp->data);
+      if (sibling_prio > element->priority)
+        ges_timeline_element_set_priority (GES_TIMELINE_ELEMENT (tmp->data),
+            sibling_prio - 1);
+    }
+    priv->nb_effects--;
+    priv->prevent_resort = FALSE;
+    /* no need to re-sort the children since the rest keep the same
+     * relative priorities */
+    /* height may have changed */
+    _compute_height (container);
   }
-
-  GST_FIXME_OBJECT (container, "We should set other children prios");
-
   if (ELEMENT_FLAG_IS_SET (element, GES_TRACK_ELEMENT_IS_CORE)) {
     /* When removed, the child is no longer considered a core element.
      * This prevents the user from being able to add the removed track
@@ -462,31 +477,8 @@ _child_added (GESContainer * container, GESTimelineElement * element)
 static void
 _child_removed (GESContainer * container, GESTimelineElement * element)
 {
-  GESClipPrivate *priv = GES_CLIP (element)->priv;
-
   g_signal_handlers_disconnect_by_func (element, _child_priority_changed_cb,
       container);
-
-  if (!ELEMENT_FLAG_IS_SET (element, GES_TRACK_ELEMENT_IS_CORE)
-      && GES_IS_BASE_EFFECT (element)) {
-    GList *tmp;
-    GST_DEBUG_OBJECT (container, "Resyncing effects priority.");
-
-    /* changing priorities, so preventing a re-sort */
-    priv->prevent_resort = TRUE;
-    for (tmp = GES_CONTAINER_CHILDREN (container); tmp; tmp = tmp->next) {
-      guint32 sibling_prio = GES_TIMELINE_ELEMENT_PRIORITY (tmp->data);
-      if (sibling_prio > element->priority)
-        ges_timeline_element_set_priority (GES_TIMELINE_ELEMENT (tmp->data),
-            sibling_prio - 1);
-    }
-    priv->prevent_resort = FALSE;
-    /* no need to re-sort the children since the rest keep the same
-     * relative priorities */
-    /* height may have changed */
-    _compute_height (container);
-  }
-
 }
 
 static void
