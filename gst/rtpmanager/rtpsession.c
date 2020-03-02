@@ -733,7 +733,7 @@ rtp_session_finalize (GObject * object)
   for (i = 0; i < 1; i++)
     g_hash_table_destroy (sess->ssrcs[i]);
 
-  rtp_twcc_manager_free (sess->twcc);
+  g_object_unref (sess->twcc);
   rtp_twcc_stats_free (sess->twcc_stats);
 
   g_mutex_clear (&sess->lock);

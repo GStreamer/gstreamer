@@ -29,29 +29,6 @@ GST_DEBUG_CATEGORY_EXTERN (rtp_session_debug);
 #define DELTA_UNIT (250 * GST_USECOND)
 #define MAX_TS_DELTA (0xff * DELTA_UNIT)
 
-struct _RTPTWCCManager
-{
-  guint mtu;
-  guint max_packets_per_rtcp;
-  GArray *recv_packets;
-
-  guint8 fb_pkt_count;
-  gint32 last_seqnum;
-
-  GArray *sent_packets;
-  GArray *parsed_packets;
-  GQueue *rtcp_buffers;
-
-  guint64 recv_sender_ssrc;
-  guint64 recv_media_ssrc;
-
-  guint16 expected_recv_seqnum;
-
-  gboolean first_fci_parse;
-  guint16 expected_parsed_seqnum;
-  guint8 expected_parsed_fb_pkt_count;
-};
-
 typedef enum
 {
   RTP_TWCC_CHUNK_TYPE_RUN_LENGTH = 0,
@@ -87,13 +64,37 @@ typedef struct
   gboolean lost;
 } SentPacket;
 
-RTPTWCCManager *
-rtp_twcc_manager_new (guint mtu)
+struct _RTPTWCCManager
 {
-  RTPTWCCManager *twcc = g_new0 (RTPTWCCManager, 1);
+  GObject object;
 
+  guint mtu;
+  guint max_packets_per_rtcp;
+  GArray *recv_packets;
+
+  guint8 fb_pkt_count;
+  gint32 last_seqnum;
+
+  GArray *sent_packets;
+  GArray *parsed_packets;
+  GQueue *rtcp_buffers;
+
+  guint64 recv_sender_ssrc;
+  guint64 recv_media_ssrc;
+
+  guint16 expected_recv_seqnum;
+
+  gboolean first_fci_parse;
+  guint16 expected_parsed_seqnum;
+  guint8 expected_parsed_fb_pkt_count;
+};
+
+G_DEFINE_TYPE (RTPTWCCManager, rtp_twcc_manager, G_TYPE_OBJECT);
+
+static void
+rtp_twcc_manager_init (RTPTWCCManager * twcc)
+{
   twcc->recv_packets = g_array_new (FALSE, FALSE, sizeof (RecvPacket));
-
   twcc->sent_packets = g_array_new (FALSE, FALSE, sizeof (SentPacket));
   twcc->parsed_packets = g_array_new (FALSE, FALSE, sizeof (RecvPacket));
 
@@ -103,21 +104,37 @@ rtp_twcc_manager_new (guint mtu)
   twcc->recv_media_ssrc = -1;
   twcc->recv_sender_ssrc = -1;
 
-  rtp_twcc_manager_set_mtu (twcc, mtu);
-
   twcc->first_fci_parse = TRUE;
-
-  return twcc;
 }
 
-void
-rtp_twcc_manager_free (RTPTWCCManager * twcc)
+static void
+rtp_twcc_manager_finalize (GObject * object)
 {
+  RTPTWCCManager *twcc = RTP_TWCC_MANAGER_CAST (object);
+
   g_array_unref (twcc->recv_packets);
   g_array_unref (twcc->sent_packets);
   g_array_unref (twcc->parsed_packets);
   g_queue_free_full (twcc->rtcp_buffers, (GDestroyNotify) gst_buffer_unref);
-  g_free (twcc);
+
+  G_OBJECT_CLASS (rtp_twcc_manager_parent_class)->finalize (object);
+}
+
+static void
+rtp_twcc_manager_class_init (RTPTWCCManagerClass * klass)
+{
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  gobject_class->finalize = rtp_twcc_manager_finalize;
+}
+
+RTPTWCCManager *
+rtp_twcc_manager_new (guint mtu)
+{
+  RTPTWCCManager *twcc = g_object_new (RTP_TYPE_TWCC_MANAGER, NULL);
+
+  rtp_twcc_manager_set_mtu (twcc, mtu);
+
+  return twcc;
 }
 
 static void

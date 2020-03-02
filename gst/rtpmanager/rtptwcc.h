@@ -29,6 +29,10 @@ typedef struct _RTPTWCCManager RTPTWCCManager;
 typedef struct _RTPTWCCPacket RTPTWCCPacket;
 typedef enum _RTPTWCCPacketStatus RTPTWCCPacketStatus;
 
+G_DECLARE_FINAL_TYPE (RTPTWCCManager, rtp_twcc_manager, RTP, TWCC_MANAGER, GObject)
+#define RTP_TYPE_TWCC_MANAGER (rtp_twcc_manager_get_type())
+#define RTP_TWCC_MANAGER_CAST(obj) ((RTPTWCCManager *)(obj))
+
 enum _RTPTWCCPacketStatus
 {
   RTP_TWCC_PACKET_STATUS_NOT_RECV = 0,
@@ -49,7 +53,6 @@ struct _RTPTWCCPacket
 };
 
 RTPTWCCManager * rtp_twcc_manager_new (guint mtu);
-void rtp_twcc_manager_free (RTPTWCCManager * twcc);
 
 void rtp_twcc_manager_set_mtu (RTPTWCCManager * twcc, guint mtu);
 
