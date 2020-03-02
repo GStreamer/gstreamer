@@ -736,13 +736,15 @@ ges_launcher_parse_options (GESLauncher * self,
   GError *err = NULL;
   gboolean owns_ctx = ctx == NULL;
   GESLauncherParsedOptions *opts = &self->priv->parsed_options;
+  gchar *prev_videosink = opts->videosink, *prev_audiosink = opts->audiosink;
   GOptionEntry options[] = {
     {"disable-mixing", 0, 0, G_OPTION_ARG_NONE, &opts->disable_mixing,
         "Do not use mixing elements to mix layers together.", NULL}
     ,
     {"track-types", 't', 0, G_OPTION_ARG_CALLBACK, &_parse_track_type,
           "Specify the track types to be created. "
-          "When loading a project, only relevant tracks will be added to the timeline.",
+          "When loading a project, only relevant tracks will be added to the "
+          "timeline.",
         "<track-types>"}
     ,
     {
@@ -766,10 +768,12 @@ ges_launcher_parse_options (GESLauncher * self,
 #ifdef HAVE_GST_VALIDATE
     {"set-scenario", 0, 0, G_OPTION_ARG_STRING, &opts->scenario,
           "ges-launch-1.0 exposes gst-validate functionalities, such as scenarios."
-          " Scenarios describe actions to execute, such as seeks or setting of properties. "
-          "GES implements editing-specific actions such as adding or removing clips. "
-          "See gst-validate-1.0 --help for more info about validate and scenarios, "
-          "and --inspect-action-type.",
+          " Scenarios describe actions to execute, such as seeks or setting of "
+          "properties. "
+          "GES implements editing-specific actions such as adding or removing "
+          "clips. "
+          "See gst-validate-1.0 --help for more info about validate and "
+          "scenarios, " "and --inspect-action-type.",
         "<scenario_name>"}
     ,
 #endif
@@ -785,8 +789,10 @@ ges_launcher_parse_options (GESLauncher * self,
     {NULL}
   };
 
-  if (!ctx)
+  if (owns_ctx) {
+    opts->videosink = opts->audiosink = NULL;
     ctx = g_option_context_new ("- plays or renders a timeline.");
+  }
   tmpargc = argc ? *argc : g_strv_length (*arguments);
 
   if (tmpargc > 2) {
@@ -827,6 +833,16 @@ ges_launcher_parse_options (GESLauncher * self,
 
   if (owns_ctx) {
     g_option_context_free (ctx);
+    /* sinks passed in the command line are preferred. */
+    if (prev_videosink) {
+      g_free (opts->videosink);
+      opts->videosink = prev_videosink;
+    }
+
+    if (prev_audiosink) {
+      g_free (opts->audiosink);
+      opts->audiosink = prev_audiosink;
+    }
     _set_playback_details (self);
   }
 
