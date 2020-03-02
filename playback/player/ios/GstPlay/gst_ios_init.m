@@ -528,8 +528,8 @@ GST_PLUGIN_STATIC_DECLARE(rtmp);
 GST_PLUGIN_STATIC_DECLARE(nle);
 #endif
 
-#if defined(GST_IOS_GIO_MODULE_GNUTLS)
-  GST_G_IO_MODULE_DECLARE(gnutls);
+#if defined(GST_IOS_GIO_MODULE_OPENSSL)
+  GST_G_IO_MODULE_DECLARE(openssl);
 #endif
 
 void
@@ -564,8 +564,8 @@ gst_ios_init (void)
   ca_certificates = g_build_filename (resources_dir, "ssl", "certs", "ca-certificates.crt", NULL);
   g_setenv ("CA_CERTIFICATES", ca_certificates, TRUE);
 
-#if defined(GST_IOS_GIO_MODULE_GNUTLS)
-  GST_G_IO_MODULE_LOAD(gnutls);
+#if defined(GST_IOS_GIO_MODULE_OPENSSL)
+  GST_G_IO_MODULE_LOAD(openssl);
 #endif
 
   if (ca_certificates) {
