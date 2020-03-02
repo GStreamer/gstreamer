@@ -156,16 +156,13 @@ class TimeColumn (TextColumn):
             base_time = self.base_time
 
             def format_time(value):
-                # TODO: Hard coded to omit trailing zeroes, see below.
-                return time_diff_args(value - base_time)[:-3]
+                return time_diff_args(value - base_time)
         else:
             time_args = Data.time_args
 
             def format_time(value):
-                # TODO: This is hard coded to omit hours as well as the last 3
-                # digits at the end, since current gst uses g_get_current_time,
-                # which has microsecond precision only.
-                return time_args(value)[2:-3]
+                # TODO: This is hard coded to omit hours.
+                return time_args(value)[2:]
 
         return format_time
 
