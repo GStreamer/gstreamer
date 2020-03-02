@@ -98,6 +98,16 @@ class Asset(GES.Asset):
 Asset = override(Asset)
 __all__.append('Asset')
 
+class Timeline(GES.Timeline):
+    def iter_clips(self):
+        """Iterate all clips in a timeline"""
+        for layer in self.get_layers():
+            for clip in layer.get_clips():
+                yield clip
+
+Timeline = override(Timeline)
+__all__.append('Timeline')
+
 try:
     from gi.repository import Gst
     Gst

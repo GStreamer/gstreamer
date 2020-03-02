@@ -102,6 +102,15 @@ class TestTimeline(common.GESSimpleTimelineTest):
         self.assertEqual(timeline.get_asset(), project)
         self.assertEqual(len(project.list_assets(GES.Extractable)), 2)
 
+    def test_iter_timeline(self):
+        all_clips = set()
+        for l in range(5):
+            self.timeline.append_layer()
+            for _ in range(5):
+                all_clips.add(self.append_clip(l))
+        self.assertEqual(set(self.timeline.iter_clips()), all_clips)
+
+
     def test_nested_serialization(self):
         nested_timeline = common.create_project(with_group=True, saved=True)
         nested_project = nested_timeline.get_asset()
