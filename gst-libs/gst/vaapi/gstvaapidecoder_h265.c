@@ -1453,8 +1453,6 @@ parse_slice (GstVaapiDecoderH265 * decoder, GstVaapiDecoderUnit * unit)
     return get_status (result);
 
   priv->parser_state |= GST_H265_VIDEO_STATE_GOT_SLICE;
-  if (!GST_H265_IS_I_SLICE (slice_hdr))
-    priv->parser_state |= GST_H265_VIDEO_STATE_GOT_P_SLICE;
   return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
@@ -2995,6 +2993,8 @@ gst_vaapi_decoder_h265_parse (GstVaapiDecoder * base_decoder,
             pi);
       else
         populate_dependent_slice_hdr (pi, priv->prev_independent_slice_pi);
+      if (!GST_H265_IS_I_SLICE (&pi->data.slice_hdr))
+        priv->parser_state |= GST_H265_VIDEO_STATE_GOT_P_SLICE;
       break;
     default:
       /* Fix */
