@@ -1230,6 +1230,201 @@ GST_START_TEST (test_children_properties_change)
 
 GST_END_TEST;
 
+static GESTimelineElement *
+_el_with_child_prop (GESTimelineElement * clip, GObject * prop_child,
+    GParamSpec * prop)
+{
+  GList *tmp;
+  GESTimelineElement *child = NULL;
+  for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
+    GObject *found_child;
+    GParamSpec *found_prop;
+    if (ges_timeline_element_lookup_child (tmp->data, prop->name,
+            &found_child, &found_prop)) {
+      if (found_child == prop_child && found_prop == prop) {
+        child = tmp->data;
+        /* break early, but still free */
+        tmp->next = NULL;
+      }
+      g_param_spec_unref (found_prop);
+      g_object_unref (found_child);
+    }
+  }
+  return child;
+}
+
+static GstTimedValue *
+_new_timed_value (GstClockTime time, gdouble val)
+{
+  GstTimedValue *tmval = g_new0 (GstTimedValue, 1);
+  tmval->value = val;
+  tmval->timestamp = time;
+  return tmval;
+}
+
+#define _assert_binding(element, prop_name, child, timed_vals, mode) \
+{ \
+  GstInterpolationMode found_mode; \
+  GSList *tmp1; \
+  GList *tmp2; \
+  guint i; \
+  GList *found_timed_vals; \
+  GObject *found_object = NULL; \
+  GstControlSource *source = NULL; \
+  GstControlBinding *binding = ges_track_element_get_control_binding ( \
+      GES_TRACK_ELEMENT (element), prop_name); \
+  fail_unless (binding, "No control binding found for %s on %s", \
+      prop_name, element->name); \
+  g_object_get (G_OBJECT (binding), "control-source", &source, \
+      "object", &found_object, NULL); \
+  \
+  fail_unless (found_object == child); \
+  g_object_unref (found_object); \
+  \
+  fail_unless (GST_IS_INTERPOLATION_CONTROL_SOURCE (source)); \
+  found_timed_vals = gst_timed_value_control_source_get_all ( \
+      GST_TIMED_VALUE_CONTROL_SOURCE (source)); \
+  \
+  for (i = 0, tmp1 = timed_vals, tmp2 = found_timed_vals; tmp1 && tmp2; \
+      tmp1 = tmp1->next, tmp2 = tmp2->next, i++) { \
+    GstTimedValue *val1 = tmp1->data, *val2 = tmp2->data; \
+    fail_unless (val1->timestamp == val2->timestamp && \
+        val1->value == val2->value, "The %ith timed value (%lu: %g) " \
+        "does not match the found timed value (%lu: %g)", \
+        i, val1->timestamp, val1->value, val2->timestamp, val2->value); \
+  } \
+  fail_unless (tmp1 == NULL, "Found too few timed values"); \
+  fail_unless (tmp2 == NULL, "Found too many timed values"); \
+  \
+  g_list_free (found_timed_vals); \
+  g_object_get (G_OBJECT (source), "mode", &found_mode, NULL); \
+  fail_unless (found_mode == GST_INTERPOLATION_MODE_CUBIC); \
+  g_object_unref (source); \
+}
+
+GST_START_TEST (test_copy_paste_children_properties)
+{
+  GESTimeline *timeline;
+  GESLayer *layer;
+  GESTimelineElement *clip, *copy, *pasted, *track_el, *pasted_el;
+  GObject *sub_child, *pasted_sub_child;
+  GParamSpec **orig_props, **pasted_props, **track_el_props, **pasted_el_props;
+  guint num_orig_props, num_pasted_props, num_track_el_props,
+      num_pasted_el_props;
+  GParamSpec *prop, *found_prop;
+  GValue val = G_VALUE_INIT;
+  GSList *timed_vals;
+  GstControlSource *source;
+
+  ges_init ();
+
+  timeline = ges_timeline_new_audio_video ();
+  layer = ges_timeline_append_layer (timeline);
+  clip = GES_TIMELINE_ELEMENT (ges_test_clip_new ());
+  ges_timeline_element_set_duration (GES_TIMELINE_ELEMENT (clip), 50);
+
+  fail_unless (ges_layer_add_clip (layer, GES_CLIP (clip)));
+
+  /* get children properties */
+  orig_props =
+      ges_timeline_element_list_children_properties (clip, &num_orig_props);
+  fail_unless (num_orig_props);
+
+  /* focus on one property */
+  fail_unless (ges_timeline_element_lookup_child (clip, "posx",
+          &sub_child, &prop));
+  g_value_init (&val, G_TYPE_INT);
+  g_value_set_int (&val, 30);
+  fail_unless (ges_timeline_element_set_child_property (clip, "posx", &val));
+  g_value_unset (&val);
+
+  _assert_int_val_child_prop (clip, val, 30, prop, "posx");
+
+  /* find the track element where the child property comes from */
+  fail_unless (track_el = _el_with_child_prop (clip, sub_child, prop));
+  _assert_int_val_child_prop (track_el, val, 30, prop, "posx");
+
+  track_el_props =
+      ges_timeline_element_list_children_properties (track_el,
+      &num_track_el_props);
+
+  /* set a control binding */
+  timed_vals = g_slist_prepend (NULL, _new_timed_value (200, 5));
+  timed_vals = g_slist_prepend (timed_vals, _new_timed_value (40, 50));
+  timed_vals = g_slist_prepend (timed_vals, _new_timed_value (20, 10));
+  timed_vals = g_slist_prepend (timed_vals, _new_timed_value (0, 20));
+
+  source = GST_CONTROL_SOURCE (gst_interpolation_control_source_new ());
+  g_object_set (G_OBJECT (source), "mode", GST_INTERPOLATION_MODE_CUBIC, NULL);
+  fail_unless (gst_timed_value_control_source_set_from_list
+      (GST_TIMED_VALUE_CONTROL_SOURCE (source), timed_vals));
+
+  fail_unless (ges_track_element_set_control_source (GES_TRACK_ELEMENT
+          (track_el), source, "posx", "direct-absolute"));
+  g_object_unref (source);
+
+  /* check the control binding */
+  _assert_binding (track_el, "posx", sub_child, timed_vals,
+      GST_INTERPOLATION_MODE_CUBIC);
+
+  /* copy and paste */
+  fail_unless (copy = ges_timeline_element_copy (clip, TRUE));
+  fail_unless (pasted = ges_timeline_element_paste (copy, 30));
+
+  gst_object_unref (copy);
+
+  /* test that the new clip has the same child properties */
+  pasted_props =
+      ges_timeline_element_list_children_properties (pasted, &num_pasted_props);
+
+  assert_property_list_match (pasted_props, num_pasted_props,
+      orig_props, num_orig_props);
+
+  /* get the details for the copied 'prop' property */
+  fail_unless (ges_timeline_element_lookup_child (pasted,
+          "posx", &pasted_sub_child, &found_prop));
+  fail_unless (found_prop == prop);
+  g_param_spec_unref (found_prop);
+  fail_unless (G_OBJECT_TYPE (pasted_sub_child) == G_OBJECT_TYPE (sub_child));
+
+  _assert_int_val_child_prop (pasted, val, 30, prop, "posx");
+
+  /* get the associated child */
+  fail_unless (pasted_el =
+      _el_with_child_prop (pasted, pasted_sub_child, prop));
+  _assert_int_val_child_prop (pasted_el, val, 30, prop, "posx");
+
+  pasted_el_props =
+      ges_timeline_element_list_children_properties (pasted_el,
+      &num_pasted_el_props);
+
+  assert_property_list_match (pasted_el_props, num_pasted_el_props,
+      track_el_props, num_track_el_props);
+
+  /* check the control binding on the pasted element */
+  _assert_binding (pasted_el, "posx", pasted_sub_child, timed_vals,
+      GST_INTERPOLATION_MODE_CUBIC);
+
+
+  /* free */
+  g_slist_free_full (timed_vals, g_free);
+
+  free_children_properties (pasted_props, num_pasted_props);
+  free_children_properties (orig_props, num_orig_props);
+  free_children_properties (pasted_el_props, num_pasted_el_props);
+  free_children_properties (track_el_props, num_track_el_props);
+
+  g_param_spec_unref (prop);
+  g_object_unref (pasted_sub_child);
+  g_object_unref (sub_child);
+  gst_object_unref (timeline);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
+
 
 static Suite *
 ges_suite (void)
@@ -1251,6 +1446,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_can_add_effect);
   tcase_add_test (tc_chain, test_children_properties_contain);
   tcase_add_test (tc_chain, test_children_properties_change);
+  tcase_add_test (tc_chain, test_copy_paste_children_properties);
 
   return s;
 }

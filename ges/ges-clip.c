@@ -727,7 +727,9 @@ _deep_copy (GESTimelineElement * element, GESTimelineElement * copy)
 
   for (tmp = GES_CONTAINER_CHILDREN (element); tmp; tmp = tmp->next) {
     el = GES_TRACK_ELEMENT (tmp->data);
+    /* copies the children properties */
     el_copy = ges_track_element_copy_core (el, TRUE);
+    ges_track_element_copy_bindings (el, el_copy, GST_CLOCK_TIME_NONE);
     ccopy->priv->copied_track_elements =
         g_list_append (ccopy->priv->copied_track_elements, el_copy);
   }
@@ -745,17 +747,7 @@ _paste (GESTimelineElement * element, GESTimelineElement * ref,
 
   if (self->priv->copied_layer)
     nclip->priv->copied_layer = g_object_ref (self->priv->copied_layer);
-
   ges_timeline_element_set_start (GES_TIMELINE_ELEMENT (nclip), paste_position);
-  if (self->priv->copied_layer) {
-    if (!ges_layer_add_clip (self->priv->copied_layer, nclip)) {
-      GST_INFO ("%" GES_FORMAT " could not be pasted to %" GST_TIME_FORMAT,
-          GES_ARGS (element), GST_TIME_ARGS (paste_position));
-
-      return NULL;
-    }
-
-  }
 
   for (tmp = self->priv->copied_track_elements; tmp; tmp = tmp->next) {
     GESTrackElement *new_trackelement, *trackelement =
@@ -779,6 +771,18 @@ _paste (GESTimelineElement * element, GESTimelineElement * ref,
 
     ges_track_element_copy_bindings (trackelement, new_trackelement,
         GST_CLOCK_TIME_NONE);
+  }
+
+  /* FIXME: should we bypass the select-tracks-for-object signal when
+   * copying and pasting? */
+  if (self->priv->copied_layer) {
+    if (!ges_layer_add_clip (self->priv->copied_layer, nclip)) {
+      GST_INFO ("%" GES_FORMAT " could not be pasted to %" GST_TIME_FORMAT,
+          GES_ARGS (element), GST_TIME_ARGS (paste_position));
+
+      return NULL;
+    }
+
   }
 
   return GES_TIMELINE_ELEMENT (nclip);
