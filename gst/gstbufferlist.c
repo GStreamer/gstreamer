@@ -307,8 +307,11 @@ gst_buffer_list_foreach (GstBufferList * list, GstBufferListFunc func,
         gst_buffer_list_remove_range_internal (list, i, 1, !was_writable);
         --len;
       } else {
-        if (!was_writable)
+        if (!was_writable) {
+          gst_mini_object_remove_parent (GST_MINI_OBJECT_CAST (buf),
+              GST_MINI_OBJECT_CAST (list));
           gst_buffer_unref (buf);
+        }
 
         list->buffers[i] = buf_ret;
         gst_mini_object_add_parent (GST_MINI_OBJECT_CAST (buf_ret),
