@@ -234,11 +234,14 @@ static const struct wl_shell_surface_listener wl_shell_surface_listener = {
 static void
 handle_xdg_toplevel_close (void *data, struct xdg_toplevel *xdg_toplevel)
 {
-  GstGLWindowWaylandEGL *window_egl = data;
+  GstGLWindow *window = data;
 
   GST_DEBUG ("XDG toplevel got a \"close\" event.");
 
-  gst_gl_window_wayland_egl_close (GST_GL_WINDOW (window_egl));
+  if (window->close)
+    window->close (window->close_data);
+
+  gst_gl_display_remove_window (window->display, window);
 }
 
 static void
