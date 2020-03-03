@@ -831,14 +831,14 @@ gst_gl_filter_propose_allocation (GstBaseTransform * trans,
     gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
 
     if (!gst_buffer_pool_set_config (pool, config)) {
-      g_object_unref (pool);
+      gst_object_unref (pool);
       goto config_failed;
     }
   }
 
   gst_query_add_allocation_pool (query, pool, size, 1, 0);
   if (pool)
-    g_object_unref (pool);
+    gst_object_unref (pool);
 
   if (context->gl_vtable->FenceSync)
     gst_query_add_allocation_meta (query, GST_GL_SYNC_META_API_TYPE, 0);
