@@ -926,6 +926,311 @@ GST_START_TEST (test_can_add_effect)
 
 GST_END_TEST;
 
+GST_START_TEST (test_children_properties_contain)
+{
+  GESTimeline *timeline;
+  GESLayer *layer;
+  GESClip *clip;
+  GList *tmp;
+  GParamSpec **clips_child_props, **childrens_child_props = NULL;
+  guint num_clips_props, num_childrens_props = 0;
+
+  ges_init ();
+
+  timeline = ges_timeline_new_audio_video ();
+  layer = ges_timeline_append_layer (timeline);
+  clip = GES_CLIP (ges_test_clip_new ());
+  ges_timeline_element_set_duration (GES_TIMELINE_ELEMENT (clip), 50);
+
+  fail_unless (ges_layer_add_clip (layer, clip));
+
+  clips_child_props =
+      ges_timeline_element_list_children_properties (GES_TIMELINE_ELEMENT
+      (clip), &num_clips_props);
+  fail_unless (clips_child_props);
+  fail_unless (num_clips_props);
+
+  fail_unless (GES_CONTAINER_CHILDREN (clip));
+
+  for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next)
+    childrens_child_props =
+        append_children_properties (childrens_child_props, tmp->data,
+        &num_childrens_props);
+
+  assert_property_list_match (clips_child_props, num_clips_props,
+      childrens_child_props, num_childrens_props);
+
+  free_children_properties (clips_child_props, num_clips_props);
+  free_children_properties (childrens_child_props, num_childrens_props);
+
+  gst_object_unref (timeline);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
+static gboolean
+_has_child_property (GESTimelineElement * element, GParamSpec * property)
+{
+  gboolean has_prop = FALSE;
+  guint num_props, i;
+  GParamSpec **props =
+      ges_timeline_element_list_children_properties (element, &num_props);
+  for (i = 0; i < num_props; i++) {
+    if (props[i] == property)
+      has_prop = TRUE;
+    g_param_spec_unref (props[i]);
+  }
+  g_free (props);
+  return has_prop;
+}
+
+typedef struct
+{
+  GstElement *child;
+  GParamSpec *property;
+  guint num_calls;
+} PropChangedData;
+
+#define _INIT_PROP_CHANGED_DATA(data) \
+  data.child = NULL; \
+  data.property = NULL; \
+  data.num_calls = 0;
+
+static void
+_prop_changed_cb (GESTimelineElement * element, GstElement * child,
+    GParamSpec * property, PropChangedData * data)
+{
+  data->num_calls++;
+  data->property = property;
+  data->child = child;
+}
+
+#define _assert_prop_changed_data(element, data, num_cmp, chld_cmp, prop_cmp) \
+  fail_unless (num_cmp == data.num_calls, \
+      "%s: num calls to callback (%u) not the expected %u", element->name, \
+      data.num_calls, num_cmp); \
+  fail_unless (prop_cmp == data.property, \
+      "%s: property %s is not the expected property %s", element->name, \
+      data.property->name, prop_cmp ? ((GParamSpec *)prop_cmp)->name : NULL); \
+  fail_unless (chld_cmp == data.child, \
+      "%s: child %s is not the expected child %s", element->name, \
+      GST_ELEMENT_NAME (data.child), \
+      chld_cmp ? GST_ELEMENT_NAME (chld_cmp) : NULL);
+
+#define _assert_int_val_child_prop(element, val, int_cmp, prop, prop_name) \
+  g_value_init (&val, G_TYPE_INT); \
+  ges_timeline_element_get_child_property_by_pspec (element, prop, &val); \
+  assert_equals_int (g_value_get_int (&val), int_cmp); \
+  g_value_unset (&val); \
+  g_value_init (&val, G_TYPE_INT); \
+  fail_unless (ges_timeline_element_get_child_property ( \
+        element, prop_name, &val)); \
+  assert_equals_int (g_value_get_int (&val), int_cmp); \
+  g_value_unset (&val); \
+
+GST_START_TEST (test_children_properties_change)
+{
+  GESTimeline *timeline;
+  GESLayer *layer;
+  GESTimelineElement *clip, *child;
+  PropChangedData clip_add_data, clip_remove_data, clip_notify_data,
+      child_add_data, child_remove_data, child_notify_data;
+  GstElement *sub_child;
+  GParamSpec *prop1, *prop2, *prop3;
+  GValue val = G_VALUE_INIT;
+  gint num_buffs;
+
+  ges_init ();
+
+  timeline = ges_timeline_new_audio_video ();
+  layer = ges_timeline_append_layer (timeline);
+  clip = GES_TIMELINE_ELEMENT (ges_test_clip_new ());
+  ges_timeline_element_set_duration (GES_TIMELINE_ELEMENT (clip), 50);
+
+  fail_unless (ges_layer_add_clip (layer, GES_CLIP (clip)));
+  fail_unless (GES_CONTAINER_CHILDREN (clip));
+  child = GES_CONTAINER_CHILDREN (clip)->data;
+
+  /* fake sub-child */
+  sub_child = gst_element_factory_make ("fakesink", "sub-child");
+  fail_unless (sub_child);
+  gst_object_ref_sink (sub_child);
+  prop1 = g_object_class_find_property (G_OBJECT_GET_CLASS (sub_child),
+      "num-buffers");
+  fail_unless (prop1);
+  prop2 = g_object_class_find_property (G_OBJECT_GET_CLASS (sub_child), "dump");
+  fail_unless (prop2);
+  prop3 = g_object_class_find_property (G_OBJECT_GET_CLASS (sub_child),
+      "silent");
+  fail_unless (prop2);
+
+  _INIT_PROP_CHANGED_DATA (clip_add_data);
+  _INIT_PROP_CHANGED_DATA (clip_remove_data);
+  _INIT_PROP_CHANGED_DATA (clip_notify_data);
+  _INIT_PROP_CHANGED_DATA (child_add_data);
+  _INIT_PROP_CHANGED_DATA (child_remove_data);
+  _INIT_PROP_CHANGED_DATA (child_notify_data);
+  g_signal_connect (clip, "child-property-added",
+      G_CALLBACK (_prop_changed_cb), &clip_add_data);
+  g_signal_connect (clip, "child-property-removed",
+      G_CALLBACK (_prop_changed_cb), &clip_remove_data);
+  g_signal_connect (clip, "deep-notify",
+      G_CALLBACK (_prop_changed_cb), &clip_notify_data);
+  g_signal_connect (child, "child-property-added",
+      G_CALLBACK (_prop_changed_cb), &child_add_data);
+  g_signal_connect (child, "child-property-removed",
+      G_CALLBACK (_prop_changed_cb), &child_remove_data);
+  g_signal_connect (child, "deep-notify",
+      G_CALLBACK (_prop_changed_cb), &child_notify_data);
+
+  /* adding to child should also add it to the parent clip */
+  fail_unless (ges_timeline_element_add_child_property (child, prop1,
+          G_OBJECT (sub_child)));
+
+  fail_unless (_has_child_property (child, prop1));
+  fail_unless (_has_child_property (clip, prop1));
+
+  _assert_prop_changed_data (clip, clip_add_data, 1, sub_child, prop1);
+  _assert_prop_changed_data (clip, clip_remove_data, 0, NULL, NULL);
+  _assert_prop_changed_data (clip, clip_notify_data, 0, NULL, NULL);
+  _assert_prop_changed_data (child, child_add_data, 1, sub_child, prop1);
+  _assert_prop_changed_data (child, child_remove_data, 0, NULL, NULL);
+  _assert_prop_changed_data (child, child_notify_data, 0, NULL, NULL);
+
+  fail_unless (ges_timeline_element_add_child_property (child, prop2,
+          G_OBJECT (sub_child)));
+
+  fail_unless (_has_child_property (child, prop2));
+  fail_unless (_has_child_property (clip, prop2));
+
+  _assert_prop_changed_data (clip, clip_add_data, 2, sub_child, prop2);
+  _assert_prop_changed_data (clip, clip_remove_data, 0, NULL, NULL);
+  _assert_prop_changed_data (clip, clip_notify_data, 0, NULL, NULL);
+  _assert_prop_changed_data (child, child_add_data, 2, sub_child, prop2);
+  _assert_prop_changed_data (child, child_remove_data, 0, NULL, NULL);
+  _assert_prop_changed_data (child, child_notify_data, 0, NULL, NULL);
+
+  /* adding to parent does not add to the child */
+
+  fail_unless (ges_timeline_element_add_child_property (clip, prop3,
+          G_OBJECT (sub_child)));
+
+  fail_if (_has_child_property (child, prop3));
+  fail_unless (_has_child_property (clip, prop3));
+
+  _assert_prop_changed_data (clip, clip_add_data, 3, sub_child, prop3);
+  _assert_prop_changed_data (clip, clip_remove_data, 0, NULL, NULL);
+  _assert_prop_changed_data (clip, clip_notify_data, 0, NULL, NULL);
+  _assert_prop_changed_data (child, child_add_data, 2, sub_child, prop2);
+  _assert_prop_changed_data (child, child_remove_data, 0, NULL, NULL);
+  _assert_prop_changed_data (child, child_notify_data, 0, NULL, NULL);
+
+  /* both should be notified of a change in the value */
+
+  g_object_set (G_OBJECT (sub_child), "num-buffers", 100, NULL);
+
+  _assert_prop_changed_data (clip, clip_add_data, 3, sub_child, prop3);
+  _assert_prop_changed_data (clip, clip_remove_data, 0, NULL, NULL);
+  _assert_prop_changed_data (clip, clip_notify_data, 1, sub_child, prop1);
+  _assert_prop_changed_data (child, child_add_data, 2, sub_child, prop2);
+  _assert_prop_changed_data (child, child_remove_data, 0, NULL, NULL);
+  _assert_prop_changed_data (child, child_notify_data, 1, sub_child, prop1);
+
+  _assert_int_val_child_prop (clip, val, 100, prop1,
+      "GstFakeSink::num-buffers");
+  _assert_int_val_child_prop (child, val, 100, prop1,
+      "GstFakeSink::num-buffers");
+
+  g_value_init (&val, G_TYPE_INT);
+  g_value_set_int (&val, 79);
+  ges_timeline_element_set_child_property_by_pspec (clip, prop1, &val);
+  g_value_unset (&val);
+
+  _assert_prop_changed_data (clip, clip_add_data, 3, sub_child, prop3);
+  _assert_prop_changed_data (clip, clip_remove_data, 0, NULL, NULL);
+  _assert_prop_changed_data (clip, clip_notify_data, 2, sub_child, prop1);
+  _assert_prop_changed_data (child, child_add_data, 2, sub_child, prop2);
+  _assert_prop_changed_data (child, child_remove_data, 0, NULL, NULL);
+  _assert_prop_changed_data (child, child_notify_data, 2, sub_child, prop1);
+
+  _assert_int_val_child_prop (clip, val, 79, prop1, "GstFakeSink::num-buffers");
+  _assert_int_val_child_prop (child, val, 79, prop1,
+      "GstFakeSink::num-buffers");
+  g_object_get (G_OBJECT (sub_child), "num-buffers", &num_buffs, NULL);
+  assert_equals_int (num_buffs, 79);
+
+  g_value_init (&val, G_TYPE_INT);
+  g_value_set_int (&val, 97);
+  fail_unless (ges_timeline_element_set_child_property (child,
+          "GstFakeSink::num-buffers", &val));
+  g_value_unset (&val);
+
+  _assert_prop_changed_data (clip, clip_add_data, 3, sub_child, prop3);
+  _assert_prop_changed_data (clip, clip_remove_data, 0, NULL, NULL);
+  _assert_prop_changed_data (clip, clip_notify_data, 3, sub_child, prop1);
+  _assert_prop_changed_data (child, child_add_data, 2, sub_child, prop2);
+  _assert_prop_changed_data (child, child_remove_data, 0, NULL, NULL);
+  _assert_prop_changed_data (child, child_notify_data, 3, sub_child, prop1);
+
+  _assert_int_val_child_prop (clip, val, 97, prop1, "GstFakeSink::num-buffers");
+  _assert_int_val_child_prop (child, val, 97, prop1,
+      "GstFakeSink::num-buffers");
+  g_object_get (G_OBJECT (sub_child), "num-buffers", &num_buffs, NULL);
+  assert_equals_int (num_buffs, 97);
+
+  /* remove a property from the child, removes from the parent */
+
+  fail_unless (ges_timeline_element_remove_child_property (child, prop2));
+
+  _assert_prop_changed_data (clip, clip_add_data, 3, sub_child, prop3);
+  _assert_prop_changed_data (clip, clip_remove_data, 1, sub_child, prop2);
+  _assert_prop_changed_data (clip, clip_notify_data, 3, sub_child, prop1);
+  _assert_prop_changed_data (child, child_add_data, 2, sub_child, prop2);
+  _assert_prop_changed_data (child, child_remove_data, 1, sub_child, prop2);
+  _assert_prop_changed_data (child, child_notify_data, 3, sub_child, prop1);
+
+  fail_if (_has_child_property (child, prop2));
+  fail_if (_has_child_property (clip, prop2));
+
+  /* removing from parent doesn't remove from child */
+
+  fail_unless (ges_timeline_element_remove_child_property (clip, prop1));
+
+  _assert_prop_changed_data (clip, clip_add_data, 3, sub_child, prop3);
+  _assert_prop_changed_data (clip, clip_remove_data, 2, sub_child, prop1);
+  _assert_prop_changed_data (clip, clip_notify_data, 3, sub_child, prop1);
+  _assert_prop_changed_data (child, child_add_data, 2, sub_child, prop2);
+  _assert_prop_changed_data (child, child_remove_data, 1, sub_child, prop2);
+  _assert_prop_changed_data (child, child_notify_data, 3, sub_child, prop1);
+
+  fail_unless (_has_child_property (child, prop1));
+  fail_if (_has_child_property (clip, prop1));
+
+  /* but still safe to remove it from the child later */
+
+  fail_unless (ges_timeline_element_remove_child_property (child, prop1));
+
+  _assert_prop_changed_data (clip, clip_add_data, 3, sub_child, prop3);
+  _assert_prop_changed_data (clip, clip_remove_data, 2, sub_child, prop1);
+  _assert_prop_changed_data (clip, clip_notify_data, 3, sub_child, prop1);
+  _assert_prop_changed_data (child, child_add_data, 2, sub_child, prop2);
+  _assert_prop_changed_data (child, child_remove_data, 2, sub_child, prop1);
+  _assert_prop_changed_data (child, child_notify_data, 3, sub_child, prop1);
+
+  fail_if (_has_child_property (child, prop1));
+  fail_if (_has_child_property (clip, prop1));
+
+  gst_object_unref (sub_child);
+  gst_object_unref (timeline);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
+
 static Suite *
 ges_suite (void)
 {
@@ -944,6 +1249,8 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_effects_priorities);
   tcase_add_test (tc_chain, test_children_time_setters);
   tcase_add_test (tc_chain, test_can_add_effect);
+  tcase_add_test (tc_chain, test_children_properties_contain);
+  tcase_add_test (tc_chain, test_children_properties_change);
 
   return s;
 }

@@ -120,6 +120,8 @@ enum
 enum
 {
   DEEP_NOTIFY,
+  CHILD_PROPERTY_ADDED,
+  CHILD_PROPERTY_REMOVED,
   LAST_SIGNAL
 };
 
@@ -219,8 +221,8 @@ _lookup_child (GESTimelineElement * self, const gchar * prop_name,
   return res;
 }
 
-static GParamSpec **
-default_list_children_properties (GESTimelineElement * self,
+GParamSpec **
+ges_timeline_element_get_children_properties (GESTimelineElement * self,
     guint * n_properties)
 {
   GParamSpec **pspec, *spec;
@@ -495,10 +497,10 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
   /**
    * GESTimelineElement::deep-notify:
    * @timeline_element: A #GESTtimelineElement
-   * @prop_object: The object that originated the signal
-   * @prop: The specification for the property that changed
+   * @prop_object: The child whose property has been set
+   * @prop: The specification for the property that been set
    *
-   * Emitted when a child of @timeline_element has one of its registered
+   * Emitted when a child of the element has one of its registered
    * properties set. See ges_timeline_element_add_child_property().
    * Note that unlike #GObject::notify, a child property name can not be
    * used as a signal detail.
@@ -508,6 +510,39 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
       G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE | G_SIGNAL_DETAILED |
       G_SIGNAL_NO_HOOKS, 0, NULL, NULL, NULL,
       G_TYPE_NONE, 2, G_TYPE_OBJECT, G_TYPE_PARAM);
+
+  /**
+   * GESTimelineElement::child-property-added:
+   * @timeline_element: A #GESTtimelineElement
+   * @prop_object: The child whose property has been registered
+   * @prop: The specification for the property that has been registered
+   *
+   * Emitted when the element has a new child property registered. See
+   * ges_timeline_element_add_child_property().
+   *
+   * Note that some GES elements will be automatically created with
+   * pre-registered children properties. You can use
+   * ges_timeline_element_list_children_properties() to list these.
+   */
+  ges_timeline_element_signals[CHILD_PROPERTY_ADDED] =
+      g_signal_new ("child-property-added", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, NULL, G_TYPE_NONE, 2,
+      G_TYPE_OBJECT, G_TYPE_PARAM);
+
+  /**
+   * GESTimelineElement::child-property-removed:
+   * @timeline_element: A #GESTtimelineElement
+   * @prop_object: The child whose property has been unregistered
+   * @prop: The specification for the property that has been unregistered
+   *
+   * Emitted when the element has a child property unregistered. See
+   * ges_timeline_element_remove_child_property().
+   */
+  ges_timeline_element_signals[CHILD_PROPERTY_REMOVED] =
+      g_signal_new ("child-property-removed", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, NULL, G_TYPE_NONE, 2,
+      G_TYPE_OBJECT, G_TYPE_PARAM);
+
 
   object_class->dispose = ges_timeline_element_dispose;
   object_class->finalize = ges_timeline_element_finalize;
@@ -525,7 +560,8 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
   klass->roll_end = NULL;
   klass->trim = NULL;
 
-  klass->list_children_properties = default_list_children_properties;
+  klass->list_children_properties =
+      ges_timeline_element_get_children_properties;
   klass->lookup_child = _lookup_child;
   klass->set_child_property = _set_child_property;
 }
@@ -751,6 +787,13 @@ ges_timeline_element_add_child_property_full (GESTimelineElement * self,
   gchar *signame;
   ChildPropHandler *handler;
 
+  /* FIXME: allow the same pspec, provided the child is different. This
+   * is important for containers that may have duplicate children
+   * If this is changed, _remove_childs_child_property in ges-container.c
+   * should be changed to reflect this.
+   * We could hack around this by copying the pspec into a new instance
+   * of GParamSpec, but there is no such GLib method, and it would break
+   * the usage of get_..._from_pspec and set_..._from_pspec */
   if (g_hash_table_contains (self->priv->children_props, pspec)) {
     GST_INFO_OBJECT (self, "Child property already exists: %s", pspec->name);
     return FALSE;
@@ -769,9 +812,24 @@ ges_timeline_element_add_child_property_full (GESTimelineElement * self,
   g_hash_table_insert (self->priv->children_props, g_param_spec_ref (pspec),
       handler);
 
+  g_signal_emit (self, ges_timeline_element_signals[CHILD_PROPERTY_ADDED], 0,
+      child, pspec);
+
   g_free (signame);
   return TRUE;
 }
+
+GObject *
+ges_timeline_element_get_child_from_child_property (GESTimelineElement * self,
+    GParamSpec * pspec)
+{
+  ChildPropHandler *handler =
+      g_hash_table_lookup (self->priv->children_props, pspec);
+  if (handler)
+    return handler->child;
+  return NULL;
+}
+
 
 /*********************************************
  *            API implementation             *
@@ -1748,6 +1806,10 @@ gboolean
 ges_timeline_element_add_child_property (GESTimelineElement * self,
     GParamSpec * pspec, GObject * child)
 {
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
+  g_return_val_if_fail (G_IS_PARAM_SPEC (pspec), FALSE);
+  g_return_val_if_fail (G_IS_OBJECT (child), FALSE);
+
   return ges_timeline_element_add_child_property_full (self, NULL, pspec,
       child);
 }
@@ -1769,6 +1831,7 @@ ges_timeline_element_get_child_property_by_pspec (GESTimelineElement * self,
   ChildPropHandler *handler;
 
   g_return_if_fail (GES_IS_TIMELINE_ELEMENT (self));
+  g_return_if_fail (G_IS_PARAM_SPEC (pspec));
 
   handler = g_hash_table_lookup (self->priv->children_props, pspec);
   if (!handler)
@@ -1799,7 +1862,8 @@ void
 ges_timeline_element_set_child_property_by_pspec (GESTimelineElement * self,
     GParamSpec * pspec, const GValue * value)
 {
-  g_return_if_fail (GES_IS_TRACK_ELEMENT (self));
+  g_return_if_fail (GES_IS_TIMELINE_ELEMENT (self));
+  g_return_if_fail (G_IS_PARAM_SPEC (pspec));
 
   set_child_property_by_pspec (self, pspec, value);
 }
@@ -2179,7 +2243,29 @@ gboolean
 ges_timeline_element_remove_child_property (GESTimelineElement * self,
     GParamSpec * pspec)
 {
-  return g_hash_table_remove (self->priv->children_props, pspec);
+  gpointer key, value;
+  GParamSpec *found_pspec;
+  ChildPropHandler *handler;
+
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
+  g_return_val_if_fail (G_IS_PARAM_SPEC (pspec), FALSE);
+
+  if (!g_hash_table_steal_extended (self->priv->children_props, pspec,
+          &key, &value)) {
+    GST_WARNING_OBJECT (self, "No child property with pspec %p (%s) found",
+        pspec, pspec->name);
+    return FALSE;
+  }
+  found_pspec = G_PARAM_SPEC (key);
+  handler = (ChildPropHandler *) value;
+
+  g_signal_emit (self, ges_timeline_element_signals[CHILD_PROPERTY_REMOVED], 0,
+      handler->child, found_pspec);
+
+  g_param_spec_unref (found_pspec);
+  _child_prop_handler_free (handler);
+
+  return TRUE;
 }
 
 /**

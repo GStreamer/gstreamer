@@ -312,3 +312,33 @@ print_timeline (GESTimeline * timeline)
   g_printerr
       ("\n=====================================================================\n");
 }
+
+/* append the properties found in element to list, num_props should point
+ * to the current list length.
+ */
+GParamSpec **
+append_children_properties (GParamSpec ** list, GESTimelineElement * element,
+    guint * num_props)
+{
+  guint i, num;
+  GParamSpec **props =
+      ges_timeline_element_list_children_properties (element, &num);
+  fail_unless (props);
+  list = g_realloc_n (list, num + *num_props, sizeof (GParamSpec *));
+
+  for (i = 0; i < num; i++)
+    list[*num_props + i] = props[i];
+
+  g_free (props);
+  *num_props += num;
+  return list;
+}
+
+void
+free_children_properties (GParamSpec ** list, guint num_props)
+{
+  guint i;
+  for (i = 0; i < num_props; i++)
+    g_param_spec_unref (list[i]);
+  g_free (list);
+}

@@ -51,6 +51,11 @@ ges_generate_test_file_audio_video (const gchar * filedest,
 gboolean
 play_timeline (GESTimeline * timeline);
 
+GParamSpec **
+append_children_properties (GParamSpec ** list, GESTimelineElement * element, guint * num_props);
+void
+free_children_properties (GParamSpec ** list, guint num_props);
+
 #define nle_object_check(nleobj, start, duration, mstart, mduration, priority, active) { \
   guint64 pstart, pdur, inpoint, pprio, pact;			\
   g_object_get (nleobj, "start", &pstart, "duration", &pdur,		\
@@ -122,6 +127,53 @@ G_STMT_START {                                          \
     "%s in layer %d instead of %d", GES_TIMELINE_ELEMENT_NAME (clip),        \
     GES_TIMELINE_ELEMENT_LAYER_PRIORITY (clip), layer_prio);                 \
 }
+
+/* test that the two property lists contain the same properties the same
+ * number of times */
+#define assert_property_list_match(list1, len1, list2, len2) \
+  { \
+    gboolean *found_count_in_list2; \
+    guint *count_list1; \
+    guint i, j; \
+    found_count_in_list2 = g_new0 (gboolean, len1); \
+    count_list1 = g_new0 (guint, len1); \
+    for (i = 0; i < len1; i++) { \
+      found_count_in_list2[i] = 0; \
+      count_list1[i] = 0; \
+      for (j = 0; j < len1; j++) { \
+        if (list1[i] == list1[j]) \
+          count_list1[i] ++; \
+      } \
+    } \
+    for (j = 0; j < len2; j++) { \
+      guint count_list2 = 0; \
+      guint found_count_in_list1 = 0; \
+      GParamSpec *prop = list2[j]; \
+      for (i = 0; i < len2; i++) { \
+        if (list2[i] == prop) \
+          count_list2 ++; \
+      } \
+      for (i = 0; i < len1; i++) { \
+        if (list1[i] == prop) { \
+          found_count_in_list2[i] ++; \
+          found_count_in_list1 ++; \
+        } \
+      } \
+      fail_unless (found_count_in_list1 == count_list2, \
+          "Found property '%s' %u times, rather than %u times, in " #list1, \
+          prop->name, found_count_in_list1, count_list2); \
+    } \
+    /* make sure we found each one once */ \
+    for (i = 0; i < len1; i++) { \
+      GParamSpec *prop = list1[i]; \
+      fail_unless (found_count_in_list2[i] == count_list1[i], \
+          "Found property '%s' %u times, rather than %u times, in " #list2, \
+          prop->name, found_count_in_list2[i], count_list1[i]); \
+    } \
+    g_free (found_count_in_list2); \
+    g_free (count_list1); \
+  }
+
 
 void print_timeline(GESTimeline *timeline);
 
