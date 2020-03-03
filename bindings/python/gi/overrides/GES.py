@@ -51,62 +51,44 @@ python module to use with GES 0.10"
 
     warnings.warn(warn_msg, RuntimeWarning)
 
-class TimelineElement(GES.TimelineElement):
-    def __repr__(self):
-        return "%s [%s (%s) %s]" % (
-            self.props.name,
-            Gst.TIME_ARGS(self.props.start),
-            Gst.TIME_ARGS(self.props.in_point),
-            Gst.TIME_ARGS(self.props.duration),
-        )
+def __timeline_element__repr__(self):
+    return "%s [%s (%s) %s]" % (
+        self.props.name,
+        Gst.TIME_ARGS(self.props.start),
+        Gst.TIME_ARGS(self.props.in_point),
+        Gst.TIME_ARGS(self.props.duration),
+    )
 
-    def set_child_property(self, prop_name, prop_value):
-        res, _, pspec = GES.TimelineElement.lookup_child(self, prop_name)
-        if not res:
-            return res
+__prev_set_child_property = GES.TimelineElement.set_child_property
+def __timeline_element_set_child_property(self, prop_name, prop_value):
+    res, _, pspec = GES.TimelineElement.lookup_child(self, prop_name)
+    if not res:
+        return res
 
-        v = GObject.Value()
-        v.init(pspec.value_type)
-        v.set_value(prop_value)
+    v = GObject.Value()
+    v.init(pspec.value_type)
+    v.set_value(prop_value)
 
-        return GES.TimelineElement.set_child_property(self, prop_name, v)
-
-
-TimelineElement = override(TimelineElement)
-__all__.append('TimelineElement')
-
-class TrackElement(GES.TrackElement):
-    def set_child_property(self, prop_name, prop_value):
-        return TimelineElement.set_child_property(self, prop_name, prop_value)
-
-TrackElement = override(TrackElement)
-__all__.append('TrackElement')
+    return __prev_set_child_property(self, prop_name, v)
 
 
-class Container(GES.Container):
-    def edit(self, layers, new_layer_priority, mode, edge, position):
-        return GES.TimelineElement.edit(self, layers, new_layer_priority, mode, edge, position)
+GES.TimelineElement.__repr__ = __timeline_element__repr__
+GES.TimelineElement.set_child_property = __timeline_element_set_child_property
+GES.TrackElement.set_child_property = GES.TimelineElement.set_child_property
+GES.Container.edit = GES.TimelineElement.edit
 
-Container = override(Container)
-__all__.append('Container')
+def __asset__repr__(self):
+    return "%s(%s)" % (super(type(self)).__repr__(), self.props.id)
 
-class Asset(GES.Asset):
-    def __repr__(self):
-        return "%s(%s)" % (super().__repr__(), self.props.id)
+GES.Asset.__repr__ = __asset__repr__
 
+def __timeline_iter_clips(self):
+    """Iterate all clips in a timeline"""
+    for layer in self.get_layers():
+        for clip in layer.get_clips():
+            yield clip
 
-Asset = override(Asset)
-__all__.append('Asset')
-
-class Timeline(GES.Timeline):
-    def iter_clips(self):
-        """Iterate all clips in a timeline"""
-        for layer in self.get_layers():
-            for clip in layer.get_clips():
-                yield clip
-
-Timeline = override(Timeline)
-__all__.append('Timeline')
+GES.Timeline.iter_clips = __timeline_iter_clips
 
 try:
     from gi.repository import Gst
