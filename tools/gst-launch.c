@@ -76,7 +76,7 @@ fault_handler_sighandler (int signum)
 {
   fault_restore ();
 
-  /* printf is used instead of g_print(), since it's less likely to
+  /* printf is used instead of gst_print(), since it's less likely to
    * deadlock */
   switch (signum) {
     case SIGSEGV:
@@ -249,13 +249,13 @@ print_index_stats (GPtrArray * index_stats)
   gint i;
 
   if (index_stats->len) {
-    g_print ("%s:\n", _("Index statistics"));
+    gst_print ("%s:\n", _("Index statistics"));
   }
 
   for (i = 0; i < index_stats->len; i++) {
     GstIndexStats *s = g_ptr_array_index (index_stats, i);
     if (s) {
-      g_print ("id %d, %s\n", s->id, s->desc);
+      gst_print ("id %d, %s\n", s->id, s->desc);
       if (s->num_frames) {
         GstClockTime last_frame = s->last_keyframe;
 
@@ -266,24 +266,24 @@ print_index_stats (GPtrArray * index_stats)
         }
 
         if (GST_CLOCK_TIME_IS_VALID (last_frame)) {
-          g_print ("  total time               = %" GST_TIME_FORMAT "\n",
+          gst_print ("  total time               = %" GST_TIME_FORMAT "\n",
               GST_TIME_ARGS (last_frame));
         }
-        g_print ("  frame/keyframe rate      = %u / %u = ", s->num_frames,
+        gst_print ("  frame/keyframe rate      = %u / %u = ", s->num_frames,
             s->num_keyframes);
         if (s->num_keyframes)
-          g_print ("%lf\n", s->num_frames / (gdouble) s->num_keyframes);
+          gst_print ("%lf\n", s->num_frames / (gdouble) s->num_keyframes);
         else
-          g_print ("-\n");
+          gst_print ("-\n");
         if (s->num_keyframes) {
-          g_print ("  min/avg/max keyframe gap = %" GST_TIME_FORMAT ", %"
+          gst_print ("  min/avg/max keyframe gap = %" GST_TIME_FORMAT ", %"
               GST_TIME_FORMAT ", %" GST_TIME_FORMAT "\n",
               GST_TIME_ARGS (s->min_keyframe_gap),
               GST_TIME_ARGS (s->avg_keyframe_gap),
               GST_TIME_ARGS (s->max_keyframe_gap));
         }
       } else {
-        g_print ("  no stats\n");
+        gst_print ("  no stats\n");
       }
 
       g_free (s->desc);
@@ -425,7 +425,7 @@ print_tag_foreach (const GstTagList * tags, const gchar * tag,
   else
     str = gst_value_serialize (&val);
 
-  g_print ("%*s%s: %s\n", 2 * depth, " ", gst_tag_get_nick (tag), str);
+  gst_print ("%*s%s: %s\n", 2 * depth, " ", gst_tag_get_nick (tag), str);
   g_free (str);
 
   g_value_unset (&val);
@@ -899,7 +899,7 @@ event_loop (GstElement * pipeline, gboolean blocking, gboolean do_progress,
           val_str = g_strdup ("(no value)");
         }
 
-        g_print ("%s: %s = %s\n", obj_name, name, val_str);
+        gst_print ("%s: %s = %s\n", obj_name, name, val_str);
         g_free (obj_name);
         g_free (val_str);
         break;
