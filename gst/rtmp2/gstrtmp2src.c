@@ -646,7 +646,9 @@ gst_rtmp2_src_task_func (gpointer user_data)
   g_main_loop_run (loop);
   g_mutex_lock (&self->lock);
 
-  self->stats = gst_rtmp_connection_get_stats (self->connection);
+  if (self->connection) {
+    self->stats = gst_rtmp_connection_get_stats (self->connection);
+  }
 
   g_clear_pointer (&self->loop, g_main_loop_unref);
   g_clear_pointer (&self->connection, gst_rtmp_connection_close_and_unref);
