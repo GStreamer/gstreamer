@@ -5740,6 +5740,9 @@ gst_qt_mux_video_sink_set_caps (GstQTMuxPad * qtpad, GstCaps * caps)
     gst_structure_get_flagset (structure,
         "multiview-flags", (guint *) & flags, NULL);
     switch (mode) {
+      case GST_VIDEO_MULTIVIEW_MODE_MONO:
+        /* Nothing to do for mono, just don't warn about it */
+        break;
       case GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE:
         qtpad->trak->mdia.minf.stbl.svmi =
             atom_svmi_new (0,
