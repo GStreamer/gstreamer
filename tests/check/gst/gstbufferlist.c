@@ -539,6 +539,24 @@ GST_START_TEST (test_foreach_modify_non_writeable_list)
 
 GST_END_TEST;
 
+GST_START_TEST (test_foreach_modify_writeable_list)
+{
+  GstBufferList *b = gst_buffer_list_new_sized (1);
+  GstBuffer *buf;
+
+  buf = gst_buffer_new ();
+  gst_buffer_list_add (b, gst_buffer_ref (buf));
+
+  fail_unless (gst_buffer_list_is_writable (b));
+
+  gst_buffer_list_foreach (b, foreach_replace_buffer, NULL);
+
+  gst_buffer_list_unref (b);
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_buffer_list_suite (void)
 {
@@ -546,6 +564,7 @@ gst_buffer_list_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
+
   tcase_add_checked_fixture (tc_chain, setup, cleanup);
   tcase_add_test (tc_chain, test_add_and_iterate);
   tcase_add_test (tc_chain, test_remove);
@@ -559,6 +578,7 @@ gst_buffer_list_suite (void)
   tcase_add_test (tc_chain, test_new_sized_0);
   tcase_add_test (tc_chain, test_multiple_mutable_buffer_references);
   tcase_add_test (tc_chain, test_foreach_modify_non_writeable_list);
+  tcase_add_test (tc_chain, test_foreach_modify_writeable_list);
 
   return s;
 }
