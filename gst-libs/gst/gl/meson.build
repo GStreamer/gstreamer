@@ -537,7 +537,7 @@ if need_win_wayland != 'no'
       message ('Could not find EGL libraries for wayland')
     endif
   else
-    wayland_client_dep = dependency('wayland-client', version : '>= 1.0', required : false)
+    wayland_client_dep = dependency('wayland-client', version : '>= 1.11', required : false)
     wayland_cursor_dep = dependency('wayland-cursor', version : '>= 1.0', required : false)
     wayland_egl_dep = dependency('wayland-egl', version : '>= 1.0', required : false)
     wayland_protocols_dep = dependency('wayland-protocols', version : '>= 1.15', required : false)

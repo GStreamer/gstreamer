@@ -53,12 +53,12 @@ struct _GstGLDisplayWayland
   GstGLDisplay            parent;
 
   struct wl_display       *display;
-  struct wl_registry      *registry;
-  struct wl_compositor    *compositor;
-  struct wl_subcompositor *subcompositor;
+  struct wl_registry      *registry;            /* unset */
+  struct wl_compositor    *compositor;          /* unset */
+  struct wl_subcompositor *subcompositor;       /* unset */
 
   /* Basic shell, see private struct for others (e.g. XDG-shell) */
-  struct wl_shell     *shell;
+  struct wl_shell     *shell;                   /* unset */
 
   /*< private >*/
   gboolean foreign_display;

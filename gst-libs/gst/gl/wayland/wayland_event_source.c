@@ -39,6 +39,21 @@
 
 #include "wayland_event_source.h"
 
+#define GST_CAT_DEFAULT gst_gl_wayland_event_source_debug
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
+
+static void
+init_debug (void)
+{
+  static volatile gsize _debug;
+
+  if (g_once_init_enter (&_debug)) {
+    GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "glwaylandeventsource", 0,
+        "OpenGL Wayland event source");
+    g_once_init_leave (&_debug, 1);
+  }
+}
+
 static void
 sync_callback (void *data, struct wl_callback *callback, uint32_t serial)
 {
@@ -62,46 +77,48 @@ static const struct wl_callback_listener sync_listener = {
  * As a concrete example, if the wayland event source (below) for a @queue is
  * running on a certain thread, then this function must only be called in that
  * thread (with that @queue). */
+/* @sync_display is the wl_display that is used to create the sync object and
+ * may be a proxy wrapper.
+ * @dispatch_display must not be a proxy wrapper.
+ * @queue can be NULL. */
 gint
-gst_gl_wl_display_roundtrip_queue (struct wl_display *display,
-    struct wl_event_queue *queue)
+gst_gl_wl_display_roundtrip_queue (struct wl_display *sync_display,
+    struct wl_display *dispatch_display, struct wl_event_queue *queue)
 {
   struct wl_callback *callback;
   gboolean done = FALSE;
   gint ret = 0;
 
-  GST_TRACE ("roundtrip start for dpy %p and queue %p", display, queue);
+  init_debug ();
 
-  if (queue) {
-    /* creating a wl_proxy and setting the queue is racy with the dispatching
-     * of the default queue */
-    while (wl_display_prepare_read_queue (display, queue) != 0) {
-      if ((ret = wl_display_dispatch_queue_pending (display, queue)) < 0) {
-        return ret;
-      }
-    }
-  }
-  if (!(callback = wl_display_sync (display))) {
+  GST_TRACE ("roundtrip start for dpy %p and queue %p", dispatch_display,
+      queue);
+
+  if (!(callback = wl_display_sync (sync_display))) {
+    GST_WARNING ("creating sync callback failed");
     return -1;
   }
   GST_TRACE ("create roundtrip callback %p", callback);
   wl_callback_add_listener (callback, &sync_listener, &done);
   if (queue) {
-    wl_proxy_set_queue ((struct wl_proxy *) callback, queue);
-    wl_display_cancel_read (display);
     while (!done && ret >= 0) {
-      ret = wl_display_dispatch_queue (display, queue);
+      ret = wl_display_dispatch_queue (dispatch_display, queue);
+      GST_TRACE ("dispatch ret: %i, errno: (%i, 0x%x) \'%s\'", ret, errno,
+          errno, g_strerror (errno));
     }
   } else {
     while (!done && ret >= 0) {
-      ret = wl_display_dispatch (display);
+      ret = wl_display_dispatch (dispatch_display);
+      GST_TRACE ("dispatch ret: %i, errno: (%i, 0x%x) \'%s\'", ret, errno,
+          errno, g_strerror (errno));
     }
   }
 
   if (ret == -1 && !done)
     wl_callback_destroy (callback);
-  GST_TRACE ("roundtrip done for dpy %p and queue %p. ret %i", display, queue,
-      ret);
+  GST_DEBUG ("roundtrip done for dpy %p and queue %p. ret %i, "
+      "errno: (%i, 0x%x) \'%s\'", dispatch_display, queue, ret, errno, errno,
+      g_strerror (errno));
 
   return ret;
 }
@@ -203,6 +220,8 @@ wayland_event_source_new (struct wl_display *display,
     struct wl_event_queue *queue)
 {
   WaylandEventSource *source;
+
+  init_debug ();
 
   source = (WaylandEventSource *)
       g_source_new (&wayland_event_source_funcs, sizeof (WaylandEventSource));

@@ -46,6 +46,7 @@ struct display {
   struct wl_display      *display;
   struct wl_registry     *registry;
   struct wl_compositor   *compositor;
+  struct wl_subcompositor *subcompositor;
   struct wl_shell        *shell;
   struct wl_seat         *seat;
   struct wl_pointer      *pointer;
@@ -54,6 +55,7 @@ struct display {
   struct wl_cursor_theme *cursor_theme;
   struct wl_cursor       *default_cursor;
   struct wl_surface      *cursor_surface;
+  struct xdg_wm_base     *xdg_wm_base;
   struct window          *window;
   guint32                 serial;
 

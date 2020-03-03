@@ -33,7 +33,6 @@
 #include <gst/gl/gstglcontext.h>
 
 #include "gstgldisplay_wayland.h"
-#include "gstgldisplay_wayland_private.h"
 #include "gstglwindow_wayland_egl.h"
 
 #include "../gstglwindow_private.h"
@@ -301,35 +300,19 @@ destroy_surfaces (GstGLWindowWaylandEGL * window_egl)
 static void
 create_xdg_surface_and_toplevel (GstGLWindowWaylandEGL * window_egl)
 {
-  GstGLDisplayWayland *display =
-      GST_GL_DISPLAY_WAYLAND (GST_GL_WINDOW (window_egl)->display);
-  struct xdg_wm_base *xdg_wm_base;
   struct xdg_surface *xdg_surface;
   struct xdg_toplevel *xdg_toplevel;
 
   GST_DEBUG ("Creating surfaces XDG-shell");
 
   /* First create the XDG surface */
-  xdg_wm_base = gst_gl_display_wayland_get_xdg_wm_base (display);
-  if (window_egl->window.queue) {
-    wl_proxy_set_queue ((struct wl_proxy *) xdg_wm_base,
-        window_egl->window.queue);
-  }
-  xdg_surface = xdg_wm_base_get_xdg_surface (xdg_wm_base,
+  xdg_surface = xdg_wm_base_get_xdg_surface (window_egl->display.xdg_wm_base,
       window_egl->window.surface);
-  if (window_egl->window.queue) {
-    wl_proxy_set_queue ((struct wl_proxy *) xdg_surface,
-        window_egl->window.queue);
-  }
   xdg_surface_add_listener (xdg_surface, &xdg_surface_listener, window_egl);
 
   /* Then the XDG top-level */
   xdg_toplevel = xdg_surface_get_toplevel (xdg_surface);
   xdg_toplevel_set_title (xdg_toplevel, "OpenGL Renderer");
-  if (window_egl->window.queue) {
-    wl_proxy_set_queue ((struct wl_proxy *) xdg_toplevel,
-        window_egl->window.queue);
-  }
   xdg_toplevel_add_listener (xdg_toplevel, &xdg_toplevel_listener, window_egl);
 
   /* Commit the xdg_surface state */
@@ -343,19 +326,12 @@ create_xdg_surface_and_toplevel (GstGLWindowWaylandEGL * window_egl)
 static void
 create_wl_shell_surface (GstGLWindowWaylandEGL * window_egl)
 {
-  GstGLDisplayWayland *display =
-      GST_GL_DISPLAY_WAYLAND (GST_GL_WINDOW (window_egl)->display);
   struct wl_shell_surface *wl_shell_surface;
 
   GST_DEBUG ("Creating surfaces for wl-shell");
 
-  wl_shell_surface = wl_shell_get_shell_surface (display->shell,
+  wl_shell_surface = wl_shell_get_shell_surface (window_egl->display.shell,
       window_egl->window.surface);
-
-  if (window_egl->window.queue) {
-    wl_proxy_set_queue ((struct wl_proxy *) wl_shell_surface,
-        window_egl->window.queue);
-  }
 
   wl_shell_surface_add_listener (wl_shell_surface, &wl_shell_surface_listener,
       window_egl);
@@ -368,21 +344,16 @@ create_wl_shell_surface (GstGLWindowWaylandEGL * window_egl)
 static void
 create_surfaces (GstGLWindowWaylandEGL * window_egl)
 {
-  GstGLDisplayWayland *display =
-      GST_GL_DISPLAY_WAYLAND (GST_GL_WINDOW (window_egl)->display);
   gint width, height;
 
   if (!window_egl->window.surface) {
     window_egl->window.surface =
-        wl_compositor_create_surface (display->compositor);
-    if (window_egl->window.queue)
-      wl_proxy_set_queue ((struct wl_proxy *) window_egl->window.surface,
-          window_egl->window.queue);
+        wl_compositor_create_surface (window_egl->display.compositor);
   }
 
   if (window_egl->window.foreign_surface) {
     /* (re)parent */
-    if (!display->subcompositor) {
+    if (!window_egl->display.subcompositor) {
       GST_ERROR_OBJECT (window_egl,
           "Wayland server does not support subsurfaces");
       window_egl->window.foreign_surface = NULL;
@@ -391,11 +362,8 @@ create_surfaces (GstGLWindowWaylandEGL * window_egl)
 
     if (!window_egl->window.subsurface) {
       window_egl->window.subsurface =
-          wl_subcompositor_get_subsurface (display->subcompositor,
+          wl_subcompositor_get_subsurface (window_egl->display.subcompositor,
           window_egl->window.surface, window_egl->window.foreign_surface);
-      if (window_egl->window.queue)
-        wl_proxy_set_queue ((struct wl_proxy *) window_egl->window.subsurface,
-            window_egl->window.queue);
 
       wl_subsurface_set_position (window_egl->window.subsurface,
           window_egl->window.window_x, window_egl->window.window_y);
@@ -403,7 +371,7 @@ create_surfaces (GstGLWindowWaylandEGL * window_egl)
     }
   } else {
   shell_window:
-    if (gst_gl_display_wayland_get_xdg_wm_base (display)) {
+    if (window_egl->display.xdg_wm_base) {
       if (!window_egl->window.xdg_surface)
         create_xdg_surface_and_toplevel (window_egl);
     } else if (!window_egl->window.wl_shell_surface) {
@@ -508,6 +476,47 @@ gst_gl_window_wayland_egl_close (GstGLWindow * window)
   GST_GL_WINDOW_CLASS (parent_class)->close (window);
 }
 
+static void
+handle_xdg_wm_base_ping (void *user_data, struct xdg_wm_base *xdg_wm_base,
+    uint32_t serial)
+{
+  xdg_wm_base_pong (xdg_wm_base, serial);
+}
+
+static const struct xdg_wm_base_listener xdg_wm_base_listener = {
+  handle_xdg_wm_base_ping
+};
+
+static void
+registry_handle_global (void *data, struct wl_registry *registry,
+    uint32_t name, const char *interface, uint32_t version)
+{
+  GstGLWindowWaylandEGL *window_wayland = data;
+
+  GST_TRACE_OBJECT (window_wayland, "registry_handle_global with registry %p, "
+      "interface %s, version %u", registry, interface, version);
+
+  if (g_strcmp0 (interface, "wl_compositor") == 0) {
+    window_wayland->display.compositor =
+        wl_registry_bind (registry, name, &wl_compositor_interface, 1);
+  } else if (g_strcmp0 (interface, "wl_subcompositor") == 0) {
+    window_wayland->display.subcompositor =
+        wl_registry_bind (registry, name, &wl_subcompositor_interface, 1);
+  } else if (g_strcmp0 (interface, "xdg_wm_base") == 0) {
+    window_wayland->display.xdg_wm_base =
+        wl_registry_bind (registry, name, &xdg_wm_base_interface, 1);
+    xdg_wm_base_add_listener (window_wayland->display.xdg_wm_base,
+        &xdg_wm_base_listener, window_wayland);
+  } else if (g_strcmp0 (interface, "wl_shell") == 0) {
+    window_wayland->display.shell =
+        wl_registry_bind (registry, name, &wl_shell_interface, 1);
+  }
+}
+
+static const struct wl_registry_listener registry_listener = {
+  registry_handle_global
+};
+
 static gboolean
 gst_gl_window_wayland_egl_open (GstGLWindow * window, GError ** error)
 {
@@ -529,7 +538,29 @@ gst_gl_window_wayland_egl_open (GstGLWindow * window, GError ** error)
     return FALSE;
   }
 
-  window_egl->window.queue = wl_display_create_queue (display->display);
+  /* we create a proxy wrapper for the display so that we can set the queue on
+   * it. This allows us to avoid sprinkling `wl_proxy_set_queue()` calls for
+   * each wayland resource we create as well as removing a race between
+   * creation and the `wl_proxy_set_queue()` call. */
+  window_egl->display.display = wl_proxy_create_wrapper (display->display);
+  window_egl->window.queue =
+      wl_display_create_queue (window_egl->display.display);
+
+  wl_proxy_set_queue ((struct wl_proxy *) window_egl->display.display,
+      window_egl->window.queue);
+
+  window_egl->display.registry =
+      wl_display_get_registry (window_egl->display.display);
+  wl_registry_add_listener (window_egl->display.registry, &registry_listener,
+      window_egl);
+
+  if (gst_gl_wl_display_roundtrip_queue (window_egl->display.display,
+          display->display, window_egl->window.queue) < 0) {
+    g_set_error (error, GST_GL_WINDOW_ERROR,
+        GST_GL_WINDOW_ERROR_RESOURCE_UNAVAILABLE,
+        "Failed to perform a wayland roundtrip");
+    return FALSE;
+  }
 
   window_egl->wl_source = wayland_event_source_new (display->display,
       window_egl->window.queue);
@@ -574,14 +605,13 @@ gst_gl_window_wayland_egl_set_window_handle (GstGLWindow * window,
 static void
 _roundtrip_async (GstGLWindow * window)
 {
-  GstGLDisplayWayland *display_wayland =
-      GST_GL_DISPLAY_WAYLAND (window->display);
+  GstGLDisplayWayland *display = GST_GL_DISPLAY_WAYLAND (window->display);
   GstGLWindowWaylandEGL *window_egl = GST_GL_WINDOW_WAYLAND_EGL (window);
 
   create_surfaces (window_egl);
 
-  if (gst_gl_wl_display_roundtrip_queue (display_wayland->display,
-          window_egl->window.queue) < 0)
+  if (gst_gl_wl_display_roundtrip_queue (window_egl->display.display,
+          display->display, window_egl->window.queue) < 0)
     GST_WARNING_OBJECT (window, "failed a roundtrip");
 }
 
