@@ -585,6 +585,16 @@ gst_tcp_client_src_get_stats (GstTCPClientSrc * src)
     fd = g_socket_get_fd (src->socket);
 
     if (getsockopt (fd, IPPROTO_TCP, TCP_INFO, &info, &info_len) == 0) {
+      /* this is system-specific */
+#ifdef HAVE_BSD_TCP_INFO
+      gst_structure_set (s,
+          "reordering", G_TYPE_UINT, info.__tcpi_reordering,
+          "unacked", G_TYPE_UINT, info.__tcpi_unacked,
+          "sacked", G_TYPE_UINT, info.__tcpi_sacked,
+          "lost", G_TYPE_UINT, info.__tcpi_lost,
+          "retrans", G_TYPE_UINT, info.__tcpi_retrans,
+          "fackets", G_TYPE_UINT, info.__tcpi_fackets, NULL);
+#elif defined(HAVE_LINUX_TCP_INFO)
       gst_structure_set (s,
           "reordering", G_TYPE_UINT, info.tcpi_reordering,
           "unacked", G_TYPE_UINT, info.tcpi_unacked,
@@ -592,6 +602,7 @@ gst_tcp_client_src_get_stats (GstTCPClientSrc * src)
           "lost", G_TYPE_UINT, info.tcpi_lost,
           "retrans", G_TYPE_UINT, info.tcpi_retrans,
           "fackets", G_TYPE_UINT, info.tcpi_fackets, NULL);
+#endif
     }
   }
 #endif

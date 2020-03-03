@@ -375,6 +375,14 @@ else
     endif
 endif
 
+if cc.has_member('struct tcp_info', '__tcpi_reordering', prefix: '#include <netinet/tcp.h>')
+  core_conf.set('HAVE_BSD_TCP_INFO', true)
+endif
+
+if cc.has_member('struct tcp_info', 'tcpi_reordering', prefix: '#include <netinet/tcp.h>')
+  core_conf.set('HAVE_LINUX_TCP_INFO', true)
+endif
+
 gir = find_program('g-ir-scanner', required : get_option('introspection'))
 gnome = import('gnome')
 build_gir = gir.found() and (not meson.is_cross_build() or get_option('introspection').enabled())
