@@ -23,6 +23,7 @@
 #endif
 
 #include "gsttranscoding.h"
+#include <glib/gi18n-lib.h>
 #include <gst/pbutils/pbutils.h>
 
 #include <gst/pbutils/missing-plugins.h>
@@ -103,14 +104,17 @@ static GstPad *
 _insert_filter (GstTranscodeBin * self, GstPad * sinkpad, GstPad * pad,
     GstCaps * caps)
 {
-  GstPad *filter_src = NULL, *filter_sink = NULL;
-  GstElement *filter = NULL;
+  GstPad *filter_src = NULL, *filter_sink = NULL, *convert_sink, *convert_src;
+  GstElement *filter = NULL, *convert;
   GstObject *filter_parent;
   const gchar *media_type;
+  gboolean audio = TRUE;
 
   media_type = gst_structure_get_name (gst_caps_get_structure (caps, 0));
 
   if (self->video_filter && g_str_has_prefix (media_type, "video")) {
+    audio = FALSE;
+
     if (!g_strcmp0 (media_type, "video/x-raw"))
       filter = self->video_filter;
     else
@@ -145,26 +149,67 @@ _insert_filter (GstTranscodeBin * self, GstPad * sinkpad, GstPad * pad,
   filter_src = filter->srcpads->data;
   GST_OBJECT_UNLOCK (filter);
 
-  gst_bin_add (GST_BIN (self), gst_object_ref (filter));
-  if (G_UNLIKELY (gst_pad_link (pad, filter_sink) != GST_PAD_LINK_OK)) {
-    GstCaps *othercaps = gst_pad_get_pad_template_caps (filter_sink);
+  if (audio)
+    convert = gst_element_factory_make ("audioconvert", "filter-convert");
+  else
+    convert = gst_element_factory_make ("videoconvert", "filter-convert");
+
+  if (!convert) {
+    GST_ELEMENT_ERROR (self, CORE, MISSING_PLUGIN,
+        (_("Missing element '%s' - check your GStreamer installation."),
+            audio ? "audioconvert" : "videoconvert"),
+        ("Cannot add filter as %s element is missing",
+            audio ? "audioconvert" : "videoconvert"));
+    return pad;
+  }
+
+  gst_bin_add_many (GST_BIN (self), convert, gst_object_ref (filter), NULL);
+
+  convert_sink = gst_element_get_static_pad (convert, "sink");
+  g_assert (convert_sink);
+
+  if (G_UNLIKELY (gst_pad_link (pad, convert_sink) != GST_PAD_LINK_OK)) {
+    GstCaps *othercaps = gst_pad_get_pad_template_caps (convert_sink);
     caps = gst_pad_get_current_caps (pad);
 
     GST_ELEMENT_ERROR (self, CORE, PAD,
         (NULL),
         ("Couldn't link pads \n\n %" GST_PTR_FORMAT ": %" GST_PTR_FORMAT
             "\n\n  and \n\n %" GST_PTR_FORMAT ": %" GST_PTR_FORMAT
-            "\n\n", pad, caps, filter_sink, othercaps));
+            "\n\n", pad, caps, convert_sink, othercaps));
 
+    gst_object_unref (convert_sink);
     gst_caps_unref (caps);
     gst_caps_unref (othercaps);
   }
 
+  gst_object_unref (convert_sink);
+
+  convert_src = gst_element_get_static_pad (convert, "src");
+  g_assert (convert_src);
+
+  if (G_UNLIKELY (gst_pad_link (convert_src, filter_sink) != GST_PAD_LINK_OK)) {
+    GstCaps *othercaps = gst_pad_get_pad_template_caps (filter_sink);
+    caps = gst_pad_get_pad_template_caps (convert_src);
+
+    GST_ELEMENT_ERROR (self, CORE, PAD,
+        (NULL),
+        ("Couldn't link pads \n\n %" GST_PTR_FORMAT ": %" GST_PTR_FORMAT
+            "\n\n  and \n\n %" GST_PTR_FORMAT ": %" GST_PTR_FORMAT
+            "\n\n", convert_src, caps, filter_sink, othercaps));
+
+    gst_object_unref (convert_src);
+    gst_caps_unref (caps);
+    gst_caps_unref (othercaps);
+  }
+
+  gst_object_unref (convert_src);
+
+  gst_element_sync_state_with_parent (convert);
   gst_element_sync_state_with_parent (filter);
 
   GST_DEBUG_OBJECT (self, "added %s filter '%s'",
-      filter == self->video_filter ? "video" : "audio",
-      GST_ELEMENT_NAME (filter));
+      audio ? "audio" : "video", GST_ELEMENT_NAME (filter));
 
   return filter_src;
 }
