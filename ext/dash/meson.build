@@ -46,7 +46,8 @@ if xml2_dep.found()
     link_args : noseh_link_args,
     include_directories : [configinc, libsinc],
     dependencies : [gstadaptivedemux_dep, gsturidownloader_dep, gsttag_dep,
-                    gstnet_dep, gstbase_dep, gstisoff_dep, gio_dep, xml2_dep],
+                    gstnet_dep, gstpbutils_dep, gstbase_dep, gstisoff_dep,
+                    gio_dep, xml2_dep],
     install : true,
     install_dir : plugins_install_dir,
   )
