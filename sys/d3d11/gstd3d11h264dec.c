@@ -709,7 +709,6 @@ gst_d3d11_h264_dec_output_picture (GstH264Decoder * decoder,
     GstH264Picture * picture)
 {
   GstD3D11H264Dec *self = GST_D3D11_H264_DEC (decoder);
-  GList *pending_frames, *iter;
   GstVideoCodecFrame *frame = NULL;
   GstBuffer *output_buffer = NULL;
   GstFlowReturn ret;
@@ -726,28 +725,8 @@ gst_d3d11_h264_dec_output_picture (GstH264Decoder * decoder,
     return FALSE;
   }
 
-  pending_frames = gst_video_decoder_get_frames (GST_VIDEO_DECODER (self));
-  for (iter = pending_frames; iter; iter = g_list_next (iter)) {
-    GstVideoCodecFrame *tmp;
-    GstH264Picture *other_pic;
-
-    tmp = (GstVideoCodecFrame *) iter->data;
-    other_pic = gst_video_codec_frame_get_user_data (tmp);
-    if (!other_pic) {
-      /* FIXME: what should we do here? */
-      GST_WARNING_OBJECT (self,
-          "Codec frame %p does not have corresponding picture object", tmp);
-      continue;
-    }
-
-    if (other_pic == picture) {
-      frame = gst_video_codec_frame_ref (tmp);
-      break;
-    }
-  }
-
-  g_list_free_full (pending_frames,
-      (GDestroyNotify) gst_video_codec_frame_unref);
+  frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
+      picture->system_frame_number);
 
   /* if downstream is d3d11 element and forward playback case,
    * expose our decoder view without copy. In case of reverse playback, however,
