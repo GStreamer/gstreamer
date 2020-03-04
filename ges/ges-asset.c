@@ -278,7 +278,7 @@ async_initable_init_async (GAsyncInitable * initable, gint io_priority,
 
   task = g_task_new (asset, cancellable, callback, user_data);
 
-  ges_asset_cache_put (g_object_ref (asset), task);
+  ges_asset_cache_put (gst_object_ref (asset), task);
   switch (GES_ASSET_GET_CLASS (asset)->start_loading (asset, &error)) {
     case GES_ASSET_LOADING_ERROR:
     {
@@ -701,6 +701,7 @@ ges_asset_cache_set_loaded (GType extractable_type, const gchar * id,
   return TRUE;
 }
 
+/* transfer full for both @asset and @task */
 void
 ges_asset_cache_put (GESAsset * asset, GTask * task)
 {
@@ -728,12 +729,15 @@ ges_asset_cache_put (GESAsset * asset, GTask * task)
 
     entry = g_slice_new0 (GESAssetCacheEntry);
 
+    /* transfer asset to entry */
     entry->asset = asset;
     if (task)
       entry->results = g_list_prepend (entry->results, task);
     g_hash_table_insert (entries_table, (gpointer) g_strdup (asset_id),
         (gpointer) entry);
   } else {
+    /* give up the reference we were given */
+    gst_object_unref (asset);
     if (task) {
       GST_DEBUG ("%s already in cache, adding result %p", asset_id, task);
       entry->results = g_list_prepend (entry->results, task);
@@ -1097,6 +1101,7 @@ _ensure_asset_for_wrong_id (const gchar * wrong_id, GType extractable_type,
   asset = g_object_new (GES_TYPE_ASSET, "id", wrong_id,
       "extractable-type", extractable_type, NULL);
 
+  /* transfer ownership to the cache */
   ges_asset_cache_put (asset, NULL);
   ges_asset_cache_set_loaded (extractable_type, wrong_id, error);
 
@@ -1174,7 +1179,8 @@ ges_asset_request (GType extractable_type, const gchar * id, GError ** error)
   gchar *real_id;
 
   GError *lerr = NULL;
-  GESAsset *asset = NULL;
+  GESAsset *asset = NULL, *proxy;
+  gboolean proxied = TRUE;
 
   g_return_val_if_fail (error == NULL || *error == NULL, NULL);
   g_return_val_if_fail (g_type_is_a (extractable_type, G_TYPE_OBJECT), NULL);
@@ -1191,45 +1197,51 @@ ges_asset_request (GType extractable_type, const gchar * id, GError ** error)
   if (lerr)
     g_error_free (lerr);
 
+  /* asset owned by cache */
   asset = ges_asset_cache_lookup (extractable_type, real_id);
   if (asset) {
-    while (TRUE) {
+    while (proxied) {
+      proxied = FALSE;
       switch (asset->priv->state) {
         case ASSET_INITIALIZED:
-          gst_object_ref (asset);
-          goto done;
+          break;
         case ASSET_INITIALIZING:
           asset = NULL;
-          goto done;
+          break;
         case ASSET_PROXIED:
-          if (asset->priv->proxies == NULL) {
+          proxy = ges_asset_get_proxy (asset);
+          if (proxy == NULL) {
             GST_ERROR ("Proxied against an asset we do not"
                 " have in cache, something massively screwed");
-
-            goto done;
+            asset = NULL;
+          } else {
+            proxied = TRUE;
+            do {
+              asset = proxy;
+            } while ((proxy = ges_asset_get_proxy (asset)));
           }
-
-          asset = asset->priv->proxies->data;
-          while (ges_asset_get_proxy (asset))
-            asset = ges_asset_get_proxy (asset);
-
           break;
         case ASSET_NEEDS_RELOAD:
           GST_DEBUG_OBJECT (asset, "Asset in cache and needs reload");
-          start_loading (asset);
-
-          goto done;
+          if (!start_loading (asset)) {
+            GST_ERROR ("Failed to reload the asset for id %s", id);
+            asset = NULL;
+          }
+          break;
         case ASSET_INITIALIZED_WITH_ERROR:
           GST_WARNING_OBJECT (asset, "Initialized with error, not returning");
           if (asset->priv->error && error)
             *error = g_error_copy (asset->priv->error);
           asset = NULL;
-          goto done;
+          break;
         default:
           GST_WARNING ("Case %i not handle, returning", asset->priv->state);
-          goto done;
+          asset = NULL;
+          break;
       }
     }
+    if (asset)
+      gst_object_ref (asset);
   } else {
     GObjectClass *klass;
     GInitableIface *iface;
@@ -1251,7 +1263,6 @@ ges_asset_request (GType extractable_type, const gchar * id, GError ** error)
     g_type_class_unref (klass);
   }
 
-done:
   if (real_id)
     g_free (real_id);
 
