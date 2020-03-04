@@ -548,10 +548,12 @@ finish_frame:
   gst_v4l2_request_set_done (request);
   frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
       picture->system_frame_number);
-
   g_return_val_if_fail (frame, GST_FLOW_ERROR);
+  g_return_val_if_fail (frame->output_buffer, GST_FLOW_ERROR);
 
-  gst_h264_picture_set_user_data (picture, NULL, NULL);
+  /* Hold on reference buffers for the rest of the picture lifetime */
+  gst_h264_picture_set_user_data (picture,
+      gst_buffer_ref (frame->output_buffer), (GDestroyNotify) gst_buffer_unref);
   return gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
 }
 
