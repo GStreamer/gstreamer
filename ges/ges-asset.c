@@ -429,11 +429,6 @@ ges_asset_set_property (GObject * object, guint property_id,
     case PROP_PROXY:
       ges_asset_set_proxy (asset, g_value_get_object (value));
       break;
-    case PROP_PROXY_TARGET:
-      /* FIXME: Need to remove self as a proxy from the previous target
-       * and only call the below when the new target is not NULL */
-      ges_asset_set_proxy (g_value_get_object (value), asset);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -520,7 +515,7 @@ ges_asset_class_init (GESAssetClass * klass)
    */
   _properties[PROP_PROXY_TARGET] =
       g_param_spec_object ("proxy-target", "Proxy target",
-      "The target of a proxy asset.", GES_TYPE_ASSET, G_PARAM_READWRITE);
+      "The target of a proxy asset.", GES_TYPE_ASSET, G_PARAM_READABLE);
 
   g_object_class_install_properties (object_class, PROP_LAST, _properties);
 
