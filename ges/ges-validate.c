@@ -474,6 +474,20 @@ check_property (GQuark field_id, GValue * expected_value, PropertyData * data)
   GstControlBinding *binding = NULL;
 
   if (!data->check_children) {
+    GParamSpec *pspec =
+        g_object_class_find_property (G_OBJECT_GET_CLASS (data->element),
+        property);
+    if (!pspec) {
+      GST_VALIDATE_REPORT_ACTION (data->scenario, data->action,
+          SCENARIO_ACTION_EXECUTION_ERROR,
+          "Could not get property %s on %" GES_FORMAT,
+          property, GES_ARGS (data->element));
+      data->res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+
+      return FALSE;
+    }
+
+    g_value_init (&cvalue, pspec->value_type);
     g_object_get_property (G_OBJECT (data->element), property, &cvalue);
     goto compare;
   }
