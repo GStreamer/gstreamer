@@ -503,7 +503,7 @@ _loading_done (GESFormatter * self)
    * properly set */
   assets = ges_project_list_assets (self->project, GES_TYPE_EXTRACTABLE);
   for (tmp = assets; tmp; tmp = tmp->next) {
-    ges_asset_set_proxy (NULL, tmp->data);
+    ges_asset_finish_proxy (tmp->data);
   }
   g_list_free_full (assets, g_object_unref);
 

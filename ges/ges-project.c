@@ -737,7 +737,7 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, GESProject * project)
     return;
   }
 
-  ges_asset_set_proxy (NULL, asset);
+  ges_asset_finish_proxy (asset);
   ges_project_add_asset (project, asset);
   if (asset)
     gst_object_unref (asset);
@@ -923,7 +923,7 @@ ges_project_create_asset_sync (GESProject * project, const gchar * id,
   }
 
   if (!ges_asset_get_proxy_target (asset))
-    ges_asset_set_proxy (NULL, asset);
+    ges_asset_finish_proxy (asset);
 
   ges_project_add_asset (project, asset);
 

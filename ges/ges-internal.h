@@ -175,11 +175,16 @@ ges_asset_cache_put (GESAsset * asset, GTask *task);
 G_GNUC_INTERNAL gboolean
 ges_asset_cache_set_loaded(GType extractable_type, const gchar * id, GError *error);
 
+/* FIXME: marked as GES_API just so they can be used in tests! */
+
 GES_API GESAsset*
 ges_asset_cache_lookup(GType extractable_type, const gchar * id);
 
 GES_API gboolean
 ges_asset_try_proxy (GESAsset *asset, const gchar *new_id);
+
+G_GNUC_INTERNAL gboolean
+ges_asset_finish_proxy (GESAsset * proxy);
 
 G_GNUC_INTERNAL gboolean
 ges_asset_request_id_update (GESAsset *asset, gchar **proposed_id,

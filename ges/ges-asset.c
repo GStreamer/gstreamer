@@ -160,10 +160,12 @@ struct _GESAssetPrivate
   GESAssetState state;
   GType extractable_type;
 
-  /* When an asset is proxied, instantiating it will
-   * return the asset it points to */
+  /* used internally by try_proxy to pre-set a proxy whilst an asset is
+   * still loading. It can be used later to set the proxy for the asset
+   * once it has finished loading */
   char *proxied_asset_id;
 
+  /* actual list of proxies */
   GList *proxies;
   GESAsset *proxy_target;
 
@@ -769,6 +771,8 @@ ges_asset_request_id_update (GESAsset * asset, gchar ** proposed_id,
       error);
 }
 
+/* pre-set a proxy id whilst the asset is still loading. Once the proxy
+ * is loaded, call ges_asset_finish_proxy (proxy) */
 gboolean
 ges_asset_try_proxy (GESAsset * asset, const gchar * new_id)
 {
@@ -812,6 +816,46 @@ _lookup_proxied_asset (const gchar * id, GESAssetCacheEntry * entry,
   return !g_strcmp0 (asset_id, entry->asset->priv->proxied_asset_id);
 }
 
+/* find the assets that called try_proxy for the asset id of @proxy
+ * and set @proxy as their proxy */
+gboolean
+ges_asset_finish_proxy (GESAsset * proxy)
+{
+  GESAsset *proxied_asset;
+  GHashTable *entries_table;
+  GESAssetCacheEntry *entry;
+
+  LOCK_CACHE;
+  entries_table = g_hash_table_lookup (_get_type_entries (),
+      _extractable_type_name (proxy->priv->extractable_type));
+  entry = g_hash_table_find (entries_table, (GHRFunc) _lookup_proxied_asset,
+      (gpointer) ges_asset_get_id (proxy));
+
+  if (!entry) {
+    UNLOCK_CACHE;
+    GST_DEBUG_OBJECT (proxy, "Not proxying any asset %s", proxy->priv->id);
+    return FALSE;
+  }
+
+  proxied_asset = entry->asset;
+  UNLOCK_CACHE;
+
+  /* If the asset with the matching ->proxied_asset_id is already proxied
+   * by another asset, we actually want @proxy to proxy this instead */
+  while (proxied_asset->priv->proxies)
+    proxied_asset = proxied_asset->priv->proxies->data;
+
+  /* unless it is ourselves. I.e. it is already proxied by us */
+  if (proxied_asset == proxy)
+    return FALSE;
+
+  GST_INFO_OBJECT (proxied_asset,
+      "%s Making sure the proxy chain is fully set.",
+      ges_asset_get_id (entry->asset));
+  ges_asset_finish_proxy (proxied_asset);
+  return ges_asset_set_proxy (proxied_asset, proxy);
+}
+
 /**
  * ges_asset_set_proxy:
  * @asset: The #GESAsset to proxy
@@ -836,7 +880,7 @@ _lookup_proxied_asset (const gchar * id, GESAssetCacheEntry * entry,
 gboolean
 ges_asset_set_proxy (GESAsset * asset, GESAsset * proxy)
 {
-  g_return_val_if_fail (asset == NULL || GES_IS_ASSET (asset), FALSE);
+  g_return_val_if_fail (GES_IS_ASSET (asset), FALSE);
   g_return_val_if_fail (proxy == NULL || GES_IS_ASSET (proxy), FALSE);
   g_return_val_if_fail (asset != proxy, FALSE);
 
@@ -862,40 +906,6 @@ ges_asset_set_proxy (GESAsset * asset, GESAsset * proxy)
     g_object_notify_by_pspec (G_OBJECT (asset), _properties[PROP_PROXY]);
 
     return TRUE;
-  }
-
-  /* FIXME: why are we allowing for a NULL asset? What is the desired
-   * behaviour? */
-  if (asset == NULL) {
-    GHashTable *entries_table;
-    GESAssetCacheEntry *entry;
-
-    LOCK_CACHE;
-    entries_table = g_hash_table_lookup (_get_type_entries (),
-        _extractable_type_name (proxy->priv->extractable_type));
-    entry = g_hash_table_find (entries_table, (GHRFunc) _lookup_proxied_asset,
-        (gpointer) ges_asset_get_id (proxy));
-
-    if (!entry) {
-      UNLOCK_CACHE;
-      GST_DEBUG_OBJECT (asset, "Not proxying any asset %s", proxy->priv->id);
-      return FALSE;
-    }
-
-    asset = entry->asset;
-    UNLOCK_CACHE;
-
-    while (asset->priv->proxies)
-      asset = asset->priv->proxies->data;
-
-    if (asset == proxy)
-      return FALSE;
-
-    GST_INFO_OBJECT (asset, "%s Making sure the proxy chain is fully set.",
-        ges_asset_get_id (entry->asset));
-    if (g_strcmp0 (asset->priv->proxied_asset_id, proxy->priv->id) ||
-        g_strcmp0 (asset->priv->id, proxy->priv->proxied_asset_id))
-      ges_asset_set_proxy (NULL, asset);
   }
 
   if (proxy->priv->proxy_target) {
