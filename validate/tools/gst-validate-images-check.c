@@ -93,7 +93,8 @@ main (int argc, char **argv)
 
   runner = gst_validate_runner_new ();
   ssim =
-      gst_validate_ssim_new (runner, min_avg_similarity, min_lowest_similarity);
+      gst_validate_ssim_new (runner, min_avg_similarity, min_lowest_similarity,
+      0, 1);
 
   gst_validate_ssim_compare_image_files (ssim, argv[1], argv[2], &mssim,
       &lowest, &highest, outfolder);

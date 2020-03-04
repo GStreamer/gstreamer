@@ -129,6 +129,7 @@ runner_stopping (GstValidateRunner * runner, ValidateSsimOverride * self)
   const gchar *compared_files_dir =
       gst_structure_get_string (self->priv->config,
       "reference-images-dir");
+  gint fps_n = 0, fps_d = 1;
 
   if (!self->priv->is_attached) {
     gchar *config_str = gst_structure_to_string (self->priv->config);
@@ -154,8 +155,10 @@ runner_stopping (GstValidateRunner * runner, ValidateSsimOverride * self)
   gst_structure_get_double (self->priv->config, "min-lowest-priority",
       &min_lowest_similarity);
 
+  gst_structure_get_fraction (self->priv->config, "framerate", &fps_n, &fps_d);
   ssim =
-      gst_validate_ssim_new (runner, min_avg_similarity, min_lowest_similarity);
+      gst_validate_ssim_new (runner, min_avg_similarity, min_lowest_similarity,
+      fps_n, fps_d);
 
   nfiles = self->priv->frames->len;
   for (i = 0; i < nfiles; i++) {
@@ -180,10 +183,10 @@ runner_stopping (GstValidateRunner * runner, ValidateSsimOverride * self)
     min_avg = MIN (min_avg, mssim);
     min_min = MIN (lowest, min_min);
     total_avg += mssim;
-    gst_validate_print_position(frame->position, GST_CLOCK_TIME_NONE, 1.0,
-        g_strdup_printf(" %d / %d avg: %f min: %f (Passed: %d failed: %d)",
+    gst_validate_print_position (frame->position, GST_CLOCK_TIME_NONE, 1.0,
+        g_strdup_printf (" %d / %d avg: %f min: %f (Passed: %d failed: %d)",
             i + 1, nfiles, mssim, lowest, npassed, nfailures));
-    g_free(bname);
+    g_free (bname);
   }
 
   gst_validate_printf (NULL,

@@ -71,6 +71,7 @@ struct _GstValidateSsimPrivate
   gfloat min_lowest_similarity;
 
   GHashTable *ref_frames_cache;
+  gint fps_n, fps_d;
 };
 
 G_DEFINE_TYPE_WITH_CODE (GstValidateSsim, gst_validate_ssim,
@@ -531,6 +532,16 @@ _find_frame (GstValidateSsim * self, GArray * frames, GstClockTime ts,
 {
   guint i;
   Frame *lframe = &g_array_index (frames, Frame, 0);
+
+  if (self->priv->fps_n) {
+    gint64 frame_number = gst_util_uint64_scale (ts, self->priv->fps_n,
+        self->priv->fps_d * GST_SECOND);
+
+    if (frames->len < frame_number)
+      return NULL;
+
+    return &g_array_index (frames, Frame, frame_number);
+  }
 
   if (frames->len == 1) {
     Frame *iframe = &g_array_index (frames, Frame, 0);
@@ -1002,13 +1013,16 @@ gst_validate_ssim_init (GstValidateSsim * self)
 
 GstValidateSsim *
 gst_validate_ssim_new (GstValidateRunner * runner,
-    gfloat min_avg_similarity, gfloat min_lowest_similarity)
+    gfloat min_avg_similarity, gfloat min_lowest_similarity,
+    gint fps_n, gint fps_d)
 {
   GstValidateSsim *self =
       g_object_new (GST_VALIDATE_SSIM_TYPE, "validate-runner", runner, NULL);
 
   self->priv->min_avg_similarity = min_avg_similarity;
   self->priv->min_lowest_similarity = min_lowest_similarity;
+  self->priv->fps_n = fps_n;
+  self->priv->fps_d = fps_d;
 
   gst_validate_reporter_set_name (GST_VALIDATE_REPORTER (self),
       g_strdup ("gst-validate-images-checker"));

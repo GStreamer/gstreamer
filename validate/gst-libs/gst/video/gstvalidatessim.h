@@ -60,7 +60,9 @@ GType gst_validate_ssim_get_type                (void);
 
 GstValidateSsim * gst_validate_ssim_new         (GstValidateRunner *runner,
                                                  gfloat min_avg_similarity,
-                                                 gfloat min_lowest_similarity);
+                                                 gfloat min_lowest_similarity,
+                                                 gint fps_n,
+                                                 gint fps_d);
 
 gboolean gst_validate_ssim_compare_image_files  (GstValidateSsim *self, const gchar *ref_file,
                                                  const gchar * file, gfloat * mean, gfloat * lowest,

@@ -54,6 +54,9 @@ The following parameters can be passed in the configuration file:
    used to configure the following configuration expressions. In practice this
    means that it will change the default values for the other configuration
    expressions.
+ - framerate: (GstFraction): The framerate to use to compute frame number from
+   timestamp, allowing to compare frames by 'frame number' instead of trying to
+   match timestamp between reference images and output images.
 
 # Example #
 
