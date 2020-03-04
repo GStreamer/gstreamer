@@ -93,10 +93,14 @@ function onIncomingSDP(sdp) {
 function onLocalDescription(desc) {
     console.log("Got local description: " + JSON.stringify(desc));
     peer_connection.setLocalDescription(desc).then(function() {
-        setStatus("Sending SDP answer");
+        setStatus("Sending SDP " + desc.type);
         sdp = {'sdp': peer_connection.localDescription}
         ws_conn.send(JSON.stringify(sdp));
     });
+}
+
+function generateOffer() {
+    peer_connection.createOffer().then(onLocalDescription).catch(setError);
 }
 
 // ICE candidate received from peer, add it to the peer connection
@@ -116,29 +120,36 @@ function onServerMessage(event) {
                 handleIncomingError(event.data);
                 return;
             }
-            // Handle incoming JSON SDP and ICE messages
-            try {
-                msg = JSON.parse(event.data);
-            } catch (e) {
-                if (e instanceof SyntaxError) {
-                    handleIncomingError("Error parsing incoming JSON: " + event.data);
-                } else {
-                    handleIncomingError("Unknown error parsing response: " + event.data);
+	    if (event.data.startsWith("OFFER_REQUEST")) {
+	      // The peer wants us to set up and then send an offer
+              if (!peer_connection)
+                  createCall(null).then (generateOffer);
+	    }
+            else {
+                // Handle incoming JSON SDP and ICE messages
+                try {
+                    msg = JSON.parse(event.data);
+                } catch (e) {
+                    if (e instanceof SyntaxError) {
+                        handleIncomingError("Error parsing incoming JSON: " + event.data);
+                    } else {
+                        handleIncomingError("Unknown error parsing response: " + event.data);
+                    }
+                    return;
                 }
-                return;
-            }
 
-            // Incoming JSON signals the beginning of a call
-            if (!peer_connection)
-                createCall(msg);
+                // Incoming JSON signals the beginning of a call
+                if (!peer_connection)
+                    createCall(msg);
 
-            if (msg.sdp != null) {
-                onIncomingSDP(msg.sdp);
-            } else if (msg.ice != null) {
-                onIncomingICE(msg.ice);
-            } else {
-                handleIncomingError("Unknown incoming JSON: " + msg);
-            }
+                if (msg.sdp != null) {
+                    onIncomingSDP(msg.sdp);
+                } else if (msg.ice != null) {
+                    onIncomingICE(msg.ice);
+                } else {
+                    handleIncomingError("Unknown incoming JSON: " + msg);
+                }
+	    }
     }
 }
 
@@ -286,7 +297,7 @@ function createCall(msg) {
         return stream;
     }).catch(setError);
 
-    if (!msg.sdp) {
+    if (msg != null && !msg.sdp) {
         console.log("WARNING: First message wasn't an SDP message!?");
     }
 
@@ -300,5 +311,8 @@ function createCall(msg) {
 	ws_conn.send(JSON.stringify({'ice': event.candidate}));
     };
 
-    setStatus("Created peer connection for call, waiting for SDP");
+    if (msg != null)
+        setStatus("Created peer connection for call, waiting for SDP");
+
+    return local_stream_promise;
 }
