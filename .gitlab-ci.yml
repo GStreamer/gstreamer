@@ -12,6 +12,8 @@ stages:
 test manifest:
   variables:
     GIT_STRATEGY: fetch
+  rules:
+    - when: 'always'
   image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/test-manifest:2019-10-23-793476'
   stage: "preparation"
   script:
@@ -24,9 +26,13 @@ test manifest:
 
 .base:
   image: "docker:stable"
+  extends:
+    - '.global_ci_policy'
+  rules:
+    - when: 'manual'
+      allow_failure: true
   services:
     - docker:dind
-  when: 'manual'
   variables:
     # When using dind, it's wise to use the overlayfs driver for
     # improved performance.
@@ -112,18 +118,21 @@ android docker:
     DOCKERFILE: "docker/android/Dockerfile"
   extends: .base
 
-.build local:
-  extends: '.build'
+.local_rules: &local_rules
   rules:
     - if: '$CI_COMMIT_REF_NAME == "master" && $CI_PROJECT_PATH == "gstreamer/gst-ci"'
       when: 'never'
     - when: 'manual'
+      allow_failure: true
+
+.local_template: &local_template
+  <<: *local_rules
   needs:
     - 'manifest'
 
 # Test the build job against the latest build image tag and the local manifest
 build fedora x86_64 local:
-  extends: '.build local'
+  extends: '.build'
   stage: 'build'
   image: "${CI_REGISTRY_IMAGE}/amd64/fedora:latest"
   artifacts:
@@ -132,26 +141,35 @@ build fedora x86_64 local:
     paths:
       - "manifest.xml"
       - "gst-build/"
+  <<: *local_template
 
 build cerbero fedora x86_64 local:
   extends: '.cerbero fedora x86_64'
   image: "${CI_REGISTRY_IMAGE}/amd64/cerbero-fedora:latest"
+  <<: *local_template
 
 build cerbero cross-android universal local:
   extends: '.cerbero cross-android universal'
   image: "${CI_REGISTRY_IMAGE}/amd64/cerbero-fedora:latest"
+  <<: *local_template
 
 build cerbero cross win32 local:
   extends: '.cerbero cross win32'
   image: "${CI_REGISTRY_IMAGE}/amd64/cerbero-fedora:latest"
+  <<: *local_template
 
 build cerbero cross win64 local:
   extends: '.cerbero cross win64'
   image: "${CI_REGISTRY_IMAGE}/amd64/cerbero-fedora:latest"
+  <<: *local_template
 
+# Note: dependencies: will be deprecated in the future, but current manual
+# jobs with needs: (even if they are allowed to fail) will leave the pipeline
+# pending.
 .test fedora x86_64 local:
   image: '${CI_REGISTRY_IMAGE}/amd64/fedora:latest'
   extends: '.test'
+  <<: *local_rules
   dependencies:
     - 'build fedora x86_64 local'
 
@@ -163,8 +181,9 @@ check fedora local:
 cross-android universal examples local:
   extends: '.cross-android universal examples'
   image: "${CI_REGISTRY_IMAGE}/amd64/android:latest"
+  <<: *local_rules
   dependencies:
-    - "build cerbero cross-android universal local"
+    - 'build cerbero cross-android universal local'
 
 integration testsuites fedora local:
   extends: '.test fedora x86_64 local'

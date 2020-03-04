@@ -64,6 +64,12 @@ manifest:
   image: $MANIFEST_IMAGE
   extends:
     - '.global_ci_policy'
+  rules:
+    - if: '$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME'
+      when: 'always'
+    - if: '$CI_PROJECT_PATH == "gstreamer/cerbero"'
+      when: 'always'
+    - when: 'manual'
   stage: 'preparation'
   script:
     - cd /gst-ci
