@@ -1833,12 +1833,13 @@ gst_validate_execute_action (GstValidateActionType * action_type,
   scenario = gst_validate_action_get_scenario (action);
 
   if (action_type->prepare) {
-    if (action_type->prepare (action) == FALSE) {
+    res = action_type->prepare (action);
+    if (res != GST_VALIDATE_EXECUTE_ACTION_OK) {
       GST_ERROR_OBJECT (scenario, "Action %" GST_PTR_FORMAT
           " could not be prepared", action->structure);
 
       gst_object_unref (scenario);
-      return GST_VALIDATE_EXECUTE_ACTION_ERROR;
+      return res;
     }
   }
 
@@ -2996,7 +2997,7 @@ gst_validate_scenario_update_segment_from_seek (GstValidateScenario * scenario,
   }
 }
 
-static gboolean
+static GstValidateExecuteActionReturn
 gst_validate_action_default_prepare_func (GstValidateAction * action)
 {
   gint i;
@@ -3017,17 +3018,17 @@ gst_validate_action_default_prepare_func (GstValidateAction * action)
   }
 
   if (action->repeat > 0)
-    return TRUE;
+    return GST_VALIDATE_EXECUTE_ACTION_OK;
 
   if (!gst_structure_has_field (action->structure, "repeat"))
-    return TRUE;
+    return GST_VALIDATE_EXECUTE_ACTION_OK;
 
   if (gst_structure_get_int (action->structure, "repeat", &action->repeat))
-    return TRUE;
+    return GST_VALIDATE_EXECUTE_ACTION_OK;
 
   if (gst_structure_get_double (action->structure, "repeat",
           (gdouble *) & action->repeat))
-    return TRUE;
+    return GST_VALIDATE_EXECUTE_ACTION_OK;
 
   repeat_expr =
       g_strdup (gst_structure_get_string (action->structure, "repeat"));
@@ -3035,7 +3036,7 @@ gst_validate_action_default_prepare_func (GstValidateAction * action)
     g_error ("Invalid value for 'repeat' in %s",
         gst_structure_to_string (action->structure));
 
-    return FALSE;
+    return GST_VALIDATE_EXECUTE_ACTION_ERROR;
   }
 
   action->repeat =
@@ -3045,7 +3046,7 @@ gst_validate_action_default_prepare_func (GstValidateAction * action)
     g_error ("Invalid value for 'repeat' in %s: %s",
         gst_structure_to_string (action->structure), error);
 
-    return FALSE;
+    return GST_VALIDATE_EXECUTE_ACTION_ERROR;
   }
   g_free (repeat_expr);
 
@@ -3057,7 +3058,7 @@ gst_validate_action_default_prepare_func (GstValidateAction * action)
   if (scenario)
     gst_object_unref (scenario);
 
-  return TRUE;
+  return GST_VALIDATE_EXECUTE_ACTION_OK;
 }
 
 static void

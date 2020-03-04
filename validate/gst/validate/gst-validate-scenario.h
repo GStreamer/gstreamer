@@ -84,7 +84,7 @@ typedef GstValidateExecuteActionReturn (*GstValidateExecuteAction) (GstValidateS
  * Returns: %TRUE if the action could be prepared and is ready to be run
  *          , %FALSE otherwise
  */
-typedef gboolean (*GstValidatePrepareAction) (GstValidateAction * action);
+typedef GstValidateExecuteActionReturn (*GstValidatePrepareAction) (GstValidateAction * action);
 
 
 typedef struct _GstValidateActionPrivate          GstValidateActionPrivate;
