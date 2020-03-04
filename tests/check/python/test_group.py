@@ -359,3 +359,49 @@ class TestGroup(common.GESSimpleTimelineTest):
                 (GES.TestClip, 30, 10),
             ],
         ], groups=[group_clips])
+
+    def test_group_priority(self):
+        self.track_types = [GES.TrackType.AUDIO]
+        self.setUp()
+
+        clip0 = self.append_clip()
+        clip1 = self.append_clip(1)
+        clip1.props.start = 20
+
+        group = GES.Group.new()
+        group.add(clip0)
+        group.add(clip1)
+        self.assertEqual(group.get_layer_priority(), 0)
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 0, 10),
+            ],
+            [
+                (GES.TestClip, 20, 10),
+            ]
+        ], groups=[(clip0, clip1)])
+        group.remove(clip0)
+        self.assertEqual(group.get_layer_priority(), 1)
+
+        clip1.edit(self.timeline.get_layers(), 2, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, clip1.start)
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 0, 10),
+            ],
+            [ ],
+            [
+                (GES.TestClip, 20, 10),
+            ]
+        ], groups=[(clip1,)])
+
+        self.assertEqual(group.get_layer_priority(), 2)
+        self.assertTrue(clip1.edit(self.timeline.get_layers(), 0, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, clip1.start))
+
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 0, 10),
+                (GES.TestClip, 20, 10),
+            ],
+            [ ],
+            [ ]
+        ], groups=[(clip1,)])

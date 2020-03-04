@@ -565,10 +565,11 @@ _disconnect_signals (GESGroup * group, GESTimelineElement * child,
 static void
 _child_removed (GESContainer * group, GESTimelineElement * child)
 {
-  GList *children;
+  GList *children, *tmp;
   GstClockTime first_child_start;
   gchar *signals_ids_key;
   ChildSignalIds *sigids;
+  guint32 new_priority = G_MAXUINT32;
   GESGroupPrivate *priv = GES_GROUP (group)->priv;
 
   _ges_container_sort_children (group);
@@ -588,8 +589,15 @@ _child_removed (GESContainer * group, GESTimelineElement * child)
     return;
   }
 
+  for (tmp = children; tmp; tmp = tmp->next)
+    new_priority =
+        MIN (new_priority, ges_timeline_element_get_priority (tmp->data));
+
   priv->setting_value = TRUE;
   ELEMENT_SET_FLAG (group, GES_TIMELINE_ELEMENT_SET_SIMPLE);
+  if (_PRIORITY (group) != new_priority)
+    ges_timeline_element_set_priority (GES_TIMELINE_ELEMENT (group),
+        new_priority);
   first_child_start = GES_TIMELINE_ELEMENT_START (children->data);
   if (first_child_start > GES_TIMELINE_ELEMENT_START (group)) {
     group->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;

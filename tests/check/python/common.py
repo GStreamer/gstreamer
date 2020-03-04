@@ -198,6 +198,8 @@ class GESSimpleTimelineTest(GESTest):
         return clip
 
     def append_clip(self, layer=0):
+        while len(self.timeline.get_layers()) < layer + 1:
+            self.timeline.append_layer()
         layer = self.timeline.get_layers()[layer]
         clip = GES.TestClip()
         clip.props.start = layer.get_duration()
