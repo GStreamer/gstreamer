@@ -409,6 +409,8 @@ static void gst_qt_mux_release_pad (GstElement * element, GstPad * pad);
 /* event */
 static gboolean gst_qt_mux_sink_event (GstAggregator * agg,
     GstAggregatorPad * agg_pad, GstEvent * event);
+static gboolean gst_qt_mux_sink_event_pre_queue (GstAggregator * self,
+    GstAggregatorPad * aggpad, GstEvent * event);
 
 /* aggregator */
 static GstAggregatorPad *gst_qt_mux_create_new_pad (GstAggregator * self,
@@ -639,6 +641,7 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
   gstelement_class->release_pad = GST_DEBUG_FUNCPTR (gst_qt_mux_release_pad);
 
   gstagg_class->sink_event = gst_qt_mux_sink_event;
+  gstagg_class->sink_event_pre_queue = gst_qt_mux_sink_event_pre_queue;
   gstagg_class->aggregate = gst_qt_mux_aggregate;
   gstagg_class->clip = gst_qt_mux_clip_running_time;
   gstagg_class->start = gst_qt_mux_start;
@@ -5293,6 +5296,10 @@ gst_qt_mux_can_renegotiate (GstQTMux * qtmux, GstPad * pad, GstCaps * caps)
    * the old caps are a subset of the new one (this means upstream
    * added more info to the caps, as both should be 'fixed' caps) */
   current_caps = gst_pad_get_current_caps (pad);
+
+  if (!current_caps)
+    return TRUE;
+
   g_assert (caps != NULL);
 
   if (!gst_qtmux_caps_is_subset_full (qtmux, current_caps, caps)) {
@@ -5300,14 +5307,12 @@ gst_qt_mux_can_renegotiate (GstQTMux * qtmux, GstPad * pad, GstCaps * caps)
     GST_WARNING_OBJECT (qtmux,
         "pad %s refused renegotiation to %" GST_PTR_FORMAT,
         GST_PAD_NAME (pad), caps);
-    gst_object_unref (qtmux);
     return FALSE;
   }
 
   GST_DEBUG_OBJECT (qtmux,
       "pad %s accepted renegotiation to %" GST_PTR_FORMAT " from %"
       GST_PTR_FORMAT, GST_PAD_NAME (pad), caps, current_caps);
-  gst_object_unref (qtmux);
   gst_caps_unref (current_caps);
 
   return TRUE;
@@ -5330,9 +5335,6 @@ gst_qt_mux_audio_sink_set_caps (GstQTMuxPad * qtpad, GstCaps * caps)
   gint constant_size = 0;
   const gchar *stream_format;
   guint32 timescale;
-
-  if (qtpad->fourcc)
-    return gst_qt_mux_can_renegotiate (qtmux, pad, caps);
 
   GST_DEBUG_OBJECT (qtmux, "%s:%s, caps=%" GST_PTR_FORMAT,
       GST_DEBUG_PAD_NAME (pad), caps);
@@ -5680,9 +5682,6 @@ gst_qt_mux_video_sink_set_caps (GstQTMuxPad * qtpad, GstCaps * caps)
   gboolean sync = FALSE;
   int par_num, par_den;
   const gchar *multiview_mode;
-
-  if (qtpad->fourcc)
-    return gst_qt_mux_can_renegotiate (qtmux, pad, caps);
 
   GST_DEBUG_OBJECT (qtmux, "%s:%s, caps=%" GST_PTR_FORMAT,
       GST_DEBUG_PAD_NAME (pad), caps);
@@ -6229,9 +6228,6 @@ gst_qt_mux_subtitle_sink_set_caps (GstQTMuxPad * qtpad, GstCaps * caps)
   GstStructure *structure;
   SubtitleSampleEntry entry = { 0, };
 
-  if (qtpad->fourcc)
-    return gst_qt_mux_can_renegotiate (qtmux, pad, caps);
-
   GST_DEBUG_OBJECT (qtmux, "%s:%s, caps=%" GST_PTR_FORMAT,
       GST_DEBUG_PAD_NAME (pad), caps);
 
@@ -6283,9 +6279,6 @@ gst_qt_mux_caption_sink_set_caps (GstQTMuxPad * qtpad, GstCaps * caps)
   guint32 fourcc_entry;
   guint32 timescale;
 
-  if (qtpad->fourcc)
-    return gst_qt_mux_can_renegotiate (qtmux, pad, caps);
-
   GST_DEBUG_OBJECT (qtmux, "%s:%s, caps=%" GST_PTR_FORMAT,
       GST_DEBUG_PAD_NAME (pad), caps);
 
@@ -6336,6 +6329,34 @@ refuse_caps:
     return FALSE;
   }
 }
+
+static GstFlowReturn
+gst_qt_mux_sink_event_pre_queue (GstAggregator * agg,
+    GstAggregatorPad * agg_pad, GstEvent * event)
+{
+  GstAggregatorClass *agg_class = GST_AGGREGATOR_CLASS (parent_class);
+  GstQTMux *qtmux;
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  qtmux = GST_QT_MUX_CAST (agg);
+
+  if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS) {
+    GstCaps *caps;
+
+    gst_event_parse_caps (event, &caps);
+    if (!gst_qt_mux_can_renegotiate (qtmux, GST_PAD (agg_pad), caps)) {
+      gst_event_unref (event);
+      event = NULL;
+      ret = GST_FLOW_NOT_NEGOTIATED;
+    }
+  }
+
+  if (event != NULL)
+    ret = agg_class->sink_event_pre_queue (agg, agg_pad, event);
+
+  return ret;
+}
+
 
 static gboolean
 gst_qt_mux_sink_event (GstAggregator * agg, GstAggregatorPad * agg_pad,
