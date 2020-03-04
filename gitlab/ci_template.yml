@@ -58,6 +58,7 @@ variables:
       - 'stuck_or_timeout_failure'
       - 'scheduler_failure'
       - 'api_failure'
+  interruptible: true
 
 manifest:
   image: $MANIFEST_IMAGE
