@@ -556,7 +556,7 @@ build msys2 :
     - test "x${CERBERO_OVERRIDDEN_DIST_DIR}" != "x"
           && mkdir -p ${CERBERO_HOME}/dist/${ARCH}
           && rsync -aH ${CERBERO_OVERRIDDEN_DIST_DIR}/ ${CERBERO_HOME}/dist/${ARCH}
-    - tar -C ${CERBERO_HOME} -czf $CERBERO_DEPS
+    - tar -C ${CERBERO_HOME} --exclude=var/tmp -czf $CERBERO_DEPS
               build-tools build-tools.cache
               dist/${ARCH} ${ARCH}.cache
   only:
