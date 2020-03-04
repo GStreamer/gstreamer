@@ -905,12 +905,14 @@ _collate_ice_gathering_states (GstWebRTCBin * webrtc)
         i);
     WebRTCTransceiver *trans = WEBRTC_TRANSCEIVER (rtp_trans);
     TransportStream *stream = trans->stream;
+    GstWebRTCDTLSTransport *dtls_transport;
     GstWebRTCICETransport *transport, *rtcp_transport;
     GstWebRTCICEGatheringState ice_state;
     gboolean rtcp_mux = FALSE;
 
-    if (rtp_trans->stopped) {
-      GST_TRACE_OBJECT (webrtc, "transceiver %p stopped", rtp_trans);
+    if (rtp_trans->stopped || stream == NULL) {
+      GST_TRACE_OBJECT (webrtc, "transceiver %p stopped or unassociated",
+          rtp_trans);
       continue;
     }
 
@@ -922,7 +924,13 @@ _collate_ice_gathering_states (GstWebRTCBin * webrtc)
 
     g_object_get (stream, "rtcp-mux", &rtcp_mux, NULL);
 
-    transport = webrtc_transceiver_get_dtls_transport (rtp_trans)->transport;
+    dtls_transport = webrtc_transceiver_get_dtls_transport (rtp_trans);
+    if (dtls_transport == NULL) {
+      GST_WARNING ("Transceiver %p has no DTLS transport", rtp_trans);
+      continue;
+    }
+
+    transport = dtls_transport->transport;
 
     /* get gathering state */
     g_object_get (transport, "gathering-state", &ice_state, NULL);
@@ -932,8 +940,12 @@ _collate_ice_gathering_states (GstWebRTCBin * webrtc)
     if (ice_state != STATE (COMPLETE))
       all_completed = FALSE;
 
-    rtcp_transport =
-        webrtc_transceiver_get_rtcp_dtls_transport (rtp_trans)->transport;
+    dtls_transport = webrtc_transceiver_get_rtcp_dtls_transport (rtp_trans);
+    if (dtls_transport == NULL) {
+      GST_WARNING ("Transceiver %p has no DTLS RTCP transport", rtp_trans);
+      continue;
+    }
+    rtcp_transport = dtls_transport->transport;
 
     if (!rtcp_mux && rtcp_transport && rtcp_transport != transport) {
       g_object_get (rtcp_transport, "gathering-state", &ice_state, NULL);
@@ -4751,6 +4763,9 @@ gst_webrtc_bin_add_transceiver (GstWebRTCBin * webrtc,
       NULL);
 
   trans = _create_webrtc_transceiver (webrtc, direction, -1);
+  GST_LOG_OBJECT (webrtc,
+      "Created new unassociated transceiver %" GST_PTR_FORMAT, trans);
+
   rtp_trans = GST_WEBRTC_RTP_TRANSCEIVER (trans);
   if (caps)
     rtp_trans->codec_preferences = gst_caps_ref (caps);
@@ -5573,10 +5588,13 @@ gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
 
     pad = _create_pad_for_sdp_media (webrtc, GST_PAD_SINK, serial);
     trans = _find_transceiver_for_mline (webrtc, serial);
-    if (!trans)
+    if (!trans) {
       trans =
           GST_WEBRTC_RTP_TRANSCEIVER (_create_webrtc_transceiver (webrtc,
               GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDRECV, serial));
+      GST_LOG_OBJECT (webrtc, "Created new transceiver %" GST_PTR_FORMAT
+          " for mline %u", trans, serial);
+    }
     pad->trans = gst_object_ref (trans);
 
     pad->block_id = gst_pad_add_probe (GST_PAD (pad), GST_PAD_PROBE_TYPE_BLOCK |
