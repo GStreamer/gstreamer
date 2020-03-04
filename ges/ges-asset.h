@@ -91,6 +91,7 @@ struct _GESAsset
  * failed to load. @error is the error given by
  * ges_asset_request_finish (). Returns: %TRUE if a new id for @self was
  * passed to @proposed_new_id.
+ * @proxied: Deprecated: 1.18: This vmethod is no longer called.
  */
 /* FIXME: add documentation for inform_proxy when it is used properly */
 struct _GESAssetClass

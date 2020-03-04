@@ -523,7 +523,6 @@ ges_asset_class_init (GESAssetClass * klass)
   klass->extract = ges_asset_extract_default;
   klass->request_id_update = ges_asset_request_id_update_default;
   klass->inform_proxy = NULL;
-  /* FIXME: ->proxied vmethod unset */
 
   GST_DEBUG_CATEGORY_INIT (ges_asset_debug, "ges-asset",
       GST_DEBUG_FG_BLUE | GST_DEBUG_BOLD, "GES Asset");
