@@ -40,7 +40,9 @@
 #define SUPPORTED_RATECONTROLS                          \
   (GST_VAAPI_RATECONTROL_MASK (CQP) |                   \
    GST_VAAPI_RATECONTROL_MASK (CBR) |                   \
-   GST_VAAPI_RATECONTROL_MASK (VBR))
+   GST_VAAPI_RATECONTROL_MASK (VBR) |                   \
+   GST_VAAPI_RATECONTROL_MASK (ICQ) |                   \
+   GST_VAAPI_RATECONTROL_MASK (QVBR))
 
 /* Supported set of tuning options, within this implementation */
 #define SUPPORTED_TUNE_OPTIONS                          \
@@ -111,6 +113,7 @@ struct _GstVaapiEncoderH265
   guint32 ctu_height;
   guint32 luma_width;
   guint32 luma_height;
+  guint32 quality_factor;
   GstClockTime cts_offset;
   gboolean config_changed;
   gboolean low_delay_b;
@@ -1970,6 +1973,14 @@ ensure_control_rate_params (GstVaapiEncoderH265 * encoder)
   if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CQP)
     return TRUE;
 
+#if VA_CHECK_VERSION(1,1,0)
+  if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_ICQ) {
+    GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder).ICQ_quality_factor =
+        encoder->quality_factor;
+    return TRUE;
+  }
+#endif
+
   /* RateControl params */
   GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder).bits_per_second =
       encoder->bitrate_bits;
@@ -1986,6 +1997,11 @@ ensure_control_rate_params (GstVaapiEncoderH265 * encoder)
 #if VA_CHECK_VERSION(1,0,0)
   GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder).rc_flags.bits.mb_rate_control =
       (guint) encoder->mbbrc;
+#endif
+
+#if VA_CHECK_VERSION(1,3,0)
+  GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder).quality_factor =
+      encoder->quality_factor;
 #endif
 
   /* HRD params */
@@ -2105,6 +2121,7 @@ ensure_bitrate (GstVaapiEncoderH265 * encoder)
   switch (GST_VAAPI_ENCODER_RATE_CONTROL (encoder)) {
     case GST_VAAPI_RATECONTROL_CBR:
     case GST_VAAPI_RATECONTROL_VBR:
+    case GST_VAAPI_RATECONTROL_QVBR:
       if (!base_encoder->bitrate) {
         /* FIXME: Provide better estimation */
         /* Using a 1/6 compression ratio */
@@ -2807,6 +2824,7 @@ enum
   ENCODER_H265_PROP_QP_IB,
   ENCODER_H265_PROP_LOW_DELAY_B,
   ENCODER_H265_PROP_MAX_QP,
+  ENCODER_H265_PROP_QUALITY_FACTOR,
   ENCODER_H265_N_PROPERTIES
 };
 
@@ -2866,6 +2884,9 @@ gst_vaapi_encoder_h265_set_property (GObject * object, guint prop_id,
     case ENCODER_H265_PROP_MAX_QP:
       encoder->max_qp = g_value_get_uint (value);
       break;
+    case ENCODER_H265_PROP_QUALITY_FACTOR:
+      encoder->quality_factor = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
   }
@@ -2917,6 +2938,9 @@ gst_vaapi_encoder_h265_get_property (GObject * object, guint prop_id,
       break;
     case ENCODER_H265_PROP_MAX_QP:
       g_value_set_uint (value, encoder->max_qp);
+      break;
+    case ENCODER_H265_PROP_QUALITY_FACTOR:
+      g_value_set_uint (value, encoder->quality_factor);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -3108,6 +3132,20 @@ gst_vaapi_encoder_h265_class_init (GstVaapiEncoderH265Class * klass)
       "Transforms P frames into predictive B frames."
       " Enable it when P frames are not supported.",
       FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
+      GST_VAAPI_PARAM_ENCODER_EXPOSURE);
+
+  /**
+   * GstVaapiEncoderH265:quality_factor:
+   *
+   * Quality factor used with ICQ/QVBR bitrate control mode.
+   */
+  properties[ENCODER_H265_PROP_QUALITY_FACTOR] =
+      g_param_spec_uint ("quality-factor",
+      "Quality factor for ICQ/QVBR",
+      "quality factor for ICQ/QBVR bitrate control mode"
+      " (lower value means higher quality, higher value means lower quality)",
+      1, 51, 26,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
       GST_VAAPI_PARAM_ENCODER_EXPOSURE);
 
   g_object_class_install_properties (object_class, ENCODER_H265_N_PROPERTIES,
