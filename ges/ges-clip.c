@@ -1428,6 +1428,30 @@ ges_clip_split (GESClip * clip, guint64 position)
     return NULL;
   }
 
+  old_duration = position - start;
+  if (!timeline_tree_can_move_element (timeline_get_tree
+          (GES_TIMELINE_ELEMENT_TIMELINE (clip)), GES_TIMELINE_ELEMENT (clip),
+          GES_TIMELINE_ELEMENT_LAYER_PRIORITY (clip),
+          start, old_duration, NULL)) {
+    GST_WARNING_OBJECT (clip,
+        "Can not split %" GES_FORMAT " at %" GST_TIME_FORMAT
+        " as timeline would be in an illegal" " state.", GES_ARGS (clip),
+        GST_TIME_ARGS (position));
+    return NULL;
+  }
+
+  new_duration = duration + start - position;
+  if (!timeline_tree_can_move_element (timeline_get_tree
+          (GES_TIMELINE_ELEMENT_TIMELINE (clip)), GES_TIMELINE_ELEMENT (clip),
+          GES_TIMELINE_ELEMENT_LAYER_PRIORITY (clip), position, new_duration,
+          NULL)) {
+    GST_WARNING_OBJECT (clip,
+        "Can not split %" GES_FORMAT " at %" GST_TIME_FORMAT
+        " as timeline would end up in an illegal" " state.", GES_ARGS (clip),
+        GST_TIME_ARGS (position));
+    return NULL;
+  }
+
   GST_DEBUG_OBJECT (clip, "Spliting at %" GST_TIME_FORMAT,
       GST_TIME_ARGS (position));
 
@@ -1440,8 +1464,6 @@ ges_clip_split (GESClip * clip, guint64 position)
   media_duration_factor =
       ges_timeline_element_get_media_duration_factor (GES_TIMELINE_ELEMENT
       (clip));
-  new_duration = duration + start - position;
-  old_duration = position - start;
   _set_start0 (GES_TIMELINE_ELEMENT (new_object), position);
   _set_inpoint0 (GES_TIMELINE_ELEMENT (new_object),
       inpoint + old_duration * media_duration_factor);

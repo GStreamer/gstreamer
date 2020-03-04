@@ -561,6 +561,32 @@ class TestInvalidOverlaps(common.GESSimpleTimelineTest):
         self.assertIsNone(clip3.split(12))
         self.assertIsNone(clip3.split(15))
 
+    def test_split_with_transition(self):
+        self.track_types = [GES.TrackType.AUDIO]
+        super().setUp()
+        self.timeline.set_auto_transition(True)
+
+        clip0 = self.add_clip(start=0, in_point=0, duration=50)
+        clip1 = self.add_clip(start=20, in_point=0, duration=50)
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 0, 50),
+                (GES.TransitionClip, 20, 30),
+                (GES.TestClip, 20, 50)
+            ]
+        ])
+
+        # Split should file as the first part of the split
+        # would be fully overlapping clip0
+        self.assertIsNone(clip1.split(40))
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 0, 50),
+                (GES.TransitionClip, 20, 30),
+                (GES.TestClip, 20, 50)
+            ]
+        ])
+
     def test_changing_duration(self):
         clip1 = self.add_clip(start=9, in_point=0, duration=2)
         clip2 = self.add_clip(start=10, in_point=0, duration=2)
