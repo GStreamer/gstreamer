@@ -35,7 +35,22 @@ variables:
     --variants werror
     --timestamps
 
-.global_retry_policy:
+#
+# Global CI policy
+#
+# This can be used to configure global behaviour our our jobs. It also
+# supports some variable to affect the job when:
+#
+#   EXCEPT_PROJECT_REGEX: Will mark to never if that regex match
+#   ONLY_PROJECT_REGEX: Will mark to never if that regex do not match
+#
+.global_ci_policy:
+  rules:
+    - if: '$EXCEPT_PROJECT_REGEX && $CI_PROJECT_NAME =~ $EXCEPT_PROJECT_REGEX'
+      when: 'never'
+    - if: '$ONLY_PROJECT_REGEX && $CI_PROJECT_NAME !~ $ONLY_PROJECT_REGEX'
+      when: 'never'
+    - when: 'on_success'
   retry:
     max: 2
     when:
@@ -47,7 +62,7 @@ variables:
 manifest:
   image: $MANIFEST_IMAGE
   extends:
-    - '.global_retry_policy'
+    - '.global_ci_policy'
   stage: 'preparation'
   script:
     - cd /gst-ci
@@ -62,10 +77,11 @@ manifest:
 gst indent:
   image: $INDENT_IMAGE
   extends:
-    - '.global_retry_policy'
+    - '.global_ci_policy'
   stage: 'preparation'
   variables:
     GIT_STRATEGY: 'fetch'
+    EXCEPT_REGEX: '/^(gstreamer-sharp|gst-integration-testsuites|cerbero|gst-docs)$/'
   script:
     # man indent. grep RETURN VALUE, grab a beer on my behalf...
     - indent --version || true
@@ -80,21 +96,12 @@ gst indent:
           echo 'style diverges, please run gst-indent first'
           exit 1
       fi
-  except:
-    variables:
-      # No point on trying to format C files in those repositories
-      - $CI_PROJECT_NAME == "gstreamer-sharp"
-      - $CI_PROJECT_NAME == "gst-integration-testsuites"
-      - $CI_PROJECT_NAME == "cerbero"
-      - $CI_PROJECT_NAME == "gst-docs"
 
 .build:
   stage: 'build'
   extends:
-    - '.global_retry_policy'
+    - '.global_ci_policy'
   needs:
-    - "manifest"
-  dependencies:
     - "manifest"
   # Taking into account the slowest shared runner + time needed to upload the binaries to artifacts
   # Also need to take into account I/O of pulling docker images and uploading artifacts
@@ -109,6 +116,7 @@ gst indent:
     CARGO_HOME: "/cache/gstreamer/cargo"
 
     MESON_ARGS: "${DEFAULT_MESON_ARGS} ${MESON_BUILDTYPE_ARGS} --werror"
+    EXCEPT_PROJECT_REGEX: '/^(cerbero)$/'
 
   script:
     - ccache --show-stats
@@ -129,9 +137,6 @@ gst indent:
     # Clean the .git repos since we won't need them anymore
     - rm -rf subprojects/*/.git/
     - rm -rf build/subprojects/*/.git/
-  except:
-    variables:
-      - $CI_PROJECT_NAME == "cerbero"
 
 build fedora x86_64:
   extends: '.build'
@@ -139,16 +144,13 @@ build fedora x86_64:
   image: $FEDORA_IMAGE
   variables:
     MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Domx=enabled -Dgst-omx:target=generic -Ddoc=enabled -Drs=disabled ${MESON_BUILDTYPE_ARGS} --werror"
+    EXCEPT_PROJECT_REGEX: '/^(cerbero|gst-plugins-rs)$/'
   artifacts:
     expire_in: '5 days'
     when: always
     paths:
       - "manifest.xml"
       - "gst-build/"
-  except:
-    variables:
-      - $CI_PROJECT_NAME == "cerbero"
-      - $CI_PROJECT_NAME == "gst-plugins-rs"
 
 build nodebug fedora x86_64:
   extends: '.build'
@@ -156,51 +158,31 @@ build nodebug fedora x86_64:
   image: $FEDORA_IMAGE
   variables:
     MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Dgstreamer:gst_debug=false -Domx=enabled -Dgst-omx:target=generic -Drs=disabled ${MESON_BUILDTYPE_ARGS} --werror"
-  except:
-    variables:
-      - $CI_PROJECT_NAME == "cerbero"
-      - $CI_PROJECT_NAME == "gst-docs"
-      - $CI_PROJECT_NAME == "gst-integration-testsuites"
-      - $CI_PROJECT_NAME == "gst-plugins-rs"
+    EXCEPT_PROJECT_REGEX: '/^(cerbero|gst-docs|gst-integration-testsuites|gst-plugins-rs)$/'
 
 build static fedora x86_64:
   extends: 'build fedora x86_64'
   variables:
     MESON_BUILDTYPE_ARGS: "--default-library=static -Dintrospection=disabled -Ddoc=disabled"
-  except:
-    variables:
-      - $CI_PROJECT_NAME == "cerbero"
-      - $CI_PROJECT_NAME == "gst-docs"
-      - $CI_PROJECT_NAME == "gst-integration-testsuites"
-      - $CI_PROJECT_NAME == "gst-plugins-rs"
+    EXCEPT_PROJECT_REGEX: '/^(cerbero|gst-docs|gst-integration-testsuites|gst-plugins-rs)$/'
 
 build static nodebug fedora x86_64:
   extends: 'build nodebug fedora x86_64'
   variables:
     MESON_BUILDTYPE_ARGS: "--default-library=static -Dintrospection=disabled -Ddoc=disabled"
-  except:
-    variables:
-      - $CI_PROJECT_NAME == "cerbero"
-      - $CI_PROJECT_NAME == "gst-docs"
-      - $CI_PROJECT_NAME == "gst-integration-testsuites"
-      - $CI_PROJECT_NAME == "gst-plugins-rs"
+    EXCEPT_PROJECT_REGEX: '/^(cerbero|gst-docs|gst-integration-testsuites|gst-plugins-rs)$/'
 
 build clang fedora x86_64:
   extends: 'build fedora x86_64'
   variables:
     CC: 'ccache clang'
     CXX: 'ccache clang++'
-  except:
-    variables:
-      - $CI_PROJECT_NAME == "cerbero"
-      - $CI_PROJECT_NAME == "gst-docs"
-      - $CI_PROJECT_NAME == "gst-integration-testsuites"
-      - $CI_PROJECT_NAME == "gst-plugins-rs"
+    EXCEPT_PROJECT_REGEX: '/^(cerbero|gst-docs|gst-integration-testsuites|gst-plugins-rs)$/'
 
 .test:
   stage: 'test'
   extends:
-    - '.global_retry_policy'
+    - '.global_ci_policy'
   variables:
     # Disable colored output to avoid weird rendering issues
     GST_DEBUG_NO_COLOR: "true"
@@ -208,6 +190,7 @@ build clang fedora x86_64:
     GST_VALIDATE_LAUNCHER_FORCE_COLORS: "true"
     TIMEOUT_FACTOR: "2"
     CARGO_HOME: "/cache/gstreamer/cargo"
+    EXCEPT_PROJECT_REGEX: '/^(cerbero|gst-examples|gst-docs)$/'
   script:
     - cd gst-build/
     - echo "-> Running ${TEST_SUITE}"
@@ -233,12 +216,6 @@ build clang fedora x86_64:
     reports:
       junit:
         - "validate-logs/*.xml"
-  # We disable the .build above, which this job usually depends upon for cerbero
-  except:
-    variables:
-      - $CI_PROJECT_NAME == "cerbero"
-      - $CI_PROJECT_NAME == "gst-examples"
-      - $CI_PROJECT_NAME == "gst-docs"
 
 .test fedora x86_64:
   image: $FEDORA_IMAGE
@@ -246,21 +223,12 @@ build clang fedora x86_64:
   tags: ['gstreamer']
   needs:
     - 'build fedora x86_64'
-  dependencies:
-    - build fedora x86_64
 
 check fedora:
   extends: '.test fedora x86_64'
   variables:
     TEST_SUITE: "check.gst*"
-  except:
-    variables:
-      - $CI_PROJECT_NAME == "gst-integration-testsuites"
-      - $CI_PROJECT_NAME == "cerbero"
-      - $CI_PROJECT_NAME == "gst-examples"
-      - $CI_PROJECT_NAME == "gst-omx"
-      - $CI_PROJECT_NAME == "gst-docs"
-      - $CI_PROJECT_NAME == "gst-plugins-rs"
+    EXCEPT_PROJECT_REGEX: '/^(cerbero|gst-docs|gst-examples|gst-integration-testsuites|gst-omx|gst-plugins-rs)$/'
 
 integration testsuites fedora:
   extends: '.test fedora x86_64'
@@ -268,12 +236,7 @@ integration testsuites fedora:
   variables:
     EXTRA_VALIDATE_ARGS: "--timeout-factor=2 --retry-on-failures --check-bugs --parts=${CI_NODE_TOTAL} --part-index=${CI_NODE_INDEX}"
     TEST_SUITE: "validate ges"
-  except:
-    variables:
-      - $CI_PROJECT_NAME == "gst-omx"
-      - $CI_PROJECT_NAME == "cerbero"
-      - $CI_PROJECT_NAME == "gst-docs"
-      - $CI_PROJECT_NAME == "gst-plugins-rs"
+    EXCEPT_PROJECT_REGEX: '/^(cerbero|gst-docs|gst-omx|gst-plugins-rs)$/'
 
 gstreamer-full:
   extends: 'build static fedora x86_64'
@@ -303,60 +266,45 @@ gstreamer-full:
   stage: 'test'
   variables:
     EXTRA_VALIDATE_ARGS: "--valgrind"
-  # Some suppression files are missing a newline at the end which messes things
-  # up when concatenating them. awk will add missing newlines (unlike cat)
-  except:
-    variables:
-      - $CI_PROJECT_NAMESPACE == 'gstreamer'
-      - $CI_PROJECT_NAME == "gst-integration-testsuites"
+    # Some suppression files are missing a newline at the end which messes things
+    # up when concatenating them. awk will add missing newlines (unlike cat)
+    EXCEPT_PROJECT_REGEX: '/^(gstreamer|gst-integration-testsuites)$/'
 
 valgrind core:
   extends: '.valgrind fedora x86_64'
   variables:
     TEST_SUITE: "check.gstreamer\\..*"
-  only:
-    variables:
-      - $CI_PROJECT_NAME =~ /^(gstreamer|gst-ci)$/
+    ONLY_PROJECT_REGEX: '/^(gstreamer|gst-ci)$/'
 
 valgrind base:
   extends: '.valgrind fedora x86_64'
   variables:
     TEST_SUITE: "check.gst-plugins-base\\..*"
-  only:
-    variables:
-      - $CI_PROJECT_NAME =~ /^(gstreamer|gst-plugins-base|gst-ci)$/
+    ONLY_PROJECT_REGEX: '/^(gstreamer|gst-plugins-base|gst-ci)$/'
 
 valgrind good:
   extends: '.valgrind fedora x86_64'
   variables:
     TEST_SUITE: "check.gst-plugins-good\\..*"
-  only:
-    variables:
-      - $CI_PROJECT_NAME =~ /^(gstreamer|gst-plugins-base|gst-plugins-good|gst-ci)$/
+    ONLY_PROJECT_REGEX: '/^(gstreamer|gst-plugins-base|gst-plugins-good|gst-ci)$/'
 
 valgrind ugly:
   extends: '.valgrind fedora x86_64'
   variables:
     TEST_SUITE: "check.gst-plugins-ugly\\..*"
-  only:
-    variables:
-      - $CI_PROJECT_NAME =~ /^(gstreamer|gst-plugins-base|gst-plugins-ugly|gst-ci)$/
+    ONLY_PROJECT_REGEX: '/^(gstreamer|gst-plugins-base|gst-plugins-ugly|gst-ci)$/'
 
 valgrind bad:
   extends: '.valgrind fedora x86_64'
   variables:
     TEST_SUITE: "check.gst-plugins-bad\\..*"
-  only:
-    variables:
-      - $CI_PROJECT_NAME =~ /^(gstreamer|gst-plugins-base|gst-plugins-good|gst-plugins-bad|gst-ci)$/
+    ONLY_PROJECT_REGEX: '/^(gstreamer|gst-plugins-base|gst-plugins-good|gst-plugins-bad|gst-ci)$/'
 
 valgrind ges:
   extends: '.valgrind fedora x86_64'
   variables:
     TEST_SUITE: "check.gst-editing-services\\..*"
-  only:
-    variables:
-      - $CI_PROJECT_NAME =~ /^(gstreamer|gst-plugins-base|gst-plugins-good|gst-editing-services|gst-ci|gst-devtools)$/
+    ONLY_PROJECT_REGEX: '/^(gstreamer|gst-plugins-base|gst-plugins-good|gst-editing-services|gst-ci|gst-devtools)$/'
 
 # Template for Cerbero GStreamer Build
 #
@@ -369,10 +317,8 @@ valgrind ges:
   stage: "build"
   image: $CERBERO_IMAGE
   extends:
-    - '.global_retry_policy'
+    - '.global_ci_policy'
   needs:
-    - "manifest"
-  dependencies:
     - "manifest"
   # Ensure that the runners it will be executed on
   # will have plenty of space for the cache
@@ -446,11 +392,9 @@ valgrind ges:
 .build windows:
   image: $WINDOWS_IMAGE
   extends:
-    - '.global_retry_policy'
+    - '.global_ci_policy'
   stage: 'build'
   needs:
-    - 'manifest'
-  dependencies:
     - 'manifest'
   tags:
     - 'docker'
@@ -464,6 +408,7 @@ valgrind ges:
       -Dlibav=disabled
       -Dvaapi=disabled
       -Ddevtools=disabled
+    EXCEPT_PROJECT_REGEX: '/^(cerbero|gst-docs|gst-integration-testsuites|gst-omx|gst-plugins-rs|gstreamer-vaapi)$/'
   script:
     # Sometimes there's seems to be an existing gst-build clone that comes either from the ether or
     # from a previous job due to some gitlab bug or implicit behavior?
@@ -497,14 +442,6 @@ valgrind ges:
   # Gitlab Runner issue: https://gitlab.com/gitlab-org/gitlab-runner/issues/4291
   # Blocked upgrade issue: https://gitlab.freedesktop.org/gstreamer/gst-ci/issues/6#note_192780
   after_script:
-  except:
-    variables:
-      - $CI_PROJECT_NAME == "cerbero"
-      - $CI_PROJECT_NAME == "gst-omx"
-      - $CI_PROJECT_NAME == "gstreamer-vaapi"
-      - $CI_PROJECT_NAME == "gst-docs"
-      - $CI_PROJECT_NAME == "gst-integration-testsuites"
-      - $CI_PROJECT_NAME == "gst-plugins-rs"
 
 build vs2017 amd64:
   extends: '.build windows'
@@ -566,6 +503,8 @@ build msys2 :
 # with the associated build-tools.
 .cerbero deps:
   extends: .cerbero
+  variables:
+    ONLY_PROJECT_REGEX: '/^cerbero$/'
   stage: "pre-build"
   script:
     - $CERBERO $CERBERO_ARGS show-config
@@ -583,9 +522,6 @@ build msys2 :
     - tar -C ${CERBERO_HOME} --exclude=var/tmp -czf $CERBERO_DEPS
               build-tools build-tools.cache
               dist/${ARCH} ${ARCH}.cache
-  only:
-    variables:
-      - $CI_PROJECT_NAME == "cerbero"
   artifacts:
     name: "${CI_JOB_NAME}_${CI_COMMIT_SHA}"
     expire_in: '10 days'
@@ -612,26 +548,15 @@ cerbero deps fedora x86_64:
 
 cerbero fedora x86_64:
   extends: '.cerbero fedora x86_64'
+  variables:
+    ONLY_PROJECT_REGEX: '/^cerbero$/'
   needs:
     - "cerbero deps fedora x86_64"
-    - "manifest"
-  dependencies:
-    - "cerbero deps fedora x86_64"
-  only:
-    variables:
-      - $CI_PROJECT_NAME == "cerbero"
 
 build cerbero fedora x86_64:
   extends: '.cerbero fedora x86_64'
-  except:
-    variables:
-      - $CI_PROJECT_NAME == "cerbero"
-      - $CI_PROJECT_NAME == "gst-build"
-      - $CI_PROJECT_NAME == "gst-omx"
-      - $CI_PROJECT_NAME == "gstreamer-vaapi"
-      - $CI_PROJECT_NAME == "gst-docs"
-      - $CI_PROJECT_NAME == "gst-integration-testsuites"
-      - $CI_PROJECT_NAME == "gst-plugins-rs"
+  variables:
+    EXCEPT_PROJECT_REGEX: '/^(cerbero|gst-build|gst-omx|gstreamer-vaapi|gst-docs|gst-integration-testsuites|gst-plugins-rs)$/'
 
 #
 # Cerbero Android Universal build
@@ -657,25 +582,15 @@ cerbero deps cross-android universal:
 
 cerbero cross-android universal:
   extends: '.cerbero cross-android universal'
+  variables:
+    ONLY_PROJECT_REGEX: '/^cerbero$/'
   needs:
     - "cerbero deps cross-android universal"
-    - "manifest"
-  dependencies:
-    - "cerbero deps cross-android universal"
-  only:
-    variables:
-      - $CI_PROJECT_NAME == "cerbero"
 
 build cerbero cross-android universal:
   extends: '.cerbero cross-android universal'
-  except:
-    variables:
-      - $CI_PROJECT_NAME == "cerbero"
-      - $CI_PROJECT_NAME == "gst-build"
-      - $CI_PROJECT_NAME == "gst-omx"
-      - $CI_PROJECT_NAME == "gstreamer-vaapi"
-      - $CI_PROJECT_NAME == "gst-integration-testsuites"
-      - $CI_PROJECT_NAME == "gst-plugins-rs"
+  variables:
+    EXCEPT_PROJECT_REGEX: '/^(cerbero|gst-build|gst-omx|gstreamer-vaapi|gst-integration-testsuites|gst-plugins-rs)$/'
 
 #
 # Cerbero Cross Windows builds
@@ -695,26 +610,15 @@ cerbero deps cross-windows x86:
 
 cerbero cross win32:
   extends: '.cerbero cross win32'
+  variables:
+    ONLY_PROJECT_REGEX: '/^cerbero$/'
   needs:
     - "cerbero deps cross-windows x86"
-    - "manifest"
-  dependencies:
-    - "cerbero deps cross-windows x86"
-  only:
-    variables:
-      - $CI_PROJECT_NAME == "cerbero"
 
 build cerbero cross win32:
   extends: '.cerbero cross win32'
-  except:
-    variables:
-      - $CI_PROJECT_NAME == "cerbero"
-      - $CI_PROJECT_NAME == "gst-build"
-      - $CI_PROJECT_NAME == "gst-omx"
-      - $CI_PROJECT_NAME == "gstreamer-vaapi"
-      - $CI_PROJECT_NAME == "gst-docs"
-      - $CI_PROJECT_NAME == "gst-integration-testsuites"
-      - $CI_PROJECT_NAME == "gst-plugins-rs"
+  variables:
+    EXCEPT_PROJECT_REGEX: '/^(cerbero|gst-build|gst-omx|gstreamer-vaapi|gst-docs|gst-integration-testsuites|gst-plugins-rs)$/'
 
 cerbero deps cross-windows x86_64:
   extends: '.cerbero deps'
@@ -731,26 +635,15 @@ cerbero deps cross-windows x86_64:
 
 cerbero cross win64:
   extends: '.cerbero cross win64'
+  variables:
+    ONLY_PROJECT_REGEX: '/^cerbero$/'
   needs:
     - "cerbero deps cross-windows x86_64"
-    - "manifest"
-  dependencies:
-    - "cerbero deps cross-windows x86_64"
-  only:
-    variables:
-      - $CI_PROJECT_NAME == "cerbero"
 
 build cerbero cross win64:
   extends: '.cerbero cross win64'
-  except:
-    variables:
-      - $CI_PROJECT_NAME == "cerbero"
-      - $CI_PROJECT_NAME == "gst-build"
-      - $CI_PROJECT_NAME == "gst-omx"
-      - $CI_PROJECT_NAME == "gstreamer-vaapi"
-      - $CI_PROJECT_NAME == "gst-docs"
-      - $CI_PROJECT_NAME == "gst-integration-testsuites"
-      - $CI_PROJECT_NAME == "gst-plugins-rs"
+  variables:
+    EXCEPT_PROJECT_REGEX: '/^(cerbero|gst-build|gst-omx|gstreamer-vaapi|gst-docs|gst-integration-testsuites|gst-plugins-rs)$/'
 
 #
 # Build an Android App using the android binaries
@@ -758,7 +651,7 @@ build cerbero cross win64:
 .cross-android universal examples:
   image: $ANDROID_IMAGE
   extends:
-    - '.global_retry_policy'
+    - '.global_ci_policy'
   stage: 'integrate'
   variables:
     EXAMPLES_HOME: ${CI_PROJECT_DIR}/examples
@@ -798,30 +691,17 @@ build cerbero cross win64:
 
 cross-android universal examples:
   extends: ".cross-android universal examples"
+  variables:
+    EXCEPT_PROJECT_REGEX: '/^(cerbero|gst-build|gst-omx|gstreamer-vaapi|gst-integration-testsuites|gst-plugins-rs)$/'
   needs:
     - "build cerbero cross-android universal"
-    - "manifest"
-  dependencies:
-    - "build cerbero cross-android universal"
-  except:
-    variables:
-      - $CI_PROJECT_NAME == "cerbero"
-      - $CI_PROJECT_NAME == "gst-build"
-      - $CI_PROJECT_NAME == "gst-omx"
-      - $CI_PROJECT_NAME == "gst-integration-testsuites"
-      - $CI_PROJECT_NAME == "gstreamer-vaapi"
-      - $CI_PROJECT_NAME == "gst-plugins-rs"
 
 cerbero cross-android universal examples:
   extends: ".cross-android universal examples"
+  variables:
+    ONLY_PROJECT_REGEX: '/^cerbero$/'
   needs:
     - "cerbero cross-android universal"
-    - "manifest"
-  dependencies:
-    - "cerbero cross-android universal"
-  only:
-    variables:
-      - $CI_PROJECT_NAME == "cerbero"
 
 #
 # Cerbero macOS X86_64 build
@@ -860,27 +740,15 @@ cerbero deps macos x86_64:
 
 cerbero macos x86_64:
   extends: '.cerbero macos x86_64'
+  variables:
+    ONLY_PROJECT_REGEX: '/^cerbero$/'
   needs:
     - "cerbero deps macos x86_64"
-    - "manifest"
-  dependencies:
-    - "cerbero deps macos x86_64"
-  only:
-    variables:
-      - $CI_PROJECT_NAME == "cerbero"
 
 build cerbero macos x86_64:
   extends: '.cerbero macos x86_64'
-  except:
-    variables:
-      - $CI_PROJECT_NAME == "cerbero"
-      - $CI_PROJECT_NAME == "gst-build"
-      - $CI_PROJECT_NAME == "gst-integration-testsuites"
-      - $CI_PROJECT_NAME == "gst-omx"
-      - $CI_PROJECT_NAME == "gstreamer-vaapi"
-      - $CI_PROJECT_NAME == "gst-docs"
-      - $CI_PROJECT_NAME == "gst-sharp"
-      - $CI_PROJECT_NAME == "gst-plugins-rs"
+  variables:
+    EXCEPT_PROJECT_REGEX: '/^(cerbero|gst-build|gst-docs|gst-omx|gst-sharp|gstreamer-vaapi|gst-integration-testsuites|gst-plugins-rs)$/'
 
 #
 # Cerbero iOS build
@@ -918,36 +786,24 @@ cerbero deps cross-ios universal:
 
 cerbero cross-ios universal:
   extends: '.cerbero cross-ios universal'
+  variables:
+    ONLY_PROJECT_REGEX: '/^cerbero$/'
   needs:
     - "cerbero deps cross-ios universal"
-    - "manifest"
-  dependencies:
-    - "cerbero deps cross-ios universal"
-  only:
-    variables:
-      - $CI_PROJECT_NAME == "cerbero"
 
 build cerbero cross-ios universal:
   extends: '.cerbero cross-ios universal'
-  except:
-    variables:
-      - $CI_PROJECT_NAME == "cerbero"
-      - $CI_PROJECT_NAME == "gst-build"
-      - $CI_PROJECT_NAME == "gst-integration-testsuites"
-      - $CI_PROJECT_NAME == "gst-omx"
-      - $CI_PROJECT_NAME == "gstreamer-vaapi"
-      - $CI_PROJECT_NAME == "gst-sharp"
-      - $CI_PROJECT_NAME == "gst-plugins-rs"
+  variables:
+    EXCEPT_PROJECT_REGEX: '/^(cerbero|gst-build|gst-docs|gst-omx|gst-sharp|gstreamer-vaapi|gst-integration-testsuites|gst-plugins-rs)$/'
 
 documentation:
   image: $FEDORA_IMAGE
   extends:
-    - '.global_retry_policy'
+    - '.global_ci_policy'
+  variables:
+    EXCEPT_PROJECT_REGEX: '/^(cerbero|gst-build|gst-sharp|gst-integration-testsuites|gst-plugins-rs|gst-python)$/'
   needs:
     - "build fedora x86_64"
-    - "manifest"
-  dependencies:
-    - 'build fedora x86_64'
   stage: integrate
 
   script:
@@ -960,14 +816,6 @@ documentation:
   artifacts:
     paths:
     - documentation/
-  except:
-    variables:
-      - $CI_PROJECT_NAME == "cerbero"
-      - $CI_PROJECT_NAME == "gst-integration-testsuites"
-      - $CI_PROJECT_NAME == "gst-python"
-      - $CI_PROJECT_NAME == "gst-sharp"
-      - $CI_PROJECT_NAME == "gst-build"
-      - $CI_PROJECT_NAME == "gst-plugins-rs"
 
 #
 # Build an iOS App using the iOS binaries
@@ -975,7 +823,7 @@ documentation:
 .cross-ios universal examples:
   stage: 'integrate'
   extends:
-    - '.global_retry_policy'
+    - '.global_ci_policy'
   variables:
     EXAMPLES_HOME: ${CI_PROJECT_DIR}/examples
     # disable codesigning so we don't need developer identities on the CI
@@ -985,6 +833,7 @@ documentation:
       CODE_SIGN_IDENTITY=""
       CODE_SIGNING_ALLOWED="NO"
       CODE_SIGN_ENTITLEMENTS=""
+    EXCEPT_PROJECT_REGEX: '/^(cerbero|gst-build|gst-omx|gstreamer-vaapi|gst-integration-testsuites|gst-plugins-rs)$/'
   script:
     # install the binaries
     - installer -pkg gstreamer-1.0-devel-*-ios-universal.pkg -target CurrentUserHomeDirectory -verbose
@@ -1015,44 +864,28 @@ cross-ios universal examples:
   extends: ".cross-ios universal examples"
   needs:
     - "build cerbero cross-ios universal"
-    - "manifest"
-  dependencies:
-    - "build cerbero cross-ios universal"
-  except:
-    variables:
-      - $CI_PROJECT_NAME == "cerbero"
-      - $CI_PROJECT_NAME == "gst-build"
-      - $CI_PROJECT_NAME == "gst-omx"
-      - $CI_PROJECT_NAME == "gst-integration-testsuites"
-      - $CI_PROJECT_NAME == "gstreamer-vaapi"
-      - $CI_PROJECT_NAME == "gst-plugins-rs"
 
 cerbero cross-ios universal examples:
   extends: ".cross-ios universal examples"
+  variables:
+    ONLY_PROJECT_REGEX: '/^cerbero$/'
   needs:
     - "cerbero cross-ios universal"
-    - "manifest"
-  dependencies:
-    - "cerbero cross-ios universal"
-  only:
-    variables:
-      - $CI_PROJECT_NAME == "cerbero"
 
 build gst-omx zynq fedora x86_64:
   extends: 'build fedora x86_64'
   variables:
     MESON_ARGS: "-Domx=enabled -Dgst-omx:target=zynqultrascaleplus -Dgst-omx:header_path=${CI_PROJECT_DIR}/vcu-omx-il/omx_header -Dpython=disabled -Dlibav=disabled -Dlibnice=disabled -Dugly=disabled -Dbad=disabled -Ddevtools=disabled -Dges=disabled -Drtsp_server=disabled -Dvaapi=disabled -Dsharp=disabled -Dgst-examples=disabled -Drs=disabled ${MESON_BUILDTYPE_ARGS} --werror"
+    ONLY_PROJECT_REGEX: '/^(gst-omx|gst-ci)$/'
   before_script:
     - git clone https://github.com/Xilinx/vcu-omx-il.git --branch=release-2019.2 ${CI_PROJECT_DIR}/vcu-omx-il
-  only:
-    variables:
-      - $CI_PROJECT_NAME =~ /^(gst-omx|gst-ci)$/
 
 build gst-omx tizonia fedora x86_64:
   extends: 'build fedora x86_64'
   variables:
     MESON_ARGS: "-Domx=enabled -Dgst-omx:target=tizonia -Dpython=disabled -Dlibav=disabled -Dlibnice=disabled -Dugly=disabled -Dbad=disabled -Ddevtools=disabled -Dges=disabled -Drtsp_server=disabled -Dvaapi=disabled -Dsharp=disabled -Dgst-examples=disabled -Drs=disabled ${MESON_BUILDTYPE_ARGS} --werror"
     PKG_CONFIG_PATH: ${PKG_CONFIG_PATH}:${CI_PROJECT_DIR}/tizonia-install/lib64/pkgconfig/
+    ONLY_PROJECT_REGEX: '/^(gst-omx|gst-ci)$/'
   before_script:
     - git clone https://github.com/tizonia/tizonia-openmax-il --branch v0.20.2
     - cd tizonia-openmax-il
@@ -1060,29 +893,17 @@ build gst-omx tizonia fedora x86_64:
     - ninja -C build
     - ninja -C build install
     - cd ..
-  only:
-    variables:
-      - $CI_PROJECT_NAME =~ /^(gst-omx|gst-ci)$/
 
 build rust fedora x86_64:
   extends: 'build fedora x86_64'
   variables:
     MESON_ARGS: "-Domx=disabled -Dpython=disabled -Dlibav=disabled -Dlibnice=disabled -Dugly=disabled -Dbad=disabled -Ddevtools=enabled -Dges=disabled -Drtsp_server=disabled -Dvaapi=disabled -Dsharp=disabled -Dgst-examples=disabled -Drs=enabled -Dgst-plugins-rs:sodium=system ${MESON_BUILDTYPE_ARGS} --werror"
-  only:
-    variables:
-      - $CI_PROJECT_NAME =~ /^(gst-plugins-rs|gstreamer|gst-plugins-base|gst-ci|gst-build|gst-devtools)$/
-  except:
-    variables:
-      - $CI_PROJECT_NAME == "cerbero"
+    ONLY_PROJECT_REGEX: '/^(gst-plugins-rs|gstreamer|gst-plugins-base|gst-ci|gst-build|gst-devtools)$/'
 
 check rust fedora:
   extends: '.test fedora x86_64'
   needs:
     - 'build rust fedora x86_64'
-  dependencies:
-    - build rust fedora x86_64
   variables:
     TEST_SUITE: "check.gst-plugins-rs.*"
-  only:
-    variables:
-      - $CI_PROJECT_NAME =~ /^(gst-plugins-rs|gstreamer|gst-plugins-base|gst-ci|gst-build|gst-devtools)$/
+    ONLY_PROJECT_REGEX: '/^(gst-plugins-rs|gstreamer|gst-plugins-base|gst-ci|gst-build|gst-devtools)$/'

@@ -114,7 +114,10 @@ android docker:
 
 .build local:
   extends: '.build'
-  when: 'manual'
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == "master" && $CI_PROJECT_PATH == "gstreamer/gst-ci"'
+      when: 'never'
+    - when: 'manual'
   needs:
     - 'manifest'
 
@@ -129,51 +132,28 @@ build fedora x86_64 local:
     paths:
       - "manifest.xml"
       - "gst-build/"
-  except:
-    refs:
-      - "master@gstreamer/gst-ci"
 
 build cerbero fedora x86_64 local:
   extends: '.cerbero fedora x86_64'
   image: "${CI_REGISTRY_IMAGE}/amd64/cerbero-fedora:latest"
-  when: 'manual'
-  except:
-    refs:
-      - "master@gstreamer/gst-ci"
 
 build cerbero cross-android universal local:
   extends: '.cerbero cross-android universal'
   image: "${CI_REGISTRY_IMAGE}/amd64/cerbero-fedora:latest"
-  when: 'manual'
-  except:
-    refs:
-      - "master@gstreamer/gst-ci"
 
 build cerbero cross win32 local:
   extends: '.cerbero cross win32'
   image: "${CI_REGISTRY_IMAGE}/amd64/cerbero-fedora:latest"
-  when: 'manual'
-  except:
-    refs:
-      - "master@gstreamer/gst-ci"
 
 build cerbero cross win64 local:
   extends: '.cerbero cross win64'
   image: "${CI_REGISTRY_IMAGE}/amd64/cerbero-fedora:latest"
-  when: 'manual'
-  except:
-    refs:
-      - "master@gstreamer/gst-ci"
 
 .test fedora x86_64 local:
   image: '${CI_REGISTRY_IMAGE}/amd64/fedora:latest'
   extends: '.test'
   dependencies:
     - 'build fedora x86_64 local'
-  when: 'manual'
-  except:
-    refs:
-      - "master@gstreamer/gst-ci"
 
 check fedora local:
   extends: '.test fedora x86_64 local'
@@ -185,10 +165,6 @@ cross-android universal examples local:
   image: "${CI_REGISTRY_IMAGE}/amd64/android:latest"
   dependencies:
     - "build cerbero cross-android universal local"
-  when: 'manual'
-  except:
-    refs:
-      - "master@gstreamer/gst-ci"
 
 integration testsuites fedora local:
   extends: '.test fedora x86_64 local'
@@ -197,4 +173,3 @@ integration testsuites fedora local:
   variables:
     EXTRA_VALIDATE_ARGS: "--timeout-factor=2 --retry-on-failures"
     TEST_SUITE: "validate ges"
-
