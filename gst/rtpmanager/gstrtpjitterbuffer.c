@@ -3013,7 +3013,8 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
        * next packet */
       GST_WARNING_OBJECT (jitterbuffer, "%d pending timers > %d - resetting",
           rtp_timer_queue_length (priv->timers), max_dropout);
-      gst_buffer_unref (buffer);
+      g_queue_insert_sorted (&priv->gap_packets, buffer,
+          (GCompareDataFunc) compare_buffer_seqnum, NULL);
       return gst_rtp_jitter_buffer_reset (jitterbuffer, pad, parent, seqnum);
     }
 
