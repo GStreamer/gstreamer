@@ -322,7 +322,7 @@ struct _GstAggregatorClass {
 
   gboolean          (*negotiate) (GstAggregator * self);
 
-  gboolean          (*sink_event_pre_queue)     (GstAggregator    *  aggregator,
+  GstFlowReturn     (*sink_event_pre_queue)     (GstAggregator    *  aggregator,
                                                  GstAggregatorPad *  aggregator_pad,
                                                  GstEvent         *  event);
 

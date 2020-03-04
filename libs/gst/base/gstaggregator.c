@@ -1632,7 +1632,7 @@ eat:
  * The queued events with be handled from the src-pad task in
  * gst_aggregator_do_events_and_queries().
  */
-static gboolean
+static GstFlowReturn
 gst_aggregator_default_sink_event_pre_queue (GstAggregator * self,
     GstAggregatorPad * aggpad, GstEvent * event)
 {
