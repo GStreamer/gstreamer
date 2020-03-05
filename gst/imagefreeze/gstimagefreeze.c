@@ -592,7 +592,10 @@ gst_image_freeze_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gst_image_freeze_reset (self);
       /* fall through */
     default:
-      ret = gst_pad_push_event (self->srcpad, event);
+      ret = gst_pad_push_event (self->srcpad, gst_event_ref (event));
+      if (GST_EVENT_IS_STICKY (event))
+        ret = TRUE;
+      gst_event_unref (event);
       break;
   }
 
