@@ -475,8 +475,6 @@ gst_vaapidecode_negotiate (GstVaapiDecode * decode)
   GST_DEBUG_OBJECT (decode, "input codec state changed: renegotiating");
 
   GST_VIDEO_DECODER_STREAM_LOCK (vdec);
-  if (!gst_vaapi_plugin_base_set_caps (plugin, decode->sinkpad_caps, NULL))
-    goto caps_negotiation_failed;
   if (!gst_vaapidecode_update_src_caps (decode))
     goto caps_negotiation_failed;
   if (!gst_vaapi_plugin_base_set_caps (plugin, NULL, decode->srcpad_caps))
