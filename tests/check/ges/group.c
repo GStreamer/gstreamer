@@ -195,39 +195,66 @@ GST_START_TEST (test_move_group)
    *            |----------------------------------|
    *            |        7---------     2----------|
    * layer1:    |        | clip1   |    |  clip2   |
-   *            |       22--------30   62----------|
+   *            |       20--------30   60----------|
    *            |----------------------------------|
    */
   ges_timeline_element_trim (GES_TIMELINE_ELEMENT (group), 12);
   CHECK_OBJECT_PROPS (clip, 12, 2, 3);
-  CHECK_OBJECT_PROPS (clip1, 22, 7, 8);
-  CHECK_OBJECT_PROPS (clip2, 62, 2, 48);
+  CHECK_OBJECT_PROPS (clip1, 20, 5, 10);
+  CHECK_OBJECT_PROPS (clip2, 60, 0, 50);
   CHECK_OBJECT_PROPS (group, 12, 0, 98);
   ASSERT_OBJECT_REFCOUNT (group, "2 ref for the timeline", 2);
 
   /* Setting the duration would lead to overlaps */
-  ges_timeline_element_set_duration (GES_TIMELINE_ELEMENT (group), 10);
+  fail_if (ges_timeline_element_set_duration (GES_TIMELINE_ELEMENT (group),
+          10));
   CHECK_OBJECT_PROPS (clip, 12, 2, 3);
-  CHECK_OBJECT_PROPS (clip1, 22, 7, 8);
-  CHECK_OBJECT_PROPS (clip2, 62, 2, 48);
+  CHECK_OBJECT_PROPS (clip1, 20, 5, 10);
+  CHECK_OBJECT_PROPS (clip2, 60, 0, 50);
   CHECK_OBJECT_PROPS (group, 12, 0, 98);
   ges_timeline_element_set_duration (GES_TIMELINE_ELEMENT (group), 100);
   CHECK_OBJECT_PROPS (clip, 12, 2, 3);
-  CHECK_OBJECT_PROPS (clip1, 22, 7, 8);
-  CHECK_OBJECT_PROPS (clip2, 62, 2, 50);
+  CHECK_OBJECT_PROPS (clip1, 20, 5, 10);
+  CHECK_OBJECT_PROPS (clip2, 60, 0, 52);
   CHECK_OBJECT_PROPS (group, 12, 0, 100);
 
   ges_timeline_element_set_start (GES_TIMELINE_ELEMENT (group), 20);
   CHECK_OBJECT_PROPS (clip, 20, 2, 3);
-  CHECK_OBJECT_PROPS (clip1, 30, 7, 8);
-  CHECK_OBJECT_PROPS (clip2, 70, 2, 50);
+  CHECK_OBJECT_PROPS (clip1, 28, 5, 10);
+  CHECK_OBJECT_PROPS (clip2, 68, 0, 52);
   CHECK_OBJECT_PROPS (group, 20, 0, 100);
 
+  /* Trim fails because clip inpoint would become negative */
   fail_if (ges_timeline_element_trim (GES_TIMELINE_ELEMENT (group), 10));
   CHECK_OBJECT_PROPS (clip, 20, 2, 3);
-  CHECK_OBJECT_PROPS (clip1, 30, 7, 8);
-  CHECK_OBJECT_PROPS (clip2, 70, 2, 50);
+  CHECK_OBJECT_PROPS (clip1, 28, 5, 10);
+  CHECK_OBJECT_PROPS (clip2, 68, 0, 52);
   CHECK_OBJECT_PROPS (group, 20, 0, 100);
+
+  fail_unless (ges_timeline_element_trim (GES_TIMELINE_ELEMENT (group), 18));
+  CHECK_OBJECT_PROPS (clip, 18, 0, 5);
+  CHECK_OBJECT_PROPS (clip1, 28, 5, 10);
+  CHECK_OBJECT_PROPS (clip2, 68, 0, 52);
+  CHECK_OBJECT_PROPS (group, 18, 0, 102);
+
+  fail_unless (ges_timeline_element_set_duration (GES_TIMELINE_ELEMENT (clip),
+          17));
+  CHECK_OBJECT_PROPS (clip, 18, 0, 17);
+  CHECK_OBJECT_PROPS (clip1, 28, 5, 10);
+  CHECK_OBJECT_PROPS (clip2, 68, 0, 52);
+  CHECK_OBJECT_PROPS (group, 18, 0, 102);
+
+  fail_unless (ges_timeline_element_trim (GES_TIMELINE_ELEMENT (group), 30));
+  CHECK_OBJECT_PROPS (clip, 30, 12, 5);
+  CHECK_OBJECT_PROPS (clip1, 30, 7, 8);
+  CHECK_OBJECT_PROPS (clip2, 68, 0, 52);
+  CHECK_OBJECT_PROPS (group, 30, 0, 90);
+
+  fail_unless (ges_timeline_element_trim (GES_TIMELINE_ELEMENT (group), 25));
+  CHECK_OBJECT_PROPS (clip, 25, 7, 10);
+  CHECK_OBJECT_PROPS (clip1, 25, 2, 13);
+  CHECK_OBJECT_PROPS (clip2, 68, 0, 52);
+  CHECK_OBJECT_PROPS (group, 25, 0, 95);
 
   ASSERT_OBJECT_REFCOUNT (group, "2 ref for the timeline", 2);
   check_destroyed (G_OBJECT (timeline), G_OBJECT (group), NULL);

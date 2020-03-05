@@ -46,49 +46,6 @@ enum
 
 G_DEFINE_TYPE_WITH_PRIVATE (GESSourceClip, ges_source_clip, GES_TYPE_CLIP);
 
-static gboolean
-_set_start (GESTimelineElement * element, GstClockTime start)
-{
-  GESTimelineElement *toplevel =
-      ges_timeline_element_get_toplevel_parent (element);
-
-  gst_object_unref (toplevel);
-  if (element->timeline
-      && !ELEMENT_FLAG_IS_SET (element, GES_TIMELINE_ELEMENT_SET_SIMPLE)
-      && !ELEMENT_FLAG_IS_SET (toplevel, GES_TIMELINE_ELEMENT_SET_SIMPLE)) {
-    if (!ges_timeline_move_object_simple (element->timeline, element, NULL,
-            GES_EDGE_NONE, start))
-      return FALSE;
-    return -1;
-  }
-
-  return
-      GES_TIMELINE_ELEMENT_CLASS (ges_source_clip_parent_class)->set_start
-      (element, start);
-}
-
-static gboolean
-_set_duration (GESTimelineElement * element, GstClockTime duration)
-{
-  GESTimelineElement *toplevel =
-      ges_timeline_element_get_toplevel_parent (element);
-
-  gst_object_unref (toplevel);
-  if (element->timeline
-      && !ELEMENT_FLAG_IS_SET (element, GES_TIMELINE_ELEMENT_SET_SIMPLE)
-      && !ELEMENT_FLAG_IS_SET (toplevel, GES_TIMELINE_ELEMENT_SET_SIMPLE)) {
-    if (!timeline_trim_object (element->timeline, element,
-            GES_TIMELINE_ELEMENT_LAYER_PRIORITY (element), NULL, GES_EDGE_END,
-            element->start + duration))
-      return FALSE;
-    return -1;
-  }
-
-  return
-      GES_TIMELINE_ELEMENT_CLASS (ges_source_clip_parent_class)->set_duration
-      (element, duration);
-}
-
 static void
 ges_source_clip_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
@@ -119,14 +76,10 @@ static void
 ges_source_clip_class_init (GESSourceClipClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GESTimelineElementClass *element_class = GES_TIMELINE_ELEMENT_CLASS (klass);
 
   object_class->get_property = ges_source_clip_get_property;
   object_class->set_property = ges_source_clip_set_property;
   object_class->finalize = ges_source_clip_finalize;
-
-  element_class->set_start = _set_start;
-  element_class->set_duration = _set_duration;
 }
 
 static void

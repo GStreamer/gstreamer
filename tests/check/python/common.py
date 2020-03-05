@@ -188,8 +188,8 @@ class GESSimpleTimelineTest(GESTest):
                          len(self.track_types))
         self.layer = self.timeline.append_layer()
 
-    def add_clip(self, start, in_point, duration):
-        clip = GES.TestClip()
+    def add_clip(self, start, in_point, duration, asset_type=GES.TestClip):
+        clip = GES.Asset.request(asset_type, None).extract()
         clip.props.start = start
         clip.props.in_point = in_point
         clip.props.duration = duration
@@ -197,11 +197,11 @@ class GESSimpleTimelineTest(GESTest):
 
         return clip
 
-    def append_clip(self, layer=0):
+    def append_clip(self, layer=0, asset_type=GES.TestClip):
         while len(self.timeline.get_layers()) < layer + 1:
             self.timeline.append_layer()
         layer = self.timeline.get_layers()[layer]
-        clip = GES.TestClip()
+        clip = GES.Asset.request(asset_type, None).extract()
         clip.props.start = layer.get_duration()
         clip.props.duration = 10
         self.assertTrue(layer.add_clip(clip))
@@ -215,6 +215,9 @@ class GESSimpleTimelineTest(GESTest):
             for clip in layer.get_clips():
                 layer_timings.append(
                     (type(clip), clip.props.start, clip.props.duration))
+                for child in clip.get_children(True):
+                    self.assertEqual(child.props.start, clip.props.start)
+                    self.assertEqual(child.props.duration, clip.props.duration)
 
             res.append(layer_timings)
         if topology != res:

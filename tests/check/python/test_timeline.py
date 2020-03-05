@@ -505,6 +505,160 @@ class TestEditing(common.GESSimpleTimelineTest):
             ]
         ])
 
+    def test_illegal_effect_move(self):
+        c0 = self.append_clip()
+        self.append_clip()
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 0, 10),
+                (GES.TestClip, 10, 10),
+            ]
+        ])
+
+        effect = GES.Effect.new("agingtv")
+        c0.add(effect)
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 0, 10),
+                (GES.TestClip, 10, 10),
+            ]
+        ])
+
+        self.assertFalse(effect.set_start(10))
+        self.assertEqual(effect.props.start, 0)
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 0, 10),
+                (GES.TestClip, 10, 10),
+            ]
+        ])
+
+
+        self.assertFalse(effect.set_duration(20))
+        self.assertEqual(effect.props.duration, 10)
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 0, 10),
+                (GES.TestClip, 10, 10),
+            ]
+        ])
+
+    def test_moving_overlay_clip_in_group(self):
+        c0 = self.append_clip()
+        overlay = self.append_clip(asset_type=GES.TextOverlayClip)
+        group = GES.Group.new()
+        group.add(c0)
+        group.add(overlay)
+
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 0, 10),
+                (GES.TextOverlayClip, 10, 10),
+            ]
+        ], groups=[(c0, overlay)])
+
+        self.assertTrue(overlay.set_start(20))
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 10, 10),
+                (GES.TextOverlayClip, 20, 10),
+            ]
+        ], groups=[(c0, overlay)])
+
+    def test_moving_group_in_group(self):
+        c0 = self.append_clip()
+        overlay = self.append_clip(asset_type=GES.TextOverlayClip)
+        group0 = GES.Group.new()
+        group0.add(c0)
+        group0.add(overlay)
+
+        c1 = self.append_clip()
+        group1 = GES.Group.new()
+        group1.add(group0)
+        group1.add(c1)
+
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 0, 10),
+                (GES.TextOverlayClip, 10, 10),
+                (GES.TestClip, 20, 10),
+            ]
+        ], groups=[(c1, group0), (c0, overlay)])
+
+        self.assertTrue(group0.set_start(10))
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 10, 10),
+                (GES.TextOverlayClip, 20, 10),
+                (GES.TestClip, 30, 10),
+            ]
+        ], groups=[(c1, group0), (c0, overlay)])
+        self.check_element_values(group0, 10, 0, 20)
+        self.check_element_values(group1, 10, 0, 30)
+
+    def test_illegal_group_child_move(self):
+        clip0 = self.append_clip()
+        _clip1 = self.add_clip(20, 0, 10)
+        overlay = self.add_clip(20, 0, 10, asset_type=GES.TextOverlayClip)
+
+        group = GES.Group.new()
+        group.add(clip0)
+        group.add(overlay)
+
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 0, 10),
+                (GES.TextOverlayClip, 20, 10),
+                (GES.TestClip, 20, 10),
+            ]
+        ], groups=[(clip0, overlay),])
+
+        # Can't move as clip0 and clip1 would fully overlap
+        self.assertFalse(overlay.set_start(40))
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 0, 10),
+                (GES.TextOverlayClip, 20, 10),
+                (GES.TestClip, 20, 10),
+            ]
+        ], groups=[(clip0, overlay)])
+
+    def test_child_duration_change(self):
+        c0 = self.append_clip()
+
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 0, 10),
+            ]
+        ])
+        self.assertTrue(c0.set_duration(40))
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 0, 40),
+            ]
+        ])
+
+        c0.children[0].set_duration(10)
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 0, 10),
+            ]
+        ])
+
+        self.assertTrue(c0.set_start(40))
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 40, 10),
+            ]
+        ])
+
+        c0.children[0].set_start(10)
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 10, 10),
+            ]
+        ])
+
 
 class TestInvalidOverlaps(common.GESSimpleTimelineTest):
 

@@ -1096,8 +1096,10 @@ _trim_transition (GESTimeline * timeline, GESTimelineElement * element,
   GESLayer *layer = ges_timeline_get_layer (timeline,
       GES_TIMELINE_ELEMENT_LAYER_PRIORITY (element));
 
-  if (!ges_layer_get_auto_transition (layer))
-    goto fail;
+  if (!ges_layer_get_auto_transition (layer)) {
+    gst_object_unref (layer);
+    return -1;
+  }
 
   gst_object_unref (layer);
   for (tmp = timeline->priv->auto_transitions; tmp; tmp = tmp->next) {
@@ -1122,10 +1124,6 @@ _trim_transition (GESTimeline * timeline, GESTimelineElement * element,
     }
   }
 
-  return FALSE;
-
-fail:
-  gst_object_unref (layer);
   return FALSE;
 }
 

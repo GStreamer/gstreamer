@@ -91,9 +91,11 @@ neighbour_changed_cb (GESClip * clip, GParamSpec * arg G_GNUC_UNUSED,
   }
 
   self->positioning = TRUE;
+  ELEMENT_SET_FLAG (self->transition_clip, GES_TIMELINE_ELEMENT_SET_SIMPLE);
   _set_start0 (GES_TIMELINE_ELEMENT (self->transition_clip),
       _START (self->next_source));
   _set_duration0 (GES_TIMELINE_ELEMENT (self->transition_clip), new_duration);
+  ELEMENT_SET_FLAG (self->transition_clip, GES_TIMELINE_ELEMENT_SET_SIMPLE);
   self->positioning = FALSE;
 }
 

@@ -218,8 +218,11 @@ _set_duration (GESTimelineElement * element, GstClockTime duration)
   for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
     GESTimelineElement *child = (GESTimelineElement *) tmp->data;
 
-    if (child != container->initiated_move)
+    if (child != container->initiated_move) {
+      ELEMENT_SET_FLAG (child, GES_TIMELINE_ELEMENT_SET_SIMPLE);
       _set_duration0 (GES_TIMELINE_ELEMENT (child), duration);
+      ELEMENT_UNSET_FLAG (child, GES_TIMELINE_ELEMENT_SET_SIMPLE);
+    }
   }
   container->children_control_mode = GES_CHILDREN_UPDATE;
 

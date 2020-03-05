@@ -75,6 +75,10 @@ struct _TreeIterationData
   GHashTable *moved_clips;
 
   GList *neighbours;
+
+  /* Data related to trimming groups */
+  GstClockTime trim_group_start;
+  GstClockTime trim_group_end;
 } tree_iteration_data_init = {
    .root = NULL,
    .res = TRUE,
@@ -91,6 +95,8 @@ struct _TreeIterationData
    .edge = GES_EDGE_NONE,
    .moved_clips = NULL,
    .neighbours = NULL,
+   .trim_group_start = GST_CLOCK_TIME_NONE,
+   .trim_group_end = GST_CLOCK_TIME_NONE,
 };
 /*  *INDENT-ON* */
 
@@ -784,6 +790,47 @@ error:
 }
 
 static gboolean
+trim_group_get_vals (TreeIterationData * data, GESTimelineElement * e,
+    GstClockTimeDiff * n_start, GstClockTimeDiff * n_inpoint,
+    GstClockTimeDiff * n_duration)
+{
+  GstClockTimeDiff offset;
+  GstClockTimeDiff group_nstart =
+      GST_CLOCK_DIFF (data->start_diff, data->trim_group_start);
+  GstClockTimeDiff group_nend =
+      GST_CLOCK_DIFF (data->duration_diff, data->trim_group_end);
+
+  if (data->edge == GES_EDGE_START &&
+      ((group_nstart >= e->start) || (e->start == data->trim_group_start))) {
+
+    offset = GST_CLOCK_DIFF (group_nstart, e->start);
+    *n_start = group_nstart;
+    *n_inpoint = GST_CLOCK_DIFF (offset, e->inpoint);
+    *n_duration =
+        GST_CLOCK_DIFF (*n_start, (GstClockTimeDiff) e->start + e->duration);
+
+    GST_DEBUG_OBJECT (data->element, "Trimming %" GES_FORMAT " start",
+        GES_ARGS (e));
+    return TRUE;
+  } else if (data->edge == GES_EDGE_END &&
+      ((group_nend <= _END (e)) || (_END (e) == data->trim_group_end))) {
+
+    offset = GST_CLOCK_DIFF (group_nend, _END (e));
+    *n_start = e->start;
+    *n_inpoint = e->inpoint;
+    *n_duration = GST_CLOCK_DIFF (offset, e->duration);
+
+    GST_DEBUG_OBJECT (data->element, "Trimming %" GES_FORMAT " end",
+        GES_ARGS (e));
+
+    return TRUE;
+  }
+
+  /* Ignoring child */
+  return FALSE;
+}
+
+static gboolean
 check_trim_child (GNode * node, TreeIterationData * data)
 {
   GESTimelineElement *e = node->data;
@@ -792,6 +839,12 @@ check_trim_child (GNode * node, TreeIterationData * data)
   GstClockTimeDiff n_duration = data->edge == GES_EDGE_END ?
       GST_CLOCK_DIFF (data->duration_diff, e->duration) :
       GST_CLOCK_DIFF (n_start, (GstClockTimeDiff) e->start + e->duration);
+
+  if (GST_CLOCK_TIME_IS_VALID (data->trim_group_start)
+      && !trim_group_get_vals (data, e, &n_start, &n_inpoint, &n_duration)) {
+    GST_DEBUG_OBJECT (data->element, "Not trimming");
+    return FALSE;
+  }
 
   if (!timeline_tree_can_move_element_internal (data->root, e,
           (gint64) ges_timeline_element_get_layer_priority (e) -
@@ -823,21 +876,33 @@ timeline_tree_can_trim_element_internal (GNode * root, TreeIterationData * data)
 
 static void
 trim_simple (GESTimelineElement * element, GstClockTimeDiff offset,
-    GESEdge edge)
+    GESEdge edge, TreeIterationData * data)
 {
+  GESTimelineElement *toplevel =
+      ges_timeline_element_get_toplevel_parent (element);
+
+  GstClockTimeDiff n_start = GST_CLOCK_DIFF (offset, element->start);
+  GstClockTimeDiff n_inpoint = GST_CLOCK_DIFF (offset, element->inpoint);
+  GstClockTimeDiff n_duration = edge == GES_EDGE_END
+      ? GST_CLOCK_DIFF (offset, element->duration)
+      : element->duration + offset;
+
+  if (data && GST_CLOCK_TIME_IS_VALID (data->trim_group_start))
+    g_assert (trim_group_get_vals (data, element, &n_start, &n_inpoint,
+            &n_duration));
+
   ELEMENT_SET_FLAG (element, GES_TIMELINE_ELEMENT_SET_SIMPLE);
-  if (edge == GES_EDGE_END) {
-    ges_timeline_element_set_duration (element, GST_CLOCK_DIFF (offset,
-            element->duration));
-  } else {
-    ges_timeline_element_set_start (element, GST_CLOCK_DIFF (offset,
-            element->start));
-    ges_timeline_element_set_inpoint (element, GST_CLOCK_DIFF (offset,
-            element->inpoint));
-    ges_timeline_element_set_duration (element, element->duration + offset);
+  ELEMENT_SET_FLAG (toplevel, GES_TIMELINE_ELEMENT_SET_SIMPLE);
+  if (edge != GES_EDGE_END) {
+    ges_timeline_element_set_start (element, n_start);
+    ges_timeline_element_set_inpoint (element, n_inpoint);
   }
+  ges_timeline_element_set_duration (element, n_duration);
+
   GST_LOG ("Trimmed %" GES_FORMAT, GES_ARGS (element));
   ELEMENT_UNSET_FLAG (element, GES_TIMELINE_ELEMENT_SET_SIMPLE);
+  ELEMENT_UNSET_FLAG (toplevel, GES_TIMELINE_ELEMENT_SET_SIMPLE);
+  gst_object_unref (toplevel);
 }
 
 #define SET_TRIMMING_DATA(data, _edge, offset) G_STMT_START { \
@@ -845,6 +910,10 @@ trim_simple (GESTimelineElement * element, GstClockTimeDiff offset,
   data.start_diff = (_edge) == GES_EDGE_END ? 0 : (offset); \
   data.inpoint_diff = (_edge) == GES_EDGE_END ? 0 : (offset); \
   data.duration_diff = (_edge) == GES_EDGE_END ? (offset) : -(offset); \
+  if (GES_IS_GROUP (data.element)) {\
+    data.trim_group_start = data.element->start;\
+    data.trim_group_end = _END (data.element); \
+  } \
 } G_STMT_END
 
 
@@ -869,6 +938,10 @@ timeline_tree_trim (GNode * root, GESTimelineElement * element,
   };
   TreeIterationData data = tree_iteration_data_init;
 
+  /* Make sure to check all children of clips */
+  if (GES_IS_TRACK_ELEMENT (element) && element->parent)
+    element = element->parent;
+
   data.root = root;
   data.element = element;
   data.priority_diff =
@@ -876,13 +949,12 @@ timeline_tree_trim (GNode * root, GESTimelineElement * element,
       new_layer_priority;
   data.snapping = snapping_distance ? &snapping : NULL;
   data.moved_clips = g_hash_table_new (g_direct_hash, g_direct_equal);
-
   SET_TRIMMING_DATA (data, edge, offset);
   GST_INFO ("%" GES_FORMAT " trimming %s with offset %" G_GINT64_FORMAT "",
       GES_ARGS (element), edge == GES_EDGE_END ? "end" : "start", offset);
-  g_node_traverse (find_node (root, element), G_IN_ORDER,
-      G_TRAVERSE_LEAVES, -1, (GNodeTraverseFunc) add_element_to_list,
-      &data.movings);
+  g_node_traverse (find_node (root, get_toplevel_container (element)),
+      G_IN_ORDER, G_TRAVERSE_LEAVES, -1,
+      (GNodeTraverseFunc) add_element_to_list, &data.movings);
 
   if (!timeline_tree_can_trim_element_internal (root, &data)) {
     GST_INFO ("Can not trim object.");
@@ -909,7 +981,7 @@ timeline_tree_trim (GNode * root, GESTimelineElement * element,
 
   g_hash_table_iter_init (&iter, data.moved_clips);
   while (g_hash_table_iter_next (&iter, (gpointer *) & elem, NULL))
-    trim_simple (elem, offset, edge);
+    trim_simple (elem, offset, edge, &data);
 
   timeline_tree_create_transitions (root, ges_timeline_find_auto_transition);
   timeline_update_transition (root->data);
@@ -1155,9 +1227,9 @@ timeline_tree_roll (GNode * root, GESTimelineElement * element,
     }
   }
 
-  trim_simple (element, offset, edge);
+  trim_simple (element, offset, edge, NULL);
   for (tmp = data.neighbours; tmp; tmp = tmp->next)
-    trim_simple (tmp->data, offset, data.edge);
+    trim_simple (tmp->data, offset, data.edge, NULL);
 
 done:
   timeline_update_duration (root->data);

@@ -972,6 +972,7 @@ ges_timeline_element_get_timeline (GESTimelineElement * self)
 gboolean
 ges_timeline_element_set_start (GESTimelineElement * self, GstClockTime start)
 {
+  gboolean emit_notify = TRUE;
   GESTimelineElementClass *klass;
   GESTimelineElement *toplevel_container, *parent;
 
@@ -980,13 +981,24 @@ ges_timeline_element_set_start (GESTimelineElement * self, GstClockTime start)
   if (self->start == start)
     return TRUE;
 
-  klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
-
   GST_DEBUG_OBJECT (self, "current start: %" GST_TIME_FORMAT
       " new start: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GES_TIMELINE_ELEMENT_START (self)), GST_TIME_ARGS (start));
 
   toplevel_container = ges_timeline_element_get_toplevel_parent (self);
+
+  if (self->timeline
+      && !ELEMENT_FLAG_IS_SET (self, GES_TIMELINE_ELEMENT_SET_SIMPLE)
+      && !ELEMENT_FLAG_IS_SET (toplevel_container,
+          GES_TIMELINE_ELEMENT_SET_SIMPLE)) {
+    if (!ges_timeline_move_object_simple (self->timeline, self, NULL,
+            GES_EDGE_NONE, start)) {
+      gst_object_unref (toplevel_container);
+      return FALSE;
+    }
+
+    emit_notify = FALSE;
+  }
   parent = self->parent;
 
   /* FIXME This should not belong to GESTimelineElement */
@@ -1003,9 +1015,10 @@ ges_timeline_element_set_start (GESTimelineElement * self, GstClockTime start)
   }
 
   gst_object_unref (toplevel_container);
+  klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
   if (klass->set_start) {
     gint res = klass->set_start (self, start);
-    if (res == TRUE) {
+    if (res == TRUE && emit_notify) {
       self->start = start;
       g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_START]);
     }
@@ -1126,19 +1139,40 @@ ges_timeline_element_set_duration (GESTimelineElement * self,
     GstClockTime duration)
 {
   GESTimelineElementClass *klass;
+  gboolean emit_notify = TRUE;
+  GESTimelineElement *toplevel;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
 
-  klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
+  toplevel = ges_timeline_element_get_toplevel_parent (self);
+  if (self->timeline &&
+      !ELEMENT_FLAG_IS_SET (self, GES_TIMELINE_ELEMENT_SET_SIMPLE) &&
+      !ELEMENT_FLAG_IS_SET (toplevel, GES_TIMELINE_ELEMENT_SET_SIMPLE)) {
+    gboolean res;
+
+    res = timeline_trim_object (self->timeline, self,
+        GES_TIMELINE_ELEMENT_LAYER_PRIORITY (self), NULL,
+        GES_EDGE_END, self->start + duration);
+
+    if (!res) {
+      gst_object_unref (toplevel);
+
+      return FALSE;
+    }
+
+    emit_notify = res == -1;
+  }
+  gst_object_unref (toplevel);
 
   GST_DEBUG_OBJECT (self, "current duration: %" GST_TIME_FORMAT
       " new duration: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GES_TIMELINE_ELEMENT_DURATION (self)),
       GST_TIME_ARGS (duration));
 
+  klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
   if (klass->set_duration) {
     gint res = klass->set_duration (self, duration);
-    if (res == TRUE) {
+    if (res == TRUE && emit_notify) {
       self->duration = duration;
       g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_DURATION]);
     }
