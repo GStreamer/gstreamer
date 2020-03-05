@@ -780,6 +780,7 @@ _link_track (GESPipeline * self, GESTrack * track)
   GstCaps *caps;
   GstPadLinkReturn lret;
   gboolean reconfigured = FALSE;
+  gboolean ignore;
 
   pad = ges_timeline_get_pad_for_track (self->priv->timeline, track);
   if (G_UNLIKELY (!pad)) {
@@ -799,21 +800,28 @@ _link_track (GESPipeline * self, GESTrack * track)
    * video or text tracks. Also provide a way to switch between these. */
 
   /* Don't connect track if it's not going to be used */
-  if (track->type == GES_TRACK_TYPE_VIDEO &&
-      !(self->priv->mode & GES_PIPELINE_MODE_PREVIEW_VIDEO) &&
-      !(self->priv->mode & GES_PIPELINE_MODE_RENDER) &&
-      !(self->priv->mode & GES_PIPELINE_MODE_SMART_RENDER)) {
-    GST_DEBUG_OBJECT (self, "Video track... but we don't need it. Not linking");
-    /* FIXME: why are we not returning early at this point? */
+  ignore = TRUE;
+  /* only support audio and video. Technically, preview mode could support
+   * text quite easily, but this isn't yet the case for rendering using
+   * encodebin */
+  if (track->type == GES_TRACK_TYPE_AUDIO ||
+      track->type == GES_TRACK_TYPE_VIDEO) {
+    if (IN_RENDERING_MODE (self))
+      ignore = FALSE;
+    else if (track->type == GES_TRACK_TYPE_VIDEO &&
+        self->priv->mode & GES_PIPELINE_MODE_PREVIEW_VIDEO)
+      ignore = FALSE;
+    else if (track->type == GES_TRACK_TYPE_AUDIO &&
+        self->priv->mode & GES_PIPELINE_MODE_PREVIEW_AUDIO)
+      ignore = FALSE;
   }
-  if (track->type == GES_TRACK_TYPE_AUDIO &&
-      !(self->priv->mode & GES_PIPELINE_MODE_PREVIEW_AUDIO) &&
-      !(self->priv->mode & GES_PIPELINE_MODE_RENDER) &&
-      !(self->priv->mode & GES_PIPELINE_MODE_SMART_RENDER)) {
-    GST_DEBUG_OBJECT (self, "Audio track... but we don't need it. Not linking");
-    /* FIXME: why are we not returning early at this point? */
+
+  if (ignore) {
+    gst_object_unref (pad);
+    GST_DEBUG_OBJECT (self, "Ignoring track (type %u). Not linking",
+        track->type);
+    return;
   }
-  /* FIXME: what about text and custom tracks? */
 
   /* Get an existing chain or create it */
   if (!(chain = get_output_chain_for_track (self, track)))
