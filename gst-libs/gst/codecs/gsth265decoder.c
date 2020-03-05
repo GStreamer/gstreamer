@@ -340,7 +340,7 @@ gst_h265_decoder_preprocess_slice (GstH265Decoder * self, GstH265Slice * slice)
     return FALSE;
   }
 
-  if (IS_IDR (nalu->type)) {
+  if (GST_H265_IS_NAL_TYPE_IDR (nalu->type)) {
     GST_DEBUG_OBJECT (self, "IDR nalu, clear dpb");
     gst_h265_decoder_drain (GST_VIDEO_DECODER (self));
   }
@@ -708,17 +708,20 @@ gst_h265_decoder_fill_picture_from_slice (GstH265Decoder * self,
    * 4) first picture that follows an end of sequence NAL unit in decoding order
    * 5) has HandleCraAsBlaFlag == 1 (set by external means, so not considering )
    */
-  if (IS_IDR (nalu->type) || IS_BLA (nalu->type) ||
-      (IS_CRA (nalu->type) && priv->new_bitstream) || priv->prev_nal_is_eos) {
+  if (GST_H265_IS_NAL_TYPE_IDR (nalu->type) ||
+      GST_H265_IS_NAL_TYPE_BLA (nalu->type) ||
+      (GST_H265_IS_NAL_TYPE_CRA (nalu->type) && priv->new_bitstream) ||
+      priv->prev_nal_is_eos) {
     picture->NoRaslOutputFlag = TRUE;
   }
 
-  if (IS_IRAP (nalu->type)) {
+  if (GST_H265_IS_NAL_TYPE_IRAP (nalu->type)) {
     picture->IntraPicFlag = TRUE;
     priv->associated_irap_NoRaslOutputFlag = picture->NoRaslOutputFlag;
   }
 
-  if (IS_RASL (nalu->type) && priv->associated_irap_NoRaslOutputFlag) {
+  if (GST_H265_IS_NAL_TYPE_RASL (nalu->type) &&
+      priv->associated_irap_NoRaslOutputFlag) {
     picture->output_flag = FALSE;
   } else {
     picture->output_flag = slice_hdr->pic_output_flag;
@@ -762,21 +765,24 @@ gst_h265_decoder_calculate_poc (GstH265Decoder * self,
   const GstH265NalUnit *nalu = &slice->nalu;
   const GstH265SPS *sps = priv->active_sps;
   gint32 MaxPicOrderCntLsb = 1 << (sps->log2_max_pic_order_cnt_lsb_minus4 + 4);
+  gboolean is_irap;
 
   GST_DEBUG_OBJECT (self, "decode PicOrderCntVal");
 
   priv->prev_poc_lsb = priv->poc_lsb;
   priv->prev_poc_msb = priv->poc_msb;
 
-  if (!(IS_IRAP (nalu->type) && picture->NoRaslOutputFlag)) {
+  is_irap = GST_H265_IS_NAL_TYPE_IRAP (nalu->type);
+
+  if (!(is_irap && picture->NoRaslOutputFlag)) {
     priv->prev_poc_lsb = priv->prev_tid0pic_poc_lsb;
     priv->prev_poc_msb = priv->prev_tid0pic_poc_msb;
   }
 
   /* Finding PicOrderCntMsb */
-  if (IS_IRAP (nalu->type) && picture->NoRaslOutputFlag)
+  if (is_irap && picture->NoRaslOutputFlag) {
     priv->poc_msb = 0;
-  else {
+  } else {
     /* (8-1) */
     if ((slice_hdr->pic_order_cnt_lsb < priv->prev_poc_lsb) &&
         ((priv->prev_poc_lsb - slice_hdr->pic_order_cnt_lsb) >=
@@ -797,7 +803,7 @@ gst_h265_decoder_calculate_poc (GstH265Decoder * self,
       priv->poc_msb + slice_hdr->pic_order_cnt_lsb;
   priv->poc_lsb = picture->pic_order_cnt_lsb = slice_hdr->pic_order_cnt_lsb;
 
-  if (IS_IDR (nalu->type)) {
+  if (GST_H265_IS_NAL_TYPE_IDR (nalu->type)) {
     picture->pic_order_cnt = 0;
     picture->pic_order_cnt_lsb = 0;
     priv->poc_lsb = 0;
@@ -812,8 +818,8 @@ gst_h265_decoder_calculate_poc (GstH265Decoder * self,
       "PicOrderCntVal %d, (lsb %d)", picture->pic_order_cnt,
       picture->pic_order_cnt_lsb);
 
-  if (nalu->temporal_id_plus1 == 1 && !IS_RASL (nalu->type) &&
-      !IS_RADL (nalu->type) && nal_is_ref (nalu->type)) {
+  if (nalu->temporal_id_plus1 == 1 && !GST_H265_IS_NAL_TYPE_RASL (nalu->type) &&
+      !GST_H265_IS_NAL_TYPE_RADL (nalu->type) && nal_is_ref (nalu->type)) {
     priv->prev_tid0pic_poc_lsb = slice_hdr->pic_order_cnt_lsb;
     priv->prev_tid0pic_poc_msb = priv->poc_msb;
   }
@@ -962,13 +968,13 @@ gst_h265_decoder_prepare_rps (GstH265Decoder * self, const GstH265Slice * slice,
   gint i, j, k;
 
   /* if it is an irap pic, set all ref pics in dpb as unused for ref */
-  if (IS_IRAP (nalu->type) && picture->NoRaslOutputFlag) {
+  if (GST_H265_IS_NAL_TYPE_IRAP (nalu->type) && picture->NoRaslOutputFlag) {
     GST_DEBUG_OBJECT (self, "Mark all pictures in DPB as non-ref");
     gst_h265_dpb_mark_all_non_ref (priv->dpb);
   }
 
   /* Reset everything for IDR */
-  if (IS_IDR (nalu->type)) {
+  if (GST_H265_IS_NAL_TYPE_IDR (nalu->type)) {
     memset (priv->PocStCurrBefore, 0, sizeof (priv->PocStCurrBefore));
     memset (priv->PocStCurrAfter, 0, sizeof (priv->PocStCurrAfter));
     memset (priv->PocStFoll, 0, sizeof (priv->PocStFoll));
@@ -1150,7 +1156,8 @@ gst_h265_decoder_dpb_init (GstH265Decoder * self, const GstH265Slice * slice,
   const GstH265SliceHdr *slice_hdr = &slice->header;
   const GstH265NalUnit *nalu = &slice->nalu;
 
-  if (IS_IRAP (nalu->type) && picture->NoRaslOutputFlag && !priv->new_bitstream) {
+  if (GST_H265_IS_NAL_TYPE_IRAP (nalu->type) && picture->NoRaslOutputFlag
+      && !priv->new_bitstream) {
     if (nalu->type == GST_H265_NAL_SLICE_CRA_NUT)
       picture->NoOutputOfPriorPicsFlag = TRUE;
     else
@@ -1182,7 +1189,7 @@ gst_h265_decoder_start_current_picture (GstH265Decoder * self)
 
   /* Drop all RASL pictures having NoRaslOutputFlag is TRUE for the
    * associated IRAP picture */
-  if (IS_RASL (priv->current_slice.nalu.type) &&
+  if (GST_H265_IS_NAL_TYPE_RASL (priv->current_slice.nalu.type) &&
       priv->associated_irap_NoRaslOutputFlag) {
     GST_DEBUG_OBJECT (self, "Drop current picture");
     gst_h265_picture_replace (&priv->current_picture, NULL);

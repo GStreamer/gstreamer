@@ -40,24 +40,6 @@ typedef struct _GstH265Decoder GstH265Decoder;
 typedef struct _GstH265DecoderClass GstH265DecoderClass;
 typedef struct _GstH265DecoderPrivate GstH265DecoderPrivate;
 
-#define IS_IDR(nal_type) \
-  ((nal_type) == GST_H265_NAL_SLICE_IDR_W_RADL || (nal_type) == GST_H265_NAL_SLICE_IDR_N_LP)
-
-#define IS_IRAP(nal_type) \
-  ((nal_type) >= GST_H265_NAL_SLICE_BLA_W_LP && (nal_type) <= RESERVED_IRAP_NAL_TYPE_MAX)
-
-#define IS_BLA(nal_type) \
-  ((nal_type) >= GST_H265_NAL_SLICE_BLA_W_LP && (nal_type) <= GST_H265_NAL_SLICE_BLA_N_LP)
-
-#define IS_CRA(nal_type) \
-  ((nal_type) == GST_H265_NAL_SLICE_CRA_NUT)
-
-#define IS_RADL(nal_type) \
-  ((nal_type) >= GST_H265_NAL_SLICE_RADL_N && (nal_type) <= GST_H265_NAL_SLICE_RADL_R)
-
-#define IS_RASL(nal_type) \
-  ((nal_type) >= GST_H265_NAL_SLICE_RASL_N && (nal_type) <= GST_H265_NAL_SLICE_RASL_R)
-
 /**
  * GstH265Decoder:
  *

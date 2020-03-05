@@ -1260,9 +1260,9 @@ gst_d3d11_h265_dec_decode_slice (GstH265Decoder * decoder,
   gst_d3d11_h265_dec_fill_picture_params (self, &slice->header, &pic_params);
 
   pic_params.CurrPic.Index7Bits = view->view_id;
-  pic_params.IrapPicFlag = IS_IRAP (slice->nalu.type);
-  pic_params.IdrPicFlag = IS_IDR (slice->nalu.type);
-  pic_params.IntraPicFlag = IS_IRAP (slice->nalu.type);
+  pic_params.IrapPicFlag = GST_H265_IS_NAL_TYPE_IRAP (slice->nalu.type);
+  pic_params.IdrPicFlag = GST_H265_IS_NAL_TYPE_IDR (slice->nalu.type);
+  pic_params.IntraPicFlag = GST_H265_IS_NAL_TYPE_IRAP (slice->nalu.type);
   pic_params.CurrPicOrderCntVal = picture->pic_order_cnt;
 
   memcpy (pic_params.RefPicList, self->ref_pic_list,
