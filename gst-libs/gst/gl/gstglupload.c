@@ -633,6 +633,11 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
           "EGL_KHR_image_base"))
     return FALSE;
 
+  if (dmabuf->target == GST_GL_TEXTURE_TARGET_EXTERNAL_OES &&
+      !gst_gl_context_check_feature (dmabuf->upload->context,
+          "GL_OES_EGL_image_external"))
+    return FALSE;
+
   /* This will eliminate most non-dmabuf out there */
   if (!gst_is_dmabuf_memory (gst_buffer_peek_memory (buffer, 0)))
     return FALSE;
