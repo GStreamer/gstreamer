@@ -313,8 +313,8 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
   /* if we have multiple frames in superframe here,
    * decide which frame should consume given GstVideoCodecFrame.
    * In practice, superframe consists of two frame, one is decode-only frame
-   * and the other is normal frame. If it's not the case, any other vp9 decoder
-   * implementations (nvdec, libvpx) including this d3d11 decoder would
+   * and the other is normal frame. If it's not the case, existing vp9 decoder
+   * implementations (nvdec, vp9dec, d3d11 and so on) would
    * show mismatched number of input and output buffers.
    * To handle it in generic manner, we need vp9parse element to
    * split frames from superframe. */

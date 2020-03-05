@@ -62,9 +62,9 @@ struct _GstVp9Decoder
  * GstVp9DecoderClass:
  * @new_sequence:      Notifies subclass of SPS update
  * @new_picture:       Optional.
- *                     Called whenever new #GstH264Picture is created.
+ *                     Called whenever new #GstVp9Picture is created.
  *                     Subclass can set implementation specific user data
- *                     on the #GstH264Picture via gst_h264_picture_set_user_data()
+ *                     on the #GstVp9Picture via gst_h264_picture_set_user_data()
  * @duplicate_picture: Duplicate the #GstVp9Picture
  * @output_picture:    Called with a #GstVp9Picture which is required to be outputted.
  *                     Subclass can retrieve parent #GstVideoCodecFrame by using
@@ -72,13 +72,13 @@ struct _GstVp9Decoder
  *                     and the #GstVideoCodecFrame must be consumed by subclass via
  *                     gst_video_decoder_{finish,drop,release}_frame().
  * @start_picture:     Optional.
- *                     Called per one #GstH264Picture to notify subclass to prepare
- *                     decoding process for the #GstH264Picture
+ *                     Called per one #GstVp9Picture to notify subclass to prepare
+ *                     decoding process for the #GstVp9Picture
  * @decode_slice:      Provides per slice data with parsed slice header and
  *                     required raw bitstream for subclass to decode it
  * @end_picture:       Optional.
- *                     Called per one #GstH264Picture to notify subclass to finish
- *                     decoding process for the #GstH264Picture
+ *                     Called per one #GstVp9Picture to notify subclass to finish
+ *                     decoding process for the #GstVp9Picture
  */
 struct _GstVp9DecoderClass
 {
