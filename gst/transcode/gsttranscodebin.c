@@ -150,9 +150,9 @@ _insert_filter (GstTranscodeBin * self, GstPad * sinkpad, GstPad * pad,
   GST_OBJECT_UNLOCK (filter);
 
   if (audio)
-    convert = gst_element_factory_make ("audioconvert", "filter-convert");
+    convert = gst_element_factory_make ("audioconvert", NULL);
   else
-    convert = gst_element_factory_make ("videoconvert", "filter-convert");
+    convert = gst_element_factory_make ("videoconvert", NULL);
 
   if (!convert) {
     GST_ELEMENT_ERROR (self, CORE, MISSING_PLUGIN,
