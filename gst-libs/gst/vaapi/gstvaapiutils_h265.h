@@ -28,6 +28,21 @@
 G_BEGIN_DECLS
 
 /**
+ * GST_VAAPI_H265_MAX_COL_TILES:
+ *
+ * The max tiles in column according to spec A1
+ *
+ */
+#define GST_VAAPI_H265_MAX_COL_TILES    20
+/**
+ * GST_VAAPI_H265_MAX_ROW_TILES:
+ *
+ * The max tiles in row according to spec A1
+ *
+ */
+#define GST_VAAPI_H265_MAX_ROW_TILES    22
+
+/**
  * GstVaapiLevelH265:
  * @GST_VAAPI_LEVEL_H265_L1: H.265 level 1.
  * @GST_VAAPI_LEVEL_H265_L2: H.265 level 2.

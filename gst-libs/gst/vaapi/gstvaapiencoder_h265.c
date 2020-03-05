@@ -117,6 +117,8 @@ struct _GstVaapiEncoderH265
   GstClockTime cts_offset;
   gboolean config_changed;
   gboolean low_delay_b;
+  guint32 num_tile_cols;
+  guint32 num_tile_rows;
 
   /* maximum required size of the decoded picture buffer */
   guint32 max_dec_pic_buffering;
@@ -2893,6 +2895,8 @@ enum
   ENCODER_H265_PROP_LOW_DELAY_B,
   ENCODER_H265_PROP_MAX_QP,
   ENCODER_H265_PROP_QUALITY_FACTOR,
+  ENCODER_H265_PROP_NUM_TILE_COLS,
+  ENCODER_H265_PROP_NUM_TILE_ROWS,
   ENCODER_H265_N_PROPERTIES
 };
 
@@ -2955,6 +2959,12 @@ gst_vaapi_encoder_h265_set_property (GObject * object, guint prop_id,
     case ENCODER_H265_PROP_QUALITY_FACTOR:
       encoder->quality_factor = g_value_get_uint (value);
       break;
+    case ENCODER_H265_PROP_NUM_TILE_COLS:
+      encoder->num_tile_cols = g_value_get_uint (value);
+      break;
+    case ENCODER_H265_PROP_NUM_TILE_ROWS:
+      encoder->num_tile_rows = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
   }
@@ -3009,6 +3019,12 @@ gst_vaapi_encoder_h265_get_property (GObject * object, guint prop_id,
       break;
     case ENCODER_H265_PROP_QUALITY_FACTOR:
       g_value_set_uint (value, encoder->quality_factor);
+      break;
+    case ENCODER_H265_PROP_NUM_TILE_COLS:
+      g_value_set_uint (value, encoder->num_tile_cols);
+      break;
+    case ENCODER_H265_PROP_NUM_TILE_ROWS:
+      g_value_set_uint (value, encoder->num_tile_rows);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -3213,6 +3229,32 @@ gst_vaapi_encoder_h265_class_init (GstVaapiEncoderH265Class * klass)
       "quality factor for ICQ/QBVR bitrate control mode"
       " (lower value means higher quality, higher value means lower quality)",
       1, 51, 26,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
+      GST_VAAPI_PARAM_ENCODER_EXPOSURE);
+
+  /**
+   * GstVaapiEncoderH265:num-tile-cols:
+   *
+   * The number of tile columns when tile encoding is enabled.
+   */
+  properties[ENCODER_H265_PROP_NUM_TILE_COLS] =
+      g_param_spec_uint ("num-tile-cols",
+      "number of tile columns",
+      "the number of columns for tile encoding", 1,
+      GST_VAAPI_H265_MAX_COL_TILES, 1,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
+      GST_VAAPI_PARAM_ENCODER_EXPOSURE);
+
+  /**
+   * GstVaapiEncoderH265:num-tile-rows:
+   *
+   * The number of tile rows when tile encoding is enabled.
+   */
+  properties[ENCODER_H265_PROP_NUM_TILE_ROWS] =
+      g_param_spec_uint ("num-tile-rows",
+      "number of tile rows",
+      "the number of rows for tile encoding", 1,
+      GST_VAAPI_H265_MAX_ROW_TILES, 1,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
       GST_VAAPI_PARAM_ENCODER_EXPOSURE);
 
