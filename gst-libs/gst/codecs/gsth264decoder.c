@@ -1117,8 +1117,8 @@ gst_h264_decoder_do_output_picture (GstH264Decoder * self,
 
   klass = GST_H264_DECODER_GET_CLASS (self);
 
-  if (klass->output_picture)
-    priv->last_ret = klass->output_picture (self, picture);
+  g_assert (klass->output_picture);
+  priv->last_ret = klass->output_picture (self, picture);
 }
 
 static gboolean

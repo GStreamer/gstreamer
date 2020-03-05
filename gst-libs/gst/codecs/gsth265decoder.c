@@ -1112,8 +1112,8 @@ gst_h265_decoder_do_output_picture (GstH265Decoder * self,
 
   klass = GST_H265_DECODER_GET_CLASS (self);
 
-  if (klass->output_picture)
-    priv->last_ret = klass->output_picture (self, picture);
+  g_assert (klass->output_picture);
+  priv->last_ret = klass->output_picture (self, picture);
 }
 
 static gint

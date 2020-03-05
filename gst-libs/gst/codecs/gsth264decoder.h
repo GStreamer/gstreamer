@@ -65,9 +65,11 @@ struct _GstH264Decoder
  *                  Called whenever new #GstH264Picture is created.
  *                  Subclass can set implementation specific user data
  *                  on the #GstH264Picture via gst_h264_picture_set_user_data()
- * @output_picture: Optional.
- *                  Called just before gst_video_decoder_have_frame().
- *                  Subclass should be prepared for handle_frame()
+ * @output_picture: Called with a #GstH264Picture which is required to be outputted.
+ *                  Subclass can retrieve parent #GstVideoCodecFrame by using
+ *                  gst_video_decoder_get_frame() with system_frame_number
+ *                  and the #GstVideoCodecFrame must be consumed by subclass via
+ *                  gst_video_decoder_{finish,drop,release}_frame().
  * @start_picture:  Optional.
  *                  Called per one #GstH264Picture to notify subclass to prepare
  *                  decoding process for the #GstH264Picture

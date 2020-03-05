@@ -373,8 +373,8 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
             (GDestroyNotify) gst_vp9_picture_unref);
       }
 
-      if (klass->output_picture)
-        ret = klass->output_picture (self, picture);
+      g_assert (klass->output_picture);
+      ret = klass->output_picture (self, picture);
 
       gst_vp9_picture_unref (picture);
       picture = NULL;
@@ -433,8 +433,8 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
         }
       }
 
-      if (klass->output_picture)
-        ret = klass->output_picture (self, picture);
+      g_assert (klass->output_picture);
+      ret = klass->output_picture (self, picture);
 
       /* transfer ownership of picture */
       gst_vp9_dpb_add (priv->dpb, picture);
