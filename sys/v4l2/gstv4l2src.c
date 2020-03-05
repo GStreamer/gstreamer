@@ -953,7 +953,7 @@ retry:
   }
   gst_object_sync_values (GST_OBJECT (src), v4l2src->ctrl_time);
 
-  GST_INFO_OBJECT (src, "sync to %" GST_TIME_FORMAT " out ts %" GST_TIME_FORMAT,
+  GST_LOG_OBJECT (src, "sync to %" GST_TIME_FORMAT " out ts %" GST_TIME_FORMAT,
       GST_TIME_ARGS (v4l2src->ctrl_time), GST_TIME_ARGS (timestamp));
 
   /* use generated offset values only if there are not already valid ones
