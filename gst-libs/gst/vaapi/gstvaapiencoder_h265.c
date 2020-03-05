@@ -1872,6 +1872,26 @@ fill_picture (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
   pic_param->pic_fields.bits.no_output_of_prior_pics_flag =
       no_output_of_prior_pics_flag;
 
+  /* Setup tile info */
+  pic_param->pic_fields.bits.tiles_enabled_flag =
+      h265_is_tile_enabled (encoder);
+  if (pic_param->pic_fields.bits.tiles_enabled_flag) {
+    /* Always set loop filter across tiles enabled now */
+    pic_param->pic_fields.bits.loop_filter_across_tiles_enabled_flag = 1;
+
+    pic_param->num_tile_columns_minus1 = encoder->num_tile_cols - 1;
+    pic_param->num_tile_rows_minus1 = encoder->num_tile_rows - 1;
+
+    /* The VA row_height_minus1 and column_width_minus1 size is 1 smaller
+       than the MAX_COL_TILES and MAX_ROW_TILES, which means the driver
+       can deduce the last tile's size based on the picture info. We need
+       to take care of the array size here. */
+    for (i = 0; i < MIN (encoder->num_tile_cols, 19); ++i)
+      pic_param->column_width_minus1[i] = tile_ctu_cols[i] - 1;
+    for (i = 0; i < MIN (encoder->num_tile_rows, 21); ++i)
+      pic_param->row_height_minus1[i] = tile_ctu_rows[i] - 1;
+  }
+
   return TRUE;
 }
 
@@ -1982,62 +2002,92 @@ add_slice_headers (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
 
   g_assert (picture);
 
-  ctu_size = encoder->ctu_width * encoder->ctu_height;
+  if (h265_is_tile_enabled (encoder)) {
+    for (i_slice = 0; i_slice < encoder->num_slices; ++i_slice) {
+      encoder->first_slice_segment_in_pic_flag = (i_slice == 0);
 
-  g_assert (encoder->num_slices && encoder->num_slices < ctu_size);
-  slice_of_ctus = ctu_size / encoder->num_slices;
-  slice_mod_ctus = ctu_size % encoder->num_slices;
-  last_ctu_index = 0;
+      slice = create_and_fill_one_slice (encoder, picture, reflist_0,
+          reflist_0_count, reflist_1, reflist_1_count);
+      slice_param = slice->param;
 
-  for (i_slice = 0;
-      i_slice < encoder->num_slices && (last_ctu_index < ctu_size); ++i_slice) {
-    cur_slice_ctus = slice_of_ctus;
-    if (slice_mod_ctus) {
-      ++cur_slice_ctus;
-      --slice_mod_ctus;
+      slice_param->slice_segment_address =
+          encoder->tile_slice_address_map[encoder->tile_slice_address[i_slice]];
+      slice_param->num_ctu_in_slice = encoder->tile_slice_ctu_num[i_slice];
+      GST_LOG ("slice %d start tile address is %d, start address is %d,"
+          " CTU num %d", i_slice, encoder->tile_slice_address[i_slice],
+          slice_param->slice_segment_address, slice_param->num_ctu_in_slice);
+
+
+      if (i_slice == encoder->num_slices - 1)
+        slice_param->slice_fields.bits.last_slice_of_pic_flag = 1;
+
+      if ((GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) &
+              VA_ENC_PACKED_HEADER_SLICE)
+          && !add_packed_slice_header (encoder, picture, slice))
+        goto error_create_packed_slice_hdr;
+
+      gst_vaapi_enc_picture_add_slice (picture, slice);
+      gst_vaapi_codec_object_replace (&slice, NULL);
+    }
+  } else {
+    ctu_size = encoder->ctu_width * encoder->ctu_height;
+
+    g_assert (encoder->num_slices && encoder->num_slices < ctu_size);
+    slice_of_ctus = ctu_size / encoder->num_slices;
+    slice_mod_ctus = ctu_size % encoder->num_slices;
+    last_ctu_index = 0;
+
+    for (i_slice = 0;
+        i_slice < encoder->num_slices && (last_ctu_index < ctu_size);
+        ++i_slice) {
+      cur_slice_ctus = slice_of_ctus;
+      if (slice_mod_ctus) {
+        ++cur_slice_ctus;
+        --slice_mod_ctus;
+      }
+
+      slice = create_and_fill_one_slice (encoder, picture, reflist_0,
+          reflist_0_count, reflist_1, reflist_1_count);
+      slice_param = slice->param;
+
+      /* Work-around for satisfying the VA-Intel driver.
+       * The driver only support multi slice begin from row start address */
+      ctu_width_round_factor =
+          encoder->ctu_width - (cur_slice_ctus % encoder->ctu_width);
+      cur_slice_ctus += ctu_width_round_factor;
+      if ((last_ctu_index + cur_slice_ctus) > ctu_size)
+        cur_slice_ctus = ctu_size - last_ctu_index;
+
+      if (i_slice == 0) {
+        encoder->first_slice_segment_in_pic_flag = TRUE;
+        slice_param->slice_segment_address = 0;
+      } else {
+        encoder->first_slice_segment_in_pic_flag = FALSE;
+        slice_param->slice_segment_address = last_ctu_index;
+      }
+      slice_param->num_ctu_in_slice = cur_slice_ctus;
+
+      /* set calculation for next slice */
+      last_ctu_index += cur_slice_ctus;
+
+      if ((i_slice == encoder->num_slices - 1) || (last_ctu_index == ctu_size))
+        slice_param->slice_fields.bits.last_slice_of_pic_flag = 1;
+
+      if ((GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) &
+              VA_ENC_PACKED_HEADER_SLICE)
+          && !add_packed_slice_header (encoder, picture, slice))
+        goto error_create_packed_slice_hdr;
+
+      gst_vaapi_enc_picture_add_slice (picture, slice);
+      gst_vaapi_codec_object_replace (&slice, NULL);
     }
 
-    slice = create_and_fill_one_slice (encoder, picture,
-        reflist_0, reflist_0_count, reflist_1, reflist_1_count);
-    slice_param = slice->param;
-
-    /* Work-around for satisfying the VA-Intel driver.
-     * The driver only support multi slice begin from row start address */
-    ctu_width_round_factor =
-        encoder->ctu_width - (cur_slice_ctus % encoder->ctu_width);
-    cur_slice_ctus += ctu_width_round_factor;
-    if ((last_ctu_index + cur_slice_ctus) > ctu_size)
-      cur_slice_ctus = ctu_size - last_ctu_index;
-
-    if (i_slice == 0) {
-      encoder->first_slice_segment_in_pic_flag = TRUE;
-      slice_param->slice_segment_address = 0;
-    } else {
-      encoder->first_slice_segment_in_pic_flag = FALSE;
-      slice_param->slice_segment_address = last_ctu_index;
-    }
-    slice_param->num_ctu_in_slice = cur_slice_ctus;
-
-    /* set calculation for next slice */
-    last_ctu_index += cur_slice_ctus;
-
-    if ((i_slice == encoder->num_slices - 1) || (last_ctu_index == ctu_size))
-      slice_param->slice_fields.bits.last_slice_of_pic_flag = 1;
-
-    if ((GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) &
-            VA_ENC_PACKED_HEADER_SLICE)
-        && !add_packed_slice_header (encoder, picture, slice))
-      goto error_create_packed_slice_hdr;
-
-    gst_vaapi_enc_picture_add_slice (picture, slice);
-    gst_vaapi_codec_object_replace (&slice, NULL);
+    if (i_slice < encoder->num_slices)
+      GST_WARNING
+          ("Using less number of slices than requested, Number of slices per"
+          " pictures is %d", i_slice);
+    g_assert (last_ctu_index == ctu_size);
   }
-
-  if (i_slice < encoder->num_slices)
-    GST_WARNING
-        ("Using less number of slices than requested, Number of slices per"
-        " pictures is %d", i_slice);
-  g_assert (last_ctu_index == ctu_size);
 
   return TRUE;
 
