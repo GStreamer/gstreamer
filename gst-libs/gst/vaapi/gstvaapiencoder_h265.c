@@ -1811,6 +1811,97 @@ fill_picture (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
   return TRUE;
 }
 
+static GstVaapiEncSlice *
+create_and_fill_one_slice (GstVaapiEncoderH265 * encoder,
+    GstVaapiEncPicture * picture,
+    GstVaapiEncoderH265Ref ** reflist_0, guint reflist_0_count,
+    GstVaapiEncoderH265Ref ** reflist_1, guint reflist_1_count)
+{
+  VAEncSliceParameterBufferHEVC *slice_param;
+  GstVaapiEncSlice *slice;
+  guint i_ref;
+
+  slice = GST_VAAPI_ENC_SLICE_NEW (HEVC, encoder);
+  g_assert (slice && slice->param_id != VA_INVALID_ID);
+  slice_param = slice->param;
+  memset (slice_param, 0, sizeof (VAEncSliceParameterBufferHEVC));
+
+  slice_param->slice_type = h265_get_slice_type (picture->type);
+  if (encoder->low_delay_b && slice_param->slice_type == GST_H265_P_SLICE) {
+    slice_param->slice_type = GST_H265_B_SLICE;
+  }
+  slice_param->slice_pic_parameter_set_id = 0;
+
+  slice_param->slice_fields.bits.num_ref_idx_active_override_flag =
+      reflist_0_count || reflist_1_count;
+  if (picture->type != GST_VAAPI_PICTURE_TYPE_I && reflist_0_count > 0)
+    slice_param->num_ref_idx_l0_active_minus1 = reflist_0_count - 1;
+  else
+    slice_param->num_ref_idx_l0_active_minus1 = 0;
+  if (picture->type == GST_VAAPI_PICTURE_TYPE_B && reflist_1_count > 0)
+    slice_param->num_ref_idx_l1_active_minus1 = reflist_1_count - 1;
+  else
+    slice_param->num_ref_idx_l1_active_minus1 = 0;
+  if (picture->type == GST_VAAPI_PICTURE_TYPE_P && encoder->low_delay_b)
+    slice_param->num_ref_idx_l1_active_minus1 =
+        slice_param->num_ref_idx_l0_active_minus1;
+
+  i_ref = 0;
+  if (picture->type != GST_VAAPI_PICTURE_TYPE_I) {
+    for (; i_ref < reflist_0_count; ++i_ref) {
+      slice_param->ref_pic_list0[i_ref].picture_id =
+          GST_VAAPI_SURFACE_PROXY_SURFACE_ID (reflist_0[i_ref]->pic);
+      slice_param->ref_pic_list0[i_ref].pic_order_cnt = reflist_0[i_ref]->poc;
+    }
+  }
+  for (; i_ref < G_N_ELEMENTS (slice_param->ref_pic_list0); ++i_ref) {
+    slice_param->ref_pic_list0[i_ref].picture_id = VA_INVALID_SURFACE;
+    slice_param->ref_pic_list0[i_ref].flags = VA_PICTURE_HEVC_INVALID;
+  }
+
+  i_ref = 0;
+  if (picture->type == GST_VAAPI_PICTURE_TYPE_B) {
+    for (; i_ref < reflist_1_count; ++i_ref) {
+      slice_param->ref_pic_list1[i_ref].picture_id =
+          GST_VAAPI_SURFACE_PROXY_SURFACE_ID (reflist_1[i_ref]->pic);
+      slice_param->ref_pic_list1[i_ref].pic_order_cnt = reflist_1[i_ref]->poc;
+    }
+  } else if (picture->type == GST_VAAPI_PICTURE_TYPE_P && encoder->low_delay_b) {
+    for (; i_ref < reflist_0_count; ++i_ref) {
+      slice_param->ref_pic_list1[i_ref].picture_id =
+          GST_VAAPI_SURFACE_PROXY_SURFACE_ID (reflist_0[i_ref]->pic);
+      slice_param->ref_pic_list1[i_ref].pic_order_cnt = reflist_0[i_ref]->poc;
+    }
+  }
+  for (; i_ref < G_N_ELEMENTS (slice_param->ref_pic_list1); ++i_ref) {
+    slice_param->ref_pic_list1[i_ref].picture_id = VA_INVALID_SURFACE;
+    slice_param->ref_pic_list1[i_ref].flags = VA_PICTURE_HEVC_INVALID;
+  }
+
+  slice_param->max_num_merge_cand = 5;  /* MaxNumMergeCand      */
+  slice_param->slice_qp_delta = encoder->qp_i - encoder->init_qp;
+  if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CQP) {
+    if (picture->type == GST_VAAPI_PICTURE_TYPE_P) {
+      slice_param->slice_qp_delta += encoder->qp_ip;
+    } else if (picture->type == GST_VAAPI_PICTURE_TYPE_B) {
+      slice_param->slice_qp_delta += encoder->qp_ib;
+    }
+    if ((gint) encoder->init_qp + slice_param->slice_qp_delta <
+        (gint) encoder->min_qp) {
+      slice_param->slice_qp_delta = encoder->min_qp - encoder->init_qp;
+    }
+    if ((gint) encoder->init_qp + slice_param->slice_qp_delta >
+        (gint) encoder->max_qp) {
+      slice_param->slice_qp_delta = encoder->max_qp - encoder->init_qp;
+    }
+  }
+
+  slice_param->slice_fields.bits.slice_loop_filter_across_slices_enabled_flag =
+      TRUE;
+
+  return slice;
+}
+
 /* Adds slice headers to picture */
 static gboolean
 add_slice_headers (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
@@ -1823,7 +1914,7 @@ add_slice_headers (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
   guint ctu_size;
   guint ctu_width_round_factor;
   guint last_ctu_index;
-  guint i_slice, i_ref;
+  guint i_slice;
 
   g_assert (picture);
 
@@ -1842,6 +1933,10 @@ add_slice_headers (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
       --slice_mod_ctus;
     }
 
+    slice = create_and_fill_one_slice (encoder, picture,
+        reflist_0, reflist_0_count, reflist_1, reflist_1_count);
+    slice_param = slice->param;
+
     /* Work-around for satisfying the VA-Intel driver.
      * The driver only support multi slice begin from row start address */
     ctu_width_round_factor =
@@ -1850,11 +1945,6 @@ add_slice_headers (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
     if ((last_ctu_index + cur_slice_ctus) > ctu_size)
       cur_slice_ctus = ctu_size - last_ctu_index;
 
-    slice = GST_VAAPI_ENC_SLICE_NEW (HEVC, encoder);
-    g_assert (slice && slice->param_id != VA_INVALID_ID);
-    slice_param = slice->param;
-
-    memset (slice_param, 0, sizeof (VAEncSliceParameterBufferHEVC));
     if (i_slice == 0) {
       encoder->first_slice_segment_in_pic_flag = TRUE;
       slice_param->slice_segment_address = 0;
@@ -1863,79 +1953,6 @@ add_slice_headers (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
       slice_param->slice_segment_address = last_ctu_index;
     }
     slice_param->num_ctu_in_slice = cur_slice_ctus;
-    slice_param->slice_type = h265_get_slice_type (picture->type);
-    if (encoder->low_delay_b && slice_param->slice_type == GST_H265_P_SLICE) {
-      slice_param->slice_type = GST_H265_B_SLICE;
-    }
-    slice_param->slice_pic_parameter_set_id = 0;
-
-    slice_param->slice_fields.bits.num_ref_idx_active_override_flag =
-        reflist_0_count || reflist_1_count;
-    if (picture->type != GST_VAAPI_PICTURE_TYPE_I && reflist_0_count > 0)
-      slice_param->num_ref_idx_l0_active_minus1 = reflist_0_count - 1;
-    else
-      slice_param->num_ref_idx_l0_active_minus1 = 0;
-    if (picture->type == GST_VAAPI_PICTURE_TYPE_B && reflist_1_count > 0)
-      slice_param->num_ref_idx_l1_active_minus1 = reflist_1_count - 1;
-    else
-      slice_param->num_ref_idx_l1_active_minus1 = 0;
-    if (picture->type == GST_VAAPI_PICTURE_TYPE_P && encoder->low_delay_b)
-      slice_param->num_ref_idx_l1_active_minus1 =
-          slice_param->num_ref_idx_l0_active_minus1;
-
-    i_ref = 0;
-    if (picture->type != GST_VAAPI_PICTURE_TYPE_I) {
-      for (; i_ref < reflist_0_count; ++i_ref) {
-        slice_param->ref_pic_list0[i_ref].picture_id =
-            GST_VAAPI_SURFACE_PROXY_SURFACE_ID (reflist_0[i_ref]->pic);
-        slice_param->ref_pic_list0[i_ref].pic_order_cnt = reflist_0[i_ref]->poc;
-      }
-    }
-    for (; i_ref < G_N_ELEMENTS (slice_param->ref_pic_list0); ++i_ref) {
-      slice_param->ref_pic_list0[i_ref].picture_id = VA_INVALID_SURFACE;
-      slice_param->ref_pic_list0[i_ref].flags = VA_PICTURE_HEVC_INVALID;
-    }
-
-    i_ref = 0;
-    if (picture->type == GST_VAAPI_PICTURE_TYPE_B) {
-      for (; i_ref < reflist_1_count; ++i_ref) {
-        slice_param->ref_pic_list1[i_ref].picture_id =
-            GST_VAAPI_SURFACE_PROXY_SURFACE_ID (reflist_1[i_ref]->pic);
-        slice_param->ref_pic_list1[i_ref].pic_order_cnt = reflist_1[i_ref]->poc;
-      }
-    } else if (picture->type == GST_VAAPI_PICTURE_TYPE_P
-        && encoder->low_delay_b) {
-      for (; i_ref < reflist_0_count; ++i_ref) {
-        slice_param->ref_pic_list1[i_ref].picture_id =
-            GST_VAAPI_SURFACE_PROXY_SURFACE_ID (reflist_0[i_ref]->pic);
-        slice_param->ref_pic_list1[i_ref].pic_order_cnt = reflist_0[i_ref]->poc;
-      }
-    }
-    for (; i_ref < G_N_ELEMENTS (slice_param->ref_pic_list1); ++i_ref) {
-      slice_param->ref_pic_list1[i_ref].picture_id = VA_INVALID_SURFACE;
-      slice_param->ref_pic_list1[i_ref].flags = VA_PICTURE_HEVC_INVALID;
-    }
-
-    slice_param->max_num_merge_cand = 5;        /* MaxNumMergeCand  */
-    slice_param->slice_qp_delta = encoder->qp_i - encoder->init_qp;
-    if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CQP) {
-      if (picture->type == GST_VAAPI_PICTURE_TYPE_P) {
-        slice_param->slice_qp_delta += encoder->qp_ip;
-      } else if (picture->type == GST_VAAPI_PICTURE_TYPE_B) {
-        slice_param->slice_qp_delta += encoder->qp_ib;
-      }
-      if ((gint) encoder->init_qp + slice_param->slice_qp_delta <
-          (gint) encoder->min_qp) {
-        slice_param->slice_qp_delta = encoder->min_qp - encoder->init_qp;
-      }
-      if ((gint) encoder->init_qp + slice_param->slice_qp_delta >
-          (gint) encoder->max_qp) {
-        slice_param->slice_qp_delta = encoder->max_qp - encoder->init_qp;
-      }
-    }
-
-    slice_param->slice_fields.bits.
-        slice_loop_filter_across_slices_enabled_flag = TRUE;
 
     /* set calculation for next slice */
     last_ctu_index += cur_slice_ctus;
@@ -1951,10 +1968,11 @@ add_slice_headers (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
     gst_vaapi_enc_picture_add_slice (picture, slice);
     gst_vaapi_codec_object_replace (&slice, NULL);
   }
+
   if (i_slice < encoder->num_slices)
     GST_WARNING
-        ("Using less number of slices than requested, Number of slices per pictures is %d",
-        i_slice);
+        ("Using less number of slices than requested, Number of slices per"
+        " pictures is %d", i_slice);
   g_assert (last_ctu_index == ctu_size);
 
   return TRUE;
