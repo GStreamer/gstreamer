@@ -907,19 +907,15 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
        * 1) the first AU in bitstream is CRA
        * 2) or the first AU following EOS nal is CRA
        * 3) or it has HandleCraAsBlaFlag equal to 1 */
-      if (nal_type == GST_H265_NAL_SLICE_IDR_W_RADL ||
-          nal_type == GST_H265_NAL_SLICE_IDR_N_LP) {
+      if (GST_H265_IS_NAL_TYPE_IDR (nal_type)) {
         /* NoRaslOutputFlag is equal to 1 for each IDR */
         no_rasl_output_flag = TRUE;
-      } else if (nal_type == GST_H265_NAL_SLICE_BLA_W_LP ||
-          nal_type == GST_H265_NAL_SLICE_BLA_W_RADL ||
-          nal_type == GST_H265_NAL_SLICE_BLA_N_LP) {
+      } else if (GST_H265_IS_NAL_TYPE_BLA (nal_type)) {
         /* NoRaslOutputFlag is equal to 1 for each BLA */
         no_rasl_output_flag = TRUE;
       }
 
-      is_irap = ((nal_type >= GST_H265_NAL_SLICE_BLA_W_LP)
-          && (nal_type <= GST_H265_NAL_SLICE_CRA_NUT)) ? TRUE : FALSE;
+      is_irap = GST_H265_IS_NAL_TYPE_IRAP (nal_type);
 
       if (no_rasl_output_flag && is_irap
           && slice.first_slice_segment_in_pic_flag == 1) {
@@ -1015,8 +1011,7 @@ gst_h265_parse_collect_nal (GstH265Parse * h265parse, const guint8 * data,
    * i.e. other types become aggregated in front of it */
   h265parse->picture_start |= ((nal_type >= GST_H265_NAL_SLICE_TRAIL_N
           && nal_type <= GST_H265_NAL_SLICE_RASL_R)
-      || (nal_type >= GST_H265_NAL_SLICE_BLA_W_LP
-          && nal_type <= RESERVED_IRAP_NAL_TYPE_MAX));
+      || GST_H265_IS_NAL_TYPE_IRAP (nal_type));
 
   /* consider a coded slices (IRAP or not) to start a picture,
    * (so ending the previous one) if first_slice_segment_in_pic_flag == 1*/
@@ -1033,8 +1028,7 @@ gst_h265_parse_collect_nal (GstH265Parse * h265parse, const guint8 * data,
     complete |= h265parse->picture_start
         && (((nal_type >= GST_H265_NAL_SLICE_TRAIL_N
                 && nal_type <= GST_H265_NAL_SLICE_RASL_R)
-            || (nal_type >= GST_H265_NAL_SLICE_BLA_W_LP
-                && nal_type <= RESERVED_IRAP_NAL_TYPE_MAX))
+            || GST_H265_IS_NAL_TYPE_IRAP (nal_type))
         && (nnalu.data[nnalu.offset + 2] & 0x80));
   }
 

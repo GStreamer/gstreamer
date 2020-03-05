@@ -2269,8 +2269,7 @@ gst_h265_parser_parse_slice_hdr (GstH265Parser * parser,
 
   READ_UINT8 (&nr, slice->first_slice_segment_in_pic_flag, 1);
 
-  if (nalu->type >= GST_H265_NAL_SLICE_BLA_W_LP
-      && nalu->type <= RESERVED_IRAP_NAL_TYPE_MAX)
+  if (GST_H265_IS_NAL_TYPE_IRAP (nalu->type))
     READ_UINT8 (&nr, slice->no_output_of_prior_pics_flag, 1);
 
   READ_UE_MAX (&nr, pps_id, GST_H265_MAX_PPS_COUNT - 1);
@@ -2321,8 +2320,7 @@ gst_h265_parser_parse_slice_hdr (GstH265Parser * parser,
     if (sps->separate_colour_plane_flag == 1)
       READ_UINT8 (&nr, slice->colour_plane_id, 2);
 
-    if ((nalu->type != GST_H265_NAL_SLICE_IDR_W_RADL)
-        && (nalu->type != GST_H265_NAL_SLICE_IDR_N_LP)) {
+    if (!GST_H265_IS_NAL_TYPE_IDR (nalu->type)) {
       READ_UINT16 (&nr, slice->pic_order_cnt_lsb,
           (sps->log2_max_pic_order_cnt_lsb_minus4 + 4));
 

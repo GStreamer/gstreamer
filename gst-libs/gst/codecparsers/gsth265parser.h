@@ -43,6 +43,72 @@ G_BEGIN_DECLS
 #define GST_H265_IS_I_SLICE(slice)  ((slice)->type == GST_H265_I_SLICE)
 
 /**
+ * GST_H265_IS_NAL_TYPE_IDR:
+ * @nal_type: a #GstH265NalUnitType
+ *
+ * Check whether @nal_type is IDR or not
+ *
+ * Since: 1.18
+ */
+#define GST_H265_IS_NAL_TYPE_IDR(nal_type) \
+  ((nal_type) == GST_H265_NAL_SLICE_IDR_W_RADL || (nal_type) == GST_H265_NAL_SLICE_IDR_N_LP)
+
+/**
+ * GST_H265_IS_NAL_TYPE_IRAP:
+ * @nal_type: a #GstH265NalUnitType
+ *
+ * Check whether @nal_type is IRAP or not
+ *
+ * Since: 1.18
+ */
+#define GST_H265_IS_NAL_TYPE_IRAP(nal_type) \
+  ((nal_type) >= GST_H265_NAL_SLICE_BLA_W_LP && (nal_type) <= RESERVED_IRAP_NAL_TYPE_MAX)
+
+/**
+ * GST_H265_IS_NAL_TYPE_BLA:
+ * @nal_type: a #GstH265NalUnitType
+ *
+ * Check whether @nal_type is BLA or not
+ *
+ * Since: 1.18
+ */
+#define GST_H265_IS_NAL_TYPE_BLA(nal_type) \
+  ((nal_type) >= GST_H265_NAL_SLICE_BLA_W_LP && (nal_type) <= GST_H265_NAL_SLICE_BLA_N_LP)
+
+/**
+ * GST_H265_IS_NAL_TYPE_CRA:
+ * @nal_type: a #GstH265NalUnitType
+ *
+ * Check whether @nal_type is CRA or not
+ *
+ * Since: 1.18
+ */
+#define GST_H265_IS_NAL_TYPE_CRA(nal_type) \
+  ((nal_type) == GST_H265_NAL_SLICE_CRA_NUT)
+
+/**
+ * GST_H265_IS_NAL_TYPE_RADL:
+ * @nal_type: a #GstH265NalUnitType
+ *
+ * Check whether @nal_type is RADL or not
+ *
+ * Since: 1.18
+ */
+#define GST_H265_IS_NAL_TYPE_RADL(nal_type) \
+  ((nal_type) == GST_H265_NAL_SLICE_RADL_N || (nal_type) == GST_H265_NAL_SLICE_RADL_R)
+
+/**
+ * GST_H265_IS_NAL_TYPE_RASL:
+ * @nal_type: a #GstH265NalUnitType
+ *
+ * Check whether @nal_type is RASL or not
+ *
+ * Since: 1.18
+ */
+#define GST_H265_IS_NAL_TYPE_RASL(nal_type) \
+  ((nal_type) == GST_H265_NAL_SLICE_RASL_N || (nal_type) == GST_H265_NAL_SLICE_RASL_R)
+
+/**
  * GstH265Profile:
  * @GST_H265_PROFILE_MAIN: Main profile (A.3.2)
  * @GST_H265_PROFILE_MAIN_10: Main 10 profile (A.3.3)

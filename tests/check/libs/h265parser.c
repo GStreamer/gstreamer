@@ -524,6 +524,74 @@ GST_START_TEST (test_h265_parse_pps)
 
 GST_END_TEST;
 
+typedef struct
+{
+  GstH265NalUnitType type;
+  gboolean is_idr;
+  gboolean is_irap;
+  gboolean is_bla;
+  gboolean is_cra;
+  gboolean is_radl;
+  gboolean is_rasl;
+} H265NalTypeTestVector;
+
+GST_START_TEST (test_h265_nal_type_classification)
+{
+  gint i;
+  /* *INDENT-OFF* */
+  H265NalTypeTestVector test_vector[] = {
+    /*         NAL-TYPE             IDR    IRAP   BLA    CRA    RADL   RASL */
+    {GST_H265_NAL_SLICE_TRAIL_N,    FALSE, FALSE, FALSE, FALSE, FALSE, FALSE},
+    {GST_H265_NAL_SLICE_TRAIL_R,    FALSE, FALSE, FALSE, FALSE, FALSE, FALSE},
+    {GST_H265_NAL_SLICE_TSA_N,      FALSE, FALSE, FALSE, FALSE, FALSE, FALSE},
+    {GST_H265_NAL_SLICE_TSA_R,      FALSE, FALSE, FALSE, FALSE, FALSE, FALSE},
+    {GST_H265_NAL_SLICE_STSA_N,     FALSE, FALSE, FALSE, FALSE, FALSE, FALSE},
+    {GST_H265_NAL_SLICE_STSA_R,     FALSE, FALSE, FALSE, FALSE, FALSE, FALSE},
+    {GST_H265_NAL_SLICE_RADL_N,     FALSE, FALSE, FALSE, FALSE, TRUE,  FALSE},
+    {GST_H265_NAL_SLICE_RADL_R,     FALSE, FALSE, FALSE, FALSE, TRUE,  FALSE},
+    {GST_H265_NAL_SLICE_RASL_N,     FALSE, FALSE, FALSE, FALSE, FALSE, TRUE },
+    {GST_H265_NAL_SLICE_RASL_R,     FALSE, FALSE, FALSE, FALSE, FALSE, TRUE },
+    /* 10 ~ 15: reserved non-irap sublayer nal */
+    {GST_H265_NAL_SLICE_BLA_W_LP,   FALSE, TRUE,  TRUE,  FALSE, FALSE, FALSE},
+    {GST_H265_NAL_SLICE_BLA_W_RADL, FALSE, TRUE,  TRUE,  FALSE, FALSE, FALSE},
+    {GST_H265_NAL_SLICE_BLA_N_LP,   FALSE, TRUE,  TRUE,  FALSE, FALSE, FALSE},
+    {GST_H265_NAL_SLICE_IDR_W_RADL, TRUE,  TRUE,  FALSE, FALSE, FALSE, FALSE},
+    {GST_H265_NAL_SLICE_IDR_N_LP,   TRUE,  TRUE,  FALSE, FALSE, FALSE, FALSE},
+    {GST_H265_NAL_SLICE_CRA_NUT,    FALSE, TRUE,  FALSE, TRUE,  FALSE, FALSE},
+    /* 22 ~ 23: reserved irap nal */
+    {(GstH265NalUnitType) 22,       FALSE, TRUE,  FALSE, FALSE, FALSE, FALSE},
+    {(GstH265NalUnitType) 23,       FALSE, TRUE,  FALSE, FALSE, FALSE, FALSE},
+  };
+  /* *INDENT-ON* */
+
+  for (i = 0; i < G_N_ELEMENTS (test_vector); i++) {
+    assert_equals_int (GST_H265_IS_NAL_TYPE_IDR (test_vector[i].type),
+        test_vector[i].is_idr);
+    assert_equals_int (GST_H265_IS_NAL_TYPE_IRAP (test_vector[i].type),
+        test_vector[i].is_irap);
+    assert_equals_int (GST_H265_IS_NAL_TYPE_BLA (test_vector[i].type),
+        test_vector[i].is_bla);
+    assert_equals_int (GST_H265_IS_NAL_TYPE_CRA (test_vector[i].type),
+        test_vector[i].is_cra);
+    assert_equals_int (GST_H265_IS_NAL_TYPE_RADL (test_vector[i].type),
+        test_vector[i].is_radl);
+    assert_equals_int (GST_H265_IS_NAL_TYPE_RASL (test_vector[i].type),
+        test_vector[i].is_rasl);
+  }
+
+  for (i = RESERVED_NON_IRAP_NAL_TYPE_MIN;
+      i <= UNSPECIFIED_NON_VCL_NAL_TYPE_MAX; i++) {
+    assert_equals_int (GST_H265_IS_NAL_TYPE_IDR (i), FALSE);
+    assert_equals_int (GST_H265_IS_NAL_TYPE_IRAP (i), FALSE);
+    assert_equals_int (GST_H265_IS_NAL_TYPE_BLA (i), FALSE);
+    assert_equals_int (GST_H265_IS_NAL_TYPE_CRA (i), FALSE);
+    assert_equals_int (GST_H265_IS_NAL_TYPE_RADL (i), FALSE);
+    assert_equals_int (GST_H265_IS_NAL_TYPE_RASL (i), FALSE);
+  }
+}
+
+GST_END_TEST;
+
 static Suite *
 h265parser_suite (void)
 {
@@ -541,6 +609,7 @@ h265parser_suite (void)
   tcase_add_test (tc_chain, test_h265_format_range_profiles_partial_match);
   tcase_add_test (tc_chain, test_h265_parse_vps);
   tcase_add_test (tc_chain, test_h265_parse_pps);
+  tcase_add_test (tc_chain, test_h265_nal_type_classification);
 
   return s;
 }
