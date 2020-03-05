@@ -384,6 +384,11 @@ gboolean
 gst_vaapi_encoder_ensure_max_num_ref_frames (GstVaapiEncoder * encoder,
     GstVaapiProfile profile, GstVaapiEntrypoint entrypoint);
 
+G_GNUC_INTERNAL
+gboolean
+gst_vaapi_encoder_ensure_tile_support (GstVaapiEncoder * encoder,
+    GstVaapiProfile profile, GstVaapiEntrypoint entrypoint);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_ENCODER_PRIV_H */

@@ -1679,6 +1679,43 @@ gst_vaapi_encoder_ensure_max_num_ref_frames (GstVaapiEncoder * encoder,
   return TRUE;
 }
 
+/**
+ * gst_vaapi_encoder_ensure_tile_support:
+ * @encoder: a #GstVaapiEncoder
+ * @profile: a #GstVaapiProfile
+ * @entrypoint: a #GstVaapiEntrypoint
+ *
+ * This function will query VAConfigAttribEncTileSupport to check
+ * whether the encoder support tile.
+ *
+ * We need to pass the @profile and the @entrypoint, because at the
+ * moment the encoder base class, still doesn't have them assigned,
+ * and this function is meant to be called by the derived classes
+ * while they are configured.
+ *
+ * Returns: %TRUE if supported, %FALSE if not.
+ **/
+gboolean
+gst_vaapi_encoder_ensure_tile_support (GstVaapiEncoder * encoder,
+    GstVaapiProfile profile, GstVaapiEntrypoint entrypoint)
+{
+  guint tile = 0;
+
+#if VA_CHECK_VERSION(1,0,1)
+  VAProfile va_profile;
+  VAEntrypoint va_entrypoint;
+
+  va_profile = gst_vaapi_profile_get_va_profile (profile);
+  va_entrypoint = gst_vaapi_entrypoint_get_va_entrypoint (entrypoint);
+
+  if (!gst_vaapi_get_config_attribute (encoder->display, va_profile,
+          va_entrypoint, VAConfigAttribEncTileSupport, &tile))
+    return FALSE;
+#endif
+
+  return tile > 0;
+}
+
 GstVaapiProfile
 gst_vaapi_encoder_get_profile (GstVaapiEncoder * encoder)
 {
