@@ -771,6 +771,25 @@ bs_write_pps (GstBitWriter * bs,
   /* entropy_coding_sync_enabled_flag */
   WRITE_UINT32 (bs, pic_param->pic_fields.bits.entropy_coding_sync_enabled_flag,
       1);
+
+  /* tiles info */
+  if (pic_param->pic_fields.bits.tiles_enabled_flag) {
+    WRITE_UE (bs, pic_param->num_tile_columns_minus1);
+    WRITE_UE (bs, pic_param->num_tile_rows_minus1);
+    /* uniform_spacing_flag is 1 now */
+    WRITE_UINT32 (bs, 1, 1);
+    /* if (!uniform_spacing_flag) {
+       for (i = 0; i < num_tile_columns_minus1; i++)
+       column_width_minus1[i]
+       ue (v)
+       for (i = 0; i < num_tile_rows_minus1; i++)
+       row_height_minus1[i]
+       ue (v)
+       } */
+    WRITE_UINT32 (bs,
+        pic_param->pic_fields.bits.loop_filter_across_tiles_enabled_flag, 1);
+  }
+
   /* pps_loop_filter_across_slices_enabled_flag */
   WRITE_UINT32 (bs,
       pic_param->pic_fields.bits.pps_loop_filter_across_slices_enabled_flag, 1);
@@ -970,7 +989,12 @@ bs_write_slice (GstBitWriter * bs,
       WRITE_UINT32 (bs,
           slice_param->slice_fields.bits.
           slice_loop_filter_across_slices_enabled_flag, 1);
+  }
 
+  if (pic_param->pic_fields.bits.tiles_enabled_flag
+      || pic_param->pic_fields.bits.entropy_coding_sync_enabled_flag) {
+    /* output a num_entry_point_offsets, which should be 0 here */
+    WRITE_UE (bs, 0);
   }
 
   /* byte_alignment() */
