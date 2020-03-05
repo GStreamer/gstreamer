@@ -167,6 +167,7 @@ struct _GESAssetPrivate
 
   /* actual list of proxies */
   GList *proxies;
+  /* the asset whose proxies list we belong to */
   GESAsset *proxy_target;
 
   /* The error that occurred when an asset has been initialized with error */
@@ -502,8 +503,8 @@ ges_asset_class_init (GESAssetClass * klass)
    * proxy will act as a substitute for the original asset when the
    * original is requested (see ges_asset_request()).
    *
-   * Setting this property will not remove the existing proxy, but will
-   * replace it as the default (see ges_asset_set_proxy()).
+   * Setting this property will not usually remove the existing proxy, but
+   * will replace it as the default (see ges_asset_set_proxy()).
    */
   _properties[PROP_PROXY] =
       g_param_spec_object ("proxy", "Proxy",
@@ -512,8 +513,18 @@ ges_asset_class_init (GESAssetClass * klass)
   /**
    * GESAsset:proxy-target:
    *
-   * The asset that this asset is a proxy of, or %NULL if it is not a
+   * The asset that this asset is a proxy for, or %NULL if it is not a
    * proxy for another asset.
+   *
+   * Note that even if this asset is acting as a proxy for another asset,
+   * but this asset is not the default #GESAsset:proxy, then @proxy-target
+   * will *still* point to this other asset. So you should check the
+   * #GESAsset:proxy property of @target-proxy before assuming it is the
+   * current default proxy for the target.
+   *
+   * Note that the #GObject::notify for this property is emitted after
+   * the #GESAsset:proxy #GObject::notify for the corresponding (if any)
+   * asset it is now the proxy of/no longer the proxy of.
    */
   _properties[PROP_PROXY_TARGET] =
       g_param_spec_object ("proxy-target", "Proxy target",
@@ -860,23 +871,38 @@ ges_asset_finish_proxy (GESAsset * proxy)
   return ges_asset_set_proxy (proxied_asset, proxy);
 }
 
+static gboolean
+_contained_in_proxy_tree (GESAsset * node, GESAsset * search)
+{
+  GList *tmp;
+  if (node == search)
+    return TRUE;
+  for (tmp = node->priv->proxies; tmp; tmp = tmp->next) {
+    if (_contained_in_proxy_tree (tmp->data, search))
+      return TRUE;
+  }
+  return FALSE;
+}
+
 /**
  * ges_asset_set_proxy:
  * @asset: The #GESAsset to proxy
  * @proxy: (allow-none): A new default proxy for @asset
  *
- * Sets one asset as the default #GESAsset:proxy of another (the
- * original asset).
+ * Sets the #GESAsset:proxy for the asset.
  *
- * If the given proxy is among the existing proxies of the asset (see
+ * If @proxy is among the existing proxies of the asset (see
  * ges_asset_list_proxies()) it will be moved to become the default
- * proxy. Otherwise, the proxy will be added to the list of proxies, as
- * the new default. The previous default proxy will become 'next in line'
- * for if the new one is removed, and so on. As such, this method will
- * **not** actually remove the previous default proxy
- * (use ges_asset_unproxy() for that).
+ * proxy. Otherwise, if @proxy is not %NULL, it will be added to the list
+ * of proxies, as the new default. The previous default proxy will become
+ * 'next in line' for if the new one is removed, and so on. As such, this
+ * will **not** actually remove the previous default proxy (use
+ * ges_asset_unproxy() for that).
  *
  * Note that an asset can only act as a proxy for one other asset.
+ *
+ * As a special case, if @proxy is %NULL, then this method will actually
+ * remove **all** proxies from the asset.
  *
  * Returns: %TRUE if @proxy was successfully set as the default for
  * @asset.
@@ -884,43 +910,50 @@ ges_asset_finish_proxy (GESAsset * proxy)
 gboolean
 ges_asset_set_proxy (GESAsset * asset, GESAsset * proxy)
 {
+  GESAsset *current_target;
   g_return_val_if_fail (GES_IS_ASSET (asset), FALSE);
   g_return_val_if_fail (proxy == NULL || GES_IS_ASSET (proxy), FALSE);
   g_return_val_if_fail (asset != proxy, FALSE);
 
   if (!proxy) {
+    GList *tmp, *proxies;
     if (asset->priv->error) {
       GST_ERROR_OBJECT (asset,
-          "Proxy was loaded with error (%s), it should not be 'unproxied'",
+          "Asset was loaded with error (%s), it should not be 'unproxied'",
           asset->priv->error->message);
 
       return FALSE;
     }
 
-    if (asset->priv->proxies) {
-      GESAsset *old_proxy = GES_ASSET (asset->priv->proxies->data);
+    GST_DEBUG_OBJECT (asset, "Removing all proxies");
+    proxies = asset->priv->proxies;
+    asset->priv->proxies = NULL;
 
-      old_proxy->priv->proxy_target = NULL;
-      g_object_notify_by_pspec (G_OBJECT (old_proxy),
-          _properties[PROP_PROXY_TARGET]);
+    for (tmp = proxies; tmp; tmp = tmp->next) {
+      GESAsset *proxy = tmp->data;
+      proxy->priv->proxy_target = NULL;
     }
-
-    GST_DEBUG_OBJECT (asset, "%s not proxied anymore", asset->priv->id);
     asset->priv->state = ASSET_INITIALIZED;
-    g_object_notify_by_pspec (G_OBJECT (asset), _properties[PROP_PROXY]);
 
+    g_object_notify_by_pspec (G_OBJECT (asset), _properties[PROP_PROXY]);
+    for (tmp = proxies; tmp; tmp = tmp->next)
+      g_object_notify_by_pspec (G_OBJECT (tmp->data),
+          _properties[PROP_PROXY_TARGET]);
+
+    g_list_free (proxies);
     return TRUE;
   }
+  current_target = proxy->priv->proxy_target;
 
-  if (proxy->priv->proxy_target) {
+  if (current_target && current_target != asset) {
     GST_ERROR_OBJECT (asset,
-        "Trying to use %s as a proxy, but it is already proxying %s",
-        proxy->priv->id, proxy->priv->proxy_target->priv->id);
+        "Trying to use '%s' as a proxy, but it is already proxying '%s'",
+        proxy->priv->id, current_target->priv->id);
 
     return FALSE;
   }
 
-  if (g_list_find (proxy->priv->proxies, asset)) {
+  if (_contained_in_proxy_tree (proxy, asset)) {
     GST_ERROR_OBJECT (asset, "Trying to setup a circular proxying dependency!");
 
     return FALSE;
@@ -929,17 +962,18 @@ ges_asset_set_proxy (GESAsset * asset, GESAsset * proxy)
   if (g_list_find (asset->priv->proxies, proxy)) {
     GST_INFO_OBJECT (asset,
         "%" GST_PTR_FORMAT " already marked as proxy, moving to first", proxy);
-    GES_ASSET (asset->priv->proxies->data)->priv->proxy_target = NULL;
     asset->priv->proxies = g_list_remove (asset->priv->proxies, proxy);
   }
 
   GST_INFO ("%s is now proxied by %s", asset->priv->id, proxy->priv->id);
   asset->priv->proxies = g_list_prepend (asset->priv->proxies, proxy);
-  proxy->priv->proxy_target = asset;
-  g_object_notify_by_pspec (G_OBJECT (proxy), _properties[PROP_PROXY_TARGET]);
 
+  proxy->priv->proxy_target = asset;
   asset->priv->state = ASSET_PROXIED;
+
   g_object_notify_by_pspec (G_OBJECT (asset), _properties[PROP_PROXY]);
+  if (current_target != asset)
+    g_object_notify_by_pspec (G_OBJECT (proxy), _properties[PROP_PROXY_TARGET]);
 
   /* FIXME: ->inform_proxy is not called. We should figure out what the
    * purpose of ->inform_proxy should be generically. Currently, it is
@@ -965,20 +999,38 @@ ges_asset_set_proxy (GESAsset * asset, GESAsset * proxy)
 gboolean
 ges_asset_unproxy (GESAsset * asset, GESAsset * proxy)
 {
+  gboolean removing_default;
+  gboolean last_proxy;
   g_return_val_if_fail (GES_IS_ASSET (asset), FALSE);
   g_return_val_if_fail (GES_IS_ASSET (proxy), FALSE);
   g_return_val_if_fail (asset != proxy, FALSE);
 
+  /* also tests if the list is NULL */
   if (!g_list_find (asset->priv->proxies, proxy)) {
-    GST_INFO_OBJECT (asset, "%s is not a proxy.", proxy->priv->id);
+    GST_INFO_OBJECT (asset, "'%s' is not a proxy.", proxy->priv->id);
 
     return FALSE;
   }
 
-  if (asset->priv->proxies->data == proxy)
-    ges_asset_set_proxy (asset, NULL);
+  last_proxy = (asset->priv->proxies->next == NULL);
+  if (last_proxy && asset->priv->error) {
+    GST_ERROR_OBJECT (asset,
+        "Asset was loaded with error (%s), its last proxy '%s' should "
+        "not be removed", asset->priv->error->message, proxy->priv->id);
+    return FALSE;
+  }
+
+  removing_default = (asset->priv->proxies->data == proxy);
 
   asset->priv->proxies = g_list_remove (asset->priv->proxies, proxy);
+
+  if (last_proxy)
+    asset->priv->state = ASSET_INITIALIZED;
+  proxy->priv->proxy_target = NULL;
+
+  if (removing_default)
+    g_object_notify_by_pspec (G_OBJECT (asset), _properties[PROP_PROXY]);
+  g_object_notify_by_pspec (G_OBJECT (proxy), _properties[PROP_PROXY_TARGET]);
 
   return TRUE;
 }

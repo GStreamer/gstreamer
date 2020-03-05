@@ -327,6 +327,413 @@ GST_START_TEST (test_proxy_asset)
 GST_END_TEST;
 */
 
+static void
+_count_cb (GObject * obj, GParamSpec * pspec, gpointer key)
+{
+  guint count = GPOINTER_TO_UINT (g_object_get_data (G_OBJECT (obj), key));
+  g_object_set_data (G_OBJECT (obj), key, GUINT_TO_POINTER (count + 1));
+}
+
+#define _CONNECT_PROXY_SIGNALS(asset) \
+  g_signal_connect (asset, "notify::proxy", G_CALLBACK (_count_cb), \
+      (gchar *)"test-data-proxy-count"); \
+  g_signal_connect (asset, "notify::proxy-target", G_CALLBACK (_count_cb), \
+      (gchar *)"test-data-target-count");
+
+/* test that @asset has the properties proxy = @proxy and
+ * proxy-target = @proxy_target
+ * Also check that the callback for "notify::proxy" (set up in
+ * _CONNECT_PROXY_SIGNALS) has been called @p_count times, and the
+ * callback for "notify::target-proxy" has been called @t_count times.
+ */
+#define _assert_proxy_state(asset, proxy, proxy_target, p_count, t_count) \
+{ \
+  const gchar *id = ges_asset_get_id (asset); \
+  guint found_p_count = GPOINTER_TO_UINT (g_object_get_data ( \
+        G_OBJECT (asset), "test-data-proxy-count")); \
+  guint found_t_count = GPOINTER_TO_UINT (g_object_get_data ( \
+        G_OBJECT (asset), "test-data-target-count")); \
+  GESAsset *found_proxy = ges_asset_get_proxy (asset); \
+  GESAsset *found_target = ges_asset_get_proxy_target (asset); \
+  fail_unless (found_proxy == proxy, "Asset '%s' has the proxy '%s' " \
+      "rather than the expected '%s'", id, \
+      found_proxy ? ges_asset_get_id (found_proxy) : NULL, \
+      proxy ? ges_asset_get_id (proxy) : NULL); \
+  fail_unless (found_target == proxy_target, "Asset '%s' has the proxy " \
+      "target '%s' rather than the expected '%s'", id, \
+      found_target ? ges_asset_get_id (found_target) : NULL, \
+      proxy_target ? ges_asset_get_id (proxy_target) : NULL); \
+  fail_unless (p_count == found_p_count, "notify::proxy for asset '%s' " \
+      "was called %u times, rather than the expected %u times", \
+      id, found_p_count, p_count); \
+  fail_unless (t_count == found_t_count, "notify::target-proxy for " \
+      "asset '%s' was called %u times, rather than the expected %u times", \
+      id, found_t_count, t_count); \
+}
+
+#define _assert_proxy_list(asset, cmp_list) \
+{ \
+  const gchar * id = ges_asset_get_id (asset); \
+  int i; \
+  GList *tmp; \
+  for (i = 0, tmp = ges_asset_list_proxies (asset); cmp_list[i] && tmp; \
+      i++, tmp = tmp->next) { \
+    GESAsset *proxy = tmp->data; \
+    fail_unless (proxy == cmp_list[i], "The asset '%s' has '%s' as its " \
+        "%ith proxy, rather than the expected '%s'", id, \
+        ges_asset_get_id (proxy), i, ges_asset_get_id (cmp_list[i])); \
+  } \
+  fail_unless (tmp == NULL, "Found more proxies for '%s' than expected", \
+      id); \
+  fail_unless (cmp_list[i] == NULL, "Found less proxies (%i) for '%s' " \
+      "than expected", i, id); \
+}
+
+#define _assert_effect_asset_request(req_id, expect) \
+{ \
+  GESAsset *requested = ges_asset_request (GES_TYPE_EFFECT, req_id, NULL); \
+  fail_unless (requested == expect, "Requested asset for id '%s' is " \
+      "'%s' rather than the expected '%s'", req_id, \
+      requested ? ges_asset_get_id (requested) : NULL, \
+      ges_asset_get_id (expect)); \
+  gst_object_unref (requested); \
+}
+
+GST_START_TEST (test_proxy_setters)
+{
+  GESAsset *proxies[] = { NULL, NULL, NULL, NULL };
+  GESAsset *asset, *alt_asset;
+  GESAsset *proxy0, *proxy1, *proxy2;
+  gchar asset_id[] = "video agingtv ! videobalance";
+  gchar alt_asset_id[] = "video gamma";
+  gchar proxy0_id[] = "video videobalance contrast=0.0";
+  gchar proxy1_id[] = "video videobalance contrast=1.0";
+  gchar proxy2_id[] = "video videobalance contrast=2.0";
+
+  ges_init ();
+
+  asset = ges_asset_request (GES_TYPE_EFFECT, asset_id, NULL);
+  alt_asset = ges_asset_request (GES_TYPE_EFFECT, alt_asset_id, NULL);
+
+  proxy0 = ges_asset_request (GES_TYPE_EFFECT, proxy0_id, NULL);
+  proxy1 = ges_asset_request (GES_TYPE_EFFECT, proxy1_id, NULL);
+  proxy2 = ges_asset_request (GES_TYPE_EFFECT, proxy2_id, NULL);
+
+  /* make sure our assets are unique */
+  fail_unless (asset);
+  fail_unless (alt_asset);
+  fail_unless (proxy0);
+  fail_unless (proxy1);
+  fail_unless (proxy2);
+  fail_unless (asset != alt_asset);
+  fail_unless (asset != proxy0);
+  fail_unless (asset != proxy1);
+  fail_unless (asset != proxy2);
+  fail_unless (alt_asset != proxy0);
+  fail_unless (alt_asset != proxy1);
+  fail_unless (alt_asset != proxy2);
+  fail_unless (proxy0 != proxy1);
+  fail_unless (proxy0 != proxy1);
+  fail_unless (proxy0 != proxy2);
+  fail_unless (proxy1 != proxy2);
+
+  _CONNECT_PROXY_SIGNALS (asset);
+  _CONNECT_PROXY_SIGNALS (alt_asset);
+  _CONNECT_PROXY_SIGNALS (proxy0);
+  _CONNECT_PROXY_SIGNALS (proxy1);
+  _CONNECT_PROXY_SIGNALS (proxy2);
+
+  /* no proxies to start with */
+  _assert_proxy_state (asset, NULL, NULL, 0, 0);
+  _assert_proxy_state (alt_asset, NULL, NULL, 0, 0);
+  _assert_proxy_state (proxy0, NULL, NULL, 0, 0);
+  _assert_proxy_state (proxy1, NULL, NULL, 0, 0);
+  _assert_proxy_state (proxy2, NULL, NULL, 0, 0);
+  _assert_proxy_list (asset, proxies);
+  _assert_proxy_list (alt_asset, proxies);
+  _assert_proxy_list (proxy0, proxies);
+  _assert_proxy_list (proxy1, proxies);
+  _assert_proxy_list (proxy2, proxies);
+
+  /* id for an asset with no proxy returns itself */
+  _assert_effect_asset_request (asset_id, asset);
+  _assert_effect_asset_request (alt_asset_id, alt_asset);
+  _assert_effect_asset_request (proxy0_id, proxy0);
+  _assert_effect_asset_request (proxy1_id, proxy1);
+  _assert_effect_asset_request (proxy2_id, proxy2);
+
+  /* set a proxy */
+  fail_unless (ges_asset_set_proxy (asset, proxy0));
+  _assert_proxy_state (asset, proxy0, NULL, 1, 0);
+  _assert_proxy_state (proxy0, NULL, asset, 0, 1);
+  _assert_proxy_state (proxy1, NULL, NULL, 0, 0);
+  _assert_proxy_state (proxy2, NULL, NULL, 0, 0);
+
+  proxies[0] = proxy0;
+  _assert_proxy_list (asset, proxies);
+
+  /* requesting the same asset should return the proxy instead */
+  _assert_effect_asset_request (asset_id, proxy0);
+  _assert_effect_asset_request (proxy0_id, proxy0);
+  _assert_effect_asset_request (proxy1_id, proxy1);
+  _assert_effect_asset_request (proxy2_id, proxy2);
+
+  /* can't proxy a different asset */
+  /* Raises ERROR */
+  fail_unless (ges_asset_set_proxy (alt_asset, proxy0) == FALSE);
+  _assert_proxy_state (alt_asset, NULL, NULL, 0, 0);
+  _assert_proxy_state (asset, proxy0, NULL, 1, 0);
+  _assert_proxy_state (proxy0, NULL, asset, 0, 1);
+  _assert_proxy_state (proxy1, NULL, NULL, 0, 0);
+  _assert_proxy_state (proxy2, NULL, NULL, 0, 0);
+
+  _assert_proxy_list (asset, proxies);
+  _assert_effect_asset_request (asset_id, proxy0);
+  _assert_effect_asset_request (proxy0_id, proxy0);
+
+  /* set the same proxy again is safe */
+  fail_unless (ges_asset_set_proxy (asset, proxy0));
+  /* notify::proxy callback count increases, even though we set the same
+   * proxy. This is the default behaviour for setters. */
+  _assert_proxy_state (asset, proxy0, NULL, 2, 0);
+  /* but the notify::target-proxy has not increased for the proxy */
+  _assert_proxy_state (proxy0, NULL, asset, 0, 1);
+  _assert_proxy_state (proxy1, NULL, NULL, 0, 0);
+  _assert_proxy_state (proxy2, NULL, NULL, 0, 0);
+
+  _assert_proxy_list (asset, proxies);
+  _assert_effect_asset_request (asset_id, proxy0);
+  _assert_effect_asset_request (proxy0_id, proxy0);
+
+  /* replace the proxy with a new one */
+  fail_unless (ges_asset_set_proxy (asset, proxy1));
+  _assert_proxy_state (asset, proxy1, NULL, 3, 0);
+  /* first proxy still keeps its target */
+  _assert_proxy_state (proxy0, NULL, asset, 0, 1);
+  _assert_proxy_state (proxy1, NULL, asset, 0, 1);
+  _assert_proxy_state (proxy2, NULL, NULL, 0, 0);
+
+  proxies[0] = proxy1;
+  proxies[1] = proxy0;
+  _assert_proxy_list (asset, proxies);
+
+  _assert_effect_asset_request (asset_id, proxy1);
+  _assert_effect_asset_request (proxy0_id, proxy0);
+  _assert_effect_asset_request (proxy1_id, proxy1);
+  _assert_effect_asset_request (proxy2_id, proxy2);
+
+  /* replace again */
+  fail_unless (ges_asset_set_proxy (asset, proxy2));
+  _assert_proxy_state (asset, proxy2, NULL, 4, 0);
+  _assert_proxy_state (proxy0, NULL, asset, 0, 1);
+  _assert_proxy_state (proxy1, NULL, asset, 0, 1);
+  _assert_proxy_state (proxy2, NULL, asset, 0, 1);
+
+  proxies[0] = proxy2;
+  proxies[1] = proxy1;
+  proxies[2] = proxy0;
+  _assert_proxy_list (asset, proxies);
+
+  _assert_effect_asset_request (asset_id, proxy2);
+  _assert_effect_asset_request (proxy0_id, proxy0);
+  _assert_effect_asset_request (proxy1_id, proxy1);
+  _assert_effect_asset_request (proxy2_id, proxy2);
+
+  /* move proxy0 back to being the default */
+  fail_unless (ges_asset_set_proxy (asset, proxy0));
+  _assert_proxy_state (asset, proxy0, NULL, 5, 0);
+  _assert_proxy_state (proxy0, NULL, asset, 0, 1);
+  _assert_proxy_state (proxy1, NULL, asset, 0, 1);
+  _assert_proxy_state (proxy2, NULL, asset, 0, 1);
+
+  proxies[0] = proxy0;
+  proxies[1] = proxy2;
+  proxies[2] = proxy1;
+  _assert_proxy_list (asset, proxies);
+
+  _assert_effect_asset_request (asset_id, proxy0);
+  _assert_effect_asset_request (proxy0_id, proxy0);
+  _assert_effect_asset_request (proxy1_id, proxy1);
+  _assert_effect_asset_request (proxy2_id, proxy2);
+
+  /* remove proxy2 */
+  fail_unless (ges_asset_unproxy (asset, proxy2));
+  /* notify::proxy not released since we have not switched defaults */
+  _assert_proxy_state (asset, proxy0, NULL, 5, 0);
+  _assert_proxy_state (proxy0, NULL, asset, 0, 1);
+  _assert_proxy_state (proxy1, NULL, asset, 0, 1);
+  _assert_proxy_state (proxy2, NULL, NULL, 0, 2);
+
+  proxies[0] = proxy0;
+  proxies[1] = proxy1;
+  proxies[2] = NULL;
+  _assert_proxy_list (asset, proxies);
+
+  _assert_effect_asset_request (asset_id, proxy0);
+  _assert_effect_asset_request (proxy0_id, proxy0);
+  _assert_effect_asset_request (proxy1_id, proxy1);
+  _assert_effect_asset_request (proxy2_id, proxy2);
+
+  /* make proxy2 a proxy for proxy0 */
+  fail_unless (ges_asset_set_proxy (proxy0, proxy2));
+  _assert_proxy_state (asset, proxy0, NULL, 5, 0);
+  _assert_proxy_state (proxy0, proxy2, asset, 1, 1);
+  _assert_proxy_state (proxy1, NULL, asset, 0, 1);
+  _assert_proxy_state (proxy2, NULL, proxy0, 0, 3);
+
+  proxies[0] = proxy0;
+  proxies[1] = proxy1;
+  proxies[2] = NULL;
+  _assert_proxy_list (asset, proxies);
+
+  proxies[0] = proxy2;
+  proxies[1] = NULL;
+  _assert_proxy_list (proxy0, proxies);
+
+  /* original id will now follows two proxy links to get proxy2 */
+  _assert_effect_asset_request (asset_id, proxy2);
+  _assert_effect_asset_request (proxy0_id, proxy2);
+  _assert_effect_asset_request (proxy1_id, proxy1);
+  _assert_effect_asset_request (proxy2_id, proxy2);
+
+  /* remove proxy0 from asset, should now default to proxy1 */
+  fail_unless (ges_asset_unproxy (asset, proxy0));
+  /* notify::proxy released since we have switched defaults */
+  _assert_proxy_state (asset, proxy1, NULL, 6, 0);
+  _assert_proxy_state (proxy0, proxy2, NULL, 1, 2);
+  _assert_proxy_state (proxy1, NULL, asset, 0, 1);
+  _assert_proxy_state (proxy2, NULL, proxy0, 0, 3);
+
+  proxies[0] = proxy1;
+  proxies[1] = NULL;
+  _assert_proxy_list (asset, proxies);
+
+  proxies[0] = proxy2;
+  proxies[1] = NULL;
+  _assert_proxy_list (proxy0, proxies);
+
+  _assert_effect_asset_request (asset_id, proxy1);
+  _assert_effect_asset_request (proxy0_id, proxy2);
+  _assert_effect_asset_request (proxy1_id, proxy1);
+  _assert_effect_asset_request (proxy2_id, proxy2);
+
+  /* remove proxy2 from proxy0 */
+  fail_unless (ges_asset_unproxy (proxy0, proxy2));
+  _assert_proxy_state (asset, proxy1, NULL, 6, 0);
+  _assert_proxy_state (proxy0, NULL, NULL, 2, 2);
+  _assert_proxy_state (proxy1, NULL, asset, 0, 1);
+  _assert_proxy_state (proxy2, NULL, NULL, 0, 4);
+
+  proxies[0] = proxy1;
+  proxies[1] = NULL;
+  _assert_proxy_list (asset, proxies);
+
+  proxies[0] = NULL;
+  _assert_proxy_list (proxy0, proxies);
+
+  _assert_effect_asset_request (asset_id, proxy1);
+  _assert_effect_asset_request (proxy0_id, proxy0);
+  _assert_effect_asset_request (proxy1_id, proxy1);
+  _assert_effect_asset_request (proxy2_id, proxy2);
+
+  /* make both proxy0 and proxy2 proxies of proxy1 */
+  fail_unless (ges_asset_set_proxy (proxy1, proxy0));
+  _assert_proxy_state (asset, proxy1, NULL, 6, 0);
+  _assert_proxy_state (proxy0, NULL, proxy1, 2, 3);
+  _assert_proxy_state (proxy1, proxy0, asset, 1, 1);
+  _assert_proxy_state (proxy2, NULL, NULL, 0, 4);
+  fail_unless (ges_asset_set_proxy (proxy1, proxy2));
+  _assert_proxy_state (asset, proxy1, NULL, 6, 0);
+  _assert_proxy_state (proxy0, NULL, proxy1, 2, 3);
+  _assert_proxy_state (proxy1, proxy2, asset, 2, 1);
+  _assert_proxy_state (proxy2, NULL, proxy1, 0, 5);
+
+  proxies[0] = proxy1;
+  proxies[1] = NULL;
+  _assert_proxy_list (asset, proxies);
+
+  proxies[0] = proxy2;
+  proxies[1] = proxy0;
+  proxies[2] = NULL;
+  _assert_proxy_list (proxy1, proxies);
+
+  _assert_effect_asset_request (asset_id, proxy2);
+  _assert_effect_asset_request (proxy0_id, proxy0);
+  _assert_effect_asset_request (proxy1_id, proxy2);
+  _assert_effect_asset_request (proxy2_id, proxy2);
+
+  /* should not be able to set up any circular proxies */
+  /* Raises ERROR */
+  fail_unless (ges_asset_set_proxy (proxy1, asset) == FALSE);
+  _assert_proxy_state (asset, proxy1, NULL, 6, 0);
+  _assert_proxy_state (proxy0, NULL, proxy1, 2, 3);
+  _assert_proxy_state (proxy1, proxy2, asset, 2, 1);
+  _assert_proxy_state (proxy2, NULL, proxy1, 0, 5);
+  /* Raises ERROR */
+  fail_unless (ges_asset_set_proxy (proxy0, asset) == FALSE);
+  _assert_proxy_state (asset, proxy1, NULL, 6, 0);
+  _assert_proxy_state (proxy0, NULL, proxy1, 2, 3);
+  _assert_proxy_state (proxy1, proxy2, asset, 2, 1);
+  _assert_proxy_state (proxy2, NULL, proxy1, 0, 5);
+  /* Raises ERROR */
+  fail_unless (ges_asset_set_proxy (proxy2, asset) == FALSE);
+  _assert_proxy_state (asset, proxy1, NULL, 6, 0);
+  _assert_proxy_state (proxy0, NULL, proxy1, 2, 3);
+  _assert_proxy_state (proxy1, proxy2, asset, 2, 1);
+  _assert_proxy_state (proxy2, NULL, proxy1, 0, 5);
+
+  /* remove last proxy from asset, should set its proxy to NULL */
+  fail_unless (ges_asset_unproxy (asset, proxy1));
+  _assert_proxy_state (asset, NULL, NULL, 7, 0);
+  _assert_proxy_state (proxy0, NULL, proxy1, 2, 3);
+  _assert_proxy_state (proxy1, proxy2, NULL, 2, 2);
+  _assert_proxy_state (proxy2, NULL, proxy1, 0, 5);
+
+  proxies[0] = NULL;
+  _assert_proxy_list (asset, proxies);
+
+  proxies[0] = proxy2;
+  proxies[1] = proxy0;
+  proxies[2] = NULL;
+  _assert_proxy_list (proxy1, proxies);
+
+  /* get asset back */
+  _assert_effect_asset_request (asset_id, asset);
+  _assert_effect_asset_request (proxy0_id, proxy0);
+  _assert_effect_asset_request (proxy1_id, proxy2);
+  _assert_effect_asset_request (proxy2_id, proxy2);
+
+  /* set the proxy property to NULL for proxy1, should remove all of
+   * its proxies */
+  fail_unless (ges_asset_set_proxy (proxy1, NULL));
+  _assert_proxy_state (asset, NULL, NULL, 7, 0);
+  /* only one notify for proxy1, but two separate ones for ex-proxies */
+  _assert_proxy_state (proxy0, NULL, NULL, 2, 4);
+  _assert_proxy_state (proxy1, NULL, NULL, 3, 2);
+  _assert_proxy_state (proxy2, NULL, NULL, 0, 6);
+
+  proxies[0] = NULL;
+  _assert_proxy_list (asset, proxies);
+  _assert_proxy_list (proxy0, proxies);
+  _assert_proxy_list (proxy1, proxies);
+  _assert_proxy_list (proxy2, proxies);
+
+  _assert_effect_asset_request (asset_id, asset);
+  _assert_effect_asset_request (proxy0_id, proxy0);
+  _assert_effect_asset_request (proxy1_id, proxy1);
+  _assert_effect_asset_request (proxy2_id, proxy2);
+
+  gst_object_unref (asset);
+  gst_object_unref (alt_asset);
+  gst_object_unref (proxy0);
+  gst_object_unref (proxy1);
+  gst_object_unref (proxy2);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
 static Suite *
 ges_suite (void)
 {
@@ -340,6 +747,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_transition_change_asset);
   tcase_add_test (tc_chain, test_uri_clip_change_asset);
   tcase_add_test (tc_chain, test_list_asset);
+  tcase_add_test (tc_chain, test_proxy_setters);
 
   return s;
 }
