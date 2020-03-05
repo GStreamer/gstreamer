@@ -178,6 +178,12 @@ h265_get_slice_type (GstVaapiPictureType type)
   return -1;
 }
 
+static gboolean
+h265_is_tile_enabled (GstVaapiEncoderH265 * encoder)
+{
+  return encoder->num_tile_cols * encoder->num_tile_rows > 1;
+}
+
 /* Get log2_max_pic_order_cnt value for H.265 specification */
 static guint
 h265_get_log2_max_pic_order_cnt (guint num)
@@ -1148,6 +1154,7 @@ ensure_tier_level (GstVaapiEncoderH265 * encoder)
   guint i, num_limits, PicSizeInSamplesY;
   guint LumaSr;
   const GstVaapiH265LevelLimits *limits_table;
+  const GstVaapiH265LevelLimits *limits;
 
   PicSizeInSamplesY = encoder->luma_width * encoder->luma_height;
   LumaSr =
@@ -1156,7 +1163,7 @@ ensure_tier_level (GstVaapiEncoderH265 * encoder)
 
   limits_table = gst_vaapi_utils_h265_get_level_limits_table (&num_limits);
   for (i = 0; i < num_limits; i++) {
-    const GstVaapiH265LevelLimits *const limits = &limits_table[i];
+    limits = &limits_table[i];
     /* Choose level by luma picture size and luma sample rate */
     if (PicSizeInSamplesY <= limits->MaxLumaPs && LumaSr <= limits->MaxLumaSr)
       break;
@@ -1164,6 +1171,19 @@ ensure_tier_level (GstVaapiEncoderH265 * encoder)
 
   if (i == num_limits)
     goto error_unsupported_level;
+
+  /* may need to promote the level by tile setting */
+  if (h265_is_tile_enabled (encoder)) {
+    for (; i < num_limits; i++) {
+      limits = &limits_table[i];
+      if (encoder->num_tile_cols <= limits->MaxTileColumns &&
+          encoder->num_tile_rows <= limits->MaxTileRows)
+        break;
+    }
+
+    if (i == num_limits)
+      goto error_promote_level;
+  }
 
   if (bitrate <= limits_table[i].MaxBRTierMain) {
     encoder->tier = GST_VAAPI_TIER_H265_MAIN;
@@ -1185,6 +1205,12 @@ ensure_tier_level (GstVaapiEncoderH265 * encoder)
   return TRUE;
 
   /* ERRORS */
+error_promote_level:
+  {
+    GST_ERROR ("failed to promote level for num-tile-cols is %d,"
+        " num-tile-rows %d", encoder->num_tile_cols, encoder->num_tile_rows);
+    return FALSE;
+  }
 error_unsupported_level:
   {
     GST_ERROR ("failed to find a suitable level matching codec config");
