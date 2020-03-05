@@ -472,17 +472,23 @@ gst_vaapidecode_negotiate (GstVaapiDecode * decode)
 
   GST_VIDEO_DECODER_STREAM_LOCK (vdec);
   if (!gst_vaapi_plugin_base_set_caps (plugin, decode->sinkpad_caps, NULL))
-    return FALSE;
+    goto caps_negotiation_failed;
   if (!gst_vaapidecode_update_src_caps (decode))
-    return FALSE;
+    goto caps_negotiation_failed;
   if (!gst_vaapi_plugin_base_set_caps (plugin, NULL, decode->srcpad_caps))
-    return FALSE;
+    goto caps_negotiation_failed;
   GST_VIDEO_DECODER_STREAM_UNLOCK (vdec);
 
   if (!gst_video_decoder_negotiate (vdec))
     return FALSE;
 
   return TRUE;
+
+caps_negotiation_failed:
+  {
+    GST_VIDEO_DECODER_STREAM_UNLOCK (vdec);
+    return FALSE;
+  }
 }
 
 static gboolean
