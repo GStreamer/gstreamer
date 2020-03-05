@@ -554,8 +554,8 @@ gst_gl_window_wayland_egl_open (GstGLWindow * window, GError ** error)
   wl_registry_add_listener (window_egl->display.registry, &registry_listener,
       window_egl);
 
-  if (gst_gl_wl_display_roundtrip_queue (window_egl->display.display,
-          display->display, window_egl->window.queue) < 0) {
+  if (wl_display_roundtrip_queue (display->display,
+          window_egl->window.queue) < 0) {
     g_set_error (error, GST_GL_WINDOW_ERROR,
         GST_GL_WINDOW_ERROR_RESOURCE_UNAVAILABLE,
         "Failed to perform a wayland roundtrip");
@@ -610,8 +610,8 @@ _roundtrip_async (GstGLWindow * window)
 
   create_surfaces (window_egl);
 
-  if (gst_gl_wl_display_roundtrip_queue (window_egl->display.display,
-          display->display, window_egl->window.queue) < 0)
+  if (wl_display_roundtrip_queue (display->display,
+          window_egl->window.queue) < 0)
     GST_WARNING_OBJECT (window, "failed a roundtrip");
 }
 
