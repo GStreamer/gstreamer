@@ -119,6 +119,13 @@ struct _GstVaapiEncoderH265
   gboolean low_delay_b;
   guint32 num_tile_cols;
   guint32 num_tile_rows;
+  /* CTUs start address used in stream pack */
+  guint32 *tile_slice_address;
+  /* CTUs in this slice */
+  guint32 *tile_slice_ctu_num;
+  /* map the tile_slice_address to CTU start address in picture,
+     which is used by VA API. */
+  guint32 *tile_slice_address_map;
 
   /* maximum required size of the decoded picture buffer */
   guint32 max_dec_pic_buffering;
@@ -1774,6 +1781,11 @@ fill_sequence (GstVaapiEncoderH265 * encoder, GstVaapiEncSequence * sequence)
   return TRUE;
 }
 
+/* CTUs in each tile column */
+static guint32 tile_ctu_cols[GST_VAAPI_H265_MAX_COL_TILES];
+/* CTUs in each tile row */
+static guint32 tile_ctu_rows[GST_VAAPI_H265_MAX_ROW_TILES];
+
 /* Fills in VA picture parameter buffer */
 static gboolean
 fill_picture (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
@@ -2374,6 +2386,299 @@ reset_properties (GstVaapiEncoderH265 * encoder)
   reorder_pool->frame_index = 0;
 }
 
+static void
+reset_tile (GstVaapiEncoderH265 * encoder)
+{
+  memset (tile_ctu_cols, 0, sizeof (tile_ctu_cols));
+  memset (tile_ctu_rows, 0, sizeof (tile_ctu_rows));
+
+  if (encoder->tile_slice_address)
+    g_free (encoder->tile_slice_address);
+  encoder->tile_slice_address = NULL;
+
+  if (encoder->tile_slice_ctu_num)
+    g_free (encoder->tile_slice_ctu_num);
+  encoder->tile_slice_ctu_num = NULL;
+
+  if (encoder->tile_slice_address_map)
+    g_free (encoder->tile_slice_address_map);
+  encoder->tile_slice_address_map = NULL;
+}
+
+static void
+recalculate_slices_num_by_tile (GstVaapiEncoderH265 * encoder)
+{
+  GstVaapiDisplay *const display = GST_VAAPI_ENCODER_DISPLAY (encoder);
+
+  /* If driver has the requirement that the slice should not span tiles,
+     we need to increase slice number if needed. */
+  if (gst_vaapi_display_has_driver_quirks (display,
+          GST_VAAPI_DRIVER_QUIRK_HEVC_ENC_SLICE_NOT_SPAN_TILE)) {
+    if (encoder->num_slices < encoder->num_tile_cols * encoder->num_tile_rows) {
+      /* encoder->num_slices > 1 means user set it */
+      if (encoder->num_slices > 1)
+        GST_WARNING ("user set num-slices to %d, which is smaller than tile"
+            " num %d. We should make slice not span tiles, just set the"
+            " num-slices to tile num here.",
+            encoder->num_slices,
+            encoder->num_tile_cols * encoder->num_tile_rows);
+      else
+        GST_INFO ("set default slice num to %d, the same as the tile num.",
+            encoder->num_tile_cols * encoder->num_tile_rows);
+      encoder->num_slices = encoder->num_tile_cols * encoder->num_tile_rows;
+    }
+  }
+}
+
+static GstVaapiEncoderStatus
+calculate_slices_start_address (GstVaapiEncoderH265 * encoder)
+{
+  GstVaapiDisplay *const display = GST_VAAPI_ENCODER_DISPLAY (encoder);
+  guint32 ctu_per_slice;
+  guint32 left_slices;
+  gint32 i, j, k;
+
+  /* If driver has the requirement that the slice should not span tiles,
+     firstly we should scatter slices uniformly into each tile, bigger
+     tile gets more slices. Then we should assign CTUs within one tile
+     uniformly to each slice in that tile. */
+  if (gst_vaapi_display_has_driver_quirks (display,
+          GST_VAAPI_DRIVER_QUIRK_HEVC_ENC_SLICE_NOT_SPAN_TILE)) {
+    guint32 *slices_per_tile = g_malloc (encoder->num_tile_cols *
+        encoder->num_tile_rows * sizeof (guint32));
+    if (!slices_per_tile)
+      return GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED;
+
+    ctu_per_slice = (encoder->ctu_width * encoder->ctu_height +
+        encoder->num_slices - 1) / encoder->num_slices;
+    g_assert (ctu_per_slice > 0);
+    left_slices = encoder->num_slices;
+
+    for (i = 0; i < encoder->num_tile_cols * encoder->num_tile_rows; i++) {
+      slices_per_tile[i] = 1;
+      left_slices--;
+    }
+    while (left_slices) {
+      /* Find the biggest CTUs/slices, and assign more. */
+      gfloat largest = 0.0f;
+      k = -1;
+      for (i = 0; i < encoder->num_tile_cols * encoder->num_tile_rows; i++) {
+        gfloat f;
+        f = ((gfloat) (tile_ctu_cols[i % encoder->num_tile_cols] *
+                tile_ctu_rows[i / encoder->num_tile_cols])) /
+            (gfloat) slices_per_tile[i];
+        g_assert (f >= 1.0f);
+        if (f > largest) {
+          k = i;
+          largest = f;
+        }
+      }
+
+      g_assert (k >= 0);
+      slices_per_tile[k]++;
+      left_slices--;
+    }
+
+    /* Assign CTUs in one tile uniformly to each slice. Note: the slice start
+       address is CTB address in tile scan(see spec 6.5), that is, we accumulate
+       all CTUs in tile0, then tile1, and tile2..., not from the picture's
+       perspective. */
+    encoder->tile_slice_address[0] = 0;
+    k = 1;
+    for (i = 0; i < encoder->num_tile_rows; i++) {
+      for (j = 0; j < encoder->num_tile_cols; j++) {
+        guint32 s_num = slices_per_tile[i * encoder->num_tile_cols + j];
+        guint32 one_tile_ctus = tile_ctu_cols[j] * tile_ctu_rows[i];
+        guint32 s;
+
+        GST_LOG ("Tile(row %d col %d), has CTU in col %d,"
+            " CTU in row is %d, total CTU %d, assigned %d slices", i, j,
+            tile_ctu_cols[j], tile_ctu_rows[i], one_tile_ctus, s_num);
+
+        g_assert (s_num > 0);
+        for (s = 0; s < s_num; s++) {
+          encoder->tile_slice_address[k] =
+              encoder->tile_slice_address[k - 1] + ((s +
+                  1) * one_tile_ctus) / s_num - (s * one_tile_ctus) / s_num;
+          encoder->tile_slice_ctu_num[k - 1] =
+              encoder->tile_slice_address[k] - encoder->tile_slice_address[k -
+              1];
+          k++;
+        }
+      }
+    }
+
+    g_assert (k == encoder->num_slices + 1);
+    /* Calculate the last one */
+    encoder->tile_slice_ctu_num[encoder->num_slices - 1] =
+        encoder->ctu_width * encoder->ctu_height -
+        encoder->tile_slice_address[encoder->num_slices - 1];
+
+    g_free (slices_per_tile);
+  }
+  /* The easy way, just assign CTUs to each slice uniformly */
+  else {
+    ctu_per_slice = (encoder->ctu_width * encoder->ctu_height +
+        encoder->num_slices - 1) / encoder->num_slices;
+    g_assert (ctu_per_slice > 0);
+
+    for (i = 0; i < encoder->num_slices - 1; i++)
+      encoder->tile_slice_ctu_num[i] = ctu_per_slice;
+    encoder->tile_slice_ctu_num[encoder->num_slices - 1] =
+        encoder->ctu_width * encoder->ctu_height -
+        (encoder->num_slices - 1) * ctu_per_slice;
+
+    encoder->tile_slice_address[0] = 0;
+    for (i = 1; i <= encoder->num_slices; i++)
+      encoder->tile_slice_address[i] = encoder->tile_slice_address[i - 1] +
+          encoder->tile_slice_ctu_num[i - 1];
+  }
+
+  return GST_VAAPI_ENCODER_STATUS_SUCCESS;
+}
+
+static GstVaapiEncoderStatus
+ensure_tile (GstVaapiEncoderH265 * encoder)
+{
+  gint32 i, j, k;
+  guint32 ctu_tile_width_accu[GST_VAAPI_H265_MAX_COL_TILES + 1];
+  guint32 ctu_tile_height_accu[GST_VAAPI_H265_MAX_ROW_TILES + 1];
+  guint32 num_slices;
+  GstVaapiEncoderStatus ret;
+
+  reset_tile (encoder);
+
+  if (!h265_is_tile_enabled (encoder))
+    return GST_VAAPI_ENCODER_STATUS_SUCCESS;
+
+  if (!gst_vaapi_encoder_ensure_tile_support (GST_VAAPI_ENCODER (encoder),
+          encoder->profile, encoder->entrypoint)) {
+    GST_ERROR ("The profile:%s, entrypoint:%d does not support tile.",
+        gst_vaapi_utils_h265_get_profile_string (encoder->profile),
+        encoder->entrypoint);
+    return GST_VAAPI_ENCODER_STATUS_ERROR_UNKNOWN;
+  }
+
+  if (encoder->num_tile_cols >
+      gst_vaapi_utils_h265_get_level_limits (encoder->level)->MaxTileColumns) {
+    GST_ERROR ("num_tile_cols:%d exceeds MaxTileColumns:%d",
+        encoder->num_tile_cols,
+        gst_vaapi_utils_h265_get_level_limits (encoder->level)->MaxTileColumns);
+    return GST_VAAPI_ENCODER_STATUS_ERROR_UNKNOWN;
+  }
+  if (encoder->num_tile_rows >
+      gst_vaapi_utils_h265_get_level_limits (encoder->level)->MaxTileRows) {
+    GST_ERROR ("num_tile_rows:%d exceeds MaxTileRows:%d",
+        encoder->num_tile_rows,
+        gst_vaapi_utils_h265_get_level_limits (encoder->level)->MaxTileRows);
+    return GST_VAAPI_ENCODER_STATUS_ERROR_UNKNOWN;
+  }
+
+  if (encoder->ctu_width < encoder->num_tile_cols) {
+    GST_WARNING
+        ("Only %d CTUs in width, not enough to split into %d tile columns",
+        encoder->ctu_width, encoder->num_tile_cols);
+    return GST_VAAPI_ENCODER_STATUS_ERROR_UNKNOWN;
+  }
+  if (encoder->ctu_height < encoder->num_tile_rows) {
+    GST_WARNING
+        ("Only %d CTUs in height, not enough to split into %d tile rows",
+        encoder->ctu_height, encoder->num_tile_rows);
+    return GST_VAAPI_ENCODER_STATUS_ERROR_UNKNOWN;
+  }
+
+  recalculate_slices_num_by_tile (encoder);
+
+  /* ensure not exceed max supported slices */
+  num_slices = encoder->num_slices;
+  gst_vaapi_encoder_ensure_num_slices (GST_VAAPI_ENCODER_CAST (encoder),
+      encoder->profile, encoder->entrypoint,
+      (encoder->ctu_width * encoder->ctu_height + 1) / 2, &num_slices);
+  if (num_slices != encoder->num_slices) {
+    GST_ERROR ("The tile setting need at least %d slices, but the max"
+        " slice number is just %d", encoder->num_slices, num_slices);
+    return GST_VAAPI_ENCODER_STATUS_ERROR_UNKNOWN;
+  }
+
+  encoder->tile_slice_address =
+      /* Add one as sentinel, hold val to calculate ctu_num */
+      g_malloc ((encoder->num_slices + 1) * sizeof (guint32));
+  if (!encoder->tile_slice_address)
+    return GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED;
+  encoder->tile_slice_ctu_num =
+      g_malloc (encoder->num_slices * sizeof (guint32));
+  if (!encoder->tile_slice_ctu_num)
+    return GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED;
+  encoder->tile_slice_address_map =
+      g_malloc (encoder->ctu_width * encoder->ctu_height * sizeof (guint32));
+  if (!encoder->tile_slice_address_map)
+    return GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED;
+
+  /* firstly uniformly separate CTUs into tiles, as the spec 6.5.1 define */
+  for (i = 0; i < encoder->num_tile_cols; i++)
+    tile_ctu_cols[i] =
+        ((i + 1) * encoder->ctu_width) / encoder->num_tile_cols -
+        (i * encoder->ctu_width) / encoder->num_tile_cols;
+  for (i = 0; i < encoder->num_tile_rows; i++)
+    tile_ctu_rows[i] =
+        ((i + 1) * encoder->ctu_height) / encoder->num_tile_rows -
+        (i * encoder->ctu_height) / encoder->num_tile_rows;
+
+  ret = calculate_slices_start_address (encoder);
+  if (ret != GST_VAAPI_ENCODER_STATUS_SUCCESS)
+    return ret;
+
+  /* Build the map to specifying the conversion between a CTB address in CTB
+     raster scan of a picture and a CTB address in tile scan(see spec 6.5.1
+     for details). */
+  ctu_tile_width_accu[0] = 0;
+  for (i = 1; i <= encoder->num_tile_cols; i++)
+    ctu_tile_width_accu[i] = ctu_tile_width_accu[i - 1] + tile_ctu_cols[i - 1];
+  ctu_tile_height_accu[0] = 0;
+  for (i = 1; i <= encoder->num_tile_rows; i++)
+    ctu_tile_height_accu[i] =
+        ctu_tile_height_accu[i - 1] + tile_ctu_rows[i - 1];
+
+  for (k = 0; k < encoder->ctu_width * encoder->ctu_height; k++) {
+    /* The ctu coordinate in the picture. */
+    guint32 x = k % encoder->ctu_width;
+    guint32 y = k / encoder->ctu_width;
+    /* The ctu coordinate in the tile mode. */
+    guint32 tile_x = 0;
+    guint32 tile_y = 0;
+    /* The index of the CTU in the tile mode. */
+    guint32 tso = 0;
+
+    for (i = 0; i < encoder->num_tile_cols; i++)
+      if (x >= ctu_tile_width_accu[i])
+        tile_x = i;
+    g_assert (tile_x <= encoder->num_tile_cols - 1);
+
+    for (j = 0; j < encoder->num_tile_rows; j++)
+      if (y >= ctu_tile_height_accu[j])
+        tile_y = j;
+    g_assert (tile_y <= encoder->num_tile_rows - 1);
+
+    /* add all ctus in the tiles the same line before us */
+    for (i = 0; i < tile_x; i++)
+      tso += tile_ctu_rows[tile_y] * tile_ctu_cols[i];
+
+    /* add all ctus in the tiles above us */
+    for (j = 0; j < tile_y; j++)
+      tso += encoder->ctu_width * tile_ctu_rows[j];
+
+    /* add the ctus inside the same tile before us */
+    tso += (y - ctu_tile_height_accu[tile_y]) * tile_ctu_cols[tile_x]
+        + x - ctu_tile_width_accu[tile_x];
+
+    g_assert (tso < encoder->ctu_width * encoder->ctu_height);
+
+    encoder->tile_slice_address_map[tso] = k;
+  }
+
+  return GST_VAAPI_ENCODER_STATUS_SUCCESS;
+}
+
 static GstVaapiEncoderStatus
 gst_vaapi_encoder_h265_encode (GstVaapiEncoder * base_encoder,
     GstVaapiEncPicture * picture, GstVaapiCodedBufferProxy * codedbuf)
@@ -2837,6 +3142,9 @@ gst_vaapi_encoder_h265_reconfigure (GstVaapiEncoder * base_encoder)
   }
 
   reset_properties (encoder);
+  status = ensure_tile (encoder);
+  if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
+    return status;
   ensure_control_rate_params (encoder);
   return set_context_info (base_encoder);
 }
@@ -2906,6 +3214,8 @@ gst_vaapi_encoder_h265_finalize (GObject * object)
     gst_vaapi_enc_picture_unref (pic);
   }
   g_queue_clear (&reorder_pool->reorder_frame_list);
+
+  reset_tile (encoder);
 
   G_OBJECT_CLASS (gst_vaapi_encoder_h265_parent_class)->finalize (object);
 }
