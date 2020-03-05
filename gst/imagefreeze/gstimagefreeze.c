@@ -221,9 +221,9 @@ gst_image_freeze_sink_setcaps (GstImageFreeze * self, GstCaps * caps)
     gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, self->fps_n,
         self->fps_d, NULL);
     GST_DEBUG_OBJECT (pad, "Setting caps %" GST_PTR_FORMAT, caps);
-    ret = gst_pad_set_caps (self->srcpad, caps);
+    gst_pad_set_caps (self->srcpad, caps);
     gst_caps_unref (caps);
-    return ret;
+    return TRUE;
   }
 
   /* Else negotiate a framerate with downstream */
@@ -267,17 +267,16 @@ gst_image_freeze_sink_setcaps (GstImageFreeze * self, GstCaps * caps)
         gst_structure_fixate_field_nearest_fraction (s, "framerate", 25, 1)) {
       gst_structure_get_fraction (s, "framerate", &fps_n, &fps_d);
       if (fps_d != 0) {
-        if (gst_pad_set_caps (self->srcpad, candidate)) {
-          g_mutex_lock (&self->lock);
-          self->fps_n = fps_n;
-          self->fps_d = fps_d;
-          g_mutex_unlock (&self->lock);
-          self->negotiated_framerate = TRUE;
-          GST_DEBUG_OBJECT (pad, "Setting caps %" GST_PTR_FORMAT, candidate);
-          ret = TRUE;
-          gst_caps_unref (candidate);
-          break;
-        }
+        gst_pad_set_caps (self->srcpad, candidate);
+        g_mutex_lock (&self->lock);
+        self->fps_n = fps_n;
+        self->fps_d = fps_d;
+        g_mutex_unlock (&self->lock);
+        self->negotiated_framerate = TRUE;
+        GST_DEBUG_OBJECT (pad, "Setting caps %" GST_PTR_FORMAT, candidate);
+        ret = TRUE;
+        gst_caps_unref (candidate);
+        break;
       } else {
         GST_WARNING_OBJECT (pad, "Invalid caps with framerate %d/%d", fps_n,
             fps_d);
@@ -823,6 +822,19 @@ gst_image_freeze_src_loop (GstPad * pad)
     goto pause_task;
   }
 
+  if (self->buffer_caps_updated) {
+    GstCaps *buffer_caps = gst_caps_ref (self->buffer_caps);
+    self->buffer_caps_updated = FALSE;
+    g_mutex_unlock (&self->lock);
+    if (!gst_image_freeze_sink_setcaps (self, buffer_caps)) {
+      gst_caps_unref (buffer_caps);
+      flow_ret = GST_FLOW_NOT_NEGOTIATED;
+      goto pause_task;
+    }
+    gst_caps_unref (buffer_caps);
+    g_mutex_lock (&self->lock);
+  }
+
   /* normally we don't count buffers */
   if (G_UNLIKELY (self->num_buffers_left >= 0)) {
     GST_DEBUG_OBJECT (pad, "Buffers left %d", self->num_buffers_left);
@@ -835,16 +847,7 @@ gst_image_freeze_src_loop (GstPad * pad)
     }
   }
   buffer = gst_buffer_copy (self->buffer);
-
-  if (self->buffer_caps_updated) {
-    GstCaps *buffer_caps = gst_caps_ref (self->buffer_caps);
-    self->buffer_caps_updated = FALSE;
-    g_mutex_unlock (&self->lock);
-    gst_image_freeze_sink_setcaps (self, buffer_caps);
-    gst_caps_unref (buffer_caps);
-  } else {
-    g_mutex_unlock (&self->lock);
-  }
+  g_mutex_unlock (&self->lock);
 
   if (self->need_segment) {
     GstEvent *e;
