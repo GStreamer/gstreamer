@@ -222,6 +222,107 @@ class TestTimeline(common.GESSimpleTimelineTest):
         self.assertEqual(self.timeline.get_frame_at(Gst.SECOND), 60)
         self.assertEqual(clip.props.max_duration, Gst.SECOND)
 
+    def test_layer_active(self):
+        def check_nle_object_activeness(clip, track_type, active=None, ref_clip=None):
+            assert ref_clip is not None or active is not None
+
+            if ref_clip:
+                ref_elem, = ref_clip.find_track_elements(None, track_type, GES.Source)
+                active = ref_elem.get_nleobject().props.active
+
+            elem, = clip.find_track_elements(None, track_type, GES.Source)
+            self.assertIsNotNone(elem)
+            self.assertEqual(elem.get_nleobject().props.active, active)
+
+        def get_tracks(timeline):
+            for track in self.timeline.get_tracks():
+                if track.props.track_type == GES.TrackType.VIDEO:
+                    video_track = track
+                else:
+                    audio_track = track
+            return video_track, audio_track
+
+
+        def check_set_active_for_tracks(layer, active, tracks, expected_changed_tracks):
+            callback_called = []
+            def _check_active_changed_cb(layer, active, tracks, expected_tracks, expected_active):
+                self.assertEqual(set(tracks), set(expected_tracks))
+                self.assertEqual(active, expected_active)
+                callback_called.append(True)
+
+            layer.connect("active-changed", _check_active_changed_cb, expected_changed_tracks, active)
+            self.assertTrue(layer.set_active_for_tracks(active, tracks))
+            self.layer.disconnect_by_func(_check_active_changed_cb)
+            self.assertEqual(callback_called, [True])
+
+        c0 = self.append_clip()
+        check_nle_object_activeness(c0, GES.TrackType.VIDEO, True)
+        check_nle_object_activeness(c0, GES.TrackType.AUDIO, True)
+
+        elem, = c0.find_track_elements(None, GES.TrackType.AUDIO, GES.Source)
+        elem.props.active = False
+        check_nle_object_activeness(c0, GES.TrackType.VIDEO, True)
+        check_nle_object_activeness(c0, GES.TrackType.AUDIO, False)
+        self.check_reload_timeline()
+        elem.props.active = True
+
+        # Muting audio track
+        video_track, audio_track = get_tracks(self.timeline)
+
+        check_set_active_for_tracks(self.layer, False, [audio_track], [audio_track])
+
+        check_nle_object_activeness(c0, GES.TrackType.VIDEO, True)
+        check_nle_object_activeness(c0, GES.TrackType.AUDIO, False)
+        self.check_reload_timeline()
+
+        c1 = self.append_clip()
+        check_nle_object_activeness(c1, GES.TrackType.VIDEO, True)
+        check_nle_object_activeness(c1, GES.TrackType.AUDIO, False)
+
+        l1 = self.timeline.append_layer()
+        c1.move_to_layer(l1)
+        check_nle_object_activeness(c1, GES.TrackType.VIDEO, True)
+        check_nle_object_activeness(c1, GES.TrackType.AUDIO, True)
+
+        self.assertTrue(c1.edit([], self.layer.get_priority(), GES.EditMode.EDIT_NORMAL,
+                   GES.Edge.EDGE_NONE, c1.props.start))
+        check_nle_object_activeness(c1, GES.TrackType.VIDEO, True)
+        check_nle_object_activeness(c1, GES.TrackType.AUDIO, False)
+        self.check_reload_timeline()
+
+        self.assertTrue(self.layer.remove_clip(c1))
+        check_nle_object_activeness(c1, GES.TrackType.VIDEO, True)
+        check_nle_object_activeness(c1, GES.TrackType.AUDIO, True)
+
+        self.assertTrue(self.layer.add_clip(c1))
+        check_nle_object_activeness(c1, GES.TrackType.VIDEO, True)
+        check_nle_object_activeness(c1, GES.TrackType.AUDIO, False)
+
+        check_set_active_for_tracks(self.layer, True, None, [audio_track])
+        check_nle_object_activeness(c1, GES.TrackType.VIDEO, True)
+        check_nle_object_activeness(c1, GES.TrackType.AUDIO, True)
+
+        elem, = c1.find_track_elements(None, GES.TrackType.AUDIO, GES.Source)
+        check_nle_object_activeness(c1, GES.TrackType.VIDEO, True)
+        check_nle_object_activeness(c1, GES.TrackType.AUDIO, True)
+
+        # Force deactivating a specific TrackElement
+        elem.props.active = False
+        check_nle_object_activeness(c1, GES.TrackType.VIDEO, True)
+        check_nle_object_activeness(c1, GES.TrackType.AUDIO, False)
+        self.check_reload_timeline()
+
+        # Try activating a specific TrackElement, that won't change the
+        # underlying nleobject activness
+        check_set_active_for_tracks(self.layer, False, None, [audio_track, video_track])
+        check_nle_object_activeness(c1, GES.TrackType.VIDEO, False)
+        check_nle_object_activeness(c1, GES.TrackType.AUDIO, False)
+
+        elem.props.active = True
+        check_nle_object_activeness(c1, GES.TrackType.VIDEO, False)
+        check_nle_object_activeness(c1, GES.TrackType.AUDIO, False)
+        self.check_reload_timeline()
+
 
 class TestEditing(common.GESSimpleTimelineTest):
 

@@ -943,7 +943,7 @@ ges_base_xml_formatter_set_timeline_properties (GESBaseXmlFormatter * self,
 void
 ges_base_xml_formatter_add_layer (GESBaseXmlFormatter * self,
     GType extractable_type, guint priority, GstStructure * properties,
-    const gchar * metadatas, GError ** error)
+    const gchar * metadatas, gchar ** deactivated_tracks, GError ** error)
 {
   LayerEntry *entry;
   GESAsset *asset;
@@ -967,10 +967,11 @@ ges_base_xml_formatter_add_layer (GESBaseXmlFormatter * self,
             G_MARKUP_ERROR_INVALID_CONTENT,
             "Layer type %s could not be created'",
             g_type_name (extractable_type));
-        return;
       }
+      return;
     }
     layer = GES_LAYER (ges_asset_extract (asset, error));
+    gst_object_unref (asset);
   }
 
   ges_layer_set_priority (layer, priority);
@@ -987,6 +988,27 @@ ges_base_xml_formatter_add_layer (GESBaseXmlFormatter * self,
   if (metadatas)
     ges_meta_container_add_metas_from_string (GES_META_CONTAINER (layer),
         metadatas);
+
+  if (deactivated_tracks) {
+    gint i;
+    GList *tracks = NULL;
+
+    for (i = 0; deactivated_tracks[i] && deactivated_tracks[i][0] != '\0'; i++) {
+      GESTrack *track =
+          g_hash_table_lookup (priv->tracks, deactivated_tracks[i]);
+
+      if (!track) {
+        GST_ERROR_OBJECT (self,
+            "Unknown deactivated track: %s", deactivated_tracks[i]);
+        continue;
+      }
+
+      tracks = g_list_append (tracks, track);
+    }
+
+    ges_layer_set_active_for_tracks (layer, FALSE, tracks);
+    g_list_free (tracks);
+  }
 
   entry = g_slice_new0 (LayerEntry);
   entry->layer = gst_object_ref (layer);

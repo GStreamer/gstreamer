@@ -1333,3 +1333,30 @@ timeline_tree_get_duration (GNode * root)
 
   return duration;
 }
+
+static gboolean
+reset_layer_activness (GNode * node, GESLayer * layer)
+{
+  GESTrack *track;
+
+
+  if (!GES_IS_TRACK_ELEMENT (node->data))
+    return FALSE;
+
+  track = ges_track_element_get_track (node->data);
+  if (!track || (ges_timeline_element_get_layer_priority (node->data) !=
+          ges_layer_get_priority (layer)))
+    return FALSE;
+
+  ges_track_element_set_layer_active (node->data,
+      ges_layer_get_active_for_track (layer, track));
+
+  return FALSE;
+}
+
+void
+timeline_tree_reset_layer_active (GNode * root, GESLayer * layer)
+{
+  g_node_traverse (root, G_PRE_ORDER, G_TRAVERSE_LEAFS, -1,
+      (GNodeTraverseFunc) reset_layer_activness, layer);
+}

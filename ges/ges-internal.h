@@ -291,6 +291,7 @@ G_GNUC_INTERNAL void ges_base_xml_formatter_add_layer           (GESBaseXmlForma
                                                                  guint priority,
                                                                  GstStructure *properties,
                                                                  const gchar *metadatas,
+                                                                 gchar **deactivated_tracks,
                                                                  GError **error);
 G_GNUC_INTERNAL void ges_base_xml_formatter_add_track           (GESBaseXmlFormatter *self,
                                                                  GESTrackType track_type,
@@ -418,6 +419,7 @@ G_GNUC_INTERNAL void layer_set_priority               (GESLayer * layer, guint p
 G_GNUC_INTERNAL gboolean  ges_track_element_set_track           (GESTrackElement * object, GESTrack * track);
 G_GNUC_INTERNAL void ges_track_element_copy_properties          (GESTimelineElement * element,
                                                                  GESTimelineElement * elementcopy);
+G_GNUC_INTERNAL void ges_track_element_set_layer_active         (GESTrackElement *element, gboolean active);
 
 G_GNUC_INTERNAL void ges_track_element_copy_bindings (GESTrackElement *element,
                                                       GESTrackElement *new_element,

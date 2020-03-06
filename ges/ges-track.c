@@ -232,6 +232,17 @@ update_gaps (GESTrack * track)
     if (!ges_track_element_is_active (trackelement))
       continue;
 
+    if (priv->timeline) {
+      guint32 layer_prio = GES_TIMELINE_ELEMENT_LAYER_PRIORITY (trackelement);
+
+      if (layer_prio != GES_TIMELINE_ELEMENT_NO_LAYER_PRIORITY) {
+        GESLayer *layer = g_list_nth_data (priv->timeline->layers, layer_prio);
+
+        if (!ges_layer_get_active_for_track (layer, track))
+          continue;
+      }
+    }
+
     start = _START (trackelement);
     end = start + _DURATION (trackelement);
 

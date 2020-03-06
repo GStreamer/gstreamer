@@ -77,6 +77,7 @@ if gstvalidate_dep.found()
     'check_video_track_restriction_scale_with_keyframes',
     'check_edit_in_frames',
     'check_edit_in_frames_with_framerate_mismatch',
+    'check_layer_activness_gaps',
   ]
 
   env = environment()

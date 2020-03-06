@@ -26,6 +26,7 @@ gi.require_version("GES", "1.0")
 from gi.repository import Gst  # noqa
 from gi.repository import GES  # noqa
 from gi.repository import GLib  # noqa
+from gi.repository import GObject  # noqa
 import contextlib  # noqa
 import os  #noqa
 import unittest  # noqa
@@ -207,6 +208,93 @@ class GESSimpleTimelineTest(GESTest):
         self.assertTrue(layer.add_clip(clip))
 
         return clip
+
+    def assertElementAreEqual(self, ref, element):
+        self.assertTrue(isinstance(element, type(ref)), "%s and %s do not have the same type!" % (ref, element))
+
+        props = [p for p in ref.list_properties() if p.name not in ['name']
+            and not GObject.type_is_a(p.value_type, GObject.Object)]
+        for p in props:
+            pname = p.name
+            v0 = GObject.Value()
+            v0.init(p.value_type)
+            v0.set_value(ref.get_property(pname))
+
+            v1 = GObject.Value()
+            v1.init(p.value_type)
+            v1.set_value(element.get_property(pname))
+
+            self.assertTrue(Gst.value_compare(v0, v1) == Gst.VALUE_EQUAL,
+                "%s are not equal: %s != %s" % (pname, v0, v1))
+
+        if isinstance(ref, GES.TrackElement):
+            self.assertElementAreEqual(ref.get_nleobject(), element.get_nleobject())
+            return
+
+        if not isinstance(ref, GES.Clip):
+            return
+
+        ttypes = [track.type for track in self.timeline.get_tracks()]
+        for ttype in ttypes:
+            if ttypes.count(ttype) > 1:
+                self.warning("Can't deeply check %s and %s "
+                    "(only one track per type supported %s %s found)" % (ref,
+                    element, ttypes.count(ttype), ttype))
+                return
+
+        children = element.get_children(False)
+        for ref_child in ref.get_children(False):
+            ref_track = ref_child.get_track()
+            if not ref_track:
+                self.warning("Can't check %s as not in a track" % (ref_child))
+                continue
+
+            child = None
+            for tmpchild in children:
+                if not isinstance(tmpchild, type(ref_child)):
+                    continue
+
+                if ref_track.type != tmpchild.get_track().type:
+                    continue
+
+                if not isinstance(ref_child, GES.Effect):
+                    child = tmpchild
+                    break
+                elif ref_child.props.bin_description == child.props.bin_description:
+                    child = tmpchild
+                    break
+
+            self.assertIsNotNone(child, "Could not find equivalent child %s in %s(%s)" % (ref_child,
+                element, children))
+
+            self.assertElementAreEqual(ref_child, child)
+
+    def check_reload_timeline(self):
+        tmpf = tempfile.NamedTemporaryFile(suffix='.xges')
+        uri = Gst.filename_to_uri(tmpf.name)
+        self.assertTrue(self.timeline.save_to_uri(uri, None, True))
+        project = GES.Project.new(uri)
+        mainloop = create_main_loop()
+        def loaded_cb(unused_project, unused_timeline):
+            mainloop.quit()
+
+        project.connect("loaded", loaded_cb)
+        reloaded_timeline = project.extract()
+
+        mainloop.run()
+        self.assertIsNotNone(reloaded_timeline)
+
+        layers = self.timeline.get_layers()
+        reloaded_layers = reloaded_timeline.get_layers()
+        self.assertEqual(len(layers), len(reloaded_layers))
+        for layer, reloaded_layer in zip(layers, reloaded_layers):
+            clips = layer.get_clips()
+            reloaded_clips = reloaded_layer.get_clips()
+            self.assertEqual(len(clips), len(reloaded_clips))
+            for clip, reloaded_clip in zip(clips, reloaded_clips):
+                self.assertElementAreEqual(clip, reloaded_clip)
+
+        return reloaded_timeline
 
     def assertTimelineTopology(self, topology, groups=[]):
         res = []

@@ -63,6 +63,7 @@ struct _GESTrackElementPrivate
 
   gboolean locked;              /* If TRUE, then moves in sync with its controlling
                                  * GESClip */
+  gboolean layer_active;
 
   GHashTable *bindings_hashtable;       /* We need this if we want to be able to serialize
                                            and deserialize keyframes */
@@ -302,7 +303,7 @@ ges_track_element_constructed (GObject * gobject)
       "inpoint", GES_TIMELINE_ELEMENT_INPOINT (object),
       "duration", GES_TIMELINE_ELEMENT_DURATION (object),
       "priority", GES_TIMELINE_ELEMENT_PRIORITY (object),
-      "active", object->active, NULL);
+      "active", object->active & object->priv->layer_active, NULL);
 
   media_duration_factor =
       ges_timeline_element_get_media_duration_factor (GES_TIMELINE_ELEMENT
@@ -467,6 +468,7 @@ ges_track_element_init (GESTrackElement * self)
   GES_TIMELINE_ELEMENT_DURATION (self) = GST_SECOND;
   GES_TIMELINE_ELEMENT_PRIORITY (self) = 0;
   self->active = TRUE;
+  self->priv->layer_active = TRUE;
 
   priv->bindings_hashtable = g_hash_table_new_full (g_str_hash, g_str_equal,
       g_free, NULL);
@@ -740,7 +742,8 @@ ges_track_element_set_active (GESTrackElement * object, gboolean active)
   if (G_UNLIKELY (active == object->active))
     return FALSE;
 
-  g_object_set (object->priv->nleobject, "active", active, NULL);
+  g_object_set (object->priv->nleobject, "active",
+      active & object->priv->layer_active, NULL);
 
   object->active = active;
   if (GES_TRACK_ELEMENT_GET_CLASS (object)->active_changed)
@@ -1048,6 +1051,17 @@ ges_track_element_set_track (GESTrackElement * object, GESTrack * track)
 
   g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_TRACK]);
   return ret;
+}
+
+void
+ges_track_element_set_layer_active (GESTrackElement * element, gboolean active)
+{
+  if (element->priv->layer_active == active)
+    return;
+
+  element->priv->layer_active = active;
+  g_object_set (element->priv->nleobject, "active", active & element->active,
+      NULL);
 }
 
 /**

@@ -35,8 +35,8 @@
 
 #define parent_class ges_xml_formatter_parent_class
 #define API_VERSION 0
-#define MINOR_VERSION 6
-#define VERSION 0.5
+#define MINOR_VERSION 7
+#define VERSION 0.7
 
 #define COLLECT_STR_OPT (G_MARKUP_COLLECT_STRING | G_MARKUP_COLLECT_OPTIONAL)
 
@@ -471,13 +471,16 @@ _parse_layer (GMarkupParseContext * context, const gchar * element_name,
   guint priority;
   GType extractable_type = G_TYPE_NONE;
   const gchar *metadatas = NULL, *properties = NULL, *strprio = NULL,
-      *extractable_type_name;
+      *extractable_type_name, *deactivated_tracks_str;
+
+  gchar **deactivated_tracks = NULL;
 
   if (!g_markup_collect_attributes (element_name, attribute_names,
           attribute_values, error,
           G_MARKUP_COLLECT_STRING, "priority", &strprio,
           COLLECT_STR_OPT, "extractable-type-name", &extractable_type_name,
           COLLECT_STR_OPT, "properties", &properties,
+          COLLECT_STR_OPT, "deactivated-tracks", &deactivated_tracks_str,
           COLLECT_STR_OPT, "metadatas", &metadatas, G_MARKUP_COLLECT_INVALID))
     return;
 
@@ -511,8 +514,13 @@ _parse_layer (GMarkupParseContext * context, const gchar * element_name,
   if (errno)
     goto convertion_failed;
 
+  if (deactivated_tracks_str)
+    deactivated_tracks = g_strsplit (deactivated_tracks_str, " ", -1);
+
   ges_base_xml_formatter_add_layer (GES_BASE_XML_FORMATTER (self),
-      extractable_type, priority, props, metadatas, error);
+      extractable_type, priority, props, metadatas, deactivated_tracks, error);
+
+  g_strfreev (deactivated_tracks);
 
 done:
   if (props)
@@ -1084,7 +1092,8 @@ _init_value_from_spec_for_serialization (GValue * value, GParamSpec * spec)
 }
 
 static gchar *
-_serialize_properties (GObject * object, const gchar * fieldname, ...)
+_serialize_properties (GObject * object, gint * ret_n_props,
+    const gchar * fieldname, ...)
 {
   gchar *ret;
   guint n_props, j;
@@ -1097,22 +1106,31 @@ _serialize_properties (GObject * object, const gchar * fieldname, ...)
     GValue val = { 0 };
 
     spec = pspecs[j];
-    if (spec->value_type == GST_TYPE_CAPS) {
-      GstCaps *caps;
-      gchar *caps_str;
+    if (!_can_serialize_spec (spec))
+      continue;
 
-      g_object_get (object, spec->name, &caps, NULL);
+    _init_value_from_spec_for_serialization (&val, spec);
+    g_object_get_property (object, spec->name, &val);
+    if (gst_value_compare (g_param_spec_get_default_value (spec),
+            &val) == GST_VALUE_EQUAL) {
+      GST_INFO ("Ignoring %s as it is using the default value", spec->name);
+      goto next;
+    }
+
+    if (spec->value_type == GST_TYPE_CAPS) {
+      gchar *caps_str;
+      const GstCaps *caps = gst_value_get_caps (&val);
+
       caps_str = gst_caps_to_string (caps);
       gst_structure_set (structure, spec->name, G_TYPE_STRING, caps_str, NULL);
-      if (caps)
-        gst_caps_unref (caps);
       g_free (caps_str);
-    } else if (_can_serialize_spec (spec)) {
-      _init_value_from_spec_for_serialization (&val, spec);
-      g_object_get_property (object, spec->name, &val);
-      gst_structure_set_value (structure, spec->name, &val);
-      g_value_unset (&val);
+      goto next;
     }
+
+    gst_structure_set_value (structure, spec->name, &val);
+
+  next:
+    g_value_unset (&val);
   }
   g_free (pspecs);
 
@@ -1124,6 +1142,8 @@ _serialize_properties (GObject * object, const gchar * fieldname, ...)
   }
 
   ret = gst_structure_to_string (structure);
+  if (ret_n_props)
+    *ret_n_props = gst_structure_n_fields (structure);
   gst_structure_free (structure);
 
   return ret;
@@ -1190,7 +1210,7 @@ _save_subproject (GESXmlFormatter * self, GString * str, GESProject * project,
 
   subproject = ges_extractable_get_asset (GES_EXTRACTABLE (timeline));
   substr = g_string_new (NULL);
-  properties = _serialize_properties (G_OBJECT (subproject), NULL);
+  properties = _serialize_properties (G_OBJECT (subproject), NULL, NULL);
   metas = ges_meta_container_metas_to_string (GES_META_CONTAINER (subproject));
   append_escaped (str,
       g_markup_printf_escaped
@@ -1248,7 +1268,7 @@ _serialize_streams (GESXmlFormatter * self, GString * str,
         ges_uri_source_asset_get_stream_info (tmp->data);
     GstCaps *caps = gst_discoverer_stream_info_get_caps (sinfo);
 
-    properties = _serialize_properties (tmp->data, NULL);
+    properties = _serialize_properties (tmp->data, NULL, NULL);
     metas = ges_meta_container_metas_to_string (tmp->data);
     capsstr = gst_caps_to_string (caps);
 
@@ -1299,7 +1319,7 @@ _save_assets (GESXmlFormatter * self, GString * str, GESProject * project,
       G_UNLOCK (uri_subprojects_map_lock);
     }
 
-    properties = _serialize_properties (G_OBJECT (asset), NULL);
+    properties = _serialize_properties (G_OBJECT (asset), NULL, NULL);
     metas = ges_meta_container_metas_to_string (GES_META_CONTAINER (asset));
     append_escaped (str,
         g_markup_printf_escaped
@@ -1363,7 +1383,7 @@ _save_tracks (GESXmlFormatter * self, GString * str, GESTimeline * timeline,
   tracks = ges_timeline_get_tracks (timeline);
   for (tmp = tracks; tmp; tmp = tmp->next) {
     track = GES_TRACK (tmp->data);
-    properties = _serialize_properties (G_OBJECT (track), "caps", NULL);
+    properties = _serialize_properties (G_OBJECT (track), NULL, "caps", NULL);
     strtmp = gst_caps_to_string (ges_track_get_caps (track));
     metas = ges_meta_container_metas_to_string (GES_META_CONTAINER (track));
     append_escaped (str,
@@ -1512,7 +1532,7 @@ _save_effect (GString * str, guint clip_id, GESTrackElement * trackelement,
   }
   g_list_free_full (tracks, gst_object_unref);
 
-  properties = _serialize_properties (G_OBJECT (trackelement), "start",
+  properties = _serialize_properties (G_OBJECT (trackelement), NULL, "start",
       "in-point", "duration", "locked", "max-duration", "name", "priority",
       NULL);
   metas =
@@ -1538,6 +1558,79 @@ _save_effect (GString * str, guint clip_id, GESTrackElement * trackelement,
 }
 
 static inline void
+_save_layer_track_activness (GESXmlFormatter * self, GESLayer * layer,
+    GString * str, GESTimeline * timeline, guint depth)
+{
+  guint nb_tracks = 0, i;
+  GList *tmp, *tracks = ges_timeline_get_tracks (timeline);
+  GArray *deactivated_tracks = g_array_new (TRUE, FALSE, sizeof (gint32));
+
+  for (tmp = tracks; tmp; tmp = tmp->next, nb_tracks++) {
+    if (!ges_layer_get_active_for_track (layer, tmp->data))
+      g_array_append_val (deactivated_tracks, nb_tracks);
+  }
+
+  if (!deactivated_tracks->len) {
+    g_string_append (str, ">\n");
+    goto done;
+  }
+
+  self->priv->min_version = MAX (self->priv->min_version, 7);
+  g_string_append (str, " deactivated-tracks='");
+  for (i = 0; i < deactivated_tracks->len; i++)
+    g_string_append_printf (str, "%d ", g_array_index (deactivated_tracks, gint,
+            i));
+  g_string_append (str, "'>\n");
+
+done:
+  g_array_free (deactivated_tracks, TRUE);
+  g_list_free_full (tracks, gst_object_unref);
+}
+
+static void
+_save_source (GESXmlFormatter * self, GString * str,
+    GESTimelineElement * element, GESTimeline * timeline, GList * tracks,
+    guint depth)
+{
+  gint index, n_props;
+  gboolean serialize;
+  gchar *properties;
+
+  if (!GES_IS_SOURCE (element))
+    return;
+
+  g_object_get (element, "serialize", &serialize, NULL);
+  if (!serialize) {
+    GST_DEBUG_OBJECT (element, "Should not be serialized");
+    return;
+  }
+
+  index =
+      g_list_index (tracks,
+      ges_track_element_get_track (GES_TRACK_ELEMENT (element)));
+  append_escaped (str,
+      g_markup_printf_escaped
+      ("          <source track-id='%i' ", index), depth);
+
+  properties = _serialize_properties (G_OBJECT (element), &n_props,
+      "in-point", "priority", "start", "duration", "track", "track-type"
+      "uri", "name", "max-duration", NULL);
+
+  /* Try as possible to allow older versions of GES to load the files */
+  if (n_props) {
+    self->priv->min_version = MAX (self->priv->min_version, 7);
+    g_string_append_printf (str, "properties='%s' ", properties);
+  }
+  g_free (properties);
+
+  _save_children_properties (str, element, depth);
+  append_escaped (str, g_markup_printf_escaped (">\n"), depth);
+  _save_keyframes (str, GES_TRACK_ELEMENT (element), index, depth);
+  append_escaped (str, g_markup_printf_escaped ("          </source>\n"),
+      depth);
+}
+
+static inline void
 _save_layers (GESXmlFormatter * self, GString * str, GESTimeline * timeline,
     guint depth)
 {
@@ -1552,14 +1645,17 @@ _save_layers (GESXmlFormatter * self, GString * str, GESTimeline * timeline,
     layer = GES_LAYER (tmplayer->data);
 
     priority = ges_layer_get_priority (layer);
-    properties = _serialize_properties (G_OBJECT (layer), "priority", NULL);
+    properties =
+        _serialize_properties (G_OBJECT (layer), NULL, "priority", NULL);
     metas = ges_meta_container_metas_to_string (GES_META_CONTAINER (layer));
     append_escaped (str,
         g_markup_printf_escaped
-        ("      <layer priority='%i' properties='%s' metadatas='%s'>\n",
+        ("      <layer priority='%i' properties='%s' metadatas='%s'",
             priority, properties, metas), depth);
     g_free (properties);
     g_free (metas);
+
+    _save_layer_track_activness (self, layer, str, timeline, depth);
 
     clips = ges_layer_get_clips (layer);
     for (tmpclip = clips; tmpclip; tmpclip = tmpclip->next) {
@@ -1579,7 +1675,7 @@ _save_layers (GESXmlFormatter * self, GString * str, GESTimeline * timeline,
 
       /* We escape all mandatrorry properties that are handled sparetely
        * and vtype for StandarTransition as it is the asset ID */
-      properties = _serialize_properties (G_OBJECT (clip),
+      properties = _serialize_properties (G_OBJECT (clip), NULL,
           "supported-formats", "rate", "in-point", "start", "duration",
           "max-duration", "priority", "vtype", "uri", NULL);
       extractable_id = ges_extractable_get_id (GES_EXTRACTABLE (clip));
@@ -1629,31 +1725,9 @@ _save_layers (GESXmlFormatter * self, GString * str, GESTimeline * timeline,
 
       for (tmptrackelement = GES_CONTAINER_CHILDREN (clip); tmptrackelement;
           tmptrackelement = tmptrackelement->next) {
-        gint index;
-        gboolean serialize;
-
-        if (!GES_IS_SOURCE (tmptrackelement->data))
-          continue;
-
-        g_object_get (tmptrackelement->data, "serialize", &serialize, NULL);
-        if (!serialize) {
-          GST_DEBUG_OBJECT (tmptrackelement->data, "Should not be serialized");
-          continue;
-        }
-
-        index =
-            g_list_index (tracks,
-            ges_track_element_get_track (tmptrackelement->data));
-        append_escaped (str,
-            g_markup_printf_escaped ("          <source track-id='%i'", index),
-            depth);
-        _save_children_properties (str, tmptrackelement->data, depth);
-        append_escaped (str, g_markup_printf_escaped (">\n"), depth);
-        _save_keyframes (str, tmptrackelement->data, index, depth);
-        append_escaped (str, g_markup_printf_escaped ("          </source>\n"),
+        _save_source (self, str, tmptrackelement->data, timeline, tracks,
             depth);
       }
-
       g_list_free_full (tracks, gst_object_unref);
 
       string_append_with_depth (str, "        </clip>\n", depth);
@@ -1695,7 +1769,7 @@ _save_group (GESXmlFormatter * self, GString * str, GList ** seen_groups,
     }
   }
 
-  properties = _serialize_properties (G_OBJECT (group), NULL);
+  properties = _serialize_properties (G_OBJECT (group), NULL, NULL);
 
   metadatas = ges_meta_container_metas_to_string (GES_META_CONTAINER (group));
   self->priv->min_version = MAX (self->priv->min_version, 5);
@@ -1742,7 +1816,8 @@ _save_timeline (GESXmlFormatter * self, GString * str, GESTimeline * timeline,
 {
   gchar *properties = NULL, *metas = NULL;
 
-  properties = _serialize_properties (G_OBJECT (timeline), "update", "name",
+  properties =
+      _serialize_properties (G_OBJECT (timeline), NULL, "update", "name",
       "async-handling", "message-forward", NULL);
 
   ges_meta_container_set_uint64 (GES_META_CONTAINER (timeline), "duration",
@@ -1815,10 +1890,10 @@ _save_stream_profiles (GESXmlFormatter * self, GString * str,
       if (GST_IS_PRESET (encoder) &&
           gst_preset_load_preset (GST_PRESET (encoder), preset)) {
 
-        gchar *settings = _serialize_properties (G_OBJECT (encoder), NULL);
-        append_escaped (str,
-            g_markup_printf_escaped ("preset-properties='%s' ", settings),
-            depth);
+        gchar *settings =
+            _serialize_properties (G_OBJECT (encoder), NULL, NULL);
+        append_escaped (str, g_markup_printf_escaped ("preset-properties='%s' ",
+                settings), depth);
         g_free (settings);
       }
       gst_object_unref (encoder);
@@ -1893,7 +1968,8 @@ _save_encoding_profiles (GESXmlFormatter * self, GString * str,
       if (element) {
         if (GST_IS_PRESET (element) &&
             gst_preset_load_preset (GST_PRESET (element), profpreset)) {
-          gchar *settings = _serialize_properties (G_OBJECT (element), NULL);
+          gchar *settings =
+              _serialize_properties (G_OBJECT (element), NULL, NULL);
           append_escaped (str,
               g_markup_printf_escaped ("preset-properties='%s' ", settings),
               depth);
@@ -1960,7 +2036,7 @@ _save_project (GESFormatter * formatter, GString * str, GESProject * project,
   GESXmlFormatter *self = GES_XML_FORMATTER (formatter);
   GESXmlFormatterPrivate *priv = _GET_PRIV (formatter);
 
-  properties = _serialize_properties (G_OBJECT (project), NULL);
+  properties = _serialize_properties (G_OBJECT (project), NULL, NULL);
   metas = ges_meta_container_metas_to_string (GES_META_CONTAINER (project));
   append_escaped (str,
       g_markup_printf_escaped ("  <project properties='%s' metadatas='%s'>\n",

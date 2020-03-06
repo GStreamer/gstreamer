@@ -65,6 +65,8 @@ struct _GESLayerPrivate
   guint32 priority;             /* The priority of the layer within the
                                  * containing timeline */
   gboolean auto_transition;
+
+  GHashTable *tracks_activness;
 };
 
 typedef struct
@@ -72,6 +74,43 @@ typedef struct
   GESClip *clip;
   GESLayer *layer;
 } NewAssetUData;
+
+typedef struct
+{
+  GESTrack *track;
+  GESLayer *layer;
+  gboolean active;
+  gboolean track_disposed;
+} LayerActivnessData;
+
+static void
+_track_disposed_cb (LayerActivnessData * data, GObject * disposed_track)
+{
+  data->track_disposed = TRUE;
+  g_hash_table_remove (data->layer->priv->tracks_activness, data->track);
+}
+
+static void
+layer_activness_data_free (LayerActivnessData * data)
+{
+  if (!data->track_disposed)
+    g_object_weak_unref ((GObject *) data->track,
+        (GWeakNotify) _track_disposed_cb, data);
+  g_free (data);
+}
+
+static LayerActivnessData *
+layer_activness_data_new (GESTrack * track, GESLayer * layer, gboolean active)
+{
+  LayerActivnessData *data = g_new0 (LayerActivnessData, 1);
+
+  data->layer = layer;
+  data->track = track;
+  data->active = active;
+  g_object_weak_ref (G_OBJECT (track), (GWeakNotify) _track_disposed_cb, data);
+
+  return data;
+}
 
 enum
 {
@@ -85,6 +124,7 @@ enum
 {
   OBJECT_ADDED,
   OBJECT_REMOVED,
+  ACTIVE_CHANGED,
   LAST_SIGNAL
 };
 
@@ -144,6 +184,8 @@ ges_layer_dispose (GObject * object)
 
   while (priv->clips_start)
     ges_layer_remove_clip (layer, (GESClip *) priv->clips_start->data);
+
+  g_clear_pointer (&layer->priv->tracks_activness, g_hash_table_unref);
 
   G_OBJECT_CLASS (ges_layer_parent_class)->dispose (object);
 }
@@ -245,6 +287,21 @@ ges_layer_class_init (GESLayerClass * klass)
       g_signal_new ("clip-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESLayerClass,
           object_removed), NULL, NULL, NULL, G_TYPE_NONE, 1, GES_TYPE_CLIP);
+
+  /**
+   * GESLayer::active-changed:
+   * @layer: The #GESLayer
+   * @active: Whether @layer has been made active or de-active in the @tracks
+   * @tracks: (element-type GESTrack) (transfer none): A list of #GESTrack
+   * which have been activated or deactivated
+   *
+   * Will be emitted whenever the layer is activated or deactivated
+   * for some #GESTrack. See ges_layer_set_active_for_tracks().
+   */
+  ges_layer_signals[ACTIVE_CHANGED] =
+      g_signal_new ("active-changed", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, NULL, G_TYPE_NONE, 2,
+      G_TYPE_BOOLEAN, G_TYPE_PTR_ARRAY);
 }
 
 static void
@@ -256,6 +313,10 @@ ges_layer_init (GESLayer * self)
   self->priv->auto_transition = FALSE;
   self->min_nle_priority = MIN_NLE_PRIO;
   self->max_nle_priority = LAYER_HEIGHT + MIN_NLE_PRIO;
+
+  self->priv->tracks_activness =
+      g_hash_table_new_full (g_direct_hash, g_direct_equal,
+      NULL, (GDestroyNotify) layer_activness_data_free);
 
   _register_metas (self);
 }
@@ -420,6 +481,7 @@ ges_layer_remove_clip_internal (GESLayer * layer, GESClip * clip,
     gboolean emit_removed)
 {
   GESLayer *current_layer;
+  GList *tmp;
 
   GST_DEBUG ("layer:%p, clip:%p", layer, clip);
 
@@ -447,6 +509,9 @@ ges_layer_remove_clip_internal (GESLayer * layer, GESClip * clip,
   /* so neither in a timeline */
   if (layer->timeline)
     ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (clip), NULL);
+
+  for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next)
+    ges_track_element_set_layer_active (tmp->data, TRUE);
 
   /* Remove our reference to the clip */
   gst_object_unref (clip);
@@ -618,6 +683,7 @@ ges_layer_is_empty (GESLayer * layer)
 gboolean
 ges_layer_add_clip (GESLayer * layer, GESClip * clip)
 {
+  GList *tmp;
   GESAsset *asset;
   GESLayerPrivate *priv;
   GESLayer *current_layer;
@@ -721,6 +787,14 @@ ges_layer_add_clip (GESLayer * layer, GESClip * clip)
     GST_INFO_OBJECT (layer, "Clip %" GES_FORMAT, GES_ARGS (clip));
     ges_layer_remove_clip_internal (layer, clip, TRUE);
     return FALSE;
+  }
+
+  for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
+    GESTrack *track = ges_track_element_get_track (tmp->data);
+
+    if (track)
+      ges_track_element_set_layer_active (tmp->data,
+          ges_layer_get_active_for_track (layer, track));
   }
 
   return TRUE;
@@ -878,4 +952,88 @@ ges_layer_get_clips_in_interval (GESLayer * layer, GstClockTime start,
           gst_object_ref (tmp->data), (GCompareFunc) element_start_compare);
   }
   return intersecting_clips;
+}
+
+/**
+ * ges_layer_get_active_for_track:
+ * @layer: The #GESLayer
+ * @track: The #GESTrack to check if @layer is currently active for
+ *
+ * Gets whether the layer is active for the given track. See
+ * ges_layer_set_active_for_tracks().
+ *
+ * Returns: %TRUE if @layer is active for @track, or %FALSE otherwise.
+ */
+gboolean
+ges_layer_get_active_for_track (GESLayer * layer, GESTrack * track)
+{
+  LayerActivnessData *d;
+
+  g_return_val_if_fail (GES_IS_LAYER (layer), FALSE);
+  g_return_val_if_fail (GES_IS_TRACK (track), FALSE);
+  g_return_val_if_fail (layer->timeline == ges_track_get_timeline (track),
+      FALSE);
+
+  d = g_hash_table_lookup (layer->priv->tracks_activness, track);
+
+  return d ? d->active : TRUE;
+}
+
+/**
+ * ges_layer_set_active_for_tracks:
+ * @layer: The #GESLayer
+ * @active: Whether elements in @tracks should be active or not
+ * @tracks: (transfer none) (element-type GESTrack) (allow-none): The list of
+ * tracks @layer should be (de-)active in, or %NULL to include all the tracks
+ * in the @layer's timeline
+ *
+ * Activate or deactivate track elements in @tracks (or in all tracks if @tracks
+ * is %NULL).
+ *
+ * When a layer is deactivated for a track, all the #GESTrackElement-s in
+ * the track that belong to a #GESClip in the layer will no longer be
+ * active in the track, regardless of their individual
+ * #GESTrackElement:active value.
+ *
+ * Note that by default a layer will be active for all of its
+ * timeline's tracks.
+ *
+ * Returns: %TRUE if the operation worked %FALSE otherwise.
+ */
+gboolean
+ges_layer_set_active_for_tracks (GESLayer * layer, gboolean active,
+    GList * tracks)
+{
+  GList *tmp, *owned_tracks = NULL;
+  GPtrArray *changed_tracks = NULL;
+
+  g_return_val_if_fail (GES_IS_LAYER (layer), FALSE);
+
+  if (!tracks && layer->timeline)
+    owned_tracks = tracks = ges_timeline_get_tracks (layer->timeline);
+
+  for (tmp = tracks; tmp; tmp = tmp->next) {
+    GESTrack *track = tmp->data;
+
+    /* Handle setting timeline later */
+    g_return_val_if_fail (layer->timeline == ges_track_get_timeline (track),
+        FALSE);
+
+    if (ges_layer_get_active_for_track (layer, track) != active) {
+      if (changed_tracks == NULL)
+        changed_tracks = g_ptr_array_new ();
+      g_ptr_array_add (changed_tracks, track);
+    }
+    g_hash_table_insert (layer->priv->tracks_activness, track,
+        layer_activness_data_new (track, layer, active));
+  }
+
+  if (changed_tracks) {
+    g_signal_emit (layer, ges_layer_signals[ACTIVE_CHANGED], 0, active,
+        changed_tracks);
+    g_ptr_array_unref (changed_tracks);
+  }
+  g_list_free_full (owned_tracks, gst_object_unref);
+
+  return TRUE;
 }

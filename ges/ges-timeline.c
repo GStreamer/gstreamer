@@ -1351,6 +1351,13 @@ add_object_to_tracks (GESTimeline * timeline, GESClip * clip, GESTrack * track)
 }
 
 static void
+layer_active_changed_cb (GESLayer * layer, gboolean active G_GNUC_UNUSED,
+    GPtrArray * tracks G_GNUC_UNUSED, GESTimeline * timeline)
+{
+  timeline_tree_reset_layer_active (timeline->priv->tree, layer);
+}
+
+static void
 layer_auto_transition_changed_cb (GESLayer * layer,
     GParamSpec * arg G_GNUC_UNUSED, GESTimeline * timeline)
 {
@@ -2050,6 +2057,8 @@ ges_timeline_add_layer (GESTimeline * timeline, GESLayer * layer)
       G_CALLBACK (layer_priority_changed_cb), timeline);
   g_signal_connect (layer, "notify::auto-transition",
       G_CALLBACK (layer_auto_transition_changed_cb), timeline);
+  g_signal_connect_after (layer, "active-changed",
+      G_CALLBACK (layer_active_changed_cb), timeline);
 
   GST_DEBUG ("Done adding layer, emitting 'layer-added' signal");
   g_signal_emit (timeline, ges_timeline_signals[LAYER_ADDED], 0, layer);
@@ -2111,6 +2120,8 @@ ges_timeline_remove_layer (GESTimeline * timeline, GESLayer * layer)
       timeline);
   g_signal_handlers_disconnect_by_func (layer,
       layer_auto_transition_changed_cb, timeline);
+  g_signal_handlers_disconnect_by_func (layer, layer_active_changed_cb,
+      timeline);
 
   timeline->layers = g_list_remove (timeline->layers, layer);
   ges_layer_set_timeline (layer, NULL);

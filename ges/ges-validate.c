@@ -1066,6 +1066,74 @@ done:
   return res;
 }
 
+static gint
+set_layer_active (GstValidateScenario * scenario, GstValidateAction * action)
+{
+  gboolean active;
+  gint i, layer_prio;
+  GESLayer *layer;
+  GList *tracks = NULL;
+  GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
+  gchar **track_names =
+      gst_validate_utils_get_strv (action->structure, "tracks");
+
+  DECLARE_AND_GET_TIMELINE (scenario, action);
+
+  for (i = 0; track_names[i]; i++) {
+    GESTrack *track =
+        (GESTrack *) gst_bin_get_by_name (GST_BIN (timeline), track_names[i]);
+
+    if (!track) {
+      GST_VALIDATE_REPORT_ACTION (scenario, action,
+          SCENARIO_ACTION_EXECUTION_ERROR,
+          "Could not find track %s", track_names[i]);
+      res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+      goto done;
+    }
+
+    tracks = g_list_prepend (tracks, track);
+  }
+
+  if (!gst_structure_get_int (action->structure, "layer-priority", &layer_prio)) {
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
+        SCENARIO_ACTION_EXECUTION_ERROR,
+        "Could not find layer from %" GST_PTR_FORMAT, action->structure);
+    res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+    goto done;
+  }
+  if (!(layer = g_list_nth_data (timeline->layers, layer_prio))) {
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
+        SCENARIO_ACTION_EXECUTION_ERROR, "Could not find layer %d", layer_prio);
+    res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+    goto done;
+  }
+
+  if (!gst_structure_get_boolean (action->structure, "active", &active)) {
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
+        SCENARIO_ACTION_EXECUTION_ERROR,
+        "Could not find 'active' boolean in %" GST_PTR_FORMAT,
+        action->structure);
+    res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+    goto done;
+  }
+
+  if (!ges_layer_set_active_for_tracks (layer, active, tracks)) {
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
+        SCENARIO_ACTION_EXECUTION_ERROR,
+        "Could not set active for track defined in %" GST_PTR_FORMAT,
+        action->structure);
+    res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+    goto done;
+  }
+
+done:
+  g_strfreev (track_names);
+  gst_object_unref (timeline);
+  g_list_free_full (tracks, gst_object_unref);
+
+  return res;
+}
+
 #endif
 
 gboolean
@@ -1403,6 +1471,43 @@ ges_validate_register_action_types (void)
         },
         {NULL}
       }, "Allows to change child property of an object", GST_VALIDATE_ACTION_TYPE_NONE);
+
+  gst_validate_register_action_type ("set-layer-active", "ges", set_layer_active,
+      (GstValidateActionParameter []) {
+        {
+          .name = "layer-priority",
+          .description = "The priority of the layer to set activness on",
+          .types = "gint",
+          .mandatory = TRUE,
+        },
+        {
+          .name = "active",
+          .description = "The activness of the layer",
+          .types = "gboolean",
+          .mandatory = TRUE,
+        },
+        {
+          .name = "tracks",
+          .description = "tracks",
+          .types = "{string, }",
+          .mandatory = FALSE,
+        },
+        {NULL}
+      }, "Set activness of a layer (on optional tracks).",
+        GST_VALIDATE_ACTION_TYPE_NONE);
+
+  gst_validate_register_action_type ("set-ges-properties", "ges", set_or_check_properties,
+      (GstValidateActionParameter []) {
+        {
+          .name = "element-name",
+          .description = "The name of the element on which to set properties",
+          .types = "string",
+          .mandatory = TRUE,
+        },
+        {NULL}
+      }, "Set `element-name` properties values defined by the"
+         " fields in the following format: `property_name=expected-value`",
+        GST_VALIDATE_ACTION_TYPE_NONE);
 
   gst_validate_register_action_type ("check-ges-properties", "ges", set_or_check_properties,
       (GstValidateActionParameter []) {
