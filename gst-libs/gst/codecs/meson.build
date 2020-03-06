@@ -16,8 +16,6 @@ codecs_headers = [
   'gstvp9picture.h',
 ]
 
-install_headers(codecs_headers, subdir : 'gstreamer-1.0/gst/codecs')
-
 cp_args = [
   '-DGST_USE_UNSTABLE_API',
   '-DBUILDING_GST_CODECS',
