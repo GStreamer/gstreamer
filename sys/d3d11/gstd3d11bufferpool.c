@@ -159,10 +159,31 @@ gst_d3d11_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     priv->d3d11_params =
         gst_d3d11_allocation_params_new (priv->device, &info, 0, 0);
   }
+
+  desc = priv->d3d11_params->desc;
+
+  /* resolution of semi-planar formats must be multiple of 2 */
+  if (desc[0].Format == DXGI_FORMAT_NV12 || desc[0].Format == DXGI_FORMAT_P010
+      || desc[0].Format == DXGI_FORMAT_P016) {
+    if (desc[0].Width % 2 || desc[0].Height % 2) {
+      gint width, height;
+      GstVideoAlignment align;
+
+      GST_WARNING_OBJECT (self, "Resolution %dx%d is not mutiple of 2, fixing",
+          desc[0].Width, desc[0].Height);
+
+      width = GST_ROUND_UP_2 (desc[0].Width);
+      height = GST_ROUND_UP_2 (desc[0].Height);
+
+      gst_video_alignment_reset (&align);
+      align.padding_right = width - desc[0].Width;
+      align.padding_bottom = height - desc[0].Height;
+
+      gst_d3d11_allocation_params_alignment (priv->d3d11_params, &align);
+    }
+  }
 #ifndef GST_DISABLE_GST_DEBUG
   {
-    desc = priv->d3d11_params->desc;
-
     GST_LOG_OBJECT (self, "Direct3D11 Allocation params");
     GST_LOG_OBJECT (self, "\tD3D11AllocationFlags: 0x%x",
         priv->d3d11_params->flags);
@@ -189,7 +210,6 @@ gst_d3d11_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 
   if ((priv->d3d11_params->flags & GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY)) {
     guint max_array_size = 0;
-    desc = priv->d3d11_params->desc;
 
     for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
       if (desc[i].Format == DXGI_FORMAT_UNKNOWN)
