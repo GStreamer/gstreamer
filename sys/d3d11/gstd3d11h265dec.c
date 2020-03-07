@@ -392,16 +392,26 @@ gst_d3d11_h265_dec_decide_allocation (GstVideoDecoder * decoder,
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
 
   if (self->use_d3d11_output) {
+    GstVideoAlignment align;
+    gint width, height;
+
+    gst_video_alignment_reset (&align);
+
     d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
     if (!d3d11_params)
-      d3d11_params =
-          gst_d3d11_allocation_params_new (self->device, &vinfo, 0, 0);
+      d3d11_params = gst_d3d11_allocation_params_new (self->device,
+          &vinfo, 0, 0);
 
-    /* dxva2 decoder uses non-resource format
-     * (e.g., use NV12 instead of R8 + R8G8 */
-    d3d11_params->desc[0].Width = GST_VIDEO_INFO_WIDTH (&vinfo);
-    d3d11_params->desc[0].Height = GST_VIDEO_INFO_HEIGHT (&vinfo);
-    d3d11_params->desc[0].Format = d3d11_params->d3d11_format->dxgi_format;
+    width = GST_VIDEO_INFO_WIDTH (&vinfo);
+    height = GST_VIDEO_INFO_HEIGHT (&vinfo);
+
+    /* need alignment to copy decoder output texture to downstream texture */
+    align.padding_right = GST_ROUND_UP_16 (width) - width;
+    align.padding_bottom = GST_ROUND_UP_16 (height) - height;
+    if (!gst_d3d11_allocation_params_alignment (d3d11_params, &align)) {
+      GST_ERROR_OBJECT (self, "Cannot set alignment");
+      return FALSE;
+    }
 
     gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
     gst_d3d11_allocation_params_free (d3d11_params);
