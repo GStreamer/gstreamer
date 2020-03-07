@@ -169,8 +169,10 @@ GstD3D11DecoderOutputView * gst_d3d11_decoder_get_output_view_from_buffer (GstD3
 guint             gst_d3d11_decoder_get_output_view_index (GstD3D11Decoder * decoder,
                                                            ID3D11VideoDecoderOutputView * view_handle);
 
-gboolean          gst_d3d11_decoder_copy_decoder_buffer (GstD3D11Decoder * decoder,
+gboolean          gst_d3d11_decoder_process_output      (GstD3D11Decoder * decoder,
                                                          GstVideoInfo * info,
+                                                         gint display_width,
+                                                         gint display_height,
                                                          GstBuffer * decoder_buffer,
                                                          GstBuffer * output);
 

@@ -55,6 +55,7 @@
 #include "gstd3d11memory.h"
 #include "gstd3d11bufferpool.h"
 #include "gstd3d11device.h"
+#include "gstd3d11colorconverter.h"
 #include <string.h>
 
 GST_DEBUG_CATEGORY (d3d11_decoder_debug);
@@ -77,12 +78,24 @@ struct _GstD3D11DecoderPrivate
 
   GstBufferPool *internal_pool;
 
+  gint display_width;
+  gint display_height;
+
   /* for staging */
   ID3D11Texture2D *staging;
   gsize staging_texture_offset[GST_VIDEO_MAX_PLANES];
   gint stating_texture_stride[GST_VIDEO_MAX_PLANES];
 
   GUID decoder_profile;
+
+  /* for internal shader */
+  GstD3D11ColorConverter *converter;
+  ID3D11Texture2D *shader_resource_texture;
+  ID3D11ShaderResourceView *shader_resource_view[GST_VIDEO_MAX_PLANES];
+  ID3D11Texture2D *fallback_shader_output_texture;
+  ID3D11RenderTargetView *fallback_render_target_view[GST_VIDEO_MAX_PLANES];
+  DXGI_FORMAT resource_formats[GST_VIDEO_MAX_PLANES];
+  guint num_resource_views;
 };
 
 #define OUTPUT_VIEW_QUARK _decoder_output_view_get()
@@ -249,6 +262,7 @@ static void
 gst_d3d11_decoder_reset_unlocked (GstD3D11Decoder * decoder)
 {
   GstD3D11DecoderPrivate *priv;
+  gint i;
 
   priv = decoder->priv;
   gst_clear_object (&priv->internal_pool);
@@ -261,6 +275,33 @@ gst_d3d11_decoder_reset_unlocked (GstD3D11Decoder * decoder)
   if (priv->staging) {
     ID3D11Texture2D_Release (priv->staging);
     priv->staging = NULL;
+  }
+
+  if (priv->converter) {
+    gst_d3d11_color_converter_free (priv->converter);
+    priv->converter = NULL;
+  }
+
+  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+    if (priv->shader_resource_view[i]) {
+      ID3D11ShaderResourceView_Release (priv->shader_resource_view[i]);
+      priv->shader_resource_view[i] = NULL;
+    }
+
+    if (priv->fallback_render_target_view[i]) {
+      ID3D11RenderTargetView_Release (priv->fallback_render_target_view[i]);
+      priv->fallback_render_target_view[i] = NULL;
+    }
+  }
+
+  if (priv->shader_resource_texture) {
+    ID3D11Texture2D_Release (priv->shader_resource_texture);
+    priv->shader_resource_texture = NULL;
+  }
+
+  if (priv->fallback_shader_output_texture) {
+    ID3D11Texture2D_Release (priv->fallback_shader_output_texture);
+    priv->fallback_shader_output_texture = NULL;
   }
 
   decoder->opened = FALSE;
@@ -686,6 +727,9 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
 
   GST_DEBUG_OBJECT (decoder, "Decoder object %p created", priv->decoder);
 
+  priv->display_width = GST_VIDEO_INFO_WIDTH (info);
+  priv->display_height = GST_VIDEO_INFO_HEIGHT (info);
+
   /* create stage texture to copy out */
   staging_desc.Width = aligned_width;
   staging_desc.Height = aligned_height;
@@ -710,11 +754,129 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
 
   priv->decoder_profile = selected_profile;
   decoder->opened = TRUE;
+
+  /* VP9 codec allows internal frame resizing. To handle that case, we need to
+   * configure converter here.
+   *
+   * Note: d3d11videoprocessor seemly does not work well and its ability of
+   * YUV to YUV resizing would vary depending on device.
+   * To make sure this conversion, shader will be placed
+   * instead of d3d11videoprocessor.
+   *
+   * TODO: VP8 has the same resizing spec.
+   * Need to VP8 here when VP8 support is added
+   */
+  if (codec == GST_D3D11_CODEC_VP9) {
+    D3D11_TEXTURE2D_DESC texture_desc = { 0, };
+    D3D11_RENDER_TARGET_VIEW_DESC render_desc = { 0, };
+    D3D11_SHADER_RESOURCE_VIEW_DESC resource_desc = { 0, };
+    ID3D11Device *device_handle;
+    RECT rect;
+
+    priv->converter = gst_d3d11_color_converter_new (priv->device, info, info);
+
+    rect.left = 0;
+    rect.top = 0;
+    rect.right = priv->display_width;
+    rect.bottom = priv->display_height;
+    gst_d3d11_color_converter_update_rect (priv->converter, &rect);
+
+    device_handle = gst_d3d11_device_get_device_handle (priv->device);
+
+    texture_desc.Width = aligned_width;
+    texture_desc.Height = aligned_height;
+    texture_desc.MipLevels = 1;
+    texture_desc.Format = d3d11_format->dxgi_format;
+    texture_desc.SampleDesc.Count = 1;
+    texture_desc.ArraySize = 1;
+    texture_desc.Usage = D3D11_USAGE_DEFAULT;
+    texture_desc.BindFlags = D3D11_BIND_RENDER_TARGET;
+
+    priv->fallback_shader_output_texture =
+        gst_d3d11_device_create_texture (priv->device, &texture_desc, NULL);
+    if (!priv->fallback_shader_output_texture) {
+      GST_ERROR_OBJECT (decoder, "Couldn't create shader output texture");
+      goto error;
+    }
+
+    texture_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+    priv->shader_resource_texture =
+        gst_d3d11_device_create_texture (priv->device, &texture_desc, NULL);
+    if (!priv->shader_resource_texture) {
+      GST_ERROR_OBJECT (decoder, "Couldn't create shader input texture");
+      goto error;
+    }
+
+    switch (texture_desc.Format) {
+      case DXGI_FORMAT_B8G8R8A8_UNORM:
+      case DXGI_FORMAT_R8G8B8A8_UNORM:
+      case DXGI_FORMAT_R10G10B10A2_UNORM:
+      case DXGI_FORMAT_R8_UNORM:
+      case DXGI_FORMAT_R8G8_UNORM:
+      case DXGI_FORMAT_R16_UNORM:
+      case DXGI_FORMAT_R16G16_UNORM:
+        priv->num_resource_views = 1;
+        priv->resource_formats[0] = texture_desc.Format;
+        break;
+      case DXGI_FORMAT_AYUV:
+        priv->num_resource_views = 1;
+        priv->resource_formats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+        break;
+      case DXGI_FORMAT_NV12:
+        priv->num_resource_views = 2;
+        priv->resource_formats[0] = DXGI_FORMAT_R8_UNORM;
+        priv->resource_formats[1] = DXGI_FORMAT_R8G8_UNORM;
+        break;
+      case DXGI_FORMAT_P010:
+      case DXGI_FORMAT_P016:
+        priv->num_resource_views = 2;
+        priv->resource_formats[0] = DXGI_FORMAT_R16_UNORM;
+        priv->resource_formats[1] = DXGI_FORMAT_R16G16_UNORM;
+        break;
+      default:
+        g_assert_not_reached ();
+        break;
+    }
+
+    render_desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+    render_desc.Texture2D.MipSlice = 0;
+
+    for (i = 0; i < priv->num_resource_views; i++) {
+      render_desc.Format = priv->resource_formats[i];
+
+      hr = ID3D11Device_CreateRenderTargetView (device_handle,
+          (ID3D11Resource *) priv->fallback_shader_output_texture, &render_desc,
+          &priv->fallback_render_target_view[i]);
+      if (!gst_d3d11_result (hr, priv->device)) {
+        GST_ERROR_OBJECT (decoder,
+            "Failed to create %dth render target view (0x%x)", i, (guint) hr);
+        goto error;
+      }
+    }
+
+    resource_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    resource_desc.Texture2D.MipLevels = 1;
+
+    for (i = 0; i < priv->num_resource_views; i++) {
+      resource_desc.Format = priv->resource_formats[i];
+      hr = ID3D11Device_CreateShaderResourceView (device_handle,
+          (ID3D11Resource *) priv->shader_resource_texture, &resource_desc,
+          &priv->shader_resource_view[i]);
+
+      if (!gst_d3d11_result (hr, priv->device)) {
+        GST_ERROR_OBJECT (decoder,
+            "Failed to create %dth resource view (0x%x)", i, (guint) hr);
+        goto error;
+      }
+    }
+  }
+
   gst_d3d11_device_unlock (priv->device);
 
   return TRUE;
 
 error:
+  gst_d3d11_decoder_reset_unlocked (decoder);
   gst_d3d11_device_unlock (priv->device);
 
   return FALSE;
@@ -938,7 +1100,8 @@ gst_d3d11_decoder_get_output_view_index (GstD3D11Decoder * decoder,
 }
 
 static gboolean
-copy_to_system (GstD3D11Decoder * self, GstVideoInfo * info,
+copy_to_system (GstD3D11Decoder * self, GstVideoInfo * info, gint display_width,
+    gint display_height, gboolean need_convert,
     GstBuffer * decoder_buffer, GstBuffer * output)
 {
   GstD3D11DecoderPrivate *priv = self->priv;
@@ -947,6 +1110,8 @@ copy_to_system (GstD3D11Decoder * self, GstVideoInfo * info,
   GstD3D11Memory *in_mem;
   D3D11_MAPPED_SUBRESOURCE map;
   HRESULT hr;
+  ID3D11Texture2D *in_texture;
+  guint in_subresource_index;
   ID3D11DeviceContext *device_context =
       gst_d3d11_device_get_device_context_handle (priv->device);
 
@@ -957,18 +1122,59 @@ copy_to_system (GstD3D11Decoder * self, GstVideoInfo * info,
 
   in_mem = (GstD3D11Memory *) gst_buffer_peek_memory (decoder_buffer, 0);
 
+  in_texture = in_mem->texture;
+  in_subresource_index = in_mem->subresource_index;
+
   gst_d3d11_device_lock (priv->device);
+
+  if (need_convert) {
+    D3D11_BOX src_box;
+    RECT rect;
+
+    GST_LOG_OBJECT (self, "convert resolution, %dx%d -> %dx%d",
+        display_width, display_height,
+        priv->display_width, priv->display_height);
+
+    src_box.left = 0;
+    src_box.top = 0;
+    src_box.front = 0;
+    src_box.back = 1;
+    src_box.right = GST_ROUND_UP_2 (display_width);
+    src_box.bottom = GST_ROUND_UP_2 (display_height);
+
+    /* copy decoded texture into shader resource texture */
+    ID3D11DeviceContext_CopySubresourceRegion (device_context,
+        (ID3D11Resource *) priv->shader_resource_texture, 0, 0, 0, 0,
+        (ID3D11Resource *) in_mem->texture, in_mem->subresource_index,
+        &src_box);
+
+    rect.left = 0;
+    rect.top = 0;
+    rect.right = display_width;
+    rect.bottom = display_height;
+
+    gst_d3d11_color_converter_update_crop_rect (priv->converter, &rect);
+
+    if (!gst_d3d11_color_converter_convert_unlocked (priv->converter,
+            priv->shader_resource_view, priv->fallback_render_target_view)) {
+      GST_ERROR_OBJECT (self, "Failed to convert");
+      goto error;
+    }
+
+    in_texture = priv->fallback_shader_output_texture;
+    in_subresource_index = 0;
+  }
+
   ID3D11DeviceContext_CopySubresourceRegion (device_context,
       (ID3D11Resource *) priv->staging, 0, 0, 0, 0,
-      (ID3D11Resource *) in_mem->texture, in_mem->subresource_index, NULL);
+      (ID3D11Resource *) in_texture, in_subresource_index, NULL);
 
   hr = ID3D11DeviceContext_Map (device_context,
       (ID3D11Resource *) priv->staging, 0, D3D11_MAP_READ, 0, &map);
 
   if (!gst_d3d11_result (hr, priv->device)) {
     GST_ERROR_OBJECT (self, "Failed to map, hr: 0x%x", (guint) hr);
-    gst_d3d11_device_unlock (priv->device);
-    return FALSE;
+    goto error;
   }
 
   /* calculate stride and offset only once */
@@ -1006,55 +1212,113 @@ copy_to_system (GstD3D11Decoder * self, GstVideoInfo * info,
   gst_d3d11_device_unlock (priv->device);
 
   return TRUE;
+
+error:
+  gst_d3d11_device_unlock (priv->device);
+  return FALSE;
 }
 
 static gboolean
-copy_to_d3d11 (GstD3D11Decoder * self, GstVideoInfo * info,
+copy_to_d3d11 (GstD3D11Decoder * self, GstVideoInfo * info, gint display_width,
+    gint display_height, gboolean need_convert,
     GstBuffer * decoder_buffer, GstBuffer * output)
 {
   GstD3D11DecoderPrivate *priv = self->priv;
-  gint i;
+  GstD3D11Memory *in_mem;
+  GstD3D11Memory *out_mem;
+  D3D11_BOX src_box;
+  ID3D11Texture2D *in_texture;
+  guint in_subresource_index;
   ID3D11DeviceContext *device_context =
       gst_d3d11_device_get_device_context_handle (priv->device);
 
   gst_d3d11_device_lock (priv->device);
-  for (i = 0; i < gst_buffer_n_memory (output); i++) {
-    GstD3D11Memory *in_mem;
-    GstD3D11Memory *out_mem;
-    D3D11_BOX src_box;
-    D3D11_TEXTURE2D_DESC desc;
 
-    in_mem = (GstD3D11Memory *) gst_buffer_peek_memory (decoder_buffer, i);
-    out_mem = (GstD3D11Memory *) gst_buffer_peek_memory (output, i);
+  in_mem = (GstD3D11Memory *) gst_buffer_peek_memory (decoder_buffer, 0);
+  out_mem = (GstD3D11Memory *) gst_buffer_peek_memory (output, 0);
 
-    ID3D11Texture2D_GetDesc (out_mem->texture, &desc);
+  in_texture = in_mem->texture;
+  in_subresource_index = in_mem->subresource_index;
 
-    src_box.left = 0;
-    src_box.top = 0;
-    src_box.front = 0;
-    src_box.back = 1;
-    src_box.right = desc.Width;
-    src_box.bottom = desc.Height;
+  src_box.left = 0;
+  src_box.top = 0;
+  src_box.front = 0;
+  src_box.back = 1;
 
+  if (need_convert) {
+    gboolean need_copy = FALSE;
+    ID3D11RenderTargetView **rtv;
+    RECT rect;
+
+    GST_LOG_OBJECT (self, "convert resolution, %dx%d -> %dx%d",
+        display_width, display_height,
+        priv->display_width, priv->display_height);
+
+    if (!gst_d3d11_memory_ensure_render_target_view (out_mem)) {
+      /* convert to fallback output view */
+      GST_LOG_OBJECT (self, "output memory cannot support render target view");
+      rtv = priv->fallback_render_target_view;
+      need_copy = TRUE;
+    } else {
+      rtv = out_mem->render_target_view;
+    }
+
+    src_box.right = GST_ROUND_UP_2 (display_width);
+    src_box.bottom = GST_ROUND_UP_2 (display_height);
+
+    /* copy decoded texture into shader resource texture */
     ID3D11DeviceContext_CopySubresourceRegion (device_context,
-        (ID3D11Resource *) out_mem->texture,
-        out_mem->subresource_index, 0, 0, 0,
-        (ID3D11Resource *) in_mem->texture, in_mem->subresource_index,
-        &src_box);
+        (ID3D11Resource *) priv->shader_resource_texture, 0, 0, 0, 0,
+        (ID3D11Resource *) in_texture, in_subresource_index, &src_box);
 
-    GST_MINI_OBJECT_FLAG_SET (out_mem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
+    rect.left = 0;
+    rect.top = 0;
+    rect.right = display_width;
+    rect.bottom = display_height;
+
+    gst_d3d11_color_converter_update_crop_rect (priv->converter, &rect);
+
+    if (!gst_d3d11_color_converter_convert_unlocked (priv->converter,
+            priv->shader_resource_view, rtv)) {
+      GST_ERROR_OBJECT (self, "Failed to convert");
+      goto error;
+    }
+
+    if (!need_copy) {
+      gst_d3d11_device_unlock (priv->device);
+      return TRUE;
+    }
+
+    in_texture = priv->fallback_shader_output_texture;
+    in_subresource_index = 0;
   }
+
+  src_box.right = GST_ROUND_UP_2 (priv->display_width);
+  src_box.bottom = GST_ROUND_UP_2 (priv->display_height);
+
+  ID3D11DeviceContext_CopySubresourceRegion (device_context,
+      (ID3D11Resource *) out_mem->texture,
+      out_mem->subresource_index, 0, 0, 0,
+      (ID3D11Resource *) in_texture, in_subresource_index, &src_box);
+
+  GST_MINI_OBJECT_FLAG_SET (out_mem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
   gst_d3d11_device_unlock (priv->device);
 
   return TRUE;
+
+error:
+  gst_d3d11_device_unlock (priv->device);
+  return FALSE;
 }
 
 gboolean
-gst_d3d11_decoder_copy_decoder_buffer (GstD3D11Decoder * decoder,
-    GstVideoInfo * info, GstBuffer * decoder_buffer, GstBuffer * output)
+gst_d3d11_decoder_process_output (GstD3D11Decoder * decoder,
+    GstVideoInfo * info, gint display_width, gint display_height,
+    GstBuffer * decoder_buffer, GstBuffer * output)
 {
   GstD3D11DecoderPrivate *priv;
   gboolean can_device_copy = TRUE;
+  gboolean need_convert = FALSE;
 
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (decoder_buffer), FALSE);
@@ -1062,36 +1326,41 @@ gst_d3d11_decoder_copy_decoder_buffer (GstD3D11Decoder * decoder,
 
   priv = decoder->priv;
 
+  need_convert = priv->converter &&
+      (priv->display_width != display_width ||
+      priv->display_height != display_height);
+
+  /* if decoder buffer is intended to be outputted and we don't need to
+   * do post processing, do nothing here */
+  if (decoder_buffer == output && !need_convert)
+    return TRUE;
+
+  /* decoder buffer must have single memory */
   if (gst_buffer_n_memory (decoder_buffer) == gst_buffer_n_memory (output)) {
-    gint i;
+    GstMemory *mem;
+    GstD3D11Memory *dmem;
 
-    for (i = 0; i < gst_buffer_n_memory (output); i++) {
-      GstMemory *mem;
-      GstD3D11Memory *dmem;
-
-      mem = gst_buffer_peek_memory (output, i);
-
-      if (!gst_is_d3d11_memory (mem)) {
-        can_device_copy = FALSE;
-        break;
-      }
-
-      dmem = (GstD3D11Memory *) mem;
-
-      if (dmem->device != priv->device) {
-        can_device_copy = FALSE;
-        break;
-      }
+    mem = gst_buffer_peek_memory (output, 0);
+    if (!gst_is_d3d11_memory (mem)) {
+      can_device_copy = FALSE;
+      goto do_process;
     }
+
+    dmem = (GstD3D11Memory *) mem;
+    if (dmem->device != priv->device)
+      can_device_copy = FALSE;
   } else {
     can_device_copy = FALSE;
   }
 
+do_process:
   if (can_device_copy) {
-    return copy_to_d3d11 (decoder, info, decoder_buffer, output);
+    return copy_to_d3d11 (decoder, info, display_width, display_height,
+        need_convert, decoder_buffer, output);
   }
 
-  return copy_to_system (decoder, info, decoder_buffer, output);
+  return copy_to_system (decoder, info, display_width, display_height,
+      need_convert, decoder_buffer, output);
 }
 
 static const gchar *

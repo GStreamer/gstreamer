@@ -722,7 +722,6 @@ gst_d3d11_h264_dec_output_picture (GstH264Decoder * decoder,
   GstBuffer *output_buffer = NULL;
   GstFlowReturn ret;
   GstBuffer *view_buffer;
-  gboolean do_copy;
 
   GST_LOG_OBJECT (self,
       "Outputting picture %p (poc %d)", picture, picture->pic_order_cnt);
@@ -748,11 +747,9 @@ gst_d3d11_h264_dec_output_picture (GstH264Decoder * decoder,
     output_buffer = gst_buffer_ref (view_buffer);
     mem = gst_buffer_peek_memory (output_buffer, 0);
     GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
-    do_copy = FALSE;
   } else {
     output_buffer =
         gst_video_decoder_allocate_output_buffer (GST_VIDEO_DECODER (self));
-    do_copy = TRUE;
   }
 
   if (!output_buffer) {
@@ -775,8 +772,11 @@ gst_d3d11_h264_dec_output_picture (GstH264Decoder * decoder,
         GST_BUFFER_DURATION (frame->input_buffer);
   }
 
-  if (do_copy && !gst_d3d11_decoder_copy_decoder_buffer (self->d3d11_decoder,
-          &self->output_state->info, view_buffer, output_buffer)) {
+  if (!gst_d3d11_decoder_process_output (self->d3d11_decoder,
+          &self->output_state->info,
+          GST_VIDEO_INFO_WIDTH (&self->output_state->info),
+          GST_VIDEO_INFO_HEIGHT (&self->output_state->info),
+          view_buffer, output_buffer)) {
     GST_ERROR_OBJECT (self, "Failed to copy buffer");
     if (frame)
       gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);

@@ -412,6 +412,10 @@ gst_d3d11_vp9_dec_decide_allocation (GstVideoDecoder * decoder,
       return FALSE;
     }
 
+    /* Needs render target bind flag so that it can be used for
+     * output of shader pipeline if internal resizing is required */
+    d3d11_params->desc[0].BindFlags |= D3D11_BIND_RENDER_TARGET;
+
     gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
     gst_d3d11_allocation_params_free (d3d11_params);
   }
@@ -582,7 +586,6 @@ gst_d3d11_vp9_dec_output_picture (GstVp9Decoder * decoder,
   GstBuffer *output_buffer = NULL;
   GstFlowReturn ret;
   GstBuffer *view_buffer;
-  gboolean do_copy;
 
   GST_LOG_OBJECT (self, "Outputting picture %p", picture);
 
@@ -614,17 +617,19 @@ gst_d3d11_vp9_dec_output_picture (GstVp9Decoder * decoder,
    * we cannot do that since baseclass will store the decoded buffer
    * up to gop size but our dpb pool cannot be increased */
   if (self->use_d3d11_output &&
-      GST_VIDEO_DECODER (self)->input_segment.rate > 0) {
+      GST_VIDEO_DECODER (self)->input_segment.rate > 0 &&
+      GST_VIDEO_INFO_WIDTH (&self->output_state->info) ==
+      picture->frame_hdr.width
+      && GST_VIDEO_INFO_HEIGHT (&self->output_state->info) ==
+      picture->frame_hdr.height) {
     GstMemory *mem;
 
     output_buffer = gst_buffer_ref (view_buffer);
     mem = gst_buffer_peek_memory (output_buffer, 0);
     GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
-    do_copy = FALSE;
   } else {
     output_buffer =
         gst_video_decoder_allocate_output_buffer (GST_VIDEO_DECODER (self));
-    do_copy = TRUE;
   }
 
   if (!output_buffer) {
@@ -647,8 +652,10 @@ gst_d3d11_vp9_dec_output_picture (GstVp9Decoder * decoder,
         GST_BUFFER_DURATION (frame->input_buffer);
   }
 
-  if (do_copy && !gst_d3d11_decoder_copy_decoder_buffer (self->d3d11_decoder,
-          &self->output_state->info, view_buffer, output_buffer)) {
+  if (!gst_d3d11_decoder_process_output (self->d3d11_decoder,
+          &self->output_state->info,
+          picture->frame_hdr.width, picture->frame_hdr.height,
+          view_buffer, output_buffer)) {
     GST_ERROR_OBJECT (self, "Failed to copy buffer");
     if (frame)
       gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
