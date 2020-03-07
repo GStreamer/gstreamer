@@ -1061,6 +1061,10 @@ gst_caps_copy_nth (const GstCaps * caps, guint nth)
  * on it if necessary, so you must not use @caps afterwards unless you keep an
  * additional reference to it with gst_caps_ref().
  *
+ * Note that it is not guaranteed that the returned caps have exactly one
+ * structure. If @caps is any or empty caps then then returned caps will be
+ * the same and contain no structure at all.
+ *
  * Returns: (transfer full): truncated caps
  */
 GstCaps *
@@ -1070,7 +1074,13 @@ gst_caps_truncate (GstCaps * caps)
 
   g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
 
+  /* Nothing to truncate here */
+  if (GST_CAPS_LEN (caps) == 0)
+    return caps;
+
   i = GST_CAPS_LEN (caps) - 1;
+
+  /* Already truncated */
   if (i == 0)
     return caps;
 
@@ -2183,6 +2193,10 @@ gst_caps_simplify (GstCaps * caps)
 
   g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
 
+  /* empty/any caps are as simple as can be */
+  if (GST_CAPS_LEN (caps) == 0)
+    return caps;
+
   start = GST_CAPS_LEN (caps) - 1;
   /* one caps, already as simple as can be */
   if (start == 0)
@@ -2244,6 +2258,12 @@ gst_caps_simplify (GstCaps * caps)
  * on it so you must not use @caps afterwards unless you keep an additional
  * reference to it with gst_caps_ref().
  *
+ * Note that it is not guaranteed that the returned caps have exactly one
+ * structure. If @caps are empty caps then then returned caps will be
+ * the empty too and contain no structure at all.
+ *
+ * Calling this function with any caps is not allowed.
+ *
  * Returns: (transfer full): the fixated caps
  */
 GstCaps *
@@ -2253,10 +2273,20 @@ gst_caps_fixate (GstCaps * caps)
   GstCapsFeatures *f;
 
   g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
+  g_return_val_if_fail (!CAPS_IS_ANY (caps), NULL);
 
   /* default fixation */
   caps = gst_caps_truncate (caps);
   caps = gst_caps_make_writable (caps);
+
+  /* need to return early here because empty caps have no structure
+   * but must return after make_writable() because the documentation
+   * specifies that it will call make_writable() on the return value
+   * and callers might assume writable caps.
+   */
+  if (CAPS_IS_EMPTY (caps))
+    return caps;
+
   s = gst_caps_get_structure (caps, 0);
   gst_structure_fixate (s);
 

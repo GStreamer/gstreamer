@@ -270,6 +270,16 @@ GST_START_TEST (test_simplify)
   }
 
   gst_caps_unref (caps);
+
+  caps = gst_caps_new_empty ();
+  caps = gst_caps_simplify (caps);
+  fail_unless (gst_caps_is_empty (caps));
+  gst_caps_unref (caps);
+
+  caps = gst_caps_new_any ();
+  caps = gst_caps_simplify (caps);
+  fail_unless (gst_caps_is_any (caps));
+  gst_caps_unref (caps);
 }
 
 GST_END_TEST;
@@ -284,6 +294,45 @@ GST_START_TEST (test_truncate)
   fail_unless_equals_int (gst_caps_get_size (caps), 4);
   caps = gst_caps_truncate (caps);
   fail_unless_equals_int (gst_caps_get_size (caps), 1);
+  gst_caps_unref (caps);
+
+  caps = gst_caps_new_empty ();
+  caps = gst_caps_truncate (caps);
+  fail_if (caps == NULL);
+  fail_unless (gst_caps_is_empty (caps));
+  gst_caps_unref (caps);
+
+  caps = gst_caps_new_any ();
+  caps = gst_caps_truncate (caps);
+  fail_if (caps == NULL);
+  fail_unless (gst_caps_is_any (caps));
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_fixate)
+{
+  GstCaps *caps, *expected;
+
+  caps = gst_caps_from_string (non_simple_caps_string);
+  fail_unless (caps != NULL,
+      "gst_caps_from_string (non_simple_caps_string) failed");
+  fail_unless_equals_int (gst_caps_get_size (caps), 4);
+  caps = gst_caps_fixate (caps);
+  fail_unless_equals_int (gst_caps_get_size (caps), 1);
+  expected =
+      gst_caps_from_string
+      ("video/x-raw, format=(string)I420, framerate=(fraction)1/100, "
+      "width=(int)16, height=(int)16");
+  fail_unless (gst_caps_is_equal (caps, expected));
+  gst_caps_unref (caps);
+  gst_caps_unref (expected);
+
+  caps = gst_caps_new_empty ();
+  caps = gst_caps_fixate (caps);
+  fail_if (caps == NULL);
+  fail_unless (gst_caps_is_empty (caps));
   gst_caps_unref (caps);
 }
 
@@ -330,6 +379,22 @@ GST_START_TEST (test_subset)
       ("video/x-h264, stream-format=(string)byte-stream, alignment=(string)nal");
   fail_if (gst_caps_is_subset (c2, c1));
   fail_if (gst_caps_is_subset (c1, c2));
+  fail_if (gst_caps_is_equal (c1, c2));
+  gst_caps_unref (c1);
+  gst_caps_unref (c2);
+
+  c1 = gst_caps_from_string ("video/x-h264, parsed=(boolean)true");
+  c2 = gst_caps_new_empty ();
+  fail_unless (gst_caps_is_subset (c2, c1));
+  fail_if (gst_caps_is_subset (c1, c2));
+  fail_if (gst_caps_is_equal (c1, c2));
+  gst_caps_unref (c1);
+  gst_caps_unref (c2);
+
+  c1 = gst_caps_from_string ("video/x-h264, parsed=(boolean)true");
+  c2 = gst_caps_new_any ();
+  fail_if (gst_caps_is_subset (c2, c1));
+  fail_unless (gst_caps_is_subset (c1, c2));
   fail_if (gst_caps_is_equal (c1, c2));
   gst_caps_unref (c1);
   gst_caps_unref (c2);
@@ -721,6 +786,55 @@ GST_START_TEST (test_intersect)
   fail_unless (gst_structure_get_value (s, "format") != NULL);
   fail_unless (gst_structure_get_value (s, "height") != NULL);
   fail_unless (gst_structure_get_value (s, "width") != NULL);
+
+  fail_unless (gst_caps_is_equal (ci1, ci2));
+
+  gst_caps_unref (ci1);
+  gst_caps_unref (ci2);
+
+  gst_caps_unref (c1);
+  gst_caps_unref (c2);
+
+  /* ========== */
+
+  c1 = gst_caps_from_string ("video/x-raw,format=(string)I420,width=20");
+  c2 = gst_caps_new_empty ();
+
+  ci1 = gst_caps_intersect (c1, c2);
+  GST_DEBUG ("intersected: %" GST_PTR_FORMAT, ci1);
+
+  fail_unless (gst_caps_is_empty (ci1));
+  fail_unless (gst_caps_get_size (ci1) == 0);
+
+  ci2 = gst_caps_intersect (c2, c1);
+  GST_DEBUG ("intersected: %" GST_PTR_FORMAT, ci2);
+
+  fail_unless (gst_caps_is_empty (ci2));
+  fail_unless (gst_caps_get_size (ci2) == 0);
+
+  fail_unless (gst_caps_is_equal (ci1, ci2));
+
+  gst_caps_unref (ci1);
+  gst_caps_unref (ci2);
+
+  gst_caps_unref (c1);
+  gst_caps_unref (c2);
+
+
+  /* ========== */
+
+  c1 = gst_caps_from_string ("video/x-raw,format=(string)I420,width=20");
+  c2 = gst_caps_new_any ();
+
+  ci1 = gst_caps_intersect (c1, c2);
+  GST_DEBUG ("intersected: %" GST_PTR_FORMAT, ci1);
+
+  fail_unless (gst_caps_is_equal (ci1, c1));
+
+  ci2 = gst_caps_intersect (c2, c1);
+  GST_DEBUG ("intersected: %" GST_PTR_FORMAT, ci2);
+
+  fail_unless (gst_caps_is_equal (ci2, c1));
 
   fail_unless (gst_caps_is_equal (ci1, ci2));
 
@@ -1707,6 +1821,7 @@ gst_caps_suite (void)
   tcase_add_test (tc_chain, test_static_caps);
   tcase_add_test (tc_chain, test_simplify);
   tcase_add_test (tc_chain, test_truncate);
+  tcase_add_test (tc_chain, test_fixate);
   tcase_add_test (tc_chain, test_subset);
   tcase_add_test (tc_chain, test_subset_duplication);
   tcase_add_test (tc_chain, test_merge_fundamental);
