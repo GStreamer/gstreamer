@@ -79,8 +79,8 @@ struct _GstD3D11DecoderPrivate
 
   /* for staging */
   ID3D11Texture2D *staging;
-  D3D11_TEXTURE2D_DESC staging_desc;
-  D3D11_BOX staging_box;
+  gsize staging_texture_offset[GST_VIDEO_MAX_PLANES];
+  gint stating_texture_stride[GST_VIDEO_MAX_PLANES];
 
   GUID decoder_profile;
 };
@@ -559,6 +559,7 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
   D3D11_VIDEO_DECODER_CONFIG *config_list;
   D3D11_VIDEO_DECODER_CONFIG *best_config = NULL;
   D3D11_VIDEO_DECODER_DESC decoder_desc = { 0, };
+  D3D11_TEXTURE2D_DESC staging_desc = { 0, };
   GUID selected_profile;
   gint i;
   guint aligned_width, aligned_height;
@@ -686,34 +687,26 @@ gst_d3d11_decoder_open (GstD3D11Decoder * decoder, GstD3D11Codec codec,
   GST_DEBUG_OBJECT (decoder, "Decoder object %p created", priv->decoder);
 
   /* create stage texture to copy out */
-  memset (&priv->staging_desc, 0, sizeof (D3D11_TEXTURE2D_DESC));
-  priv->staging_desc.Width = GST_VIDEO_INFO_WIDTH (info);
-  priv->staging_desc.Height = GST_VIDEO_INFO_HEIGHT (info);
-  priv->staging_desc.MipLevels = 1;
-  priv->staging_desc.Format = d3d11_format->dxgi_format;
-  priv->staging_desc.SampleDesc.Count = 1;
-  priv->staging_desc.ArraySize = 1;
-  priv->staging_desc.Usage = D3D11_USAGE_STAGING;
-  priv->staging_desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+  staging_desc.Width = aligned_width;
+  staging_desc.Height = aligned_height;
+  staging_desc.MipLevels = 1;
+  staging_desc.Format = d3d11_format->dxgi_format;
+  staging_desc.SampleDesc.Count = 1;
+  staging_desc.ArraySize = 1;
+  staging_desc.Usage = D3D11_USAGE_STAGING;
+  staging_desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
 
   priv->staging = gst_d3d11_device_create_texture (priv->device,
-      &priv->staging_desc, NULL);
+      &staging_desc, NULL);
   if (!priv->staging) {
     GST_ERROR_OBJECT (decoder, "Couldn't create staging texture");
     goto error;
   }
 
-  /* This D3D11_BOX structure is used to copy decoder view to staging texture,
-   * in case of system memory downstream.
-   * Since resolution of decoder view might be larger than this staging texture,
-   * this D3D11_BOX structure will guide the target area which need to be copied.
-   */
-  priv->staging_box.left = 0;
-  priv->staging_box.top = 0;
-  priv->staging_box.front = 0;
-  priv->staging_box.back = 1;
-  priv->staging_box.right = GST_VIDEO_INFO_WIDTH (info);
-  priv->staging_box.bottom = GST_VIDEO_INFO_HEIGHT (info);
+  memset (priv->staging_texture_offset,
+      0, sizeof (priv->staging_texture_offset));
+  memset (priv->stating_texture_stride,
+      0, sizeof (priv->stating_texture_stride));
 
   priv->decoder_profile = selected_profile;
   decoder->opened = TRUE;
@@ -949,14 +942,10 @@ copy_to_system (GstD3D11Decoder * self, GstVideoInfo * info,
     GstBuffer * decoder_buffer, GstBuffer * output)
 {
   GstD3D11DecoderPrivate *priv = self->priv;
-  D3D11_TEXTURE2D_DESC *desc = &priv->staging_desc;
   GstVideoFrame out_frame;
   gint i;
   GstD3D11Memory *in_mem;
   D3D11_MAPPED_SUBRESOURCE map;
-  gsize offset[GST_VIDEO_MAX_PLANES];
-  gint stride[GST_VIDEO_MAX_PLANES];
-  gsize dummy;
   HRESULT hr;
   ID3D11DeviceContext *device_context =
       gst_d3d11_device_get_device_context_handle (priv->device);
@@ -971,8 +960,7 @@ copy_to_system (GstD3D11Decoder * self, GstVideoInfo * info,
   gst_d3d11_device_lock (priv->device);
   ID3D11DeviceContext_CopySubresourceRegion (device_context,
       (ID3D11Resource *) priv->staging, 0, 0, 0, 0,
-      (ID3D11Resource *) in_mem->texture, in_mem->subresource_index,
-      &priv->staging_box);
+      (ID3D11Resource *) in_mem->texture, in_mem->subresource_index, NULL);
 
   hr = ID3D11DeviceContext_Map (device_context,
       (ID3D11Resource *) priv->staging, 0, D3D11_MAP_READ, 0, &map);
@@ -983,15 +971,24 @@ copy_to_system (GstD3D11Decoder * self, GstVideoInfo * info,
     return FALSE;
   }
 
-  gst_d3d11_dxgi_format_get_size (desc->Format, desc->Width, desc->Height,
-      map.RowPitch, offset, stride, &dummy);
+  /* calculate stride and offset only once */
+  if (priv->stating_texture_stride[0] == 0) {
+    D3D11_TEXTURE2D_DESC desc;
+    gsize dummy;
+
+    ID3D11Texture2D_GetDesc (priv->staging, &desc);
+
+    gst_d3d11_dxgi_format_get_size (desc.Format, desc.Width, desc.Height,
+        map.RowPitch, priv->staging_texture_offset,
+        priv->stating_texture_stride, &dummy);
+  }
 
   for (i = 0; i < GST_VIDEO_FRAME_N_PLANES (&out_frame); i++) {
     guint8 *src, *dst;
     gint j;
     gint width;
 
-    src = (guint8 *) map.pData + offset[i];
+    src = (guint8 *) map.pData + priv->staging_texture_offset[i];
     dst = GST_VIDEO_FRAME_PLANE_DATA (&out_frame, i);
     width = GST_VIDEO_FRAME_COMP_WIDTH (&out_frame, i) *
         GST_VIDEO_FRAME_COMP_PSTRIDE (&out_frame, i);
@@ -999,7 +996,7 @@ copy_to_system (GstD3D11Decoder * self, GstVideoInfo * info,
     for (j = 0; j < GST_VIDEO_FRAME_COMP_HEIGHT (&out_frame, i); j++) {
       memcpy (dst, src, width);
       dst += GST_VIDEO_FRAME_PLANE_STRIDE (&out_frame, i);
-      src += map.RowPitch;
+      src += priv->stating_texture_stride[i];
     }
   }
 
