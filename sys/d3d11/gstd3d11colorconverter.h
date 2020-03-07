@@ -45,6 +45,9 @@ gboolean                 gst_d3d11_color_converter_convert_unlocked (GstD3D11Col
 gboolean                 gst_d3d11_color_converter_update_rect (GstD3D11ColorConverter * converter,
                                                                 RECT *rect);
 
+gboolean                 gst_d3d11_color_converter_update_crop_rect (GstD3D11ColorConverter * converter,
+                                                                     RECT *crop_rect);
+
 G_END_DECLS
 
 #endif /* __GST_D3D11_COLOR_CONVERTER_H__ */

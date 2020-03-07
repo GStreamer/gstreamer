@@ -291,6 +291,12 @@ struct _GstD3D11ColorConverter
 
   D3D11_VIEWPORT viewport[GST_VIDEO_MAX_PLANES];
 
+  RECT crop_rect;
+  gint input_texture_width;
+  gint input_texture_height;
+  ID3D11Buffer *vertex_buffer;
+  gboolean update_vertex;
+
   ConvertInfo convert_info;
 };
 
@@ -1048,6 +1054,18 @@ gst_d3d11_color_convert_setup_shader (GstD3D11ColorConverter * self,
   self->num_input_view = GST_VIDEO_INFO_N_PLANES (in_info);
   self->num_output_view = GST_VIDEO_INFO_N_PLANES (out_info);
 
+  /* holds vertex buffer for crop rect update */
+  self->vertex_buffer = vertex_buffer;
+  ID3D11Buffer_AddRef (vertex_buffer);
+
+  self->crop_rect.left = 0;
+  self->crop_rect.top = 0;
+  self->crop_rect.right = GST_VIDEO_INFO_WIDTH (in_info);
+  self->crop_rect.bottom = GST_VIDEO_INFO_HEIGHT (in_info);
+
+  self->input_texture_width = GST_VIDEO_INFO_WIDTH (in_info);
+  self->input_texture_height = GST_VIDEO_INFO_HEIGHT (in_info);
+
 clear:
   for (i = 0; i < CONVERTER_MAX_QUADS; i++) {
     if (ps[i])
@@ -1203,8 +1221,86 @@ gst_d3d11_color_converter_free (GstD3D11ColorConverter * converter)
     g_free (converter->convert_info.ps_body[i]);
   }
 
+  if (converter->vertex_buffer)
+    ID3D11Buffer_Release (converter->vertex_buffer);
+
   gst_clear_object (&converter->device);
   g_free (converter);
+}
+
+/* must be called with gst_d3d11_device_lock since ID3D11DeviceContext is not
+ * thread-safe */
+static gboolean
+gst_d3d11_color_converter_update_vertex_buffer (GstD3D11ColorConverter * self)
+{
+  D3D11_MAPPED_SUBRESOURCE map;
+  VertexData *vertex_data;
+  ID3D11DeviceContext *context_handle;
+  HRESULT hr;
+  FLOAT u, v;
+  const RECT *crop_rect = &self->crop_rect;
+  gint texture_width = self->input_texture_width;
+  gint texture_height = self->input_texture_height;
+
+  context_handle = gst_d3d11_device_get_device_context_handle (self->device);
+
+  hr = ID3D11DeviceContext_Map (context_handle,
+      (ID3D11Resource *) self->vertex_buffer, 0, D3D11_MAP_WRITE_DISCARD,
+      0, &map);
+
+  if (!gst_d3d11_result (hr, self->device)) {
+    GST_ERROR ("Couldn't map vertex buffer, hr: 0x%x", (guint) hr);
+    return FALSE;
+  }
+
+  vertex_data = (VertexData *) map.pData;
+
+  /* bottom left */
+  u = (crop_rect->left / (gfloat) texture_width) - 0.5f / texture_width;
+  v = (crop_rect->bottom / (gfloat) texture_height) - 0.5f / texture_height;
+
+  vertex_data[0].position.x = -1.0f;
+  vertex_data[0].position.y = -1.0f;
+  vertex_data[0].position.z = 0.0f;
+  vertex_data[0].texture.x = u;
+  vertex_data[0].texture.y = v;
+
+  /* top left */
+  u = (crop_rect->left / (gfloat) texture_width) - 0.5f / texture_width;
+  v = (crop_rect->top / (gfloat) texture_height) - 0.5f / texture_height;
+
+  vertex_data[1].position.x = -1.0f;
+  vertex_data[1].position.y = 1.0f;
+  vertex_data[1].position.z = 0.0f;
+  vertex_data[1].texture.x = u;
+  vertex_data[1].texture.y = v;
+
+  /* top right */
+  u = (crop_rect->right / (gfloat) texture_width) - 0.5f / texture_width;
+  v = (crop_rect->top / (gfloat) texture_height) - 0.5f / texture_height;
+
+  vertex_data[2].position.x = 1.0f;
+  vertex_data[2].position.y = 1.0f;
+  vertex_data[2].position.z = 0.0f;
+  vertex_data[2].texture.x = u;
+  vertex_data[2].texture.y = v;
+
+  /* bottom right */
+  u = (crop_rect->right / (gfloat) texture_width) - 0.5f / texture_width;
+  v = (crop_rect->bottom / (gfloat) texture_height) - 0.5f / texture_height;
+
+  vertex_data[3].position.x = 1.0f;
+  vertex_data[3].position.y = -1.0f;
+  vertex_data[3].position.z = 0.0f;
+  vertex_data[3].texture.x = u;
+  vertex_data[3].texture.y = v;
+
+  ID3D11DeviceContext_Unmap (context_handle,
+      (ID3D11Resource *) self->vertex_buffer, 0);
+
+  self->update_vertex = FALSE;
+
+  return TRUE;
 }
 
 gboolean
@@ -1231,10 +1327,32 @@ gst_d3d11_color_converter_convert_unlocked (GstD3D11ColorConverter * converter,
     ID3D11RenderTargetView * rtv[GST_VIDEO_MAX_PLANES])
 {
   gboolean ret;
+  ID3D11Resource *resource;
+  D3D11_TEXTURE2D_DESC desc;
 
   g_return_val_if_fail (converter != NULL, FALSE);
   g_return_val_if_fail (srv != NULL, FALSE);
   g_return_val_if_fail (rtv != NULL, FALSE);
+
+  /* check texture resolution and update crop area */
+  ID3D11ShaderResourceView_GetResource (srv[0], &resource);
+  ID3D11Texture2D_GetDesc ((ID3D11Texture2D *) resource, &desc);
+  ID3D11Resource_Release (resource);
+
+  if (converter->update_vertex ||
+      desc.Width != converter->input_texture_width ||
+      desc.Height != converter->input_texture_height) {
+    GST_DEBUG ("Update vertext buffer, texture resolution: %dx%d",
+        desc.Width, desc.Height);
+
+    converter->input_texture_width = desc.Width;
+    converter->input_texture_height = desc.Height;
+
+    if (!gst_d3d11_color_converter_update_vertex_buffer (converter)) {
+      GST_ERROR ("Cannot update vertex buffer");
+      return FALSE;
+    }
+  }
 
   ret = gst_d3d11_draw_quad_unlocked (converter->quad[0], converter->viewport,
       1, srv, converter->num_input_view, rtv, 1, NULL);
@@ -1288,6 +1406,26 @@ gst_d3d11_color_converter_update_rect (GstD3D11ColorConverter * converter,
       if (converter->num_output_view > 1)
         g_assert_not_reached ();
       break;
+  }
+
+  return TRUE;
+}
+
+gboolean
+gst_d3d11_color_converter_update_crop_rect (GstD3D11ColorConverter * converter,
+    RECT * crop_rect)
+{
+  g_return_val_if_fail (converter != NULL, FALSE);
+  g_return_val_if_fail (crop_rect != NULL, FALSE);
+
+  if (converter->crop_rect.left != crop_rect->left ||
+      converter->crop_rect.top != crop_rect->top ||
+      converter->crop_rect.right != crop_rect->right ||
+      converter->crop_rect.bottom != crop_rect->bottom) {
+    converter->crop_rect = *crop_rect;
+
+    /* vertex buffer will be updated on next convert() call */
+    converter->update_vertex = TRUE;
   }
 
   return TRUE;
