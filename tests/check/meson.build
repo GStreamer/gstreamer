@@ -1,7 +1,12 @@
 tests = [
   [ 'elements/vaapipostproc' ],
-  [ 'elements/vaapioverlay' ],
 ]
+
+if USE_DRM
+  tests += [
+  [ 'elements/vaapioverlay' ]
+]
+endif
 
 test_deps = [gst_dep, gstbase_dep, gstvideo_dep, gstcheck_dep]
 test_defines = [
