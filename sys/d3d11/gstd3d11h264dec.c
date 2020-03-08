@@ -85,9 +85,6 @@ DEFINE_GUID (GST_GUID_D3D11_DECODER_PROFILE_H264_VLD_NOFGT, 0x1b81be68, 0xa0c7,
 DEFINE_GUID (GST_GUID_D3D11_DECODER_PROFILE_H264_VLD_FGT, 0x1b81be69, 0xa0c7,
     0x11d3, 0xb9, 0x84, 0x00, 0xc0, 0x4f, 0x2e, 0x73, 0xc5);
 
-/* worst case 16 (non-interlaced) + 4 margin */
-#define NUM_OUTPUT_VIEW 20
-
 typedef struct _GstD3D11H264Dec
 {
   GstH264Decoder parent;
@@ -549,7 +546,9 @@ gst_d3d11_h264_dec_new_sequence (GstH264Decoder * decoder,
 
     gst_d3d11_decoder_reset (self->d3d11_decoder);
     if (!gst_d3d11_decoder_open (self->d3d11_decoder, GST_D3D11_CODEC_H264,
-            &info, self->coded_width, self->coded_height, NUM_OUTPUT_VIEW,
+            &info, self->coded_width, self->coded_height,
+            /* Additional 4 views margin for zero-copy rendering */
+            max_dpb_size + 4,
             supported_profiles, G_N_ELEMENTS (supported_profiles))) {
       GST_ERROR_OBJECT (self, "Failed to create decoder");
       return FALSE;
