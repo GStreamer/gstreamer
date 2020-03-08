@@ -97,7 +97,8 @@ struct _GstH265DecoderClass
   GstVideoDecoderClass parent_class;
 
   gboolean      (*new_sequence)     (GstH265Decoder * decoder,
-                                     const GstH265SPS * sps);
+                                     const GstH265SPS * sps,
+                                     gint max_dpb_size);
 
   gboolean      (*new_picture)      (GstH265Decoder * decoder,
                                      GstH265Picture * picture);

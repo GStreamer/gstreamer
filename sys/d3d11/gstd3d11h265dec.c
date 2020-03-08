@@ -53,9 +53,6 @@ DEFINE_GUID (GST_GUID_D3D11_DECODER_PROFILE_HEVC_VLD_MAIN,
 DEFINE_GUID (GST_GUID_D3D11_DECODER_PROFILE_HEVC_VLD_MAIN10,
     0x107af0e0, 0xef1a, 0x4d19, 0xab, 0xa8, 0x67, 0xa1, 0x63, 0x07, 0x3d, 0x13);
 
-/* worst case 16 + 4 margin */
-#define NUM_OUTPUT_VIEW 20
-
 typedef struct _GstD3D11H265Dec
 {
   GstH265Decoder parent;
@@ -123,7 +120,7 @@ static gboolean gst_d3d11_h265_dec_src_query (GstVideoDecoder * decoder,
 
 /* GstH265Decoder */
 static gboolean gst_d3d11_h265_dec_new_sequence (GstH265Decoder * decoder,
-    const GstH265SPS * sps);
+    const GstH265SPS * sps, gint max_dpb_size);
 static gboolean gst_d3d11_h265_dec_new_picture (GstH265Decoder * decoder,
     GstH265Picture * picture);
 static GstFlowReturn gst_d3d11_h265_dec_output_picture (GstH265Decoder *
@@ -445,7 +442,7 @@ gst_d3d11_h265_dec_src_query (GstVideoDecoder * decoder, GstQuery * query)
 
 static gboolean
 gst_d3d11_h265_dec_new_sequence (GstH265Decoder * decoder,
-    const GstH265SPS * sps)
+    const GstH265SPS * sps, gint max_dpb_size)
 {
   GstD3D11H265Dec *self = GST_D3D11_H265_DEC (decoder);
   gint crop_width, crop_height;
@@ -520,7 +517,8 @@ gst_d3d11_h265_dec_new_sequence (GstH265Decoder * decoder,
     gst_d3d11_decoder_reset (self->d3d11_decoder);
     if (!gst_d3d11_decoder_open (self->d3d11_decoder, GST_D3D11_CODEC_H265,
             &info, self->coded_width, self->coded_height,
-            NUM_OUTPUT_VIEW, &profile_guid, 1)) {
+            /* Additional 4 views margin for zero-copy rendering */
+            max_dpb_size + 4, &profile_guid, 1)) {
       GST_ERROR_OBJECT (self, "Failed to create decoder");
       return FALSE;
     }
