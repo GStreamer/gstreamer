@@ -618,14 +618,17 @@ set_or_check_properties (GstValidateScenario * scenario,
     data.res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
     goto done;
   }
-  g_object_unref (timeline);
 
   data.element = element;
-  gst_structure_remove_fields (structure, "element-name", "at-time", NULL);
+  gst_structure_remove_fields (structure, "element-name", "at-time",
+      "project-uri", NULL);
   gst_structure_foreach (structure,
       gst_structure_has_name (action->structure,
           "set-child-properties") ? (GstStructureForeachFunc) set_property
       : (GstStructureForeachFunc) check_property, &data);
+
+  SAVE_TIMELINE_IF_NEEDED (scenario, timeline, action);
+  g_object_unref (timeline);
   gst_object_unref (element);
 
 done:
