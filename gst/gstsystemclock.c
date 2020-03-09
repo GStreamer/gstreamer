@@ -193,10 +193,11 @@ gst_system_clock_init (GstSystemClock * clock)
 #ifdef G_OS_WIN32
   QueryPerformanceFrequency (&priv->frequency);
   /* can be 0 if the hardware does not have hardware support */
-  if (priv->frequency.QuadPart != 0)
+  if (priv->frequency.QuadPart != 0) {
     /* we take a base time so that time starts from 0 to ease debugging */
     QueryPerformanceCounter (&priv->start);
-  priv->ratio = GST_SECOND / priv->frequency.QuadPart;
+    priv->ratio = GST_SECOND / priv->frequency.QuadPart;
+  }
 #endif /* G_OS_WIN32 */
 
 #ifdef __APPLE__
