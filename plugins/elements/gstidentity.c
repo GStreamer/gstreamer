@@ -464,7 +464,7 @@ gst_identity_sink_event (GstBaseTransform * trans, GstEvent * event)
     if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_START) {
       GST_OBJECT_LOCK (identity);
       identity->flushing = TRUE;
-      g_cond_broadcast (&identity->blocked_cond);
+      g_cond_signal (&identity->blocked_cond);
       if (identity->clock_id) {
         GST_DEBUG_OBJECT (identity, "unlock clock wait");
         gst_clock_id_unschedule (identity->clock_id);
@@ -1013,7 +1013,7 @@ gst_identity_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       GST_OBJECT_LOCK (identity);
       identity->blocked = FALSE;
-      g_cond_broadcast (&identity->blocked_cond);
+      g_cond_signal (&identity->blocked_cond);
       GST_OBJECT_UNLOCK (identity);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
@@ -1024,7 +1024,7 @@ gst_identity_change_state (GstElement * element, GstStateChange transition)
         gst_clock_id_unschedule (identity->clock_id);
       }
       identity->blocked = FALSE;
-      g_cond_broadcast (&identity->blocked_cond);
+      g_cond_signal (&identity->blocked_cond);
       GST_OBJECT_UNLOCK (identity);
       break;
     default:
