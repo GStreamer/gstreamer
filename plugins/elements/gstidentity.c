@@ -334,7 +334,7 @@ gst_identity_do_sync (GstIdentity * identity, GstClockTime running_time)
       return GST_FLOW_FLUSHING;
     }
 
-    while (identity->blocked)
+    while (identity->blocked && !identity->flushing)
       g_cond_wait (&identity->blocked_cond, GST_OBJECT_GET_LOCK (identity));
 
     if (identity->flushing) {
@@ -464,6 +464,7 @@ gst_identity_sink_event (GstBaseTransform * trans, GstEvent * event)
     if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_START) {
       GST_OBJECT_LOCK (identity);
       identity->flushing = TRUE;
+      g_cond_broadcast (&identity->blocked_cond);
       if (identity->clock_id) {
         GST_DEBUG_OBJECT (identity, "unlock clock wait");
         gst_clock_id_unschedule (identity->clock_id);
