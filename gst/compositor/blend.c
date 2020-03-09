@@ -956,8 +956,8 @@ fill_checker_##name##_c (GstVideoFrame * frame) \
   \
   for (i = 0; i < height; i++) { \
     for (j = 0; j < width; j++) { \
-      dest[Y1] = tab[((i & 0x8) >> 3) + ((j & 0x8) >> 3)]; \
-      dest[Y2] = tab[((i & 0x8) >> 3) + ((j & 0x8) >> 3)]; \
+      dest[Y1] = tab[((i & 0x8) >> 3) + (((2 * j + 0) & 0x8) >> 3)]; \
+      dest[Y2] = tab[((i & 0x8) >> 3) + (((2 * j + 1) & 0x8) >> 3)]; \
       dest[U] = 128; \
       dest[V] = 128; \
       dest += 4; \
