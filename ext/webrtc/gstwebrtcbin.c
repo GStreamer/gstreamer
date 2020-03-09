@@ -1156,6 +1156,19 @@ _update_ice_gathering_state_task (GstWebRTCBin * webrtc, gpointer data)
 
   new_state = _collate_ice_gathering_states (webrtc);
 
+  /* If the new state is complete, before we update the public state,
+   * check if anyone published more ICE candidates while we were collating
+   * and stop if so, because it means there's a new later
+   * ice_gathering_state_task queued */
+  if (new_state == GST_WEBRTC_ICE_GATHERING_STATE_COMPLETE) {
+    ICE_LOCK (webrtc);
+    if (webrtc->priv->pending_local_ice_candidates->len != 0) {
+      /* ICE candidates queued for emissiong -> we're gathering, not complete */
+      new_state = GST_WEBRTC_ICE_GATHERING_STATE_GATHERING;
+    }
+    ICE_UNLOCK (webrtc);
+  }
+
   if (new_state != webrtc->ice_gathering_state) {
     gchar *old_s, *new_s;
 
@@ -4646,50 +4659,88 @@ gst_webrtc_bin_add_ice_candidate (GstWebRTCBin * webrtc, guint mline,
 }
 
 static void
-_on_ice_candidate_task (GstWebRTCBin * webrtc, IceCandidateItem * item)
+_on_local_ice_candidate_task (GstWebRTCBin * webrtc)
 {
-  const gchar *cand = item->candidate;
+  gsize i;
+  GArray *items;
 
-  if (!g_ascii_strncasecmp (cand, "a=candidate:", 12)) {
-    /* stripping away "a=" */
-    cand += 2;
+  ICE_LOCK (webrtc);
+  if (webrtc->priv->pending_local_ice_candidates->len == 0) {
+    ICE_UNLOCK (webrtc);
+    GST_LOG_OBJECT (webrtc, "No ICE candidates to process right now");
+    return;                     /* Nothing to process */
   }
+  /* Take the array so we can process it all and free it later
+   * without holding the lock
+   * FIXME: When we depend on GLib 2.64, we can use g_array_steal()
+   * here */
+  items = webrtc->priv->pending_local_ice_candidates;
+  /* Replace with a new array */
+  webrtc->priv->pending_local_ice_candidates =
+      g_array_new (FALSE, TRUE, sizeof (IceCandidateItem *));
+  g_array_set_clear_func (webrtc->priv->pending_local_ice_candidates,
+      (GDestroyNotify) _clear_ice_candidate_item);
+  ICE_UNLOCK (webrtc);
 
-  GST_TRACE_OBJECT (webrtc, "produced ICE candidate for mline:%u and %s",
-      item->mlineindex, cand);
+  for (i = 0; i < items->len; i++) {
+    IceCandidateItem *item = g_array_index (items, IceCandidateItem *, i);
+    const gchar *cand = item->candidate;
 
-  /* First, merge this ice candidate into the appropriate mline
-   * in the local-description SDP.
-   * Second, emit the on-ice-candidate signal for the app.
-   *
-   * FIXME: This ICE candidate should be stored somewhere with
-   * the associated mid and also merged back into any subsequent
-   * local descriptions on renegotiation */
-  if (webrtc->current_local_description)
-    _add_ice_candidate_to_sdp (webrtc, webrtc->current_local_description->sdp,
+    if (!g_ascii_strncasecmp (cand, "a=candidate:", 12)) {
+      /* stripping away "a=" */
+      cand += 2;
+    }
+
+    GST_TRACE_OBJECT (webrtc, "produced ICE candidate for mline:%u and %s",
         item->mlineindex, cand);
-  if (webrtc->pending_local_description)
-    _add_ice_candidate_to_sdp (webrtc, webrtc->pending_local_description->sdp,
-        item->mlineindex, cand);
 
-  PC_UNLOCK (webrtc);
-  g_signal_emit (webrtc, gst_webrtc_bin_signals[ON_ICE_CANDIDATE_SIGNAL],
-      0, item->mlineindex, cand);
-  PC_LOCK (webrtc);
+    /* First, merge this ice candidate into the appropriate mline
+     * in the local-description SDP.
+     * Second, emit the on-ice-candidate signal for the app.
+     *
+     * FIXME: This ICE candidate should be stored somewhere with
+     * the associated mid and also merged back into any subsequent
+     * local descriptions on renegotiation */
+    if (webrtc->current_local_description)
+      _add_ice_candidate_to_sdp (webrtc, webrtc->current_local_description->sdp,
+          item->mlineindex, cand);
+    if (webrtc->pending_local_description)
+      _add_ice_candidate_to_sdp (webrtc, webrtc->pending_local_description->sdp,
+          item->mlineindex, cand);
+
+    PC_UNLOCK (webrtc);
+    g_signal_emit (webrtc, gst_webrtc_bin_signals[ON_ICE_CANDIDATE_SIGNAL],
+        0, item->mlineindex, cand);
+    PC_LOCK (webrtc);
+
+  }
+  g_array_free (items, TRUE);
 }
 
 static void
-_on_ice_candidate (GstWebRTCICE * ice, guint session_id,
+_on_local_ice_candidate_cb (GstWebRTCICE * ice, guint session_id,
     gchar * candidate, GstWebRTCBin * webrtc)
 {
   IceCandidateItem *item = g_new0 (IceCandidateItem, 1);
+  gboolean queue_task = FALSE;
 
   item->mlineindex = session_id;
   item->candidate = g_strdup (candidate);
 
-  gst_webrtc_bin_enqueue_task (webrtc,
-      (GstWebRTCBinFunc) _on_ice_candidate_task, item,
-      (GDestroyNotify) _free_ice_candidate_item);
+  ICE_LOCK (webrtc);
+  g_array_append_val (webrtc->priv->pending_local_ice_candidates, item);
+
+  /* Let the first pending candidate queue a task each time, which will
+   * handle any that arrive between now and when the task runs */
+  if (webrtc->priv->pending_local_ice_candidates->len == 1)
+    queue_task = TRUE;
+  ICE_UNLOCK (webrtc);
+
+  if (queue_task) {
+    GST_TRACE_OBJECT (webrtc, "Queueing on_ice_candidate_task");
+    gst_webrtc_bin_enqueue_task (webrtc,
+        (GstWebRTCBinFunc) _on_local_ice_candidate_task, NULL, NULL);
+  }
 }
 
 /* https://www.w3.org/TR/webrtc/#dfn-stats-selection-algorithm */
@@ -5779,6 +5830,10 @@ gst_webrtc_bin_finalize (GObject * object)
     g_array_free (webrtc->priv->pending_remote_ice_candidates, TRUE);
   webrtc->priv->pending_remote_ice_candidates = NULL;
 
+  if (webrtc->priv->pending_local_ice_candidates)
+    g_array_free (webrtc->priv->pending_local_ice_candidates, TRUE);
+  webrtc->priv->pending_local_ice_candidates = NULL;
+
   if (webrtc->priv->session_mid_map)
     g_array_free (webrtc->priv->session_mid_map, TRUE);
   webrtc->priv->session_mid_map = NULL;
@@ -6289,12 +6344,17 @@ gst_webrtc_bin_init (GstWebRTCBin * webrtc)
 
   webrtc->priv->ice = gst_webrtc_ice_new ();
   g_signal_connect (webrtc->priv->ice, "on-ice-candidate",
-      G_CALLBACK (_on_ice_candidate), webrtc);
+      G_CALLBACK (_on_local_ice_candidate_cb), webrtc);
   webrtc->priv->ice_stream_map =
       g_array_new (FALSE, TRUE, sizeof (IceStreamItem));
   webrtc->priv->pending_remote_ice_candidates =
       g_array_new (FALSE, TRUE, sizeof (IceCandidateItem *));
   g_array_set_clear_func (webrtc->priv->pending_remote_ice_candidates,
+      (GDestroyNotify) _clear_ice_candidate_item);
+
+  webrtc->priv->pending_local_ice_candidates =
+      g_array_new (FALSE, TRUE, sizeof (IceCandidateItem *));
+  g_array_set_clear_func (webrtc->priv->pending_local_ice_candidates,
       (GDestroyNotify) _clear_ice_candidate_item);
 
   /* we start off closed until we move to READY */
