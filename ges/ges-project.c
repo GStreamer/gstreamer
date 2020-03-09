@@ -190,7 +190,8 @@ ges_project_set_uri (GESProject * project, const gchar * uri)
 
   priv = project->priv;
   if (priv->uri) {
-    GST_WARNING_OBJECT (project, "Trying to rest URI, this is prohibited");
+    if (g_strcmp0 (priv->uri, uri))
+      GST_WARNING_OBJECT (project, "Trying to reset URI, this is prohibited");
 
     return;
   }
