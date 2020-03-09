@@ -361,7 +361,7 @@ gst_clock_sync_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_FLUSH_START:
       GST_OBJECT_LOCK (clocksync);
       clocksync->flushing = TRUE;
-      g_cond_broadcast (&clocksync->blocked_cond);
+      g_cond_signal (&clocksync->blocked_cond);
       if (clocksync->clock_id) {
         GST_DEBUG_OBJECT (clocksync, "unlock clock wait");
         gst_clock_id_unschedule (clocksync->clock_id);
@@ -539,7 +539,7 @@ gst_clocksync_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       GST_OBJECT_LOCK (clocksync);
       clocksync->blocked = FALSE;
-      g_cond_broadcast (&clocksync->blocked_cond);
+      g_cond_signal (&clocksync->blocked_cond);
       GST_OBJECT_UNLOCK (clocksync);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
@@ -550,7 +550,7 @@ gst_clocksync_change_state (GstElement * element, GstStateChange transition)
         gst_clock_id_unschedule (clocksync->clock_id);
       }
       clocksync->blocked = FALSE;
-      g_cond_broadcast (&clocksync->blocked_cond);
+      g_cond_signal (&clocksync->blocked_cond);
       GST_OBJECT_UNLOCK (clocksync);
       break;
     default:
