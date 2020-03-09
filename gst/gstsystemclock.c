@@ -87,7 +87,6 @@ struct _GstSystemClockPrivate
   gboolean async_wakeup;        /* if the wakeup was because of a async list change */
 
 #ifdef G_OS_WIN32
-  LARGE_INTEGER start;
   LARGE_INTEGER frequency;
   guint64 ratio;
 #endif                          /* G_OS_WIN32 */
@@ -194,8 +193,6 @@ gst_system_clock_init (GstSystemClock * clock)
   QueryPerformanceFrequency (&priv->frequency);
   /* can be 0 if the hardware does not have hardware support */
   if (priv->frequency.QuadPart != 0) {
-    /* we take a base time so that time starts from 0 to ease debugging */
-    QueryPerformanceCounter (&priv->start);
     priv->ratio = GST_SECOND / priv->frequency.QuadPart;
   }
 #endif /* G_OS_WIN32 */
@@ -591,8 +588,7 @@ gst_system_clock_get_internal_time (GstClock * clock)
     /* we prefer the highly accurate performance counters on windows */
     QueryPerformanceCounter (&now);
 
-    return ((now.QuadPart -
-            sysclock->priv->start.QuadPart) * sysclock->priv->ratio);
+    return now.QuadPart * sysclock->priv->ratio;
   } else
 #endif /* G_OS_WIN32 */
 #if !defined HAVE_POSIX_TIMERS || !defined HAVE_CLOCK_GETTIME
