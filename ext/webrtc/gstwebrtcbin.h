@@ -109,7 +109,8 @@ struct _GstWebRTCBinPrivate
 
   GstWebRTCICE *ice;
   GArray *ice_stream_map;
-  GArray *pending_ice_candidates;
+  GMutex ice_lock;
+  GArray *pending_remote_ice_candidates;
 
   /* peerconnection variables */
   gboolean is_closed;

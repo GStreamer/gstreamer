@@ -49,6 +49,10 @@
 #define PC_COND_BROADCAST(w) (g_cond_broadcast(PC_GET_COND(w)))
 #define PC_COND_SIGNAL(w) (g_cond_signal(PC_GET_COND(w)))
 
+#define ICE_GET_LOCK(w) (&w->priv->ice_lock)
+#define ICE_LOCK(w) (g_mutex_lock (ICE_GET_LOCK(w)))
+#define ICE_UNLOCK(w) (g_mutex_unlock (ICE_GET_LOCK(w)))
+
 /*
  * This webrtcbin implements the majority of the W3's peerconnection API and
  * implementation guide where possible. Generating offers, answers and setting
@@ -3537,9 +3541,11 @@ _add_ice_candidate (GstWebRTCBin * webrtc, IceCandidateItem * item,
       IceCandidateItem *new = g_new0 (IceCandidateItem, 1);
       new->mlineindex = item->mlineindex;
       new->candidate = g_strdup (item->candidate);
-
-      g_array_append_val (webrtc->priv->pending_ice_candidates, new);
       GST_INFO_OBJECT (webrtc, "Unknown mline %u, deferring", item->mlineindex);
+
+      ICE_LOCK (webrtc);
+      g_array_append_val (webrtc->priv->pending_remote_ice_candidates, new);
+      ICE_UNLOCK (webrtc);
     }
     return;
   }
@@ -4479,14 +4485,16 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
       _add_ice_candidates_from_sdp (webrtc, i, media);
     }
 
-    for (i = 0; i < webrtc->priv->pending_ice_candidates->len; i++) {
+    ICE_LOCK (webrtc);
+    for (i = 0; i < webrtc->priv->pending_remote_ice_candidates->len; i++) {
       IceCandidateItem *item =
-          g_array_index (webrtc->priv->pending_ice_candidates,
+          g_array_index (webrtc->priv->pending_remote_ice_candidates,
           IceCandidateItem *, i);
 
       _add_ice_candidate (webrtc, item, TRUE);
     }
-    g_array_set_size (webrtc->priv->pending_ice_candidates, 0);
+    g_array_set_size (webrtc->priv->pending_remote_ice_candidates, 0);
+    ICE_UNLOCK (webrtc);
   }
 
   /*
@@ -4606,7 +4614,9 @@ _add_ice_candidate_task (GstWebRTCBin * webrtc, IceCandidateItem * item)
     new->mlineindex = item->mlineindex;
     new->candidate = g_strdup (item->candidate);
 
-    g_array_append_val (webrtc->priv->pending_ice_candidates, new);
+    ICE_LOCK (webrtc);
+    g_array_append_val (webrtc->priv->pending_remote_ice_candidates, new);
+    ICE_UNLOCK (webrtc);
   } else {
     _add_ice_candidate (webrtc, item, FALSE);
   }
@@ -5765,9 +5775,9 @@ gst_webrtc_bin_finalize (GObject * object)
     g_array_free (webrtc->priv->pending_data_channels, TRUE);
   webrtc->priv->pending_data_channels = NULL;
 
-  if (webrtc->priv->pending_ice_candidates)
-    g_array_free (webrtc->priv->pending_ice_candidates, TRUE);
-  webrtc->priv->pending_ice_candidates = NULL;
+  if (webrtc->priv->pending_remote_ice_candidates)
+    g_array_free (webrtc->priv->pending_remote_ice_candidates, TRUE);
+  webrtc->priv->pending_remote_ice_candidates = NULL;
 
   if (webrtc->priv->session_mid_map)
     g_array_free (webrtc->priv->session_mid_map, TRUE);
@@ -5808,6 +5818,7 @@ gst_webrtc_bin_finalize (GObject * object)
     gst_structure_free (webrtc->priv->stats);
   webrtc->priv->stats = NULL;
 
+  g_mutex_clear (ICE_GET_LOCK (webrtc));
   g_mutex_clear (PC_GET_LOCK (webrtc));
   g_cond_clear (PC_GET_COND (webrtc));
 
@@ -6249,6 +6260,8 @@ gst_webrtc_bin_init (GstWebRTCBin * webrtc)
   g_mutex_init (PC_GET_LOCK (webrtc));
   g_cond_init (PC_GET_COND (webrtc));
 
+  g_mutex_init (ICE_GET_LOCK (webrtc));
+
   webrtc->rtpbin = _create_rtpbin (webrtc);
   gst_bin_add (GST_BIN (webrtc), webrtc->rtpbin);
 
@@ -6279,9 +6292,9 @@ gst_webrtc_bin_init (GstWebRTCBin * webrtc)
       G_CALLBACK (_on_ice_candidate), webrtc);
   webrtc->priv->ice_stream_map =
       g_array_new (FALSE, TRUE, sizeof (IceStreamItem));
-  webrtc->priv->pending_ice_candidates =
+  webrtc->priv->pending_remote_ice_candidates =
       g_array_new (FALSE, TRUE, sizeof (IceCandidateItem *));
-  g_array_set_clear_func (webrtc->priv->pending_ice_candidates,
+  g_array_set_clear_func (webrtc->priv->pending_remote_ice_candidates,
       (GDestroyNotify) _clear_ice_candidate_item);
 
   /* we start off closed until we move to READY */
