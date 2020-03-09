@@ -53,6 +53,7 @@ struct _GstRTPBasePayloadPrivate
   gint64 base_rtime;
   guint64 base_rtime_hz;
   guint64 running_time;
+  gboolean scale_rtptime;
 
   gint64 prop_max_ptime;
   gint64 caps_max_ptime;
@@ -94,6 +95,7 @@ enum
 #define DEFAULT_SOURCE_INFO             FALSE
 #define DEFAULT_ONVIF_NO_RATE_CONTROL   FALSE
 #define DEFAULT_TWCC_EXT_ID             0
+#define DEFAULT_SCALE_RTPTIME           TRUE
 
 enum
 {
@@ -113,6 +115,7 @@ enum
   PROP_SOURCE_INFO,
   PROP_ONVIF_NO_RATE_CONTROL,
   PROP_TWCC_EXT_ID,
+  PROP_SCALE_RTPTIME,
   PROP_LAST
 };
 
@@ -361,6 +364,24 @@ gst_rtp_base_payload_class_init (GstRTPBasePayloadClass * klass)
           0, 15, DEFAULT_TWCC_EXT_ID,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstRTPBasePayload:scale-rtptime:
+   *
+   * Make the RTP packets' timestamps be scaled with the segment's rate
+   * (corresponding to RTSP speed parameter). Disabling this property means
+   * the timestamps will not be affected by the set delivery speed (RTSP speed).
+   * 
+   * Example: A server wants to allow streaming a recorded video in double 
+   * speed but still have the timestamps correspond to the position in the 
+   * video. This is achieved by the client setting RTSP Speed to 2 while the 
+   * server has this property disabled.
+   * 
+   * Since: 1.18
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SCALE_RTPTIME,
+      g_param_spec_boolean ("scale-rtptime", "Scale RTP time",
+          "Whether the RTP timestamp should be scaled with the rate (speed)",
+          DEFAULT_SCALE_RTPTIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = gst_rtp_base_payload_change_state;
 
@@ -423,6 +444,7 @@ gst_rtp_base_payload_init (GstRTPBasePayload * rtpbasepayload, gpointer g_class)
   rtpbasepayload->priv->base_offset = GST_BUFFER_OFFSET_NONE;
   rtpbasepayload->priv->base_rtime_hz = GST_BUFFER_OFFSET_NONE;
   rtpbasepayload->priv->onvif_no_rate_control = DEFAULT_ONVIF_NO_RATE_CONTROL;
+  rtpbasepayload->priv->scale_rtptime = DEFAULT_SCALE_RTPTIME;
 
   rtpbasepayload->media = NULL;
   rtpbasepayload->encoding_name = NULL;
@@ -1332,7 +1354,7 @@ gst_rtp_base_payload_prepare_push (GstRTPBasePayload * payload,
     guint64 rtime_hz;
 
     /* no offset, use the gstreamer pts */
-    if (priv->onvif_no_rate_control)
+    if (priv->onvif_no_rate_control || !priv->scale_rtptime)
       rtime_ns = gst_segment_to_stream_time (&payload->segment,
           GST_FORMAT_TIME, data.pts);
     else
@@ -1617,6 +1639,9 @@ gst_rtp_base_payload_set_property (GObject * object, guint prop_id,
     case PROP_TWCC_EXT_ID:
       priv->twcc_ext_id = g_value_get_uint (value);
       break;
+    case PROP_SCALE_RTPTIME:
+      priv->scale_rtptime = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1689,6 +1714,9 @@ gst_rtp_base_payload_get_property (GObject * object, guint prop_id,
       break;
     case PROP_TWCC_EXT_ID:
       g_value_set_uint (value, priv->twcc_ext_id);
+      break;
+    case PROP_SCALE_RTPTIME:
+      g_value_set_boolean (value, priv->scale_rtptime);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
