@@ -424,8 +424,7 @@ _find_transceiver (GstWebRTCBin * webrtc, gconstpointer data,
 
   for (i = 0; i < webrtc->priv->transceivers->len; i++) {
     GstWebRTCRTPTransceiver *transceiver =
-        g_array_index (webrtc->priv->transceivers, GstWebRTCRTPTransceiver *,
-        i);
+        g_ptr_array_index (webrtc->priv->transceivers, i);
 
     if (func (transceiver, data))
       return transceiver;
@@ -471,9 +470,7 @@ _find_transport (GstWebRTCBin * webrtc, gconstpointer data,
   int i;
 
   for (i = 0; i < webrtc->priv->transports->len; i++) {
-    TransportStream *stream =
-        g_array_index (webrtc->priv->transports, TransportStream *,
-        i);
+    TransportStream *stream = g_ptr_array_index (webrtc->priv->transports, i);
 
     if (func (stream, data))
       return stream;
@@ -548,8 +545,7 @@ _find_data_channel (GstWebRTCBin * webrtc, gconstpointer data,
 
   for (i = 0; i < webrtc->priv->data_channels->len; i++) {
     GstWebRTCDataChannel *channel =
-        g_array_index (webrtc->priv->data_channels, GstWebRTCDataChannel *,
-        i);
+        g_ptr_array_index (webrtc->priv->data_channels, i);
 
     if (func (channel, data))
       return channel;
@@ -796,8 +792,7 @@ _collate_ice_connection_states (GstWebRTCBin * webrtc)
 
   for (i = 0; i < webrtc->priv->transceivers->len; i++) {
     GstWebRTCRTPTransceiver *rtp_trans =
-        g_array_index (webrtc->priv->transceivers, GstWebRTCRTPTransceiver *,
-        i);
+        g_ptr_array_index (webrtc->priv->transceivers, i);
     WebRTCTransceiver *trans = WEBRTC_TRANSCEIVER (rtp_trans);
     TransportStream *stream = trans->stream;
     GstWebRTCICETransport *transport, *rtcp_transport;
@@ -905,8 +900,7 @@ _collate_ice_gathering_states (GstWebRTCBin * webrtc)
 
   for (i = 0; i < webrtc->priv->transceivers->len; i++) {
     GstWebRTCRTPTransceiver *rtp_trans =
-        g_array_index (webrtc->priv->transceivers, GstWebRTCRTPTransceiver *,
-        i);
+        g_ptr_array_index (webrtc->priv->transceivers, i);
     WebRTCTransceiver *trans = WEBRTC_TRANSCEIVER (rtp_trans);
     TransportStream *stream = trans->stream;
     GstWebRTCDTLSTransport *dtls_transport;
@@ -1001,8 +995,7 @@ _collate_peer_connection_states (GstWebRTCBin * webrtc)
 
   for (i = 0; i < webrtc->priv->transceivers->len; i++) {
     GstWebRTCRTPTransceiver *rtp_trans =
-        g_array_index (webrtc->priv->transceivers, GstWebRTCRTPTransceiver *,
-        i);
+        g_ptr_array_index (webrtc->priv->transceivers, i);
     WebRTCTransceiver *trans = WEBRTC_TRANSCEIVER (rtp_trans);
     TransportStream *stream = trans->stream;
     GstWebRTCDTLSTransport *transport, *rtcp_transport;
@@ -1346,9 +1339,7 @@ _check_if_negotiation_is_needed (GstWebRTCBin * webrtc)
   for (i = 0; i < webrtc->priv->transceivers->len; i++) {
     GstWebRTCRTPTransceiver *trans;
 
-    trans =
-        g_array_index (webrtc->priv->transceivers, GstWebRTCRTPTransceiver *,
-        i);
+    trans = g_ptr_array_index (webrtc->priv->transceivers, i);
 
     if (trans->stopped) {
       /* FIXME: If t is stopped and is associated with an m= section according to
@@ -1627,7 +1618,7 @@ _create_webrtc_transceiver (GstWebRTCBin * webrtc,
   /* FIXME: We don't support stopping transceiver yet so they're always not stopped */
   rtp_trans->stopped = FALSE;
 
-  g_array_append_val (webrtc->priv->transceivers, trans);
+  g_ptr_array_add (webrtc->priv->transceivers, trans);
 
   gst_object_unref (sender);
   gst_object_unref (receiver);
@@ -1684,7 +1675,7 @@ _get_or_create_rtp_transport_channel (GstWebRTCBin * webrtc, guint session_id)
     ret = _create_transport_channel (webrtc, session_id);
     gst_bin_add (GST_BIN (webrtc), GST_ELEMENT (ret->send_bin));
     gst_bin_add (GST_BIN (webrtc), GST_ELEMENT (ret->receive_bin));
-    g_array_append_val (webrtc->priv->transports, ret);
+    g_ptr_array_add (webrtc->priv->transports, ret);
 
     pad_name = g_strdup_printf ("recv_rtcp_sink_%u", ret->session_id);
     if (!gst_element_link_pads (GST_ELEMENT (ret->receive_bin), "rtcp_src",
@@ -1721,11 +1712,10 @@ _on_data_channel_ready_state (GstWebRTCDataChannel * channel,
     for (i = 0; i < webrtc->priv->pending_data_channels->len; i++) {
       GstWebRTCDataChannel *c;
 
-      c = g_array_index (webrtc->priv->pending_data_channels,
-          GstWebRTCDataChannel *, i);
+      c = g_ptr_array_index (webrtc->priv->pending_data_channels, i);
       if (c == channel) {
         found = TRUE;
-        g_array_remove_index (webrtc->priv->pending_data_channels, i);
+        g_ptr_array_remove_index (webrtc->priv->pending_data_channels, i);
         break;
       }
     }
@@ -1734,7 +1724,7 @@ _on_data_channel_ready_state (GstWebRTCDataChannel * channel,
       return;
     }
 
-    g_array_append_val (webrtc->priv->data_channels, channel);
+    g_ptr_array_add (webrtc->priv->data_channels, channel);
 
     g_signal_emit (webrtc, gst_webrtc_bin_signals[ON_DATA_CHANNEL_SIGNAL], 0,
         gst_object_ref (channel));
@@ -1768,7 +1758,7 @@ _on_sctpdec_pad_added (GstElement * sctpdec, GstPad * pad,
     gst_webrtc_data_channel_link_to_sctp (channel,
         webrtc->priv->sctp_transport);
 
-    g_array_append_val (webrtc->priv->pending_data_channels, channel);
+    g_ptr_array_add (webrtc->priv->pending_data_channels, channel);
   }
 
   g_signal_connect (channel, "notify::ready-state",
@@ -1799,9 +1789,7 @@ _on_sctp_state_notify (GstWebRTCSCTPTransport * sctp, GParamSpec * pspec,
     for (i = 0; i < webrtc->priv->data_channels->len; i++) {
       GstWebRTCDataChannel *channel;
 
-      channel =
-          g_array_index (webrtc->priv->data_channels, GstWebRTCDataChannel *,
-          i);
+      channel = g_ptr_array_index (webrtc->priv->data_channels, i);
 
       gst_webrtc_data_channel_link_to_sctp (channel,
           webrtc->priv->sctp_transport);
@@ -1918,7 +1906,7 @@ _get_or_create_data_channel_transports (GstWebRTCBin * webrtc, guint session_id)
       stream = _create_transport_channel (webrtc, session_id);
       gst_bin_add (GST_BIN (webrtc), GST_ELEMENT (stream->send_bin));
       gst_bin_add (GST_BIN (webrtc), GST_ELEMENT (stream->receive_bin));
-      g_array_append_val (webrtc->priv->transports, stream);
+      g_ptr_array_add (webrtc->priv->transports, stream);
     }
 
     webrtc->priv->data_channel_transport = stream;
@@ -1968,9 +1956,7 @@ _get_or_create_data_channel_transports (GstWebRTCBin * webrtc, guint session_id)
     for (i = 0; i < webrtc->priv->data_channels->len; i++) {
       GstWebRTCDataChannel *channel;
 
-      channel =
-          g_array_index (webrtc->priv->data_channels, GstWebRTCDataChannel *,
-          i);
+      channel = g_ptr_array_index (webrtc->priv->data_channels, i);
 
       gst_webrtc_data_channel_link_to_sctp (channel,
           webrtc->priv->sctp_transport);
@@ -2613,9 +2599,7 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options)
         last_mid = gst_sdp_media_get_attribute_val (last_media, "mid");
 
         for (j = 0; j < webrtc->priv->transceivers->len; j++) {
-          trans =
-              g_array_index (webrtc->priv->transceivers,
-              GstWebRTCRTPTransceiver *, j);
+          trans = g_ptr_array_index (webrtc->priv->transceivers, j);
 
           if (trans->mid && g_strcmp0 (trans->mid, last_mid) == 0) {
             GstSDPMedia *media;
@@ -2665,9 +2649,7 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options)
     GstWebRTCRTPTransceiver *trans;
     GstSDPMedia media = { 0, };
 
-    trans =
-        g_array_index (webrtc->priv->transceivers, GstWebRTCRTPTransceiver *,
-        i);
+    trans = g_ptr_array_index (webrtc->priv->transceivers, i);
 
     /* don't add transceivers twice */
     if (g_list_find (seen_transceivers, trans))
@@ -3090,9 +3072,7 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options)
         for (j = 0; j < webrtc->priv->transceivers->len; j++) {
           GstCaps *trans_caps;
 
-          rtp_trans =
-              g_array_index (webrtc->priv->transceivers,
-              GstWebRTCRTPTransceiver *, j);
+          rtp_trans = g_ptr_array_index (webrtc->priv->transceivers, j);
 
           if (g_list_find (seen_transceivers, rtp_trans)) {
             /* Don't double allocate a transceiver to multiple mlines */
@@ -3533,10 +3513,9 @@ typedef struct
 } IceCandidateItem;
 
 static void
-_clear_ice_candidate_item (IceCandidateItem ** item)
+_clear_ice_candidate_item (IceCandidateItem * item)
 {
-  g_free ((*item)->candidate);
-  g_free (*item);
+  g_free (item->candidate);
 }
 
 static void
@@ -3551,9 +3530,9 @@ _add_ice_candidate (GstWebRTCBin * webrtc, IceCandidateItem * item,
       GST_WARNING_OBJECT (webrtc, "Unknown mline %u, dropping",
           item->mlineindex);
     } else {
-      IceCandidateItem *new = g_new0 (IceCandidateItem, 1);
-      new->mlineindex = item->mlineindex;
-      new->candidate = g_strdup (item->candidate);
+      IceCandidateItem new;
+      new.mlineindex = item->mlineindex;
+      new.candidate = g_strdup (item->candidate);
       GST_INFO_OBJECT (webrtc, "Unknown mline %u, deferring", item->mlineindex);
 
       ICE_LOCK (webrtc);
@@ -4034,8 +4013,7 @@ _update_data_channel_from_sdp_media (GstWebRTCBin * webrtc,
   for (i = 0; i < webrtc->priv->data_channels->len; i++) {
     GstWebRTCDataChannel *channel;
 
-    channel =
-        g_array_index (webrtc->priv->data_channels, GstWebRTCDataChannel *, i);
+    channel = g_ptr_array_index (webrtc->priv->data_channels, i);
 
     if (channel->id == -1)
       channel->id = _generate_data_channel_id (webrtc);
@@ -4501,8 +4479,8 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
     ICE_LOCK (webrtc);
     for (i = 0; i < webrtc->priv->pending_remote_ice_candidates->len; i++) {
       IceCandidateItem *item =
-          g_array_index (webrtc->priv->pending_remote_ice_candidates,
-          IceCandidateItem *, i);
+          &g_array_index (webrtc->priv->pending_remote_ice_candidates,
+          IceCandidateItem, i);
 
       _add_ice_candidate (webrtc, item, TRUE);
     }
@@ -4623,9 +4601,9 @@ static void
 _add_ice_candidate_task (GstWebRTCBin * webrtc, IceCandidateItem * item)
 {
   if (!webrtc->current_local_description || !webrtc->current_remote_description) {
-    IceCandidateItem *new = g_new0 (IceCandidateItem, 1);
-    new->mlineindex = item->mlineindex;
-    new->candidate = g_strdup (item->candidate);
+    IceCandidateItem new;
+    new.mlineindex = item->mlineindex;
+    new.candidate = g_steal_pointer (&item->candidate);
 
     ICE_LOCK (webrtc);
     g_array_append_val (webrtc->priv->pending_remote_ice_candidates, new);
@@ -4638,7 +4616,8 @@ _add_ice_candidate_task (GstWebRTCBin * webrtc, IceCandidateItem * item)
 static void
 _free_ice_candidate_item (IceCandidateItem * item)
 {
-  _clear_ice_candidate_item (&item);
+  _clear_ice_candidate_item (item);
+  g_free (item);
 }
 
 static void
@@ -4677,13 +4656,13 @@ _on_local_ice_candidate_task (GstWebRTCBin * webrtc)
   items = webrtc->priv->pending_local_ice_candidates;
   /* Replace with a new array */
   webrtc->priv->pending_local_ice_candidates =
-      g_array_new (FALSE, TRUE, sizeof (IceCandidateItem *));
+      g_array_new (FALSE, TRUE, sizeof (IceCandidateItem));
   g_array_set_clear_func (webrtc->priv->pending_local_ice_candidates,
       (GDestroyNotify) _clear_ice_candidate_item);
   ICE_UNLOCK (webrtc);
 
   for (i = 0; i < items->len; i++) {
-    IceCandidateItem *item = g_array_index (items, IceCandidateItem *, i);
+    IceCandidateItem *item = &g_array_index (items, IceCandidateItem, i);
     const gchar *cand = item->candidate;
 
     if (!g_ascii_strncasecmp (cand, "a=candidate:", 12)) {
@@ -4721,11 +4700,11 @@ static void
 _on_local_ice_candidate_cb (GstWebRTCICE * ice, guint session_id,
     gchar * candidate, GstWebRTCBin * webrtc)
 {
-  IceCandidateItem *item = g_new0 (IceCandidateItem, 1);
+  IceCandidateItem item;
   gboolean queue_task = FALSE;
 
-  item->mlineindex = session_id;
-  item->candidate = g_strdup (candidate);
+  item.mlineindex = session_id;
+  item.candidate = g_strdup (candidate);
 
   ICE_LOCK (webrtc);
   g_array_append_val (webrtc->priv->pending_local_ice_candidates, item);
@@ -4837,22 +4816,20 @@ gst_webrtc_bin_add_transceiver (GstWebRTCBin * webrtc,
 static void
 _deref_and_unref (GstObject ** object)
 {
-  if (object)
-    gst_object_unref (*object);
+  gst_clear_object (object);
 }
 
 static GArray *
 gst_webrtc_bin_get_transceivers (GstWebRTCBin * webrtc)
 {
-  GArray *arr = g_array_new (FALSE, TRUE, sizeof (gpointer));
+  GArray *arr = g_array_new (FALSE, TRUE, sizeof (GstWebRTCRTPTransceiver *));
   int i;
 
   g_array_set_clear_func (arr, (GDestroyNotify) _deref_and_unref);
 
   for (i = 0; i < webrtc->priv->transceivers->len; i++) {
     GstWebRTCRTPTransceiver *trans =
-        g_array_index (webrtc->priv->transceivers, GstWebRTCRTPTransceiver *,
-        i);
+        g_ptr_array_index (webrtc->priv->transceivers, i);
     gst_object_ref (trans);
     g_array_append_val (arr, trans);
   }
@@ -4870,9 +4847,7 @@ gst_webrtc_bin_get_transceiver (GstWebRTCBin * webrtc, guint idx)
     goto done;
   }
 
-  trans =
-      g_array_index (webrtc->priv->transceivers, GstWebRTCRTPTransceiver *,
-      idx);
+  trans = g_ptr_array_index (webrtc->priv->transceivers, idx);
   gst_object_ref (trans);
 
 done:
@@ -5013,7 +4988,7 @@ gst_webrtc_bin_create_data_channel (GstWebRTCBin * webrtc, const gchar * label,
 
     ret = gst_object_ref (ret);
     ret->webrtcbin = webrtc;
-    g_array_append_val (webrtc->priv->data_channels, ret);
+    g_ptr_array_add (webrtc->priv->data_channels, ret);
     gst_webrtc_data_channel_link_to_sctp (ret, webrtc->priv->sctp_transport);
     if (webrtc->priv->sctp_transport &&
         webrtc->priv->sctp_transport->association_established
@@ -5811,19 +5786,19 @@ gst_webrtc_bin_finalize (GObject * object)
   GstWebRTCBin *webrtc = GST_WEBRTC_BIN (object);
 
   if (webrtc->priv->transports)
-    g_array_free (webrtc->priv->transports, TRUE);
+    g_ptr_array_free (webrtc->priv->transports, TRUE);
   webrtc->priv->transports = NULL;
 
   if (webrtc->priv->transceivers)
-    g_array_free (webrtc->priv->transceivers, TRUE);
+    g_ptr_array_free (webrtc->priv->transceivers, TRUE);
   webrtc->priv->transceivers = NULL;
 
   if (webrtc->priv->data_channels)
-    g_array_free (webrtc->priv->data_channels, TRUE);
+    g_ptr_array_free (webrtc->priv->data_channels, TRUE);
   webrtc->priv->data_channels = NULL;
 
   if (webrtc->priv->pending_data_channels)
-    g_array_free (webrtc->priv->pending_data_channels, TRUE);
+    g_ptr_array_free (webrtc->priv->pending_data_channels, TRUE);
   webrtc->priv->pending_data_channels = NULL;
 
   if (webrtc->priv->pending_remote_ice_candidates)
@@ -6278,19 +6253,19 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
 }
 
 static void
-_deref_unparent_and_unref (GObject ** object)
+_unparent_and_unref (GObject * object)
 {
-  GstObject *obj = GST_OBJECT (*object);
+  GstObject *obj = GST_OBJECT (object);
 
   GST_OBJECT_PARENT (obj) = NULL;
 
-  gst_object_unref (*object);
+  gst_object_unref (obj);
 }
 
 static void
-_transport_free (GObject ** object)
+_transport_free (GObject * object)
 {
-  TransportStream *stream = (TransportStream *) * object;
+  TransportStream *stream = (TransportStream *) object;
   GstWebRTCBin *webrtc;
 
   webrtc = GST_WEBRTC_BIN (GST_OBJECT_PARENT (stream));
@@ -6305,7 +6280,7 @@ _transport_free (GObject ** object)
     g_signal_handlers_disconnect_by_data (stream->rtcp_transport, webrtc);
   }
 
-  gst_object_unref (*object);
+  gst_object_unref (object);
 }
 
 static void
@@ -6320,22 +6295,16 @@ gst_webrtc_bin_init (GstWebRTCBin * webrtc)
   webrtc->rtpbin = _create_rtpbin (webrtc);
   gst_bin_add (GST_BIN (webrtc), webrtc->rtpbin);
 
-  webrtc->priv->transceivers = g_array_new (FALSE, TRUE, sizeof (gpointer));
-  g_array_set_clear_func (webrtc->priv->transceivers,
-      (GDestroyNotify) _deref_unparent_and_unref);
+  webrtc->priv->transceivers =
+      g_ptr_array_new_with_free_func ((GDestroyNotify) _unparent_and_unref);
+  webrtc->priv->transports =
+      g_ptr_array_new_with_free_func ((GDestroyNotify) _transport_free);
 
-  webrtc->priv->transports = g_array_new (FALSE, TRUE, sizeof (gpointer));
-  g_array_set_clear_func (webrtc->priv->transports,
-      (GDestroyNotify) _transport_free);
-
-  webrtc->priv->data_channels = g_array_new (FALSE, TRUE, sizeof (gpointer));
-  g_array_set_clear_func (webrtc->priv->data_channels,
-      (GDestroyNotify) _deref_and_unref);
+  webrtc->priv->data_channels =
+      g_ptr_array_new_with_free_func ((GDestroyNotify) gst_object_unref);
 
   webrtc->priv->pending_data_channels =
-      g_array_new (FALSE, TRUE, sizeof (gpointer));
-  g_array_set_clear_func (webrtc->priv->pending_data_channels,
-      (GDestroyNotify) _deref_and_unref);
+      g_ptr_array_new_with_free_func ((GDestroyNotify) gst_object_unref);
 
   webrtc->priv->session_mid_map =
       g_array_new (FALSE, TRUE, sizeof (SessionMidItem));
@@ -6348,12 +6317,12 @@ gst_webrtc_bin_init (GstWebRTCBin * webrtc)
   webrtc->priv->ice_stream_map =
       g_array_new (FALSE, TRUE, sizeof (IceStreamItem));
   webrtc->priv->pending_remote_ice_candidates =
-      g_array_new (FALSE, TRUE, sizeof (IceCandidateItem *));
+      g_array_new (FALSE, TRUE, sizeof (IceCandidateItem));
   g_array_set_clear_func (webrtc->priv->pending_remote_ice_candidates,
       (GDestroyNotify) _clear_ice_candidate_item);
 
   webrtc->priv->pending_local_ice_candidates =
-      g_array_new (FALSE, TRUE, sizeof (IceCandidateItem *));
+      g_array_new (FALSE, TRUE, sizeof (IceCandidateItem));
   g_array_set_clear_func (webrtc->priv->pending_local_ice_candidates,
       (GDestroyNotify) _clear_ice_candidate_item);
 

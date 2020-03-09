@@ -96,13 +96,13 @@ struct _GstWebRTCBinPrivate
   guint max_sink_pad_serial;
 
   gboolean bundle;
-  GArray *transceivers;
+  GPtrArray *transceivers;
   GArray *session_mid_map;
-  GArray *transports;
-  GArray *data_channels;
+  GPtrArray *transports;
+  GPtrArray *data_channels;
   /* list of data channels we've received a sctp stream for but no data
    * channel protocol for */
-  GArray *pending_data_channels;
+  GPtrArray *pending_data_channels;
 
   GstWebRTCSCTPTransport *sctp_transport;
   TransportStream *data_channel_transport;
