@@ -763,6 +763,14 @@ gst_rtsp_client_finalize (GObject * obj)
 
   GST_INFO ("finalize client %p", client);
 
+  if (priv->rtsp_ctrl_timeout_id != 0) {
+    GST_DEBUG ("Killing leftover timeout GSource for client %p", client);
+    g_source_destroy (g_main_context_find_source_by_id (priv->watch_context,
+            priv->rtsp_ctrl_timeout_id));
+    priv->rtsp_ctrl_timeout_id = 0;
+    priv->rtsp_ctrl_timeout_cnt = 0;
+  }
+
   if (priv->watch)
     gst_rtsp_watch_set_flushing (priv->watch, TRUE);
   gst_rtsp_client_set_send_func (client, NULL, NULL, NULL);
@@ -797,14 +805,6 @@ gst_rtsp_client_finalize (GObject * obj)
     g_object_unref (priv->thread_pool);
 
   clean_cached_media (client, TRUE);
-
-  if (priv->rtsp_ctrl_timeout_id != 0) {
-    GST_DEBUG ("Killing leftover timeout GSource for client %p", client);
-    g_source_destroy (g_main_context_find_source_by_id (priv->watch_context,
-            priv->rtsp_ctrl_timeout_id));
-    priv->rtsp_ctrl_timeout_id = 0;
-    priv->rtsp_ctrl_timeout_cnt = 0;
-  }
 
   g_free (priv->server_ip);
   g_mutex_clear (&priv->lock);
