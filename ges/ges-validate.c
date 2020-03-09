@@ -234,7 +234,7 @@ _add_asset (GstValidateScenario * scenario, GstValidateAction * action)
   const gchar *id = NULL;
   const gchar *type_string = NULL;
   GType type;
-  GESAsset *asset;
+  GESAsset *asset = NULL;
   gboolean res = FALSE;
   GESProject *project;
   DECLARE_AND_GET_TIMELINE (scenario, action);
@@ -269,6 +269,7 @@ _add_asset (GstValidateScenario * scenario, GstValidateAction * action)
   SAVE_TIMELINE_IF_NEEDED (scenario, timeline, action);
 
 beach:
+  gst_clear_object (&asset);
   g_object_unref (timeline);
   return res;
 }
@@ -544,12 +545,15 @@ _commit (GstValidateScenario * scenario, GstValidateAction * action)
         action);
     gst_object_unref (timeline);
     gst_object_unref (bus);
+    gst_object_unref (pipeline);
 
     return TRUE;
   }
+  SAVE_TIMELINE_IF_NEEDED (scenario, timeline, action);
+
   gst_object_unref (bus);
   gst_object_unref (timeline);
-  SAVE_TIMELINE_IF_NEEDED (scenario, timeline, action);
+  gst_object_unref (pipeline);
 
   return GST_VALIDATE_EXECUTE_ACTION_ASYNC;
 }
@@ -1170,6 +1174,7 @@ _load_project (GstValidateScenario * scenario, GstValidateAction * action)
   gst_element_set_state (pipeline, state);
 
 done:
+  gst_object_unref (pipeline);
   if (error)
     g_error_free (error);
 

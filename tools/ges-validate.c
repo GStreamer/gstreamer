@@ -174,11 +174,10 @@ ges_validate_clean (GstPipeline * pipeline)
     res = gst_validate_runner_exit (runner, TRUE);
 
   gst_object_unref (pipeline);
-  if (runner) {
+  if (runner)
     gst_object_unref (runner);
-    if (monitor)
-      gst_object_unref (monitor);
-  }
+  if (monitor)
+    gst_object_unref (monitor);
 
   return res;
 }

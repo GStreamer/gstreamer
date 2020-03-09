@@ -367,7 +367,7 @@ gboolean
 _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
     GError ** error)
 {
-  GESAsset *asset;
+  GESAsset *asset = NULL;
   GESLayer *layer;
   GESClip *clip;
   gint layer_priority;
@@ -546,6 +546,7 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
   res = _ges_save_timeline_if_needed (timeline, structure, error);
 
 beach:
+  gst_clear_object (&asset);
   g_free (asset_id);
   g_free (check_asset_id);
   return res;
@@ -555,7 +556,7 @@ gboolean
 _ges_container_add_child_from_struct (GESTimeline * timeline,
     GstStructure * structure, GError ** error)
 {
-  GESAsset *asset;
+  GESAsset *asset = NULL;
   GESContainer *container;
   GESTimelineElement *child = NULL;
   const gchar *container_name, *child_name, *child_type, *id;
@@ -640,6 +641,7 @@ _ges_container_add_child_from_struct (GESTimeline * timeline,
   res = _ges_save_timeline_if_needed (timeline, structure, error);
 
 beach:
+  gst_clear_object (&asset);
   return res;
 }
 

@@ -79,10 +79,17 @@ if gstvalidate_dep.found()
     'check_edit_in_frames_with_framerate_mismatch',
   ]
 
+  env = environment()
+  env.set('GST_PLUGIN_SYSTEM_PATH_1_0', '')
+  env.set('GST_STATE_IGNORE_ELEMENTS', '')
+  env.set('CK_DEFAULT_TIMEOUT', '20')
+  env.set('GST_REGISTRY', '@0@/@1@.registry'.format(meson.current_build_dir(), 'scenarios'))
+  env.set('GST_PLUGIN_PATH_1_0', [meson.build_root()] + pluginsdirs)
   foreach scenario: scenarios
     scenario_file = join_paths(meson.current_source_dir(), 'scenarios', scenario + '.scenario')
     test(scenario, ges_launch, env: env, args: ['--set-scenario', scenario_file])
   endforeach
+  test('simple_playback_test', ges_launch, env: env, args: ['+test-clip', 'blue', 'd=0.1', '--disable-validate', '--videosink=fakevideosink', '--audiosink=fakesink'])
 endif
 
 if build_gir

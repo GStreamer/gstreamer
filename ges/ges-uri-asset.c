@@ -919,6 +919,8 @@ _ges_uri_asset_cleanup (void)
     g_hash_table_destroy (discoverers);
     discoverers = NULL;
   }
+  gst_clear_object (&GES_URI_CLIP_ASSET_CLASS (g_type_class_peek
+          (GES_TYPE_URI_CLIP_ASSET))->discoverer);
   G_UNLOCK (discoverers_lock);
 }
 
@@ -946,7 +948,7 @@ _ges_uri_asset_ensure_setup (gpointer uriasset_class)
   if (errno)
     timeout = DEFAULT_DISCOVERY_TIMEOUT;
 
-  if (!discoverer) {
+  if (!klass->discoverer) {
     discoverer = gst_discoverer_new (timeout, &err);
     if (!discoverer) {
       GST_ERROR ("Could not create discoverer: %s", err->message);

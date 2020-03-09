@@ -262,6 +262,7 @@ _create_timeline (GESLauncher * self, const gchar * serialized_timeline,
 
   self->priv->timeline =
       GES_TIMELINE (ges_asset_extract (GES_ASSET (project), &error));
+  gst_object_unref (project);
 
   if (error) {
     printerr ("\nERROR: Could not create timeline because: %s\n\n",

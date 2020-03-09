@@ -1028,6 +1028,9 @@ timeline_get_framerate (GESTimeline * self, gint * fps_n, gint * fps_d)
       GstCaps *restriction = ges_track_get_restriction_caps (tmp->data);
       gint i;
 
+      if (!restriction)
+        continue;
+
       for (i = 0; i < gst_caps_get_size (restriction); i++) {
         gint n, d;
 
