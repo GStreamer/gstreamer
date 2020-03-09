@@ -65,6 +65,7 @@ struct _GstV4l2CodecH264Dec
   GstV4l2CodecPool *src_pool;
   gint min_pool_size;
   gboolean has_videometa;
+  gboolean need_negotiation;
 
   struct v4l2_ctrl_h264_sps sps;
   struct v4l2_ctrl_h264_pps pps;
@@ -136,6 +137,11 @@ gst_v4l2_codec_h264_dec_negotiate (GstVideoDecoder * decoder)
 {
   GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
   GstH264Decoder *h264dec = GST_H264_DECODER (decoder);
+
+  /* Ignore downstream renegotiation request. */
+  if (!self->need_negotiation)
+    return TRUE;
+  self->need_negotiation = FALSE;
 
   GST_DEBUG_OBJECT (self, "Negotiate");
 
@@ -449,6 +455,7 @@ gst_v4l2_codec_h264_dec_new_sequence (GstH264Decoder * decoder,
   gst_v4l2_codec_h264_dec_fill_sequence (self, sps);
 
   if (negotiation_needed) {
+    self->need_negotiation = TRUE;
     if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
       GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
       return FALSE;
