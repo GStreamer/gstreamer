@@ -634,7 +634,7 @@ gst_video_crop_transform_dimension_value (const GValue * src_val,
 
     for (i = 0; i < gst_value_list_get_size (src_val); ++i) {
       const GValue *list_val;
-      GValue newval = { 0, };
+      GValue newval = G_VALUE_INIT;
 
       list_val = gst_value_list_get_value (src_val, i);
       if (gst_video_crop_transform_dimension_value (list_val, delta, &newval,
@@ -695,8 +695,7 @@ gst_video_crop_transform_caps (GstBaseTransform * trans,
   for (i = 0; i < gst_caps_get_size (caps); ++i) {
     const GValue *v;
     GstStructure *structure, *new_structure;
-    GValue w_val = { 0, }, h_val = {
-    0,};
+    GValue w_val = G_VALUE_INIT, h_val = G_VALUE_INIT;
 
     structure = gst_caps_get_structure (caps, i);
 
