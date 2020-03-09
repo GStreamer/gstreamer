@@ -31,6 +31,8 @@
 
 G_BEGIN_DECLS
 
+typedef struct _GstDxgiColorSpace GstDxgiColorSpace;
+
 struct _GstD3D11Format
 {
   GstVideoFormat format;
@@ -40,6 +42,15 @@ struct _GstD3D11Format
 
   /* formats for texture processing */
   DXGI_FORMAT resource_format[GST_VIDEO_MAX_COMPONENTS];
+};
+
+struct _GstDxgiColorSpace
+{
+  guint dxgi_color_space_type;
+  GstVideoColorRange range;
+  GstVideoColorMatrix matrix;
+  GstVideoTransferFunction transfer;
+  GstVideoColorPrimaries primaries;
 };
 
 guint           gst_d3d11_dxgi_format_n_planes      (DXGI_FORMAT format);
@@ -62,12 +73,11 @@ gboolean        gst_d3d11_hdr_meta_data_to_dxgi     (GstVideoMasteringDisplayInf
 #endif
 
 #if (DXGI_HEADER_VERSION >= 4)
-gboolean        gst_d3d11_video_info_to_dxgi_color_space (GstVideoInfo * info,
-                                                          DXGI_COLOR_SPACE_TYPE * colorspace);
+const GstDxgiColorSpace * gst_d3d11_video_info_to_dxgi_color_space (GstVideoInfo * info);
 
-gboolean        gst_d3d11_find_swap_chain_color_space (GstVideoInfo * info,
-                                                       IDXGISwapChain3 * swapchain,
-                                                       DXGI_COLOR_SPACE_TYPE * colorspace);
+const GstDxgiColorSpace * gst_d3d11_find_swap_chain_color_space (GstVideoInfo * info,
+                                                                 IDXGISwapChain3 * swapchain,
+                                                                 gboolean use_hdr10);
 #endif
 
 G_END_DECLS

@@ -79,7 +79,6 @@ struct _GstD3D11Window
 
   GstVideoInfo info;
   GstVideoInfo render_info;
-  const GstD3D11Format *render_format;
   GstD3D11VideoProcessor *processor;
   GstD3D11ColorConverter *converter;
   GstD3D11OverlayCompositor *compositor;

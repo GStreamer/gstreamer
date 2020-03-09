@@ -250,15 +250,6 @@ typedef enum
   GST_DXGI_COLOR_SPACE_CUSTOM = 0xFFFFFFFF
 } GST_DXGI_COLOR_SPACE_TYPE;
 
-typedef struct
-{
-  GST_DXGI_COLOR_SPACE_TYPE type;
-  GstVideoColorRange range;
-  GstVideoColorMatrix matrix;
-  GstVideoTransferFunction transfer;
-  GstVideoColorPrimaries primaries;
-} DxgiColorSpaceMap;
-
 /* https://docs.microsoft.com/en-us/windows/win32/api/dxgicommon/ne-dxgicommon-dxgi_color_space_type */
 
 #define MAKE_COLOR_MAP(d,r,m,t,p) \
@@ -266,7 +257,7 @@ typedef struct
     GST_VIDEO_COLOR_MATRIX_ ##m, GST_VIDEO_TRANSFER_ ##t, \
     GST_VIDEO_COLOR_PRIMARIES_ ##p }
 
-static const DxgiColorSpaceMap rgb_colorspace_map[] = {
+static const GstDxgiColorSpace rgb_colorspace_map[] = {
   /* RGB_FULL_G22_NONE_P709 */
   MAKE_COLOR_MAP (RGB_FULL_G22_NONE_P709, _0_255, UNKNOWN, BT709, BT709),
 
@@ -299,7 +290,7 @@ static const DxgiColorSpaceMap rgb_colorspace_map[] = {
   MAKE_COLOR_MAP (RGB_STUDIO_G24_NONE_P709, _16_235, UNKNOWN, SRGB, BT2020),
 };
 
-static const DxgiColorSpaceMap yuv_colorspace_map[] = {
+static const GstDxgiColorSpace yuv_colorspace_map[] = {
   /* YCBCR_FULL_G22_NONE_P709_X601 */
   MAKE_COLOR_MAP (YCBCR_FULL_G22_NONE_P709_X601, _0_255, BT601, BT709, BT709),
 
@@ -368,7 +359,7 @@ static const DxgiColorSpaceMap yuv_colorspace_map[] = {
 #define SCORE_PRIMARY_MISMATCH 10
 
 static gint
-get_score (GstVideoInfo * info, const DxgiColorSpaceMap * color_map,
+get_score (GstVideoInfo * info, const GstDxgiColorSpace * color_map,
     gboolean is_yuv)
 {
   gint loss = 0;
@@ -389,84 +380,74 @@ get_score (GstVideoInfo * info, const DxgiColorSpaceMap * color_map,
   return loss;
 }
 
-static gboolean
-gst_d3d11_video_info_to_dxgi_color_space_rgb (GstVideoInfo * info,
-    DXGI_COLOR_SPACE_TYPE * colorspace)
+static const GstDxgiColorSpace *
+gst_d3d11_video_info_to_dxgi_color_space_rgb (GstVideoInfo * info)
 {
   gint best_score = G_MAXINT;
   gint score, i;
-  GST_DXGI_COLOR_SPACE_TYPE type = GST_DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
+  const GstDxgiColorSpace *colorspace = NULL;
 
   for (i = 0; i < G_N_ELEMENTS (rgb_colorspace_map); i++) {
     score = get_score (info, &rgb_colorspace_map[i], TRUE);
 
     if (score < best_score) {
       best_score = score;
-      type = rgb_colorspace_map[i].type;
+      colorspace = &rgb_colorspace_map[i];
 
       if (score == 0)
         break;
     }
   }
 
-  *colorspace = (DXGI_COLOR_SPACE_TYPE) type;
-
-  return TRUE;
+  return colorspace;
 }
 
-static gboolean
-gst_d3d11_video_info_to_dxgi_color_space_yuv (GstVideoInfo * info,
-    DXGI_COLOR_SPACE_TYPE * colorspace)
+static const GstDxgiColorSpace *
+gst_d3d11_video_info_to_dxgi_color_space_yuv (GstVideoInfo * info)
 {
   gint best_score = G_MAXINT;
   gint score, i;
-  GST_DXGI_COLOR_SPACE_TYPE type =
-      GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P709;
+  const GstDxgiColorSpace *colorspace = NULL;
 
   for (i = 0; i < G_N_ELEMENTS (yuv_colorspace_map); i++) {
     score = get_score (info, &yuv_colorspace_map[i], TRUE);
 
     if (score < best_score) {
       best_score = score;
-      type = yuv_colorspace_map[i].type;
+      colorspace = &yuv_colorspace_map[i];
 
       if (score == 0)
         break;
     }
   }
 
-  *colorspace = (DXGI_COLOR_SPACE_TYPE) type;
-
-  return TRUE;
+  return colorspace;
 }
 
-gboolean
-gst_d3d11_video_info_to_dxgi_color_space (GstVideoInfo * info,
-    DXGI_COLOR_SPACE_TYPE * colorspace)
+const GstDxgiColorSpace *
+gst_d3d11_video_info_to_dxgi_color_space (GstVideoInfo * info)
 {
-  g_return_val_if_fail (info != NULL, FALSE);
-  g_return_val_if_fail (colorspace != NULL, FALSE);
+  g_return_val_if_fail (info != NULL, NULL);
 
   if (GST_VIDEO_INFO_IS_RGB (info)) {
-    return gst_d3d11_video_info_to_dxgi_color_space_rgb (info, colorspace);
+    return gst_d3d11_video_info_to_dxgi_color_space_rgb (info);
   } else if (GST_VIDEO_INFO_IS_YUV (info)) {
-    return gst_d3d11_video_info_to_dxgi_color_space_yuv (info, colorspace);
+    return gst_d3d11_video_info_to_dxgi_color_space_yuv (info);
   }
 
-  return FALSE;
+  return NULL;
 }
 
-gboolean
+const GstDxgiColorSpace *
 gst_d3d11_find_swap_chain_color_space (GstVideoInfo * info,
-    IDXGISwapChain3 * swapchain, DXGI_COLOR_SPACE_TYPE * colorspace)
+    IDXGISwapChain3 * swapchain, gboolean use_hdr10)
 {
-  GST_DXGI_COLOR_SPACE_TYPE best_type;
+  const GstDxgiColorSpace *colorspace = NULL;
   gint best_score = G_MAXINT;
   gint i;
 
   g_return_val_if_fail (info != NULL, FALSE);
   g_return_val_if_fail (swapchain != NULL, FALSE);
-  g_return_val_if_fail (colorspace != NULL, FALSE);
 
   if (!GST_VIDEO_INFO_IS_RGB (info)) {
     GST_WARNING ("Swapchain colorspace should be RGB format");
@@ -477,7 +458,16 @@ gst_d3d11_find_swap_chain_color_space (GstVideoInfo * info,
     UINT can_support = 0;
     HRESULT hr;
     gint score;
-    GST_DXGI_COLOR_SPACE_TYPE cur_type = rgb_colorspace_map[i].type;
+    GST_DXGI_COLOR_SPACE_TYPE cur_type =
+        rgb_colorspace_map[i].dxgi_color_space_type;
+
+    /* FIXME: Non-HDR colorspace with BT2020 primaries will break rendering.
+     * https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/1175
+     * To workaround it, BT709 colorspace will be chosen for non-HDR case.
+     */
+    if (!use_hdr10 &&
+        rgb_colorspace_map[i].primaries == GST_VIDEO_COLOR_PRIMARIES_BT2020)
+      continue;
 
     hr = IDXGISwapChain3_CheckColorSpaceSupport (swapchain,
         cur_type, &can_support);
@@ -493,17 +483,12 @@ gst_d3d11_find_swap_chain_color_space (GstVideoInfo * info,
 
       if (score < best_score) {
         best_score = score;
-        best_type = cur_type;
+        colorspace = &rgb_colorspace_map[i];
       }
     }
   }
 
-  if (best_score == G_MAXINT)
-    return FALSE;
-
-  *colorspace = (DXGI_COLOR_SPACE_TYPE) best_type;
-
-  return TRUE;
+  return colorspace;
 }
 
 #endif

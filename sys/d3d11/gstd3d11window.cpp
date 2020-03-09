@@ -416,77 +416,260 @@ gst_d3d11_window_on_mouse_event (GstD3D11Window * window, const gchar * event,
       event, button, x, y);
 }
 
+typedef struct
+{
+  DXGI_FORMAT dxgi_format;
+  GstVideoFormat gst_format;
+  gboolean supported;
+} GstD3D11WindowDisplayFormat;
+
+
 gboolean
 gst_d3d11_window_prepare (GstD3D11Window * window, guint display_width,
     guint display_height, GstCaps * caps, gboolean * video_processor_available,
     GError ** error)
 {
   GstD3D11WindowClass *klass;
-  GstCaps *render_caps;
   guint swapchain_flags = 0;
-  gboolean need_processor_output_configure = FALSE;
-  gboolean need_processor_input_configure = FALSE;
+  ID3D11Device *device_handle;
+  guint i;
+  guint num_supported_format = 0;
+  HRESULT hr;
+  UINT display_flags =
+      D3D11_FORMAT_SUPPORT_TEXTURE2D | D3D11_FORMAT_SUPPORT_DISPLAY;
+  UINT supported_flags = 0;
+  GstD3D11WindowDisplayFormat formats[] = {
+    { DXGI_FORMAT_R8G8B8A8_UNORM, GST_VIDEO_FORMAT_RGBA, FALSE },
+    { DXGI_FORMAT_B8G8R8A8_UNORM, GST_VIDEO_FORMAT_BGRA, FALSE },
+    { DXGI_FORMAT_R10G10B10A2_UNORM, GST_VIDEO_FORMAT_RGB10A2_LE, FALSE },
+  };
+  const GstD3D11WindowDisplayFormat *chosen_format = NULL;
+  const GstDxgiColorSpace * chosen_colorspace = NULL;
+#if (DXGI_HEADER_VERSION >= 4)
+  gboolean have_hdr10 = FALSE;
+  DXGI_COLOR_SPACE_TYPE native_colorspace_type =
+      DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
+#endif
+#if (DXGI_HEADER_VERSION >= 5)
+  DXGI_HDR_METADATA_HDR10 hdr10_metadata = { 0, };
+#endif
 
   g_return_val_if_fail (GST_IS_D3D11_WINDOW (window), FALSE);
 
   GST_DEBUG_OBJECT (window, "Prepare window, display resolution %dx%d, caps %"
       GST_PTR_FORMAT, display_width, display_height, caps);
 
+  /* Step 1: Clear old resources and objects */
   gst_clear_buffer (&window->cached_buffer);
+  g_clear_pointer (&window->processor, gst_d3d11_video_processor_free);
+  g_clear_pointer (&window->converter, gst_d3d11_color_converter_free);
+  g_clear_pointer (&window->compositor, gst_d3d11_overlay_compositor_free);
 
-  render_caps = gst_d3d11_device_get_supported_caps (window->device,
-      (D3D11_FORMAT_SUPPORT) (D3D11_FORMAT_SUPPORT_TEXTURE2D |
-          D3D11_FORMAT_SUPPORT_DISPLAY));
-
-  GST_DEBUG_OBJECT (window, "rendering caps %" GST_PTR_FORMAT, render_caps);
-  render_caps = gst_d3d11_caps_fixate_format (caps, render_caps);
-
-  if (!render_caps || gst_caps_is_empty (render_caps)) {
-    GST_ERROR_OBJECT (window, "Couldn't define render caps");
-    g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
-        "Couldn't define render caps");
-    gst_clear_caps (&render_caps);
-
-    return FALSE;
-  }
-
-  render_caps = gst_caps_fixate (render_caps);
-  gst_video_info_from_caps (&window->render_info, render_caps);
-  gst_clear_caps (&render_caps);
-
-  window->render_format =
-      gst_d3d11_device_format_from_gst (window->device,
-      GST_VIDEO_INFO_FORMAT (&window->render_info));
-  if (!window->render_format ||
-      window->render_format->dxgi_format == DXGI_FORMAT_UNKNOWN) {
-    GST_ERROR_OBJECT (window, "Unknown dxgi render format");
-    g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
-        "Unknown dxgi render format");
-
-    return FALSE;
-  }
-
+  /* Step 2: Decide display color format
+   * If upstream format is 10bits, try DXGI_FORMAT_R10G10B10A2_UNORM first
+   * Otherwise, use DXGI_FORMAT_B8G8R8A8_UNORM or DXGI_FORMAT_B8G8R8A8_UNORM
+   */
   gst_video_info_from_caps (&window->info, caps);
+  device_handle = gst_d3d11_device_get_device_handle (window->device);
+  for (i = 0; i < G_N_ELEMENTS (formats); i++) {
+    hr = device_handle->CheckFormatSupport (formats[i].dxgi_format,
+        &supported_flags);
+    if (SUCCEEDED (hr) && (supported_flags & display_flags) == display_flags) {
+      GST_DEBUG_OBJECT (window, "Device supports format %s (DXGI_FORMAT %d)",
+          gst_video_format_to_string (formats[i].gst_format),
+          formats[i].dxgi_format);
+      formats[i].supported = TRUE;
+      num_supported_format++;
+    }
+  }
 
-  if (window->processor)
-    gst_d3d11_video_processor_free (window->processor);
-  window->processor = NULL;
+  if (num_supported_format == 0) {
+    GST_ERROR_OBJECT (window, "Cannot determine render format");
+    g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
+        "Cannot determine render format");
+    return FALSE;
+  }
 
-  if (window->converter)
-    gst_d3d11_color_converter_free (window->converter);
-  window->converter = NULL;
+  for (i = 0; i < GST_VIDEO_INFO_N_COMPONENTS (&window->info); i++) {
+    if (GST_VIDEO_INFO_COMP_DEPTH (&window->info, i) > 8) {
+      if (formats[2].supported) {
+        chosen_format = &formats[2];
+      }
+      break;
+    }
+  }
 
-  if (window->compositor)
-    gst_d3d11_overlay_compositor_free (window->compositor);
-  window->compositor = NULL;
+  if (!chosen_format) {
+    /* prefer native format over conversion */
+    for (i = 0; i < 2; i++) {
+      if (formats[i].supported &&
+          formats[i].gst_format == GST_VIDEO_INFO_FORMAT (&window->info)) {
+        chosen_format = &formats[i];
+        break;
+      }
+    }
+
+    /* choose any color space then */
+    if (!chosen_format) {
+      for (i = 0; i < G_N_ELEMENTS (formats); i++) {
+        if (formats[i].supported) {
+          chosen_format = &formats[i];
+          break;
+        }
+      }
+    }
+  }
+
+  g_assert (chosen_format != NULL);
+
+  GST_DEBUG_OBJECT (window, "chosen rendero format %s (DXGI_FORMAT %d)",
+      gst_video_format_to_string (chosen_format->gst_format),
+      chosen_format->dxgi_format);
+
+  /* Step 3: Create swapchain
+   * (or reuse old swapchain if the format is not changed) */
+  window->allow_tearing = FALSE;
+  g_object_get (window->device, "allow-tearing", &window->allow_tearing, NULL);
+  if (window->allow_tearing) {
+    GST_DEBUG_OBJECT (window, "device support tearning");
+    swapchain_flags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
+  }
+
+  /* release swapchain if render format is being changed */
+  gst_d3d11_device_lock (window->device);
+  if (window->swap_chain &&
+      window->dxgi_format != chosen_format->dxgi_format) {
+    gst_d3d11_window_release_resources (window->device, window);
+  }
+  window->dxgi_format = chosen_format->dxgi_format;
+
+  klass = GST_D3D11_WINDOW_GET_CLASS (window);
+  if (!window->swap_chain &&
+      !klass->create_swap_chain (window, window->dxgi_format,
+          display_width, display_height, swapchain_flags, &window->swap_chain)) {
+    GST_ERROR_OBJECT (window, "Cannot create swapchain");
+    g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
+        "Cannot create swapchain");
+    gst_d3d11_device_unlock (window->device);
+
+    return FALSE;
+  }
+  gst_d3d11_device_unlock (window->device);
+
+  /* this rect struct will be used to calculate render area */
+  window->render_rect.left = 0;
+  window->render_rect.top = 0;
+  window->render_rect.right = display_width;
+  window->render_rect.bottom = display_height;
+
+  window->input_rect.left = 0;
+  window->input_rect.top = 0;
+  window->input_rect.right = GST_VIDEO_INFO_WIDTH (&window->info);
+  window->input_rect.bottom = GST_VIDEO_INFO_HEIGHT (&window->info);
+
+  /* Step 4: Decide render color space and set it on converter/processor */
+
+  /* check HDR10 metadata. If HDR APIs are available, BT2020 primaries colorspcae
+   * will be used.
+   *
+   * FIXME: need to query h/w level support. If that's not the case, tone-mapping
+   * should be placed somewhere.
+   *
+   * FIXME: Non-HDR colorspace with BT2020 primaries will break rendering.
+   * https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/1175
+   * To workaround it, BT709 colorspace will be chosen for non-HDR case.
+   */
+#if (DXGI_HEADER_VERSION >= 5)
+  {
+    GstVideoMasteringDisplayInfo minfo;
+    GstVideoContentLightLevel cll;
+
+    if (gst_video_mastering_display_info_from_caps (&minfo, caps) &&
+        gst_video_content_light_level_from_caps (&cll, caps)) {
+      IDXGISwapChain4 *swapchain4 = NULL;
+      HRESULT hr;
+
+      hr = window->swap_chain->QueryInterface (IID_IDXGISwapChain4,
+        (void **) &swapchain4);
+      if (gst_d3d11_result (hr, window->device)) {
+        GST_DEBUG_OBJECT (window, "Have HDR metadata, set to DXGI swapchain");
+
+        gst_d3d11_hdr_meta_data_to_dxgi (&minfo, &cll, &hdr10_metadata);
+
+        hr = swapchain4->SetHDRMetaData (DXGI_HDR_METADATA_TYPE_HDR10,
+            sizeof (DXGI_HDR_METADATA_HDR10), &hdr10_metadata);
+        if (!gst_d3d11_result (hr, window->device)) {
+          GST_WARNING_OBJECT (window, "Couldn't set HDR metadata, hr 0x%x",
+              (guint) hr);
+        } else {
+          have_hdr10 = TRUE;
+        }
+
+        swapchain4->Release ();
+      }
+    }
+  }
+#endif
+
+  /* Step 5: Choose display color space */
+  gst_video_info_set_format (&window->render_info,
+      chosen_format->gst_format, display_width, display_height);
 
   /* preserve upstream colorimetry */
-  window->render_info.width = display_width;
-  window->render_info.height = display_height;
-
   window->render_info.colorimetry.primaries =
       window->info.colorimetry.primaries;
   window->render_info.colorimetry.transfer = window->info.colorimetry.transfer;
+  window->render_info.colorimetry.range = window->info.colorimetry.range;
+
+#if (DXGI_HEADER_VERSION >= 4)
+  {
+    IDXGISwapChain3 *swapchain3 = NULL;
+    HRESULT hr;
+
+    hr = window->swap_chain->QueryInterface (IID_IDXGISwapChain3,
+        (void **) &swapchain3);
+
+    if (gst_d3d11_result (hr, window->device)) {
+      chosen_colorspace = gst_d3d11_find_swap_chain_color_space (&window->render_info,
+          swapchain3, have_hdr10);
+      if (chosen_colorspace) {
+        native_colorspace_type =
+            (DXGI_COLOR_SPACE_TYPE) chosen_colorspace->dxgi_color_space_type;
+        hr = swapchain3->SetColorSpace1 (native_colorspace_type);
+        if (!gst_d3d11_result (hr, window->device)) {
+          GST_WARNING_OBJECT (window, "Failed to set colorspace %d, hr: 0x%x",
+            native_colorspace_type, (guint) hr);
+          chosen_colorspace = NULL;
+          native_colorspace_type = DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
+        } else {
+          GST_DEBUG_OBJECT (window,
+              "Set colorspace %d", native_colorspace_type);
+
+          /* update with selected display color space */
+          window->render_info.colorimetry.primaries =
+              chosen_colorspace->primaries;
+          window->render_info.colorimetry.transfer =
+              chosen_colorspace->transfer;
+          window->render_info.colorimetry.range =
+              chosen_colorspace->range;
+          window->render_info.colorimetry.matrix =
+              chosen_colorspace->matrix;
+        }
+      }
+
+      swapchain3->Release ();
+    }
+  }
+#endif
+
+  /* otherwise, use most common DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709
+   * color space */
+  if (!chosen_colorspace) {
+    GST_DEBUG_OBJECT (window, "No selected render color space, use BT709");
+    window->render_info.colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT709;
+    window->render_info.colorimetry.transfer = GST_VIDEO_TRANSFER_BT709;
+    window->render_info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
+  }
 
   window->processor =
       gst_d3d11_video_processor_new (window->device,
@@ -526,10 +709,60 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint display_width,
       gst_d3d11_video_processor_free (window->processor);
       window->processor = NULL;
     } else {
+      gboolean processor_input_configureed = FALSE;
+      gboolean processor_output_configured = FALSE;
+
       GST_DEBUG_OBJECT (window, "IVideoProcessor interface available");
       *video_processor_available = TRUE;
-      need_processor_input_configure = TRUE;
-      need_processor_output_configure = TRUE;
+#if (DXGI_HEADER_VERSION >= 5)
+      if (have_hdr10) {
+        GST_DEBUG_OBJECT (window, "Set HDR metadata on video processor");
+        gst_d3d11_video_processor_set_input_hdr10_metadata (window->processor,
+            &hdr10_metadata);
+        gst_d3d11_video_processor_set_output_hdr10_metadata (window->processor,
+            &hdr10_metadata);
+      }
+#endif
+
+#if (DXGI_HEADER_VERSION >= 4)
+      {
+        DXGI_COLOR_SPACE_TYPE in_native_cs =
+            DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
+        const GstDxgiColorSpace *in_cs =
+            gst_d3d11_video_info_to_dxgi_color_space (&window->info);
+
+        if (in_cs) {
+          in_native_cs = (DXGI_COLOR_SPACE_TYPE) in_cs->dxgi_color_space_type;
+        } else {
+          GST_WARNING_OBJECT (window,
+              "Cannot figure out input dxgi color space");
+          if (GST_VIDEO_INFO_IS_RGB (&window->info)) {
+            in_native_cs = DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
+          } else {
+            in_native_cs = DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P709;
+          }
+        }
+
+        GST_DEBUG_OBJECT (window,
+            "Set color space on video processor, in %d, out %d",
+            in_native_cs, native_colorspace_type);
+        processor_input_configureed =
+            gst_d3d11_video_processor_set_input_dxgi_color_space
+            (window->processor, in_native_cs);
+        processor_output_configured =
+            gst_d3d11_video_processor_set_output_dxgi_color_space
+            (window->processor, native_colorspace_type);
+      }
+#endif
+      if (!processor_input_configureed) {
+        gst_d3d11_video_processor_set_input_color_space (window->processor,
+            &window->info.colorimetry);
+      }
+
+      if (!processor_output_configured) {
+        gst_d3d11_video_processor_set_output_color_space (window->processor,
+            &window->render_info.colorimetry);
+      }
     }
   }
 
@@ -555,141 +788,6 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint display_width,
 
     return FALSE;
   }
-
-  window->allow_tearing = FALSE;
-  g_object_get (window->device, "allow-tearing", &window->allow_tearing, NULL);
-  if (window->allow_tearing) {
-    GST_DEBUG_OBJECT (window, "device support tearning");
-    swapchain_flags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
-  }
-
-  /* release swapchain if render format is being changed */
-  gst_d3d11_device_lock (window->device);
-  if (window->swap_chain &&
-      window->render_format->dxgi_format != window->dxgi_format) {
-    gst_d3d11_window_release_resources (window->device, window);
-  }
-
-  window->dxgi_format = window->render_format->dxgi_format;
-
-  window->render_rect.left = 0;
-  window->render_rect.top = 0;
-  window->render_rect.right = display_width;
-  window->render_rect.bottom = display_height;
-
-  window->input_rect.left = 0;
-  window->input_rect.top = 0;
-  window->input_rect.right = GST_VIDEO_INFO_WIDTH (&window->info);
-  window->input_rect.bottom = GST_VIDEO_INFO_HEIGHT (&window->info);
-
-  klass = GST_D3D11_WINDOW_GET_CLASS (window);
-  if (!window->swap_chain &&
-      !klass->create_swap_chain (window, window->dxgi_format,
-          display_width, display_height, swapchain_flags, &window->swap_chain)) {
-    GST_ERROR_OBJECT (window, "Cannot create swapchain");
-    g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
-        "Cannot create swapchain");
-    gst_d3d11_device_unlock (window->device);
-
-    return FALSE;
-  }
-  gst_d3d11_device_unlock (window->device);
-
-#if (DXGI_HEADER_VERSION >= 4)
-  {
-    IDXGISwapChain3 *swapchain3 = NULL;
-    HRESULT hr;
-
-    hr = window->swap_chain->QueryInterface (IID_IDXGISwapChain3,
-        (void **) &swapchain3);
-
-    if (gst_d3d11_result (hr, window->device)) {
-      DXGI_COLOR_SPACE_TYPE ctype;
-
-      if (gst_d3d11_find_swap_chain_color_space (&window->render_info,
-              swapchain3, &ctype)) {
-        hr = swapchain3->SetColorSpace1 (ctype);
-        if (!gst_d3d11_result (hr, window->device)) {
-          GST_WARNING_OBJECT (window, "Failed to set colorspace %d, hr: 0x%x",
-            ctype, (guint) hr);
-        } else {
-          GST_DEBUG_OBJECT (window, "Set colorspace %d", ctype);
-
-          if (window->processor)
-            need_processor_output_configure =
-                !gst_d3d11_video_processor_set_output_dxgi_color_space
-                (window->processor, ctype);
-        }
-      }
-
-      swapchain3->Release ();
-    }
-  }
-
-  if (window->processor) {
-    if (need_processor_output_configure) {
-      /* Set most common color space */
-      need_processor_output_configure =
-          !gst_d3d11_video_processor_set_output_dxgi_color_space
-          (window->processor, DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709);
-    }
-
-    if (need_processor_input_configure) {
-      DXGI_COLOR_SPACE_TYPE ctype;
-      gst_d3d11_video_info_to_dxgi_color_space (&window->info, &ctype);
-      need_processor_input_configure =
-          !gst_d3d11_video_processor_set_input_dxgi_color_space
-          (window->processor, ctype);
-    }
-  }
-#endif
-
-  if (window->processor && need_processor_output_configure) {
-    gst_d3d11_video_processor_set_output_color_space (window->processor,
-        &window->render_info.colorimetry);
-  }
-
-  if (window->processor && need_processor_input_configure) {
-    gst_d3d11_video_processor_set_input_color_space (window->processor,
-        &window->info.colorimetry);
-  }
-
-#if (DXGI_HEADER_VERSION >= 5)
-  {
-    GstVideoMasteringDisplayInfo minfo;
-    GstVideoContentLightLevel cll;
-
-    if (gst_video_mastering_display_info_from_caps (&minfo, caps) &&
-        gst_video_content_light_level_from_caps (&cll, caps)) {
-      IDXGISwapChain4 *swapchain4 = NULL;
-      HRESULT hr;
-
-      hr = window->swap_chain->QueryInterface (IID_IDXGISwapChain4,
-        (void **) &swapchain4);
-      if (gst_d3d11_result (hr, window->device)) {
-        DXGI_HDR_METADATA_HDR10 metadata = { 0, };
-
-        GST_DEBUG_OBJECT (window, "Have HDR metadata, set to DXGI swapchain");
-
-        gst_d3d11_hdr_meta_data_to_dxgi (&minfo, &cll, &metadata);
-
-        hr = swapchain4->SetHDRMetaData (DXGI_HDR_METADATA_TYPE_HDR10,
-            sizeof (DXGI_HDR_METADATA_HDR10), &metadata);
-        if (!gst_d3d11_result (hr, window->device)) {
-          GST_WARNING_OBJECT (window, "Couldn't set HDR metadata, hr 0x%x",
-              (guint) hr);
-        } else if (window->processor) {
-          gst_d3d11_video_processor_set_input_hdr10_metadata (window->processor,
-              &metadata);
-          gst_d3d11_video_processor_set_output_hdr10_metadata (window->processor,
-              &metadata);
-        }
-
-        swapchain4->Release ();
-      }
-    }
-  }
-#endif
 
   /* call resize to allocated resources */
   klass->on_resize (window, display_width, display_height);
