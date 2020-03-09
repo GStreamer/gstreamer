@@ -873,6 +873,7 @@ RGB_FILL_COLOR (xrgb, 4, _memset_xrgb);
 MEMSET_XRGB (xbgr, 0, 16, 24);
 RGB_FILL_COLOR (xbgr, 4, _memset_xbgr);
 
+RGB_FILL_CHECKER_C (rgbx, 4, 0, 1, 2);
 MEMSET_XRGB (rgbx, 24, 16, 8);
 RGB_FILL_COLOR (rgbx, 4, _memset_rgbx);
 
@@ -1053,6 +1054,7 @@ FillCheckerFunction gst_compositor_fill_checker_y41b;
 FillCheckerFunction gst_compositor_fill_checker_rgb;
 /* BGR is equal to RGB */
 FillCheckerFunction gst_compositor_fill_checker_xrgb;
+FillCheckerFunction gst_compositor_fill_checker_rgbx;
 /* BGRx, xRGB, xBGR are equal to RGBx */
 FillCheckerFunction gst_compositor_fill_checker_yuy2;
 /* YVYU is equal to YUY2 */
@@ -1113,6 +1115,7 @@ gst_compositor_init_blend (void)
   gst_compositor_fill_checker_y41b = GST_DEBUG_FUNCPTR (fill_checker_y41b);
   gst_compositor_fill_checker_rgb = GST_DEBUG_FUNCPTR (fill_checker_rgb_c);
   gst_compositor_fill_checker_xrgb = GST_DEBUG_FUNCPTR (fill_checker_xrgb_c);
+  gst_compositor_fill_checker_rgbx = GST_DEBUG_FUNCPTR (fill_checker_rgbx_c);
   gst_compositor_fill_checker_yuy2 = GST_DEBUG_FUNCPTR (fill_checker_yuy2_c);
   gst_compositor_fill_checker_uyvy = GST_DEBUG_FUNCPTR (fill_checker_uyvy_c);
 
