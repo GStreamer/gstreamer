@@ -39,6 +39,7 @@
 #endif
 
 #include "gsteglimage.h"
+#include "gsteglimage_private.h"
 
 #include <string.h>
 
@@ -673,8 +674,20 @@ _drm_direct_fourcc_from_info (GstVideoInfo * info)
   }
 }
 
-static gboolean
-_gst_egl_image_check_dmabuf_direct (GstGLContext * context, int fourcc)
+/*
+ * gst_egl_image_check_dmabuf_direct:
+ * @context: a #GstGLContext (must be an EGL context)
+ * @in_info: a #GstVideoInfo
+ * @target: a #GstGLTextureTarget
+ *
+ * Checks whether the video format specified by the given #GstVideoInfo is a
+ * supported texture format for the given target.
+ *
+ * Returns: %TRUE if the format is supported.
+ */
+gboolean
+gst_egl_image_check_dmabuf_direct (GstGLContext * context,
+    GstVideoInfo * in_info)
 {
   EGLDisplay egl_display = EGL_DEFAULT_DISPLAY;
   GstGLDisplayEGL *display_egl;
@@ -684,6 +697,7 @@ _gst_egl_image_check_dmabuf_direct (GstGLContext * context, int fourcc)
   EGLBoolean *external_only;
   int num_modifiers;
   gboolean ret;
+  int fourcc;
   int i;
 
   EGLBoolean (*gst_eglQueryDmaBufFormatsEXT) (EGLDisplay dpy,
@@ -691,6 +705,10 @@ _gst_egl_image_check_dmabuf_direct (GstGLContext * context, int fourcc)
   EGLBoolean (*gst_eglQueryDmaBufModifiersEXT) (EGLDisplay dpy,
       int format, int max_modifiers, EGLuint64KHR * modifiers,
       EGLBoolean * external_only, int *num_modifiers);
+
+  fourcc = _drm_direct_fourcc_from_info (in_info);
+  if (fourcc == -1)
+    return FALSE;
 
   gst_eglQueryDmaBufFormatsEXT =
       gst_gl_context_get_proc_address (context, "eglQueryDmaBufFormatsEXT");
@@ -812,13 +830,10 @@ gst_egl_image_from_dmabuf_direct (GstGLContext * context,
   guintptr attribs[41];         /* 6 + 10 * 3 + 4 + 1 */
   gint atti = 0;
 
+  if (!gst_egl_image_check_dmabuf_direct (context, in_info))
+    return NULL;
+
   fourcc = _drm_direct_fourcc_from_info (in_info);
-  if (fourcc == -1)
-    return NULL;
-
-  if (!_gst_egl_image_check_dmabuf_direct (context, fourcc))
-    return NULL;
-
   with_modifiers = gst_gl_context_check_feature (context,
       "EGL_EXT_image_dma_buf_import_with_modifiers");
 

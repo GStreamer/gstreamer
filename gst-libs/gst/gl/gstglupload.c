@@ -30,6 +30,7 @@
 
 #if GST_GL_HAVE_PLATFORM_EGL
 #include "egl/gsteglimage.h"
+#include "egl/gsteglimage_private.h"
 #include "egl/gstglmemoryegl.h"
 #include "egl/gstglcontext_egl.h"
 #endif
@@ -691,9 +692,12 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
     fd[i] = gst_dmabuf_memory_get_fd (mems[i]);
   }
 
-  if (dmabuf->direct)
+  if (dmabuf->direct) {
+    /* Check if this format is supported by the driver */
     dmabuf->n_mem = 1;
-  else
+    if (!gst_egl_image_check_dmabuf_direct (dmabuf->upload->context, in_info))
+      return FALSE;
+  } else
     dmabuf->n_mem = n_planes;
 
   /* Now create an EGLImage for each dmabufs */
@@ -754,6 +758,15 @@ static GstGLUploadReturn
 _dma_buf_upload_perform (gpointer impl, GstBuffer * buffer, GstBuffer ** outbuf)
 {
   struct DmabufUpload *dmabuf = impl;
+
+  /* The direct path sets sinkpad caps to RGBA but this may be incorrect for
+   * the non-direct path, if that path fails to accept. In that case, we need
+   * to reconfigure.
+   */
+  if (!dmabuf->direct &&
+      GST_VIDEO_INFO_FORMAT (&dmabuf->upload->priv->in_info) !=
+      GST_VIDEO_INFO_FORMAT (&dmabuf->out_info))
+    return GST_GL_UPLOAD_RECONFIGURE;
 
   gst_gl_context_thread_add (dmabuf->upload->context,
       (GstGLContextThreadFunc) _dma_buf_upload_perform_gl_thread, dmabuf);
