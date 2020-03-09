@@ -252,6 +252,7 @@ struct _TSDemuxStream
       "emphasis = (boolean) { FALSE, TRUE }, " \
       "mute = (boolean) { FALSE, TRUE }; " \
     "audio/x-ac3; audio/x-eac3;" \
+    "audio/x-ac4;" \
     "audio/x-dts;" \
     "audio/x-opus;" \
     "audio/x-private-ts-lpcm" \
@@ -1189,6 +1190,10 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
         is_audio = TRUE;
         caps = gst_caps_new_empty_simple ("audio/x-eac3");
         break;
+      case ST_BD_AUDIO_AC4:
+        is_audio = TRUE;
+        caps = gst_caps_new_empty_simple ("audio/x-ac4");
+        break;
       case ST_BD_AUDIO_AC3_TRUE_HD:
         is_audio = TRUE;
         caps = gst_caps_new_empty_simple ("audio/x-true-hd");
@@ -1250,6 +1255,17 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
       /* FIXME: Move all of this into a common method (there might be other
        * types also, depending on registratino descriptors also
        */
+
+      desc =
+          mpegts_get_descriptor_from_stream (bstream,
+          GST_MTS_DESC_DVB_EXTENSION);
+      if (desc != NULL && desc->tag_extension == GST_MTS_DESC_EXT_DVB_AC4) {
+        GST_LOG ("ac4 audio");
+        is_audio = TRUE;
+        caps = gst_caps_new_empty_simple ("audio/x-ac4");
+        break;
+      }
+
       desc = mpegts_get_descriptor_from_stream (bstream, GST_MTS_DESC_DVB_AC3);
       if (desc) {
         GST_LOG ("ac3 audio");

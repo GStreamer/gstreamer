@@ -46,6 +46,7 @@
 #define ST_VIDEO_DIRAC                  0xd1
 
 /* private stream types */
+#define ST_PS_AUDIO_AC4                 0x06
 #define ST_PS_VIDEO_MPEG2_DCII          0x80
 #define ST_PS_AUDIO_AC3                 0x81
 #define ST_PS_AUDIO_EAC3                0x87
@@ -55,6 +56,7 @@
 #define ST_PS_DVD_SUBPICTURE            0xff
 
 /* Blu-ray related (registration: 'HDMV'*/
+#define ST_BD_AUDIO_AC4                 0x06
 #define ST_BD_AUDIO_LPCM                0x80
 #define ST_BD_AUDIO_AC3                 0x81
 #define ST_BD_AUDIO_DTS                 0x82
