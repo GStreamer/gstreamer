@@ -80,7 +80,7 @@ enum
 /* we support the same caps as aspectratiocrop (sync changes) */
 #define VIDEO_CROP_CAPS                                \
   GST_VIDEO_CAPS_MAKE ("{ RGBx, xRGB, BGRx, xBGR, "    \
-      "RGBA, ARGB, BGRA, ABGR, RGB, BGR, AYUV, YUY2, " \
+      "RGBA, ARGB, BGRA, ABGR, RGB, BGR, AYUV, YUY2, Y444, " \
       "YVYU, UYVY, I420, YV12, RGB16, RGB15, GRAY8, "  \
       "NV12, NV21, GRAY16_LE, GRAY16_BE }")
 
@@ -331,52 +331,46 @@ static void
 gst_video_crop_transform_planar (GstVideoCrop * vcrop,
     GstVideoFrame * in_frame, GstVideoFrame * out_frame, gint x, gint y)
 {
-  gint width, height;
+  const GstVideoFormatInfo *format_info;
   gint crop_top, crop_left;
-  guint8 *y_out, *u_out, *v_out;
-  guint8 *y_in, *u_in, *v_in;
-  guint i, dx;
 
-  width = GST_VIDEO_FRAME_WIDTH (out_frame);
-  height = GST_VIDEO_FRAME_HEIGHT (out_frame);
+  format_info = in_frame->info.finfo;
   crop_left = vcrop->crop_left + x;
   crop_top = vcrop->crop_top + y;
 
-  /* Y plane */
-  y_in = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
-  y_out = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
+  for (guint p = 0; p < GST_VIDEO_FRAME_N_PLANES (in_frame); ++p) {
+    guint8 *plane_in, *plane_out;
+    guint sub_w_factor, sub_h_factor;
+    guint subsampled_crop_left, subsampled_crop_top;
+    guint copy_width;
 
-  y_in += (crop_top * GST_VIDEO_FRAME_PLANE_STRIDE (in_frame, 0)) + crop_left;
-  dx = width;
+    /* plane */
+    plane_in = GST_VIDEO_FRAME_PLANE_DATA (in_frame, p);
+    plane_out = GST_VIDEO_FRAME_PLANE_DATA (out_frame, p);
 
-  for (i = 0; i < height; ++i) {
-    memcpy (y_out, y_in, dx);
-    y_in += GST_VIDEO_FRAME_PLANE_STRIDE (in_frame, 0);
-    y_out += GST_VIDEO_FRAME_PLANE_STRIDE (out_frame, 0);
-  }
+    /* apply crop top/left
+     * crop_top and crop_left have to be rounded down to the corresponding
+     * subsampling factor, since, e.g.: the first line in a subsampled plane
+     * describes 2 lines in the actual image. A crop_top of 1 thus should
+     * not shift the pointer of the input plane. */
+    sub_w_factor = 1 << GST_VIDEO_FORMAT_INFO_W_SUB (format_info, p);
+    sub_h_factor = 1 << GST_VIDEO_FORMAT_INFO_H_SUB (format_info, p);
+    subsampled_crop_left = GST_ROUND_DOWN_N ((guint) crop_left, sub_w_factor);
+    subsampled_crop_top = GST_ROUND_DOWN_N ((guint) crop_top, sub_h_factor);
 
-  /* U + V planes */
-  u_in = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 1);
-  u_out = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 1);
+    plane_in +=
+        GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (format_info, p,
+        subsampled_crop_top) * GST_VIDEO_FRAME_PLANE_STRIDE (in_frame, p);
+    plane_in +=
+        GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (format_info, p,
+        subsampled_crop_left);
+    copy_width = (guint) GST_VIDEO_FRAME_COMP_WIDTH (out_frame, p);
 
-  u_in += (crop_top / 2) * GST_VIDEO_FRAME_PLANE_STRIDE (in_frame, 1);
-  u_in += crop_left / 2;
-
-  v_in = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 2);
-  v_out = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 2);
-
-  v_in += (crop_top / 2) * GST_VIDEO_FRAME_PLANE_STRIDE (in_frame, 2);
-  v_in += crop_left / 2;
-
-  dx = GST_ROUND_UP_2 (width) / 2;
-
-  for (i = 0; i < GST_ROUND_UP_2 (height) / 2; ++i) {
-    memcpy (u_out, u_in, dx);
-    memcpy (v_out, v_in, dx);
-    u_in += GST_VIDEO_FRAME_PLANE_STRIDE (in_frame, 1);
-    u_out += GST_VIDEO_FRAME_PLANE_STRIDE (out_frame, 1);
-    v_in += GST_VIDEO_FRAME_PLANE_STRIDE (in_frame, 2);
-    v_out += GST_VIDEO_FRAME_PLANE_STRIDE (out_frame, 2);
+    for (gint i = 0; i < GST_VIDEO_FRAME_COMP_HEIGHT (out_frame, p); ++i) {
+      memcpy (plane_out, plane_in, copy_width);
+      plane_in += GST_VIDEO_FRAME_PLANE_STRIDE (in_frame, p);
+      plane_out += GST_VIDEO_FRAME_PLANE_STRIDE (out_frame, p);
+    }
   }
 }
 
@@ -812,6 +806,7 @@ gst_video_crop_set_info (GstVideoFilter * vfilter, GstCaps * in,
         break;
       case GST_VIDEO_FORMAT_I420:
       case GST_VIDEO_FORMAT_YV12:
+      case GST_VIDEO_FORMAT_Y444:
         crop->packing = VIDEO_CROP_PIXEL_FORMAT_PLANAR;
         break;
       case GST_VIDEO_FORMAT_NV12:
