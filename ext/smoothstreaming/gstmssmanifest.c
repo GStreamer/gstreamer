@@ -629,8 +629,8 @@ _gst_mss_stream_add_h264_codec_data (GstCaps * caps, const gchar * codecdatastr)
 
   nalu.ref_idc = (spsinfo.data[0] & 0x60) >> 5;
   nalu.type = GST_H264_NAL_SPS;
-  nalu.size = spsinfo.size;
-  nalu.data = spsinfo.data;
+  nalu.size = spsinfo.size - 1;
+  nalu.data = spsinfo.data + 1;
   nalu.offset = 0;
   nalu.sc_offset = 0;
   nalu.valid = TRUE;
