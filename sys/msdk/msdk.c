@@ -67,6 +67,10 @@ static const struct map gst_msdk_video_format_to_mfx_map[] = {
   GST_VIDEO_INFO_TO_MFX_MAP (Y210, YUV422, Y210),
   GST_VIDEO_INFO_TO_MFX_MAP (Y410, YUV444, Y410),
 #endif
+#if (MFX_VERSION >= 1031)
+  /* P016 is used for semi-planar 12 bits format in MSDK */
+  GST_VIDEO_INFO_TO_MFX_MAP (P012_LE, YUV420, P016),
+#endif
   {0, 0, 0}
 };
 
@@ -337,6 +341,15 @@ gst_msdk_set_mfx_frame_info_from_video_info (mfxFrameInfo * mfx_info,
       mfx_info->BitDepthLuma = 10;
       mfx_info->BitDepthChroma = 10;
       mfx_info->Shift = 0;
+
+      break;
+#endif
+
+#if (MFX_VERSION >= 1031)
+    case MFX_FOURCC_P016:
+      mfx_info->BitDepthLuma = 12;
+      mfx_info->BitDepthChroma = 12;
+      mfx_info->Shift = 1;
 
       break;
 #endif
