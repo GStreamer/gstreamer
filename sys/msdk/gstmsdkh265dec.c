@@ -39,7 +39,7 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkh265dec_debug);
 #define GST_CAT_DEFAULT gst_msdkh265dec_debug
 
-#define COMMON_FORMAT "{ NV12, P010_10LE, YUY2, Y210, VUYA, Y410 }"
+#define COMMON_FORMAT "{ NV12, P010_10LE, YUY2, Y210, VUYA, Y410, P012_LE }"
 
 /* TODO: update both sink and src dynamically */
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
