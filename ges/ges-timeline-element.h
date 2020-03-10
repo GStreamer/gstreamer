@@ -175,11 +175,17 @@ struct _GESTimelineElement
  * subclass handled emitting the notify signal and the base class should
  * return %TRUE.
  * @set_inpoint: Method called just before the
- * #GESTimelineElement:in-point is set. A return of -1 means that the
- * subclass handled emitting the notify signal and the base class should
- * return %TRUE.
+ * #GESTimelineElement:in-point is set to a new value. This method should
+ * not set the #GESTimelineElement:in-point itself, but should check
+ * whether it can be changed to the new value and to otherwise prepare the
+ * element in response to what the new value will be. A return of %FALSE
+ * means that the property should not be set.
  * @set_max_duration: Method called just before the
- * #GESTimelineElement:max-duration is set.
+ * #GESTimelineElement:max-duration is set. This method should
+ * not set the #GESTimelineElement:max-duration itself, but should check
+ * whether it can be changed to the new value and to otherwise prepare the
+ * element in response to what the new value will be. A return of %FALSE
+ * means that the property should not be set.
  * @set_priority:  Method called just before the
  * #GESTimelineElement:in-point is set.
  * @ripple_end: Method to ripple an object on its #GES_EDGE_END edge.

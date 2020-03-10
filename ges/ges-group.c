@@ -402,7 +402,23 @@ _set_start (GESTimelineElement * element, GstClockTime start)
 static gboolean
 _set_inpoint (GESTimelineElement * element, GstClockTime inpoint)
 {
-  return FALSE;
+  if (inpoint != 0) {
+    GST_WARNING_OBJECT (element, "The in-point of a group has no meaning,"
+        " it can not be set to a non-zero value");
+    return FALSE;
+  }
+  return TRUE;
+}
+
+static gboolean
+_set_max_duration (GESTimelineElement * element, GstClockTime max_duration)
+{
+  if (GST_CLOCK_TIME_IS_VALID (max_duration)) {
+    GST_WARNING_OBJECT (element, "The max-duration of a group has no "
+        "meaning, it can not be set to a valid GstClockTime value");
+    return FALSE;
+  }
+  return TRUE;
 }
 
 static gboolean
@@ -762,6 +778,7 @@ ges_group_class_init (GESGroupClass * klass)
   element_class->trim = _trim;
   element_class->set_duration = _set_duration;
   element_class->set_inpoint = _set_inpoint;
+  element_class->set_max_duration = _set_max_duration;
   element_class->set_start = _set_start;
   element_class->set_priority = _set_priority;
   element_class->paste = _paste;

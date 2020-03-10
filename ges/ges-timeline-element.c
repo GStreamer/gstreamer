@@ -430,7 +430,7 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
    */
   properties[PROP_INPOINT] =
       g_param_spec_uint64 ("in-point", "In-point", "The in-point", 0,
-      G_MAXUINT64, 0, G_PARAM_READWRITE);
+      G_MAXUINT64, 0, G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY);
 
   /**
    * GESTimelineElement:duration:
@@ -462,7 +462,7 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
   properties[PROP_MAX_DURATION] =
       g_param_spec_uint64 ("max-duration", "Maximum duration",
       "The maximum duration of the object", 0, G_MAXUINT64, GST_CLOCK_TIME_NONE,
-      G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_EXPLICIT_NOTIFY);
 
   /**
    * GESTimelineElement:priority:
@@ -1113,8 +1113,11 @@ ges_timeline_element_set_inpoint (GESTimelineElement * self,
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
 
   GST_DEBUG_OBJECT (self, "current inpoint: %" GST_TIME_FORMAT
-      " new inpoint: %" GST_TIME_FORMAT, GST_TIME_ARGS (inpoint),
-      GST_TIME_ARGS (GES_TIMELINE_ELEMENT_INPOINT (self)));
+      " new inpoint: %" GST_TIME_FORMAT, GST_TIME_ARGS (self->inpoint),
+      GST_TIME_ARGS (inpoint));
+
+  if (G_UNLIKELY (inpoint == self->inpoint))
+    return TRUE;
 
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
@@ -1123,13 +1126,13 @@ ges_timeline_element_set_inpoint (GESTimelineElement * self,
      * duplicate notify signals? Rather than relying on the return value
      * being -1 for setting that succeeds but does not want a notify
      * signal because it will call this method on itself a second time. */
-    gint res = klass->set_inpoint (self, inpoint);
-    if (res == TRUE) {
-      self->inpoint = inpoint;
-      g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_INPOINT]);
-    }
+    if (!klass->set_inpoint (self, inpoint))
+      return FALSE;
 
-    return ! !res;
+    self->inpoint = inpoint;
+    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_INPOINT]);
+
+    return TRUE;
   }
 
   GST_DEBUG_OBJECT (self, "No set_inpoint virtual method implementation"
@@ -1156,21 +1159,29 @@ ges_timeline_element_set_max_duration (GESTimelineElement * self,
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
 
+  GST_DEBUG_OBJECT (self, "current max-duration: %" GST_TIME_FORMAT
+      " new max-duration: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (self->maxduration), GST_TIME_ARGS (maxduration));
+
+  if (G_UNLIKELY (maxduration == self->maxduration))
+    return TRUE;
+
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
-  GST_DEBUG_OBJECT (self, "current duration: %" GST_TIME_FORMAT
-      " new duration: %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (GES_TIMELINE_ELEMENT_MAX_DURATION (self)),
-      GST_TIME_ARGS (maxduration));
-
   if (klass->set_max_duration) {
-    if (klass->set_max_duration (self, maxduration) == FALSE)
+    if (!klass->set_max_duration (self, maxduration))
       return FALSE;
+    self->maxduration = maxduration;
+    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_MAX_DURATION]);
+
+    return TRUE;
   }
 
-  self->maxduration = maxduration;
-  g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_MAX_DURATION]);
-  return TRUE;
+  GST_DEBUG_OBJECT (self, "No set_max_duration virtual method implementation"
+      " on class %s. Can not set max-duration  %" GST_TIME_FORMAT,
+      G_OBJECT_CLASS_NAME (klass), GST_TIME_ARGS (maxduration));
+
+  return FALSE;
 }
 
 /**
