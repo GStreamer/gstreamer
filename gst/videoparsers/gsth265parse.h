@@ -85,6 +85,8 @@ struct _GstH265Parse
   gboolean have_sps_in_frame;
   gboolean have_pps_in_frame;
 
+  gboolean first_frame;
+
   /* collected SPS and PPS NALUs */
   GstBuffer *vps_nals[GST_H265_MAX_VPS_COUNT];
   GstBuffer *sps_nals[GST_H265_MAX_SPS_COUNT];
@@ -113,8 +115,6 @@ struct _GstH265Parse
 
   /* props */
   gint interval;
-
-  gboolean sent_codec_tag;
 
   GstClockTime pending_key_unit_ts;
   GstEvent *force_key_unit_event;

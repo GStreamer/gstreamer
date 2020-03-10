@@ -230,6 +230,7 @@ gst_h265_parse_reset_stream_info (GstH265Parse * h265parse)
   h265parse->nal_length_size = 4;
   h265parse->packetized = FALSE;
   h265parse->push_codec = FALSE;
+  h265parse->first_frame = TRUE;
 
   gst_buffer_replace (&h265parse->codec_data, NULL);
   gst_buffer_replace (&h265parse->codec_data_in, NULL);
@@ -254,8 +255,6 @@ static void
 gst_h265_parse_reset (GstH265Parse * h265parse)
 {
   h265parse->last_report = GST_CLOCK_TIME_NONE;
-
-  h265parse->sent_codec_tag = FALSE;
 
   h265parse->pending_key_unit_ts = GST_CLOCK_TIME_NONE;
   gst_event_replace (&h265parse->force_key_unit_event, NULL);
@@ -2105,6 +2104,7 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
     gint par_n, par_d;
     const gchar *mdi_str = NULL;
     const gchar *cll_str = NULL;
+    gboolean codec_data_modified = FALSE;
 
     gst_caps_set_simple (caps, "parsed", G_TYPE_BOOLEAN, TRUE,
         "stream-format", G_TYPE_STRING,
@@ -2171,13 +2171,47 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
     src_caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (h265parse));
 
     if (src_caps) {
-      /* use codec data from old caps for comparison; we don't want to resend caps
-         if everything is same except codec data; */
-      if (gst_structure_has_field (gst_caps_get_structure (src_caps, 0),
-              "codec_data")) {
-        gst_caps_set_value (caps, "codec_data",
-            gst_structure_get_value (gst_caps_get_structure (src_caps, 0),
-                "codec_data"));
+      GstStructure *src_caps_str = gst_caps_get_structure (src_caps, 0);
+
+      /* use codec data from old caps for comparison if we have pushed frame for now.
+       * we don't want to resend caps if everything is same except codec data.
+       * However, if the updated sps/pps is not in bitstream, we should put
+       * it on bitstream */
+      if (gst_structure_has_field (src_caps_str, "codec_data")) {
+        const GValue *codec_data_value =
+            gst_structure_get_value (src_caps_str, "codec_data");
+
+        if (!GST_VALUE_HOLDS_BUFFER (codec_data_value)) {
+          GST_WARNING_OBJECT (h265parse, "codec_data does not hold buffer");
+        } else if (!h265parse->first_frame) {
+          /* If there is no pushed frame before, we can update caps without worry.
+           * But updating codec_data in the middle of frames
+           * (especially on non-keyframe) might make downstream be confused.
+           * Therefore we are setting old codec data
+           * (i.e., was pushed to downstream previously) to new caps candidate
+           * here for gst_caps_is_strictly_equal() to be returned TRUE if only
+           * the codec_data is different, and to avoid re-sending caps it
+           * that case.
+           */
+          gst_caps_set_value (caps, "codec_data", codec_data_value);
+
+          /* check for codec_data update to re-send sps/pps inband data if
+           * current frame has no sps/pps but upstream codec_data was updated.
+           * Note that have_vps_in_frame is skipped here since it's optional  */
+          if ((!h265parse->have_sps_in_frame || !h265parse->have_pps_in_frame)
+              && buf) {
+            GstBuffer *codec_data_buf = gst_value_get_buffer (codec_data_value);
+            GstMapInfo map;
+
+            gst_buffer_map (buf, &map, GST_MAP_READ);
+            if (map.size != gst_buffer_get_size (codec_data_buf) ||
+                gst_buffer_memcmp (codec_data_buf, 0, map.data, map.size)) {
+              codec_data_modified = TRUE;
+            }
+
+            gst_buffer_unmap (buf, &map);
+          }
+        }
       } else if (!buf) {
         GstStructure *s;
         /* remove any left-over codec-data hanging around */
@@ -2202,6 +2236,12 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
       }
 
       gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (h265parse), caps);
+    } else if (codec_data_modified) {
+      GST_DEBUG_OBJECT (h265parse,
+          "Only codec_data is different, need inband vps/sps/pps update");
+
+      /* this will insert updated codec_data with next idr */
+      h265parse->push_codec = TRUE;
     }
 
     if (src_caps)
@@ -2517,7 +2557,7 @@ gst_h265_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
   h265parse = GST_H265_PARSE (parse);
 
-  if (!h265parse->sent_codec_tag) {
+  if (h265parse->first_frame) {
     GstTagList *taglist;
     GstCaps *caps;
 
@@ -2542,7 +2582,7 @@ gst_h265_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     gst_tag_list_unref (taglist);
 
     /* also signals the end of first-frame processing */
-    h265parse->sent_codec_tag = TRUE;
+    h265parse->first_frame = FALSE;
   }
 
   buffer = frame->buffer;
