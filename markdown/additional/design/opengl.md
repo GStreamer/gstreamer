@@ -203,7 +203,7 @@ frame in an OpenGL texture.
 
 ### `GstGLBuffer`
 
-`GstGLMemory` is a `GstMemory` subclass that holds data stored in an OpenGL
+`GstGLBuffer` is a `GstMemory` subclass that holds data stored in an OpenGL
 buffer object.
 
 ### Automatic Transfers To/From The GPU
