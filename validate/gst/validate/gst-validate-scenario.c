@@ -541,6 +541,8 @@ _update_well_known_vars (GstValidateScenario * scenario)
   } else {
     GST_WARNING_OBJECT (scenario, "Could not query position");
   }
+
+  gst_object_unref (pipeline);
 }
 
 static gboolean
@@ -2861,6 +2863,7 @@ _execute_appsrc_push (GstValidateScenario * scenario,
   gst_validate_action_ref (action);
 
   g_signal_emit_by_name (target, "push-buffer", buffer, &push_buffer_ret);
+  gst_buffer_unref (buffer);
   if (push_buffer_ret != GST_FLOW_OK) {
     gchar *structure_string = gst_structure_to_string (action->structure);
     GST_VALIDATE_REPORT_ACTION (scenario, action,
@@ -3004,6 +3007,7 @@ gst_validate_action_default_prepare_func (GstValidateAction * action)
   GstClockTime tmp;
   gchar *repeat_expr;
   gchar *error = NULL;
+  GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
   GstValidateActionType *type = gst_validate_get_action_type (action->type);
   GstValidateScenario *scenario = gst_validate_action_get_scenario (action);
 
@@ -3018,17 +3022,17 @@ gst_validate_action_default_prepare_func (GstValidateAction * action)
   }
 
   if (action->repeat > 0)
-    return GST_VALIDATE_EXECUTE_ACTION_OK;
+    goto done;
 
   if (!gst_structure_has_field (action->structure, "repeat"))
-    return GST_VALIDATE_EXECUTE_ACTION_OK;
+    goto done;
 
   if (gst_structure_get_int (action->structure, "repeat", &action->repeat))
-    return GST_VALIDATE_EXECUTE_ACTION_OK;
+    goto done;
 
   if (gst_structure_get_double (action->structure, "repeat",
           (gdouble *) & action->repeat))
-    return GST_VALIDATE_EXECUTE_ACTION_OK;
+    goto done;
 
   repeat_expr =
       g_strdup (gst_structure_get_string (action->structure, "repeat"));
@@ -3036,7 +3040,7 @@ gst_validate_action_default_prepare_func (GstValidateAction * action)
     g_error ("Invalid value for 'repeat' in %s",
         gst_structure_to_string (action->structure));
 
-    return GST_VALIDATE_EXECUTE_ACTION_ERROR;
+    goto err;
   }
 
   action->repeat =
@@ -3046,7 +3050,7 @@ gst_validate_action_default_prepare_func (GstValidateAction * action)
     g_error ("Invalid value for 'repeat' in %s: %s",
         gst_structure_to_string (action->structure), error);
 
-    return GST_VALIDATE_EXECUTE_ACTION_ERROR;
+    goto err;
   }
   g_free (repeat_expr);
 
@@ -3055,10 +3059,14 @@ gst_validate_action_default_prepare_func (GstValidateAction * action)
   gst_structure_set (action->priv->main_structure, "repeat", G_TYPE_INT,
       action->repeat, NULL);
 
+done:
   if (scenario)
     gst_object_unref (scenario);
 
-  return GST_VALIDATE_EXECUTE_ACTION_OK;
+  return res;
+err:
+  res = GST_VALIDATE_EXECUTE_ACTION_ERROR;
+  goto done;
 }
 
 static void
@@ -3113,6 +3121,7 @@ gst_validate_scenario_check_latency (GstValidateScenario * scenario,
   }
 
   gst_query_parse_latency (query, NULL, &min_latency, NULL);
+  gst_query_unref (query);
   GST_DEBUG_OBJECT (scenario, "Pipeline latency: %" GST_TIME_FORMAT
       " max allowed: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (min_latency), GST_TIME_ARGS (priv->max_latency));
@@ -4310,6 +4319,7 @@ check_last_sample_internal (GstValidateScenario * scenario,
   }
 
 done:
+  gst_sample_unref (sample);
   return res;
 }
 
@@ -4352,6 +4362,8 @@ _check_last_sample_value (GstValidateScenario * scenario,
   g_object_get (sink, "last-sample", &sample, NULL);
   if (sample == NULL)
     return GST_VALIDATE_EXECUTE_ACTION_ASYNC;
+  gst_sample_unref (sample);
+  gst_validate_action_unref (action);
 
   g_signal_handlers_disconnect_by_func (sink, sink_last_sample_notify_cb,
       action);
@@ -4479,10 +4491,12 @@ _execute_check_last_sample (GstValidateScenario * scenario,
     goto error;
   }
 
+  g_clear_object (&pipeline);
   return _check_last_sample_value (scenario, action, sink);
 
 error:
   g_clear_object (&sink);
+  g_clear_object (&pipeline);
   return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
 }
 

@@ -223,6 +223,7 @@ validate_flow_override_new (GstStructure * config)
   gchar *ignored_fields, *logged_fields;
 
   flow = g_object_new (VALIDATE_TYPE_FLOW_OVERRIDE, NULL);
+  GST_OBJECT_FLAG_SET (flow, GST_OBJECT_FLAG_MAY_BE_LEAKED);
   override = GST_VALIDATE_OVERRIDE (flow);
 
   /* pad: Name of the pad where flowing buffers and events will be monitorized. */

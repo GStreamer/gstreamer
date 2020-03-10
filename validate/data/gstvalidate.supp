@@ -201,3 +201,41 @@
    fun:_draw_background
    fun:gst_gl_video_mixer_callback
 }
+
+{
+    #https://bugs.freedesktop.org/show_bug.cgi?id=8215
+    #https://bugs.freedesktop.org/show_bug.cgi?id=8428
+    #FcPattern uses 'intptr_t elts_offset' instead of 'FcPatternEltPtr elts',
+    #which confuses valgrind.
+    font_config_bug_2
+    Memcheck:Leak
+    fun:*alloc
+    ...
+    fun:Fc*Add*
+}
+{
+    #Same root cause as font_config_bug_2.
+    #The 'leak' here is a copy of rule values, as opposed to new values.
+    font_config_bug_3
+    Memcheck:Leak
+    fun:*alloc
+    ...
+    fun:FcConfigValues
+}
+{
+    #Same root cause as font_config_bug_2.
+    #The 'leak' is copies of font or pattern values into returned pattern values.
+    font_config_bug_4
+    Memcheck:Leak
+    fun:*alloc
+    ...
+    fun:FcValue*
+    fun:FcFontRenderPrepare
+}
+{
+   font_config_bug_6
+   Memcheck:Leak
+   fun:*alloc
+   ...
+   obj:*/libfontconfig.so.*
+}

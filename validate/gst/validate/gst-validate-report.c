@@ -747,6 +747,7 @@ _report_free (GstValidateReport * report)
   g_free (report->message);
   g_free (report->reporter_name);
   g_free (report->trace);
+  g_free (report->dotfile_name);
   g_list_free_full (report->shadow_reports,
       (GDestroyNotify) gst_validate_report_unref);
   g_list_free_full (report->repeated_reports,
@@ -767,6 +768,7 @@ gst_validate_report_new (GstValidateIssue * issue,
   gst_mini_object_init (((GstMiniObject *) report), 0,
       _gst_validate_report_type, NULL, NULL,
       (GstMiniObjectFreeFunction) _report_free);
+  GST_MINI_OBJECT_FLAG_SET (report, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
 
   report->issue = issue;
   /* The reporter is owning a ref on the report so it doesn't keep a ref to

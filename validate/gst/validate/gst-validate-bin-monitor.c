@@ -150,7 +150,7 @@ gst_validate_bin_monitor_dispose (GObject * object)
   if (monitor->scenario) {
     gst_validate_reporter_purge_reports (GST_VALIDATE_REPORTER
         (monitor->scenario));
-    g_object_unref (monitor->scenario);
+    gst_object_unref (monitor->scenario);
   }
 
   g_list_free_full (monitor->element_monitors, purge_and_unref_reporter);

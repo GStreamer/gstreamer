@@ -775,6 +775,7 @@ gst_validate_pipeline_monitor_create_scenarios (GstValidateBinMonitor * monitor)
           GST_INFO_OBJECT (monitor, "Not attaching to pipeline %" GST_PTR_FORMAT
               " as not matching pattern %s", target, scenario_v[1]);
 
+          g_strfreev (scenario_v);
           goto done;
         }
       }

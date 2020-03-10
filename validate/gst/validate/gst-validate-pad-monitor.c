@@ -959,7 +959,7 @@ gst_validate_pad_monitor_reset (GstValidatePadMonitor * pad_monitor)
 {
   gst_validate_pad_monitor_flush (pad_monitor);
 
-  /* Note : For the entries that haven't been resetted in _flush(), do
+  /* Note : For the entries that haven't been reset in _flush(), do
    * it here and keep in the same order as the GstValidatePadMonitor
    * structure */
 
@@ -1637,11 +1637,17 @@ gst_validate_pad_monitor_add_expected_newsegment (GstValidatePadMonitor *
     switch (gst_iterator_next (iter, &value)) {
       case GST_ITERATOR_OK:
         otherpad = g_value_get_object (&value);
-        if (!otherpad)
+        if (!otherpad) {
+          g_value_reset (&value);
           continue;
+        }
+
         othermonitor = _GET_PAD_MONITOR (otherpad);
-        if (!othermonitor)
+        if (!othermonitor) {
+          g_value_reset (&value);
           continue;
+        }
+
         GST_VALIDATE_MONITOR_LOCK (othermonitor);
         gst_event_replace (&othermonitor->expected_segment, event);
         GST_VALIDATE_MONITOR_UNLOCK (othermonitor);
