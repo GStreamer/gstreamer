@@ -781,7 +781,7 @@ GST_START_TEST (test_dar_calc)
           &display_ratio_d, 720, 480, 32, 27, 1, 1));
   fail_unless (display_ratio_n == 16 && display_ratio_d == 9);
 
-  /* video 360x288, par 533333/500000, display par 16/15 = 
+  /* video 360x288, par 533333/500000, display par 16/15 =
    * dar 1599999/1600000 */
   fail_unless (gst_video_calculate_display_ratio (&display_ratio_n,
           &display_ratio_d, 360, 288, 533333, 500000, 16, 15));
@@ -3065,26 +3065,24 @@ GST_START_TEST (test_hdr)
   GstStructure *s = NULL;
   gchar *minfo_str;
   gchar *level_str = NULL;
+  gint i;
+  guint val;
+
 
   gst_video_mastering_display_info_init (&minfo);
   gst_video_mastering_display_info_init (&other_minfo);
 
-  /* Test GstVideoMasteringDisplayInfo */
-  minfo.Rx_n = 1;
-  minfo.Ry_n = 2;
-  minfo.Gx_n = 3;
-  minfo.Gy_n = 4;
-  minfo.Bx_n = 5;
-  minfo.By_n = 6;
-  minfo.Wx_n = 7;
-  minfo.Wy_n = 8;
-
-  minfo.max_luma_n = 9990;
-  minfo.min_luma_n = 10;
-
-  minfo.Rx_d = minfo.Ry_d = minfo.Gx_d = minfo.Gy_d = minfo.Bx_d =
-      minfo.By_d = minfo.Wx_d = minfo.Wy_d = minfo.max_luma_d =
-      minfo.min_luma_d = 10;
+  /* Test GstVideoMasteringDisplayInfo, initialize with random values
+   * just for comparison */
+  val = 1;
+  for (i = 0; i < G_N_ELEMENTS (minfo.display_primaries); i++) {
+    minfo.display_primaries[i].x = val++;
+    minfo.display_primaries[i].y = val++;
+  }
+  minfo.white_point.x = val++;
+  minfo.white_point.y = val++;
+  minfo.max_display_mastering_luminance = val++;
+  minfo.min_display_mastering_luminance = val++;
 
   caps = gst_caps_new_empty_simple ("video/x-raw");
   minfo_str = gst_video_mastering_display_info_to_string (&minfo);
@@ -3126,10 +3124,9 @@ GST_START_TEST (test_hdr)
   /* Test GstVideoContentLightLevel */
   gst_video_content_light_level_init (&level);
   gst_video_content_light_level_init (&other_level);
-  level.maxCLL_n = 1000;
-  level.maxCLL_d = 1;
-  level.maxFALL_n = 300;
-  level.maxFALL_d = 1;
+
+  level.max_content_light_level = 1000;
+  level.max_frame_average_light_level = 300;
 
   caps = gst_caps_new_empty_simple ("video/x-raw");
   level_str = gst_video_content_light_level_to_string (&level);
@@ -3147,18 +3144,18 @@ GST_START_TEST (test_hdr)
           level_str));
   g_free (level_str);
 
-  fail_unless_equals_int (level.maxCLL_n, other_level.maxCLL_n);
-  fail_unless_equals_int (level.maxCLL_d, other_level.maxCLL_d);
-  fail_unless_equals_int (level.maxFALL_n, other_level.maxFALL_n);
-  fail_unless_equals_int (level.maxFALL_d, other_level.maxFALL_d);
+  fail_unless_equals_int (level.max_content_light_level,
+      other_level.max_content_light_level);
+  fail_unless_equals_int (level.max_frame_average_light_level,
+      other_level.max_frame_average_light_level);
 
   /* simplified version for caps use case */
   fail_unless (gst_video_content_light_level_from_caps (&level_from_caps,
           caps));
-  fail_unless_equals_int (level.maxCLL_n, level_from_caps.maxCLL_n);
-  fail_unless_equals_int (level.maxCLL_d, level_from_caps.maxCLL_d);
-  fail_unless_equals_int (level.maxFALL_n, level_from_caps.maxFALL_n);
-  fail_unless_equals_int (level.maxFALL_d, level_from_caps.maxFALL_d);
+  fail_unless_equals_int (level.max_content_light_level,
+      level_from_caps.max_content_light_level);
+  fail_unless_equals_int (level.max_frame_average_light_level,
+      level_from_caps.max_frame_average_light_level);
 
   /* check _add_to_caps () and manually created one */
   other_caps = gst_caps_new_empty_simple ("video/x-raw");

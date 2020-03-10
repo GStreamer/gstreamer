@@ -25,53 +25,52 @@
 
 G_BEGIN_DECLS
 
+typedef struct _GstVideoMasteringDisplayInfoCoordinates GstVideoMasteringDisplayInfoCoordinates;
 typedef struct _GstVideoMasteringDisplayInfo GstVideoMasteringDisplayInfo;
 typedef struct _GstVideoContentLightLevel GstVideoContentLightLevel;
 
 /**
+ * GstVideoMasteringDisplayInfoCoordinates:
+ * @x: the x coordinate of CIE 1931 color space in unit of 0.00002.
+ * @x: the y coordinate of CIE 1931 color space in unit of 0.00002.
+ *
+ * Used to represent display_primaries and white_point of
+ * #GstVideoMasteringDisplayInfo struct. See #GstVideoMasteringDisplayInfo
+ *
+ * Since: 1.18
+ */
+struct _GstVideoMasteringDisplayInfoCoordinates
+{
+  guint16 x;
+  guint16 y;
+};
+
+/**
  * GstVideoMasteringDisplayInfo:
- * @Rx_n: the numerator of normalized red x coordinate as defined CIE 1931
- * @Rx_d: the denominator of normalized red x coordinate as defined CIE 1931
- * @Ry_n: the numerator of normalized red y coordinate as defined CIE 1931
- * @Ry_d: the denominator of normalized red y coordinate as defined CIE 1931
- * @Gx_n: the numerator of normalized green x coordinate as defined CIE 1931
- * @Gx_d: the denominator of normalized green x coordinate as defined CIE 1931
- * @Gy_n: the numerator of normalized green y coordinate as defined CIE 1931
- * @Gy_d: the denominator of normalized green y coordinate as defined CIE 1931
- * @Bx_n: the numerator of normalized blue x coordinate as defined CIE 1931
- * @Bx_d: the denominator of normalized blue x coordinate as defined CIE 1931
- * @By_n: the numerator of normalized blue y coordinate as defined CIE 1931
- * @By_d: the denominator of normalized blue y coordinate as defined CIE 1931
- * @Wx_n: the numerator of normalized white x coordinate as defined CIE 1931
- * @Wx_d: the denominator of normalized white x coordinate as defined CIE 1931
- * @Wy_n: the numerator of normalized white y coordinate as defined CIE 1931
- * @Wy_d: the denominator of normalized white y coordinate as defined CIE 1931
- * @max_luma_n: the numerator of maximum display luminance in candelas per square meter (cd/m^2 and nit)
- * @max_luma_d: the denominator of maximum display luminance in candelas per square meter (cd/m^2 and nit)
- * @min_luma_n: the numerator of minimum display luminance in candelas per square meter (cd/m^2 and nit)
- * @min_luma_d: the denominator of minimum display luminance in candelas per square meter (cd/m^2 and nit)
+ * @display_primaries: the xy coordinates of primaries in the CIE 1931 color space.
+ *   the index 0 contains red, 1 is for green and 2 is for blue.
+ *   each value is normalized to 50000 (meaning that in unit of 0.00002)
+ * @white_point: the xy coordinates of white point in the CIE 1931 color space.
+ *   each value is normalized to 50000 (meaning that in unit of 0.00002)
+ * @max_display_mastering_luminance: the maximum value of display luminance
+ *   in unit of 0.0001 candelas per square metre (cd/m^2 and nit)
+ * @min_display_mastering_luminance: the minimum value of display luminance
+ *   in unit of 0.0001 candelas per square metre (cd/m^2 and nit)
  *
  * Mastering display color volume information defined by SMPTE ST 2086
  * (a.k.a static HDR metadata).
- * Each pair of *_d and *_n represents fraction value of red, green, blue, white
- * and min/max luma.
- *
- * The decimal representation of each red, green, blue and white value should
- * be in the range of [0, 1].
  *
  * Since: 1.18
  */
 struct _GstVideoMasteringDisplayInfo
 {
-  guint Rx_n, Rx_d, Ry_n, Ry_d;
-  guint Gx_n, Gx_d, Gy_n, Gy_d;
-  guint Bx_n, Bx_d, By_n, By_d;
-  guint Wx_n, Wx_d, Wy_n, Wy_d;
-  guint max_luma_n, max_luma_d;
-  guint min_luma_n, min_luma_d;
+  GstVideoMasteringDisplayInfoCoordinates display_primaries[3];
+  GstVideoMasteringDisplayInfoCoordinates white_point;
+  guint32 max_display_mastering_luminance;
+  guint32 min_display_mastering_luminance;
 
   /*< private >*/
-  guint _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GST_VIDEO_API
@@ -89,9 +88,6 @@ gboolean  gst_video_mastering_display_info_is_equal     (const GstVideoMastering
                                                          const GstVideoMasteringDisplayInfo * other);
 
 GST_VIDEO_API
-gboolean  gst_video_mastering_display_info_is_valid     (const GstVideoMasteringDisplayInfo * minfo);
-
-GST_VIDEO_API
 gboolean  gst_video_mastering_display_info_from_caps    (GstVideoMasteringDisplayInfo * minfo,
                                                          const GstCaps * caps);
 
@@ -101,10 +97,10 @@ gboolean  gst_video_mastering_display_info_add_to_caps  (const GstVideoMastering
 
 /**
  * GstVideoContentLightLevel:
- * @maxCLL_n: the numerator of Maximum Content Light Level (cd/m^2 and nit)
- * @maxCLL_d: the denominator of Maximum Content Light Level (cd/m^2 and nit)
- * @maxFALL_n: the numerator Maximum Frame-Average Light Level (cd/m^2 and nit)
- * @maxFALL_d: the denominator Maximum Frame-Average Light Level (cd/m^2 and nit)
+ * @max_content_light_level: the maximum content light level
+ *   (abbreviated to MaxCLL) in candelas per square meter (cd/m^2 and nit)
+ * @max_frame_average_light_level: the maximum frame average light level
+ *   (abbreviated to MaxFLL) in candelas per square meter (cd/m^2 and nit)
  *
  * Content light level information specified in CEA-861.3, Appendix A.
  *
@@ -112,11 +108,11 @@ gboolean  gst_video_mastering_display_info_add_to_caps  (const GstVideoMastering
  */
 struct _GstVideoContentLightLevel
 {
-  guint maxCLL_n, maxCLL_d;
-  guint maxFALL_n, maxFALL_d;
+  guint16 max_content_light_level;
+  guint16 max_frame_average_light_level;
 
   /*< private >*/
-  guint _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GST_VIDEO_API

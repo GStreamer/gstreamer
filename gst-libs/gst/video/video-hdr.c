@@ -21,49 +21,41 @@
 #  include "config.h"
 #endif
 
-#include <string.h>
-#include <stdio.h>
-
 #include "video-hdr.h"
 
-#define N_ELEMENT_MASTERING_DISPLAY_INFO 20
+#define N_ELEMENT_MASTERING_DISPLAY_INFO 10
 #define MASTERING_FORMAT \
-  "%d:%d:" \
-  "%d:%d:" \
-  "%d:%d:" \
-  "%d:%d:" \
-  "%d:%d:" \
   "%d:%d:" \
   "%d:%d:" \
   "%d:%d:" \
   "%d:%d:" \
   "%d:%d"
 
-#define MASTERING_SCANF_ARGS(m) \
-  &(m)->Rx_n, &(m)->Rx_d, &(m)->Ry_n, &(m)->Ry_d, \
-  &(m)->Gx_n, &(m)->Gx_d, &(m)->Gy_n, &(m)->Gy_d, \
-  &(m)->Bx_n, &(m)->Bx_d, &(m)->By_n, &(m)->By_d, \
-  &(m)->Wx_n, &(m)->Wx_d, &(m)->Wy_n, &(m)->Wy_d, \
-  &(m)->max_luma_n, &(m)->max_luma_d,             \
-  &(m)->min_luma_n, &(m)->min_luma_d
-
-#define RX_ARGS(m) (m)->Rx_n, (m)->Rx_d
-#define RY_ARGS(m) (m)->Ry_n, (m)->Ry_d
-#define GX_ARGS(m) (m)->Gx_n, (m)->Gx_d
-#define GY_ARGS(m) (m)->Gy_n, (m)->Gy_d
-#define BX_ARGS(m) (m)->Bx_n, (m)->Bx_d
-#define BY_ARGS(m) (m)->By_n, (m)->By_d
-#define WX_ARGS(m) (m)->Wx_n, (m)->Wx_d
-#define WY_ARGS(m) (m)->Wy_n, (m)->Wy_d
-#define MAX_LUMA_ARGS(m) (m)->max_luma_n, (m)->max_luma_d
-#define MIN_LUMA_ARGS(m) (m)->min_luma_n, (m)->min_luma_d
-
 #define MASTERING_PRINTF_ARGS(m) \
-  RX_ARGS(m), RY_ARGS(m), \
-  GX_ARGS(m), GY_ARGS(m), \
-  BX_ARGS(m), BY_ARGS(m), \
-  WX_ARGS(m), WY_ARGS(m), \
-  MAX_LUMA_ARGS(m), MIN_LUMA_ARGS(m)
+  (m)->display_primaries[0].x, (m)->display_primaries[0].y, \
+  (m)->display_primaries[1].x, (m)->display_primaries[1].y, \
+  (m)->display_primaries[2].x, (m)->display_primaries[2].y, \
+  (m)->white_point.x, (m)->white_point.y, \
+  (m)->max_display_mastering_luminance, \
+  (m)->min_display_mastering_luminance
+
+/* g_ascii_string_to_unsigned is available since 2.54. Get rid of this wrapper
+ * when we bump the version in 1.18 */
+#if !GLIB_CHECK_VERSION(2,54,0)
+#define g_ascii_string_to_unsigned vidoe_hdr_ascii_string_to_unsigned
+static gboolean
+vidoe_hdr_ascii_string_to_unsigned (const gchar * str, guint base, guint64 min,
+    guint64 max, guint64 * out_num, GError ** error)
+{
+  gchar *endptr = NULL;
+  *out_num = g_ascii_strtoull (str, &endptr, base);
+  if (errno)
+    return FALSE;
+  if (endptr == str)
+    return FALSE;
+  return TRUE;
+}
+#endif
 
 /**
  * gst_video_mastering_display_info_init:
@@ -81,49 +73,6 @@ gst_video_mastering_display_info_init (GstVideoMasteringDisplayInfo * minfo)
   memset (minfo, 0, sizeof (GstVideoMasteringDisplayInfo));
 }
 
-#define DIVIDE_ARGS(val,gcd) \
-{ \
-  minfo->G_PASTE(val,_n) /= gcd; \
-  minfo->G_PASTE(val,_d) /= gcd; \
-}
-
-static void
-gst_video_mastering_display_info_normalize (GstVideoMasteringDisplayInfo *
-    minfo)
-{
-  guint gcd;
-
-  gcd = gst_util_greatest_common_divisor (RX_ARGS (minfo));
-  DIVIDE_ARGS (Rx, gcd);
-
-  gcd = gst_util_greatest_common_divisor (RY_ARGS (minfo));
-  DIVIDE_ARGS (Ry, gcd);
-
-  gcd = gst_util_greatest_common_divisor (GX_ARGS (minfo));
-  DIVIDE_ARGS (Gx, gcd);
-
-  gcd = gst_util_greatest_common_divisor (GY_ARGS (minfo));
-  DIVIDE_ARGS (Gy, gcd);
-
-  gcd = gst_util_greatest_common_divisor (BX_ARGS (minfo));
-  DIVIDE_ARGS (Bx, gcd);
-
-  gcd = gst_util_greatest_common_divisor (BY_ARGS (minfo));
-  DIVIDE_ARGS (By, gcd);
-
-  gcd = gst_util_greatest_common_divisor (WX_ARGS (minfo));
-  DIVIDE_ARGS (Wx, gcd);
-
-  gcd = gst_util_greatest_common_divisor (WY_ARGS (minfo));
-  DIVIDE_ARGS (Wy, gcd);
-
-  gcd = gst_util_greatest_common_divisor (MAX_LUMA_ARGS (minfo));
-  DIVIDE_ARGS (max_luma, gcd);
-
-  gcd = gst_util_greatest_common_divisor (MIN_LUMA_ARGS (minfo));
-  DIVIDE_ARGS (min_luma, gcd);
-}
-
 /**
  * gst_video_mastering_display_info_from_string:
  * @minfo: (out): a #GstVideoMasteringDisplayInfo
@@ -136,23 +85,68 @@ gst_video_mastering_display_info_normalize (GstVideoMasteringDisplayInfo *
  * Since: 1.18
  */
 gboolean
-    gst_video_mastering_display_info_from_string
-    (GstVideoMasteringDisplayInfo * minfo, const gchar * mastering)
+gst_video_mastering_display_info_from_string (GstVideoMasteringDisplayInfo *
+    minfo, const gchar * mastering)
 {
-  GstVideoMasteringDisplayInfo tmp;
+  gboolean ret = FALSE;
+  gchar **split;
+  gint i;
+  gint idx = 0;
+  guint64 val;
 
   g_return_val_if_fail (minfo != NULL, FALSE);
   g_return_val_if_fail (mastering != NULL, FALSE);
 
-  if (sscanf (mastering, MASTERING_FORMAT,
-          MASTERING_SCANF_ARGS (&tmp)) == N_ELEMENT_MASTERING_DISPLAY_INFO &&
-      gst_video_mastering_display_info_is_valid (&tmp)) {
-    gst_video_mastering_display_info_normalize (&tmp);
-    *minfo = tmp;
-    return TRUE;
+  split = g_strsplit (mastering, ":", -1);
+
+  if (g_strv_length (split) != N_ELEMENT_MASTERING_DISPLAY_INFO)
+    goto out;
+
+  for (i = 0; i < G_N_ELEMENTS (minfo->display_primaries); i++) {
+    if (!g_ascii_string_to_unsigned (split[idx++],
+            10, 0, G_MAXUINT16, &val, NULL))
+      goto out;
+
+    minfo->display_primaries[i].x = (guint16) val;
+
+    if (!g_ascii_string_to_unsigned (split[idx++],
+            10, 0, G_MAXUINT16, &val, NULL))
+      goto out;
+
+    minfo->display_primaries[i].y = (guint16) val;
   }
 
-  return FALSE;
+  if (!g_ascii_string_to_unsigned (split[idx++],
+          10, 0, G_MAXUINT16, &val, NULL))
+    goto out;
+
+  minfo->white_point.x = (guint16) val;
+
+  if (!g_ascii_string_to_unsigned (split[idx++],
+          10, 0, G_MAXUINT16, &val, NULL))
+    goto out;
+
+  minfo->white_point.y = (guint16) val;
+
+  if (!g_ascii_string_to_unsigned (split[idx++],
+          10, 0, G_MAXUINT32, &val, NULL))
+    goto out;
+
+  minfo->max_display_mastering_luminance = (guint32) val;
+
+  if (!g_ascii_string_to_unsigned (split[idx++],
+          10, 0, G_MAXUINT32, &val, NULL))
+    goto out;
+
+  minfo->min_display_mastering_luminance = (guint32) val;
+  ret = TRUE;
+
+out:
+  g_strfreev (split);
+  if (!ret)
+    gst_video_mastering_display_info_init (minfo);
+
+  return ret;
 }
 
 /**
@@ -161,26 +155,17 @@ gboolean
  *
  * Convert @minfo to its string representation
  *
- * Returns: (transfer full) (nullable): a string representation of @minfo
- * or %NULL if @minfo has invalid chromaticity and/or luminance values
+ * Returns: (transfer full): a string representation of @minfo
  *
  * Since: 1.18
  */
 gchar *
-gst_video_mastering_display_info_to_string (const
-    GstVideoMasteringDisplayInfo * minfo)
+gst_video_mastering_display_info_to_string (const GstVideoMasteringDisplayInfo *
+    minfo)
 {
-  GstVideoMasteringDisplayInfo copy;
-
   g_return_val_if_fail (minfo != NULL, NULL);
 
-  if (!gst_video_mastering_display_info_is_valid (minfo))
-    return NULL;
-
-  copy = *minfo;
-  gst_video_mastering_display_info_normalize (&copy);
-
-  return g_strdup_printf (MASTERING_FORMAT, MASTERING_PRINTF_ARGS (&copy));
+  return g_strdup_printf (MASTERING_FORMAT, MASTERING_PRINTF_ARGS (minfo));
 }
 
 /**
@@ -195,69 +180,26 @@ gst_video_mastering_display_info_to_string (const
  * Since: 1.18
  */
 gboolean
-gst_video_mastering_display_info_is_equal (const
-    GstVideoMasteringDisplayInfo * minfo,
-    const GstVideoMasteringDisplayInfo * other)
+gst_video_mastering_display_info_is_equal (const GstVideoMasteringDisplayInfo *
+    minfo, const GstVideoMasteringDisplayInfo * other)
 {
-  if (gst_util_fraction_compare (RX_ARGS (minfo), RX_ARGS (other)) ||
-      gst_util_fraction_compare (RY_ARGS (minfo), RY_ARGS (other)) ||
-      gst_util_fraction_compare (GX_ARGS (minfo), GX_ARGS (other)) ||
-      gst_util_fraction_compare (GY_ARGS (minfo), GY_ARGS (other)) ||
-      gst_util_fraction_compare (BX_ARGS (minfo), BX_ARGS (other)) ||
-      gst_util_fraction_compare (BY_ARGS (minfo), BY_ARGS (other)) ||
-      gst_util_fraction_compare (WX_ARGS (minfo), WX_ARGS (other)) ||
-      gst_util_fraction_compare (WY_ARGS (minfo), WY_ARGS (other)) ||
-      gst_util_fraction_compare (MAX_LUMA_ARGS (minfo), MAX_LUMA_ARGS (other))
-      || gst_util_fraction_compare (MIN_LUMA_ARGS (minfo),
-          MIN_LUMA_ARGS (other)))
-    return FALSE;
+  gint i;
 
-  return TRUE;
-}
+  g_return_val_if_fail (minfo != NULL, FALSE);
+  g_return_val_if_fail (other != NULL, FALSE);
 
-/**
- * gst_video_mastering_display_info_is_valid:
- * @minfo: a #GstVideoMasteringDisplayInfo
- *
- * Checks the minimum validity of @mininfo (not theoretical validation).
- *
- * Each x and y chromaticity coordinate should be in the range of [0, 1]
- * min_luma should be less than max_luma.
- *
- * Returns: %TRUE if @minfo satisfies the condition.
- *
- * Since: 1.18
- */
-gboolean
-gst_video_mastering_display_info_is_valid (const GstVideoMasteringDisplayInfo *
-    minfo)
-{
-  GstVideoMasteringDisplayInfo other;
+  for (i = 0; i < G_N_ELEMENTS (minfo->display_primaries); i++) {
+    if (minfo->display_primaries[i].x != other->display_primaries[i].x ||
+        minfo->display_primaries[i].y != other->display_primaries[i].y)
+      return FALSE;
+  }
 
-  gst_video_mastering_display_info_init (&other);
-
-  if (!memcmp (minfo, &other, sizeof (GstVideoMasteringDisplayInfo)))
-    return FALSE;
-
-  /* should be valid fraction */
-  if (!minfo->Rx_d || !minfo->Ry_d || !minfo->Gx_d || !minfo->Gy_d ||
-      !minfo->Bx_d || !minfo->By_d || !minfo->Wx_d || !minfo->Wy_d ||
-      !minfo->max_luma_d || !minfo->min_luma_d)
-    return FALSE;
-
-  /* should be less than one */
-  if (gst_util_fraction_compare (RX_ARGS (minfo), 1, 1) > 0 ||
-      gst_util_fraction_compare (RY_ARGS (minfo), 1, 1) > 0 ||
-      gst_util_fraction_compare (GX_ARGS (minfo), 1, 1) > 0 ||
-      gst_util_fraction_compare (GY_ARGS (minfo), 1, 1) > 0 ||
-      gst_util_fraction_compare (BX_ARGS (minfo), 1, 1) > 0 ||
-      gst_util_fraction_compare (BY_ARGS (minfo), 1, 1) > 0 ||
-      gst_util_fraction_compare (WX_ARGS (minfo), 1, 1) > 0 ||
-      gst_util_fraction_compare (WY_ARGS (minfo), 1, 1) > 0)
-    return FALSE;
-
-  if (gst_util_fraction_compare (MAX_LUMA_ARGS (minfo),
-          MIN_LUMA_ARGS (minfo)) <= 0)
+  if (minfo->white_point.x != other->white_point.x ||
+      minfo->white_point.y != other->white_point.y ||
+      minfo->max_display_mastering_luminance !=
+      other->max_display_mastering_luminance
+      || minfo->min_display_mastering_luminance !=
+      other->min_display_mastering_luminance)
     return FALSE;
 
   return TRUE;
@@ -353,25 +295,39 @@ gst_video_content_light_level_init (GstVideoContentLightLevel * linfo)
  * Since: 1.18
  */
 gboolean
-gst_video_content_light_level_from_string (GstVideoContentLightLevel *
-    linfo, const gchar * level)
+gst_video_content_light_level_from_string (GstVideoContentLightLevel * linfo,
+    const gchar * level)
 {
-  guint maxCLL_n, maxCLL_d;
-  guint maxFALL_n, maxFALL_d;
+  gboolean ret = FALSE;
+  gchar **split;
+  guint64 val;
 
   g_return_val_if_fail (linfo != NULL, FALSE);
   g_return_val_if_fail (level != NULL, FALSE);
 
-  if (sscanf (level, "%u:%u:%u:%u", &maxCLL_n, &maxCLL_d, &maxFALL_n,
-          &maxFALL_d) == 4 && maxCLL_d != 0 && maxFALL_d != 0) {
-    linfo->maxCLL_n = maxCLL_n;
-    linfo->maxCLL_d = maxCLL_d;
-    linfo->maxFALL_n = maxFALL_n;
-    linfo->maxFALL_d = maxFALL_d;
-    return TRUE;
-  }
+  split = g_strsplit (level, ":", -1);
 
-  return FALSE;
+  if (g_strv_length (split) != 2)
+    goto out;
+
+  if (!g_ascii_string_to_unsigned (split[0], 10, 0, G_MAXUINT16, &val, NULL))
+    goto out;
+
+  linfo->max_content_light_level = (guint16) val;
+
+  if (!g_ascii_string_to_unsigned (split[1], 10, 0, G_MAXUINT16, &val, NULL))
+    goto out;
+
+  linfo->max_frame_average_light_level = (guint16) val;
+
+  ret = TRUE;
+
+out:
+  g_strfreev (split);
+  if (!ret)
+    gst_video_content_light_level_init (linfo);
+
+  return ret;
 }
 
 /**
@@ -390,12 +346,8 @@ gst_video_content_light_level_to_string (const GstVideoContentLightLevel *
 {
   g_return_val_if_fail (linfo != NULL, NULL);
 
-  /* When maxCLL and/or maxFALL is zero, it means no upper bound is indicated.
-   * But at least it should be valid fraction value */
-  g_return_val_if_fail (linfo->maxCLL_d != 0 && linfo->maxFALL_d != 0, NULL);
-
-  return g_strdup_printf ("%u:%u:%u:%u",
-      linfo->maxCLL_n, linfo->maxCLL_d, linfo->maxFALL_n, linfo->maxFALL_d);
+  return g_strdup_printf ("%d:%d",
+      linfo->max_content_light_level, linfo->max_frame_average_light_level);
 }
 
 /**
