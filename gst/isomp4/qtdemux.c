@@ -15895,6 +15895,12 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       }
       break;
     }
+    case GST_MAKE_FOURCC ('a', 'c', '-', '4'):
+    {
+      _codec ("AC4");
+      caps = gst_caps_new_empty_simple ("audio/x-ac4");
+      break;
+    }
     case GST_MAKE_FOURCC ('q', 't', 'v', 'r'):
       /* ? */
     default:
