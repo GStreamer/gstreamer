@@ -303,6 +303,9 @@ _child_removed (GESContainer * container, GESTimelineElement * element)
     priv->video_transitions = g_slist_remove (priv->video_transitions, element);
     gst_object_unref (element);
   }
+  /* call parent method */
+  GES_CONTAINER_CLASS (ges_transition_clip_parent_class)->child_removed
+      (container, element);
 }
 
 static void
@@ -322,6 +325,9 @@ _child_added (GESContainer * container, GESTimelineElement * element)
     ges_timeline_element_add_child_property (GES_TIMELINE_ELEMENT (container),
         g_object_class_find_property (eklass, "border"), G_OBJECT (element));
   }
+  /* call parent method */
+  GES_CONTAINER_CLASS (ges_transition_clip_parent_class)->child_added
+      (container, element);
 }
 
 static GESTrackElement *

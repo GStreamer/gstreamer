@@ -302,8 +302,6 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
     _set_duration0 (GES_TIMELINE_ELEMENT (uriclip),
         ges_uri_clip_asset_get_duration (uri_clip_asset));
 
-  ges_timeline_element_set_max_duration (GES_TIMELINE_ELEMENT (uriclip),
-      ges_uri_clip_asset_get_max_duration (uri_clip_asset));
   ges_uri_clip_set_is_image (uriclip,
       ges_uri_clip_asset_is_image (uri_clip_asset));
 
@@ -421,6 +419,7 @@ uri_clip_set_max_duration (GESTimelineElement * element,
 {
   if (_DURATION (element) == GST_CLOCK_TIME_NONE || _DURATION (element) == 0)
     /* If we don't have a valid duration, use the max duration */
+    /* FIXME: don't do this when we have time effects */
     _set_duration0 (element, maxduration - _INPOINT (element));
 
   return
@@ -488,17 +487,28 @@ ges_uri_clip_create_track_elements (GESClip * clip, GESTrackType type)
 {
   GList *res = NULL;
   const GList *tmp, *stream_assets;
+  GESAsset *asset = GES_TIMELINE_ELEMENT (clip)->asset;
+  GESUriClipAsset *uri_asset;
+  GstClockTime max_duration;
 
-  g_return_val_if_fail (GES_TIMELINE_ELEMENT (clip)->asset, NULL);
+  g_return_val_if_fail (asset, NULL);
 
-  stream_assets =
-      ges_uri_clip_asset_get_stream_assets (GES_URI_CLIP_ASSET
-      (GES_TIMELINE_ELEMENT (clip)->asset));
+  uri_asset = GES_URI_CLIP_ASSET (asset);
+
+  max_duration = ges_uri_clip_asset_get_max_duration (uri_asset);
+  stream_assets = ges_uri_clip_asset_get_stream_assets (uri_asset);
+
   for (tmp = stream_assets; tmp; tmp = tmp->next) {
-    GESTrackElementAsset *asset = GES_TRACK_ELEMENT_ASSET (tmp->data);
+    GESTrackElementAsset *element_asset = GES_TRACK_ELEMENT_ASSET (tmp->data);
 
-    if (ges_track_element_asset_get_track_type (asset) == type)
-      res = g_list_prepend (res, ges_asset_extract (GES_ASSET (asset), NULL));
+    if (ges_track_element_asset_get_track_type (element_asset) == type) {
+      GESTrackElement *element =
+          GES_TRACK_ELEMENT (ges_asset_extract (GES_ASSET (element_asset),
+              NULL));
+      ges_timeline_element_set_max_duration (GES_TIMELINE_ELEMENT (element),
+          max_duration);
+      res = g_list_prepend (res, element);
+    }
   }
 
   return res;

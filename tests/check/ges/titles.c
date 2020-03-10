@@ -65,7 +65,10 @@ GST_START_TEST (test_title_source_properties)
       "in-point", (guint64) 12, NULL);
   assert_equals_uint64 (_START (clip), 42);
   assert_equals_uint64 (_DURATION (clip), 51);
-  assert_equals_uint64 (_INPOINT (clip), 0);
+  /* the clip can have a non-zero in-point, but this won't affect any
+   * of the core children because they have their has-internal-source set
+   * to FALSE */
+  assert_equals_uint64 (_INPOINT (clip), 12);
 
   ges_layer_add_clip (layer, GES_CLIP (clip));
   ges_timeline_commit (timeline);
@@ -91,7 +94,7 @@ GST_START_TEST (test_title_source_properties)
   ges_timeline_commit (timeline);
   assert_equals_uint64 (_START (clip), 420);
   assert_equals_uint64 (_DURATION (clip), 510);
-  assert_equals_uint64 (_INPOINT (clip), 0);
+  assert_equals_uint64 (_INPOINT (clip), 120);
   assert_equals_uint64 (_START (trackelement), 420);
   assert_equals_uint64 (_DURATION (trackelement), 510);
   assert_equals_uint64 (_INPOINT (trackelement), 0);

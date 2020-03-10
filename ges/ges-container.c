@@ -58,12 +58,10 @@ typedef struct
 
   GstClockTime start_offset;
   GstClockTime duration_offset;
-  GstClockTime inpoint_offset;
   gint32 priority_offset;
 
   gulong start_notifyid;
   gulong duration_notifyid;
-  gulong inpoint_notifyid;
   gulong child_property_added_notifyid;
   gulong child_property_removed_notifyid;
 } ChildMapping;
@@ -120,8 +118,6 @@ _free_mapping (ChildMapping * mapping)
     g_signal_handler_disconnect (child, mapping->start_notifyid);
   if (mapping->duration_notifyid)
     g_signal_handler_disconnect (child, mapping->duration_notifyid);
-  if (mapping->inpoint_notifyid)
-    g_signal_handler_disconnect (child, mapping->inpoint_notifyid);
   if (mapping->child_property_added_notifyid)
     g_signal_handler_disconnect (child, mapping->child_property_added_notifyid);
   if (mapping->child_property_removed_notifyid)
@@ -182,22 +178,6 @@ _set_start (GESTimelineElement * element, GstClockTime start)
     map->start_offset = start - _START (child);
   }
   container->children_control_mode = GES_CHILDREN_UPDATE;
-
-  return TRUE;
-}
-
-static gboolean
-_set_inpoint (GESTimelineElement * element, GstClockTime inpoint)
-{
-  GList *tmp;
-  GESContainer *container = GES_CONTAINER (element);
-
-  for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
-    GESTimelineElement *child = (GESTimelineElement *) tmp->data;
-    ChildMapping *map = g_hash_table_lookup (container->priv->mappings, child);
-
-    map->inpoint_offset = inpoint - _INPOINT (child);
-  }
 
   return TRUE;
 }
@@ -369,7 +349,6 @@ _deep_copy (GESTimelineElement * element, GESTimelineElement * copy)
             tmp->data));
     map->child = ges_timeline_element_copy (tmp->data, TRUE);
     map->start_notifyid = 0;
-    map->inpoint_notifyid = 0;
     map->duration_notifyid = 0;
 
     ccopy->priv->copied_children = g_list_prepend (ccopy->priv->copied_children,
@@ -532,7 +511,6 @@ ges_container_class_init (GESContainerClass * klass)
 
   element_class->set_start = _set_start;
   element_class->set_duration = _set_duration;
-  element_class->set_inpoint = _set_inpoint;
   element_class->lookup_child = _lookup_child;
   element_class->get_track_types = _get_track_types;
   element_class->paste = _paste;
@@ -623,34 +601,6 @@ _child_start_changed_cb (GESTimelineElement * child,
 
   if (ELEMENT_FLAG_IS_SET (child, GES_TIMELINE_ELEMENT_SET_SIMPLE))
     container->children_control_mode = pmode;
-}
-
-static void
-_child_inpoint_changed_cb (GESTimelineElement * child,
-    GParamSpec * arg G_GNUC_UNUSED, GESContainer * container)
-{
-  ChildMapping *map;
-
-  GESContainerPrivate *priv = container->priv;
-  GESTimelineElement *element = GES_TIMELINE_ELEMENT (container);
-
-  if (container->children_control_mode == GES_CHILDREN_IGNORE_NOTIFIES)
-    return;
-
-  map = g_hash_table_lookup (priv->mappings, child);
-  g_assert (map);
-
-  if (container->children_control_mode == GES_CHILDREN_UPDATE_OFFSETS
-      || ELEMENT_FLAG_IS_SET (child, GES_TIMELINE_ELEMENT_SET_SIMPLE)) {
-    map->inpoint_offset = _INPOINT (container) - _INPOINT (child);
-
-    return;
-  }
-
-  /* We update all the children calling our set_inpoint method */
-  container->initiated_move = child;
-  _set_inpoint0 (element, _INPOINT (child) + map->inpoint_offset);
-  container->initiated_move = NULL;
 }
 
 static void
@@ -838,7 +788,6 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
   mapping->child = gst_object_ref (child);
   mapping->start_offset = _START (container) - _START (child);
   mapping->duration_offset = _DURATION (container) - _DURATION (child);
-  mapping->inpoint_offset = _INPOINT (container) - _INPOINT (child);
 
   g_hash_table_insert (priv->mappings, child, mapping);
 
@@ -853,9 +802,6 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
   mapping->duration_notifyid =
       g_signal_connect (G_OBJECT (child), "notify::duration",
       G_CALLBACK (_child_duration_changed_cb), container);
-  mapping->inpoint_notifyid =
-      g_signal_connect (G_OBJECT (child), "notify::in-point",
-      G_CALLBACK (_child_inpoint_changed_cb), container);
 
   if (ges_timeline_element_set_parent (child, GES_TIMELINE_ELEMENT (container))
       == FALSE) {

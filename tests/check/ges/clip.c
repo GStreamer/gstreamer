@@ -792,19 +792,8 @@ _count_cb (GObject * obj, GParamSpec * pspec, gint * count)
 }
 
 static void
-_test_children_time_setting_on_clip (GESClip * clip, GESTimelineElement * child)
+_test_children_time_setting_on_clip (GESClip * clip, GESTrackElement * child)
 {
-  /* FIXME: Don't necessarily want to change the inpoint of all the
-   * children if the clip inpoint changes. Really, we would only expect
-   * the inpoint to change for the source elements within a clip.
-   * Setting the inpoint of an operation may be irrelevant, and for
-   * operations where it *is* relevant, we would ideally want it to be
-   * independent from the source element's inpoint (unlike the start and
-   * duration values).
-   * However, this is the current behaviour, but if this is changed this
-   * test should be changed to only check that source elements have
-   * their inpoint changed, and operation elements have their inpoint
-   * unchanged */
   _assert_children_time_setter (clip, child, "in-point",
       ges_timeline_element_set_inpoint, 11, 101);
   _assert_children_time_setter (clip, child, "in-point",
@@ -842,14 +831,16 @@ GST_START_TEST (test_children_time_setters)
     GESClip *clip = clips[i];
     GESContainer *group = GES_CONTAINER (ges_group_new ());
     GList *children;
-    GESTimelineElement *child;
+    GESTrackElement *child;
     /* no children */
     _test_children_time_setting_on_clip (clip, NULL);
     /* child in timeline */
     fail_unless (ges_layer_add_clip (layer, clip));
     children = GES_CONTAINER_CHILDREN (clip);
     fail_unless (children);
-    child = GES_TIMELINE_ELEMENT (children->data);
+    child = GES_TRACK_ELEMENT (children->data);
+    /* make sure the child can have its in-point set */
+    ges_track_element_set_has_internal_source (child, TRUE);
     _test_children_time_setting_on_clip (clip, child);
     /* clip in a group */
     ges_container_add (group, GES_TIMELINE_ELEMENT (clip));
@@ -861,7 +852,8 @@ GST_START_TEST (test_children_time_setters)
     fail_unless (ges_layer_remove_clip (layer, clip));
     children = GES_CONTAINER_CHILDREN (clip);
     fail_unless (children);
-    child = GES_TIMELINE_ELEMENT (children->data);
+    child = GES_TRACK_ELEMENT (children->data);
+    ges_track_element_set_has_internal_source (child, TRUE);
     _test_children_time_setting_on_clip (clip, child);
     gst_object_unref (clip);
   }
@@ -920,6 +912,376 @@ GST_START_TEST (test_can_add_effect)
     gst_object_unref (effect);
     gst_object_unref (clip);
   }
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_children_inpoint)
+{
+  GESTimeline *timeline;
+  GESLayer *layer;
+  GESTimelineElement *clip, *child0, *child1, *effect;
+  GList *children;
+
+  ges_init ();
+
+  timeline = ges_timeline_new_audio_video ();
+  fail_unless (timeline);
+
+  layer = ges_timeline_append_layer (timeline);
+
+  clip = GES_TIMELINE_ELEMENT (ges_test_clip_new ());
+
+  fail_unless (ges_timeline_element_set_start (clip, 5));
+  fail_unless (ges_timeline_element_set_duration (clip, 20));
+  fail_unless (ges_timeline_element_set_inpoint (clip, 30));
+
+  CHECK_OBJECT_PROPS (clip, 5, 30, 20);
+
+  fail_unless (ges_layer_add_clip (layer, GES_CLIP (clip)));
+
+  /* clip now has children */
+  children = GES_CONTAINER_CHILDREN (clip);
+  fail_unless (children);
+  child0 = children->data;
+  fail_unless (children->next);
+  child1 = children->next->data;
+  fail_unless (children->next->next == NULL);
+
+  fail_unless (ges_track_element_has_internal_source (GES_TRACK_ELEMENT
+          (child0)));
+  fail_unless (ges_track_element_has_internal_source (GES_TRACK_ELEMENT
+          (child1)));
+
+  CHECK_OBJECT_PROPS (clip, 5, 30, 20);
+  CHECK_OBJECT_PROPS (child0, 5, 30, 20);
+  CHECK_OBJECT_PROPS (child1, 5, 30, 20);
+
+  /* add a non-core element */
+  effect = GES_TIMELINE_ELEMENT (ges_effect_new ("agingtv"));
+  fail_if (ges_track_element_has_internal_source (GES_TRACK_ELEMENT (effect)));
+  /* allow us to choose our own in-point */
+  ges_track_element_set_has_internal_source (GES_TRACK_ELEMENT (effect), TRUE);
+  fail_unless (ges_timeline_element_set_start (effect, 104));
+  fail_unless (ges_timeline_element_set_duration (effect, 53));
+  fail_unless (ges_timeline_element_set_inpoint (effect, 67));
+
+  /* adding the effect will change its start and duration, but not its
+   * in-point */
+  fail_unless (ges_container_add (GES_CONTAINER (clip), effect));
+
+  CHECK_OBJECT_PROPS (clip, 5, 30, 20);
+  CHECK_OBJECT_PROPS (child0, 5, 30, 20);
+  CHECK_OBJECT_PROPS (child1, 5, 30, 20);
+  CHECK_OBJECT_PROPS (effect, 5, 67, 20);
+
+  /* register child0 as having no internal source, which means its
+   * in-point will be set to 0 */
+  ges_track_element_set_has_internal_source (GES_TRACK_ELEMENT (child0), FALSE);
+
+  CHECK_OBJECT_PROPS (clip, 5, 30, 20);
+  CHECK_OBJECT_PROPS (child0, 5, 0, 20);
+  CHECK_OBJECT_PROPS (child1, 5, 30, 20);
+  CHECK_OBJECT_PROPS (effect, 5, 67, 20);
+
+  /* should not be able to set the in-point to non-zero */
+  fail_if (ges_timeline_element_set_inpoint (child0, 40));
+
+  CHECK_OBJECT_PROPS (clip, 5, 30, 20);
+  CHECK_OBJECT_PROPS (child0, 5, 0, 20);
+  CHECK_OBJECT_PROPS (child1, 5, 30, 20);
+  CHECK_OBJECT_PROPS (effect, 5, 67, 20);
+
+  /* when we set the in-point on a core-child with an internal source we
+   * also set the clip and siblings with the same features */
+  fail_unless (ges_timeline_element_set_inpoint (child1, 50));
+
+  CHECK_OBJECT_PROPS (clip, 5, 50, 20);
+  /* child with no internal source not changed */
+  CHECK_OBJECT_PROPS (child0, 5, 0, 20);
+  CHECK_OBJECT_PROPS (child1, 5, 50, 20);
+  /* non-core no changed */
+  CHECK_OBJECT_PROPS (effect, 5, 67, 20);
+
+  /* setting back to having internal source will put in sync with the
+   * in-point of the clip */
+  ges_track_element_set_has_internal_source (GES_TRACK_ELEMENT (child0), TRUE);
+
+  CHECK_OBJECT_PROPS (clip, 5, 50, 20);
+  CHECK_OBJECT_PROPS (child0, 5, 50, 20);
+  CHECK_OBJECT_PROPS (child1, 5, 50, 20);
+  CHECK_OBJECT_PROPS (effect, 5, 67, 20);
+
+  fail_unless (ges_timeline_element_set_inpoint (child0, 40));
+
+  CHECK_OBJECT_PROPS (clip, 5, 40, 20);
+  CHECK_OBJECT_PROPS (child0, 5, 40, 20);
+  CHECK_OBJECT_PROPS (child1, 5, 40, 20);
+  CHECK_OBJECT_PROPS (effect, 5, 67, 20);
+
+  /* setting in-point on effect shouldn't change any other siblings */
+  fail_unless (ges_timeline_element_set_inpoint (effect, 77));
+
+  CHECK_OBJECT_PROPS (clip, 5, 40, 20);
+  CHECK_OBJECT_PROPS (child0, 5, 40, 20);
+  CHECK_OBJECT_PROPS (child1, 5, 40, 20);
+  CHECK_OBJECT_PROPS (effect, 5, 77, 20);
+
+  gst_object_unref (timeline);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_children_max_duration)
+{
+  GESTimeline *timeline;
+  GESLayer *layer;
+  gchar *uri;
+  GESTimelineElement *clips[] = { NULL, NULL };
+  GESTimelineElement *child0, *child1, *effect;
+  guint i;
+  GstClockTime max_duration, new_max;
+  GList *children;
+
+  ges_init ();
+
+  timeline = ges_timeline_new_audio_video ();
+  fail_unless (timeline);
+
+  layer = ges_timeline_append_layer (timeline);
+
+  uri = ges_test_get_audio_video_uri ();
+  clips[0] = GES_TIMELINE_ELEMENT (ges_uri_clip_new (uri));
+  fail_unless (clips[0]);
+  g_free (uri);
+
+  clips[1] = GES_TIMELINE_ELEMENT (ges_test_clip_new ());
+
+  for (i = 0; i < G_N_ELEMENTS (clips); i++) {
+    GESTimelineElement *clip = clips[i];
+    fail_unless (_MAX_DURATION (clip) == GST_CLOCK_TIME_NONE);
+
+    fail_unless (ges_timeline_element_set_start (clip, 5));
+    fail_unless (ges_timeline_element_set_duration (clip, 20));
+    fail_unless (ges_timeline_element_set_inpoint (clip, 30));
+    /* can not set the max duration when we have no children */
+    fail_if (ges_timeline_element_set_max_duration (clip, 150));
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, GST_CLOCK_TIME_NONE);
+
+    fail_unless (ges_layer_add_clip (layer, GES_CLIP (clip)));
+
+    /* clip now has children */
+    children = GES_CONTAINER_CHILDREN (clip);
+    fail_unless (children);
+    child0 = children->data;
+    fail_unless (children->next);
+    child1 = children->next->data;
+    fail_unless (children->next->next == NULL);
+
+    fail_unless (ges_track_element_has_internal_source (GES_TRACK_ELEMENT
+            (child0)));
+    fail_unless (ges_track_element_has_internal_source (GES_TRACK_ELEMENT
+            (child1)));
+
+    if (GES_IS_URI_CLIP (clip)) {
+      /* uri clip children should be created with a max-duration set */
+      /* each created child has the same max-duration */
+      max_duration = _MAX_DURATION (child0);
+      fail_unless (max_duration != GST_CLOCK_TIME_NONE);
+      new_max = max_duration;
+    } else {
+      max_duration = GST_CLOCK_TIME_NONE;
+      /* need a valid clock time that is not too large */
+      new_max = 500;
+    }
+
+    /* added children do not change the clip's max-duration, but will
+     * instead set it to the minimum value of its children */
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, max_duration);
+    CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, max_duration);
+    CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, max_duration);
+
+    /* add a non-core element */
+    effect = GES_TIMELINE_ELEMENT (ges_effect_new ("agingtv"));
+    fail_if (ges_track_element_has_internal_source (GES_TRACK_ELEMENT
+            (effect)));
+    /* allow us to choose our own max-duration */
+    ges_track_element_set_has_internal_source (GES_TRACK_ELEMENT (effect),
+        TRUE);
+    fail_unless (ges_timeline_element_set_start (effect, 104));
+    fail_unless (ges_timeline_element_set_duration (effect, 53));
+    fail_unless (ges_timeline_element_set_max_duration (effect, 1));
+
+    /* adding the effect will change its start and duration, but not its
+     * max-duration (or in-point) */
+    fail_unless (ges_container_add (GES_CONTAINER (clip), effect));
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, max_duration);
+    CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, max_duration);
+    CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, max_duration);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+
+    /* when setting max_duration of core children, clip will take the
+     * minimum value */
+    fail_unless (ges_timeline_element_set_max_duration (child0, new_max - 1));
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 1);
+    CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max - 1);
+    CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, max_duration);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+
+    fail_unless (ges_timeline_element_set_max_duration (child1, new_max - 2));
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max - 1);
+    CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+
+    fail_unless (ges_timeline_element_set_max_duration (child0, new_max + 1));
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max + 1);
+    CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+
+    /* non-core has no effect */
+    fail_unless (ges_timeline_element_set_max_duration (effect, new_max - 4));
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max + 1);
+    CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, new_max - 4);
+
+    fail_unless (ges_timeline_element_set_max_duration (effect, 1));
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max + 1);
+    CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+
+    /* setting on the clip will set all the core children to the same
+     * value */
+    fail_unless (ges_timeline_element_set_max_duration (clip, 180));
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, 180);
+    CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, 180);
+    CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, 180);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+
+    /* register child0 as having no internal source, which means its
+     * in-point will be set to 0 and max-duration set to
+     * GST_CLOCK_TIME_NONE */
+    ges_track_element_set_has_internal_source (GES_TRACK_ELEMENT (child0),
+        FALSE);
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, 180);
+    CHECK_OBJECT_PROPS_MAX (child0, 5, 0, 20, GST_CLOCK_TIME_NONE);
+    CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, 180);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+
+    /* should not be able to set the max-duration to a valid time */
+    fail_if (ges_timeline_element_set_max_duration (child0, 40));
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, 180);
+    CHECK_OBJECT_PROPS_MAX (child0, 5, 0, 20, GST_CLOCK_TIME_NONE);
+    CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, 180);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+
+    /* same with child1 */
+    /* clock time of the clip should now be GST_CLOCK_TIME_NONE */
+    ges_track_element_set_has_internal_source (GES_TRACK_ELEMENT (child1),
+        FALSE);
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, GST_CLOCK_TIME_NONE);
+    CHECK_OBJECT_PROPS_MAX (child0, 5, 0, 20, GST_CLOCK_TIME_NONE);
+    CHECK_OBJECT_PROPS_MAX (child1, 5, 0, 20, GST_CLOCK_TIME_NONE);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+
+    /* should not be able to set the max of the clip to anything else
+     * when it has no core children with an internal source */
+    fail_if (ges_timeline_element_set_max_duration (clip, 150));
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, GST_CLOCK_TIME_NONE);
+    CHECK_OBJECT_PROPS_MAX (child0, 5, 0, 20, GST_CLOCK_TIME_NONE);
+    CHECK_OBJECT_PROPS_MAX (child1, 5, 0, 20, GST_CLOCK_TIME_NONE);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+
+    /* setting back to having an internal source will not immediately
+     * change the max-duration (unlike in-point) */
+    ges_track_element_set_has_internal_source (GES_TRACK_ELEMENT (child0),
+        TRUE);
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, GST_CLOCK_TIME_NONE);
+    CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, GST_CLOCK_TIME_NONE);
+    CHECK_OBJECT_PROPS_MAX (child1, 5, 0, 20, GST_CLOCK_TIME_NONE);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+
+    /* can now set the max-duration, which will effect the clip */
+    fail_unless (ges_timeline_element_set_max_duration (child0, 140));
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, 140);
+    CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, 140);
+    CHECK_OBJECT_PROPS_MAX (child1, 5, 0, 20, GST_CLOCK_TIME_NONE);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+
+    ges_track_element_set_has_internal_source (GES_TRACK_ELEMENT (child1),
+        TRUE);
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, 140);
+    CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, 140);
+    CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, GST_CLOCK_TIME_NONE);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+
+    fail_unless (ges_timeline_element_set_max_duration (child1, 130));
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, 130);
+    CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, 140);
+    CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, 130);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+
+    /* removing a child may change the max_duration of the clip */
+    gst_object_ref (child0);
+    gst_object_ref (child1);
+    gst_object_ref (effect);
+
+    /* removing non-core does nothing */
+    fail_unless (ges_container_remove (GES_CONTAINER (clip), effect));
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, 130);
+    CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, 140);
+    CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, 130);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+
+    /* new minimum max-duration for the clip when we remove child1 */
+    fail_unless (ges_container_remove (GES_CONTAINER (clip), child1));
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, 140);
+    CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, 140);
+    CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, 130);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+
+    /* with no core-children, the max-duration of the clip is set to
+     * GST_CLOCK_TIME_NONE */
+    fail_unless (ges_container_remove (GES_CONTAINER (clip), child0));
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, GST_CLOCK_TIME_NONE);
+    CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, 140);
+    CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, 130);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+
+    fail_unless (ges_layer_remove_clip (layer, GES_CLIP (clip)));
+
+    gst_object_unref (child0);
+    gst_object_unref (child1);
+    gst_object_unref (effect);
+  }
+
+  gst_object_unref (timeline);
 
   ges_deinit ();
 }
@@ -1444,6 +1806,8 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_effects_priorities);
   tcase_add_test (tc_chain, test_children_time_setters);
   tcase_add_test (tc_chain, test_can_add_effect);
+  tcase_add_test (tc_chain, test_children_inpoint);
+  tcase_add_test (tc_chain, test_children_max_duration);
   tcase_add_test (tc_chain, test_children_properties_contain);
   tcase_add_test (tc_chain, test_children_properties_change);
   tcase_add_test (tc_chain, test_copy_paste_children_properties);

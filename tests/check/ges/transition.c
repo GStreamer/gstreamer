@@ -109,10 +109,11 @@ GST_START_TEST (test_transition_properties)
   /* Check that trackelement has the same properties */
   assert_equals_uint64 (_START (trackelement), 42);
   assert_equals_uint64 (_DURATION (trackelement), 51);
-  assert_equals_uint64 (_INPOINT (trackelement), 12);
+  /* in-point is 0 since it does not have has-internal-source */
+  assert_equals_uint64 (_INPOINT (trackelement), 0);
 
   /* And let's also check that it propagated correctly to GNonLin */
-  nle_object_check (ges_track_element_get_nleobject (trackelement), 42, 51, 12,
+  nle_object_check (ges_track_element_get_nleobject (trackelement), 42, 51, 0,
       51, MIN_NLE_PRIO, TRUE);
 
   /* Change more properties, see if they propagate */
@@ -124,11 +125,11 @@ GST_START_TEST (test_transition_properties)
   assert_equals_uint64 (_INPOINT (clip), 120);
   assert_equals_uint64 (_START (trackelement), 420);
   assert_equals_uint64 (_DURATION (trackelement), 510);
-  assert_equals_uint64 (_INPOINT (trackelement), 120);
+  assert_equals_uint64 (_INPOINT (trackelement), 0);
 
   /* And let's also check that it propagated correctly to GNonLin */
   nle_object_check (ges_track_element_get_nleobject (trackelement), 420, 510,
-      120, 510, MIN_NLE_PRIO + 0, TRUE);
+      0, 510, MIN_NLE_PRIO + 0, TRUE);
 
   /* test changing vtype */
   GST_DEBUG ("Setting to crossfade");

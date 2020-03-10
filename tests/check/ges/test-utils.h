@@ -88,6 +88,7 @@ G_STMT_START {                                          \
 #define _START(obj) GES_TIMELINE_ELEMENT_START (obj)
 #define _DURATION(obj) GES_TIMELINE_ELEMENT_DURATION (obj)
 #define _INPOINT(obj) GES_TIMELINE_ELEMENT_INPOINT (obj)
+#define _MAX_DURATION(obj) GES_TIMELINE_ELEMENT_MAX_DURATION (obj)
 #define _PRIORITY(obj) GES_TIMELINE_ELEMENT_PRIORITY (obj)
 #ifndef _END
 #define _END(obj) (_START(obj) + _DURATION(obj))
@@ -99,6 +100,14 @@ G_STMT_START {                                          \
   fail_unless (_DURATION (obj) == duration, "%s duration is %" GST_TIME_FORMAT " != %" GST_TIME_FORMAT, GES_TIMELINE_ELEMENT_NAME(obj), GST_TIME_ARGS (_DURATION(obj)), GST_TIME_ARGS (duration));\
 }
 
+#define CHECK_OBJECT_PROPS_MAX(obj, start, inpoint, duration, max_duration) {\
+  CHECK_OBJECT_PROPS (obj, start, inpoint, duration); \
+  fail_unless (_MAX_DURATION(obj) == max_duration, "%s max-duration is " \
+      "%" GST_TIME_FORMAT " != %" GST_TIME_FORMAT, \
+      GES_TIMELINE_ELEMENT_NAME(obj), \
+      GST_TIME_ARGS (_MAX_DURATION(obj)), GST_TIME_ARGS (max_duration)); \
+}
+
 /* assert that the time property (start, duration or in-point) is the
  * same as @cmp for the clip and all its children */
 #define assert_clip_children_time_val(clip, property, cmp) \
@@ -106,6 +115,7 @@ G_STMT_START {                                          \
   GList *tmp; \
   GstClockTime read_val; \
   gchar *name = GES_TIMELINE_ELEMENT (clip)->name; \
+  gboolean is_inpoint = (g_strcmp0 (property, "in-point") == 0); \
   g_object_get (clip, property, &read_val, NULL); \
   fail_unless (read_val == cmp, "The %s property for clip %s is %" \
       GST_TIME_FORMAT ", rather than the expected value of %" \
@@ -115,10 +125,16 @@ G_STMT_START {                                          \
       tmp = tmp->next) { \
     GESTimelineElement *child = tmp->data; \
     g_object_get (child, property, &read_val, NULL); \
-    fail_unless (read_val == cmp, "The %s property for the child %s " \
-        "of clip %s is %" GST_TIME_FORMAT ", rather than the expected " \
-        "value of %" GST_TIME_FORMAT, property, child->name, name, \
-        GST_TIME_ARGS (read_val), GST_TIME_ARGS (cmp)); \
+    if (!is_inpoint || ges_track_element_has_internal_source ( \
+          GES_TRACK_ELEMENT (child))) \
+      fail_unless (read_val == cmp, "The %s property for the child %s " \
+          "of clip %s is %" GST_TIME_FORMAT ", rather than the expected" \
+          " value of %" GST_TIME_FORMAT, property, child->name, name, \
+          GST_TIME_ARGS (read_val), GST_TIME_ARGS (cmp)); \
+    else \
+      fail_unless (read_val == 0, "The %s property for the child %s " \
+          "of clip %s is %" GST_TIME_FORMAT ", rather than 0", \
+          property, child->name, name, GST_TIME_ARGS (read_val)); \
   } \
 }
 
