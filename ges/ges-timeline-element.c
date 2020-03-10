@@ -409,7 +409,8 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
    * to any source content.
    */
   properties[PROP_START] = g_param_spec_uint64 ("start", "Start",
-      "The position in the timeline", 0, G_MAXUINT64, 0, G_PARAM_READWRITE);
+      "The position in the timeline", 0, G_MAXUINT64, 0,
+      G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY);
 
   /**
    * GESTimelineElement:in-point:
@@ -444,7 +445,8 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
    */
   properties[PROP_DURATION] =
       g_param_spec_uint64 ("duration", "Duration", "The play duration", 0,
-      G_MAXUINT64, GST_CLOCK_TIME_NONE, G_PARAM_READWRITE);
+      G_MAXUINT64, GST_CLOCK_TIME_NONE,
+      G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY);
 
   /**
    * GESTimelineElement:max-duration:
@@ -1081,6 +1083,8 @@ ges_timeline_element_set_start (GESTimelineElement * self, GstClockTime start)
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
   if (klass->set_start) {
     gint res = klass->set_start (self, start);
+    if (res == FALSE)
+      return FALSE;
     if (res == TRUE && emit_notify) {
       self->start = start;
       g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_START]);
@@ -1089,7 +1093,7 @@ ges_timeline_element_set_start (GESTimelineElement * self, GstClockTime start)
     GST_DEBUG_OBJECT (self, "New start: %" GST_TIME_FORMAT,
         GST_TIME_ARGS (GES_TIMELINE_ELEMENT_START (self)));
 
-    return ! !res;
+    return TRUE;
   }
 
   GST_WARNING_OBJECT (self, "No set_start virtual method implementation"
@@ -1236,6 +1240,9 @@ ges_timeline_element_set_duration (GESTimelineElement * self,
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
 
+  if (duration == self->duration)
+    return TRUE;
+
   toplevel = ges_timeline_element_get_toplevel_parent (self);
   if (self->timeline &&
       !ELEMENT_FLAG_IS_SET (self, GES_TIMELINE_ELEMENT_SET_SIMPLE) &&
@@ -1264,12 +1271,14 @@ ges_timeline_element_set_duration (GESTimelineElement * self,
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
   if (klass->set_duration) {
     gint res = klass->set_duration (self, duration);
+    if (res == FALSE)
+      return FALSE;
     if (res == TRUE && emit_notify) {
       self->duration = duration;
       g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_DURATION]);
     }
 
-    return ! !res;
+    return TRUE;
   }
 
   GST_WARNING_OBJECT (self, "No set_duration virtual method implementation"

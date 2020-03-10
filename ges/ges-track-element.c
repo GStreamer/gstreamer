@@ -580,9 +580,6 @@ _set_start (GESTimelineElement * element, GstClockTime start)
 
   g_return_val_if_fail (object->priv->nleobject, FALSE);
 
-  if (G_UNLIKELY (start == _START (object)))
-    return -1;
-
   g_object_set (object->priv->nleobject, "start", start, NULL);
 
   return TRUE;
@@ -627,9 +624,6 @@ _set_duration (GESTimelineElement * element, GstClockTime duration)
   if (GST_CLOCK_TIME_IS_VALID (_MAXDURATION (element)) &&
       duration > _INPOINT (object) + _MAXDURATION (element))
     duration = _MAXDURATION (element) - _INPOINT (object);
-
-  if (G_UNLIKELY (duration == _DURATION (object)))
-    return -1;
 
   g_object_set (priv->nleobject, "duration", duration, NULL);
 

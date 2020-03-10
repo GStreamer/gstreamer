@@ -168,12 +168,24 @@ struct _GESTimelineElement
  * @set_parent: Method called just before the #GESTimelineElement:parent
  * is set.
  * @set_start: Method called just before the #GESTimelineElement:start is
- * set. A return of -1 means that the subclass handled emitting the notify
- * signal and the base class should return %TRUE.
- * @set_duration: Method called just before the
- * #GESTimelineElement:duration is set. A return of -1 means that the
- * subclass handled emitting the notify signal and the base class should
- * return %TRUE.
+ * set. This method should check whether the #GESTimelineElement:start can
+ * be changed to the new value and to otherwise prepare the element in
+ * response to what the new value will be. A return of %FALSE means that
+ * the property should not be set. A return of %TRUE means that the
+ * property should be set to the value given to the setter and a notify
+ * emitted. A return of -1 means that the property should not be set but
+ * the setter should still return %TRUE (normally because the method
+ * already handled setting the value, potentially to a snapped value, and
+ * emitted the notify signal).
+ * #GESTimelineElement:duration is set. This method should check
+ * whether the #GESTimelineElement:duration can be changed to the new
+ * value and to otherwise prepare the element in response to what the new
+ * value will be. A return of %FALSE means that the property should not be
+ * set. A return of %TRUE means that the property should be set to the
+ * value given to the setter and a notify emitted. A return of -1 means
+ * that the property should not be set but the setter should still return
+ * %TRUE (normally because the method already handled setting the value,
+ * potentially to a snapped value, and emitted the notify signal).
  * @set_inpoint: Method called just before the
  * #GESTimelineElement:in-point is set to a new value. This method should
  * not set the #GESTimelineElement:in-point itself, but should check
