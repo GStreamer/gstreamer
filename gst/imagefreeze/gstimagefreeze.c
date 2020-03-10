@@ -186,7 +186,6 @@ gst_image_freeze_reset (GstImageFreeze * self)
   gst_buffer_replace (&self->buffer, NULL);
   gst_caps_replace (&self->buffer_caps, NULL);
   gst_caps_replace (&self->current_caps, NULL);
-  self->buffer_caps_updated = FALSE;
   self->num_buffers_left = self->num_buffers;
 
   gst_segment_init (&self->segment, GST_FORMAT_TIME);
@@ -790,8 +789,9 @@ gst_image_freeze_sink_chain (GstPad * pad, GstObject * parent,
   }
 
   gst_buffer_replace (&self->buffer, buffer);
-  self->buffer_caps_updated = !self->buffer_caps
-      || !gst_caps_is_equal (self->buffer_caps, self->current_caps);
+  if (!self->buffer_caps
+      || !gst_caps_is_equal (self->buffer_caps, self->current_caps))
+    gst_pad_mark_reconfigure (self->srcpad);
   gst_caps_replace (&self->buffer_caps, self->current_caps);
   gst_buffer_unref (buffer);
 
@@ -822,12 +822,12 @@ gst_image_freeze_src_loop (GstPad * pad)
     goto pause_task;
   }
 
-  if (self->buffer_caps_updated) {
+  if (gst_pad_check_reconfigure (self->srcpad)) {
     GstCaps *buffer_caps = gst_caps_ref (self->buffer_caps);
-    self->buffer_caps_updated = FALSE;
     g_mutex_unlock (&self->lock);
     if (!gst_image_freeze_sink_setcaps (self, buffer_caps)) {
       gst_caps_unref (buffer_caps);
+      gst_pad_mark_reconfigure (self->srcpad);
       flow_ret = GST_FLOW_NOT_NEGOTIATED;
       goto pause_task;
     }
