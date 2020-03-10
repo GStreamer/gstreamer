@@ -486,6 +486,15 @@ _add_child (GESContainer * container, GESTimelineElement * element)
 
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (element), FALSE);
 
+  if (element->timeline
+      && element->timeline != GES_TIMELINE_ELEMENT_TIMELINE (container)) {
+    GST_WARNING_OBJECT (container, "Can not add the child %" GES_FORMAT
+        " because its timeline is %" GST_PTR_FORMAT " rather than the "
+        "clip's timeline %" GST_PTR_FORMAT, GES_ARGS (element),
+        element->timeline, GES_TIMELINE_ELEMENT_TIMELINE (container));
+    return FALSE;
+  }
+
   /* NOTE: notifies are currently frozen by ges_container_add */
   _get_priority_range (container, &min_prio, &max_prio);
   if (ELEMENT_FLAG_IS_SET (element, GES_TRACK_ELEMENT_IS_CORE)) {

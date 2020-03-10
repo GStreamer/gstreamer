@@ -588,6 +588,12 @@ GST_START_TEST (test_clip_find_track_element)
   fail_unless (ges_timeline_add_track (timeline, track1));
   fail_unless (ges_timeline_add_track (timeline, track2));
 
+  /* need to register the clip with the timeline */
+  /* FIXME: we should make the clip part of a layer, but the current
+   * default select-tracks-for-object signal is broken for multiple
+   * tracks. In fact, we should be using this signal in this test */
+  ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (clip), timeline);
+
   effect = GES_TRACK_ELEMENT (ges_effect_new ("identity"));
   fail_unless (ges_track_add_element (track, effect));
   fail_unless (ges_container_add (GES_CONTAINER (clip),
