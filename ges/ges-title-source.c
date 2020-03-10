@@ -122,10 +122,11 @@ ges_title_source_class_init (GESTitleSourceClass * klass)
   object_class->set_property = ges_title_source_set_property;
   object_class->dispose = ges_title_source_dispose;
 
-  timeline_element_class->set_inpoint = NULL;
   timeline_element_class->lookup_child = _lookup_child;
   source_class->ABI.abi.disable_scale_in_compositor = TRUE;
   source_class->create_source = ges_title_source_create_source;
+
+  GES_TRACK_ELEMENT_CLASS_DEFAULT_HAS_INTERNAL_SOURCE (klass) = FALSE;
 }
 
 static void

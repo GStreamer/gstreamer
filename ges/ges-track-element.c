@@ -59,6 +59,7 @@ struct _GESTrackElementPrivate
   GstElement *element;          /* The element contained in the nleobject (can be NULL) */
 
   GESTrack *track;
+  gboolean has_internal_source;
 
   gboolean locked;              /* If TRUE, then moves in sync with its controlling
                                  * GESClip */
@@ -73,6 +74,7 @@ enum
   PROP_ACTIVE,
   PROP_TRACK_TYPE,
   PROP_TRACK,
+  PROP_HAS_INTERNAL_SOURCE,
   PROP_LAST
 };
 
@@ -98,6 +100,8 @@ static gboolean _set_inpoint (GESTimelineElement * element,
     GstClockTime inpoint);
 static gboolean _set_duration (GESTimelineElement * element,
     GstClockTime duration);
+static gboolean _set_max_duration (GESTimelineElement * element,
+    GstClockTime max_duration);
 static gboolean _set_priority (GESTimelineElement * element, guint32 priority);
 GESTrackType _get_track_types (GESTimelineElement * object);
 
@@ -155,6 +159,10 @@ ges_track_element_get_property (GObject * object, guint property_id,
     case PROP_TRACK:
       g_value_set_object (value, track_element->priv->track);
       break;
+    case PROP_HAS_INTERNAL_SOURCE:
+      g_value_set_boolean (value,
+          ges_track_element_has_internal_source (track_element));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -171,7 +179,12 @@ ges_track_element_set_property (GObject * object, guint property_id,
       ges_track_element_set_active (track_element, g_value_get_boolean (value));
       break;
     case PROP_TRACK_TYPE:
-      track_element->priv->track_type = g_value_get_flags (value);
+      ges_track_element_set_track_type (track_element,
+          g_value_get_flags (value));
+      break;
+    case PROP_HAS_INTERNAL_SOURCE:
+      ges_track_element_set_has_internal_source (track_element,
+          g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -257,6 +270,11 @@ ges_track_element_constructed (GObject * gobject)
   g_object_set (object->priv->nleobject,
       "media-duration-factor", media_duration_factor, NULL);
 
+  /* set the default has-internal-source */
+  ges_track_element_set_has_internal_source (GES_TRACK_ELEMENT (gobject),
+      GES_TRACK_ELEMENT_CLASS_DEFAULT_HAS_INTERNAL_SOURCE
+      (GES_TRACK_ELEMENT_GET_CLASS (gobject)));
+
   G_OBJECT_CLASS (ges_track_element_parent_class)->constructed (gobject);
 }
 
@@ -281,7 +299,7 @@ ges_track_element_class_init (GESTrackElementClass * klass)
    */
   properties[PROP_ACTIVE] =
       g_param_spec_boolean ("active", "Active", "Use object in output", TRUE,
-      G_PARAM_READWRITE);
+      G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY);
   g_object_class_install_property (object_class, PROP_ACTIVE,
       properties[PROP_ACTIVE]);
 
@@ -295,7 +313,8 @@ ges_track_element_class_init (GESTrackElementClass * klass)
    */
   properties[PROP_TRACK_TYPE] = g_param_spec_flags ("track-type", "Track Type",
       "The track type of the object", GES_TYPE_TRACK_TYPE,
-      GES_TRACK_TYPE_UNKNOWN, G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
+      GES_TRACK_TYPE_UNKNOWN, G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+      G_PARAM_EXPLICIT_NOTIFY);
   g_object_class_install_property (object_class, PROP_TRACK_TYPE,
       properties[PROP_TRACK_TYPE]);
 
@@ -309,6 +328,51 @@ ges_track_element_class_init (GESTrackElementClass * klass)
       "The track the object is in", GES_TYPE_TRACK, G_PARAM_READABLE);
   g_object_class_install_property (object_class, PROP_TRACK,
       properties[PROP_TRACK]);
+
+  /**
+   * GESTrackElement:has-internal-source:
+   *
+   * This property is used to determine whether the 'internal time'
+   * properties of the element have any meaning. In particular, unless
+   * this is set to %TRUE, the #GESTimelineElement:in-point and
+   * #GESTimelineElement:max-duration can not be set to any value other
+   * than the default 0 and #GST_CLOCK_TIME_NONE, respectively.
+   *
+   * If an element has some *internal* *timed* source #GstElement that it
+   * reads stream data from as part of its function in a #GESTrack, then
+   * you'll likely want to set this to %TRUE to allow the
+   * #GESTimelineElement:in-point and #GESTimelineElement:max-duration to
+   * be set.
+   *
+   * The default value is determined by the #GESTrackElementClass
+   * @default_has_internal_source class property. For most
+   * #GESSourceClass-es, this will be %TRUE, with the exception of those
+   * that have a potentially *static* source, such as #GESImageSourceClass
+   * and #GESTitleSourceClass. Otherwise, this will usually be %FALSE.
+   *
+   * For most #GESOperation-s you will likely want to leave this set to
+   * %FALSE. The exception may be for an operation that reads some stream
+   * data from some private internal source as part of manipulating the
+   * input data from the usual linked upstream #GESTrackElement.
+   *
+   * For example, you may want to set this to %TRUE for a
+   * #GES_TRACK_TYPE_VIDEO operation that wraps a #textoverlay that reads
+   * from a subtitle file and places its text on top of the received video
+   * data. The #GESTimelineElement:in-point of the element would be used
+   * to shift the initial seek time on the #textoverlay away from 0, and
+   * the #GESTimelineElement:max-duration could be set to reflect the
+   * time at which the subtitle file runs out of data.
+   *
+   * Note that GES can not support track elements that have both internal
+   * content and manipulate the timing of their data streams (time
+   * effects).
+   */
+  properties[PROP_HAS_INTERNAL_SOURCE] =
+      g_param_spec_boolean ("has-internal-source", "Has Internal Source",
+      "Whether the element has some internal source of stream data", FALSE,
+      G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY);
+  g_object_class_install_property (object_class, PROP_HAS_INTERNAL_SOURCE,
+      properties[PROP_HAS_INTERNAL_SOURCE]);
 
   /**
    * GESTrackElement::control-binding-added:
@@ -339,6 +403,7 @@ ges_track_element_class_init (GESTrackElementClass * klass)
   element_class->set_start = _set_start;
   element_class->set_duration = _set_duration;
   element_class->set_inpoint = _set_inpoint;
+  element_class->set_max_duration = _set_max_duration;
   element_class->set_priority = _set_priority;
   element_class->get_track_types = _get_track_types;
   element_class->deep_copy = ges_track_element_copy_properties;
@@ -363,6 +428,20 @@ ges_track_element_init (GESTrackElement * self)
 
   priv->bindings_hashtable = g_hash_table_new_full (g_str_hash, g_str_equal,
       g_free, NULL);
+
+  /* NOTE: make sure we set this flag to TRUE so that
+   *   g_object_new (, "has-internal-source", TRUE, "in-point", 10, NULL);
+   * can succeed. The problem is that "in-point" will always be set before
+   * has-internal-source is set, so we first assume that it is TRUE.
+   * Note that if we call
+   *   g_object_new (, "has-internal-source", FALSE, "in-point", 10, NULL);
+   * then "in-point" will be allowed to be set, but then when
+   * "has-internal-source" is later set to TRUE, this will set the
+   * "in-point" back to 0.
+   * This is particularly needed for the ges_timeline_element_copy method
+   * because it calls g_object_new_with_properties.
+   */
+  self->priv->has_internal_source = TRUE;
 }
 
 static gfloat
@@ -515,9 +594,11 @@ _set_inpoint (GESTimelineElement * element, GstClockTime inpoint)
   GESTrackElement *object = GES_TRACK_ELEMENT (element);
 
   g_return_val_if_fail (object->priv->nleobject, FALSE);
-
-  if (G_UNLIKELY (inpoint == _INPOINT (object)))
-    return -1;
+  if (inpoint && !object->priv->has_internal_source) {
+    GST_WARNING_OBJECT (element, "Can not set an in-point for a track "
+        "element that is not registered with internal content");
+    return FALSE;
+  }
 
   g_object_set (object->priv->nleobject, "inpoint", inpoint, NULL);
   _update_control_bindings (element, inpoint, GST_CLOCK_TIME_NONE);
@@ -547,6 +628,22 @@ _set_duration (GESTimelineElement * element, GstClockTime duration)
 
   return TRUE;
 }
+
+static gboolean
+_set_max_duration (GESTimelineElement * element, GstClockTime max_duration)
+{
+  GESTrackElement *object = GES_TRACK_ELEMENT (element);
+
+  if (GST_CLOCK_TIME_IS_VALID (max_duration)
+      && !object->priv->has_internal_source) {
+    GST_WARNING_OBJECT (element, "Can not set a max-duration for a track "
+        "element that is not registered with internal content");
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 
 static gboolean
 _set_priority (GESTimelineElement * element, guint32 priority)
@@ -599,14 +696,50 @@ ges_track_element_set_active (GESTrackElement * object, gboolean active)
 
   g_object_set (object->priv->nleobject, "active", active, NULL);
 
-  /* FIXME: no need to check again at this point */
-  if (active != object->active) {
-    object->active = active;
-    if (GES_TRACK_ELEMENT_GET_CLASS (object)->active_changed)
-      GES_TRACK_ELEMENT_GET_CLASS (object)->active_changed (object, active);
-  }
+  object->active = active;
+  if (GES_TRACK_ELEMENT_GET_CLASS (object)->active_changed)
+    GES_TRACK_ELEMENT_GET_CLASS (object)->active_changed (object, active);
+
+  g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_ACTIVE]);
 
   return TRUE;
+}
+
+/**
+ * ges_track_element_set_has_internal_source:
+ * @object: A #GESTrackElement
+ * @has_internal_source: Whether the @object should be allowed to have its
+ * 'internal time' properties set.
+ *
+ * Sets #GESTrackElement:has-internal-source for the element. If this is
+ * set to %FALSE, this method will also set the
+ * #GESTimelineElement:in-point of the element to 0 and its
+ * #GESTimelineElement:max-duration to #GST_CLOCK_TIME_NONE.
+ */
+void
+ges_track_element_set_has_internal_source (GESTrackElement * object,
+    gboolean has_internal_source)
+{
+  GESTimelineElement *element;
+
+  g_return_if_fail (GES_IS_TRACK_ELEMENT (object));
+
+  GST_DEBUG_OBJECT (object, "object:%p, has-internal-source: %s", object,
+      has_internal_source ? "TRUE" : "FALSE");
+
+  if (G_UNLIKELY (has_internal_source == object->priv->has_internal_source))
+    return;
+
+  object->priv->has_internal_source = has_internal_source;
+
+  if (!has_internal_source) {
+    element = GES_TIMELINE_ELEMENT (object);
+    ges_timeline_element_set_inpoint (element, 0);
+    ges_timeline_element_set_max_duration (element, GST_CLOCK_TIME_NONE);
+  }
+
+  g_object_notify_by_pspec (G_OBJECT (object),
+      properties[PROP_HAS_INTERNAL_SOURCE]);
 }
 
 /**
@@ -980,6 +1113,22 @@ ges_track_element_is_active (GESTrackElement * object)
   g_return_val_if_fail (object->priv->nleobject, FALSE);
 
   return object->active;
+}
+
+/**
+ * ges_track_element_has_internal_source:
+ * @object: A #GESTrackElement
+ *
+ * Gets #GESTrackElement:has-internal-source for the element.
+ *
+ * Returns: %TRUE if @object can have its 'internal time' properties set.
+ */
+gboolean
+ges_track_element_has_internal_source (GESTrackElement * object)
+{
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
+
+  return object->priv->has_internal_source;
 }
 
 /**

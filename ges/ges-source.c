@@ -152,6 +152,7 @@ ges_source_class_init (GESSourceClass * klass)
 
   track_class->nleobject_factorytype = "nlesource";
   track_class->create_element = NULL;
+  GES_TRACK_ELEMENT_CLASS_DEFAULT_HAS_INTERNAL_SOURCE (klass) = TRUE;
 }
 
 static void

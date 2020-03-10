@@ -169,10 +169,11 @@ ges_image_source_class_init (GESImageSourceClass * klass)
       g_param_spec_string ("uri", "URI", "uri of the resource",
           NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
-  GES_TIMELINE_ELEMENT_CLASS (klass)->set_inpoint = NULL;
   source_class->create_source = ges_image_source_create_source;
   source_class->ABI.abi.get_natural_size =
       ges_video_uri_source_get_natural_size;
+
+  GES_TRACK_ELEMENT_CLASS_DEFAULT_HAS_INTERNAL_SOURCE (klass) = FALSE;
 }
 
 static void

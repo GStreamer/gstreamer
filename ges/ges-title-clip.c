@@ -133,8 +133,6 @@ static void
 ges_title_clip_class_init (GESTitleClipClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GESTimelineElementClass *timeline_element_class =
-      GES_TIMELINE_ELEMENT_CLASS (klass);
   GESClipClass *clip_class = GES_CLIP_CLASS (klass);
   GESContainerClass *container_class = GES_CONTAINER_CLASS (klass);
 
@@ -205,7 +203,6 @@ ges_title_clip_class_init (GESTitleClipClass * klass)
           GES_PARAM_NO_SERIALIZATION));
 
   clip_class->create_track_element = ges_title_clip_create_track_element;
-  timeline_element_class->set_inpoint = NULL;
 
   container_class->child_added = _child_added;
   container_class->child_removed = _child_removed;

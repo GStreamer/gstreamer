@@ -51,6 +51,16 @@ G_BEGIN_DECLS
 typedef struct _GESTrackElementPrivate GESTrackElementPrivate;
 
 /**
+ * GES_TRACK_ELEMENT_CLASS_DEFAULT_HAS_INTERNAL_SOURCE:
+ * @klass: A #GESTrackElementClass
+ *
+ * What the default #GESTrackElement:has-internal-source value should be
+ * for new elements from this class.
+ */
+#define GES_TRACK_ELEMENT_CLASS_DEFAULT_HAS_INTERNAL_SOURCE(klass) \
+  ((GES_TRACK_ELEMENT_CLASS (klass))->ABI.abi.default_has_internal_source)
+
+/**
  * GESTrackElement:
  *
  * The #GESTrackElement base class.
@@ -85,6 +95,9 @@ struct _GESTrackElement {
  * handled by ges_timeline_element_list_children_properties() instead.
  * @lookup_child: Deprecated: Use #GESTimelineElement.lookup_child()
  * instead.
+ * @default_has_internal_source: What the default
+ * #GESTrackElement:has-internal-source value should be for new elements
+ * from this class.
  */
 struct _GESTrackElementClass {
   /*< private >*/
@@ -112,7 +125,12 @@ struct _GESTrackElementClass {
                                             GParamSpec **pspec);
   /*< private >*/
   /* Padding for API extension */
-  gpointer _ges_reserved[GES_PADDING_LARGE];
+  union {
+    gpointer _ges_reserved[GES_PADDING_LARGE];
+    struct {
+      gboolean default_has_internal_source;
+    } abi;
+  } ABI;
 };
 
 GES_API
@@ -139,6 +157,13 @@ gboolean ges_track_element_set_active          (GESTrackElement * object,
 
 GES_API
 gboolean ges_track_element_is_active           (GESTrackElement * object);
+
+GES_API
+void ges_track_element_set_has_internal_source (GESTrackElement * object,
+                                                gboolean has_internal_source);
+
+GES_API
+gboolean ges_track_element_has_internal_source (GESTrackElement * object);
 
 GES_API void
 ges_track_element_get_child_property_by_pspec (GESTrackElement * object,
