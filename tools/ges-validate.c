@@ -107,6 +107,14 @@ ges_validate_activate (GstPipeline * pipeline, GESLauncher * launcher,
   GstValidateRunner *runner = NULL;
   GstValidateMonitor *monitor = NULL;
 
+  if (opts->disable_validate) {
+    if (opts->scenario)
+      g_error ("Trying to run scenario: %s but validate is deactivated",
+          opts->scenario);
+    opts->needs_set_state = TRUE;
+    return TRUE;
+  }
+
   ges_validate_register_action_types ();
   ges_validate_register_issues ();
 

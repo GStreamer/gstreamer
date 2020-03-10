@@ -283,7 +283,8 @@ _set_sink (GESLauncher * self, const gchar * sink_desc,
 {
   if (sink_desc != NULL) {
     GError *err = NULL;
-    GstElement *sink = gst_parse_bin_from_description (sink_desc, TRUE, &err);
+    GstElement *sink = gst_parse_bin_from_description_full (sink_desc, TRUE,
+        NULL, GST_PARSE_FLAG_NO_SINGLE_ELEMENT_BINS, &err);
     if (sink == NULL) {
       GST_ERROR ("could not create the requested videosink %s (err: %s), "
           "exiting", err ? err->message : "", sink_desc);
@@ -780,6 +781,10 @@ ges_launcher_parse_options (GESLauncher * self,
           "clips. "
           "See gst-validate-1.0 --help for more info about validate and "
           "scenarios, " "and --inspect-action-type.",
+        "<scenario_name>"}
+    ,
+    {"disable-validate", 'n', 0, G_OPTION_ARG_NONE, &opts->disable_validate,
+          "Do not run inside GstValidate.",
         "<scenario_name>"}
     ,
 #endif
