@@ -453,6 +453,11 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
    * difference in nanoseconds using the time coordinates of the internal
    * content).
    *
+   * This will act as a cap on the #GESTimelineElement:in-point of the
+   * element (which is in the same time coordinates), and will sometimes
+   * be used to limit the #GESTimelineElement:duration of the element in
+   * the timeline.
+   *
    * For example, for a #GESVideoUriSource that references some media
    * file, this would be the length of the media file.
    *
@@ -1098,9 +1103,9 @@ ges_timeline_element_set_start (GESTimelineElement * self, GstClockTime start)
  * @self: A #GESTimelineElement
  * @inpoint: The in-point, in internal time coordinates
  *
- * Sets #GESTimelineElement:in-point for the element. This may fail if
- * the element does not have enough internal content to last for the
- * current #GESTimelineElement:duration after @inpoint.
+ * Sets #GESTimelineElement:in-point for the element. If the new in-point
+ * is above the current #GESTimelineElement:max-duration of the element,
+ * this method will fail.
  *
  * Returns: %TRUE if @inpoint could be set for @self.
  */
@@ -1118,6 +1123,14 @@ ges_timeline_element_set_inpoint (GESTimelineElement * self,
 
   if (G_UNLIKELY (inpoint == self->inpoint))
     return TRUE;
+
+  if (GST_CLOCK_TIME_IS_VALID (self->maxduration)
+      && inpoint > self->maxduration) {
+    GST_WARNING_OBJECT (self, "Can not set an in-point of %" GST_TIME_FORMAT
+        " because it exceeds the element's max-duration: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (inpoint), GST_TIME_ARGS (self->maxduration));
+    return FALSE;
+  }
 
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
@@ -1147,7 +1160,9 @@ ges_timeline_element_set_inpoint (GESTimelineElement * self,
  * @self: A #GESTimelineElement
  * @maxduration: The maximum duration, in internal time coordinates
  *
- * Sets #GESTimelineElement:max-duration for the element.
+ * Sets #GESTimelineElement:max-duration for the element. If the new
+ * maximum duration is below the current #GESTimelineElement:in-point of
+ * the element, this method will fail.
  *
  * Returns: %TRUE if @maxduration could be set for @self.
  */
@@ -1165,6 +1180,14 @@ ges_timeline_element_set_max_duration (GESTimelineElement * self,
 
   if (G_UNLIKELY (maxduration == self->maxduration))
     return TRUE;
+
+  if (GST_CLOCK_TIME_IS_VALID (maxduration) && self->inpoint > maxduration) {
+    GST_WARNING_OBJECT (self, "Can not set a max-duration of %"
+        GST_TIME_FORMAT " because it lies below the element's in-point: %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (maxduration),
+        GST_TIME_ARGS (self->inpoint));
+    return FALSE;
+  }
 
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 

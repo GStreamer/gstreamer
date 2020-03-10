@@ -1121,7 +1121,7 @@ GST_START_TEST (test_children_max_duration)
         TRUE);
     fail_unless (ges_timeline_element_set_start (effect, 104));
     fail_unless (ges_timeline_element_set_duration (effect, 53));
-    fail_unless (ges_timeline_element_set_max_duration (effect, 1));
+    fail_unless (ges_timeline_element_set_max_duration (effect, 400));
 
     /* adding the effect will change its start and duration, but not its
      * max-duration (or in-point) */
@@ -1130,7 +1130,7 @@ GST_START_TEST (test_children_max_duration)
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, max_duration);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, max_duration);
     CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, max_duration);
-    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
     /* when setting max_duration of core children, clip will take the
      * minimum value */
@@ -1139,36 +1139,137 @@ GST_START_TEST (test_children_max_duration)
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 1);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max - 1);
     CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, max_duration);
-    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
     fail_unless (ges_timeline_element_set_max_duration (child1, new_max - 2));
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max - 1);
     CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, new_max - 2);
-    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
     fail_unless (ges_timeline_element_set_max_duration (child0, new_max + 1));
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max + 1);
     CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, new_max - 2);
-    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
+
+    /* can not set in-point above max_duration, nor max_duration below
+     * in-point */
+
+    fail_if (ges_timeline_element_set_max_duration (child0, 29));
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max + 1);
+    CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
+
+    fail_if (ges_timeline_element_set_max_duration (child1, 29));
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max + 1);
+    CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
+
+    fail_if (ges_timeline_element_set_max_duration (clip, 29));
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max + 1);
+    CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
+
+    /* can't set the inpoint to (new_max), even though it is lower than
+     * our own max-duration (new_max + 1) because it is too high for our
+     * sibling child1 */
+    fail_if (ges_timeline_element_set_inpoint (child0, new_max));
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max + 1);
+    CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
+
+    fail_if (ges_timeline_element_set_inpoint (child1, new_max));
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max + 1);
+    CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
+
+    fail_if (ges_timeline_element_set_inpoint (clip, new_max));
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max + 1);
+    CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
+
+    /* setting below new_max is ok */
+    fail_unless (ges_timeline_element_set_inpoint (child0, 15));
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 15, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (child0, 5, 15, 20, new_max + 1);
+    CHECK_OBJECT_PROPS_MAX (child1, 5, 15, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
+
+    fail_unless (ges_timeline_element_set_inpoint (child1, 25));
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 25, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (child0, 5, 25, 20, new_max + 1);
+    CHECK_OBJECT_PROPS_MAX (child1, 5, 25, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
+
+    fail_unless (ges_timeline_element_set_inpoint (clip, 30));
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max + 1);
+    CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
     /* non-core has no effect */
-    fail_unless (ges_timeline_element_set_max_duration (effect, new_max - 4));
+    fail_unless (ges_timeline_element_set_max_duration (effect, new_max + 500));
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max + 1);
     CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, new_max - 2);
-    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, new_max - 4);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, new_max + 500);
 
-    fail_unless (ges_timeline_element_set_max_duration (effect, 1));
+    /* can set the in-point of non-core to be higher than the max_duration
+     * of the clip */
+    fail_unless (ges_timeline_element_set_inpoint (effect, new_max + 2));
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max + 1);
     CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, new_max - 2);
-    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, new_max + 2, 20, new_max + 500);
+
+    /* but not higher than our own */
+    fail_if (ges_timeline_element_set_inpoint (effect, new_max + 501));
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max + 1);
+    CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, new_max + 2, 20, new_max + 500);
+
+    fail_if (ges_timeline_element_set_max_duration (effect, new_max + 1));
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max + 1);
+    CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, new_max + 2, 20, new_max + 500);
+
+    fail_unless (ges_timeline_element_set_inpoint (effect, 0));
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max + 1);
+    CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, new_max + 500);
+
+    fail_unless (ges_timeline_element_set_max_duration (effect, 400));
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max + 1);
+    CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, new_max - 2);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
     /* setting on the clip will set all the core children to the same
      * value */
@@ -1177,7 +1278,7 @@ GST_START_TEST (test_children_max_duration)
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, 180);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, 180);
     CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, 180);
-    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
     /* register child0 as having no internal source, which means its
      * in-point will be set to 0 and max-duration set to
@@ -1188,7 +1289,7 @@ GST_START_TEST (test_children_max_duration)
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, 180);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 0, 20, GST_CLOCK_TIME_NONE);
     CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, 180);
-    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
     /* should not be able to set the max-duration to a valid time */
     fail_if (ges_timeline_element_set_max_duration (child0, 40));
@@ -1196,7 +1297,7 @@ GST_START_TEST (test_children_max_duration)
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, 180);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 0, 20, GST_CLOCK_TIME_NONE);
     CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, 180);
-    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
     /* same with child1 */
     /* clock time of the clip should now be GST_CLOCK_TIME_NONE */
@@ -1206,7 +1307,7 @@ GST_START_TEST (test_children_max_duration)
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, GST_CLOCK_TIME_NONE);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 0, 20, GST_CLOCK_TIME_NONE);
     CHECK_OBJECT_PROPS_MAX (child1, 5, 0, 20, GST_CLOCK_TIME_NONE);
-    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
     /* should not be able to set the max of the clip to anything else
      * when it has no core children with an internal source */
@@ -1215,7 +1316,7 @@ GST_START_TEST (test_children_max_duration)
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, GST_CLOCK_TIME_NONE);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 0, 20, GST_CLOCK_TIME_NONE);
     CHECK_OBJECT_PROPS_MAX (child1, 5, 0, 20, GST_CLOCK_TIME_NONE);
-    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
     /* setting back to having an internal source will not immediately
      * change the max-duration (unlike in-point) */
@@ -1225,7 +1326,7 @@ GST_START_TEST (test_children_max_duration)
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, GST_CLOCK_TIME_NONE);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, GST_CLOCK_TIME_NONE);
     CHECK_OBJECT_PROPS_MAX (child1, 5, 0, 20, GST_CLOCK_TIME_NONE);
-    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
     /* can now set the max-duration, which will effect the clip */
     fail_unless (ges_timeline_element_set_max_duration (child0, 140));
@@ -1233,7 +1334,7 @@ GST_START_TEST (test_children_max_duration)
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, 140);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, 140);
     CHECK_OBJECT_PROPS_MAX (child1, 5, 0, 20, GST_CLOCK_TIME_NONE);
-    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
     ges_track_element_set_has_internal_source (GES_TRACK_ELEMENT (child1),
         TRUE);
@@ -1241,14 +1342,14 @@ GST_START_TEST (test_children_max_duration)
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, 140);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, 140);
     CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, GST_CLOCK_TIME_NONE);
-    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
     fail_unless (ges_timeline_element_set_max_duration (child1, 130));
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, 130);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, 140);
     CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, 130);
-    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
     /* removing a child may change the max_duration of the clip */
     gst_object_ref (child0);
@@ -1261,7 +1362,7 @@ GST_START_TEST (test_children_max_duration)
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, 130);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, 140);
     CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, 130);
-    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
     /* new minimum max-duration for the clip when we remove child1 */
     fail_unless (ges_container_remove (GES_CONTAINER (clip), child1));
@@ -1269,7 +1370,7 @@ GST_START_TEST (test_children_max_duration)
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, 140);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, 140);
     CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, 130);
-    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
     /* with no core-children, the max-duration of the clip is set to
      * GST_CLOCK_TIME_NONE */
@@ -1278,7 +1379,7 @@ GST_START_TEST (test_children_max_duration)
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, GST_CLOCK_TIME_NONE);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, 140);
     CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, 130);
-    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 1);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
     fail_unless (ges_layer_remove_clip (layer, GES_CLIP (clip)));
 

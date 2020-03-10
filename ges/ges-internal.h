@@ -394,6 +394,7 @@ G_GNUC_INTERNAL gboolean          ges_clip_is_moving_from_layer   (GESClip *clip
 G_GNUC_INTERNAL void              ges_clip_set_moving_from_layer  (GESClip *clip, gboolean is_moving);
 G_GNUC_INTERNAL GESTrackElement*  ges_clip_create_track_element   (GESClip *clip, GESTrackType type);
 G_GNUC_INTERNAL GList*            ges_clip_create_track_elements  (GESClip *clip, GESTrackType type);
+G_GNUC_INTERNAL gboolean          ges_clip_can_set_inpoint_of_child (GESClip * clip, GESTimelineElement * child, GstClockTime inpoint);
 
 /****************************************************
  *              GESLayer                            *

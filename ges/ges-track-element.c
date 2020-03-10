@@ -600,6 +600,16 @@ _set_inpoint (GESTimelineElement * element, GstClockTime inpoint)
     return FALSE;
   }
 
+  if (GES_IS_CLIP (element->parent)
+      && !ges_clip_can_set_inpoint_of_child (GES_CLIP (element->parent),
+          element, inpoint)) {
+    GST_WARNING_OBJECT (element, "Can not set an in-point of %"
+        GST_TIME_FORMAT " because the parent clip %" GES_FORMAT
+        " would not be able to follow",
+        GST_TIME_ARGS (inpoint), GES_ARGS (element->parent));
+    return FALSE;
+  }
+
   g_object_set (object->priv->nleobject, "inpoint", inpoint, NULL);
   _update_control_bindings (element, inpoint, GST_CLOCK_TIME_NONE);
 

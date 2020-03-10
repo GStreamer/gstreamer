@@ -292,8 +292,39 @@ _set_start (GESTimelineElement * element, GstClockTime start)
   return TRUE;
 }
 
+/* Whether @clip can have its in-point set to @inpoint because none of
+ * its children have a max-duration below it */
+gboolean
+ges_clip_can_set_inpoint_of_child (GESClip * clip, GESTimelineElement * child,
+    GstClockTime inpoint)
+{
+  GList *tmp;
+
+  /* don't bother checking if we are setting the value */
+  if (clip->priv->setting_inpoint)
+    return TRUE;
+
+  /* non-core children do not effect our in-point */
+  if (!ELEMENT_FLAG_IS_SET (child, GES_TRACK_ELEMENT_IS_CORE))
+    return TRUE;
+
+  for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
+    GESTimelineElement *child = tmp->data;
+
+    if (ELEMENT_FLAG_IS_SET (child, GES_TRACK_ELEMENT_IS_CORE)
+        && ges_track_element_has_internal_source (GES_TRACK_ELEMENT (child))) {
+      if (GST_CLOCK_TIME_IS_VALID (child->maxduration)
+          && child->maxduration < inpoint)
+        return FALSE;
+    }
+  }
+  return TRUE;
+}
+
+/* returns TRUE if we did not break early */
 static gboolean
-_set_inpoint (GESTimelineElement * element, GstClockTime inpoint)
+_set_childrens_inpoint (GESTimelineElement * element, GstClockTime inpoint,
+    gboolean break_on_failure)
 {
   GList *tmp;
   GESClipPrivate *priv = GES_CLIP (element)->priv;
@@ -303,11 +334,28 @@ _set_inpoint (GESTimelineElement * element, GstClockTime inpoint)
     GESTimelineElement *child = tmp->data;
 
     if (ELEMENT_FLAG_IS_SET (child, GES_TRACK_ELEMENT_IS_CORE)
-        && ges_track_element_has_internal_source (GES_TRACK_ELEMENT (child)))
-      _set_inpoint0 (child, inpoint);
+        && ges_track_element_has_internal_source (GES_TRACK_ELEMENT (child))) {
+      if (!_set_inpoint0 (child, inpoint)) {
+        GST_ERROR_OBJECT ("Could not set the in-point of child %"
+            GES_FORMAT " to %" GST_TIME_FORMAT, GES_ARGS (child),
+            GST_TIME_ARGS (inpoint));
+        if (break_on_failure)
+          return FALSE;
+      }
+    }
   }
   priv->setting_inpoint = FALSE;
 
+  return TRUE;
+}
+
+static gboolean
+_set_inpoint (GESTimelineElement * element, GstClockTime inpoint)
+{
+  if (!_set_childrens_inpoint (element, inpoint, TRUE)) {
+    _set_childrens_inpoint (element, element->inpoint, FALSE);
+    return FALSE;
+  }
   return TRUE;
 }
 
@@ -355,7 +403,11 @@ _set_max_duration (GESTimelineElement * element, GstClockTime maxduration)
 
     if (ELEMENT_FLAG_IS_SET (child, GES_TRACK_ELEMENT_IS_CORE)
         && ges_track_element_has_internal_source (GES_TRACK_ELEMENT (child))) {
-      ges_timeline_element_set_max_duration (child, maxduration);
+      if (!ges_timeline_element_set_max_duration (child, maxduration)) {
+        GST_ERROR_OBJECT ("Could not set the max-duration of child %"
+            GES_FORMAT " to %" GST_TIME_FORMAT, GES_ARGS (child),
+            GST_TIME_ARGS (maxduration));
+      }
       if (GST_CLOCK_TIME_IS_VALID (child->maxduration)) {
         new_min = GST_CLOCK_TIME_IS_VALID (new_min) ?
             MIN (new_min, child->maxduration) : child->maxduration;
@@ -504,13 +556,22 @@ _add_child (GESContainer * container, GESTimelineElement * element)
      * other core clip. In particular, they are *not* added to the list of
      * added effects, so we don not increase nb_effects. */
 
-    /* Always add at the same priority, on top of existing effects */
-    _set_priority0 (element, min_prio + priv->nb_effects);
-
     /* Set the core element to have the same in-point, which we don't
      * apply to effects */
-    if (ges_track_element_has_internal_source (GES_TRACK_ELEMENT (element)))
-      _set_inpoint0 (element, _INPOINT (container));
+    if (ges_track_element_has_internal_source (GES_TRACK_ELEMENT (element))) {
+      /* adding can fail if the max-duration of the element is smaller
+       * than the current in-point of the clip */
+      if (!_set_inpoint0 (element, _INPOINT (container))) {
+        GST_ERROR_OBJECT (element, "Could not set the in-point of the "
+            "element %" GES_FORMAT " to %" GST_TIME_FORMAT ". Not adding "
+            "as a child", GES_ARGS (element),
+            GST_TIME_ARGS (_INPOINT (container)));
+        return FALSE;
+      }
+    }
+
+    /* Always add at the same priority, on top of existing effects */
+    _set_priority0 (element, min_prio + priv->nb_effects);
   } else if (GES_CLIP_CLASS_CAN_ADD_EFFECTS (klass)
       && GES_IS_BASE_EFFECT (element)) {
     GList *tmp;
