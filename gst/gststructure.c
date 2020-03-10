@@ -347,8 +347,25 @@ gst_structure_new_valist (const gchar * name,
     const gchar * firstfield, va_list varargs)
 {
   GstStructure *structure;
+  va_list copy;
+  guint len = 0;
+  const gchar *field_copy = firstfield;
+  GType type_copy;
 
-  structure = gst_structure_new_empty (name);
+  g_return_val_if_fail (gst_structure_validate_name (name), NULL);
+
+  /* Calculate size of varargs */
+  va_copy (copy, varargs);
+  while (field_copy) {
+    type_copy = va_arg (copy, GType);
+    G_VALUE_COLLECT_SKIP (type_copy, copy);
+    field_copy = va_arg (copy, gchar *);
+    len++;
+  }
+  va_end (copy);
+
+  structure =
+      gst_structure_new_id_empty_with_size (g_quark_from_string (name), len);
 
   if (structure)
     gst_structure_set_valist (structure, firstfield, varargs);
@@ -882,13 +899,28 @@ gst_structure_new_id (GQuark name_quark, GQuark field_quark, ...)
 {
   GstStructure *s;
   va_list varargs;
+  va_list copy;
+  guint len = 0;
+  GQuark quark_copy = field_quark;
+  GType type_copy;
 
   g_return_val_if_fail (name_quark != 0, NULL);
   g_return_val_if_fail (field_quark != 0, NULL);
 
-  s = gst_structure_new_id_empty (name_quark);
-
   va_start (varargs, field_quark);
+
+  /* Calculate size of varargs */
+  va_copy (copy, varargs);
+  while (quark_copy) {
+    type_copy = va_arg (copy, GType);
+    G_VALUE_COLLECT_SKIP (type_copy, copy);
+    quark_copy = va_arg (copy, GQuark);
+    len++;
+  }
+  va_end (copy);
+
+  s = gst_structure_new_id_empty_with_size (name_quark, len);
+
   gst_structure_id_set_valist_internal (s, field_quark, varargs);
   va_end (varargs);
 
