@@ -139,6 +139,11 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
       format = VA_RT_FORMAT_YUV444_10;
 #endif
 
+#if ((MFX_VERSION >= 1031) && VA_CHECK_VERSION(1, 2, 0))
+    if (format == VA_RT_FORMAT_YUV420 && va_fourcc == VA_FOURCC_P016)
+      format = VA_RT_FORMAT_YUV420_12;
+#endif
+
     va_status = vaCreateSurfaces (gst_msdk_context_get_handle (context),
         format,
         req->Info.Width, req->Info.Height, surfaces, surfaces_num, attribs,
@@ -334,6 +339,7 @@ gst_msdk_frame_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData * data)
     switch (mem_id->image.format.fourcc) {
       case VA_FOURCC_NV12:
       case VA_FOURCC_P010:
+      case VA_FOURCC_P016:
         data->Pitch = mem_id->image.pitches[0];
         data->Y = buf + mem_id->image.offsets[0];
         data->UV = buf + mem_id->image.offsets[1];
