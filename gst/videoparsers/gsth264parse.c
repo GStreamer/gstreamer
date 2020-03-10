@@ -243,6 +243,7 @@ gst_h264_parse_reset_stream_info (GstH264Parse * h264parse)
   h264parse->nal_length_size = 4;
   h264parse->packetized = FALSE;
   h264parse->push_codec = FALSE;
+  h264parse->first_frame = TRUE;
 
   gst_buffer_replace (&h264parse->codec_data, NULL);
   gst_buffer_replace (&h264parse->codec_data_in, NULL);
@@ -269,8 +270,6 @@ gst_h264_parse_reset (GstH264Parse * h264parse)
   h264parse->dts = GST_CLOCK_TIME_NONE;
   h264parse->ts_trn_nb = GST_CLOCK_TIME_NONE;
   h264parse->do_ts = TRUE;
-
-  h264parse->sent_codec_tag = FALSE;
 
   h264parse->pending_key_unit_ts = GST_CLOCK_TIME_NONE;
   gst_event_replace (&h264parse->force_key_unit_event, NULL);
@@ -2199,6 +2198,7 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
   if (caps) {
     const gchar *mdi_str = NULL;
     const gchar *cll_str = NULL;
+    gboolean codec_data_modified = FALSE;
 
     gst_caps_set_simple (caps, "parsed", G_TYPE_BOOLEAN, TRUE,
         "stream-format", G_TYPE_STRING,
@@ -2251,13 +2251,46 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
     src_caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (h264parse));
 
     if (src_caps) {
-      /* use codec data from old caps for comparison; we don't want to resend caps
-         if everything is same except codec data; */
-      if (gst_structure_has_field (gst_caps_get_structure (src_caps, 0),
-              "codec_data")) {
-        gst_caps_set_value (caps, "codec_data",
-            gst_structure_get_value (gst_caps_get_structure (src_caps, 0),
-                "codec_data"));
+      GstStructure *src_caps_str = gst_caps_get_structure (src_caps, 0);
+
+      /* use codec data from old caps for comparison if we have pushed frame for now.
+       * we don't want to resend caps if everything is same except codec data.
+       * However, if the updated sps/pps is not in bitstream, we should put
+       * it on bitstream */
+      if (gst_structure_has_field (src_caps_str, "codec_data")) {
+        const GValue *codec_data_value =
+            gst_structure_get_value (src_caps_str, "codec_data");
+
+        if (!GST_VALUE_HOLDS_BUFFER (codec_data_value)) {
+          GST_WARNING_OBJECT (h264parse, "codec_data does not hold buffer");
+        } else if (!h264parse->first_frame) {
+          /* If there is no pushed frame before, we can update caps without worry.
+           * But updating codec_data in the middle of frames
+           * (especially on non-keyframe) might make downstream be confused.
+           * Therefore we are setting old codec data
+           * (i.e., was pushed to downstream previously) to new caps candidate
+           * here for gst_caps_is_strictly_equal() to be returned TRUE if only
+           * the codec_data is different, and to avoid re-sending caps it
+           * that case.
+           */
+          gst_caps_set_value (caps, "codec_data", codec_data_value);
+
+          /* check for codec_data update to re-send sps/pps inband data if
+           * current frame has no sps/pps but upstream codec_data was updated */
+          if ((!h264parse->have_sps_in_frame || !h264parse->have_pps_in_frame)
+              && buf) {
+            GstBuffer *codec_data_buf = gst_value_get_buffer (codec_data_value);
+            GstMapInfo map;
+
+            gst_buffer_map (buf, &map, GST_MAP_READ);
+            if (map.size != gst_buffer_get_size (codec_data_buf) ||
+                gst_buffer_memcmp (codec_data_buf, 0, map.data, map.size)) {
+              codec_data_modified = TRUE;
+            }
+
+            gst_buffer_unmap (buf, &map);
+          }
+        }
       } else if (!buf) {
         GstStructure *s;
         /* remove any left-over codec-data hanging around */
@@ -2282,6 +2315,12 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
       }
 
       gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (h264parse), caps);
+    } else if (codec_data_modified) {
+      GST_DEBUG_OBJECT (h264parse,
+          "Only codec_data is different, need inband sps/pps update");
+
+      /* this will insert updated codec_data with next idr */
+      h264parse->push_codec = TRUE;
     }
 
     if (src_caps)
@@ -2703,7 +2742,7 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
   h264parse = GST_H264_PARSE (parse);
 
-  if (!h264parse->sent_codec_tag) {
+  if (h264parse->first_frame) {
     GstTagList *taglist;
     GstCaps *caps;
 
@@ -2728,7 +2767,7 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     gst_tag_list_unref (taglist);
 
     /* also signals the end of first-frame processing */
-    h264parse->sent_codec_tag = TRUE;
+    h264parse->first_frame = FALSE;
   }
 
   /* In case of byte-stream, insert au delimiter by default
