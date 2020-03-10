@@ -1498,6 +1498,10 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
           caps = gst_caps_new_simple ("meta/x-klv",
               "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
           break;
+        case DRF_ID_AC4:
+          is_audio = TRUE;
+          caps = gst_caps_new_empty_simple ("audio/x-ac4");
+          break;
       }
       if (caps)
         break;
