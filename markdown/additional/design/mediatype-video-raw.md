@@ -1340,3 +1340,55 @@
           tile width:   6
           tile height:  5
 ```
+
+- **"P012\_LE"** planar 4:2:0 YUV with interleaved UV plane, 2 bytes per channel where color data is stored in MSB 12 bits, LE
+
+```
+        Component 0: Y
+          depth:           12 LE
+          pstride:         2
+          default offset:  0
+          default rstride: RU4 (width * 2)
+          default size:    rstride (component0) * RU2 (height)
+
+        Component 1: U
+          depth:           12 LE
+          pstride:         4
+          default offset:  size (component0)
+          default rstride: RU4 (width * 2)
+
+        Component 2: V
+          depth            12 LE
+          pstride:         4
+          default offset:  offset (component1) + 2
+          default rstride: RU4 (width * 2)
+
+        Image
+          default size: RU4 (width * 2) * RU2 (height) * 3 / 2
+```
+
+- **"P012\_BE"** planar 4:2:0 YUV with interleaved UV plane, 2 bytes per channel where color data is stored in MSB 12 bits, BE
+
+```
+        Component 0: Y
+          depth:           12 BE
+          pstride:         2
+          default offset:  0
+          default rstride: RU4 (width * 2)
+          default size:    rstride (component0) * RU2 (height)
+
+        Component 1: U
+          depth:           12 BE
+          pstride:         4
+          default offset:  size (component0)
+          default rstride: RU4 (width * 2)
+
+        Component 2: V
+          depth            12 BE
+          pstride:         4
+          default offset:  offset (component1) + 2
+          default rstride: RU4 (width * 2)
+
+        Image
+          default size: RU4 (width * 2) * RU2 (height) * 3 / 2
+```
