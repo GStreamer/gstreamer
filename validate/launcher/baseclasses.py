@@ -63,6 +63,7 @@ from .utils import mkdir, Result, Colors, printc, DEFAULT_TIMEOUT, GST_SECOND, \
 # The factor by which we increase the hard timeout when running inside
 # Valgrind
 GDB_TIMEOUT_FACTOR = VALGRIND_TIMEOUT_FACTOR = 20
+RR_TIMEOUT_FACTOR = 2
 TIMEOUT_FACTOR = float(os.environ.get("TIMEOUT_FACTOR", 1))
 # The error reported by valgrind when detecting errors
 VALGRIND_ERROR_CODE = 20
@@ -127,6 +128,7 @@ class Test(Loggable):
         self.workdir = workdir
         self.allow_flakiness = False
         self.html_log = None
+        self.rr_logdir = None
 
         self.clean()
 
@@ -237,6 +239,11 @@ class Test(Loggable):
                 self.out.write('\n\n## %s:\n\n```\n%s\n```\n' % (
                     os.path.basename(logfile), self.get_extra_log_content(logfile))
                 )
+
+            if self.rr_logdir:
+                self.out.write('\n\n## rr trace:\n\n```\nrr replay %s/latest-trace\n```\n' % (
+                    self.rr_logdir))
+
             self.out.flush()
             self.out.close()
 
@@ -293,6 +300,9 @@ class Test(Loggable):
 
     def add_stack_trace_to_logfile(self):
         self.debug("Adding stack trace")
+        if self.options.rr:
+            return
+
         trace_gatherer = BackTraceGenerator.get_default()
         stack_trace = trace_gatherer.get_trace(self)
 
@@ -364,7 +374,9 @@ class Test(Loggable):
             return
 
         self.debug("%s returncode: %s", self, self.process.returncode)
-        if self.process.returncode == 0:
+        if self.options.rr and self.process.returncode == -signal.SIGPIPE:
+            self.set_result(Result.SKIPPED, "SIGPIPE received under `rr`, known issue.")
+        elif self.process.returncode == 0:
             self.set_result(Result.PASSED)
         elif self.process.returncode in EXITING_SIGNALS:
             self.add_stack_trace_to_logfile()
@@ -443,7 +455,19 @@ class Test(Loggable):
         return os.environ.copy()
 
     def kill_subprocess(self):
-        utils.kill_subprocess(self, self.process, DEFAULT_TIMEOUT)
+        subprocs_id = None
+        if self.options.rr and self.process and self.process.returncode is None:
+            cmd = ["ps", "-o", "pid", "--ppid", str(self.process.pid), "--noheaders"]
+            try:
+                subprocs_id = [int(pid.strip('\n')) for
+                    pid in subprocess.check_output(cmd).decode().split(' ') if pid]
+            except FileNotFoundError:
+                self.error("Ps not found, will probably not be able to get rr "
+                    "working properly after we kill the process")
+            except subprocess.CalledProcessError as e:
+                self.error("Couldn't get rr subprocess pid: %s" % (e))
+
+        utils.kill_subprocess(self, self.process, DEFAULT_TIMEOUT, subprocs_id)
 
     def run_external_checks(self):
         pass
@@ -495,6 +519,20 @@ class Test(Loggable):
             args += ["-ex", "run", "-ex", "backtrace", "-ex", "quit"]
         args += ["--args"] + command
         return args
+
+    def use_rr(self, command, subenv):
+        command = ["rr", 'record', '-h'] + command
+
+        self.timeout *= RR_TIMEOUT_FACTOR
+        self.rr_logdir = os.path.join(self.options.logsdir, self.classname.replace(".", os.sep), 'rr-logs')
+        subenv['_RR_TRACE_DIR'] = self.rr_logdir
+        try:
+            shutil.rmtree(self.rr_logdir, ignore_errors=False, onerror=None)
+        except FileNotFoundError:
+            pass
+        self.add_env_variable('_RR_TRACE_DIR', self.rr_logdir)
+
+        return command
 
     def use_valgrind(self, command, subenv):
         vglogsfile = os.path.splitext(self.logfile)[0] + '.valgrind'
@@ -606,6 +644,9 @@ class Test(Loggable):
 
         if self.options.valgrind:
             self.command = self.use_valgrind(self.command, self.proc_env)
+
+        if self.options.rr:
+            self.command = self.use_rr(self.command, self.proc_env)
 
         if not self.options.redirect_logs:
             self.out.write("# `%s`\n\n"
@@ -762,6 +803,7 @@ class GstValidateTest(Test):
     """ A class representing a particular test. """
     HARD_TIMEOUT_FACTOR = 5
     fault_sig_regex = re.compile("<Caught SIGNAL: .*>")
+    needs_gst_inspect = set()
 
     def __init__(self, application_name, classname,
                  options, reporter, duration=0,
@@ -1009,9 +1051,13 @@ class GstValidateTest(Test):
         if self.result in [Result.FAILED, Result.PASSED, Result.SKIPPED]:
             return
 
+
         self.debug("%s returncode: %s", self, self.process.returncode)
 
         expected_issues = copy.deepcopy(self.expected_issues)
+        if self.options.rr:
+            # signal.SIGPPIPE is 13 but it sometimes isn't present in python for some reason.
+            expected_issues.append({"returncode": -13, "sometimes": True})
         self.criticals, not_found_expected_issues, expected_returncode = self.check_reported_issues(expected_issues)
         expected_timeout = None
         expected_signal = None
@@ -2029,7 +2075,7 @@ class _TestsLauncher(Loggable):
                 current_test_num += 1
                 res = test.test_end(retry_on_failure=retry_on_failures)
                 to_report = True
-                if res != Result.PASSED:
+                if res not in [Result.PASSED, Result.SKIPPED]:
                     if self.options.forever or self.options.fatal_error:
                         self.print_result(current_test_num - 1, test, retry_on_failure=retry_on_failures)
                         self.reporter.after_test(test)

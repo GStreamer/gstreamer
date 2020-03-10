@@ -18,6 +18,7 @@
 # Boston, MA 02110-1301, USA.
 import os
 import sys
+import shutil
 from . import utils
 import urllib.parse
 from . import loggable
@@ -202,6 +203,7 @@ class LauncherConfig(Loggable):
         self.valgrind = False
         self.gdb = False
         self.no_display = False
+        self.rr = False
         self.xunit_file = None
         self.main_dir = utils.DEFAULT_MAIN_DIR
         self.output_dir = None
@@ -329,6 +331,12 @@ class LauncherConfig(Loggable):
                 subprocess.check_output("valgrind --help", shell=True)
             except subprocess.CalledProcessError:
                 printc("Want to use valgrind, but not available on the system",
+                       Colors.FAIL)
+                return False
+
+        if self.rr:
+            if not shutil.which('rr'):
+                printc("Want to use rr, but not available on the system",
                        Colors.FAIL)
                 return False
 
@@ -478,6 +486,9 @@ class LauncherConfig(Loggable):
         parser.add_argument("-vg", "--valgrind", dest="valgrind",
                             action="store_true",
                             help="Run the tests inside Valgrind")
+        parser.add_argument("-rr", "--rr", dest="rr",
+                            action="store_true",
+                            help="Run the tests inside rr record")
         parser.add_argument("--gdb", dest="gdb",
                             action="store_true",
                             help="Run the tests inside gdb (implies"

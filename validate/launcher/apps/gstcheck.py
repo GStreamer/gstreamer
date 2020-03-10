@@ -290,7 +290,7 @@ class GstCheckTestsManager(MesonTestsManager):
         else:
             child_env['CK_TIMEOUT_MULTIPLIER'] = str(self.options.timeout_factor)
 
-        if self.options.gdb:
+        if self.options.gdb or self.options.rr:
             child_env['CK_FORK'] = "no"
 
         if self.options.gst_check_leak_trace_testnames:

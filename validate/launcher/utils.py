@@ -594,7 +594,7 @@ def check_bugs_resolution(bugs_definitions):
     return res
 
 
-def kill_subprocess(owner, process, timeout):
+def kill_subprocess(owner, process, timeout, subprocess_ids=None):
     if process is None:
         return
 
@@ -611,11 +611,16 @@ def kill_subprocess(owner, process, timeout):
                 subprocess.call(
                     ['taskkill', '/F', '/T', '/PID', str(process.pid)])
             else:
-                process.send_signal(killsig)
+                if subprocess_ids:
+                    for subprocess_id in subprocess_ids:
+                        os.kill(subprocess_id, killsig)
+                else:
+                    process.send_signal(killsig)
             time.sleep(waittime)
             waittime *= 2
         except OSError:
             pass
+
         if not is_windows() and time.time() - stime > timeout / 4:
             killsig = signal.SIGKILL
         if time.time() - stime > timeout:
