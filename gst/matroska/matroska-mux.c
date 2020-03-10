@@ -2532,6 +2532,8 @@ gst_matroska_mux_write_mastering_metadata (GstMatroskaMux * mux,
   guint64 master;
   GstVideoMasteringDisplayInfo *minfo = &videocontext->mastering_display_info;
   gdouble value;
+  const gdouble chroma_scale = 50000;
+  const gdouble luma_scale = 50000;
 
   if (!videocontext->mastering_display_info_present)
     return;
@@ -2539,34 +2541,34 @@ gst_matroska_mux_write_mastering_metadata (GstMatroskaMux * mux,
   master =
       gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_MASTERINGMETADATA);
 
-  gst_util_fraction_to_double (minfo->Rx_n, minfo->Rx_d, &value);
+  value = (gdouble) minfo->display_primaries[0].x / chroma_scale;
   gst_ebml_write_float (ebml, GST_MATROSKA_ID_PRIMARYRCHROMATICITYX, value);
 
-  gst_util_fraction_to_double (minfo->Ry_n, minfo->Ry_d, &value);
+  value = (gdouble) minfo->display_primaries[0].y / chroma_scale;
   gst_ebml_write_float (ebml, GST_MATROSKA_ID_PRIMARYRCHROMATICITYY, value);
 
-  gst_util_fraction_to_double (minfo->Gx_n, minfo->Gx_d, &value);
+  value = (gdouble) minfo->display_primaries[1].x / chroma_scale;
   gst_ebml_write_float (ebml, GST_MATROSKA_ID_PRIMARYGCHROMATICITYX, value);
 
-  gst_util_fraction_to_double (minfo->Gy_n, minfo->Gy_d, &value);
+  value = (gdouble) minfo->display_primaries[1].y / chroma_scale;
   gst_ebml_write_float (ebml, GST_MATROSKA_ID_PRIMARYGCHROMATICITYY, value);
 
-  gst_util_fraction_to_double (minfo->Bx_n, minfo->Bx_d, &value);
+  value = (gdouble) minfo->display_primaries[2].x / chroma_scale;
   gst_ebml_write_float (ebml, GST_MATROSKA_ID_PRIMARYBCHROMATICITYX, value);
 
-  gst_util_fraction_to_double (minfo->By_n, minfo->By_d, &value);
+  value = (gdouble) minfo->display_primaries[2].y / chroma_scale;
   gst_ebml_write_float (ebml, GST_MATROSKA_ID_PRIMARYBCHROMATICITYY, value);
 
-  gst_util_fraction_to_double (minfo->Wx_n, minfo->Wx_d, &value);
+  value = (gdouble) minfo->white_point.x / chroma_scale;
   gst_ebml_write_float (ebml, GST_MATROSKA_ID_WHITEPOINTCHROMATICITYX, value);
 
-  gst_util_fraction_to_double (minfo->Wy_n, minfo->Wy_d, &value);
+  value = (gdouble) minfo->white_point.y / chroma_scale;
   gst_ebml_write_float (ebml, GST_MATROSKA_ID_WHITEPOINTCHROMATICITYY, value);
 
-  gst_util_fraction_to_double (minfo->max_luma_n, minfo->max_luma_d, &value);
+  value = (gdouble) minfo->max_display_mastering_luminance / luma_scale;
   gst_ebml_write_float (ebml, GST_MATROSKA_ID_LUMINANCEMAX, value);
 
-  gst_util_fraction_to_double (minfo->min_luma_n, minfo->min_luma_d, &value);
+  value = (gdouble) minfo->min_display_mastering_luminance / luma_scale;
   gst_ebml_write_float (ebml, GST_MATROSKA_ID_LUMINANCEMIN, value);
 
   gst_ebml_write_master_finish (ebml, master);
@@ -2609,16 +2611,12 @@ gst_matroska_mux_write_colour (GstMatroskaMux * mux,
   gst_ebml_write_uint (ebml, GST_MATROSKA_ID_VIDEOTRANSFERCHARACTERISTICS,
       transfer_id);
   gst_ebml_write_uint (ebml, GST_MATROSKA_ID_VIDEOPRIMARIES, primaries_id);
-  if (videocontext->content_light_level.maxCLL_n &&
-      videocontext->content_light_level.maxFALL_n) {
-    gdouble maxCLL = 0, maxFALL = 0;
-
-    gst_util_fraction_to_double (videocontext->content_light_level.maxCLL_n,
-        videocontext->content_light_level.maxCLL_d, &maxCLL);
-    gst_util_fraction_to_double (videocontext->content_light_level.maxFALL_n,
-        videocontext->content_light_level.maxFALL_d, &maxFALL);
-    gst_ebml_write_uint (ebml, GST_MATROSKA_ID_MAXCLL, (guint) maxCLL);
-    gst_ebml_write_uint (ebml, GST_MATROSKA_ID_MAXFALL, (guint) maxFALL);
+  if (videocontext->content_light_level.max_content_light_level &&
+      videocontext->content_light_level.max_frame_average_light_level) {
+    gst_ebml_write_uint (ebml, GST_MATROSKA_ID_MAXCLL,
+        videocontext->content_light_level.max_content_light_level);
+    gst_ebml_write_uint (ebml, GST_MATROSKA_ID_MAXFALL,
+        videocontext->content_light_level.max_frame_average_light_level);
   }
 
   gst_matroska_mux_write_mastering_metadata (mux, videocontext);

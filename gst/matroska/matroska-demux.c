@@ -473,8 +473,8 @@ gst_matroska_demux_parse_mastering_metadata (GstMatroskaDemux * demux,
   guint32 id;
   gdouble num;
   /* Precision defined by HEVC specification */
-  const guint chroma_den = 50000;
-  const guint luma_den = 10000;
+  const guint chroma_scale = 50000;
+  const guint luma_scale = 10000;
 
   gst_video_mastering_display_info_init (&minfo);
 
@@ -504,7 +504,7 @@ gst_matroska_demux_parse_mastering_metadata (GstMatroskaDemux * demux,
        * 1000 cd/m^2 is generally used value on HDR. Just check guint range here.
        * See https://www.webmproject.org/docs/container/#LuminanceMax
        */
-      if (num < 0 || num > (gdouble) (G_MAXUINT32 / luma_den)) {
+      if (num < 0 || num > (gdouble) (G_MAXUINT32 / luma_scale)) {
         GST_WARNING_OBJECT (demux, "0x%x has invalid value %f", id, num);
         goto beach;
       }
@@ -512,44 +512,34 @@ gst_matroska_demux_parse_mastering_metadata (GstMatroskaDemux * demux,
 
     switch (id) {
       case GST_MATROSKA_ID_PRIMARYRCHROMATICITYX:
-        minfo.Rx_n = (guint) round (num * chroma_den);
-        minfo.Rx_d = chroma_den;
+        minfo.display_primaries[0].x = (guint16) (num * chroma_scale);
         break;
       case GST_MATROSKA_ID_PRIMARYRCHROMATICITYY:
-        minfo.Ry_n = (guint) round (num * chroma_den);
-        minfo.Ry_d = chroma_den;
+        minfo.display_primaries[0].y = (guint16) (num * chroma_scale);
         break;
       case GST_MATROSKA_ID_PRIMARYGCHROMATICITYX:
-        minfo.Gx_n = (guint) round (num * chroma_den);
-        minfo.Gx_d = chroma_den;
+        minfo.display_primaries[1].x = (guint16) (num * chroma_scale);
         break;
       case GST_MATROSKA_ID_PRIMARYGCHROMATICITYY:
-        minfo.Gy_n = (guint) round (num * chroma_den);
-        minfo.Gy_d = chroma_den;
+        minfo.display_primaries[1].y = (guint16) (num * chroma_scale);
         break;
       case GST_MATROSKA_ID_PRIMARYBCHROMATICITYX:
-        minfo.Bx_n = (guint) round (num * chroma_den);
-        minfo.Bx_d = chroma_den;
+        minfo.display_primaries[2].x = (guint16) (num * chroma_scale);
         break;
       case GST_MATROSKA_ID_PRIMARYBCHROMATICITYY:
-        minfo.By_n = (guint) round (num * chroma_den);
-        minfo.By_d = chroma_den;
+        minfo.display_primaries[2].y = (guint16) (num * chroma_scale);
         break;
       case GST_MATROSKA_ID_WHITEPOINTCHROMATICITYX:
-        minfo.Wx_n = (guint) round (num * chroma_den);
-        minfo.Wx_d = chroma_den;
+        minfo.white_point.x = (guint16) (num * chroma_scale);
         break;
       case GST_MATROSKA_ID_WHITEPOINTCHROMATICITYY:
-        minfo.Wy_n = (guint) round (num * chroma_den);
-        minfo.Wy_d = chroma_den;
+        minfo.white_point.y = (guint16) (num * chroma_scale);
         break;
       case GST_MATROSKA_ID_LUMINANCEMAX:
-        minfo.max_luma_n = (guint) round (num * luma_den);
-        minfo.max_luma_d = luma_den;
+        minfo.max_display_mastering_luminance = (guint32) (num * luma_scale);
         break;
       case GST_MATROSKA_ID_LUMINANCEMIN:
-        minfo.min_luma_n = (guint) round (num * luma_den);
-        minfo.min_luma_d = luma_den;
+        minfo.min_display_mastering_luminance = (guint32) (num * luma_scale);
         break;
       default:
         GST_FIXME_OBJECT (demux,
@@ -650,12 +640,11 @@ gst_matroska_demux_parse_colour (GstMatroskaDemux * demux, GstEbmlRead * ebml,
       case GST_MATROSKA_ID_MAXCLL:{
         if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK)
           goto beach;
-        if (num >= G_MAXUINT32) {
+        if (num > G_MAXUINT16) {
           GST_WARNING_OBJECT (demux,
               "Too large maxCLL value %" G_GUINT64_FORMAT, num);
         } else {
-          video_context->content_light_level.maxCLL_n = num;
-          video_context->content_light_level.maxCLL_d = 1;
+          video_context->content_light_level.max_content_light_level = num;
         }
         break;
       }
@@ -663,12 +652,12 @@ gst_matroska_demux_parse_colour (GstMatroskaDemux * demux, GstEbmlRead * ebml,
       case GST_MATROSKA_ID_MAXFALL:{
         if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK)
           goto beach;
-        if (num >= G_MAXUINT32) {
+        if (num >= G_MAXUINT16) {
           GST_WARNING_OBJECT (demux,
               "Too large maxFALL value %" G_GUINT64_FORMAT, num);
         } else {
-          video_context->content_light_level.maxFALL_n = num;
-          video_context->content_light_level.maxFALL_d = 1;
+          video_context->content_light_level.max_frame_average_light_level =
+              num;
         }
         break;
       }
@@ -6536,8 +6525,8 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
       }
     }
 
-    if (videocontext->content_light_level.maxCLL_n &&
-        videocontext->content_light_level.maxFALL_n) {
+    if (videocontext->content_light_level.max_content_light_level &&
+        videocontext->content_light_level.max_frame_average_light_level) {
       if (!gst_video_content_light_level_add_to_caps
           (&videocontext->content_light_level, caps)) {
         GST_WARNING ("couldn't set content light level to caps");
