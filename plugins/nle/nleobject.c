@@ -738,6 +738,7 @@ nle_object_reset (NleObject * object)
   object->inpoint = GST_CLOCK_TIME_NONE;
   object->priority = 0;
   object->active = TRUE;
+  object->in_composition = FALSE;
 }
 
 GType

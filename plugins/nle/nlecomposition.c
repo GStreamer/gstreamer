@@ -3543,7 +3543,6 @@ nle_composition_remove_object (GstBin * bin, GstElement * element)
 
   object = NLE_OBJECT (element);
 
-  object->in_composition = FALSE;
   _add_remove_object_action (comp, object);
 
   return TRUE;
