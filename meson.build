@@ -170,6 +170,9 @@ all_plugins_paths = []
 foreach plugin: all_plugins
   all_plugins_paths += plugin.full_path()
 endforeach
+# Work around meson bug: https://github.com/mesonbuild/meson/pull/6770
+pathsep = host_machine.system() == 'windows' ? ';' : ':'
+all_plugins_paths = pathsep.join(all_plugins_paths)
 
 generate_plugins_paths = find_program('scripts/generate_plugins_path.py')
 configure_file(

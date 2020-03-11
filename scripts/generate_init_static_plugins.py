@@ -19,12 +19,12 @@ gst_init_static_plugins (void)
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(dest="output", help="Output file")
-    parser.add_argument(dest="plugins", nargs=argparse.REMAINDER, help="The list of plugins")
+    parser.add_argument(dest="plugins", help="The list of plugins")
 
     options = parser.parse_args()
 
     names = set()
-    for plugin in options.plugins:
+    for plugin in options.plugins.split(os.pathsep):
         filename = os.path.basename(plugin)
         if filename.startswith('libgst') and filename.endswith('.a'):
             names.add(filename[len('libgst'):-len('.a')])
