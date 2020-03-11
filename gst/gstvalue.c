@@ -2440,28 +2440,18 @@ _priv_gst_value_parse_any_list (gchar * s, gchar ** after, GValue * value,
 
   while (g_ascii_isspace (*s))
     s++;
-  if (*s == end) {
-    s++;
-    *after = s;
-    return TRUE;
-  }
-
-  ret = _priv_gst_value_parse_value (s, &s, &list_value, type);
-  if (!ret)
-    return FALSE;
-
-  g_array_append_val (array, list_value);
-
-  while (g_ascii_isspace (*s))
-    s++;
 
   while (*s != end) {
-    if (*s != ',')
-      return FALSE;
-    s++;
-
-    while (g_ascii_isspace (*s))
+    if (*s == ',') {
       s++;
+      while (g_ascii_isspace (*s))
+        s++;
+
+      if (*s == ',')
+        return FALSE;
+
+      continue;
+    }
 
     memset (&list_value, 0, sizeof (list_value));
     ret = _priv_gst_value_parse_value (s, &s, &list_value, type);
@@ -2469,8 +2459,12 @@ _priv_gst_value_parse_any_list (gchar * s, gchar ** after, GValue * value,
       return FALSE;
 
     g_array_append_val (array, list_value);
+
     while (g_ascii_isspace (*s))
       s++;
+
+    if (*s != ',' && *s != end)
+      return FALSE;
   }
 
   s++;

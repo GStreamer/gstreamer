@@ -3435,6 +3435,42 @@ GST_START_TEST (test_serialize_null_aray)
 
 GST_END_TEST;
 
+GST_START_TEST (test_deserialize_array)
+{
+  GValue value = { 0 };
+  const gchar *strings[] = {
+    "{ test, }",
+    "{ , }",
+    "{ test,, }",
+    "{ , , }",
+  };
+  gint results_size[] = { 1, 0, -1, -1 };       /* -1 means deserialization should fail */
+  int i;
+
+  for (i = 0; i < G_N_ELEMENTS (strings); ++i) {
+    /* Workaround a bug in our parser that would lead to segfaults
+     * when deserializing container types using static strings */
+    gchar *str = g_strdup (strings[i]);
+    g_value_init (&value, GST_TYPE_LIST);
+
+    if (results_size[i] == -1) {
+      fail_if (gst_value_deserialize (&value, str),
+          "Should not be able to deserialize %s (%d) as list", str, i);
+    } else {
+      fail_unless (gst_value_deserialize (&value, str),
+          "could not deserialize %s (%d)", str, i);
+      fail_unless (gst_value_list_get_size (&value) == results_size[i],
+          "Wrong array size: %d. expected %d",
+          gst_value_array_get_size (&value), results_size[i]);
+    }
+
+    g_value_unset (&value);
+    g_free (str);
+  }
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_value_suite (void)
 {
@@ -3455,6 +3491,7 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_deserialize_gtype);
   tcase_add_test (tc_chain, test_deserialize_gtype_failures);
   tcase_add_test (tc_chain, test_deserialize_bitmask);
+  tcase_add_test (tc_chain, test_deserialize_array);
   tcase_add_test (tc_chain, test_serialize_flags);
   tcase_add_test (tc_chain, test_deserialize_flags);
   tcase_add_test (tc_chain, test_serialize_deserialize_format_enum);
