@@ -778,7 +778,7 @@ gst_ps_demux_handle_dvd_event (GstPsDemux * demux, GstEvent * event)
     /* Create a video pad to ensure have it before emit no more pads */
     (void) gst_ps_demux_get_stream (demux, 0xe0, ST_VIDEO_MPEG2, 0);
 
-    /* Read out the languages for audio streams and request each one that 
+    /* Read out the languages for audio streams and request each one that
      * is present */
     for (i = 0; i < MAX_DVD_AUDIO_STREAMS; i++) {
       gint stream_format;
