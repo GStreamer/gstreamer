@@ -156,6 +156,9 @@ struct _GstPsDemux
 
   /* Indicates an MPEG-2 stream */
   gboolean is_mpeg2_pack;
+
+  /* properties */
+  gboolean ignore_scr;
 };
 
 struct _GstPsDemuxClass

@@ -91,8 +91,11 @@ enum
 enum
 {
   PROP_0,
+  PROP_IGNORE_SCR,
   /* FILL ME */
 };
+
+#define DEFAULT_IGNORE_SCR FALSE
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -140,6 +143,10 @@ static void gst_ps_demux_base_init (GstPsDemuxClass * klass);
 static void gst_ps_demux_class_init (GstPsDemuxClass * klass);
 static void gst_ps_demux_init (GstPsDemux * demux);
 static void gst_ps_demux_finalize (GstPsDemux * demux);
+static void gst_ps_demux_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_ps_demux_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 static void gst_ps_demux_reset (GstPsDemux * demux);
 
 static gboolean gst_ps_demux_sink_event (GstPad * pad, GstObject * parent,
@@ -247,8 +254,24 @@ gst_ps_demux_class_init (GstPsDemuxClass * klass)
   gstelement_class = (GstElementClass *) klass;
 
   gobject_class->finalize = (GObjectFinalizeFunc) gst_ps_demux_finalize;
+  gobject_class->set_property = gst_ps_demux_set_property;
+  gobject_class->get_property = gst_ps_demux_get_property;
 
   gstelement_class->change_state = gst_ps_demux_change_state;
+
+  /**
+   * GstPsDemux:ignore-scr:
+   *
+   * Ignore SCR (System Clock Reference) data from MPEG-PS Pack Header.
+   * This can help with playback of some broken files.
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (gobject_class, PROP_IGNORE_SCR,
+      g_param_spec_boolean ("ignore-scr", "Ignore SCR data for timing",
+          "Ignore SCR data for timing", DEFAULT_IGNORE_SCR,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+          G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -279,6 +302,8 @@ gst_ps_demux_init (GstPsDemux * demux)
   demux->flowcombiner = gst_flow_combiner_new ();
 
   gst_ps_demux_reset (demux);
+
+  demux->ignore_scr = DEFAULT_IGNORE_SCR;
 }
 
 static void
@@ -293,6 +318,36 @@ gst_ps_demux_finalize (GstPsDemux * demux)
   g_object_unref (demux->rev_adapter);
 
   G_OBJECT_CLASS (parent_class)->finalize (G_OBJECT (demux));
+}
+
+static void
+gst_ps_demux_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstPsDemux *demux = GST_PS_DEMUX (object);
+
+  switch (prop_id) {
+    case PROP_IGNORE_SCR:
+      demux->ignore_scr = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+  }
+}
+
+static void
+gst_ps_demux_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstPsDemux *demux = GST_PS_DEMUX (object);
+
+  switch (prop_id) {
+    case PROP_IGNORE_SCR:
+      g_value_set_boolean (value, demux->ignore_scr);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+  }
 }
 
 static void
@@ -1736,6 +1791,20 @@ gst_ps_demux_parse_pack_start (GstPsDemux * demux)
 
     data += 8;
   }
+
+  if (demux->ignore_scr) {
+    /* update only first/current_scr with raw scr value to start streaming
+     * after parsing 2 seconds long data with no-more-pad */
+    if (demux->first_scr == G_MAXUINT64) {
+      demux->first_scr = scr;
+      demux->first_scr_offset = demux->cur_scr_offset;
+    }
+
+    demux->current_scr = scr;
+
+    goto out;
+  }
+
   new_rate *= MPEG_MUX_RATE_MULT;
 
   /* scr adjusted is the new scr found + the colected adjustment */
@@ -1851,14 +1920,15 @@ gst_ps_demux_parse_pack_start (GstPsDemux * demux)
    * adapter */
   demux->bytes_since_scr = avail;
 
-  gst_adapter_unmap (demux->adapter);
-  gst_adapter_flush (demux->adapter, length);
-  ADAPTER_OFFSET_FLUSH (length);
-
   /* Now check for all streams if they're behind the new SCR and if
    * they are then move them forward to the SCR position */
   gst_ps_demux_send_gap_updates (demux,
       MPEGTIME_TO_GSTTIME (demux->current_scr - demux->first_scr));
+
+out:
+  gst_adapter_unmap (demux->adapter);
+  gst_adapter_flush (demux->adapter, length);
+  ADAPTER_OFFSET_FLUSH (length);
 
   return GST_FLOW_OK;
 
