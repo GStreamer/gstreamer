@@ -2554,7 +2554,7 @@ gst_base_transform_src_activate_mode (GstPad * pad, GstObject * parent,
  * useful for filters that do not care about negotiation.
  *
  * Always %TRUE for filters which don't implement either a transform
- * or transform_ip method.
+ * or transform_ip or generate_output method.
  *
  * MT safe.
  */
@@ -2570,7 +2570,8 @@ gst_base_transform_set_passthrough (GstBaseTransform * trans,
 
   GST_OBJECT_LOCK (trans);
   if (!passthrough) {
-    if (bclass->transform_ip || bclass->transform)
+    if (bclass->transform_ip || bclass->transform || (bclass->generate_output
+            && bclass->generate_output != default_generate_output))
       trans->priv->passthrough = FALSE;
   } else {
     trans->priv->passthrough = TRUE;
