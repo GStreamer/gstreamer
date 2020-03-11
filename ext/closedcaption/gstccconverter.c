@@ -1189,14 +1189,13 @@ convert_cea708_cdp_cea708_cc_data (GstCCConverter * self, GstBuffer * inbuf,
 }
 
 static GstFlowReturn
-gst_cc_converter_transform (GstBaseTransform * base, GstBuffer * inbuf,
+gst_cc_converter_transform (GstCCConverter * self, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
-  GstCCConverter *self = GST_CCCONVERTER (base);
   GstVideoTimeCodeMeta *tc_meta = gst_buffer_get_video_time_code_meta (inbuf);
   GstFlowReturn ret = GST_FLOW_OK;
 
-  GST_DEBUG_OBJECT (base, "Converting %" GST_PTR_FORMAT " from %u to %u", inbuf,
+  GST_DEBUG_OBJECT (self, "Converting %" GST_PTR_FORMAT " from %u to %u", inbuf,
       self->input_caption_type, self->output_caption_type);
 
   switch (self->input_caption_type) {
@@ -1293,6 +1292,45 @@ gst_cc_converter_transform (GstBaseTransform * base, GstBuffer * inbuf,
       0 ? GST_FLOW_OK : GST_BASE_TRANSFORM_FLOW_DROPPED;
 }
 
+static GstFlowReturn
+gst_cc_converter_generate_output (GstBaseTransform * base, GstBuffer ** outbuf)
+{
+  GstBaseTransformClass *bclass = GST_BASE_TRANSFORM_GET_CLASS (base);
+  GstCCConverter *self = GST_CCCONVERTER (base);
+  GstBuffer *inbuf = base->queued_buf;
+  GstFlowReturn ret;
+
+  *outbuf = NULL;
+  base->queued_buf = NULL;
+  if (!inbuf) {
+    return GST_FLOW_OK;
+  }
+
+  if (gst_base_transform_is_passthrough (base)) {
+    *outbuf = inbuf;
+    ret = GST_FLOW_OK;
+  } else {
+    ret = bclass->prepare_output_buffer (base, inbuf, outbuf);
+
+    if (ret != GST_FLOW_OK || *outbuf == NULL)
+      goto no_buffer;
+
+    ret = gst_cc_converter_transform (self, inbuf, *outbuf);
+    gst_buffer_unref (inbuf);
+  }
+
+  return ret;
+
+no_buffer:
+  {
+    gst_buffer_unref (inbuf);
+    *outbuf = NULL;
+    GST_WARNING_OBJECT (self, "could not get buffer from pool: %s",
+        gst_flow_get_name (ret));
+    return ret;
+  }
+}
+
 static gboolean
 gst_cc_converter_start (GstBaseTransform * base)
 {
@@ -1330,8 +1368,8 @@ gst_cc_converter_class_init (GstCCConverterClass * klass)
   basetransform_class->fixate_caps =
       GST_DEBUG_FUNCPTR (gst_cc_converter_fixate_caps);
   basetransform_class->set_caps = GST_DEBUG_FUNCPTR (gst_cc_converter_set_caps);
-  basetransform_class->transform =
-      GST_DEBUG_FUNCPTR (gst_cc_converter_transform);
+  basetransform_class->generate_output =
+      GST_DEBUG_FUNCPTR (gst_cc_converter_generate_output);
   basetransform_class->passthrough_on_same_caps = TRUE;
 
   GST_DEBUG_CATEGORY_INIT (gst_cc_converter_debug, "ccconverter",
