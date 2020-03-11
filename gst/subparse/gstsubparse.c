@@ -903,8 +903,18 @@ parse_subrip_time (const gchar * ts_string, GstClockTime * t)
 
   GST_LOG ("parsing timestamp '%s'", s);
   if (sscanf (s, "%u:%u:%u,%u", &hour, &min, &sec, &msec) != 4) {
-    GST_WARNING ("failed to parse subrip timestamp string '%s'", s);
-    return FALSE;
+    /* https://www.w3.org/TR/webvtt1/#webvtt-timestamp
+     *
+     * The hours component is optional with webVTT, for example
+     * mm:ss,500 is a valid webVTT timestamp. When not present,
+     * hours is 0.
+     */
+    hour = 0;
+
+    if (sscanf (s, "%u:%u,%u", &min, &sec, &msec) != 3) {
+      GST_WARNING ("failed to parse subrip timestamp string '%s'", s);
+      return FALSE;
+    }
   }
 
   *t = ((hour * 3600) + (min * 60) + sec) * GST_SECOND + msec * GST_MSECOND;
