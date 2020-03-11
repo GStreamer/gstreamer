@@ -29,7 +29,8 @@
 G_DECLARE_FINAL_TYPE(GstV4l2CodecPool, gst_v4l2_codec_pool, GST,
     V4L2_CODEC_POOL, GstBufferPool)
 
-GstV4l2CodecPool *gst_v4l2_codec_pool_new  (GstV4l2CodecAllocator *allocator);
+GstV4l2CodecPool *gst_v4l2_codec_pool_new  (GstV4l2CodecAllocator *allocator,
+                                            const GstVideoInfo * vinfo);
 
 guint32           gst_v4l2_codec_buffer_get_index (GstBuffer * buffer);
 
