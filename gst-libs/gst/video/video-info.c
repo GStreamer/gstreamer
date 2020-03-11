@@ -825,6 +825,8 @@ fill_planes (GstVideoInfo * info, gsize plane_size[GST_VIDEO_MAX_PLANES])
       break;
     case GST_VIDEO_FORMAT_v216:
     case GST_VIDEO_FORMAT_Y210:
+    case GST_VIDEO_FORMAT_Y212_BE:
+    case GST_VIDEO_FORMAT_Y212_LE:
       info->stride[0] = GST_ROUND_UP_8 (width * 4);
       info->offset[0] = 0;
       info->size = info->stride[0] * height;

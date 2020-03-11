@@ -5930,6 +5930,8 @@ get_scale_format (GstVideoFormat format, gint plane)
     case GST_VIDEO_FORMAT_P016_LE:
     case GST_VIDEO_FORMAT_P012_BE:
     case GST_VIDEO_FORMAT_P012_LE:
+    case GST_VIDEO_FORMAT_Y212_BE:
+    case GST_VIDEO_FORMAT_Y212_LE:
       res = format;
       g_assert_not_reached ();
       break;
