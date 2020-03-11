@@ -130,7 +130,12 @@ if build_gir
   pymod = import('python')
   python = pymod.find_installation(required: get_option('python'))
   if python.found()
-    python_dep = python.dependency(required : get_option('python'))
+    # Workaround for https://github.com/mesonbuild/meson/issues/5629
+    pythonver = python.language_version()
+    python_dep = dependency('python-@0@-embed'.format(pythonver), version: '>=3', required: false)
+    if not python_dep.found()
+      python_dep = python.dependency(required : get_option('python'))
+    endif
   else
     python_dep = dependency('', required: false)
   endif
