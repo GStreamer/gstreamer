@@ -1127,39 +1127,33 @@ static gboolean
 mastering_display_metadata_av_to_gst (AVMasteringDisplayMetadata * av,
     GstVideoMasteringDisplayInfo * gst)
 {
+  const guint64 chroma_scale = 50000;
+  const guint64 luma_scale = 10000;
+  gint i;
+
   /* Use only complete mastering meta */
   if (!av->has_primaries || !av->has_luminance)
     return FALSE;
 
-  gst->Wx_n = av->white_point[0].num;
-  gst->Wx_d = av->white_point[0].den;
+  for (i = 0; i < G_N_ELEMENTS (gst->display_primaries); i++) {
+    gst->display_primaries[i].x = (guint16) gst_util_uint64_scale (chroma_scale,
+        av->display_primaries[i][0].num, av->display_primaries[i][0].den);
+    gst->display_primaries[i].y = (guint16) gst_util_uint64_scale (chroma_scale,
+        av->display_primaries[i][1].num, av->display_primaries[i][1].den);
+  }
 
-  gst->Wy_n = av->white_point[1].num;
-  gst->Wy_d = av->white_point[1].den;
+  gst->white_point.x = (guint16) gst_util_uint64_scale (chroma_scale,
+      av->white_point[0].num, av->white_point[0].den);
+  gst->white_point.y = (guint16) gst_util_uint64_scale (chroma_scale,
+      av->white_point[1].num, av->white_point[1].den);
 
-  gst->Rx_n = av->display_primaries[0][0].num;
-  gst->Rx_d = av->display_primaries[0][0].den;
 
-  gst->Ry_n = av->display_primaries[0][1].num;
-  gst->Ry_d = av->display_primaries[0][1].den;
-
-  gst->Gx_n = av->display_primaries[1][0].num;
-  gst->Gx_d = av->display_primaries[1][0].den;
-
-  gst->Gy_n = av->display_primaries[1][1].num;
-  gst->Gy_d = av->display_primaries[1][1].den;
-
-  gst->Bx_n = av->display_primaries[2][0].num;
-  gst->Bx_d = av->display_primaries[2][0].den;
-
-  gst->By_n = av->display_primaries[2][1].num;
-  gst->By_d = av->display_primaries[2][1].den;
-
-  gst->max_luma_n = av->max_luminance.num;
-  gst->max_luma_d = av->max_luminance.den;
-
-  gst->min_luma_n = av->min_luminance.num;
-  gst->min_luma_d = av->min_luminance.den;
+  gst->max_display_mastering_luminance =
+      (guint32) gst_util_uint64_scale (luma_scale,
+      av->max_luminance.num, av->max_luminance.den);
+  gst->min_display_mastering_luminance =
+      (guint32) gst_util_uint64_scale (luma_scale,
+      av->min_luminance.num, av->min_luminance.den);
 
   return TRUE;
 }
@@ -1168,11 +1162,8 @@ static gboolean
 content_light_metadata_av_to_gst (AVContentLightMetadata * av,
     GstVideoContentLightLevel * gst)
 {
-  gst->maxCLL_n = av->MaxCLL;
-  gst->maxCLL_d = 1;
-
-  gst->maxFALL_n = av->MaxFALL;
-  gst->maxFALL_d = 1;
+  gst->max_content_light_level = av->MaxCLL;
+  gst->max_frame_average_light_level = av->MaxFALL;
 
   return TRUE;
 }
@@ -1316,26 +1307,26 @@ gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
   if (!gst_structure_has_field (in_s, "mastering-display-info")) {
     AVFrameSideData *sd = av_frame_get_side_data (picture,
         AV_FRAME_DATA_MASTERING_DISPLAY_METADATA);
-    GstVideoMasteringDisplayInfo mastering;
+    GstVideoMasteringDisplayInfo minfo;
 
     if (sd
         && mastering_display_metadata_av_to_gst ((AVMasteringDisplayMetadata *)
-            sd->data, &mastering)) {
-      GST_LOG_OBJECT (ffmpegdec, "update mastering display info");
-      GST_LOG_OBJECT (ffmpegdec, "\tRed  (%u/%u, %u/%u)", mastering.Rx_n,
-          mastering.Rx_d, mastering.Ry_n, mastering.Ry_d);
-      GST_LOG_OBJECT (ffmpegdec, "\tGreen(%u/%u, %u/%u)", mastering.Gx_n,
-          mastering.Gx_d, mastering.Gy_n, mastering.Gy_d);
-      GST_LOG_OBJECT (ffmpegdec, "\tBlue (%u/%u, %u/%u)", mastering.Bx_n,
-          mastering.Bx_d, mastering.By_n, mastering.By_d);
-      GST_LOG_OBJECT (ffmpegdec, "\tWhite(%u/%u, %u/%u)", mastering.Wx_n,
-          mastering.Wx_d, mastering.Wy_n, mastering.Wy_d);
-      GST_LOG_OBJECT (ffmpegdec,
-          "\tmax_luminance:(%u/%u), min_luminance:(%u/%u)",
-          mastering.max_luma_n, mastering.max_luma_d, mastering.min_luma_n,
-          mastering.min_luma_d);
+            sd->data, &minfo)) {
+      GST_LOG_OBJECT (ffmpegdec, "update mastering display info: "
+          "Red(%u, %u) "
+          "Green(%u, %u) "
+          "Blue(%u, %u) "
+          "White(%u, %u) "
+          "max_luminance(%u) "
+          "min_luminance(%u) ",
+          minfo.display_primaries[0].x, minfo.display_primaries[0].y,
+          minfo.display_primaries[1].x, minfo.display_primaries[1].y,
+          minfo.display_primaries[2].x, minfo.display_primaries[2].y,
+          minfo.white_point.x, minfo.white_point.y,
+          minfo.max_display_mastering_luminance,
+          minfo.min_display_mastering_luminance);
 
-      if (!gst_video_mastering_display_info_add_to_caps (&mastering,
+      if (!gst_video_mastering_display_info_add_to_caps (&minfo,
               output_state->caps)) {
         GST_WARNING_OBJECT (ffmpegdec,
             "Couldn't set mastering display info to caps");
@@ -1346,17 +1337,15 @@ gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
   if (!gst_structure_has_field (in_s, "content-light-level")) {
     AVFrameSideData *sd = av_frame_get_side_data (picture,
         AV_FRAME_DATA_CONTENT_LIGHT_LEVEL);
-    GstVideoContentLightLevel level;
+    GstVideoContentLightLevel cll;
 
     if (sd && content_light_metadata_av_to_gst ((AVContentLightMetadata *)
-            sd->data, &level)) {
-      GST_LOG_OBJECT (ffmpegdec, "update content light level");
-      GST_LOG_OBJECT (ffmpegdec,
-          "\tmaxCLL:(%u/%u), maxFALL:(%u/%u)", level.maxCLL_n, level.maxCLL_d,
-          level.maxFALL_n, level.maxFALL_d);
+            sd->data, &cll)) {
+      GST_LOG_OBJECT (ffmpegdec, "update content light level: "
+          "maxCLL:(%u), maxFALL:(%u)", cll.max_content_light_level,
+          cll.max_frame_average_light_level);
 
-      if (!gst_video_content_light_level_add_to_caps (&level,
-              output_state->caps)) {
+      if (!gst_video_content_light_level_add_to_caps (&cll, output_state->caps)) {
         GST_WARNING_OBJECT (ffmpegdec,
             "Couldn't set content light level to caps");
       }
