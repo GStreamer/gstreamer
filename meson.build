@@ -108,7 +108,7 @@ foreach sp : subprojects
     # Replace by using subproject.get_variable('plugins', [])
     # when https://github.com/mesonbuild/meson/pull/5426/files
     # is merged and released
-    if build_infos.has_key('has-plugins', default: false)
+    if build_infos.get('has-plugins', false)
       plugins = subproj.get_variable('plugins')
     else
       plugins = []
@@ -121,7 +121,7 @@ foreach sp : subprojects
       message('Created symlink to ' + project_name)
     endif
 
-    if not meson.is_cross_build() and build_infos.has_key('build-hotdoc', default: false)
+    if not meson.is_cross_build() and build_infos.get('build-hotdoc', false)
       if plugins.length() > 0
         plugins_doc_caches += [subproj.get_variable('plugins_doc_dep')]
       endif
