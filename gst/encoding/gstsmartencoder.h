@@ -23,19 +23,9 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_SMART_ENCODER \
-  (gst_smart_encoder_get_type())
-#define GST_SMART_ENCODER(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SMART_ENCODER,GstSmartEncoder))
-#define GST_SMART_ENCODER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SMART_ENCODER,GstSmartEncoderClass))
-#define GST_IS_SMART_ENCODER(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SMART_ENCODER))
-#define GST_IS_SMART_ENCODER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SMART_ENCODER))
-
-typedef struct _GstSmartEncoder GstSmartEncoder;
-typedef struct _GstSmartEncoderClass GstSmartEncoderClass;
+#define GST_TYPE_SMART_ENCODER (gst_smart_encoder_get_type())
+G_DECLARE_FINAL_TYPE (GstSmartEncoder, gst_smart_encoder, GST, SMART_ENCODER,
+    GstElement)
 
 struct _GstSmartEncoder {
   GstElement element;
@@ -59,12 +49,6 @@ struct _GstSmartEncoder {
   /* Available caps at runtime */
   GstCaps *available_caps;
 };
-
-struct _GstSmartEncoderClass {
-  GstElementClass parent_class;
-};
-
-GType gst_smart_encoder_get_type(void);
 
 G_END_DECLS
 

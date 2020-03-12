@@ -23,14 +23,9 @@
 
 #include <gst/gst.h>
 
-#define GST_TYPE_STREAM_SPLITTER               (gst_stream_splitter_get_type())
-#define GST_STREAM_SPLITTER(obj)               (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_STREAM_SPLITTER,GstStreamSplitter))
-#define GST_STREAM_SPLITTER_CLASS(klass)       (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_STREAM_SPLITTER,GstStreamSplitterClass))
-#define GST_IS_STREAM_SPLITTER(obj)            (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_STREAM_SPLITTER))
-#define GST_IS_STREAM_SPLITTER_CLASS(klass)    (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_STREAM_SPLITTER))
-
-typedef struct _GstStreamSplitter GstStreamSplitter;
-typedef struct _GstStreamSplitterClass GstStreamSplitterClass;
+#define GST_TYPE_STREAM_SPLITTER (gst_stream_splitter_get_type())
+G_DECLARE_FINAL_TYPE (GstStreamSplitter, gst_stream_splitter,
+    GST, STREAM_SPLITTER, GstElement)
 
 struct _GstStreamSplitter {
   GstElement parent;
@@ -52,12 +47,6 @@ struct _GstStreamSplitter {
 
   guint32 keyunit_seqnum;
 };
-
-struct _GstStreamSplitterClass {
-  GstElementClass parent;
-};
-
-GType gst_stream_splitter_get_type(void);
 
 GstElement *gst_stream_splitter_new (gchar *name);
 

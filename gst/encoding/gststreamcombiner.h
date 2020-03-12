@@ -23,14 +23,9 @@
 
 #include <gst/gst.h>
 
-#define GST_TYPE_STREAM_COMBINER               (gst_stream_combiner_get_type())
-#define GST_STREAM_COMBINER(obj)               (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_STREAM_COMBINER,GstStreamCombiner))
-#define GST_STREAM_COMBINER_CLASS(klass)       (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_STREAM_COMBINER,GstStreamCombinerClass))
-#define GST_IS_STREAM_COMBINER(obj)            (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_STREAM_COMBINER))
-#define GST_IS_STREAM_COMBINER_CLASS(klass)    (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_STREAM_COMBINER))
-
-typedef struct _GstStreamCombiner GstStreamCombiner;
-typedef struct _GstStreamCombinerClass GstStreamCombinerClass;
+#define GST_TYPE_STREAM_COMBINER (gst_stream_combiner_get_type())
+G_DECLARE_FINAL_TYPE (GstStreamCombiner, gst_stream_combiner,
+    GST, STREAM_COMBINER, GstElement)
 
 struct _GstStreamCombiner {
   GstElement parent;
@@ -48,12 +43,6 @@ struct _GstStreamCombiner {
   guint32 cookie;
 
 };
-
-struct _GstStreamCombinerClass {
-  GstElementClass parent;
-};
-
-GType gst_stream_combiner_get_type(void);
 
 GstElement *gst_stream_combiner_new (gchar *name);
 
