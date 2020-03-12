@@ -28,15 +28,10 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_VIDEO_CONVERT	          (gst_video_convert_get_type())
-#define GST_VIDEO_CONVERT(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_CONVERT,GstVideoConvert))
-#define GST_VIDEO_CONVERT_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEO_CONVERT,GstVideoConvertClass))
-#define GST_IS_VIDEO_CONVERT(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_CONVERT))
-#define GST_IS_VIDEO_CONVERT_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_CONVERT))
-#define GST_VIDEO_CONVERT_CAST(obj)       ((GstVideoConvert *)(obj))
-
-typedef struct _GstVideoConvert GstVideoConvert;
-typedef struct _GstVideoConvertClass GstVideoConvertClass;
+#define GST_TYPE_VIDEO_CONVERT (gst_video_convert_get_type())
+#define GST_VIDEO_CONVERT_CAST(obj) ((GstVideoConvert *)(obj))
+G_DECLARE_FINAL_TYPE (GstVideoConvert, gst_video_convert, GST, VIDEO_CONVERT,
+    GstVideoFilter)
 
 /**
  * GstVideoConvert:
@@ -57,11 +52,6 @@ struct _GstVideoConvert {
   GstVideoPrimariesMode primaries_mode;
   gdouble alpha_value;
   gint n_threads;
-};
-
-struct _GstVideoConvertClass
-{
-  GstVideoFilterClass parent_class;
 };
 
 G_END_DECLS

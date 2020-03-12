@@ -52,8 +52,6 @@ GST_DEBUG_CATEGORY (videoconvert_debug);
 #define GST_CAT_DEFAULT videoconvert_debug
 GST_DEBUG_CATEGORY_STATIC (CAT_PERFORMANCE);
 
-GType gst_video_convert_get_type (void);
-
 static GQuark _colorspace_quark;
 
 #define gst_video_convert_parent_class parent_class
