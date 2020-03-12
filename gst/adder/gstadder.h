@@ -29,17 +29,8 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_ADDER            (gst_adder_get_type())
-#define GST_ADDER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ADDER,GstAdder))
-#define GST_IS_ADDER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ADDER))
-#define GST_ADDER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass) ,GST_TYPE_ADDER,GstAdderClass))
-#define GST_IS_ADDER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_ADDER))
-
-typedef struct _GstAdder             GstAdder;
-typedef struct _GstAdderClass        GstAdderClass;
-
-typedef struct _GstAdderPad GstAdderPad;
-typedef struct _GstAdderPadClass GstAdderPadClass;
+#define GST_TYPE_ADDER (gst_adder_get_type())
+G_DECLARE_FINAL_TYPE (GstAdder, gst_adder, GST, ADDER, GstElement)
 
 /**
  * GstAdder:
@@ -78,18 +69,8 @@ struct _GstAdder {
   gboolean send_caps;
 };
 
-struct _GstAdderClass {
-  GstElementClass parent_class;
-};
-
-GType    gst_adder_get_type (void);
-
-#define GST_TYPE_ADDER_PAD            (gst_adder_pad_get_type())
-#define GST_ADDER_PAD(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ADDER_PAD,GstAdderPad))
-#define GST_IS_ADDER_PAD(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ADDER_PAD))
-#define GST_ADDER_PAD_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass) ,GST_TYPE_ADDER_PAD,GstAdderPadClass))
-#define GST_IS_ADDER_PAD_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_ADDER_PAD))
-#define GST_ADDER_PAD_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_ADDER_PAD,GstAdderPadClass))
+#define GST_TYPE_ADDER_PAD (gst_adder_pad_get_type())
+G_DECLARE_FINAL_TYPE (GstAdderPad, gst_adder_pad, GST, ADDER_PAD, GstPad)
 
 struct _GstAdderPad {
   GstPad parent;
@@ -101,13 +82,6 @@ struct _GstAdderPad {
   gboolean mute;
 };
 
-struct _GstAdderPadClass {
-  GstPadClass parent_class;
-};
-
-GType gst_adder_pad_get_type (void);
-
 G_END_DECLS
-
 
 #endif /* __GST_ADDER_H__ */
