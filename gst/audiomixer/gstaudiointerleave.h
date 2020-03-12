@@ -31,18 +31,9 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_AUDIO_INTERLEAVE            (gst_audio_interleave_get_type())
-#define GST_AUDIO_INTERLEAVE(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIO_INTERLEAVE,GstAudioInterleave))
-#define GST_IS_AUDIO_INTERLEAVE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_INTERLEAVE))
-#define GST_AUDIO_INTERLEAVE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass) ,GST_TYPE_AUDIO_INTERLEAVE,GstAudioInterleaveClass))
-#define GST_IS_AUDIO_INTERLEAVE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_AUDIO_INTERLEAVE))
-#define GST_AUDIO_INTERLEAVE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_AUDIO_INTERLEAVE,GstAudioInterleaveClass))
-
-typedef struct _GstAudioInterleave             GstAudioInterleave;
-typedef struct _GstAudioInterleaveClass        GstAudioInterleaveClass;
-
-typedef struct _GstAudioInterleavePad GstAudioInterleavePad;
-typedef struct _GstAudioInterleavePadClass GstAudioInterleavePadClass;
+#define GST_TYPE_AUDIO_INTERLEAVE (gst_audio_interleave_get_type())
+G_DECLARE_FINAL_TYPE (GstAudioInterleave, gst_audio_interleave,
+    GST, AUDIO_INTERLEAVE, GstAudioAggregator)
 
 typedef void (*GstInterleaveFunc) (gpointer out, gpointer in, guint stride,
     guint nframes);
@@ -69,18 +60,10 @@ struct _GstAudioInterleave {
   GstInterleaveFunc func;
 };
 
-struct _GstAudioInterleaveClass {
-  GstAudioAggregatorClass parent_class;
-};
 
-GType    gst_audio_interleave_get_type (void);
-
-#define GST_TYPE_AUDIO_INTERLEAVE_PAD            (gst_audio_interleave_pad_get_type())
-#define GST_AUDIO_INTERLEAVE_PAD(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIO_INTERLEAVE_PAD,GstAudioInterleavePad))
-#define GST_IS_AUDIO_INTERLEAVE_PAD(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_INTERLEAVE_PAD))
-#define GST_AUDIO_INTERLEAVE_PAD_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass) ,GST_TYPE_AUDIO_INTERLEAVE_PAD,GstAudioInterleavePadClass))
-#define GST_IS_AUDIO_INTERLEAVE_PAD_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_AUDIO_INTERLEAVE_PAD))
-#define GST_AUDIO_INTERLEAVE_PAD_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_AUDIO_INTERLEAVE_PAD,GstAudioInterleavePadClass))
+#define GST_TYPE_AUDIO_INTERLEAVE_PAD (gst_audio_interleave_pad_get_type())
+G_DECLARE_FINAL_TYPE (GstAudioInterleavePad, gst_audio_interleave_pad,
+    GST, AUDIO_INTERLEAVE_PAD, GstAudioAggregatorConvertPad)
 
 struct _GstAudioInterleavePad {
   GstAudioAggregatorPad parent;
@@ -88,13 +71,6 @@ struct _GstAudioInterleavePad {
   guint channel;
 };
 
-struct _GstAudioInterleavePadClass {
-  GstAudioAggregatorPadClass parent_class;
-};
-
-GType gst_audio_interleave_pad_get_type (void);
-
 G_END_DECLS
-
 
 #endif /* __GST_AUDIO_INTERLEAVE_H__ */
