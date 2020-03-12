@@ -23,13 +23,13 @@
 #include "config.h"
 #endif
 
-#include "plugin.h"
+#include "gstaudioconvert.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "audioconvert",
-          GST_RANK_PRIMARY, gst_audio_convert_get_type ()))
+          GST_RANK_PRIMARY, GST_TYPE_AUDIO_CONVERT))
     return FALSE;
 
   return TRUE;

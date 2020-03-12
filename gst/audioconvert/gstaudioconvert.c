@@ -110,7 +110,6 @@
 #include <string.h>
 
 #include "gstaudioconvert.h"
-#include "plugin.h"
 
 GST_DEBUG_CATEGORY (audio_convert_debug);
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
