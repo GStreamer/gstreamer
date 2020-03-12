@@ -1147,6 +1147,9 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
       || timecodestamper->reset_internal_tc_from_seek) {
     gchar *tc_str;
 
+    if (timecodestamper->internal_tc)
+      gst_video_time_code_free (timecodestamper->internal_tc);
+
     timecodestamper->reset_internal_tc_from_seek = FALSE;
     if (timecodestamper->set_internal_tc) {
       timecodestamper->internal_tc =
