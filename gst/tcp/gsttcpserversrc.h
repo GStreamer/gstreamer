@@ -61,6 +61,9 @@ struct _GstTCPServerSrc {
   GCancellable *cancellable;
   GSocket *server_socket;
   GSocket *client_socket;
+
+  guint64 bytes_received;
+  GstStructure *stats;
 };
 
 struct _GstTCPServerSrcClass {

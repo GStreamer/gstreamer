@@ -6,6 +6,7 @@ tcp_sources = [
   'gsttcpclientsink.c',
   'gsttcpserversrc.c',
   'gsttcpserversink.c',
+  'gsttcpsrcstats.c',
   'gsttcpplugin.c',
 ]
 

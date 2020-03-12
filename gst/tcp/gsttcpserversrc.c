@@ -42,6 +42,7 @@
 
 #include <gst/gst-i18n-plugin.h>
 #include "gsttcp.h"
+#include "gsttcpsrcstats.h"
 #include "gsttcpserversrc.h"
 
 GST_DEBUG_CATEGORY_STATIC (tcpserversrc_debug);
@@ -62,7 +63,8 @@ enum
   PROP_0,
   PROP_HOST,
   PROP_PORT,
-  PROP_CURRENT_PORT
+  PROP_CURRENT_PORT,
+  PROP_STATS,
 };
 
 #define gst_tcp_server_src_parent_class parent_class
@@ -81,6 +83,7 @@ static void gst_tcp_server_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_tcp_server_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static GstStructure *gst_tcp_server_src_get_stats (GstTCPServerSrc * src);
 
 static void
 gst_tcp_server_src_class_init (GstTCPServerSrcClass * klass)
@@ -122,6 +125,30 @@ gst_tcp_server_src_class_init (GstTCPServerSrcClass * klass)
       g_param_spec_int ("current-port", "current-port",
           "The port number the socket is currently bound to", 0,
           TCP_HIGHEST_PORT, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstTCPServerSrc::stats:
+   *
+   * Sends a GstStructure with statistics. We count bytes-received in a
+   * platform-independent way and the rest via the tcp_info struct, if it's
+   * available. The OS takes care of the TCP layer for us so we can't know it
+   * from here.
+   *
+   * Struct members:
+   *
+   * bytes-received (uint64): Total bytes received (platform-independent)
+   * reordering (uint): Amount of reordering (linux-specific)
+   * unacked (uint): Un-acked packets (linux-specific)
+   * sacked (uint): Selective acked packets (linux-specific)
+   * lost (uint): Lost packets (linux-specific)
+   * retrans (uint): Retransmits (linux-specific)
+   * fackets (uint): Forward acknowledgement (linux-specific)
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (gobject_class, PROP_STATS,
+      g_param_spec_boxed ("stats", "Stats", "Retrieve a statistics structure",
+          GST_TYPE_STRUCTURE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
 
@@ -170,6 +197,8 @@ gst_tcp_server_src_finalize (GObject * gobject)
 
   g_free (src->host);
   src->host = NULL;
+
+  gst_clear_structure (&src->stats);
 
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
@@ -277,6 +306,7 @@ gst_tcp_server_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
     ret = GST_FLOW_OK;
     gst_buffer_unmap (*outbuf, &map);
     gst_buffer_resize (*outbuf, 0, rret);
+    src->bytes_received += read;
 
     GST_LOG_OBJECT (src,
         "Returning buffer from _get of size %" G_GSIZE_FORMAT ", ts %"
@@ -372,6 +402,9 @@ gst_tcp_server_src_get_property (GObject * object, guint prop_id,
     case PROP_CURRENT_PORT:
       g_value_set_int (value, g_atomic_int_get (&tcpserversrc->current_port));
       break;
+    case PROP_STATS:
+      g_value_take_boxed (value, gst_tcp_server_src_get_stats (tcpserversrc));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -388,6 +421,9 @@ gst_tcp_server_src_start (GstBaseSrc * bsrc)
   GSocketAddress *saddr;
   GResolver *resolver;
   gint bound_port = 0;
+
+  src->bytes_received = 0;
+  gst_clear_structure (&src->stats);
 
   /* look up name if we need to */
   addr = g_inet_address_new_from_string (src->host);
@@ -516,6 +552,8 @@ gst_tcp_server_src_stop (GstBaseSrc * bsrc)
   if (src->client_socket) {
     GST_DEBUG_OBJECT (src, "closing socket");
 
+    src->stats = gst_tcp_server_src_get_stats (src);
+
     if (!g_socket_close (src->client_socket, &err)) {
       GST_ERROR_OBJECT (src, "Failed to close socket: %s", err->message);
       g_clear_error (&err);
@@ -563,4 +601,22 @@ gst_tcp_server_src_unlock_stop (GstBaseSrc * bsrc)
   src->cancellable = g_cancellable_new ();
 
   return TRUE;
+}
+
+
+static GstStructure *
+gst_tcp_server_src_get_stats (GstTCPServerSrc * src)
+{
+  GstStructure *s;
+
+  /* we can't get the values post stop so just return the saved ones */
+  if (src->stats)
+    return gst_structure_copy (src->stats);
+
+  s = gst_structure_new ("GstTCPServerSrcStats",
+      "bytes-received", G_TYPE_UINT64, src->bytes_received, NULL);
+
+  gst_tcp_stats_from_socket (s, src->client_socket);
+
+  return s;
 }
