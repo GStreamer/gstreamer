@@ -26,22 +26,12 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_RAW_VIDEO_PARSE \
-  (gst_raw_video_parse_get_type())
-#define GST_RAW_VIDEO_PARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_RAW_VIDEO_PARSE, GstRawVideoParse))
-#define GST_RAW_VIDEO_PARSE_CAST(obj) \
-  ((GstRawVideoParse *)(obj))
-#define GST_RAW_VIDEO_PARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_RAW_VIDEO_PARSE, GstRawVideoParseClass))
-#define GST_IS_RAW_VIDEO_PARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_RAW_VIDEO_PARSE))
-#define GST_IS_RAW_VIDEO_PARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_RAW_VIDEO_PARSE))
+#define GST_TYPE_RAW_VIDEO_PARSE (gst_raw_video_parse_get_type())
+#define GST_RAW_VIDEO_PARSE_CAST(obj) ((GstRawVideoParse *)(obj))
+G_DECLARE_FINAL_TYPE (GstRawVideoParse, gst_raw_video_parse,
+    GST, RAW_VIDEO_PARSE, GstRawBaseParse)
 
 typedef struct _GstRawVideoParseConfig GstRawVideoParseConfig;
-typedef struct _GstRawVideoParse GstRawVideoParse;
-typedef struct _GstRawVideoParseClass GstRawVideoParseClass;
 
 /* Contains information about the video frame format. */
 struct _GstRawVideoParseConfig
@@ -100,13 +90,6 @@ struct _GstRawVideoParse
    * or to sink_caps_config. This is never NULL. */
   GstRawVideoParseConfig *current_config;
 };
-
-struct _GstRawVideoParseClass
-{
-  GstRawBaseParseClass parent_class;
-};
-
-GType gst_raw_video_parse_get_type (void);
 
 G_END_DECLS
 

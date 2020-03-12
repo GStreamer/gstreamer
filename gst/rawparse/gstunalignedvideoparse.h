@@ -26,23 +26,10 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_UNALIGNED_VIDEO_PARSE \
-  (gst_unaligned_video_parse_get_type())
-#define GST_UNALIGNED_VIDEO_PARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_UNALIGNED_VIDEO_PARSE, GstUnalignedVideoParse))
-#define GST_UNALIGNED_VIDEO_PARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_UNALIGNED_VIDEO_PARSE, GstUnalignedVideoParseClass))
-#define GST_UNALIGNED_VIDEO_PARSE_CAST(obj) \
-  ((GstUnalignedVideoParse *)(obj))
-#define GST_IS_UNALIGNED_VIDEO_PARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_UNALIGNED_VIDEO_PARSE))
-#define GST_IS_UNALIGNED_VIDEO_PARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_UNALIGNED_VIDEO_PARSE))
-
-typedef struct _GstUnalignedVideoParse GstUnalignedVideoParse;
-typedef struct _GstUnalignedVideoParseClass GstUnalignedVideoParseClass;
-
-GType gst_unaligned_video_parse_get_type (void);
+#define GST_TYPE_UNALIGNED_VIDEO_PARSE (gst_unaligned_video_parse_get_type())
+#define GST_UNALIGNED_VIDEO_PARSE_CAST(obj) ((GstRawAudioParse *)(obj))
+G_DECLARE_FINAL_TYPE (GstUnalignedVideoParse, gst_unaligned_video_parse,
+    GST, UNALIGNED_VIDEO_PARSE, GstBin)
 
 G_END_DECLS
 

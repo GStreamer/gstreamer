@@ -35,11 +35,6 @@ struct _GstUnalignedAudioParse
   GstElement *inner_parser;
 };
 
-struct _GstUnalignedAudioParseClass
-{
-  GstBinClass parent_class;
-};
-
 static GstStaticPadTemplate static_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,

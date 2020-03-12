@@ -26,23 +26,10 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_UNALIGNED_AUDIO_PARSE \
-  (gst_unaligned_audio_parse_get_type())
-#define GST_UNALIGNED_AUDIO_PARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_UNALIGNED_AUDIO_PARSE, GstUnalignedAudioParse))
-#define GST_UNALIGNED_AUDIO_PARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_UNALIGNED_AUDIO_PARSE, GstUnalignedAudioParseClass))
-#define GST_UNALIGNED_AUDIO_PARSE_CAST(obj) \
-  ((GstUnalignedAudioParse *)(obj))
-#define GST_IS_UNALIGNED_AUDIO_PARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_UNALIGNED_AUDIO_PARSE))
-#define GST_IS_UNALIGNED_AUDIO_PARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_UNALIGNED_AUDIO_PARSE))
-
-typedef struct _GstUnalignedAudioParse GstUnalignedAudioParse;
-typedef struct _GstUnalignedAudioParseClass GstUnalignedAudioParseClass;
-
-GType gst_unaligned_audio_parse_get_type (void);
+#define GST_TYPE_UNALIGNED_AUDIO_PARSE (gst_unaligned_audio_parse_get_type())
+#define GST_UNALIGNED_AUDIO_PARSE_CAST(obj) ((GstRawAudioParse *)(obj))
+G_DECLARE_FINAL_TYPE (GstUnalignedAudioParse, gst_unaligned_audio_parse,
+    GST, UNALIGNED_AUDIO_PARSE, GstBin)
 
 G_END_DECLS
 
