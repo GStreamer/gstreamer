@@ -537,7 +537,7 @@ retry:
    * upstream msdk element sometimes needs to wait for a gst buffer
    * to be released in downstream.
    *
-   * Poll the pool for a maximum of 20 milisecnds.
+   * Poll the pool for a maximum of 20 millisecond.
    *
    * FIXME: Is there any better way to handle this case?
    */

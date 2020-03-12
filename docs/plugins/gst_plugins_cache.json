@@ -843,7 +843,7 @@
                         "writable": true
                     },
                     "preroll": {
-                        "blurb": "The preroll time (milisecs)",
+                        "blurb": "The preroll time (milliseconds)",
                         "construct": true,
                         "construct-only": false,
                         "default": "5000",

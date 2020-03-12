@@ -135,7 +135,7 @@ struct _GstAsfMux
   /* same as properties, but those are stored here to be
    * used without modification while muxing a single file */
   guint32 packet_size;
-  guint64 preroll;              /* milisecs */
+  guint64 preroll;              /* milliseconds */
   gboolean merge_stream_tags;
 
   GstClockTime first_ts;

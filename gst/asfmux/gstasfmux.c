@@ -242,7 +242,7 @@ gst_asf_mux_class_init (GstAsfMuxClass * klass)
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PREROLL,
       g_param_spec_uint64 ("preroll", "Preroll",
-          "The preroll time (milisecs)",
+          "The preroll time (milliseconds)",
           0, G_MAXUINT64,
           DEFAULT_PREROLL,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
