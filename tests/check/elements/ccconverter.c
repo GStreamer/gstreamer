@@ -22,6 +22,7 @@
 #include "config.h"
 #endif
 #include <gst/gst.h>
+#include <gst/video/video.h>
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstharness.h>
 
@@ -145,10 +146,12 @@ GST_END_TEST;
 
 static void
 check_conversion (const guint8 * in, guint in_len, const guint8 * out,
-    guint out_len, const gchar * in_caps, const gchar * out_caps)
+    guint out_len, const gchar * in_caps, const gchar * out_caps,
+    const GstVideoTimeCode * in_tc, const GstVideoTimeCode * out_tc)
 {
   GstHarness *h;
   GstBuffer *buffer;
+  GstVideoTimeCodeMeta *out_tc_meta;
 
   h = gst_harness_new ("ccconverter");
 
@@ -158,21 +161,40 @@ check_conversion (const guint8 * in, guint in_len, const guint8 * out,
   buffer =
       gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, (gpointer) in,
       in_len, 0, in_len, NULL, NULL);
+  if (in_tc)
+    gst_buffer_add_video_time_code_meta (buffer, in_tc);
 
   buffer = gst_harness_push_and_pull (h, buffer);
 
   fail_unless (buffer != NULL);
   gst_check_buffer_data (buffer, out, out_len);
+  out_tc_meta = gst_buffer_get_video_time_code_meta (buffer);
+  fail_if (out_tc_meta == NULL && out_tc != NULL);
+  if (out_tc_meta)
+    fail_unless (gst_video_time_code_compare (&out_tc_meta->tc, out_tc) == 0);
+
   gst_buffer_unref (buffer);
 
   gst_harness_teardown (h);
+}
+
+static void
+check_conversion_tc_passthrough (const guint8 * in, guint in_len,
+    const guint8 * out, guint out_len, const gchar * in_caps,
+    const gchar * out_caps)
+{
+  GstVideoTimeCode tc;
+  gst_video_time_code_init (&tc, 30, 1, NULL, GST_VIDEO_TIME_CODE_FLAGS_NONE,
+      1, 2, 3, 4, 0);
+  check_conversion (in, in_len, out, out_len, in_caps, out_caps, &tc, &tc);
+  gst_video_time_code_clear (&tc);
 }
 
 GST_START_TEST (convert_cea608_raw_cea608_s334_1a)
 {
   const guint8 in[] = { 0x80, 0x80 };
   const guint8 out[] = { 0x80, 0x80, 0x80 };
-  check_conversion (in, sizeof (in), out, sizeof (out),
+  check_conversion_tc_passthrough (in, sizeof (in), out, sizeof (out),
       "closedcaption/x-cea-608,format=(string)raw",
       "closedcaption/x-cea-608,format=(string)s334-1a");
 }
@@ -183,7 +205,7 @@ GST_START_TEST (convert_cea608_raw_cea708_cc_data)
 {
   const guint8 in[] = { 0x80, 0x80 };
   const guint8 out[] = { 0xfc, 0x80, 0x80 };
-  check_conversion (in, sizeof (in), out, sizeof (out),
+  check_conversion_tc_passthrough (in, sizeof (in), out, sizeof (out),
       "closedcaption/x-cea-608,format=(string)raw",
       "closedcaption/x-cea-708,format=(string)cc_data");
 }
@@ -201,7 +223,7 @@ GST_START_TEST (convert_cea608_raw_cea708_cdp)
   };
   check_conversion (in, sizeof (in), out, sizeof (out),
       "closedcaption/x-cea-608,format=(string)raw,framerate=(fraction)60/1",
-      "closedcaption/x-cea-708,format=(string)cdp");
+      "closedcaption/x-cea-708,format=(string)cdp", NULL, NULL);
 }
 
 GST_END_TEST;
@@ -210,7 +232,7 @@ GST_START_TEST (convert_cea608_s334_1a_cea608_raw)
 {
   const guint8 in[] = { 0x80, 0x80, 0x80, 0x00, 0x80, 0x80 };
   const guint8 out[] = { 0x80, 0x80 };
-  check_conversion (in, sizeof (in), out, sizeof (out),
+  check_conversion_tc_passthrough (in, sizeof (in), out, sizeof (out),
       "closedcaption/x-cea-608,format=(string)s334-1a",
       "closedcaption/x-cea-608,format=(string)raw");
 }
@@ -224,7 +246,7 @@ GST_START_TEST (convert_cea608_s334_1a_cea608_raw_too_big)
     0x80
   };
   const guint8 out[] = { 0x80, 0x80, 0x80, 0x80 };
-  check_conversion (in, sizeof (in), out, sizeof (out),
+  check_conversion_tc_passthrough (in, sizeof (in), out, sizeof (out),
       "closedcaption/x-cea-608,format=(string)s334-1a",
       "closedcaption/x-cea-608,format=(string)raw");
 }
@@ -235,7 +257,7 @@ GST_START_TEST (convert_cea608_s334_1a_cea708_cc_data)
 {
   const guint8 in[] = { 0x80, 0x80, 0x80, 0x00, 0x80, 0x80 };
   const guint8 out[] = { 0xfc, 0x80, 0x80, 0xfd, 0x80, 0x80 };
-  check_conversion (in, sizeof (in), out, sizeof (out),
+  check_conversion_tc_passthrough (in, sizeof (in), out, sizeof (out),
       "closedcaption/x-cea-608,format=(string)s334-1a",
       "closedcaption/x-cea-708,format=(string)cc_data");
 }
@@ -253,7 +275,7 @@ GST_START_TEST (convert_cea608_s334_1a_cea708_cdp)
   };
   check_conversion (in, sizeof (in), out, sizeof (out),
       "closedcaption/x-cea-608,format=(string)s334-1a,framerate=(fraction)60/1",
-      "closedcaption/x-cea-708,format=(string)cdp");
+      "closedcaption/x-cea-708,format=(string)cdp", NULL, NULL);
 }
 
 GST_END_TEST;
@@ -262,7 +284,7 @@ GST_START_TEST (convert_cea708_cc_data_cea608_raw)
 {
   const guint8 in[] = { 0xfc, 0x80, 0x80, 0xfe, 0x80, 0x80 };
   const guint8 out[] = { 0x80, 0x80 };
-  check_conversion (in, sizeof (in), out, sizeof (out),
+  check_conversion_tc_passthrough (in, sizeof (in), out, sizeof (out),
       "closedcaption/x-cea-708,format=(string)cc_data",
       "closedcaption/x-cea-608,format=(string)raw");
 }
@@ -273,7 +295,7 @@ GST_START_TEST (convert_cea708_cc_data_cea608_s334_1a)
 {
   const guint8 in[] = { 0xfc, 0x80, 0x80, 0xfe, 0x80, 0x80 };
   const guint8 out[] = { 0x80, 0x80, 0x80 };
-  check_conversion (in, sizeof (in), out, sizeof (out),
+  check_conversion_tc_passthrough (in, sizeof (in), out, sizeof (out),
       "closedcaption/x-cea-708,format=(string)cc_data",
       "closedcaption/x-cea-608,format=(string)s334-1a");
 }
@@ -291,7 +313,7 @@ GST_START_TEST (convert_cea708_cc_data_cea708_cdp)
   };
   check_conversion (in, sizeof (in), out, sizeof (out),
       "closedcaption/x-cea-708,format=(string)cc_data,framerate=(fraction)60/1",
-      "closedcaption/x-cea-708,format=(string)cdp");
+      "closedcaption/x-cea-708,format=(string)cdp", NULL, NULL);
 }
 
 GST_END_TEST;
@@ -303,7 +325,7 @@ GST_START_TEST (convert_cea708_cdp_cea608_raw)
     0xfe, 0x80, 0x80, 0x74, 0x00, 0x00, 0x8a
   };
   const guint8 out[] = { 0x80, 0x80 };
-  check_conversion (in, sizeof (in), out, sizeof (out),
+  check_conversion_tc_passthrough (in, sizeof (in), out, sizeof (out),
       "closedcaption/x-cea-708,format=(string)cdp",
       "closedcaption/x-cea-608,format=(string)raw");
 }
@@ -317,7 +339,7 @@ GST_START_TEST (convert_cea708_cdp_cea608_s334_1a)
     0xfe, 0x80, 0x80, 0x74, 0x00, 0x00, 0x8a
   };
   const guint8 out[] = { 0x80, 0x80, 0x80 };
-  check_conversion (in, sizeof (in), out, sizeof (out),
+  check_conversion_tc_passthrough (in, sizeof (in), out, sizeof (out),
       "closedcaption/x-cea-708,format=(string)cdp",
       "closedcaption/x-cea-608,format=(string)s334-1a");
 }
@@ -331,7 +353,7 @@ GST_START_TEST (convert_cea708_cdp_cea708_cc_data)
     0xfe, 0x80, 0x80, 0x74, 0x00, 0x00, 0x8a
   };
   const guint8 out[] = { 0xfc, 0x80, 0x80, 0xfe, 0x80, 0x80 };
-  check_conversion (in, sizeof (in), out, sizeof (out),
+  check_conversion_tc_passthrough (in, sizeof (in), out, sizeof (out),
       "closedcaption/x-cea-708,format=(string)cdp",
       "closedcaption/x-cea-708,format=(string)cc_data");
 }
@@ -350,7 +372,7 @@ GST_START_TEST (convert_cea708_cdp_cea708_cc_data_too_big)
     0xfe, 0x80, 0x80, 0xfe, 0x80, 0x80, 0xfe, 0x80, 0x80, 0xfe, 0x80, 0x80,
     0xfe, 0x80, 0x80, 0xfe, 0x80, 0x80, 0xfe, 0x80, 0x80
   };
-  check_conversion (in, sizeof (in), out, sizeof (out),
+  check_conversion_tc_passthrough (in, sizeof (in), out, sizeof (out),
       "closedcaption/x-cea-708,format=(string)cdp",
       "closedcaption/x-cea-708,format=(string)cc_data");
 }

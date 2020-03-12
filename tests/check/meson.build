@@ -90,7 +90,7 @@ if host_machine.system() != 'windows'
     [['elements/avtpcvfdepay.c'], not avtp_dep.found(), [avtp_dep]],
     [['elements/avtpsink.c'], not avtp_dep.found(), [avtp_dep]],
     [['elements/avtpsrc.c'], not avtp_dep.found(), [avtp_dep]],
-    [['elements/ccconverter.c']],
+    [['elements/ccconverter.c'], not gstvideo_dep.found(), [gstvideo_dep]],
     [['elements/cccombiner.c']],
     [['elements/ccextractor.c']],
     [['elements/clockselect.c']],
