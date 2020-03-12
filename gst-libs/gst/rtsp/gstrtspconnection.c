@@ -4813,7 +4813,7 @@ G_GNUC_BEGIN_IGNORE_DEPRECATIONS
 /**
  * gst_rtsp_connection_connect:
  * @conn: a #GstRTSPConnection
- * @timeout: a #GTimeVal timeout
+ * @timeout: a GTimeVal timeout
  *
  * Attempt to connect to the url of @conn made with
  * gst_rtsp_connection_create(). If @timeout is %NULL this function can block
@@ -4835,7 +4835,7 @@ gst_rtsp_connection_connect (GstRTSPConnection * conn, GTimeVal * timeout)
 /**
  * gst_rtsp_connection_connect_with_response:
  * @conn: a #GstRTSPConnection
- * @timeout: a #GTimeVal timeout
+ * @timeout: a GTimeVal timeout
  * @response: a #GstRTSPMessage
  *
  * Attempt to connect to the url of @conn made with
@@ -5038,7 +5038,7 @@ gst_rtsp_connection_next_timeout (GstRTSPConnection * conn, GTimeVal * timeout)
 /**
  * gst_rtsp_watch_wait_backlog:
  * @watch: a #GstRTSPWatch
- * @timeout: a #GTimeVal timeout
+ * @timeout: a GTimeVal timeout
  *
  * Wait until there is place in the backlog queue, @timeout is reached
  * or @watch is set to flushing.
