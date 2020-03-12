@@ -27,24 +27,11 @@
 #include <aalib.h>
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
+#define GST_TYPE_AATV (gst_aatv_get_type())
+G_DECLARE_FINAL_TYPE (GstAATv, gst_aatv, GST, AATV, GstVideoFilter)
 
-#define GST_TYPE_AATV \
-    (gst_aatv_get_type())
-#define GST_AATV(obj) \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AATV,GstAATv))
-#define GST_AATV_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AATV,GstAATvClass))
-#define GST_IS_AATV(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AATV))
-#define GST_IS_AATV_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AATV))
-
-  typedef struct _GstAATv GstAATv;
-  typedef struct _GstAATvClass GstAATvClass;
   typedef struct _GstAATvDroplet GstAATvDroplet;
   typedef struct _GstAATvARGB GstAATvARGB;
 
@@ -97,15 +84,7 @@ extern "C" {
     struct aa_renderparams ascii_parms;
   };
 
-  struct _GstAATvClass {
-    GstVideoFilterClass parent_class;
-  };
-
-  GType gst_aatv_get_type(void);
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 
 #endif /* __GST_AASINKE_H__ */

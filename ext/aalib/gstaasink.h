@@ -27,24 +27,10 @@
 
 #include <aalib.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
-
-#define GST_TYPE_AASINK \
-  (gst_aasink_get_type())
-#define GST_AASINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AASINK,GstAASink))
-#define GST_AASINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AASINK,GstAASinkClass))
-#define GST_IS_AASINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AASINK))
-#define GST_IS_AASINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AASINK))
-
-typedef struct _GstAASink GstAASink;
-typedef struct _GstAASinkClass GstAASinkClass;
+#define GST_TYPE_AASINK (gst_aasink_get_type())
+G_DECLARE_FINAL_TYPE (GstAASink, gst_aasink, GST, AASINK, GstVideoSink)
 
 struct _GstAASink {
   GstVideoSink parent;
@@ -61,15 +47,6 @@ struct _GstAASink {
   gint aa_driver;
 };
 
-struct _GstAASinkClass {
-  GstVideoSinkClass parent_class;
-};
-
-GType gst_aasink_get_type(void);
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_AASINKE_H__ */
