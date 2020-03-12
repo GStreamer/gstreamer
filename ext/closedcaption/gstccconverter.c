@@ -443,6 +443,46 @@ invalid_caps:
   }
 }
 
+struct cdp_fps_entry
+{
+  guint8 fps_idx;
+  guint fps_n, fps_d;
+  guint max_cc_count;
+};
+
+static const struct cdp_fps_entry cdp_fps_table[] = {
+  {0x1f, 24000, 1001, 25},
+  {0x2f, 24, 1, 25},
+  {0x3f, 25, 1, 24},
+  {0x4f, 30000, 1001, 20},
+  {0x5f, 30, 1, 20},
+  {0x6f, 50, 1, 12},
+  {0x7f, 60000, 1001, 10},
+  {0x8f, 60, 1, 10},
+};
+
+static const struct cdp_fps_entry *
+cdp_fps_entry_from_id (guint8 id)
+{
+  int i;
+  for (i = 0; i < G_N_ELEMENTS (cdp_fps_table); i++) {
+    if (cdp_fps_table[i].fps_idx == id)
+      return &cdp_fps_table[i];
+  }
+  return NULL;
+}
+
+static const struct cdp_fps_entry *
+cdp_fps_entry_from_fps (guint fps_n, guint fps_d)
+{
+  int i;
+  for (i = 0; i < G_N_ELEMENTS (cdp_fps_table); i++) {
+    if (cdp_fps_table[i].fps_n == fps_n && cdp_fps_table[i].fps_d == fps_d)
+      return &cdp_fps_table[i];
+  }
+  return NULL;
+}
+
 /* Converts raw CEA708 cc_data and an optional timecode into CDP */
 static guint
 convert_cea708_cc_data_cea708_cdp_internal (GstCCConverter * self,
@@ -453,38 +493,19 @@ convert_cea708_cc_data_cea708_cdp_internal (GstCCConverter * self,
   guint8 flags, checksum;
   guint i, len;
   guint cc_count;
+  const struct cdp_fps_entry *fps_entry;
 
   gst_byte_writer_init_with_data (&bw, cdp, cdp_len, FALSE);
   gst_byte_writer_put_uint16_be_unchecked (&bw, 0x9669);
   /* Write a length of 0 for now */
   gst_byte_writer_put_uint8_unchecked (&bw, 0);
-  if (self->fps_n == 24000 && self->fps_d == 1001) {
-    gst_byte_writer_put_uint8_unchecked (&bw, 0x1f);
-    cc_count = 25;
-  } else if (self->fps_n == 24 && self->fps_d == 1) {
-    gst_byte_writer_put_uint8_unchecked (&bw, 0x2f);
-    cc_count = 25;
-  } else if (self->fps_n == 25 && self->fps_d == 1) {
-    gst_byte_writer_put_uint8_unchecked (&bw, 0x3f);
-    cc_count = 24;
-  } else if (self->fps_n == 30000 && self->fps_d == 1001) {
-    gst_byte_writer_put_uint8_unchecked (&bw, 0x4f);
-    cc_count = 20;
-  } else if (self->fps_n == 30 && self->fps_d == 1) {
-    gst_byte_writer_put_uint8_unchecked (&bw, 0x5f);
-    cc_count = 20;
-  } else if (self->fps_n == 50 && self->fps_d == 1) {
-    gst_byte_writer_put_uint8_unchecked (&bw, 0x6f);
-    cc_count = 12;
-  } else if (self->fps_n == 60000 && self->fps_d == 1001) {
-    gst_byte_writer_put_uint8_unchecked (&bw, 0x7f);
-    cc_count = 10;
-  } else if (self->fps_n == 60 && self->fps_d == 1) {
-    gst_byte_writer_put_uint8_unchecked (&bw, 0x8f);
-    cc_count = 10;
-  } else {
+
+  fps_entry = cdp_fps_entry_from_fps (self->fps_n, self->fps_d);
+  if (!fps_entry)
     g_assert_not_reached ();
-  }
+
+  cc_count = fps_entry->max_cc_count;
+  gst_byte_writer_put_uint8_unchecked (&bw, fps_entry->fps_idx);
 
   if (cc_data_len / 3 > cc_count) {
     GST_WARNING_OBJECT (self, "Too many cc_data triplet for framerate: %u > %u",
@@ -571,8 +592,8 @@ convert_cea708_cdp_cea708_cc_data_internal (GstCCConverter * self,
   guint16 u16;
   guint8 u8;
   guint8 flags;
-  gint fps_n, fps_d;
   guint len = 0;
+  const struct cdp_fps_entry *fps_entry;
 
   memset (tc, 0, sizeof (*tc));
 
@@ -590,42 +611,9 @@ convert_cea708_cdp_cea708_cc_data_internal (GstCCConverter * self,
     return 0;
 
   u8 = gst_byte_reader_get_uint8_unchecked (&br);
-  switch (u8) {
-    case 0x1f:
-      fps_n = 24000;
-      fps_d = 1001;
-      break;
-    case 0x2f:
-      fps_n = 24;
-      fps_d = 1;
-      break;
-    case 0x3f:
-      fps_n = 25;
-      fps_d = 1;
-      break;
-    case 0x4f:
-      fps_n = 30000;
-      fps_d = 1001;
-      break;
-    case 0x5f:
-      fps_n = 30;
-      fps_d = 1;
-      break;
-    case 0x6f:
-      fps_n = 50;
-      fps_d = 1;
-      break;
-    case 0x7f:
-      fps_n = 60000;
-      fps_d = 1001;
-      break;
-    case 0x8f:
-      fps_n = 60;
-      fps_d = 1;
-      break;
-    default:
-      return 0;
-  }
+  fps_entry = cdp_fps_entry_from_id (u8);
+  if (!fps_entry)
+    return 0;
 
   flags = gst_byte_reader_get_uint8_unchecked (&br);
   /* No cc_data? */
@@ -670,7 +658,7 @@ convert_cea708_cdp_cea708_cc_data_internal (GstCCConverter * self,
     drop_frame = ! !(u8 & 0x80);
     frames = ((u8 >> 4) & 0x3) * 10 + (u8 & 0xf);
 
-    gst_video_time_code_init (tc, fps_n, fps_d, NULL,
+    gst_video_time_code_init (tc, fps_entry->fps_n, fps_entry->fps_d, NULL,
         drop_frame ? GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME :
         GST_VIDEO_TIME_CODE_FLAGS_NONE, hours, minutes, seconds, frames,
         fields);
