@@ -928,6 +928,102 @@ GST_START_TEST (test_splitmuxsink_muxer_pad_map)
 
 GST_END_TEST;
 
+static void
+splitmuxsink_split_by_keyframe (gboolean send_keyframe_request,
+    guint max_size_time_sec, guint encoder_key_interval_sec)
+{
+  GstMessage *msg;
+  GstElement *pipeline;
+  GstElement *sink;
+  gchar *pipeline_str;
+  gchar *dest_pattern;
+  guint count;
+  guint expected_count;
+  gchar *in_pattern;
+
+  pipeline_str = g_strdup_printf ("splitmuxsink name=splitsink "
+      "max-size-time=%" G_GUINT64_FORMAT
+      " send-keyframe-requests=%s muxer=qtmux "
+      "videotestsrc num-buffers=30 ! video/x-raw,width=80,height=64,framerate=5/1 "
+      "! videoconvert ! queue ! vp8enc keyframe-max-dist=%d ! splitsink.video ",
+      max_size_time_sec * GST_SECOND, send_keyframe_request ? "true" : "false",
+      encoder_key_interval_sec * 5);
+
+  pipeline = gst_parse_launch (pipeline_str, NULL);
+  g_free (pipeline_str);
+
+  fail_if (pipeline == NULL);
+  sink = gst_bin_get_by_name (GST_BIN (pipeline), "splitsink");
+  fail_if (sink == NULL);
+  g_signal_connect (sink, "format-location-full",
+      (GCallback) check_format_location, NULL);
+  dest_pattern = g_build_filename (tmpdir, "out%05d.m4v", NULL);
+  g_object_set (G_OBJECT (sink), "location", dest_pattern, NULL);
+  g_free (dest_pattern);
+  g_object_unref (sink);
+
+  msg = run_pipeline (pipeline);
+
+  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)
+    dump_error (msg);
+  fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
+  gst_message_unref (msg);
+
+  gst_object_unref (pipeline);
+
+  count = count_files (tmpdir);
+  expected_count = 6 / max_size_time_sec;
+  fail_unless (count == expected_count,
+      "Expected %d output files, got %d", expected_count, count);
+
+  in_pattern = g_build_filename (tmpdir, "out*.m4v", NULL);
+  /* FIXME: Reverse playback works poorly with multiple video streams
+   * in qtdemux (at least, maybe other demuxers) at the time this was
+   * written, and causes test failures like buffers being output
+   * multiple times by qtdemux as it loops through GOPs. Disable that
+   * for now */
+  test_playback (in_pattern, 0, 6 * GST_SECOND, FALSE);
+  g_free (in_pattern);
+}
+
+GST_START_TEST (test_splitmuxsink_without_keyframe_request)
+{
+  /* This encoding option is intended to produce keyframe per 1 seconds
+   * but splitmuxsink will split file per 2 second without keyframe request */
+  splitmuxsink_split_by_keyframe (FALSE, 2, 1);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_splitmuxsink_keyframe_request)
+{
+  /* This encoding option is intended to produce keyframe per 2 seconds
+   * and splitmuxsink will request keyframe per 2 seconds as well.
+   * This should produce 2 seconds long files */
+  splitmuxsink_split_by_keyframe (TRUE, 2, 2);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_splitmuxsink_keyframe_request_more)
+{
+  /* This encoding option is intended to produce keyframe per 2 seconds
+   * but splitmuxsink will request keyframe per 1 second. This should produce
+   * 1 second long files */
+  splitmuxsink_split_by_keyframe (TRUE, 1, 2);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_splitmuxsink_keyframe_request_less)
+{
+  /* This encoding option is intended to produce keyframe per 1 second
+   * but splitmuxsink will request keyframe per 2 seconds. This should produce
+   * 2 seconds long files */
+  splitmuxsink_split_by_keyframe (TRUE, 2, 1);
+}
+
+GST_END_TEST;
 
 static Suite *
 splitmux_suite (void)
@@ -996,9 +1092,14 @@ splitmux_suite (void)
 
   if (have_qtmux && have_vp8) {
     tcase_add_test (tc_chain, test_splitmuxsink_multivid);
+    tcase_add_test (tc_chain, test_splitmuxsink_without_keyframe_request);
+    tcase_add_test (tc_chain, test_splitmuxsink_keyframe_request);
+    tcase_add_test (tc_chain, test_splitmuxsink_keyframe_request_more);
+    tcase_add_test (tc_chain, test_splitmuxsink_keyframe_request_less);
   } else {
     GST_INFO ("Skipping tests, missing plugins: vp8enc or mp4mux");
   }
+
   return s;
 }
 

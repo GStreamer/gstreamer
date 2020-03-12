@@ -91,8 +91,6 @@ typedef struct _MqStreamCtx
   GstClockTimeDiff in_running_time;
   GstClockTimeDiff out_running_time;
 
-  GstBuffer *prev_in_keyframe; /* store keyframe for each GOP */
-
   GstElement *q;
   GQueue queued_bufs;
 
@@ -120,6 +118,7 @@ struct _GstSplitMuxSink
   gchar *threshold_timecode_str;
   GstClockTime next_max_tc_time;
   GstClockTime alignment_threshold;
+  GstClockTime last_fku_time;
 
   gboolean reset_muxer;
 
