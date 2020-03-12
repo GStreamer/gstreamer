@@ -494,37 +494,30 @@ cdp_fps_entry_from_fps (guint fps_n, guint fps_d)
 static guint
 convert_cea708_cc_data_cea708_cdp_internal (GstCCConverter * self,
     const guint8 * cc_data, guint cc_data_len, guint8 * cdp, guint cdp_len,
-    const GstVideoTimeCodeMeta * tc_meta)
+    const GstVideoTimeCode * tc, const struct cdp_fps_entry *fps_entry)
 {
   GstByteWriter bw;
   guint8 flags, checksum;
   guint i, len;
-  guint cc_count;
-  const struct cdp_fps_entry *fps_entry;
 
   gst_byte_writer_init_with_data (&bw, cdp, cdp_len, FALSE);
   gst_byte_writer_put_uint16_be_unchecked (&bw, 0x9669);
   /* Write a length of 0 for now */
   gst_byte_writer_put_uint8_unchecked (&bw, 0);
 
-  fps_entry = cdp_fps_entry_from_fps (self->out_fps_n, self->out_fps_d);
-  if (!fps_entry || fps_entry->fps_n == 0)
-    g_assert_not_reached ();
-
-  cc_count = fps_entry->max_cc_count;
   gst_byte_writer_put_uint8_unchecked (&bw, fps_entry->fps_idx);
 
-  if (cc_data_len / 3 > cc_count) {
+  if (cc_data_len / 3 > fps_entry->max_cc_count) {
     GST_WARNING_OBJECT (self, "Too many cc_data triplet for framerate: %u > %u",
-        cc_data_len / 3, cc_count);
-    cc_data_len = 3 * cc_count;
+        cc_data_len / 3, fps_entry->max_cc_count);
+    cc_data_len = 3 * fps_entry->max_cc_count;
   }
 
   /* ccdata_present | caption_service_active */
   flags = 0x42;
 
   /* time_code_present */
-  if (tc_meta)
+  if (tc)
     flags |= 0x80;
 
   /* reserved */
@@ -534,9 +527,7 @@ convert_cea708_cc_data_cea708_cdp_internal (GstCCConverter * self,
 
   gst_byte_writer_put_uint16_be_unchecked (&bw, self->cdp_hdr_sequence_cntr);
 
-  if (tc_meta) {
-    const GstVideoTimeCode *tc = &tc_meta->tc;
-
+  if (tc) {
     gst_byte_writer_put_uint8_unchecked (&bw, 0x71);
     gst_byte_writer_put_uint8_unchecked (&bw, 0xc0 |
         (((tc->hours % 10) & 0x3) << 4) |
@@ -559,9 +550,9 @@ convert_cea708_cc_data_cea708_cdp_internal (GstCCConverter * self,
   }
 
   gst_byte_writer_put_uint8_unchecked (&bw, 0x72);
-  gst_byte_writer_put_uint8_unchecked (&bw, 0xe0 | cc_count);
+  gst_byte_writer_put_uint8_unchecked (&bw, 0xe0 | fps_entry->max_cc_count);
   gst_byte_writer_put_data_unchecked (&bw, cc_data, cc_data_len);
-  while (cc_count > cc_data_len / 3) {
+  while (fps_entry->max_cc_count > cc_data_len / 3) {
     gst_byte_writer_put_uint8_unchecked (&bw, 0xf8);
     gst_byte_writer_put_uint8_unchecked (&bw, 0x00);
     gst_byte_writer_put_uint8_unchecked (&bw, 0x00);
@@ -787,6 +778,8 @@ convert_cea608_raw_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
   GstMapInfo in, out;
   guint i, n, len;
   guint8 cc_data[256];
+  const GstVideoTimeCodeMeta *tc_meta;
+  const struct cdp_fps_entry *fps_entry;
 
   n = gst_buffer_get_size (inbuf);
   if (n & 1) {
@@ -811,9 +804,14 @@ convert_cea608_raw_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
     cc_data[i * 3 + 2] = in.data[i * 2 + 1];
   }
 
+  fps_entry = cdp_fps_entry_from_fps (self->out_fps_n, self->out_fps_d);
+  if (!fps_entry || fps_entry->fps_n == 0)
+    g_assert_not_reached ();
+
+  tc_meta = gst_buffer_get_video_time_code_meta (inbuf);
   len =
       convert_cea708_cc_data_cea708_cdp_internal (self, cc_data, n * 3,
-      out.data, out.size, gst_buffer_get_video_time_code_meta (inbuf));
+      out.data, out.size, tc_meta ? &tc_meta->tc : NULL, fps_entry);
 
   gst_buffer_unmap (inbuf, &in);
   gst_buffer_unmap (outbuf, &out);
@@ -907,6 +905,8 @@ convert_cea608_s334_1a_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
   GstMapInfo in, out;
   guint i, n, len;
   guint8 cc_data[256];
+  const GstVideoTimeCodeMeta *tc_meta;
+  const struct cdp_fps_entry *fps_entry;
 
   n = gst_buffer_get_size (inbuf);
   if (n % 3 != 0) {
@@ -930,9 +930,14 @@ convert_cea608_s334_1a_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
     cc_data[i * 3 + 2] = in.data[i * 3 + 2];
   }
 
+  fps_entry = cdp_fps_entry_from_fps (self->out_fps_n, self->out_fps_d);
+  if (!fps_entry || fps_entry->fps_n == 0)
+    g_assert_not_reached ();
+
+  tc_meta = gst_buffer_get_video_time_code_meta (inbuf);
   len =
       convert_cea708_cc_data_cea708_cdp_internal (self, cc_data, n * 3,
-      out.data, out.size, gst_buffer_get_video_time_code_meta (inbuf));
+      out.data, out.size, tc_meta ? &tc_meta->tc : NULL, fps_entry);
 
   gst_buffer_unmap (inbuf, &in);
   gst_buffer_unmap (outbuf, &out);
@@ -1035,6 +1040,8 @@ convert_cea708_cc_data_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
   GstMapInfo in, out;
   guint n;
   guint len;
+  const GstVideoTimeCodeMeta *tc_meta;
+  const struct cdp_fps_entry *fps_entry;
 
   n = gst_buffer_get_size (inbuf);
   if (n % 3 != 0) {
@@ -1052,9 +1059,14 @@ convert_cea708_cc_data_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
   gst_buffer_map (inbuf, &in, GST_MAP_READ);
   gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
 
+  fps_entry = cdp_fps_entry_from_fps (self->out_fps_n, self->out_fps_d);
+  if (!fps_entry || fps_entry->fps_n == 0)
+    g_assert_not_reached ();
+
+  tc_meta = gst_buffer_get_video_time_code_meta (inbuf);
   len =
       convert_cea708_cc_data_cea708_cdp_internal (self, in.data, in.size,
-      out.data, out.size, gst_buffer_get_video_time_code_meta (inbuf));
+      out.data, out.size, tc_meta ? &tc_meta->tc : NULL, fps_entry);
 
   gst_buffer_unmap (inbuf, &in);
   gst_buffer_unmap (outbuf, &out);
