@@ -66,6 +66,7 @@ struct _GstV4l2CodecH264Dec
   gint min_pool_size;
   gboolean has_videometa;
   gboolean need_negotiation;
+  gboolean copy_frames;
 
   struct v4l2_ctrl_h264_sps sps;
   struct v4l2_ctrl_h264_pps pps;
@@ -462,6 +463,27 @@ gst_v4l2_codec_h264_dec_new_sequence (GstH264Decoder * decoder,
     }
   }
 
+  /* Check if we can zero-copy buffers */
+  if (!self->has_videometa) {
+    GstVideoInfo ref_vinfo;
+    gint i;
+
+    gst_video_info_set_format (&ref_vinfo, GST_VIDEO_INFO_FORMAT (&self->vinfo),
+        self->display_width, self->display_height);
+
+    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&self->vinfo); i++) {
+      if (self->vinfo.stride[i] != ref_vinfo.stride[i] ||
+          self->vinfo.offset[i] != ref_vinfo.offset[i]) {
+        GST_WARNING_OBJECT (self,
+            "GstVideoMeta support required, copying frames.");
+        self->copy_frames = TRUE;
+        break;
+      }
+    }
+  } else {
+    self->copy_frames = FALSE;
+  }
+
   return TRUE;
 }
 
@@ -503,6 +525,54 @@ gst_v4l2_codec_h264_dec_start_picture (GstH264Decoder * decoder,
   gst_v4l2_codec_h264_dec_fill_slice_params (self, slice);
 
   return TRUE;
+}
+
+static gboolean
+gst_v4l2_codec_h264_dec_copy_output_buffer (GstV4l2CodecH264Dec * self,
+    GstVideoCodecFrame * codec_frame)
+{
+  GstVideoFrame src_frame;
+  GstVideoFrame dest_frame;
+  GstVideoInfo dest_vinfo;
+  GstBuffer *buffer;
+
+  gst_video_info_set_format (&dest_vinfo, GST_VIDEO_INFO_FORMAT (&self->vinfo),
+      self->display_width, self->display_height);
+
+  buffer = gst_video_decoder_allocate_output_buffer (GST_VIDEO_DECODER (self));
+  if (!buffer)
+    goto fail;
+
+  if (!gst_video_frame_map (&src_frame, &self->vinfo,
+          codec_frame->output_buffer, GST_MAP_READ))
+    goto fail;
+
+  if (!gst_video_frame_map (&dest_frame, &dest_vinfo, buffer, GST_MAP_WRITE)) {
+    gst_video_frame_unmap (&dest_frame);
+    goto fail;
+  }
+
+  /* gst_video_frame_copy can crop this, but does not know, so let make it
+   * think it's all right */
+  GST_VIDEO_INFO_WIDTH (&src_frame.info) = self->display_width;
+  GST_VIDEO_INFO_HEIGHT (&src_frame.info) = self->display_height;
+
+  if (!gst_video_frame_copy (&dest_frame, &src_frame)) {
+    gst_video_frame_unmap (&src_frame);
+    gst_video_frame_unmap (&dest_frame);
+    goto fail;
+  }
+
+  gst_video_frame_unmap (&src_frame);
+  gst_video_frame_unmap (&dest_frame);
+  gst_buffer_replace (&codec_frame->output_buffer, buffer);
+  gst_buffer_unref (buffer);
+
+  return TRUE;
+
+fail:
+  GST_ERROR_OBJECT (self, "Failed copy output buffer.");
+  return FALSE;
 }
 
 static GstFlowReturn
@@ -561,6 +631,10 @@ finish_frame:
   /* Hold on reference buffers for the rest of the picture lifetime */
   gst_h264_picture_set_user_data (picture,
       gst_buffer_ref (frame->output_buffer), (GDestroyNotify) gst_buffer_unref);
+
+  if (self->copy_frames)
+    gst_v4l2_codec_h264_dec_copy_output_buffer (self, frame);
+
   return gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
 }
 
