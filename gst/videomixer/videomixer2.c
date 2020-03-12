@@ -258,6 +258,7 @@ gst_videomixer2_update_src_caps (GstVideoMixer2 * mix)
       tmp = gst_caps_intersect (caps, peercaps);
       gst_caps_unref (caps);
       gst_caps_unref (peercaps);
+      peercaps = NULL;
       caps = tmp;
       if (gst_caps_is_empty (caps)) {
         GST_DEBUG_OBJECT (mix, "empty caps");
@@ -277,6 +278,8 @@ gst_videomixer2_update_src_caps (GstVideoMixer2 * mix)
       gst_structure_get_int (s, "height", &info.height);
       gst_structure_get_fraction (s, "fraction", &info.fps_n, &info.fps_d);
     }
+    if (peercaps)
+      gst_caps_unref (peercaps);
 
     gst_caps_unref (caps);
     caps = gst_video_info_to_caps (&info);
