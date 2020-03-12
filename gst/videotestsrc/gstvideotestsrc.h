@@ -29,16 +29,9 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_VIDEO_TEST_SRC \
-  (gst_video_test_src_get_type())
-#define GST_VIDEO_TEST_SRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_TEST_SRC,GstVideoTestSrc))
-#define GST_VIDEO_TEST_SRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEO_TEST_SRC,GstVideoTestSrcClass))
-#define GST_IS_VIDEO_TEST_SRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_TEST_SRC))
-#define GST_IS_VIDEO_TEST_SRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_TEST_SRC))
+#define GST_TYPE_VIDEO_TEST_SRC (gst_video_test_src_get_type())
+G_DECLARE_FINAL_TYPE (GstVideoTestSrc, gst_video_test_src, GST, VIDEO_TEST_SRC,
+    GstPushSrc)
 
 /**
  * GstVideoTestSrcPattern:
@@ -129,9 +122,6 @@ typedef enum {
   GST_VIDEO_TEST_SRC_HSWEEP
 } GstVideoTestSrcMotionType;
 
-typedef struct _GstVideoTestSrc GstVideoTestSrc;
-typedef struct _GstVideoTestSrcClass GstVideoTestSrcClass;
-
 /**
  * GstVideoTestSrc:
  *
@@ -207,12 +197,6 @@ struct _GstVideoTestSrc {
   gint offset;
   gpointer *lines;
 };
-
-struct _GstVideoTestSrcClass {
-  GstPushSrcClass parent_class;
-};
-
-GType gst_video_test_src_get_type (void);
 
 G_END_DECLS
 
