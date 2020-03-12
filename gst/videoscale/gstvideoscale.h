@@ -26,17 +26,10 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_VIDEO_SCALE \
-  (gst_video_scale_get_type())
-#define GST_VIDEO_SCALE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_SCALE,GstVideoScale))
-#define GST_VIDEO_SCALE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEO_SCALE,GstVideoScaleClass))
-#define GST_IS_VIDEO_SCALE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_SCALE))
-#define GST_IS_VIDEO_SCALE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_SCALE))
-#define GST_VIDEO_SCALE_CAST(obj)       ((GstVideoScale *)(obj))
+#define GST_TYPE_VIDEO_SCALE (gst_video_scale_get_type())
+#define GST_VIDEO_SCALE_CAST(obj) ((GstVideoScale *)(obj))
+G_DECLARE_FINAL_TYPE (GstVideoScale, gst_video_scale, GST, VIDEO_SCALE,
+    GstVideoFilter)
 
 
 /**
@@ -68,9 +61,6 @@ typedef enum {
   GST_VIDEO_SCALE_MITCHELL
 } GstVideoScaleMethod;
 
-typedef struct _GstVideoScale GstVideoScale;
-typedef struct _GstVideoScaleClass GstVideoScaleClass;
-
 /**
  * GstVideoScale:
  *
@@ -95,12 +85,6 @@ struct _GstVideoScale {
   gint borders_h;
   gint borders_w;
 };
-
-struct _GstVideoScaleClass {
-  GstVideoFilterClass parent_class;
-};
-
-G_GNUC_INTERNAL GType gst_video_scale_get_type (void);
 
 G_END_DECLS
 
