@@ -30,30 +30,12 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_COMPOSITOR (gst_compositor_get_type())
-#define GST_COMPOSITOR(obj) \
-        (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_COMPOSITOR, GstCompositor))
-#define GST_COMPOSITOR_CLASS(klass) \
-        (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_COMPOSITOR, GstCompositorClass))
-#define GST_IS_COMPOSITOR(obj) \
-        (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_COMPOSITOR))
-#define GST_IS_COMPOSITOR_CLASS(klass) \
-        (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_COMPOSITOR))
+G_DECLARE_FINAL_TYPE (GstCompositor, gst_compositor, GST, COMPOSITOR,
+    GstVideoAggregator)
 
 #define GST_TYPE_COMPOSITOR_PAD (gst_compositor_pad_get_type())
-#define GST_COMPOSITOR_PAD(obj) \
-        (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_COMPOSITOR_PAD, GstCompositorPad))
-#define GST_COMPOSITOR_PAD_CLASS(klass) \
-        (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_COMPOSITOR_PAD, GstCompositorPadClass))
-#define GST_IS_COMPOSITOR_PAD(obj) \
-        (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_COMPOSITOR_PAD))
-#define GST_IS_COMPOSITOR_PAD_CLASS(klass) \
-        (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_COMPOSITOR_PAD))
-
-typedef struct _GstCompositor GstCompositor;
-typedef struct _GstCompositorClass GstCompositorClass;
-
-typedef struct _GstCompositorPad GstCompositorPad;
-typedef struct _GstCompositorPadClass GstCompositorPadClass;
+G_DECLARE_FINAL_TYPE (GstCompositorPad, gst_compositor_pad, GST, COMPOSITOR_PAD,
+    GstVideoAggregatorConvertPad)
 
 /**
  * GstCompositorBackground:
@@ -112,11 +94,6 @@ struct _GstCompositor
   FillColorFunction fill_color;
 };
 
-struct _GstCompositorClass
-{
-  GstVideoAggregatorClass parent_class;
-};
-
 /**
  * GstCompositorPad:
  *
@@ -133,14 +110,6 @@ struct _GstCompositorPad
 
   GstCompositorOperator op;
 };
-
-struct _GstCompositorPadClass
-{
-  GstVideoAggregatorConvertPadClass parent_class;
-};
-
-GType gst_compositor_get_type (void);
-GType gst_compositor_pad_get_type (void);
 
 G_END_DECLS
 #endif /* __GST_COMPOSITOR_H__ */
