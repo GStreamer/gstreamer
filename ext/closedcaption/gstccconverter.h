@@ -40,6 +40,8 @@ G_BEGIN_DECLS
 typedef struct _GstCCConverter GstCCConverter;
 typedef struct _GstCCConverterClass GstCCConverterClass;
 
+#define MAX_CDP_PACKET_LEN 256
+
 struct _GstCCConverter
 {
   GstBaseTransform parent;

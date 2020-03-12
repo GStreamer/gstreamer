@@ -64,9 +64,9 @@ gst_cc_converter_transform_size (GstBaseTransform * base,
 
   /* Assume worst-case here and over-allocate, and in ::transform() we then
    * downsize the buffer as needed. The worst-case is one CDP packet, which
-   * can be up to 256 bytes large */
+   * can be up to MAX_CDP_PACKET_LEN bytes large */
 
-  *othersize = 256;
+  *othersize = MAX_CDP_PACKET_LEN;
 
   return TRUE;
 }
@@ -583,7 +583,7 @@ convert_cea708_cc_data_cea708_cdp_internal (GstCCConverter * self,
 /* Converts CDP into raw CEA708 cc_data */
 static guint
 convert_cea708_cdp_cea708_cc_data_internal (GstCCConverter * self,
-    const guint8 * cdp, guint cdp_len, guint8 cc_data[256],
+    const guint8 * cdp, guint cdp_len, guint8 cc_data[MAX_CDP_PACKET_LEN],
     GstVideoTimeCode * tc, const struct cdp_fps_entry ** out_fps_entry)
 {
   GstByteReader br;
@@ -777,7 +777,7 @@ convert_cea608_raw_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
 {
   GstMapInfo in, out;
   guint i, n, len;
-  guint8 cc_data[256];
+  guint8 cc_data[MAX_CDP_PACKET_LEN];
   const GstVideoTimeCodeMeta *tc_meta;
   const struct cdp_fps_entry *fps_entry;
 
@@ -904,7 +904,7 @@ convert_cea608_s334_1a_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
 {
   GstMapInfo in, out;
   guint i, n, len;
-  guint8 cc_data[256];
+  guint8 cc_data[MAX_CDP_PACKET_LEN];
   const GstVideoTimeCodeMeta *tc_meta;
   const struct cdp_fps_entry *fps_entry;
 
@@ -1083,7 +1083,7 @@ convert_cea708_cdp_cea608_raw (GstCCConverter * self, GstBuffer * inbuf,
   GstMapInfo in, out;
   guint i;
   GstVideoTimeCode tc;
-  guint8 cc_data[256];
+  guint8 cc_data[MAX_CDP_PACKET_LEN];
   guint len, cea608 = 0;
   const struct cdp_fps_entry *fps_entry;
 
@@ -1130,7 +1130,7 @@ convert_cea708_cdp_cea608_s334_1a (GstCCConverter * self, GstBuffer * inbuf,
   GstMapInfo in, out;
   guint i;
   GstVideoTimeCode tc;
-  guint8 cc_data[256];
+  guint8 cc_data[MAX_CDP_PACKET_LEN];
   guint len, cea608 = 0;
   const struct cdp_fps_entry *fps_entry;
 
