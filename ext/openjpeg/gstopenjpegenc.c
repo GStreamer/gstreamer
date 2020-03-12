@@ -1027,7 +1027,7 @@ gst_openjpeg_enc_handle_frame (GstVideoEncoder * encoder,
 
     gst_buffer_append_memory (frame->output_buffer,
         gst_memory_new_wrapped (0, mstream.data, mstream.allocsize, 0,
-            mstream.size, NULL, (GDestroyNotify) g_free));
+            mstream.size, mstream.data, (GDestroyNotify) g_free));
 
     GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
     ret =
