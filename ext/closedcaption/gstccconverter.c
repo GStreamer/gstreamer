@@ -95,11 +95,9 @@ gst_cc_converter_transform_caps (GstBaseTransform * base,
   n = gst_caps_get_size (caps);
   for (i = 0; i < n; i++) {
     const GstStructure *s = gst_caps_get_structure (caps, i);
+    const GValue *framerate = gst_structure_get_value (s, "framerate");
 
     if (gst_structure_has_name (s, "closedcaption/x-cea-608")) {
-      const GValue *framerate;
-
-      framerate = gst_structure_get_value (s, "framerate");
 
       if (direction == GST_PAD_SRC) {
         /* SRC direction: We produce upstream caps
@@ -110,19 +108,8 @@ gst_cc_converter_transform_caps (GstBaseTransform * base,
          *
          * We can convert everything to CEA608.
          */
-        if (framerate) {
-          GstCaps *tmp;
-
-          tmp =
-              gst_caps_merge (gst_static_caps_get (&cdp_caps),
-              gst_static_caps_get (&non_cdp_caps));
-          tmp = gst_caps_make_writable (tmp);
-          gst_caps_set_value (tmp, "framerate", framerate);
-          res = gst_caps_merge (res, tmp);
-        } else {
-          res = gst_caps_merge (res, gst_static_caps_get (&cdp_caps));
-          res = gst_caps_merge (res, gst_static_caps_get (&non_cdp_caps));
-        }
+        res = gst_caps_merge (res, gst_static_caps_get (&cdp_caps_framerate));
+        res = gst_caps_merge (res, gst_static_caps_get (&non_cdp_caps));
       } else {
         /* SINK: We produce downstream caps
          *
@@ -135,7 +122,7 @@ gst_cc_converter_transform_caps (GstBaseTransform * base,
          */
         if (framerate) {
           GstCaps *tmp;
-          GstStructure *t, *u;
+          GstStructure *t;
 
           /* Create caps that contain the intersection of all framerates with
            * the CDP allowed framerates */
@@ -145,22 +132,17 @@ gst_cc_converter_transform_caps (GstBaseTransform * base,
           t = gst_caps_get_structure (tmp, 0);
           gst_structure_set_name (t, "closedcaption/x-cea-608");
           gst_structure_remove_field (t, "format");
-          u = gst_structure_intersect (s, t);
-          gst_caps_unref (tmp);
+          if (gst_structure_can_intersect (s, t)) {
+            gst_caps_unref (tmp);
 
-          if (u) {
-            const GValue *cdp_framerate;
-
-            /* There's an intersection between the framerates so we can convert
-             * into CDP with exactly those framerates */
-            cdp_framerate = gst_structure_get_value (u, "framerate");
-            tmp = gst_caps_make_writable (gst_static_caps_get (&cdp_caps));
-            gst_caps_set_value (tmp, "framerate", cdp_framerate);
-            gst_structure_free (u);
+            tmp =
+                gst_caps_make_writable (gst_static_caps_get
+                (&cdp_caps_framerate));
 
             res = gst_caps_merge (res, tmp);
+          } else {
+            gst_caps_unref (tmp);
           }
-
           /* And we can convert to everything else with the given framerate */
           tmp = gst_caps_make_writable (gst_static_caps_get (&non_cdp_caps));
           gst_caps_set_value (tmp, "framerate", framerate);
@@ -170,10 +152,6 @@ gst_cc_converter_transform_caps (GstBaseTransform * base,
         }
       }
     } else if (gst_structure_has_name (s, "closedcaption/x-cea-708")) {
-      const GValue *framerate;
-
-      framerate = gst_structure_get_value (s, "framerate");
-
       if (direction == GST_PAD_SRC) {
         /* SRC direction: We produce upstream caps
          *
@@ -190,20 +168,13 @@ gst_cc_converter_transform_caps (GstBaseTransform * base,
           /* Downstream wants only CDP */
 
           /* We need CDP from upstream in that case */
-          if (framerate) {
-            GstCaps *tmp;
-
-            tmp = gst_caps_make_writable (gst_static_caps_get (&cdp_caps));
-            gst_caps_set_value (tmp, "framerate", framerate);
-            res = gst_caps_merge (res, tmp);
-          } else {
-            res = gst_caps_merge (res, gst_static_caps_get (&cdp_caps));
-          }
+          res = gst_caps_merge (res, gst_static_caps_get (&cdp_caps_framerate));
 
           /* Or anything else with a CDP framerate */
           if (framerate) {
             GstCaps *tmp;
-            GstStructure *t, *u;
+            GstStructure *t;
+            const GValue *cdp_framerate;
 
             /* Create caps that contain the intersection of all framerates with
              * the CDP allowed framerates */
@@ -211,23 +182,13 @@ gst_cc_converter_transform_caps (GstBaseTransform * base,
                 gst_caps_make_writable (gst_static_caps_get
                 (&cdp_caps_framerate));
             t = gst_caps_get_structure (tmp, 0);
-            gst_structure_set_name (t, "closedcaption/x-cea-708");
-            gst_structure_remove_field (t, "format");
-            u = gst_structure_intersect (s, t);
-            gst_caps_unref (tmp);
 
-            if (u) {
-              const GValue *cdp_framerate;
-
-              /* There's an intersection between the framerates so we can convert
-               * into CDP with exactly those framerates from anything else */
-              cdp_framerate = gst_structure_get_value (u, "framerate");
-
-              tmp =
-                  gst_caps_make_writable (gst_static_caps_get (&non_cdp_caps));
-              gst_caps_set_value (tmp, "framerate", cdp_framerate);
-              res = gst_caps_merge (res, tmp);
-            }
+            /* There's an intersection between the framerates so we can convert
+             * into CDP with exactly those framerates from anything else */
+            cdp_framerate = gst_structure_get_value (t, "framerate");
+            tmp = gst_caps_make_writable (gst_static_caps_get (&non_cdp_caps));
+            gst_caps_set_value (tmp, "framerate", cdp_framerate);
+            res = gst_caps_merge (res, tmp);
           } else {
             GstCaps *tmp, *cdp_caps;
             const GValue *cdp_framerate;
@@ -247,20 +208,8 @@ gst_cc_converter_transform_caps (GstBaseTransform * base,
           }
         } else {
           /* Downstream wants not only CDP, we can do everything */
-
-          if (framerate) {
-            GstCaps *tmp;
-
-            tmp =
-                gst_caps_merge (gst_static_caps_get (&cdp_caps),
-                gst_static_caps_get (&non_cdp_caps));
-            tmp = gst_caps_make_writable (tmp);
-            gst_caps_set_value (tmp, "framerate", framerate);
-            res = gst_caps_merge (res, tmp);
-          } else {
-            res = gst_caps_merge (res, gst_static_caps_get (&cdp_caps));
-            res = gst_caps_merge (res, gst_static_caps_get (&non_cdp_caps));
-          }
+          res = gst_caps_merge (res, gst_static_caps_get (&cdp_caps_framerate));
+          res = gst_caps_merge (res, gst_static_caps_get (&non_cdp_caps));
         }
       } else {
         GstCaps *tmp;
@@ -280,15 +229,10 @@ gst_cc_converter_transform_caps (GstBaseTransform * base,
                 gst_caps_get_structure (gst_static_caps_get (&cdp_caps), 0))) {
           /* Upstream provided CDP caps, we can do everything independent of
            * framerate */
-          if (framerate) {
-            tmp = gst_caps_make_writable (gst_static_caps_get (&cdp_caps));
-            gst_caps_set_value (tmp, "framerate", framerate);
-            res = gst_caps_merge (res, tmp);
-          } else {
-            res = gst_caps_merge (res, gst_static_caps_get (&cdp_caps));
-          }
+          res = gst_caps_merge (res, gst_static_caps_get (&cdp_caps_framerate));
         } else if (framerate) {
-          GstStructure *t, *u;
+          const GValue *cdp_framerate;
+          GstStructure *t;
 
           /* Upstream did not provide CDP. We can only do CDP if upstream
            * happened to have a CDP framerate */
@@ -299,38 +243,23 @@ gst_cc_converter_transform_caps (GstBaseTransform * base,
               gst_caps_make_writable (gst_static_caps_get
               (&cdp_caps_framerate));
           t = gst_caps_get_structure (tmp, 0);
-          gst_structure_set_name (t, "closedcaption/x-cea-708");
-          gst_structure_remove_field (t, "format");
-          u = gst_structure_intersect (s, t);
-          gst_caps_unref (tmp);
 
-          if (u) {
-            const GValue *cdp_framerate;
+          /* There's an intersection between the framerates so we can convert
+           * into CDP with exactly those framerates */
+          cdp_framerate = gst_structure_get_value (t, "framerate");
+          gst_caps_set_value (tmp, "framerate", cdp_framerate);
 
-            /* There's an intersection between the framerates so we can convert
-             * into CDP with exactly those framerates */
-            cdp_framerate = gst_structure_get_value (u, "framerate");
-            tmp = gst_caps_make_writable (gst_static_caps_get (&cdp_caps));
-            gst_caps_set_value (tmp, "framerate", cdp_framerate);
-            gst_structure_free (u);
-
-            res = gst_caps_merge (res, tmp);
-          }
-        }
-
-        /* We can always convert CEA708 to all non-CDP formats */
-        if (framerate) {
-          tmp = gst_caps_make_writable (gst_static_caps_get (&non_cdp_caps));
-          gst_caps_set_value (tmp, "framerate", framerate);
           res = gst_caps_merge (res, tmp);
-        } else {
-          res = gst_caps_merge (res, gst_static_caps_get (&non_cdp_caps));
         }
+        /* We can always convert CEA708 to all non-CDP formats */
+        res = gst_caps_merge (res, gst_static_caps_get (&non_cdp_caps));
       }
     } else {
       g_assert_not_reached ();
     }
   }
+
+  GST_DEBUG_OBJECT (self, "pre filter caps %" GST_PTR_FORMAT, res);
 
   /* We can convert anything into anything but it might involve loss of
    * information so always filter according to the order in our template caps
@@ -347,9 +276,10 @@ gst_cc_converter_transform_caps (GstBaseTransform * base,
 
   gst_caps_unref (templ);
 
-  GST_DEBUG_OBJECT (self,
-      "Transformed in direction %s caps %" GST_PTR_FORMAT " to %"
-      GST_PTR_FORMAT, direction == GST_PAD_SRC ? "src" : "sink", caps, res);
+  GST_DEBUG_OBJECT (self, "Transformed in direction %s caps %" GST_PTR_FORMAT,
+      direction == GST_PAD_SRC ? "src" : "sink", caps);
+  GST_DEBUG_OBJECT (self, "filter %" GST_PTR_FORMAT, filter);
+  GST_DEBUG_OBJECT (self, "to %" GST_PTR_FORMAT, res);
 
   return res;
 }
@@ -363,6 +293,10 @@ gst_cc_converter_fixate_caps (GstBaseTransform * base,
   GstStructure *t;
   const GValue *framerate;
   GstCaps *intersection, *templ;
+
+  GST_DEBUG_OBJECT (self, "Fixating in direction %s incaps %" GST_PTR_FORMAT,
+      direction == GST_PAD_SRC ? "src" : "sink", incaps);
+  GST_DEBUG_OBJECT (self, "and outcaps %" GST_PTR_FORMAT, outcaps);
 
   /* Prefer passthrough if we can */
   if (gst_caps_is_subset (incaps, outcaps)) {
@@ -382,19 +316,13 @@ gst_cc_converter_fixate_caps (GstBaseTransform * base,
       GST_BASE_TRANSFORM_CLASS (parent_class)->fixate_caps (base, direction,
       incaps, outcaps);
 
-  if (direction == GST_PAD_SRC)
-    return outcaps;
-
-  /* if we generate caps for the source pad, pass through any framerate
-   * upstream might've given us and remove any framerate that might've
-   * been added by basetransform due to intersecting with downstream */
+  /* remove any framerate that might've been added by basetransform due to
+   * intersecting with downstream */
   s = gst_caps_get_structure (incaps, 0);
   framerate = gst_structure_get_value (s, "framerate");
   outcaps = gst_caps_make_writable (outcaps);
   t = gst_caps_get_structure (outcaps, 0);
-  if (framerate) {
-    gst_structure_set_value (t, "framerate", framerate);
-  } else {
+  if (!framerate) {
     gst_structure_remove_field (t, "framerate");
   }
 
@@ -428,6 +356,8 @@ gst_cc_converter_set_caps (GstBaseTransform * base, GstCaps * incaps,
   if (!gst_structure_get_fraction (s, "framerate", &self->out_fps_n,
           &self->out_fps_d))
     self->out_fps_n = self->out_fps_d = 0;
+
+  gst_video_time_code_clear (&self->current_output_timecode);
 
   /* Caps can be different but we can passthrough as long as they can
    * intersect, i.e. have same caps name and format */
@@ -490,6 +420,189 @@ cdp_fps_entry_from_fps (guint fps_n, guint fps_d)
   return &null_fps_entry;
 }
 
+static void
+get_framerate_output_scale (GstCCConverter * self,
+    const struct cdp_fps_entry *in_fps_entry, gint * scale_n, gint * scale_d)
+{
+  if (self->in_fps_n == 0 || self->out_fps_d == 0) {
+    *scale_n = 1;
+    *scale_d = 1;
+    return;
+  }
+
+  /* compute the relative rates of the two framerates */
+  if (!gst_util_fraction_multiply (in_fps_entry->fps_d, in_fps_entry->fps_n,
+          self->out_fps_n, self->out_fps_d, scale_n, scale_d))
+    /* we should never overflow */
+    g_assert_not_reached ();
+}
+
+static gboolean
+interpolate_time_code_with_framerate (GstCCConverter * self,
+    const GstVideoTimeCode * tc, gint out_fps_n, gint out_fps_d,
+    gint scale_n, gint scale_d, GstVideoTimeCode * out)
+{
+  gchar *tc_str;
+  gint output_n, output_d;
+  guint output_frame;
+  GstVideoTimeCodeFlags flags;
+
+  g_return_val_if_fail (tc != NULL, FALSE);
+  g_return_val_if_fail (out != NULL, FALSE);
+  /* out_n/d can only be 0 if scale_n/d are 1/1 */
+  g_return_val_if_fail ((scale_n == 1 && scale_d == 1) || (out_fps_n != 0
+          && out_fps_d != 0), FALSE);
+
+  if (!tc || tc->config.fps_n == 0)
+    return FALSE;
+
+  gst_util_fraction_multiply (tc->frames, 1, scale_n, scale_d, &output_n,
+      &output_d);
+
+  tc_str = gst_video_time_code_to_string (tc);
+  GST_TRACE_OBJECT (self, "interpolating time code %s with scale %d/%d "
+      "to frame %d/%d", tc_str, scale_n, scale_d, output_n, output_d);
+  g_free (tc_str);
+
+  if (out_fps_n == 0 || out_fps_d == 0) {
+    out_fps_n = tc->config.fps_n;
+    out_fps_d = tc->config.fps_d;
+  }
+
+  flags = tc->config.flags;
+  if ((flags & GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME) != 0 && out_fps_d != 1001
+      && out_fps_n != 60000 && out_fps_n != 30000) {
+    flags &= ~GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME;
+  } else if ((flags & GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME) == 0
+      && out_fps_d == 1001 && (out_fps_n == 60000 || out_fps_n == 30000)) {
+    /* XXX: theoretically, not quite correct however this is an assumption
+     * we have elsewhere that these framerates are always drop-framed */
+    flags |= GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME;
+  }
+
+  output_frame = output_n / output_d;
+
+  *out = (GstVideoTimeCode) GST_VIDEO_TIME_CODE_INIT;
+  do {
+    /* here we try to find the next available valid timecode.  The dropped
+     * (when they exist) frames in time codes are that the beginning of each
+     * minute */
+    gst_video_time_code_clear (out);
+    gst_video_time_code_init (out, out_fps_n, out_fps_d,
+        tc->config.latest_daily_jam, flags, tc->hours, tc->minutes,
+        tc->seconds, output_frame, tc->field_count);
+    output_frame++;
+  } while ((flags & GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME) != 0
+      && output_frame < 10 && !gst_video_time_code_is_valid (out));
+
+  tc_str = gst_video_time_code_to_string (out);
+  GST_TRACE_OBJECT (self, "interpolated to %s", tc_str);
+  g_free (tc_str);
+
+  return TRUE;
+}
+
+/* takes cc_data and cc_data_len and attempts to fit it into a hypothetical
+ * output packet.  Any leftover data is stored for later addition.  Returns
+ * the number of bytes of @cc_data to place in a new output packet */
+static gint
+fit_and_scale_cc_data (GstCCConverter * self,
+    const struct cdp_fps_entry *in_fps_entry,
+    const struct cdp_fps_entry *out_fps_entry, const guint8 * cc_data,
+    guint cc_data_len, const GstVideoTimeCode * tc)
+{
+  if (!in_fps_entry || in_fps_entry->fps_n == 0) {
+    in_fps_entry = cdp_fps_entry_from_fps (self->in_fps_n, self->in_fps_d);
+    if (!in_fps_entry || in_fps_entry->fps_n == 0)
+      g_assert_not_reached ();
+  }
+
+  /* This is slightly looser than checking for the exact framerate as the cdp
+   * spec allow for 0.1% difference between framerates to be considered equal */
+  if (in_fps_entry->max_cc_count == out_fps_entry->max_cc_count) {
+    if (tc && tc->config.fps_n != 0)
+      interpolate_time_code_with_framerate (self, tc, out_fps_entry->fps_n,
+          out_fps_entry->fps_d, 1, 1, &self->current_output_timecode);
+  } else {
+    int input_frame_n, input_frame_d, output_frame_n, output_frame_d;
+    int output_time_cmp, scale_n, scale_d, rate_cmp;
+
+    /* TODO: handle input discont */
+
+    /* compute the relative frame count for each */
+    if (!gst_util_fraction_multiply (self->in_fps_d, self->in_fps_n,
+            self->input_frames, 1, &input_frame_n, &input_frame_d))
+      /* we should never overflow */
+      g_assert_not_reached ();
+
+    if (!gst_util_fraction_multiply (self->out_fps_d, self->out_fps_n,
+            self->output_frames + 1, 1, &output_frame_n, &output_frame_d))
+      /* we should never overflow */
+      g_assert_not_reached ();
+
+    output_time_cmp = gst_util_fraction_compare (input_frame_n, input_frame_d,
+        output_frame_n, output_frame_d);
+
+    /* compute the relative rates of the two framerates */
+    get_framerate_output_scale (self, in_fps_entry, &scale_n, &scale_d);
+
+    rate_cmp = gst_util_fraction_compare (scale_n, scale_d, 1, 1);
+
+    GST_TRACE_OBJECT (self, "performing framerate conversion at scale %d/%d "
+        "of cc data", scale_n, scale_d);
+
+    if (rate_cmp == 0) {
+      /* we are not scaling. Should never happen with current conditions
+       * above */
+      g_assert_not_reached ();
+    } else if (output_time_cmp == 0) {
+      /* we have completed a cycle and can reset our counters to avoid
+       * overflow. Anything that fits into the output packet will be written */
+      GST_LOG_OBJECT (self, "cycle completed, resetting frame counters");
+      self->scratch_len = 0;
+      self->input_frames = self->output_frames = 0;
+      if (tc->config.fps_n != 0) {
+        interpolate_time_code_with_framerate (self, tc, out_fps_entry->fps_n,
+            out_fps_entry->fps_d, scale_n, scale_d,
+            &self->current_output_timecode);
+      }
+    } else if (output_time_cmp < 0) {
+      /* we can't generate an output yet */
+      self->scratch_len = cc_data_len;
+      GST_DEBUG_OBJECT (self, "holding cc_data of len %u until next input "
+          "buffer", self->scratch_len);
+      memcpy (self->scratch, cc_data, self->scratch_len);
+      return 0;
+    } else if (rate_cmp != 0) {
+      /* we are changing the framerate and may overflow the max output packet
+       * size. Split them where necessary. */
+
+      if (cc_data_len / 3 > out_fps_entry->max_cc_count) {
+        /* packet would overflow, push extra bytes into the next packet */
+        self->scratch_len = cc_data_len - 3 * out_fps_entry->max_cc_count;
+        GST_DEBUG_OBJECT (self, "buffer would overflow by %u bytes (max "
+            "length %u)", self->scratch_len, 3 * out_fps_entry->max_cc_count);
+        memcpy (self->scratch, &cc_data[3 * out_fps_entry->max_cc_count],
+            self->scratch_len);
+        cc_data_len = 3 * out_fps_entry->max_cc_count;
+      } else {
+        GST_DEBUG_OBJECT (self, "packet length of %u fits within max output "
+            "packet size %u", cc_data_len, 3 * out_fps_entry->max_cc_count);
+        self->scratch_len = 0;
+      }
+    } else {
+      g_assert_not_reached ();
+    }
+
+    if (tc && tc->config.fps_n != 0)
+      interpolate_time_code_with_framerate (self, tc, out_fps_entry->fps_n,
+          out_fps_entry->fps_d, scale_n, scale_d,
+          &self->current_output_timecode);
+  }
+
+  return cc_data_len;
+}
+
 /* Converts raw CEA708 cc_data and an optional timecode into CDP */
 static guint
 convert_cea708_cc_data_cea708_cdp_internal (GstCCConverter * self,
@@ -499,6 +612,9 @@ convert_cea708_cc_data_cea708_cdp_internal (GstCCConverter * self,
   GstByteWriter bw;
   guint8 flags, checksum;
   guint i, len;
+
+  GST_DEBUG_OBJECT (self, "writing out cdp packet from cc_data with length %u",
+      cc_data_len);
 
   gst_byte_writer_init_with_data (&bw, cdp, cdp_len, FALSE);
   gst_byte_writer_put_uint16_be_unchecked (&bw, 0x9669);
@@ -517,7 +633,7 @@ convert_cea708_cc_data_cea708_cdp_internal (GstCCConverter * self,
   flags = 0x42;
 
   /* time_code_present */
-  if (tc)
+  if (tc && tc->config.fps_n > 0)
     flags |= 0x80;
 
   /* reserved */
@@ -527,7 +643,7 @@ convert_cea708_cc_data_cea708_cdp_internal (GstCCConverter * self,
 
   gst_byte_writer_put_uint16_be_unchecked (&bw, self->cdp_hdr_sequence_cntr);
 
-  if (tc) {
+  if (tc && tc->config.fps_n > 0) {
     gst_byte_writer_put_uint8_unchecked (&bw, 0x71);
     gst_byte_writer_put_uint8_unchecked (&bw, 0xc0 |
         (((tc->hours % 10) & 0x3) << 4) |
@@ -584,7 +700,7 @@ convert_cea708_cc_data_cea708_cdp_internal (GstCCConverter * self,
 static guint
 convert_cea708_cdp_cea708_cc_data_internal (GstCCConverter * self,
     const guint8 * cdp, guint cdp_len, guint8 cc_data[MAX_CDP_PACKET_LEN],
-    GstVideoTimeCode * tc, const struct cdp_fps_entry ** out_fps_entry)
+    GstVideoTimeCode * tc, const struct cdp_fps_entry **out_fps_entry)
 {
   GstByteReader br;
   guint16 u16;
@@ -690,6 +806,42 @@ convert_cea708_cdp_cea708_cc_data_internal (GstCCConverter * self,
   return len;
 }
 
+static guint
+cdp_to_cc_data (GstCCConverter * self, GstBuffer * inbuf, guint8 * out,
+    guint out_size, GstVideoTimeCode * out_tc,
+    const struct cdp_fps_entry **out_fps_entry)
+{
+  GstMapInfo in;
+  guint len = 0;
+
+  if (self->scratch_len > 0) {
+    GST_DEBUG_OBJECT (self, "copying from previous scratch buffer of %u bytes",
+        self->scratch_len);
+    memcpy (&out[len], self->scratch, self->scratch_len);
+    len += self->scratch_len;
+  }
+
+  if (inbuf) {
+    guint cc_data_len;
+
+    gst_buffer_map (inbuf, &in, GST_MAP_READ);
+
+    cc_data_len =
+        convert_cea708_cdp_cea708_cc_data_internal (self, in.data, in.size,
+        &out[len], out_tc, out_fps_entry);
+    if (cc_data_len / 3 > (*out_fps_entry)->max_cc_count) {
+      GST_WARNING_OBJECT (self, "Too many cc_data triples in CDP packet %u",
+          cc_data_len / 3);
+      cc_data_len = 3 * (*out_fps_entry)->max_cc_count;
+    }
+    len += cc_data_len;
+
+    gst_buffer_unmap (inbuf, &in);
+    self->input_frames++;
+  }
+
+  return len;
+}
 
 static GstFlowReturn
 convert_cea608_raw_cea608_s334_1a (GstCCConverter * self, GstBuffer * inbuf,
@@ -809,9 +961,14 @@ convert_cea608_raw_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
     g_assert_not_reached ();
 
   tc_meta = gst_buffer_get_video_time_code_meta (inbuf);
-  len =
-      convert_cea708_cc_data_cea708_cdp_internal (self, cc_data, n * 3,
-      out.data, out.size, tc_meta ? &tc_meta->tc : NULL, fps_entry);
+
+  len = fit_and_scale_cc_data (self, NULL, fps_entry, cc_data,
+      n * 3, tc_meta ? &tc_meta->tc : NULL);
+  if (len > 0) {
+    len =
+        convert_cea708_cc_data_cea708_cdp_internal (self, cc_data, len,
+        out.data, out.size, &self->current_output_timecode, fps_entry);
+  }
 
   gst_buffer_unmap (inbuf, &in);
   gst_buffer_unmap (outbuf, &out);
@@ -935,9 +1092,14 @@ convert_cea608_s334_1a_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
     g_assert_not_reached ();
 
   tc_meta = gst_buffer_get_video_time_code_meta (inbuf);
-  len =
-      convert_cea708_cc_data_cea708_cdp_internal (self, cc_data, n * 3,
-      out.data, out.size, tc_meta ? &tc_meta->tc : NULL, fps_entry);
+
+  len = fit_and_scale_cc_data (self, NULL, fps_entry, cc_data,
+      n * 3, tc_meta ? &tc_meta->tc : NULL);
+  if (len > 0) {
+    len =
+        convert_cea708_cc_data_cea708_cdp_internal (self, cc_data, len,
+        out.data, out.size, &self->current_output_timecode, fps_entry);
+  }
 
   gst_buffer_unmap (inbuf, &in);
   gst_buffer_unmap (outbuf, &out);
@@ -1064,9 +1226,14 @@ convert_cea708_cc_data_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
     g_assert_not_reached ();
 
   tc_meta = gst_buffer_get_video_time_code_meta (inbuf);
-  len =
-      convert_cea708_cc_data_cea708_cdp_internal (self, in.data, in.size,
-      out.data, out.size, tc_meta ? &tc_meta->tc : NULL, fps_entry);
+
+  len = fit_and_scale_cc_data (self, NULL, fps_entry, in.data,
+      in.size, tc_meta ? &tc_meta->tc : NULL);
+  if (len > 0) {
+    len =
+        convert_cea708_cc_data_cea708_cdp_internal (self, in.data, len,
+        out.data, out.size, &self->current_output_timecode, fps_entry);
+  }
 
   gst_buffer_unmap (inbuf, &in);
   gst_buffer_unmap (outbuf, &out);
@@ -1080,45 +1247,50 @@ static GstFlowReturn
 convert_cea708_cdp_cea608_raw (GstCCConverter * self, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
-  GstMapInfo in, out;
-  guint i;
-  GstVideoTimeCode tc;
-  guint8 cc_data[MAX_CDP_PACKET_LEN];
-  guint len, cea608 = 0;
-  const struct cdp_fps_entry *fps_entry;
-
-  gst_buffer_map (inbuf, &in, GST_MAP_READ);
-  gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
+  GstMapInfo out;
+  GstVideoTimeCode tc = GST_VIDEO_TIME_CODE_INIT;
+  guint i, len = 0, cea608 = 0;
+  const struct cdp_fps_entry *in_fps_entry = NULL, *out_fps_entry;
+  guint8 cc_data[MAX_CDP_PACKET_LEN] = { 0, };
 
   len =
-      convert_cea708_cdp_cea708_cc_data_internal (self, in.data, in.size,
-      cc_data, &tc, &fps_entry);
-  len /= 3;
+      cdp_to_cc_data (self, inbuf, cc_data, sizeof (cc_data), &tc,
+      &in_fps_entry);
 
-  if (len > fps_entry->max_cc_count) {
-    GST_WARNING_OBJECT (self, "Too many cc_data triples in CDP packet %u", len);
-    len = fps_entry->max_cc_count;
-  }
+  out_fps_entry = cdp_fps_entry_from_fps (self->out_fps_n, self->out_fps_d);
+  if (!out_fps_entry || out_fps_entry->fps_n == 0)
+    out_fps_entry = in_fps_entry;
 
-  for (i = 0; i < len; i++) {
-    /* We can only really copy the first field here as there can't be any
-     * signalling in raw CEA608 and we must not mix the streams of different
-     * fields
-     */
-    if (cc_data[i * 3] == 0xfc) {
-      out.data[cea608 * 2] = cc_data[i * 3 + 1];
-      out.data[cea608 * 2 + 1] = cc_data[i * 3 + 2];
-      cea608++;
+  len = fit_and_scale_cc_data (self, in_fps_entry, out_fps_entry, cc_data, len,
+      &tc);
+  if (len > 0) {
+    len /= 3;
+
+    gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
+
+    for (i = 0; i < len; i++) {
+      /* We can only really copy the first field here as there can't be any
+       * signalling in raw CEA608 and we must not mix the streams of different
+       * fields
+       */
+      if (cc_data[i * 3] == 0xfc) {
+        out.data[cea608 * 2] = cc_data[i * 3 + 1];
+        out.data[cea608 * 2 + 1] = cc_data[i * 3 + 2];
+        cea608++;
+      }
     }
-  }
 
-  gst_buffer_unmap (inbuf, &in);
-  gst_buffer_unmap (outbuf, &out);
+    gst_buffer_unmap (outbuf, &out);
+  }
 
   gst_buffer_set_size (outbuf, 2 * cea608);
 
-  if (tc.config.fps_n != 0 && !gst_buffer_get_video_time_code_meta (inbuf))
-    gst_buffer_add_video_time_code_meta (outbuf, &tc);
+  if (self->current_output_timecode.config.fps_n != 0
+      && !gst_buffer_get_video_time_code_meta (inbuf)) {
+    gst_buffer_add_video_time_code_meta (outbuf,
+        &self->current_output_timecode);
+    gst_video_time_code_increment_frame (&self->current_output_timecode);
+  }
 
   return GST_FLOW_OK;
 }
@@ -1127,43 +1299,47 @@ static GstFlowReturn
 convert_cea708_cdp_cea608_s334_1a (GstCCConverter * self, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
-  GstMapInfo in, out;
-  guint i;
-  GstVideoTimeCode tc;
-  guint8 cc_data[MAX_CDP_PACKET_LEN];
-  guint len, cea608 = 0;
-  const struct cdp_fps_entry *fps_entry;
-
-  gst_buffer_map (inbuf, &in, GST_MAP_READ);
-  gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
+  GstMapInfo out;
+  GstVideoTimeCode tc = GST_VIDEO_TIME_CODE_INIT;
+  guint i, len = 0, cea608 = 0;
+  const struct cdp_fps_entry *in_fps_entry = NULL, *out_fps_entry;
+  guint8 cc_data[MAX_CDP_PACKET_LEN] = { 0, };
 
   len =
-      convert_cea708_cdp_cea708_cc_data_internal (self, in.data, in.size,
-      cc_data, &tc, &fps_entry);
-  len /= 3;
+      cdp_to_cc_data (self, inbuf, cc_data, sizeof (cc_data), &tc,
+      &in_fps_entry);
 
-  if (len > fps_entry->max_cc_count) {
-    GST_WARNING_OBJECT (self, "Too many cc_data triples in CDP packet %u", len);
-    len = fps_entry->max_cc_count;
-  }
+  out_fps_entry = cdp_fps_entry_from_fps (self->out_fps_n, self->out_fps_d);
+  if (!out_fps_entry || out_fps_entry->fps_n == 0)
+    out_fps_entry = in_fps_entry;
 
-  for (i = 0; i < len; i++) {
-    if (cc_data[i * 3] == 0xfc || cc_data[i * 3] == 0xfd) {
-      /* We have to assume a line offset of 0 */
-      out.data[cea608 * 3] = cc_data[i * 3] == 0xfc ? 0x80 : 0x00;
-      out.data[cea608 * 3 + 1] = cc_data[i * 3 + 1];
-      out.data[cea608 * 3 + 2] = cc_data[i * 3 + 2];
-      cea608++;
+  len = fit_and_scale_cc_data (self, in_fps_entry, out_fps_entry, cc_data, len,
+      &tc);
+  if (len > 0) {
+    len /= 3;
+
+    gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
+    for (i = 0; i < len; i++) {
+      if (cc_data[i * 3] == 0xfc || cc_data[i * 3] == 0xfd) {
+        /* We have to assume a line offset of 0 */
+        out.data[cea608 * 3] = cc_data[i * 3] == 0xfc ? 0x80 : 0x00;
+        out.data[cea608 * 3 + 1] = cc_data[i * 3 + 1];
+        out.data[cea608 * 3 + 2] = cc_data[i * 3 + 2];
+        cea608++;
+      }
     }
+    gst_buffer_unmap (outbuf, &out);
+    self->output_frames++;
   }
-
-  gst_buffer_unmap (inbuf, &in);
-  gst_buffer_unmap (outbuf, &out);
 
   gst_buffer_set_size (outbuf, 3 * cea608);
 
-  if (tc.config.fps_n != 0 && !gst_buffer_get_video_time_code_meta (inbuf))
-    gst_buffer_add_video_time_code_meta (outbuf, &tc);
+  if (self->current_output_timecode.config.fps_n != 0
+      && !gst_buffer_get_video_time_code_meta (inbuf)) {
+    gst_buffer_add_video_time_code_meta (outbuf,
+        &self->current_output_timecode);
+    gst_video_time_code_increment_frame (&self->current_output_timecode);
+  }
 
   return GST_FLOW_OK;
 }
@@ -1172,31 +1348,72 @@ static GstFlowReturn
 convert_cea708_cdp_cea708_cc_data (GstCCConverter * self, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
-  GstMapInfo in, out;
-  GstVideoTimeCode tc;
-  guint len;
-  const struct cdp_fps_entry *fps_entry;
-
-  gst_buffer_map (inbuf, &in, GST_MAP_READ);
-  gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
+  GstMapInfo out;
+  GstVideoTimeCode tc = GST_VIDEO_TIME_CODE_INIT;
+  guint len = 0;
+  const struct cdp_fps_entry *in_fps_entry = NULL, *out_fps_entry;
+  guint8 cc_data[MAX_CDP_PACKET_LEN] = { 0, };
 
   len =
-      convert_cea708_cdp_cea708_cc_data_internal (self, in.data, in.size,
-      out.data, &tc, &fps_entry);
+      cdp_to_cc_data (self, inbuf, cc_data, sizeof (cc_data), &tc,
+      &in_fps_entry);
 
-  gst_buffer_unmap (inbuf, &in);
-  gst_buffer_unmap (outbuf, &out);
+  out_fps_entry = cdp_fps_entry_from_fps (self->out_fps_n, self->out_fps_d);
+  if (!out_fps_entry || out_fps_entry->fps_n == 0)
+    out_fps_entry = in_fps_entry;
 
-  if (len / 3 > fps_entry->max_cc_count) {
-    GST_WARNING_OBJECT (self, "Too many cc_data triples in CDP packet %u",
-        len / 3);
-    len = 3 * fps_entry->max_cc_count;
+  len = fit_and_scale_cc_data (self, in_fps_entry, out_fps_entry, cc_data, len,
+      &tc);
+  if (len > 0) {
+    gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
+    memcpy (out.data, cc_data, len);
+    gst_buffer_unmap (outbuf, &out);
+    self->output_frames++;
+  }
+
+  if (self->current_output_timecode.config.fps_n != 0
+      && !gst_buffer_get_video_time_code_meta (inbuf)) {
+    gst_buffer_add_video_time_code_meta (outbuf,
+        &self->current_output_timecode);
+    gst_video_time_code_increment_frame (&self->current_output_timecode);
   }
 
   gst_buffer_set_size (outbuf, len);
 
-  if (tc.config.fps_n != 0 && !gst_buffer_get_video_time_code_meta (inbuf))
-    gst_buffer_add_video_time_code_meta (outbuf, &tc);
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+convert_cea708_cdp_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
+    GstBuffer * outbuf)
+{
+  GstMapInfo out;
+  GstVideoTimeCode tc = GST_VIDEO_TIME_CODE_INIT;
+  guint len = 0;
+  const struct cdp_fps_entry *in_fps_entry = NULL, *out_fps_entry;
+  guint8 cc_data[MAX_CDP_PACKET_LEN] = { 0, };
+
+  len =
+      cdp_to_cc_data (self, inbuf, cc_data, sizeof (cc_data), &tc,
+      &in_fps_entry);
+
+  out_fps_entry = cdp_fps_entry_from_fps (self->out_fps_n, self->out_fps_d);
+  if (!out_fps_entry || out_fps_entry->fps_n == 0)
+    out_fps_entry = in_fps_entry;
+
+  len = fit_and_scale_cc_data (self, in_fps_entry, out_fps_entry, cc_data, len,
+      &tc);
+  if (len > 0) {
+    gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
+    len =
+        convert_cea708_cc_data_cea708_cdp_internal (self, cc_data, len,
+        out.data, out.size, &self->current_output_timecode, out_fps_entry);
+
+    gst_buffer_unmap (outbuf, &out);
+    self->output_frames++;
+  }
+
+  gst_buffer_set_size (outbuf, len);
 
   return GST_FLOW_OK;
 }
@@ -1205,11 +1422,34 @@ static GstFlowReturn
 gst_cc_converter_transform (GstCCConverter * self, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
-  GstVideoTimeCodeMeta *tc_meta = gst_buffer_get_video_time_code_meta (inbuf);
+  GstVideoTimeCodeMeta *tc_meta = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
 
   GST_DEBUG_OBJECT (self, "Converting %" GST_PTR_FORMAT " from %u to %u", inbuf,
       self->input_caption_type, self->output_caption_type);
+
+  if (inbuf)
+    tc_meta = gst_buffer_get_video_time_code_meta (inbuf);
+
+  if (tc_meta) {
+    if (self->current_output_timecode.config.fps_n <= 0) {
+      /* XXX: this assumes the input time codes are well-formed and increase
+       * at the rate of one frame for each input buffer */
+      const struct cdp_fps_entry *in_fps_entry;
+      gint scale_n, scale_d;
+
+      in_fps_entry = cdp_fps_entry_from_fps (self->in_fps_n, self->in_fps_d);
+      if (!in_fps_entry || in_fps_entry->fps_n == 0)
+        scale_n = scale_d = 1;
+      else
+        get_framerate_output_scale (self, in_fps_entry, &scale_n, &scale_d);
+
+      if (tc_meta)
+        interpolate_time_code_with_framerate (self, &tc_meta->tc,
+            self->out_fps_n, self->out_fps_d, scale_n, scale_d,
+            &self->current_output_timecode);
+    }
+  }
 
   switch (self->input_caption_type) {
     case GST_VIDEO_CAPTION_TYPE_CEA608_RAW:
@@ -1282,6 +1522,8 @@ gst_cc_converter_transform (GstCCConverter * self, GstBuffer * inbuf,
           ret = convert_cea708_cdp_cea708_cc_data (self, inbuf, outbuf);
           break;
         case GST_VIDEO_CAPTION_TYPE_CEA708_CDP:
+          ret = convert_cea708_cdp_cea708_cdp (self, inbuf, outbuf);
+          break;
         default:
           g_assert_not_reached ();
           break;
@@ -1293,16 +1535,39 @@ gst_cc_converter_transform (GstCCConverter * self, GstBuffer * inbuf,
       break;
   }
 
-  if (ret != GST_FLOW_OK)
+  if (ret != GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (self, "returning %s", gst_flow_get_name (ret));
     return ret;
-
-  if (tc_meta)
-    gst_buffer_add_video_time_code_meta (outbuf, &tc_meta->tc);
+  }
 
   GST_DEBUG_OBJECT (self, "Converted to %" GST_PTR_FORMAT, outbuf);
 
-  return gst_buffer_get_size (outbuf) >
-      0 ? GST_FLOW_OK : GST_BASE_TRANSFORM_FLOW_DROPPED;
+  if (gst_buffer_get_size (outbuf) > 0) {
+    if (self->current_output_timecode.config.fps_n > 0) {
+      gst_buffer_add_video_time_code_meta (outbuf,
+          &self->current_output_timecode);
+      /* XXX: discont handling? */
+      gst_video_time_code_increment_frame (&self->current_output_timecode);
+    }
+
+    return GST_FLOW_OK;
+  } else {
+    return GST_BASE_TRANSFORM_FLOW_DROPPED;
+  }
+}
+
+static gboolean
+gst_cc_converter_transform_meta (GstBaseTransform * base, GstBuffer * outbuf,
+    GstMeta * meta, GstBuffer * inbuf)
+{
+  const GstMetaInfo *info = meta->info;
+
+  /* we do this manually for framerate scaling */
+  if (info->api == GST_VIDEO_TIME_CODE_META_API_TYPE)
+    return FALSE;
+
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->transform_meta (base, outbuf,
+      meta, inbuf);
 }
 
 static GstFlowReturn
@@ -1315,7 +1580,7 @@ gst_cc_converter_generate_output (GstBaseTransform * base, GstBuffer ** outbuf)
 
   *outbuf = NULL;
   base->queued_buf = NULL;
-  if (!inbuf) {
+  if (!inbuf && self->scratch_len == 0) {
     return GST_FLOW_OK;
   }
 
@@ -1323,25 +1588,80 @@ gst_cc_converter_generate_output (GstBaseTransform * base, GstBuffer ** outbuf)
     *outbuf = inbuf;
     ret = GST_FLOW_OK;
   } else {
-    ret = bclass->prepare_output_buffer (base, inbuf, outbuf);
-
-    if (ret != GST_FLOW_OK || *outbuf == NULL)
+    *outbuf = gst_buffer_new_allocate (NULL, MAX_CDP_PACKET_LEN, NULL);
+    if (*outbuf == NULL)
       goto no_buffer;
 
+    if (inbuf)
+      gst_buffer_replace (&self->previous_buffer, inbuf);
+
+    if (bclass->copy_metadata) {
+      if (!bclass->copy_metadata (base, self->previous_buffer, *outbuf)) {
+        /* something failed, post a warning */
+        GST_ELEMENT_WARNING (self, STREAM, NOT_IMPLEMENTED,
+            ("could not copy metadata"), (NULL));
+      }
+    }
+
     ret = gst_cc_converter_transform (self, inbuf, *outbuf);
-    gst_buffer_unref (inbuf);
+
+    if (inbuf)
+      gst_buffer_unref (inbuf);
   }
 
   return ret;
 
 no_buffer:
   {
-    gst_buffer_unref (inbuf);
+    if (inbuf)
+      gst_buffer_unref (inbuf);
     *outbuf = NULL;
-    GST_WARNING_OBJECT (self, "could not get buffer from pool: %s",
-        gst_flow_get_name (ret));
-    return ret;
+    GST_WARNING_OBJECT (self, "could not allocate buffer");
+    return GST_FLOW_ERROR;
   }
+}
+
+static gboolean
+gst_cc_converter_sink_event (GstBaseTransform * trans, GstEvent * event)
+{
+  GstCCConverter *self = GST_CCCONVERTER (trans);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+      GST_DEBUG_OBJECT (self, "received EOS");
+
+      while (self->scratch_len > 0) {
+        GstBuffer *outbuf;
+        GstFlowReturn ret;
+
+        outbuf = gst_buffer_new_allocate (NULL, MAX_CDP_PACKET_LEN, NULL);
+
+        ret = gst_cc_converter_transform (self, NULL, outbuf);
+        if (ret == GST_BASE_TRANSFORM_FLOW_DROPPED) {
+          /* try to move the output along */
+          self->input_frames++;
+          gst_buffer_unref (outbuf);
+          continue;
+        } else if (ret != GST_FLOW_OK)
+          break;
+
+        ret = gst_pad_push (GST_BASE_TRANSFORM_SRC_PAD (trans), outbuf);
+        if (ret != GST_FLOW_OK)
+          break;
+      }
+      /* fallthrough */
+    case GST_EVENT_FLUSH_START:
+      self->scratch_len = 0;
+      self->input_frames = 0;
+      self->output_frames = 0;
+      gst_video_time_code_clear (&self->current_output_timecode);
+      gst_clear_buffer (&self->previous_buffer);
+      break;
+    default:
+      break;
+  }
+
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans, event);
 }
 
 static gboolean
@@ -1351,6 +1671,21 @@ gst_cc_converter_start (GstBaseTransform * base)
 
   /* Resetting this is not really needed but makes debugging easier */
   self->cdp_hdr_sequence_cntr = 0;
+  self->current_output_timecode = (GstVideoTimeCode) GST_VIDEO_TIME_CODE_INIT;
+  self->input_frames = 0;
+  self->output_frames = 0;
+  self->scratch_len = 0;
+
+  return TRUE;
+}
+
+static gboolean
+gst_cc_converter_stop (GstBaseTransform * base)
+{
+  GstCCConverter *self = GST_CCCONVERTER (base);
+
+  gst_video_time_code_clear (&self->current_output_timecode);
+  gst_clear_buffer (&self->previous_buffer);
 
   return TRUE;
 }
@@ -1374,6 +1709,9 @@ gst_cc_converter_class_init (GstCCConverterClass * klass)
   gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
 
   basetransform_class->start = GST_DEBUG_FUNCPTR (gst_cc_converter_start);
+  basetransform_class->stop = GST_DEBUG_FUNCPTR (gst_cc_converter_stop);
+  basetransform_class->sink_event =
+      GST_DEBUG_FUNCPTR (gst_cc_converter_sink_event);
   basetransform_class->transform_size =
       GST_DEBUG_FUNCPTR (gst_cc_converter_transform_size);
   basetransform_class->transform_caps =
@@ -1381,6 +1719,8 @@ gst_cc_converter_class_init (GstCCConverterClass * klass)
   basetransform_class->fixate_caps =
       GST_DEBUG_FUNCPTR (gst_cc_converter_fixate_caps);
   basetransform_class->set_caps = GST_DEBUG_FUNCPTR (gst_cc_converter_set_caps);
+  basetransform_class->transform_meta =
+      GST_DEBUG_FUNCPTR (gst_cc_converter_transform_meta);
   basetransform_class->generate_output =
       GST_DEBUG_FUNCPTR (gst_cc_converter_generate_output);
   basetransform_class->passthrough_on_same_caps = TRUE;

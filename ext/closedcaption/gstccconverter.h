@@ -54,6 +54,18 @@ struct _GstCCConverter
 
   gint in_fps_n, in_fps_d;
   gint out_fps_n, out_fps_d;
+
+  /* for framerate differences, we need to keep previous/next frames in order
+   * to split/merge data across multiple input or output buffers.  The data is
+   * stored as cc_data */
+  guint8    scratch[MAX_CDP_PACKET_LEN];
+  guint     scratch_len;
+
+  guint     input_frames;
+  guint     output_frames;
+  GstVideoTimeCode current_output_timecode;
+  /* previous buffer for copying metas onto */
+  GstBuffer *previous_buffer;
 };
 
 struct _GstCCConverterClass
