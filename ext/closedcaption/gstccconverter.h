@@ -50,7 +50,8 @@ struct _GstCCConverter
   /* CDP sequence numbers when outputting CDP */
   guint16 cdp_hdr_sequence_cntr;
 
-  gint fps_n, fps_d;
+  gint in_fps_n, in_fps_d;
+  gint out_fps_n, out_fps_d;
 };
 
 struct _GstCCConverterClass
