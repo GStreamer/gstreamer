@@ -28,19 +28,9 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_CAIRO_OVERLAY \
-  (gst_cairo_overlay_get_type())
-#define GST_CAIRO_OVERLAY(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_CAIRO_OVERLAY,GstCairoOverlay))
-#define GST_CAIRO_OVERLAY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_CAIRO_OVERLAY,GstCairoOverlayClass))
-#define GST_IS_CAIRO_OVERLAY(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CAIRO_OVERLAY))
-#define GST_IS_CAIRO_OVERLAY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CAIRO_OVERLAY))
-
-typedef struct _GstCairoOverlay GstCairoOverlay;
-typedef struct _GstCairoOverlayClass GstCairoOverlayClass;
+#define GST_TYPE_CAIRO_OVERLAY (gst_cairo_overlay_get_type())
+G_DECLARE_FINAL_TYPE (GstCairoOverlay, gst_cairo_overlay,
+    GST, CAIRO_OVERLAY, GstBaseTransform)
 
 struct _GstCairoOverlay {
   GstBaseTransform parent;
@@ -52,12 +42,6 @@ struct _GstCairoOverlay {
   GstVideoInfo info;
   gboolean attach_compo_to_buffer;
 };
-
-struct _GstCairoOverlayClass {
-  GstBaseTransformClass parent_class;
-};
-
-GType gst_cairo_overlay_get_type (void);
 
 G_END_DECLS
 
