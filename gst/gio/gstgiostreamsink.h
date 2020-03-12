@@ -29,19 +29,9 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_GIO_STREAM_SINK \
-  (gst_gio_stream_sink_get_type())
-#define GST_GIO_STREAM_SINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GIO_STREAM_SINK,GstGioStreamSink))
-#define GST_GIO_STREAM_SINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GIO_STREAM_SINK,GstGioStreamSinkClass))
-#define GST_IS_GIO_STREAM_SINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GIO_STREAM_SINK))
-#define GST_IS_GIO_STREAM_SINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GIO_STREAM_SINK))
-
-typedef struct _GstGioStreamSink      GstGioStreamSink;
-typedef struct _GstGioStreamSinkClass GstGioStreamSinkClass;
+#define GST_TYPE_GIO_STREAM_SINK (gst_gio_stream_sink_get_type())
+G_DECLARE_FINAL_TYPE (GstGioStreamSink, gst_gio_stream_sink,
+    GST, GIO_STREAM_SINK, GstGioBaseSink)
 
 /**
  * GstGioStreamSink:
@@ -51,17 +41,10 @@ typedef struct _GstGioStreamSinkClass GstGioStreamSinkClass;
 struct _GstGioStreamSink
 {
   GstGioBaseSink sink;
-  
+
   /* < private > */
   GOutputStream *stream;
 };
-
-struct _GstGioStreamSinkClass 
-{
-  GstGioBaseSinkClass parent_class;
-};
-
-GType gst_gio_stream_sink_get_type (void);
 
 G_END_DECLS
 

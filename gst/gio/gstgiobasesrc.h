@@ -67,6 +67,8 @@ struct _GstGioBaseSrcClass
 
 GType gst_gio_base_src_get_type (void);
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstGioBaseSrc, gst_object_unref)
+
 G_END_DECLS
 
 #endif /* __GST_GIO_BASE_SRC_H__ */

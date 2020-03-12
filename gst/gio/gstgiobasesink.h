@@ -66,6 +66,8 @@ struct _GstGioBaseSinkClass
 
 GType gst_gio_base_sink_get_type (void);
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstGioBaseSink, gst_object_unref)
+
 G_END_DECLS
 
 #endif /* __GST_GIO_BASE_SINK_H__ */

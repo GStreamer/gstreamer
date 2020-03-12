@@ -29,19 +29,9 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_GIO_STREAM_SRC \
-  (gst_gio_stream_src_get_type())
-#define GST_GIO_STREAM_SRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GIO_STREAM_SRC,GstGioStreamSrc))
-#define GST_GIO_STREAM_SRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GIO_STREAM_SRC,GstGioStreamSrcClass))
-#define GST_IS_GIO_STREAM_SRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GIO_STREAM_SRC))
-#define GST_IS_GIO_STREAM_SRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GIO_STREAM_SRC))
-
-typedef struct _GstGioStreamSrc      GstGioStreamSrc;
-typedef struct _GstGioStreamSrcClass GstGioStreamSrcClass;
+#define GST_TYPE_GIO_STREAM_SRC (gst_gio_stream_src_get_type())
+G_DECLARE_FINAL_TYPE (GstGioStreamSrc, gst_gio_stream_src,
+    GST, GIO_STREAM_SRC, GstGioBaseSrc)
 
 /**
  * GstGioStreamSrc:
@@ -55,13 +45,6 @@ struct _GstGioStreamSrc
   /* < private > */
   GInputStream *stream;
 };
-
-struct _GstGioStreamSrcClass 
-{
-  GstGioBaseSrcClass parent_class;
-};
-
-GType gst_gio_stream_src_get_type (void);
 
 G_END_DECLS
 
