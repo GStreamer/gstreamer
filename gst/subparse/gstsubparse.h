@@ -29,19 +29,8 @@ GST_DEBUG_CATEGORY_EXTERN (sub_parse_debug);
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_SUBPARSE \
-  (gst_sub_parse_get_type ())
-#define GST_SUBPARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_SUBPARSE, GstSubParse))
-#define GST_SUBPARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_SUBPARSE, GstSubParseClass))
-#define GST_IS_SUBPARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_SUBPARSE))
-#define GST_IS_SUBPARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_SUBPARSE))
-
-typedef struct _GstSubParse GstSubParse;
-typedef struct _GstSubParseClass GstSubParseClass;
+#define GST_TYPE_SUBPARSE (gst_sub_parse_get_type ())
+G_DECLARE_FINAL_TYPE (GstSubParse, gst_sub_parse, GST, SUBPARSE, GstElement)
 
 /* format enum */
 typedef enum
@@ -116,12 +105,6 @@ struct _GstSubParse {
   /* used by frame based parsers */
   gint fps_n, fps_d;          
 };
-
-struct _GstSubParseClass {
-  GstElementClass parent_class;
-};
-
-GType gst_sub_parse_get_type (void);
 
 G_END_DECLS
 

@@ -24,14 +24,8 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_SSA_PARSE            (gst_ssa_parse_get_type ())
-#define GST_SSA_PARSE(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_SSA_PARSE, GstSsaParse))
-#define GST_SSA_PARSE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_SSA_PARSE, GstSsaParseClass))
-#define GST_IS_SSA_PARSE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_SSA_PARSE))
-#define GST_IS_SSA_PARSE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_SSA_PARSE))
-
-typedef struct _GstSsaParse GstSsaParse;
-typedef struct _GstSsaParseClass GstSsaParseClass;
+#define GST_TYPE_SSA_PARSE (gst_ssa_parse_get_type ())
+G_DECLARE_FINAL_TYPE (GstSsaParse, gst_ssa_parse, GST, SSA_PARSE, GstElement)
 
 struct _GstSsaParse {
   GstElement element;
@@ -44,12 +38,6 @@ struct _GstSsaParse {
 
   gchar          *ini;
 };
-
-struct _GstSsaParseClass {
-  GstElementClass   parent_class;
-};
-
-GType gst_ssa_parse_get_type (void);
 
 G_END_DECLS
 
