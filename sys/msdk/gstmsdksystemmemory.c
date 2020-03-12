@@ -152,6 +152,13 @@ ensure_data (GstMsdkSystemMemory * mem)
       mem->surface->Data.U = mem->cached_data[0];       /* Data.Y410 */
       mem->surface->Data.Pitch = mem->destination_pitches[0];
       break;
+    case GST_VIDEO_FORMAT_Y412_LE:
+      mem->surface->Data.U = mem->cached_data[0];
+      mem->surface->Data.Y = mem->surface->Data.U + 2;
+      mem->surface->Data.V = mem->surface->Data.U + 4;
+      mem->surface->Data.A = mem->surface->Data.U + 6;
+      mem->surface->Data.Pitch = mem->destination_pitches[0];
+      break;
 
     default:
       g_assert_not_reached ();
@@ -251,6 +258,11 @@ gst_msdk_system_memory_map_full (GstMemory * base_mem, GstMapInfo * info,
 #if (MFX_VERSION >= 1027)
     case MFX_FOURCC_Y410:
       return mem->surface->Data.U;      /* Data.Y410 */
+#endif
+
+#if (MFX_VERSION >= 1031)
+    case MFX_FOURCC_Y416:
+      return mem->surface->Data.U;      /* The first channel is U */
 #endif
 
     default:

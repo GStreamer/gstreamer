@@ -248,7 +248,8 @@ gst_video_meta_map_msdk_memory (GstVideoMeta * meta, guint plane,
       break;
 
     case GST_VIDEO_FORMAT_Y410:
-      *data = mem->surface->Data.U + offset;    /* Data.Y410 */
+    case GST_VIDEO_FORMAT_Y412_LE:
+      *data = mem->surface->Data.U + offset;
       break;
 
     default:
@@ -323,6 +324,11 @@ gst_msdk_video_memory_map_full (GstMemory * base_mem, GstMapInfo * info,
 #if (MFX_VERSION >= 1027)
     case MFX_FOURCC_Y410:
       return mem->surface->Data.U;      /* Data.Y410 */
+#endif
+
+#if (MFX_VERSION >= 1031)
+    case MFX_FOURCC_Y416:
+      return mem->surface->Data.U;
 #endif
 
     default:
