@@ -354,62 +354,22 @@ gst_nv_h265_enc_create_mastering_display_sei_nal (GstNvH265Enc * h265enc,
     GstVideoMasteringDisplayInfo * minfo, guint * size)
 {
   guint sei_size;
-  guint16 primary_x[3];
-  guint16 primary_y[3];
-  guint16 white_x, white_y;
-  guint32 max_luma;
-  guint32 min_luma;
-  const guint chroma_scale = 50000;
-  const guint luma_scale = 10000;
   gint i;
   GstByteWriter br;
 
-  GST_DEBUG_OBJECT (h265enc, "Apply mastering display info");
-  GST_LOG_OBJECT (h265enc, "\tRed  (%u/%u, %u/%u)", minfo->Rx_n,
-      minfo->Rx_d, minfo->Ry_n, minfo->Ry_d);
-  GST_LOG_OBJECT (h265enc, "\tGreen(%u/%u, %u/%u)", minfo->Gx_n,
-      minfo->Gx_d, minfo->Gy_n, minfo->Gy_d);
-  GST_LOG_OBJECT (h265enc, "\tBlue (%u/%u, %u/%u)", minfo->Bx_n,
-      minfo->Bx_d, minfo->By_n, minfo->By_d);
-  GST_LOG_OBJECT (h265enc, "\tWhite(%u/%u, %u/%u)", minfo->Wx_n,
-      minfo->Wx_d, minfo->Wy_n, minfo->Wy_d);
-  GST_LOG_OBJECT (h265enc,
-      "\tmax_luminance:(%u/%u), min_luminance:(%u/%u)",
-      minfo->max_luma_n, minfo->max_luma_d, minfo->min_luma_n,
-      minfo->min_luma_d);
-
-  primary_x[0] =
-      (guint16) gst_util_uint64_scale_round (minfo->Gx_n, chroma_scale,
-      minfo->Gx_d);
-  primary_x[1] =
-      (guint16) gst_util_uint64_scale_round (minfo->Bx_n, chroma_scale,
-      minfo->Bx_d);
-  primary_x[2] =
-      (guint16) gst_util_uint64_scale_round (minfo->Rx_n, chroma_scale,
-      minfo->Rx_d);
-
-  primary_y[0] =
-      (guint16) gst_util_uint64_scale_round (minfo->Gy_n, chroma_scale,
-      minfo->Gy_d);
-  primary_y[1] =
-      (guint16) gst_util_uint64_scale_round (minfo->By_n, chroma_scale,
-      minfo->By_d);
-  primary_y[2] =
-      (guint16) gst_util_uint64_scale_round (minfo->Ry_n, chroma_scale,
-      minfo->Ry_d);
-
-  white_x =
-      (guint16) gst_util_uint64_scale_round (minfo->Wx_n, chroma_scale,
-      minfo->Wx_d);
-  white_y =
-      (guint16) gst_util_uint64_scale_round (minfo->Wy_n, chroma_scale,
-      minfo->Wy_d);
-  max_luma =
-      (guint32) gst_util_uint64_scale_round (minfo->max_luma_n, luma_scale,
-      minfo->max_luma_d);
-  min_luma =
-      (guint32) gst_util_uint64_scale_round (minfo->min_luma_n, luma_scale,
-      minfo->min_luma_d);
+  GST_LOG_OBJECT (h265enc, "Apply mastering display info: "
+      "Red(%u, %u) "
+      "Green(%u, %u) "
+      "Blue(%u, %u) "
+      "White(%u, %u) "
+      "max_luminance(%u) "
+      "min_luminance(%u) ",
+      minfo->display_primaries[0].x, minfo->display_primaries[0].y,
+      minfo->display_primaries[1].x, minfo->display_primaries[1].y,
+      minfo->display_primaries[2].x, minfo->display_primaries[2].y,
+      minfo->white_point.x, minfo->white_point.y,
+      minfo->max_display_mastering_luminance,
+      minfo->min_display_mastering_luminance);
 
   /* x, y 16bits per RGB channel
    * x, y 16bits white point
@@ -418,16 +378,22 @@ gst_nv_h265_enc_create_mastering_display_sei_nal (GstNvH265Enc * h265enc,
   sei_size = (2 * 2 * 3) + (2 * 2) + (4 * 2);
   gst_byte_writer_init_with_size (&br, sei_size, TRUE);
 
+  /* GstVideoMasteringDisplayInfo::display_primaries is rgb order but
+   * HEVC uses gbr order
+   * See spec D.3.28 display_primaries_x and display_primaries_y
+   */
   for (i = 0; i < 3; i++) {
-    gst_byte_writer_put_uint16_be (&br, primary_x[i]);
-    gst_byte_writer_put_uint16_be (&br, primary_y[i]);
+    gst_byte_writer_put_uint16_be (&br,
+        minfo->display_primaries[(i + 1) % 3].x);
+    gst_byte_writer_put_uint16_be (&br,
+        minfo->display_primaries[(i + 1) % 3].y);
   }
 
-  gst_byte_writer_put_uint16_be (&br, white_x);
-  gst_byte_writer_put_uint16_be (&br, white_y);
+  gst_byte_writer_put_uint16_be (&br, minfo->white_point.x);
+  gst_byte_writer_put_uint16_be (&br, minfo->white_point.y);
 
-  gst_byte_writer_put_uint32_be (&br, max_luma);
-  gst_byte_writer_put_uint32_be (&br, min_luma);
+  gst_byte_writer_put_uint32_be (&br, minfo->max_display_mastering_luminance);
+  gst_byte_writer_put_uint32_be (&br, minfo->min_display_mastering_luminance);
 
   *size = sei_size;
 
@@ -438,25 +404,19 @@ static guint8 *
 gst_nv_h265_enc_create_content_light_level_sei_nal (GstNvH265Enc * h265enc,
     GstVideoContentLightLevel * linfo, guint * size)
 {
-  gdouble val;
   guint sei_size;
   GstByteWriter br;
 
-  GST_DEBUG_OBJECT (h265enc, "Apply content light level");
-  GST_LOG_OBJECT (h265enc, "content light level found");
-  GST_LOG_OBJECT (h265enc,
-      "\tmaxCLL:(%u/%u), maxFALL:(%u/%u)", linfo->maxCLL_n, linfo->maxCLL_d,
-      linfo->maxFALL_n, linfo->maxFALL_d);
+  GST_LOG_OBJECT (h265enc, "Apply content light level: "
+      "maxCLL:(%u), maxFALL:(%u)", linfo->max_content_light_level,
+      linfo->max_frame_average_light_level);
 
   /* maxCLL and maxFALL per 16bits */
   sei_size = 2 * 2;
   gst_byte_writer_init_with_size (&br, sei_size, TRUE);
 
-  gst_util_fraction_to_double (linfo->maxCLL_n, linfo->maxCLL_d, &val);
-  gst_byte_writer_put_uint16_be (&br, (guint16) val);
-
-  gst_util_fraction_to_double (linfo->maxFALL_n, linfo->maxFALL_d, &val);
-  gst_byte_writer_put_uint16_be (&br, (guint16) val);
+  gst_byte_writer_put_uint16_be (&br, linfo->max_content_light_level);
+  gst_byte_writer_put_uint16_be (&br, linfo->max_frame_average_light_level);
 
   *size = sei_size;
 
