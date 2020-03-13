@@ -52,6 +52,22 @@ lookup_v4l2_fmt (guint v4l2_pix_fmt)
   return ret;
 }
 
+static struct FormatEntry *
+lookup_gst_fmt (GstVideoFormat gst_fmt)
+{
+  gint i;
+  struct FormatEntry *ret = NULL;
+
+  for (i = 0; format_map[i].v4l2_pix_fmt; i++) {
+    if (format_map[i].gst_fmt == gst_fmt) {
+      ret = format_map + i;
+      break;
+    }
+  }
+
+  return ret;
+}
+
 static gint
 extrapolate_stride (const GstVideoFormatInfo * finfo, gint plane, gint stride)
 {
@@ -111,5 +127,29 @@ gst_v4l2_format_to_video_info (struct v4l2_format * fmt,
         plane, pix_mp->height);
   }
 
+  return TRUE;
+}
+
+gboolean
+gst_v4l2_format_to_video_format (guint32 pix_fmt, GstVideoFormat * out_format)
+{
+  struct FormatEntry *entry = lookup_v4l2_fmt (pix_fmt);
+
+  if (!entry)
+    return FALSE;
+
+  *out_format = entry->gst_fmt;
+  return TRUE;
+}
+
+gboolean
+gst_v4l2_format_from_video_format (GstVideoFormat format, guint32 * out_pix_fmt)
+{
+  struct FormatEntry *entry = lookup_gst_fmt (format);
+
+  if (!entry)
+    return FALSE;
+
+  *out_pix_fmt = entry->v4l2_pix_fmt;
   return TRUE;
 }
