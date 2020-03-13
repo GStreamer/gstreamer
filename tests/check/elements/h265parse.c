@@ -238,9 +238,9 @@ GST_START_TEST (test_parse_detect_stream_with_hdr_sei)
   fail_unless_structure_field_string_equals (s, "tier", "main");
   fail_unless_structure_field_string_equals (s, "level", "2.1");
   fail_unless_structure_field_string_equals (s, "mastering-display-info",
-      "17:25:8:25:53:200:69:100:3:20:3:50:3127:10000:329:1000:1000:1:1:10000");
+      "34000:16000:13250:34500:7500:3000:15635:16450:10000000:1");
   fail_unless_structure_field_string_equals (s, "content-light-level",
-      "1000:1:400:1");
+      "1000:400");
 
   g_free (h265_idr_plus_sei);
   gst_caps_unref (caps);

@@ -484,9 +484,9 @@ GST_START_TEST (test_parse_detect_stream_with_hdr_sei)
   fail_unless_structure_field_string_equals (s, "level", "2.1");
 
   fail_unless_structure_field_string_equals (s, "mastering-display-info",
-      "3:20:3:50:17:25:8:25:33:125:69:100:3127:10000:329:1000:1000:1:1:10000");
+      "7500:3000:34000:16000:13200:34500:15635:16450:10000000:1");
   fail_unless_structure_field_string_equals (s, "content-light-level",
-      "1000:1:400:1");
+      "1000:400");
   if (ctx_codec_data) {
     fail_unless (gst_structure_has_field (s, "codec_data"));
 

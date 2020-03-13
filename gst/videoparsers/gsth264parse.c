@@ -784,48 +784,47 @@ gst_h264_parse_process_sei (GstH264Parse * h264parse, GstH264NalUnit * nalu)
       case GST_H264_SEI_MASTERING_DISPLAY_COLOUR_VOLUME:
       {
         /* Precision defined by spec.
-         * See D.3.28 Mastering display colour volume SEI message semantics */
-        const guint chroma_den = 50000;
-        const guint luma_den = 10000;
+         * See D.2.29 Mastering display colour volume SEI message semantics */
         GstVideoMasteringDisplayInfo minfo;
+        gint j, k;
 
-        minfo.Gx_n =
-            sei.payload.mastering_display_colour_volume.display_primaries_x[0];
-        minfo.Gy_n =
-            sei.payload.mastering_display_colour_volume.display_primaries_y[0];
-        minfo.Bx_n =
-            sei.payload.mastering_display_colour_volume.display_primaries_x[1];
-        minfo.By_n =
-            sei.payload.mastering_display_colour_volume.display_primaries_y[1];
-        minfo.Rx_n =
-            sei.payload.mastering_display_colour_volume.display_primaries_x[2];
-        minfo.Ry_n =
-            sei.payload.mastering_display_colour_volume.display_primaries_y[2];
-        minfo.Wx_n = sei.payload.mastering_display_colour_volume.white_point_x;
-        minfo.Wy_n = sei.payload.mastering_display_colour_volume.white_point_y;
-        minfo.max_luma_n =
-            sei.payload.
-            mastering_display_colour_volume.max_display_mastering_luminance;
-        minfo.min_luma_n =
-            sei.payload.
-            mastering_display_colour_volume.min_display_mastering_luminance;
+        /* GstVideoMasteringDisplayInfo::display_primaries is rgb order but
+         * AVC uses gbr order.
+         * See spec D.2.29 display_primaries_x and display_primaries_y
+         */
+        for (j = 0, k = 2; j < G_N_ELEMENTS (minfo.display_primaries); j++, k++) {
+          minfo.display_primaries[j].x =
+              sei.payload.
+              mastering_display_colour_volume.display_primaries_x[k % 3];
+          minfo.display_primaries[j].y =
+              sei.payload.
+              mastering_display_colour_volume.display_primaries_y[k % 3];
+        }
 
-        minfo.Gx_d = minfo.Gy_d = minfo.Bx_d = minfo.By_d =
-            minfo.Rx_d = minfo.Ry_d = minfo.Wx_d = minfo.Wy_d = chroma_den;
-
-        minfo.max_luma_d = minfo.min_luma_d = luma_den;
+        minfo.white_point.x =
+            sei.payload.mastering_display_colour_volume.white_point_x;
+        minfo.white_point.y =
+            sei.payload.mastering_display_colour_volume.white_point_y;
+        minfo.max_display_mastering_luminance =
+            sei.payload.mastering_display_colour_volume.
+            max_display_mastering_luminance;
+        minfo.min_display_mastering_luminance =
+            sei.payload.mastering_display_colour_volume.
+            min_display_mastering_luminance;
 
         GST_LOG_OBJECT (h264parse, "mastering display info found: "
-            "Red(%u/%u, %u/%u) "
-            "Green(%u/%u, %u/%u) "
-            "Blue(%u/%u, %u/%u) "
-            "White(%u/%u, %u/%u) "
-            "max_luminance(%u/%u) "
-            "min_luminance(%u/%u) ", minfo.Rx_n, minfo.Rx_d, minfo.Ry_n,
-            minfo.Ry_d, minfo.Gx_n, minfo.Gx_d, minfo.Gy_n, minfo.Gy_d,
-            minfo.Bx_n, minfo.Bx_d, minfo.By_n, minfo.By_d, minfo.Wx_n,
-            minfo.Wx_d, minfo.Wy_n, minfo.Wy_d, minfo.max_luma_n,
-            minfo.max_luma_d, minfo.min_luma_n, minfo.min_luma_d);
+            "Red(%u, %u) "
+            "Green(%u, %u) "
+            "Blue(%u, %u) "
+            "White(%u, %u) "
+            "max_luminance(%u) "
+            "min_luminance(%u) ",
+            minfo.display_primaries[0].x, minfo.display_primaries[0].y,
+            minfo.display_primaries[1].x, minfo.display_primaries[1].y,
+            minfo.display_primaries[2].x, minfo.display_primaries[2].y,
+            minfo.white_point.x, minfo.white_point.y,
+            minfo.max_display_mastering_luminance,
+            minfo.min_display_mastering_luminance);
 
         if (h264parse->mastering_display_info_state ==
             GST_H264_PARSE_SEI_EXPIRED) {
@@ -844,24 +843,21 @@ gst_h264_parse_process_sei (GstH264Parse * h264parse, GstH264NalUnit * nalu)
       {
         GstVideoContentLightLevel cll;
 
-        cll.maxCLL_n = sei.payload.content_light_level.max_content_light_level;
-        cll.maxFALL_n =
+        cll.max_content_light_level =
+            sei.payload.content_light_level.max_content_light_level;
+        cll.max_frame_average_light_level =
             sei.payload.content_light_level.max_pic_average_light_level;
 
-        cll.maxCLL_d = cll.maxFALL_d = 1;
-
         GST_LOG_OBJECT (h264parse, "content light level found: "
-            "maxCLL:(%u/%u), maxFALL:(%u/%u)", cll.maxCLL_n, cll.maxCLL_d,
-            cll.maxFALL_n, cll.maxFALL_d);
+            "maxCLL:(%u), maxFALL:(%u)", cll.max_content_light_level,
+            cll.max_frame_average_light_level);
 
         if (h264parse->content_light_level_state == GST_H264_PARSE_SEI_EXPIRED) {
           h264parse->update_caps = TRUE;
-        } else if (gst_util_fraction_compare (cll.maxCLL_n, cll.maxCLL_d,
-                h264parse->content_light_level.maxCLL_n,
-                h264parse->content_light_level.maxCLL_d)
-            || gst_util_fraction_compare (cll.maxFALL_n, cll.maxFALL_d,
-                h264parse->content_light_level.maxFALL_n,
-                h264parse->content_light_level.maxFALL_d)) {
+        } else if (cll.max_content_light_level !=
+            h264parse->content_light_level.max_frame_average_light_level ||
+            cll.max_content_light_level !=
+            h264parse->content_light_level.max_frame_average_light_level) {
           h264parse->update_caps = TRUE;
         }
 
