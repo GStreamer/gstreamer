@@ -29,13 +29,7 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_FLAC_ENC (gst_flac_enc_get_type())
-#define GST_FLAC_ENC(obj) G_TYPE_CHECK_INSTANCE_CAST(obj, GST_TYPE_FLAC_ENC, GstFlacEnc)
-#define GST_FLAC_ENC_CLASS(klass) G_TYPE_CHECK_CLASS_CAST(klass, GST_TYPE_FLAC_ENC, GstFlacEncClass)
-#define GST_IS_FLAC_ENC(obj) G_TYPE_CHECK_INSTANCE_TYPE(obj, GST_TYPE_FLAC_ENC)
-#define GST_IS_FLAC_ENC_CLASS(klass) G_TYPE_CHECK_CLASS_TYPE(klass, GST_TYPE_FLAC_ENC)
-
-typedef struct _GstFlacEnc GstFlacEnc;
-typedef struct _GstFlacEncClass GstFlacEncClass;
+G_DECLARE_FINAL_TYPE (GstFlacEnc, gst_flac_enc, GST, FLAC_ENC, GstAudioEncoder)
 
 struct _GstFlacEnc {
   GstAudioEncoder  element;
@@ -68,12 +62,6 @@ struct _GstFlacEnc {
 
   gint             channel_reorder_map[8];
 };
-
-struct _GstFlacEncClass {
-  GstAudioEncoderClass parent_class;
-};
-
-GType gst_flac_enc_get_type(void);
 
 G_END_DECLS
 

@@ -28,13 +28,7 @@
 #include <gst/base/gstadapter.h>
 
 #define GST_TYPE_FLAC_TAG (gst_flac_tag_get_type())
-#define GST_FLAC_TAG(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FLAC_TAG, GstFlacTag))
-#define GST_FLAC_TAG_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FLAC_TAG, GstFlacTag))
-#define GST_IS_FLAC_TAG(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FLAC_TAG))
-#define GST_IS_FLAC_TAG_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FLAC_TAG))
-
-typedef struct _GstFlacTag GstFlacTag;
-typedef struct _GstFlacTagClass GstFlacTagClass;
+G_DECLARE_FINAL_TYPE (GstFlacTag, gst_flac_tag, GST, FLAC_TAG, GstElement)
 
 typedef enum
 {
@@ -67,12 +61,5 @@ struct _GstFlacTag
   guint metadata_block_size;
   gboolean metadata_last_block;
 };
-
-struct _GstFlacTagClass
-{
-  GstElementClass parent_class;
-};
-
-GType gst_flac_tag_get_type (void);
 
 #endif /* GST_FLAC_TAG_H */
