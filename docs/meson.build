@@ -175,7 +175,9 @@ foreach plugin_name: list_plugin_res.stdout().split(':')
         gst_smart_index: true,
         gst_c_sources: [
             join_paths(root_rel, 'sys/*/*.[ch]'),
+            join_paths(root_rel, 'sys/*/*.cpp'),
             join_paths(root_rel, 'ext/*/*.[ch]'),
+            join_paths(root_rel, 'ext/*/*.cpp'),
             join_paths(root_rel, 'gst/*/*.[ch]'),
         ],
         dependencies: [gst_dep, plugins],
