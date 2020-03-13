@@ -168,15 +168,6 @@ gst_d3d11_device_get_supported_caps (GstD3D11Device * device,
 }
 
 #if (DXGI_HEADER_VERSION >= 5)
-static inline UINT16
-fraction_to_uint (guint num, guint den, guint scale)
-{
-  gdouble val;
-  gst_util_fraction_to_double (num, den, &val);
-
-  return (UINT16) val *scale;
-}
-
 gboolean
 gst_d3d11_hdr_meta_data_to_dxgi (GstVideoMasteringDisplayInfo * minfo,
     GstVideoContentLightLevel * cll, DXGI_HDR_METADATA_HDR10 * dxgi_hdr10)
@@ -186,33 +177,22 @@ gst_d3d11_hdr_meta_data_to_dxgi (GstVideoMasteringDisplayInfo * minfo,
   memset (dxgi_hdr10, 0, sizeof (DXGI_HDR_METADATA_HDR10));
 
   if (minfo) {
-    dxgi_hdr10->RedPrimary[0] =
-        fraction_to_uint (minfo->Rx_n, minfo->Rx_d, 50000);
-    dxgi_hdr10->RedPrimary[1] =
-        fraction_to_uint (minfo->Ry_n, minfo->Ry_d, 50000);
-    dxgi_hdr10->GreenPrimary[0] =
-        fraction_to_uint (minfo->Gx_n, minfo->Gx_d, 50000);
-    dxgi_hdr10->GreenPrimary[1] =
-        fraction_to_uint (minfo->Gy_n, minfo->Gy_d, 50000);
-    dxgi_hdr10->BluePrimary[0] =
-        fraction_to_uint (minfo->Bx_n, minfo->Bx_d, 50000);
-    dxgi_hdr10->BluePrimary[1] =
-        fraction_to_uint (minfo->By_n, minfo->By_d, 50000);
-    dxgi_hdr10->WhitePoint[0] =
-        fraction_to_uint (minfo->Wx_n, minfo->Wx_d, 50000);
-    dxgi_hdr10->WhitePoint[1] =
-        fraction_to_uint (minfo->Wy_n, minfo->Wy_d, 50000);
-    dxgi_hdr10->MaxMasteringLuminance =
-        fraction_to_uint (minfo->max_luma_n, minfo->max_luma_d, 1);
-    dxgi_hdr10->MinMasteringLuminance =
-        fraction_to_uint (minfo->min_luma_n, minfo->min_luma_d, 1);
+    dxgi_hdr10->RedPrimary[0] = minfo->display_primaries[0].x;
+    dxgi_hdr10->RedPrimary[1] = minfo->display_primaries[0].y;
+    dxgi_hdr10->GreenPrimary[0] = minfo->display_primaries[1].x;
+    dxgi_hdr10->GreenPrimary[1] = minfo->display_primaries[1].y;
+    dxgi_hdr10->BluePrimary[0] = minfo->display_primaries[2].x;
+    dxgi_hdr10->BluePrimary[1] = minfo->display_primaries[2].y;
+
+    dxgi_hdr10->WhitePoint[0] = minfo->white_point.x;
+    dxgi_hdr10->WhitePoint[1] = minfo->white_point.y;
+    dxgi_hdr10->MaxMasteringLuminance = minfo->max_display_mastering_luminance;
+    dxgi_hdr10->MinMasteringLuminance = minfo->min_display_mastering_luminance;
   }
 
   if (cll) {
-    dxgi_hdr10->MaxContentLightLevel =
-        fraction_to_uint (cll->maxCLL_n, cll->maxCLL_d, 1);
-    dxgi_hdr10->MaxFrameAverageLightLevel =
-        fraction_to_uint (cll->maxFALL_n, cll->maxFALL_d, 1);
+    dxgi_hdr10->MaxContentLightLevel = cll->max_content_light_level;
+    dxgi_hdr10->MaxFrameAverageLightLevel = cll->max_frame_average_light_level;
   }
 
   return TRUE;
