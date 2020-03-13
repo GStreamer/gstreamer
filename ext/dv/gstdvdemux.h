@@ -27,23 +27,10 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_DVDEMUX \
-  (gst_dvdemux_get_type())
-#define GST_DVDEMUX(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DVDEMUX,GstDVDemux))
-#define GST_DVDEMUX_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DVDEMUX,GstDVDemuxClass))
-#define GST_IS_DVDEMUX(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DVDEMUX))
-#define GST_IS_DVDEMUX_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DVDEMUX))
-
-
-typedef struct _GstDVDemux GstDVDemux;
-typedef struct _GstDVDemuxClass GstDVDemuxClass;
+#define GST_TYPE_DVDEMUX (gst_dvdemux_get_type())
+G_DECLARE_FINAL_TYPE (GstDVDemux, gst_dvdemux, GST, DVDEMUX, GstElement)
 
 typedef gboolean (*GstDVDemuxSeekHandler) (GstDVDemux *demux, GstPad * pad, GstEvent * event);
-
 
 struct _GstDVDemux {
   GstElement     element;
@@ -90,12 +77,6 @@ struct _GstDVDemux {
 
   gint16        *audio_buffers[4];
 };
-
-struct _GstDVDemuxClass {
-  GstElementClass parent_class;
-};
-
-GType gst_dvdemux_get_type (void);
 
 G_END_DECLS
 
