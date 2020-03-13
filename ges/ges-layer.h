@@ -122,10 +122,10 @@ GList*   ges_layer_get_clips   (GESLayer * layer);
 GES_API
 GstClockTime ges_layer_get_duration (GESLayer *layer);
 GES_API
-gboolean ges_layer_set_active_for_tracks(GESLayer *layer, gboolean active,
-                                         GList *tracks);
+gboolean ges_layer_set_active_for_tracks        (GESLayer *layer, gboolean active,
+                                                 GList *tracks);
 
-GES_API gboolean ges_layer_get_active_for_track(GESLayer *layer,
-                                                GESTrack *track);
+GES_API gboolean ges_layer_get_active_for_track (GESLayer *layer,
+                                                 GESTrack *track);
 
 G_END_DECLS

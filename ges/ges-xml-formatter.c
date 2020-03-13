@@ -712,13 +712,14 @@ _parse_source (GMarkupParseContext * context, const gchar * element_name,
     const gchar ** attribute_names, const gchar ** attribute_values,
     GESXmlFormatter * self, GError ** error)
 {
-  GstStructure *children_props = NULL;
-  const gchar *track_id = NULL, *children_properties = NULL;
+  GstStructure *children_props = NULL, *props = NULL;
+  const gchar *track_id = NULL, *children_properties = NULL, *properties = NULL;
 
   if (!g_markup_collect_attributes (element_name, attribute_names,
           attribute_values, error,
           G_MARKUP_COLLECT_STRING, "track-id", &track_id,
           COLLECT_STR_OPT, "children-properties", &children_properties,
+          COLLECT_STR_OPT, "properties", &properties,
           G_MARKUP_COLLECT_INVALID)) {
     return;
   }
@@ -729,11 +730,21 @@ _parse_source (GMarkupParseContext * context, const gchar * element_name,
       goto wrong_children_properties;
   }
 
-  ges_base_xml_formatter_add_source (GES_BASE_XML_FORMATTER (self), track_id,
-      children_props);
+  if (properties) {
+    props = gst_structure_from_string (properties, NULL);
+    if (props == NULL)
+      goto wrong_properties;
+  }
 
+  ges_base_xml_formatter_add_source (GES_BASE_XML_FORMATTER (self), track_id,
+      children_props, props);
+
+done:
   if (children_props)
     gst_structure_free (children_props);
+
+  if (props)
+    gst_structure_free (props);
 
   return;
 
@@ -742,6 +753,13 @@ wrong_children_properties:
       G_MARKUP_ERROR_INVALID_CONTENT,
       "element '%s', children properties '%s', could no be deserialized",
       element_name, children_properties);
+  goto done;
+
+wrong_properties:
+  g_set_error (error, G_MARKUP_ERROR, G_MARKUP_ERROR_INVALID_CONTENT,
+      "element '%s', properties '%s', could no be deserialized",
+      element_name, properties);
+  goto done;
 }
 
 static inline void

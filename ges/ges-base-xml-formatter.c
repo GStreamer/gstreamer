@@ -1106,7 +1106,8 @@ ges_base_xml_formatter_add_control_binding (GESBaseXmlFormatter * self,
 
 void
 ges_base_xml_formatter_add_source (GESBaseXmlFormatter * self,
-    const gchar * track_id, GstStructure * children_properties)
+    const gchar * track_id, GstStructure * children_properties,
+    GstStructure * properties)
 {
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
   GESTrackElement *element = NULL;
@@ -1128,8 +1129,13 @@ ges_base_xml_formatter_add_source (GESBaseXmlFormatter * self,
     return;
   }
 
-  gst_structure_foreach (children_properties,
-      (GstStructureForeachFunc) _set_child_property, element);
+  if (properties)
+    gst_structure_foreach (properties,
+        (GstStructureForeachFunc) set_property_foreach, element);
+
+  if (children_properties)
+    gst_structure_foreach (children_properties,
+        (GstStructureForeachFunc) _set_child_property, element);
 }
 
 void
