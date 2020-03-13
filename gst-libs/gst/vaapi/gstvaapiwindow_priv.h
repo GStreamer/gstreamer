@@ -123,8 +123,6 @@ struct _GstVaapiWindowClass
   gboolean (*render) (GstVaapiWindow * window, GstVaapiSurface * surface,
       const GstVaapiRectangle * src_rect, const GstVaapiRectangle * dst_rect,
       guint flags);
-  gboolean (*render_pixmap) (GstVaapiWindow * window, GstVaapiPixmap * pixmap,
-      const GstVaapiRectangle * src_rect, const GstVaapiRectangle * dst_rect);
   guintptr (*get_visual_id) (GstVaapiWindow * window);
   guintptr (*get_colormap) (GstVaapiWindow * window);
   gboolean (*unblock) (GstVaapiWindow * window);

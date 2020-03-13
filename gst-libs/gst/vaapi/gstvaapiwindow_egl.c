@@ -281,8 +281,11 @@ gst_vaapi_window_egl_finalize (GObject * object)
 {
   GstVaapiWindowEGL *const window = GST_VAAPI_WINDOW_EGL (object);
 
-  egl_context_run (window->egl_window->context,
-      (EglContextRunFunc) do_destroy_objects, window);
+  if (window->egl_window) {
+    egl_context_run (window->egl_window->context,
+        (EglContextRunFunc) do_destroy_objects, window);
+  }
+
   gst_vaapi_window_replace (&window->window, NULL);
   gst_vaapi_texture_replace (&window->texture, NULL);
 
@@ -505,20 +508,6 @@ gst_vaapi_window_egl_render (GstVaapiWindow * window, GstVaapiSurface * surface,
       (EglContextRunFunc) do_upload_surface, &args) && args.success;
 }
 
-static gboolean
-gst_vaapi_window_egl_render_pixmap (GstVaapiWindow * window,
-    GstVaapiPixmap * pixmap, const GstVaapiRectangle * src_rect,
-    const GstVaapiRectangle * dst_rect)
-{
-  const GstVaapiWindowClass *const klass =
-      GST_VAAPI_WINDOW_GET_CLASS (GST_VAAPI_WINDOW_EGL_GET_PROXY (window));
-
-  if (!klass->render_pixmap)
-    return FALSE;
-  return klass->render_pixmap (GST_VAAPI_WINDOW_EGL_GET_PROXY (window), pixmap,
-      src_rect, dst_rect);
-}
-
 static void
 gst_vaapi_window_egl_class_init (GstVaapiWindowEGLClass * klass)
 {
@@ -534,7 +523,6 @@ gst_vaapi_window_egl_class_init (GstVaapiWindowEGLClass * klass)
   window_class->set_fullscreen = gst_vaapi_window_egl_set_fullscreen;
   window_class->resize = gst_vaapi_window_egl_resize;
   window_class->render = gst_vaapi_window_egl_render;
-  window_class->render_pixmap = gst_vaapi_window_egl_render_pixmap;
 }
 
 static void

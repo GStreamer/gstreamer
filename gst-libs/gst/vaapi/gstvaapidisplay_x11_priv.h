@@ -66,17 +66,6 @@ typedef struct _GstVaapiDisplayX11Class         GstVaapiDisplayX11Class;
 #define GST_VAAPI_DISPLAY_XSCREEN(display) \
     GST_VAAPI_DISPLAY_X11_PRIVATE(display)->x11_screen
 
-/**
- * GST_VAAPI_DISPLAY_HAS_XRENDER:
- * @display: a #GstVaapiDisplay
- *
- * Macro that evaluates to the existence of the XRender extension on
- * @display server.
- */
-#undef  GST_VAAPI_DISPLAY_HAS_XRENDER
-#define GST_VAAPI_DISPLAY_HAS_XRENDER(display) \
-    (GST_VAAPI_DISPLAY_X11_PRIVATE(display)->has_xrender)
-
 struct _GstVaapiDisplayX11Private
 {
   gchar *display_name;
@@ -85,7 +74,6 @@ struct _GstVaapiDisplayX11Private
   GArray *pixmap_formats;
   guint use_foreign_display:1;  // Foreign native_display?
   guint use_xrandr:1;
-  guint has_xrender:1;          // Has XRender extension?
   guint synchronous:1;
 };
 

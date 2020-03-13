@@ -47,12 +47,8 @@ struct _GstVaapiWindowX11Private
 {
   Atom atom_NET_WM_STATE;
   Atom atom_NET_WM_STATE_FULLSCREEN;
-#if HAVE_XRENDER
-  Picture picture;
-#endif
   guint is_mapped:1;
   guint fullscreen_on_map:1;
-  guint has_xrender:1;
   gboolean need_vpp;
 };
 

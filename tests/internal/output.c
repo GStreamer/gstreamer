@@ -29,7 +29,6 @@
 #if USE_X11
 # include <gst/vaapi/gstvaapidisplay_x11.h>
 # include <gst/vaapi/gstvaapiwindow_x11.h>
-# include <gst/vaapi/gstvaapipixmap_x11.h>
 #endif
 #if USE_GLX
 # include <gst/vaapi/gstvaapidisplay_glx.h>
@@ -56,14 +55,12 @@ static const VideoOutputInfo g_video_outputs[] = {
 #if USE_X11
   {"x11",
         gst_vaapi_display_x11_new,
-        gst_vaapi_window_x11_new,
-      gst_vaapi_pixmap_x11_new},
+      gst_vaapi_window_x11_new},
 #endif
 #if USE_GLX
   {"glx",
         gst_vaapi_display_glx_new,
-        gst_vaapi_window_glx_new,
-      gst_vaapi_pixmap_x11_new},
+      gst_vaapi_window_glx_new},
 #endif
 #if USE_DRM
   {"drm",
@@ -227,13 +224,4 @@ video_output_create_window (GstVaapiDisplay * display, guint width,
   if (g_fullscreen)
     gst_vaapi_window_set_fullscreen (window, TRUE);
   return window;
-}
-
-GstVaapiPixmap *
-video_output_create_pixmap (GstVaapiDisplay * display, GstVideoFormat format,
-    guint width, guint height)
-{
-  if (!g_video_output || !g_video_output->create_pixmap)
-    return NULL;
-  return g_video_output->create_pixmap (display, format, width, height);
 }

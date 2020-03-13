@@ -38,10 +38,6 @@
 # include <X11/extensions/Xrandr.h>
 #endif
 
-#if HAVE_XRENDER
-# include <X11/extensions/Xrender.h>
-#endif
-
 #define DEBUG_VAAPI_DISPLAY 1
 #include "gstvaapidebug.h"
 
@@ -114,10 +110,6 @@ check_extensions (GstVaapiDisplayX11 * display)
   priv->use_xrandr = XRRQueryExtension (priv->x11_display,
       &evt_base, &err_base);
 #endif
-#if HAVE_XRENDER
-  priv->has_xrender = XRenderQueryExtension (priv->x11_display,
-      &evt_base, &err_base);
-#endif
 }
 
 static gboolean
@@ -132,7 +124,6 @@ gst_vaapi_display_x11_bind_display (GstVaapiDisplay * base_display,
   priv->use_foreign_display = TRUE;
 
   check_extensions (display);
-
   if (!set_display_name (display, XDisplayString (priv->x11_display)))
     return FALSE;
   return TRUE;

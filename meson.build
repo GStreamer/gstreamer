@@ -90,7 +90,6 @@ wayland_protocols_dep = dependency('wayland-protocols', version: '>= 1.15', requ
 wayland_scanner_bin = find_program('wayland-scanner', required: false)
 x11_dep = dependency('x11', required: false)
 xrandr_dep = dependency('xrandr', required: false)
-xrender_dep = dependency('xrender', required: false)
 
 # some of the examples can use GTK+-3
 gtk_dep = dependency('gtk+-3.0', version : '>= 3.10', required : get_option('examples'))
@@ -144,7 +143,6 @@ cdata.set10('USE_WAYLAND', USE_WAYLAND)
 cdata.set10('USE_X11', USE_X11)
 cdata.set10('HAVE_XKBLIB', cc.has_header('X11/XKBlib.h', dependencies: x11_dep))
 cdata.set10('HAVE_XRANDR', xrandr_dep.found())
-cdata.set10('HAVE_XRENDER', xrender_dep.found())
 cdata.set10('USE_GST_GL_HELPERS', gstgl_dep.found())
 cdata.set('USE_GLES_VERSION_MASK', GLES_VERSION_MASK)
 

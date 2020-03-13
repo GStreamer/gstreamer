@@ -22,7 +22,6 @@ gstlibvaapi_sources = [
   'gstvaapiminiobject.c',
   'gstvaapiobject.c',
   'gstvaapiparser_frame.c',
-  'gstvaapipixmap.c',
   'gstvaapiprofile.c',
   'gstvaapiprofilecaps.c',
   'gstvaapisubpicture.c',
@@ -61,7 +60,6 @@ gstlibvaapi_headers = [
   'gstvaapiimage.h',
   'gstvaapiimagepool.h',
   'gstvaapiobject.h',
-  'gstvaapipixmap.h',
   'gstvaapiprofile.h',
   'gstvaapiprofilecaps.h',
   'gstvaapisubpicture.h',
@@ -126,13 +124,11 @@ endif
 if USE_X11
   gstlibvaapi_sources += [
       'gstvaapidisplay_x11.c',
-      'gstvaapipixmap_x11.c',
       'gstvaapiutils_x11.c',
       'gstvaapiwindow_x11.c',
     ]
   gstlibvaapi_headers += [
       'gstvaapidisplay_x11.h',
-      'gstvaapipixmap_x11.h',
       'gstvaapiwindow_x11.h',
     ]
 endif
@@ -212,7 +208,7 @@ if USE_WAYLAND
   gstlibvaapi_deps  += [libva_wayland_dep, wayland_client_dep, wayland_protocols_dep]
 endif
 if USE_X11
-  gstlibvaapi_deps  += [libva_x11_dep, x11_dep, xrandr_dep, xrender_dep]
+  gstlibvaapi_deps  += [libva_x11_dep, x11_dep, xrandr_dep]
 endif
 
 gstlibvaapi = static_library('gstlibvaapi-@0@'.format(api_version),

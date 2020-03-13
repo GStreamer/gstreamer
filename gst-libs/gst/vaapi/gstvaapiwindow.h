@@ -29,7 +29,6 @@
 #include <gst/vaapi/gstvaapitypes.h>
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapisurface.h>
-#include <gst/vaapi/gstvaapipixmap.h>
 
 G_BEGIN_DECLS
 
@@ -90,10 +89,6 @@ gboolean
 gst_vaapi_window_put_surface (GstVaapiWindow * window,
     GstVaapiSurface * surface, const GstVaapiRectangle * src_rect,
     const GstVaapiRectangle * dst_rect, guint flags);
-
-gboolean
-gst_vaapi_window_put_pixmap (GstVaapiWindow * window, GstVaapiPixmap * pixmap,
-    const GstVaapiRectangle * src_rect, const GstVaapiRectangle * dst_rect);
 
 void
 gst_vaapi_window_reconfigure (GstVaapiWindow * window);
