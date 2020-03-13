@@ -27,19 +27,9 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_GDK_PIXBUF_DEC			\
-  (gst_gdk_pixbuf_dec_get_type())
-#define GST_GDK_PIXBUF_DEC(obj)						\
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GDK_PIXBUF_DEC,GstGdkPixbufDec))
-#define GST_GDK_PIXBUF_DEC_CLASS(klass)					\
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GDK_PIXBUF_DEC,GstGdkPixbufDecClass))
-#define GST_IS_GDK_PIXBUF_DEC(obj)					\
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GDK_PIXBUF_DEC))
-#define GST_IS_GDK_PIXBUF_DEC_CLASS(klass)				\
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GDK_PIXBUF_DEC))
-
-typedef struct _GstGdkPixbufDec      GstGdkPixbufDec;
-typedef struct _GstGdkPixbufDecClass GstGdkPixbufDecClass;
+#define GST_TYPE_GDK_PIXBUF_DEC (gst_gdk_pixbuf_dec_get_type())
+G_DECLARE_FINAL_TYPE (GstGdkPixbufDec, gst_gdk_pixbuf_dec, GST, GDK_PIXBUF_DEC,
+    GstElement)
 
 struct _GstGdkPixbufDec
 {
@@ -57,13 +47,6 @@ struct _GstGdkPixbufDec
   GList         *pending_events;
   gboolean       packetized;
 };
-
-struct _GstGdkPixbufDecClass
-{
-  GstElementClass parent_class;
-};
-
-GType gst_gdk_pixbuf_dec_get_type (void);
 
 G_END_DECLS
 

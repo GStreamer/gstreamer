@@ -28,14 +28,9 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_GDK_PIXBUF_OVERLAY   (gst_gdk_pixbuf_overlay_get_type())
-#define GST_GDK_PIXBUF_OVERLAY(obj)   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GDK_PIXBUF_OVERLAY,GstGdkPixbufOverlay))
-#define GST_GDK_PIXBUF_OVERLAY_CLASS(klass)   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GDK_PIXBUF_OVERLAY,GstGdkPixbufOverlayClass))
-#define GST_IS_GDK_PIXBUF_OVERLAY(obj)   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GDK_PIXBUF_OVERLAY))
-#define GST_IS_GDK_PIXBUF_OVERLAY_CLASS(obj)   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GDK_PIXBUF_OVERLAY))
-
-typedef struct _GstGdkPixbufOverlay GstGdkPixbufOverlay;
-typedef struct _GstGdkPixbufOverlayClass GstGdkPixbufOverlayClass;
+#define GST_TYPE_GDK_PIXBUF_OVERLAY (gst_gdk_pixbuf_overlay_get_type())
+G_DECLARE_FINAL_TYPE (GstGdkPixbufOverlay, gst_gdk_pixbuf_overlay,
+    GST, GDK_PIXBUF_OVERLAY, GstVideoFilter)
 
 typedef enum {
   GST_GDK_PIXBUF_POSITIONING_PIXELS_RELATIVE_TO_EDGES,
@@ -81,13 +76,6 @@ struct _GstGdkPixbufOverlay
   /* render position or dimension has changed */
   gboolean                     update_composition;
 };
-
-struct _GstGdkPixbufOverlayClass
-{
-  GstVideoFilterClass  videofilter_class;
-};
-
-GType gst_gdk_pixbuf_overlay_get_type (void);
 
 G_END_DECLS
 
