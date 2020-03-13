@@ -2087,6 +2087,12 @@ gst_value_compare_caps (const GValue * value1, const GValue * value2)
   GstCaps *caps1 = GST_CAPS (gst_value_get_caps (value1));
   GstCaps *caps2 = GST_CAPS (gst_value_get_caps (value2));
 
+  if (caps1 == caps2)
+    return GST_VALUE_EQUAL;
+
+  if (!caps1 || !caps2)
+    return GST_VALUE_UNORDERED;
+
   if (gst_caps_is_equal (caps1, caps2))
     return GST_VALUE_EQUAL;
   return GST_VALUE_UNORDERED;

@@ -2720,6 +2720,31 @@ GST_START_TEST (test_serialize_deserialize_value_array)
 
 GST_END_TEST;
 
+GST_START_TEST (test_compare_caps)
+{
+  GValue value = { 0 }
+  , value2 = {
+  0};
+
+  g_value_init (&value, GST_TYPE_CAPS);
+  g_value_init (&value2, GST_TYPE_CAPS);
+  g_value_take_boxed (&value, NULL);
+  g_value_take_boxed (&value2, NULL);
+
+  fail_unless_equals_int (gst_value_compare (&value, &value2), GST_VALUE_EQUAL);
+
+  g_value_take_boxed (&value, gst_caps_new_empty_simple ("something"));
+
+  fail_unless_equals_int (gst_value_compare (&value, &value2),
+      GST_VALUE_UNORDERED);
+
+  g_value_unset (&value);
+  g_value_unset (&value2);
+
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_serialize_deserialize_caps)
 {
   GValue value = { 0 }
@@ -3510,6 +3535,7 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_date_time);
   tcase_add_test (tc_chain, test_fraction_range);
   tcase_add_test (tc_chain, test_serialize_deserialize_caps);
+  tcase_add_test (tc_chain, test_compare_caps);
   tcase_add_test (tc_chain, test_int_range);
   tcase_add_test (tc_chain, test_int64_range);
   tcase_add_test (tc_chain, test_serialize_int64_range);
