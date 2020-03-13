@@ -52,11 +52,37 @@ lookup_v4l2_fmt (guint v4l2_pix_fmt)
   return ret;
 }
 
+static gint
+extrapolate_stride (const GstVideoFormatInfo * finfo, gint plane, gint stride)
+{
+  gint estride;
+
+  switch (finfo->format) {
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_NV12_64Z32:
+    case GST_VIDEO_FORMAT_NV21:
+    case GST_VIDEO_FORMAT_NV16:
+    case GST_VIDEO_FORMAT_NV61:
+    case GST_VIDEO_FORMAT_NV24:
+      estride = (plane == 0 ? 1 : 2) *
+          GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, plane, stride);
+      break;
+    default:
+      estride = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, plane, stride);
+      break;
+  }
+
+  return estride;
+}
+
 gboolean
 gst_v4l2_format_to_video_info (struct v4l2_format * fmt,
     GstVideoInfo * out_info)
 {
   struct FormatEntry *entry = lookup_v4l2_fmt (fmt->fmt.pix_mp.pixelformat);
+  struct v4l2_pix_format_mplane *pix_mp = &fmt->fmt.pix_mp;
+  gint plane;
+  gsize offset = 0;
 
   if (!entry)
     return FALSE;
@@ -67,11 +93,23 @@ gst_v4l2_format_to_video_info (struct v4l2_format * fmt,
   }
 
   if (!gst_video_info_set_format (out_info, entry->gst_fmt,
-          fmt->fmt.pix_mp.width, fmt->fmt.pix_mp.height))
+          pix_mp->width, pix_mp->height))
     return FALSE;
 
-  /* FIXME play the extrapolation danse for single FDs formats, and copy over
-   * stride/offsets/size for the other formats */
+  /* TODO: We don't support multi-allocation yet */
+  g_return_val_if_fail (pix_mp->num_planes == 1, FALSE);
+  out_info->size = pix_mp->plane_fmt[0].sizeimage;
+
+  for (plane = 0; plane < GST_VIDEO_INFO_N_PLANES (out_info); plane++) {
+    gint stride = extrapolate_stride (out_info->finfo, plane,
+        pix_mp->plane_fmt[0].bytesperline);
+
+    out_info->stride[plane] = stride;
+    out_info->offset[plane] = offset;
+
+    offset += stride * GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (out_info->finfo,
+        plane, pix_mp->height);
+  }
 
   return TRUE;
 }
