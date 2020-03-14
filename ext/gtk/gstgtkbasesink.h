@@ -89,6 +89,8 @@ struct _GstGtkBaseSinkClass
   GtkWidget* (*create_widget) (void);
 };
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstGtkBaseSink, gst_object_unref)
+
 G_END_DECLS
 
 #endif /* __GST_GTK_BASE_SINK_H__ */

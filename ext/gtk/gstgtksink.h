@@ -28,19 +28,10 @@
 
 #include "gstgtkbasesink.h"
 
-#define GST_TYPE_GTK_SINK            (gst_gtk_sink_get_type())
-#define GST_GTK_SINK(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GTK_SINK,GstGtkSink))
-#define GST_GTK_SINK_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GTK_SINK,GstGtkSinkClass))
-#define GST_IS_GTK_SINK(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GTK_SINK))
-#define GST_IS_GTK_SINK_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GTK_SINK))
-#define GST_GTK_SINK_CAST(obj)       ((GstGtkSink*)(obj))
-
 G_BEGIN_DECLS
 
-typedef struct _GstGtkSink GstGtkSink;
-typedef struct _GstGtkSinkClass GstGtkSinkClass;
-
-GType gst_gtk_sink_get_type (void);
+#define GST_TYPE_GTK_SINK (gst_gtk_sink_get_type())
+G_DECLARE_FINAL_TYPE (GstGtkSink, gst_gtk_sink, GST, GTK_SINK, GstGtkBaseSink)
 
 /**
  * GstGtkSink:
@@ -51,17 +42,6 @@ struct _GstGtkSink
 {
   /* <private> */
   GstGtkBaseSink       parent;
-};
-
-/**
- * GstGtkSinkClass:
- *
- * The #GstGtkSinkClass struct only contains private data
- */
-struct _GstGtkSinkClass
-{
-  /* <private> */
-  GstGtkBaseSinkClass object_class;
 };
 
 G_END_DECLS
