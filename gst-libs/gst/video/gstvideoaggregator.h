@@ -247,10 +247,9 @@ struct _GstVideoAggregatorClass
 GST_VIDEO_API
 GType gst_video_aggregator_get_type       (void);
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVideoAggregator, gst_object_unref)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVideoAggregatorPad, gst_object_unref)
-#endif
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVideoAggregatorConvertPad, gst_object_unref)
 
 G_END_DECLS
 #endif /* __GST_VIDEO_AGGREGATOR_H__ */

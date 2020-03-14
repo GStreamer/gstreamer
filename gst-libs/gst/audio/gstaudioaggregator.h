@@ -223,10 +223,9 @@ void  gst_audio_aggregator_set_sink_caps (GstAudioAggregator    * aagg,
                                           GstAudioAggregatorPad * pad,
                                           GstCaps               * caps);
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstAudioAggregator, gst_object_unref)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstAudioAggregatorPad, gst_object_unref)
-#endif
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstAudioAggregatorConvertPad, gst_object_unref)
 
 G_END_DECLS
 
