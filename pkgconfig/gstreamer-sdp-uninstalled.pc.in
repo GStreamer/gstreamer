@@ -10,7 +10,7 @@ typelibdir=@abs_top_builddir@/gst-libs/gst/sdp
 Name: GStreamer SDP Library, Uninstalled
 Description: SDP helper functions, uninstalled
 Version: @VERSION@
-Requires: glib-2.0
+Requires: glib-2.0 gstreamer-@GST_API_VERSION@ gstreamer-rtp-@GST_API_VERSION@
 Requires.private: gio-2.0
 Libs: -L${libdir} -lgstsdp-@GST_API_VERSION@
 Cflags: -I@abs_top_srcdir@/gst-libs -I@abs_top_builddir@/gst-libs
