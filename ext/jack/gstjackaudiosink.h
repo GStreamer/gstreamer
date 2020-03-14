@@ -32,15 +32,9 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_JACK_AUDIO_SINK             (gst_jack_audio_sink_get_type())
-#define GST_JACK_AUDIO_SINK(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_JACK_AUDIO_SINK,GstJackAudioSink))
-#define GST_JACK_AUDIO_SINK_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_JACK_AUDIO_SINK,GstJackAudioSinkClass))
-#define GST_JACK_AUDIO_SINK_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_JACK_AUDIO_SINK,GstJackAudioSinkClass))
-#define GST_IS_JACK_AUDIO_SINK(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_JACK_AUDIO_SINK))
-#define GST_IS_JACK_AUDIO_SINK_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_JACK_AUDIO_SINK))
-
-typedef struct _GstJackAudioSink GstJackAudioSink;
-typedef struct _GstJackAudioSinkClass GstJackAudioSinkClass;
+#define GST_TYPE_JACK_AUDIO_SINK (gst_jack_audio_sink_get_type())
+G_DECLARE_FINAL_TYPE (GstJackAudioSink, gst_jack_audio_sink,
+    GST, JACK_AUDIO_SINK, GstAudioBaseSink)
 
 /**
  * GstJackAudioSink:
@@ -70,12 +64,6 @@ struct _GstJackAudioSink {
   int              port_count;
   sample_t       **buffers;
 };
-
-struct _GstJackAudioSinkClass {
-  GstAudioBaseSinkClass parent_class;
-};
-
-GType gst_jack_audio_sink_get_type (void);
 
 G_END_DECLS
 
