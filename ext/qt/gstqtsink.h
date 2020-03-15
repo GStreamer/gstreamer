@@ -27,19 +27,13 @@
 #include <gst/gl/gl.h>
 #include "qtitem.h"
 
-typedef struct _GstQtSink GstQtSink;
-typedef struct _GstQtSinkClass GstQtSinkClass;
 typedef struct _GstQtSinkPrivate GstQtSinkPrivate;
 
 G_BEGIN_DECLS
 
-GType gst_qt_sink_get_type (void);
-#define GST_TYPE_QT_SINK            (gst_qt_sink_get_type())
-#define GST_QT_SINK(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_QT_SINK,GstQtSink))
-#define GST_QT_SINK_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_QT_SINK,GstQtSinkClass))
-#define GST_IS_QT_SINK(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_QT_SINK))
-#define GST_IS_QT_SINK_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_QT_SINK))
-#define GST_QT_SINK_CAST(obj)       ((GstQtSink*)(obj))
+#define GST_TYPE_QT_SINK (gst_qt_sink_get_type())
+G_DECLARE_FINAL_TYPE (GstQtSink, gst_qt_sink, GST, QT_SINK, GstVideoSink)
+#define GST_QT_SINK_CAST(obj) ((GstQtSink*)(obj))
 
 /**
  * GstQtSink:
@@ -59,17 +53,6 @@ struct _GstQtSink
   GstGLContext         *qt_context;
 
   QSharedPointer<QtGLVideoItemInterface> widget;
-};
-
-/**
- * GstQtSinkClass:
- *
- * The #GstQtSinkClass struct only contains private data
- */
-struct _GstQtSinkClass
-{
-  /* <private> */
-  GstVideoSinkClass object_class;
 };
 
 GstQtSink *    gst_qt_sink_new (void);

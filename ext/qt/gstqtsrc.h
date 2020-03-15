@@ -27,18 +27,11 @@
 #include <gst/gl/gl.h>
 #include "qtwindow.h"
 
-typedef struct _GstQtSrc GstQtSrc;
-typedef struct _GstQtSrcClass GstQtSrcClass;
-
 G_BEGIN_DECLS
 
-GType gst_qt_src_get_type (void);
-#define GST_TYPE_QT_SRC            (gst_qt_src_get_type())
-#define GST_QT_SRC(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_QT_SRC,GstQtSrc))
-#define GST_QT_SRC_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_QT_SRC,GstQtSrcClass))
-#define GST_IS_QT_SRC(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_QT_SRC))
-#define GST_IS_QT_SRC_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_QT_SRC))
-#define GST_QT_SRC_CAST(obj)       ((GstQtSrc*)(obj))
+#define GST_TYPE_QT_SRC (gst_qt_src_get_type())
+G_DECLARE_FINAL_TYPE (GstQtSrc, gst_qt_src, GST, QT_SRC, GstPushSrc)
+#define GST_QT_SRC_CAST(obj) ((GstQtSrc*)(obj))
 
 /**
  * GstQtSrc:
@@ -62,17 +55,6 @@ struct _GstQtSrc
   gboolean              default_fbo;
   gboolean              downstream_supports_affine_meta;
   gboolean              pending_image_orientation;
-};
-
-/**
- * GstQtSrcClass:
- *
- * The #GstQtSrcClass struct only contains private data
- */
-struct _GstQtSrcClass
-{
-  /* <private> */
-  GstPushSrcClass object_class;
 };
 
 G_END_DECLS
