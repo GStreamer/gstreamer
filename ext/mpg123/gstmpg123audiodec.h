@@ -26,16 +26,9 @@
 
 G_BEGIN_DECLS
 
-
-typedef struct _GstMpg123AudioDec GstMpg123AudioDec;
-typedef struct _GstMpg123AudioDecClass GstMpg123AudioDecClass;
-
-
-#define GST_TYPE_MPG123_AUDIO_DEC             (gst_mpg123_audio_dec_get_type())
-#define GST_MPG123_AUDIO_DEC(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_MPG123_AUDIO_DEC,GstMpg123AudioDec))
-#define GST_MPG123_AUDIO_DEC_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_MPG123_AUDIO_DEC,GstMpg123AudioDecClass))
-#define GST_IS_MPG123_AUDIO_DEC(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_MPG123_AUDIO_DEC))
-#define GST_IS_MPG123_AUDIO_DEC_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_MPG123_AUDIO_DEC))
+#define GST_TYPE_MPG123_AUDIO_DEC (gst_mpg123_audio_dec_get_type())
+G_DECLARE_FINAL_TYPE (GstMpg123AudioDec, gst_mpg123_audio_dec,
+    GST, MPG123_AUDIO_DEC, GstAudioDecoder)
 
 struct _GstMpg123AudioDec
 {
@@ -48,14 +41,6 @@ struct _GstMpg123AudioDec
 
   off_t frame_offset;
 };
-
-
-struct _GstMpg123AudioDecClass
-{
-  GstAudioDecoderClass parent_class;
-};
-
-G_GNUC_INTERNAL GType gst_mpg123_audio_dec_get_type (void);
 
 G_END_DECLS
 
