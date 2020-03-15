@@ -35,8 +35,10 @@ typedef enum {
 } GstShout2SendProtocol;
 
 
-/* Definition of structure storing data for this element. */
-typedef struct _GstShout2send GstShout2send;
+#define GST_TYPE_SHOUT2SEND (gst_shout2send_get_type())
+G_DECLARE_FINAL_TYPE (GstShout2send, gst_shout2send, GST, SHOUT2SEND,
+    GstBaseSink)
+
 struct _GstShout2send {
   GstBaseSink parent;
 
@@ -71,33 +73,6 @@ struct _GstShout2send {
 
   GstTagList* tags;
 };
-
-
-
-/* Standard definition defining a class for this element. */
-typedef struct _GstShout2sendClass GstShout2sendClass;
-struct _GstShout2sendClass {
-  GstBaseSinkClass parent_class;
-
-  /* signal callbacks */
-  void (*connection_problem) (GstElement *element,guint errno);
-};
-
-/* Standard macros for defining types for this element.  */
-#define GST_TYPE_SHOUT2SEND \
-  (gst_shout2send_get_type())
-#define GST_SHOUT2SEND(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SHOUT2SEND,GstShout2send))
-#define GST_SHOUT2SEND_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SHOUT2SEND,GstShout2sendClass))
-#define GST_IS_SHOUT2SEND(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SHOUT2SEND))
-#define GST_IS_SHOUT2SEND_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SHOUT2SEND))
-
-/* Standard function returning type information. */
-GType gst_shout2send_get_type(void);
-
 
 G_END_DECLS
 
