@@ -25,29 +25,12 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstId3v2Mux GstId3v2Mux;
-typedef struct _GstId3v2MuxClass GstId3v2MuxClass;
+#define GST_TYPE_ID3V2_MUX (gst_id3v2_mux_get_type())
+G_DECLARE_FINAL_TYPE (GstId3v2Mux, gst_id3v2_mux, GST, ID3V2_MUX, GstTagMux)
 
 struct _GstId3v2Mux {
   GstTagMux  tagmux;
 };
-
-struct _GstId3v2MuxClass {
-  GstTagMuxClass  tagmux_class;
-};
-
-#define GST_TYPE_ID3V2_MUX \
-  (gst_id3v2_mux_get_type())
-#define GST_ID3V2_MUX(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ID3V2_MUX,GstId3v2Mux))
-#define GST_ID3V2_MUX_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ID3V2_MUX,GstId3v2MuxClass))
-#define GST_IS_ID3V2_MUX(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ID3V2_MUX))
-#define GST_IS_ID3V2_MUX_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ID3V2_MUX))
-
-GType gst_id3v2_mux_get_type (void);
 
 G_END_DECLS
 

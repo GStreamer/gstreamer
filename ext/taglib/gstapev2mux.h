@@ -26,29 +26,12 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstApev2Mux GstApev2Mux;
-typedef struct _GstApev2MuxClass GstApev2MuxClass;
+#define GST_TYPE_APEV2_MUX (gst_apev2_mux_get_type())
+G_DECLARE_FINAL_TYPE (GstApev2Mux, gst_apev2_mux, GST, APEV2_MUX, GstTagMux)
 
 struct _GstApev2Mux {
   GstTagMux  tagmux;
 };
-
-struct _GstApev2MuxClass {
-  GstTagMuxClass  tagmux_class;
-};
-
-#define GST_TYPE_APEV2_MUX \
-  (gst_apev2_mux_get_type())
-#define GST_APEV2_MUX(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_APEV2_MUX,GstApev2Mux))
-#define GST_APEV2_MUX_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_APEV2_MUX,GstApev2MuxClass))
-#define GST_IS_APEV2_MUX(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_APEV2_MUX))
-#define GST_IS_APEV2_MUX_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_APEV2_MUX))
-
-GType gst_apev2_mux_get_type (void);
 
 G_END_DECLS
 
