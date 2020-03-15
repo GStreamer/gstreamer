@@ -31,19 +31,9 @@ G_BEGIN_DECLS
 
 #include <lame/lame.h>
 
-#define GST_TYPE_LAMEMP3ENC \
-  (gst_lamemp3enc_get_type())
-#define GST_LAMEMP3ENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_LAMEMP3ENC,GstLameMP3Enc))
-#define GST_LAMEMP3ENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_LAMEMP3ENC,GstLameMP3EncClass))
-#define GST_IS_LAMEMP3ENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_LAMEMP3ENC))
-#define GST_IS_LAMEMP3ENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_LAMEMP3ENC))
-
-typedef struct _GstLameMP3Enc GstLameMP3Enc;
-typedef struct _GstLameMP3EncClass GstLameMP3EncClass;
+#define GST_TYPE_LAMEMP3ENC (gst_lamemp3enc_get_type())
+G_DECLARE_FINAL_TYPE (GstLameMP3Enc, gst_lamemp3enc, GST, LAMEMP3ENC,
+    GstAudioEncoder)
 
 /**
  * GstLameMP3Enc:
@@ -71,11 +61,6 @@ struct _GstLameMP3Enc {
   GstAdapter *adapter;
 };
 
-struct _GstLameMP3EncClass {
-  GstAudioEncoderClass parent_class;
-};
-
-GType gst_lamemp3enc_get_type(void);
 gboolean gst_lamemp3enc_register (GstPlugin * plugin);
 
 G_END_DECLS
