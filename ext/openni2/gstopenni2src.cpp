@@ -549,7 +549,7 @@ openni2_initialise_devices (GstOpenni2Src * src)
     return FALSE;
   }
 
-  /** depth sensor **/
+  /* depth sensor */
   rc = src->depth->create (*src->device, openni::SENSOR_DEPTH);
   if (rc == openni::STATUS_OK) {
     rc = src->depth->start ();
@@ -562,7 +562,7 @@ openni2_initialise_devices (GstOpenni2Src * src)
         openni::OpenNI::getExtendedError ());
   }
 
-  /** color sensor **/
+  /* color sensor */
   rc = src->color->create (*src->device, openni::SENSOR_COLOR);
   if (rc == openni::STATUS_OK) {
     rc = src->color->start ();
@@ -582,7 +582,7 @@ openni2_initialise_devices (GstOpenni2Src * src)
     return FALSE;
   }
 
-  /** Get resolution and make sure is valid **/
+  /* Get resolution and make sure is valid */
   if (src->depth->isValid () && src->color->isValid ()) {
     src->depthVideoMode = src->depth->getVideoMode ();
     src->colorVideoMode = src->color->getVideoMode ();
