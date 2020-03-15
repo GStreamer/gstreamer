@@ -19,7 +19,5 @@
 #include <gst/gst.h>
 #include <png.h>
 
-GType gst_pngenc_get_type (void);
-
 extern GstPadTemplate *gst_png_sink_factory ();
 extern GstPadTemplate *gst_png_src_factory ();
