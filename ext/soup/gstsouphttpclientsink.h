@@ -25,14 +25,9 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_SOUP_HTTP_CLIENT_SINK           (gst_soup_http_client_sink_get_type())
-#define GST_SOUP_HTTP_CLIENT_SINK(obj)           (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SOUP_HTTP_CLIENT_SINK,GstSoupHttpClientSink))
-#define GST_SOUP_HTTP_CLIENT_SINK_CLASS(klass)   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SOUP_HTTP_CLIENT_SINK,GstSoupHttpClientSinkClass))
-#define GST_IS_SOUP_HTTP_CLIENT_SINK(obj)        (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SOUP_HTTP_CLIENT_SINK))
-#define GST_IS_SOUP_HTTP_CLIENT_SINK_CLASS(obj)  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SOUP_HTTP_CLIENT_SINK))
-
-typedef struct _GstSoupHttpClientSink GstSoupHttpClientSink;
-typedef struct _GstSoupHttpClientSinkClass GstSoupHttpClientSinkClass;
+#define GST_TYPE_SOUP_HTTP_CLIENT_SINK (gst_soup_http_client_sink_get_type())
+G_DECLARE_FINAL_TYPE (GstSoupHttpClientSink, gst_soup_http_client_sink,
+    GST, SOUP_HTTP_CLIENT_SINK, GstBaseSink)
 
 struct _GstSoupHttpClientSink
 {
@@ -72,13 +67,6 @@ struct _GstSoupHttpClientSink
   gint retry_delay;
   gint retries;
 };
-
-struct _GstSoupHttpClientSinkClass
-{
-  GstBaseSinkClass base_souphttpsink_class;
-};
-
-GType gst_soup_http_client_sink_get_type (void);
 
 G_END_DECLS
 
