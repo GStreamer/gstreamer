@@ -30,16 +30,9 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_SPEEX_ENC \
-  (gst_speex_enc_get_type())
-#define GST_SPEEX_ENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SPEEX_ENC,GstSpeexEnc))
-#define GST_SPEEX_ENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SPEEX_ENC,GstSpeexEncClass))
-#define GST_IS_SPEEX_ENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SPEEX_ENC))
-#define GST_IS_SPEEX_ENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SPEEX_ENC))
+#define GST_TYPE_SPEEX_ENC (gst_speex_enc_get_type())
+G_DECLARE_FINAL_TYPE (GstSpeexEnc, gst_speex_enc, GST, SPEEX_ENC,
+    GstAudioEncoder)
 
 typedef enum
 {
@@ -48,9 +41,6 @@ typedef enum
   GST_SPEEX_ENC_MODE_WB,
   GST_SPEEX_ENC_MODE_NB
 } GstSpeexMode;
-
-typedef struct _GstSpeexEnc GstSpeexEnc;
-typedef struct _GstSpeexEncClass GstSpeexEncClass;
 
 struct _GstSpeexEnc {
   GstAudioEncoder   element;
@@ -86,12 +76,6 @@ struct _GstSpeexEnc {
   guint8                *comments;
   gint                  comment_len;
 };
-
-struct _GstSpeexEncClass {
-  GstAudioEncoderClass parent_class;
-};
-
-GType gst_speex_enc_get_type (void);
 
 G_END_DECLS
 

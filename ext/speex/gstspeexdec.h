@@ -31,19 +31,9 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_SPEEX_DEC \
-  (gst_speex_dec_get_type())
-#define GST_SPEEX_DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SPEEX_DEC,GstSpeexDec))
-#define GST_SPEEX_DEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SPEEX_DEC,GstSpeexDecClass))
-#define GST_IS_SPEEX_DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SPEEX_DEC))
-#define GST_IS_SPEEX_DEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SPEEX_DEC))
-
-typedef struct _GstSpeexDec GstSpeexDec;
-typedef struct _GstSpeexDecClass GstSpeexDecClass;
+#define GST_TYPE_SPEEX_DEC (gst_speex_dec_get_type())
+G_DECLARE_FINAL_TYPE (GstSpeexDec, gst_speex_dec, GST, SPEEX_DEC,
+    GstAudioDecoder)
 
 struct _GstSpeexDec {
   GstAudioDecoder   element;
@@ -64,12 +54,6 @@ struct _GstSpeexDec {
   GstBuffer             *streamheader;
   GstBuffer             *vorbiscomment;
 };
-
-struct _GstSpeexDecClass {
-  GstAudioDecoderClass parent_class;
-};
-
-GType gst_speex_dec_get_type (void);
 
 G_END_DECLS
 
