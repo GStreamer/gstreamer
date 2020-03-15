@@ -23,7 +23,7 @@
 /**
  * SECTION:element-webrtcechoprobe
  *
- * This echo probe is to be used with the webrtcdsp element. See #gst-plugins-bad-plugins-webrtcdsp
+ * This echo probe is to be used with the webrtcdsp element. See #webrtcdsp
  * documentation for more details.
  */
 
