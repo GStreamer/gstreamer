@@ -32,21 +32,9 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_PULSESRC \
-  (gst_pulsesrc_get_type())
-#define GST_PULSESRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_PULSESRC,GstPulseSrc))
-#define GST_PULSESRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_PULSESRC,GstPulseSrcClass))
-#define GST_IS_PULSESRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PULSESRC))
-#define GST_IS_PULSESRC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PULSESRC))
-#define GST_PULSESRC_CAST(obj) \
-  ((GstPulseSrc *)(obj))
-
-typedef struct _GstPulseSrc GstPulseSrc;
-typedef struct _GstPulseSrcClass GstPulseSrcClass;
+#define GST_TYPE_PULSESRC (gst_pulsesrc_get_type())
+G_DECLARE_FINAL_TYPE (GstPulseSrc, gst_pulsesrc, GST, PULSESRC, GstAudioSrc)
+#define GST_PULSESRC_CAST(obj) ((GstPulseSrc *)(obj))
 
 struct _GstPulseSrc
 {
@@ -85,13 +73,6 @@ struct _GstPulseSrc
   GstStructure *properties;
   pa_proplist *proplist;
 };
-
-struct _GstPulseSrcClass
-{
-  GstAudioSrcClass parent_class;
-};
-
-GType gst_pulsesrc_get_type (void);
 
 G_END_DECLS
 

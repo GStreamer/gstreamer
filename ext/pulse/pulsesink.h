@@ -39,21 +39,10 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_PULSESINK \
-  (gst_pulsesink_get_type())
-#define GST_PULSESINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_PULSESINK,GstPulseSink))
-#define GST_PULSESINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_PULSESINK,GstPulseSinkClass))
-#define GST_IS_PULSESINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PULSESINK))
-#define GST_IS_PULSESINK_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PULSESINK))
-#define GST_PULSESINK_CAST(obj) \
-  ((GstPulseSink *)(obj))
-
-typedef struct _GstPulseSink GstPulseSink;
-typedef struct _GstPulseSinkClass GstPulseSinkClass;
+#define GST_TYPE_PULSESINK (gst_pulsesink_get_type())
+G_DECLARE_FINAL_TYPE (GstPulseSink, gst_pulsesink, GST, PULSESINK,
+    GstAudioBaseSink)
+#define GST_PULSESINK_CAST(obj) ((GstPulseSink *)(obj))
 
 typedef struct _GstPulseDeviceInfo {
   gchar *description;
@@ -86,13 +75,6 @@ struct _GstPulseSink
   volatile gint format_lost;
   GstClockTime format_lost_time;
 };
-
-struct _GstPulseSinkClass
-{
-  GstAudioBaseSinkClass parent_class;
-};
-
-GType gst_pulsesink_get_type (void);
 
 #define PULSE_SINK_TEMPLATE_CAPS \
   _PULSE_CAPS_PCM \

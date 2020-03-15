@@ -34,16 +34,10 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstPulseDeviceProvider GstPulseDeviceProvider;
-typedef struct _GstPulseDeviceProviderClass GstPulseDeviceProviderClass;
-
-#define GST_TYPE_PULSE_DEVICE_PROVIDER                 (gst_pulse_device_provider_get_type())
-#define GST_IS_PULSE_DEVICE_PROVIDER(obj)              (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PULSE_DEVICE_PROVIDER))
-#define GST_IS_PULSE_DEVICE_PROVIDER_CLASS(klass)      (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PULSE_DEVICE_PROVIDER))
-#define GST_PULSE_DEVICE_PROVIDER_GET_CLASS(obj)       (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_PULSE_DEVICE_PROVIDER, GstPulseDeviceProviderClass))
-#define GST_PULSE_DEVICE_PROVIDER(obj)                 (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PULSE_DEVICE_PROVIDER, GstPulseDeviceProvider))
-#define GST_PULSE_DEVICE_PROVIDER_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_DEVICE_PROVIDER, GstPulseDeviceProviderClass))
-#define GST_PULSE_DEVICE_PROVIDER_CAST(obj)            ((GstPulseDeviceProvider *)(obj))
+#define GST_TYPE_PULSE_DEVICE_PROVIDER (gst_pulse_device_provider_get_type())
+G_DECLARE_FINAL_TYPE (GstPulseDeviceProvider, gst_pulse_device_provider,
+    GST, PULSE_DEVICE_PROVIDER, GstDeviceProvider)
+#define GST_PULSE_DEVICE_PROVIDER_CAST(obj) ((GstPulseDeviceProvider *)(obj))
 
 struct _GstPulseDeviceProvider {
   GstDeviceProvider         parent;
@@ -62,23 +56,11 @@ typedef enum {
   GST_PULSE_DEVICE_TYPE_SINK
 } GstPulseDeviceType;
 
-struct _GstPulseDeviceProviderClass {
-  GstDeviceProviderClass    parent_class;
-};
 
-GType        gst_pulse_device_provider_get_type (void);
-
-
-typedef struct _GstPulseDevice GstPulseDevice;
-typedef struct _GstPulseDeviceClass GstPulseDeviceClass;
-
-#define GST_TYPE_PULSE_DEVICE                 (gst_pulse_device_get_type())
-#define GST_IS_PULSE_DEVICE(obj)              (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PULSE_DEVICE))
-#define GST_IS_PULSE_DEVICE_CLASS(klass)      (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PULSE_DEVICE))
-#define GST_PULSE_DEVICE_GET_CLASS(obj)       (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_PULSE_DEVICE, GstPulseDeviceClass))
-#define GST_PULSE_DEVICE(obj)                 (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PULSE_DEVICE, GstPulseDevice))
-#define GST_PULSE_DEVICE_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_DEVICE, GstPulseDeviceClass))
-#define GST_PULSE_DEVICE_CAST(obj)            ((GstPulseDevice *)(obj))
+#define GST_TYPE_PULSE_DEVICE (gst_pulse_device_get_type())
+G_DECLARE_FINAL_TYPE (GstPulseDevice, gst_pulse_device, GST, PULSE_DEVICE,
+    GstDevice)
+#define GST_PULSE_DEVICE_CAST(obj) ((GstPulseDevice *)(obj))
 
 struct _GstPulseDevice {
   GstDevice         parent;
@@ -89,12 +71,6 @@ struct _GstPulseDevice {
   gboolean         is_default;
   const gchar      *element;
 };
-
-struct _GstPulseDeviceClass {
-  GstDeviceClass    parent_class;
-};
-
-GType        gst_pulse_device_get_type (void);
 
 G_END_DECLS
 
