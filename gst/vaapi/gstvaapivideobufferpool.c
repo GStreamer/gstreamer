@@ -321,22 +321,15 @@ gst_vaapi_video_buffer_pool_alloc_buffer (GstBufferPool * pool,
   GstMemory *mem;
   GstBuffer *buffer;
 
-  const gboolean alloc_vaapi_video_meta = !params ||
-      !(params->flags & GST_VAAPI_VIDEO_BUFFER_POOL_ACQUIRE_FLAG_NO_ALLOC);
-
   if (!priv->allocator)
     goto error_no_allocator;
 
-  if (alloc_vaapi_video_meta) {
-    meta = gst_vaapi_video_meta_new (priv->display);
-    if (!meta)
-      goto error_create_meta;
+  meta = gst_vaapi_video_meta_new (priv->display);
+  if (!meta)
+    goto error_create_meta;
 
-    buffer = gst_vaapi_video_buffer_new (meta);
-  } else {
-    meta = NULL;
-    buffer = gst_vaapi_video_buffer_new_empty ();
-  }
+  buffer = gst_vaapi_video_buffer_new (meta);
+
   if (!buffer)
     goto error_create_buffer;
 
@@ -487,8 +480,8 @@ gst_vaapi_video_buffer_pool_reset_buffer (GstBufferPool * pool,
      * While surface is passed, we should clear it to avoid wrong
      * reference. */
     meta = gst_buffer_get_vaapi_video_meta (buffer);
-    if (meta)
-      gst_vaapi_video_meta_set_surface_proxy (meta, NULL);
+    g_assert (meta);
+    gst_vaapi_video_meta_set_surface_proxy (meta, NULL);
   }
 
   GST_BUFFER_POOL_CLASS (gst_vaapi_video_buffer_pool_parent_class)->reset_buffer
