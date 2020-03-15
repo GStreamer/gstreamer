@@ -47,6 +47,8 @@ struct _GstVaapiVideoBufferPoolPrivate
   guint options;
   guint use_dmabuf_memory:1;
   guint forced_video_meta:1;
+  /* Map between surface and GstMemory, only DMA */
+  GHashTable *dma_mem_map;
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE (GstVaapiVideoBufferPool,
@@ -60,6 +62,8 @@ gst_vaapi_video_buffer_pool_finalize (GObject * object)
 
   gst_vaapi_display_replace (&priv->display, NULL);
   g_clear_object (&priv->allocator);
+  if (priv->dma_mem_map)
+    g_hash_table_destroy (priv->dma_mem_map);
 
   G_OBJECT_CLASS (gst_vaapi_video_buffer_pool_parent_class)->finalize (object);
 }
@@ -309,6 +313,58 @@ error_no_allocator:
   }
 }
 
+static void
+vaapi_buffer_pool_cache_dma_mem (GstVaapiVideoBufferPool * pool,
+    GstVaapiSurfaceProxy * proxy, GstMemory * mem)
+{
+  GstVaapiVideoBufferPoolPrivate *const priv = pool->priv;
+  GstVaapiSurface *surface;
+
+  surface = GST_VAAPI_SURFACE_PROXY_SURFACE (proxy);
+  g_assert (surface);
+  g_assert (gst_vaapi_surface_peek_buffer_proxy (surface));
+
+  if (!priv->dma_mem_map)
+    priv->dma_mem_map = g_hash_table_new_full (g_direct_hash,
+        g_direct_equal, NULL, (GDestroyNotify) gst_memory_unref);
+
+  if (!g_hash_table_contains (priv->dma_mem_map, surface)) {
+    g_hash_table_insert (priv->dma_mem_map, surface, gst_memory_ref (mem));
+  } else {
+    g_assert (g_hash_table_lookup (priv->dma_mem_map, surface) == mem);
+  }
+}
+
+static GstMemory *
+vaapi_buffer_pool_lookup_dma_mem (GstVaapiVideoBufferPool * pool,
+    GstVaapiSurfaceProxy * proxy)
+{
+  GstVaapiSurface *surface;
+  GstVaapiVideoBufferPoolPrivate *const priv = pool->priv;
+  GstVaapiBufferProxy *buf_proxy;
+  GstMemory *mem;
+
+  g_assert (priv->use_dmabuf_memory);
+
+  if (!priv->dma_mem_map)
+    return NULL;
+
+  surface = GST_VAAPI_SURFACE_PROXY_SURFACE (proxy);
+  g_assert (surface);
+
+  buf_proxy = gst_vaapi_surface_peek_buffer_proxy (surface);
+  /* Have not exported yet */
+  if (!buf_proxy) {
+    g_assert (!g_hash_table_contains (priv->dma_mem_map, surface));
+    return NULL;
+  }
+
+  mem = g_hash_table_lookup (priv->dma_mem_map, surface);
+  g_assert (mem);
+
+  return gst_memory_ref (mem);
+}
+
 static GstFlowReturn
 gst_vaapi_video_buffer_pool_alloc_buffer (GstBufferPool * pool,
     GstBuffer ** out_buffer_ptr, GstBufferPoolAcquireParams * params)
@@ -336,10 +392,23 @@ gst_vaapi_video_buffer_pool_alloc_buffer (GstBufferPool * pool,
   if (priv_params && priv_params->proxy)
     gst_vaapi_video_meta_set_surface_proxy (meta, priv_params->proxy);
 
-  if (priv->use_dmabuf_memory)
-    mem = gst_vaapi_dmabuf_memory_new (priv->allocator, meta);
-  else
+  if (priv->use_dmabuf_memory) {
+    mem = NULL;
+    if (priv_params && priv_params->proxy) {
+      mem = vaapi_buffer_pool_lookup_dma_mem (base_pool, priv_params->proxy);
+      if (!mem) {
+        mem = gst_vaapi_dmabuf_memory_new (priv->allocator, meta);
+        if (!mem)
+          goto error_create_memory;
+
+        vaapi_buffer_pool_cache_dma_mem (base_pool, priv_params->proxy, mem);
+      }
+    } else {
+      mem = gst_vaapi_dmabuf_memory_new (priv->allocator, meta);
+    }
+  } else {
     mem = gst_vaapi_video_memory_new (priv->allocator, meta);
+  }
   if (!mem)
     goto error_create_memory;
   gst_vaapi_video_meta_replace (&meta, NULL);
@@ -407,7 +476,6 @@ gst_vaapi_video_buffer_pool_acquire_buffer (GstBufferPool * pool,
   GstMemory *mem;
   GstVaapiVideoMeta *meta;
   GstVaapiSurface *surface;
-  GstVaapiBufferProxy *dmabuf_proxy;
 
   ret =
       GST_BUFFER_POOL_CLASS
@@ -420,15 +488,20 @@ gst_vaapi_video_buffer_pool_acquire_buffer (GstBufferPool * pool,
     return ret;
   }
 
-  /* The point of the following dance is to attach the right GstMemory to the
-   * current acquired buffer. Indeed this buffer can contain any of the
-   * GstFdmemory since this buffer have been popped out from the buffer pool's
-   * FIFO. So there is no garantee that this matches the current surface. The
-   * va decoder driver might not even use a FIFO. So there is no way to guess
-   * on the ordering. In short acquire_current_buffer on the va driver and on
-   * the buffer pool return none matching data. So we have to manually attach
-   * the right GstFdMemory to the acquired GstBuffer. The right GstMemory is
-   * the one associated with the current surface. */
+  /* Some pool users, such as decode, needs to acquire a buffer for a
+   * specified surface (via surface proxy). If not it is a DMABuf, we
+   * just replace the underlying surface proxy of buffer's
+   * GstVaapiVideoMeta. But in DMABuf case, the thing is a little bit
+   * more complicated:
+   *
+   * For DMABuf, GstMemory is-a GstFdMemory, which doesn't provide a
+   * way to change its FD, thus once created it's bound to a
+   * surface. On the other side, for performace reason, when the
+   * buffer is released, the buffer and its memory are cached in the
+   * buffer pool, and at next acquire_buffer() may still reuse a
+   * buffer and its memory. But the pushed surface by the decoder may
+   * be different from the one popped by the pool, so we need to
+   * replace the buffer's memory with the correct one. */
   g_assert (gst_buffer_n_memory (buffer) == 1);
 
   /* Update the underlying surface proxy */
@@ -439,30 +512,34 @@ gst_vaapi_video_buffer_pool_acquire_buffer (GstBufferPool * pool,
   }
   gst_vaapi_video_meta_set_surface_proxy (meta, priv_params->proxy);
 
-  /* Find the cached memory associated with the given surface. */
-  surface = GST_VAAPI_SURFACE_PROXY_SURFACE (priv_params->proxy);
-  dmabuf_proxy = gst_vaapi_surface_peek_buffer_proxy (surface);
-  if (dmabuf_proxy) {
-    mem = gst_vaapi_buffer_proxy_peek_mem (dmabuf_proxy);
-    if (mem == gst_buffer_peek_memory (buffer, 0))
-      mem = NULL;
-    else
-      mem = gst_memory_ref (mem);
+  mem = vaapi_buffer_pool_lookup_dma_mem (base_pool, priv_params->proxy);
+  if (mem) {
+    if (mem == gst_buffer_peek_memory (buffer, 0)) {
+      gst_memory_unref (mem);
+      *out_buffer_ptr = buffer;
+      return GST_FLOW_OK;
+    }
   } else {
-    /* The given surface has not been exported yet. */
+    /* Should be an unexported surface */
+    surface = GST_VAAPI_SURFACE_PROXY_SURFACE (priv_params->proxy);
+    g_assert (surface);
+    g_assert (gst_vaapi_surface_peek_buffer_proxy (surface) == NULL);
+    gst_vaapi_video_meta_set_surface_proxy (meta, priv_params->proxy);
     mem = gst_vaapi_dmabuf_memory_new (priv->allocator, meta);
+    if (mem)
+      vaapi_buffer_pool_cache_dma_mem (base_pool, priv_params->proxy, mem);
   }
 
-  /* Attach the GstFdMemory to the output buffer. */
   if (mem) {
-    GST_DEBUG_OBJECT (base_pool, "assigning memory %p to acquired buffer %p",
-        mem, buffer);
     gst_buffer_replace_memory (buffer, 0, mem);
     gst_buffer_unset_flags (buffer, GST_BUFFER_FLAG_TAG_MEMORY);
+    *out_buffer_ptr = buffer;
+    return GST_FLOW_OK;
+  } else {
+    gst_buffer_unref (buffer);
+    *out_buffer_ptr = NULL;
+    return GST_FLOW_ERROR;
   }
-
-  *out_buffer_ptr = buffer;
-  return GST_FLOW_OK;
 }
 
 static void
@@ -523,6 +600,7 @@ static void
 gst_vaapi_video_buffer_pool_init (GstVaapiVideoBufferPool * pool)
 {
   pool->priv = gst_vaapi_video_buffer_pool_get_instance_private (pool);
+  pool->priv->dma_mem_map = NULL;
 }
 
 GstBufferPool *
