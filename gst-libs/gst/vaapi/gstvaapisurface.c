@@ -492,6 +492,7 @@ gst_vaapi_surface_new_from_buffer_proxy (GstVaapiDisplay * display,
 
   g_return_val_if_fail (proxy != NULL, NULL);
   g_return_val_if_fail (info != NULL, NULL);
+  g_return_val_if_fail (!proxy->surface, NULL);
 
   surface = gst_vaapi_surface_create (display);
   if (!surface)
@@ -499,6 +500,8 @@ gst_vaapi_surface_new_from_buffer_proxy (GstVaapiDisplay * display,
 
   if (!gst_vaapi_surface_init_from_buffer_proxy (surface, proxy, info))
     goto error;
+
+  proxy->surface = GST_MINI_OBJECT_CAST (surface);
   return surface;
 
   /* ERRORS */

@@ -94,7 +94,7 @@ gst_vaapi_buffer_proxy_finalize (GstVaapiBufferProxy * proxy)
   if (proxy->destroy_func)
     proxy->destroy_func (proxy->destroy_data);
 
-  gst_mini_object_replace ((GstMiniObject **) & proxy->surface, NULL);
+  proxy->surface = NULL;
 }
 
 static inline const GstVaapiMiniObjectClass *
@@ -157,7 +157,7 @@ gst_vaapi_buffer_proxy_new_from_surface (GstMiniObject * surface,
   if (!proxy)
     return NULL;
 
-  proxy->surface = gst_mini_object_ref (surface);
+  proxy->surface = surface;
   proxy->destroy_func = destroy_func;
   proxy->destroy_data = data;
   proxy->type = type;

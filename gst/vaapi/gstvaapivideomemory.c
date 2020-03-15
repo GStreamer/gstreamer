@@ -1019,8 +1019,9 @@ gst_vaapi_dmabuf_memory_holds_surface (GstMemory * mem)
 {
   g_return_val_if_fail (mem != NULL, FALSE);
 
-  return gst_mini_object_get_qdata (GST_MINI_OBJECT_CAST (mem),
-      GST_VAAPI_BUFFER_PROXY_QUARK) != NULL;
+  return
+      GPOINTER_TO_INT (gst_mini_object_get_qdata (GST_MINI_OBJECT_CAST (mem),
+          GST_VAAPI_BUFFER_PROXY_QUARK)) == TRUE;
 }
 
 GstMemory *
@@ -1065,20 +1066,21 @@ gst_vaapi_dmabuf_memory_new (GstAllocator * base_allocator,
     proxy = gst_vaapi_surface_proxy_new (surface);
     if (!proxy)
       goto error_create_surface_proxy;
+    /* The proxy has incremented the surface ref count. */
+    gst_vaapi_surface_unref (surface);
   } else {
     /* When exporting existing surfaces that come from decoder's
      * context. */
     surface = GST_VAAPI_SURFACE_PROXY_SURFACE (proxy);
   }
 
-  dmabuf_proxy = gst_vaapi_surface_get_dma_buf_handle (surface);
+  dmabuf_proxy = gst_vaapi_surface_peek_dma_buf_handle (surface);
   if (!dmabuf_proxy)
     goto error_create_dmabuf_proxy;
 
   if (needs_surface) {
-    /* The proxy has incremented the surface ref count.  */
-    gst_vaapi_surface_unref (surface);
     gst_vaapi_video_meta_set_surface_proxy (meta, proxy);
+    /* meta holds the proxy's reference */
     gst_vaapi_surface_proxy_unref (proxy);
   }
 
@@ -1095,17 +1097,9 @@ gst_vaapi_dmabuf_memory_new (GstAllocator * base_allocator,
     goto error_create_dmabuf_memory;
 
   if (needs_surface) {
-    /* Just set the GstVaapiBufferProxy (dmabuf_proxy) as qdata and
-     * forget about it. */
+    /* qdata express that memory has an associated surface. */
     gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (mem),
-        GST_VAAPI_BUFFER_PROXY_QUARK, dmabuf_proxy,
-        (GDestroyNotify) gst_vaapi_buffer_proxy_unref);
-  } else {
-    /* When not allocating the surface from this pool, so when
-     * exporting from the decoder's VA context, we need to know which
-     * GstMemory belongs to a provided surface. */
-    gst_vaapi_buffer_proxy_set_mem (dmabuf_proxy, mem);
-    gst_vaapi_surface_set_buffer_proxy (surface, dmabuf_proxy);
+        GST_VAAPI_BUFFER_PROXY_QUARK, GINT_TO_POINTER (TRUE), NULL);
   }
 
   /* When a VA surface is going to be filled by a VAAPI element

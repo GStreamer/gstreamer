@@ -29,10 +29,10 @@
 G_BEGIN_DECLS
 
 GstVaapiBufferProxy *
-gst_vaapi_surface_get_dma_buf_handle (GstVaapiSurface * surface);
+gst_vaapi_surface_peek_dma_buf_handle (GstVaapiSurface * surface);
 
 GstVaapiBufferProxy *
-gst_vaapi_surface_get_gem_buf_handle (GstVaapiSurface * surface);
+gst_vaapi_surface_peek_gem_buf_handle (GstVaapiSurface * surface);
 
 GstVaapiSurface *
 gst_vaapi_surface_new_with_dma_buf_handle (GstVaapiDisplay * display, gint fd,

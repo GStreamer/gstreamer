@@ -59,48 +59,69 @@ error_alloc_export_buffer:
 }
 
 /**
- * gst_vaapi_surface_get_dma_buf_handle:
+ * gst_vaapi_surface_peek_dma_buf_handle:
  * @surface: a #GstVaapiSurface
  *
  * If the underlying VA driver implementation supports it, this
  * function allows for returning a suitable dma_buf (DRM) buffer
- * handle as a #GstVaapiBufferProxy instance. The resulting buffer
- * handle is live until the last reference to the proxy gets
- * released. Besides, any further change to the parent VA @surface may
- * fail.
+ * handle as a #GstVaapiBufferProxy instance. The returned buffer
+ * proxy does not increase the ref of underlying buffer proxy.
  *
  * Return value: the underlying buffer as a #GstVaapiBufferProxy
  * instance.
  */
 GstVaapiBufferProxy *
-gst_vaapi_surface_get_dma_buf_handle (GstVaapiSurface * surface)
+gst_vaapi_surface_peek_dma_buf_handle (GstVaapiSurface * surface)
 {
+  GstVaapiBufferProxy *buf_proxy;
+
   g_return_val_if_fail (surface != NULL, NULL);
 
-  return gst_vaapi_surface_get_drm_buf_handle (surface,
+  if (surface->extbuf_proxy)
+    return surface->extbuf_proxy;
+
+  buf_proxy = gst_vaapi_surface_get_drm_buf_handle (surface,
       GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF);
+
+  if (buf_proxy) {
+    gst_vaapi_surface_set_buffer_proxy (surface, buf_proxy);
+    gst_vaapi_buffer_proxy_unref (buf_proxy);
+  }
+
+  return buf_proxy;
 }
 
 /**
- * gst_vaapi_surface_get_gem_buf_handle:
+ * gst_vaapi_surface_peek_gem_buf_handle:
  * @surface: a #GstVaapiSurface
  *
  * If the underlying VA driver implementation supports it, this
  * function allows for returning a suitable GEM buffer handle as a
- * #GstVaapiBufferProxy instance. The resulting buffer handle is live
- * until the last reference to the proxy gets released. Besides, any
- * further change to the parent VA @surface may fail.
+ * #GstVaapiBufferProxy instance. The returned buffer proxy does
+ * not increase the ref of underlying buffer proxy.
  *
  * Return value: the underlying buffer as a #GstVaapiBufferProxy
  * instance.
  */
 GstVaapiBufferProxy *
-gst_vaapi_surface_get_gem_buf_handle (GstVaapiSurface * surface)
+gst_vaapi_surface_peek_gem_buf_handle (GstVaapiSurface * surface)
 {
+  GstVaapiBufferProxy *buf_proxy;
+
   g_return_val_if_fail (surface != NULL, NULL);
 
-  return gst_vaapi_surface_get_drm_buf_handle (surface,
+  if (surface->extbuf_proxy)
+    return surface->extbuf_proxy;
+
+  buf_proxy = gst_vaapi_surface_get_drm_buf_handle (surface,
       GST_VAAPI_BUFFER_MEMORY_TYPE_GEM_BUF);
+
+  if (buf_proxy) {
+    gst_vaapi_surface_set_buffer_proxy (surface, buf_proxy);
+    gst_vaapi_buffer_proxy_unref (buf_proxy);
+  }
+
+  return buf_proxy;
 }
 
 static void
@@ -149,6 +170,7 @@ gst_vaapi_surface_new_with_dma_buf_handle (GstVaapiDisplay * display, gint fd,
     return NULL;
 
   surface = gst_vaapi_surface_new_from_buffer_proxy (display, proxy, vi);
+  /* Surface holds proxy's reference */
   gst_vaapi_buffer_proxy_unref (proxy);
   return surface;
 }
@@ -187,6 +209,7 @@ gst_vaapi_surface_new_with_gem_buf_handle (GstVaapiDisplay * display,
 
   fill_video_info (&vi, format, width, height, offset, stride);
   surface = gst_vaapi_surface_new_from_buffer_proxy (display, proxy, &vi);
+  /* Surface holds proxy's reference */
   gst_vaapi_buffer_proxy_unref (proxy);
   return surface;
 }
