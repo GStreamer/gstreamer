@@ -28,18 +28,10 @@
 #include <wavpack/wavpack.h>
 
 G_BEGIN_DECLS
-#define GST_TYPE_WAVPACK_ENC \
-  (gst_wavpack_enc_get_type())
-#define GST_WAVPACK_ENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_WAVPACK_ENC,GstWavpackEnc))
-#define GST_WAVPACK_ENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_WAVPACK_ENC,GstWavpackEnc))
-#define GST_IS_WAVPACK_ENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_WAVPACK_ENC))
-#define GST_IS_WAVPACK_ENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_WAVPACK_ENC))
-typedef struct _GstWavpackEnc GstWavpackEnc;
-typedef struct _GstWavpackEncClass GstWavpackEncClass;
+
+#define GST_TYPE_WAVPACK_ENC (gst_wavpack_enc_get_type())
+G_DECLARE_FINAL_TYPE (GstWavpackEnc, gst_wavpack_enc, GST, WAVPACK_ENC,
+    GstAudioEncoder)
 
 typedef struct
 {
@@ -47,7 +39,6 @@ typedef struct
   GstWavpackEnc *wavpack_enc;
   gboolean passthrough;
 } GstWavpackEncWriteID;
-
 
 struct _GstWavpackEnc
 {
@@ -91,13 +82,6 @@ struct _GstWavpackEnc
   GstClockTime timestamp_offset;
   GstClockTime next_ts;
 };
-
-struct _GstWavpackEncClass
-{
-  GstAudioEncoderClass parent;
-};
-
-GType gst_wavpack_enc_get_type (void);
 
 gboolean gst_wavpack_enc_plugin_init (GstPlugin * plugin);
 

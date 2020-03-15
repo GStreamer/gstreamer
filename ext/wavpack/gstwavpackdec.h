@@ -31,18 +31,10 @@
 #include "gstwavpackstreamreader.h"
 
 G_BEGIN_DECLS
-#define GST_TYPE_WAVPACK_DEC \
-  (gst_wavpack_dec_get_type())
-#define GST_WAVPACK_DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_WAVPACK_DEC,GstWavpackDec))
-#define GST_WAVPACK_DEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_WAVPACK_DEC,GstWavpackDecClass))
-#define GST_IS_WAVPACK_DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_WAVPACK_DEC))
-#define GST_IS_WAVPACK_DEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_WAVPACK_DEC))
-typedef struct _GstWavpackDec GstWavpackDec;
-typedef struct _GstWavpackDecClass GstWavpackDecClass;
+
+#define GST_TYPE_WAVPACK_DEC (gst_wavpack_dec_get_type())
+G_DECLARE_FINAL_TYPE (GstWavpackDec, gst_wavpack_dec, GST, WAVPACK_DEC,
+    GstAudioDecoder)
 
 struct _GstWavpackDec
 {
@@ -64,13 +56,6 @@ struct _GstWavpackDec
   gint channel_reorder_map[64];
 
 };
-
-struct _GstWavpackDecClass
-{
-  GstAudioDecoderClass parent;
-};
-
-GType gst_wavpack_dec_get_type (void);
 
 gboolean gst_wavpack_dec_plugin_init (GstPlugin * plugin);
 
