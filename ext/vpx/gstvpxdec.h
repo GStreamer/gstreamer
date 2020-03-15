@@ -106,6 +106,8 @@ struct _GstVPXDecClass
 
 GType gst_vpx_dec_get_type (void);
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstVPXDec, gst_object_unref)
+
 G_END_DECLS
 
 #endif

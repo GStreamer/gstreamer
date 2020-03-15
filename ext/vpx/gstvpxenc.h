@@ -133,6 +133,8 @@ struct _GstVPXEncClass
 
 GType gst_vpx_enc_get_type (void);
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstVPXEnc, gst_object_unref)
+
 G_END_DECLS
 
 #endif

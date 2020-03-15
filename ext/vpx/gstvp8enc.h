@@ -38,19 +38,8 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_VP8_ENC \
-  (gst_vp8_enc_get_type())
-#define GST_VP8_ENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VP8_ENC,GstVP8Enc))
-#define GST_VP8_ENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VP8_ENC,GstVP8EncClass))
-#define GST_IS_VP8_ENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VP8_ENC))
-#define GST_IS_VP8_ENC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VP8_ENC))
-
-typedef struct _GstVP8Enc GstVP8Enc;
-typedef struct _GstVP8EncClass GstVP8EncClass;
+#define GST_TYPE_VP8_ENC (gst_vp8_enc_get_type())
+G_DECLARE_FINAL_TYPE (GstVP8Enc, gst_vp8_enc, GST, VP8_ENC, GstVPXEnc)
 
 struct _GstVP8Enc
 {
@@ -58,13 +47,6 @@ struct _GstVP8Enc
 
   int keyframe_distance;
 };
-
-struct _GstVP8EncClass
-{
-  GstVPXEncClass  base_vpxenc_class;
-};
-
-GType gst_vp8_enc_get_type (void);
 
 G_END_DECLS
 

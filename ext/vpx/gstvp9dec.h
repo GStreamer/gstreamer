@@ -44,31 +44,13 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_VP9_DEC \
-  (gst_vp9_dec_get_type())
-#define GST_VP9_DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VP9_DEC,GstVP9Dec))
-#define GST_VP9_DEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VP9_DEC,GstVP9DecClass))
-#define GST_IS_VP9_DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VP9_DEC))
-#define GST_IS_VP9_DEC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VP9_DEC))
-
-typedef struct _GstVP9Dec GstVP9Dec;
-typedef struct _GstVP9DecClass GstVP9DecClass;
+#define GST_TYPE_VP9_DEC (gst_vp9_dec_get_type())
+G_DECLARE_FINAL_TYPE (GstVP9Dec, gst_vp9_dec, GST, VP9_DEC, GstVPXDec)
 
 struct _GstVP9Dec
 {
   GstVPXDec base_vpx_decoder;
 };
-
-struct _GstVP9DecClass
-{
-  GstVPXDecClass base_vpx_class;
-};
-
-GType gst_vp9_dec_get_type (void);
 
 G_END_DECLS
 
