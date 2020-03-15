@@ -33,19 +33,8 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_DV1394SRC \
-  (gst_dv1394src_get_type())
-#define GST_DV1394SRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DV1394SRC,GstDV1394Src))
-#define GST_DV1394SRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DV1394SRC,GstDV1394SrcClass))
-#define GST_IS_DV1394SRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DV1394SRC))
-#define GST_IS_DV1394SRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DV1394SRC))
-
-typedef struct _GstDV1394Src GstDV1394Src;
-typedef struct _GstDV1394SrcClass GstDV1394SrcClass;
+#define GST_TYPE_DV1394SRC (gst_dv1394src_get_type())
+G_DECLARE_FINAL_TYPE (GstDV1394Src, gst_dv1394src, GST, DV1394SRC, GstPushSrc)
 
 struct _GstDV1394Src {
   GstPushSrc element;
@@ -86,15 +75,6 @@ struct _GstDV1394Src {
 
   Gst1394Clock *provided_clock;
 };
-
-struct _GstDV1394SrcClass {
-  GstPushSrcClass parent_class;
-
-  /* signal */
-  void (*frame_dropped)  (GstElement *elem);
-};
-
-GType gst_dv1394src_get_type(void);
 
 G_END_DECLS
 

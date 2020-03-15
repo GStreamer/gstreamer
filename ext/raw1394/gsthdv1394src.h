@@ -32,19 +32,9 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_HDV1394SRC \
-  (gst_hdv1394src_get_type())
-#define GST_HDV1394SRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_HDV1394SRC,GstHDV1394Src))
-#define GST_HDV1394SRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_HDV1394SRC,GstHDV1394SrcClass))
-#define GST_IS_HDV1394SRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_HDV1394SRC))
-#define GST_IS_HDV1394SRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_HDV1394SRC))
-
-typedef struct _GstHDV1394Src GstHDV1394Src;
-typedef struct _GstHDV1394SrcClass GstHDV1394SrcClass;
+#define GST_TYPE_HDV1394SRC (gst_hdv1394src_get_type())
+G_DECLARE_FINAL_TYPE (GstHDV1394Src, gst_hdv1394src, GST, HDV1394SRC,
+    GstPushSrc)
 
 struct _GstHDV1394Src {
   GstPushSrc element;
@@ -73,12 +63,6 @@ struct _GstHDV1394Src {
   gboolean connected;
   iec61883_mpeg2_t iec61883mpeg2;
 };
-
-struct _GstHDV1394SrcClass {
-  GstPushSrcClass parent_class;
-};
-
-GType gst_hdv1394src_get_type(void);
 
 G_END_DECLS
 

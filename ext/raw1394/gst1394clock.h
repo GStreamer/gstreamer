@@ -31,21 +31,10 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_1394_CLOCK \
-  (gst_1394_clock_get_type())
-#define GST_1394_CLOCK(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_1394_CLOCK,Gst1394Clock))
-#define GST_1394_CLOCK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_1394_CLOCK,Gst1394ClockClass))
-#define GST_IS_1394_CLOCK(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_1394_CLOCK))
-#define GST_IS_1394_CLOCK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_1394_CLOCK))
-#define GST_1394_CLOCK_CAST(obj) \
-  ((Gst1394Clock*)(obj))
-
-typedef struct _Gst1394Clock Gst1394Clock;
-typedef struct _Gst1394ClockClass Gst1394ClockClass;
+#define GST_TYPE_1394_CLOCK (gst_1394_clock_get_type())
+G_DECLARE_FINAL_TYPE (Gst1394Clock, gst_1394_clock, GST, 1394_CLOCK,
+    GstSystemClock)
+#define GST_1394_CLOCK_CAST(obj) ((Gst1394Clock*)(obj))
 
 /**
  * Gst1394Clock:
@@ -62,11 +51,6 @@ struct _Gst1394Clock {
   guint32 cycle_timer_hi;
 };
 
-struct _Gst1394ClockClass {
-  GstSystemClockClass parent_class;
-};
-
-GType           gst_1394_clock_get_type        (void);
 Gst1394Clock*   gst_1394_clock_new             (const gchar *name);
 void            gst_1394_clock_set_handle      (Gst1394Clock *clock,
     raw1394handle_t handle);
