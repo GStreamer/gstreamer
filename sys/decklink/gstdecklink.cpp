@@ -1804,7 +1804,7 @@ gst_decklink_release_nth_input (gint n, GstElement * src, gboolean is_audio)
   g_mutex_unlock (&input->lock);
 }
 
-/**
+/*
  * Probes if duplex-mode is supported and sets it accordingly. I duplex-mode is not supported
  * but this device is part of a pair (Duo2- and Quad2-Cards) and Half-Dupley-Mode is requested,
  * the parent device is also checked and configured accordingly.
