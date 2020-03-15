@@ -92,6 +92,9 @@ typedef struct _GstNvCodecCudaVTable
     CUresult (CUDAAPI *
       CuGraphicsResourceSetMapFlags) (CUgraphicsResource resource,
       unsigned int flags);
+    CUresult (CUDAAPI * CuGLGetDevices) (unsigned int *pCudaDeviceCount,
+      CUdevice * pCudaDevices, unsigned int cudaDeviceCount,
+      CUGLDeviceList deviceList);
 } GstNvCodecCudaVTable;
 
 static GstNvCodecCudaVTable gst_cuda_vtable = { 0, };
@@ -150,6 +153,7 @@ gst_cuda_load_library (void)
   LOAD_SYMBOL (cuGraphicsGLRegisterImage, CuGraphicsGLRegisterImage);
   LOAD_SYMBOL (cuGraphicsGLRegisterBuffer, CuGraphicsGLRegisterBuffer);
   LOAD_SYMBOL (cuGraphicsResourceSetMapFlags, CuGraphicsResourceSetMapFlags);
+  LOAD_SYMBOL (cuGLGetDevices, CuGLGetDevices);
 
   vtable->loaded = TRUE;
 
@@ -388,4 +392,14 @@ CuGraphicsResourceSetMapFlags (CUgraphicsResource resource, unsigned int flags)
   g_assert (gst_cuda_vtable.CuGraphicsResourceSetMapFlags != NULL);
 
   return gst_cuda_vtable.CuGraphicsResourceSetMapFlags (resource, flags);
+}
+
+CUresult CUDAAPI
+CuGLGetDevices (unsigned int *pCudaDeviceCount, CUdevice * pCudaDevices,
+    unsigned int cudaDeviceCount, CUGLDeviceList deviceList)
+{
+  g_assert (gst_cuda_vtable.CuGLGetDevices != NULL);
+
+  return gst_cuda_vtable.CuGLGetDevices (pCudaDeviceCount, pCudaDevices,
+      cudaDeviceCount, deviceList);
 }

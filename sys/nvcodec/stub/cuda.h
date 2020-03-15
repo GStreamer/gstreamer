@@ -92,6 +92,11 @@ typedef struct
   gsize Height;
 } CUDA_MEMCPY2D;
 
+typedef enum
+{
+  CU_GL_DEVICE_LIST_ALL = 0x01,
+} CUGLDeviceList;
+
 #define CUDA_VERSION 10000
 
 #ifdef _WIN32
@@ -112,6 +117,7 @@ typedef struct
 #define cuMemcpy2D cuMemcpy2D_v2
 #define cuMemcpy2DAsync cuMemcpy2DAsync_v2
 #define cuMemFree cuMemFree_v2
+#define cuGLGetDevices cuGLGetDevices_v2
 
 G_END_DECLS
 

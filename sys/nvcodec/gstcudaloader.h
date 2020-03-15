@@ -142,5 +142,11 @@ G_GNUC_INTERNAL
 CUresult CUDAAPI CuGraphicsResourceSetMapFlags (CUgraphicsResource resource,
                                                 unsigned int flags);
 
+G_GNUC_INTERNAL
+CUresult CUDAAPI CuGLGetDevices (unsigned int * pCudaDeviceCount,
+                                 CUdevice * pCudaDevices,
+                                 unsigned int cudaDeviceCount,
+                                 CUGLDeviceList deviceList);
+
 G_END_DECLS
 #endif /* __GST_CUDA_LOADER_H__ */

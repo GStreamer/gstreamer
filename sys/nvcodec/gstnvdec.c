@@ -479,7 +479,7 @@ gst_nvdec_negotiate (GstVideoDecoder * decoder)
   if (nvdec->mem_type == GST_NVDEC_MEM_TYPE_GL &&
       !gst_nvdec_ensure_gl_context (nvdec)) {
     GST_WARNING_OBJECT (nvdec,
-        "OpenGL context cannot support PBO memory, fallback to system memory");
+        "OpenGL context is not CUDA-compatible, fallback to system memory");
     nvdec->mem_type = GST_NVDEC_MEM_TYPE_SYSTEM;
   }
 
@@ -579,7 +579,7 @@ parser_display_callback (GstNvDec * nvdec, CUVIDPARSERDISPINFO * dispinfo)
   GstVideoCodecFrame *frame = NULL;
   GstBuffer *output_buffer = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
-  gboolean copy_ret;
+  gboolean copy_ret = FALSE;
 
   GST_LOG_OBJECT (nvdec, "picture index: %u", dispinfo->picture_index);
 
@@ -639,7 +639,19 @@ parser_display_callback (GstNvDec * nvdec, CUVIDPARSERDISPINFO * dispinfo)
 #ifdef HAVE_NVCODEC_GST_GL
   if (nvdec->mem_type == GST_NVDEC_MEM_TYPE_GL) {
     copy_ret = gst_nvdec_copy_device_to_gl (nvdec, dispinfo, output_buffer);
-  } else
+
+    /* FIXME: This is the case where OpenGL context of downstream glbufferpool
+     * belongs to non-nvidia (or different device).
+     * There should be enhancement to ensure nvdec has compatible OpenGL context
+     */
+    if (!copy_ret) {
+      GST_WARNING_OBJECT (nvdec,
+          "Couldn't copy frame to GL memory, fallback to system memory");
+      nvdec->mem_type = GST_NVDEC_MEM_TYPE_SYSTEM;
+    }
+  }
+
+  if (!copy_ret)
 #endif
   {
     copy_ret = gst_nvdec_copy_device_to_system (nvdec, dispinfo, output_buffer);
@@ -1203,9 +1215,32 @@ gst_nvdec_finish (GstVideoDecoder * decoder)
 }
 
 #ifdef HAVE_NVCODEC_GST_GL
+static void
+gst_nvdec_check_cuda_device_from_context (GstGLContext * context,
+    gboolean * ret)
+{
+  guint device_count = 0;
+  CUdevice device_list[1] = { 0, };
+  CUresult cuda_ret;
+
+  *ret = FALSE;
+
+  cuda_ret = CuGLGetDevices (&device_count,
+      device_list, 1, CU_GL_DEVICE_LIST_ALL);
+
+  if (!gst_cuda_result (cuda_ret) || device_count == 0)
+    return;
+
+  *ret = TRUE;
+
+  return;
+}
+
 static gboolean
 gst_nvdec_ensure_gl_context (GstNvDec * nvdec)
 {
+  gboolean ret;
+
   if (!nvdec->gl_display) {
     GST_DEBUG_OBJECT (nvdec, "No available OpenGL display");
     return FALSE;
@@ -1238,6 +1273,14 @@ gst_nvdec_ensure_gl_context (GstNvDec * nvdec)
   if (!gst_gl_context_check_gl_version (nvdec->gl_context,
           SUPPORTED_GL_APIS, 3, 0)) {
     GST_WARNING_OBJECT (nvdec, "OpenGL context could not support PBO download");
+    return FALSE;
+  }
+
+  gst_gl_context_thread_add (nvdec->gl_context,
+      (GstGLContextThreadFunc) gst_nvdec_check_cuda_device_from_context, &ret);
+
+  if (!ret) {
+    GST_WARNING_OBJECT (nvdec, "Current OpenGL context is not CUDA-compatible");
     return FALSE;
   }
 
