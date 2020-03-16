@@ -279,13 +279,10 @@ gstreamer-full:
   extends: 'build static fedora x86_64'
   stage: integrate
   variables:
-    MESON_BUILDTYPE_ARGS: >
+    MESON_ARGS: >
       --default-library=static
-      -Dintrospection=disabled
-      -Ddoc=disabled
-      -Dgtk_doc=disabled
-      -Dgst-plugins-rs=disabled
-      -Dpython=disabled
+      -Dauto_features=disabled
+      -Dgst-plugins-good:alpha=enabled
   after_script:
   - cd gst-build/
   - ninja -C build install
@@ -295,6 +292,10 @@ gstreamer-full:
   - meson _build
   - ninja -C _build
   - meson test -C _build -v
+  artifacts:
+    paths:
+      - 'gst-build/build/meson-logs/'
+      - 'gst-build/build/gstinitstaticplugins.c'
 
 # Valgrind
 .valgrind fedora x86_64:
