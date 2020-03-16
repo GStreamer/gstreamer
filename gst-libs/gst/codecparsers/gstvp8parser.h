@@ -27,6 +27,11 @@
 #include <gst/gst.h>
 #include <gst/codecparsers/codecparsers-prelude.h>
 
+#ifndef GST_USE_UNSTABLE_API
+#warning "The VP8 parsing library is unstable API and may change in future."
+#warning "You can define GST_USE_UNSTABLE_API to avoid this warning."
+#endif
+
 G_BEGIN_DECLS
 
 typedef struct _GstVp8FrameHdr          GstVp8FrameHdr;
