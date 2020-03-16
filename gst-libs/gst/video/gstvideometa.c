@@ -1151,7 +1151,8 @@ gst_video_time_code_meta_get_info (void)
  * Since: 1.10
  */
 GstVideoTimeCodeMeta *
-gst_buffer_add_video_time_code_meta (GstBuffer * buffer, GstVideoTimeCode * tc)
+gst_buffer_add_video_time_code_meta (GstBuffer * buffer,
+    const GstVideoTimeCode * tc)
 {
   if (!gst_video_time_code_is_valid (tc))
     return NULL;

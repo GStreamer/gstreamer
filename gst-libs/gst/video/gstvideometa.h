@@ -397,7 +397,7 @@ const GstMetaInfo *gst_video_time_code_meta_get_info (void);
 
 GST_VIDEO_API
 GstVideoTimeCodeMeta *gst_buffer_add_video_time_code_meta    (GstBuffer             * buffer,
-                                                              GstVideoTimeCode      * tc);
+                                                              const GstVideoTimeCode* tc);
 
 GST_VIDEO_API
 GstVideoTimeCodeMeta *
