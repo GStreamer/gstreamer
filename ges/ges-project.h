@@ -29,16 +29,7 @@
 G_BEGIN_DECLS
 
 #define GES_TYPE_PROJECT            ges_project_get_type()
-#define GES_PROJECT(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_PROJECT, GESProject))
-#define GES_PROJECT_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_PROJECT, GESProjectClass))
-#define GES_IS_PROJECT(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_PROJECT))
-#define GES_IS_PROJECT_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_PROJECT))
-#define GES_PROJECT_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_PROJECT, GESProjectClass))
-
-typedef struct _GESProjectPrivate GESProjectPrivate;
-
-GES_API
-GType ges_project_get_type (void);
+GES_DECLARE_TYPE(Project, project, PROJECT);
 
 struct _GESProject
 {

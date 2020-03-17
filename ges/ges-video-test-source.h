@@ -29,23 +29,7 @@
 G_BEGIN_DECLS
 
 #define GES_TYPE_VIDEO_TEST_SOURCE ges_video_test_source_get_type()
-
-#define GES_VIDEO_TEST_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_VIDEO_TEST_SOURCE, GESVideoTestSource))
-
-#define GES_VIDEO_TEST_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_VIDEO_TEST_SOURCE, GESVideoTestSourceClass))
-
-#define GES_IS_VIDEO_TEST_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_VIDEO_TEST_SOURCE))
-
-#define GES_IS_VIDEO_TEST_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_VIDEO_TEST_SOURCE))
-
-#define GES_VIDEO_TEST_SOURCE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_VIDEO_TEST_SOURCE, GESVideoTestSourceClass))
-
-typedef struct _GESVideoTestSourcePrivate GESVideoTestSourcePrivate;
+GES_DECLARE_TYPE(VideoTestSource, video_test_source, VIDEO_TEST_SOURCE);
 
 /**
  * GESVideoTestSource:
@@ -66,9 +50,6 @@ struct _GESVideoTestSourceClass {
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
-
-GES_API
-GType ges_video_test_source_get_type (void);
 
 GES_API void
 ges_video_test_source_set_pattern(GESVideoTestSource *self,

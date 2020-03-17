@@ -27,23 +27,7 @@
 G_BEGIN_DECLS
 
 #define GES_TYPE_LAYER ges_layer_get_type()
-
-#define GES_LAYER(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_LAYER, GESLayer))
-
-#define GES_LAYER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_LAYER, GESLayerClass))
-
-#define GES_IS_LAYER(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_LAYER))
-
-#define GES_IS_LAYER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_LAYER))
-
-#define GES_LAYER_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_LAYER, GESLayerClass))
-
-typedef struct _GESLayerPrivate GESLayerPrivate;
+GES_DECLARE_TYPE(Layer, layer, LAYER);
 
 /**
  * GESLayer:
@@ -88,9 +72,6 @@ struct _GESLayerClass {
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
-
-GES_API
-GType ges_layer_get_type (void);
 
 GES_API
 GESLayer* ges_layer_new (void);

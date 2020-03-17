@@ -30,13 +30,7 @@
 G_BEGIN_DECLS
 
 #define GES_TYPE_CONTAINER             ges_container_get_type()
-#define GES_CONTAINER(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_CONTAINER, GESContainer))
-#define GES_CONTAINER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_CONTAINER, GESContainerClass))
-#define GES_IS_CONTAINER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_CONTAINER))
-#define GES_IS_CONTAINER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_CONTAINER))
-#define GES_CONTAINER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_CONTAINER, GESContainerClass))
-
-typedef struct _GESContainerPrivate GESContainerPrivate;
+GES_DECLARE_TYPE(Container, container, CONTAINER);
 
 /**
  * GESChildrenControlMode:
@@ -142,9 +136,6 @@ struct _GESContainerClass
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING_LARGE];
 };
-
-GES_API
-GType ges_container_get_type (void);
 
 /* Children handling */
 GES_API

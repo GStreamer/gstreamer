@@ -28,23 +28,7 @@
 G_BEGIN_DECLS
 
 #define GES_TYPE_IMAGE_SOURCE ges_image_source_get_type()
-
-#define GES_IMAGE_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_IMAGE_SOURCE, GESImageSource))
-
-#define GES_IMAGE_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_IMAGE_SOURCE, GESImageSourceClass))
-
-#define GES_IS_IMAGE_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_IMAGE_SOURCE))
-
-#define GES_IS_IMAGE_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_IMAGE_SOURCE))
-
-#define GES_IMAGE_SOURCE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_IMAGE_SOURCE, GESImageSourceClass))
-
-typedef struct _GESImageSourcePrivate GESImageSourcePrivate;
+GES_DECLARE_TYPE(ImageSource, image_source, IMAGE_SOURCE);
 
 /**
  * GESImageSource:
@@ -67,9 +51,6 @@ struct _GESImageSourceClass {
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
-
-GES_API
-GType ges_image_source_get_type (void);
 
 G_END_DECLS
 

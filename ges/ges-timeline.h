@@ -29,21 +29,7 @@
 G_BEGIN_DECLS
 
 #define GES_TYPE_TIMELINE ges_timeline_get_type()
-
-#define GES_TIMELINE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TIMELINE, GESTimeline))
-
-#define GES_TIMELINE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TIMELINE, GESTimelineClass))
-
-#define GES_IS_TIMELINE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TIMELINE))
-
-#define GES_IS_TIMELINE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TIMELINE))
-
-#define GES_TIMELINE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE, GESTimelineClass))
+GES_DECLARE_TYPE(Timeline, timeline, TIMELINE);
 
 #define GES_TIMELINE_GET_TRACKS(obj) (GES_TIMELINE (obj)->tracks)
 #define GES_TIMELINE_GET_LAYERS(obj) (GES_TIMELINE (obj)->layers)
@@ -100,9 +86,6 @@ struct _GESTimelineClass {
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
-
-GES_API
-GType ges_timeline_get_type (void);
 
 GES_API
 GESTimeline* ges_timeline_new (void);

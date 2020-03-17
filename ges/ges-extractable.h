@@ -33,12 +33,9 @@ G_BEGIN_DECLS
 
 /* GESExtractable interface declarations */
 #define GES_TYPE_EXTRACTABLE                (ges_extractable_get_type ())
-#define GES_EXTRACTABLE(obj)                (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_EXTRACTABLE, GESExtractable))
-#define GES_IS_EXTRACTABLE(obj)             (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_EXTRACTABLE))
 #define GES_EXTRACTABLE_GET_INTERFACE(inst) (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GES_TYPE_EXTRACTABLE, GESExtractableInterface))
-
 GES_API
-GType ges_extractable_get_type (void);
+G_DECLARE_INTERFACE(GESExtractable, ges_extractable, GES, EXTRACTABLE, GInitiallyUnowned);
 
 /**
  * GESExtractableCheckId:

@@ -28,17 +28,7 @@
 
 G_BEGIN_DECLS
 #define GES_TYPE_OVERLAY_TEXT_CLIP ges_text_overlay_clip_get_type()
-#define GES_OVERLAY_TEXT_CLIP(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_OVERLAY_TEXT_CLIP, GESTextOverlayClip))
-#define GES_OVERLAY_TEXT_CLIP_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_OVERLAY_TEXT_CLIP, GESTextOverlayClipClass))
-#define GES_IS_OVERLAY_TEXT_CLIP(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_OVERLAY_TEXT_CLIP))
-#define GES_IS_OVERLAY_TEXT_CLIP_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_OVERLAY_TEXT_CLIP))
-#define GES_OVERLAY_TEXT_CLIP_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_OVERLAY_TEXT_CLIP, GESTextOverlayClipClass))
-typedef struct _GESTextOverlayClipPrivate GESTextOverlayClipPrivate;
+GES_DECLARE_TYPE(TextOverlayClip, text_overlay_clip, OVERLAY_TEXT_CLIP);
 
 /**
  * GESTextOverlayClip:
@@ -68,9 +58,6 @@ struct _GESTextOverlayClipClass
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
-
-GES_API
-GType ges_text_overlay_clip_get_type (void);
 
 GES_API void
 ges_text_overlay_clip_set_text (GESTextOverlayClip * self,

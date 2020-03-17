@@ -24,6 +24,12 @@
 #include <gst/pbutils/encoding-profile.h>
 #include <gio/gio.h>
 
+G_BEGIN_DECLS
+
+#ifndef GST_CAT_DEFAULT
+#define GST_CAT_DEFAULT (_ges_debug ())
+#endif
+
 #include "ges-timeline.h"
 #include "ges-track-element.h"
 #include "ges-timeline-element.h"
@@ -31,12 +37,6 @@
 #include "ges-asset.h"
 #include "ges-base-xml-formatter.h"
 #include "ges-timeline-tree.h"
-
-G_BEGIN_DECLS
-
-#ifndef GST_CAT_DEFAULT
-#define GST_CAT_DEFAULT (_ges_debug ())
-#endif
 
 G_GNUC_INTERNAL
 GstDebugCategory * _ges_debug (void);

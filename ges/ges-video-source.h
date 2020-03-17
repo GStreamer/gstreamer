@@ -30,23 +30,7 @@
 G_BEGIN_DECLS
 
 #define GES_TYPE_VIDEO_SOURCE ges_video_source_get_type()
-
-#define GES_VIDEO_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_VIDEO_SOURCE, GESVideoSource))
-
-#define GES_VIDEO_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_VIDEO_SOURCE, GESVideoSourceClass))
-
-#define GES_IS_VIDEO_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_VIDEO_SOURCE))
-
-#define GES_IS_VIDEO_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_VIDEO_SOURCE))
-
-#define GES_VIDEO_SOURCE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_VIDEO_SOURCE, GESVideoSourceClass))
-
-typedef struct _GESVideoSourcePrivate GESVideoSourcePrivate;
+GES_DECLARE_TYPE(VideoSource, video_source, VIDEO_SOURCE);
 
 /**
  * GESVideoSource:
@@ -90,8 +74,6 @@ struct _GESVideoSourceClass {
   } ABI;
 };
 
-GES_API
-GType ges_video_source_get_type (void);
 GES_API
 gboolean ges_video_source_get_natural_size(GESVideoSource* self, gint* width, gint* height);
 

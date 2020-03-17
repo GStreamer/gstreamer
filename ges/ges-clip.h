@@ -31,13 +31,7 @@
 G_BEGIN_DECLS
 
 #define GES_TYPE_CLIP             ges_clip_get_type()
-#define GES_CLIP(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_CLIP, GESClip))
-#define GES_CLIP_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_CLIP, GESClipClass))
-#define GES_IS_CLIP(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_CLIP))
-#define GES_IS_CLIP_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_CLIP))
-#define GES_CLIP_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_CLIP, GESClipClass))
-
-typedef struct _GESClipPrivate GESClipPrivate;
+GES_DECLARE_TYPE(Clip, clip, CLIP);
 
 /**
  * GES_CLIP_CLASS_CAN_ADD_EFFECTS:
@@ -145,12 +139,6 @@ struct _GESClipClass
     } abi;
   } ABI;
 };
-
-/****************************************************
- *                  Standard                        *
- ****************************************************/
-GES_API
-GType ges_clip_get_type (void);
 
 /****************************************************
  *                TrackElement handling             *

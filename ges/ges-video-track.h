@@ -27,13 +27,7 @@
 
 G_BEGIN_DECLS
 #define GES_TYPE_VIDEO_TRACK             (ges_video_track_get_type ())
-#define GES_VIDEO_TRACK(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_VIDEO_TRACK, GESVideoTrack))
-#define GES_VIDEO_TRACK_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_VIDEO_TRACK, GESVideoTrackClass))
-#define GES_IS_VIDEO_TRACK(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_VIDEO_TRACK))
-#define GES_IS_VIDEO_TRACK_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_VIDEO_TRACK))
-#define GES_VIDEO_TRACK_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_VIDEO_TRACK, GESVideoTrackClass))
-
-typedef struct _GESVideoTrackPrivate GESVideoTrackPrivate;
+GES_DECLARE_TYPE(VideoTrack, video_track, VIDEO_TRACK);
 
 struct _GESVideoTrackClass
 {
@@ -53,9 +47,6 @@ struct _GESVideoTrack
   /* Padding for API extension */
   gpointer    _ges_reserved[GES_PADDING];
 };
-
-GES_API
-GType ges_video_track_get_type (void) G_GNUC_CONST;
 
 GES_API
 GESVideoTrack * ges_video_track_new (void);

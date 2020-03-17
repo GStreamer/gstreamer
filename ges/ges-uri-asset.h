@@ -30,21 +30,7 @@
 
 G_BEGIN_DECLS
 #define GES_TYPE_URI_CLIP_ASSET ges_uri_clip_asset_get_type()
-#define GES_URI_CLIP_ASSET(obj) \
-    (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_URI_CLIP_ASSET, GESUriClipAsset))
-#define GES_URI_CLIP_ASSET_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_URI_CLIP_ASSET, GESUriClipAssetClass))
-#define GES_IS_URI_CLIP_ASSET(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_URI_CLIP_ASSET))
-#define GES_IS_URI_CLIP_ASSET_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_URI_CLIP_ASSET))
-#define GES_URI_CLIP_ASSET_GET_CLASS(obj) \
-    (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_URI_CLIP_ASSET, GESUriClipAssetClass))
-
-typedef struct _GESUriClipAssetPrivate GESUriClipAssetPrivate;
-
-GES_API
-GType ges_uri_clip_asset_get_type (void);
+GES_DECLARE_TYPE(UriClipAsset, uri_clip_asset, URI_CLIP_ASSET);
 
 struct _GESUriClipAsset
 {
@@ -97,21 +83,7 @@ GES_API
 const GList * ges_uri_clip_asset_get_stream_assets  (GESUriClipAsset *self);
 
 #define GES_TYPE_URI_SOURCE_ASSET ges_uri_source_asset_get_type()
-#define GES_URI_SOURCE_ASSET(obj) \
-    (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_URI_SOURCE_ASSET, GESUriSourceAsset))
-#define GES_URI_SOURCE_ASSET_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_URI_SOURCE_ASSET, GESUriSourceAssetClass))
-#define GES_IS_URI_SOURCE_ASSET(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_URI_SOURCE_ASSET))
-#define GES_IS_URI_SOURCE_ASSET_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_URI_SOURCE_ASSET))
-#define GES_URI_SOURCE_ASSET_GET_CLASS(obj) \
-    (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_URI_SOURCE_ASSET, GESUriSourceAssetClass))
-
-typedef struct _GESUriSourceAssetPrivate GESUriSourceAssetPrivate;
-
-GES_API
-GType ges_uri_source_asset_get_type (void);
+GES_DECLARE_TYPE(UriSourceAsset, uri_source_asset, URI_SOURCE_ASSET);
 
 struct _GESUriSourceAsset
 {

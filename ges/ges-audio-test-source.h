@@ -28,24 +28,7 @@
 G_BEGIN_DECLS
 
 #define GES_TYPE_AUDIO_TEST_SOURCE ges_audio_test_source_get_type()
-
-#define GES_AUDIO_TEST_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_AUDIO_TEST_SOURCE, GESAudioTestSource))
-
-#define GES_AUDIO_TEST_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_AUDIO_TEST_SOURCE, GESAudioTestSourceClass))
-
-#define GES_IS_AUDIO_TEST_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_AUDIO_TEST_SOURCE))
-
-#define GES_IS_AUDIO_TEST_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_AUDIO_TEST_SOURCE))
-
-#define GES_AUDIO_TEST_SOURCE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_AUDIO_TEST_SOURCE, GESAudioTestSourceClass))
-
-typedef struct _GESAudioTestSourcePrivate GESAudioTestSourcePrivate;
-
+GES_DECLARE_TYPE(AudioTestSource, audio_test_source, AUDIO_TEST_SOURCE);
 
 /**
  * GESAudioTestSource:
@@ -69,10 +52,6 @@ struct _GESAudioTestSourceClass {
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
-
-GES_API
-GType ges_audio_test_source_get_type (void);
-
 
 GES_API
 void ges_audio_test_source_set_freq(GESAudioTestSource *self,

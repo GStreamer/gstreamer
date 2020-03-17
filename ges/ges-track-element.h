@@ -32,23 +32,7 @@
 G_BEGIN_DECLS
 
 #define GES_TYPE_TRACK_ELEMENT ges_track_element_get_type()
-
-#define GES_TRACK_ELEMENT(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TRACK_ELEMENT, GESTrackElement))
-
-#define GES_TRACK_ELEMENT_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TRACK_ELEMENT, GESTrackElementClass))
-
-#define GES_IS_TRACK_ELEMENT(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TRACK_ELEMENT))
-
-#define GES_IS_TRACK_ELEMENT_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TRACK_ELEMENT))
-
-#define GES_TRACK_ELEMENT_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_ELEMENT, GESTrackElementClass))
-
-typedef struct _GESTrackElementPrivate GESTrackElementPrivate;
+GES_DECLARE_TYPE(TrackElement, track_element, TRACK_ELEMENT)
 
 /**
  * GES_TRACK_ELEMENT_CLASS_DEFAULT_HAS_INTERNAL_SOURCE:
@@ -132,9 +116,6 @@ struct _GESTrackElementClass {
     } abi;
   } ABI;
 };
-
-GES_API
-GType ges_track_element_get_type               (void);
 
 GES_API
 GESTrack* ges_track_element_get_track          (GESTrackElement * object);

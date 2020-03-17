@@ -31,16 +31,7 @@
 
 G_BEGIN_DECLS
 #define GES_TYPE_ASSET ges_asset_get_type()
-#define GES_ASSET(obj) \
-    (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_ASSET, GESAsset))
-#define GES_ASSET_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_ASSET, GESAssetClass))
-#define GES_IS_ASSET(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_ASSET))
-#define GES_IS_ASSET_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_ASSET))
-#define GES_ASSET_GET_CLASS(obj) \
-    (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_ASSET, GESAssetClass))
+GES_DECLARE_TYPE(Asset, asset, ASSET);
 
 /**
  * GESAssetLoadingReturn:
@@ -56,11 +47,6 @@ typedef enum
   GES_ASSET_LOADING_ASYNC,
   GES_ASSET_LOADING_OK
 } GESAssetLoadingReturn;
-
-typedef struct _GESAssetPrivate GESAssetPrivate;
-
-GES_API
-GType ges_asset_get_type (void);
 
 struct _GESAsset
 {

@@ -28,23 +28,7 @@
 G_BEGIN_DECLS
 
 #define GES_TYPE_OVERLAY_CLIP ges_overlay_clip_get_type()
-
-#define GES_OVERLAY_CLIP(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_OVERLAY_CLIP, GESOverlayClip))
-
-#define GES_OVERLAY_CLIP_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_OVERLAY_CLIP, GESOverlayClipClass))
-
-#define GES_IS_OVERLAY_CLIP(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_OVERLAY_CLIP))
-
-#define GES_IS_OVERLAY_CLIP_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_OVERLAY_CLIP))
-
-#define GES_OVERLAY_CLIP_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_OVERLAY_CLIP, GESOverlayClipClass))
-
-typedef struct _GESOverlayClipPrivate GESOverlayClipPrivate;
+GES_DECLARE_TYPE(OverlayClip, overlay_clip, OVERLAY_CLIP);
 
 /**
  * GESOverlayClip:
@@ -72,10 +56,6 @@ struct _GESOverlayClipClass {
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
-
-GES_API
-GType ges_overlay_clip_get_type (void);
-
 G_END_DECLS
 
 #endif /* _GES_OVERLAY_CLIP */

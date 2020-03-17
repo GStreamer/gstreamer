@@ -29,13 +29,7 @@
 G_BEGIN_DECLS
 
 #define GES_TYPE_TRACK            ges_track_get_type()
-#define GES_TRACK(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TRACK, GESTrack))
-#define GES_TRACK_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TRACK, GESTrackClass))
-#define GES_IS_TRACK(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TRACK))
-#define GES_IS_TRACK_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TRACK))
-#define GES_TRACK_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK, GESTrackClass))
-
-typedef struct _GESTrackPrivate GESTrackPrivate;
+GES_DECLARE_TYPE(Track, track, TRACK);
 
 /**
  * GESCreateElementForGapFunc:
@@ -108,9 +102,6 @@ void               ges_track_update_restriction_caps         (GESTrack *track, c
 GES_API
 GstCaps *          ges_track_get_restriction_caps            (GESTrack * track);
 
-/* standard methods */
-GES_API
-GType              ges_track_get_type                        (void);
 GES_API
 GESTrack*          ges_track_new                             (GESTrackType type, GstCaps * caps);
 

@@ -28,23 +28,7 @@
 G_BEGIN_DECLS
 
 #define GES_TYPE_AUDIO_URI_SOURCE ges_audio_uri_source_get_type()
-
-#define GES_AUDIO_URI_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_AUDIO_URI_SOURCE, GESAudioUriSource))
-
-#define GES_AUDIO_URI_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_AUDIO_URI_SOURCE, GESAudioUriSourceClass))
-
-#define GES_IS_AUDIO_URI_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_AUDIO_URI_SOURCE))
-
-#define GES_IS_AUDIO_URI_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_AUDIO_URI_SOURCE))
-
-#define GES_AUDIO_URI_SOURCE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_AUDIO_URI_SOURCE, GESAudioUriSourceClass))
-
-typedef struct _GESAudioUriSourcePrivate GESAudioUriSourcePrivate;
+GES_DECLARE_TYPE(AudioUriSource, audio_uri_source, AUDIO_URI_SOURCE);
 
 /**
  * GESAudioUriSource:
@@ -68,9 +52,6 @@ struct _GESAudioUriSourceClass {
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
-
-GES_API
-GType ges_audio_uri_source_get_type (void);
 
 G_END_DECLS
 

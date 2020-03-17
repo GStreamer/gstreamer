@@ -28,23 +28,7 @@
 G_BEGIN_DECLS
 
 #define GES_TYPE_VIDEO_TRANSITION ges_video_transition_get_type()
-
-#define GES_VIDEO_TRANSITION(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_VIDEO_TRANSITION, GESVideoTransition))
-
-#define GES_VIDEO_TRANSITION_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_VIDEO_TRANSITION, GESVideoTransitionClass))
-
-#define GES_IS_VIDEO_TRANSITION(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_VIDEO_TRANSITION))
-
-#define GES_IS_VIDEO_TRANSITION_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_VIDEO_TRANSITION))
-
-#define GES_VIDEO_TRANSITION_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_VIDEO_TRANSITION, GESVideoTransitionClass))
-
-typedef struct _GESVideoTransitionPrivate GESVideoTransitionPrivate;
+GES_DECLARE_TYPE(VideoTransition, video_transition, VIDEO_TRANSITION);
 
 /**
  * GESVideoTransition:
@@ -75,8 +59,6 @@ struct _GESVideoTransitionClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GES_API
-GType ges_video_transition_get_type               (void);
 GES_API
 GESVideoTransition* ges_video_transition_new (void);
 

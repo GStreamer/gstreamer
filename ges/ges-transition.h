@@ -30,26 +30,7 @@
 G_BEGIN_DECLS
 
 #define GES_TYPE_TRANSITION ges_transition_get_type()
-
-#define GES_TRANSITION(obj) \
-    (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TRANSITION,\
-        GESTransition))
-
-#define GES_TRANSITION_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TRANSITION,\
-        GESTransitionClass))
-
-#define GES_IS_TRANSITION(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TRANSITION))
-
-#define GES_IS_TRANSITION_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TRANSITION))
-
-#define GES_TRANSITION_GET_CLASS(obj) \
-    (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRANSITION,\
-        GESTransitionClass))
-
-typedef struct _GESTransitionPrivate GESTransitionPrivate;
+GES_DECLARE_TYPE(Transition, transition, TRANSITION);
 
 /**
  * GESTransition:
@@ -75,14 +56,11 @@ struct _GESTransition
 struct _GESTransitionClass {
   /*< private >*/
   GESOperationClass parent_class;
-  
+
   /*< private >*/
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
-
-GES_API
-GType ges_transition_get_type (void);
 
 G_END_DECLS
 

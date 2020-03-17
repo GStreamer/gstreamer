@@ -25,31 +25,23 @@
 
 G_BEGIN_DECLS
 #define GES_TYPE_XML_FORMATTER (ges_xml_formatter_get_type ())
-#define GES_XML_FORMATTER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_XML_FORMATTER, GESXmlFormatter))
-#define GES_XML_FORMATTER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_XML_FORMATTER, GESXmlFormatterClass))
-#define GES_IS_XML_FORMATTER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_XML_FORMATTER))
-#define GES_IS_XML_FORMATTER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_XML_FORMATTER))
-#define GES_XML_FORMATTER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_XML_FORMATTER, GESXmlFormatterClass))
-typedef struct _GESXmlFormatterPrivate GESXmlFormatterPrivate;
+GES_DECLARE_TYPE(XmlFormatter, xml_formatter, XML_FORMATTER);
 
-typedef struct
+struct _GESXmlFormatter
 {
   GESBaseXmlFormatter parent;
 
   GESXmlFormatterPrivate *priv;
 
   gpointer _ges_reserved[GES_PADDING];
-} GESXmlFormatter;
+};
 
-typedef struct
+struct _GESXmlFormatterClass
 {
   GESBaseXmlFormatterClass parent;
 
   gpointer _ges_reserved[GES_PADDING];
-} GESXmlFormatterClass;
-
-GES_API
-GType ges_xml_formatter_get_type (void);
+};
 
 G_END_DECLS
 #endif /* _GES_XML_FORMATTER_H */

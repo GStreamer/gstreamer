@@ -28,16 +28,7 @@
 G_BEGIN_DECLS
 
 #define GES_TYPE_TRACK_ELEMENT_ASSET ges_track_element_asset_get_type()
-#define GES_TRACK_ELEMENT_ASSET(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TRACK_ELEMENT_ASSET, GESTrackElementAsset))
-#define GES_TRACK_ELEMENT_ASSET_CLASS(klass)  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TRACK_ELEMENT_ASSET, GESTrackElementAssetClass))
-#define GES_IS_TRACK_ELEMENT_ASSET(obj)  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TRACK_ELEMENT_ASSET))
-#define GES_IS_TRACK_ELEMENT_ASSET_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TRACK_ELEMENT_ASSET))
-#define GES_TRACK_ELEMENT_ASSET_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_ELEMENT_ASSET, GESTrackElementAssetClass))
-
-typedef struct _GESTrackElementAssetPrivate GESTrackElementAssetPrivate;
-
-GES_API
-GType ges_track_element_asset_get_type (void);
+GES_DECLARE_TYPE(TrackElementAsset, track_element_asset, TRACK_ELEMENT_ASSET);
 
 struct _GESTrackElementAsset
 {

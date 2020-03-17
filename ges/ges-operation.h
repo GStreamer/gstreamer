@@ -29,23 +29,7 @@
 G_BEGIN_DECLS
 
 #define GES_TYPE_OPERATION ges_operation_get_type()
-
-#define GES_OPERATION(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_OPERATION, GESOperation))
-
-#define GES_OPERATION_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_OPERATION, GESOperationClass))
-
-#define GES_IS_OPERATION(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_OPERATION))
-
-#define GES_IS_OPERATION_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_OPERATION))
-
-#define GES_OPERATION_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_OPERATION, GESOperationClass))
-
-typedef struct _GESOperationPrivate GESOperationPrivate;
+GES_DECLARE_TYPE(Operation, operation, OPERATION);
 
 /**
  * GESOperation:
@@ -75,9 +59,6 @@ struct _GESOperationClass {
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
-
-GES_API
-GType ges_operation_get_type (void);
 
 G_END_DECLS
 

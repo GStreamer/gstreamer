@@ -26,23 +26,7 @@
 G_BEGIN_DECLS
 
 #define GES_TYPE_EFFECT_CLIP ges_effect_clip_get_type()
-
-#define GES_EFFECT_CLIP(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_EFFECT_CLIP, GESEffectClip))
-
-#define GES_EFFECT_CLIP_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_EFFECT_CLIP, GESEffectClipClass))
-
-#define GES_IS_EFFECT_CLIP(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_EFFECT_CLIP))
-
-#define GES_IS_EFFECT_CLIP_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_EFFECT_CLIP))
-
-#define GES_EFFECT_CLIP_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_EFFECT_CLIP, GESEffectClipClass))
-
-typedef struct _GESEffectClipPrivate GESEffectClipPrivate;
+GES_DECLARE_TYPE(EffectClip, effect_clip, EFFECT_CLIP);
 
 /**
  * GESEffectClip:
@@ -69,9 +53,6 @@ struct _GESEffectClipClass {
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
-
-GES_API
-GType ges_effect_clip_get_type (void);
 
 GES_API GESEffectClip *
 ges_effect_clip_new (const gchar * video_bin_description,

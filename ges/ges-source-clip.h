@@ -29,23 +29,7 @@
 G_BEGIN_DECLS
 
 #define GES_TYPE_SOURCE_CLIP ges_source_clip_get_type()
-
-#define GES_SOURCE_CLIP(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_SOURCE_CLIP, GESSourceClip))
-
-#define GES_SOURCE_CLIP_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_SOURCE_CLIP, GESSourceClipClass))
-
-#define GES_IS_SOURCE_CLIP(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_SOURCE_CLIP))
-
-#define GES_IS_SOURCE_CLIP_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_SOURCE_CLIP))
-
-#define GES_SOURCE_CLIP_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_SOURCE_CLIP, GESSourceClipClass))
-
-typedef struct _GESSourceClipPrivate GESSourceClipPrivate;
+GES_DECLARE_TYPE(SourceClip, source_clip, SOURCE_CLIP);
 
 /**
  * GESSourceClip:
@@ -74,9 +58,6 @@ struct _GESSourceClipClass {
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
-
-GES_API
-GType ges_source_clip_get_type (void);
 
 G_END_DECLS
 

@@ -30,13 +30,7 @@
 G_BEGIN_DECLS
 
 #define GES_TYPE_CLIP_ASSET (ges_clip_asset_get_type ())
-#define GES_CLIP_ASSET(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_CLIP_ASSET, GESClipAsset))
-#define GES_CLIP_ASSET_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_CLIP_ASSET, GESClipAssetClass))
-#define GES_IS_CLIP_ASSET(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_CLIP_ASSET))
-#define GES_IS_CLIP_ASSET_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_CLIP_ASSET))
-#define GES_CLIP_ASSET_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_CLIP_ASSET, GESClipAssetClass))
-
-typedef struct _GESClipAssetPrivate GESClipAssetPrivate;
+GES_DECLARE_TYPE(ClipAsset, clip_asset, CLIP_ASSET);
 
 struct _GESClipAsset
 {
@@ -55,8 +49,6 @@ struct _GESClipAssetClass
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GES_API
-GType ges_clip_asset_get_type (void);
 GES_API
 void ges_clip_asset_set_supported_formats         (GESClipAsset *self,
                                                               GESTrackType supportedformats);

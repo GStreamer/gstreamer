@@ -28,16 +28,10 @@
 G_BEGIN_DECLS
 
 #define GES_TYPE_AUTO_TRANSITION             (ges_auto_transition_get_type ())
-#define GES_AUTO_TRANSITION(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_AUTO_TRANSITION, GESAutoTransition))
-#define GES_AUTO_TRANSITION_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_AUTO_TRANSITION, GESAutoTransitionClass))
-#define GES_IS_AUTO_TRANSITION(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_AUTO_TRANSITION))
-#define GES_IS_AUTO_TRANSITION_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_AUTO_TRANSITION))
-#define GES_AUTO_TRANSITION_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_AUTO_TRANSITION, GESAutoTransitionClass))
-
 typedef struct _GESAutoTransitionClass GESAutoTransitionClass;
 typedef struct _GESAutoTransition GESAutoTransition;
 
-
+GES_DECLARE_TYPE(AutoTransition, auto_transition, AUTO_TRANSITION);
 
 struct _GESAutoTransitionClass
 {
@@ -68,8 +62,6 @@ struct _GESAutoTransition
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
-
-G_GNUC_INTERNAL GType ges_auto_transition_get_type (void) G_GNUC_CONST;
 
 G_GNUC_INTERNAL void ges_auto_transition_update (GESAutoTransition *self);
 G_GNUC_INTERNAL GESAutoTransition * ges_auto_transition_new (GESTrackElement * transition,

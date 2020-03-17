@@ -28,23 +28,7 @@
 G_BEGIN_DECLS
 
 #define GES_TYPE_TRANSITION_CLIP ges_transition_clip_get_type()
-
-#define GES_TRANSITION_CLIP(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TRANSITION_CLIP, GESTransitionClip))
-
-#define GES_TRANSITION_CLIP_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TRANSITION_CLIP, GESTransitionClipClass))
-
-#define GES_IS_TRANSITION_CLIP(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TRANSITION_CLIP))
-
-#define GES_IS_TRANSITION_CLIP_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TRANSITION_CLIP))
-
-#define GES_TRANSITION_CLIP_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRANSITION_CLIP, GESTransitionClipClass))
-
-typedef struct _GESTransitionClipPrivate GESTransitionClipPrivate;
+GES_DECLARE_TYPE(TransitionClip, transition_clip, TRANSITION_CLIP);
 
 /**
  * GESTransitionClip:
@@ -77,9 +61,6 @@ struct _GESTransitionClipClass {
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
-
-GES_API
-GType ges_transition_clip_get_type (void);
 
 GES_API
 GESTransitionClip *ges_transition_clip_new (GESVideoStandardTransitionType vtype);

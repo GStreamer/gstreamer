@@ -28,13 +28,7 @@
 G_BEGIN_DECLS
 
 #define GES_TYPE_TIMELINE_ELEMENT             (ges_timeline_element_get_type ())
-#define GES_TIMELINE_ELEMENT(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TIMELINE_ELEMENT, GESTimelineElement))
-#define GES_TIMELINE_ELEMENT_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TIMELINE_ELEMENT, GESTimelineElementClass))
-#define GES_IS_TIMELINE_ELEMENT(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TIMELINE_ELEMENT))
-#define GES_IS_TIMELINE_ELEMENT_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TIMELINE_ELEMENT))
-#define GES_TIMELINE_ELEMENT_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_ELEMENT, GESTimelineElementClass))
-
-typedef struct _GESTimelineElementPrivate GESTimelineElementPrivate;
+GES_DECLARE_TYPE(TimelineElement, timeline_element, TIMELINE_ELEMENT);
 
 /**
  * GES_TIMELINE_ELEMENT_START:
@@ -277,9 +271,6 @@ struct _GESTimelineElementClass
 };
 
 GES_API
-GType ges_timeline_element_get_type (void) G_GNUC_CONST;
-
-GES_API
 GESTimelineElement * ges_timeline_element_get_toplevel_parent         (GESTimelineElement *self);
 GES_API
 GESTimelineElement * ges_timeline_element_get_parent                  (GESTimelineElement * self);
@@ -400,7 +391,6 @@ gboolean ges_timeline_element_edit                                    (GESTimeli
                                                                        GESEditMode mode,
                                                                        GESEdge edge,
                                                                        guint64 position);
-
 G_END_DECLS
 
 #endif /* _GES_TIMELINE_ELEMENT_H_ */

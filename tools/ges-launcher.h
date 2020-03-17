@@ -26,24 +26,8 @@ G_BEGIN_DECLS
 
 #define GES_TYPE_LAUNCHER ges_launcher_get_type()
 
-#define GES_LAUNCHER(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_LAUNCHER, GESLauncher))
-
-#define GES_LAUNCHER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_LAUNCHER, GESLauncherClass))
-
-#define GES_IS_LAUNCHER(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_LAUNCHER))
-
-#define GES_IS_LAUNCHER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_LAUNCHER))
-
-#define GES_LAUNCHER_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_LAUNCHER, GESLauncherClass))
-
 typedef struct _GESLauncherPrivate GESLauncherPrivate;
-typedef struct _GESLauncher GESLauncher;
-typedef struct _GESLauncherClass GESLauncherClass;
+G_DECLARE_FINAL_TYPE(GESLauncher, ges_launcher, GES, LAUNCHER, GApplication);
 
 typedef struct
 {
@@ -78,16 +62,6 @@ struct _GESLauncher {
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
-
-struct _GESLauncherClass {
-  /*< private >*/
-  GApplicationClass parent_class;
-
-  /* Padding for API extension */
-  gpointer _ges_reserved[GES_PADDING];
-};
-
-GType ges_launcher_get_type (void);
 
 GESLauncher* ges_launcher_new (void);
 gint ges_launcher_get_exit_status (GESLauncher *self);

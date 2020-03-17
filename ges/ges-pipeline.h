@@ -28,23 +28,7 @@
 G_BEGIN_DECLS
 
 #define GES_TYPE_PIPELINE ges_pipeline_get_type()
-
-#define GES_PIPELINE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_PIPELINE, GESPipeline))
-
-#define GES_PIPELINE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_PIPELINE, GESPipelineClass))
-
-#define GES_IS_PIPELINE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_PIPELINE))
-
-#define GES_IS_PIPELINE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_PIPELINE))
-
-#define GES_PIPELINE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_PIPELINE, GESPipelineClass))
-
-typedef struct _GESPipelinePrivate GESPipelinePrivate;
+GES_DECLARE_TYPE(Pipeline, pipeline, PIPELINE);
 
 /**
  * GESPipeline:
@@ -74,9 +58,6 @@ struct _GESPipelineClass {
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
-
-GES_API
-GType ges_pipeline_get_type (void);
 
 GES_API
 GESPipeline* ges_pipeline_new (void);

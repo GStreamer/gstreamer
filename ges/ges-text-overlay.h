@@ -28,17 +28,7 @@
 
 G_BEGIN_DECLS
 #define GES_TYPE_TEXT_OVERLAY ges_text_overlay_get_type()
-#define GES_TEXT_OVERLAY(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TEXT_OVERLAY, GESTextOverlay))
-#define GES_TEXT_OVERLAY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TEXT_OVERLAY, GESTextOverlayClass))
-#define GES_IS_TEXT_OVERLAY(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TEXT_OVERLAY))
-#define GES_IS_TEXT_OVERLAY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TEXT_OVERLAY))
-#define GES_TEXT_OVERLAY_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TEXT_OVERLAY, GESTextOverlayClass))
-typedef struct _GESTextOverlayPrivate GESTextOverlayPrivate;
+GES_DECLARE_TYPE(TextOverlay, text_overlay, TEXT_OVERLAY);
 
 /**
  * GESTextOverlay:
@@ -65,9 +55,6 @@ struct _GESTextOverlayClass
 };
 
 GES_API
-GType ges_text_overlay_get_type (void);
-
-GES_API
 void ges_text_overlay_set_text (GESTextOverlay * self,
     const gchar * text);
 GES_API
@@ -92,6 +79,9 @@ void ges_text_overlay_set_ypos (GESTextOverlay * self,
     gdouble position);
 
 GES_API
+GESTextOverlay *ges_text_overlay_new (void);
+
+GES_API
 const gchar *ges_text_overlay_get_text (GESTextOverlay * self);
 GES_API
 const char *ges_text_overlay_get_font_desc (GESTextOverlay * self);
@@ -107,9 +97,6 @@ GES_API
 const gdouble ges_text_overlay_get_xpos (GESTextOverlay * self);
 GES_API
 const gdouble ges_text_overlay_get_ypos (GESTextOverlay * self);
-
-GES_API
-GESTextOverlay *ges_text_overlay_new (void);
 
 G_END_DECLS
 #endif /* _GES_TEXT_OVERLAY */

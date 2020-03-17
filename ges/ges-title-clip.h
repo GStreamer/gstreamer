@@ -29,23 +29,7 @@
 G_BEGIN_DECLS
 
 #define GES_TYPE_TITLE_CLIP ges_title_clip_get_type()
-
-#define GES_TITLE_CLIP(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TITLE_CLIP, GESTitleClip))
-
-#define GES_TITLE_CLIP_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TITLE_CLIP, GESTitleClipClass))
-
-#define GES_IS_TITLE_CLIP(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TITLE_CLIP))
-
-#define GES_IS_TITLE_CLIP_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TITLE_CLIP))
-
-#define GES_TITLE_CLIP_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TITLE_CLIP, GESTitleClipClass))
-
-typedef struct _GESTitleClipPrivate GESTitleClipPrivate;
+GES_DECLARE_TYPE(TitleClip, title_clip, TITLE_CLIP);
 
 /**
  * GESTitleClip:
@@ -70,9 +54,6 @@ struct _GESTitleClipClass {
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
-
-GES_API
-GType ges_title_clip_get_type (void);
 
 G_DEPRECATED_FOR(ges_timeline_element_set_children_properties) void
 ges_title_clip_set_text( GESTitleClip * self, const gchar * text);

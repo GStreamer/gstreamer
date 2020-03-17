@@ -30,23 +30,7 @@
 G_BEGIN_DECLS
 
 #define GES_TYPE_TEST_CLIP ges_test_clip_get_type()
-
-#define GES_TEST_CLIP(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TEST_CLIP, GESTestClip))
-
-#define GES_TEST_CLIP_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TEST_CLIP, GESTestClipClass))
-
-#define GES_IS_TEST_CLIP(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TEST_CLIP))
-
-#define GES_IS_TEST_CLIP_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TEST_CLIP))
-
-#define GES_TEST_CLIP_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TEST_CLIP, GESTestClipClass))
-
-typedef struct _GESTestClipPrivate GESTestClipPrivate;
+GES_DECLARE_TYPE(TestClip, test_clip, TEST_CLIP);
 
 /**
  * GESTestClip:
@@ -74,9 +58,6 @@ struct _GESTestClipClass {
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
-
-GES_API
-GType ges_test_clip_get_type (void);
 
 GES_API void
 ges_test_clip_set_mute (GESTestClip * self, gboolean mute);

@@ -31,15 +31,7 @@
 #include <ges/ges.h>
 #include "ges-internal.h"
 
-struct _GESTransitionPrivate
-{
-  /*  Dummy variable */
-  void *nothing;
-};
-
-G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GESTransition, ges_transition,
-    GES_TYPE_OPERATION);
-
+G_DEFINE_ABSTRACT_TYPE (GESTransition, ges_transition, GES_TYPE_OPERATION);
 
 static void
 ges_transition_class_init (GESTransitionClass * klass)
@@ -49,5 +41,4 @@ ges_transition_class_init (GESTransitionClass * klass)
 static void
 ges_transition_init (GESTransition * self)
 {
-  self->priv = ges_transition_get_instance_private (self);
 }

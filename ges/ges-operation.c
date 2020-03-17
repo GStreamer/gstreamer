@@ -31,14 +31,7 @@
 #include "ges-track-element.h"
 #include "ges-operation.h"
 
-struct _GESOperationPrivate
-{
-  /* Dummy variable */
-  void *nothing;
-};
-
-G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GESOperation, ges_operation,
-    GES_TYPE_TRACK_ELEMENT);
+G_DEFINE_ABSTRACT_TYPE (GESOperation, ges_operation, GES_TYPE_TRACK_ELEMENT);
 
 static void
 ges_operation_class_init (GESOperationClass * klass)
@@ -51,5 +44,4 @@ ges_operation_class_init (GESOperationClass * klass)
 static void
 ges_operation_init (GESOperation * self)
 {
-  self->priv = ges_operation_get_instance_private (self);
 }

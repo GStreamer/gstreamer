@@ -507,7 +507,7 @@ asset_ready_cb (GESAsset * source, GAsyncResult * res, RequestSyncData * data)
 GstDiscovererInfo *
 ges_uri_clip_asset_get_info (const GESUriClipAsset * self)
 {
-  g_return_val_if_fail (GES_IS_URI_CLIP_ASSET (self), NULL);
+  g_return_val_if_fail (GES_IS_URI_CLIP_ASSET ((GESUriClipAsset *) self), NULL);
 
   return self->priv->info;
 }

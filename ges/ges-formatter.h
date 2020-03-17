@@ -27,23 +27,7 @@
 G_BEGIN_DECLS
 
 #define GES_TYPE_FORMATTER ges_formatter_get_type()
-
-#define GES_FORMATTER(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_FORMATTER, GESFormatter))
-
-#define GES_FORMATTER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_FORMATTER, GESFormatterClass))
-
-#define GES_IS_FORMATTER(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_FORMATTER))
-
-#define GES_IS_FORMATTER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_FORMATTER))
-
-#define GES_FORMATTER_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_FORMATTER, GESFormatterClass))
-
-typedef struct _GESFormatterPrivate GESFormatterPrivate;
+GES_DECLARE_TYPE(Formatter, formatter, FORMATTER);
 
 /**
  * GESFormatter:
@@ -51,7 +35,8 @@ typedef struct _GESFormatterPrivate GESFormatterPrivate;
  * Base class for timeline data serialization and deserialization.
  */
 
-struct _GESFormatter {
+struct _GESFormatter
+{
   GInitiallyUnowned parent;
 
   /*< private >*/
@@ -137,9 +122,6 @@ struct _GESFormatterClass {
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
-
-GES_API
-GType ges_formatter_get_type (void);
 
 GES_API
 void ges_formatter_class_register_metas (GESFormatterClass * klass,

@@ -189,8 +189,41 @@ typedef struct _GESAudioTrackClass GESAudioTrackClass;
 typedef struct _GESAudioTrack GESAudioTrack;
 
 typedef struct _GESMarkerList GESMarkerList;
-
 typedef struct _GESMarker GESMarker;
+
+typedef struct _GESEffectAssetClass GESEffectAssetClass;
+typedef struct _GESEffectAsset GESEffectAsset;
+
+typedef struct _GESXmlFormatterClass GESXmlFormatterClass;
+typedef struct _GESXmlFormatter GESXmlFormatter;
+
+#define GES_DECLARE_TYPE(ObjName, obj_name, OBJ_NAME)    \
+  GES_API GType ges_##obj_name##_get_type(void);                               \
+  G_GNUC_BEGIN_IGNORE_DEPRECATIONS                                             \
+  typedef struct _GES##ObjName##Private GES##ObjName##Private;                 \
+                                                                               \
+  G_DEFINE_AUTOPTR_CLEANUP_FUNC(GES##ObjName, gst_object_unref)                \
+                                                                               \
+  static G_GNUC_UNUSED inline GES##ObjName *GES_##OBJ_NAME(gpointer ptr) {                   \
+    return G_TYPE_CHECK_INSTANCE_CAST(ptr, ges_##obj_name##_get_type(),        \
+                                      GES##ObjName);                           \
+  }                                                                            \
+  static G_GNUC_UNUSED inline GES##ObjName##Class *GES_##OBJ_NAME##_CLASS(gpointer ptr) {    \
+    return G_TYPE_CHECK_CLASS_CAST(ptr, ges_##obj_name##_get_type(),           \
+                                   GES##ObjName##Class);                       \
+  }                                                                            \
+  static G_GNUC_UNUSED inline gboolean GES_IS_##OBJ_NAME(gpointer ptr) {                     \
+    return G_TYPE_CHECK_INSTANCE_TYPE(ptr, ges_##obj_name##_get_type());       \
+  }                                                                            \
+  static G_GNUC_UNUSED inline gboolean GES_IS_##OBJ_NAME##_CLASS(gpointer ptr) {             \
+    return G_TYPE_CHECK_CLASS_TYPE(ptr, ges_##obj_name##_get_type());          \
+  }                                                                            \
+  static G_GNUC_UNUSED inline GES##ObjName##Class *GES_##OBJ_NAME##_GET_CLASS(               \
+      gpointer ptr) {                                                          \
+    return G_TYPE_INSTANCE_GET_CLASS(ptr, ges_##obj_name##_get_type(),         \
+                                     GES##ObjName##Class);                     \
+  }                                                                            \
+  G_GNUC_END_IGNORE_DEPRECATIONS
 
 G_END_DECLS
 

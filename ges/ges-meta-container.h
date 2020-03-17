@@ -28,9 +28,9 @@
 G_BEGIN_DECLS
 
 #define GES_TYPE_META_CONTAINER                 (ges_meta_container_get_type ())
-#define GES_META_CONTAINER(obj)                (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_META_CONTAINER, GESMetaContainer))
-#define GES_IS_META_CONTAINER(obj)             (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_META_CONTAINER))
 #define GES_META_CONTAINER_GET_INTERFACE (inst) (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GES_TYPE_META_CONTAINER, GESMetaContainerInterface))
+GES_API
+G_DECLARE_INTERFACE(GESMetaContainer, ges_meta_container, GES, META_CONTAINER, GObject);
 
 /**
  * GES_META_FORMATTER_NAME:
@@ -111,9 +111,6 @@ struct _GESMetaContainerInterface {
 
   gpointer _ges_reserved[GES_PADDING];
 };
-
-GES_API
-GType ges_meta_container_get_type (void);
 
 GES_API gboolean
 ges_meta_container_set_boolean     (GESMetaContainer *container,

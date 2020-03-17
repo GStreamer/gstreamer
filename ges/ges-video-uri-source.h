@@ -28,23 +28,7 @@
 G_BEGIN_DECLS
 
 #define GES_TYPE_VIDEO_URI_SOURCE ges_video_uri_source_get_type()
-
-#define GES_VIDEO_URI_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_VIDEO_URI_SOURCE, GESVideoUriSource))
-
-#define GES_VIDEO_URI_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_VIDEO_URI_SOURCE, GESVideoUriSourceClass))
-
-#define GES_IS_VIDEO_URI_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_VIDEO_URI_SOURCE))
-
-#define GES_IS_VIDEO_URI_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_VIDEO_URI_SOURCE))
-
-#define GES_VIDEO_URI_SOURCE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_VIDEO_URI_SOURCE, GESVideoUriSourceClass))
-
-typedef struct _GESVideoUriSourcePrivate GESVideoUriSourcePrivate;
+GES_DECLARE_TYPE(VideoUriSource, video_uri_source, VIDEO_URI_SOURCE);
 
 /**
  * GESVideoUriSource:
@@ -68,9 +52,6 @@ struct _GESVideoUriSourceClass {
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
-
-GES_API
-GType ges_video_uri_source_get_type (void);
 
 G_END_DECLS
 
