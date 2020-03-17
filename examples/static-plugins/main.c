@@ -13,5 +13,9 @@ main (int argc, char *argv[])
   g_assert_nonnull (e);
   g_object_unref (e);
 
+  e = gst_element_factory_make ("alpha", NULL);
+  g_assert_nonnull (e);
+  g_object_unref (e);
+
   return 0;
 }
