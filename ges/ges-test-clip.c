@@ -52,11 +52,11 @@
 #define DEFAULT_VPATTERN GES_VIDEO_TEST_PATTERN_SMPTE
 
 G_DECLARE_FINAL_TYPE (GESTestClipAsset, ges_test_clip_asset, GES,
-    TEST_CLIP_ASSET, GESClipAsset);
+    TEST_CLIP_ASSET, GESSourceClipAsset);
 
 struct _GESTestClipAsset
 {
-  GESClipAsset parent;
+  GESSourceClipAsset parent;
 
   gint natural_framerate_n;
   gint natural_framerate_d;
@@ -66,7 +66,8 @@ struct _GESTestClipAsset
 };
 
 #define GES_TYPE_TEST_CLIP_ASSET (ges_test_clip_asset_get_type())
-G_DEFINE_TYPE (GESTestClipAsset, ges_test_clip_asset, GES_TYPE_CLIP_ASSET);
+G_DEFINE_TYPE (GESTestClipAsset, ges_test_clip_asset,
+    GES_TYPE_SOURCE_CLIP_ASSET);
 
 static gboolean
 _get_natural_framerate (GESClipAsset * asset, gint * framerate_n,

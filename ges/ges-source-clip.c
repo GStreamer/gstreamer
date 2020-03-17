@@ -53,7 +53,15 @@ enum
   PROP_0,
 };
 
-G_DEFINE_TYPE_WITH_PRIVATE (GESSourceClip, ges_source_clip, GES_TYPE_CLIP);
+static void
+extractable_interface_init (GESExtractableInterface * iface)
+{
+  iface->asset_type = GES_TYPE_SOURCE_CLIP_ASSET;
+}
+
+G_DEFINE_TYPE_WITH_CODE (GESSourceClip, ges_source_clip,
+    GES_TYPE_CLIP, G_ADD_PRIVATE (GESSourceClip)
+    G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE, extractable_interface_init));
 
 static void
 ges_source_clip_get_property (GObject * object, guint property_id,

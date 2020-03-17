@@ -199,22 +199,13 @@ ges_clip_asset_get_natural_framerate (GESClipAsset * self,
   if (klass->get_natural_framerate)
     return klass->get_natural_framerate (self, framerate_n, framerate_d);
 
-  if (g_type_is_a (ges_asset_get_extractable_type (GES_ASSET (self)),
-          GES_TYPE_SOURCE_CLIP)) {
-    *framerate_n = DEFAULT_FRAMERATE_N;
-    *framerate_d = DEFAULT_FRAMERATE_D;
-
-    return TRUE;
-  }
-
   return FALSE;
 }
 
 /**
  * ges_clip_asset_get_frame_time:
  * @self: The object for which to compute timestamp for specifed frame
- * @frame_number: The frame number we want the timestamp for the frame number
- * inside the media scale of @self
+ * @frame_number: The frame number we want the internal time coordinate timestamp of
  *
  * Converts the given frame number into a timestamp, using the "natural" frame
  * rate of the asset.
@@ -222,8 +213,8 @@ ges_clip_asset_get_natural_framerate (GESClipAsset * self,
  * You can use this to reference a specific frame in a media file and use this
  * as, for example, the `in-point` or `max-duration` of a #GESClip.
  *
- * Returns: The timestamp corresponding to @frame_number in the element source
- * in the media scale, or #GST_CLOCK_TIME_NONE if the clip asset does not have a
+ * Returns: The timestamp corresponding to @frame_number in the element source, given
+ * in internal time coordinates, or #GST_CLOCK_TIME_NONE if the clip asset does not have a
  * natural frame rate.
  */
 GstClockTime

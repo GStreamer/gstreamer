@@ -126,7 +126,7 @@ struct _GESUriSourceAssetPrivate
 };
 
 G_DEFINE_TYPE_WITH_CODE (GESUriClipAsset, ges_uri_clip_asset,
-    GES_TYPE_CLIP_ASSET, G_ADD_PRIVATE (GESUriClipAsset)
+    GES_TYPE_SOURCE_CLIP_ASSET, G_ADD_PRIVATE (GESUriClipAsset)
     G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, initable_iface_init));
 
 static void
