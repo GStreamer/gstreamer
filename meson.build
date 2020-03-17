@@ -228,9 +228,7 @@ if get_option('default_library') == 'static'
   )
   install_headers('gstinitstaticplugins.h', subdir : 'gstreamer-1.0/gst')
 
-  # Get include paths in source tree
   gst_dep = subproject('gstreamer').get_variable('gst_dep')
-  gst_includes = gst_dep.partial_dependency(includes: true, compile_args: true)
 
   # Get a list of libraries that needs to be exposed in the ABI.
   exposed_libs = []
@@ -257,7 +255,7 @@ if get_option('default_library') == 'static'
     init_static_plugins_c,
     link_with : all_plugins,
     link_whole : exposed_libs,
-    dependencies : gst_includes,
+    dependencies : gst_dep,
     install : true,
   )
   pkgconfig.generate(gstfull,
