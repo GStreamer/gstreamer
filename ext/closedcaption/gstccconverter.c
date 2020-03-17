@@ -502,6 +502,46 @@ interpolate_time_code_with_framerate (GstCCConverter * self,
   return TRUE;
 }
 
+/* remove padding bytes from a cc_data packet. Returns the length of the new
+ * data in @cc_data */
+static guint
+compact_cc_data (guint8 * cc_data, guint cc_data_len)
+{
+  gboolean started_ccp = FALSE;
+  guint out_len = 0;
+  guint i;
+
+  if (cc_data_len % 3 != 0) {
+    GST_WARNING ("Invalid cc_data buffer size");
+    cc_data_len = cc_data_len - (cc_data_len % 3);
+  }
+
+  for (i = 0; i < cc_data_len / 3; i++) {
+    gboolean cc_valid = (cc_data[i * 3] & 0x04) == 0x04;
+    guint8 cc_type = cc_data[i * 3] & 0x03;
+
+    if (!started_ccp && cc_valid && (cc_type == 0x00 || cc_type == 0x01)) {
+      /* skip over 608 data */
+      cc_data[out_len++] = cc_data[i * 3];
+      cc_data[out_len++] = cc_data[i * 3 + 1];
+      cc_data[out_len++] = cc_data[i * 3 + 2];
+      continue;
+    }
+
+    if (cc_type & 0x10)
+      started_ccp = TRUE;
+
+    if (!cc_valid)
+      continue;
+
+    cc_data[out_len++] = cc_data[i * 3];
+    cc_data[out_len++] = cc_data[i * 3 + 1];
+    cc_data[out_len++] = cc_data[i * 3 + 2];
+  }
+
+  return out_len;
+}
+
 /* takes cc_data and cc_data_len and attempts to fit it into a hypothetical
  * output packet.  Any leftover data is stored for later addition.  Returns
  * the number of bytes of @cc_data to place in a new output packet */
@@ -572,7 +612,7 @@ fit_and_scale_cc_data (GstCCConverter * self,
       GST_DEBUG_OBJECT (self, "holding cc_data of len %u until next input "
           "buffer", self->scratch_len);
       memcpy (self->scratch, cc_data, self->scratch_len);
-      return 0;
+      return -1;
     } else if (rate_cmp != 0) {
       /* we are changing the framerate and may overflow the max output packet
        * size. Split them where necessary. */
@@ -834,6 +874,7 @@ cdp_to_cc_data (GstCCConverter * self, GstBuffer * inbuf, guint8 * out,
           cc_data_len / 3);
       cc_data_len = 3 * (*out_fps_entry)->max_cc_count;
     }
+    cc_data_len = compact_cc_data (&out[len], cc_data_len);
     len += cc_data_len;
 
     gst_buffer_unmap (inbuf, &in);
@@ -928,7 +969,8 @@ convert_cea608_raw_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
   GstMapInfo in, out;
-  guint i, n, len;
+  guint i, n;
+  gint len;
   guint8 cc_data[MAX_CDP_PACKET_LEN];
   const GstVideoTimeCodeMeta *tc_meta;
   const struct cdp_fps_entry *fps_entry;
@@ -964,10 +1006,12 @@ convert_cea608_raw_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
 
   len = fit_and_scale_cc_data (self, NULL, fps_entry, cc_data,
       n * 3, tc_meta ? &tc_meta->tc : NULL);
-  if (len > 0) {
+  if (len >= 0) {
     len =
         convert_cea708_cc_data_cea708_cdp_internal (self, cc_data, len,
         out.data, out.size, &self->current_output_timecode, fps_entry);
+  } else {
+    len = 0;
   }
 
   gst_buffer_unmap (inbuf, &in);
@@ -1060,7 +1104,8 @@ convert_cea608_s334_1a_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
   GstMapInfo in, out;
-  guint i, n, len;
+  guint i, n;
+  gint len;
   guint8 cc_data[MAX_CDP_PACKET_LEN];
   const GstVideoTimeCodeMeta *tc_meta;
   const struct cdp_fps_entry *fps_entry;
@@ -1095,10 +1140,12 @@ convert_cea608_s334_1a_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
 
   len = fit_and_scale_cc_data (self, NULL, fps_entry, cc_data,
       n * 3, tc_meta ? &tc_meta->tc : NULL);
-  if (len > 0) {
+  if (len >= 0) {
     len =
         convert_cea708_cc_data_cea708_cdp_internal (self, cc_data, len,
         out.data, out.size, &self->current_output_timecode, fps_entry);
+  } else {
+    len = 0;
   }
 
   gst_buffer_unmap (inbuf, &in);
@@ -1201,7 +1248,7 @@ convert_cea708_cc_data_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
 {
   GstMapInfo in, out;
   guint n;
-  guint len;
+  gint len;
   const GstVideoTimeCodeMeta *tc_meta;
   const struct cdp_fps_entry *fps_entry;
 
@@ -1229,10 +1276,12 @@ convert_cea708_cc_data_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
 
   len = fit_and_scale_cc_data (self, NULL, fps_entry, in.data,
       in.size, tc_meta ? &tc_meta->tc : NULL);
-  if (len > 0) {
+  if (len >= 0) {
     len =
         convert_cea708_cc_data_cea708_cdp_internal (self, in.data, len,
         out.data, out.size, &self->current_output_timecode, fps_entry);
+  } else {
+    len = 0;
   }
 
   gst_buffer_unmap (inbuf, &in);
@@ -1249,7 +1298,8 @@ convert_cea708_cdp_cea608_raw (GstCCConverter * self, GstBuffer * inbuf,
 {
   GstMapInfo out;
   GstVideoTimeCode tc = GST_VIDEO_TIME_CODE_INIT;
-  guint i, len = 0, cea608 = 0;
+  guint i, cea608 = 0;
+  gint len = 0;
   const struct cdp_fps_entry *in_fps_entry = NULL, *out_fps_entry;
   guint8 cc_data[MAX_CDP_PACKET_LEN] = { 0, };
 
@@ -1301,7 +1351,8 @@ convert_cea708_cdp_cea608_s334_1a (GstCCConverter * self, GstBuffer * inbuf,
 {
   GstMapInfo out;
   GstVideoTimeCode tc = GST_VIDEO_TIME_CODE_INIT;
-  guint i, len = 0, cea608 = 0;
+  guint i, cea608 = 0;
+  gint len = 0;
   const struct cdp_fps_entry *in_fps_entry = NULL, *out_fps_entry;
   guint8 cc_data[MAX_CDP_PACKET_LEN] = { 0, };
 
@@ -1350,7 +1401,7 @@ convert_cea708_cdp_cea708_cc_data (GstCCConverter * self, GstBuffer * inbuf,
 {
   GstMapInfo out;
   GstVideoTimeCode tc = GST_VIDEO_TIME_CODE_INIT;
-  guint len = 0;
+  gint len = 0;
   const struct cdp_fps_entry *in_fps_entry = NULL, *out_fps_entry;
   guint8 cc_data[MAX_CDP_PACKET_LEN] = { 0, };
 
@@ -1364,11 +1415,13 @@ convert_cea708_cdp_cea708_cc_data (GstCCConverter * self, GstBuffer * inbuf,
 
   len = fit_and_scale_cc_data (self, in_fps_entry, out_fps_entry, cc_data, len,
       &tc);
-  if (len > 0) {
+  if (len >= 0) {
     gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
     memcpy (out.data, cc_data, len);
     gst_buffer_unmap (outbuf, &out);
     self->output_frames++;
+  } else {
+    len = 0;
   }
 
   if (self->current_output_timecode.config.fps_n != 0
@@ -1389,7 +1442,7 @@ convert_cea708_cdp_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
 {
   GstMapInfo out;
   GstVideoTimeCode tc = GST_VIDEO_TIME_CODE_INIT;
-  guint len = 0;
+  gint len = 0;
   const struct cdp_fps_entry *in_fps_entry = NULL, *out_fps_entry;
   guint8 cc_data[MAX_CDP_PACKET_LEN] = { 0, };
 
@@ -1403,7 +1456,7 @@ convert_cea708_cdp_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
 
   len = fit_and_scale_cc_data (self, in_fps_entry, out_fps_entry, cc_data, len,
       &tc);
-  if (len > 0) {
+  if (len >= 0) {
     gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
     len =
         convert_cea708_cc_data_cea708_cdp_internal (self, cc_data, len,
@@ -1411,6 +1464,8 @@ convert_cea708_cdp_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
 
     gst_buffer_unmap (outbuf, &out);
     self->output_frames++;
+  } else {
+    len = 0;
   }
 
   gst_buffer_set_size (outbuf, len);
@@ -1570,6 +1625,36 @@ gst_cc_converter_transform_meta (GstBaseTransform * base, GstBuffer * outbuf,
       meta, inbuf);
 }
 
+static gboolean
+can_generate_output (GstCCConverter * self)
+{
+  int input_frame_n, input_frame_d, output_frame_n, output_frame_d;
+  int output_time_cmp;
+
+  if (self->in_fps_n == 0 || self->out_fps_n == 0)
+    return FALSE;
+
+  /* compute the relative frame count for each */
+  if (!gst_util_fraction_multiply (self->in_fps_d, self->in_fps_n,
+          self->input_frames, 1, &input_frame_n, &input_frame_d))
+    /* we should never overflow */
+    g_assert_not_reached ();
+
+  if (!gst_util_fraction_multiply (self->out_fps_d, self->out_fps_n,
+          self->output_frames + 1, 1, &output_frame_n, &output_frame_d))
+    /* we should never overflow */
+    g_assert_not_reached ();
+
+  output_time_cmp = gst_util_fraction_compare (input_frame_n, input_frame_d,
+      output_frame_n, output_frame_d);
+
+  /* if the next output frame is at or before the current input frame */
+  if (output_time_cmp >= 0)
+    return TRUE;
+
+  return FALSE;
+}
+
 static GstFlowReturn
 gst_cc_converter_generate_output (GstBaseTransform * base, GstBuffer ** outbuf)
 {
@@ -1580,7 +1665,7 @@ gst_cc_converter_generate_output (GstBaseTransform * base, GstBuffer ** outbuf)
 
   *outbuf = NULL;
   base->queued_buf = NULL;
-  if (!inbuf && self->scratch_len == 0) {
+  if (!inbuf && !can_generate_output (self)) {
     return GST_FLOW_OK;
   }
 
@@ -1630,7 +1715,7 @@ gst_cc_converter_sink_event (GstBaseTransform * trans, GstEvent * event)
     case GST_EVENT_EOS:
       GST_DEBUG_OBJECT (self, "received EOS");
 
-      while (self->scratch_len > 0) {
+      while (self->scratch_len > 0 || can_generate_output (self)) {
         GstBuffer *outbuf;
         GstFlowReturn ret;
 
