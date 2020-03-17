@@ -56,41 +56,16 @@
 #include <gst/video/navigation.h>
 #include <gst/video/video-enumtypes.h>
 
-static void gst_navigation_class_init (GstNavigationInterface * iface);
-
 #define GST_NAVIGATION_MESSAGE_NAME "GstNavigationMessage"
 #define GST_NAVIGATION_QUERY_NAME "GstNavigationQuery"
 #define GST_NAVIGATION_EVENT_NAME "application/x-gst-navigation"
 
 #define WARN_IF_FAIL(exp,msg) if(G_UNLIKELY(!(exp))){g_warning("%s",(msg));}
 
-GType
-gst_navigation_get_type (void)
-{
-  static GType gst_navigation_type = 0;
-
-  if (!gst_navigation_type) {
-    static const GTypeInfo gst_navigation_info = {
-      sizeof (GstNavigationInterface),
-      (GBaseInitFunc) gst_navigation_class_init,
-      NULL,
-      NULL,
-      NULL,
-      NULL,
-      0,
-      0,
-      NULL,
-    };
-
-    gst_navigation_type = g_type_register_static (G_TYPE_INTERFACE,
-        "GstNavigation", &gst_navigation_info, 0);
-  }
-
-  return gst_navigation_type;
-}
+G_DEFINE_INTERFACE (GstNavigation, gst_navigation, 0);
 
 static void
-gst_navigation_class_init (GstNavigationInterface * iface)
+gst_navigation_default_init (GstNavigationInterface * iface)
 {
   /* default virtual functions */
   iface->send_event = NULL;
