@@ -275,8 +275,6 @@ gstreamer-full:
   stage: 'test'
   variables:
     EXTRA_VALIDATE_ARGS: "--valgrind"
-    # Some suppression files are missing a newline at the end which messes things
-    # up when concatenating them. awk will add missing newlines (unlike cat)
     EXCEPT_PROJECT_REGEX: '/^(gstreamer|gst-integration-testsuites)$/'
 
 valgrind core:
