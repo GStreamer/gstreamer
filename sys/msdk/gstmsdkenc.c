@@ -552,6 +552,13 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
       thiz->param.mfx.FrameInfo.BitDepthLuma = 10;
       thiz->param.mfx.FrameInfo.BitDepthChroma = 10;
       break;
+    case GST_VIDEO_FORMAT_Y210:
+      thiz->param.mfx.FrameInfo.FourCC = MFX_FOURCC_Y210;
+      thiz->param.mfx.FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV422;
+      thiz->param.mfx.FrameInfo.BitDepthLuma = 10;
+      thiz->param.mfx.FrameInfo.BitDepthChroma = 10;
+      thiz->param.mfx.FrameInfo.Shift = 1;
+      break;
 #endif
     case GST_VIDEO_FORMAT_BGRA:
       thiz->param.mfx.FrameInfo.FourCC = MFX_FOURCC_RGB4;
@@ -1864,6 +1871,7 @@ gst_msdkenc_need_conversion (GstMsdkEnc * encoder, GstVideoInfo * info,
     case GST_VIDEO_FORMAT_VUYA:
 #if (MFX_VERSION >= 1027)
     case GST_VIDEO_FORMAT_Y410:
+    case GST_VIDEO_FORMAT_Y210:
 #endif
       return FALSE;
 
