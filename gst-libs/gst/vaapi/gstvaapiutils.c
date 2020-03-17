@@ -237,6 +237,7 @@ string_of_VAProfile (VAProfile profile)
 #if VA_CHECK_VERSION(1,2,0)
       MAP (HEVCMain422_10);
       MAP (HEVCMain444);
+      MAP (HEVCMain444_10);
 #endif
       MAP (HEVCMain);
       MAP (HEVCMain10);
