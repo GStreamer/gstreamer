@@ -265,6 +265,7 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
 
             config_files = {}
             config = defs.pop('config', None)
+            timeout = defs.pop('timeout', DEFAULT_TIMEOUT)
             scenario_defs = defs.pop('scenarios', [])
             if not scenario_defs and config:
                 config_files[None] = cls.get_config_file(config, test_private_dir, test_name, extra_data)
@@ -302,6 +303,7 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
                 'config_files': config_files,
                 'plays-reverse': True,
                 'extra_env_vars': envvars,
+                'timeout': timeout,
             })
 
             expand_vars_in_dict_recurse(local_extra_data, extra_data)
@@ -360,6 +362,7 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
                 scenarios_to_iterate = scenarios
 
             config_files = extra_data.get('config_files')
+            timeout = extra_data.get('timeout', DEFAULT_TIMEOUT)
             mediainfo = extra_data.get(
                 'media_info', FakeMediaDescriptor(extra_data, pipeline))
             for scenario in scenarios_to_iterate:
@@ -395,6 +398,7 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
                                              self.test_manager.reporter,
                                              pipeline_desc,
                                              scenario=scenario,
+                                             timeout=timeout,
                                              media_descriptor=mediainfo,
                                              expected_issues=expected_issues,
                                              extra_env_variables=extra_env_vars)
