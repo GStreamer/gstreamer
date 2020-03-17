@@ -25,16 +25,13 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstPhysMemoryAllocator GstPhysMemoryAllocator;
-typedef struct _GstPhysMemoryAllocatorInterface GstPhysMemoryAllocatorInterface;
+#define GST_TYPE_PHYS_MEMORY_ALLOCATOR (gst_phys_memory_allocator_get_type())
+GST_ALLOCATORS_API
+G_DECLARE_INTERFACE (GstPhysMemoryAllocator, gst_phys_memory_allocator,
+    GST, PHYS_MEMORY_ALLOCATOR, GstAllocator)
 
-#define GST_TYPE_PHYS_MEMORY_ALLOCATOR                  (gst_phys_memory_allocator_get_type())
-#define GST_IS_PHYS_MEMORY_ALLOCATOR(obj)               (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PHYS_MEMORY_ALLOCATOR))
-#define GST_IS_PHYS_MEMORY_ALLOCATOR_INTERFACE(iface)   (G_TYPE_CHECK_INTERFACE_TYPE ((iface), GST_TYPE_PHYS_MEMORY_ALLOCATOR))
-#define GST_PHYS_MEMORY_ALLOCATOR_GET_INTERFACE(obj)    (G_TYPE_INSTANCE_GET_INTERFACE ((obj), GST_TYPE_PHYS_MEMORY_ALLOCATOR, GstPhysMemoryAllocatorInterface))
-#define GST_PHYS_MEMORY_ALLOCATOR(obj)                  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PHYS_MEMORY_ALLOCATOR, GstPhysMemoryAllocator))
-#define GST_PHYS_MEMORY_ALLOCATOR_INTERFACE(iface)      (G_TYPE_CHECK_INTERFACE_CAST ((iface), GST_TYPE_PHYS_MEMORY_ALLOCATOR, GstPhysMemoryAllocatorInterface))
-#define GST_PHYS_MEMORY_ALLOCATOR_CAST(obj)             ((GstPhysMemoryAllocator *)(obj))
+#define GST_PHYS_MEMORY_ALLOCATOR_GET_INTERFACE(obj) (GST_PHYS_MEMORY_ALLOCATOR_GET_IFACE(obj))
+#define GST_PHYS_MEMORY_ALLOCATOR_CAST(obj) ((GstPhysMemoryAllocator *)(obj))
 
 /**
  * GstPhysMemoryAllocatorInterface:
@@ -53,9 +50,6 @@ struct _GstPhysMemoryAllocatorInterface
   /*< public >*/
   guintptr (*get_phys_addr) (GstPhysMemoryAllocator * allocator, GstMemory * mem);
 };
-
-GST_ALLOCATORS_API
-GType gst_phys_memory_allocator_get_type (void);
 
 GST_ALLOCATORS_API
 gboolean gst_is_phys_memory (GstMemory *mem);

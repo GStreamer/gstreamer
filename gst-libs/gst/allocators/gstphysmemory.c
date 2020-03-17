@@ -70,7 +70,7 @@ gst_phys_memory_get_phys_addr (GstMemory * mem)
 
   g_return_val_if_fail (gst_is_phys_memory (mem), 0);
 
-  iface = GST_PHYS_MEMORY_ALLOCATOR_GET_INTERFACE (mem->allocator);
+  iface = GST_PHYS_MEMORY_ALLOCATOR_GET_IFACE (mem->allocator);
   g_return_val_if_fail (iface->get_phys_addr != NULL, 0);
 
   return iface->get_phys_addr ((GstPhysMemoryAllocator *) mem->allocator, mem);
