@@ -151,7 +151,7 @@ build fedora x86_64:
   image: $FEDORA_IMAGE
   variables:
     MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Domx=enabled -Dgst-omx:target=generic -Ddoc=enabled -Drs=disabled ${MESON_BUILDTYPE_ARGS} --werror"
-    EXCEPT_PROJECT_REGEX: '/^(cerbero|gst-plugins-rs)$/'
+    EXCEPT_PROJECT_REGEX: '/^(cerbero|gst-omx|gst-plugins-rs)$/'
   artifacts:
     expire_in: '5 days'
     when: always
@@ -165,26 +165,26 @@ build nodebug fedora x86_64:
   image: $FEDORA_IMAGE
   variables:
     MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Dgstreamer:gst_debug=false -Domx=enabled -Dgst-omx:target=generic -Drs=disabled ${MESON_BUILDTYPE_ARGS} --werror"
-    EXCEPT_PROJECT_REGEX: '/^(cerbero|gst-docs|gst-integration-testsuites|gst-plugins-rs)$/'
+    EXCEPT_PROJECT_REGEX: '/^(cerbero|gst-docs|gst-integration-testsuites|gst-omx|gst-plugins-rs)$/'
 
 build static fedora x86_64:
   extends: 'build fedora x86_64'
   variables:
     MESON_BUILDTYPE_ARGS: "--default-library=static -Dintrospection=disabled -Ddoc=disabled"
-    EXCEPT_PROJECT_REGEX: '/^(cerbero|gst-docs|gst-integration-testsuites|gst-plugins-rs)$/'
+    EXCEPT_PROJECT_REGEX: '/^(cerbero|gst-docs|gst-integration-testsuites|gst-omx|gst-plugins-rs)$/'
 
 build static nodebug fedora x86_64:
   extends: 'build nodebug fedora x86_64'
   variables:
     MESON_BUILDTYPE_ARGS: "--default-library=static -Dintrospection=disabled -Ddoc=disabled"
-    EXCEPT_PROJECT_REGEX: '/^(cerbero|gst-docs|gst-integration-testsuites|gst-plugins-rs)$/'
+    EXCEPT_PROJECT_REGEX: '/^(cerbero|gst-docs|gst-integration-testsuites|gst-omx|gst-plugins-rs)$/'
 
 build clang fedora x86_64:
   extends: 'build fedora x86_64'
   variables:
     CC: 'ccache clang'
     CXX: 'ccache clang++'
-    EXCEPT_PROJECT_REGEX: '/^(cerbero|gst-docs|gst-integration-testsuites|gst-plugins-rs)$/'
+    EXCEPT_PROJECT_REGEX: '/^(cerbero|gst-docs|gst-integration-testsuites|gst-omx|gst-plugins-rs)$/'
 
 .test:
   stage: 'test'
@@ -253,6 +253,8 @@ gstreamer-full:
       --default-library=static
       -Dauto_features=disabled
       -Dgst-plugins-good:alpha=enabled
+    EXCEPT_PROJECT_REGEX: ''
+    ONLY_PROJECT_REGEX: '/^(gst-omx|gst-ci)$/'
   after_script:
   - cd gst-build/
   - ninja -C build install
@@ -808,7 +810,7 @@ documentation:
   extends:
     - '.global_ci_policy'
   variables:
-    EXCEPT_PROJECT_REGEX: '/^(cerbero|gst-build|gst-sharp|gst-integration-testsuites|gst-plugins-rs|gst-python)$/'
+    EXCEPT_PROJECT_REGEX: '/^(cerbero|gst-build|gst-sharp|gst-integration-testsuites|gst-omx|gst-plugins-rs|gst-python)$/'
   needs:
     - "build fedora x86_64"
   stage: integrate
@@ -883,6 +885,7 @@ build gst-omx zynq fedora x86_64:
   extends: 'build fedora x86_64'
   variables:
     MESON_ARGS: "-Domx=enabled -Dgst-omx:target=zynqultrascaleplus -Dgst-omx:header_path=${CI_PROJECT_DIR}/vcu-omx-il/omx_header -Dpython=disabled -Dlibav=disabled -Dlibnice=disabled -Dugly=disabled -Dbad=disabled -Ddevtools=disabled -Dges=disabled -Drtsp_server=disabled -Dvaapi=disabled -Dsharp=disabled -Dgst-examples=disabled -Drs=disabled ${MESON_BUILDTYPE_ARGS} --werror"
+    EXCEPT_PROJECT_REGEX: ''
     ONLY_PROJECT_REGEX: '/^(gst-omx|gst-ci)$/'
   before_script:
     - git clone https://github.com/Xilinx/vcu-omx-il.git --branch=release-2019.2 ${CI_PROJECT_DIR}/vcu-omx-il
@@ -892,6 +895,7 @@ build gst-omx tizonia fedora x86_64:
   variables:
     MESON_ARGS: "-Domx=enabled -Dgst-omx:target=tizonia -Dpython=disabled -Dlibav=disabled -Dlibnice=disabled -Dugly=disabled -Dbad=disabled -Ddevtools=disabled -Dges=disabled -Drtsp_server=disabled -Dvaapi=disabled -Dsharp=disabled -Dgst-examples=disabled -Drs=disabled ${MESON_BUILDTYPE_ARGS} --werror"
     PKG_CONFIG_PATH: ${PKG_CONFIG_PATH}:${CI_PROJECT_DIR}/tizonia-install/lib64/pkgconfig/
+    EXCEPT_PROJECT_REGEX: ''
     ONLY_PROJECT_REGEX: '/^(gst-omx|gst-ci)$/'
   before_script:
     - git clone https://github.com/tizonia/tizonia-openmax-il --branch v0.20.2
@@ -905,6 +909,7 @@ build rust fedora x86_64:
   extends: 'build fedora x86_64'
   variables:
     MESON_ARGS: "-Domx=disabled -Dpython=disabled -Dlibav=disabled -Dlibnice=disabled -Dugly=disabled -Dbad=disabled -Ddevtools=enabled -Dges=disabled -Drtsp_server=disabled -Dvaapi=disabled -Dsharp=disabled -Dgst-examples=disabled -Drs=enabled -Dgst-plugins-rs:sodium=system ${MESON_BUILDTYPE_ARGS} --werror"
+    EXCEPT_PROJECT_REGEX: ''
     ONLY_PROJECT_REGEX: '/^(gst-plugins-rs|gstreamer|gst-plugins-base|gst-ci|gst-build|gst-devtools)$/'
 
 check rust fedora:
@@ -913,4 +918,5 @@ check rust fedora:
     - 'build rust fedora x86_64'
   variables:
     TEST_SUITE: "check.gst-plugins-rs.*"
+    EXCEPT_PROJECT_REGEX: ''
     ONLY_PROJECT_REGEX: '/^(gst-plugins-rs|gstreamer|gst-plugins-base|gst-ci|gst-build|gst-devtools)$/'
