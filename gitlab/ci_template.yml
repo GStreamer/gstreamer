@@ -275,7 +275,6 @@ gstreamer-full:
   stage: 'test'
   variables:
     EXTRA_VALIDATE_ARGS: "--valgrind"
-    EXCEPT_PROJECT_REGEX: '/^(gstreamer|gst-integration-testsuites)$/'
 
 valgrind core:
   extends: '.valgrind fedora x86_64'
