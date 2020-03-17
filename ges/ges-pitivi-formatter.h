@@ -17,8 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_PITIVI_FORMATTER
-#define _GES_PITIVI_FORMATTER
+#pragma once
 
 G_BEGIN_DECLS
 
@@ -54,5 +53,3 @@ GES_API
 GESPitiviFormatter *ges_pitivi_formatter_new (void);
 
 G_END_DECLS
-
-#endif /* _GES_PITIVI_FORMATTER */

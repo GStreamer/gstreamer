@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_URI_CLIP
-#define _GES_URI_CLIP
+#pragma once
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -71,6 +70,3 @@ GES_API
 GESUriClip* ges_uri_clip_new (const gchar *uri);
 
 G_END_DECLS
-
-#endif /* _GES_URI_CLIP */
-

@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_TEXT_OVERLAY
-#define _GES_TEXT_OVERLAY
+#pragma once
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -99,4 +98,3 @@ GES_API
 const gdouble ges_text_overlay_get_ypos (GESTextOverlay * self);
 
 G_END_DECLS
-#endif /* _GES_TEXT_OVERLAY */

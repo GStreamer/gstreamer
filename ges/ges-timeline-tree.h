@@ -1,5 +1,4 @@
-#ifndef __GES_TIMELINE_TREE__
-#define __GES_TIMELINE_TREE__
+#pragma once
 
 #include <ges/ges.h>
 #include "ges-auto-transition.h"
@@ -75,5 +74,3 @@ void
 timeline_update_duration                  (GESTimeline * timeline);
 
 void timeline_tree_init_debug             (void);
-
-#endif // __GES_TIMELINE_TREE__

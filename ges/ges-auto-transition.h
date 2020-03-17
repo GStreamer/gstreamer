@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
 
-#ifndef _GES_AUTO_TRANSITION_H_
-#define _GES_AUTO_TRANSITION_H_
+#pragma once
 
 #include <glib-object.h>
 #include "ges-track-element.h"
@@ -69,4 +68,3 @@ G_GNUC_INTERNAL GESAutoTransition * ges_auto_transition_new (GESTrackElement * t
                                              GESTrackElement * next_source);
 
 G_END_DECLS
-#endif /* _GES_AUTO_TRANSITION_H_ */

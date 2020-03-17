@@ -17,8 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_BASE_EFFECT_CLIP
-#define _GES_BASE_EFFECT_CLIP
+#pragma once
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -55,4 +54,3 @@ struct _GESBaseEffectClipClass {
 };
 
 G_END_DECLS
-#endif /* _GES_BASE_EFFECT_CLIP */

@@ -17,8 +17,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef _GES_STRUCTURE_PARSER_H
-#define _GES_STRUCTURE_PARSER_H
+#pragma once
 
 #include <glib.h>
 #include <gst/gst.h>
@@ -61,5 +60,3 @@ G_GNUC_INTERNAL void ges_structure_parser_end_of_file (GESStructureParser *self)
 
 G_GNUC_INTERNAL GESStructureParser *ges_structure_parser_new(void);
 G_END_DECLS
-
-#endif  /* _GES_STRUCTURE_PARSER_H */

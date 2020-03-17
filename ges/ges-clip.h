@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_CLIP
-#define _GES_CLIP
+#pragma once
 
 #include <glib-object.h>
 #include <gst/gst.h>
@@ -187,4 +186,3 @@ GES_API
 GESClip* ges_clip_split  (GESClip *clip, guint64  position);
 
 G_END_DECLS
-#endif /* _GES_CLIP */

@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_OPERATION_CLIP
-#define _GES_OPERATION_CLIP
+#pragma once
 
 #include <glib-object.h>
 #include <gst/gst.h>
@@ -59,6 +58,3 @@ struct _GESOperationClipClass {
 };
 
 G_END_DECLS
-
-#endif /* _GES_OPERATION_CLIP */
-

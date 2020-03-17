@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GES_ENUMS_H__
-#define __GES_ENUMS_H__
+#pragma once
 
 #include <gst/gst.h>
 #include <ges/ges-prelude.h>
@@ -478,5 +477,3 @@ GType ges_edge_get_type (void);
 GES_API
 const gchar * ges_track_type_name (GESTrackType type);
 G_END_DECLS
-
-#endif /* __GES_ENUMS_H__ */

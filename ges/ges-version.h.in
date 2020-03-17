@@ -17,8 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GES_VERSION_H__
-#define __GES_VERSION_H__
+#pragma once
 
 G_BEGIN_DECLS
 
@@ -28,5 +27,3 @@ G_BEGIN_DECLS
 #define GES_VERSION_NANO  (@GES_VERSION_NANO@)
 
 G_END_DECLS
-
-#endif /* __GES_H__ */

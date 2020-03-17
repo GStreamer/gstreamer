@@ -17,8 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_EFFECT
-#define _GES_EFFECT
+#pragma once
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -66,4 +65,3 @@ GES_API gboolean
 ges_effect_class_register_rate_property (GESEffectClass *klass, const gchar *element_name, const gchar *property_name);
 
 G_END_DECLS
-#endif /* _GES_EFFECT */

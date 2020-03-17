@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_VIDEO_TRANSITION
-#define _GES_VIDEO_TRANSITION
+#pragma once
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -81,6 +80,3 @@ GES_API
 gboolean ges_video_transition_is_inverted        (GESVideoTransition * self);
 
 G_END_DECLS
-
-#endif /* _GES_TRACK_VIDEO_transition */
-

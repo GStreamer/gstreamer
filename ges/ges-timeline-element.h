@@ -17,8 +17,7 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _GES_TIMELINE_ELEMENT_H_
-#define _GES_TIMELINE_ELEMENT_H_
+#pragma once
 
 #include <glib-object.h>
 #include <gst/gst.h>
@@ -392,5 +391,3 @@ gboolean ges_timeline_element_edit                                    (GESTimeli
                                                                        GESEdge edge,
                                                                        guint64 position);
 G_END_DECLS
-
-#endif /* _GES_TIMELINE_ELEMENT_H_ */

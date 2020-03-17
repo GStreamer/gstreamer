@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_SOURCE_CLIP
-#define _GES_SOURCE_CLIP
+#pragma once
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -60,6 +59,3 @@ struct _GESSourceClipClass {
 };
 
 G_END_DECLS
-
-#endif /* _GES_SOURCE_CLIP */
-

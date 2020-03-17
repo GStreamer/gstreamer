@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_FORMATTER
-#define _GES_FORMATTER
+#pragma once
 
 #include <glib-object.h>
 #include <ges/ges-timeline.h>
@@ -157,5 +156,3 @@ GES_API
 GESAsset *ges_find_formatter_for_uri   (const gchar *uri);
 
 G_END_DECLS
-
-#endif /* _GES_FORMATTER */

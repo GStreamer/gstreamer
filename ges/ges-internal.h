@@ -18,8 +18,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GES_INTERNAL_H__
-#define __GES_INTERNAL_H__
+#pragma once
+
 #include <gst/gst.h>
 #include <gst/pbutils/encoding-profile.h>
 #include <gio/gio.h>
@@ -504,5 +504,3 @@ G_GNUC_INTERNAL gboolean ges_nle_composition_remove_object (GstElement *comp, Gs
 G_GNUC_INTERNAL gboolean ges_nle_object_commit (GstElement * nlesource, gboolean recurse);
 
 G_END_DECLS
-
-#endif /* __GES_INTERNAL_H__ */

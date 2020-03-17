@@ -20,8 +20,7 @@
 
 #include "ges-formatter.h"
 
-#ifndef GES_BASE_XML_FORMATTER_H
-#define GES_BASE_XML_FORMATTER_H
+#pragma once
 
 G_BEGIN_DECLS
 typedef struct _GESBaseXmlFormatter GESBaseXmlFormatter;
@@ -61,4 +60,3 @@ struct _GESBaseXmlFormatterClass
 };
 
 G_END_DECLS
-#endif /* _GES_BASE_XML_FORMATTER_H */

@@ -17,8 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_LAUNCHER
-#define _GES_LAUNCHER
+#pragma once
 
 #include <ges/ges.h>
 
@@ -68,5 +67,3 @@ gint ges_launcher_get_exit_status (GESLauncher *self);
 gboolean ges_launcher_parse_options(GESLauncher* self, gchar*** arguments, gint *argc, GOptionContext* ctx, GError** error);
 
 G_END_DECLS
-
-#endif /* _GES_LAUNCHER */

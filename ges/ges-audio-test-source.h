@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_AUDIO_TEST_SOURCE
-#define _GES_AUDIO_TEST_SOURCE
+#pragma once
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -66,6 +65,3 @@ double ges_audio_test_source_get_freq(GESAudioTestSource *self);
 GES_API
 double ges_audio_test_source_get_volume(GESAudioTestSource *self);
 G_END_DECLS
-
-#endif /* _GES_AUDIO_TEST_SOURCE */
-

@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_TIMELINE_TITLESOURCE
-#define _GES_TIMELINE_TITLESOURCE
+#pragma once
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -107,6 +106,3 @@ GES_API
 GESTitleClip* ges_title_clip_new (void);
 
 G_END_DECLS
-
-#endif /* _GES_TIMELINE_TITLESOURCE */
-

@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_TIMELINE
-#define _GES_TIMELINE
+#pragma once
 
 #include <glib-object.h>
 #include <gst/gst.h>
@@ -150,6 +149,3 @@ GES_API
 gboolean ges_timeline_move_layer (GESTimeline *timeline, GESLayer *layer, guint new_layer_priority);
 
 G_END_DECLS
-
-#endif /* _GES_TIMELINE */
-

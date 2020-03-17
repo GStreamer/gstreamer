@@ -18,8 +18,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef _GES_COMMAND_LINE_FORMATTER_H_
-#define _GES_COMMAND_LINE_FORMATTER_H_
+#pragma once
 
 #include <glib-object.h>
 #include "ges-formatter.h"
@@ -48,6 +47,3 @@ GES_API
 gchar * ges_command_line_formatter_get_help (gint nargs, gchar ** commands);
 
 G_END_DECLS
-
-#endif /* _GES_COMMAND_LINE_FORMATTER_H_ */
-

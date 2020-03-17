@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
 
-#ifndef _GES_SMART_MIXER_H_
-#define _GES_SMART_MIXER_H_
+#pragma once
 
 #include <glib-object.h>
 #include <gst/gst.h>
@@ -69,4 +68,3 @@ G_GNUC_INTERNAL
 GstElement*   ges_smart_mixer_new      (GESTrack *track);
 
 G_END_DECLS
-#endif /* _GES_SMART_MIXER_H_ */

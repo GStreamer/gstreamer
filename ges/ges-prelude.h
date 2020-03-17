@@ -18,9 +18,7 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
-
-#ifndef __GST_GES_PRELUDE_H__
-#define __GST_GES_PRELUDE_H__
+#pragma once
 
 #include <gst/gst.h>
 
@@ -39,5 +37,3 @@
 #define GES_DEPRECATED G_DEPRECATED GES_API
 #define GES_DEPRECATED_FOR(f) G_DEPRECATED_FOR(f) GES_API
 #endif
-
-#endif /* __GST_GES_PRELUDE_H__ */

@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GES_SCREENSHOT_H__
-#define __GES_SCREENSHOT_H__
+#pragma once
 
 #include <gst/gst.h>
 #include <ges/ges-prelude.h>
@@ -30,5 +29,3 @@ GES_DEPRECATED GstSample *
 ges_play_sink_convert_frame (GstElement * playsink, GstCaps * caps);
 
 G_END_DECLS
-
-#endif /* __GES_SCREENSHOT_H__ */

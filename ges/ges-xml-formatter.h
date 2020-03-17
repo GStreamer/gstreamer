@@ -17,11 +17,9 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+#pragma once
 
 #include "ges-base-xml-formatter.h"
-
-#ifndef GES_XML_FORMATTER_H
-#define GES_XML_FORMATTER_H
 
 G_BEGIN_DECLS
 #define GES_TYPE_XML_FORMATTER (ges_xml_formatter_get_type ())
@@ -44,4 +42,3 @@ struct _GESXmlFormatterClass
 };
 
 G_END_DECLS
-#endif /* _GES_XML_FORMATTER_H */

@@ -20,8 +20,7 @@
  */
 
 
-#ifndef GES_CLIP_ASSET_H
-#define GES_CLIP_ASSET_H
+#pragma once
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -56,4 +55,3 @@ GES_API
 GESTrackType ges_clip_asset_get_supported_formats (GESClipAsset *self);
 
 G_END_DECLS
-#endif /* _GES_CLIP_ASSET_H */

@@ -18,8 +18,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef _GES_EXTRACTABLE_
-#define _GES_EXTRACTABLE_
+#pragma once
 
 typedef struct _GESExtractable GESExtractable;
 
@@ -148,4 +147,3 @@ GES_API
 gchar * ges_extractable_get_id                 (GESExtractable *self);
 
 G_END_DECLS
-#endif /* _GES_EXTRACTABLE_ */

@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_LAYER
-#define _GES_LAYER
+#pragma once
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -124,5 +123,3 @@ GES_API
 GstClockTime ges_layer_get_duration (GESLayer *layer);
 
 G_END_DECLS
-
-#endif /* _GES_LAYER */

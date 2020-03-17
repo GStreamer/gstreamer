@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_TRANSITION
-#define _GES_TRANSITION
+#pragma once
 
 #include <glib-object.h>
 #include <gst/gst.h>
@@ -63,5 +62,3 @@ struct _GESTransitionClass {
 };
 
 G_END_DECLS
-
-#endif

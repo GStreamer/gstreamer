@@ -18,8 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
 
-#ifndef _GES_EFFECT_ASSET_H_
-#define _GES_EFFECT_ASSET_H_
+#pragma once
 
 #include <glib-object.h>
 #include "ges-track-element-asset.h"
@@ -46,6 +45,3 @@ struct _GESEffectAsset
 };
 
 G_END_DECLS
-
-#endif /* _GES_EFFECT_ASSET_H_ */
-

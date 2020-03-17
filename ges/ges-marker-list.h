@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_MARKER_LIST
-#define _GES_MARKER_LIST
+#pragma once
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -56,5 +55,3 @@ GES_API
 gboolean ges_marker_list_move (GESMarkerList *list, GESMarker *marker, GstClockTime position);
 
 G_END_DECLS
-
-#endif /* _GES_MARKER_LIST */

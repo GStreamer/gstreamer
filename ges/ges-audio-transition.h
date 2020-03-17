@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_AUDIO_TRANSITION
-#define _GES_AUDIO_TRANSITION
+#pragma once
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -56,6 +55,3 @@ GES_API
 GESAudioTransition* ges_audio_transition_new (void);
 
 G_END_DECLS
-
-#endif /* _GES_TRACK_AUDIO_transition */
-

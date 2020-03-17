@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_BASE_TRANSITION_CLIP
-#define _GES_BASE_TRANSITION_CLIP
+#pragma once
 
 #include "ges-operation-clip.h"
 
@@ -59,5 +58,3 @@ struct _GESBaseTransitionClipClass {
 };
 
 G_END_DECLS
-
-#endif /* _GES_BASE_TRANSITION_CLIP */

@@ -16,9 +16,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
-#ifndef _GES_META_CONTAINER
-#define _GES_META_CONTAINER
+#pragma once
 
 #include <glib-object.h>
 #include <gst/gst.h>
@@ -334,4 +332,3 @@ ges_meta_container_add_metas_from_string (GESMetaContainer *container,
                                           const gchar *str);
 
 G_END_DECLS
-#endif /* _GES_META_CONTAINER */

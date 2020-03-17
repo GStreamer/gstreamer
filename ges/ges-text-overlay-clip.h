@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_OVERLAY_TEXT_CLIP
-#define _GES_OVERLAY_TEXT_CLIP
+#pragma once
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -113,4 +112,3 @@ GES_API
 GESTextOverlayClip *ges_text_overlay_clip_new (void);
 
 G_END_DECLS
-#endif /* _GES_TL_OVERLAY */

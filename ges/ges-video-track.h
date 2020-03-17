@@ -17,8 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_VIDEO_TRACK_H_
-#define _GES_VIDEO_TRACK_H_
+#pragma once
 
 #include <glib-object.h>
 
@@ -52,4 +51,3 @@ GES_API
 GESVideoTrack * ges_video_track_new (void);
 
 G_END_DECLS
-#endif /* _GES_VIDEO_TRACK_H_ */

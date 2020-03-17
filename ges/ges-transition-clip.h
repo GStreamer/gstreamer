@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_TRANSITION_CLIP
-#define _GES_TRANSITION_CLIP
+#pragma once
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -68,5 +67,3 @@ GES_API
 GESTransitionClip *ges_transition_clip_new_for_nick (char *nick);
 
 G_END_DECLS
-
-#endif /* _GES_TRANSITION_CLIP */

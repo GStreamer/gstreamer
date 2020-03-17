@@ -18,8 +18,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_TL_TESTSOURCE
-#define _GES_TL_TESTSOURCE
+#pragma once
+
 
 #include <glib-object.h>
 #include <ges/ges-enums.h>
@@ -90,6 +90,3 @@ GES_API
 GESTestClip* ges_test_clip_new_for_nick(gchar * nick);
 
 G_END_DECLS
-
-#endif /* _GES_TL_TESTSOURCE */
-

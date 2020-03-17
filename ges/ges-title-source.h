@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_TITLE_SOURCE
-#define _GES_TITLE_SOURCE
+#pragma once
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -104,6 +103,3 @@ GES_API
 const gdouble ges_title_source_get_ypos (GESTitleSource *source);
 
 G_END_DECLS
-
-#endif /* _GES_TITLE_SOURCE */
-

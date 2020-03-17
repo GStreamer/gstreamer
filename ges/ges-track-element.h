@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_TRACK_ELEMENT
-#define _GES_TRACK_ELEMENT
+#pragma once
 
 #include <glib-object.h>
 #include <gst/gst.h>
@@ -175,4 +174,3 @@ ges_track_element_remove_control_binding      (GESTrackElement * object,
 #include "ges-track-element-deprecated.h"
 
 G_END_DECLS
-#endif /* _GES_TRACK_ELEMENT */

@@ -17,8 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_UTILS
-#define _GES_UTILS
+#pragma once
 
 #include <glib-object.h>
 #include <gst/gst.h>
@@ -35,6 +34,3 @@ guint ges_pspec_hash (gconstpointer key_spec);
 
 
 G_END_DECLS
-
-#endif /* _GES_UTILS */
-

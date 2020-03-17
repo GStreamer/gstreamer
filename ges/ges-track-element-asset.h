@@ -17,8 +17,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef _GES_TRACK_ELEMENT_ASSET_
-#define _GES_TRACK_ELEMENT_ASSET_
+#pragma once
 
 #include <glib-object.h>
 #include <gio/gio.h>
@@ -54,5 +53,3 @@ GES_API
 void ges_track_element_asset_set_track_type               (GESTrackElementAsset * asset, GESTrackType type);
 
 G_END_DECLS
-#endif /* _GES_TRACK_ELEMENT_ASSET */
-

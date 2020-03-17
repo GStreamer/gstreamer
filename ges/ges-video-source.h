@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_VIDEO_SOURCE
-#define _GES_VIDEO_SOURCE
+#pragma once
 
 #include <glib-object.h>
 #include <gst/gst.h>
@@ -78,5 +77,3 @@ GES_API
 gboolean ges_video_source_get_natural_size(GESVideoSource* self, gint* width, gint* height);
 
 G_END_DECLS
-
-#endif /* _GES_VIDEO_SOURCE */

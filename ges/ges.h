@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GES_H__
-#define __GES_H__
+#pragma once
 
 #include <glib.h>
 #include <gst/gst.h>
@@ -112,5 +111,3 @@ GES_API
 gboolean ges_is_initialized                  (void);
 
 G_END_DECLS
-
-#endif /* __GES_H__ */

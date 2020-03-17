@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_TRACK
-#define _GES_TRACK
+#pragma once
 
 #include <glib-object.h>
 #include <gst/gst.h>
@@ -106,5 +105,3 @@ GES_API
 GESTrack*          ges_track_new                             (GESTrackType type, GstCaps * caps);
 
 G_END_DECLS
-
-#endif /* _GES_TRACK */

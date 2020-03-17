@@ -17,8 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_EFFECT_CLIP
-#define _GES_EFFECT_CLIP
+#pragma once
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -59,4 +58,3 @@ ges_effect_clip_new (const gchar * video_bin_description,
 				      const gchar * audio_bin_description);
 
 G_END_DECLS
-#endif /* _GES_EFFECT_CLIP */

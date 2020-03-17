@@ -18,9 +18,7 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
-
-#ifndef _GES_TEST_UTILS
-#define _GES_TEST_UTILS
+#pragma once
 
 #include <ges/ges.h>
 #include <gst/check/gstcheck.h>
@@ -192,5 +190,3 @@ G_STMT_START {                                          \
 
 
 void print_timeline(GESTimeline *timeline);
-
-#endif /* _GES_TEST_UTILS */

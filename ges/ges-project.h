@@ -17,8 +17,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef _GES_PROJECT_
-#define _GES_PROJECT_
+#pragma once
 
 #include <glib-object.h>
 #include <gio/gio.h>
@@ -121,5 +120,3 @@ GES_API
 void ges_project_add_formatter (GESProject * project, GESFormatter * formatter);
 
 G_END_DECLS
-
-#endif  /* _GES_PROJECT */

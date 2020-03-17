@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GES_TYPES_H__
-#define __GES_TYPES_H__
+#pragma once
 
 #include <glib.h>
 #include <ges/ges-prelude.h>
@@ -226,5 +225,3 @@ typedef struct _GESXmlFormatter GESXmlFormatter;
   G_GNUC_END_IGNORE_DEPRECATIONS
 
 G_END_DECLS
-
-#endif /* __GES_TYPES_H__ */

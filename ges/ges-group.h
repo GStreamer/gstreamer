@@ -17,8 +17,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef GES_GROUP_H
-#define GES_GROUP_H
+#pragma once
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -49,4 +48,3 @@ GES_API
 GESGroup *ges_group_new           (void);
 
 G_END_DECLS
-#endif /* _GES_GROUP_H */

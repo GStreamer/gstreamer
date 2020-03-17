@@ -21,8 +21,7 @@
  *
  */
 
-#ifndef __GES_BASE_BIN_H__
-#define __GES_BASE_BIN_H__
+#pragma once
 
 #include <gst/gst.h>
 #include <gst/base/gstflowcombiner.h>
@@ -42,4 +41,3 @@ gboolean ges_base_bin_set_timeline (GESBaseBin * self, GESTimeline * timeline);
 GESTimeline * ges_base_bin_get_timeline (GESBaseBin * self);
 
 G_END_DECLS
-#endif /* __GES_BASE_BIN_H__ */

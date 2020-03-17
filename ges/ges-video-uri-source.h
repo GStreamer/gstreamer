@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_VIDEO_URI_SOURCE
-#define _GES_VIDEO_URI_SOURCE
+#pragma once
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -54,6 +53,3 @@ struct _GESVideoUriSourceClass {
 };
 
 G_END_DECLS
-
-#endif /* _GES_VIDEO_URI_SOURCE */
-

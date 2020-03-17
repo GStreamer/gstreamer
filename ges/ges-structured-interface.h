@@ -17,9 +17,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
-#ifndef __GES_STRUCTURED_INTERFACE__
-#define __GES_STRUCTURED_INTERFACE__
+#pragma once
 
 #include <ges/ges.h>
 
@@ -60,5 +58,3 @@ G_GNUC_INTERNAL gboolean
 _ges_save_timeline_if_needed (GESTimeline* timeline, GstStructure* structure, GError** error);
 
 G_END_DECLS
-
-#endif /* __GES_STRUCTURED_INTERFACE__*/

@@ -19,8 +19,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef _GES_ASSET_
-#define _GES_ASSET_
+#pragma once
 
 #include <glib-object.h>
 #include <ges/ges-extractable.h>
@@ -145,4 +144,3 @@ gboolean ges_asset_needs_reload 	 (GType extractable_type,
 									  const gchar * id);
 
 G_END_DECLS
-#endif /* _GES_ASSET */

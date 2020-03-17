@@ -17,8 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_BASE_EFFECT
-#define _GES_BASE_EFFECT
+#pragma once
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -57,4 +56,3 @@ struct _GESBaseEffectClass
 };
 
 G_END_DECLS
-#endif /* _GES_BASE_EFFECT */

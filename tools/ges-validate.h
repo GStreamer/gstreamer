@@ -17,8 +17,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef _GES_VALIDATE_
-#define _GES_VALIDATE_
+#pragma once
 
 #include <glib.h>
 #include <gio/gio.h>
@@ -40,5 +39,3 @@ void ges_validate_handle_request_state_change (GstMessage *message, GApplication
 gint ges_validate_print_action_types (const gchar **types, gint num_types);
 
 G_END_DECLS
-
-#endif  /* _GES_VALIDATE */

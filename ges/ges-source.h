@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_SOURCE
-#define _GES_SOURCE
+#pragma once
 
 #include <glib-object.h>
 #include <gst/gst.h>
@@ -62,5 +61,3 @@ struct _GESSourceClass {
 };
 
 G_END_DECLS
-
-#endif /* _GES_SOURCE */

@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_PIPELINE
-#define _GES_PIPELINE
+#pragma once
 
 #include <glib-object.h>
 #include <ges/ges.h>
@@ -104,6 +103,3 @@ ges_pipeline_preview_set_audio_sink (GESPipeline * self,
     GstElement * sink);
 
 G_END_DECLS
-
-#endif /* _GES_PIPELINE */
-

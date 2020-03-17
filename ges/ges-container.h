@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_CONTAINER
-#define _GES_CONTAINER
+#pragma once
 
 #include <glib-object.h>
 #include <gst/gst.h>
@@ -157,4 +156,3 @@ gboolean ges_container_edit       (GESContainer * container,
                                    guint64 position);
 
 G_END_DECLS
-#endif /* _GES_CONTAINER */

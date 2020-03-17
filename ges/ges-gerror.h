@@ -16,9 +16,7 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
-
-#ifndef __GES_ERROR_H__
-#define __GES_ERROR_H__
+#pragma once
 
 /**
  * SECTION: ges-gerror
@@ -49,4 +47,3 @@ typedef enum
 } GESError;
 
 G_END_DECLS
-#endif /* __GES_ERROR_H__ */

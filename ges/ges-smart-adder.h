@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
 
-#ifndef _GES_SMART_ADDER_H_
-#define _GES_SMART_ADDER_H_
+#pragma once
 
 #include <glib-object.h>
 #include <gst/gst.h>
@@ -68,4 +67,3 @@ GES_API
 GstElement*   ges_smart_adder_new      (GESTrack *track);
 
 G_END_DECLS
-#endif /* _GES_SMART_ADDER_H_ */
