@@ -227,7 +227,7 @@ plugin_init (GstPlugin * plugin)
   /* ERRORS: */
 error_no_display:
   {
-    GST_ERROR ("Cannot create a VA display");
+    GST_WARNING ("Cannot create a VA display");
     /* Avoid blacklisting: failure to create a display could be a
      * transient condition */
     return TRUE;
