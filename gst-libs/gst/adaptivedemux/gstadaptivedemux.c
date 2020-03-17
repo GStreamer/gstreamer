@@ -1757,21 +1757,23 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux, GstPad * pad,
   }
   stream = NULL;
 
-  gst_segment_do_seek (&demux->segment, rate, format, flags, start_type,
+  ret = gst_segment_do_seek (&demux->segment, rate, format, flags, start_type,
       start, stop_type, stop, &update);
 
-  /* FIXME - this seems unatural, do_seek() is updating base when we
-   * only want the start/stop position to change, maybe do_seek() needs
-   * some fixing? */
-  if (!(flags & GST_SEEK_FLAG_FLUSH) && ((rate > 0
-              && start_type == GST_SEEK_TYPE_NONE) || (rate < 0
-              && stop_type == GST_SEEK_TYPE_NONE))) {
-    demux->segment.base = oldsegment.base;
+  if (ret) {
+    /* FIXME - this seems unatural, do_seek() is updating base when we
+     * only want the start/stop position to change, maybe do_seek() needs
+     * some fixing? */
+    if (!(flags & GST_SEEK_FLAG_FLUSH) && ((rate > 0
+                && start_type == GST_SEEK_TYPE_NONE) || (rate < 0
+                && stop_type == GST_SEEK_TYPE_NONE))) {
+      demux->segment.base = oldsegment.base;
+    }
+
+    GST_DEBUG_OBJECT (demux, "Calling subclass seek: %" GST_PTR_FORMAT, event);
+
+    ret = demux_class->seek (demux, event);
   }
-
-  GST_DEBUG_OBJECT (demux, "Calling subclass seek: %" GST_PTR_FORMAT, event);
-
-  ret = demux_class->seek (demux, event);
 
   if (!ret) {
     /* Is there anything else we can do if it fails? */
