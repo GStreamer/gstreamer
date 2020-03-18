@@ -110,6 +110,7 @@ gst_msdkh265enc_configure (GstMsdkEnc * encoder)
       encoder->param.mfx.CodecProfile = MFX_PROFILE_HEVC_MAIN10;
       break;
     case MFX_FOURCC_AYUV:
+    case MFX_FOURCC_YUY2:
 #if (MFX_VERSION >= 1027)
     case MFX_FOURCC_Y410:
     case MFX_FOURCC_Y210:
@@ -210,6 +211,11 @@ gst_msdkh265enc_set_src_caps (GstMsdkEnc * encoder)
       break;
     case MFX_FOURCC_AYUV:
       gst_structure_set (structure, "profile", G_TYPE_STRING, "main-444", NULL);
+      break;
+    case MFX_FOURCC_YUY2:
+      /* The profile is main-422-10 for 8-bit 422 */
+      gst_structure_set (structure, "profile", G_TYPE_STRING, "main-422-10",
+          NULL);
       break;
 #if (MFX_VERSION >= 1027)
     case MFX_FOURCC_Y410:
@@ -320,6 +326,36 @@ gst_msdkh265enc_set_extra_params (GstMsdkEnc * encoder,
     gst_msdkenc_add_extra_param (encoder, (mfxExtBuffer *) & h265enc->roi[0]);
 }
 
+static gboolean
+gst_msdkh265enc_need_conversion (GstMsdkEnc * encoder, GstVideoInfo * info,
+    GstVideoFormat * out_format)
+{
+  GstMsdkH265Enc *h265enc = GST_MSDKH265ENC (encoder);
+
+  switch (GST_VIDEO_INFO_FORMAT (info)) {
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_P010_10LE:
+    case GST_VIDEO_FORMAT_VUYA:
+#if (MFX_VERSION >= 1027)
+    case GST_VIDEO_FORMAT_Y410:
+    case GST_VIDEO_FORMAT_Y210:
+#endif
+      return FALSE;
+
+    case GST_VIDEO_FORMAT_YUY2:
+#if (MFX_VERSION >= 1027)
+      if (encoder->codename >= MFX_PLATFORM_ICELAKE && !h265enc->lowpower)
+        return FALSE;
+#endif
+    default:
+      if (GST_VIDEO_INFO_COMP_DEPTH (info, 0) == 10)
+        *out_format = GST_VIDEO_FORMAT_P010_10LE;
+      else
+        *out_format = GST_VIDEO_FORMAT_NV12;
+      return TRUE;
+  }
+}
+
 static void
 gst_msdkh265enc_class_init (GstMsdkH265EncClass * klass)
 {
@@ -339,6 +375,7 @@ gst_msdkh265enc_class_init (GstMsdkH265EncClass * klass)
   encoder_class->set_src_caps = gst_msdkh265enc_set_src_caps;
   encoder_class->need_reconfig = gst_msdkh265enc_need_reconfig;
   encoder_class->set_extra_params = gst_msdkh265enc_set_extra_params;
+  encoder_class->need_conversion = gst_msdkh265enc_need_conversion;
 
   gst_msdkenc_install_common_properties (encoder_class);
 

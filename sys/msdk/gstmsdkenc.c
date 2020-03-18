@@ -376,6 +376,7 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
 
   GST_OBJECT_LOCK (thiz);
   session = gst_msdk_context_get_session (thiz->context);
+  thiz->codename = msdk_get_platform_codename (session);
 
   thiz->has_vpp = FALSE;
   if (thiz->use_video_memory)

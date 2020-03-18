@@ -159,6 +159,8 @@ struct _GstMsdkEnc
   gint16 adaptive_b;
 
   gboolean reconfig;
+
+  guint16 codename;
 };
 
 struct _GstMsdkEncClass
