@@ -1267,9 +1267,34 @@ gst_vaapidecode_ensure_allowed_sinkpad_caps (GstVaapiDecode * decode)
       continue;
 
     profile_name = gst_vaapi_profile_get_name (profile);
-    if (profile_name)
-      gst_structure_set (structure, "profile", G_TYPE_STRING,
-          profile_name, NULL);
+    if (profile_name) {
+      /* Add all according -intra profile for HEVC */
+      if (profile == GST_VAAPI_PROFILE_H265_MAIN
+          || profile == GST_VAAPI_PROFILE_H265_MAIN10
+          || profile == GST_VAAPI_PROFILE_H265_MAIN_422_10
+          || profile == GST_VAAPI_PROFILE_H265_MAIN_444
+          || profile == GST_VAAPI_PROFILE_H265_MAIN_444_10) {
+        GValue list_value = G_VALUE_INIT;
+        GValue value = G_VALUE_INIT;
+        gchar *intra_name;
+
+        g_value_init (&list_value, GST_TYPE_LIST);
+        g_value_init (&value, G_TYPE_STRING);
+        g_value_set_string (&value, profile_name);
+        gst_value_list_append_value (&list_value, &value);
+
+        intra_name = g_strdup_printf ("%s-intra", profile_name);
+        g_value_take_string (&value, intra_name);
+        gst_value_list_append_value (&list_value, &value);
+
+        gst_structure_set_value (structure, "profile", &list_value);
+        g_value_unset (&list_value);
+        g_value_unset (&value);
+      } else {
+        gst_structure_set (structure, "profile", G_TYPE_STRING,
+            profile_name, NULL);
+      }
+    }
 
     gst_vaapi_profile_caps_append_decoder (display, profile, structure);
 

@@ -184,6 +184,61 @@ gst_vaapi_utils_h265_get_profile (GstH265SPS * sps)
           && sps->profile_tier_level.lower_bit_rate_constraint_flag == 1) {
         profile = GST_VAAPI_PROFILE_H265_MAIN_444_10;
         break;
+      } else if (sps->profile_tier_level.max_12bit_constraint_flag == 1
+          && sps->profile_tier_level.max_10bit_constraint_flag == 1
+          && sps->profile_tier_level.max_8bit_constraint_flag == 1
+          && sps->profile_tier_level.max_422chroma_constraint_flag == 1
+          && sps->profile_tier_level.max_420chroma_constraint_flag == 1
+          && sps->profile_tier_level.max_monochrome_constraint_flag == 0
+          && sps->profile_tier_level.intra_constraint_flag == 1
+          && sps->profile_tier_level.one_picture_only_constraint_flag == 0) {
+        /* Main Intra, recognize it as MAIN */
+        profile = GST_VAAPI_PROFILE_H265_MAIN;
+        break;
+      } else if (sps->profile_tier_level.max_12bit_constraint_flag == 1
+          && sps->profile_tier_level.max_10bit_constraint_flag == 1
+          && sps->profile_tier_level.max_8bit_constraint_flag == 0
+          && sps->profile_tier_level.max_422chroma_constraint_flag == 1
+          && sps->profile_tier_level.max_420chroma_constraint_flag == 1
+          && sps->profile_tier_level.max_monochrome_constraint_flag == 0
+          && sps->profile_tier_level.intra_constraint_flag == 1
+          && sps->profile_tier_level.one_picture_only_constraint_flag == 0) {
+        /* Main 10 Intra, recognize it as MAIN10 */
+        profile = GST_VAAPI_PROFILE_H265_MAIN10;
+        break;
+      } else if (sps->profile_tier_level.max_12bit_constraint_flag == 1
+          && sps->profile_tier_level.max_10bit_constraint_flag == 1
+          && sps->profile_tier_level.max_8bit_constraint_flag == 1
+          && sps->profile_tier_level.max_422chroma_constraint_flag == 0
+          && sps->profile_tier_level.max_420chroma_constraint_flag == 0
+          && sps->profile_tier_level.max_monochrome_constraint_flag == 0
+          && sps->profile_tier_level.intra_constraint_flag == 1
+          && sps->profile_tier_level.one_picture_only_constraint_flag == 0) {
+        /* Main 444 Intra, recognize it as MAIN_444 */
+        profile = GST_VAAPI_PROFILE_H265_MAIN_444;
+        break;
+      } else if (sps->profile_tier_level.max_12bit_constraint_flag == 1
+          && sps->profile_tier_level.max_10bit_constraint_flag == 1
+          && sps->profile_tier_level.max_8bit_constraint_flag == 0
+          && sps->profile_tier_level.max_422chroma_constraint_flag == 0
+          && sps->profile_tier_level.max_420chroma_constraint_flag == 0
+          && sps->profile_tier_level.max_monochrome_constraint_flag == 0
+          && sps->profile_tier_level.intra_constraint_flag == 1
+          && sps->profile_tier_level.one_picture_only_constraint_flag == 0) {
+        /* Main 444_10 Intra, recognize it as MAIN_444_10 */
+        profile = GST_VAAPI_PROFILE_H265_MAIN_444_10;
+        break;
+      } else if (sps->profile_tier_level.max_12bit_constraint_flag == 1
+          && sps->profile_tier_level.max_10bit_constraint_flag == 1
+          && sps->profile_tier_level.max_8bit_constraint_flag == 0
+          && sps->profile_tier_level.max_422chroma_constraint_flag == 1
+          && sps->profile_tier_level.max_420chroma_constraint_flag == 0
+          && sps->profile_tier_level.max_monochrome_constraint_flag == 0
+          && sps->profile_tier_level.intra_constraint_flag == 1
+          && sps->profile_tier_level.one_picture_only_constraint_flag == 0) {
+        /* Main 422_10 Intra, recognize it as MAIN_422_10 */
+        profile = GST_VAAPI_PROFILE_H265_MAIN_422_10;
+        break;
       }
     default:
       GST_DEBUG ("unsupported profile_idc value");

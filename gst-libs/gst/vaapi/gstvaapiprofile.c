@@ -426,6 +426,15 @@ gst_vaapi_profile_from_caps (const GstCaps * caps)
         /* HACK: qtdemux does not report profiles for h263 */
         profile = m->profile;
       }
+
+      /* Consider HEVC -intra profiles. Just map them to their
+       * non-intra profiles */
+      if (!profile && profile_str
+          && strncmp (name, "video/x-h265", namelen) == 0
+          && g_str_has_prefix (profile_str, m->profile_str)
+          && strncmp (profile_str + strlen (m->profile_str), "-intra", 6) == 0) {
+        profile = m->profile;
+      }
     }
     gst_caps_unref (caps_test);
   }
