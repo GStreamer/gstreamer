@@ -904,7 +904,13 @@ ges_container_remove (GESContainer * container, GESTimelineElement * child)
     g_signal_emit (container, ges_container_signals[CHILD_REMOVED_SIGNAL], 0,
         child);
   } else {
-    GST_INFO_OBJECT (container, "Not emitting 'child-removed' signal as child"
+    GESContainerClass *klass = GES_CONTAINER_GET_CLASS (container);
+
+    if (klass->child_removed)
+      klass->child_removed (container, child);
+
+    GST_INFO_OBJECT (container,
+        "Not emitting 'child-removed' signal as child"
         " removal happend during 'child-added' signal emission");
   }
   gst_object_unref (child);
