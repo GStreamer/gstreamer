@@ -66,6 +66,7 @@ struct _GESTrackElementPrivate
 
   GHashTable *bindings_hashtable;       /* We need this if we want to be able to serialize
                                            and deserialize keyframes */
+  GList *valid_owners;
 };
 
 enum
@@ -225,6 +226,26 @@ ges_track_element_dispose (GObject * object)
 }
 
 static void
+owner_disposed (GESTrackElement * self, GObject * owner)
+{
+  self->priv->valid_owners = g_list_remove (self->priv->valid_owners, owner);
+}
+
+static void
+ges_track_element_finalize (GObject * object)
+{
+  GESTrackElement *self = GES_TRACK_ELEMENT (object);
+  GList *tmp;
+
+  for (tmp = self->priv->valid_owners; tmp; tmp = tmp->next)
+    g_object_weak_unref (tmp->data, (GWeakNotify) owner_disposed, self);
+
+  g_list_free (self->priv->valid_owners);
+
+  G_OBJECT_CLASS (ges_track_element_parent_class)->finalize (object);
+}
+
+static void
 ges_track_element_constructed (GObject * gobject)
 {
   GESTrackElementClass *class;
@@ -287,6 +308,7 @@ ges_track_element_class_init (GESTrackElementClass * klass)
   object_class->get_property = ges_track_element_get_property;
   object_class->set_property = ges_track_element_set_property;
   object_class->dispose = ges_track_element_dispose;
+  object_class->finalize = ges_track_element_finalize;
   object_class->constructed = ges_track_element_constructed;
 
 
@@ -1403,17 +1425,17 @@ ges_track_element_copy_properties (GESTimelineElement * element,
   g_free (specs);
 }
 
-/* copy an element, as well as its GES_TRACK_ELEMENT_IS_CORE flag */
-GESTrackElement *
-ges_track_element_copy_core (GESTrackElement * self, gboolean deep)
+void
+ges_track_element_add_owner (GESTrackElement * self, GESClip * owner)
 {
-  GESTimelineElement *copy =
-      ges_timeline_element_copy (GES_TIMELINE_ELEMENT (self), deep);
-  if (!copy)
-    return NULL;
-  if (ELEMENT_FLAG_IS_SET (self, GES_TRACK_ELEMENT_IS_CORE))
-    ELEMENT_SET_FLAG (copy, GES_TRACK_ELEMENT_IS_CORE);
-  return GES_TRACK_ELEMENT (copy);
+  self->priv->valid_owners = g_list_prepend (self->priv->valid_owners, owner);
+  g_object_weak_ref (G_OBJECT (owner), (GWeakNotify) owner_disposed, self);
+}
+
+GList *
+ges_track_element_get_owners (GESTrackElement * self)
+{
+  return self->priv->valid_owners;
 }
 
 static void

@@ -195,7 +195,7 @@ _child_inpoint_changed_cb (GESTimelineElement * child, GParamSpec * pspec,
     return;
 
   /* ignore non-core */
-  if (!ELEMENT_FLAG_IS_SET (child, GES_TRACK_ELEMENT_IS_CORE))
+  if (!ges_track_element_get_owners (GES_TRACK_ELEMENT (child)))
     return;
 
   /* if the track element has no internal content, then this means its
@@ -223,7 +223,7 @@ _update_max_duration (GESContainer * container)
 
   for (tmp = container->children; tmp; tmp = tmp->next) {
     GESTimelineElement *child = tmp->data;
-    if (ELEMENT_FLAG_IS_SET (child, GES_TRACK_ELEMENT_IS_CORE)
+    if (ges_track_element_get_owners (GES_TRACK_ELEMENT (child))
         && GST_CLOCK_TIME_IS_VALID (child->maxduration))
       min = GST_CLOCK_TIME_IS_VALID (min) ? MIN (min, child->maxduration) :
           child->maxduration;
@@ -238,7 +238,7 @@ _child_max_duration_changed_cb (GESTimelineElement * child,
     GParamSpec * pspec, GESContainer * container)
 {
   /* ignore non-core */
-  if (!ELEMENT_FLAG_IS_SET (child, GES_TRACK_ELEMENT_IS_CORE))
+  if (!ges_track_element_get_owners (GES_TRACK_ELEMENT (child)))
     return;
 
   _update_max_duration (container);
@@ -249,7 +249,7 @@ _child_has_internal_source_changed_cb (GESTimelineElement * child,
     GParamSpec * pspec, GESContainer * container)
 {
   /* ignore non-core */
-  if (!ELEMENT_FLAG_IS_SET (child, GES_TRACK_ELEMENT_IS_CORE))
+  if (!ges_track_element_get_owners (GES_TRACK_ELEMENT (child)))
     return;
 
   /* if the track element is now registered to have no internal content,
@@ -305,13 +305,13 @@ ges_clip_can_set_inpoint_of_child (GESClip * clip, GESTimelineElement * child,
     return TRUE;
 
   /* non-core children do not effect our in-point */
-  if (!ELEMENT_FLAG_IS_SET (child, GES_TRACK_ELEMENT_IS_CORE))
+  if (!ges_track_element_get_owners (GES_TRACK_ELEMENT (child)))
     return TRUE;
 
   for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
     GESTimelineElement *child = tmp->data;
 
-    if (ELEMENT_FLAG_IS_SET (child, GES_TRACK_ELEMENT_IS_CORE)
+    if (ges_track_element_get_owners (GES_TRACK_ELEMENT (child))
         && ges_track_element_has_internal_source (GES_TRACK_ELEMENT (child))) {
       if (GST_CLOCK_TIME_IS_VALID (child->maxduration)
           && child->maxduration < inpoint)
@@ -333,7 +333,7 @@ _set_childrens_inpoint (GESTimelineElement * element, GstClockTime inpoint,
   for (tmp = GES_CONTAINER_CHILDREN (element); tmp; tmp = tmp->next) {
     GESTimelineElement *child = tmp->data;
 
-    if (ELEMENT_FLAG_IS_SET (child, GES_TRACK_ELEMENT_IS_CORE)
+    if (ges_track_element_get_owners (GES_TRACK_ELEMENT (child))
         && ges_track_element_has_internal_source (GES_TRACK_ELEMENT (child))) {
       if (!_set_inpoint0 (child, inpoint)) {
         GST_ERROR_OBJECT ("Could not set the in-point of child %"
@@ -401,7 +401,7 @@ _set_max_duration (GESTimelineElement * element, GstClockTime maxduration)
   for (tmp = GES_CONTAINER_CHILDREN (element); tmp; tmp = tmp->next) {
     GESTimelineElement *child = tmp->data;
 
-    if (ELEMENT_FLAG_IS_SET (child, GES_TRACK_ELEMENT_IS_CORE)
+    if (ges_track_element_get_owners (GES_TRACK_ELEMENT (child))
         && ges_track_element_has_internal_source (GES_TRACK_ELEMENT (child))) {
       if (!ges_timeline_element_set_max_duration (child, maxduration)) {
         GST_ERROR_OBJECT ("Could not set the max-duration of child %"
@@ -535,6 +535,7 @@ _add_child (GESContainer * container, GESTimelineElement * element)
   GESClipClass *klass = GES_CLIP_GET_CLASS (GES_CLIP (container));
   guint max_prio, min_prio;
   GESClipPrivate *priv = GES_CLIP (container)->priv;
+  GList *child_core_owners;
 
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (element), FALSE);
 
@@ -547,11 +548,19 @@ _add_child (GESContainer * container, GESTimelineElement * element)
     return FALSE;
   }
 
+  child_core_owners =
+      ges_track_element_get_owners (GES_TRACK_ELEMENT (element));
+  if (child_core_owners
+      && !g_list_find (child_core_owners, GES_CLIP (container))) {
+    GST_WARNING_OBJECT (container,
+        "Can not add child %" GES_FORMAT " because we are not in it core owner"
+        " element list", GES_ARGS (element));
+    return FALSE;
+  }
+
   /* NOTE: notifies are currently frozen by ges_container_add */
   _get_priority_range (container, &min_prio, &max_prio);
-  if (ELEMENT_FLAG_IS_SET (element, GES_TRACK_ELEMENT_IS_CORE)) {
-    /* NOTE: we are assuming that the core element is **our** core element
-     * and not from another clip. */
+  if (child_core_owners) {
     /* NOTE: Core track elements that are base effects are added like any
      * other core clip. In particular, they are *not* added to the list of
      * added effects, so we don not increase nb_effects. */
@@ -572,8 +581,8 @@ _add_child (GESContainer * container, GESTimelineElement * element)
 
     /* Always add at the same priority, on top of existing effects */
     _set_priority0 (element, min_prio + priv->nb_effects);
-  } else if (GES_CLIP_CLASS_CAN_ADD_EFFECTS (klass)
-      && GES_IS_BASE_EFFECT (element)) {
+  } else if (GES_CLIP_CLASS_CAN_ADD_EFFECTS (klass) &&
+      GES_IS_BASE_EFFECT (element)) {
     GList *tmp;
     /* Add the effect at the lowest priority among effects (just after
      * the core elements). Need to shift the core elements up by 1
@@ -626,7 +635,7 @@ _remove_child (GESContainer * container, GESTimelineElement * element)
   GESClipPrivate *priv = GES_CLIP (container)->priv;
 
   /* NOTE: notifies are currently frozen by ges_container_add */
-  if (!ELEMENT_FLAG_IS_SET (element, GES_TRACK_ELEMENT_IS_CORE)
+  if (!ges_track_element_get_owners (GES_TRACK_ELEMENT (element))
       && GES_IS_BASE_EFFECT (element)) {
     GList *tmp;
     GST_DEBUG_OBJECT (container, "Resyncing effects priority.");
@@ -646,12 +655,8 @@ _remove_child (GESContainer * container, GESTimelineElement * element)
     /* height may have changed */
     _compute_height (container);
   }
-  if (ELEMENT_FLAG_IS_SET (element, GES_TRACK_ELEMENT_IS_CORE)) {
-    /* When removed, the child is no longer considered a core element.
-     * This prevents the user from being able to add the removed track
-     * element to an arbitrary clip */
-    ELEMENT_UNSET_FLAG (element, GES_TRACK_ELEMENT_IS_CORE);
-  }
+  /* Core owner is not reset so that the child can be readded here in @container
+   * but not in any other clip by the end user */
   return TRUE;
 }
 
@@ -696,15 +701,14 @@ static void
 _transfer_child (GESClip * from_clip, GESClip * to_clip,
     GESTrackElement * child)
 {
-  gboolean is_core;
   /* We need to bump the refcount to avoid the object to be destroyed */
   gst_object_ref (child);
-  /* IS_CORE flag is removed when an element is removed from its clip */
-  is_core = ELEMENT_FLAG_IS_SET (child, GES_TRACK_ELEMENT_IS_CORE);
   ges_container_remove (GES_CONTAINER (from_clip),
       GES_TIMELINE_ELEMENT (child));
-  if (is_core)
-    ELEMENT_SET_FLAG (child, GES_TRACK_ELEMENT_IS_CORE);
+
+  if (ges_track_element_get_owners (GES_TRACK_ELEMENT (child)))
+    ges_track_element_add_owner (GES_TRACK_ELEMENT (child), to_clip);
+
   ges_container_add (GES_CONTAINER (to_clip), GES_TIMELINE_ELEMENT (child));
   gst_object_unref (child);
 }
@@ -828,7 +832,7 @@ _group (GList * containers)
           inpoint != _INPOINT (tmpcontainer) ||
           duration != _DURATION (tmpcontainer) || clip->priv->layer != layer) {
         GST_INFO ("All children must have the same start, inpoint, duration "
-            " and be in the same layer");
+            "and be in the same layer");
 
         goto done;
       } else {
@@ -929,7 +933,11 @@ _deep_copy (GESTimelineElement * element, GESTimelineElement * copy)
   for (tmp = GES_CONTAINER_CHILDREN (element); tmp; tmp = tmp->next) {
     el = GES_TRACK_ELEMENT (tmp->data);
     /* copies the children properties */
-    el_copy = ges_track_element_copy_core (el, TRUE);
+    el_copy = GES_TRACK_ELEMENT (ges_timeline_element_copy (tmp->data, TRUE));
+
+    if (ges_track_element_get_owners (el))
+      ges_track_element_add_owner (el_copy, ccopy);
+
     ges_track_element_copy_bindings (el, el_copy, GST_CLOCK_TIME_NONE);
     ccopy->priv->copied_track_elements =
         g_list_append (ccopy->priv->copied_track_elements, el_copy);
@@ -958,11 +966,15 @@ _paste (GESTimelineElement * element, GESTimelineElement * ref,
      * ges_track_element_copy_properties explicitly, which is the
      * deep_copy for the GESTrackElementClass. */
     new_trackelement =
-        GES_TRACK_ELEMENT (ges_track_element_copy_core (trackelement, FALSE));
+        GES_TRACK_ELEMENT (ges_timeline_element_copy (GES_TIMELINE_ELEMENT
+            (trackelement), FALSE));
     if (new_trackelement == NULL) {
       GST_WARNING_OBJECT (trackelement, "Could not create a copy");
       continue;
     }
+
+    if (ges_track_element_get_owners (trackelement))
+      ges_track_element_add_owner (new_trackelement, nclip);
 
     ges_container_add (GES_CONTAINER (nclip),
         GES_TIMELINE_ELEMENT (new_trackelement));
@@ -1219,16 +1231,11 @@ ges_clip_create_track_elements (GESClip * clip, GESTrackType type)
 
     if (!ges_track_element_get_track (child)
         && ges_track_element_get_track_type (child) & type) {
-      gboolean is_core = ELEMENT_FLAG_IS_SET (child, GES_TRACK_ELEMENT_IS_CORE);
-
       GST_DEBUG_OBJECT (clip, "Removing for reusage: %" GST_PTR_FORMAT, child);
       result = g_list_append (result, g_object_ref (child));
       ges_container_remove (GES_CONTAINER (clip), tmp->data);
-      if (is_core) {
-        /* set on child since the flag is removed when removed from the clip */
-        ELEMENT_SET_FLAG (child, GES_TRACK_ELEMENT_IS_CORE);
+      if (ges_track_element_get_owners (GES_TRACK_ELEMENT (child)))
         readding_effects_only = FALSE;
-      }
     }
   }
   g_list_free_full (children, gst_object_unref);
@@ -1265,10 +1272,8 @@ ges_clip_create_track_elements (GESClip * clip, GESTrackType type)
    */
   if (readding_effects_only) {
     GList *track_elements = klass->create_track_elements (clip, type);
-    for (tmp = track_elements; tmp; tmp = tmp->next) {
-      GESTimelineElement *elem = tmp->data;
-      ELEMENT_SET_FLAG (elem, GES_TRACK_ELEMENT_IS_CORE);
-    }
+    for (tmp = track_elements; tmp; tmp = tmp->next)
+      ges_track_element_add_owner (tmp->data, clip);
     result = g_list_concat (track_elements, result);
   }
 
@@ -1514,7 +1519,7 @@ ges_clip_get_top_effects (GESClip * clip)
   for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
     child = tmp->data;
     if (GES_IS_BASE_EFFECT (child)
-        && !ELEMENT_FLAG_IS_SET (child, GES_TRACK_ELEMENT_IS_CORE))
+        && !ges_track_element_get_owners (GES_TRACK_ELEMENT (child)))
       ret = g_list_append (ret, gst_object_ref (child));
   }
 
@@ -1531,7 +1536,7 @@ _is_added_effect (GESClip * clip, GESBaseEffect * effect)
         " doe not belong to this clip", GES_ARGS (effect));
     return FALSE;
   }
-  if (ELEMENT_FLAG_IS_SET (effect, GES_TRACK_ELEMENT_IS_CORE)) {
+  if (ges_track_element_get_owners (GES_TRACK_ELEMENT (effect))) {
     GST_WARNING_OBJECT (clip, "The effect %" GES_FORMAT " is not a top "
         "effect of this clip (it is a core element of the clip)",
         GES_ARGS (effect));
@@ -1778,11 +1783,16 @@ ges_clip_split (GESClip * clip, guint64 position)
     GESTrackElement *new_trackelement, *trackelement =
         GES_TRACK_ELEMENT (tmp->data);
 
-    new_trackelement = ges_track_element_copy_core (trackelement, FALSE);
+    new_trackelement =
+        GES_TRACK_ELEMENT (ges_timeline_element_copy (GES_TIMELINE_ELEMENT
+            (trackelement), FALSE));
     if (new_trackelement == NULL) {
       GST_WARNING_OBJECT (trackelement, "Could not create a copy");
       continue;
     }
+
+    if (ges_track_element_get_owners (trackelement))
+      ges_track_element_add_owner (new_trackelement, new_object);
 
     /* FIXME: in-point for non-core track elements should be shifted by
      * the split (adding them to the new clip will not set their in-point)

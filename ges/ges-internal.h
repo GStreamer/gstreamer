@@ -413,8 +413,11 @@ G_GNUC_INTERNAL void ges_track_element_copy_properties          (GESTimelineElem
 G_GNUC_INTERNAL void ges_track_element_copy_bindings (GESTrackElement *element,
                                                       GESTrackElement *new_element,
                                                       guint64 position);
-G_GNUC_INTERNAL GESTrackElement * ges_track_element_copy_core   (GESTrackElement * self,
-                                                                 gboolean deep);
+
+G_GNUC_INTERNAL void ges_track_element_add_owner           (GESTrackElement * self,
+                                                                 GESClip * owner);
+/* NOTE: Returned elements in list are only valid for **pointer comparison** */
+G_GNUC_INTERNAL GList * ges_track_element_get_owners      (GESTrackElement *self);
 
 G_GNUC_INTERNAL GstElement* ges_source_create_topbin(const gchar* bin_name, GstElement* sub_element, GPtrArray* elements);
 G_GNUC_INTERNAL void ges_track_set_caps(GESTrack* track,

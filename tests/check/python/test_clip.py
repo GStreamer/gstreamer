@@ -143,7 +143,7 @@ class TestTitleClip(unittest.TestCase):
                             children2[1].props.priority)
 
 
-class TestTrackElements(common.GESTest):
+class TestTrackElements(common.GESSimpleTimelineTest):
 
     def test_add_to_layer_with_effect_remove_add(self):
         timeline = GES.Timeline.new_audio_video()
@@ -240,3 +240,31 @@ class TestTrackElements(common.GESTest):
         mainloop.run(until_empty=True)
 
         self.assertEqual(signals, ["child-removed", "notify::priority"])
+
+    def test_moving_core_track_elements(self):
+        clip = self.append_clip()
+        clip1 = self.append_clip()
+
+        track_element = clip.find_track_element(None, GES.VideoSource)
+        self.assertTrue(clip.remove(track_element))
+
+        track_element1 = clip1.find_track_element(None, GES.VideoSource)
+        self.assertTrue(clip1.remove(track_element1))
+
+        self.assertFalse(clip1.add(track_element))
+        self.assertFalse(clip.add(track_element1))
+
+        self.assertTrue(clip.add(track_element))
+        self.assertTrue(clip1.add(track_element1))
+
+    def test_ungroup_regroup(self):
+        clip = self.append_clip()
+        clip1, clip2 = GES.Container.ungroup(clip, True)
+
+        self.assertEqual(clip, clip1)
+        clip2_child, = clip2.get_children(True)
+
+        self.assertTrue(clip2.remove(clip2_child))
+        self.assertTrue(self.layer.remove_clip(clip2))
+
+        self.assertTrue(clip1.add(clip2_child))
