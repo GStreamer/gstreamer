@@ -342,8 +342,13 @@ gst_srt_src_uri_set_uri (GstURIHandler * handler,
     const gchar * uri, GError ** error)
 {
   GstSRTSrc *self = GST_SRT_SRC (handler);
+  gboolean ret;
 
-  return gst_srt_object_set_uri (self->srtobject, uri, error);
+  GST_OBJECT_LOCK (self);
+  ret = gst_srt_object_set_uri (self->srtobject, uri, error);
+  GST_OBJECT_UNLOCK (self);
+
+  return ret;
 }
 
 static void

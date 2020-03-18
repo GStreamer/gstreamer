@@ -56,13 +56,15 @@ struct _GstSRTObject
   gint                          poll_id;
   gboolean                      sent_headers;
 
-  GCond                         sock_cond;
-
   GTask                        *listener_task;
   SRTSOCKET                     listener_sock;
   gint                          listener_poll_id;
 
   GThread                      *thread;
+
+  /* Protects the list of callers */
+  GMutex                        sock_lock;
+  GCond                         sock_cond;
 
   GList                        *callers;
 
