@@ -436,6 +436,9 @@ gst_buffer_list_insert (GstBufferList * list, gint idx, GstBuffer * buffer)
   want_alloc = list->n_buffers + 1;
 
   if (want_alloc > list->n_allocated) {
+    if (G_UNLIKELY (list->n_allocated > (G_MAXUINT / 2)))
+      g_error ("Growing GstBufferList would result in overflow");
+
     want_alloc = MAX (GST_ROUND_UP_16 (want_alloc), list->n_allocated * 2);
 
     if (GST_BUFFER_LIST_IS_USING_DYNAMIC_ARRAY (list)) {
