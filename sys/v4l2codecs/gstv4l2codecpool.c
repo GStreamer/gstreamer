@@ -33,22 +33,37 @@ struct _GstV4l2CodecPool
 
 G_DEFINE_TYPE (GstV4l2CodecPool, gst_v4l2_codec_pool, GST_TYPE_BUFFER_POOL);
 
+static GstBuffer *
+gst_v4l2_codec_pool_create_empty_buffer (void)
+{
+  GstVideoMeta *vmeta;
+  GstBuffer *buffer = gst_buffer_new ();
+
+  vmeta = gst_buffer_add_video_meta (buffer, 0, GST_VIDEO_FORMAT_NV12, 1, 1);
+  GST_META_FLAG_SET (vmeta, GST_META_FLAG_POOLED);
+
+  return buffer;
+}
+
 static GstFlowReturn
 gst_v4l2_codec_pool_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
     GstBufferPoolAcquireParams * params)
 {
   GstV4l2CodecPool *self = GST_V4L2_CODEC_POOL (pool);
-  GstBuffer *buf = gst_atomic_queue_pop (self->queue);
+  GstBuffer *buf;
   GstVideoMeta *vmeta;
 
   /* A GstVideoInfo must be set before buffer can be acquired */
   g_return_val_if_fail (self->vinfo, GST_FLOW_ERROR);
 
+  buf = gst_atomic_queue_pop (self->queue);
   if (!buf)
-    return GST_FLOW_ERROR;
+    buf = gst_v4l2_codec_pool_create_empty_buffer ();
 
-  if (!gst_v4l2_codec_allocator_prepare_buffer (self->allocator, buf))
+  if (!gst_v4l2_codec_allocator_prepare_buffer (self->allocator, buf)) {
+    gst_atomic_queue_push (self->queue, buf);
     return GST_FLOW_ERROR;
+  }
 
   vmeta = gst_buffer_get_video_meta (buf);
   vmeta->format = GST_VIDEO_INFO_FORMAT (self->vinfo);
@@ -130,12 +145,7 @@ gst_v4l2_codec_pool_new (GstV4l2CodecAllocator * allocator,
 
   pool_size = gst_v4l2_codec_allocator_get_pool_size (allocator);
   for (gsize i = 0; i < pool_size; i++) {
-    GstVideoMeta *vmeta;
-    GstBuffer *buffer = gst_buffer_new ();
-
-    vmeta = gst_buffer_add_video_meta (buffer, 0, GST_VIDEO_FORMAT_NV12, 1, 1);
-    GST_META_FLAG_SET (vmeta, GST_META_FLAG_POOLED);
-
+    GstBuffer *buffer = gst_v4l2_codec_pool_create_empty_buffer ();
     gst_atomic_queue_push (pool->queue, buffer);
   }
 
