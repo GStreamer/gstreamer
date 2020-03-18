@@ -120,16 +120,22 @@ validate_ext (GstRTPBuffer * rtp, gboolean wanted_has_drop_null,
   gboolean has_drop_null;
   guint orig_ts_packet_count;
   gboolean ts_packet_size;
+  guint8 *data;
   guint8 npd_bits;
 
   fail_unless (gst_rtp_buffer_get_extension_data (rtp, &bits, &extdata,
           &extlen));
 
-  has_drop_null = (bits >> 15) & 1;     /* N */
-  has_seqnum_ext = (bits >> 14) & 1;    /* E */
-  orig_ts_packet_count = (bits >> 10) & 7;      /* Size */
-  ts_packet_size = ((bits >> 7) & 1) ? 204 : 188;
-  npd_bits = bits & 0x7F;
+  fail_unless_equals_int (bits, 'R' << 8 | 'I');
+  fail_unless (extlen == 1);
+
+  data = extdata;
+
+  has_drop_null = (data[0] >> 7) & 1;     /* N */
+  has_seqnum_ext = (data[0] >> 6) & 1;    /* E */
+  orig_ts_packet_count = (data[0] >> 3) & 7;      /* Size */
+  ts_packet_size = ((data[1] >> 7) & 1) ? 204 : 188;
+  npd_bits = data[1] & 0x7F;
 
   fail_unless_equals_int (has_drop_null, wanted_has_drop_null);
   fail_unless_equals_int (has_seqnum_ext, wanted_has_seqnum_ext);
@@ -140,9 +146,7 @@ validate_ext (GstRTPBuffer * rtp, gboolean wanted_has_drop_null,
   if (wanted_has_seqnum_ext) {
     guint16 ext;
 
-    fail_unless (extlen == 1);
-    ext = GST_READ_UINT16_BE (extdata);
-
+    ext = GST_READ_UINT16_BE (data + 2);
     fail_unless_equals_int (ext, wanted_ext);
   }
 }

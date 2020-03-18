@@ -95,9 +95,10 @@ gst_rist_rtp_ext_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   gboolean drop_null = self->drop_null;
   gboolean ts_packet_size = 0;
   guint ts_packet_count = 0;
-  guint16 bits = 0;
   guint8 npd_bits = 0;
   gboolean num_packets_deleted = 0;
+  guint8 *data;
+  guint wordlen;
 
   if (!self->drop_null && !self->add_seqnumext)
     return gst_pad_push (self->srcpad, buffer);
@@ -173,20 +174,19 @@ gst_rist_rtp_ext_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     goto error_mapped;
   }
 
-  bits = 0;
-  bits |= drop_null << 15;      /* N */
-  bits |= self->add_seqnumext << 14;    /* E */
-  if (ts_packet_count <= 7)
-    bits |= (ts_packet_count & 7) << 10;        /* Size */
-  bits |= (ts_packet_size == 204) << 7; /* T */
-  bits |= (npd_bits & 0x7F);
-
   gst_rtp_buffer_set_extension (&rtp, TRUE);
-  gst_rtp_buffer_set_extension_data (&rtp, bits, self->add_seqnumext ? 1 : 0);
+  gst_rtp_buffer_set_extension_data (&rtp, 'R' << 8 | 'I', 1);
+  gst_rtp_buffer_get_extension_data (&rtp, NULL, (void **) &data, &wordlen);
+
+  data[0] = drop_null << 7;
+  data[0] |= self->add_seqnumext << 6;
+  if (ts_packet_count <= 7)
+    data[0] |= (ts_packet_count & 7) << 3;      /* Size */
+
+  data[1] = (ts_packet_size == 204) << 7;
+  data[1] |= (npd_bits & 0x7F);
 
   if (self->add_seqnumext) {
-    guint8 *data;
-    guint wordlen;
     guint16 seqnum = gst_rtp_buffer_get_seq (&rtp);
     guint32 extseqnum;
 
@@ -195,9 +195,7 @@ gst_rist_rtp_ext_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
     extseqnum = gst_rist_rtp_ext_seq (&self->extseqnum, seqnum);
 
-    gst_rtp_buffer_get_extension_data (&rtp, &bits, (void **) &data, &wordlen);
-    GST_WRITE_UINT16_BE (data, (extseqnum >> 16));
-    data[2] = data[3] = 0;
+    GST_WRITE_UINT16_BE (data + 2, (extseqnum >> 16));
   }
 
   gst_rtp_buffer_unmap (&rtp);
