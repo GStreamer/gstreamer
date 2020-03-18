@@ -1392,3 +1392,47 @@
         Image
           default size: RU4 (width * 2) * RU2 (height) * 3 / 2
 ```
+
+- **"Y212\_LE"** Packed 4:2:2 YUV, 2 bytes per channel where color value is stored in MSB 12 bits (Y-U-Y-V), LE
+
+```
+        Component 0: Y
+          depth:           12 LE
+          pstride:         4
+          default offset:  0
+
+        Component 1: U
+          depth:           12 LE
+          pstride:         8
+          offset:          2
+
+        Component 2: V
+          depth            12 LE
+          pstride:         8
+          offset:          6
+        Image
+          default rstride: RU8 (width * 4)
+          default size:    rstride (image) * height
+```
+
+- **"Y212\_BE"** Packed 4:2:2 YUV, 2 bytes per channel where color value is stored in MSB 12 bits (Y-U-Y-V), BE
+
+```
+        Component 0: Y
+          depth:           12 BE
+          pstride:         4
+          default offset:  0
+
+        Component 1: U
+          depth:           12 BE
+          pstride:         8
+          offset:          2
+
+        Component 2: V
+          depth            12 BE
+          pstride:         8
+          offset:          6
+        Image
+          default rstride: RU8 (width * 4)
+          default size:    rstride (image) * height
+```
