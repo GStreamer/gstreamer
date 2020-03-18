@@ -4258,6 +4258,39 @@ gst_value_is_subset_structure_structure (const GValue * value1,
   return gst_structure_is_subset (s1, s2);
 }
 
+static gboolean
+gst_value_is_subset_list_list (const GValue * value1, const GValue * value2)
+{
+  GstValueList *vlist1 = VALUE_LIST_ARRAY (value1);
+  GstValueList *vlist2 = VALUE_LIST_ARRAY (value2);
+  gint it1, len1, it2, len2;
+
+  len1 = vlist1->len;
+  len2 = vlist2->len;
+
+  /* A list can't be a subset of a smaller list */
+  if (len1 > len2)
+    return FALSE;
+
+  /* Check if all elements of the first list are within the 2nd list */
+  for (it1 = 0; it1 < len1; it1++) {
+    const GValue *child1 = &vlist1->fields[it1];
+    gboolean seen = FALSE;
+
+    for (it2 = 0; it2 < len2; it2++) {
+      const GValue *child2 = &vlist2->fields[it2];
+      if (gst_value_compare (child1, child2) == GST_VALUE_EQUAL) {
+        seen = TRUE;
+        break;
+      }
+    }
+    if (!seen)
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
 /**
  * gst_value_is_subset:
  * @value1: a #GValue
@@ -4285,6 +4318,8 @@ gst_value_is_subset (const GValue * value1, const GValue * value2)
   } else if (GST_VALUE_HOLDS_STRUCTURE (value1)
       && GST_VALUE_HOLDS_STRUCTURE (value2)) {
     return gst_value_is_subset_structure_structure (value1, value2);
+  } else if (GST_VALUE_HOLDS_LIST (value1) && GST_VALUE_HOLDS_LIST (value2)) {
+    return gst_value_is_subset_list_list (value1, value2);
   }
 
   /*
@@ -4723,12 +4758,125 @@ gst_value_intersect_double_range_double_range (GValue * dest,
 }
 
 static gboolean
+gst_value_intersect_list_list (GValue * dest, const GValue * value1,
+    const GValue * value2)
+{
+  guint8 tmpfield[16];          /* Check up to 128 values */
+  guint8 *bitfield;
+  gboolean alloc_bitfield = FALSE;
+  gboolean res = FALSE;
+  GValue *tmp;
+  GType type1, type2;
+  guint it1, len1, it2, len2, itar;
+  GstValueList *vlist = NULL;
+
+  /* If they don't have the same basic type, all bets are off :) */
+  if (!gst_value_list_or_array_get_basic_type (value1, &type1) ||
+      !gst_value_list_or_array_get_basic_type (value2, &type2) ||
+      type1 != type2)
+    return FALSE;
+
+  len1 = VALUE_LIST_SIZE (value1);
+  len2 = VALUE_LIST_SIZE (value2);
+
+  /* Fast-path with no dest (i.e. only interested in knowing whether
+   * both lists intersected without wanting the result) */
+  if (!dest) {
+    for (it1 = 0; it1 < len1; it1++) {
+      const GValue *item1 = VALUE_LIST_GET_VALUE (value1, it1);
+      for (it2 = 0; it2 < len2; it2++) {
+        const GValue *item2 = VALUE_LIST_GET_VALUE (value2, it2);
+        if (gst_value_intersect (NULL, item1, item2)) {
+          res = TRUE;
+          goto beach;
+        }
+      }
+    }
+    goto beach;
+  }
+#define is_visited(idx) (bitfield[(idx) >> 3]    & (1 << ((idx) & 0x7)))
+#define mark_visited(idx) (bitfield[(idx) >> 3] |= (1 << ((idx) & 0x7)))
+
+  /* Bitfield to avoid double-visiting */
+  if (G_UNLIKELY (len2 > 128)) {
+    alloc_bitfield = TRUE;
+    bitfield = g_malloc0 ((len2 / 8) + 1);
+    GST_CAT_LOG (GST_CAT_PERFORMANCE,
+        "Allocation for GstValueList with more than 128 members");
+  } else {
+    bitfield = &tmpfield[0];
+    memset (bitfield, 0, 16);
+  }
+
+
+  /* When doing list<->list intersections, there is a greater
+   * probability of ending up with a list than with a single value.
+   * Furthermore, the biggest that list can be will the smallest list
+   * (i.e. intersects fully).
+   * Therefore we pre-allocate a GstValueList of that size. */
+  vlist = _gst_value_list_new (MIN (len1, len2));
+
+  itar = 0;
+  tmp = &vlist->fields[0];
+
+  for (it1 = 0; it1 < len1; it1++) {
+    const GValue *item1 = VALUE_LIST_GET_VALUE (value1, it1);
+    for (it2 = 0; it2 < len2; it2++) {
+      const GValue *item2;
+      if (is_visited (it2))
+        continue;
+      item2 = VALUE_LIST_GET_VALUE (value2, it2);
+
+      if (gst_value_intersect (tmp, item1, item2)) {
+        res = TRUE;
+        mark_visited (it2);
+
+        /* Move our collection value */
+        itar += 1;
+        tmp = &vlist->fields[itar];
+        vlist->len += 1;
+
+        /* We can stop iterating the second part now that we've matched */
+        break;
+      }
+    }
+  }
+
+#undef is_visited
+#undef mark_visited
+
+  if (res) {
+    /* If we end up with a single value in the list, just use that
+     * value. Else use the list */
+    if (vlist->len == 1) {
+      gst_value_move (dest, &vlist->fields[0]);
+      g_free (vlist);
+    } else {
+      dest->g_type = GST_TYPE_LIST;
+      dest->data[0].v_pointer = vlist;
+    }
+  } else {
+    g_free (vlist);
+  }
+
+beach:
+  if (alloc_bitfield)
+    g_free (bitfield);
+  return res;
+}
+
+static gboolean
 gst_value_intersect_list (GValue * dest, const GValue * value1,
     const GValue * value2)
 {
   guint i, size;
   GValue intersection = { 0, };
   gboolean ret = FALSE;
+
+  /* Use optimized list-list intersection */
+  if (G_VALUE_TYPE (value2) == GST_TYPE_LIST) {
+    return gst_value_intersect_list_list (dest, value1, value2);
+  }
 
   size = VALUE_LIST_SIZE (value1);
   for (i = 0; i < size; i++) {
