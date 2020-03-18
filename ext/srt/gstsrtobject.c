@@ -90,24 +90,10 @@ srt_caller_free (SRTCaller * caller)
 
 /* called with sock_lock */
 static void
-srt_caller_invoke_removed_closure (SRTCaller * caller, GstSRTObject * srtobject)
+srt_caller_signal_removed (SRTCaller * caller, GstSRTObject * srtobject)
 {
-  GValue values[2] = { G_VALUE_INIT };
-
-  if (srtobject->caller_removed_closure == NULL) {
-    return;
-  }
-
-  g_value_init (&values[0], G_TYPE_INT);
-  g_value_set_int (&values[0], caller->sock);
-
-  g_value_init (&values[1], G_TYPE_SOCKET_ADDRESS);
-  g_value_set_object (&values[1], caller->sockaddr);
-
-  g_closure_invoke (srtobject->caller_removed_closure, NULL, 2, values, NULL);
-
-  g_value_unset (&values[0]);
-  g_value_unset (&values[1]);
+  g_signal_emit_by_name (srtobject->element, "caller-removed", caller->sock,
+      caller->sockaddr);
 }
 
 struct srt_constant_params
@@ -733,20 +719,8 @@ thread_func (gpointer data)
       g_mutex_unlock (&srtobject->sock_lock);
 
       /* notifying caller-added */
-      if (srtobject->caller_added_closure != NULL) {
-        GValue values[2] = { G_VALUE_INIT, G_VALUE_INIT };
-
-        g_value_init (&values[0], G_TYPE_INT);
-        g_value_set_int (&values[0], caller->sock);
-
-        g_value_init (&values[1], G_TYPE_SOCKET_ADDRESS);
-        g_value_set_object (&values[1], caller->sockaddr);
-
-        g_closure_invoke (srtobject->caller_added_closure, NULL, 2, values,
-            NULL);
-
-        g_value_unset (&values[1]);
-      }
+      g_signal_emit_by_name (srtobject->element, "caller-added", caller->sock,
+          caller->sockaddr);
 
       GST_DEBUG_OBJECT (srtobject->element, "Accept to connect");
 
@@ -996,15 +970,6 @@ gboolean
 gst_srt_object_open (GstSRTObject * srtobject, GCancellable * cancellable,
     GError ** error)
 {
-  return gst_srt_object_open_full (srtobject, NULL, NULL, cancellable, error);
-}
-
-gboolean
-gst_srt_object_open_full (GstSRTObject * srtobject,
-    GstSRTObjectCallerAdded caller_added_func,
-    GstSRTObjectCallerRemoved caller_removed_func,
-    GCancellable * cancellable, GError ** error)
-{
   GSocketAddress *socket_address = NULL;
   GstSRTConnectionMode connection_mode = GST_SRT_CONNECTION_MODE_NONE;
 
@@ -1017,20 +982,6 @@ gst_srt_object_open_full (GstSRTObject * srtobject,
   GST_OBJECT_LOCK (srtobject->element);
 
   srtobject->opened = FALSE;
-
-  if (caller_added_func != NULL) {
-    srtobject->caller_added_closure =
-        g_cclosure_new (G_CALLBACK (caller_added_func), srtobject, NULL);
-    g_closure_set_marshal (srtobject->caller_added_closure,
-        g_cclosure_marshal_generic);
-  }
-
-  if (caller_removed_func != NULL) {
-    srtobject->caller_removed_closure =
-        g_cclosure_new (G_CALLBACK (caller_removed_func), srtobject, NULL);
-    g_closure_set_marshal (srtobject->caller_removed_closure,
-        g_cclosure_marshal_generic);
-  }
 
   addr_str = gst_uri_get_host (srtobject->uri);
   if (addr_str == NULL) {
@@ -1132,13 +1083,9 @@ gst_srt_object_close (GstSRTObject * srtobject)
 
   if (srtobject->callers) {
     GList *callers = g_steal_pointer (&srtobject->callers);
-    g_list_foreach (callers, (GFunc) srt_caller_invoke_removed_closure,
-        srtobject);
+    g_list_foreach (callers, (GFunc) srt_caller_signal_removed, srtobject);
     g_list_free_full (callers, (GDestroyNotify) srt_caller_free);
   }
-
-  g_clear_pointer (&srtobject->caller_added_closure, g_closure_unref);
-  g_clear_pointer (&srtobject->caller_removed_closure, g_closure_unref);
 
   g_mutex_unlock (&srtobject->sock_lock);
 
@@ -1388,7 +1335,7 @@ gst_srt_object_write_to_callers (GstSRTObject * srtobject,
 
   err:
     srtobject->callers = g_list_remove (srtobject->callers, caller);
-    srt_caller_invoke_removed_closure (caller, srtobject);
+    srt_caller_signal_removed (caller, srtobject);
     srt_caller_free (caller);
   }
 

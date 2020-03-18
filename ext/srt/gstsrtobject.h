@@ -68,30 +68,16 @@ struct _GstSRTObject
 
   GList                        *callers;
 
-  GClosure                     *caller_added_closure;
-  GClosure                     *caller_removed_closure;
-
   gchar                        *passphrase;
 
   gboolean                     wait_for_connection;
 };
-
-
-typedef void (*GstSRTObjectCallerAdded)         (int sock, GSocketAddress *addr, GstSRTObject * srtobject);
-
-typedef void (*GstSRTObjectCallerRemoved)       (int sock, GSocketAddress *addr, GstSRTObject * srtobject);
 
 GstSRTObject   *gst_srt_object_new              (GstElement *element);
 
 void            gst_srt_object_destroy          (GstSRTObject *srtobject);
 
 gboolean        gst_srt_object_open             (GstSRTObject *srtobject,
-                                                 GCancellable *cancellable,
-                                                 GError **error);
-
-gboolean        gst_srt_object_open_full        (GstSRTObject *srtobject,
-                                                 GstSRTObjectCallerAdded caller_added_func,
-                                                 GstSRTObjectCallerRemoved caller_removed_func,
                                                  GCancellable *cancellable,
                                                  GError **error);
 
