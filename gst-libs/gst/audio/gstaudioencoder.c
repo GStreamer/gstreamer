@@ -717,7 +717,7 @@ foreach_metadata (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
 /**
  * gst_audio_encoder_finish_frame:
  * @enc: a #GstAudioEncoder
- * @buffer: encoded data
+ * @buffer: (transfer full) (allow-none): encoded data
  * @samples: number of samples (per channel) represented by encoded data
  *
  * Collects encoded data and pushes encoded data downstream.
