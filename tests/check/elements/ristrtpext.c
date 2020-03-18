@@ -628,27 +628,24 @@ alloc_ts_buffer_with_ext (guint num_ts_packets, gboolean has_drop_null,
   GstBuffer *buf = alloc_ts_buffer (num_ts_packets);
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
   guint8 *payload;
-  guint16 bits;
+  guint8 *data;
   guint i;
 
-  bits = 0;
-  bits |= has_drop_null << 15;  /* N */
-  bits |= has_seqnum_ext << 14; /* E */
-  bits |= (MIN (orig_ts_packet_count, 7) & 7) << 10;    /* Size */
-  bits |= (ts_packet_size == 204) << 7; /* T */
-  bits |= (npd_bits & 0x7F);
-
   gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp);
-  gst_rtp_buffer_set_extension_data (&rtp, bits,
-      (has_seqnum_ext && extseq != 0xFFFF) ? 1 : 0);
-  if (has_seqnum_ext && extseq != 0xFFFF) {
-    guint8 *data;
-    guint wordlen;
+  gst_rtp_buffer_set_extension_data (&rtp, 'R' << 8 | 'I', 1);
+  gst_rtp_buffer_get_extension_data (&rtp, NULL, (void **) &data, NULL);
 
-    gst_rtp_buffer_get_extension_data (&rtp, &bits, (void **) &data, &wordlen);
-    GST_WRITE_UINT16_BE (data, extseq);
-    data[2] = data[3] = 0;
-  }
+  data[0] = has_drop_null << 7; /* N */
+  data[0] |= has_seqnum_ext << 6;       /* E */
+  data[0] |= (MIN (orig_ts_packet_count, 7) & 7) << 2;  /* Size */
+  data[1] = (ts_packet_size == 204) << 7;       /* T */
+  data[1] |= (npd_bits & 0x7F);
+
+  if (has_seqnum_ext && extseq != 0xFFFF)
+    GST_WRITE_UINT16_BE (data + 2, extseq);
+  else
+    GST_WRITE_UINT16_BE (data + 2, 0);
+
 
   payload = gst_rtp_buffer_get_payload (&rtp);
   for (i = 0; i < num_ts_packets; i++) {

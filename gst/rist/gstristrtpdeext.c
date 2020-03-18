@@ -103,9 +103,9 @@ gst_rist_rtp_deext_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   guint16 bits;
   guint8 npd_bits;
   guint8 num_packets_deleted;
-  guint16 seqnumext_val = 0;
   guint extlen;
-  gpointer extdata;
+  gpointer extdata = NULL;
+  guint8 *data = NULL;
   guint8 *payload;
   guint plen;
   guint i;
@@ -127,24 +127,32 @@ gst_rist_rtp_deext_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     return gst_pad_push (self->srcpad, buffer);
   }
 
-  has_drop_null = (bits >> 15) & 1;     /* N */
-  has_seqnum_ext = (bits >> 14) & 1;    /* E */
-  orig_ts_packet_count = (bits >> 10) & 7;      /* Size */
-  ts_packet_size = ((bits >> 7) & 1) ? 204 : 188;
-  npd_bits = bits & 0x7F;
+  if (bits != ('R' << 8 | 'I')) {
+    gst_rtp_buffer_unmap (&rtp);
+    GST_LOG_OBJECT (self, "Buffer %" GST_PTR_FORMAT
+        " has an extension that's not the RIST one, ignoring", buffer);
+    return gst_pad_push (self->srcpad, buffer);
+  }
+
+  if (extlen != 1) {
+    gst_rtp_buffer_unmap (&rtp);
+    GST_LOG_OBJECT (self, "Buffer %" GST_PTR_FORMAT
+        " has a RIST extension that's not of length 1, ignoring", buffer);
+    return gst_pad_push (self->srcpad, buffer);
+  }
+
+  data = extdata;
+
+  has_drop_null = (data[0] >> 7) & 1;   /* N */
+  has_seqnum_ext = (data[0] >> 6) & 1;  /* E */
+  orig_ts_packet_count = (data[0] >> 3) & 7;    /* Size */
+  ts_packet_size = ((data[1] >> 7) & 1) ? 204 : 188;
+  npd_bits = data[1] & 0x7F;
 
   num_packets_deleted = bit_count (npd_bits);
 
-  if (has_seqnum_ext && extlen >= 1) {
-    seqnumext_val = GST_READ_UINT16_BE (extdata);
-    GST_LOG_OBJECT (self, "Seqnum ext is %d\n", seqnumext_val);
-  } else if (has_seqnum_ext && extlen == 0) {
-    GST_WARNING_OBJECT (self, "Has seqnum flag, but extension is too short");
-    has_seqnum_ext = FALSE;
-    seqnumext_val = 0;
-  }
-
   if (has_seqnum_ext) {
+    guint16 seqnumext_val = GST_READ_UINT16_BE (data + 2);
     guint32 extseqnum = seqnumext_val << 16 | gst_rtp_buffer_get_seq (&rtp);
 
     if (extseqnum < self->max_extseqnum &&
