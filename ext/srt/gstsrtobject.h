@@ -71,6 +71,8 @@ struct _GstSRTObject
   gchar                        *passphrase;
 
   gboolean                     wait_for_connection;
+
+  guint64                      previous_bytes;
 };
 
 GstSRTObject   *gst_srt_object_new              (GstElement *element);
