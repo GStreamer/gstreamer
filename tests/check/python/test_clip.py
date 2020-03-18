@@ -146,8 +146,7 @@ class TestTitleClip(unittest.TestCase):
 
 class TestUriClip(common.GESSimpleTimelineTest):
     def test_max_duration_on_extract(self):
-        uri = Gst.filename_to_uri(os.path.join(__file__, "../../ges/audio_video.ogg"))
-        asset = GES.UriClipAsset.request_sync(uri)
+        asset = GES.UriClipAsset.request_sync(common.get_asset_uri("audio_video.ogg"))
         clip = asset.extract()
 
         self.assertEqual(clip.props.max_duration, Gst.SECOND)

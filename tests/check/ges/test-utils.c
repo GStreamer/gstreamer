@@ -31,20 +31,7 @@ typedef struct _DestroyedObjectStruct
 gchar *
 ges_test_get_audio_only_uri (void)
 {
-  gchar *uri;
-  GFile *cfile, *fdir, *f_audio_only;
-
-  cfile = g_file_new_for_path (__FILE__);
-  fdir = g_file_get_parent (cfile);
-
-  f_audio_only = g_file_get_child (fdir, "audio_only.ogg");
-  uri = g_file_get_uri (f_audio_only);
-
-  gst_object_unref (cfile);
-  gst_object_unref (fdir);
-  gst_object_unref (f_audio_only);
-
-  return uri;
+  return ges_test_file_uri ("audio_only.ogg");
 }
 
 gchar *
