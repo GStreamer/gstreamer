@@ -254,7 +254,7 @@ gstreamer-full:
       -Dauto_features=disabled
       -Dgst-plugins-good:alpha=enabled
     EXCEPT_PROJECT_REGEX: ''
-    ONLY_PROJECT_REGEX: '/^(gst-omx|gst-ci)$/'
+    ONLY_PROJECT_REGEX: '/^(gst-build|gst-ci)$/'
   after_script:
   - cd gst-build/
   - ninja -C build install
