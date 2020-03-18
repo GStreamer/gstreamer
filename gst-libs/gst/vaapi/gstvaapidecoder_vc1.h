@@ -42,6 +42,8 @@ gst_vaapi_decoder_vc1_get_type (void) G_GNUC_CONST;
 GstVaapiDecoder *
 gst_vaapi_decoder_vc1_new (GstVaapiDisplay *display, GstCaps *caps);
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiDecoderVC1, gst_object_unref)
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_DECODER_VC1_H */

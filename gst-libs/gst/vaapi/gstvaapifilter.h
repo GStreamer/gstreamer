@@ -308,8 +308,6 @@ gboolean
 gst_vaapi_filter_set_colorimetry (GstVaapiFilter * filter,
     GstVideoColorimetry * input, GstVideoColorimetry * output);
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiFilter, gst_object_unref)
-#endif
 
 #endif /* GST_VAAPI_FILTER_H */

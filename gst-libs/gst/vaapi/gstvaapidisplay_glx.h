@@ -44,6 +44,8 @@ gst_vaapi_display_glx_new_with_display (Display * x11_display);
 GType
 gst_vaapi_display_glx_get_type (void) G_GNUC_CONST;
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiDisplayGLX, gst_object_unref)
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_DISPLAY_GLX_H */

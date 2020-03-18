@@ -56,6 +56,8 @@ gst_vaapi_encoder_h264_get_profile_and_level (GstVaapiEncoderH264 * encoder,
 gboolean
 gst_vaapi_encoder_h264_supports_avc (GstVaapiEncoderH264 * encoder);
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiEncoderH264, gst_object_unref)
+
 G_END_DECLS
 
 #endif /*GST_VAAPI_ENCODER_H264_H */

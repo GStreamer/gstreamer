@@ -58,6 +58,8 @@ gst_vaapi_display_x11_set_synchronous (GstVaapiDisplayX11 * display,
 GType
 gst_vaapi_display_x11_get_type (void) G_GNUC_CONST;
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiDisplayX11, gst_object_unref)
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_DISPLAY_X11_H */

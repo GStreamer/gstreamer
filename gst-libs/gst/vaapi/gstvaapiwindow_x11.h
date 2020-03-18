@@ -64,6 +64,8 @@ gst_vaapi_window_x11_get_xid (GstVaapiWindowX11 * window);
 gboolean
 gst_vaapi_window_x11_is_foreign_xid (GstVaapiWindowX11 * window);
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiWindowX11, gst_object_unref)
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_WINDOW_X11_H */

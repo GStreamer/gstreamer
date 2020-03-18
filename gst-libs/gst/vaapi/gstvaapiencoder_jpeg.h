@@ -43,5 +43,8 @@ gst_vaapi_encoder_jpeg_get_type (void) G_GNUC_CONST;
 GstVaapiEncoder *
 gst_vaapi_encoder_jpeg_new (GstVaapiDisplay * display);
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiEncoderJpeg, gst_object_unref)
+
 G_END_DECLS
+
 #endif /*GST_VAAPI_ENCODER_JPEG_H */

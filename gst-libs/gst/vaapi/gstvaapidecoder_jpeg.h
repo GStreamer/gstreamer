@@ -43,6 +43,8 @@ gst_vaapi_decoder_jpeg_get_type (void) G_GNUC_CONST;
 GstVaapiDecoder *
 gst_vaapi_decoder_jpeg_new (GstVaapiDisplay *display, GstCaps *caps);
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiDecoderJpeg, gst_object_unref)
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_DECODER_JPEG_H */

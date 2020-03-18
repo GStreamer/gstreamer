@@ -195,6 +195,8 @@ gst_vaapi_encoder_get_entrypoint (GstVaapiEncoder * encoder,
 GArray *
 gst_vaapi_encoder_get_available_profiles (GstVaapiEncoder * encoder);
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiEncoder, gst_object_unref)
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_ENCODER_H */

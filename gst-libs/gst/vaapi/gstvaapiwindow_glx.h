@@ -68,9 +68,7 @@ gst_vaapi_window_glx_put_texture (GstVaapiWindowGLX * window,
     GstVaapiTexture * texture, const GstVaapiRectangle * src_rect,
     const GstVaapiRectangle * dst_rect);
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiWindowGLX, gst_object_unref)
-#endif
 
 G_END_DECLS
 

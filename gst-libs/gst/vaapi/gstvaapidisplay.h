@@ -284,9 +284,7 @@ gst_vaapi_display_reset_texture_map (GstVaapiDisplay * display);
 gboolean
 gst_vaapi_display_has_driver_quirks (GstVaapiDisplay * display, guint quirks);
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiDisplay, gst_object_unref)
-#endif
 
 G_END_DECLS
 

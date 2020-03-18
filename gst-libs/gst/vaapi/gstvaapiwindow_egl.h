@@ -43,9 +43,7 @@ gst_vaapi_window_egl_get_type (void) G_GNUC_CONST;
 GstVaapiWindow *
 gst_vaapi_window_egl_new (GstVaapiDisplay * display, guint width, guint height);
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiWindowEGL, gst_object_unref)
-#endif
 
 G_END_DECLS
 

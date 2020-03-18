@@ -52,6 +52,8 @@ gboolean
 gst_vaapi_encoder_h265_get_profile_tier_level (GstVaapiEncoderH265 * encoder,
     GstVaapiProfile * out_profile_ptr, GstVaapiTierH265 *out_tier_ptr, GstVaapiLevelH265 * out_level_ptr);
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiEncoderH265, gst_object_unref)
+
 G_END_DECLS
 
 #endif /*GST_VAAPI_ENCODER_H265_H */

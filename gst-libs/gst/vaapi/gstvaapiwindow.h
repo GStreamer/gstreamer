@@ -99,9 +99,7 @@ gst_vaapi_window_unblock (GstVaapiWindow * window);
 gboolean
 gst_vaapi_window_unblock_cancel (GstVaapiWindow * window);
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiWindow, gst_object_unref)
-#endif
 
 G_END_DECLS
 

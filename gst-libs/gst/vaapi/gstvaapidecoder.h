@@ -142,9 +142,7 @@ gst_vaapi_decoder_check_status (GstVaapiDecoder * decoder);
 gboolean
 gst_vaapi_decoder_update_caps (GstVaapiDecoder * decoder, GstCaps * caps);
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiDecoder, gst_object_unref)
-#endif
 
 G_END_DECLS
 

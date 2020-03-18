@@ -53,6 +53,8 @@ gst_vaapi_texture_map_reset (GstVaapiTextureMap * map);
 GType
 gst_vaapi_texture_map_get_type (void) G_GNUC_CONST;
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiTextureMap, gst_object_unref)
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_TEXTURE_MAP_H */

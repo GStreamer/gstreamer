@@ -51,6 +51,8 @@ gst_vaapi_display_wayland_get_display (GstVaapiDisplayWayland * display);
 GType
 gst_vaapi_display_wayland_get_type (void) G_GNUC_CONST;
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiDisplayWayland, gst_object_unref)
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_DISPLAY_WAYLAND_H */
