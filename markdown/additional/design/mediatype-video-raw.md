@@ -1436,3 +1436,59 @@
           default rstride: RU8 (width * 4)
           default size:    rstride (image) * height
 ```
+
+- **"Y412\_LE"** Packed 4:4:4:4 AYUV, 2 bytes per channel where color value is stored in MSB 12 bits (U-Y-V-A), LE
+
+```
+        Component 0: Y
+          depth:           12 LE
+          pstride:         8
+          default offset:  2
+
+        Component 1: U
+          depth:           12 LE
+          pstride:         8
+          offset:          0
+
+        Component 2: V
+          depth            12 LE
+          pstride:         8
+          offset:          4
+
+        Component 2: A
+          depth            12 LE
+          pstride:         8
+          offset:          6
+
+        Image
+          default rstride: width * 8
+          default size:    rstride (image) * height
+```
+
+- **"Y412\_BE"** Packed 4:4:4:4 AYUV, 2 bytes per channel where color value is stored in MSB 12 bits (U-Y-V-A), BE
+
+```
+        Component 0: Y
+          depth:           12 BE
+          pstride:         8
+          default offset:  2
+
+        Component 1: U
+          depth:           12 BE
+          pstride:         8
+          offset:          0
+
+        Component 2: V
+          depth            12 BE
+          pstride:         8
+          offset:          4
+
+        Component 2: A
+          depth            12 BE
+          pstride:         8
+          offset:          6
+
+        Image
+          default rstride: width * 8
+          default size:    rstride (image) * height
+```
