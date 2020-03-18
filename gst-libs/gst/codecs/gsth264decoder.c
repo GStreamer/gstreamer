@@ -1133,8 +1133,10 @@ gst_h264_decoder_finish_current_picture (GstH264Decoder * self)
 
   klass = GST_H264_DECODER_GET_CLASS (self);
 
-  if (klass->end_picture)
-    ret = klass->end_picture (self, priv->current_picture);
+  if (klass->end_picture) {
+    if (!klass->end_picture (self, priv->current_picture))
+      priv->current_picture->nonexisting = TRUE;
+  }
 
   /* finish picture takes ownership of the picture */
   ret = gst_h264_decoder_finish_picture (self, priv->current_picture);
