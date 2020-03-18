@@ -1560,13 +1560,6 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux, GstPad * pad,
   GST_API_LOCK (demux);
   GST_MANIFEST_LOCK (demux);
 
-  if (!gst_adaptive_demux_can_seek (demux)) {
-    GST_MANIFEST_UNLOCK (demux);
-    GST_API_UNLOCK (demux);
-    gst_event_unref (event);
-    return FALSE;
-  }
-
   gst_event_parse_seek (event, &rate, &format, &flags, &start_type, &start,
       &stop_type, &stop);
 
@@ -1588,6 +1581,48 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux, GstPad * pad,
   }
 
   seqnum = gst_event_get_seqnum (event);
+
+  if (flags & GST_SEEK_FLAG_INSTANT_RATE_CHANGE) {
+    /* For instant rate seeks, reply directly and update
+     * our segment so the new rate is reflected in any future
+     * fragments */
+    GstEvent *ev;
+
+    /* instant rate change only supported if direction does not change. All
+     * other requirements are already checked before creating the seek event
+     * but let's double-check here to be sure */
+    if ((demux->segment.rate > 0 && rate < 0) ||
+        (demux->segment.rate < 0 && rate > 0) ||
+        start_type != GST_SEEK_TYPE_NONE ||
+        stop_type != GST_SEEK_TYPE_NONE || (flags & GST_SEEK_FLAG_FLUSH)) {
+      GST_ERROR_OBJECT (demux,
+          "Instant rate change seeks only supported in the "
+          "same direction, without flushing and position change");
+      GST_MANIFEST_UNLOCK (demux);
+      GST_API_UNLOCK (demux);
+      return FALSE;
+    }
+
+    ev = gst_event_new_instant_rate_change (rate / demux->segment.rate,
+        (GstSegmentFlags) flags);
+    gst_event_set_seqnum (ev, seqnum);
+
+    GST_MANIFEST_UNLOCK (demux);
+
+    ret = gst_adaptive_demux_push_src_event (demux, ev);
+
+    GST_API_UNLOCK (demux);
+    gst_event_unref (event);
+
+    return ret;
+  }
+
+  if (!gst_adaptive_demux_can_seek (demux)) {
+    GST_MANIFEST_UNLOCK (demux);
+    GST_API_UNLOCK (demux);
+    gst_event_unref (event);
+    return FALSE;
+  }
 
   if (gst_adaptive_demux_is_live (demux)) {
     gint64 range_start, range_stop;
