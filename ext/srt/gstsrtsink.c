@@ -35,7 +35,7 @@
  * |[
  * gst-launch-1.0 -v audiotestsrc ! srtsink uri=srt://:port
  * ]| This pipeline shows how to wait SRT callers.
- * 
+ *
  */
 
 #ifdef HAVE_CONFIG_H
@@ -303,7 +303,7 @@ gst_srt_sink_class_init (GstSRTSinkClass * klass)
    * @gstsrtsink: the srtsink element that emitted this signal
    * @sock: the client socket descriptor that was added to srtsink
    * @addr: the #GSocketAddress that describes the @sock
-   * 
+   *
    * The given socket descriptor was added to srtsink.
    */
   signals[SIG_CALLER_ADDED] =

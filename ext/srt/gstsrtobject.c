@@ -383,8 +383,8 @@ gst_srt_object_install_properties_helper (GObjectClass * gobject_class)
 
   /**
    * GstSRTSrc:mode:
-   * 
-   * The SRT connection mode. 
+   *
+   * The SRT connection mode.
    * This property can be set by URI parameters.
    */
   g_object_class_install_property (gobject_class, PROP_MODE,
@@ -396,7 +396,7 @@ gst_srt_object_install_properties_helper (GObjectClass * gobject_class)
 
   /**
    * GstSRTSrc:localaddress:
-   * 
+   *
    * The address to bind when #GstSRTSrc:mode is listener or rendezvous.
    * This property can be set by URI parameters.
    */
@@ -432,7 +432,7 @@ gst_srt_object_install_properties_helper (GObjectClass * gobject_class)
 
   /**
    * GstSRTSrc:pbkeylen:
-   * 
+   *
    * The crypto key length.
    * This property can be set by URI parameters.
    */
@@ -445,7 +445,7 @@ gst_srt_object_install_properties_helper (GObjectClass * gobject_class)
 
   /**
    * GstSRTSrc:poll-timeout:
-   * 
+   *
    * The polling timeout used when srt poll is started.
    * Even if the default value indicates infinite waiting, it can be cancellable according to #GstState
    * This property can be set by URI parameters.

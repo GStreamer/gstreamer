@@ -2,7 +2,7 @@
  * Copyright (C) 2018, Collabora Ltd.
  * Copyright (C) 2018, SK Telecom, Co., Ltd.
  *   Author: Jeongseok Kim <jeongseok.kim@sk.com>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -272,7 +272,7 @@ gst_srt_src_class_init (GstSRTSrcClass * klass)
    * @gstsrtsink: the srtsink element that emitted this signal
    * @sock: the client socket descriptor that was added to srtsink
    * @addr: the #GSocketAddress that describes the @sock
-   * 
+   *
    * The given socket descriptor was added to srtsink.
    */
   signals[SIG_CALLER_ADDED] =

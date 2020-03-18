@@ -95,11 +95,11 @@ gboolean        gst_srt_object_open_full        (GstSRTObject *srtobject,
 
 void            gst_srt_object_close            (GstSRTObject *srtobject);
 
-gboolean        gst_srt_object_set_property_helper (GstSRTObject *srtobject, 
+gboolean        gst_srt_object_set_property_helper (GstSRTObject *srtobject,
                                                     guint prop_id, const GValue * value,
                                                     GParamSpec * pspec);
 
-gboolean        gst_srt_object_get_property_helper (GstSRTObject *srtobject, 
+gboolean        gst_srt_object_get_property_helper (GstSRTObject *srtobject,
                                                     guint prop_id, GValue * value,
                                                     GParamSpec * pspec);
 
@@ -107,12 +107,12 @@ void            gst_srt_object_install_properties_helper (GObjectClass *gobject_
 
 gboolean        gst_srt_object_set_uri (GstSRTObject * srtobject, const gchar *uri, GError ** err);
 
-gssize          gst_srt_object_read     (GstSRTObject * srtobject, 
+gssize          gst_srt_object_read     (GstSRTObject * srtobject,
                                          guint8 *data, gsize size,
                                          GCancellable *cancellable,
                                          GError **err);
 
-gssize          gst_srt_object_write    (GstSRTObject * srtobject, 
+gssize          gst_srt_object_write    (GstSRTObject * srtobject,
                                          GstBufferList * headers,
                                          const GstMapInfo * mapinfo,
                                          GCancellable *cancellable,
