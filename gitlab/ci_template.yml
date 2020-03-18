@@ -88,7 +88,7 @@ gst indent:
   stage: 'preparation'
   variables:
     GIT_STRATEGY: 'fetch'
-    EXCEPT_REGEX: '/^(gstreamer-sharp|gst-integration-testsuites|cerbero|gst-docs)$/'
+    EXCEPT_PROJECT_REGEX: '/^(gstreamer-sharp|gst-integration-testsuites|cerbero|gst-docs)$/'
   script:
     # man indent. grep RETURN VALUE, grab a beer on my behalf...
     - indent --version || true
