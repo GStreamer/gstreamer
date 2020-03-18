@@ -508,6 +508,9 @@ GST_API
 const GValue *  gst_value_list_get_value        (const GValue   *value,
                                                  guint          index);
 
+GST_API
+GValue *        gst_value_list_init             (GValue *value,
+						 guint prealloc);
 /* array */
 
 GST_API
@@ -525,6 +528,9 @@ guint           gst_value_array_get_size        (const GValue   *value);
 GST_API
 const GValue *  gst_value_array_get_value       (const GValue   *value,
                                                  guint          index);
+GST_API
+GValue *        gst_value_array_init            (GValue *value,
+						 guint prealloc);
 
 /* int range */
 

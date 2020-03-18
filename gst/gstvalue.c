@@ -141,14 +141,32 @@ struct _GstValueAbbreviation
   GType type;
 };
 
+/* Actual internal implementation of "GstValueList" and
+ * "GstValueArray" */
+typedef struct _GstValueList GstValueList;
+
+struct _GstValueList
+{
+  /* These 2 fields must remain the same so that they match the public
+   * GArray structure (which was the former implementation) just in
+   * case someone calls `gst_value_peek_pointer` to access the
+   * array/list (such as in gststructure.c) */
+  GValue *fields;
+  guint len;
+
+  guint allocated;
+  GValue arr[1];
+};
+
 #define FUNDAMENTAL_TYPE_ID_MAX \
     (G_TYPE_FUNDAMENTAL_MAX >> G_TYPE_FUNDAMENTAL_SHIFT)
 #define FUNDAMENTAL_TYPE_ID(type) \
     ((type) >> G_TYPE_FUNDAMENTAL_SHIFT)
 
-#define VALUE_LIST_ARRAY(v) ((GArray *) (v)->data[0].v_pointer)
+#define VALUE_LIST_ARRAY(v) ((GstValueList *) (v)->data[0].v_pointer)
 #define VALUE_LIST_SIZE(v) (VALUE_LIST_ARRAY(v)->len)
-#define VALUE_LIST_GET_VALUE(v, index) ((const GValue *) &g_array_index (VALUE_LIST_ARRAY(v), GValue, (index)))
+#define VALUE_LIST_GET_VALUE(v, index) ((const GValue *) &(VALUE_LIST_ARRAY(v)->fields[index]))
+#define VALUE_LIST_IS_USING_DYNAMIC_ARRAY(array) ((array)->fields != &(array)->arr[0])
 
 static GArray *gst_value_table;
 static GHashTable *gst_value_hash;
@@ -195,6 +213,135 @@ gst_value_hash_add_type (GType type, const GstValueTable * table)
  * list *
  ********/
 
+static void
+resize_value_list (GstValueList * vlist)
+{
+  guint want_alloc;
+
+  if (G_UNLIKELY (vlist->allocated > (G_MAXUINT / 2)))
+    g_error ("Growing GstValueList would result in overflow");
+
+  want_alloc = MAX (GST_ROUND_UP_8 (vlist->len + 1), vlist->allocated * 2);
+
+  if (VALUE_LIST_IS_USING_DYNAMIC_ARRAY (vlist)) {
+    vlist->fields = g_renew (GValue, vlist->fields, want_alloc);
+  } else {
+    vlist->fields = g_new0 (GValue, want_alloc);
+    memcpy (vlist->fields, &vlist->arr[0], vlist->len * sizeof (GValue));
+    GST_CAT_LOG (GST_CAT_PERFORMANCE, "Exceeding pre-allocated array");
+  }
+  vlist->allocated = want_alloc;
+}
+
+/* Replacement for g_array_append_val */
+static void
+_gst_value_list_append_val (GstValueList * vlist, GValue * val)
+{
+  /* resize if needed */
+  if (G_UNLIKELY (vlist->len == vlist->allocated))
+    resize_value_list (vlist);
+
+  /* Finally set value */
+  vlist->fields[vlist->len++] = *val;
+}
+
+/* Replacement for g_array_prepend_val */
+static void
+_gst_value_list_prepend_val (GstValueList * vlist, GValue * val)
+{
+  /* resize if needed */
+  if (G_UNLIKELY (vlist->len == vlist->allocated))
+    resize_value_list (vlist);
+
+  /* Shift everything */
+  memmove (&vlist->fields[1], &vlist->fields[0],
+      (vlist->len) * sizeof (GValue));
+
+  vlist->fields[0] = *val;
+  vlist->len++;
+}
+
+static GstValueList *
+_gst_value_list_new (guint prealloc)
+{
+  guint n_alloc;
+  GstValueList *res;
+
+  if (prealloc == 0)
+    prealloc = 1;
+
+  n_alloc = GST_ROUND_UP_8 (prealloc);
+  res = g_malloc0 (sizeof (GstValueList) + (n_alloc - 1) * sizeof (GValue));
+
+  res->len = 0;
+  res->allocated = n_alloc;
+  res->fields = &res->arr[0];
+
+  return res;
+}
+
+static void
+_gst_value_list_init (GValue * value, guint prealloc)
+{
+  value->g_type = GST_TYPE_LIST;
+  memset (value->data, 0, sizeof (value->data));
+  value->data[0].v_pointer = _gst_value_list_new (prealloc);
+}
+
+/**
+ * gst_value_list_init:
+ * @value: A zero-filled (uninitialized) #GValue structure
+ * @prealloc: The number of entries to pre-allocate in the list
+ *
+ * Initializes and pre-allocates a #GValue of type #GST_VALUE_LIST.
+ *
+ * Returns: (transfer none): The #GValue structure that has been passed in
+ *
+ * Since: 1.18
+ */
+
+GValue *
+gst_value_list_init (GValue * value, guint prealloc)
+{
+  g_return_val_if_fail (value != NULL, NULL);
+  g_return_val_if_fail (G_VALUE_TYPE (value) == 0, NULL);
+
+  _gst_value_list_init (value, prealloc);
+
+  return value;
+}
+
+static void
+_gst_value_array_init (GValue * value, guint prealloc)
+{
+  value->g_type = GST_TYPE_ARRAY;
+  memset (value->data, 0, sizeof (value->data));
+  value->data[0].v_pointer = _gst_value_list_new (prealloc);
+}
+
+/**
+ * gst_value_array_init:
+ * @value: A zero-filled (uninitialized) #GValue structure
+ * @prealloc: The number of entries to pre-allocate in the array
+ *
+ * Initializes and pre-allocates a #GValue of type #GST_VALUE_ARRAY.
+ *
+ * Returns: (transfer none): The #GValue structure that has been passed in
+ *
+ * Since: 1.18
+ */
+
+GValue *
+gst_value_array_init (GValue * value, guint prealloc)
+{
+  g_return_val_if_fail (value != NULL, NULL);
+  g_return_val_if_fail (G_VALUE_TYPE (value) == 0, NULL);
+
+  _gst_value_array_init (value, prealloc);
+
+  return value;
+}
+
 /* two helper functions to serialize/stringify any type of list
  * regular lists are done with { }, arrays with < >
  */
@@ -203,17 +350,17 @@ _priv_gst_value_serialize_any_list (const GValue * value, const gchar * begin,
     const gchar * end, gboolean print_type)
 {
   guint i;
-  GArray *array = value->data[0].v_pointer;
+  GstValueList *vlist = value->data[0].v_pointer;
   GString *s;
   GValue *v;
   gchar *s_val;
-  guint alen = array->len;
+  guint alen = vlist->len;
 
   /* estimate minimum string length to minimise re-allocs in GString */
   s = g_string_sized_new (2 + (6 * alen) + 2);
   g_string_append (s, begin);
   for (i = 0; i < alen; i++) {
-    v = &g_array_index (array, GValue, i);
+    v = &vlist->fields[i];
     s_val = gst_value_serialize (v);
     if (s_val != NULL) {
       if (print_type) {
@@ -240,7 +387,7 @@ gst_value_transform_any_list_string (const GValue * src_value,
     GValue * dest_value, const gchar * begin, const gchar * end)
 {
   GValue *list_value;
-  GArray *array;
+  GstValueList *array;
   GString *s;
   guint i;
   gchar *list_s;
@@ -253,7 +400,7 @@ gst_value_transform_any_list_string (const GValue * src_value,
   s = g_string_sized_new (2 + (10 * alen) + 2);
   g_string_append (s, begin);
   for (i = 0; i < alen; i++) {
-    list_value = &g_array_index (array, GValue, i);
+    list_value = &array->fields[i];
 
     if (i != 0) {
       g_string_append_len (s, ", ", 2);
@@ -370,21 +517,20 @@ gst_type_is_fixed (GType type)
 static void
 gst_value_init_list_or_array (GValue * value)
 {
-  value->data[0].v_pointer = g_array_new (FALSE, TRUE, sizeof (GValue));
+  value->data[0].v_pointer = _gst_value_list_new (0);
 }
 
-static GArray *
-copy_garray_of_gstvalue (const GArray * src)
+static GstValueList *
+copy_gst_value_list (const GstValueList * src)
 {
-  GArray *dest;
+  GstValueList *dest;
   guint i, len;
 
   len = src->len;
-  dest = g_array_sized_new (FALSE, TRUE, sizeof (GValue), len);
-  g_array_set_size (dest, len);
+  dest = _gst_value_list_new (len);
+  dest->len = len;
   for (i = 0; i < len; i++) {
-    gst_value_init_and_copy (&g_array_index (dest, GValue, i),
-        &g_array_index (src, GValue, i));
+    gst_value_init_and_copy (&dest->fields[i], &src->fields[i]);
   }
 
   return dest;
@@ -394,21 +540,24 @@ static void
 gst_value_copy_list_or_array (const GValue * src_value, GValue * dest_value)
 {
   dest_value->data[0].v_pointer =
-      copy_garray_of_gstvalue ((GArray *) src_value->data[0].v_pointer);
+      copy_gst_value_list (VALUE_LIST_ARRAY (src_value));
 }
 
 static void
 gst_value_free_list_or_array (GValue * value)
 {
   guint i, len;
-  GArray *src = (GArray *) value->data[0].v_pointer;
+  GstValueList *src = VALUE_LIST_ARRAY (value);
   len = src->len;
 
   if ((value->data[1].v_uint & G_VALUE_NOCOPY_CONTENTS) == 0) {
     for (i = 0; i < len; i++) {
-      g_value_unset (&g_array_index (src, GValue, i));
+      g_value_unset (&src->fields[i]);
     }
-    g_array_free (src, TRUE);
+    if (VALUE_LIST_IS_USING_DYNAMIC_ARRAY (src)) {
+      g_free (src->fields);
+    }
+    g_free (src);
   }
 }
 
@@ -427,7 +576,7 @@ gst_value_collect_list_or_array (GValue * value, guint n_collect_values,
     value->data[1].v_uint = G_VALUE_NOCOPY_CONTENTS;
   } else {
     value->data[0].v_pointer =
-        copy_garray_of_gstvalue ((GArray *) collect_values[0].v_pointer);
+        copy_gst_value_list ((GstValueList *) collect_values[0].v_pointer);
   }
   return NULL;
 }
@@ -436,7 +585,7 @@ static gchar *
 gst_value_lcopy_list_or_array (const GValue * value, guint n_collect_values,
     GTypeCValue * collect_values, guint collect_flags)
 {
-  GArray **dest = collect_values[0].v_pointer;
+  GstValueList **dest = collect_values[0].v_pointer;
 
   if (!dest)
     return g_strdup_printf ("value location for `%s' passed as NULL",
@@ -445,9 +594,9 @@ gst_value_lcopy_list_or_array (const GValue * value, guint n_collect_values,
     return g_strdup_printf ("invalid value given for `%s'",
         G_VALUE_TYPE_NAME (value));
   if (collect_flags & G_VALUE_NOCOPY_CONTENTS) {
-    *dest = (GArray *) value->data[0].v_pointer;
+    *dest = (GstValueList *) value->data[0].v_pointer;
   } else {
-    *dest = copy_garray_of_gstvalue ((GArray *) value->data[0].v_pointer);
+    *dest = copy_gst_value_list (VALUE_LIST_ARRAY (value));
   }
   return NULL;
 }
@@ -458,18 +607,11 @@ gst_value_list_or_array_get_basic_type (const GValue * value, GType * type)
   if (G_UNLIKELY (value == NULL))
     return FALSE;
 
-  if (GST_VALUE_HOLDS_LIST (value)) {
+  if (GST_VALUE_HOLDS_LIST (value) || GST_VALUE_HOLDS_ARRAY (value)) {
     if (VALUE_LIST_SIZE (value) == 0)
       return FALSE;
     return gst_value_list_or_array_get_basic_type (VALUE_LIST_GET_VALUE (value,
             0), type);
-  }
-  if (GST_VALUE_HOLDS_ARRAY (value)) {
-    const GArray *array = (const GArray *) value->data[0].v_pointer;
-    if (array->len == 0)
-      return FALSE;
-    return gst_value_list_or_array_get_basic_type (&g_array_index (array,
-            GValue, 0), type);
   }
 
   *type = G_VALUE_TYPE (value);
@@ -512,7 +654,7 @@ gst_value_list_or_array_are_compatible (const GValue * value1,
 static inline void
 _gst_value_list_append_and_take_value (GValue * value, GValue * append_value)
 {
-  g_array_append_vals ((GArray *) value->data[0].v_pointer, append_value, 1);
+  _gst_value_list_append_val (VALUE_LIST_ARRAY (value), append_value);
   memset (append_value, 0, sizeof (GValue));
 }
 
@@ -554,7 +696,7 @@ gst_value_list_append_value (GValue * value, const GValue * append_value)
           append_value));
 
   gst_value_init_and_copy (&val, append_value);
-  g_array_append_vals ((GArray *) value->data[0].v_pointer, &val, 1);
+  _gst_value_list_append_val (VALUE_LIST_ARRAY (value), &val);
 }
 
 /**
@@ -575,7 +717,7 @@ gst_value_list_prepend_value (GValue * value, const GValue * prepend_value)
           prepend_value));
 
   gst_value_init_and_copy (&val, prepend_value);
-  g_array_prepend_vals ((GArray *) value->data[0].v_pointer, &val, 1);
+  _gst_value_list_prepend_val (VALUE_LIST_ARRAY (value), &val);
 }
 
 /**
@@ -593,7 +735,7 @@ gst_value_list_concat (GValue * dest, const GValue * value1,
     const GValue * value2)
 {
   guint i, value1_length, value2_length;
-  GArray *array;
+  GstValueList *vlist;
 
   g_return_if_fail (dest != NULL);
   g_return_if_fail (G_VALUE_TYPE (dest) == 0);
@@ -605,27 +747,27 @@ gst_value_list_concat (GValue * dest, const GValue * value1,
       (GST_VALUE_HOLDS_LIST (value1) ? VALUE_LIST_SIZE (value1) : 1);
   value2_length =
       (GST_VALUE_HOLDS_LIST (value2) ? VALUE_LIST_SIZE (value2) : 1);
-  g_value_init (dest, GST_TYPE_LIST);
-  array = (GArray *) dest->data[0].v_pointer;
-  g_array_set_size (array, value1_length + value2_length);
+
+  _gst_value_list_init (dest, value1_length + value2_length);
+  vlist = VALUE_LIST_ARRAY (dest);
+  vlist->len = value1_length + value2_length;
 
   if (GST_VALUE_HOLDS_LIST (value1)) {
     for (i = 0; i < value1_length; i++) {
-      gst_value_init_and_copy (&g_array_index (array, GValue, i),
+      gst_value_init_and_copy (&vlist->fields[i],
           VALUE_LIST_GET_VALUE (value1, i));
     }
   } else {
-    gst_value_init_and_copy (&g_array_index (array, GValue, 0), value1);
+    gst_value_init_and_copy (&vlist->fields[0], value1);
   }
 
   if (GST_VALUE_HOLDS_LIST (value2)) {
     for (i = 0; i < value2_length; i++) {
-      gst_value_init_and_copy (&g_array_index (array, GValue,
-              i + value1_length), VALUE_LIST_GET_VALUE (value2, i));
+      gst_value_init_and_copy (&vlist->fields[i + value1_length],
+          VALUE_LIST_GET_VALUE (value2, i));
     }
   } else {
-    gst_value_init_and_copy (&g_array_index (array, GValue, value1_length),
-        value2);
+    gst_value_init_and_copy (&vlist->fields[value1_length], value2);
   }
 }
 
@@ -637,7 +779,7 @@ gst_value_list_concat_and_take_values (GValue * dest, GValue * val1,
   guint i, val1_length, val2_length;
   gboolean val1_is_list;
   gboolean val2_is_list;
-  GArray *array;
+  GstValueList *vlist;
 
   g_assert (dest != NULL);
   g_assert (G_VALUE_TYPE (dest) == 0);
@@ -651,30 +793,32 @@ gst_value_list_concat_and_take_values (GValue * dest, GValue * val1,
   val2_is_list = GST_VALUE_HOLDS_LIST (val2);
   val2_length = (val2_is_list ? VALUE_LIST_SIZE (val2) : 1);
 
-  g_value_init (dest, GST_TYPE_LIST);
-  array = (GArray *) dest->data[0].v_pointer;
-  g_array_set_size (array, val1_length + val2_length);
+  /* Overidding the default initialization to have a list of the target size */
+  _gst_value_list_init (dest, val1_length + val2_length);
+  vlist = VALUE_LIST_ARRAY (dest);
+  vlist->len = val1_length + val2_length;
 
   if (val1_is_list) {
     for (i = 0; i < val1_length; i++) {
-      g_array_index (array, GValue, i) = *VALUE_LIST_GET_VALUE (val1, i);
+      vlist->fields[i] = *VALUE_LIST_GET_VALUE (val1, i);
     }
-    g_array_set_size (VALUE_LIST_ARRAY (val1), 0);
+    VALUE_LIST_ARRAY (val1)->len = 0;
     g_value_unset (val1);
   } else {
-    g_array_index (array, GValue, 0) = *val1;
+    vlist->fields[0] = *val1;
     G_VALUE_TYPE (val1) = G_TYPE_INVALID;
   }
 
   if (val2_is_list) {
     for (i = 0; i < val2_length; i++) {
       const GValue *v2 = VALUE_LIST_GET_VALUE (val2, i);
-      g_array_index (array, GValue, i + val1_length) = *v2;
+      vlist->fields[i + val1_length] = *v2;
     }
-    g_array_set_size (VALUE_LIST_ARRAY (val2), 0);
+
+    VALUE_LIST_ARRAY (val2)->len = 0;
     g_value_unset (val2);
   } else {
-    g_array_index (array, GValue, val1_length) = *val2;
+    vlist->fields[val1_length] = *val2;
     G_VALUE_TYPE (val2) = G_TYPE_INVALID;
   }
 }
@@ -699,7 +843,7 @@ gst_value_list_merge (GValue * dest, const GValue * value1,
   guint i, j, k, value1_length, value2_length, skipped;
   const GValue *src;
   gboolean skip;
-  GArray *array;
+  GstValueList *vlist;
 
   g_return_if_fail (dest != NULL);
   g_return_if_fail (G_VALUE_TYPE (dest) == 0);
@@ -711,17 +855,18 @@ gst_value_list_merge (GValue * dest, const GValue * value1,
       (GST_VALUE_HOLDS_LIST (value1) ? VALUE_LIST_SIZE (value1) : 1);
   value2_length =
       (GST_VALUE_HOLDS_LIST (value2) ? VALUE_LIST_SIZE (value2) : 1);
-  g_value_init (dest, GST_TYPE_LIST);
-  array = (GArray *) dest->data[0].v_pointer;
-  g_array_set_size (array, value1_length + value2_length);
+
+  _gst_value_list_init (dest, value1_length + value2_length);
+  vlist = VALUE_LIST_ARRAY (dest);
+  vlist->len = value1_length + value2_length;
 
   if (GST_VALUE_HOLDS_LIST (value1)) {
     for (i = 0; i < value1_length; i++) {
-      gst_value_init_and_copy (&g_array_index (array, GValue, i),
-          VALUE_LIST_GET_VALUE (value1, i));
+      gst_value_init_and_copy (&vlist->fields[i], VALUE_LIST_GET_VALUE (value1,
+              i));
     }
   } else {
-    gst_value_init_and_copy (&g_array_index (array, GValue, 0), value1);
+    gst_value_init_and_copy (&vlist->fields[0], value1);
   }
 
   j = value1_length;
@@ -731,30 +876,28 @@ gst_value_list_merge (GValue * dest, const GValue * value1,
       skip = FALSE;
       src = VALUE_LIST_GET_VALUE (value2, i);
       for (k = 0; k < value1_length; k++) {
-        if (gst_value_compare (&g_array_index (array, GValue, k),
-                src) == GST_VALUE_EQUAL) {
+        if (gst_value_compare (&vlist->fields[k], src) == GST_VALUE_EQUAL) {
           skip = TRUE;
           skipped++;
           break;
         }
       }
       if (!skip) {
-        gst_value_init_and_copy (&g_array_index (array, GValue, j), src);
+        gst_value_init_and_copy (&vlist->fields[j], src);
         j++;
       }
     }
   } else {
     skip = FALSE;
     for (k = 0; k < value1_length; k++) {
-      if (gst_value_compare (&g_array_index (array, GValue, k),
-              value2) == GST_VALUE_EQUAL) {
+      if (gst_value_compare (&vlist->fields[k], value2) == GST_VALUE_EQUAL) {
         skip = TRUE;
         skipped++;
         break;
       }
     }
     if (!skip) {
-      gst_value_init_and_copy (&g_array_index (array, GValue, j), value2);
+      gst_value_init_and_copy (&vlist->fields[j], value2);
     }
   }
   if (skipped) {
@@ -762,17 +905,17 @@ gst_value_list_merge (GValue * dest, const GValue * value1,
 
     if (new_size > 1) {
       /* shrink list */
-      g_array_set_size (array, new_size);
+      vlist->len = new_size;
     } else {
       GValue single_dest;
 
       /* size is 1, take single value in list and make it new dest */
-      single_dest = g_array_index (array, GValue, 0);
+      single_dest = vlist->fields[0];
 
       /* clean up old value allocations: must set array size to 0, because
        * allocated values are not inited meaning g_value_unset() will not
        * work on them */
-      g_array_set_size (array, 0);
+      vlist->len = 0;
       g_value_unset (dest);
 
       /* the single value is our new result */
@@ -794,7 +937,7 @@ gst_value_list_get_size (const GValue * value)
 {
   g_return_val_if_fail (GST_VALUE_HOLDS_LIST (value), 0);
 
-  return ((GArray *) value->data[0].v_pointer)->len;
+  return VALUE_LIST_SIZE (value);
 }
 
 /**
@@ -813,8 +956,7 @@ gst_value_list_get_value (const GValue * value, guint index)
   g_return_val_if_fail (GST_VALUE_HOLDS_LIST (value), NULL);
   g_return_val_if_fail (index < VALUE_LIST_SIZE (value), NULL);
 
-  return (const GValue *) &g_array_index ((GArray *) value->data[0].v_pointer,
-      GValue, index);
+  return VALUE_LIST_GET_VALUE (value, index);
 }
 
 /**
@@ -835,13 +977,13 @@ gst_value_array_append_value (GValue * value, const GValue * append_value)
           append_value));
 
   gst_value_init_and_copy (&val, append_value);
-  g_array_append_vals ((GArray *) value->data[0].v_pointer, &val, 1);
+  _gst_value_list_append_val (VALUE_LIST_ARRAY (value), &val);
 }
 
 static inline void
 _gst_value_array_append_and_take_value (GValue * value, GValue * append_value)
 {
-  g_array_append_vals ((GArray *) value->data[0].v_pointer, append_value, 1);
+  _gst_value_list_append_val (VALUE_LIST_ARRAY (value), append_value);
   memset (append_value, 0, sizeof (GValue));
 }
 
@@ -883,7 +1025,7 @@ gst_value_array_prepend_value (GValue * value, const GValue * prepend_value)
           prepend_value));
 
   gst_value_init_and_copy (&val, prepend_value);
-  g_array_prepend_vals ((GArray *) value->data[0].v_pointer, &val, 1);
+  _gst_value_list_prepend_val (VALUE_LIST_ARRAY (value), &val);
 }
 
 /**
@@ -899,7 +1041,7 @@ gst_value_array_get_size (const GValue * value)
 {
   g_return_val_if_fail (GST_VALUE_HOLDS_ARRAY (value), 0);
 
-  return ((GArray *) value->data[0].v_pointer)->len;
+  return VALUE_LIST_SIZE (value);
 }
 
 /**
@@ -916,10 +1058,9 @@ const GValue *
 gst_value_array_get_value (const GValue * value, guint index)
 {
   g_return_val_if_fail (GST_VALUE_HOLDS_ARRAY (value), NULL);
-  g_return_val_if_fail (index < gst_value_array_get_size (value), NULL);
+  g_return_val_if_fail (index < VALUE_LIST_SIZE (value), NULL);
 
-  return (const GValue *) &g_array_index ((GArray *) value->data[0].v_pointer,
-      GValue, index);
+  return VALUE_LIST_GET_VALUE (value, index);
 }
 
 static void
@@ -946,20 +1087,20 @@ gst_value_transform_g_value_array_any_list (const GValue * src_value,
     GValue * dest_value)
 {
   const GValueArray *varray;
-  GArray *array;
+  GstValueList *vlist;
   gint i;
+
+  varray = g_value_get_boxed (src_value);
 
   /* GLib will unset the value, memset to 0 the data instead of doing a proper
    * reset. That's why we need to allocate the array here */
-  gst_value_init_list_or_array (dest_value);
-
-  varray = g_value_get_boxed (src_value);
-  array = dest_value->data[0].v_pointer;
+  vlist = dest_value->data[0].v_pointer =
+      _gst_value_list_new (varray->n_values);
 
   for (i = 0; i < varray->n_values; i++) {
     GValue val = G_VALUE_INIT;
     gst_value_init_and_copy (&val, &varray->values[i]);
-    g_array_append_vals (array, &val, 1);
+    _gst_value_list_append_val (vlist, &val);
   }
 }
 
@@ -968,14 +1109,14 @@ gst_value_transform_any_list_g_value_array (const GValue * src_value,
     GValue * dest_value)
 {
   GValueArray *varray;
-  const GArray *array;
+  GstValueList *vlist;
   gint i;
 
-  array = src_value->data[0].v_pointer;
-  varray = g_value_array_new (array->len);
+  vlist = VALUE_LIST_ARRAY (src_value);
+  varray = g_value_array_new (vlist->len);
 
-  for (i = 0; i < array->len; i++)
-    g_value_array_append (varray, &g_array_index (array, GValue, i));
+  for (i = 0; i < vlist->len; i++)
+    g_value_array_append (varray, &vlist->fields[i]);
 
   g_value_take_boxed (dest_value, varray);
 }
@@ -985,8 +1126,8 @@ static gint
 gst_value_compare_value_list (const GValue * value1, const GValue * value2)
 {
   guint i, j;
-  GArray *array1 = value1->data[0].v_pointer;
-  GArray *array2 = value2->data[0].v_pointer;
+  GstValueList *vlist1 = VALUE_LIST_ARRAY (value1);
+  GstValueList *vlist2 = VALUE_LIST_ARRAY (value2);
   GValue *v1;
   GValue *v2;
   gint len, to_remove;
@@ -994,8 +1135,8 @@ gst_value_compare_value_list (const GValue * value1, const GValue * value2)
   GstValueCompareFunc compare;
 
   /* get length and do initial length check. */
-  len = array1->len;
-  if (len != array2->len)
+  len = vlist1->len;
+  if (len != vlist2->len)
     return GST_VALUE_UNORDERED;
 
   /* place to mark removed value indices of array2 */
@@ -1006,13 +1147,13 @@ gst_value_compare_value_list (const GValue * value1, const GValue * value2)
   /* loop over array1, all items should be in array2. When we find an
    * item in array2, remove it from array2 by marking it as removed */
   for (i = 0; i < len; i++) {
-    v1 = &g_array_index (array1, GValue, i);
+    v1 = &vlist1->fields[i];
     if ((compare = gst_value_get_compare_func (v1))) {
       for (j = 0; j < len; j++) {
         /* item is removed, we can skip it */
         if (removed[j])
           continue;
-        v2 = &g_array_index (array2, GValue, j);
+        v2 = &vlist2->fields[j];
         if (gst_value_compare_with_func (v1, v2, compare) == GST_VALUE_EQUAL) {
           /* mark item as removed now that we found it in array2 and
            * decrement the number of remaining items in array2. */
@@ -1040,18 +1181,18 @@ static gint
 gst_value_compare_value_array (const GValue * value1, const GValue * value2)
 {
   guint i;
-  GArray *array1 = value1->data[0].v_pointer;
-  GArray *array2 = value2->data[0].v_pointer;
-  guint len = array1->len;
+  GstValueList *vlist1 = VALUE_LIST_ARRAY (value1);
+  GstValueList *vlist2 = VALUE_LIST_ARRAY (value2);
+  guint len = vlist1->len;
   GValue *v1;
   GValue *v2;
 
-  if (len != array2->len)
+  if (len != vlist2->len)
     return GST_VALUE_UNORDERED;
 
   for (i = 0; i < len; i++) {
-    v1 = &g_array_index (array1, GValue, i);
-    v2 = &g_array_index (array2, GValue, i);
+    v1 = &vlist1->fields[i];
+    v2 = &vlist2->fields[i];
     if (gst_value_compare (v1, v2) != GST_VALUE_EQUAL)
       return GST_VALUE_UNORDERED;
   }
@@ -2436,9 +2577,7 @@ _priv_gst_value_parse_any_list (gchar * s, gchar ** after, GValue * value,
 {
   GValue list_value = { 0 };
   gboolean ret;
-  GArray *array;
-
-  array = g_value_peek_pointer (value);
+  GstValueList *vlist = VALUE_LIST_ARRAY (value);
 
   if (*s != begin)
     return FALSE;
@@ -2464,7 +2603,7 @@ _priv_gst_value_parse_any_list (gchar * s, gchar ** after, GValue * value,
     if (!ret)
       return FALSE;
 
-    g_array_append_val (array, list_value);
+    _gst_value_list_append_val (vlist, &list_value);
 
     while (g_ascii_isspace (*s))
       s++;

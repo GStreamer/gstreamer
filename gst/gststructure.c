@@ -1935,6 +1935,9 @@ gst_structure_value_get_generic_type (const GValue * val)
       || G_VALUE_TYPE (val) == GST_TYPE_ARRAY) {
     GArray *array = g_value_peek_pointer (val);
 
+    /* Note, we can do this because the internal
+     * GstValueList/GstValueArray implementation is API/ABI compatible
+     * with GArray */
     if (array->len > 0) {
       GValue *value = &g_array_index (array, GValue, 0);
 
