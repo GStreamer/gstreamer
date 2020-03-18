@@ -19,6 +19,7 @@
 
 from . import overrides_hack
 
+import os
 import tempfile
 
 import gi
@@ -141,6 +142,15 @@ class TestTitleClip(unittest.TestCase):
         children2 = clip2.get_children(True)
         self.assertNotEqual(children2[0].props.priority,
                             children2[1].props.priority)
+
+
+class TestUriClip(common.GESSimpleTimelineTest):
+    def test_max_duration_on_extract(self):
+        uri = Gst.filename_to_uri(os.path.join(__file__, "../../ges/audio_video.ogg"))
+        asset = GES.UriClipAsset.request_sync(uri)
+        clip = asset.extract()
+
+        self.assertEqual(clip.props.max_duration, Gst.SECOND)
 
 
 class TestTrackElements(common.GESSimpleTimelineTest):

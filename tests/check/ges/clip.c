@@ -1047,11 +1047,19 @@ GST_START_TEST (test_children_max_duration)
   GESTimeline *timeline;
   GESLayer *layer;
   gchar *uri;
-  GESTimelineElement *clips[] = { NULL, NULL };
   GESTimelineElement *child0, *child1, *effect;
   guint i;
   GstClockTime max_duration, new_max;
   GList *children;
+  struct
+  {
+    GESTimelineElement *clip;
+    GstClockTime max_duration;
+  } clips[] = {
+    {
+    NULL, GST_SECOND}, {
+    NULL, GST_CLOCK_TIME_NONE}
+  };
 
   ges_init ();
 
@@ -1061,23 +1069,24 @@ GST_START_TEST (test_children_max_duration)
   layer = ges_timeline_append_layer (timeline);
 
   uri = ges_test_get_audio_video_uri ();
-  clips[0] = GES_TIMELINE_ELEMENT (ges_uri_clip_new (uri));
-  fail_unless (clips[0]);
+  clips[0].clip = GES_TIMELINE_ELEMENT (ges_uri_clip_new (uri));
+  fail_unless (clips[0].clip);
   g_free (uri);
 
-  clips[1] = GES_TIMELINE_ELEMENT (ges_test_clip_new ());
+  clips[1].clip = GES_TIMELINE_ELEMENT (ges_test_clip_new ());
 
   for (i = 0; i < G_N_ELEMENTS (clips); i++) {
-    GESTimelineElement *clip = clips[i];
-    fail_unless (_MAX_DURATION (clip) == GST_CLOCK_TIME_NONE);
+    GESTimelineElement *clip = clips[i].clip;
 
+    max_duration = clips[i].max_duration;
+    fail_unless_equals_uint64 (_MAX_DURATION (clip), max_duration);
     fail_unless (ges_timeline_element_set_start (clip, 5));
     fail_unless (ges_timeline_element_set_duration (clip, 20));
     fail_unless (ges_timeline_element_set_inpoint (clip, 30));
-    /* can not set the max duration when we have no children */
-    fail_if (ges_timeline_element_set_max_duration (clip, 150));
+    /* can not the max duration the clip has no child */
+    fail_unless (ges_timeline_element_set_max_duration (clip, 150));
 
-    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, GST_CLOCK_TIME_NONE);
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, 150);
 
     fail_unless (ges_layer_add_clip (layer, GES_CLIP (clip)));
 
@@ -1094,17 +1103,11 @@ GST_START_TEST (test_children_max_duration)
     fail_unless (ges_track_element_has_internal_source (GES_TRACK_ELEMENT
             (child1)));
 
-    if (GES_IS_URI_CLIP (clip)) {
-      /* uri clip children should be created with a max-duration set */
-      /* each created child has the same max-duration */
-      max_duration = _MAX_DURATION (child0);
-      fail_unless (max_duration != GST_CLOCK_TIME_NONE);
+    if (GES_IS_URI_CLIP (clip))
       new_max = max_duration;
-    } else {
-      max_duration = GST_CLOCK_TIME_NONE;
+    else
       /* need a valid clock time that is not too large */
       new_max = 500;
-    }
 
     /* added children do not change the clip's max-duration, but will
      * instead set it to the minimum value of its children */

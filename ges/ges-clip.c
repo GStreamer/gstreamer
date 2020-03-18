@@ -395,6 +395,16 @@ _set_max_duration (GESTimelineElement * element, GstClockTime maxduration)
   if (priv->updating_max_duration)
     return TRUE;
 
+  if (!GES_CONTAINER_CHILDREN (element)) {
+    /* If any child added later on has a lower max duration, this max duration
+     * will be used instead anyway */
+    GST_INFO_OBJECT (element,
+        "Setting max duration %" GST_TIME_FORMAT " as %" GES_FORMAT
+        " doesn't have any child yet",
+        GST_TIME_ARGS (maxduration), GES_ARGS (element));
+    return TRUE;
+  }
+
   /* else, we set every core child to have the same max duration */
 
   priv->prevent_max_duration_update = TRUE;

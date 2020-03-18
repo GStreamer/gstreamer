@@ -362,6 +362,10 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
     uriclip->priv->uri = g_strdup (ges_asset_get_id (asset));
   }
 
+  if (!GES_CONTAINER_CHILDREN (uriclip))
+    ges_timeline_element_set_max_duration (GES_TIMELINE_ELEMENT (uriclip),
+        ges_uri_clip_asset_get_max_duration (uri_clip_asset));
+
   return res;
 }
 
