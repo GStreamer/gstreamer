@@ -37,6 +37,7 @@
 
 #include <gst/base/gstbytereader.h>
 #include <gst/base/gstbitreader.h>
+#include <gst/base/gstbitwriter.h>
 #include <string.h>
 
 guint ceil_log2 (guint32 v);
@@ -53,6 +54,14 @@ typedef struct
   guint32 epb_cache;            /* cache 3 bytes to check emulation prevention bytes */
   guint64 cache;                /* cached bytes */
 } NalReader;
+
+typedef struct
+{
+  GstBitWriter bw;
+
+  guint nal_prefix_size;
+  gboolean packetized;
+} NalWriter;
 
 G_GNUC_INTERNAL
 void nal_reader_init (NalReader * nr, const guint8 * data, guint size);
@@ -182,3 +191,68 @@ gboolean nal_reader_get_se (NalReader * nr, gint32 * val);
 
 G_GNUC_INTERNAL
 gint scan_for_start_codes (const guint8 * data, guint size);
+
+G_GNUC_INTERNAL
+void nal_writer_init (NalWriter * nw, guint nal_prefix_size, gboolean packetized);
+
+G_GNUC_INTERNAL
+void nal_writer_reset (NalWriter * nw);
+
+G_GNUC_INTERNAL
+gboolean nal_writer_do_rbsp_trailing_bits (NalWriter * nw);
+
+G_GNUC_INTERNAL
+GstMemory * nal_writer_reset_and_get_memory (NalWriter * nw);
+
+G_GNUC_INTERNAL
+gboolean nal_writer_put_bits_uint8 (NalWriter * nw, guint8 value, guint nbits);
+
+G_GNUC_INTERNAL
+gboolean nal_writer_put_bits_uint16 (NalWriter * nw, guint16 value, guint nbits);
+
+G_GNUC_INTERNAL
+gboolean nal_writer_put_bits_uint32 (NalWriter * nw, guint32 value, guint nbits);
+
+G_GNUC_INTERNAL
+gboolean nal_writer_put_bytes (NalWriter * nw, const guint8 * data, guint nbytes);
+
+G_GNUC_INTERNAL
+gboolean nal_writer_put_ue (NalWriter * nw, guint32 value);
+
+G_GNUC_INTERNAL
+gboolean count_exp_golomb_bits (guint32 value, guint * leading_zeros, guint * rest);
+
+#define WRITE_UINT8(nw, val, nbits) { \
+  if (!nal_writer_put_bits_uint8 (nw, val, nbits)) { \
+    GST_WARNING ("failed to write uint8, nbits: %d", nbits); \
+    goto error; \
+  } \
+}
+
+#define WRITE_UINT16(nw, val, nbits) { \
+  if (!nal_writer_put_bits_uint16 (nw, val, nbits)) { \
+    GST_WARNING ("failed to write uint16, nbits: %d", nbits); \
+    goto error; \
+  } \
+}
+
+#define WRITE_UINT32(nw, val, nbits) { \
+  if (!nal_writer_put_bits_uint32 (nw, val, nbits)) { \
+    GST_WARNING ("failed to write uint32, nbits: %d", nbits); \
+    goto error; \
+  } \
+}
+
+#define WRITE_BYTES(nw, data, nbytes) { \
+  if (!nal_writer_put_bytes (nw, data, nbytes)) { \
+    GST_WARNING ("failed to write bytes, nbits: %d", nbytes); \
+    goto error; \
+  } \
+}
+
+#define WRITE_UE(nw, val) { \
+  if (!nal_writer_put_ue (nw, val)) { \
+    GST_WARNING ("failed to write ue"); \
+    goto error; \
+  } \
+}

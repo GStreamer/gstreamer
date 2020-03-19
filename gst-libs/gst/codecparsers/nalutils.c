@@ -36,6 +36,7 @@
 #endif
 
 #include "nalutils.h"
+#include <string.h>
 
 /* Compute Ceil(Log2(v)) */
 /* Derived from branchless code for integer log2(v) from:
@@ -303,4 +304,221 @@ scan_for_start_codes (const guint8 * data, guint size)
   /* NALU not empty, so we can at least expect 1 (even 2) bytes following sc */
   return gst_byte_reader_masked_scan_uint32 (&br, 0xffffff00, 0x00000100,
       0, size);
+}
+
+void
+nal_writer_init (NalWriter * nw, guint nal_prefix_size, gboolean packetized)
+{
+  g_return_if_fail (nw != NULL);
+  g_return_if_fail ((packetized && nal_prefix_size > 1 && nal_prefix_size < 5)
+      || (!packetized && (nal_prefix_size == 3 || nal_prefix_size == 4)));
+
+  gst_bit_writer_init (&nw->bw);
+  nw->nal_prefix_size = nal_prefix_size;
+  nw->packetized = packetized;
+}
+
+void
+nal_writer_reset (NalWriter * nw)
+{
+  g_return_if_fail (nw != NULL);
+
+  gst_bit_writer_reset (&nw->bw);
+  memset (nw, 0, sizeof (NalWriter));
+}
+
+gboolean
+nal_writer_do_rbsp_trailing_bits (NalWriter * nw)
+{
+  g_return_val_if_fail (nw != NULL, FALSE);
+
+  if (!gst_bit_writer_put_bits_uint8 (&nw->bw, 1, 1)) {
+    GST_WARNING ("Cannot put trailing bits");
+    return FALSE;
+  }
+
+  if (!gst_bit_writer_align_bytes (&nw->bw, 0)) {
+    GST_WARNING ("Cannot put align bits");
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+GstMemory *
+nal_writer_reset_and_get_memory (NalWriter * nw)
+{
+  GstBitWriter bw;
+  gint i;
+  guint8 *src, *dst;
+  gsize size;
+  GstMemory *ret = NULL;
+  gpointer data;
+
+  g_return_val_if_fail (nw != NULL, NULL);
+
+  if ((GST_BIT_WRITER_BIT_SIZE (&nw->bw) >> 3) == 0) {
+    GST_WARNING ("No written byte");
+    goto done;
+  }
+
+  if ((GST_BIT_WRITER_BIT_SIZE (&nw->bw) & 0x7) != 0) {
+    GST_WARNING ("Written stream is not byte aligned");
+    if (!nal_writer_do_rbsp_trailing_bits (nw))
+      goto done;
+  }
+
+  /* scan to put emulation_prevention_three_byte */
+  size = GST_BIT_WRITER_BIT_SIZE (&nw->bw) >> 3;
+  src = GST_BIT_WRITER_DATA (&nw->bw);
+
+  gst_bit_writer_init_with_size (&bw, size + nw->nal_prefix_size, FALSE);
+  for (i = 0; i < nw->nal_prefix_size - 1; i++)
+    gst_bit_writer_put_bits_uint8 (&bw, 0, 8);
+  gst_bit_writer_put_bits_uint8 (&bw, 1, 8);
+
+  for (i = 0; i < size; i++) {
+    guint pos = (GST_BIT_WRITER_BIT_SIZE (&bw) >> 3);
+    dst = GST_BIT_WRITER_DATA (&bw);
+    if (pos >= nw->nal_prefix_size + 2 &&
+        dst[pos - 2] == 0 && dst[pos - 1] == 0 && src[i] <= 0x3) {
+      gst_bit_writer_put_bits_uint8 (&bw, 0x3, 8);
+    }
+
+    gst_bit_writer_put_bits_uint8 (&bw, src[i], 8);
+  }
+
+  size = bw.bit_size >> 3;
+  data = gst_bit_writer_reset_and_get_data (&bw);
+  ret = gst_memory_new_wrapped (0, data, size, 0, size, data, g_free);
+
+  if (nw->packetized) {
+    GstMapInfo info;
+
+    gst_memory_map (ret, &info, GST_MAP_WRITE);
+
+    size = info.size - nw->nal_prefix_size;
+
+    switch (nw->nal_prefix_size) {
+      case 1:
+        GST_WRITE_UINT8 (info.data, size);
+        break;
+      case 2:
+        GST_WRITE_UINT16_BE (info.data, size);
+        break;
+      case 3:
+        GST_WRITE_UINT24_BE (info.data, size);
+        break;
+      case 4:
+        GST_WRITE_UINT32_BE (info.data, size);
+        break;
+      default:
+        g_assert_not_reached ();
+        break;
+    }
+
+    gst_memory_unmap (ret, &info);
+  }
+
+done:
+  gst_bit_writer_reset (&nw->bw);
+
+  return ret;
+}
+
+gboolean
+nal_writer_put_bits_uint8 (NalWriter * nw, guint8 value, guint nbits)
+{
+  g_return_val_if_fail (nw != NULL, FALSE);
+
+  if (!gst_bit_writer_put_bits_uint8 (&nw->bw, value, nbits))
+    return FALSE;
+
+  return TRUE;
+}
+
+gboolean
+nal_writer_put_bits_uint16 (NalWriter * nw, guint16 value, guint nbits)
+{
+  g_return_val_if_fail (nw != NULL, FALSE);
+
+  if (!gst_bit_writer_put_bits_uint16 (&nw->bw, value, nbits))
+    return FALSE;
+
+  return TRUE;
+}
+
+gboolean
+nal_writer_put_bits_uint32 (NalWriter * nw, guint32 value, guint nbits)
+{
+  g_return_val_if_fail (nw != NULL, FALSE);
+
+  if (!gst_bit_writer_put_bits_uint32 (&nw->bw, value, nbits))
+    return FALSE;
+
+  return TRUE;
+}
+
+gboolean
+nal_writer_put_bytes (NalWriter * nw, const guint8 * data, guint nbytes)
+{
+  g_return_val_if_fail (nw != NULL, FALSE);
+  g_return_val_if_fail (data != NULL, FALSE);
+  g_return_val_if_fail (nbytes != 0, FALSE);
+
+  if (!gst_bit_writer_put_bytes (&nw->bw, data, nbytes))
+    return FALSE;
+
+  return TRUE;
+}
+
+gboolean
+nal_writer_put_ue (NalWriter * nw, guint32 value)
+{
+  guint leading_zeros;
+  guint rest;
+
+  g_return_val_if_fail (nw != NULL, FALSE);
+
+  count_exp_golomb_bits (value, &leading_zeros, &rest);
+
+  /* write leading zeros */
+  if (leading_zeros) {
+    if (!nal_writer_put_bits_uint32 (nw, 0, leading_zeros))
+      return FALSE;
+  }
+
+  /* write the rest */
+  if (!nal_writer_put_bits_uint32 (nw, value + 1, rest))
+    return FALSE;
+
+  return TRUE;
+}
+
+gboolean
+count_exp_golomb_bits (guint32 value, guint * leading_zeros, guint * rest)
+{
+  guint32 x;
+  guint count = 0;
+
+  /* https://en.wikipedia.org/wiki/Exponential-Golomb_coding */
+  /* count bits of value + 1 */
+  x = value + 1;
+  while (x) {
+    count++;
+    x >>= 1;
+  }
+
+  if (leading_zeros) {
+    if (count > 1)
+      *leading_zeros = count - 1;
+    else
+      *leading_zeros = 0;
+  }
+
+  if (rest) {
+    *rest = count;
+  }
+
+  return TRUE;
 }
