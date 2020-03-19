@@ -409,7 +409,7 @@ static void gst_qt_mux_release_pad (GstElement * element, GstPad * pad);
 /* event */
 static gboolean gst_qt_mux_sink_event (GstAggregator * agg,
     GstAggregatorPad * agg_pad, GstEvent * event);
-static gboolean gst_qt_mux_sink_event_pre_queue (GstAggregator * self,
+static GstFlowReturn gst_qt_mux_sink_event_pre_queue (GstAggregator * self,
     GstAggregatorPad * aggpad, GstEvent * event);
 
 /* aggregator */
