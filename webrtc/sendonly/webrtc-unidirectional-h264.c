@@ -196,6 +196,7 @@ create_receiver_entry (SoupWebsocketConnection * connection)
   g_assert (transceivers != NULL && transceivers->len > 0);
   trans = g_array_index (transceivers, GstWebRTCRTPTransceiver *, 0);
   trans->direction = GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY;
+  g_array_unref (transceivers);
 
   g_signal_connect (receiver_entry->webrtcbin, "on-negotiation-needed",
       G_CALLBACK (on_negotiation_needed_cb), (gpointer) receiver_entry);
