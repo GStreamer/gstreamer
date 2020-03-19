@@ -2488,7 +2488,7 @@ gst_validate_pad_monitor_get_range_func (GstPad * pad, GstObject * parent,
     if (peer) {
       GST_OBJECT_LOCK (peer);
       task = GST_PAD_TASK (peer);
-      if (task) {
+      if (task && GST_TASK_STATE (task) == GST_TASK_STARTED) {
         GST_OBJECT_LOCK (task);
         /* Only doing pointer comparison, no need to hold a ref */
         thread = task->thread;
