@@ -31,24 +31,21 @@
 #include <QtPlatformHeaders/QGLXNativeContext>
 #endif
 
-#if GST_GL_HAVE_WINDOW_WAYLAND && GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_WAYLAND)
+#if GST_GL_HAVE_PLATFORM_EGL && (defined (HAVE_QT_WAYLAND) || defined (HAVE_QT_EGLFS) || defined (HAVE_QT_ANDROID))
 #include <gst/gl/egl/gstegl.h>
-#include <qpa/qplatformnativeinterface.h>
-#include <QtPlatformHeaders/QEGLNativeContext>
-#include <gst/gl/wayland/gstgldisplay_wayland.h>
-#endif
-
-#if GST_GL_HAVE_PLATFORM_EGL && (defined (HAVE_QT_EGLFS) || defined (HAVE_QT_ANDROID))
-#if GST_GL_HAVE_WINDOW_VIV_FB
-#include <qpa/qplatformnativeinterface.h>
-#include <gst/gl/viv-fb/gstgldisplay_viv_fb.h>
-#else
-#include <gst/gl/egl/gstegl.h>
-#include <gst/gl/egl/gstgldisplay_egl.h>
 #ifdef HAVE_QT_QPA_HEADER
 #include <qpa/qplatformnativeinterface.h>
 #endif
+#include <QtPlatformHeaders/QEGLNativeContext>
+#include <gst/gl/egl/gstgldisplay_egl.h>
 #endif
+
+#if GST_GL_HAVE_WINDOW_WAYLAND && defined (HAVE_QT_WAYLAND)
+#include <gst/gl/wayland/gstgldisplay_wayland.h>
+#endif
+
+#if GST_GL_HAVE_WINDOW_VIV_FB
+#include <gst/gl/viv-fb/gstgldisplay_viv_fb.h>
 #endif
 
 #if GST_GL_HAVE_WINDOW_WIN32 && GST_GL_HAVE_PLATFORM_WGL && defined (HAVE_QT_WIN32)
@@ -315,7 +312,7 @@ qt_opengl_native_context_from_gst_gl_context (GstGLContext * context)
         return QVariant::fromValue(QGLXNativeContext((GLXContext) handle, xdisplay));
     }
 #endif
-#if GST_GL_HAVE_PLATFORM_EGL
+#if GST_GL_HAVE_PLATFORM_EGL && (defined (HAVE_QT_WAYLAND) || defined (HAVE_QT_EGLFS) || defined (HAVE_QT_ANDROID))
     if (platform == GST_GL_PLATFORM_EGL) {
         EGLDisplay egl_display = EGL_DEFAULT_DISPLAY;
         GstGLDisplay *display = gst_gl_context_get_display (context);
