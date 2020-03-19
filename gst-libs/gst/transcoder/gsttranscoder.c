@@ -593,7 +593,7 @@ dump_dot_file (GstTranscoder * self, const gchar * name)
   full_name = g_strdup_printf ("gst-transcoder.%p.%s", self, name);
 
   GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (self->transcodebin),
-      GST_DEBUG_GRAPH_SHOW_VERBOSE, full_name);
+      GST_DEBUG_GRAPH_SHOW_ALL, full_name);
 
   g_free (full_name);
 }

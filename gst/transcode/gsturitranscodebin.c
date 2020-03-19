@@ -110,7 +110,7 @@ make_transcodebin (GstUriTranscodeBin * self)
 
   self->transcodebin = gst_element_factory_make ("transcodebin", NULL);
   if (!self->transcodebin)
-    goto no_decodebin;
+    goto no_transcodebin;
 
   g_object_set (self->transcodebin, "profile", self->profile,
       "video-filter", self->video_filter,
@@ -118,13 +118,15 @@ make_transcodebin (GstUriTranscodeBin * self)
       "avoid-reencoding", self->avoid_reencoding, NULL);
 
   gst_bin_add (GST_BIN (self), self->transcodebin);
-  if (!gst_element_link (self->transcodebin, self->sink))
+  if (!gst_element_link (self->transcodebin, self->sink)) {
+    GST_ERROR ("Could not link transcodbin");
     return FALSE;
+  }
 
   return TRUE;
 
   /* ERRORS */
-no_decodebin:
+no_transcodebin:
   {
     post_missing_plugin_error (GST_ELEMENT_CAST (self), "transcodebin");
 
@@ -191,6 +193,49 @@ no_sink:
   }
 }
 
+static void
+src_pad_added_cb (GstElement * src, GstPad * pad, GstUriTranscodeBin * self)
+{
+  GstPad *sinkpad = NULL;
+  GstPadLinkReturn res;
+
+  GST_DEBUG_OBJECT (self,
+      "New pad %" GST_PTR_FORMAT " from source %" GST_PTR_FORMAT, pad, src);
+
+  if (sinkpad == NULL)
+    sinkpad = gst_element_get_static_pad (self->transcodebin, "sink");
+
+  if (gst_pad_is_linked (sinkpad)) {
+    GST_WARNING_OBJECT (self, "Pad already linked....");
+    return;
+  }
+
+  if (sinkpad) {
+    GST_DEBUG_OBJECT (self,
+        "Linking %" GST_PTR_FORMAT " to %" GST_PTR_FORMAT, pad, sinkpad);
+    res = gst_pad_link (pad, sinkpad);
+    gst_object_unref (sinkpad);
+    if (GST_PAD_LINK_FAILED (res))
+      goto link_failed;
+  }
+  return;
+
+link_failed:
+  {
+    GST_ERROR_OBJECT (self,
+        "failed to link pad %s:%s to decodebin, reason %s (%d)",
+        GST_DEBUG_PAD_NAME (pad), gst_pad_link_get_name (res), res);
+    return;
+  }
+}
+
+static void
+src_pad_removed_cb (GstElement * element, GstPad * pad,
+    GstUriTranscodeBin * self)
+{
+  /* FIXME : IMPLEMENT */
+}
+
 static gboolean
 make_source (GstUriTranscodeBin * self)
 {
@@ -199,15 +244,17 @@ make_source (GstUriTranscodeBin * self)
   if (!gst_uri_is_valid (self->source_uri))
     goto invalid_uri;
 
-  self->src = gst_element_make_from_uri (GST_URI_SRC, self->source_uri,
-      "src", &err);
+  self->src = gst_element_factory_make ("urisourcebin", NULL);
   if (!self->src)
-    goto no_sink;
+    goto no_urisourcebin;
 
   gst_bin_add (GST_BIN (self), self->src);
 
-  if (!gst_element_link (self->src, self->transcodebin))
-    return FALSE;
+  g_object_set (self->src, "uri", self->source_uri, NULL);
+
+  g_signal_connect (self->src, "pad-added", (GCallback) src_pad_added_cb, self);
+  g_signal_connect (self->src, "pad-removed",
+      (GCallback) src_pad_removed_cb, self);
 
   return TRUE;
 
@@ -219,34 +266,16 @@ invalid_uri:
     return FALSE;
   }
 
-no_sink:
+no_urisourcebin:
   {
-    /* whoops, could not create the source element, dig a little deeper to
-     * figure out what might be wrong. */
-    if (err != NULL && err->code == GST_URI_ERROR_UNSUPPORTED_PROTOCOL) {
-      gchar *prot;
+    post_missing_plugin_error (GST_ELEMENT_CAST (self), "urisourcebin");
 
-      prot = gst_uri_get_protocol (self->source_uri);
-      if (prot == NULL)
-        goto invalid_uri;
-
-      gst_element_post_message (GST_ELEMENT_CAST (self),
-          gst_missing_uri_source_message_new (GST_ELEMENT (self), prot));
-
-      GST_ELEMENT_ERROR (self, CORE, MISSING_PLUGIN,
-          ("No URI handler implemented for \"%s\".", prot), (NULL));
-
-      g_free (prot);
-    } else {
-      GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
-          ("%s", (err) ? err->message : "URI was not accepted by any element"),
-          ("No element accepted URI '%s'", self->dest_uri));
-    }
-
-    g_clear_error (&err);
+    GST_ELEMENT_ERROR (self, CORE, MISSING_PLUGIN, (NULL),
+        ("No urisourcebin element, check your installation"));
 
     return FALSE;
   }
+
 }
 
 static void
