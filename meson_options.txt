@@ -169,6 +169,7 @@ option('zxing', type : 'feature', value : 'auto', description : 'Barcode image s
 option('wpe', type : 'feature', value : 'auto', description : 'WPE Web browser plugin')
 option('magicleap', type : 'feature', value : 'auto', description : 'Magic Leap platform support')
 option('v4l2codecs', type : 'feature', value : 'auto', description : 'Video4Linux Stateless CODECs support')
+option('isac', type : 'feature', value : 'auto', description : 'iSAC plugin')
 
 # HLS plugin options
 option('hls', type : 'feature', value : 'auto', description : 'HTTP Live Streaming plugin')
