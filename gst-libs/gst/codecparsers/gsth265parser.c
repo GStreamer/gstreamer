@@ -3371,3 +3371,561 @@ gst_h265_profile_from_string (const gchar * string)
 
   return GST_H265_PROFILE_INVALID;
 }
+
+static gboolean
+gst_h265_write_sei_registered_user_data (NalWriter * nw,
+    GstH265RegisteredUserData * rud)
+{
+  WRITE_UINT8 (nw, rud->country_code, 8);
+  if (rud->country_code == 0xff)
+    WRITE_UINT8 (nw, rud->country_code_extension, 8);
+
+  WRITE_BYTES (nw, rud->data, rud->size);
+
+  return TRUE;
+
+error:
+  return FALSE;
+}
+
+static gboolean
+gst_h265_write_sei_time_code (NalWriter * nw, GstH265TimeCode * tc)
+{
+  gint i;
+
+  WRITE_UINT8 (nw, tc->num_clock_ts, 2);
+
+  for (i = 0; i < tc->num_clock_ts; i++) {
+    WRITE_UINT8 (nw, tc->clock_timestamp_flag[i], 1);
+    if (tc->clock_timestamp_flag[i]) {
+      WRITE_UINT8 (nw, tc->units_field_based_flag[i], 1);
+      WRITE_UINT8 (nw, tc->counting_type[i], 5);
+      WRITE_UINT8 (nw, tc->full_timestamp_flag[i], 1);
+      WRITE_UINT8 (nw, tc->discontinuity_flag[i], 1);
+      WRITE_UINT8 (nw, tc->cnt_dropped_flag[i], 1);
+      WRITE_UINT16 (nw, tc->n_frames[i], 9);
+
+      if (tc->full_timestamp_flag[i]) {
+        WRITE_UINT8 (nw, tc->seconds_value[i], 6);
+        WRITE_UINT8 (nw, tc->minutes_value[i], 6);
+        WRITE_UINT8 (nw, tc->hours_value[i], 5);
+      } else {
+        WRITE_UINT8 (nw, tc->seconds_flag[i], 1);
+        if (tc->seconds_flag[i]) {
+          WRITE_UINT8 (nw, tc->seconds_value[i], 6);
+          WRITE_UINT8 (nw, tc->minutes_flag[i], 1);
+          if (tc->minutes_flag[i]) {
+            WRITE_UINT8 (nw, tc->minutes_value[i], 6);
+            WRITE_UINT8 (nw, tc->hours_flag[i], 1);
+            if (tc->hours_flag[i]) {
+              WRITE_UINT8 (nw, tc->hours_value[i], 5);
+            }
+          }
+        }
+      }
+    }
+
+    WRITE_UINT8 (nw, tc->time_offset_length[i], 5);
+
+    if (tc->time_offset_length[i] > 0)
+      WRITE_UINT8 (nw, tc->time_offset_value[i], tc->time_offset_length[i]);
+  }
+
+  return TRUE;
+
+error:
+  return FALSE;
+}
+
+static gboolean
+gst_h265_write_sei_mastering_display_colour_volume (NalWriter * nw,
+    GstH265MasteringDisplayColourVolume * mdcv)
+{
+  gint i;
+
+  for (i = 0; i < 3; i++) {
+    WRITE_UINT16 (nw, mdcv->display_primaries_x[i], 16);
+    WRITE_UINT16 (nw, mdcv->display_primaries_y[i], 16);
+  }
+
+  WRITE_UINT16 (nw, mdcv->white_point_x, 16);
+  WRITE_UINT16 (nw, mdcv->white_point_y, 16);
+  WRITE_UINT32 (nw, mdcv->max_display_mastering_luminance, 32);
+  WRITE_UINT32 (nw, mdcv->min_display_mastering_luminance, 32);
+
+  return TRUE;
+
+error:
+  return FALSE;
+}
+
+static gboolean
+gst_h265_write_sei_content_light_level_info (NalWriter * nw,
+    GstH265ContentLightLevel * cll)
+{
+  WRITE_UINT16 (nw, cll->max_content_light_level, 16);
+  WRITE_UINT16 (nw, cll->max_pic_average_light_level, 16);
+
+  return TRUE;
+
+error:
+  return FALSE;
+}
+
+static GstMemory *
+gst_h265_create_sei_memory_internal (guint8 layer_id, guint8 temporal_id_plus1,
+    guint nal_prefix_size, gboolean packetized, GArray * messages)
+{
+  NalWriter nw;
+  gint i;
+  gboolean have_written_data = FALSE;
+
+  nal_writer_init (&nw, nal_prefix_size, packetized);
+
+  if (messages->len == 0)
+    goto error;
+
+  GST_DEBUG ("Create SEI nal from array, len: %d", messages->len);
+
+  /* nal header */
+  /* forbidden_zero_bit */
+  WRITE_UINT8 (&nw, 0, 1);
+  /* nal_unit_type */
+  WRITE_UINT8 (&nw, GST_H265_NAL_PREFIX_SEI, 6);
+  /* nuh_layer_id */
+  WRITE_UINT8 (&nw, layer_id, 6);
+  /* nuh_temporal_id_plus1 */
+  WRITE_UINT8 (&nw, temporal_id_plus1, 3);
+
+  for (i = 0; i < messages->len; i++) {
+    GstH265SEIMessage *msg = &g_array_index (messages, GstH265SEIMessage, i);
+    guint32 payload_size_data = 0;
+    guint32 payload_size_in_bits = 0;
+    guint32 payload_type_data = msg->payloadType;
+    gboolean need_align = FALSE;
+
+    switch (payload_type_data) {
+      case GST_H265_SEI_REGISTERED_USER_DATA:{
+        GstH265RegisteredUserData *rud = &msg->payload.registered_user_data;
+
+        /* itu_t_t35_country_code: 8 bits */
+        payload_size_data = 1;
+        if (rud->country_code == 0xff) {
+          /* itu_t_t35_country_code_extension_byte */
+          payload_size_data++;
+        }
+
+        payload_size_data += rud->size;
+        break;
+      }
+      case GST_H265_SEI_TIME_CODE:{
+        gint j;
+        GstH265TimeCode *tc = &msg->payload.time_code;
+        /* num_clock_ts: 2 bits */
+        payload_size_in_bits = 2;
+        for (j = 0; j < tc->num_clock_ts; j++) {
+          /* clock_timestamp_flag: 1 bit */
+          payload_size_in_bits += 1;
+
+          if (tc->clock_timestamp_flag[j]) {
+            /* units_field_based_flag: 1 bit
+             * counting_type: 5 bits
+             * full_timestamp_flag: 1 bit
+             * discontinuity_flag: 1 bit
+             * cnt_dropped_flag: 1 bit
+             * n_frames: 9 bit
+             */
+            payload_size_in_bits += 18;
+
+            if (tc->full_timestamp_flag[j]) {
+              /* seconds_value: 6 bits
+               * minutes_value: 6 bits
+               * hours_value: 5 bits
+               */
+              payload_size_in_bits += 17;
+            } else {
+              /* seconds_flag: 1 bit */
+              payload_size_in_bits += 1;
+
+              if (tc->seconds_flag[j]) {
+                /* seconds_value: 6 bits
+                 * minutes_flag: 1 bit
+                 */
+                payload_size_in_bits += 7;
+
+                if (tc->minutes_flag[j]) {
+                  /* minutes_value: 6 bits
+                   * hours_flag: 1 bit
+                   */
+                  payload_size_in_bits += 7;
+                  if (tc->hours_flag[j]) {
+                    /* hours_value: 5 bits */
+                    payload_size_in_bits += 5;
+                  }
+                }
+              }
+            }
+
+            /* time_offset_length: 5bits
+             * time_offset_value: time_offset_length bits
+             */
+            payload_size_in_bits += (5 + tc->time_offset_length[j]);
+          }
+        }
+
+        payload_size_data = payload_size_in_bits >> 3;
+
+        if ((payload_size_in_bits & 0x7) != 0) {
+          GST_INFO ("Bits for Time Code SEI is not byte aligned");
+          payload_size_data++;
+          need_align = TRUE;
+        }
+        break;
+      }
+      case GST_H265_SEI_MASTERING_DISPLAY_COLOUR_VOLUME:
+        /* x, y 16 bits per RGB channel
+         * x, y 16 bits white point
+         * max, min luminance 32 bits
+         *
+         * (2 * 2 * 3) + (2 * 2) + (4 * 2) = 24 bytes
+         */
+        payload_size_data = 24;
+        break;
+      case GST_H265_SEI_CONTENT_LIGHT_LEVEL:
+        /* maxCLL and maxFALL per 16 bits
+         *
+         * 2 * 2 = 4 bytes
+         */
+        payload_size_data = 4;
+        break;
+      default:
+        break;
+    }
+
+    if (payload_size_data == 0) {
+      GST_FIXME ("Unsupported SEI type %d", msg->payloadType);
+      continue;
+    }
+
+    /* write payload type bytes */
+    while (payload_type_data >= 0xff) {
+      WRITE_UINT8 (&nw, 0xff, 8);
+      payload_type_data -= -0xff;
+    }
+    WRITE_UINT8 (&nw, payload_type_data, 8);
+
+    /* write payload size bytes */
+    while (payload_size_data >= 0xff) {
+      WRITE_UINT8 (&nw, 0xff, 8);
+      payload_size_data -= -0xff;
+    }
+    WRITE_UINT8 (&nw, payload_size_data, 8);
+
+    switch (msg->payloadType) {
+      case GST_H265_SEI_REGISTERED_USER_DATA:
+        GST_DEBUG ("Writing \"Registered user data\" done");
+        if (!gst_h265_write_sei_registered_user_data (&nw,
+                &msg->payload.registered_user_data)) {
+          GST_WARNING ("Failed to write \"Registered user data\"");
+          goto error;
+        }
+        have_written_data = TRUE;
+        break;
+      case GST_H265_SEI_TIME_CODE:
+        GST_DEBUG ("Wrtiting \"Time code\"");
+        if (!gst_h265_write_sei_time_code (&nw, &msg->payload.time_code)) {
+          GST_WARNING ("Failed to write \"Time code\"");
+          goto error;
+        }
+        have_written_data = TRUE;
+        break;
+      case GST_H265_SEI_MASTERING_DISPLAY_COLOUR_VOLUME:
+        GST_DEBUG ("Wrtiting \"Mastering display colour volume\"");
+        if (!gst_h265_write_sei_mastering_display_colour_volume (&nw,
+                &msg->payload.mastering_display_colour_volume)) {
+          GST_WARNING ("Failed to write \"Mastering display colour volume\"");
+          goto error;
+        }
+        have_written_data = TRUE;
+        break;
+      case GST_H265_SEI_CONTENT_LIGHT_LEVEL:
+        GST_DEBUG ("Writing \"Content light level\" done");
+        if (!gst_h265_write_sei_content_light_level_info (&nw,
+                &msg->payload.content_light_level)) {
+          GST_WARNING ("Failed to write \"Content light level\"");
+          goto error;
+        }
+        have_written_data = TRUE;
+        break;
+      default:
+        break;
+    }
+
+    if (need_align && !nal_writer_do_rbsp_trailing_bits (&nw)) {
+      GST_WARNING ("Cannot insert traling bits");
+      goto error;
+    }
+  }
+
+  if (!have_written_data) {
+    GST_WARNING ("No written sei data");
+    goto error;
+  }
+
+  if (!nal_writer_do_rbsp_trailing_bits (&nw)) {
+    GST_WARNING ("Failed to insert rbsp trailing bits");
+    goto error;
+  }
+
+  return nal_writer_reset_and_get_memory (&nw);
+
+error:
+  nal_writer_reset (&nw);
+
+  return NULL;
+}
+
+/**
+ * gst_h265_create_sei_memory:
+ * @layer_id: a nal unit layer id
+ * @temporal_id_plus1: a nal unit temporal identifier
+ * @start_code_prefix_length: a length of start code prefix, must be 3 or 4
+ * @messages: (transfer none): a GArray of #GstH265SEIMessage
+ *
+ * Creates raw byte-stream format (a.k.a Annex B type) SEI nal unit data
+ * from @messages
+ *
+ * Returns: a #GstMemory containing a PREFIX SEI nal unit
+ *
+ * Since: 1.18
+ */
+GstMemory *
+gst_h265_create_sei_memory (guint8 layer_id, guint8 temporal_id_plus1,
+    guint8 start_code_prefix_length, GArray * messages)
+{
+  g_return_val_if_fail (start_code_prefix_length == 3
+      || start_code_prefix_length == 4, NULL);
+  g_return_val_if_fail (messages != NULL, NULL);
+  g_return_val_if_fail (messages->len > 0, NULL);
+
+  return gst_h265_create_sei_memory_internal (layer_id, temporal_id_plus1,
+      start_code_prefix_length, FALSE, messages);
+}
+
+/**
+ * gst_h265_create_sei_memory_hevc:
+ * @layer_id: a nal unit layer id
+ * @temporal_id_plus1: a nal unit temporal identifier
+ * @nal_length_size: a size of nal length field, allowed range is [1, 4]
+ * @messages: (transfer none): a GArray of #GstH265SEIMessage
+ *
+ * Creates raw packetized format SEI nal unit data from @messages
+ *
+ * Returns: a #GstMemory containing a PREFIX SEI nal unit
+ *
+ * Since: 1.18
+ */
+GstMemory *
+gst_h265_create_sei_memory_hevc (guint8 layer_id, guint8 temporal_id_plus1,
+    guint8 nal_length_size, GArray * messages)
+{
+  return gst_h265_create_sei_memory_internal (layer_id, temporal_id_plus1,
+      nal_length_size, TRUE, messages);
+}
+
+static GstBuffer *
+gst_h265_parser_insert_sei_internal (GstH265Parser * parser,
+    guint8 nal_prefix_size, gboolean packetized, GstBuffer * au,
+    GstMemory * sei)
+{
+  GstH265NalUnit nalu;
+  GstH265NalUnit sei_nalu;
+  GstMapInfo info;
+  GstMapInfo sei_info;
+  GstH265ParserResult pres;
+  guint offset = 0;
+  GstBuffer *new_buffer = NULL;
+  GstMemory *new_mem = NULL;
+
+  /* all SEI payload types supported by us need to have the identical
+   * temporal id to that of slice. Parse SEI first and we will
+   * update it if it's required */
+  if (!gst_memory_map (sei, &sei_info, GST_MAP_READ)) {
+    GST_ERROR ("Cannot map sei memory");
+    return NULL;
+  }
+
+  if (packetized) {
+    pres = gst_h265_parser_identify_nalu_hevc (parser,
+        sei_info.data, 0, sei_info.size, nal_prefix_size, &sei_nalu);
+  } else {
+    pres = gst_h265_parser_identify_nalu (parser,
+        sei_info.data, 0, sei_info.size, &sei_nalu);
+  }
+  gst_memory_unmap (sei, &sei_info);
+  if (pres != GST_H265_PARSER_OK && pres != GST_H265_PARSER_NO_NAL_END) {
+    GST_DEBUG ("Failed to identify sei nal unit, ret: %d", pres);
+    return NULL;
+  }
+
+  if (!gst_buffer_map (au, &info, GST_MAP_READ)) {
+    GST_ERROR ("Cannot map au buffer");
+    return NULL;
+  }
+
+  /* Find the offset of the first slice */
+  do {
+    if (packetized) {
+      pres = gst_h265_parser_identify_nalu_hevc (parser,
+          info.data, offset, info.size, nal_prefix_size, &nalu);
+    } else {
+      pres = gst_h265_parser_identify_nalu (parser,
+          info.data, offset, info.size, &nalu);
+    }
+
+    if (pres != GST_H265_PARSER_OK && pres != GST_H265_PARSER_NO_NAL_END) {
+      GST_DEBUG ("Failed to identify nal unit, ret: %d", pres);
+      gst_buffer_unmap (au, &info);
+
+      return NULL;
+    }
+
+    if ((nalu.type >= GST_H265_NAL_SLICE_TRAIL_N
+            && nalu.type <= GST_H265_NAL_SLICE_RASL_R)
+        || (nalu.type >= GST_H265_NAL_SLICE_BLA_W_LP
+            && nalu.type <= GST_H265_NAL_SLICE_CRA_NUT)) {
+      GST_DEBUG ("Found slice nal type %d at offset %d", nalu.type,
+          nalu.sc_offset);
+      break;
+    }
+
+    offset = nalu.offset + nalu.size;
+  } while (pres == GST_H265_PARSER_OK);
+  gst_buffer_unmap (au, &info);
+
+  /* found the best position now, create new buffer */
+  new_buffer = gst_buffer_new ();
+
+  /* copy all metadata */
+  if (!gst_buffer_copy_into (new_buffer, au, GST_BUFFER_COPY_METADATA, 0, -1)) {
+    GST_ERROR ("Failed to copy metadata into new buffer");
+    gst_clear_buffer (&new_buffer);
+    goto out;
+  }
+
+  /* copy non-slice nal */
+  if (nalu.sc_offset > 0) {
+    if (!gst_buffer_copy_into (new_buffer, au,
+            GST_BUFFER_COPY_MEMORY, 0, nalu.sc_offset)) {
+      GST_ERROR ("Failed to copy buffer");
+      gst_clear_buffer (&new_buffer);
+      goto out;
+    }
+  }
+
+  /* check whether we need to update temporal id and layer id.
+   * If it's not matched to slice nalu, update it.
+   */
+  if (sei_nalu.layer_id != nalu.layer_id || sei_nalu.temporal_id_plus1 !=
+      nalu.temporal_id_plus1) {
+    guint16 nalu_header;
+    guint16 layer_id_temporal_id = 0;
+    new_mem = gst_memory_copy (sei, 0, -1);
+
+    if (!gst_memory_map (new_mem, &sei_info, GST_MAP_READWRITE)) {
+      GST_ERROR ("Failed to map new sei memory");
+      gst_memory_unref (new_mem);
+      gst_clear_buffer (&new_buffer);
+      goto out;
+    }
+
+    nalu_header = GST_READ_UINT16_BE (sei_info.data + sei_nalu.offset);
+
+    /* clear bits 7 ~ 15
+     * NOTE:
+     * bit 0: forbidden_zero_bit
+     * bits 1 ~ 6: nalu type */
+    nalu_header &= 0xfe00;
+
+    layer_id_temporal_id = ((nalu.layer_id << 3) & 0x1f8);
+    layer_id_temporal_id |= (nalu.temporal_id_plus1 & 0x7);
+
+    nalu_header |= layer_id_temporal_id;
+    GST_WRITE_UINT16_BE (sei_info.data + sei_nalu.offset, nalu_header);
+    gst_memory_unmap (new_mem, &sei_info);
+  } else {
+    new_mem = gst_memory_ref (sei);
+  }
+
+  /* insert sei */
+  gst_buffer_append_memory (new_buffer, new_mem);
+
+  /* copy the rest */
+  if (!gst_buffer_copy_into (new_buffer, au,
+          GST_BUFFER_COPY_MEMORY, nalu.sc_offset, -1)) {
+    GST_ERROR ("Failed to copy buffer");
+    gst_clear_buffer (&new_buffer);
+    goto out;
+  }
+
+out:
+  return new_buffer;
+}
+
+/**
+ * gst_h265_parser_insert_sei:
+ * @parser: a #GstH265Parser
+ * @au: (transfer none): a #GstBuffer containing AU data
+ * @sei: (transfer none): a #GstMemory containing a SEI nal
+ *
+ * Copy @au into new #GstBuffer and insert @sei into the #GstBuffer.
+ * The validation for completeness of @au and @sei is caller's responsibility.
+ * Both @au and @sei must be byte-stream formatted
+ *
+ * Returns: (nullable): a SEI inserted #GstBuffer or %NULL
+ *   if cannot figure out proper position to insert a @sei
+ *
+ * Since: 1.18
+ */
+GstBuffer *
+gst_h265_parser_insert_sei (GstH265Parser * parser, GstBuffer * au,
+    GstMemory * sei)
+{
+  g_return_val_if_fail (parser != NULL, NULL);
+  g_return_val_if_fail (GST_IS_BUFFER (au), NULL);
+  g_return_val_if_fail (sei != NULL, NULL);
+
+  /* the size of start code prefix (3 or 4) is not matter since it will be
+   * scanned */
+  return gst_h265_parser_insert_sei_internal (parser, 4, FALSE, au, sei);
+}
+
+/**
+ * gst_h265_parser_insert_sei_hevc:
+ * @parser: a #GstH265Parser
+ * @nal_length_size: a size of nal length field, allowed range is [1, 4]
+ * @au: (transfer none): a #GstBuffer containing AU data
+ * @sei: (transfer none): a #GstMemory containing a SEI nal
+ *
+ * Copy @au into new #GstBuffer and insert @sei into the #GstBuffer.
+ * The validation for completeness of @au and @sei is caller's responsibility.
+ * Nal prefix type of both @au and @sei must be packetized, and
+ * also the size of nal length field must be identical to @nal_length_size
+ *
+ * Returns: (nullable): a SEI inserted #GstBuffer or %NULL
+ *   if cannot figure out proper position to insert a @sei
+ *
+ * Since: 1.18
+ */
+GstBuffer *
+gst_h265_parser_insert_sei_hevc (GstH265Parser * parser, guint8 nal_length_size,
+    GstBuffer * au, GstMemory * sei)
+{
+  g_return_val_if_fail (parser != NULL, NULL);
+  g_return_val_if_fail (nal_length_size > 0 && nal_length_size < 5, NULL);
+  g_return_val_if_fail (GST_IS_BUFFER (au), NULL);
+  g_return_val_if_fail (sei != NULL, NULL);
+
+  return gst_h265_parser_insert_sei_internal (parser, nal_length_size, TRUE,
+      au, sei);
+}

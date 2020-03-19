@@ -1669,5 +1669,28 @@ const gchar * gst_h265_profile_to_string (GstH265Profile profile);
 GST_CODEC_PARSERS_API
 GstH265Profile gst_h265_profile_from_string (const gchar * string);
 
+GST_CODEC_PARSERS_API
+GstMemory * gst_h265_create_sei_memory (guint8 layer_id,
+                                        guint8 temporal_id_plus1,
+                                        guint8 start_code_prefix_length,
+                                        GArray * messages);
+
+GST_CODEC_PARSERS_API
+GstMemory * gst_h265_create_sei_memory_hevc (guint8 layer_id,
+                                             guint8 temporal_id_plus1,
+                                             guint8 nal_length_size,
+                                             GArray * messages);
+
+GST_CODEC_PARSERS_API
+GstBuffer * gst_h265_parser_insert_sei (GstH265Parser * parser,
+                                        GstBuffer * au,
+                                        GstMemory * sei);
+
+GST_CODEC_PARSERS_API
+GstBuffer * gst_h265_parser_insert_sei_hevc (GstH265Parser * parser,
+                                             guint8 nal_length_size,
+                                             GstBuffer * au,
+                                             GstMemory * sei);
+
 G_END_DECLS
 #endif
