@@ -2479,10 +2479,11 @@ calculate_expected (GstRtpJitterBuffer * jitterbuffer, guint32 expected,
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
   GstClockTime duration, expected_pts;
   gboolean equidistant = priv->equidistant > 0;
+  GstClockTime last_in_pts = priv->last_in_pts;
 
   GST_DEBUG_OBJECT (jitterbuffer,
       "pts %" GST_TIME_FORMAT ", last %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (pts), GST_TIME_ARGS (priv->last_in_pts));
+      GST_TIME_ARGS (pts), GST_TIME_ARGS (last_in_pts));
 
   if (pts == GST_CLOCK_TIME_NONE) {
     GST_WARNING_OBJECT (jitterbuffer, "Have no PTS");
@@ -2492,8 +2493,8 @@ calculate_expected (GstRtpJitterBuffer * jitterbuffer, guint32 expected,
   if (equidistant) {
     GstClockTime total_duration;
     /* the total duration spanned by the missing packets */
-    if (pts >= priv->last_in_pts)
-      total_duration = pts - priv->last_in_pts;
+    if (pts >= last_in_pts)
+      total_duration = pts - last_in_pts;
     else
       total_duration = 0;
 
@@ -2530,18 +2531,30 @@ calculate_expected (GstRtpJitterBuffer * jitterbuffer, guint32 expected,
           GST_TIME_ARGS (priv->latency_ns), lost_packets,
           GST_TIME_ARGS (gap_time));
 
-      /* this timer will fire immediately and the lost event will be pushed from
-       * the timer thread */
+      /* this multi-lost-packet event will be inserted directly into the packet-queue
+         for immediate processing */
       if (lost_packets > 0) {
-        rtp_timer_queue_set_lost (priv->timers, expected, lost_packets,
-            priv->last_in_pts + duration, gap_time,
-            timeout_offset (jitterbuffer));
+        RtpTimer *timer;
+        GstClockTime timestamp =
+            apply_offset (jitterbuffer, last_in_pts + duration);
+        insert_lost_event (jitterbuffer, expected, lost_packets, timestamp,
+            gap_time, 0);
+
+        timer = rtp_timer_queue_find (priv->timers, expected);
+        if (timer && timer->type == RTP_TIMER_EXPECTED) {
+          if (timer->queued)
+            rtp_timer_queue_unschedule (priv->timers, timer);
+          GST_DEBUG_OBJECT (jitterbuffer, "removing timer for seqnum #%u",
+              expected);
+          rtp_timer_free (timer);
+        }
+
         expected += lost_packets;
-        priv->last_in_pts += gap_time;
+        last_in_pts += gap_time;
       }
     }
 
-    expected_pts = priv->last_in_pts + duration;
+    expected_pts = last_in_pts + duration;
   } else {
     /* If we cannot assume equidistant packet spacing, the only thing we now
      * for sure is that the missing packets have expected pts not later than
