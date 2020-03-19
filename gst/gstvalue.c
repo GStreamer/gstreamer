@@ -5783,17 +5783,28 @@ gst_value_list_equals_range (const GValue * list, const GValue * value)
 
 /* "Pure" variant of gst_value_compare which is guaranteed to
  * not have list arguments and therefore does basic comparisons
+*
+* Handled will be set to TRUE if there is a valid compared function
+* regardless of whether the two values are equal or not. This is
+* useful to know whether this function returned !EQUAL because the
+* values are compatible but didn't match or because there wasn't
+* a valid comparision function.
  */
 static inline gint
-_gst_value_compare_nolist (const GValue * value1, const GValue * value2)
+_gst_value_compare_nolist (const GValue * value1, const GValue * value2,
+    gboolean * handled)
 {
   GstValueCompareFunc compare;
 
+  if (handled)
+    *handled = FALSE;
   if (G_VALUE_TYPE (value1) != G_VALUE_TYPE (value2))
     return GST_VALUE_UNORDERED;
 
   compare = gst_value_get_compare_func (value1);
   if (compare) {
+    if (handled)
+      *handled = TRUE;
     return compare (value1, value2);
   }
 
@@ -5878,7 +5889,7 @@ gst_value_compare (const GValue * value1, const GValue * value2)
   }
 
   /* And now handle the generic case */
-  return _gst_value_compare_nolist (value1, value2);
+  return _gst_value_compare_nolist (value1, value2, NULL);
 }
 
 /*
@@ -6097,6 +6108,7 @@ gst_value_intersect (GValue * dest, const GValue * value1,
   GstValueIntersectInfo *intersect_info;
   guint i, len;
   GType type1, type2;
+  gboolean handled;
 
   g_return_val_if_fail (G_IS_VALUE (value1), FALSE);
   g_return_val_if_fail (G_IS_VALUE (value2), FALSE);
@@ -6110,7 +6122,7 @@ gst_value_intersect (GValue * dest, const GValue * value1,
   if (type2 == GST_TYPE_LIST)
     return gst_value_intersect_list (dest, value2, value1);
 
-  if (_gst_value_compare_nolist (value1, value2) == GST_VALUE_EQUAL) {
+  if (_gst_value_compare_nolist (value1, value2, &handled) == GST_VALUE_EQUAL) {
     if (dest)
       gst_value_init_and_copy (dest, value1);
     return TRUE;
@@ -6127,6 +6139,11 @@ gst_value_intersect (GValue * dest, const GValue * value1,
       return intersect_info->func (dest, value2, value1);
     }
   }
+
+  /* If there was a comparision that failed and it doesnt' have an
+   * intersect function then it definitely can't intersect */
+  if (handled)
+    return FALSE;
 
   /* Failed to find a direct intersection, check if these are
    * GstFlagSet sub-types. */
@@ -6211,7 +6228,7 @@ gst_value_subtract (GValue * dest, const GValue * minuend,
     }
   }
 
-  if (_gst_value_compare_nolist (minuend, subtrahend) != GST_VALUE_EQUAL) {
+  if (_gst_value_compare_nolist (minuend, subtrahend, NULL) != GST_VALUE_EQUAL) {
     if (dest)
       gst_value_init_and_copy (dest, minuend);
     return TRUE;
