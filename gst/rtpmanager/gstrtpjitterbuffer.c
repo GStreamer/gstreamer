@@ -2420,6 +2420,59 @@ calculate_packet_spacing (GstRtpJitterBuffer * jitterbuffer, guint32 rtptime,
 }
 
 static void
+insert_lost_event (GstRtpJitterBuffer * jitterbuffer,
+    guint16 seqnum, guint lost_packets, GstClockTime timestamp,
+    GstClockTime duration, guint num_rtx_retry)
+{
+  GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
+  GstEvent *event = NULL;
+  RTPJitterBufferItem *item;
+  guint next_in_seqnum;
+  gboolean head;
+
+  /* we had a gap and thus we lost some packets. Create an event for this.  */
+  if (lost_packets > 1)
+    GST_DEBUG_OBJECT (jitterbuffer, "Packets #%d -> #%d lost", seqnum,
+        seqnum + lost_packets - 1);
+  else
+    GST_DEBUG_OBJECT (jitterbuffer, "Packet #%d lost", seqnum);
+
+  priv->num_lost += lost_packets;
+  priv->num_rtx_failed += num_rtx_retry;
+
+  next_in_seqnum = (seqnum + lost_packets) & 0xffff;
+
+  /* we now only accept seqnum bigger than this */
+  if (gst_rtp_buffer_compare_seqnum (priv->next_in_seqnum, next_in_seqnum) > 0) {
+    priv->next_in_seqnum = next_in_seqnum;
+    priv->last_in_pts = timestamp;
+  }
+
+  /* Avoid creating events if we don't need it. Note that we still need to create
+   * the lost *ITEM* since it will be used to notify the outgoing thread of
+   * lost items (so that we can set discont flags and such) */
+  if (priv->do_lost) {
+    /* create packet lost event */
+    if (duration == GST_CLOCK_TIME_NONE && priv->packet_spacing > 0)
+      duration = priv->packet_spacing;
+    event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+        gst_structure_new ("GstRTPPacketLost",
+            "seqnum", G_TYPE_UINT, (guint) seqnum,
+            "timestamp", G_TYPE_UINT64, timestamp,
+            "duration", G_TYPE_UINT64, duration,
+            "retry", G_TYPE_UINT, num_rtx_retry, NULL));
+  }
+  item = rtp_jitter_buffer_alloc_item (event, ITEM_TYPE_LOST, -1, -1, seqnum,
+      lost_packets, -1, (GDestroyNotify) gst_mini_object_unref);
+  if (!rtp_jitter_buffer_insert (priv->jbuf, item, &head, NULL))
+    /* Duplicate */
+    rtp_jitter_buffer_free_item (item);
+
+  if (head)
+    JBUF_SIGNAL_EVENT (priv);
+}
+
+static void
 calculate_expected (GstRtpJitterBuffer * jitterbuffer, guint32 expected,
     guint16 seqnum, GstClockTime pts, gint gap)
 {
@@ -3874,55 +3927,14 @@ do_lost_timeout (GstRtpJitterBuffer * jitterbuffer, RtpTimer * timer,
     GstClockTime now)
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
-  guint seqnum, lost_packets, num_rtx_retry, next_in_seqnum;
-  gboolean head;
-  GstEvent *event = NULL;
-  RTPJitterBufferItem *item;
+  guint lost_packets;
+  GstClockTime timestamp;
 
-  seqnum = timer->seqnum;
+  timestamp = apply_offset (jitterbuffer, get_pts_timeout (timer));
   lost_packets = MAX (timer->num, 1);
-  num_rtx_retry = timer->num_rtx_retry;
 
-  /* we had a gap and thus we lost some packets. Create an event for this.  */
-  if (lost_packets > 1)
-    GST_DEBUG_OBJECT (jitterbuffer, "Packets #%d -> #%d lost", seqnum,
-        seqnum + lost_packets - 1);
-  else
-    GST_DEBUG_OBJECT (jitterbuffer, "Packet #%d lost", seqnum);
-
-  priv->num_lost += lost_packets;
-  priv->num_rtx_failed += num_rtx_retry;
-
-  next_in_seqnum = (seqnum + lost_packets) & 0xffff;
-
-  /* we now only accept seqnum bigger than this */
-  if (gst_rtp_buffer_compare_seqnum (priv->next_in_seqnum, next_in_seqnum) > 0) {
-    priv->next_in_seqnum = next_in_seqnum;
-    priv->last_in_pts = apply_offset (jitterbuffer, get_pts_timeout (timer));
-  }
-
-  /* Avoid creating events if we don't need it. Note that we still need to create
-   * the lost *ITEM* since it will be used to notify the outgoing thread of
-   * lost items (so that we can set discont flags and such) */
-  if (priv->do_lost) {
-    GstClockTime duration, timestamp;
-    /* create packet lost event */
-    timestamp = apply_offset (jitterbuffer, get_pts_timeout (timer));
-    duration = timer->duration;
-    if (duration == GST_CLOCK_TIME_NONE && priv->packet_spacing > 0)
-      duration = priv->packet_spacing;
-    event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
-        gst_structure_new ("GstRTPPacketLost",
-            "seqnum", G_TYPE_UINT, (guint) seqnum,
-            "timestamp", G_TYPE_UINT64, timestamp,
-            "duration", G_TYPE_UINT64, duration,
-            "retry", G_TYPE_UINT, num_rtx_retry, NULL));
-  }
-  item = rtp_jitter_buffer_alloc_item (event, ITEM_TYPE_LOST, -1, -1, seqnum,
-      lost_packets, -1, (GDestroyNotify) gst_mini_object_unref);
-  if (!rtp_jitter_buffer_insert (priv->jbuf, item, &head, NULL))
-    /* Duplicate */
-    rtp_jitter_buffer_free_item (item);
+  insert_lost_event (jitterbuffer, timer->seqnum, lost_packets, timestamp,
+      timer->duration, timer->num_rtx_retry);
 
   if (GST_CLOCK_TIME_IS_VALID (timer->rtx_last)) {
     /* Store info to update stats if the packet arrives too late */
@@ -3932,9 +3944,6 @@ do_lost_timeout (GstRtpJitterBuffer * jitterbuffer, RtpTimer * timer,
   } else {
     rtp_timer_free (timer);
   }
-
-  if (head)
-    JBUF_SIGNAL_EVENT (priv);
 
   return TRUE;
 }
