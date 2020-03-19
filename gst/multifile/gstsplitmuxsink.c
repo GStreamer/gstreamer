@@ -543,9 +543,7 @@ gst_splitmux_sink_init (GstSplitMuxSink * splitmux)
   splitmux->threshold_bytes = DEFAULT_MAX_SIZE_BYTES;
   splitmux->max_files = DEFAULT_MAX_FILES;
   splitmux->send_keyframe_requests = DEFAULT_SEND_KEYFRAME_REQUESTS;
-  splitmux->next_max_tc_time = GST_CLOCK_TIME_NONE;
   splitmux->alignment_threshold = DEFAULT_ALIGNMENT_THRESHOLD;
-  splitmux->last_fku_time = GST_CLOCK_TIME_NONE;
   splitmux->use_robust_muxing = DEFAULT_USE_ROBUST_MUXING;
   splitmux->reset_muxer = DEFAULT_RESET_MUXER;
 
@@ -561,10 +559,12 @@ gst_splitmux_sink_init (GstSplitMuxSink * splitmux)
   splitmux->split_requested = FALSE;
   splitmux->do_split_next_gop = FALSE;
   splitmux->times_to_split = gst_queue_array_new_for_struct (8, 8);
+  splitmux->next_max_tc_time = GST_CLOCK_TIME_NONE;
+  splitmux->last_fku_time = GST_CLOCK_TIME_NONE;
 }
 
 static void
-gst_splitmux_reset (GstSplitMuxSink * splitmux)
+gst_splitmux_reset_elements (GstSplitMuxSink * splitmux)
 {
   if (splitmux->muxer) {
     gst_element_set_locked_state (splitmux->muxer, TRUE);
@@ -937,6 +937,16 @@ my_segment_to_running_time (GstSegment * segment, GstClockTime val)
   return res;
 }
 
+static void
+mq_stream_ctx_reset (MqStreamCtx * ctx)
+{
+  gst_segment_init (&ctx->in_segment, GST_FORMAT_UNDEFINED);
+  gst_segment_init (&ctx->out_segment, GST_FORMAT_UNDEFINED);
+  ctx->in_running_time = ctx->out_running_time = GST_CLOCK_STIME_NONE;
+  g_queue_foreach (&ctx->queued_bufs, (GFunc) mq_stream_buf_free, NULL);
+  g_queue_clear (&ctx->queued_bufs);
+}
+
 static MqStreamCtx *
 mq_stream_ctx_new (GstSplitMuxSink * splitmux)
 {
@@ -944,10 +954,9 @@ mq_stream_ctx_new (GstSplitMuxSink * splitmux)
 
   ctx = g_new0 (MqStreamCtx, 1);
   ctx->splitmux = splitmux;
-  gst_segment_init (&ctx->in_segment, GST_FORMAT_UNDEFINED);
-  gst_segment_init (&ctx->out_segment, GST_FORMAT_UNDEFINED);
-  ctx->in_running_time = ctx->out_running_time = GST_CLOCK_STIME_NONE;
   g_queue_init (&ctx->queued_bufs);
+  mq_stream_ctx_reset (ctx);
+
   return ctx;
 }
 
@@ -1393,6 +1402,10 @@ handle_mq_output (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
         gst_segment_init (&ctx->out_segment, GST_FORMAT_UNDEFINED);
         g_queue_foreach (&ctx->queued_bufs, (GFunc) mq_stream_buf_free, NULL);
         g_queue_clear (&ctx->queued_bufs);
+        g_queue_clear (&ctx->queued_bufs);
+        /* If this is the reference context, we just threw away any queued keyframes */
+        if (ctx->is_reference)
+          splitmux->queued_keyframes = 0;
         ctx->flushing = FALSE;
         break;
       case GST_EVENT_FLUSH_START:
@@ -2948,7 +2961,7 @@ gst_splitmux_sink_release_pad (GstElement * element, GstPad * pad)
 
   /* Reset the internal elements only after all request pads are released */
   if (splitmux->contexts == NULL)
-    gst_splitmux_reset (splitmux);
+    gst_splitmux_reset_elements (splitmux);
 
 fail:
   GST_SPLITMUX_UNLOCK (splitmux);
@@ -3234,6 +3247,32 @@ do_async_done (GstSplitMuxSink * splitmux)
   splitmux->need_async_start = FALSE;
 }
 
+static void
+gst_splitmux_sink_reset (GstSplitMuxSink * splitmux)
+{
+  splitmux->max_in_running_time = GST_CLOCK_STIME_NONE;
+  splitmux->gop_start_time = splitmux->fragment_start_time =
+      GST_CLOCK_STIME_NONE;
+  splitmux->max_out_running_time = 0;
+  splitmux->fragment_total_bytes = 0;
+  splitmux->gop_total_bytes = 0;
+  splitmux->muxed_out_bytes = 0;
+  splitmux->ready_for_output = FALSE;
+
+  g_atomic_int_set (&(splitmux->split_requested), FALSE);
+  g_atomic_int_set (&(splitmux->do_split_next_gop), FALSE);
+
+  splitmux->next_max_tc_time = GST_CLOCK_TIME_NONE;
+  splitmux->last_fku_time = GST_CLOCK_TIME_NONE;
+  gst_queue_array_clear (splitmux->times_to_split);
+
+  g_list_foreach (splitmux->contexts, (GFunc) mq_stream_ctx_reset, NULL);
+  splitmux->queued_keyframes = 0;
+
+  g_queue_foreach (&splitmux->out_cmd_q, (GFunc) out_cmd_buf_free, NULL);
+  g_queue_clear (&splitmux->out_cmd_q);
+}
+
 static GstStateChangeReturn
 gst_splitmux_sink_change_state (GstElement * element, GstStateChange transition)
 {
@@ -3256,14 +3295,12 @@ gst_splitmux_sink_change_state (GstElement * element, GstStateChange transition)
     }
     case GST_STATE_CHANGE_READY_TO_PAUSED:{
       GST_SPLITMUX_LOCK (splitmux);
+      /* Make sure contexts and tracking times are cleared, in case we're being reused */
+      gst_splitmux_sink_reset (splitmux);
       /* Start by collecting one input on each pad */
       splitmux->input_state = SPLITMUX_INPUT_STATE_COLLECTING_GOP_START;
       splitmux->output_state = SPLITMUX_OUTPUT_STATE_START_NEXT_FILE;
-      splitmux->max_in_running_time = GST_CLOCK_STIME_NONE;
-      splitmux->gop_start_time = splitmux->fragment_start_time =
-          GST_CLOCK_STIME_NONE;
-      splitmux->muxed_out_bytes = 0;
-      splitmux->ready_for_output = FALSE;
+
       GST_SPLITMUX_UNLOCK (splitmux);
       break;
     }
@@ -3272,7 +3309,7 @@ gst_splitmux_sink_change_state (GstElement * element, GstStateChange transition)
       g_atomic_int_set (&(splitmux->do_split_next_gop), FALSE);
     case GST_STATE_CHANGE_READY_TO_NULL:
       GST_SPLITMUX_LOCK (splitmux);
-      gst_queue_array_clear (splitmux->times_to_split);
+      gst_splitmux_sink_reset (splitmux);
       splitmux->output_state = SPLITMUX_OUTPUT_STATE_STOPPED;
       splitmux->input_state = SPLITMUX_INPUT_STATE_STOPPED;
       /* Wake up any blocked threads */
@@ -3312,7 +3349,7 @@ gst_splitmux_sink_change_state (GstElement * element, GstStateChange transition)
       splitmux->fragment_id = 0;
       /* Reset internal elements only if no pad contexts are using them */
       if (splitmux->contexts == NULL)
-        gst_splitmux_reset (splitmux);
+        gst_splitmux_reset_elements (splitmux);
       do_async_done (splitmux);
       GST_SPLITMUX_UNLOCK (splitmux);
       break;
@@ -3324,7 +3361,7 @@ beach:
   if (transition == GST_STATE_CHANGE_NULL_TO_READY &&
       ret == GST_STATE_CHANGE_FAILURE) {
     /* Cleanup elements on failed transition out of NULL */
-    gst_splitmux_reset (splitmux);
+    gst_splitmux_reset_elements (splitmux);
     GST_SPLITMUX_LOCK (splitmux);
     do_async_done (splitmux);
     GST_SPLITMUX_UNLOCK (splitmux);
