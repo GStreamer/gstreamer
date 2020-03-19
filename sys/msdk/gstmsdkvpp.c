@@ -54,7 +54,10 @@
 #endif
 #endif
 
-#if (MFX_VERSION >= 1028)
+#if (MFX_VERSION >= 1032)
+#define EXT_SINK_FORMATS        ", RGB16, Y410, Y210"
+#define EXT_SRC_FORMATS         ", YV12, Y410, Y210"
+#elif (MFX_VERSION >= 1028)
 #define EXT_SINK_FORMATS        ", RGB16, Y410, Y210"
 #define EXT_SRC_FORMATS         ", Y410, Y210"
 #elif (MFX_VERSION >= 1027)
