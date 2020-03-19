@@ -40,6 +40,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_cc_converter_debug);
         "closedcaption/x-cea-608,format=(string) s334-1a; " \
         "closedcaption/x-cea-608,format=(string) raw"
 
+#define VAL_OR_0(v) ((v) ? (*(v)) : 0)
+
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -384,17 +386,19 @@ struct cdp_fps_entry
   guint8 fps_idx;
   guint fps_n, fps_d;
   guint max_cc_count;
+  guint max_ccp_count;
+  guint max_cea608_count;
 };
 
 static const struct cdp_fps_entry cdp_fps_table[] = {
-  {0x1f, 24000, 1001, 25},
-  {0x2f, 24, 1, 25},
-  {0x3f, 25, 1, 24},
-  {0x4f, 30000, 1001, 20},
-  {0x5f, 30, 1, 20},
-  {0x6f, 50, 1, 12},
-  {0x7f, 60000, 1001, 10},
-  {0x8f, 60, 1, 10},
+  {0x1f, 24000, 1001, 25, 22, 3 /* FIXME: alternating max cea608 count! */ },
+  {0x2f, 24, 1, 25, 22, 2},
+  {0x3f, 25, 1, 24, 22, 2},
+  {0x4f, 30000, 1001, 20, 18, 2},
+  {0x5f, 30, 1, 20, 18, 2},
+  {0x6f, 50, 1, 12, 11, 1},
+  {0x7f, 60000, 1001, 10, 9, 1},
+  {0x8f, 60, 1, 10, 9, 1},
 };
 static const struct cdp_fps_entry null_fps_entry = { 0, 0, 0, 0 };
 
@@ -520,11 +524,13 @@ compact_cc_data (guint8 * cc_data, guint cc_data_len)
     gboolean cc_valid = (cc_data[i * 3] & 0x04) == 0x04;
     guint8 cc_type = cc_data[i * 3] & 0x03;
 
-    if (!started_ccp && cc_valid && (cc_type == 0x00 || cc_type == 0x01)) {
-      /* skip over 608 data */
-      cc_data[out_len++] = cc_data[i * 3];
-      cc_data[out_len++] = cc_data[i * 3 + 1];
-      cc_data[out_len++] = cc_data[i * 3 + 2];
+    if (!started_ccp && (cc_type == 0x00 || cc_type == 0x01)) {
+      if (cc_valid) {
+        /* copy over valid 608 data */
+        cc_data[out_len++] = cc_data[i * 3];
+        cc_data[out_len++] = cc_data[i * 3 + 1];
+        cc_data[out_len++] = cc_data[i * 3 + 2];
+      }
       continue;
     }
 
@@ -534,22 +540,241 @@ compact_cc_data (guint8 * cc_data, guint cc_data_len)
     if (!cc_valid)
       continue;
 
+    if (cc_type == 0x00 || cc_type == 0x01) {
+      GST_WARNING ("Invalid cc_data.  cea608 bytes after cea708");
+      return 0;
+    }
+
     cc_data[out_len++] = cc_data[i * 3];
     cc_data[out_len++] = cc_data[i * 3 + 1];
     cc_data[out_len++] = cc_data[i * 3 + 2];
   }
 
+  GST_LOG ("compacted cc_data from %u to %u", cc_data_len, out_len);
+
   return out_len;
 }
 
-/* takes cc_data and cc_data_len and attempts to fit it into a hypothetical
- * output packet.  Any leftover data is stored for later addition.  Returns
- * the number of bytes of @cc_data to place in a new output packet */
 static gint
+cc_data_extract_cea608 (guint8 * cc_data, guint cc_data_len,
+    guint8 * cea608_field1, guint * cea608_field1_len,
+    guint8 * cea608_field2, guint * cea608_field2_len)
+{
+  guint i, field_1_len = 0, field_2_len = 0;
+
+  if (cea608_field1_len) {
+    field_1_len = *cea608_field1_len;
+    *cea608_field1_len = 0;
+  }
+  if (cea608_field2_len) {
+    field_2_len = *cea608_field2_len;
+    *cea608_field2_len = 0;
+  }
+
+  if (cc_data_len % 3 != 0) {
+    GST_WARNING ("Invalid cc_data buffer size %u. Truncating to a multiple "
+        "of 3", cc_data_len);
+    cc_data_len = cc_data_len - (cc_data_len % 3);
+  }
+
+  for (i = 0; i < cc_data_len / 3; i++) {
+    gboolean cc_valid = (cc_data[i * 3] & 0x04) == 0x04;
+    guint8 cc_type = cc_data[i * 3] & 0x03;
+
+    if (cc_type == 0x00) {
+      if (!cc_valid)
+        continue;
+
+      if (cea608_field1 && cea608_field1_len) {
+        if (*cea608_field1_len + 2 > field_1_len) {
+          GST_WARNING ("Too many cea608 input bytes %u for field 1",
+              *cea608_field1_len + 2);
+          return -1;
+        }
+        cea608_field1[(*cea608_field1_len)++] = cc_data[i * 3 + 1];
+        cea608_field1[(*cea608_field1_len)++] = cc_data[i * 3 + 2];
+      }
+    } else if (cc_type == 0x01) {
+      if (!cc_valid)
+        continue;
+
+      if (cea608_field2 && cea608_field2_len) {
+        if (*cea608_field2_len + 2 > field_2_len) {
+          GST_WARNING ("Too many cea608 input bytes %u for field 2",
+              *cea608_field2_len + 2);
+          return -1;
+        }
+        cea608_field2[(*cea608_field2_len)++] = cc_data[i * 3 + 1];
+        cea608_field2[(*cea608_field2_len)++] = cc_data[i * 3 + 2];
+      }
+    } else {
+      /* all cea608 packets must be at the beginning of a cc_data */
+      break;
+    }
+  }
+
+  g_assert_cmpint (i * 3, <=, cc_data_len);
+
+  GST_LOG ("Extracted cea608-1 of length %u and cea608-2 of length %u",
+      VAL_OR_0 (cea608_field1_len), VAL_OR_0 (cea608_field2_len));
+
+  return i * 3;
+}
+
+static void
+store_cc_data (GstCCConverter * self, const guint8 * ccp_data,
+    guint ccp_data_len, const guint8 * cea608_1, guint cea608_1_len,
+    const guint8 * cea608_2, guint cea608_2_len)
+{
+  GST_DEBUG_OBJECT (self, "holding data of len ccp:%u, cea608 1:%u, "
+      "cea608 2:%u until next input buffer", ccp_data_len, cea608_1_len,
+      cea608_2_len);
+
+  if (ccp_data && ccp_data_len > 0) {
+    memcpy (self->scratch_ccp, ccp_data, ccp_data_len);
+    self->scratch_ccp_len = ccp_data_len;
+  } else {
+    self->scratch_ccp_len = 0;
+  }
+  g_assert_cmpint (self->scratch_ccp_len, <, sizeof (self->scratch_ccp));
+
+  if (cea608_1 && cea608_1_len > 0) {
+    memcpy (self->scratch_cea608_1, cea608_1, cea608_1_len);
+    self->scratch_cea608_1_len = cea608_1_len;
+  } else {
+    self->scratch_cea608_1_len = 0;
+  }
+  g_assert_cmpint (self->scratch_cea608_1_len, <,
+      sizeof (self->scratch_cea608_1));
+
+  if (cea608_2 && cea608_2_len > 0) {
+    memcpy (self->scratch_cea608_2, cea608_2, cea608_2_len);
+    self->scratch_cea608_2_len = cea608_2_len;
+  } else {
+    self->scratch_cea608_2_len = 0;
+  }
+  g_assert_cmpint (self->scratch_cea608_2_len, <,
+      sizeof (self->scratch_cea608_2));
+}
+
+static gboolean
+combine_cc_data (GstCCConverter * self, gboolean pad_cea608,
+    const struct cdp_fps_entry *out_fps_entry, const guint8 * ccp_data,
+    guint ccp_data_len, const guint8 * cea608_1, guint cea608_1_len,
+    const guint8 * cea608_2, guint cea608_2_len, guint8 * out, guint * out_size)
+{
+  guint i = 0, out_i = 0, max_size = 0, cea608_1_i = 0, cea608_2_i = 0;
+  guint cea608_output_count;
+  guint total_cea608_1_count, total_cea608_2_count;
+
+  g_assert (out);
+  g_assert (out_size);
+  g_assert (!ccp_data || ccp_data_len % 3 == 0);
+  g_assert (!cea608_1 || cea608_1_len % 2 == 0);
+  g_assert (!cea608_2 || cea608_2_len % 2 == 0);
+  cea608_1_len /= 2;
+  cea608_2_len /= 2;
+#if 0
+  /* FIXME: if cea608 field 2 is generated, field 1 needs to be generated,
+   * However that is not possible for 60fps (where only one cea608 field fits)
+   * without adding previous output buffer tracking */
+  g_assert_cmpint (cea608_1_len >= cea608_2_len);
+#endif
+  g_assert_cmpint (cea608_1_len + cea608_2_len, <=,
+      out_fps_entry->max_cea608_count);
+
+  total_cea608_1_count = cea608_1_len;
+  total_cea608_2_count = cea608_2_len;
+
+#if 0
+  /* FIXME: if cea608 field 2 is generated, field 1 needs to be generated. */
+  if (cea608_1_len < cea608_2_len)
+    total_cea608_1_count += cea608_2_len - cea608_1_len;
+#endif
+
+  max_size = ccp_data_len + (total_cea608_1_count + total_cea608_2_count) * 3;
+  if (*out_size < max_size) {
+    GST_WARNING_OBJECT (self, "Output data too small (%u < %u)", *out_size,
+        max_size);
+    return FALSE;
+  }
+
+  /* FIXME: interlacing, tff, rff, ensuring cea608 field1 is generated if
+   * field2 exists even across packets */
+
+  cea608_output_count = cea608_1_len + cea608_2_len;
+  if (pad_cea608) {
+    for (i = total_cea608_1_count + total_cea608_2_count;
+        i < out_fps_entry->max_cea608_count; i++) {
+      /* try to pad evenly */
+      if (i > cea608_1_len / 2)
+        total_cea608_1_count++;
+      else
+        total_cea608_2_count++;
+      cea608_output_count++;
+    }
+  }
+
+  GST_LOG ("writing %u cea608-1 fields and %u cea608-2 fields",
+      total_cea608_1_count, total_cea608_2_count);
+  g_assert_cmpint (total_cea608_1_count + total_cea608_2_count, <=,
+      out_fps_entry->max_cea608_count);
+
+  while (cea608_1_i + cea608_2_i < cea608_output_count) {
+    if (cea608_1_i < cea608_1_len) {
+      out[out_i++] = 0xfc;
+      out[out_i++] = cea608_1[cea608_1_i * 2];
+      out[out_i++] = cea608_1[cea608_1_i * 2 + 1];
+      cea608_1_i++;
+      i++;
+    } else if (cea608_1_i < total_cea608_1_count) {
+      out[out_i++] = 0xfc;
+      out[out_i++] = 0x80;
+      out[out_i++] = 0x80;
+      cea608_1_i++;
+      i++;
+    }
+
+    if (cea608_2_i < cea608_2_len) {
+      out[out_i++] = 0xfd;
+      out[out_i++] = cea608_2[cea608_2_i * 2];
+      out[out_i++] = cea608_2[cea608_2_i * 2 + 1];
+      cea608_2_i++;
+      i++;
+    } else if (cea608_2_i < total_cea608_2_count) {
+      out[out_i++] = 0xfd;
+      out[out_i++] = 0x80;
+      out[out_i++] = 0x80;
+      cea608_2_i++;
+      i++;
+    }
+  }
+
+  g_assert_cmpint (out_i / 3, <=, out_fps_entry->max_cea608_count);
+
+  *out_size = out_i;
+
+  if (ccp_data) {
+    memcpy (&out[out_i], ccp_data, ccp_data_len);
+    *out_size += ccp_data_len;
+  }
+
+  g_assert_cmpint (*out_size, <, MAX_CDP_PACKET_LEN);
+
+  return TRUE;
+}
+
+/* takes cc_data cea608_1, cea608_2 and attempts to fit it into a hypothetical
+ * output packet.  Any leftover data is stored for later addition.  Returns
+ * whether any output can be generated. @ccp_data_len, @cea608_1_len,
+ * @cea608_2_len are also updated to reflect the size of that data to add to
+ * the output packet */
+static gboolean
 fit_and_scale_cc_data (GstCCConverter * self,
     const struct cdp_fps_entry *in_fps_entry,
-    const struct cdp_fps_entry *out_fps_entry, const guint8 * cc_data,
-    guint cc_data_len, const GstVideoTimeCode * tc)
+    const struct cdp_fps_entry *out_fps_entry, const guint8 * ccp_data,
+    guint * ccp_data_len, const guint8 * cea608_1, guint * cea608_1_len,
+    const guint8 * cea608_2, guint * cea608_2_len, const GstVideoTimeCode * tc)
 {
   if (!in_fps_entry || in_fps_entry->fps_n == 0) {
     in_fps_entry = cdp_fps_entry_from_fps (self->in_fps_n, self->in_fps_d);
@@ -576,7 +801,7 @@ fit_and_scale_cc_data (GstCCConverter * self,
       g_assert_not_reached ();
 
     if (!gst_util_fraction_multiply (self->out_fps_d, self->out_fps_n,
-            self->output_frames + 1, 1, &output_frame_n, &output_frame_d))
+            self->output_frames, 1, &output_frame_n, &output_frame_d))
       /* we should never overflow */
       g_assert_not_reached ();
 
@@ -589,46 +814,101 @@ fit_and_scale_cc_data (GstCCConverter * self,
     rate_cmp = gst_util_fraction_compare (scale_n, scale_d, 1, 1);
 
     GST_TRACE_OBJECT (self, "performing framerate conversion at scale %d/%d "
-        "of cc data", scale_n, scale_d);
+        "of cc data of with sizes, ccp:%u, cea608-1:%u, cea608-2:%u", scale_n,
+        scale_d, VAL_OR_0 (ccp_data_len), VAL_OR_0 (cea608_1_len),
+        VAL_OR_0 (cea608_2_len));
 
     if (rate_cmp == 0) {
       /* we are not scaling. Should never happen with current conditions
        * above */
       g_assert_not_reached ();
-    } else if (output_time_cmp == 0) {
-      /* we have completed a cycle and can reset our counters to avoid
-       * overflow. Anything that fits into the output packet will be written */
-      GST_LOG_OBJECT (self, "cycle completed, resetting frame counters");
-      self->scratch_len = 0;
-      self->input_frames = self->output_frames = 0;
-      if (tc->config.fps_n != 0) {
-        interpolate_time_code_with_framerate (self, tc, out_fps_entry->fps_n,
-            out_fps_entry->fps_d, scale_n, scale_d,
-            &self->current_output_timecode);
-      }
     } else if (output_time_cmp < 0) {
       /* we can't generate an output yet */
-      self->scratch_len = cc_data_len;
-      GST_DEBUG_OBJECT (self, "holding cc_data of len %u until next input "
-          "buffer", self->scratch_len);
-      memcpy (self->scratch, cc_data, self->scratch_len);
-      return -1;
+      guint cd_len = ccp_data_len ? *ccp_data_len : 0;
+      guint c1_len = cea608_1_len ? *cea608_1_len : 0;
+      guint c2_len = cea608_2_len ? *cea608_2_len : 0;
+
+      store_cc_data (self, ccp_data, cd_len, cea608_1, c1_len, cea608_2,
+          c2_len);
+      if (ccp_data_len)
+        *ccp_data_len = 0;
+      if (cea608_1_len)
+        *cea608_1_len = 0;
+      if (cea608_2_len)
+        *cea608_2_len = 0;
+      return FALSE;
     } else if (rate_cmp != 0) {
       /* we are changing the framerate and may overflow the max output packet
        * size. Split them where necessary. */
+      gint extra_ccp = 0, extra_cea608_1 = 0, extra_cea608_2 = 0;
+      gint ccp_off = 0, cea608_1_off = 0, cea608_2_off = 0;
 
-      if (cc_data_len / 3 > out_fps_entry->max_cc_count) {
+      if (output_time_cmp == 0) {
+        /* we have completed a cycle and can reset our counters to avoid
+         * overflow. Anything that fits into the output packet will be written */
+        GST_LOG_OBJECT (self, "cycle completed, resetting frame counters");
+        self->scratch_ccp_len = 0;
+        self->scratch_cea608_1_len = 0;
+        self->scratch_cea608_2_len = 0;
+        self->input_frames = 0;
+        self->output_frames = 0;
+      }
+
+      if (ccp_data_len) {
+        extra_ccp = *ccp_data_len - 3 * out_fps_entry->max_ccp_count;
+        extra_ccp = MAX (0, extra_ccp);
+        ccp_off = *ccp_data_len - extra_ccp;
+      }
+
+      if (cea608_1_len) {
+        extra_cea608_1 = *cea608_1_len - 2 * out_fps_entry->max_cea608_count;
+        extra_cea608_1 = MAX (0, extra_cea608_1);
+        cea608_1_off = *cea608_1_len - extra_cea608_1;
+      }
+
+      if (cea608_2_len) {
+        /* this prefers using field1 data first. This may not be quite correct */
+        if (extra_cea608_1 > 0) {
+          /* all the cea608 space is for field 1 */
+          extra_cea608_2 = *cea608_2_len;
+          cea608_2_off = 0;
+        } else if (cea608_1_len) {
+          /* cea608 space is shared between field 1 and field 2 */
+          extra_cea608_2 =
+              *cea608_1_len + *cea608_2_len -
+              2 * out_fps_entry->max_cea608_count;
+          extra_cea608_2 = MAX (0, extra_cea608_2);
+          cea608_2_off = *cea608_2_len - extra_cea608_2;
+        } else {
+          /* all of the cea608 space is for field 2 */
+          extra_cea608_2 = *cea608_2_len - 2 * out_fps_entry->max_cea608_count;
+          extra_cea608_2 = MAX (0, extra_cea608_2);
+          cea608_2_off = *cea608_2_len - extra_cea608_2;
+        }
+      }
+
+      if (extra_ccp > 0 || extra_cea608_1 > 0 || extra_cea608_2 > 0) {
         /* packet would overflow, push extra bytes into the next packet */
-        self->scratch_len = cc_data_len - 3 * out_fps_entry->max_cc_count;
-        GST_DEBUG_OBJECT (self, "buffer would overflow by %u bytes (max "
-            "length %u)", self->scratch_len, 3 * out_fps_entry->max_cc_count);
-        memcpy (self->scratch, &cc_data[3 * out_fps_entry->max_cc_count],
-            self->scratch_len);
-        cc_data_len = 3 * out_fps_entry->max_cc_count;
+        GST_DEBUG_OBJECT (self, "buffer would overflow by %u ccp bytes, "
+            "%u cea608 field 1 bytes, or %u cea608 field 2 bytes", extra_ccp,
+            extra_cea608_1, extra_cea608_2);
+        store_cc_data (self, &ccp_data[ccp_off], extra_ccp,
+            &cea608_1[cea608_1_off], extra_cea608_1, &cea608_2[cea608_2_off],
+            extra_cea608_2);
+        if (ccp_data_len)
+          *ccp_data_len = MIN (*ccp_data_len, ccp_off);
+        if (cea608_1_len)
+          *cea608_1_len = MIN (*cea608_1_len, cea608_1_off);
+        if (cea608_2_len)
+          *cea608_2_len = MIN (*cea608_2_len, cea608_2_off);
       } else {
-        GST_DEBUG_OBJECT (self, "packet length of %u fits within max output "
-            "packet size %u", cc_data_len, 3 * out_fps_entry->max_cc_count);
-        self->scratch_len = 0;
+        GST_DEBUG_OBJECT (self, "section sizes of %u ccp bytes, "
+            "%u cea608 field 1 bytes, and %u cea608 field 2 bytes fit within "
+            "output packet", VAL_OR_0 (ccp_data_len), VAL_OR_0 (cea608_1_len),
+            VAL_OR_0 (cea608_2_len));
+        self->scratch_ccp_len = 0;
+        self->scratch_cea608_1_len = 0;
+        self->scratch_cea608_2_len = 0;
       }
     } else {
       g_assert_not_reached ();
@@ -640,7 +920,15 @@ fit_and_scale_cc_data (GstCCConverter * self,
           &self->current_output_timecode);
   }
 
-  return cc_data_len;
+  g_assert_cmpint (VAL_OR_0 (ccp_data_len) + (VAL_OR_0 (cea608_1_len) +
+          VAL_OR_0 (cea608_2_len)) / 2 * 3, <=,
+      3 * out_fps_entry->max_cc_count);
+
+  GST_DEBUG_OBJECT (self, "write out packet with lengths ccp:%u, cea608-1:%u, "
+      "cea608-2:%u", VAL_OR_0 (ccp_data_len), VAL_OR_0 (cea608_1_len),
+      VAL_OR_0 (cea608_2_len));
+
+  return TRUE;
 }
 
 /* Converts raw CEA708 cc_data and an optional timecode into CDP */
@@ -846,42 +1134,197 @@ convert_cea708_cdp_cea708_cc_data_internal (GstCCConverter * self,
   return len;
 }
 
-static guint
-cdp_to_cc_data (GstCCConverter * self, GstBuffer * inbuf, guint8 * out,
-    guint out_size, GstVideoTimeCode * out_tc,
-    const struct cdp_fps_entry **out_fps_entry)
+static gboolean
+copy_from_stored_data (GstCCConverter * self, guint8 * out_ccp,
+    guint * ccp_size, guint8 * cea608_1, guint * cea608_1_len,
+    guint8 * cea608_2, guint * cea608_2_len)
 {
-  GstMapInfo in;
-  guint len = 0;
+  guint ccp_in_size = 0, cea608_1_in_size = 0, cea608_2_in_size = 0;
 
-  if (self->scratch_len > 0) {
-    GST_DEBUG_OBJECT (self, "copying from previous scratch buffer of %u bytes",
-        self->scratch_len);
-    memcpy (&out[len], self->scratch, self->scratch_len);
-    len += self->scratch_len;
+  g_assert (out_ccp || !ccp_size);
+  g_assert (cea608_1 || !cea608_1_len);
+  g_assert (cea608_2 || !cea608_2_len);
+
+  if (ccp_size) {
+    ccp_in_size = *ccp_size;
+    *ccp_size = 0;
+  }
+  if (cea608_1_len) {
+    cea608_1_in_size = *cea608_1_len;
+    *cea608_1_len = 0;
+  }
+  if (cea608_2_len) {
+    cea608_2_in_size = *cea608_2_len;
+    *cea608_2_len = 0;
   }
 
-  if (inbuf) {
-    guint cc_data_len;
+  if (out_ccp && self->scratch_ccp_len > 0) {
+    GST_DEBUG_OBJECT (self, "copying from previous scratch ccp buffer of "
+        "%u bytes", self->scratch_ccp_len);
+    if (ccp_in_size < *ccp_size + self->scratch_ccp_len) {
+      GST_WARNING_OBJECT (self, "output buffer too small %u < %u", ccp_in_size,
+          *ccp_size + self->scratch_ccp_len);
+      goto fail;
+    }
+    memcpy (&out_ccp[*ccp_size], self->scratch_ccp, self->scratch_ccp_len);
+    *ccp_size += self->scratch_ccp_len;
+  }
 
+  if (cea608_1 && self->scratch_cea608_1_len > 0) {
+    GST_DEBUG_OBJECT (self, "copying from previous scratch cea608 field 1 "
+        "buffer of %u bytes", self->scratch_cea608_1_len);
+    if (cea608_1_in_size < *cea608_1_len + self->scratch_cea608_1_len) {
+      GST_WARNING_OBJECT (self, "output buffer too small %u < %u",
+          cea608_1_in_size, *cea608_1_len + self->scratch_cea608_1_len);
+      goto fail;
+    }
+    memcpy (&cea608_1[*cea608_1_len], self->scratch_cea608_1,
+        self->scratch_cea608_1_len);
+    *cea608_1_len += self->scratch_cea608_1_len;
+  }
+
+  if (cea608_2 && self->scratch_cea608_2_len > 0) {
+    GST_DEBUG_OBJECT (self, "copying from previous scratch cea608 field 2 "
+        "buffer of %u bytes", self->scratch_cea608_2_len);
+    if (cea608_2_in_size < *cea608_2_len + self->scratch_cea608_2_len) {
+      GST_WARNING_OBJECT (self, "output buffer too small %u < %u",
+          cea608_2_in_size, *cea608_2_len + self->scratch_cea608_2_len);
+      goto fail;
+    }
+    memcpy (&cea608_2[*cea608_2_len], self->scratch_cea608_2,
+        self->scratch_cea608_2_len);
+    *cea608_2_len += self->scratch_cea608_2_len;
+  }
+
+  return TRUE;
+
+fail:
+  if (ccp_size)
+    *ccp_size = 0;
+  if (cea608_1_len)
+    *cea608_1_len = 0;
+  if (cea608_2_len)
+    *cea608_2_len = 0;
+  return FALSE;
+}
+
+static gboolean
+cc_data_to_cea608_ccp (GstCCConverter * self, guint8 * cc_data,
+    guint cc_data_len, guint8 * out_ccp, guint * ccp_size, guint8 * cea608_1,
+    guint * cea608_1_len, guint8 * cea608_2, guint * cea608_2_len,
+    const struct cdp_fps_entry *in_fps_entry)
+{
+  guint ccp_in_size = 0, cea608_1_in_size = 0, cea608_2_in_size = 0;
+
+  g_assert (cc_data || cc_data_len == 0);
+
+  if (ccp_size)
+    ccp_in_size = *ccp_size;
+  if (cea608_1_len)
+    cea608_1_in_size = *cea608_1_len;
+  if (cea608_2_len)
+    cea608_2_in_size = *cea608_2_len;
+
+  if (!copy_from_stored_data (self, out_ccp, ccp_size, cea608_1, cea608_1_len,
+          cea608_2, cea608_2_len))
+    goto fail;
+
+  if (cc_data) {
+    gint ccp_offset = 0;
+    guint new_cea608_1_len = 0, new_cea608_2_len = 0;
+    guint8 *new_cea608_1 = cea608_1, *new_cea608_2 = cea608_2;
+
+    if (cea608_1_len) {
+      new_cea608_1_len = cea608_1_in_size - *cea608_1_len;
+      new_cea608_1 = &cea608_1[*cea608_1_len];
+    }
+    if (cea608_2_len) {
+      new_cea608_2_len = cea608_2_in_size - *cea608_2_len;
+      new_cea608_2 = &cea608_2[*cea608_2_len];
+    }
+
+    cc_data_len = compact_cc_data (cc_data, cc_data_len);
+
+    if (cc_data_len / 3 > in_fps_entry->max_cc_count) {
+      GST_WARNING_OBJECT (self, "Too many cc_data triples in CDP packet %u",
+          cc_data_len / 3);
+      cc_data_len = 3 * in_fps_entry->max_cc_count;
+    }
+
+    ccp_offset = cc_data_extract_cea608 (cc_data, cc_data_len, new_cea608_1,
+        &new_cea608_1_len, new_cea608_2, &new_cea608_2_len);
+    if (ccp_offset < 0) {
+      GST_WARNING_OBJECT (self, "Failed to extract cea608 from cc_data");
+      goto fail;
+    }
+
+    if ((new_cea608_1_len + new_cea608_2_len) / 2 >
+        in_fps_entry->max_cea608_count) {
+      GST_WARNING_OBJECT (self, "Too many cea608 triples in CDP packet %u",
+          (new_cea608_1_len + new_cea608_2_len) / 2);
+      if ((new_cea608_1_len + new_cea608_2_len) / 2 >
+          in_fps_entry->max_cea608_count) {
+        new_cea608_1_len = 2 * in_fps_entry->max_cea608_count;
+        new_cea608_2_len = 0;
+      } else {
+        new_cea608_2_len =
+            2 * in_fps_entry->max_cea608_count - new_cea608_1_len;
+      }
+    }
+
+    if (cea608_1_len)
+      *cea608_1_len += new_cea608_1_len;
+    if (cea608_2_len)
+      *cea608_2_len += new_cea608_2_len;
+
+    if (out_ccp) {
+      if (ccp_in_size < *ccp_size + cc_data_len - ccp_offset) {
+        GST_WARNING_OBJECT (self, "output buffer too small %u < %u",
+            ccp_in_size, *ccp_size + cc_data_len - ccp_offset);
+        goto fail;
+      }
+      memcpy (&out_ccp[*ccp_size], &cc_data[ccp_offset],
+          cc_data_len - ccp_offset);
+      *ccp_size += cc_data_len - ccp_offset;
+    }
+  }
+
+  return TRUE;
+
+fail:
+  if (ccp_size)
+    *ccp_size = 0;
+  if (cea608_1_len)
+    *cea608_1_len = 0;
+  if (cea608_2_len)
+    *cea608_2_len = 0;
+  return FALSE;
+}
+
+static gboolean
+cdp_to_cea608_cc_data (GstCCConverter * self, GstBuffer * inbuf,
+    guint8 * out_ccp, guint * ccp_size, guint8 * cea608_1, guint * cea608_1_len,
+    guint8 * cea608_2, guint * cea608_2_len, GstVideoTimeCode * out_tc,
+    const struct cdp_fps_entry **in_fps_entry)
+{
+  guint8 cc_data[MAX_CDP_PACKET_LEN];
+  guint cc_data_len = 0;
+  GstMapInfo in;
+
+  if (inbuf) {
     gst_buffer_map (inbuf, &in, GST_MAP_READ);
 
     cc_data_len =
         convert_cea708_cdp_cea708_cc_data_internal (self, in.data, in.size,
-        &out[len], out_tc, out_fps_entry);
-    if (cc_data_len / 3 > (*out_fps_entry)->max_cc_count) {
-      GST_WARNING_OBJECT (self, "Too many cc_data triples in CDP packet %u",
-          cc_data_len / 3);
-      cc_data_len = 3 * (*out_fps_entry)->max_cc_count;
-    }
-    cc_data_len = compact_cc_data (&out[len], cc_data_len);
-    len += cc_data_len;
+        cc_data, out_tc, in_fps_entry);
 
     gst_buffer_unmap (inbuf, &in);
     self->input_frames++;
   }
 
-  return len;
+  return cc_data_to_cea608_ccp (self, inbuf ? cc_data : NULL, cc_data_len,
+      out_ccp, ccp_size, cea608_1, cea608_1_len, cea608_2, cea608_2_len,
+      inbuf ? *in_fps_entry : NULL);
 }
 
 static GstFlowReturn
@@ -969,57 +1412,76 @@ convert_cea608_raw_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
   GstMapInfo in, out;
-  guint i, n;
-  gint len;
-  guint8 cc_data[MAX_CDP_PACKET_LEN];
   const GstVideoTimeCodeMeta *tc_meta;
-  const struct cdp_fps_entry *fps_entry;
+  const struct cdp_fps_entry *in_fps_entry, *out_fps_entry;
+  guint cc_data_len = MAX_CDP_PACKET_LEN;
+  guint cea608_1_len = MAX_CDP_PACKET_LEN;
+  guint8 cc_data[MAX_CDP_PACKET_LEN], cea608_1[MAX_CEA608_LEN];
 
-  n = gst_buffer_get_size (inbuf);
-  if (n & 1) {
-    GST_WARNING_OBJECT (self, "Invalid raw CEA608 buffer size");
-    gst_buffer_set_size (outbuf, 0);
-    return GST_FLOW_OK;
-  }
-
-  n /= 2;
-
-  if (n > 3) {
-    GST_WARNING_OBJECT (self, "Too many CEA608 pairs %u", n);
-    n = 3;
-  }
-
-  gst_buffer_map (inbuf, &in, GST_MAP_READ);
-  gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
-
-  for (i = 0; i < n; i++) {
-    cc_data[i * 3] = 0xfc;
-    cc_data[i * 3 + 1] = in.data[i * 2];
-    cc_data[i * 3 + 2] = in.data[i * 2 + 1];
-  }
-
-  fps_entry = cdp_fps_entry_from_fps (self->out_fps_n, self->out_fps_d);
-  if (!fps_entry || fps_entry->fps_n == 0)
+  in_fps_entry = cdp_fps_entry_from_fps (self->in_fps_n, self->in_fps_d);
+  if (!in_fps_entry || in_fps_entry->fps_n == 0)
     g_assert_not_reached ();
 
-  tc_meta = gst_buffer_get_video_time_code_meta (inbuf);
+  if (!copy_from_stored_data (self, NULL, 0, cea608_1, &cea608_1_len, NULL, 0))
+    goto drop;
 
-  len = fit_and_scale_cc_data (self, NULL, fps_entry, cc_data,
-      n * 3, tc_meta ? &tc_meta->tc : NULL);
-  if (len >= 0) {
-    len =
-        convert_cea708_cc_data_cea708_cdp_internal (self, cc_data, len,
-        out.data, out.size, &self->current_output_timecode, fps_entry);
+  if (inbuf) {
+    guint n = 0;
+
+    n = gst_buffer_get_size (inbuf);
+    if (n & 1) {
+      GST_WARNING_OBJECT (self, "Invalid raw CEA608 buffer size");
+      gst_buffer_set_size (outbuf, 0);
+      return GST_FLOW_OK;
+    }
+
+    n /= 2;
+
+    if (n > in_fps_entry->max_cea608_count) {
+      GST_WARNING_OBJECT (self, "Too many CEA608 pairs %u", n);
+      n = 3;
+    }
+
+    gst_buffer_map (inbuf, &in, GST_MAP_READ);
+    memcpy (&cea608_1[cea608_1_len], in.data, n * 2);
+    gst_buffer_unmap (inbuf, &in);
+    cea608_1_len += n * 2;
+    self->input_frames++;
+
+    tc_meta = gst_buffer_get_video_time_code_meta (inbuf);
   } else {
-    len = 0;
+    tc_meta = NULL;
   }
 
-  gst_buffer_unmap (inbuf, &in);
+  out_fps_entry = cdp_fps_entry_from_fps (self->out_fps_n, self->out_fps_d);
+  if (!out_fps_entry || out_fps_entry->fps_n == 0)
+    g_assert_not_reached ();
+
+  gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
+
+  if (!fit_and_scale_cc_data (self, in_fps_entry, out_fps_entry, NULL, 0,
+          cea608_1, &cea608_1_len, NULL, 0, tc_meta ? &tc_meta->tc : NULL))
+    goto drop;
+
+  if (!combine_cc_data (self, TRUE, out_fps_entry, NULL, 0, cea608_1,
+          cea608_1_len, NULL, 0, cc_data, &cc_data_len))
+    goto drop;
+
+  cc_data_len =
+      convert_cea708_cc_data_cea708_cdp_internal (self, cc_data, cc_data_len,
+      out.data, out.size, &self->current_output_timecode, out_fps_entry);
+  self->output_frames++;
+
+out:
   gst_buffer_unmap (outbuf, &out);
 
-  gst_buffer_set_size (outbuf, len);
+  gst_buffer_set_size (outbuf, cc_data_len);
 
   return GST_FLOW_OK;
+
+drop:
+  cc_data_len = 0;
+  goto out;
 }
 
 static GstFlowReturn
@@ -1104,56 +1566,84 @@ convert_cea608_s334_1a_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
   GstMapInfo in, out;
-  guint i, n;
-  gint len;
-  guint8 cc_data[MAX_CDP_PACKET_LEN];
   const GstVideoTimeCodeMeta *tc_meta;
-  const struct cdp_fps_entry *fps_entry;
+  const struct cdp_fps_entry *in_fps_entry, *out_fps_entry;
+  guint cc_data_len = MAX_CDP_PACKET_LEN;
+  guint cea608_1_len = MAX_CDP_PACKET_LEN, cea608_2_len = MAX_CDP_PACKET_LEN;
+  guint8 cc_data[MAX_CDP_PACKET_LEN];
+  guint8 cea608_1[MAX_CEA608_LEN], cea608_2[MAX_CEA608_LEN];
+  guint i, n;
 
-  n = gst_buffer_get_size (inbuf);
-  if (n % 3 != 0) {
-    GST_WARNING_OBJECT (self, "Invalid S334-1A CEA608 buffer size");
-    n = n - (n % 3);
-  }
-
-  n /= 3;
-
-  if (n > 3) {
-    GST_WARNING_OBJECT (self, "Too many S334-1A CEA608 triplets %u", n);
-    n = 3;
-  }
-
-  gst_buffer_map (inbuf, &in, GST_MAP_READ);
-  gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
-
-  for (i = 0; i < n; i++) {
-    cc_data[i * 3] = (in.data[i * 3] & 0x80) ? 0xfc : 0xfd;
-    cc_data[i * 3 + 1] = in.data[i * 3 + 1];
-    cc_data[i * 3 + 2] = in.data[i * 3 + 2];
-  }
-
-  fps_entry = cdp_fps_entry_from_fps (self->out_fps_n, self->out_fps_d);
-  if (!fps_entry || fps_entry->fps_n == 0)
+  in_fps_entry = cdp_fps_entry_from_fps (self->in_fps_n, self->in_fps_d);
+  if (!in_fps_entry || in_fps_entry->fps_n == 0)
     g_assert_not_reached ();
 
-  tc_meta = gst_buffer_get_video_time_code_meta (inbuf);
+  if (!copy_from_stored_data (self, NULL, 0, cea608_1, &cea608_1_len,
+          cea608_2, &cea608_2_len))
+    goto drop;
 
-  len = fit_and_scale_cc_data (self, NULL, fps_entry, cc_data,
-      n * 3, tc_meta ? &tc_meta->tc : NULL);
-  if (len >= 0) {
-    len =
-        convert_cea708_cc_data_cea708_cdp_internal (self, cc_data, len,
-        out.data, out.size, &self->current_output_timecode, fps_entry);
+  if (inbuf) {
+    n = gst_buffer_get_size (inbuf);
+    if (n % 3 != 0) {
+      GST_WARNING_OBJECT (self, "Invalid S334-1A CEA608 buffer size");
+      n = n - (n % 3);
+    }
+
+    n /= 3;
+
+    if (n > in_fps_entry->max_cea608_count) {
+      GST_WARNING_OBJECT (self, "Too many S334-1A CEA608 triplets %u", n);
+      n = 3;
+    }
+
+    gst_buffer_map (inbuf, &in, GST_MAP_READ);
+
+    for (i = 0; i < n; i++) {
+      if (in.data[i * 3] & 0x80) {
+        cea608_1[cea608_1_len++] = in.data[i * 3 + 1];
+        cea608_1[cea608_1_len++] = in.data[i * 3 + 2];
+      } else {
+        cea608_2[cea608_2_len++] = in.data[i * 3 + 1];
+        cea608_2[cea608_2_len++] = in.data[i * 3 + 2];
+      }
+    }
+    gst_buffer_unmap (inbuf, &in);
+    self->input_frames++;
+    tc_meta = gst_buffer_get_video_time_code_meta (inbuf);
   } else {
-    len = 0;
+    tc_meta = NULL;
   }
 
-  gst_buffer_unmap (inbuf, &in);
+  out_fps_entry = cdp_fps_entry_from_fps (self->out_fps_n, self->out_fps_d);
+  if (!out_fps_entry || out_fps_entry->fps_n == 0)
+    g_assert_not_reached ();
+
+  gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
+
+  if (!fit_and_scale_cc_data (self, in_fps_entry, out_fps_entry, NULL, 0,
+          cea608_1, &cea608_1_len, cea608_2, &cea608_2_len,
+          tc_meta ? &tc_meta->tc : NULL))
+    goto drop;
+
+  if (!combine_cc_data (self, TRUE, out_fps_entry, NULL, 0, cea608_1,
+          cea608_1_len, cea608_2, cea608_2_len, cc_data, &cc_data_len))
+    goto drop;
+
+  cc_data_len =
+      convert_cea708_cc_data_cea708_cdp_internal (self, cc_data, cc_data_len,
+      out.data, out.size, &self->current_output_timecode, out_fps_entry);
+  self->output_frames++;
+
+out:
   gst_buffer_unmap (outbuf, &out);
 
-  gst_buffer_set_size (outbuf, len);
+  gst_buffer_set_size (outbuf, cc_data_len);
 
   return GST_FLOW_OK;
+
+drop:
+  cc_data_len = 0;
+  goto out;
 }
 
 static GstFlowReturn
@@ -1247,49 +1737,74 @@ convert_cea708_cc_data_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
   GstMapInfo in, out;
-  guint n;
-  gint len;
   const GstVideoTimeCodeMeta *tc_meta;
-  const struct cdp_fps_entry *fps_entry;
+  const struct cdp_fps_entry *in_fps_entry, *out_fps_entry;
+  guint in_cc_data_len;
+  guint cc_data_len = MAX_CDP_PACKET_LEN, ccp_data_len = MAX_CDP_PACKET_LEN;
+  guint cea608_1_len = MAX_CEA608_LEN, cea608_2_len = MAX_CEA608_LEN;
+  guint8 cc_data[MAX_CDP_PACKET_LEN], ccp_data[MAX_CDP_PACKET_LEN];
+  guint8 cea608_1[MAX_CEA608_LEN], cea608_2[MAX_CEA608_LEN];
+  guint8 *in_cc_data;
 
-  n = gst_buffer_get_size (inbuf);
-  if (n % 3 != 0) {
-    GST_WARNING_OBJECT (self, "Invalid raw CEA708 buffer size");
-    n = n - (n % 3);
+  if (inbuf) {
+    gst_buffer_map (inbuf, &in, GST_MAP_READ);
+    in_cc_data = in.data;
+    in_cc_data_len = in.size;
+    tc_meta = gst_buffer_get_video_time_code_meta (inbuf);
+    self->input_frames++;
+  } else {
+    in_cc_data = NULL;
+    in_cc_data_len = 0;
+    tc_meta = NULL;
   }
 
-  n /= 3;
-
-  if (n > 25) {
-    GST_WARNING_OBJECT (self, "Too many CEA708 triplets %u", n);
-    n = 25;
-  }
-
-  gst_buffer_map (inbuf, &in, GST_MAP_READ);
-  gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
-
-  fps_entry = cdp_fps_entry_from_fps (self->out_fps_n, self->out_fps_d);
-  if (!fps_entry || fps_entry->fps_n == 0)
+  in_fps_entry = cdp_fps_entry_from_fps (self->in_fps_n, self->in_fps_d);
+  if (!in_fps_entry || in_fps_entry->fps_n == 0)
     g_assert_not_reached ();
 
-  tc_meta = gst_buffer_get_video_time_code_meta (inbuf);
+  out_fps_entry = cdp_fps_entry_from_fps (self->out_fps_n, self->out_fps_d);
+  if (!out_fps_entry || out_fps_entry->fps_n == 0)
+    g_assert_not_reached ();
 
-  len = fit_and_scale_cc_data (self, NULL, fps_entry, in.data,
-      in.size, tc_meta ? &tc_meta->tc : NULL);
-  if (len >= 0) {
-    len =
-        convert_cea708_cc_data_cea708_cdp_internal (self, in.data, len,
-        out.data, out.size, &self->current_output_timecode, fps_entry);
-  } else {
-    len = 0;
+  if (!cc_data_to_cea608_ccp (self, in_cc_data, in_cc_data_len, ccp_data,
+          &ccp_data_len, cea608_1, &cea608_1_len, cea608_2, &cea608_2_len,
+          in_fps_entry)) {
+    if (inbuf)
+      gst_buffer_unmap (inbuf, &in);
+    gst_buffer_set_size (outbuf, cc_data_len);
+    return GST_FLOW_OK;
   }
 
-  gst_buffer_unmap (inbuf, &in);
+  if (inbuf)
+    gst_buffer_unmap (inbuf, &in);
+
+  gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
+
+  if (!fit_and_scale_cc_data (self, in_fps_entry, out_fps_entry, ccp_data,
+          &ccp_data_len, cea608_1, &cea608_1_len, cea608_2, &cea608_2_len,
+          tc_meta ? &tc_meta->tc : NULL))
+    goto drop;
+
+  if (!combine_cc_data (self, TRUE, out_fps_entry, ccp_data, ccp_data_len,
+          cea608_1, cea608_1_len, cea608_2, cea608_2_len, cc_data,
+          &cc_data_len))
+    goto drop;
+
+  cc_data_len =
+      convert_cea708_cc_data_cea708_cdp_internal (self, cc_data, cc_data_len,
+      out.data, out.size, &self->current_output_timecode, out_fps_entry);
+  self->output_frames++;
+
+out:
   gst_buffer_unmap (outbuf, &out);
 
-  gst_buffer_set_size (outbuf, len);
+  gst_buffer_set_size (outbuf, cc_data_len);
 
   return GST_FLOW_OK;
+
+drop:
+  cc_data_len = 0;
+  goto out;
 }
 
 static GstFlowReturn
@@ -1298,42 +1813,30 @@ convert_cea708_cdp_cea608_raw (GstCCConverter * self, GstBuffer * inbuf,
 {
   GstMapInfo out;
   GstVideoTimeCode tc = GST_VIDEO_TIME_CODE_INIT;
-  guint i, cea608 = 0;
-  gint len = 0;
+  guint cea608_1_len;
   const struct cdp_fps_entry *in_fps_entry = NULL, *out_fps_entry;
-  guint8 cc_data[MAX_CDP_PACKET_LEN] = { 0, };
 
-  len =
-      cdp_to_cc_data (self, inbuf, cc_data, sizeof (cc_data), &tc,
-      &in_fps_entry);
+  gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
+  cea608_1_len = (guint) out.size;
+  if (!cdp_to_cea608_cc_data (self, inbuf, NULL, NULL, out.data, &cea608_1_len,
+          NULL, NULL, &tc, &in_fps_entry)) {
+    gst_buffer_set_size (outbuf, 0);
+    return GST_FLOW_OK;
+  }
 
   out_fps_entry = cdp_fps_entry_from_fps (self->out_fps_n, self->out_fps_d);
   if (!out_fps_entry || out_fps_entry->fps_n == 0)
     out_fps_entry = in_fps_entry;
 
-  len = fit_and_scale_cc_data (self, in_fps_entry, out_fps_entry, cc_data, len,
-      &tc);
-  if (len > 0) {
-    len /= 3;
-
-    gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
-
-    for (i = 0; i < len; i++) {
-      /* We can only really copy the first field here as there can't be any
-       * signalling in raw CEA608 and we must not mix the streams of different
-       * fields
-       */
-      if (cc_data[i * 3] == 0xfc) {
-        out.data[cea608 * 2] = cc_data[i * 3 + 1];
-        out.data[cea608 * 2 + 1] = cc_data[i * 3 + 2];
-        cea608++;
-      }
-    }
-
-    gst_buffer_unmap (outbuf, &out);
+  if (fit_and_scale_cc_data (self, in_fps_entry, out_fps_entry, NULL, 0,
+          out.data, &cea608_1_len, NULL, NULL, &tc)) {
+    self->output_frames++;
+  } else {
+    cea608_1_len = 0;
   }
+  gst_buffer_unmap (outbuf, &out);
 
-  gst_buffer_set_size (outbuf, 2 * cea608);
+  gst_buffer_set_size (outbuf, cea608_1_len);
 
   if (self->current_output_timecode.config.fps_n != 0
       && !gst_buffer_get_video_time_code_meta (inbuf)) {
@@ -1351,39 +1854,40 @@ convert_cea708_cdp_cea608_s334_1a (GstCCConverter * self, GstBuffer * inbuf,
 {
   GstMapInfo out;
   GstVideoTimeCode tc = GST_VIDEO_TIME_CODE_INIT;
-  guint i, cea608 = 0;
-  gint len = 0;
   const struct cdp_fps_entry *in_fps_entry = NULL, *out_fps_entry;
-  guint8 cc_data[MAX_CDP_PACKET_LEN] = { 0, };
+  guint8 cea608_1[MAX_CEA608_LEN], cea608_2[MAX_CEA608_LEN];
+  guint cea608_1_len = MAX_CEA608_LEN, cea608_2_len = MAX_CEA608_LEN;
+  guint i, cc_data_len;
 
-  len =
-      cdp_to_cc_data (self, inbuf, cc_data, sizeof (cc_data), &tc,
-      &in_fps_entry);
+  if (!cdp_to_cea608_cc_data (self, inbuf, NULL, NULL, cea608_1, &cea608_1_len,
+          cea608_2, &cea608_2_len, &tc, &in_fps_entry))
+    goto drop;
 
   out_fps_entry = cdp_fps_entry_from_fps (self->out_fps_n, self->out_fps_d);
   if (!out_fps_entry || out_fps_entry->fps_n == 0)
     out_fps_entry = in_fps_entry;
 
-  len = fit_and_scale_cc_data (self, in_fps_entry, out_fps_entry, cc_data, len,
-      &tc);
-  if (len > 0) {
-    len /= 3;
+  if (!fit_and_scale_cc_data (self, in_fps_entry, out_fps_entry, NULL, 0,
+          cea608_1, &cea608_1_len, cea608_2, &cea608_2_len, &tc))
+    goto drop;
 
-    gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
-    for (i = 0; i < len; i++) {
-      if (cc_data[i * 3] == 0xfc || cc_data[i * 3] == 0xfd) {
-        /* We have to assume a line offset of 0 */
-        out.data[cea608 * 3] = cc_data[i * 3] == 0xfc ? 0x80 : 0x00;
-        out.data[cea608 * 3 + 1] = cc_data[i * 3 + 1];
-        out.data[cea608 * 3 + 2] = cc_data[i * 3 + 2];
-        cea608++;
-      }
-    }
+  cc_data_len = gst_buffer_get_sizes (outbuf, NULL, NULL);
+
+  gst_buffer_map (outbuf, &out, GST_MAP_READWRITE);
+  if (!combine_cc_data (self, FALSE, out_fps_entry, NULL, 0, cea608_1,
+          cea608_1_len, cea608_2, cea608_2_len, out.data, &cc_data_len)) {
     gst_buffer_unmap (outbuf, &out);
-    self->output_frames++;
+    goto drop;
   }
 
-  gst_buffer_set_size (outbuf, 3 * cea608);
+  for (i = 0; i < cc_data_len / 3; i++)
+    /* We have to assume a line offset of 0 */
+    out.data[i * 3] = out.data[i * 3] == 0xfc ? 0x80 : 0x00;
+
+  gst_buffer_unmap (outbuf, &out);
+  self->output_frames++;
+
+  gst_buffer_set_size (outbuf, cc_data_len);
 
   if (self->current_output_timecode.config.fps_n != 0
       && !gst_buffer_get_video_time_code_meta (inbuf)) {
@@ -1393,6 +1897,10 @@ convert_cea708_cdp_cea608_s334_1a (GstCCConverter * self, GstBuffer * inbuf,
   }
 
   return GST_FLOW_OK;
+
+drop:
+  gst_buffer_set_size (outbuf, 0);
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
@@ -1401,28 +1909,36 @@ convert_cea708_cdp_cea708_cc_data (GstCCConverter * self, GstBuffer * inbuf,
 {
   GstMapInfo out;
   GstVideoTimeCode tc = GST_VIDEO_TIME_CODE_INIT;
-  gint len = 0;
   const struct cdp_fps_entry *in_fps_entry = NULL, *out_fps_entry;
-  guint8 cc_data[MAX_CDP_PACKET_LEN] = { 0, };
+  guint8 cea608_1[MAX_CEA608_LEN], cea608_2[MAX_CEA608_LEN];
+  guint8 ccp_data[MAX_CDP_PACKET_LEN];
+  guint cea608_1_len = MAX_CEA608_LEN, cea608_2_len = MAX_CEA608_LEN;
+  guint ccp_data_len = MAX_CDP_PACKET_LEN;
+  guint out_len = 0;
 
-  len =
-      cdp_to_cc_data (self, inbuf, cc_data, sizeof (cc_data), &tc,
-      &in_fps_entry);
+  if (!cdp_to_cea608_cc_data (self, inbuf, ccp_data, &ccp_data_len,
+          cea608_1, &cea608_1_len, cea608_2, &cea608_2_len, &tc, &in_fps_entry))
+    goto out;
 
   out_fps_entry = cdp_fps_entry_from_fps (self->out_fps_n, self->out_fps_d);
   if (!out_fps_entry || out_fps_entry->fps_n == 0)
     out_fps_entry = in_fps_entry;
 
-  len = fit_and_scale_cc_data (self, in_fps_entry, out_fps_entry, cc_data, len,
-      &tc);
-  if (len >= 0) {
-    gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
-    memcpy (out.data, cc_data, len);
+  if (!fit_and_scale_cc_data (self, in_fps_entry, out_fps_entry, ccp_data,
+          &ccp_data_len, cea608_1, &cea608_1_len, cea608_2, &cea608_2_len, &tc))
+    goto out;
+
+  gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
+  out_len = (guint) out.size;
+  if (!combine_cc_data (self, FALSE, out_fps_entry, ccp_data, ccp_data_len,
+          cea608_1, cea608_1_len, cea608_2, cea608_2_len, out.data, &out_len)) {
     gst_buffer_unmap (outbuf, &out);
-    self->output_frames++;
-  } else {
-    len = 0;
+    out_len = 0;
+    goto out;
   }
+
+  gst_buffer_unmap (outbuf, &out);
+  self->output_frames++;
 
   if (self->current_output_timecode.config.fps_n != 0
       && !gst_buffer_get_video_time_code_meta (inbuf)) {
@@ -1431,7 +1947,8 @@ convert_cea708_cdp_cea708_cc_data (GstCCConverter * self, GstBuffer * inbuf,
     gst_video_time_code_increment_frame (&self->current_output_timecode);
   }
 
-  gst_buffer_set_size (outbuf, len);
+out:
+  gst_buffer_set_size (outbuf, out_len);
 
   return GST_FLOW_OK;
 }
@@ -1442,33 +1959,42 @@ convert_cea708_cdp_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
 {
   GstMapInfo out;
   GstVideoTimeCode tc = GST_VIDEO_TIME_CODE_INIT;
-  gint len = 0;
   const struct cdp_fps_entry *in_fps_entry = NULL, *out_fps_entry;
-  guint8 cc_data[MAX_CDP_PACKET_LEN] = { 0, };
+  guint8 cea608_1[MAX_CEA608_LEN], cea608_2[MAX_CEA608_LEN];
+  guint8 ccp_data[MAX_CDP_PACKET_LEN], cc_data[MAX_CDP_PACKET_LEN];
+  guint cea608_1_len = MAX_CEA608_LEN, cea608_2_len = MAX_CEA608_LEN;
+  guint ccp_data_len = MAX_CDP_PACKET_LEN, cc_data_len = MAX_CDP_PACKET_LEN;
+  guint out_len = 0;
 
-  len =
-      cdp_to_cc_data (self, inbuf, cc_data, sizeof (cc_data), &tc,
-      &in_fps_entry);
+  if (!cdp_to_cea608_cc_data (self, inbuf, ccp_data, &ccp_data_len,
+          cea608_1, &cea608_1_len, cea608_2, &cea608_2_len, &tc, &in_fps_entry))
+    goto out;
 
   out_fps_entry = cdp_fps_entry_from_fps (self->out_fps_n, self->out_fps_d);
   if (!out_fps_entry || out_fps_entry->fps_n == 0)
     out_fps_entry = in_fps_entry;
 
-  len = fit_and_scale_cc_data (self, in_fps_entry, out_fps_entry, cc_data, len,
-      &tc);
-  if (len >= 0) {
-    gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
-    len =
-        convert_cea708_cc_data_cea708_cdp_internal (self, cc_data, len,
-        out.data, out.size, &self->current_output_timecode, out_fps_entry);
+  if (!fit_and_scale_cc_data (self, in_fps_entry, out_fps_entry, ccp_data,
+          &ccp_data_len, cea608_1, &cea608_1_len, cea608_2, &cea608_2_len, &tc))
+    goto out;
 
+  if (!combine_cc_data (self, TRUE, out_fps_entry, ccp_data, ccp_data_len,
+          cea608_1, cea608_1_len, cea608_2, cea608_2_len, cc_data,
+          &cc_data_len)) {
     gst_buffer_unmap (outbuf, &out);
-    self->output_frames++;
-  } else {
-    len = 0;
+    goto out;
   }
 
-  gst_buffer_set_size (outbuf, len);
+  gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
+  out_len =
+      convert_cea708_cc_data_cea708_cdp_internal (self, cc_data, cc_data_len,
+      out.data, out.size, &self->current_output_timecode, out_fps_entry);
+
+  gst_buffer_unmap (outbuf, &out);
+  self->output_frames++;
+
+out:
+  gst_buffer_set_size (outbuf, out_len);
 
   return GST_FLOW_OK;
 }
@@ -1641,7 +2167,7 @@ can_generate_output (GstCCConverter * self)
     g_assert_not_reached ();
 
   if (!gst_util_fraction_multiply (self->out_fps_d, self->out_fps_n,
-          self->output_frames + 1, 1, &output_frame_n, &output_frame_d))
+          self->output_frames, 1, &output_frame_n, &output_frame_d))
     /* we should never overflow */
     g_assert_not_reached ();
 
@@ -1715,7 +2241,8 @@ gst_cc_converter_sink_event (GstBaseTransform * trans, GstEvent * event)
     case GST_EVENT_EOS:
       GST_DEBUG_OBJECT (self, "received EOS");
 
-      while (self->scratch_len > 0 || can_generate_output (self)) {
+      while (self->scratch_ccp_len > 0 || self->scratch_cea608_1_len > 0
+          || self->scratch_cea608_2_len > 0 || can_generate_output (self)) {
         GstBuffer *outbuf;
         GstFlowReturn ret;
 
@@ -1736,9 +2263,11 @@ gst_cc_converter_sink_event (GstBaseTransform * trans, GstEvent * event)
       }
       /* fallthrough */
     case GST_EVENT_FLUSH_START:
-      self->scratch_len = 0;
+      self->scratch_ccp_len = 0;
+      self->scratch_cea608_1_len = 0;
+      self->scratch_cea608_2_len = 0;
       self->input_frames = 0;
-      self->output_frames = 0;
+      self->output_frames = 1;
       gst_video_time_code_clear (&self->current_output_timecode);
       gst_clear_buffer (&self->previous_buffer);
       break;
@@ -1758,8 +2287,10 @@ gst_cc_converter_start (GstBaseTransform * base)
   self->cdp_hdr_sequence_cntr = 0;
   self->current_output_timecode = (GstVideoTimeCode) GST_VIDEO_TIME_CODE_INIT;
   self->input_frames = 0;
-  self->output_frames = 0;
-  self->scratch_len = 0;
+  self->output_frames = 1;
+  self->scratch_ccp_len = 0;
+  self->scratch_cea608_1_len = 0;
+  self->scratch_cea608_2_len = 0;
 
   return TRUE;
 }

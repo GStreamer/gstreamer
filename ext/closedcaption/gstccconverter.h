@@ -41,6 +41,7 @@ typedef struct _GstCCConverter GstCCConverter;
 typedef struct _GstCCConverterClass GstCCConverterClass;
 
 #define MAX_CDP_PACKET_LEN 256
+#define MAX_CEA608_LEN 32
 
 struct _GstCCConverter
 {
@@ -58,8 +59,12 @@ struct _GstCCConverter
   /* for framerate differences, we need to keep previous/next frames in order
    * to split/merge data across multiple input or output buffers.  The data is
    * stored as cc_data */
-  guint8    scratch[MAX_CDP_PACKET_LEN];
-  guint     scratch_len;
+  guint8    scratch_cea608_1[MAX_CEA608_LEN];
+  guint     scratch_cea608_1_len;
+  guint8    scratch_cea608_2[MAX_CEA608_LEN];
+  guint     scratch_cea608_2_len;
+  guint8    scratch_ccp[MAX_CDP_PACKET_LEN];
+  guint     scratch_ccp_len;
 
   guint     input_frames;
   guint     output_frames;
