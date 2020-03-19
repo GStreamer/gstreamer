@@ -2554,7 +2554,7 @@ calculate_expected (GstRtpJitterBuffer * jitterbuffer, guint32 expected,
     }
   } else {
     while (gst_rtp_buffer_compare_seqnum (expected, seqnum) > 0) {
-      rtp_timer_queue_set_lost (priv->timers, expected, 0, expected_pts,
+      rtp_timer_queue_set_lost (priv->timers, expected, expected_pts,
           duration, timeout_offset (jitterbuffer));
       expected_pts += duration;
       expected++;
@@ -3887,13 +3887,10 @@ do_lost_timeout (GstRtpJitterBuffer * jitterbuffer, RtpTimer * timer,
     GstClockTime now)
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
-  guint lost_packets;
   GstClockTime timestamp;
 
   timestamp = apply_offset (jitterbuffer, get_pts_timeout (timer));
-  lost_packets = MAX (timer->num, 1);
-
-  insert_lost_event (jitterbuffer, timer->seqnum, lost_packets, timestamp,
+  insert_lost_event (jitterbuffer, timer->seqnum, 1, timestamp,
       timer->duration, timer->num_rtx_retry);
 
   if (GST_CLOCK_TIME_IS_VALID (timer->rtx_last)) {

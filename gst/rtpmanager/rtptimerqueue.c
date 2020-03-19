@@ -555,7 +555,6 @@ rtp_timer_queue_remove_all (RtpTimerQueue * queue)
  * @queue: the #RtpTimerQueue
  * @type: the #RtpTimerType
  * @senum: the timer seqnum
- * @num: the number of seqnum in the range (partially supported)
  * @timeout: the timer timeout
  * @delay: the additional delay (will be added to @timeout)
  * @duration: the duration of the event related to the timer
@@ -567,7 +566,7 @@ rtp_timer_queue_remove_all (RtpTimerQueue * queue)
  */
 void
 rtp_timer_queue_set_timer (RtpTimerQueue * queue, RtpTimerType type,
-    guint16 seqnum, guint num, GstClockTime timeout, GstClockTime delay,
+    guint16 seqnum, GstClockTime timeout, GstClockTime delay,
     GstClockTime duration, GstClockTimeDiff offset)
 {
   RtpTimer *timer;
@@ -591,7 +590,6 @@ rtp_timer_queue_set_timer (RtpTimerQueue * queue, RtpTimerType type,
 
   timer->type = type;
   timer->seqnum = seqnum;
-  timer->num = num;
 
   if (timeout == -1)
     timer->timeout = -1;
@@ -623,7 +621,7 @@ void
 rtp_timer_queue_set_expected (RtpTimerQueue * queue, guint16 seqnum,
     GstClockTime timeout, GstClockTime delay, GstClockTime duration)
 {
-  rtp_timer_queue_set_timer (queue, RTP_TIMER_EXPECTED, seqnum, 0, timeout,
+  rtp_timer_queue_set_timer (queue, RTP_TIMER_EXPECTED, seqnum, timeout,
       delay, duration, 0);
 }
 
@@ -631,7 +629,6 @@ rtp_timer_queue_set_expected (RtpTimerQueue * queue, guint16 seqnum,
  * rtp_timer_queue_set_lost:
  * @queue: the #RtpTimerQueue
  * @senum: the timer seqnum
- * @num: the number of seqnum in the range (partially supported)
  * @timeout: the timer timeout
  * @duration: the duration of the event related to the timer
  * @offset: offset that can be used to convert the timeout to timestamp
@@ -641,10 +638,9 @@ rtp_timer_queue_set_expected (RtpTimerQueue * queue, guint16 seqnum,
  */
 void
 rtp_timer_queue_set_lost (RtpTimerQueue * queue, guint16 seqnum,
-    guint num, GstClockTime timeout, GstClockTime duration,
-    GstClockTimeDiff offset)
+    GstClockTime timeout, GstClockTime duration, GstClockTimeDiff offset)
 {
-  rtp_timer_queue_set_timer (queue, RTP_TIMER_LOST, seqnum, num, timeout, 0,
+  rtp_timer_queue_set_timer (queue, RTP_TIMER_LOST, seqnum, timeout, 0,
       duration, offset);
 }
 
@@ -662,8 +658,7 @@ void
 rtp_timer_queue_set_eos (RtpTimerQueue * queue, GstClockTime timeout,
     GstClockTimeDiff offset)
 {
-  rtp_timer_queue_set_timer (queue, RTP_TIMER_EOS, -1, 0, timeout, 0, 0,
-      offset);
+  rtp_timer_queue_set_timer (queue, RTP_TIMER_EOS, -1, timeout, 0, 0, offset);
 }
 
 /**
@@ -681,7 +676,7 @@ void
 rtp_timer_queue_set_deadline (RtpTimerQueue * queue, guint16 seqnum,
     GstClockTime timeout, GstClockTimeDiff offset)
 {
-  rtp_timer_queue_set_timer (queue, RTP_TIMER_DEADLINE, seqnum, 0, timeout, 0,
+  rtp_timer_queue_set_timer (queue, RTP_TIMER_DEADLINE, seqnum, timeout, 0,
       0, offset);
 }
 

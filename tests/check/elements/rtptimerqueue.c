@@ -27,12 +27,11 @@ GST_START_TEST (test_timer_queue_set_timer)
   RtpTimerQueue *queue = rtp_timer_queue_new ();
   RtpTimer *timer10, *timer0;
 
-  rtp_timer_queue_set_timer (queue, RTP_TIMER_EXPECTED, 10, 0,
+  rtp_timer_queue_set_timer (queue, RTP_TIMER_EXPECTED, 10,
       1 * GST_SECOND, 2 * GST_SECOND, 5 * GST_SECOND, 0);
   timer10 = rtp_timer_queue_find (queue, 10);
   fail_unless (timer10);
   fail_unless_equals_int (10, timer10->seqnum);
-  fail_unless_equals_int (0, timer10->num);
   fail_unless_equals_int (RTP_TIMER_EXPECTED, timer10->type);
   /* timer10->timeout = timerout + delay */
   fail_unless_equals_uint64 (3 * GST_SECOND, timer10->timeout);
@@ -44,12 +43,11 @@ GST_START_TEST (test_timer_queue_set_timer)
   fail_unless_equals_int (0, timer10->num_rtx_retry);
   fail_unless_equals_int (0, timer10->num_rtx_received);
 
-  rtp_timer_queue_set_timer (queue, RTP_TIMER_LOST, 0, 10,
+  rtp_timer_queue_set_timer (queue, RTP_TIMER_LOST, 0,
       0 * GST_SECOND, 2 * GST_SECOND, 0, 0);
   timer0 = rtp_timer_queue_find (queue, 0);
   fail_unless (timer0);
   fail_unless_equals_int (0, timer0->seqnum);
-  fail_unless_equals_int (10, timer0->num);
   fail_unless_equals_int (RTP_TIMER_LOST, timer0->type);
   fail_unless_equals_uint64 (2 * GST_SECOND, timer0->timeout);
   fail_unless_equals_uint64 (0, timer0->duration);
@@ -291,7 +289,7 @@ GST_START_TEST (test_timer_queue_timer_offset)
   RtpTimerQueue *queue = rtp_timer_queue_new ();
   RtpTimer *timer;
 
-  rtp_timer_queue_set_timer (queue, RTP_TIMER_EXPECTED, 2, 0, 2 * GST_SECOND,
+  rtp_timer_queue_set_timer (queue, RTP_TIMER_EXPECTED, 2, 2 * GST_SECOND,
       GST_MSECOND, 0, GST_USECOND);
 
   timer = rtp_timer_queue_find (queue, 2);

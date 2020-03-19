@@ -60,7 +60,6 @@ typedef struct
   gboolean queued;
 
   guint16 seqnum;
-  guint num;
   RtpTimerType type;
   GstClockTime timeout;
   GstClockTimeDiff offset;
@@ -107,14 +106,14 @@ void            rtp_timer_queue_remove_until (RtpTimerQueue * queue, GstClockTim
 void            rtp_timer_queue_remove_all (RtpTimerQueue * queue);
 
 void            rtp_timer_queue_set_timer (RtpTimerQueue * queue, RtpTimerType type,
-                                           guint16 seqnum, guint num, GstClockTime timeout,
+                                           guint16 seqnum, GstClockTime timeout,
                                            GstClockTime delay, GstClockTime duration,
                                            GstClockTimeDiff offset);
 void            rtp_timer_queue_set_expected (RtpTimerQueue * queue, guint16 seqnum,
                                               GstClockTime timeout, GstClockTime delay,
                                               GstClockTime duration);
 void            rtp_timer_queue_set_lost (RtpTimerQueue * queue, guint16 seqnum,
-                                          guint num, GstClockTime timeout,
+                                          GstClockTime timeout,
                                           GstClockTime duration, GstClockTimeDiff offset);
 void            rtp_timer_queue_set_eos (RtpTimerQueue * queue, GstClockTime timeout,
                                          GstClockTimeDiff offset);
