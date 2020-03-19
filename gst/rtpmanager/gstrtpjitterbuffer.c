@@ -399,13 +399,11 @@ struct _GstRtpJitterBufferPrivate
   GstClockTime last_drop_msg_timestamp;
   /* accumulators; reset every time a drop message is posted */
   guint num_too_late;
-  guint num_already_lost;
   guint num_drop_on_latency;
 };
 typedef enum
 {
   REASON_TOO_LATE,
-  REASON_ALREADY_LOST,
   REASON_DROP_ON_LATENCY
 } DropMessageReason;
 
@@ -597,8 +595,6 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
    * * #gstring `reason`: Reason for dropping the packet.
    * * #guint   `num-too-late`: Number of packets arriving too late since
    *    last drop message.
-   * * #guint   `num-already-lost`: Number of packets already considered lost
-   *    since drop message.
    * * #guint   `num-drop-on-latency`: Number of packets dropped due to the
    *    drop-on-latency property since last drop message.
    *
@@ -1022,7 +1018,6 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer)
   priv->avg_jitter = 0;
   priv->last_drop_msg_timestamp = GST_CLOCK_TIME_NONE;
   priv->num_too_late = 0;
-  priv->num_already_lost = 0;
   priv->num_drop_on_latency = 0;
   priv->segment_seqnum = GST_SEQNUM_INVALID;
   priv->timers = rtp_timer_queue_new ();
@@ -1619,7 +1614,6 @@ gst_rtp_jitter_buffer_flush_stop (GstRtpJitterBuffer * jitterbuffer)
   priv->segment_seqnum = GST_SEQNUM_INVALID;
   priv->last_drop_msg_timestamp = GST_CLOCK_TIME_NONE;
   priv->num_too_late = 0;
-  priv->num_already_lost = 0;
   priv->num_drop_on_latency = 0;
   GST_DEBUG_OBJECT (jitterbuffer, "flush and reset jitterbuffer");
   rtp_jitter_buffer_flush (priv->jbuf, NULL, NULL);
@@ -2047,9 +2041,6 @@ new_drop_message (GstRtpJitterBuffer * jitterbuffer, guint seqnum,
   if (reason == REASON_TOO_LATE) {
     priv->num_too_late++;
     reason_str = "too-late";
-  } else if (reason == REASON_ALREADY_LOST) {
-    priv->num_already_lost++;
-    reason_str = "already-lost";
   } else if (reason == REASON_DROP_ON_LATENCY) {
     priv->num_drop_on_latency++;
     reason_str = "drop-on-latency";
@@ -2068,12 +2059,10 @@ new_drop_message (GstRtpJitterBuffer * jitterbuffer, guint seqnum,
         "timestamp", GST_TYPE_CLOCK_TIME, timestamp,
         "reason", G_TYPE_STRING, reason_str,
         "num-too-late", G_TYPE_UINT, priv->num_too_late,
-        "num-already-lost", G_TYPE_UINT, priv->num_already_lost,
         "num-drop-on-latency", G_TYPE_UINT, priv->num_drop_on_latency, NULL);
 
     priv->last_drop_msg_timestamp = current_time;
     priv->num_too_late = 0;
-    priv->num_already_lost = 0;
     priv->num_drop_on_latency = 0;
     drop_msg = gst_message_new_element (GST_OBJECT (jitterbuffer), s);
   }
@@ -2237,33 +2226,6 @@ get_rtx_delay (GstRtpJitterBufferPrivate * priv)
     delay = MAX (delay, priv->rtx_min_delay * GST_MSECOND);
 
   return delay;
-}
-
-/* Check if packet with seqnum is already considered definitely lost by being
- * part of a "lost timer" for multiple packets */
-static gboolean
-already_lost (GstRtpJitterBuffer * jitterbuffer, GstClockTime pts,
-    guint16 seqnum)
-{
-  GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
-  RtpTimer *test;
-
-  test = rtp_timer_queue_peek_earliest (priv->timers);
-  while (test && get_pts_timeout (test) <= pts) {
-    gint gap = gst_rtp_buffer_compare_seqnum (test->seqnum, seqnum);
-
-    if (test->num > 1 && test->type == RTP_TIMER_LOST && gap >= 0 &&
-        gap < test->num) {
-      GST_DEBUG_OBJECT (jitterbuffer,
-          "seqnum #%d already considered definitely lost (#%d->#%d)",
-          seqnum, test->seqnum, (test->seqnum + test->num - 1) & 0xffff);
-      return TRUE;
-    }
-
-    test = rtp_timer_get_next (test);
-  }
-
-  return FALSE;
 }
 
 /* we just received a packet with seqnum and dts.
@@ -3188,9 +3150,6 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     }
   }
 
-  if (already_lost (jitterbuffer, pts, seqnum))
-    goto already_lost;
-
   /* let's drop oldest packet if the queue is already full and drop-on-latency
    * is set. We can only do this when there actually is a latency. When no
    * latency is set, we just pump it in the queue and let the other end push it
@@ -3316,18 +3275,6 @@ too_late:
     priv->num_late++;
     if (priv->post_drop_messages) {
       drop_msg = new_drop_message (jitterbuffer, seqnum, pts, REASON_TOO_LATE);
-    }
-    gst_buffer_unref (buffer);
-    goto finished;
-  }
-already_lost:
-  {
-    GST_DEBUG_OBJECT (jitterbuffer, "Packet #%d too late as it was already "
-        "considered lost", seqnum);
-    priv->num_late++;
-    if (priv->post_drop_messages) {
-      drop_msg =
-          new_drop_message (jitterbuffer, seqnum, pts, REASON_ALREADY_LOST);
     }
     gst_buffer_unref (buffer);
     goto finished;

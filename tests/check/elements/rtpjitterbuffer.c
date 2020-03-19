@@ -2769,19 +2769,15 @@ check_drop_message (GstMessage * drop_msg, const char *reason_check,
   GstClockTime timestamp;
   guint seqnum;
   guint num_too_late;
-  guint num_already_lost;
   guint num_drop_on_latency;
 
   guint num_too_late_check = 0;
-  guint num_already_lost_check = 0;
   guint num_drop_on_latency_check = 0;
 
   /* Check that fields exist */
   fail_unless (gst_structure_get_uint (s, "seqnum", &seqnum));
   fail_unless (gst_structure_get_uint64 (s, "timestamp", &timestamp));
   fail_unless (gst_structure_get_uint (s, "num-too-late", &num_too_late));
-  fail_unless (gst_structure_get_uint (s, "num-already-lost",
-          &num_already_lost));
   fail_unless (gst_structure_get_uint (s, "num-drop-on-latency",
           &num_drop_on_latency));
   fail_unless (reason_str = gst_structure_get_string (s, "reason"));
@@ -2789,8 +2785,6 @@ check_drop_message (GstMessage * drop_msg, const char *reason_check,
   /* Assing what to compare message fields to based on message reason */
   if (g_strcmp0 (reason_check, "too-late") == 0) {
     num_too_late_check += num_msg;
-  } else if (g_strcmp0 (reason_check, "already-lost") == 0) {
-    num_already_lost_check += num_msg;
   } else if (g_strcmp0 (reason_check, "drop-on-latency") == 0) {
     num_drop_on_latency_check += num_msg;
   } else {
@@ -2801,7 +2795,6 @@ check_drop_message (GstMessage * drop_msg, const char *reason_check,
   fail_unless (seqnum == seqnum_check);
   fail_unless (g_strcmp0 (reason_str, reason_check) == 0);
   fail_unless (num_too_late == num_too_late_check);
-  fail_unless (num_already_lost == num_already_lost_check);
   fail_unless (num_drop_on_latency == num_drop_on_latency_check);
 
   return TRUE;
@@ -2850,71 +2843,6 @@ GST_START_TEST (test_drop_messages_too_late)
   /* Cleanup */
   gst_element_set_bus (h->element, NULL);
   gst_object_unref (bus);
-  gst_harness_teardown (h);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_drop_messages_already_lost)
-{
-  GstHarness *h = gst_harness_new ("rtpjitterbuffer");
-  GstTestClock *testclock;
-  GstClockID id;
-  gint latency_ms = 20;
-  guint seqnum_late;
-  guint seqnum_final;
-  GstBus *bus;
-  GstMessage *drop_msg;
-  gboolean have_message = FALSE;
-
-  testclock = gst_harness_get_testclock (h);
-  g_object_set (h->element, "post-drop-messages", TRUE, NULL);
-
-  /* Create a bus to get the drop message on */
-  bus = gst_bus_new ();
-  gst_element_set_bus (h->element, bus);
-
-  /* Get seqnum from initial state */
-  seqnum_late = construct_deterministic_initial_state (h, latency_ms);
-
-  /* Hop over 3 buffers and push buffer (gap of 3) */
-  seqnum_final = seqnum_late + 4;
-  fail_unless_equals_int (GST_FLOW_OK,
-      gst_harness_push (h,
-          generate_test_buffer_full (seqnum_final * TEST_BUF_DURATION,
-              seqnum_final, seqnum_final * TEST_RTP_TS_DURATION)));
-
-  /* The jitterbuffer should be waiting for the timeout of a "large gap timer"
-   * for buffer seqnum_late and seqnum_late+1 */
-  gst_test_clock_wait_for_next_pending_id (testclock, &id);
-  fail_unless_equals_uint64 (seqnum_late * TEST_BUF_DURATION +
-      latency_ms * GST_MSECOND, gst_clock_id_get_time (id));
-
-  /* Now seqnum_late sneaks in before the lost event for buffer seqnum_late and seqnum_late+1 is
-   * processed. It will be dropped due to already having been considered lost */
-  fail_unless_equals_int (GST_FLOW_OK,
-      gst_harness_push (h,
-          generate_test_buffer_full (seqnum_late * TEST_BUF_DURATION,
-              seqnum_late, seqnum_late * TEST_RTP_TS_DURATION)));
-
-  /* Pop the resulting drop message and check its correctness */
-  while (!have_message &&
-      (drop_msg = gst_bus_pop_filtered (bus, GST_MESSAGE_ELEMENT)) != NULL) {
-    if (gst_message_has_name (drop_msg, "drop-msg")) {
-      fail_unless (check_drop_message (drop_msg, "already-lost", seqnum_late,
-              1));
-      have_message = TRUE;
-    }
-    gst_message_unref (drop_msg);
-  }
-  fail_unless (have_message);
-
-  /* Cleanup */
-  gst_clock_id_unref (id);
-  gst_element_set_bus (h->element, NULL);
-  gst_buffer_unref (gst_harness_take_all_data_as_buffer (h));
-  gst_object_unref (bus);
-  gst_object_unref (testclock);
   gst_harness_teardown (h);
 }
 
@@ -3226,7 +3154,6 @@ rtpjitterbuffer_suite (void)
   tcase_add_test (tc_chain, test_performance);
 
   tcase_add_test (tc_chain, test_drop_messages_too_late);
-  tcase_skip_broken_test (tc_chain, test_drop_messages_already_lost);
   tcase_add_test (tc_chain, test_drop_messages_drop_on_latency);
   tcase_add_test (tc_chain, test_drop_messages_interval);
 
