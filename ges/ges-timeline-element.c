@@ -2293,12 +2293,13 @@ ges_timeline_element_remove_child_property (GESTimelineElement * self,
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
   g_return_val_if_fail (G_IS_PARAM_SPEC (pspec), FALSE);
 
-  if (!g_hash_table_steal_extended (self->priv->children_props, pspec,
+  if (!g_hash_table_lookup_extended (self->priv->children_props, pspec,
           &key, &value)) {
     GST_WARNING_OBJECT (self, "No child property with pspec %p (%s) found",
         pspec, pspec->name);
     return FALSE;
   }
+  g_hash_table_steal (self->priv->children_props, pspec);
   found_pspec = G_PARAM_SPEC (key);
   handler = (ChildPropHandler *) value;
 
