@@ -1519,9 +1519,9 @@ gst_omx_video_enc_handle_output_frame (GstOMXVideoEnc * self, GstOMXPort * port,
     }
 
     if (frame) {
+      frame->output_buffer = outbuf;
       if ((buf->omx_buf->nFlags & OMX_BUFFERFLAG_ENDOFFRAME)
           || !gst_omx_port_get_subframe (self->enc_out_port)) {
-        frame->output_buffer = outbuf;
         flow_ret =
             gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (self), frame);
         if (!(buf->omx_buf->nFlags & OMX_BUFFERFLAG_ENDOFFRAME))
