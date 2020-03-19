@@ -63,21 +63,21 @@ gst_vaapi_encoder_ensure_param_control_rate (GstVaapiEncoder * encoder,
   if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CQP)
     return TRUE;
 
-  /* RateControl params */
-  misc = GST_VAAPI_ENC_MISC_PARAM_NEW (RateControl, encoder);
-  if (!misc)
-    return FALSE;
-  memcpy (misc->data, &GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder),
-      sizeof (VAEncMiscParameterRateControl));
-  gst_vaapi_enc_picture_add_misc_param (picture, misc);
-  gst_vaapi_codec_object_replace (&misc, NULL);
-
   /* HRD params */
   misc = GST_VAAPI_ENC_MISC_PARAM_NEW (HRD, encoder);
   if (!misc)
     return FALSE;
   memcpy (misc->data, &GST_VAAPI_ENCODER_VA_HRD (encoder),
       sizeof (VAEncMiscParameterHRD));
+  gst_vaapi_enc_picture_add_misc_param (picture, misc);
+  gst_vaapi_codec_object_replace (&misc, NULL);
+
+  /* RateControl params */
+  misc = GST_VAAPI_ENC_MISC_PARAM_NEW (RateControl, encoder);
+  if (!misc)
+    return FALSE;
+  memcpy (misc->data, &GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder),
+      sizeof (VAEncMiscParameterRateControl));
   gst_vaapi_enc_picture_add_misc_param (picture, misc);
   gst_vaapi_codec_object_replace (&misc, NULL);
 
