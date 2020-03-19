@@ -34,6 +34,7 @@
 #include <gst/validate/gst-validate-utils.h>
 #include <gst/validate/validate.h>
 #include <gst/pbutils/encoding-profile.h>
+#include <gst/transcoder/gsttranscoder.h>
 
 
 #ifdef G_OS_UNIX
@@ -44,29 +45,57 @@
 #include <gst/validate/gst-validate-bin-monitor.h>
 
 static gint ret = 0;
-static GMainLoop *mainloop;
-static GstElement *pipeline, *encodebin, *sink;
-static GstEncodingProfile *encoding_profile = NULL;
+static GstValidateMonitor *monitor = NULL;
+static GstValidateRunner *runner = NULL;
+static GstTranscoder *transcoder = NULL;
 static gboolean eos_on_shutdown = FALSE;
-static gboolean force_reencoding = FALSE;
 
-static gboolean buffering = FALSE;
-static gboolean is_live = FALSE;
+static gint
+finish_transcoding (GstElement * pipeline, gint ret)
+{
+  int rep_err;
+
+  if (!runner) {
+    ret = 1;
+    goto done;
+  }
+
+  rep_err = gst_validate_runner_exit (runner, TRUE);
+  if (ret == 0)
+    ret = rep_err;
+
+  gst_clear_object (&transcoder);
+  gst_clear_object (&pipeline);
+  gst_validate_reporter_purge_reports (GST_VALIDATE_REPORTER (monitor));
+  g_object_unref (monitor);
+  g_object_unref (runner);
+
+  gst_validate_deinit ();
+  gst_deinit ();
+
+done:
+  g_print ("\n=======> Test %s (Return value: %i)\n\n",
+      ret == 0 ? "PASSED" : "FAILED", ret);
+
+  exit (ret);
+  return ret;
+}
 
 #ifdef G_OS_UNIX
 static gboolean
-intr_handler (gpointer user_data)
+intr_handler (GstElement * pipeline)
 {
-  gst_validate_printf (NULL, "interrupt received.\n");
+  GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
+      GST_DEBUG_GRAPH_SHOW_ALL, "gst-validate.interrupted");
 
   if (eos_on_shutdown) {
-    gst_validate_printf (NULL, "Sending EOS to the pipeline\n");
     eos_on_shutdown = FALSE;
-    gst_element_send_event (GST_ELEMENT_CAST (user_data), gst_event_new_eos ());
+    gst_element_send_event (pipeline, gst_event_new_eos ());
     return TRUE;
-  }
-  g_main_loop_quit (mainloop);
 
+  }
+
+  finish_transcoding (pipeline, 1);
   /* remove signal handler */
   return FALSE;
 }
@@ -79,7 +108,10 @@ _execute_set_restriction (GstValidateScenario * scenario,
   GstCaps *caps;
   GType profile_type = G_TYPE_NONE;
   const gchar *restriction_caps, *profile_type_name, *profile_name;
+  GstElement *pipeline = gst_validate_scenario_get_pipeline (scenario);
+  GstEncodingProfile *encoding_profile;
 
+  g_object_get (pipeline, "profile", &encoding_profile, NULL);
   restriction_caps =
       gst_structure_get_string (action->structure, "restriction-caps");
   profile_type_name =
@@ -167,209 +199,6 @@ _execute_set_restriction (GstValidateScenario * scenario,
   return TRUE;
 }
 
-typedef struct
-{
-  GMainLoop *mainloop;
-  GstValidateMonitor *monitor;
-} BusCallbackData;
-
-static gboolean
-bus_callback (GstBus * bus, GstMessage * message, gpointer data)
-{
-  BusCallbackData *bus_callback_data = data;
-  GMainLoop *loop = bus_callback_data->mainloop;
-  GstValidateMonitor *monitor = bus_callback_data->monitor;
-
-  switch (GST_MESSAGE_TYPE (message)) {
-    case GST_MESSAGE_STATE_CHANGED:
-    {
-      if (GST_MESSAGE_SRC (message) == GST_OBJECT_CAST (pipeline)) {
-        gchar *dotname;
-        GstState old, new, pending;
-
-        gst_message_parse_state_changed (message, &old, &new, &pending);
-
-        if (new == GST_STATE_PLAYING) {
-          GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
-              GST_DEBUG_GRAPH_SHOW_ALL, "gst-validate-transcode.playing");
-        }
-
-        dotname = g_strdup_printf ("gst-validate-transcoding.%s_%s",
-            gst_element_state_get_name (old), gst_element_state_get_name (new));
-
-        GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
-            GST_DEBUG_GRAPH_SHOW_ALL, dotname);
-        g_free (dotname);
-      }
-      break;
-    }
-    case GST_MESSAGE_ERROR:
-    {
-      g_main_loop_quit (loop);
-      break;
-    }
-    case GST_MESSAGE_EOS:
-      if (!g_getenv ("GST_VALIDATE_SCENARIO"))
-        g_main_loop_quit (loop);
-      break;
-    case GST_MESSAGE_BUFFERING:{
-      gint percent;
-      GstState target_state = GST_STATE_PLAYING;
-      gboolean monitor_handles_state;
-
-      GParamSpec *spec =
-          g_object_class_find_property (G_OBJECT_GET_CLASS (sink), "sync");
-
-      if (spec) {
-        gboolean sync;
-
-        /* Never do buffering if the sink is not synchronizing on the clock */
-        g_object_get (sink, "sync", &sync, NULL);
-        if (!sync)
-          return TRUE;
-      } else {
-        return TRUE;
-      }
-
-      g_object_get (monitor, "handles-states", &monitor_handles_state, NULL);
-      if (monitor_handles_state && GST_IS_VALIDATE_BIN_MONITOR (monitor)) {
-        target_state =
-            gst_validate_scenario_get_target_state (GST_VALIDATE_BIN_MONITOR
-            (monitor)->scenario);
-      }
-
-      if (!buffering) {
-        gst_validate_printf (NULL, "\n");
-      }
-
-      gst_message_parse_buffering (message, &percent);
-
-      /* no state management needed for live pipelines */
-      if (is_live)
-        break;
-
-      if (percent == 100) {
-        /* a 100% message means buffering is done */
-        if (buffering) {
-          buffering = FALSE;
-
-          if (target_state == GST_STATE_PLAYING) {
-            gst_element_set_state (pipeline, GST_STATE_PLAYING);
-          }
-        }
-      } else {
-        /* buffering... */
-        if (!buffering) {
-          gst_element_set_state (pipeline, GST_STATE_PAUSED);
-          buffering = TRUE;
-        }
-      }
-      break;
-    }
-    case GST_MESSAGE_REQUEST_STATE:
-    {
-      GstState state;
-
-      gst_message_parse_request_state (message, &state);
-
-      if (GST_IS_VALIDATE_SCENARIO (GST_MESSAGE_SRC (message))
-          && state == GST_STATE_NULL) {
-        GST_VALIDATE_REPORT (GST_MESSAGE_SRC (message),
-            SCENARIO_ACTION_EXECUTION_ISSUE,
-            "Force stopping a transcoding pipeline is not recommended"
-            " you should make sure to finalize it using a EOS event");
-
-        gst_validate_printf (pipeline, "State change request NULL, "
-            "quiting mainloop\n");
-        g_main_loop_quit (mainloop);
-      }
-      break;
-    }
-    default:
-      break;
-  }
-
-  return TRUE;
-}
-
-static void
-pad_added_cb (GstElement * uridecodebin, GstPad * pad, GstElement * encodebin)
-{
-  GstCaps *caps;
-  GstPad *sinkpad = NULL;
-
-  caps = gst_pad_query_caps (pad, NULL);
-
-  /* Ask encodebin for a compatible pad */
-  GST_DEBUG_OBJECT (uridecodebin, "Pad added, caps: %" GST_PTR_FORMAT, caps);
-
-  g_signal_emit_by_name (encodebin, "request-pad", caps, &sinkpad);
-  if (caps)
-    gst_caps_unref (caps);
-
-  if (sinkpad == NULL) {
-    GST_WARNING ("Couldn't get an encoding pad for pad %s:%s\n",
-        GST_DEBUG_PAD_NAME (pad));
-    return;
-  }
-
-  if (G_UNLIKELY (gst_pad_link (pad, sinkpad) != GST_PAD_LINK_OK)) {
-    GstCaps *othercaps = gst_pad_get_current_caps (sinkpad);
-    caps = gst_pad_get_current_caps (pad);
-
-    GST_ERROR ("Couldn't link pads \n\n%" GST_PTR_FORMAT "\n\n  and \n\n %"
-        GST_PTR_FORMAT "\n\n", caps, othercaps);
-
-    gst_caps_unref (caps);
-    gst_caps_unref (othercaps);
-  }
-
-  gst_object_unref (sinkpad);
-  return;
-}
-
-static void
-create_transcoding_pipeline (gchar * uri, gchar * outuri)
-{
-  GstElement *src;
-
-  pipeline = gst_pipeline_new ("encoding-pipeline");
-  src = gst_element_factory_make ("uridecodebin", NULL);
-
-  encodebin = gst_element_factory_make ("encodebin", NULL);
-  g_object_set (encodebin, "avoid-reencoding", !force_reencoding, NULL);
-  sink = gst_element_make_from_uri (GST_URI_SINK, outuri, "sink", NULL);
-  g_assert (sink);
-
-  g_object_set (src, "uri", uri, NULL);
-  g_object_set (encodebin, "profile", encoding_profile, NULL);
-
-  g_signal_connect (src, "pad-added", G_CALLBACK (pad_added_cb), encodebin);
-
-  gst_bin_add_many (GST_BIN (pipeline), src, encodebin, sink, NULL);
-  gst_element_link (encodebin, sink);
-}
-
-static gboolean
-_parse_encoding_profile (const gchar * option_name, const gchar * profile_desc,
-    gpointer udata, GError ** error)
-{
-  GValue value = G_VALUE_INIT;
-
-  g_value_init (&value, GST_TYPE_ENCODING_PROFILE);
-
-  if (!gst_value_deserialize (&value, profile_desc)) {
-    g_value_reset (&value);
-
-    return FALSE;
-  }
-
-  encoding_profile = g_value_dup_object (&value);
-  g_value_reset (&value);
-
-  return TRUE;
-}
-
 static void
 _register_actions (void)
 {
@@ -395,26 +224,20 @@ int
 main (int argc, gchar ** argv)
 {
   guint i;
-  GstBus *bus;
-  GstValidateRunner *runner;
-  GstValidateMonitor *monitor;
   GOptionContext *ctx;
-  int rep_err;
-  GstStateChangeReturn sret;
   gchar *output_file = NULL;
-  BusCallbackData bus_callback_data = { 0, };
 
-#ifdef G_OS_UNIX
-  guint signal_watch_id;
-#endif
+  const gchar *profile_str;
 
   GError *err = NULL;
   gchar *scenario = NULL, *configs = NULL;
   gboolean want_help = FALSE;
   gboolean list_scenarios = FALSE, inspect_action_type = FALSE;
+  GstElement *pipeline = NULL;
+  gboolean force_reencoding = TRUE;
 
   GOptionEntry options[] = {
-    {"output-format", 'o', 0, G_OPTION_ARG_CALLBACK, &_parse_encoding_profile,
+    {"output-format", 'o', 0, G_OPTION_ARG_STRING, &profile_str,
           "Set the properties to use for the encoding profile "
           "(in case of transcoding.) For example:\n"
           "video/mpegts:video/x-raw-yuv,width=1920,height=1080->video/x-h264:audio/x-ac3\n"
@@ -432,11 +255,6 @@ main (int argc, gchar ** argv)
           " description). Specify multiple ones using ':' as separator."
           " This option overrides the GST_VALIDATE_SCENARIO environment variable.",
         NULL},
-    {"eos-on-shutdown", 'e', 0, G_OPTION_ARG_NONE, &eos_on_shutdown,
-        "If an EOS event should be sent to the pipeline if an interrupt is "
-          "received, instead of forcing the pipeline to stop. Sending an EOS "
-          "will allow the transcoding to finish the files properly before "
-          "exiting.", NULL},
     {"list-scenarios", 'l', 0, G_OPTION_ARG_NONE, &list_scenarios,
         "List the available scenarios that can be run", NULL},
     {"inspect-action-type", 't', 0, G_OPTION_ARG_NONE, &inspect_action_type,
@@ -451,6 +269,11 @@ main (int argc, gchar ** argv)
     {"force-reencoding", 'r', 0, G_OPTION_ARG_NONE, &force_reencoding,
         "Whether to try to force reencoding, meaning trying to only remux "
           "if possible(default: TRUE)", NULL},
+    {"eos-on-shutdown", 'e', 0, G_OPTION_ARG_NONE, &eos_on_shutdown,
+        "If an EOS event should be sent to the pipeline if an interrupt is "
+          "received, instead of forcing the pipeline to stop. Sending an EOS "
+          "will allow the transcoding to finish the files properly before "
+          "exiting.", NULL},
     {NULL}
   };
 
@@ -509,7 +332,6 @@ main (int argc, gchar ** argv)
     return 0;
   }
 
-
   _register_actions ();
 
   if (inspect_action_type) {
@@ -527,20 +349,21 @@ main (int argc, gchar ** argv)
     return 1;
   }
 
-  if (encoding_profile == NULL) {
+  if (profile_str == NULL) {
     GST_INFO ("Creating default encoding profile");
 
-    _parse_encoding_profile ("encoding-profile",
-        "application/ogg:video/x-theora:audio/x-vorbis", NULL, NULL);
+    profile_str = "application/ogg:video/x-theora:audio/x-vorbis";
   }
+
+  transcoder = gst_transcoder_new (argv[1], argv[2], profile_str);
+  gst_transcoder_set_avoid_reencoding (transcoder, !force_reencoding);
 
   /* Create the pipeline */
   runner = gst_validate_runner_new ();
-  create_transcoding_pipeline (argv[1], argv[2]);
 
+  pipeline = gst_transcoder_get_pipeline (transcoder);
 #ifdef G_OS_UNIX
-  signal_watch_id =
-      g_unix_signal_add (SIGINT, (GSourceFunc) intr_handler, pipeline);
+  g_unix_signal_add (SIGINT, (GSourceFunc) intr_handler, pipeline);
 #endif
 
   gst_validate_spin_on_fault_signals ();
@@ -549,64 +372,18 @@ main (int argc, gchar ** argv)
       gst_validate_monitor_factory_create (GST_OBJECT_CAST (pipeline), runner,
       NULL);
   gst_validate_reporter_set_handle_g_logs (GST_VALIDATE_REPORTER (monitor));
-  mainloop = g_main_loop_new (NULL, FALSE);
 
   if (!runner) {
+    gst_object_unref (pipeline);
+    gst_object_unref (transcoder);
     g_printerr ("Failed to setup Validate Runner\n");
     exit (1);
   }
 
-  bus = gst_element_get_bus (pipeline);
-  gst_bus_add_signal_watch (bus);
-  bus_callback_data.mainloop = mainloop;
-  bus_callback_data.monitor = monitor;
-  g_signal_connect (bus, "message", (GCallback) bus_callback,
-      &bus_callback_data);
-
-  gst_validate_printf (NULL, "Starting pipeline\n");
-  sret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  switch (sret) {
-    case GST_STATE_CHANGE_FAILURE:
-      /* ignore, we should get an error message posted on the bus */
-      gst_validate_printf (NULL, "Pipeline failed to go to PLAYING state\n");
-      ret = -1;
-      goto exit;
-    case GST_STATE_CHANGE_NO_PREROLL:
-      gst_validate_printf (NULL, "Pipeline is live.\n");
-      is_live = TRUE;
-      break;
-    case GST_STATE_CHANGE_ASYNC:
-      gst_validate_printf (NULL, "Prerolling...\r");
-      break;
-    default:
-      break;
+  if (!gst_transcoder_run (transcoder, &err)) {
+    ret = -1;
+    GST_ERROR ("\nFAILURE: %s", err->message);
   }
 
-  g_main_loop_run (mainloop);
-
-  rep_err = gst_validate_runner_exit (runner, TRUE);
-  if (ret == 0)
-    ret = rep_err;
-
-exit:
-  gst_bus_remove_signal_watch (bus);
-  gst_object_unref (bus);
-
-  gst_element_set_state (pipeline, GST_STATE_NULL);
-  g_main_loop_unref (mainloop);
-  g_clear_object (&encoding_profile);
-  g_object_unref (pipeline);
-  gst_validate_reporter_purge_reports (GST_VALIDATE_REPORTER (monitor));
-  g_object_unref (monitor);
-  g_object_unref (runner);
-
-#ifdef G_OS_UNIX
-  g_source_remove (signal_watch_id);
-#endif
-  gst_validate_deinit ();
-  gst_deinit ();
-
-  gst_validate_printf (NULL, "\n=======> Test %s (Return value: %i)\n\n",
-      ret == 0 ? "PASSED" : "FAILED", ret);
-  return ret;
+  return finish_transcoding (pipeline, ret);
 }

@@ -1222,7 +1222,7 @@ class GstValidateEncodingTestInterface(object):
 
     def _get_profile_full(self, muxer, venc, aenc, video_restriction=None,
                           audio_restriction=None, audio_presence=0,
-                          video_presence=0):
+                          video_presence=0, variable_framerate=False):
         ret = ""
         if muxer:
             ret += muxer
@@ -1231,8 +1231,13 @@ class GstValidateEncodingTestInterface(object):
             if video_restriction is not None:
                 ret = ret + video_restriction + '->'
             ret += venc
+            props = ""
             if video_presence:
-                ret = ret + '|' + str(video_presence)
+                props += 'presence=%s,' % str(video_presence)
+            if variable_framerate:
+                props += 'variable-framerate=true,'
+            if props:
+                ret = ret + '|' + props[:-1]
         if aenc:
             ret += ":"
             if audio_restriction is not None:
@@ -1243,7 +1248,8 @@ class GstValidateEncodingTestInterface(object):
 
         return ret.replace("::", ":")
 
-    def get_profile(self, video_restriction=None, audio_restriction=None):
+    def get_profile(self, video_restriction=None, audio_restriction=None,
+            variable_framerate=False):
         vcaps = self.combination.get_video_caps()
         acaps = self.combination.get_audio_caps()
         if video_restriction is None:
@@ -1260,7 +1266,8 @@ class GstValidateEncodingTestInterface(object):
         return self._get_profile_full(self.combination.get_muxer_caps(),
                                       vcaps, acaps,
                                       video_restriction=video_restriction,
-                                      audio_restriction=audio_restriction)
+                                      audio_restriction=audio_restriction,
+                                      variable_framerate=variable_framerate)
 
     def _clean_caps(self, caps):
         """
@@ -2794,7 +2801,8 @@ class MediaFormatCombination(object):
     def __str__(self):
         return "%s and %s in %s" % (self.audio, self.video, self.container)
 
-    def __init__(self, container, audio, video, duration_factor=1, video_restriction=None, audio_restriction=None):
+    def __init__(self, container, audio, video, duration_factor=1,
+            video_restriction=None, audio_restriction=None):
         """
         Describes a media format to be used for transcoding tests.
 

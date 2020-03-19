@@ -5,13 +5,22 @@ executable('gst-validate-' + apiversion,
             dependencies : validate_dep,
             c_args : [gst_c_args],
           )
-executable('gst-validate-transcoding-' + apiversion,
-           'gst-validate-transcoding.c',
-            install: true,
-            include_directories : inc_dirs,
-            dependencies : validate_dep,
-            c_args : [gst_c_args],
-          )
+
+gst_transcoder_dep = dependency('gstreamer-transcoder-' + apiversion, version : gst_req,
+    fallback : ['gst-plugins-bad', 'gst_transcoder_dep'], required: false)
+
+if gst_transcoder_dep.found()
+  executable('gst-validate-transcoding-' + apiversion,
+             'gst-validate-transcoding.c',
+             install: true,
+             include_directories : inc_dirs,
+             dependencies : [validate_dep, gst_transcoder_dep],
+             c_args : [gst_c_args],
+            )
+else
+  warning('Can not build gst-validate-transcoding-' + apiversion)
+endif
+
 executable('gst-validate-media-check-' + apiversion,
            'gst-validate-media-check.c',
             install: true,
