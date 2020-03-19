@@ -2549,7 +2549,6 @@ GST_START_TEST (test_considered_lost_packet_in_large_gap_arrives)
 {
   GstHarness *h = gst_harness_new ("rtpjitterbuffer");
   GstTestClock *testclock;
-  GstClockID id;
   GstBuffer *buffer;
   gint jb_latency_ms = 20;
   const TestLateArrivalInput *test_input =
@@ -2574,33 +2573,24 @@ GST_START_TEST (test_considered_lost_packet_in_large_gap_arrives)
     gst_event_unref (gst_harness_pull_event (h));
 
   /* hop over 3 packets, and push buffer 4 (gap of 3) */
+  gst_harness_set_time (h, 4 * TEST_BUF_DURATION);
   fail_unless_equals_int (GST_FLOW_OK,
       gst_harness_push (h, generate_test_buffer_full (4 * TEST_BUF_DURATION,
               4 + seq_offset, 4 * TEST_RTP_TS_DURATION)));
 
-  /* the jitterbuffer should be waiting for the timeout of a "large gap timer"
-   * for buffer 1 and 2 */
-  gst_test_clock_wait_for_next_pending_id (testclock, &id);
-  fail_unless_equals_uint64 (1 * TEST_BUF_DURATION +
-      jb_latency_ms * GST_MSECOND, gst_clock_id_get_time (id));
-  gst_clock_id_unref (id);
+  /* we get a "bundled" lost-event for the 2 packets now already too late */
+  verify_lost_event (h, 1 + seq_offset, 1 * TEST_BUF_DURATION,
+      2 * TEST_BUF_DURATION);
 
-  /* now buffer 1 sneaks in before the lost event for buffer 1 and 2 is
-   * processed */
+  /* and another one for buffer 3 */
+  verify_lost_event (h, 3 + seq_offset, 3 * TEST_BUF_DURATION,
+      1 * TEST_BUF_DURATION);
+
+  /* A late buffer arrives */
   fail_unless_equals_int (GST_FLOW_OK,
       gst_harness_push (h,
           generate_test_buffer_full (late_buffer * TEST_BUF_DURATION,
               late_buffer + seq_offset, late_buffer * TEST_RTP_TS_DURATION)));
-
-  /* time out for lost packets 1 and 2 (one event, double duration) */
-  fail_unless (gst_harness_crank_single_clock_wait (h));
-  verify_lost_event (h, 1 + seq_offset, 1 * TEST_BUF_DURATION,
-      2 * TEST_BUF_DURATION);
-
-  /* time out for lost packets 3 */
-  fail_unless (gst_harness_crank_single_clock_wait (h));
-  verify_lost_event (h, 3 + seq_offset, 3 * TEST_BUF_DURATION,
-      1 * TEST_BUF_DURATION);
 
   /* buffer 4 is pushed as normal */
   buffer = gst_harness_pull (h);
