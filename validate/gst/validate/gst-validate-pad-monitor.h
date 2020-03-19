@@ -107,8 +107,6 @@ struct _GstValidatePadMonitor {
   GstClockTime current_timestamp;
   GstClockTime current_duration;
 
-  GstFlowReturn last_flow_return;
-
   /* Stores the timestamp range of data that has flown through
    * this pad by using TIMESTAMP and TIMESTAMP+DURATION from
    * incomming buffers. Every time a buffer is pushed, this range

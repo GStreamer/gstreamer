@@ -295,23 +295,13 @@ fake_demuxer_prepare_pads (GstBin * pipeline, GstElement * demux,
           TRUE));
 }
 
-static GstValidatePadMonitor *
-_get_pad_monitor (GstPad * pad)
-{
-  GstValidatePadMonitor *m = get_pad_monitor (pad);
-
-  gst_object_unref (pad);
-
-  return m;
-}
-
 static void
 _test_flow_aggregation (GstFlowReturn flow, GstFlowReturn flow1,
     GstFlowReturn flow2, GstFlowReturn demux_flow, gboolean should_fail)
 {
   GstPad *srcpad;
   GstValidateReport *report;
-  GstValidatePadMonitor *pmonitor, *pmonitor1, *pmonitor2;
+  GstPad *p, *p1, *p2;
   GstElement *demuxer = fake_demuxer_new ();
   GstBin *pipeline = GST_BIN (gst_pipeline_new ("validate-pipeline"));
   GList *reports;
@@ -329,16 +319,18 @@ _test_flow_aggregation (GstFlowReturn flow, GstFlowReturn flow1,
   gst_check_setup_events_with_stream_id (srcpad, demuxer, NULL,
       GST_FORMAT_TIME, "the-stream");
 
-  pmonitor = _get_pad_monitor (gst_pad_get_peer (demuxer->srcpads->data));
-  pmonitor1 =
-      _get_pad_monitor (gst_pad_get_peer (demuxer->srcpads->next->data));
-  pmonitor2 =
-      _get_pad_monitor (gst_pad_get_peer (demuxer->srcpads->next->next->data));
+  p = gst_pad_get_peer (demuxer->srcpads->data);
+  p1 = gst_pad_get_peer (demuxer->srcpads->next->data);
+  p2 = gst_pad_get_peer (demuxer->srcpads->next->next->data);
 
-  pmonitor->last_flow_return = flow;
-  pmonitor1->last_flow_return = flow1;
-  pmonitor2->last_flow_return = flow2;
+  p->ABI.abi.last_flowret = flow;
+  p1->ABI.abi.last_flowret = flow1;
+  p2->ABI.abi.last_flowret = flow2;
   FAKE_DEMUXER (demuxer)->return_value = demux_flow;
+
+  gst_object_unref (p);
+  gst_object_unref (p1);
+  gst_object_unref (p2);
 
   fail_unless_equals_int (gst_pad_push (srcpad, gst_discont_buffer_new ()),
       demux_flow);
@@ -360,13 +352,10 @@ _test_flow_aggregation (GstFlowReturn flow, GstFlowReturn flow1,
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
   ASSERT_OBJECT_REFCOUNT (pipeline, "ours", 1);
   gst_object_ref (demuxer);
-  gst_object_ref (pmonitor);
   _stop_monitoring_bin (pipeline, runner);
 
   ASSERT_OBJECT_REFCOUNT (demuxer, "plop", 1);
   gst_object_unref (demuxer);
-  ASSERT_OBJECT_REFCOUNT (pmonitor, "plop", 1);
-  gst_object_unref (pmonitor);
   gst_object_unref (srcpad);
 }
 

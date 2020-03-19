@@ -985,8 +985,6 @@ gst_validate_pad_monitor_flush (GstValidatePadMonitor * pad_monitor)
   pad_monitor->current_timestamp = GST_CLOCK_TIME_NONE;
   pad_monitor->current_duration = GST_CLOCK_TIME_NONE;
 
-  pad_monitor->last_flow_return = GST_FLOW_OK;
-
   pad_monitor->timestamp_range_start = GST_CLOCK_TIME_NONE;
   pad_monitor->timestamp_range_end = GST_CLOCK_TIME_NONE;
 }
@@ -1387,7 +1385,6 @@ gst_validate_pad_monitor_check_aggregated_return (GstValidatePadMonitor *
   GstPad *otherpad;
   GstPad *peerpad;
   GstState state, pending;
-  GstValidatePadMonitor *othermonitor;
   GstFlowReturn aggregated = GST_FLOW_NOT_LINKED;
   gboolean found_a_pad = FALSE;
   GstPad *pad =
@@ -1403,14 +1400,10 @@ gst_validate_pad_monitor_check_aggregated_return (GstValidatePadMonitor *
         otherpad = g_value_get_object (&value);
         peerpad = gst_pad_get_peer (otherpad);
         if (peerpad) {
-          othermonitor = _GET_PAD_MONITOR (peerpad);
-          if (othermonitor) {
-            found_a_pad = TRUE;
-            GST_VALIDATE_MONITOR_LOCK (othermonitor);
-            aggregated =
-                _combine_flows (aggregated, othermonitor->last_flow_return);
-            GST_VALIDATE_MONITOR_UNLOCK (othermonitor);
-          }
+          found_a_pad = TRUE;
+          aggregated =
+              _combine_flows (aggregated,
+              gst_pad_get_last_flow_return (peerpad));
 
           gst_object_unref (peerpad);
         }
@@ -2354,7 +2347,6 @@ gst_validate_pad_monitor_chain_func (GstPad * pad, GstObject * parent,
   GST_VALIDATE_PAD_MONITOR_PARENT_LOCK (pad_monitor);
   GST_VALIDATE_MONITOR_LOCK (pad_monitor);
 
-  pad_monitor->last_flow_return = ret;
   if (ret == GST_FLOW_EOS) {
     mark_pads_eos (pad_monitor);
   }
