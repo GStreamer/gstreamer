@@ -1065,33 +1065,23 @@ gst_transcoder_new_full (const gchar * source_uri,
 
 typedef struct
 {
-  GError **user_error;
-  GMutex m;
-  GCond cond;
-
-  gboolean done;
-
+  GError *error;
+  GMainLoop *loop;
 } RunSyncData;
 
 static void
 _error_cb (GstTranscoder * self, GError * error, GstStructure * details,
     RunSyncData * data)
 {
-  g_mutex_lock (&data->m);
-  data->done = TRUE;
-  if (data->user_error && (*data->user_error) == NULL)
-    g_propagate_error (data->user_error, error);
-  g_cond_broadcast (&data->cond);
-  g_mutex_unlock (&data->m);
+  if (data->error == NULL)
+    g_propagate_error (&data->error, error);
+  g_main_loop_quit (data->loop);
 }
 
 static void
 _done_cb (GstTranscoder * self, RunSyncData * data)
 {
-  g_mutex_lock (&data->m);
-  data->done = TRUE;
-  g_cond_broadcast (&data->cond);
-  g_mutex_unlock (&data->m);
+  g_main_loop_quit (data->loop);
 }
 
 /**
@@ -1108,22 +1098,19 @@ gst_transcoder_run (GstTranscoder * self, GError ** error)
 {
   RunSyncData data = { 0, };
 
-  g_mutex_init (&data.m);
-  g_cond_init (&data.cond);
-
+  data.loop = g_main_loop_new (NULL, FALSE);
   g_signal_connect (self, "error", G_CALLBACK (_error_cb), &data);
   g_signal_connect (self, "done", G_CALLBACK (_done_cb), &data);
   gst_transcoder_run_async (self);
 
-  g_mutex_lock (&data.m);
-  while (!data.done) {
-    g_cond_wait (&data.cond, &data.m);
-  }
-  g_mutex_unlock (&data.m);
+  if (!data.error)
+    g_main_loop_run (data.loop);
 
-  if (data.user_error) {
-    g_propagate_error (error, *data.user_error);
+  if (data.error) {
+    if (error)
+      g_propagate_error (error, data.error);
 
+    g_clear_error (&data.error);
     return FALSE;
   }
 
