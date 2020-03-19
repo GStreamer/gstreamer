@@ -92,11 +92,12 @@
  *   video/webm:video/x-vp8+youtube-preset:audio/x-vorbis
  * ```
  *
- * Moreover, you can set extra properties `presence` and `single-segment` of an
- * encoding profile using the `|presence=` syntax as in:
+ * Moreover, you can set extra properties `presence`, `single-segment` and
+ * `variable-framerate` * of an * encoding profile using the `|presence=` syntax
+ * as in:
  *
  * ```
- *   video/webm:video/x-vp8|presence=1|single-segment=true:audio/x-vorbis
+ *   video/webm:video/x-vp8|presence=1,variable-framerate=true|single-segment=true:audio/x-vorbis
  * ```
  *
  * This field allows specifies the maximum number of times a
@@ -1626,7 +1627,8 @@ create_encoding_stream_profile (gchar * serialized_profile,
   guint presence = 0;
   gboolean single_segment = FALSE;
   gchar *strcaps, *strpresence, **strprops_v, **restriction_format,
-      **preset_v, *preset_name = NULL, *factory_name = NULL;
+      **preset_v, *preset_name = NULL, *factory_name = NULL,
+      *variable_framerate = NULL;
   GstCaps *restrictioncaps = NULL;
   GstEncodingProfile *profile = NULL;
 
@@ -1676,6 +1678,8 @@ create_encoding_stream_profile (gchar * serialized_profile,
         presence_str = propv[0];
       } else if (!g_strcmp0 (propv[0], "presence")) {
         presence_str = propv[1];
+      } else if (!g_strcmp0 (propv[0], "variable-framerate")) {
+        variable_framerate = g_strdup (propv[1]);
       } else if (!g_strcmp0 (propv[0], "single-segment")) {
         GValue v = G_VALUE_INIT;
 
@@ -1737,6 +1741,29 @@ create_encoding_stream_profile (gchar * serialized_profile,
 
   if (restrictioncaps)
     gst_caps_unref (restrictioncaps);
+
+  if (variable_framerate) {
+    if (GST_IS_ENCODING_VIDEO_PROFILE (profile)) {
+      GValue v = {
+        0,
+      };
+      g_value_init (&v, G_TYPE_BOOLEAN);
+      if (gst_value_deserialize (&v, variable_framerate)) {
+        gst_encoding_video_profile_set_variableframerate
+            (GST_ENCODING_VIDEO_PROFILE (profile), g_value_get_boolean (&v));
+      } else {
+        GST_WARNING ("Invalid value for variable_framerate: %s",
+            variable_framerate);
+
+      }
+      g_value_reset (&v);
+    } else {
+      GST_WARNING
+          ("Variable framerate specified on a non video encoding profile");
+    }
+
+    g_free (variable_framerate);
+  }
 
   if (profile == NULL) {
     GST_ERROR ("No way to create a profile for description: %s",
