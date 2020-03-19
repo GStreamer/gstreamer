@@ -157,6 +157,15 @@ typedef enum {
   GST_VALIDATE_ISSUE_FLAGS_NONE = 0,
   GST_VALIDATE_ISSUE_FLAGS_FULL_DETAILS = 1 << 0,
   GST_VALIDATE_ISSUE_FLAGS_NO_BACKTRACE = 1 << 1,
+
+  /**
+   * GST_VALIDATE_ISSUE_FLAGS_FORCE_BACKTRACE:
+   *
+   * Always generate backtrace, even if not a critical issue
+   *
+   * Since: 1.20
+   */
+  GST_VALIDATE_ISSUE_FLAGS_FORCE_BACKTRACE = 1 << 2,
 } GstValidateIssueFlags;
 
 typedef struct {

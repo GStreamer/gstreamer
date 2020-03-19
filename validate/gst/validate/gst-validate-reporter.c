@@ -299,8 +299,6 @@ gst_validate_reporter_g_log_func (const gchar * log_domain,
     GST_VALIDATE_REPORT (reporter, G_LOG_CRITICAL, "%s", message);
   else if (log_level & G_LOG_LEVEL_WARNING)
     GST_VALIDATE_REPORT (reporter, G_LOG_WARNING, "%s", message);
-  else
-    GST_VALIDATE_REPORT (reporter, G_LOG_ISSUE, "%s", message);
 }
 
 /**

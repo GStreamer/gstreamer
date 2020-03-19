@@ -464,12 +464,17 @@ gst_validate_report_load_issues (void)
       ("Pad buffers push frequency is lower than the minimum required by the config"),
       NULL);
   REGISTER_VALIDATE_ISSUE_FULL (WARNING, G_LOG_WARNING,
-      _("We got a g_log warning"), NULL, GST_VALIDATE_ISSUE_FLAGS_FULL_DETAILS);
+      _("We got a g_log warning"), NULL,
+      GST_VALIDATE_ISSUE_FLAGS_FORCE_BACKTRACE |
+      GST_VALIDATE_ISSUE_FLAGS_FULL_DETAILS);
   REGISTER_VALIDATE_ISSUE_FULL (CRITICAL, G_LOG_CRITICAL,
       "We got a g_log critical issue", NULL,
+      GST_VALIDATE_ISSUE_FLAGS_FORCE_BACKTRACE |
       GST_VALIDATE_ISSUE_FLAGS_FULL_DETAILS);
   REGISTER_VALIDATE_ISSUE_FULL (ISSUE, G_LOG_ISSUE, "We got a g_log issue",
-      NULL, GST_VALIDATE_ISSUE_FLAGS_FULL_DETAILS);
+      NULL,
+      GST_VALIDATE_ISSUE_FLAGS_FORCE_BACKTRACE |
+      GST_VALIDATE_ISSUE_FLAGS_FULL_DETAILS);
 
   REGISTER_VALIDATE_ISSUE (CRITICAL, PULL_RANGE_FROM_WRONG_THREAD,
       "gst_pad_pull_range called from wrong thread",
@@ -763,6 +768,34 @@ _report_free (GstValidateReport * report)
   g_slice_free (GstValidateReport, report);
 }
 
+static gboolean
+gst_validate_report_should_generate_backtrace (GstValidateIssue * issue,
+    GstValidateReport * report,
+    GstValidateReportingDetails default_details,
+    GstValidateReportingDetails issue_type_details,
+    GstValidateReportingDetails reporter_details)
+{
+  if (issue->flags & GST_VALIDATE_ISSUE_FLAGS_FORCE_BACKTRACE)
+    return TRUE;
+
+  if (issue->flags & GST_VALIDATE_ISSUE_FLAGS_NO_BACKTRACE)
+    return FALSE;
+
+  if (default_details == GST_VALIDATE_SHOW_ALL)
+    return TRUE;
+
+  if (issue_type_details == GST_VALIDATE_SHOW_ALL)
+    return TRUE;
+
+  if (gst_validate_report_check_abort (report))
+    return TRUE;
+
+  if (report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL)
+    return TRUE;
+
+  return FALSE;
+}
+
 GstValidateReport *
 gst_validate_report_new (GstValidateIssue * issue,
     GstValidateReporter * reporter, const gchar * message)
@@ -802,11 +835,8 @@ gst_validate_report_new (GstValidateIssue * issue,
       reporter_details != GST_VALIDATE_SHOW_UNKNOWN)
     return report;
 
-  if ((default_details == GST_VALIDATE_SHOW_ALL ||
-          issue_type_details == GST_VALIDATE_SHOW_ALL ||
-          gst_validate_report_check_abort (report) ||
-          report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL) &&
-      (!(issue->flags & GST_VALIDATE_ISSUE_FLAGS_NO_BACKTRACE)))
+  if (gst_validate_report_should_generate_backtrace (issue, report,
+          default_details, issue_type_details, reporter_details))
     report->trace = gst_debug_get_stack_trace (GST_STACK_TRACE_SHOW_FULL);
 
   return report;
