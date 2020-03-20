@@ -1284,8 +1284,8 @@ not been tested and explicitly activated if you set use --wanted-tests ALL""")
         self.add_encoding_formats([
             MediaFormatCombination("ogg", "vorbis", "theora"),
             MediaFormatCombination("webm", "vorbis", "vp8"),
-            MediaFormatCombination(
-                "webm", "vorbis", "vp9", video_restriction="video/x-raw,width=320,height=240"),
+            MediaFormatCombination("webm", "vorbis", "vp9",
+                video_restriction="video/x-raw,width=160,height=120"),
             MediaFormatCombination("mp4", "mp3", "h264"),
             MediaFormatCombination("mkv", "vorbis", "h264"),
         ])
