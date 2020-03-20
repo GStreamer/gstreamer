@@ -38,12 +38,21 @@ GstV4l2CodecAllocator  *gst_v4l2_codec_allocator_new (GstV4l2Decoder * decoder,
 
 GstMemory              *gst_v4l2_codec_allocator_alloc (GstV4l2CodecAllocator * allocator);
 
+
+
+gboolean                gst_v4l2_codec_allocator_create_buffer (GstV4l2CodecAllocator * self);
+
+gboolean                gst_v4l2_codec_allocator_wait_for_buffer (GstV4l2CodecAllocator * self);
+
 gboolean                gst_v4l2_codec_allocator_prepare_buffer (GstV4l2CodecAllocator * allocator,
                                                                  GstBuffer * buffer);
 
 guint                   gst_v4l2_codec_allocator_get_pool_size (GstV4l2CodecAllocator *self);
 
 void                    gst_v4l2_codec_allocator_detach (GstV4l2CodecAllocator * self);
+
+void                    gst_v4l2_codec_allocator_set_flushing (GstV4l2CodecAllocator * self,
+                                                               gboolean flushing);
 
 guint32                 gst_v4l2_codec_memory_get_index (GstMemory * mem);
 

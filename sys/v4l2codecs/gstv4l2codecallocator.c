@@ -45,6 +45,9 @@ struct _GstV4l2CodecAllocator
   gint pool_size;
   gboolean detached;
 
+  GCond buffer_cond;
+  gboolean flushing;
+
   GstV4l2Decoder *decoder;
   GstPadDirection direction;
 };
@@ -152,6 +155,7 @@ gst_v4l2_codec_allocator_release (GstMiniObject * mini_object)
   if (gst_v4l2_codec_buffer_release_mem (buf)) {
     GST_DEBUG_OBJECT (self, "Placing back buffer %i into pool", buf->index);
     g_queue_push_tail (&self->pool, buf);
+    g_cond_signal (&self->buffer_cond);
   }
 
   GST_OBJECT_UNLOCK (self);
@@ -196,6 +200,7 @@ failed:
 static void
 gst_v4l2_codec_allocator_init (GstV4l2CodecAllocator * self)
 {
+  g_cond_init (&self->buffer_cond);
 }
 
 static void
@@ -219,6 +224,8 @@ gst_v4l2_codec_allocator_finalize (GObject * object)
 
   if (!self->detached)
     gst_v4l2_decoder_request_buffers (self->decoder, self->direction, 0);
+
+  g_cond_clear (&self->buffer_cond);
 
   G_OBJECT_CLASS (gst_v4l2_codec_allocator_parent_class)->finalize (object);
 }
@@ -274,6 +281,27 @@ gst_v4l2_codec_allocator_alloc (GstV4l2CodecAllocator * self)
 }
 
 gboolean
+gst_v4l2_codec_allocator_create_buffer (GstV4l2CodecAllocator * self)
+{
+  /* TODO implement */
+  return FALSE;
+}
+
+gboolean
+gst_v4l2_codec_allocator_wait_for_buffer (GstV4l2CodecAllocator * self)
+{
+  gboolean ret;
+
+  GST_OBJECT_LOCK (self);
+  while (self->pool.length == 0 && !self->flushing)
+    g_cond_wait (&self->buffer_cond, GST_OBJECT_GET_LOCK (self));
+  ret = !self->flushing;
+  GST_OBJECT_UNLOCK (self);
+
+  return ret;
+}
+
+gboolean
 gst_v4l2_codec_allocator_prepare_buffer (GstV4l2CodecAllocator * self,
     GstBuffer * gstbuf)
 {
@@ -321,6 +349,17 @@ gst_v4l2_codec_allocator_detach (GstV4l2CodecAllocator * self)
     self->detached = TRUE;
     gst_v4l2_decoder_request_buffers (self->decoder, self->direction, 0);
   }
+  GST_OBJECT_UNLOCK (self);
+}
+
+void
+gst_v4l2_codec_allocator_set_flushing (GstV4l2CodecAllocator * self,
+    gboolean flushing)
+{
+  GST_OBJECT_LOCK (self);
+  self->flushing = flushing;
+  if (flushing)
+    g_cond_broadcast (&self->buffer_cond);
   GST_OBJECT_UNLOCK (self);
 }
 
