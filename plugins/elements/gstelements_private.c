@@ -167,7 +167,7 @@ gst_writev (gint fd, const struct iovec *iov, gint iovcnt, gsize total_bytes)
      * cases, and it's not clear how that can be reconciled with the
      * possibility of short writes, so in any case we might want to
      * simplify this later or just remove it. */
-    if (total_bytes <= FDSINK_MAX_MALLOC_SIZE) {
+    if (iovcnt > 1 && total_bytes <= FDSINK_MAX_MALLOC_SIZE) {
       gchar *mem, *p;
 
       if (total_bytes <= FDSINK_MAX_ALLOCA_SIZE)
@@ -440,7 +440,7 @@ gst_writev_buffer (GstObject * sink, gint fd, GstPoll * fdset,
 }
 
 GstFlowReturn
-gst_write_mem (GstObject * sink, gint fd, GstPoll * fdset,
+gst_writev_mem (GstObject * sink, gint fd, GstPoll * fdset,
     const guint8 * data, guint size,
     guint64 * bytes_written, guint64 skip,
     gint max_transient_error_timeout, guint64 current_position,
@@ -474,6 +474,10 @@ gst_write_mem (GstObject * sink, gint fd, GstPoll * fdset,
 
     if (bytes_written)
       *bytes_written += bytes_written_local;
+
+    /* All done, no need for bookkeeping */
+    if (bytes_written_local == left)
+      break;
 
     /* skip partially written vector data */
     if (bytes_written_local < left) {

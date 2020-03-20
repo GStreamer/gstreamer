@@ -48,7 +48,7 @@ GstFlowReturn  gst_writev_buffer_list (GstObject * sink, gint fd, GstPoll * fdse
                                        gboolean * flushing);
 
 G_GNUC_INTERNAL
-GstFlowReturn  gst_write_mem          (GstObject * sink, gint fd, GstPoll * fdset,
+GstFlowReturn  gst_writev_mem         (GstObject * sink, gint fd, GstPoll * fdset,
                                        const guint8 *data, guint size,
                                        guint64 * bytes_written, guint64 skip,
                                        gint max_transient_error_timeout, guint64 current_position,
