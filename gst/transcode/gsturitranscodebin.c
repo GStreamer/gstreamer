@@ -202,13 +202,10 @@ src_pad_added_cb (GstElement * src, GstPad * pad, GstUriTranscodeBin * self)
   GST_DEBUG_OBJECT (self,
       "New pad %" GST_PTR_FORMAT " from source %" GST_PTR_FORMAT, pad, src);
 
-  if (sinkpad == NULL)
-    sinkpad = gst_element_get_static_pad (self->transcodebin, "sink");
+  sinkpad = gst_element_get_static_pad (self->transcodebin, "sink");
 
-  if (gst_pad_is_linked (sinkpad)) {
-    GST_WARNING_OBJECT (self, "Pad already linked....");
-    return;
-  }
+  if (gst_pad_is_linked (sinkpad))
+    sinkpad = gst_element_get_request_pad (self->transcodebin, "sink_%u");
 
   if (sinkpad) {
     GST_DEBUG_OBJECT (self,

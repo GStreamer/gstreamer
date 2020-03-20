@@ -31,6 +31,19 @@
 GST_DEBUG_CATEGORY_STATIC (gst_transcodebin_debug);
 #define GST_CAT_DEFAULT gst_transcodebin_debug
 
+/**
+ * GstTranscodeBin!sink_%u:
+ *
+ * Extra sinkpads for the parallel transcoding of auxiliary streams.
+ *
+ * Since: 1.20
+ */
+static GstStaticPadTemplate transcode_bin_sinks_template =
+GST_STATIC_PAD_TEMPLATE ("sink_%u",
+    GST_PAD_SINK,
+    GST_PAD_REQUEST,
+    GST_STATIC_CAPS_ANY);
+
 static GstStaticPadTemplate transcode_bin_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -42,6 +55,32 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
+
+typedef struct
+{
+  const gchar *stream_id;
+  GstStream *stream;
+  GstPad *encodebin_pad;
+} TranscodingStream;
+
+static TranscodingStream *
+transcoding_stream_new (GstStream * stream, GstPad * encodebin_pad)
+{
+  TranscodingStream *tstream = g_new0 (TranscodingStream, 1);
+
+  tstream->stream_id = gst_stream_get_stream_id (stream);
+  tstream->stream = gst_object_ref (stream);
+  tstream->encodebin_pad = encodebin_pad;
+
+  return tstream;
+}
+
+static void
+transcoding_stream_free (TranscodingStream * tstream)
+{
+  gst_object_unref (tstream->stream);
+  gst_object_unref (tstream->encodebin_pad);
+}
 
 typedef struct
 {
@@ -57,6 +96,8 @@ typedef struct
 
   GstElement *audio_filter;
   GstElement *video_filter;
+
+  GPtrArray *transcoding_streams;
 } GstTranscodeBin;
 
 typedef struct
@@ -68,10 +109,6 @@ typedef struct
 /* *INDENT-OFF* */
 #define GST_TYPE_TRANSCODE_BIN (gst_transcode_bin_get_type ())
 #define GST_TRANSCODE_BIN(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_TRANSCODE_BIN, GstTranscodeBin))
-#define GST_TRANSCODE_BIN_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TRANSCODE_BIN_TYPE, GstTranscodeBinClass))
-#define GST_IS_TRANSCODE_BIN(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TRANSCODE_BIN_TYPE))
-#define GST_IS_TRANSCODE_BIN_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TRANSCODE_BIN_TYPE))
-#define GST_TRANSCODE_BIN_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TRANSCODE_BIN_TYPE, GstTranscodeBinClass))
 
 #define DEFAULT_AVOID_REENCODING   FALSE
 
@@ -214,49 +251,57 @@ _insert_filter (GstTranscodeBin * self, GstPad * sinkpad, GstPad * pad,
   return filter_src;
 }
 
+static TranscodingStream *
+find_stream (GstTranscodeBin * self, const gchar * stream_id, GstPad * pad)
+{
+  gint i;
+  TranscodingStream *res = NULL;
+
+  GST_OBJECT_LOCK (self);
+  for (i = 0; i < self->transcoding_streams->len; i = i + 1) {
+    TranscodingStream *s = self->transcoding_streams->pdata[i];
+
+    if (stream_id && !g_strcmp0 (s->stream_id, stream_id)) {
+      res = s;
+      goto done;
+    } else if (pad && s->encodebin_pad == pad) {
+      res = s;
+      goto done;
+    }
+  }
+
+done:
+  GST_OBJECT_UNLOCK (self);
+
+  return res;
+}
+
 static void
-pad_added_cb (GstElement * decodebin, GstPad * pad, GstTranscodeBin * self)
+gst_transcode_bin_link_encodebin_pad (GstTranscodeBin * self, GstPad * pad,
+    const gchar * stream_id)
 {
   GstCaps *caps;
-  GstPad *sinkpad = NULL;
   GstPadLinkReturn lret;
+  TranscodingStream *stream = find_stream (self, stream_id, NULL);
 
-  caps = gst_pad_query_caps (pad, NULL);
-
-  GST_DEBUG_OBJECT (decodebin, "Pad added, caps: %" GST_PTR_FORMAT, caps);
-
-  g_signal_emit_by_name (self->encodebin, "request-pad", caps, &sinkpad);
-
-  if (sinkpad == NULL) {
-    gchar *stream_id = gst_pad_get_stream_id (pad);
-
-    GST_ELEMENT_WARNING_WITH_DETAILS (self, STREAM, FORMAT,
-        (NULL), ("Stream with caps: %" GST_PTR_FORMAT " can not be"
-            " encoded in the defined encoding formats",
-            caps),
-        ("can-t-encode-stream", G_TYPE_BOOLEAN, TRUE,
-            "stream-caps", GST_TYPE_CAPS, caps,
-            "stream-id", G_TYPE_STRING, stream_id, NULL));
-
-    g_free (stream_id);
+  if (!stream) {
+    GST_ERROR_OBJECT (self, "%s -> Got not stream, decodebin3 bug?", stream_id);
     return;
   }
 
-  if (caps)
-    gst_caps_unref (caps);
-
-  pad = _insert_filter (self, sinkpad, pad, caps);
-  lret = gst_pad_link (pad, sinkpad);
+  caps = gst_pad_query_caps (pad, NULL);
+  pad = _insert_filter (self, stream->encodebin_pad, pad, caps);
+  lret = gst_pad_link (pad, stream->encodebin_pad);
   switch (lret) {
     case GST_PAD_LINK_OK:
       break;
     case GST_PAD_LINK_WAS_LINKED:
       GST_FIXME_OBJECT (self, "Pad %" GST_PTR_FORMAT " was already linked",
-          sinkpad);
+          stream->encodebin_pad);
       break;
     default:
     {
-      GstCaps *othercaps = gst_pad_query_caps (sinkpad, NULL);
+      GstCaps *othercaps = gst_pad_query_caps (stream->encodebin_pad, NULL);
       caps = gst_pad_get_current_caps (pad);
 
       GST_ELEMENT_ERROR_WITH_DETAILS (self, CORE, PAD,
@@ -264,11 +309,11 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstTranscodeBin * self)
           ("Couldn't link pads:\n    %" GST_PTR_FORMAT ": %" GST_PTR_FORMAT
               "\nand:\n"
               "    %" GST_PTR_FORMAT ": %" GST_PTR_FORMAT "\n\n",
-              pad, caps, sinkpad, othercaps),
+              pad, caps, stream->encodebin_pad, othercaps),
           ("linking-error", GST_TYPE_PAD_LINK_RETURN, lret,
               "source-pad", GST_TYPE_PAD, pad,
               "source-caps", GST_TYPE_CAPS, caps,
-              "sink-pad", GST_TYPE_PAD, sinkpad,
+              "sink-pad", GST_TYPE_PAD, stream->encodebin_pad,
               "sink-caps", GST_TYPE_CAPS, othercaps, NULL));
 
       gst_clear_caps (&caps);
@@ -276,8 +321,47 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstTranscodeBin * self)
         gst_caps_unref (othercaps);
     }
   }
+}
 
-  gst_object_unref (sinkpad);
+static GstPadProbeReturn
+wait_stream_start_probe (GstPad * pad,
+    GstPadProbeInfo * info, GstTranscodeBin * self)
+{
+  const gchar *stream_id;
+
+  if (GST_EVENT_TYPE (info->data) != GST_EVENT_STREAM_START)
+    return GST_PAD_PROBE_OK;
+
+  gst_event_parse_stream_start (info->data, &stream_id);
+  GST_INFO_OBJECT (self, "Got pad %" GST_PTR_FORMAT " with stream ID: %s",
+      pad, stream_id);
+  gst_transcode_bin_link_encodebin_pad (self, pad, stream_id);
+
+  return GST_PAD_PROBE_REMOVE;
+}
+
+static void
+decodebin_pad_added_cb (GstElement * decodebin, GstPad * pad,
+    GstTranscodeBin * self)
+{
+  const gchar *stream_id;
+  GstEvent *sstart_event;
+
+  if (GST_PAD_IS_SINK (pad))
+    return;
+
+  sstart_event = gst_pad_get_sticky_event (pad, GST_EVENT_STREAM_START, -1);
+  if (sstart_event) {
+    gst_event_parse_stream_start (sstart_event, &stream_id);
+    GST_INFO_OBJECT (self, "Got pad %" GST_PTR_FORMAT " with stream ID: %s",
+        pad, stream_id);
+    gst_transcode_bin_link_encodebin_pad (self, pad, stream_id);
+    return;
+  }
+
+  GST_INFO_OBJECT (self, "Waiting for stream ID for pad %" GST_PTR_FORMAT, pad);
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+      (GstPadProbeCallback) wait_stream_start_probe, self, NULL);
 }
 
 static gboolean
@@ -329,13 +413,162 @@ no_profile:
   }
 }
 
+static GstPad *
+get_encodebin_pad_for_caps (GstTranscodeBin * self, GstCaps * srccaps)
+{
+  GstPad *res = NULL;
+  GstIterator *pads;
+  gboolean done = FALSE;
+  GValue paditem = { 0, };
+
+  if (G_UNLIKELY (srccaps == NULL))
+    goto no_caps;
+
+  pads = gst_element_iterate_sink_pads (self->encodebin);
+
+  GST_DEBUG_OBJECT (self, "srccaps %" GST_PTR_FORMAT, srccaps);
+
+  while (!done) {
+    switch (gst_iterator_next (pads, &paditem)) {
+      case GST_ITERATOR_OK:
+      {
+        GstPad *testpad = g_value_get_object (&paditem);
+
+        if (!gst_pad_is_linked (testpad) && !find_stream (self, NULL, testpad)) {
+          GstCaps *sinkcaps = gst_pad_query_caps (testpad, NULL);
+
+          GST_DEBUG_OBJECT (self, "sinkccaps %" GST_PTR_FORMAT, sinkcaps);
+
+          if (gst_caps_can_intersect (srccaps, sinkcaps)) {
+            res = gst_object_ref (testpad);
+            done = TRUE;
+          }
+          gst_caps_unref (sinkcaps);
+        }
+        g_value_reset (&paditem);
+      }
+        break;
+      case GST_ITERATOR_DONE:
+      case GST_ITERATOR_ERROR:
+        done = TRUE;
+        break;
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (pads);
+        break;
+    }
+  }
+  g_value_reset (&paditem);
+  gst_iterator_free (pads);
+
+  if (!res)
+    g_signal_emit_by_name (self->encodebin, "request-pad", srccaps, &res);
+
+  return res;
+
+no_caps:
+  {
+    GST_DEBUG_OBJECT (self, "No caps, can't do anything");
+    return NULL;
+  }
+}
+
+static gboolean
+caps_is_raw (GstCaps * caps, GstStreamType stype)
+{
+  const gchar *media_type;
+
+  if (!caps || !gst_caps_get_size (caps))
+    return FALSE;
+
+  media_type = gst_structure_get_name (gst_caps_get_structure (caps, 0));
+  if (stype == GST_STREAM_TYPE_VIDEO)
+    return !g_strcmp0 (media_type, "video/x-raw");
+  else if (stype == GST_STREAM_TYPE_AUDIO)
+    return !g_strcmp0 (media_type, "audio/x-raw");
+  /* FIXME: Handle more types ? */
+
+  return FALSE;
+}
+
+static GstPad *
+get_encodebin_pad_from_stream (GstTranscodeBin * self,
+    GstEncodingProfile * profile, GstStream * stream)
+{
+  GstCaps *caps = gst_stream_get_caps (stream);
+  GstPad *sinkpad = get_encodebin_pad_for_caps (self, caps);
+
+  if (!sinkpad && !caps_is_raw (caps, gst_stream_get_stream_type (stream))) {
+    gst_clear_caps (&caps);
+    switch (gst_stream_get_stream_type (stream)) {
+      case GST_STREAM_TYPE_AUDIO:
+        caps = gst_caps_from_string ("audio/x-raw");
+        break;
+      case GST_STREAM_TYPE_VIDEO:
+        caps = gst_caps_from_string ("video/x-raw");
+        break;
+      default:
+        GST_INFO_OBJECT (self, "Unsupported stream type: %" GST_PTR_FORMAT,
+            stream);
+        return NULL;
+    }
+    sinkpad = get_encodebin_pad_for_caps (self, caps);
+  }
+
+  return sinkpad;
+}
+
+static gint
+select_stream_cb (GstElement * decodebin,
+    GstStreamCollection * collection, GstStream * stream,
+    GstTranscodeBin * self)
+{
+  gint i;
+  gboolean transcode_stream = FALSE;
+
+  GST_OBJECT_LOCK (self);
+  if (self->transcoding_streams->len) {
+    GST_OBJECT_UNLOCK (self);
+
+    transcode_stream =
+        find_stream (self, gst_stream_get_stream_id (stream), NULL) != NULL;
+    goto done;
+  }
+  GST_OBJECT_UNLOCK (self);
+
+  for (i = 0; i < gst_stream_collection_get_size (collection); i++) {
+    GstStream *tmpstream = gst_stream_collection_get_stream (collection, i);
+    GstPad *encodebin_pad =
+        get_encodebin_pad_from_stream (self, self->profile, tmpstream);
+
+    if (encodebin_pad) {
+      if (stream == tmpstream)
+        transcode_stream = TRUE;
+
+      GST_INFO_OBJECT (self,
+          "Going to transcode stream %s (encodebin pad: %" GST_PTR_FORMAT,
+          gst_stream_get_stream_id (tmpstream), encodebin_pad);
+
+      GST_OBJECT_LOCK (self);
+      g_ptr_array_add (self->transcoding_streams,
+          transcoding_stream_new (tmpstream, encodebin_pad));
+      GST_OBJECT_UNLOCK (self);
+    }
+  }
+
+done:
+  if (!transcode_stream)
+    GST_INFO_OBJECT (self, "Discarding stream: %" GST_PTR_FORMAT, stream);
+
+  return transcode_stream;
+}
+
 static gboolean
 make_decodebin (GstTranscodeBin * self)
 {
   GstPad *pad;
   GST_INFO_OBJECT (self, "making new decodebin");
 
-  self->decodebin = gst_element_factory_make ("decodebin", NULL);
+  self->decodebin = gst_element_factory_make ("decodebin3", NULL);
 
   if (!self->decodebin)
     goto no_decodebin;
@@ -384,8 +617,10 @@ make_decodebin (GstTranscodeBin * self)
     gst_caps_unref (decodecaps);
   }
 
-  g_signal_connect (self->decodebin, "pad-added", G_CALLBACK (pad_added_cb),
-      self);
+  g_signal_connect (self->decodebin, "pad-added",
+      G_CALLBACK (decodebin_pad_added_cb), self);
+  g_signal_connect (self->decodebin, "select-stream",
+      G_CALLBACK (select_stream_cb), self);
 
   gst_bin_add (GST_BIN (self), self->decodebin);
   pad = gst_element_get_static_pad (self->decodebin, "sink");
@@ -466,6 +701,13 @@ gst_transcode_bin_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      GST_OBJECT_LOCK (self);
+      g_ptr_array_remove_range (self->transcoding_streams, 0,
+          self->transcoding_streams->len);
+      GST_OBJECT_UNLOCK (self);
+
+      g_signal_handlers_disconnect_by_data (self->decodebin, self);
+
       remove_all_children (self);
       break;
     default:
@@ -487,6 +729,7 @@ gst_transcode_bin_dispose (GObject * object)
 
   g_clear_object (&self->video_filter);
   g_clear_object (&self->audio_filter);
+  g_clear_pointer (&self->transcoding_streams, g_ptr_array_unref);
 
   G_OBJECT_CLASS (gst_transcode_bin_parent_class)->dispose (object);
 }
@@ -521,6 +764,28 @@ gst_transcode_bin_get_property (GObject * object,
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
   }
+}
+
+static GstPad *
+gst_transcode_bin_request_pad (GstElement * element, GstPadTemplate * temp,
+    const gchar * name, const GstCaps * caps)
+{
+  GstTranscodeBin *self = (GstTranscodeBin *) element;
+  GstPad *gpad, *decodebin_pad =
+      gst_element_get_request_pad (self->decodebin, "sink_%u");
+
+  if (!decodebin_pad) {
+    GST_ERROR_OBJECT (element,
+        "Could not request decodebin3 pad for %" GST_PTR_FORMAT, caps);
+
+    return NULL;
+  }
+
+  gpad = gst_ghost_pad_new_from_template (name, decodebin_pad, temp);
+  gst_element_add_pad (element, GST_PAD (gpad));
+  gst_object_unref (decodebin_pad);
+
+  return gpad;
 }
 
 static void
@@ -592,9 +857,13 @@ gst_transcode_bin_class_init (GstTranscodeBinClass * klass)
   gstelement_klass = (GstElementClass *) klass;
   gstelement_klass->change_state =
       GST_DEBUG_FUNCPTR (gst_transcode_bin_change_state);
+  gstelement_klass->request_new_pad =
+      GST_DEBUG_FUNCPTR (gst_transcode_bin_request_pad);
 
   gst_element_class_add_pad_template (gstelement_klass,
       gst_static_pad_template_get (&transcode_bin_sink_template));
+  gst_element_class_add_pad_template (gstelement_klass,
+      gst_static_pad_template_get (&transcode_bin_sinks_template));
   gst_element_class_add_pad_template (gstelement_klass,
       gst_static_pad_template_get (&transcode_bin_src_template));
 
@@ -668,6 +937,9 @@ gst_transcode_bin_init (GstTranscodeBin * self)
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
 
   gst_object_unref (pad_tmpl);
+
+  self->transcoding_streams =
+      g_ptr_array_new_with_free_func ((GDestroyNotify) transcoding_stream_free);
 }
 
 static gboolean
