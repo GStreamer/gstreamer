@@ -200,6 +200,18 @@ gst_v4l2_decoder_streamoff (GstV4l2Decoder * self, GstPadDirection direction)
 }
 
 gboolean
+gst_v4l2_decoder_flush (GstV4l2Decoder * self)
+{
+  /* We ignore streamoff failure as it's not relevant, if we manage to
+   * streamon again, we are good. */
+  gst_v4l2_decoder_streamoff (self, GST_PAD_SINK);
+  gst_v4l2_decoder_streamoff (self, GST_PAD_SRC);
+
+  return gst_v4l2_decoder_streamon (self, GST_PAD_SINK) &&
+      gst_v4l2_decoder_streamon (self, GST_PAD_SRC);
+}
+
+gboolean
 gst_v4l2_decoder_enum_sink_fmt (GstV4l2Decoder * self, gint i,
     guint32 * out_fmt)
 {

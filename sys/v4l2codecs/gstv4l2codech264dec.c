@@ -808,6 +808,18 @@ gst_v4l2_codec_h264_dec_decode_slice (GstH264Decoder * decoder,
   return TRUE;
 }
 
+static gboolean
+gst_v4l2_codec_h264_dec_flush (GstVideoDecoder * decoder)
+{
+  GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
+
+  GST_DEBUG_OBJECT (self, "Flushing decoder state.");
+
+  gst_v4l2_decoder_flush (self->decoder);
+
+  return GST_VIDEO_DECODER_CLASS (parent_class)->flush (decoder);
+}
+
 static void
 gst_v4l2_codec_h264_dec_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -896,6 +908,7 @@ gst_v4l2_codec_h264_dec_subclass_init (GstV4l2CodecH264DecClass * klass,
       GST_DEBUG_FUNCPTR (gst_v4l2_codec_h264_dec_negotiate);
   decoder_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_v4l2_codec_h264_dec_decide_allocation);
+  decoder_class->flush = GST_DEBUG_FUNCPTR (gst_v4l2_codec_h264_dec_flush);
 
   h264decoder_class->new_sequence =
       GST_DEBUG_FUNCPTR (gst_v4l2_codec_h264_dec_new_sequence);
