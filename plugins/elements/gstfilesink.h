@@ -81,8 +81,15 @@ struct _GstFileSink {
   gint    buffer_mode;
   guint   buffer_size;
 
-  GstBufferList *buffer;
-  guint   current_buffer_size;
+  /* For default buffer mode */
+  GstBufferList *buffer_list;
+
+  /* For full buffer mode */
+  guint8 *buffer;
+  gsize   allocated_buffer_size;
+
+  /* For default/full buffer mode */
+  gsize current_buffer_size;
 
   gboolean append;
   gboolean o_sync;
