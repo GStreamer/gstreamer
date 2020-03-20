@@ -70,6 +70,7 @@
 #include "gstrtph264pay.h"
 #include "gstrtph265depay.h"
 #include "gstrtph265pay.h"
+#include "gstrtpisacpay.h"
 #include "gstrtpj2kdepay.h"
 #include "gstrtpj2kpay.h"
 #include "gstrtpjpegdepay.h"
@@ -391,6 +392,9 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_rtp_stream_depay_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rtp_isac_pay_plugin_init (plugin))
     return FALSE;
 
   if (!gst_element_register (plugin, "rtpredenc", GST_RANK_NONE,

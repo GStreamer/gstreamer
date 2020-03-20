@@ -102,6 +102,7 @@ rtp_sources = [
   'rtpstorage.c',
   'rtpstoragestream.c',
   'gstrtpstorage.c',
+  'gstrtpisacpay.c',
 ]
 
 rtp_args = [
