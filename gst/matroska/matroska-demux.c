@@ -2816,8 +2816,11 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
       seeksegment.stop = seeksegment.duration;
   }
 
-  gst_segment_do_seek (&seeksegment, rate, format, flags,
-      cur_type, cur, stop_type, stop, &update);
+  if (!gst_segment_do_seek (&seeksegment, rate, format, flags,
+          cur_type, cur, stop_type, stop, &update)) {
+    GST_WARNING_OBJECT (demux, "gst_segment_do_seek() failed.");
+    return FALSE;
+  }
 
   /* Restore the clip timestamp offset */
   if (GST_CLOCK_TIME_IS_VALID (demux->stream_start_time)) {
