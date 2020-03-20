@@ -46,7 +46,18 @@
 #define GST_CAT_DEFAULT GST_CAT_REGISTRY
 
 /* count string length, but return -1 if we hit the eof */
-static gint
+#ifdef HAVE_STRNLEN
+static inline gint
+_strnlen (const gchar * str, gint maxlen)
+{
+  gint len = strnlen (str, maxlen);
+
+  if (G_UNLIKELY (len == maxlen))
+    return -1;
+  return len;
+}
+#else
+static inline gint
 _strnlen (const gchar * str, gint maxlen)
 {
   gint len = 0;
@@ -58,6 +69,7 @@ _strnlen (const gchar * str, gint maxlen)
   }
   return -1;
 }
+#endif
 
 /* Macros */
 #define unpack_element(inptr, outptr, element, endptr, error_label) G_STMT_START{ \

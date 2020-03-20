@@ -230,6 +230,7 @@ check_functions = [
   'pselect',
   'getpagesize',
   'clock_gettime',
+  'strnlen',
   # These are needed by libcheck
   'getline',
   'mkstemp',
