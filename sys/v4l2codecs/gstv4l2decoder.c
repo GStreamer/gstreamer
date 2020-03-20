@@ -688,10 +688,13 @@ gst_v4l2_request_free (GstV4l2Request * request)
   request->decoder = NULL;
 
   if (request->pending) {
+    GST_DEBUG_OBJECT (decoder, "Freeing pending request %p.", request);
     gst_v4l2_request_free (request);
     g_object_unref (decoder);
     return;
   }
+
+  GST_DEBUG_OBJECT (decoder, "Recycling request %p.", request);
 
   ret = ioctl (request->fd, MEDIA_REQUEST_IOC_REINIT, NULL);
   if (ret < 0) {
@@ -710,6 +713,8 @@ gboolean
 gst_v4l2_request_queue (GstV4l2Request * request)
 {
   gint ret;
+
+  GST_DEBUG_OBJECT (request->decoder, "Queuing request %p.", request);
 
   ret = ioctl (request->fd, MEDIA_REQUEST_IOC_QUEUE, NULL);
   if (ret < 0) {

@@ -107,14 +107,9 @@ gst_v4l2_codec_h264_dec_close (GstVideoDecoder * decoder)
   return TRUE;
 }
 
-static gboolean
-gst_v4l2_codec_h264_dec_stop (GstVideoDecoder * decoder)
+static void
+gst_v4l2_codec_h264_dec_reset_allocation (GstV4l2CodecH264Dec * self)
 {
-  GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
-
-  gst_v4l2_decoder_streamoff (self->decoder, GST_PAD_SINK);
-  gst_v4l2_decoder_streamoff (self->decoder, GST_PAD_SRC);
-
   if (self->sink_allocator) {
     gst_v4l2_codec_allocator_detach (self->sink_allocator);
     g_clear_object (&self->sink_allocator);
@@ -125,6 +120,17 @@ gst_v4l2_codec_h264_dec_stop (GstVideoDecoder * decoder)
     g_clear_object (&self->src_allocator);
     g_clear_object (&self->src_pool);
   }
+}
+
+static gboolean
+gst_v4l2_codec_h264_dec_stop (GstVideoDecoder * decoder)
+{
+  GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
+
+  gst_v4l2_decoder_streamoff (self->decoder, GST_PAD_SINK);
+  gst_v4l2_decoder_streamoff (self->decoder, GST_PAD_SRC);
+
+  gst_v4l2_codec_h264_dec_reset_allocation (self);
 
   if (self->output_state)
     gst_video_codec_state_unref (self->output_state);
@@ -156,11 +162,7 @@ gst_v4l2_codec_h264_dec_negotiate (GstVideoDecoder * decoder)
 
   GST_DEBUG_OBJECT (self, "Negotiate");
 
-  if (self->sink_allocator)
-    gst_v4l2_codec_allocator_detach (self->sink_allocator);
-
-  if (self->src_allocator)
-    gst_v4l2_codec_allocator_detach (self->src_allocator);
+  gst_v4l2_codec_h264_dec_reset_allocation (self);
 
   gst_v4l2_decoder_streamoff (self->decoder, GST_PAD_SINK);
   gst_v4l2_decoder_streamoff (self->decoder, GST_PAD_SRC);
@@ -729,9 +731,11 @@ gst_v4l2_codec_h264_dec_end_picture (GstH264Decoder * decoder,
   flow_ret = gst_buffer_pool_acquire_buffer (GST_BUFFER_POOL (self->src_pool),
       &buffer, NULL);
   if (flow_ret != GST_FLOW_OK) {
-    /* FIXME our pool does not wait */
-    GST_ELEMENT_ERROR (decoder, RESOURCE, WRITE,
-        ("No more picture buffer available."), (NULL));
+    if (flow_ret == GST_FLOW_FLUSHING)
+      GST_DEBUG_OBJECT (self, "Frame decoding aborted, we are flushing.");
+    else
+      GST_ELEMENT_ERROR (decoder, RESOURCE, WRITE,
+          ("No more picture buffer available."), (NULL));
     goto fail;
   }
 
@@ -808,6 +812,16 @@ gst_v4l2_codec_h264_dec_decode_slice (GstH264Decoder * decoder,
   return TRUE;
 }
 
+static void
+gst_v4l2_codec_h264_dec_set_flushing (GstV4l2CodecH264Dec * self,
+    gboolean flushing)
+{
+  if (self->sink_allocator)
+    gst_v4l2_codec_allocator_set_flushing (self->sink_allocator, flushing);
+  if (self->src_allocator)
+    gst_v4l2_codec_allocator_set_flushing (self->src_allocator, flushing);
+}
+
 static gboolean
 gst_v4l2_codec_h264_dec_flush (GstVideoDecoder * decoder)
 {
@@ -816,8 +830,38 @@ gst_v4l2_codec_h264_dec_flush (GstVideoDecoder * decoder)
   GST_DEBUG_OBJECT (self, "Flushing decoder state.");
 
   gst_v4l2_decoder_flush (self->decoder);
+  gst_v4l2_codec_h264_dec_set_flushing (self, FALSE);
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->flush (decoder);
+}
+
+static gboolean
+gst_v4l2_codec_h264_dec_sink_event (GstVideoDecoder * decoder, GstEvent * event)
+{
+  GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_START:
+      GST_DEBUG_OBJECT (self, "flush start");
+      gst_v4l2_codec_h264_dec_set_flushing (self, TRUE);
+      break;
+    default:
+      break;
+  }
+
+  return GST_VIDEO_DECODER_CLASS (parent_class)->sink_event (decoder, event);
+}
+
+static GstStateChangeReturn
+gst_v4l2_codec_h264_dec_change_state (GstElement * element,
+    GstStateChange transition)
+{
+  GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (element);
+
+  if (transition == GST_STATE_CHANGE_PAUSED_TO_READY)
+    gst_v4l2_codec_h264_dec_set_flushing (self, TRUE);
+
+  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 }
 
 static void
@@ -900,6 +944,8 @@ gst_v4l2_codec_h264_dec_subclass_init (GstV4l2CodecH264DecClass * klass,
 
   gst_element_class_add_static_pad_template (element_class, &sink_template);
   gst_element_class_add_static_pad_template (element_class, &src_template);
+  element_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_v4l2_codec_h264_dec_change_state);
 
   decoder_class->open = GST_DEBUG_FUNCPTR (gst_v4l2_codec_h264_dec_open);
   decoder_class->close = GST_DEBUG_FUNCPTR (gst_v4l2_codec_h264_dec_close);
@@ -909,6 +955,8 @@ gst_v4l2_codec_h264_dec_subclass_init (GstV4l2CodecH264DecClass * klass,
   decoder_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_v4l2_codec_h264_dec_decide_allocation);
   decoder_class->flush = GST_DEBUG_FUNCPTR (gst_v4l2_codec_h264_dec_flush);
+  decoder_class->sink_event =
+      GST_DEBUG_FUNCPTR (gst_v4l2_codec_h264_dec_sink_event);
 
   h264decoder_class->new_sequence =
       GST_DEBUG_FUNCPTR (gst_v4l2_codec_h264_dec_new_sequence);

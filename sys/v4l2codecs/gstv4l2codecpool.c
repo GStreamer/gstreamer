@@ -60,9 +60,28 @@ gst_v4l2_codec_pool_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
   if (!buf)
     buf = gst_v4l2_codec_pool_create_empty_buffer ();
 
+  /* First, just try and obtain a buffer. */
   if (!gst_v4l2_codec_allocator_prepare_buffer (self->allocator, buf)) {
-    gst_atomic_queue_push (self->queue, buf);
-    return GST_FLOW_ERROR;
+    GstFlowReturn flow_ret = GST_FLOW_OK;
+
+    /* If none were available, try and allocate one. */
+    if (!gst_v4l2_codec_allocator_create_buffer (self->allocator)) {
+      /* Otherwise, wait if this is allowed. */
+      if (params && params->flags & GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT) {
+        flow_ret = GST_FLOW_EOS;
+      } else {
+        if (!gst_v4l2_codec_allocator_wait_for_buffer (self->allocator))
+          flow_ret = GST_FLOW_FLUSHING;
+      }
+    }
+
+    if (flow_ret != GST_FLOW_OK) {
+      gst_atomic_queue_push (self->queue, buf);
+      return flow_ret;
+    }
+
+    /* Finally, pop the buffer we created or waited for. */
+    gst_v4l2_codec_allocator_prepare_buffer (self->allocator, buf);
   }
 
   vmeta = gst_buffer_get_video_meta (buf);
