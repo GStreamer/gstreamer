@@ -201,6 +201,7 @@ check_headers = [
   'unistd.h',
   'valgrind/valgrind.h',
   'sys/resource.h',
+  'sys/uio.h',
 ]
 
 if host_system == 'windows'
