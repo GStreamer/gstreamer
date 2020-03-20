@@ -121,6 +121,7 @@ typedef struct _TSDemuxStream TSDemuxStream;
 
 typedef struct _TSDemuxH264ParsingInfos TSDemuxH264ParsingInfos;
 typedef struct _TSDemuxJP2KParsingInfos TSDemuxJP2KParsingInfos;
+typedef struct _TSDemuxADTSParsingInfos TSDemuxADTSParsingInfos;
 
 /* Returns TRUE if a keyframe was found */
 typedef gboolean (*GstTsDemuxKeyFrameScanFunction) (TSDemuxStream * stream,
@@ -147,6 +148,12 @@ struct _TSDemuxJP2KParsingInfos
   /* J2K parsing data */
   gboolean interlace;
 };
+
+struct _TSDemuxADTSParsingInfos
+{
+  guint mpegversion;
+};
+
 struct _TSDemuxStream
 {
   MpegTSBaseStream stream;
@@ -215,6 +222,7 @@ struct _TSDemuxStream
   GstTsDemuxKeyFrameScanFunction scan_function;
   TSDemuxH264ParsingInfos h264infos;
   TSDemuxJP2KParsingInfos jp2kInfos;
+  TSDemuxADTSParsingInfos atdsInfos;
 };
 
 #define VIDEO_CAPS \
@@ -239,7 +247,7 @@ struct _TSDemuxStream
     "audio/mpeg, " \
       "mpegversion = (int) 1;" \
     "audio/mpeg, " \
-      "mpegversion = (int) 2, " \
+      "mpegversion = (int) { 2, 4 }, " \
       "stream-format = (string) adts; " \
     "audio/mpeg, " \
       "mpegversion = (int) 4, " \
@@ -1530,9 +1538,12 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
       break;
     case GST_MPEGTS_STREAM_TYPE_AUDIO_AAC_ADTS:
       is_audio = TRUE;
+      /* prefer mpegversion 4 since it's more commonly supported one */
       caps = gst_caps_new_simple ("audio/mpeg",
-          "mpegversion", G_TYPE_INT, 2,
+          "mpegversion", G_TYPE_INT, 4,
           "stream-format", G_TYPE_STRING, "adts", NULL);
+      /* we will set caps later once parsing adts header is done */
+      stream->atdsInfos.mpegversion = 4;
       break;
     case GST_MPEGTS_STREAM_TYPE_AUDIO_AAC_LATM:
       is_audio = TRUE;
@@ -2602,6 +2613,7 @@ push_new_segment:
 
     if (demux->segment_event) {
       GST_DEBUG_OBJECT (stream->pad, "Pushing newsegment event");
+
       gst_event_ref (demux->segment_event);
       gst_pad_push_event (stream->pad, demux->segment_event);
     }
@@ -2937,6 +2949,79 @@ error:
   return NULL;
 }
 
+static GstBuffer *
+parse_aac_adts_frame (TSDemuxStream * stream)
+{
+  gint data_location = -1;
+  guint frame_len;
+  guint crc_size;
+  guint mpegversion = 4;
+  gint i;
+
+  if (stream->current_size < 6) {
+    GST_DEBUG_OBJECT (stream->pad, "Not enough data for header");
+    goto out;
+  }
+
+  /* check syncword */
+  for (i = 0; i < stream->current_size - 2; i++) {
+    if ((stream->data[i] == 0xff) && ((stream->data[i + 1] & 0xf6) == 0xf0)) {
+      data_location = i;
+      break;
+    }
+  }
+
+  GST_TRACE_OBJECT (stream->pad, "data location %d", data_location);
+
+  if (data_location == -1) {
+    GST_DEBUG_OBJECT (stream->pad, "Stream does not contain adts syncword");
+    goto out;
+  }
+
+  if (stream->current_size - data_location < 6) {
+    GST_DEBUG_OBJECT (stream->pad, "Not enough data for header");
+    goto out;
+  }
+
+  frame_len = ((stream->data[data_location + 3] & 0x03) << 11) |
+      (stream->data[data_location + 4] << 3) | ((stream->data[data_location +
+              5] & 0xe0) >> 5);
+
+  crc_size = (stream->data[data_location + 1] & 0x01) ? 0 : 2;
+
+  if (frame_len < 7 + crc_size) {
+    GST_DEBUG_OBJECT (stream->pad, "Invalid frame len %d", frame_len);
+    goto out;
+  }
+
+  /* this seems to be valid adts header, check mpeg version now
+   *
+   * TODO: check channels, rate, and profile and then update caps too?
+   */
+  mpegversion = (stream->data[data_location + 1] & 0x08) ? 2 : 4;
+
+out:
+  if (mpegversion != stream->atdsInfos.mpegversion) {
+    GstCaps *caps;
+    MpegTSBaseStream *bstream = (MpegTSBaseStream *) stream;
+
+    GST_DEBUG_OBJECT (stream->pad, "Update mpegversion from %d to %d",
+        stream->atdsInfos.mpegversion, mpegversion);
+    stream->atdsInfos.mpegversion = mpegversion;
+
+    caps = gst_stream_get_caps (bstream->stream_object);
+    caps = gst_caps_make_writable (caps);
+
+    gst_caps_set_simple (caps, "mpegversion", G_TYPE_INT, mpegversion, NULL);
+    gst_stream_set_caps (bstream->stream_object, caps);
+    gst_pad_set_caps (stream->pad, caps);
+    gst_caps_unref (caps);
+  }
+
+  return gst_buffer_new_wrapped (stream->data, stream->current_size);
+}
+
+
 static GstFlowReturn
 gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,
     MpegTSBaseProgram * target_program)
@@ -3037,6 +3122,12 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,
       }
     } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_VIDEO_JP2K) {
       buffer = parse_jp2k_access_unit (stream);
+      if (!buffer) {
+        res = GST_FLOW_ERROR;
+        goto beach;
+      }
+    } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_AUDIO_AAC_ADTS) {
+      buffer = parse_aac_adts_frame (stream);
       if (!buffer) {
         res = GST_FLOW_ERROR;
         goto beach;
