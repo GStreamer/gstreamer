@@ -34,12 +34,25 @@ G_GNUC_INTERNAL
 gchar *   gst_buffer_get_meta_string (GstBuffer * buffer);
 
 G_GNUC_INTERNAL
-GstFlowReturn  gst_writev_buffers (GstObject * sink, gint fd, GstPoll * fdset,
-                                   GstBuffer ** buffers, guint num_buffers,
-                                   guint8 * mem_nums, guint total_mem_num,
-                                   guint64 * bytes_written, guint64 skip,
-                                   gint max_transient_error_timeout, guint64 current_position,
-                                   gboolean * flushing);
+GstFlowReturn  gst_writev_buffer (GstObject * sink, gint fd, GstPoll * fdset,
+                                  GstBuffer * buffer,
+                                  guint64 * bytes_written, guint64 skip,
+                                  gint max_transient_error_timeout, guint64 current_position,
+                                  gboolean * flushing);
+
+G_GNUC_INTERNAL
+GstFlowReturn  gst_writev_buffer_list (GstObject * sink, gint fd, GstPoll * fdset,
+                                       GstBufferList * buffer_list,
+                                       guint64 * bytes_written, guint64 skip,
+                                       gint max_transient_error_timeout, guint64 current_position,
+                                       gboolean * flushing);
+
+G_GNUC_INTERNAL
+GstFlowReturn  gst_write_mem          (GstObject * sink, gint fd, GstPoll * fdset,
+                                       const guint8 *data, guint size,
+                                       guint64 * bytes_written, guint64 skip,
+                                       gint max_transient_error_timeout, guint64 current_position,
+                                       gboolean * flushing);
 
 G_END_DECLS
 

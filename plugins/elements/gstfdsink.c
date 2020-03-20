@@ -243,18 +243,24 @@ gst_fd_sink_query (GstBaseSink * bsink, GstQuery * query)
 }
 
 static GstFlowReturn
-gst_fd_sink_render_buffers (GstFdSink * sink, GstBuffer ** buffers,
-    guint num_buffers, guint8 * mem_nums, guint total_mems)
+gst_fd_sink_render_list (GstBaseSink * bsink, GstBufferList * buffer_list)
 {
+  GstFdSink *sink;
   GstFlowReturn ret;
   guint64 skip = 0;
+  guint num_buffers;
+
+  sink = GST_FD_SINK_CAST (bsink);
+
+  num_buffers = gst_buffer_list_length (buffer_list);
+  if (num_buffers == 0)
+    goto no_data;
 
   for (;;) {
     guint64 bytes_written = 0;
 
-    ret = gst_writev_buffers (GST_OBJECT_CAST (sink), sink->fd, sink->fdset,
-        buffers, num_buffers, mem_nums, total_mems, &bytes_written, skip,
-        0, -1, NULL);
+    ret = gst_writev_buffer_list (GST_OBJECT_CAST (sink), sink->fd, sink->fdset,
+        buffer_list, &bytes_written, skip, 0, -1, NULL);
 
     sink->bytes_written += bytes_written;
     sink->current_pos += bytes_written;
@@ -269,38 +275,6 @@ gst_fd_sink_render_buffers (GstFdSink * sink, GstBuffer ** buffers,
   }
 
   return ret;
-}
-
-static GstFlowReturn
-gst_fd_sink_render_list (GstBaseSink * bsink, GstBufferList * buffer_list)
-{
-  GstFlowReturn flow;
-  GstBuffer **buffers;
-  GstFdSink *sink;
-  guint8 *mem_nums;
-  guint total_mems;
-  guint i, num_buffers;
-
-  sink = GST_FD_SINK_CAST (bsink);
-
-  num_buffers = gst_buffer_list_length (buffer_list);
-  if (num_buffers == 0)
-    goto no_data;
-
-  /* extract buffers from list and count memories */
-  buffers = g_newa (GstBuffer *, num_buffers);
-  mem_nums = g_newa (guint8, num_buffers);
-  for (i = 0, total_mems = 0; i < num_buffers; ++i) {
-    buffers[i] = gst_buffer_list_get (buffer_list, i);
-    mem_nums[i] = gst_buffer_n_memory (buffers[i]);
-    total_mems += mem_nums[i];
-  }
-
-  flow =
-      gst_fd_sink_render_buffers (sink, buffers, num_buffers, mem_nums,
-      total_mems);
-
-  return flow;
 
 no_data:
   {
@@ -312,20 +286,31 @@ no_data:
 static GstFlowReturn
 gst_fd_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
 {
-  GstFlowReturn flow;
   GstFdSink *sink;
-  guint8 n_mem;
+  GstFlowReturn ret;
+  guint64 skip = 0;
 
   sink = GST_FD_SINK_CAST (bsink);
 
-  n_mem = gst_buffer_n_memory (buffer);
+  for (;;) {
+    guint64 bytes_written = 0;
 
-  if (n_mem > 0)
-    flow = gst_fd_sink_render_buffers (sink, &buffer, 1, &n_mem, n_mem);
-  else
-    flow = GST_FLOW_OK;
+    ret = gst_writev_buffer (GST_OBJECT_CAST (sink), sink->fd, sink->fdset,
+        buffer, &bytes_written, skip, 0, -1, NULL);
 
-  return flow;
+    sink->bytes_written += bytes_written;
+    sink->current_pos += bytes_written;
+    skip += bytes_written;
+
+    if (!sink->unlock)
+      break;
+
+    ret = gst_base_sink_wait_preroll (GST_BASE_SINK (sink));
+    if (ret != GST_FLOW_OK)
+      return ret;
+  }
+
+  return ret;
 }
 
 static gboolean

@@ -700,54 +700,27 @@ gst_file_sink_get_current_offset (GstFileSink * filesink, guint64 * p_pos)
 }
 
 static GstFlowReturn
-gst_file_sink_render_buffers (GstFileSink * sink, GstBuffer ** buffers,
-    guint num_buffers, guint8 * mem_nums, guint total_mems, gsize size)
-{
-  GstFlowReturn ret;
-  guint64 bytes_written = 0;
-
-  GST_DEBUG_OBJECT (sink,
-      "writing %u buffers (%u memories, %" G_GSIZE_FORMAT
-      " bytes) at position %" G_GUINT64_FORMAT, num_buffers, total_mems, size,
-      sink->current_pos);
-
-  ret = gst_writev_buffers (GST_OBJECT_CAST (sink), fileno (sink->file), NULL,
-      buffers, num_buffers, mem_nums, total_mems, &bytes_written, 0,
-      sink->max_transient_error_timeout, sink->current_pos, &sink->flushing);
-
-  sink->current_pos += bytes_written;
-
-  return ret;
-}
-
-static GstFlowReturn
 gst_file_sink_render_list_internal (GstFileSink * sink,
     GstBufferList * buffer_list)
 {
   GstFlowReturn flow;
-  GstBuffer **buffers;
-  guint8 *mem_nums;
-  guint total_mems;
-  gsize total_size = 0;
-  guint i, num_buffers;
+  guint64 bytes_written = 0;
+  guint num_buffers;
 
   num_buffers = gst_buffer_list_length (buffer_list);
   if (num_buffers == 0)
     goto no_data;
 
-  /* extract buffers from list and count memories */
-  buffers = g_newa (GstBuffer *, num_buffers);
-  mem_nums = g_newa (guint8, num_buffers);
-  for (i = 0, total_mems = 0; i < num_buffers; ++i) {
-    buffers[i] = gst_buffer_list_get (buffer_list, i);
-    mem_nums[i] = gst_buffer_n_memory (buffers[i]);
-    total_mems += mem_nums[i];
-    total_size += gst_buffer_get_size (buffers[i]);
-  }
+  GST_DEBUG_OBJECT (sink,
+      "writing %u buffers at position %" G_GUINT64_FORMAT, num_buffers,
+      sink->current_pos);
 
   flow =
-      gst_file_sink_render_buffers (sink, buffers, num_buffers, mem_nums,
-      total_mems, total_size);
+      gst_writev_buffer_list (GST_OBJECT_CAST (sink), fileno (sink->file), NULL,
+      buffer_list, &bytes_written, 0, sink->max_transient_error_timeout,
+      sink->current_pos, &sink->flushing);
+
+  sink->current_pos += bytes_written;
 
   return flow;
 
@@ -885,10 +858,22 @@ gst_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 
   if (n_mem > 0 && (sync_after || !filesink->buffer)) {
     flow = gst_file_sink_flush_buffer (filesink);
-    if (flow == GST_FLOW_OK)
+    if (flow == GST_FLOW_OK) {
+      guint64 bytes_written = 0;
+
+      GST_DEBUG_OBJECT (sink,
+          "writing buffer ( %" G_GSIZE_FORMAT
+          " bytes) at position %" G_GUINT64_FORMAT,
+          gst_buffer_get_size (buffer), filesink->current_pos);
+
       flow =
-          gst_file_sink_render_buffers (filesink, &buffer, 1, &n_mem, n_mem,
-          gst_buffer_get_size (buffer));
+          gst_writev_buffer (GST_OBJECT_CAST (filesink),
+          fileno (filesink->file), NULL, buffer, &bytes_written, 0,
+          filesink->max_transient_error_timeout, filesink->current_pos,
+          &filesink->flushing);
+
+      filesink->current_pos += bytes_written;
+    }
   } else if (n_mem > 0) {
     GST_DEBUG_OBJECT (filesink,
         "Queueing buffer of %" G_GSIZE_FORMAT " bytes at offset %"
