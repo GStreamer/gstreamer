@@ -40,7 +40,16 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkvp9enc_debug);
 #define GST_CAT_DEFAULT gst_msdkvp9enc_debug
 
-#define COMMON_FORMAT "{ NV12, I420, YV12, YUY2, UYVY, BGRA, P010_10LE, VUYA }"
+#define RAW_FORMATS "NV12, I420, YV12, YUY2, UYVY, BGRA, P010_10LE, VUYA"
+#define PROFILES    "0, 1, 2"
+
+#if (MFX_VERSION >= 1027)
+#define COMMON_FORMAT "{ " RAW_FORMATS ", Y410 }"
+#define SRC_PROFILES  "{ " PROFILES ", 3 }"
+#else
+#define COMMON_FORMAT "{ " RAW_FORMATS " }"
+#define SRC_PROFILES  "{ " PROFILES " }"
+#endif
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -54,7 +63,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("video/x-vp9, "
         "framerate = (fraction) [0/1, MAX], "
         "width = (int) [ 1, MAX ], height = (int) [ 1, MAX ], "
-        "profile = (string) { 0, 1, 2 } ")
+        "profile = (string) " SRC_PROFILES)
     );
 
 #define gst_msdkvp9enc_parent_class parent_class
@@ -91,7 +100,9 @@ gst_msdkvp9enc_set_format (GstMsdkEnc * encoder)
     profile = gst_structure_get_string (s, "profile");
 
     if (profile) {
-      if (!strcmp (profile, "2")) {
+      if (!strcmp (profile, "3")) {
+        thiz->profile = MFX_PROFILE_VP9_3;
+      } else if (!strcmp (profile, "2")) {
         thiz->profile = MFX_PROFILE_VP9_2;
       } else if (!strcmp (profile, "1")) {
         thiz->profile = MFX_PROFILE_VP9_1;
@@ -128,6 +139,12 @@ gst_msdkvp9enc_configure (GstMsdkEnc * encoder)
   encoder->param.mfx.CodecLevel = 0;
 
   switch (encoder->param.mfx.FrameInfo.FourCC) {
+#if (MFX_VERSION >= 1027)
+    case MFX_FOURCC_Y410:
+      encoder->param.mfx.CodecProfile = MFX_PROFILE_VP9_3;
+      break;
+#endif
+
     case MFX_FOURCC_P010:
       encoder->param.mfx.CodecProfile = MFX_PROFILE_VP9_2;
       break;
@@ -170,6 +187,8 @@ static inline const gchar *
 profile_to_string (gint profile)
 {
   switch (profile) {
+    case MFX_PROFILE_VP9_3:
+      return "3";
     case MFX_PROFILE_VP9_2:
       return "2";
     case MFX_PROFILE_VP9_1:
