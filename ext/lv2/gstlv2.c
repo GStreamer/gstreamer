@@ -69,6 +69,39 @@ GST_DEBUG_CATEGORY (lv2_debug);
 #error "Unsupported OS"
 #endif
 
+LilvWorld *world = NULL;
+LilvNode *atom_class = NULL;
+LilvNode *audio_class = NULL;
+LilvNode *control_class = NULL;
+LilvNode *cv_class = NULL;
+LilvNode *event_class = NULL;
+LilvNode *input_class = NULL;
+LilvNode *output_class = NULL;
+LilvNode *preset_class = NULL;
+LilvNode *state_iface = NULL;
+LilvNode *state_uri = NULL;
+
+LilvNode *integer_prop = NULL;
+LilvNode *toggled_prop = NULL;
+LilvNode *designation_pred = NULL;
+LilvNode *in_place_broken_pred = NULL;
+LilvNode *optional_pred = NULL;
+LilvNode *group_pred = NULL;
+LilvNode *supports_event_pred = NULL;
+LilvNode *label_pred = NULL;
+
+LilvNode *center_role = NULL;
+LilvNode *left_role = NULL;
+LilvNode *right_role = NULL;
+LilvNode *rear_center_role = NULL;
+LilvNode *rear_left_role = NULL;
+LilvNode *rear_right_role = NULL;
+LilvNode *lfe_role = NULL;
+LilvNode *center_left_role = NULL;
+LilvNode *center_right_role = NULL;
+LilvNode *side_left_role = NULL;
+LilvNode *side_right_role = NULL;
+
 GstStructure *lv2_meta_all = NULL;
 
 static void

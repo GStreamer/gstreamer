@@ -28,40 +28,40 @@
 
 #include "gstlv2utils.h"
 
-LilvWorld *world;
-LilvNode *atom_class;
-LilvNode *audio_class;
-LilvNode *control_class;
-LilvNode *cv_class;
-LilvNode *event_class;
-LilvNode *input_class;
-LilvNode *output_class;
-LilvNode *preset_class;
-LilvNode *state_iface;
-LilvNode *state_uri;
+extern LilvWorld *world;
+extern LilvNode *atom_class;
+extern LilvNode *audio_class;
+extern LilvNode *control_class;
+extern LilvNode *cv_class;
+extern LilvNode *event_class;
+extern LilvNode *input_class;
+extern LilvNode *output_class;
+extern LilvNode *preset_class;
+extern LilvNode *state_iface;
+extern LilvNode *state_uri;
 
-LilvNode *integer_prop;
-LilvNode *toggled_prop;
-LilvNode *designation_pred;
-LilvNode *in_place_broken_pred;
-LilvNode *optional_pred;
-LilvNode *group_pred;
-LilvNode *supports_event_pred;
-LilvNode *label_pred;
+extern LilvNode *integer_prop;
+extern LilvNode *toggled_prop;
+extern LilvNode *designation_pred;
+extern LilvNode *in_place_broken_pred;
+extern LilvNode *optional_pred;
+extern LilvNode *group_pred;
+extern LilvNode *supports_event_pred;
+extern LilvNode *label_pred;
 
-LilvNode *center_role;
-LilvNode *left_role;
-LilvNode *right_role;
-LilvNode *rear_center_role;
-LilvNode *rear_left_role;
-LilvNode *rear_right_role;
-LilvNode *lfe_role;
-LilvNode *center_left_role;
-LilvNode *center_right_role;
-LilvNode *side_left_role;
-LilvNode *side_right_role;
+extern LilvNode *center_role;
+extern LilvNode *left_role;
+extern LilvNode *right_role;
+extern LilvNode *rear_center_role;
+extern LilvNode *rear_left_role;
+extern LilvNode *rear_right_role;
+extern LilvNode *lfe_role;
+extern LilvNode *center_left_role;
+extern LilvNode *center_right_role;
+extern LilvNode *side_left_role;
+extern LilvNode *side_right_role;
 
-GstStructure *lv2_meta_all;
+extern GstStructure *lv2_meta_all;
 
 void gst_lv2_filter_register_element (GstPlugin *plugin,
                                       GstStructure * lv2_meta);
