@@ -323,6 +323,7 @@ static void string_to_profile_transform (const GValue * src_value,
     GValue * dest_value);
 static gboolean gst_encoding_profile_deserialize_valfunc (GValue * value,
     const gchar * s);
+static gchar *gst_encoding_profile_serialize_valfunc (GValue * value);
 
 static void gst_encoding_profile_class_init (GstEncodingProfileClass * klass);
 static gpointer gst_encoding_profile_parent_class = NULL;
@@ -350,7 +351,7 @@ gst_encoding_profile_get_type (void)
     static GstValueTable gstvtable = {
       G_TYPE_NONE,
       (GstValueCompareFunc) NULL,
-      (GstValueSerializeFunc) NULL,
+      (GstValueSerializeFunc) gst_encoding_profile_serialize_valfunc,
       (GstValueDeserializeFunc) gst_encoding_profile_deserialize_valfunc
     };
 
@@ -1893,6 +1894,50 @@ string_to_profile_transform (const GValue * src_value, GValue * dest_value)
 
   if (profile)
     g_value_take_object (dest_value, (GObject *) profile);
+}
+
+static void
+serialize_profile (GString * res, GstEncodingProfile * profile)
+{
+  gchar *tmp;
+
+  if (res->len)
+    g_string_append_c (res, ':');
+
+  if (profile->restriction) {
+    tmp = gst_caps_to_string (profile->restriction);
+    g_string_append_printf (res, "%s->", tmp);
+    g_free (tmp);
+  }
+
+  tmp = gst_caps_to_string (profile->format);
+  g_string_append (res, tmp);
+
+  if (profile->presence)
+    g_string_append_printf (res, "|presence=%d", profile->presence);
+
+  if (profile->single_segment)
+    g_string_append_printf (res, "%ssingle-segment=true",
+        profile->presence ? "" : "|");
+
+  if (GST_IS_ENCODING_CONTAINER_PROFILE (profile)) {
+    GList *tmp;
+
+    for (tmp = GST_ENCODING_CONTAINER_PROFILE (profile)->encodingprofiles; tmp;
+        tmp = tmp->next)
+      serialize_profile (res, tmp->data);
+  }
+}
+
+static gchar *
+gst_encoding_profile_serialize_valfunc (GValue * value)
+{
+  GString *res = g_string_new (NULL);
+  GstEncodingProfile *profile = g_value_get_object (value);
+
+  serialize_profile (res, profile);
+
+  return g_string_free (res, FALSE);
 }
 
 static gboolean
