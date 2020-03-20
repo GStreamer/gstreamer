@@ -3386,7 +3386,7 @@ get_format_range_extension_profile (GstH265ProfileTierLevel * ptl)
 
     if (extra_constraints == 0 &&
         (p.profile_idc == ptl->profile_idc
-            || ptl->profile_compatibility_flag[ptl->profile_idc])) {
+            || ptl->profile_compatibility_flag[p.profile_idc])) {
       result = p.profile;
       break;
     }
