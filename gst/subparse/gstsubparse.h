@@ -99,6 +99,7 @@ struct _GstSubParse {
   gboolean valid_utf8;
   gchar   *detected_encoding;
   gchar   *encoding;
+  gboolean strip_pango_markup;
 
   gboolean first_buffer;
 

@@ -179,6 +179,7 @@ gst_sub_parse_init (GstSubParse * subparse)
 
   subparse->textbuf = g_string_new (NULL);
   subparse->parser_type = GST_SUB_PARSE_FORMAT_UNKNOWN;
+  subparse->strip_pango_markup = FALSE;
   subparse->flushing = FALSE;
   gst_segment_init (&subparse->segment, GST_FORMAT_TIME);
   subparse->need_segment = TRUE;
@@ -1724,11 +1725,97 @@ feed_textbuf (GstSubParse * self, GstBuffer * buf)
   g_free (input);
 }
 
+
+static void
+xml_text (GMarkupParseContext * context,
+    const gchar * text, gsize text_len, gpointer user_data, GError ** error)
+{
+  gchar **accum = (gchar **) user_data;
+  gchar *concat;
+
+  if (*accum) {
+    concat = g_strconcat (*accum, text, NULL);
+    g_free (*accum);
+    *accum = concat;
+  } else {
+    *accum = g_strdup (text);
+  }
+}
+
+static gchar *
+strip_pango_markup (gchar * markup, GError ** error)
+{
+  GMarkupParser parser = { 0, };
+  GMarkupParseContext *context;
+  gchar *accum = NULL;
+
+  parser.text = xml_text;
+  context = g_markup_parse_context_new (&parser, 0, &accum, NULL);
+
+  g_markup_parse_context_parse (context, "<root>", 6, NULL);
+  g_markup_parse_context_parse (context, markup, strlen (markup), error);
+  g_markup_parse_context_parse (context, "</root>", 7, NULL);
+  if (*error)
+    goto error;
+
+  g_markup_parse_context_end_parse (context, error);
+  if (*error)
+    goto error;
+
+done:
+  g_markup_parse_context_free (context);
+  return accum;
+
+error:
+  g_free (accum);
+  accum = NULL;
+  goto done;
+}
+
+static gboolean
+gst_sub_parse_negotiate (GstSubParse * self, GstCaps * preferred)
+{
+  GstCaps *caps;
+  gboolean ret = FALSE;
+  const GstStructure *s1, *s2;
+
+  caps = gst_pad_get_allowed_caps (self->srcpad);
+
+  s1 = gst_caps_get_structure (preferred, 0);
+
+  if (!g_strcmp0 (gst_structure_get_string (s1, "format"), "utf8")) {
+    GstCaps *intersected = gst_caps_intersect (caps, preferred);
+    gst_caps_unref (caps);
+    caps = intersected;
+  }
+
+  caps = gst_caps_fixate (caps);
+
+  if (gst_caps_is_empty (caps)) {
+    goto done;
+  }
+
+  s2 = gst_caps_get_structure (caps, 0);
+
+  self->strip_pango_markup =
+      !g_strcmp0 (gst_structure_get_string (s2, "format"), "utf8")
+      && !g_strcmp0 (gst_structure_get_string (s1, "format"), "pango-markup");
+
+  if (self->strip_pango_markup) {
+    GST_INFO_OBJECT (self, "We will convert from pango-markup to utf8");
+  }
+
+  ret = gst_pad_set_caps (self->srcpad, caps);
+
+done:
+  gst_caps_unref (caps);
+  return ret;
+}
+
 static GstFlowReturn
 handle_buffer (GstSubParse * self, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  GstCaps *caps = NULL;
   gchar *line, *subtitle;
   gboolean need_tags = FALSE;
 
@@ -1747,14 +1834,19 @@ handle_buffer (GstSubParse * self, GstBuffer * buf)
 
   /* make sure we know the format */
   if (G_UNLIKELY (self->parser_type == GST_SUB_PARSE_FORMAT_UNKNOWN)) {
-    if (!(caps = gst_sub_parse_format_autodetect (self))) {
-      return GST_FLOW_EOS;
+    GstCaps *preferred;
+
+    if (!(preferred = gst_sub_parse_format_autodetect (self))) {
+      return GST_FLOW_NOT_NEGOTIATED;
     }
-    if (!gst_pad_set_caps (self->srcpad, caps)) {
-      gst_caps_unref (caps);
-      return GST_FLOW_EOS;
+
+    if (!gst_sub_parse_negotiate (self, preferred)) {
+      gst_caps_unref (preferred);
+      return GST_FLOW_NOT_NEGOTIATED;
     }
-    gst_caps_unref (caps);
+
+    gst_caps_unref (preferred);
+
     need_tags = TRUE;
   }
 
@@ -1790,7 +1882,22 @@ handle_buffer (GstSubParse * self, GstBuffer * buf)
     g_free (line);
 
     if (subtitle) {
-      guint subtitle_len = strlen (subtitle);
+      guint subtitle_len;
+
+      if (self->strip_pango_markup) {
+        GError *error = NULL;
+        gchar *stripped;
+
+        if ((stripped = strip_pango_markup (subtitle, &error))) {
+          g_free (subtitle);
+          subtitle = stripped;
+        } else {
+          GST_WARNING_OBJECT (self, "Failed to strip pango markup: %s",
+              error->message);
+        }
+      }
+
+      subtitle_len = strlen (subtitle);
 
       /* +1 for terminating NUL character */
       buf = gst_buffer_new_and_alloc (subtitle_len + 1);
@@ -1947,6 +2054,7 @@ gst_sub_parse_change_state (GstElement * element, GstStateChange transition)
       /* format detection will init the parser state */
       self->offset = 0;
       self->parser_type = GST_SUB_PARSE_FORMAT_UNKNOWN;
+      self->strip_pango_markup = FALSE;
       self->valid_utf8 = TRUE;
       self->first_buffer = TRUE;
       g_free (self->detected_encoding);
