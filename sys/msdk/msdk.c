@@ -148,6 +148,24 @@ msdk_status_to_string (mfxStatus status)
   return "undefined error";
 }
 
+mfxU16
+msdk_get_platform_codename (mfxSession session)
+{
+  mfxU16 codename = MFX_PLATFORM_UNKNOWN;
+
+#if (MFX_VERSION >= 1019)
+  {
+    mfxStatus status;
+    mfxPlatform platform = { 0 };
+    status = MFXVideoCORE_QueryPlatform (session, &platform);
+    if (MFX_ERR_NONE == status)
+      codename = platform.CodeName;
+  }
+#endif
+
+  return codename;
+}
+
 void
 msdk_close_session (mfxSession session)
 {
@@ -169,6 +187,7 @@ msdk_open_session (mfxIMPL impl)
   };
   mfxIMPL implementation;
   mfxStatus status;
+  mfxU16 codename;
 
   static const gchar *implementation_names[] = {
     "AUTO", "SOFTWARE", "HARDWARE", "AUTO_ANY", "HARDWARE_ANY", "HARDWARE2",
@@ -194,17 +213,13 @@ msdk_open_session (mfxIMPL impl)
     GST_ERROR ("Query version failed (%s)", msdk_status_to_string (status));
     goto failed;
   }
-#if (MFX_VERSION >= 1019)
-  {
-    mfxPlatform platform = { 0 };
-    status = MFXVideoCORE_QueryPlatform (session, &platform);
-    if (MFX_ERR_NONE == status) {
-      GST_INFO ("Detected MFX platform with device code %d", platform.CodeName);
-    } else {
-      GST_WARNING ("Platform auto-detection failed with MFX status %d", status);
-    }
-  }
-#endif
+
+  codename = msdk_get_platform_codename (session);
+
+  if (codename != MFX_PLATFORM_UNKNOWN)
+    GST_INFO ("Detected MFX platform with device code %d", codename);
+  else
+    GST_WARNING ("Unknown MFX platform");
 
   GST_INFO ("MFX implementation: 0x%04x (%s)", implementation,
       implementation_names[MFX_IMPL_BASETYPE (implementation)]);

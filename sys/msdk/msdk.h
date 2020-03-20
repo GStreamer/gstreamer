@@ -104,6 +104,9 @@ gboolean
 gst_msdk_load_plugin (mfxSession session, const mfxPluginUID * uid,
     mfxU32 version, const gchar * plugin);
 
+mfxU16
+msdk_get_platform_codename (mfxSession session);
+
 G_END_DECLS
 
 #endif /* __MSDK_H__ */
