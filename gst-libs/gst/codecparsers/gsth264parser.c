@@ -1018,8 +1018,10 @@ gst_h264_parser_parse_registered_user_data (GstH264NalParser * nalparser,
   rud->data = NULL;
   rud->size = 0;
 
-  if (payload_size < 2)
-    return GST_H264_PARSER_ERROR;
+  if (payload_size < 2) {
+    GST_WARNING ("Too small payload size %d", payload_size);
+    return GST_H264_PARSER_BROKEN_DATA;
+  }
 
   READ_UINT8 (nr, rud->country_code, 8);
   --payload_size;
@@ -1031,15 +1033,17 @@ gst_h264_parser_parse_registered_user_data (GstH264NalParser * nalparser,
     rud->country_code_extension = 0;
   }
 
-  if (payload_size < 8)
-    return GST_H264_PARSER_ERROR;
+  if (payload_size < 1) {
+    GST_WARNING ("No more remaining payload data to store");
+    return GST_H264_PARSER_BROKEN_DATA;
+  }
 
   data = g_malloc (payload_size);
-  for (i = 0; i < payload_size / 8; ++i) {
+  for (i = 0; i < payload_size; ++i) {
     READ_UINT8 (nr, data[i], 8);
   }
 
-  GST_MEMDUMP ("SEI user data", data, payload_size / 8);
+  GST_MEMDUMP ("SEI user data", data, payload_size);
 
   rud->data = data;
   rud->size = payload_size;
@@ -1204,7 +1208,7 @@ gst_h264_parser_parse_sei_message (GstH264NalParser * nalparser,
       break;
     case GST_H264_SEI_REGISTERED_USER_DATA:
       res = gst_h264_parser_parse_registered_user_data (nalparser,
-          &sei->payload.registered_user_data, nr, payload_size);
+          &sei->payload.registered_user_data, nr, payload_size >> 3);
       break;
     case GST_H264_SEI_RECOVERY_POINT:
       res = gst_h264_parser_parse_recovery_point (nalparser,

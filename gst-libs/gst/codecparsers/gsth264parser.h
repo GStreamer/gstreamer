@@ -997,6 +997,18 @@ struct _GstH264PicTiming
   GstH264ClockTimestamp clock_timestamp[3];
 };
 
+/**
+ * GstH264RegisteredUserData:
+ * The User data registered by Rec. ITU-T T.35 SEI messag.
+ * @country_code: an itu_t_t35_country_code.
+ * @country_code_extension: an itu_t_t35_country_code_extension_byte.
+ *   Should be ignored when @country_code is not 0xff
+ * @data: the data of itu_t_t35_payload_byte
+ *   excluding @country_code and @country_code_extension
+ * @size: the size of @data in bytes
+ *
+ * Since: 1.16
+ */
 struct _GstH264RegisteredUserData
 {
   guint8 country_code;
