@@ -6358,10 +6358,24 @@ gst_value_register (const GstValueTable * table)
 void
 gst_value_init_and_copy (GValue * dest, const GValue * src)
 {
+  GType type;
+
   g_return_if_fail (G_IS_VALUE (src));
   g_return_if_fail (dest != NULL);
 
-  g_value_init (dest, G_VALUE_TYPE (src));
+  type = G_VALUE_TYPE (src);
+  /* We need to shortcut GstValueList/GstValueArray copying because:
+   * * g_value_init would end up allocating something
+   * * which g_value_copy would then free and re-alloc.
+   *
+   * Instead directly call the copy */
+  if (type == GST_TYPE_LIST || type == GST_TYPE_ARRAY) {
+    dest->g_type = type;
+    gst_value_copy_list_or_array (src, dest);
+    return;
+  }
+
+  g_value_init (dest, type);
   g_value_copy (src, dest);
 }
 
