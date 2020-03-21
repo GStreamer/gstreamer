@@ -41,6 +41,7 @@ import random
 import shutil
 import uuid
 from itertools import cycle
+from fractions import Fraction
 
 from .utils import which
 from . import reporters
@@ -1257,14 +1258,29 @@ class GstValidateEncodingTestInterface(object):
         if audio_restriction is None:
             audio_restriction = self.combination.audio_restriction
         if self.media_descriptor is not None:
-            if self.media_descriptor.get_num_tracks("video") == 0:
+            if self.combination.video == "theora":
+                # Theoraenc doesn't support variable framerate, make sure to avoid them
+                framerate = self.media_descriptor.get_framerate()
+                if framerate == Fraction(0, 1):
+                    framerate = Fraction(30, 1)
+                    restriction = utils.GstCaps.new_from_str(video_restriction or "video/x-raw")
+                    for struct, _ in restriction:
+                        if struct.get("framerate") is None:
+                            struct.set("framerate", struct.FRACTION_TYPE, framerate)
+                    video_restriction = str(restriction)
+
+            video_presence = self.media_descriptor.get_num_tracks("video")
+            if video_presence == 0:
                 vcaps = None
 
-            if self.media_descriptor.get_num_tracks("audio") == 0:
+            audio_presence = self.media_descriptor.get_num_tracks("audio")
+            if audio_presence == 0:
                 acaps = None
 
         return self._get_profile_full(self.combination.get_muxer_caps(),
                                       vcaps, acaps,
+                                      audio_presence=audio_presence,
+                                      video_presence=video_presence,
                                       video_restriction=video_restriction,
                                       audio_restriction=audio_restriction,
                                       variable_framerate=variable_framerate)
@@ -2481,6 +2497,22 @@ class MediaDescriptor(Loggable):
     def has_frames(self):
         return False
 
+    def get_framerate(self):
+        for ttype, caps_str in self.get_tracks_caps():
+            if ttype != "video":
+                continue
+
+            caps = utils.GstCaps.new_from_str(caps_str)
+            if not caps:
+                self.warning("Could not create caps for %s" % caps_str)
+                continue
+
+            framerate = caps[0].get("framerate")
+            if framerate:
+                return framerate
+
+        return Fraction(0, 1)
+
     def get_media_filepath(self):
         raise NotImplemented
 
@@ -2510,6 +2542,9 @@ class MediaDescriptor(Loggable):
 
     def get_num_tracks(self, track_type):
         raise NotImplemented
+
+    def get_tracks_caps(self):
+        return []
 
     def can_play_reverse(self):
         raise NotImplemented
@@ -2624,6 +2659,7 @@ class GstValidateMediaDescriptor(MediaDescriptor):
             for stream in streams:
                 self._track_caps.append(
                     (stream.attrib["type"], stream.attrib["caps"]))
+
         self._skip_parsers = bool(int(media_xml.attrib.get('skip-parsers', 0)))
         self._has_frames = bool(int(media_xml.attrib["frame-detection"]))
         self._duration = int(media_xml.attrib["duration"])

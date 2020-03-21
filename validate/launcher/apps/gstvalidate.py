@@ -150,6 +150,9 @@ class FakeMediaDescriptor(MediaDescriptor):
     def get_path(self):
         return self._infos.get('path', None)
 
+    def get_tracks_caps(self):
+        return self._info.get('tracks-caps', [])
+
     def get_media_filepath(self):
         return self._infos.get('media-filepath', None)
 

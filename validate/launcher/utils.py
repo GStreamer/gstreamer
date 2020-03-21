@@ -1007,6 +1007,7 @@ class GstStructure(Loggable):
             raise InvalidValueError(
                 name, check, "to match the regular expression {}"
                 "".format(regex.pattern))
+        return check
 
     NAME_REGEX = re.compile(NAME_FORMAT)
     KEY_REGEX = re.compile(KEY_FORMAT)
@@ -1014,15 +1015,15 @@ class GstStructure(Loggable):
 
     @classmethod
     def _check_name(cls, name):
-        cls._check_against_regex(name, cls.NAME_REGEX, "name")
+        return cls._check_against_regex(name, cls.NAME_REGEX, "name")
 
     @classmethod
     def _check_key(cls, key):
-        cls._check_against_regex(key, cls.KEY_REGEX, "key")
+        return cls._check_against_regex(key, cls.KEY_REGEX, "key")
 
     @classmethod
     def _check_type(cls, _type):
-        cls._check_against_regex(_type, cls.TYPE_REGEX, "type")
+        return cls._check_against_regex(_type, cls.TYPE_REGEX, "type")
 
     @classmethod
     def _check_unknown_typed_value(cls, value):
