@@ -2749,6 +2749,15 @@ gst_h265_sei_copy (GstH265SEIMessage * dst_sei,
             src_pic_timing->du_cpb_removal_delay_increment_minus1[i];
       }
     }
+  } else if (dst_sei->payloadType == GST_H265_SEI_REGISTERED_USER_DATA) {
+    GstH265RegisteredUserData *dst_rud = &dst_sei->payload.registered_user_data;
+    const GstH265RegisteredUserData *src_rud =
+        &src_sei->payload.registered_user_data;
+
+    if (src_rud->size) {
+      dst_rud->data = g_malloc (src_rud->size);
+      memcpy ((guint8 *) dst_rud->data, src_rud->data, src_rud->size);
+    }
   }
 
   return TRUE;
@@ -2773,6 +2782,10 @@ gst_h265_sei_free (GstH265SEIMessage * sei)
     }
     pic_timing->num_nalus_in_du_minus1 = 0;
     pic_timing->du_cpb_removal_delay_increment_minus1 = 0;
+  } else if (sei->payloadType == GST_H265_SEI_REGISTERED_USER_DATA) {
+    GstH265RegisteredUserData *rud = &sei->payload.registered_user_data;
+    g_free ((guint8 *) rud->data);
+    rud->data = NULL;
   }
 }
 
