@@ -51,20 +51,20 @@
  *
  * ## Data processing
  *
- *     * The base class gathers input data, and optionally allows subclass
- *       to parse this into subsequently manageable chunks, typically
- *       corresponding to and referred to as 'frames'.
+ *   * The base class gathers input data, and optionally allows subclass
+ *     to parse this into subsequently manageable chunks, typically
+ *     corresponding to and referred to as 'frames'.
  *
- *     * Each input frame is provided in turn to the subclass' @handle_frame
- *       callback.
- *       The ownership of the frame is given to the @handle_frame callback.
+ *   * Each input frame is provided in turn to the subclass' @handle_frame
+ *     callback.
+ *     The ownership of the frame is given to the @handle_frame callback.
  *
- *     * If codec processing results in decoded data, the subclass should call
- *       @gst_video_decoder_finish_frame to have decoded data pushed.
- *       downstream. Otherwise, the subclass must call
- *       @gst_video_decoder_drop_frame, to allow the base class to do timestamp
- *       and offset tracking, and possibly to requeue the frame for a later
- *       attempt in the case of reverse playback.
+ *   * If codec processing results in decoded data, the subclass should call
+ *     @gst_video_decoder_finish_frame to have decoded data pushed.
+ *     downstream. Otherwise, the subclass must call
+ *     @gst_video_decoder_drop_frame, to allow the base class to do timestamp
+ *     and offset tracking, and possibly to requeue the frame for a later
+ *     attempt in the case of reverse playback.
  *
  * ## Shutdown phase
  *
