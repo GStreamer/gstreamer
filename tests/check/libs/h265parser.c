@@ -18,6 +18,7 @@
  */
 #include <gst/check/gstcheck.h>
 #include <gst/codecparsers/gsth265parser.h>
+#include <string.h>
 
 unsigned char slice_eos_slice_eob[] = {
   0x00, 0x00, 0x00, 0x01, 0x26, 0x01, 0xaf, 0x06, 0xb8, 0x63, 0xef, 0x3a,
@@ -101,6 +102,15 @@ static guint8 h265_sei_pic_timing[] = {
   0xff, 0xfe, 0x80
 };
 
+/* hdr10plus dynamic metadata */
+static guint8 h265_sei_user_data_registered[] = {
+  0x00, 0x00, 0x00, 0x01, 0x4e, 0x01, 0x04, 0x40, 0xb5, 0x00, 0x3c, 0x00, 0x01,
+  0x04, 0x01, 0x40, 0x00, 0x0c, 0x80, 0x8b, 0x4c, 0x41, 0xff, 0x1b, 0xd6,
+  0x01, 0x03, 0x64, 0x08, 0x00, 0x0c, 0x28, 0xdb, 0x20, 0x50, 0x00, 0xac,
+  0xc8, 0x00, 0xe1, 0x90, 0x03, 0x6e, 0x58, 0x10, 0x32, 0xd0, 0x2a, 0x6a,
+  0xf8, 0x48, 0xf3, 0x18, 0xe1, 0xb4, 0x00, 0x40, 0x44, 0x10, 0x25, 0x09,
+  0xa6, 0xae, 0x5c, 0x83, 0x50, 0xdd, 0xf9, 0x8e, 0xc7, 0xbd, 0x00, 0x80
+};
 
 GST_START_TEST (test_h265_parse_slice_eos_slice_eob)
 {
@@ -592,6 +602,60 @@ GST_START_TEST (test_h265_nal_type_classification)
 
 GST_END_TEST;
 
+GST_START_TEST (test_h265_sei_registered_user_data)
+{
+  GstH265ParserResult res;
+  GstH265NalUnit nalu;
+  GArray *messages = NULL;
+  GstH265SEIMessage *sei;
+  GstH265SEIMessage other_sei;
+  GstH265RegisteredUserData *user_data;
+  GstH265RegisteredUserData *other_user_data;
+  GstH265Parser *parser = gst_h265_parser_new ();
+  guint payload_size;
+
+  res = gst_h265_parser_identify_nalu_unchecked (parser,
+      h265_sei_user_data_registered, 0,
+      G_N_ELEMENTS (h265_sei_user_data_registered), &nalu);
+  assert_equals_int (res, GST_H265_PARSER_OK);
+  assert_equals_int (nalu.type, GST_H265_NAL_PREFIX_SEI);
+
+  res = gst_h265_parser_parse_sei (parser, &nalu, &messages);
+  assert_equals_int (res, GST_H265_PARSER_OK);
+  fail_unless (messages != NULL);
+  assert_equals_int (messages->len, 1);
+
+  sei = &g_array_index (messages, GstH265SEIMessage, 0);
+  assert_equals_int (sei->payloadType, GST_H265_SEI_REGISTERED_USER_DATA);
+
+  user_data = &sei->payload.registered_user_data;
+  /* start code prefix 4 bytes
+   * nalu header 2 bytes
+   * payload type 1 byte
+   * payload size 1 byte
+   * country code 1 byte (0xb5)
+   */
+  payload_size = h265_sei_user_data_registered[4 + 2 + 1];
+
+  /* excluding country_code byte */
+  assert_equals_int (payload_size - 1, user_data->size);
+  fail_if (memcmp (user_data->data,
+          &h265_sei_user_data_registered[4 + 2 + 1 + 1 + 1], user_data->size));
+
+  memset (&other_sei, 0, sizeof (GstH265SEIMessage));
+  fail_unless (gst_h265_sei_copy (&other_sei, sei));
+  assert_equals_int (other_sei.payloadType, GST_H265_SEI_REGISTERED_USER_DATA);
+
+  other_user_data = &other_sei.payload.registered_user_data;
+  fail_if (memcmp (user_data->data, other_user_data->data, user_data->size));
+
+  g_array_unref (messages);
+  gst_h265_sei_free (&other_sei);
+  gst_h265_parser_free (parser);
+}
+
+GST_END_TEST;
+
 static Suite *
 h265parser_suite (void)
 {
@@ -610,6 +674,7 @@ h265parser_suite (void)
   tcase_add_test (tc_chain, test_h265_parse_vps);
   tcase_add_test (tc_chain, test_h265_parse_pps);
   tcase_add_test (tc_chain, test_h265_nal_type_classification);
+  tcase_add_test (tc_chain, test_h265_sei_registered_user_data);
 
   return s;
 }
