@@ -271,7 +271,6 @@ gst_msdk_buffer_pool_acquire_buffer (GstBufferPool * pool,
   GstBuffer *buf = NULL;
   GstFlowReturn ret;
   mfxFrameSurface1 *surface;
-  gint fd;
 
   ret =
       GST_BUFFER_POOL_CLASS (parent_class)->acquire_buffer (pool, &buf, params);
@@ -302,6 +301,7 @@ gst_msdk_buffer_pool_acquire_buffer (GstBufferPool * pool,
    * between surface and memory.
    */
   if (priv->memory_type == GST_MSDK_MEMORY_TYPE_DMABUF) {
+    gint fd;
     surface = gst_msdk_get_surface_from_buffer (buf);
     gst_msdk_get_dmabuf_info_from_surface (surface, &fd, NULL);
 
