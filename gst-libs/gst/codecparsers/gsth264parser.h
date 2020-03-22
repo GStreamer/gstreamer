@@ -1201,6 +1201,9 @@ GST_CODEC_PARSERS_API
 void                gst_h264_pps_clear                (GstH264PPS *pps);
 
 GST_CODEC_PARSERS_API
+void                gst_h264_sei_clear                (GstH264SEIMessage *sei);
+
+GST_CODEC_PARSERS_API
 void    gst_h264_quant_matrix_8x8_get_zigzag_from_raster (guint8 out_quant[64],
                                                           const guint8 quant[64]);
 

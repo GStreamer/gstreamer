@@ -2405,12 +2405,20 @@ gst_h264_sps_clear (GstH264SPS * sps)
   }
 }
 
-static void
-h264_sei_message_clear (GstH264SEIMessage * sei_msg)
+/**
+ * gst_h264_sei_clear:
+ * sei: The #GstH264SEIMessage to clear
+ *
+ * Frees allocated data in @sei if any.
+ *
+ * Since: 1.18
+ */
+void
+gst_h264_sei_clear (GstH264SEIMessage * sei)
 {
-  switch (sei_msg->payloadType) {
+  switch (sei->payloadType) {
     case GST_H264_SEI_REGISTERED_USER_DATA:{
-      GstH264RegisteredUserData *rud = &sei_msg->payload.registered_user_data;
+      GstH264RegisteredUserData *rud = &sei->payload.registered_user_data;
 
       g_free ((guint8 *) rud->data);
       rud->data = NULL;
@@ -2444,7 +2452,7 @@ gst_h264_parser_parse_sei (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
   nal_reader_init (&nr, nalu->data + nalu->offset + nalu->header_bytes,
       nalu->size - nalu->header_bytes);
   *messages = g_array_new (FALSE, FALSE, sizeof (GstH264SEIMessage));
-  g_array_set_clear_func (*messages, (GDestroyNotify) h264_sei_message_clear);
+  g_array_set_clear_func (*messages, (GDestroyNotify) gst_h264_sei_clear);
 
   do {
     res = gst_h264_parser_parse_sei_message (nalparser, &nr, &sei);
