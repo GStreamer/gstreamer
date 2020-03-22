@@ -116,9 +116,9 @@ endif
 if msdk_deps_found
   gstmsdktag = library('gstmsdk',
     msdk_sources,
-    c_args : gst_plugins_bad_args,
+    c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
     include_directories : [configinc, mfx_inc],
-    dependencies : [gstbase_dep, gstvideo_dep, gstpbutils_dep, gstallocators_dep, mfx_dep, msdk_deps],
+    dependencies : [gstbase_dep, gstvideo_dep, gstpbutils_dep, gstallocators_dep, gstcodecparsers_dep, mfx_dep, msdk_deps],
     install : true,
     install_dir : plugins_install_dir,
   )

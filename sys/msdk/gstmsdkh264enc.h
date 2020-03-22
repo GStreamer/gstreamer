@@ -33,6 +33,7 @@
 #define __GST_MSDKH264ENC_H__
 
 #include "gstmsdkenc.h"
+#include <gst/codecparsers/gsth264parser.h>
 
 G_BEGIN_DECLS
 
@@ -68,6 +69,9 @@ struct _GstMsdkH264Enc
   guint trellis;
   guint max_slice_size;
   guint b_pyramid;
+
+  GstH264NalParser *parser;
+  GArray *extra_sei;
 };
 
 struct _GstMsdkH264EncClass
