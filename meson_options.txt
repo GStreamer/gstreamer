@@ -151,6 +151,7 @@ option('tinyalsa', type : 'feature', value : 'auto', description : 'TinyALSA plu
 option('transcode', type : 'feature', value : 'auto', description : 'Transcode plugin')
 option('ttml', type : 'feature', value : 'auto', description : 'TTML subtitle parser and renderer plugin')
 option('uvch264', type : 'feature', value : 'auto', description : 'UVC compliant H.264 camera source plugin')
+option('va', type : 'feature', value : 'auto', description: 'VA-API new plugin')
 option('voaacenc', type : 'feature', value : 'auto', description : 'AAC audio encoder plugin')
 option('voamrwbenc', type : 'feature', value : 'auto', description : 'AMR-WB audio encoder plugin')
 option('vulkan', type : 'feature', value : 'auto', description : 'Vulkan video sink plugin')

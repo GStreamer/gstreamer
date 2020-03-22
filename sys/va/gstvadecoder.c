@@ -1,0 +1,656 @@
+/* GStreamer
+ * Copyright (C) 2020 Igalia, S.L.
+ *     Author: Víctor Jáquez <vjaquez@igalia.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
+ */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include "gstvadecoder.h"
+
+#include "gstvacaps.h"
+#include "gstvadisplay_wrapped.h"
+
+struct _GstVaDecoder
+{
+  GstObject parent;
+
+  GArray *available_profiles;
+  GstCaps *srcpad_caps;
+  GstCaps *sinkpad_caps;
+  GstVaDisplay *display;
+  VAConfigID config;
+  VAContextID context;
+  VAProfile profile;
+  guint rt_format;
+  gint coded_width;
+  gint coded_height;
+};
+
+GST_DEBUG_CATEGORY_STATIC (gst_va_decoder_debug);
+#define GST_CAT_DEFAULT gst_va_decoder_debug
+
+#define gst_va_decoder_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstVaDecoder, gst_va_decoder, GST_TYPE_OBJECT,
+    GST_DEBUG_CATEGORY_INIT (gst_va_decoder_debug, "vadecoder", 0,
+        "VA Decoder"));
+
+enum
+{
+  PROP_DISPLAY = 1,
+  PROP_PROFILE,
+  PROP_WIDTH,
+  PROP_HEIGHT,
+  PROP_CHROMA,
+  N_PROPERTIES
+};
+
+static GParamSpec *g_properties[N_PROPERTIES];
+
+static void
+gst_va_decoder_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstVaDecoder *self = GST_VA_DECODER (object);
+
+  switch (prop_id) {
+    case PROP_DISPLAY:{
+      g_assert (!self->display);
+      self->display = g_value_dup_object (value);
+      break;
+    }
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_va_decoder_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GstVaDecoder *self = GST_VA_DECODER (object);
+
+  switch (prop_id) {
+    case PROP_DISPLAY:
+      g_value_set_object (value, self->display);
+      break;
+    case PROP_PROFILE:
+      g_value_set_int (value, self->profile);
+      break;
+    case PROP_CHROMA:
+      g_value_set_uint (value, self->rt_format);
+      break;
+    case PROP_WIDTH:
+      g_value_set_int (value, self->coded_width);
+      break;
+    case PROP_HEIGHT:
+      g_value_set_int (value, self->coded_height);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_va_decoder_dispose (GObject * object)
+{
+  GstVaDecoder *self = GST_VA_DECODER (object);
+
+  gst_va_decoder_close (self);
+
+  g_clear_pointer (&self->available_profiles, g_array_unref);
+  gst_clear_object (&self->display);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_va_decoder_class_init (GstVaDecoderClass * klass)
+{
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+
+  gobject_class->set_property = gst_va_decoder_set_property;
+  gobject_class->get_property = gst_va_decoder_get_property;
+  gobject_class->dispose = gst_va_decoder_dispose;
+
+  g_properties[PROP_DISPLAY] =
+      g_param_spec_object ("display", "GstVaDisplay", "GstVADisplay object",
+      GST_TYPE_VA_DISPLAY,
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+
+  g_properties[PROP_PROFILE] =
+      g_param_spec_int ("va-profile", "VAProfile", "VA Profile",
+      VAProfileNone, 50, VAProfileNone,
+      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+
+  g_properties[PROP_CHROMA] =
+      g_param_spec_uint ("va-rt-format", "VARTFormat", "VA RT Fromat or chroma",
+      VA_RT_FORMAT_YUV420, VA_RT_FORMAT_PROTECTED, VA_RT_FORMAT_YUV420,
+      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+
+  g_properties[PROP_WIDTH] =
+      g_param_spec_int ("coded-width", "coded-picture-width",
+      "coded picture width", 0, G_MAXINT, 0,
+      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+
+  g_properties[PROP_HEIGHT] =
+      g_param_spec_int ("coded-height", "coded-picture-height",
+      "coded picture height", 0, G_MAXINT, 0,
+      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, g_properties);
+}
+
+static void
+gst_va_decoder_init (GstVaDecoder * self)
+{
+  self->profile = VAProfileNone;
+  self->config = VA_INVALID_ID;
+  self->context = VA_INVALID_ID;
+  self->rt_format = VA_RT_FORMAT_YUV420;
+  self->coded_width = 0;
+  self->coded_height = 0;
+}
+
+static gboolean
+gst_va_decoder_initialize (GstVaDecoder * self, guint32 codec)
+{
+  if (self->available_profiles)
+    return FALSE;
+
+  self->available_profiles = gst_va_display_get_profiles (self->display, codec,
+      VAEntrypointVLD);
+
+  return (self->available_profiles != NULL);
+}
+
+GstVaDecoder *
+gst_va_decoder_new (GstVaDisplay * display, guint32 codec)
+{
+  GstVaDecoder *self;
+
+  g_return_val_if_fail (GST_IS_VA_DISPLAY (display), NULL);
+
+  self = g_object_new (GST_TYPE_VA_DECODER, "display", display, NULL);
+  if (!gst_va_decoder_initialize (self, codec))
+    gst_clear_object (&self);
+
+  return self;
+}
+
+gboolean
+gst_va_decoder_is_open (GstVaDecoder * self)
+{
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_VA_DECODER (self), FALSE);
+
+  GST_OBJECT_LOCK (self);
+  ret = (self->config != VA_INVALID_ID && self->profile != VAProfileNone);
+  GST_OBJECT_UNLOCK (self);
+  return ret;
+}
+
+gboolean
+gst_va_decoder_open (GstVaDecoder * self, VAProfile profile, guint rt_format)
+{
+  VAConfigAttrib attrib = {
+    .type = VAConfigAttribRTFormat,
+    .value = rt_format,
+  };
+  VADisplay dpy;
+  VAStatus status;
+
+  g_return_val_if_fail (GST_IS_VA_DECODER (self), FALSE);
+
+  if (self->config != VA_INVALID_ID)
+    return TRUE;
+
+  if (!gst_va_decoder_has_profile (self, profile)) {
+    GST_ERROR_OBJECT (self, "Unsupported profile: %d", profile);
+    return FALSE;
+  }
+
+  dpy = gst_va_display_get_va_dpy (self->display);
+  gst_va_display_lock (self->display);
+  status = vaCreateConfig (dpy, profile, VAEntrypointVLD, &attrib, 1,
+      &self->config);
+  gst_va_display_unlock (self->display);
+  if (status != VA_STATUS_SUCCESS) {
+    GST_ERROR_OBJECT (self, "vaCreateConfig: %s", vaErrorStr (status));
+    return FALSE;
+  }
+
+  GST_OBJECT_LOCK (self);
+  self->profile = profile;
+  self->rt_format = rt_format;
+  GST_OBJECT_UNLOCK (self);
+
+  /* now we should return now only this profile's caps */
+  gst_caps_replace (&self->srcpad_caps, NULL);
+
+  return TRUE;
+}
+
+gboolean
+gst_va_decoder_close (GstVaDecoder * self)
+{
+  VADisplay dpy;
+  VAStatus status;
+
+  g_return_val_if_fail (GST_IS_VA_DECODER (self), FALSE);
+
+  if (!gst_va_decoder_is_open (self))
+    return TRUE;
+
+  dpy = gst_va_display_get_va_dpy (self->display);
+
+  if (self->context != VA_INVALID_ID) {
+    gst_va_display_lock (self->display);
+    status = vaDestroyContext (dpy, self->context);
+    gst_va_display_unlock (self->display);
+    if (status != VA_STATUS_SUCCESS)
+      GST_ERROR_OBJECT (self, "vaDestroyContext: %s", vaErrorStr (status));
+  }
+
+  gst_va_display_lock (self->display);
+  status = vaDestroyConfig (dpy, self->config);
+  gst_va_display_unlock (self->display);
+  if (status != VA_STATUS_SUCCESS) {
+    GST_ERROR_OBJECT (self, "vaDestroyConfig: %s", vaErrorStr (status));
+    return FALSE;
+  }
+
+  GST_OBJECT_LOCK (self);
+  gst_va_decoder_init (self);
+  GST_OBJECT_UNLOCK (self);
+
+  gst_caps_replace (&self->srcpad_caps, NULL);
+  gst_caps_replace (&self->sinkpad_caps, NULL);
+
+  return TRUE;
+}
+
+gboolean
+gst_va_decoder_set_format (GstVaDecoder * self, gint coded_width,
+    gint coded_height, GArray * surfaces)
+{
+  VADisplay dpy;
+  VAStatus status;
+  VASurfaceID *render_targets = NULL;
+  gint num_render_targets = 0;
+
+  g_return_val_if_fail (GST_IS_VA_DECODER (self), FALSE);
+
+  if (self->context != VA_INVALID_ID) {
+    GST_WARNING_OBJECT (self, "decoder already has a format");
+    return TRUE;
+  }
+
+  if (!gst_va_decoder_is_open (self)) {
+    GST_ERROR_OBJECT (self, "decoder has not been opened yet");
+    return FALSE;
+  }
+
+  if (surfaces) {
+    num_render_targets = surfaces->len;
+    render_targets = (VASurfaceID *) surfaces->data;
+  }
+
+  dpy = gst_va_display_get_va_dpy (self->display);
+
+  gst_va_display_lock (self->display);
+  status = vaCreateContext (dpy, self->config, coded_width, coded_height,
+      VA_PROGRESSIVE, render_targets, num_render_targets, &self->context);
+  gst_va_display_unlock (self->display);
+
+  if (status != VA_STATUS_SUCCESS) {
+    GST_ERROR_OBJECT (self, "vaDestroyConfig: %s", vaErrorStr (status));
+    return FALSE;
+  }
+
+  GST_OBJECT_LOCK (self);
+  self->coded_width = coded_width;
+  self->coded_height = coded_height;
+  GST_OBJECT_UNLOCK (self);
+
+  return TRUE;
+}
+
+static gboolean
+_get_codec_caps (GstVaDecoder * self)
+{
+  GstCaps *sinkpad_caps = NULL, *srcpad_caps = NULL;
+
+  if (!gst_va_decoder_is_open (self)
+      && GST_IS_VA_DISPLAY_WRAPPED (self->display)) {
+    if (gst_va_caps_from_profiles (self->display, self->available_profiles,
+            VAEntrypointVLD, &sinkpad_caps, &srcpad_caps)) {
+      gst_caps_replace (&self->sinkpad_caps, sinkpad_caps);
+      gst_caps_replace (&self->srcpad_caps, srcpad_caps);
+      gst_caps_unref (srcpad_caps);
+      gst_caps_unref (sinkpad_caps);
+
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+GstCaps *
+gst_va_decoder_get_srcpad_caps (GstVaDecoder * self)
+{
+  GstCaps *srcpad_caps = NULL;
+
+  g_return_val_if_fail (GST_IS_VA_DECODER (self), FALSE);
+
+  if (self->srcpad_caps)
+    return gst_caps_ref (self->srcpad_caps);
+
+  if (_get_codec_caps (self))
+    return gst_caps_ref (self->srcpad_caps);
+
+  if (gst_va_decoder_is_open (self)) {
+    srcpad_caps = gst_va_create_raw_caps_from_config (self->display,
+        self->config);
+    gst_caps_replace (&self->srcpad_caps, srcpad_caps);
+    gst_caps_unref (srcpad_caps);
+
+    return gst_caps_ref (self->srcpad_caps);
+  }
+
+  return NULL;
+}
+
+GstCaps *
+gst_va_decoder_get_sinkpad_caps (GstVaDecoder * self)
+{
+  g_return_val_if_fail (GST_IS_VA_DECODER (self), FALSE);
+
+  if (self->sinkpad_caps)
+    return gst_caps_ref (self->sinkpad_caps);
+
+  if (_get_codec_caps (self))
+    return gst_caps_ref (self->sinkpad_caps);
+
+  return NULL;
+}
+
+gboolean
+gst_va_decoder_has_profile (GstVaDecoder * self, VAProfile profile)
+{
+  gint i;
+
+  g_return_val_if_fail (GST_IS_VA_DECODER (self), FALSE);
+
+  if (profile == VAProfileNone)
+    return FALSE;
+
+  for (i = 0; i < self->available_profiles->len; i++) {
+    if (g_array_index (self->available_profiles, VAProfile, i) == profile)
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
+gint
+gst_va_decoder_get_mem_types (GstVaDecoder * self)
+{
+  VASurfaceAttrib *attribs;
+  guint i, attrib_count;
+  gint ret = 0;
+
+  g_return_val_if_fail (GST_IS_VA_DECODER (self), 0);
+
+  if (!gst_va_decoder_is_open (self))
+    return 0;
+
+  attribs = gst_va_get_surface_attribs (self->display, self->config,
+      &attrib_count);
+  if (!attribs)
+    return 0;
+
+  for (i = 0; i < attrib_count; i++) {
+    if (attribs[i].value.type != VAGenericValueTypeInteger)
+      continue;
+    switch (attribs[i].type) {
+      case VASurfaceAttribMemoryType:
+        ret = attribs[i].value.value.i;
+        break;
+      default:
+        break;
+    }
+  }
+
+  g_free (attribs);
+
+  return ret;
+}
+
+gboolean
+gst_va_decoder_add_param_buffer (GstVaDecoder * self, GstVaDecodePicture * pic,
+    gint type, gpointer data, gsize size)
+{
+  VABufferID buffer;
+  VADisplay dpy;
+  VAStatus status;
+
+  g_return_val_if_fail (GST_IS_VA_DECODER (self), FALSE);
+  g_return_val_if_fail (self->context != VA_INVALID_ID, FALSE);
+  g_return_val_if_fail (pic && data && size > 0, FALSE);
+  g_return_val_if_fail (pic->buffers->len + 1 <= 16, FALSE);
+
+  dpy = gst_va_display_get_va_dpy (self->display);
+  gst_va_display_lock (self->display);
+  status = vaCreateBuffer (dpy, self->context, type, size, 1, data, &buffer);
+  gst_va_display_unlock (self->display);
+  if (status != VA_STATUS_SUCCESS) {
+    GST_ERROR_OBJECT (self, "vaCreateBuffer: %s", vaErrorStr (status));
+    return FALSE;
+  }
+
+  g_array_append_val (pic->buffers, buffer);
+  return TRUE;
+}
+
+gboolean
+gst_va_decoder_add_slice_buffer (GstVaDecoder * self, GstVaDecodePicture * pic,
+    gpointer params_data, gsize params_size, gpointer slice_data,
+    gsize slice_size)
+{
+  VABufferID params_buffer, slice_buffer;
+  VADisplay dpy;
+  VAStatus status;
+
+  g_return_val_if_fail (GST_IS_VA_DECODER (self), FALSE);
+  g_return_val_if_fail (self->context != VA_INVALID_ID, FALSE);
+  g_return_val_if_fail (pic && slice_data && slice_size > 0
+      && params_data && params_size > 0, FALSE);
+
+  dpy = gst_va_display_get_va_dpy (self->display);
+  gst_va_display_lock (self->display);
+  status = vaCreateBuffer (dpy, self->context, VASliceParameterBufferType,
+      params_size, 1, params_data, &params_buffer);
+  gst_va_display_unlock (self->display);
+  if (status != VA_STATUS_SUCCESS) {
+    GST_ERROR_OBJECT (self, "vaCreateBuffer: %s", vaErrorStr (status));
+    return FALSE;
+  }
+
+  gst_va_display_lock (self->display);
+  status = vaCreateBuffer (dpy, self->context, VASliceDataBufferType,
+      slice_size, 1, slice_data, &slice_buffer);
+  gst_va_display_unlock (self->display);
+  if (status != VA_STATUS_SUCCESS) {
+    GST_ERROR_OBJECT (self, "vaCreateBuffer: %s", vaErrorStr (status));
+    return FALSE;
+  }
+
+  g_array_append_val (pic->slices, params_buffer);
+  g_array_append_val (pic->slices, slice_buffer);
+
+  return TRUE;
+}
+
+gboolean
+gst_va_decoder_decode (GstVaDecoder * self, GstVaDecodePicture * pic)
+{
+  VADisplay dpy;
+  VAStatus status;
+  gboolean ret = FALSE;
+
+  g_return_val_if_fail (GST_IS_VA_DECODER (self), FALSE);
+  g_return_val_if_fail (self->context != VA_INVALID_ID, FALSE);
+  g_return_val_if_fail (pic && pic->surface != VA_INVALID_ID, FALSE);
+
+  GST_TRACE_OBJECT (self, "Decode to surface %#x", pic->surface);
+
+  dpy = gst_va_display_get_va_dpy (self->display);
+
+  gst_va_display_lock (self->display);
+  status = vaBeginPicture (dpy, self->context, pic->surface);
+  gst_va_display_unlock (self->display);
+  if (status != VA_STATUS_SUCCESS) {
+    GST_ERROR_OBJECT (self, "vaBeginPicture: %s", vaErrorStr (status));
+    goto fail_end_pic;
+  }
+
+  gst_va_display_lock (self->display);
+  status = vaRenderPicture (dpy, self->context,
+      (VABufferID *) pic->buffers->data, pic->buffers->len);
+  gst_va_display_unlock (self->display);
+  if (status != VA_STATUS_SUCCESS) {
+    GST_ERROR_OBJECT (self, "vaRenderPicture: %s", vaErrorStr (status));
+    goto fail_end_pic;
+  }
+
+  gst_va_display_lock (self->display);
+  status = vaRenderPicture (dpy, self->context,
+      (VABufferID *) pic->slices->data, pic->slices->len);
+  gst_va_display_unlock (self->display);
+  if (status != VA_STATUS_SUCCESS) {
+    GST_ERROR_OBJECT (self, "vaRenderPicture: %s", vaErrorStr (status));
+    goto fail_end_pic;
+  }
+
+  gst_va_display_lock (self->display);
+  status = vaEndPicture (dpy, self->context);
+  gst_va_display_unlock (self->display);
+  if (status != VA_STATUS_SUCCESS) {
+    GST_ERROR_OBJECT (self, "vaEndPicture: %s", vaErrorStr (status));
+    goto bail;
+  }
+
+  ret = TRUE;
+
+bail:
+  gst_va_decoder_destroy_buffers (self, pic);
+
+  return ret;
+
+fail_end_pic:
+  {
+    gst_va_display_lock (self->display);
+    status = vaEndPicture (dpy, self->context);
+    gst_va_display_unlock (self->display);
+    if (status != VA_STATUS_SUCCESS)
+      GST_ERROR_OBJECT (self, "vaEndPicture: %s", vaErrorStr (status));
+    goto bail;
+  }
+}
+
+gboolean
+gst_va_decoder_destroy_buffers (GstVaDecoder * self, GstVaDecodePicture * pic)
+{
+  VABufferID buffer;
+  VADisplay dpy;
+  VAStatus status;
+  guint i;
+  gboolean ret = TRUE;
+
+  g_return_val_if_fail (GST_IS_VA_DECODER (self), FALSE);
+  g_return_val_if_fail (pic && pic->surface != VA_INVALID_ID, FALSE);
+
+  GST_TRACE_OBJECT (self, "Destroy buffers of surface %#x", pic->surface);
+
+  dpy = gst_va_display_get_va_dpy (self->display);
+
+  for (i = 0; i < pic->buffers->len; i++) {
+    buffer = g_array_index (pic->buffers, VABufferID, i);
+    gst_va_display_lock (self->display);
+    status = vaDestroyBuffer (dpy, buffer);
+    gst_va_display_unlock (self->display);
+    if (status != VA_STATUS_SUCCESS) {
+      ret = FALSE;
+      GST_WARNING ("Failed to destroy parameter buffer: %s",
+          vaErrorStr (status));
+    }
+  }
+
+  for (i = 0; i < pic->slices->len; i++) {
+    buffer = g_array_index (pic->slices, VABufferID, i);
+    gst_va_display_lock (self->display);
+    status = vaDestroyBuffer (dpy, buffer);
+    gst_va_display_unlock (self->display);
+    if (status != VA_STATUS_SUCCESS) {
+      ret = FALSE;
+      GST_WARNING ("Failed to destroy slice buffer: %s", vaErrorStr (status));
+    }
+  }
+
+  pic->buffers = g_array_set_size (pic->buffers, 0);
+  pic->slices = g_array_set_size (pic->slices, 0);
+
+  return ret;
+}
+
+
+GstVaDecodePicture *
+gst_va_decoder_new_decode_picture (GstVaDecoder * self, VASurfaceID surface)
+{
+  GstVaDecodePicture *pic;
+
+  g_return_val_if_fail (GST_IS_VA_DECODER (self), NULL);
+  g_return_val_if_fail (surface != VA_INVALID_ID, NULL);
+
+  pic = g_slice_new (GstVaDecodePicture);
+  pic->surface = surface;
+  pic->buffers = g_array_sized_new (FALSE, FALSE, sizeof (VABufferID), 16);
+  pic->slices = g_array_sized_new (FALSE, FALSE, sizeof (VABufferID), 64);
+
+  return pic;
+}
+
+void
+gst_va_decode_picture_free (GstVaDecodePicture * pic)
+{
+  g_return_if_fail (pic);
+
+  if (pic->buffers->len > 0 || pic->slices->len > 0)
+    GST_WARNING ("VABufferID are leaked");
+
+  g_clear_pointer (&pic->buffers, g_array_unref);
+  g_clear_pointer (&pic->slices, g_array_unref);
+
+  g_slice_free (GstVaDecodePicture, pic);
+}
