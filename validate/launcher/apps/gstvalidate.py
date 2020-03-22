@@ -112,6 +112,7 @@ class GstValidateMediaCheckTestsGenerator(GstValidateTestsGenerator):
 
 
 class GstValidateTranscodingTestsGenerator(GstValidateTestsGenerator):
+    HARD_TIMEOUT_FACTOR = 10
 
     def __init__(self, test_manager):
         GstValidateTestsGenerator.__init__(self, "transcode", test_manager)
