@@ -520,6 +520,9 @@ gst_date_time_new_local_time (gint year, gint month, gint day, gint hour,
   datetime = gst_date_time_new_from_g_date_time (g_date_time_new_local (year,
           month, day, hour, minute, seconds));
 
+  if (datetime == NULL)
+    return NULL;
+
   datetime->fields = fields;
   return datetime;
 }
@@ -643,6 +646,9 @@ gst_date_time_new (gfloat tzoffset, gint year, gint month, gint day, gint hour,
 
   dt = g_date_time_new (tz, year, month, day, hour, minute, seconds);
   g_time_zone_unref (tz);
+
+  if (!dt)
+    return NULL;                /* date failed validation */
 
   datetime = gst_date_time_new_from_g_date_time (dt);
   datetime->fields = fields;

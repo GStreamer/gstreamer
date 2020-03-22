@@ -176,6 +176,128 @@ GST_START_TEST (test_GstDateTime_get_hour)
 
 GST_END_TEST;
 
+GST_START_TEST (test_GstDateTime_new_local_time)
+{
+  GstDateTime *dt;
+
+  /* Valid date */
+  dt = gst_date_time_new_local_time (2020, 2, 28, 12, 0, 0);
+  fail_unless (dt != NULL);
+  gst_date_time_unref (dt);
+
+  /* Date out of bounds - regression test for segfault #524 */
+  dt = gst_date_time_new_local_time (2020, 2, 31, 12, 0, 0);
+  fail_unless (dt == NULL);
+
+  // TODO more tests for correctness of the function (regarding local timezone)
+
+  /* Invalid values */
+
+  /* Year */
+  ASSERT_CRITICAL (dt = gst_date_time_new_local_time (0, 2, 28, 12, 0, 0));     // -1 has special meaning!
+  fail_unless (dt == NULL);
+
+  ASSERT_CRITICAL (dt = gst_date_time_new_local_time (10000, 2, 28, 12, 0, 0));
+  fail_unless (dt == NULL);
+
+  dt = gst_date_time_new_local_time (1, 2, 28, 12, 0, 0);
+  fail_unless (dt != NULL);
+  gst_date_time_unref (dt);
+
+  dt = gst_date_time_new_local_time (9999, 2, 28, 12, 0, 0);
+  fail_unless (dt != NULL);
+  gst_date_time_unref (dt);
+
+  /* Month */
+  ASSERT_CRITICAL (dt = gst_date_time_new_local_time (2020, 0, 28, 12, 0, 0));
+  fail_unless (dt == NULL);
+
+  ASSERT_CRITICAL (dt = gst_date_time_new_local_time (2020, 13, 28, 12, 0, 0));
+  fail_unless (dt == NULL);
+
+  dt = gst_date_time_new_local_time (2020, 1, 28, 12, 0, 0);
+  fail_unless (dt != NULL);
+  gst_date_time_unref (dt);
+
+  dt = gst_date_time_new_local_time (2020, 12, 28, 12, 0, 0);
+  fail_unless (dt != NULL);
+  gst_date_time_unref (dt);
+
+  dt = gst_date_time_new_local_time (2038, 6, 15, 12, 0, 0);
+  fail_unless (dt != NULL);
+  gst_date_time_unref (dt);
+
+  /* Day */
+  ASSERT_CRITICAL (dt = gst_date_time_new_local_time (2020, 2, 0, 12, 0, 0));
+  fail_unless (dt == NULL);
+
+  ASSERT_CRITICAL (dt = gst_date_time_new_local_time (2020, 2, 32, 12, 0, 0));
+  fail_unless (dt == NULL);
+
+  dt = gst_date_time_new_local_time (2020, 2, 1, 12, 0, 0);
+  fail_unless (dt != NULL);
+  gst_date_time_unref (dt);
+
+  dt = gst_date_time_new_local_time (2020, 2, 29, 12, 0, 0);    // leap year
+  fail_unless (dt != NULL);
+  gst_date_time_unref (dt);
+
+  dt = gst_date_time_new_local_time (2020, 1, 31, 12, 0, 0);
+  fail_unless (dt != NULL);
+  gst_date_time_unref (dt);
+
+  /* Hour */
+  ASSERT_CRITICAL (dt = gst_date_time_new_local_time (2020, 2, 28, -10, 0, 0)); // -1 has special meaning!
+  fail_unless (dt == NULL);
+
+  ASSERT_CRITICAL (dt = gst_date_time_new_local_time (2020, 2, 28, 24, 0, 0));
+  fail_unless (dt == NULL);
+
+  dt = gst_date_time_new_local_time (2020, 2, 28, 0, 0, 0);
+  fail_unless (dt != NULL);
+  gst_date_time_unref (dt);
+
+  dt = gst_date_time_new_local_time (2020, 2, 28, 23, 0, 0);
+  fail_unless (dt != NULL);
+  gst_date_time_unref (dt);
+
+  /* Min */
+  ASSERT_CRITICAL (dt = gst_date_time_new_local_time (2020, 2, 28, 12, -10, 0));        // -1 has special meaning!
+  fail_unless (dt == NULL);
+
+  ASSERT_CRITICAL (dt = gst_date_time_new_local_time (2020, 2, 28, 12, 60, 0));
+  fail_unless (dt == NULL);
+
+  dt = gst_date_time_new_local_time (2020, 2, 28, 12, 0, 0);
+  fail_unless (dt != NULL);
+  gst_date_time_unref (dt);
+
+  dt = gst_date_time_new_local_time (2020, 2, 28, 12, 59, 0);
+  fail_unless (dt != NULL);
+  gst_date_time_unref (dt);
+
+  /* Sec */
+  ASSERT_CRITICAL (dt = gst_date_time_new_local_time (2020, 2, 28, 12, 0, -10));        // -1 has special meaning!
+  fail_unless (dt == NULL);
+
+  ASSERT_CRITICAL (dt = gst_date_time_new_local_time (2020, 2, 28, 12, 0, 60));
+  fail_unless (dt == NULL);
+
+  dt = gst_date_time_new_local_time (2020, 2, 28, 12, 0, 0);
+  fail_unless (dt != NULL);
+  gst_date_time_unref (dt);
+
+  dt = gst_date_time_new_local_time (2020, 2, 28, 12, 0, 59);
+  fail_unless (dt != NULL);
+  gst_date_time_unref (dt);
+
+  dt = gst_date_time_new_local_time (2020, 12, 31, 23, 59, 59);
+  fail_unless (dt != NULL);
+  gst_date_time_unref (dt);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_GstDateTime_get_microsecond)
 {
   GTimeVal tv;
@@ -784,6 +906,7 @@ gst_date_time_suite (void)
   tcase_add_test (tc_chain, test_GstDateTime_iso8601);
   tcase_add_test (tc_chain, test_GstDateTime_to_g_date_time);
   tcase_add_test (tc_chain, test_GstDateTime_new_from_g_date_time);
+  tcase_add_test (tc_chain, test_GstDateTime_new_local_time);
 
   return s;
 }
