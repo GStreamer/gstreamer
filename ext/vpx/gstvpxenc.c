@@ -1495,12 +1495,36 @@ gst_vpx_enc_stop (GstVideoEncoder * video_encoder)
   return TRUE;
 }
 
+#define INVALID_PROFILE -1
+
 static gint
-gst_vpx_enc_get_downstream_profile (GstVPXEnc * encoder)
+gst_vpx_gvalue_to_profile (const GValue * v)
+{
+  gchar *endptr = NULL;
+  gint profile = g_ascii_strtoull (g_value_get_string (v), &endptr, 10);
+
+  if (*endptr != '\0') {
+    profile = INVALID_PROFILE;
+  }
+
+  return profile;
+}
+
+static gint
+gst_vpx_enc_get_downstream_profile (GstVPXEnc * encoder, GstVideoInfo * info)
 {
   GstCaps *allowed;
   GstStructure *s;
-  gint profile = DEFAULT_PROFILE;
+  gint min_profile;
+  gint profile = INVALID_PROFILE;
+
+  switch (GST_VIDEO_INFO_FORMAT (info)) {
+    case GST_VIDEO_FORMAT_Y444:
+      min_profile = 1;
+      break;
+    default:
+      min_profile = 0;
+  }
 
   allowed = gst_pad_get_allowed_caps (GST_VIDEO_ENCODER_SRC_PAD (encoder));
   if (allowed) {
@@ -1508,22 +1532,29 @@ gst_vpx_enc_get_downstream_profile (GstVPXEnc * encoder)
     s = gst_caps_get_structure (allowed, 0);
     if (gst_structure_has_field (s, "profile")) {
       const GValue *v = gst_structure_get_value (s, "profile");
-      const gchar *profile_str = NULL;
 
-      if (GST_VALUE_HOLDS_LIST (v) && gst_value_list_get_size (v) > 0) {
-        profile_str = g_value_get_string (gst_value_list_get_value (v, 0));
+      if (GST_VALUE_HOLDS_LIST (v)) {
+        gint i;
+
+        for (i = 0; i != gst_value_list_get_size (v); ++i) {
+          gint p = gst_vpx_gvalue_to_profile (gst_value_list_get_value (v, i));
+          if (p >= min_profile) {
+            profile = p;
+            break;
+          }
+        }
       } else if (G_VALUE_HOLDS_STRING (v)) {
-        profile_str = g_value_get_string (v);
+        profile = gst_vpx_gvalue_to_profile (v);
       }
 
-      if (profile_str) {
-        gchar *endptr = NULL;
+      if (profile < min_profile || profile > 3) {
+        profile = INVALID_PROFILE;
+      }
 
-        profile = g_ascii_strtoull (profile_str, &endptr, 10);
-        if (*endptr != '\0' || profile < 0 || profile > 3) {
-          GST_ERROR_OBJECT (encoder, "Invalid profile '%s'", profile_str);
-          profile = DEFAULT_PROFILE;
-        }
+      if (profile > 1 && info->finfo->bits == 8) {
+        GST_DEBUG_OBJECT (encoder,
+            "Codec bit-depth 8 not supported in profile > 1");
+        profile = INVALID_PROFILE;
       }
     }
     gst_caps_unref (allowed);
@@ -1562,7 +1593,14 @@ gst_vpx_enc_set_format (GstVideoEncoder * video_encoder,
     g_mutex_lock (&encoder->encoder_lock);
   }
 
-  encoder->cfg.g_profile = gst_vpx_enc_get_downstream_profile (encoder);
+  encoder->cfg.g_profile = gst_vpx_enc_get_downstream_profile (encoder, info);
+  if (encoder->cfg.g_profile == INVALID_PROFILE) {
+    GST_ELEMENT_ERROR (encoder, RESOURCE, OPEN_READ,
+        ("Invalid vpx profile"), (NULL));
+    g_mutex_unlock (&encoder->encoder_lock);
+    return FALSE;
+  }
+
   encoder->cfg.g_w = GST_VIDEO_INFO_WIDTH (info);
   encoder->cfg.g_h = GST_VIDEO_INFO_HEIGHT (info);
 

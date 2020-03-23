@@ -69,13 +69,13 @@ GST_DEBUG_CATEGORY_STATIC (gst_vp9enc_debug);
 #define GST_CAT_DEFAULT gst_vp9enc_debug
 
 
-/* FIXME: Y42B and Y444 do not work yet it seems */
+/* FIXME: Y42B do not work yet it seems */
 static GstStaticPadTemplate gst_vp9_enc_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     /*GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ I420, YV12, Y42B, Y444 }")) */
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ I420, YV12 }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ I420, YV12, Y444 }"))
     );
 
 static GstStaticPadTemplate gst_vp9_enc_src_template =
