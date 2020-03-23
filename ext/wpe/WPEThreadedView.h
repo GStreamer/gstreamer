@@ -31,7 +31,7 @@ typedef struct _GstGLContext GstGLContext;
 typedef struct _GstGLDisplay GstGLDisplay;
 typedef struct _GstEGLImage GstEGLImage;
 
-#if defined(WPE_FDO_CHECK_VERSION) && WPE_FDO_CHECK_VERSION(1, 5, 0)
+#if defined(WPE_FDO_CHECK_VERSION) && WPE_FDO_CHECK_VERSION(1, 6, 0)
 #define ENABLE_SHM_BUFFER_SUPPORT 1
 #else
 #define ENABLE_SHM_BUFFER_SUPPORT 0
