@@ -368,7 +368,7 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
     GError ** error)
 {
   GESAsset *asset = NULL;
-  GESLayer *layer;
+  GESLayer *layer = NULL;
   GESClip *clip;
   gint layer_priority;
   const gchar *name;
@@ -532,9 +532,12 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
           name, asset_id);
     }
   } else {
-    *error = g_error_new (GES_ERROR, 0,
+    *error =
+        g_error_new (GES_ERROR, 0,
         "Couldn't add clip with id %s to layer with priority %d", asset_id,
         layer_priority);
+    res = FALSE;
+    goto beach;
   }
 
   if (res) {
@@ -542,10 +545,10 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
     g_object_set_qdata (G_OBJECT (timeline), LAST_CHILD_QDATA, NULL);
   }
 
-  gst_object_unref (layer);
   res = _ges_save_timeline_if_needed (timeline, structure, error);
 
 beach:
+  gst_clear_object (&layer);
   gst_clear_object (&asset);
   g_free (asset_id);
   g_free (check_asset_id);
