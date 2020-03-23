@@ -281,9 +281,9 @@ gst_h265_decoder_parse_sps (GstH265Decoder * self, GstH265NalUnit * nalu)
   GstH265DecoderPrivate *priv = self->priv;
   GstH265SPS sps;
   GstH265ParserResult pres;
-  gboolean ret = TRUE;
+  gboolean ret;
 
-  pres = gst_h265_parser_parse_sps (priv->parser, nalu, &sps, TRUE);
+  pres = gst_h265_parse_sps (priv->parser, nalu, &sps, TRUE);
   if (pres != GST_H265_PARSER_OK) {
     GST_WARNING_OBJECT (self, "Failed to parse SPS, result %d", pres);
     return FALSE;
@@ -291,8 +291,14 @@ gst_h265_decoder_parse_sps (GstH265Decoder * self, GstH265NalUnit * nalu)
 
   GST_LOG_OBJECT (self, "SPS parsed");
 
-  if (!gst_h265_decoder_process_sps (self, &sps))
+  ret = gst_h265_decoder_process_sps (self, &sps);
+  if (!ret) {
+    GST_WARNING_OBJECT (self, "Failed to process SPS");
+  } else if (gst_h265_parser_update_sps (priv->parser,
+          &sps) != GST_H265_PARSER_OK) {
+    GST_WARNING_OBJECT (self, "Failed to update SPS");
     ret = FALSE;
+  }
 
   return ret;
 }
@@ -564,13 +570,22 @@ gst_h265_decoder_parse_codec_data (GstH265Decoder * self, const guint8 * data,
 
       switch (nalu.type) {
         case GST_H265_NAL_VPS:
-          gst_h265_decoder_parse_vps (self, &nalu);
+          if (!gst_h265_decoder_parse_vps (self, &nalu)) {
+            GST_WARNING_OBJECT (self, "Failed to parse VPS");
+            return FALSE;
+          }
           break;
         case GST_H265_NAL_SPS:
-          gst_h265_decoder_parse_sps (self, &nalu);
+          if (!gst_h265_decoder_parse_sps (self, &nalu)) {
+            GST_WARNING_OBJECT (self, "Failed to parse SPS");
+            return FALSE;
+          }
           break;
         case GST_H265_NAL_PPS:
-          gst_h265_decoder_parse_pps (self, &nalu);
+          if (!gst_h265_decoder_parse_pps (self, &nalu)) {
+            GST_WARNING_OBJECT (self, "Failed to parse PPS");
+            return FALSE;
+          }
           break;
         default:
           break;
@@ -657,7 +672,11 @@ gst_h265_decoder_set_format (GstVideoDecoder * decoder,
     GstMapInfo map;
 
     gst_buffer_map (priv->codec_data, &map, GST_MAP_READ);
-    gst_h265_decoder_parse_codec_data (self, map.data, map.size);
+    if (!gst_h265_decoder_parse_codec_data (self, map.data, map.size)) {
+      /* keep going without error.
+       * Probably inband SPS/PPS might be valid data */
+      GST_WARNING_OBJECT (self, "Failed to handle codec data");
+    }
     gst_buffer_unmap (priv->codec_data, &map);
   }
 

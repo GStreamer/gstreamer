@@ -186,9 +186,10 @@ gst_vp9_decoder_check_codec_change (GstVp9Decoder * self,
     GstVp9DecoderClass *klass = GST_VP9_DECODER_GET_CLASS (self);
 
     priv->had_sequence = TRUE;
-
     if (klass->new_sequence)
-      ret = klass->new_sequence (self, frame_hdr);
+      priv->had_sequence = klass->new_sequence (self, frame_hdr);
+
+    ret = priv->had_sequence;
   }
 
   return ret;
@@ -346,6 +347,17 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
     return gst_video_decoder_drop_frame (decoder, frame);;
   }
 
+  if (frame_hdr[0].frame_type == GST_VP9_KEY_FRAME &&
+      !gst_vp9_decoder_check_codec_change (self, &frame_hdr[0])) {
+    GST_ERROR_OBJECT (self, "codec change error");
+    goto unmap_and_error;
+  }
+
+  if (!priv->had_sequence) {
+    GST_WARNING_OBJECT (self, "No handled frame header, drop frame");
+    goto unmap_and_error;
+  }
+
   priv->wait_keyframe = FALSE;
 
   offset = 0;
@@ -386,12 +398,6 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
       gst_vp9_picture_unref (picture);
       picture = NULL;
     } else {
-      if (cur_hdr->frame_type == GST_VP9_KEY_FRAME &&
-          !gst_vp9_decoder_check_codec_change (self, cur_hdr)) {
-        GST_ERROR_OBJECT (self, "codec change error");
-        goto unmap_and_error;
-      }
-
       picture = gst_vp9_picture_new ();
       picture->frame_hdr = *cur_hdr;
       picture->pts = GST_BUFFER_PTS (in_buf);

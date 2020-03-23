@@ -340,9 +340,9 @@ gst_h264_decoder_parse_sps (GstH264Decoder * self, GstH264NalUnit * nalu)
   GstH264DecoderPrivate *priv = self->priv;
   GstH264SPS sps;
   GstH264ParserResult pres;
-  gboolean ret = TRUE;
+  gboolean ret;
 
-  pres = gst_h264_parser_parse_sps (priv->parser, nalu, &sps);
+  pres = gst_h264_parse_sps (nalu, &sps);
   if (pres != GST_H264_PARSER_OK) {
     GST_WARNING_OBJECT (self, "Failed to parse SPS, result %d", pres);
     return FALSE;
@@ -350,8 +350,14 @@ gst_h264_decoder_parse_sps (GstH264Decoder * self, GstH264NalUnit * nalu)
 
   GST_LOG_OBJECT (self, "SPS parsed");
 
-  if (!gst_h264_decoder_process_sps (self, &sps))
+  ret = gst_h264_decoder_process_sps (self, &sps);
+  if (!ret) {
+    GST_WARNING_OBJECT (self, "Failed to process SPS");
+  } else if (gst_h264_parser_update_sps (priv->parser,
+          &sps) != GST_H264_PARSER_OK) {
+    GST_WARNING_OBJECT (self, "Failed to update SPS");
     ret = FALSE;
+  }
 
   gst_h264_sps_clear (&sps);
 
@@ -424,7 +430,10 @@ gst_h264_decoder_parse_codec_data (GstH264Decoder * self, const guint8 * data,
       return FALSE;
     }
 
-    gst_h264_decoder_parse_sps (self, &nalu);
+    if (!gst_h264_decoder_parse_sps (self, &nalu)) {
+      GST_WARNING_OBJECT (self, "Failed to parse SPS");
+      return FALSE;
+    }
     off = nalu.offset + nalu.size;
   }
 
@@ -444,7 +453,10 @@ gst_h264_decoder_parse_codec_data (GstH264Decoder * self, const guint8 * data,
       return FALSE;
     }
 
-    gst_h264_decoder_parse_pps (self, &nalu);
+    if (!gst_h264_decoder_parse_pps (self, &nalu)) {
+      GST_WARNING_OBJECT (self, "Failed to parse PPS");
+      return FALSE;
+    }
     off = nalu.offset + nalu.size;
   }
 
@@ -830,7 +842,11 @@ gst_h264_decoder_set_format (GstVideoDecoder * decoder,
     GstMapInfo map;
 
     gst_buffer_map (priv->codec_data, &map, GST_MAP_READ);
-    gst_h264_decoder_parse_codec_data (self, map.data, map.size);
+    if (!gst_h264_decoder_parse_codec_data (self, map.data, map.size)) {
+      /* keep going without error.
+       * Probably inband SPS/PPS might be valid data */
+      GST_WARNING_OBJECT (self, "Failed to handle codec data");
+    }
     gst_buffer_unmap (priv->codec_data, &map);
   }
 
