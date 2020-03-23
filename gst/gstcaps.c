@@ -1334,11 +1334,12 @@ gst_caps_is_subset (const GstCaps * subset, const GstCaps * superset)
     return FALSE;
 
   for (i = GST_CAPS_LEN (subset) - 1; i >= 0; i--) {
+    s1 = gst_caps_get_structure_unchecked (subset, i);
+    f1 = gst_caps_get_features_unchecked (subset, i);
+    if (!f1)
+      f1 = GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY;
+
     for (j = GST_CAPS_LEN (superset) - 1; j >= 0; j--) {
-      s1 = gst_caps_get_structure_unchecked (subset, i);
-      f1 = gst_caps_get_features_unchecked (subset, i);
-      if (!f1)
-        f1 = GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY;
       s2 = gst_caps_get_structure_unchecked (superset, j);
       f2 = gst_caps_get_features_unchecked (superset, j);
       if (!f2)
@@ -1351,6 +1352,7 @@ gst_caps_is_subset (const GstCaps * subset, const GstCaps * superset)
         break;
       }
     }
+
     /* If we found no superset for this subset structure
      * we return FALSE immediately */
     if (j == -1) {
