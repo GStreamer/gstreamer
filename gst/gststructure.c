@@ -2982,45 +2982,6 @@ gst_structure_is_equal (const GstStructure * structure1,
       (gpointer) structure2);
 }
 
-
-typedef struct
-{
-  GstStructure *dest;
-  const GstStructure *intersect;
-}
-IntersectData;
-
-static gboolean
-gst_structure_intersect_field1 (GQuark id, const GValue * val1, gpointer data)
-{
-  IntersectData *idata = (IntersectData *) data;
-  const GValue *val2 = gst_structure_id_get_value (idata->intersect, id);
-
-  if (G_UNLIKELY (val2 == NULL)) {
-    gst_structure_id_set_value (idata->dest, id, val1);
-  } else {
-    GValue dest_value = { 0 };
-    if (gst_value_intersect (&dest_value, val1, val2)) {
-      gst_structure_id_take_value (idata->dest, id, &dest_value);
-    } else {
-      return FALSE;
-    }
-  }
-  return TRUE;
-}
-
-static gboolean
-gst_structure_intersect_field2 (GQuark id, const GValue * val1, gpointer data)
-{
-  IntersectData *idata = (IntersectData *) data;
-  const GValue *val2 = gst_structure_id_get_value (idata->intersect, id);
-
-  if (G_UNLIKELY (val2 == NULL)) {
-    gst_structure_id_set_value (idata->dest, id, val1);
-  }
-  return TRUE;
-}
-
 /**
  * gst_structure_intersect:
  * @struct1: a #GstStructure
@@ -3034,7 +2995,8 @@ GstStructure *
 gst_structure_intersect (const GstStructure * struct1,
     const GstStructure * struct2)
 {
-  IntersectData data;
+  guint it1, len1, it2, len2;
+  GstStructure *dest;
 
   g_assert (struct1 != NULL);
   g_assert (struct2 != NULL);
@@ -3042,24 +3004,59 @@ gst_structure_intersect (const GstStructure * struct1,
   if (G_UNLIKELY (struct1->name != struct2->name))
     return NULL;
 
+  len1 = GST_STRUCTURE_LEN (struct1);
+  len2 = GST_STRUCTURE_LEN (struct2);
+
+  /* Resulting structure will be at most the size of the smallest structure */
+  dest = gst_structure_new_id_empty_with_size (struct1->name, MIN (len1, len2));
+
   /* copy fields from struct1 which we have not in struct2 to target
    * intersect if we have the field in both */
-  data.dest = gst_structure_new_id_empty (struct1->name);
-  data.intersect = struct2;
-  if (G_UNLIKELY (!gst_structure_foreach ((GstStructure *) struct1,
-              gst_structure_intersect_field1, &data)))
-    goto error;
+  for (it1 = 0; it1 < len1; it1++) {
+    GstStructureField *field1 = GST_STRUCTURE_FIELD (struct1, it1);
+    gboolean seenother = FALSE;
+    for (it2 = 0; it2 < len2; it2++) {
+      GstStructureField *field2 = GST_STRUCTURE_FIELD (struct2, it2);
+      if (field1->name == field2->name) {
+        GValue dest_value = { 0 };
+        seenother = TRUE;
+        /* Get the intersection if any */
+        if (gst_value_intersect (&dest_value, &field1->value, &field2->value)) {
+          gst_structure_id_take_value (dest, field1->name, &dest_value);
+          break;
+        } else {
+          /* No intersection, return nothing */
+          goto error;
+        }
+      }
+    }
+    /* Field1 was only present in struct1, copy it over */
+    if (!seenother)
+      gst_structure_id_set_value (dest, field1->name, &field1->value);
+  }
 
-  /* copy fields from struct2 which we have not in struct1 to target */
-  data.intersect = struct1;
-  if (G_UNLIKELY (!gst_structure_foreach ((GstStructure *) struct2,
-              gst_structure_intersect_field2, &data)))
-    goto error;
+  /* Now iterate over the 2nd struct and copy over everything which
+   * isn't present in the 1st struct (we've already taken care of
+   * values being present in both just above) */
+  for (it2 = 0; it2 < len2; it2++) {
+    GstStructureField *field2 = GST_STRUCTURE_FIELD (struct2, it2);
+    gboolean seenother = FALSE;
+    for (it1 = 0; it1 < len1; it1++) {
+      GstStructureField *field1 = GST_STRUCTURE_FIELD (struct1, it1);
+      if (field1->name == field2->name) {
+        seenother = TRUE;
+        break;
+      }
+    }
+    if (!seenother)
+      gst_structure_id_set_value (dest, field2->name, &field2->value);
 
-  return data.dest;
+  }
+
+  return dest;
 
 error:
-  gst_structure_free (data.dest);
+  gst_structure_free (dest);
   return NULL;
 }
 
