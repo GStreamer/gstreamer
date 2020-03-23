@@ -511,11 +511,14 @@ gst_clear_structure (GstStructure ** structure_ptr)
  *     a #GstStructure to take
  * @newstr: (transfer full) (allow-none): a new #GstStructure
  *
- * Atomically modifies a pointer to point to a new object.
+ * Atomically modifies a pointer to point to a new structure.
  * The #GstStructure @oldstr_ptr is pointing to is freed and
  * @newstr is taken ownership over.
  *
  * Either @newstr and the value pointed to by @oldstr_ptr may be %NULL.
+ *
+ * It is a programming error if both @newstr and the value pointed to by
+ * @oldstr_ptr refer to the same, non-%NULL structure.
  *
  * Returns: %TRUE if @newstr was different from @oldstr_ptr
  *
@@ -528,22 +531,19 @@ gst_structure_take (GstStructure ** oldstr_ptr, GstStructure * newstr)
 
   g_return_val_if_fail (oldstr_ptr != NULL, FALSE);
 
-  oldstr = g_atomic_pointer_get ((gpointer *) oldstr_ptr);
-
-  if (G_UNLIKELY (oldstr == newstr))
-    return FALSE;
-
-  while (G_UNLIKELY (!g_atomic_pointer_compare_and_exchange ((gpointer *)
-              oldstr_ptr, oldstr, newstr))) {
+  do {
     oldstr = g_atomic_pointer_get ((gpointer *) oldstr_ptr);
-    if (G_UNLIKELY (oldstr == newstr))
-      break;
-  }
+    if (G_UNLIKELY (oldstr == newstr)) {
+      g_return_val_if_fail (newstr == NULL, FALSE);
+      return FALSE;
+    }
+  } while (G_UNLIKELY (!g_atomic_pointer_compare_and_exchange ((gpointer *)
+              oldstr_ptr, oldstr, newstr)));
 
   if (oldstr)
     gst_structure_free (oldstr);
 
-  return oldstr != newstr;
+  return TRUE;
 }
 
 /**
