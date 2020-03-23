@@ -871,7 +871,7 @@ default_authenticate (GstRTSPAuth * auth, GstRTSPContext * ctx)
 
       GST_DEBUG_OBJECT (auth, "check Basic auth");
       g_mutex_lock (&priv->lock);
-      if ((token =
+      if ((*credential)->authorization && (token =
               g_hash_table_lookup (priv->basic,
                   (*credential)->authorization))) {
         GST_DEBUG_OBJECT (auth, "setting token %p", token);
