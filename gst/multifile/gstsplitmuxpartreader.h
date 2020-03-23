@@ -80,6 +80,7 @@ struct _GstSplitMuxPartReader
   GCond inactive_cond;
   GMutex lock;
   GMutex type_lock;
+  GMutex msg_lock;
 
   GstSplitMuxPartReaderPadCb get_pad_cb;
   gpointer cb_data;

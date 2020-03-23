@@ -331,13 +331,13 @@ do_async_start (GstSplitMuxSrc * splitmux)
 {
   GstMessage *message;
 
-  GST_STATE_LOCK (splitmux);
+  SPLITMUX_SRC_MSG_LOCK (splitmux);
   splitmux->async_pending = TRUE;
 
   message = gst_message_new_async_start (GST_OBJECT_CAST (splitmux));
   GST_BIN_CLASS (parent_class)->handle_message (GST_BIN_CAST (splitmux),
       message);
-  GST_STATE_UNLOCK (splitmux);
+  SPLITMUX_SRC_MSG_UNLOCK (splitmux);
 }
 
 static void
@@ -345,7 +345,7 @@ do_async_done (GstSplitMuxSrc * splitmux)
 {
   GstMessage *message;
 
-  GST_STATE_LOCK (splitmux);
+  SPLITMUX_SRC_MSG_LOCK (splitmux);
   if (splitmux->async_pending) {
     message =
         gst_message_new_async_done (GST_OBJECT_CAST (splitmux),
@@ -355,7 +355,7 @@ do_async_done (GstSplitMuxSrc * splitmux)
 
     splitmux->async_pending = FALSE;
   }
-  GST_STATE_UNLOCK (splitmux);
+  SPLITMUX_SRC_MSG_UNLOCK (splitmux);
 }
 
 static GstStateChangeReturn
@@ -408,10 +408,14 @@ gst_splitmux_src_change_state (GstElement * element, GstStateChange transition)
 static void
 gst_splitmux_src_activate_first_part (GstSplitMuxSrc * splitmux)
 {
-  if (!gst_splitmux_src_activate_part (splitmux, 0, GST_SEEK_FLAG_NONE)) {
-    GST_ELEMENT_ERROR (splitmux, RESOURCE, OPEN_READ, (NULL),
-        ("Failed to activate first part for playback"));
+  SPLITMUX_SRC_LOCK (splitmux);
+  if (splitmux->running) {
+    if (!gst_splitmux_src_activate_part (splitmux, 0, GST_SEEK_FLAG_NONE)) {
+      GST_ELEMENT_ERROR (splitmux, RESOURCE, OPEN_READ, (NULL),
+          ("Failed to activate first part for playback"));
+    }
   }
+  SPLITMUX_SRC_UNLOCK (splitmux);
 }
 
 static GstBusSyncReply
@@ -887,6 +891,14 @@ gst_splitmux_src_start (GstSplitMuxSrc * splitmux)
   gchar **files;
   guint i;
 
+  SPLITMUX_SRC_LOCK (splitmux);
+  if (splitmux->running) {
+    /* splitmux is still running / stopping. We can't start again yet */
+    SPLITMUX_SRC_UNLOCK (splitmux);
+    return FALSE;
+  }
+  SPLITMUX_SRC_UNLOCK (splitmux);
+
   GST_DEBUG_OBJECT (splitmux, "Starting");
 
   g_signal_emit (splitmux, signals[SIGNAL_FORMAT_LOCATION], 0, &files);
@@ -980,7 +992,10 @@ gst_splitmux_src_stop (GstSplitMuxSrc * splitmux)
 
   GST_DEBUG_OBJECT (splitmux, "Stopping");
 
-  /* Stop and destroy all parts  */
+  SPLITMUX_SRC_UNLOCK (splitmux);
+
+  /* Stop and destroy all parts. We don't need the lock here,
+   * because all parts were created in _start()  */
   for (i = 0; i < splitmux->num_created_parts; i++) {
     if (splitmux->parts[i] == NULL)
       continue;
@@ -988,6 +1003,7 @@ gst_splitmux_src_stop (GstSplitMuxSrc * splitmux)
     g_object_unref (splitmux->parts[i]);
     splitmux->parts[i] = NULL;
   }
+  SPLITMUX_SRC_LOCK (splitmux);
 
   SPLITMUX_SRC_PADS_WLOCK (splitmux);
   pads_list = splitmux->pads;

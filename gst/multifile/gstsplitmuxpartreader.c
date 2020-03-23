@@ -37,6 +37,9 @@ GST_DEBUG_CATEGORY_STATIC (splitmux_part_debug);
 #define SPLITMUX_PART_TYPE_LOCK(p) g_mutex_lock(&(p)->type_lock)
 #define SPLITMUX_PART_TYPE_UNLOCK(p) g_mutex_unlock(&(p)->type_lock)
 
+#define SPLITMUX_PART_MSG_LOCK(p) g_mutex_lock(&(p)->msg_lock)
+#define SPLITMUX_PART_MSG_UNLOCK(p) g_mutex_unlock(&(p)->msg_lock)
+
 typedef struct _GstSplitMuxPartPad
 {
   GstPad parent;
@@ -636,6 +639,7 @@ gst_splitmux_part_reader_init (GstSplitMuxPartReader * reader)
   g_cond_init (&reader->inactive_cond);
   g_mutex_init (&reader->lock);
   g_mutex_init (&reader->type_lock);
+  g_mutex_init (&reader->msg_lock);
 
   /* FIXME: Create elements on a state change */
   reader->src = gst_element_factory_make ("filesrc", NULL);
@@ -683,6 +687,7 @@ splitmux_part_reader_finalize (GObject * object)
   g_cond_clear (&reader->inactive_cond);
   g_mutex_clear (&reader->lock);
   g_mutex_clear (&reader->type_lock);
+  g_mutex_clear (&reader->msg_lock);
 
   g_free (reader->path);
 
@@ -694,12 +699,12 @@ do_async_start (GstSplitMuxPartReader * reader)
 {
   GstMessage *message;
 
-  GST_STATE_LOCK (reader);
+  SPLITMUX_PART_MSG_LOCK (reader);
   reader->async_pending = TRUE;
 
   message = gst_message_new_async_start (GST_OBJECT_CAST (reader));
   GST_BIN_CLASS (parent_class)->handle_message (GST_BIN_CAST (reader), message);
-  GST_STATE_UNLOCK (reader);
+  SPLITMUX_PART_MSG_UNLOCK (reader);
 }
 
 static void
@@ -707,7 +712,7 @@ do_async_done (GstSplitMuxPartReader * reader)
 {
   GstMessage *message;
 
-  GST_STATE_LOCK (reader);
+  SPLITMUX_PART_MSG_LOCK (reader);
   if (reader->async_pending) {
     message =
         gst_message_new_async_done (GST_OBJECT_CAST (reader),
@@ -717,7 +722,7 @@ do_async_done (GstSplitMuxPartReader * reader)
 
     reader->async_pending = FALSE;
   }
-  GST_STATE_UNLOCK (reader);
+  SPLITMUX_PART_MSG_UNLOCK (reader);
 }
 
 static void
