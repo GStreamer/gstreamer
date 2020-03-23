@@ -102,4 +102,4 @@ GType gst_motion_cells_get_type (void);
 GST_ELEMENT_REGISTER_DECLARE (motioncells);
 
 G_END_DECLS
-#endif /* __GST_MOTION_CELLS_H__ */
+#endif /* __GST_MOTIONCELLS_H__ */
