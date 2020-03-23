@@ -170,11 +170,26 @@ GstQuickRenderer::activateContext ()
 {
 }
 
-static void
-delete_cxx (QOpenGLFramebufferObject * cxx)
+struct FBOUserData
 {
-  GST_TRACE ("freeing Qfbo %p", cxx);
-  delete cxx;
+  GstGLContext * context;
+  QOpenGLFramebufferObject * fbo;
+};
+
+static void
+delete_cxx_gl_context (GstGLContext * context, struct FBOUserData * data)
+{
+  GST_TRACE ("freeing Qfbo %p", data->fbo);
+  delete data->fbo;
+}
+
+static void
+notify_fbo_delete (struct FBOUserData * data)
+{
+  gst_gl_context_thread_add (data->context,
+      (GstGLContextThreadFunc) delete_cxx_gl_context, data);
+  gst_object_unref (data->context);
+  g_free (data);
 }
 
 GstQuickRenderer::GstQuickRenderer()
@@ -294,7 +309,7 @@ bool GstQuickRenderer::init (GstGLContext * context, GError ** error)
     gl_params = (GstGLAllocationParams *)
         gst_gl_video_allocation_params_new_wrapped_texture (gl_context,
             NULL, &this->v_info, 0, NULL, GST_GL_TEXTURE_TARGET_2D, GST_GL_RGBA8,
-            0, NULL, (GDestroyNotify) delete_cxx);
+            0, NULL, (GDestroyNotify) notify_fbo_delete);
 
     /* This is a gross hack relying on the internals of Qt and GStreamer
      * however it's the only way to remove this warning on shutdown of all
@@ -435,7 +450,10 @@ GstQuickRenderer::renderGstGL ()
     m_renderControl->render();
 
     GST_DEBUG ("wrapping Qfbo %p with texture %u", m_fbo, m_fbo->texture());
-    gl_params->user_data = static_cast<gpointer> (m_fbo);
+    struct FBOUserData *data = g_new0 (struct FBOUserData, 1);
+    data->context = (GstGLContext *) gst_object_ref (gl_context);
+    data->fbo = m_fbo;
+    gl_params->user_data = static_cast<gpointer> (data);
     gl_params->gl_handle = GINT_TO_POINTER (m_fbo->texture());
     gl_mem = (GstGLMemory *) gst_gl_base_memory_alloc (gl_allocator, gl_params);
 
