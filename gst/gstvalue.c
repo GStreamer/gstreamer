@@ -1139,6 +1139,18 @@ gst_value_compare_value_list (const GValue * value1, const GValue * value2)
   if (len != vlist2->len)
     return GST_VALUE_UNORDERED;
 
+  /* Empty lists are equal */
+  if (len == 0)
+    return GST_VALUE_EQUAL;
+
+  /* We know lists are not empty. do sanity check on first values */
+  if (G_VALUE_TYPE (&vlist1->fields[0]) != G_VALUE_TYPE (&vlist2->fields[0]))
+    return GST_VALUE_UNORDERED;
+
+  /* Get the compare function */
+  if (!(compare = gst_value_get_compare_func (&vlist1->fields[0])))
+    return GST_VALUE_UNORDERED;
+
   /* place to mark removed value indices of array2 */
   removed = g_newa (guint8, len);
   memset (removed, 0, len);
@@ -1148,24 +1160,24 @@ gst_value_compare_value_list (const GValue * value1, const GValue * value2)
    * item in array2, remove it from array2 by marking it as removed */
   for (i = 0; i < len; i++) {
     v1 = &vlist1->fields[i];
-    if ((compare = gst_value_get_compare_func (v1))) {
-      for (j = 0; j < len; j++) {
-        /* item is removed, we can skip it */
-        if (removed[j])
-          continue;
-        v2 = &vlist2->fields[j];
-        if (gst_value_compare_with_func (v1, v2, compare) == GST_VALUE_EQUAL) {
-          /* mark item as removed now that we found it in array2 and
-           * decrement the number of remaining items in array2. */
-          removed[j] = 1;
-          to_remove--;
-          break;
-        }
+
+    for (j = 0; j < len; j++) {
+      /* item is removed, we can skip it */
+      if (removed[j])
+        continue;
+      v2 = &vlist2->fields[j];
+      /* Note: compare function can be called directly since we know the types
+       * are identical */
+      if (compare (v1, v2) == GST_VALUE_EQUAL) {
+        /* mark item as removed now that we found it in array2 and
+         * decrement the number of remaining items in array2. */
+        removed[j] = 1;
+        to_remove--;
+        break;
       }
-      /* item in array1 and not in array2, UNORDERED */
-      if (j == len)
-        return GST_VALUE_UNORDERED;
-    } else
+    }
+    /* item in array1 and not in array2, UNORDERED */
+    if (j == len)
       return GST_VALUE_UNORDERED;
   }
   /* if not all items were removed, array2 contained something not in array1 */
