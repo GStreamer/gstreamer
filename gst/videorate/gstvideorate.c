@@ -1276,6 +1276,9 @@ gst_video_rate_check_variable_rate (GstVideoRate * videorate,
   videorate->updating_caps = TRUE;
   gst_base_transform_update_src_caps (GST_BASE_TRANSFORM (videorate), tmpcaps);
 
+  /* also reconfigure sink so that buffer pool can be updated again */
+  gst_base_transform_reconfigure_sink (GST_BASE_TRANSFORM (videorate));
+
 done:
   gst_caps_unref (tmpcaps);
   if (pad)
