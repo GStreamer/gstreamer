@@ -4011,11 +4011,13 @@ gst_rtsp_stream_get_rtpinfo (GstRTSPStream * stream,
    * This will have a more accurate sequence number and timestamp, as between
    * the payloader and the sink there can be some queues
    */
-  if (priv->udpsink[0] || priv->appsink[0]) {
+  if (priv->udpsink[0] || priv->mcast_udpsink[0] || priv->appsink[0]) {
     GstSample *last_sample;
 
     if (priv->udpsink[0])
       g_object_get (priv->udpsink[0], "last-sample", &last_sample, NULL);
+    else if (priv->mcast_udpsink[0])
+      g_object_get (priv->mcast_udpsink[0], "last-sample", &last_sample, NULL);
     else
       g_object_get (priv->appsink[0], "last-sample", &last_sample, NULL);
 
