@@ -168,6 +168,8 @@ struct _GstV4l2Object {
 
   /* optional pool */
   GstBufferPool *pool;
+  /* the sequence of pool to identify (for debugging) */
+  guint pool_seq;
 
   /* the video device's capabilities */
   struct v4l2_capability vcap;

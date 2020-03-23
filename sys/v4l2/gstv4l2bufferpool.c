@@ -1669,8 +1669,9 @@ gst_v4l2_buffer_pool_new (GstV4l2Object * obj, GstCaps * caps)
 
   /* setting a significant unique name */
   parent_name = gst_object_get_name (GST_OBJECT (obj->element));
-  name = g_strconcat (parent_name, ":", "pool:",
-      V4L2_TYPE_IS_OUTPUT (obj->type) ? "sink" : "src", NULL);
+  name = g_strdup_printf ("%s:pool%u:%s",
+      parent_name, obj->pool_seq++,
+      V4L2_TYPE_IS_OUTPUT (obj->type) ? "sink" : "src");
   g_free (parent_name);
 
   pool = (GstV4l2BufferPool *) g_object_new (GST_TYPE_V4L2_BUFFER_POOL,
