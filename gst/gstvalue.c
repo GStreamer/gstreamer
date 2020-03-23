@@ -4303,6 +4303,25 @@ gst_value_is_subset_list_list (const GValue * value1, const GValue * value2)
   return TRUE;
 }
 
+static gboolean
+gst_value_is_subset_list (const GValue * value1, const GValue * value2)
+{
+  GstValueList *vlist2 = VALUE_LIST_ARRAY (value2);
+  gint it2, len2;
+
+  len2 = vlist2->len;
+
+  /* Check whether value1 is within the list */
+  for (it2 = 0; it2 < len2; it2++) {
+    const GValue *child2 = &vlist2->fields[it2];
+    if (gst_value_compare (value1, child2) == GST_VALUE_EQUAL) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
 /**
  * gst_value_is_subset:
  * @value1: a #GValue
@@ -4315,6 +4334,9 @@ gst_value_is_subset_list_list (const GValue * value1, const GValue * value2)
 gboolean
 gst_value_is_subset (const GValue * value1, const GValue * value2)
 {
+  GType type1 = G_VALUE_TYPE (value1);
+  GType type2 = G_VALUE_TYPE (value2);
+
   /* special case for int/int64 ranges, since we cannot compute
      the difference for those when they have different steps,
      and it's actually a lot simpler to compute whether a range
@@ -4330,8 +4352,10 @@ gst_value_is_subset (const GValue * value1, const GValue * value2)
   } else if (GST_VALUE_HOLDS_STRUCTURE (value1)
       && GST_VALUE_HOLDS_STRUCTURE (value2)) {
     return gst_value_is_subset_structure_structure (value1, value2);
-  } else if (GST_VALUE_HOLDS_LIST (value1) && GST_VALUE_HOLDS_LIST (value2)) {
-    return gst_value_is_subset_list_list (value1, value2);
+  } else if (type2 == GST_TYPE_LIST) {
+    if (type1 == GST_TYPE_LIST)
+      return gst_value_is_subset_list_list (value1, value2);
+    return gst_value_is_subset_list (value1, value2);
   }
 
   /*
