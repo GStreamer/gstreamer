@@ -488,7 +488,7 @@ struct _GstDeviceProviderFactory {
 
   GType                      type;              /* unique GType the device factory or 0 if not loaded */
 
-  volatile GstDeviceProvider *provider;
+  GstDeviceProvider         *provider;
   gpointer                   metadata;
 
   gpointer _gst_reserved[GST_PADDING];
