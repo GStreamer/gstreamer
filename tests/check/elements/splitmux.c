@@ -231,6 +231,8 @@ test_playback (const gchar * in_pattern, GstClockTime exp_first_time,
 
   appsink = gst_element_factory_make ("appsink", NULL);
   fail_if (appsink == NULL);
+  g_object_set (G_OBJECT (appsink), "sync", FALSE, NULL);
+
   g_object_set (G_OBJECT (pipeline), "video-sink", appsink, NULL);
   fakesink2 = gst_element_factory_make ("fakesink", NULL);
   fail_if (fakesink2 == NULL);
