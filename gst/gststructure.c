@@ -3111,30 +3111,6 @@ gst_structure_can_intersect (const GstStructure * struct1,
       gst_caps_structure_can_intersect_field, (gpointer) struct2);
 }
 
-static gboolean
-gst_caps_structure_is_superset_field (GQuark field_id, const GValue * value,
-    gpointer user_data)
-{
-  GstStructure *subset = user_data;
-  const GValue *other;
-  int comparison;
-
-  if (!(other = gst_structure_id_get_value (subset, field_id)))
-    /* field is missing in the subset => no subset */
-    return FALSE;
-
-  comparison = gst_value_compare (value, other);
-
-  /* equal values are subset */
-  if (comparison == GST_VALUE_EQUAL)
-    return TRUE;
-
-  /* ordered, but unequal, values are not */
-  if (comparison != GST_VALUE_UNORDERED)
-    return FALSE;
-
-  return gst_value_is_subset (other, value);
-}
 
 /**
  * gst_structure_is_subset:
@@ -3151,12 +3127,51 @@ gboolean
 gst_structure_is_subset (const GstStructure * subset,
     const GstStructure * superset)
 {
-  if ((superset->name != subset->name) ||
-      (gst_structure_n_fields (superset) > gst_structure_n_fields (subset)))
+  guint it1, len1, it2, len2;
+
+  g_assert (superset);
+
+  if (G_UNLIKELY (superset->name != subset->name))
     return FALSE;
 
-  return gst_structure_foreach ((GstStructure *) superset,
-      gst_caps_structure_is_superset_field, (gpointer) subset);
+  len1 = GST_STRUCTURE_LEN (subset);
+  len2 = GST_STRUCTURE_LEN (superset);
+  if (len2 > len1)
+    return FALSE;
+
+  for (it2 = 0; it2 < len2; it2++) {
+    GstStructureField *superfield = GST_STRUCTURE_FIELD (superset, it2);
+    gboolean seenother = FALSE;
+    for (it1 = 0; it1 < len1; it1++) {
+      GstStructureField *subfield = GST_STRUCTURE_FIELD (subset, it1);
+      if (subfield->name == superfield->name) {
+        int comparison =
+            gst_value_compare (&subfield->value, &superfield->value);
+        seenother = TRUE;
+
+        /* If present and equal, stop iterating */
+        if (comparison == GST_VALUE_EQUAL)
+          break;
+
+        /* Stop everything if ordered but unequal */
+        if (comparison != GST_VALUE_UNORDERED)
+          return FALSE;
+
+        /* Stop everything if not a subset */
+        if (!gst_value_is_subset (&subfield->value, &superfield->value))
+          return FALSE;
+
+        break;
+      }
+    }
+
+    /* We did not see superfield in subfield */
+    if (!seenother)
+      return FALSE;
+  }
+
+  /* We saw everything from subset in the superset */
+  return TRUE;
 }
 
 
