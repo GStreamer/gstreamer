@@ -5,6 +5,6 @@ source_url = https://www.sqlite.org/2018/sqlite-amalgamation-3250100.zip
 source_filename = sqlite-amalgamation-3250100.zip
 source_hash = 6c68b6364fa0e01d9d05088ba473ac4e7a6fbc64f9b9aeb6d830f944e2a1fa03
 
-patch_url = https://github.com/mesonbuild/sqlite/releases/download/3250100-1/sqlite.zip
+patch_url = https://github.com/mesonbuild/sqlite/releases/download/3250100-2/sqlite.zip
 patch_filename = sqlite.zip
-patch_hash = cbb697a1e4649cf6b7f28d82048109d87ccbf01106e1d5a68f763d4685d8607c
+patch_hash = b8b4c04b02f20a842b013a2609a8ebb367669a39e4077eba4892796ede39f6ec
