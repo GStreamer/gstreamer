@@ -3027,6 +3027,11 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
   } else if (qtmux->fast_start) {
     qtmux->mux_mode = GST_QT_MUX_MODE_FAST_START;
   } else if (reserved_max_duration != GST_CLOCK_TIME_NONE) {
+    if (reserved_max_duration == 0) {
+      GST_ELEMENT_ERROR (qtmux, STREAM, MUX,
+          ("reserved-max-duration of 0 is not allowed"), (NULL));
+      return GST_FLOW_ERROR;
+    }
     if (qtmux->reserved_prefill)
       qtmux->mux_mode = GST_QT_MUX_MODE_ROBUST_RECORDING_PREFILL;
     else
@@ -5078,6 +5083,12 @@ find_best_pad (GstQTMux * qtmux)
       /* Find the exact offset where the next sample of this track is supposed
        * to be written at */
       block_idx = current_block_idx = prefill_get_block_index (qtmux, qtpad);
+      if (!qtpad->samples || block_idx >= qtpad->samples->len) {
+        GST_ELEMENT_ERROR (qtmux, RESOURCE, SETTINGS,
+            ("Failed to create samples in prefill mode"), (NULL));
+        return NULL;
+      }
+
       sample_entry =
           &g_array_index (qtpad->samples, TrakBufferEntryInfo, block_idx);
       while (block_idx > 0) {
