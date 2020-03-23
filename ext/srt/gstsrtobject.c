@@ -1510,7 +1510,7 @@ get_stats_for_srtsock (SRTSOCKET srtsock, gboolean is_sender)
           /* number of sent NAK packets */
           "packet-nack-sent", G_TYPE_INT, stats.pktSentNAK,
           "bytes-received", G_TYPE_UINT64, stats.byteRecvTotal,
-          "bytes-received-lost", G_TYPE_INT, stats.byteRcvLossTotal,
+          "bytes-received-lost", G_TYPE_UINT64, stats.byteRcvLossTotal,
           "receive-rate-mbps", G_TYPE_DOUBLE, stats.mbpsRecvRate,
           "negotiated-latency-ms", G_TYPE_INT, stats.msRcvTsbPdDelay, NULL);
 
