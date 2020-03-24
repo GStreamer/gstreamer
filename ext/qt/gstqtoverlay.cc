@@ -29,6 +29,9 @@
 
 #include "gstqtoverlay.h"
 #include "qtglrenderer.h"
+#include "gstqtglutility.h"
+
+#include <QtGui/QGuiApplication>
 
 #include <gst/gl/gstglfuncs.h>
 
@@ -50,6 +53,9 @@ static GstFlowReturn gst_qt_overlay_prepare_output_buffer (GstBaseTransform * bt
     GstBuffer * buffer, GstBuffer ** outbuf);
 static GstFlowReturn gst_qt_overlay_transform (GstBaseTransform * btrans,
     GstBuffer * inbuf, GstBuffer * outbuf);
+
+static GstStateChangeReturn gst_qt_overlay_change_state (GstElement * element,
+    GstStateChange transition);
 
 enum
 {
@@ -80,12 +86,14 @@ gst_qt_overlay_class_init (GstQtOverlayClass * klass)
   GstBaseTransformClass *btrans_class;
   GstGLBaseFilterClass *glbasefilter_class;
   GstGLFilterClass *glfilter_class;
+  GstElementClass *element_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   glbasefilter_class = (GstGLBaseFilterClass *) klass;
   glfilter_class = (GstGLFilterClass *) klass;
   btrans_class = (GstBaseTransformClass *) klass;
+  element_class = (GstElementClass *) klass;
 
   gobject_class->set_property = gst_qt_overlay_set_property;
   gobject_class->get_property = gst_qt_overlay_get_property;
@@ -123,6 +131,8 @@ gst_qt_overlay_class_init (GstQtOverlayClass * klass)
   glbasefilter_class->gl_start = gst_qt_overlay_gl_start;
   glbasefilter_class->gl_stop = gst_qt_overlay_gl_stop;
   glbasefilter_class->gl_set_caps = gst_qt_overlay_gl_set_caps;
+
+  element_class->change_state = gst_qt_overlay_change_state;
 }
 
 static void
@@ -309,4 +319,55 @@ gst_qt_overlay_transform (GstBaseTransform * btrans, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
   return GST_FLOW_OK;
+}
+
+static GstStateChangeReturn
+gst_qt_overlay_change_state (GstElement * element,
+    GstStateChange transition)
+{
+  GstQtOverlay *qt_overlay = GST_QT_OVERLAY (element);
+  GstGLBaseFilter *filter = GST_GL_BASE_FILTER (element);
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+
+  GST_DEBUG_OBJECT (filter, "changing state: %s => %s",
+      gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
+      gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
+
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY: {
+      QGuiApplication *app;
+      GstGLDisplay *display = NULL;
+
+      app = static_cast<QGuiApplication *> (QCoreApplication::instance ());
+      if (!app) {
+        GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND,
+            ("%s", "Failed to connect to Qt"),
+            ("%s", "Could not retrieve QGuiApplication instance"));
+        return GST_STATE_CHANGE_FAILURE;
+      }
+
+      display = gst_qt_get_gl_display ();
+
+      if (display != filter->display)
+        /* always propagate. The application may need to choose between window
+         * system display connections */
+        gst_gl_element_propagate_display_context (GST_ELEMENT (qt_overlay), display);
+      gst_object_unref (display);
+      break;
+    }
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
+
+  switch (transition) {
+    default:
+      break;
+  }
+
+  return ret;
+
 }
