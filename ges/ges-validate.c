@@ -125,41 +125,76 @@ done:
   return timeline;
 }
 
-#define DECLARE_AND_GET_TIMELINE_AND_PIPELINE(scenario, action)                                   \
-    GESTimeline* timeline;                                                                        \
-    GstElement* pipeline = NULL;                                                                  \
-    const gchar* project_uri = gst_structure_get_string(action->structure, "project-uri"); \
-    if (!project_uri) {                                                                    \
-        pipeline = gst_validate_scenario_get_pipeline(scenario);                                  \
-        if (pipeline == NULL) {                                                                   \
-            GST_VALIDATE_REPORT_ACTION (scenario, action, SCENARIO_ACTION_EXECUTION_ERROR,        \
-                "Can't execute a '%s' action after the pipeline "                                 \
-                "has been destroyed.",                                                            \
-                action->type);                                                                    \
-            return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;                                    \
-        }                                                                                         \
-        g_object_get(pipeline, "timeline", &timeline, NULL);                                      \
-    } else {                                                                                      \
-        timeline = _ges_load_timeline(scenario, action, project_uri);                             \
-        if (!timeline)                                                                            \
-            return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;                                    \
-    }
+#ifdef G_HAVE_ISO_VARARGS
+#define REPORT_UNLESS(condition, errpoint, ...)                                \
+  G_STMT_START {                                                               \
+    if (!(condition)) {                                                        \
+      res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;                        \
+      gst_validate_report_action(GST_VALIDATE_REPORTER(scenario), action,      \
+                                 SCENARIO_ACTION_EXECUTION_ERROR,              \
+                                 __VA_ARGS__);                                 \
+      goto errpoint;                                                           \
+    }                                                                          \
+  }                                                                            \
+  G_STMT_END
+#else /* G_HAVE_GNUC_VARARGS */
+#ifdef G_HAVE_GNUC_VARARGS
+#define REPORT_UNLESS(condition, errpoint, args...)                            \
+  G_STMT_START {                                                               \
+    if (!(condition)) {                                                        \
+      res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;                        \
+      gst_validate_report_action(GST_VALIDATE_REPORTER(scenario), action,      \
+                                 SCENARIO_ACTION_EXECUTION_ERROR, ##args);     \
+      goto errpoint;                                                           \
+    }                                                                          \
+  }                                                                            \
+  G_STMT_END
+#endif /* G_HAVE_ISO_VARARGS */
+#endif /* G_HAVE_GNUC_VARARGS */
+
+#define DECLARE_AND_GET_TIMELINE_AND_PIPELINE(scenario, action)                \
+  GESTimeline *timeline = NULL;                                                \
+  GstElement *pipeline = NULL;                                                 \
+  const gchar *project_uri =                                                   \
+      gst_structure_get_string(action->structure, "project-uri");              \
+  if (!project_uri) {                                                          \
+    pipeline = gst_validate_scenario_get_pipeline(scenario);                   \
+    REPORT_UNLESS(GES_IS_PIPELINE(pipeline), done,                     \
+                  "Can't execute a '%s' action after the pipeline "            \
+                  "has been destroyed.",                                       \
+                  action->type);                                               \
+    g_object_get(pipeline, "timeline", &timeline, NULL);                       \
+  } else {                                                                     \
+    timeline = _ges_load_timeline(scenario, action, project_uri);              \
+    if (!timeline)                                                             \
+      return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;                       \
+  }
 
 #define DECLARE_AND_GET_TIMELINE(scenario, action)         \
   DECLARE_AND_GET_TIMELINE_AND_PIPELINE(scenario, action); \
   if (pipeline)                                            \
-      gst_object_unref(pipeline);                          \
+    gst_object_unref(pipeline);
 
-#define SAVE_TIMELINE_IF_NEEDED(scenario, timeline, action)                                                  \
-    {                                                                                                        \
-        if (!_ges_save_timeline_if_needed(timeline, action->structure, NULL)) {                              \
-            GST_VALIDATE_REPORT_ACTION(scenario, action,                                                     \
-                g_quark_from_string("scenario::execution-error"),                                            \
-                "Could not save timeline to %s", gst_structure_get_string(action->structure, "project-id")); \
-            gst_object_unref(timeline);                                                                      \
-            return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;                                               \
-        }                                                                                                    \
-    }
+#define GES_START_VALIDATE_ACTION(funcname)                                    \
+static gint                                                                    \
+funcname(GstValidateScenario *scenario, GstValidateAction *action) {           \
+  GstValidateActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;                \
+  DECLARE_AND_GET_TIMELINE_AND_PIPELINE(scenario, action);
+
+#define GST_END_VALIDATE_ACTION                                                \
+done:                                                                          \
+  if (res == GST_VALIDATE_EXECUTE_ACTION_OK) {                                        \
+    REPORT_UNLESS(                                                             \
+        _ges_save_timeline_if_needed(timeline, action->structure, NULL),       \
+        done_no_save, "Could not save timeline to %s",                         \
+        gst_structure_get_string(action->structure, "project-id"));            \
+  }                                                                            \
+                                                                               \
+done_no_save:                                                                  \
+  gst_clear_object(&pipeline);                                                 \
+  gst_clear_object(&timeline);                                                 \
+  return res;                                                                  \
+}
 
 #define TRY_GET(name,type,var,def) G_STMT_START {\
   if  (!gst_structure_get (action->structure, name, type, var, NULL)) {\
@@ -167,14 +202,11 @@ done:
   } \
 } G_STMT_END
 
-static gboolean
-_serialize_project (GstValidateScenario * scenario, GstValidateAction * action)
+GES_START_VALIDATE_ACTION (_serialize_project)
 {
   const gchar *uri = gst_structure_get_string (action->structure, "uri");
   gchar *location = gst_uri_get_location (uri),
       *dir = g_path_get_dirname (location);
-  gboolean res;
-  DECLARE_AND_GET_TIMELINE (scenario, action);
 
   gst_validate_printf (action, "Saving project to %s", uri);
 
@@ -183,61 +215,44 @@ _serialize_project (GstValidateScenario * scenario, GstValidateAction * action)
   g_free (dir);
 
   res = ges_timeline_save_to_uri (timeline, uri, NULL, TRUE, NULL);
-
-  g_object_unref (timeline);
-  return res;
 }
 
-static gboolean
-_remove_asset (GstValidateScenario * scenario, GstValidateAction * action)
+GST_END_VALIDATE_ACTION;
+
+GES_START_VALIDATE_ACTION (_remove_asset)
 {
   const gchar *id = NULL;
   const gchar *type_string = NULL;
   GType type;
   GESAsset *asset;
-  gboolean res = FALSE;
   GESProject *project;
-  DECLARE_AND_GET_TIMELINE (scenario, action);
 
   project = ges_timeline_get_project (timeline);
 
   id = gst_structure_get_string (action->structure, "id");
   type_string = gst_structure_get_string (action->structure, "type");
 
-  if (!type_string || !id) {
-    GST_ERROR ("Missing parameters, we got type %s and id %s", type_string, id);
-    goto beach;
-  }
-
-  if (!(type = g_type_from_name (type_string))) {
-    GST_ERROR ("This type doesn't exist : %s", type_string);
-    goto beach;
-  }
+  REPORT_UNLESS (type_string && id, done,
+      "Missing parameters, we got type %s and id %s", type_string, id);
+  REPORT_UNLESS ((type = g_type_from_name (type_string)), done,
+      "This type doesn't exist : %s", type_string);
 
   asset = ges_project_get_asset (project, id, type);
-
-  if (!asset) {
-    GST_ERROR ("No asset with id %s and type %s", id, type_string);
-    goto beach;
-  }
-
+  REPORT_UNLESS (asset, done, "No asset with id %s and type %s", id,
+      type_string);
   res = ges_project_remove_asset (project, asset);
-  SAVE_TIMELINE_IF_NEEDED (scenario, timeline, action);
-beach:
-  g_object_unref (timeline);
-  return res;
+  gst_object_unref (asset);
 }
 
-static gboolean
-_add_asset (GstValidateScenario * scenario, GstValidateAction * action)
+GST_END_VALIDATE_ACTION;
+
+GES_START_VALIDATE_ACTION (_add_asset)
 {
   const gchar *id = NULL;
   const gchar *type_string = NULL;
   GType type;
   GESAsset *asset = NULL;
-  gboolean res = FALSE;
   GESProject *project;
-  DECLARE_AND_GET_TIMELINE (scenario, action);
 
   project = ges_timeline_get_project (timeline);
 
@@ -247,129 +262,92 @@ _add_asset (GstValidateScenario * scenario, GstValidateAction * action)
   gst_validate_printf (action, "Adding asset of type %s with ID %s\n",
       id, type_string);
 
-  if (!type_string || !id) {
-    GST_ERROR ("Missing parameters, we got type %s and id %s", type_string, id);
-    goto beach;
-  }
-
-  if (!(type = g_type_from_name (type_string))) {
-    GST_ERROR ("This type doesn't exist : %s", type_string);
-    goto beach;
-  }
+  REPORT_UNLESS (type_string
+      && id, beach, "Missing parameters, we got type %s and id %s", type_string,
+      id);
+  REPORT_UNLESS ((type =
+          g_type_from_name (type_string)), beach,
+      "This type doesn't exist : %s", type_string);
 
   asset = _ges_get_asset_from_timeline (timeline, type, id, NULL);
 
-  if (!asset) {
-    res = FALSE;
-
-    goto beach;
-  }
-
+  REPORT_UNLESS (asset, beach, "Could not get asset for %s id: %s", type_string,
+      id);
   res = ges_project_add_asset (project, asset);
-  SAVE_TIMELINE_IF_NEEDED (scenario, timeline, action);
 
 beach:
   gst_clear_object (&asset);
-  g_object_unref (timeline);
-  return res;
 }
 
-static gboolean
-_add_layer (GstValidateScenario * scenario, GstValidateAction * action)
+GST_END_VALIDATE_ACTION;
+
+GES_START_VALIDATE_ACTION (_add_layer)
 {
   GESLayer *layer;
   gint priority;
-  gboolean res = TRUE, auto_transition = FALSE;
-  DECLARE_AND_GET_TIMELINE (scenario, action);
+  gboolean auto_transition = FALSE;
 
-  if (!gst_structure_get_int (action->structure, "priority", &priority)) {
-    GST_ERROR ("priority is needed when adding a layer");
-    goto failed;
-  }
-
-  gst_validate_printf (action, "Adding layer with priority %d\n", priority);
-  layer = _ges_get_layer_by_priority (timeline, priority);
+  REPORT_UNLESS (gst_structure_get_int (action->structure, "priority",
+          &priority), done, "priority is needed when adding a layer");
+  REPORT_UNLESS ((layer =
+          _ges_get_layer_by_priority (timeline, priority)), done,
+      "No layer with priority: %d", priority);
 
   gst_structure_get_boolean (action->structure, "auto-transition",
       &auto_transition);
   g_object_set (layer, "priority", priority, "auto-transition", auto_transition,
       NULL);
-
-
-  SAVE_TIMELINE_IF_NEEDED (scenario, timeline, action);
-beach:
-  g_object_unref (timeline);
-  return res;
-
-failed:
-  goto beach;
+  gst_object_unref (layer);
 }
 
-static gboolean
-_remove_layer (GstValidateScenario * scenario, GstValidateAction * action)
+GST_END_VALIDATE_ACTION;
+
+GES_START_VALIDATE_ACTION (_remove_layer)
 {
-  GESLayer *layer;
+  GESLayer *layer = NULL;
   gint priority;
-  gboolean res = FALSE;
-  DECLARE_AND_GET_TIMELINE (scenario, action);
 
-  if (!gst_structure_get_int (action->structure, "priority", &priority)) {
-    GST_ERROR ("priority is needed when removing a layer");
-    goto beach;
-  }
-
+  REPORT_UNLESS (gst_structure_get_int (action->structure, "priority",
+          &priority), done, "'priority' is required when removing a layer");
   layer = _ges_get_layer_by_priority (timeline, priority);
+  REPORT_UNLESS (layer, beach, "No layer with priority %d", priority);
 
-  if (layer) {
-    res = ges_timeline_remove_layer (timeline, layer);
-    gst_object_unref (layer);
-  } else {
-    GST_ERROR ("No layer with priority %d", priority);
-  }
+  res = ges_timeline_remove_layer (timeline, layer);
 
-  SAVE_TIMELINE_IF_NEEDED (scenario, timeline, action);
 beach:
-  g_object_unref (timeline);
-  return res;
+  gst_clear_object (&layer);
 }
 
-static gboolean
-_remove_clip (GstValidateScenario * scenario, GstValidateAction * action)
+GST_END_VALIDATE_ACTION;
+
+GES_START_VALIDATE_ACTION (_remove_clip)
 {
   GESTimelineElement *clip;
-  GESLayer *layer;
+  GESLayer *layer = NULL;
   const gchar *name;
-  gboolean res = FALSE;
-  DECLARE_AND_GET_TIMELINE (scenario, action);
 
   name = gst_structure_get_string (action->structure, "name");
   clip = ges_timeline_get_element (timeline, name);
-  g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
+  REPORT_UNLESS (GES_IS_CLIP (clip), beach, "Couldnt' find clip: %s", name);
 
-  gst_validate_printf (action, "removing clip with ID %s\n", name);
   layer = ges_clip_get_layer (GES_CLIP (clip));
+  REPORT_UNLESS (layer, beach, "Clip %s not in a layer", name);
 
-  if (layer) {
-    res = ges_layer_remove_clip (layer, GES_CLIP (clip));
-    gst_object_unref (layer);
-  } else {
-    GST_ERROR ("No layer for clip %s", ges_timeline_element_get_name (clip));
-  }
+  res = ges_layer_remove_clip (layer, GES_CLIP (clip));
 
-  SAVE_TIMELINE_IF_NEEDED (scenario, timeline, action);
-  g_object_unref (timeline);
-  return res;
+beach:
+  gst_clear_object (&layer);
+  gst_clear_object (&clip);
 }
 
+GST_END_VALIDATE_ACTION;
 
-static gboolean
-_edit (GstValidateScenario * scenario, GstValidateAction * action)
+GES_START_VALIDATE_ACTION (_edit)
 {
   GList *layers = NULL;
   GESTimelineElement *element;
   GESFrameNumber fposition = GES_FRAME_NUMBER_NONE;
   GstClockTime position;
-  gboolean res = FALSE;
   GError *err = NULL;
   gboolean source_position = FALSE;
 
@@ -380,19 +358,13 @@ _edit (GstValidateScenario * scenario, GstValidateAction * action)
   const gchar *edit_mode_str = NULL, *edge_str = NULL;
   const gchar *element_name;
 
-  DECLARE_AND_GET_TIMELINE (scenario, action);
-
+  res = GST_VALIDATE_EXECUTE_ACTION_ERROR;
   element_name = gst_structure_get_string (action->structure,
       gst_structure_has_name (action->structure, "edit-container") ?
       "container-name" : "element-name");
 
   element = ges_timeline_get_element (timeline, element_name);
-  if (!element) {
-    GST_VALIDATE_REPORT_ACTION (scenario, action,
-        SCENARIO_ACTION_EXECUTION_ERROR,
-        "Could not find element %s", element_name);
-    return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
-  }
+  REPORT_UNLESS (element, beach, "Could not find element %s", element_name);
 
   if (!_get_clocktime (action->structure, "position", &position, &fposition)) {
     fposition = 0;
@@ -406,7 +378,6 @@ _edit (GstValidateScenario * scenario, GstValidateAction * action)
           SCENARIO_ACTION_EXECUTION_ERROR,
           "could not find `position` or `source-frame` in %s", structstr);
       g_free (structstr);
-      res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
       goto beach;
     }
 
@@ -416,26 +387,14 @@ _edit (GstValidateScenario * scenario, GstValidateAction * action)
 
   if ((edit_mode_str =
           gst_structure_get_string (action->structure, "edit-mode"))) {
-    if (!gst_validate_utils_enum_from_str (GES_TYPE_EDIT_MODE, edit_mode_str,
-            &mode)) {
-      GST_VALIDATE_REPORT_ACTION (scenario, action,
-          SCENARIO_ACTION_EXECUTION_ERROR, "Could not get enum from %s",
-          edit_mode_str);
-
-      res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
-      goto beach;
-    }
+    REPORT_UNLESS (gst_validate_utils_enum_from_str (GES_TYPE_EDIT_MODE,
+            edit_mode_str, &mode), beach,
+        "Could not get enum from %s", edit_mode_str);
   }
 
   if ((edge_str = gst_structure_get_string (action->structure, "edge"))) {
-    if (!gst_validate_utils_enum_from_str (GES_TYPE_EDGE, edge_str, &edge)) {
-      GST_VALIDATE_REPORT_ACTION (scenario, action,
-          SCENARIO_ACTION_EXECUTION_ERROR,
-          "Could not get enum from %s", edge_str);
-
-      res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
-      goto beach;
-    }
+    REPORT_UNLESS (gst_validate_utils_enum_from_str (GES_TYPE_EDGE, edge_str,
+            &edge), beach, "Could not get enum from %s", edge_str);
   }
 
   if (GES_FRAME_NUMBER_IS_VALID (fposition)) {
@@ -447,42 +406,22 @@ _edit (GstValidateScenario * scenario, GstValidateAction * action)
       else if (GES_IS_TRACK_ELEMENT (element))
         clip = GES_CLIP (element->parent);
 
-      if (!clip) {
-        GST_VALIDATE_REPORT_ACTION (scenario, action,
-            SCENARIO_ACTION_EXECUTION_ERROR,
-            "Could not get find element to edit using source frame for %"
-            GST_PTR_FORMAT, action->structure);
-
-        res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
-        goto beach;
-      }
-
-      position = ges_clip_get_timeline_time_from_source_frame (clip, fposition,
-          &err);
+      REPORT_UNLESS (clip, beach,
+          "Could not get find element to edit using source frame for %"
+          GST_PTR_FORMAT, action->structure);
+      position =
+          ges_clip_get_timeline_time_from_source_frame (clip, fposition, &err);
     } else {
       position = ges_timeline_get_frame_time (timeline, fposition);
     }
 
-    if (!GST_CLOCK_TIME_IS_VALID (position)) {
-      GST_VALIDATE_REPORT_ACTION (scenario, action,
-          SCENARIO_ACTION_EXECUTION_ERROR,
-          "Invalid frame number '%" G_GINT64_FORMAT "': %s", fposition,
-          err->message);
-
-      res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
-      goto beach;
-    }
+    REPORT_UNLESS (GST_CLOCK_TIME_IS_VALID (position), beach,
+        "Invalid frame number '%" G_GINT64_FORMAT "': %s", fposition,
+        err->message);
   }
 
   gst_structure_get_int (action->structure, "new-layer-priority",
       &new_layer_priority);
-
-  gst_validate_printf (action, "Editing %s to %" GST_TIME_FORMAT
-      " in %s mode, edge: %s "
-      "with new layer prio: %d \n\n",
-      element_name, GST_TIME_ARGS (position),
-      edit_mode_str ? edit_mode_str : "normal",
-      edge_str ? edge_str : "None", new_layer_priority);
 
   if (!(res = ges_timeline_element_edit (element, layers,
               new_layer_priority, mode, edge, position))) {
@@ -501,18 +440,15 @@ _edit (GstValidateScenario * scenario, GstValidateAction * action)
         edit_mode_str ? edit_mode_str : "normal",
         edge_str ? edge_str : "None", new_layer_priority);
     g_free (fpositionstr);
-    res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
     goto beach;
   }
-
-  SAVE_TIMELINE_IF_NEEDED (scenario, timeline, action);
 
 beach:
   gst_clear_object (&element);
   g_clear_error (&err);
-  g_object_unref (timeline);
-  return res;
 }
+
+GST_END_VALIDATE_ACTION;
 
 
 static void
@@ -523,13 +459,10 @@ _commit_done_cb (GstBus * bus, GstMessage * message, GstValidateAction * action)
   g_signal_handlers_disconnect_by_func (bus, _commit_done_cb, action);
 }
 
-static gboolean
-_commit (GstValidateScenario * scenario, GstValidateAction * action)
+GES_START_VALIDATE_ACTION (_commit)
 {
   GstBus *bus;
   GstState state;
-
-  DECLARE_AND_GET_TIMELINE_AND_PIPELINE (scenario, action);
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
 
@@ -543,41 +476,38 @@ _commit (GstValidateScenario * scenario, GstValidateAction * action)
   if (!ges_timeline_commit (timeline) || state < GST_STATE_PAUSED) {
     g_signal_handlers_disconnect_by_func (bus, G_CALLBACK (_commit_done_cb),
         action);
-    gst_object_unref (timeline);
     gst_object_unref (bus);
-    gst_object_unref (pipeline);
-
-    return TRUE;
+    goto done;
   }
-  SAVE_TIMELINE_IF_NEEDED (scenario, timeline, action);
 
   gst_object_unref (bus);
-  gst_object_unref (timeline);
-  gst_object_unref (pipeline);
 
-  return GST_VALIDATE_EXECUTE_ACTION_ASYNC;
+  res = GST_VALIDATE_EXECUTE_ACTION_ASYNC;
 }
 
-static gboolean
-_split_clip (GstValidateScenario * scenario, GstValidateAction * action)
+GST_END_VALIDATE_ACTION;
+
+GES_START_VALIDATE_ACTION (_split_clip)
 {
   const gchar *clip_name;
   GESTimelineElement *element;
   GstClockTime position;
 
-  DECLARE_AND_GET_TIMELINE (scenario, action);
-
   clip_name = gst_structure_get_string (action->structure, "clip-name");
 
   element = ges_timeline_get_element (timeline, clip_name);
-  g_return_val_if_fail (GES_IS_CLIP (element), FALSE);
-  g_object_unref (timeline);
+  REPORT_UNLESS (GES_IS_CLIP (element), beach, "Could not find clip: %s",
+      clip_name);
+  REPORT_UNLESS (gst_validate_action_get_clocktime (scenario, action,
+          "position", &position), beach,
+      "Could not find position in %" GST_PTR_FORMAT, action->structure);
+  res = (ges_clip_split (GES_CLIP (element), position) != NULL);
 
-  g_return_val_if_fail (gst_validate_action_get_clocktime (scenario, action,
-          "position", &position), FALSE);
-
-  return (ges_clip_split (GES_CLIP (element), position) != NULL);
+beach:
+  gst_clear_object (&element);
 }
+
+GST_END_VALIDATE_ACTION;
 
 typedef struct
 {
@@ -724,9 +654,7 @@ set_property (GQuark field_id, const GValue * value, PropertyData * data)
   return TRUE;
 }
 
-static gboolean
-set_or_check_properties (GstValidateScenario * scenario,
-    GstValidateAction * action)
+GES_START_VALIDATE_ACTION (set_or_check_properties)
 {
   GESTimelineElement *element;
   GstStructure *structure;
@@ -741,8 +669,6 @@ set_or_check_properties (GstValidateScenario * scenario,
     .action = action,
   };
 
-  DECLARE_AND_GET_TIMELINE (scenario, action);
-
   gst_validate_action_get_clocktime (scenario, action, "at-time", &data.time);
 
   structure = gst_structure_copy (action->structure);
@@ -754,7 +680,7 @@ set_or_check_properties (GstValidateScenario * scenario,
         "Can not find element: %s", element_name);
 
     data.res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
-    goto done;
+    goto local_done;
   }
 
   data.element = element;
@@ -764,39 +690,33 @@ set_or_check_properties (GstValidateScenario * scenario,
       gst_structure_has_name (action->structure,
           "set-child-properties") ? (GstStructureForeachFunc) set_property
       : (GstStructureForeachFunc) check_property, &data);
-
-  SAVE_TIMELINE_IF_NEEDED (scenario, timeline, action);
-  g_object_unref (timeline);
   gst_object_unref (element);
 
-done:
+local_done:
   gst_structure_free (structure);
-
-  return data.res;
+  res = data.res;
 }
 
-static gboolean
-_set_track_restriction_caps (GstValidateScenario * scenario,
-    GstValidateAction * action)
+GST_END_VALIDATE_ACTION;
+
+GES_START_VALIDATE_ACTION (_set_track_restriction_caps)
 {
   GList *tmp;
   GstCaps *caps;
-  gboolean res = FALSE;
   GESTrackType track_types;
 
   const gchar *track_type_str =
       gst_structure_get_string (action->structure, "track-type");
   const gchar *caps_str = gst_structure_get_string (action->structure, "caps");
 
-  DECLARE_AND_GET_TIMELINE (scenario, action);
+  REPORT_UNLESS (track_types =
+      gst_validate_utils_flags_from_str (GES_TYPE_TRACK_TYPE, track_type_str),
+      done, "Invalide track types: %s", track_type_str);
 
-  g_return_val_if_fail ((track_types =
-          gst_validate_utils_flags_from_str (GES_TYPE_TRACK_TYPE,
-              track_type_str)), FALSE);
+  REPORT_UNLESS (caps = gst_caps_from_string (caps_str),
+      done, "Invalide track restriction caps: %s", caps_str);
 
-  g_return_val_if_fail ((caps =
-          gst_caps_from_string (caps_str)) != NULL, FALSE);
-
+  res = GST_VALIDATE_EXECUTE_ACTION_ERROR;
   for (tmp = timeline->tracks; tmp; tmp = tmp->next) {
     GESTrack *track = tmp->data;
 
@@ -804,36 +724,27 @@ _set_track_restriction_caps (GstValidateScenario * scenario,
       gchar *str;
 
       str = gst_caps_to_string (caps);
-      gst_validate_printf (action, "Setting restriction caps %s on track: %s\n",
-          str, GST_ELEMENT_NAME (track));
       g_free (str);
 
       ges_track_set_restriction_caps (track, caps);
 
-      res = TRUE;
+      res = GST_VALIDATE_EXECUTE_ACTION_OK;
     }
   }
   gst_caps_unref (caps);
-  SAVE_TIMELINE_IF_NEEDED (scenario, timeline, action);
-  gst_object_unref (timeline);
-
-  return res;
 }
 
-static gboolean
-_set_asset_on_element (GstValidateScenario * scenario,
-    GstValidateAction * action)
+GST_END_VALIDATE_ACTION;
+
+GES_START_VALIDATE_ACTION (_set_asset_on_element)
 {
   GESAsset *asset;
   GESTimelineElement *element;
   const gchar *element_name, *id;
 
-  gboolean res = TRUE;
-  DECLARE_AND_GET_TIMELINE (scenario, action);
-
   element_name = gst_structure_get_string (action->structure, "element-name");
   element = ges_timeline_get_element (timeline, element_name);
-  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (element), FALSE);
+  REPORT_UNLESS (element, done, "Can't find %s", element_name);
 
   id = gst_structure_get_string (action->structure, "asset-id");
 
@@ -842,156 +753,122 @@ _set_asset_on_element (GstValidateScenario * scenario,
 
   asset = _ges_get_asset_from_timeline (timeline, G_OBJECT_TYPE (element), id,
       NULL);
-  if (asset == NULL) {
-    res = FALSE;
-    GST_ERROR ("Could not find asset: %s", id);
-    goto beach;
-  }
+  REPORT_UNLESS (asset, beach, "Could not find asset: %s", id);
 
   res = ges_extractable_set_asset (GES_EXTRACTABLE (element), asset);
-  SAVE_TIMELINE_IF_NEEDED (scenario, timeline, action);
 
 beach:
-  gst_object_unref (timeline);
-
-  return res;
+  gst_clear_object (&asset);
+  gst_clear_object (&element);
 }
 
-static gboolean
-_container_remove_child (GstValidateScenario * scenario,
-    GstValidateAction * action)
+GST_END_VALIDATE_ACTION;
+
+GES_START_VALIDATE_ACTION (_container_remove_child)
 {
-  GESContainer *container;
-  GESTimelineElement *child;
+  GESContainer *container = NULL;
+  GESTimelineElement *child = NULL;
   const gchar *container_name, *child_name;
-
-  gboolean res = TRUE;
-
-  DECLARE_AND_GET_TIMELINE (scenario, action);
 
   container_name =
       gst_structure_get_string (action->structure, "container-name");
   container =
-      GES_CONTAINER (ges_timeline_get_element (timeline, container_name));
-  g_return_val_if_fail (GES_IS_CONTAINER (container), FALSE);
+      (GESContainer *) ges_timeline_get_element (timeline, container_name);
+  REPORT_UNLESS (GES_IS_CONTAINER (container), beach,
+      "Could not find container: %s", container_name);
 
   child_name = gst_structure_get_string (action->structure, "child-name");
   child = ges_timeline_get_element (timeline, child_name);
-  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (child), FALSE);
-
-  gst_validate_printf (action, "Remove child %s from container %s\n",
-      child_name, GES_TIMELINE_ELEMENT_NAME (container));
+  REPORT_UNLESS (GES_IS_TIMELINE_ELEMENT (child), beach, "Could not find %s",
+      child_name);
 
   res = ges_container_remove (container, child);
 
-  SAVE_TIMELINE_IF_NEEDED (scenario, timeline, action);
-  gst_object_unref (timeline);
-
-  return res;
+beach:
+  gst_clear_object (&container);
+  gst_clear_object (&child);
 }
 
-static gboolean
-_ungroup (GstValidateScenario * scenario, GstValidateAction * action)
+GST_END_VALIDATE_ACTION;
+
+GES_START_VALIDATE_ACTION (_ungroup)
 {
   GESContainer *container;
   gboolean recursive = FALSE;
   const gchar *container_name;
 
-  gboolean res = TRUE;
-
-  DECLARE_AND_GET_TIMELINE (scenario, action);
-
   container_name =
       gst_structure_get_string (action->structure, "container-name");
   container =
-      GES_CONTAINER (ges_timeline_get_element (timeline, container_name));
-  g_return_val_if_fail (GES_IS_CONTAINER (container), FALSE);
-
-  gst_validate_printf (action, "Ungrouping children from container %s\n",
-      GES_TIMELINE_ELEMENT_NAME (container));
+      (GESContainer *) ges_timeline_get_element (timeline, container_name);
+  REPORT_UNLESS (GES_IS_CONTAINER (container), beach, "Could not find %s",
+      container_name);
 
   gst_structure_get_boolean (action->structure, "recursive", &recursive);
 
   g_list_free (ges_container_ungroup (container, recursive));
 
-  SAVE_TIMELINE_IF_NEEDED (scenario, timeline, action);
-  gst_object_unref (timeline);
-
-  return res;
+beach:
+  gst_clear_object (&container);
 }
 
-static GstValidateExecuteActionReturn
-_copy_element (GstValidateScenario * scenario, GstValidateAction * action)
+GST_END_VALIDATE_ACTION;
+
+GES_START_VALIDATE_ACTION (_copy_element)
 {
-  GESTimelineElement *element, *copied, *pasted;
+  GESTimelineElement *element = NULL, *copied = NULL, *pasted = NULL;
   gboolean recursive = FALSE;
   const gchar *element_name, *paste_name;
   GstClockTime position;
-  DECLARE_AND_GET_TIMELINE (scenario, action);
-
 
   element_name = gst_structure_get_string (action->structure, "element-name");
   element = ges_timeline_get_element (timeline, element_name);
 
-  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (element),
-      GST_VALIDATE_EXECUTE_ACTION_ERROR);
-
-  gst_validate_printf (action, "Copying element %s\n",
-      GES_TIMELINE_ELEMENT_NAME (element));
+  REPORT_UNLESS (GES_IS_CONTAINER (element), beach, "Could not find %s",
+      element_name);
 
   if (!gst_structure_get_boolean (action->structure, "recursive", &recursive))
     recursive = TRUE;
 
-  g_return_val_if_fail (gst_validate_action_get_clocktime (scenario, action,
-          "position", &position), FALSE);
+  REPORT_UNLESS (gst_validate_action_get_clocktime (scenario, action,
+          "position", &position), beach, "Could not find position");
 
   copied = ges_timeline_element_copy (element, recursive);
   pasted = ges_timeline_element_paste (copied, position);
+
+  REPORT_UNLESS (pasted, beach, "Could not paste clip %s", element_name);
+
+  paste_name = gst_structure_get_string (action->structure, "paste-name");
+  if (paste_name)
+    REPORT_UNLESS (ges_timeline_element_set_name (pasted, paste_name),
+        beach, "Could not set element name %s", paste_name);
+
+beach:
+  gst_clear_object (&pasted);
+  gst_clear_object (&element);
+
   /* `copied` is only used for the single paste operation, and is not
    * actually in any timeline. We own it (it is actually still floating).
    * `pasted` is the actual new object in the timeline. We own a
    * reference to it. */
-  gst_object_unref (timeline);
-  gst_object_unref (copied);
-
-  if (!pasted) {
-    GST_VALIDATE_REPORT_ACTION (scenario, action,
-        g_quark_from_string ("scenario::execution-error"),
-        "Could not paste clip %s", element_name);
-    return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
-  }
-
-  paste_name = gst_structure_get_string (action->structure, "paste-name");
-  if (paste_name) {
-    if (!ges_timeline_element_set_name (pasted, paste_name)) {
-      GST_VALIDATE_REPORT_ACTION (scenario, action,
-          g_quark_from_string ("scenario::execution-error"),
-          "Could not set element name %s", paste_name);
-
-      gst_object_unref (pasted);
-      return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
-    }
-  }
-  gst_object_unref (pasted);
-
-  return GST_VALIDATE_EXECUTE_ACTION_OK;
+  gst_clear_object (&copied);
 }
 
-static gboolean
-_set_control_source (GstValidateScenario * scenario, GstValidateAction * action)
-{
-  GESTrackElement *element;
+GST_END_VALIDATE_ACTION;
 
-  gboolean ret = FALSE;
+GES_START_VALIDATE_ACTION (_set_control_source)
+{
+  guint mode;
+  GESTrackElement *element = NULL;
+
   GstControlSource *source = NULL;
   gchar *element_name, *property_name, *binding_type = NULL,
       *source_type = NULL, *interpolation_mode = NULL;
 
-  DECLARE_AND_GET_TIMELINE (scenario, action);
-
-  g_return_val_if_fail (gst_structure_get (action->structure,
+  REPORT_UNLESS (gst_structure_get (action->structure,
           "element-name", G_TYPE_STRING, &element_name,
-          "property-name", G_TYPE_STRING, &property_name, NULL), FALSE);
+          "property-name", G_TYPE_STRING, &property_name, NULL),
+      beach, "Wrong parametters");
 
   TRY_GET ("binding-type", G_TYPE_STRING, &binding_type, NULL);
   TRY_GET ("source-type", G_TYPE_STRING, &source_type, NULL);
@@ -999,57 +876,45 @@ _set_control_source (GstValidateScenario * scenario, GstValidateAction * action)
 
   element =
       GES_TRACK_ELEMENT (ges_timeline_get_element (timeline, element_name));
-  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (element), FALSE);
+  REPORT_UNLESS (GES_IS_TRACK_ELEMENT (element), beach,
+      "Could not find element %s", element_name);
 
   if (!binding_type)
     binding_type = g_strdup ("direct");
 
-  if (source_type == NULL || !g_strcmp0 (source_type, "interpolation")) {
-    guint mode;
+  REPORT_UNLESS (source_type == NULL
+      || !g_strcmp0 (source_type, "interpolation"), beach,
+      "Interpolation type %s not supported", source_type);
+  source = gst_interpolation_control_source_new ();
 
-    source = gst_interpolation_control_source_new ();
+  if (interpolation_mode)
+    REPORT_UNLESS (gst_validate_utils_enum_from_str
+        (GST_TYPE_INTERPOLATION_MODE, interpolation_mode, &mode), beach,
+        "Wrong intorpolation mode: %s", interpolation_mode);
+  else
+    mode = GST_INTERPOLATION_MODE_LINEAR;
 
-    if (interpolation_mode)
-      g_return_val_if_fail (gst_validate_utils_enum_from_str
-          (GST_TYPE_INTERPOLATION_MODE, interpolation_mode, &mode), FALSE);
-    else
-      mode = GST_INTERPOLATION_MODE_LINEAR;
+  g_object_set (source, "mode", mode, NULL);
 
-    g_object_set (source, "mode", mode, NULL);
-
-  } else {
-    GST_ERROR_OBJECT (scenario, "Interpolation type %s not supported",
-        source_type);
-
-    goto done;
-  }
-
-  gst_validate_printf (action, "Setting control source on %s:%s\n",
-      element_name, property_name);
-  ret = ges_track_element_set_control_source (element,
+  res = ges_track_element_set_control_source (element,
       source, property_name, binding_type);
 
-done:
+beach:
+  gst_clear_object (&element);
+  gst_clear_object (&source);
   g_free (property_name);
   g_free (element_name);
   g_free (binding_type);
   g_free (source_type);
   g_free (interpolation_mode);
-
-  SAVE_TIMELINE_IF_NEEDED (scenario, timeline, action);
-  gst_object_unref (timeline);
-
-  return ret;
 }
 
-static gboolean
-_validate_action_execute (GstValidateScenario * scenario,
-    GstValidateAction * action)
+GST_END_VALIDATE_ACTION;
+
+GES_START_VALIDATE_ACTION (_validate_action_execute)
 {
   GError *err = NULL;
   ActionFromStructureFunc func;
-
-  DECLARE_AND_GET_TIMELINE (scenario, action);
 
   gst_structure_remove_field (action->structure, "playback-time");
   if (gst_structure_has_name (action->structure, "add-keyframe") ||
@@ -1073,14 +938,11 @@ _validate_action_execute (GstValidateScenario * scenario,
         err ? err->message : "None");
 
     g_clear_error (&err);
-
-    return TRUE;
+    res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
   }
-
-  gst_object_unref (timeline);
-
-  return TRUE;
 }
+
+GST_END_VALIDATE_ACTION;
 
 static void
 _project_loaded_cb (GESProject * project, GESTimeline * timeline,
@@ -1089,11 +951,10 @@ _project_loaded_cb (GESProject * project, GESTimeline * timeline,
   gst_validate_action_set_done (action);
 }
 
-static gboolean
-_load_project (GstValidateScenario * scenario, GstValidateAction * action)
+GES_START_VALIDATE_ACTION (_load_project)
 {
   GstState state;
-  GESProject *project;
+  GESProject *project = NULL;
   GList *tmp, *tmp_full;
 
   gchar *uri = NULL;
@@ -1103,18 +964,10 @@ _load_project (GstValidateScenario * scenario, GstValidateAction * action)
   gchar *tmpfile = g_strdup_printf ("%s%s%s", g_get_tmp_dir (),
       G_DIR_SEPARATOR_S, "tmpxgesload.xges");
 
-  GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_ASYNC;
-  DECLARE_AND_GET_TIMELINE_AND_PIPELINE (scenario, action);
+  res = GST_VALIDATE_EXECUTE_ACTION_ASYNC;
+  REPORT_UNLESS (GES_IS_PIPELINE (pipeline), local_done,
+      "Not a GES pipeline, can't work with it");
 
-  gst_validate_printf (action, "Loading project from serialized content\n");
-
-  if (!GES_IS_PIPELINE (pipeline)) {
-    GST_VALIDATE_REPORT_ACTION (scenario, action,
-        g_quark_from_string ("scenario::execution-error"),
-        "Not a GES pipeline, can't work with it");
-
-    goto fail;
-  }
   gst_element_get_state (pipeline, &state, NULL, 0);
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
@@ -1122,32 +975,17 @@ _load_project (GstValidateScenario * scenario, GstValidateAction * action)
   if (content) {
 
     g_file_set_contents (tmpfile, content, -1, &error);
-    if (error) {
-      GST_VALIDATE_REPORT_ACTION (scenario, action,
-          g_quark_from_string ("scenario::execution-error"),
-          "Could not set XML content: %s", error->message);
-
-      goto fail;
-    }
+    REPORT_UNLESS (!error, local_done,
+        "Could not set XML content: %s", error->message);
 
     uri = gst_filename_to_uri (tmpfile, &error);
-    if (error) {
-      GST_VALIDATE_REPORT_ACTION (scenario, action,
-          g_quark_from_string ("scenario::execution-error"),
-          "Could not set filename to URI: %s", error->message);
-
-      goto fail;
-    }
+    REPORT_UNLESS (!error, local_done,
+        "Could not set filename to URI: %s", error->message);
   } else {
     uri = g_strdup (gst_structure_get_string (action->structure, "uri"));
-
-    if (!uri) {
-      GST_VALIDATE_REPORT_ACTION (scenario, action,
-          g_quark_from_string ("scenario::execution-error"),
-          "None of 'uri' or 'content' passed as parametter"
-          " can't load any timeline!");
-      goto fail;
-    }
+    REPORT_UNLESS (uri, local_done,
+        "None of 'uri' or 'content' passed as parametter"
+        " can't load any timeline!");
   }
 
   tmp_full = ges_timeline_get_layers (timeline);
@@ -1162,40 +1000,25 @@ _load_project (GstValidateScenario * scenario, GstValidateAction * action)
 
   project = ges_project_new (uri);
   g_signal_connect (project, "loaded", G_CALLBACK (_project_loaded_cb), action);
-  ges_project_load (project, timeline, &error);
-  if (error) {
-    GST_VALIDATE_REPORT_ACTION (scenario, action,
-        g_quark_from_string ("scenario::execution-error"),
-        "Could not load timeline: %s", error->message);
-
-    goto fail;
-  }
+  ges_project_load (project, gst_object_ref (timeline), &error);
+  REPORT_UNLESS (!error, local_done,
+      "Could not load timeline: %s", error->message);
 
   gst_element_set_state (pipeline, state);
 
-done:
-  gst_object_unref (pipeline);
-  if (error)
-    g_error_free (error);
-
-  if (uri)
-    g_free (uri);
-
+local_done:
+  gst_clear_object (&project);
+  g_clear_error (&error);
+  g_free (uri);
   g_free (tmpfile);
-
-  return res;
-
-fail:
-
-  res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
-
-  goto done;
-
 }
 
-static gboolean
+GST_END_VALIDATE_ACTION;
+
+static gint
 prepare_seek_action (GstValidateAction * action)
 {
+  gint res = GST_VALIDATE_EXECUTE_ACTION_ERROR;
   GESFrameNumber fstart, fstop;
   GstValidateScenario *scenario = gst_validate_action_get_scenario (action);
   GstValidateActionType *type = gst_validate_get_action_type (action->type);
@@ -1213,7 +1036,7 @@ prepare_seek_action (GstValidateAction * action)
           SCENARIO_ACTION_EXECUTION_ERROR,
           "Invalid seeking frame number '%" G_GINT64_FORMAT "': %s", fstart,
           err->message);
-      goto err;
+      goto done;
     }
     gst_structure_set (action->structure, "start", G_TYPE_UINT64, start, NULL);
   }
@@ -1228,7 +1051,7 @@ prepare_seek_action (GstValidateAction * action)
           SCENARIO_ACTION_EXECUTION_ERROR,
           "Invalid seeking frame number '%" G_GINT64_FORMAT "': %s", fstop,
           err->message);
-      goto err;
+      goto done;
     }
     gst_structure_set (action->structure, "stop", G_TYPE_UINT64, stop, NULL);
   }
@@ -1237,10 +1060,10 @@ prepare_seek_action (GstValidateAction * action)
   gst_object_unref (timeline);
   return type->overriden_type->prepare (action);
 
-err:
+done:
   gst_object_unref (scenario);
   gst_object_unref (timeline);
-  return FALSE;
+  return res;
 }
 
 #endif
