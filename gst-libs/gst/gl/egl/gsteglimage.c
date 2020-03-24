@@ -534,11 +534,13 @@ _drm_rgba_fourcc_from_info (GstVideoInfo * info, int plane,
       return DRM_FORMAT_RGBA1010102;
 
     case GST_VIDEO_FORMAT_P010_10LE:
+    case GST_VIDEO_FORMAT_P012_LE:
     case GST_VIDEO_FORMAT_P016_LE:
       *out_format = plane == 0 ? GST_GL_R16 : GST_GL_RG16;
       return plane == 0 ? DRM_FORMAT_R16 : DRM_FORMAT_GR1616;
 
     case GST_VIDEO_FORMAT_P010_10BE:
+    case GST_VIDEO_FORMAT_P012_BE:
     case GST_VIDEO_FORMAT_P016_BE:
       *out_format = plane == 0 ? GST_GL_R16 : GST_GL_RG16;
       return plane == 0 ? DRM_FORMAT_R16 : DRM_FORMAT_RG1616;

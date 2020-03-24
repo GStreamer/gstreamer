@@ -937,9 +937,11 @@ _init_supported_formats (GstGLContext * context, gboolean output,
   if (!context || (gst_gl_format_is_supported (context, GST_GL_R16) &&
           gst_gl_format_is_supported (context, GST_GL_RG16))) {
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-    _append_value_string_list (supported_formats, "P010_10LE", "P016_LE", NULL);
+    _append_value_string_list (supported_formats, "P010_10LE", "P012_LE",
+        "P016_LE", NULL);
 #else
-    _append_value_string_list (supported_formats, "P010_10BE", "P016_BE", NULL);
+    _append_value_string_list (supported_formats, "P010_10BE", "P012_BE",
+        "P016_BE", NULL);
 #endif
   }
 
@@ -1542,6 +1544,8 @@ _get_n_textures (GstVideoFormat v_format)
     case GST_VIDEO_FORMAT_NV61:
     case GST_VIDEO_FORMAT_P010_10LE:
     case GST_VIDEO_FORMAT_P010_10BE:
+    case GST_VIDEO_FORMAT_P012_LE:
+    case GST_VIDEO_FORMAT_P012_BE:
     case GST_VIDEO_FORMAT_P016_LE:
     case GST_VIDEO_FORMAT_P016_BE:
       return 2;
@@ -1722,6 +1726,8 @@ _YUV_to_RGB (GstGLColorConvert * convert)
       }
       case GST_VIDEO_FORMAT_P010_10LE:
       case GST_VIDEO_FORMAT_P010_10BE:
+      case GST_VIDEO_FORMAT_P012_LE:
+      case GST_VIDEO_FORMAT_P012_BE:
       case GST_VIDEO_FORMAT_P016_LE:
       case GST_VIDEO_FORMAT_P016_BE:
       {

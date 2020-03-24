@@ -208,6 +208,8 @@ gst_gl_format_from_video_info (GstGLContext * context, GstVideoInfo * vinfo,
       return GST_GL_RGB10_A2;
     case GST_VIDEO_FORMAT_P010_10LE:
     case GST_VIDEO_FORMAT_P010_10BE:
+    case GST_VIDEO_FORMAT_P012_LE:
+    case GST_VIDEO_FORMAT_P012_BE:
     case GST_VIDEO_FORMAT_P016_LE:
     case GST_VIDEO_FORMAT_P016_BE:
       return plane == 0 ? GST_GL_R16 : GST_GL_RG16;
