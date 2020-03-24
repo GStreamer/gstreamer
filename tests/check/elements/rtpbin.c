@@ -939,7 +939,9 @@ _pad_added (G_GNUC_UNUSED GstElement * rtpbin, GstPad * pad, GstHarness * h)
 
 GST_START_TEST (test_quick_shutdown)
 {
-  for (guint r = 0; r < 1000; r++) {
+  guint r;
+
+  for (r = 0; r < 1000; r++) {
     guint i;
     GstHarness *h = gst_harness_new_with_padnames ("rtpbin",
         "recv_rtp_sink_0", NULL);

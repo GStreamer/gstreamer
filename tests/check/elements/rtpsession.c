@@ -3568,7 +3568,9 @@ GST_START_TEST (test_twcc_send_and_recv)
 
   for (frame = 0; frame < num_frames; frame++) {
     GstBuffer *buf;
-    for (guint slice = 0; slice < num_slices; slice++) {
+    guint slice;
+
+    for (slice = 0; slice < num_slices; slice++) {
       GstFlowReturn res;
       guint seq = frame * num_slices + slice;
 

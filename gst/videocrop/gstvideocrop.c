@@ -333,16 +333,18 @@ gst_video_crop_transform_planar (GstVideoCrop * vcrop,
 {
   const GstVideoFormatInfo *format_info;
   gint crop_top, crop_left;
+  guint p;
 
   format_info = in_frame->info.finfo;
   crop_left = vcrop->crop_left + x;
   crop_top = vcrop->crop_top + y;
 
-  for (guint p = 0; p < GST_VIDEO_FRAME_N_PLANES (in_frame); ++p) {
+  for (p = 0; p < GST_VIDEO_FRAME_N_PLANES (in_frame); ++p) {
     guint8 *plane_in, *plane_out;
     guint sub_w_factor, sub_h_factor;
     guint subsampled_crop_left, subsampled_crop_top;
     guint copy_width;
+    gint i;
 
     /* plane */
     plane_in = GST_VIDEO_FRAME_PLANE_DATA (in_frame, p);
@@ -366,7 +368,7 @@ gst_video_crop_transform_planar (GstVideoCrop * vcrop,
         subsampled_crop_left);
     copy_width = (guint) GST_VIDEO_FRAME_COMP_WIDTH (out_frame, p);
 
-    for (gint i = 0; i < GST_VIDEO_FRAME_COMP_HEIGHT (out_frame, p); ++i) {
+    for (i = 0; i < GST_VIDEO_FRAME_COMP_HEIGHT (out_frame, p); ++i) {
       memcpy (plane_out, plane_in, copy_width);
       plane_in += GST_VIDEO_FRAME_PLANE_STRIDE (in_frame, p);
       plane_out += GST_VIDEO_FRAME_PLANE_STRIDE (out_frame, p);

@@ -293,16 +293,18 @@ rtp_twcc_write_status_vector_chunk (ChunkBitWriter * writer, RecvPacket * pkt)
   if (pkt->missing_run > 0) {
     guint available = chunk_bit_writer_get_available_slots (writer);
     guint total = chunk_bit_writer_get_total_slots (writer);
+    guint i;
+
     if (pkt->missing_run > (available + total)) {
       /* here it is better to finish up the current status-chunk and then
          go for run-length */
-      for (guint i = 0; i < available; i++) {
+      for (i = 0; i < available; i++) {
         chunk_bit_writer_write (writer, RTP_TWCC_PACKET_STATUS_NOT_RECV);
       }
       rtp_twcc_write_run_length_chunk (writer->packet_chunks,
           RTP_TWCC_PACKET_STATUS_NOT_RECV, pkt->missing_run - available);
     } else {
-      for (guint i = 0; i < pkt->missing_run; i++) {
+      for (i = 0; i < pkt->missing_run; i++) {
         chunk_bit_writer_write (writer, RTP_TWCC_PACKET_STATUS_NOT_RECV);
       }
     }
@@ -696,13 +698,14 @@ _parse_run_length_chunk (GstBitReader * reader, GArray * twcc_packets,
 {
   guint run_length;
   guint8 status_code;
+  guint i;
 
   gst_bit_reader_get_bits_uint8 (reader, &status_code, 2);
 
   run_length = *(guint16 *) reader->data & ~0xE0;       /* mask out the 3 last bits */
   run_length = MIN (remaining_packets, GST_READ_UINT16_BE (&run_length));
 
-  for (guint i = 0; i < run_length; i++) {
+  for (i = 0; i < run_length; i++) {
     _add_twcc_packet (twcc_packets, seqnum_offset + i, status_code);
   }
 
@@ -715,12 +718,13 @@ _parse_status_vector_chunk (GstBitReader * reader, GArray * twcc_packets,
 {
   guint8 symbol_size;
   guint num_bits;
+  guint i;
 
   gst_bit_reader_get_bits_uint8 (reader, &symbol_size, 1);
   symbol_size += 1;
   num_bits = MIN (remaining_packets, 14 / symbol_size);
 
-  for (guint i = 0; i < num_bits; i++) {
+  for (i = 0; i < num_bits; i++) {
     guint8 status_code;
     if (gst_bit_reader_get_bits_uint8 (reader, &status_code, symbol_size))
       _add_twcc_packet (twcc_packets, seqnum_offset + i, status_code);
