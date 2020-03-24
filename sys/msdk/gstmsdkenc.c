@@ -854,19 +854,68 @@ gst_msdkenc_reset_task (MsdkEncTask * task)
   task->sync_point = NULL;
 }
 
+static GstVideoCodecFrame *
+gst_msdkenc_find_best_frame (GstMsdkEnc * thiz, GList * frames,
+    mfxBitstream * bitstream)
+{
+  GList *iter;
+  GstVideoCodecFrame *ret = NULL;
+  GstClockTime pts;
+  GstClockTimeDiff best_diff = GST_CLOCK_STIME_NONE;
+
+  if (!bitstream)
+    return NULL;
+
+  if (bitstream->TimeStamp == MFX_TIMESTAMP_UNKNOWN) {
+    pts = GST_CLOCK_TIME_NONE;
+  } else {
+    pts = gst_util_uint64_scale (bitstream->TimeStamp, GST_SECOND, 90000);
+  }
+
+  for (iter = frames; iter; iter = g_list_next (iter)) {
+    GstVideoCodecFrame *frame = (GstVideoCodecFrame *) iter->data;
+
+    /* if we don't know the time stamp, find the first frame which
+     * has unknown timestamp */
+    if (!GST_CLOCK_TIME_IS_VALID (pts)) {
+      if (!GST_CLOCK_TIME_IS_VALID (frame->pts)) {
+        ret = frame;
+        break;
+      }
+    } else {
+      GstClockTimeDiff abs_diff = ABS (GST_CLOCK_DIFF (frame->pts, pts));
+      if (abs_diff == 0) {
+        ret = frame;
+        break;
+      }
+
+      if (!GST_CLOCK_STIME_IS_VALID (best_diff) || abs_diff < best_diff) {
+        ret = frame;
+        best_diff = abs_diff;
+      }
+    }
+  }
+
+  if (ret)
+    gst_video_codec_frame_ref (ret);
+
+  return ret;
+}
+
 static GstFlowReturn
 gst_msdkenc_finish_frame (GstMsdkEnc * thiz, MsdkEncTask * task,
     gboolean discard)
 {
   GstVideoCodecFrame *frame;
+  GList *list;
 
   if (!task->sync_point)
     return GST_FLOW_OK;
 
-  frame = gst_video_encoder_get_oldest_frame (GST_VIDEO_ENCODER (thiz));
+  list = gst_video_encoder_get_frames (GST_VIDEO_ENCODER (thiz));
 
-  if (!frame) {
-    GST_ERROR_OBJECT (thiz, "failed to get a frame");
+  if (!list) {
+    GST_ERROR_OBJECT (thiz, "failed to get list of frame");
     return GST_FLOW_ERROR;
   }
 
@@ -883,6 +932,13 @@ gst_msdkenc_finish_frame (GstMsdkEnc * thiz, MsdkEncTask * task,
     guint8 *data =
         task->output_bitstream.Data + task->output_bitstream.DataOffset;
     gsize size = task->output_bitstream.DataLength;
+
+    frame = gst_msdkenc_find_best_frame (thiz, list, &task->output_bitstream);
+    if (!frame) {
+      /* just pick the oldest one */
+      frame = gst_video_encoder_get_oldest_frame (GST_VIDEO_ENCODER (thiz));
+    }
+
     out_buf = gst_buffer_new_allocate (NULL, size, NULL);
     gst_buffer_fill (out_buf, 0, data, size);
     frame->output_buffer = out_buf;
@@ -900,7 +956,11 @@ gst_msdkenc_finish_frame (GstMsdkEnc * thiz, MsdkEncTask * task,
 
     /* Mark task as available */
     gst_msdkenc_reset_task (task);
+  } else {
+    frame = gst_video_encoder_get_oldest_frame (GST_VIDEO_ENCODER (thiz));
   }
+
+  g_list_free_full (list, (GDestroyNotify) gst_video_codec_frame_unref);
 
   gst_video_codec_frame_unref (frame);
   gst_msdkenc_dequeue_frame (thiz, frame);
