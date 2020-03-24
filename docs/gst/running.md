@@ -27,11 +27,11 @@ GStreamer will fill in this list for you with
     ``.
 
 GStreamer will scan these paths for GStreamer plug-ins. These plug-ins
-will be loaded after the plug-ins in the GST_PLUGIN_PATH variable
+will be loaded after the plug-ins in the `GST_PLUGIN_PATH` variable
 below. The paths are scanned in the given order. This allows a user to
 override system-installed plug-ins with his own versions.
 
-The GST_PLUGIN_SYSTEM_PATH_1_0 variant is useful if both the old
+The `GST_PLUGIN_SYSTEM_PATH_1_0` variant is useful if both the old
 GStreamer 0.10 version and the new GStreamer 1.0 version need to be
 pointed to new plugin paths. The latter will use the _1_0 variant over
 the non-versioned one if it is set.
@@ -53,7 +53,7 @@ The GST_PLUGIN_PATH_1_0 variant is useful if both the old GStreamer
 plugin paths. The latter will use the `_1_0` variant over the
 non-versioned one if it is set.
 
-**`GST_DEBUG.`**
+**`GST_DEBUG`.**
 
 If GStreamer has been configured with `--enable-gst-debug=yes`, this
 variable can be set to a list of debug options, which cause GStreamer to
@@ -131,7 +131,7 @@ hand.
 Since GStreamer 1.2 it is also possible to specify debug levels by name,
 e.g. `GST_DEBUG=*:WARNING,*audio*:LOG`
 
-**`GST_DEBUG_NO_COLOR.`**
+**`GST_DEBUG_NO_COLOR`.**
 
 Set this environment variable to any value ("1" typically) to switch
 off colouring in `GST_DEBUG` output. This has the same effect as
@@ -144,7 +144,7 @@ for the output to be compressed much better than with colours turned on.
 Has the same effect as setting `GST_DEBUG_COLOR_MODE` environment
 variable to "off".
 
-**`GST_DEBUG_COLOR_MODE.`**
+**`GST_DEBUG_COLOR_MODE`.**
 
 Set this environment variable to change log colouring in `GST_DEBUG` output.
 Possible values:
@@ -173,7 +173,7 @@ This is particularly useful to dump debug output into a file on non-UNIX
 platforms to be sent to developers who have viewers that support UNIX terminal
 codes.
 
-**`GST_DEBUG_OPTIONS.`**
+**`GST_DEBUG_OPTIONS`.**
 
 This environment variable can be used to tweak the behaviour of the
 debugging system. Currently the only options supported are
@@ -183,7 +183,7 @@ first few and last few bytes of a buffer-type tag will be serialized
 into the log, to avoid dumping hundreds of lines of useless output into
 the log in case of large image tags and the like.
 
-**`GST_DEBUG_DUMP_DOT_DIR.`**
+**`GST_DEBUG_DUMP_DOT_DIR`.**
 
 Set this environment variable to a path to turn on all
 `GST_DEBUG_BIN_TO_DOT_FILE` or `GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS` calls and
@@ -228,7 +228,7 @@ updating the plugin registry. This is useful for embedded device which
 is not updating the plugins frequently, it will save time when doing
 `gst_init()`.
 
-**GST_TRACE.**
+**`GST_TRACE`.**
 
 Enable memory allocation tracing. Most GStreamer objects have support
 for tracing the number of unfreed objects and their memory pointers.
