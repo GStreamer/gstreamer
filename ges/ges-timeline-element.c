@@ -2483,6 +2483,7 @@ ges_timeline_element_edit (GESTimelineElement * self, GList * layers,
   GESTimeline *timeline;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (position), FALSE);
 
   timeline = GES_TIMELINE_ELEMENT_TIMELINE (self);
   /* FIXME: handle a NULL timeline! */
