@@ -24,6 +24,7 @@ use serde_derive::{Deserialize, Serialize};
 use anyhow::{anyhow, bail, Context};
 
 const STUN_SERVER: &str = "stun://stun.l.google.com:19302";
+const TURN_SERVER: &str = "turn://foo:bar@webrtc.nirbheek.in:3478";
 
 // upgrade weak reference or return
 #[macro_export]
@@ -131,6 +132,7 @@ impl App {
 
         // Set some properties on webrtcbin
         webrtcbin.set_property_from_str("stun-server", STUN_SERVER);
+        webrtcbin.set_property_from_str("turn-server", TURN_SERVER);
         webrtcbin.set_property_from_str("bundle-policy", "max-bundle");
 
         // Create a stream for handling the GStreamer message asynchronously
