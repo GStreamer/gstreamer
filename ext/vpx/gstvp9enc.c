@@ -75,7 +75,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     /*GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ I420, YV12, Y42B, Y444 }")) */
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ I420, YV12, Y444, I420_10LE }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE
+        ("{ I420, YV12, Y444, I420_10LE, I422_10LE }"))
     );
 
 static GstStaticPadTemplate gst_vp9_enc_src_template =
@@ -198,6 +199,12 @@ gst_vp9_enc_set_image_format (GstVPXEnc * enc, vpx_image_t * image)
       image->fmt = VPX_IMG_FMT_I42016;
       image->bps = 15;
       image->x_chroma_shift = image->y_chroma_shift = 1;
+      break;
+    case GST_VIDEO_FORMAT_I422_10LE:
+      image->fmt = VPX_IMG_FMT_I42216;
+      image->bps = 20;
+      image->x_chroma_shift = 1;
+      image->y_chroma_shift = 0;
       break;
     default:
       g_assert_not_reached ();
