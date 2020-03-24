@@ -184,7 +184,7 @@ gst_validate_report_valist (GstValidateReporter * reporter,
   g_return_if_fail (GST_IS_VALIDATE_REPORTER (reporter));
 
   G_VA_COPY (vacopy, var_args);
-  message = g_strdup_vprintf (format, vacopy);
+  message = gst_info_strdup_vprintf (format, vacopy);
   report = gst_validate_report_new (issue, reporter, message);
 
 #ifndef GST_DISABLE_GST_DEBUG
