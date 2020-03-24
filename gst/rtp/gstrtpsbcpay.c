@@ -109,6 +109,8 @@ static void gst_rtp_sbc_pay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_rtp_sbc_pay_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static GstStateChangeReturn gst_rtp_sbc_pay_change_state (GstElement * element,
+    GstStateChange transition);
 
 static gint
 gst_rtp_sbc_pay_get_frame_len (gint subbands, gint channels,
@@ -280,11 +282,36 @@ gst_rtp_sbc_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
     case GST_EVENT_EOS:
       gst_rtp_sbc_pay_flush_buffers (sbcpay);
       break;
+    case GST_EVENT_FLUSH_STOP:
+      gst_adapter_clear (sbcpay->adapter);
+      break;
+    case GST_EVENT_SEGMENT:
+      gst_rtp_sbc_pay_flush_buffers (sbcpay);
+      break;
     default:
       break;
   }
 
   return GST_RTP_BASE_PAYLOAD_CLASS (parent_class)->sink_event (payload, event);
+}
+
+static GstStateChangeReturn
+gst_rtp_sbc_pay_change_state (GstElement * element, GstStateChange transition)
+{
+  GstStateChangeReturn ret;
+  GstRtpSBCPay *sbcpay = GST_RTP_SBC_PAY (element);
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_adapter_clear (sbcpay->adapter);
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }
 
 static void
@@ -312,6 +339,8 @@ gst_rtp_sbc_pay_class_init (GstRtpSBCPayClass * klass)
   payload_class->handle_buffer =
       GST_DEBUG_FUNCPTR (gst_rtp_sbc_pay_handle_buffer);
   payload_class->sink_event = GST_DEBUG_FUNCPTR (gst_rtp_sbc_pay_sink_event);
+
+  element_class->change_state = gst_rtp_sbc_pay_change_state;
 
   /* properties */
   g_object_class_install_property (G_OBJECT_CLASS (klass),
