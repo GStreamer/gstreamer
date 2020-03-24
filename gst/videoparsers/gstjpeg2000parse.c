@@ -57,19 +57,21 @@ gst_jpeg2000_parse_is_part_2 (guint16 rsiz)
 
 
 static void
-gst_jpeg2000_parse_get_subsampling (GstJPEG2000Sampling sampling, guint8 * dx,
-    guint8 * dy)
+gst_jpeg2000_parse_get_subsampling (guint16 compno,
+    GstJPEG2000Sampling sampling, guint8 * dx, guint8 * dy)
 {
   *dx = 1;
   *dy = 1;
-  if (sampling == GST_JPEG2000_SAMPLING_YBR422) {
-    *dx = 2;
-  } else if (sampling == GST_JPEG2000_SAMPLING_YBR420) {
-    *dx = 2;
-    *dy = 2;
-  } else if (sampling == GST_JPEG2000_SAMPLING_YBR410) {
-    *dx = 4;
-    *dy = 2;
+  if (compno == 1 || compno == 2) {
+    if (sampling == GST_JPEG2000_SAMPLING_YBR422) {
+      *dx = 2;
+    } else if (sampling == GST_JPEG2000_SAMPLING_YBR420) {
+      *dx = 2;
+      *dy = 2;
+    } else if (sampling == GST_JPEG2000_SAMPLING_YBR410) {
+      *dx = 4;
+      *dy = 2;
+    }
   }
 }
 
@@ -590,7 +592,8 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
     }
     if (sink_sampling != GST_JPEG2000_SAMPLING_NONE) {
       guint8 dx_caps, dy_caps;
-      gst_jpeg2000_parse_get_subsampling (sink_sampling, &dx_caps, &dy_caps);
+      gst_jpeg2000_parse_get_subsampling (compno, sink_sampling, &dx_caps,
+          &dy_caps);
       if (dx_caps != dx[compno] || dy_caps != dy[compno]) {
         GstJPEG2000Colorspace inferred_colorspace =
             GST_JPEG2000_COLORSPACE_NONE;
