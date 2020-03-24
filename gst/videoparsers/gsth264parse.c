@@ -687,7 +687,10 @@ gst_h264_parse_process_sei (GstH264Parse * h264parse, GstH264NalUnit * nalu)
         GST_LOG_OBJECT (h264parse,
             "frame packing arrangement message: id %u cancelled %u "
             "type %u quincunx %u content_interpretation %d flip %u "
-            "right_first %u field_views %u is_frame0 %u",
+            "right_first %u field_views %u is_frame0 %u "
+            "frame0_self_contained %u frame1_self_contained %u "
+            "frame0_grid (%u, %u) frame1_grid (%u, %u) "
+            "repetition_period %" G_GUINT16_FORMAT,
             sei.payload.frame_packing.frame_packing_id,
             sei.payload.frame_packing.frame_packing_cancel_flag,
             sei.payload.frame_packing.frame_packing_type,
@@ -696,7 +699,14 @@ gst_h264_parse_process_sei (GstH264Parse * h264parse, GstH264NalUnit * nalu)
             sei.payload.frame_packing.spatial_flipping_flag,
             sei.payload.frame_packing.frame0_flipped_flag,
             sei.payload.frame_packing.field_views_flag,
-            sei.payload.frame_packing.current_frame_is_frame0_flag);
+            sei.payload.frame_packing.current_frame_is_frame0_flag,
+            sei.payload.frame_packing.frame0_self_contained_flag,
+            sei.payload.frame_packing.frame1_self_contained_flag,
+            sei.payload.frame_packing.frame0_grid_position_x,
+            sei.payload.frame_packing.frame0_grid_position_y,
+            sei.payload.frame_packing.frame1_grid_position_x,
+            sei.payload.frame_packing.frame1_grid_position_y,
+            sei.payload.frame_packing.frame_packing_repetition_period);
 
         /* Only IDs from 0->255 and 512->2^31-1 are valid. Ignore others */
         if ((sei.payload.frame_packing.frame_packing_id >= 256 &&
