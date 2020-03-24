@@ -548,6 +548,7 @@ gst_splitmux_sink_init (GstSplitMuxSink * splitmux)
   splitmux->reset_muxer = DEFAULT_RESET_MUXER;
 
   splitmux->threshold_timecode_str = NULL;
+  splitmux->threshold_timecode = GST_CLOCK_TIME_NONE;
 
   splitmux->async_finalize = DEFAULT_ASYNC_FINALIZE;
   splitmux->muxer_factory = g_strdup (DEFAULT_MUXER);
@@ -620,6 +621,8 @@ gst_splitmux_sink_finalize (GObject * object)
 
   if (splitmux->threshold_timecode_str)
     g_free (splitmux->threshold_timecode_str);
+  if (splitmux->tc_interval)
+    gst_video_time_code_interval_free (splitmux->tc_interval);
 
   if (splitmux->times_to_split)
     gst_queue_array_free (splitmux->times_to_split);
@@ -700,7 +703,25 @@ gst_splitmux_sink_set_property (GObject * object, guint prop_id,
       break;
     case PROP_MAX_SIZE_TIMECODE:
       GST_OBJECT_LOCK (splitmux);
+      g_free (splitmux->threshold_timecode_str);
+      /* will be calculated later */
+      splitmux->threshold_timecode = GST_CLOCK_TIME_NONE;
+      splitmux->next_max_tc_time = GST_CLOCK_TIME_NONE;
+      g_clear_pointer (&splitmux->tc_interval,
+          gst_video_time_code_interval_free);
+
       splitmux->threshold_timecode_str = g_value_dup_string (value);
+      if (splitmux->threshold_timecode_str) {
+        splitmux->tc_interval =
+            gst_video_time_code_interval_new_from_string
+            (splitmux->threshold_timecode_str);
+        if (!splitmux->tc_interval) {
+          g_warning ("Wrong timecode string %s",
+              splitmux->threshold_timecode_str);
+          g_free (splitmux->threshold_timecode_str);
+          splitmux->threshold_timecode_str = NULL;
+        }
+      }
       GST_OBJECT_UNLOCK (splitmux);
       break;
     case PROP_SEND_KEYFRAME_REQUESTS:
@@ -1261,17 +1282,12 @@ calculate_next_max_timecode (GstSplitMuxSink * splitmux,
     const GstVideoTimeCode * cur_tc, GstClockTime running_time)
 {
   GstVideoTimeCode *target_tc;
-  GstVideoTimeCodeInterval *tc_inter;
   GstClockTime cur_tc_time, target_tc_time, next_max_tc_time;
 
-  if (cur_tc == NULL || splitmux->threshold_timecode_str == NULL)
+  if (cur_tc == NULL || splitmux->tc_interval == NULL)
     return GST_CLOCK_TIME_NONE;
 
-  tc_inter =
-      gst_video_time_code_interval_new_from_string
-      (splitmux->threshold_timecode_str);
-  target_tc = gst_video_time_code_add_interval (cur_tc, tc_inter);
-  gst_video_time_code_interval_free (tc_inter);
+  target_tc = gst_video_time_code_add_interval (cur_tc, splitmux->tc_interval);
 
   /* Convert to ns */
   target_tc_time = gst_video_time_code_nsec_since_daily_jam (target_tc);
@@ -1323,7 +1339,7 @@ request_next_keyframe (GstSplitMuxSink * splitmux, GstBuffer * buffer,
   gboolean timecode_based = FALSE;
   GstClockTime next_max_tc_time = GST_CLOCK_TIME_NONE;
 
-  if (splitmux->threshold_timecode_str) {
+  if (splitmux->tc_interval) {
     GstVideoTimeCodeMeta *tc_meta;
 
     if (buffer != NULL) {
@@ -1363,8 +1379,10 @@ request_next_keyframe (GstSplitMuxSink * splitmux, GstBuffer * buffer,
   }
 
   splitmux->last_fku_time = target_time;
-  if (timecode_based && !GST_CLOCK_TIME_IS_VALID (splitmux->next_max_tc_time))
+  if (timecode_based && !GST_CLOCK_TIME_IS_VALID (splitmux->next_max_tc_time)) {
     splitmux->next_max_tc_time = next_max_tc_time;
+    splitmux->threshold_timecode = next_max_tc_time - running_time;
+  }
 
   ev = gst_video_event_new_upstream_force_key_unit (target_time, TRUE, 0);
   GST_INFO_OBJECT (splitmux, "Requesting next keyframe at %" GST_TIME_FORMAT,
@@ -2059,7 +2077,9 @@ need_new_fragment (GstSplitMuxSink * splitmux,
 
   /* 5us possible rounding error was already accounted around keyframe request */
   if (splitmux->next_max_tc_time != GST_CLOCK_TIME_NONE &&
-      splitmux->reference_ctx->in_running_time >= splitmux->next_max_tc_time) {
+      (queued_time >= splitmux->threshold_timecode ||
+          splitmux->reference_ctx->in_running_time >=
+          splitmux->next_max_tc_time)) {
     GST_TRACE_OBJECT (splitmux, "Splitting at timecode mark");
     return TRUE;                /* Timecode threshold */
   }

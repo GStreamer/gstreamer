@@ -116,6 +116,10 @@ struct _GstSplitMuxSink
   guint max_files;
   gboolean send_keyframe_requests;
   gchar *threshold_timecode_str;
+  /* created from threshold_timecode_str */
+  GstVideoTimeCodeInterval *tc_interval;
+  /* allowed max size of queued time based on timecode */
+  GstClockTime threshold_timecode;
   GstClockTime next_max_tc_time;
   GstClockTime alignment_threshold;
   GstClockTime last_fku_time;
