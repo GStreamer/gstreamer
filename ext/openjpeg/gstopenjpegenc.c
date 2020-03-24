@@ -28,6 +28,7 @@
 #include <gst/codecparsers/gstjpeg2000sampling.h>
 
 #include <string.h>
+#include <math.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_openjpeg_enc_debug);
 #define GST_CAT_DEFAULT gst_openjpeg_enc_debug
@@ -504,12 +505,15 @@ fill_image_planar16_3 (opj_image_t * image, GstVideoFrame * frame)
   gint sstride;
 
   for (c = 0; c < 3; c++) {
+    opj_image_comp_t *comp = image->comps + c;
+
     w = GST_VIDEO_FRAME_COMP_WIDTH (frame, c);
-    h = image->comps[c].h;
+    h = comp->h;
     sstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, c) / 2;
     data_in =
-        (guint16 *) GST_VIDEO_FRAME_COMP_DATA (frame, c) + image->y0 * sstride;
-    data_out = image->comps[c].data;
+        (guint16 *) GST_VIDEO_FRAME_COMP_DATA (frame,
+        c) + (image->y0 / comp->dy) * sstride;
+    data_out = comp->data;
 
     for (y = 0; y < h; y++) {
       tmp = data_in;
@@ -534,12 +538,15 @@ fill_image_planar8_3 (opj_image_t * image, GstVideoFrame * frame)
   gint sstride;
 
   for (c = 0; c < 3; c++) {
+    opj_image_comp_t *comp = image->comps + c;
+
     w = GST_VIDEO_FRAME_COMP_WIDTH (frame, c);
-    h = image->comps[c].h;
+    h = comp->h;
     sstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, c);
     data_in =
-        (guint8 *) GST_VIDEO_FRAME_COMP_DATA (frame, c) + image->y0 * sstride;
-    data_out = image->comps[c].data;
+        (guint8 *) GST_VIDEO_FRAME_COMP_DATA (frame,
+        c) + (image->y0 / comp->dy) * sstride;
+    data_out = comp->data;
 
     for (y = 0; y < h; y++) {
       tmp = data_in;
@@ -562,12 +569,14 @@ fill_image_planar8_1 (opj_image_t * image, GstVideoFrame * frame)
   const guint8 *data_in, *tmp;
   gint *data_out;
   gint sstride;
+  opj_image_comp_t *comp = image->comps;
 
   w = GST_VIDEO_FRAME_COMP_WIDTH (frame, 0);
-  h = image->comps[0].h;
+  h = comp->h;
   sstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
   data_in =
-      (guint8 *) GST_VIDEO_FRAME_COMP_DATA (frame, 0) + image->y0 * sstride;
+      (guint8 *) GST_VIDEO_FRAME_COMP_DATA (frame,
+      0) + (image->y0 / comp->dy) * sstride;
   data_out = image->comps[0].data;
 
   for (y = 0; y < h; y++) {
@@ -590,13 +599,15 @@ fill_image_planar16_1 (opj_image_t * image, GstVideoFrame * frame)
   const guint16 *data_in, *tmp;
   gint *data_out;
   gint sstride;
+  opj_image_comp_t *comp = image->comps;
 
   w = GST_VIDEO_FRAME_COMP_WIDTH (frame, 0);
-  h = image->comps[0].h;
+  h = comp->h;
   sstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0) / 2;
   data_in =
-      (guint16 *) GST_VIDEO_FRAME_COMP_DATA (frame, 0) + image->y0 * sstride;
-  data_out = image->comps[0].data;
+      (guint16 *) GST_VIDEO_FRAME_COMP_DATA (frame,
+      0) + (image->y0 / comp->dy) * sstride;
+  data_out = comp->data;
 
   for (y = 0; y < h; y++) {
     tmp = data_in;
@@ -778,12 +789,10 @@ static opj_image_t *
 gst_openjpeg_enc_fill_image (GstOpenJPEGEnc * self, GstVideoFrame * frame,
     guint slice_num)
 {
-  gint i, ncomps;
+  gint i, ncomps, temp, min_height = INT_MAX;
   opj_image_cmptparm_t *comps;
   OPJ_COLOR_SPACE colorspace;
   opj_image_t *image;
-  guint nominal_stripe_height =
-      GST_VIDEO_FRAME_HEIGHT (frame) / self->num_stripes;
 
   ncomps = GST_VIDEO_FRAME_N_COMPONENTS (frame);
   comps = g_new0 (opj_image_cmptparm_t, ncomps);
@@ -793,13 +802,27 @@ gst_openjpeg_enc_fill_image (GstOpenJPEGEnc * self, GstVideoFrame * frame,
     comps[i].bpp = GST_VIDEO_FRAME_COMP_DEPTH (frame, i);
     comps[i].sgnd = 0;
     comps[i].w = GST_VIDEO_FRAME_COMP_WIDTH (frame, i);
-    comps[i].h =
-        get_stripe_height (self, slice_num, GST_VIDEO_FRAME_COMP_HEIGHT (frame,
-            i));
     comps[i].dx =
-        GST_VIDEO_FRAME_WIDTH (frame) / GST_VIDEO_FRAME_COMP_WIDTH (frame, i);
+        (guint) ((float) GST_VIDEO_FRAME_WIDTH (frame) /
+        GST_VIDEO_FRAME_COMP_WIDTH (frame, i) + 0.5f);
     comps[i].dy =
-        GST_VIDEO_FRAME_HEIGHT (frame) / GST_VIDEO_FRAME_COMP_HEIGHT (frame, i);
+        (guint) ((float) GST_VIDEO_FRAME_HEIGHT (frame) /
+        GST_VIDEO_FRAME_COMP_HEIGHT (frame, i) + 0.5f);
+    temp =
+        (GST_VIDEO_FRAME_COMP_HEIGHT (frame,
+            i) / self->num_stripes) * comps[i].dy;
+    if (temp < min_height)
+      min_height = temp;
+  }
+
+  for (i = 0; i < ncomps; i++) {
+    gint nominal_height = min_height / comps[i].dy;
+
+    comps[i].h = (slice_num < self->num_stripes - 1) ?
+        nominal_height
+        : GST_VIDEO_FRAME_COMP_HEIGHT (frame,
+        i) - (self->num_stripes - 1) * nominal_height;
+
   }
 
   if ((frame->info.finfo->flags & GST_VIDEO_FORMAT_FLAG_YUV))
@@ -812,14 +835,22 @@ gst_openjpeg_enc_fill_image (GstOpenJPEGEnc * self, GstVideoFrame * frame,
     g_return_val_if_reached (NULL);
 
   image = opj_image_create (ncomps, comps, colorspace);
+  if (!image) {
+    GST_WARNING_OBJECT (self,
+        "Unable to create a JPEG image. first component height=%d",
+        ncomps ? comps[0].h : 0);
+    return NULL;
+  }
+
   g_free (comps);
 
   image->x0 = 0;
   image->x1 = GST_VIDEO_FRAME_WIDTH (frame);
-  image->y0 = slice_num * nominal_stripe_height;
+  image->y0 = slice_num * min_height;
   image->y1 =
-      image->y0 + get_stripe_height (self, slice_num,
-      GST_VIDEO_FRAME_HEIGHT (frame));
+      (slice_num <
+      self->num_stripes - 1) ? image->y0 +
+      min_height : GST_VIDEO_FRAME_HEIGHT (frame);
   self->fill_image (image, frame);
 
   return image;
@@ -942,6 +973,8 @@ gst_openjpeg_enc_handle_frame (GstVideoEncoder * encoder,
 
   if (stripe_mode) {
     const gchar *str = gst_structure_get_string (s, "alignment");
+    gint min_res;
+
     if (g_strcmp0 (str, "stripe") != 0) {
       GST_ERROR_OBJECT (self,
           "Number of stripes set to %d, but alignment=stripe not supported downstream",
@@ -950,6 +983,26 @@ gst_openjpeg_enc_handle_frame (GstVideoEncoder * encoder,
       ret = GST_FLOW_NOT_NEGOTIATED;
       goto done;
     }
+
+    /* due to limitations in openjpeg library,
+     * number of wavelet resolutions must not exceed floor(log(stripe height)) + 1 */
+    if (!gst_video_frame_map (&vframe, &self->input_state->info,
+            frame->input_buffer, GST_MAP_READ)) {
+      gst_video_codec_frame_unref (frame);
+      GST_ELEMENT_ERROR (self, CORE, FAILED,
+          ("Failed to map input buffer"), (NULL));
+      return GST_FLOW_ERROR;
+    }
+    /* find stripe with least height */
+    min_res =
+        get_stripe_height (self, self->num_stripes - 1,
+        GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, 0));
+    min_res = MIN (min_res, get_stripe_height (self, 0,
+            GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, 0)));
+    /* take log to find correct number of wavelet resolutions */
+    min_res = min_res > 1 ? (gint) log (min_res) + 1 : 1;
+    self->params.numresolution = MIN (min_res + 1, self->params.numresolution);
+    gst_video_frame_unmap (&vframe);
   }
 
 
