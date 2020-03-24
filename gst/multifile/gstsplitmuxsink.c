@@ -309,24 +309,30 @@ gst_splitmux_sink_class_init (GstSplitMuxSinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_MAX_SIZE_TIME,
       g_param_spec_uint64 ("max-size-time", "Max. size (ns)",
           "Max. amount of time per file (in ns, 0=disable)", 0, G_MAXUINT64,
-          DEFAULT_MAX_SIZE_TIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_MAX_SIZE_TIME,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+          G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_MAX_SIZE_BYTES,
       g_param_spec_uint64 ("max-size-bytes", "Max. size bytes",
           "Max. amount of data per file (in bytes, 0=disable)", 0, G_MAXUINT64,
-          DEFAULT_MAX_SIZE_BYTES, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_MAX_SIZE_BYTES,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+          G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_MAX_SIZE_TIMECODE,
       g_param_spec_string ("max-size-timecode", "Maximum timecode difference",
           "Maximum difference in timecode between first and last frame. "
           "Separator is assumed to be \":\" everywhere (e.g. 01:00:00:00). "
-          "Will only be effective if a timecode track is present.",
-          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Will only be effective if a timecode track is present.", NULL,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+          G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SEND_KEYFRAME_REQUESTS,
       g_param_spec_boolean ("send-keyframe-requests",
           "Request keyframes at max-size-time",
           "Request a keyframe every max-size-time ns to try splitting at that point. "
           "Needs max-size-bytes to be 0 in order to be effective.",
           DEFAULT_SEND_KEYFRAME_REQUESTS,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+          G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_MAX_FILES,
       g_param_spec_uint ("max-files", "Max files",
           "Maximum number of files to keep on disk. Once the maximum is reached,"
@@ -336,9 +342,9 @@ gst_splitmux_sink_class_init (GstSplitMuxSinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_ALIGNMENT_THRESHOLD,
       g_param_spec_uint64 ("alignment-threshold", "Alignment threshold (ns)",
           "Allow non-reference streams to be that many ns before the reference"
-          " stream",
-          0, G_MAXUINT64, DEFAULT_ALIGNMENT_THRESHOLD,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          " stream", 0, G_MAXUINT64, DEFAULT_ALIGNMENT_THRESHOLD,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+          G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_MUXER,
       g_param_spec_object ("muxer", "Muxer",
