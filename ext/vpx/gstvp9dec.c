@@ -73,7 +73,8 @@ static GstStaticPadTemplate gst_vp9_dec_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ I420, YV12, Y42B, Y444, GBR }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE
+        ("{ I420, YV12, Y42B, Y444, GBR, I420_10LE }"))
     );
 
 #define parent_class gst_vp9_dec_parent_class
@@ -157,14 +158,16 @@ gst_vp9_dec_get_valid_format (GstVPXDec * dec, vpx_image_t * img,
           (NULL), ("Unsupported frame format - 4:4:0 planar"));
       return FALSE;
 #endif
-#ifdef VPX_IMG_FMT_I42016
     case VPX_IMG_FMT_I42016:
       /* VPX_IMG_FMT_I420 | VPX_IMG_FMT_HIGHBITDEPTH */
+      if (img->bit_depth == 10) {
+        *fmt = GST_VIDEO_FORMAT_I420_10LE;
+        return TRUE;
+      }
       GST_FIXME_OBJECT (dec, "Please add 16-bit I420 format");
       GST_ELEMENT_WARNING (dec, STREAM, NOT_IMPLEMENTED,
           (NULL), ("Unsupported frame format - 16-bit 4:2:0 planar"));
       return FALSE;
-#endif
 #ifdef VPX_IMG_FMT_I42216
     case VPX_IMG_FMT_I42216:
       /* VPX_IMG_FMT_I422 | VPX_IMG_FMT_HIGHBITDEPTH */

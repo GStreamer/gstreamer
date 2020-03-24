@@ -1522,6 +1522,9 @@ gst_vpx_enc_get_downstream_profile (GstVPXEnc * encoder, GstVideoInfo * info)
     case GST_VIDEO_FORMAT_Y444:
       min_profile = 1;
       break;
+    case GST_VIDEO_FORMAT_I420_10LE:
+      min_profile = 2;
+      break;
     default:
       min_profile = 0;
   }
@@ -1572,6 +1575,7 @@ gst_vpx_enc_set_format (GstVideoEncoder * video_encoder,
   GstVPXEnc *encoder;
   vpx_codec_err_t status;
   vpx_image_t *image;
+  vpx_codec_flags_t flags = 0;
   GstCaps *caps;
   gboolean ret = TRUE;
   GstVideoInfo *info = &state->info;
@@ -1591,6 +1595,11 @@ gst_vpx_enc_set_format (GstVideoEncoder * video_encoder,
     encoder->multipass_cache_idx++;
   } else {
     g_mutex_lock (&encoder->encoder_lock);
+  }
+
+  encoder->cfg.g_bit_depth = encoder->cfg.g_input_bit_depth = info->finfo->bits;
+  if (encoder->cfg.g_bit_depth > 8) {
+    flags |= VPX_CODEC_USE_HIGHBITDEPTH;
   }
 
   encoder->cfg.g_profile = gst_vpx_enc_get_downstream_profile (encoder, info);
@@ -1666,7 +1675,7 @@ gst_vpx_enc_set_format (GstVideoEncoder * video_encoder,
 
   status =
       vpx_codec_enc_init (&encoder->encoder, vpx_enc_class->get_algo (encoder),
-      &encoder->cfg, 0);
+      &encoder->cfg, flags);
   if (status != VPX_CODEC_OK) {
     GST_ELEMENT_ERROR (encoder, LIBRARY, INIT,
         ("Failed to initialize encoder"), ("%s", gst_vpx_error_name (status)));
