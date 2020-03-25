@@ -2082,7 +2082,7 @@ need_new_fragment (GstSplitMuxSink * splitmux,
 
   /* 5us possible rounding error was already accounted around keyframe request */
   if (splitmux->threshold_timecode != GST_CLOCK_TIME_NONE &&
-      (queued_time >= splitmux->threshold_timecode)) {
+      (queued_time > splitmux->threshold_timecode)) {
     GST_TRACE_OBJECT (splitmux, "Splitting at timecode mark");
     return TRUE;                /* Timecode threshold */
   }
