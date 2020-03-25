@@ -1025,6 +1025,95 @@ GST_START_TEST (test_splitmuxsink_keyframe_request_less)
 
 GST_END_TEST;
 
+static void
+splitmuxsink_split_by_keyframe_timecode (gboolean send_keyframe_request,
+    const gchar * maxsize_timecode_string, guint maxsize_timecode_in_sec,
+    guint encoder_key_interval_sec)
+{
+  GstMessage *msg;
+  GstElement *pipeline;
+  GstElement *sink;
+  gchar *pipeline_str;
+  gchar *dest_pattern;
+  guint count;
+  guint expected_count;
+  gchar *in_pattern;
+
+  pipeline_str = g_strdup_printf ("splitmuxsink name=splitsink "
+      "max-size-timecode=%s"
+      " send-keyframe-requests=%s muxer=qtmux "
+      "videotestsrc num-buffers=30 ! video/x-raw,width=80,height=64,framerate=5/1 "
+      "! videoconvert ! timecodestamper ! queue ! vp8enc keyframe-max-dist=%d ! splitsink.video ",
+      maxsize_timecode_string, send_keyframe_request ? "true" : "false",
+      encoder_key_interval_sec ? encoder_key_interval_sec * 5 : 1);
+
+  pipeline = gst_parse_launch (pipeline_str, NULL);
+  g_free (pipeline_str);
+
+  fail_if (pipeline == NULL);
+  sink = gst_bin_get_by_name (GST_BIN (pipeline), "splitsink");
+  fail_if (sink == NULL);
+  g_signal_connect (sink, "format-location-full",
+      (GCallback) check_format_location, NULL);
+  dest_pattern = g_build_filename (tmpdir, "out%05d.m4v", NULL);
+  g_object_set (G_OBJECT (sink), "location", dest_pattern, NULL);
+  g_free (dest_pattern);
+  g_object_unref (sink);
+
+  msg = run_pipeline (pipeline);
+
+  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)
+    dump_error (msg);
+  fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
+  gst_message_unref (msg);
+
+  gst_object_unref (pipeline);
+
+  count = count_files (tmpdir);
+  expected_count = (6 / maxsize_timecode_in_sec) +
+      (6 % maxsize_timecode_in_sec ? 1 : 0);
+  fail_unless (count == expected_count,
+      "Expected %d output files, got %d", expected_count, count);
+
+  in_pattern = g_build_filename (tmpdir, "out*.m4v", NULL);
+  /* FIXME: Reverse playback works poorly with multiple video streams
+   * in qtdemux (at least, maybe other demuxers) at the time this was
+   * written, and causes test failures like buffers being output
+   * multiple times by qtdemux as it loops through GOPs. Disable that
+   * for now */
+  test_playback (in_pattern, 0, 6 * GST_SECOND, FALSE);
+  g_free (in_pattern);
+}
+
+GST_START_TEST (test_splitmuxsink_keyframe_request_timecode)
+{
+  /* This encoding option is intended to produce keyframe per 1 second
+   * but splitmuxsink will request keyframe per 2 seconds. This should produce
+   * 2 seconds long files */
+  splitmuxsink_split_by_keyframe_timecode (TRUE, "00:00:02:00", 2, 1);
+}
+
+GST_END_TEST;
+
+GST_START_TEST
+    (test_splitmuxsink_keyframe_request_timecode_trailing_small_segment) {
+  /* This encoding option is intended to produce keyframe per 1 second
+   * but splitmuxsink will request keyframe per 4 seconds. This should produce
+   * 4 seconds long files */
+  splitmuxsink_split_by_keyframe_timecode (TRUE, "00:00:04:00", 4, 1);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_splitmuxsink_keyframe_request_timecode_all_intra)
+{
+  /* This encoding option is intended to produce keyframe for every frame.
+   * This should produce 1 second long files */
+  splitmuxsink_split_by_keyframe_timecode (TRUE, "00:00:01:00", 1, 0);
+}
+
+GST_END_TEST;
+
 static Suite *
 splitmux_suite (void)
 {
@@ -1034,7 +1123,7 @@ splitmux_suite (void)
   TCase *tc_chain_complex = tcase_create ("complex");
   TCase *tc_chain_mp4_jpeg = tcase_create ("caps_change");
   gboolean have_theora, have_ogg, have_vorbis, have_matroska, have_qtmux,
-      have_jpeg, have_vp8;
+      have_jpeg, have_vp8, have_timecodestamper;
 
   /* we assume that if encoder/muxer are there, decoder/demuxer will be a well */
   have_theora = gst_registry_check_feature_version (gst_registry_get (),
@@ -1051,6 +1140,9 @@ splitmux_suite (void)
       "jpegenc", GST_VERSION_MAJOR, GST_VERSION_MINOR, 0);
   have_vp8 = gst_registry_check_feature_version (gst_registry_get (),
       "vp8enc", GST_VERSION_MAJOR, GST_VERSION_MINOR, 0);
+  have_timecodestamper =
+      gst_registry_check_feature_version (gst_registry_get (),
+      "timecodestamper", GST_VERSION_MAJOR, GST_VERSION_MINOR, 0);
 
   suite_add_tcase (s, tc_chain);
   suite_add_tcase (s, tc_chain_basic);
@@ -1098,6 +1190,17 @@ splitmux_suite (void)
     tcase_add_test (tc_chain, test_splitmuxsink_keyframe_request_less);
   } else {
     GST_INFO ("Skipping tests, missing plugins: vp8enc or mp4mux");
+  }
+
+  if (have_qtmux && have_vp8 && have_timecodestamper) {
+    tcase_add_test (tc_chain, test_splitmuxsink_keyframe_request_timecode);
+    tcase_add_test (tc_chain,
+        test_splitmuxsink_keyframe_request_timecode_trailing_small_segment);
+    tcase_add_test (tc_chain,
+        test_splitmuxsink_keyframe_request_timecode_all_intra);
+  } else {
+    GST_INFO
+        ("Skipping tests, missing plugins: vp8enc, mp4mux, or timecodestamper");
   }
 
   return s;
