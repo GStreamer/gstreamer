@@ -59,6 +59,8 @@ manifest:
       when: 'always'
     - if: '$CI_PROJECT_PATH == "gstreamer/cerbero"'
       when: 'always'
+    - if: '$CI_PROJECT_PATH == "gstreamer/gst-docs"'
+      when: 'always'
     - when: 'manual'
   stage: 'preparation'
   script:
