@@ -245,6 +245,40 @@ static guint8 nalu_chained_sei[] = {
   0x06, 0x01, 0xc4, 0x80
 };
 
+/* Content light level information SEI message */
+static guint8 h264_sei_cll[] = {
+  0x00, 0x00, 0x00, 0x01, 0x06, 0x90, 0x04, 0x03, 0xe8, 0x01, 0x90, 0x80
+};
+
+/* Mastering display colour volume information SEI message */
+static guint8 h264_sei_mdcv[] = {
+  0x00, 0x00, 0x00, 0x01, 0x06, 0x89, 0x18, 0x84,
+  0xd0, 0x3e, 0x80, 0x33, 0x90, 0x86, 0xc4, 0x1d,
+  0x4c, 0x0b, 0xb8, 0x3d, 0x13, 0x40, 0x42, 0x00,
+  0x98, 0x96, 0x80, 0x00, 0x00, 0x03, 0x00, 0x01,
+  0x80
+};
+
+/* closed caption data */
+static guint8 h264_sei_user_data_registered[] = {
+  0x00, 0x00, 0x00, 0x01, 0x06, 0x04, 0x47, 0xb5, 0x00, 0x31, 0x47, 0x41,
+  0x39, 0x34, 0x03, 0xd4,
+  0xff, 0xfc, 0x80, 0x80, 0xfd, 0x80, 0x80, 0xfa, 0x00, 0x00, 0xfa, 0x00,
+  0x00, 0xfa, 0x00, 0x00,
+  0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00,
+  0xfa, 0x00, 0x00, 0xfa,
+  0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa,
+  0x00, 0x00, 0xfa, 0x00,
+  0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00,
+  0x00, 0xff, 0x80
+};
+
+/* frame packing, side-by-side */
+static guint8 h264_sei_frame_packing[] = {
+  0x00, 0x00, 0x00, 0x01, 0x06, 0x2d, 0x07, 0x81, 0x81, 0x00, 0x00, 0x03,
+  0x00, 0x01, 0x20, 0x80
+};
+
 GST_START_TEST (test_h264_parse_invalid_sei)
 {
   GstH264ParserResult res;
@@ -313,6 +347,215 @@ GST_START_TEST (test_h264_parse_invalid_sei)
 
 GST_END_TEST;
 
+typedef gboolean (*SEICheckFunc) (gconstpointer a, gconstpointer b);
+
+static gboolean
+check_sei_user_data_registered (const GstH264RegisteredUserData * a,
+    const GstH264RegisteredUserData * b)
+{
+  if (a->country_code != b->country_code)
+    return FALSE;
+
+  if ((a->country_code == 0xff) &&
+      (a->country_code_extension != b->country_code_extension))
+    return FALSE;
+
+  if (a->size != b->size)
+    return FALSE;
+
+  return !memcmp (a->data, b->data, a->size);
+}
+
+static gboolean
+check_sei_frame_packing (const GstH264FramePacking * a,
+    const GstH264FramePacking * b)
+{
+  if ((a->frame_packing_id != b->frame_packing_id) ||
+      (a->frame_packing_cancel_flag != b->frame_packing_cancel_flag))
+    return FALSE;
+
+  if (!a->frame_packing_cancel_flag) {
+    if ((a->frame_packing_type != b->frame_packing_type) ||
+        (a->quincunx_sampling_flag != b->quincunx_sampling_flag) ||
+        (a->content_interpretation_type != b->content_interpretation_type) ||
+        (a->spatial_flipping_flag != b->spatial_flipping_flag) ||
+        (a->frame0_flipped_flag != b->frame0_flipped_flag) ||
+        (a->field_views_flag != b->field_views_flag) ||
+        (a->current_frame_is_frame0_flag != b->current_frame_is_frame0_flag) ||
+        (a->frame0_self_contained_flag != b->frame0_self_contained_flag) ||
+        (a->frame1_self_contained_flag != b->frame1_self_contained_flag))
+      return FALSE;
+
+    if (!a->quincunx_sampling_flag &&
+        a->frame_packing_type != GST_H264_FRAME_PACKING_TEMPORAL_INTERLEAVING) {
+      if ((a->frame0_grid_position_x != b->frame0_grid_position_x) ||
+          (a->frame0_grid_position_y != b->frame0_grid_position_y) ||
+          (a->frame1_grid_position_x != b->frame1_grid_position_x) ||
+          (a->frame1_grid_position_y != b->frame1_grid_position_y))
+        return FALSE;
+    }
+
+    if (a->frame_packing_repetition_period !=
+        b->frame_packing_repetition_period)
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+check_sei_mdcv (const GstH264MasteringDisplayColourVolume * a,
+    const GstH264MasteringDisplayColourVolume * b)
+{
+  gint i;
+  for (i = 0; i < 3; i++) {
+    if (a->display_primaries_x[i] != b->display_primaries_x[i] ||
+        a->display_primaries_y[i] != b->display_primaries_y[i])
+      return FALSE;
+  }
+
+  return (a->white_point_x == b->white_point_x) &&
+      (a->white_point_y == b->white_point_y) &&
+      (a->max_display_mastering_luminance == b->max_display_mastering_luminance)
+      && (a->min_display_mastering_luminance ==
+      b->min_display_mastering_luminance);
+}
+
+static gboolean
+check_sei_cll (const GstH264ContentLightLevel * a,
+    const GstH264ContentLightLevel * b)
+{
+  return (a->max_content_light_level == b->max_content_light_level) &&
+      (a->max_pic_average_light_level == b->max_pic_average_light_level);
+}
+
+GST_START_TEST (test_h264_create_sei)
+{
+  GstH264NalParser *parser;
+  GstH264ParserResult parse_ret;
+  GstH264NalUnit nalu;
+  GArray *msg_array = NULL;
+  GstMemory *mem;
+  gint i;
+  GstMapInfo info;
+  struct
+  {
+    guint8 *raw_data;
+    guint len;
+    GstH264SEIPayloadType type;
+    GstH264SEIMessage parsed_message;
+    SEICheckFunc check_func;
+  } test_list[] = {
+    /* *INDENT-OFF* */
+    {h264_sei_user_data_registered, G_N_ELEMENTS (h264_sei_user_data_registered),
+        GST_H264_SEI_REGISTERED_USER_DATA, {0,},
+        (SEICheckFunc) check_sei_user_data_registered},
+    {h264_sei_frame_packing, G_N_ELEMENTS (h264_sei_frame_packing),
+        GST_H264_SEI_FRAME_PACKING, {0,},
+        (SEICheckFunc) check_sei_frame_packing},
+    {h264_sei_mdcv, G_N_ELEMENTS (h264_sei_mdcv),
+        GST_H264_SEI_MASTERING_DISPLAY_COLOUR_VOLUME, {0,},
+        (SEICheckFunc) check_sei_mdcv},
+    {h264_sei_cll, G_N_ELEMENTS (h264_sei_cll),
+        GST_H264_SEI_CONTENT_LIGHT_LEVEL, {0,},
+        (SEICheckFunc) check_sei_cll},
+    /* *INDENT-ON* */
+  };
+
+  parser = gst_h264_nal_parser_new ();
+
+  /* test single sei message per sei nal unit */
+  for (i = 0; i < G_N_ELEMENTS (test_list); i++) {
+    gsize nal_size;
+
+    parse_ret = gst_h264_parser_identify_nalu_unchecked (parser,
+        test_list[i].raw_data, 0, test_list[i].len, &nalu);
+    assert_equals_int (parse_ret, GST_H264_PARSER_OK);
+    assert_equals_int (nalu.type, GST_H264_NAL_SEI);
+
+    parse_ret = gst_h264_parser_parse_sei (parser, &nalu, &msg_array);
+    assert_equals_int (parse_ret, GST_H264_PARSER_OK);
+    assert_equals_int (msg_array->len, 1);
+
+    /* test bytestream */
+    mem = gst_h264_create_sei_memory (4, msg_array);
+    fail_unless (mem != NULL);
+    fail_unless (gst_memory_map (mem, &info, GST_MAP_READ));
+    GST_MEMDUMP ("created sei nal", info.data, info.size);
+    GST_MEMDUMP ("original sei nal", test_list[i].raw_data, test_list[i].len);
+    assert_equals_int (info.size, test_list[i].len);
+    fail_if (memcmp (info.data, test_list[i].raw_data, test_list[i].len));
+    gst_memory_unmap (mem, &info);
+    gst_memory_unref (mem);
+
+    /* test packetized */
+    mem = gst_h264_create_sei_memory_avc (4, msg_array);
+    fail_unless (mem != NULL);
+    fail_unless (gst_memory_map (mem, &info, GST_MAP_READ));
+    assert_equals_int (info.size, test_list[i].len);
+    fail_if (memcmp (info.data + 4, test_list[i].raw_data + 4,
+            test_list[i].len - 4));
+    nal_size = GST_READ_UINT32_BE (info.data);
+    assert_equals_int (nal_size, info.size - 4);
+    gst_memory_unmap (mem, &info);
+    gst_memory_unref (mem);
+
+    /* store parsed SEI for following tests */
+    test_list[i].parsed_message =
+        g_array_index (msg_array, GstH264SEIMessage, 0);
+    if (test_list[i].type == GST_H264_SEI_REGISTERED_USER_DATA) {
+      GstH264RegisteredUserData *dst_rud =
+          &test_list[i].parsed_message.payload.registered_user_data;
+      const GstH264SEIMessage *src_msg =
+          &g_array_index (msg_array, GstH264SEIMessage, 0);
+      const GstH264RegisteredUserData *src_rud =
+          &src_msg->payload.registered_user_data;
+
+      dst_rud->data = g_malloc (src_rud->size);
+      memcpy ((guint8 *) dst_rud->data, src_rud->data, src_rud->size);
+    }
+    g_array_unref (msg_array);
+  }
+
+  /* test multiple SEI messages in a nal unit */
+  msg_array = g_array_new (FALSE, FALSE, sizeof (GstH264SEIMessage));
+  for (i = 0; i < G_N_ELEMENTS (test_list); i++)
+    g_array_append_val (msg_array, test_list[i].parsed_message);
+
+  mem = gst_h264_create_sei_memory (4, msg_array);
+  fail_unless (mem != NULL);
+  g_array_unref (msg_array);
+
+  /* parse sei message from buffer */
+  fail_unless (gst_memory_map (mem, &info, GST_MAP_READ));
+  parse_ret = gst_h264_parser_identify_nalu_unchecked (parser,
+      info.data, 0, info.size, &nalu);
+  assert_equals_int (parse_ret, GST_H264_PARSER_OK);
+  assert_equals_int (nalu.type, GST_H264_NAL_SEI);
+  parse_ret = gst_h264_parser_parse_sei (parser, &nalu, &msg_array);
+  gst_memory_unmap (mem, &info);
+  gst_memory_unref (mem);
+
+  assert_equals_int (parse_ret, GST_H264_PARSER_OK);
+  assert_equals_int (msg_array->len, G_N_ELEMENTS (test_list));
+  for (i = 0; i < msg_array->len; i++) {
+    GstH264SEIMessage *msg = &g_array_index (msg_array, GstH264SEIMessage, i);
+
+    assert_equals_int (msg->payloadType, test_list[i].type);
+    fail_unless (test_list[i].check_func (&msg->payload,
+            &test_list[i].parsed_message.payload));
+  }
+
+  /* clean up */
+  for (i = 0; i < G_N_ELEMENTS (test_list); i++)
+    gst_h264_sei_clear (&test_list[i].parsed_message);
+
+  g_array_unref (msg_array);
+  gst_h264_nal_parser_free (parser);
+}
+
+GST_END_TEST;
+
 static Suite *
 h264parser_suite (void)
 {
@@ -325,6 +568,7 @@ h264parser_suite (void)
   tcase_add_test (tc_chain, test_h264_parse_slice_eoseq_slice);
   tcase_add_test (tc_chain, test_h264_parse_slice_5bytes);
   tcase_add_test (tc_chain, test_h264_parse_invalid_sei);
+  tcase_add_test (tc_chain, test_h264_create_sei);
 
   return s;
 }
