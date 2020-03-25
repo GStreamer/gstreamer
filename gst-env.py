@@ -430,8 +430,11 @@ if __name__ == "__main__":
         exit(1)
 
     # The following incantation will retrieve the current branch name.
-    gst_version = git("rev-parse", "--symbolic-full-name", "--abbrev-ref", "HEAD",
-                      repository_path=options.srcdir).strip('\n')
+    try:
+      gst_version = git("rev-parse", "--symbolic-full-name", "--abbrev-ref", "HEAD",
+                        repository_path=options.srcdir).strip('\n')
+    except subprocess.CalledProcessError:
+      gst_version = "unknown"
 
     if options.wine:
         gst_version += '-' + os.path.basename(options.wine)
