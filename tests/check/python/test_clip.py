@@ -268,15 +268,47 @@ class TestTrackElements(common.GESSimpleTimelineTest):
 
     def test_ungroup_regroup(self):
         clip = self.append_clip()
+        children = clip.get_children(True)
+
         clip1, clip2 = GES.Container.ungroup(clip, True)
 
         self.assertEqual(clip, clip1)
+        clip1_child, = clip1.get_children(True)
         clip2_child, = clip2.get_children(True)
+        self.assertCountEqual (children, [clip1_child, clip2_child])
+
+        # can freely move children between the ungrouped clips
+        self.assertTrue(clip1.remove(clip1_child))
+        self.assertTrue(clip2.add(clip1_child))
 
         self.assertTrue(clip2.remove(clip2_child))
-        self.assertTrue(self.layer.remove_clip(clip2))
-
         self.assertTrue(clip1.add(clip2_child))
+
+        grouped = GES.Container.group([clip1, clip2])
+        self.assertEqual(grouped, clip1)
+
+        self.assertCountEqual(clip1.get_children(True),
+                [clip1_child, clip2_child])
+        self.assertEqual(clip2.get_children(True), [])
+
+        # can freely move children between the grouped clips
+        self.assertTrue(clip1.remove(clip2_child))
+        self.assertTrue(clip2.add(clip2_child))
+
+        self.assertTrue(clip1.remove(clip1_child))
+        self.assertTrue(clip2.add(clip1_child))
+
+        self.assertTrue(clip2.remove(clip1_child))
+        self.assertTrue(clip1.add(clip1_child))
+
+        self.assertTrue(clip2.remove(clip2_child))
+        self.assertTrue(clip1.add(clip2_child))
+
+        # clip2 no longer part of the timeline
+        self.assertIsNone(clip2.props.layer)
+        self.assertEqual(clip1.props.layer, self.layer)
+        self.assertIsNone(clip2.props.timeline)
+        self.assertEqual(clip1.props.timeline, self.timeline)
 
     def test_image_source_asset(self):
         asset = GES.UriClipAsset.request_sync(common.get_asset_uri("png.png"))

@@ -67,7 +67,7 @@ struct _GESTrackElementPrivate
 
   GHashTable *bindings_hashtable;       /* We need this if we want to be able to serialize
                                            and deserialize keyframes */
-  GList *valid_owners;
+  GList *creators;              /* the GESClips that are considered our creators */
 };
 
 enum
@@ -258,21 +258,11 @@ ges_track_element_dispose (GObject * object)
 }
 
 static void
-owner_disposed (GESTrackElement * self, GObject * owner)
-{
-  self->priv->valid_owners = g_list_remove (self->priv->valid_owners, owner);
-}
-
-static void
 ges_track_element_finalize (GObject * object)
 {
   GESTrackElement *self = GES_TRACK_ELEMENT (object);
-  GList *tmp;
 
-  for (tmp = self->priv->valid_owners; tmp; tmp = tmp->next)
-    g_object_weak_unref (tmp->data, (GWeakNotify) owner_disposed, self);
-
-  g_list_free (self->priv->valid_owners);
+  ges_track_element_clear_creators (self);
 
   G_OBJECT_CLASS (ges_track_element_parent_class)->finalize (object);
 }
@@ -1484,17 +1474,37 @@ ges_track_element_copy_properties (GESTimelineElement * element,
   g_free (specs);
 }
 
-void
-ges_track_element_add_owner (GESTrackElement * self, GESClip * owner)
+static void
+creator_disposed (GESTrackElement * self, GObject * creator)
 {
-  self->priv->valid_owners = g_list_prepend (self->priv->valid_owners, owner);
-  g_object_weak_ref (G_OBJECT (owner), (GWeakNotify) owner_disposed, self);
+  self->priv->creators = g_list_remove (self->priv->creators, creator);
+}
+
+void
+ges_track_element_add_creator (GESTrackElement * self, GESClip * creator)
+{
+  if (!g_list_find (self->priv->creators, creator)) {
+    self->priv->creators = g_list_prepend (self->priv->creators, creator);
+    g_object_weak_ref (G_OBJECT (creator),
+        (GWeakNotify) creator_disposed, self);
+  }
+}
+
+void
+ges_track_element_clear_creators (GESTrackElement * self)
+{
+  GList *tmp;
+  for (tmp = self->priv->creators; tmp; tmp = tmp->next)
+    g_object_weak_unref (tmp->data, (GWeakNotify) creator_disposed, self);
+
+  g_list_free (self->priv->creators);
+  self->priv->creators = NULL;
 }
 
 GList *
-ges_track_element_get_owners (GESTrackElement * self)
+ges_track_element_get_creators (GESTrackElement * self)
 {
-  return self->priv->valid_owners;
+  return self->priv->creators;
 }
 
 static void

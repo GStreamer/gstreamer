@@ -1494,9 +1494,10 @@ clip_track_element_added_cb (GESClip * clip,
 
     track_element_copy =
         GES_TRACK_ELEMENT (ges_timeline_element_copy (GES_TIMELINE_ELEMENT
-            (track_element), FALSE));
-    if (ges_track_element_get_owners (track_element))
-      ges_track_element_add_owner (track_element_copy, clip);
+            (track_element), TRUE));
+    /* if a core child, mark the copy as core so it can be added */
+    if (ges_track_element_get_creators (track_element))
+      ges_track_element_add_creator (track_element_copy, clip);
 
     GST_LOG_OBJECT (timeline, "Trying to add %p to track %p",
         track_element_copy, track);
