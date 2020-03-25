@@ -609,6 +609,7 @@ cerbero cross-android universal:
 build cerbero cross-android universal:
   extends: '.cerbero cross-android universal'
   rules:
+    - if: '$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME && $CI_PROJECT_NAME == "gst-docs"'
     - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-build|gst-docs|gst-omx|gstreamer-vaapi|gst-integration-testsuites|gst-plugins-rs)$/'
 
 #
@@ -707,6 +708,7 @@ build cerbero cross win64:
 cross-android universal examples:
   extends: ".cross-android universal examples"
   rules:
+    - if: '$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME && $CI_PROJECT_NAME == "gst-docs"'
     - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-build|gst-docs|gst-omx|gstreamer-vaapi|gst-integration-testsuites|gst-plugins-rs)$/'
   needs:
     - "build cerbero cross-android universal"
@@ -805,6 +807,7 @@ cerbero cross-ios universal:
 build cerbero cross-ios universal:
   extends: '.cerbero cross-ios universal'
   rules:
+    - if: '$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME && $CI_PROJECT_NAME == "gst-docs"'
     - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-build|gst-docs|gst-omx|gst-sharp|gstreamer-vaapi|gst-integration-testsuites|gst-plugins-rs)$/'
 
 documentation:
@@ -873,6 +876,7 @@ documentation:
 cross-ios universal examples:
   extends: ".cross-ios universal examples"
   rules:
+    - if: '$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME && $CI_PROJECT_NAME == "gst-docs"'
     - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-build|gst-docs|gst-omx|gstreamer-vaapi|gst-integration-testsuites|gst-plugins-rs)$/'
   needs:
     - "build cerbero cross-ios universal"
