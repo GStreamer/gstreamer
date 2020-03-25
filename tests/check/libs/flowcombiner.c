@@ -232,6 +232,20 @@ GST_START_TEST (test_clear)
 
 GST_END_TEST;
 
+GST_START_TEST (test_no_pads_passthrough)
+{
+  GstFlowCombiner *combiner = gst_flow_combiner_new ();
+
+  fail_unless_equals_int (GST_FLOW_FLUSHING,
+      gst_flow_combiner_update_flow (combiner, GST_FLOW_FLUSHING));
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_flow_combiner_update_flow (combiner, GST_FLOW_OK));
+
+  gst_flow_combiner_free (combiner);
+}
+
+GST_END_TEST;
+
 static Suite *
 flow_combiner_suite (void)
 {
@@ -241,6 +255,7 @@ flow_combiner_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_combined_flows);
   tcase_add_test (tc_chain, test_clear);
+  tcase_add_test (tc_chain, test_no_pads_passthrough);
 
   return s;
 }
