@@ -22,8 +22,14 @@
  * @title: GESMultiFileSource
  * @short_description: outputs the video stream from a sequence of images.
  *
- * Outputs the video stream from a given image sequence. The start frame
- * chosen will be determined by the in-point property on the track element.
+ * Outputs the video stream from a given image sequence. The start frame chosen
+ * will be determined by the in-point property on the track element.
+ *
+ * This should not be used anymore, the `imagesequence://` protocol should be
+ * used instead. Check the #imagesequencesrc GStreamer element for more
+ * information.
+ *
+ * Deprecated: 1.18: Use #GESUriSource instead
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -257,9 +263,7 @@ ges_multi_file_source_init (GESMultiFileSource * self)
   self->priv = ges_multi_file_source_get_instance_private (self);
 }
 
-/**
- * ges_multi_file_source_new:
- * @uri: the URI the source should control
+/* @uri: the URI the source should control
  *
  * Creates a new #GESMultiFileSource for the provided @uri.
  *
@@ -268,6 +272,12 @@ ges_multi_file_source_init (GESMultiFileSource * self)
 GESMultiFileSource *
 ges_multi_file_source_new (gchar * uri)
 {
-  return g_object_new (GES_TYPE_MULTI_FILE_SOURCE, "uri", uri,
-      "track-type", GES_TRACK_TYPE_VIDEO, NULL);
+  GESMultiFileSource *res;
+  GESAsset *asset = ges_asset_request (GES_TYPE_MULTI_FILE_SOURCE, uri, NULL);
+
+  res = GES_MULTI_FILE_SOURCE (ges_asset_extract (asset, NULL));
+  res->uri = g_strdup (uri);
+  gst_object_unref (asset);
+
+  return res;
 }

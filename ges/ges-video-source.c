@@ -113,31 +113,17 @@ post_missing_element_message (GstElement * element, const gchar * name)
   gst_element_post_message (element, msg);
 }
 
-static GstElement *
-ges_video_source_create_element (GESTrackElement * trksrc)
+static gboolean
+ges_video_source_create_filters (GESVideoSource * self, GPtrArray * elements,
+    gboolean needs_converters)
 {
-  GstElement *topbin;
-  GstElement *sub_element;
-  GESVideoSourceClass *source_class = GES_VIDEO_SOURCE_GET_CLASS (trksrc);
-  GESVideoSource *self;
+  GESTrackElement *trksrc = GES_TRACK_ELEMENT (self);
   GstElement *positioner, *videoflip, *capsfilter, *deinterlace;
   const gchar *positioner_props[] =
       { "alpha", "posx", "posy", "width", "height", NULL };
   const gchar *deinterlace_props[] = { "mode", "fields", "tff", NULL };
   const gchar *videoflip_props[] = { "video-direction", NULL };
-  gboolean needs_converters = TRUE;
-  GPtrArray *elements;
 
-  if (!source_class->create_source)
-    return NULL;
-
-  sub_element = source_class->create_source (trksrc);
-
-  self = (GESVideoSource *) trksrc;
-  if (source_class->ABI.abi.needs_converters)
-    needs_converters = source_class->ABI.abi.needs_converters (self);
-
-  elements = g_ptr_array_new ();
   g_ptr_array_add (elements, gst_element_factory_make ("queue", NULL));
 
   /* That positioner will add metadata to buffers according to its
@@ -175,9 +161,11 @@ ges_video_source_create_element (GESTrackElement * trksrc)
 
   deinterlace = gst_element_factory_make ("deinterlace", "deinterlace");
   if (deinterlace == NULL) {
-    post_missing_element_message (sub_element, "deinterlace");
+    post_missing_element_message (ges_track_element_get_nleobject (trksrc),
+        "deinterlace");
 
-    GST_ELEMENT_WARNING (sub_element, CORE, MISSING_PLUGIN,
+    GST_ELEMENT_WARNING (ges_track_element_get_nleobject (trksrc), CORE,
+        MISSING_PLUGIN,
         ("Missing element '%s' - check your GStreamer installation.",
             "deinterlace"), ("deinterlacing won't work"));
   } else {
@@ -185,8 +173,6 @@ ges_video_source_create_element (GESTrackElement * trksrc)
     ges_track_element_add_children_props (trksrc, deinterlace, NULL, NULL,
         deinterlace_props);
   }
-  topbin = ges_source_create_topbin ("videosrcbin", sub_element, elements);
-  g_ptr_array_free (elements, TRUE);
 
   self->priv->positioner = GST_FRAME_POSITIONNER (positioner);
   self->priv->positioner->scale_in_compositor =
@@ -196,6 +182,39 @@ ges_video_source_create_element (GESTrackElement * trksrc)
       &self->priv->positioner->natural_height);
 
   self->priv->capsfilter = capsfilter;
+
+  return TRUE;
+}
+
+static GstElement *
+ges_video_source_create_element (GESTrackElement * trksrc)
+{
+  GstElement *topbin;
+  GstElement *sub_element;
+  GESVideoSourceClass *source_class = GES_VIDEO_SOURCE_GET_CLASS (trksrc);
+  GESVideoSource *self;
+  gboolean needs_converters = TRUE;
+  GPtrArray *elements;
+
+  if (!source_class->create_source)
+    return NULL;
+
+  sub_element = source_class->create_source (trksrc);
+
+  self = (GESVideoSource *) trksrc;
+  if (source_class->ABI.abi.needs_converters)
+    needs_converters = source_class->ABI.abi.needs_converters (self);
+
+  elements = g_ptr_array_new ();
+  g_assert (source_class->ABI.abi.create_filters);
+  if (!source_class->ABI.abi.create_filters (self, elements, needs_converters)) {
+    g_ptr_array_free (elements, TRUE);
+
+    return NULL;
+  }
+
+  topbin = ges_source_create_topbin ("videosrcbin", sub_element, elements);
+  g_ptr_array_free (elements, TRUE);
 
   return topbin;
 }
@@ -246,6 +265,7 @@ ges_video_source_class_init (GESVideoSourceClass * klass)
   track_element_class->ABI.abi.default_track_type = GES_TRACK_TYPE_VIDEO;
 
   video_source_class->create_source = NULL;
+  video_source_class->ABI.abi.create_filters = ges_video_source_create_filters;
 }
 
 static void

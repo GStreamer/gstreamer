@@ -24,9 +24,13 @@
  * @short_description: outputs the video stream from a media file as a still
  * image.
  *
- * Outputs the video stream from a given file as a still frame. The frame
- * chosen will be determined by the in-point property on the track element. For
- * image files, do not set the in-point property.
+ * Outputs the video stream from a given file as a still frame. The frame chosen
+ * will be determined by the in-point property on the track element. For image
+ * files, do not set the in-point property.
+ *
+ * Deprecated: 1.18: This won't be used anymore and has been replaced by
+ * #GESUriSource instead which now plugs an `imagefreeze` element when
+ * #ges_uri_source_asset_is_image returns %TRUE.
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -182,9 +186,7 @@ ges_image_source_init (GESImageSource * self)
   self->priv = ges_image_source_get_instance_private (self);
 }
 
-/**
- * ges_image_source_new:
- * @uri: the URI the source should control
+/* @uri: the URI the source should control
  *
  * Creates a new #GESImageSource for the provided @uri.
  *
@@ -193,6 +195,12 @@ ges_image_source_init (GESImageSource * self)
 GESImageSource *
 ges_image_source_new (gchar * uri)
 {
-  return g_object_new (GES_TYPE_IMAGE_SOURCE, "uri", uri, "track-type",
-      GES_TRACK_TYPE_VIDEO, NULL);
+  GESImageSource *res;
+  GESAsset *asset = ges_asset_request (GES_TYPE_IMAGE_SOURCE, uri, NULL);
+
+  res = GES_IMAGE_SOURCE (ges_asset_extract (asset, NULL));
+  res->uri = g_strdup (uri);
+  gst_object_unref (asset);
+
+  return res;
 }

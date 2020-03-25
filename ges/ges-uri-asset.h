@@ -108,5 +108,7 @@ GES_API
 const gchar * ges_uri_source_asset_get_stream_uri                  (GESUriSourceAsset *asset);
 GES_API
 const GESUriClipAsset *ges_uri_source_asset_get_filesource_asset   (GESUriSourceAsset *asset);
+GES_API
+gboolean ges_uri_source_asset_is_image                             (GESUriSourceAsset *asset);
 
 G_END_DECLS

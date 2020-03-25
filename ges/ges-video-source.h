@@ -69,6 +69,7 @@ struct _GESVideoSourceClass {
       gboolean disable_scale_in_compositor;
       gboolean (*needs_converters)(GESVideoSource *self);
       gboolean (*get_natural_size)(GESVideoSource* self, gint* width, gint* height);
+      gboolean (*create_filters)(GESVideoSource *self, GPtrArray *filters, gboolean needs_converters);
     } abi;
   } ABI;
 };

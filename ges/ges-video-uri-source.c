@@ -218,16 +218,32 @@ G_DEFINE_TYPE_WITH_CODE (GESVideoUriSource, ges_video_uri_source,
 
 
 /* GObject VMethods */
+static gboolean
+ges_video_uri_source_create_filters (GESVideoSource * source,
+    GPtrArray * elements, gboolean needs_converters)
+{
+  GESAsset *asset = ges_extractable_get_asset (GES_EXTRACTABLE (source));
+
+  g_assert (GES_IS_URI_SOURCE_ASSET (asset));
+  if (!GES_VIDEO_SOURCE_CLASS (ges_video_uri_source_parent_class)
+      ->ABI.abi.create_filters (source, elements, needs_converters))
+    return FALSE;
+
+  if (ges_uri_source_asset_is_image (GES_URI_SOURCE_ASSET (asset)))
+    g_ptr_array_add (elements, gst_element_factory_make ("imagefreeze", NULL));
+
+  return TRUE;
+}
 
 static void
 ges_video_uri_source_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GESVideoUriSource *uriclip = GES_VIDEO_URI_SOURCE (object);
+  GESVideoUriSource *urisource = GES_VIDEO_URI_SOURCE (object);
 
   switch (property_id) {
     case PROP_URI:
-      g_value_set_string (value, uriclip->uri);
+      g_value_set_string (value, urisource->uri);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -238,15 +254,15 @@ static void
 ges_video_uri_source_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GESVideoUriSource *uriclip = GES_VIDEO_URI_SOURCE (object);
+  GESVideoUriSource *urisource = GES_VIDEO_URI_SOURCE (object);
 
   switch (property_id) {
     case PROP_URI:
-      if (uriclip->uri) {
-        GST_WARNING_OBJECT (object, "Uri already set to %s", uriclip->uri);
+      if (urisource->uri) {
+        GST_WARNING_OBJECT (object, "Uri already set to %s", urisource->uri);
         return;
       }
-      uriclip->uri = g_value_dup_string (value);
+      urisource->uri = g_value_dup_string (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -256,10 +272,9 @@ ges_video_uri_source_set_property (GObject * object, guint property_id,
 static void
 ges_video_uri_source_dispose (GObject * object)
 {
-  GESVideoUriSource *uriclip = GES_VIDEO_URI_SOURCE (object);
+  GESVideoUriSource *urisource = GES_VIDEO_URI_SOURCE (object);
 
-  if (uriclip->uri)
-    g_free (uriclip->uri);
+  g_free (urisource->uri);
 
   G_OBJECT_CLASS (ges_video_uri_source_parent_class)->dispose (object);
 }
@@ -288,6 +303,7 @@ ges_video_uri_source_class_init (GESVideoUriSourceClass * klass)
       ges_video_uri_source_needs_converters;
   source_class->ABI.abi.get_natural_size =
       ges_video_uri_source_get_natural_size;
+  source_class->ABI.abi.create_filters = ges_video_uri_source_create_filters;
 }
 
 static void

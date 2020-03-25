@@ -277,3 +277,20 @@ class TestTrackElements(common.GESSimpleTimelineTest):
         self.assertTrue(self.layer.remove_clip(clip2))
 
         self.assertTrue(clip1.add(clip2_child))
+
+    def test_image_source_asset(self):
+        asset = GES.UriClipAsset.request_sync(common.get_asset_uri("png.png"))
+        clip = self.layer.add_asset(asset, 0, 0, Gst.SECOND, GES.TrackType.UNKNOWN)
+
+        image_src, = clip.get_children(True)
+
+        self.assertTrue(image_src.get_asset().is_image())
+        self.assertTrue(isinstance(image_src, GES.VideoUriSource))
+        imagefreeze, = [e for e in image_src.get_nleobject().iterate_recurse()
+            if e.get_factory().get_name() == "imagefreeze"]
+
+        asset = GES.UriClipAsset.request_sync(common.get_asset_uri("audio_video.ogg"))
+        clip = self.layer.add_asset(asset, Gst.SECOND, 0, Gst.SECOND, GES.TrackType.VIDEO)
+        video_src, = clip.get_children(True)
+        self.assertEqual([e for e in video_src.get_nleobject().iterate_recurse()
+            if e.get_factory().get_name() == "imagefreeze"], [])

@@ -358,8 +358,8 @@ static void
 _create_uri_source_asset (GESUriClipAsset * asset,
     GstDiscovererStreamInfo * sinfo, GESTrackType type)
 {
-  GESAsset *tck_filesource_asset;
-  GESUriSourceAssetPrivate *priv_tckasset;
+  GESAsset *src_asset;
+  GESUriSourceAssetPrivate *src_priv;
   GESUriClipAssetPrivate *priv = asset->priv;
   gchar *stream_id =
       g_strdup (gst_discoverer_stream_info_get_stream_id (sinfo));
@@ -371,22 +371,22 @@ _create_uri_source_asset (GESUriClipAsset * asset,
   }
 
   if (type == GES_TRACK_TYPE_VIDEO)
-    tck_filesource_asset = ges_asset_request (GES_TYPE_VIDEO_URI_SOURCE,
-        stream_id, NULL);
+    src_asset = ges_asset_request (GES_TYPE_VIDEO_URI_SOURCE, stream_id, NULL);
   else
-    tck_filesource_asset = ges_asset_request (GES_TYPE_AUDIO_URI_SOURCE,
-        stream_id, NULL);
+    src_asset = ges_asset_request (GES_TYPE_AUDIO_URI_SOURCE, stream_id, NULL);
   g_free (stream_id);
 
-  priv_tckasset = GES_URI_SOURCE_ASSET (tck_filesource_asset)->priv;
-  priv_tckasset->uri = ges_asset_get_id (GES_ASSET (asset));
-  priv_tckasset->sinfo = gst_object_ref (sinfo);
-  priv_tckasset->parent_asset = asset;
+  src_priv = GES_URI_SOURCE_ASSET (src_asset)->priv;
+  src_priv->uri = ges_asset_get_id (GES_ASSET (asset));
+  src_priv->sinfo = gst_object_ref (sinfo);
+  src_priv->parent_asset = asset;
   ges_track_element_asset_set_track_type (GES_TRACK_ELEMENT_ASSET
-      (tck_filesource_asset), type);
+      (src_asset), type);
 
-  priv->asset_trackfilesources = g_list_append (priv->asset_trackfilesources,
-      tck_filesource_asset);
+  priv->is_image |=
+      ges_uri_source_asset_is_image (GES_URI_SOURCE_ASSET (src_asset));
+  priv->asset_trackfilesources =
+      g_list_append (priv->asset_trackfilesources, src_asset);
 }
 
 static void
@@ -416,9 +416,6 @@ ges_uri_clip_asset_set_info (GESUriClipAsset * self, GstDiscovererInfo * info)
         supportedformats = GES_TRACK_TYPE_VIDEO;
       else
         supportedformats |= GES_TRACK_TYPE_VIDEO;
-      if (gst_discoverer_video_info_is_image ((GstDiscovererVideoInfo *)
-              sinf))
-        priv->is_image = TRUE;
       type = GES_TRACK_TYPE_VIDEO;
     }
 
@@ -812,12 +809,8 @@ _extract (GESAsset * asset, GError ** error)
 
   uri = g_strdup (priv->uri);
 
-  if (g_str_has_prefix (priv->uri, GES_MULTI_FILE_URI_PREFIX)) {
+  if (g_str_has_prefix (priv->uri, GES_MULTI_FILE_URI_PREFIX))
     trackelement = GES_TRACK_ELEMENT (ges_multi_file_source_new (uri));
-  } else if (GST_IS_DISCOVERER_VIDEO_INFO (priv->sinfo)
-      && gst_discoverer_video_info_is_image ((GstDiscovererVideoInfo *)
-          priv->sinfo))
-    trackelement = GES_TRACK_ELEMENT (ges_image_source_new (uri));
   else if (GST_IS_DISCOVERER_VIDEO_INFO (priv->sinfo))
     trackelement = GES_TRACK_ELEMENT (ges_video_uri_source_new (uri));
   else
@@ -904,6 +897,27 @@ ges_uri_source_asset_get_filesource_asset (GESUriSourceAsset * asset)
   g_return_val_if_fail (GES_IS_URI_SOURCE_ASSET (asset), NULL);
 
   return asset->priv->parent_asset;
+}
+
+/**
+ * ges_uri_source_asset_is_image:
+ * @asset: A #GESUriClipAsset
+ *
+ * Check if @asset contains a single image
+ *
+ * Returns: %TRUE if the video stream corresponds to an image (i.e. only
+ * contains one frame)
+ */
+gboolean
+ges_uri_source_asset_is_image (GESUriSourceAsset * asset)
+{
+  g_return_val_if_fail (GES_IS_URI_SOURCE_ASSET (asset), FALSE);
+
+  if (!GST_IS_DISCOVERER_VIDEO_INFO (asset->priv->sinfo))
+    return FALSE;
+
+  return gst_discoverer_video_info_is_image ((GstDiscovererVideoInfo *)
+      asset->priv->sinfo);
 }
 
 void
