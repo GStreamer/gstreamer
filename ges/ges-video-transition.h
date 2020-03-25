@@ -58,7 +58,7 @@ struct _GESVideoTransitionClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GES_API
+GES_DEPRECATED
 GESVideoTransition* ges_video_transition_new (void);
 
 GES_API

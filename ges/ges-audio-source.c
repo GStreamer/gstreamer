@@ -182,6 +182,7 @@ ges_audio_source_class_init (GESAudioSourceClass * klass)
   gobject_class->dispose = ges_audio_source_dispose;
   track_class->nleobject_factorytype = "nlesource";
   track_class->create_element = ges_audio_source_create_element;
+  track_class->ABI.abi.default_track_type = GES_TRACK_TYPE_AUDIO;
   audio_source_class->create_source = NULL;
 }
 

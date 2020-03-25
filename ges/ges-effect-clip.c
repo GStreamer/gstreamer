@@ -242,11 +242,8 @@ _create_track_element (GESClip * self, GESTrackType type)
     bin_description = effect->priv->audio_bin_description;
   }
 
-  if (bin_description) {
-    /* FIXME Work with a GESAsset here! */
-    return g_object_new (GES_TYPE_EFFECT, "bin-description",
-        bin_description, "track-type", type, NULL);
-  }
+  if (bin_description)
+    return GES_TRACK_ELEMENT (ges_effect_new (bin_description));
 
   GST_WARNING ("Effect doesn't handle this track type");
   return NULL;

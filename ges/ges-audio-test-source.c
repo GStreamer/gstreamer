@@ -199,16 +199,18 @@ ges_audio_test_source_get_volume (GESAudioTestSource * self)
   return g_value_get_double (&val);
 }
 
-/**
- * ges_audio_test_source_new:
- *
- * Creates a new #GESAudioTestSource.
+/* Creates a new #GESAudioTestSource.
  *
  * Returns: (transfer floating) (nullable): The newly created #GESAudioTestSource.
  */
 GESAudioTestSource *
 ges_audio_test_source_new (void)
 {
-  return g_object_new (GES_TYPE_AUDIO_TEST_SOURCE, "track-type",
-      GES_TRACK_TYPE_AUDIO, NULL);
+  GESAudioTestSource *res;
+  GESAsset *asset = ges_asset_request (GES_TYPE_AUDIO_TEST_SOURCE, NULL, NULL);
+
+  res = GES_AUDIO_TEST_SOURCE (ges_asset_extract (asset, NULL));
+  gst_object_unref (asset);
+
+  return res;
 }

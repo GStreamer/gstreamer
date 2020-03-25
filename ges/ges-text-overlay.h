@@ -77,7 +77,7 @@ GES_API
 void ges_text_overlay_set_ypos (GESTextOverlay * self,
     gdouble position);
 
-GES_API
+GES_DEPRECATED
 GESTextOverlay *ges_text_overlay_new (void);
 
 GES_API

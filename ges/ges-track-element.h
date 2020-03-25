@@ -81,6 +81,8 @@ struct _GESTrackElement {
  * @default_has_internal_source: What the default
  * #GESTrackElement:has-internal-source value should be for new elements
  * from this class.
+ * @default_track_type: What the default #GESTrackElement:track-type value
+ * should be for new elements from this class.
  */
 struct _GESTrackElementClass {
   /*< private >*/
@@ -106,12 +108,12 @@ struct _GESTrackElementClass {
                                             const gchar *prop_name,
                                             GstElement **element,
                                             GParamSpec **pspec);
-  /*< private >*/
-  /* Padding for API extension */
+  /*< protected >*/
   union {
     gpointer _ges_reserved[GES_PADDING_LARGE];
     struct {
       gboolean default_has_internal_source;
+      GESTrackType default_track_type;
     } abi;
   } ABI;
 };

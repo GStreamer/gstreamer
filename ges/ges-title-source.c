@@ -407,7 +407,7 @@ ges_title_source_set_ypos (GESTitleSource * self, gdouble position)
  * Get the text currently set on the @source.
  *
  * Returns: (transfer full): The text currently set on the @source.
- * 
+ *
  * Deprecated: 1.16: Use ges_timeline_element_get_child_property instead
  * (this actually returns a newly allocated string)
  */
@@ -430,7 +430,7 @@ ges_title_source_get_text (GESTitleSource * source)
  *
  * Returns: (transfer full): The pango font description used by this
  * @source.
- * 
+ *
  * Deprecated: 1.16: Use ges_timeline_element_get_child_property instead
  * (this actually returns a newly allocated string)
  */
@@ -559,8 +559,7 @@ ges_title_source_get_ypos (GESTitleSource * source)
   return ypos;
 }
 
-/**
- * ges_title_source_new:
+/* ges_title_source_new:
  *
  * Creates a new #GESTitleSource.
  *
@@ -570,6 +569,11 @@ ges_title_source_get_ypos (GESTitleSource * source)
 GESTitleSource *
 ges_title_source_new (void)
 {
-  return g_object_new (GES_TYPE_TITLE_SOURCE, "track-type",
-      GES_TRACK_TYPE_VIDEO, NULL);
+  GESTitleSource *res;
+  GESAsset *asset = ges_asset_request (GES_TYPE_TITLE_SOURCE, NULL, NULL);
+
+  res = GES_TITLE_SOURCE (ges_asset_extract (asset, NULL));
+  gst_object_unref (asset);
+
+  return res;
 }

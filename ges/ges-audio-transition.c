@@ -90,6 +90,7 @@ ges_audio_transition_class_init (GESAudioTransitionClass * klass)
   object_class->finalize = ges_audio_transition_finalize;
 
   toclass->create_element = ges_audio_transition_create_element;
+  toclass->ABI.abi.default_track_type = GES_TRACK_TYPE_AUDIO;
 
 }
 
@@ -289,10 +290,18 @@ ges_audio_transition_duration_changed (GESTrackElement * track_element,
  * Creates a new #GESAudioTransition.
  *
  * Returns: (transfer floating): The newly created #GESAudioTransition.
+ *
+ * Deprecated: 1.18: This should never be called by applications as this will
+ * be created by clips.
  */
 GESAudioTransition *
 ges_audio_transition_new (void)
 {
-  return g_object_new (GES_TYPE_AUDIO_TRANSITION, "track-type",
-      GES_TRACK_TYPE_AUDIO, NULL);
+  GESAudioTransition *res;
+  GESAsset *asset = ges_asset_request (GES_TYPE_AUDIO_TRANSITION, NULL, NULL);
+
+  res = GES_AUDIO_TRANSITION (ges_asset_extract (asset, NULL));
+  gst_object_unref (asset);
+
+  return res;
 }

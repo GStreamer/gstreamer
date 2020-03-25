@@ -438,8 +438,7 @@ ges_video_test_source_get_pattern (GESVideoTestSource * source)
   return g_value_get_enum (&val);
 }
 
-/**
- * ges_video_test_source_new:
+/* ges_video_test_source_new:
  *
  * Creates a new #GESVideoTestSource.
  *
@@ -449,6 +448,11 @@ ges_video_test_source_get_pattern (GESVideoTestSource * source)
 GESVideoTestSource *
 ges_video_test_source_new (void)
 {
-  return g_object_new (GES_TYPE_VIDEO_TEST_SOURCE, "track-type",
-      GES_TRACK_TYPE_VIDEO, NULL);
+  GESVideoTestSource *res;
+  GESAsset *asset = ges_asset_request (GES_TYPE_VIDEO_TEST_SOURCE, NULL, NULL);
+
+  res = GES_VIDEO_TEST_SOURCE (ges_asset_extract (asset, NULL));
+  gst_object_unref (asset);
+
+  return res;
 }

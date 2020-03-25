@@ -313,8 +313,11 @@ ges_track_element_constructed (GObject * gobject)
 
   /* set the default has-internal-source */
   ges_track_element_set_has_internal_source (GES_TRACK_ELEMENT (gobject),
-      GES_TRACK_ELEMENT_CLASS_DEFAULT_HAS_INTERNAL_SOURCE
-      (GES_TRACK_ELEMENT_GET_CLASS (gobject)));
+      GES_TRACK_ELEMENT_CLASS_DEFAULT_HAS_INTERNAL_SOURCE (class));
+
+  if (object->priv->track_type == GES_TRACK_TYPE_UNKNOWN)
+    ges_track_element_set_track_type (GES_TRACK_ELEMENT (gobject),
+        class->ABI.abi.default_track_type);
 
   G_OBJECT_CLASS (ges_track_element_parent_class)->constructed (gobject);
 }
@@ -454,6 +457,7 @@ ges_track_element_class_init (GESTrackElementClass * klass)
 
   klass->create_gnl_object = ges_track_element_create_gnl_object_func;
   klass->lookup_child = _lookup_child;
+  klass->ABI.abi.default_track_type = GES_TRACK_TYPE_UNKNOWN;
 }
 
 static void

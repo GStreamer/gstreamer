@@ -879,5 +879,11 @@ ges_group_init (GESGroup * self)
 GESGroup *
 ges_group_new (void)
 {
-  return g_object_new (GES_TYPE_GROUP, NULL);
+  GESGroup *res;
+  GESAsset *asset = ges_asset_request (GES_TYPE_GROUP, NULL, NULL);
+
+  res = GES_GROUP (ges_asset_extract (asset, NULL));
+  gst_object_unref (asset);
+
+  return res;
 }

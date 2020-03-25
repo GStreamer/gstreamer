@@ -240,6 +240,8 @@ ges_video_source_class_init (GESVideoSourceClass * klass)
 
   track_element_class->nleobject_factorytype = "nlesource";
   track_element_class->create_element = ges_video_source_create_element;
+  track_element_class->ABI.abi.default_track_type = GES_TRACK_TYPE_VIDEO;
+
   video_source_class->create_source = NULL;
 }
 

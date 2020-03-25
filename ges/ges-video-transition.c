@@ -139,6 +139,7 @@ ges_video_transition_class_init (GESVideoTransitionClass * klass)
   GObjectClass *object_class;
   GESTrackElementClass *toclass;
   GESTimelineElementClass *element_class = GES_TIMELINE_ELEMENT_CLASS (klass);
+  GESTrackElementClass *track_element_class = GES_TRACK_ELEMENT_CLASS (klass);
 
   object_class = G_OBJECT_CLASS (klass);
 
@@ -146,6 +147,8 @@ ges_video_transition_class_init (GESVideoTransitionClass * klass)
   object_class->set_property = ges_video_transition_set_property;
   object_class->dispose = ges_video_transition_dispose;
   object_class->finalize = ges_video_transition_finalize;
+
+  track_element_class->ABI.abi.default_track_type = GES_TRACK_TYPE_VIDEO;
 
   /**
    * GESVideoTransition:border:
@@ -672,8 +675,7 @@ ges_video_transition_get_transition_type (GESVideoTransition * trans)
   return trans->priv->type;
 }
 
-/**
- * ges_video_transition_new:
+/* ges_video_transition_new:
  *
  * Creates a new #GESVideoTransition.
  *
@@ -683,6 +685,11 @@ ges_video_transition_get_transition_type (GESVideoTransition * trans)
 GESVideoTransition *
 ges_video_transition_new (void)
 {
-  return g_object_new (GES_TYPE_VIDEO_TRANSITION, "track-type",
-      GES_TRACK_TYPE_VIDEO, NULL);
+  GESVideoTransition *res;
+  GESAsset *asset = ges_asset_request (GES_TYPE_VIDEO_TRANSITION, NULL, NULL);
+
+  res = GES_VIDEO_TRANSITION (ges_asset_extract (asset, NULL));
+  gst_object_unref (asset);
+
+  return res;
 }

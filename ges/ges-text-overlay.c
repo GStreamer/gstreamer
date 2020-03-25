@@ -69,14 +69,15 @@ static void
 ges_text_overlay_class_init (GESTextOverlayClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GESTrackElementClass *bg_class = GES_TRACK_ELEMENT_CLASS (klass);
+  GESTrackElementClass *track_element_class = GES_TRACK_ELEMENT_CLASS (klass);
 
   object_class->get_property = ges_text_overlay_get_property;
   object_class->set_property = ges_text_overlay_set_property;
   object_class->dispose = ges_text_overlay_dispose;
   object_class->finalize = ges_text_overlay_finalize;
 
-  bg_class->create_element = ges_text_overlay_create_element;
+  track_element_class->create_element = ges_text_overlay_create_element;
+  track_element_class->ABI.abi.default_track_type = GES_TRACK_TYPE_VIDEO;
 }
 
 static void
@@ -429,10 +430,18 @@ ges_text_overlay_get_ypos (GESTextOverlay * self)
  *
  * Returns: (transfer floating) (nullable): The newly created #GESTextOverlay or
  * %NULL if something went wrong.
+ *
+ * Deprecated: 1.18: This should never be called by applications as this will
+ * be created by clips.
  */
 GESTextOverlay *
 ges_text_overlay_new (void)
 {
-  return g_object_new (GES_TYPE_TEXT_OVERLAY, "track-type",
-      GES_TRACK_TYPE_VIDEO, NULL);
+  GESTextOverlay *res;
+  GESAsset *asset = ges_asset_request (GES_TYPE_TEXT_OVERLAY, NULL, NULL);
+
+  res = GES_TEXT_OVERLAY (ges_asset_extract (asset, NULL));
+  gst_object_unref (asset);
+
+  return res;
 }
