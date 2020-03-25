@@ -1083,37 +1083,12 @@ GST_START_TEST (test_children_max_duration)
     fail_unless (ges_timeline_element_set_start (clip, 5));
     fail_unless (ges_timeline_element_set_duration (clip, 20));
     fail_unless (ges_timeline_element_set_inpoint (clip, 30));
-    /* can not the max duration the clip has no child */
+
+    /* can set the max duration the clip to anything whilst it has
+     * no core child */
     fail_unless (ges_timeline_element_set_max_duration (clip, 150));
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, 150);
-
-    fail_unless (ges_layer_add_clip (layer, GES_CLIP (clip)));
-
-    /* clip now has children */
-    children = GES_CONTAINER_CHILDREN (clip);
-    fail_unless (children);
-    child0 = children->data;
-    fail_unless (children->next);
-    child1 = children->next->data;
-    fail_unless (children->next->next == NULL);
-
-    fail_unless (ges_track_element_has_internal_source (GES_TRACK_ELEMENT
-            (child0)));
-    fail_unless (ges_track_element_has_internal_source (GES_TRACK_ELEMENT
-            (child1)));
-
-    if (GES_IS_URI_CLIP (clip))
-      new_max = max_duration;
-    else
-      /* need a valid clock time that is not too large */
-      new_max = 500;
-
-    /* added children do not change the clip's max-duration, but will
-     * instead set it to the minimum value of its children */
-    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, max_duration);
-    CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, max_duration);
-    CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, max_duration);
 
     /* add a non-core element */
     effect = GES_TIMELINE_ELEMENT (ges_effect_new ("agingtv"));
@@ -1130,6 +1105,53 @@ GST_START_TEST (test_children_max_duration)
      * max-duration (or in-point) */
     fail_unless (ges_container_add (GES_CONTAINER (clip), effect));
 
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, 150);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
+
+    /* only non-core, so can still set the max-duration */
+    fail_unless (ges_timeline_element_set_max_duration (clip, 200));
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, 200);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
+
+    /* removing should not change the max-duration we set on the clip */
+    gst_object_ref (effect);
+    fail_unless (ges_container_remove (GES_CONTAINER (clip), effect));
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, 200);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
+
+    fail_unless (ges_container_add (GES_CONTAINER (clip), effect));
+    gst_object_unref (effect);
+
+    CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, 200);
+    CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
+
+    /* now add to a layer to create the core children */
+    fail_unless (ges_layer_add_clip (layer, GES_CLIP (clip)));
+
+    children = GES_CONTAINER_CHILDREN (clip);
+    fail_unless (children);
+    fail_unless (GES_TIMELINE_ELEMENT (children->data) == effect);
+    fail_unless (children->next);
+    child0 = children->next->data;
+    fail_unless (children->next->next);
+    child1 = children->next->next->data;
+    fail_unless (children->next->next->next == NULL);
+
+    fail_unless (ges_track_element_has_internal_source (GES_TRACK_ELEMENT
+            (child0)));
+    fail_unless (ges_track_element_has_internal_source (GES_TRACK_ELEMENT
+            (child1)));
+
+    if (GES_IS_URI_CLIP (clip))
+      new_max = max_duration;
+    else
+      /* need a valid clock time that is not too large */
+      new_max = 500;
+
+    /* added children do not change the clip's max-duration, but will
+     * instead set it to the minimum value of its children */
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, max_duration);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, max_duration);
     CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, max_duration);

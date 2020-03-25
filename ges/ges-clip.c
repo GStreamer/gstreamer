@@ -54,11 +54,15 @@
  * The #GESTimelineElement:in-point of the clip will control the
  * #GESTimelineElement:in-point of these core elements to be the same
  * value if their #GESTrackElement:has-internal-source is set to %TRUE.
+ *
  * The #GESTimelineElement:max-duration of the clip is the minimum
  * #GESTimelineElement:max-duration of its children. If you set its value
  * to anything other than its current value, this will also set the
  * #GESTimelineElement:max-duration of all its core children to the same
  * value if their #GESTrackElement:has-internal-source is set to %TRUE.
+ * As a special case, whilst a clip does not yet have any core children,
+ * its #GESTimelineElement:max-duration may be set to indicate what its
+ * value will be once they are created.
  *
  * ## Effects
  *
@@ -397,20 +401,11 @@ _set_max_duration (GESTimelineElement * element, GstClockTime maxduration)
   GList *tmp;
   GESClipPrivate *priv = GES_CLIP (element)->priv;
   GstClockTime new_min = GST_CLOCK_TIME_NONE;
+  gboolean has_core = FALSE;
 
   /* if we are setting based on a change in the minimum */
   if (priv->updating_max_duration)
     return TRUE;
-
-  if (!GES_CONTAINER_CHILDREN (element)) {
-    /* If any child added later on has a lower max duration, this max duration
-     * will be used instead anyway */
-    GST_INFO_OBJECT (element,
-        "Setting max duration %" GST_TIME_FORMAT " as %" GES_FORMAT
-        " doesn't have any child yet",
-        GST_TIME_ARGS (maxduration), GES_ARGS (element));
-    return TRUE;
-  }
 
   /* else, we set every core child to have the same max duration */
 
@@ -418,19 +413,32 @@ _set_max_duration (GESTimelineElement * element, GstClockTime maxduration)
   for (tmp = GES_CONTAINER_CHILDREN (element); tmp; tmp = tmp->next) {
     GESTimelineElement *child = tmp->data;
 
-    if (_IS_CORE_INTERNAL_SOURCE_CHILD (child)) {
-      if (!ges_timeline_element_set_max_duration (child, maxduration)) {
-        GST_ERROR_OBJECT ("Could not set the max-duration of child %"
-            GES_FORMAT " to %" GST_TIME_FORMAT, GES_ARGS (child),
-            GST_TIME_ARGS (maxduration));
-      }
-      if (GST_CLOCK_TIME_IS_VALID (child->maxduration)) {
-        new_min = GST_CLOCK_TIME_IS_VALID (new_min) ?
-            MIN (new_min, child->maxduration) : child->maxduration;
+    if (_IS_CORE_CHILD (child)) {
+      has_core = TRUE;
+      if (ges_track_element_has_internal_source (GES_TRACK_ELEMENT (child))) {
+        if (!ges_timeline_element_set_max_duration (child, maxduration))
+          GST_ERROR_OBJECT ("Could not set the max-duration of child %"
+              GES_FORMAT " to %" GST_TIME_FORMAT, GES_ARGS (child),
+              GST_TIME_ARGS (maxduration));
+
+        if (GST_CLOCK_TIME_IS_VALID (child->maxduration))
+          new_min = GST_CLOCK_TIME_IS_VALID (new_min) ?
+              MIN (new_min, child->maxduration) : child->maxduration;
       }
     }
   }
   priv->prevent_max_duration_update = FALSE;
+
+  if (!has_core) {
+    /* allow max-duration to be set arbitrarily when we have no
+     * core children, even though there is no actual minimum max-duration
+     * when it has no core children */
+    if (GST_CLOCK_TIME_IS_VALID (maxduration))
+      GST_INFO_OBJECT (element,
+          "Allowing max-duration of the clip to be set to %" GST_TIME_FORMAT
+          " because it has no core children", GST_TIME_ARGS (maxduration));
+    return TRUE;
+  }
 
   if (new_min != maxduration) {
     if (GST_CLOCK_TIME_IS_VALID (new_min))
@@ -703,7 +711,9 @@ _child_added (GESContainer * container, GESTimelineElement * element)
       G_CALLBACK (_child_has_internal_source_changed_cb), container);
 
   _child_priority_changed_cb (element, NULL, container);
-  _update_max_duration (container);
+
+  if (_IS_CORE_CHILD (element))
+    _update_max_duration (container);
 }
 
 static void
@@ -718,7 +728,8 @@ _child_removed (GESContainer * container, GESTimelineElement * element)
   g_signal_handlers_disconnect_by_func (element,
       _child_has_internal_source_changed_cb, container);
 
-  _update_max_duration (container);
+  if (_IS_CORE_CHILD (element))
+    _update_max_duration (container);
 }
 
 static void

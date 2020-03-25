@@ -227,12 +227,12 @@ extractable_get_id (GESExtractable * self)
 static gboolean
 extractable_set_asset (GESExtractable * self, GESAsset * asset)
 {
-  gboolean res = TRUE;
+  gboolean res = TRUE, contains_core;
   GESUriClip *uriclip = GES_URI_CLIP (self);
   GESUriClipAsset *uri_clip_asset;
   GESClip *clip = GES_CLIP (self);
   GESLayer *layer = ges_clip_get_layer (clip);
-  GList *tmp;
+  GList *tmp, *children;
   GESTimelineElement *audio_source = NULL, *video_source = NULL;
 
   g_return_val_if_fail (GES_IS_URI_CLIP_ASSET (asset), FALSE);
@@ -270,24 +270,26 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
 
   GES_TIMELINE_ELEMENT (uriclip)->asset = asset;
 
-  if (layer) {
-    GList *children = ges_container_get_children (GES_CONTAINER (self), TRUE);
+  children = ges_container_get_children (GES_CONTAINER (self), TRUE);
 
-    for (tmp = children; tmp; tmp = tmp->next) {
-      if (GES_IS_SOURCE (tmp->data)) {
-        GESTrack *track = ges_track_element_get_track (tmp->data);
+  for (tmp = children; tmp; tmp = tmp->next) {
+    if (GES_IS_SOURCE (tmp->data)) {
+      GESTrack *track = ges_track_element_get_track (tmp->data);
 
-        if (track->type == GES_TRACK_TYPE_AUDIO)
-          audio_source = gst_object_ref (tmp->data);
-        else if (track->type == GES_TRACK_TYPE_VIDEO)
-          video_source = gst_object_ref (tmp->data);
+      if (track->type == GES_TRACK_TYPE_AUDIO)
+        audio_source = gst_object_ref (tmp->data);
+      else if (track->type == GES_TRACK_TYPE_VIDEO)
+        video_source = gst_object_ref (tmp->data);
 
-        ges_track_remove_element (track, tmp->data);
-        ges_container_remove (GES_CONTAINER (self), tmp->data);
-      }
+      ges_track_remove_element (track, tmp->data);
+      ges_container_remove (GES_CONTAINER (self), tmp->data);
     }
-    g_list_free_full (children, g_object_unref);
+  }
+  g_list_free_full (children, g_object_unref);
 
+  contains_core = FALSE;
+
+  if (layer) {
     gst_object_ref (clip);
 
     ges_layer_remove_clip (layer, clip);
@@ -296,6 +298,7 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
     for (tmp = GES_CONTAINER_CHILDREN (self); tmp; tmp = tmp->next) {
       if (GES_IS_SOURCE (tmp->data)) {
         GESTrack *track = ges_track_element_get_track (tmp->data);
+        contains_core = TRUE;
 
         if (track->type == GES_TRACK_TYPE_AUDIO && audio_source) {
           ges_track_element_copy_properties (audio_source, tmp->data);
@@ -308,19 +311,18 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
         }
       }
     }
-
-    g_clear_object (&audio_source);
-    g_clear_object (&video_source);
     gst_object_unref (clip);
     gst_object_unref (layer);
   }
+  g_clear_object (&audio_source);
+  g_clear_object (&video_source);
 
   if (res) {
     g_free (uriclip->priv->uri);
     uriclip->priv->uri = g_strdup (ges_asset_get_id (asset));
   }
 
-  if (!GES_CONTAINER_CHILDREN (uriclip))
+  if (!contains_core)
     ges_timeline_element_set_max_duration (GES_TIMELINE_ELEMENT (uriclip),
         ges_uri_clip_asset_get_max_duration (uri_clip_asset));
 
