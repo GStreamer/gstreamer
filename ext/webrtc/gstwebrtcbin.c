@@ -3794,8 +3794,24 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
     }
   }
 
+  if (new_dir == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_INACTIVE) {
+    if (!bundled) {
+      /* Not a bundled stream means this entire transport is inactive,
+       * so set the receive state to BLOCK below */
+      stream->active = FALSE;
+      receive_state = RECEIVE_STATE_BLOCK;
+    }
+  } else {
+    /* If this transceiver is active for sending or receiving,
+     * we still need receive at least RTCP, so need to unblock
+     * the receive bin below. */
+    GST_LOG_OBJECT (webrtc, "marking stream %p as active", stream);
+    receive_state = RECEIVE_STATE_PASS;
+    stream->active = TRUE;
+  }
+
   if (new_dir != prev_dir) {
-    GST_TRACE_OBJECT (webrtc, "transceiver direction change");
+    GST_DEBUG_OBJECT (webrtc, "transceiver direction change");
 
     if (new_dir == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_INACTIVE) {
       GstWebRTCBinPad *pad;
@@ -3814,20 +3830,7 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
         gst_object_unref (pad);
       }
 
-      if (!bundled) {
-        /* Not a bundled stream means this entire transport is inactive,
-         * so set the receive state to BLOCK below */
-        stream->active = FALSE;
-        receive_state = RECEIVE_STATE_BLOCK;
-      }
-
       /* XXX: send eos event up the sink pad as well? */
-    } else {
-      /* If this transceiver is active for sending or receiving,
-       * we still need receive at least RTCP, so need to unblock
-       * the receive bin below. */
-      receive_state = RECEIVE_STATE_PASS;
-      stream->active = TRUE;
     }
 
     if (new_dir == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY ||
