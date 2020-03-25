@@ -91,8 +91,20 @@ enum
 
 static guint ges_track_element_signals[LAST_SIGNAL] = { 0 };
 
-G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GESTrackElement, ges_track_element,
-    GES_TYPE_TIMELINE_ELEMENT);
+static void ges_track_element_set_asset (GESExtractable * extractable,
+    GESAsset * asset);
+
+static void
+ges_extractable_interface_init (GESExtractableInterface * iface)
+{
+  iface->set_asset = ges_track_element_set_asset;
+  iface->asset_type = GES_TYPE_TRACK_ELEMENT_ASSET;
+}
+
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GESTrackElement, ges_track_element,
+    GES_TYPE_TIMELINE_ELEMENT, G_ADD_PRIVATE (GESTrackElement)
+    G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
+        ges_extractable_interface_init));
 
 static GstElement *ges_track_element_create_gnl_object_func (GESTrackElement *
     object);
@@ -266,15 +278,19 @@ ges_track_element_finalize (GObject * object)
 }
 
 static void
-ges_track_element_constructed (GObject * gobject)
+ges_track_element_set_asset (GESExtractable * extractable, GESAsset * asset)
 {
   GESTrackElementClass *class;
   GstElement *nleobject;
   gdouble media_duration_factor;
   gchar *tmp;
-  GESTrackElement *object = GES_TRACK_ELEMENT (gobject);
+  GESTrackElement *object = GES_TRACK_ELEMENT (extractable);
 
-  GST_DEBUG_OBJECT (object, "Creating NleObject");
+  if (ges_track_element_get_track_type (object) == GES_TRACK_TYPE_UNKNOWN) {
+    ges_track_element_set_track_type (object,
+        ges_track_element_asset_get_track_type (GES_TRACK_ELEMENT_ASSET
+            (asset)));
+  }
 
   class = GES_TRACK_ELEMENT_GET_CLASS (object);
   g_assert (class->create_gnl_object);
@@ -290,8 +306,6 @@ ges_track_element_constructed (GObject * gobject)
       GST_OBJECT_NAME (nleobject));
   gst_object_set_name (GST_OBJECT (nleobject), tmp);
   g_free (tmp);
-
-  GST_DEBUG_OBJECT (object, "Got a valid NleObject, now filling it in");
 
   object->priv->nleobject = gst_object_ref (nleobject);
   g_object_set_qdata (G_OBJECT (nleobject), NLE_OBJECT_TRACK_ELEMENT_QUARK,
@@ -310,16 +324,23 @@ ges_track_element_constructed (GObject * gobject)
       (object));
   g_object_set (object->priv->nleobject,
       "media-duration-factor", media_duration_factor, NULL);
+}
+
+static void
+ges_track_element_constructed (GObject * object)
+{
+  GESTrackElement *self = GES_TRACK_ELEMENT (object);
+
+  if (self->priv->track_type == GES_TRACK_TYPE_UNKNOWN)
+    ges_track_element_set_track_type (GES_TRACK_ELEMENT (object),
+        GES_TRACK_ELEMENT_GET_CLASS (object)->ABI.abi.default_track_type);
 
   /* set the default has-internal-source */
-  ges_track_element_set_has_internal_source (GES_TRACK_ELEMENT (gobject),
-      GES_TRACK_ELEMENT_CLASS_DEFAULT_HAS_INTERNAL_SOURCE (class));
+  ges_track_element_set_has_internal_source (self,
+      GES_TRACK_ELEMENT_CLASS_DEFAULT_HAS_INTERNAL_SOURCE
+      (GES_TRACK_ELEMENT_GET_CLASS (object)));
 
-  if (object->priv->track_type == GES_TRACK_TYPE_UNKNOWN)
-    ges_track_element_set_track_type (GES_TRACK_ELEMENT (gobject),
-        class->ABI.abi.default_track_type);
-
-  G_OBJECT_CLASS (ges_track_element_parent_class)->constructed (gobject);
+  G_OBJECT_CLASS (ges_track_element_parent_class)->constructed (object);
 }
 
 static void

@@ -205,31 +205,10 @@ ges_extractable_check_id (GType type, const gchar * id, GError ** error)
 }
 
 static void
-extractable_set_asset (GESExtractable * extractable, GESAsset * asset)
-{
-  GESExtractableInterface *piface, *iface;
-  /* FIXME That should go into #GESTrackElement, but
-   * some work is needed to make sure it works properly */
-
-  if (ges_track_element_get_track_type (GES_TRACK_ELEMENT (extractable)) ==
-      GES_TRACK_TYPE_UNKNOWN) {
-    ges_track_element_set_track_type (GES_TRACK_ELEMENT (extractable),
-        ges_track_element_asset_get_track_type (GES_TRACK_ELEMENT_ASSET
-            (asset)));
-  }
-
-  iface = G_TYPE_INSTANCE_GET_INTERFACE (extractable, GES_TYPE_EXTRACTABLE,
-      GESExtractableInterface);
-  piface = g_type_interface_peek_parent (iface);
-  piface->set_asset (extractable, asset);
-}
-
-static void
 ges_extractable_interface_init (GESExtractableInterface * iface)
 {
   iface->asset_type = GES_TYPE_URI_SOURCE_ASSET;
   iface->check_id = ges_extractable_check_id;
-  iface->set_asset = extractable_set_asset;
 }
 
 G_DEFINE_TYPE_WITH_CODE (GESVideoUriSource, ges_video_uri_source,
