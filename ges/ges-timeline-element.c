@@ -1655,10 +1655,9 @@ GESTimelineElement *
 ges_timeline_element_copy (GESTimelineElement * self, gboolean deep)
 {
   GESAsset *asset;
-  GParameter *params;
   GParamSpec **specs;
   GESTimelineElementClass *klass;
-  guint n, n_specs, n_params;
+  guint n, n_specs;
 
   GESTimelineElement *ret = NULL;
 
@@ -1667,56 +1666,26 @@ ges_timeline_element_copy (GESTimelineElement * self, gboolean deep)
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
   specs = g_object_class_list_properties (G_OBJECT_GET_CLASS (self), &n_specs);
-  params = g_new0 (GParameter, n_specs);
-  n_params = 0;
 
+  asset = ges_extractable_get_asset (GES_EXTRACTABLE (self));
+  g_assert (asset);
+  ret = GES_TIMELINE_ELEMENT (ges_asset_extract (asset, NULL));
   for (n = 0; n < n_specs; ++n) {
     /* We do not want the timeline or the name to be copied */
     if (g_strcmp0 (specs[n]->name, "parent") &&
         g_strcmp0 (specs[n]->name, "timeline") &&
         g_strcmp0 (specs[n]->name, "name") &&
         (specs[n]->flags & G_PARAM_READWRITE) == G_PARAM_READWRITE) {
-      params[n_params].name = g_intern_string (specs[n]->name);
-      g_value_init (&params[n_params].value, specs[n]->value_type);
-      g_object_get_property (G_OBJECT (self), specs[n]->name,
-          &params[n_params].value);
-      ++n_params;
+      GValue v = G_VALUE_INIT;
+      g_value_init (&v, specs[n]->value_type);
+      g_object_get_property (G_OBJECT (self), specs[n]->name, &v);
+
+      g_object_set_property (G_OBJECT (ret), specs[n]->name, &v);
+      g_value_reset (&v);
     }
   }
-
-#if GLIB_CHECK_VERSION(2, 53, 1)
-  {
-    gint i;
-    GValue *values;
-    const gchar **names;
-    values = g_malloc0 (sizeof (GValue) * n_specs);
-    names = g_malloc0 (sizeof (gchar *) * n_specs);
-
-    for (i = 0; i < n_params; i++) {
-      values[i] = params[i].value;
-      names[i] = params[i].name;
-    }
-
-    ret =
-        GES_TIMELINE_ELEMENT (g_object_new_with_properties (G_OBJECT_TYPE
-            (self), n_params, names, values));
-    g_free (names);
-    g_free (values);
-  }
-#else
-  ret = g_object_newv (G_OBJECT_TYPE (self), n_params, params);
-#endif
-
-  while (n_params--)
-    g_value_unset (&params[n_params].value);
 
   g_free (specs);
-  g_free (params);
-
-
-  asset = ges_extractable_get_asset (GES_EXTRACTABLE (self));
-  if (asset)
-    ges_extractable_set_asset (GES_EXTRACTABLE (ret), asset);
   if (deep) {
     if (klass->deep_copy)
       klass->deep_copy (self, ret);
