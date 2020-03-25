@@ -73,8 +73,6 @@ G_DEFINE_TYPE_WITH_CODE (GESUriClip, ges_uri_clip,
 
 static GList *ges_uri_clip_create_track_elements (GESClip *
     clip, GESTrackType type);
-static GESTrackElement
-    * ges_uri_clip_create_track_element (GESClip * clip, GESTrackType type);
 static void ges_uri_clip_set_uri (GESUriClip * self, gchar * uri);
 
 gboolean
@@ -145,7 +143,7 @@ static void
 ges_uri_clip_class_init (GESUriClipClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GESClipClass *timobj_class = GES_CLIP_CLASS (klass);
+  GESClipClass *clip_class = GES_CLIP_CLASS (klass);
   GESTimelineElementClass *element_class = GES_TIMELINE_ELEMENT_CLASS (klass);
 
   object_class->get_property = ges_uri_clip_get_property;
@@ -192,8 +190,7 @@ ges_uri_clip_class_init (GESUriClipClass * klass)
 
   element_class->set_max_duration = uri_clip_set_max_duration;
 
-  timobj_class->create_track_elements = ges_uri_clip_create_track_elements;
-  timobj_class->create_track_element = ges_uri_clip_create_track_element;
+  clip_class->create_track_elements = ges_uri_clip_create_track_elements;
 }
 
 static gchar *
@@ -514,44 +511,6 @@ ges_uri_clip_create_track_elements (GESClip * clip, GESTrackType type)
       res = g_list_prepend (res, element);
     }
   }
-
-  return res;
-}
-
-static GESTrackElement *
-ges_uri_clip_create_track_element (GESClip * clip, GESTrackType type)
-{
-  GESUriClipPrivate *priv = GES_URI_CLIP (clip)->priv;
-  GESTrackElement *res = NULL;
-
-  if (g_str_has_prefix (priv->uri, GES_MULTI_FILE_URI_PREFIX)) {
-    GST_DEBUG ("Creating a GESMultiFileSource for %s", priv->uri);
-    res = (GESTrackElement *) ges_multi_file_source_new (priv->uri);
-  } else if (priv->is_image) {
-    if (type != GES_TRACK_TYPE_VIDEO) {
-      GST_DEBUG ("Object is still image, not adding any audio source");
-      return NULL;
-    } else {
-      GST_DEBUG ("Creating a GESImageSource");
-      res = (GESTrackElement *) ges_image_source_new (priv->uri);
-    }
-
-  } else {
-    GST_DEBUG ("Creating a GESUriSource");
-
-    /* FIXME : Implement properly ! */
-    if (type == GES_TRACK_TYPE_VIDEO)
-      res = (GESTrackElement *) ges_video_uri_source_new (priv->uri);
-    else if (type == GES_TRACK_TYPE_AUDIO)
-      res = (GESTrackElement *) ges_audio_uri_source_new (priv->uri);
-
-    /* If mute and track is audio, deactivate the track element */
-    if (type == GES_TRACK_TYPE_AUDIO && priv->mute)
-      ges_track_element_set_active (res, FALSE);
-  }
-
-  if (res)
-    ges_track_element_set_track_type (res, type);
 
   return res;
 }
