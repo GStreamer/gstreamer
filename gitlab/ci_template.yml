@@ -607,7 +607,7 @@ cerbero cross-android universal:
 build cerbero cross-android universal:
   extends: '.cerbero cross-android universal'
   rules:
-    - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-build|gst-omx|gstreamer-vaapi|gst-integration-testsuites|gst-plugins-rs)$/'
+    - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-build|gst-docs|gst-omx|gstreamer-vaapi|gst-integration-testsuites|gst-plugins-rs)$/'
 
 #
 # Cerbero Cross Windows builds
@@ -633,7 +633,7 @@ cerbero cross win32:
 build cerbero cross win32:
   extends: '.cerbero cross win32'
   rules:
-    - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-build|gst-omx|gstreamer-vaapi|gst-docs|gst-integration-testsuites|gst-plugins-rs)$/'
+    - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-build|gst-docs|gst-omx|gstreamer-vaapi|gst-docs|gst-integration-testsuites|gst-plugins-rs)$/'
 
 cerbero deps cross-windows x86_64:
   extends: '.cerbero deps'
@@ -705,7 +705,7 @@ build cerbero cross win64:
 cross-android universal examples:
   extends: ".cross-android universal examples"
   rules:
-    - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-build|gst-omx|gstreamer-vaapi|gst-integration-testsuites|gst-plugins-rs)$/'
+    - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-build|gst-docs|gst-omx|gstreamer-vaapi|gst-integration-testsuites|gst-plugins-rs)$/'
   needs:
     - "build cerbero cross-android universal"
 
@@ -842,8 +842,6 @@ documentation:
       CODE_SIGN_IDENTITY=""
       CODE_SIGNING_ALLOWED="NO"
       CODE_SIGN_ENTITLEMENTS=""
-  rules:
-    - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-build|gst-omx|gstreamer-vaapi|gst-integration-testsuites|gst-plugins-rs)$/'
   script:
     # install the binaries
     - installer -pkg gstreamer-1.0-devel-*-ios-universal.pkg -target CurrentUserHomeDirectory -verbose
@@ -872,6 +870,8 @@ documentation:
 
 cross-ios universal examples:
   extends: ".cross-ios universal examples"
+  rules:
+    - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-build|gst-docs|gst-omx|gstreamer-vaapi|gst-integration-testsuites|gst-plugins-rs)$/'
   needs:
     - "build cerbero cross-ios universal"
 
