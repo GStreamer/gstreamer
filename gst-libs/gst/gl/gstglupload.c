@@ -1975,7 +1975,7 @@ gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer,
     GstBuffer ** outbuf_ptr)
 {
   GstGLUploadReturn ret = GST_GL_UPLOAD_ERROR;
-  GstBuffer *outbuf;
+  GstBuffer *outbuf = NULL;
   gpointer last_impl = upload->priv->method_impl;
 
   g_return_val_if_fail (GST_IS_GL_UPLOAD (upload), FALSE);
@@ -2016,6 +2016,8 @@ restart:
         break;
       }
     }
+
+    gst_buffer_replace (&outbuf, NULL);
     goto restart;
   } else if (ret == GST_GL_UPLOAD_DONE || ret == GST_GL_UPLOAD_RECONFIGURE) {
     if (last_impl != upload->priv->method_impl) {
@@ -2030,6 +2032,7 @@ restart:
     /* we are done */
   } else {
     upload->priv->method_impl = NULL;
+    gst_buffer_replace (&outbuf, NULL);
     NEXT_METHOD;
   }
 
