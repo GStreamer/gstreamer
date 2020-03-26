@@ -138,6 +138,11 @@ gst indent:
     # Clean the .git repos since we won't need them anymore
     - rm -rf subprojects/*/.git/
     - rm -rf build/subprojects/*/.git/
+  artifacts:
+    expire_in: "7 days"
+    when: "always"
+    paths:
+      - 'gst-build/build/meson-logs/'
 
 build fedora x86_64:
   extends: '.build'
@@ -268,6 +273,8 @@ gstreamer-full:
   - ninja -C _build
   - meson test -C _build -v
   artifacts:
+    expire_in: "7 days"
+    when: "always"
     paths:
       - 'gst-build/build/meson-logs/'
       - 'gst-build/build/gstinitstaticplugins.c'
@@ -453,13 +460,12 @@ valgrind ges:
         meson build $env:MESON_ARGS &&
         ninja -C build"
   # FIXME: extract builddir for tests
-  # There's a bug that prevents us from exporting artifacts with docker-windows
-  # executors. It has since been fixed in gitlab 12.1, but
-  # we are blocked from upgrading currently.
-  #
-  # Gitlab Runner issue: https://gitlab.com/gitlab-org/gitlab-runner/issues/4291
-  # Blocked upgrade issue: https://gitlab.freedesktop.org/gstreamer/gst-ci/issues/6#note_192780
-  after_script:
+  #after_script:
+  artifacts:
+    expire_in: "7 days"
+    when: "always"
+    paths:
+      - 'gst-build/build/meson-logs/'
 
 build vs2017 amd64:
   extends: '.build windows'
