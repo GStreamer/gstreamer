@@ -10,7 +10,20 @@ v4l2codecs_sources = [
 
 libgudev_dep = dependency('gudev-1.0', required: get_option('v4l2codecs'))
 
-if libgudev_dep.found()
+if get_option('v4l2codecs').disabled()
+  have_v4l2 = false
+  message('V4L2 CODECs plugin is disabled')
+else
+  # Should only be built on Linux, check for Linux kernel headers even though
+  # we have our own copy.
+  have_v4l2 = cc.has_header('linux/videodev2.h')
+  if get_option('v4l2codecs').enabled() and not have_v4l2
+    error('V4L2i CODECs is requested but kernel headers were not found')
+  endif
+endif
+
+
+if have_v4l2 and libgudev_dep.found()
   gstv4l2codecs = library('gstv4l2codecs',
     v4l2codecs_sources,
     c_args : gst_plugins_bad_args,
