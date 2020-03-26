@@ -64,9 +64,16 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   GList *devices, *d;
+  const gchar *paths[] = { "/dev", NULL };
+  const gchar *names[] = { "media", NULL };
 
   GST_DEBUG_CATEGORY_INIT (gstv4l2codecs_debug, "v4l2codecs", 0,
       "V4L2 CODECs general debug");
+
+  /* Add some dependency, so the dynamic features get updated upon changes in
+   * /dev/media* */
+  gst_plugin_add_dependency (plugin,
+      NULL, paths, names, GST_PLUGIN_DEPENDENCY_FLAG_FILE_NAME_IS_PREFIX);
 
   devices = gst_v4l2_codec_find_devices ();
   for (d = devices; d; d = g_list_next (d)) {
