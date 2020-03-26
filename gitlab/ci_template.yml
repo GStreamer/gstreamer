@@ -424,6 +424,7 @@ valgrind ges:
     - 'docker'
     - 'windows'
     - '1809'
+    - 'gstreamer-windows'
   timeout: '45min'
   variables:
     MESON_ARGS: >
