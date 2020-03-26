@@ -314,7 +314,7 @@ gst_d3d11_window_on_resize_default (GstD3D11Window * window, guint width,
   }
 
   swap_chain->GetDesc (&swap_desc);
-  hr = swap_chain->ResizeBuffers (0, width, height, DXGI_FORMAT_UNKNOWN,
+  hr = swap_chain->ResizeBuffers (0, width, height, window->dxgi_format,
       swap_desc.Flags);
   if (!gst_d3d11_result (hr, window->device)) {
     GST_ERROR_OBJECT (window, "Couldn't resize buffers, hr: 0x%x", (guint) hr);
@@ -535,12 +535,7 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint display_width,
     swapchain_flags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
   }
 
-  /* release swapchain if render format is being changed */
   gst_d3d11_device_lock (window->device);
-  if (window->swap_chain &&
-      window->dxgi_format != chosen_format->dxgi_format) {
-    gst_d3d11_window_release_resources (window->device, window);
-  }
   window->dxgi_format = chosen_format->dxgi_format;
 
   klass = GST_D3D11_WINDOW_GET_CLASS (window);
