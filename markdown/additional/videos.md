@@ -23,8 +23,8 @@ short-description: Collection of GStreamer-related multimedia content
 [GStreamer Conference 2014: Videos and Slides]: http://gstconf.ubicast.tv/channels/#gstreamer-conference-2014
 [GStreamer Conference 2013: Videos and Slides]: http://gstconf.ubicast.tv/channels/#gstreamer-conference-2013
 [GStreamer Conference 2012: Videos and Slides]: http://gstconf.ubicast.tv/channels/#gstreamer-conference-2012
-[GStreamer Conference 2011: Videos and Slides]: http://gstconf.ubicast.tv/channels/#conferences-2011
-[GStreamer Conference 2010: Videos and Slides]: http://gstconf.ubicast.tv/channels/#conferences-2010
+[GStreamer Conference 2011: Videos and Slides]: http://gstconf.ubicast.tv/channels/#conferences2011
+[GStreamer Conference 2010: Videos and Slides]: http://gstconf.ubicast.tv/channels/#conferences2010
 [2018]: https://gstreamer.freedesktop.org/data/events/gstreamer-conference/2018/
 [2017]: https://gstreamer.freedesktop.org/data/events/gstreamer-conference/2017/
 [2016]: https://gstreamer.freedesktop.org/data/events/gstreamer-conference/2016/
