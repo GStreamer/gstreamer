@@ -97,8 +97,6 @@ struct _GstGLWindowPrivate
   guint surface_width;
   guint surface_height;
 
-  gboolean alive;
-
   GMutex sync_message_lock;
   GCond sync_message_cond;
 };
@@ -553,7 +551,6 @@ gst_gl_window_run (GstGLWindow * window)
   window_class = GST_GL_WINDOW_GET_CLASS (window);
   g_return_if_fail (window_class->run != NULL);
 
-  window->priv->alive = TRUE;
   window_class->run (window);
 }
 
@@ -590,8 +587,6 @@ gst_gl_window_quit (GstGLWindow * window)
   g_return_if_fail (window_class->quit != NULL);
 
   GST_GL_WINDOW_LOCK (window);
-
-  window->priv->alive = FALSE;
 
   window_class->quit (window);
 
