@@ -989,7 +989,7 @@ bio_method_ctrl (BIO * bio, int cmd, long arg1, void *arg2)
       GST_LOG_OBJECT (self, "BIO: EOF reset");
       return 1;
     case BIO_CTRL_EOF:{
-      gint eof = !(priv->bio_buffer_len - priv->bio_buffer_offset);
+      gint eof = priv->is_alive == FALSE;
       GST_LOG_OBJECT (self, "BIO: EOF query returned %d", eof);
       return eof;
     }
