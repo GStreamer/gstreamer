@@ -432,8 +432,8 @@ gst_vaapi_video_meta_replace (GstVaapiVideoMeta ** old_meta_ptr,
   if (new_meta)
     gst_vaapi_video_meta_ref (new_meta);
 
-  while (!g_atomic_pointer_compare_and_exchange ((gpointer *) old_meta_ptr,
-          old_meta, new_meta))
+  while (!g_atomic_pointer_compare_and_exchange (old_meta_ptr, old_meta,
+          new_meta))
     old_meta = g_atomic_pointer_get ((gpointer *) old_meta_ptr);
 
   if (old_meta)
