@@ -801,6 +801,8 @@ gst_gl_context_get_thread (GstGLContext * context)
 {
   GThread *ret;
 
+  g_return_val_if_fail (GST_IS_GL_CONTEXT (context), NULL);
+
   GST_OBJECT_LOCK (context);
   ret = context->priv->active_thread;
   if (ret)
