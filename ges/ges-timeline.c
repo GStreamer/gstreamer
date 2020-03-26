@@ -1667,31 +1667,6 @@ update_stream_object (TrackPrivate * tr_priv)
   return res;
 }
 
-static void
-trackelement_start_changed_cb (GESTrackElement * child,
-    GParamSpec * arg G_GNUC_UNUSED, GESTimeline * timeline)
-{
-  timeline_update_duration (timeline);
-}
-
-static void
-track_element_added_cb (GESTrack * track, GESTrackElement * track_element,
-    GESTimeline * timeline)
-{
-  /* Auto transition should be updated before we receive the signal */
-  g_signal_connect_after (GES_TRACK_ELEMENT (track_element), "notify::start",
-      G_CALLBACK (trackelement_start_changed_cb), timeline);
-}
-
-static void
-track_element_removed_cb (GESTrack * track,
-    GESTrackElement * track_element, GESTimeline * timeline)
-{
-  /* Disconnect all signal handlers */
-  g_signal_handlers_disconnect_by_func (track_element,
-      trackelement_start_changed_cb, timeline);
-}
-
 static GstPadProbeReturn
 _pad_probe_cb (GstPad * mixer_pad, GstPadProbeInfo * info,
     TrackPrivate * tr_priv)
@@ -2205,12 +2180,6 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
   /* ensure that each existing clip has the opportunity to create a
    * track element for this track*/
 
-  /* We connect to the object for the timeline editing mode management */
-  g_signal_connect (G_OBJECT (track), "track-element-added",
-      G_CALLBACK (track_element_added_cb), timeline);
-  g_signal_connect (G_OBJECT (track), "track-element-removed",
-      G_CALLBACK (track_element_removed_cb), timeline);
-
   for (tmp = timeline->layers; tmp; tmp = tmp->next) {
     GList *objects, *obj;
     objects = ges_layer_get_clips (tmp->data);
@@ -2282,12 +2251,6 @@ ges_timeline_remove_track (GESTimeline * timeline, GESTrack * track)
     gst_ghost_pad_set_target ((GstGhostPad *) tr_priv->ghostpad, NULL);
     gst_element_remove_pad (GST_ELEMENT (timeline), tr_priv->ghostpad);
   }
-
-  /* Remove pad-added/-removed handlers */
-  g_signal_handlers_disconnect_by_func (track, track_element_added_cb,
-      timeline);
-  g_signal_handlers_disconnect_by_func (track, track_element_removed_cb,
-      timeline);
 
   /* Signal track removal to all layers/objects */
   g_signal_emit (timeline, ges_timeline_signals[TRACK_REMOVED], 0, track);
