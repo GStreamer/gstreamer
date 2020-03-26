@@ -652,7 +652,7 @@ failure:
   return FALSE;
 }
 
-/* must start with "a=candidate:" */
+/* candidate must start with "a=candidate:" or be NULL*/
 void
 gst_webrtc_ice_add_candidate (GstWebRTCICE * ice, GstWebRTCICEStream * stream,
     const gchar * candidate)
@@ -663,6 +663,12 @@ gst_webrtc_ice_add_candidate (GstWebRTCICE * ice, GstWebRTCICEStream * stream,
 
   item = _find_item (ice, -1, -1, stream);
   g_return_if_fail (item != NULL);
+
+  if (candidate == NULL) {
+    nice_agent_peer_candidate_gathering_done (ice->priv->nice_agent,
+        item->nice_stream_id);
+    return;
+  }
 
   cand =
       nice_agent_parse_remote_candidate_sdp (ice->priv->nice_agent,
@@ -1080,8 +1086,8 @@ gst_webrtc_ice_constructed (GObject * object)
 
   _start_thread (ice);
 
-  ice->priv->nice_agent = nice_agent_new (ice->priv->main_context,
-      NICE_COMPATIBILITY_RFC5245);
+  ice->priv->nice_agent = nice_agent_new_full (ice->priv->main_context,
+      NICE_COMPATIBILITY_RFC5245, NICE_AGENT_OPTION_ICE_TRICKLE);
   g_signal_connect (ice->priv->nice_agent, "new-candidate-full",
       G_CALLBACK (_on_new_candidate), ice);
 

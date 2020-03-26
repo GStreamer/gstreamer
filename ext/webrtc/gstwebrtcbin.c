@@ -4869,10 +4869,12 @@ gst_webrtc_bin_add_ice_candidate (GstWebRTCBin * webrtc, guint mline,
 
   item = g_new0 (IceCandidateItem, 1);
   item->mlineindex = mline;
-  if (!g_ascii_strncasecmp (attr, "a=candidate:", 12))
-    item->candidate = g_strdup (attr);
-  else if (!g_ascii_strncasecmp (attr, "candidate:", 10))
-    item->candidate = g_strdup_printf ("a=%s", attr);
+  if (attr && attr[0] != 0) {
+    if (!g_ascii_strncasecmp (attr, "a=candidate:", 12))
+      item->candidate = g_strdup (attr);
+    else if (!g_ascii_strncasecmp (attr, "candidate:", 10))
+      item->candidate = g_strdup_printf ("a=%s", attr);
+  }
   gst_webrtc_bin_enqueue_task (webrtc,
       (GstWebRTCBinFunc) _add_ice_candidate_task, item,
       (GDestroyNotify) _free_ice_candidate_item, NULL);
@@ -6410,7 +6412,8 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
    * GstWebRTCBin::add-ice-candidate:
    * @object: the #webrtcbin
    * @mline_index: the index of the media description in the SDP
-   * @ice-candidate: an ice candidate
+   * @ice-candidate: an ice candidate or NULL/"" to mark that no more candidates
+   * will arrive
    */
   gst_webrtc_bin_signals[ADD_ICE_CANDIDATE_SIGNAL] =
       g_signal_new_class_handler ("add-ice-candidate",
