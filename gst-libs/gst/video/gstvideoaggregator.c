@@ -55,11 +55,13 @@ static void gst_video_aggregator_reset_qos (GstVideoAggregator * vagg);
 
 #define DEFAULT_PAD_ZORDER 0
 #define DEFAULT_PAD_REPEAT_AFTER_EOS FALSE
+#define DEFAULT_PAD_MAX_LAST_BUFFER_REPEAT GST_CLOCK_TIME_NONE
 enum
 {
   PROP_PAD_0,
   PROP_PAD_ZORDER,
   PROP_PAD_REPEAT_AFTER_EOS,
+  PROP_PAD_MAX_LAST_BUFFER_REPEAT,
 };
 
 
@@ -71,6 +73,7 @@ struct _GstVideoAggregatorPadPrivate
   /* properties */
   guint zorder;
   gboolean repeat_after_eos;
+  GstClockTime max_last_buffer_repeat;
 
   /* Subclasses can force an alpha channel in the (input thus output)
    * colorspace format */
@@ -98,6 +101,9 @@ gst_video_aggregator_pad_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PAD_REPEAT_AFTER_EOS:
       g_value_set_boolean (value, pad->priv->repeat_after_eos);
+      break;
+    case PROP_PAD_MAX_LAST_BUFFER_REPEAT:
+      g_value_set_uint64 (value, pad->priv->max_last_buffer_repeat);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -130,6 +136,9 @@ gst_video_aggregator_pad_set_property (GObject * object, guint prop_id,
       break;
     case PROP_PAD_REPEAT_AFTER_EOS:
       pad->priv->repeat_after_eos = g_value_get_boolean (value);
+      break;
+    case PROP_PAD_MAX_LAST_BUFFER_REPEAT:
+      pad->priv->max_last_buffer_repeat = g_value_get_uint64 (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -218,6 +227,36 @@ gst_video_aggregator_pad_class_init (GstVideoAggregatorPadClass * klass)
           DEFAULT_PAD_REPEAT_AFTER_EOS,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   *
+   * GstVideoAggregator:max-last-buffer-repeat:
+   *
+   * Repeat last buffer for time (in ns, -1 = until EOS).
+   * The default behaviour is for the last buffer received on a pad to be
+   * aggregated until a new buffer is received.
+   *
+   * Setting this property causes the last buffer to be discarded once the
+   * running time of the output buffer is `max-last-buffer-repeat` nanoseconds
+   * past its end running time. When the buffer didn't have a duration, the
+   * comparison is made against its running start time.
+   *
+   * This is useful in live scenarios: when a stream encounters a temporary
+   * networking problem, a #GstVideoAggregator subclass can then fall back to
+   * displaying a lower z-order stream, or the background.
+   *
+   * Setting this property doesn't affect the behaviour on EOS.
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_PAD_MAX_LAST_BUFFER_REPEAT,
+      g_param_spec_uint64 ("max-last-buffer-repeat", "Max Last Buffer Repeat",
+          "Repeat last buffer for time (in ns, -1=until EOS), "
+          "behaviour on EOS is not affected", 0, G_MAXUINT64,
+          DEFAULT_PAD_MAX_LAST_BUFFER_REPEAT,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
+
   aggpadclass->flush = GST_DEBUG_FUNCPTR (_flush_pad);
   aggpadclass->skip_buffer =
       GST_DEBUG_FUNCPTR (gst_video_aggregator_pad_skip_buffer);
@@ -233,6 +272,7 @@ gst_video_aggregator_pad_init (GstVideoAggregatorPad * vaggpad)
 
   vaggpad->priv->zorder = DEFAULT_PAD_ZORDER;
   vaggpad->priv->repeat_after_eos = DEFAULT_PAD_REPEAT_AFTER_EOS;
+  vaggpad->priv->max_last_buffer_repeat = DEFAULT_PAD_MAX_LAST_BUFFER_REPEAT;
   memset (&vaggpad->priv->prepared_frame, 0, sizeof (GstVideoFrame));
 }
 
@@ -1459,6 +1499,7 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
           }
           gst_buffer_unref (buf);
           gst_aggregator_pad_drop_buffer (bpad);
+          pad->priv->start_time = start_time;
           need_more_data = TRUE;
           continue;
         }
@@ -1470,7 +1511,8 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
           need_reconfigure = TRUE;
           pad->priv->pending_vinfo.finfo = NULL;
         }
-        /* FIXME: Set start_time and end_time to something here? */
+        /* FIXME: Set end_time to something here? */
+        pad->priv->start_time = start_time;
         gst_buffer_unref (buf);
         GST_DEBUG_OBJECT (pad, "buffer duration is -1");
         continue;
@@ -1568,18 +1610,41 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
 
       if (pad->priv->end_time != -1) {
         if (pad->priv->end_time <= output_start_running_time) {
-          pad->priv->start_time = pad->priv->end_time = -1;
           if (!is_eos) {
-            GST_DEBUG ("I just need more data");
+            GST_DEBUG_OBJECT (pad, "I just need more data");
+            if (GST_CLOCK_TIME_IS_VALID (pad->priv->max_last_buffer_repeat)) {
+              if (output_start_running_time - pad->priv->end_time >
+                  pad->priv->max_last_buffer_repeat) {
+                pad->priv->start_time = pad->priv->end_time = -1;
+                gst_buffer_replace (&pad->priv->buffer, NULL);
+              }
+            } else {
+              pad->priv->start_time = pad->priv->end_time = -1;
+            }
             need_more_data = TRUE;
           } else {
             gst_buffer_replace (&pad->priv->buffer, NULL);
+            pad->priv->start_time = pad->priv->end_time = -1;
           }
         } else if (is_eos) {
           eos = FALSE;
         }
       } else if (is_eos) {
         gst_buffer_replace (&pad->priv->buffer, NULL);
+      } else if (pad->priv->start_time != -1) {
+        /* When the current buffer didn't have a duration, but
+         * max-last-buffer-repeat was set, we use start_time as
+         * the comparison point
+         */
+        if (pad->priv->start_time <= output_start_running_time) {
+          if (GST_CLOCK_TIME_IS_VALID (pad->priv->max_last_buffer_repeat)) {
+            if (output_start_running_time - pad->priv->start_time >
+                pad->priv->max_last_buffer_repeat) {
+              pad->priv->start_time = pad->priv->end_time = -1;
+              gst_buffer_replace (&pad->priv->buffer, NULL);
+            }
+          }
+        }
       }
     }
   }
