@@ -1205,7 +1205,7 @@ start_rtcp_thread (GstRtpSession * rtpsession)
       g_thread_join (rtpsession->priv->thread);
     /* only create a new thread if the old one was stopped. Otherwise we can
      * just reuse the currently running one. */
-    rtpsession->priv->thread = g_thread_try_new ("rtpsession-rtcp-thread",
+    rtpsession->priv->thread = g_thread_try_new ("rtpsession-rtcp",
         (GThreadFunc) rtcp_thread, rtpsession, &error);
     rtpsession->priv->thread_stopped = FALSE;
   }
