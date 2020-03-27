@@ -475,16 +475,19 @@ build vs2017 amd64:
 
 build vs2017 x86:
   extends: '.build windows'
+  # Disabled until the container image can be updated
+  rules:
+    - allow_failure: true
+      when: 'manual'
   variables:
     ARCH: 'x86'
 
-# Disabled until the runner issues has been resolved.
 build msys2 :
   extends: '.build windows'
+  # Disabled until the container image can be updated
   rules:
-    - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-docs|gst-integration-testsuites|gst-omx|gst-plugins-rs|gstreamer-vaapi)$/'
-      allow_failure: true
-      when: manual
+    - allow_failure: true
+      when: 'manual'
   timeout: '60min'
   script:
     # Sometimes there's seems to be an existing gst-build clone that comes either from the ether or
