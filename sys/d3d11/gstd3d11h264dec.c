@@ -117,8 +117,6 @@ typedef struct _GstD3D11H264Dec
   USHORT frame_num_list[16];
   UINT used_for_reference_flags;
   USHORT non_existing_frame_flags;
-
-  guint status_report_feedback_number;
 } GstD3D11H264Dec;
 
 typedef struct _GstD3D11H264DecClass
@@ -568,8 +566,6 @@ gst_d3d11_h264_dec_new_sequence (GstH264Decoder * decoder,
       GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
       return FALSE;
     }
-
-    self->status_report_feedback_number = 0;
   }
 
   return TRUE;
@@ -907,8 +903,6 @@ gst_d3d11_h264_dec_end_picture (GstH264Decoder * decoder,
     GstH264Picture * picture)
 {
   GstD3D11H264Dec *self = GST_D3D11_H264_DEC (decoder);
-  GError *err = NULL;
-  GstDXVAStatus status = { 0, };
 
   GST_LOG_OBJECT (self, "end picture %p, (poc %d)",
       picture, picture->pic_order_cnt);
@@ -921,11 +915,6 @@ gst_d3d11_h264_dec_end_picture (GstH264Decoder * decoder,
   if (!gst_d3d11_decoder_end_frame (self->d3d11_decoder)) {
     GST_ERROR_OBJECT (self, "Failed to EndFrame");
     return FALSE;
-  }
-
-  if (gst_d3d11_decoder_get_status_report (self->d3d11_decoder,
-          &status, &err) && err) {
-    GST_D3D11_VIDEO_DECODER_ERROR_FROM_ERROR (self, err);
   }
 
   return TRUE;
@@ -1017,9 +1006,7 @@ gst_d3d11_h264_dec_fill_picture_params (GstD3D11H264Dec * self,
   params->ContinuationFlag = 1;
   params->Reserved8BitsA = 0;
   params->Reserved8BitsB = 0;
-  /* StatusReportFeedbackNumber should be non-zero */
-  params->StatusReportFeedbackNumber = 1 + self->status_report_feedback_number;
-  self->status_report_feedback_number++;
+  params->StatusReportFeedbackNumber = 1;
 
   gst_d3d11_h264_dec_picture_params_from_sps (self,
       sps, slice_header->field_pic_flag, params);

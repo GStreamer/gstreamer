@@ -41,16 +41,6 @@ G_BEGIN_DECLS
 #define GST_IS_D3D11_DECODER_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_D3D11_DECODER))
 
-#define GST_D3D11_VIDEO_DECODER_ERROR_FROM_ERROR(el, err) G_STMT_START {  \
-  gchar *__dbg = g_strdup (err->message); \
-  GstVideoDecoder *__dec = GST_VIDEO_DECODER (el);  \
-  GST_WARNING_OBJECT (el, "error: %s", __dbg);  \
-  _gst_video_decoder_error (__dec, 1, \
-    err->domain, err->code, \
-    NULL, __dbg, __FILE__, GST_FUNCTION, __LINE__); \
-  g_clear_error (&err); \
-} G_STMT_END
-
 typedef struct _GstD3D11DecoderOutputView GstD3D11DecoderOutputView;
 
 struct _GstD3D11DecoderOutputView
@@ -80,35 +70,6 @@ typedef struct
   guint vendor_id;
   gchar *description;
 } GstD3D11DecoderClassData;
-
-/* use our struct for DXVA_Status_* (including DXVA_PicEntry_*) to query
- * decoding status. Microsoft defines the struct per codec but their ABI are
- * compatible each other and mingw header does not define some structs */
-
-/* DXVA_PicEntry_*, from dxva.h */
-typedef struct
-{
-  union {
-    struct {
-      UCHAR  Index7Bits      : 7;
-      UCHAR  AssociatedFlag  : 1;
-    };
-    UCHAR  bPicEntry;
-  };
-} GstDXVAPicEntry;
-
-/* DXVA_Status_*, from dxva.h */
-typedef struct
-{
-  UINT StatusReportFeedbackNumber;
-  GstDXVAPicEntry CurrPic; /* flag is bot field flag */
-  UCHAR  field_pic_flag;
-  UCHAR  bDXVA_Func;
-  UCHAR  bBufType;
-  UCHAR  bStatus;
-  UCHAR  bReserved8Bits;
-  USHORT wNumMbsAffected;
-} GstDXVAStatus;
 
 struct _GstD3D11Decoder
 {
@@ -175,10 +136,6 @@ gboolean          gst_d3d11_decoder_process_output      (GstD3D11Decoder * decod
                                                          gint display_height,
                                                          GstBuffer * decoder_buffer,
                                                          GstBuffer * output);
-
-gboolean          gst_d3d11_decoder_get_status_report   (GstD3D11Decoder * decoder,
-                                                         GstDXVAStatus * status,
-                                                         GError ** error);
 
 /* Utils for class registration */
 gboolean          gst_d3d11_decoder_util_is_legacy_device (GstD3D11Device * device);
