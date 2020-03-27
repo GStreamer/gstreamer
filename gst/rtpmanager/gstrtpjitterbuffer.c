@@ -276,9 +276,9 @@ struct _GstRtpJitterBufferPrivate
 
   RTPJitterBuffer *jbuf;
   GMutex jbuf_lock;
-  gboolean waiting_queue;
+  guint waiting_queue;
   GCond jbuf_queue;
-  gboolean waiting_timer;
+  guint waiting_timer;
   GCond jbuf_timer;
   gboolean waiting_event;
   GCond jbuf_event;
@@ -4134,9 +4134,9 @@ gst_rtp_jitter_buffer_loop (GstRtpJitterBuffer * jitterbuffer)
   JBUF_LOCK_CHECK (priv, flushing);
   do {
     result = handle_next_buffer (jitterbuffer);
-    JBUF_SIGNAL_QUEUE (priv);
     if (G_LIKELY (result == GST_FLOW_WAIT)) {
       /* now wait for the next event */
+      JBUF_SIGNAL_QUEUE (priv);
       JBUF_WAIT_EVENT (priv, flushing);
       result = GST_FLOW_OK;
     }
