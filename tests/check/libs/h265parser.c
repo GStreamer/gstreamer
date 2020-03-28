@@ -642,7 +642,7 @@ GST_START_TEST (test_h265_parse_pps)
   assert_equals_int (pps.pps_range_extension_flag, 1);
   assert_equals_int (pps.pps_multilayer_extension_flag, 0);
   assert_equals_int (pps.pps_3d_extension_flag, 0);
-  assert_equals_int (pps.pps_extension_5bits, 0);
+  assert_equals_int (pps.pps_extension_4bits, 0);
   assert_equals_int (pps.
       pps_extension_params.log2_max_transform_skip_block_size_minus2, 0);
   assert_equals_int (pps.

@@ -1934,7 +1934,8 @@ gst_h265_parse_sps (GstH265Parser * parser, GstH265NalUnit * nalu,
     READ_UINT8 (&nr, sps->sps_range_extension_flag, 1);
     READ_UINT8 (&nr, sps->sps_multilayer_extension_flag, 1);
     READ_UINT8 (&nr, sps->sps_3d_extension_flag, 1);
-    READ_UINT8 (&nr, sps->sps_extension_5bits, 5);
+    READ_UINT8 (&nr, sps->sps_scc_extension_flag, 1);
+    READ_UINT8 (&nr, sps->sps_extension_4bits, 4);
   }
 
   if (sps->sps_range_extension_flag) {
@@ -1955,6 +1956,64 @@ gst_h265_parse_sps (GstH265Parser * parser, GstH265NalUnit * nalu,
         sps->sps_extnsion_params.cabac_bypass_alignment_enabled_flag, 1);
   }
 
+  if (sps->sps_multilayer_extension_flag) {
+    GST_WARNING ("do not support multilayer extension, skip all"
+        " remaining bits");
+    goto done;
+  }
+  if (sps->sps_3d_extension_flag) {
+    GST_WARNING ("do not support 3d extension, skip all remaining bits");
+    goto done;
+  }
+
+  if (sps->sps_scc_extension_flag) {
+    READ_UINT8 (&nr,
+        sps->sps_scc_extension_params.sps_curr_pic_ref_enabled_flag, 1);
+    READ_UINT8 (&nr, sps->sps_scc_extension_params.palette_mode_enabled_flag,
+        1);
+    if (sps->sps_scc_extension_params.palette_mode_enabled_flag) {
+      READ_UE_MAX (&nr, sps->sps_scc_extension_params.palette_max_size, 64);
+      READ_UE_MAX (&nr,
+          sps->sps_scc_extension_params.delta_palette_max_predictor_size,
+          128 - sps->sps_scc_extension_params.palette_max_size);
+
+      READ_UINT8 (&nr,
+          sps->sps_scc_extension_params.
+          sps_palette_predictor_initializers_present_flag, 1);
+      if (sps->sps_scc_extension_params.
+          sps_palette_predictor_initializers_present_flag) {
+        guint comp;
+        READ_UE_MAX (&nr,
+            sps->sps_scc_extension_params.
+            sps_num_palette_predictor_initializer_minus1,
+            sps->sps_scc_extension_params.palette_max_size +
+            sps->sps_scc_extension_params.delta_palette_max_predictor_size - 1);
+
+        for (comp = 0; comp < (sps->chroma_format_idc == 0 ? 1 : 3); comp++) {
+          guint num_bits;
+          guint num =
+              sps->sps_scc_extension_params.
+              sps_num_palette_predictor_initializer_minus1 + 1;
+
+          num_bits = (comp == 0 ? sps->bit_depth_luma_minus8 + 8 :
+              sps->bit_depth_chroma_minus8 + 8);
+          for (i = 0; i < num; i++)
+            READ_UINT32 (&nr,
+                sps->sps_scc_extension_params.sps_palette_predictor_initializer
+                [comp]
+                [i], num_bits);
+        }
+      }
+    }
+
+    READ_UINT8 (&nr,
+        sps->sps_scc_extension_params.motion_vector_resolution_control_idc, 2);
+    READ_UINT8 (&nr,
+        sps->sps_scc_extension_params.intra_boundary_filtering_disabled_flag,
+        1);
+  }
+
+done:
   /* calculate ChromaArrayType */
   if (!sps->separate_colour_plane_flag)
     sps->chroma_array_type = sps->chroma_format_idc;
@@ -2164,7 +2223,8 @@ gst_h265_parse_pps (GstH265Parser * parser, GstH265NalUnit * nalu,
     READ_UINT8 (&nr, pps->pps_range_extension_flag, 1);
     READ_UINT8 (&nr, pps->pps_multilayer_extension_flag, 1);
     READ_UINT8 (&nr, pps->pps_3d_extension_flag, 1);
-    READ_UINT8 (&nr, pps->pps_extension_5bits, 5);
+    READ_UINT8 (&nr, pps->pps_scc_extension_flag, 1);
+    READ_UINT8 (&nr, pps->pps_extension_4bits, 4);
   }
 
   if (pps->pps_range_extension_flag) {
@@ -2200,6 +2260,87 @@ gst_h265_parse_pps (GstH265Parser * parser, GstH265NalUnit * nalu,
         pps->pps_extension_params.log2_sao_offset_scale_chroma, 0,
         MaxBitDepthC);
   }
+
+  if (pps->pps_multilayer_extension_flag) {
+    GST_WARNING ("do not support multilayer extension, skip all"
+        " remaining bits");
+    goto done;
+  }
+  if (pps->pps_3d_extension_flag) {
+    GST_WARNING ("do not support 3d extension, skip all remaining bits");
+    goto done;
+  }
+
+  if (pps->pps_scc_extension_flag) {
+    READ_UINT8 (&nr,
+        pps->pps_scc_extension_params.pps_curr_pic_ref_enabled_flag, 1);
+    READ_UINT8 (&nr,
+        pps->pps_scc_extension_params.
+        residual_adaptive_colour_transform_enabled_flag, 1);
+    if (pps->pps_scc_extension_params.
+        residual_adaptive_colour_transform_enabled_flag) {
+      READ_UINT8 (&nr,
+          pps->pps_scc_extension_params.pps_slice_act_qp_offsets_present_flag,
+          1);
+      READ_SE_ALLOWED (&nr,
+          pps->pps_scc_extension_params.pps_act_y_qp_offset_plus5, -7, 17);
+      READ_SE_ALLOWED (&nr,
+          pps->pps_scc_extension_params.pps_act_cb_qp_offset_plus5, -7, 17);
+      READ_SE_ALLOWED (&nr,
+          pps->pps_scc_extension_params.pps_act_cr_qp_offset_plus3, -9, 15);
+    }
+
+    READ_UINT8 (&nr,
+        pps->pps_scc_extension_params.
+        pps_palette_predictor_initializers_present_flag, 1);
+    if (pps->pps_scc_extension_params.
+        pps_palette_predictor_initializers_present_flag) {
+      READ_UE_MAX (&nr,
+          pps->pps_scc_extension_params.pps_num_palette_predictor_initializer,
+          sps->sps_scc_extension_params.palette_max_size +
+          sps->sps_scc_extension_params.delta_palette_max_predictor_size);
+      if (pps->pps_scc_extension_params.pps_num_palette_predictor_initializer >
+          0) {
+        guint comp;
+
+        READ_UINT8 (&nr, pps->pps_scc_extension_params.monochrome_palette_flag,
+            1);
+        /* It is a requirement of bitstream conformance that the value of
+           luma_bit_depth_entry_minus8 shall be equal to the value of
+           bit_depth_luma_minus8 */
+        READ_UE_ALLOWED (&nr,
+            pps->pps_scc_extension_params.luma_bit_depth_entry_minus8,
+            sps->bit_depth_luma_minus8, sps->bit_depth_luma_minus8);
+        if (!pps->pps_scc_extension_params.monochrome_palette_flag) {
+          /* It is a requirement of bitstream conformance that the value
+             of chroma_bit_depth_entry_minus8 shall be equal to the value
+             of bit_depth_chroma_minus8. */
+          READ_UE_ALLOWED (&nr,
+              pps->pps_scc_extension_params.chroma_bit_depth_entry_minus8,
+              sps->bit_depth_chroma_minus8, sps->bit_depth_chroma_minus8);
+        }
+
+        for (comp = 0; comp <
+            (pps->pps_scc_extension_params.monochrome_palette_flag ? 1 : 3);
+            comp++) {
+          guint num_bits;
+          guint num =
+              pps->pps_scc_extension_params.
+              pps_num_palette_predictor_initializer;
+
+          num_bits = (comp == 0 ?
+              pps->pps_scc_extension_params.luma_bit_depth_entry_minus8 + 8 :
+              pps->pps_scc_extension_params.chroma_bit_depth_entry_minus8 + 8);
+          for (i = 0; i < num; i++)
+            READ_UINT32 (&nr,
+                pps->pps_scc_extension_params.pps_palette_predictor_initializer
+                [comp][i], num_bits);
+        }
+      }
+    }
+  }
+
+done:
   pps->valid = TRUE;
   return GST_H265_PARSER_OK;
 
@@ -2457,12 +2598,22 @@ gst_h265_parser_parse_slice_hdr (GstH265Parser * parser,
         if (!gst_h265_slice_parse_pred_weight_table (slice, &nr))
           goto error;
       READ_UE_MAX (&nr, slice->five_minus_max_num_merge_cand, 4);
+
+      if (sps->sps_scc_extension_params.motion_vector_resolution_control_idc
+          == 2)
+        READ_UINT8 (&nr, slice->use_integer_mv_flag, 1);
     }
 
     READ_SE_ALLOWED (&nr, slice->qp_delta, -87, 77);
     if (pps->slice_chroma_qp_offsets_present_flag) {
       READ_SE_ALLOWED (&nr, slice->cb_qp_offset, -12, 12);
       READ_SE_ALLOWED (&nr, slice->cr_qp_offset, -12, 12);
+    }
+
+    if (pps->pps_scc_extension_params.pps_slice_act_qp_offsets_present_flag) {
+      READ_SE_ALLOWED (&nr, slice->slice_act_y_qp_offset, -12, 12);
+      READ_SE_ALLOWED (&nr, slice->slice_act_cb_qp_offset, -12, 12);
+      READ_SE_ALLOWED (&nr, slice->slice_act_cr_qp_offset, -12, 12);
     }
 
     if (pps->pps_extension_params.chroma_qp_offset_list_enabled_flag)

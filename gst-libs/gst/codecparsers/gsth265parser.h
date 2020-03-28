@@ -434,7 +434,9 @@ typedef struct _GstH265SubLayerHRDParams        GstH265SubLayerHRDParams;
 typedef struct _GstH265HRDParams                GstH265HRDParams;
 typedef struct _GstH265VUIParams                GstH265VUIParams;
 typedef struct _GstH265SPSExtensionParams       GstH265SPSExtensionParams;
+typedef struct _GstH265SPSSccExtensionParams    GstH265SPSSccExtensionParams;
 typedef struct _GstH265PPSExtensionParams       GstH265PPSExtensionParams;
+typedef struct _GstH265PPSSccExtensionParams    GstH265PPSSccExtensionParams;
 
 typedef struct _GstH265ScalingList              GstH265ScalingList;
 typedef struct _GstH265RefPicListModification   GstH265RefPicListModification;
@@ -951,6 +953,43 @@ struct _GstH265SPSExtensionParams {
 };
 
 /**
+ * GstH265SPSSccExtensionParams:
+ * @sps_curr_pic_ref_enabled_flag: equal to 1 specifies that a picture in the CVS may be
+ *   included in a reference picture list of a slice of the picture itself.
+ * @palette_mode_enabled_flag: equal to 1 specifies that the decoding process for palette mode
+ *   may be used for intra blocks. Equal to 0 specifies that the decoding process for palette
+ *   mode is not applied.
+ * @palette_max_size: specifies the maximum allowed palette size.
+ * @delta_palette_max_predictor_size: specifies the difference between the maximum allowed
+ *   palette predictor size and the maximum allowed palette size.
+ * @sps_palette_predictor_initializers_present_flag: equal to 1 specifies that the sequence
+ *   palette predictors are initialized using the sps_palette_predictor_initializer specified
+ *   in clause 7.3.2.2.3.
+ * @sps_num_palette_predictor_initializer_minus1: plus 1 specifies the number of entries in
+ *   the sequence palette predictor initializer.
+ * @sps_palette_predictor_initializer: specifies the value of the comp-th component of the
+ *   i-th palette entry in the SPS that is used to initialize the array PredictorPaletteEntries.
+ * @motion_vector_resolution_control_idc: controls the presence and inference of the
+ *   use_integer_mv_flag that specifies the resolution of motion vectors for inter prediction.
+ * @intra_boundary_filtering_disabled_flag: equal to 1 specifies that the intra boundary
+ *   filtering process is unconditionally disabled for intra prediction.
+ * Defines the _GstH265SPSSccExtensionParams
+ *
+ * Since: 1.18
+ */
+struct _GstH265SPSSccExtensionParams {
+  guint8 sps_curr_pic_ref_enabled_flag;
+  guint8 palette_mode_enabled_flag;
+  guint8 palette_max_size;
+  guint8 delta_palette_max_predictor_size;
+  guint8 sps_palette_predictor_initializers_present_flag;
+  guint8 sps_num_palette_predictor_initializer_minus1;
+  guint32 sps_palette_predictor_initializer[3][128];
+  guint8 motion_vector_resolution_control_idc;
+  guint8 intra_boundary_filtering_disabled_flag;
+};
+
+/**
  * GstH265PPSExtensionParams:
  * @log2_max_transform_skip_block_size_minus2: plus 2 specifies the maximum transform block size for which
  *   transform_skip_flag may be present in coded pictures referring to the PPS.
@@ -981,6 +1020,51 @@ struct _GstH265PPSExtensionParams {
   gint8 cr_qp_offset_list[6];
   guint8 log2_sao_offset_scale_luma;
   guint8 log2_sao_offset_scale_chroma;
+};
+
+/**
+ * GstH265PPSSccExtensionParams:
+ * @pps_curr_pic_ref_enabled_flag: equal to 1 specifies that a picture referring to the PPS may
+ *   be included in a reference picture list of a slice of the picture itself.
+ * @residual_adaptive_colour_transform_enabled_flag: equal to 1 specifies that an adaptive
+ *   colour transform may be applied to the residual in the decoding process.
+ * @pps_slice_act_qp_offsets_present_flag: equal to 1 specifies that slice_act_y_qp_offset,
+ *   slice_act_cb_qp_offset, slice_act_cr_qp_offset are present in the slice header.
+ * @pps_act_y_qp_offset_plus5 @pps_act_cb_qp_offset_plus5 @pps_act_cr_qp_offset_plus3:
+ *   are used to determine the offsets that are applied to the quantization parameter values
+ *   qp derived in clause 8.6.2 for the luma, Cb and Cr components, respectively, when
+ *   tu_residual_act_flag[ xTbY ][ yTbY ] is equal to 1.
+ * @pps_palette_predictor_initializers_present_flag: equal to 1 specifies that the palette
+ *   predictor initializers used for the pictures referring to the PPS are derived based on
+ *   the palette predictor initializers specified by the PPS.
+ * @pps_num_palette_predictor_initializer: specifies the number of entries in the picture
+ *   palette predictor initializer.
+ * @monochrome_palette_flag: equal to 1 specifies that the pictures that refer to this PPS
+ *   are monochrome. Equal to 0 specifies that the pictures that refer to this PPS have
+ *   multiple components.
+ * @luma_bit_depth_entry_minus8: plus 8 specifies the bit depth of the luma component of the
+ *   entries of the palette predictor initializer.
+ * @chroma_bit_depth_entry_minus8: plus 8 specifies the bit depth of the chroma components of
+ *   the entries of the palette predictor initializer.
+ * @pps_palette_predictor_initializer: specifies the value of the comp-th component of the
+ *   i-th palette entry in the PPS that is used to initialize the array PredictorPaletteEntries.
+ * Defines the _GstH265PPSSccExtensionParams
+ *
+ * Since: 1.18
+ */
+struct _GstH265PPSSccExtensionParams {
+  guint8 pps_curr_pic_ref_enabled_flag;
+  guint8 residual_adaptive_colour_transform_enabled_flag;
+  guint8 pps_slice_act_qp_offsets_present_flag;
+  guint8 pps_act_y_qp_offset_plus5;
+  guint8 pps_act_cb_qp_offset_plus5;
+  guint8 pps_act_cr_qp_offset_plus3;
+  guint8 pps_palette_predictor_initializers_present_flag;
+  guint8 pps_num_palette_predictor_initializer;
+  guint8 monochrome_palette_flag;
+  guint8 luma_bit_depth_entry_minus8;
+  guint32 chroma_bit_depth_entry_minus8;
+  guint32 pps_palette_predictor_initializer[3][128];
 };
 
 /**
@@ -1091,10 +1175,13 @@ struct _GstH265SPS
   guint8 sps_range_extension_flag;
   guint8 sps_multilayer_extension_flag;
   guint8 sps_3d_extension_flag;
-  guint8 sps_extension_5bits;
+  guint8 sps_scc_extension_flag;
+  guint8 sps_extension_4bits;
 
-/* if sps_range_extension_flag */
+  /* if sps_range_extension_flag */
   GstH265SPSExtensionParams sps_extnsion_params;
+  /* if sps_scc_extension_flag */
+  GstH265SPSSccExtensionParams sps_scc_extension_params;
 
   /* calculated values */
   guint8 chroma_array_type;
@@ -1167,10 +1254,13 @@ struct _GstH265PPS
   guint8 pps_range_extension_flag;
   guint8 pps_multilayer_extension_flag;
   guint8 pps_3d_extension_flag;
-  guint8 pps_extension_5bits;
+  guint8 pps_scc_extension_flag;
+  guint8 pps_extension_4bits;
 
   /* if pps_range_extension_flag*/
-   GstH265PPSExtensionParams pps_extension_params;
+  GstH265PPSExtensionParams pps_extension_params;
+  /* if pps_scc_extension_flag*/
+  GstH265PPSSccExtensionParams pps_scc_extension_params;
 
   /* calculated values */
   guint32 PicWidthInCtbsY;
@@ -1262,9 +1352,17 @@ struct _GstH265PredWeightTable
  * @pred_weight_table: a #GstH265PredWeightTable
  * @five_minus_max_num_merge_cand: specifies the maximum number of merging motion vector prediction (MVP)
  *   candidates supported in the slice.
+ * @use_integer_mv_flag: equal to 1 specifies that the resolution of motion vectors for inter
+ *   prediction in the current slice is integer. (Since: 1.18)
  * @qp_delta: specifies the inital value of QPy to be used for the coding blocks in the slice.
  * @cb_qp_offset: a difference to be added to the value of pps_cb_qp_offset.
  * @cr_qp_offset: a difference to be added to the value of pps_cr_qp_offset.
+ * @slice_act_y_qp_offset: specify offsets to the quantization parameter values qP derived in
+ *   clause 8.6.2 for luma components. (Since: 1.18)
+ * @slice_act_cb_qp_offset: specify offsets to the quantization parameter values qP derived in
+ *   clause 8.6.2 for Cb components. (Since: 1.18)
+ * @slice_act_cr_qp_offset: specify offsets to the quantization parameter values qP derived in
+ *   clause 8.6.2 for Cr components. (Since: 1.18)
  * @cu_chroma_qp_offset_enabled_flag: equal to 1 if the cu_chroma_qp_offset_flag
  *   may be present in the transform unit syntax. (Since: 1.18)
  * @deblocking_filter_override_flag: equal to 1 if deblocking paramertes are present in the slice header.
@@ -1332,10 +1430,14 @@ struct _GstH265SliceHdr
   GstH265PredWeightTable pred_weight_table;
 
   guint8 five_minus_max_num_merge_cand;
+  guint8 use_integer_mv_flag;
 
   gint8 qp_delta;
   gint8 cb_qp_offset;
   gint8 cr_qp_offset;
+  gint8 slice_act_y_qp_offset;
+  gint8 slice_act_cb_qp_offset;
+  gint8 slice_act_cr_qp_offset;
 
   guint8 cu_chroma_qp_offset_enabled_flag;
 
