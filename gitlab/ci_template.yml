@@ -304,6 +304,8 @@ valgrind good:
   extends: '.valgrind fedora x86_64'
   variables:
     TEST_SUITE: "check.gst-plugins-good\\..*"
+    # take longer time due to splitmux unit test
+    TIMEOUT_FACTOR: "4"
   rules:
     - if: '$CI_PROJECT_NAME =~ /^(gstreamer|gst-plugins-base|gst-plugins-good|gst-ci)$/'
 
