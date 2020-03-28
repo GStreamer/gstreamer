@@ -464,11 +464,12 @@ valgrind ges:
         ninja -C build"
   # FIXME: extract builddir for tests
   #after_script:
-  artifacts:
-    expire_in: "7 days"
-    when: "always"
-    paths:
-      - 'gst-build/build/meson-logs/'
+  # XXX: Re-enable when uploading stops timing out
+  #artifacts:
+  #  expire_in: "7 days"
+  #  when: "always"
+  #  paths:
+  #    - 'gst-build/build/meson-logs/'
 
 build vs2017 amd64:
   extends: '.build windows'
