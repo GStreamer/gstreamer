@@ -85,6 +85,17 @@ static const guint8 h265_pps_with_range_extension[] = {
   0xce, 0x25, 0x04, 0x83, 0x21, 0x96, 0x3b, 0x80,
 };
 
+static const guint8 h265_with_scc_extension[] = {
+  0x00, 0x00, 0x00, 0x01, 0x40, 0x01, 0x0c, 0x01, 0xff, 0xff, 0x09, 0x00, 0x40,
+  0x00, 0x00, 0x0e, 0x0c, 0x00, 0x00, 0x03, 0x00, 0x00, 0x3c, 0x9b, 0x02, 0x40,
+  0x00, 0x00, 0x00, 0x01, 0x42, 0x01, 0x01, 0x09, 0x00, 0x40, 0x00, 0x00, 0x0e,
+  0x0c, 0x00, 0x00, 0x03, 0x00, 0x00, 0x3c, 0xa0, 0x0d, 0x08, 0x0f, 0x1f, 0xe5,
+  0x9b, 0x92, 0x46, 0xd8, 0x79, 0x79, 0x24, 0x93, 0xf9, 0xe7, 0xf3, 0xcb, 0xff,
+  0xff, 0xff, 0x3f, 0x9f, 0xcf, 0xcf, 0xe7, 0x6d, 0x90, 0xf3, 0x60, 0x40, 0x02,
+  0x12, 0xc0, 0x00, 0x00, 0x00, 0x01, 0x44, 0x01, 0xc1, 0x94, 0x95, 0x81, 0x14,
+  0x42, 0x40, 0x0a,
+};
+
 static guint8 h265_sps[] = {
   0x00, 0x00, 0x00, 0x01, 0x42, 0x01, 0x01, 0x21, 0x60, 0x00, 0x00, 0x03,
   0x00, 0xb0, 0x00, 0x00, 0x03, 0x00, 0x00, 0x03, 0x00, 0x99, 0xa0, 0x01,
@@ -661,6 +672,80 @@ GST_START_TEST (test_h265_parse_pps)
 
 GST_END_TEST;
 
+GST_START_TEST (test_h265_parse_scc)
+{
+  GstH265Parser *parser;
+  GstH265NalUnit nalu;
+  GstH265ParserResult res;
+  GstH265VPS vps;
+  GstH265PPS pps;
+  GstH265SPS sps;
+  guint offset;
+  gsize size;
+
+  parser = gst_h265_parser_new ();
+
+  offset = 0;
+  size = sizeof (h265_with_scc_extension);
+
+  res = gst_h265_parser_identify_nalu_unchecked (parser,
+      h265_with_scc_extension, offset, size, &nalu);
+  assert_equals_int (res, GST_H265_PARSER_OK);
+  assert_equals_int (nalu.type, GST_H265_NAL_VPS);
+  offset = nalu.offset;
+
+  res = gst_h265_parser_parse_vps (parser, &nalu, &vps);
+  assert_equals_int (res, GST_H265_PARSER_OK);
+
+  res = gst_h265_parser_identify_nalu_unchecked (parser,
+      h265_with_scc_extension, offset, size, &nalu);
+  assert_equals_int (res, GST_H265_PARSER_OK);
+  assert_equals_int (nalu.type, GST_H265_NAL_SPS);
+  offset = nalu.offset;
+
+  res = gst_h265_parser_parse_sps (parser, &nalu, &sps, FALSE);
+  assert_equals_int (res, GST_H265_PARSER_OK);
+  assert_equals_int (sps.profile_tier_level.profile_idc,
+      GST_H265_PROFILE_IDC_SCREEN_CONTENT_CODING);
+  assert_equals_int (sps.profile_tier_level.profile_compatibility_flag[9], 1);
+  assert_equals_int (sps.sps_scc_extension_flag, 1);
+  assert_equals_int (sps.sps_extension_4bits, 0);
+  assert_equals_int (sps.sps_scc_extension_params.sps_curr_pic_ref_enabled_flag,
+      1);
+  assert_equals_int (sps.sps_scc_extension_params.palette_mode_enabled_flag, 1);
+  assert_equals_int (sps.
+      sps_scc_extension_params.delta_palette_max_predictor_size, 65);
+  assert_equals_int (sps.
+      sps_scc_extension_params.sps_palette_predictor_initializers_present_flag,
+      0);
+  assert_equals_int (sps.
+      sps_scc_extension_params.motion_vector_resolution_control_idc, 2);
+  assert_equals_int (sps.
+      sps_scc_extension_params.intra_boundary_filtering_disabled_flag, 1);
+
+  res = gst_h265_parser_identify_nalu_unchecked (parser,
+      h265_with_scc_extension, offset, size, &nalu);
+  assert_equals_int (res, GST_H265_PARSER_OK);
+  assert_equals_int (nalu.type, GST_H265_NAL_PPS);
+
+  res = gst_h265_parser_parse_pps (parser, &nalu, &pps);
+  assert_equals_int (res, GST_H265_PARSER_OK);
+  assert_equals_int (pps.pps_extension_4bits, 0);
+  assert_equals_int (pps.pps_scc_extension_flag, 1);
+  assert_equals_int (pps.pps_scc_extension_params.pps_curr_pic_ref_enabled_flag,
+      1);
+  assert_equals_int (pps.
+      pps_scc_extension_params.residual_adaptive_colour_transform_enabled_flag,
+      0);
+  assert_equals_int (pps.
+      pps_scc_extension_params.pps_palette_predictor_initializers_present_flag,
+      0);
+
+  gst_h265_parser_free (parser);
+}
+
+GST_END_TEST;
+
 typedef struct
 {
   GstH265NalUnitType type;
@@ -1022,6 +1107,7 @@ h265parser_suite (void)
   tcase_add_test (tc_chain, test_h265_format_range_profiles_partial_match);
   tcase_add_test (tc_chain, test_h265_parse_vps);
   tcase_add_test (tc_chain, test_h265_parse_pps);
+  tcase_add_test (tc_chain, test_h265_parse_scc);
   tcase_add_test (tc_chain, test_h265_nal_type_classification);
   tcase_add_test (tc_chain, test_h265_sei_registered_user_data);
   tcase_add_test (tc_chain, test_h265_create_sei);
