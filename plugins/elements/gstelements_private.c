@@ -208,12 +208,11 @@ gst_writev (gint fd, const struct iovec *iov, gint iovcnt, gsize total_bytes)
 
 static GstFlowReturn
 gst_writev_iovecs (GstObject * sink, gint fd, GstPoll * fdset,
-    struct iovec *vecs, guint n_vecs,
+    struct iovec *vecs, guint n_vecs, gsize bytes_to_write,
     guint64 * bytes_written, gint max_transient_error_timeout,
     guint64 current_position, gboolean * flushing)
 {
   GstFlowReturn flow_ret;
-  gsize size = 0;
   gint64 start_time = 0;
 
   *bytes_written = 0;
@@ -227,7 +226,7 @@ gst_writev_iovecs (GstObject * sink, gint fd, GstPoll * fdset,
   {
     gssize ret, left;
 
-    left = size;
+    left = bytes_to_write;
 
     do {
       if (flushing != NULL && g_atomic_int_get (flushing)) {
@@ -360,7 +359,7 @@ gst_writev_buffer (GstObject * sink, gint fd, GstPoll * fdset,
   struct iovec *vecs;
   GstMapInfo *maps;
   guint i, num_mem, num_vecs;
-  gsize left;
+  gsize left = 0;
 
   /* Buffers can contain up to 16 memories, so we can safely directly call
    * writev() here without splitting up */
@@ -379,7 +378,6 @@ gst_writev_buffer (GstObject * sink, gint fd, GstPoll * fdset,
     GstMemory *mem;
     guint i;
 
-    left = 0;
     for (i = 0; i < num_mem; ++i) {
       mem = gst_buffer_peek_memory (buffer, i);
       if (gst_memory_map (mem, &maps[i], GST_MAP_READ)) {
@@ -398,7 +396,7 @@ gst_writev_buffer (GstObject * sink, gint fd, GstPoll * fdset,
     guint64 bytes_written_local = 0;
 
     flow_ret =
-        gst_writev_iovecs (sink, fd, fdset, vecs, num_vecs,
+        gst_writev_iovecs (sink, fd, fdset, vecs, num_vecs, left,
         &bytes_written_local, max_transient_error_timeout, current_position,
         flushing);
 
@@ -460,7 +458,7 @@ gst_writev_mem (GstObject * sink, gint fd, GstPoll * fdset,
     guint64 bytes_written_local = 0;
 
     flow_ret =
-        gst_writev_iovecs (sink, fd, fdset, &vec, 1,
+        gst_writev_iovecs (sink, fd, fdset, &vec, 1, left,
         &bytes_written_local, max_transient_error_timeout, current_position,
         flushing);
 
@@ -502,7 +500,7 @@ gst_writev_buffer_list (GstObject * sink, gint fd, GstPoll * fdset,
   GstMapInfo *maps;
   guint num_bufs, current_buf_idx = 0, current_buf_mem_idx = 0;
   guint i, num_vecs;
-  gsize left;
+  gsize left = 0;
 
   num_bufs = gst_buffer_list_length (buffer_list);
   num_vecs = 0;
@@ -518,7 +516,6 @@ gst_writev_buffer_list (GstObject * sink, gint fd, GstPoll * fdset,
     GstMemory *mem;
     guint j = 0;
 
-    left = 0;
     for (i = 0; i < num_bufs && num_vecs < GST_IOV_MAX; i++) {
       guint num_mem;
 
@@ -548,7 +545,7 @@ gst_writev_buffer_list (GstObject * sink, gint fd, GstPoll * fdset,
     guint vecs_written = 0;
 
     flow_ret =
-        gst_writev_iovecs (sink, fd, fdset, vecs, num_vecs,
+        gst_writev_iovecs (sink, fd, fdset, vecs, num_vecs, left,
         &bytes_written_local, max_transient_error_timeout, current_position,
         flushing);
 
