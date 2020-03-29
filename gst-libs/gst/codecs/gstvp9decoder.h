@@ -64,7 +64,7 @@ struct _GstVp9Decoder
  * @new_picture:       Optional.
  *                     Called whenever new #GstVp9Picture is created.
  *                     Subclass can set implementation specific user data
- *                     on the #GstVp9Picture via gst_h264_picture_set_user_data()
+ *                     on the #GstVp9Picture via gst_vp9_picture_set_user_data()
  * @duplicate_picture: Duplicate the #GstVp9Picture
  * @start_picture:     Optional.
  *                     Called per one #GstVp9Picture to notify subclass to prepare
