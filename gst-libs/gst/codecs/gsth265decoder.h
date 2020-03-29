@@ -78,11 +78,6 @@ struct _GstH265Decoder
  *                  Called whenever new #GstH265Picture is created.
  *                  Subclass can set implementation specific user data
  *                  on the #GstH265Picture via gst_h265_picture_set_user_data()
- * @output_picture: Called with a #GstH265Picture which is required to be outputted.
- *                  Subclass can retrieve parent #GstVideoCodecFrame by using
- *                  gst_video_decoder_get_frame() with system_frame_number
- *                  and the #GstVideoCodecFrame must be consumed by subclass via
- *                  gst_video_decoder_{finish,drop,release}_frame().
  * @start_picture:  Optional.
  *                  Called per one #GstH265Picture to notify subclass to prepare
  *                  decoding process for the #GstH265Picture
@@ -91,6 +86,11 @@ struct _GstH265Decoder
  * @end_picture:    Optional.
  *                  Called per one #GstH265Picture to notify subclass to finish
  *                  decoding process for the #GstH265Picture
+ * @output_picture: Called with a #GstH265Picture which is required to be outputted.
+ *                  Subclass can retrieve parent #GstVideoCodecFrame by using
+ *                  gst_video_decoder_get_frame() with system_frame_number
+ *                  and the #GstVideoCodecFrame must be consumed by subclass via
+ *                  gst_video_decoder_{finish,drop,release}_frame().
  */
 struct _GstH265DecoderClass
 {
@@ -103,9 +103,6 @@ struct _GstH265DecoderClass
   gboolean      (*new_picture)      (GstH265Decoder * decoder,
                                      GstH265Picture * picture);
 
-  GstFlowReturn (*output_picture)   (GstH265Decoder * decoder,
-                                     GstH265Picture * picture);
-
   gboolean      (*start_picture)    (GstH265Decoder * decoder,
                                      GstH265Picture * picture,
                                      GstH265Slice * slice,
@@ -116,6 +113,9 @@ struct _GstH265DecoderClass
                                      GstH265Slice * slice);
 
   gboolean      (*end_picture)      (GstH265Decoder * decoder,
+                                     GstH265Picture * picture);
+
+  GstFlowReturn (*output_picture)   (GstH265Decoder * decoder,
                                      GstH265Picture * picture);
 
   /*< private >*/

@@ -66,11 +66,6 @@ struct _GstVp9Decoder
  *                     Subclass can set implementation specific user data
  *                     on the #GstVp9Picture via gst_h264_picture_set_user_data()
  * @duplicate_picture: Duplicate the #GstVp9Picture
- * @output_picture:    Called with a #GstVp9Picture which is required to be outputted.
- *                     Subclass can retrieve parent #GstVideoCodecFrame by using
- *                     gst_video_decoder_get_frame() with system_frame_number
- *                     and the #GstVideoCodecFrame must be consumed by subclass via
- *                     gst_video_decoder_{finish,drop,release}_frame().
  * @start_picture:     Optional.
  *                     Called per one #GstVp9Picture to notify subclass to prepare
  *                     decoding process for the #GstVp9Picture
@@ -79,6 +74,11 @@ struct _GstVp9Decoder
  * @end_picture:       Optional.
  *                     Called per one #GstVp9Picture to notify subclass to finish
  *                     decoding process for the #GstVp9Picture
+ * @output_picture:    Called with a #GstVp9Picture which is required to be outputted.
+ *                     Subclass can retrieve parent #GstVideoCodecFrame by using
+ *                     gst_video_decoder_get_frame() with system_frame_number
+ *                     and the #GstVideoCodecFrame must be consumed by subclass via
+ *                     gst_video_decoder_{finish,drop,release}_frame().
  */
 struct _GstVp9DecoderClass
 {
@@ -93,9 +93,6 @@ struct _GstVp9DecoderClass
   GstVp9Picture * (*duplicate_picture) (GstVp9Decoder * decoder,
                                         GstVp9Picture * picture);
 
-  GstFlowReturn   (*output_picture)    (GstVp9Decoder * decoder,
-                                        GstVp9Picture * picture);
-
   gboolean        (*start_picture)     (GstVp9Decoder * decoder,
                                         GstVp9Picture * picture);
 
@@ -104,6 +101,9 @@ struct _GstVp9DecoderClass
                                         GstVp9Dpb * dpb);
 
   gboolean        (*end_picture)       (GstVp9Decoder * decoder,
+                                        GstVp9Picture * picture);
+
+  GstFlowReturn   (*output_picture)    (GstVp9Decoder * decoder,
                                         GstVp9Picture * picture);
 
   /*< private >*/
