@@ -330,46 +330,11 @@ gst_d3d11_h264_dec_negotiate (GstVideoDecoder * decoder)
 {
   GstD3D11H264Dec *self = GST_D3D11_H264_DEC (decoder);
   GstH264Decoder *h264dec = GST_H264_DECODER (decoder);
-  GstCaps *peer_caps;
 
-  GST_DEBUG_OBJECT (self, "negotiate");
-
-  if (self->output_state)
-    gst_video_codec_state_unref (self->output_state);
-
-  self->output_state =
-      gst_video_decoder_set_output_state (GST_VIDEO_DECODER (self),
-      self->out_format, self->width, self->height, h264dec->input_state);
-
-  self->output_state->caps = gst_video_info_to_caps (&self->output_state->info);
-
-  peer_caps = gst_pad_get_allowed_caps (GST_VIDEO_DECODER_SRC_PAD (self));
-  GST_DEBUG_OBJECT (self, "Allowed caps %" GST_PTR_FORMAT, peer_caps);
-
-  self->use_d3d11_output = FALSE;
-
-  if (!peer_caps || gst_caps_is_any (peer_caps)) {
-    GST_DEBUG_OBJECT (self,
-        "cannot determine output format, use system memory");
-  } else {
-    GstCapsFeatures *features;
-    guint size = gst_caps_get_size (peer_caps);
-    guint i;
-
-    for (i = 0; i < size; i++) {
-      features = gst_caps_get_features (peer_caps, i);
-      if (features && gst_caps_features_contains (features,
-              GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
-        GST_DEBUG_OBJECT (self, "found D3D11 memory feature");
-        gst_caps_set_features (self->output_state->caps, 0,
-            gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, NULL));
-
-        self->use_d3d11_output = TRUE;
-        break;
-      }
-    }
-  }
-  gst_clear_caps (&peer_caps);
+  if (!gst_d3d11_decoder_negotiate (decoder, h264dec->input_state,
+          self->out_format, self->width, self->height, &self->output_state,
+          &self->use_d3d11_output))
+    return FALSE;
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);
 }
@@ -379,82 +344,10 @@ gst_d3d11_h264_dec_decide_allocation (GstVideoDecoder * decoder,
     GstQuery * query)
 {
   GstD3D11H264Dec *self = GST_D3D11_H264_DEC (decoder);
-  GstCaps *outcaps;
-  GstBufferPool *pool = NULL;
-  guint n, size, min, max;
-  GstVideoInfo vinfo = { 0, };
-  GstStructure *config;
-  GstD3D11AllocationParams *d3d11_params;
 
-  GST_DEBUG_OBJECT (self, "decide allocation");
-
-  gst_query_parse_allocation (query, &outcaps, NULL);
-
-  if (!outcaps) {
-    GST_DEBUG_OBJECT (self, "No output caps");
+  if (!gst_d3d11_decoder_decide_allocation (decoder, query, self->device,
+          GST_D3D11_CODEC_H264, self->use_d3d11_output))
     return FALSE;
-  }
-
-  gst_video_info_from_caps (&vinfo, outcaps);
-  n = gst_query_get_n_allocation_pools (query);
-  if (n > 0)
-    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
-
-  /* create our own pool */
-  if (pool && (self->use_d3d11_output && !GST_D3D11_BUFFER_POOL (pool))) {
-    gst_object_unref (pool);
-    pool = NULL;
-  }
-
-  if (!pool) {
-    if (self->use_d3d11_output)
-      pool = gst_d3d11_buffer_pool_new (self->device);
-    else
-      pool = gst_video_buffer_pool_new ();
-
-    min = max = 0;
-    size = (guint) vinfo.size;
-  }
-
-  config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
-  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
-
-  if (self->use_d3d11_output) {
-    GstVideoAlignment align;
-    gint width, height;
-
-    gst_video_alignment_reset (&align);
-
-    d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
-    if (!d3d11_params)
-      d3d11_params = gst_d3d11_allocation_params_new (self->device,
-          &vinfo, 0, 0);
-
-    width = GST_VIDEO_INFO_WIDTH (&vinfo);
-    height = GST_VIDEO_INFO_HEIGHT (&vinfo);
-
-    /* need alignment to copy decoder output texture to downstream texture */
-    align.padding_right = GST_ROUND_UP_16 (width) - width;
-    align.padding_bottom = GST_ROUND_UP_16 (height) - height;
-    if (!gst_d3d11_allocation_params_alignment (d3d11_params, &align)) {
-      GST_ERROR_OBJECT (self, "Cannot set alignment");
-      return FALSE;
-    }
-
-    gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
-    gst_d3d11_allocation_params_free (d3d11_params);
-  }
-
-  gst_buffer_pool_set_config (pool, config);
-  if (self->use_d3d11_output)
-    size = GST_D3D11_BUFFER_POOL (pool)->buffer_size;
-
-  if (n > 0)
-    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
-  else
-    gst_query_add_allocation_pool (query, pool, size, min, max);
-  gst_object_unref (pool);
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation
       (decoder, query);

@@ -1429,6 +1429,157 @@ do_process:
       need_convert, decoder_buffer, output);
 }
 
+gboolean
+gst_d3d11_decoder_negotiate (GstVideoDecoder * decoder,
+    GstVideoCodecState * input_state, GstVideoFormat format,
+    guint width, guint height, GstVideoCodecState ** output_state,
+    gboolean * downstream_supports_d3d11)
+{
+  GstCaps *peer_caps;
+  GstVideoCodecState *state;
+
+  g_return_val_if_fail (GST_IS_VIDEO_DECODER (decoder), FALSE);
+  g_return_val_if_fail (input_state != NULL, FALSE);
+  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, FALSE);
+  g_return_val_if_fail (width > 0, FALSE);
+  g_return_val_if_fail (height > 0, FALSE);
+  g_return_val_if_fail (output_state != NULL, FALSE);
+  g_return_val_if_fail (downstream_supports_d3d11 != NULL, FALSE);
+
+  state = gst_video_decoder_set_output_state (decoder,
+      format, width, height, input_state);
+  state->caps = gst_video_info_to_caps (&state->info);
+
+  if (*output_state)
+    gst_video_codec_state_unref (*output_state);
+  *output_state = state;
+
+  peer_caps = gst_pad_get_allowed_caps (GST_VIDEO_DECODER_SRC_PAD (decoder));
+  GST_DEBUG_OBJECT (decoder, "Allowed caps %" GST_PTR_FORMAT, peer_caps);
+
+  *downstream_supports_d3d11 = FALSE;
+
+  if (!peer_caps || gst_caps_is_any (peer_caps)) {
+    GST_DEBUG_OBJECT (decoder,
+        "cannot determine output format, use system memory");
+  } else {
+    GstCapsFeatures *features;
+    guint size = gst_caps_get_size (peer_caps);
+    guint i;
+
+    for (i = 0; i < size; i++) {
+      features = gst_caps_get_features (peer_caps, i);
+      if (features && gst_caps_features_contains (features,
+              GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
+        GST_DEBUG_OBJECT (decoder, "found D3D11 memory feature");
+        gst_caps_set_features (state->caps, 0,
+            gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, NULL));
+
+        *downstream_supports_d3d11 = TRUE;
+        break;
+      }
+    }
+  }
+  gst_clear_caps (&peer_caps);
+
+  return TRUE;
+}
+
+gboolean
+gst_d3d11_decoder_decide_allocation (GstVideoDecoder * decoder,
+    GstQuery * query, GstD3D11Device * device, GstD3D11Codec codec,
+    gboolean use_d3d11_pool)
+{
+  GstCaps *outcaps;
+  GstBufferPool *pool = NULL;
+  guint n, size, min, max;
+  GstVideoInfo vinfo = { 0, };
+  GstStructure *config;
+  GstD3D11AllocationParams *d3d11_params;
+
+  g_return_val_if_fail (GST_IS_VIDEO_DECODER (decoder), FALSE);
+  g_return_val_if_fail (query != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), FALSE);
+  g_return_val_if_fail (codec > GST_D3D11_CODEC_NONE &&
+      codec < GST_D3D11_CODEC_LAST, FALSE);
+
+  gst_query_parse_allocation (query, &outcaps, NULL);
+
+  if (!outcaps) {
+    GST_DEBUG_OBJECT (decoder, "No output caps");
+    return FALSE;
+  }
+
+  gst_video_info_from_caps (&vinfo, outcaps);
+  n = gst_query_get_n_allocation_pools (query);
+  if (n > 0)
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+
+  /* create our own pool */
+  if (pool && (use_d3d11_pool && !GST_D3D11_BUFFER_POOL (pool))) {
+    gst_object_unref (pool);
+    pool = NULL;
+  }
+
+  if (!pool) {
+    if (use_d3d11_pool)
+      pool = gst_d3d11_buffer_pool_new (device);
+    else
+      pool = gst_video_buffer_pool_new ();
+
+    min = max = 0;
+    size = (guint) vinfo.size;
+  }
+
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+
+  if (use_d3d11_pool) {
+    GstVideoAlignment align;
+    gint width, height;
+
+    gst_video_alignment_reset (&align);
+
+    d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
+    if (!d3d11_params)
+      d3d11_params = gst_d3d11_allocation_params_new (device, &vinfo, 0, 0);
+
+    width = GST_VIDEO_INFO_WIDTH (&vinfo);
+    height = GST_VIDEO_INFO_HEIGHT (&vinfo);
+
+    /* need alignment to copy decoder output texture to downstream texture */
+    align.padding_right = GST_ROUND_UP_16 (width) - width;
+    align.padding_bottom = GST_ROUND_UP_16 (height) - height;
+    if (!gst_d3d11_allocation_params_alignment (d3d11_params, &align)) {
+      GST_ERROR_OBJECT (decoder, "Cannot set alignment");
+      return FALSE;
+    }
+
+    if (codec == GST_D3D11_CODEC_VP9) {
+      /* Needs render target bind flag so that it can be used for
+       * output of shader pipeline if internal resizing is required */
+      d3d11_params->desc[0].BindFlags |= D3D11_BIND_RENDER_TARGET;
+    }
+
+    gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
+    gst_d3d11_allocation_params_free (d3d11_params);
+  }
+
+  gst_buffer_pool_set_config (pool, config);
+  if (use_d3d11_pool)
+    size = GST_D3D11_BUFFER_POOL (pool)->buffer_size;
+
+  if (n > 0)
+    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+  else
+    gst_query_add_allocation_pool (query, pool, size, min, max);
+  gst_object_unref (pool);
+
+  return TRUE;
+}
+
+
 /* Keep sync with chromium and keep in sorted order.
  * See supported_profile_helpers.cc in chromium */
 static const guint legacy_amd_list[] = {

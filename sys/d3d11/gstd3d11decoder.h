@@ -137,6 +137,20 @@ gboolean          gst_d3d11_decoder_process_output      (GstD3D11Decoder * decod
                                                          GstBuffer * decoder_buffer,
                                                          GstBuffer * output);
 
+gboolean          gst_d3d11_decoder_negotiate           (GstVideoDecoder * decoder,
+                                                         GstVideoCodecState * input_state,
+                                                         GstVideoFormat format,
+                                                         guint width,
+                                                         guint height,
+                                                         GstVideoCodecState ** output_state,
+                                                         gboolean * downstream_supports_d3d11);
+
+gboolean          gst_d3d11_decoder_decide_allocation   (GstVideoDecoder * decoder,
+                                                         GstQuery * query,
+                                                         GstD3D11Device * device,
+                                                         GstD3D11Codec codec,
+                                                         gboolean use_d3d11_pool);
+
 /* Utils for class registration */
 gboolean          gst_d3d11_decoder_util_is_legacy_device (GstD3D11Device * device);
 
