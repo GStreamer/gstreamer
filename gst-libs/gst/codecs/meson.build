@@ -5,6 +5,8 @@ codecs_sources = files([
   'gsth265picture.c',
   'gstvp9decoder.c',
   'gstvp9picture.c',
+  'gstvp8decoder.c',
+  'gstvp8picture.c',
 ])
 
 codecs_headers = [
@@ -14,6 +16,8 @@ codecs_headers = [
   'gsth265picture.h',
   'gstvp9decoder.h',
   'gstvp9picture.h',
+  'gstvp8decoder.h',
+  'gstvp8picture.h',
 ]
 
 cp_args = [
@@ -46,7 +50,9 @@ if build_gir
     extra_args : gir_init_section + ['-DGST_USE_UNSTABLE_API'] +
       ['--c-include=gst/codecs/gsth264decoder.h',
       '--c-include=gst/codecs/gsth265decoder.h',
-      '--c-include=gst/codecs/gstvp9decoder.h', ],
+      '--c-include=gst/codecs/gstvp9decoder.h',
+      '--c-include=gst/codecs/gstvp8decoder.h',
+      ],
     dependencies : [gstvideo_dep, gstcodecparsers_dep]
   )
 endif
