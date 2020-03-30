@@ -72,6 +72,7 @@ struct _GstMsdkH264Enc
 
   GstH264NalParser *parser;
   GArray *extra_sei;
+  GstMemory *frame_packing_sei;
 };
 
 struct _GstMsdkH264EncClass

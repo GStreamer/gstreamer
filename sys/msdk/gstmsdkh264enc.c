@@ -95,98 +95,6 @@ gst_msdkh264enc_frame_packing_get_type (void)
 G_DEFINE_TYPE (GstMsdkH264Enc, gst_msdkh264enc, GST_TYPE_MSDKENC);
 
 static void
-insert_frame_packing_sei (GstMsdkH264Enc * thiz, GstVideoCodecFrame * frame,
-    GstVideoMultiviewMode mode)
-{
-  GstMapInfo map;
-  GstByteReader reader;
-  guint offset;
-
-  if (mode != GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE
-      && mode != GST_VIDEO_MULTIVIEW_MODE_TOP_BOTTOM) {
-    GST_ERROR_OBJECT (thiz, "Unsupported multiview mode %d", mode);
-    return;
-  }
-
-  GST_DEBUG ("Inserting SEI Frame Packing for multiview mode %d", mode);
-
-  gst_buffer_map (frame->output_buffer, &map, GST_MAP_READ);
-  gst_byte_reader_init (&reader, map.data, map.size);
-
-  while ((offset =
-          gst_byte_reader_masked_scan_uint32 (&reader, 0xffffff00, 0x00000100,
-              0, gst_byte_reader_get_remaining (&reader))) != -1) {
-    guint8 type;
-    guint offset2;
-
-    gst_byte_reader_skip_unchecked (&reader, offset + 3);
-    if (!gst_byte_reader_get_uint8 (&reader, &type))
-      goto done;
-    type = type & 0x1f;
-
-    offset2 =
-        gst_byte_reader_masked_scan_uint32 (&reader, 0xffffff00, 0x00000100, 0,
-        gst_byte_reader_get_remaining (&reader));
-    if (offset2 == -1)
-      offset2 = gst_byte_reader_get_remaining (&reader);
-
-    /* Slice, should really be an IDR slice (5) */
-    if (type >= 1 && type <= 5) {
-      GstBuffer *new_buffer;
-      GstMemory *mem;
-      static const guint8 sei_top_bottom[] =
-          { 0x00, 0x00, 0x01, 0x06, 0x2d, 0x07, 0x82, 0x01,
-        0x00, 0x00, 0x03, 0x00, 0x01, 0x20, 0x80
-      };
-      static const guint8 sei_side_by_side[] =
-          { 0x00, 0x00, 0x01, 0x06, 0x2d, 0x07, 0x81, 0x81,
-        0x00, 0x00, 0x03, 0x00, 0x01, 0x20, 0x80
-      };
-      const guint8 *sei;
-      guint sei_size;
-
-      if (mode == GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE) {
-        sei = sei_side_by_side;
-        sei_size = sizeof (sei_side_by_side);
-      } else {
-        sei = sei_top_bottom;
-        sei_size = sizeof (sei_top_bottom);
-      }
-
-      /* Create frame packing SEI
-       * FIXME: This assumes it does not exist in the stream, which is not
-       * going to be true anymore once this is fixed:
-       * https://github.com/Intel-Media-SDK/MediaSDK/issues/13
-       */
-      new_buffer = gst_buffer_new ();
-
-      /* Copy all metadata */
-      gst_buffer_copy_into (new_buffer, frame->output_buffer,
-          GST_BUFFER_COPY_METADATA, 0, -1);
-
-      /* Copy previous NALs */
-      gst_buffer_copy_into (new_buffer, frame->output_buffer,
-          GST_BUFFER_COPY_MEMORY, 0, gst_byte_reader_get_pos (&reader) - 4);
-
-      mem =
-          gst_memory_new_wrapped (0, g_memdup (sei, sei_size), sei_size, 0,
-          sei_size, NULL, g_free);
-      gst_buffer_append_memory (new_buffer, mem);
-      gst_buffer_copy_into (new_buffer, frame->output_buffer,
-          GST_BUFFER_COPY_MEMORY, gst_byte_reader_get_pos (&reader) - 4, -1);
-
-      gst_buffer_unmap (frame->output_buffer, &map);
-      gst_buffer_unref (frame->output_buffer);
-      frame->output_buffer = new_buffer;
-      return;
-    }
-  }
-
-done:
-  gst_buffer_unmap (frame->output_buffer, &map);
-}
-
-static void
 gst_msdkh264enc_add_cc (GstMsdkH264Enc * thiz, GstVideoCodecFrame * frame)
 {
   GstVideoCaptionMeta *cc_meta;
@@ -270,17 +178,26 @@ gst_msdkh264enc_pre_push (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
 {
   GstMsdkH264Enc *thiz = GST_MSDKH264ENC (encoder);
 
-  /* FIXME: port to generic sei insertion logic */
-  if (GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame) &&
-      (thiz->frame_packing != GST_VIDEO_MULTIVIEW_MODE_NONE ||
-          ((GST_VIDEO_INFO_MULTIVIEW_MODE (&thiz->base.input_state->info) !=
-                  GST_VIDEO_MULTIVIEW_MODE_NONE)
-              && GST_VIDEO_INFO_MULTIVIEW_MODE (&thiz->base.
-                  input_state->info) != GST_VIDEO_MULTIVIEW_MODE_MONO))) {
-    insert_frame_packing_sei (thiz, frame,
-        thiz->frame_packing !=
-        GST_VIDEO_MULTIVIEW_MODE_NONE ? thiz->frame_packing :
-        GST_VIDEO_INFO_MULTIVIEW_MODE (&thiz->base.input_state->info));
+  if (GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame) && thiz->frame_packing_sei) {
+    GstBuffer *new_buffer = NULL;
+
+    /* Insert frame packing SEI
+     * FIXME: This assumes it does not exist in the stream, which is not
+     * going to be true anymore once this is fixed:
+     * https://github.com/Intel-Media-SDK/MediaSDK/issues/13
+     */
+    new_buffer = gst_h264_parser_insert_sei (thiz->parser,
+        frame->output_buffer, thiz->frame_packing_sei);
+
+    if (new_buffer) {
+      GST_DEBUG_OBJECT (thiz, "Inserting SEI Frame Packing for multiview");
+
+      gst_buffer_unref (frame->output_buffer);
+      frame->output_buffer = new_buffer;
+    } else {
+      GST_WARNING_OBJECT (thiz,
+          "Cannot insert frame packing SEI intu AU buffer");
+    }
   }
 
   gst_msdkh264enc_add_cc (thiz, frame);
@@ -344,6 +261,75 @@ gst_msdkh264enc_set_format (GstMsdkEnc * encoder)
   }
 
   gst_caps_unref (template_caps);
+
+  if (thiz->frame_packing_sei) {
+    gst_memory_unref (thiz->frame_packing_sei);
+    thiz->frame_packing_sei = NULL;
+  }
+
+  /* prepare frame packing SEI message */
+  if (encoder->input_state) {
+    GstVideoMultiviewMode mode = GST_VIDEO_MULTIVIEW_MODE_NONE;
+
+    /* use property value if any */
+    if (thiz->frame_packing != GST_VIDEO_MULTIVIEW_MODE_NONE) {
+      mode = (GstVideoMultiviewMode) thiz->frame_packing;
+    } else {
+      mode = GST_VIDEO_INFO_MULTIVIEW_MODE (&encoder->input_state->info);
+    }
+
+    if (mode == GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE ||
+        mode == GST_VIDEO_MULTIVIEW_MODE_TOP_BOTTOM) {
+      GstH264SEIMessage sei;
+      GstH264FramePacking *frame_packing;
+      GArray *array = g_array_new (FALSE, FALSE, sizeof (GstH264SEIMessage));
+
+      g_array_set_clear_func (thiz->extra_sei,
+          (GDestroyNotify) gst_h264_sei_clear);
+
+      GST_DEBUG_OBJECT (thiz,
+          "Prepare frame packing SEI data for multiview mode %d", mode);
+
+      memset (&sei, 0, sizeof (GstH264SEIMessage));
+
+      sei.payloadType = GST_H264_SEI_FRAME_PACKING;
+      frame_packing = &sei.payload.frame_packing;
+      frame_packing->frame_packing_id = 0;
+      frame_packing->frame_packing_cancel_flag = 0;
+      frame_packing->frame_packing_type =
+          (mode == GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE ?
+          GST_H264_FRAME_PACKING_SIDE_BY_SIDE :
+          GST_H264_FRMAE_PACKING_TOP_BOTTOM);
+      /* we don't do this */
+      frame_packing->quincunx_sampling_flag = 0;
+      /* 0: unspecified */
+      /* 1: frame 0 will be left view and frame 1 will be right view */
+      frame_packing->content_interpretation_type = 1;
+      /* we didn't do flip */
+      frame_packing->spatial_flipping_flag = 0;
+      frame_packing->frame0_flipped_flag = 0;
+      /* must be zero for frame_packing_type != 2 */
+      frame_packing->field_views_flag = 0;
+      /* must be zero for frame_packing_type != 5 */
+      frame_packing->current_frame_is_frame0_flag = 0;
+      /* may or may not used to reference each other */
+      frame_packing->frame0_self_contained_flag = 0;
+      frame_packing->frame1_self_contained_flag = 0;
+
+      frame_packing->frame0_grid_position_x = 0;
+      frame_packing->frame0_grid_position_y = 0;
+      frame_packing->frame1_grid_position_x = 0;
+      frame_packing->frame1_grid_position_y = 0;
+
+      /* will be applied to this GOP */
+      frame_packing->frame_packing_repetition_period = 1;
+
+      g_array_append_val (array, sei);
+
+      thiz->frame_packing_sei = gst_h264_create_sei_memory (4, array);
+      g_array_unref (array);
+    }
+  }
 
   return TRUE;
 }
@@ -484,6 +470,19 @@ gst_msdkh264enc_set_src_caps (GstMsdkEnc * encoder)
 }
 
 static void
+gst_msdkh264enc_dispose (GObject * object)
+{
+  GstMsdkH264Enc *thiz = GST_MSDKH264ENC (object);
+
+  if (thiz->frame_packing_sei) {
+    gst_memory_unref (thiz->frame_packing_sei);
+    thiz->frame_packing_sei = NULL;
+  }
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
 gst_msdkh264enc_finalize (GObject * object)
 {
   GstMsdkH264Enc *thiz = GST_MSDKH264ENC (object);
@@ -605,6 +604,7 @@ gst_msdkh264enc_class_init (GstMsdkH264EncClass * klass)
   videoencoder_class = GST_VIDEO_ENCODER_CLASS (klass);
   encoder_class = GST_MSDKENC_CLASS (klass);
 
+  gobject_class->dispose = gst_msdkh264enc_dispose;
   gobject_class->finalize = gst_msdkh264enc_finalize;
   gobject_class->set_property = gst_msdkh264enc_set_property;
   gobject_class->get_property = gst_msdkh264enc_get_property;
