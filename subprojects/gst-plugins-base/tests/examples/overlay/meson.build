@@ -16,9 +16,7 @@ if x11_dep.found()
     qt5widgets_dep = dependency('qt5', modules : ['Core', 'Gui', 'Widgets'],
                                 required: get_option('examples'))
 
-    # FIXME Add a way to get that information out of the qt5 module
-    moc = find_program('moc-qt5', required : get_option('examples'))
-    if qt5widgets_dep.found() and moc.found()
+    if qt5widgets_dep.found() and qt5_mod.has_tools(required: get_option('examples'))
       executable('qt-videooverlay', 'qt-videooverlay.cpp',
         cpp_args : gst_plugins_base_args,
         include_directories: [configinc, libsinc],
