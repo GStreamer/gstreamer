@@ -945,8 +945,14 @@ _init_supported_formats (GstGLContext * context, gboolean output,
 #endif
   }
 
-  if (!context || (gst_gl_format_is_supported (context, GST_GL_RG16)))
+  if (!context || (gst_gl_format_is_supported (context, GST_GL_RG16))) {
     _append_value_string_list (supported_formats, "Y210", NULL);
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+    _append_value_string_list (supported_formats, "Y212_LE", NULL);
+#else
+    _append_value_string_list (supported_formats, "Y212_BE", NULL);
+#endif
+  }
 }
 
 /* copies the given caps */
@@ -1537,6 +1543,8 @@ _get_n_textures (GstVideoFormat v_format)
     case GST_VIDEO_FORMAT_RGB10A2_LE:
     case GST_VIDEO_FORMAT_Y410:
     case GST_VIDEO_FORMAT_Y210:
+    case GST_VIDEO_FORMAT_Y212_LE:
+    case GST_VIDEO_FORMAT_Y212_BE:
       return 1;
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_NV21:
@@ -1691,6 +1699,8 @@ _YUV_to_RGB (GstGLColorConvert * convert)
         break;
       }
       case GST_VIDEO_FORMAT_Y210:
+      case GST_VIDEO_FORMAT_Y212_LE:
+      case GST_VIDEO_FORMAT_Y212_BE:
       {
         info->templ = &templ_YUY2_UYVY_to_RGB;
         info->frag_body =
@@ -1821,6 +1831,8 @@ _RGB_to_YUV (GstGLColorConvert * convert)
       break;
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_Y210:
+    case GST_VIDEO_FORMAT_Y212_LE:
+    case GST_VIDEO_FORMAT_Y212_BE:
       info->templ = &templ_RGB_to_YUY2_UYVY;
       info->frag_body = g_strdup_printf (templ_RGB_to_YUY2_UYVY_BODY,
           pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3],

@@ -214,6 +214,8 @@ gst_gl_format_from_video_info (GstGLContext * context, GstVideoInfo * vinfo,
     case GST_VIDEO_FORMAT_P016_BE:
       return plane == 0 ? GST_GL_R16 : GST_GL_RG16;
     case GST_VIDEO_FORMAT_Y210:
+    case GST_VIDEO_FORMAT_Y212_LE:
+    case GST_VIDEO_FORMAT_Y212_BE:
       return GST_GL_RG16;
     default:
       n_plane_components = 4;
