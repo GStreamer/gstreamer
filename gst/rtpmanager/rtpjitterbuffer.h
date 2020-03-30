@@ -116,6 +116,12 @@ struct _RTPJitterBufferClass {
   GObjectClass   parent_class;
 };
 
+#define IS_DROPABLE(it) (((it)->type == ITEM_TYPE_BUFFER) || ((it)->type == ITEM_TYPE_LOST))
+#define ITEM_TYPE_BUFFER        0
+#define ITEM_TYPE_LOST          1
+#define ITEM_TYPE_EVENT         2
+#define ITEM_TYPE_QUERY         3
+
 /**
  * RTPJitterBufferItem:
  * @data: the data of the item
@@ -174,9 +180,14 @@ void                  rtp_jitter_buffer_set_rfc7273_sync (RTPJitterBuffer *jbuf,
 
 void                  rtp_jitter_buffer_reset_skew       (RTPJitterBuffer *jbuf);
 
-gboolean              rtp_jitter_buffer_insert           (RTPJitterBuffer *jbuf,
-                                                          RTPJitterBufferItem *item,
-                                                          gboolean *head, gint *percent);
+gboolean              rtp_jitter_buffer_append_event      (RTPJitterBuffer * jbuf, GstEvent * event);
+gboolean              rtp_jitter_buffer_append_query      (RTPJitterBuffer * jbuf, GstQuery * query);
+gboolean              rtp_jitter_buffer_append_lost_event (RTPJitterBuffer * jbuf, GstEvent * event,
+                                                           guint16 seqnum, guint lost_packets);
+gboolean              rtp_jitter_buffer_append_buffer     (RTPJitterBuffer * jbuf, GstBuffer * buf,
+                                                           GstClockTime dts, GstClockTime pts,
+                                                           guint16 seqnum, guint rtptime,
+                                                           gboolean * duplicate, gint * percent);
 
 void                  rtp_jitter_buffer_disable_buffering (RTPJitterBuffer *jbuf, gboolean disabled);
 
@@ -205,9 +216,6 @@ gboolean              rtp_jitter_buffer_can_fast_start   (RTPJitterBuffer * jbuf
 
 gboolean              rtp_jitter_buffer_is_full          (RTPJitterBuffer * jbuf);
 
-RTPJitterBufferItem * rtp_jitter_buffer_alloc_item       (gpointer data, guint type, GstClockTime dts,
-                                                          GstClockTime pts, guint seqnum, guint count,
-                                                          guint rtptime, GDestroyNotify free_data);
 void                  rtp_jitter_buffer_free_item        (RTPJitterBufferItem * item);
 
 #endif /* __RTP_JITTER_BUFFER_H__ */
