@@ -1579,6 +1579,18 @@ GstH265ParserResult gst_h265_parser_parse_sei       (GstH265Parser   * parser,
                                                      GArray **messages);
 
 GST_CODEC_PARSERS_API
+GstH265ParserResult gst_h265_parser_update_vps      (GstH265Parser   * parser,
+                                                     GstH265VPS      * vps);
+
+GST_CODEC_PARSERS_API
+GstH265ParserResult gst_h265_parser_update_sps      (GstH265Parser   * parser,
+                                                     GstH265SPS      * sps);
+
+GST_CODEC_PARSERS_API
+GstH265ParserResult gst_h265_parser_update_pps      (GstH265Parser   * parser,
+                                                     GstH265PPS      * pps);
+
+GST_CODEC_PARSERS_API
 void                gst_h265_parser_free            (GstH265Parser  * parser);
 
 GST_CODEC_PARSERS_API
