@@ -173,7 +173,7 @@ gst_rtp_sbc_pay_set_caps (GstRTPBasePayload * payload, GstCaps * caps)
 }
 
 static GstFlowReturn
-gst_rtp_sbc_pay_flush_buffers (GstRtpSBCPay * sbcpay)
+gst_rtp_sbc_pay_drain_buffers (GstRtpSBCPay * sbcpay)
 {
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
   guint available;
@@ -251,7 +251,7 @@ gst_rtp_sbc_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
 
   if (GST_BUFFER_IS_DISCONT (buffer)) {
     /* Try to flush whatever's left */
-    gst_rtp_sbc_pay_flush_buffers (sbcpay);
+    gst_rtp_sbc_pay_drain_buffers (sbcpay);
     /* Drop the rest */
     gst_adapter_flush (sbcpay->adapter,
         gst_adapter_available (sbcpay->adapter));
@@ -268,7 +268,7 @@ gst_rtp_sbc_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
   if (available + RTP_SBC_HEADER_TOTAL >=
       GST_RTP_BASE_PAYLOAD_MTU (sbcpay) ||
       (available > (sbcpay->min_frames * sbcpay->frame_length)))
-    return gst_rtp_sbc_pay_flush_buffers (sbcpay);
+    return gst_rtp_sbc_pay_drain_buffers (sbcpay);
 
   return GST_FLOW_OK;
 }
@@ -280,13 +280,13 @@ gst_rtp_sbc_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
-      gst_rtp_sbc_pay_flush_buffers (sbcpay);
+      gst_rtp_sbc_pay_drain_buffers (sbcpay);
       break;
     case GST_EVENT_FLUSH_STOP:
       gst_adapter_clear (sbcpay->adapter);
       break;
     case GST_EVENT_SEGMENT:
-      gst_rtp_sbc_pay_flush_buffers (sbcpay);
+      gst_rtp_sbc_pay_drain_buffers (sbcpay);
       break;
     default:
       break;
