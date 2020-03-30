@@ -359,7 +359,6 @@ def get_subprocess_env(options, gst_version):
 
     presets = set()
     encoding_targets = set()
-    pkg_dirs = set()
     python_dirs = setup_gdb(options)
     if '--installed' in subprocess.check_output(meson + ['introspect', '-h']).decode():
         installed_s = subprocess.check_output(meson + ['introspect', options.builddir, '--installed'])
@@ -388,11 +387,6 @@ def get_subprocess_env(options, gst_version):
             elif path.endswith('.gep'):
                 encoding_targets.add(
                     os.path.abspath(os.path.join(os.path.dirname(path), '..')))
-            elif path.endswith('.pc'):
-                # Is there a -uninstalled pc file for this file?
-                uninstalled = "{0}-uninstalled.pc".format(path[:-3])
-                if os.path.exists(uninstalled):
-                    pkg_dirs.add(os.path.dirname(path))
 
             if path.endswith('gstomx.conf'):
                 prepend_env_var(env, 'GST_OMX_CONFIG_DIR', os.path.dirname(path),
@@ -403,9 +397,6 @@ def get_subprocess_env(options, gst_version):
 
         for t in sorted(encoding_targets):
             prepend_env_var(env, 'GST_ENCODING_TARGET_PATH', t, options.sysroot)
-
-        for pkg_dir in sorted(pkg_dirs):
-            prepend_env_var(env, "PKG_CONFIG_PATH", pkg_dir, options.sysroot)
 
     # Check if meson has generated -uninstalled pkgconfig files
     meson_uninstalled = pathlib.Path(options.builddir) / 'meson-uninstalled'
