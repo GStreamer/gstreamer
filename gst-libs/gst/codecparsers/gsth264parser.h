@@ -1261,6 +1261,14 @@ GstH264ParserResult gst_h264_parser_parse_sei         (GstH264NalParser *nalpars
                                                        GstH264NalUnit *nalu, GArray ** messages);
 
 GST_CODEC_PARSERS_API
+GstH264ParserResult gst_h264_parser_update_sps        (GstH264NalParser *nalparser,
+                                                       GstH264SPS *sps);
+
+GST_CODEC_PARSERS_API
+GstH264ParserResult gst_h264_parser_update_pps        (GstH264NalParser *nalparser,
+                                                       GstH264PPS *pps);
+
+GST_CODEC_PARSERS_API
 void gst_h264_nal_parser_free                         (GstH264NalParser *nalparser);
 
 GST_CODEC_PARSERS_API

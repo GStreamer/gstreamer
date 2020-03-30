@@ -2497,6 +2497,89 @@ gst_h264_parser_parse_sei (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
 }
 
 /**
+ * gst_h264_parser_update_sps:
+ * @nalparser: a #GstH264NalParser
+ * @sps: (transfer none): a #GstH264SPS.
+ *
+ * Replace internal Sequence Parameter Set struct corresponding to id of @sps
+ * with @sps. @nalparser will mark @sps as last parsed sps.
+ *
+ * Returns: a #GstH264ParserResult
+ *
+ * Since: 1.18
+ */
+GstH264ParserResult
+gst_h264_parser_update_sps (GstH264NalParser * nalparser, GstH264SPS * sps)
+{
+  g_return_val_if_fail (nalparser != NULL, GST_H264_PARSER_ERROR);
+  g_return_val_if_fail (sps != NULL, GST_H264_PARSER_ERROR);
+  g_return_val_if_fail (sps->id >= 0 && sps->id < GST_H264_MAX_SPS_COUNT,
+      GST_H264_PARSER_ERROR);
+
+  if (!sps->valid) {
+    GST_WARNING ("Cannot update with invalid SPS");
+    return GST_H264_PARSER_ERROR;
+  }
+
+  GST_DEBUG ("Updating sequence parameter set with id: %d", sps->id);
+
+  if (!gst_h264_sps_copy (&nalparser->sps[sps->id], sps))
+    return GST_H264_PARSER_ERROR;
+
+  nalparser->last_sps = &nalparser->sps[sps->id];
+
+  return GST_H264_PARSER_OK;
+}
+
+/**
+ * gst_h264_parser_update_pps:
+ * @nalparser: a #GstH264NalParser
+ * @pps: (transfer none): a #GstH264PPS.
+ *
+ * Replace internal Picture Parameter Set struct corresponding to id of @pps
+ * with @pps. @nalparser will mark @pps as last parsed pps.
+ *
+ * Returns: a #GstH264ParserResult
+ *
+ * Since: 1.18
+ */
+GstH264ParserResult
+gst_h264_parser_update_pps (GstH264NalParser * nalparser, GstH264PPS * pps)
+{
+  GstH264SPS *sps;
+
+  g_return_val_if_fail (nalparser != NULL, GST_H264_PARSER_ERROR);
+  g_return_val_if_fail (pps != NULL, GST_H264_PARSER_ERROR);
+  g_return_val_if_fail (pps->id >= 0 && pps->id < GST_H264_MAX_PPS_COUNT,
+      GST_H264_PARSER_ERROR);
+
+  if (!pps->valid) {
+    GST_WARNING ("Cannot update with invalid PPS");
+    return GST_H264_PARSER_ERROR;
+  }
+
+  if (!pps->sequence) {
+    GST_WARNING ("No linked SPS struct");
+    return GST_H264_PARSER_BROKEN_LINK;
+  }
+
+  sps = gst_h264_parser_get_sps (nalparser, pps->sequence->id);
+  if (!sps || sps != pps->sequence) {
+    GST_WARNING ("Linked SPS is not identical to internal SPS");
+    return GST_H264_PARSER_BROKEN_LINK;
+  }
+
+  GST_DEBUG ("Updating picture parameter set with id: %d", pps->id);
+
+  if (!gst_h264_pps_copy (&nalparser->pps[pps->id], pps))
+    return GST_H264_PARSER_ERROR;
+
+  nalparser->last_pps = &nalparser->pps[pps->id];
+
+  return GST_H264_PARSER_OK;
+}
+
+/**
  * gst_h264_quant_matrix_8x8_get_zigzag_from_raster:
  * @out_quant: (out): The resulting quantization matrix
  * @quant: The source quantization matrix
