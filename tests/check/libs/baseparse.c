@@ -464,12 +464,13 @@ _sink_chain_pull_short_read (GstPad * pad, GstObject * parent,
   GstMapInfo map;
   gint buffer_size = 0;
   gint compare_result = 0;
+  gint64 result_offset = GST_BUFFER_OFFSET (buffer);
 
   gst_buffer_map (buffer, &map, GST_MAP_READ);
   buffer_size = map.size;
 
-  fail_unless (current_offset + buffer_size <= raw_buffer_size);
-  compare_result = memcmp (map.data, &raw_buffer[current_offset], buffer_size);
+  fail_unless (result_offset + buffer_size <= raw_buffer_size);
+  compare_result = memcmp (map.data, &raw_buffer[result_offset], buffer_size);
   fail_unless_equals_int (compare_result, 0);
 
   gst_buffer_unmap (buffer, &map);
@@ -549,7 +550,9 @@ GST_START_TEST (parser_pull_short_read)
   g_main_loop_run (loop);
   fail_unless_equals_int (have_eos, TRUE);
   fail_unless_equals_int (have_data, TRUE);
-  fail_unless_equals_int (buffer_pull_count, buffer_count);
+  /* If the parser asked upstream for buffers more times than buffers were
+   * produced, then something is wrong */
+  fail_unless (buffer_pull_count <= buffer_count);
 
   gst_element_set_state (parsetest, GST_STATE_NULL);
 
