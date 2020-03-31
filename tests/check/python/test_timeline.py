@@ -610,6 +610,32 @@ class TestEditing(common.GESSimpleTimelineTest):
         self.assertEqual(group.props.start, 5)
         self.assertEqual(group.props.duration, 15)
 
+        group1 = GES.Group.new ()
+        group1.add(group)
+        clips[0].trim(0)
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 0, 10),
+                (GES.TestClip, 10, 10),
+            ]
+        ])
+        self.assertEqual(group.props.start, 0)
+        self.assertEqual(group.props.duration, 20)
+        self.assertEqual(group1.props.start, 0)
+        self.assertEqual(group1.props.duration, 20)
+
+        self.assertTrue(clips[1].edit([], -1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_END, 15))
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 0, 10),
+                (GES.TestClip, 10, 5),
+            ]
+        ])
+        self.assertEqual(group.props.start, 0)
+        self.assertEqual(group.props.duration, 15)
+        self.assertEqual(group1.props.start, 0)
+        self.assertEqual(group1.props.duration, 15)
+
     def test_trim_end_past_max_duration(self):
         clip = self.append_clip()
         max_duration = clip.props.duration

@@ -567,6 +567,11 @@ _child_start_changed_cb (GESTimelineElement * child,
     case GES_CHILDREN_IGNORE_NOTIFIES:
       return;
     case GES_CHILDREN_UPDATE_ALL_VALUES:
+    {
+      gboolean was_setting_simple =
+          ELEMENT_FLAG_IS_SET (container, GES_TIMELINE_ELEMENT_SET_SIMPLE);
+
+      ELEMENT_SET_FLAG (container, GES_TIMELINE_ELEMENT_SET_SIMPLE);
       _ges_container_sort_children (container);
       start = container->children ?
           _START (container->children->data) : _START (container);
@@ -577,14 +582,17 @@ _child_start_changed_cb (GESTimelineElement * child,
         _DURATION (container) = _END (container) - start;
         _START (container) = start;
 
-        GST_DEBUG_OBJECT (container, "Child move made us move %" GES_FORMAT,
-            GES_ARGS (container));
+        GST_INFO ("%" GES_FORMAT " child %" GES_FORMAT " move made us move",
+            GES_ARGS (container), GES_ARGS (container->children->data));
 
         g_object_notify (G_OBJECT (container), "start");
         g_object_notify (G_OBJECT (container), "duration");
       }
+      if (!was_setting_simple)
+        ELEMENT_UNSET_FLAG (container, GES_TIMELINE_ELEMENT_SET_SIMPLE);
 
       /* Falltrough! */
+    }
     case GES_CHILDREN_UPDATE_OFFSETS:
       map->start_offset = _START (container) - _START (child);
       break;
