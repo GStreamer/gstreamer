@@ -70,6 +70,7 @@ struct _GstFlvMuxPad
   gint64 dts;
 
   gboolean info_changed;
+  gboolean drop_deltas;
 };
 
 struct _GstFlvMuxPadClass {
@@ -94,6 +95,7 @@ struct _GstFlvMux {
   gboolean streamable;
   gchar *metadatacreator;
   gchar *encoder;
+  gboolean skip_backwards_streams;
 
   GstTagList *tags;
   gboolean new_tags;

@@ -55,11 +55,13 @@ enum
   PROP_STREAMABLE,
   PROP_METADATACREATOR,
   PROP_ENCODER,
+  PROP_SKIP_BACKWARDS_STREAMS,
 };
 
 #define DEFAULT_STREAMABLE FALSE
 #define MAX_INDEX_ENTRIES 128
 #define DEFAULT_METADATACREATOR "GStreamer " PACKAGE_VERSION " FLV muxer"
+#define DEFAULT_SKIP_BACKWARDS_STREAMS FALSE
 
 static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -138,7 +140,7 @@ gst_flv_mux_pad_flush (GstAggregatorPad * pad, GstAggregator * aggregator)
 {
   GstFlvMuxPad *flvpad = GST_FLV_MUX_PAD (pad);
 
-  flvpad->last_timestamp = 0;
+  flvpad->last_timestamp = GST_CLOCK_TIME_NONE;
   flvpad->pts = GST_CLOCK_STIME_NONE;
   flvpad->dts = GST_CLOCK_STIME_NONE;
 
@@ -236,6 +238,12 @@ gst_flv_mux_class_init (GstFlvMuxClass * klass)
       g_param_spec_string ("encoder", "encoder",
           "The value of encoder in the meta packet.",
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_SKIP_BACKWARDS_STREAMS,
+      g_param_spec_boolean ("skip-backwards-streams", "Skip backwards streams",
+          "If set to true, streams that go backwards related to the other stream "
+          "will have buffers dropped until they reach the correct timestamp",
+          DEFAULT_SKIP_BACKWARDS_STREAMS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstaggregator_class->create_new_pad =
       GST_DEBUG_FUNCPTR (gst_flv_mux_create_new_pad);
@@ -662,6 +670,7 @@ gst_flv_mux_reset_pad (GstFlvMuxPad * pad)
   pad->width = G_MAXUINT;
   pad->channels = G_MAXUINT;
   pad->info_changed = FALSE;
+  pad->drop_deltas = FALSE;
 
   gst_flv_mux_pad_flush (GST_AGGREGATOR_PAD_CAST (pad), NULL);
 }
@@ -1131,7 +1140,6 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
   data[2] = 9;                  /* end marker */
   script_tag = gst_buffer_append (script_tag, tmp);
 
-
   _gst_buffer_new_and_alloc (4, &tmp, &data);
   GST_WRITE_UINT32_BE (data, gst_buffer_get_size (script_tag));
   script_tag = gst_buffer_append (script_tag, tmp);
@@ -1159,11 +1167,13 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
   guint8 *data, *bdata = NULL;
   gsize bsize = 0;
 
-  if (!GST_CLOCK_STIME_IS_VALID (pad->dts)) {
-    pts = dts = pad->last_timestamp / GST_MSECOND;
-  } else {
+  if (GST_CLOCK_STIME_IS_VALID (pad->dts)) {
     pts = pad->pts / GST_MSECOND;
     dts = pad->dts / GST_MSECOND;
+  } else if (GST_CLOCK_TIME_IS_VALID (pad->last_timestamp)) {
+    pts = dts = pad->last_timestamp / GST_MSECOND;
+  } else {
+    pts = dts = mux->last_dts;
   }
 
   /* We prevent backwards timestamps because they confuse librtmp,
@@ -1177,7 +1187,6 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
     dts = mux->last_dts;
   }
   mux->last_dts = dts;
-
 
   /* Be safe in case TS are buggy */
   if (pts > dts)
@@ -1231,7 +1240,6 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
   data[1] = ((size - 11 - 4) >> 16) & 0xff;
   data[2] = ((size - 11 - 4) >> 8) & 0xff;
   data[3] = ((size - 11 - 4) >> 0) & 0xff;
-
 
   GST_WRITE_UINT24_BE (data + 4, dts);
   data[7] = (((guint) dts) >> 24) & 0xff;
@@ -1607,7 +1615,6 @@ gst_flv_mux_write_buffer (GstFlvMux * mux, GstFlvMuxPad * pad,
   if (ret == GST_FLOW_OK && GST_CLOCK_TIME_IS_VALID (dts))
     pad->last_timestamp = dts;
 
-
   return ret;
 }
 
@@ -1668,7 +1675,6 @@ gst_flv_mux_query_upstream_duration (GstFlvMux * mux)
 
   return cb_data.duration;
 }
-
 
 static gboolean
 gst_flv_mux_are_all_pads_eos (GstFlvMux * mux)
@@ -1857,21 +1863,51 @@ gst_flv_mux_find_best_pad (GstAggregator * aggregator, GstClockTime * ts)
     switch (gst_iterator_next (pads, &padptr)) {
       case GST_ITERATOR_OK:{
 
+        GstFlvMux *mux = GST_FLV_MUX (aggregator);
         GstAggregatorPad *apad = g_value_get_object (&padptr);
+        GstFlvMuxPad *fpad = GST_FLV_MUX_PAD (apad);
+        gint64 t = GST_CLOCK_TIME_NONE;
+
         buffer = gst_aggregator_pad_peek_buffer (apad);
         if (!buffer)
           continue;
-        if (best_ts == GST_CLOCK_TIME_NONE) {
-          gst_object_replace ((GstObject **) & best, GST_OBJECT (apad));
-          best_ts = gst_flv_mux_segment_to_running_time (&apad->segment,
-              GST_BUFFER_DTS_OR_PTS (buffer));
-        } else if (GST_BUFFER_DTS_OR_PTS (buffer) != GST_CLOCK_TIME_NONE) {
-          gint64 t = gst_flv_mux_segment_to_running_time (&apad->segment,
-              GST_BUFFER_DTS_OR_PTS (buffer));
-          if (t < best_ts) {
-            gst_object_replace ((GstObject **) & best, GST_OBJECT (apad));
-            best_ts = t;
+
+        if (fpad->drop_deltas) {
+          if (mux->skip_backwards_streams
+              && GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT)) {
+            GST_INFO_OBJECT (apad,
+                "Dropped buffer %" GST_PTR_FORMAT " until keyframe", buffer);
+            gst_buffer_unref (buffer);
+            gst_aggregator_pad_drop_buffer (apad);
+            continue;
+          } else {
+            /* drop-deltas is set and the buffer isn't delta, drop flag */
+            fpad->drop_deltas = FALSE;
           }
+        }
+
+        if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DTS_OR_PTS (buffer))) {
+          t = gst_flv_mux_segment_to_running_time (&apad->segment,
+              GST_BUFFER_DTS_OR_PTS (buffer));
+
+          if (mux->skip_backwards_streams
+              && (t < (GST_MSECOND * mux->last_dts))) {
+            GST_WARNING_OBJECT (mux,
+                "Timestamp %" GST_TIME_FORMAT " going "
+                "backwards from last known %" GST_TIME_FORMAT ", dropping",
+                GST_TIME_ARGS (t), GST_TIME_ARGS (GST_MSECOND * mux->last_dts));
+            gst_buffer_unref (buffer);
+            gst_aggregator_pad_drop_buffer (apad);
+            /* Look for non-delta buffer */
+            fpad->drop_deltas = TRUE;
+            continue;
+          }
+        }
+
+        if (!GST_CLOCK_TIME_IS_VALID (best_ts) ||
+            (GST_CLOCK_TIME_IS_VALID (t) && t < best_ts)) {
+          gst_object_replace ((GstObject **) & best, GST_OBJECT (apad));
+          best_ts = t;
         }
         gst_buffer_unref (buffer);
         g_value_reset (&padptr);
@@ -1920,12 +1956,15 @@ gst_flv_mux_aggregate (GstAggregator * aggregator, gboolean timeout)
       return GST_FLOW_ERROR;
     }
 
-    ret = gst_flv_mux_write_header (mux);
-    if (ret != GST_FLOW_OK)
-      return ret;
-    mux->state = GST_FLV_MUX_STATE_DATA;
-
     best = gst_flv_mux_find_best_pad (aggregator, &ts);
+
+    ret = gst_flv_mux_write_header (mux);
+    if (ret != GST_FLOW_OK) {
+      gst_object_unref (best);
+      return ret;
+    }
+
+    mux->state = GST_FLV_MUX_STATE_DATA;
 
     if (!mux->streamable || mux->first_timestamp == GST_CLOCK_STIME_NONE) {
       if (best && GST_CLOCK_STIME_IS_VALID (ts))
@@ -2012,6 +2051,9 @@ gst_flv_mux_get_property (GObject * object,
     case PROP_ENCODER:
       g_value_set_string (value, mux->encoder);
       break;
+    case PROP_SKIP_BACKWARDS_STREAMS:
+      g_value_set_boolean (value, mux->skip_backwards_streams);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2051,6 +2093,9 @@ gst_flv_mux_set_property (GObject * object,
       } else {
         mux->encoder = g_value_dup_string (value);
       }
+      break;
+    case PROP_SKIP_BACKWARDS_STREAMS:
+      mux->skip_backwards_streams = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
