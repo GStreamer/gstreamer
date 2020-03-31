@@ -535,9 +535,11 @@ gst_writev_buffer_list (GstObject * sink, gint fd, GstPoll * fdset,
         left += vecs[num_vecs].iov_len;
         num_vecs++;
       }
+      current_buf_mem_idx = j;
+      if (j == num_mem)
+        current_buf_mem_idx = 0;
     }
     current_buf_idx = i;
-    current_buf_mem_idx = j;
   }
 
   do {
@@ -622,9 +624,11 @@ gst_writev_buffer_list (GstObject * sink, gint fd, GstPoll * fdset,
           left += vecs[num_vecs].iov_len;
           num_vecs++;
         }
+        current_buf_mem_idx = j;
+        if (current_buf_mem_idx == num_mem)
+          current_buf_mem_idx = 0;
       }
       current_buf_idx = i;
-      current_buf_mem_idx = j;
     }
   } while (left > 0);
 
