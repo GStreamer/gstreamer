@@ -3889,7 +3889,8 @@ create_recv_rtp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
   /* ERRORS */
 no_name:
   {
-    g_warning ("rtpbin: invalid name given");
+    g_warning ("rtpbin: cannot find session id for pad: %s",
+        GST_STR_NULL (name));
     return NULL;
   }
 create_error:
@@ -4064,7 +4065,8 @@ create_recv_rtcp (GstRtpBin * rtpbin, GstPadTemplate * templ,
   /* ERRORS */
 no_name:
   {
-    g_warning ("rtpbin: invalid name given");
+    g_warning ("rtpbin: cannot find session id for pad: %s",
+        GST_STR_NULL (name));
     return NULL;
   }
 create_error:
@@ -4393,7 +4395,8 @@ create_send_rtp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
   /* ERRORS */
 no_name:
   {
-    g_warning ("rtpbin: invalid name given");
+    g_warning ("rtpbin: cannot find session id for pad: %s",
+        GST_STR_NULL (name));
     return NULL;
   }
 create_error:
@@ -4547,7 +4550,8 @@ create_send_rtcp (GstRtpBin * rtpbin, GstPadTemplate * templ,
   /* ERRORS */
 no_name:
   {
-    g_warning ("rtpbin: invalid name given");
+    g_warning ("rtpbin: cannot find session id for pad: %s",
+        GST_STR_NULL (name));
     return NULL;
   }
 create_error:
