@@ -1481,8 +1481,12 @@ get_profile_surface_attributes (GstVaapiEncoder * encoder,
     return FALSE;
 
   ret = gst_vaapi_context_get_surface_attributes (ctxt, attribs);
-  if (ret)
+  if (ret) {
     attribs->formats = gst_vaapi_context_get_surface_formats (ctxt);
+
+    if (!attribs->formats)
+      ret = FALSE;
+  }
 
   gst_vaapi_context_unref (ctxt);
   return ret;
