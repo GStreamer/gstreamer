@@ -3426,7 +3426,7 @@ exit:
 
 /* PULL mode:
  * pull and scan for next frame starting from current offset
- * ajusts sync, drain and offset going along */
+ * adjusts sync, drain and offset going along */
 static GstFlowReturn
 gst_base_parse_scan_frame (GstBaseParse * parse, GstBaseParseClass * klass)
 {
