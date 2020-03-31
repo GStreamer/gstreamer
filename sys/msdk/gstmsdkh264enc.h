@@ -71,7 +71,7 @@ struct _GstMsdkH264Enc
   guint b_pyramid;
 
   GstH264NalParser *parser;
-  GArray *extra_sei;
+  GArray *cc_sei_array;
   GstMemory *frame_packing_sei;
 };
 

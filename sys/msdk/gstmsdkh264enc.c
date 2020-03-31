@@ -95,15 +95,36 @@ gst_msdkh264enc_frame_packing_get_type (void)
 G_DEFINE_TYPE (GstMsdkH264Enc, gst_msdkh264enc, GST_TYPE_MSDKENC);
 
 static void
+gst_msdkh264enc_insert_sei (GstMsdkH264Enc * thiz, GstVideoCodecFrame * frame,
+    GstMemory * sei_mem)
+{
+  GstBuffer *new_buffer;
+
+  if (!thiz->parser)
+    thiz->parser = gst_h264_nal_parser_new ();
+
+  new_buffer = gst_h264_parser_insert_sei (thiz->parser,
+      frame->output_buffer, sei_mem);
+
+  if (!new_buffer) {
+    GST_WARNING_OBJECT (thiz, "Cannot insert SEI nal into AU buffer");
+    return;
+  }
+
+  gst_buffer_unref (frame->output_buffer);
+  frame->output_buffer = new_buffer;
+}
+
+static void
 gst_msdkh264enc_add_cc (GstMsdkH264Enc * thiz, GstVideoCodecFrame * frame)
 {
   GstVideoCaptionMeta *cc_meta;
   gpointer iter = NULL;
   GstBuffer *in_buf = frame->input_buffer;
   GstMemory *mem = NULL;
-  GstBuffer *new_buffer = NULL;
 
-  g_array_set_size (thiz->extra_sei, 0);
+  if (thiz->cc_sei_array)
+    g_array_set_size (thiz->cc_sei_array, 0);
 
   while ((cc_meta =
           (GstVideoCaptionMeta *) gst_buffer_iterate_meta_filtered (in_buf,
@@ -144,13 +165,20 @@ gst_msdkh264enc_add_cc (GstMsdkH264Enc * thiz, GstVideoCodecFrame * frame)
 
     rud->data = data;
 
-    g_array_append_val (thiz->extra_sei, sei);
+    if (!thiz->cc_sei_array) {
+      thiz->cc_sei_array =
+          g_array_new (FALSE, FALSE, sizeof (GstH264SEIMessage));
+      g_array_set_clear_func (thiz->cc_sei_array,
+          (GDestroyNotify) gst_h264_sei_clear);
+    }
+
+    g_array_append_val (thiz->cc_sei_array, sei);
   }
 
-  if (!thiz->extra_sei->len)
+  if (!thiz->cc_sei_array || !thiz->cc_sei_array->len)
     return;
 
-  mem = gst_h264_create_sei_memory (4, thiz->extra_sei);
+  mem = gst_h264_create_sei_memory (4, thiz->cc_sei_array);
 
   if (!mem) {
     GST_WARNING_OBJECT (thiz, "Cannot create SEI nal unit");
@@ -158,19 +186,10 @@ gst_msdkh264enc_add_cc (GstMsdkH264Enc * thiz, GstVideoCodecFrame * frame)
   }
 
   GST_DEBUG_OBJECT (thiz,
-      "Inserting %d closed caption SEI message(s)", thiz->extra_sei->len);
+      "Inserting %d closed caption SEI message(s)", thiz->cc_sei_array->len);
 
-  new_buffer = gst_h264_parser_insert_sei (thiz->parser,
-      frame->output_buffer, mem);
+  gst_msdkh264enc_insert_sei (thiz, frame, mem);
   gst_memory_unref (mem);
-
-  if (!new_buffer) {
-    GST_WARNING_OBJECT (thiz, "Cannot insert SEI nal into AU buffer");
-    return;
-  }
-
-  gst_buffer_unref (frame->output_buffer);
-  frame->output_buffer = new_buffer;
 }
 
 static GstFlowReturn
@@ -179,25 +198,13 @@ gst_msdkh264enc_pre_push (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
   GstMsdkH264Enc *thiz = GST_MSDKH264ENC (encoder);
 
   if (GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame) && thiz->frame_packing_sei) {
-    GstBuffer *new_buffer = NULL;
-
     /* Insert frame packing SEI
      * FIXME: This assumes it does not exist in the stream, which is not
      * going to be true anymore once this is fixed:
      * https://github.com/Intel-Media-SDK/MediaSDK/issues/13
      */
-    new_buffer = gst_h264_parser_insert_sei (thiz->parser,
-        frame->output_buffer, thiz->frame_packing_sei);
-
-    if (new_buffer) {
-      GST_DEBUG_OBJECT (thiz, "Inserting SEI Frame Packing for multiview");
-
-      gst_buffer_unref (frame->output_buffer);
-      frame->output_buffer = new_buffer;
-    } else {
-      GST_WARNING_OBJECT (thiz,
-          "Cannot insert frame packing SEI intu AU buffer");
-    }
+    GST_DEBUG_OBJECT (thiz, "Inserting SEI Frame Packing for multiview");
+    gst_msdkh264enc_insert_sei (thiz, frame, thiz->frame_packing_sei);
   }
 
   gst_msdkh264enc_add_cc (thiz, frame);
@@ -284,7 +291,7 @@ gst_msdkh264enc_set_format (GstMsdkEnc * encoder)
       GstH264FramePacking *frame_packing;
       GArray *array = g_array_new (FALSE, FALSE, sizeof (GstH264SEIMessage));
 
-      g_array_set_clear_func (thiz->extra_sei,
+      g_array_set_clear_func (thiz->cc_sei_array,
           (GDestroyNotify) gst_h264_sei_clear);
 
       GST_DEBUG_OBJECT (thiz,
@@ -487,8 +494,10 @@ gst_msdkh264enc_finalize (GObject * object)
 {
   GstMsdkH264Enc *thiz = GST_MSDKH264ENC (object);
 
-  gst_h264_nal_parser_free (thiz->parser);
-  g_array_unref (thiz->extra_sei);
+  if (thiz->parser)
+    gst_h264_nal_parser_free (thiz->parser);
+  if (thiz->cc_sei_array)
+    g_array_unref (thiz->cc_sei_array);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -674,8 +683,4 @@ gst_msdkh264enc_init (GstMsdkH264Enc * thiz)
   thiz->trellis = PROP_TRELLIS_DEFAULT;
   thiz->max_slice_size = PROP_MAX_SLICE_SIZE_DEFAULT;
   thiz->b_pyramid = PROP_B_PYRAMID_DEFAULT;
-
-  thiz->parser = gst_h264_nal_parser_new ();
-  thiz->extra_sei = g_array_new (FALSE, FALSE, sizeof (GstH264SEIMessage));
-  g_array_set_clear_func (thiz->extra_sei, (GDestroyNotify) gst_h264_sei_clear);
 }
