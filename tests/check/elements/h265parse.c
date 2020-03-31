@@ -4,6 +4,8 @@
  * unit test for h265parse
  *
  * Copyright (C) 2019 Stéphane Cerveau <scerveau@collabora.com>
+ * Copyright (C) 2019 Collabora Ltd.
+ *   @author George Kiagiadakis <george.kiagiadakis@collabora.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,7 +23,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include <gst/check/gstcheck.h>
+#include <gst/check/check.h>
 #include "parser.h"
 
 #define SRC_CAPS_TMPL   "video/x-h265, parsed=(boolean)false"
@@ -102,6 +104,88 @@ static guint8 h265_sei_mdcv[] = {
   0x00, 0x00, 0x00, 0x01, 0x4e, 0x01, 0x89, 0x18, 0x33, 0xc2, 0x86, 0xc4, 0x1d,
   0x4c, 0x0b, 0xb8, 0x84, 0xd0, 0x3e, 0x80, 0x3d, 0x13, 0x40, 0x42, 0x00, 0x98,
   0x96, 0x80, 0x00, 0x00, 0x03, 0x00, 0x01, 0x80
+};
+
+
+/* single-sliced data, generated with:
+ * gst-launch-1.0 videotestsrc num-buffers=1 pattern=green \
+ *    ! video/x-raw,width=128,height=128 \
+ *    ! x265enc
+ *    ! fakesink dump=1
+ */
+
+static guint8 h265_128x128_vps[] = {
+  0x00, 0x00, 0x00, 0x01, 0x40, 0x01, 0x0c, 0x01,
+  0xff, 0xff, 0x01, 0x60, 0x00, 0x00, 0x03, 0x00,
+  0x90, 0x00, 0x00, 0x03, 0x00, 0x00, 0x03, 0x00,
+  0x3f, 0x95, 0x98, 0x09
+};
+
+static guint8 h265_128x128_sps[] = {
+  0x00, 0x00, 0x00, 0x01, 0x42, 0x01, 0x01, 0x01,
+  0x60, 0x00, 0x00, 0x03, 0x00, 0x90, 0x00, 0x00,
+  0x03, 0x00, 0x00, 0x03, 0x00, 0x3f, 0xa0, 0x10,
+  0x20, 0x20, 0x59, 0x65, 0x66, 0x92, 0x4c, 0xaf,
+  0xff, 0x00, 0x01, 0x00, 0x01, 0x01, 0x00, 0x00,
+  0x03, 0x00, 0x01, 0x00, 0x00, 0x03, 0x00, 0x1e,
+  0x08
+};
+
+static guint8 h265_128x128_pps[] = {
+  0x00, 0x00, 0x00, 0x01, 0x44, 0x01, 0xc1, 0x72,
+  0xb4, 0x22, 0x40
+};
+
+static guint8 h265_128x128_slice_idr_n_lp[] = {
+  0x00, 0x00, 0x00, 0x01, 0x28, 0x01, 0xaf, 0x0e,
+  0xe0, 0x34, 0x82, 0x15, 0x84, 0xf4, 0x70, 0x4f,
+  0xff, 0xed, 0x41, 0x3f, 0xff, 0xe4, 0xcd, 0xc4,
+  0x7c, 0x03, 0x0c, 0xc2, 0xbb, 0xb0, 0x74, 0xe5,
+  0xef, 0x4f, 0xe1, 0xa3, 0xd4, 0x00, 0x02, 0xc2
+};
+
+/* multi-sliced data, generated on zynqultrascaleplus with:
+ * gst-launch-1.0 videotestsrc num-buffers=1 pattern=green \
+ *    ! video/x-raw,width=128,height=128 \
+ *    ! omxh265enc num-slices=2 \
+ *    ! fakesink dump=1
+ */
+
+static guint8 h265_128x128_sliced_vps[] = {
+  0x00, 0x00, 0x00, 0x01, 0x40, 0x01, 0x0c, 0x01,
+  0xff, 0xff, 0x01, 0x40, 0x00, 0x00, 0x03, 0x00,
+  0x90, 0x00, 0x00, 0x03, 0x00, 0x00, 0x03, 0x00,
+  0x1e, 0x25, 0x02, 0x40
+};
+
+static guint8 h265_128x128_sliced_sps[] = {
+  0x00, 0x00, 0x00, 0x01, 0x42, 0x01, 0x01, 0x01,
+  0x40, 0x00, 0x00, 0x03, 0x00, 0x90, 0x00, 0x00,
+  0x03, 0x00, 0x00, 0x03, 0x00, 0x1e, 0xa0, 0x10,
+  0x20, 0x20, 0x59, 0xe9, 0x6e, 0x44, 0xa1, 0x73,
+  0x50, 0x60, 0x20, 0x2e, 0x10, 0x00, 0x00, 0x03,
+  0x00, 0x10, 0x00, 0x00, 0x03, 0x01, 0xe5, 0x1a,
+  0xff, 0xff, 0x10, 0x3e, 0x80, 0x5d, 0xf7, 0xc2,
+  0x01, 0x04
+};
+
+static guint8 h265_128x128_sliced_pps[] = {
+  0x00, 0x00, 0x00, 0x01, 0x44, 0x01, 0xc0, 0x71,
+  0x81, 0x8d, 0xb2
+};
+
+static guint8 h265_128x128_slice_1_idr_n_lp[] = {
+  0x00, 0x00, 0x00, 0x01, 0x28, 0x01, 0xac, 0x46,
+  0x13, 0xb6, 0x45, 0x43, 0xaf, 0xee, 0x3d, 0x3f,
+  0x76, 0xe5, 0x73, 0x2f, 0xee, 0xd2, 0xeb, 0xbf,
+  0x80
+};
+
+static guint8 h265_128x128_slice_2_idr_n_lp[] = {
+  0x00, 0x00, 0x00, 0x01, 0x28, 0x01, 0x30, 0xc4,
+  0x60, 0x13, 0xb6, 0x45, 0x43, 0xaf, 0xee, 0x3d,
+  0x3f, 0x76, 0xe5, 0x73, 0x2f, 0xee, 0xd2, 0xeb,
+  0xbf, 0x80
 };
 
 static const gchar *ctx_suite;
@@ -264,16 +348,676 @@ h265parse_suite (void)
   return s;
 }
 
+
+/* helper methods for GstHasness based tests */
+
+static inline GstBuffer *
+wrap_buffer (guint8 * buf, gsize size, GstClockTime pts, GstBufferFlags flags)
+{
+  GstBuffer *buffer;
+
+  buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+      buf, size, 0, size, NULL, NULL);
+  GST_BUFFER_PTS (buffer) = pts;
+  GST_BUFFER_FLAGS (buffer) |= flags;
+
+  return buffer;
+}
+
+static inline GstBuffer *
+composite_buffer (GstClockTime pts, GstBufferFlags flags, gint count, ...)
+{
+  va_list vl;
+  gint i;
+  guint8 *data;
+  gsize size;
+  GstBuffer *buffer;
+
+  va_start (vl, count);
+
+  buffer = gst_buffer_new ();
+  for (i = 0; i < count; i++) {
+    data = va_arg (vl, guint8 *);
+    size = va_arg (vl, gsize);
+
+    buffer = gst_buffer_append (buffer, wrap_buffer (data, size, 0, 0));
+  }
+  GST_BUFFER_PTS (buffer) = pts;
+  GST_BUFFER_FLAGS (buffer) |= flags;
+
+  va_end (vl);
+
+  return buffer;
+}
+
+static inline void
+pull_and_check_full (GstHarness * h, guint8 * data, gsize size,
+    GstClockTime pts, GstBufferFlags flags)
+{
+  GstBuffer *b = gst_harness_pull (h);
+  gst_check_buffer_data (b, data, size);
+  fail_unless_equals_clocktime (GST_BUFFER_PTS (b), pts);
+  if (flags)
+    fail_unless (GST_BUFFER_FLAG_IS_SET (b, flags));
+  gst_buffer_unref (b);
+}
+
+#define pull_and_check(h, data, pts, flags) \
+  pull_and_check_full (h, data, sizeof (data), pts, flags)
+
+#define pull_and_check_composite(h, pts, flags, ...) \
+  G_STMT_START { \
+    GstMapInfo info; \
+    GstBuffer *cb; \
+    \
+    cb = composite_buffer (0, 0, __VA_ARGS__); \
+    gst_buffer_map (cb, &info, GST_MAP_READ); \
+    \
+    pull_and_check_full (h, info.data, info.size, pts, flags); \
+    \
+    gst_buffer_unmap (cb, &info); \
+    gst_buffer_unref (cb); \
+  } G_STMT_END
+
+#define pull_and_drop(h) \
+  G_STMT_START { \
+    GstBuffer *b = gst_harness_pull (h); \
+    gst_buffer_unref (b); \
+  } G_STMT_END
+
+#define HEADER_DATA \
+  guint8 * const vps = sliced ? h265_128x128_sliced_vps : h265_128x128_vps; \
+  guint8 * const sps = sliced ? h265_128x128_sliced_sps : h265_128x128_sps; \
+  guint8 * const pps = sliced ? h265_128x128_sliced_pps : h265_128x128_pps; \
+  const gsize vps_size = sliced ? sizeof (h265_128x128_sliced_vps) : sizeof (h265_128x128_vps); \
+  const gsize sps_size = sliced ? sizeof (h265_128x128_sliced_sps) : sizeof (h265_128x128_sps); \
+  const gsize pps_size = sliced ? sizeof (h265_128x128_sliced_pps) : sizeof (h265_128x128_pps)
+
+#define SLICE_DATA \
+  guint8 * const slice_1 = sliced ? h265_128x128_slice_1_idr_n_lp : h265_128x128_slice_idr_n_lp; \
+  guint8 * const slice_2 = sliced ? h265_128x128_slice_2_idr_n_lp : NULL; \
+  const gsize slice_1_size = sliced ? sizeof (h265_128x128_slice_1_idr_n_lp) : sizeof (h265_128x128_slice_idr_n_lp); \
+  const gsize slice_2_size = sliced ? sizeof (h265_128x128_slice_2_idr_n_lp) : 0
+
+#define bytestream_set_caps(h, in_align, out_align) \
+  gst_harness_set_caps_str (h, \
+      "video/x-h265, parsed=(boolean)false, stream-format=byte-stream, alignment=" in_align ", framerate=30/1", \
+      "video/x-h265, parsed=(boolean)true, stream-format=byte-stream, alignment=" out_align)
+
+static inline void
+bytestream_push_first_au_inalign_nal (GstHarness * h, gboolean sliced)
+{
+  HEADER_DATA;
+  SLICE_DATA;
+  GstBuffer *buf;
+
+  buf = wrap_buffer (vps, vps_size, 10, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  buf = wrap_buffer (sps, sps_size, 10, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  buf = wrap_buffer (pps, pps_size, 10, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  buf = wrap_buffer (slice_1, slice_1_size, 10, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  if (sliced) {
+    buf = wrap_buffer (slice_2, slice_2_size, 10, 0);
+    fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+  }
+}
+
+static inline void
+bytestream_push_first_au_inalign_au (GstHarness * h, gboolean sliced)
+{
+  HEADER_DATA;
+  SLICE_DATA;
+  GstBuffer *buf;
+
+  buf = composite_buffer (10, 0, sliced ? 5 : 4,
+      vps, vps_size, sps, sps_size, pps, pps_size,
+      slice_1, slice_1_size, slice_2, slice_2_size);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+}
+
+/* tests */
+
+static void
+test_flow_outalign_nal (GstHarness * h)
+{
+  GstBuffer *buf;
+
+  /* drop the first AU - tested separately */
+  fail_unless (gst_harness_buffers_in_queue (h) > 0);
+  while (gst_harness_buffers_in_queue (h) > 0)
+    pull_and_drop (h);
+
+  buf = wrap_buffer (h265_128x128_slice_idr_n_lp,
+      sizeof (h265_128x128_slice_idr_n_lp), 100, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+  pull_and_check (h, h265_128x128_slice_idr_n_lp, 100, 0);
+
+  buf = wrap_buffer (h265_128x128_slice_idr_n_lp,
+      sizeof (h265_128x128_slice_idr_n_lp), 200, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+  pull_and_check (h, h265_128x128_slice_idr_n_lp, 200, 0);
+}
+
+static void
+test_flow_outalign_au (GstHarness * h)
+{
+  GstBuffer *buf;
+
+  /* drop the first AU - tested separately */
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+  pull_and_drop (h);
+
+  buf = wrap_buffer (h265_128x128_slice_idr_n_lp,
+      sizeof (h265_128x128_slice_idr_n_lp), 100, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+  pull_and_check (h, h265_128x128_slice_idr_n_lp, 100, 0);
+
+  buf = wrap_buffer (h265_128x128_slice_idr_n_lp,
+      sizeof (h265_128x128_slice_idr_n_lp), 200, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+  pull_and_check (h, h265_128x128_slice_idr_n_lp, 200, 0);
+}
+
+GST_START_TEST (test_flow_nal_nal)
+{
+  GstHarness *h = gst_harness_new ("h265parse");
+
+  bytestream_set_caps (h, "nal", "nal");
+  bytestream_push_first_au_inalign_nal (h, FALSE);
+  test_flow_outalign_nal (h);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_flow_au_nal)
+{
+  GstHarness *h = gst_harness_new ("h265parse");
+
+  bytestream_set_caps (h, "au", "nal");
+  bytestream_push_first_au_inalign_au (h, FALSE);
+  test_flow_outalign_nal (h);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_flow_nal_au)
+{
+  GstHarness *h = gst_harness_new ("h265parse");
+  GstBuffer *buf;
+
+  bytestream_set_caps (h, "nal", "au");
+  bytestream_push_first_au_inalign_nal (h, FALSE);
+
+  /* special case because we have latency */
+
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 0);
+
+  buf = wrap_buffer (h265_128x128_slice_idr_n_lp,
+      sizeof (h265_128x128_slice_idr_n_lp), 100, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  /* drop the first AU - tested separately */
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+  pull_and_drop (h);
+
+  buf = wrap_buffer (h265_128x128_slice_idr_n_lp,
+      sizeof (h265_128x128_slice_idr_n_lp), 200, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+  pull_and_check (h, h265_128x128_slice_idr_n_lp, 100, 0);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_flow_au_au)
+{
+  GstHarness *h = gst_harness_new ("h265parse");
+
+  bytestream_set_caps (h, "au", "au");
+  bytestream_push_first_au_inalign_au (h, FALSE);
+  test_flow_outalign_au (h);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+static void
+test_headers_outalign_nal (GstHarness * h)
+{
+  /* 5 -> AUD + VPS + SPS + PPS + slice */
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 4);
+
+  /* parser must have inserted AUD before the headers, with the same PTS */
+  pull_and_check (h, h265_128x128_vps, 10, 0);
+  pull_and_check (h, h265_128x128_sps, 10, 0);
+  pull_and_check (h, h265_128x128_pps, 10, 0);
+
+  /* FIXME The timestamp should be 10 really, but base parse refuse to repeat
+   * the same TS for two consecutive calls to _finish_frame(), see [0] for
+   * more details. It's not a huge issue, the decoder can fix it for now.
+   *
+   * [0] https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/287
+   */
+  pull_and_check (h, h265_128x128_slice_idr_n_lp, -1, 0);
+}
+
+static void
+test_headers_outalign_au (GstHarness * h)
+{
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+  pull_and_check_composite (h, 10, 0, 4,
+      h265_128x128_vps, sizeof (h265_128x128_vps),
+      h265_128x128_sps, sizeof (h265_128x128_sps),
+      h265_128x128_pps, sizeof (h265_128x128_pps),
+      h265_128x128_slice_idr_n_lp, sizeof (h265_128x128_slice_idr_n_lp));
+}
+
+GST_START_TEST (test_headers_nal_nal)
+{
+  GstHarness *h = gst_harness_new ("h265parse");
+
+  bytestream_set_caps (h, "nal", "nal");
+  bytestream_push_first_au_inalign_nal (h, FALSE);
+  test_headers_outalign_nal (h);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_headers_au_nal)
+{
+  GstHarness *h = gst_harness_new ("h265parse");
+
+  bytestream_set_caps (h, "au", "nal");
+  bytestream_push_first_au_inalign_au (h, FALSE);
+  test_headers_outalign_nal (h);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_headers_au_au)
+{
+  GstHarness *h = gst_harness_new ("h265parse");
+
+  bytestream_set_caps (h, "au", "au");
+  bytestream_push_first_au_inalign_au (h, FALSE);
+  test_headers_outalign_au (h);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_latency_nal_nal)
+{
+  GstHarness *h = gst_harness_new ("h265parse");
+
+  bytestream_set_caps (h, "nal", "nal");
+  bytestream_push_first_au_inalign_nal (h, FALSE);
+
+  fail_unless_equals_clocktime (gst_harness_query_latency (h), 0);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_latency_au_nal)
+{
+  GstHarness *h = gst_harness_new ("h265parse");
+
+  bytestream_set_caps (h, "au", "nal");
+  bytestream_push_first_au_inalign_au (h, FALSE);
+
+  fail_unless_equals_clocktime (gst_harness_query_latency (h), 0);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_latency_nal_au)
+{
+  GstHarness *h = gst_harness_new ("h265parse");
+  GstBuffer *buf;
+
+  bytestream_set_caps (h, "nal", "au");
+  bytestream_push_first_au_inalign_nal (h, FALSE);
+
+  /* special case because we have latency;
+   * the first buffer needs to be pushed out
+   * before we can correctly query the latency */
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 0);
+  buf = wrap_buffer (h265_128x128_slice_idr_n_lp,
+      sizeof (h265_128x128_slice_idr_n_lp), 100, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  /* our input caps declare framerate=30fps, so the latency must be 1/30 sec */
+  fail_unless_equals_clocktime (gst_harness_query_latency (h),
+      gst_util_uint64_scale (GST_SECOND, 1, 30));
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_latency_au_au)
+{
+  GstHarness *h = gst_harness_new ("h265parse");
+
+  bytestream_set_caps (h, "au", "au");
+  bytestream_push_first_au_inalign_au (h, FALSE);
+
+  fail_unless_equals_clocktime (gst_harness_query_latency (h), 0);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+static void
+test_discont_outalign_nal (GstHarness * h)
+{
+  GstBuffer *buf;
+
+  /* drop the first AU - tested separately */
+  fail_unless (gst_harness_buffers_in_queue (h) > 0);
+  while (gst_harness_buffers_in_queue (h) > 0)
+    pull_and_drop (h);
+
+  /* FIXME: I think the AUD ought to have DISCONT */
+  buf = wrap_buffer (h265_128x128_slice_idr_n_lp,
+      sizeof (h265_128x128_slice_idr_n_lp), 1000, GST_BUFFER_FLAG_DISCONT);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+  pull_and_check (h, h265_128x128_slice_idr_n_lp, 1000,
+      GST_BUFFER_FLAG_DISCONT);
+}
+
+static void
+test_discont_outalign_au (GstHarness * h)
+{
+  GstBuffer *buf;
+
+  /* drop the first AU - tested separately */
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+  pull_and_drop (h);
+
+  buf = wrap_buffer (h265_128x128_slice_idr_n_lp,
+      sizeof (h265_128x128_slice_idr_n_lp), 1000, GST_BUFFER_FLAG_DISCONT);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+  pull_and_check (h, h265_128x128_slice_idr_n_lp, 1000,
+      GST_BUFFER_FLAG_DISCONT);
+}
+
+GST_START_TEST (test_discont_nal_nal)
+{
+  GstHarness *h = gst_harness_new ("h265parse");
+
+  bytestream_set_caps (h, "nal", "nal");
+  bytestream_push_first_au_inalign_nal (h, FALSE);
+  test_discont_outalign_nal (h);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_discont_au_nal)
+{
+  GstHarness *h = gst_harness_new ("h265parse");
+
+  bytestream_set_caps (h, "au", "nal");
+  bytestream_push_first_au_inalign_au (h, FALSE);
+  test_discont_outalign_nal (h);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_discont_au_au)
+{
+  GstHarness *h = gst_harness_new ("h265parse");
+
+  bytestream_set_caps (h, "au", "au");
+  bytestream_push_first_au_inalign_au (h, FALSE);
+  test_discont_outalign_au (h);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_sliced_nal_nal)
+{
+  GstHarness *h = gst_harness_new ("h265parse");
+  GstBuffer *buf;
+
+  bytestream_set_caps (h, "nal", "nal");
+  bytestream_push_first_au_inalign_nal (h, TRUE);
+
+  /* drop the header buffers */
+  fail_unless (gst_harness_buffers_in_queue (h) > 2);
+  while (gst_harness_buffers_in_queue (h) > 2)
+    pull_and_drop (h);
+
+  /* but expect 2 slices */
+  pull_and_check (h, h265_128x128_slice_1_idr_n_lp, -1, 0);
+  pull_and_check (h, h265_128x128_slice_2_idr_n_lp, -1, 0);
+
+  /* push some more */
+  buf = wrap_buffer (h265_128x128_slice_1_idr_n_lp,
+      sizeof (h265_128x128_slice_1_idr_n_lp), 100, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+  pull_and_check (h, h265_128x128_slice_1_idr_n_lp, 100, 0);
+
+  buf = wrap_buffer (h265_128x128_slice_2_idr_n_lp,
+      sizeof (h265_128x128_slice_2_idr_n_lp), 100, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+  pull_and_check (h, h265_128x128_slice_2_idr_n_lp, -1, 0);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_sliced_au_nal)
+{
+  GstHarness *h = gst_harness_new ("h265parse");
+  GstBuffer *buf;
+
+  bytestream_set_caps (h, "au", "nal");
+  bytestream_push_first_au_inalign_au (h, TRUE);
+
+  /* drop the header buffers */
+  fail_unless (gst_harness_buffers_in_queue (h) > 2);
+  while (gst_harness_buffers_in_queue (h) > 2)
+    pull_and_drop (h);
+
+  /* but expect 2 slices */
+  pull_and_check (h, h265_128x128_slice_1_idr_n_lp, -1, 0);
+  pull_and_check (h, h265_128x128_slice_2_idr_n_lp, -1, 0);
+
+  /* push some more */
+  buf = composite_buffer (100, 0, 2,
+      h265_128x128_slice_1_idr_n_lp, sizeof (h265_128x128_slice_1_idr_n_lp),
+      h265_128x128_slice_2_idr_n_lp, sizeof (h265_128x128_slice_2_idr_n_lp));
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 2);
+  pull_and_check (h, h265_128x128_slice_1_idr_n_lp, 100, 0);
+  pull_and_check (h, h265_128x128_slice_2_idr_n_lp, -1, 0);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_sliced_nal_au)
+{
+  GstHarness *h = gst_harness_new ("h265parse");
+  GstBuffer *buf;
+
+  bytestream_set_caps (h, "nal", "au");
+  bytestream_push_first_au_inalign_nal (h, TRUE);
+
+  /* nal -> au has latency; we need to start the next AU to get output */
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 0);
+
+
+  /* push some more */
+  buf = wrap_buffer (h265_128x128_slice_1_idr_n_lp,
+      sizeof (h265_128x128_slice_1_idr_n_lp), 100, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  /* now we can see the initial AU on the output */
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+  pull_and_check_composite (h, 10, 0, 5,
+      h265_128x128_sliced_vps, sizeof (h265_128x128_sliced_vps),
+      h265_128x128_sliced_sps, sizeof (h265_128x128_sliced_sps),
+      h265_128x128_sliced_pps, sizeof (h265_128x128_sliced_pps),
+      h265_128x128_slice_1_idr_n_lp, sizeof (h265_128x128_slice_1_idr_n_lp),
+      h265_128x128_slice_2_idr_n_lp, sizeof (h265_128x128_slice_2_idr_n_lp));
+
+  buf = wrap_buffer (h265_128x128_slice_2_idr_n_lp,
+      sizeof (h265_128x128_slice_2_idr_n_lp), 100, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 0);
+
+  buf = wrap_buffer (h265_128x128_slice_1_idr_n_lp,
+      sizeof (h265_128x128_slice_1_idr_n_lp), 200, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+  pull_and_check_composite (h, 100, 0, 2,
+      h265_128x128_slice_1_idr_n_lp, sizeof (h265_128x128_slice_1_idr_n_lp),
+      h265_128x128_slice_2_idr_n_lp, sizeof (h265_128x128_slice_2_idr_n_lp));
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_sliced_au_au)
+{
+  GstHarness *h = gst_harness_new ("h265parse");
+  GstBuffer *buf;
+
+  bytestream_set_caps (h, "au", "au");
+  bytestream_push_first_au_inalign_au (h, TRUE);
+
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+  pull_and_check_composite (h, 10, 0, 5,
+      h265_128x128_sliced_vps, sizeof (h265_128x128_sliced_vps),
+      h265_128x128_sliced_sps, sizeof (h265_128x128_sliced_sps),
+      h265_128x128_sliced_pps, sizeof (h265_128x128_sliced_pps),
+      h265_128x128_slice_1_idr_n_lp, sizeof (h265_128x128_slice_1_idr_n_lp),
+      h265_128x128_slice_2_idr_n_lp, sizeof (h265_128x128_slice_2_idr_n_lp));
+
+  /* push some more */
+  buf = composite_buffer (100, 0, 2,
+      h265_128x128_slice_1_idr_n_lp, sizeof (h265_128x128_slice_1_idr_n_lp),
+      h265_128x128_slice_2_idr_n_lp, sizeof (h265_128x128_slice_2_idr_n_lp));
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+  pull_and_check_composite (h, 100, 0, 2,
+      h265_128x128_slice_1_idr_n_lp, sizeof (h265_128x128_slice_1_idr_n_lp),
+      h265_128x128_slice_2_idr_n_lp, sizeof (h265_128x128_slice_2_idr_n_lp));
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+/* nal->au has latency, but EOS should force the last AU out */
+GST_START_TEST (test_drain)
+{
+  GstHarness *h = gst_harness_new ("h265parse");
+
+  bytestream_set_caps (h, "nal", "au");
+  bytestream_push_first_au_inalign_nal (h, FALSE);
+
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 0);
+
+  gst_harness_push_event (h, gst_event_new_eos ());
+
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+  pull_and_drop (h);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+
+static Suite *
+h265parse_harnessed_suite (void)
+{
+  Suite *s = suite_create ("h265parse");
+  TCase *tc_chain = tcase_create ("general");
+
+  suite_add_tcase (s, tc_chain);
+  tcase_add_test (tc_chain, test_flow_nal_nal);
+  tcase_add_test (tc_chain, test_flow_au_nal);
+  tcase_add_test (tc_chain, test_flow_nal_au);
+  tcase_add_test (tc_chain, test_flow_au_au);
+
+  tcase_add_test (tc_chain, test_headers_nal_nal);
+  tcase_add_test (tc_chain, test_headers_au_nal);
+  tcase_add_test (tc_chain, test_headers_au_au);
+
+  tcase_add_test (tc_chain, test_latency_nal_nal);
+  tcase_add_test (tc_chain, test_latency_au_nal);
+  tcase_add_test (tc_chain, test_latency_nal_au);
+  tcase_add_test (tc_chain, test_latency_au_au);
+
+  tcase_add_test (tc_chain, test_discont_nal_nal);
+  tcase_add_test (tc_chain, test_discont_au_nal);
+  tcase_add_test (tc_chain, test_discont_au_au);
+
+  tcase_add_test (tc_chain, test_sliced_nal_nal);
+  tcase_add_test (tc_chain, test_sliced_au_nal);
+  tcase_add_test (tc_chain, test_sliced_nal_au);
+  tcase_add_test (tc_chain, test_sliced_au_au);
+
+  tcase_add_test (tc_chain, test_drain);
+
+  return s;
+}
+
 int
 main (int argc, char **argv)
 {
   int nf = 0;
 
   Suite *s;
-  //SRunner *sr;
 
   gst_check_init (&argc, &argv);
-
 
   /* init test context */
   ctx_factory = "h265parse";
@@ -297,6 +1041,10 @@ main (int argc, char **argv)
   ctx_suite = "h265parse_to_bs_au";
   s = h265parse_suite ();
   nf += gst_check_run_suite (s, ctx_suite, __FILE__ "_to_bs_au.c");
+
+  ctx_suite = "h265parse_harnessed";
+  s = h265parse_harnessed_suite ();
+  nf += gst_check_run_suite (s, ctx_suite, __FILE__ "_harnessed.c");
 
   return nf;
 }
