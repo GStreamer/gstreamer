@@ -54,7 +54,7 @@ enum
   PROP_0,
   PROP_STREAMABLE,
   PROP_METADATACREATOR,
-  PROP_ENCODER
+  PROP_ENCODER,
 };
 
 #define DEFAULT_STREAMABLE FALSE
@@ -677,8 +677,10 @@ gst_flv_mux_create_new_pad (GstAggregator * agg,
   const gchar *name = NULL;
   gboolean video;
 
-  if (mux->state != GST_FLV_MUX_STATE_HEADER) {
-    GST_WARNING_OBJECT (mux, "Can't request pads after writing header");
+  if (mux->state != GST_FLV_MUX_STATE_HEADER && !mux->streamable) {
+    GST_ELEMENT_WARNING (mux, STREAM, MUX,
+        ("Requested a late stream in a non-streamable file"),
+        ("Stream added after file started and therefore won't be playable"));
     return NULL;
   }
 
