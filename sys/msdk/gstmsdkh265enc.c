@@ -80,6 +80,115 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 #define gst_msdkh265enc_parent_class parent_class
 G_DEFINE_TYPE (GstMsdkH265Enc, gst_msdkh265enc, GST_TYPE_MSDKENC);
 
+static void
+gst_msdkh265enc_insert_sei (GstMsdkH265Enc * thiz, GstVideoCodecFrame * frame,
+    GstMemory * sei_mem)
+{
+  GstBuffer *new_buffer;
+
+  if (!thiz->parser)
+    thiz->parser = gst_h265_parser_new ();
+
+  new_buffer = gst_h265_parser_insert_sei (thiz->parser,
+      frame->output_buffer, sei_mem);
+
+  if (!new_buffer) {
+    GST_WARNING_OBJECT (thiz, "Cannot insert SEI nal into AU buffer");
+    return;
+  }
+
+  gst_buffer_unref (frame->output_buffer);
+  frame->output_buffer = new_buffer;
+}
+
+static void
+gst_msdkh265enc_add_cc (GstMsdkH265Enc * thiz, GstVideoCodecFrame * frame)
+{
+  GstVideoCaptionMeta *cc_meta;
+  gpointer iter = NULL;
+  GstBuffer *in_buf = frame->input_buffer;
+  GstMemory *mem = NULL;
+
+  if (thiz->cc_sei_array)
+    g_array_set_size (thiz->cc_sei_array, 0);
+
+  while ((cc_meta =
+          (GstVideoCaptionMeta *) gst_buffer_iterate_meta_filtered (in_buf,
+              &iter, GST_VIDEO_CAPTION_META_API_TYPE))) {
+    GstH265SEIMessage sei;
+    GstH265RegisteredUserData *rud;
+    guint8 *data;
+
+    if (cc_meta->caption_type != GST_VIDEO_CAPTION_TYPE_CEA708_RAW)
+      continue;
+
+    memset (&sei, 0, sizeof (GstH265SEIMessage));
+    sei.payloadType = GST_H265_SEI_REGISTERED_USER_DATA;
+    rud = &sei.payload.registered_user_data;
+
+    rud->country_code = 181;
+    rud->size = cc_meta->size + 10;
+
+    data = g_malloc (rud->size);
+    memcpy (data + 9, cc_meta->data, cc_meta->size);
+
+    data[0] = 0;                /* 16-bits itu_t_t35_provider_code */
+    data[1] = 49;
+    data[2] = 'G';              /* 32-bits ATSC_user_identifier */
+    data[3] = 'A';
+    data[4] = '9';
+    data[5] = '4';
+    data[6] = 3;                /* 8-bits ATSC1_data_user_data_type_code */
+    /* 8-bits:
+     * 1 bit process_em_data_flag (0)
+     * 1 bit process_cc_data_flag (1)
+     * 1 bit additional_data_flag (0)
+     * 5-bits cc_count
+     */
+    data[7] = ((cc_meta->size / 3) & 0x1f) | 0x40;
+    data[8] = 255;              /* 8 bits em_data, unused */
+    data[cc_meta->size + 9] = 255;      /* 8 marker bits */
+
+    rud->data = data;
+
+    if (!thiz->cc_sei_array) {
+      thiz->cc_sei_array =
+          g_array_new (FALSE, FALSE, sizeof (GstH265SEIMessage));
+      g_array_set_clear_func (thiz->cc_sei_array,
+          (GDestroyNotify) gst_h265_sei_free);
+    }
+
+    g_array_append_val (thiz->cc_sei_array, sei);
+  }
+
+  if (!thiz->cc_sei_array || !thiz->cc_sei_array->len)
+    return;
+
+  /* layer_id and temporal_id will be updated by parser later */
+  mem = gst_h265_create_sei_memory (0, 1, 4, thiz->cc_sei_array);
+
+  if (!mem) {
+    GST_WARNING_OBJECT (thiz, "Cannot create SEI nal unit");
+    return;
+  }
+
+  GST_DEBUG_OBJECT (thiz,
+      "Inserting %d closed caption SEI message(s)", thiz->cc_sei_array->len);
+
+  gst_msdkh265enc_insert_sei (thiz, frame, mem);
+  gst_memory_unref (mem);
+}
+
+static GstFlowReturn
+gst_msdkh265enc_pre_push (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
+{
+  GstMsdkH265Enc *thiz = GST_MSDKH265ENC (encoder);
+
+  gst_msdkh265enc_add_cc (thiz, frame);
+
+  return GST_FLOW_OK;
+}
+
 static gboolean
 gst_msdkh265enc_set_format (GstMsdkEnc * encoder)
 {
@@ -240,6 +349,19 @@ gst_msdkh265enc_set_src_caps (GstMsdkEnc * encoder)
 }
 
 static void
+gst_msdkh265enc_finalize (GObject * object)
+{
+  GstMsdkH265Enc *thiz = GST_MSDKH265ENC (object);
+
+  if (thiz->parser)
+    gst_h264_nal_parser_free (thiz->parser);
+  if (thiz->cc_sei_array)
+    g_array_unref (thiz->cc_sei_array);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
 gst_msdkh265enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -361,14 +483,19 @@ gst_msdkh265enc_class_init (GstMsdkH265EncClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *element_class;
+  GstVideoEncoderClass *videoencoder_class;
   GstMsdkEncClass *encoder_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
   element_class = GST_ELEMENT_CLASS (klass);
+  videoencoder_class = GST_VIDEO_ENCODER_CLASS (klass);
   encoder_class = GST_MSDKENC_CLASS (klass);
 
+  gobject_class->finalize = gst_msdkh265enc_finalize;
   gobject_class->set_property = gst_msdkh265enc_set_property;
   gobject_class->get_property = gst_msdkh265enc_get_property;
+
+  videoencoder_class->pre_push = gst_msdkh265enc_pre_push;
 
   encoder_class->set_format = gst_msdkh265enc_set_format;
   encoder_class->configure = gst_msdkh265enc_configure;
