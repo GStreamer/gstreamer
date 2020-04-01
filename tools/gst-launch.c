@@ -1089,7 +1089,6 @@ main (int argc, char *argv[])
   }
 
   if (!savefile) {
-    GstState state, pending;
     GstStateChangeReturn ret;
     GstBus *bus;
 
@@ -1150,7 +1149,6 @@ main (int argc, char *argv[])
           res = caught_error;
           goto end;
         }
-        state = GST_STATE_PAUSED;
         /* fallthrough */
       case GST_STATE_CHANGE_SUCCESS:
         PRINT (_("Pipeline is PREROLLED ...\n"));
@@ -1230,21 +1228,9 @@ main (int argc, char *argv[])
           GST_TIME_ARGS (diff));
     }
 
-    PRINT (_("Setting pipeline to PAUSED ...\n"));
-    gst_element_set_state (pipeline, GST_STATE_PAUSED);
-    if (caught_error == ELR_NO_ERROR)
-      gst_element_get_state (pipeline, &state, &pending, GST_CLOCK_TIME_NONE);
-
-    /* iterate mainloop to process pending stuff */
-    while (g_main_context_iteration (NULL, FALSE));
-
     /* No need to see all those pad caps going to NULL etc., it's just noise */
     if (deep_notify_id != 0)
       g_signal_handler_disconnect (pipeline, deep_notify_id);
-
-    PRINT (_("Setting pipeline to READY ...\n"));
-    gst_element_set_state (pipeline, GST_STATE_READY);
-    gst_element_get_state (pipeline, &state, &pending, GST_CLOCK_TIME_NONE);
 
 #if 0
     if (check_index) {
