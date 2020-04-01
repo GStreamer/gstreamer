@@ -633,12 +633,9 @@ gst_video_encoder_setcaps (GstVideoEncoder * encoder, GstCaps * caps)
 {
   GstVideoEncoderClass *encoder_class;
   GstVideoCodecState *state;
-  gboolean ret;
+  gboolean ret = TRUE;
 
   encoder_class = GST_VIDEO_ENCODER_GET_CLASS (encoder);
-
-  /* subclass should do something here ... */
-  g_return_val_if_fail (encoder_class->set_format != NULL, FALSE);
 
   GST_DEBUG_OBJECT (encoder, "setcaps %" GST_PTR_FORMAT, caps);
 
@@ -669,7 +666,9 @@ gst_video_encoder_setcaps (GstVideoEncoder * encoder, GstCaps * caps)
   }
 
   /* and subclass should be ready to configure format at any time around */
-  ret = encoder_class->set_format (encoder, state);
+  if (encoder_class->set_format != NULL)
+    ret = encoder_class->set_format (encoder, state);
+
   if (ret) {
     if (encoder->priv->input_state)
       gst_video_codec_state_unref (encoder->priv->input_state);
