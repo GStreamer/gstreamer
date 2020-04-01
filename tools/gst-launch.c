@@ -1160,7 +1160,6 @@ main (int argc, char *argv[])
   loop = g_main_loop_new (NULL, FALSE);
 
   if (!savefile) {
-    GstState state, pending;
     GstStateChangeReturn ret;
     GstBus *bus;
 
@@ -1263,21 +1262,9 @@ main (int argc, char *argv[])
       }
     }
 
-    PRINT (_("Setting pipeline to PAUSED ...\n"));
-    gst_element_set_state (pipeline, GST_STATE_PAUSED);
-    if (last_launch_code == LEC_NO_ERROR)
-      gst_element_get_state (pipeline, &state, &pending, GST_CLOCK_TIME_NONE);
-
-    /* iterate mainloop to process pending stuff */
-    while (g_main_context_iteration (NULL, FALSE));
-
     /* No need to see all those pad caps going to NULL etc., it's just noise */
     if (deep_notify_id != 0)
       g_signal_handler_disconnect (pipeline, deep_notify_id);
-
-    PRINT (_("Setting pipeline to READY ...\n"));
-    gst_element_set_state (pipeline, GST_STATE_READY);
-    gst_element_get_state (pipeline, &state, &pending, GST_CLOCK_TIME_NONE);
 
 #if 0
     if (check_index) {
