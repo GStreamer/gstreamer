@@ -953,6 +953,14 @@ _init_supported_formats (GstGLContext * context, gboolean output,
     _append_value_string_list (supported_formats, "Y212_BE", NULL);
 #endif
   }
+
+  if (!context || gst_gl_format_is_supported (context, GST_GL_RGBA16)) {
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+    _append_value_string_list (supported_formats, "Y412_LE", NULL);
+#else
+    _append_value_string_list (supported_formats, "Y412_BE", NULL);
+#endif
+  }
 }
 
 /* copies the given caps */
@@ -1545,6 +1553,8 @@ _get_n_textures (GstVideoFormat v_format)
     case GST_VIDEO_FORMAT_Y210:
     case GST_VIDEO_FORMAT_Y212_LE:
     case GST_VIDEO_FORMAT_Y212_BE:
+    case GST_VIDEO_FORMAT_Y412_LE:
+    case GST_VIDEO_FORMAT_Y412_BE:
       return 1;
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_NV21:
@@ -1650,6 +1660,8 @@ _YUV_to_RGB (GstGLColorConvert * convert)
         info->shader_tex_names[0] = "tex";
         break;
       case GST_VIDEO_FORMAT_Y410:
+      case GST_VIDEO_FORMAT_Y412_LE:
+      case GST_VIDEO_FORMAT_Y412_BE:
         info->templ = &templ_AYUV_to_RGB;
         info->frag_body = g_strdup_printf (templ_AYUV_to_RGB_BODY, "yxz", 'w',
             pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3]);
@@ -1801,6 +1813,8 @@ _RGB_to_YUV (GstGLColorConvert * convert)
       info->out_n_textures = 1;
       break;
     case GST_VIDEO_FORMAT_Y410:
+    case GST_VIDEO_FORMAT_Y412_LE:
+    case GST_VIDEO_FORMAT_Y412_BE:
       alpha = _is_RGBx (in_format) ? "1.0" : "texel.a";
       info->templ = &templ_RGB_to_AYUV;
       info->frag_body = g_strdup_printf (templ_RGB_to_AYUV_BODY, pixel_order[0],
