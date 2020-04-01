@@ -228,8 +228,7 @@ gst_video_aggregator_pad_class_init (GstVideoAggregatorPadClass * klass)
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   /**
-   *
-   * GstVideoAggregator:max-last-buffer-repeat:
+   * GstVideoAggregatorPad::max-last-buffer-repeat:
    *
    * Repeat last buffer for time (in ns, -1 = until EOS).
    * The default behaviour is for the last buffer received on a pad to be
