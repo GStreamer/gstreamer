@@ -527,8 +527,11 @@ gst_rmdemux_perform_seek (GstRMDemux * rmdemux, GstEvent * event)
   GST_LOG_OBJECT (rmdemux, "Took streamlock");
 
   if (event) {
-    gst_segment_do_seek (&rmdemux->segment, rate, format, flags,
-        cur_type, cur, stop_type, stop, &update);
+    if (!gst_segment_do_seek (&rmdemux->segment, rate, format, flags,
+            cur_type, cur, stop_type, stop, &update)) {
+      ret = FALSE;
+      goto done;
+    }
   }
 
   GST_DEBUG_OBJECT (rmdemux, "segment positions set to %" GST_TIME_FORMAT "-%"
