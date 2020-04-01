@@ -32,11 +32,13 @@ struct _GstBufferMemoryMap
   GstMemory *mem;
   GstMapInfo map;
   guint index;
+  gsize total_size;
 
   /* public datas */
 
   /* data of the currently mapped memory */
   const guint8 *data;
+  guint offset;
 
   /* size of the currently mapped memory */
   gsize size;

@@ -45,6 +45,8 @@ gst_buffer_memory_map (GstBuffer * buffer, GstBufferMemoryMap * map)
   map->data = map->map.data;
   map->size = map->map.size;
   map->index = 0;
+  map->total_size = gst_buffer_get_size (buffer);
+  map->offset = 0;
 
   return TRUE;
 }
@@ -89,6 +91,8 @@ gst_buffer_memory_advance_bytes (GstBufferMemoryMap * map, gsize size)
   gsize offset = size;
 
   g_return_val_if_fail (map != NULL, FALSE);
+
+  map->offset += size;
 
   while (offset >= map->size) {
     offset -= map->size;
