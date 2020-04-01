@@ -43,7 +43,7 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkvp9dec_debug);
 #define GST_CAT_DEFAULT gst_msdkvp9dec_debug
 
-#define COMMON_FORMAT "{ NV12, P010_10LE, VUYA, Y410 }"
+#define COMMON_FORMAT "{ NV12, P010_10LE, VUYA, Y410, P012_LE, Y412_LE }"
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
