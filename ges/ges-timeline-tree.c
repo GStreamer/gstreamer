@@ -64,6 +64,8 @@ struct _TreeIterationData
   /* Elements overlaping on the start/end of @element */
   GESTimelineElement *overlaping_on_start;
   GESTimelineElement *overlaping_on_end;
+  GstClockTime overlap_start_final_time;
+  GstClockTime overlap_end_first_time;
 
   /* Timestamp after which elements will be rippled */
   GstClockTime ripple_time;
@@ -90,6 +92,8 @@ struct _TreeIterationData
    .movings = NULL,
    .overlaping_on_start = NULL,
    .overlaping_on_end = NULL,
+   .overlap_start_final_time = GST_CLOCK_TIME_NONE,
+   .overlap_end_first_time = GST_CLOCK_TIME_NONE,
    .ripple_time = GST_CLOCK_TIME_NONE,
    .snapping = NULL,
    .edge = GES_EDGE_NONE,
@@ -436,6 +440,7 @@ check_track_elements_overlaps_and_values (GNode * node,
   }
 
   if (moving_start < end && moving_start > start) {
+    /* moving_start is between the start and end of the node */
     GST_LOG ("Overlap start: %s<%p> [%" G_GINT64_FORMAT "-%" G_GINT64_FORMAT
         "] and %s<%p> [%" G_GINT64_FORMAT "-%" G_GINT64_FORMAT " (%"
         G_GINT64_FORMAT ")]", e->name, e, start, end, data->element->name,
@@ -445,9 +450,18 @@ check_track_elements_overlaps_and_values (GNode * node,
           data->overlaping_on_start->name, e->name);
       goto error;
     }
-
+    if (GST_CLOCK_TIME_IS_VALID (data->overlap_end_first_time) &&
+        end > data->overlap_end_first_time) {
+      GST_INFO ("%s overlaps %s at start and %s at end, but they already "
+          "overlap each other", data->element->name, e->name,
+          data->overlaping_on_end->name);
+      goto error;
+    }
+    /* record the time at which the overlapped ends */
+    data->overlap_start_final_time = end;
     data->overlaping_on_start = node->data;
-  } else if (moving_end > end && end > moving_start) {
+  } else if (moving_end < end && moving_end > start) {
+    /* moving_end is between the start and end of the node */
     GST_LOG ("Overlap end: %s<%p> [%" G_GINT64_FORMAT "-%" G_GINT64_FORMAT
         "] and %s<%p> [%" G_GINT64_FORMAT "-%" G_GINT64_FORMAT " (%"
         G_GINT64_FORMAT ")]", e->name, e, start, end, data->element->name,
@@ -458,6 +472,15 @@ check_track_elements_overlaps_and_values (GNode * node,
           data->overlaping_on_end->name, e->name);
       goto error;
     }
+    if (GST_CLOCK_TIME_IS_VALID (data->overlap_start_final_time) &&
+        start < data->overlap_start_final_time) {
+      GST_INFO ("%s overlaps %s at end and %s at start, but they already "
+          "overlap each other", data->element->name, e->name,
+          data->overlaping_on_start->name);
+      goto error;
+    }
+    /* record the time at which the overlapped starts */
+    data->overlap_end_first_time = start;
     data->overlaping_on_end = node->data;
   }
 

@@ -1188,6 +1188,84 @@ class TestInvalidOverlaps(common.GESSimpleTimelineTest):
         ])
 
 
+class TestConfigurationRules(common.GESSimpleTimelineTest):
+
+    def _try_add_clip(self, start, duration, layer=None):
+        if layer is None:
+            layer = self.layer
+        asset = GES.Asset.request(GES.TestClip, None)
+        # large inpoint to allow trims
+        return layer.add_asset (asset, start, 1000, duration,
+                GES.TrackType.UNKNOWN)
+
+    def test_full_overlap_add(self):
+        clip1 = self._try_add_clip(50, 50)
+        self.assertIsNotNone(clip1)
+        self.assertIsNone(self._try_add_clip(50, 50))
+        self.assertIsNone(self._try_add_clip(49, 51))
+        self.assertIsNone(self._try_add_clip(51, 49))
+
+    def test_triple_overlap_add(self):
+        clip1 = self._try_add_clip(0, 50)
+        self.assertIsNotNone(clip1)
+        clip2 = self._try_add_clip(40, 50)
+        self.assertIsNotNone(clip2)
+        self.assertIsNone(self._try_add_clip(40, 10))
+        self.assertIsNone(self._try_add_clip(30, 30))
+        self.assertIsNone(self._try_add_clip(1, 88))
+
+    def test_full_overlap_move(self):
+        clip1 = self._try_add_clip(0, 50)
+        self.assertIsNotNone(clip1)
+        clip2 = self._try_add_clip(50, 50)
+        self.assertIsNotNone(clip2)
+        self.assertFalse(clip2.set_start(0))
+
+    def test_triple_overlap_move(self):
+        clip1 = self._try_add_clip(0, 50)
+        self.assertIsNotNone(clip1)
+        clip2 = self._try_add_clip(40, 50)
+        self.assertIsNotNone(clip2)
+        clip3 = self._try_add_clip(100, 60)
+        self.assertIsNotNone(clip3)
+        self.assertFalse(clip3.set_start(30))
+
+    def test_full_overlap_move_into_layer(self):
+        clip1 = self._try_add_clip(0, 50)
+        self.assertIsNotNone(clip1)
+        layer2 = self.timeline.append_layer()
+        clip2 = self._try_add_clip(0, 50, layer2)
+        self.assertIsNotNone(clip2)
+        self.assertFalse(clip2.move_to_layer(self.layer))
+
+    def test_triple_overlap_move_into_layer(self):
+        clip1 = self._try_add_clip(0, 50)
+        self.assertIsNotNone(clip1)
+        clip2 = self._try_add_clip(40, 50)
+        self.assertIsNotNone(clip2)
+        layer2 = self.timeline.append_layer()
+        clip3 = self._try_add_clip(30, 30, layer2)
+        self.assertIsNotNone(clip3)
+        self.assertFalse(clip3.move_to_layer(self.layer))
+
+    def test_full_overlap_trim(self):
+        clip1 = self._try_add_clip(0, 50)
+        self.assertIsNotNone(clip1)
+        clip2 = self._try_add_clip(50, 50)
+        self.assertIsNotNone(clip2)
+        self.assertFalse(clip2.trim(0))
+        self.assertFalse(clip1.set_duration(100))
+
+    def test_triple_overlap_trim(self):
+        clip1 = self._try_add_clip(0, 20)
+        self.assertIsNotNone(clip1)
+        clip2 = self._try_add_clip(10, 30)
+        self.assertIsNotNone(clip2)
+        clip3 = self._try_add_clip(30, 20)
+        self.assertIsNotNone(clip3)
+        self.assertFalse(clip3.trim(19))
+        self.assertFalse(clip1.set_duration(31))
+
 class TestSnapping(common.GESSimpleTimelineTest):
 
     def test_snapping(self):
