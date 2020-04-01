@@ -1393,11 +1393,11 @@ unprotect:
       /* success! */
       break;
     case srtp_err_status_replay_fail:
-      GST_INFO_OBJECT (filter,
+      GST_DEBUG_OBJECT (filter,
           "Dropping replayed packet, probably retransmission");
       goto err;
     case srtp_err_status_replay_old:
-      GST_INFO_OBJECT (filter,
+      GST_DEBUG_OBJECT (filter,
           "Dropping replayed old packet, probably retransmission");
       goto err;
     case srtp_err_status_key_expired:{
