@@ -71,6 +71,7 @@ good_tests = [
   [ 'elements/rtpcollision' ],
   [ 'elements/rtpfunnel' ],
   [ 'elements/rtpjitterbuffer' ],
+  [ 'elements/rtpjpeg' ],
 
   [ 'elements/rtptimerqueue', false, [gstrtp_dep],
       ['../../gst/rtpmanager/rtptimerqueue.c']],

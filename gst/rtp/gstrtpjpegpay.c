@@ -43,6 +43,7 @@
 
 #include "gstrtpjpegpay.h"
 #include "gstrtputils.h"
+#include "gstbuffermemory.h"
 
 static GstStaticPadTemplate gst_rtp_jpeg_pay_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
@@ -383,45 +384,76 @@ invalid_framerate:
   }
 }
 
+/*
+ * get uint16 value from current position in mapped memory.
+ * the memory offset will be increased with 2.
+ */
 static guint
-gst_rtp_jpeg_pay_header_size (const guint8 * data, guint offset)
+parse_mem_inc_offset_guint16 (GstBufferMemoryMap * memory)
 {
-  return data[offset] << 8 | data[offset + 1];
+  guint data;
+
+  g_return_val_if_fail (memory->total_size > (memory->offset + 1), 0);
+
+  data = ((guint) * memory->data) << 8;
+  gst_buffer_memory_advance_bytes (memory, 1);
+  data = data | (*memory->data);
+  gst_buffer_memory_advance_bytes (memory, 1);
+
+  return data;
 }
 
+/*
+ * get uint8 value from current position in mapped memory.
+ * the memory offset will be increased with 1.
+ */
 static guint
-gst_rtp_jpeg_pay_read_quant_table (const guint8 * data, guint size,
-    guint offset, RtpQuantTable tables[])
+parse_mem_inc_offset_guint8 (GstBufferMemoryMap * memory)
+{
+  guint data;
+
+  g_return_val_if_fail (memory->total_size > memory->offset, 0);
+
+  data = (*memory->data);
+  gst_buffer_memory_advance_bytes (memory, 1);
+
+  return data;
+}
+
+static void
+gst_rtp_jpeg_pay_read_quant_table (GstBufferMemoryMap * memory,
+    RtpQuantTable tables[])
 {
   guint quant_size, tab_size;
   guint8 prec;
   guint8 id;
 
-  if (offset + 2 > size)
+  if (memory->total_size <= (memory->offset + 1))
     goto too_small;
 
-  quant_size = gst_rtp_jpeg_pay_header_size (data, offset);
+  quant_size = parse_mem_inc_offset_guint16 (memory);
   if (quant_size < 2)
     goto small_quant_size;
 
   /* clamp to available data */
-  if (offset + quant_size > size)
-    quant_size = size - offset;
+  if (memory->offset + quant_size > memory->total_size)
+    quant_size = memory->total_size - memory->offset;
 
-  offset += 2;
   quant_size -= 2;
 
   while (quant_size > 0) {
+    guint8 data;
     /* not enough to read the id */
-    if (offset + 1 > size)
+    if (memory->offset + 1 > memory->total_size)
       break;
 
-    id = data[offset] & 0x0f;
+    data = parse_mem_inc_offset_guint8 (memory);
+    id = data & 0x0f;
     if (id == 15)
       /* invalid id received - corrupt data */
       goto invalid_id;
 
-    prec = (data[offset] & 0xf0) >> 4;
+    prec = (data & 0xf0) >> 4;
     if (prec)
       tab_size = 128;
     else
@@ -434,25 +466,26 @@ gst_rtp_jpeg_pay_read_quant_table (const guint8 * data, guint size,
     GST_LOG ("read quant table %d, tab_size %d, prec %02x", id, tab_size, prec);
 
     tables[id].size = tab_size;
-    tables[id].data = &data[offset + 1];
+    tables[id].data = memory->data;
 
-    tab_size += 1;
-    quant_size -= tab_size;
-    offset += tab_size;
+    quant_size -= (tab_size + 1);
+    if (!gst_buffer_memory_advance_bytes (memory, tab_size)) {
+      goto too_small;
+    }
   }
 done:
-  return offset + quant_size;
+  return;
 
   /* ERRORS */
 too_small:
   {
     GST_WARNING ("not enough data");
-    return size;
+    return;
   }
 small_quant_size:
   {
     GST_WARNING ("quant_size too small (%u < 2)", quant_size);
-    return size;
+    return;
   }
 invalid_id:
   {
@@ -468,38 +501,31 @@ no_table:
 }
 
 static gboolean
-gst_rtp_jpeg_pay_read_sof (GstRtpJPEGPay * pay, const guint8 * data,
-    guint size, guint * offset, CompInfo info[], RtpQuantTable tables[],
-    gulong tables_elements)
+gst_rtp_jpeg_pay_read_sof (GstRtpJPEGPay * pay, GstBufferMemoryMap * memory,
+    CompInfo info[], RtpQuantTable tables[], gulong tables_elements)
 {
   guint sof_size, off;
   guint width, height, infolen;
   CompInfo elem;
   gint i, j;
 
-  off = *offset;
+  off = memory->offset;
 
   /* we need at least 17 bytes for the SOF */
-  if (off + 17 > size)
+  if (off + 17 > memory->total_size)
     goto wrong_size;
 
-  sof_size = gst_rtp_jpeg_pay_header_size (data, off);
+  sof_size = parse_mem_inc_offset_guint16 (memory);
   if (sof_size < 17)
     goto wrong_length;
 
-  *offset += sof_size;
-
-  /* skip size */
-  off += 2;
-
   /* precision should be 8 */
-  if (data[off++] != 8)
+  if (parse_mem_inc_offset_guint8 (memory) != 8)
     goto bad_precision;
 
   /* read dimensions */
-  height = data[off] << 8 | data[off + 1];
-  width = data[off + 2] << 8 | data[off + 3];
-  off += 4;
+  height = parse_mem_inc_offset_guint16 (memory);
+  width = parse_mem_inc_offset_guint16 (memory);
 
   GST_LOG_OBJECT (pay, "got dimensions %ux%u", height, width);
 
@@ -525,14 +551,14 @@ gst_rtp_jpeg_pay_read_sof (GstRtpJPEGPay * pay, const guint8 * data,
   }
 
   /* we only support 3 components */
-  if (data[off++] != 3)
+  if (parse_mem_inc_offset_guint8 (memory) != 3)
     goto bad_components;
 
   infolen = 0;
   for (i = 0; i < 3; i++) {
-    elem.id = data[off++];
-    elem.samp = data[off++];
-    elem.qt = data[off++];
+    elem.id = parse_mem_inc_offset_guint8 (memory);
+    elem.samp = parse_mem_inc_offset_guint8 (memory);
+    elem.qt = parse_mem_inc_offset_guint8 (memory);
     GST_LOG_OBJECT (pay, "got comp %d, samp %02x, qt %d", elem.id, elem.samp,
         elem.qt);
     /* insertion sort from the last element to the first */
@@ -565,7 +591,8 @@ gst_rtp_jpeg_pay_read_sof (GstRtpJPEGPay * pay, const guint8 * data,
 wrong_size:
   {
     GST_ELEMENT_WARNING (pay, STREAM, FORMAT,
-        ("Wrong size %u (needed %u).", size, off + 17), (NULL));
+        ("Wrong size %u (needed %u).", (guint) memory->total_size, off + 17),
+        (NULL));
     return FALSE;
   }
 wrong_length:
@@ -600,57 +627,81 @@ invalid_comp:
 }
 
 static gboolean
-gst_rtp_jpeg_pay_read_dri (GstRtpJPEGPay * pay, const guint8 * data,
-    guint size, guint * offset, RtpRestartMarkerHeader * dri)
+gst_rtp_jpeg_pay_read_dri (GstRtpJPEGPay * pay, GstBufferMemoryMap * memory,
+    RtpRestartMarkerHeader * dri)
 {
-  guint dri_size, off;
-
-  off = *offset;
+  guint dri_size, restart_interval;
 
   /* we need at least 4 bytes for the DRI */
-  if (off + 4 > size)
+  if (memory->offset + 4 > memory->total_size)
     goto wrong_size;
 
-  dri_size = gst_rtp_jpeg_pay_header_size (data, off);
+  dri_size = parse_mem_inc_offset_guint16 (memory);
   if (dri_size < 4)
     goto wrong_length;
 
-  *offset += dri_size;
-  off += 2;
-
-  dri->restart_interval = g_htons ((data[off] << 8) | (data[off + 1]));
+  restart_interval = parse_mem_inc_offset_guint16 (memory);
+  dri->restart_interval = g_htons (restart_interval);
   dri->restart_count = g_htons (0xFFFF);
+  if (!gst_buffer_memory_advance_bytes (memory, dri_size - 4)) {
+    goto wrong_size;
+  }
 
   return dri->restart_interval > 0;
 
 wrong_size:
   {
     GST_WARNING ("not enough data for DRI");
-    *offset = size;
     return FALSE;
   }
 wrong_length:
   {
     GST_WARNING ("DRI size too small (%u)", dri_size);
-    *offset += dri_size;
+    /* offset got incremented by two when dri_size was parsed. */
+    if (dri_size > 2)
+      gst_buffer_memory_advance_bytes (memory, dri_size - 2);
     return FALSE;
   }
 }
 
-static RtpJpegMarker
-gst_rtp_jpeg_pay_scan_marker (const guint8 * data, guint size, guint * offset)
+static void
+gst_rtp_jpeg_pay_skipping_marker (GstBufferMemoryMap * memory)
 {
-  while ((data[(*offset)++] != JPEG_MARKER) && ((*offset) < size));
+  guint skip;
 
-  if (G_UNLIKELY ((*offset) >= size)) {
+  if (G_UNLIKELY (((memory->offset + 1) >= memory->total_size))) {
+    goto wrong_size;
+  }
+  skip = parse_mem_inc_offset_guint16 (memory);
+
+  if (G_UNLIKELY (((skip - 2 + memory->offset) > memory->total_size))) {
+    goto wrong_size;
+  }
+  if (skip > 2) {
+    gst_buffer_memory_advance_bytes (memory, skip - 2);
+  }
+  return;
+
+wrong_size:
+  {
+    GST_WARNING ("not enough data");
+  }
+}
+
+static RtpJpegMarker
+gst_rtp_jpeg_pay_scan_marker (GstBufferMemoryMap * memory)
+{
+  guint8 marker = parse_mem_inc_offset_guint8 (memory);
+
+  while (marker != JPEG_MARKER && ((memory->offset) < memory->total_size)) {
+    marker = parse_mem_inc_offset_guint8 (memory);
+  }
+
+  if (G_UNLIKELY ((memory->offset) >= memory->total_size)) {
     GST_LOG ("found EOI marker");
     return JPEG_MARKER_EOI;
   } else {
-    guint8 marker;
-
-    marker = data[*offset];
-    GST_LOG ("found 0x%02x marker at offset %u", marker, *offset);
-    (*offset)++;
+    marker = parse_mem_inc_offset_guint8 (memory);
     return marker;
   }
 }
@@ -670,9 +721,6 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
   RtpQuantTable tables[15] = { {0, NULL}, };
   CompInfo info[3] = { {0,}, };
   guint quant_data_size;
-  GstMapInfo map;
-  guint8 *data;
-  gsize size;
   guint mtu, max_payload_size;
   guint bytes_left;
   guint jpeg_header_size = 0;
@@ -682,19 +730,19 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
   gint i;
   GstBufferList *list = NULL;
   gboolean discont;
+  GstBufferMemoryMap memory;
 
   pay = GST_RTP_JPEG_PAY (basepayload);
   mtu = GST_RTP_BASE_PAYLOAD_MTU (pay);
 
-  gst_buffer_map (buffer, &map, GST_MAP_READ);
-  data = map.data;
-  size = map.size;
+  gst_buffer_memory_map (buffer, &memory);
+
   timestamp = GST_BUFFER_PTS (buffer);
-  offset = 0;
   discont = GST_BUFFER_IS_DISCONT (buffer);
 
   GST_LOG_OBJECT (pay, "got buffer size %" G_GSIZE_FORMAT
-      " , timestamp %" GST_TIME_FORMAT, size, GST_TIME_ARGS (timestamp));
+      " , timestamp %" GST_TIME_FORMAT, memory.total_size,
+      GST_TIME_ARGS (timestamp));
 
   /* parse the jpeg header for 'start of scan' and read quant tables if needed */
   sos_found = FALSE;
@@ -702,33 +750,35 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
   sof_found = FALSE;
   dri_found = FALSE;
 
-  while (!sos_found && (offset < size)) {
+  while (!sos_found && (memory.offset < memory.total_size)) {
     gint marker;
 
-    GST_LOG_OBJECT (pay, "checking from offset %u", offset);
-    switch ((marker = gst_rtp_jpeg_pay_scan_marker (data, size, &offset))) {
+    GST_LOG_OBJECT (pay, "checking from offset %u", memory.offset);
+    marker = gst_rtp_jpeg_pay_scan_marker (&memory);
+    switch (marker) {
       case JPEG_MARKER_JFIF:
       case JPEG_MARKER_CMT:
       case JPEG_MARKER_DHT:
       case JPEG_MARKER_H264:
         GST_LOG_OBJECT (pay, "skipping marker");
-        offset += gst_rtp_jpeg_pay_header_size (data, offset);
+        gst_rtp_jpeg_pay_skipping_marker (&memory);
         break;
       case JPEG_MARKER_SOF:
-        if (!gst_rtp_jpeg_pay_read_sof (pay, data, size, &offset, info, tables,
+        if (!gst_rtp_jpeg_pay_read_sof (pay, &memory, info, tables,
                 G_N_ELEMENTS (tables)))
           goto invalid_format;
         sof_found = TRUE;
         break;
       case JPEG_MARKER_DQT:
         GST_LOG ("DQT found");
-        offset = gst_rtp_jpeg_pay_read_quant_table (data, size, offset, tables);
+        gst_rtp_jpeg_pay_read_quant_table (&memory, tables);
         dqt_found = TRUE;
         break;
       case JPEG_MARKER_SOS:
         sos_found = TRUE;
         GST_LOG_OBJECT (pay, "SOS found");
-        jpeg_header_size = offset + gst_rtp_jpeg_pay_header_size (data, offset);
+        jpeg_header_size =
+            memory.offset + parse_mem_inc_offset_guint16 (&memory);
         break;
       case JPEG_MARKER_EOI:
         GST_WARNING_OBJECT (pay, "EOI reached before SOS!");
@@ -738,8 +788,7 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
         break;
       case JPEG_MARKER_DRI:
         GST_LOG_OBJECT (pay, "DRI found");
-        if (gst_rtp_jpeg_pay_read_dri (pay, data, size, &offset,
-                &restart_marker_header))
+        if (gst_rtp_jpeg_pay_read_dri (pay, &memory, &restart_marker_header))
           dri_found = TRUE;
         break;
       default:
@@ -747,8 +796,9 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
             (marker >= JPEG_MARKER_JPG0 && marker <= JPEG_MARKER_JPG13) ||
             (marker >= JPEG_MARKER_APP0 && marker <= JPEG_MARKER_APP15)) {
           GST_LOG_OBJECT (pay, "skipping marker");
-          offset += gst_rtp_jpeg_pay_header_size (data, offset);
+          gst_rtp_jpeg_pay_skipping_marker (&memory);
         } else {
+          /* no need to do anything, gst_rtp_jpeg_pay_scan_marker will go on */
           GST_FIXME_OBJECT (pay, "unhandled marker 0x%02x", marker);
         }
         break;
@@ -765,8 +815,6 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
   GST_LOG_OBJECT (pay, "header size %u", jpeg_header_size);
 
-  size -= jpeg_header_size;
-  data += jpeg_header_size;
   offset = 0;
 
   if (dri_found)
@@ -778,7 +826,6 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
   jpeg_header.q = pay->quant;
   jpeg_header.width = pay->width;
   jpeg_header.height = pay->height;
-
   /* collect the quant headers sizes */
   quant_header.mbz = 0;
   quant_header.precision = 0;
@@ -809,7 +856,9 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
   GST_LOG_OBJECT (pay, "quant_data size %u", quant_data_size);
 
-  bytes_left = sizeof (jpeg_header) + quant_data_size + size;
+  bytes_left =
+      sizeof (jpeg_header) + quant_data_size + memory.total_size -
+      jpeg_header_size;
 
   if (dri_found)
     bytes_left += sizeof (restart_marker_header);
@@ -912,14 +961,12 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
     bytes_left -= payload_size;
     offset += payload_size;
-    data += payload_size;
   }
   while (!frame_done);
-
   /* push the whole buffer list at once */
   ret = gst_rtp_base_payload_push_list (basepayload, list);
 
-  gst_buffer_unmap (buffer, &map);
+  gst_buffer_memory_unmap (&memory);
   gst_buffer_unref (buffer);
 
   return ret;
@@ -928,28 +975,28 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
 unsupported_jpeg:
   {
     GST_ELEMENT_WARNING (pay, STREAM, FORMAT, ("Unsupported JPEG"), (NULL));
-    gst_buffer_unmap (buffer, &map);
+    gst_buffer_memory_unmap (&memory);
     gst_buffer_unref (buffer);
     return GST_FLOW_OK;
   }
 no_dimension:
   {
     GST_ELEMENT_WARNING (pay, STREAM, FORMAT, ("No size given"), (NULL));
-    gst_buffer_unmap (buffer, &map);
+    gst_buffer_memory_unmap (&memory);
     gst_buffer_unref (buffer);
     return GST_FLOW_OK;
   }
 invalid_format:
   {
     /* error was posted */
-    gst_buffer_unmap (buffer, &map);
+    gst_buffer_memory_unmap (&memory);
     gst_buffer_unref (buffer);
     return GST_FLOW_OK;
   }
 invalid_quant:
   {
     GST_ELEMENT_WARNING (pay, STREAM, FORMAT, ("Invalid quant tables"), (NULL));
-    gst_buffer_unmap (buffer, &map);
+    gst_buffer_memory_unmap (&memory);
     gst_buffer_unref (buffer);
     return GST_FLOW_OK;
   }
