@@ -895,6 +895,12 @@ export_srtp_keys (GstDtlsConnection * self)
 
   profile = SSL_get_selected_srtp_profile (self->priv->ssl);
 
+  if (!profile) {
+    GST_WARNING_OBJECT (self,
+        "no srtp capabilities negotiated during handshake");
+    return;
+  }
+
   GST_INFO_OBJECT (self, "keys received, profile is %s", profile->name);
 
   switch (profile->id) {
@@ -908,7 +914,7 @@ export_srtp_keys (GstDtlsConnection * self)
       break;
     default:
       GST_WARNING_OBJECT (self, "invalid crypto suite set by handshake");
-      goto beach;
+      return;
   }
 
   client_key.key = exported_keys.client_key;
@@ -928,7 +934,6 @@ export_srtp_keys (GstDtlsConnection * self)
         auth);
   }
 
-beach:
   self->priv->keys_exported = TRUE;
 }
 
