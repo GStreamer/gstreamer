@@ -409,7 +409,7 @@ enum
 #define ARG_SUBME_DEFAULT              1
 #define ARG_ANALYSE_DEFAULT            0
 #define ARG_DCT8x8_DEFAULT             FALSE
-#define ARG_REF_DEFAULT                1
+#define ARG_REF_DEFAULT                3
 #define ARG_BFRAMES_DEFAULT            0
 #define ARG_B_ADAPT_DEFAULT            TRUE
 #define ARG_B_PYRAMID_DEFAULT          FALSE
@@ -1073,7 +1073,7 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
   g_object_class_install_property (gobject_class, ARG_REF,
       g_param_spec_uint ("ref", "Reference Frames",
           "Number of reference frames",
-          1, 12, ARG_REF_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          1, 16, ARG_REF_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":ref=%d", ARG_REF_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_BFRAMES,
       g_param_spec_uint ("bframes", "B-Frames",
