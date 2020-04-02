@@ -4878,6 +4878,10 @@ probed_data:
 
   GST_PAD_STREAM_UNLOCK (pad);
 
+  /* If the caller provided a buffer it must be filled by the getrange
+   * function instead of it returning a new buffer */
+  g_return_val_if_fail (!*buffer || res_buf == *buffer, GST_FLOW_ERROR);
+
   *buffer = res_buf;
 
   return ret;
