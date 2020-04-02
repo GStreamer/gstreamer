@@ -127,6 +127,7 @@ _free_mapping (ChildMapping * mapping)
     ges_timeline_element_set_parent (child, NULL);
     gst_object_unref (child);
   }
+
   g_slice_free (ChildMapping, mapping);
 }
 
@@ -344,14 +345,11 @@ _deep_copy (GESTimelineElement * element, GESTimelineElement * copy)
   GESContainer *self = GES_CONTAINER (element), *ccopy = GES_CONTAINER (copy);
 
   for (tmp = GES_CONTAINER_CHILDREN (element); tmp; tmp = tmp->next) {
-    ChildMapping *map;
-
-    map =
-        g_slice_dup (ChildMapping, g_hash_table_lookup (self->priv->mappings,
-            tmp->data));
+    ChildMapping *map, *orig_map;
+    orig_map = g_hash_table_lookup (self->priv->mappings, tmp->data);
+    map = g_slice_new0 (ChildMapping);
     map->child = ges_timeline_element_copy (tmp->data, TRUE);
-    map->start_notifyid = 0;
-    map->duration_notifyid = 0;
+    map->start_offset = orig_map->start_offset;
 
     ccopy->priv->copied_children = g_list_prepend (ccopy->priv->copied_children,
         map);
@@ -384,8 +382,7 @@ _paste (GESTimelineElement * element, GESTimelineElement * ref,
       return NULL;
     }
 
-    ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (ncontainer),
-        GES_TIMELINE_ELEMENT_TIMELINE (ref));
+    /* for GESGroups, this may register the group on the timeline */
     ges_container_add (ncontainer, nchild);
   }
 
