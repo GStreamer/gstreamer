@@ -47,17 +47,14 @@ os.environ['GIT_TERMINAL_PROMPT'] = '0'
 def git(*args, repository_path='.'):
     return subprocess.check_output(["git"] + list(args), cwd=repository_path).decode()
 
-def get_cerbero_last_build_info (namespace : str, branch : str):
-    base_url = f"https://gitlab.freedesktop.org/{namespace}/cerbero/-/jobs"
-    url = f"{base_url}/artifacts/{branch}/raw/cerbero-build/cerbero-deps.log"
+def get_cerbero_last_build_info (branch : str):
+    # Take the log from slowest build to reduce cache misses, the logs are
+    # uploaded as soon as they are ready.
+    url = "https://artifacts.gstreamer-foundation.net/cerbero-deps/{branch}/cross-ios/universal/cerbero-deps.log"
     deps = [{'commit': None}]
 
     try:
-        # The logs are only available if all jobs have passed so it does not
-        # matter which distro/arch is picked.
-        values = { 'job': "cerbero deps fedora x86_64" }
-        data = urllib.parse.urlencode(values)
-        req = urllib.request.Request(f"{url}?{data}")
+        req = urllib.request.Request(url)
         resp = urllib.request.urlopen(req);
         deps = json.loads(resp.read())
     except urllib.error.URLError:
@@ -76,7 +73,7 @@ def get_branch_info(module: str, namespace: str, branch: str) -> Tuple[str, str]
 
     # Special case cerbero to avoid cache misses
     if module == 'cerbero':
-        sha = get_cerbero_last_build_info(namespace, branch)
+        sha = get_cerbero_last_build_info(branch)
         if sha is not None:
             return sha, sha
 
