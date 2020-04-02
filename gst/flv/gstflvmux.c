@@ -131,6 +131,7 @@ static GstFlowReturn gst_flv_mux_rewrite_header (GstFlvMux * mux);
 static gboolean gst_flv_mux_are_all_pads_eos (GstFlvMux * mux);
 static GstFlowReturn gst_flv_mux_update_src_caps (GstAggregator * aggregator,
     GstCaps * caps, GstCaps ** ret);
+static guint64 gst_flv_mux_query_upstream_duration (GstFlvMux * mux);
 
 static GstFlowReturn
 gst_flv_mux_pad_flush (GstAggregatorPad * pad, GstAggregator * aggregator)
@@ -946,20 +947,7 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
   }
 
   if (!mux->streamable && mux->duration == GST_CLOCK_TIME_NONE) {
-    GList *l;
-    guint64 dur;
-
-    for (l = GST_ELEMENT_CAST (mux)->sinkpads; l; l = l->next) {
-      GstFlvMuxPad *pad = GST_FLV_MUX_PAD (l->data);
-
-      if (gst_pad_peer_query_duration (GST_PAD (pad), GST_FORMAT_TIME,
-              (gint64 *) & dur) && dur != GST_CLOCK_TIME_NONE) {
-        if (mux->duration == GST_CLOCK_TIME_NONE)
-          mux->duration = dur;
-        else
-          mux->duration = MAX (dur, mux->duration);
-      }
-    }
+    mux->duration = gst_flv_mux_query_upstream_duration (mux);
   }
 
   if (!mux->streamable && mux->duration != GST_CLOCK_TIME_NONE) {
@@ -1386,6 +1374,7 @@ gst_flv_mux_prepare_src_caps (GstFlvMux * mux, GstBuffer ** header_buf,
   video_codec_data = NULL;
   audio_codec_data = NULL;
 
+  GST_OBJECT_LOCK (mux);
   for (l = GST_ELEMENT_CAST (mux)->sinkpads; l != NULL; l = l->next) {
     GstFlvMuxPad *pad = l->data;
 
@@ -1406,6 +1395,7 @@ gst_flv_mux_prepare_src_caps (GstFlvMux * mux, GstBuffer ** header_buf,
             gst_flv_mux_codec_data_buffer_to_tag (mux, pad->codec_data, pad);
     }
   }
+  GST_OBJECT_UNLOCK (mux);
 
   /* mark buffers that will go in the streamheader */
   GST_BUFFER_FLAG_SET (header, GST_BUFFER_FLAG_HEADER);
@@ -1628,6 +1618,7 @@ gst_flv_mux_determine_duration (GstFlvMux * mux)
   GST_DEBUG_OBJECT (mux, "trying to determine the duration "
       "from pad timestamps");
 
+  GST_OBJECT_LOCK (mux);
   for (l = GST_ELEMENT_CAST (mux)->sinkpads; l != NULL; l = l->next) {
     GstFlvMuxPad *pad = GST_FLV_MUX_PAD (l->data);
 
@@ -1638,21 +1629,60 @@ gst_flv_mux_determine_duration (GstFlvMux * mux)
         duration = MAX (duration, pad->last_timestamp);
     }
   }
+  GST_OBJECT_UNLOCK (mux);
 
   return duration;
 }
+
+struct DurationData
+{
+  GstClockTime duration;
+};
+
+static gboolean
+duration_query_cb (GstElement * element, GstPad * pad,
+    struct DurationData *data)
+{
+  guint64 dur;
+
+  if (gst_pad_peer_query_duration (GST_PAD (pad), GST_FORMAT_TIME,
+          (gint64 *) & dur) && dur != GST_CLOCK_TIME_NONE) {
+    if (data->duration == GST_CLOCK_TIME_NONE)
+      data->duration = dur;
+    else
+      data->duration = MAX (dur, data->duration);
+  }
+
+  return TRUE;
+}
+
+static guint64
+gst_flv_mux_query_upstream_duration (GstFlvMux * mux)
+{
+  struct DurationData cb_data = { GST_CLOCK_TIME_NONE };
+
+  gst_element_foreach_sink_pad (GST_ELEMENT (mux),
+      (GstElementForeachPadFunc) (duration_query_cb), &cb_data);
+
+  return cb_data.duration;
+}
+
 
 static gboolean
 gst_flv_mux_are_all_pads_eos (GstFlvMux * mux)
 {
   GList *l;
 
+  GST_OBJECT_LOCK (mux);
   for (l = GST_ELEMENT_CAST (mux)->sinkpads; l; l = l->next) {
     GstFlvMuxPad *pad = GST_FLV_MUX_PAD (l->data);
 
-    if (!gst_aggregator_pad_is_eos (GST_AGGREGATOR_PAD (pad)))
+    if (!gst_aggregator_pad_is_eos (GST_AGGREGATOR_PAD (pad))) {
+      GST_OBJECT_UNLOCK (mux);
       return FALSE;
+    }
   }
+  GST_OBJECT_UNLOCK (mux);
   return TRUE;
 }
 
@@ -1807,35 +1837,62 @@ gst_flv_mux_rewrite_header (GstFlvMux * mux)
   return gst_flv_mux_push (mux, rewrite);
 }
 
+/* Returns NULL, or a reference to the pad with the
+ * buffer with lowest running time */
 static GstFlvMuxPad *
 gst_flv_mux_find_best_pad (GstAggregator * aggregator, GstClockTime * ts)
 {
-  GstAggregatorPad *apad;
-  GstFlvMuxPad *pad, *best = NULL;
-  GList *l;
+  GstFlvMuxPad *best = NULL;
   GstBuffer *buffer;
   GstClockTime best_ts = GST_CLOCK_TIME_NONE;
+  GstIterator *pads;
+  GValue padptr = { 0, };
+  gboolean done = FALSE;
 
-  for (l = GST_ELEMENT_CAST (aggregator)->sinkpads; l; l = l->next) {
-    apad = GST_AGGREGATOR_PAD (l->data);
-    pad = GST_FLV_MUX_PAD (l->data);
-    buffer = gst_aggregator_pad_peek_buffer (GST_AGGREGATOR_PAD (pad));
-    if (!buffer)
-      continue;
-    if (best_ts == GST_CLOCK_TIME_NONE) {
-      best = pad;
-      best_ts = gst_flv_mux_segment_to_running_time (&apad->segment,
-          GST_BUFFER_DTS_OR_PTS (buffer));
-    } else if (GST_BUFFER_DTS_OR_PTS (buffer) != GST_CLOCK_TIME_NONE) {
-      gint64 t = gst_flv_mux_segment_to_running_time (&apad->segment,
-          GST_BUFFER_DTS_OR_PTS (buffer));
-      if (t < best_ts) {
-        best = pad;
-        best_ts = t;
+  pads = gst_element_iterate_sink_pads (GST_ELEMENT (aggregator));
+
+  while (!done) {
+    switch (gst_iterator_next (pads, &padptr)) {
+      case GST_ITERATOR_OK:{
+
+        GstAggregatorPad *apad = g_value_get_object (&padptr);
+        buffer = gst_aggregator_pad_peek_buffer (apad);
+        if (!buffer)
+          continue;
+        if (best_ts == GST_CLOCK_TIME_NONE) {
+          gst_object_replace ((GstObject **) & best, GST_OBJECT (apad));
+          best_ts = gst_flv_mux_segment_to_running_time (&apad->segment,
+              GST_BUFFER_DTS_OR_PTS (buffer));
+        } else if (GST_BUFFER_DTS_OR_PTS (buffer) != GST_CLOCK_TIME_NONE) {
+          gint64 t = gst_flv_mux_segment_to_running_time (&apad->segment,
+              GST_BUFFER_DTS_OR_PTS (buffer));
+          if (t < best_ts) {
+            gst_object_replace ((GstObject **) & best, GST_OBJECT (apad));
+            best_ts = t;
+          }
+        }
+        gst_buffer_unref (buffer);
+        g_value_reset (&padptr);
+        break;
       }
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (pads);
+        /* Clear the best pad and start again. It might have disappeared */
+        gst_object_replace ((GstObject **) best, NULL);
+        best_ts = GST_CLOCK_TIME_NONE;
+        break;
+      case GST_ITERATOR_ERROR:
+        /* This can't happen if the parameters to gst_iterator_next() are valid */
+        g_assert_not_reached ();
+        break;
     }
-    gst_buffer_unref (buffer);
   }
+  g_value_unset (&padptr);
+  gst_iterator_free (pads);
+
   GST_DEBUG_OBJECT (aggregator,
       "Best pad found with %" GST_TIME_FORMAT ": %" GST_PTR_FORMAT,
       GST_TIME_ARGS (best_ts), best);
@@ -1919,11 +1976,14 @@ gst_flv_mux_aggregate (GstAggregator * aggregator, gboolean timeout)
       gst_buffer_unref (buffer);
       buffer = NULL;
     }
+    gst_object_unref (best);
     best = NULL;
   }
 
   if (best) {
-    return gst_flv_mux_write_buffer (mux, best, buffer);
+    GstFlowReturn ret = gst_flv_mux_write_buffer (mux, best, buffer);
+    gst_object_unref (best);
+    return ret;
   } else {
     if (gst_flv_mux_are_all_pads_eos (mux)) {
       gst_flv_mux_write_eos (mux);
