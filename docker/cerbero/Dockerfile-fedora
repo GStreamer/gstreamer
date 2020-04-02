@@ -13,7 +13,7 @@ RUN echo "fastestmirror=true" >>  /etc/dnf/dnf.conf && \
 RUN git config --global user.email "cerbero@gstreamer.freedesktop.org" && \
     git config --global user.name  "Cerbero Build System"
 
-RUN git clone -b ${DEFAULT_BRANCH} https://gitlab.freedesktop.org/gstreamer/cerbero.git && \
+RUN git clone -b ndk-21 https://gitlab.freedesktop.org/ystreet/cerbero.git && \
     mkdir $HOME/.cerbero && \
     echo "allow_parallel_build=True" > $HOME/.cerbero/cerbero.cbc && \
     echo "use_ccache=True" >> $HOME/.cerbero/cerbero.cbc && \
