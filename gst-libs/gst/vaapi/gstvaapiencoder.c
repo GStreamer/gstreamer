@@ -681,8 +681,9 @@ is_chroma_type_supported (GstVaapiEncoder * encoder)
   /* ERRORS */
 unsupported:
   {
-    GST_ERROR ("We only support YUV 4:2:0 and YUV 4:2:2 for encoding. "
-        "Please try to use vaapipostproc to convert the input format.");
+    GST_ERROR ("The encoding format %s is not supported, "
+        "Please try to use vaapipostproc to convert the input format.",
+        gst_video_format_to_string (fmt));
     return FALSE;
   }
 }
