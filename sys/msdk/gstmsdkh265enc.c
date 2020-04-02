@@ -354,7 +354,7 @@ gst_msdkh265enc_finalize (GObject * object)
   GstMsdkH265Enc *thiz = GST_MSDKH265ENC (object);
 
   if (thiz->parser)
-    gst_h264_nal_parser_free (thiz->parser);
+    gst_h265_parser_free (thiz->parser);
   if (thiz->cc_sei_array)
     g_array_unref (thiz->cc_sei_array);
 
