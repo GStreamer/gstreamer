@@ -41,6 +41,7 @@ static const struct map gst_vaapi_h265_profile_map[] = {
   { GST_VAAPI_PROFILE_H265_MAIN10,               "main-10"              },
   { GST_VAAPI_PROFILE_H265_MAIN_STILL_PICTURE,   "main-still-picture"   },
   { GST_VAAPI_PROFILE_H265_MAIN_444,             "main-444"             },
+  { GST_VAAPI_PROFILE_H265_MAIN_444_10,          "main-444-10"          },
   { 0, NULL }
 /* *INDENT-ON* */
 };
@@ -267,6 +268,8 @@ gst_vaapi_utils_h265_get_profile_idc (GstVaapiProfile profile)
     case GST_VAAPI_PROFILE_H265_MAIN_422_10:
       /* Fall through */
     case GST_VAAPI_PROFILE_H265_MAIN_444:
+      /* Fall through */
+    case GST_VAAPI_PROFILE_H265_MAIN_444_10:
       profile_idc = GST_H265_PROFILE_IDC_FORMAT_RANGE_EXTENSION;
       break;
     default:

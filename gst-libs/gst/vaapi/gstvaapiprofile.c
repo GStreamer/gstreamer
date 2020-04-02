@@ -339,6 +339,8 @@ gst_vaapi_profile_from_codec_data_h265 (GstBuffer * buffer)
       return GST_VAAPI_PROFILE_H265_MAIN_422_10;
     case 5:
       return GST_VAAPI_PROFILE_H265_MAIN_444;
+    case 6:
+      return GST_VAAPI_PROFILE_H265_MAIN_444_10;
   }
   return 0;
 }
