@@ -1028,6 +1028,10 @@ gst_msdkvpp_initialize (GstMsdkVPP * thiz)
     }
 
     MFXVideoVPP_Close (session);
+
+    memset (&thiz->param, 0, sizeof (thiz->param));
+    memset (&thiz->extra_params, 0, sizeof (thiz->extra_params));
+    thiz->num_extra_params = 0;
   }
 
   if (thiz->use_video_memory) {
