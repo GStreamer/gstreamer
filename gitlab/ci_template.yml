@@ -144,14 +144,16 @@ gst indent:
     paths:
       - 'gst-build/build/meson-logs/'
 
-build fedora x86_64:
+.build fedora x86_64:
   extends: '.build'
-  stage: 'build'
   image: $FEDORA_IMAGE
   variables:
     MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Domx=enabled -Dgst-omx:target=generic -Ddoc=enabled -Drs=disabled ${MESON_BUILDTYPE_ARGS} --werror"
   rules:
     - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-omx|gst-plugins-rs)$/'
+
+build fedora x86_64:
+  extends: '.build fedora x86_64'
   artifacts:
     expire_in: '5 days'
     when: always
@@ -161,7 +163,6 @@ build fedora x86_64:
 
 build nodebug fedora x86_64:
   extends: '.build'
-  stage: 'build'
   image: $FEDORA_IMAGE
   variables:
     MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Dgstreamer:gst_debug=false -Domx=enabled -Dgst-omx:target=generic -Drs=disabled ${MESON_BUILDTYPE_ARGS} --werror"
@@ -169,7 +170,7 @@ build nodebug fedora x86_64:
     - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-docs|gst-integration-testsuites|gst-omx|gst-plugins-rs)$/'
 
 build static fedora x86_64:
-  extends: 'build fedora x86_64'
+  extends: '.build fedora x86_64'
   variables:
     MESON_BUILDTYPE_ARGS: "--default-library=static -Dintrospection=disabled -Ddoc=disabled"
   rules:
@@ -183,7 +184,7 @@ build static nodebug fedora x86_64:
     - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-docs|gst-integration-testsuites|gst-omx|gst-plugins-rs)$/'
 
 build clang fedora x86_64:
-  extends: 'build fedora x86_64'
+  extends: '.build fedora x86_64'
   variables:
     CC: 'ccache clang'
     CXX: 'ccache clang++'
