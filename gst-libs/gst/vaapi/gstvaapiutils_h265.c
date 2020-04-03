@@ -42,6 +42,7 @@ static const struct map gst_vaapi_h265_profile_map[] = {
   { GST_VAAPI_PROFILE_H265_MAIN_STILL_PICTURE,   "main-still-picture"   },
   { GST_VAAPI_PROFILE_H265_MAIN_444,             "main-444"             },
   { GST_VAAPI_PROFILE_H265_MAIN_444_10,          "main-444-10"          },
+  { GST_VAAPI_PROFILE_H265_MAIN_422_10,          "main-422-10"          },
   { 0, NULL }
 /* *INDENT-ON* */
 };
@@ -445,6 +446,7 @@ gst_vaapi_utils_h265_get_chroma_format_idc (GstVaapiChromaType chroma_type)
       chroma_format_idc = 1;
       break;
     case GST_VAAPI_CHROMA_TYPE_YUV422:
+    case GST_VAAPI_CHROMA_TYPE_YUV422_10BPP:
       chroma_format_idc = 2;
       break;
     case GST_VAAPI_CHROMA_TYPE_YUV444:

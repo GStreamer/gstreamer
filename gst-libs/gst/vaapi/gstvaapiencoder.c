@@ -668,7 +668,8 @@ is_chroma_type_supported (GstVaapiEncoder * encoder)
       cip->chroma_type != GST_VAAPI_CHROMA_TYPE_YUV422 &&
       cip->chroma_type != GST_VAAPI_CHROMA_TYPE_YUV420_10BPP &&
       cip->chroma_type != GST_VAAPI_CHROMA_TYPE_YUV444 &&
-      cip->chroma_type != GST_VAAPI_CHROMA_TYPE_YUV444_10BPP)
+      cip->chroma_type != GST_VAAPI_CHROMA_TYPE_YUV444_10BPP &&
+      cip->chroma_type != GST_VAAPI_CHROMA_TYPE_YUV422_10BPP)
     goto unsupported;
 
   if (!get_config_attribute (encoder, VAConfigAttribRTFormat, &format))

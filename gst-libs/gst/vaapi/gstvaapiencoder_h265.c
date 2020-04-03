@@ -305,8 +305,8 @@ bs_write_profile_tier_level (GstBitWriter * bs,
   /* additional indications specified for general_profile_idc from 4~10 */
   if (seq_param->general_profile_idc == 4) {
     /* In A.3.5, Format range extensions profiles.
-       Just support main444 and main444-10 profile now, may add more profiles
-       when needed. */
+       Just support main444, main444-10 and main422-10 profile now, may add
+       more profiles when needed. */
     switch (profile) {
       case GST_VAAPI_PROFILE_H265_MAIN_444:
         /* max_12bit_constraint_flag */
@@ -337,6 +337,26 @@ bs_write_profile_tier_level (GstBitWriter * bs,
         WRITE_UINT32 (bs, 0, 1);
         /* max_422chroma_constraint_flag */
         WRITE_UINT32 (bs, 0, 1);
+        /* max_420chroma_constraint_flag */
+        WRITE_UINT32 (bs, 0, 1);
+        /* max_monochrome_constraint_flag */
+        WRITE_UINT32 (bs, 0, 1);
+        /* intra_constraint_flag */
+        WRITE_UINT32 (bs, 0, 1);
+        /* one_picture_only_constraint_flag */
+        WRITE_UINT32 (bs, 0, 1);
+        /* lower_bit_rate_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
+        break;
+      case GST_VAAPI_PROFILE_H265_MAIN_422_10:
+        /* max_12bit_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
+        /* max_10bit_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
+        /* max_8bit_constraint_flag */
+        WRITE_UINT32 (bs, 0, 1);
+        /* max_422chroma_constraint_flag */
+        WRITE_UINT32 (bs, 1, 1);
         /* max_420chroma_constraint_flag */
         WRITE_UINT32 (bs, 0, 1);
         /* max_monochrome_constraint_flag */
@@ -1110,6 +1130,8 @@ ensure_profile (GstVaapiEncoderH265 * encoder)
     profile = GST_VAAPI_PROFILE_H265_MAIN_444;
   else if (format == GST_VIDEO_FORMAT_Y410)
     profile = GST_VAAPI_PROFILE_H265_MAIN_444_10;
+  else if (format == GST_VIDEO_FORMAT_Y210 || format == GST_VIDEO_FORMAT_YUY2)
+    profile = GST_VAAPI_PROFILE_H265_MAIN_422_10;
 
   encoder->profile = profile;
   encoder->profile_idc = gst_vaapi_utils_h265_get_profile_idc (profile);

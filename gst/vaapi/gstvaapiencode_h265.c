@@ -55,7 +55,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_vaapi_h265_encode_debug);
 /* *INDENT-OFF* */
 static const char gst_vaapiencode_h265_src_caps_str[] =
   GST_CODEC_CAPS ", "
-  "profile = (string) { main, main-10, main-444, main-444-10 }";
+  "profile = (string) { main, main-10, main-444, main-444-10, main-422-10 }";
 /* *INDENT-ON* */
 
 /* *INDENT-OFF* */
