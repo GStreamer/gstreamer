@@ -122,7 +122,10 @@ struct _GstSplitMuxSink
   GstClockTime threshold_timecode;
   GstClockTime next_max_tc_time;
   GstClockTime alignment_threshold;
+  /* previously sent running time of force keyframe unit event */
   GstClockTime last_fku_time;
+  /* expected running time of next force keyframe unit event */
+  GstClockTime next_fku_time;
 
   gboolean reset_muxer;
 

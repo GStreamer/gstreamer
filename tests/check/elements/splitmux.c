@@ -27,6 +27,7 @@
 
 #include <gst/check/gstcheck.h>
 #include <gst/app/app.h>
+#include <gst/video/video.h>
 #include <stdlib.h>
 
 gchar *tmpdir = NULL;
@@ -930,6 +931,24 @@ GST_START_TEST (test_splitmuxsink_muxer_pad_map)
 
 GST_END_TEST;
 
+static GstPadProbeReturn
+count_upstrea_fku (GstPad * pad, GstPadProbeInfo * info,
+    guint * upstream_fku_count)
+{
+  GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CUSTOM_UPSTREAM:
+      if (gst_video_event_is_force_key_unit (event))
+        *upstream_fku_count += 1;
+      break;
+    default:
+      break;
+  }
+
+  return GST_PAD_PROBE_OK;
+}
+
 static void
 splitmuxsink_split_by_keyframe (gboolean send_keyframe_request,
     guint max_size_time_sec, guint encoder_key_interval_sec)
@@ -937,17 +956,21 @@ splitmuxsink_split_by_keyframe (gboolean send_keyframe_request,
   GstMessage *msg;
   GstElement *pipeline;
   GstElement *sink;
+  GstElement *enc;
+  GstPad *srcpad;
   gchar *pipeline_str;
   gchar *dest_pattern;
   guint count;
   guint expected_count;
   gchar *in_pattern;
+  guint upstream_fku_count = 0;
+  guint expected_fku_count;
 
   pipeline_str = g_strdup_printf ("splitmuxsink name=splitsink "
       "max-size-time=%" G_GUINT64_FORMAT
       " send-keyframe-requests=%s muxer=qtmux "
       "videotestsrc num-buffers=30 ! video/x-raw,width=80,height=64,framerate=5/1 "
-      "! videoconvert ! queue ! vp8enc keyframe-max-dist=%d ! splitsink.video ",
+      "! videoconvert ! queue ! vp8enc name=enc keyframe-max-dist=%d ! splitsink.video ",
       max_size_time_sec * GST_SECOND, send_keyframe_request ? "true" : "false",
       encoder_key_interval_sec * 5);
 
@@ -964,6 +987,16 @@ splitmuxsink_split_by_keyframe (gboolean send_keyframe_request,
   g_free (dest_pattern);
   g_object_unref (sink);
 
+  enc = gst_bin_get_by_name (GST_BIN (pipeline), "enc");
+  fail_if (enc == NULL);
+  srcpad = gst_element_get_static_pad (enc, "src");
+  fail_if (srcpad == NULL);
+
+  gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_EVENT_UPSTREAM,
+      (GstPadProbeCallback) count_upstrea_fku, &upstream_fku_count, NULL);
+  gst_object_unref (srcpad);
+  gst_object_unref (enc);
+
   msg = run_pipeline (pipeline);
 
   if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)
@@ -977,6 +1010,18 @@ splitmuxsink_split_by_keyframe (gboolean send_keyframe_request,
   expected_count = 6 / max_size_time_sec;
   fail_unless (count == expected_count,
       "Expected %d output files, got %d", expected_count, count);
+
+  if (!send_keyframe_request) {
+    expected_fku_count = 0;
+  } else {
+    expected_fku_count = count;
+  }
+
+  GST_INFO ("Upstream force keyunit event count %d", upstream_fku_count);
+
+  fail_unless (upstream_fku_count == expected_fku_count,
+      "Expected upstream force keyunit event count %d, got %d",
+      expected_fku_count, upstream_fku_count);
 
   in_pattern = g_build_filename (tmpdir, "out*.m4v", NULL);
   /* FIXME: Reverse playback works poorly with multiple video streams
@@ -1035,17 +1080,21 @@ splitmuxsink_split_by_keyframe_timecode (gboolean send_keyframe_request,
   GstMessage *msg;
   GstElement *pipeline;
   GstElement *sink;
+  GstElement *enc;
+  GstPad *srcpad;
   gchar *pipeline_str;
   gchar *dest_pattern;
   guint count;
   guint expected_count;
   gchar *in_pattern;
+  guint upstream_fku_count = 0;
+  guint expected_fku_count;
 
   pipeline_str = g_strdup_printf ("splitmuxsink name=splitsink "
       "max-size-timecode=%s"
       " send-keyframe-requests=%s muxer=qtmux "
       "videotestsrc num-buffers=30 ! video/x-raw,width=80,height=64,framerate=5/1 "
-      "! videoconvert ! timecodestamper ! queue ! vp8enc keyframe-max-dist=%d ! splitsink.video ",
+      "! videoconvert ! timecodestamper ! queue ! vp8enc name=enc keyframe-max-dist=%d ! splitsink.video ",
       maxsize_timecode_string, send_keyframe_request ? "true" : "false",
       encoder_key_interval_sec ? encoder_key_interval_sec * 5 : 1);
 
@@ -1062,6 +1111,16 @@ splitmuxsink_split_by_keyframe_timecode (gboolean send_keyframe_request,
   g_free (dest_pattern);
   g_object_unref (sink);
 
+  enc = gst_bin_get_by_name (GST_BIN (pipeline), "enc");
+  fail_if (enc == NULL);
+  srcpad = gst_element_get_static_pad (enc, "src");
+  fail_if (srcpad == NULL);
+
+  gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_EVENT_UPSTREAM,
+      (GstPadProbeCallback) count_upstrea_fku, &upstream_fku_count, NULL);
+  gst_object_unref (srcpad);
+  gst_object_unref (enc);
+
   msg = run_pipeline (pipeline);
 
   if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)
@@ -1077,6 +1136,18 @@ splitmuxsink_split_by_keyframe_timecode (gboolean send_keyframe_request,
   fail_unless (count == expected_count,
       "Expected %d output files, got %d", expected_count, count);
 
+  if (!send_keyframe_request) {
+    expected_fku_count = 0;
+  } else {
+    expected_fku_count = count;
+  }
+
+  GST_INFO ("Upstream force keyunit event count %d", upstream_fku_count);
+
+  fail_unless (upstream_fku_count == expected_fku_count,
+      "Expected upstream force keyunit event count %d, got %d",
+      expected_fku_count, upstream_fku_count);
+
   in_pattern = g_build_filename (tmpdir, "out*.m4v", NULL);
   /* FIXME: Reverse playback works poorly with multiple video streams
    * in qtdemux (at least, maybe other demuxers) at the time this was
@@ -1086,6 +1157,15 @@ splitmuxsink_split_by_keyframe_timecode (gboolean send_keyframe_request,
   test_playback (in_pattern, 0, 6 * GST_SECOND, FALSE);
   g_free (in_pattern);
 }
+
+GST_START_TEST (test_splitmuxsink_without_keyframe_request_timecode)
+{
+  /* This encoding option is intended to produce keyframe per 1 second
+   * but splitmuxsink will split file per 2 second without keyframe request */
+  splitmuxsink_split_by_keyframe_timecode (FALSE, "00:00:02:00", 2, 1);
+}
+
+GST_END_TEST;
 
 GST_START_TEST (test_splitmuxsink_keyframe_request_timecode)
 {
@@ -1195,6 +1275,8 @@ splitmux_suite (void)
   }
 
   if (have_qtmux && have_vp8 && have_timecodestamper) {
+    tcase_add_test (tc_chain,
+        test_splitmuxsink_without_keyframe_request_timecode);
     tcase_add_test (tc_chain, test_splitmuxsink_keyframe_request_timecode);
     tcase_add_test (tc_chain,
         test_splitmuxsink_keyframe_request_timecode_trailing_small_segment);
