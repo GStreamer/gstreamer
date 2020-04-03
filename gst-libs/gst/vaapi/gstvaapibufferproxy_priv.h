@@ -62,7 +62,7 @@ G_BEGIN_DECLS
 struct _GstVaapiBufferProxy {
   /*< private >*/
   GstVaapiMiniObject    parent_instance;
-  GstMiniObject        *parent;
+  GstMiniObject        *surface;
 
   GDestroyNotify        destroy_func;
   gpointer              destroy_data;
@@ -74,7 +74,7 @@ struct _GstVaapiBufferProxy {
 
 G_GNUC_INTERNAL
 GstVaapiBufferProxy *
-gst_vaapi_buffer_proxy_new_from_object (GstMiniObject * object,
+gst_vaapi_buffer_proxy_new_from_surface (GstMiniObject * surface,
     VABufferID buf_id, guint type, GDestroyNotify destroy_func, gpointer data);
 
 G_GNUC_INTERNAL

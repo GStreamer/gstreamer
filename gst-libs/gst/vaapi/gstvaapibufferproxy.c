@@ -41,11 +41,10 @@ gst_vaapi_buffer_proxy_acquire_handle (GstVaapiBufferProxy * proxy)
   if (proxy->va_info.handle)
     return TRUE;
 
-  if (!proxy->parent || proxy->va_buf == VA_INVALID_ID)
+  if (!proxy->surface || proxy->va_buf == VA_INVALID_ID)
     return FALSE;
 
-  /* @XXX(victor): parent might be not a surface */
-  display = GST_VAAPI_SURFACE_DISPLAY (GST_VAAPI_SURFACE (proxy->parent));
+  display = GST_VAAPI_SURFACE_DISPLAY (GST_VAAPI_SURFACE (proxy->surface));
 
   GST_VAAPI_DISPLAY_LOCK (display);
   va_status = vaAcquireBufferHandle (GST_VAAPI_DISPLAY_VADISPLAY (display),
@@ -67,11 +66,10 @@ gst_vaapi_buffer_proxy_release_handle (GstVaapiBufferProxy * proxy)
   if (!proxy->va_info.handle)
     return TRUE;
 
-  if (!proxy->parent || proxy->va_buf == VA_INVALID_ID)
+  if (!proxy->surface || proxy->va_buf == VA_INVALID_ID)
     return FALSE;
 
-  /* @XXX(victor): parent might be not a surface */
-  display = GST_VAAPI_SURFACE_DISPLAY (GST_VAAPI_SURFACE (proxy->parent));
+  display = GST_VAAPI_SURFACE_DISPLAY (GST_VAAPI_SURFACE (proxy->surface));
 
   GST_VAAPI_DISPLAY_LOCK (display);
   va_status = vaReleaseBufferHandle (GST_VAAPI_DISPLAY_VADISPLAY (display),
@@ -96,7 +94,7 @@ gst_vaapi_buffer_proxy_finalize (GstVaapiBufferProxy * proxy)
   if (proxy->destroy_func)
     proxy->destroy_func (proxy->destroy_data);
 
-  gst_mini_object_replace ((GstMiniObject **) & proxy->parent, NULL);
+  gst_mini_object_replace ((GstMiniObject **) & proxy->surface, NULL);
 }
 
 static inline const GstVaapiMiniObjectClass *
@@ -123,7 +121,7 @@ gst_vaapi_buffer_proxy_new (guintptr handle, guint type, gsize size,
   if (!proxy)
     return NULL;
 
-  proxy->parent = NULL;
+  proxy->surface = NULL;
   proxy->destroy_func = destroy_func;
   proxy->destroy_data = user_data;
   proxy->type = type;
@@ -147,19 +145,19 @@ error_unsupported_mem_type:
 }
 
 GstVaapiBufferProxy *
-gst_vaapi_buffer_proxy_new_from_object (GstMiniObject * object,
+gst_vaapi_buffer_proxy_new_from_surface (GstMiniObject * surface,
     VABufferID buf_id, guint type, GDestroyNotify destroy_func, gpointer data)
 {
   GstVaapiBufferProxy *proxy;
 
-  g_return_val_if_fail (object != NULL, NULL);
+  g_return_val_if_fail (surface != NULL, NULL);
 
   proxy = (GstVaapiBufferProxy *)
       gst_vaapi_mini_object_new (gst_vaapi_buffer_proxy_class ());
   if (!proxy)
     return NULL;
 
-  proxy->parent = gst_mini_object_ref (object);
+  proxy->surface = gst_mini_object_ref (surface);
   proxy->destroy_func = destroy_func;
   proxy->destroy_data = data;
   proxy->type = type;
