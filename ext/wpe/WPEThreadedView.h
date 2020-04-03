@@ -31,7 +31,7 @@ typedef struct _GstGLContext GstGLContext;
 typedef struct _GstGLDisplay GstGLDisplay;
 typedef struct _GstEGLImage GstEGLImage;
 
-#if defined(WPE_FDO_CHECK_VERSION) && WPE_FDO_CHECK_VERSION(1, 6, 0)
+#if defined(WPE_FDO_CHECK_VERSION) && WPE_FDO_CHECK_VERSION(1, 7, 0)
 #define ENABLE_SHM_BUFFER_SUPPORT 1
 #else
 #define ENABLE_SHM_BUFFER_SUPPORT 0
@@ -91,7 +91,11 @@ private:
         GstGLDisplay* display;
     } gst { nullptr, nullptr };
 
-    static struct wpe_view_backend_exportable_fdo_egl_client s_exportableClient;
+    static struct wpe_view_backend_exportable_fdo_egl_client s_exportableEGLClient;
+#if ENABLE_SHM_BUFFER_SUPPORT
+    static struct wpe_view_backend_exportable_fdo_client s_exportableClient;
+#endif
+
     static void s_releaseImage(GstEGLImage*, gpointer);
     struct {
         struct wpe_view_backend_exportable_fdo* exportable;

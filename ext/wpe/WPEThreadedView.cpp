@@ -31,6 +31,10 @@
 #include <cstdio>
 #include <mutex>
 
+#if ENABLE_SHM_BUFFER_SUPPORT
+#include <wpe/unstable/fdo-shm.h>
+#endif
+
 GST_DEBUG_CATEGORY_EXTERN (wpe_src_debug);
 #define GST_CAT_DEFAULT wpe_src_debug
 
@@ -187,18 +191,10 @@ bool WPEThreadedView::initialize(GstWpeSrc* src, GstGLContext* context, GstGLDis
 #endif
         });
 
-    EGLDisplay eglDisplay;
+    EGLDisplay eglDisplay = EGL_NO_DISPLAY;
     if (context && display)
       eglDisplay = gst_gl_display_egl_get_from_native(GST_GL_DISPLAY_TYPE_WAYLAND,
                                                       gst_gl_display_get_handle(display));
-    else {
-      eglDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-      if (eglDisplay == EGL_NO_DISPLAY)
-        return false;
-
-      if (!eglInitialize(eglDisplay, nullptr, nullptr) || !eglBindAPI(EGL_OPENGL_ES_API))
-        return false;
-    }
     GST_DEBUG("eglDisplay %p", eglDisplay);
 
     struct InitializeContext {
@@ -209,7 +205,7 @@ bool WPEThreadedView::initialize(GstWpeSrc* src, GstGLContext* context, GstGLDis
         EGLDisplay eglDisplay;
         int width;
         int height;
-      bool result;
+        bool result;
     } initializeContext { src, *this, context, display, eglDisplay, width, height, FALSE };
 
     GSource* source = g_idle_source_new();
@@ -229,15 +225,31 @@ bool WPEThreadedView::initialize(GstWpeSrc* src, GstGLContext* context, GstGLDis
             view.wpe.width = initializeContext.width;
             view.wpe.height = initializeContext.height;
 
-            initializeContext.result = wpe_fdo_initialize_for_egl_display(initializeContext.eglDisplay);
-            GST_DEBUG("FDO EGL display initialisation result: %d", initializeContext.result);
+            if (initializeContext.eglDisplay) {
+              initializeContext.result = wpe_fdo_initialize_for_egl_display(initializeContext.eglDisplay);
+              GST_DEBUG("FDO EGL display initialisation result: %d", initializeContext.result);
+            } else {
+#if ENABLE_SHM_BUFFER_SUPPORT
+              initializeContext.result = wpe_fdo_initialize_shm();
+              GST_DEBUG("FDO SHM initialisation result: %d", initializeContext.result);
+#else
+              GST_WARNING("FDO SHM support is available only in WPEBackend-FDO 1.7.0");
+#endif
+            }
             if (!initializeContext.result) {
               g_cond_signal(&view.threading.cond);
               return G_SOURCE_REMOVE;
             }
 
-            view.wpe.exportable = wpe_view_backend_exportable_fdo_egl_create(&s_exportableClient,
-                &view, view.wpe.width, view.wpe.height);
+            if (initializeContext.eglDisplay) {
+              view.wpe.exportable = wpe_view_backend_exportable_fdo_egl_create(&s_exportableEGLClient,
+                  &view, view.wpe.width, view.wpe.height);
+            } else {
+#if ENABLE_SHM_BUFFER_SUPPORT
+              view.wpe.exportable = wpe_view_backend_exportable_fdo_create(&s_exportableClient,
+                  &view, view.wpe.width, view.wpe.height);
+#endif
+            }
             auto* wpeViewBackend = wpe_view_backend_exportable_fdo_get_view_backend(view.wpe.exportable);
             auto* viewBackend = webkit_web_view_backend_new(wpeViewBackend, nullptr, nullptr);
 #if defined(WPE_BACKEND_CHECK_VERSION) && WPE_BACKEND_CHECK_VERSION(1, 1, 0)
@@ -637,7 +649,7 @@ void WPEThreadedView::handleExportedBuffer(struct wpe_fdo_shm_exported_buffer* b
 }
 #endif
 
-struct wpe_view_backend_exportable_fdo_egl_client WPEThreadedView::s_exportableClient = {
+struct wpe_view_backend_exportable_fdo_egl_client WPEThreadedView::s_exportableEGLClient = {
 #if USE_DEPRECATED_FDO_EGL_IMAGE
     // export_egl_image
     [](void* data, EGLImageKHR image) {
@@ -652,19 +664,25 @@ struct wpe_view_backend_exportable_fdo_egl_client WPEThreadedView::s_exportableC
         auto& view = *static_cast<WPEThreadedView*>(data);
         view.handleExportedImage(static_cast<gpointer>(image));
     },
+    nullptr,
+#endif // USE_DEPRECATED_FDO_EGL_IMAGE
+    // padding
+    nullptr, nullptr
+};
+
 #if ENABLE_SHM_BUFFER_SUPPORT
+struct wpe_view_backend_exportable_fdo_client WPEThreadedView::s_exportableClient = {
+    nullptr,
+    nullptr,
     // export_shm_buffer
     [](void* data, struct wpe_fdo_shm_exported_buffer* buffer) {
         auto& view = *static_cast<WPEThreadedView*>(data);
         view.handleExportedBuffer(buffer);
     },
-#else
     nullptr,
-#endif // ENABLE_SHM_BUFFER_SUPPORT
-#endif // USE_DEPRECATED_FDO_EGL_IMAGE
-    // padding
-    nullptr, nullptr
+    nullptr,
 };
+#endif
 
 void WPEThreadedView::s_releaseImage(GstEGLImage* image, gpointer data)
 {
