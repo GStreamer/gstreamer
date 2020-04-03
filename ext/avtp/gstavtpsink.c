@@ -374,12 +374,17 @@ gst_avtp_sink_render (GstBaseSink * basesink, GstBuffer * buffer)
   if (G_LIKELY (basesink->sync)) {
     GstClockTime base_time, running_time;
     struct cmsghdr *cmsg = CMSG_FIRSTHDR (avtpsink->msg);
+    gint ret;
 
     g_assert (GST_BUFFER_DTS_OR_PTS (buffer) != GST_CLOCK_TIME_NONE);
 
+    ret = gst_segment_to_running_time_full (&basesink->segment,
+        basesink->segment.format, GST_BUFFER_DTS_OR_PTS (buffer),
+        &running_time);
+    if (ret == -1)
+      running_time = -running_time;
+
     base_time = gst_element_get_base_time (GST_ELEMENT (avtpsink));
-    running_time = gst_segment_to_running_time (&basesink->segment,
-        basesink->segment.format, GST_BUFFER_DTS_OR_PTS (buffer));
     running_time = gst_avtp_sink_adjust_time (basesink, running_time);
     *(__u64 *) CMSG_DATA (cmsg) = UTC_TO_TAI (base_time + running_time);
   }
