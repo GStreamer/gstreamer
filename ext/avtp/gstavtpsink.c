@@ -44,6 +44,7 @@
  */
 
 #include <arpa/inet.h>
+#include <linux/errqueue.h>
 #include <linux/if_packet.h>
 #include <linux/net_tstamp.h>
 #include <net/ethernet.h>
@@ -242,7 +243,7 @@ gst_avtp_sink_init_socket (GstAvtpSink * avtpsink)
   }
 
   txtime_cfg.clockid = CLOCK_TAI;
-  txtime_cfg.flags = 0;
+  txtime_cfg.flags = SOF_TXTIME_REPORT_ERRORS;
   res = setsockopt (fd, SOL_SOCKET, SO_TXTIME, &txtime_cfg,
       sizeof (txtime_cfg));
   if (res < 0) {
@@ -363,6 +364,51 @@ gst_avtp_sink_adjust_time (GstBaseSink * basesink, GstClockTime time)
   return time;
 }
 
+static void
+gst_avtp_sink_process_error_queue (GstAvtpSink * avtpsink, int fd)
+{
+  uint8_t msg_control[CMSG_SPACE (sizeof (struct sock_extended_err))];
+  unsigned char err_buffer[256];
+  struct sock_extended_err *serr;
+  struct cmsghdr *cmsg;
+
+  struct iovec iov = {
+    .iov_base = err_buffer,
+    .iov_len = sizeof (err_buffer)
+  };
+  struct msghdr msg = {
+    .msg_iov = &iov,
+    .msg_iovlen = 1,
+    .msg_control = msg_control,
+    .msg_controllen = sizeof (msg_control)
+  };
+
+  if (recvmsg (fd, &msg, MSG_ERRQUEUE) == -1) {
+    GST_LOG_OBJECT (avtpsink, "Could not get socket errqueue: recvmsg failed");
+    return;
+  }
+
+  cmsg = CMSG_FIRSTHDR (&msg);
+  while (cmsg != NULL) {
+    serr = (void *) CMSG_DATA (cmsg);
+    if (serr->ee_origin == SO_EE_ORIGIN_TXTIME) {
+      switch (serr->ee_code) {
+        case SO_EE_CODE_TXTIME_INVALID_PARAM:
+        case SO_EE_CODE_TXTIME_MISSED:
+          GST_INFO_OBJECT (avtpsink, "AVTPDU dropped due to being late. "
+              "Check stream spec and pipeline settings.");
+          break;
+        default:
+          break;
+      }
+
+      return;
+    }
+
+    cmsg = CMSG_NXTHDR (&msg, cmsg);
+  }
+}
+
 static GstFlowReturn
 gst_avtp_sink_render (GstBaseSink * basesink, GstBuffer * buffer)
 {
@@ -400,6 +446,10 @@ gst_avtp_sink_render (GstBaseSink * basesink, GstBuffer * buffer)
   n = sendmsg (avtpsink->sk_fd, avtpsink->msg, 0);
   if (n < 0) {
     GST_INFO_OBJECT (avtpsink, "Failed to send AVTPDU: %s", strerror (errno));
+
+    if (G_LIKELY (basesink->sync))
+      gst_avtp_sink_process_error_queue (avtpsink, avtpsink->sk_fd);
+
     goto out;
   }
   if (n != info.size) {
