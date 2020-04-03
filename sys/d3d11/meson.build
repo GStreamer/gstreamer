@@ -86,7 +86,7 @@ if not have_d3d11
 endif
 
 # for enabling debug layer
-if get_option('buildtype').startswith('debug')
+if get_option('debug')
   d3d11_debug_libs = [
     ['d3d11sdklayers.h', 'ID3D11Debug', 'ID3D11InfoQueue', 'have_d3d11sdk_h'],
     ['dxgidebug.h', 'IDXGIDebug', 'IDXGIInfoQueue', 'have_dxgidebug_h'],

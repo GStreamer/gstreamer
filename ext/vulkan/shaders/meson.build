@@ -18,17 +18,16 @@ bin2array = find_program('bin2array.py')
 # FIXME: meson compiler class instead?
 glslc_build_options = []
 optimization = get_option('optimization')
-buildtype = get_option('buildtype')
-if get_option('debug') or optimization == 'g' or ['debug', 'debugoptimized'].contains(buildtype)
+if get_option('debug')
   glslc_build_options += ['-g']
 endif
 if get_option('werror')
   glslc_build_options += ['-Werror']
 endif
-if buildtype == 'minsize' or optimization == 's'
+if optimization == 's'
   glslc_build_options += ['-Os']
 endif
-if ['release', 'debugoptimized'].contains(buildtype) or ['1', '2', '3'].contains(optimization)
+if optimization in ['1', '2', '3']
   glslc_build_options += ['-O']
 endif
 
