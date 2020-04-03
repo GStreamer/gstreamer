@@ -139,6 +139,59 @@ compare_h264_avtpdu (struct avtp_stream_pdu *pdu, GstBuffer * buffer)
   return result;
 }
 
+GST_START_TEST (test_payloader_spread_ts)
+{
+  GstHarness *h;
+  GstBuffer *in, *out;
+  gint i, total_fragments, max_interval_frames;
+  guint64 first_tx_time, final_dts, measurement_interval = 250000;
+
+  /* Create the harness for the avtpcvfpay */
+  h = gst_harness_new_parse
+      ("avtpcvfpay streamid=0xAABBCCDDEEFF0001 mtt=2000000 tu=125000 processing-deadline=0 mtu=128 measurement-interval=250000 max-interval-frames=3");
+  gst_harness_set_src_caps (h, generate_caps (4));
+
+  /* A 980 bytes NAL with mtu=128 should generate 10 fragments */
+  in = gst_harness_create_buffer (h, 980 + 4);
+  add_nal (in, 980, 7, 0);
+  GST_BUFFER_DTS (in) = final_dts = 1000000;
+  GST_BUFFER_PTS (in) = 2000000;
+
+  /* We now push the buffer, and check if we got ten from the avtpcvfpay */
+  gst_harness_push (h, in);
+  fail_unless_equals_int (gst_harness_buffers_received (h), 10);
+
+  /* Using max-interval-frames=3, we'll need 4 measurement intervals to send
+   * all fragments, with last one just about current DTS, and others
+   * progressively before that.
+   *
+   * So we should have something like:
+   *
+   * |  1st  |  2nd  |  3rd  |  4th |  Intervals
+   * | 1 2 3 | 4 5 6 | 7 8 9 |  10  |  AVTPDUs in each interval (sharing same DTS/PTS)
+   *
+   * And PTS/DTS should increment by a
+   * measurement-interval / max-interval-frames for each AVTPDU.
+   */
+  i = 0;
+  total_fragments = 10;
+  max_interval_frames = 3;
+  first_tx_time =
+      final_dts -
+      (measurement_interval / max_interval_frames) * (total_fragments - 1);
+  for (i = 0; i < 10; i++) {
+    out = gst_harness_pull (h);
+    fail_unless_equals_uint64 (GST_BUFFER_DTS (out), first_tx_time);
+
+    first_tx_time += measurement_interval / max_interval_frames;
+  }
+
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_payloader_downstream_eos)
 {
   GstHarness *h;
@@ -332,12 +385,12 @@ GST_START_TEST (test_payloader_properties)
 {
   GstHarness *h;
   GstElement *element;
-  guint mtu, mtt, tu;
-  guint64 streamid, processing_deadline;
+  guint mtu, mtt, tu, max_interval_frames;
+  guint64 streamid, processing_deadline, measurement_interval;
 
   /* Create the harness for the avtpcvfpay */
   h = gst_harness_new_parse
-      ("avtpcvfpay streamid=0xAABBCCDDEEFF0001 mtt=1000000 tu=2000000 mtu=100 processing-deadline=5000");
+      ("avtpcvfpay streamid=0xAABBCCDDEEFF0001 mtt=1000000 tu=2000000 mtu=100 processing-deadline=5000 measurement-interval=125000 max-interval-frames=3");
 
   /* Check if all properties were properly set up */
   element = gst_harness_find_element (h, "avtpcvfpay");
@@ -356,6 +409,14 @@ GST_START_TEST (test_payloader_properties)
   g_object_get (G_OBJECT (element), "processing-deadline", &processing_deadline,
       NULL);
   fail_unless_equals_uint64 (processing_deadline, 5000);
+
+  g_object_get (G_OBJECT (element), "measurement-interval",
+      &measurement_interval, NULL);
+  fail_unless_equals_uint64 (measurement_interval, 125000);
+
+  g_object_get (G_OBJECT (element), "max-interval-frames",
+      &max_interval_frames, NULL);
+  fail_unless_equals_uint64 (max_interval_frames, 3);
 
   gst_object_unref (element);
   gst_harness_teardown (h);
@@ -704,6 +765,7 @@ avtpcvfpay_suite (void)
   tcase_add_test (tc_chain, test_payloader_no_codec_data);
   tcase_add_test (tc_chain, test_payloader_zero_sized_nal);
   tcase_add_test (tc_chain, test_payloader_downstream_eos);
+  tcase_add_test (tc_chain, test_payloader_spread_ts);
 
   return s;
 }

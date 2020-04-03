@@ -47,6 +47,9 @@ struct _GstAvtpCvfPay
 
   GstBuffer *header;
   guint mtu;
+  guint64 measurement_interval;
+  guint max_interval_frames;
+  guint64 last_interval_ct;
 
   /* H.264 specific information */
   guint8 nal_length_size;
