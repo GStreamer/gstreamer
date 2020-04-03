@@ -744,6 +744,20 @@ gst_avtp_cvf_pay_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       ret = gst_avtp_cvf_pay_new_caps (avtpcvfpay, caps);
       gst_event_unref (event);
       return ret;
+    case GST_EVENT_FLUSH_STOP:
+      if (GST_ELEMENT (avtpcvfpay)->current_state == GST_STATE_PLAYING) {
+        /* After a flush, the sink will reset pipeline base_time, but only
+         * after it gets the first buffer. So, here, we used the wrong
+         * base_time to calculate DTS. We'll just notice base_time changed
+         * when we get the next buffer. So, we'll basically mess with
+         * timestamps of two frames, which is bad. Known workaround is
+         * to pause the pipeline before a flushing seek - so that we'll
+         * be up to date to new pipeline base_time */
+        GST_WARNING_OBJECT (avtpcvfpay,
+            "Flushing seek performed while pipeline is PLAYING, "
+            "AVTP timestamps will be incorrect!");
+      }
+      break;
     default:
       break;
   }
