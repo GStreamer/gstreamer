@@ -79,6 +79,7 @@ GST_STATIC_PAD_TEMPLATE ("video_%u",
 
 GST_DEBUG_CATEGORY (asfdemux_dbg);
 
+static void gst_asf_demux_finalize (GObject * object);
 static GstStateChangeReturn gst_asf_demux_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean gst_asf_demux_element_send_event (GstElement * element,
@@ -120,9 +121,13 @@ G_DEFINE_TYPE (GstASFDemux, gst_asf_demux, GST_TYPE_ELEMENT);
 static void
 gst_asf_demux_class_init (GstASFDemuxClass * klass)
 {
+  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
+  gobject_class = G_OBJECT_CLASS (klass);
   gstelement_class = (GstElementClass *) klass;
+
+  gobject_class->finalize = gst_asf_demux_finalize;
 
   gst_element_class_set_static_metadata (gstelement_class, "ASF Demuxer",
       "Codec/Demuxer",
@@ -216,10 +221,12 @@ gst_asf_demux_reset (GstASFDemux * demux, gboolean chain_reset)
     gst_caps_unref (demux->metadata);
     demux->metadata = NULL;
   }
+  demux->metadata = gst_caps_new_empty ();
   if (demux->global_metadata) {
     gst_structure_free (demux->global_metadata);
     demux->global_metadata = NULL;
   }
+  demux->global_metadata = gst_structure_new_empty ("metadata");
   if (demux->mut_ex_streams) {
     g_slist_free (demux->mut_ex_streams);
     demux->mut_ex_streams = NULL;
@@ -291,8 +298,6 @@ gst_asf_demux_reset (GstASFDemux * demux, gboolean chain_reset)
     demux->segment_running = FALSE;
     demux->keyunit_sync = FALSE;
     demux->accurate = FALSE;
-    demux->metadata = gst_caps_new_empty ();
-    demux->global_metadata = gst_structure_new_empty ("metadata");
     demux->data_size = 0;
     demux->data_offset = 0;
     demux->index_offset = 0;
@@ -4806,6 +4811,22 @@ gst_asf_demux_handle_src_query (GstPad * pad, GstObject * parent,
   return res;
 }
 
+static void
+gst_asf_demux_finalize (GObject * object)
+{
+  GstASFDemux *demux = GST_ASF_DEMUX (object);
+
+  if (demux->metadata)
+    gst_caps_unref (demux->metadata);
+  demux->metadata = NULL;
+
+  if (demux->global_metadata)
+    gst_structure_free (demux->global_metadata);
+  demux->global_metadata = NULL;
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
 static GstStateChangeReturn
 gst_asf_demux_change_state (GstElement * element, GstStateChange transition)
 {
@@ -4820,8 +4841,6 @@ gst_asf_demux_change_state (GstElement * element, GstStateChange transition)
       demux->keyunit_sync = FALSE;
       demux->accurate = FALSE;
       demux->adapter = gst_adapter_new ();
-      demux->metadata = gst_caps_new_empty ();
-      demux->global_metadata = gst_structure_new_empty ("metadata");
       demux->data_size = 0;
       demux->data_offset = 0;
       demux->index_offset = 0;
