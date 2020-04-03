@@ -46,6 +46,37 @@ typedef struct
   char **argv;
 } PrivStruct;
 
+static gboolean
+structure_remove_buffers_ip (GQuark field_id, GValue * value,
+    gpointer user_data)
+{
+  if (G_VALUE_HOLDS (value, GST_TYPE_BUFFER))
+    return FALSE;
+
+  if (GST_VALUE_HOLDS_ARRAY (value)) {
+    gint i;
+
+    for (i = 0; i < gst_value_array_get_size (value); i++) {
+      if (structure_remove_buffers_ip (0,
+              (GValue *) gst_value_array_get_value (value, i), user_data))
+        return TRUE;
+    }
+
+    return FALSE;
+  }
+  return TRUE;
+}
+
+static gboolean
+caps_remove_buffers_ip (GstCapsFeatures * features, GstStructure * structure,
+    gpointer user_data)
+{
+  gst_structure_filter_and_map_in_place (structure,
+      structure_remove_buffers_ip, NULL);
+
+  return TRUE;
+}
+
 static void
 my_g_string_append_printf (GString * str, int depth, const gchar * format, ...)
 {
@@ -60,6 +91,26 @@ my_g_string_append_printf (GString * str, int depth, const gchar * format, ...)
   va_end (args);
 }
 
+static gchar *
+caps_to_string (GstCaps * caps)
+{
+  gchar *res = NULL;
+
+  if (verbose) {
+    res = gst_caps_to_string (caps);
+    goto done;
+  }
+
+  caps = gst_caps_make_writable (caps);
+
+  gst_caps_map_in_place (caps, caps_remove_buffers_ip, NULL);
+  res = gst_caps_to_string (caps);
+
+done:
+  gst_caps_unref (caps);
+  return res;
+}
+
 static void
 gst_stream_information_to_string (GstDiscovererStreamInfo * info, GString * s,
     guint depth)
@@ -70,21 +121,22 @@ gst_stream_information_to_string (GstDiscovererStreamInfo * info, GString * s,
   const GstStructure *misc;
 #endif
 
-  my_g_string_append_printf (s, depth, "Codec:\n");
-  caps = gst_discoverer_stream_info_get_caps (info);
-  tmp = gst_caps_to_string (caps);
-  gst_caps_unref (caps);
-  my_g_string_append_printf (s, depth, "  %s\n", tmp);
-  g_free (tmp);
-
-#ifndef GST_DISABLE_DEPRECATED
-  my_g_string_append_printf (s, depth, "Additional info:\n");
-  if ((misc = gst_discoverer_stream_info_get_misc (info))) {
-    tmp = gst_structure_to_string (misc);
+  if (verbose) {
+    my_g_string_append_printf (s, depth, "Codec:\n");
+    caps = gst_discoverer_stream_info_get_caps (info);
+    tmp = caps_to_string (caps);
     my_g_string_append_printf (s, depth, "  %s\n", tmp);
     g_free (tmp);
-  } else {
-    my_g_string_append_printf (s, depth, "  None\n");
+  }
+#ifndef GST_DISABLE_DEPRECATED
+  if (verbose) {
+    misc = gst_discoverer_stream_info_get_misc (info);
+    if (misc) {
+      my_g_string_append_printf (s, depth, "Additional info:\n");
+      tmp = gst_structure_to_string (misc);
+      my_g_string_append_printf (s, depth, "  %s\n", tmp);
+      g_free (tmp);
+    }
   }
 #endif
 
@@ -114,7 +166,7 @@ print_tag_foreach (const GstTagList * tags, const gchar * tag,
       if (caps) {
         gchar *caps_str;
 
-        caps_str = gst_caps_to_string (caps);
+        caps_str = caps_to_string (gst_caps_ref (caps));
         str = g_strdup_printf ("buffer of %" G_GSIZE_FORMAT " bytes, "
             "type: %s", gst_buffer_get_size (img), caps_str);
         g_free (caps_str);
@@ -138,6 +190,9 @@ print_tag_foreach (const GstTagList * tags, const gchar * tag,
 static void
 print_tags_topology (guint depth, const GstTagList * tags)
 {
+  if (!verbose)
+    return;
+
   g_print ("%*sTags:\n", 2 * depth, " ");
   if (tags) {
     gst_tag_list_foreach (tags, print_tag_foreach,
@@ -145,8 +200,7 @@ print_tags_topology (guint depth, const GstTagList * tags)
   } else {
     g_print ("%*sNone\n", 2 * (depth + 1), " ");
   }
-  if (verbose)
-    g_print ("%*s\n", 2 * depth, " ");
+  g_print ("%*s\n", 2 * depth, " ");
 }
 
 static gchar *
@@ -309,7 +363,7 @@ print_stream_info (GstDiscovererStreamInfo * info, void *depth)
     if (gst_caps_is_fixed (caps) && !verbose)
       desc = gst_pb_utils_get_codec_description (caps);
     else
-      desc = gst_caps_to_string (caps);
+      desc = caps_to_string (gst_caps_ref (caps));
     gst_caps_unref (caps);
   }
 
@@ -322,23 +376,21 @@ print_stream_info (GstDiscovererStreamInfo * info, void *depth)
     desc = NULL;
   }
 
-  if (verbose) {
-    if (GST_IS_DISCOVERER_AUDIO_INFO (info))
-      desc =
-          gst_stream_audio_information_to_string (info,
-          GPOINTER_TO_INT (depth) + 1);
-    else if (GST_IS_DISCOVERER_VIDEO_INFO (info))
-      desc =
-          gst_stream_video_information_to_string (info,
-          GPOINTER_TO_INT (depth) + 1);
-    else if (GST_IS_DISCOVERER_SUBTITLE_INFO (info))
-      desc =
-          gst_stream_subtitle_information_to_string (info,
-          GPOINTER_TO_INT (depth) + 1);
-    if (desc) {
-      g_print ("%s", desc);
-      g_free (desc);
-    }
+  if (GST_IS_DISCOVERER_AUDIO_INFO (info))
+    desc =
+        gst_stream_audio_information_to_string (info,
+        GPOINTER_TO_INT (depth) + 1);
+  else if (GST_IS_DISCOVERER_VIDEO_INFO (info))
+    desc =
+        gst_stream_video_information_to_string (info,
+        GPOINTER_TO_INT (depth) + 1);
+  else if (GST_IS_DISCOVERER_SUBTITLE_INFO (info))
+    desc =
+        gst_stream_subtitle_information_to_string (info,
+        GPOINTER_TO_INT (depth) + 1);
+  if (desc) {
+    g_print ("%s", desc);
+    g_free (desc);
   }
 }
 
@@ -411,7 +463,7 @@ print_properties (GstDiscovererInfo * info, gint tab)
       (gst_discoverer_info_get_seekable (info) ? "yes" : "no"));
   g_print ("%*sLive: %s\n", tab + 1, " ",
       (gst_discoverer_info_get_live (info) ? "yes" : "no"));
-  if ((tags = gst_discoverer_info_get_tags (info))) {
+  if (verbose && (tags = gst_discoverer_info_get_tags (info))) {
     g_print ("%*sTags: \n", tab + 1, " ");
     gst_tag_list_foreach (tags, print_tag_foreach, GUINT_TO_POINTER (tab + 2));
   }
@@ -466,27 +518,25 @@ print_info (GstDiscovererInfo * info, GError * err)
     }
     case GST_DISCOVERER_MISSING_PLUGINS:
     {
+      gint i = 0;
+      const gchar **installer_details =
+          gst_discoverer_info_get_missing_elements_installer_details (info);
+
       g_print ("Missing plugins\n");
-      if (verbose) {
-        gint i = 0;
-        const gchar **installer_details =
-            gst_discoverer_info_get_missing_elements_installer_details (info);
 
-        while (installer_details[i]) {
-          g_print (" (%s)\n", installer_details[i]);
+      while (installer_details[i]) {
+        g_print (" (%s)\n", installer_details[i]);
 
-          i++;
-        }
+        i++;
       }
       break;
     }
   }
 
   if ((sinfo = gst_discoverer_info_get_stream_info (info))) {
-    g_print ("\nTopology:\n");
-    print_topology (sinfo, 1);
     g_print ("\nProperties:\n");
     print_properties (info, 1);
+    print_topology (sinfo, 1);
     gst_discoverer_stream_info_unref (sinfo);
   }
 
