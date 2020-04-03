@@ -1,0 +1,5 @@
+[wrap-file]
+directory=libdrm-2.4.100
+source_url=https://dri.freedesktop.org/libdrm/libdrm-2.4.100.tar.bz2
+source_filename=libdrm-2.4.100.tar.bz2
+source_hash=c77cc828186c9ceec3e56ae202b43ee99eb932b4a87255038a80e8a1060d0a5d

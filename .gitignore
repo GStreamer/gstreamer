@@ -59,5 +59,6 @@ subprojects/FFmpeg
 subprojects/x264
 subprojects/libxml2-*
 subprojects/sqlite-*
+subprojects/libdrm-*
 prefix/
 pygobject
