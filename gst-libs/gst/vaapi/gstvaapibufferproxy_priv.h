@@ -69,7 +69,6 @@ struct _GstVaapiBufferProxy {
   guint                 type;
   VABufferID            va_buf;
   VABufferInfo          va_info;
-  GstMemory             *mem;
 };
 
 G_GNUC_INTERNAL
