@@ -106,6 +106,23 @@ G_STMT_START {                                          \
       GST_TIME_ARGS (_MAX_DURATION(obj)), GST_TIME_ARGS (max_duration)); \
 }
 
+#define assert_num_in_track(track, val) \
+{ \
+  GList *tmp = ges_track_get_elements (track); \
+  guint length = g_list_length (tmp); \
+  fail_unless (length == val, "Track %" GST_PTR_FORMAT \
+      " contains %u track elements, rather than %u", track, length, val); \
+  g_list_free_full (tmp, gst_object_unref); \
+}
+
+#define assert_num_children(clip, cmp) \
+{ \
+  guint num_children = g_list_length (GES_CONTAINER_CHILDREN (clip)); \
+  fail_unless (cmp == num_children, \
+      "clip %s contains %u children rather than %u", \
+      GES_TIMELINE_ELEMENT_NAME (clip), num_children, cmp); \
+}
+
 /* assert that the time property (start, duration or in-point) is the
  * same as @cmp for the clip and all its children */
 #define assert_clip_children_time_val(clip, property, cmp) \
@@ -140,6 +157,27 @@ G_STMT_START {                                          \
   fail_unless (GES_TIMELINE_ELEMENT_LAYER_PRIORITY (clip) ==  (layer_prio),  \
     "%s in layer %d instead of %d", GES_TIMELINE_ELEMENT_NAME (clip),        \
     GES_TIMELINE_ELEMENT_LAYER_PRIORITY (clip), layer_prio);                 \
+}
+
+#define assert_layer(clip, layer) \
+{ \
+  GESLayer *tmp_layer = ges_clip_get_layer (GES_CLIP (clip)); \
+  fail_unless (tmp_layer == GES_LAYER (layer), "clip %s belongs to " \
+      "layer %u (timeline %" GST_PTR_FORMAT ") rather than layer %u " \
+      "(timeline %" GST_PTR_FORMAT ")", \
+      tmp_layer ? ges_layer_get_priority (tmp_layer) : 0, \
+      tmp_layer ? tmp_layer->timeline : NULL, \
+      layer ? ges_layer_get_priority (GES_LAYER (layer)) : 0, \
+      layer ? GES_LAYER (layer)->timeline : NULL); \
+  if (tmp_layer) \
+    gst_object_unref (tmp_layer); \
+  if (layer) { \
+    GList *layer_clips = ges_layer_get_clips (GES_LAYER (layer)); \
+    fail_unless (g_list_find (layer_clips, clip), "clip %s not found " \
+        "in layer %u (timeline %" GST_PTR_FORMAT ")", \
+        ges_layer_get_priority (GES_LAYER (layer)), layer->timeline); \
+    g_list_free_full (layer_clips, gst_object_unref); \
+  } \
 }
 
 /* test that the two property lists contain the same properties the same
@@ -188,5 +226,144 @@ G_STMT_START {                                          \
     g_free (count_list1); \
   }
 
+#define assert_equal_children_properties(el1, el2) \
+{ \
+  guint i, num1, num2; \
+  const gchar *name1 = GES_TIMELINE_ELEMENT_NAME (el1); \
+  const gchar *name2 = GES_TIMELINE_ELEMENT_NAME (el2); \
+  GParamSpec **el_props1 = ges_timeline_element_list_children_properties ( \
+      GES_TIMELINE_ELEMENT (el1), &num1); \
+  GParamSpec **el_props2 = ges_timeline_element_list_children_properties ( \
+      GES_TIMELINE_ELEMENT (el2), &num2); \
+  assert_property_list_match (el_props1, num1, el_props2, num2); \
+  \
+  for (i = 0; i < num1; i++) { \
+    gchar *ser1, *ser2; \
+    GParamSpec *prop = el_props1[i]; \
+    GValue val1 = G_VALUE_INIT, val2 = G_VALUE_INIT; \
+    /* name property can be different */ \
+    if (g_strcmp0 (prop->name, "name") == 0) \
+      continue; \
+    if (g_strcmp0 (prop->name, "parent") == 0) \
+      continue; \
+    g_value_init (&val1, prop->value_type); \
+    g_value_init (&val2, prop->value_type); \
+    ges_timeline_element_get_child_property_by_pspec ( \
+        GES_TIMELINE_ELEMENT (el1), prop, &val1); \
+    ges_timeline_element_get_child_property_by_pspec ( \
+        GES_TIMELINE_ELEMENT (el2), prop, &val2); \
+    ser1 = gst_value_serialize (&val1); \
+    ser2 = gst_value_serialize (&val2); \
+    fail_unless (gst_value_compare (&val1, &val2) == GST_VALUE_EQUAL, \
+        "Child property '%s' for %s does not match that for %s (%s vs %s)", \
+        prop->name, name1, name2, ser1, ser2); \
+    g_free (ser1); \
+    g_free (ser2); \
+    g_value_unset (&val1); \
+    g_value_unset (&val2); \
+  } \
+  free_children_properties (el_props1, num1); \
+  free_children_properties (el_props2, num2); \
+}
+
+#define assert_equal_bindings(el1, el2) \
+{ \
+  guint i, num1, num2; \
+  const gchar *name1 = GES_TIMELINE_ELEMENT_NAME (el1); \
+  const gchar *name2 = GES_TIMELINE_ELEMENT_NAME (el2); \
+  GParamSpec **props1 = ges_timeline_element_list_children_properties ( \
+      GES_TIMELINE_ELEMENT (el1), &num1); \
+  GParamSpec **props2 = ges_timeline_element_list_children_properties ( \
+      GES_TIMELINE_ELEMENT (el2), &num2); \
+  assert_property_list_match (props1, num1, props2, num2); \
+  \
+  for (i = 0; i < num1; i++) { \
+    const gchar *prop = props1[i]->name; \
+    GList *tmp1, *tmp2; \
+    GList *timed_vals1, *timed_vals2; \
+    GObject *object1, *object2; \
+    gboolean abs1, abs2; \
+    GstControlSource *source1, *source2; \
+    GstInterpolationMode mode1, mode2; \
+    GstControlBinding *binding1, *binding2; \
+    guint j; \
+    \
+    binding1 = ges_track_element_get_control_binding ( \
+        GES_TRACK_ELEMENT (el1), prop); \
+    binding2 = ges_track_element_get_control_binding ( \
+        GES_TRACK_ELEMENT (el2), prop); \
+    if (binding1 == NULL) { \
+      fail_unless (binding2 == NULL, "%s has a binding for property " \
+          " '%s', whilst %s does not", name2, prop, name1); \
+      continue; \
+    } \
+    if (binding2 == NULL) { \
+      fail_unless (binding1 == NULL, "%s has a binding for property " \
+          "'%s', whilst %s does not", name1, prop, name2); \
+      continue; \
+    } \
+    \
+    fail_unless (G_OBJECT_TYPE (binding1) == GST_TYPE_DIRECT_CONTROL_BINDING, \
+        "%s binding for property '%s' is not a direct control binding, " \
+        "so cannot be handled", prop, name1); \
+    fail_unless (G_OBJECT_TYPE (binding2) == GST_TYPE_DIRECT_CONTROL_BINDING, \
+        "%s binding for property '%s' is not a direct control binding, " \
+        "so cannot be handled", prop, name2); \
+    \
+    g_object_get (G_OBJECT (binding1), "control-source", &source1, \
+        "absolute", &abs1, "object", &object1, NULL); \
+    g_object_get (G_OBJECT (binding2), "control-source", &source2, \
+        "absolute", &abs2, "object", &object2, NULL); \
+    \
+    fail_unless (G_OBJECT_TYPE (object1) == G_OBJECT_TYPE (object2), \
+        "The child object for property '%s' for %s and %s correspond " \
+        "to different object types (%s vs %s)", prop, name1, name2, \
+        G_OBJECT_TYPE_NAME (object1), G_OBJECT_TYPE_NAME (object2)); \
+    gst_object_unref (object1); \
+    gst_object_unref (object2); \
+    \
+    fail_unless (abs1 == abs2, "control biding for property '%s' " \
+        " is %s absolute for %s, but %s absolute for %s", prop, \
+        abs1 ? "" : "not", name1, abs2 ? "" : "not", name2); \
+    \
+    fail_unless (GST_IS_INTERPOLATION_CONTROL_SOURCE (source1), \
+        "%s does not have an interpolation control source for " \
+        "property '%s', so cannot be handled", name1, prop); \
+    fail_unless (GST_IS_INTERPOLATION_CONTROL_SOURCE (source2), \
+        "%s does not have an interpolation control source for " \
+        "property '%s', so cannot be handled", name2, prop); \
+    g_object_get (G_OBJECT (source1), "mode", &mode1, NULL); \
+    g_object_get (G_OBJECT (source2), "mode", &mode2, NULL); \
+    fail_unless (mode1 == mode2, "control source for property '%s' " \
+        "has different modes for %s and %s (%i vs %i)", prop, \
+        name1, name2, mode1, mode2); \
+    \
+    timed_vals1 = gst_timed_value_control_source_get_all ( \
+      GST_TIMED_VALUE_CONTROL_SOURCE (source1)); \
+    timed_vals2 = gst_timed_value_control_source_get_all ( \
+      GST_TIMED_VALUE_CONTROL_SOURCE (source2)); \
+    \
+    for (j = 0, tmp1 = timed_vals1, tmp2 = timed_vals2; tmp1 && tmp2; \
+        j++, tmp1 = tmp1->next, tmp2 = tmp2->next) { \
+      GstTimedValue *val1 = tmp1->data, *val2 = tmp2->data; \
+      fail_unless (val1->timestamp == val2->timestamp && \
+          val1->value == val2->value, "The %uth timed value for property " \
+          "'%s' is different for %s and %s: (%" G_GUINT64_FORMAT ": %g) vs " \
+          "(%" G_GUINT64_FORMAT ": %g)", j, prop, name1, name2, \
+          val1->timestamp, val1->value, val2->timestamp, val2->value); \
+    } \
+    fail_unless (tmp1 == NULL, "Found too many timed values for " \
+        "property '%s' for %s", prop, name1); \
+    fail_unless (tmp2 == NULL, "Found too many timed values for " \
+        "property '%s' for %s", prop, name2); \
+    \
+    g_list_free (timed_vals1); \
+    g_list_free (timed_vals2); \
+    gst_object_unref (source1); \
+    gst_object_unref (source2); \
+  } \
+  free_children_properties (props1, num1); \
+  free_children_properties (props2, num2); \
+}
 
 void print_timeline(GESTimeline *timeline);

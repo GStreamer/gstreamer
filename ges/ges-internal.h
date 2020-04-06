@@ -83,6 +83,9 @@ GstDebugCategory * _ges_debug (void);
 #define GES_FORMAT GES_TIMELINE_ELEMENT_FORMAT
 #define GES_ARGS GES_TIMELINE_ELEMENT_ARGS
 
+#define GES_TRACK_ELEMENT_IS_CORE(child) \
+  (ges_track_element_get_creators (GES_TRACK_ELEMENT (child)) != NULL)
+
 #define SUPRESS_UNUSED_WARNING(a) (void)a
 
 G_GNUC_INTERNAL gboolean
@@ -156,6 +159,14 @@ timeline_create_transitions (GESTimeline * timeline, GESTrackElement * track_ele
 
 G_GNUC_INTERNAL void timeline_get_framerate(GESTimeline *self, gint *fps_n,
                                             gint *fps_d);
+G_GNUC_INTERNAL void
+ges_timeline_set_moving_track_elements (GESTimeline * timeline, gboolean moving);
+
+G_GNUC_INTERNAL gboolean
+ges_timeline_add_clip (GESTimeline * timeline, GESClip * clip);
+
+G_GNUC_INTERNAL void
+ges_timeline_remove_clip (GESTimeline * timeline, GESClip * clip);
 
 G_GNUC_INTERNAL
 void
@@ -406,6 +417,8 @@ G_GNUC_INTERNAL void              ges_clip_set_moving_from_layer  (GESClip *clip
 G_GNUC_INTERNAL GESTrackElement*  ges_clip_create_track_element   (GESClip *clip, GESTrackType type);
 G_GNUC_INTERNAL GList*            ges_clip_create_track_elements  (GESClip *clip, GESTrackType type);
 G_GNUC_INTERNAL gboolean          ges_clip_can_set_inpoint_of_child (GESClip * clip, GESTimelineElement * child, GstClockTime inpoint);
+G_GNUC_INTERNAL gboolean          ges_clip_can_set_track_of_child (GESClip * clip, GESTrackElement * child, GESTrack * tack);
+G_GNUC_INTERNAL void              ges_clip_empty_from_track       (GESClip * clip, GESTrack * track);
 
 /****************************************************
  *              GESLayer                            *

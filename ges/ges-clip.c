@@ -113,6 +113,8 @@ struct _GESClipPrivate
   gboolean prevent_max_duration_update;
   gboolean setting_inpoint;
 
+  gboolean allow_any_track;
+
   /* The formats supported by this Clip */
   GESTrackType supportedformats;
 };
@@ -148,8 +150,10 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GESClip, ges_clip,
  *              Listen to our children              *
  ****************************************************/
 
-#define _IS_CORE_CHILD(child) \
-  (ges_track_element_get_creators (GES_TRACK_ELEMENT (child)) != NULL)
+#define _IS_CORE_CHILD(child) GES_TRACK_ELEMENT_IS_CORE(child)
+
+#define _IS_TOP_EFFECT(child) \
+    (!_IS_CORE_CHILD (child) && GES_IS_BASE_EFFECT (child))
 
 #define _IS_CORE_INTERNAL_SOURCE_CHILD(child) \
   (_IS_CORE_CHILD (child) \
@@ -275,6 +279,85 @@ _child_has_internal_source_changed_cb (GESTimelineElement * child,
   _set_inpoint0 (child, _INPOINT (container));
 }
 
+/****************************************************
+ *              Restrict our children               *
+ ****************************************************/
+
+static gboolean
+_track_contains_core (GESClip * clip, GESTrack * track, gboolean core)
+{
+  GList *tmp;
+  for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
+    GESTrackElement *child = tmp->data;
+    if (_IS_CORE_CHILD (child) == core
+        && ges_track_element_get_track (child) == track)
+      return TRUE;
+  }
+  return FALSE;
+}
+
+gboolean
+ges_clip_can_set_track_of_child (GESClip * clip, GESTrackElement * child,
+    GESTrack * track)
+{
+  GESTrack *current_track = ges_track_element_get_track (child);
+
+  if (clip->priv->allow_any_track)
+    return TRUE;
+
+  if (current_track == track)
+    return TRUE;
+
+  if (current_track) {
+    /* can not remove a core element from a track if a non-core one sits
+     * above it */
+    if (_IS_CORE_CHILD (child)
+        && _track_contains_core (clip, current_track, FALSE)) {
+      GST_INFO_OBJECT (clip, "Cannot move the core child %" GES_FORMAT
+          " to the track %" GST_PTR_FORMAT " because it has non-core "
+          "siblings above it in its current track %" GST_PTR_FORMAT,
+          GES_ARGS (child), track, current_track);
+      return FALSE;
+    }
+    /* otherwise can remove */
+  }
+  if (track) {
+    GESTimeline *clip_timeline = GES_TIMELINE_ELEMENT_TIMELINE (clip);
+    const GESTimeline *track_timeline = ges_track_get_timeline (track);
+    if (track_timeline == NULL) {
+      GST_INFO_OBJECT (clip, "Cannot move the child %" GES_FORMAT
+          " to the track %" GST_PTR_FORMAT " because it is not part "
+          "of a timeline", GES_ARGS (child), track);
+      return FALSE;
+    }
+    if (track_timeline != clip_timeline) {
+      GST_INFO_OBJECT (clip, "Cannot move the child %" GES_FORMAT
+          " to the track %" GST_PTR_FORMAT " because its timeline %"
+          GST_PTR_FORMAT " does not match the clip's timeline %"
+          GST_PTR_FORMAT, GES_ARGS (child), track, track_timeline,
+          clip_timeline);
+      return FALSE;
+    }
+    /* one core child per track, and other children (effects) can only be
+     * placed in a track that already has a core child */
+    if (_IS_CORE_CHILD (child)) {
+      if (_track_contains_core (clip, track, TRUE)) {
+        GST_INFO_OBJECT (clip, "Cannot move the core child %" GES_FORMAT
+            " to the track %" GST_PTR_FORMAT " because it contains a "
+            "core sibling", GES_ARGS (child), track);
+        return FALSE;
+      }
+    } else {
+      if (!_track_contains_core (clip, track, TRUE)) {
+        GST_INFO_OBJECT (clip, "Cannot move the non-core child %"
+            GES_FORMAT " to the track %" GST_PTR_FORMAT " because it "
+            " does not contain a core sibling", GES_ARGS (child), track);
+        return FALSE;
+      }
+    }
+  }
+  return TRUE;
+}
 
 /*****************************************************
  *                                                   *
@@ -574,17 +657,18 @@ _add_child (GESContainer * container, GESTimelineElement * element)
 {
   GESClipClass *klass = GES_CLIP_GET_CLASS (GES_CLIP (container));
   guint max_prio, min_prio;
+  GESTrack *track;
   GList *creators;
+  GESTimeline *timeline = GES_TIMELINE_ELEMENT_TIMELINE (container);
   GESClipPrivate *priv = GES_CLIP (container)->priv;
 
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (element), FALSE);
 
-  if (element->timeline
-      && element->timeline != GES_TIMELINE_ELEMENT_TIMELINE (container)) {
+  if (element->timeline && element->timeline != timeline) {
     GST_WARNING_OBJECT (container, "Cannot add %" GES_FORMAT " as a child "
         "because its timeline is %" GST_PTR_FORMAT " rather than the "
         "clip's timeline %" GST_PTR_FORMAT, GES_ARGS (element),
-        element->timeline, GES_TIMELINE_ELEMENT_TIMELINE (container));
+        element->timeline, timeline);
     return FALSE;
   }
 
@@ -597,12 +681,34 @@ _add_child (GESContainer * container, GESTimelineElement * element)
     return FALSE;
   }
 
+  track = ges_track_element_get_track (GES_TRACK_ELEMENT (element));
+
+  if (track && ges_track_get_timeline (track) != timeline) {
+    /* really, an element in a track should have the same timeline as
+     * the track, so we would have checked this with the
+     * element->timeline check. But technically a user could get around
+     * this, so we double check here. */
+    GST_WARNING_OBJECT (container, "Cannot add %" GES_FORMAT " as a child "
+        "because its track %" GST_PTR_FORMAT " is part of the timeline %"
+        GST_PTR_FORMAT " rather than the clip's timeline %" GST_PTR_FORMAT,
+        GES_ARGS (element), track, ges_track_get_timeline (track), timeline);
+    return FALSE;
+  }
+
   /* NOTE: notifies are currently frozen by ges_container_add */
   _get_priority_range (container, &min_prio, &max_prio);
   if (creators) {
     /* NOTE: Core track elements that are base effects are added like any
-     * other core clip. In particular, they are *not* added to the list of
-     * added effects, so we don not increase nb_effects. */
+     * other core elements. In particular, they are *not* added to the
+     * list of added effects, so we do not increase nb_effects. */
+
+    if (track && !priv->allow_any_track
+        && _track_contains_core (GES_CLIP (container), track, TRUE)) {
+      GST_WARNING_OBJECT (container, "Cannot add the core child %" GES_FORMAT
+          " because it is in the same track %" GST_PTR_FORMAT " as an "
+          "existing core child", GES_ARGS (element), track);
+      return FALSE;
+    }
 
     /* Set the core element to have the same in-point, which we don't
      * apply to effects */
@@ -620,12 +726,20 @@ _add_child (GESContainer * container, GESTimelineElement * element)
 
     /* Always add at the same priority, on top of existing effects */
     _set_priority0 (element, min_prio + priv->nb_effects);
-  } else if (GES_CLIP_CLASS_CAN_ADD_EFFECTS (klass) &&
-      GES_IS_BASE_EFFECT (element)) {
+  } else if (GES_CLIP_CLASS_CAN_ADD_EFFECTS (klass) && _IS_TOP_EFFECT (element)) {
     GList *tmp;
     /* Add the effect at the lowest priority among effects (just after
      * the core elements). Need to shift the core elements up by 1
      * to make room. */
+
+    if (track && !priv->allow_any_track
+        && !_track_contains_core (GES_CLIP (container), track, TRUE)) {
+      GST_WARNING_OBJECT (container, "Cannot add the effect %" GES_FORMAT
+          " because its track %" GST_PTR_FORMAT " does not contain one "
+          "of the clip's core children", GES_ARGS (element), track);
+      return FALSE;
+    }
+
     GST_DEBUG_OBJECT (container, "Adding %ith effect: %" GES_FORMAT
         " Priority %i", priv->nb_effects + 1, GES_ARGS (element),
         min_prio + priv->nb_effects);
@@ -646,7 +760,7 @@ _add_child (GESContainer * container, GESTimelineElement * element)
     /* The height has already changed (increased by 1) */
     _compute_height (container);
   } else {
-    if (GES_IS_BASE_EFFECT (element))
+    if (_IS_TOP_EFFECT (element))
       GST_WARNING_OBJECT (container, "Cannot add the effect %" GES_FORMAT
           " because it is not a core element created by the clip itself "
           "and the %s class does not allow for adding extra effects",
@@ -674,7 +788,7 @@ _remove_child (GESContainer * container, GESTimelineElement * element)
   GESClipPrivate *priv = GES_CLIP (container)->priv;
 
   /* NOTE: notifies are currently frozen by ges_container_add */
-  if (!_IS_CORE_CHILD (element) && GES_IS_BASE_EFFECT (element)) {
+  if (_IS_TOP_EFFECT (element)) {
     GList *tmp;
     GST_DEBUG_OBJECT (container, "Resyncing effects priority.");
 
@@ -701,13 +815,13 @@ _remove_child (GESContainer * container, GESTimelineElement * element)
 static void
 _child_added (GESContainer * container, GESTimelineElement * element)
 {
-  g_signal_connect (G_OBJECT (element), "notify::priority",
+  g_signal_connect (element, "notify::priority",
       G_CALLBACK (_child_priority_changed_cb), container);
-  g_signal_connect (G_OBJECT (element), "notify::in-point",
+  g_signal_connect (element, "notify::in-point",
       G_CALLBACK (_child_inpoint_changed_cb), container);
-  g_signal_connect (G_OBJECT (element), "notify::max-duration",
+  g_signal_connect (element, "notify::max-duration",
       G_CALLBACK (_child_max_duration_changed_cb), container);
-  g_signal_connect (G_OBJECT (element), "notify::has-internal-source",
+  g_signal_connect (element, "notify::has-internal-source",
       G_CALLBACK (_child_has_internal_source_changed_cb), container);
 
   _child_priority_changed_cb (element, NULL, container);
@@ -738,12 +852,24 @@ add_clip_to_list (gpointer key, gpointer clip, GList ** list)
   *list = g_list_prepend (*list, gst_object_ref (clip));
 }
 
+/* NOTE: Since this does not change the track of @child, this should
+ * only be called if it is guaranteed that neither @from_clip nor @to_clip
+ * will not break the track rules:
+ * + no more than one core child per track
+ * + every non-core child must be in the same track as a core child
+ */
 static void
 _transfer_child (GESClip * from_clip, GESClip * to_clip,
     GESTrackElement * child)
 {
+  GESTimeline *timeline = GES_TIMELINE_ELEMENT_TIMELINE (to_clip);
+
   /* We need to bump the refcount to avoid the object to be destroyed */
   gst_object_ref (child);
+
+  /* don't want to change tracks */
+  ges_timeline_set_moving_track_elements (timeline, TRUE);
+
   ges_container_remove (GES_CONTAINER (from_clip),
       GES_TIMELINE_ELEMENT (child));
 
@@ -752,7 +878,11 @@ _transfer_child (GESClip * from_clip, GESClip * to_clip,
     ges_track_element_add_creator (child, to_clip);
   }
 
+  to_clip->priv->allow_any_track = TRUE;
   ges_container_add (GES_CONTAINER (to_clip), GES_TIMELINE_ELEMENT (child));
+  to_clip->priv->allow_any_track = FALSE;
+  ges_timeline_set_moving_track_elements (timeline, FALSE);
+
   gst_object_unref (child);
 }
 
@@ -982,8 +1112,85 @@ _group (GList * containers)
 done:
   if (tracks)
     g_free (tracks);
-
   return ret;
+}
+
+void
+ges_clip_empty_from_track (GESClip * clip, GESTrack * track)
+{
+  GList *tmp;
+  if (track == NULL)
+    return;
+  /* allow us to remove in any order */
+  clip->priv->allow_any_track = TRUE;
+
+  for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
+    GESTrackElement *child = tmp->data;
+    if (ges_track_element_get_track (child) == track) {
+      if (!ges_track_remove_element (track, child))
+        GST_ERROR_OBJECT (clip, "Failed to remove child %" GES_FORMAT
+            " from the track %" GST_PTR_FORMAT, GES_ARGS (child), track);
+    }
+  }
+  clip->priv->allow_any_track = FALSE;
+}
+
+static GESTrackElement *
+_copy_track_element_to (GESTrackElement * orig, GESClip * to_clip,
+    GstClockTime position)
+{
+  GESTrackElement *copy;
+  GESTimelineElement *el_copy, *el_orig;
+
+  /* NOTE: we do not deep copy the track element, we instead call
+   * ges_track_element_copy_properties explicitly, which is the
+   * deep_copy for the GESTrackElementClass. */
+  el_orig = GES_TIMELINE_ELEMENT (orig);
+  el_copy = ges_timeline_element_copy (el_orig, FALSE);
+
+  if (el_copy == NULL)
+    return NULL;
+
+  copy = GES_TRACK_ELEMENT (el_copy);
+  ges_track_element_copy_properties (el_orig, el_copy);
+  /* NOTE: control bindings that are not registered in GES are not
+   * handled */
+  ges_track_element_copy_bindings (orig, copy, position);
+
+  if (_IS_CORE_CHILD (orig))
+    ges_track_element_add_creator (copy, to_clip);
+
+  return copy;
+}
+
+static GESTrackElement *
+ges_clip_copy_track_element_into (GESClip * clip, GESTrackElement * orig,
+    GstClockTime position)
+{
+  GESTimeline *timeline = GES_TIMELINE_ELEMENT_TIMELINE (clip);
+  GESTrackElement *copy;
+
+  copy = _copy_track_element_to (orig, clip, position);
+  if (copy == NULL) {
+    GST_ERROR_OBJECT (clip, "Failed to create a copy of the "
+        "element %" GES_FORMAT " for the clip", GES_ARGS (orig));
+    return NULL;
+  }
+
+  gst_object_ref (copy);
+  ges_timeline_set_moving_track_elements (timeline, TRUE);
+  if (!ges_container_add (GES_CONTAINER (clip), GES_TIMELINE_ELEMENT (copy))) {
+    GST_ERROR_OBJECT (clip, "Failed to add the copied child track "
+        "element %" GES_FORMAT " to the clip", GES_ARGS (copy));
+    ges_timeline_set_moving_track_elements (timeline, FALSE);
+    gst_object_unref (copy);
+    return NULL;
+  }
+  ges_timeline_set_moving_track_elements (timeline, FALSE);
+  /* now owned by the clip */
+  gst_object_unref (copy);
+
+  return copy;
 }
 
 static void
@@ -993,20 +1200,26 @@ _deep_copy (GESTimelineElement * element, GESTimelineElement * copy)
   GESClip *self = GES_CLIP (element), *ccopy = GES_CLIP (copy);
   GESTrackElement *el, *el_copy;
 
-  if (!self->priv->layer)
-    return;
-
+  /* NOTE: this should only be called on a newly created @copy, so
+   * its copied_track_elements, and copied_layer, should be free to set
+   * without disposing of the previous values */
   for (tmp = GES_CONTAINER_CHILDREN (element); tmp; tmp = tmp->next) {
     el = GES_TRACK_ELEMENT (tmp->data);
-    /* copies the children properties */
-    el_copy = GES_TRACK_ELEMENT (ges_timeline_element_copy (tmp->data, TRUE));
 
-    /* any element created by self, will have its copy considered created
-     * by self's copy */
-    if (_IS_CORE_CHILD (el))
-      ges_track_element_add_creator (el_copy, ccopy);
+    el_copy = _copy_track_element_to (el, ccopy, GST_CLOCK_TIME_NONE);
+    if (!el_copy) {
+      GST_ERROR_OBJECT (element, "Failed to copy the track element %"
+          GES_FORMAT " for pasting", GES_ARGS (el));
+      continue;
+    }
+    /* owned by copied_track_elements */
+    gst_object_ref_sink (el_copy);
 
-    ges_track_element_copy_bindings (el, el_copy, GST_CLOCK_TIME_NONE);
+    /* _add_child will add core elements at the lowest priority and new
+     * non-core effects at the lowest effect priority, so we need to add
+     * the highest priority children first to preserve the effect order.
+     * The clip's children are already ordered by highest priority first.
+     * So we order copied_track_elements in the same way */
     ccopy->priv->copied_track_elements =
         g_list_append (ccopy->priv->copied_track_elements, el_copy);
   }
@@ -1022,48 +1235,12 @@ _paste (GESTimelineElement * element, GESTimelineElement * ref,
   GESClip *self = GES_CLIP (element);
   GESClip *nclip = GES_CLIP (ges_timeline_element_copy (element, FALSE));
 
-  if (self->priv->copied_layer)
-    nclip->priv->copied_layer = g_object_ref (self->priv->copied_layer);
   ges_timeline_element_set_start (GES_TIMELINE_ELEMENT (nclip), paste_position);
 
-  for (tmp = self->priv->copied_track_elements; tmp; tmp = tmp->next) {
-    GESTrackElement *new_trackelement, *trackelement =
-        GES_TRACK_ELEMENT (tmp->data);
+  /* paste in order of priority (highest first) */
+  for (tmp = self->priv->copied_track_elements; tmp; tmp = tmp->next)
+    ges_clip_copy_track_element_into (nclip, tmp->data, GST_CLOCK_TIME_NONE);
 
-    /* NOTE: we do not deep copy the track element, we instead call
-     * ges_track_element_copy_properties explicitly, which is the
-     * deep_copy for the GESTrackElementClass. */
-    new_trackelement =
-        GES_TRACK_ELEMENT (ges_timeline_element_copy (GES_TIMELINE_ELEMENT
-            (trackelement), FALSE));
-    if (new_trackelement == NULL) {
-      GST_WARNING_OBJECT (trackelement, "Could not create a copy");
-      continue;
-    }
-
-    if (_IS_CORE_CHILD (trackelement))
-      ges_track_element_add_creator (new_trackelement, nclip);
-
-    gst_object_ref_sink (new_trackelement);
-    if (!ges_container_add (GES_CONTAINER (nclip),
-            GES_TIMELINE_ELEMENT (new_trackelement))) {
-      GST_ERROR_OBJECT (self, "Failed add the copied child track element %"
-          GES_FORMAT " to the copy %" GES_FORMAT,
-          GES_ARGS (new_trackelement), GES_ARGS (nclip));
-      gst_object_unref (new_trackelement);
-      continue;
-    }
-
-    ges_track_element_copy_properties (GES_TIMELINE_ELEMENT (trackelement),
-        GES_TIMELINE_ELEMENT (new_trackelement));
-
-    ges_track_element_copy_bindings (trackelement, new_trackelement,
-        GST_CLOCK_TIME_NONE);
-    gst_object_unref (new_trackelement);
-  }
-
-  /* FIXME: should we bypass the select-tracks-for-object signal when
-   * copying and pasting? */
   if (self->priv->copied_layer) {
     if (!ges_layer_add_clip (self->priv->copied_layer, nclip)) {
       GST_INFO ("%" GES_FORMAT " could not be pasted to %" GST_TIME_FORMAT,
@@ -1071,8 +1248,11 @@ _paste (GESTimelineElement * element, GESTimelineElement * ref,
 
       return NULL;
     }
-
   }
+
+  /* NOTE: self should not be used and be freed after this call, so we can
+   * leave the freeing of copied_layer and copied_track_elements to the
+   * dispose method */
 
   return GES_TIMELINE_ELEMENT (nclip);
 }
@@ -1138,7 +1318,7 @@ ges_clip_dispose (GObject * object)
 {
   GESClip *self = GES_CLIP (object);
 
-  g_list_free_full (self->priv->copied_track_elements, g_object_unref);
+  g_list_free_full (self->priv->copied_track_elements, gst_object_unref);
   self->priv->copied_track_elements = NULL;
   g_clear_object (&self->priv->copied_layer);
 
@@ -1218,15 +1398,7 @@ ges_clip_class_init (GESClipClass * klass)
 static void
 ges_clip_init (GESClip * self)
 {
-  GESClipPrivate *priv;
-  priv = self->priv = ges_clip_get_instance_private (self);
-  priv->layer = NULL;
-  priv->nb_effects = 0;
-  priv->prevent_priority_offset_update = FALSE;
-  priv->prevent_resort = FALSE;
-  priv->updating_max_duration = FALSE;
-  priv->prevent_max_duration_update = FALSE;
-  priv->setting_inpoint = FALSE;
+  self->priv = ges_clip_get_instance_private (self);
 }
 
 /**
@@ -1235,9 +1407,6 @@ ges_clip_init (GESClip * self)
  * @type: The track to create an element for
  *
  * Creates the core #GESTrackElement of the clip, of the given track type.
- *
- * Note, unlike ges_clip_create_track_elements(), this does not add the
- * created track element to the clip or set their timings.
  *
  * Returns: (transfer floating) (nullable): The element created
  * by @clip, or %NULL if @clip can not provide a track element for the
@@ -1277,7 +1446,7 @@ ges_clip_create_track_element (GESClip * clip, GESTrackType type)
  * @type: The track-type to create elements for
  *
  * Creates the core #GESTrackElement-s of the clip, of the given track
- * type, and adds them to the clip.
+ * type.
  *
  * Returns: (transfer container) (element-type GESTrackElement): A list of
  * the #GESTrackElement-s created by @clip for the given @type, or %NULL
@@ -1287,13 +1456,14 @@ ges_clip_create_track_element (GESClip * clip, GESTrackType type)
 GList *
 ges_clip_create_track_elements (GESClip * clip, GESTrackType type)
 {
-  /* add_list holds a ref to its elements to keep them alive
-   * result does not */
-  GList *result = NULL, *add_list = NULL, *tmp, *children;
+  GList *tmp, *ret;
   GESClipClass *klass;
-  gboolean readding_effects_only = TRUE;
+  gboolean already_created = FALSE;
 
   g_return_val_if_fail (GES_IS_CLIP (clip), NULL);
+
+  if ((clip->priv->supportedformats & type) == 0)
+    return NULL;
 
   klass = GES_CLIP_GET_CLASS (clip);
 
@@ -1304,71 +1474,24 @@ ges_clip_create_track_elements (GESClip * clip, GESTrackType type)
 
   GST_DEBUG_OBJECT (clip, "Creating TrackElements for type: %s",
       ges_track_type_name (type));
-  children = ges_container_get_children (GES_CONTAINER (clip), TRUE);
-  for (tmp = children; tmp; tmp = tmp->next) {
+  for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
     GESTrackElement *child = GES_TRACK_ELEMENT (tmp->data);
 
-    if (!ges_track_element_get_track (child)
+    if (_IS_CORE_CHILD (child)
         && ges_track_element_get_track_type (child) & type) {
-      GST_DEBUG_OBJECT (clip, "Removing for reusage: %" GST_PTR_FORMAT, child);
-      add_list = g_list_append (add_list, gst_object_ref (child));
-      ges_container_remove (GES_CONTAINER (clip), tmp->data);
-      if (_IS_CORE_CHILD (child))
-        readding_effects_only = FALSE;
+      /* assume the core track elements have all been created if we find
+       * at least one core child with the same type */
+      already_created = TRUE;
+      break;
     }
   }
-  g_list_free_full (children, gst_object_unref);
+  if (already_created)
+    return NULL;
 
-  /* FIXME: we need something smarter to determine whether we should
-   * create the track elements.
-   * Currently, if the clip contains at least one element with a matching
-   * track-type, not in a track and not a GESBaseEffect, we will not
-   * recreate the track elements! But this is not a reliable indicator.
-   *
-   * For example, consider a uri clip that creates two audio track
-   * elements: El_A and El_B. First, we add the clip to a timeline that
-   * only has a single track: Track_A, and we connect to the timeline's
-   * ::select-tracks-for-object signal to only allow El_A to end up in
-   * Track_A. As such, whilst both El_A and El_B are initially created,
-   * El_B will eventually be removed from the clip since it has no track
-   * (see clip_track_element_added_cb in ges-timeline.c). As such, we now
-   * have a clip that only contains El_A.
-   * Next, we remove Track_A from the timeline. El_A will remain a child
-   * of the clip, but now has its track unset.
-   * Next, we add Track_B to the timeline, and we connect to the
-   * timeline's ::select-tracks-for-object signal to only allow El_B to
-   * end up in Track_B.
-   *
-   * However, since the clip contains an audio track element, that is not
-   * an effect and has no track set: El_A. Therefore, the
-   * create_track_elements method below will not be called, so we will not
-   * have an El_B created for Track_B!
-   *
-   * Moreover, even if we did recreate the track elements, we would be
-   * creating El_A again! We could destroy and recreate El_A instead, or
-   * we would need a way to determine exactly which elements need to be
-   * recreated.
-   */
-  if (readding_effects_only) {
-    GList *track_elements = klass->create_track_elements (clip, type);
-    for (tmp = track_elements; tmp; tmp = tmp->next) {
-      gst_object_ref_sink (tmp->data);
-      ges_track_element_add_creator (tmp->data, clip);
-    }
-    add_list = g_list_concat (track_elements, add_list);
-  }
-
-  for (tmp = add_list; tmp; tmp = tmp->next) {
-    GESTimelineElement *el = GES_TIMELINE_ELEMENT (tmp->data);
-    if (ges_container_add (GES_CONTAINER (clip), el))
-      result = g_list_append (result, el);
-    else
-      GST_ERROR_OBJECT (clip, "Failed add the track element %"
-          GES_FORMAT " to the clip", GES_ARGS (el));
-  }
-  g_list_free_full (add_list, gst_object_unref);
-
-  return result;
+  ret = klass->create_track_elements (clip, type);
+  for (tmp = ret; tmp; tmp = tmp->next)
+    ges_track_element_add_creator (tmp->data, clip);
+  return ret;
 }
 
 /*
@@ -1605,7 +1728,7 @@ ges_clip_get_top_effects (GESClip * clip)
 
   for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
     child = tmp->data;
-    if (GES_IS_BASE_EFFECT (child) && !_IS_CORE_CHILD (child))
+    if (_IS_TOP_EFFECT (child))
       ret = g_list_append (ret, gst_object_ref (child));
   }
 
@@ -1801,14 +1924,20 @@ ges_clip_split (GESClip * clip, guint64 position)
   GESClip *new_object;
   GstClockTime start, inpoint, duration, old_duration, new_duration;
   gdouble media_duration_factor;
+  GESTimelineElement *element;
+  GESTimeline *timeline;
+  GHashTable *track_for_copy;
 
   g_return_val_if_fail (GES_IS_CLIP (clip), NULL);
   g_return_val_if_fail (clip->priv->layer, NULL);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (position), NULL);
 
-  duration = _DURATION (clip);
-  start = _START (clip);
-  inpoint = _INPOINT (clip);
+  element = GES_TIMELINE_ELEMENT (clip);
+  timeline = element->timeline;
+
+  duration = element->duration;
+  start = element->start;
+  inpoint = element->inpoint;
 
   if (position >= start + duration || position <= start) {
     GST_WARNING_OBJECT (clip, "Can not split %" GST_TIME_FORMAT
@@ -1817,9 +1946,9 @@ ges_clip_split (GESClip * clip, guint64 position)
   }
 
   old_duration = position - start;
-  if (!timeline_tree_can_move_element (timeline_get_tree
-          (GES_TIMELINE_ELEMENT_TIMELINE (clip)), GES_TIMELINE_ELEMENT (clip),
-          GES_TIMELINE_ELEMENT_LAYER_PRIORITY (clip),
+  if (timeline && !timeline_tree_can_move_element (timeline_get_tree
+          (timeline), element,
+          ges_timeline_element_get_layer_priority (element),
           start, old_duration, NULL)) {
     GST_WARNING_OBJECT (clip,
         "Can not split %" GES_FORMAT " at %" GST_TIME_FORMAT
@@ -1829,10 +1958,10 @@ ges_clip_split (GESClip * clip, guint64 position)
   }
 
   new_duration = duration + start - position;
-  if (!timeline_tree_can_move_element (timeline_get_tree
-          (GES_TIMELINE_ELEMENT_TIMELINE (clip)), GES_TIMELINE_ELEMENT (clip),
-          GES_TIMELINE_ELEMENT_LAYER_PRIORITY (clip), position, new_duration,
-          NULL)) {
+  if (timeline && !timeline_tree_can_move_element (timeline_get_tree
+          (timeline), element,
+          ges_timeline_element_get_layer_priority (element),
+          position, new_duration, NULL)) {
     GST_WARNING_OBJECT (clip,
         "Can not split %" GES_FORMAT " at %" GST_TIME_FORMAT
         " as timeline would end up in an illegal" " state.", GES_ARGS (clip),
@@ -1844,64 +1973,60 @@ ges_clip_split (GESClip * clip, guint64 position)
       GST_TIME_ARGS (position));
 
   /* Create the new Clip */
-  new_object = GES_CLIP (ges_timeline_element_copy (GES_TIMELINE_ELEMENT (clip),
-          FALSE));
+  new_object = GES_CLIP (ges_timeline_element_copy (element, FALSE));
 
   GST_DEBUG_OBJECT (new_object, "New 'splitted' clip");
   /* Set new timing properties on the Clip */
   media_duration_factor =
-      ges_timeline_element_get_media_duration_factor (GES_TIMELINE_ELEMENT
-      (clip));
+      ges_timeline_element_get_media_duration_factor (element);
   _set_start0 (GES_TIMELINE_ELEMENT (new_object), position);
   _set_inpoint0 (GES_TIMELINE_ELEMENT (new_object),
       inpoint + old_duration * media_duration_factor);
   _set_duration0 (GES_TIMELINE_ELEMENT (new_object), new_duration);
 
-  _DURATION (clip) = old_duration;
-  g_object_notify (G_OBJECT (clip), "duration");
-
   /* We do not want the timeline to create again TrackElement-s */
   ges_clip_set_moving_from_layer (new_object, TRUE);
+  /* adding to the same layer should not fail when moving */
   ges_layer_add_clip (clip->priv->layer, new_object);
   ges_clip_set_moving_from_layer (new_object, FALSE);
 
+  /* split binding before duration changes */
+  track_for_copy = g_hash_table_new_full (NULL, NULL,
+      gst_object_unref, gst_object_unref);
+  /* _add_child will add core elements at the lowest priority and new
+   * non-core effects at the lowest effect priority, so we need to add the
+   * highest priority children first to preserve the effect order. The
+   * clip's children are already ordered by highest priority first. */
   for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
-    GESTrackElement *new_trackelement, *trackelement =
-        GES_TRACK_ELEMENT (tmp->data);
-
-    new_trackelement =
-        GES_TRACK_ELEMENT (ges_timeline_element_copy (GES_TIMELINE_ELEMENT
-            (trackelement), FALSE));
-    if (new_trackelement == NULL) {
-      GST_WARNING_OBJECT (trackelement, "Could not create a copy");
-      continue;
-    }
-
-    if (_IS_CORE_CHILD (trackelement))
-      ges_track_element_add_creator (new_trackelement, new_object);
-
-    /* FIXME: in-point for non-core track elements should be shifted by
-     * the split (adding them to the new clip will not set their in-point)
-     * Handle this once generic time effects are supported in splitting */
-    ges_container_add (GES_CONTAINER (new_object),
-        GES_TIMELINE_ELEMENT (new_trackelement));
-    ges_track_element_copy_properties (GES_TIMELINE_ELEMENT (trackelement),
-        GES_TIMELINE_ELEMENT (new_trackelement));
-
+    GESTrackElement *copy, *orig = tmp->data;
+    GESTrack *track = ges_track_element_get_track (orig);
     /* FIXME: is position - start + inpoint always the correct splitting
      * point for control bindings? What coordinate system are control
      * bindings given in? */
-    /* NOTE: control bindings that are not registered in GES are not
-     * handled */
-    ges_track_element_copy_bindings (trackelement, new_trackelement,
+    copy = ges_clip_copy_track_element_into (new_object, orig,
         position - start + inpoint);
+    if (copy && track)
+      g_hash_table_insert (track_for_copy, gst_object_ref (copy),
+          gst_object_ref (track));
   }
 
-  /* FIXME: The below leads to a *second* notify signal for duration */
   ELEMENT_SET_FLAG (clip, GES_TIMELINE_ELEMENT_SET_SIMPLE);
-  _DURATION (clip) = duration;
   _set_duration0 (GES_TIMELINE_ELEMENT (clip), old_duration);
   ELEMENT_UNSET_FLAG (clip, GES_TIMELINE_ELEMENT_SET_SIMPLE);
+  g_object_notify (G_OBJECT (clip), "duration");
+
+  /* add to the track after the duration change so we don't overlap! */
+  for (tmp = GES_CONTAINER_CHILDREN (new_object); tmp; tmp = tmp->next) {
+    GESTrackElement *copy = tmp->data;
+    GESTrack *track = g_hash_table_lookup (track_for_copy, copy);
+    if (track) {
+      new_object->priv->allow_any_track = TRUE;
+      ges_track_add_element (track, copy);
+      new_object->priv->allow_any_track = FALSE;
+    }
+  }
+
+  g_hash_table_unref (track_for_copy);
 
   return new_object;
 }
@@ -2132,4 +2257,118 @@ ges_clip_get_timeline_time_from_source_frame (GESClip * clip,
   }
 
   return GST_CLOCK_DIFF (inpoint_diff, _START (clip));
+}
+
+/**
+ * ges_clip_add_child_to_track:
+ * @clip: A #GESClip
+ * @child: A child of @clip
+ * @track: The track to add @child to
+ * @err: Return location for an error
+ *
+ * Adds the track element child of the clip to a specific track.
+ *
+ * If the given child is already in another track, this will create a copy
+ * of the child, add it to the clip, and add this copy to the track.
+ *
+ * You should only call this whilst a clip is part of a #GESTimeline, and
+ * for tracks that are in the same timeline.
+ *
+ * This method is an alternative to using the
+ * #GESTimeline::select-tracks-for-object signal, but can be used to
+ * complement it when, say, you wish to copy a clip's children from one
+ * track into a new one.
+ *
+ * When the child is a core child, it must be added to a track that does
+ * not already contain another core child of the same clip. If it is not a
+ * core child (an additional effect), then it must be added to a track
+ * that already contains one of the core children of the same clip.
+ *
+ * This method can also fail if the adding the track element to the track
+ * would break a configuration rule of the corresponding #GESTimeline,
+ * such as causing three sources to overlap at a single time, or causing
+ * a source to completely overlap another in the same track.
+ *
+ * Note that @err will not always be set upon failure.
+ *
+ * Returns: (transfer none): The element that was added to @track, either
+ * @child or a copy of child, or %NULL if the element could not be added.
+ */
+GESTrackElement *
+ges_clip_add_child_to_track (GESClip * clip, GESTrackElement * child,
+    GESTrack * track, GError ** err)
+{
+  GESTimeline *timeline;
+  GESTrackElement *el;
+  GESTrack *current_track;
+
+  g_return_val_if_fail (GES_IS_CLIP (clip), NULL);
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (child), NULL);
+  g_return_val_if_fail (GES_IS_TRACK (track), NULL);
+  g_return_val_if_fail (!err || !*err, NULL);
+
+  timeline = GES_TIMELINE_ELEMENT_TIMELINE (clip);
+
+  if (!g_list_find (GES_CONTAINER_CHILDREN (clip), child)) {
+    GST_WARNING_OBJECT (clip, "The track element %" GES_FORMAT " is not "
+        "a child of the clip", GES_ARGS (child));
+    return NULL;
+  }
+
+  if (!timeline) {
+    GST_WARNING_OBJECT (clip, "Cannot add children to tracks unless "
+        "the clip is part of a timeline");
+    return NULL;
+  }
+
+  if (timeline != ges_track_get_timeline (track)) {
+    GST_WARNING_OBJECT (clip, "Cannot add the children to the track %"
+        GST_PTR_FORMAT " because its timeline is %" GST_PTR_FORMAT
+        " rather than that of the clip %" GST_PTR_FORMAT,
+        track, ges_track_get_timeline (track), timeline);
+    return NULL;
+  }
+
+  current_track = ges_track_element_get_track (child);
+
+  if (current_track == track) {
+    GST_WARNING_OBJECT (clip, "Child %s" GES_FORMAT " is already in the "
+        "track %" GST_PTR_FORMAT, GES_ARGS (child), track);
+    return NULL;
+  }
+
+  /* copy if the element is already in a track */
+  if (current_track) {
+    el = ges_clip_copy_track_element_into (clip, child, GST_CLOCK_TIME_NONE);
+    if (!el) {
+      GST_ERROR_OBJECT (clip, "Could not add a copy of the track element %"
+          GES_FORMAT " to the clip so cannot add it to the track %"
+          GST_PTR_FORMAT, GES_ARGS (child), track);
+      return NULL;
+    }
+    if (_IS_TOP_EFFECT (child)) {
+      /* add at next lowest priority */
+      ges_clip_set_top_effect_index (clip, GES_BASE_EFFECT (el),
+          ges_clip_get_top_effect_index (clip, GES_BASE_EFFECT (child)) + 1);
+    }
+  } else {
+    el = child;
+  }
+
+  /* FIXME: set error if can not be added to track:
+   * Either breaks the track rules for the clip, or the timeline
+   * configuration rules */
+  if (!ges_track_add_element (track, el)) {
+    GST_WARNING_OBJECT (clip, "Could not add the track element %"
+        GES_FORMAT " to the track %" GST_PTR_FORMAT, GES_ARGS (el), track);
+    if (el != child)
+      ges_container_remove (GES_CONTAINER (clip), GES_TIMELINE_ELEMENT (el));
+    return NULL;
+  }
+
+  if (GES_IS_SOURCE (el))
+    timeline_tree_create_transitions (timeline_get_tree (timeline),
+        ges_timeline_find_auto_transition);
+
+  return el;
 }

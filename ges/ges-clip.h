@@ -155,6 +155,9 @@ GES_API
 GList *           ges_clip_find_track_elements    (GESClip * clip, GESTrack * track,
                                                    GESTrackType track_type, GType type);
 
+GES_API
+GESTrackElement * ges_clip_add_child_to_track     (GESClip * clip, GESTrackElement * child, GESTrack * track, GError **err);
+
 /****************************************************
  *                     Layer                        *
  ****************************************************/

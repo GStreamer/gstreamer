@@ -482,6 +482,7 @@ ges_layer_remove_clip_internal (GESLayer * layer, GESClip * clip,
 {
   GESLayer *current_layer;
   GList *tmp;
+  GESTimeline *timeline = layer->timeline;
 
   GST_DEBUG ("layer:%p, clip:%p", layer, clip);
 
@@ -507,8 +508,10 @@ ges_layer_remove_clip_internal (GESLayer * layer, GESClip * clip,
   /* inform the clip it's no longer in a layer */
   ges_clip_set_layer (clip, NULL);
   /* so neither in a timeline */
-  if (layer->timeline)
+  if (timeline) {
+    ges_timeline_remove_clip (timeline, clip);
     ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (clip), NULL);
+  }
 
   for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next)
     ges_track_element_set_layer_active (tmp->data, TRUE);
@@ -766,25 +769,17 @@ ges_layer_add_clip (GESLayer * layer, GESClip * clip)
   ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (clip),
       layer->timeline);
 
-  /* emit 'clip-added' */
-  /* FIXME: we are emitting the 'clip-added' signal even though we still
-   * might fail. This is because the timeline uses this signal to create
-   * the auto-transitions etc needed for timeline_tree_can_move_element
-   * below, which checks whether the added clip is in a legal position.
-   * However, we should have a way to check that adding a clip will be
-   * legal **before** we actually add it!
-   * A user connecting to 'clip-added' in such a case would receive a
-   * signal saying that the clip was added, but a return value that says
-   * something else! */
+  /* FIXME: ideally we would only emit if we are going to return TRUE.
+   * However, for backward-compatibility, we ensure the "clip-added"
+   * signal is released before the clip's "child-added" signal, which is
+   * invoked by ges_timeline_add_clip */
   g_signal_emit (layer, ges_layer_signals[OBJECT_ADDED], 0, clip);
 
-  if (!ELEMENT_FLAG_IS_SET (clip, GES_CLIP_IS_MOVING) && layer->timeline
-      && !timeline_tree_can_move_element (timeline_get_tree (layer->timeline),
-          GES_TIMELINE_ELEMENT (clip),
-          GES_TIMELINE_ELEMENT_LAYER_PRIORITY (clip),
-          GES_TIMELINE_ELEMENT_START (clip),
-          GES_TIMELINE_ELEMENT_DURATION (clip), NULL)) {
-    GST_INFO_OBJECT (layer, "Clip %" GES_FORMAT, GES_ARGS (clip));
+  if (layer->timeline && !ges_timeline_add_clip (layer->timeline, clip)) {
+    GST_WARNING_OBJECT (layer, "Could not add the clip %" GES_FORMAT
+        " to the timeline %" GST_PTR_FORMAT, GES_ARGS (clip), layer->timeline);
+    /* FIXME: change emit signal to FALSE once we are able to delay the
+     * "clip-added" signal until after ges_timeline_add_clip */
     ges_layer_remove_clip_internal (layer, clip, TRUE);
     return FALSE;
   }

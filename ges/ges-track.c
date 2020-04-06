@@ -382,7 +382,8 @@ ges_track_get_composition (GESTrack * track)
  * accessing it
  */
 static gboolean
-remove_object_internal (GESTrack * track, GESTrackElement * object)
+remove_object_internal (GESTrack * track, GESTrackElement * object,
+    gboolean emit)
 {
   GESTrackPrivate *priv;
   GstElement *nleobject;
@@ -392,25 +393,30 @@ remove_object_internal (GESTrack * track, GESTrackElement * object)
   priv = track->priv;
 
   if (G_UNLIKELY (ges_track_element_get_track (object) != track)) {
-    GST_WARNING ("Object belongs to another track");
+    GST_WARNING_OBJECT (track, "Object belongs to another track");
     return FALSE;
   }
+
+  if (!ges_track_element_set_track (object, NULL)) {
+    GST_WARNING_OBJECT (track, "Failed to unset the track for %" GES_FORMAT,
+        GES_ARGS (object));
+    return FALSE;
+  }
+  ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (object), NULL);
 
   if ((nleobject = ges_track_element_get_nleobject (object))) {
     GST_DEBUG ("Removing NleObject '%s' from composition '%s'",
         GST_ELEMENT_NAME (nleobject), GST_ELEMENT_NAME (priv->composition));
 
     if (!ges_nle_composition_remove_object (priv->composition, nleobject)) {
-      GST_WARNING ("Failed to remove nleobject from composition");
+      GST_WARNING_OBJECT (track, "Failed to remove nleobject from composition");
       return FALSE;
     }
   }
 
-  ges_track_element_set_track (object, NULL);
-  ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (object), NULL);
-
-  g_signal_emit (track, ges_track_signals[TRACK_ELEMENT_REMOVED], 0,
-      GES_TRACK_ELEMENT (object));
+  if (emit)
+    g_signal_emit (track, ges_track_signals[TRACK_ELEMENT_REMOVED], 0,
+        GES_TRACK_ELEMENT (object));
 
   gst_object_unref (object);
 
@@ -420,7 +426,7 @@ remove_object_internal (GESTrack * track, GESTrackElement * object)
 static void
 dispose_trackelements_foreach (GESTrackElement * trackelement, GESTrack * track)
 {
-  remove_object_internal (track, trackelement);
+  remove_object_internal (track, trackelement, TRUE);
 }
 
 /* GstElement virtual methods */
@@ -918,9 +924,19 @@ ges_track_new (GESTrackType type, GstCaps * caps)
 void
 ges_track_set_timeline (GESTrack * track, GESTimeline * timeline)
 {
+  GSequenceIter *it;
+  g_return_if_fail (GES_IS_TRACK (track));
+  g_return_if_fail (timeline == NULL || GES_IS_TIMELINE (timeline));
   GST_DEBUG ("track:%p, timeline:%p", track, timeline);
 
   track->priv->timeline = timeline;
+
+  for (it = g_sequence_get_begin_iter (track->priv->trackelements_by_start);
+      g_sequence_iter_is_end (it) == FALSE; it = g_sequence_iter_next (it)) {
+    GESTimelineElement *trackelement =
+        GES_TIMELINE_ELEMENT (g_sequence_get (it));
+    ges_timeline_element_set_timeline (trackelement, timeline);
+  }
   track_resort_and_fill_gaps (track);
 }
 
@@ -1089,6 +1105,31 @@ notify:
   GST_DEBUG_OBJECT (track, "The track has been set to mixing = %d", mixing);
 }
 
+static gboolean
+remove_element_internal (GESTrack * track, GESTrackElement * object,
+    gboolean emit)
+{
+  GSequenceIter *it;
+  GESTrackPrivate *priv = track->priv;
+
+  GST_DEBUG_OBJECT (track, "Removing %" GST_PTR_FORMAT, object);
+
+  it = g_hash_table_lookup (priv->trackelements_iter, object);
+  g_sequence_remove (it);
+
+  if (remove_object_internal (track, object, emit) == TRUE) {
+    ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (object), NULL);
+
+    return TRUE;
+  }
+
+  g_hash_table_insert (track->priv->trackelements_iter, object,
+      g_sequence_insert_sorted (track->priv->trackelements_by_start, object,
+          (GCompareDataFunc) element_start_compare, NULL));
+
+  return FALSE;
+}
+
 /**
  * ges_track_add_element:
  * @track: A #GESTrack
@@ -1097,6 +1138,9 @@ notify:
  * Adds the given track element to the track, which takes ownership of the
  * element.
  *
+ * Note that this can fail if it would break a configuration rule of the
+ * track's #GESTimeline.
+ *
  * Note that a #GESTrackElement can only be added to one track.
  *
  * Returns: %TRUE if @object was successfully added to @track.
@@ -1104,8 +1148,14 @@ notify:
 gboolean
 ges_track_add_element (GESTrack * track, GESTrackElement * object)
 {
+  GESTimeline *timeline;
+  GESTimelineElement *el;
+
   g_return_val_if_fail (GES_IS_TRACK (track), FALSE);
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
+
+  el = GES_TIMELINE_ELEMENT (object);
+
   CHECK_THREAD (track);
 
   GST_DEBUG ("track:%p, object:%p", track, object);
@@ -1117,12 +1167,14 @@ ges_track_add_element (GESTrack * track, GESTrackElement * object)
     return FALSE;
   }
 
-  if (G_UNLIKELY (!ges_track_element_set_track (object, track))) {
-    GST_ERROR ("Couldn't properly add the object to the Track");
+  if (!ges_track_element_set_track (object, track)) {
+    GST_WARNING_OBJECT (track, "Failed to set the track for %" GES_FORMAT,
+        GES_ARGS (object));
     gst_object_ref_sink (object);
     gst_object_unref (object);
     return FALSE;
   }
+  ges_timeline_element_set_timeline (el, NULL);
 
   GST_DEBUG ("Adding object %s to ourself %s",
       GST_OBJECT_NAME (ges_track_element_get_nleobject (object)),
@@ -1131,6 +1183,7 @@ ges_track_add_element (GESTrack * track, GESTrackElement * object)
   if (G_UNLIKELY (!ges_nle_composition_add_object (track->priv->composition,
               ges_track_element_get_nleobject (object)))) {
     GST_WARNING ("Couldn't add object to the NleComposition");
+    ges_track_element_set_track (object, NULL);
     gst_object_ref_sink (object);
     gst_object_unref (object);
     return FALSE;
@@ -1141,8 +1194,20 @@ ges_track_add_element (GESTrack * track, GESTrackElement * object)
       g_sequence_insert_sorted (track->priv->trackelements_by_start, object,
           (GCompareDataFunc) element_start_compare, NULL));
 
-  ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (object),
-      track->priv->timeline);
+  timeline = track->priv->timeline;
+  ges_timeline_element_set_timeline (el, timeline);
+  if (timeline
+      && !timeline_tree_can_move_element (timeline_get_tree (timeline), el,
+          GES_TIMELINE_ELEMENT_LAYER_PRIORITY (el), el->start, el->duration,
+          NULL)) {
+    GST_WARNING_OBJECT (track,
+        "Could not add the track element %" GES_FORMAT
+        " to the track because it breaks the timeline " "configuration rules",
+        GES_ARGS (el));
+    remove_element_internal (track, object, FALSE);
+    return FALSE;
+  }
+
   g_signal_emit (track, ges_track_signals[TRACK_ELEMENT_ADDED], 0,
       GES_TRACK_ELEMENT (object));
 
@@ -1188,31 +1253,12 @@ ges_track_get_elements (GESTrack * track)
 gboolean
 ges_track_remove_element (GESTrack * track, GESTrackElement * object)
 {
-  GSequenceIter *it;
-  GESTrackPrivate *priv;
-
   g_return_val_if_fail (GES_IS_TRACK (track), FALSE);
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
+
   CHECK_THREAD (track);
 
-  priv = track->priv;
-
-  GST_DEBUG_OBJECT (track, "Removing %" GST_PTR_FORMAT, object);
-
-  it = g_hash_table_lookup (priv->trackelements_iter, object);
-  g_sequence_remove (it);
-
-  if (remove_object_internal (track, object) == TRUE) {
-    ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (object), NULL);
-
-    return TRUE;
-  }
-
-  g_hash_table_insert (track->priv->trackelements_iter, object,
-      g_sequence_insert_sorted (track->priv->trackelements_by_start, object,
-          (GCompareDataFunc) element_start_compare, NULL));
-
-  return FALSE;
+  return remove_element_internal (track, object, TRUE);
 }
 
 /**

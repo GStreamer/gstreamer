@@ -1049,11 +1049,19 @@ ges_track_element_add_children_props (GESTrackElement * self,
 gboolean
 ges_track_element_set_track (GESTrackElement * object, GESTrack * track)
 {
-  gboolean ret = TRUE;
+  GESTimelineElement *parent = GES_TIMELINE_ELEMENT_PARENT (object);
 
   g_return_val_if_fail (object->priv->nleobject, FALSE);
 
   GST_DEBUG_OBJECT (object, "new track: %" GST_PTR_FORMAT, track);
+
+  if (GES_IS_CLIP (parent)
+      && !ges_clip_can_set_track_of_child (GES_CLIP (parent), object, track)) {
+    GST_WARNING_OBJECT (object, "The parent clip %" GES_FORMAT " would "
+        "not allow the track to be set to %" GST_PTR_FORMAT,
+        GES_ARGS (parent), track);
+    return FALSE;
+  }
 
   object->priv->track = track;
 
@@ -1065,7 +1073,7 @@ ges_track_element_set_track (GESTrackElement * object, GESTrack * track)
   }
 
   g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_TRACK]);
-  return ret;
+  return TRUE;
 }
 
 void

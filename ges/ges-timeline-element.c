@@ -409,7 +409,8 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
    */
   properties[PROP_TIMELINE] =
       g_param_spec_object ("timeline", "Timeline",
-      "The timeline the object is in", GES_TYPE_TIMELINE, G_PARAM_READWRITE);
+      "The timeline the object is in", GES_TYPE_TIMELINE,
+      G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY);
 
   /**
    * GESTimelineElement:start:
@@ -979,6 +980,9 @@ ges_timeline_element_set_timeline (GESTimelineElement * self,
   g_return_val_if_fail (timeline == NULL || GES_IS_TIMELINE (timeline), FALSE);
 
   GST_DEBUG_OBJECT (self, "set timeline to %" GST_PTR_FORMAT, timeline);
+
+  if (self->timeline == timeline)
+    return TRUE;
 
   if (timeline != NULL && G_UNLIKELY (self->timeline != NULL))
     goto had_timeline;

@@ -54,7 +54,7 @@ GST_START_TEST (test_object_properties)
 
   ges_layer_add_clip (layer, GES_CLIP (clip));
   ges_timeline_commit (timeline);
-  assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 1);
+  assert_num_children (clip, 1);
   trackelement = GES_CONTAINER_CHILDREN (clip)->data;
   fail_unless (trackelement != NULL);
   fail_unless (GES_TIMELINE_ELEMENT_PARENT (trackelement) ==
@@ -133,7 +133,7 @@ GST_START_TEST (test_split_direct_bindings)
   g_object_unref (asset);
 
   CHECK_OBJECT_PROPS (clip, 0 * GST_SECOND, 10 * GST_SECOND, 10 * GST_SECOND);
-  assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 1);
+  assert_num_children (clip, 1);
   check_layer (clip, 0);
 
   source = gst_interpolation_control_source_new ();
@@ -231,7 +231,7 @@ GST_START_TEST (test_split_direct_absolute_bindings)
   g_object_unref (asset);
 
   CHECK_OBJECT_PROPS (clip, 0 * GST_SECOND, 10 * GST_SECOND, 10 * GST_SECOND);
-  assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 1);
+  assert_num_children (clip, 1);
   check_layer (clip, 0);
 
   source = gst_interpolation_control_source_new ();
@@ -301,14 +301,37 @@ GST_START_TEST (test_split_direct_absolute_bindings)
 
 GST_END_TEST;
 
+static GPtrArray *
+_select_none (GESTimeline * timeline, GESClip * clip,
+    GESTrackElement * track_element, guint * called_p)
+{
+  (*called_p)++;
+  return NULL;
+}
+
+static GPtrArray *
+_select_track (GESTimeline * timeline, GESClip * clip,
+    GESTrackElement * track_element, GESTrack ** track_p)
+{
+  GPtrArray *tracks = g_ptr_array_new ();
+  fail_unless (track_p);
+  fail_unless (*track_p);
+  g_ptr_array_insert (tracks, -1, gst_object_ref (*track_p));
+  *track_p = NULL;
+  return tracks;
+}
 
 GST_START_TEST (test_split_object)
 {
   GESTimeline *timeline;
+  GESTrack *track1, *track2, *effect_track;
   GESLayer *layer;
   GESClip *clip, *splitclip;
   GList *splittrackelements;
-  GESTrackElement *trackelement, *splittrackelement;
+  GESTrackElement *trackelement1, *trackelement2, *effect1, *effect2,
+      *splittrackelement;
+  guint32 priority1, priority2, effect_priority1, effect_priority2;
+  guint selection_called = 0;
 
   ges_init ();
 
@@ -327,58 +350,151 @@ GST_START_TEST (test_split_object)
   g_object_set (clip, "start", (guint64) 42, "duration", (guint64) 50,
       "in-point", (guint64) 12, NULL);
   ASSERT_OBJECT_REFCOUNT (timeline, "timeline", 1);
-  assert_equals_uint64 (_START (clip), 42);
-  assert_equals_uint64 (_DURATION (clip), 50);
-  assert_equals_uint64 (_INPOINT (clip), 12);
+  CHECK_OBJECT_PROPS (clip, 42, 12, 50);
 
   ges_layer_add_clip (layer, GES_CLIP (clip));
   ges_timeline_commit (timeline);
-  assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 2);
-  trackelement = GES_CONTAINER_CHILDREN (clip)->data;
-  fail_unless (trackelement != NULL);
-  fail_unless (GES_TIMELINE_ELEMENT_PARENT (trackelement) ==
+  assert_num_children (clip, 2);
+  trackelement1 = GES_CONTAINER_CHILDREN (clip)->data;
+  fail_unless (trackelement1 != NULL);
+  fail_unless (GES_TIMELINE_ELEMENT_PARENT (trackelement1) ==
+      GES_TIMELINE_ELEMENT (clip));
+  trackelement2 = GES_CONTAINER_CHILDREN (clip)->next->data;
+  fail_unless (trackelement2 != NULL);
+  fail_unless (GES_TIMELINE_ELEMENT_PARENT (trackelement2) ==
       GES_TIMELINE_ELEMENT (clip));
 
+  effect1 = GES_TRACK_ELEMENT (ges_effect_new ("agingtv"));
+  ges_container_add (GES_CONTAINER (clip), GES_TIMELINE_ELEMENT (effect1));
+
+  effect2 = GES_TRACK_ELEMENT (ges_effect_new ("vertigotv"));
+  ges_container_add (GES_CONTAINER (clip), GES_TIMELINE_ELEMENT (effect2));
+
   /* Check that trackelement has the same properties */
-  assert_equals_uint64 (_START (trackelement), 42);
-  assert_equals_uint64 (_DURATION (trackelement), 50);
-  assert_equals_uint64 (_INPOINT (trackelement), 12);
+  CHECK_OBJECT_PROPS (trackelement1, 42, 12, 50);
+  CHECK_OBJECT_PROPS (trackelement2, 42, 12, 50);
+  CHECK_OBJECT_PROPS (effect1, 42, 0, 50);
+  CHECK_OBJECT_PROPS (effect2, 42, 0, 50);
 
   /* And let's also check that it propagated correctly to GNonLin */
-  nle_object_check (ges_track_element_get_nleobject (trackelement), 42, 50, 12,
-      50, MIN_NLE_PRIO + TRANSITIONS_HEIGHT, TRUE);
+  nle_object_check (ges_track_element_get_nleobject (trackelement1), 42, 50, 12,
+      50, MIN_NLE_PRIO + TRANSITIONS_HEIGHT + 2, TRUE);
+  nle_object_check (ges_track_element_get_nleobject (trackelement2), 42, 50, 12,
+      50, MIN_NLE_PRIO + TRANSITIONS_HEIGHT + 2, TRUE);
+
+  track1 = ges_track_element_get_track (trackelement1);
+  fail_unless (track1);
+  track2 = ges_track_element_get_track (trackelement2);
+  fail_unless (track2);
+  fail_unless (track1 != track2);
+  effect_track = ges_track_element_get_track (effect1);
+  fail_unless (effect_track);
+  fail_unless (ges_track_element_get_track (effect2) == effect_track);
+
+  priority1 = GES_TIMELINE_ELEMENT_PRIORITY (trackelement1);
+  priority2 = GES_TIMELINE_ELEMENT_PRIORITY (trackelement2);
+  effect_priority1 = GES_TIMELINE_ELEMENT_PRIORITY (effect1);
+  effect_priority2 = GES_TIMELINE_ELEMENT_PRIORITY (effect2);
+
+  fail_unless (priority1 == priority2);
+  fail_unless (priority1 > effect_priority2);
+  fail_unless (effect_priority2 > effect_priority1);
+
+  ges_timeline_element_set_child_properties (GES_TIMELINE_ELEMENT (clip),
+      "font-desc", "Normal", "posx", 30, "posy", 50, "alpha", 0.1,
+      "freq", 449.0, "scratch-lines", 2, "zoom-speed", 1.05, NULL);
+
+  /* splitting should avoid track selection */
+  g_signal_connect (timeline, "select-tracks-for-object",
+      G_CALLBACK (_select_none), &selection_called);
 
   splitclip = ges_clip_split (clip, 67);
   fail_unless (GES_IS_CLIP (splitclip));
+  fail_unless (splitclip != clip);
 
-  assert_equals_uint64 (_START (clip), 42);
-  assert_equals_uint64 (_DURATION (clip), 25);
-  assert_equals_uint64 (_INPOINT (clip), 12);
+  fail_if (selection_called);
 
-  assert_equals_uint64 (_START (splitclip), 67);
-  assert_equals_uint64 (_DURATION (splitclip), 25);
-  assert_equals_uint64 (_INPOINT (splitclip), 37);
+  CHECK_OBJECT_PROPS (clip, 42, 12, 25);
+  CHECK_OBJECT_PROPS (trackelement1, 42, 12, 25);
+  CHECK_OBJECT_PROPS (trackelement1, 42, 12, 25);
+  CHECK_OBJECT_PROPS (effect1, 42, 0, 25);
+  CHECK_OBJECT_PROPS (effect2, 42, 0, 25);
+
+  CHECK_OBJECT_PROPS (splitclip, 67, 37, 25);
+
+  assert_equal_children_properties (splitclip, clip);
 
   splittrackelements = GES_CONTAINER_CHILDREN (splitclip);
-  fail_unless_equals_int (g_list_length (splittrackelements), 2);
+  fail_unless_equals_int (g_list_length (splittrackelements), 4);
 
+  /* first is the effects */
   splittrackelement = GES_TRACK_ELEMENT (splittrackelements->data);
   fail_unless (GES_IS_TRACK_ELEMENT (splittrackelement));
-  assert_equals_uint64 (_START (splittrackelement), 67);
-  assert_equals_uint64 (_DURATION (splittrackelement), 25);
-  assert_equals_uint64 (_INPOINT (splittrackelement), 37);
+  CHECK_OBJECT_PROPS (splittrackelement, 67, 0, 25);
 
-  fail_unless (splittrackelement != trackelement);
-  fail_unless (splitclip != clip);
+  assert_equal_children_properties (splittrackelement, effect1);
+  fail_unless (ges_track_element_get_track (splittrackelement) == effect_track);
+  fail_unless (ges_track_element_get_track (effect1) == effect_track);
+  /* +3 priority from layer */
+  assert_equals_int (GES_TIMELINE_ELEMENT_PRIORITY (splittrackelement),
+      effect_priority1 + 3);
+  fail_unless (GES_TIMELINE_ELEMENT_PRIORITY (effect1) == effect_priority1);
+
+  fail_unless (splittrackelement != trackelement1);
+  fail_unless (splittrackelement != trackelement2);
+  fail_unless (splittrackelement != effect1);
+  fail_unless (splittrackelement != effect2);
 
   splittrackelement = GES_TRACK_ELEMENT (splittrackelements->next->data);
   fail_unless (GES_IS_TRACK_ELEMENT (splittrackelement));
-  assert_equals_uint64 (_START (splittrackelement), 67);
-  assert_equals_uint64 (_DURATION (splittrackelement), 25);
-  assert_equals_uint64 (_INPOINT (splittrackelement), 37);
+  CHECK_OBJECT_PROPS (splittrackelement, 67, 0, 25);
 
-  fail_unless (splittrackelement != trackelement);
-  fail_unless (splitclip != clip);
+  assert_equal_children_properties (splittrackelement, effect2);
+  fail_unless (ges_track_element_get_track (splittrackelement) == effect_track);
+  fail_unless (ges_track_element_get_track (effect2) == effect_track);
+  assert_equals_int (GES_TIMELINE_ELEMENT_PRIORITY (splittrackelement),
+      effect_priority2 + 3);
+  fail_unless (GES_TIMELINE_ELEMENT_PRIORITY (effect2) == effect_priority2);
+
+  fail_unless (splittrackelement != trackelement1);
+  fail_unless (splittrackelement != trackelement2);
+  fail_unless (splittrackelement != effect1);
+  fail_unless (splittrackelement != effect2);
+
+  splittrackelement = GES_TRACK_ELEMENT (splittrackelements->next->next->data);
+  fail_unless (GES_IS_TRACK_ELEMENT (splittrackelement));
+  CHECK_OBJECT_PROPS (splittrackelement, 67, 37, 25);
+
+  /* core elements have swapped order in the clip, this is ok since they
+   * share the same priority */
+  assert_equal_children_properties (splittrackelement, trackelement2);
+  fail_unless (ges_track_element_get_track (splittrackelement) == track2);
+  fail_unless (ges_track_element_get_track (trackelement2) == track2);
+  assert_equals_int (GES_TIMELINE_ELEMENT_PRIORITY (splittrackelement),
+      priority2 + 3);
+  fail_unless (GES_TIMELINE_ELEMENT_PRIORITY (trackelement2) == priority2);
+
+  fail_unless (splittrackelement != trackelement1);
+  fail_unless (splittrackelement != trackelement2);
+  fail_unless (splittrackelement != effect1);
+  fail_unless (splittrackelement != effect2);
+
+  splittrackelement =
+      GES_TRACK_ELEMENT (splittrackelements->next->next->next->data);
+  fail_unless (GES_IS_TRACK_ELEMENT (splittrackelement));
+  CHECK_OBJECT_PROPS (splittrackelement, 67, 37, 25);
+
+  assert_equal_children_properties (splittrackelement, trackelement1);
+  fail_unless (ges_track_element_get_track (splittrackelement) == track1);
+  fail_unless (ges_track_element_get_track (trackelement1) == track1);
+  assert_equals_int (GES_TIMELINE_ELEMENT_PRIORITY (splittrackelement),
+      priority1 + 3);
+  fail_unless (GES_TIMELINE_ELEMENT_PRIORITY (trackelement1) == priority2);
+
+  fail_unless (splittrackelement != trackelement1);
+  fail_unless (splittrackelement != trackelement2);
+  fail_unless (splittrackelement != effect1);
+  fail_unless (splittrackelement != effect2);
 
   /* We own the only ref */
   ASSERT_OBJECT_REFCOUNT (splitclip, "1 ref for us + 1 for the timeline", 2);
@@ -395,15 +511,51 @@ GST_START_TEST (test_split_object)
 
 GST_END_TEST;
 
+#define _assert_higher_priority(el, higher) \
+{ \
+  if (higher) { \
+    guint32 el_prio = GES_TIMELINE_ELEMENT_PRIORITY (el); \
+    guint32 higher_prio = GES_TIMELINE_ELEMENT_PRIORITY (higher); \
+    fail_unless (el_prio > higher_prio, "%s does not have a higher " \
+        "priority than %s (%u vs %u)", GES_TIMELINE_ELEMENT_NAME (el), \
+        GES_TIMELINE_ELEMENT_NAME (higher), el_prio, higher_prio); \
+  } \
+}
+
+#define _assert_regroup_fails(clip_list) \
+{ \
+  GESContainer *regrouped = ges_container_group (clip_list); \
+  fail_unless (GES_IS_GROUP (regrouped)); \
+  assert_equals_int (g_list_length (regrouped->children), \
+      g_list_length (clip_list)); \
+  g_list_free_full (ges_container_ungroup (regrouped, FALSE), \
+      gst_object_unref); \
+}
+
 GST_START_TEST (test_clip_group_ungroup)
 {
   GESAsset *asset;
   GESTimeline *timeline;
-  GESClip *clip, *clip2;
+  GESClip *clip, *video_clip, *audio_clip;
+  GESTrackElement *el;
   GList *containers, *tmp;
   GESLayer *layer;
   GESContainer *regrouped_clip;
   GESTrack *audio_track, *video_track;
+  guint selection_called = 0;
+  struct
+  {
+    GESTrackElement *element;
+    GESTrackElement *higher_priority;
+  } audio_els[2];
+  struct
+  {
+    GESTrackElement *element;
+    GESTrackElement *higher_priority;
+  } video_els[3];
+  guint i, j;
+  const gchar *name;
+  GESTrackType type;
 
   ges_init ();
 
@@ -420,101 +572,192 @@ GST_START_TEST (test_clip_group_ungroup)
   assert_is_type (asset, GES_TYPE_ASSET);
 
   clip = ges_layer_add_asset (layer, asset, 0, 0, 10, GES_TRACK_TYPE_UNKNOWN);
-  ASSERT_OBJECT_REFCOUNT (clip, "1 layer + 1 timeline.all_elements", 2);
-  assert_equals_uint64 (_START (clip), 0);
-  assert_equals_uint64 (_INPOINT (clip), 0);
-  assert_equals_uint64 (_DURATION (clip), 10);
-  assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 2);
+  ASSERT_OBJECT_REFCOUNT (clip, "1 layer + 1 timeline.all_els", 2);
+  assert_num_children (clip, 2);
+  CHECK_OBJECT_PROPS (clip, 0, 0, 10);
+
+  el = GES_TRACK_ELEMENT (ges_effect_new ("audioecho"));
+  ges_track_element_set_track_type (el, GES_TRACK_TYPE_AUDIO);
+  fail_unless (ges_container_add (GES_CONTAINER (clip),
+          GES_TIMELINE_ELEMENT (el)));
+
+  el = GES_TRACK_ELEMENT (ges_effect_new ("agingtv"));
+  ges_track_element_set_track_type (el, GES_TRACK_TYPE_VIDEO);
+  fail_unless (ges_container_add (GES_CONTAINER (clip),
+          GES_TIMELINE_ELEMENT (el)));
+
+  el = GES_TRACK_ELEMENT (ges_effect_new ("videobalance"));
+  ges_track_element_set_track_type (el, GES_TRACK_TYPE_VIDEO);
+  fail_unless (ges_container_add (GES_CONTAINER (clip),
+          GES_TIMELINE_ELEMENT (el)));
+
+  assert_num_children (clip, 5);
+  CHECK_OBJECT_PROPS (clip, 0, 0, 10);
+
+  i = j = 0;
+  for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
+    el = tmp->data;
+    type = ges_track_element_get_track_type (el);
+    if (type == GES_TRACK_TYPE_AUDIO) {
+      fail_unless (i < G_N_ELEMENTS (audio_els));
+      audio_els[i].element = el;
+      fail_unless (ges_track_element_get_track (el) == audio_track,
+          "%s not in audio track", GES_TIMELINE_ELEMENT_NAME (el));
+      if (i == 0)
+        audio_els[i].higher_priority = NULL;
+      else
+        audio_els[i].higher_priority = audio_els[i - 1].element;
+      _assert_higher_priority (el, audio_els[i].higher_priority);
+      i++;
+    }
+    if (type == GES_TRACK_TYPE_VIDEO) {
+      fail_unless (j < G_N_ELEMENTS (video_els));
+      video_els[j].element = el;
+      fail_unless (ges_track_element_get_track (el) == video_track,
+          "%s not in video track", GES_TIMELINE_ELEMENT_NAME (el));
+      if (j == 0)
+        video_els[j].higher_priority = NULL;
+      else
+        video_els[j].higher_priority = video_els[j - 1].element;
+      _assert_higher_priority (el, video_els[j].higher_priority);
+      j++;
+    }
+  }
+  fail_unless (i == G_N_ELEMENTS (audio_els));
+  fail_unless (j == G_N_ELEMENTS (video_els));
+  assert_num_in_track (audio_track, 2);
+  assert_num_in_track (video_track, 3);
+
+  /* group and ungroup should avoid track selection */
+  g_signal_connect (timeline, "select-tracks-for-object",
+      G_CALLBACK (_select_none), &selection_called);
 
   containers = ges_container_ungroup (GES_CONTAINER (clip), FALSE);
+
+  fail_if (selection_called);
+
+  video_clip = NULL;
+  audio_clip = NULL;
+
   assert_equals_int (g_list_length (containers), 2);
-  fail_unless (clip == containers->data);
-  assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 1);
-  assert_equals_uint64 (_START (clip), 0);
-  assert_equals_uint64 (_INPOINT (clip), 0);
-  assert_equals_uint64 (_DURATION (clip), 10);
-  ASSERT_OBJECT_REFCOUNT (clip, "1 for the layer + 1 for the timeline + "
+
+  type = ges_clip_get_supported_formats (containers->data);
+  if (type == GES_TRACK_TYPE_VIDEO)
+    video_clip = containers->data;
+  if (type == GES_TRACK_TYPE_AUDIO)
+    audio_clip = containers->data;
+
+  type = ges_clip_get_supported_formats (containers->next->data);
+  if (type == GES_TRACK_TYPE_VIDEO)
+    video_clip = containers->next->data;
+  if (type == GES_TRACK_TYPE_AUDIO)
+    audio_clip = containers->next->data;
+
+  fail_unless (video_clip);
+  fail_unless (audio_clip);
+  fail_unless (video_clip == clip || audio_clip == clip);
+
+  assert_layer (video_clip, layer);
+  assert_num_children (video_clip, 3);
+  fail_unless (GES_TIMELINE_ELEMENT_TIMELINE (video_clip) == timeline);
+  CHECK_OBJECT_PROPS (video_clip, 0, 0, 10);
+  ASSERT_OBJECT_REFCOUNT (video_clip, "1 for the layer + 1 for the timeline + "
       "1 in containers list", 3);
 
-  clip2 = containers->next->data;
-  fail_if (clip2 == clip);
-  fail_unless (GES_TIMELINE_ELEMENT_TIMELINE (clip2) != NULL);
-  assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip2)), 1);
-  assert_equals_uint64 (_START (clip2), 0);
-  assert_equals_uint64 (_INPOINT (clip2), 0);
-  assert_equals_uint64 (_DURATION (clip2), 10);
-  ASSERT_OBJECT_REFCOUNT (clip2, "1 for the layer + 1 for the timeline +"
-      " 1 in containers list", 3);
+  assert_layer (audio_clip, layer);
+  assert_num_children (audio_clip, 2);
+  fail_unless (GES_TIMELINE_ELEMENT_TIMELINE (audio_clip) == timeline);
+  CHECK_OBJECT_PROPS (audio_clip, 0, 0, 10);
+  ASSERT_OBJECT_REFCOUNT (audio_clip, "1 for the layer + 1 for the timeline + "
+      "1 in containers list", 3);
 
-  tmp = ges_track_get_elements (audio_track);
-  assert_equals_int (g_list_length (tmp), 1);
-  ASSERT_OBJECT_REFCOUNT (tmp->data, "1 for the track + 1 for the container "
-      "+ 1 for the timeline + 1 in tmp list", 4);
-  assert_equals_int (ges_track_element_get_track_type (tmp->data),
-      GES_TRACK_TYPE_AUDIO);
-  assert_equals_int (ges_clip_get_supported_formats (GES_CLIP
-          (ges_timeline_element_get_parent (tmp->data))), GES_TRACK_TYPE_AUDIO);
-  g_list_free_full (tmp, gst_object_unref);
-  tmp = ges_track_get_elements (video_track);
-  assert_equals_int (g_list_length (tmp), 1);
-  ASSERT_OBJECT_REFCOUNT (tmp->data, "1 for the track + 1 for the container "
-      "+ 1 for the timeline + 1 in tmp list", 4);
-  assert_equals_int (ges_track_element_get_track_type (tmp->data),
-      GES_TRACK_TYPE_VIDEO);
-  assert_equals_int (ges_clip_get_supported_formats (GES_CLIP
-          (ges_timeline_element_get_parent (tmp->data))), GES_TRACK_TYPE_VIDEO);
-  g_list_free_full (tmp, gst_object_unref);
+  for (i = 0; i < G_N_ELEMENTS (audio_els); i++) {
+    el = audio_els[i].element;
+    name = GES_TIMELINE_ELEMENT_NAME (el);
+    fail_unless (ges_track_element_get_track (el) == audio_track,
+        "%s not in audio track", name);
+    fail_unless (GES_TIMELINE_ELEMENT_PARENT (el) ==
+        GES_TIMELINE_ELEMENT (audio_clip), "%s not in the audio clip", name);
+    ASSERT_OBJECT_REFCOUNT (el,
+        "1 for the track + 1 for the container " "+ 1 for the timeline", 3);
+    _assert_higher_priority (el, audio_els[i].higher_priority);
+  }
+  for (i = 0; i < G_N_ELEMENTS (video_els); i++) {
+    el = video_els[i].element;
+    name = GES_TIMELINE_ELEMENT_NAME (el);
+    fail_unless (ges_track_element_get_track (el) == video_track,
+        "%s not in video track", name);
+    fail_unless (GES_TIMELINE_ELEMENT_PARENT (el) ==
+        GES_TIMELINE_ELEMENT (video_clip), "%s not in the video clip", name);
+    ASSERT_OBJECT_REFCOUNT (el,
+        "1 for the track + 1 for the container " "+ 1 for the timeline", 3);
+    _assert_higher_priority (el, video_els[i].higher_priority);
+  }
+  assert_num_in_track (audio_track, 2);
+  assert_num_in_track (video_track, 3);
 
-  ges_timeline_element_set_start (GES_TIMELINE_ELEMENT (clip), 10);
-  assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 1);
-  assert_equals_uint64 (_START (clip), 10);
-  assert_equals_uint64 (_INPOINT (clip), 0);
-  assert_equals_uint64 (_DURATION (clip), 10);
-  assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip2)), 1);
-  assert_equals_uint64 (_START (clip2), 0);
-  assert_equals_uint64 (_INPOINT (clip2), 0);
-  assert_equals_uint64 (_DURATION (clip2), 10);
+  ges_timeline_element_set_start (GES_TIMELINE_ELEMENT (video_clip), 10);
+  CHECK_OBJECT_PROPS (video_clip, 10, 0, 10);
+  CHECK_OBJECT_PROPS (audio_clip, 0, 0, 10);
+
+  _assert_regroup_fails (containers);
+
+  ges_timeline_element_set_start (GES_TIMELINE_ELEMENT (video_clip), 0);
+  ges_timeline_element_set_inpoint (GES_TIMELINE_ELEMENT (video_clip), 10);
+  CHECK_OBJECT_PROPS (video_clip, 0, 10, 10);
+  CHECK_OBJECT_PROPS (audio_clip, 0, 0, 10);
+
+  _assert_regroup_fails (containers);
+
+  ges_timeline_element_set_inpoint (GES_TIMELINE_ELEMENT (video_clip), 0);
+  ges_timeline_element_set_duration (GES_TIMELINE_ELEMENT (video_clip), 15);
+  CHECK_OBJECT_PROPS (video_clip, 0, 0, 15);
+  CHECK_OBJECT_PROPS (audio_clip, 0, 0, 10);
+
+  _assert_regroup_fails (containers);
+
+  ges_timeline_element_set_duration (GES_TIMELINE_ELEMENT (video_clip), 10);
+  CHECK_OBJECT_PROPS (video_clip, 0, 0, 10);
+  CHECK_OBJECT_PROPS (audio_clip, 0, 0, 10);
 
   regrouped_clip = ges_container_group (containers);
-  fail_unless (GES_IS_GROUP (regrouped_clip));
-  assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (regrouped_clip)),
-      2);
-  tmp = ges_container_ungroup (regrouped_clip, FALSE);
-  g_list_free_full (tmp, gst_object_unref);
 
-  ges_timeline_element_set_start (GES_TIMELINE_ELEMENT (clip), 0);
-  regrouped_clip = ges_container_group (containers);
+  fail_if (selection_called);
+
   assert_is_type (regrouped_clip, GES_TYPE_CLIP);
-  assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (regrouped_clip)),
-      2);
+  assert_num_children (regrouped_clip, 5);
   assert_equals_int (ges_clip_get_supported_formats (GES_CLIP (regrouped_clip)),
       GES_TRACK_TYPE_VIDEO | GES_TRACK_TYPE_AUDIO);
   g_list_free_full (containers, gst_object_unref);
 
-  GST_DEBUG ("Check clips in the layer");
-  tmp = ges_layer_get_clips (layer);
-  assert_equals_int (g_list_length (tmp), 1);
-  g_list_free_full (tmp, gst_object_unref);
+  assert_layer (regrouped_clip, layer);
 
-  GST_DEBUG ("Check TrackElement in audio track");
-  tmp = ges_track_get_elements (audio_track);
-  assert_equals_int (g_list_length (tmp), 1);
-  assert_equals_int (ges_track_element_get_track_type (tmp->data),
-      GES_TRACK_TYPE_AUDIO);
-  fail_unless (GES_CONTAINER (ges_timeline_element_get_parent (tmp->data)) ==
-      regrouped_clip);
-  g_list_free_full (tmp, gst_object_unref);
-
-  GST_DEBUG ("Check TrackElement in video track");
-  tmp = ges_track_get_elements (video_track);
-  assert_equals_int (g_list_length (tmp), 1);
-  ASSERT_OBJECT_REFCOUNT (tmp->data, "1 for the track + 1 for the container "
-      "+ 1 for the timeline + 1 in tmp list", 4);
-  assert_equals_int (ges_track_element_get_track_type (tmp->data),
-      GES_TRACK_TYPE_VIDEO);
-  fail_unless (GES_CONTAINER (ges_timeline_element_get_parent (tmp->data)) ==
-      regrouped_clip);
-  g_list_free_full (tmp, gst_object_unref);
+  for (i = 0; i < G_N_ELEMENTS (audio_els); i++) {
+    el = audio_els[i].element;
+    name = GES_TIMELINE_ELEMENT_NAME (el);
+    fail_unless (ges_track_element_get_track (el) == audio_track,
+        "%s not in audio track", name);
+    fail_unless (GES_TIMELINE_ELEMENT_PARENT (el) ==
+        GES_TIMELINE_ELEMENT (regrouped_clip), "%s not in the regrouped clip",
+        name);
+    ASSERT_OBJECT_REFCOUNT (el,
+        "1 for the track + 1 for the container " "+ 1 for the timeline", 3);
+    _assert_higher_priority (el, audio_els[i].higher_priority);
+  }
+  for (i = 0; i < G_N_ELEMENTS (video_els); i++) {
+    el = video_els[i].element;
+    name = GES_TIMELINE_ELEMENT_NAME (el);
+    fail_unless (ges_track_element_get_track (el) == video_track,
+        "%s not in video track", name);
+    fail_unless (GES_TIMELINE_ELEMENT_PARENT (el) ==
+        GES_TIMELINE_ELEMENT (regrouped_clip), "%s not in the regrouped clip",
+        name);
+    ASSERT_OBJECT_REFCOUNT (el,
+        "1 for the track + 1 for the container " "+ 1 for the timeline", 3);
+    _assert_higher_priority (el, video_els[i].higher_priority);
+  }
+  assert_num_in_track (audio_track, 2);
+  assert_num_in_track (video_track, 3);
 
   gst_object_unref (timeline);
 
@@ -523,12 +766,324 @@ GST_START_TEST (test_clip_group_ungroup)
 
 GST_END_TEST;
 
+GST_START_TEST (test_adding_children_to_track)
+{
+  GESTimeline *timeline;
+  GESLayer *layer;
+  GESTrack *track1, *track2;
+  GESClip *clip, *clip2;
+  GESAsset *asset;
+  GESTrackElement *source, *effect, *effect2, *added, *added2, *added3;
+  GstControlSource *ctrl_source;
+  guint selection_called = 0;
+
+  ges_init ();
+
+  timeline = ges_timeline_new ();
+  ges_timeline_set_auto_transition (timeline, TRUE);
+  track1 = GES_TRACK (ges_video_track_new ());
+  track2 = GES_TRACK (ges_video_track_new ());
+
+
+  /* only add two for now */
+  fail_unless (ges_timeline_add_track (timeline, track1));
+
+  layer = ges_timeline_append_layer (timeline);
+
+  asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
+
+  clip = ges_layer_add_asset (layer, asset, 0, 0, 10, GES_TRACK_TYPE_UNKNOWN);
+  fail_unless (clip);
+  assert_num_children (clip, 1);
+  assert_num_in_track (track1, 1);
+  assert_num_in_track (track2, 0);
+  source = GES_CONTAINER_CHILDREN (clip)->data;
+  fail_unless (ges_track_element_get_track (source) == track1);
+
+  effect = GES_TRACK_ELEMENT (ges_effect_new ("agingtv"));
+  fail_unless (ges_container_add (GES_CONTAINER (clip),
+          GES_TIMELINE_ELEMENT (effect)));
+  effect2 = GES_TRACK_ELEMENT (ges_effect_new ("vertigotv"));
+  fail_unless (ges_container_add (GES_CONTAINER (clip),
+          GES_TIMELINE_ELEMENT (effect2)));
+  assert_num_children (clip, 3);
+  assert_num_in_track (track1, 3);
+  assert_num_in_track (track2, 0);
+  fail_unless (ges_track_element_get_track (effect) == track1);
+  fail_unless (ges_track_element_get_track (effect2) == track1);
+
+  ges_timeline_element_set_child_properties (GES_TIMELINE_ELEMENT (clip),
+      "font-desc", "Normal", "posx", 30, "posy", 50, "alpha", 0.1,
+      "freq", 449.0, "scratch-lines", 2, NULL);
+
+  ctrl_source = GST_CONTROL_SOURCE (gst_interpolation_control_source_new ());
+  g_object_set (G_OBJECT (ctrl_source), "mode",
+      GST_INTERPOLATION_MODE_CUBIC, NULL);
+  fail_unless (gst_timed_value_control_source_set
+      (GST_TIMED_VALUE_CONTROL_SOURCE (ctrl_source), 0, 20.0));
+  fail_unless (gst_timed_value_control_source_set
+      (GST_TIMED_VALUE_CONTROL_SOURCE (ctrl_source), 5, 45.0));
+  fail_unless (ges_track_element_set_control_source (source, ctrl_source,
+          "posx", "direct-absolute"));
+  gst_object_unref (ctrl_source);
+
+  ctrl_source = GST_CONTROL_SOURCE (gst_interpolation_control_source_new ());
+  g_object_set (G_OBJECT (ctrl_source), "mode",
+      GST_INTERPOLATION_MODE_LINEAR, NULL);
+  fail_unless (gst_timed_value_control_source_set
+      (GST_TIMED_VALUE_CONTROL_SOURCE (ctrl_source), 2, 0.1));
+  fail_unless (gst_timed_value_control_source_set
+      (GST_TIMED_VALUE_CONTROL_SOURCE (ctrl_source), 5, 0.7));
+  fail_unless (gst_timed_value_control_source_set
+      (GST_TIMED_VALUE_CONTROL_SOURCE (ctrl_source), 8, 0.3));
+  fail_unless (ges_track_element_set_control_source (source, ctrl_source,
+          "alpha", "direct"));
+  gst_object_unref (ctrl_source);
+
+  ctrl_source = GST_CONTROL_SOURCE (gst_interpolation_control_source_new ());
+  g_object_set (G_OBJECT (ctrl_source), "mode",
+      GST_INTERPOLATION_MODE_NONE, NULL);
+  fail_unless (gst_timed_value_control_source_set
+      (GST_TIMED_VALUE_CONTROL_SOURCE (ctrl_source), 0, 1.0));
+  fail_unless (gst_timed_value_control_source_set
+      (GST_TIMED_VALUE_CONTROL_SOURCE (ctrl_source), 4, 7.0));
+  fail_unless (gst_timed_value_control_source_set
+      (GST_TIMED_VALUE_CONTROL_SOURCE (ctrl_source), 8, 3.0));
+  fail_unless (ges_track_element_set_control_source (effect, ctrl_source,
+          "scratch-lines", "direct-absolute"));
+  gst_object_unref (ctrl_source);
+
+  /* can't add to a track that does not belong to the timeline */
+  fail_if (ges_clip_add_child_to_track (clip, source, track2, NULL));
+  assert_num_children (clip, 3);
+  fail_unless (ges_track_element_get_track (source) == track1);
+  assert_num_in_track (track1, 3);
+  assert_num_in_track (track2, 0);
+
+  /* can't add the clip to a track that already contains our source */
+  fail_if (ges_clip_add_child_to_track (clip, source, track1, NULL));
+  assert_num_children (clip, 3);
+  fail_unless (ges_track_element_get_track (source) == track1);
+  assert_num_in_track (track1, 3);
+  assert_num_in_track (track2, 0);
+
+  /* can't remove a core element from its track whilst a non-core sits
+   * above it */
+  fail_if (ges_track_remove_element (track1, source));
+  assert_num_children (clip, 3);
+  fail_unless (ges_track_element_get_track (source) == track1);
+  assert_num_in_track (track1, 3);
+  assert_num_in_track (track2, 0);
+
+  /* can not add to the same track as it is currently in */
+  fail_if (ges_clip_add_child_to_track (clip, effect, track1, NULL));
+  fail_unless (ges_track_element_get_track (effect) == track1);
+  assert_num_in_track (track1, 3);
+  assert_num_in_track (track2, 0);
+
+  /* adding another video track, select-tracks-for-object will do nothing
+   * since no each track element is already part of a track */
+  fail_unless (ges_timeline_add_track (timeline, track2));
+  assert_num_children (clip, 3);
+  assert_num_in_track (track1, 3);
+  assert_num_in_track (track2, 0);
+
+  /* can not add effect to a track that does not contain a core child */
+  fail_if (ges_clip_add_child_to_track (clip, effect, track2, NULL));
+  assert_num_children (clip, 3);
+  assert_num_in_track (track1, 3);
+  assert_num_in_track (track2, 0);
+
+  /* can add core */
+
+  added = ges_clip_add_child_to_track (clip, source, track2, NULL);
+  fail_unless (added);
+  assert_num_children (clip, 4);
+  fail_unless (added != source);
+  fail_unless (ges_track_element_get_track (source) == track1);
+  fail_unless (ges_track_element_get_track (added) == track2);
+  assert_num_in_track (track1, 3);
+  assert_num_in_track (track2, 1);
+
+  assert_equal_children_properties (added, source);
+  assert_equal_bindings (added, source);
+
+  /* can now add non-core */
+  assert_equals_int (0,
+      ges_clip_get_top_effect_index (clip, GES_BASE_EFFECT (effect)));
+  assert_equals_int (1,
+      ges_clip_get_top_effect_index (clip, GES_BASE_EFFECT (effect2)));
+
+  added2 = ges_clip_add_child_to_track (clip, effect, track2, NULL);
+  fail_unless (added2);
+  assert_num_children (clip, 5);
+  fail_unless (added2 != effect);
+  fail_unless (ges_track_element_get_track (effect) == track1);
+  fail_unless (ges_track_element_get_track (added2) == track2);
+  assert_num_in_track (track1, 3);
+  assert_num_in_track (track2, 2);
+
+  assert_equal_children_properties (added2, effect);
+  assert_equal_bindings (added2, effect);
+
+  assert_equals_int (0,
+      ges_clip_get_top_effect_index (clip, GES_BASE_EFFECT (effect)));
+  assert_equals_int (1,
+      ges_clip_get_top_effect_index (clip, GES_BASE_EFFECT (added2)));
+  assert_equals_int (2,
+      ges_clip_get_top_effect_index (clip, GES_BASE_EFFECT (effect2)));
+
+  added3 = ges_clip_add_child_to_track (clip, effect2, track2, NULL);
+  fail_unless (added3);
+  assert_num_children (clip, 6);
+  fail_unless (added3 != effect2);
+  fail_unless (ges_track_element_get_track (effect2) == track1);
+  fail_unless (ges_track_element_get_track (added3) == track2);
+  assert_num_in_track (track1, 3);
+  assert_num_in_track (track2, 3);
+
+  assert_equal_children_properties (added3, effect2);
+  assert_equal_bindings (added3, effect2);
+
+  /* priorities within new track match that in previous track! */
+  assert_equals_int (0,
+      ges_clip_get_top_effect_index (clip, GES_BASE_EFFECT (effect)));
+  assert_equals_int (1,
+      ges_clip_get_top_effect_index (clip, GES_BASE_EFFECT (added2)));
+  assert_equals_int (2,
+      ges_clip_get_top_effect_index (clip, GES_BASE_EFFECT (effect2)));
+  assert_equals_int (3,
+      ges_clip_get_top_effect_index (clip, GES_BASE_EFFECT (added3)));
+
+  /* removing core from the container, empties the non-core from their
+   * tracks */
+  gst_object_ref (added);
+  fail_unless (ges_container_remove (GES_CONTAINER (clip),
+          GES_TIMELINE_ELEMENT (added)));
+  assert_num_children (clip, 5);
+  fail_unless (ges_track_element_get_track (source) == track1);
+  fail_if (ges_track_element_get_track (added));
+  fail_if (ges_track_element_get_track (added2));
+  fail_unless (GES_TIMELINE_ELEMENT_PARENT (added) == NULL);
+  fail_unless (GES_TIMELINE_ELEMENT_PARENT (added2) ==
+      GES_TIMELINE_ELEMENT (clip));
+  assert_num_in_track (track1, 3);
+  assert_num_in_track (track2, 0);
+  gst_object_unref (added);
+
+  fail_unless (ges_container_remove (GES_CONTAINER (clip),
+          GES_TIMELINE_ELEMENT (added2)));
+  fail_unless (ges_container_remove (GES_CONTAINER (clip),
+          GES_TIMELINE_ELEMENT (added3)));
+  assert_num_children (clip, 3);
+  assert_num_in_track (track1, 3);
+  assert_num_in_track (track2, 0);
+
+  /* remove from layer empties all children from the tracks */
+  gst_object_ref (clip);
+
+  fail_unless (ges_layer_remove_clip (layer, clip));
+  assert_num_children (clip, 3);
+  fail_if (ges_track_element_get_track (source));
+  fail_if (ges_track_element_get_track (effect));
+  assert_num_in_track (track1, 0);
+  assert_num_in_track (track2, 0);
+
+  /* add different sources to the layer */
+  fail_unless (ges_layer_add_asset (layer, asset, 0, 0, 10,
+          GES_TRACK_TYPE_UNKNOWN));
+  fail_unless (ges_layer_add_asset (layer, asset, 20, 0, 10,
+          GES_TRACK_TYPE_UNKNOWN));
+  fail_unless (clip2 = ges_layer_add_asset (layer, asset, 25, 0, 10,
+          GES_TRACK_TYPE_UNKNOWN));
+  assert_num_children (clip2, 2);
+  /* 3 sources + 1 transition */
+  assert_num_in_track (track1, 4);
+  assert_num_in_track (track2, 4);
+
+  /* removing the track from the timeline empties it of track elements */
+  gst_object_ref (track2);
+  fail_unless (ges_timeline_remove_track (timeline, track2));
+  /* but children remain in the clips */
+  assert_num_children (clip2, 2);
+  assert_num_in_track (track1, 4);
+  assert_num_in_track (track2, 0);
+  gst_object_unref (track2);
+
+  /* add clip back in, but don't select any tracks */
+  g_signal_connect (timeline, "select-tracks-for-object",
+      G_CALLBACK (_select_none), &selection_called);
+
+  /* can add the clip to the layer, despite a source existing between
+   * 0 and 10 because the clip will not fill any track */
+  /* NOTE: normally this would be useless because it would not trigger
+   * the creation of any core children. But clip currently still has
+   * its core children */
+  fail_unless (ges_layer_add_clip (layer, clip));
+  gst_object_unref (clip);
+
+  /* one call for each child */
+  assert_equals_int (selection_called, 3);
+
+  fail_if (ges_track_element_get_track (source));
+  fail_if (ges_track_element_get_track (effect));
+  assert_num_children (clip, 3);
+  assert_num_in_track (track1, 4);
+
+  /* can not add the source to the track because it would overlap another
+   * source */
+  fail_if (ges_clip_add_child_to_track (clip, source, track1, NULL));
+  assert_num_children (clip, 3);
+  assert_num_in_track (track1, 4);
+
+  /* can not add source at time 23 because it would result in three
+   * overlapping sources in the track */
+  fail_unless (ges_timeline_element_set_start (GES_TIMELINE_ELEMENT (clip),
+          23));
+  fail_if (ges_clip_add_child_to_track (clip, source, track1, NULL));
+  assert_num_children (clip, 3);
+  assert_num_in_track (track1, 4);
+
+  /* can add at 5, with overlap */
+  fail_unless (ges_timeline_element_set_start (GES_TIMELINE_ELEMENT (clip), 5));
+  added = ges_clip_add_child_to_track (clip, source, track1, NULL);
+  /* added is the source since it was not already in a track */
+  fail_unless (added == source);
+  assert_num_children (clip, 3);
+  /* 4 sources + 2 transitions */
+  assert_num_in_track (track1, 6);
+
+  /* also add effect */
+  added = ges_clip_add_child_to_track (clip, effect, track1, NULL);
+  /* added is the source since it was not already in a track */
+  fail_unless (added == effect);
+  assert_num_children (clip, 3);
+  assert_num_in_track (track1, 7);
+
+  added = ges_clip_add_child_to_track (clip, effect2, track1, NULL);
+  /* added is the source since it was not already in a track */
+  fail_unless (added == effect2);
+  assert_num_children (clip, 3);
+  assert_num_in_track (track1, 8);
+
+  assert_equals_int (0,
+      ges_clip_get_top_effect_index (clip, GES_BASE_EFFECT (effect)));
+  assert_equals_int (1,
+      ges_clip_get_top_effect_index (clip, GES_BASE_EFFECT (effect2)));
+
+  gst_object_unref (timeline);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
 
 static void
 child_removed_cb (GESClip * clip, GESTimelineElement * effect,
     gboolean * called)
 {
-  ASSERT_OBJECT_REFCOUNT (effect, "1 keeping alive ref + emission ref", 2);
+  ASSERT_OBJECT_REFCOUNT (effect, "1 test ref + 1 keeping alive ref + "
+      "emission ref", 3);
   *called = TRUE;
 }
 
@@ -537,30 +1092,52 @@ GST_START_TEST (test_clip_refcount_remove_child)
   GESClip *clip;
   GESTrack *track;
   gboolean called;
-  GESTrackElement *effect;
+  GESTrackElement *effect, *source;
+  GESTimeline *timeline;
+  GESLayer *layer;
 
   ges_init ();
 
-  clip = GES_CLIP (ges_test_clip_new ());
+  timeline = ges_timeline_new ();
   track = GES_TRACK (ges_audio_track_new ());
-  effect = GES_TRACK_ELEMENT (ges_effect_new ("identity"));
+  fail_unless (ges_timeline_add_track (timeline, track));
 
+  layer = ges_timeline_append_layer (timeline);
+  clip = GES_CLIP (ges_test_clip_new ());
+  fail_unless (ges_layer_add_clip (layer, clip));
+
+  assert_num_children (clip, 1);
+  assert_num_in_track (track, 1);
+
+  source = GES_CONTAINER_CHILDREN (clip)->data;
+  ASSERT_OBJECT_REFCOUNT (source, "1 for the container + 1 for the track"
+      " + 1 timeline", 3);
+
+  effect = GES_TRACK_ELEMENT (ges_effect_new ("identity"));
   fail_unless (ges_track_add_element (track, effect));
+  assert_num_in_track (track, 2);
+  ASSERT_OBJECT_REFCOUNT (effect, "1 for the track + 1 timeline", 2);
+
   fail_unless (ges_container_add (GES_CONTAINER (clip),
           GES_TIMELINE_ELEMENT (effect)));
-  ASSERT_OBJECT_REFCOUNT (effect, "1 for the container + 1 for the track", 2);
+  assert_num_children (clip, 2);
+  ASSERT_OBJECT_REFCOUNT (effect, "1 for the container + 1 for the track"
+      " + 1 timeline", 3);
 
   fail_unless (ges_track_remove_element (track, effect));
   ASSERT_OBJECT_REFCOUNT (effect, "1 for the container", 1);
 
   g_signal_connect (clip, "child-removed", G_CALLBACK (child_removed_cb),
       &called);
+  gst_object_ref (effect);
   fail_unless (ges_container_remove (GES_CONTAINER (clip),
           GES_TIMELINE_ELEMENT (effect)));
   fail_unless (called == TRUE);
+  ASSERT_OBJECT_REFCOUNT (effect, "1 test ref", 1);
+  gst_object_unref (effect);
 
-  check_destroyed (G_OBJECT (track), NULL, NULL);
-  check_destroyed (G_OBJECT (clip), NULL, NULL);
+  check_destroyed (G_OBJECT (timeline), G_OBJECT (track),
+      G_OBJECT (layer), G_OBJECT (clip), G_OBJECT (source), NULL);
 
   ges_deinit ();
 }
@@ -572,13 +1149,14 @@ GST_START_TEST (test_clip_find_track_element)
   GESClip *clip;
   GList *foundelements;
   GESTimeline *timeline;
+  GESLayer *layer;
   GESTrack *track, *track1, *track2;
+  guint selection_called = 0;
 
-  GESTrackElement *effect, *effect1, *effect2, *foundelem;
+  GESTrackElement *effect, *effect1, *effect2, *foundelem, *video_source;
 
   ges_init ();
 
-  clip = GES_CLIP (ges_test_clip_new ());
   track = GES_TRACK (ges_audio_track_new ());
   track1 = GES_TRACK (ges_audio_track_new ());
   track2 = GES_TRACK (ges_video_track_new ());
@@ -588,11 +1166,18 @@ GST_START_TEST (test_clip_find_track_element)
   fail_unless (ges_timeline_add_track (timeline, track1));
   fail_unless (ges_timeline_add_track (timeline, track2));
 
-  /* need to register the clip with the timeline */
-  /* FIXME: we should make the clip part of a layer, but the current
-   * default select-tracks-for-object signal is broken for multiple
-   * tracks. In fact, we should be using this signal in this test */
-  ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (clip), timeline);
+  layer = ges_timeline_append_layer (timeline);
+  clip = GES_CLIP (ges_test_clip_new ());
+
+  /* should have a source in every track */
+  fail_unless (ges_layer_add_clip (layer, clip));
+  assert_num_children (clip, 3);
+  assert_num_in_track (track, 1);
+  assert_num_in_track (track1, 1);
+  assert_num_in_track (track2, 1);
+
+  g_signal_connect (timeline, "select-tracks-for-object",
+      G_CALLBACK (_select_none), &selection_called);
 
   effect = GES_TRACK_ELEMENT (ges_effect_new ("identity"));
   fail_unless (ges_track_add_element (track, effect));
@@ -609,29 +1194,111 @@ GST_START_TEST (test_clip_find_track_element)
   fail_unless (ges_container_add (GES_CONTAINER (clip),
           GES_TIMELINE_ELEMENT (effect2)));
 
-  foundelem = ges_clip_find_track_element (clip, track, G_TYPE_NONE);
+  fail_if (selection_called);
+  assert_num_children (clip, 6);
+  assert_num_in_track (track, 2);
+  assert_num_in_track (track1, 2);
+  assert_num_in_track (track2, 2);
+
+  foundelem = ges_clip_find_track_element (clip, track, GES_TYPE_EFFECT);
   fail_unless (foundelem == effect);
   gst_object_unref (foundelem);
 
-  foundelem = ges_clip_find_track_element (clip, NULL, GES_TYPE_SOURCE);
+  foundelem = ges_clip_find_track_element (clip, track1, GES_TYPE_EFFECT);
+  fail_unless (foundelem == effect1);
+  gst_object_unref (foundelem);
+
+  foundelem = ges_clip_find_track_element (clip, track2, GES_TYPE_EFFECT);
+  fail_unless (foundelem == effect2);
+  gst_object_unref (foundelem);
+
+  foundelem = ges_clip_find_track_element (clip, NULL, GES_TYPE_TRANSITION);
   fail_unless (foundelem == NULL);
+
+  foundelem = ges_clip_find_track_element (clip, track, GES_TYPE_TRANSITION);
+  fail_unless (foundelem == NULL);
+
+  foundelem = ges_clip_find_track_element (clip, track1, GES_TYPE_TRANSITION);
+  fail_unless (foundelem == NULL);
+
+  foundelem = ges_clip_find_track_element (clip, track2, GES_TYPE_TRANSITION);
+  fail_unless (foundelem == NULL);
+
+  foundelem = ges_clip_find_track_element (clip, track, GES_TYPE_SOURCE);
+  fail_unless (GES_IS_AUDIO_TEST_SOURCE (foundelem));
+  gst_object_unref (foundelem);
+
+  foundelem = ges_clip_find_track_element (clip, track1, GES_TYPE_SOURCE);
+  fail_unless (GES_IS_AUDIO_TEST_SOURCE (foundelem));
+  gst_object_unref (foundelem);
+
+  foundelem = ges_clip_find_track_element (clip, track2, GES_TYPE_SOURCE);
+  fail_unless (GES_IS_VIDEO_TEST_SOURCE (foundelem));
+  gst_object_unref (foundelem);
+
+  video_source = ges_clip_find_track_element (clip, NULL,
+      GES_TYPE_VIDEO_TEST_SOURCE);
+  fail_unless (foundelem == video_source);
+  gst_object_unref (video_source);
+
 
   foundelements = ges_clip_find_track_elements (clip, NULL,
       GES_TRACK_TYPE_AUDIO, G_TYPE_NONE);
-  fail_unless_equals_int (g_list_length (foundelements), 2);
+  fail_unless_equals_int (g_list_length (foundelements), 4);
   g_list_free_full (foundelements, gst_object_unref);
 
   foundelements = ges_clip_find_track_elements (clip, NULL,
       GES_TRACK_TYPE_VIDEO, G_TYPE_NONE);
-  fail_unless_equals_int (g_list_length (foundelements), 1);
+  fail_unless_equals_int (g_list_length (foundelements), 2);
   g_list_free_full (foundelements, gst_object_unref);
 
+  foundelements = ges_clip_find_track_elements (clip, NULL,
+      GES_TRACK_TYPE_UNKNOWN, GES_TYPE_SOURCE);
+  fail_unless_equals_int (g_list_length (foundelements), 3);
+  fail_unless (g_list_find (foundelements, video_source));
+  g_list_free_full (foundelements, gst_object_unref);
+
+  foundelements = ges_clip_find_track_elements (clip, NULL,
+      GES_TRACK_TYPE_UNKNOWN, GES_TYPE_EFFECT);
+  fail_unless_equals_int (g_list_length (foundelements), 3);
+  fail_unless (g_list_find (foundelements, effect));
+  fail_unless (g_list_find (foundelements, effect1));
+  fail_unless (g_list_find (foundelements, effect2));
+  g_list_free_full (foundelements, gst_object_unref);
+
+  foundelements = ges_clip_find_track_elements (clip, NULL,
+      GES_TRACK_TYPE_VIDEO, GES_TYPE_SOURCE);
+  fail_unless_equals_int (g_list_length (foundelements), 1);
+  fail_unless (foundelements->data == video_source);
+  g_list_free_full (foundelements, gst_object_unref);
+
+  foundelements = ges_clip_find_track_elements (clip, track2,
+      GES_TRACK_TYPE_UNKNOWN, GES_TYPE_SOURCE);
+  fail_unless_equals_int (g_list_length (foundelements), 1);
+  fail_unless (foundelements->data == video_source);
+  g_list_free_full (foundelements, gst_object_unref);
+
+  foundelements = ges_clip_find_track_elements (clip, track2,
+      GES_TRACK_TYPE_UNKNOWN, G_TYPE_NONE);
+  fail_unless_equals_int (g_list_length (foundelements), 2);
+  fail_unless (g_list_find (foundelements, effect2));
+  fail_unless (g_list_find (foundelements, video_source));
+  g_list_free_full (foundelements, gst_object_unref);
+
+  foundelements = ges_clip_find_track_elements (clip, track1,
+      GES_TRACK_TYPE_UNKNOWN, GES_TYPE_EFFECT);
+  fail_unless_equals_int (g_list_length (foundelements), 1);
+  fail_unless (foundelements->data == effect1);
+  g_list_free_full (foundelements, gst_object_unref);
+
+  /* NOTE: search in *either* track or track type
+   * TODO 2.0: this should be an AND condition, rather than OR */
   foundelements = ges_clip_find_track_elements (clip, track,
       GES_TRACK_TYPE_VIDEO, G_TYPE_NONE);
-  fail_unless_equals_int (g_list_length (foundelements), 2);
-  fail_unless (g_list_find (foundelements, effect2) != NULL,
-      "In the video track");
-  fail_unless (g_list_find (foundelements, effect2) != NULL, "In 'track'");
+  fail_unless_equals_int (g_list_length (foundelements), 4);
+  fail_unless (g_list_find (foundelements, effect));
+  fail_unless (g_list_find (foundelements, effect2));
+  fail_unless (g_list_find (foundelements, video_source));
   g_list_free_full (foundelements, gst_object_unref);
 
   gst_object_unref (timeline);
@@ -1736,9 +2403,10 @@ _el_with_child_prop (GESTimelineElement * clip, GObject * prop_child,
     if (ges_timeline_element_lookup_child (tmp->data, prop->name,
             &found_child, &found_prop)) {
       if (found_child == prop_child && found_prop == prop) {
+        g_param_spec_unref (found_prop);
+        g_object_unref (found_child);
         child = tmp->data;
-        /* break early, but still free */
-        tmp->next = NULL;
+        break;
       }
       g_param_spec_unref (found_prop);
       g_object_unref (found_child);
@@ -1802,13 +2470,12 @@ GST_START_TEST (test_copy_paste_children_properties)
   GESLayer *layer;
   GESTimelineElement *clip, *copy, *pasted, *track_el, *pasted_el;
   GObject *sub_child, *pasted_sub_child;
-  GParamSpec **orig_props, **pasted_props, **track_el_props, **pasted_el_props;
-  guint num_orig_props, num_pasted_props, num_track_el_props,
-      num_pasted_el_props;
+  GParamSpec **orig_props;
+  guint num_orig_props;
   GParamSpec *prop, *found_prop;
   GValue val = G_VALUE_INIT;
-  GSList *timed_vals;
   GstControlSource *source;
+  GSList *timed_vals;
 
   ges_init ();
 
@@ -1824,23 +2491,19 @@ GST_START_TEST (test_copy_paste_children_properties)
       ges_timeline_element_list_children_properties (clip, &num_orig_props);
   fail_unless (num_orig_props);
 
+  /* font-desc is originally "", but on setting switches to Normal, so we
+   * set it explicitly */
+  ges_timeline_element_set_child_properties (clip, "font-desc", "Normal",
+      "posx", 30, "posy", 50, "alpha", 0.1, "freq", 449.0, NULL);
+
   /* focus on one property */
   fail_unless (ges_timeline_element_lookup_child (clip, "posx",
           &sub_child, &prop));
-  g_value_init (&val, G_TYPE_INT);
-  g_value_set_int (&val, 30);
-  fail_unless (ges_timeline_element_set_child_property (clip, "posx", &val));
-  g_value_unset (&val);
-
   _assert_int_val_child_prop (clip, val, 30, prop, "posx");
 
   /* find the track element where the child property comes from */
   fail_unless (track_el = _el_with_child_prop (clip, sub_child, prop));
   _assert_int_val_child_prop (track_el, val, 30, prop, "posx");
-
-  track_el_props =
-      ges_timeline_element_list_children_properties (track_el,
-      &num_track_el_props);
 
   /* set a control binding */
   timed_vals = g_slist_prepend (NULL, _new_timed_value (200, 5));
@@ -1855,6 +2518,7 @@ GST_START_TEST (test_copy_paste_children_properties)
 
   fail_unless (ges_track_element_set_control_source (GES_TRACK_ELEMENT
           (track_el), source, "posx", "direct-absolute"));
+
   g_object_unref (source);
 
   /* check the control binding */
@@ -1866,13 +2530,10 @@ GST_START_TEST (test_copy_paste_children_properties)
   fail_unless (pasted = ges_timeline_element_paste (copy, 30));
 
   gst_object_unref (copy);
+  gst_object_unref (pasted);
 
   /* test that the new clip has the same child properties */
-  pasted_props =
-      ges_timeline_element_list_children_properties (pasted, &num_pasted_props);
-
-  assert_property_list_match (pasted_props, num_pasted_props,
-      orig_props, num_orig_props);
+  assert_equal_children_properties (clip, pasted);
 
   /* get the details for the copied 'prop' property */
   fail_unless (ges_timeline_element_lookup_child (pasted,
@@ -1888,25 +2549,18 @@ GST_START_TEST (test_copy_paste_children_properties)
       _el_with_child_prop (pasted, pasted_sub_child, prop));
   _assert_int_val_child_prop (pasted_el, val, 30, prop, "posx");
 
-  pasted_el_props =
-      ges_timeline_element_list_children_properties (pasted_el,
-      &num_pasted_el_props);
-
-  assert_property_list_match (pasted_el_props, num_pasted_el_props,
-      track_el_props, num_track_el_props);
+  assert_equal_children_properties (track_el, pasted_el);
 
   /* check the control binding on the pasted element */
   _assert_binding (pasted_el, "posx", pasted_sub_child, timed_vals,
       GST_INTERPOLATION_MODE_CUBIC);
 
+  assert_equal_bindings (pasted_el, track_el);
 
   /* free */
   g_slist_free_full (timed_vals, g_free);
 
-  free_children_properties (pasted_props, num_pasted_props);
   free_children_properties (orig_props, num_orig_props);
-  free_children_properties (pasted_el_props, num_pasted_el_props);
-  free_children_properties (track_el_props, num_track_el_props);
 
   g_param_spec_unref (prop);
   g_object_unref (pasted_sub_child);
@@ -1933,6 +2587,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_split_direct_bindings);
   tcase_add_test (tc_chain, test_split_direct_absolute_bindings);
   tcase_add_test (tc_chain, test_clip_group_ungroup);
+  tcase_add_test (tc_chain, test_adding_children_to_track);
   tcase_add_test (tc_chain, test_clip_refcount_remove_child);
   tcase_add_test (tc_chain, test_clip_find_track_element);
   tcase_add_test (tc_chain, test_effects_priorities);

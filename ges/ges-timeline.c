@@ -152,7 +152,8 @@ struct _GESTimelinePrivate
 
   /* While we are creating and adding the TrackElements for a clip, we need to
    * ignore the child-added signal */
-  GESClip *ignore_track_element_added;
+  gboolean track_elements_moving;
+  gboolean track_selection_error;
   GList *groups;
 
   guint stream_start_group_id;
@@ -702,8 +703,12 @@ ges_timeline_class_init (GESTimelineClass * klass)
    * @clip: The clip that @track_element is being added to
    * @track_element: The element being added
    *
-   * This will be emitted whenever a new track element is added to a
-   * clip within the timeline.
+   * This will be emitted whenever the timeline needs to determine which
+   * tracks a clip's children should be added to. The track element will
+   * be added to each of the tracks given in the return. If a track
+   * element is selected to go into multiple tracks, it will be copied
+   * into the additional tracks, under the same clip. Note that the copy
+   * will *not* keep its properties or state in sync with the original.
    *
    * Connect to this signal once if you wish to control which element
    * should be added to which track. Doing so will overwrite the default
@@ -711,16 +716,48 @@ ges_timeline_class_init (GESTimelineClass * klass)
    * #GESTrack:track-type includes the @track_element's
    * #GESTrackElement:track-type.
    *
-   * If you wish to use this, you should add all necessary tracks to the
-   * timeline before adding any clips. In particular, this signal is
-   * **not** re-emitted for the existing clips when a new track is added
-   * to the timeline.
+   * Note that under the default track selection, if a clip would produce
+   * multiple core children of the same #GESTrackType, it will choose
+   * one of the core children arbitrarily to place in the corresponding
+   * tracks, with a warning for the other core children that are not
+   * placed in the track. For example, this would happen for a #GESUriClip
+   * that points to a file that contains multiple audio streams. If you
+   * wish to choose the stream, you could connect to this signal, and use,
+   * say, ges_uri_source_asset_get_stream_info() to choose which core
+   * source to add.
+   *
+   * When a clip is first added to a timeline, its core elements will
+   * be created for the current tracks in the timeline if they have not
+   * already been created. Then this will be emitted for each of these
+   * core children to select which tracks, if any, they should be added
+   * to. It will then be called for any non-core children in the clip.
+   *
+   * In addition, if a new track element is ever added to a clip in a
+   * timeline (and it is not already part of a track) this will be emitted
+   * to select which tracks the element should be added to.
+   *
+   * Finally, as a special case, if a track is added to the timeline
+   * *after* it already contains clips, then it will request the creation
+   * of the clips' core elements of the corresponding type, if they have
+   * not already been created, and this signal will be emitted for each of
+   * these newly created elements. In addition, this will also be released
+   * for all other track elements in the timeline's clips that have not
+   * yet been assigned a track. However, in this final case, the timeline
+   * will only check whether the newly added track appears in the track
+   * list. If it does appear, the track element will be added to the newly
+   * added track. All other tracks in the returned track list are ignored.
+   *
+   * In this latter case, track elements that are already part of a track
+   * will not be asked if they want to be copied into the new track. If
+   * you wish to do this, you can use ges_clip_add_child_to_track().
+   *
+   * Note that the returned #GPtrArray should own a new reference to each
+   * of its contained #GESTrack. The timeline will set the #GDestroyNotify
+   * free function on the #GPtrArray to dereference the elements.
    *
    * Returns: (transfer full) (element-type GESTrack): An array of
-   * #GESTrack-s that @track_element should be added to. If this contains
-   * more than one track, a copy of @track_element will be added to the
-   * other tracks. If this is empty, @track_element will also be removed
-   * from @clip.
+   * #GESTrack-s that @track_element should be added to, or %NULL to
+   * not add the element to any track.
    */
   ges_timeline_signals[SELECT_TRACKS_FOR_OBJECT] =
       g_signal_new ("select-tracks-for-object", G_TYPE_FROM_CLASS (klass),
@@ -1297,12 +1334,26 @@ timeline_remove_group (GESTimeline * timeline, GESGroup * group)
   gst_object_unref (group);
 }
 
+static GESTrackElement *
+_core_in_track (GESTrack * track, GESClip * clip)
+{
+  GList *tmp;
+  for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
+    if (GES_TRACK_ELEMENT_IS_CORE (tmp->data)
+        && ges_track_element_get_track (tmp->data) == track) {
+      return tmp->data;
+    }
+  }
+  return NULL;
+}
+
 static GPtrArray *
 select_tracks_for_object_default (GESTimeline * timeline,
     GESClip * clip, GESTrackElement * tr_object, gpointer user_data)
 {
   GPtrArray *result;
   GList *tmp;
+  GESTrackElement *core;
 
   result = g_ptr_array_new ();
 
@@ -1311,6 +1362,24 @@ select_tracks_for_object_default (GESTimeline * timeline,
     GESTrack *track = GES_TRACK (tmp->data);
 
     if ((track->type & ges_track_element_get_track_type (tr_object))) {
+      if (GES_TRACK_ELEMENT_IS_CORE (tr_object)) {
+        core = _core_in_track (track, clip);
+        if (core) {
+          GST_WARNING_OBJECT (timeline, "The clip '%s' contains multiple "
+              "core elements of the same %s track type. The core child "
+              "'%s' has already been chosen arbitrarily for the track %"
+              GST_PTR_FORMAT ", which means that the other core child "
+              "'%s' of the same type can not be added to the track. "
+              "Consider connecting to "
+              "GESTimeline::select-tracks-for-objects to be able to "
+              "specify which core element should land in the track",
+              GES_TIMELINE_ELEMENT_NAME (clip),
+              ges_track_type_name (track->type),
+              GES_TIMELINE_ELEMENT_NAME (core), track,
+              GES_TIMELINE_ELEMENT_NAME (tr_object));
+          continue;
+        }
+      }
       gst_object_ref (track);
       g_ptr_array_add (result, track);
     }
@@ -1320,34 +1389,273 @@ select_tracks_for_object_default (GESTimeline * timeline,
   return result;
 }
 
+static GPtrArray *
+_get_selected_tracks (GESTimeline * timeline, GESClip * clip,
+    GESTrackElement * track_element)
+{
+  guint i, j;
+  GPtrArray *tracks = NULL;
+
+  g_signal_emit (G_OBJECT (timeline),
+      ges_timeline_signals[SELECT_TRACKS_FOR_OBJECT], 0, clip, track_element,
+      &tracks);
+
+  if (tracks == NULL)
+    tracks = g_ptr_array_new ();
+
+  g_ptr_array_set_free_func (tracks, gst_object_unref);
+
+  /* make sure unique */
+  for (i = 0; i < tracks->len;) {
+    GESTrack *track = GES_TRACK (g_ptr_array_index (tracks, i));
+
+    for (j = i + 1; j < tracks->len;) {
+      if (track == g_ptr_array_index (tracks, j)) {
+        GST_WARNING_OBJECT (timeline, "Found the track %" GST_PTR_FORMAT
+            " more than once in the return for select-tracks-for-object "
+            "signal for track element %" GES_FORMAT " in clip %"
+            GES_FORMAT ". Ignoring the extra track", track,
+            GES_ARGS (track_element), GES_ARGS (clip));
+        g_ptr_array_remove_index (tracks, j);
+        /* don't increase index since the next track is in its place */
+        continue;
+      }
+      j++;
+    }
+
+    if (ges_track_get_timeline (track) != timeline) {
+      GST_WARNING_OBJECT (timeline, "The track %" GST_PTR_FORMAT
+          " found in the return for select-tracks-for-object belongs "
+          "to a different timeline %" GST_PTR_FORMAT ". Ignoring this "
+          "track", track, ges_track_get_timeline (track));
+      g_ptr_array_remove_index (tracks, i);
+      /* don't increase index since the next track is in its place */
+      continue;
+    }
+    i++;
+  }
+
+  return tracks;
+}
+
+/* returns TRUE if track element was successfully added to all the
+ * selected tracks */
+static gboolean
+_add_track_element_to_tracks (GESTimeline * timeline, GESClip * clip,
+    GESTrackElement * track_element)
+{
+  guint i;
+  gboolean ret = TRUE;
+  GPtrArray *tracks = _get_selected_tracks (timeline, clip, track_element);
+
+  for (i = 0; i < tracks->len; i++) {
+    GESTrack *track = GES_TRACK (g_ptr_array_index (tracks, i));
+    if (!ges_clip_add_child_to_track (clip, track_element, track, NULL))
+      ret = FALSE;
+  }
+
+  g_ptr_array_unref (tracks);
+
+  return ret;
+}
+
+static gboolean
+_try_add_track_element_to_track (GESTimeline * timeline, GESClip * clip,
+    GESTrackElement * track_element, GESTrack * track)
+{
+  gboolean no_error = TRUE;
+  GPtrArray *tracks = _get_selected_tracks (timeline, clip, track_element);
+
+  /* if we are trying to add the element to a newly added track, then
+   * we only check whether the track list contains the newly added track,
+   * if it does we add the track element to the track, or add a copy if
+   * the track element is already in a track */
+  if (g_ptr_array_find (tracks, track, NULL)) {
+    if (!ges_clip_add_child_to_track (clip, track_element, track, NULL))
+      no_error = FALSE;
+  }
+
+  g_ptr_array_unref (tracks);
+  return no_error;
+}
+
+/* accepts NULL */
+void
+ges_timeline_set_moving_track_elements (GESTimeline * timeline, gboolean moving)
+{
+  if (timeline) {
+    LOCK_DYN (timeline);
+    timeline->priv->track_elements_moving = moving;
+    UNLOCK_DYN (timeline);
+  }
+}
+
 static void
+_set_track_selection_error (GESTimeline * timeline, gboolean error)
+{
+  LOCK_DYN (timeline);
+  timeline->priv->track_selection_error = error;
+  UNLOCK_DYN (timeline);
+}
+
+static gboolean
+_get_track_selection_error (GESTimeline * timeline)
+{
+  gboolean ret;
+
+  LOCK_DYN (timeline);
+  ret = timeline->priv->track_selection_error;
+  timeline->priv->track_selection_error = FALSE;
+  UNLOCK_DYN (timeline);
+
+  return ret;
+}
+
+static void
+clip_track_element_added_cb (GESClip * clip,
+    GESTrackElement * track_element, GESTimeline * timeline)
+{
+  gboolean error = FALSE;
+
+  if (timeline->priv->track_elements_moving) {
+    GST_DEBUG_OBJECT (timeline, "Ignoring element added: %" GES_FORMAT
+        " in %" GES_FORMAT, GES_ARGS (track_element), GES_ARGS (clip));
+    return;
+  }
+
+  if (ges_track_element_get_track (track_element) != NULL) {
+    GST_DEBUG_OBJECT (timeline, "Not selecting tracks for %" GES_FORMAT
+        " in %" GES_FORMAT " because it already part of the track %"
+        GST_PTR_FORMAT, GES_ARGS (track_element), GES_ARGS (clip),
+        ges_track_element_get_track (track_element));
+    return;
+  }
+
+  if (!_add_track_element_to_tracks (timeline, clip, track_element))
+    error = TRUE;
+
+  if (error)
+    _set_track_selection_error (timeline, TRUE);
+}
+
+static void
+clip_track_element_removed_cb (GESClip * clip,
+    GESTrackElement * track_element, GESTimeline * timeline)
+{
+  GESTrack *track = ges_track_element_get_track (track_element);
+
+  if (timeline->priv->track_elements_moving) {
+    GST_DEBUG_OBJECT (timeline, "Ignoring element removed (%" GST_PTR_FORMAT
+        " in %" GST_PTR_FORMAT, track_element, clip);
+
+    return;
+  }
+
+  if (track) {
+    /* if we have non-core elements in the same track, they should be
+     * removed from them to preserve the rule that a non-core can only be
+     * in the same track as a core element from the same clip */
+    if (GES_TRACK_ELEMENT_IS_CORE (track_element))
+      ges_clip_empty_from_track (clip, track);
+    ges_track_remove_element (track, track_element);
+  }
+}
+
+/* returns TRUE if no errors in adding to tracks */
+static gboolean
+_add_clip_children_to_tracks (GESTimeline * timeline, GESClip * clip,
+    gboolean add_core, GESTrack * new_track, GList * blacklist)
+{
+  GList *tmp, *children;
+  gboolean no_errors = TRUE;
+
+  /* list of children may change if some are copied into tracks */
+  children = ges_container_get_children (GES_CONTAINER (clip), FALSE);
+  for (tmp = children; tmp; tmp = tmp->next) {
+    GESTrackElement *el = tmp->data;
+    if (GES_TRACK_ELEMENT_IS_CORE (el) != add_core)
+      continue;
+    if (g_list_find (blacklist, el))
+      continue;
+    if (ges_track_element_get_track (el) == NULL) {
+      gboolean res;
+      if (new_track)
+        res = _try_add_track_element_to_track (timeline, clip, el, new_track);
+      else
+        res = _add_track_element_to_tracks (timeline, clip, el);
+      if (!res)
+        no_errors = FALSE;
+    }
+  }
+  g_list_free_full (children, gst_object_unref);
+
+  return no_errors;
+}
+
+/* returns TRUE if no errors in adding to tracks */
+static gboolean
 add_object_to_tracks (GESTimeline * timeline, GESClip * clip, GESTrack * track)
 {
-  gint i;
-  GList *tmp, *list;
-  GESTrackType types, visited_type = GES_TRACK_TYPE_UNKNOWN;
+  GList *tracks, *tmp, *list, *created, *just_added = NULL;
+  gboolean no_errors = TRUE;
+  /* TODO: extend with GError ** argument, which is accepted by
+   * ges_clip_add_child_to_track */
 
   GST_DEBUG_OBJECT (timeline, "Creating %" GST_PTR_FORMAT
       " trackelements and adding them to our tracks", clip);
 
-  types = ges_clip_get_supported_formats (clip);
-  if (track) {
-    if ((types & track->type) == 0)
-      return;
-    types = track->type;
-  }
-
   LOCK_DYN (timeline);
-  for (i = 0, tmp = timeline->tracks; tmp; tmp = tmp->next, i++) {
-    GESTrack *track = GES_TRACK (tmp->data);
-    /* FIXME: visited_type is essentially unused */
-    if (((track->type & types) == 0 || (track->type & visited_type)))
-      continue;
-
-    list = ges_clip_create_track_elements (clip, track->type);
-    g_list_free (list);
-  }
+  tracks =
+      g_list_copy_deep (timeline->tracks, (GCopyFunc) gst_object_ref, NULL);
   UNLOCK_DYN (timeline);
+  /* create core elements */
+  for (tmp = tracks; tmp; tmp = tmp->next) {
+    GESTrack *track = GES_TRACK (tmp->data);
+    list = ges_clip_create_track_elements (clip, track->type);
+    for (created = list; created; created = created->next) {
+      GESTimelineElement *el = created->data;
+
+      gst_object_ref (el);
+
+      /* make track selection be handled by clip_track_element_added_cb
+       * This is needed for backward-compatibility: when adding a clip to
+       * a layer, the track is set for the core elements of the clip
+       * during the child-added signal emission, just before the user's
+       * own connection.
+       * NOTE: for the children that have not just been created, they
+       * are already part of the clip and so child-added will not be
+       * released. And when a child is selected for multiple tracks, their
+       * copy will be added to the clip before the track is selected, so
+       * the track will not be set in the child-added signal */
+      _set_track_selection_error (timeline, FALSE);
+      if (!ges_container_add (GES_CONTAINER (clip), el))
+        GST_ERROR_OBJECT (clip, "Could not add the core element %s "
+            "to the clip", el->name);
+      if (_get_track_selection_error (timeline))
+        no_errors = FALSE;
+
+      gst_object_unref (el);
+    }
+    /* just_added only used for pointer comparison, so safe to include
+     * elements that are now destroyed because they failed to be added to
+     * the clip */
+    just_added = g_list_concat (just_added, list);
+  }
+  g_list_free_full (tracks, gst_object_unref);
+
+  /* set the tracks for the other children, with core elements first to
+   * make sure the non-core can be placed above them in the track (a
+   * non-core can not be in a track by itself) */
+  /* include just_added as a blacklist to ensure we do not try the track
+   * selection a second time when track selection returns no tracks */
+  if (!_add_clip_children_to_tracks (timeline, clip, TRUE, track, just_added))
+    no_errors = FALSE;
+  if (!_add_clip_children_to_tracks (timeline, clip, FALSE, track, just_added))
+    no_errors = FALSE;
+
+  g_list_free (just_added);
+
+  return no_errors;
 }
 
 static void
@@ -1392,160 +1700,14 @@ layer_auto_transition_changed_cb (GESLayer * layer,
   g_list_free_full (clips, gst_object_unref);
 }
 
-static void
-clip_track_element_added_cb (GESClip * clip,
-    GESTrackElement * track_element, GESTimeline * timeline)
-{
-  guint i;
-  GESTrack *track;
-  gboolean is_source;
-  GPtrArray *tracks = NULL;
-  GESTrackElement *existing_src = NULL;
-
-  if (timeline->priv->ignore_track_element_added == clip) {
-    GST_DEBUG_OBJECT (timeline, "Ignoring element added (%" GST_PTR_FORMAT
-        " in %" GST_PTR_FORMAT, track_element, clip);
-
-    return;
-  }
-
-  if (ges_track_element_get_track (track_element)) {
-    GST_WARNING_OBJECT (track_element, "Already in a track");
-
-    return;
-  }
-
-  g_signal_emit (G_OBJECT (timeline),
-      ges_timeline_signals[SELECT_TRACKS_FOR_OBJECT], 0, clip, track_element,
-      &tracks);
-  /* FIXME: make sure each track in the list is unique */
-  /* FIXME: make sure each track is part of the same timeline as the clip,
-   * and warn and ignore the track if it isn't */
-
-  if (!tracks || tracks->len == 0) {
-    GST_WARNING_OBJECT (timeline, "Got no Track to add %p (type %s), removing"
-        " from clip (stopping 'child-added' signal emission).",
-        track_element, ges_track_type_name (ges_track_element_get_track_type
-            (track_element)));
-
-    if (tracks)
-      g_ptr_array_unref (tracks);
-
-    g_signal_stop_emission_by_name (clip, "child-added");
-    ges_container_remove (GES_CONTAINER (clip),
-        GES_TIMELINE_ELEMENT (track_element));
-
-    return;
-  }
-
-  /* We add the current element to the first track */
-  track = g_ptr_array_index (tracks, 0);
-
-  is_source = g_type_is_a (G_OBJECT_TYPE (track_element), GES_TYPE_SOURCE);
-  if (is_source)
-    existing_src = ges_clip_find_track_element (clip, track, GES_TYPE_SOURCE);
-
-  if (existing_src == NULL) {
-    if (!ges_track_add_element (track, track_element)) {
-      GST_WARNING_OBJECT (clip, "Failed to add track element to track");
-      ges_container_remove (GES_CONTAINER (clip),
-          GES_TIMELINE_ELEMENT (track_element));
-      /* FIXME: unref all the individual track in tracks */
-      g_ptr_array_unref (tracks);
-      return;
-    }
-  } else {
-    GST_INFO_OBJECT (clip, "Already had a Source Element in %" GST_PTR_FORMAT
-        " of type %s, removing new one. (stopping 'child-added' emission)",
-        track, G_OBJECT_TYPE_NAME (track_element));
-    g_signal_stop_emission_by_name (clip, "child-added");
-    ges_container_remove (GES_CONTAINER (clip),
-        GES_TIMELINE_ELEMENT (track_element));
-  }
-  gst_object_unref (track);
-  g_clear_object (&existing_src);
-
-  /* And create copies to add to other tracks */
-  timeline->priv->ignore_track_element_added = clip;
-  for (i = 1; i < tracks->len; i++) {
-    GESTrack *track;
-    GESTrackElement *track_element_copy;
-
-    track = g_ptr_array_index (tracks, i);
-    if (is_source)
-      existing_src = ges_clip_find_track_element (clip, track, GES_TYPE_SOURCE);
-    if (existing_src == NULL) {
-      ges_container_remove (GES_CONTAINER (clip),
-          GES_TIMELINE_ELEMENT (track_element));
-      gst_object_unref (track);
-      /* FIXME: tracks is needed for the next loop after continue */
-      g_ptr_array_unref (tracks);
-      continue;
-    } else {
-      GST_INFO_OBJECT (clip, "Already had a Source Element in %" GST_PTR_FORMAT
-          " of type %s, removing new one. (stopping 'child-added' emission)",
-          track, G_OBJECT_TYPE_NAME (track_element));
-      g_signal_stop_emission_by_name (clip, "child-added");
-      ges_container_remove (GES_CONTAINER (clip),
-          GES_TIMELINE_ELEMENT (track_element));
-    }
-    /* FIXME: in both cases track_element is removed from the clip! */
-    g_clear_object (&existing_src);
-
-    track_element_copy =
-        GES_TRACK_ELEMENT (ges_timeline_element_copy (GES_TIMELINE_ELEMENT
-            (track_element), TRUE));
-    /* if a core child, mark the copy as core so it can be added */
-    if (ges_track_element_get_creators (track_element))
-      ges_track_element_add_creator (track_element_copy, clip);
-
-    GST_LOG_OBJECT (timeline, "Trying to add %p to track %p",
-        track_element_copy, track);
-
-    if (!ges_container_add (GES_CONTAINER (clip),
-            GES_TIMELINE_ELEMENT (track_element_copy))) {
-      GST_WARNING_OBJECT (clip, "Failed to add track element to clip");
-      gst_object_unref (track_element_copy);
-      /* FIXME: unref **all** the individual track in tracks */
-      g_ptr_array_unref (tracks);
-      return;
-    }
-
-    if (!ges_track_add_element (track, track_element_copy)) {
-      GST_WARNING_OBJECT (clip, "Failed to add track element to track");
-      ges_container_remove (GES_CONTAINER (clip),
-          GES_TIMELINE_ELEMENT (track_element_copy));
-      /* FIXME: should we also stop the child-added and child-removed
-       * emissions? */
-      gst_object_unref (track_element_copy);
-      /* FIXME: unref **all** the individual track in tracks */
-      g_ptr_array_unref (tracks);
-      return;
-    }
-
-    gst_object_unref (track);
-  }
-  timeline->priv->ignore_track_element_added = NULL;
-  g_ptr_array_unref (tracks);
-  if (GES_IS_SOURCE (track_element))
-    timeline_tree_create_transitions (timeline->priv->tree,
-        ges_timeline_find_auto_transition);
-}
-
-static void
-clip_track_element_removed_cb (GESClip * clip,
-    GESTrackElement * track_element, GESTimeline * timeline)
-{
-  GESTrack *track = ges_track_element_get_track (track_element);
-
-  if (track)
-    ges_track_remove_element (track, track_element);
-}
-
-static void
-layer_object_added_cb (GESLayer * layer, GESClip * clip, GESTimeline * timeline)
+/* returns TRUE if selecting of tracks did not error */
+gboolean
+ges_timeline_add_clip (GESTimeline * timeline, GESClip * clip)
 {
   GESProject *project;
+  gboolean ret;
+  /* TODO: extend with GError ** argument, which is accepted by
+   * ges_clip_add_child_to_track */
 
   /* We make sure not to be connected twice */
   g_signal_handlers_disconnect_by_func (clip, clip_track_element_added_cb,
@@ -1564,10 +1726,10 @@ layer_object_added_cb (GESLayer * layer, GESClip * clip, GESTimeline * timeline)
         "TrackElement", clip);
     timeline_tree_create_transitions (timeline->priv->tree,
         ges_timeline_find_auto_transition);
-    return;
+    ret = TRUE;
+  } else {
+    ret = add_object_to_tracks (timeline, clip, NULL);
   }
-
-  add_object_to_tracks (timeline, clip, NULL);
 
   GST_DEBUG ("Making sure that the asset is in our project");
   project =
@@ -1576,6 +1738,8 @@ layer_object_added_cb (GESLayer * layer, GESClip * clip, GESTimeline * timeline)
       ges_extractable_get_asset (GES_EXTRACTABLE (clip)));
 
   GST_DEBUG ("Done");
+
+  return ret;
 }
 
 static void
@@ -1589,11 +1753,10 @@ layer_priority_changed_cb (GESLayer * layer,
       sort_layers);
 }
 
-static void
-layer_object_removed_cb (GESLayer * layer, GESClip * clip,
-    GESTimeline * timeline)
+void
+ges_timeline_remove_clip (GESTimeline * timeline, GESClip * clip)
 {
-  GList *trackelements, *tmp;
+  GList *tmp;
 
   if (ges_clip_is_moving_from_layer (clip)) {
     GST_DEBUG ("Clip %p is moving from a layer to another, not doing"
@@ -1601,40 +1764,18 @@ layer_object_removed_cb (GESLayer * layer, GESClip * clip,
     return;
   }
 
-  GST_DEBUG_OBJECT (timeline, "Clip %" GES_FORMAT " removed from layer %p",
-      GES_ARGS (clip), layer);
+  GST_DEBUG_OBJECT (timeline, "Clip %" GES_FORMAT " removed from layer",
+      GES_ARGS (clip));
 
-  /* Go over the clip's track element and figure out which one belongs to
-   * the list of tracks we control */
+  LOCK_DYN (timeline);
+  for (tmp = timeline->tracks; tmp; tmp = tmp->next)
+    ges_clip_empty_from_track (clip, tmp->data);
+  UNLOCK_DYN (timeline);
 
-  trackelements = ges_container_get_children (GES_CONTAINER (clip), FALSE);
-  for (tmp = trackelements; tmp; tmp = tmp->next) {
-    GESTrackElement *track_element = (GESTrackElement *) tmp->data;
-    GESTrack *track = ges_track_element_get_track (track_element);
-
-    if (!track)
-      continue;
-
-    GST_DEBUG_OBJECT (timeline, "Trying to remove TrackElement %p",
-        track_element);
-
-    /* FIXME Check if we should actually check that we control the
-     * track in the new management of TrackElement context */
-    LOCK_DYN (timeline);
-    if (G_LIKELY (g_list_find_custom (timeline->priv->priv_tracks, track,
-                (GCompareFunc) custom_find_track) || track == NULL)) {
-      GST_DEBUG ("Belongs to one of the tracks we control");
-
-      ges_track_remove_element (track, track_element);
-    }
-    UNLOCK_DYN (timeline);
-  }
   g_signal_handlers_disconnect_by_func (clip, clip_track_element_added_cb,
       timeline);
   g_signal_handlers_disconnect_by_func (clip, clip_track_element_removed_cb,
       timeline);
-
-  g_list_free_full (trackelements, gst_object_unref);
 
   GST_DEBUG ("Done");
 }
@@ -1971,6 +2112,17 @@ ges_timeline_append_layer (GESTimeline * timeline)
  *
  * Add a layer to the timeline.
  *
+ * If the layer contains #GESClip-s, then this may trigger the creation of
+ * their core track element children for the timeline's tracks, and the
+ * placement of the clip's children in the tracks of the timeline using
+ * #GESTimeline::select-tracks-for-object. Some errors may occur if this
+ * would break one of the configuration rules of the timeline in one of
+ * its tracks. In such cases, some track elements would fail to be added
+ * to their tracks, but this method would still return %TRUE. As such, it
+ * is advised that you only add clips to layers that already part of a
+ * timeline. In such situations, ges_layer_add_clip() is able to fail if
+ * adding the clip would cause such an error.
+ *
  * Deprecated: 1.18: This method requires you to ensure the layer's
  * #GESLayer:priority will be unique to the timeline. Use
  * ges_timeline_append_layer() and ges_timeline_move_layer() instead.
@@ -2025,10 +2177,6 @@ ges_timeline_add_layer (GESTimeline * timeline, GESLayer * layer)
   ges_layer_set_timeline (layer, timeline);
 
   /* Connect to 'clip-added'/'clip-removed' signal from the new layer */
-  g_signal_connect_after (layer, "clip-added",
-      G_CALLBACK (layer_object_added_cb), timeline);
-  g_signal_connect_after (layer, "clip-removed",
-      G_CALLBACK (layer_object_removed_cb), timeline);
   g_signal_connect (layer, "notify::priority",
       G_CALLBACK (layer_priority_changed_cb), timeline);
   g_signal_connect (layer, "notify::auto-transition",
@@ -2041,12 +2189,9 @@ ges_timeline_add_layer (GESTimeline * timeline, GESLayer * layer)
 
   /* add any existing clips to the timeline */
   objects = ges_layer_get_clips (layer);
-  for (tmp = objects; tmp; tmp = tmp->next) {
-    layer_object_added_cb (layer, tmp->data, timeline);
-    gst_object_unref (tmp->data);
-    tmp->data = NULL;
-  }
-  g_list_free (objects);
+  for (tmp = objects; tmp; tmp = tmp->next)
+    ges_timeline_add_clip (timeline, tmp->data);
+  g_list_free_full (objects, gst_object_unref);
 
   return TRUE;
 }
@@ -2080,18 +2225,12 @@ ges_timeline_remove_layer (GESTimeline * timeline, GESLayer * layer)
   /* remove objects from any private data structures */
 
   layer_objects = ges_layer_get_clips (layer);
-  for (tmp = layer_objects; tmp; tmp = tmp->next) {
-    layer_object_removed_cb (layer, GES_CLIP (tmp->data), timeline);
-    gst_object_unref (G_OBJECT (tmp->data));
-    tmp->data = NULL;
-  }
-  g_list_free (layer_objects);
+  for (tmp = layer_objects; tmp; tmp = tmp->next)
+    ges_timeline_remove_clip (timeline, tmp->data);
+  g_list_free_full (layer_objects, gst_object_unref);
 
   /* Disconnect signals */
   GST_DEBUG ("Disconnecting signal callbacks");
-  g_signal_handlers_disconnect_by_func (layer, layer_object_added_cb, timeline);
-  g_signal_handlers_disconnect_by_func (layer, layer_object_removed_cb,
-      timeline);
   g_signal_handlers_disconnect_by_func (layer, layer_priority_changed_cb,
       timeline);
   g_signal_handlers_disconnect_by_func (layer,
@@ -2115,8 +2254,16 @@ ges_timeline_remove_layer (GESTimeline * timeline, GESLayer * layer)
  * @timeline: The #GESTimeline
  * @track: (transfer full): The track to add
  *
- * Add a track to the timeline. Existing #GESClip-s in the timeline will,
- * where appropriate, add their controlled elements to the new track.
+ * Add a track to the timeline.
+ *
+ * If the timeline already contains clips, then this may trigger the
+ * creation of their core track element children for the track, and the
+ * placement of the clip's children in the track of the timeline using
+ * #GESTimeline::select-tracks-for-object. Some errors may occur if this
+ * would break one of the configuration rules for the timeline in the
+ * track. In such cases, some track elements would fail to be added to the
+ * track, but this method would still return %TRUE. As such, it is advised
+ * that you avoid adding tracks to timelines that already contain clips.
  *
  * Returns: %TRUE if @track was properly added.
  */
@@ -2184,13 +2331,10 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
     GList *objects, *obj;
     objects = ges_layer_get_clips (tmp->data);
 
-    for (obj = objects; obj; obj = obj->next) {
-      GESClip *clip = obj->data;
+    for (obj = objects; obj; obj = obj->next)
+      add_object_to_tracks (timeline, obj->data, track);
 
-      add_object_to_tracks (timeline, clip, track);
-      gst_object_unref (clip);
-    }
-    g_list_free (objects);
+    g_list_free_full (objects, gst_object_unref);
   }
 
   /* FIXME Check if we should rollback if we can't sync state */
@@ -2240,8 +2384,22 @@ ges_timeline_remove_track (GESTimeline * timeline, GESTrack * track)
   gst_object_unref (tr_priv->pad);
   priv->priv_tracks = g_list_remove (priv->priv_tracks, tr_priv);
   UNLOCK_DYN (timeline);
-  timeline->tracks = g_list_remove (timeline->tracks, track);
 
+  /* empty track of all elements that belong to the timeline's clips */
+  /* elements with no parent can stay in the track, but their timeline
+   * will be set to NULL when the track's timeline is set to NULL */
+
+  for (tmp = timeline->layers; tmp; tmp = tmp->next) {
+    GList *clips, *clip;
+    clips = ges_layer_get_clips (tmp->data);
+
+    for (clip = clips; clip; clip = clip->next)
+      ges_clip_empty_from_track (clip->data, track);
+
+    g_list_free_full (clips, gst_object_unref);
+  }
+
+  timeline->tracks = g_list_remove (timeline->tracks, track);
   ges_track_set_timeline (track, NULL);
 
   /* Remove ghost pad */
