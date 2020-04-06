@@ -766,6 +766,202 @@ GST_START_TEST (test_clip_group_ungroup)
 
 GST_END_TEST;
 
+GST_START_TEST (test_clip_can_group)
+{
+  GESTimeline *timeline;
+  GESLayer *layer1, *layer2;
+  GESTrack *track1, *track2, *track3, *select_track;
+  GESAsset *asset1, *asset2, *asset3;
+  GESContainer *container;
+  GESClip *clip1, *clip2, *clip3, *grouped;
+  GList *clips = NULL;
+
+  ges_init ();
+
+  timeline = ges_timeline_new ();
+
+  track1 = GES_TRACK (ges_audio_track_new ());
+  track2 = GES_TRACK (ges_video_track_new ());
+  track3 = GES_TRACK (ges_video_track_new ());
+
+  fail_unless (ges_timeline_add_track (timeline, track1));
+  fail_unless (ges_timeline_add_track (timeline, track2));
+
+  layer1 = ges_timeline_append_layer (timeline);
+  layer2 = ges_timeline_append_layer (timeline);
+
+  asset1 = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
+  asset2 = ges_asset_request (GES_TYPE_TEST_CLIP, "width=700", NULL);
+  asset3 =
+      ges_asset_request (GES_TYPE_EFFECT_CLIP, "audioecho || agingtv", NULL);
+
+  /* fail if different layer */
+  clip1 = ges_layer_add_asset (layer1, asset1, 0, 0, 10, GES_TRACK_TYPE_VIDEO);
+  fail_unless (clip1);
+  assert_num_children (clip1, 1);
+  assert_num_in_track (track1, 0);
+  assert_num_in_track (track2, 1);
+
+  clip2 = ges_layer_add_asset (layer2, asset1, 0, 0, 10, GES_TRACK_TYPE_AUDIO);
+  fail_unless (clip2);
+  assert_num_children (clip2, 1);
+  assert_num_in_track (track1, 1);
+  assert_num_in_track (track2, 1);
+
+  clips = g_list_append (clips, clip1);
+  clips = g_list_append (clips, clip2);
+
+  _assert_regroup_fails (clips);
+
+  g_list_free (clips);
+  clips = NULL;
+
+  gst_object_ref (clip1);
+  gst_object_ref (clip2);
+  fail_unless (ges_layer_remove_clip (layer1, clip1));
+  fail_unless (ges_layer_remove_clip (layer2, clip2));
+  assert_num_children (clip1, 1);
+  assert_num_children (clip2, 1);
+  gst_object_unref (clip1);
+  gst_object_unref (clip2);
+  assert_num_in_track (track1, 0);
+  assert_num_in_track (track2, 0);
+
+  /* fail if different asset */
+  clip1 = ges_layer_add_asset (layer1, asset1, 0, 0, 10, GES_TRACK_TYPE_VIDEO);
+  fail_unless (clip1);
+  assert_num_children (clip1, 1);
+
+  clip2 = ges_layer_add_asset (layer1, asset2, 0, 0, 10, GES_TRACK_TYPE_AUDIO);
+  fail_unless (clip2);
+  assert_num_children (clip2, 1);
+  assert_num_in_track (track1, 1);
+  assert_num_in_track (track2, 1);
+
+  clips = g_list_append (clips, clip1);
+  clips = g_list_append (clips, clip2);
+
+  _assert_regroup_fails (clips);
+
+  g_list_free (clips);
+  clips = NULL;
+
+  fail_unless (ges_layer_remove_clip (layer1, clip1));
+  fail_unless (ges_layer_remove_clip (layer1, clip2));
+
+  /* fail if sharing track */
+  clip1 = ges_layer_add_asset (layer1, asset3, 0, 0, 10, GES_TRACK_TYPE_VIDEO);
+  fail_unless (clip1);
+  assert_num_children (clip1, 1);
+
+  clip2 = ges_layer_add_asset (layer1, asset3, 0, 0, 10, GES_TRACK_TYPE_VIDEO);
+  fail_unless (clip2);
+  assert_num_children (clip2, 1);
+  assert_num_in_track (track1, 0);
+  assert_num_in_track (track2, 2);
+
+  clips = g_list_append (clips, clip1);
+  clips = g_list_append (clips, clip2);
+
+  _assert_regroup_fails (clips);
+
+  g_list_free (clips);
+  clips = NULL;
+
+  fail_unless (ges_layer_remove_clip (layer1, clip1));
+  fail_unless (ges_layer_remove_clip (layer1, clip2));
+
+  clip1 = ges_layer_add_asset (layer1, asset1, 0, 0, 10, GES_TRACK_TYPE_VIDEO);
+  fail_unless (clip1);
+  assert_num_children (clip1, 1);
+  assert_num_in_track (track1, 0);
+  assert_num_in_track (track2, 1);
+
+  clip2 = ges_layer_add_asset (layer1, asset2, 0, 0, 10, GES_TRACK_TYPE_AUDIO);
+  fail_unless (clip2);
+  assert_num_children (clip2, 1);
+  assert_num_in_track (track1, 1);
+  assert_num_in_track (track2, 1);
+
+  clips = g_list_append (clips, clip1);
+  clips = g_list_append (clips, clip2);
+
+  _assert_regroup_fails (clips);
+
+  g_list_free (clips);
+  clips = NULL;
+
+  fail_unless (ges_layer_remove_clip (layer1, clip1));
+  fail_unless (ges_layer_remove_clip (layer1, clip2));
+
+  /* can group if same asset but different tracks */
+  clip1 = ges_layer_add_asset (layer1, asset2, 0, 0, 10, GES_TRACK_TYPE_VIDEO);
+  fail_unless (clip1);
+  fail_unless (ges_container_add (GES_CONTAINER (clip1),
+          GES_TIMELINE_ELEMENT (ges_effect_new ("agingtv"))));
+  assert_num_children (clip1, 2);
+
+  clip2 = ges_layer_add_asset (layer1, asset2, 0, 0, 10, GES_TRACK_TYPE_AUDIO);
+  fail_unless (clip2);
+  assert_num_children (clip2, 1);
+
+  fail_unless (ges_timeline_add_track (timeline, track3));
+  assert_num_children (clip1, 2);
+  assert_num_children (clip2, 1);
+  assert_num_in_track (track1, 1);
+  assert_num_in_track (track2, 2);
+  assert_num_in_track (track3, 0);
+
+  select_track = track3;
+  g_signal_connect (timeline, "select-tracks-for-object",
+      G_CALLBACK (_select_track), &select_track);
+
+  clip3 = ges_layer_add_asset (layer1, asset2, 0, 0, 10, GES_TRACK_TYPE_VIDEO);
+  fail_unless (select_track == NULL);
+  assert_num_children (clip1, 2);
+  assert_num_children (clip2, 1);
+  assert_num_children (clip3, 1);
+  assert_num_in_track (track1, 1);
+  assert_num_in_track (track2, 2);
+  assert_num_in_track (track3, 1);
+
+  clips = g_list_append (clips, clip1);
+  clips = g_list_append (clips, clip2);
+  clips = g_list_append (clips, clip3);
+
+  container = ges_container_group (clips);
+
+  fail_unless (GES_IS_CLIP (container));
+  grouped = GES_CLIP (container);
+  assert_num_children (grouped, 4);
+  assert_num_in_track (track1, 1);
+  assert_num_in_track (track2, 2);
+  assert_num_in_track (track3, 1);
+
+  fail_unless (ges_clip_get_supported_formats (grouped),
+      GES_TRACK_TYPE_VIDEO | GES_TRACK_TYPE_AUDIO);
+  fail_unless (ges_extractable_get_asset (GES_EXTRACTABLE (grouped))
+      == asset2);
+  CHECK_OBJECT_PROPS (grouped, 0, 0, 10);
+
+  g_list_free (clips);
+
+  clips = ges_layer_get_clips (layer1);
+  fail_unless (g_list_length (clips), 1);
+  fail_unless (GES_CLIP (clips->data) == grouped);
+  g_list_free_full (clips, gst_object_unref);
+
+  gst_object_unref (asset1);
+  gst_object_unref (asset2);
+  gst_object_unref (asset3);
+
+  gst_object_unref (timeline);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_adding_children_to_track)
 {
   GESTimeline *timeline;
@@ -2587,6 +2783,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_split_direct_bindings);
   tcase_add_test (tc_chain, test_split_direct_absolute_bindings);
   tcase_add_test (tc_chain, test_clip_group_ungroup);
+  tcase_add_test (tc_chain, test_clip_can_group);
   tcase_add_test (tc_chain, test_adding_children_to_track);
   tcase_add_test (tc_chain, test_clip_refcount_remove_child);
   tcase_add_test (tc_chain, test_clip_find_track_element);

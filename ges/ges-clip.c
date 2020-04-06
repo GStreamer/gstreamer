@@ -120,12 +120,6 @@ struct _GESClipPrivate
   GESTrackType supportedformats;
 };
 
-typedef struct _CheckTrack
-{
-  GESTrack *track;
-  GESTrackElement *source;
-} CheckTrack;
-
 enum
 {
   PROP_0,
@@ -925,8 +919,11 @@ _ungroup (GESContainer * container, gboolean recursive)
     return g_list_prepend (ret, container);
   }
 
-  /* We need a copy of the current list of tracks */
   children = ges_container_get_children (container, FALSE);
+  /* _add_child will add core elements at the lowest priority and new
+   * non-core effects at the lowest effect priority, so we need to add
+   * the highest priority children first to preserve the effect order.
+   * @children is already ordered by highest priority first */
   for (tmp = children; tmp; tmp = tmp->next) {
     track_element = GES_TRACK_ELEMENT (tmp->data);
     track_type = ges_track_element_get_track_type (track_element);
@@ -941,6 +938,7 @@ _ungroup (GESContainer * container, gboolean recursive)
         if (layer) {
           /* Add new container to the same layer as @container */
           ges_clip_set_moving_from_layer (tmpclip, TRUE);
+          /* adding to the same layer should not fail when moving */
           ges_layer_add_clip (layer, tmpclip);
           ges_clip_set_moving_from_layer (tmpclip, FALSE);
         }
@@ -951,6 +949,9 @@ _ungroup (GESContainer * container, gboolean recursive)
     }
 
     /* Move trackelement to the container it is supposed to land into */
+    /* Note: it is safe to transfer the element whilst not changing tracks
+     * because all track elements in the same track will stay in the
+     * same clip */
     if (tmpclip != clip)
       _transfer_child (clip, tmpclip, track_element);
   }
@@ -962,125 +963,96 @@ _ungroup (GESContainer * container, gboolean recursive)
   return ret;
 }
 
+static gboolean
+_group_test_share_track (GESClip * clip1, GESClip * clip2)
+{
+  GList *tmp1, *tmp2;
+  GESTrackElement *child1, *child2;
+  for (tmp1 = GES_CONTAINER_CHILDREN (clip1); tmp1; tmp1 = tmp1->next) {
+    child1 = tmp1->data;
+    for (tmp2 = GES_CONTAINER_CHILDREN (clip2); tmp2; tmp2 = tmp2->next) {
+      child2 = tmp2->data;
+      if (ges_track_element_get_track (child1)
+          == ges_track_element_get_track (child2)) {
+        GST_INFO_OBJECT (clip1, "Cannot group with clip %" GES_FORMAT
+            " because its child %" GES_FORMAT " shares the same "
+            "track with our child %" GES_FORMAT, GES_ARGS (clip2),
+            GES_ARGS (child2), GES_ARGS (child1));
+        return TRUE;
+      }
+    }
+  }
+  return FALSE;
+}
+
+#define _GROUP_TEST_EQUAL(val, expect, format) \
+if (val != expect) { \
+  GST_INFO_OBJECT (clip, "Cannot group with other clip %" GES_FORMAT \
+      " because the clip's " #expect " is %" format " rather than the " \
+      #expect " of the other clip %" format, GES_ARGS (first_clip), val, \
+      expect); \
+  return NULL; \
+}
+
 static GESContainer *
 _group (GList * containers)
 {
-  CheckTrack *tracks = NULL;
-  GESTimeline *timeline = NULL;
+  GESClip *first_clip = NULL;
+  GESTimeline *timeline;
   GESTrackType supported_formats;
-  GESLayer *layer = NULL;
-  GList *tmp, *tmpclip, *tmpelement, *list;
+  GESLayer *layer;
+  GList *tmp, *tmp2, *tmpclip, *list;
   GstClockTime start, inpoint, duration;
+  GESTimelineElement *element;
 
-  GESAsset *asset = NULL;
+  GESAsset *asset;
   GESContainer *ret = NULL;
-  guint nb_tracks = 0, i = 0;
-
-  start = inpoint = duration = GST_CLOCK_TIME_NONE;
 
   if (!containers)
     return NULL;
 
-  /* First check if all the containers are clips, if they
-   * all have the same start/inpoint/duration and are in the same
-   * layer.
-   *
-   * We also need to make sure that all source have been created by the
-   * same asset, keep the information */
   for (tmp = containers; tmp; tmp = tmp->next) {
-    GESClip *clip;
-    GESTimeline *tmptimeline;
-    GESContainer *tmpcontainer;
-    GESTimelineElement *element;
-
-    tmpcontainer = GES_CONTAINER (tmp->data);
-    element = GES_TIMELINE_ELEMENT (tmp->data);
-    if (GES_IS_CLIP (element) == FALSE) {
+    if (GES_IS_CLIP (tmp->data) == FALSE) {
       GST_DEBUG ("Can only work with clips");
-      goto done;
+      return NULL;
     }
-    clip = GES_CLIP (tmp->data);
-    tmptimeline = GES_TIMELINE_ELEMENT_TIMELINE (element);
-    if (!timeline) {
-      GList *tmptrack;
-
-      start = _START (tmpcontainer);
-      inpoint = _INPOINT (tmpcontainer);
-      duration = _DURATION (tmpcontainer);
-      timeline = tmptimeline;
-      layer = clip->priv->layer;
-      nb_tracks = g_list_length (GES_TIMELINE_GET_TRACKS (timeline));
-      tracks = g_new0 (CheckTrack, nb_tracks);
-
-      for (tmptrack = GES_TIMELINE_GET_TRACKS (timeline); tmptrack;
-          tmptrack = tmptrack->next) {
-        tracks[i].track = tmptrack->data;
-        i++;
-      }
-    } else {
-      /* FIXME: we should allow the inpoint to be different if not a
-       * core track element of the clip.
-       * E.g. a GESEffect on a GESUriClip */
-      if (start != _START (tmpcontainer) ||
-          inpoint != _INPOINT (tmpcontainer) ||
-          duration != _DURATION (tmpcontainer) || clip->priv->layer != layer) {
-        GST_INFO ("All children must have the same start, inpoint, duration "
-            "and be in the same layer");
-
-        goto done;
-      } else {
-        GList *tmp2;
-
-        for (tmp2 = GES_CONTAINER_CHILDREN (tmp->data); tmp2; tmp2 = tmp2->next) {
-          GESTrackElement *track_element = GES_TRACK_ELEMENT (tmp2->data);
-
-          if (GES_IS_SOURCE (track_element)) {
-            guint i;
-
-            for (i = 0; i < nb_tracks; i++) {
-              if (tracks[i].track ==
-                  ges_track_element_get_track (track_element)) {
-                if (tracks[i].source) {
-                  GST_INFO ("Can not link clips with various source for a "
-                      "same track");
-
-                  goto done;
-                }
-                tracks[i].source = track_element;
-                break;
-              }
-            }
-          }
-        }
-      }
+    if (!first_clip) {
+      first_clip = tmp->data;
+      element = GES_TIMELINE_ELEMENT (first_clip);
+      start = element->start;
+      inpoint = element->inpoint;
+      duration = element->duration;
+      timeline = element->timeline;
+      layer = first_clip->priv->layer;
+      asset = ges_extractable_get_asset (GES_EXTRACTABLE (first_clip));
     }
   }
 
+  for (tmp = containers; tmp; tmp = tmp->next) {
+    GESClip *clip;
+    GESAsset *cmp_asset;
 
-  /* Then check that all sources have been created by the same asset,
-   * otherwise we can not group */
-  for (i = 0; i < nb_tracks; i++) {
-    if (tracks[i].source == NULL) {
-      GST_FIXME ("Check what to do here as we might end up having a mess");
+    element = GES_TIMELINE_ELEMENT (tmp->data);
+    clip = GES_CLIP (element);
 
-      continue;
+    _GROUP_TEST_EQUAL (element->start, start, G_GUINT64_FORMAT);
+    _GROUP_TEST_EQUAL (element->duration, duration, G_GUINT64_FORMAT);
+    _GROUP_TEST_EQUAL (element->inpoint, inpoint, G_GUINT64_FORMAT);
+    _GROUP_TEST_EQUAL (element->timeline, timeline, GST_PTR_FORMAT);
+    _GROUP_TEST_EQUAL (clip->priv->layer, layer, GST_PTR_FORMAT);
+    cmp_asset = ges_extractable_get_asset (GES_EXTRACTABLE (clip));
+    if (cmp_asset != asset) {
+      GST_INFO_OBJECT (clip, "Cannot group with other clip %"
+          GES_FORMAT " because the clip's asset is %s rather than "
+          " the asset of the other clip %s", GES_ARGS (first_clip),
+          cmp_asset ? ges_asset_get_id (cmp_asset) : NULL,
+          asset ? ges_asset_get_id (asset) : NULL);
+      return NULL;
     }
-
-    /* FIXME Check what to do if we have source that have no assets */
-    if (!asset) {
-      asset =
-          ges_extractable_get_asset (GES_EXTRACTABLE
-          (ges_timeline_element_get_parent (GES_TIMELINE_ELEMENT (tracks
-                      [i].source))));
-      continue;
-    }
-    if (asset !=
-        ges_extractable_get_asset (GES_EXTRACTABLE
-            (ges_timeline_element_get_parent (GES_TIMELINE_ELEMENT (tracks
-                        [i].source))))) {
-      GST_INFO ("Can not link clips with source coming from different assets");
-
-      goto done;
+    /* make sure we don't share the same track */
+    for (tmp2 = tmp->next; tmp2; tmp2 = tmp2->next) {
+      if (_group_test_share_track (clip, tmp2->data))
+        return NULL;
     }
   }
 
@@ -1095,8 +1067,18 @@ _group (GList * containers)
     GESClip *cclip = tmpclip->data;
     GList *children = ges_container_get_children (GES_CONTAINER (cclip), FALSE);
 
-    for (tmpelement = children; tmpelement; tmpelement = tmpelement->next) {
-      GESTrackElement *celement = GES_TRACK_ELEMENT (tmpelement->data);
+    /* _add_child will add core elements at the lowest priority and new
+     * non-core effects at the lowest effect priority, so we need to add
+     * the highest priority children first to preserve the effect order.
+     * @children is already ordered by highest priority first.
+     * Priorities between children in different tracks (as tmpclips are)
+     * is not important */
+    for (tmp = children; tmp; tmp = tmp->next) {
+      GESTrackElement *celement = GES_TRACK_ELEMENT (tmp->data);
+      /* Note: it is safe to transfer the element whilst not changing
+       * tracks because the elements from different clips will have
+       * children in separate tracks. So it should not be possible for
+       * two core children to appear in the same track */
       _transfer_child (cclip, GES_CLIP (ret), celement);
       supported_formats |= ges_track_element_get_track_type (celement);
     }
@@ -1110,9 +1092,6 @@ _group (GList * containers)
   _share_creators (list);
   g_list_free_full (list, gst_object_unref);
 
-done:
-  if (tracks)
-    g_free (tracks);
   return ret;
 }
 
