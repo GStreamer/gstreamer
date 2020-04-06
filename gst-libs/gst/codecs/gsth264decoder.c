@@ -1684,8 +1684,11 @@ gst_h264_decoder_process_sps (GstH264Decoder * self, GstH264SPS * sps)
   max_dpb_frames = MIN (max_dpb_mbs / (width_mb * height_mb),
       GST_H264_DPB_MAX_SIZE);
 
-  max_dpb_size = MAX (max_dpb_frames,
+  max_dpb_size = MIN (max_dpb_frames,
       MAX (sps->num_ref_frames, sps->vui_parameters.max_dec_frame_buffering));
+
+  /* Safety, so that subclass don't need bound checking */
+  g_return_val_if_fail (max_dpb_size <= GST_H264_DPB_MAX_SIZE, FALSE);
 
   prev_max_dpb_size = gst_h264_dpb_get_max_num_pics (priv->dpb);
   if (priv->width != sps->width || priv->height != sps->height ||

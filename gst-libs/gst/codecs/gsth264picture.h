@@ -34,7 +34,8 @@ G_BEGIN_DECLS
 typedef struct _GstH264Slice GstH264Slice;
 typedef struct _GstH264Picture GstH264Picture;
 
-#define GST_H264_DPB_MAX_SIZE 32
+/* As specified in A.3.1 h) and A.3.2 f) */
+#define GST_H264_DPB_MAX_SIZE 16
 
 struct _GstH264Slice
 {
