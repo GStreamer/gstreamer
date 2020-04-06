@@ -47,8 +47,6 @@ static void ges_extractable_interface_init (GESExtractableInterface * iface);
 
 #define parent_class ges_uri_clip_parent_class
 
-GESExtractableInterface *parent_extractable_iface;
-
 struct _GESUriClipPrivate
 {
   gchar *uri;

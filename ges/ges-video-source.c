@@ -56,7 +56,7 @@
 #include "ges-extractable.h"
 
 #define parent_class ges_video_source_parent_class
-GESExtractableInterface *parent_extractable_iface = NULL;
+static GESExtractableInterface *parent_extractable_iface = NULL;
 
 struct _GESVideoSourcePrivate
 {
