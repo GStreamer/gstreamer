@@ -366,6 +366,7 @@ enum
   PROP_DO_CTTS,
   PROP_INTERLEAVE_BYTES,
   PROP_INTERLEAVE_TIME,
+  PROP_FORCE_CHUNKS,
   PROP_MAX_RAW_AUDIO_DRIFT,
   PROP_START_GAP_THRESHOLD,
   PROP_FORCE_CREATE_TIMECODE_TRAK,
@@ -391,6 +392,7 @@ enum
 #define DEFAULT_RESERVED_PREFILL FALSE
 #define DEFAULT_INTERLEAVE_BYTES 0
 #define DEFAULT_INTERLEAVE_TIME 250*GST_MSECOND
+#define DEFAULT_FORCE_CHUNKS (FALSE)
 #define DEFAULT_MAX_RAW_AUDIO_DRIFT 40 * GST_MSECOND
 #define DEFAULT_START_GAP_THRESHOLD 0
 #define DEFAULT_FORCE_CREATE_TIMECODE_TRAK FALSE
@@ -627,6 +629,10 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
           "Interleave between streams in nanoseconds",
           0, G_MAXUINT64, DEFAULT_INTERLEAVE_TIME,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_FORCE_CHUNKS,
+      g_param_spec_boolean ("force-chunks", "Force Chunks",
+          "Force multiple chunks to be created even for single-stream files",
+          DEFAULT_FORCE_CHUNKS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_MAX_RAW_AUDIO_DRIFT,
       g_param_spec_uint64 ("max-raw-audio-drift", "Max Raw Audio Drift",
           "Maximum allowed drift of raw audio samples vs. timestamps in nanoseconds",
@@ -862,6 +868,7 @@ gst_qt_mux_init (GstQTMux * qtmux, GstQTMuxClass * qtmux_klass)
       DEFAULT_RESERVED_BYTES_PER_SEC_PER_TRAK;
   qtmux->interleave_bytes = DEFAULT_INTERLEAVE_BYTES;
   qtmux->interleave_time = DEFAULT_INTERLEAVE_TIME;
+  qtmux->force_chunks = DEFAULT_FORCE_CHUNKS;
   qtmux->max_raw_audio_drift = DEFAULT_MAX_RAW_AUDIO_DRIFT;
   qtmux->start_gap_threshold = DEFAULT_START_GAP_THRESHOLD;
   qtmux->force_create_timecode_trak = DEFAULT_FORCE_CREATE_TIMECODE_TRAK;
@@ -5157,10 +5164,13 @@ find_best_pad (GstQTMux * qtmux)
     }
   } else {
     GST_OBJECT_LOCK (qtmux);
-    if (GST_ELEMENT (qtmux)->sinkpads->next) {
+    if (GST_ELEMENT (qtmux)->sinkpads->next || qtmux->force_chunks) {
       /* Only switch pads if we have more than one, otherwise
        * we can just put everything into a single chunk and save
-       * a few bytes of offsets
+       * a few bytes of offsets.
+       *
+       * Various applications and the Apple ProRes spec require chunking even
+       * in case of single stream files.
        */
       if (qtmux->current_pad)
         GST_DEBUG_OBJECT (qtmux, "Switching from pad %s:%s",
@@ -6662,6 +6672,9 @@ gst_qt_mux_get_property (GObject * object,
     case PROP_INTERLEAVE_TIME:
       g_value_set_uint64 (value, qtmux->interleave_time);
       break;
+    case PROP_FORCE_CHUNKS:
+      g_value_set_boolean (value, qtmux->force_chunks);
+      break;
     case PROP_MAX_RAW_AUDIO_DRIFT:
       g_value_set_uint64 (value, qtmux->max_raw_audio_drift);
       break;
@@ -6758,6 +6771,9 @@ gst_qt_mux_set_property (GObject * object,
     case PROP_INTERLEAVE_TIME:
       qtmux->interleave_time = g_value_get_uint64 (value);
       qtmux->interleave_time_set = TRUE;
+      break;
+    case PROP_FORCE_CHUNKS:
+      qtmux->force_chunks = g_value_get_boolean (value);
       break;
     case PROP_MAX_RAW_AUDIO_DRIFT:
       qtmux->max_raw_audio_drift = g_value_get_uint64 (value);
