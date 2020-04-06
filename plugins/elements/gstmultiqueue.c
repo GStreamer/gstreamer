@@ -572,7 +572,8 @@ gst_multi_queue_class_init (GstMultiQueueClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_USE_BUFFERING,
       g_param_spec_boolean ("use-buffering", "Use buffering",
-          "Emit GST_MESSAGE_BUFFERING based on low-/high-percent thresholds",
+          "Emit GST_MESSAGE_BUFFERING based on low-/high-percent thresholds "
+          "(0% = low-watermark, 100% = high-watermark)",
           DEFAULT_USE_BUFFERING, G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
           G_PARAM_STATIC_STRINGS));
   /**

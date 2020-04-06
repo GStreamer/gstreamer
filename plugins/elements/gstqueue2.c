@@ -362,7 +362,8 @@ gst_queue2_class_init (GstQueue2Class * klass)
 
   obj_props[PROP_USE_BUFFERING] = g_param_spec_boolean ("use-buffering",
       "Use buffering",
-      "Emit GST_MESSAGE_BUFFERING based on low-/high-percent thresholds",
+      "Emit GST_MESSAGE_BUFFERING based on low-/high-percent thresholds "
+      "(0% = low-watermark, 100% = high-watermark)",
       DEFAULT_USE_BUFFERING,
       G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING | G_PARAM_STATIC_STRINGS);
   obj_props[PROP_USE_TAGS_BITRATE] = g_param_spec_boolean ("use-tags-bitrate",

@@ -232,12 +232,14 @@ gst_download_buffer_class_init (GstDownloadBufferClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_LOW_PERCENT,
       g_param_spec_int ("low-percent", "Low percent",
-          "Low threshold for buffering to start. Only used if use-buffering is True",
+          "Low threshold for buffering to start. "
+          "Emits GST_MESSAGE_BUFFERING with a value of 0%",
           0, 100, DEFAULT_LOW_PERCENT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_HIGH_PERCENT,
       g_param_spec_int ("high-percent", "High percent",
-          "High threshold for buffering to finish. Only used if use-buffering is True",
+          "High threshold for buffering to finish. "
+          "Emits GST_MESSAGE_BUFFERING with a value of 100%",
           0, 100, DEFAULT_HIGH_PERCENT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
