@@ -1470,7 +1470,9 @@ ges_track_element_copy_properties (GESTimelineElement * element,
       ges_track_element_list_children_properties (GES_TRACK_ELEMENT (element),
       &n_specs);
   for (n = 0; n < n_specs; ++n) {
-    if (!(specs[n]->flags & G_PARAM_WRITABLE))
+    if ((specs[n]->flags & G_PARAM_READWRITE) != G_PARAM_READWRITE)
+      continue;
+    if (specs[n]->flags & G_PARAM_CONSTRUCT_ONLY)
       continue;
     g_value_init (&val, specs[n]->value_type);
     ges_track_element_get_child_property_by_pspec (GES_TRACK_ELEMENT (element),

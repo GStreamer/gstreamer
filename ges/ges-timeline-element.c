@@ -1679,7 +1679,8 @@ ges_timeline_element_copy (GESTimelineElement * self, gboolean deep)
     if (g_strcmp0 (specs[n]->name, "parent") &&
         g_strcmp0 (specs[n]->name, "timeline") &&
         g_strcmp0 (specs[n]->name, "name") &&
-        (specs[n]->flags & G_PARAM_READWRITE) == G_PARAM_READWRITE) {
+        (specs[n]->flags & G_PARAM_READWRITE) == G_PARAM_READWRITE &&
+        (specs[n]->flags & G_PARAM_CONSTRUCT_ONLY) == 0) {
       GValue v = G_VALUE_INIT;
       g_value_init (&v, specs[n]->value_type);
       g_object_get_property (G_OBJECT (self), specs[n]->name, &v);
