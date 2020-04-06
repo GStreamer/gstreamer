@@ -24,6 +24,24 @@
 
 #include <gst/gst.h>
 
+/**
+ * GstFakeVideoSinkAllocationMetaFlags:
+ * @GST_ALLOCATION_FLAG_CROP_META: Expose the crop meta as supported
+ * @GST_ALLOCATION_FLAG_OVERLAY_COMPOSITION_META: Expose the overlay composition meta as supported
+ *
+ * Extra flags to configure the behaviour of the sink.
+ *
+ * Since: 1.18
+ */
+typedef enum {
+  GST_ALLOCATION_FLAG_CROP_META                = (1 << 0),
+  GST_ALLOCATION_FLAG_OVERLAY_COMPOSITION_META = (2 << 0)
+} GstFakeVideoSinkAllocationMetaFlags;
+
+#define GST_TYPE_FAKE_VIDEO_SINK_ALLOCATION_META_FLAGS (gst_fake_video_sink_allocation_meta_flags_get_type())
+GType gst_fake_video_sink_allocation_meta_flags_get_type (void);
+
+
 #define GST_TYPE_FAKE_VIDEO_SINK \
   (gst_fake_video_sink_get_type())
 #define GST_FAKE_VIDEO_SINK(obj) \
@@ -46,6 +64,7 @@ struct _GstFakeVideoSink
 {
     GstBin parent;
     GstElement *child;
+    GstFakeVideoSinkAllocationMetaFlags allocation_meta_flags;
 };
 
 struct _GstFakeVideoSinkClass
