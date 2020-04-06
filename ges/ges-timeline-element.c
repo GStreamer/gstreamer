@@ -2377,7 +2377,7 @@ ges_timeline_element_paste (GESTimelineElement * self,
 
   g_clear_object (&self->priv->copied_from);
 
-  return res ? g_object_ref (res) : res;
+  return res ? g_object_ref_sink (res) : res;
 }
 
 /**

@@ -3035,7 +3035,7 @@ ges_timeline_paste_element (GESTimeline * timeline,
 
   gst_object_unref (copied_from);
 
-  return res ? g_object_ref (res) : res;
+  return res ? g_object_ref_sink (res) : res;
 }
 
 /**
