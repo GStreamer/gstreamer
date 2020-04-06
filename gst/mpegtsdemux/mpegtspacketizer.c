@@ -354,6 +354,17 @@ mpegts_packetizer_parse_adaptation_field_control (MpegTSPacketizer2 *
       GST_MEMDUMP ("Unknown payload", packet->data + length,
           packet->data_end - packet->data - length);
     }
+  } else if (length == 183) {
+    /* Note: According to the specification, the adaptation field length
+     * must be 183 if there is no payload data and < 183 if the packet
+     * contains an adaptation field and payload data.
+     * Some payloaders always set the flag for payload data, even if the
+     * adaptation field length is 183. This just means a zero length
+     * payload so we clear the payload flag here and continue.
+     */
+    GST_WARNING ("PID 0x%04x afc == 0x%02x and length %d == 183 (ignored)",
+        packet->pid, packet->scram_afc_cc & 0x30, length);
+    packet->scram_afc_cc &= ~0x10;
   } else if (length > 182) {
     GST_WARNING ("PID 0x%04x afc == 0x%02x and length %d > 182",
         packet->pid, packet->scram_afc_cc & 0x30, length);
@@ -482,7 +493,7 @@ mpegts_packetizer_parse_packet (MpegTSPacketizer2 * packetizer,
       return FALSE;
   }
 
-  if (FLAGS_HAS_PAYLOAD (tmp))
+  if (FLAGS_HAS_PAYLOAD (packet->scram_afc_cc))
     packet->payload = packet->data;
   else
     packet->payload = NULL;
