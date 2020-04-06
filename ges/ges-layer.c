@@ -690,29 +690,41 @@ ges_layer_add_clip (GESLayer * layer, GESClip * clip)
   GESAsset *asset;
   GESLayerPrivate *priv;
   GESLayer *current_layer;
+  GESTimeline *timeline = GES_TIMELINE_ELEMENT_TIMELINE (clip);
 
   g_return_val_if_fail (GES_IS_LAYER (layer), FALSE);
   g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
 
   GST_DEBUG_OBJECT (layer, "adding clip:%p", clip);
+  gst_object_ref_sink (clip);
 
   priv = layer->priv;
   current_layer = ges_clip_get_layer (clip);
   if (G_UNLIKELY (current_layer)) {
-    GST_WARNING ("Clip %p already belongs to another layer", clip);
-    gst_object_ref_sink (clip);
+    GST_WARNING_OBJECT (layer, "Clip %" GES_FORMAT " already belongs to "
+        "another layer", GES_ARGS (clip));
     gst_object_unref (clip);
     gst_object_unref (current_layer);
-
     return FALSE;
   }
+
+  if (timeline && timeline != layer->timeline) {
+    /* if a clip is not in any layer, its timeline should not be set */
+    GST_ERROR_OBJECT (layer, "Clip %" GES_FORMAT " timeline %"
+        GST_PTR_FORMAT " does not match that of the layer %"
+        GST_PTR_FORMAT, GES_ARGS (clip), timeline, layer->timeline);
+    gst_object_unref (clip);
+    return FALSE;
+  }
+
+  timeline = layer->timeline;
 
   asset = ges_extractable_get_asset (GES_EXTRACTABLE (clip));
   if (asset == NULL) {
     gchar *id;
     NewAssetUData *mudata = g_slice_new (NewAssetUData);
 
-    mudata->clip = gst_object_ref_sink (clip);
+    mudata->clip = clip;
     mudata->layer = layer;
 
     GST_DEBUG_OBJECT (layer, "%" GST_PTR_FORMAT " as no reference to any "
@@ -741,8 +753,6 @@ ges_layer_add_clip (GESLayer * layer, GESClip * clip)
 
     g_slice_free (NewAssetUData, mudata);
     gst_clear_object (&asset);
-  } else {
-    gst_object_ref_sink (clip);
   }
 
   /* Take a reference to the clip and store it stored by start/priority */
@@ -775,9 +785,9 @@ ges_layer_add_clip (GESLayer * layer, GESClip * clip)
    * invoked by ges_timeline_add_clip */
   g_signal_emit (layer, ges_layer_signals[OBJECT_ADDED], 0, clip);
 
-  if (layer->timeline && !ges_timeline_add_clip (layer->timeline, clip)) {
+  if (timeline && !ges_timeline_add_clip (timeline, clip)) {
     GST_WARNING_OBJECT (layer, "Could not add the clip %" GES_FORMAT
-        " to the timeline %" GST_PTR_FORMAT, GES_ARGS (clip), layer->timeline);
+        " to the timeline %" GST_PTR_FORMAT, GES_ARGS (clip), timeline);
     /* FIXME: change emit signal to FALSE once we are able to delay the
      * "clip-added" signal until after ges_timeline_add_clip */
     ges_layer_remove_clip_internal (layer, clip, TRUE);

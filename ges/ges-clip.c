@@ -106,6 +106,7 @@ struct _GESClipPrivate
 
   GList *copied_track_elements;
   GESLayer *copied_layer;
+  GESTimeline *copied_timeline;
   gboolean prevent_priority_offset_update;
   gboolean prevent_resort;
 
@@ -1225,6 +1226,7 @@ _deep_copy (GESTimelineElement * element, GESTimelineElement * copy)
   }
 
   ccopy->priv->copied_layer = g_object_ref (self->priv->layer);
+  ccopy->priv->copied_timeline = self->priv->layer->timeline;
 }
 
 static GESTimelineElement *
@@ -1233,6 +1235,7 @@ _paste (GESTimelineElement * element, GESTimelineElement * ref,
 {
   GList *tmp;
   GESClip *self = GES_CLIP (element);
+  GESLayer *layer = self->priv->copied_layer;
   GESClip *nclip = GES_CLIP (ges_timeline_element_copy (element, FALSE));
 
   ges_timeline_element_set_start (GES_TIMELINE_ELEMENT (nclip), paste_position);
@@ -1241,8 +1244,18 @@ _paste (GESTimelineElement * element, GESTimelineElement * ref,
   for (tmp = self->priv->copied_track_elements; tmp; tmp = tmp->next)
     ges_clip_copy_track_element_into (nclip, tmp->data, GST_CLOCK_TIME_NONE);
 
-  if (self->priv->copied_layer) {
-    if (!ges_layer_add_clip (self->priv->copied_layer, nclip)) {
+  if (layer) {
+    if (layer->timeline != self->priv->copied_timeline) {
+      GST_WARNING_OBJECT (self, "Cannot be pasted into the layer %"
+          GST_PTR_FORMAT " because its timeline has changed", layer);
+      gst_object_ref_sink (nclip);
+      gst_object_unref (nclip);
+      return NULL;
+    }
+
+    /* adding the clip to the layer will add it to the tracks, but not
+     * necessarily the same ones depending on select-tracks-for-object */
+    if (!ges_layer_add_clip (layer, nclip)) {
       GST_INFO ("%" GES_FORMAT " could not be pasted to %" GST_TIME_FORMAT,
           GES_ARGS (element), GST_TIME_ARGS (paste_position));
 
@@ -1366,7 +1379,7 @@ ges_clip_class_init (GESClipClass * klass)
    */
   properties[PROP_LAYER] = g_param_spec_object ("layer", "Layer",
       "The GESLayer where this clip is being used.",
-      GES_TYPE_LAYER, G_PARAM_READABLE);
+      GES_TYPE_LAYER, G_PARAM_READABLE | G_PARAM_EXPLICIT_NOTIFY);
   g_object_class_install_property (object_class, PROP_LAYER,
       properties[PROP_LAYER]);
 
@@ -1585,13 +1598,42 @@ ges_clip_is_moving_from_layer (GESClip * clip)
 gboolean
 ges_clip_move_to_layer (GESClip * clip, GESLayer * layer)
 {
-  gboolean ret;
+  gboolean ret = FALSE;
   GESLayer *current_layer;
+  GESTimeline *current_timeline = GES_TIMELINE_ELEMENT_TIMELINE (clip);
 
   g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
   g_return_val_if_fail (GES_IS_LAYER (layer), FALSE);
 
+  current_layer = clip->priv->layer;
+
+  if (current_layer == layer) {
+    GST_INFO_OBJECT (clip, "Already in the layer %" GST_PTR_FORMAT, layer);
+    return TRUE;
+  }
+
+  gst_object_ref (clip);
+
+  if (current_layer == NULL) {
+    GST_DEBUG ("Not moving %p, only adding it to %p", clip, layer);
+
+    ret = ges_layer_add_clip (layer, clip);
+    goto done;
+  }
+
   ELEMENT_SET_FLAG (clip, GES_CLIP_IS_MOVING);
+
+  if (current_timeline != layer->timeline) {
+    /* make sure we can perform the can_move_element_check in the timeline
+     * of the layer */
+    GST_WARNING_OBJECT (layer, "Cannot move clip %" GES_FORMAT " into "
+        "the layer because its timeline %" GST_PTR_FORMAT " does not "
+        "match the timeline of the layer %" GST_PTR_FORMAT,
+        GES_ARGS (clip), current_timeline, layer->timeline);
+    ret = FALSE;
+    goto done;
+  }
+
   if (layer->timeline
       && !timeline_tree_can_move_element (timeline_get_tree (layer->timeline),
           GES_TIMELINE_ELEMENT (clip),
@@ -1600,36 +1642,30 @@ ges_clip_move_to_layer (GESClip * clip, GESLayer * layer)
           GES_TIMELINE_ELEMENT_DURATION (clip), NULL)) {
     GST_INFO_OBJECT (layer, "Clip %" GES_FORMAT " can't move to layer %d",
         GES_ARGS (clip), ges_layer_get_priority (layer));
-    ELEMENT_UNSET_FLAG (clip, GES_CLIP_IS_MOVING);
-    return FALSE;
-  }
-
-  current_layer = clip->priv->layer;
-
-  if (current_layer == NULL) {
-    GST_DEBUG ("Not moving %p, only adding it to %p", clip, layer);
-
-    return ges_layer_add_clip (layer, clip);
+    goto done;
   }
 
   GST_DEBUG_OBJECT (clip, "moving to layer %p, priority: %d", layer,
       ges_layer_get_priority (layer));
 
-  gst_object_ref (clip);
   ret = ges_layer_remove_clip (current_layer, clip);
 
   if (!ret) {
-    ELEMENT_UNSET_FLAG (clip, GES_CLIP_IS_MOVING);
-    gst_object_unref (clip);
-    return FALSE;
+    goto done;
   }
 
   ret = ges_layer_add_clip (layer, clip);
+
+  if (ret) {
+    g_object_notify_by_pspec (G_OBJECT (clip), properties[PROP_LAYER]);
+  } else {
+    /* try and move back into the original layer */
+    ges_layer_add_clip (current_layer, clip);
+  }
+
+done:
   ELEMENT_UNSET_FLAG (clip, GES_CLIP_IS_MOVING);
-
   gst_object_unref (clip);
-  g_object_notify_by_pspec (G_OBJECT (clip), properties[PROP_LAYER]);
-
 
   return ret && (clip->priv->layer == layer);
 }
