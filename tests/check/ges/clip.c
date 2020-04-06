@@ -528,7 +528,7 @@ static void
 child_removed_cb (GESClip * clip, GESTimelineElement * effect,
     gboolean * called)
 {
-  ASSERT_OBJECT_REFCOUNT (effect, "2 keeping alive ref + emission ref", 3);
+  ASSERT_OBJECT_REFCOUNT (effect, "1 keeping alive ref + emission ref", 2);
   *called = TRUE;
 }
 

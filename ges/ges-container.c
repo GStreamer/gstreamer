@@ -123,8 +123,10 @@ _free_mapping (ChildMapping * mapping)
   if (mapping->child_property_removed_notifyid)
     g_signal_handler_disconnect (child,
         mapping->child_property_removed_notifyid);
-
-  ges_timeline_element_set_parent (child, NULL);
+  if (child) {
+    ges_timeline_element_set_parent (child, NULL);
+    gst_object_unref (child);
+  }
   g_slice_free (ChildMapping, mapping);
 }
 
@@ -750,6 +752,7 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
   GESContainerClass *class;
   GList *current_children, *tmp;
   GESContainerPrivate *priv;
+  GstClockTime prev_start;
 
   g_return_val_if_fail (GES_IS_CONTAINER (container), FALSE);
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (child), FALSE);
@@ -770,6 +773,7 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
   for (tmp = current_children; tmp; tmp = tmp->next)
     g_object_freeze_notify (G_OBJECT (tmp->data));
   g_object_freeze_notify (G_OBJECT (child));
+  gst_object_ref_sink (child);
 
   if (class->add_child) {
     if (class->add_child (container, child) == FALSE) {
@@ -784,7 +788,8 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
    * add_child. However, a user's custom container class may have a good
    * reason to not want the container's start value to change when adding
    * a new child */
-  if (_START (container) > _START (child)) {
+  prev_start = _START (container);
+  if (prev_start > _START (child)) {
     _START (container) = _START (child);
 
     g_hash_table_foreach (priv->mappings, (GHFunc) _resync_start_offsets,
@@ -798,7 +803,6 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
   mapping->duration_offset = _DURATION (container) - _DURATION (child);
 
   g_hash_table_insert (priv->mappings, child, mapping);
-
   container->children = g_list_prepend (container->children, child);
 
   _ges_container_sort_children (container);
@@ -818,6 +822,14 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
 
     g_hash_table_remove (priv->mappings, child);
     container->children = g_list_remove (container->children, child);
+
+    if (prev_start != _START (container)) {
+      _START (container) = prev_start;
+      g_hash_table_foreach (priv->mappings, (GHFunc) _resync_start_offsets,
+          container);
+      g_signal_stop_emission_by_name (container, "start");
+    }
+
     _ges_container_sort_children (container);
 
     goto done;
@@ -848,6 +860,7 @@ done:
     g_object_thaw_notify (G_OBJECT (tmp->data));
   g_object_thaw_notify (G_OBJECT (child));
   g_list_free_full (current_children, gst_object_unref);
+  gst_object_unref (child);
   container->children_control_mode = GES_CHILDREN_UPDATE;
   return ret;
 }
@@ -903,7 +916,6 @@ ges_container_remove (GESContainer * container, GESTimelineElement * child)
   }
 
   container->children = g_list_remove (container->children, child);
-  /* Let it live removing from our mappings, also disconnects signals */
   g_hash_table_remove (priv->mappings, child);
 
   _ges_container_remove_child_properties (container, child);
@@ -921,7 +933,6 @@ ges_container_remove (GESContainer * container, GESTimelineElement * child)
         "Not emitting 'child-removed' signal as child"
         " removal happend during 'child-added' signal emission");
   }
-  gst_object_unref (child);
 
   ret = TRUE;
 
