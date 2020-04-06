@@ -233,7 +233,7 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
   GESClip *clip = GES_CLIP (self);
   GESLayer *layer = ges_clip_get_layer (clip);
   GList *tmp, *children;
-  GESTimelineElement *audio_source = NULL, *video_source = NULL;
+  GHashTable *source_by_track;
 
   g_return_val_if_fail (GES_IS_URI_CLIP_ASSET (asset), FALSE);
 
@@ -270,19 +270,24 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
 
   GES_TIMELINE_ELEMENT (uriclip)->asset = asset;
 
+  source_by_track = g_hash_table_new_full (NULL, NULL,
+      gst_object_unref, gst_object_unref);
   children = ges_container_get_children (GES_CONTAINER (self), TRUE);
 
   for (tmp = children; tmp; tmp = tmp->next) {
-    if (GES_IS_SOURCE (tmp->data)) {
-      GESTrack *track = ges_track_element_get_track (tmp->data);
+    GESTrackElement *child = tmp->data;
+    GESTrack *track = ges_track_element_get_track (child);
+    /* remove our core children */
+    if (GES_TRACK_ELEMENT_IS_CORE (child)) {
+      if (track)
+        g_hash_table_insert (source_by_track, gst_object_ref (track),
+            gst_object_ref (child));
 
-      if (track->type == GES_TRACK_TYPE_AUDIO)
-        audio_source = gst_object_ref (tmp->data);
-      else if (track->type == GES_TRACK_TYPE_VIDEO)
-        video_source = gst_object_ref (tmp->data);
-
-      ges_track_remove_element (track, tmp->data);
-      ges_container_remove (GES_CONTAINER (self), tmp->data);
+      /* removing the track element from its clip whilst it is in a
+       * timeline will remove it from its track */
+      /* removing the core element will also empty its non-core siblings
+       * from the same track */
+      ges_container_remove (GES_CONTAINER (self), GES_TIMELINE_ELEMENT (child));
     }
   }
   g_list_free_full (children, g_object_unref);
@@ -293,29 +298,31 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
     gst_object_ref (clip);
 
     ges_layer_remove_clip (layer, clip);
+    /* adding back to the layer will trigger the re-creation of the core
+     * children */
     res = ges_layer_add_clip (layer, clip);
 
-    for (tmp = GES_CONTAINER_CHILDREN (self); tmp; tmp = tmp->next) {
-      if (GES_IS_SOURCE (tmp->data)) {
-        GESTrack *track = ges_track_element_get_track (tmp->data);
+    /* NOTE: assume that core children in the same tracks correspond to
+     * the same source! */
+    for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
+      GESTrackElement *child = tmp->data;
+      if (GES_TRACK_ELEMENT_IS_CORE (child)) {
+        GESTrackElement *orig_source = g_hash_table_lookup (source_by_track,
+            ges_track_element_get_track (child));
         contains_core = TRUE;
 
-        if (track->type == GES_TRACK_TYPE_AUDIO && audio_source) {
-          ges_track_element_copy_properties (audio_source, tmp->data);
-          ges_track_element_copy_bindings (GES_TRACK_ELEMENT (audio_source),
-              tmp->data, GST_CLOCK_TIME_NONE);
-        } else if (track->type == GES_TRACK_TYPE_VIDEO && video_source) {
-          ges_track_element_copy_properties (video_source, tmp->data);
-          ges_track_element_copy_bindings (GES_TRACK_ELEMENT (video_source),
-              tmp->data, GST_CLOCK_TIME_NONE);
+        if (orig_source) {
+          ges_track_element_copy_properties (GES_TIMELINE_ELEMENT (orig_source),
+              GES_TIMELINE_ELEMENT (child));
+          ges_track_element_copy_bindings (orig_source, child,
+              GST_CLOCK_TIME_NONE);
         }
       }
     }
     gst_object_unref (clip);
     gst_object_unref (layer);
   }
-  g_clear_object (&audio_source);
-  g_clear_object (&video_source);
+  g_hash_table_unref (source_by_track);
 
   if (res) {
     g_free (uriclip->priv->uri);
@@ -370,9 +377,9 @@ ges_uri_clip_set_mute (GESUriClip * self, gboolean mute)
   /* Go over tracked objects, and update 'active' status on all audio objects */
   for (tmp = GES_CONTAINER_CHILDREN (self); tmp; tmp = g_list_next (tmp)) {
     GESTrackElement *trackelement = (GESTrackElement *) tmp->data;
+    GESTrack *track = ges_track_element_get_track (trackelement);
 
-    if (ges_track_element_get_track (trackelement)->type ==
-        GES_TRACK_TYPE_AUDIO)
+    if (track && track->type == GES_TRACK_TYPE_AUDIO)
       ges_track_element_set_active (trackelement, !mute);
   }
 }
