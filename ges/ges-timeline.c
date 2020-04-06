@@ -150,6 +150,8 @@ struct _GESTimelinePrivate
    * and %FALSE otherwize */
   gboolean needs_transitions_update;
 
+  GESTrack *auto_transition_track;
+
   /* While we are creating and adding the TrackElements for a clip, we need to
    * ignore the child-added signal */
   gboolean track_elements_moving;
@@ -343,6 +345,8 @@ ges_timeline_dispose (GObject * object)
 
   g_hash_table_unref (priv->all_elements);
   gst_object_unref (priv->stream_collection);
+
+  gst_clear_object (&priv->auto_transition_track);
 
   G_OBJECT_CLASS (ges_timeline_parent_class)->dispose (object);
 }
@@ -897,25 +901,46 @@ ges_timeline_create_transition (GESTimeline * timeline,
     GESTrackElement * previous, GESTrackElement * next, GESClip * transition,
     GESLayer * layer, guint64 start, guint64 duration)
 {
-  GESAsset *asset;
   GESAutoTransition *auto_transition;
+  GESTrackElement *child;
+  /* track should not be NULL */
+  GESTrack *track = ges_track_element_get_track (next);
 
   if (transition == NULL) {
-    /* TODO make it possible to specify a Transition asset in the API */
+    GESAsset *asset;
+
+    LOCK_DYN (timeline);
+    timeline->priv->auto_transition_track = gst_object_ref (track);
+    UNLOCK_DYN (timeline);
+
     asset = ges_asset_request (GES_TYPE_TRANSITION_CLIP, "crossfade", NULL);
-    transition =
-        ges_layer_add_asset (layer, asset, start, 0, duration,
+    transition = ges_layer_add_asset (layer, asset, start, 0, duration,
         ges_track_element_get_track_type (next));
-    g_object_unref (asset);
+    gst_object_unref (asset);
+
+    LOCK_DYN (timeline);
+    /* should have been set to NULL, but clear just in case */
+    gst_clear_object (&timeline->priv->auto_transition_track);
+    UNLOCK_DYN (timeline);
   } else {
     GST_DEBUG_OBJECT (timeline,
         "Reusing already existing transition: %" GST_PTR_FORMAT, transition);
   }
 
+  g_return_val_if_fail (transition, NULL);
+  g_return_val_if_fail (g_list_length (GES_CONTAINER_CHILDREN (transition)) ==
+      1, NULL);
+  child = GES_CONTAINER_CHILDREN (transition)->data;
+  if (ges_track_element_get_track (child) != track) {
+    GST_ERROR_OBJECT (timeline, "The auto transition element %"
+        GES_FORMAT " for elements %" GES_FORMAT " and %" GES_FORMAT
+        " is not in the same track %" GST_PTR_FORMAT,
+        GES_ARGS (child), GES_ARGS (previous), GES_ARGS (next), track);
+    return NULL;
+  }
+
   /* We know there is only 1 TrackElement */
-  auto_transition =
-      ges_auto_transition_new (GES_CONTAINER_CHILDREN (transition)->data,
-      previous, next);
+  auto_transition = ges_auto_transition_new (child, previous, next);
 
   g_signal_connect (auto_transition, "destroy-me",
       G_CALLBACK (_destroy_auto_transition_cb), timeline);
@@ -1515,6 +1540,7 @@ static void
 clip_track_element_added_cb (GESClip * clip,
     GESTrackElement * track_element, GESTimeline * timeline)
 {
+  GESTrack *auto_trans_track;
   gboolean error = FALSE;
 
   if (timeline->priv->track_elements_moving) {
@@ -1531,8 +1557,23 @@ clip_track_element_added_cb (GESClip * clip,
     return;
   }
 
-  if (!_add_track_element_to_tracks (timeline, clip, track_element))
-    error = TRUE;
+  LOCK_DYN (timeline);
+  /* take ownership of auto_transition_track. For auto-transitions, this
+   * should be used exactly once! */
+  auto_trans_track = timeline->priv->auto_transition_track;
+  timeline->priv->auto_transition_track = NULL;
+  UNLOCK_DYN (timeline);
+
+  if (auto_trans_track) {
+    /* don't use track-selection */
+    if (!ges_clip_add_child_to_track (clip, track_element, auto_trans_track,
+            NULL))
+      error = TRUE;
+    gst_object_unref (auto_trans_track);
+  } else {
+    if (!_add_track_element_to_tracks (timeline, clip, track_element))
+      error = TRUE;
+  }
 
   if (error)
     _set_track_selection_error (timeline, TRUE);

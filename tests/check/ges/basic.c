@@ -536,7 +536,7 @@ GST_START_TEST (test_ges_timeline_multiple_tracks)
   GESTimeline *timeline;
   GESLayer *layer;
   GESTrack *track1, *track2;
-  GESClip *s1, *s2, *s3, *s4;
+  GESClip *s1, *s2, *s3, *s4, *transition;
   GESTrackElement *e1, *e2, *e3, *el, *el2, *e_copy;
   gboolean found_e1 = FALSE, found_e2 = FALSE, found_e3 = FALSE;
   GList *trackelements, *tmp, *layers;
@@ -549,6 +549,7 @@ GST_START_TEST (test_ges_timeline_multiple_tracks)
   GST_DEBUG ("Create a timeline");
   timeline = ges_timeline_new ();
   fail_unless (timeline != NULL);
+  ges_timeline_set_auto_transition (timeline, TRUE);
 
   GST_DEBUG ("Create a layer");
   layer = ges_layer_new ();
@@ -578,7 +579,7 @@ GST_START_TEST (test_ges_timeline_multiple_tracks)
   /* s1 and s3 can overlap since they are destined for different tracks */
   /* s2 will overlap both */
   /* s4 destined for no track */
-  _CREATE_SOURCE (layer, s1, 0, 10);
+  _CREATE_SOURCE (layer, s1, 0, 12);
   _CREATE_SOURCE (layer, s2, 5, 10);
   _CREATE_SOURCE (layer, s3, 0, 10);
   _CREATE_SOURCE (layer, s4, 0, 20);
@@ -647,6 +648,8 @@ GST_START_TEST (test_ges_timeline_multiple_tracks)
   layers = ges_timeline_get_layers (timeline);
   fail_unless (g_list_find (layers, layer) != NULL);
   g_list_free_full (layers, gst_object_unref);
+
+  fail_unless (ges_layer_get_auto_transition (layer));
 
   assert_equals_int (st_data.num_unrecognised, 0);
 
@@ -756,11 +759,49 @@ GST_START_TEST (test_ges_timeline_multiple_tracks)
   /* called once for source (where no track was selected) */
   assert_equals_int (st_data.num_calls[0], 1);
 
-  /* 2 sources + 2 effects */
-  assert_num_in_track (track1, 4);
-  assert_num_in_track (track2, 4);
+  /* 2 sources + 1 transition + 2 effects */
+  assert_num_in_track (track1, 5);
+  assert_num_in_track (track2, 5);
 
+  el = NULL;
+  trackelements = ges_track_get_elements (track1);
+  for (tmp = trackelements; tmp; tmp = tmp->next) {
+    if (GES_IS_VIDEO_TRANSITION (tmp->data)) {
+      fail_if (el);
+      el = tmp->data;
+    }
+  }
+  g_list_free_full (trackelements, gst_object_unref);
+  fail_unless (GES_IS_CLIP (GES_TIMELINE_ELEMENT_PARENT (el)));
+  transition = GES_CLIP (GES_TIMELINE_ELEMENT_PARENT (el));
+  assert_layer (transition, layer);
 
+  CHECK_OBJECT_PROPS (transition, 5, 0, 7);
+  CHECK_OBJECT_PROPS (el, 5, 0, 7);
+  fail_unless (ges_track_element_get_track (el) == track1);
+  /* make sure we can change the transition type */
+  fail_unless (ges_video_transition_set_transition_type (GES_VIDEO_TRANSITION
+          (el), GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNDOOR_H));
+
+  el = NULL;
+  trackelements = ges_track_get_elements (track2);
+  for (tmp = trackelements; tmp; tmp = tmp->next) {
+    if (GES_IS_VIDEO_TRANSITION (tmp->data)) {
+      fail_if (el);
+      el = tmp->data;
+    }
+  }
+  g_list_free_full (trackelements, gst_object_unref);
+  fail_unless (GES_IS_CLIP (GES_TIMELINE_ELEMENT_PARENT (el)));
+  transition = GES_CLIP (GES_TIMELINE_ELEMENT_PARENT (el));
+  assert_layer (transition, layer);
+
+  CHECK_OBJECT_PROPS (transition, 5, 0, 5);
+  CHECK_OBJECT_PROPS (el, 5, 0, 5);
+  fail_unless (ges_track_element_get_track (el) == track2);
+  /* make sure we can change the transition type */
+  fail_unless (ges_video_transition_set_transition_type (GES_VIDEO_TRANSITION
+          (el), GES_VIDEO_STANDARD_TRANSITION_TYPE_BARNDOOR_H));
 
   gst_object_unref (timeline);
 
