@@ -1224,7 +1224,7 @@ void gst_h264_video_calculate_framerate (const GstH264SPS * sps, guint field_pic
     guint pic_struct, gint * fps_num, gint * fps_den);
 
 GST_CODEC_PARSERS_API
-GstMemory * gst_h264_create_sei_memory (guint8 start_code_prefix_size,
+GstMemory * gst_h264_create_sei_memory (guint8 start_code_prefix_length,
                                         GArray * messages);
 
 GST_CODEC_PARSERS_API
