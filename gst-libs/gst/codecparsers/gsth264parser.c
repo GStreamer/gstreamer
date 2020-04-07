@@ -2872,7 +2872,7 @@ gst_h264_create_sei_memory_internal (guint8 nal_prefix_size,
 
     switch (msg->payloadType) {
       case GST_H264_SEI_REGISTERED_USER_DATA:
-        GST_DEBUG ("Writing \"Registered user data\" done");
+        GST_DEBUG ("Writing \"Registered user data\"");
         if (!gst_h264_write_sei_registered_user_data (&nw,
                 &msg->payload.registered_user_data)) {
           GST_WARNING ("Failed to write \"Registered user data\"");
@@ -2881,7 +2881,7 @@ gst_h264_create_sei_memory_internal (guint8 nal_prefix_size,
         have_written_data = TRUE;
         break;
       case GST_H264_SEI_FRAME_PACKING:
-        GST_DEBUG ("Writing \"Frame packing\" done");
+        GST_DEBUG ("Writing \"Frame packing\"");
         if (!gst_h264_write_sei_frame_packing (&nw,
                 &msg->payload.frame_packing)) {
           GST_WARNING ("Failed to write \"Frame packing\"");
@@ -2899,7 +2899,7 @@ gst_h264_create_sei_memory_internal (guint8 nal_prefix_size,
         have_written_data = TRUE;
         break;
       case GST_H264_SEI_CONTENT_LIGHT_LEVEL:
-        GST_DEBUG ("Writing \"Content light level\" done");
+        GST_DEBUG ("Writing \"Content light level\"");
         if (!gst_h264_write_sei_content_light_level_info (&nw,
                 &msg->payload.content_light_level)) {
           GST_WARNING ("Failed to write \"Content light level\"");
