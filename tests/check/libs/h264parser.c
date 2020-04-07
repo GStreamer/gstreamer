@@ -237,7 +237,7 @@ static guint8 nalu_sps_with_vui[] = {
 };
 
 static guint8 nalu_sei_pic_timing[] = {
-  0x00, 0x00, 0x01, 0x06, 0x01, 0x01, 0x32, 0x80
+  0x00, 0x00, 0x00, 0x01, 0x06, 0x01, 0x01, 0x32, 0x80
 };
 
 static guint8 nalu_chained_sei[] = {
@@ -429,6 +429,91 @@ check_sei_cll (const GstH264ContentLightLevel * a,
       (a->max_pic_average_light_level == b->max_pic_average_light_level);
 }
 
+static gboolean
+check_sei_pic_timing (const GstH264PicTiming * a, const GstH264PicTiming * b)
+{
+  if (a->CpbDpbDelaysPresentFlag != b->CpbDpbDelaysPresentFlag)
+    return FALSE;
+
+  if (a->CpbDpbDelaysPresentFlag) {
+    if (a->cpb_removal_delay != b->cpb_removal_delay ||
+        a->cpb_removal_delay_length_minus1 != b->cpb_removal_delay_length_minus1
+        || a->dpb_output_delay != b->dpb_output_delay
+        || a->dpb_output_delay_length_minus1 !=
+        b->dpb_output_delay_length_minus1)
+      return FALSE;
+  }
+
+  if (a->pic_struct_present_flag != b->pic_struct_present_flag)
+    return FALSE;
+
+  if (a->pic_struct_present_flag) {
+    const guint8 num_clock_ts_table[9] = {
+      1, 1, 1, 2, 2, 3, 3, 2, 3
+    };
+    guint8 num_clock_num_ts;
+    guint i;
+
+    if (a->pic_struct != b->pic_struct)
+      return FALSE;
+
+    if (a->time_offset_length != b->time_offset_length)
+      return FALSE;
+
+    num_clock_num_ts = num_clock_ts_table[a->pic_struct];
+
+    for (i = 0; i < num_clock_num_ts; i++) {
+      if (a->clock_timestamp_flag[i] != b->clock_timestamp_flag[i])
+        return FALSE;
+
+      if (a->clock_timestamp_flag[i]) {
+        const GstH264ClockTimestamp *ta = &a->clock_timestamp[i];
+        const GstH264ClockTimestamp *tb = &b->clock_timestamp[i];
+
+        if (ta->ct_type != tb->ct_type ||
+            ta->nuit_field_based_flag != tb->nuit_field_based_flag ||
+            ta->counting_type != tb->counting_type ||
+            ta->discontinuity_flag != tb->discontinuity_flag ||
+            ta->cnt_dropped_flag != tb->cnt_dropped_flag ||
+            ta->n_frames != tb->n_frames)
+          return FALSE;
+
+        if (ta->full_timestamp_flag) {
+          if (ta->seconds_value != tb->seconds_value ||
+              ta->minutes_value != tb->minutes_value ||
+              ta->hours_value != tb->hours_value)
+            return FALSE;
+        } else {
+          if (ta->seconds_flag != tb->seconds_flag)
+            return FALSE;
+
+          if (ta->seconds_flag) {
+            if (ta->seconds_value != tb->seconds_value ||
+                ta->minutes_flag != tb->minutes_flag)
+              return FALSE;
+
+            if (ta->minutes_flag) {
+              if (ta->minutes_value != tb->minutes_value ||
+                  ta->hours_flag != tb->hours_flag)
+                return FALSE;
+
+              if (ta->hours_flag) {
+                if (ta->hours_value != tb->hours_value)
+                  return FALSE;
+              }
+            }
+          }
+        }
+
+        if (ta->time_offset != tb->time_offset)
+          return FALSE;
+      }
+    }
+  }
+
+  return TRUE;
+}
+
 GST_START_TEST (test_h264_create_sei)
 {
   GstH264NalParser *parser;
@@ -459,10 +544,24 @@ GST_START_TEST (test_h264_create_sei)
     {h264_sei_cll, G_N_ELEMENTS (h264_sei_cll),
         GST_H264_SEI_CONTENT_LIGHT_LEVEL, {0,},
         (SEICheckFunc) check_sei_cll},
+    {nalu_sei_pic_timing, G_N_ELEMENTS (nalu_sei_pic_timing),
+        GST_H264_SEI_PIC_TIMING, {0,},
+        (SEICheckFunc) check_sei_pic_timing},
     /* *INDENT-ON* */
   };
 
   parser = gst_h264_nal_parser_new ();
+
+  /* inject SPS for picture timing sei */
+  parse_ret =
+      gst_h264_parser_identify_nalu_unchecked (parser, nalu_sps_with_vui, 0,
+      sizeof (nalu_sps_with_vui), &nalu);
+  assert_equals_int (parse_ret, GST_H264_PARSER_OK);
+  assert_equals_int (nalu.type, GST_H264_NAL_SPS);
+  assert_equals_int (nalu.size, 28);
+
+  parse_ret = gst_h264_parser_parse_nal (parser, &nalu);
+  assert_equals_int (parse_ret, GST_H264_PARSER_OK);
 
   /* test single sei message per sei nal unit */
   for (i = 0; i < G_N_ELEMENTS (test_list); i++) {

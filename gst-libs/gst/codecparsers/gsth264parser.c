@@ -2729,6 +2729,70 @@ error:
   return FALSE;
 }
 
+static gboolean
+gst_h264_write_sei_pic_timing (NalWriter * nw, GstH264PicTiming * tim)
+{
+  if (tim->CpbDpbDelaysPresentFlag) {
+    WRITE_UINT32 (nw, tim->cpb_removal_delay,
+        tim->cpb_removal_delay_length_minus1 + 1);
+    WRITE_UINT32 (nw, tim->dpb_output_delay,
+        tim->dpb_output_delay_length_minus1 + 1);
+  }
+
+  if (tim->pic_struct_present_flag) {
+    const guint8 num_clock_ts_table[9] = {
+      1, 1, 1, 2, 2, 3, 3, 2, 3
+    };
+    guint8 num_clock_num_ts;
+    guint i;
+
+    WRITE_UINT8 (nw, tim->pic_struct, 4);
+
+    num_clock_num_ts = num_clock_ts_table[tim->pic_struct];
+    for (i = 0; i < num_clock_num_ts; i++) {
+      WRITE_UINT8 (nw, tim->clock_timestamp_flag[i], 1);
+      if (tim->clock_timestamp_flag[i]) {
+        GstH264ClockTimestamp *timestamp = &tim->clock_timestamp[i];
+
+        WRITE_UINT8 (nw, timestamp->ct_type, 2);
+        WRITE_UINT8 (nw, timestamp->nuit_field_based_flag, 1);
+        WRITE_UINT8 (nw, timestamp->counting_type, 5);
+        WRITE_UINT8 (nw, timestamp->full_timestamp_flag, 1);
+        WRITE_UINT8 (nw, timestamp->discontinuity_flag, 1);
+        WRITE_UINT8 (nw, timestamp->cnt_dropped_flag, 1);
+        WRITE_UINT8 (nw, timestamp->n_frames, 8);
+
+        if (timestamp->full_timestamp_flag) {
+          WRITE_UINT8 (nw, timestamp->seconds_value, 6);
+          WRITE_UINT8 (nw, timestamp->minutes_value, 6);
+          WRITE_UINT8 (nw, timestamp->hours_value, 5);
+        } else {
+          WRITE_UINT8 (nw, timestamp->seconds_flag, 1);
+          if (timestamp->seconds_flag) {
+            WRITE_UINT8 (nw, timestamp->seconds_value, 6);
+            WRITE_UINT8 (nw, timestamp->minutes_flag, 1);
+            if (timestamp->minutes_flag) {
+              WRITE_UINT8 (nw, timestamp->minutes_value, 6);
+              WRITE_UINT8 (nw, timestamp->hours_flag, 1);
+              if (timestamp->hours_flag)
+                WRITE_UINT8 (nw, timestamp->hours_value, 5);
+            }
+          }
+        }
+
+        if (tim->time_offset_length > 0) {
+          WRITE_UINT32 (nw, timestamp->time_offset, tim->time_offset_length);
+        }
+      }
+    }
+  }
+
+  return TRUE;
+
+error:
+  return FALSE;
+}
+
 static GstMemory *
 gst_h264_create_sei_memory_internal (guint8 nal_prefix_size,
     gboolean packetized, GArray * messages)
@@ -2844,6 +2908,89 @@ gst_h264_create_sei_memory_internal (guint8 nal_prefix_size,
          */
         payload_size_data = 4;
         break;
+      case GST_H264_SEI_PIC_TIMING:{
+        GstH264PicTiming *tim = &msg->payload.pic_timing;
+        const guint8 num_clock_ts_table[9] = {
+          1, 1, 1, 2, 2, 3, 3, 2, 3
+        };
+        guint8 num_clock_num_ts;
+        guint i;
+
+        if (!tim->CpbDpbDelaysPresentFlag && !tim->pic_struct_present_flag) {
+          GST_WARNING
+              ("Both CpbDpbDelaysPresentFlag and pic_struct_present_flag are zero");
+          break;
+        }
+
+        if (tim->CpbDpbDelaysPresentFlag) {
+          payload_size_in_bits = tim->cpb_removal_delay_length_minus1 + 1;
+          payload_size_in_bits += tim->dpb_output_delay_length_minus1 + 1;
+        }
+
+        if (tim->pic_struct_present_flag) {
+          /* pic_struct: 4bits */
+          payload_size_in_bits += 4;
+
+          num_clock_num_ts = num_clock_ts_table[tim->pic_struct];
+          for (i = 0; i < num_clock_num_ts; i++) {
+            /* clock_timestamp_flag: 1bit */
+            payload_size_in_bits++;
+
+            if (tim->clock_timestamp_flag[i]) {
+              GstH264ClockTimestamp *timestamp = &tim->clock_timestamp[i];
+
+              /* ct_type: 2bits
+               * nuit_field_based_flag: 1bit
+               * counting_type: 5bits
+               * full_timestamp_flag: 1bit
+               * discontinuity_flag: 1bit
+               * cnt_dropped_flag: 1bit
+               * n_frames: 8bits
+               */
+              payload_size_in_bits += 19;
+              if (timestamp->full_timestamp_flag) {
+                /* seconds_value: 6bits
+                 * minutes_value: 6bits
+                 * hours_value: 5bits
+                 */
+                payload_size_in_bits += 17;
+              } else {
+                /* seconds_flag: 1bit */
+                payload_size_in_bits++;
+
+                if (timestamp->seconds_flag) {
+                  /* seconds_value: 6bits
+                   * minutes_flag: 1bit
+                   */
+                  payload_size_in_bits += 7;
+                  if (timestamp->minutes_flag) {
+                    /* minutes_value: 6bits
+                     * hours_flag: 1bits
+                     */
+                    payload_size_in_bits += 7;
+                    if (timestamp->hours_flag) {
+                      /* hours_value: 5bits */
+                      payload_size_in_bits += 5;
+                    }
+                  }
+                }
+              }
+
+              /* time_offset_length bits */
+              payload_size_in_bits += tim->time_offset_length;
+            }
+          }
+        }
+
+        payload_size_data = payload_size_in_bits >> 3;
+
+        if ((payload_size_in_bits & 0x7) != 0) {
+          GST_INFO ("Bits for Picture Timing SEI is not byte aligned");
+          payload_size_data++;
+          need_align = TRUE;
+        }
+        break;
+      }
       default:
         break;
     }
@@ -2900,6 +3047,14 @@ gst_h264_create_sei_memory_internal (guint8 nal_prefix_size,
         if (!gst_h264_write_sei_content_light_level_info (&nw,
                 &msg->payload.content_light_level)) {
           GST_WARNING ("Failed to write \"Content light level\"");
+          goto error;
+        }
+        have_written_data = TRUE;
+        break;
+      case GST_H264_SEI_PIC_TIMING:
+        GST_DEBUG ("Writing \"Picture timing\"");
+        if (!gst_h264_write_sei_pic_timing (&nw, &msg->payload.pic_timing)) {
+          GST_WARNING ("Failed to write \"Picture timing\"");
           goto error;
         }
         have_written_data = TRUE;
