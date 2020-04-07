@@ -63,7 +63,7 @@ descriptions resemble black magic. Fear not, for everyone learns the
 
 The command line for gst-launch-1.0 consists of a list of options followed
 by a PIPELINE-DESCRIPTION. Some simplified instructions are given next,
-se the complete documentation at [the reference page](tools/gst-launch.md)
+see the complete documentation at [the reference page](tools/gst-launch.md)
 for `gst-launch-1.0`.
 
 ### Elements

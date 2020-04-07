@@ -33,7 +33,7 @@ resilience, then, should listen to these messages and pause playback if
 the buffer level is not high enough (usually, whenever it is below
 100%).
 
-To achieve synchronization among multiple sinks (for example and audio
+To achieve synchronization among multiple sinks (for example an audio
 and a video sink) a global clock is used. This clock is selected by
 GStreamer among all elements which can provide one. Under some
 circumstances, for example, an RTP source switching streams or changing
