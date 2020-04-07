@@ -662,7 +662,6 @@ done:
   return structures;
 
 failed:
-  g_free (content);
   if (structures)
     g_list_free_full (structures, (GDestroyNotify) gst_structure_free);
   structures = NULL;
