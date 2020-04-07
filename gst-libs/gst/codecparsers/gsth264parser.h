@@ -955,12 +955,38 @@ struct _GstH264SliceHdr
   guint pic_order_cnt_bit_size;
 };
 
-
+/**
+ * GstH264ClockTimestamp:
+ * @ct_type: indicates the scan type, 0: progressive, 1: interlaced, 2: unknown,
+ *   3: reserved
+ * @nuit_field_based_flag: used in calculating clockTimestamp
+ * @counting_type: specifies the method of dropping values of the n_frames
+ * @full_timestamp_flag: equal to 1 specifies that the n_frames syntax element
+ *   is followed by seconds_value, minutes_value, and hours_value (Since 1.18)
+ * @discontinuity_flag: indicates whether the difference between the current
+ *   value of clockTimestamp and the value of clockTimestamp computed from the
+ *   previous clock timestamp can be interpreted as the time difference or not.
+ * @cnt_dropped_flag: specifies the skipping of one or more values of n_frames
+ *   using the counting method specified by counting_type
+ * @n_frames: specifies the value of nFrames used to compute clockTimestamp
+ * @seconds_flag: equal to 1 specifies that @seconds_value and minutes_flag are
+ *   present when @full_timestamp_flag is equal to 0
+ * @seconds_value: specifies the value of seconds to compute clockTimestamp
+ * @minutes_flag: equal to 1 specifies that @minutes_value and hours_flag are
+ *   present when @full_timestamp_flag is equal to 0 and @seconds_flag is
+ *   equal to 1
+ * @minutes_value: specifies the value of minutes to compute clockTimestamp
+ * @hours_flag: equal to 1 specifies that @hours_value is present when
+ *   @full_timestamp_flag is equal to 0 and @seconds_flag is equal to 1 and
+ *   @minutes_flag is equal to 1
+ * @time_offset: specifies the value of tOffset used to compute clockTimestamp
+ */
 struct _GstH264ClockTimestamp
 {
   guint8 ct_type;
   guint8 nuit_field_based_flag;
   guint8 counting_type;
+  guint8 full_timestamp_flag;
   guint8 discontinuity_flag;
   guint8 cnt_dropped_flag;
   guint8 n_frames;
@@ -1017,8 +1043,36 @@ struct _GstH264StereoVideoInfo
   guint8 right_view_self_contained_flag;
 };
 
+/**
+ * GstH264PicTiming:
+ * @CpbDpbDelaysPresentFlag: non-zero if linked
+ *   GstH264VUIParams::nal_hrd_parameters_present_flag or
+ *   GstH264VUIParams::vcl_hrd_parameters_present_flag is non-zero (Since: 1.18)
+ * @cpb_removal_delay_length_minus1: specifies the length of @cpb_removal_delay
+ *   in bits (Since 1.18)
+ * @dpb_output_delay_length_minus1: specifies the length of @dpb_output_delay
+ *   in bits (Since 1.18)
+ * @cpb_removal_delay: specifies how many clock ticks to wait after removal from
+ *   the CPB of the access unit associated with the most recent buffering period
+ *   SEI message in a preceding access unit before removing from the
+ *   buffer the access unit data associated with the picture timing SEI message
+ * @dpb_output_delay: used to compute the DPB output time of the picture
+ * @pic_struct_present_flag: GstH264VUIParams::pic_struct_present_flag
+ * @pic_struct: indicates whether a picture should be displayed as a frame or
+ *   one or more fields
+ * @clock_timestamp_flag: equal to 1 indicates that a number of clock timestamp
+ *   syntax elements are present
+ * @clock_timestamp: a #GstH264ClockTimestamp
+ * @time_offset_length: specifies the length time_offset of
+ *   #GstH264ClockTimestamp in bits (Since 1.18)
+ */
 struct _GstH264PicTiming
 {
+  /* from vui */
+  guint8 CpbDpbDelaysPresentFlag;
+  /* if CpbDpbDelaysPresentFlag */
+  guint8 cpb_removal_delay_length_minus1;
+  guint8 dpb_output_delay_length_minus1;
   guint32 cpb_removal_delay;
   guint32 dpb_output_delay;
 
@@ -1028,6 +1082,7 @@ struct _GstH264PicTiming
 
   guint8 clock_timestamp_flag[3];
   GstH264ClockTimestamp clock_timestamp[3];
+  guint8 time_offset_length;
 };
 
 /**
