@@ -253,6 +253,7 @@ class TestTrackElements(common.GESSimpleTimelineTest):
     def test_moving_core_track_elements(self):
         clip = self.append_clip()
         clip1 = self.append_clip()
+        title_clip = self.append_clip(asset_type=GES.TitleClip)
 
         track_element = clip.find_track_element(None, GES.VideoSource)
         self.assertTrue(clip.remove(track_element))
@@ -260,9 +261,22 @@ class TestTrackElements(common.GESSimpleTimelineTest):
         track_element1 = clip1.find_track_element(None, GES.VideoSource)
         self.assertTrue(clip1.remove(track_element1))
 
-        self.assertFalse(clip1.add(track_element))
-        self.assertFalse(clip.add(track_element1))
+        self.assertTrue(clip1.add(track_element))
+        self.assertIsNotNone(track_element.get_track())
+        # We can add another TestSource to the clip as it has the same parent
+        # asset
+        self.assertTrue(clip1.add(track_element1))
+        # We already have a core TrackElement for the video track, not adding
+        # a second one.
+        self.assertIsNone(track_element1.get_track())
 
+        clip1.remove(track_element)
+        clip1.remove(track_element1)
+        title = title_clip.find_track_element(None, GES.VideoSource)
+        self.assertTrue(title_clip.remove(title))
+        # But we can't add an element that has been created by a TitleClip
+        self.assertFalse(clip.add(title))
+        self.assertFalse(title_clip.add(track_element))
         self.assertTrue(clip.add(track_element))
         self.assertTrue(clip1.add(track_element1))
 

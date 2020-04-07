@@ -845,8 +845,6 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
       child);
   priv->adding_children = g_list_remove (priv->adding_children, child);
 
-  ret = TRUE;
-
 done:
   /* thaw all notifies */
   /* Ignore notifies for the start and duration since the child should
@@ -857,6 +855,7 @@ done:
     g_object_thaw_notify (G_OBJECT (tmp->data));
   g_object_thaw_notify (G_OBJECT (child));
   g_list_free_full (current_children, gst_object_unref);
+  ret = ! !g_list_find (container->children, child);
   gst_object_unref (child);
   container->children_control_mode = GES_CHILDREN_UPDATE;
   return ret;

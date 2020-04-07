@@ -77,8 +77,9 @@ GES.TimelineElement.set_child_property = __timeline_element_set_child_property
 GES.TrackElement.set_child_property = GES.TimelineElement.set_child_property
 GES.Container.edit = GES.TimelineElement.edit
 
+__prev_asset_repr = GES.Asset.__repr__
 def __asset__repr__(self):
-    return "%s(%s)" % (super(type(self)).__repr__(), self.props.id)
+    return "%s(%s)" % (__prev_asset_repr(self), self.props.id)
 
 GES.Asset.__repr__ = __asset__repr__
 

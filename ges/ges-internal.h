@@ -84,7 +84,7 @@ GstDebugCategory * _ges_debug (void);
 #define GES_ARGS GES_TIMELINE_ELEMENT_ARGS
 
 #define GES_TRACK_ELEMENT_IS_CORE(child) \
-  (ges_track_element_get_creators (GES_TRACK_ELEMENT (child)) != NULL)
+  (ges_track_element_get_creator_asset (GES_TRACK_ELEMENT (child)) != NULL)
 
 #define SUPRESS_UNUSED_WARNING(a) (void)a
 
@@ -439,11 +439,11 @@ G_GNUC_INTERNAL void ges_track_element_copy_bindings (GESTrackElement *element,
                                                       GESTrackElement *new_element,
                                                       guint64 position);
 
-G_GNUC_INTERNAL void ges_track_element_add_creator              (GESTrackElement * self,
-                                                                 GESClip * creator);
-G_GNUC_INTERNAL void ges_track_element_clear_creators           (GESTrackElement * self);
-/* NOTE: Returned element is only valid for **pointer comparison** */
-G_GNUC_INTERNAL GList * ges_track_element_get_creators          (GESTrackElement * self);
+G_GNUC_INTERNAL void
+ges_track_element_set_creator_asset                    (GESTrackElement * self,
+                                                       GESAsset *creator_asset);
+G_GNUC_INTERNAL GESAsset *
+ges_track_element_get_creator_asset                    (GESTrackElement * self);
 
 G_GNUC_INTERNAL GstElement* ges_source_create_topbin(const gchar* bin_name, GstElement* sub_element, GPtrArray* elements);
 G_GNUC_INTERNAL void ges_track_set_caps(GESTrack* track,

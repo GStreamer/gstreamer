@@ -165,6 +165,8 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
   GESVideoStandardTransitionType value;
   GESTransitionClip *trans = GES_TRANSITION_CLIP (self);
   const gchar *vtype = ges_asset_get_id (asset);
+  GESAsset *prev_asset = ges_extractable_get_asset (self);
+  GList *tmp;
 
   if (!(ges_clip_get_supported_formats (GES_CLIP (self)) &
           GES_TRACK_TYPE_VIDEO)) {
@@ -186,6 +188,14 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
       }
     }
     ges_transition_clip_update_vtype_internal (GES_CLIP (self), value, FALSE);
+  }
+
+  if (!prev_asset)
+    return TRUE;
+
+  for (tmp = GES_CONTAINER_CHILDREN (self); tmp; tmp = tmp->next) {
+    if (ges_track_element_get_creator_asset (tmp->data) == prev_asset)
+      ges_track_element_set_creator_asset (tmp->data, asset);
   }
 
   return TRUE;

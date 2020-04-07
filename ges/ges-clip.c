@@ -653,9 +653,9 @@ _add_child (GESContainer * container, GESTimelineElement * element)
   GESClipClass *klass = GES_CLIP_GET_CLASS (GES_CLIP (container));
   guint max_prio, min_prio;
   GESTrack *track;
-  GList *creators;
   GESTimeline *timeline = GES_TIMELINE_ELEMENT_TIMELINE (container);
   GESClipPrivate *priv = GES_CLIP (container)->priv;
+  GESAsset *asset, *creator_asset;
 
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (element), FALSE);
 
@@ -667,12 +667,14 @@ _add_child (GESContainer * container, GESTimelineElement * element)
     return FALSE;
   }
 
-  creators = ges_track_element_get_creators (GES_TRACK_ELEMENT (element));
-  if (creators && !g_list_find (creators, container)) {
+  asset = ges_extractable_get_asset (GES_EXTRACTABLE (container));
+  creator_asset =
+      ges_track_element_get_creator_asset (GES_TRACK_ELEMENT (element));
+  if (creator_asset && asset != creator_asset) {
     GST_WARNING_OBJECT (container,
-        "Cannot add the track element %" GES_FORMAT " because it was "
-        "created for a different clip %" GES_FORMAT " as its core child",
-        GES_ARGS (element), GES_ARGS (creators->data));
+        "Cannot add the track element %" GES_FORMAT " as a child "
+        "because it is a core element created by another clip with a "
+        "different asset to the current clip's asset", GES_ARGS (element));
     return FALSE;
   }
 
@@ -692,7 +694,7 @@ _add_child (GESContainer * container, GESTimelineElement * element)
 
   /* NOTE: notifies are currently frozen by ges_container_add */
   _get_priority_range (container, &min_prio, &max_prio);
-  if (creators) {
+  if (creator_asset) {
     /* NOTE: Core track elements that are base effects are added like any
      * other core elements. In particular, they are *not* added to the
      * list of added effects, so we do not increase nb_effects. */
@@ -802,8 +804,6 @@ _remove_child (GESContainer * container, GESTimelineElement * element)
     /* height may have changed */
     _compute_height (container);
   }
-  /* Creator is not reset so that the child can be readded to @container
-   * but not to any other clip by the end user */
   return TRUE;
 }
 
@@ -852,6 +852,9 @@ add_clip_to_list (gpointer key, gpointer clip, GList ** list)
  * will not break the track rules:
  * + no more than one core child per track
  * + every non-core child must be in the same track as a core child
+ * NOTE: Since this does not change the creator asset of the child, this
+ * should only be called for transferring children between clips with the
+ * same asset.
  */
 static void
 _transfer_child (GESClip * from_clip, GESClip * to_clip,
@@ -868,35 +871,12 @@ _transfer_child (GESClip * from_clip, GESClip * to_clip,
   ges_container_remove (GES_CONTAINER (from_clip),
       GES_TIMELINE_ELEMENT (child));
 
-  if (_IS_CORE_CHILD (child)) {
-    ges_track_element_clear_creators (child);
-    ges_track_element_add_creator (child, to_clip);
-  }
-
   to_clip->priv->allow_any_track = TRUE;
   ges_container_add (GES_CONTAINER (to_clip), GES_TIMELINE_ELEMENT (child));
   to_clip->priv->allow_any_track = FALSE;
   ges_timeline_set_moving_track_elements (timeline, FALSE);
 
   gst_object_unref (child);
-}
-
-/* make each clip's child share creators to allow their children
- * to be moved between the clips */
-static void
-_share_creators (GList * clips)
-{
-  GList *clip1, *clip2, *child;
-
-  for (clip1 = clips; clip1; clip1 = clip1->next) {
-    for (child = GES_CONTAINER_CHILDREN (clip1->data); child;
-        child = child->next) {
-      if (!_IS_CORE_CHILD (child->data))
-        continue;
-      for (clip2 = clips; clip2; clip2 = clip2->next)
-        ges_track_element_add_creator (child->data, clip2->data);
-    }
-  }
 }
 
 static GList *
@@ -959,7 +939,6 @@ _ungroup (GESContainer * container, gboolean recursive)
   g_hash_table_foreach (_tracktype_clip, (GHFunc) add_clip_to_list, &ret);
   g_hash_table_unref (_tracktype_clip);
 
-  _share_creators (ret);
   return ret;
 }
 
@@ -1001,7 +980,7 @@ _group (GList * containers)
   GESTimeline *timeline;
   GESTrackType supported_formats;
   GESLayer *layer;
-  GList *tmp, *tmp2, *tmpclip, *list;
+  GList *tmp, *tmp2, *tmpclip;
   GstClockTime start, inpoint, duration;
   GESTimelineElement *element;
 
@@ -1056,9 +1035,6 @@ _group (GList * containers)
     }
   }
 
-  /* keep containers alive for _share_creators */
-  list = g_list_copy_deep (containers, (GCopyFunc) gst_object_ref, NULL);
-
   /* And now pass all TrackElements to the first clip,
    * and remove others from the layer (updating the supported formats) */
   ret = containers->data;
@@ -1088,9 +1064,6 @@ _group (GList * containers)
   }
 
   ges_clip_set_supported_formats (GES_CLIP (ret), supported_formats);
-
-  _share_creators (list);
-  g_list_free_full (list, gst_object_unref);
 
   return ret;
 }
@@ -1137,8 +1110,8 @@ _copy_track_element_to (GESTrackElement * orig, GESClip * to_clip,
    * handled */
   ges_track_element_copy_bindings (orig, copy, position);
 
-  if (_IS_CORE_CHILD (orig))
-    ges_track_element_add_creator (copy, to_clip);
+  ges_track_element_set_creator_asset (copy,
+      ges_track_element_get_creator_asset (orig));
 
   return copy;
 }
@@ -1451,6 +1424,7 @@ ges_clip_create_track_elements (GESClip * clip, GESTrackType type)
   GList *tmp, *ret;
   GESClipClass *klass;
   gboolean already_created = FALSE;
+  GESAsset *asset;
 
   g_return_val_if_fail (GES_IS_CLIP (clip), NULL);
 
@@ -1481,8 +1455,9 @@ ges_clip_create_track_elements (GESClip * clip, GESTrackType type)
     return NULL;
 
   ret = klass->create_track_elements (clip, type);
+  asset = ges_extractable_get_asset (GES_EXTRACTABLE (clip));
   for (tmp = ret; tmp; tmp = tmp->next)
-    ges_track_element_add_creator (tmp->data, clip);
+    ges_track_element_set_creator_asset (tmp->data, asset);
   return ret;
 }
 

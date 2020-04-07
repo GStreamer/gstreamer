@@ -67,7 +67,7 @@ struct _GESTrackElementPrivate
 
   GHashTable *bindings_hashtable;       /* We need this if we want to be able to serialize
                                            and deserialize keyframes */
-  GList *creators;              /* the GESClips that are considered our creators */
+  GESAsset *creator_asset;
 };
 
 enum
@@ -258,16 +258,6 @@ ges_track_element_dispose (GObject * object)
 }
 
 static void
-ges_track_element_finalize (GObject * object)
-{
-  GESTrackElement *self = GES_TRACK_ELEMENT (object);
-
-  ges_track_element_clear_creators (self);
-
-  G_OBJECT_CLASS (ges_track_element_parent_class)->finalize (object);
-}
-
-static void
 ges_track_element_set_asset (GESExtractable * extractable, GESAsset * asset)
 {
   GESTrackElementClass *class;
@@ -342,9 +332,7 @@ ges_track_element_class_init (GESTrackElementClass * klass)
   object_class->get_property = ges_track_element_get_property;
   object_class->set_property = ges_track_element_set_property;
   object_class->dispose = ges_track_element_dispose;
-  object_class->finalize = ges_track_element_finalize;
   object_class->constructed = ges_track_element_constructed;
-
 
   /**
    * GESTrackElement:active:
@@ -1484,37 +1472,17 @@ ges_track_element_copy_properties (GESTimelineElement * element,
   g_free (specs);
 }
 
-static void
-creator_disposed (GESTrackElement * self, GObject * creator)
-{
-  self->priv->creators = g_list_remove (self->priv->creators, creator);
-}
-
 void
-ges_track_element_add_creator (GESTrackElement * self, GESClip * creator)
+ges_track_element_set_creator_asset (GESTrackElement * self,
+    GESAsset * creator_asset)
 {
-  if (!g_list_find (self->priv->creators, creator)) {
-    self->priv->creators = g_list_prepend (self->priv->creators, creator);
-    g_object_weak_ref (G_OBJECT (creator),
-        (GWeakNotify) creator_disposed, self);
-  }
+  self->priv->creator_asset = creator_asset;
 }
 
-void
-ges_track_element_clear_creators (GESTrackElement * self)
+GESAsset *
+ges_track_element_get_creator_asset (GESTrackElement * self)
 {
-  GList *tmp;
-  for (tmp = self->priv->creators; tmp; tmp = tmp->next)
-    g_object_weak_unref (tmp->data, (GWeakNotify) creator_disposed, self);
-
-  g_list_free (self->priv->creators);
-  self->priv->creators = NULL;
-}
-
-GList *
-ges_track_element_get_creators (GESTrackElement * self)
-{
-  return self->priv->creators;
+  return self->priv->creator_asset;
 }
 
 static void

@@ -120,7 +120,7 @@ typedef struct
 struct _GESUriSourceAssetPrivate
 {
   GstDiscovererStreamInfo *sinfo;
-  GESUriClipAsset *parent_asset;
+  GESUriClipAsset *creator_asset;
 
   const gchar *uri;
 };
@@ -379,7 +379,7 @@ _create_uri_source_asset (GESUriClipAsset * asset,
   src_priv = GES_URI_SOURCE_ASSET (src_asset)->priv;
   src_priv->uri = ges_asset_get_id (GES_ASSET (asset));
   src_priv->sinfo = gst_object_ref (sinfo);
-  src_priv->parent_asset = asset;
+  src_priv->creator_asset = asset;
   ges_track_element_asset_set_track_type (GES_TRACK_ELEMENT_ASSET
       (src_asset), type);
 
@@ -855,7 +855,7 @@ ges_uri_source_asset_init (GESUriSourceAsset * self)
   priv = self->priv = ges_uri_source_asset_get_instance_private (self);
 
   priv->sinfo = NULL;
-  priv->parent_asset = NULL;
+  priv->creator_asset = NULL;
   priv->uri = NULL;
 }
 
@@ -896,7 +896,7 @@ ges_uri_source_asset_get_filesource_asset (GESUriSourceAsset * asset)
 {
   g_return_val_if_fail (GES_IS_URI_SOURCE_ASSET (asset), NULL);
 
-  return asset->priv->parent_asset;
+  return asset->priv->creator_asset;
 }
 
 /**
