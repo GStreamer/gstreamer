@@ -251,6 +251,15 @@ _check_and_update_parameters (GType * extractable_type, const gchar * id,
 static gboolean
 start_loading (GESAsset * asset)
 {
+  GInitableIface *iface;
+
+  iface = g_type_interface_peek (GES_ASSET_GET_CLASS (asset), G_TYPE_INITABLE);
+
+  if (!iface->init) {
+    GST_INFO_OBJECT (asset, "Can not start loading sync, as no ->init vmethod");
+    return FALSE;
+  }
+
   ges_asset_cache_put (gst_object_ref (asset), NULL);
   return ges_asset_cache_set_loaded (asset->priv->extractable_type,
       asset->priv->id, NULL);
@@ -1492,6 +1501,9 @@ ges_asset_needs_reload (GType extractable_type, const gchar * id)
   gchar *real_id;
   GESAsset *asset;
   GError *error = NULL;
+
+  g_return_val_if_fail (g_type_is_a (extractable_type, GES_TYPE_EXTRACTABLE),
+      FALSE);
 
   real_id = _check_and_update_parameters (&extractable_type, id, &error);
   if (error) {
