@@ -160,7 +160,7 @@ gst_v4l2_decoder_close (GstV4l2Decoder * self)
   if (self->media_fd)
     close (self->media_fd);
   if (self->video_fd)
-    close (self->media_fd);
+    close (self->video_fd);
 
   self->media_fd = 0;
   self->video_fd = 0;
