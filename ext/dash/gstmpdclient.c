@@ -3116,12 +3116,11 @@ gst_mpd_client_set_root_node (GstMPDClient * client,
   va_list myargs;
   g_return_val_if_fail (client != NULL, FALSE);
 
-  va_start (myargs, property_name);
-
   if (!client->mpd_root_node)
     client->mpd_root_node = gst_mpd_root_node_new ();
-  g_object_set_valist (G_OBJECT (client->mpd_root_node), property_name, myargs);
 
+  va_start (myargs, property_name);
+  g_object_set_valist (G_OBJECT (client->mpd_root_node), property_name, myargs);
   va_end (myargs);
 
   return TRUE;
@@ -3159,8 +3158,6 @@ gst_mpd_client_set_period_node (GstMPDClient * client,
   g_return_val_if_fail (client != NULL, NULL);
   g_return_val_if_fail (client->mpd_root_node != NULL, NULL);
 
-  va_start (myargs, property_name);
-
   period_node =
       GST_MPD_PERIOD_NODE (gst_mpd_client_get_period_with_id
       (client->mpd_root_node->Periods, period_id));
@@ -3176,9 +3173,10 @@ gst_mpd_client_set_period_node (GstMPDClient * client,
         g_list_append (client->mpd_root_node->Periods, period_node);
   }
 
+  va_start (myargs, property_name);
   g_object_set_valist (G_OBJECT (period_node), property_name, myargs);
-
   va_end (myargs);
+
   return period_node->id;
 }
 
@@ -3194,8 +3192,6 @@ gst_mpd_client_set_adaptation_set_node (GstMPDClient * client,
 
   g_return_val_if_fail (client != NULL, 0);
   g_return_val_if_fail (client->mpd_root_node != NULL, 0);
-
-  va_start (myargs, property_name);
 
   period_node =
       GST_MPD_PERIOD_NODE (gst_mpd_client_get_period_with_id
@@ -3217,9 +3213,11 @@ gst_mpd_client_set_adaptation_set_node (GstMPDClient * client,
     period_node->AdaptationSets =
         g_list_append (period_node->AdaptationSets, adap_node);
   }
-  g_object_set_valist (G_OBJECT (adap_node), property_name, myargs);
 
+  va_start (myargs, property_name);
+  g_object_set_valist (G_OBJECT (adap_node), property_name, myargs);
   va_end (myargs);
+
   return adap_node->id;
 }
 
@@ -3236,8 +3234,6 @@ gst_mpd_client_set_representation_node (GstMPDClient * client,
 
   g_return_val_if_fail (client != NULL, NULL);
   g_return_val_if_fail (client->mpd_root_node != NULL, NULL);
-
-  va_start (myargs, property_name);
 
   period_node =
       GST_MPD_PERIOD_NODE (gst_mpd_client_get_period_with_id
@@ -3262,10 +3258,11 @@ gst_mpd_client_set_representation_node (GstMPDClient * client,
     adap_set_node->Representations =
         g_list_append (adap_set_node->Representations, rep_node);
   }
+
+  va_start (myargs, property_name);
   g_object_set_valist (G_OBJECT (rep_node), property_name, myargs);
-
-
   va_end (myargs);
+
   return rep_node->id;
 }
 
@@ -3283,8 +3280,6 @@ gst_mpd_client_set_segment_list (GstMPDClient * client,
   g_return_val_if_fail (client != NULL, FALSE);
   g_return_val_if_fail (client->mpd_root_node != NULL, FALSE);
 
-  va_start (myargs, property_name);
-
   period =
       GST_MPD_PERIOD_NODE (gst_mpd_client_get_period_with_id
       (client->mpd_root_node->Periods, period_id));
@@ -3300,10 +3295,11 @@ gst_mpd_client_set_segment_list (GstMPDClient * client,
     representation->SegmentList = gst_mpd_segment_list_node_new ();
   }
 
+  va_start (myargs, property_name);
   g_object_set_valist (G_OBJECT (representation->SegmentList), property_name,
       myargs);
-
   va_end (myargs);
+
   return TRUE;
 }
 
@@ -3321,8 +3317,6 @@ gst_mpd_client_set_segment_template (GstMPDClient * client,
   g_return_val_if_fail (client != NULL, FALSE);
   g_return_val_if_fail (client->mpd_root_node != NULL, FALSE);
 
-  va_start (myargs, property_name);
-
   period =
       GST_MPD_PERIOD_NODE (gst_mpd_client_get_period_with_id
       (client->mpd_root_node->Periods, period_id));
@@ -3338,10 +3332,11 @@ gst_mpd_client_set_segment_template (GstMPDClient * client,
     representation->SegmentTemplate = gst_mpd_segment_template_node_new ();
   }
 
+  va_start (myargs, property_name);
   g_object_set_valist (G_OBJECT (representation->SegmentTemplate),
       property_name, myargs);
-
   va_end (myargs);
+
   return TRUE;
 }
 
@@ -3361,8 +3356,6 @@ gst_mpd_client_add_segment_url (GstMPDClient * client,
   g_return_val_if_fail (client != NULL, FALSE);
   g_return_val_if_fail (client->mpd_root_node != NULL, FALSE);
 
-  va_start (myargs, property_name);
-
   period =
       GST_MPD_PERIOD_NODE (gst_mpd_client_get_period_with_id
       (client->mpd_root_node->Periods, period_id));
@@ -3380,7 +3373,11 @@ gst_mpd_client_add_segment_url (GstMPDClient * client,
   }
 
   segment_url = gst_mpd_segment_url_node_new ();
+
+  va_start (myargs, property_name);
   g_object_set_valist (G_OBJECT (segment_url), property_name, myargs);
+  va_end (myargs);
+
   gst_mpd_segment_list_node_add_segment (representation->SegmentList,
       segment_url);
 
@@ -3392,6 +3389,5 @@ gst_mpd_client_add_segment_url (GstMPDClient * client,
   g_object_set (client->mpd_root_node, "media-presentation-duration",
       media_presentation_duration, NULL);
 
-  va_end (myargs);
   return TRUE;
 }
