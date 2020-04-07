@@ -879,9 +879,7 @@ gst_omx_h264_enc_handle_output_frame (GstOMXVideoEnc * enc, GstOMXPort * port,
     frame->output_buffer = hdrs;
     flow_ret =
         gst_video_encoder_finish_subframe (GST_VIDEO_ENCODER (self), frame);
-
-    if (frame)
-      gst_video_codec_frame_unref (frame);
+    gst_video_codec_frame_unref (frame);
 
     return flow_ret;
   } else if (self->headers) {

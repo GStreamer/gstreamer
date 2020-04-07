@@ -225,7 +225,8 @@ gst_omx_video_find_nearest_frame (GstElement * element, GstOMXBuffer * buf,
           GST_TIME_FORMAT ") seems too high (%" GST_TIME_FORMAT ")",
           GST_TIME_ARGS (timestamp), best->system_frame_number,
           GST_TIME_ARGS (best->pts), GST_TIME_ARGS (best_diff));
-  }
+  } else
+    GST_WARNING_OBJECT (element, "No best frame has been found");
 
   g_list_foreach (frames, (GFunc) gst_video_codec_frame_unref, NULL);
   g_list_free (frames);

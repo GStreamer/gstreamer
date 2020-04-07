@@ -1707,7 +1707,15 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
       gst_video_encoder_get_frames (GST_VIDEO_ENCODER (self)));
 
   g_assert (klass->handle_output_frame);
-  flow_ret = klass->handle_output_frame (self, self->enc_out_port, buf, frame);
+
+  if (frame)
+    flow_ret =
+        klass->handle_output_frame (self, self->enc_out_port, buf, frame);
+  else {
+    gst_omx_port_release_buffer (self->enc_out_port, buf);
+    goto flow_error;
+  }
+
 
   GST_DEBUG_OBJECT (self, "Finished frame: %s", gst_flow_get_name (flow_ret));
 

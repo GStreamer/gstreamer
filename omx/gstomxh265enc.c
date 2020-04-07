@@ -730,13 +730,10 @@ gst_omx_h265_enc_handle_output_frame (GstOMXVideoEnc * enc, GstOMXPort * port,
         buf->omx_buf->nFilledLen);
     gst_buffer_unmap (hdrs, &map);
     self->headers = g_list_append (self->headers, gst_buffer_ref (hdrs));
-
     frame->output_buffer = hdrs;
     flow_ret =
         gst_video_encoder_finish_subframe (GST_VIDEO_ENCODER (self), frame);
-
-    if (frame)
-      gst_video_codec_frame_unref (frame);
+    gst_video_codec_frame_unref (frame);
 
     return flow_ret;
   } else if (self->headers) {
