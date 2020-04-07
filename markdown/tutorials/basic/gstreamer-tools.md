@@ -144,14 +144,14 @@ stream out of a
 demuxer:
 
 ```
-gst-launch-1.0 souphttpsrc location=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm ! matroskademux name=d d.video_00 ! matroskamux ! filesink location=sintel_video.mkv
+gst-launch-1.0 souphttpsrc location=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm ! matroskademux name=d d.video_0 ! matroskamux ! filesink location=sintel_video.mkv
 ```
 
 This fetches a media file from the internet using `souphttpsrc`, which
 is in webm format (a special kind of Matroska container, see [](tutorials/basic/concepts.md)). We
 then open the container using `matroskademux`. This media contains both
 audio and video, so `matroskademux` will create two output Pads, named
-`video_00` and `audio_00`. We link `video_00` to a `matroskamux` element
+`video_0` and `audio_0`. We link `video_0` to a `matroskamux` element
 to re-pack the video stream into a new container, and finally link it to
 a `filesink`, which will write the stream into a file named
 "sintel\_video.mkv" (the `location` property specifies the name of the
@@ -162,7 +162,7 @@ new matroska file with the video. If we wanted to keep only the
 audio:
 
 ```
-gst-launch-1.0 souphttpsrc location=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm ! matroskademux name=d d.audio_00 ! vorbisparse ! matroskamux ! filesink location=sintel_audio.mka
+gst-launch-1.0 souphttpsrc location=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm ! matroskademux name=d d.audio_0 ! vorbisparse ! matroskamux ! filesink location=sintel_audio.mka
 ```
 
 The `vorbisparse` element is required to extract some information from
@@ -194,7 +194,7 @@ gst-launch-1.0 souphttpsrc location=https://www.freedesktop.org/software/gstream
 This is the same media file and demuxer as in the previous example. The
 input Pad Caps of `filesink` are `ANY`, meaning that it can accept any
 kind of media. Which one of the two output pads of `matroskademux` will
-be linked against the filesink? `video_00` or `audio_00`? You cannot
+be linked against the filesink? `video_0` or `audio_0`? You cannot
 know.
 
 You can remove this ambiguity, though, by using named pads, as in the
