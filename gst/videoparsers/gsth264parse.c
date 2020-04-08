@@ -866,10 +866,18 @@ gst_h264_parse_process_sei (GstH264Parse * h264parse, GstH264NalUnit * nalu)
 
         break;
       }
-      default:
-        GST_LOG_OBJECT (h264parse, "Unsupported payload type %u",
-            sei.payloadType);
+      default:{
+        gint payload_type = sei.payloadType;
+
+        if (payload_type == GST_H264_SEI_UNHANDLED_PAYLOAD) {
+          GstH264SEIUnhandledPayload *unhandled =
+              &sei.payload.unhandled_payload;
+          payload_type = unhandled->payloadType;
+        }
+
+        GST_LOG_OBJECT (h264parse, "Unsupported payload type %d", payload_type);
         break;
+      }
     }
   }
   g_array_free (messages, TRUE);

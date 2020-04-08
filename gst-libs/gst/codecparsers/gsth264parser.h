@@ -247,6 +247,8 @@ typedef enum
  *     contains the 3D arrangement for stereoscopic 3D video (Since: 1.6)
  * @GST_H264_SEI_MASTERING_DISPLAY_COLOUR_VOLUME: Mastering display colour volume information SEI message (D.2.29) (Since: 1.18)
  * @GST_H264_SEI_CONTENT_LIGHT_LEVEL: Content light level information SEI message (D.2.31) (Since: 1.18)
+ * @GST_H264_SEI_UNHANDLED_PAYLOAD: Unhandled SEI message. This may or may not
+ *     be defined by spec (Since 1.18)
  * ...
  *
  * The type of SEI message.
@@ -262,6 +264,9 @@ typedef enum
   GST_H264_SEI_MASTERING_DISPLAY_COLOUR_VOLUME = 137,
   GST_H264_SEI_CONTENT_LIGHT_LEVEL = 144,
       /* and more...  */
+
+  /* Unhandled SEI type */
+  GST_H264_SEI_UNHANDLED_PAYLOAD = -1
 } GstH264SEIPayloadType;
 
 /**
@@ -358,6 +363,7 @@ typedef struct _GstH264StereoVideoInfo        GstH264StereoVideoInfo;
 typedef struct _GstH264FramePacking           GstH264FramePacking;
 typedef struct _GstH264MasteringDisplayColourVolume GstH264MasteringDisplayColourVolume;
 typedef struct _GstH264ContentLightLevel        GstH264ContentLightLevel;
+typedef struct _GstH264SEIUnhandledPayload    GstH264SEIUnhandledPayload;
 typedef struct _GstH264SEIMessage             GstH264SEIMessage;
 
 /**
@@ -1160,6 +1166,25 @@ struct _GstH264ContentLightLevel
   guint16 max_pic_average_light_level;
 };
 
+/**
+ * GstH264SEIUnhandledPayload:
+ * @payloadType: Payload type
+ * @data: payload raw data excluding payload type and payload size byte
+ * @size: the size of @data
+ *
+ * Contains unhandled SEI payload data. This SEI may or may not
+ * be defined by spec
+ *
+ * Since: 1.18
+ */
+struct _GstH264SEIUnhandledPayload
+{
+  guint payloadType;
+
+  guint8 *data;
+  guint size;
+};
+
 struct _GstH264SEIMessage
 {
   GstH264SEIPayloadType payloadType;
@@ -1173,6 +1198,7 @@ struct _GstH264SEIMessage
     GstH264FramePacking frame_packing;
     GstH264MasteringDisplayColourVolume mastering_display_colour_volume;
     GstH264ContentLightLevel content_light_level;
+    GstH264SEIUnhandledPayload unhandled_payload;
     /* ... could implement more */
   } payload;
 };
