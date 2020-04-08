@@ -37,11 +37,13 @@ GST_DEBUG_CATEGORY (h264_parse_debug);
 #define GST_CAT_DEFAULT h264_parse_debug
 
 #define DEFAULT_CONFIG_INTERVAL      (0)
+#define DEFAULT_UPDATE_TIMECODE       FALSE
 
 enum
 {
   PROP_0,
-  PROP_CONFIG_INTERVAL
+  PROP_CONFIG_INTERVAL,
+  PROP_UPDATE_TIMECODE,
 };
 
 enum
@@ -144,6 +146,29 @@ gst_h264_parse_class_init (GstH264ParseClass * klass)
           -1, 3600, DEFAULT_CONFIG_INTERVAL,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstH264Parse:update-timecode:
+   *
+   * If the stream contains Picture Timing SEI, update their timecode values
+   * using upstream GstVideoTimeCodeMeta. However, if there are no Picture
+   * Timing SEI in bitstream, this property will not insert the SEI into the
+   * bitstream - it only modifies existing ones.
+   * Moreover, even if both GstVideoTimeCodeMeta and Picture Timing SEI
+   * are present, if pic_struct_present_flag of VUI is equal to zero,
+   * timecode values will not updated as there is not enough information
+   * in the stream to do so.
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (gobject_class, PROP_UPDATE_TIMECODE,
+      g_param_spec_boolean ("update-timecode",
+          "Update Timecode",
+          "Update time code values in Picture Timing SEI if GstVideoTimeCodeMeta "
+          "is attached to incoming buffer and also Picture Timing SEI exists "
+          "in the bitstream. To make this property work, SPS must contain "
+          "VUI and pic_struct_present_flag of VUI must be non-zero",
+          DEFAULT_CONFIG_INTERVAL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /* Override BaseParse vfuncs */
   parse_class->start = GST_DEBUG_FUNCPTR (gst_h264_parse_start);
   parse_class->stop = GST_DEBUG_FUNCPTR (gst_h264_parse_stop);
@@ -175,8 +200,8 @@ gst_h264_parse_init (GstH264Parse * h264parse)
 
   h264parse->aud_needed = TRUE;
   h264parse->aud_insert = TRUE;
+  h264parse->update_timecode = FALSE;
 }
-
 
 static void
 gst_h264_parse_finalize (GObject * object)
@@ -200,6 +225,8 @@ gst_h264_parse_reset_frame (GstH264Parse * h264parse)
   h264parse->update_caps = FALSE;
   h264parse->idr_pos = -1;
   h264parse->sei_pos = -1;
+  h264parse->pic_timing_sei_pos = -1;
+  h264parse->pic_timing_sei_size = -1;
   h264parse->keyframe = FALSE;
   h264parse->predicted = FALSE;
   h264parse->bidirectional = FALSE;
@@ -604,13 +631,23 @@ gst_h264_parse_process_sei (GstH264Parse * h264parse, GstH264NalUnit * nalu)
         }
 
         h264parse->num_clock_timestamp = 0;
+        memcpy (&h264parse->pic_timing_sei, &sei.payload.pic_timing,
+            sizeof (GstH264PicTiming));
 
         for (j = 0; j < 3; j++) {
           if (sei.payload.pic_timing.clock_timestamp_flag[j]) {
-            memcpy (&h264parse->
-                clock_timestamp[h264parse->num_clock_timestamp++],
-                &sei.payload.pic_timing.clock_timestamp[j],
-                sizeof (GstH264ClockTimestamp));
+            h264parse->num_clock_timestamp++;
+          }
+        }
+
+        if (h264parse->sei_pic_struct_pres_flag && h264parse->update_timecode) {
+          /* FIXME: add support multiple messages in a SEI nalu.
+           * Updating only this SEI message and preserving the others
+           * is a bit complicated */
+          if (messages->len == 1) {
+            h264parse->pic_timing_sei_pos = nalu->sc_offset;
+            h264parse->pic_timing_sei_size =
+                nalu->size + (nalu->offset - nalu->sc_offset);
           }
         }
 
@@ -2745,11 +2782,181 @@ gst_h264_parse_handle_sps_pps_nals (GstH264Parse * h264parse,
   return send_done;
 }
 
+static GstBuffer *
+gst_h264_parse_create_pic_timing_sei (GstH264Parse * h264parse,
+    GstBuffer * buffer)
+{
+  guint num_meta;
+  const guint8 num_clock_ts_table[9] = {
+    1, 1, 1, 2, 2, 3, 3, 2, 3
+  };
+  guint num_clock_ts;
+  GstBuffer *out_buf = NULL;
+  GstMemory *sei_mem;
+  GArray *msg_array;
+  gint i, j;
+  GstH264SEIMessage sei;
+  GstH264PicTiming *pic_timing;
+  GstVideoTimeCodeMeta *tc_meta;
+  gpointer iter = NULL;
+  guint8 ct_type = GST_H264_CT_TYPE_PROGRESSIVE;
+
+  if (!h264parse->update_timecode)
+    return NULL;
+
+  num_meta = gst_buffer_get_n_meta (buffer, GST_VIDEO_TIME_CODE_META_API_TYPE);
+  if (num_meta == 0)
+    return NULL;
+
+  if (!h264parse->sei_pic_struct_pres_flag || h264parse->pic_timing_sei_pos < 0) {
+    GST_ELEMENT_WARNING (h264parse, STREAM, NOT_IMPLEMENTED, (NULL),
+        ("timecode update was requested but VUI doesn't support timecode"));
+    return NULL;
+  }
+
+  g_assert (h264parse->sei_pic_struct >= GST_H264_SEI_PIC_STRUCT_FRAME);
+  g_assert (h264parse->sei_pic_struct <=
+      GST_H264_SEI_PIC_STRUCT_FRAME_TRIPLING);
+
+  num_clock_ts = num_clock_ts_table[h264parse->sei_pic_struct];
+
+  if (num_meta != num_clock_ts) {
+    GST_LOG_OBJECT (h264parse,
+        "The number of timecode meta %d is not equal to required %d",
+        num_meta, num_clock_ts);
+
+    return NULL;
+  }
+
+  GST_LOG_OBJECT (h264parse,
+      "The number of timecode meta %d is equal", num_meta);
+
+  memset (&sei, 0, sizeof (GstH264SEIMessage));
+  sei.payloadType = GST_H264_SEI_PIC_TIMING;
+  memcpy (&sei.payload.pic_timing,
+      &h264parse->pic_timing_sei, sizeof (GstH264PicTiming));
+
+  pic_timing = &sei.payload.pic_timing;
+
+  switch (h264parse->sei_pic_struct) {
+    case GST_H264_SEI_PIC_STRUCT_FRAME:
+    case GST_H264_SEI_PIC_STRUCT_FRAME_DOUBLING:
+    case GST_H264_SEI_PIC_STRUCT_FRAME_TRIPLING:
+      ct_type = GST_H264_CT_TYPE_PROGRESSIVE;
+      break;
+    case GST_H264_SEI_PIC_STRUCT_TOP_BOTTOM:
+    case GST_H264_SEI_PIC_STRUCT_BOTTOM_TOP:
+    case GST_H264_SEI_PIC_STRUCT_TOP_BOTTOM_TOP:
+    case GST_H264_SEI_PIC_STRUCT_BOTTOM_TOP_BOTTOM:
+      ct_type = GST_H264_CT_TYPE_INTERLACED;
+      break;
+    default:
+      ct_type = GST_H264_CT_TYPE_UNKNOWN;
+      break;
+  }
+
+  i = 0;
+  while ((tc_meta =
+          (GstVideoTimeCodeMeta *) gst_buffer_iterate_meta_filtered (buffer,
+              &iter, GST_VIDEO_TIME_CODE_META_API_TYPE))) {
+    GstH264ClockTimestamp *tim = &pic_timing->clock_timestamp[i];
+    GstVideoTimeCode *tc = &tc_meta->tc;
+
+    pic_timing->clock_timestamp_flag[i] = 1;
+    tim->ct_type = ct_type;
+    tim->nuit_field_based_flag = 1;
+    tim->counting_type = 0;
+
+    if ((tc->config.flags & GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME)
+        == GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME)
+      tim->counting_type = 4;
+
+    tim->discontinuity_flag = 0;
+    tim->cnt_dropped_flag = 0;
+    tim->n_frames = tc->frames;
+
+    tim->hours_value = tc->hours;
+    tim->minutes_value = tc->minutes;
+    tim->seconds_value = tc->seconds;
+
+    tim->full_timestamp_flag =
+        tim->seconds_flag = tim->minutes_flag = tim->hours_flag = 0;
+
+    if (tc->hours > 0)
+      tim->full_timestamp_flag = 1;
+    else if (tc->minutes > 0)
+      tim->seconds_flag = tim->minutes_flag = 1;
+    else if (tc->seconds > 0)
+      tim->seconds_flag = 1;
+
+    GST_LOG_OBJECT (h264parse,
+        "New time code value %02u:%02u:%02u:%02u",
+        tim->hours_value, tim->minutes_value, tim->seconds_value,
+        tim->n_frames);
+
+    i++;
+  }
+
+  for (j = i; j < 3; j++)
+    pic_timing->clock_timestamp_flag[j] = 0;
+
+  msg_array = g_array_new (FALSE, FALSE, sizeof (GstH264SEIMessage));
+  g_array_set_clear_func (msg_array, (GDestroyNotify) gst_h264_sei_clear);
+
+  g_array_append_val (msg_array, sei);
+  if (h264parse->format == GST_H264_PARSE_FORMAT_BYTE) {
+    sei_mem = gst_h264_create_sei_memory (3, msg_array);
+  } else {
+    sei_mem = gst_h264_create_sei_memory_avc (h264parse->nal_length_size,
+        msg_array);
+  }
+  g_array_unref (msg_array);
+
+  if (!sei_mem) {
+    GST_WARNING_OBJECT (h264parse, "Cannot create Picture Timing SEI memory");
+    return NULL;
+  }
+
+  out_buf = gst_buffer_new ();
+  gst_buffer_copy_into (out_buf, buffer, GST_BUFFER_COPY_METADATA, 0, -1);
+
+  if (h264parse->align == GST_H264_PARSE_ALIGN_NAL) {
+    gst_buffer_append_memory (out_buf, sei_mem);
+  } else {
+    gsize mem_size;
+
+    mem_size = gst_memory_get_sizes (sei_mem, NULL, NULL);
+
+    /* copy every data except for the SEI */
+    if (h264parse->pic_timing_sei_pos > 0) {
+      gst_buffer_copy_into (out_buf, buffer, GST_BUFFER_COPY_MEMORY, 0,
+          h264parse->pic_timing_sei_pos);
+    }
+
+    /* insert new SEI */
+    gst_buffer_append_memory (out_buf, sei_mem);
+
+    if (gst_buffer_get_size (buffer) >
+        h264parse->pic_timing_sei_pos + h264parse->pic_timing_sei_size) {
+      gst_buffer_copy_into (out_buf, buffer, GST_BUFFER_COPY_MEMORY,
+          h264parse->pic_timing_sei_pos + h264parse->pic_timing_sei_size, -1);
+    }
+
+    if (h264parse->idr_pos >= 0) {
+      h264parse->idr_pos += mem_size;
+      h264parse->idr_pos -= h264parse->pic_timing_sei_size;
+    }
+  }
+
+  return out_buf;
+}
+
 static GstFlowReturn
 gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
   GstH264Parse *h264parse;
   GstBuffer *buffer;
+  GstBuffer *new_buf;
   GstEvent *event;
   GstBuffer *parse_buffer = NULL;
   gboolean is_interlaced = FALSE;
@@ -2815,6 +3022,15 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
               &parse->segment, GST_BUFFER_TIMESTAMP (buffer),
               GST_BUFFER_FLAGS (buffer), h264parse->pending_key_unit_ts))) {
     gst_h264_parse_prepare_key_unit (h264parse, event);
+  }
+
+  /* handle timecode */
+  new_buf = gst_h264_parse_create_pic_timing_sei (h264parse, buffer);
+  if (new_buf) {
+    if (frame->out_buffer)
+      gst_buffer_unref (frame->out_buffer);
+
+    buffer = frame->out_buffer = new_buf;
   }
 
   /* periodic SPS/PPS sending */
@@ -2899,11 +3115,15 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   if (!gst_buffer_get_video_time_code_meta (buffer)) {
     guint i = 0;
 
-    for (i = 0; i < h264parse->num_clock_timestamp; i++) {
-      GstH264ClockTimestamp *tim = &h264parse->clock_timestamp[i];
+    for (i = 0; i < 3 && h264parse->num_clock_timestamp; i++) {
+      GstH264ClockTimestamp *tim =
+          &h264parse->pic_timing_sei.clock_timestamp[i];
       gint field_count = -1;
       guint n_frames;
       GstVideoTimeCodeFlags flags = 0;
+
+      if (!h264parse->pic_timing_sei.clock_timestamp_flag[i])
+        continue;
 
       /* Table D-1 */
       switch (h264parse->sei_pic_struct) {
@@ -2950,6 +3170,10 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
       n_frames =
           gst_util_uint64_scale_int (tim->n_frames, 1,
           2 - tim->nuit_field_based_flag);
+
+      GST_LOG_OBJECT (h264parse,
+          "Add time code meta %02u:%02u:%02u:%02u",
+          tim->hours_value, tim->minutes_value, tim->seconds_value, n_frames);
 
       gst_buffer_add_video_time_code_meta_full (buffer,
           h264parse->parsed_fps_n,
@@ -3416,6 +3640,9 @@ gst_h264_parse_set_property (GObject * object, guint prop_id,
     case PROP_CONFIG_INTERVAL:
       parse->interval = g_value_get_int (value);
       break;
+    case PROP_UPDATE_TIMECODE:
+      parse->update_timecode = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -3433,6 +3660,9 @@ gst_h264_parse_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_CONFIG_INTERVAL:
       g_value_set_int (value, parse->interval);
+      break;
+    case PROP_UPDATE_TIMECODE:
+      g_value_set_boolean (value, parse->update_timecode);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

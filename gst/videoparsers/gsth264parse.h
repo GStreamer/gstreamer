@@ -100,7 +100,7 @@ struct _GstH264Parse
 
   /* collected SEI timestamps */
   guint num_clock_timestamp;
-  GstH264ClockTimestamp clock_timestamp[3];
+  GstH264PicTiming pic_timing_sei;
 
   /* Infos we need to keep track of */
   guint32 sei_cpb_removal_delay;
@@ -121,6 +121,8 @@ struct _GstH264Parse
   /*guint last_nal_pos;*/
   /*guint next_sc_pos;*/
   gint idr_pos, sei_pos;
+  gint pic_timing_sei_pos;
+  gint pic_timing_sei_size;
   gboolean update_caps;
   GstAdapter *frame_out;
   gboolean keyframe;
@@ -133,6 +135,7 @@ struct _GstH264Parse
 
   /* props */
   gint interval;
+  gboolean update_timecode;
 
   GstClockTime pending_key_unit_ts;
   GstEvent *force_key_unit_event;
