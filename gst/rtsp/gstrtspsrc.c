@@ -6246,8 +6246,11 @@ gst_rtsp_src_receive_response (GstRTSPSrc * src, GstRTSPConnInfo * conninfo,
 {
   GstRTSPStatusCode thecode;
   gchar *content_base = NULL;
-  GstRTSPResult res = gst_rtspsrc_connection_receive (src, conninfo,
-      response, src->ptcp_timeout);
+  GstRTSPResult res;
+
+next:
+  res = gst_rtspsrc_connection_receive (src, conninfo, response,
+      src->ptcp_timeout);
 
   if (res < 0)
     goto receive_error;
@@ -6263,7 +6266,7 @@ gst_rtsp_src_receive_response (GstRTSPSrc * src, GstRTSPConnInfo * conninfo,
         goto handle_request_failed;
 
       /* Not a response, receive next message */
-      return gst_rtsp_src_receive_response (src, conninfo, response, code);
+      goto next;
     case GST_RTSP_MESSAGE_RESPONSE:
       /* ok, a response is good */
       GST_DEBUG_OBJECT (src, "received response message");
@@ -6274,13 +6277,13 @@ gst_rtsp_src_receive_response (GstRTSPSrc * src, GstRTSPConnInfo * conninfo,
       gst_rtspsrc_handle_data (src, response);
 
       /* Not a response, receive next message */
-      return gst_rtsp_src_receive_response (src, conninfo, response, code);
+      goto next;
     default:
       GST_WARNING_OBJECT (src, "ignoring unknown message type %d",
           response->type);
 
       /* Not a response, receive next message */
-      return gst_rtsp_src_receive_response (src, conninfo, response, code);
+      goto next;
   }
 
   thecode = response->type_data.response.code;
