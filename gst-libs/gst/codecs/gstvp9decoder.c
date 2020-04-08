@@ -46,6 +46,13 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/**
+ * SECTION:gstvp9decoder
+ * @title: Gstvp9Decoder
+ * @short_description: Base class to implement stateless VP9 decoders
+ * @sources:
+ * - gstvp9picture.h
+ */
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>

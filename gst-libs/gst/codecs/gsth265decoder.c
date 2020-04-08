@@ -18,6 +18,13 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+/**
+ * SECTION:gsth265decoder
+ * @title: GstH265Decoder
+ * @short_description: Base class to implement stateless H.265 decoders
+ * @sources:
+ * - gsth265picture.h
+ */
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>

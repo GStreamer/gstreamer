@@ -32,6 +32,26 @@ gstcodecs = library('gstcodecs-' + api_version,
   dependencies : [gstvideo_dep, gstcodecparsers_dep],
 )
 
+gen_sources = []
+if build_gir
+  codecs_gir = gnome.generate_gir(gstcodecs,
+    sources : codecs_sources + codecs_headers,
+    namespace : 'GstCodecs',
+    nsversion : api_version,
+    identifier_prefix : 'Gst',
+    symbol_prefix : 'gst',
+    export_packages : 'gstreamer-codecs-1.0',
+    includes : ['Gst-1.0', 'GstVideo-1.0'],
+    install : true,
+    extra_args : gir_init_section + ['-DGST_USE_UNSTABLE_API'] +
+      ['--c-include=gst/codecs/gsth264decoder.h',
+      '--c-include=gst/codecs/gsth265decoder.h',
+      '--c-include=gst/codecs/gstvp9decoder.h', ],
+    dependencies : [gstvideo_dep, gstcodecparsers_dep]
+  )
+endif
+
 gstcodecs_dep = declare_dependency(link_with : gstcodecs,
   include_directories : [libsinc],
+  sources: gen_sources,
   dependencies : [gstvideo_dep, gstcodecparsers_dep])
