@@ -573,6 +573,8 @@ gst_gl_display_create_context (GstGLDisplay * display,
 
   if (ret)
     *p_context = context;
+  else
+    gst_object_unref (context);
 
   return ret;
 }
