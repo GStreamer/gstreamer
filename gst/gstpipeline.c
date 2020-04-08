@@ -109,6 +109,7 @@ struct _GstPipelinePrivate
 {
   /* with LOCK */
   gboolean auto_flush_bus;
+  gboolean is_live;
 
   /* when we need to update stream_time or clock when going back to
    * PLAYING*/
@@ -227,6 +228,8 @@ gst_pipeline_init (GstPipeline * pipeline)
   pipeline->priv->auto_flush_bus = DEFAULT_AUTO_FLUSH_BUS;
   pipeline->delay = DEFAULT_DELAY;
   pipeline->priv->latency = DEFAULT_LATENCY;
+
+  pipeline->priv->is_live = FALSE;
 
   /* create and set a default bus */
   bus = gst_bus_new ();
@@ -512,6 +515,7 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
       break;
     }
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      pipeline->priv->is_live = FALSE;
       reset_start_time (pipeline, 0);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
@@ -519,6 +523,12 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
   }
 
   result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  if (GST_STATE_TRANSITION_NEXT (transition) == GST_STATE_PAUSED) {
+    pipeline->priv->is_live = result == GST_STATE_CHANGE_NO_PREROLL;
+    GST_INFO_OBJECT (pipeline, "pipeline is%slive",
+        pipeline->priv->is_live ? " " : " not ");
+  }
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_NULL:
@@ -613,6 +623,14 @@ gst_pipeline_handle_message (GstBin * bin, GstMessage * message)
       /* reset our running time if we need to distribute a new base_time to the
        * children. */
       reset_start_time (pipeline, running_time);
+
+      /* If we are live, sample a new base_time immediately */
+      if (pipeline->priv->is_live
+          && GST_STATE_TARGET (pipeline) == GST_STATE_PLAYING) {
+        gst_pipeline_change_state (GST_ELEMENT (pipeline),
+            GST_STATE_CHANGE_PAUSED_TO_PLAYING);
+      }
+
       break;
     }
     case GST_MESSAGE_CLOCK_LOST:
