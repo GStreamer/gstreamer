@@ -385,7 +385,7 @@ else
   message('Orc Compiler not found or disabled, will use backup C code')
   cdata.set('DISABLE_ORC', 1)
 endif
-cdata.set('GST_ENABLE_EXTRA_CHECKS', get_option('extra-checks'))
+cdata.set('GST_ENABLE_EXTRA_CHECKS', not get_option('extra-checks').disabled())
 
 gnustl_dep = declare_dependency()
 if host_system == 'android'
