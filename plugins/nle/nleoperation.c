@@ -195,7 +195,6 @@ nle_operation_reset (NleOperation * operation)
 {
   operation->num_sinks = 1;
   operation->realsinks = 0;
-  operation->next_base_time = 0;
 }
 
 static void
@@ -826,20 +825,4 @@ nle_operation_signal_input_priority_changed (NleOperation * operation,
       GST_DEBUG_PAD_NAME (pad), priority);
   g_signal_emit (operation, nle_operation_signals[INPUT_PRIORITY_CHANGED],
       0, pad, priority);
-}
-
-void
-nle_operation_update_base_time (NleOperation * operation,
-    GstClockTime timestamp)
-{
-  if (!nle_object_to_media_time (NLE_OBJECT (operation),
-          timestamp, &operation->next_base_time)) {
-    GST_WARNING_OBJECT (operation, "Trying to set a basetime outside of "
-        "ourself");
-
-    return;
-  }
-
-  GST_INFO_OBJECT (operation, "Setting next_basetime to %"
-      GST_TIME_FORMAT, GST_TIME_ARGS (operation->next_base_time));
 }

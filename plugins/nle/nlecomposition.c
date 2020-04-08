@@ -1764,31 +1764,6 @@ beach:
 
 /* WITH OBJECTS LOCK TAKEN */
 static gboolean
-update_base_time (GNode * node, GstClockTime * timestamp)
-{
-  if (NLE_IS_OPERATION (node->data))
-    nle_operation_update_base_time (NLE_OPERATION (node->data), *timestamp);
-
-  return FALSE;
-}
-
-/* WITH OBJECTS LOCK TAKEN */
-static void
-update_operations_base_time (NleComposition * comp, gboolean reverse)
-{
-  GstClockTime timestamp;
-
-  if (reverse)
-    timestamp = comp->priv->segment->stop;
-  else
-    timestamp = comp->priv->segment->start;
-
-  g_node_traverse (comp->priv->current, G_IN_ORDER, G_TRAVERSE_ALL, -1,
-      (GNodeTraverseFunc) update_base_time, &timestamp);
-}
-
-/* WITH OBJECTS LOCK TAKEN */
-static gboolean
 _seek_current_stack (NleComposition * comp, GstEvent * event,
     gboolean flush_downstream)
 {
@@ -1853,7 +1828,6 @@ seek_handling (NleComposition * comp, gint32 seqnum,
     _set_real_eos_seqnum_from_seek (comp, toplevel_seek);
 
     _remove_update_actions (comp);
-    update_operations_base_time (comp, !(comp->priv->segment->rate >= 0.0));
     _seek_current_stack (comp, toplevel_seek,
         _have_to_flush_downstream (update_stack_reason));
   }
@@ -2255,8 +2229,6 @@ get_stack_list (NleComposition * comp, GstClockTime timestamp,
               GST_OBJECT_NAME (object));
           stack = g_list_insert_sorted (stack, object,
               (GCompareFunc) priority_comp);
-          if (NLE_IS_OPERATION (object))
-            nle_operation_update_base_time (NLE_OPERATION (object), timestamp);
         }
       } else {
         GST_LOG_OBJECT (comp, "too far, stopping iteration");
@@ -2282,8 +2254,6 @@ get_stack_list (NleComposition * comp, GstClockTime timestamp,
               GST_OBJECT_NAME (object));
           stack = g_list_insert_sorted (stack, object,
               (GCompareFunc) priority_comp);
-          if (NLE_IS_OPERATION (object))
-            nle_operation_update_base_time (NLE_OPERATION (object), timestamp);
         }
       } else {
         GST_LOG_OBJECT (comp, "too far, stopping iteration");
@@ -2300,8 +2270,6 @@ get_stack_list (NleComposition * comp, GstClockTime timestamp,
           GST_OBJECT_NAME (tmp->data));
       stack = g_list_insert_sorted (stack, tmp->data,
           (GCompareFunc) priority_comp);
-      if (NLE_IS_OPERATION (tmp->data))
-        nle_operation_update_base_time (NLE_OPERATION (tmp->data), timestamp);
     }
 
   /* convert that list to a stack */
@@ -2947,7 +2915,6 @@ _relink_single_node (NleComposition * comp, GNode * node,
 {
   NleObject *newobj;
   NleObject *newparent;
-  GNode *node_it;
   GstPad *srcpad = NULL, *sinkpad = NULL;
 
   if (G_UNLIKELY (!node))
@@ -2958,12 +2925,6 @@ _relink_single_node (NleComposition * comp, GNode * node,
 
   GST_DEBUG_OBJECT (comp, "newobj:%s",
       GST_ELEMENT_NAME ((GstElement *) newobj));
-
-  newobj->recursive_media_duration_factor = 1.0f;
-  for (node_it = node; node_it != NULL; node_it = node_it->parent) {
-    NleObject *object = (NleObject *) node_it->data;
-    newobj->recursive_media_duration_factor *= object->media_duration_factor;
-  }
 
   srcpad = NLE_OBJECT_SRC (newobj);
 

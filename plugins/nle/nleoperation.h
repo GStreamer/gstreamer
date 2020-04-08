@@ -60,8 +60,6 @@ G_BEGIN_DECLS
   GList * sinks;		/* The sink ghostpads */
   
   GstElement *element;		/* controlled element */
-
-  GstClockTime next_base_time;
 };
 
 struct _NleOperationClass
