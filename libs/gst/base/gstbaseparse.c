@@ -3330,6 +3330,7 @@ gst_base_parse_pull_range (GstBaseParse * parse, guint size,
     GstBuffer ** buffer)
 {
   GstFlowReturn ret = GST_FLOW_OK;
+  guint read_size;
 
   g_return_val_if_fail (buffer != NULL, GST_FLOW_ERROR);
 
@@ -3355,12 +3356,12 @@ gst_base_parse_pull_range (GstBaseParse * parse, guint size,
   }
 
   /* refill the cache */
-  size = MAX (64 * 1024, size);
+  read_size = MAX (64 * 1024, size);
   GST_LOG_OBJECT (parse,
       "Reading cache buffer of %u bytes from offset %" G_GINT64_FORMAT,
-      size, parse->priv->offset);
+      read_size, parse->priv->offset);
   ret =
-      gst_pad_pull_range (parse->sinkpad, parse->priv->offset, size,
+      gst_pad_pull_range (parse->sinkpad, parse->priv->offset, read_size,
       &parse->priv->cache);
   if (ret != GST_FLOW_OK) {
     parse->priv->cache = NULL;

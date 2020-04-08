@@ -53,6 +53,9 @@ typedef struct _GstParserTesterClass GstParserTesterClass;
 struct _GstParserTester
 {
   GstBaseParse parent;
+
+  guint min_frame_size;
+  guint last_frame_size;
 };
 
 struct _GstParserTesterClass
@@ -86,6 +89,8 @@ gst_parser_tester_handle_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, gint * skipsize)
 {
   GstFlowReturn ret = GST_FLOW_OK;
+  GstParserTester *test = (GstParserTester *) (parse);
+  gsize frame_size;
 
   if (caps_set == FALSE) {
     GstCaps *caps;
@@ -99,11 +104,35 @@ gst_parser_tester_handle_frame (GstBaseParse * parse,
     caps_set = TRUE;
   }
 
-  while (frame->buffer && gst_buffer_get_size (frame->buffer) >= 8) {
+  /* Base parse always passes a buffer, or it's a bug */
+  fail_unless (frame->buffer != NULL);
+
+  frame_size = gst_buffer_get_size (frame->buffer);
+
+  /* Require that baseparse collect enough input
+   * for 2 output frames */
+  if (frame_size < test->min_frame_size) {
+    /* We need more data for this */
+    *skipsize = 0;
+
+    /* If we skipped data before, last_frame_size will be set, and
+     * base parse must pass more data next time */
+    fail_unless (frame_size >= test->last_frame_size);
+    test->last_frame_size = frame_size;
+
+    return GST_FLOW_OK;
+  }
+  /* Reset our expectation of frame size once we've collected
+   * a full frame */
+  test->last_frame_size = 0;
+
+  while (frame_size >= test->min_frame_size) {
     GST_BUFFER_DURATION (frame->buffer) =
         gst_util_uint64_scale_round (GST_SECOND, TEST_VIDEO_FPS_D,
         TEST_VIDEO_FPS_N);
-    ret = gst_base_parse_finish_frame (parse, frame, 8);
+    ret = gst_base_parse_finish_frame (parse, frame, test->min_frame_size);
+    if (frame->buffer == NULL)
+      break;                    // buffer finished
   }
   return ret;
 }
@@ -137,6 +166,7 @@ gst_parser_tester_class_init (GstParserTesterClass * klass)
 static void
 gst_parser_tester_init (GstParserTester * tester)
 {
+  tester->min_frame_size = 8;
 }
 
 static void
@@ -565,6 +595,84 @@ GST_START_TEST (parser_pull_short_read)
 
 GST_END_TEST;
 
+/* parser_pull_frame_growth test */
+
+/* Buffer size is chosen to interact with
+ * the 64KB that baseparse reads
+ * from upstream as cache size */
+#define BUFSIZE (123 * 1024)
+
+static GstFlowReturn
+_sink_chain_pull_frame_growth (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer)
+{
+  gst_buffer_unref (buffer);
+
+  have_data = TRUE;
+  buffer_count++;
+
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+_src_getrange_64k (GstPad * pad, GstObject * parent, guint64 offset,
+    guint length, GstBuffer ** buffer)
+{
+  guint8 *data;
+
+  /* Our "file" is large enough for 4 packets exactly */
+  if (offset >= BUFSIZE * 4)
+    return GST_FLOW_EOS;
+
+  /* Return a buffer of the size baseparse asked for */
+  data = g_malloc0 (length);
+  *buffer = gst_buffer_new_wrapped (data, length);
+
+  return GST_FLOW_OK;
+}
+
+/* Test that when we fail to parse a frame from
+ * the provided data, that baseparse provides a larger
+ * buffer on the next iteration */
+GST_START_TEST (parser_pull_frame_growth)
+{
+  have_eos = FALSE;
+  have_data = FALSE;
+  loop = g_main_loop_new (NULL, FALSE);
+
+  setup_parsertester ();
+  buffer_count = 0;
+
+  /* This size is chosen to require that baseparse pull
+   * a 2nd 64KB buffer */
+  ((GstParserTester *) (parsetest))->min_frame_size = BUFSIZE;
+
+  gst_pad_set_getrange_function (mysrcpad, _src_getrange_64k);
+  gst_pad_set_query_function (mysrcpad, _src_query);
+  gst_pad_set_chain_function (mysinkpad, _sink_chain_pull_frame_growth);
+  gst_pad_set_event_function (mysinkpad, _sink_event);
+  gst_base_parse_set_min_frame_size (GST_BASE_PARSE (parsetest), 1024);
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_element_set_state (parsetest, GST_STATE_PLAYING);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  g_main_loop_run (loop);
+  fail_unless (have_eos == TRUE);
+  fail_unless (have_data == TRUE);
+
+  gst_element_set_state (parsetest, GST_STATE_NULL);
+
+  check_no_error_received ();
+  cleanup_parsertest ();
+
+  g_main_loop_unref (loop);
+  loop = NULL;
+}
+
+GST_END_TEST;
+
+
 static void
 baseparse_setup (void)
 {
@@ -595,6 +703,7 @@ gst_baseparse_suite (void)
   tcase_add_test (tc, parser_reverse_playback_on_passthrough);
   tcase_add_test (tc, parser_reverse_playback);
   tcase_add_test (tc, parser_pull_short_read);
+  tcase_add_test (tc, parser_pull_frame_growth);
 
   return s;
 }
