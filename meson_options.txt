@@ -46,31 +46,44 @@ option('virtme_kernel_image', type: 'string', value: '', description: 'Path to a
 # License-related feature options
 option('gpl', type: 'feature', value: 'disabled',
   description: 'Allow build of plugins that have (A)GPL-licensed dependencies')
+option('gstreamer-full-license', type : 'string', value : 'unknown',
+       description : 'gstreamer-full license (default unknown)')
 
-# Common options, automatically inherited by subprojects
-option('tests', type : 'feature', value : 'auto', description : 'Build tests')
+# Common options specific to GStreamer, automatically inherited by subprojects.
+option('package-origin', type : 'string', value : 'Unknown package origin', yield : true,
+       description : 'package origin URL to use in plugins')
+option('package-name', type : 'string', yield : true,
+       description : 'package name to use in plugins')
+option('extra-checks', type : 'feature', value : 'enabled', description : 'Enable extra runtime checks')
+option('benchmarks', type : 'feature', value : 'auto')
 option('tools', type : 'feature', value : 'auto', yield : true, description : 'Build command line tools')
-option('examples', type : 'feature', value : 'auto', description : 'Build examples')
-option('introspection', type : 'feature', value : 'auto', description : 'Generate introspection data')
-option('nls', type : 'feature', value : 'auto', description : 'Native language support (translations)')
 option('orc', type : 'feature', value : 'auto', description : 'Optimized Inner Loop Runtime Compiler (SIMD)')
-option('doc', type : 'feature', value : 'disabled', description : 'Generate API documentation with hotdoc')
-option('gtk_doc', type : 'feature', value : 'disabled', description : 'Generate API documentation with gtk-doc')
 option('qt5', type : 'feature', value : 'auto', description : 'Qt5 toolkit support')
 option('qt6', type : 'feature', value : 'auto', description : 'Qt6 toolkit support')
 option('webrtc', type : 'feature', value : 'auto', description : 'WebRTC support')
 
-option('package-origin', type : 'string', value : 'Unknown package origin', yield : true,
-       description : 'package origin URL to use in plugins')
+# Common options shared by other projects, automatically inherited by subprojects.
+option('glib_debug', type : 'feature', value : 'auto', yield : true, description : 'Enable GLib debug infrastructure (see docs/macros.txt)')
+option('glib_assert', type : 'boolean', value : true, yield : true, description : 'Enable GLib assertion (see docs/macros.txt)',
+  deprecated: {'enabled' : 'true', 'disabled' : 'false', 'auto' : 'false'},
+)
+option('glib_checks', type : 'boolean', value : true, yield : true, description : 'Enable GLib checks such as API guards (see docs/macros.txt)',
+  deprecated: {'enabled' : 'true', 'disabled' : 'false', 'auto' : 'false'},
+)
+option('tests', type : 'feature', value : 'auto', description : 'Build tests')
+option('examples', type : 'feature', value : 'auto', description : 'Build examples')
+option('introspection', type : 'feature', value : 'auto', description : 'Generate introspection data')
+option('nls', type : 'feature', value : 'auto', description : 'Native language support (translations)')
+option('doc', type : 'feature', value : 'disabled', description : 'Generate API documentation with hotdoc')
+option('gtk_doc', type : 'feature', value : 'disabled', description : 'Generate API documentation with gtk-doc')
 
+# Deprecated, kept for backward compat
 option('gobject-cast-checks', type : 'feature', value : 'auto', yield : true,
-       description: 'Enable run-time GObject cast checks (auto = enabled for development, disabled for stable releases)')
+       description: 'Enable run-time GObject cast checks (auto = enabled for development, disabled for stable releases)',
+       deprecated: 'glib_debug')
 option('glib-asserts', type : 'feature', value : 'enabled', yield : true,
-       description: 'Enable GLib assertion (auto = enabled for development, disabled for stable releases)')
+       description: 'Enable GLib assertion (auto = enabled for development, disabled for stable releases)',
+       deprecated: 'glib_assert')
 option('glib-checks', type : 'feature', value : 'enabled', yield : true,
-       description: 'Enable GLib checks such as API guards (auto = enabled for development, disabled for stable releases)')
-
-option('package-name', type : 'string', yield : true,
-       description : 'package name to use in plugins')
-option('gstreamer-full-license', type : 'string', value : 'unknown',
-       description : 'gstreamer-full license (default unknown)')
+       description: 'Enable GLib checks such as API guards (auto = enabled for development, disabled for stable releases)',
+       deprecated: 'glib_checks')

@@ -203,9 +203,9 @@ else
   gst_cdata.set('GST_DISABLE_PARSE_DEFINE', '#define GST_DISABLE_PARSE 1')
 endif
 
-gst_cdata.set10('GST_DISABLE_CAST_CHECKS_DEFINE', cast_checks.disabled())
-gst_cdata.set10('GST_DISABLE_GLIB_ASSERTS_DEFINE', glib_asserts.disabled())
-gst_cdata.set10('GST_DISABLE_GLIB_CHECKS_DEFINE', glib_checks.disabled())
+gst_cdata.set10('GST_DISABLE_CAST_CHECKS_DEFINE', disable_cast_checks)
+gst_cdata.set10('GST_DISABLE_GLIB_ASSERTS_DEFINE', disable_glib_asserts)
+gst_cdata.set10('GST_DISABLE_GLIB_CHECKS_DEFINE', disable_glib_checks)
 
 # FIXME: add --disable-plugin option?
 gst_cdata.set('GST_DISABLE_PLUGIN_DEFINE', '#undef GST_DISABLE_PLUGIN')
