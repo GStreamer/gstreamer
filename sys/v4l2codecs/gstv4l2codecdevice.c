@@ -26,6 +26,7 @@
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
+#include <unistd.h>
 
 #define GST_CAT_DEFAULT gstv4l2codecs_debug
 GST_DEBUG_CATEGORY_EXTERN (gstv4l2codecs_debug);
@@ -312,6 +313,7 @@ gst_v4l2_codec_find_devices (void)
     gint fd;
     struct media_v2_topology topology;
     GList *codec_entities, *c;
+    gboolean ret;
 
     fd = open (path, 0);
     if (fd < 0)
@@ -319,7 +321,10 @@ gst_v4l2_codec_find_devices (void)
 
     GST_DEBUG ("Analysing media device '%s'", path);
 
-    if (!get_topology (fd, &topology)) {
+    ret = get_topology (fd, &topology);
+    close (fd);
+
+    if (!ret) {
       clear_topology (&topology);
       continue;
     }
