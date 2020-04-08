@@ -2896,7 +2896,7 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   }
 #endif
 
-  {
+  if (!gst_buffer_get_video_time_code_meta (buffer)) {
     guint i = 0;
 
     for (i = 0; i < h264parse->num_clock_timestamp; i++) {
