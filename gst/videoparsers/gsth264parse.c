@@ -892,8 +892,8 @@ gst_h264_parse_process_sei (GstH264Parse * h264parse, GstH264NalUnit * nalu)
         if (h264parse->content_light_level_state == GST_H264_PARSE_SEI_EXPIRED) {
           h264parse->update_caps = TRUE;
         } else if (cll.max_content_light_level !=
-            h264parse->content_light_level.max_frame_average_light_level ||
-            cll.max_content_light_level !=
+            h264parse->content_light_level.max_content_light_level ||
+            cll.max_frame_average_light_level !=
             h264parse->content_light_level.max_frame_average_light_level) {
           h264parse->update_caps = TRUE;
         }
