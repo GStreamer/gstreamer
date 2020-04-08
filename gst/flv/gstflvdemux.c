@@ -402,6 +402,11 @@ gst_flv_demux_parse_metadata_item (GstFlvDemux * demux, GstByteReader * reader,
       s = FLV_GET_STRING (reader);
       if (s == NULL)
         goto error;
+      if (!strcmp (s, "")) {
+        /* Not strictly an error, just an empty string */
+        g_free (s);
+        break;
+      }
 
       GST_DEBUG_OBJECT (demux, "%s => (string) %s", tag_name, s);
 
