@@ -573,6 +573,15 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
       thiz->param.mfx.FrameInfo.BitDepthLuma = 8;
       thiz->param.mfx.FrameInfo.BitDepthChroma = 8;
       break;
+#if (MFX_VERSION >= 1031)
+    case GST_VIDEO_FORMAT_P012_LE:
+      thiz->param.mfx.FrameInfo.FourCC = MFX_FOURCC_P016;
+      thiz->param.mfx.FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
+      thiz->param.mfx.FrameInfo.BitDepthLuma = 12;
+      thiz->param.mfx.FrameInfo.BitDepthChroma = 12;
+      thiz->param.mfx.FrameInfo.Shift = 1;
+      break;
+#endif
     default:
       thiz->param.mfx.FrameInfo.FourCC = MFX_FOURCC_NV12;
       thiz->param.mfx.FrameInfo.BitDepthLuma = 8;

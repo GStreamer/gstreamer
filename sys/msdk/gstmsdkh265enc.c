@@ -54,11 +54,17 @@ enum
 #define PROP_MAX_SLICE_SIZE_DEFAULT     0
 
 #define RAW_FORMATS "NV12, I420, YV12, YUY2, UYVY, BGRA, P010_10LE, VUYA"
+#define PROFILES    "main, main-10, main-444"
 
-#if (MFX_VERSION >= 1027)
+#if (MFX_VERSION >= 1031)
+#define COMMON_FORMAT "{ " RAW_FORMATS ", Y410, Y210, P012_LE }"
+#define PRFOLIE_STR   "{ " PROFILES ", main-444-10, main-422-10, main-12 }"
+#elif (MFX_VERSION >= 1027)
 #define COMMON_FORMAT "{ " RAW_FORMATS ", Y410, Y210 }"
+#define PRFOLIE_STR   "{ " PROFILES ", main-444-10, main-422-10 }"
 #else
 #define COMMON_FORMAT "{ " RAW_FORMATS " }"
+#define PRFOLIE_STR   "{ " PROFILES " }"
 #endif
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -74,7 +80,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "framerate = (fraction) [0/1, MAX], "
         "width = (int) [ 1, MAX ], height = (int) [ 1, MAX ], "
         "stream-format = (string) byte-stream , alignment = (string) au , "
-        "profile = (string) { main, main-10, main-444, main-444-10, main-422-10 } ")
+        "profile = (string) " PRFOLIE_STR)
     );
 
 #define gst_msdkh265enc_parent_class parent_class
@@ -224,6 +230,9 @@ gst_msdkh265enc_configure (GstMsdkEnc * encoder)
     case MFX_FOURCC_Y410:
     case MFX_FOURCC_Y210:
 #endif
+#if (MFX_VERSION >= 1031)
+    case MFX_FOURCC_P016:
+#endif
       encoder->param.mfx.CodecProfile = MFX_PROFILE_HEVC_REXT;
       break;
     default:
@@ -334,6 +343,11 @@ gst_msdkh265enc_set_src_caps (GstMsdkEnc * encoder)
     case MFX_FOURCC_Y210:
       gst_structure_set (structure, "profile", G_TYPE_STRING, "main-422-10",
           NULL);
+      break;
+#endif
+#if (MFX_VERSION >= 1031)
+    case MFX_FOURCC_P016:
+      gst_structure_set (structure, "profile", G_TYPE_STRING, "main-12", NULL);
       break;
 #endif
     default:
@@ -461,6 +475,9 @@ gst_msdkh265enc_need_conversion (GstMsdkEnc * encoder, GstVideoInfo * info,
 #if (MFX_VERSION >= 1027)
     case GST_VIDEO_FORMAT_Y410:
     case GST_VIDEO_FORMAT_Y210:
+#endif
+#if (MFX_VERSION >= 1031)
+    case GST_VIDEO_FORMAT_P012_LE:
 #endif
       return FALSE;
 
