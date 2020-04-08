@@ -248,6 +248,10 @@ nle_object_class_init (NleObjectClass * klass)
    * relation between the rate of media entering and leaving this object. I.e.
    * if object pulls data at twice the speed it sends it (e.g. `pitch
    * tempo=2.0`), this value is set to 2.0.
+   *
+   * Deprecated: 1.18: This property is ignored since the wrapped
+   * #GstElement-s themselves should internally perform any additional time
+   * translations.
    */
   properties[PROP_MEDIA_DURATION_FACTOR] =
       g_param_spec_double ("media-duration-factor", "Media duration factor",
@@ -292,8 +296,6 @@ nle_object_init (NleObject * object, NleObjectClass * klass)
   object->segment_rate = 1.0;
   object->segment_start = -1;
   object->segment_stop = -1;
-  object->media_duration_factor = 1.0;
-  object->recursive_media_duration_factor = 1.0;
 
   object->srcpad = nle_object_ghost_pad_no_target (object,
       "src", GST_PAD_SRC,
@@ -326,15 +328,41 @@ nle_object_dispose (GObject * object)
  * @objecttime: The #GstClockTime we want to convert
  * @mediatime: A pointer on a #GstClockTime to fill
  *
- * Converts a #GstClockTime from the object (container) context to the media context
+ * Converts a #GstClockTime timestamp received from another nleobject pad
+ * in the same nlecomposition, or from the nlecomposition itself, to an
+ * internal source time.
  *
- * Returns: TRUE if @objecttime was within the limits of the @object start/stop time,
- * FALSE otherwise
+ * If the object is furthest downstream in the nlecomposition (highest
+ * priority in the current stack), this will convert the timestamp from
+ * the composition coordinate time to the internal source coordinate time
+ * of the object.
+ *
+ * If the object is upstream from another nleobject, then this can convert
+ * the timestamp received from the downstream sink pad to the internal
+ * source coordinates of the object, to be passed to its internal
+ * elements.
+ *
+ * If the object is downstream from another nleobject, then this can
+ * convert the timestamp received from the upstream source pad to the
+ * internal sink coordinates of the object, to be passed to its internal
+ * elements.
+ *
+ * In these latter two cases, the timestamp should have been converted
+ * by the peer pad using nle_media_to_object_time().
+ *
+ * Note, if an object introduces a time effect, it must have a 0 in-point
+ * and the same #nleobject:start and #nleobject:duration as all the other
+ * objects that are further upstream.
+ *
+ * Returns: TRUE if @objecttime was below the @object start time,
+ * FALSE otherwise.
  */
 gboolean
 nle_object_to_media_time (NleObject * object, GstClockTime otime,
     GstClockTime * mtime)
 {
+  gboolean ret = TRUE;
+
   g_return_val_if_fail (mtime, FALSE);
 
   GST_DEBUG_OBJECT (object, "ObjectTime : %" GST_TIME_FORMAT,
@@ -345,39 +373,61 @@ nle_object_to_media_time (NleObject * object, GstClockTime otime,
       "Media start: %" GST_TIME_FORMAT, GST_TIME_ARGS (object->start),
       GST_TIME_ARGS (object->stop), GST_TIME_ARGS (object->inpoint));
 
-  /* limit check */
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (otime))) {
+    GST_DEBUG_OBJECT (object, "converting none object time to none");
+    *mtime = GST_CLOCK_TIME_NONE;
+    return TRUE;
+  }
+
+  /* We do not allow @otime to be below the start of the object.
+   * If it was below, then the object would have a negative external
+   * source/sink time.
+   *
+   * Note that ges only supports time effects that map the time 0 to
+   * 0. Such time effects would also not produce an external timestamp
+   * below start, nor can they receive such a timestamp. */
   if (G_UNLIKELY ((otime < object->start))) {
     GST_DEBUG_OBJECT (object, "ObjectTime is before start");
-    *mtime = (object->inpoint == GST_CLOCK_TIME_NONE) ? 0 : object->inpoint;
-    return FALSE;
+    otime = object->start;
+    ret = FALSE;
   }
+  /* NOTE: if an nlecomposition contains time effect operations, then
+   * @otime can reasonably exceed the stop time of the object. So we
+   * do not limit it here. */
 
-  if (G_UNLIKELY ((otime >= object->stop))) {
-    GST_DEBUG_OBJECT (object, "ObjectTime is after stop");
-    if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (object->inpoint)))
-      *mtime =
-          object->inpoint +
-          object->duration * object->recursive_media_duration_factor;
-    else
-      *mtime =
-          (object->stop -
-          object->start) * object->recursive_media_duration_factor;
-    return FALSE;
-  }
+  /* first we convert the timestamp to the object's external source/sink
+   * coordinates:
+   * + For an object that is furthest downstream, we translate from the
+   *   composition coordinates to the external source coordinates by
+   *   subtracting the object start.
+   * + For an object that is upstream from d_object, we need to
+   *   translate from its external sink coordinates to our external
+   *   source coordinates. This is done by adding
+   *     (d_object->start - object->start)
+   *   However, the sink pad of d_object should have already added the
+   *   d_object->start to the timestamp (see nle_media_to_object_time)
+   *   so we also only need to subtract the object start.
+   * + For an object that is downstream from u_object, we need to
+   *   translate from its external source coordinates to our external
+   *   sink coordinates. This is similarly done by adding
+   *     (u_object->start - object->start)
+   *   However, the source pad of u_object should have already added the
+   *   u_object->start to the timestamp (see nle_media_to_object_time)
+   *   so we also only need to subtract the object start.
+   */
+  *mtime = otime - object->start;
 
-  if (G_UNLIKELY (object->inpoint == GST_CLOCK_TIME_NONE)) {
-    /* no time shifting, for live sources ? */
-    *mtime = (otime - object->start) * object->recursive_media_duration_factor;
-  } else {
-    *mtime =
-        (otime - object->start) * object->recursive_media_duration_factor +
-        object->inpoint;
-  }
+  /* we then convert the timestamp from the object's external source/sink
+   * coordinates to its internal source/sink coordinates, to be used by
+   * internal elements that the object wraps. This is done by adding
+   * the object in-point. */
+  if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (object->inpoint)))
+    *mtime += object->inpoint;
 
   GST_DEBUG_OBJECT (object, "Returning MediaTime : %" GST_TIME_FORMAT,
       GST_TIME_ARGS (*mtime));
 
-  return TRUE;
+  return ret;
 }
 
 /**
@@ -386,10 +436,28 @@ nle_object_to_media_time (NleObject * object, GstClockTime otime,
  * @mediatime: The #GstClockTime we want to convert
  * @objecttime: A pointer on a #GstClockTime to fill
  *
- * Converts a #GstClockTime from the media context to the object (container) context
+ * Converts a #GstClockTime timestamp from an internal time to an
+ * nleobject pad time.
  *
- * Returns: TRUE if @objecttime was within the limits of the @object media start/stop time,
- * FALSE otherwise
+ * If the object is furthest downstream in an nlecomposition (highest
+ * priority in the current stack), this will convert the timestamp from
+ * the internal source coordinate time of the object to the composition
+ * coordinate time.
+ *
+ * If the object is upstream from another nleobject, then this can convert
+ * the timestamp from the internal source coordinates of the object to be
+ * sent to the downstream sink pad.
+ *
+ * If the object is downstream from another nleobject, then this can
+ * convert the timestamp from the internal sink coordinates of the object
+ * to be sent to the upstream source pad.
+ *
+ * Note, if an object introduces a time effect, it must have a 0 in-point
+ * and the same #nleobject:start and #nleobject:duration as all the other
+ * objects that are further upstream.
+ *
+ * Returns: TRUE if @objecttime was below the @object in-point time,
+ * FALSE otherwise.
  */
 
 gboolean
@@ -406,19 +474,35 @@ nle_media_to_object_time (NleObject * object, GstClockTime mtime,
       "inpoint  %" GST_TIME_FORMAT, GST_TIME_ARGS (object->start),
       GST_TIME_ARGS (object->stop), GST_TIME_ARGS (object->inpoint));
 
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (mtime))) {
+    GST_DEBUG_OBJECT (object, "converting none media time to none");
+    *otime = GST_CLOCK_TIME_NONE;
+    return TRUE;
+  }
 
-  /* limit check */
-  if (G_UNLIKELY ((object->inpoint != GST_CLOCK_TIME_NONE)
+  /* the internal time should never go below the in-point! */
+  if (G_UNLIKELY (GST_CLOCK_TIME_IS_VALID (object->inpoint)
           && (mtime < object->inpoint))) {
     GST_DEBUG_OBJECT (object, "media time is before inpoint, forcing to start");
     *otime = object->start;
     return FALSE;
   }
 
-  if (G_LIKELY (object->inpoint != GST_CLOCK_TIME_NONE)) {
-    *otime = mtime - object->inpoint + object->start;
-  } else
-    *otime = mtime + object->start;
+  /* first we convert the timestamp to the object's external source/sink
+   * coordinates by removing the in-point */
+  if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (object->inpoint)))
+    *otime = mtime - object->inpoint;
+  else
+    *otime = mtime;
+
+  /* then we convert the timestamp by adding start.
+   * If the object is furthest downstream, this will translate it from
+   * the external source coordinates to the composition coordinates.
+   * Otherwise, this will perform part of the conversion from the object's
+   * source/sink coordinates to the downstream/upstream sink/source
+   * coordinates (the conversion is completed in
+   * nle_object_to_media_time). */
+  *otime += object->start;
 
   GST_DEBUG_OBJECT (object, "Returning ObjectTime : %" GST_TIME_FORMAT,
       GST_TIME_ARGS (*otime));
@@ -563,7 +647,12 @@ nle_object_set_property (GObject * object, guint prop_id,
         GST_OBJECT_FLAG_UNSET (nleobject, NLE_OBJECT_EXPANDABLE);
       break;
     case PROP_MEDIA_DURATION_FACTOR:
-      nleobject->media_duration_factor = g_value_get_double (value);
+    {
+      gdouble val = g_value_get_double (value);
+      if (val != 1.0)
+        g_warning ("Ignoring media-duration-factor value of %g since the "
+            "property is deprecated", val);
+    }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -604,7 +693,8 @@ nle_object_get_property (GObject * object, guint prop_id,
       g_value_set_boolean (value, NLE_OBJECT_IS_EXPANDABLE (object));
       break;
     case PROP_MEDIA_DURATION_FACTOR:
-      g_value_set_double (value, nleobject->media_duration_factor);
+      g_warning ("The media-duration-factor property is deprecated");
+      g_value_set_double (value, 1.0);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

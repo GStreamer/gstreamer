@@ -31,6 +31,46 @@
  * A NleOperation performs a transformation or mixing operation on the
  * data from one or more #NleSources, which is used to implement filters or
  * effects.
+ *
+ * ## Time Effects
+ *
+ * An #nleoperation that wraps a #GstElement that transforms seek and
+ * segment times is considered a time effect. Nle only tries to support
+ * time effect's whose overall seek transformation:
+ *
+ * + Maps the time `0` to `0`. So initial time-shifting effects are
+ *   excluded (the #nlesource:inpoint can sometimes be used instead).
+ * + Is monotonically increasing. So reversing effects, and effects that
+ *   jump backwards in the stream are excluded.
+ * + Can handle a reasonable #GstClockTime, relative to the project. So
+ *   this would exclude a time effect with an extremely large speed-up
+ *   that would cause the converted #GstClockTime seeks to overflow.
+ * + Is 'continuously reversible'. This essentially means that for every
+ *   seek position found on the sink pad of the element, we can, to 'good
+ *   enough' accuracy, calculate the corresponding seek position that was
+ *   received on the source pad. Moreover, this calculation should
+ *   correspond to how the element transforms its #GstSegment
+ *   @time field. This is needed so that a seek can result in an accurate
+ *   segment.
+ *
+ * Note that a constant-rate-change effect that is not extremely fast or
+ * slow would satisfy these conditions.
+ *
+ * For such a time effect, they should be configured in nle such that:
+ *
+ * + Their #nleoperation:inpoint is `0`. Otherwise this will introduce
+ *   seeking problems in its #nlecomposition.
+ * + They must share the same #nleoperation:start and
+ *   #nleoperation:duration as all nleobjects of lower priority in its
+ *   #nlecomposition. Otherwise this will introduce jumps in playback.
+ *
+ * Note that, at the moment, nle only converts the #GstSegment
+ * @time field which means the other fields, such as @start and @stop, can
+ * end up with non-meaningful values when time effects are involved.
+ * Moreover, it does not convert #GstBuffer times either, which can result
+ * in them having non-meaningful values. In particular, this means that
+ * #GstControlBinding-s will not work well with #nlecomposition-s when
+ * they include time effects.
  */
 
 static GstStaticPadTemplate nle_operation_src_template =

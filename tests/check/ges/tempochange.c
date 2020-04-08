@@ -30,8 +30,6 @@ GST_START_TEST (test_tempochange)
   GESEffect *effect;
   GESTestClip *clip;
   GESClip *clip2, *clip3;
-  GList *tmp;
-  int found;
 
   ges_init ();
 
@@ -77,45 +75,6 @@ GST_START_TEST (test_tempochange)
   fail_unless_equals_int64 (_START (clip3), 6 * GST_SECOND);
   fail_unless_equals_int64 (_INPOINT (clip3), 7.5 * GST_SECOND);
   fail_unless_equals_int64 (_DURATION (clip3), 3 * GST_SECOND);
-
-#define MDF_OF_CLIP(x) \
-  ((NleObject *) ges_track_element_get_nleobject \
-    (ges_clip_find_track_element (GES_CLIP (x), track_audio, \
-    G_TYPE_NONE)))->media_duration_factor
-
-  fail_unless_equals_float (MDF_OF_CLIP (clip), 1.0);
-  fail_unless_equals_float (MDF_OF_CLIP (clip2), 1.5);
-  fail_unless_equals_float (MDF_OF_CLIP (clip3), 1.5);
-
-  found = 0;
-
-  for (tmp = GES_CONTAINER_CHILDREN (clip2); tmp; tmp = tmp->next) {
-    // A clip may have children other than the effect we added. As such, we
-    // need to find the child which is the pitch effect in order to check its
-    // value.
-    GstElement *nle = ges_track_element_get_nleobject (tmp->data);
-    if (strncmp (GST_OBJECT_NAME (nle), "GESEffect:", 10) == 0) {
-      fail_if (found);
-      found = 1;
-      fail_unless_equals_float (((NleObject *) nle)->media_duration_factor,
-          1.5);
-    }
-  }
-
-  fail_unless (found);
-
-  found = 0;
-  for (tmp = GES_CONTAINER_CHILDREN (clip3); tmp; tmp = tmp->next) {
-    GstElement *nle = ges_track_element_get_nleobject (tmp->data);
-    if (strncmp (GST_OBJECT_NAME (nle), "GESEffect:", 10) == 0) {
-      fail_if (found);
-      found = 1;
-      fail_unless_equals_float (((NleObject *) nle)->media_duration_factor,
-          1.5);
-    }
-  }
-
-  fail_unless (found);
 
   ges_layer_remove_clip (layer, (GESClip *) clip);
   ges_layer_remove_clip (layer, clip2);

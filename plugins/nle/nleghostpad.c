@@ -98,6 +98,12 @@ nle_object_translate_incoming_seek (NleObject * object, GstEvent * event)
     GST_LOG_OBJECT (object, "Setting stop to %" GST_TIME_FORMAT,
         GST_TIME_ARGS (nstop));
   } else {
+    /* NOTE: for an element that is upstream from a time effect we do not
+     * want to limit the seek to the object->stop because a time effect
+     * can reasonably increase the final time.
+     * In such situations, the seek stop should be set once by the
+     * source pad of the most downstream object (highest priority in the
+     * nlecomposition). */
     GST_DEBUG_OBJECT (object, "Limiting end of seek to media_stop");
     nle_object_to_media_time (object, object->stop, &nstop);
     if (nstop > G_MAXINT64)
@@ -190,6 +196,9 @@ translate_outgoing_seek (NleObject * object, GstEvent * event)
     GST_LOG_OBJECT (object, "Setting stop to %" GST_TIME_FORMAT,
         GST_TIME_ARGS (nstop));
   } else {
+    /* NOTE: when we have time effects, the object stop is not the
+     * correct stop limit. Therefore, the seek stop time should already
+     * be set at this point */
     GST_DEBUG_OBJECT (object, "Limiting end of seek to stop");
     nstop = object->stop;
     if (nstop > G_MAXINT64)
@@ -423,6 +432,9 @@ translate_incoming_duration_query (NleObject * object, GstQuery * query)
     return FALSE;
   }
 
+  /* NOTE: returns the duration of the object, but this is not the same
+   * as the source duration when time effects are used. Nor is it the
+   * duration of the current nlecomposition stack */
   gst_query_set_duration (query, GST_FORMAT_TIME, object->duration);
 
   return TRUE;
