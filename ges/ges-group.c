@@ -677,7 +677,13 @@ _group (GList * containers)
       return NULL;
     }
 
-    ges_container_add (ret, tmp->data);
+    if (!ges_container_add (ret, tmp->data)) {
+      GST_INFO ("%" GES_FORMAT " could not add child %p while"
+          " grouping", GES_ARGS (ret), tmp->data);
+      g_object_unref (ret);
+
+      return NULL;
+    }
   }
 
   /* No need to add to the timeline here, this will be done in _child_added */

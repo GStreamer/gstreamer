@@ -383,7 +383,9 @@ _paste (GESTimelineElement * element, GESTimelineElement * ref,
     }
 
     /* for GESGroups, this may register the group on the timeline */
-    ges_container_add (ncontainer, nchild);
+    if (!ges_container_add (ncontainer, nchild))
+      GST_ERROR ("%" GES_FORMAT " could not add child %p while"
+          " copying, this should never happen", GES_ARGS (ncontainer), nchild);
   }
 
   return GES_TIMELINE_ELEMENT (ncontainer);

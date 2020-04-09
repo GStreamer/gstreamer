@@ -364,8 +364,10 @@ ges_demux_adapt_timeline_duration (GESDemux * self, GESTimeline * timeline)
               text = ges_effect_new (effect_str);
               g_free (effect_str_full);
 
-              ges_container_add (GES_CONTAINER (clip),
-                  GES_TIMELINE_ELEMENT (text));
+              if (!ges_container_add (GES_CONTAINER (clip),
+                      GES_TIMELINE_ELEMENT (text))) {
+                GST_ERROR ("Could not add text overlay to ending clip!");
+              }
             }
 
           }

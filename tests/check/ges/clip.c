@@ -1712,7 +1712,7 @@ GST_START_TEST (test_children_time_setters)
     ges_track_element_set_has_internal_source (child, TRUE);
     _test_children_time_setting_on_clip (clip, child);
     /* clip in a group */
-    ges_container_add (group, GES_TIMELINE_ELEMENT (clip));
+    fail_unless (ges_container_add (group, GES_TIMELINE_ELEMENT (clip)));
     _test_children_time_setting_on_clip (clip, child);
     /* group is removed from the timeline and destroyed when empty */
     ges_container_remove (group, GES_TIMELINE_ELEMENT (clip));

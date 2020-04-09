@@ -872,7 +872,10 @@ _transfer_child (GESClip * from_clip, GESClip * to_clip,
       GES_TIMELINE_ELEMENT (child));
 
   to_clip->priv->allow_any_track = TRUE;
-  ges_container_add (GES_CONTAINER (to_clip), GES_TIMELINE_ELEMENT (child));
+  if (!ges_container_add (GES_CONTAINER (to_clip),
+          GES_TIMELINE_ELEMENT (child)))
+    GST_ERROR ("%" GES_FORMAT " could not add child %p while"
+        " transfering, this should never happen", GES_ARGS (to_clip), child);
   to_clip->priv->allow_any_track = FALSE;
   ges_timeline_set_moving_track_elements (timeline, FALSE);
 

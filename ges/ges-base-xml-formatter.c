@@ -480,7 +480,11 @@ _add_all_groups (GESFormatter * self)
       GST_DEBUG_OBJECT (tmp->data, "Adding %s child %" GST_PTR_FORMAT " %s",
           (const gchar *) lchild->data, child,
           GES_TIMELINE_ELEMENT_NAME (child));
-      ges_container_add (GES_CONTAINER (pgroup->group), child);
+      if (!ges_container_add (GES_CONTAINER (pgroup->group), child)) {
+        GST_ERROR ("%" GES_FORMAT " could not add child %p while"
+            " reloading, this should never happen", GES_ARGS (pgroup->group),
+            child);
+      }
     }
     pgroup->group = NULL;
   }
@@ -624,7 +628,10 @@ _add_track_element (GESFormatter * self, GESClip * clip,
   GST_DEBUG_OBJECT (self, "Adding track_element: %" GST_PTR_FORMAT
       " To : %" GST_PTR_FORMAT, trackelement, clip);
 
-  ges_container_add (GES_CONTAINER (clip), GES_TIMELINE_ELEMENT (trackelement));
+  if (!ges_container_add (GES_CONTAINER (clip),
+          GES_TIMELINE_ELEMENT (trackelement)))
+    GST_ERROR ("%" GES_FORMAT " could not add child %p while"
+        " reloading, this should never happen", GES_ARGS (clip), trackelement);
   gst_structure_foreach (children_properties,
       (GstStructureForeachFunc) _set_child_property, trackelement);
 
