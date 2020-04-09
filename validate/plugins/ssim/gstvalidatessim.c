@@ -231,9 +231,6 @@ validate_ssim_override_new (GstStructure * config)
     }
   }
 
-  gst_validate_printf (self, "Using %s as output directory\n",
-      self->priv->outdir);
-
   self->priv->config = gst_structure_copy (config);
   self->priv->result_outdir =
       g_strdup (gst_structure_get_string (config, "result-output-dir"));
@@ -290,7 +287,7 @@ _can_attach (GstValidateOverride * override, GstValidateMonitor * monitor)
   GstCaps *template_caps;
   GstElement *element = NULL;
   GstStructure *structure;
-  gboolean res = TRUE;
+  gboolean res = FALSE;
   ValidateSsimOverride *self = VALIDATE_SSIM_OVERRIDE (override);
 
   if (self->priv->is_attached) {
@@ -322,21 +319,31 @@ _can_attach (GstValidateOverride * override, GstValidateMonitor * monitor)
   }
 
   template_caps = GST_PAD_TEMPLATE_CAPS (GST_PAD_PAD_TEMPLATE (pad));
+  if (gst_caps_is_any (template_caps)) {
+    res = TRUE;
+    goto done;
+  }
+
   for (i = 0; i < gst_caps_get_size (template_caps); i++) {
     structure = gst_caps_get_structure (template_caps, i);
     if (gst_structure_has_name (structure, "video/x-raw")) {
-      GST_INFO_OBJECT (override, "Wrapping %" GST_PTR_FORMAT, pad);
-
-      gst_validate_reporter_set_name (GST_VALIDATE_REPORTER (override),
-          g_strdup_printf ("ssim-override-%s",
-              gst_validate_reporter_get_name (GST_VALIDATE_REPORTER
-                  (monitor))));
-
-      goto done;
+      res = TRUE;
+      break;
     }
   }
 
 done:
+  if (res) {
+    gchar *path = gst_object_get_path_string (GST_OBJECT (pad));
+    GST_INFO_OBJECT (override, "Wrapping %" GST_PTR_FORMAT, pad);
+
+    gst_validate_reporter_set_name (GST_VALIDATE_REPORTER (override),
+        g_strdup_printf ("ssim-override-%s", path));
+    gst_validate_printf (self, "Using %s as output directory\n",
+        self->priv->outdir);
+    g_free (path);
+  }
+
   if (pad)
     gst_object_unref (pad);
   if (element)
