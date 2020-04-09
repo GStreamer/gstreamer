@@ -351,7 +351,8 @@ ges_video_test_source_create_source (GESTrackElement * element)
   GstCaps *caps;
   gint pattern;
   GstElement *testsrc, *res;
-  const gchar *props[] = { "pattern", NULL };
+  const gchar *props[] =
+      { "pattern", "background-color", "foreground-color", NULL };
   GPtrArray *elements;
   GESVideoTestSource *self = GES_VIDEO_TEST_SOURCE (element);
 
