@@ -1081,10 +1081,10 @@ timeline_get_framerate (GESTimeline * self, gint * fps_n, gint * fps_d)
 {
   GList *tmp;
 
+  *fps_n = *fps_d = -1;
   if (!self)
     goto done;
 
-  *fps_n = *fps_d = -1;
   LOCK_DYN (self);
   for (tmp = self->tracks; tmp; tmp = tmp->next) {
     if (GES_IS_VIDEO_TRACK (tmp->data)) {
