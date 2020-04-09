@@ -156,20 +156,21 @@ ges_base_bin_event (GstPad * pad, GstObject * parent, GstEvent * event)
       guint stream_group;
       GstTagList *tlist = gst_tag_list_new ("is-ges-timeline", TRUE, NULL);
       GstPad *peer = gst_pad_get_peer (pad);
+      GstEvent *new_event;
 
       gst_event_parse_stream_start (event, &stream_id);
-      gst_event_parse_group_id (event, &stream_group);
       new_stream_id =
           gst_pad_create_stream_id (peer,
           GST_ELEMENT (GST_OBJECT_PARENT (parent)), stream_id);
-      gst_event_unref (event);
       gst_object_unref (peer);
 
-      event = gst_event_new_stream_start (new_stream_id);
-      gst_event_set_group_id (event, stream_group);
+      new_event = gst_event_new_stream_start (new_stream_id);
+      if (gst_event_parse_group_id (event, &stream_group))
+        gst_event_set_group_id (new_event, stream_group);
+      gst_event_unref (event);
       g_free (new_stream_id);
 
-      gst_pad_event_default (pad, parent, event);
+      gst_pad_event_default (pad, parent, new_event);
 
       gst_tag_list_set_scope (tlist, GST_TAG_SCOPE_GLOBAL);
 
