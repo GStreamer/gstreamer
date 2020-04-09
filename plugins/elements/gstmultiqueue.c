@@ -311,6 +311,9 @@ enum
 {
   PROP_PAD_0,
   PROP_PAD_GROUP_ID,
+  PROP_CURRENT_LEVEL_BUFFERS,
+  PROP_CURRENT_LEVEL_BYTES,
+  PROP_CURRENT_LEVEL_TIME,
 };
 
 #define GST_TYPE_MULTIQUEUE_PAD            (gst_multiqueue_pad_get_type())
@@ -319,6 +322,22 @@ enum
 #define GST_MULTIQUEUE_PAD_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass) ,GST_TYPE_MULTIQUEUE_PAD,GstMultiQueuePadClass))
 #define GST_IS_MULTIQUEUE_PAD_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_MULTIQUEUE_PAD))
 #define GST_MULTIQUEUE_PAD_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_MULTIQUEUE_PAD,GstMultiQueuePadClass))
+
+#define GST_MULTI_QUEUE_MUTEX_LOCK(q) G_STMT_START {                          \
+  g_mutex_lock (&q->qlock);                                              \
+} G_STMT_END
+
+#define GST_MULTI_QUEUE_MUTEX_UNLOCK(q) G_STMT_START {                        \
+  g_mutex_unlock (&q->qlock);                                            \
+} G_STMT_END
+
+#define SET_PERCENT(mq, perc) G_STMT_START {                             \
+  if (perc != mq->buffering_percent) {                                   \
+    mq->buffering_percent = perc;                                        \
+    mq->buffering_percent_changed = TRUE;                                \
+    GST_DEBUG_OBJECT (mq, "buffering %d percent", perc);                 \
+  }                                                                      \
+} G_STMT_END
 
 struct _GstMultiQueuePad
 {
@@ -335,6 +354,110 @@ struct _GstMultiQueuePadClass
 GType gst_multiqueue_pad_get_type (void);
 
 G_DEFINE_TYPE (GstMultiQueuePad, gst_multiqueue_pad, GST_TYPE_PAD);
+
+static guint
+gst_multiqueue_pad_get_group_id (GstMultiQueuePad * pad)
+{
+  guint ret = 0;
+  GstMultiQueue *mq;
+
+  if (!pad->sq)
+    return 0;
+
+  mq = g_weak_ref_get (&pad->sq->mqueue);
+
+  if (mq) {
+    GST_OBJECT_LOCK (mq);
+  }
+
+  ret = pad->sq->groupid;
+
+  if (mq) {
+    GST_OBJECT_UNLOCK (mq);
+    gst_object_unref (mq);
+  }
+
+  return ret;
+}
+
+static guint
+gst_multiqueue_pad_get_current_level_buffers (GstMultiQueuePad * pad)
+{
+  GstSingleQueue *sq = pad->sq;
+  GstDataQueueSize level;
+  GstMultiQueue *mq;
+
+  if (!sq)
+    return 0;
+
+  mq = g_weak_ref_get (&pad->sq->mqueue);
+
+  if (mq) {
+    GST_MULTI_QUEUE_MUTEX_LOCK (mq);
+  }
+
+  gst_data_queue_get_level (sq->queue, &level);
+
+  if (mq) {
+    GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
+    gst_object_unref (mq);
+  }
+
+  return level.visible;
+}
+
+static guint
+gst_multiqueue_pad_get_current_level_bytes (GstMultiQueuePad * pad)
+{
+  GstSingleQueue *sq = pad->sq;
+  GstDataQueueSize level;
+  GstMultiQueue *mq;
+
+  if (!sq)
+    return 0;
+
+  mq = g_weak_ref_get (&pad->sq->mqueue);
+
+  if (mq) {
+    GST_MULTI_QUEUE_MUTEX_LOCK (mq);
+  }
+
+  gst_data_queue_get_level (sq->queue, &level);
+
+  if (mq) {
+    GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
+    gst_object_unref (mq);
+  }
+
+  return level.bytes;
+}
+
+static guint64
+gst_multiqueue_pad_get_current_level_time (GstMultiQueuePad * pad)
+{
+  GstSingleQueue *sq = pad->sq;
+  GstMultiQueue *mq;
+  guint64 ret;
+
+  if (!sq)
+    return 0;
+
+  mq = g_weak_ref_get (&pad->sq->mqueue);
+
+  if (mq) {
+    GST_MULTI_QUEUE_MUTEX_LOCK (mq);
+  }
+
+  ret = sq->cur_time;
+
+  if (mq) {
+    GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
+    gst_object_unref (mq);
+  }
+
+  return ret;
+}
+
 static void
 gst_multiqueue_pad_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
@@ -343,19 +466,23 @@ gst_multiqueue_pad_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_PAD_GROUP_ID:
-      if (pad->sq) {
-        GstMultiQueue *mq = g_weak_ref_get (&pad->sq->mqueue);
-
-        if (mq)
-          GST_OBJECT_LOCK (mq);
-
-        g_value_set_uint (value, pad->sq->groupid);
-        if (mq) {
-          GST_OBJECT_UNLOCK (mq);
-          gst_object_unref (mq);
-        }
-      }
+      g_value_set_uint (value, gst_multiqueue_pad_get_group_id (pad));
       break;
+    case PROP_CURRENT_LEVEL_BUFFERS:{
+      g_value_set_uint (value,
+          gst_multiqueue_pad_get_current_level_buffers (pad));
+      break;
+    }
+    case PROP_CURRENT_LEVEL_BYTES:{
+      g_value_set_uint (value,
+          gst_multiqueue_pad_get_current_level_bytes (pad));
+      break;
+    }
+    case PROP_CURRENT_LEVEL_TIME:{
+      g_value_set_uint64 (value,
+          gst_multiqueue_pad_get_current_level_time (pad));
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -421,6 +548,42 @@ gst_multiqueue_pad_class_init (GstMultiQueuePadClass * klass)
       g_param_spec_uint ("group-id", "Group ID",
           "Group to which this pad belongs", 0, G_MAXUINT32,
           DEFAULT_PAD_GROUP_ID, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstMultiQueuePad:current-level-buffers:
+   *
+   * The corresponding queue's current level of buffers.
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (gobject_class, PROP_CURRENT_LEVEL_BUFFERS,
+      g_param_spec_uint ("current-level-buffers", "Current level buffers",
+          "Current level buffers", 0, G_MAXUINT32,
+          0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstMultiQueuePad:current-level-bytes:
+   *
+   * The corresponding queue's current level of bytes.
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (gobject_class, PROP_CURRENT_LEVEL_BYTES,
+      g_param_spec_uint ("current-level-bytes", "Current level bytes",
+          "Current level bytes", 0, G_MAXUINT32,
+          0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstMultiQueuePad:current-level-time:
+   *
+   * The corresponding queue's current level of time.
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (gobject_class, PROP_CURRENT_LEVEL_TIME,
+      g_param_spec_uint64 ("current-level-time", "Current level time",
+          "Current level time", 0, G_MAXUINT64,
+          0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -429,22 +592,6 @@ gst_multiqueue_pad_init (GstMultiQueuePad * pad)
 
 }
 
-
-#define GST_MULTI_QUEUE_MUTEX_LOCK(q) G_STMT_START {                          \
-  g_mutex_lock (&q->qlock);                                              \
-} G_STMT_END
-
-#define GST_MULTI_QUEUE_MUTEX_UNLOCK(q) G_STMT_START {                        \
-  g_mutex_unlock (&q->qlock);                                            \
-} G_STMT_END
-
-#define SET_PERCENT(mq, perc) G_STMT_START {                             \
-  if (perc != mq->buffering_percent) {                                   \
-    mq->buffering_percent = perc;                                        \
-    mq->buffering_percent_changed = TRUE;                                \
-    GST_DEBUG_OBJECT (mq, "buffering %d percent", perc);                 \
-  }                                                                      \
-} G_STMT_END
 
 /* Convenience function */
 static inline GstClockTimeDiff
