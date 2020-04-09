@@ -285,7 +285,14 @@ ges_demux_src_probe (GstPad * pad, GstPadProbeInfo * info, GstElement * parent)
       if (gst_uri_has_protocol (upstream_uri, "file")) {
         gchar *location = gst_uri_get_location (upstream_uri);
 
-        g_stat (location, &stats);
+        if (g_stat (location, &stats) < 0) {
+          GST_INFO_OBJECT (self, "Could not stat %s - not updating", location);
+
+          g_free (location);
+          g_free (upstream_uri);
+          goto done;
+        }
+
         g_free (location);
         GST_OBJECT_LOCK (self);
         if (g_strcmp0 (upstream_uri, self->upstream_uri)
@@ -303,6 +310,7 @@ ges_demux_src_probe (GstPad * pad, GstPadProbeInfo * info, GstElement * parent)
         GST_OBJECT_UNLOCK (self);
       }
     }
+  done:
     gst_query_unref (uri_query);
   }
 
@@ -436,7 +444,8 @@ ges_demux_create_timeline (GESDemux * self, gchar * uri, GError ** error)
     if (gst_uri_has_protocol (self->upstream_uri, "file")) {
       gchar *location = gst_uri_get_location (self->upstream_uri);
 
-      g_stat (location, &self->stats);
+      if (g_stat (location, &self->stats) < 0)
+        GST_INFO_OBJECT (self, "Could not stat file: %s", location);
       g_free (location);
     }
 
