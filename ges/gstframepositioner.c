@@ -263,7 +263,7 @@ gst_frame_positioner_update_properties (GstFramePositioner * pos,
   } else if (auto_position (pos))
     goto done;
 
-  if (!old_track_height || !old_track_height) {
+  if (!old_track_height || !old_track_width) {
     GST_DEBUG_OBJECT (pos, "No old track size, can not properly reposition");
     goto done;
   }
