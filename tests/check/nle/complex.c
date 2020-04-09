@@ -567,7 +567,7 @@ GST_START_TEST (test_renegotiation)
 
   gst_bin_add_many (GST_BIN (pipeline), comp, audioconvert, sink, NULL);
   caps = gst_caps_from_string ("audio/x-raw,format=(string)S16LE");
-  gst_element_link_filtered (audioconvert, sink, caps);
+  fail_unless (gst_element_link_filtered (audioconvert, sink, caps));
   gst_caps_unref (caps);
 
   /* Shared data */
