@@ -273,6 +273,7 @@ enum
   PROP_USE_INTERLEAVE,
   PROP_UNLINKED_CACHE_TIME,
   PROP_MINIMUM_INTERLEAVE,
+  PROP_STATS,
   PROP_LAST
 };
 
@@ -657,6 +658,25 @@ gst_multi_queue_class_init (GstMultiQueueClass * klass)
           G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
           G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstMultiQueue:stats:
+   *
+   * Various #GstMultiQueue statistics. This property returns a #GstStructure
+   * with name "application/x-gst-multi-queue-stats" with the following fields:
+   *
+   * - "queues" GST_TYPE_ARRAY    Contains one GstStructure named "queue_%d"
+   *   (where %d is the queue's ID) per internal queue:
+   *   - "buffers" G_TYPE_UINT    The queue's current level of buffers
+   *   - "bytes" G_TYPE_UINT    The queue's current level of bytes
+   *   - "time" G_TYPE_UINT64    The queue's current level of time
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (gobject_class, PROP_STATS,
+      g_param_spec_boxed ("stats", "Stats",
+          "Multiqueue Statistics",
+          GST_TYPE_STRUCTURE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
   gobject_class->finalize = gst_multi_queue_finalize;
 
   gst_element_class_set_static_metadata (gstelement_class,
@@ -850,6 +870,44 @@ gst_multi_queue_set_property (GObject * object, guint prop_id,
   }
 }
 
+/* Called with mutex held */
+static GstStructure *
+gst_multi_queue_get_stats (GstMultiQueue * mq)
+{
+  GstStructure *ret =
+      gst_structure_new_empty ("application/x-gst-multi-queue-stats");
+  GList *tmp;
+  GstSingleQueue *sq;
+
+  if (mq->queues != NULL) {
+    GValue queues = G_VALUE_INIT;
+    GValue v = G_VALUE_INIT;
+
+    g_value_init (&queues, GST_TYPE_ARRAY);
+
+    for (tmp = mq->queues; tmp; tmp = g_list_next (tmp)) {
+      GstDataQueueSize level;
+      GstStructure *s;
+      gchar *id;
+      g_value_init (&v, GST_TYPE_STRUCTURE);
+
+      sq = (GstSingleQueue *) tmp->data;
+      gst_data_queue_get_level (sq->queue, &level);
+      id = g_strdup_printf ("queue_%d", sq->id);
+      s = gst_structure_new (id,
+          "buffers", G_TYPE_UINT, level.visible,
+          "bytes", G_TYPE_UINT, level.bytes,
+          "time", G_TYPE_UINT64, sq->cur_time, NULL);
+      g_value_take_boxed (&v, s);
+      gst_value_array_append_and_take_value (&queues, &v);
+      g_free (id);
+    }
+    gst_structure_take_value (ret, "queues", &queues);
+  }
+
+  return ret;
+}
+
 static void
 gst_multi_queue_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
@@ -905,6 +963,9 @@ gst_multi_queue_get_property (GObject * object, guint prop_id,
       break;
     case PROP_MINIMUM_INTERLEAVE:
       g_value_set_uint64 (value, mq->min_interleave_time);
+      break;
+    case PROP_STATS:
+      g_value_take_boxed (value, gst_multi_queue_get_stats (mq));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
