@@ -606,7 +606,7 @@ ges_project_class_init (GESProjectClass * klass)
    * @project: the #GESProject on which a problem happend when creted a #GESAsset
    * @timeline: The timeline that failed loading
    * @error: The #GError defining the error that occured
-   * 
+   *
    * Since: 1.18
    */
   _signals[ERROR_LOADING] =
@@ -738,10 +738,11 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, GESProject * project)
     return;
   }
 
-  ges_asset_finish_proxy (asset);
-  ges_project_add_asset (project, asset);
-  if (asset)
+  if (asset) {
+    ges_asset_finish_proxy (asset);
+    ges_project_add_asset (project, asset);
     gst_object_unref (asset);
+  }
 }
 
 /**

@@ -1244,7 +1244,6 @@ _trim_transition (GESTimeline * timeline, GESTimelineElement * element,
   return FALSE;
 }
 
-
 gboolean
 timeline_trim_object (GESTimeline * timeline, GESTimelineElement * object,
     guint32 new_layer_priority, GList * layers, GESEdge edge, guint64 position)
