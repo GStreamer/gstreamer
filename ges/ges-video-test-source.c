@@ -302,6 +302,7 @@ ges_video_test_source_create_overlay (GESVideoTestSource * self)
   GstPad *tmppad;
 
   CREATE_ELEMENT (os, "output-selector");
+  gst_util_set_object_arg (G_OBJECT (os), "pad-negotiation-mode", "active");
   CREATE_ELEMENT (is, "input-selector");
   CREATE_ELEMENT (tcstamper, "timecodestamper");
   CREATE_ELEMENT (toverlay, "timeoverlay");
