@@ -1163,12 +1163,14 @@ timeline_ripple_object (GESTimeline * timeline, GESTimelineElement * obj,
 
       timeline->priv->needs_transitions_update = FALSE;
       new_duration =
-          CLAMP (position - obj->start, 0, obj->maxduration - obj->inpoint);
+          CLAMP (GST_CLOCK_DIFF (obj->start, position), 0,
+          GST_CLOCK_TIME_IS_VALID (obj->
+              maxduration) ? GST_CLOCK_DIFF (obj->inpoint,
+              obj->maxduration) : GST_CLOCK_TIME_NONE);
       res =
           timeline_tree_ripple (timeline->priv->tree,
           (gint64) GES_TIMELINE_ELEMENT_LAYER_PRIORITY (obj) -
-          (gint64) new_layer_priority,
-          _DURATION (obj) - new_duration, obj,
+          (gint64) new_layer_priority, _DURATION (obj) - new_duration, obj,
           GES_EDGE_END, timeline->priv->snapping_distance);
       timeline->priv->needs_transitions_update = TRUE;
 
