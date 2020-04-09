@@ -417,7 +417,7 @@ GES_START_VALIDATE_ACTION (_edit)
 
     REPORT_UNLESS (GST_CLOCK_TIME_IS_VALID (position), beach,
         "Invalid frame number '%" G_GINT64_FORMAT "': %s", fposition,
-        err->message);
+        err ? err->message : "Unknown");
   }
 
   gst_structure_get_int (action->structure, "new-layer-priority",
