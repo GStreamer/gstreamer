@@ -18,6 +18,12 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION: gessourceclipasset
+ * @title: GESSourceClipAsset
+ * @short_description: A GESAsset subclass, baseclass for #GESSourceClip-s extraction
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

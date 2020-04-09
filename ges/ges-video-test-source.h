@@ -32,6 +32,10 @@ GES_DECLARE_TYPE(VideoTestSource, video_test_source, VIDEO_TEST_SOURCE);
 
 /**
  * GESVideoTestSource:
+ *
+ * ### Children Properties
+ *
+ *  {{ libs/GESVideoTestSource-children-props.md }}
  */
 struct _GESVideoTestSource {
   /*< private >*/

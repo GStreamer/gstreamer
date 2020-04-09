@@ -85,6 +85,14 @@ const GList * ges_uri_clip_asset_get_stream_assets  (GESUriClipAsset *self);
 #define GES_TYPE_URI_SOURCE_ASSET ges_uri_source_asset_get_type()
 GES_DECLARE_TYPE(UriSourceAsset, uri_source_asset, URI_SOURCE_ASSET);
 
+/**
+ * GESUriSourceAsset:
+ *
+ * Asset to create a stream specific #GESSource for a media file.
+ *
+ * NOTE: You should never request such a #GESAsset as they will be created automatically
+ * by #GESUriClipAsset-s.
+ */
 struct _GESUriSourceAsset
 {
   GESTrackElementAsset parent;

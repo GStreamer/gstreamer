@@ -6,9 +6,10 @@ gi-index
 		ges-uri-clip.h
 		ges-title-clip.h
 		ges-test-clip.h
+		ges-effect-clip.h
+		ges-transition-clip.h
 	ges-pipeline.h
 	ges-project.h
-	ges-effect.h
 	base-classes.md
 		ges-timeline-element.h
 		ges-container.h
@@ -16,41 +17,48 @@ gi-index
 		ges-audio-track.h
 		ges-video-track.h
 	ges-asset.h
+		ges-uri-asset.h
+		ges-clip-asset.h
+		ges-effect-asset.h
+		ges-track-element-asset.h
+		ges-source-clip-asset.h
+	ges-effect.h
 	ges-extractable.h
-	ges-gerror.h
 	ges-group.h
 	ges-meta-container.h
-	ges-text-overlay.h
+		ges-marker-list.h
 	ges-formatter.h
+		ges-xml-formatter.h
 	ges-track-element.h
 		ges-video-source.h
 		ges-audio-source.h
-	ges-enums.h
-	low_level.md
 		ges-audio-test-source.h
-		ges-audio-transition.h
 		ges-audio-uri-source.h
+		ges-video-uri-source.h
+		ges-video-test-source.h
+		ges-title-source.h
+		ges-text-overlay.h
+	ges-gerror.h
+	ges-types.h
+	ges-enums.h
+	ges-utils.h
+	low_level.md
+		ges-base-xml-formatter.h
+		ges-command-line-formatter.h
+		ges-audio-transition.h
 		ges-base-effect-clip.h
 		ges-base-effect.h
 		ges-base-transition-clip.h
-		ges-clip-asset.h
-		# ges-effect-asset.h
-		ges-effect-clip.h
-		ges-image-source.h
-		ges-multi-file-source.h
 		ges-operation-clip.h
 		ges-operation.h
 		ges-overlay-clip.h
-		# ges-pitivi-formatter.h
 		ges-source-clip.h
 		ges-source.h
 		ges-text-overlay-clip.h
-		ges-title-source.h
-		ges-track-element-asset.h
-		ges-transition-clip.h
 		ges-transition.h
-		ges-uri-asset.h
-		ges-video-test-source.h
 		ges-video-transition.h
-		ges-video-uri-source.h
-		# ges-xml-formatter.h
+		ges-prelude.h
+	deprecated.md
+		ges-pitivi-formatter.h
+		ges-image-source.h
+		ges-multi-file-source.h

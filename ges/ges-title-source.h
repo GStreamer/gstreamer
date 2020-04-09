@@ -32,6 +32,9 @@ GES_DECLARE_TYPE(TitleSource, title_source, TITLE_SOURCE);
 /**
  * GESTitleSource:
  *
+ * ## Children Properties
+ *
+ *  {{ libs/GESTitleSource-children-props.md }}
  */
 struct _GESTitleSource {
   GESVideoSource parent;

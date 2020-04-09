@@ -32,6 +32,9 @@ GES_DECLARE_TYPE(AudioTestSource, audio_test_source, AUDIO_TEST_SOURCE);
 /**
  * GESAudioTestSource:
  *
+ * ### Children Properties
+ *
+ *  {{ libs/GESAudioTestSource-children-props.md }}
  */
 
 struct _GESAudioTestSource {

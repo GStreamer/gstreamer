@@ -33,6 +33,10 @@ GES_DECLARE_TYPE(TransitionClip, transition_clip, TRANSITION_CLIP);
  * GESTransitionClip:
  * @vtype: a #GESVideoStandardTransitionType indicating the type of video transition
  * to apply.
+ *
+ * ### Children Properties
+ *
+ *  {{ libs/GESTransitionClip-children-props.md }}
  */
 struct _GESTransitionClip {
   /*< private >*/

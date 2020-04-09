@@ -19,7 +19,7 @@
  * Boston, MA 02111-1307, USA.
  */
 /**
- * SECTION: gesuriclipasset
+ * SECTION: gesuriasset
  * @title: GESUriClipAsset
  * @short_description: A GESAsset subclass specialized in GESUriClip extraction
  *
@@ -776,15 +776,6 @@ ges_uri_clip_asset_get_stream_assets (GESUriClipAsset * self)
 /*****************************************************************
  *            GESUriSourceAsset implementation             *
  *****************************************************************/
-/**
- * SECTION: gesurisourceasset
- * @title: GESUriClipAsset
- * @short_description: A GESAsset subclass specialized in GESUriSource extraction
- *
- * NOTE: You should never request such a #GESAsset as they will be created automatically
- * by #GESUriClipAsset-s.
- */
-
 G_DEFINE_TYPE_WITH_PRIVATE (GESUriSourceAsset, ges_uri_source_asset,
     GES_TYPE_TRACK_ELEMENT_ASSET);
 

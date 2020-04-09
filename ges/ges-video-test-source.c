@@ -264,7 +264,7 @@ ges_video_test_source_class_init (GESVideoTestSourceClass * klass)
   properties[PROP_USE_TIME_OVERLAY] =
       g_param_spec_boolean ("use-time-overlay", "Use-time-overlay",
       "Use time overlay, setting a child property corresponding to"
-      "GstTimeOverlay will switch this on by default.", FALSE,
+      " GstTimeOverlay will switch this on by default.", FALSE,
       G_PARAM_READWRITE);
 
   object_class->get_property = get_property;

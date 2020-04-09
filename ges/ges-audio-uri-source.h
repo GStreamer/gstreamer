@@ -31,6 +31,10 @@ GES_DECLARE_TYPE(AudioUriSource, audio_uri_source, AUDIO_URI_SOURCE);
 
 /**
  * GESAudioUriSource:
+ *
+ * ### Children Properties
+ *
+ *  {{ libs/GESVideoUriSource-children-props.md }}
  */
 struct _GESAudioUriSource {
   /*< private >*/

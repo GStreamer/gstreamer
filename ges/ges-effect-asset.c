@@ -18,11 +18,13 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* SECTION: geseffectasset
+/**
+ * SECTION: geseffectasset
+ * @title: GESEffectAsset
  * @short_description: A GESAsset subclass specialized in GESEffect extraction
  *
- * This is internal, and implementation details, so we are not showing it in the
- * documentation
+ * This asset has a GStreamer bin-description as ID and is able to determine
+ * to what track type the effect should be used in.
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"

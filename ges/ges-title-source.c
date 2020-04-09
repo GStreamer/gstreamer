@@ -25,22 +25,6 @@
  *
  * #GESTitleSource is a GESTimelineElement that implements the notion
  * of titles in GES.
- *
- * ## Children Properties
- *
- * You can use the following children properties through the
- * #ges_timeline_element_set_child_property and alike set of methods:
- *
- *  - #gchar `text`: The text to be rendered
- *  - #guint `background`: The color of the background
- *  - #guint `color`: The color of the text
- *  - #gchar `font-desc`: Pango font description string
- *  - #GESTextHAlign `halignment`: Horizontal alignment of the text
- *  - #GESTextVAlign `valignment`: Vertical alignent of the text
- *  - #gdouble `xpos`: The horizontal position of the text
- *  - #gdouble `ypos`: The vertical position of the text
- *  - #gboolean `shaded-background`: Whether to shade the background under the text area
- *  - #guint `outline-color`: Color to use for outline the text (big-endian ARGB).
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"

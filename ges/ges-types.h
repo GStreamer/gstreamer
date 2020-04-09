@@ -18,6 +18,14 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:gestypes
+ * @title: GES Types
+ * @short_description: GStreamer Editing Services data types
+ *
+ * GStreamer Editing Services data types
+ */
+
 #pragma once
 
 #include <glib.h>
@@ -223,6 +231,9 @@ typedef struct _GESEffectAsset GESEffectAsset;
 typedef struct _GESXmlFormatterClass GESXmlFormatterClass;
 typedef struct _GESXmlFormatter GESXmlFormatter;
 
+/**
+ * GES_DECLARE_TYPE: (attributes doc.skip=true)
+ */
 #define GES_DECLARE_TYPE(ObjName, obj_name, OBJ_NAME)    \
   GES_API GType ges_##obj_name##_get_type(void);                               \
   G_GNUC_BEGIN_IGNORE_DEPRECATIONS                                             \

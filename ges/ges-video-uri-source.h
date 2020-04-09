@@ -31,6 +31,10 @@ GES_DECLARE_TYPE(VideoUriSource, video_uri_source, VIDEO_URI_SOURCE);
 
 /**
  * GESVideoUriSource:
+ *
+ * ### Children Properties
+ *
+ *  {{ libs/GESVideoUriSource-children-props.md }}
  */
 struct _GESVideoUriSource {
   /*< private >*/
