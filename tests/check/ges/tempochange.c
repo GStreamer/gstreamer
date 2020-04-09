@@ -132,11 +132,11 @@ static Suite *
 ges_suite (void)
 {
   Suite *s = suite_create ("ges");
-  TCase *tc_chain = tcase_create ("tempochange");
   GstPluginFeature *pitch = gst_registry_find_feature (gst_registry_get (),
       "pitch", GST_TYPE_ELEMENT_FACTORY);
 
   if (pitch) {
+    TCase *tc_chain = tcase_create ("tempochange");
     gst_object_unref (pitch);
 
     suite_add_tcase (s, tc_chain);
