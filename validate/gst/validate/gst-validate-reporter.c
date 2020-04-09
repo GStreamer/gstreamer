@@ -344,18 +344,28 @@ gst_validate_report_action (GstValidateReporter * reporter,
     const gchar * format, ...)
 {
   va_list var_args;
-  gchar *f = g_strdup_printf ("\n> %s:%d\n> %d | %s\n>  %*c|\n",
+  gint nrepeats;
+  gchar *f, *repeat = NULL;
+
+  if (action && gst_structure_get_int (action->structure, "repeat", &nrepeats))
+    repeat =
+        g_strdup_printf (" (repeat: %d/%d)", nrepeats - action->repeat + 1,
+        nrepeats);
+
+  f = action ? g_strdup_printf ("\n> %s:%d%s\n> %d | %s\n>  %*c|\n",
       GST_VALIDATE_ACTION_FILENAME (action),
-      GST_VALIDATE_ACTION_LINENO (action), GST_VALIDATE_ACTION_LINENO (action),
-      format,
+      GST_VALIDATE_ACTION_LINENO (action), repeat ? repeat : "",
+      GST_VALIDATE_ACTION_LINENO (action), format,
       (gint) floor (log10 (abs ((GST_VALIDATE_ACTION_LINENO (action))))) + 1,
-      ' ');
+      ' ')
+      : g_strdup (format);
 
   va_start (var_args, format);
   gst_validate_report_valist (reporter, issue_id, f, var_args);
   va_end (var_args);
 
   g_free (f);
+  g_free (repeat);
 }
 
 void
