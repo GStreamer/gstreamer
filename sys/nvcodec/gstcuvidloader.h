@@ -28,7 +28,12 @@ G_BEGIN_DECLS
 
 /* cuvid.h */
 G_GNUC_INTERNAL
-gboolean gst_cuvid_load_library     (void);
+gboolean gst_cuvid_load_library     (guint api_major_ver,
+                                     guint api_minor_ver);
+
+G_GNUC_INTERNAL
+gboolean gst_cuvid_get_api_version  (guint * api_major_ver,
+                                     guint * api_minor_ver);
 
 G_GNUC_INTERNAL
 gboolean gst_cuvid_can_get_decoder_caps (void);

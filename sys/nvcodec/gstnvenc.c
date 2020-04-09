@@ -849,7 +849,7 @@ typedef struct
 } GstNvEncVersion;
 
 gboolean
-gst_nvenc_load_library (void)
+gst_nvenc_load_library (guint * api_major_ver, guint * api_minor_ver)
 {
   GModule *module;
   NVENCSTATUS ret = NV_ENC_SUCCESS;
@@ -945,6 +945,9 @@ gst_nvenc_load_library (void)
     if (ret == NV_ENC_SUCCESS) {
       GST_INFO ("API version %d.%d load done",
           version_list[i].major, version_list[i].minor);
+
+      *api_major_ver = version_list[i].major;
+      *api_minor_ver = version_list[i].minor;
       break;
     }
   }

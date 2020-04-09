@@ -220,7 +220,48 @@ get_cuda_surface_format_from_gst (GstVideoFormat format)
   return cudaVideoSurfaceFormat_NV12;
 }
 
-static gboolean CUDAAPI
+static guint
+calculate_num_decode_surface (cudaVideoCodec codec, guint width, guint height)
+{
+  switch (codec) {
+    case cudaVideoCodec_VP9:
+      return 12;
+    case cudaVideoCodec_H264:
+    case cudaVideoCodec_H264_SVC:
+    case cudaVideoCodec_H264_MVC:
+      return 20;
+    case cudaVideoCodec_HEVC:{
+      gint max_dpb_size;
+      gint MaxLumaPS;
+      const gint MaxDpbPicBuf = 6;
+      gint PicSizeInSamplesY;
+
+      /* A.4.1 */
+      MaxLumaPS = 35651584;
+      PicSizeInSamplesY = width * height;
+      if (PicSizeInSamplesY <= (MaxLumaPS >> 2))
+        max_dpb_size = MaxDpbPicBuf * 4;
+      else if (PicSizeInSamplesY <= (MaxLumaPS >> 1))
+        max_dpb_size = MaxDpbPicBuf * 2;
+      else if (PicSizeInSamplesY <= ((3 * MaxLumaPS) >> 2))
+        max_dpb_size = (MaxDpbPicBuf * 4) / 3;
+      else
+        max_dpb_size = MaxDpbPicBuf;
+
+      max_dpb_size = MIN (max_dpb_size, 16);
+
+      return max_dpb_size + 4;
+    }
+    default:
+      break;
+  }
+
+  return 8;
+}
+
+/* 0: fail, 1: succeeded, > 1: override dpb size of parser
+ * (set by CUVIDPARSERPARAMS::ulMaxNumDecodeSurfaces while creating parser) */
+static gint CUDAAPI
 parser_sequence_callback (GstNvDec * nvdec, CUVIDEOFORMAT * format)
 {
   guint width, height;
@@ -232,6 +273,8 @@ parser_sequence_callback (GstNvDec * nvdec, CUVIDEOFORMAT * format)
   GstCudaContext *ctx = nvdec->cuda_ctx;
   GstStructure *in_s = NULL;
   gboolean updata = FALSE;
+  gint num_decode_surface = 0;
+  guint major_api_ver = 0;
 
   width = format->display_area.right - format->display_area.left;
   height = format->display_area.bottom - format->display_area.top;
@@ -252,7 +295,7 @@ parser_sequence_callback (GstNvDec * nvdec, CUVIDEOFORMAT * format)
             format->bit_depth_luma_minus8 + 8);
 
         nvdec->last_ret = GST_FLOW_NOT_NEGOTIATED;
-        return FALSE;
+        return 0;
       }
       break;
     case cudaVideoChromaFormat_420:
@@ -275,7 +318,7 @@ parser_sequence_callback (GstNvDec * nvdec, CUVIDEOFORMAT * format)
             format->bit_depth_luma_minus8 + 8);
 
         nvdec->last_ret = GST_FLOW_NOT_NEGOTIATED;
-        return FALSE;
+        return 0;
       }
       break;
     default:
@@ -283,7 +326,7 @@ parser_sequence_callback (GstNvDec * nvdec, CUVIDEOFORMAT * format)
           format->chroma_format, format->bit_depth_luma_minus8 + 8);
 
       nvdec->last_ret = GST_FLOW_NOT_NEGOTIATED;
-      return FALSE;
+      return 0;
   }
 
   GST_DEBUG_OBJECT (nvdec,
@@ -359,6 +402,19 @@ parser_sequence_callback (GstNvDec * nvdec, CUVIDEOFORMAT * format)
     out_info->interlace_mode = GST_VIDEO_INTERLACE_MODE_MIXED;
   }
 
+  if (gst_cuvid_get_api_version (&major_api_ver, NULL) && major_api_ver >= 9) {
+    /* min_num_decode_surfaces was introduced in nvcodec sdk 9.0 header */
+    num_decode_surface = format->min_num_decode_surfaces;
+
+    GST_DEBUG_OBJECT (nvdec, "Num decode surface: %d", num_decode_surface);
+  } else {
+    num_decode_surface =
+        calculate_num_decode_surface (format->codec, width, height);
+
+    GST_DEBUG_OBJECT (nvdec,
+        "Calculated num decode surface: %d", num_decode_surface);
+  }
+
   if (!nvdec->decoder || !gst_video_info_is_equal (out_info, &prev_out_info)) {
     updata = TRUE;
 
@@ -379,7 +435,7 @@ parser_sequence_callback (GstNvDec * nvdec, CUVIDEOFORMAT * format)
     GST_DEBUG_OBJECT (nvdec, "creating decoder");
     create_info.ulWidth = width;
     create_info.ulHeight = height;
-    create_info.ulNumDecodeSurfaces = 20;
+    create_info.ulNumDecodeSurfaces = num_decode_surface;
     create_info.CodecType = format->codec;
     create_info.ChromaFormat = format->chroma_format;
     create_info.ulCreationFlags = cudaVideoCreate_Default;
@@ -414,15 +470,15 @@ parser_sequence_callback (GstNvDec * nvdec, CUVIDEOFORMAT * format)
   if (!gst_pad_has_current_caps (GST_VIDEO_DECODER_SRC_PAD (nvdec)) || updata) {
     if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (nvdec))) {
       nvdec->last_ret = GST_FLOW_NOT_NEGOTIATED;
-      return FALSE;
+      return 0;
     }
   }
 
-  return TRUE;
+  return num_decode_surface;
 
 error:
   nvdec->last_ret = GST_FLOW_ERROR;
-  return FALSE;
+  return 0;
 }
 
 static gboolean
@@ -860,7 +916,9 @@ gst_nvdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
     return FALSE;
 
   parser_params.CodecType = klass->codec_type;
-  parser_params.ulMaxNumDecodeSurfaces = 20;
+  /* ulMaxNumDecodeSurfaces will be updated by the return value of
+   * SequenceCallback */
+  parser_params.ulMaxNumDecodeSurfaces = 1;
   parser_params.ulErrorThreshold = 100;
   parser_params.ulMaxDisplayDelay = 0;
   parser_params.ulClockRate = GST_SECOND;

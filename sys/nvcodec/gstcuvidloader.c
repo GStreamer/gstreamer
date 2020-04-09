@@ -44,6 +44,9 @@ typedef struct _GstnvdecCuvidVTable
 {
   gboolean loaded;
 
+  guint major_version;
+  guint minor_version;
+
     CUresult (CUDAAPI * CuvidCtxLockCreate) (CUvideoctxlock * pLock,
       CUcontext ctx);
     CUresult (CUDAAPI * CuvidCtxLockDestroy) (CUvideoctxlock lck);
@@ -72,7 +75,7 @@ typedef struct _GstnvdecCuvidVTable
 static GstnvdecCuvidVTable gst_cuvid_vtable = { 0, };
 
 gboolean
-gst_cuvid_load_library (void)
+gst_cuvid_load_library (guint api_major_ver, guint api_minor_ver)
 {
   GModule *module;
   const gchar *filename = NVCUVID_LIBNAME;
@@ -104,6 +107,8 @@ gst_cuvid_load_library (void)
   LOAD_SYMBOL (cuvidGetDecoderCaps, CuvidGetDecoderCaps, FALSE);
 
   vtable->loaded = TRUE;
+  vtable->major_version = api_major_ver;
+  vtable->minor_version = api_minor_ver;
 
   return TRUE;
 
@@ -111,6 +116,21 @@ error:
   g_module_close (module);
 
   return FALSE;
+}
+
+gboolean
+gst_cuvid_get_api_version (guint * api_major_ver, guint * api_minor_ver)
+{
+  if (!gst_cuvid_vtable.loaded)
+    return FALSE;
+
+  if (api_major_ver)
+    *api_major_ver = gst_cuvid_vtable.major_version;
+
+  if (api_minor_ver)
+    *api_minor_ver = gst_cuvid_vtable.minor_version;
+
+  return TRUE;
 }
 
 gboolean

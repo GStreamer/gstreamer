@@ -46,6 +46,9 @@ plugin_init (GstPlugin * plugin)
   gint i;
   gboolean nvdec_available = TRUE;
   gboolean nvenc_available = TRUE;
+  /* hardcoded minimum supported version */
+  guint api_major_ver = 8;
+  guint api_minor_ver = 1;
 
   GST_DEBUG_CATEGORY_INIT (gst_nvcodec_debug, "nvcodec", 0, "nvcodec");
   GST_DEBUG_CATEGORY_INIT (gst_nvdec_debug, "nvdec", 0, "nvdec");
@@ -56,14 +59,16 @@ plugin_init (GstPlugin * plugin)
     return TRUE;
   }
 
-  if (!gst_cuvid_load_library ()) {
-    GST_WARNING ("Failed to load nvdec library");
-    nvdec_available = FALSE;
-  }
-
-  if (!gst_nvenc_load_library ()) {
+  /* get available API version from nvenc and it will be passed to
+   * nvdec */
+  if (!gst_nvenc_load_library (&api_major_ver, &api_minor_ver)) {
     GST_WARNING ("Failed to load nvenc library");
     nvenc_available = FALSE;
+  }
+
+  if (!gst_cuvid_load_library (api_major_ver, api_minor_ver)) {
+    GST_WARNING ("Failed to load nvdec library");
+    nvdec_available = FALSE;
   }
 
   if (!nvdec_available && !nvenc_available)

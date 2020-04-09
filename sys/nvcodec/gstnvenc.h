@@ -114,6 +114,7 @@ G_GNUC_INTERNAL
 guint32                 gst_nvenc_get_open_encode_session_ex_params_version (void);
 
 G_GNUC_INTERNAL
-gboolean                gst_nvenc_load_library (void);
+gboolean                gst_nvenc_load_library (guint * api_major_ver,
+                                                guint * api_minor_ver);
 
 #endif /* __GST_NVENC_H_INCLUDED__ */
