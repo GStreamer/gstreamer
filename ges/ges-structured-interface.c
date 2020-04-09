@@ -154,6 +154,7 @@ _ges_add_remove_keyframe_from_struct (GESTimeline * timeline,
   gchar *element_name = NULL, *property_name = NULL;
 
   gboolean ret = FALSE;
+  gboolean setting_value;
 
   const gchar *valid_fields[] =
       { "element-name", "property-name", "value", "timestamp", "project-uri",
@@ -249,17 +250,18 @@ _ges_add_remove_keyframe_from_struct (GESTimeline * timeline,
   } else
     GET_AND_CHECK ("value", G_TYPE_DOUBLE, &value, done);
 
-  if (!g_strcmp0 (gst_structure_get_name (structure), "add-keyframe"))
+  setting_value
+      = !g_strcmp0 (gst_structure_get_name (structure), "add-keyframe");
+  if (setting_value)
     ret = gst_timed_value_control_source_set (source, timestamp, value);
-  else {
+  else
     ret = gst_timed_value_control_source_unset (source, timestamp);
 
-    if (!ret) {
-      *error =
-          g_error_new (GES_ERROR, 0,
-          "Could not unset value for timestamp: %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (timestamp));
-    }
+  if (!ret) {
+    *error =
+        g_error_new (GES_ERROR, 0,
+        "Could not %sset value for timestamp: %" GST_TIME_FORMAT,
+        setting_value ? "" : "un", GST_TIME_ARGS (timestamp));
   }
   ret = _ges_save_timeline_if_needed (timeline, structure, error);
 
