@@ -1253,9 +1253,10 @@ timeline_trim_object (GESTimeline * timeline, GESTimelineElement * object,
   }
 
   return timeline_tree_trim (timeline->priv->tree,
-      GES_TIMELINE_ELEMENT (object), new_layer_priority < 0 ? 0 : (gint64)
+      GES_TIMELINE_ELEMENT (object), (gint64)
       ges_timeline_element_get_layer_priority (GES_TIMELINE_ELEMENT (object)) -
-      new_layer_priority, edge == GES_EDGE_END ? GST_CLOCK_DIFF (position,
+      (gint64) new_layer_priority,
+      edge == GES_EDGE_END ? GST_CLOCK_DIFF (position,
           _START (object) + _DURATION (object)) : GST_CLOCK_DIFF (position,
           GES_TIMELINE_ELEMENT_START (object)), edge,
       timeline->priv->snapping_distance);
@@ -1283,9 +1284,10 @@ timeline_move_object (GESTimeline * timeline, GESTimelineElement * object,
       GST_CLOCK_DIFF (position, GES_TIMELINE_ELEMENT_START (object));
 
   ret = timeline_tree_move (timeline->priv->tree,
-      GES_TIMELINE_ELEMENT (object), new_layer_priority < 0 ? 0 : (gint64)
+      GES_TIMELINE_ELEMENT (object), (gint64)
       ges_timeline_element_get_layer_priority (GES_TIMELINE_ELEMENT (object)) -
-      new_layer_priority, offset, edge, timeline->priv->snapping_distance);
+      (gint64) new_layer_priority, offset, edge,
+      timeline->priv->snapping_distance);
 
   return ret;
 }
