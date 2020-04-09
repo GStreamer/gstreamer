@@ -341,7 +341,7 @@ gst_text_render_check_argb (GstTextRender * render)
       if (info == NULL)
         continue;
 
-      render->use_ARGB = GST_VIDEO_FORMAT_INFO_HAS_ALPHA (info);
+      render->use_ARGB = GST_VIDEO_FORMAT_INFO_IS_RGB (info);
     }
     gst_caps_unref (peer_caps);
   }
