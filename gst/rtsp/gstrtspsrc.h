@@ -303,6 +303,7 @@ struct _GstRTSPSrc {
    * between any two random access points
    *  */
   gfloat             seekable;
+  guint32            seek_seqnum;
   GstClockTime       last_pos;
 
   /* session management */

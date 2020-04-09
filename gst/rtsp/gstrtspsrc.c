@@ -1394,6 +1394,7 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   src->onvif_mode = DEFAULT_ONVIF_MODE;
   src->onvif_rate_control = DEFAULT_ONVIF_RATE_CONTROL;
   src->is_live = DEFAULT_IS_LIVE;
+  src->seek_seqnum = GST_SEQNUM_INVALID;
 
   /* get a list of all extensions */
   src->extensions = gst_rtsp_ext_list_get ();
@@ -2920,6 +2921,7 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   /* If an accurate seek was requested, we want to clip the segment we
    * output in ONVIF mode to the requested bounds */
   src->clip_out_segment = ! !(flags & GST_SEEK_FLAG_ACCURATE);
+  src->seek_seqnum = gst_event_get_seqnum (event);
 
   if (playing)
     gst_rtspsrc_play (src, &seeksegment, FALSE, seek_style);
@@ -2992,6 +2994,7 @@ gst_rtspsrc_handle_src_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event)
 {
   GstRTSPStream *stream;
+  GstRTSPSrc *self = GST_RTSPSRC (GST_OBJECT_PARENT (parent));
 
   stream = gst_pad_get_element_private (pad);
 
@@ -3008,6 +3011,10 @@ gst_rtspsrc_handle_src_sink_event (GstPad * pad, GstObject * parent,
       g_free (stream_id);
       break;
     }
+    case GST_EVENT_SEGMENT:
+      if (self->seek_seqnum != GST_SEQNUM_INVALID)
+        GST_EVENT_SEQNUM (event) = self->seek_seqnum;
+      break;
     default:
       break;
   }
@@ -9175,6 +9182,7 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
       ret = GST_STATE_CHANGE_SUCCESS;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      rtspsrc->seek_seqnum = GST_SEQNUM_INVALID;
       gst_rtspsrc_loop_send_cmd_and_wait (rtspsrc, CMD_CLOSE, CMD_ALL,
           rtspsrc->teardown_timeout);
       ret = GST_STATE_CHANGE_SUCCESS;
