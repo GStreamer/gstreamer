@@ -5,6 +5,10 @@ kmssink_sources = [
   'gstkmsutils.c',
 ]
 
+if host_system != 'linux'
+  subdir_done()
+endif
+
 libdrm_dep = dependency('libdrm', version : '>= 2.4.55',
                         required : get_option('kms'),
                         fallback: ['libdrm', 'ext_libdrm'])
