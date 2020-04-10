@@ -31,8 +31,6 @@
 #define GST_CAT_DEFAULT gstv4l2codecs_debug
 GST_DEBUG_CATEGORY_EXTERN (gstv4l2codecs_debug);
 
-GType _gst_v4l2_codec_device_type = 0;
-
 GST_DEFINE_MINI_OBJECT_TYPE (GstV4l2CodecDevice, gst_v4l2_codec_device);
 
 static void
@@ -51,7 +49,7 @@ gst_v4l2_codec_device_new (const gchar * name, guint32 function,
   GstV4l2CodecDevice *device = g_new0 (GstV4l2CodecDevice, 1);
 
   gst_mini_object_init (GST_MINI_OBJECT_CAST (device),
-      0, _gst_v4l2_codec_device_type, NULL, NULL,
+      0, GST_TYPE_V4L2_CODEC_DEVICE, NULL, NULL,
       (GstMiniObjectFreeFunction) gst_v4l2_codec_device_free);
 
   device->name = g_strdup (name);
