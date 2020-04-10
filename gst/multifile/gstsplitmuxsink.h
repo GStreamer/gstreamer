@@ -118,12 +118,7 @@ struct _GstSplitMuxSink
   gchar *threshold_timecode_str;
   /* created from threshold_timecode_str */
   GstVideoTimeCodeInterval *tc_interval;
-  /* allowed max size of queued time based on timecode */
-  GstClockTime threshold_timecode;
-  GstClockTime next_max_tc_time;
   GstClockTime alignment_threshold;
-  /* previously sent running time of force keyframe unit event */
-  GstClockTime last_fku_time;
   /* expected running time of next force keyframe unit event */
   GstClockTime next_fku_time;
 
@@ -156,6 +151,14 @@ struct _GstSplitMuxSink
   GstClockTimeDiff fragment_start_time;
   /* Start time of the current GOP */
   GstClockTimeDiff gop_start_time;
+  /* The last timecode we have */
+  GstVideoTimeCode *in_tc;
+  /* Start timecode of the current fragment */
+  GstVideoTimeCode *fragment_start_tc;
+  /* Start timecode of the current GOP */
+  GstVideoTimeCode *gop_start_tc;
+  /* expected running time of next fragment in timecode mode */
+  GstClockTime next_fragment_start_tc_time;
 
   GQueue out_cmd_q;             /* Queue of commands for output thread */
 
