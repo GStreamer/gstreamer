@@ -1038,7 +1038,7 @@ _mixer_pad_get_output_size (GstGLVideoMixer * mix,
 static GstCaps *
 _update_caps (GstVideoAggregator * vagg, GstCaps * caps)
 {
-  GstCaps *ret;
+  GstCaps *template_caps, *ret;
   GList *l;
 
   GST_OBJECT_LOCK (vagg);
@@ -1063,7 +1063,8 @@ _update_caps (GstVideoAggregator * vagg, GstCaps * caps)
 
   GST_OBJECT_UNLOCK (vagg);
 
-  ret = gst_caps_ref (caps);
+  template_caps = gst_pad_get_pad_template_caps (GST_AGGREGATOR_SRC_PAD (vagg));
+  ret = gst_caps_intersect (caps, template_caps);
 
   return ret;
 }
