@@ -2155,7 +2155,7 @@ static GstStaticCaps mpeg_sys_caps = GST_STATIC_CAPS ("video/mpeg, "
                                          IS_MPEG_PACK_CODE (((guint8 *)(data))[3]))
 
 #define IS_MPEG_PES_CODE(b) (((b) & 0xF0) == 0xE0 || ((b) & 0xF0) == 0xC0 || \
-                             (b) >= 0xBD)
+                             (b) >= 0xBC)
 #define IS_MPEG_PES_HEADER(data)        (IS_MPEG_HEADER (data) &&            \
                                          IS_MPEG_PES_CODE (((guint8 *)(data))[3]))
 
