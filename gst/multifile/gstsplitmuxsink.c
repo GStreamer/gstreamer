@@ -1293,6 +1293,11 @@ calculate_next_max_timecode (GstSplitMuxSink * splitmux,
     return GST_CLOCK_TIME_NONE;
 
   target_tc = gst_video_time_code_add_interval (cur_tc, splitmux->tc_interval);
+  if (!target_tc) {
+    GST_ELEMENT_ERROR (splitmux,
+        STREAM, FAILED, (NULL), ("Couldn't calculate target timecode"));
+    return GST_CLOCK_TIME_NONE;
+  }
 
   /* Convert to ns */
   target_tc_time = gst_video_time_code_nsec_since_daily_jam (target_tc);
