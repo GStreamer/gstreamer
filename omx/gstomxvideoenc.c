@@ -2680,15 +2680,60 @@ gst_omx_video_enc_flush (GstVideoEncoder * encoder)
 }
 
 static gboolean
+gst_omx_video_enc_copy_plane (GstOMXVideoEnc * self, guint i,
+    GstVideoFrame * frame, GstOMXBuffer * outbuf,
+    const GstVideoFormatInfo * finfo)
+{
+  OMX_PARAM_PORTDEFINITIONTYPE *port_def = &self->enc_in_port->port_def;
+  guint8 *src, *dest;
+  gint src_stride, dest_stride;
+  gint j, height, width;
+
+  src_stride = GST_VIDEO_FRAME_COMP_STRIDE (frame, i);
+  dest_stride = port_def->format.video.nStride;
+  /* XXX: Try this if no stride was set */
+  if (dest_stride == 0)
+    dest_stride = src_stride;
+
+  dest = outbuf->omx_buf->pBuffer + outbuf->omx_buf->nOffset;
+  if (i == 1)
+    dest +=
+        port_def->format.video.nSliceHeight * port_def->format.video.nStride;
+
+  src = GST_VIDEO_FRAME_COMP_DATA (frame, i);
+  height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, i);
+  width = GST_VIDEO_FRAME_COMP_WIDTH (frame, i) * (i == 0 ? 1 : 2);
+
+  if (GST_VIDEO_FORMAT_INFO_BITS (finfo) == 10)
+    /* Need ((width + 2) / 3) 32-bits words */
+    width = (width + 2) / 3 * 4;
+
+  if (dest + dest_stride * height >
+      outbuf->omx_buf->pBuffer + outbuf->omx_buf->nAllocLen) {
+    GST_ERROR_OBJECT (self, "Invalid output buffer size");
+    return FALSE;
+  }
+
+  for (j = 0; j < height; j++) {
+    memcpy (dest, src, width);
+    src += src_stride;
+    dest += dest_stride;
+  }
+
+  /* nFilledLen should include the vertical padding in each slice (spec 3.1.3.7.1) */
+  outbuf->omx_buf->nFilledLen +=
+      GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (finfo, i,
+      port_def->format.video.nSliceHeight) * port_def->format.video.nStride;
+  return TRUE;
+}
+
+static gboolean
 gst_omx_video_enc_semi_planar_manual_copy (GstOMXVideoEnc * self,
     GstBuffer * inbuf, GstOMXBuffer * outbuf, const GstVideoFormatInfo * finfo)
 {
   GstVideoInfo *info = &self->input_state->info;
-  OMX_PARAM_PORTDEFINITIONTYPE *port_def = &self->enc_in_port->port_def;
   GstVideoFrame frame;
-  gint i, j, height, width;
-  guint8 *src, *dest;
-  gint src_stride, dest_stride;
+  gint i;
 
   outbuf->omx_buf->nFilledLen = 0;
 
@@ -2696,44 +2741,12 @@ gst_omx_video_enc_semi_planar_manual_copy (GstOMXVideoEnc * self,
     GST_ERROR_OBJECT (self, "Invalid input buffer size");
     return FALSE;
   }
-  dest_stride = port_def->format.video.nStride;
 
   for (i = 0; i < 2; i++) {
-    src_stride = GST_VIDEO_FRAME_COMP_STRIDE (&frame, i);
-    /* XXX: Try this if no stride was set */
-    if (dest_stride == 0)
-      dest_stride = src_stride;
-
-    dest = outbuf->omx_buf->pBuffer + outbuf->omx_buf->nOffset;
-    if (i == 1)
-      dest +=
-          port_def->format.video.nSliceHeight * port_def->format.video.nStride;
-
-    src = GST_VIDEO_FRAME_COMP_DATA (&frame, i);
-    height = GST_VIDEO_FRAME_COMP_HEIGHT (&frame, i);
-    width = GST_VIDEO_FRAME_COMP_WIDTH (&frame, i) * (i == 0 ? 1 : 2);
-
-    if (GST_VIDEO_FORMAT_INFO_BITS (finfo) == 10)
-      /* Need ((width + 2) / 3) 32-bits words */
-      width = (width + 2) / 3 * 4;
-
-    if (dest + dest_stride * height >
-        outbuf->omx_buf->pBuffer + outbuf->omx_buf->nAllocLen) {
-      GST_ERROR_OBJECT (self, "Invalid output buffer size");
+    if (!gst_omx_video_enc_copy_plane (self, i, &frame, outbuf, finfo)) {
       gst_video_frame_unmap (&frame);
       return FALSE;
     }
-
-    for (j = 0; j < height; j++) {
-      memcpy (dest, src, width);
-      src += src_stride;
-      dest += dest_stride;
-    }
-
-    /* nFilledLen should include the vertical padding in each slice (spec 3.1.3.7.1) */
-    outbuf->omx_buf->nFilledLen +=
-        GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (finfo, i,
-        port_def->format.video.nSliceHeight) * port_def->format.video.nStride;
   }
 
   gst_video_frame_unmap (&frame);
