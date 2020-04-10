@@ -1984,10 +1984,18 @@ gst_omx_video_enc_configure_input_buffer (GstOMXVideoEnc * self,
 
   meta = gst_buffer_get_video_meta (input);
   if (meta) {
+    guint plane_height[GST_VIDEO_MAX_PLANES];
+
     /* Use the stride and slice height of the first plane */
+    if (!gst_video_meta_get_plane_height (meta, plane_height)) {
+      GST_WARNING_OBJECT (self, "Failed to retrieve plane height from meta");
+      slice_height = GST_VIDEO_INFO_FIELD_HEIGHT (info);
+    } else {
+      slice_height = plane_height[0];
+    }
+
     stride = meta->stride[0];
     g_assert (stride != 0);
-    slice_height = (meta->offset[1] - meta->offset[0]) / stride;
 
     GST_DEBUG_OBJECT (self,
         "adjusting stride (%d) and slice-height (%d) using input buffer meta",
