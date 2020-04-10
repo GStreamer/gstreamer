@@ -36,7 +36,7 @@ to another, for example for media decoding.
 
 We have previously introduced the concept of capabilities as a way for
 elements (or, rather, pads) to agree on a media type when streaming data
-from one element to the next (see [Capabilities of a pad][pad-caps])). We have
+from one element to the next (see [Capabilities of a pad][pad-caps]). We have
 explained that a capability is a combination of a media type and a set of
 properties. For most container formats (those are the files that you will find
 on your hard disk; Ogg, for example, is a container format), no properties are
