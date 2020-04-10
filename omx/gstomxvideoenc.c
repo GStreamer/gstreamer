@@ -2043,6 +2043,11 @@ gst_omx_video_enc_configure_input_buffer (GstOMXVideoEnc * self,
           ((port_def.format.video.nFrameHeight + 1) / 2));
       break;
 
+    case OMX_COLOR_FormatL8:
+      port_def.nBufferSize =
+          port_def.format.video.nStride * port_def.format.video.nFrameHeight;
+      break;
+
     case OMX_COLOR_FormatYUV422SemiPlanar:
 #ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
       /* Formats defined in extensions have their own enum so disable to -Wswitch warning */
@@ -2908,6 +2913,18 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
           gst_omx_video_enc_semi_planar_manual_copy (self, inbuf, outbuf,
           info->finfo);
       break;
+    case GST_VIDEO_FORMAT_GRAY8:
+    {
+      if (!gst_video_frame_map (&frame, info, inbuf, GST_MAP_READ)) {
+        GST_ERROR_OBJECT (self, "Failed to map input buffer");
+        ret = FALSE;
+        goto done;
+      }
+
+      ret = gst_omx_video_enc_copy_plane (self, 0, &frame, outbuf, info->finfo);
+      gst_video_frame_unmap (&frame);
+    }
+      break;
     default:
       GST_ERROR_OBJECT (self, "Unsupported format");
       goto done;
@@ -3522,6 +3539,7 @@ filter_supported_formats (GList * negotiation_map)
       case GST_VIDEO_FORMAT_NV12_10LE32:
       case GST_VIDEO_FORMAT_NV16:
       case GST_VIDEO_FORMAT_NV16_10LE32:
+      case GST_VIDEO_FORMAT_GRAY8:
         //case GST_VIDEO_FORMAT_ABGR:
         //case GST_VIDEO_FORMAT_ARGB:
         cur = g_list_next (cur);
