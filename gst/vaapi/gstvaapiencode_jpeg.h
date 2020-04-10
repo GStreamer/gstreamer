@@ -64,6 +64,9 @@ struct _GstVaapiEncodeJpegClass
 GType
 gst_vaapiencode_jpeg_get_type (void) G_GNUC_CONST;
 
+GType
+gst_vaapiencode_jpeg_register_type (GstVaapiDisplay * display);
+
 G_END_DECLS
 
 #endif /* GST_VAAPIENCODE_JPEG_H */
