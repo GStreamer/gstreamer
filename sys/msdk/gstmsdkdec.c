@@ -728,7 +728,7 @@ gst_msdkdec_context_prepare (GstMsdkDec * thiz)
   GST_INFO_OBJECT (thiz, "Found context %" GST_PTR_FORMAT " from neighbour",
       thiz->context);
 
-  if (!gst_msdk_context_get_job_type (thiz->context) & GST_MSDK_JOB_DECODER) {
+  if (!(gst_msdk_context_get_job_type (thiz->context) & GST_MSDK_JOB_DECODER)) {
     gst_msdk_context_add_job_type (thiz->context, GST_MSDK_JOB_DECODER);
     return TRUE;
   }
