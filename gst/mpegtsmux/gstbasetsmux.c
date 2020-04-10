@@ -688,89 +688,78 @@ not_negotiated:
 }
 
 static GstFlowReturn
-gst_base_ts_mux_create_streams (GstBaseTsMux * mux)
+gst_base_ts_mux_create_pad_stream (GstBaseTsMux * mux, GstPad * pad)
 {
+  GstBaseTsMuxPad *ts_pad = GST_BASE_TS_MUX_PAD (pad);
+  gchar *name = NULL;
+  gchar *pcr_name;
   GstFlowReturn ret = GST_FLOW_OK;
-  GList *walk = GST_ELEMENT (mux)->sinkpads;
 
-  /* Create the streams */
-  while (walk) {
-    GstPad *pad = GST_PAD (walk->data);
-    GstBaseTsMuxPad *ts_pad = GST_BASE_TS_MUX_PAD (walk->data);
-    gchar *name = NULL;
-    gchar *pcr_name;
-
-    walk = g_list_next (walk);
-
-    if (ts_pad->prog_id == -1) {
-      name = GST_PAD_NAME (pad);
-      if (mux->prog_map != NULL && gst_structure_has_field (mux->prog_map,
-              name)) {
-        gint idx;
-        gboolean ret = gst_structure_get_int (mux->prog_map, name, &idx);
-        if (!ret) {
-          GST_ELEMENT_ERROR (mux, STREAM, MUX,
-              ("Reading program map failed. Assuming default"), (NULL));
-          idx = DEFAULT_PROG_ID;
-        }
-        if (idx < 0) {
-          GST_DEBUG_OBJECT (mux, "Program number %d associate with pad %s less "
-              "than zero; DEFAULT_PROGRAM = %d is used instead",
-              idx, name, DEFAULT_PROG_ID);
-          idx = DEFAULT_PROG_ID;
-        }
-        ts_pad->prog_id = idx;
-      } else {
-        ts_pad->prog_id = DEFAULT_PROG_ID;
+  if (ts_pad->prog_id == -1) {
+    name = GST_PAD_NAME (pad);
+    if (mux->prog_map != NULL && gst_structure_has_field (mux->prog_map, name)) {
+      gint idx;
+      gboolean ret = gst_structure_get_int (mux->prog_map, name, &idx);
+      if (!ret) {
+        GST_ELEMENT_ERROR (mux, STREAM, MUX,
+            ("Reading program map failed. Assuming default"), (NULL));
+        idx = DEFAULT_PROG_ID;
       }
-    }
-
-    ts_pad->prog =
-        (TsMuxProgram *) g_hash_table_lookup (mux->programs,
-        GINT_TO_POINTER (ts_pad->prog_id));
-    if (ts_pad->prog == NULL) {
-      ts_pad->prog = tsmux_program_new (mux->tsmux, ts_pad->prog_id);
-      if (ts_pad->prog == NULL)
-        goto no_program;
-      tsmux_set_pmt_interval (ts_pad->prog, mux->pmt_interval);
-      tsmux_program_set_scte35_pid (ts_pad->prog, mux->scte35_pid);
-      tsmux_program_set_scte35_interval (ts_pad->prog,
-          mux->scte35_null_interval);
-      g_hash_table_insert (mux->programs, GINT_TO_POINTER (ts_pad->prog_id),
-          ts_pad->prog);
-    }
-
-    if (ts_pad->stream == NULL) {
-      ret = gst_base_ts_mux_create_stream (mux, ts_pad);
-      if (ret != GST_FLOW_OK)
-        goto no_stream;
-    }
-
-    if (ts_pad->prog->pcr_stream == NULL) {
-      /* Take the first stream of the program for the PCR */
-      GST_DEBUG_OBJECT (ts_pad,
-          "Use stream (pid=%d) from pad as PCR for program (prog_id = %d)",
-          ts_pad->pid, ts_pad->prog_id);
-
-      tsmux_program_set_pcr_stream (ts_pad->prog, ts_pad->stream);
-    }
-
-    /* Check for user-specified PCR PID */
-    pcr_name = g_strdup_printf ("PCR_%d", ts_pad->prog->pgm_number);
-    if (mux->prog_map && gst_structure_has_field (mux->prog_map, pcr_name)) {
-      const gchar *sink_name =
-          gst_structure_get_string (mux->prog_map, pcr_name);
-
-      if (!g_strcmp0 (name, sink_name)) {
-        GST_DEBUG_OBJECT (mux, "User specified stream (pid=%d) as PCR for "
-            "program (prog_id = %d)", ts_pad->pid, ts_pad->prog->pgm_number);
-        tsmux_program_set_pcr_stream (ts_pad->prog, ts_pad->stream);
+      if (idx < 0) {
+        GST_DEBUG_OBJECT (mux, "Program number %d associate with pad %s less "
+            "than zero; DEFAULT_PROGRAM = %d is used instead",
+            idx, name, DEFAULT_PROG_ID);
+        idx = DEFAULT_PROG_ID;
       }
+      ts_pad->prog_id = idx;
+    } else {
+      ts_pad->prog_id = DEFAULT_PROG_ID;
     }
-    g_free (pcr_name);
   }
 
-  return GST_FLOW_OK;
+  ts_pad->prog =
+      (TsMuxProgram *) g_hash_table_lookup (mux->programs,
+      GINT_TO_POINTER (ts_pad->prog_id));
+  if (ts_pad->prog == NULL) {
+    ts_pad->prog = tsmux_program_new (mux->tsmux, ts_pad->prog_id);
+    if (ts_pad->prog == NULL)
+      goto no_program;
+    tsmux_set_pmt_interval (ts_pad->prog, mux->pmt_interval);
+    tsmux_program_set_scte35_pid (ts_pad->prog, mux->scte35_pid);
+    tsmux_program_set_scte35_interval (ts_pad->prog, mux->scte35_null_interval);
+    g_hash_table_insert (mux->programs, GINT_TO_POINTER (ts_pad->prog_id),
+        ts_pad->prog);
+  }
+
+  if (ts_pad->stream == NULL) {
+    ret = gst_base_ts_mux_create_stream (mux, ts_pad);
+    if (ret != GST_FLOW_OK)
+      goto no_stream;
+  }
+
+  if (ts_pad->prog->pcr_stream == NULL) {
+    /* Take the first stream of the program for the PCR */
+    GST_DEBUG_OBJECT (ts_pad,
+        "Use stream (pid=%d) from pad as PCR for program (prog_id = %d)",
+        ts_pad->pid, ts_pad->prog_id);
+
+    tsmux_program_set_pcr_stream (ts_pad->prog, ts_pad->stream);
+  }
+
+  /* Check for user-specified PCR PID */
+  pcr_name = g_strdup_printf ("PCR_%d", ts_pad->prog->pgm_number);
+  if (mux->prog_map && gst_structure_has_field (mux->prog_map, pcr_name)) {
+    const gchar *sink_name = gst_structure_get_string (mux->prog_map, pcr_name);
+
+    if (!g_strcmp0 (name, sink_name)) {
+      GST_DEBUG_OBJECT (mux, "User specified stream (pid=%d) as PCR for "
+          "program (prog_id = %d)", ts_pad->pid, ts_pad->prog->pgm_number);
+      tsmux_program_set_pcr_stream (ts_pad->prog, ts_pad->stream);
+    }
+  }
+  g_free (pcr_name);
+
+  return ret;
 
   /* ERRORS */
 no_program:
@@ -785,6 +774,25 @@ no_stream:
         ("Could not create handler for stream"), (NULL));
     return ret;
   }
+}
+
+static GstFlowReturn
+gst_base_ts_mux_create_streams (GstBaseTsMux * mux)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+  GList *walk = GST_ELEMENT (mux)->sinkpads;
+
+  /* Create the streams */
+  while (walk) {
+    GstPad *pad = GST_PAD (walk->data);
+
+    ret = gst_base_ts_mux_create_pad_stream (mux, pad);
+    if (ret != GST_FLOW_OK)
+      return ret;
+    walk = g_list_next (walk);
+  }
+
+  return GST_FLOW_OK;
 }
 
 static void
@@ -1078,8 +1086,22 @@ gst_base_ts_mux_aggregate_buffer (GstBaseTsMux * mux,
   }
 
   prog = best->prog;
-  if (prog == NULL)
-    goto no_program;
+  if (prog == NULL) {
+    GList *cur;
+
+    gst_base_ts_mux_create_pad_stream (mux, GST_PAD (best));
+    tsmux_resend_pat (mux->tsmux);
+    tsmux_resend_si (mux->tsmux);
+    prog = best->prog;
+    g_assert_nonnull (prog);
+
+    /* output PMT for each program */
+    for (cur = mux->tsmux->programs; cur; cur = cur->next) {
+      TsMuxProgram *program = (TsMuxProgram *) cur->data;
+
+      tsmux_resend_pmt (program);
+    }
+  }
 
   g_assert (buf != NULL);
 
@@ -1213,15 +1235,6 @@ write_fail:
   {
     return mux->last_flow_ret;
   }
-no_program:
-  {
-    if (buf)
-      gst_buffer_unref (buf);
-    GST_ELEMENT_ERROR (mux, STREAM, MUX,
-        ("Stream on pad %" GST_PTR_FORMAT
-            " is not associated with any program", best), (NULL));
-    return GST_FLOW_ERROR;
-  }
 }
 
 /* GstElement implementation */
@@ -1257,6 +1270,37 @@ stream_exists:
         (NULL));
     return NULL;
   }
+}
+
+static void
+gst_base_ts_mux_release_pad (GstElement * element, GstPad * pad)
+{
+  GstBaseTsMux *mux = GST_BASE_TS_MUX (element);
+
+  if (mux->tsmux) {
+    GList *cur;
+    GstBaseTsMuxPad *ts_pad = GST_BASE_TS_MUX_PAD (pad);
+    gint pid = ts_pad->pid;
+
+    if (ts_pad->prog->pcr_stream == ts_pad->stream) {
+      tsmux_stream_pcr_unref (ts_pad->prog->pcr_stream);
+      ts_pad->prog->pcr_stream = NULL;
+    }
+    if (tsmux_remove_stream (mux->tsmux, pid, ts_pad->prog)) {
+      g_hash_table_remove (mux->programs, GINT_TO_POINTER (ts_pad->prog_id));
+    }
+    tsmux_resend_pat (mux->tsmux);
+    tsmux_resend_si (mux->tsmux);
+
+    /* output PMT for each program */
+    for (cur = mux->tsmux->programs; cur; cur = cur->next) {
+      TsMuxProgram *program = (TsMuxProgram *) cur->data;
+
+      tsmux_resend_pmt (program);
+    }
+  }
+
+  gst_element_remove_pad (element, pad);
 }
 
 static gboolean
@@ -1863,6 +1907,7 @@ gst_base_ts_mux_class_init (GstBaseTsMuxClass * klass)
   gobject_class->constructed = gst_base_ts_mux_constructed;
 
   gstelement_class->request_new_pad = gst_base_ts_mux_request_new_pad;
+  gstelement_class->release_pad = gst_base_ts_mux_release_pad;
   gstelement_class->send_event = gst_base_ts_mux_send_event;
 
   gstagg_class->update_src_caps = gst_base_ts_mux_update_src_caps;

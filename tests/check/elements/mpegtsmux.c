@@ -148,29 +148,17 @@ cleanup_tsmux (GstElement * mux, const gchar * sinkname)
 }
 
 static void
-check_tsmux_pad (GstStaticPadTemplate * srctemplate,
+check_tsmux_pad_given_muxer (GstElement * mux,
     const gchar * src_caps_string, gint pes_id, gint pmt_id,
-    const gchar * sinkname, CheckOutputBuffersFunc check_func, guint n_bufs,
-    gssize input_buf_size, guint alignment)
+    CheckOutputBuffersFunc check_func, guint n_bufs, gssize input_buf_size)
 {
   GstClockTime ts;
-  GstElement *mux;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gint num_buffers;
   gint i;
   gint pmt_pid = -1, el_pid = -1, pcr_pid = -1, packets = 0;
-  gchar *padname;
   GstQuery *drain;
-
-  mux = setup_tsmux (srctemplate, sinkname, &padname);
-
-  if (alignment != 0)
-    g_object_set (mux, "alignment", alignment, NULL);
-
-  fail_unless (gst_element_set_state (mux,
-          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
-      "could not set to playing");
 
   caps = gst_caps_from_string (src_caps_string);
   gst_check_setup_events (mysrcpad, mux, caps, GST_FORMAT_TIME);
@@ -348,11 +336,68 @@ check_tsmux_pad (GstStaticPadTemplate * srctemplate,
 
   g_list_free (buffers);
   buffers = NULL;
+}
+
+static void
+check_tsmux_pad (GstStaticPadTemplate * srctemplate,
+    const gchar * src_caps_string, gint pes_id, gint pmt_id,
+    const gchar * sinkname, CheckOutputBuffersFunc check_func, guint n_bufs,
+    gssize input_buf_size, guint alignment)
+{
+  gchar *padname;
+  GstElement *mux;
+
+  mux = setup_tsmux (srctemplate, sinkname, &padname);
+
+  if (alignment != 0)
+    g_object_set (mux, "alignment", alignment, NULL);
+
+  fail_unless (gst_element_set_state (mux,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  check_tsmux_pad_given_muxer (mux, src_caps_string, pes_id, pmt_id,
+      check_func, n_bufs, input_buf_size);
 
   cleanup_tsmux (mux, padname);
   g_free (padname);
 }
 
+GST_START_TEST (test_reappearing_pad)
+{
+  gchar *padname;
+  GstElement *mux;
+  GstPad *pad;
+
+  mux = gst_check_setup_element ("mpegtsmux");
+  mysrcpad = setup_src_pad (mux, &video_src_template, "sink_%d", &padname);
+  mysinkpad = gst_check_setup_sink_pad (mux, &sink_template);
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  fail_unless (gst_element_set_state (mux,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  check_tsmux_pad_given_muxer (mux, VIDEO_CAPS_STRING, 0xE0, 0x1b, NULL, 1, 1);
+
+  pad = gst_element_get_static_pad (mux, padname);
+  gst_pad_set_active (mysrcpad, FALSE);
+  gst_object_unref (pad);
+  teardown_src_pad (mux, padname);
+  gst_element_release_request_pad (mux, pad);
+  g_free (padname);
+
+  mysrcpad = setup_src_pad (mux, &video_src_template, "sink_%d", &padname);
+  gst_pad_set_active (mysrcpad, TRUE);
+
+  check_tsmux_pad_given_muxer (mux, VIDEO_CAPS_STRING, 0xE0, 0x1b, NULL, 1, 1);
+
+  cleanup_tsmux (mux, padname);
+  g_free (padname);
+}
+
+GST_END_TEST;
 
 GST_START_TEST (test_video)
 {
@@ -491,6 +536,7 @@ mpegtsmux_suite (void)
   tcase_add_test (tc_chain, test_multiple_state_change);
   tcase_add_test (tc_chain, test_align);
   tcase_add_test (tc_chain, test_keyframe_flag_propagation);
+  tcase_add_test (tc_chain, test_reappearing_pad);
 
   return s;
 }

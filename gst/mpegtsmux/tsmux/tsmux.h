@@ -225,6 +225,7 @@ void 		tsmux_resend_pmt                (TsMuxProgram *program);
 void            tsmux_program_set_scte35_pid    (TsMuxProgram *program, guint16 pid);
 guint16         tsmux_program_get_scte35_pid    (TsMuxProgram *program);
 void            tsmux_program_set_scte35_interval (TsMuxProgram *mux, guint interval);
+gboolean        tsmux_program_delete            (TsMux *mux, TsMuxProgram *program);
 
 
 /* SI table management */
@@ -239,6 +240,7 @@ gboolean        tsmux_send_section              (TsMux *mux, GstMpegtsSection *s
 /* stream management */
 TsMuxStream *	tsmux_create_stream 		(TsMux *mux, guint stream_type, guint16 pid, gchar *language);
 TsMuxStream *	tsmux_find_stream 		(TsMux *mux, guint16 pid);
+gboolean        tsmux_remove_stream             (TsMux *mux, guint16 pid, TsMuxProgram *program);
 
 void 		tsmux_program_add_stream 	(TsMuxProgram *program, TsMuxStream *stream);
 void 		tsmux_program_set_pcr_stream 	(TsMuxProgram *program, TsMuxStream *stream);
