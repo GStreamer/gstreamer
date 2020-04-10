@@ -130,14 +130,14 @@ struct _GstVaapiEncoderMap
   GstVaapiCodec codec;
   guint rank;
   const gchar *name;
-    GType (*get_type) (void);
+    GType (*register_type) (GstVaapiDisplay * display);
 };
 
 #define DEF_ENC(CODEC,codec)          \
   {GST_VAAPI_CODEC_##CODEC,           \
    GST_RANK_PRIMARY,                  \
    "vaapi" G_STRINGIFY (codec) "enc", \
-   gst_vaapiencode_##codec##_get_type}
+   gst_vaapiencode_##codec##_register_type}
 
 static const GstVaapiEncoderMap vaapi_encode_map[] = {
   DEF_ENC (H264, h264),
@@ -168,7 +168,8 @@ gst_vaapiencode_register (GstPlugin * plugin, GstVaapiDisplay * display)
     for (j = 0; j < G_N_ELEMENTS (vaapi_encode_map); j++) {
       if (vaapi_encode_map[j].codec == codec) {
         gst_element_register (plugin, vaapi_encode_map[j].name,
-            vaapi_encode_map[j].rank, vaapi_encode_map[j].get_type ());
+            vaapi_encode_map[j].rank,
+            vaapi_encode_map[j].register_type (display));
         break;
       }
     }
