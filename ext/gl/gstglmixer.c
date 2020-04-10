@@ -536,36 +536,7 @@ _mixer_create_fbo (GstGLContext * context, GstGLMixer * mix)
 static gboolean
 gst_gl_mixer_gl_start (GstGLBaseMixer * base_mix)
 {
-  GstGLMixer *mix = GST_GL_MIXER (base_mix);
-  GstGLMixerClass *mixer_class = GST_GL_MIXER_GET_CLASS (mix);
-
-  g_mutex_lock (&mix->priv->gl_resource_lock);
-  mix->priv->gl_resource_ready = FALSE;
-  if (mix->fbo)
-    gst_object_unref (mix->fbo);
-
-  gst_gl_context_thread_add (base_mix->context,
-      (GstGLContextThreadFunc) _mixer_create_fbo, mix);
-  if (!mix->fbo) {
-    g_cond_signal (&mix->priv->gl_resource_cond);
-    g_mutex_unlock (&mix->priv->gl_resource_lock);
-    goto context_error;
-  }
-
-  if (mixer_class->set_caps)
-    mixer_class->set_caps (mix, mix->out_caps);
-
-  mix->priv->gl_resource_ready = TRUE;
-  g_cond_signal (&mix->priv->gl_resource_cond);
-  g_mutex_unlock (&mix->priv->gl_resource_lock);
-
   return GST_GL_BASE_MIXER_CLASS (parent_class)->gl_start (base_mix);
-
-context_error:
-  {
-    GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND, ("Context error"), (NULL));
-    return FALSE;
-  }
 }
 
 static void
@@ -577,10 +548,9 @@ gst_gl_mixer_gl_stop (GstGLBaseMixer * base_mix)
   if (mixer_class->reset)
     mixer_class->reset (mix);
 
-  if (mix->fbo) {
-    gst_object_unref (mix->fbo);
-    mix->fbo = NULL;
-  }
+  g_mutex_lock (&mix->priv->gl_resource_lock);
+  gst_clear_object (&mix->fbo);
+  g_mutex_unlock (&mix->priv->gl_resource_lock);
 
   GST_GL_BASE_MIXER_CLASS (parent_class)->gl_stop (base_mix);
 }
@@ -589,6 +559,8 @@ static gboolean
 gst_gl_mixer_decide_allocation (GstAggregator * agg, GstQuery * query)
 {
   GstGLBaseMixer *base_mix = GST_GL_BASE_MIXER (agg);
+  GstGLMixer *mix = GST_GL_MIXER (base_mix);
+  GstGLMixerClass *mixer_class = GST_GL_MIXER_GET_CLASS (mix);
   GstGLContext *context;
   GstBufferPool *pool = NULL;
   GstStructure *config;
@@ -605,6 +577,26 @@ gst_gl_mixer_decide_allocation (GstAggregator * agg, GstQuery * query)
     GST_WARNING_OBJECT (agg, "No OpenGL context");
     return FALSE;
   }
+
+  g_mutex_lock (&mix->priv->gl_resource_lock);
+  mix->priv->gl_resource_ready = FALSE;
+  if (mix->fbo)
+    gst_object_unref (mix->fbo);
+
+  gst_gl_context_thread_add (context,
+      (GstGLContextThreadFunc) _mixer_create_fbo, mix);
+  if (!mix->fbo) {
+    g_cond_signal (&mix->priv->gl_resource_cond);
+    g_mutex_unlock (&mix->priv->gl_resource_lock);
+    goto context_error;
+  }
+
+  if (mixer_class->set_caps)
+    mixer_class->set_caps (mix, mix->out_caps);
+
+  mix->priv->gl_resource_ready = TRUE;
+  g_cond_signal (&mix->priv->gl_resource_cond);
+  g_mutex_unlock (&mix->priv->gl_resource_lock);
 
   gst_query_parse_allocation (query, &caps, NULL);
 
@@ -641,6 +633,12 @@ gst_gl_mixer_decide_allocation (GstAggregator * agg, GstQuery * query)
   gst_clear_object (&context);
 
   return TRUE;
+
+context_error:
+  {
+    GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND, ("Context error"), (NULL));
+    return FALSE;
+  }
 }
 
 gboolean
