@@ -64,6 +64,9 @@ struct _GstVaapiEncodeVP8Class
 GType
 gst_vaapiencode_vp8_get_type (void) G_GNUC_CONST;
 
+GType
+gst_vaapiencode_vp8_register_type (GstVaapiDisplay * display);
+
 G_END_DECLS
 
 #endif /* GST_VAAPIENCODE_VP8_H */
