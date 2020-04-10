@@ -198,10 +198,10 @@ gst_omx_h265_enc_class_init (GstOMXH265EncClass * klass)
   videoenc_class->cdata.default_sink_template_caps =
 #ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
       GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_FORMAT_INTERLACED,
-      GST_OMX_VIDEO_SUPPORTED_FORMATS)
+      GST_OMX_VIDEO_ENC_SUPPORTED_FORMATS)
       ", interlace-mode = (string) alternate ; "
 #endif
-      GST_VIDEO_CAPS_MAKE (GST_OMX_VIDEO_SUPPORTED_FORMATS);
+      GST_VIDEO_CAPS_MAKE (GST_OMX_VIDEO_ENC_SUPPORTED_FORMATS);
 
   videoenc_class->cdata.default_src_template_caps = "video/x-h265, "
       "width=(int) [ 1, MAX ], " "height=(int) [ 1, MAX ], "

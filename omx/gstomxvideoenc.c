@@ -545,7 +545,7 @@ gst_omx_video_enc_class_init (GstOMXVideoEncClass * klass)
 
   klass->cdata.type = GST_OMX_COMPONENT_TYPE_FILTER;
   klass->cdata.default_sink_template_caps =
-      GST_VIDEO_CAPS_MAKE (GST_OMX_VIDEO_SUPPORTED_FORMATS);
+      GST_VIDEO_CAPS_MAKE (GST_OMX_VIDEO_ENC_SUPPORTED_FORMATS);
 
   klass->handle_output_frame =
       GST_DEBUG_FUNCPTR (gst_omx_video_enc_handle_output_frame);
@@ -3540,8 +3540,6 @@ filter_supported_formats (GList * negotiation_map)
       case GST_VIDEO_FORMAT_NV16:
       case GST_VIDEO_FORMAT_NV16_10LE32:
       case GST_VIDEO_FORMAT_GRAY8:
-        //case GST_VIDEO_FORMAT_ABGR:
-        //case GST_VIDEO_FORMAT_ARGB:
         cur = g_list_next (cur);
         continue;
       default:

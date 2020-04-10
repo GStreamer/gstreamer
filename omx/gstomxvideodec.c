@@ -191,10 +191,10 @@ gst_omx_video_dec_class_init (GstOMXVideoDecClass * klass)
 #endif
 #ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
       GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_FORMAT_INTERLACED,
-      GST_OMX_VIDEO_SUPPORTED_FORMATS)
+      GST_OMX_VIDEO_DEC_SUPPORTED_FORMATS)
       ", interlace-mode = (string) alternate ; "
 #endif
-      GST_VIDEO_CAPS_MAKE (GST_OMX_VIDEO_SUPPORTED_FORMATS);
+      GST_VIDEO_CAPS_MAKE (GST_OMX_VIDEO_DEC_SUPPORTED_FORMATS);
 }
 
 static void
