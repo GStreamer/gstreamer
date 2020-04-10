@@ -138,6 +138,21 @@ gst indent:
     # Clean the .git repos since we won't need them anymore
     - rm -rf subprojects/*/.git/
     - rm -rf build/subprojects/*/.git/
+    # Clean the big files that are not useful to us to reduce the artifact size
+    - rm -rf subprojects/FFmpeg/tests
+    - rm -rf subprojects/FFmpeg/doc
+    - rm -rf subprojects/openh264/res
+    - rm -rf subprojects/libxml2-2.9.7/result
+    - rm -rf subprojects/libxml2-2.9.7/doc
+    - rm -rf subprojects/libxml2-2.9.7/test
+    - rm -rf subprojects/libpsl/fuzz
+    - rm -rf subprojects/glib/gio/tests
+    - rm -rf subprojects/glib/glib/tests
+    - rm -rf subprojects/glib/gobject/tests
+    - rm -rf subprojects/glib/docs/tests
+    - rm -rf subprojects/glib/tests
+    - rm -rf subprojects/glib/po
+    - rm -rf subprojects/glib/docs
   artifacts:
     expire_in: "7 days"
     when: "always"
