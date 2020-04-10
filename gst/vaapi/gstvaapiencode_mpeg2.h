@@ -69,6 +69,9 @@ struct _GstVaapiEncodeMpeg2Class
 GType
 gst_vaapiencode_mpeg2_get_type (void) G_GNUC_CONST;
 
+GType
+gst_vaapiencode_mpeg2_register_type (GstVaapiDisplay * display);
+
 G_END_DECLS
 
 #endif /* GST_VAAPIENCODE_MPEG2_H */
