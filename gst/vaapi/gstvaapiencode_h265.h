@@ -65,6 +65,8 @@ struct _GstVaapiEncodeH265Class
 
 GType
 gst_vaapiencode_h265_get_type (void) G_GNUC_CONST;
+GType
+gst_vaapiencode_h265_register_type (GstVaapiDisplay * display);
 
 G_END_DECLS
 

@@ -53,27 +53,9 @@ GST_DEBUG_CATEGORY_STATIC (gst_vaapi_h265_encode_debug);
   "alignment = (string) au"
 
 /* *INDENT-OFF* */
-static const char gst_vaapiencode_h265_sink_caps_str[] =
-  GST_VAAPI_MAKE_SURFACE_CAPS ", "
-  GST_CAPS_INTERLACED_FALSE "; "
-  GST_VIDEO_CAPS_MAKE (GST_VAAPI_FORMATS_ALL) ", "
-  GST_CAPS_INTERLACED_FALSE ";"
-  GST_VIDEO_CAPS_MAKE_WITH_FEATURES(GST_CAPS_FEATURE_MEMORY_DMABUF, GST_VAAPI_FORMATS_ALL) ","
-  GST_CAPS_INTERLACED_FALSE;
-/* *INDENT-ON* */
-
-/* *INDENT-OFF* */
 static const char gst_vaapiencode_h265_src_caps_str[] =
   GST_CODEC_CAPS ", "
   "profile = (string) { main, main-10, main-444, main-444-10 }";
-/* *INDENT-ON* */
-
-/* *INDENT-OFF* */
-static GstStaticPadTemplate gst_vaapiencode_h265_sink_factory =
-  GST_STATIC_PAD_TEMPLATE ("sink",
-      GST_PAD_SINK,
-      GST_PAD_ALWAYS,
-      GST_STATIC_CAPS (gst_vaapiencode_h265_sink_caps_str));
 /* *INDENT-ON* */
 
 /* *INDENT-OFF* */
@@ -84,8 +66,10 @@ static GstStaticPadTemplate gst_vaapiencode_h265_src_factory =
       GST_STATIC_CAPS (gst_vaapiencode_h265_src_caps_str));
 /* *INDENT-ON* */
 
+#define EXTRA_FORMATS {}
+
 /* h265 encode */
-G_DEFINE_TYPE (GstVaapiEncodeH265, gst_vaapiencode_h265, GST_TYPE_VAAPIENCODE);
+GST_VAAPI_ENCODE_REGISTER_TYPE (h265, H265, H265, EXTRA_FORMATS);
 
 static void
 gst_vaapiencode_h265_init (GstVaapiEncodeH265 * encode)
@@ -361,15 +345,13 @@ error_convert_buffer:
 }
 
 static void
-gst_vaapiencode_h265_class_init (GstVaapiEncodeH265Class * klass)
+gst_vaapiencode_h265_class_init (GstVaapiEncodeH265Class * klass, gpointer data)
 {
   GObjectClass *const object_class = G_OBJECT_CLASS (klass);
   GstElementClass *const element_class = GST_ELEMENT_CLASS (klass);
   GstVaapiEncodeClass *const encode_class = GST_VAAPIENCODE_CLASS (klass);
+  GstCaps *sink_caps = GST_CAPS_CAST (data);
   gpointer encoder_class;
-
-  GST_DEBUG_CATEGORY_INIT (gst_vaapi_h265_encode_debug,
-      GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);
 
   object_class->finalize = gst_vaapiencode_h265_finalize;
   object_class->set_property = gst_vaapiencode_set_property_subclass;
@@ -389,8 +371,10 @@ gst_vaapiencode_h265_class_init (GstVaapiEncodeH265Class * klass)
       "Sreerenj Balachandran <sreerenj.balachandran@intel.com>");
 
   /* sink pad */
-  gst_element_class_add_static_pad_template (element_class,
-      &gst_vaapiencode_h265_sink_factory);
+  g_assert (sink_caps);
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, sink_caps));
+  gst_caps_unref (sink_caps);
 
   /* src pad */
   gst_element_class_add_static_pad_template (element_class,
