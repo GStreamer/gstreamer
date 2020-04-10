@@ -358,13 +358,9 @@ static gboolean
 ensure_allowed_sinkpad_caps (GstVaapiEncode * encode)
 {
   GstCaps *out_caps = NULL;
-  GstCaps *raw_caps = NULL;
-  GstCaps *va_caps, *dma_caps;
   GArray *formats = NULL;
   gboolean ret = FALSE;
   GArray *profiles = NULL;
-  guint i, size;
-  GstStructure *structure;
   gint min_width, min_height, max_width, max_height;
   guint mem_types;
 
@@ -385,34 +381,10 @@ ensure_allowed_sinkpad_caps (GstVaapiEncode * encode)
   if (!formats)
     goto failed_get_attributes;
 
-  raw_caps = gst_vaapi_video_format_new_template_caps_from_list (formats);
-  if (!raw_caps)
-    goto failed_create_raw_caps;
-
-  /* Set the width/height info to caps */
-  size = gst_caps_get_size (raw_caps);
-  for (i = 0; i < size; i++) {
-    structure = gst_caps_get_structure (raw_caps, i);
-    if (!structure)
-      continue;
-    gst_structure_set (structure, "width", GST_TYPE_INT_RANGE, min_width,
-        max_width, "height", GST_TYPE_INT_RANGE, min_height, max_height, NULL);
-  }
-
-  out_caps = gst_caps_copy (raw_caps);
-
-  va_caps = gst_caps_copy (raw_caps);
-  gst_caps_set_features_simple (va_caps,
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE));
-  gst_caps_append (out_caps, va_caps);
-
-  if (gst_vaapi_mem_type_supports (mem_types,
-          GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF)) {
-    dma_caps = gst_caps_copy (raw_caps);
-    gst_caps_set_features_simple (dma_caps,
-        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_DMABUF));
-    gst_caps_append (out_caps, dma_caps);
-  }
+  out_caps = gst_vaapi_build_caps_from_formats (formats, min_width, min_height,
+      max_width, max_height, mem_types);
+  if (!out_caps)
+    goto failed_create_caps;
 
   gst_caps_replace (&encode->allowed_sinkpad_caps, out_caps);
   GST_INFO_OBJECT (encode, "Allowed sink caps %" GST_PTR_FORMAT,
@@ -428,8 +400,6 @@ bail:
     g_array_unref (profiles);
   if (out_caps)
     gst_caps_unref (out_caps);
-  if (raw_caps)
-    gst_caps_unref (raw_caps);
   if (formats)
     g_array_unref (formats);
   return ret;
@@ -439,9 +409,9 @@ failed_get_attributes:
     GST_WARNING_OBJECT (encode, "failed to get surface attributes");
     goto bail;
   }
-failed_create_raw_caps:
+failed_create_caps:
   {
-    GST_WARNING_OBJECT (encode, "failed to create raw sink caps");
+    GST_WARNING_OBJECT (encode, "failed to create sink caps");
     goto bail;
   }
 failed_get_profiles:
