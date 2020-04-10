@@ -25,6 +25,7 @@
 #include "gstcompat.h"
 #include "gstvaapivideocontext.h"
 #include <gst/vaapi/gstvaapiprofilecaps.h>
+#include <gst/vaapi/gstvaapiutils.h>
 #if USE_DRM
 # include <gst/vaapi/gstvaapidisplay_drm.h>
 #endif
@@ -1135,6 +1136,110 @@ gst_vaapi_build_caps_from_formats (GArray * formats, gint min_width,
   }
 
   gst_caps_unref (raw_caps);
+
+  return out_caps;
+}
+
+/**
+ * gst_vaapi_build_template_caps_by_codec:
+ * @display: a #GstVaapiDisplay
+ * @usage: used for encode, decode or postproc
+ * @codec: a #GstVaapiCodec specify the codec to detect
+ * @extra_fmts: a #GArray of extra #GstVideoFormat
+ *
+ * Called by vaapi elements to detect the all possible video formats belong to
+ * the specified codec and build the caps. Only YUV kinds of formats are detected
+ * because so far almost all codecs use YUV kinds of formats as input/output.
+ * extra_fmts can specified more formats to be included.
+ *
+ * Returns: a built #GstCaps if succeeds, or %NULL if error.
+ **/
+GstCaps *
+gst_vaapi_build_template_caps_by_codec (GstVaapiDisplay * display,
+    GstVaapiContextUsage usage, GstVaapiCodec codec, GArray * extra_fmts)
+{
+  GArray *profiles = NULL;
+  GArray *supported_fmts = NULL;
+  GstCaps *out_caps = NULL;
+  guint i, e;
+  GstVaapiProfile profile;
+  guint value;
+  guint chroma;
+  GstVaapiChromaType gst_chroma;
+  GstVaapiEntrypoint entrypoint_start, entrypoint_end;
+
+  if (usage == GST_VAAPI_CONTEXT_USAGE_ENCODE) {
+    profiles = gst_vaapi_display_get_encode_profiles (display);
+    entrypoint_start = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE;
+    entrypoint_end = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_LP;
+  } else if (usage == GST_VAAPI_CONTEXT_USAGE_DECODE) {
+    profiles = gst_vaapi_display_get_decode_profiles (display);
+    entrypoint_start = GST_VAAPI_ENTRYPOINT_VLD;
+    entrypoint_end = GST_VAAPI_ENTRYPOINT_MOCO;
+  }
+  /* TODO: VPP */
+
+  if (!profiles)
+    goto out;
+
+  chroma = 0;
+  for (i = 0; i < profiles->len; i++) {
+    profile = g_array_index (profiles, GstVaapiProfile, i);
+    if (gst_vaapi_profile_get_codec (profile) != codec)
+      continue;
+
+    for (e = entrypoint_start; e <= entrypoint_end; e++) {
+      if (!gst_vaapi_get_config_attribute (display,
+              gst_vaapi_profile_get_va_profile (profile),
+              gst_vaapi_entrypoint_get_va_entrypoint (e),
+              VAConfigAttribRTFormat, &value))
+        continue;
+
+      chroma |= value;
+    }
+  }
+
+  if (!chroma)
+    goto out;
+
+  for (gst_chroma = GST_VAAPI_CHROMA_TYPE_YUV420;
+      gst_chroma <= GST_VAAPI_CHROMA_TYPE_YUV444_12BPP; gst_chroma++) {
+    GArray *fmts;
+    if (!(chroma & from_GstVaapiChromaType (gst_chroma)))
+      continue;
+
+    fmts = gst_vaapi_video_format_get_formats_by_chroma (gst_chroma);
+    if (!fmts)
+      continue;
+
+    /* One format can not belong to different chroma, no need to merge */
+    if (supported_fmts == NULL) {
+      supported_fmts = fmts;
+    } else {
+      for (i = 0; i < fmts->len; i++)
+        g_array_append_val (supported_fmts,
+            g_array_index (fmts, GstVideoFormat, i));
+      g_array_unref (fmts);
+    }
+  }
+
+  if (!supported_fmts)
+    goto out;
+
+  if (extra_fmts) {
+    for (i = 0; i < extra_fmts->len; i++)
+      g_array_append_val (supported_fmts,
+          g_array_index (extra_fmts, GstVideoFormat, i));
+  }
+
+  out_caps = gst_vaapi_build_caps_from_formats (supported_fmts, 1, 1,
+      G_MAXINT, G_MAXINT, TRUE);
+
+out:
+  if (profiles)
+    g_array_unref (profiles);
+  if (supported_fmts)
+    g_array_unref (supported_fmts);
 
   return out_caps;
 }

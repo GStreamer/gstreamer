@@ -27,6 +27,7 @@
 
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapisurface.h>
+#include <gst/vaapi/gstvaapicontext.h>
 #include "gstvaapivideomemory.h"
 
 typedef GstVaapiProfile (*GstVaapiStrToProfileFunc) (const gchar * str);
@@ -164,5 +165,10 @@ G_GNUC_INTERNAL
 GstCaps *
 gst_vaapi_build_caps_from_formats (GArray * formats, gint min_width,
     gint min_height, gint max_width, gint max_height, guint mem_type);
+
+G_GNUC_INTERNAL
+GstCaps *
+gst_vaapi_build_template_caps_by_codec (GstVaapiDisplay * display,
+    GstVaapiContextUsage usage, GstVaapiCodec codec, GArray * extra_fmts);
 
 #endif /* GST_VAAPI_PLUGIN_UTIL_H */
