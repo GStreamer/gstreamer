@@ -49,6 +49,8 @@ static const struct
   DEF_FMT (XBGR8888, RGBx),
   DEF_FMT (BGR888, RGB),
   DEF_FMT (RGB888, BGR),
+  DEF_FMT (P010, P010_10LE),
+  DEF_FMT (P016, P016_LE),
 #else
   DEF_FMT (ARGB8888, ARGB),
   DEF_FMT (XRGB8888, xRGB),
@@ -56,6 +58,8 @@ static const struct
   DEF_FMT (XBGR8888, xBGR),
   DEF_FMT (RGB888, RGB),
   DEF_FMT (BGR888, BGR),
+  DEF_FMT (P010, P010_10BE),
+  DEF_FMT (P016, P016_BE),
 #endif
   DEF_FMT (UYVY, UYVY),
   DEF_FMT (YUYV, YUY2),
@@ -111,9 +115,13 @@ gst_drm_bpp_from_drm (guint32 drmfmt)
     case DRM_FORMAT_NV16:
       bpp = 8;
       break;
+    case DRM_FORMAT_P010:
+      bpp = 10;
+      break;
     case DRM_FORMAT_UYVY:
     case DRM_FORMAT_YUYV:
     case DRM_FORMAT_YVYU:
+    case DRM_FORMAT_P016:
       bpp = 16;
       break;
     case DRM_FORMAT_BGR888:
@@ -139,6 +147,8 @@ gst_drm_height_from_drm (guint32 drmfmt, guint32 height)
     case DRM_FORMAT_YUV422:
     case DRM_FORMAT_NV12:
     case DRM_FORMAT_NV21:
+    case DRM_FORMAT_P010:
+    case DRM_FORMAT_P016:
       ret = height * 3 / 2;
       break;
     case DRM_FORMAT_NV16:

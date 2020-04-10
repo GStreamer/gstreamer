@@ -9,7 +9,7 @@ if host_system != 'linux'
   subdir_done()
 endif
 
-libdrm_dep = dependency('libdrm', version : '>= 2.4.55',
+libdrm_dep = dependency('libdrm', version : '>= 2.4.98',
                         required : get_option('kms'),
                         fallback: ['libdrm', 'ext_libdrm'])
 if libdrm_dep.found()
