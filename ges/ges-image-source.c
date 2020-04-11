@@ -97,7 +97,7 @@ ges_image_source_dispose (GObject * object)
 }
 
 static void
-pad_added_cb (GstElement * timeline, GstPad * pad, GstElement * scale)
+pad_added_cb (GstElement * source, GstPad * pad, GstElement * scale)
 {
   GstPad *sinkpad;
   GstPadLinkReturn ret;

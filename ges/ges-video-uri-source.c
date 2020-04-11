@@ -216,6 +216,13 @@ G_DEFINE_TYPE_WITH_CODE (GESVideoUriSource, ges_video_uri_source,
     G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
         ges_extractable_interface_init));
 
+static gboolean
+_find_positioner (GstElement * a, GstElement * b)
+{
+  return !g_strcmp0 (GST_OBJECT_NAME (gst_element_get_factory (a)),
+      "framepositioner");
+}
+
 
 /* GObject VMethods */
 static gboolean
@@ -229,8 +236,16 @@ ges_video_uri_source_create_filters (GESVideoSource * source,
       ->ABI.abi.create_filters (source, elements, needs_converters))
     return FALSE;
 
-  if (ges_uri_source_asset_is_image (GES_URI_SOURCE_ASSET (asset)))
-    g_ptr_array_add (elements, gst_element_factory_make ("imagefreeze", NULL));
+  if (ges_uri_source_asset_is_image (GES_URI_SOURCE_ASSET (asset))) {
+    guint i;
+
+    g_ptr_array_find_with_equal_func (elements, NULL,
+        (GEqualFunc) _find_positioner, &i);
+    /* Adding the imagefreeze right before the positionner so positioning can happen
+     * properly */
+    g_ptr_array_insert (elements, i,
+        gst_element_factory_make ("imagefreeze", NULL));
+  }
 
   return TRUE;
 }
