@@ -219,6 +219,7 @@ typedef enum {
  * @GST_H265_PROFILE_IDC_SCREEN_CONTENT_CODING: Screen content coding extensions profiles (A.3.7)
  * @GST_H265_PROFILE_IDC_3D_MAIN: 3D Main profile (I.11.1) (Since: 1.18)
  * @GST_H265_PROFILE_IDC_SCALABLE_FORMAT_RANGE_EXTENSION: Scalable Format range extensions profiles (H.11.1) (Since: 1.18)
+ * @GST_H265_PROFILE_IDC_HIGH_THROUGHPUT_SCREEN_CONTENT_CODING_EXTENSION: High throughput screen content coding extensions profiles (A.3.8) (Since: 1.18)
  *
  * Valid values for the profile_idc field. This is different from
  * #GstH265Profile as an extension idc can be used to encode a whole variety of
@@ -236,6 +237,7 @@ typedef enum {
   GST_H265_PROFILE_IDC_3D_MAIN                = 8,
   GST_H265_PROFILE_IDC_SCREEN_CONTENT_CODING  = 9,
   GST_H265_PROFILE_IDC_SCALABLE_FORMAT_RANGE_EXTENSION = 10,
+  GST_H265_PROFILE_IDC_HIGH_THROUGHPUT_SCREEN_CONTENT_CODING_EXTENSION = 11,
 } GstH265ProfileIDC;
 
 /**

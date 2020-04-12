@@ -3481,7 +3481,10 @@ gst_h265_profile_tier_level_get_profile (GstH265ProfileTierLevel * ptl)
     return get_3d_profile (ptl);
 
   if (ptl->profile_idc == GST_H265_PROFILE_IDC_SCREEN_CONTENT_CODING
-      || ptl->profile_compatibility_flag[9])
+      || ptl->profile_compatibility_flag[9]
+      || ptl->profile_idc ==
+      GST_H265_PROFILE_IDC_HIGH_THROUGHPUT_SCREEN_CONTENT_CODING_EXTENSION
+      || ptl->profile_compatibility_flag[11])
     return get_screen_content_coding_extensions_profile (ptl);
 
   if (ptl->profile_idc == GST_H265_PROFILE_IDC_SCALABLE_FORMAT_RANGE_EXTENSION
