@@ -297,6 +297,7 @@ GST_END_TEST;
 
 static void
 set_format_range_fields (GstH265ProfileTierLevel * ptl,
+    guint8 max_14bit_constraint_flag,
     guint8 max_12bit_constraint_flag,
     guint8 max_10bit_constraint_flag,
     guint8 max_8bit_constraint_flag,
@@ -307,6 +308,7 @@ set_format_range_fields (GstH265ProfileTierLevel * ptl,
     guint8 one_picture_only_constraint_flag,
     guint8 lower_bit_rate_constraint_flag)
 {
+  ptl->max_14bit_constraint_flag = max_14bit_constraint_flag;
   ptl->max_12bit_constraint_flag = max_12bit_constraint_flag;
   ptl->max_10bit_constraint_flag = max_10bit_constraint_flag;
   ptl->max_8bit_constraint_flag = max_8bit_constraint_flag;
@@ -326,118 +328,163 @@ GST_START_TEST (test_h265_format_range_profiles_exact_match)
   memset (&ptl, 0, sizeof (ptl));
   ptl.profile_idc = 4;
 
-  set_format_range_fields (&ptl, 1, 1, 1, 1, 1, 1, 0, 0, 1);
+  set_format_range_fields (&ptl, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1);
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
       GST_H265_PROFILE_MONOCHROME);
 
-  set_format_range_fields (&ptl, 1, 0, 0, 1, 1, 1, 0, 0, 1);
+  set_format_range_fields (&ptl, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1);
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
       GST_H265_PROFILE_MONOCHROME_12);
 
-  set_format_range_fields (&ptl, 0, 0, 0, 1, 1, 1, 0, 0, 1);
+  set_format_range_fields (&ptl, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1);
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
       GST_H265_PROFILE_MONOCHROME_16);
 
-  set_format_range_fields (&ptl, 1, 0, 0, 1, 1, 0, 0, 0, 1);
+  set_format_range_fields (&ptl, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1);
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
       GST_H265_PROFILE_MAIN_12);
 
-  set_format_range_fields (&ptl, 1, 1, 0, 1, 0, 0, 0, 0, 1);
+  set_format_range_fields (&ptl, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1);
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
       GST_H265_PROFILE_MAIN_422_10);
 
-  set_format_range_fields (&ptl, 1, 0, 0, 1, 0, 0, 0, 0, 1);
+  set_format_range_fields (&ptl, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1);
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
       GST_H265_PROFILE_MAIN_422_12);
 
-  set_format_range_fields (&ptl, 1, 1, 1, 0, 0, 0, 0, 0, 1);
+  set_format_range_fields (&ptl, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1);
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
       GST_H265_PROFILE_MAIN_444);
 
-  set_format_range_fields (&ptl, 1, 1, 0, 0, 0, 0, 0, 0, 1);
+  set_format_range_fields (&ptl, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1);
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
       GST_H265_PROFILE_MAIN_444_10);
 
-  set_format_range_fields (&ptl, 1, 0, 0, 0, 0, 0, 0, 0, 1);
+  set_format_range_fields (&ptl, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1);
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
       GST_H265_PROFILE_MAIN_444_12);
 
-  set_format_range_fields (&ptl, 1, 1, 1, 1, 1, 0, 1, 0, 0);
+  set_format_range_fields (&ptl, 0, 1, 1, 1, 1, 1, 0, 1, 0, 0);
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
       GST_H265_PROFILE_MAIN_INTRA);
-  set_format_range_fields (&ptl, 1, 1, 1, 1, 1, 0, 1, 0, 1);
+  set_format_range_fields (&ptl, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1);
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
       GST_H265_PROFILE_MAIN_INTRA);
 
-  set_format_range_fields (&ptl, 1, 1, 0, 1, 1, 0, 1, 0, 0);
+  set_format_range_fields (&ptl, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0);
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
       GST_H265_PROFILE_MAIN_10_INTRA);
-  set_format_range_fields (&ptl, 1, 1, 0, 1, 1, 0, 1, 0, 1);
+  set_format_range_fields (&ptl, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1);
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
       GST_H265_PROFILE_MAIN_10_INTRA);
 
-  set_format_range_fields (&ptl, 1, 0, 0, 1, 1, 0, 1, 0, 0);
+  set_format_range_fields (&ptl, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0);
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
       GST_H265_PROFILE_MAIN_12_INTRA);
-  set_format_range_fields (&ptl, 1, 0, 0, 1, 1, 0, 1, 0, 1);
+  set_format_range_fields (&ptl, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1);
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
       GST_H265_PROFILE_MAIN_12_INTRA);
 
-  set_format_range_fields (&ptl, 1, 1, 0, 1, 0, 0, 1, 0, 0);
+  set_format_range_fields (&ptl, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0);
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
       GST_H265_PROFILE_MAIN_422_10_INTRA);
-  set_format_range_fields (&ptl, 1, 1, 0, 1, 0, 0, 1, 0, 1);
+  set_format_range_fields (&ptl, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1);
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
       GST_H265_PROFILE_MAIN_422_10_INTRA);
 
-  set_format_range_fields (&ptl, 1, 0, 0, 1, 0, 0, 1, 0, 0);
+  set_format_range_fields (&ptl, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0);
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
       GST_H265_PROFILE_MAIN_422_12_INTRA);
-  set_format_range_fields (&ptl, 1, 0, 0, 1, 0, 0, 1, 0, 1);
+  set_format_range_fields (&ptl, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1);
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
       GST_H265_PROFILE_MAIN_422_12_INTRA);
 
-  set_format_range_fields (&ptl, 1, 1, 1, 0, 0, 0, 1, 0, 0);
+  set_format_range_fields (&ptl, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0);
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
       GST_H265_PROFILE_MAIN_444_INTRA);
-  set_format_range_fields (&ptl, 1, 1, 1, 0, 0, 0, 1, 0, 1);
+  set_format_range_fields (&ptl, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1);
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
       GST_H265_PROFILE_MAIN_444_INTRA);
 
-  set_format_range_fields (&ptl, 1, 1, 0, 0, 0, 0, 1, 0, 0);
+  set_format_range_fields (&ptl, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0);
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
       GST_H265_PROFILE_MAIN_444_10_INTRA);
-  set_format_range_fields (&ptl, 1, 1, 0, 0, 0, 0, 1, 0, 1);
+  set_format_range_fields (&ptl, 0, 1, 1, 0, 0, 0, 0, 1, 0, 1);
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
       GST_H265_PROFILE_MAIN_444_10_INTRA);
 
-  set_format_range_fields (&ptl, 1, 0, 0, 0, 0, 0, 1, 0, 0);
+  set_format_range_fields (&ptl, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0);
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
       GST_H265_PROFILE_MAIN_444_12_INTRA);
-  set_format_range_fields (&ptl, 1, 0, 0, 0, 0, 0, 1, 0, 1);
+  set_format_range_fields (&ptl, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1);
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
       GST_H265_PROFILE_MAIN_444_12_INTRA);
 
-  set_format_range_fields (&ptl, 0, 0, 0, 0, 0, 0, 1, 0, 0);
+  set_format_range_fields (&ptl, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0);
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
       GST_H265_PROFILE_MAIN_444_16_INTRA);
-  set_format_range_fields (&ptl, 0, 0, 0, 0, 0, 0, 1, 0, 1);
+  set_format_range_fields (&ptl, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1);
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
       GST_H265_PROFILE_MAIN_444_16_INTRA);
 
-  set_format_range_fields (&ptl, 1, 1, 1, 0, 0, 0, 1, 1, 0);
+  set_format_range_fields (&ptl, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0);
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
       GST_H265_PROFILE_MAIN_444_STILL_PICTURE);
-  set_format_range_fields (&ptl, 1, 1, 1, 0, 0, 0, 1, 1, 1);
+  set_format_range_fields (&ptl, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1);
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
       GST_H265_PROFILE_MAIN_444_STILL_PICTURE);
 
-  set_format_range_fields (&ptl, 0, 0, 0, 0, 0, 0, 1, 1, 0);
+  set_format_range_fields (&ptl, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0);
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
       GST_H265_PROFILE_MAIN_444_16_STILL_PICTURE);
-  set_format_range_fields (&ptl, 0, 0, 0, 0, 0, 0, 1, 1, 1);
+  set_format_range_fields (&ptl, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1);
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
       GST_H265_PROFILE_MAIN_444_16_STILL_PICTURE);
+
+  ptl.profile_idc = 5;
+  set_format_range_fields (&ptl, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1);
+  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
+      GST_H265_PROFILE_HIGH_THROUGHPUT_444);
+  set_format_range_fields (&ptl, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1);
+  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
+      GST_H265_PROFILE_HIGH_THROUGHPUT_444_10);
+  set_format_range_fields (&ptl, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1);
+  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
+      GST_H265_PROFILE_HIGH_THROUGHPUT_444_14);
+  set_format_range_fields (&ptl, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0);
+  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
+      GST_H265_PROFILE_HIGH_THROUGHPUT_444_16_INTRA);
+
+  ptl.profile_idc = 6;
+  set_format_range_fields (&ptl, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1);
+  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
+      GST_H265_PROFILE_MULTIVIEW_MAIN);
+
+  ptl.profile_idc = 7;
+  set_format_range_fields (&ptl, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1);
+  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
+      GST_H265_PROFILE_SCALABLE_MAIN_10);
+
+  ptl.profile_idc = 8;
+  set_format_range_fields (&ptl, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1);
+  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
+      GST_H265_PROFILE_3D_MAIN);
+
+  ptl.profile_idc = 9;
+  set_format_range_fields (&ptl, 1, 1, 1, 0, 1, 1, 0, 0, 0, 1);
+  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
+      GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_10);
+  set_format_range_fields (&ptl, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1);
+  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
+      GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_444_10);
+
+  ptl.profile_idc = 10;
+  set_format_range_fields (&ptl, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1);
+  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
+      GST_H265_PROFILE_SCALABLE_MONOCHROME);
+  set_format_range_fields (&ptl, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1);
+  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
+      GST_H265_PROFILE_SCALABLE_MONOCHROME_16);
 }
 
 GST_END_TEST;
@@ -449,10 +496,62 @@ GST_START_TEST (test_h265_format_range_profiles_partial_match)
 
   memset (&ptl, 0, sizeof (ptl));
   ptl.profile_idc = 4;
-
-  set_format_range_fields (&ptl, 1, 1, 1, 1, 0, 0, 0, 0, 1);
+  set_format_range_fields (&ptl, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1);
   g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
       GST_H265_PROFILE_MAIN_444);
+
+  ptl.profile_idc = 5;
+  /* wrong max_monochrome_constraint_flag, should still be compatible
+     with GST_H265_PROFILE_HIGH_THROUGHPUT_444_10 */
+  set_format_range_fields (&ptl, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1);
+  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
+      GST_H265_PROFILE_HIGH_THROUGHPUT_444_10);
+  /* wrong max_12bit_constraint_flag, should still be compatible
+     with GST_H265_PROFILE_HIGH_THROUGHPUT_444_14 */
+  set_format_range_fields (&ptl, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1);
+  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
+      GST_H265_PROFILE_HIGH_THROUGHPUT_444_14);
+  /* wrong intra_constraint_flag, GST_H265_PROFILE_HIGH_THROUGHPUT_444_14
+     and GST_H265_PROFILE_HIGH_THROUGHPUT_444_16_INTRA are both compatible,
+     but GST_H265_PROFILE_HIGH_THROUGHPUT_444_16_INTRA should be chosen
+     because of the higher priority. */
+  set_format_range_fields (&ptl, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0);
+  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
+      GST_H265_PROFILE_HIGH_THROUGHPUT_444_16_INTRA);
+
+  ptl.profile_idc = 6;
+  /* wrong max_12bit_constraint_flag, should not be compatible with any */
+  set_format_range_fields (&ptl, 0, 1, 0, 1, 1, 1, 0, 0, 0, 1);
+  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
+      GST_H265_PROFILE_INVALID);
+
+  ptl.profile_idc = 7;
+  /* wrong max_monochrome_constraint_flag, and intra_constraint_flag,
+     still compatible with GST_H265_PROFILE_SCALABLE_MAIN_10 */
+  set_format_range_fields (&ptl, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1);
+  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
+      GST_H265_PROFILE_SCALABLE_MAIN_10);
+
+  ptl.profile_idc = 8;
+  /* wrong one_picture_only_constraint_flag, still compatible
+     with GST_H265_PROFILE_3D_MAIN */
+  set_format_range_fields (&ptl, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1);
+  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
+      GST_H265_PROFILE_3D_MAIN);
+
+  ptl.profile_idc = 9;
+  /* wrong one_picture_only_constraint_flag, still compatible
+     with GST_H265_PROFILE_SCREEN_EXTENDED_MAIN */
+  set_format_range_fields (&ptl, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1);
+  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
+      GST_H265_PROFILE_SCREEN_EXTENDED_MAIN);
+
+  ptl.profile_idc = 10;
+  /* wrong max_10bit_constraint_flag, still compatible
+     with GST_H265_PROFILE_SCALABLE_MONOCHROME_16 */
+  set_format_range_fields (&ptl, 0, 0, 1, 0, 1, 1, 1, 0, 0, 1);
+  g_assert_cmpuint (gst_h265_profile_tier_level_get_profile (&ptl), ==,
+      GST_H265_PROFILE_SCALABLE_MONOCHROME_16);
 }
 
 GST_END_TEST;
