@@ -166,6 +166,8 @@ gst_base_ts_mux_pad_dispose (GObject * obj)
   GstBaseTsMuxPad *ts_pad = GST_BASE_TS_MUX_PAD (obj);
 
   gst_base_ts_mux_pad_reset (ts_pad);
+
+  G_OBJECT_CLASS (gst_base_ts_mux_pad_parent_class)->dispose (obj);
 }
 
 static void
