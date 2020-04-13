@@ -1065,11 +1065,11 @@ gst_value_compare_g_value_array (const GValue * value1, const GValue * value2)
   guint i;
   GValueArray *array1 = value1->data[0].v_pointer;
   GValueArray *array2 = value2->data[0].v_pointer;
-  guint len = array1->n_values;
+  guint len = array1 ? array1->n_values : 0;
   GValue *v1;
   GValue *v2;
 
-  if (len != array2->n_values)
+  if (len != (array2 ? array2->n_values : 0))
     return GST_VALUE_UNORDERED;
 
   for (i = 0; i < len; i++) {

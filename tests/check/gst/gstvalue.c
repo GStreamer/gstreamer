@@ -1020,6 +1020,15 @@ GST_START_TEST (test_value_compare)
   g_value_unset (&value2);
   g_value_unset (&tmp);
 
+  g_value_init (&value1, G_TYPE_VALUE_ARRAY);
+  g_value_init (&value2, G_TYPE_VALUE_ARRAY);
+
+  fail_unless (gst_value_compare (&value1, &value2) == GST_VALUE_EQUAL,
+      "Empty Value arrays aren't equals when they should");
+
+  g_value_unset (&value1);
+  g_value_unset (&value2);
+
   g_value_init (&value1, GST_TYPE_BITMASK);
   gst_value_set_bitmask (&value1, 0x123);
   g_value_init (&value2, GST_TYPE_BITMASK);
