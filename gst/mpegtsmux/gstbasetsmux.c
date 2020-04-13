@@ -1300,7 +1300,7 @@ gst_base_ts_mux_release_pad (GstElement * element, GstPad * pad)
     }
   }
 
-  gst_element_remove_pad (element, pad);
+  GST_ELEMENT_CLASS (parent_class)->release_pad (element, pad);
 }
 
 static gboolean
