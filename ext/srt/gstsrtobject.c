@@ -48,6 +48,7 @@ enum
   PROP_MSG_SIZE,
   PROP_STATS,
   PROP_WAIT_FOR_CONNECTION,
+  PROP_STREAMID,
   PROP_LAST
 };
 
@@ -290,6 +291,9 @@ gst_srt_object_set_property_helper (GstSRTObject * srtobject,
     case PROP_WAIT_FOR_CONNECTION:
       srtobject->wait_for_connection = g_value_get_boolean (value);
       break;
+    case PROP_STREAMID:
+      gst_structure_set_value (srtobject->parameters, "streamid", value);
+      break;
     default:
       goto err;
   }
@@ -369,6 +373,11 @@ gst_srt_object_get_property_helper (GstSRTObject * srtobject,
     case PROP_WAIT_FOR_CONNECTION:
       g_value_set_boolean (value, srtobject->wait_for_connection);
       break;
+    case PROP_STREAMID:{
+      g_value_set_string (value,
+          gst_structure_get_string (srtobject->parameters, "streamid"));
+      break;
+    }
     default:
       goto err;
   }
@@ -505,6 +514,17 @@ gst_srt_object_install_properties_helper (GObjectClass * gobject_class)
           "Block the stream until a client connects",
           GST_SRT_DEFAULT_WAIT_FOR_CONNECTION,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstSRTSrc:streamid:
+   *
+   * The stream id for the SRT access control.
+   */
+  g_object_class_install_property (gobject_class, PROP_STREAMID,
+      g_param_spec_string ("streamid", "Stream ID",
+          "Stream ID for the SRT access control", "",
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+          G_PARAM_STATIC_STRINGS));
 }
 
 static void
