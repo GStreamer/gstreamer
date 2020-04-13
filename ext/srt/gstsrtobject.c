@@ -283,9 +283,9 @@ gst_srt_object_set_property_helper (GstSRTObject * srtobject,
       gst_structure_set_value (srtobject->parameters, "pbkeylen", value);
       break;
     case PROP_WAIT_FOR_CONNECTION:
-      GST_OBJECT_LOCK (srtobject);
+      GST_OBJECT_LOCK (srtobject->element);
       srtobject->wait_for_connection = g_value_get_boolean (value);
-      GST_OBJECT_UNLOCK (srtobject);
+      GST_OBJECT_UNLOCK (srtobject->element);
       break;
     default:
       return FALSE;
