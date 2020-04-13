@@ -106,6 +106,26 @@ G_STMT_START {                                          \
       GST_TIME_ARGS (_MAX_DURATION(obj)), GST_TIME_ARGS (max_duration)); \
 }
 
+#define assert_set_start(obj, start) \
+  fail_unless (ges_timeline_element_set_start (\
+        GES_TIMELINE_ELEMENT (obj), start), \
+        "Could not set the start of " #obj " to " #start)
+
+#define assert_set_duration(obj, duration) \
+  fail_unless (ges_timeline_element_set_duration (\
+        GES_TIMELINE_ELEMENT (obj), duration), \
+        "Could not set the duration of " #obj " to " #duration)
+
+#define assert_set_inpoint(obj, inpoint) \
+  fail_unless (ges_timeline_element_set_inpoint (\
+        GES_TIMELINE_ELEMENT (obj), inpoint), \
+        "Could not set the in-point of " #obj " to " #inpoint)
+
+#define assert_set_max_duration(obj, max_duration) \
+  fail_unless (ges_timeline_element_set_max_duration (\
+        GES_TIMELINE_ELEMENT (obj), max_duration), \
+        "Could not set the max-duration of " #obj " to " #max_duration)
+
 #define assert_num_in_track(track, val) \
 { \
   GList *tmp = ges_track_get_elements (track); \

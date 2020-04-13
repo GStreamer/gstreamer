@@ -193,4 +193,7 @@ GstClockTime ges_clip_get_timeline_time_from_source_frame (GESClip * clip,
                                                            GESFrameNumber frame_number,
                                                            GError ** err);
 
+GES_API
+GstClockTime ges_clip_get_duration_limit (GESClip * clip);
+
 G_END_DECLS

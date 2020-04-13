@@ -22,6 +22,14 @@
 #include <ges/ges.h>
 #include <gst/check/gstcheck.h>
 
+#define _assert_add(clip, child) \
+  fail_unless (ges_container_add (GES_CONTAINER (clip), \
+        GES_TIMELINE_ELEMENT (child)))
+
+#define _assert_remove(clip, child) \
+  fail_unless (ges_container_remove (GES_CONTAINER (clip), \
+        GES_TIMELINE_ELEMENT (child)))
+
 GST_START_TEST (test_object_properties)
 {
   GESClip *clip;
@@ -95,8 +103,7 @@ GST_START_TEST (test_object_properties)
   nle_object_check (ges_track_element_get_nleobject (trackelement), 400, 510,
       120, 510, MIN_NLE_PRIO + TRANSITIONS_HEIGHT, TRUE);
 
-  ges_container_remove (GES_CONTAINER (clip),
-      GES_TIMELINE_ELEMENT (trackelement));
+  _assert_remove (clip, trackelement);
 
   gst_object_unref (timeline);
 
@@ -365,10 +372,10 @@ GST_START_TEST (test_split_object)
       GES_TIMELINE_ELEMENT (clip));
 
   effect1 = GES_TRACK_ELEMENT (ges_effect_new ("agingtv"));
-  ges_container_add (GES_CONTAINER (clip), GES_TIMELINE_ELEMENT (effect1));
+  _assert_add (clip, effect1);
 
   effect2 = GES_TRACK_ELEMENT (ges_effect_new ("vertigotv"));
-  ges_container_add (GES_CONTAINER (clip), GES_TIMELINE_ELEMENT (effect2));
+  _assert_add (clip, effect2);
 
   /* Check that trackelement has the same properties */
   CHECK_OBJECT_PROPS (trackelement1, 42, 12, 50);
@@ -578,18 +585,15 @@ GST_START_TEST (test_clip_group_ungroup)
 
   el = GES_TRACK_ELEMENT (ges_effect_new ("audioecho"));
   ges_track_element_set_track_type (el, GES_TRACK_TYPE_AUDIO);
-  fail_unless (ges_container_add (GES_CONTAINER (clip),
-          GES_TIMELINE_ELEMENT (el)));
+  _assert_add (clip, el);
 
   el = GES_TRACK_ELEMENT (ges_effect_new ("agingtv"));
   ges_track_element_set_track_type (el, GES_TRACK_TYPE_VIDEO);
-  fail_unless (ges_container_add (GES_CONTAINER (clip),
-          GES_TIMELINE_ELEMENT (el)));
+  _assert_add (clip, el);
 
   el = GES_TRACK_ELEMENT (ges_effect_new ("videobalance"));
   ges_track_element_set_track_type (el, GES_TRACK_TYPE_VIDEO);
-  fail_unless (ges_container_add (GES_CONTAINER (clip),
-          GES_TIMELINE_ELEMENT (el)));
+  _assert_add (clip, el);
 
   assert_num_children (clip, 5);
   CHECK_OBJECT_PROPS (clip, 0, 0, 10);
@@ -696,27 +700,27 @@ GST_START_TEST (test_clip_group_ungroup)
   assert_num_in_track (audio_track, 2);
   assert_num_in_track (video_track, 3);
 
-  ges_timeline_element_set_start (GES_TIMELINE_ELEMENT (video_clip), 10);
+  assert_set_start (video_clip, 10);
   CHECK_OBJECT_PROPS (video_clip, 10, 0, 10);
   CHECK_OBJECT_PROPS (audio_clip, 0, 0, 10);
 
   _assert_regroup_fails (containers);
 
-  ges_timeline_element_set_start (GES_TIMELINE_ELEMENT (video_clip), 0);
-  ges_timeline_element_set_inpoint (GES_TIMELINE_ELEMENT (video_clip), 10);
+  assert_set_start (video_clip, 0);
+  assert_set_inpoint (video_clip, 10);
   CHECK_OBJECT_PROPS (video_clip, 0, 10, 10);
   CHECK_OBJECT_PROPS (audio_clip, 0, 0, 10);
 
   _assert_regroup_fails (containers);
 
-  ges_timeline_element_set_inpoint (GES_TIMELINE_ELEMENT (video_clip), 0);
-  ges_timeline_element_set_duration (GES_TIMELINE_ELEMENT (video_clip), 15);
+  assert_set_inpoint (video_clip, 0);
+  assert_set_duration (video_clip, 15);
   CHECK_OBJECT_PROPS (video_clip, 0, 0, 15);
   CHECK_OBJECT_PROPS (audio_clip, 0, 0, 10);
 
   _assert_regroup_fails (containers);
 
-  ges_timeline_element_set_duration (GES_TIMELINE_ELEMENT (video_clip), 10);
+  assert_set_duration (video_clip, 10);
   CHECK_OBJECT_PROPS (video_clip, 0, 0, 10);
   CHECK_OBJECT_PROPS (audio_clip, 0, 0, 10);
 
@@ -897,8 +901,7 @@ GST_START_TEST (test_clip_can_group)
   /* can group if same asset but different tracks */
   clip1 = ges_layer_add_asset (layer1, asset2, 0, 0, 10, GES_TRACK_TYPE_VIDEO);
   fail_unless (clip1);
-  fail_unless (ges_container_add (GES_CONTAINER (clip1),
-          GES_TIMELINE_ELEMENT (ges_effect_new ("agingtv"))));
+  _assert_add (clip1, ges_effect_new ("agingtv"));
   assert_num_children (clip1, 2);
 
   clip2 = ges_layer_add_asset (layer1, asset2, 0, 0, 10, GES_TRACK_TYPE_AUDIO);
@@ -997,11 +1000,9 @@ GST_START_TEST (test_adding_children_to_track)
   fail_unless (ges_track_element_get_track (source) == track1);
 
   effect = GES_TRACK_ELEMENT (ges_effect_new ("agingtv"));
-  fail_unless (ges_container_add (GES_CONTAINER (clip),
-          GES_TIMELINE_ELEMENT (effect)));
+  _assert_add (clip, effect);
   effect2 = GES_TRACK_ELEMENT (ges_effect_new ("vertigotv"));
-  fail_unless (ges_container_add (GES_CONTAINER (clip),
-          GES_TIMELINE_ELEMENT (effect2)));
+  _assert_add (clip, effect2);
   assert_num_children (clip, 3);
   assert_num_in_track (track1, 3);
   assert_num_in_track (track2, 0);
@@ -1154,8 +1155,7 @@ GST_START_TEST (test_adding_children_to_track)
   /* removing core from the container, empties the non-core from their
    * tracks */
   gst_object_ref (added);
-  fail_unless (ges_container_remove (GES_CONTAINER (clip),
-          GES_TIMELINE_ELEMENT (added)));
+  _assert_remove (clip, added);
   assert_num_children (clip, 5);
   fail_unless (ges_track_element_get_track (source) == track1);
   fail_if (ges_track_element_get_track (added));
@@ -1167,10 +1167,8 @@ GST_START_TEST (test_adding_children_to_track)
   assert_num_in_track (track2, 0);
   gst_object_unref (added);
 
-  fail_unless (ges_container_remove (GES_CONTAINER (clip),
-          GES_TIMELINE_ELEMENT (added2)));
-  fail_unless (ges_container_remove (GES_CONTAINER (clip),
-          GES_TIMELINE_ELEMENT (added3)));
+  _assert_remove (clip, added2);
+  _assert_remove (clip, added3);
   assert_num_children (clip, 3);
   assert_num_in_track (track1, 3);
   assert_num_in_track (track2, 0);
@@ -1234,14 +1232,13 @@ GST_START_TEST (test_adding_children_to_track)
 
   /* can not add source at time 23 because it would result in three
    * overlapping sources in the track */
-  fail_unless (ges_timeline_element_set_start (GES_TIMELINE_ELEMENT (clip),
-          23));
+  assert_set_start (clip, 23);
   fail_if (ges_clip_add_child_to_track (clip, source, track1, NULL));
   assert_num_children (clip, 3);
   assert_num_in_track (track1, 4);
 
   /* can add at 5, with overlap */
-  fail_unless (ges_timeline_element_set_start (GES_TIMELINE_ELEMENT (clip), 5));
+  assert_set_start (clip, 5);
   added = ges_clip_add_child_to_track (clip, source, track1, NULL);
   /* added is the source since it was not already in a track */
   fail_unless (added == source);
@@ -1314,8 +1311,7 @@ GST_START_TEST (test_clip_refcount_remove_child)
   assert_num_in_track (track, 2);
   ASSERT_OBJECT_REFCOUNT (effect, "1 for the track + 1 timeline", 2);
 
-  fail_unless (ges_container_add (GES_CONTAINER (clip),
-          GES_TIMELINE_ELEMENT (effect)));
+  _assert_add (clip, effect);
   assert_num_children (clip, 2);
   ASSERT_OBJECT_REFCOUNT (effect, "1 for the container + 1 for the track"
       " + 1 timeline", 3);
@@ -1326,8 +1322,7 @@ GST_START_TEST (test_clip_refcount_remove_child)
   g_signal_connect (clip, "child-removed", G_CALLBACK (child_removed_cb),
       &called);
   gst_object_ref (effect);
-  fail_unless (ges_container_remove (GES_CONTAINER (clip),
-          GES_TIMELINE_ELEMENT (effect)));
+  _assert_remove (clip, effect);
   fail_unless (called == TRUE);
   ASSERT_OBJECT_REFCOUNT (effect, "1 test ref", 1);
   gst_object_unref (effect);
@@ -1377,18 +1372,15 @@ GST_START_TEST (test_clip_find_track_element)
 
   effect = GES_TRACK_ELEMENT (ges_effect_new ("identity"));
   fail_unless (ges_track_add_element (track, effect));
-  fail_unless (ges_container_add (GES_CONTAINER (clip),
-          GES_TIMELINE_ELEMENT (effect)));
+  _assert_add (clip, effect);
 
   effect1 = GES_TRACK_ELEMENT (ges_effect_new ("identity"));
   fail_unless (ges_track_add_element (track1, effect1));
-  fail_unless (ges_container_add (GES_CONTAINER (clip),
-          GES_TIMELINE_ELEMENT (effect1)));
+  _assert_add (clip, effect1);
 
   effect2 = GES_TRACK_ELEMENT (ges_effect_new ("identity"));
   fail_unless (ges_track_add_element (track2, effect2));
-  fail_unless (ges_container_add (GES_CONTAINER (clip),
-          GES_TIMELINE_ELEMENT (effect2)));
+  _assert_add (clip, effect2);
 
   fail_if (selection_called);
   assert_num_children (clip, 6);
@@ -1529,16 +1521,13 @@ GST_START_TEST (test_effects_priorities)
   ges_layer_add_clip (layer, clip);
 
   effect = GES_TRACK_ELEMENT (ges_effect_new ("agingtv"));
-  fail_unless (ges_container_add (GES_CONTAINER (clip),
-          GES_TIMELINE_ELEMENT (effect)));
+  _assert_add (clip, effect);
 
   effect1 = GES_TRACK_ELEMENT (ges_effect_new ("agingtv"));
-  fail_unless (ges_container_add (GES_CONTAINER (clip),
-          GES_TIMELINE_ELEMENT (effect1)));
+  _assert_add (clip, effect1);
 
   effect2 = GES_TRACK_ELEMENT (ges_effect_new ("agingtv"));
-  fail_unless (ges_container_add (GES_CONTAINER (clip),
-          GES_TIMELINE_ELEMENT (effect2)));
+  _assert_add (clip, effect2);
 
   fail_unless_equals_int (MIN_NLE_PRIO + TRANSITIONS_HEIGHT + 0,
       _PRIORITY (effect));
@@ -1712,10 +1701,10 @@ GST_START_TEST (test_children_time_setters)
     ges_track_element_set_has_internal_source (child, TRUE);
     _test_children_time_setting_on_clip (clip, child);
     /* clip in a group */
-    fail_unless (ges_container_add (group, GES_TIMELINE_ELEMENT (clip)));
+    _assert_add (group, clip);
     _test_children_time_setting_on_clip (clip, child);
     /* group is removed from the timeline and destroyed when empty */
-    ges_container_remove (group, GES_TIMELINE_ELEMENT (clip));
+    _assert_remove (group, clip);
     /* child not in timeline */
     gst_object_ref (clip);
     fail_unless (ges_layer_remove_clip (layer, clip));
@@ -1803,9 +1792,9 @@ GST_START_TEST (test_children_inpoint)
 
   clip = GES_TIMELINE_ELEMENT (ges_test_clip_new ());
 
-  fail_unless (ges_timeline_element_set_start (clip, 5));
-  fail_unless (ges_timeline_element_set_duration (clip, 20));
-  fail_unless (ges_timeline_element_set_inpoint (clip, 30));
+  assert_set_start (clip, 5);
+  assert_set_duration (clip, 20);
+  assert_set_inpoint (clip, 30);
 
   CHECK_OBJECT_PROPS (clip, 5, 30, 20);
 
@@ -1833,13 +1822,13 @@ GST_START_TEST (test_children_inpoint)
   fail_if (ges_track_element_has_internal_source (GES_TRACK_ELEMENT (effect)));
   /* allow us to choose our own in-point */
   ges_track_element_set_has_internal_source (GES_TRACK_ELEMENT (effect), TRUE);
-  fail_unless (ges_timeline_element_set_start (effect, 104));
-  fail_unless (ges_timeline_element_set_duration (effect, 53));
-  fail_unless (ges_timeline_element_set_inpoint (effect, 67));
+  assert_set_start (effect, 104);
+  assert_set_duration (effect, 53);
+  assert_set_inpoint (effect, 67);
 
   /* adding the effect will change its start and duration, but not its
    * in-point */
-  fail_unless (ges_container_add (GES_CONTAINER (clip), effect));
+  _assert_add (clip, effect);
 
   CHECK_OBJECT_PROPS (clip, 5, 30, 20);
   CHECK_OBJECT_PROPS (child0, 5, 30, 20);
@@ -1865,7 +1854,7 @@ GST_START_TEST (test_children_inpoint)
 
   /* when we set the in-point on a core-child with an internal source we
    * also set the clip and siblings with the same features */
-  fail_unless (ges_timeline_element_set_inpoint (child1, 50));
+  assert_set_inpoint (child1, 50);
 
   CHECK_OBJECT_PROPS (clip, 5, 50, 20);
   /* child with no internal source not changed */
@@ -1883,7 +1872,7 @@ GST_START_TEST (test_children_inpoint)
   CHECK_OBJECT_PROPS (child1, 5, 50, 20);
   CHECK_OBJECT_PROPS (effect, 5, 67, 20);
 
-  fail_unless (ges_timeline_element_set_inpoint (child0, 40));
+  assert_set_inpoint (child0, 40);
 
   CHECK_OBJECT_PROPS (clip, 5, 40, 20);
   CHECK_OBJECT_PROPS (child0, 5, 40, 20);
@@ -1891,7 +1880,7 @@ GST_START_TEST (test_children_inpoint)
   CHECK_OBJECT_PROPS (effect, 5, 67, 20);
 
   /* setting in-point on effect shouldn't change any other siblings */
-  fail_unless (ges_timeline_element_set_inpoint (effect, 77));
+  assert_set_inpoint (effect, 77);
 
   CHECK_OBJECT_PROPS (clip, 5, 40, 20);
   CHECK_OBJECT_PROPS (child0, 5, 40, 20);
@@ -1943,13 +1932,13 @@ GST_START_TEST (test_children_max_duration)
 
     max_duration = clips[i].max_duration;
     fail_unless_equals_uint64 (_MAX_DURATION (clip), max_duration);
-    fail_unless (ges_timeline_element_set_start (clip, 5));
-    fail_unless (ges_timeline_element_set_duration (clip, 20));
-    fail_unless (ges_timeline_element_set_inpoint (clip, 30));
+    assert_set_start (clip, 5);
+    assert_set_duration (clip, 20);
+    assert_set_inpoint (clip, 30);
 
     /* can set the max duration the clip to anything whilst it has
      * no core child */
-    fail_unless (ges_timeline_element_set_max_duration (clip, 150));
+    assert_set_max_duration (clip, 150);
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, 150);
 
@@ -1960,31 +1949,31 @@ GST_START_TEST (test_children_max_duration)
     /* allow us to choose our own max-duration */
     ges_track_element_set_has_internal_source (GES_TRACK_ELEMENT (effect),
         TRUE);
-    fail_unless (ges_timeline_element_set_start (effect, 104));
-    fail_unless (ges_timeline_element_set_duration (effect, 53));
-    fail_unless (ges_timeline_element_set_max_duration (effect, 400));
+    assert_set_start (effect, 104);
+    assert_set_duration (effect, 53);
+    assert_set_max_duration (effect, 400);
 
     /* adding the effect will change its start and duration, but not its
      * max-duration (or in-point) */
-    fail_unless (ges_container_add (GES_CONTAINER (clip), effect));
+    _assert_add (clip, effect);
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, 150);
     CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
     /* only non-core, so can still set the max-duration */
-    fail_unless (ges_timeline_element_set_max_duration (clip, 200));
+    assert_set_max_duration (clip, 200);
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, 200);
     CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
     /* removing should not change the max-duration we set on the clip */
     gst_object_ref (effect);
-    fail_unless (ges_container_remove (GES_CONTAINER (clip), effect));
+    _assert_remove (clip, effect);
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, 200);
     CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
-    fail_unless (ges_container_add (GES_CONTAINER (clip), effect));
+    _assert_add (clip, effect);
     gst_object_unref (effect);
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, 200);
@@ -2022,21 +2011,21 @@ GST_START_TEST (test_children_max_duration)
 
     /* when setting max_duration of core children, clip will take the
      * minimum value */
-    fail_unless (ges_timeline_element_set_max_duration (child0, new_max - 1));
+    assert_set_max_duration (child0, new_max - 1);
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 1);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max - 1);
     CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, max_duration);
     CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
-    fail_unless (ges_timeline_element_set_max_duration (child1, new_max - 2));
+    assert_set_max_duration (child1, new_max - 2);
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max - 1);
     CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, new_max - 2);
     CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
-    fail_unless (ges_timeline_element_set_max_duration (child0, new_max + 1));
+    assert_set_max_duration (child0, new_max + 1);
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max + 1);
@@ -2092,21 +2081,21 @@ GST_START_TEST (test_children_max_duration)
     CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
     /* setting below new_max is ok */
-    fail_unless (ges_timeline_element_set_inpoint (child0, 15));
+    assert_set_inpoint (child0, 15);
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 15, 20, new_max - 2);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 15, 20, new_max + 1);
     CHECK_OBJECT_PROPS_MAX (child1, 5, 15, 20, new_max - 2);
     CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
-    fail_unless (ges_timeline_element_set_inpoint (child1, 25));
+    assert_set_inpoint (child1, 25);
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 25, 20, new_max - 2);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 25, 20, new_max + 1);
     CHECK_OBJECT_PROPS_MAX (child1, 5, 25, 20, new_max - 2);
     CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
-    fail_unless (ges_timeline_element_set_inpoint (clip, 30));
+    assert_set_inpoint (clip, 30);
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max + 1);
@@ -2114,7 +2103,7 @@ GST_START_TEST (test_children_max_duration)
     CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
     /* non-core has no effect */
-    fail_unless (ges_timeline_element_set_max_duration (effect, new_max + 500));
+    assert_set_max_duration (effect, new_max + 500);
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max + 1);
@@ -2123,7 +2112,7 @@ GST_START_TEST (test_children_max_duration)
 
     /* can set the in-point of non-core to be higher than the max_duration
      * of the clip */
-    fail_unless (ges_timeline_element_set_inpoint (effect, new_max + 2));
+    assert_set_inpoint (effect, new_max + 2);
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max + 1);
@@ -2145,14 +2134,14 @@ GST_START_TEST (test_children_max_duration)
     CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, new_max - 2);
     CHECK_OBJECT_PROPS_MAX (effect, 5, new_max + 2, 20, new_max + 500);
 
-    fail_unless (ges_timeline_element_set_inpoint (effect, 0));
+    assert_set_inpoint (effect, 0);
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max + 1);
     CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, new_max - 2);
     CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, new_max + 500);
 
-    fail_unless (ges_timeline_element_set_max_duration (effect, 400));
+    assert_set_max_duration (effect, 400);
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max + 1);
@@ -2161,7 +2150,7 @@ GST_START_TEST (test_children_max_duration)
 
     /* setting on the clip will set all the core children to the same
      * value */
-    fail_unless (ges_timeline_element_set_max_duration (clip, 180));
+    assert_set_max_duration (clip, 180);
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, 180);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, 180);
@@ -2217,7 +2206,7 @@ GST_START_TEST (test_children_max_duration)
     CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
     /* can now set the max-duration, which will effect the clip */
-    fail_unless (ges_timeline_element_set_max_duration (child0, 140));
+    assert_set_max_duration (child0, 140);
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, 140);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, 140);
@@ -2232,7 +2221,7 @@ GST_START_TEST (test_children_max_duration)
     CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, GST_CLOCK_TIME_NONE);
     CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
-    fail_unless (ges_timeline_element_set_max_duration (child1, 130));
+    assert_set_max_duration (child1, 130);
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, 130);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, 140);
@@ -2245,7 +2234,7 @@ GST_START_TEST (test_children_max_duration)
     gst_object_ref (effect);
 
     /* removing non-core does nothing */
-    fail_unless (ges_container_remove (GES_CONTAINER (clip), effect));
+    _assert_remove (clip, effect);
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, 130);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, 140);
@@ -2253,7 +2242,7 @@ GST_START_TEST (test_children_max_duration)
     CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
     /* new minimum max-duration for the clip when we remove child1 */
-    fail_unless (ges_container_remove (GES_CONTAINER (clip), child1));
+    _assert_remove (clip, child1);
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, 140);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, 140);
@@ -2262,7 +2251,7 @@ GST_START_TEST (test_children_max_duration)
 
     /* with no core-children, the max-duration of the clip is set to
      * GST_CLOCK_TIME_NONE */
-    fail_unless (ges_container_remove (GES_CONTAINER (clip), child0));
+    _assert_remove (clip, child0);
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, GST_CLOCK_TIME_NONE);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, 140);
@@ -2283,6 +2272,323 @@ GST_START_TEST (test_children_max_duration)
 
 GST_END_TEST;
 
+#define _assert_duration_limit(clip, expect) \
+  assert_equals_uint64 (ges_clip_get_duration_limit (GES_CLIP (clip)), expect)
+
+GST_START_TEST (test_duration_limit)
+{
+  GESTimeline *timeline;
+  GESLayer *layer;
+  GESClip *clip;
+  GESTrackElement *video_source, *audio_source;
+  GESTrackElement *effect1, *effect2, *effect3;
+  GESTrack *track1, *track2;
+  gint limit_notify_count = 0;
+  gint duration_notify_count = 0;
+
+  ges_init ();
+
+  timeline = ges_timeline_new ();
+  track1 = GES_TRACK (ges_video_track_new ());
+  track2 = GES_TRACK (ges_audio_track_new ());
+
+  fail_unless (ges_timeline_add_track (timeline, track1));
+  fail_unless (ges_timeline_add_track (timeline, track2));
+  /* add track3 later */
+
+  layer = ges_timeline_append_layer (timeline);
+
+  clip = GES_CLIP (ges_test_clip_new ());
+  g_signal_connect (clip, "notify::duration-limit", G_CALLBACK (_count_cb),
+      &limit_notify_count);
+  g_signal_connect (clip, "notify::duration", G_CALLBACK (_count_cb),
+      &duration_notify_count);
+
+  /* no limit to begin with */
+  _assert_duration_limit (clip, GST_CLOCK_TIME_NONE);
+
+  /* add effects */
+  effect1 = GES_TRACK_ELEMENT (ges_effect_new ("textoverlay"));
+  ges_track_element_set_has_internal_source (effect1, TRUE);
+
+  effect2 = GES_TRACK_ELEMENT (ges_effect_new ("agingtv"));
+  ges_track_element_set_has_internal_source (effect2, TRUE);
+
+  effect3 = GES_TRACK_ELEMENT (ges_effect_new ("audioecho"));
+  ges_track_element_set_has_internal_source (effect3, TRUE);
+
+  _assert_add (clip, effect1);
+  _assert_add (clip, effect2);
+  _assert_add (clip, effect3);
+  assert_num_children (clip, 3);
+  _assert_duration_limit (clip, GST_CLOCK_TIME_NONE);
+  assert_equals_int (limit_notify_count, 0);
+  assert_equals_int (duration_notify_count, 0);
+
+  /* no change in duration limit whilst children are not in any track */
+  assert_set_max_duration (effect1, 20);
+  _assert_duration_limit (clip, GST_CLOCK_TIME_NONE);
+  assert_equals_int (limit_notify_count, 0);
+  assert_equals_int (duration_notify_count, 0);
+
+  assert_set_inpoint (effect1, 5);
+  _assert_duration_limit (clip, GST_CLOCK_TIME_NONE);
+  assert_equals_int (limit_notify_count, 0);
+  assert_equals_int (duration_notify_count, 0);
+
+  /* set a duration that will be above the duration-limit */
+  assert_set_duration (clip, 20);
+  assert_equals_int (duration_notify_count, 1);
+
+  /* add to layer to create sources */
+  fail_unless (ges_layer_add_clip (layer, clip));
+
+  /* duration-limit changes once because of effect1 */
+  _assert_duration_limit (clip, 15);
+  assert_equals_int (limit_notify_count, 1);
+  assert_equals_int (duration_notify_count, 2);
+  /* duration has automatically been set to the duration-limit */
+  CHECK_OBJECT_PROPS_MAX (clip, 0, 0, 15, GST_CLOCK_TIME_NONE);
+
+  assert_num_children (clip, 5);
+  assert_num_in_track (track1, 3);
+  assert_num_in_track (track2, 2);
+
+  video_source = ges_clip_find_track_element (clip, track1, GES_TYPE_SOURCE);
+  fail_unless (video_source);
+  gst_object_unref (video_source);
+
+  audio_source = ges_clip_find_track_element (clip, track2, GES_TYPE_SOURCE);
+  fail_unless (audio_source);
+  gst_object_unref (audio_source);
+
+  CHECK_OBJECT_PROPS_MAX (video_source, 0, 0, 15, GST_CLOCK_TIME_NONE);
+  fail_unless (ges_track_element_get_track (video_source) == track1);
+  fail_unless (ges_track_element_get_track_type (video_source) ==
+      GES_TRACK_TYPE_VIDEO);
+  CHECK_OBJECT_PROPS_MAX (audio_source, 0, 0, 15, GST_CLOCK_TIME_NONE);
+  fail_unless (ges_track_element_get_track (audio_source) == track2);
+  fail_unless (ges_track_element_get_track_type (audio_source) ==
+      GES_TRACK_TYPE_AUDIO);
+  CHECK_OBJECT_PROPS_MAX (effect1, 0, 5, 15, 20);
+  fail_unless (ges_track_element_get_track (effect1) == track1);
+  CHECK_OBJECT_PROPS_MAX (effect2, 0, 0, 15, GST_CLOCK_TIME_NONE);
+  fail_unless (ges_track_element_get_track (effect2) == track1);
+  CHECK_OBJECT_PROPS_MAX (effect3, 0, 0, 15, GST_CLOCK_TIME_NONE);
+  fail_unless (ges_track_element_get_track (effect3) == track2);
+
+  /* Make effect1 inactive, which will remove the duration-limit */
+  fail_unless (ges_track_element_set_active (effect1, FALSE));
+  _assert_duration_limit (clip, GST_CLOCK_TIME_NONE);
+  assert_equals_int (limit_notify_count, 2);
+  /* duration is unchanged */
+  assert_equals_int (duration_notify_count, 2);
+  CHECK_OBJECT_PROPS_MAX (clip, 0, 0, 15, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (video_source, 0, 0, 15, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (audio_source, 0, 0, 15, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect1, 0, 5, 15, 20);
+  CHECK_OBJECT_PROPS_MAX (effect2, 0, 0, 15, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect3, 0, 0, 15, GST_CLOCK_TIME_NONE);
+
+  /* changing the in-point does not change the duration limit whilst
+   * there is no max-duration */
+  assert_set_inpoint (clip, 10);
+  _assert_duration_limit (clip, GST_CLOCK_TIME_NONE);
+  assert_equals_int (limit_notify_count, 2);
+  assert_equals_int (duration_notify_count, 2);
+  CHECK_OBJECT_PROPS_MAX (clip, 0, 10, 15, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (video_source, 0, 10, 15, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (audio_source, 0, 10, 15, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect1, 0, 5, 15, 20);
+  CHECK_OBJECT_PROPS_MAX (effect2, 0, 0, 15, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect3, 0, 0, 15, GST_CLOCK_TIME_NONE);
+
+  assert_set_max_duration (video_source, 40);
+  _assert_duration_limit (clip, 30);
+  assert_equals_int (limit_notify_count, 3);
+  assert_equals_int (duration_notify_count, 2);
+  CHECK_OBJECT_PROPS_MAX (clip, 0, 10, 15, 40);
+  CHECK_OBJECT_PROPS_MAX (video_source, 0, 10, 15, 40);
+  CHECK_OBJECT_PROPS_MAX (audio_source, 0, 10, 15, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect1, 0, 5, 15, 20);
+  CHECK_OBJECT_PROPS_MAX (effect2, 0, 0, 15, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect3, 0, 0, 15, GST_CLOCK_TIME_NONE);
+
+  /* set in-point using child */
+  assert_set_inpoint (audio_source, 15);
+  _assert_duration_limit (clip, 25);
+  assert_equals_int (limit_notify_count, 4);
+  assert_equals_int (duration_notify_count, 2);
+  CHECK_OBJECT_PROPS_MAX (clip, 0, 15, 15, 40);
+  CHECK_OBJECT_PROPS_MAX (video_source, 0, 15, 15, 40);
+  CHECK_OBJECT_PROPS_MAX (audio_source, 0, 15, 15, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect1, 0, 5, 15, 20);
+  CHECK_OBJECT_PROPS_MAX (effect2, 0, 0, 15, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect3, 0, 0, 15, GST_CLOCK_TIME_NONE);
+
+  /* set max-duration of core children */
+  assert_set_max_duration (clip, 60);
+  _assert_duration_limit (clip, 45);
+  assert_equals_int (limit_notify_count, 5);
+  assert_equals_int (duration_notify_count, 2);
+  CHECK_OBJECT_PROPS_MAX (clip, 0, 15, 15, 60);
+  CHECK_OBJECT_PROPS_MAX (video_source, 0, 15, 15, 60);
+  CHECK_OBJECT_PROPS_MAX (audio_source, 0, 15, 15, 60);
+  CHECK_OBJECT_PROPS_MAX (effect1, 0, 5, 15, 20);
+  CHECK_OBJECT_PROPS_MAX (effect2, 0, 0, 15, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect3, 0, 0, 15, GST_CLOCK_TIME_NONE);
+
+  /* can set duration up to the limit */
+  assert_set_duration (clip, 45);
+  _assert_duration_limit (clip, 45);
+  assert_equals_int (limit_notify_count, 5);
+  assert_equals_int (duration_notify_count, 3);
+  CHECK_OBJECT_PROPS_MAX (clip, 0, 15, 45, 60);
+  CHECK_OBJECT_PROPS_MAX (video_source, 0, 15, 45, 60);
+  CHECK_OBJECT_PROPS_MAX (audio_source, 0, 15, 45, 60);
+  /* effect1 has a duration that exceeds max-duration - in-point
+   * ok since it is currently inactive */
+  CHECK_OBJECT_PROPS_MAX (effect1, 0, 5, 45, 20);
+  CHECK_OBJECT_PROPS_MAX (effect2, 0, 0, 45, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect3, 0, 0, 45, GST_CLOCK_TIME_NONE);
+
+  /* limit the effects */
+  assert_set_max_duration (effect2, 70);
+  _assert_duration_limit (clip, 45);
+  assert_equals_int (limit_notify_count, 5);
+  assert_equals_int (duration_notify_count, 3);
+  CHECK_OBJECT_PROPS_MAX (clip, 0, 15, 45, 60);
+  CHECK_OBJECT_PROPS_MAX (video_source, 0, 15, 45, 60);
+  CHECK_OBJECT_PROPS_MAX (audio_source, 0, 15, 45, 60);
+  CHECK_OBJECT_PROPS_MAX (effect1, 0, 5, 45, 20);
+  CHECK_OBJECT_PROPS_MAX (effect2, 0, 0, 45, 70);
+  CHECK_OBJECT_PROPS_MAX (effect3, 0, 0, 45, GST_CLOCK_TIME_NONE);
+
+  assert_set_inpoint (effect2, 40);
+  _assert_duration_limit (clip, 30);
+  assert_equals_int (limit_notify_count, 6);
+  assert_equals_int (duration_notify_count, 4);
+  CHECK_OBJECT_PROPS_MAX (clip, 0, 15, 30, 60);
+  CHECK_OBJECT_PROPS_MAX (video_source, 0, 15, 30, 60);
+  CHECK_OBJECT_PROPS_MAX (audio_source, 0, 15, 30, 60);
+  CHECK_OBJECT_PROPS_MAX (effect1, 0, 5, 30, 20);
+  CHECK_OBJECT_PROPS_MAX (effect2, 0, 40, 30, 70);
+  CHECK_OBJECT_PROPS_MAX (effect3, 0, 0, 30, GST_CLOCK_TIME_NONE);
+
+  /* no change */
+  assert_set_max_duration (effect3, 35);
+  _assert_duration_limit (clip, 30);
+  assert_equals_int (limit_notify_count, 6);
+  assert_equals_int (duration_notify_count, 4);
+  CHECK_OBJECT_PROPS_MAX (clip, 0, 15, 30, 60);
+  CHECK_OBJECT_PROPS_MAX (video_source, 0, 15, 30, 60);
+  CHECK_OBJECT_PROPS_MAX (audio_source, 0, 15, 30, 60);
+  CHECK_OBJECT_PROPS_MAX (effect1, 0, 5, 30, 20);
+  CHECK_OBJECT_PROPS_MAX (effect2, 0, 40, 30, 70);
+  CHECK_OBJECT_PROPS_MAX (effect3, 0, 0, 30, 35);
+
+  /* make effect1 active again */
+  fail_unless (ges_track_element_set_active (effect1, TRUE));
+  _assert_duration_limit (clip, 15);
+  assert_equals_int (limit_notify_count, 7);
+  assert_equals_int (duration_notify_count, 5);
+  CHECK_OBJECT_PROPS_MAX (clip, 0, 15, 15, 60);
+  CHECK_OBJECT_PROPS_MAX (video_source, 0, 15, 15, 60);
+  CHECK_OBJECT_PROPS_MAX (audio_source, 0, 15, 15, 60);
+  CHECK_OBJECT_PROPS_MAX (effect1, 0, 5, 15, 20);
+  CHECK_OBJECT_PROPS_MAX (effect2, 0, 40, 15, 70);
+  CHECK_OBJECT_PROPS_MAX (effect3, 0, 0, 15, 35);
+
+  /* removing effect2 from track does not change limit */
+  fail_unless (ges_track_remove_element (track1, effect2));
+  _assert_duration_limit (clip, 15);
+  assert_equals_int (limit_notify_count, 7);
+  assert_equals_int (duration_notify_count, 5);
+  CHECK_OBJECT_PROPS_MAX (clip, 0, 15, 15, 60);
+  CHECK_OBJECT_PROPS_MAX (video_source, 0, 15, 15, 60);
+  CHECK_OBJECT_PROPS_MAX (audio_source, 0, 15, 15, 60);
+  CHECK_OBJECT_PROPS_MAX (effect1, 0, 5, 15, 20);
+  CHECK_OBJECT_PROPS_MAX (effect3, 0, 0, 15, 35);
+  /* no track */
+  CHECK_OBJECT_PROPS_MAX (effect2, 0, 40, 15, 70);
+
+  /* removing effect1 does */
+  fail_unless (ges_track_remove_element (track1, effect1));
+  _assert_duration_limit (clip, 35);
+  assert_equals_int (limit_notify_count, 8);
+  assert_equals_int (duration_notify_count, 5);
+  CHECK_OBJECT_PROPS_MAX (clip, 0, 15, 15, 60);
+  CHECK_OBJECT_PROPS_MAX (video_source, 0, 15, 15, 60);
+  CHECK_OBJECT_PROPS_MAX (audio_source, 0, 15, 15, 60);
+  CHECK_OBJECT_PROPS_MAX (effect3, 0, 0, 15, 35);
+  /* no track */
+  CHECK_OBJECT_PROPS_MAX (effect1, 0, 5, 15, 20);
+  CHECK_OBJECT_PROPS_MAX (effect2, 0, 40, 15, 70);
+
+  /* add back */
+  fail_unless (ges_track_add_element (track1, effect2));
+  _assert_duration_limit (clip, 30);
+  assert_equals_int (limit_notify_count, 9);
+  assert_equals_int (duration_notify_count, 5);
+  CHECK_OBJECT_PROPS_MAX (clip, 0, 15, 15, 60);
+  CHECK_OBJECT_PROPS_MAX (audio_source, 0, 15, 15, 60);
+  CHECK_OBJECT_PROPS_MAX (effect3, 0, 0, 15, 35);
+  CHECK_OBJECT_PROPS_MAX (video_source, 0, 15, 15, 60);
+  CHECK_OBJECT_PROPS_MAX (effect2, 0, 40, 15, 70);
+  /* no track */
+  CHECK_OBJECT_PROPS_MAX (effect1, 0, 5, 15, 20);
+
+  assert_set_duration (clip, 20);
+  _assert_duration_limit (clip, 30);
+  assert_equals_int (limit_notify_count, 9);
+  assert_equals_int (duration_notify_count, 6);
+  CHECK_OBJECT_PROPS_MAX (clip, 0, 15, 20, 60);
+  CHECK_OBJECT_PROPS_MAX (audio_source, 0, 15, 20, 60);
+  CHECK_OBJECT_PROPS_MAX (effect3, 0, 0, 20, 35);
+  CHECK_OBJECT_PROPS_MAX (video_source, 0, 15, 20, 60);
+  CHECK_OBJECT_PROPS_MAX (effect2, 0, 40, 20, 70);
+  /* no track */
+  CHECK_OBJECT_PROPS_MAX (effect1, 0, 5, 20, 20);
+
+  fail_unless (ges_track_add_element (track1, effect1));
+  _assert_duration_limit (clip, 15);
+  assert_equals_int (limit_notify_count, 10);
+  assert_equals_int (duration_notify_count, 7);
+  CHECK_OBJECT_PROPS_MAX (clip, 0, 15, 15, 60);
+  CHECK_OBJECT_PROPS_MAX (audio_source, 0, 15, 15, 60);
+  CHECK_OBJECT_PROPS_MAX (effect3, 0, 0, 15, 35);
+  CHECK_OBJECT_PROPS_MAX (video_source, 0, 15, 15, 60);
+  CHECK_OBJECT_PROPS_MAX (effect1, 0, 5, 15, 20);
+  CHECK_OBJECT_PROPS_MAX (effect2, 0, 40, 15, 70);
+
+  gst_object_ref (clip);
+  fail_unless (ges_layer_remove_clip (layer, clip));
+
+  assert_num_in_track (track1, 0);
+  assert_num_in_track (track2, 0);
+  assert_num_children (clip, 5);
+
+  _assert_duration_limit (clip, GST_CLOCK_TIME_NONE);
+  /* may have several changes in duration limit as the children are
+   * emptied from their tracks */
+  fail_unless (limit_notify_count > 10);
+  assert_equals_int (duration_notify_count, 7);
+  /* none in any track */
+  CHECK_OBJECT_PROPS_MAX (clip, 0, 15, 15, 60);
+  CHECK_OBJECT_PROPS_MAX (audio_source, 0, 15, 15, 60);
+  CHECK_OBJECT_PROPS_MAX (effect3, 0, 0, 15, 35);
+  CHECK_OBJECT_PROPS_MAX (video_source, 0, 15, 15, 60);
+  CHECK_OBJECT_PROPS_MAX (effect1, 0, 5, 15, 20);
+  CHECK_OBJECT_PROPS_MAX (effect2, 0, 40, 15, 70);
+
+  gst_object_unref (timeline);
+  gst_object_unref (clip);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_children_properties_contain)
 {
   GESTimeline *timeline;
@@ -2297,7 +2603,7 @@ GST_START_TEST (test_children_properties_contain)
   timeline = ges_timeline_new_audio_video ();
   layer = ges_timeline_append_layer (timeline);
   clip = GES_CLIP (ges_test_clip_new ());
-  ges_timeline_element_set_duration (GES_TIMELINE_ELEMENT (clip), 50);
+  assert_set_duration (clip, 50);
 
   fail_unless (ges_layer_add_clip (layer, clip));
 
@@ -2404,7 +2710,7 @@ GST_START_TEST (test_children_properties_change)
   timeline = ges_timeline_new_audio_video ();
   layer = ges_timeline_append_layer (timeline);
   clip = GES_TIMELINE_ELEMENT (ges_test_clip_new ());
-  ges_timeline_element_set_duration (GES_TIMELINE_ELEMENT (clip), 50);
+  assert_set_duration (clip, 50);
 
   fail_unless (ges_layer_add_clip (layer, GES_CLIP (clip)));
   fail_unless (GES_CONTAINER_CHILDREN (clip));
@@ -2678,7 +2984,7 @@ GST_START_TEST (test_copy_paste_children_properties)
   timeline = ges_timeline_new_audio_video ();
   layer = ges_timeline_append_layer (timeline);
   clip = GES_TIMELINE_ELEMENT (ges_test_clip_new ());
-  ges_timeline_element_set_duration (GES_TIMELINE_ELEMENT (clip), 50);
+  assert_set_duration (clip, 50);
 
   fail_unless (ges_layer_add_clip (layer, GES_CLIP (clip)));
 
@@ -2792,6 +3098,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_can_add_effect);
   tcase_add_test (tc_chain, test_children_inpoint);
   tcase_add_test (tc_chain, test_children_max_duration);
+  tcase_add_test (tc_chain, test_duration_limit);
   tcase_add_test (tc_chain, test_children_properties_contain);
   tcase_add_test (tc_chain, test_children_properties_change);
   tcase_add_test (tc_chain, test_copy_paste_children_properties);

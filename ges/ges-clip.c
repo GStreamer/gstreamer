@@ -118,6 +118,9 @@ struct _GESClipPrivate
 
   /* The formats supported by this Clip */
   GESTrackType supportedformats;
+
+  GstClockTime duration_limit;
+  gboolean prevent_duration_limit_update;
 };
 
 enum
@@ -125,6 +128,7 @@ enum
   PROP_0,
   PROP_LAYER,
   PROP_SUPPORTED_FORMATS,
+  PROP_DURATION_LIMIT,
   PROP_LAST
 };
 
@@ -148,11 +152,176 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GESClip, ges_clip,
 #define _IS_CORE_CHILD(child) GES_TRACK_ELEMENT_IS_CORE(child)
 
 #define _IS_TOP_EFFECT(child) \
-    (!_IS_CORE_CHILD (child) && GES_IS_BASE_EFFECT (child))
+  (!_IS_CORE_CHILD (child) && GES_IS_BASE_EFFECT (child))
 
 #define _IS_CORE_INTERNAL_SOURCE_CHILD(child) \
   (_IS_CORE_CHILD (child) \
-   && ges_track_element_has_internal_source (GES_TRACK_ELEMENT (child)))
+  && ges_track_element_has_internal_source (GES_TRACK_ELEMENT (child)))
+
+#define _MIN_CLOCK_TIME(a, b) \
+  (GST_CLOCK_TIME_IS_VALID (a) ? \
+  (GST_CLOCK_TIME_IS_VALID (b) ? MIN (a, b) : a) : b) \
+
+#define _CLOCK_TIME_IS_LESS(first, second) \
+  (GST_CLOCK_TIME_IS_VALID (first) && (!GST_CLOCK_TIME_IS_VALID (second) \
+  || first < second))
+
+
+typedef struct _DurationLimitData
+{
+  GESTrackElement *child;
+  GESTrack *track;
+  guint32 priority;
+  GstClockTime max_duration;
+  GstClockTime inpoint;
+  gboolean active;
+} DurationLimitData;
+
+static DurationLimitData *
+_duration_limit_data_new (GESTrackElement * child)
+{
+  GESTrack *track = ges_track_element_get_track (child);
+  DurationLimitData *data = g_new0 (DurationLimitData, 1);
+
+  data->child = gst_object_ref (child);
+  data->track = track ? gst_object_ref (track) : NULL;
+  data->inpoint = _INPOINT (child);
+  data->max_duration = _MAXDURATION (child);
+  data->priority = _PRIORITY (child);
+  data->active = ges_track_element_is_active (child);
+
+  return data;
+}
+
+static void
+_duration_limit_data_free (gpointer data_p)
+{
+  DurationLimitData *data = data_p;
+  gst_clear_object (&data->track);
+  gst_clear_object (&data->child);
+  g_free (data);
+}
+
+static GList *
+_duration_limit_data_list (GESClip * clip)
+{
+  GList *tmp, *list = NULL;
+
+  for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next)
+    list = g_list_prepend (list, _duration_limit_data_new (tmp->data));
+
+  return list;
+}
+
+static gint
+_cmp_by_track_then_priority (gconstpointer a_p, gconstpointer b_p)
+{
+  const DurationLimitData *a = a_p, *b = b_p;
+  if (a->track < b->track)
+    return -1;
+  else if (a->track > b->track)
+    return 1;
+  /* if higher priority (numerically lower) place later */
+  if (a->priority < b->priority)
+    return -1;
+  else if (a->priority > b->priority)
+    return 1;
+  return 0;
+}
+
+#define _INTERNAL_LIMIT(data) \
+  ((data->active && GST_CLOCK_TIME_IS_VALID (data->max_duration)) ? \
+    data->max_duration - data->inpoint : GST_CLOCK_TIME_NONE)
+
+static GstClockTime
+_calculate_duration_limit (GESClip * self, GList * child_data)
+{
+  GstClockTime limit = GST_CLOCK_TIME_NONE;
+  GList *tmp;
+
+  child_data = g_list_sort (child_data, _cmp_by_track_then_priority);
+
+  tmp = child_data;
+
+  while (tmp) {
+    /* we have the first element in the track, of the lowest priority, and
+     * work our way up from here */
+    DurationLimitData *data = tmp->data;
+    GESTrack *track = data->track;
+    if (track) {
+      GstClockTime track_limit = _INTERNAL_LIMIT (data);
+
+      for (tmp = tmp->next; tmp; tmp = tmp->next) {
+        data = tmp->data;
+        if (data->track != track)
+          break;
+        track_limit = _MIN_CLOCK_TIME (track_limit, _INTERNAL_LIMIT (data));
+      }
+
+      GST_LOG_OBJECT (self, "duration-limit for track %" GST_PTR_FORMAT
+          " is %" GST_TIME_FORMAT, track, GST_TIME_ARGS (track_limit));
+      limit = _MIN_CLOCK_TIME (limit, track_limit);
+    } else {
+      /* children not in a track do not affect the duration-limit */
+      for (tmp = tmp->next; tmp; tmp = tmp->next) {
+        data = tmp->data;
+        if (data->track)
+          break;
+      }
+    }
+  }
+  GST_LOG_OBJECT (self, "calculated duration-limit for the clip is %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (limit));
+
+  g_list_free_full (child_data, _duration_limit_data_free);
+
+  return limit;
+}
+
+static void
+_update_duration_limit (GESClip * self)
+{
+  GstClockTime duration_limit;
+
+  if (self->priv->prevent_duration_limit_update)
+    return;
+
+  duration_limit = _calculate_duration_limit (self,
+      _duration_limit_data_list (self));
+
+  if (duration_limit != self->priv->duration_limit) {
+    GESTimelineElement *element = GES_TIMELINE_ELEMENT (self);
+
+    self->priv->duration_limit = duration_limit;
+    GST_INFO_OBJECT (self, "duration-limit for the clip is %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (duration_limit));
+
+    if (_CLOCK_TIME_IS_LESS (duration_limit, element->duration)) {
+      gboolean res;
+
+      GST_INFO_OBJECT (self, "Automatically reducing duration to %"
+          GST_TIME_FORMAT " to match the new duration-limit because "
+          "the current duration %" GST_TIME_FORMAT " exceeds it",
+          GST_TIME_ARGS (duration_limit), GST_TIME_ARGS (element->duration));
+
+      /* trim end with no snapping */
+      if (element->timeline)
+        res = timeline_tree_trim (timeline_get_tree (element->timeline),
+            element, 0, GST_CLOCK_DIFF (duration_limit, element->duration),
+            GES_EDGE_END, 0);
+      else
+        res = ges_timeline_element_set_duration (element, duration_limit);
+
+      if (!res)
+        GST_ERROR_OBJECT (self, "Could not reduce the duration of the "
+            "clip to below its duration-limit of %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (duration_limit));
+    }
+    /* notify after the auto-change in duration to allow the user to set
+     * the duration in response to the change in their callbacks */
+    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_DURATION_LIMIT]);
+  }
+}
 
 /* @min_priority: The absolute minimum priority a child of @container should have
  * @max_priority: The absolute maximum priority a child of @container should have
@@ -181,8 +350,7 @@ _get_priority_range (GESContainer * container, guint32 * min_priority,
 }
 
 static void
-_child_priority_changed_cb (GESTimelineElement * child,
-    GParamSpec * arg G_GNUC_UNUSED, GESContainer * container)
+_child_priority_changed (GESContainer * container, GESTimelineElement * child)
 {
   /* we do not change the rest of the clip in response to a change in
    * the child priority */
@@ -206,24 +374,29 @@ _child_priority_changed_cb (GESTimelineElement * child,
   }
 }
 
-static void
-_child_inpoint_changed_cb (GESTimelineElement * child, GParamSpec * pspec,
-    GESContainer * container)
+/* returns TRUE if duration-limit needs to be updated */
+static gboolean
+_child_inpoint_changed (GESClip * self, GESTimelineElement * child)
 {
-  if (GES_CLIP (container)->priv->setting_inpoint)
-    return;
+  if (self->priv->setting_inpoint)
+    return FALSE;
 
-  /* ignore non-core */
-  /* if the track element has no internal content, then this means its
-   * in-point has been set (back) to 0, we can ignore this update */
+  /* if we have a non-core child, then we do not need the in-point of the
+   * clip to change. Similarly, if the track element is core but has no
+   * internal content, then this means its in-point has been set (back) to
+   * 0, which means we do not need to update the in-point of the clip. */
   if (!_IS_CORE_INTERNAL_SOURCE_CHILD (child))
-    return;
+    return TRUE;
+
+  /* if setting the in-point of the clip, this will handle the change in
+   * the duration-limit */
 
   /* If the child->inpoint is the same as our own, set_inpoint will do
    * nothing. For example, when we set them in add_child (the notifies for
    * this are released after child_added is called because
    * ges_container_add freezes them) */
-  _set_inpoint0 (GES_TIMELINE_ELEMENT (container), child->inpoint);
+  _set_inpoint0 (GES_TIMELINE_ELEMENT (self), child->inpoint);
+  return FALSE;
 }
 
 /* called when a child is added, removed or their max-duration changes */
@@ -239,10 +412,8 @@ _update_max_duration (GESContainer * container)
 
   for (tmp = container->children; tmp; tmp = tmp->next) {
     GESTimelineElement *child = tmp->data;
-    if (_IS_CORE_CHILD (child)
-        && GST_CLOCK_TIME_IS_VALID (child->maxduration))
-      min = GST_CLOCK_TIME_IS_VALID (min) ? MIN (min, child->maxduration) :
-          child->maxduration;
+    if (_IS_CORE_CHILD (child))
+      min = _MIN_CLOCK_TIME (min, child->maxduration);
   }
   priv->updating_max_duration = TRUE;
   ges_timeline_element_set_max_duration (GES_TIMELINE_ELEMENT (container), min);
@@ -250,8 +421,8 @@ _update_max_duration (GESContainer * container)
 }
 
 static void
-_child_max_duration_changed_cb (GESTimelineElement * child,
-    GParamSpec * pspec, GESContainer * container)
+_child_max_duration_changed (GESContainer * container,
+    GESTimelineElement * child)
 {
   /* ignore non-core */
   if (!_IS_CORE_CHILD (child))
@@ -261,8 +432,7 @@ _child_max_duration_changed_cb (GESTimelineElement * child,
 }
 
 static void
-_child_has_internal_source_changed_cb (GESTimelineElement * child,
-    GParamSpec * pspec, GESContainer * container)
+_child_has_internal_source_changed (GESClip * self, GESTimelineElement * child)
 {
   /* ignore non-core */
   /* if the track element is now registered to have no internal content,
@@ -271,7 +441,34 @@ _child_has_internal_source_changed_cb (GESTimelineElement * child,
     return;
 
   /* otherwise, we need to make its in-point match ours */
-  _set_inpoint0 (child, _INPOINT (container));
+  _set_inpoint0 (child, _INPOINT (self));
+}
+
+#define _IS_PROP(prop) (g_strcmp0 (name, prop) == 0)
+
+static void
+_child_property_changed_cb (GESTimelineElement * child, GParamSpec * pspec,
+    GESClip * self)
+{
+  gboolean update = FALSE;
+  const gchar *name = pspec->name;
+
+  if (_IS_PROP ("track") || _IS_PROP ("active")) {
+    update = TRUE;
+  } else if (_IS_PROP ("priority")) {
+    update = TRUE;
+    _child_priority_changed (GES_CONTAINER (self), child);
+  } else if (_IS_PROP ("in-point")) {
+    update = _child_inpoint_changed (self, child);
+  } else if (_IS_PROP ("max-duration")) {
+    update = TRUE;
+    _child_max_duration_changed (GES_CONTAINER (self), child);
+  } else if (_IS_PROP ("has-internal-source")) {
+    _child_has_internal_source_changed (self, child);
+  }
+
+  if (update)
+    _update_duration_limit (self);
 }
 
 /****************************************************
@@ -416,10 +613,13 @@ static gboolean
 _set_childrens_inpoint (GESTimelineElement * element, GstClockTime inpoint,
     gboolean break_on_failure)
 {
+  GESClip *self = GES_CLIP (element);
   GList *tmp;
-  GESClipPrivate *priv = GES_CLIP (element)->priv;
+  GESClipPrivate *priv = self->priv;
+  gboolean prev_prevent = priv->prevent_duration_limit_update;
 
   priv->setting_inpoint = TRUE;
+  priv->prevent_duration_limit_update = TRUE;
   for (tmp = GES_CONTAINER_CHILDREN (element); tmp; tmp = tmp->next) {
     GESTimelineElement *child = tmp->data;
 
@@ -428,12 +628,18 @@ _set_childrens_inpoint (GESTimelineElement * element, GstClockTime inpoint,
         GST_ERROR_OBJECT ("Could not set the in-point of child %"
             GES_FORMAT " to %" GST_TIME_FORMAT, GES_ARGS (child),
             GST_TIME_ARGS (inpoint));
-        if (break_on_failure)
+        if (break_on_failure) {
+          priv->setting_inpoint = FALSE;
+          priv->prevent_duration_limit_update = prev_prevent;
           return FALSE;
+        }
       }
     }
   }
   priv->setting_inpoint = FALSE;
+  priv->prevent_duration_limit_update = prev_prevent;
+
+  _update_duration_limit (self);
 
   return TRUE;
 }
@@ -452,7 +658,6 @@ static gboolean
 _set_duration (GESTimelineElement * element, GstClockTime duration)
 {
   GList *tmp, *children;
-
   GESContainer *container = GES_CONTAINER (element);
 
   /* get copy of children, since GESContainer may resort the clip */
@@ -477,9 +682,12 @@ static gboolean
 _set_max_duration (GESTimelineElement * element, GstClockTime maxduration)
 {
   GList *tmp;
-  GESClipPrivate *priv = GES_CLIP (element)->priv;
+  GESClip *self = GES_CLIP (element);
+  GESClipPrivate *priv = self->priv;
   GstClockTime new_min = GST_CLOCK_TIME_NONE;
   gboolean has_core = FALSE;
+  gboolean res = FALSE;
+  gboolean prev_prevent = priv->prevent_duration_limit_update;
 
   /* if we are setting based on a change in the minimum */
   if (priv->updating_max_duration)
@@ -487,6 +695,7 @@ _set_max_duration (GESTimelineElement * element, GstClockTime maxduration)
 
   /* else, we set every core child to have the same max duration */
 
+  priv->prevent_duration_limit_update = TRUE;
   priv->prevent_max_duration_update = TRUE;
   for (tmp = GES_CONTAINER_CHILDREN (element); tmp; tmp = tmp->next) {
     GESTimelineElement *child = tmp->data;
@@ -498,14 +707,12 @@ _set_max_duration (GESTimelineElement * element, GstClockTime maxduration)
           GST_ERROR_OBJECT ("Could not set the max-duration of child %"
               GES_FORMAT " to %" GST_TIME_FORMAT, GES_ARGS (child),
               GST_TIME_ARGS (maxduration));
-
-        if (GST_CLOCK_TIME_IS_VALID (child->maxduration))
-          new_min = GST_CLOCK_TIME_IS_VALID (new_min) ?
-              MIN (new_min, child->maxduration) : child->maxduration;
+        new_min = _MIN_CLOCK_TIME (new_min, child->maxduration);
       }
     }
   }
   priv->prevent_max_duration_update = FALSE;
+  priv->prevent_duration_limit_update = prev_prevent;
 
   if (!has_core) {
     /* allow max-duration to be set arbitrarily when we have no
@@ -515,7 +722,8 @@ _set_max_duration (GESTimelineElement * element, GstClockTime maxduration)
       GST_INFO_OBJECT (element,
           "Allowing max-duration of the clip to be set to %" GST_TIME_FORMAT
           " because it has no core children", GST_TIME_ARGS (maxduration));
-    return TRUE;
+    res = TRUE;
+    goto done;
   }
 
   if (new_min != maxduration) {
@@ -532,10 +740,15 @@ _set_max_duration (GESTimelineElement * element, GstClockTime maxduration)
     priv->updating_max_duration = TRUE;
     ges_timeline_element_set_max_duration (element, new_min);
     priv->updating_max_duration = FALSE;
-    return FALSE;
+    goto done;
   }
 
-  return TRUE;
+  res = TRUE;
+
+done:
+  _update_duration_limit (self);
+
+  return res;
 }
 
 static gboolean
@@ -544,7 +757,7 @@ _set_priority (GESTimelineElement * element, guint32 priority)
   GESClipPrivate *priv = GES_CLIP (element)->priv;
   GList *tmp;
   guint32 min_prio, max_prio;
-
+  gboolean prev_prevent = priv->prevent_duration_limit_update;
   GESContainer *container = GES_CONTAINER (element);
 
   /* send the new 'priority' to determine what the new 'min_prio' should
@@ -554,6 +767,7 @@ _set_priority (GESTimelineElement * element, guint32 priority)
   /* offsets will remain constant for the children */
   priv->prevent_resort = TRUE;
   priv->prevent_priority_offset_update = TRUE;
+  priv->prevent_duration_limit_update = TRUE;
   for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
     guint32 track_element_prio;
     GESTimelineElement *child = (GESTimelineElement *) tmp->data;
@@ -582,9 +796,11 @@ _set_priority (GESTimelineElement * element, guint32 priority)
     _set_priority0 (child, track_element_prio);
   }
   /* no need to re-sort the container since we maintained the relative
-   * offsets. As such, the height remains the same as well. */
+   * offsets. As such, the height and duration-limit remains the same as
+   * well. */
   priv->prevent_resort = FALSE;
   priv->prevent_priority_offset_update = FALSE;
+  priv->prevent_duration_limit_update = prev_prevent;
 
   return TRUE;
 }
@@ -650,28 +866,30 @@ _compute_height (GESContainer * container)
 static gboolean
 _add_child (GESContainer * container, GESTimelineElement * element)
 {
+  GESClip *self = GES_CLIP (container);
   GESClipClass *klass = GES_CLIP_GET_CLASS (GES_CLIP (container));
   guint max_prio, min_prio;
   GESTrack *track;
   GESTimeline *timeline = GES_TIMELINE_ELEMENT_TIMELINE (container);
-  GESClipPrivate *priv = GES_CLIP (container)->priv;
+  GESClipPrivate *priv = self->priv;
   GESAsset *asset, *creator_asset;
+  gboolean prev_prevent = priv->prevent_duration_limit_update;
 
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (element), FALSE);
 
   if (element->timeline && element->timeline != timeline) {
-    GST_WARNING_OBJECT (container, "Cannot add %" GES_FORMAT " as a child "
+    GST_WARNING_OBJECT (self, "Cannot add %" GES_FORMAT " as a child "
         "because its timeline is %" GST_PTR_FORMAT " rather than the "
         "clip's timeline %" GST_PTR_FORMAT, GES_ARGS (element),
         element->timeline, timeline);
     return FALSE;
   }
 
-  asset = ges_extractable_get_asset (GES_EXTRACTABLE (container));
+  asset = ges_extractable_get_asset (GES_EXTRACTABLE (self));
   creator_asset =
       ges_track_element_get_creator_asset (GES_TRACK_ELEMENT (element));
   if (creator_asset && asset != creator_asset) {
-    GST_WARNING_OBJECT (container,
+    GST_WARNING_OBJECT (self,
         "Cannot add the track element %" GES_FORMAT " as a child "
         "because it is a core element created by another clip with a "
         "different asset to the current clip's asset", GES_ARGS (element));
@@ -685,7 +903,7 @@ _add_child (GESContainer * container, GESTimelineElement * element)
      * the track, so we would have checked this with the
      * element->timeline check. But technically a user could get around
      * this, so we double check here. */
-    GST_WARNING_OBJECT (container, "Cannot add %" GES_FORMAT " as a child "
+    GST_WARNING_OBJECT (self, "Cannot add %" GES_FORMAT " as a child "
         "because its track %" GST_PTR_FORMAT " is part of the timeline %"
         GST_PTR_FORMAT " rather than the clip's timeline %" GST_PTR_FORMAT,
         GES_ARGS (element), track, ges_track_get_timeline (track), timeline);
@@ -700,8 +918,8 @@ _add_child (GESContainer * container, GESTimelineElement * element)
      * list of added effects, so we do not increase nb_effects. */
 
     if (track && !priv->allow_any_track
-        && _track_contains_core (GES_CLIP (container), track, TRUE)) {
-      GST_WARNING_OBJECT (container, "Cannot add the core child %" GES_FORMAT
+        && _track_contains_core (self, track, TRUE)) {
+      GST_WARNING_OBJECT (self, "Cannot add the core child %" GES_FORMAT
           " because it is in the same track %" GST_PTR_FORMAT " as an "
           "existing core child", GES_ARGS (element), track);
       return FALSE;
@@ -712,11 +930,10 @@ _add_child (GESContainer * container, GESTimelineElement * element)
     if (ges_track_element_has_internal_source (GES_TRACK_ELEMENT (element))) {
       /* adding can fail if the max-duration of the element is smaller
        * than the current in-point of the clip */
-      if (!_set_inpoint0 (element, _INPOINT (container))) {
+      if (!_set_inpoint0 (element, _INPOINT (self))) {
         GST_ERROR_OBJECT (element, "Could not set the in-point of the "
             "element %" GES_FORMAT " to %" GST_TIME_FORMAT ". Not adding "
-            "as a child", GES_ARGS (element),
-            GST_TIME_ARGS (_INPOINT (container)));
+            "as a child", GES_ARGS (element), GST_TIME_ARGS (_INPOINT (self)));
         return FALSE;
       }
     }
@@ -730,20 +947,21 @@ _add_child (GESContainer * container, GESTimelineElement * element)
      * to make room. */
 
     if (track && !priv->allow_any_track
-        && !_track_contains_core (GES_CLIP (container), track, TRUE)) {
-      GST_WARNING_OBJECT (container, "Cannot add the effect %" GES_FORMAT
+        && !_track_contains_core (GES_CLIP (self), track, TRUE)) {
+      GST_WARNING_OBJECT (self, "Cannot add the effect %" GES_FORMAT
           " because its track %" GST_PTR_FORMAT " does not contain one "
           "of the clip's core children", GES_ARGS (element), track);
       return FALSE;
     }
 
-    GST_DEBUG_OBJECT (container, "Adding %ith effect: %" GES_FORMAT
+    GST_DEBUG_OBJECT (self, "Adding %ith effect: %" GES_FORMAT
         " Priority %i", priv->nb_effects + 1, GES_ARGS (element),
         min_prio + priv->nb_effects);
 
     /* changing priorities, and updating their offset */
     priv->prevent_resort = TRUE;
-    tmp = g_list_nth (GES_CONTAINER_CHILDREN (container), priv->nb_effects);
+    priv->prevent_duration_limit_update = TRUE;
+    tmp = g_list_nth (container->children, priv->nb_effects);
     for (; tmp; tmp = tmp->next)
       ges_timeline_element_set_priority (GES_TIMELINE_ELEMENT (tmp->data),
           GES_TIMELINE_ELEMENT_PRIORITY (tmp->data) + 1);
@@ -751,30 +969,32 @@ _add_child (GESContainer * container, GESTimelineElement * element)
     _set_priority0 (element, min_prio + priv->nb_effects);
     priv->nb_effects++;
     priv->prevent_resort = FALSE;
+    priv->prevent_duration_limit_update = prev_prevent;
     /* no need to call _ges_container_sort_children (container) since
      * there is no change to the ordering yet (this happens after the
      * child is actually added) */
     /* The height has already changed (increased by 1) */
     _compute_height (container);
+    /* update duration limit in _child_added */
   } else {
     if (_IS_TOP_EFFECT (element))
-      GST_WARNING_OBJECT (container, "Cannot add the effect %" GES_FORMAT
+      GST_WARNING_OBJECT (self, "Cannot add the effect %" GES_FORMAT
           " because it is not a core element created by the clip itself "
           "and the %s class does not allow for adding extra effects",
           GES_ARGS (element), G_OBJECT_CLASS_NAME (klass));
     else if (GES_CLIP_CLASS_CAN_ADD_EFFECTS (klass))
-      GST_WARNING_OBJECT (container, "Cannot add the track element %"
+      GST_WARNING_OBJECT (self, "Cannot add the track element %"
           GES_FORMAT " because it is neither a core element created by "
           "the clip itself, nor a GESBaseEffect", GES_ARGS (element));
     else
-      GST_WARNING_OBJECT (container, "Cannot add the track element %"
+      GST_WARNING_OBJECT (self, "Cannot add the track element %"
           GES_FORMAT " because it is not a core element created by the "
           "clip itself", GES_ARGS (element));
     return FALSE;
   }
 
-  _set_start0 (element, GES_TIMELINE_ELEMENT_START (container));
-  _set_duration0 (element, GES_TIMELINE_ELEMENT_DURATION (container));
+  _set_start0 (element, GES_TIMELINE_ELEMENT_START (self));
+  _set_duration0 (element, GES_TIMELINE_ELEMENT_DURATION (self));
 
   return TRUE;
 }
@@ -787,10 +1007,12 @@ _remove_child (GESContainer * container, GESTimelineElement * element)
   /* NOTE: notifies are currently frozen by ges_container_add */
   if (_IS_TOP_EFFECT (element)) {
     GList *tmp;
+    gboolean prev_prevent = priv->prevent_duration_limit_update;
     GST_DEBUG_OBJECT (container, "Resyncing effects priority.");
 
     /* changing priorities, so preventing a re-sort */
     priv->prevent_resort = TRUE;
+    priv->prevent_duration_limit_update = TRUE;
     for (tmp = GES_CONTAINER_CHILDREN (container); tmp; tmp = tmp->next) {
       guint32 sibling_prio = GES_TIMELINE_ELEMENT_PRIORITY (tmp->data);
       if (sibling_prio > element->priority)
@@ -799,46 +1021,44 @@ _remove_child (GESContainer * container, GESTimelineElement * element)
     }
     priv->nb_effects--;
     priv->prevent_resort = FALSE;
+    priv->prevent_duration_limit_update = prev_prevent;
     /* no need to re-sort the children since the rest keep the same
      * relative priorities */
     /* height may have changed */
     _compute_height (container);
   }
+  /* duration-limit updated in _child_removed */
   return TRUE;
 }
 
 static void
 _child_added (GESContainer * container, GESTimelineElement * element)
 {
-  g_signal_connect (element, "notify::priority",
-      G_CALLBACK (_child_priority_changed_cb), container);
-  g_signal_connect (element, "notify::in-point",
-      G_CALLBACK (_child_inpoint_changed_cb), container);
-  g_signal_connect (element, "notify::max-duration",
-      G_CALLBACK (_child_max_duration_changed_cb), container);
-  g_signal_connect (element, "notify::has-internal-source",
-      G_CALLBACK (_child_has_internal_source_changed_cb), container);
+  GESClip *self = GES_CLIP (container);
 
-  _child_priority_changed_cb (element, NULL, container);
+  g_signal_connect (element, "notify", G_CALLBACK (_child_property_changed_cb),
+      self);
+
+  _child_priority_changed (container, element);
 
   if (_IS_CORE_CHILD (element))
     _update_max_duration (container);
+
+  _update_duration_limit (self);
 }
 
 static void
 _child_removed (GESContainer * container, GESTimelineElement * element)
 {
-  g_signal_handlers_disconnect_by_func (element, _child_priority_changed_cb,
-      container);
-  g_signal_handlers_disconnect_by_func (element, _child_inpoint_changed_cb,
-      container);
-  g_signal_handlers_disconnect_by_func (element,
-      _child_max_duration_changed_cb, container);
-  g_signal_handlers_disconnect_by_func (element,
-      _child_has_internal_source_changed_cb, container);
+  GESClip *self = GES_CLIP (container);
+
+  g_signal_handlers_disconnect_by_func (element, _child_property_changed_cb,
+      self);
 
   if (_IS_CORE_CHILD (element))
     _update_max_duration (container);
+
+  _update_duration_limit (self);
 }
 
 static void
@@ -855,18 +1075,26 @@ add_clip_to_list (gpointer key, gpointer clip, GList ** list)
  * NOTE: Since this does not change the creator asset of the child, this
  * should only be called for transferring children between clips with the
  * same asset.
+ * NOTE: This also prevents the update of the duration-limit, so you
+ * should ensure that you call _update_duration_limit on both clips when
+ * transferring has completed.
  */
 static void
 _transfer_child (GESClip * from_clip, GESClip * to_clip,
     GESTrackElement * child)
 {
   GESTimeline *timeline = GES_TIMELINE_ELEMENT_TIMELINE (to_clip);
+  gboolean prev_prevent_from = from_clip->priv->prevent_duration_limit_update;
+  gboolean prev_prevent_to = to_clip->priv->prevent_duration_limit_update;
 
   /* We need to bump the refcount to avoid the object to be destroyed */
   gst_object_ref (child);
 
   /* don't want to change tracks */
   ges_timeline_set_moving_track_elements (timeline, TRUE);
+
+  from_clip->priv->prevent_duration_limit_update = TRUE;
+  to_clip->priv->prevent_duration_limit_update = TRUE;
 
   ges_container_remove (GES_CONTAINER (from_clip),
       GES_TIMELINE_ELEMENT (child));
@@ -878,6 +1106,9 @@ _transfer_child (GESClip * from_clip, GESClip * to_clip,
         " transfering, this should never happen", GES_ARGS (to_clip), child);
   to_clip->priv->allow_any_track = FALSE;
   ges_timeline_set_moving_track_elements (timeline, FALSE);
+
+  from_clip->priv->prevent_duration_limit_update = prev_prevent_from;
+  to_clip->priv->prevent_duration_limit_update = prev_prevent_to;
 
   gst_object_unref (child);
 }
@@ -941,6 +1172,14 @@ _ungroup (GESContainer * container, gboolean recursive)
   g_list_free_full (children, gst_object_unref);
   g_hash_table_foreach (_tracktype_clip, (GHFunc) add_clip_to_list, &ret);
   g_hash_table_unref (_tracktype_clip);
+
+  /* Need to update the duration limit.
+   * Since we have divided the clip by its tracks, the duration-limit,
+   * which is a minimum value calculated per track, can only increase in
+   * value, which means the duration of the clip should not change, which
+   * means updating should always be possible */
+  for (tmp = ret; tmp; tmp = tmp->next)
+    _update_duration_limit (tmp->data);
 
   return ret;
 }
@@ -1062,9 +1301,30 @@ _group (GList * containers)
       supported_formats |= ges_track_element_get_track_type (celement);
     }
     g_list_free_full (children, gst_object_unref);
+    /* duration-limit should be GST_CLOCK_TIME_NONE now that we have no
+     * children */
+    _update_duration_limit (cclip);
 
     ges_layer_remove_clip (layer, cclip);
   }
+
+  /* Need to update the duration limit.
+   * Each received clip C_i that has been grouped may have had a different
+   * duration-limit L_i. In each case the duration must be less than
+   * this limit, and since each clip shares the same duration, we have
+   * for each clip C_i:
+   *   duration <= L_i
+   * Thus:
+   *   duration <= min_i (L_i)
+   *
+   * Now, upon grouping each clip C_i into C, we have not changed the
+   * children properties that affect the duration-limit. And since the
+   * duration-limit is calculated as the minimum amongst the tracks of C,
+   * this means that the duration-limit for C should be
+   *   L = min_i (L_i) >= duration
+   * Therefore, we can safely set the duration-limit of C to L without
+   * changing the duration of C. */
+  _update_duration_limit (GES_CLIP (ret));
 
   ges_clip_set_supported_formats (GES_CLIP (ret), supported_formats);
 
@@ -1075,10 +1335,13 @@ void
 ges_clip_empty_from_track (GESClip * clip, GESTrack * track)
 {
   GList *tmp;
+  gboolean prev_prevent = clip->priv->prevent_duration_limit_update;
+
   if (track == NULL)
     return;
   /* allow us to remove in any order */
   clip->priv->allow_any_track = TRUE;
+  clip->priv->prevent_duration_limit_update = TRUE;
 
   for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
     GESTrackElement *child = tmp->data;
@@ -1089,6 +1352,8 @@ ges_clip_empty_from_track (GESClip * clip, GESTrack * track)
     }
   }
   clip->priv->allow_any_track = FALSE;
+  clip->priv->prevent_duration_limit_update = prev_prevent;
+  _update_duration_limit (clip);
 }
 
 static GESTrackElement *
@@ -1261,6 +1526,8 @@ ges_clip_get_property (GObject * object, guint property_id,
     case PROP_SUPPORTED_FORMATS:
       g_value_set_flags (value, clip->priv->supportedformats);
       break;
+    case PROP_DURATION_LIMIT:
+      g_value_set_uint64 (value, clip->priv->duration_limit);
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -1338,6 +1605,30 @@ ges_clip_class_init (GESClipClass * klass)
   g_object_class_install_property (object_class, PROP_LAYER,
       properties[PROP_LAYER]);
 
+  /**
+   * GESClip:duration-limit:
+   *
+   * The maximum #GESTimelineElement:duration that can be *currently* set
+   * for the clip, taking into account the #GESTimelineElement:in-point,
+   * #GESTimelineElement:max-duration, GESTrackElement:active, and
+   * #GESTrackElement:track properties of its children. If there is no
+   * limit, this will be set to #GST_CLOCK_TIME_NONE.
+   *
+   * Note that whilst a clip has no children in any tracks, the limit will
+   * be unknown, and similarly set to #GST_CLOCK_TIME_NONE.
+   *
+   * If the duration-limit would ever go below the current
+   * #GESTimelineElement:duration of the clip due to a change in the above
+   * variables, its #GESTimelineElement:duration will be set to the new
+   * limit.
+   */
+  properties[PROP_DURATION_LIMIT] =
+      g_param_spec_uint64 ("duration-limit", "Duration Limit",
+      "A limit on the duration of the clip", 0, G_MAXUINT64,
+      GST_CLOCK_TIME_NONE, G_PARAM_READABLE | G_PARAM_EXPLICIT_NOTIFY);
+  g_object_class_install_property (object_class, PROP_DURATION_LIMIT,
+      properties[PROP_DURATION_LIMIT]);
+
   element_class->ripple = _ripple;
   element_class->ripple_end = _ripple_end;
   element_class->roll_start = _roll_start;
@@ -1367,6 +1658,7 @@ static void
 ges_clip_init (GESClip * self)
 {
   self->priv = ges_clip_get_instance_private (self);
+  self->priv->duration_limit = GST_CLOCK_TIME_NONE;
 }
 
 /**
@@ -1695,6 +1987,22 @@ ges_clip_get_layer (GESClip * clip)
     gst_object_ref (G_OBJECT (clip->priv->layer));
 
   return clip->priv->layer;
+}
+
+/**
+ * ges_clip_get_duration_limit:
+ * @clip: A #GESClip
+ *
+ * Gets the #GESClip:duration-limit of the clip.
+ *
+ * Returns: The duration-limit of @clip.
+ */
+GstClockTime
+ges_clip_get_duration_limit (GESClip * clip)
+{
+  g_return_val_if_fail (GES_IS_CLIP (clip), GST_CLOCK_TIME_NONE);
+
+  return clip->priv->duration_limit;
 }
 
 /**
