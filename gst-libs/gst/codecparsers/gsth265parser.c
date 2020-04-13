@@ -2841,7 +2841,7 @@ gst_h265_parser_update_vps (GstH265Parser * parser, GstH265VPS * vps)
 {
   g_return_val_if_fail (parser != NULL, GST_H265_PARSER_ERROR);
   g_return_val_if_fail (vps != NULL, GST_H265_PARSER_ERROR);
-  g_return_val_if_fail (vps->id >= 0 && vps->id < GST_H265_MAX_VPS_COUNT,
+  g_return_val_if_fail (vps->id < GST_H265_MAX_VPS_COUNT,
       GST_H265_PARSER_ERROR);
 
   if (!vps->valid) {
@@ -2874,7 +2874,7 @@ gst_h265_parser_update_sps (GstH265Parser * parser, GstH265SPS * sps)
 {
   g_return_val_if_fail (parser != NULL, GST_H265_PARSER_ERROR);
   g_return_val_if_fail (sps != NULL, GST_H265_PARSER_ERROR);
-  g_return_val_if_fail (sps->id >= 0 && sps->id < GST_H265_MAX_SPS_COUNT,
+  g_return_val_if_fail (sps->id < GST_H265_MAX_SPS_COUNT,
       GST_H265_PARSER_ERROR);
 
   if (!sps->valid) {
@@ -2883,9 +2883,7 @@ gst_h265_parser_update_sps (GstH265Parser * parser, GstH265SPS * sps)
   }
 
   if (sps->vps) {
-    GstH265VPS *vps = NULL;
-
-    vps = gst_h265_parser_get_vps (parser, vps->id);
+    GstH265VPS *vps = gst_h265_parser_get_vps (parser, sps->vps->id);
     if (!vps || vps != sps->vps) {
       GST_WARNING ("Linked VPS is not identical to internal VPS");
       return GST_H265_PARSER_BROKEN_LINK;
@@ -2919,7 +2917,7 @@ gst_h265_parser_update_pps (GstH265Parser * parser, GstH265PPS * pps)
 
   g_return_val_if_fail (parser != NULL, GST_H265_PARSER_ERROR);
   g_return_val_if_fail (pps != NULL, GST_H265_PARSER_ERROR);
-  g_return_val_if_fail (pps->id >= 0 && pps->id < GST_H265_MAX_PPS_COUNT,
+  g_return_val_if_fail (pps->id < GST_H265_MAX_PPS_COUNT,
       GST_H265_PARSER_ERROR);
 
   if (!pps->valid) {
@@ -3911,8 +3909,7 @@ gst_h265_parser_insert_sei_internal (GstH265Parser * parser,
       return NULL;
     }
 
-    if ((nalu.type >= GST_H265_NAL_SLICE_TRAIL_N
-            && nalu.type <= GST_H265_NAL_SLICE_RASL_R)
+    if (nalu.type <= GST_H265_NAL_SLICE_RASL_R
         || (nalu.type >= GST_H265_NAL_SLICE_BLA_W_LP
             && nalu.type <= GST_H265_NAL_SLICE_CRA_NUT)) {
       GST_DEBUG ("Found slice nal type %d at offset %d", nalu.type,
