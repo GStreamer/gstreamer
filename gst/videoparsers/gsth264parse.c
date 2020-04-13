@@ -2814,7 +2814,6 @@ gst_h264_parse_create_pic_timing_sei (GstH264Parse * h264parse,
     return NULL;
   }
 
-  g_assert (h264parse->sei_pic_struct >= GST_H264_SEI_PIC_STRUCT_FRAME);
   g_assert (h264parse->sei_pic_struct <=
       GST_H264_SEI_PIC_STRUCT_FRAME_TRIPLING);
 
