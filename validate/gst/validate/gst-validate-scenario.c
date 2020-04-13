@@ -47,6 +47,7 @@
 #include <string.h>
 #include <errno.h>
 
+#include <gst/check/gsttestclock.h>
 #include "gst-validate-internal.h"
 #include "gst-validate-scenario.h"
 #include "gst-validate-reporter.h"
@@ -178,6 +179,8 @@ struct _GstValidateScenarioPrivate
   GstStructure *vars;
 
   GWeakRef ref_pipeline;
+
+  GstTestClock *clock;
 };
 
 typedef struct KeyFileGroupName
@@ -610,6 +613,10 @@ gboolean
 gst_validate_action_get_clocktime (GstValidateScenario * scenario,
     GstValidateAction * action, const gchar * name, GstClockTime * retval)
 {
+
+  if (!gst_structure_has_field (action->structure, name))
+    return FALSE;
+
   if (!gst_validate_utils_get_clocktime (action->structure, name, retval)) {
     gdouble val;
     gchar *error = NULL, *strval;
@@ -1710,12 +1717,12 @@ static gboolean
 _should_execute_action (GstValidateScenario * scenario, GstValidateAction * act,
     GstClockTime position, gdouble rate)
 {
-  GstElement *pipeline;
+  GstElement *pipeline = NULL;
 
   if (!act) {
     GST_DEBUG_OBJECT (scenario, "No action to execute");
 
-    return FALSE;
+    goto no;
   }
 
   pipeline = gst_validate_scenario_get_pipeline (scenario);
@@ -1776,7 +1783,7 @@ yes:
   return TRUE;
 
 no:
-  gst_object_unref (pipeline);
+  gst_clear_object (&pipeline);
   return FALSE;
 }
 
@@ -3512,6 +3519,9 @@ gst_validate_scenario_load_structures (GstValidateScenario * scenario,
       goto failed;
     }
 
+    if (!g_strcmp0 (type, "crank-clock") && !priv->clock)
+      priv->clock = GST_TEST_CLOCK (gst_test_clock_new ());
+
     if (action_type->parameters) {
       guint i;
 
@@ -3833,6 +3843,7 @@ gst_validate_scenario_init (GstValidateScenario * scenario)
   g_weak_ref_init (&scenario->priv->ref_pipeline, NULL);
   priv->max_latency = GST_CLOCK_TIME_NONE;
   priv->max_dropped = -1;
+  priv->clock = NULL;
 
   g_mutex_init (&priv->lock);
 }
@@ -3851,6 +3862,8 @@ gst_validate_scenario_dispose (GObject * object)
     gst_object_unref (priv->bus);
     priv->bus = NULL;
   }
+
+  gst_object_replace ((GstObject **) & priv->clock, NULL);
 
   G_OBJECT_CLASS (gst_validate_scenario_parent_class)->dispose (object);
 }
@@ -4013,6 +4026,11 @@ gst_validate_scenario_new (GstValidateRunner *
       GST_OBJECT_NAME (pipeline));
 
   g_weak_ref_init (&scenario->priv->ref_pipeline, pipeline);
+  if (scenario->priv->clock) {
+    gst_element_set_clock (pipeline, GST_CLOCK_CAST (scenario->priv->clock));
+    gst_pipeline_use_clock (GST_PIPELINE (pipeline),
+        GST_CLOCK_CAST (scenario->priv->clock));
+  }
   gst_validate_reporter_set_name (GST_VALIDATE_REPORTER (scenario),
       g_strdup (scenario_name));
 
@@ -4637,6 +4655,56 @@ done:
   return GST_PAD_PROBE_OK;
 }
 
+static GstValidateExecuteActionReturn
+_execute_crank_clock (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  GstClockTime expected_diff, expected_time;
+  GstClockTime prev_time =
+      gst_clock_get_time (GST_CLOCK (scenario->priv->clock));
+
+  if (!gst_test_clock_crank (scenario->priv->clock)) {
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
+        SCENARIO_ACTION_EXECUTION_ERROR, "Cranking clock failed");
+
+    return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+  }
+
+  if (gst_validate_action_get_clocktime (scenario, action,
+          "expected-elapsed-time", &expected_diff)) {
+    GstClockTime elapsed =
+        gst_clock_get_time (GST_CLOCK (scenario->priv->clock)) - prev_time;
+
+    if (expected_diff != elapsed) {
+      GST_VALIDATE_REPORT_ACTION (scenario, action,
+          SCENARIO_ACTION_EXECUTION_ERROR,
+          "Elapsed time during test clock cranking different than expected,"
+          " waited for %" GST_TIME_FORMAT " instead of the expected %"
+          GST_TIME_FORMAT, GST_TIME_ARGS (elapsed),
+          GST_TIME_ARGS (expected_diff));
+
+      return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+    }
+  }
+
+  if (gst_validate_action_get_clocktime (scenario, action, "expected-time",
+          &expected_time)) {
+    GstClockTime time = gst_clock_get_time (GST_CLOCK (scenario->priv->clock));
+
+    if (expected_time != time) {
+      GST_VALIDATE_REPORT_ACTION (scenario, action,
+          SCENARIO_ACTION_EXECUTION_ERROR,
+          "Clock time after cranking different than expected,"
+          " got %" GST_TIME_FORMAT " instead of the expected %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (time), GST_TIME_ARGS (expected_time));
+
+      return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+    }
+  }
+
+  return GST_VALIDATE_EXECUTE_ACTION_OK;
+}
+
 static gboolean
 _execute_request_key_unit (GstValidateScenario * scenario,
     GstValidateAction * action)
@@ -5242,7 +5310,7 @@ register_action_types (void)
         .mandatory = FALSE,
         .types = "boolean",
         .possible_variables = NULL,
-        .def = "false"
+        .def = "true if some action requires a playback-time false otherwise"
       },
       {
         .name = "min-media-duration",
@@ -5819,6 +5887,29 @@ register_action_types (void)
       " GESTimeline 'commit'"
       " for example",
       GST_VALIDATE_ACTION_TYPE_INTERLACED);
+
+    REGISTER_ACTION_TYPE ("crank-clock", _execute_crank_clock,
+      ((GstValidateActionParameter []) {
+        {
+          .name = "expected-time",
+          .description = "Expected clock time after cranking",
+          .mandatory = FALSE,
+          .types = "GstClockTime",
+          NULL
+        },
+        {
+          .name = "expected-elapsed-time",
+          .description = "Check time elapsed during the clock cranking",
+          .mandatory = FALSE,
+          .types = "GstClockTime",
+          NULL
+        },
+      }), "Crank the clock, possibly checking how much time was supposed to be waited on the clock"
+          " and/or the clock running time after the crank."
+          " Using one `crank-clock` action in a scenario implies that the scenario is driving the "
+          " clock and a #GstTestClock will be used. The user will need to crank it the number of "
+          " time required (using the `repeat` parameter comes handy here).",
+        GST_VALIDATE_ACTION_TYPE_NEEDS_CLOCK);
 
     REGISTER_ACTION_TYPE ("video-request-key-unit", _execute_request_key_unit,
       ((GstValidateActionParameter []) {

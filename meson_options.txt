@@ -1,4 +1,4 @@
-option('validate', type : 'boolean', value : true,
+option('validate', type : 'feature', value : 'auto',
        description : 'Build GstValidate')
 option('debug_viewer', type : 'boolean', value : true,
         description : 'Build GstDebugViewer')

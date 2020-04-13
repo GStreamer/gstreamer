@@ -67,11 +67,9 @@ gst_pbutils_dep = dependency('gstreamer-pbutils-' + apiversion, version : gst_re
     fallback : ['gst-plugins-base', 'pbutils_dep'])
 gst_video_dep = dependency('gstreamer-video-' + apiversion, version : gst_req,
     fallback : ['gst-plugins-base', 'video_dep'])
-if host_machine.system() != 'windows'
-  gst_check_dep = dependency('gstreamer-check-1.0', version : gst_req,
-    required : get_option('tests'),
-    fallback : ['gstreamer', 'gst_check_dep'])
-endif
+gst_check_dep = dependency('gstreamer-check-1.0', version : gst_req,
+  required : get_option('validate'),
+  fallback : ['gstreamer', 'gst_check_dep'])
 
 glib_dep = dependency('glib-2.0', version : '>=2.32.0',
   fallback: ['glib', 'libglib_dep'])
@@ -146,7 +144,7 @@ i18n = import('i18n')
 python_mod = import('python')
 python3 = python_mod.find_installation()
 
-if get_option('validate')
+if not get_option('validate').disabled()
   subdir('validate')
 endif
 

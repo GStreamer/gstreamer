@@ -28,8 +28,8 @@ The `meta` format:
 
 ## Tool arguments
 
-In the case of [`gst-validate`](gst-validate.md) it **has to** contain a
-`gst-validate-args` field with `gst-validate` argv arguments like:
+In the case of [`gst-validate`](gst-validate.md) it **has to** contain an
+`args` field with `gst-validate` argv arguments like:
 
 ``` yaml
 # This is the default tool so it is not mandatory for the `gst-validate` tool
@@ -49,7 +49,7 @@ usual [config](gst-validate-config.md) files contain.
 
 For example:
 
-``` json
+``` yaml
 configs = {
     # Set videotestsrc0 pattern value to `blue`
     "core, action=set-property, target-element-name=videotestsrc0, property-name=pattern, property-value=blue",
