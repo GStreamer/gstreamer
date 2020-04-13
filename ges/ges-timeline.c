@@ -151,6 +151,7 @@ struct _GESTimelinePrivate
   gboolean needs_transitions_update;
 
   GESTrack *auto_transition_track;
+  GESTrack *new_track;
 
   /* While we are creating and adding the TrackElements for a clip, we need to
    * ignore the child-added signal */
@@ -348,6 +349,7 @@ ges_timeline_dispose (GObject * object)
   gst_object_unref (priv->stream_collection);
 
   gst_clear_object (&priv->auto_transition_track);
+  gst_clear_object (&priv->new_track);
 
   G_OBJECT_CLASS (ges_timeline_parent_class)->dispose (object);
 }
@@ -1544,7 +1546,7 @@ static void
 clip_track_element_added_cb (GESClip * clip,
     GESTrackElement * track_element, GESTimeline * timeline)
 {
-  GESTrack *auto_trans_track;
+  GESTrack *auto_trans_track, *new_track;
   gboolean error = FALSE;
 
   if (timeline->priv->track_elements_moving) {
@@ -1566,6 +1568,8 @@ clip_track_element_added_cb (GESClip * clip,
    * should be used exactly once! */
   auto_trans_track = timeline->priv->auto_transition_track;
   timeline->priv->auto_transition_track = NULL;
+  /* don't take ownership of new_track */
+  new_track = timeline->priv->new_track;
   UNLOCK_DYN (timeline);
 
   if (auto_trans_track) {
@@ -1575,8 +1579,12 @@ clip_track_element_added_cb (GESClip * clip,
       error = TRUE;
     gst_object_unref (auto_trans_track);
   } else {
-    if (!_add_track_element_to_tracks (timeline, clip, track_element))
-      error = TRUE;
+    if (new_track)
+      error =
+          !_try_add_track_element_to_track (timeline, clip, track_element,
+          new_track);
+    else
+      error = !_add_track_element_to_tracks (timeline, clip, track_element);
   }
 
   if (error)
@@ -1639,7 +1647,8 @@ _add_clip_children_to_tracks (GESTimeline * timeline, GESClip * clip,
 
 /* returns TRUE if no errors in adding to tracks */
 static gboolean
-add_object_to_tracks (GESTimeline * timeline, GESClip * clip, GESTrack * track)
+add_object_to_tracks (GESTimeline * timeline, GESClip * clip,
+    GESTrack * new_track)
 {
   GList *tracks, *tmp, *list, *created, *just_added = NULL;
   gboolean no_errors = TRUE;
@@ -1652,10 +1661,13 @@ add_object_to_tracks (GESTimeline * timeline, GESClip * clip, GESTrack * track)
   LOCK_DYN (timeline);
   tracks =
       g_list_copy_deep (timeline->tracks, (GCopyFunc) gst_object_ref, NULL);
+  timeline->priv->new_track = new_track ? gst_object_ref (new_track) : NULL;
   UNLOCK_DYN (timeline);
   /* create core elements */
   for (tmp = tracks; tmp; tmp = tmp->next) {
     GESTrack *track = GES_TRACK (tmp->data);
+    if (new_track && track != new_track)
+      continue;
     list = ges_clip_create_track_elements (clip, track->type);
     for (created = list; created; created = created->next) {
       GESTimelineElement *el = created->data;
@@ -1693,10 +1705,16 @@ add_object_to_tracks (GESTimeline * timeline, GESClip * clip, GESTrack * track)
    * non-core can not be in a track by itself) */
   /* include just_added as a blacklist to ensure we do not try the track
    * selection a second time when track selection returns no tracks */
-  if (!_add_clip_children_to_tracks (timeline, clip, TRUE, track, just_added))
+  if (!_add_clip_children_to_tracks (timeline, clip, TRUE, new_track,
+          just_added))
     no_errors = FALSE;
-  if (!_add_clip_children_to_tracks (timeline, clip, FALSE, track, just_added))
+  if (!_add_clip_children_to_tracks (timeline, clip, FALSE, new_track,
+          just_added))
     no_errors = FALSE;
+
+  LOCK_DYN (timeline);
+  gst_clear_object (&timeline->priv->new_track);
+  UNLOCK_DYN (timeline);
 
   g_list_free (just_added);
 

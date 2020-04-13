@@ -256,13 +256,68 @@ GST_END_TEST;
 
 /* this time we add the layer before we add the track. */
 
+#define _assert_child_in_track(clip, child_type, track) \
+{ \
+  GESTrackElement *el; \
+  GList *tmp = ges_clip_find_track_elements (clip, NULL, \
+      GES_TRACK_TYPE_UNKNOWN, child_type); \
+  fail_unless (g_list_length (tmp), 1); \
+  el = tmp->data; \
+  g_list_free_full (tmp, gst_object_unref); \
+  fail_unless (ges_track_element_get_track (el) == track); \
+  if (track) \
+    ASSERT_OBJECT_REFCOUNT (el, "1 clip + 1 track + 1 timeline", 3); \
+  else \
+    ASSERT_OBJECT_REFCOUNT (el, "1 clip", 1); \
+}
+
+#define _assert_no_child_in_track(clip, track) \
+  fail_if (ges_clip_find_track_elements (clip, track, \
+        GES_TRACK_TYPE_UNKNOWN, G_TYPE_NONE));
+
+#define _assert_add_track(timeline, track) \
+{ \
+  GList *tmp; \
+  GST_DEBUG ("Adding " #track " to the timeline"); \
+  fail_unless (ges_timeline_add_track (timeline, track)); \
+  ASSERT_OBJECT_REFCOUNT (track, #track, 1); \
+  fail_unless (ges_track_get_timeline (track) == timeline); \
+  fail_unless ((gpointer) GST_ELEMENT_PARENT (track) \
+      == (gpointer) timeline); \
+  tmp = ges_timeline_get_tracks (timeline); \
+  fail_unless (g_list_find (tmp, track), #track " not found in tracks"); \
+  g_list_free_full (tmp, gst_object_unref); \
+}
+
+#define _remove_sources(clip, expect_num) \
+{ \
+  GList *tmp, *els; \
+  els = ges_clip_find_track_elements (clip, NULL, GES_TRACK_TYPE_UNKNOWN, \
+      GES_TYPE_SOURCE); \
+  assert_equals_int (g_list_length (els), expect_num); \
+  for (tmp = els; tmp; tmp = tmp->next) \
+    fail_unless (ges_container_remove (GES_CONTAINER (clip), tmp->data)); \
+  g_list_free_full (els, gst_object_unref); \
+}
+
+#define _remove_from_track(clip, track, expect_num) \
+{ \
+  GList *tmp, *els; \
+  els = ges_clip_find_track_elements (clip, track, GES_TRACK_TYPE_UNKNOWN, \
+      G_TYPE_NONE); \
+  assert_equals_int (g_list_length (els), expect_num); \
+  for (tmp = els; tmp; tmp = tmp->next) \
+    fail_unless (ges_track_remove_element (track, tmp->data)); \
+  g_list_free_full (els, gst_object_unref); \
+}
+
 GST_START_TEST (test_ges_timeline_add_layer_first)
 {
   GESTimeline *timeline;
   GESLayer *layer;
-  GESTrack *track;
+  GESTrack *track, *track1, *track2, *track3;
   GESClip *s1, *s2, *s3;
-  GList *trackelements, *tmp, *layers;
+  GList *layers;
 
   ges_init ();
 
@@ -283,6 +338,12 @@ GST_START_TEST (test_ges_timeline_add_layer_first)
   _CREATE_SOURCE (layer, s2, 20, 10);
   _CREATE_SOURCE (layer, s3, 40, 10);
 
+  fail_unless (ges_container_add (GES_CONTAINER (s1),
+          GES_TIMELINE_ELEMENT (ges_effect_new ("agingtv"))));
+  assert_num_children (s1, 1);
+  assert_num_children (s2, 0);
+  assert_num_children (s3, 0);
+
   GST_DEBUG ("Add the layer to the timeline");
   fail_unless (ges_timeline_add_layer (timeline, layer));
   /* The timeline steals our reference to the layer */
@@ -292,42 +353,145 @@ GST_START_TEST (test_ges_timeline_add_layer_first)
   fail_unless (g_list_find (layers, layer) != NULL);
   g_list_free_full (layers, gst_object_unref);
 
-  GST_DEBUG ("Add the track to the timeline");
-  fail_unless (ges_timeline_add_track (timeline, track));
-  ASSERT_OBJECT_REFCOUNT (track, "track", 1);
-  fail_unless (ges_track_get_timeline (track) == timeline);
-  fail_unless ((gpointer) GST_ELEMENT_PARENT (track) == (gpointer) timeline);
+  /* core children not created yet since no tracks */
+  assert_num_children (s1, 1);
+  assert_num_children (s2, 0);
+  assert_num_children (s3, 0);
+
+  _assert_add_track (timeline, track);
+  /* 3 sources, 1 effect */
+  assert_num_in_track (track, 4);
 
   /* Make sure the associated TrackElements are in the Track */
-  trackelements = GES_CONTAINER_CHILDREN (s1);
-  fail_unless (trackelements != NULL);
-  for (tmp = trackelements; tmp; tmp = tmp->next) {
-    /* Each object has 3 references:
-     * 1 by the clip
-     * 1 by the track
-     * 1 by the timeline */
-    ASSERT_OBJECT_REFCOUNT (GES_TRACK_ELEMENT (tmp->data), "trackelement", 3);
-  }
+  assert_num_children (s1, 2);
+  _assert_child_in_track (s1, GES_TYPE_EFFECT, track);
+  _assert_child_in_track (s1, GES_TYPE_VIDEO_TEST_SOURCE, track);
 
-  trackelements = GES_CONTAINER_CHILDREN (s2);
-  fail_unless (trackelements != NULL);
-  for (tmp = trackelements; tmp; tmp = tmp->next) {
-    /* Each object has 3 references:
-     * 1 by the clip
-     * 1 by the track
-     * 1 by the timeline */
-    ASSERT_OBJECT_REFCOUNT (GES_TRACK_ELEMENT (tmp->data), "trackelement", 3);
-  }
+  assert_num_children (s2, 1);
+  _assert_child_in_track (s2, GES_TYPE_VIDEO_TEST_SOURCE, track);
 
-  trackelements = GES_CONTAINER_CHILDREN (s3);
-  fail_unless (trackelements != NULL);
-  for (tmp = trackelements; tmp; tmp = tmp->next) {
-    /* Each object has 3 references:
-     * 1 by the clip
-     * 1 by the track
-     * 1 by the timeline */
-    ASSERT_OBJECT_REFCOUNT (GES_TRACK_ELEMENT (tmp->data), "trackelement", 3);
-  }
+  assert_num_children (s3, 1);
+  _assert_child_in_track (s3, GES_TYPE_VIDEO_TEST_SOURCE, track);
+
+  /* adding an audio track should create new audio sources */
+
+  track1 = GES_TRACK (ges_audio_track_new ());
+  _assert_add_track (timeline, track1);
+  /* other track stays the same */
+  assert_num_in_track (track, 4);
+  /* 3 sources */
+  assert_num_in_track (track1, 3);
+
+  /* one new core child */
+  assert_num_children (s1, 3);
+  _assert_child_in_track (s1, GES_TYPE_EFFECT, track);
+  _assert_child_in_track (s1, GES_TYPE_VIDEO_TEST_SOURCE, track);
+  _assert_child_in_track (s1, GES_TYPE_AUDIO_TEST_SOURCE, track1);
+
+  assert_num_children (s2, 2);
+  _assert_child_in_track (s2, GES_TYPE_VIDEO_TEST_SOURCE, track);
+  _assert_child_in_track (s2, GES_TYPE_AUDIO_TEST_SOURCE, track1);
+
+  assert_num_children (s3, 2);
+  _assert_child_in_track (s3, GES_TYPE_VIDEO_TEST_SOURCE, track);
+  _assert_child_in_track (s3, GES_TYPE_AUDIO_TEST_SOURCE, track1);
+
+  /* adding another track should not prompt the change anything
+   * unrelated to the new track */
+
+  /* remove the core children from s1 */
+  _remove_sources (s1, 2);
+
+  /* only have effect left, and not in any track */
+  assert_num_children (s1, 1);
+  /* effect is emptied from its track, since the corresponding core child
+   * was removed */
+  _assert_child_in_track (s1, GES_TYPE_EFFECT, NULL);
+
+  assert_num_in_track (track, 2);
+  assert_num_in_track (track1, 2);
+
+  track2 = GES_TRACK (ges_video_track_new ());
+  _assert_add_track (timeline, track2);
+  /* other tracks stay the same */
+  assert_num_in_track (track, 2);
+  assert_num_in_track (track1, 2);
+  /* 1 sources + 1 effect */
+  assert_num_in_track (track2, 2);
+
+  /* s1 only has a child created for the new track, not the other two */
+  assert_num_children (s1, 2);
+  _assert_child_in_track (s1, GES_TYPE_EFFECT, track2);
+  _assert_child_in_track (s1, GES_TYPE_VIDEO_TEST_SOURCE, track2);
+  _assert_no_child_in_track (s1, track);
+  _assert_no_child_in_track (s1, track1);
+
+  /* other clips stay the same since their children were already created
+   * with set tracks */
+  assert_num_children (s2, 2);
+  _assert_child_in_track (s2, GES_TYPE_VIDEO_TEST_SOURCE, track);
+  _assert_child_in_track (s2, GES_TYPE_AUDIO_TEST_SOURCE, track1);
+  _assert_no_child_in_track (s2, track2);
+
+  assert_num_children (s3, 2);
+  _assert_child_in_track (s3, GES_TYPE_VIDEO_TEST_SOURCE, track);
+  _assert_child_in_track (s3, GES_TYPE_AUDIO_TEST_SOURCE, track1);
+  _assert_no_child_in_track (s3, track2);
+
+  /* same with an audio track */
+
+  /* remove the core child from s1 */
+  _remove_sources (s1, 1);
+
+  assert_num_children (s1, 1);
+  _assert_child_in_track (s1, GES_TYPE_EFFECT, NULL);
+
+  assert_num_in_track (track, 2);
+  assert_num_in_track (track1, 2);
+  assert_num_in_track (track2, 0);
+
+  /* unset the core tracks for s2 */
+  _remove_from_track (s2, track, 1);
+  _remove_from_track (s2, track1, 1);
+  /* but keep children in clip */
+  assert_num_children (s2, 2);
+
+  assert_num_in_track (track, 1);
+  assert_num_in_track (track1, 1);
+  assert_num_in_track (track2, 0);
+
+  track3 = GES_TRACK (ges_audio_track_new ());
+  _assert_add_track (timeline, track3);
+  /* other tracks stay the same */
+  assert_num_in_track (track, 1);
+  assert_num_in_track (track1, 1);
+  assert_num_in_track (track2, 0);
+  /* 2 sources */
+  assert_num_in_track (track3, 2);
+
+  /* s1 creates core for the new track, but effect does not have a track
+   * set since the new track is not a video track */
+  assert_num_children (s1, 2);
+  _assert_child_in_track (s1, GES_TYPE_AUDIO_TEST_SOURCE, track3);
+  _assert_child_in_track (s1, GES_TYPE_EFFECT, NULL);
+  _assert_no_child_in_track (s1, track);
+  _assert_no_child_in_track (s1, track1);
+  _assert_no_child_in_track (s1, track2);
+
+  /* s2 audio core is in the new track, but video remains trackless */
+  assert_num_children (s2, 2);
+  _assert_child_in_track (s2, GES_TYPE_AUDIO_TEST_SOURCE, track3);
+  _assert_child_in_track (s2, GES_TYPE_VIDEO_TEST_SOURCE, NULL);
+  _assert_no_child_in_track (s1, track);
+  _assert_no_child_in_track (s1, track1);
+  _assert_no_child_in_track (s1, track2);
+
+  /* s3 remains the same since core already had tracks */
+  assert_num_children (s3, 2);
+  _assert_child_in_track (s3, GES_TYPE_VIDEO_TEST_SOURCE, track);
+  _assert_child_in_track (s3, GES_TYPE_AUDIO_TEST_SOURCE, track1);
+  _assert_no_child_in_track (s3, track2);
+  _assert_no_child_in_track (s3, track3);
 
   /* theoretically this is all we need to do to ensure cleanup */
   gst_object_unref (timeline);
