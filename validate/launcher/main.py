@@ -148,8 +148,8 @@ DEFAULT_GST_QA_ASSETS_REPO = "https://gitlab.freedesktop.org/gstreamer/gst-integ
 
 def download_assets(options):
     try:
-        printc("About to download assets from %s to %s" % options.remote_assets_url,
-               options.clone_dir)
+        printc("About to download assets from %s to %s" % (options.remote_assets_url,
+               options.clone_dir))
         launch_command("%s %s %s" % (options.get_assets_command,
                                      options.remote_assets_url,
                                      options.clone_dir),
