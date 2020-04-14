@@ -18,16 +18,17 @@
 
 #include <string.h>
 
-enum AppState {
+enum AppState
+{
   APP_STATE_UNKNOWN = 0,
-  APP_STATE_ERROR = 1, /* generic error */
+  APP_STATE_ERROR = 1,          /* generic error */
   SERVER_CONNECTING = 1000,
   SERVER_CONNECTION_ERROR,
-  SERVER_CONNECTED, /* Ready to register */
+  SERVER_CONNECTED,             /* Ready to register */
   SERVER_REGISTERING = 2000,
   SERVER_REGISTRATION_ERROR,
-  SERVER_REGISTERED, /* Ready to call a peer */
-  SERVER_CLOSED, /* server connection closed by us or the server */
+  SERVER_REGISTERED,            /* Ready to call a peer */
+  SERVER_CLOSED,                /* server connection closed by us or the server */
   PEER_CONNECTING = 3000,
   PEER_CONNECTION_ERROR,
   PEER_CONNECTED,
@@ -49,13 +50,15 @@ static const gchar *server_url = "wss://webrtc.nirbheek.in:8443";
 static gboolean disable_ssl = FALSE;
 static gboolean remote_is_offerer = FALSE;
 
-static GOptionEntry entries[] =
-{
-  { "peer-id", 0, 0, G_OPTION_ARG_STRING, &peer_id, "String ID of the peer to connect to", "ID" },
-  { "server", 0, 0, G_OPTION_ARG_STRING, &server_url, "Signalling server to connect to", "URL" },
-  { "disable-ssl", 0, 0, G_OPTION_ARG_NONE, &disable_ssl, "Disable ssl", NULL },
-  { "remote-offerer", 0, 0, G_OPTION_ARG_NONE, &remote_is_offerer, "Request that the peer generate the offer and we'll answer", NULL },
-  { NULL },
+static GOptionEntry entries[] = {
+  {"peer-id", 0, 0, G_OPTION_ARG_STRING, &peer_id,
+      "String ID of the peer to connect to", "ID"},
+  {"server", 0, 0, G_OPTION_ARG_STRING, &server_url,
+      "Signalling server to connect to", "URL"},
+  {"disable-ssl", 0, 0, G_OPTION_ARG_NONE, &disable_ssl, "Disable ssl", NULL},
+  {"remote-offerer", 0, 0, G_OPTION_ARG_NONE, &remote_is_offerer,
+      "Request that the peer generate the offer and we'll answer", NULL},
+  {NULL},
 };
 
 static gboolean
@@ -84,7 +87,7 @@ cleanup_and_quit_loop (const gchar * msg, enum AppState state)
   return G_SOURCE_REMOVE;
 }
 
-static gchar*
+static gchar *
 get_string_from_json_object (JsonObject * object)
 {
   JsonNode *root;
@@ -104,8 +107,8 @@ get_string_from_json_object (JsonObject * object)
 }
 
 static void
-handle_media_stream (GstPad * pad, GstElement * pipe, const char * convert_name,
-    const char * sink_name)
+handle_media_stream (GstPad * pad, GstElement * pipe, const char *convert_name,
+    const char *sink_name)
 {
   GstPad *qpad;
   GstElement *q, *conv, *resample, *sink;
@@ -215,13 +218,14 @@ send_ice_candidate_message (GstElement * webrtc G_GNUC_UNUSED, guint mlineindex,
 }
 
 static void
-send_sdp_to_peer (GstWebRTCSessionDescription *desc)
+send_sdp_to_peer (GstWebRTCSessionDescription * desc)
 {
   gchar *text;
   JsonObject *msg, *sdp;
 
   if (app_state < PEER_CALL_NEGOTIATING) {
-    cleanup_and_quit_loop ("Can't send SDP to peer, not in call", APP_STATE_ERROR);
+    cleanup_and_quit_loop ("Can't send SDP to peer, not in call",
+        APP_STATE_ERROR);
     return;
   }
 
@@ -231,12 +235,10 @@ send_sdp_to_peer (GstWebRTCSessionDescription *desc)
   if (desc->type == GST_WEBRTC_SDP_TYPE_OFFER) {
     g_print ("Sending offer:\n%s\n", text);
     json_object_set_string_member (sdp, "type", "offer");
-  }
-  else if (desc->type == GST_WEBRTC_SDP_TYPE_ANSWER) {
+  } else if (desc->type == GST_WEBRTC_SDP_TYPE_ANSWER) {
     g_print ("Sending answer:\n%s\n", text);
     json_object_set_string_member (sdp, "type", "answer");
-  }
-  else {
+  } else {
     g_assert_not_reached ();
   }
 
@@ -261,7 +263,7 @@ on_offer_created (GstPromise * promise, gpointer user_data)
 
   g_assert_cmphex (app_state, ==, PEER_CALL_NEGOTIATING);
 
-  g_assert_cmphex (gst_promise_wait(promise), ==, GST_PROMISE_RESULT_REPLIED);
+  g_assert_cmphex (gst_promise_wait (promise), ==, GST_PROMISE_RESULT_REPLIED);
   reply = gst_promise_get_reply (promise);
   gst_structure_get (reply, "offer",
       GST_TYPE_WEBRTC_SESSION_DESCRIPTION, &offer, NULL);
@@ -288,7 +290,8 @@ on_negotiation_needed (GstElement * element, gpointer user_data)
     g_free (msg);
   } else {
     GstPromise *promise;
-    promise = gst_promise_new_with_change_func (on_offer_created, user_data, NULL);;
+    promise =
+        gst_promise_new_with_change_func (on_offer_created, user_data, NULL);;
     g_signal_emit_by_name (webrtc1, "create-offer", NULL, promise);
   }
 }
@@ -306,7 +309,7 @@ data_channel_on_error (GObject * dc, gpointer user_data)
 static void
 data_channel_on_open (GObject * dc, gpointer user_data)
 {
-  GBytes *bytes = g_bytes_new ("data", strlen("data"));
+  GBytes *bytes = g_bytes_new ("data", strlen ("data"));
   g_print ("data channel opened\n");
   g_signal_emit_by_name (dc, "send-string", "Hi! from GStreamer");
   g_signal_emit_by_name (dc, "send-data", bytes);
@@ -320,7 +323,7 @@ data_channel_on_close (GObject * dc, gpointer user_data)
 }
 
 static void
-data_channel_on_message_string (GObject * dc, gchar *str, gpointer user_data)
+data_channel_on_message_string (GObject * dc, gchar * str, gpointer user_data)
 {
   g_print ("Received data channel message: %s\n", str);
 }
@@ -328,18 +331,19 @@ data_channel_on_message_string (GObject * dc, gchar *str, gpointer user_data)
 static void
 connect_data_channel_signals (GObject * data_channel)
 {
-  g_signal_connect (data_channel, "on-error", G_CALLBACK (data_channel_on_error),
-      NULL);
+  g_signal_connect (data_channel, "on-error",
+      G_CALLBACK (data_channel_on_error), NULL);
   g_signal_connect (data_channel, "on-open", G_CALLBACK (data_channel_on_open),
       NULL);
-  g_signal_connect (data_channel, "on-close", G_CALLBACK (data_channel_on_close),
-      NULL);
-  g_signal_connect (data_channel, "on-message-string", G_CALLBACK (data_channel_on_message_string),
-      NULL);
+  g_signal_connect (data_channel, "on-close",
+      G_CALLBACK (data_channel_on_close), NULL);
+  g_signal_connect (data_channel, "on-message-string",
+      G_CALLBACK (data_channel_on_message_string), NULL);
 }
 
 static void
-on_data_channel (GstElement * webrtc, GObject * data_channel, gpointer user_data)
+on_data_channel (GstElement * webrtc, GObject * data_channel,
+    gpointer user_data)
 {
   connect_data_channel_signals (data_channel);
   receive_channel = data_channel;
@@ -352,8 +356,7 @@ on_ice_gathering_state_notify (GstElement * webrtcbin, GParamSpec * pspec,
   GstWebRTCICEGatheringState ice_gather_state;
   const gchar *new_state = "unknown";
 
-  g_object_get (webrtcbin, "ice-gathering-state", &ice_gather_state,
-      NULL);
+  g_object_get (webrtcbin, "ice-gathering-state", &ice_gather_state, NULL);
   switch (ice_gather_state) {
     case GST_WEBRTC_ICE_GATHERING_STATE_NEW:
       new_state = "new";
@@ -375,12 +378,12 @@ start_pipeline (void)
   GError *error = NULL;
 
   pipe1 =
-      gst_parse_launch ("webrtcbin bundle-policy=max-bundle name=sendrecv " STUN_SERVER
+      gst_parse_launch ("webrtcbin bundle-policy=max-bundle name=sendrecv "
+      STUN_SERVER
       "videotestsrc is-live=true pattern=ball ! videoconvert ! queue ! vp8enc deadline=1 ! rtpvp8pay ! "
       "queue ! " RTP_CAPS_VP8 "96 ! sendrecv. "
       "audiotestsrc is-live=true wave=red-noise ! audioconvert ! audioresample ! queue ! opusenc ! rtpopuspay ! "
-      "queue ! " RTP_CAPS_OPUS "97 ! sendrecv. ",
-      &error);
+      "queue ! " RTP_CAPS_OPUS "97 ! sendrecv. ", &error);
 
   if (error) {
     g_printerr ("Failed to parse launch: %s\n", error->message);
@@ -497,7 +500,7 @@ on_answer_created (GstPromise * promise, gpointer user_data)
 
   g_assert_cmphex (app_state, ==, PEER_CALL_NEGOTIATING);
 
-  g_assert_cmphex (gst_promise_wait(promise), ==, GST_PROMISE_RESULT_REPLIED);
+  g_assert_cmphex (gst_promise_wait (promise), ==, GST_PROMISE_RESULT_REPLIED);
   reply = gst_promise_get_reply (promise);
   gst_structure_get (reply, "answer",
       GST_TYPE_WEBRTC_SESSION_DESCRIPTION, &answer, NULL);
@@ -514,7 +517,7 @@ on_answer_created (GstPromise * promise, gpointer user_data)
 }
 
 static void
-on_offer_received (GstSDPMessage *sdp)
+on_offer_received (GstSDPMessage * sdp)
 {
   GstWebRTCSessionDescription *offer = NULL;
   GstPromise *promise;
@@ -525,15 +528,13 @@ on_offer_received (GstSDPMessage *sdp)
   /* Set remote description on our pipeline */
   {
     promise = gst_promise_new ();
-    g_signal_emit_by_name (webrtc1, "set-remote-description", offer,
-        promise);
+    g_signal_emit_by_name (webrtc1, "set-remote-description", offer, promise);
     gst_promise_interrupt (promise);
     gst_promise_unref (promise);
   }
   gst_webrtc_session_description_free (offer);
 
-  promise = gst_promise_new_with_change_func (on_answer_created, NULL,
-      NULL);
+  promise = gst_promise_new_with_change_func (on_answer_created, NULL, NULL);
   g_signal_emit_by_name (webrtc1, "create-answer", NULL, promise);
 }
 
@@ -548,7 +549,7 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
     case SOUP_WEBSOCKET_DATA_BINARY:
       g_printerr ("Received unknown binary message, ignoring\n");
       return;
-    case SOUP_WEBSOCKET_DATA_TEXT: {
+    case SOUP_WEBSOCKET_DATA_TEXT:{
       gsize size;
       const gchar *data = g_bytes_get_data (message, &size);
       /* Convert to NULL-terminated string */
@@ -573,7 +574,7 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
       cleanup_and_quit_loop ("ERROR: Failed to setup call", PEER_CALL_ERROR);
       goto out;
     }
-  /* Call has been setup by the server, now we can start negotiation */
+    /* Call has been setup by the server, now we can start negotiation */
   } else if (g_strcmp0 (text, "SESSION_OK") == 0) {
     if (app_state != PEER_CONNECTING) {
       cleanup_and_quit_loop ("ERROR: Received SESSION_OK when not calling",
@@ -586,7 +587,7 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
     if (!start_pipeline ())
       cleanup_and_quit_loop ("ERROR: failed to start pipeline",
           PEER_CALL_ERROR);
-  /* Handle errors */
+    /* Handle errors */
   } else if (g_str_has_prefix (text, "ERROR")) {
     switch (app_state) {
       case SERVER_CONNECTING:
@@ -605,7 +606,7 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
         app_state = APP_STATE_ERROR;
     }
     cleanup_and_quit_loop (text, 0);
-  /* Look for JSON messages containing SDP and ICE candidates */
+    /* Look for JSON messages containing SDP and ICE candidates */
   } else {
     JsonNode *root;
     JsonObject *object, *child;
@@ -659,7 +660,7 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
         answer = gst_webrtc_session_description_new (GST_WEBRTC_SDP_TYPE_ANSWER,
             sdp);
         g_assert_nonnull (answer);
-  
+
         /* Set remote description on our pipeline */
         {
           GstPromise *promise = gst_promise_new ();
@@ -669,8 +670,7 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
           gst_promise_unref (promise);
         }
         app_state = PEER_CALL_STARTED;
-      }
-      else {
+      } else {
         g_print ("Received offer:\n%s\n", text);
         on_offer_received (sdp);
       }
@@ -698,7 +698,7 @@ out:
 
 static void
 on_server_connected (SoupSession * session, GAsyncResult * res,
-    SoupMessage *msg)
+    SoupMessage * msg)
 {
   GError *error = NULL;
 
@@ -730,9 +730,10 @@ connect_to_websocket_server_async (void)
   SoupLogger *logger;
   SoupMessage *message;
   SoupSession *session;
-  const char *https_aliases[] = {"wss", NULL};
+  const char *https_aliases[] = { "wss", NULL };
 
-  session = soup_session_new_with_options (SOUP_SESSION_SSL_STRICT, !disable_ssl,
+  session =
+      soup_session_new_with_options (SOUP_SESSION_SSL_STRICT, !disable_ssl,
       SOUP_SESSION_SSL_USE_SYSTEM_CA_FILE, TRUE,
       //SOUP_SESSION_SSL_CA_FILE, "/etc/ssl/certs/ca-bundle.crt",
       SOUP_SESSION_HTTPS_ALIASES, https_aliases, NULL);
@@ -759,7 +760,8 @@ check_plugins (void)
   GstPlugin *plugin;
   GstRegistry *registry;
   const gchar *needed[] = { "opus", "vpx", "nice", "webrtc", "dtls", "srtp",
-      "rtpmanager", "videotestsrc", "audiotestsrc", NULL};
+    "rtpmanager", "videotestsrc", "audiotestsrc", NULL
+  };
 
   registry = gst_registry_get ();
   ret = TRUE;
