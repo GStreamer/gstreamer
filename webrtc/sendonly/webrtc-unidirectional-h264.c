@@ -186,7 +186,9 @@ create_receiver_entry (SoupWebsocketConnection * connection)
       G_CALLBACK (soup_websocket_message_cb), (gpointer) receiver_entry);
 
   error = NULL;
-  receiver_entry->pipeline = gst_parse_launch ("webrtcbin name=webrtcbin stun-server=stun://" STUN_SERVER " "
+  receiver_entry->pipeline =
+      gst_parse_launch ("webrtcbin name=webrtcbin stun-server=stun://"
+      STUN_SERVER " "
       "v4l2src ! videorate ! video/x-raw,width=640,height=360,framerate=15/1 ! videoconvert ! queue max-size-buffers=1 ! x264enc bitrate=600 speed-preset=ultrafast tune=zerolatency key-int-max=15 ! video/x-h264,profile=constrained-baseline ! queue max-size-time=100000000 ! h264parse ! "
       "rtph264pay config-interval=-1 name=payloader ! "
       "application/x-rtp,media=video,encoding-name=H264,payload="
@@ -201,7 +203,8 @@ create_receiver_entry (SoupWebsocketConnection * connection)
       gst_bin_get_by_name (GST_BIN (receiver_entry->pipeline), "webrtcbin");
   g_assert (receiver_entry->webrtcbin != NULL);
 
-  g_signal_emit_by_name (receiver_entry->webrtcbin, "get-transceivers", &transceivers);
+  g_signal_emit_by_name (receiver_entry->webrtcbin, "get-transceivers",
+      &transceivers);
   g_assert (transceivers != NULL && transceivers->len > 0);
   trans = g_array_index (transceivers, GstWebRTCRTPTransceiver *, 0);
   trans->direction = GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY;
