@@ -602,6 +602,7 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
       case PEER_CONNECTED:
       case PEER_CALL_NEGOTIATING:
         app_state = PEER_CALL_ERROR;
+        break;
       default:
         app_state = APP_STATE_ERROR;
     }
