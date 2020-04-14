@@ -17,23 +17,24 @@
 
 #include <string.h>
 
-enum AppState {
+enum AppState
+{
   APP_STATE_UNKNOWN = 0,
-  APP_STATE_ERROR = 1, /* generic error */
+  APP_STATE_ERROR = 1,          /* generic error */
   SERVER_CONNECTING = 1000,
   SERVER_CONNECTION_ERROR,
-  SERVER_CONNECTED, /* Ready to register */
+  SERVER_CONNECTED,             /* Ready to register */
   SERVER_REGISTERING = 2000,
   SERVER_REGISTRATION_ERROR,
-  SERVER_REGISTERED, /* Ready to call a peer */
-  SERVER_CLOSED, /* server connection closed by us or the server */
+  SERVER_REGISTERED,            /* Ready to call a peer */
+  SERVER_CLOSED,                /* server connection closed by us or the server */
   ROOM_JOINING = 3000,
   ROOM_JOIN_ERROR,
   ROOM_JOINED,
   ROOM_CALL_NEGOTIATING = 4000, /* negotiating with some or all peers */
-  ROOM_CALL_OFFERING, /* when we're the one sending the offer */
-  ROOM_CALL_ANSWERING, /* when we're the one answering an offer */
-  ROOM_CALL_STARTED, /* in a call with some or all peers */
+  ROOM_CALL_OFFERING,           /* when we're the one sending the offer */
+  ROOM_CALL_ANSWERING,          /* when we're the one answering an offer */
+  ROOM_CALL_STARTED,            /* in a call with some or all peers */
   ROOM_CALL_STOPPING,
   ROOM_CALL_STOPPED,
   ROOM_CALL_ERROR,
@@ -51,12 +52,14 @@ static gchar *local_id = NULL;
 static gchar *room_id = NULL;
 static gboolean strict_ssl = TRUE;
 
-static GOptionEntry entries[] =
-{
-  { "name", 0, 0, G_OPTION_ARG_STRING, &local_id, "Name we will send to the server", "ID" },
-  { "room-id", 0, 0, G_OPTION_ARG_STRING, &room_id, "Room name to join or create", "ID" },
-  { "server", 0, 0, G_OPTION_ARG_STRING, &server_url, "Signalling server to connect to", "URL" },
-  { NULL }
+static GOptionEntry entries[] = {
+  {"name", 0, 0, G_OPTION_ARG_STRING, &local_id,
+      "Name we will send to the server", "ID"},
+  {"room-id", 0, 0, G_OPTION_ARG_STRING, &room_id,
+      "Room name to join or create", "ID"},
+  {"server", 0, 0, G_OPTION_ARG_STRING, &server_url,
+      "Signalling server to connect to", "URL"},
+  {NULL}
 };
 
 static gint
@@ -97,7 +100,7 @@ cleanup_and_quit_loop (const gchar * msg, enum AppState state)
   return G_SOURCE_REMOVE;
 }
 
-static gchar*
+static gchar *
 get_string_from_json_object (JsonObject * object)
 {
   JsonNode *root;
@@ -117,8 +120,8 @@ get_string_from_json_object (JsonObject * object)
 }
 
 static void
-handle_media_stream (GstPad * pad, GstElement * pipe, const char * convert_name,
-    const char * sink_name)
+handle_media_stream (GstPad * pad, GstElement * pipe, const char *convert_name,
+    const char *sink_name)
 {
   GstPad *qpad;
   GstElement *q, *conv, *sink;
@@ -415,8 +418,7 @@ start_pipeline (void)
    * we can preroll early. */
   pipeline = gst_parse_launch ("tee name=audiotee ! queue ! fakesink "
       "audiotestsrc is-live=true wave=red-noise ! queue ! opusenc ! rtpopuspay ! "
-      "queue ! " RTP_CAPS_OPUS(96) " ! audiotee. ",
-      &error);
+      "queue ! " RTP_CAPS_OPUS (96) " ! audiotee. ", &error);
 
   if (error) {
     g_printerr ("Failed to parse launch: %s\n", error->message);
@@ -525,8 +527,7 @@ do_join_room (const gchar * text)
   g_print ("Room joined\n");
   /* Start recording, but not transmitting */
   if (!start_pipeline ()) {
-    cleanup_and_quit_loop ("ERROR: Failed to start pipeline",
-        ROOM_CALL_ERROR);
+    cleanup_and_quit_loop ("ERROR: Failed to start pipeline", ROOM_CALL_ERROR);
     return;
   }
 
@@ -767,7 +768,7 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
     case SOUP_WEBSOCKET_DATA_BINARY:
       g_printerr ("Received unknown binary message, ignoring\n");
       return;
-    case SOUP_WEBSOCKET_DATA_TEXT: {
+    case SOUP_WEBSOCKET_DATA_TEXT:{
       gsize size;
       const gchar *data = g_bytes_get_data (message, &size);
       /* Convert to NULL-terminated string */
@@ -782,7 +783,7 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
   if (g_strcmp0 (text, "HELLO") == 0) {
     /* May fail asynchronously */
     do_registration ();
-  /* Room-related message */
+    /* Room-related message */
   } else if (g_str_has_prefix (text, "ROOM_")) {
     /* Room joined, now we can start negotiation */
     if (g_str_has_prefix (text, "ROOM_OK ")) {
@@ -811,7 +812,7 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
         peers = g_list_remove (peers, peer_id);
         g_print ("Peer %s has left the room\n", peer_id);
         remove_peer_from_pipeline (peer_id);
-        g_free ((gchar*) peer_id);
+        g_free ((gchar *) peer_id);
         /* TODO: cleanup pipeline */
       } else {
         g_printerr ("WARNING: Ignoring unknown message %s\n", text);
@@ -820,7 +821,7 @@ on_server_message (SoupWebsocketConnection * conn, SoupWebsocketDataType type,
     } else {
       goto err;
     }
-  /* Handle errors */
+    /* Handle errors */
   } else if (g_str_has_prefix (text, "ERROR")) {
     handle_error_message (text);
   } else {
@@ -842,7 +843,7 @@ err:
 
 static void
 on_server_connected (SoupSession * session, GAsyncResult * res,
-    SoupMessage *msg)
+    SoupMessage * msg)
 {
   GError *error = NULL;
 
@@ -875,7 +876,7 @@ connect_to_websocket_server_async (void)
   SoupLogger *logger;
   SoupMessage *message;
   SoupSession *session;
-  const char *https_aliases[] = {"wss", NULL};
+  const char *https_aliases[] = { "wss", NULL };
 
   session = soup_session_new_with_options (SOUP_SESSION_SSL_STRICT, strict_ssl,
       SOUP_SESSION_SSL_USE_SYSTEM_CA_FILE, TRUE,
@@ -904,7 +905,8 @@ check_plugins (void)
   GstPlugin *plugin;
   GstRegistry *registry;
   const gchar *needed[] = { "opus", "nice", "webrtc", "dtls", "srtp",
-      "rtpmanager", "audiotestsrc", NULL};
+    "rtpmanager", "audiotestsrc", NULL
+  };
 
   registry = gst_registry_get ();
   ret = TRUE;
