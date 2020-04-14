@@ -641,6 +641,11 @@ gnonlin_suite (void)
   ges_init ();
   suite_add_tcase (s, tc_chain);
 
+  /* give the tests a little more time than the default
+   * CK_DEFAULT_TIMEOUT=20, this is sometimes needed for running under
+   * valgrind */
+  tcase_set_timeout (tc_chain, 40.0);
+
   tcase_add_test (tc_chain, test_tempochange_play);
   tcase_add_test (tc_chain, test_tempochange_seek);
 
