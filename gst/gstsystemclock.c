@@ -222,7 +222,7 @@ gst_system_clock_dispose (GObject * object)
   for (entries = priv->entries; entries; entries = g_list_next (entries)) {
     GstClockEntry *entry = (GstClockEntry *) entries->data;
 
-    GST_CAT_DEBUG (GST_CAT_CLOCK, "unscheduling entry %p", entry);
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "unscheduling entry %p", entry);
     SET_ENTRY_STATUS (entry, GST_CLOCK_UNSCHEDULED);
   }
   GST_SYSTEM_CLOCK_BROADCAST (clock);
@@ -231,7 +231,7 @@ gst_system_clock_dispose (GObject * object)
   if (priv->thread)
     g_thread_join (priv->thread);
   priv->thread = NULL;
-  GST_CAT_DEBUG (GST_CAT_CLOCK, "joined thread");
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "joined thread");
 
   g_list_foreach (priv->entries, (GFunc) gst_clock_id_unref, NULL);
   g_list_free (priv->entries);
@@ -243,7 +243,7 @@ gst_system_clock_dispose (GObject * object)
 
   if (_the_system_clock == clock) {
     _the_system_clock = NULL;
-    GST_CAT_DEBUG (GST_CAT_CLOCK, "disposed system clock");
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "disposed system clock");
   }
 }
 
@@ -256,7 +256,7 @@ gst_system_clock_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_CLOCK_TYPE:
       sysclock->priv->clock_type = (GstClockType) g_value_get_enum (value);
-      GST_CAT_DEBUG (GST_CAT_CLOCK, "clock-type set to %d",
+      GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, sysclock, "clock-type set to %d",
           sysclock->priv->clock_type);
       break;
     default:
@@ -379,7 +379,7 @@ gst_system_clock_async_thread (GstClock * clock)
   GstSystemClockPrivate *priv = sysclock->priv;
   GstClockReturn status;
 
-  GST_CAT_DEBUG (GST_CAT_CLOCK, "enter system clock thread");
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "enter system clock thread");
   GST_SYSTEM_CLOCK_LOCK (clock);
   /* signal spinup */
   GST_SYSTEM_CLOCK_BROADCAST (clock);
@@ -391,10 +391,11 @@ gst_system_clock_async_thread (GstClock * clock)
 
     /* check if something to be done */
     while (priv->entries == NULL) {
-      GST_CAT_DEBUG (GST_CAT_CLOCK, "no clock entries, waiting..");
+      GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
+          "no clock entries, waiting..");
       /* wait for work to do */
       GST_SYSTEM_CLOCK_WAIT (clock);
-      GST_CAT_DEBUG (GST_CAT_CLOCK, "got signal");
+      GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "got signal");
       /* clock was stopping, exit */
       if (priv->stopping)
         goto exit;
@@ -410,14 +411,15 @@ gst_system_clock_async_thread (GstClock * clock)
       /* check for unscheduled */
       if (G_UNLIKELY (status == GST_CLOCK_UNSCHEDULED)) {
         /* entry was unscheduled, move to the next one */
-        GST_CAT_DEBUG (GST_CAT_CLOCK, "async entry %p unscheduled", entry);
+        GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
+            "async entry %p unscheduled", entry);
         goto next_entry;
       }
 
       /* for periodic timers, status can be EARLY from a previous run */
       if (G_UNLIKELY (status != GST_CLOCK_OK && status != GST_CLOCK_EARLY))
-        GST_CAT_ERROR (GST_CAT_CLOCK, "unexpected status %d for entry %p",
-            status, entry);
+        GST_CAT_ERROR_OBJECT (GST_CAT_CLOCK, clock,
+            "unexpected status %d for entry %p", status, entry);
 
       /* mark the entry as busy but watch out for intermediate unscheduled
        * statuses */
@@ -433,14 +435,16 @@ gst_system_clock_async_thread (GstClock * clock)
     switch (res) {
       case GST_CLOCK_UNSCHEDULED:
         /* entry was unscheduled, move to the next */
-        GST_CAT_DEBUG (GST_CAT_CLOCK, "async entry %p unscheduled", entry);
+        GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
+            "async entry %p unscheduled", entry);
         goto next_entry;
       case GST_CLOCK_OK:
       case GST_CLOCK_EARLY:
       {
         /* entry timed out normally, fire the callback and move to the next
          * entry */
-        GST_CAT_DEBUG (GST_CAT_CLOCK, "async entry %p timed out", entry);
+        GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "async entry %p timed out",
+            entry);
         if (entry->func) {
           /* unlock before firing the callback */
           GST_SYSTEM_CLOCK_UNLOCK (clock);
@@ -449,7 +453,8 @@ gst_system_clock_async_thread (GstClock * clock)
           GST_SYSTEM_CLOCK_LOCK (clock);
         }
         if (entry->type == GST_CLOCK_ENTRY_PERIODIC) {
-          GST_CAT_DEBUG (GST_CAT_CLOCK, "updating periodic entry %p", entry);
+          GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
+              "updating periodic entry %p", entry);
           /* adjust time now */
           entry->time = requested + entry->interval;
           /* and resort the list now */
@@ -458,7 +463,7 @@ gst_system_clock_async_thread (GstClock * clock)
           /* and restart */
           continue;
         } else {
-          GST_CAT_DEBUG (GST_CAT_CLOCK, "moving to next entry");
+          GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "moving to next entry");
           goto next_entry;
         }
       }
@@ -467,7 +472,8 @@ gst_system_clock_async_thread (GstClock * clock)
          * either a new entry was added in front of the queue or some other entry
          * was canceled. Whatever it is, pick the head entry of the list and
          * continue waiting. */
-        GST_CAT_DEBUG (GST_CAT_CLOCK, "async entry %p needs restart", entry);
+        GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
+            "async entry %p needs restart", entry);
 
         /* we set the entry back to the OK state. This is needed so that the
          * _unschedule() code can see if an entry is currently being waited
@@ -475,7 +481,7 @@ gst_system_clock_async_thread (GstClock * clock)
         SET_ENTRY_STATUS (entry, GST_CLOCK_OK);
         continue;
       default:
-        GST_CAT_DEBUG (GST_CAT_CLOCK,
+        GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
             "strange result %d waiting for %p, skipping", res, entry);
         g_warning ("%s: strange result %d waiting for %p, skipping",
             GST_OBJECT_NAME (clock), res, entry);
@@ -490,7 +496,7 @@ exit:
   /* signal exit */
   GST_SYSTEM_CLOCK_BROADCAST (clock);
   GST_SYSTEM_CLOCK_UNLOCK (clock);
-  GST_CAT_DEBUG (GST_CAT_CLOCK, "exit system clock thread");
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "exit system clock thread");
 }
 
 #ifdef HAVE_POSIX_TIMERS
@@ -639,7 +645,7 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
   if (G_LIKELY (jitter))
     *jitter = -diff;
 
-  GST_CAT_DEBUG (GST_CAT_CLOCK, "entry %p"
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "entry %p"
       " time %" GST_TIME_FORMAT
       " now %" GST_TIME_FORMAT
       " diff (time-now) %" G_GINT64_FORMAT,
@@ -666,12 +672,12 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
         if (G_UNLIKELY (status == GST_CLOCK_UNSCHEDULED))
           break;
         if (G_UNLIKELY (status != GST_CLOCK_BUSY))
-          GST_CAT_ERROR (GST_CAT_CLOCK, "unexpected status %d for entry %p",
-              status, entry);
+          GST_CAT_ERROR_OBJECT (GST_CAT_CLOCK, clock,
+              "unexpected status %d for entry %p", status, entry);
       } while (G_UNLIKELY (!CAS_ENTRY_STATUS (entry, status, GST_CLOCK_DONE)));
 
-      GST_CAT_DEBUG (GST_CAT_CLOCK, "entry %p unlocked, status %d",
-          entry, status);
+      GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
+          "entry %p unlocked, status %d", entry, status);
 
       if (G_UNLIKELY (status == GST_CLOCK_UNSCHEDULED)) {
         entry->unscheduled = TRUE;
@@ -682,15 +688,16 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
           if (!restart) {
             /* this can happen if the entry got unlocked because of an async
              * entry was added to the head of the async queue. */
-            GST_CAT_DEBUG (GST_CAT_CLOCK, "wakeup waiting for entry %p", entry);
+            GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
+                "wakeup waiting for entry %p", entry);
             goto done;
           }
 
-          GST_CAT_DEBUG (GST_CAT_CLOCK, "entry %p needs to be restarted",
-              entry);
+          GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
+              "entry %p needs to be restarted", entry);
         } else {
-          GST_CAT_DEBUG (GST_CAT_CLOCK, "entry %p unlocked after timeout",
-              entry);
+          GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
+              "entry %p unlocked after timeout", entry);
         }
 
         /* reschedule if gst_cond_wait_until returned early or we have to reschedule after
@@ -704,14 +711,14 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
                       GST_CLOCK_OK))) {
             status = GET_ENTRY_STATUS (entry);
             if (status != GST_CLOCK_UNSCHEDULED)
-              GST_CAT_ERROR (GST_CAT_CLOCK, "unexpected status %d for entry %p",
-                  status, entry);
+              GST_CAT_ERROR_OBJECT (GST_CAT_CLOCK, clock,
+                  "unexpected status %d for entry %p", status, entry);
             goto done;
           } else {
             status = GST_CLOCK_OK;
           }
 
-          GST_CAT_DEBUG (GST_CAT_CLOCK,
+          GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
               "entry %p finished, diff %" G_GINT64_FORMAT, entry, diff);
 
 #ifdef WAIT_DEBUGGING
@@ -726,7 +733,7 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
 #endif
           goto done;
         } else {
-          GST_CAT_DEBUG (GST_CAT_CLOCK,
+          GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
               "entry %p restart, diff %" G_GINT64_FORMAT, entry, diff);
           /* we are going to poll again, set status back to busy */
           do {
@@ -735,8 +742,8 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
             if (G_UNLIKELY (status == GST_CLOCK_UNSCHEDULED))
               goto done;
             if (G_UNLIKELY (status != GST_CLOCK_DONE))
-              GST_CAT_ERROR (GST_CAT_CLOCK, "unexpected status %d for entry %p",
-                  status, entry);
+              GST_CAT_ERROR_OBJECT (GST_CAT_CLOCK, clock,
+                  "unexpected status %d for entry %p", status, entry);
           } while (G_UNLIKELY (!CAS_ENTRY_STATUS (entry, status,
                       GST_CLOCK_BUSY)));
         }
@@ -750,8 +757,8 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
         if (G_LIKELY (status == GST_CLOCK_UNSCHEDULED))
           entry->unscheduled = TRUE;
         else
-          GST_CAT_ERROR (GST_CAT_CLOCK, "unexpected status %d for entry %p",
-              status, entry);
+          GST_CAT_ERROR_OBJECT (GST_CAT_CLOCK, clock,
+              "unexpected status %d for entry %p", status, entry);
       } else {
         status = GST_CLOCK_OK;
       }
@@ -761,8 +768,8 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
         if (G_LIKELY (status == GST_CLOCK_UNSCHEDULED))
           entry->unscheduled = TRUE;
         else
-          GST_CAT_ERROR (GST_CAT_CLOCK, "unexpected status %d for entry %p",
-              status, entry);
+          GST_CAT_ERROR_OBJECT (GST_CAT_CLOCK, clock,
+              "unexpected status %d for entry %p", status, entry);
       } else {
         status = GST_CLOCK_EARLY;
       }
@@ -789,8 +796,8 @@ gst_system_clock_id_wait_jitter (GstClock * clock, GstClockEntry * entry,
     }
 
     if (G_UNLIKELY (status != GST_CLOCK_OK))
-      GST_CAT_ERROR (GST_CAT_CLOCK, "unexpected status %d for entry %p",
-          status, entry);
+      GST_CAT_ERROR_OBJECT (GST_CAT_CLOCK, clock,
+          "unexpected status %d for entry %p", status, entry);
 
     /* mark the entry as busy but watch out for intermediate unscheduled
      * statuses */
@@ -851,7 +858,7 @@ gst_system_clock_id_wait_async (GstClock * clock, GstClockEntry * entry)
   sysclock = GST_SYSTEM_CLOCK_CAST (clock);
   priv = sysclock->priv;
 
-  GST_CAT_DEBUG (GST_CAT_CLOCK, "adding async entry %p", entry);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "adding async entry %p", entry);
 
   GST_SYSTEM_CLOCK_LOCK (clock);
   /* Start the clock async thread if needed */
@@ -876,22 +883,25 @@ gst_system_clock_id_wait_async (GstClock * clock, GstClockEntry * entry)
    * front, else the thread is just waiting for another entry and
    * will get to this entry automatically. */
   if (priv->entries->data == entry) {
-    GST_CAT_DEBUG (GST_CAT_CLOCK, "async entry added to head %p", head);
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
+        "async entry added to head %p", head);
     if (head == NULL) {
       /* the list was empty before, signal the cond so that the async thread can
        * start taking a look at the queue */
-      GST_CAT_DEBUG (GST_CAT_CLOCK, "first entry, sending signal");
+      GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
+          "first entry, sending signal");
       GST_SYSTEM_CLOCK_BROADCAST (clock);
     } else {
       GstClockReturn status;
 
       status = GET_ENTRY_STATUS (head);
-      GST_CAT_DEBUG (GST_CAT_CLOCK, "head entry %p status %d", head, status);
+      GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "head entry %p status %d",
+          head, status);
 
       if (status == GST_CLOCK_BUSY) {
         /* the async thread was waiting for an entry, unlock the wait so that it
          * looks at the new head entry instead, we only need to do this once */
-        GST_CAT_DEBUG (GST_CAT_CLOCK,
+        GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
             "head entry was busy. Wakeup async thread");
         GST_SYSTEM_CLOCK_BROADCAST (clock);
       }
@@ -927,7 +937,7 @@ gst_system_clock_id_unschedule (GstClock * clock, GstClockEntry * entry)
 {
   GstClockReturn status;
 
-  GST_CAT_DEBUG (GST_CAT_CLOCK, "unscheduling entry %p", entry);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "unscheduling entry %p", entry);
 
   GST_SYSTEM_CLOCK_LOCK (clock);
   /* change the entry status to unscheduled */
@@ -941,7 +951,7 @@ gst_system_clock_id_unschedule (GstClock * clock, GstClockEntry * entry)
      * status. We cannot wake up just one entry because allocating such a
      * datastructure for each entry would be too heavy and unlocking an entry
      * is usually done when shutting down or some other exceptional case. */
-    GST_CAT_DEBUG (GST_CAT_CLOCK, "entry was BUSY, doing wakeup");
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "entry was BUSY, doing wakeup");
     if (!entry->unscheduled) {
       GST_SYSTEM_CLOCK_BROADCAST (clock);
     }
