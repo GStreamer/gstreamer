@@ -404,7 +404,6 @@ incoming_call_from_peer (const gchar * peer_id)
 
 #define STR(x) #x
 #define RTP_CAPS_OPUS(x) "application/x-rtp,media=audio,encoding-name=OPUS,payload=" STR(x)
-#define RTP_CAPS_VP8(x) "application/x-rtp,media=video,encoding-name=VP8,payload=" STR(x)
 
 static gboolean
 start_pipeline (void)
@@ -902,7 +901,6 @@ check_plugins (void)
 {
   int i;
   gboolean ret;
-  GstPlugin *plugin;
   GstRegistry *registry;
   const gchar *needed[] = { "opus", "nice", "webrtc", "dtls", "srtp",
     "rtpmanager", "audiotestsrc", NULL
@@ -911,6 +909,7 @@ check_plugins (void)
   registry = gst_registry_get ();
   ret = TRUE;
   for (i = 0; i < g_strv_length ((gchar **) needed); i++) {
+    GstPlugin *plugin;
     plugin = gst_registry_find_plugin (registry, needed[i]);
     if (!plugin) {
       g_print ("Required gstreamer plugin '%s' not found\n", needed[i]);

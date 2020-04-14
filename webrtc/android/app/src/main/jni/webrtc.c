@@ -280,7 +280,6 @@ on_offer_created (GstPromise * promise, WebRTC * webrtc)
 {
   GstWebRTCSessionDescription *offer = NULL;
   const GstStructure *reply;
-  gchar *desc;
 
   g_assert (webrtc->app_state == PEER_CALL_NEGOTIATING);
 

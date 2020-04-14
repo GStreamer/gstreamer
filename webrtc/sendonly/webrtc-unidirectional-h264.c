@@ -11,13 +11,9 @@
 #include <json-glib/json-glib.h>
 #include <string.h>
 
-
-
 #define RTP_PAYLOAD_TYPE "96"
 #define SOUP_HTTP_PORT 57778
 #define STUN_SERVER "stun.l.google.com:19302"
-
-
 
 typedef struct _ReceiverEntry ReceiverEntry;
 
@@ -48,9 +44,6 @@ static gchar *get_string_from_json_object (JsonObject * object);
 
 gboolean exit_sighandler (gpointer user_data);
 
-
-
-
 struct _ReceiverEntry
 {
   SoupWebsocketConnection *connection;
@@ -58,8 +51,6 @@ struct _ReceiverEntry
   GstElement *pipeline;
   GstElement *webrtcbin;
 };
-
-
 
 const gchar *html_source = " \n \
 <html> \n \
@@ -165,9 +156,6 @@ const gchar *html_source = " \n \
   </body> \n \
 </html> \n \
 ";
-
-
-
 
 ReceiverEntry *
 create_receiver_entry (SoupWebsocketConnection * connection)
