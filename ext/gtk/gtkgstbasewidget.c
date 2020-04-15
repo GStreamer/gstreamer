@@ -361,6 +361,51 @@ gtk_gst_base_widget_motion_event (GtkWidget * widget, GdkEventMotion * event)
   return FALSE;
 }
 
+static gboolean
+gtk_gst_base_widget_scroll_event (GtkWidget * widget, GdkEventScroll * event)
+{
+  GtkGstBaseWidget *base_widget = GTK_GST_BASE_WIDGET (widget);
+  GstElement *element;
+
+  if ((element = g_weak_ref_get (&base_widget->element))) {
+    if (GST_IS_NAVIGATION (element)) {
+      gdouble x, y, delta_x, delta_y;
+
+      gtk_gst_base_widget_display_size_to_stream_size (base_widget, event->x,
+          event->y, &x, &y);
+
+      if (!gdk_event_get_scroll_deltas ((GdkEvent *) event, &delta_x, &delta_y)) {
+        gdouble offset = 20;
+
+        delta_x = event->delta_x;
+        delta_y = event->delta_y;
+
+        switch (event->direction) {
+          case GDK_SCROLL_UP:
+            delta_y = offset;
+            break;
+          case GDK_SCROLL_DOWN:
+            delta_y = -offset;
+            break;
+          case GDK_SCROLL_LEFT:
+            delta_x = -offset;
+            break;
+          case GDK_SCROLL_RIGHT:
+            delta_x = offset;
+            break;
+          default:
+            break;
+        }
+      }
+      gst_navigation_send_mouse_scroll_event (GST_NAVIGATION (element),
+          x, y, delta_x, delta_y);
+    }
+    g_object_unref (element);
+  }
+  return FALSE;
+}
+
+
 void
 gtk_gst_base_widget_class_init (GtkGstBaseWidgetClass * klass)
 {
@@ -394,6 +439,7 @@ gtk_gst_base_widget_class_init (GtkGstBaseWidgetClass * klass)
   widget_klass->button_press_event = gtk_gst_base_widget_button_event;
   widget_klass->button_release_event = gtk_gst_base_widget_button_event;
   widget_klass->motion_notify_event = gtk_gst_base_widget_motion_event;
+  widget_klass->scroll_event = gtk_gst_base_widget_scroll_event;
 
   GST_DEBUG_CATEGORY_INIT (gst_debug_gtk_base_widget, "gtkbasewidget", 0,
       "Gtk Video Base Widget");
@@ -421,7 +467,7 @@ gtk_gst_base_widget_init (GtkGstBaseWidget * widget)
       | GDK_KEY_RELEASE_MASK
       | GDK_BUTTON_PRESS_MASK
       | GDK_BUTTON_RELEASE_MASK
-      | GDK_POINTER_MOTION_MASK | GDK_BUTTON_MOTION_MASK;
+      | GDK_POINTER_MOTION_MASK | GDK_BUTTON_MOTION_MASK | GDK_SCROLL_MASK;
   gtk_widget_set_events (GTK_WIDGET (widget), event_mask);
 }
 
