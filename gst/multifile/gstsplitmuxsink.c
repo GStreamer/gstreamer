@@ -2062,7 +2062,7 @@ need_new_fragment (GstSplitMuxSink * splitmux,
   }
 
   /* User told us to split at this running time */
-  if (splitmux->reference_ctx->in_running_time >= time_to_split) {
+  if (splitmux->gop_start_time >= time_to_split) {
     GST_OBJECT_LOCK (splitmux);
     /* Dequeue running time */
     gst_queue_array_pop_head_struct (splitmux->times_to_split);
@@ -2070,7 +2070,7 @@ need_new_fragment (GstSplitMuxSink * splitmux,
     ptr_to_time = gst_queue_array_peek_head_struct (splitmux->times_to_split);
     while (ptr_to_time) {
       time_to_split = *ptr_to_time;
-      if (splitmux->reference_ctx->in_running_time < time_to_split) {
+      if (splitmux->gop_start_time < time_to_split) {
         break;
       }
       gst_queue_array_pop_head_struct (splitmux->times_to_split);
