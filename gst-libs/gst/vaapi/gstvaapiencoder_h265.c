@@ -116,7 +116,8 @@ struct _GstVaapiEncoderH265
   guint32 quality_factor;
   GstClockTime cts_offset;
   gboolean config_changed;
-  gboolean low_delay_b;
+  /* Always need two reference lists for inter frame */
+  gboolean no_p_frame;
   guint32 num_tile_cols;
   guint32 num_tile_rows;
   /* CTUs start address used in stream pack */
@@ -1873,7 +1874,7 @@ create_and_fill_one_slice (GstVaapiEncoderH265 * encoder,
   memset (slice_param, 0, sizeof (VAEncSliceParameterBufferHEVC));
 
   slice_param->slice_type = h265_get_slice_type (picture->type);
-  if (encoder->low_delay_b && slice_param->slice_type == GST_H265_P_SLICE) {
+  if (encoder->no_p_frame && slice_param->slice_type == GST_H265_P_SLICE) {
     slice_param->slice_type = GST_H265_B_SLICE;
   }
   slice_param->slice_pic_parameter_set_id = 0;
@@ -1888,7 +1889,7 @@ create_and_fill_one_slice (GstVaapiEncoderH265 * encoder,
     slice_param->num_ref_idx_l1_active_minus1 = reflist_1_count - 1;
   else
     slice_param->num_ref_idx_l1_active_minus1 = 0;
-  if (picture->type == GST_VAAPI_PICTURE_TYPE_P && encoder->low_delay_b)
+  if (picture->type == GST_VAAPI_PICTURE_TYPE_P && encoder->no_p_frame)
     slice_param->num_ref_idx_l1_active_minus1 =
         slice_param->num_ref_idx_l0_active_minus1;
 
@@ -1912,7 +1913,7 @@ create_and_fill_one_slice (GstVaapiEncoderH265 * encoder,
           GST_VAAPI_SURFACE_PROXY_SURFACE_ID (reflist_1[i_ref]->pic);
       slice_param->ref_pic_list1[i_ref].pic_order_cnt = reflist_1[i_ref]->poc;
     }
-  } else if (picture->type == GST_VAAPI_PICTURE_TYPE_P && encoder->low_delay_b) {
+  } else if (picture->type == GST_VAAPI_PICTURE_TYPE_P && encoder->no_p_frame) {
     for (; i_ref < reflist_0_count; ++i_ref) {
       slice_param->ref_pic_list1[i_ref].picture_id =
           GST_VAAPI_SURFACE_PROXY_SURFACE_ID (reflist_0[i_ref]->pic);
@@ -1978,7 +1979,6 @@ add_slice_headers (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
       GST_LOG ("slice %d start tile address is %d, start address is %d,"
           " CTU num %d", i_slice, encoder->tile_slice_address[i_slice],
           slice_param->slice_segment_address, slice_param->num_ctu_in_slice);
-
 
       if (i_slice == encoder->num_slices - 1)
         slice_param->slice_fields.bits.last_slice_of_pic_flag = 1;
@@ -3171,6 +3171,7 @@ gst_vaapi_encoder_h265_init (GstVaapiEncoderH265 * encoder)
 
   encoder->conformance_window_flag = 0;
   encoder->num_slices = 1;
+  encoder->no_p_frame = FALSE;
 
   /* re-ordering  list initialize */
   reorder_pool = &encoder->reorder_pool;
@@ -3263,7 +3264,9 @@ enum
   ENCODER_H265_PROP_MBBRC,
   ENCODER_H265_PROP_QP_IP,
   ENCODER_H265_PROP_QP_IB,
+#ifndef GST_REMOVE_DEPRECATED
   ENCODER_H265_PROP_LOW_DELAY_B,
+#endif
   ENCODER_H265_PROP_MAX_QP,
   ENCODER_H265_PROP_QUALITY_FACTOR,
   ENCODER_H265_PROP_NUM_TILE_COLS,
@@ -3321,9 +3324,19 @@ gst_vaapi_encoder_h265_set_property (GObject * object, guint prop_id,
     case ENCODER_H265_PROP_MBBRC:
       encoder->mbbrc = g_value_get_enum (value);
       break;
+#ifndef GST_REMOVE_DEPRECATED
     case ENCODER_H265_PROP_LOW_DELAY_B:
-      encoder->low_delay_b = g_value_get_boolean (value);
+#if !VA_CHECK_VERSION(1,9,0)
+      encoder->no_p_frame = g_value_get_boolean (value);
+#else
+      if (g_value_get_boolean (value) == TRUE) {
+        GST_WARNING ("Deprecate low-delay-b property. Driver now already"
+            " has the ability to detect whether supporting P frames. this"
+            " value should not be set manually and will take no effect.");
+      }
+#endif
       break;
+#endif
     case ENCODER_H265_PROP_MAX_QP:
       encoder->max_qp = g_value_get_uint (value);
       break;
@@ -3382,9 +3395,11 @@ gst_vaapi_encoder_h265_get_property (GObject * object, guint prop_id,
     case ENCODER_H265_PROP_MBBRC:
       g_value_set_enum (value, encoder->mbbrc);
       break;
+#ifndef GST_REMOVE_DEPRECATED
     case ENCODER_H265_PROP_LOW_DELAY_B:
-      g_value_set_boolean (value, encoder->low_delay_b);
+      g_value_set_boolean (value, encoder->no_p_frame);
       break;
+#endif
     case ENCODER_H265_PROP_MAX_QP:
       g_value_set_uint (value, encoder->max_qp);
       break;
@@ -3576,6 +3591,7 @@ gst_vaapi_encoder_h265_class_init (GstVaapiEncoderH265Class * klass)
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
       GST_VAAPI_PARAM_ENCODER_EXPOSURE);
 
+#ifndef GST_REMOVE_DEPRECATED
   /**
    * GstVaapiEncoderH265:low_delay_b:
    *
@@ -3588,6 +3604,7 @@ gst_vaapi_encoder_h265_class_init (GstVaapiEncoderH265Class * klass)
       " Enable it when P frames are not supported.",
       FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
       GST_VAAPI_PARAM_ENCODER_EXPOSURE);
+#endif
 
   /**
    * GstVaapiEncoderH265:quality_factor:
