@@ -94,6 +94,8 @@
 #define GST_SYSTEM_CLOCK_ENTRY_WAIT_UNTIL(entry,ns)     gst_futex_cond_wait_until(GST_SYSTEM_CLOCK_ENTRY_GET_COND(entry),GST_SYSTEM_CLOCK_ENTRY_GET_LOCK(entry),ns)
 #define GST_SYSTEM_CLOCK_ENTRY_BROADCAST(entry)         gst_futex_cond_broadcast(GST_SYSTEM_CLOCK_ENTRY_GET_COND(entry))
 
+#define CLOCK_MIN_WAIT_TIME 100 /* ns */
+
 typedef struct _GstClockEntryFutex GstClockEntryImpl;
 struct _GstClockEntryFutex
 {
@@ -164,6 +166,8 @@ gst_futex_cond_wait_until (guint * cond_val, GMutex * mutex, gint64 end_time)
 #define GST_SYSTEM_CLOCK_ENTRY_UNLOCK(entry)            (pthread_mutex_unlock(GST_SYSTEM_CLOCK_ENTRY_GET_LOCK(entry)))
 #define GST_SYSTEM_CLOCK_ENTRY_WAIT_UNTIL(entry,ns)     gst_pthread_cond_wait_until(GST_SYSTEM_CLOCK_ENTRY_GET_COND(entry),GST_SYSTEM_CLOCK_ENTRY_GET_LOCK(entry),(ns))
 #define GST_SYSTEM_CLOCK_ENTRY_BROADCAST(entry)         pthread_cond_broadcast(GST_SYSTEM_CLOCK_ENTRY_GET_COND(entry))
+
+#define CLOCK_MIN_WAIT_TIME 500 /* ns */
 
 typedef struct _GstClockEntryPThread GstClockEntryImpl;
 struct _GstClockEntryPThread
@@ -288,6 +292,14 @@ init_entry (GstClockEntryImpl * entry)
 #define GST_SYSTEM_CLOCK_ENTRY_UNLOCK(entry)            (g_mutex_unlock(GST_SYSTEM_CLOCK_ENTRY_GET_LOCK(entry)))
 #define GST_SYSTEM_CLOCK_ENTRY_WAIT_UNTIL(entry,ns)     g_cond_wait_until(GST_SYSTEM_CLOCK_ENTRY_GET_COND(entry),GST_SYSTEM_CLOCK_ENTRY_GET_LOCK(entry),(ns / 1000))
 #define GST_SYSTEM_CLOCK_ENTRY_BROADCAST(entry)         g_cond_broadcast(GST_SYSTEM_CLOCK_ENTRY_GET_COND(entry))
+
+#if defined (G_OS_WIN32)
+/* min wait time is 1ms on windows with GCond */
+#define CLOCK_MIN_WAIT_TIME GST_MSECOND
+#else
+/* min wait time is 1us on non-windows with GCond */
+#define CLOCK_MIN_WAIT_TIME GST_USECOND
+#endif
 
 typedef struct _GstClockEntryGLib GstClockEntryImpl;
 struct _GstClockEntryGLib
@@ -916,7 +928,7 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
       " diff (time-now) %" G_GINT64_FORMAT,
       entry, GST_TIME_ARGS (entryt), GST_TIME_ARGS (now), diff);
 
-  if (G_LIKELY (diff > 0)) {
+  if (G_LIKELY (diff > CLOCK_MIN_WAIT_TIME)) {
 #ifdef WAIT_DEBUGGING
     GstClockTime final;
 #endif
@@ -975,7 +987,7 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
         now = gst_clock_get_time (clock);
         diff = GST_CLOCK_DIFF (now, entryt);
 
-        if (diff <= 0) {
+        if (diff <= CLOCK_MIN_WAIT_TIME) {
           /* timeout, this is fine, we can report success now */
           if (G_UNLIKELY (!CAS_ENTRY_STATUS (entry, GST_CLOCK_DONE,
                       GST_CLOCK_OK))) {
