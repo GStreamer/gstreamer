@@ -199,22 +199,66 @@ typedef enum { /*< flags >*/
 
 /**
  * GstSegment:
- * @flags: flags for this segment
- * @rate: the playback rate of the segment
- * @applied_rate: the already applied rate to the segment
- * @format: the format of the segment values
- * @base: the running time (plus elapsed time, see offset) of the segment start
- * @offset: the amount (in buffer timestamps) that has already been elapsed in
- *     the segment
- * @start: the start of the segment in buffer timestamp time (PTS)
- * @stop: the stop of the segment in buffer timestamp time (PTS)
- * @time: the stream time of the segment start
- * @position: the buffer timestamp position in the segment (used internally by
- *     elements such as sources, demuxers or parsers to track progress)
- * @duration: the duration of the stream
+ * @flags:        flags for this segment
+ * @rate:         the playback rate of the segment is set in response to a seek
+ *                event and, without any seek, the value should be `1.0`. This
+ *                value is used by elements that synchronize buffer [running
+ *                times](additional/design/synchronisation.md#running-time) on
+ *                the clock (usually the sink elements), leading to consuming
+ *                buffers faster (for a value `> 1.0`) or slower (for `0.0 <
+ *                value < 1.0`) than normal playback speed. The rate also
+ *                defines the playback direction, meaning that when the value is
+ *                lower than `0.0`, the playback happens in reverse, and the
+ *                [stream-time](additional/design/synchronisation.md#stream-time)
+ *                is going backward. The `rate` value should never be `0.0`.
+ * @applied_rate: The applied rate is the rate that has been applied to the stream.
+ *                The effective/resulting playback rate of a stream is
+ *                `rate * applied_rate`.
+ *                The applied rate can be set by source elements when a server is
+ *                sending the stream with an already modified playback speed
+ *                rate. Filter elements that modify the stream in a way that
+ *                modifies the playback speed should also modify the applied
+ *                rate. For example the #videorate element when its
+ *                #videorate:rate property is set will set the applied rate of
+ *                the segment it pushed downstream. Also #scaletempo applies the
+ *                input segment rate to the stream and outputs a segment with
+ *                rate=1.0 and applied_rate=<inputsegment.rate>.
+ * @format:       the unit used for all of the segment's values.
+ * @base:         the running time (plus elapsed time, see offset) of the
+ *                segment [start](GstSegment.start) ([stop](GstSegment.stop) if
+ *                rate < 0.0).
+ * @offset:       the offset expresses the elapsed time (in buffer timestamps)
+ *                before a seek with its start (stop if rate < 0.0) seek type
+ *                set to #GST_SEEK_TYPE_NONE, the value is set to the position
+ *                of the segment at the time of the seek.
+ * @start:        the start time of the segment (in buffer timestamps)
+ *                [(PTS)](GstBuffer.pts), that is the timestamp of the first
+ *                buffer to output inside the segment (last one during
+ *                reverse playback). For example decoders will
+ *                [clip](gst_segment_clip) out the buffers before the start
+ *                time.
+ * @stop:         the stop time of the segment (in buffer timestamps)
+ *                [(PTS)](GstBuffer.pts), that is the timestamp of the last
+ *                buffer to output inside the segment (first one during
+ *                reverse playback). For example decoders will
+ *                [clip](gst_segment_clip) out buffers after the stop time.
+ * @time:         the stream time of the segment [start](GstSegment.start)
+ *                ([stop](GstSegment.stop) if rate < 0.0).
+ * @position:     the buffer timestamp position in the segment is supposed to be
+ *                updated by elements such as sources, demuxers or parsers to
+ *                track progress by setting it to the last pushed buffer' end time
+ *                ([timestamp](GstBuffer.pts) + #GstBuffer.duration) for that
+ *                specific segment. The position is used when reconfiguring the
+ *                segment with #gst_segment_do_seek when the seek is only
+ *                updating the segment (see [offset](GstSegment.offset)).
+ * @duration:     the duration of the segment is the maximum absolute difference
+ *                between #GstSegment.start and #GstSegment.stop if stop is not
+ *                set, otherwise it should be the difference between those
+ *                two values. This should be set by elements that know the
+ *                overall stream duration (like demuxers) and will be used when
+ *                seeking with #GST_SEEK_TYPE_END.
  *
- * A helper structure that holds the configured region of
- * interest in a media file.
+ * The structure that holds the configured region of interest in a media file.
  */
 struct _GstSegment {
   /*< public >*/
