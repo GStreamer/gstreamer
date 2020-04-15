@@ -1844,10 +1844,12 @@ gst_update_registry (void)
   res = TRUE;
 #endif /* GST_DISABLE_REGISTRY */
 
+#ifndef GST_DISABLE_OPTION_PARSING
   if (_priv_gst_preload_plugins) {
     GST_DEBUG ("Preloading indicated plugins...");
     g_slist_foreach (_priv_gst_preload_plugins, load_plugin_func, NULL);
   }
+#endif
 
   return res;
 }
