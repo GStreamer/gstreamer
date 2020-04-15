@@ -312,13 +312,13 @@ gst_svtav1enc_init (GstSvtAv1Enc * svtav1enc)
   svtav1enc->dts_offset = 0;
 
   EbErrorType res =
-      eb_init_handle(&svtav1enc->svt_encoder, NULL, svtav1enc->svt_config);
+      svt_av1_enc_init_handle(&svtav1enc->svt_encoder, NULL, svtav1enc->svt_config);
   if (res != EB_ErrorNone) {
-    GST_ERROR_OBJECT (svtav1enc, "eb_init_handle failed with error %d", res);
+    GST_ERROR_OBJECT (svtav1enc, "svt_av1_enc_init_handle failed with error %d", res);
     GST_OBJECT_UNLOCK (svtav1enc);
     return;
   }
-  /* setting configuration here since eb_init_handle overrides it */
+  /* setting configuration here since svt_av1_enc_init_handle overrides it */
   set_default_svt_configuration (svtav1enc->svt_config);
   GST_OBJECT_UNLOCK (svtav1enc);
 }
@@ -499,7 +499,7 @@ gst_svtav1enc_finalize (GObject * object)
   GST_DEBUG_OBJECT (svtav1enc, "finalizing svtav1enc");
 
   GST_OBJECT_LOCK (svtav1enc);
-  eb_deinit_handle(svtav1enc->svt_encoder);
+  svt_av1_enc_deinit_handle(svtav1enc->svt_encoder);
   svtav1enc->svt_encoder = NULL;
   g_free (svtav1enc->svt_config);
   GST_OBJECT_UNLOCK (svtav1enc);
@@ -581,9 +581,9 @@ gst_svtav1enc_configure_svt (GstSvtAv1Enc * svtav1enc)
   }
 
   EbErrorType res =
-      eb_svt_enc_set_parameter(svtav1enc->svt_encoder, svtav1enc->svt_config);
+      svt_av1_enc_set_parameter(svtav1enc->svt_encoder, svtav1enc->svt_config);
   if (res != EB_ErrorNone) {
-    GST_ERROR_OBJECT (svtav1enc, "eb_svt_enc_set_parameter failed with error %d", res);
+    GST_ERROR_OBJECT (svtav1enc, "svt_av1_enc_set_parameter failed with error %d", res);
     return FALSE;
   }
   return TRUE;
@@ -593,11 +593,11 @@ gboolean
 gst_svtav1enc_start_svt (GstSvtAv1Enc * svtav1enc)
 {
   G_LOCK (init_mutex);
-  EbErrorType res = eb_init_encoder(svtav1enc->svt_encoder);
+  EbErrorType res = svt_av1_enc_init(svtav1enc->svt_encoder);
   G_UNLOCK (init_mutex);
 
   if (res != EB_ErrorNone) {
-    GST_ERROR_OBJECT (svtav1enc, "eb_init_encoder failed with error %d", res);
+    GST_ERROR_OBJECT (svtav1enc, "svt_av1_enc_init failed with error %d", res);
     return FALSE;
   }
   return TRUE;
@@ -720,7 +720,7 @@ gst_svtav1enc_encode (GstSvtAv1Enc * svtav1enc, GstVideoCodecFrame * frame)
     input_buffer->pic_type = EB_AV1_KEY_PICTURE;
   }
 
-  res = eb_svt_enc_send_picture(svtav1enc->svt_encoder, input_buffer);
+  res = svt_av1_enc_send_picture(svtav1enc->svt_encoder, input_buffer);
   if (res != EB_ErrorNone) {
     GST_ERROR_OBJECT (svtav1enc, "Issue %d sending picture to SVT-AV1.", res);
     ret = GST_FLOW_ERROR;
@@ -743,7 +743,7 @@ gst_svtav1enc_send_eos (GstSvtAv1Enc * svtav1enc)
   input_buffer.flags = EB_BUFFERFLAG_EOS;
   input_buffer.p_buffer = NULL;
 
-  ret = eb_svt_enc_send_picture(svtav1enc->svt_encoder, &input_buffer);
+  ret = svt_av1_enc_send_picture(svtav1enc->svt_encoder, &input_buffer);
 
   if (ret != EB_ErrorNone) {
     GST_ERROR_OBJECT (svtav1enc, "couldn't send EOS frame.");
@@ -786,7 +786,7 @@ gst_svtav1enc_dequeue_encoded_frames (GstSvtAv1Enc * svtav1enc,
     EbBufferHeaderType *output_buf = NULL;
 
     res =
-        eb_svt_get_packet(svtav1enc->svt_encoder, &output_buf,
+        svt_av1_enc_get_packet(svtav1enc->svt_encoder, &output_buf,
         done_sending_pics);
 
     if (output_buf != NULL)
@@ -849,7 +849,7 @@ gst_svtav1enc_dequeue_encoded_frames (GstSvtAv1Enc * svtav1enc,
           G_GINT64_FORMAT " SliceType:%d\n", svtav1enc->frame_count,
            (frame->dts), (frame->pts), output_buf->pic_type);
 
-      eb_svt_release_out_buffer(&output_buf);
+      svt_av1_enc_release_out_buffer(&output_buf);
       output_buf = NULL;
 
       ret = gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (svtav1enc), frame);
@@ -923,7 +923,7 @@ gst_svtav1enc_stop (GstVideoEncoder * encoder)
   GST_OBJECT_UNLOCK (svtav1enc);
 
   GST_OBJECT_LOCK (svtav1enc);
-  eb_deinit_encoder(svtav1enc->svt_encoder);
+  svt_av1_enc_deinit(svtav1enc->svt_encoder);
   /* Destruct the buffer memory pool */
   gst_svthevenc_deallocate_svt_buffers (svtav1enc);
   GST_OBJECT_UNLOCK (svtav1enc);
