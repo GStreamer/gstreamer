@@ -167,11 +167,7 @@ struct _GstClockPrivate
   gboolean synced;
 };
 
-typedef struct
-{
-  GstClockEntry entry;
-  GWeakRef clock;
-} GstClockEntryImpl;
+typedef struct _GstClockEntryImpl GstClockEntryImpl;
 
 #define GST_CLOCK_ENTRY_CLOCK_WEAK_REF(entry) (&((GstClockEntryImpl *)(entry))->clock)
 
@@ -249,7 +245,7 @@ gst_clock_entry_new (GstClock * clock, GstClockTime time,
 {
   GstClockEntry *entry;
 
-  entry = (GstClockEntry *) g_slice_new (GstClockEntryImpl);
+  entry = (GstClockEntry *) g_slice_new0 (GstClockEntryImpl);
 
   /* FIXME: add tracer hook for struct allocations such as clock entries */
 
@@ -363,12 +359,17 @@ static void
 _gst_clock_id_free (GstClockID id)
 {
   GstClockEntry *entry;
+  GstClockEntryImpl *entry_impl;
   g_return_if_fail (id != NULL);
 
   GST_CAT_DEBUG (GST_CAT_CLOCK, "freed entry %p", id);
   entry = (GstClockEntry *) id;
   if (entry->destroy_data)
     entry->destroy_data (entry->user_data);
+
+  entry_impl = (GstClockEntryImpl *) id;
+  if (entry_impl->destroy_entry)
+    entry_impl->destroy_entry (entry_impl);
 
   g_weak_ref_clear (GST_CLOCK_ENTRY_CLOCK_WEAK_REF (entry));
 

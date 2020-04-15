@@ -257,6 +257,23 @@ if cc.links('''#include <pthread.h>
                }''', name : 'pthread_setname_np(const char*)')
   cdata.set('HAVE_PTHREAD_SETNAME_NP_WITHOUT_TID', 1)
 endif
+if cc.has_header_symbol('pthread.h', 'pthread_condattr_setclock')
+  cdata.set('HAVE_PTHREAD_CONDATTR_SETCLOCK', 1)
+endif
+if cc.has_header_symbol('pthread.h', 'pthread_cond_timedwait_relative_np')
+  cdata.set('HAVE_PTHREAD_COND_TIMEDWAIT_RELATIVE_NP', 1)
+endif
+
+# Check for futex(2)
+if cc.links('''#include <linux/futex.h>
+               #include <sys/syscall.h>
+               #include <unistd.h>
+               int main (int argc, char ** argv) {
+                 syscall (__NR_futex, NULL, FUTEX_WAKE, FUTEX_WAIT);
+                 return 0;
+               }''', name : 'futex(2) system call')
+  cdata.set('HAVE_FUTEX', 1)
+endif
 
 # Check for posix timers and monotonic clock
 time_prefix = '#include <time.h>\n'
