@@ -482,6 +482,7 @@ gst_ffmpegmux_setcaps (GstPad * pad, GstCaps * caps)
   st = ffmpegmux->context->streams[collect_pad->padnum];
   av_opt_set_int (ffmpegmux->context, "preload", ffmpegmux->preload, 0);
   ffmpegmux->context->max_delay = ffmpegmux->max_delay;
+  memset (&tmp, 0, sizeof (tmp));
 
   /* for the format-specific guesses, we'll go to
    * our famous codec mapper */
