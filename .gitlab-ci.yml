@@ -28,6 +28,7 @@ test manifest:
   image: 'registry.fedoraproject.org/fedora:31'
   extends:
     - '.global_ci_policy'
+  tags: ['gstreamer']
   rules:
     - when: 'manual'
       allow_failure: true
