@@ -37,9 +37,8 @@
 #include <QtQuick/QSGSimpleTextureNode>
 
 /**
- * SECTION:gtkgstglwidget
- * @short_description: a #GtkGLArea that renders GStreamer video #GstBuffers
- * @see_also: #GtkGLArea, #GstBuffer
+ * SECTION:QtGLVideoItem
+ * @short_description: a Qt5 QtQuick item that renders GStreamer video #GstBuffers
  *
  * #QtGLVideoItem is an #QQuickItem that renders GStreamer video buffers.
  */
@@ -65,6 +64,8 @@ struct _QtGLVideoItemPrivate
   /* properties */
   gboolean force_aspect_ratio;
   gint par_n, par_d;
+
+  GWeakRef sink;
 
   gint display_width;
   gint display_height;
@@ -129,12 +130,18 @@ QtGLVideoItem::QtGLVideoItem()
 
   g_mutex_init (&this->priv->lock);
 
+  g_weak_ref_init (&priv->sink, NULL);
+
   this->priv->display = gst_qt_get_gl_display(TRUE);
 
   connect(this, SIGNAL(windowChanged(QQuickWindow*)), this,
           SLOT(handleWindowChanged(QQuickWindow*)));
 
   this->proxy = QSharedPointer<QtGLVideoItemInterface>(new QtGLVideoItemInterface(this));
+
+  setFlag(ItemHasContents, true);
+  setAcceptedMouseButtons(Qt::AllButtons);
+  setAcceptHoverEvents(true);
 
   GST_DEBUG ("%p init Qt Video Item", this);
 }
@@ -171,6 +178,9 @@ QtGLVideoItem::~QtGLVideoItem()
   gst_buffer_replace (&this->priv->buffer, NULL);
 
   gst_caps_replace (&this->priv->caps, NULL);
+
+  g_weak_ref_clear (&this->priv->sink);
+
   g_free (this->priv);
   this->priv = NULL;
 }
@@ -305,6 +315,165 @@ QtGLVideoItem::updatePaintNode(QSGNode * oldNode,
   return texNode;
 }
 
+/* This method has to be invoked with the the priv->lock taken */
+void
+QtGLVideoItem::fitStreamToAllocatedSize(GstVideoRectangle * result)
+{
+  if (this->priv->force_aspect_ratio) {
+    GstVideoRectangle src, dst;
+
+    src.x = 0;
+    src.y = 0;
+    src.w = this->priv->display_width;
+    src.h = this->priv->display_height;
+
+    dst.x = 0;
+    dst.y = 0;
+    dst.w = size().width();
+    dst.h = size().height();
+
+    gst_video_sink_center_rect (src, dst, result, TRUE);
+  } else {
+    result->x = 0;
+    result->y = 0;
+    result->w = size().width();
+    result->h = size().height();
+  }
+}
+
+/* This method has to be invoked with the the priv->lock taken */
+QPointF
+QtGLVideoItem::mapPointToStreamSize(QPointF pos)
+{
+  gdouble stream_width, stream_height;
+  GstVideoRectangle result;
+  double stream_x, stream_y;
+  double x, y;
+
+  fitStreamToAllocatedSize(&result);
+
+  stream_width = (gdouble) GST_VIDEO_INFO_WIDTH (&this->priv->v_info);
+  stream_height = (gdouble) GST_VIDEO_INFO_HEIGHT (&this->priv->v_info);
+  x = pos.x();
+  y = pos.y();
+
+  /* from display coordinates to stream coordinates */
+  if (result.w > 0)
+    stream_x = (x - result.x) / result.w * stream_width;
+  else
+    stream_x = 0.;
+
+  /* clip to stream size */
+  stream_x = CLAMP(stream_x, 0., stream_width);
+
+  /* same for y-axis */
+  if (result.h > 0)
+    stream_y = (y - result.y) / result.h * stream_height;
+  else
+    stream_y = 0.;
+
+  stream_y = CLAMP(stream_y, 0., stream_height);
+  GST_TRACE ("transform %fx%f into %fx%f", x, y, stream_x, stream_y);
+  return QPointF(stream_x, stream_y);
+}
+
+void
+QtGLVideoItem::wheelEvent(QWheelEvent * event)
+{
+  g_mutex_lock (&this->priv->lock);
+  QPoint delta = event->angleDelta();
+  GstElement *element = GST_ELEMENT_CAST (g_weak_ref_get (&this->priv->sink));
+
+  if (element != NULL) {
+#if (QT_VERSION >= QT_VERSION_CHECK (5, 14, 0))
+    auto position = event->position();
+#else
+    auto position = *event;
+#endif
+    gst_navigation_send_mouse_scroll_event (GST_NAVIGATION (element),
+                                            position.x(), position.y(), delta.x(), delta.y());
+    g_object_unref (element);
+  }
+  g_mutex_unlock (&this->priv->lock);
+}
+
+void
+QtGLVideoItem::hoverEnterEvent(QHoverEvent *)
+{
+  m_hovering = true;
+}
+
+void
+QtGLVideoItem::hoverLeaveEvent(QHoverEvent *)
+{
+  m_hovering = false;
+}
+
+void
+QtGLVideoItem::hoverMoveEvent(QHoverEvent * event)
+{
+  if (!m_hovering)
+    return;
+
+  int button = !!m_mousePressedButton;
+  g_mutex_lock (&this->priv->lock);
+  if (event->pos() != event->oldPos()) {
+    QPointF pos = mapPointToStreamSize(event->pos());
+    GstElement *element = GST_ELEMENT_CAST (g_weak_ref_get (&this->priv->sink));
+
+    if (element != NULL) {
+      gst_navigation_send_mouse_event (GST_NAVIGATION (element), "mouse-move",
+                                       button, pos.x(), pos.y());
+      g_object_unref (element);
+    }
+  }
+  g_mutex_unlock (&this->priv->lock);
+}
+
+void
+QtGLVideoItem::sendMouseEvent(QMouseEvent * event, const gchar * type)
+{
+  int button = 0;
+  switch (event->button()) {
+  case Qt::LeftButton:
+    button = 1;
+    break;
+  case Qt::RightButton:
+    button = 2;
+    break;
+  default:
+    break;
+  }
+  m_mousePressedButton = button;
+  g_mutex_lock (&this->priv->lock);
+
+  QPointF pos = mapPointToStreamSize(event->pos());
+  gchar* event_type = g_strconcat ("mouse-button-", type, NULL);
+  GstElement *element = GST_ELEMENT_CAST (g_weak_ref_get (&this->priv->sink));
+
+  if (element != NULL) {
+    gst_navigation_send_mouse_event (GST_NAVIGATION (element), event_type,
+                                     button, pos.x(), pos.y());
+    g_object_unref (element);
+  }
+
+  g_free (event_type);
+  g_mutex_unlock (&this->priv->lock);
+}
+
+void
+QtGLVideoItem::mousePressEvent(QMouseEvent * event)
+{
+  forceActiveFocus();
+  sendMouseEvent(event, "press");
+}
+
+void
+QtGLVideoItem::mouseReleaseEvent(QMouseEvent * event)
+{
+  sendMouseEvent(event, "release");
+}
+
 static void
 _reset (QtGLVideoItem * qt_item)
 {
@@ -325,6 +494,18 @@ _reset (QtGLVideoItem * qt_item)
     GST_TRACE ("old buffer %p should be unbound now, unreffing", tmp_buffer);
     gst_buffer_unref (tmp_buffer);
   }
+}
+
+void
+QtGLVideoItemInterface::setSink (GstElement * sink)
+{
+  QMutexLocker locker(&lock);
+  if (qt_item == NULL)
+    return;
+
+  g_mutex_lock (&qt_item->priv->lock);
+  g_weak_ref_set (&qt_item->priv->sink, sink);
+  g_mutex_unlock (&qt_item->priv->lock);
 }
 
 void

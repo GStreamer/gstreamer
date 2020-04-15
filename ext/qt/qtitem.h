@@ -42,6 +42,7 @@ public:
 
     void invalidateRef();
 
+    void setSink (GstElement * sink);
     void setBuffer (GstBuffer * buffer);
     gboolean setCaps (GstCaps *caps);
     gboolean initWinSys ();
@@ -98,6 +99,12 @@ private Q_SLOTS:
 
 protected:
     QSGNode * updatePaintNode (QSGNode * oldNode, UpdatePaintNodeData * updatePaintNodeData);
+    void wheelEvent(QWheelEvent *) override;
+    void hoverEnterEvent(QHoverEvent *) override;
+    void hoverLeaveEvent (QHoverEvent *) override;
+    void hoverMoveEvent (QHoverEvent *) override;
+    void mousePressEvent(QMouseEvent*) override;
+    void mouseReleaseEvent(QMouseEvent*) override;
 
 private:
 
@@ -105,8 +112,14 @@ private:
     void setViewportSize(const QSize &size);
     void shareContext();
 
+    void fitStreamToAllocatedSize(GstVideoRectangle * result);
+    QPointF mapPointToStreamSize(QPointF);
+
+    void sendMouseEvent(QMouseEvent * event, const gchar * type);
     QSize m_viewportSize;
     bool m_openGlContextInitialized;
+    bool m_hovering;
+    uint32_t m_mousePressedButton;
 
     QSharedPointer<QtGLVideoItemInterface> proxy;
 };

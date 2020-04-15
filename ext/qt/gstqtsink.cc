@@ -81,6 +81,7 @@
 #define GST_CAT_DEFAULT gst_debug_qt_gl_sink
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 
+static void gst_qt_sink_navigation_interface_init (GstNavigationInterface * iface);
 static void gst_qt_sink_finalize (GObject * object);
 static void gst_qt_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * param_spec);
@@ -134,7 +135,9 @@ enum
 #define gst_qt_sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstQtSink, gst_qt_sink,
     GST_TYPE_VIDEO_SINK, GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT,
-        "qtsink", 0, "Qt Video Sink"));
+        "qtsink", 0, "Qt Video Sink");
+    G_IMPLEMENT_INTERFACE (GST_TYPE_NAVIGATION,
+        gst_qt_sink_navigation_interface_init));
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (qmlglsink, "qmlglsink",
     GST_RANK_NONE, GST_TYPE_QT_SINK, qt5_element_init (plugin));
 
@@ -194,6 +197,8 @@ static void
 gst_qt_sink_init (GstQtSink * qt_sink)
 {
   qt_sink->widget = QSharedPointer<QtGLVideoItemInterface>();
+  if (qt_sink->widget)
+    qt_sink->widget->setSink (GST_ELEMENT_CAST (qt_sink));
 }
 
 static void
@@ -205,10 +210,14 @@ gst_qt_sink_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_WIDGET: {
       QtGLVideoItem *qt_item = static_cast<QtGLVideoItem *> (g_value_get_pointer (value));
-      if (qt_item)
+      if (qt_item) {
         qt_sink->widget = qt_item->getInterface();
-      else
+        if (qt_sink->widget) {
+          qt_sink->widget->setSink (GST_ELEMENT_CAST (qt_sink));
+        }
+      } else {
         qt_sink->widget.clear();
+      }
       break;
     }
     case PROP_FORCE_ASPECT_RATIO:
@@ -545,4 +554,34 @@ config_failed:
     GST_DEBUG_OBJECT (bsink, "failed setting config");
     return FALSE;
   }
+}
+
+static void
+gst_qt_sink_navigation_send_event (GstNavigation * navigation,
+                                         GstStructure * structure)
+{
+  GstQtSink *qt_sink = GST_QT_SINK (navigation);
+  GstEvent *event;
+  GstPad *pad;
+
+  event = gst_event_new_navigation (structure);
+  pad = gst_pad_get_peer (GST_VIDEO_SINK_PAD (qt_sink));
+
+  GST_TRACE_OBJECT (qt_sink, "navigation event %" GST_PTR_FORMAT, structure);
+
+  if (GST_IS_PAD (pad) && GST_IS_EVENT (event)) {
+    if (!gst_pad_send_event (pad, gst_event_ref (event))) {
+      /* If upstream didn't handle the event we'll post a message with it
+       * for the application in case it wants to do something with it */
+      gst_element_post_message (GST_ELEMENT_CAST (qt_sink),
+                                gst_navigation_message_new_event (GST_OBJECT_CAST (qt_sink), event));
+    }
+    gst_event_unref (event);
+    gst_object_unref (pad);
+  }
+}
+
+static void gst_qt_sink_navigation_interface_init (GstNavigationInterface * iface)
+{
+  iface->send_event = gst_qt_sink_navigation_send_event;
 }
