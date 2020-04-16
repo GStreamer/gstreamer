@@ -157,11 +157,18 @@ gst indent:
     - rm -rf subprojects/glib/tests
     - rm -rf subprojects/glib/po
     - rm -rf subprojects/glib/docs
+
+    # Clear gst-intergrations-testsuites report as it contains raw media
+    # files which is only needed for validate jobs. When needed we copy the
+    # cached repo in the docker image and fetch.
+    - rm -rf subprojects/gst-integration-testsuites
   artifacts:
     expire_in: "7 days"
     when: "always"
     paths:
       - 'gst-build/build/meson-logs/'
+      # Needed by the integration tests
+      - 'manifest.xml'
 
 .build fedora x86_64:
   extends: '.build'
@@ -271,6 +278,18 @@ integration testsuites fedora:
     TEST_SUITE: "validate ges"
   rules:
     - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-docs|gst-omx|gst-plugins-rs)$/'
+  before_script:
+    # Avoid cloning the repo since it contains media files,
+    # instead copy it from the cache and do a git fetch
+    # We remove this copy first since it had its mediafiles stripped
+    - cp -r /gst-build/subprojects/gst-integration-testsuites/ "${CI_PROJECT_DIR}/gst-build/subprojects/gst-integration-testsuites/"
+    - curl -o clone_manifest_ref.py "https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/${GST_UPSTREAM_BRANCH}/gitlab/clone_manifest_ref.py"
+    - >-
+      python3 clone_manifest_ref.py
+      --fetch
+      --manifest manifest.xml
+      --project gst-integration-testsuites
+      --destination gst-build/subprojects/gst-integration-testsuites
 
 gstreamer-full:
   extends: 'build static fedora x86_64'
