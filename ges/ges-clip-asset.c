@@ -230,6 +230,5 @@ ges_clip_asset_get_frame_time (GESClipAsset * self, GESFrameNumber frame_number)
   if (!ges_clip_asset_get_natural_framerate (self, &fps_n, &fps_d))
     return GST_CLOCK_TIME_NONE;
 
-  return gst_util_uint64_scale_int_ceil (frame_number, fps_d * GST_SECOND,
-      fps_n);
+  return gst_util_uint64_scale_ceil (frame_number, fps_d * GST_SECOND, fps_n);
 }

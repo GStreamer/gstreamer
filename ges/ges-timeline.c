@@ -3109,8 +3109,7 @@ ges_timeline_get_frame_time (GESTimeline * self, GESFrameNumber frame_number)
 
   timeline_get_framerate (self, &fps_n, &fps_d);
 
-  return gst_util_uint64_scale_int_ceil (frame_number,
-      fps_d * GST_SECOND, fps_n);
+  return gst_util_uint64_scale_ceil (frame_number, fps_d * GST_SECOND, fps_n);
 }
 
 /**
