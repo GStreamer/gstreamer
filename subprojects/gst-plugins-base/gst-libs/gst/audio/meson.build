@@ -97,7 +97,7 @@ else
 endif
 
 simd_cargs = []
-simd_dependencies = []
+simd_objects = []
 
 if have_sse
   audio_resampler_sse = static_library('audio_resampler_sse',
@@ -109,7 +109,7 @@ if have_sse
     install : false
   )
   simd_cargs += ['-DHAVE_SSE']
-  simd_dependencies += audio_resampler_sse
+  simd_objects += audio_resampler_sse.extract_all_objects()
 endif
 
 if have_sse2
@@ -123,7 +123,7 @@ if have_sse2
   )
 
   simd_cargs += ['-DHAVE_SSE2']
-  simd_dependencies += audio_resampler_sse2
+  simd_objects += audio_resampler_sse2.extract_all_objects()
 endif
 
 if have_sse41
@@ -137,14 +137,14 @@ if have_sse41
   )
 
   simd_cargs += ['-DHAVE_SSE41']
-  simd_dependencies += audio_resampler_sse41
+  simd_objects += audio_resampler_sse41.extract_all_objects()
 endif
 
 gstaudio = library('gstaudio-@0@'.format(api_version),
   audio_src, gstaudio_h, gstaudio_c, orc_c, orc_h,
   c_args : gst_plugins_base_args + simd_cargs + ['-DBUILDING_GST_AUDIO'],
   include_directories: [configinc, libsinc],
-  link_with : simd_dependencies,
+  objects : simd_objects,
   version : libversion,
   soversion : soversion,
   darwin_versions : osxversion,
