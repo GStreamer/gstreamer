@@ -40,8 +40,8 @@ You can find [instructions for Windows below](#windows-prerequisites-setup).
 You can get all GStreamer built running:
 
 ```
-meson build/
-ninja -C build/
+meson builddir
+ninja -C builddir
 ```
 
 This will automatically create the `build` directory and build everything
@@ -70,13 +70,13 @@ development environment where you will be able to work on GStreamer
 easily. You can get into that environment running:
 
 ```
-ninja -C build/ devenv
+ninja -C builddir devenv
 ```
 
 If your operating system handles symlinks, built modules source code will be
 available at the root of `gst-build/` for example GStreamer core will be in
 `gstreamer/`. Otherwise they will be present in `subprojects/`. You can simply
-hack in there and to rebuild you just need to rerun `ninja -C build/`.
+hack in there and to rebuild you just need to rerun `ninja -C builddir`.
 
 NOTE: In the development environment, a fully usable prefix is also configured
 in `gst-build/prefix` where you can install any extra dependency/project.
@@ -98,13 +98,13 @@ branch).
 Update all GStreamer modules and rebuild:
 
 ```
-ninja -C build/ update
+ninja -C builddir update
 ```
 
 Update all GStreamer modules without rebuilding:
 
 ```
-ninja -C build/ git-update
+ninja -C builddir git-update
 ```
 
 ## Custom subprojects
@@ -134,25 +134,25 @@ meson test -C build
 To list all available tests:
 
 ```
-meson test -C build --list
+meson test -C builddir --list
 ```
 
 To run all the tests of a specific component:
 
 ```
-meson test -C build --suite gst-plugins-base
+meson test -C builddir --suite gst-plugins-base
 ```
 
 Or to run a specific test file:
 
 ```
-meson test -C build/ --suite gstreamer gst_gstbuffer
+meson test -C builddir --suite gstreamer gst_gstbuffer
 ```
 
 Run a specific test from a specific test file:
 
 ```
-GST_CHECKS=test_subbuffer meson test -C build/ --suite gstreamer gst_gstbuffer
+GST_CHECKS=test_subbuffer meson test -C builddir --suite gstreamer gst_gstbuffer
 ```
 
 ## Optional Installation
@@ -161,9 +161,9 @@ GST_CHECKS=test_subbuffer meson test -C build/ --suite gstreamer gst_gstbuffer
 but you can also install everything that is built into a predetermined prefix like so:
 
 ```
-meson --prefix=/path/to/install/prefix build/
-ninja -C build/
-meson install -C build/
+meson --prefix=/path/to/install/prefix builddir
+ninja -C builddir
+meson install -C builddir
 ```
 
 Note that the installed files have `RPATH` stripped, so you will need to set
@@ -181,7 +181,7 @@ For example to get a fresh checkout of `gst-1.14` from a `gst-build` in master *
 built** in a `build` directory you can simply run:
 
 ```
-./checkout-branch-worktree ../gst-build-1.14 origin/1.14 -C build/
+./checkout-branch-worktree ../gst-build-1.16 origin/1.14 -C builddir
 ```
 
 This will create a new ``gst-build-1.14`` folder at the same level of ``gst-build`` pointing to the given branch ie *1.14*
