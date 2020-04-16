@@ -50,18 +50,66 @@ inside it.
 NOTE: On Windows, you *must* run this from inside the Visual Studio command
 prompt of the appropriate architecture and version.
 
-# Development environment
+### External dependencies
 
-## Building the Qt5 QML plugin
+All mandatory dependencies of GStreamer are included as [meson subprojects](https://mesonbuild.com/Subprojects.html):
+libintl, zlib, libffi, glib. Some optional dependencies are also included as
+subprojects, such as ffmpeg, x264, json-glib, graphene, openh264, orc, etc.
+
+Mandatory dependencies will be automatically built if meson cannot find them on
+your system using pkg-config. The same is true for optional dependencies that
+are included as subprojects. You can find a full list by looking at the
+`subprojects` directory.
+
+Plugins that need optional dependencies that aren't included can only be built
+if they are provided by the system. Instructions on how to build some common
+ones such as Qt5/QML are listed below. If you do not know how to provide an
+optional dependency needed by a plugin, you should use [Cerbero](https://gitlab.freedesktop.org/gstreamer/cerbero/#description)
+which handles this for you automatically.
+
+Plugins will be automatically enabled if possible, but you can ensure that
+a particular plugin (especially if it has external dependencies) is built by
+enabling the gstreamer repository that ships it and the plugin inside it. For
+example, to enable the Qt5 plugin in the gst-plugins-good repository, you need
+to run meson as follows:
+
+```
+meson -Dgood=enabled -Dgst-plugins-good:qt5=enabled builddir
+```
+
+This will cause Meson to error out if the plugin could not be enabled. You can
+also flip the default and disable all plugins except those explicitly enabled
+like so:
+
+```
+meson -Dauto_features=disabled -Dgstreamer:tools=enabled -Dbad=enabled -Dgst-plugins-bad:openh264=enabled
+```
+
+This will disable all optional features and then enable the `openh264` plugin
+and the tools that ship with the core gstreamer repository: `gst-inspect-1.0`,
+`gst-launch-1.0`, etc. As usual, you can change these values on a builddir that
+has already been setup with `meson configure -Doption=value`.
+
+### Building the Qt5 QML plugin
 
 If `qmake` is not in `PATH` and pkgconfig files are not available, you can
 point the `QMAKE` env var to the Qt5 installation of your choosing before
 running `meson` as shown above.
 
 The plugin will be automatically enabled if possible, but you can ensure that
-it is built by passing `-Dgst-plugins-good:qt5=enabled` to `meson`. This will
-cause Meson to error out if the plugin could not be enabled. This also works
-for all plugins in all GStreamer repositories.
+it is built by passing `-Dgood=enabled -Dgst-plugins-good:qt5=enabled` to `meson`.
+
+### Building the Intel MSDK plugin
+
+On Linux, you need to have development files for `libmfx` installed. On
+Windows, if you have the [Intel Media SDK](https://software.intel.com/en-us/media-sdk),
+it will set the `INTELMEDIASDKROOT` environment variable, which will be used by
+the build files to find `libmfx`.
+
+The plugin will be automatically enabled if possible, but you can ensure it by
+passing `-Dbad=enabled -Dgst-plugins-bad:msdk=enabled` to `meson`.
+
+# Development environment
 
 ## Development environment target
 
