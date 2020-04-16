@@ -271,7 +271,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstTranscodeBin * self)
               "sink-pad", GST_TYPE_PAD, sinkpad,
               "sink-caps", GST_TYPE_CAPS, othercaps, NULL));
 
-      gst_caps_unref (caps);
+      gst_clear_caps (&caps);
       if (othercaps)
         gst_caps_unref (othercaps);
     }
