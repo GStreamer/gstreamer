@@ -172,20 +172,20 @@ platform for things to work.
 
 ## Checkout another branch using worktrees
 
-If you need to have several versions of GStreamer coexisting (eg. `master` and `1.14`),
-you can use the `checkout-branch-worktree` script provided by `gst-build`. It allows you
+If you need to have several versions of GStreamer coexisting (eg. `master` and `1.16`),
+you can use the `gst-worktree.py` script provided by `gst-build`. It allows you
 to create a new `gst-build` environment with new checkout of all the GStreamer modules as
 [git worktrees](https://git-scm.com/docs/git-worktree).
 
-For example to get a fresh checkout of `gst-1.14` from a `gst-build` in master **already
-built** in a `build` directory you can simply run:
+For example to get a fresh checkout of `gst-1.16` from a `gst-build` repository
+that is checked out at master, you can run:
 
 ```
-./checkout-branch-worktree ../gst-build-1.16 origin/1.14 -C builddir
+./gst-worktree.py add gst-build-1.16 origin/1.16
 ```
 
-This will create a new ``gst-build-1.14`` folder at the same level of ``gst-build`` pointing to the given branch ie *1.14*
-for all the subprojects ( gstreamer, gst-plugins-base etc.)
+This will create a new ``gst-build-1.16`` directory pointing to the given branch `1.16`
+for all the subprojects (gstreamer, gst-plugins-base, etc.)
 
 
 ## Add information about GStreamer development environment in your prompt line
