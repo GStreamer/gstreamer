@@ -2946,16 +2946,19 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
 
   expected = priv->next_in_seqnum;
 
-  packet_rate =
-      gst_rtp_packet_rate_ctx_update (&priv->packet_rate_ctx, seqnum, rtptime);
+  /* don't update packet-rate based on RTX, as those arrive highly unregularly */
+  if (!is_rtx) {
+    packet_rate = gst_rtp_packet_rate_ctx_update (&priv->packet_rate_ctx,
+        seqnum, rtptime);
+    GST_TRACE_OBJECT (jitterbuffer, "updated packet_rate: %d", packet_rate);
+  }
   max_dropout =
       gst_rtp_packet_rate_ctx_get_max_dropout (&priv->packet_rate_ctx,
       priv->max_dropout_time);
   max_misorder =
       gst_rtp_packet_rate_ctx_get_max_misorder (&priv->packet_rate_ctx,
       priv->max_misorder_time);
-  GST_TRACE_OBJECT (jitterbuffer,
-      "packet_rate: %d, max_dropout: %d, max_misorder: %d", packet_rate,
+  GST_TRACE_OBJECT (jitterbuffer, "max_dropout: %d, max_misorder: %d",
       max_dropout, max_misorder);
 
   timer = rtp_timer_queue_find (priv->timers, seqnum);
@@ -3021,7 +3024,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     }
 
     /* Special handling of large gaps */
-    if ((gap != -1 && gap < -max_misorder) || (gap >= max_dropout)) {
+    if (!is_rtx && ((gap != -1 && gap < -max_misorder) || (gap >= max_dropout))) {
       gboolean reset = handle_big_gap_buffer (jitterbuffer, buffer, pt, seqnum,
           gap, max_dropout, max_misorder);
       if (reset) {
