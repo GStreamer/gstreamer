@@ -27,10 +27,12 @@ from scripts.common import get_wine_shortpath
 
 SCRIPTDIR = os.path.dirname(os.path.realpath(__file__))
 PREFIX_DIR = os.path.join(SCRIPTDIR, 'prefix')
-# Use '_build' as the builddir instead of 'build'
+# Look for the following build dirs: `build` `_build` `builddir`
 DEFAULT_BUILDDIR = os.path.join(SCRIPTDIR, 'build')
 if not os.path.exists(DEFAULT_BUILDDIR):
     DEFAULT_BUILDDIR = os.path.join(SCRIPTDIR, '_build')
+if not os.path.exists(DEFAULT_BUILDDIR):
+    DEFAULT_BUILDDIR = os.path.join(SCRIPTDIR, 'builddir')
 
 TYPELIB_REG = re.compile(r'.*\.typelib$')
 SHAREDLIB_REG = re.compile(r'\.so|\.dylib|\.dll')
