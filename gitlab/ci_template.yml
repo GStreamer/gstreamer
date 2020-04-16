@@ -55,7 +55,7 @@ manifest:
   extends:
     - '.global_ci_policy'
   rules:
-    - if: '$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME'
+    - if: '$GITLAB_USER_LOGIN == "gstreamer-merge-bot"'
       when: 'always'
     - if: '$CI_PROJECT_PATH == "gstreamer/cerbero"'
       when: 'always'
