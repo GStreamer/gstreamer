@@ -28,6 +28,7 @@ osxversion = curversion + 1
 
 prefix = get_option('prefix')
 
+datadir = join_paths(prefix, get_option('datadir'))
 libexecdir = get_option('libexecdir')
 helpers_install_dir = join_paths(libexecdir, 'gstreamer-1.0')
 
@@ -97,7 +98,7 @@ if glib_checks.disabled() or (glib_checks.auto() and not gst_version_is_dev)
 endif
 
 cdata.set_quoted('GST_API_VERSION', apiversion)
-cdata.set_quoted('GST_DATADIR', join_paths(prefix, get_option('datadir')))
+cdata.set_quoted('GST_DATADIR', datadir)
 cdata.set_quoted('LOCALEDIR', join_paths(prefix, get_option('localedir')))
 cdata.set_quoted('LIBDIR', join_paths(prefix, get_option('libdir')))
 cdata.set_quoted('GST_API_VERSION', '1.0')
@@ -514,7 +515,8 @@ bash_helpers_dir = ''
 bashcomp_found = false
 if bashcomp_dep.found()
   bashcomp_found = true
-  bash_completions_dir = bashcomp_dep.get_pkgconfig_variable('completionsdir', define_variable: ['prefix', '.'])
+  bashcomp_dir_override = bashcomp_dep.version().version_compare('>= 2.10') ? ['datadir', datadir] : ['prefix', prefix]
+  bash_completions_dir = bashcomp_dep.get_pkgconfig_variable('completionsdir', define_variable: bashcomp_dir_override)
   if bash_completions_dir == ''
     msg = 'Found bash-completion but the .pc file did not set \'completionsdir\'.'
     if bashcomp_option.enabled()
@@ -525,7 +527,7 @@ if bashcomp_dep.found()
     bashcomp_found = false
   endif
 
-  bash_helpers_dir = bashcomp_dep.get_pkgconfig_variable('helpersdir', define_variable: ['prefix', '.'])
+  bash_helpers_dir = bashcomp_dep.get_pkgconfig_variable('helpersdir', define_variable: bashcomp_dir_override)
   if bash_helpers_dir == ''
     msg = 'Found bash-completion, but the .pc file did not set \'helpersdir\'.'
     if bashcomp_option.enabled()
