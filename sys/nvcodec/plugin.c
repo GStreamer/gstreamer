@@ -31,10 +31,13 @@
 
 #include "gstnvdec.h"
 #include "gstnvenc.h"
+#include "gstnvh264dec.h"
+#include "gstnvdecoder.h"
 
 GST_DEBUG_CATEGORY (gst_nvcodec_debug);
 GST_DEBUG_CATEGORY (gst_nvdec_debug);
 GST_DEBUG_CATEGORY (gst_nvenc_debug);
+GST_DEBUG_CATEGORY (gst_nv_decoder_debug);
 
 #define GST_CAT_DEFAULT gst_nvcodec_debug
 
@@ -53,6 +56,7 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (gst_nvcodec_debug, "nvcodec", 0, "nvcodec");
   GST_DEBUG_CATEGORY_INIT (gst_nvdec_debug, "nvdec", 0, "nvdec");
   GST_DEBUG_CATEGORY_INIT (gst_nvenc_debug, "nvenc", 0, "nvenc");
+  GST_DEBUG_CATEGORY_INIT (gst_nv_decoder_debug, "nvdecoder", 0, "nvdecoder");
 
   if (!gst_cuda_load_library ()) {
     GST_WARNING ("Failed to load cuda library");
@@ -104,8 +108,35 @@ plugin_init (GstPlugin * plugin)
 
     CuCtxPopCurrent (NULL);
 
-    if (nvdec_available)
-      gst_nvdec_plugin_init (plugin, i, cuda_ctx);
+    if (nvdec_available) {
+      gint j;
+
+      for (j = 0; j < cudaVideoCodec_NumCodecs; j++) {
+        GstCaps *sink_template = NULL;
+        GstCaps *src_template = NULL;
+        cudaVideoCodec codec = (cudaVideoCodec) j;
+
+        if (gst_nv_decoder_check_device_caps (cuda_ctx,
+                codec, &sink_template, &src_template)) {
+          const gchar *codec_name = gst_cuda_video_codec_to_string (codec);
+
+          GST_INFO ("CUDA video codec %s, sink template %" GST_PTR_FORMAT
+              "src template %" GST_PTR_FORMAT, codec_name,
+              sink_template, src_template);
+
+          gst_nvdec_plugin_init (plugin,
+              i, codec, codec_name, sink_template, src_template);
+
+          if (codec == cudaVideoCodec_H264) {
+            gst_nv_h264_dec_register (plugin,
+                i, GST_RANK_SECONDARY, sink_template, src_template);
+          }
+
+          gst_caps_unref (sink_template);
+          gst_caps_unref (src_template);
+        }
+      }
+    }
 
     if (nvenc_available)
       gst_nvenc_plugin_init (plugin, i, cuda_ctx);

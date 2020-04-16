@@ -104,7 +104,10 @@ GType gst_nvdec_get_type (void);
 
 void gst_nvdec_plugin_init (GstPlugin * plugin,
                             guint device_index,
-                            CUcontext cuda_ctx);
+                            cudaVideoCodec codec,
+                            const gchar * codec_name,
+                            GstCaps *sink_template,
+                            GstCaps *src_template);
 
 G_END_DECLS
 

@@ -9,6 +9,8 @@ nvcodec_sources = [
   'gstcuvidloader.c',
   'gstcudacontext.c',
   'gstcudautils.c',
+  'gstnvdecoder.c',
+  'gstnvh264dec.c',
 ]
 
 if get_option('nvcodec').disabled()
@@ -16,7 +18,7 @@ if get_option('nvcodec').disabled()
 endif
 
 plugin_incdirs = [configinc, include_directories('./stub')]
-extra_c_args = []
+extra_c_args = ['-DGST_USE_UNSTABLE_API']
 
 if gstgl_dep.found()
   extra_c_args += ['-DHAVE_NVCODEC_GST_GL=1']
@@ -26,7 +28,7 @@ gstnvcodec = library('gstnvcodec',
   nvcodec_sources,
   c_args : gst_plugins_bad_args + extra_c_args,
   include_directories : plugin_incdirs,
-  dependencies : [gstbase_dep, gstvideo_dep, gstpbutils_dep, gstgl_dep, gmodule_dep],
+  dependencies : [gstbase_dep, gstvideo_dep, gstpbutils_dep, gstgl_dep, gmodule_dep, gstcodecs_dep],
   install : true,
   install_dir : plugins_install_dir,
 )
