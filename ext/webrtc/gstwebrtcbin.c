@@ -369,6 +369,8 @@ enum
   PROP_TURN_SERVER,
   PROP_BUNDLE_POLICY,
   PROP_ICE_TRANSPORT_POLICY,
+  PROP_ICE_TCP,
+  PROP_ICE_UDP,
 };
 
 static guint gst_webrtc_bin_signals[LAST_SIGNAL] = { 0 };
@@ -5838,6 +5840,8 @@ gst_webrtc_bin_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_STUN_SERVER:
     case PROP_TURN_SERVER:
+    case PROP_ICE_TCP:
+    case PROP_ICE_UDP:
       g_object_set_property (G_OBJECT (webrtc->priv->ice), pspec->name, value);
       break;
     case PROP_BUNDLE_POLICY:
@@ -5909,6 +5913,8 @@ gst_webrtc_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_STUN_SERVER:
     case PROP_TURN_SERVER:
+    case PROP_ICE_TCP:
+    case PROP_ICE_UDP:
       g_object_get_property (G_OBJECT (webrtc->priv->ice), pspec->name, value);
       break;
     case PROP_BUNDLE_POLICY:
@@ -6178,6 +6184,18 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
           GST_TYPE_WEBRTC_ICE_TRANSPORT_POLICY,
           GST_WEBRTC_ICE_TRANSPORT_POLICY_ALL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class,
+      PROP_ICE_TCP,
+      g_param_spec_boolean ("ice-tcp", "ICE TCP",
+          "Whether the agent should use ICE-TCP when gathering candidates",
+          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class,
+      PROP_ICE_UDP,
+      g_param_spec_boolean ("ice-udp", "ICE UDP",
+          "Whether the agent should use ICE-UDP when gathering candidates",
+          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstWebRTCBin::create-offer:

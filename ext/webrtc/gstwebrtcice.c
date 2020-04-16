@@ -60,6 +60,8 @@ enum
   PROP_CONTROLLER,
   PROP_AGENT,
   PROP_FORCE_RELAY,
+  PROP_ICE_TCP,
+  PROP_ICE_UDP,
 };
 
 static guint gst_webrtc_ice_signals[LAST_SIGNAL] = { 0 };
@@ -80,8 +82,8 @@ struct _GstWebRTCICEPrivate
 #define gst_webrtc_ice_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstWebRTCICE, gst_webrtc_ice,
     GST_TYPE_OBJECT, G_ADD_PRIVATE (GstWebRTCICE)
-    GST_DEBUG_CATEGORY_INIT (gst_webrtc_ice_debug, "webrtcice", 0,
-        "webrtcice"););
+    GST_DEBUG_CATEGORY_INIT (gst_webrtc_ice_debug, "webrtcice", 0, "webrtcice");
+    );
 
 static gboolean
 _unlock_pc_thread (GMutex * lock)
@@ -833,6 +835,14 @@ gst_webrtc_ice_set_property (GObject * object, guint prop_id,
       g_object_set_property (G_OBJECT (ice->priv->nice_agent),
           "force-relay", value);
       break;
+    case PROP_ICE_TCP:
+      g_object_set_property (G_OBJECT (ice->priv->nice_agent),
+          "ice-tcp", value);
+      break;
+    case PROP_ICE_UDP:
+      g_object_set_property (G_OBJECT (ice->priv->nice_agent),
+          "ice-udp", value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -868,6 +878,14 @@ gst_webrtc_ice_get_property (GObject * object, guint prop_id,
     case PROP_FORCE_RELAY:
       g_object_get_property (G_OBJECT (ice->priv->nice_agent),
           "force-relay", value);
+      break;
+    case PROP_ICE_TCP:
+      g_object_get_property (G_OBJECT (ice->priv->nice_agent),
+          "ice-tcp", value);
+      break;
+    case PROP_ICE_UDP:
+      g_object_get_property (G_OBJECT (ice->priv->nice_agent),
+          "ice-udp", value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -956,6 +974,18 @@ gst_webrtc_ice_class_init (GstWebRTCICEClass * klass)
       g_param_spec_boolean ("force-relay", "Force Relay",
           "Force all traffic to go through a relay.", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class,
+      PROP_ICE_TCP,
+      g_param_spec_boolean ("ice-tcp", "ICE TCP",
+          "Whether the agent should use ICE-TCP when gathering candidates",
+          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class,
+      PROP_ICE_UDP,
+      g_param_spec_boolean ("ice-udp", "ICE UDP",
+          "Whether the agent should use ICE-UDP when gathering candidates",
+          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstWebRTCICE::on-ice-candidate:
