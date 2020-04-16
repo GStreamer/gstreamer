@@ -415,8 +415,6 @@ fill_image_packed16_4 (opj_image_t * image, GstVideoFrame * frame)
     }
     data_in += sstride;
   }
-  image->y1 -= image->y0;
-  image->y0 = 0;
 }
 
 static void
@@ -455,8 +453,6 @@ fill_image_packed8_4 (opj_image_t * image, GstVideoFrame * frame)
     }
     data_in += sstride;
   }
-  image->y1 -= image->y0;
-  image->y0 = 0;
 }
 
 static void
@@ -492,8 +488,6 @@ fill_image_packed8_3 (opj_image_t * image, GstVideoFrame * frame)
     }
     data_in += sstride;
   }
-  image->y1 -= image->y0;
-  image->y0 = 0;
 }
 
 static void
@@ -525,8 +519,6 @@ fill_image_planar16_3 (opj_image_t * image, GstVideoFrame * frame)
       data_in += sstride;
     }
   }
-  image->y1 -= image->y0;
-  image->y0 = 0;
 }
 
 static void
@@ -558,8 +550,6 @@ fill_image_planar8_3 (opj_image_t * image, GstVideoFrame * frame)
       data_in += sstride;
     }
   }
-  image->y1 -= image->y0;
-  image->y0 = 0;
 }
 
 static void
@@ -588,8 +578,6 @@ fill_image_planar8_1 (opj_image_t * image, GstVideoFrame * frame)
     }
     data_in += sstride;
   }
-  image->y1 -= image->y0;
-  image->y0 = 0;
 }
 
 static void
@@ -618,8 +606,6 @@ fill_image_planar16_1 (opj_image_t * image, GstVideoFrame * frame)
     }
     data_in += sstride;
   }
-  image->y1 -= image->y0;
-  image->y0 = 0;
 }
 
 static gboolean
