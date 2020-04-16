@@ -568,12 +568,18 @@ ensure_allowed_caps (GstKMSSink * self, drmModeConnector * conn,
     out_caps = gst_caps_merge (out_caps, gst_caps_simplify (tmp_caps));
   }
 
+  if (gst_caps_is_empty (out_caps)) {
+    GST_DEBUG_OBJECT (self, "allowed caps is empty");
+    gst_caps_unref (out_caps);
+    return FALSE;
+  }
+
   self->allowed_caps = gst_caps_simplify (out_caps);
 
   GST_DEBUG_OBJECT (self, "allowed caps = %" GST_PTR_FORMAT,
       self->allowed_caps);
 
-  return (self->allowed_caps && !gst_caps_is_empty (self->allowed_caps));
+  return TRUE;
 }
 
 static gboolean
