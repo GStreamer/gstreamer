@@ -212,7 +212,7 @@ gst_v4l2_codec_allocator_dispose (GObject * object)
   while ((buf = g_queue_pop_head (&self->pool)))
     gst_v4l2_codec_buffer_free (buf);
 
-  g_clear_object (&self->decoder);
+  gst_clear_object (&self->decoder);
 
   G_OBJECT_CLASS (gst_v4l2_codec_allocator_parent_class)->dispose (object);
 }
