@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) 2020 Thibault Saunier <tsaunier@igalia.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,8 +18,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_VIDEO_SCALE_H__
-#define __GST_VIDEO_SCALE_H__
+#ifndef __GST_VIDEO_CONVERT_SCALE_H__
+#define __GST_VIDEO_CONVERT_SCALE_H__
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
@@ -26,11 +27,16 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_VIDEO_SCALE (gst_video_scale_get_type())
-#define GST_VIDEO_SCALE_CAST(obj) ((GstVideoScale *)(obj))
-G_DECLARE_FINAL_TYPE (GstVideoScale, gst_video_scale, GST, VIDEO_SCALE,
+#define GST_TYPE_VIDEO_CONVERT_SCALE (gst_video_convert_scale_get_type())
+#define GST_VIDEO_CONVERT_SCALE_CAST(obj) ((GstVideoConvertScale *)(obj))
+
+G_DECLARE_DERIVABLE_TYPE (GstVideoConvertScale, gst_video_convert_scale, GST, VIDEO_CONVERT_SCALE,
     GstVideoFilter)
 
+struct _GstVideoConvertScaleClass
+{
+  GstVideoFilterClass parent;
+};
 
 /**
  * GstVideoScaleMethod:
@@ -61,33 +67,8 @@ typedef enum {
   GST_VIDEO_SCALE_MITCHELL
 } GstVideoScaleMethod;
 
-/**
- * GstVideoScale:
- *
- * Opaque data structure
- */
-struct _GstVideoScale {
-  GstVideoFilter element;
-
-  /* properties */
-  GstVideoScaleMethod method;
-  gboolean add_borders;
-  double sharpness;
-  double sharpen;
-  gboolean dither;
-  int submethod;
-  double envelope;
-  gboolean gamma_decode;
-  gint n_threads;
-
-  GstVideoConverter *convert;
-
-  gint borders_h;
-  gint borders_w;
-};
-
-GST_ELEMENT_REGISTER_DECLARE (videoscale);
+GST_ELEMENT_REGISTER_DECLARE (videoconvertscale);
 
 G_END_DECLS
 
-#endif /* __GST_VIDEO_SCALE_H__ */
+#endif /* __GST_VIDEO_CONVERT_SCALE_H__ */

@@ -19,43 +19,20 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_VIDEOCONVERT_H__
-#define __GST_VIDEOCONVERT_H__
+#pragma once
 
-#include <gst/gst.h>
-#include <gst/video/video.h>
-#include <gst/video/gstvideofilter.h>
+#include "gstvideoconvertscale.h"
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_VIDEO_CONVERT (gst_video_convert_get_type())
-#define GST_VIDEO_CONVERT_CAST(obj) ((GstVideoConvert *)(obj))
 G_DECLARE_FINAL_TYPE (GstVideoConvert, gst_video_convert, GST, VIDEO_CONVERT,
-    GstVideoFilter)
+    GstVideoConvertScale);
 
-/**
- * GstVideoConvert:
- *
- * Opaque object data structure.
- */
-struct _GstVideoConvert {
-  GstVideoFilter element;
-
-  GstVideoConverter *convert;
-  GstVideoDitherMethod dither;
-  guint dither_quantization;
-  GstVideoResamplerMethod chroma_resampler;
-  GstVideoAlphaMode alpha_mode;
-  GstVideoChromaMode chroma_mode;
-  GstVideoMatrixMode matrix_mode;
-  GstVideoGammaMode gamma_mode;
-  GstVideoPrimariesMode primaries_mode;
-  gdouble alpha_value;
-  gint n_threads;
+struct _GstVideoConvert
+{
+  GstVideoConvertScale parent;
 };
 
 GST_ELEMENT_REGISTER_DECLARE (videoconvert);
 
 G_END_DECLS
-
-#endif /* __GST_VIDEOCONVERT_H__ */
