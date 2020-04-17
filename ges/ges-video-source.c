@@ -87,24 +87,14 @@ _set_priority (GESTimelineElement * element, guint32 priority)
   return res;
 }
 
-static void
-post_missing_element_message (GstElement * element, const gchar * name)
-{
-  GstMessage *msg;
-
-  msg = gst_missing_element_message_new (element, name);
-  gst_element_post_message (element, msg);
-}
-
 static gboolean
 ges_video_source_create_filters (GESVideoSource * self, GPtrArray * elements,
     gboolean needs_converters)
 {
   GESTrackElement *trksrc = GES_TRACK_ELEMENT (self);
-  GstElement *positioner, *videoflip, *capsfilter, *deinterlace;
-  const gchar *positioner_props[] =
-      { "alpha", "posx", "posy", "width", "height", NULL };
-  const gchar *deinterlace_props[] = { "mode", "fields", "tff", NULL };
+  GstElement *positioner, *videoflip, *capsfilter;
+  const gchar *positioner_props[]
+  = { "alpha", "posx", "posy", "width", "height", NULL };
   const gchar *videoflip_props[] = { "video-direction", NULL };
 
   g_ptr_array_add (elements, gst_element_factory_make ("queue", NULL));
@@ -115,6 +105,9 @@ ges_video_source_create_filters (GESVideoSource * self, GPtrArray * elements,
   g_object_set (positioner, "zorder",
       G_MAXUINT - GES_TIMELINE_ELEMENT_PRIORITY (self), NULL);
   g_ptr_array_add (elements, positioner);
+
+  if (needs_converters)
+    g_ptr_array_add (elements, gst_element_factory_make ("videoconvert", NULL));
 
   /* If there's image-orientation tag, make sure the image is correctly oriented
    * before we scale it. */
@@ -130,6 +123,7 @@ ges_video_source_create_filters (GESVideoSource * self, GPtrArray * elements,
   }
   g_ptr_array_add (elements, gst_element_factory_make ("videorate",
           "track-element-videorate"));
+
   capsfilter =
       gst_element_factory_make ("capsfilter", "track-element-capsfilter");
   g_ptr_array_add (elements, capsfilter);
@@ -141,21 +135,6 @@ ges_video_source_create_filters (GESVideoSource * self, GPtrArray * elements,
       positioner_props);
   ges_track_element_add_children_props (trksrc, videoflip, NULL, NULL,
       videoflip_props);
-
-  deinterlace = gst_element_factory_make ("deinterlace", "deinterlace");
-  if (deinterlace == NULL) {
-    post_missing_element_message (ges_track_element_get_nleobject (trksrc),
-        "deinterlace");
-
-    GST_ELEMENT_WARNING (ges_track_element_get_nleobject (trksrc), CORE,
-        MISSING_PLUGIN,
-        ("Missing element '%s' - check your GStreamer installation.",
-            "deinterlace"), ("deinterlacing won't work"));
-  } else {
-    g_ptr_array_add (elements, deinterlace);
-    ges_track_element_add_children_props (trksrc, deinterlace, NULL, NULL,
-        deinterlace_props);
-  }
 
   self->priv->positioner = GST_FRAME_POSITIONNER (positioner);
   self->priv->positioner->scale_in_compositor =
