@@ -587,12 +587,13 @@ gst_value_lcopy_list_or_array (const GValue * value, guint n_collect_values,
 {
   GstValueList **dest = collect_values[0].v_pointer;
 
-  if (!dest)
-    return g_strdup_printf ("value location for `%s' passed as NULL",
-        G_VALUE_TYPE_NAME (value));
-  if (!value->data[0].v_pointer)
-    return g_strdup_printf ("invalid value given for `%s'",
-        G_VALUE_TYPE_NAME (value));
+  g_return_val_if_fail (dest != NULL,
+      g_strdup_printf ("value location for `%s' passed as NULL",
+          G_VALUE_TYPE_NAME (value)));
+  g_return_val_if_fail (value->data[0].v_pointer != NULL,
+      g_strdup_printf ("invalid value given for `%s'",
+          G_VALUE_TYPE_NAME (value)));
+
   if (collect_flags & G_VALUE_NOCOPY_CONTENTS) {
     *dest = (GstValueList *) value->data[0].v_pointer;
   } else {
@@ -1310,12 +1311,12 @@ static gchar *
 gst_value_collect_int_range (GValue * value, guint n_collect_values,
     GTypeCValue * collect_values, guint collect_flags)
 {
-  if (n_collect_values != 2)
-    return g_strdup_printf ("not enough value locations for `%s' passed",
-        G_VALUE_TYPE_NAME (value));
-  if (collect_values[0].v_int >= collect_values[1].v_int)
-    return g_strdup_printf ("range start is not smaller than end for `%s'",
-        G_VALUE_TYPE_NAME (value));
+  g_return_val_if_fail (n_collect_values == 2,
+      g_strdup_printf ("not enough value locations for `%s' passed",
+          G_VALUE_TYPE_NAME (value)));
+  g_return_val_if_fail (collect_values[0].v_int < collect_values[1].v_int,
+      g_strdup_printf ("range start is not smaller than end for `%s'",
+          G_VALUE_TYPE_NAME (value)));
 
   gst_value_set_int_range_step (value, collect_values[0].v_int,
       collect_values[1].v_int, 1);
@@ -1330,12 +1331,12 @@ gst_value_lcopy_int_range (const GValue * value, guint n_collect_values,
   guint32 *int_range_start = collect_values[0].v_pointer;
   guint32 *int_range_end = collect_values[1].v_pointer;
 
-  if (!int_range_start)
-    return g_strdup_printf ("start value location for `%s' passed as NULL",
-        G_VALUE_TYPE_NAME (value));
-  if (!int_range_end)
-    return g_strdup_printf ("end value location for `%s' passed as NULL",
-        G_VALUE_TYPE_NAME (value));
+  g_return_val_if_fail (int_range_start != NULL,
+      g_strdup_printf ("start value location for `%s' passed as NULL",
+          G_VALUE_TYPE_NAME (value)));
+  g_return_val_if_fail (int_range_end != NULL,
+      g_strdup_printf ("end value location for `%s' passed as NULL",
+          G_VALUE_TYPE_NAME (value)));
 
   *int_range_start = INT_RANGE_MIN (value);
   *int_range_end = INT_RANGE_MAX (value);
@@ -1549,12 +1550,13 @@ gst_value_collect_int64_range (GValue * value, guint n_collect_values,
 {
   gint64 *vals = value->data[0].v_pointer;
 
-  if (n_collect_values != 2)
-    return g_strdup_printf ("not enough value locations for `%s' passed",
-        G_VALUE_TYPE_NAME (value));
-  if (collect_values[0].v_int64 >= collect_values[1].v_int64)
-    return g_strdup_printf ("range start is not smaller than end for `%s'",
-        G_VALUE_TYPE_NAME (value));
+  g_return_val_if_fail (n_collect_values == 2,
+      g_strdup_printf ("not enough value locations for `%s' passed",
+          G_VALUE_TYPE_NAME (value)));
+
+  g_return_val_if_fail (collect_values[0].v_int64 < collect_values[1].v_int64,
+      g_strdup_printf ("range start is not smaller than end for `%s'",
+          G_VALUE_TYPE_NAME (value)));
 
   if (vals == NULL) {
     gst_value_init_int64_range (value);
@@ -1575,20 +1577,18 @@ gst_value_lcopy_int64_range (const GValue * value, guint n_collect_values,
   guint64 *int_range_step = collect_values[2].v_pointer;
   gint64 *vals = (gint64 *) value->data[0].v_pointer;
 
-  if (!int_range_start)
-    return g_strdup_printf ("start value location for `%s' passed as NULL",
-        G_VALUE_TYPE_NAME (value));
-  if (!int_range_end)
-    return g_strdup_printf ("end value location for `%s' passed as NULL",
-        G_VALUE_TYPE_NAME (value));
-  if (!int_range_step)
-    return g_strdup_printf ("step value location for `%s' passed as NULL",
-        G_VALUE_TYPE_NAME (value));
+  g_return_val_if_fail (int_range_start != NULL,
+      g_strdup_printf ("start value location for `%s' passed as NULL",
+          G_VALUE_TYPE_NAME (value)));
+  g_return_val_if_fail (int_range_end != NULL,
+      g_strdup_printf ("end value location for `%s' passed as NULL",
+          G_VALUE_TYPE_NAME (value)));
+  g_return_val_if_fail (int_range_step != NULL,
+      g_strdup_printf ("step value location for `%s' passed as NULL",
+          G_VALUE_TYPE_NAME (value)));
 
-  if (G_UNLIKELY (vals == NULL)) {
-    return g_strdup_printf ("Uninitialised `%s' passed",
-        G_VALUE_TYPE_NAME (value));
-  }
+  g_return_val_if_fail (vals != NULL,
+      g_strdup_printf ("Uninitialised `%s' passed", G_VALUE_TYPE_NAME (value)));
 
   *int_range_start = INT64_RANGE_MIN (value);
   *int_range_end = INT64_RANGE_MAX (value);
@@ -1775,12 +1775,12 @@ static gchar *
 gst_value_collect_double_range (GValue * value, guint n_collect_values,
     GTypeCValue * collect_values, guint collect_flags)
 {
-  if (n_collect_values != 2)
-    return g_strdup_printf ("not enough value locations for `%s' passed",
-        G_VALUE_TYPE_NAME (value));
-  if (collect_values[0].v_double >= collect_values[1].v_double)
-    return g_strdup_printf ("range start is not smaller than end for `%s'",
-        G_VALUE_TYPE_NAME (value));
+  g_return_val_if_fail (n_collect_values == 2,
+      g_strdup_printf ("not enough value locations for `%s' passed",
+          G_VALUE_TYPE_NAME (value)));
+  g_return_val_if_fail (collect_values[0].v_double < collect_values[1].v_double,
+      g_strdup_printf ("range start is not smaller than end for `%s'",
+          G_VALUE_TYPE_NAME (value)));
 
   value->data[0].v_double = collect_values[0].v_double;
   value->data[1].v_double = collect_values[1].v_double;
@@ -1795,12 +1795,12 @@ gst_value_lcopy_double_range (const GValue * value, guint n_collect_values,
   gdouble *double_range_start = collect_values[0].v_pointer;
   gdouble *double_range_end = collect_values[1].v_pointer;
 
-  if (!double_range_start)
-    return g_strdup_printf ("start value location for `%s' passed as NULL",
-        G_VALUE_TYPE_NAME (value));
-  if (!double_range_end)
-    return g_strdup_printf ("end value location for `%s' passed as NULL",
-        G_VALUE_TYPE_NAME (value));
+  g_return_val_if_fail (double_range_start != NULL,
+      g_strdup_printf ("start value location for `%s' passed as NULL",
+          G_VALUE_TYPE_NAME (value)));
+  g_return_val_if_fail (double_range_end != NULL,
+      g_strdup_printf ("end value location for `%s' passed as NULL",
+          G_VALUE_TYPE_NAME (value)));
 
   *double_range_start = value->data[0].v_double;
   *double_range_end = value->data[1].v_double;
@@ -1951,20 +1951,20 @@ gst_value_collect_fraction_range (GValue * value, guint n_collect_values,
 {
   GValue *vals = (GValue *) value->data[0].v_pointer;
 
-  if (n_collect_values != 4)
-    return g_strdup_printf ("not enough value locations for `%s' passed",
-        G_VALUE_TYPE_NAME (value));
-  if (collect_values[1].v_int == 0)
-    return g_strdup_printf ("passed '0' as first denominator for `%s'",
-        G_VALUE_TYPE_NAME (value));
-  if (collect_values[3].v_int == 0)
-    return g_strdup_printf ("passed '0' as second denominator for `%s'",
-        G_VALUE_TYPE_NAME (value));
-  if (gst_util_fraction_compare (collect_values[0].v_int,
+  g_return_val_if_fail (n_collect_values == 4,
+      g_strdup_printf ("not enough value locations for `%s' passed",
+          G_VALUE_TYPE_NAME (value)));
+  g_return_val_if_fail (collect_values[1].v_int != 0,
+      g_strdup_printf ("passed '0' as first denominator for `%s'",
+          G_VALUE_TYPE_NAME (value)));
+  g_return_val_if_fail (collect_values[3].v_int != 0,
+      g_strdup_printf ("passed '0' as second denominator for `%s'",
+          G_VALUE_TYPE_NAME (value)));
+  g_return_val_if_fail (gst_util_fraction_compare (collect_values[0].v_int,
           collect_values[1].v_int, collect_values[2].v_int,
-          collect_values[3].v_int) >= 0)
-    return g_strdup_printf ("range start is not smaller than end for `%s'",
-        G_VALUE_TYPE_NAME (value));
+          collect_values[3].v_int) < 0,
+      g_strdup_printf ("range start is not smaller than end for `%s'",
+          G_VALUE_TYPE_NAME (value)));
 
   if (vals == NULL) {
     gst_value_init_fraction_range (value);
@@ -1987,21 +1987,18 @@ gst_value_lcopy_fraction_range (const GValue * value, guint n_collect_values,
   gint *dest_values[4];
   GValue *vals = (GValue *) value->data[0].v_pointer;
 
-  if (G_UNLIKELY (n_collect_values != 4))
-    return g_strdup_printf ("not enough value locations for `%s' passed",
-        G_VALUE_TYPE_NAME (value));
+  g_return_val_if_fail (n_collect_values == 4,
+      g_strdup_printf ("not enough value locations for `%s' passed",
+          G_VALUE_TYPE_NAME (value)));
+  g_return_val_if_fail (vals != NULL,
+      g_strdup_printf ("Uninitialised `%s' passed", G_VALUE_TYPE_NAME (value)));
 
   for (i = 0; i < 4; i++) {
-    if (G_UNLIKELY (collect_values[i].v_pointer == NULL)) {
-      return g_strdup_printf ("value location for `%s' passed as NULL",
-          G_VALUE_TYPE_NAME (value));
-    }
-    dest_values[i] = collect_values[i].v_pointer;
-  }
+    g_return_val_if_fail (collect_values[i].v_pointer != NULL,
+        g_strdup_printf ("value location for `%s' passed as NULL",
+            G_VALUE_TYPE_NAME (value)));
 
-  if (G_UNLIKELY (vals == NULL)) {
-    return g_strdup_printf ("Uninitialised `%s' passed",
-        G_VALUE_TYPE_NAME (value));
+    dest_values[i] = collect_values[i].v_pointer;
   }
 
   dest_values[0][0] = gst_value_get_fraction_numerator (&vals[0]);
@@ -6639,22 +6636,20 @@ static gchar *
 gst_value_collect_fraction (GValue * value, guint n_collect_values,
     GTypeCValue * collect_values, guint collect_flags)
 {
-  if (n_collect_values != 2)
-    return g_strdup_printf ("not enough value locations for `%s' passed",
-        G_VALUE_TYPE_NAME (value));
-  if (collect_values[1].v_int == 0)
-    return g_strdup_printf ("passed '0' as denominator for `%s'",
-        G_VALUE_TYPE_NAME (value));
-  if (collect_values[0].v_int < -G_MAXINT)
-    return
-        g_strdup_printf
-        ("passed value smaller than -G_MAXINT as numerator for `%s'",
-        G_VALUE_TYPE_NAME (value));
-  if (collect_values[1].v_int < -G_MAXINT)
-    return
-        g_strdup_printf
-        ("passed value smaller than -G_MAXINT as denominator for `%s'",
-        G_VALUE_TYPE_NAME (value));
+  g_return_val_if_fail (n_collect_values == 2,
+      g_strdup_printf ("not enough value locations for `%s' passed",
+          G_VALUE_TYPE_NAME (value)));
+  g_return_val_if_fail (collect_values[1].v_int != 0,
+      g_strdup_printf ("passed '0' as denominator for `%s'",
+          G_VALUE_TYPE_NAME (value)));
+  g_return_val_if_fail (collect_values[0].v_int >= -G_MAXINT,
+      g_strdup_printf
+      ("passed value smaller than -G_MAXINT as numerator for `%s'",
+          G_VALUE_TYPE_NAME (value)));
+  g_return_val_if_fail (collect_values[1].v_int >= -G_MAXINT,
+      g_strdup_printf
+      ("passed value smaller than -G_MAXINT as denominator for `%s'",
+          G_VALUE_TYPE_NAME (value)));
 
   gst_value_set_fraction (value,
       collect_values[0].v_int, collect_values[1].v_int);
@@ -6669,12 +6664,12 @@ gst_value_lcopy_fraction (const GValue * value, guint n_collect_values,
   gint *numerator = collect_values[0].v_pointer;
   gint *denominator = collect_values[1].v_pointer;
 
-  if (!numerator)
-    return g_strdup_printf ("numerator for `%s' passed as NULL",
-        G_VALUE_TYPE_NAME (value));
-  if (!denominator)
-    return g_strdup_printf ("denominator for `%s' passed as NULL",
-        G_VALUE_TYPE_NAME (value));
+  g_return_val_if_fail (numerator != NULL,
+      g_strdup_printf ("numerator for `%s' passed as NULL",
+          G_VALUE_TYPE_NAME (value)));
+  g_return_val_if_fail (denominator != NULL,
+      g_strdup_printf ("denominator for `%s' passed as NULL",
+          G_VALUE_TYPE_NAME (value)));
 
   *numerator = value->data[0].v_int;
   *denominator = value->data[1].v_int;
@@ -7125,9 +7120,9 @@ static gchar *
 gst_value_collect_bitmask (GValue * value, guint n_collect_values,
     GTypeCValue * collect_values, guint collect_flags)
 {
-  if (n_collect_values != 1)
-    return g_strdup_printf ("not enough value locations for `%s' passed",
-        G_VALUE_TYPE_NAME (value));
+  g_return_val_if_fail (n_collect_values == 1,
+      g_strdup_printf ("not enough value locations for `%s' passed",
+          G_VALUE_TYPE_NAME (value)));
 
   gst_value_set_bitmask (value, (guint64) collect_values[0].v_int64);
 
@@ -7140,9 +7135,9 @@ gst_value_lcopy_bitmask (const GValue * value, guint n_collect_values,
 {
   guint64 *bitmask = collect_values[0].v_pointer;
 
-  if (!bitmask)
-    return g_strdup_printf ("value for `%s' passed as NULL",
-        G_VALUE_TYPE_NAME (value));
+  g_return_val_if_fail (bitmask != NULL,
+      g_strdup_printf ("value for `%s' passed as NULL",
+          G_VALUE_TYPE_NAME (value)));
 
   *bitmask = value->data[0].v_uint64;
 
@@ -7278,9 +7273,9 @@ static gchar *
 gst_value_collect_flagset (GValue * value, guint n_collect_values,
     GTypeCValue * collect_values, guint collect_flags)
 {
-  if (n_collect_values != 2)
-    return g_strdup_printf ("not enough value locations for `%s' passed",
-        G_VALUE_TYPE_NAME (value));
+  g_return_val_if_fail (n_collect_values == 2,
+      g_strdup_printf ("not enough value locations for `%s' passed",
+          G_VALUE_TYPE_NAME (value)));
 
   gst_value_set_flagset (value,
       (guint) collect_values[0].v_int, (guint) collect_values[1].v_int);
