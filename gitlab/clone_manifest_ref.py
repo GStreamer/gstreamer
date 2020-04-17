@@ -67,6 +67,7 @@ if __name__ == "__main__":
     parser.add_argument("--project", action="store", type=str)
     parser.add_argument("--destination", action="store", type=str, default='.')
     parser.add_argument("--manifest", action="store", type=str)
+    parser.add_argument("--fetch", action="store_true", default=False)
     options = parser.parse_args()
 
     if not options.project:
@@ -82,5 +83,10 @@ if __name__ == "__main__":
     if dest == '.':
         dest = os.path.join (os.getcwd(), project.name)
 
-    git('clone', project.fetch_uri, dest)
+    if options.fetch:
+        assert os.path.exists(dest) == True
+        git('fetch', project.fetch_uri, project.revision, repository_path=dest)
+    else:
+        git('clone', project.fetch_uri, dest)
+
     git('checkout', '--detach', project.revision, repository_path=dest)
