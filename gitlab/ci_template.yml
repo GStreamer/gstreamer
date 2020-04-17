@@ -21,6 +21,10 @@ variables:
   GIT_STRATEGY: none
   MESON_BUILDTYPE_ARGS: --default-library=both
   DEFAULT_MESON_ARGS: >
+    -Dlibnice:tests=disabled
+    -Dlibnice:examples=disabled
+    -Dopenh264:tests=disabled
+    -Dpygobject:tests=false
     -Dpython=enabled
     -Dlibav=enabled
     -Dugly=enabled
