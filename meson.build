@@ -29,6 +29,7 @@ glib_req = '>= 2.44.0'
 gst_req = '>= @0@.@1@.0'.format(gst_version_major, gst_version_minor)
 
 cc = meson.get_compiler('c')
+mathlib = cc.find_library('m', required : false)
 
 cdata = configuration_data()
 
@@ -103,7 +104,7 @@ cdata.set('DISABLE_XPTV', not libxml_dep.found())
 # gtk_dep = dependency('gtk+-3.0', required : false)
 
 libges_deps = [gst_dep, gstbase_dep, gstvideo_dep, gstpbutils_dep,
-               gstcontroller_dep, gio_dep, libxml_dep]
+               gstcontroller_dep, gio_dep, libxml_dep, mathlib]
 
 if gstvalidate_dep.found()
     libges_deps = libges_deps + [gstvalidate_dep]

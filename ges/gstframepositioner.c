@@ -27,9 +27,9 @@
 
 #include "gstframepositioner.h"
 
-GST_DEBUG_CATEGORY_STATIC (framepositioner);
+GST_DEBUG_CATEGORY_STATIC (_framepositioner);
 #undef GST_CAT_DEFAULT
-#define GST_CAT_DEFAULT framepositioner
+#define GST_CAT_DEFAULT _framepositioner
 
 /* We  need to define a max number of pixel so we can interpolate them */
 #define MAX_PIXELS 100000
@@ -115,7 +115,7 @@ is_user_positionned (GstFramePositioner * self)
 static gboolean
 auto_position (GstFramePositioner * self)
 {
-  gint scaled_width = -1, scaled_height = -1, x, y;
+  gdouble scaled_width = -1, scaled_height = -1, x, y;
 
   if (is_user_positionned (self)) {
     GST_DEBUG_OBJECT (self, "Was positioned by the user, not auto positioning");
@@ -140,13 +140,11 @@ auto_position (GstFramePositioner * self)
         self->natural_height);
   }
 
-  x = MAX (0, gst_util_uint64_scale_int_round (1,
-          self->track_width - scaled_width, 2));
-  y = MAX (0, gst_util_uint64_scale_int_round (1,
-          self->track_height - scaled_height, 2));
+  x = MAX (0, (self->track_width - scaled_width) / 2.f);
+  y = MAX (0, (self->track_height - scaled_height) / 2.f);
 
   GST_INFO_OBJECT (self, "Scalling video to match track size from "
-      "%dx%d to %dx%d",
+      "%dx%d to %fx%f",
       self->natural_width, self->natural_height, scaled_width, scaled_height);
   self->width = scaled_width;
   self->height = scaled_height;
@@ -158,7 +156,7 @@ auto_position (GstFramePositioner * self)
 
 typedef struct
 {
-  gint *value;
+  gdouble *value;
   gint old_track_value;
   gint track_value;
   GParamSpec *pspec;
@@ -186,8 +184,8 @@ reposition_properties (GstFramePositioner * pos, gint old_track_width,
     GstControlBinding *binding =
         gst_object_get_control_binding (GST_OBJECT (pos), d.pspec->name);
 
-    *(d.value) = gst_util_uint64_scale_int (*(d.value), d.track_value,
-        d.old_track_value);
+    *(d.value) =
+        *(d.value) * (gdouble) d.track_value / (gdouble) d.old_track_value;
 
     if (!binding)
       continue;
@@ -432,7 +430,7 @@ gst_frame_positioner_class_init (GstFramePositionerClass * klass)
   GstBaseTransformClass *base_transform_class =
       GST_BASE_TRANSFORM_CLASS (klass);
 
-  GST_DEBUG_CATEGORY_INIT (framepositioner, "framepositioner",
+  GST_DEBUG_CATEGORY_INIT (_framepositioner, "framepositioner",
       GST_DEBUG_FG_YELLOW, "ges frame positioner");
 
   gst_element_class_add_static_pad_template (GST_ELEMENT_CLASS (klass),
@@ -591,27 +589,29 @@ gst_frame_positioner_get_property (GObject * object, guint property_id,
       g_value_set_double (value, pos->alpha);
       break;
     case PROP_POSX:
-      g_value_set_int (value, pos->posx);
+      g_value_set_int (value, round (pos->posx));
       break;
     case PROP_POSY:
-      g_value_set_int (value, pos->posy);
+      g_value_set_int (value, round (pos->posy));
       break;
     case PROP_ZORDER:
       g_value_set_uint (value, pos->zorder);
       break;
     case PROP_WIDTH:
       if (pos->scale_in_compositor) {
-        g_value_set_int (value, pos->width);
+        g_value_set_int (value, round (pos->width));
       } else {
-        real_width = pos->width > 0 ? pos->width : pos->track_width;
+        real_width =
+            pos->width > 0 ? round (pos->width) : round (pos->track_width);
         g_value_set_int (value, real_width);
       }
       break;
     case PROP_HEIGHT:
       if (pos->scale_in_compositor) {
-        g_value_set_int (value, pos->height);
+        g_value_set_int (value, round (pos->height));
       } else {
-        real_height = pos->height > 0 ? pos->height : pos->track_height;
+        real_height =
+            pos->height > 0 ? round (pos->height) : round (pos->track_height);
         g_value_set_int (value, real_height);
       }
       break;
@@ -707,10 +707,10 @@ gst_frame_positioner_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 
   GST_OBJECT_LOCK (framepositioner);
   meta->alpha = framepositioner->alpha;
-  meta->posx = framepositioner->posx;
-  meta->posy = framepositioner->posy;
-  meta->width = framepositioner->width;
-  meta->height = framepositioner->height;
+  meta->posx = round (framepositioner->posx);
+  meta->posy = round (framepositioner->posy);
+  meta->width = round (framepositioner->width);
+  meta->height = round (framepositioner->height);
   meta->zorder = framepositioner->zorder;
   GST_OBJECT_UNLOCK (framepositioner);
 

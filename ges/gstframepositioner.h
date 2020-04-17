@@ -47,12 +47,12 @@ struct _GstFramePositioner
 
   gboolean scale_in_compositor;
   gdouble alpha;
-  gint posx;
-  gint posy;
+  gdouble posx;
+  gdouble posy;
   guint zorder;
-  gint width;
+  gdouble width;
+  gdouble height;
   gint natural_width;
-  gint height;
   gint natural_height;
   gint track_width;
   gint track_height;
