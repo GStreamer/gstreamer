@@ -588,11 +588,11 @@ gst_registry_chunks_load_feature (GstRegistry * registry, gchar ** in,
         plugin_name);
     return FALSE;
   }
-  if (G_UNLIKELY ((feature = g_object_new (type, NULL)) == NULL)) {
+  if (G_UNLIKELY ((feature =
+              g_object_new (type, "name", feature_name, NULL)) == NULL)) {
     GST_ERROR ("Can't create feature from type");
     return FALSE;
   }
-  gst_plugin_feature_set_name (feature, feature_name);
 
   if (G_UNLIKELY (!GST_IS_PLUGIN_FEATURE (feature))) {
     GST_ERROR ("typename : '%s' is not a plugin feature", type_name);
