@@ -1620,21 +1620,6 @@ gst_caps_intersect_zig_zag (GstCaps * caps1, GstCaps * caps2)
   GstCaps *dest;
   GstStructure *istruct;
 
-  /* caps are exactly the same pointers, just copy one caps */
-  if (G_UNLIKELY (caps1 == caps2))
-    return gst_caps_ref (caps1);
-
-  /* empty caps on either side, return empty */
-  if (G_UNLIKELY (CAPS_IS_EMPTY (caps1) || CAPS_IS_EMPTY (caps2)))
-    return gst_caps_ref (GST_CAPS_NONE);
-
-  /* one of the caps is any, just copy the other caps */
-  if (G_UNLIKELY (CAPS_IS_ANY (caps1)))
-    return gst_caps_ref (caps2);
-
-  if (G_UNLIKELY (CAPS_IS_ANY (caps2)))
-    return gst_caps_ref (caps1);
-
   dest = gst_caps_new_empty ();
   /* run zigzag on top line then right line, this preserves the caps order
    * much better than a simple loop.
@@ -1719,21 +1704,6 @@ gst_caps_intersect_first (GstCaps * caps1, GstCaps * caps2)
   GstCaps *dest;
   GstStructure *istruct;
 
-  /* caps are exactly the same pointers, just copy one caps */
-  if (G_UNLIKELY (caps1 == caps2))
-    return gst_caps_ref (caps1);
-
-  /* empty caps on either side, return empty */
-  if (G_UNLIKELY (CAPS_IS_EMPTY (caps1) || CAPS_IS_EMPTY (caps2)))
-    return gst_caps_ref (GST_CAPS_NONE);
-
-  /* one of the caps is any, just copy the other caps */
-  if (G_UNLIKELY (CAPS_IS_ANY (caps1)))
-    return gst_caps_ref (caps2);
-
-  if (G_UNLIKELY (CAPS_IS_ANY (caps2)))
-    return gst_caps_ref (caps1);
-
   dest = gst_caps_new_empty ();
   len1 = GST_CAPS_LEN (caps1);
   len2 = GST_CAPS_LEN (caps2);
@@ -1784,6 +1754,22 @@ gst_caps_intersect_full (GstCaps * caps1, GstCaps * caps2,
 {
   g_return_val_if_fail (GST_IS_CAPS (caps1), NULL);
   g_return_val_if_fail (GST_IS_CAPS (caps2), NULL);
+
+  /* Common fast-path */
+  /* caps are exactly the same pointers, just copy one caps */
+  if (G_UNLIKELY (caps1 == caps2))
+    return gst_caps_ref (caps1);
+
+  /* empty caps on either side, return empty */
+  if (G_UNLIKELY (CAPS_IS_EMPTY (caps1) || CAPS_IS_EMPTY (caps2)))
+    return gst_caps_ref (GST_CAPS_NONE);
+
+  /* one of the caps is any, just copy the other caps */
+  if (G_UNLIKELY (CAPS_IS_ANY (caps1)))
+    return gst_caps_ref (caps2);
+
+  if (G_UNLIKELY (CAPS_IS_ANY (caps2)))
+    return gst_caps_ref (caps1);
 
   switch (mode) {
     case GST_CAPS_INTERSECT_FIRST:
