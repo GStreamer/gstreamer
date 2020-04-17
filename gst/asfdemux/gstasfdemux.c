@@ -672,11 +672,6 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
     return FALSE;
   }
 
-  /* upstream might handle TIME seek, e.g. mms or rtsp, or not, e.g. http,
-   * so first try to let it handle the seek event. */
-  if (gst_pad_push_event (demux->sinkpad, gst_event_ref (event)))
-    return TRUE;
-
   if (G_UNLIKELY (demux->seekable == FALSE || demux->packet_size == 0 ||
           demux->num_packets == 0 || demux->play_time == 0)) {
     GST_LOG_OBJECT (demux, "stream is not seekable");
@@ -707,6 +702,11 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
   next = after && !before;
 
   if (G_UNLIKELY (demux->streaming)) {
+    /* upstream might handle TIME seek, e.g. mms or rtsp, or not, e.g. http,
+     * so first try to let it handle the seek event. */
+    if (gst_pad_push_event (demux->sinkpad, gst_event_ref (event)))
+      return TRUE;
+
     /* support it safely needs more segment handling, e.g. closing etc */
     if (!flush) {
       GST_LOG_OBJECT (demux, "streaming; non-flushing seek not supported");
