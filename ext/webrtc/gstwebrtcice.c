@@ -82,8 +82,8 @@ struct _GstWebRTCICEPrivate
 #define gst_webrtc_ice_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstWebRTCICE, gst_webrtc_ice,
     GST_TYPE_OBJECT, G_ADD_PRIVATE (GstWebRTCICE)
-    GST_DEBUG_CATEGORY_INIT (gst_webrtc_ice_debug, "webrtcice", 0, "webrtcice");
-    );
+    GST_DEBUG_CATEGORY_INIT (gst_webrtc_ice_debug, "webrtcice", 0,
+        "webrtcice"););
 
 static gboolean
 _unlock_pc_thread (GMutex * lock)
@@ -667,6 +667,28 @@ gst_webrtc_ice_add_turn_server (GstWebRTCICE * ice, const gchar * uri)
   ret = TRUE;
 
 done:
+  return ret;
+}
+
+gboolean
+gst_webrtc_ice_add_local_ip_address (GstWebRTCICE * ice, const gchar * address)
+{
+  gboolean ret = FALSE;
+  NiceAddress nice_addr;
+
+  nice_address_init (&nice_addr);
+
+  ret = nice_address_set_from_string (&nice_addr, address);
+
+  if (ret) {
+    ret = nice_agent_add_local_address (ice->priv->nice_agent, &nice_addr);
+    if (!ret) {
+      GST_ERROR_OBJECT (ice, "Failed to add local address to NiceAgent");
+    }
+  } else {
+    GST_ERROR_OBJECT (ice, "Failed to initialize NiceAddress [%s]", address);
+  }
+
   return ret;
 }
 

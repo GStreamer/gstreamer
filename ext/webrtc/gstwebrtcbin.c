@@ -325,8 +325,7 @@ gst_webrtc_bin_pad_new (const gchar * name, GstPadDirection direction)
 G_DEFINE_TYPE_WITH_CODE (GstWebRTCBin, gst_webrtc_bin, GST_TYPE_BIN,
     G_ADD_PRIVATE (GstWebRTCBin)
     GST_DEBUG_CATEGORY_INIT (gst_webrtc_bin_debug, "webrtcbin", 0,
-        "webrtcbin element");
-    );
+        "webrtcbin element"););
 
 static GstPad *_connect_input_stream (GstWebRTCBin * webrtc,
     GstWebRTCBinPad * pad);
@@ -349,6 +348,7 @@ enum
   ADD_TURN_SERVER_SIGNAL,
   CREATE_DATA_CHANNEL_SIGNAL,
   ON_DATA_CHANNEL_SIGNAL,
+  ADD_LOCAL_IP_ADDRESS_SIGNAL,
   LAST_SIGNAL,
 };
 
@@ -5026,6 +5026,18 @@ gst_webrtc_bin_add_turn_server (GstWebRTCBin * webrtc, const gchar * uri)
 }
 
 static gboolean
+gst_webrtc_bin_add_local_ip_address (GstWebRTCBin * webrtc,
+    const gchar * address)
+{
+  g_return_val_if_fail (GST_IS_WEBRTC_BIN (webrtc), FALSE);
+  g_return_val_if_fail (address != NULL, FALSE);
+
+  GST_DEBUG_OBJECT (webrtc, "Adding local IP address: %s", address);
+
+  return gst_webrtc_ice_add_local_ip_address (webrtc->priv->ice, address);
+}
+
+static gboolean
 copy_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
 {
   GstPad *gpad = GST_PAD_CAST (user_data);
@@ -6425,6 +6437,20 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_CALLBACK (gst_webrtc_bin_add_turn_server), NULL, NULL, NULL,
       G_TYPE_BOOLEAN, 1, G_TYPE_STRING);
+
+  /**
+   * GstWebRTCBin::add-local-ip-address:
+   * @object: the #GstWebRtcBin
+   * @address: The local IP address
+   *
+   * Add a local IP address to use for ICE candidate gathering.  If none
+   * are supplied, they will be discovered automatically
+   */
+  gst_webrtc_bin_signals[ADD_LOCAL_IP_ADDRESS_SIGNAL] =
+      g_signal_new_class_handler ("add-local-ip-address",
+      G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_CALLBACK (gst_webrtc_bin_add_local_ip_address), NULL, NULL,
+      g_cclosure_marshal_generic, G_TYPE_BOOLEAN, 1, G_TYPE_STRING);
 
   /*
    * GstWebRTCBin::create-data-channel:
