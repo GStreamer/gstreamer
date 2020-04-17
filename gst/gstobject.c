@@ -595,6 +595,38 @@ had_parent:
   }
 }
 
+static gboolean
+gst_object_set_name_intern (GstObject * object, const gchar * name)
+{
+  gboolean result;
+
+  GST_OBJECT_LOCK (object);
+
+  /* parented objects cannot be renamed */
+  if (G_UNLIKELY (object->parent != NULL))
+    goto had_parent;
+
+  if (name != NULL) {
+    g_free (object->name);
+    object->name = g_strdup (name);
+    GST_OBJECT_UNLOCK (object);
+    result = TRUE;
+  } else {
+    GST_OBJECT_UNLOCK (object);
+    result = gst_object_set_name_default (object);
+  }
+
+  return result;
+
+  /* error */
+had_parent:
+  {
+    GST_WARNING ("parented objects can't be renamed");
+    GST_OBJECT_UNLOCK (object);
+    return FALSE;
+  }
+}
+
 /**
  * gst_object_set_name:
  * @object: a #GstObject
@@ -618,32 +650,9 @@ gst_object_set_name (GstObject * object, const gchar * name)
 
   g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
 
-  GST_OBJECT_LOCK (object);
-
-  /* parented objects cannot be renamed */
-  if (G_UNLIKELY (object->parent != NULL))
-    goto had_parent;
-
-  if (name != NULL) {
-    g_free (object->name);
-    object->name = g_strdup (name);
-    GST_OBJECT_UNLOCK (object);
-    result = TRUE;
-  } else {
-    GST_OBJECT_UNLOCK (object);
-    result = gst_object_set_name_default (object);
-  }
-
-  g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_NAME]);
+  if ((result = gst_object_set_name_intern (object, name)))
+    g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_NAME]);
   return result;
-
-  /* error */
-had_parent:
-  {
-    GST_WARNING ("parented objects can't be renamed");
-    GST_OBJECT_UNLOCK (object);
-    return FALSE;
-  }
 }
 
 /**
@@ -926,7 +935,7 @@ gst_object_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_NAME:
-      gst_object_set_name (gstobject, g_value_get_string (value));
+      gst_object_set_name_intern (gstobject, g_value_get_string (value));
       break;
     case PROP_PARENT:
       gst_object_set_parent (gstobject, g_value_get_object (value));
