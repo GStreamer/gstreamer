@@ -516,13 +516,25 @@ GST_START_TEST (test_group_in_group_layer_moving)
   CHECK_OBJECT_PROPS (group, 10, 0, 20);
   assert_equals_int (GES_TIMELINE_ELEMENT_LAYER_PRIORITY (c), 0);
   assert_equals_int (GES_TIMELINE_ELEMENT_LAYER_PRIORITY (c1), 1);
+  assert_equals_int (GES_TIMELINE_ELEMENT_LAYER_PRIORITY (group), 0);
 
   ges_layer_set_priority (layer2, 0);
-  ges_layer_set_priority (layer, 1);
-  ges_layer_set_priority (layer1, 2);
+  /* no change since none of the clips are in layer2 */
+  assert_equals_int (GES_TIMELINE_ELEMENT_LAYER_PRIORITY (c), 0);
+  assert_equals_int (GES_TIMELINE_ELEMENT_LAYER_PRIORITY (c1), 1);
+  assert_equals_int (GES_TIMELINE_ELEMENT_LAYER_PRIORITY (group), 0);
 
+  ges_layer_set_priority (layer, 1);
+  /* c's layer now has priority 1 (conflicts with layer1) */
+  assert_equals_int (GES_TIMELINE_ELEMENT_LAYER_PRIORITY (c), 1);
+  assert_equals_int (GES_TIMELINE_ELEMENT_LAYER_PRIORITY (c1), 1);
+  assert_equals_int (GES_TIMELINE_ELEMENT_LAYER_PRIORITY (group), 1);
+
+  ges_layer_set_priority (layer1, 2);
+  /* conflicting layer priorities now resolved */
   assert_equals_int (GES_TIMELINE_ELEMENT_LAYER_PRIORITY (c), 1);
   assert_equals_int (GES_TIMELINE_ELEMENT_LAYER_PRIORITY (c1), 2);
+  assert_equals_int (GES_TIMELINE_ELEMENT_LAYER_PRIORITY (group), 1);
 
   /* Our timeline
    *
