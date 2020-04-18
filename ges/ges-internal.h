@@ -398,7 +398,6 @@ ges_util_structure_get_clocktime (GstStructure *structure, const gchar *name,
  *              GESContainer                        *
  ****************************************************/
 G_GNUC_INTERNAL void _ges_container_sort_children         (GESContainer *container);
-G_GNUC_INTERNAL void _ges_container_sort_children_by_end  (GESContainer *container);
 G_GNUC_INTERNAL void _ges_container_set_height            (GESContainer * container,
                                                            guint32 height);
 G_GNUC_INTERNAL gint  _ges_container_get_priority_offset  (GESContainer * container,

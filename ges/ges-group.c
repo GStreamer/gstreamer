@@ -491,12 +491,8 @@ _add_child (GESContainer * group, GESTimelineElement * child)
 static void
 _child_added (GESContainer * group, GESTimelineElement * child)
 {
-  GList *children, *tmp;
   gchar *signals_ids_key;
   ChildSignalIds *signals_ids;
-
-  GESGroupPrivate *priv = GES_GROUP (group)->priv;
-  GstClockTime last_child_end = 0, first_child_start = G_MAXUINT64;
 
   /* NOTE: notifies are currently frozen by ges_container_add */
   if (!GES_TIMELINE_ELEMENT_TIMELINE (group)
@@ -508,27 +504,6 @@ _child_added (GESContainer * group, GESTimelineElement * child)
   }
   /* FIXME: we should otherwise check that the child is part of the same
    * timeline */
-
-  children = GES_CONTAINER_CHILDREN (group);
-
-  for (tmp = children; tmp; tmp = tmp->next) {
-    last_child_end = MAX (GES_TIMELINE_ELEMENT_END (tmp->data), last_child_end);
-    first_child_start =
-        MIN (GES_TIMELINE_ELEMENT_START (tmp->data), first_child_start);
-  }
-
-  priv->setting_value = TRUE;
-  ELEMENT_SET_FLAG (group, GES_TIMELINE_ELEMENT_SET_SIMPLE);
-  if (first_child_start != GES_TIMELINE_ELEMENT_START (group)) {
-    _set_start0 (GES_TIMELINE_ELEMENT (group), first_child_start);
-  }
-
-  if (last_child_end != GES_TIMELINE_ELEMENT_END (group)) {
-    _set_duration0 (GES_TIMELINE_ELEMENT (group),
-        last_child_end - first_child_start);
-  }
-  ELEMENT_UNSET_FLAG (group, GES_TIMELINE_ELEMENT_SET_SIMPLE);
-  priv->setting_value = FALSE;
 
   _update_our_values (GES_GROUP (group));
 
@@ -585,12 +560,9 @@ _disconnect_signals (GESGroup * group, GESTimelineElement * child,
 static void
 _child_removed (GESContainer * group, GESTimelineElement * child)
 {
-  GList *children, *tmp;
-  GstClockTime first_child_start;
+  GList *children;
   gchar *signals_ids_key;
   ChildSignalIds *sigids;
-  guint32 new_priority = G_MAXUINT32;
-  GESGroupPrivate *priv = GES_GROUP (group)->priv;
 
   /* NOTE: notifies are currently frozen by ges_container_add */
   _ges_container_sort_children (group);
@@ -610,21 +582,7 @@ _child_removed (GESContainer * group, GESTimelineElement * child)
     return;
   }
 
-  for (tmp = children; tmp; tmp = tmp->next)
-    new_priority =
-        MIN (new_priority, ges_timeline_element_get_priority (tmp->data));
-
-  priv->setting_value = TRUE;
-  ELEMENT_SET_FLAG (group, GES_TIMELINE_ELEMENT_SET_SIMPLE);
-  if (_PRIORITY (group) != new_priority)
-    ges_timeline_element_set_priority (GES_TIMELINE_ELEMENT (group),
-        new_priority);
-  first_child_start = GES_TIMELINE_ELEMENT_START (children->data);
-  if (first_child_start > GES_TIMELINE_ELEMENT_START (group)) {
-    _set_start0 (GES_TIMELINE_ELEMENT (group), first_child_start);
-  }
-  ELEMENT_UNSET_FLAG (group, GES_TIMELINE_ELEMENT_SET_SIMPLE);
-  priv->setting_value = FALSE;
+  _update_our_values (GES_GROUP (group));
 }
 
 static GList *

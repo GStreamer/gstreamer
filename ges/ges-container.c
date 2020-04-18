@@ -152,10 +152,11 @@ compare_grouping_prio (GType * a, GType * b)
 }
 
 static void
-_resync_start_offsets (GESTimelineElement * child,
+_resync_position_offsets (GESTimelineElement * child,
     ChildMapping * map, GESContainer * container)
 {
   map->start_offset = _START (container) - _START (child);
+  map->duration_offset = _DURATION (container) - _DURATION (child);
 }
 
 /*****************************************************
@@ -547,12 +548,62 @@ ges_container_init (GESContainer * self)
  *    Property notifications from Children    *
  *                                            *
  **********************************************/
+
+static void
+_update_start_duration (GESContainer * container, GESTimelineElement * child)
+{
+  GList *tmp;
+  GstClockTime duration, end = 0, start = G_MAXUINT64;
+  gboolean was_setting_simple =
+      ELEMENT_FLAG_IS_SET (container, GES_TIMELINE_ELEMENT_SET_SIMPLE);
+
+  if (!container->children) {
+    /* If we are now empty, keep the same duration and start. This works
+     * well for a clip. For a group, the duration should probably be set
+     * to 0, but it gets automatically removed from the timeline when it
+     * is emptied */
+    return;
+  }
+
+  ELEMENT_SET_FLAG (container, GES_TIMELINE_ELEMENT_SET_SIMPLE);
+
+  for (tmp = container->children; tmp; tmp = tmp->next) {
+    start = MIN (start, _START (tmp->data));
+    end = MAX (end, _END (tmp->data));
+  }
+
+  if (end < start)
+    duration = 0;
+  else
+    duration = end - start;
+
+  if (start != _START (container) || duration != _DURATION (container)) {
+    GstClockTime prev_dur = _DURATION (container);
+    GstClockTime prev_start = _START (container);
+
+    _DURATION (container) = duration;
+    _START (container) = start;
+
+    GST_INFO ("%" GES_FORMAT " child %" GES_FORMAT " move made us move",
+        GES_ARGS (container), GES_ARGS (child));
+
+    if (prev_start != start)
+      g_object_notify (G_OBJECT (container), "start");
+    if (prev_dur != duration)
+      g_object_notify (G_OBJECT (container), "duration");
+  }
+  if (!was_setting_simple)
+    ELEMENT_UNSET_FLAG (container, GES_TIMELINE_ELEMENT_SET_SIMPLE);
+
+  g_hash_table_foreach (container->priv->mappings,
+      (GHFunc) _resync_position_offsets, container);
+}
+
 static void
 _child_start_changed_cb (GESTimelineElement * child,
     GParamSpec * arg G_GNUC_UNUSED, GESContainer * container)
 {
   ChildMapping *map;
-  GstClockTime start;
 
   GESContainerPrivate *priv = container->priv;
   GESTimelineElement *element = GES_TIMELINE_ELEMENT (container);
@@ -566,34 +617,10 @@ _child_start_changed_cb (GESTimelineElement * child,
 
   switch (container->children_control_mode) {
     case GES_CHILDREN_IGNORE_NOTIFIES:
-      return;
+      break;
     case GES_CHILDREN_UPDATE_ALL_VALUES:
-    {
-      gboolean was_setting_simple =
-          ELEMENT_FLAG_IS_SET (container, GES_TIMELINE_ELEMENT_SET_SIMPLE);
-
-      ELEMENT_SET_FLAG (container, GES_TIMELINE_ELEMENT_SET_SIMPLE);
-      _ges_container_sort_children (container);
-      start = container->children ?
-          _START (container->children->data) : _START (container);
-
-      if (start != _START (container)) {
-        /* FIXME: this is not the correct duration for a group, because
-         * the start may not be the earliest start */
-        _DURATION (container) = _END (container) - start;
-        _START (container) = start;
-
-        GST_INFO ("%" GES_FORMAT " child %" GES_FORMAT " move made us move",
-            GES_ARGS (container), GES_ARGS (container->children->data));
-
-        g_object_notify (G_OBJECT (container), "start");
-        g_object_notify (G_OBJECT (container), "duration");
-      }
-      if (!was_setting_simple)
-        ELEMENT_UNSET_FLAG (container, GES_TIMELINE_ELEMENT_SET_SIMPLE);
-
-      /* Falltrough! */
-    }
+      _update_start_duration (container, child);
+      break;
     case GES_CHILDREN_UPDATE_OFFSETS:
       map->start_offset = _START (container) - _START (child);
       break;
@@ -608,8 +635,7 @@ _child_start_changed_cb (GESTimelineElement * child,
       break;
   }
 
-  if (ELEMENT_FLAG_IS_SET (child, GES_TIMELINE_ELEMENT_SET_SIMPLE))
-    container->children_control_mode = pmode;
+  container->children_control_mode = pmode;
 }
 
 static void
@@ -618,13 +644,11 @@ _child_duration_changed_cb (GESTimelineElement * child,
 {
   ChildMapping *map;
 
-  GList *tmp;
-  GstClockTime end = 0;
   GESContainerPrivate *priv = container->priv;
   GESTimelineElement *element = GES_TIMELINE_ELEMENT (container);
   GESChildrenControlMode pmode = container->children_control_mode;
 
-  if (container->children_control_mode == GES_CHILDREN_IGNORE_NOTIFIES)
+  if (pmode == GES_CHILDREN_IGNORE_NOTIFIES)
     return;
 
   if (ELEMENT_FLAG_IS_SET (child, GES_TIMELINE_ELEMENT_SET_SIMPLE))
@@ -637,16 +661,8 @@ _child_duration_changed_cb (GESTimelineElement * child,
     case GES_CHILDREN_IGNORE_NOTIFIES:
       break;
     case GES_CHILDREN_UPDATE_ALL_VALUES:
-      _ges_container_sort_children_by_end (container);
-
-      for (tmp = container->children; tmp; tmp = tmp->next)
-        end = MAX (end, _END (tmp->data));
-
-      if (end != _END (container)) {
-        _DURATION (container) = end - _START (container);
-        g_object_notify (G_OBJECT (container), "duration");
-      }
-      /* Falltrough */
+      _update_start_duration (container, child);
+      break;
     case GES_CHILDREN_UPDATE_OFFSETS:
       map->duration_offset = _DURATION (container) - _DURATION (child);
       break;
@@ -663,8 +679,7 @@ _child_duration_changed_cb (GESTimelineElement * child,
       break;
   }
 
-  if (ELEMENT_FLAG_IS_SET (child, GES_TIMELINE_ELEMENT_SET_SIMPLE))
-    container->children_control_mode = pmode;
+  container->children_control_mode = pmode;
 }
 
 /****************************************************
@@ -678,13 +693,6 @@ _ges_container_sort_children (GESContainer * container)
 {
   container->children = g_list_sort (container->children,
       (GCompareFunc) element_start_compare);
-}
-
-void
-_ges_container_sort_children_by_end (GESContainer * container)
-{
-  container->children = g_list_sort (container->children,
-      (GCompareFunc) element_end_compare);
 }
 
 void
@@ -751,7 +759,6 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
   GESContainerClass *class;
   GList *current_children, *tmp;
   GESContainerPrivate *priv;
-  GstClockTime prev_start;
 
   g_return_val_if_fail (GES_IS_CONTAINER (container), FALSE);
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (child), FALSE);
@@ -781,30 +788,10 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
     }
   }
 
-  /* FIXME: The following code should probably be in
-   * GESGroupClass->add_child, rather than here! A GESClip will avoid this
-   * since it it sets the start of the child to that of the container in
-   * add_child. However, a user's custom container class may have a good
-   * reason to not want the container's start value to change when adding
-   * a new child */
-  prev_start = _START (container);
-  if (prev_start > _START (child)) {
-    _START (container) = _START (child);
-
-    g_hash_table_foreach (priv->mappings, (GHFunc) _resync_start_offsets,
-        container);
-    g_object_notify (G_OBJECT (container), "start");
-  }
-
   mapping = g_slice_new0 (ChildMapping);
   mapping->child = gst_object_ref (child);
-  mapping->start_offset = _START (container) - _START (child);
-  mapping->duration_offset = _DURATION (container) - _DURATION (child);
-
   g_hash_table_insert (priv->mappings, child, mapping);
   container->children = g_list_prepend (container->children, child);
-
-  _ges_container_sort_children (container);
 
   /* Listen to all property changes */
   mapping->start_notifyid =
@@ -822,17 +809,11 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
     g_hash_table_remove (priv->mappings, child);
     container->children = g_list_remove (container->children, child);
 
-    if (prev_start != _START (container)) {
-      _START (container) = prev_start;
-      g_hash_table_foreach (priv->mappings, (GHFunc) _resync_start_offsets,
-          container);
-      g_signal_stop_emission_by_name (container, "start");
-    }
-
-    _ges_container_sort_children (container);
-
     goto done;
   }
+
+  _update_start_duration (container, child);
+  _ges_container_sort_children (container);
 
   _ges_container_add_child_properties (container, child);
   mapping->child_property_added_notifyid =
@@ -932,6 +913,8 @@ ges_container_remove (GESContainer * container, GESTimelineElement * child)
         "Not emitting 'child-removed' signal as child"
         " removal happend during 'child-added' signal emission");
   }
+
+  _update_start_duration (container, child);
 
   ret = TRUE;
 
