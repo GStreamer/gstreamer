@@ -150,19 +150,12 @@ if build_gir
     elif pylib_loc == ''
       check_path_exists = 'import os, sys; assert(os.path.exists(sys.argv[1]))'
       pylib_loc = python.get_variable('LIBPL', '')
-      if host_machine.system() != 'windows'
+      if host_machine.system() != 'windows' and host_machine.system() != 'darwin'
         pylib_ldlibrary = python.get_variable('LDLIBRARY', '')
-        if host_machine.system() == 'darwin'
-          # OSX is a pain. Python as shipped by apple installs libpython in /usr/lib
-          # so we hardcode that. Other systems can use -Dlibpythondir to
-          # override this.
-          pylib_loc = '/usr/lib'
-        else
-          if run_command(python, '-c', check_path_exists, join_paths(pylib_loc, pylib_ldlibrary)).returncode() != 0
-            # Workaround for Fedora
-            pylib_loc = python.get_variable('LIBDIR', '')
-            message('pylib_loc = @0@'.format(pylib_loc))
-          endif
+        if run_command(python, '-c', check_path_exists, join_paths(pylib_loc, pylib_ldlibrary)).returncode() != 0
+          # Workaround for Fedora
+          pylib_loc = python.get_variable('LIBDIR', '')
+          message('pylib_loc = @0@'.format(pylib_loc))
         endif
 
         res = run_command(python, '-c', check_path_exists, join_paths(pylib_loc, pylib_ldlibrary))
