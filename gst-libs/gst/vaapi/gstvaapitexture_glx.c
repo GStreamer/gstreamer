@@ -45,33 +45,20 @@
 #define GST_VAAPI_TEXTURE_GLX(texture) \
   ((GstVaapiTextureGLX *)(texture))
 
-typedef struct _GstVaapiTextureGLX GstVaapiTextureGLX;
-typedef struct _GstVaapiTextureGLXClass GstVaapiTextureGLXClass;
+typedef struct _GstVaapiTextureGLXPrivate GstVaapiTextureGLXPrivate;
 
 /**
- * GstVaapiTextureGLX:
+ * GstVaapiTextureGLXPrivate:
  *
- * Base object for GLX texture wrapper.
+ * GLX texture specific fields.
  */
-struct _GstVaapiTextureGLX
+struct _GstVaapiTextureGLXPrivate
 {
   /*< private > */
-  GstVaapiTexture parent_instance;
-
+  GstVaapiTexture *texture;
   GLContextState *gl_context;
   GLPixmapObject *pixo;
   GLFramebufferObject *fbo;
-};
-
-/**
- * GstVaapiTextureGLXClass:
- *
- * Base class for GLX texture wrapper.
- */
-struct _GstVaapiTextureGLXClass
-{
-  /*< private > */
-  GstVaapiTextureClass parent_class;
 };
 
 static gboolean
@@ -80,7 +67,7 @@ gst_vaapi_texture_glx_put_surface (GstVaapiTexture * texture,
     guint flags);
 
 static void
-destroy_objects (GstVaapiTextureGLX * texture)
+destroy_objects (GstVaapiTextureGLXPrivate * texture)
 {
   GLContextState old_cs;
 
@@ -105,11 +92,12 @@ destroy_objects (GstVaapiTextureGLX * texture)
 }
 
 static void
-destroy_texture_unlocked (GstVaapiTexture * texture)
+destroy_texture_unlocked (GstVaapiTextureGLXPrivate * texture_glx)
 {
+  GstVaapiTexture *texture = texture_glx->texture;
   const guint texture_id = GST_VAAPI_TEXTURE_ID (texture);
 
-  destroy_objects (GST_VAAPI_TEXTURE_GLX (texture));
+  destroy_objects (texture_glx);
 
   if (texture_id) {
     if (!texture->is_wrapped)
@@ -119,38 +107,45 @@ destroy_texture_unlocked (GstVaapiTexture * texture)
 }
 
 static void
-gst_vaapi_texture_glx_destroy (GstVaapiTexture * texture)
+gst_vaapi_texture_glx_destroy (GstVaapiTextureGLXPrivate * texture_glx)
 {
-  GST_VAAPI_OBJECT_LOCK_DISPLAY (texture);
-  destroy_texture_unlocked (texture);
-  GST_VAAPI_OBJECT_UNLOCK_DISPLAY (texture);
+  GstVaapiTexture *texture = texture_glx->texture;
+
+  GST_VAAPI_DISPLAY_LOCK (GST_VAAPI_TEXTURE_DISPLAY (texture));
+  destroy_texture_unlocked (texture_glx);
+  GST_VAAPI_DISPLAY_UNLOCK (GST_VAAPI_TEXTURE_DISPLAY (texture));
+
+  g_free (texture_glx);
 }
 
 static gboolean
-create_objects (GstVaapiTextureGLX * texture, guint texture_id)
+create_objects (GstVaapiTexture * texture, guint texture_id)
 {
-  GstVaapiTexture *const base_texture = GST_VAAPI_TEXTURE (texture);
-  Display *const dpy = GST_VAAPI_OBJECT_NATIVE_DISPLAY (texture);
+  GstVaapiTextureGLXPrivate *texture_glx =
+      gst_vaapi_texture_get_private (texture);
+  Display *const dpy =
+      GST_VAAPI_DISPLAY_NATIVE (GST_VAAPI_TEXTURE_DISPLAY (texture));
   GLContextState old_cs;
   gboolean success = FALSE;
 
   gl_get_current_context (&old_cs);
 
-  texture->gl_context = gl_create_context (dpy, DefaultScreen (dpy), &old_cs);
-  if (!texture->gl_context ||
-      !gl_set_current_context (texture->gl_context, NULL))
+  texture_glx->gl_context =
+      gl_create_context (dpy, DefaultScreen (dpy), &old_cs);
+  if (!texture_glx->gl_context
+      || !gl_set_current_context (texture_glx->gl_context, NULL))
     return FALSE;
 
-  texture->pixo = gl_create_pixmap_object (dpy,
-      base_texture->width, base_texture->height);
-  if (!texture->pixo) {
+  texture_glx->pixo = gl_create_pixmap_object (dpy,
+      texture->width, texture->height);
+  if (!texture_glx->pixo) {
     GST_ERROR ("failed to create GLX pixmap");
     goto out_reset_context;
   }
 
-  texture->fbo = gl_create_framebuffer_object (base_texture->gl_target,
-      texture_id, base_texture->width, base_texture->height);
-  if (!texture->fbo) {
+  texture_glx->fbo = gl_create_framebuffer_object (texture->gl_target,
+      texture_id, texture->width, texture->height);
+  if (!texture_glx->fbo) {
     GST_ERROR ("failed to create FBO");
     goto out_reset_context;
   }
@@ -175,7 +170,7 @@ create_texture_unlocked (GstVaapiTexture * texture)
       return FALSE;
     GST_VAAPI_TEXTURE_ID (texture) = texture_id;
   }
-  return create_objects (GST_VAAPI_TEXTURE_GLX (texture), texture_id);
+  return create_objects (texture, texture_id);
 }
 
 static gboolean
@@ -183,28 +178,36 @@ gst_vaapi_texture_glx_create (GstVaapiTexture * texture)
 {
   gboolean success;
 
-  GST_VAAPI_OBJECT_LOCK_DISPLAY (texture);
+  GST_VAAPI_DISPLAY_LOCK (GST_VAAPI_TEXTURE_DISPLAY (texture));
   success = create_texture_unlocked (texture);
-  GST_VAAPI_OBJECT_UNLOCK_DISPLAY (texture);
+  GST_VAAPI_DISPLAY_UNLOCK (GST_VAAPI_TEXTURE_DISPLAY (texture));
   return success;
 }
 
-static void
-gst_vaapi_texture_glx_class_init (GstVaapiTextureGLXClass * klass)
+
+static GstVaapiTexture *
+gst_vaapi_texture_glx_new_internal (GstVaapiTexture * texture)
 {
-  GstVaapiObjectClass *const object_class = GST_VAAPI_OBJECT_CLASS (klass);
-  GstVaapiTextureClass *const texture_class = GST_VAAPI_TEXTURE_CLASS (klass);
+  GstVaapiTextureGLXPrivate *texture_glx;
 
-  object_class->finalize = (GstVaapiObjectFinalizeFunc)
-      gst_vaapi_texture_glx_destroy;
+  texture->put_surface = gst_vaapi_texture_glx_put_surface;
 
-  texture_class->allocate = gst_vaapi_texture_glx_create;
-  texture_class->put_surface = gst_vaapi_texture_glx_put_surface;
+  texture_glx = g_malloc0 (sizeof (GstVaapiTextureGLXPrivate));
+  if (!texture_glx) {
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (texture));
+    return NULL;
+  }
+  texture_glx->texture = texture;
+  gst_vaapi_texture_set_private (texture, texture_glx,
+      (GDestroyNotify) gst_vaapi_texture_glx_destroy);
+
+  if (!gst_vaapi_texture_glx_create (texture)) {
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (texture));
+    return NULL;
+  }
+
+  return texture;
 }
-
-#define gst_vaapi_texture_glx_finalize gst_vaapi_texture_glx_destroy
-GST_VAAPI_OBJECT_DEFINE_CLASS_WITH_CODE (GstVaapiTextureGLX,
-    gst_vaapi_texture_glx, gst_vaapi_texture_glx_class_init (&g_class));
 
 /**
  * gst_vaapi_texture_glx_new:
@@ -229,11 +232,16 @@ GstVaapiTexture *
 gst_vaapi_texture_glx_new (GstVaapiDisplay * display, guint target,
     guint format, guint width, guint height)
 {
+  GstVaapiTexture *texture;
+
   g_return_val_if_fail (GST_VAAPI_IS_DISPLAY_GLX (display), NULL);
 
-  return gst_vaapi_texture_new_internal (GST_VAAPI_TEXTURE_CLASS
-      (gst_vaapi_texture_glx_class ()), display, GST_VAAPI_ID_INVALID, target,
-      format, width, height);
+  texture = gst_vaapi_texture_new_internal (display, GST_VAAPI_ID_INVALID,
+      target, format, width, height);
+  if (!texture)
+    return NULL;
+
+  return gst_vaapi_texture_glx_new_internal (texture);
 }
 
 /* Can we assume that the vsink/app context API won't change ever? */
@@ -278,6 +286,7 @@ gst_vaapi_texture_glx_new_wrapped (GstVaapiDisplay * display,
   GLTextureState ts = { 0, };
   gboolean success;
   GstVaapiGLApi gl_api;
+  GstVaapiTexture *texture;
 
   g_return_val_if_fail (GST_VAAPI_IS_DISPLAY_GLX (display), NULL);
   g_return_val_if_fail (texture_id != GL_NONE, NULL);
@@ -312,9 +321,12 @@ gst_vaapi_texture_glx_new_wrapped (GstVaapiDisplay * display,
   g_return_val_if_fail (width > 0, NULL);
   g_return_val_if_fail (height > 0, NULL);
 
-  return gst_vaapi_texture_new_internal (GST_VAAPI_TEXTURE_CLASS
-      (gst_vaapi_texture_glx_class ()), display, texture_id, target, format,
-      width, height);
+  texture = gst_vaapi_texture_new_internal (display, texture_id, target,
+      format, width, height);
+  if (!texture)
+    return NULL;
+
+  return gst_vaapi_texture_glx_new_internal (texture);
 }
 
 /**
@@ -330,10 +342,11 @@ gst_vaapi_texture_glx_new_wrapped (GstVaapiDisplay * display,
  * Return value: %TRUE on success
  */
 static gboolean
-gst_vaapi_texture_glx_put_surface_unlocked (GstVaapiTexture * base_texture,
+gst_vaapi_texture_glx_put_surface_unlocked (GstVaapiTexture * texture,
     GstVaapiSurface * surface, const GstVaapiRectangle * crop_rect, guint flags)
 {
-  GstVaapiTextureGLX *const texture = GST_VAAPI_TEXTURE_GLX (base_texture);
+  GstVaapiTextureGLXPrivate *texture_glx =
+      gst_vaapi_texture_get_private (texture);
   VAStatus status;
   GLContextState old_cs;
   gboolean success = FALSE;
@@ -344,19 +357,19 @@ gst_vaapi_texture_glx_put_surface_unlocked (GstVaapiTexture * base_texture,
     {1.0f, 0.0f},
   };
 
-  status = vaPutSurface (GST_VAAPI_OBJECT_VADISPLAY (texture),
-      GST_VAAPI_SURFACE_ID (surface), texture->pixo->pixmap,
-      crop_rect->x, crop_rect->y, crop_rect->width, crop_rect->height,
-      0, 0, base_texture->width, base_texture->height,
-      NULL, 0, from_GstVaapiSurfaceRenderFlags (flags));
+  status = vaPutSurface (GST_VAAPI_DISPLAY_VADISPLAY (GST_VAAPI_TEXTURE_DISPLAY
+          (texture)), GST_VAAPI_SURFACE_ID (surface), texture_glx->pixo->pixmap,
+      crop_rect->x, crop_rect->y, crop_rect->width, crop_rect->height, 0, 0,
+      texture->width, texture->height, NULL, 0,
+      from_GstVaapiSurfaceRenderFlags (flags));
   if (!vaapi_check_status (status, "vaPutSurface() [TFP]"))
     return FALSE;
 
-  if (texture->gl_context &&
-      !gl_set_current_context (texture->gl_context, &old_cs))
+  if (texture_glx->gl_context &&
+      !gl_set_current_context (texture_glx->gl_context, &old_cs))
     return FALSE;
 
-  if (!gl_bind_framebuffer_object (texture->fbo)) {
+  if (!gl_bind_framebuffer_object (texture_glx->fbo)) {
     GST_ERROR ("failed to bind FBO");
     goto out_reset_context;
   }
@@ -366,12 +379,12 @@ gst_vaapi_texture_glx_put_surface_unlocked (GstVaapiTexture * base_texture,
     goto out_unbind_fbo;
   }
 
-  if (!gl_bind_pixmap_object (texture->pixo)) {
+  if (!gl_bind_pixmap_object (texture_glx->pixo)) {
     GST_ERROR ("could not bind GLX pixmap");
     goto out_unbind_fbo;
   }
 
-  flags = GST_VAAPI_TEXTURE_FLAGS (texture);
+  flags = GST_MINI_OBJECT_FLAGS (texture);
   txc = g_texcoords[! !(flags & GST_VAAPI_TEXTURE_ORIENTATION_FLAG_X_INVERTED)];
   tyc = g_texcoords[! !(flags & GST_VAAPI_TEXTURE_ORIENTATION_FLAG_Y_INVERTED)];
 
@@ -381,25 +394,25 @@ gst_vaapi_texture_glx_put_surface_unlocked (GstVaapiTexture * base_texture,
     glTexCoord2f (txc[0], tyc[0]);
     glVertex2i (0, 0);
     glTexCoord2f (txc[0], tyc[1]);
-    glVertex2i (0, base_texture->height);
+    glVertex2i (0, texture->height);
     glTexCoord2f (txc[1], tyc[1]);
-    glVertex2i (base_texture->width, base_texture->height);
+    glVertex2i (texture->width, texture->height);
     glTexCoord2f (txc[1], tyc[0]);
-    glVertex2i (base_texture->width, 0);
+    glVertex2i (texture->width, 0);
   }
   glEnd ();
 
-  if (!gl_unbind_pixmap_object (texture->pixo)) {
+  if (!gl_unbind_pixmap_object (texture_glx->pixo)) {
     GST_ERROR ("failed to release GLX pixmap");
     goto out_unbind_fbo;
   }
   success = TRUE;
 
 out_unbind_fbo:
-  if (!gl_unbind_framebuffer_object (texture->fbo))
+  if (!gl_unbind_framebuffer_object (texture_glx->fbo))
     success = FALSE;
 out_reset_context:
-  if (texture->gl_context && !gl_set_current_context (&old_cs, NULL))
+  if (texture_glx->gl_context && !gl_set_current_context (&old_cs, NULL))
     success = FALSE;
   return success;
 }
@@ -410,9 +423,9 @@ gst_vaapi_texture_glx_put_surface (GstVaapiTexture * texture,
 {
   gboolean success;
 
-  GST_VAAPI_OBJECT_LOCK_DISPLAY (texture);
+  GST_VAAPI_DISPLAY_LOCK (GST_VAAPI_TEXTURE_DISPLAY (texture));
   success = gst_vaapi_texture_glx_put_surface_unlocked (texture, surface,
       crop_rect, flags);
-  GST_VAAPI_OBJECT_UNLOCK_DISPLAY (texture);
+  GST_VAAPI_DISPLAY_UNLOCK (GST_VAAPI_TEXTURE_DISPLAY (texture));
   return success;
 }

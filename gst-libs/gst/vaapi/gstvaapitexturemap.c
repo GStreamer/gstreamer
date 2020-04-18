@@ -62,7 +62,7 @@ gst_vaapi_texture_map_init (GstVaapiTextureMap * map)
 {
   map->texture_map =
       g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL,
-      (GDestroyNotify) gst_vaapi_texture_unref);
+      (GDestroyNotify) gst_mini_object_unref);
 }
 
 static void

@@ -125,7 +125,7 @@ meta_texture_free (GstVaapiVideoMetaTexture * meta)
   if (G_UNLIKELY (!meta))
     return;
 
-  gst_vaapi_texture_replace (&meta->texture, NULL);
+  gst_mini_object_replace ((GstMiniObject **) & meta->texture, NULL);
   g_slice_free (GstVaapiVideoMetaTexture, meta);
 }
 
@@ -164,7 +164,9 @@ meta_texture_copy (GstVaapiVideoMetaTexture * meta)
   copy->gl_format = meta->gl_format;
   copy->width = meta->width;
   copy->height = meta->height;
-  gst_vaapi_texture_replace (&copy->texture, meta->texture);
+
+  gst_mini_object_replace ((GstMiniObject **) & copy->texture,
+      (GstMiniObject *) meta->texture);
   return copy;
 }
 
@@ -186,8 +188,7 @@ gst_vaapi_texture_upload (GstVideoGLTextureUploadMeta * meta,
 
   if (meta_texture->texture
       /* Check whether VA display changed */
-      && gst_vaapi_object_get_display
-      (GST_VAAPI_OBJECT (meta_texture->texture)) == dpy
+      && GST_VAAPI_TEXTURE_DISPLAY (meta_texture->texture) == dpy
       /* Check whether texture id changed */
       && (gst_vaapi_texture_get_id (meta_texture->texture) == texture_id[0])) {
     texture = meta_texture->texture;
@@ -202,7 +203,8 @@ gst_vaapi_texture_upload (GstVideoGLTextureUploadMeta * meta,
   }
 
   if (meta_texture->texture != texture) {
-    gst_vaapi_texture_replace (&meta_texture->texture, texture);
+    gst_mini_object_replace ((GstMiniObject **) & meta_texture->texture,
+        (GstMiniObject *) texture);
   }
 
   if (!texture)

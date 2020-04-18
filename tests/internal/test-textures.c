@@ -168,8 +168,8 @@ main (int argc, char *argv[])
   gst_vaapi_window_glx_swap_buffers (glx_window);
   pause ();
 
-  gst_vaapi_texture_unref (textures[0]);
-  gst_vaapi_texture_unref (textures[1]);
+  gst_mini_object_unref (GST_MINI_OBJECT_CAST (textures[0]));
+  gst_mini_object_unref (GST_MINI_OBJECT_CAST (textures[1]));
   glDeleteTextures (1, &texture_id);
 
   gst_object_unref (window);

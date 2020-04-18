@@ -139,8 +139,9 @@ ensure_texture (GstVaapiWindowEGL * window, guint width, guint height)
 
   texture = gst_vaapi_texture_egl_new (GST_VAAPI_WINDOW_DISPLAY (window),
       GL_TEXTURE_2D, GL_RGBA, width, height);
-  gst_vaapi_texture_replace (&window->texture, texture);
-  gst_vaapi_texture_replace (&texture, NULL);
+  gst_mini_object_replace ((GstMiniObject **) & window->texture,
+      (GstMiniObject *) texture);
+  gst_mini_object_replace ((GstMiniObject **) & texture, NULL);
   return window->texture != NULL;
 }
 
@@ -287,7 +288,7 @@ gst_vaapi_window_egl_finalize (GObject * object)
   }
 
   gst_vaapi_window_replace (&window->window, NULL);
-  gst_vaapi_texture_replace (&window->texture, NULL);
+  gst_mini_object_replace ((GstMiniObject **) & window->texture, NULL);
 
   G_OBJECT_CLASS (gst_vaapi_window_egl_parent_class)->finalize (object);
 }
@@ -385,7 +386,7 @@ gst_vaapi_window_egl_resize (GstVaapiWindow * window, guint width, guint height)
 static gboolean
 do_render_texture (GstVaapiWindowEGL * window, const GstVaapiRectangle * rect)
 {
-  const GLuint tex_id = GST_VAAPI_OBJECT_ID (window->texture);
+  const GLuint tex_id = GST_VAAPI_TEXTURE_ID (window->texture);
   EglVTable *const vtable = window->egl_vtable;
   GLfloat x0, y0, x1, y1;
   GLfloat texcoords[4][2];

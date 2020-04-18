@@ -40,48 +40,32 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-#define GST_VAAPI_TEXTURE_EGL(texture) \
-  ((GstVaapiTextureEGL *) (texture))
-
-typedef struct _GstVaapiTextureEGL GstVaapiTextureEGL;
-typedef struct _GstVaapiTextureEGLClass GstVaapiTextureEGLClass;
+typedef struct _GstVaapiTextureEGLPrivate GstVaapiTextureEGLPrivate;
 
 /**
- * GstVaapiTextureEGL:
+ * GstVaapiTextureEGLPrivate:
  *
- * Base object for EGL texture wrapper.
+ * EGL texture specific fields.
  */
-struct _GstVaapiTextureEGL
+struct _GstVaapiTextureEGLPrivate
 {
   /*< private > */
-  GstVaapiTexture parent_instance;
-
+  GstVaapiTexture *texture;
   EglContext *egl_context;
   EGLImageKHR egl_image;
   GstVaapiSurface *surface;
   GstVaapiFilter *filter;
 };
 
-/**
- * GstVaapiTextureEGLClass:
- *
- * Base class for EGL texture wrapper.
- */
-struct _GstVaapiTextureEGLClass
-{
-  /*< private > */
-  GstVaapiTextureClass parent_class;
-};
-
 typedef struct
 {
-  GstVaapiTextureEGL *texture;
+  GstVaapiTexture *texture;
   gboolean success;             /* result */
 } CreateTextureArgs;
 
 typedef struct
 {
-  GstVaapiTextureEGL *texture;
+  GstVaapiTexture *texture;
   GstVaapiSurface *surface;
   const GstVaapiRectangle *crop_rect;
   guint flags;
@@ -89,32 +73,31 @@ typedef struct
 } UploadSurfaceArgs;
 
 static gboolean
-create_objects (GstVaapiTextureEGL * texture, GLuint texture_id)
+create_objects (GstVaapiTexture * texture, GLuint texture_id)
 {
-  GstVaapiTexture *const base_texture = GST_VAAPI_TEXTURE (texture);
-  EglContext *const ctx = texture->egl_context;
+  GstVaapiTextureEGLPrivate *const texture_egl =
+      gst_vaapi_texture_get_private (texture);
+  EglContext *const ctx = texture_egl->egl_context;
   EglVTable *const vtable = egl_context_get_vtable (ctx, FALSE);
-  GLint attribs[3], *attrib;
+  GLint attribs[3] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
 
-  attrib = attribs;
-  *attrib++ = EGL_IMAGE_PRESERVED_KHR;
-  *attrib++ = EGL_TRUE;
-  *attrib++ = EGL_NONE;
-  texture->egl_image = vtable->eglCreateImageKHR (ctx->display->base.handle.p,
+  texture_egl->egl_image =
+      vtable->eglCreateImageKHR (ctx->display->base.handle.p,
       ctx->base.handle.p, EGL_GL_TEXTURE_2D_KHR,
       (EGLClientBuffer) GSIZE_TO_POINTER (texture_id), attribs);
-  if (!texture->egl_image)
+  if (!texture_egl->egl_image)
     goto error_create_image;
 
-  texture->surface =
-      gst_vaapi_surface_new_with_egl_image (GST_VAAPI_OBJECT_DISPLAY (texture),
-      texture->egl_image, GST_VIDEO_FORMAT_RGBA, base_texture->width,
-      base_texture->height);
-  if (!texture->surface)
+  texture_egl->surface =
+      gst_vaapi_surface_new_with_egl_image (GST_VAAPI_TEXTURE_DISPLAY (texture),
+      texture_egl->egl_image, GST_VIDEO_FORMAT_RGBA, texture->width,
+      texture->height);
+  if (!texture_egl->surface)
     goto error_create_surface;
 
-  texture->filter = gst_vaapi_filter_new (GST_VAAPI_OBJECT_DISPLAY (texture));
-  if (!texture->filter)
+  texture_egl->filter =
+      gst_vaapi_filter_new (GST_VAAPI_TEXTURE_DISPLAY (texture));
+  if (!texture_egl->filter)
     goto error_create_filter;
   return TRUE;
 
@@ -137,17 +120,18 @@ error_create_filter:
 }
 
 static gboolean
-do_create_texture_unlocked (GstVaapiTextureEGL * texture)
+do_create_texture_unlocked (GstVaapiTexture * texture)
 {
-  GstVaapiTexture *const base_texture = GST_VAAPI_TEXTURE (texture);
   GLuint texture_id;
+  GstVaapiTextureEGLPrivate *texture_egl =
+      gst_vaapi_texture_get_private (texture);
 
-  if (base_texture->is_wrapped)
+  if (texture->is_wrapped)
     texture_id = GST_VAAPI_TEXTURE_ID (texture);
   else {
-    texture_id = egl_create_texture (texture->egl_context,
-        base_texture->gl_target, base_texture->gl_format,
-        base_texture->width, base_texture->height);
+    texture_id = egl_create_texture (texture_egl->egl_context,
+        texture->gl_target, texture->gl_format,
+        texture->width, texture->height);
     if (!texture_id)
       return FALSE;
     GST_VAAPI_TEXTURE_ID (texture) = texture_id;
@@ -158,74 +142,78 @@ do_create_texture_unlocked (GstVaapiTextureEGL * texture)
 static void
 do_create_texture (CreateTextureArgs * args)
 {
-  GstVaapiTextureEGL *const texture = args->texture;
+  GstVaapiTexture *const texture = args->texture;
+  GstVaapiTextureEGLPrivate *texture_egl =
+      gst_vaapi_texture_get_private (texture);
   EglContextState old_cs;
 
   args->success = FALSE;
 
-  GST_VAAPI_OBJECT_LOCK_DISPLAY (texture);
-  if (egl_context_set_current (texture->egl_context, TRUE, &old_cs)) {
+  GST_VAAPI_DISPLAY_LOCK (GST_VAAPI_TEXTURE_DISPLAY (texture));
+  if (egl_context_set_current (texture_egl->egl_context, TRUE, &old_cs)) {
     args->success = do_create_texture_unlocked (texture);
-    egl_context_set_current (texture->egl_context, FALSE, &old_cs);
+    egl_context_set_current (texture_egl->egl_context, FALSE, &old_cs);
   }
-  GST_VAAPI_OBJECT_UNLOCK_DISPLAY (texture);
+  GST_VAAPI_DISPLAY_UNLOCK (GST_VAAPI_TEXTURE_DISPLAY (texture));
 }
 
 static void
-destroy_objects (GstVaapiTextureEGL * texture)
+destroy_objects (GstVaapiTextureEGLPrivate * texture_egl)
 {
-  EglContext *const ctx = texture->egl_context;
+  EglContext *const ctx = texture_egl->egl_context;
   EglVTable *const vtable = egl_context_get_vtable (ctx, FALSE);
 
-  if (texture->egl_image != EGL_NO_IMAGE_KHR) {
+  if (texture_egl->egl_image != EGL_NO_IMAGE_KHR) {
     vtable->eglDestroyImageKHR (ctx->display->base.handle.p,
-        texture->egl_image);
-    texture->egl_image = EGL_NO_IMAGE_KHR;
+        texture_egl->egl_image);
+    texture_egl->egl_image = EGL_NO_IMAGE_KHR;
   }
-  gst_mini_object_replace ((GstMiniObject **) & texture->surface, NULL);
-  gst_vaapi_filter_replace (&texture->filter, NULL);
+  gst_mini_object_replace ((GstMiniObject **) & texture_egl->surface, NULL);
+  gst_vaapi_filter_replace (&texture_egl->filter, NULL);
 }
 
 static void
-do_destroy_texture_unlocked (GstVaapiTextureEGL * texture)
+do_destroy_texture_unlocked (GstVaapiTextureEGLPrivate * texture_egl)
 {
-  GstVaapiTexture *const base_texture = GST_VAAPI_TEXTURE (texture);
-  const GLuint texture_id = GST_VAAPI_TEXTURE_ID (texture);
+  GstVaapiTexture *const base_texture = texture_egl->texture;
+  const GLuint texture_id = GST_VAAPI_TEXTURE_ID (base_texture);
 
-  destroy_objects (texture);
+  destroy_objects (texture_egl);
 
   if (texture_id) {
     if (!base_texture->is_wrapped)
-      egl_destroy_texture (texture->egl_context, texture_id);
-    GST_VAAPI_TEXTURE_ID (texture) = 0;
+      egl_destroy_texture (texture_egl->egl_context, texture_id);
+    GST_VAAPI_TEXTURE_ID (base_texture) = 0;
   }
 }
 
 static void
-do_destroy_texture (GstVaapiTextureEGL * texture)
+do_destroy_texture (GstVaapiTextureEGLPrivate * texture_egl)
 {
   EglContextState old_cs;
+  GstVaapiTexture *texture = texture_egl->texture;
 
-  GST_VAAPI_OBJECT_LOCK_DISPLAY (texture);
-  if (egl_context_set_current (texture->egl_context, TRUE, &old_cs)) {
-    do_destroy_texture_unlocked (texture);
-    egl_context_set_current (texture->egl_context, FALSE, &old_cs);
+  GST_VAAPI_DISPLAY_LOCK (GST_VAAPI_TEXTURE_DISPLAY (texture));
+  if (egl_context_set_current (texture_egl->egl_context, TRUE, &old_cs)) {
+    do_destroy_texture_unlocked (texture_egl);
+    egl_context_set_current (texture_egl->egl_context, FALSE, &old_cs);
   }
-  GST_VAAPI_OBJECT_UNLOCK_DISPLAY (texture);
-  egl_object_replace (&texture->egl_context, NULL);
+  GST_VAAPI_DISPLAY_UNLOCK (GST_VAAPI_TEXTURE_DISPLAY (texture));
+  egl_object_replace (&texture_egl->egl_context, NULL);
+  g_free (texture_egl);
 }
 
 static gboolean
-do_upload_surface_unlocked (GstVaapiTextureEGL * texture,
+do_upload_surface_unlocked (GstVaapiTextureEGLPrivate * texture_egl,
     GstVaapiSurface * surface, const GstVaapiRectangle * crop_rect, guint flags)
 {
   GstVaapiFilterStatus status;
 
-  if (!gst_vaapi_filter_set_cropping_rectangle (texture->filter, crop_rect))
+  if (!gst_vaapi_filter_set_cropping_rectangle (texture_egl->filter, crop_rect))
     return FALSE;
 
-  status = gst_vaapi_filter_process (texture->filter, surface, texture->surface,
-      flags);
+  status = gst_vaapi_filter_process (texture_egl->filter, surface,
+      texture_egl->surface, flags);
   if (status != GST_VAAPI_FILTER_STATUS_SUCCESS)
     return FALSE;
   return TRUE;
@@ -234,73 +222,85 @@ do_upload_surface_unlocked (GstVaapiTextureEGL * texture,
 static void
 do_upload_surface (UploadSurfaceArgs * args)
 {
-  GstVaapiTextureEGL *const texture = args->texture;
+  GstVaapiTexture *const texture = args->texture;
+  GstVaapiTextureEGLPrivate *texture_egl =
+      gst_vaapi_texture_get_private (texture);
   EglContextState old_cs;
 
   args->success = FALSE;
 
-  GST_VAAPI_OBJECT_LOCK_DISPLAY (texture);
-  if (egl_context_set_current (texture->egl_context, TRUE, &old_cs)) {
-    args->success = do_upload_surface_unlocked (texture, args->surface,
+  GST_VAAPI_DISPLAY_LOCK (GST_VAAPI_TEXTURE_DISPLAY (texture));
+  if (egl_context_set_current (texture_egl->egl_context, TRUE, &old_cs)) {
+    args->success = do_upload_surface_unlocked (texture_egl, args->surface,
         args->crop_rect, args->flags);
-    egl_context_set_current (texture->egl_context, FALSE, &old_cs);
+    egl_context_set_current (texture_egl->egl_context, FALSE, &old_cs);
   }
-  GST_VAAPI_OBJECT_UNLOCK_DISPLAY (texture);
+  GST_VAAPI_DISPLAY_UNLOCK (GST_VAAPI_TEXTURE_DISPLAY (texture));
 }
 
 static gboolean
-gst_vaapi_texture_egl_create (GstVaapiTextureEGL * texture)
+gst_vaapi_texture_egl_create (GstVaapiTexture * texture)
 {
   CreateTextureArgs args = { texture };
   GstVaapiDisplayEGL *display =
-      GST_VAAPI_DISPLAY_EGL (GST_VAAPI_OBJECT_DISPLAY (texture));
+      GST_VAAPI_DISPLAY_EGL (GST_VAAPI_TEXTURE_DISPLAY (texture));
+  GstVaapiTextureEGLPrivate *texture_egl =
+      gst_vaapi_texture_get_private (texture);
 
   if (GST_VAAPI_TEXTURE (texture)->is_wrapped) {
     if (!gst_vaapi_display_egl_set_current_display (display))
       return FALSE;
   }
 
-  egl_object_replace (&texture->egl_context,
+  egl_object_replace (&texture_egl->egl_context,
       GST_VAAPI_DISPLAY_EGL_CONTEXT (display));
 
-  return egl_context_run (texture->egl_context,
+  return egl_context_run (texture_egl->egl_context,
       (EglContextRunFunc) do_create_texture, &args) && args.success;
 }
 
 static void
-gst_vaapi_texture_egl_destroy (GstVaapiTextureEGL * texture)
+gst_vaapi_texture_egl_destroy (GstVaapiTextureEGLPrivate * texture_egl)
 {
-  egl_context_run (texture->egl_context,
-      (EglContextRunFunc) do_destroy_texture, texture);
+  egl_context_run (texture_egl->egl_context,
+      (EglContextRunFunc) do_destroy_texture, texture_egl);
 }
 
 static gboolean
-gst_vaapi_texture_egl_put_surface (GstVaapiTextureEGL * texture,
+gst_vaapi_texture_egl_put_surface (GstVaapiTexture * texture,
     GstVaapiSurface * surface, const GstVaapiRectangle * crop_rect, guint flags)
 {
   UploadSurfaceArgs args = { texture, surface, crop_rect, flags };
+  GstVaapiTextureEGLPrivate *texture_egl =
+      gst_vaapi_texture_get_private (texture);
 
-  return egl_context_run (texture->egl_context,
+  return egl_context_run (texture_egl->egl_context,
       (EglContextRunFunc) do_upload_surface, &args) && args.success;
 }
 
-static void
-gst_vaapi_texture_egl_class_init (GstVaapiTextureEGLClass * klass)
+static GstVaapiTexture *
+gst_vaapi_texture_egl_new_internal (GstVaapiTexture * texture)
 {
-  GstVaapiObjectClass *const object_class = GST_VAAPI_OBJECT_CLASS (klass);
-  GstVaapiTextureClass *const texture_class = GST_VAAPI_TEXTURE_CLASS (klass);
+  GstVaapiTextureEGLPrivate *texture_egl;
 
-  object_class->finalize = (GstVaapiObjectFinalizeFunc)
-      gst_vaapi_texture_egl_destroy;
-  texture_class->allocate = (GstVaapiTextureAllocateFunc)
-      gst_vaapi_texture_egl_create;
-  texture_class->put_surface = (GstVaapiTexturePutSurfaceFunc)
-      gst_vaapi_texture_egl_put_surface;
+  texture->put_surface = gst_vaapi_texture_egl_put_surface;
+
+  texture_egl = g_malloc0 (sizeof (GstVaapiTextureEGLPrivate));
+  if (!texture_egl) {
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (texture));
+    return NULL;
+  }
+  texture_egl->texture = texture;
+  gst_vaapi_texture_set_private (texture, texture_egl,
+      (GDestroyNotify) gst_vaapi_texture_egl_destroy);
+
+  if (!gst_vaapi_texture_egl_create (texture)) {
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (texture));
+    return NULL;
+  }
+
+  return texture;
 }
-
-#define gst_vaapi_texture_egl_finalize gst_vaapi_texture_egl_destroy
-GST_VAAPI_OBJECT_DEFINE_CLASS_WITH_CODE (GstVaapiTextureEGL,
-    gst_vaapi_texture_egl, gst_vaapi_texture_egl_class_init (&g_class));
 
 /**
  * gst_vaapi_texture_egl_new:
@@ -325,11 +325,16 @@ GstVaapiTexture *
 gst_vaapi_texture_egl_new (GstVaapiDisplay * display, guint target,
     guint format, guint width, guint height)
 {
+  GstVaapiTexture *texture;
+
   g_return_val_if_fail (GST_VAAPI_IS_DISPLAY_EGL (display), NULL);
 
-  return gst_vaapi_texture_new_internal (GST_VAAPI_TEXTURE_CLASS
-      (gst_vaapi_texture_egl_class ()), display, GST_VAAPI_ID_INVALID, target,
-      format, width, height);
+  texture = gst_vaapi_texture_new_internal (display, GST_VAAPI_ID_INVALID,
+      target, format, width, height);
+  if (!texture)
+    return NULL;
+
+  return gst_vaapi_texture_egl_new_internal (texture);
 }
 
 /**
@@ -356,10 +361,15 @@ GstVaapiTexture *
 gst_vaapi_texture_egl_new_wrapped (GstVaapiDisplay * display,
     guint texture_id, guint target, GLenum format, guint width, guint height)
 {
+  GstVaapiTexture *texture;
+
   g_return_val_if_fail (GST_VAAPI_IS_DISPLAY_EGL (display), NULL);
   g_return_val_if_fail (texture_id != GL_NONE, NULL);
 
-  return gst_vaapi_texture_new_internal (GST_VAAPI_TEXTURE_CLASS
-      (gst_vaapi_texture_egl_class ()), display, texture_id, target, format,
-      width, height);
+  texture = gst_vaapi_texture_new_internal (display, texture_id,
+      target, format, width, height);
+  if (!texture)
+    return texture;
+
+  return gst_vaapi_texture_egl_new_internal (texture);
 }

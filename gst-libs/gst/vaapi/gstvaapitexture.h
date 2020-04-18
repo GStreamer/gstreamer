@@ -33,6 +33,17 @@ G_BEGIN_DECLS
 #define GST_VAAPI_TEXTURE(obj) \
   ((GstVaapiTexture *)(obj))
 
+#define GST_TYPE_VAAPI_TEXTURE (gst_vaapi_texture_get_type ())
+
+/**
+ * GST_VAAPI_TEXTURE_DISPLAY:
+ * @texture: a #GstVaapiTexture
+ *
+ * Macro that evaluates to the display associated with the @texture
+ */
+#define GST_VAAPI_TEXTURE_DISPLAY(texture) \
+  gst_vaapi_texture_get_display (GST_VAAPI_TEXTURE (texture))
+
 /**
  * GST_VAAPI_TEXTURE_ID:
  * @texture: a #GstVaapiTexture
@@ -94,9 +105,25 @@ typedef struct _GstVaapiTexture GstVaapiTexture;
  * from the left to the right.
  */
 typedef enum {
-  GST_VAAPI_TEXTURE_ORIENTATION_FLAG_X_INVERTED = 1 << 31,
-  GST_VAAPI_TEXTURE_ORIENTATION_FLAG_Y_INVERTED = 1 << 30,
+  GST_VAAPI_TEXTURE_ORIENTATION_FLAG_X_INVERTED = (GST_MINI_OBJECT_FLAG_LAST << 1),
+  GST_VAAPI_TEXTURE_ORIENTATION_FLAG_Y_INVERTED = (GST_MINI_OBJECT_FLAG_LAST << 2),
 } GstVaapiTextureOrientationFlags;
+
+GType
+gst_vaapi_texture_get_type (void) G_GNUC_CONST;
+
+/**
+ * gst_vaapi_texture_unref: (skip)
+ * @texture: (transfer full): a #GstVaapiTexture.
+ *
+ * Decreases the refcount of the texture. If the refcount reaches 0, the
+ * texture will be freed.
+ */
+static inline void
+gst_vaapi_texture_unref (GstVaapiTexture * texture)
+{
+  gst_mini_object_unref (GST_MINI_OBJECT_CAST (texture));
+}
 
 GstVaapiTexture *
 gst_vaapi_texture_new (GstVaapiDisplay * display, guint target, guint format,
@@ -106,18 +133,11 @@ GstVaapiTexture *
 gst_vaapi_texture_new_wrapped (GstVaapiDisplay * display, guint id,
     guint target, guint format, guint width, guint height);
 
-GstVaapiTexture *
-gst_vaapi_texture_ref (GstVaapiTexture * texture);
-
-void
-gst_vaapi_texture_unref (GstVaapiTexture * texture);
-
-void
-gst_vaapi_texture_replace (GstVaapiTexture ** old_texture_ptr,
-    GstVaapiTexture * new_texture);
-
 guint
 gst_vaapi_texture_get_id (GstVaapiTexture * texture);
+
+GstVaapiDisplay *
+gst_vaapi_texture_get_display (GstVaapiTexture * texture);
 
 guint
 gst_vaapi_texture_get_target (GstVaapiTexture * texture);
@@ -146,6 +166,8 @@ gboolean
 gst_vaapi_texture_put_surface (GstVaapiTexture * texture,
     GstVaapiSurface * surface, const GstVaapiRectangle * crop_rect,
     guint flags);
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiTexture, gst_vaapi_texture_unref)
 
 G_END_DECLS
 

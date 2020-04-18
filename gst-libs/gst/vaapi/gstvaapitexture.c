@@ -38,51 +38,80 @@
   (GST_VAAPI_TEXTURE_ORIENTATION_FLAG_X_INVERTED | \
    GST_VAAPI_TEXTURE_ORIENTATION_FLAG_Y_INVERTED)
 
+#define GST_VAAPI_TEXTURE_PRIVATE_QUARK gst_vaapi_texture_private_quark ()
+static GQuark
+gst_vaapi_texture_private_quark (void)
+{
+  static gsize g_quark;
+
+  if (g_once_init_enter (&g_quark)) {
+    gsize quark = (gsize) g_quark_from_static_string ("GstVaapiTexturePrivate");
+    g_once_init_leave (&g_quark, quark);
+  }
+  return g_quark;
+}
+
+gpointer
+gst_vaapi_texture_get_private (GstVaapiTexture * texture)
+{
+  return gst_mini_object_get_qdata (GST_MINI_OBJECT_CAST (texture),
+      GST_VAAPI_TEXTURE_PRIVATE_QUARK);
+}
+
+void
+gst_vaapi_texture_set_private (GstVaapiTexture * texture, gpointer priv,
+    GDestroyNotify destroy)
+{
+  gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (texture),
+      GST_VAAPI_TEXTURE_PRIVATE_QUARK, (gpointer) priv, destroy);
+}
+
 static void
 gst_vaapi_texture_init (GstVaapiTexture * texture, GstVaapiID id,
     guint target, guint format, guint width, guint height)
 {
   texture->is_wrapped = id != GST_VAAPI_ID_INVALID;
-  GST_VAAPI_OBJECT_ID (texture) = texture->is_wrapped ? id : 0;
+  GST_VAAPI_TEXTURE_ID (texture) = texture->is_wrapped ? id : 0;
   texture->gl_target = target;
   texture->gl_format = format;
   texture->width = width;
   texture->height = height;
 }
 
-static inline gboolean
-gst_vaapi_texture_allocate (GstVaapiTexture * texture)
+static void
+gst_vaapi_texture_free (GstVaapiTexture * texture)
 {
-  return GST_VAAPI_TEXTURE_GET_CLASS (texture)->allocate (texture);
+  gst_vaapi_display_replace (&GST_VAAPI_TEXTURE_DISPLAY (texture), NULL);
+  g_slice_free1 (sizeof (GstVaapiTexture), texture);
 }
 
+GST_DEFINE_MINI_OBJECT_TYPE (GstVaapiTexture, gst_vaapi_texture);
+
 GstVaapiTexture *
-gst_vaapi_texture_new_internal (const GstVaapiTextureClass * klass,
-    GstVaapiDisplay * display, GstVaapiID id, guint target, guint format,
-    guint width, guint height)
+gst_vaapi_texture_new_internal (GstVaapiDisplay * display, GstVaapiID id,
+    guint target, guint format, guint width, guint height)
 {
   GstVaapiTexture *texture;
 
+  g_return_val_if_fail (display, NULL);
   g_return_val_if_fail (target != 0, NULL);
   g_return_val_if_fail (format != 0, NULL);
   g_return_val_if_fail (width > 0, NULL);
   g_return_val_if_fail (height > 0, NULL);
 
-  texture = gst_vaapi_object_new (GST_VAAPI_OBJECT_CLASS (klass), display);
+  texture = g_slice_alloc (sizeof (GstVaapiTexture));
   if (!texture)
     return NULL;
 
-  gst_vaapi_texture_init (texture, id, target, format, width, height);
-  if (!gst_vaapi_texture_allocate (texture))
-    goto error;
-  return texture;
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (texture), 0,
+      GST_TYPE_VAAPI_TEXTURE, NULL, NULL,
+      (GstMiniObjectFreeFunction) gst_vaapi_texture_free);
 
-  /* ERRORS */
-error:
-  {
-    gst_vaapi_object_unref (texture);
-    return NULL;
-  }
+  GST_VAAPI_TEXTURE_DISPLAY (texture) = gst_object_ref (display);
+
+  gst_vaapi_texture_init (texture, id, target, format, width, height);
+
+  return texture;
 }
 
 /**
@@ -153,50 +182,6 @@ gst_vaapi_texture_new_wrapped (GstVaapiDisplay * display, guint id,
   if (G_UNLIKELY (!dpy_class->create_texture))
     return NULL;
   return dpy_class->create_texture (display, id, target, format, width, height);
-}
-
-/**
- * gst_vaapi_texture_ref:
- * @texture: a #GstVaapiTexture
- *
- * Atomically increases the reference count of the given @texture by one.
- *
- * Returns: The same @texture argument
- */
-GstVaapiTexture *
-gst_vaapi_texture_ref (GstVaapiTexture * texture)
-{
-  return gst_vaapi_object_ref (GST_VAAPI_OBJECT (texture));
-}
-
-/**
- * gst_vaapi_texture_unref:
- * @texture: a #GstVaapiTexture
- *
- * Atomically decreases the reference count of the @texture by one. If
- * the reference count reaches zero, the texture will be free'd.
- */
-void
-gst_vaapi_texture_unref (GstVaapiTexture * texture)
-{
-  gst_vaapi_object_unref (GST_VAAPI_OBJECT (texture));
-}
-
-/**
- * gst_vaapi_texture_replace:
- * @old_texture_ptr: a pointer to a #GstVaapiTexture
- * @new_texture: a #GstVaapiTexture
- *
- * Atomically replaces the texture texture held in @old_texture_ptr
- * with @new_texture. This means that @old_texture_ptr shall reference
- * a valid texture. However, @new_texture can be NULL.
- */
-void
-gst_vaapi_texture_replace (GstVaapiTexture ** old_texture_ptr,
-    GstVaapiTexture * new_texture)
-{
-  gst_vaapi_object_replace ((GstVaapiObject **) (old_texture_ptr),
-      GST_VAAPI_OBJECT (new_texture));
 }
 
 /**
@@ -301,6 +286,21 @@ gst_vaapi_texture_get_size (GstVaapiTexture * texture,
 }
 
 /**
+ * gst_vaapi_texture_get_display:
+ * @texture: a #GstVaapiTexture
+ *
+ * Returns the #GstVaapiDisplay this @texture is bound to.
+ *
+ * Return value: the parent #GstVaapiDisplay object
+ */
+GstVaapiDisplay *
+gst_vaapi_texture_get_display (GstVaapiTexture * texture)
+{
+  g_return_val_if_fail (texture != NULL, NULL);
+  return GST_VAAPI_TEXTURE_DISPLAY (texture);
+}
+
+/**
  * gst_vaapi_texture_get_orientation_flags:
  * @texture: a #GstVaapiTexture
  *
@@ -313,8 +313,7 @@ gst_vaapi_texture_get_orientation_flags (GstVaapiTexture * texture)
 {
   g_return_val_if_fail (texture != NULL, 0);
 
-  return GST_VAAPI_TEXTURE_FLAGS (texture) &
-      GST_VAAPI_TEXTURE_ORIENTATION_FLAGS;
+  return GST_MINI_OBJECT_FLAGS (texture) & GST_VAAPI_TEXTURE_ORIENTATION_FLAGS;
 }
 
 /**
@@ -333,8 +332,8 @@ gst_vaapi_texture_set_orientation_flags (GstVaapiTexture * texture, guint flags)
   g_return_if_fail (texture != NULL);
   g_return_if_fail ((flags & ~GST_VAAPI_TEXTURE_ORIENTATION_FLAGS) == 0);
 
-  GST_VAAPI_TEXTURE_FLAG_UNSET (texture, GST_VAAPI_TEXTURE_ORIENTATION_FLAGS);
-  GST_VAAPI_TEXTURE_FLAG_SET (texture, flags);
+  GST_MINI_OBJECT_FLAG_UNSET (texture, GST_VAAPI_TEXTURE_ORIENTATION_FLAGS);
+  GST_MINI_OBJECT_FLAG_SET (texture, flags);
 }
 
 /**
@@ -343,7 +342,7 @@ gst_vaapi_texture_set_orientation_flags (GstVaapiTexture * texture, guint flags)
  * @surface: a #GstVaapiSurface
  * @flags: postprocessing flags. See #GstVaapiTextureRenderFlags
  *
- * Renders the @surface into the àtexture. The @flags specify how
+ * Renders the @surface into the @texture. The @flags specify how
  * de-interlacing (if needed), color space conversion, scaling and
  * other postprocessing transformations are performed.
  *
@@ -353,14 +352,12 @@ gboolean
 gst_vaapi_texture_put_surface (GstVaapiTexture * texture,
     GstVaapiSurface * surface, const GstVaapiRectangle * crop_rect, guint flags)
 {
-  const GstVaapiTextureClass *klass;
   GstVaapiRectangle rect;
 
   g_return_val_if_fail (texture != NULL, FALSE);
   g_return_val_if_fail (surface != NULL, FALSE);
 
-  klass = GST_VAAPI_TEXTURE_GET_CLASS (texture);
-  if (!klass)
+  if (!texture->put_surface)
     return FALSE;
 
   if (!crop_rect) {
@@ -369,5 +366,5 @@ gst_vaapi_texture_put_surface (GstVaapiTexture * texture,
     gst_vaapi_surface_get_size (surface, &rect.width, &rect.height);
     crop_rect = &rect;
   }
-  return klass->put_surface (texture, surface, crop_rect, flags);
+  return texture->put_surface (texture, surface, crop_rect, flags);
 }

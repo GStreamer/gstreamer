@@ -26,14 +26,19 @@
 #define GST_VAAPI_TEXTURE_PRIV_H
 
 #include "gstvaapiobject_priv.h"
+#include <gst/gstminiobject.h>
 
 G_BEGIN_DECLS
 
-#define GST_VAAPI_TEXTURE_CLASS(klass) \
-  ((GstVaapiTextureClass *)(klass))
-
-#define GST_VAAPI_TEXTURE_GET_CLASS(obj) \
-  GST_VAAPI_TEXTURE_CLASS (GST_VAAPI_OBJECT_GET_CLASS (obj))
+/**
+ * GST_VAAPI_TEXTURE_DISPLAY:
+ * @texture: a #GstVaapiTexture
+ *
+ * Macro that evaluates to the @texture's display.
+ */
+#undef GST_VAAPI_TEXTURE_DISPLAY
+#define GST_VAAPI_TEXTURE_DISPLAY(texture) \
+  (GST_VAAPI_TEXTURE (texture)->display)
 
 /**
  * GST_VAAPI_TEXTURE_ID:
@@ -43,7 +48,7 @@ G_BEGIN_DECLS
  */
 #undef  GST_VAAPI_TEXTURE_ID
 #define GST_VAAPI_TEXTURE_ID(texture) \
-  (GST_VAAPI_OBJECT_ID (texture))
+  (GST_VAAPI_TEXTURE (texture)->object_id)
 
 /**
  * GST_VAAPI_TEXTURE_TARGET:
@@ -85,18 +90,9 @@ G_BEGIN_DECLS
 #define GST_VAAPI_TEXTURE_HEIGHT(texture) \
   (GST_VAAPI_TEXTURE (texture)->height)
 
-#define GST_VAAPI_TEXTURE_FLAGS         GST_VAAPI_MINI_OBJECT_FLAGS
-#define GST_VAAPI_TEXTURE_FLAG_IS_SET   GST_VAAPI_MINI_OBJECT_FLAG_IS_SET
-#define GST_VAAPI_TEXTURE_FLAG_SET      GST_VAAPI_MINI_OBJECT_FLAG_SET
-#define GST_VAAPI_TEXTURE_FLAG_UNSET    GST_VAAPI_MINI_OBJECT_FLAG_UNSET
-
 /* GstVaapiTextureClass hooks */
-typedef gboolean (*GstVaapiTextureAllocateFunc) (GstVaapiTexture * texture);
 typedef gboolean (*GstVaapiTexturePutSurfaceFunc) (GstVaapiTexture * texture,
-    GstVaapiSurface * surface, const GstVaapiRectangle * crop_rect,
-    guint flags);
-
-typedef struct _GstVaapiTextureClass GstVaapiTextureClass;
+    GstVaapiSurface * surface, const GstVaapiRectangle * crop_rect, guint flags);
 
 /**
  * GstVaapiTexture:
@@ -105,9 +101,12 @@ typedef struct _GstVaapiTextureClass GstVaapiTextureClass;
  */
 struct _GstVaapiTexture {
   /*< private >*/
-  GstVaapiObject parent_instance;
+  GstMiniObject mini_object;
+  GstVaapiDisplay *display;
+  GstVaapiID object_id;
 
   /*< protected >*/
+  GstVaapiTexturePutSurfaceFunc put_surface;
   guint gl_target;
   guint gl_format;
   guint width;
@@ -115,25 +114,16 @@ struct _GstVaapiTexture {
   guint is_wrapped:1;
 };
 
-/**
- * GstVaapiTextureClass:
- * @put_surface: virtual function to render a #GstVaapiSurface into a texture
- *
- * Base class for API-dependent textures.
- */
-struct _GstVaapiTextureClass {
-  /*< private >*/
-  GstVaapiObjectClass parent_class;
-
-  /*< protected >*/
-  GstVaapiTextureAllocateFunc allocate;
-  GstVaapiTexturePutSurfaceFunc put_surface;
-};
-
 GstVaapiTexture *
-gst_vaapi_texture_new_internal (const GstVaapiTextureClass * klass,
-    GstVaapiDisplay * display, GstVaapiID id, guint target, guint format,
-    guint width, guint height);
+gst_vaapi_texture_new_internal (GstVaapiDisplay * display, GstVaapiID id,
+    guint target, guint format, guint width, guint height);
+
+gpointer
+gst_vaapi_texture_get_private (GstVaapiTexture * texture);
+
+void
+gst_vaapi_texture_set_private (GstVaapiTexture * texture, gpointer priv,
+    GDestroyNotify destroy);
 
 G_END_DECLS
 
