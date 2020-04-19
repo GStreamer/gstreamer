@@ -880,7 +880,7 @@ gst_h264_decoder_fill_picture_from_slice (GstH264Decoder * self,
   if (slice_hdr->field_pic_flag)
     picture->field =
         slice_hdr->bottom_field_flag ?
-        GST_H264_PICTURE_FIELD_BOTTOM_FIELD : GST_H264_PICTURE_FILED_TOP_FIELD;
+        GST_H264_PICTURE_FIELD_BOTTOM_FIELD : GST_H264_PICTURE_FIELD_TOP_FIELD;
   else
     picture->field = GST_H264_PICTURE_FIELD_FRAME;
 
@@ -971,7 +971,7 @@ gst_h264_decoder_calculate_poc (GstH264Decoder * self, GstH264Picture * picture)
             picture->pic_order_cnt_msb + picture->pic_order_cnt_lsb;
       }
 
-      if (picture->field != GST_H264_PICTURE_FILED_TOP_FIELD) {
+      if (picture->field != GST_H264_PICTURE_FIELD_TOP_FIELD) {
         if (picture->field == GST_H264_PICTURE_FIELD_FRAME) {
           picture->bottom_field_order_cnt =
               picture->top_field_order_cnt +
@@ -1101,7 +1101,7 @@ gst_h264_decoder_calculate_poc (GstH264Decoder * self, GstH264Picture * picture)
       picture->pic_order_cnt =
           MIN (picture->top_field_order_cnt, picture->bottom_field_order_cnt);
       break;
-    case GST_H264_PICTURE_FILED_TOP_FIELD:
+    case GST_H264_PICTURE_FIELD_TOP_FIELD:
       picture->pic_order_cnt = picture->top_field_order_cnt;
       break;
     case GST_H264_PICTURE_FIELD_BOTTOM_FIELD:
