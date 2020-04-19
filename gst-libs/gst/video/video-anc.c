@@ -1242,6 +1242,20 @@ gst_video_bar_meta_api_get_type (void)
   return type;
 }
 
+static gboolean
+gst_video_bar_meta_init (GstMeta * meta, gpointer params, GstBuffer * buffer)
+{
+  GstVideoBarMeta *emeta = (GstVideoBarMeta *) meta;
+
+  emeta->field = 0;
+  emeta->is_letterbox = FALSE;
+  emeta->bar_data1 = 0;
+  emeta->bar_data2 = 0;
+
+  return TRUE;
+}
+
+
 const GstMetaInfo *
 gst_video_bar_meta_get_info (void)
 {
@@ -1251,7 +1265,7 @@ gst_video_bar_meta_get_info (void)
     const GstMetaInfo *mi = gst_meta_register (GST_VIDEO_BAR_META_API_TYPE,
         "GstVideoBarMeta",
         sizeof (GstVideoBarMeta),
-        NULL,
+        gst_video_bar_meta_init,
         NULL,
         NULL);
     g_once_init_leave ((GstMetaInfo **) & meta_info, (GstMetaInfo *) mi);
