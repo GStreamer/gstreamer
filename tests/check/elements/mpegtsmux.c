@@ -69,20 +69,17 @@ setup_src_pad (GstElement * element,
   /* sending pad */
   srcpad = gst_pad_new_from_static_template (template, "src");
   fail_if (srcpad == NULL, "Could not create a srcpad");
-  ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 1);
 
   if (!(sinkpad = gst_element_get_static_pad (element, sinkname)))
     sinkpad = gst_element_get_request_pad (element, sinkname);
   fail_if (sinkpad == NULL, "Could not get sink pad from %s",
       GST_ELEMENT_NAME (element));
-  /* references are owned by: 1) us, 2) tsmux */
-  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
+  /* we can't test the reference count of the sinkpad here because it's either
+   * 2 or 3: 1 by us, 1 by tsmux and potentially another one by the srcpad
+   * task of tsmux if it just happens to iterate over the pads */
   fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK,
       "Could not link source and %s sink pads", GST_ELEMENT_NAME (element));
   gst_object_unref (sinkpad);   /* because we got it higher up */
-
-  /* references are owned by: 1) tsmux */
-  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 1);
 
   if (padname)
     *padname = g_strdup (GST_PAD_NAME (sinkpad));
@@ -98,21 +95,12 @@ teardown_src_pad (GstElement * element, const gchar * sinkname)
   /* clean up floating src pad */
   if (!(sinkpad = gst_element_get_static_pad (element, sinkname)))
     sinkpad = gst_element_get_request_pad (element, sinkname);
-  /* pad refs held by 1) tsmux 2) us (through _get) */
-  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
   srcpad = gst_pad_get_peer (sinkpad);
 
   gst_pad_unlink (srcpad, sinkpad);
   GST_DEBUG ("src %p", srcpad);
 
-  /* after unlinking, pad refs still held by
-   * 1) tsmux and 2) us (through _get) */
-  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
   gst_object_unref (sinkpad);
-  /* one more ref is held by element itself */
-
-  /* pad refs held by both creator and this function (through _get_peer) */
-  ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 2);
   gst_object_unref (srcpad);
   gst_object_unref (srcpad);
 
