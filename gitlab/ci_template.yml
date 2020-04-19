@@ -89,7 +89,7 @@ gst indent:
   script:
     # man indent. grep RETURN VALUE, grab a beer on my behalf...
     - indent --version || true
-    - curl -o gst-indent https://gitlab.freedesktop.org/gstreamer/gstreamer/raw/${GST_UPSTREAM_BRANCH}/tools/gst-indent
+    - curl -L -o gst-indent https://gitlab.freedesktop.org/gstreamer/gstreamer/raw/${GST_UPSTREAM_BRANCH}/tools/gst-indent
     - chmod +x gst-indent
     - find . -name '*.c' -exec ./gst-indent {} +
     - |
@@ -125,7 +125,7 @@ gst indent:
 
   script:
     - ccache --show-stats
-    - curl -o clone_manifest_ref.py https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/${GST_UPSTREAM_BRANCH}/gitlab/clone_manifest_ref.py
+    - curl -L -o clone_manifest_ref.py https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/${GST_UPSTREAM_BRANCH}/gitlab/clone_manifest_ref.py
     - chmod +x clone_manifest_ref.py
     - ./clone_manifest_ref.py --manifest manifest.xml --project gst-build --destination gst-build
     - cd gst-build/
@@ -283,7 +283,7 @@ integration testsuites fedora:
     # instead copy it from the cache and do a git fetch
     # We remove this copy first since it had its mediafiles stripped
     - cp -r /gst-build/subprojects/gst-integration-testsuites/ "${CI_PROJECT_DIR}/gst-build/subprojects/gst-integration-testsuites/"
-    - curl -o clone_manifest_ref.py "https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/${GST_UPSTREAM_BRANCH}/gitlab/clone_manifest_ref.py"
+    - curl -L -o clone_manifest_ref.py "https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/${GST_UPSTREAM_BRANCH}/gitlab/clone_manifest_ref.py"
     - >-
       python3 clone_manifest_ref.py
       --fetch
@@ -729,7 +729,7 @@ build cerbero cross win64:
     GSTREAMER_ROOT_ANDROID: ${CI_PROJECT_DIR}/examples/cerbero-android-universal
   script:
     - mkdir -p ${EXAMPLES_HOME}/outputs
-    - curl -o clone_manifest_ref.py https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/${GST_UPSTREAM_BRANCH}/gitlab/clone_manifest_ref.py
+    - curl -L -o clone_manifest_ref.py https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/${GST_UPSTREAM_BRANCH}/gitlab/clone_manifest_ref.py
     - chmod +x clone_manifest_ref.py
     - ./clone_manifest_ref.py --manifest manifest.xml --project gst-examples --destination ${EXAMPLES_HOME}/gst-examples
     - ./clone_manifest_ref.py --manifest manifest.xml --project gst-docs --destination ${EXAMPLES_HOME}/gst-docs
@@ -906,7 +906,7 @@ documentation:
     # install the binaries
     - installer -pkg gstreamer-1.0-devel-*-ios-universal.pkg -target CurrentUserHomeDirectory -verbose
 
-    - curl -o clone_manifest_ref.py https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/${GST_UPSTREAM_BRANCH}/gitlab/clone_manifest_ref.py
+    - curl -L -o clone_manifest_ref.py https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/${GST_UPSTREAM_BRANCH}/gitlab/clone_manifest_ref.py
     - chmod +x clone_manifest_ref.py
     - ./clone_manifest_ref.py --manifest manifest.xml --project gst-examples --destination ${EXAMPLES_HOME}/gst-examples
     - ./clone_manifest_ref.py --manifest manifest.xml --project gst-docs --destination ${EXAMPLES_HOME}/gst-docs
