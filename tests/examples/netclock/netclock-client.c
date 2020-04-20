@@ -53,7 +53,7 @@ main (gint argc, gchar * argv[])
 
   /* cleanup */
   g_main_loop_unref (loop);
-  g_object_unref (client_clock);
+  gst_object_unref (client_clock);
 
   return 0;
 }

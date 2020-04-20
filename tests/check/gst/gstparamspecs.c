@@ -114,7 +114,7 @@ GST_START_TEST (test_param_spec_fraction)
   fail_unless_equals_int (n, 15);
   fail_unless_equals_int (d, 8);
 
-  g_object_unref (obj);
+  gst_object_unref (obj);
 }
 
 GST_END_TEST static Suite *

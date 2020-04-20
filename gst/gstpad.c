@@ -2886,7 +2886,7 @@ gst_pad_get_single_internal_link (GstPad * pad)
           ret = g_value_dup_object (&item);
         } else {
           /* More than one internal link found - don't bother reffing */
-          g_clear_object (&ret);
+          gst_clear_object (&ret);
           GST_DEBUG_OBJECT (pad,
               "Requested single internally linked pad, multiple found");
           done = TRUE;
@@ -2895,7 +2895,7 @@ gst_pad_get_single_internal_link (GstPad * pad)
         break;
       }
       case GST_ITERATOR_RESYNC:
-        g_clear_object (&ret);
+        gst_clear_object (&ret);
         gst_iterator_resync (iter);
         break;
       case GST_ITERATOR_ERROR:

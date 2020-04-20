@@ -405,7 +405,7 @@ unref_data (GstCollectData * data)
   if (data->priv->destroy_notify)
     data->priv->destroy_notify (data);
 
-  g_object_unref (data->pad);
+  gst_object_unref (data->pad);
   if (data->buffer) {
     gst_buffer_unref (data->buffer);
   }

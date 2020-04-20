@@ -90,7 +90,7 @@ GST_START_TEST (serialize_message_logging)
   str = (gchar *) messages->data;
   fail_unless (str != NULL);
 
-  g_object_unref (tr);
+  gst_object_unref (tr);
 }
 
 GST_END_TEST;
@@ -147,7 +147,7 @@ GST_START_TEST (serialize_static_record)
   g_free (str_val);
 
   gst_structure_free (s);
-  g_object_unref (tr);
+  gst_object_unref (tr);
 }
 
 GST_END_TEST;

@@ -747,10 +747,7 @@ gst_registry_chunks_load_feature (GstRegistry * registry, gchar ** in,
 fail:
   GST_INFO ("Reading plugin feature failed");
   if (feature) {
-    if (GST_IS_OBJECT (feature))
-      gst_object_unref (feature);
-    else
-      g_object_unref (feature);
+    gst_object_unref (feature);
   }
   return FALSE;
 }

@@ -189,7 +189,7 @@ main (gint argc, gchar * argv[])
 
   bus = gst_element_get_bus (app->pipeline);
   bus_watch_id = gst_bus_add_watch (bus, bus_call, loop);
-  g_object_unref (bus);
+  gst_object_unref (bus);
 
   for (stream_cnt = 0; stream_cnt < NUM_STREAM; stream_cnt++) {
     gst_bin_add_many (GST_BIN (app->pipeline), app->audiotestsrc[stream_cnt],
@@ -225,7 +225,7 @@ main (gint argc, gchar * argv[])
   g_main_loop_run (loop);
 
   gst_element_set_state (app->pipeline, GST_STATE_NULL);
-  g_object_unref (app->pipeline);
+  gst_object_unref (app->pipeline);
   g_source_remove (bus_watch_id);
   g_main_loop_unref (loop);
 

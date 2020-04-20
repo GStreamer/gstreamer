@@ -625,7 +625,7 @@ _add_element_pad_templates (GString * json, GstElement * element,
       g_string_append (json, ",\"object-type\": {");
       tmpobj = g_object_new (pad_type, NULL);
       _add_object_details (json, tmpobj);
-      g_object_unref (tmpobj);
+      gst_object_unref (tmpobj);
       g_string_append (json, "}");
     }
     g_string_append (json, "}");

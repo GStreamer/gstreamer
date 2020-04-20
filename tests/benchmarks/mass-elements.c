@@ -109,7 +109,7 @@ main (gint argc, gchar * argv[])
       GST_TIME_ARGS (end - start));
 
   start = gst_util_get_timestamp ();
-  g_object_unref (pipeline);
+  gst_object_unref (pipeline);
   end = gst_util_get_timestamp ();
   g_print ("%" GST_TIME_FORMAT " - unreffing pipeline\n",
       GST_TIME_ARGS (end - start));

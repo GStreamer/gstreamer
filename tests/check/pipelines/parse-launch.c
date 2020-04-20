@@ -129,8 +129,8 @@ GST_START_TEST (test_launch_lines)
   fail_unless (efac != NULL);
   type = gst_element_factory_get_element_type (efac);
   fail_unless (type != 0);
-  g_object_unref (efac);
-  g_object_unref (efac);
+  gst_object_unref (efac);
+  gst_object_unref (efac);
   fail_unless (gst_element_register (NULL, "1__dentity", GST_RANK_NONE, type));
 
   for (s = test_lines; *s != NULL; s++) {

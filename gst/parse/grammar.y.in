@@ -358,7 +358,7 @@ out:
   if (G_IS_VALUE (&v))
     g_value_unset (&v);
   if (target)
-    g_object_unref (target);
+    gst_object_unref (target);
   return;
 
 error:
@@ -446,7 +446,7 @@ out:
   if (G_IS_VALUE (&v))
     g_value_unset (&v);
   if (target)
-    g_object_unref (target);
+    gst_object_unref (target);
   return;
 
 error:

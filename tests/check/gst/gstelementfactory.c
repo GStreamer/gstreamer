@@ -72,7 +72,7 @@ GST_START_TEST (test_create)
   factory = setup_factory ();
   fail_if (factory == NULL);
 
-  g_object_unref (factory);
+  gst_object_unref (factory);
 }
 
 GST_END_TEST;
@@ -93,7 +93,7 @@ GST_START_TEST (test_can_sink_any_caps)
   fail_if (!res);
   gst_caps_unref (caps);
 
-  g_object_unref (factory);
+  gst_object_unref (factory);
 }
 
 GST_END_TEST;
@@ -114,7 +114,7 @@ GST_START_TEST (test_can_sink_all_caps)
   fail_if (res);
   gst_caps_unref (caps);
 
-  g_object_unref (factory);
+  gst_object_unref (factory);
 }
 
 GST_END_TEST;

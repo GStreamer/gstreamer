@@ -81,11 +81,11 @@ GST_START_TEST (test_set_default)
   gst_object_ref_sink (clock);
   gst_system_clock_set_default (clock);
   g_assert_cmpint (GST_OBJECT_REFCOUNT (static_clock), ==, 1);
-  g_object_unref (static_clock);
+  gst_object_unref (static_clock);
   static_clock = gst_system_clock_obtain ();
   fail_unless (static_clock == clock);
   g_assert_cmpint (GST_OBJECT_REFCOUNT (clock), ==, 3);
-  g_object_unref (static_clock);
+  gst_object_unref (static_clock);
 
   /* Reset the default clock to the static one */
   gst_system_clock_set_default (NULL);
@@ -93,8 +93,8 @@ GST_START_TEST (test_set_default)
   fail_unless (static_clock != clock);
   g_assert_cmpint (GST_OBJECT_REFCOUNT (clock), ==, 1);
   g_assert_cmpint (GST_OBJECT_REFCOUNT (static_clock), ==, 2);
-  g_object_unref (clock);
-  g_object_unref (static_clock);
+  gst_object_unref (clock);
+  gst_object_unref (static_clock);
 }
 
 GST_END_TEST;
@@ -221,7 +221,7 @@ GST_START_TEST (test_resolution)
     prev_t = now_t;
     g_thread_yield ();
   }
-  g_object_unref (clock);
+  gst_object_unref (clock);
   clock = NULL;
 }
 
@@ -270,7 +270,7 @@ single_shot_wait_thread_func (gpointer data)
     g_mutex_unlock (&d->lock);
   }
 
-  g_object_unref (clock);
+  gst_object_unref (clock);
 
   return NULL;
 }

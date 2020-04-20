@@ -345,8 +345,8 @@ GST_START_TEST (test_pad_templates)
   test = g_object_new (gst_test_element_get_type (), NULL);
   test2 = g_object_new (gst_test_element2_get_type (), NULL);
 
-  g_object_unref (test);
-  g_object_unref (test2);
+  gst_object_unref (test);
+  gst_object_unref (test2);
 }
 
 GST_END_TEST;
@@ -763,8 +763,8 @@ GST_START_TEST (test_request_pad_templates)
           "sink"));
   gst_element_unlink (GST_ELEMENT (test), sink);
 
-  g_object_unref (test);
-  g_object_unref (sink);
+  gst_object_unref (test);
+  gst_object_unref (sink);
 
   /* gst_parse_launch */
   gst_plugin_register_static (GST_VERSION_MAJOR,

@@ -118,7 +118,7 @@ GST_START_TEST (test_merge)
   gst_tag_list_unref (list2);
   gst_tag_list_unref (list1);
 
-  g_object_unref (enc);
+  gst_object_unref (enc);
 }
 
 GST_END_TEST
@@ -319,7 +319,7 @@ GST_START_TEST (test_threads)
   g_thread_join (threads[1]);
   g_thread_join (threads[2]);
 
-  g_object_unref (G_OBJECT (setter));
+  gst_object_unref (G_OBJECT (setter));
 }
 
 GST_END_TEST static Suite *

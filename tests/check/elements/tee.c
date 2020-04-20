@@ -680,8 +680,8 @@ GST_START_TEST (test_allow_not_linked)
           gst_buffer_ref (buffer)) == GST_FLOW_NOT_LINKED);
 
   gst_element_release_request_pad (tee, src2);
-  g_object_unref (src1);
-  g_object_unref (src2);
+  gst_object_unref (src1);
+  gst_object_unref (src2);
 
   fail_unless (gst_pad_push (srcpad,
           gst_buffer_ref (buffer)) == GST_FLOW_NOT_LINKED);

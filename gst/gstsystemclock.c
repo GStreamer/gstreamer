@@ -578,7 +578,7 @@ gst_system_clock_set_default (GstClock * new_clock)
   clock = _the_system_clock;
 
   if (clock != NULL)
-    g_object_unref (clock);
+    gst_object_unref (clock);
 
   if (new_clock == NULL) {
     GST_CAT_DEBUG (GST_CAT_CLOCK, "resetting default system clock");

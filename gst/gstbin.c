@@ -1120,7 +1120,7 @@ gst_bin_do_deep_add_remove (GstBin * bin, gint sig_id, const gchar * sig_name,
     do {
       ires = gst_iterator_foreach (it, bin_deep_iterator_foreach, &elements);
       if (ires != GST_ITERATOR_DONE) {
-        g_queue_foreach (&elements, (GFunc) g_object_unref, NULL);
+        g_queue_foreach (&elements, (GFunc) gst_object_unref, NULL);
         g_queue_clear (&elements);
       }
       if (ires == GST_ITERATOR_RESYNC)
@@ -1139,7 +1139,7 @@ gst_bin_do_deep_add_remove (GstBin * bin, gint sig_id, const gchar * sig_name,
               " in bin %" GST_PTR_FORMAT, sig_name, e, parent);
           g_signal_emit (bin, sig_id, 0, parent, e);
           gst_object_unref (parent);
-          g_object_unref (e);
+          gst_object_unref (e);
         }
       }
     }

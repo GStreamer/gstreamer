@@ -403,7 +403,7 @@ GST_START_TEST (test_fake_object_name_threaded_unique)
   g_free (name1);
 
   /* free stuff */
-  g_list_foreach (object_list, (GFunc) g_object_unref, NULL);
+  g_list_foreach (object_list, (GFunc) gst_object_unref, NULL);
 }
 
 GST_END_TEST;
