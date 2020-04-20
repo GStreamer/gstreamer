@@ -252,6 +252,9 @@ gst_h264_dpb_delete_by_poc (GstH264Dpb * dpb, gint poc)
         g_array_index (dpb->pic_list, GstH264Picture *, i);
 
     if (picture->pic_order_cnt == poc) {
+      GST_TRACE ("remove picture %p for poc %d (frame num %d) from dpb",
+          picture, poc, picture->frame_num);
+
       g_array_remove_index (dpb->pic_list, i);
       return;
     }

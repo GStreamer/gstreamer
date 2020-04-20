@@ -1130,6 +1130,9 @@ gst_h264_decoder_do_output_picture (GstH264Decoder * self,
     return;
   }
 
+  GST_LOG_OBJECT (self, "Outputting picture %p (frame_num %d, poc %d)",
+      picture, picture->frame_num, picture->pic_order_cnt);
+
   if (picture->pic_order_cnt < priv->last_output_poc) {
     GST_WARNING_OBJECT (self,
         "Outputting out of order %d -> %d, likely a broken stream",
@@ -1157,8 +1160,14 @@ gst_h264_decoder_finish_current_picture (GstH264Decoder * self)
   klass = GST_H264_DECODER_GET_CLASS (self);
 
   if (klass->end_picture) {
-    if (!klass->end_picture (self, priv->current_picture))
+    if (!klass->end_picture (self, priv->current_picture)) {
+      GST_WARNING_OBJECT (self,
+          "end picture failed, marking picture %p non-existing "
+          "(frame_num %d, poc %d)", priv->current_picture,
+          priv->current_picture->frame_num,
+          priv->current_picture->pic_order_cnt);
       priv->current_picture->nonexisting = TRUE;
+    }
   }
 
   /* finish picture takes ownership of the picture */
@@ -1371,6 +1380,10 @@ gst_h264_decoder_sliding_window_picture_marking (GstH264Decoder * self)
       return FALSE;
     }
 
+    GST_TRACE_OBJECT (self,
+        "Unmark reference flag of picture %p (frame_num %d, poc %d)",
+        to_unmark, to_unmark->frame_num, to_unmark->pic_order_cnt);
+
     to_unmark->ref = FALSE;
     gst_h264_picture_unref (to_unmark);
   }
@@ -1409,6 +1422,13 @@ gst_h264_decoder_reference_picture_marking (GstH264Decoder * self,
    * from DPB and how to mark/unmark existing reference pictures, do so.
    * Otherwise, fall back to default sliding window process */
   if (picture->dec_ref_pic_marking.adaptive_ref_pic_marking_mode_flag) {
+    if (picture->nonexisting) {
+      GST_WARNING_OBJECT (self,
+          "Invalid memory management operation for non-existing picture "
+          "%p (frame_num %d, poc %d", picture, picture->frame_num,
+          picture->pic_order_cnt);
+    }
+
     return gst_h264_decoder_handle_memory_management_opt (self, picture);
   }
 
@@ -1470,7 +1490,8 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
     GstH264Picture *tmp = (GstH264Picture *) iter->data;
 
     GST_TRACE_OBJECT (self,
-        "\t%dth picture %p (poc %d)", i, tmp, tmp->pic_order_cnt);
+        "\t%dth picture %p (frame_num %d, poc %d)", i, tmp,
+        tmp->frame_num, tmp->pic_order_cnt);
     i++;
   }
 #endif
@@ -1486,7 +1507,8 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
     GstH264Picture *tmp = (GstH264Picture *) iter->data;
 
     GST_TRACE_OBJECT (self,
-        "\t%dth picture %p (poc %d)", i, tmp, tmp->pic_order_cnt);
+        "\t%dth picture %p (frame_num %d, poc %d)", i, tmp,
+        tmp->frame_num, tmp->pic_order_cnt);
     i++;
   }
 #endif
@@ -1766,11 +1788,15 @@ gst_h264_decoder_decode_slice (GstH264Decoder * self)
   GstH264DecoderPrivate *priv = self->priv;
   GstH264Slice *slice = &priv->current_slice;
   GstH264Picture *picture = priv->current_picture;
+  gboolean ret;
 
   if (!picture) {
     GST_ERROR_OBJECT (self, "No current picture");
     return FALSE;
   }
+
+  GST_LOG_OBJECT (self, "Decode picture %p (frame_num %d, poc %d)",
+      picture, picture->frame_num, picture->pic_order_cnt);
 
   if (slice->header.field_pic_flag == 0)
     priv->max_pic_num = priv->max_frame_num;
@@ -1779,5 +1805,12 @@ gst_h264_decoder_decode_slice (GstH264Decoder * self)
 
   g_assert (klass->decode_slice);
 
-  return klass->decode_slice (self, picture, slice);
+  ret = klass->decode_slice (self, picture, slice);
+  if (!ret) {
+    GST_WARNING_OBJECT (self,
+        "Subclass didn't want to decode picture %p (frame_num %d, poc %d)",
+        picture, picture->frame_num, picture->pic_order_cnt);
+  }
+
+  return ret;
 }
