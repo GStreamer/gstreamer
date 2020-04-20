@@ -613,7 +613,8 @@ gst_h264_decoder_start_current_picture (GstH264Decoder * self)
 
   /* 7.4.3 */
   if (frame_num != priv->prev_ref_frame_num &&
-      frame_num != (priv->prev_ref_frame_num + 1) % priv->max_frame_num) {
+      frame_num != (priv->prev_ref_frame_num + 1) % priv->max_frame_num &&
+      gst_h264_dpb_get_size (priv->dpb) > 0) {
     if (!gst_h264_decoder_handle_frame_num_gap (self, frame_num))
       return FALSE;
   }
