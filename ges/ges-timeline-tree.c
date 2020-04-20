@@ -198,18 +198,6 @@ timeline_tree_debug (GNode * root)
       (GNodeTraverseFunc) print_node, NULL);
 }
 
-static inline GESTimelineElement *
-get_toplevel_container (gpointer element)
-{
-  GESTimelineElement *ret =
-      ges_timeline_element_get_toplevel_parent ((GESTimelineElement
-          *) (element));
-
-  /*  We own a ref to the elements ourself */
-  gst_object_unref (ret);
-  return ret;
-}
-
 static GNode *
 find_node (GNode * root, gpointer element)
 {
@@ -246,7 +234,7 @@ timeline_tree_track_element (GNode * root, GESTimelineElement * element)
   g_signal_connect (element, "notify::parent",
       G_CALLBACK (timeline_element_parent_cb), root);
 
-  toplevel = get_toplevel_container (element);
+  toplevel = ges_timeline_element_peak_toplevel (element);
   if (toplevel == element) {
     GST_DEBUG ("Tracking toplevel element %" GES_FORMAT, GES_ARGS (element));
 
@@ -1462,7 +1450,6 @@ static gboolean
 perform_element_edit (GESTimelineElement * element, EditData * edit)
 {
   gboolean ret = FALSE;
-  GESTimelineElement *toplevel = get_toplevel_container (element);
   guint32 layer_prio = ges_timeline_element_get_layer_priority (element);
 
   switch (edit->mode) {
@@ -1496,8 +1483,7 @@ perform_element_edit (GESTimelineElement * element, EditData * edit)
     return FALSE;
   }
 
-  ELEMENT_SET_FLAG (element, GES_TIMELINE_ELEMENT_SET_SIMPLE);
-  ELEMENT_SET_FLAG (toplevel, GES_TIMELINE_ELEMENT_SET_SIMPLE);
+  GES_TIMELINE_ELEMENT_SET_BEING_EDITED (element);
   if (GST_CLOCK_TIME_IS_VALID (edit->start)) {
     if (!ges_timeline_element_set_start (element, edit->start)) {
       GST_ERROR_OBJECT (element, "Failed to set the start");
@@ -1541,8 +1527,7 @@ perform_element_edit (GESTimelineElement * element, EditData * edit)
   ret = TRUE;
 
 done:
-  ELEMENT_UNSET_FLAG (element, GES_TIMELINE_ELEMENT_SET_SIMPLE);
-  ELEMENT_UNSET_FLAG (toplevel, GES_TIMELINE_ELEMENT_SET_SIMPLE);
+  GES_TIMELINE_ELEMENT_UNSET_BEING_EDITED (element);
 
   return ret;
 }
@@ -1594,7 +1579,7 @@ timeline_tree_ripple (GNode * root, GESTimelineElement * element,
 
   _REPLACE_TRACK_ELEMENT_WITH_PARENT (element);
 
-  ripple_toplevel = get_toplevel_container (element);
+  ripple_toplevel = ges_timeline_element_peak_toplevel (element);
 
   /* if EDGE_END:
    *   TRIM_END the element, and MOVE all toplevels whose start is after
@@ -1797,7 +1782,7 @@ timeline_tree_move (GNode * root, GESTimelineElement * element,
       GST_INFO_OBJECT (element, "Moving with toplevel with offset %"
           G_GINT64_FORMAT " and layer offset %" G_GINT64_FORMAT, offset,
           layer_priority_offset);
-      element = get_toplevel_container (element);
+      element = ges_timeline_element_peak_toplevel (element);
       mode = EDIT_MOVE;
       break;
     default:

@@ -554,8 +554,7 @@ _update_start_duration (GESContainer * container, GESTimelineElement * child)
 {
   GList *tmp;
   GstClockTime duration, end = 0, start = G_MAXUINT64;
-  gboolean was_setting_simple =
-      ELEMENT_FLAG_IS_SET (container, GES_TIMELINE_ELEMENT_SET_SIMPLE);
+  gboolean was_being_edited = GES_TIMELINE_ELEMENT_BEING_EDITED (container);
 
   if (!container->children) {
     /* If we are now empty, keep the same duration and start. This works
@@ -565,7 +564,7 @@ _update_start_duration (GESContainer * container, GESTimelineElement * child)
     return;
   }
 
-  ELEMENT_SET_FLAG (container, GES_TIMELINE_ELEMENT_SET_SIMPLE);
+  GES_TIMELINE_ELEMENT_SET_BEING_EDITED (container);
 
   for (tmp = container->children; tmp; tmp = tmp->next) {
     start = MIN (start, _START (tmp->data));
@@ -592,8 +591,8 @@ _update_start_duration (GESContainer * container, GESTimelineElement * child)
     if (prev_dur != duration)
       g_object_notify (G_OBJECT (container), "duration");
   }
-  if (!was_setting_simple)
-    ELEMENT_UNSET_FLAG (container, GES_TIMELINE_ELEMENT_SET_SIMPLE);
+  if (!was_being_edited)
+    GES_TIMELINE_ELEMENT_UNSET_BEING_EDITED (container);
 
   g_hash_table_foreach (container->priv->mappings,
       (GHFunc) _resync_position_offsets, container);
@@ -607,24 +606,24 @@ _child_start_changed_cb (GESTimelineElement * child,
 
   GESContainerPrivate *priv = container->priv;
   GESTimelineElement *element = GES_TIMELINE_ELEMENT (container);
-  GESChildrenControlMode pmode = container->children_control_mode;
+  GESChildrenControlMode mode = container->children_control_mode;
+
+  if (mode == GES_CHILDREN_IGNORE_NOTIFIES)
+    return;
+
+  if (GES_TIMELINE_ELEMENT_BEING_EDITED (child))
+    mode = GES_CHILDREN_UPDATE_ALL_VALUES;
 
   map = g_hash_table_lookup (priv->mappings, child);
   g_assert (map);
 
-  if (ELEMENT_FLAG_IS_SET (child, GES_TIMELINE_ELEMENT_SET_SIMPLE))
-    container->children_control_mode = GES_CHILDREN_UPDATE_ALL_VALUES;
-
-  switch (container->children_control_mode) {
-    case GES_CHILDREN_IGNORE_NOTIFIES:
-      break;
+  switch (mode) {
     case GES_CHILDREN_UPDATE_ALL_VALUES:
       _update_start_duration (container, child);
       break;
     case GES_CHILDREN_UPDATE_OFFSETS:
       map->start_offset = _START (container) - _START (child);
       break;
-
     case GES_CHILDREN_UPDATE:
       /* We update all the children calling our set_start method */
       container->initiated_move = child;
@@ -634,8 +633,6 @@ _child_start_changed_cb (GESTimelineElement * child,
     default:
       break;
   }
-
-  container->children_control_mode = pmode;
 }
 
 static void
@@ -646,20 +643,18 @@ _child_duration_changed_cb (GESTimelineElement * child,
 
   GESContainerPrivate *priv = container->priv;
   GESTimelineElement *element = GES_TIMELINE_ELEMENT (container);
-  GESChildrenControlMode pmode = container->children_control_mode;
+  GESChildrenControlMode mode = container->children_control_mode;
 
-  if (pmode == GES_CHILDREN_IGNORE_NOTIFIES)
+  if (mode == GES_CHILDREN_IGNORE_NOTIFIES)
     return;
 
-  if (ELEMENT_FLAG_IS_SET (child, GES_TIMELINE_ELEMENT_SET_SIMPLE))
-    container->children_control_mode = GES_CHILDREN_UPDATE_ALL_VALUES;
+  if (GES_TIMELINE_ELEMENT_BEING_EDITED (child))
+    mode = GES_CHILDREN_UPDATE_ALL_VALUES;
 
   map = g_hash_table_lookup (priv->mappings, child);
   g_assert (map);
 
-  switch (container->children_control_mode) {
-    case GES_CHILDREN_IGNORE_NOTIFIES:
-      break;
+  switch (mode) {
     case GES_CHILDREN_UPDATE_ALL_VALUES:
       _update_start_duration (container, child);
       break;
@@ -678,8 +673,6 @@ _child_duration_changed_cb (GESTimelineElement * child,
     default:
       break;
   }
-
-  container->children_control_mode = pmode;
 }
 
 /****************************************************

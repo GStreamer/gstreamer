@@ -203,7 +203,7 @@ _child_clip_changed_layer_cb (GESTimelineElement * clip,
   /* sigids takes ownership of new_layer, we take ownership of old_layer */
   sigids->layer = new_layer;
 
-  if (ELEMENT_FLAG_IS_SET (clip, GES_TIMELINE_ELEMENT_SET_SIMPLE)) {
+  if (GES_TIMELINE_ELEMENT_BEING_EDITED (clip)) {
     GST_DEBUG_OBJECT (container, "Not moving with change in priority of "
         "clip child %" GES_FORMAT, GES_ARGS (clip));
     _update_our_values (GES_GROUP (clip->parent));
@@ -262,7 +262,8 @@ _child_group_priority_changed (GESTimelineElement * child,
     return;
   }
   /* if a child group is simply updating its values we will do the same */
-  if (child_group->priv->updating_priority) {
+  if (child_group->priv->updating_priority ||
+      GES_TIMELINE_ELEMENT_BEING_EDITED (child)) {
     GST_DEBUG_OBJECT (container, "Not moving with change in priority of "
         "group child %" GES_FORMAT " because it is not moving itself",
         GES_ARGS (child_group));
@@ -318,8 +319,6 @@ _set_priority (GESTimelineElement * element, guint32 priority)
   if (GES_GROUP (element)->priv->updating_priority == TRUE)
     return TRUE;
 
-  container->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
-
   layers = GES_TIMELINE_ELEMENT_TIMELINE (element) ?
       GES_TIMELINE_ELEMENT_TIMELINE (element)->layers : NULL;
   if (layers == NULL) {
@@ -332,11 +331,15 @@ _set_priority (GESTimelineElement * element, guint32 priority)
 
   /* FIXME: why are we not shifting ->max_layer_prio? */
 
+  if (GES_TIMELINE_ELEMENT_BEING_EDITED (element))
+    return TRUE;
+
+  container->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
+
   for (tmp = GES_CONTAINER_CHILDREN (element); tmp; tmp = tmp->next) {
     GESTimelineElement *child = tmp->data;
 
-    if (child != container->initiated_move
-        || ELEMENT_FLAG_IS_SET (container, GES_TIMELINE_ELEMENT_SET_SIMPLE)) {
+    if (child != container->initiated_move) {
       if (GES_IS_CLIP (child)) {
         guint32 layer_prio = GES_TIMELINE_ELEMENT_LAYER_PRIORITY (child) + diff;
         GESLayer *layer =
@@ -370,33 +373,20 @@ _set_start (GESTimelineElement * element, GstClockTime start)
 {
   GList *tmp, *children;
   gint64 diff = start - _START (element);
-  GESTimeline *timeline;
   GESContainer *container = GES_CONTAINER (element);
-  GESTimelineElement *toplevel =
-      ges_timeline_element_get_toplevel_parent (element);
 
-  gst_object_unref (toplevel);
   if (GES_GROUP (element)->priv->setting_value == TRUE)
     /* Let GESContainer update itself */
     return GES_TIMELINE_ELEMENT_CLASS (parent_class)->set_start (element,
         start);
 
-  if (ELEMENT_FLAG_IS_SET (element, GES_TIMELINE_ELEMENT_SET_SIMPLE) ||
-      ELEMENT_FLAG_IS_SET (toplevel, GES_TIMELINE_ELEMENT_SET_SIMPLE)) {
-    /* get copy of children, since GESContainer may resort the group */
-    children = ges_container_get_children (container, FALSE);
-    container->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
-    for (tmp = children; tmp; tmp = tmp->next)
-      _set_start0 (tmp->data, _START (tmp->data) + diff);
-    container->children_control_mode = GES_CHILDREN_UPDATE;
-    g_list_free_full (children, gst_object_unref);
-    return TRUE;
-  }
-
-  timeline = GES_TIMELINE_ELEMENT_TIMELINE (element);
-  if (timeline)
-    return ges_timeline_move_object_simple (timeline, element, NULL,
-        GES_EDGE_NONE, start);
+  /* get copy of children, since GESContainer may resort the group */
+  children = ges_container_get_children (container, FALSE);
+  container->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
+  for (tmp = children; tmp; tmp = tmp->next)
+    _set_start0 (tmp->data, _START (tmp->data) + diff);
+  container->children_control_mode = GES_CHILDREN_UPDATE;
+  g_list_free_full (children, gst_object_unref);
 
   return TRUE;
 }

@@ -297,7 +297,7 @@ _update_duration_limit (GESClip * self)
         GST_TIME_FORMAT, GST_TIME_ARGS (duration_limit));
 
     if (_CLOCK_TIME_IS_LESS (duration_limit, element->duration)
-        && !ELEMENT_FLAG_IS_SET (self, GES_TIMELINE_ELEMENT_SET_SIMPLE)) {
+        && !GES_TIMELINE_ELEMENT_BEING_EDITED (self)) {
       gboolean res;
 
       GST_INFO_OBJECT (self, "Automatically reducing duration to %"
@@ -667,11 +667,8 @@ _set_duration (GESTimelineElement * element, GstClockTime duration)
   for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
     GESTimelineElement *child = (GESTimelineElement *) tmp->data;
 
-    if (child != container->initiated_move) {
-      ELEMENT_SET_FLAG (child, GES_TIMELINE_ELEMENT_SET_SIMPLE);
+    if (child != container->initiated_move)
       _set_duration0 (GES_TIMELINE_ELEMENT (child), duration);
-      ELEMENT_UNSET_FLAG (child, GES_TIMELINE_ELEMENT_SET_SIMPLE);
-    }
   }
   container->children_control_mode = GES_CHILDREN_UPDATE;
   g_list_free_full (children, gst_object_unref);
@@ -1880,8 +1877,7 @@ ges_clip_move_to_layer (GESClip * clip, GESLayer * layer)
     return FALSE;
   }
 
-  if (layer->timeline
-      && !ELEMENT_FLAG_IS_SET (clip, GES_TIMELINE_ELEMENT_SET_SIMPLE)) {
+  if (layer->timeline && !GES_TIMELINE_ELEMENT_BEING_EDITED (clip)) {
     /* move to new layer, also checks moving of toplevel */
     return timeline_tree_move (timeline_get_tree (layer->timeline),
         element, (gint64) ges_layer_get_priority (current_layer) -
@@ -2308,10 +2304,9 @@ ges_clip_split (GESClip * clip, guint64 position)
           gst_object_ref (track));
   }
 
-  ELEMENT_SET_FLAG (clip, GES_TIMELINE_ELEMENT_SET_SIMPLE);
+  GES_TIMELINE_ELEMENT_SET_BEING_EDITED (clip);
   _set_duration0 (GES_TIMELINE_ELEMENT (clip), old_duration);
-  ELEMENT_UNSET_FLAG (clip, GES_TIMELINE_ELEMENT_SET_SIMPLE);
-  g_object_notify (G_OBJECT (clip), "duration");
+  GES_TIMELINE_ELEMENT_UNSET_BEING_EDITED (clip);
 
   /* add to the track after the duration change so we don't overlap! */
   for (tmp = GES_CONTAINER_CHILDREN (new_object); tmp; tmp = tmp->next) {

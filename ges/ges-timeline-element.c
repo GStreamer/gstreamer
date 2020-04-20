@@ -673,6 +673,18 @@ _set_name (GESTimelineElement * self, const gchar * wanted_name)
 /*********************************************
  *       Internal and private helpers        *
  *********************************************/
+
+GESTimelineElement *
+ges_timeline_element_peak_toplevel (GESTimelineElement * self)
+{
+  GESTimelineElement *toplevel = self;
+
+  while (toplevel->parent)
+    toplevel = toplevel->parent;
+
+  return toplevel;
+}
+
 gdouble
 ges_timeline_element_get_media_duration_factor (GESTimelineElement * self)
 {
@@ -1072,18 +1084,11 @@ ges_timeline_element_set_start (GESTimelineElement * self, GstClockTime start)
       " new start: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GES_TIMELINE_ELEMENT_START (self)), GST_TIME_ARGS (start));
 
-  toplevel_container = ges_timeline_element_get_toplevel_parent (self);
-
-  if (self->timeline
-      && !ELEMENT_FLAG_IS_SET (self, GES_TIMELINE_ELEMENT_SET_SIMPLE)
-      && !ELEMENT_FLAG_IS_SET (toplevel_container,
-          GES_TIMELINE_ELEMENT_SET_SIMPLE)) {
-
-    gst_object_unref (toplevel_container);
-
+  if (self->timeline && !GES_TIMELINE_ELEMENT_BEING_EDITED (self))
     return ges_timeline_element_edit (self, NULL, -1, GES_EDIT_MODE_NORMAL,
         GES_EDGE_NONE, start);
-  }
+
+  toplevel_container = ges_timeline_element_peak_toplevel (self);
   parent = self->parent;
 
   /* FIXME This should not belong to GESTimelineElement */
@@ -1097,11 +1102,9 @@ ges_timeline_element_set_start (GESTimelineElement * self, GstClockTime start)
         "Can not move the object as it would imply its "
         "container to have a negative start value");
 
-    gst_object_unref (toplevel_container);
     return FALSE;
   }
 
-  gst_object_unref (toplevel_container);
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
   if (klass->set_start) {
     gint res = klass->set_start (self, start);
@@ -1256,22 +1259,15 @@ ges_timeline_element_set_duration (GESTimelineElement * self,
     GstClockTime duration)
 {
   GESTimelineElementClass *klass;
-  GESTimelineElement *toplevel;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
 
   if (duration == self->duration)
     return TRUE;
 
-  toplevel = ges_timeline_element_get_toplevel_parent (self);
-  if (self->timeline &&
-      !ELEMENT_FLAG_IS_SET (self, GES_TIMELINE_ELEMENT_SET_SIMPLE) &&
-      !ELEMENT_FLAG_IS_SET (toplevel, GES_TIMELINE_ELEMENT_SET_SIMPLE)) {
-    gst_object_unref (toplevel);
+  if (self->timeline && !GES_TIMELINE_ELEMENT_BEING_EDITED (self))
     return ges_timeline_element_edit (self, NULL, -1, GES_EDIT_MODE_TRIM,
         GES_EDGE_END, self->start + duration);
-  }
-  gst_object_unref (toplevel);
 
   GST_DEBUG_OBJECT (self, "current duration: %" GST_TIME_FORMAT
       " new duration: %" GST_TIME_FORMAT,
@@ -1707,12 +1703,11 @@ G_GNUC_END_IGNORE_DEPRECATIONS; /* End ignoring GParameter deprecation */
 GESTimelineElement *
 ges_timeline_element_get_toplevel_parent (GESTimelineElement * self)
 {
-  GESTimelineElement *toplevel = self;
+  GESTimelineElement *toplevel;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), NULL);
 
-  while (GES_TIMELINE_ELEMENT_PARENT (toplevel))
-    toplevel = GES_TIMELINE_ELEMENT_PARENT (toplevel);
+  toplevel = ges_timeline_element_peak_toplevel (self);
 
   return gst_object_ref (toplevel);
 }

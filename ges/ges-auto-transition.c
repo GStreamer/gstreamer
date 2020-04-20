@@ -44,24 +44,22 @@ neighbour_changed_cb (GESClip * clip, GParamSpec * arg G_GNUC_UNUSED,
 {
   gint64 new_duration;
   GESTimelineElement *parent =
-      ges_timeline_element_get_toplevel_parent (GES_TIMELINE_ELEMENT (clip));
+      ges_timeline_element_peak_toplevel (GES_TIMELINE_ELEMENT (clip));
 
-  if (ELEMENT_FLAG_IS_SET (parent, GES_TIMELINE_ELEMENT_SET_SIMPLE)) {
+  if (GES_TIMELINE_ELEMENT_BEING_EDITED (parent))
     return;
-  }
 
   if (parent) {
     GESTimelineElement *prev_topparent =
-        ges_timeline_element_get_toplevel_parent (GES_TIMELINE_ELEMENT
+        ges_timeline_element_peak_toplevel (GES_TIMELINE_ELEMENT
         (self->next_source));
     GESTimelineElement *next_topparent =
-        ges_timeline_element_get_toplevel_parent (GES_TIMELINE_ELEMENT
+        ges_timeline_element_peak_toplevel (GES_TIMELINE_ELEMENT
         (self->previous_source));
 
-    if (ELEMENT_FLAG_IS_SET (prev_topparent, GES_TIMELINE_ELEMENT_SET_SIMPLE) ||
-        ELEMENT_FLAG_IS_SET (next_topparent, GES_TIMELINE_ELEMENT_SET_SIMPLE)) {
+    if (GES_TIMELINE_ELEMENT_BEING_EDITED (prev_topparent) ||
+        GES_TIMELINE_ELEMENT_BEING_EDITED (next_topparent))
       return;
-    }
 
     if (parent == prev_topparent && parent == next_topparent) {
       GST_DEBUG_OBJECT (self,
@@ -91,11 +89,11 @@ neighbour_changed_cb (GESClip * clip, GParamSpec * arg G_GNUC_UNUSED,
   }
 
   self->positioning = TRUE;
-  ELEMENT_SET_FLAG (self->transition_clip, GES_TIMELINE_ELEMENT_SET_SIMPLE);
+  GES_TIMELINE_ELEMENT_SET_BEING_EDITED (self->transition_clip);
   _set_start0 (GES_TIMELINE_ELEMENT (self->transition_clip),
       _START (self->next_source));
   _set_duration0 (GES_TIMELINE_ELEMENT (self->transition_clip), new_duration);
-  ELEMENT_UNSET_FLAG (self->transition_clip, GES_TIMELINE_ELEMENT_SET_SIMPLE);
+  GES_TIMELINE_ELEMENT_UNSET_BEING_EDITED (self->transition_clip);
   self->positioning = FALSE;
 }
 

@@ -86,6 +86,21 @@ GstDebugCategory * _ges_debug (void);
 #define GES_TRACK_ELEMENT_IS_CORE(child) \
   (ges_track_element_get_creator_asset (GES_TRACK_ELEMENT (child)) != NULL)
 
+#define GES_TIMELINE_ELEMENT_SET_BEING_EDITED(element) \
+  ELEMENT_SET_FLAG ( \
+      ges_timeline_element_peak_toplevel (GES_TIMELINE_ELEMENT (element)), \
+      GES_TIMELINE_ELEMENT_SET_SIMPLE)
+
+#define GES_TIMELINE_ELEMENT_UNSET_BEING_EDITED(element) \
+  ELEMENT_UNSET_FLAG ( \
+      ges_timeline_element_peak_toplevel (GES_TIMELINE_ELEMENT (element)), \
+      GES_TIMELINE_ELEMENT_SET_SIMPLE)
+
+#define GES_TIMELINE_ELEMENT_BEING_EDITED(element) \
+  ELEMENT_FLAG_IS_SET ( \
+      ges_timeline_element_peak_toplevel (GES_TIMELINE_ELEMENT (element)), \
+      GES_TIMELINE_ELEMENT_SET_SIMPLE)
+
 #define SUPRESS_UNUSED_WARNING(a) (void)a
 
 
@@ -443,6 +458,7 @@ typedef enum
   GES_TIMELINE_ELEMENT_SET_SIMPLE = (1 << 1),
 } GESTimelineElementFlags;
 
+G_GNUC_INTERNAL GESTimelineElement * ges_timeline_element_peak_toplevel (GESTimelineElement * self);
 G_GNUC_INTERNAL gdouble ges_timeline_element_get_media_duration_factor(GESTimelineElement *self);
 G_GNUC_INTERNAL GESTimelineElement * ges_timeline_element_get_copied_from (GESTimelineElement *self);
 G_GNUC_INTERNAL GESTimelineElementFlags ges_timeline_element_flags (GESTimelineElement *self);
