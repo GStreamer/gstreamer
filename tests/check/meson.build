@@ -54,6 +54,7 @@ good_tests = [
   [ 'elements/matroskaparse', false, [gstriff_dep] ],
   [ 'elements/multifile' ],
   [ 'elements/splitmuxsink', ],
+  [ 'elements/splitmuxsinktimecode', ],
   [ 'elements/splitmuxsrc', ],
   [ 'elements/qtmux', false, [gstriff_dep, zlib_dep] ],
   [ 'elements/qtdemux', false, [gstriff_dep, zlib_dep] ],
