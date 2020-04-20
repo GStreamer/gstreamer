@@ -20,6 +20,10 @@
 # Prefix where we will temporarily install everything
 PREFIX=$WORK/prefix
 mkdir -p $PREFIX
+# always try getting the arguments for static compilation/linking
+# Fixes GModule not being picked when gstreamer-1.0.pc is looked up by meson
+# more or less https://github.com/mesonbuild/meson/pull/6629
+export PKG_CONFIG="`which pkg-config` --static"
 export PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig
 export PATH=$PREFIX/bin:$PATH
 
@@ -31,14 +35,27 @@ echo "CFLAGS : " $CFLAGS
 echo "CXXFLAGS : " $CXXFLAGS
 PLUGIN_DIR=$PREFIX/lib/gstreamer-1.0
 
+rm -rf $WORK/*
+
 # Switch to work directory
 cd $WORK
 
 # 1) BUILD GLIB AND GSTREAMER
 # Note: we build glib ourselves so that we get proper malloc/free backtraces
-tar xvJf $SRC/glib-2.54.2.tar.xz
-cd glib-2.54.2
-./configure --prefix=$PREFIX --enable-static --disable-shared --disable-libmount --with-pcre=internal && make -j$(nproc) && make install
+tar xvJf $SRC/glib-2.64.2.tar.xz
+cd glib-2.64.2
+# options taken from glib's oss-fuzz build definition
+meson \
+    --prefix=$PREFIX \
+    --libdir=lib \
+    --default-library=static \
+    -Db_lundef=false \
+    -Doss_fuzz=enabled \
+    -Dlibmount=disabled \
+    -Dinternal_pcre=true \
+    _builddir
+ninja -C _builddir
+ninja -C _builddir install
 cd ..
 
 # Note: We don't use/build orc since it still seems to be problematic
@@ -49,11 +66,18 @@ for i in gstreamer gst-plugins-base;
 do
     mkdir -p $i
     cd $i
-    $SRC/$i/autogen.sh --prefix=$PREFIX --disable-shared --enable-static --disable-examples \
-		       --disable-gtk-doc --disable-introspection --enable-static-plugins \
-		       --disable-gst-tracer-hooks --disable-registry
-    make -j$(nproc)
-    make install
+    meson \
+        --prefix=$PREFIX \
+        --libdir=lib \
+        --default-library=static \
+        -Db_lundef=false \
+        -Ddoc=disabled \
+        -Dexamples=disabled \
+        -Dintrospection=disabled \
+        -Dtracer_hooks=false \
+        -Dregistry=false _builddir $SRC/$i
+    ninja -C _builddir
+    ninja -C _builddir install
     cd ..
 done
 
@@ -77,7 +101,7 @@ PREDEPS_LDFLAGS="-Wl,-Bdynamic -ldl -lm -pthread -lrt -lpthread"
 # These are the basic .pc dependencies required to build any of the fuzzing targets
 # That is : glib, gstreamer core and gst-app
 # The extra target-specific dependencies are to be specified later
-COMMON_DEPS="glib-2.0 gstreamer-1.0 gstreamer-app-1.0"
+COMMON_DEPS="glib-2.0 gio-2.0 gstreamer-1.0 gstreamer-app-1.0"
 
 # For each target, defined the following:
 # TARGET_DEPS : Extra .pc dependencies for the target (in addition to $COMMON_DEPS)
