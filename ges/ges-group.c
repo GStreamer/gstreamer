@@ -292,21 +292,6 @@ _child_group_priority_changed (GESTimelineElement * child,
 /****************************************************
  *              GESTimelineElement vmethods         *
  ****************************************************/
-static gboolean
-_trim (GESTimelineElement * group, GstClockTime start)
-{
-  GESTimeline *timeline = GES_TIMELINE_ELEMENT_TIMELINE (group);
-
-  if (timeline == NULL) {
-    GST_DEBUG ("Not in a timeline yet");
-
-    return FALSE;
-  }
-
-  return timeline_tree_trim (timeline_get_tree (timeline), group,
-      0, GST_CLOCK_DIFF (start, _START (group)), GES_EDGE_START,
-      ges_timeline_get_snapping_distance (timeline));
-}
 
 static gboolean
 _set_priority (GESTimelineElement * element, guint32 priority)
@@ -704,7 +689,6 @@ ges_group_class_init (GESGroupClass * klass)
   object_class->get_property = ges_group_get_property;
   object_class->set_property = ges_group_set_property;
 
-  element_class->trim = _trim;
   element_class->set_duration = _set_duration;
   element_class->set_inpoint = _set_inpoint;
   element_class->set_max_duration = _set_max_duration;

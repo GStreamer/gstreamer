@@ -89,11 +89,6 @@
 
 static GList *ges_clip_create_track_elements_func (GESClip * clip,
     GESTrackType type);
-static gboolean _ripple (GESTimelineElement * element, GstClockTime start);
-static gboolean _ripple_end (GESTimelineElement * element, GstClockTime end);
-static gboolean _roll_start (GESTimelineElement * element, GstClockTime start);
-static gboolean _roll_end (GESTimelineElement * element, GstClockTime end);
-static gboolean _trim (GESTimelineElement * element, GstClockTime start);
 static void _compute_height (GESContainer * container);
 
 struct _GESClipPrivate
@@ -1627,11 +1622,6 @@ ges_clip_class_init (GESClipClass * klass)
   g_object_class_install_property (object_class, PROP_DURATION_LIMIT,
       properties[PROP_DURATION_LIMIT]);
 
-  element_class->ripple = _ripple;
-  element_class->ripple_end = _ripple_end;
-  element_class->roll_start = _roll_start;
-  element_class->roll_end = _roll_end;
-  element_class->trim = _trim;
   element_class->set_start = _set_start;
   element_class->set_duration = _set_duration;
   element_class->set_inpoint = _set_inpoint;
@@ -2355,45 +2345,6 @@ ges_clip_get_supported_formats (GESClip * clip)
   g_return_val_if_fail (GES_IS_CLIP (clip), GES_TRACK_TYPE_UNKNOWN);
 
   return clip->priv->supportedformats;
-}
-
-gboolean
-_ripple (GESTimelineElement * element, GstClockTime start)
-{
-  return ges_container_edit (GES_CONTAINER (element), NULL,
-      ges_timeline_element_get_layer_priority (element),
-      GES_EDIT_MODE_RIPPLE, GES_EDGE_NONE, start);
-}
-
-static gboolean
-_ripple_end (GESTimelineElement * element, GstClockTime end)
-{
-  return ges_container_edit (GES_CONTAINER (element), NULL,
-      ges_timeline_element_get_layer_priority (element),
-      GES_EDIT_MODE_RIPPLE, GES_EDGE_END, end);
-}
-
-gboolean
-_roll_start (GESTimelineElement * element, GstClockTime start)
-{
-  return ges_container_edit (GES_CONTAINER (element), NULL,
-      ges_timeline_element_get_layer_priority (element),
-      GES_EDIT_MODE_ROLL, GES_EDGE_START, start);
-}
-
-gboolean
-_roll_end (GESTimelineElement * element, GstClockTime end)
-{
-  return ges_container_edit (GES_CONTAINER (element), NULL,
-      ges_timeline_element_get_layer_priority (element),
-      GES_EDIT_MODE_ROLL, GES_EDGE_END, end);
-}
-
-gboolean
-_trim (GESTimelineElement * element, GstClockTime start)
-{
-  return ges_container_edit (GES_CONTAINER (element), NULL, -1,
-      GES_EDIT_MODE_TRIM, GES_EDGE_START, start);
 }
 
 /**

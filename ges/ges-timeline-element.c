@@ -1420,13 +1420,8 @@ ges_timeline_element_set_priority (GESTimelineElement * self, guint32 priority)
  * @start: The new start time of @self in ripple mode
  *
  * Edits the start time of an element within its timeline in ripple mode.
- * The element is shifted to @start, and later elements are also shifted
- * by the same amount (see #GES_EDIT_MODE_RIPPLE). An edit may fail if it
- * would place the timeline in an unsupported configuration.
- *
- * Note that if the element's timeline has a
- * #GESTimeline:snapping-distance set, then the start time may be set
- * to the edge of some element in the neighbourhood of @start.
+ * See ges_timeline_element_edit() with #GES_EDIT_MODE_RIPPLE and
+ * #GES_EDGE_NONE.
  *
  * Returns: %TRUE if the ripple edit of @self completed, %FALSE on
  * failure.
@@ -1438,17 +1433,13 @@ ges_timeline_element_ripple (GESTimelineElement * self, GstClockTime start)
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
 
-  /* FIXME: why are we calling a vmethod to ripple, when
-   * ges_timeline_element_edit() with a GESEditMode of RIPPLE does not do
-   * so? */
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
   if (klass->ripple)
     return klass->ripple (self, start);
 
-  GST_WARNING_OBJECT (self, "No ripple virtual method implementation"
-      " on class %s. Can not ripple to %" GST_TIME_FORMAT,
-      G_OBJECT_CLASS_NAME (klass), GST_TIME_ARGS (start));
+  return ges_timeline_element_edit (self, NULL, -1, GES_EDIT_MODE_RIPPLE,
+      GES_EDGE_NONE, start);
 
   return FALSE;
 }
@@ -1459,15 +1450,8 @@ ges_timeline_element_ripple (GESTimelineElement * self, GstClockTime start)
  * @end: The new end time of @self in ripple mode
  *
  * Edits the end time of an element within its timeline in ripple mode.
- * The element's duration time is shifted until its end time matches @end,
- * and later elements have their start time shifted by the same amount
- * (see #GES_EDIT_MODE_RIPPLE). An edit may fail if it would place the
- * duration time out of bounds, or if it would place the timeline in an
- * unsupported configuration.
- *
- * Note that if the element's timeline has a
- * #GESTimeline:snapping-distance set, then the end time may be set
- * to the edge of some element in the neighbourhood of @end.
+ * See ges_timeline_element_edit() with #GES_EDIT_MODE_RIPPLE and
+ * #GES_EDGE_END.
  *
  * Returns: %TRUE if the ripple edit of @self completed, %FALSE on
  * failure.
@@ -1479,20 +1463,13 @@ ges_timeline_element_ripple_end (GESTimelineElement * self, GstClockTime end)
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
 
-  /* FIXME: why are we calling a vmethod to ripple_end, when
-   * ges_timeline_element_edit() with a GESEditMode of RIPPLE does not do
-   * so? */
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
-  if (klass->ripple_end) {
+  if (klass->ripple_end)
     return klass->ripple_end (self, end);
-  }
 
-  GST_WARNING_OBJECT (self, "No ripple virtual method implementation"
-      " on class %s. Can not ripple end to %" GST_TIME_FORMAT,
-      G_OBJECT_CLASS_NAME (klass), GST_TIME_ARGS (end));
-
-  return FALSE;
+  return ges_timeline_element_edit (self, NULL, -1, GES_EDIT_MODE_RIPPLE,
+      GES_EDGE_END, end);
 }
 
 /**
@@ -1501,15 +1478,8 @@ ges_timeline_element_ripple_end (GESTimelineElement * self, GstClockTime end)
  * @start: The new start time of @self in roll mode
  *
  * Edits the start time of an element within its timeline in roll mode.
- * The element is trimmed to @start, and any other element whose end edge
- * matched the start edge of the element is also trimmed to @start (see
- * #GES_EDIT_MODE_ROLL). An edit may fail if it would place an in-point
- * time or duration time out of bounds, or if it would place the timeline
- * in an unsupported configuration.
- *
- * Note that if the element's timeline has a
- * #GESTimeline:snapping-distance set, then the start time may be set
- * to the edge of some element in the neighbourhood of @start.
+ * See ges_timeline_element_edit() with #GES_EDIT_MODE_ROLL and
+ * #GES_EDGE_START.
  *
  * Returns: %TRUE if the roll edit of @self completed, %FALSE on failure.
  */
@@ -1520,20 +1490,13 @@ ges_timeline_element_roll_start (GESTimelineElement * self, GstClockTime start)
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
 
-  /* FIXME: why are we calling a vmethod to roll_start, when
-   * ges_timeline_element_edit() with a GESEditMode of ROLL does not do
-   * so? */
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
-  if (klass->roll_start) {
+  if (klass->roll_start)
     return klass->roll_start (self, start);
-  }
 
-  GST_WARNING_OBJECT (self, "No ripple virtual method implementation"
-      " on class %s. Can not roll to %" GST_TIME_FORMAT,
-      G_OBJECT_CLASS_NAME (klass), GST_TIME_ARGS (start));
-
-  return FALSE;
+  return ges_timeline_element_edit (self, NULL, -1, GES_EDIT_MODE_ROLL,
+      GES_EDGE_START, start);
 }
 
 /**
@@ -1542,15 +1505,8 @@ ges_timeline_element_roll_start (GESTimelineElement * self, GstClockTime start)
  * @end: The new end time of @self in roll mode
  *
  * Edits the end time of an element within its timeline in roll mode.
- * The end of the element is trimmed to @end, and any other element whose
- * start edge matched the end edge of the element is also trimmed to @end
- * (see #GES_EDIT_MODE_ROLL). An edit may fail if it would place an
- * in-point time or duration time out of bounds, or if it would place the
- * timeline in an unsupported configuration.
- *
- * Note that if the element's timeline has a
- * #GESTimeline:snapping-distance set, then the end time may be set
- * to the edge of some element in the neighbourhood of @end.
+ * See ges_timeline_element_edit() with #GES_EDIT_MODE_ROLL and
+ * #GES_EDGE_END.
  *
  * Returns: %TRUE if the roll edit of @self completed, %FALSE on failure.
  */
@@ -1561,19 +1517,13 @@ ges_timeline_element_roll_end (GESTimelineElement * self, GstClockTime end)
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
 
-  /* FIXME: why are we calling a vmethod to roll_end, when
-   * ges_timeline_element_edit() with a GESEditMode of ROLL does not do
-   * so? */
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
   if (klass->roll_end)
     return klass->roll_end (self, end);
 
-  GST_WARNING_OBJECT (self, "No ripple virtual method implementation"
-      " on class %s. Can not roll end to %" GST_TIME_FORMAT,
-      G_OBJECT_CLASS_NAME (klass), GST_TIME_ARGS (end));
-
-  return FALSE;
+  return ges_timeline_element_edit (self, NULL, -1, GES_EDIT_MODE_ROLL,
+      GES_EDGE_END, end);
 }
 
 /**
@@ -1582,15 +1532,8 @@ ges_timeline_element_roll_end (GESTimelineElement * self, GstClockTime end)
  * @start: The new start time of @self in trim mode
  *
  * Edits the start time of an element within its timeline in trim mode.
- * The element is shifted to @start, and its in-point time is similarly
- * shifted to ensure that its internal content will appear at the same
- * timeline time when it is played (see #GES_EDIT_MODE_TRIM). An edit may
- * fail if it would place the in-point time out of bounds, or if it would
- * place the timeline in an unsupported configuration.
- *
- * Note that if the element's timeline has a
- * #GESTimeline:snapping-distance set, then the start time may be set
- * to the edge of some element in the neighbourhood of @start.
+ * See ges_timeline_element_edit() with #GES_EDIT_MODE_TRIM and
+ * #GES_EDGE_START.
  *
  * Returns: %TRUE if the trim edit of @self completed, %FALSE on failure.
  */
@@ -1601,19 +1544,13 @@ ges_timeline_element_trim (GESTimelineElement * self, GstClockTime start)
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
 
-  /* FIXME: why are we calling a vmethod to trim, when
-   * ges_timeline_element_edit() with a GESEditMode of TRIM does not do
-   * so? */
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
   if (klass->trim)
     return klass->trim (self, start);
 
-  GST_WARNING_OBJECT (self, "No ripple virtual method implementation"
-      " on class %s. Can not trim to %" GST_TIME_FORMAT,
-      G_OBJECT_CLASS_NAME (klass), GST_TIME_ARGS (start));
-
-  return FALSE;
+  return ges_timeline_element_edit (self, NULL, -1, GES_EDIT_MODE_TRIM,
+      GES_EDGE_START, start);
 }
 
 /**

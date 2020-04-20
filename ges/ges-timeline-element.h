@@ -192,11 +192,17 @@ struct _GESTimelineElement
  * element in response to what the new value will be. A return of %FALSE
  * means that the property should not be set.
  * @set_priority:  Method called just before the
- * #GESTimelineElement:in-point is set.
- * @ripple_end: Method to ripple an object on its #GES_EDGE_END edge.
- * @roll_start: Method to roll an object on its #GES_EDGE_START edge.
- * @roll_end: Method to roll an object on its #GES_EDGE_END edge.
- * @trim: Method to trim an object.
+ * #GESTimelineElement:priority is set.
+ * @ripple: Set this method to overwrite a redirect to
+ * ges_timeline_element_edit() in ges_timeline_element_ripple().
+ * @ripple_end: Set this method to overwrite a redirect to
+ * ges_timeline_element_edit() in ges_timeline_element_ripple_end().
+ * @roll: Set this method to overwrite a redirect to
+ * ges_timeline_element_edit() in ges_timeline_element_roll().
+ * @roll_end: Set this method to overwrite a redirect to
+ * ges_timeline_element_edit() in ges_timeline_element_roll_end().
+ * @trim: Set this method to overwrite a redirect to
+ * ges_timeline_element_edit() in ges_timeline_element_trim().
  * @deep_copy: Prepare @copy for pasting as a copy of @self. At least by
  * copying the children properties of @self into @copy.
  * @paste: Paste @self, which is the @copy prepared by @deep_copy, into
