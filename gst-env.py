@@ -357,11 +357,6 @@ def get_subprocess_env(options, gst_version):
 
         for pkg_dir in pkg_dirs:
             prepend_env_var(env, "PKG_CONFIG_PATH", pkg_dir, options.sysroot)
-    prepend_env_var(env, "PKG_CONFIG_PATH", os.path.join(options.builddir,
-                                                         'subprojects',
-                                                         'gst-plugins-good',
-                                                         'pkgconfig'),
-                    options.sysroot)
 
     for python_dir in python_dirs:
         prepend_env_var(env, 'PYTHONPATH', python_dir, options.sysroot)
