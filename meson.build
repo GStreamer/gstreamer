@@ -122,7 +122,7 @@ endif
 
 driverdir = libva_dep.get_pkgconfig_variable('driverdir')
 if driverdir == ''
-  driverdir = '@0@/@1@/@2@'.format(get_option('prefix'), get_option('libdir'), 'dri')
+  driverdir = join_paths(get_option('prefix'), get_option('libdir'), 'dri')
 endif
 
 cdata = configuration_data()
