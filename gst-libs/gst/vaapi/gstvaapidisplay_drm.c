@@ -111,7 +111,7 @@ get_default_device_path (GstVaapiDisplay * display)
       parent = udev_device_get_parent (device);
 
       for (i = 0; allowed_subsystems[i] != NULL; i++)
-        if (strcmp (udev_device_get_subsystem (parent),
+        if (g_strcmp0 (udev_device_get_subsystem (parent),
                 allowed_subsystems[i]) == 0)
           break;
 
