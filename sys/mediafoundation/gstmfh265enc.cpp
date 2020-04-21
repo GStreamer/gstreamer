@@ -1003,6 +1003,9 @@ gst_mf_h265_enc_plugin_init_internal (GstPlugin * plugin, guint rank,
   if (!gst_mf_result (hr))
     goto done;
 
+  /* FIXME: This would take so long time.
+   * Need to find smart way to find supported resolution*/
+#if 0
   for (i = 0; i < G_N_ELEMENTS (resolutions_to_check); i++) {
     guint width, height;
 
@@ -1030,6 +1033,10 @@ gst_mf_h265_enc_plugin_init_internal (GstPlugin * plugin, guint rank,
     GST_WARNING_OBJECT (transform, "Couldn't query supported resolution");
     goto done;
   }
+#else
+  /* FIXME: don't hardcode supported resolution */
+  max_width = max_height = 8192;
+#endif
 
   src_caps = gst_caps_from_string ("video/x-h265, "
       "stream-format=(string) byte-stream, "
