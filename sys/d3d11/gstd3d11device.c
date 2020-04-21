@@ -793,8 +793,9 @@ gst_d3d11_device_new (guint adapter)
 
   if (!priv->device || !priv->device_context) {
     GST_WARNING ("Cannot create d3d11 device with adapter %d", adapter);
-    g_object_unref (device);
-    device = NULL;
+    gst_clear_object (&device);
+  } else {
+    gst_object_ref_sink (device);
   }
 
   return device;
