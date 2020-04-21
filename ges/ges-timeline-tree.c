@@ -2080,6 +2080,16 @@ create_transitions (GNode * node,
 }
 
 void
+timeline_tree_create_transitions_for_track_element (GNode * root,
+    GESTrackElement * element, GESTreeGetAutoTransitionFunc get_auto_transition)
+{
+  GNode *node = find_node (root, element);
+  g_assert (node);
+
+  create_transitions (node, get_auto_transition);
+}
+
+void
 timeline_tree_create_transitions (GNode * root,
     GESTreeGetAutoTransitionFunc get_auto_transition)
 {

@@ -54,6 +54,10 @@ typedef GESAutoTransition *
                                            GESTrackElement * next,
                                            GstClockTime transition_duration);
 
+void
+timeline_tree_create_transitions_for_track_element (GNode * root,
+                                                    GESTrackElement * element,
+                                                    GESTreeGetAutoTransitionFunc get_auto_transition);
 void timeline_tree_create_transitions     (GNode *root,
                                            GESTreeGetAutoTransitionFunc get_auto_transition);
 
