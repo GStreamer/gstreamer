@@ -3074,7 +3074,104 @@ GST_START_TEST (test_copy_paste_children_properties)
 
 GST_END_TEST;
 
+GST_START_TEST (test_unchanged_after_layer_add_failure)
+{
+  GList *found;
+  GESTrack *track;
+  GESTimeline *timeline;
+  GESLayer *layer;
+  GESClip *clip0, *clip1;
+  GESTimelineElement *effect, *source;
 
+  ges_init ();
+
+  timeline = ges_timeline_new ();
+  layer = ges_timeline_append_layer (timeline);
+
+  /* two video tracks */
+  track = GES_TRACK (ges_video_track_new ());
+  fail_unless (ges_timeline_add_track (timeline, track));
+
+  track = GES_TRACK (ges_video_track_new ());
+  fail_unless (ges_timeline_add_track (timeline, track));
+
+  clip0 = GES_CLIP (ges_test_clip_new ());
+  clip1 = GES_CLIP (ges_test_clip_new ());
+
+  gst_object_ref (clip0);
+  gst_object_ref (clip1);
+
+  assert_set_start (clip0, 0);
+  assert_set_duration (clip0, 10);
+  assert_set_start (clip1, 0);
+  assert_set_duration (clip1, 10);
+
+  effect = GES_TIMELINE_ELEMENT (ges_effect_new ("agingtv"));
+  _assert_add (clip1, effect);
+
+  assert_num_children (clip0, 0);
+  assert_num_children (clip1, 1);
+
+  fail_unless (ges_layer_add_clip (layer, clip0));
+
+  assert_num_children (clip0, 2);
+  assert_num_children (clip1, 1);
+
+  fail_unless (GES_CONTAINER_CHILDREN (clip1)->data == effect);
+
+  /* addition should fail since sources would fully overlap */
+  fail_if (ges_layer_add_clip (layer, clip1));
+
+  /* children should be the same */
+  assert_num_children (clip0, 2);
+  assert_num_children (clip1, 1);
+
+  fail_unless (GES_CONTAINER_CHILDREN (clip1)->data == effect);
+
+  /* should be able to add again once we have fixed the problem */
+  fail_unless (ges_layer_remove_clip (layer, clip0));
+
+  assert_num_children (clip0, 2);
+  assert_num_children (clip1, 1);
+
+  fail_unless (ges_layer_add_clip (layer, clip1));
+
+  assert_num_children (clip0, 2);
+  /* now has two sources and two effects */
+  assert_num_children (clip1, 4);
+
+  found = ges_clip_find_track_elements (clip1, NULL, GES_TRACK_TYPE_VIDEO,
+      GES_TYPE_VIDEO_SOURCE);
+  fail_unless_equals_int (g_list_length (found), 2);
+  g_list_free_full (found, gst_object_unref);
+
+  found = ges_clip_find_track_elements (clip1, NULL, GES_TRACK_TYPE_VIDEO,
+      GES_TYPE_EFFECT);
+  fail_unless_equals_int (g_list_length (found), 2);
+  g_list_free_full (found, gst_object_unref);
+
+  /* similarly cannot add clip0 back, and children should not change */
+  /* remove the extra source */
+  _assert_remove (clip0, GES_CONTAINER_CHILDREN (clip0)->data);
+  assert_num_children (clip0, 1);
+  source = GES_CONTAINER_CHILDREN (clip0)->data;
+
+  fail_if (ges_layer_add_clip (layer, clip0));
+
+  /* children should be the same */
+  assert_num_children (clip0, 1);
+  assert_num_children (clip1, 4);
+
+  fail_unless (GES_CONTAINER_CHILDREN (clip0)->data == source);
+
+  gst_object_unref (clip0);
+  gst_object_unref (clip1);
+  gst_object_unref (timeline);
+
+  gst_deinit ();
+}
+
+GST_END_TEST;
 
 static Suite *
 ges_suite (void)
@@ -3102,6 +3199,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_children_properties_contain);
   tcase_add_test (tc_chain, test_children_properties_change);
   tcase_add_test (tc_chain, test_copy_paste_children_properties);
+  tcase_add_test (tc_chain, test_unchanged_after_layer_add_failure);
 
   return s;
 }

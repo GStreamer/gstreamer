@@ -686,14 +686,18 @@ ges_layer_is_empty (GESLayer * layer)
 gboolean
 ges_layer_add_clip (GESLayer * layer, GESClip * clip)
 {
-  GList *tmp;
+  GList *tmp, *prev_children;
   GESAsset *asset;
   GESLayerPrivate *priv;
   GESLayer *current_layer;
-  GESTimeline *timeline = GES_TIMELINE_ELEMENT_TIMELINE (clip);
+  GESTimeline *timeline;
+  GESContainer *container;
 
   g_return_val_if_fail (GES_IS_LAYER (layer), FALSE);
   g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
+
+  timeline = GES_TIMELINE_ELEMENT_TIMELINE (clip);
+  container = GES_CONTAINER (clip);
 
   GST_DEBUG_OBJECT (layer, "adding clip:%p", clip);
   gst_object_ref_sink (clip);
@@ -785,7 +789,18 @@ ges_layer_add_clip (GESLayer * layer, GESClip * clip)
    * invoked by ges_timeline_add_clip */
   g_signal_emit (layer, ges_layer_signals[OBJECT_ADDED], 0, clip);
 
+  prev_children = ges_container_get_children (container, FALSE);
+
   if (timeline && !ges_timeline_add_clip (timeline, clip)) {
+    /* remove any track elements that were newly created */
+    GList *new_children = ges_container_get_children (container, FALSE);
+    for (tmp = new_children; tmp; tmp = tmp->next) {
+      if (!g_list_find (prev_children, tmp->data))
+        ges_container_remove (container, tmp->data);
+    }
+    g_list_free_full (prev_children, gst_object_unref);
+    g_list_free_full (new_children, gst_object_unref);
+
     GST_WARNING_OBJECT (layer, "Could not add the clip %" GES_FORMAT
         " to the timeline %" GST_PTR_FORMAT, GES_ARGS (clip), timeline);
     /* FIXME: change emit signal to FALSE once we are able to delay the
@@ -794,7 +809,9 @@ ges_layer_add_clip (GESLayer * layer, GESClip * clip)
     return FALSE;
   }
 
-  for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
+  g_list_free_full (prev_children, gst_object_unref);
+
+  for (tmp = container->children; tmp; tmp = tmp->next) {
     GESTrack *track = ges_track_element_get_track (tmp->data);
 
     if (track)
