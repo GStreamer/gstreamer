@@ -101,91 +101,74 @@ gst indent:
           exit 1
       fi
 
+.gst_build_template: &gst_build
+  - echo $MESON_ARGS
+
+  - curl -L -o clone_manifest_ref.py "https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/${GST_UPSTREAM_BRANCH}/gitlab/clone_manifest_ref.py"
+  - python3 clone_manifest_ref.py --manifest manifest.xml --project gst-build --destination gst-build
+  - cd gst-build/
+  # only copy immediate directories. We don't want to modify .wrap files
+  - find /gst-build/subprojects/ -mindepth 1 -maxdepth 1 -type d -exec cp -r \{\} subprojects/ \;
+  - ./git-update --no-interaction --manifest="${CI_PROJECT_DIR}/manifest.xml"
+  - meson build/ $MESON_ARGS
+  - ninja -C build/
+  - ccache --show-stats
+
+.gst_build_ccache_vars:
+  variables:
+    CCACHE_COMPILERCHECK: 'content'
+    CCACHE_COMPRESS: 'true'
+    CCACHE_BASEDIR: '/cache/gstreamer/gst-build'
+    CCACHE_DIR: '/cache/gstreamer/gst-build/ccache/'
+    # shared across everything really
+    CCACHE_MAXSIZE: '10G'
+    CARGO_HOME: '/cache/gstreamer/cargo'
+
+.simple_fedora_build: &simple_build >-
+  ${DEFAULT_MESON_ARGS}
+  -Dsharp=enabled
+  -Domx=enabled
+  -Dgst-omx:target=generic
+  -Ddoc=enabled
+  -Drs=disabled
+  ${MESON_BUILDTYPE_ARGS}
+  --werror
+
 .build:
   stage: 'build'
   extends:
     - '.global_ci_policy'
+    - '.gst_build_ccache_vars'
   needs:
     - "manifest"
   # Taking into account the slowest shared runner + time needed to upload the binaries to artifacts
   # Also need to take into account I/O of pulling docker images and uploading artifacts
   timeout: '45min'
   variables:
-    CCACHE_COMPILERCHECK: "content"
-    CCACHE_COMPRESS: "true"
-    CCACHE_BASEDIR: "/cache/gstreamer/gst-build"
-    CCACHE_DIR: "/cache/gstreamer/gst-build/ccache/"
-    # shared across everything really
-    CCACHE_MAXSIZE: "10G"
-    CARGO_HOME: "/cache/gstreamer/cargo"
-
     MESON_ARGS: "${DEFAULT_MESON_ARGS} ${MESON_BUILDTYPE_ARGS} --werror"
   rules:
     - if: '$CI_PROJECT_NAME != "cerbero"'
-
   script:
-    - ccache --show-stats
-    - curl -L -o clone_manifest_ref.py https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/${GST_UPSTREAM_BRANCH}/gitlab/clone_manifest_ref.py
-    - chmod +x clone_manifest_ref.py
-    - ./clone_manifest_ref.py --manifest manifest.xml --project gst-build --destination gst-build
-    - cd gst-build/
-    # only copy immediate directories. We don't want to modify .wrap files
-    - find /gst-build/subprojects/ -mindepth 1 -maxdepth 1 -type d -exec cp -r \{\} subprojects/ \;
-    - ./git-update --no-interaction --manifest="${CI_PROJECT_DIR}/manifest.xml"
-    - meson build/ $MESON_ARGS
-    - ninja -C build/
-    - ccache --show-stats
+    *gst_build
   after_script:
-    - cd gst-build/
-    # Clean the artifacts packages to avoid copying "useless" build products.
-    - test -d build && find build -name '*.[ao]' -delete
-    # Clean the .git repos since we won't need them anymore
-    - rm -rf subprojects/*/.git/
-    - rm -rf build/subprojects/*/.git/
-    # Clean the big files that are not useful to us to reduce the artifact size
-    - rm -rf subprojects/FFmpeg/tests
-    - rm -rf subprojects/FFmpeg/doc
-    - rm -rf subprojects/openh264/res
-    - rm -rf subprojects/libxml2-2.9.7/result
-    - rm -rf subprojects/libxml2-2.9.7/doc
-    - rm -rf subprojects/libxml2-2.9.7/test
-    - rm -rf subprojects/libpsl/fuzz
-    - rm -rf subprojects/glib/gio/tests
-    - rm -rf subprojects/glib/glib/tests
-    - rm -rf subprojects/glib/gobject/tests
-    - rm -rf subprojects/glib/docs/tests
-    - rm -rf subprojects/glib/tests
-    - rm -rf subprojects/glib/po
-    - rm -rf subprojects/glib/docs
-
-    # Clear gst-intergrations-testsuites report as it contains raw media
-    # files which is only needed for validate jobs. When needed we copy the
-    # cached repo in the docker image and fetch.
-    - rm -rf subprojects/gst-integration-testsuites
+    - mv gst-build/build/meson-logs/ meson-logs
+    # Cleanup everything else to reduce the size
+    # of the docker volume we leave behind
+    - rm -rf gst-build
   artifacts:
     expire_in: "7 days"
     when: "always"
     paths:
-      - 'gst-build/build/meson-logs/'
-      # Needed by the integration tests
+      - 'meson-logs/'
       - 'manifest.xml'
 
 .build fedora x86_64:
   extends: '.build'
   image: $FEDORA_IMAGE
   variables:
-    MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Domx=enabled -Dgst-omx:target=generic -Ddoc=enabled -Drs=disabled ${MESON_BUILDTYPE_ARGS} --werror"
+    MESON_ARGS: *simple_build
   rules:
     - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-omx|gst-plugins-rs)$/'
-
-build fedora x86_64:
-  extends: '.build fedora x86_64'
-  artifacts:
-    expire_in: '5 days'
-    when: always
-    paths:
-      - "manifest.xml"
-      - "gst-build/"
 
 build nodebug fedora x86_64:
   extends: '.build'
@@ -221,7 +204,12 @@ build clang fedora x86_64:
   stage: 'test'
   extends:
     - '.global_ci_policy'
+    - '.gst_build_ccache_vars'
+  needs:
+    - "manifest"
   variables:
+    MESON_ARGS: *simple_build
+
     # Disable colored output to avoid weird rendering issues
     GST_DEBUG_NO_COLOR: "true"
     CI_ARTIFACTS_URL: "${CI_PROJECT_URL}/-/jobs/${CI_JOB_ID}/artifacts/raw/validate-logs/"
@@ -231,7 +219,8 @@ build clang fedora x86_64:
   rules:
     - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-examples|gst-docs)$/'
   script:
-    - cd gst-build/
+    - *gst_build
+
     - echo "-> Running ${TEST_SUITE}"
     - >
       ./gst-uninstalled.py
@@ -252,6 +241,7 @@ build clang fedora x86_64:
     paths:
       - 'gst-build/build/meson-logs/'
       - 'validate-logs'
+      - 'manifest.xml'
     reports:
       junit:
         - "validate-logs/*.xml"
@@ -260,8 +250,6 @@ build clang fedora x86_64:
   image: $FEDORA_IMAGE
   extends: '.test'
   tags: ['gstreamer']
-  needs:
-    - 'build fedora x86_64'
 
 check fedora:
   extends: '.test fedora x86_64'
@@ -278,18 +266,6 @@ integration testsuites fedora:
     TEST_SUITE: "validate ges"
   rules:
     - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-docs|gst-omx|gst-plugins-rs)$/'
-  before_script:
-    # Avoid cloning the repo since it contains media files,
-    # instead copy it from the cache and do a git fetch
-    # We remove this copy first since it had its mediafiles stripped
-    - cp -r /gst-build/subprojects/gst-integration-testsuites/ "${CI_PROJECT_DIR}/gst-build/subprojects/gst-integration-testsuites/"
-    - curl -L -o clone_manifest_ref.py "https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/${GST_UPSTREAM_BRANCH}/gitlab/clone_manifest_ref.py"
-    - >-
-      python3 clone_manifest_ref.py
-      --fetch
-      --manifest manifest.xml
-      --project gst-integration-testsuites
-      --destination gst-build/subprojects/gst-integration-testsuites
 
 gstreamer-full:
   extends: 'build static fedora x86_64'
@@ -505,8 +481,6 @@ valgrind ges:
     - cmd.exe /C "C:\BuildTools\Common7\Tools\VsDevCmd.bat -host_arch=amd64 -arch=$env:ARCH &&
         meson build $env:MESON_ARGS &&
         ninja -C build"
-  # FIXME: extract builddir for tests
-  #after_script:
   # XXX: Re-enable when uploading stops timing out
   #artifacts:
   #  expire_in: "7 days"
@@ -869,15 +843,18 @@ documentation:
   image: $FEDORA_IMAGE
   extends:
     - '.global_ci_policy'
+    - '.gst_build_ccache_vars'
   rules:
     - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-build|gst-sharp|gst-integration-testsuites|gst-omx|gst-plugins-rs|gst-python)$/'
   needs:
-    - "build fedora x86_64"
+    - "manifest"
   stage: integrate
-
+  variables:
+    MESON_ARGS: *simple_build
   script:
   - pip3 install --upgrade git+https://github.com/hotdoc/hotdoc.git
-  - cd gst-build/
+  - *gst_build
+
   - ./gst-uninstalled.py hotdoc run --conf-file=build/subprojects/gst-docs/GStreamer-doc.json --fatal-warnings
   - cd -
   - mv gst-build/build/subprojects/gst-docs/GStreamer-doc/html documentation/
@@ -944,7 +921,7 @@ cerbero cross-ios universal examples:
     - "cerbero cross-ios universal"
 
 build gst-omx zynq fedora x86_64:
-  extends: 'build fedora x86_64'
+  extends: '.build fedora x86_64'
   variables:
     MESON_ARGS: "-Domx=enabled -Dgst-omx:target=zynqultrascaleplus -Dgst-omx:header_path=${CI_PROJECT_DIR}/vcu-omx-il/omx_header -Dpython=disabled -Dlibav=disabled -Dlibnice=disabled -Dugly=disabled -Dbad=disabled -Ddevtools=disabled -Dges=disabled -Drtsp_server=disabled -Dvaapi=disabled -Dsharp=disabled -Dgst-examples=disabled -Drs=disabled ${MESON_BUILDTYPE_ARGS} --werror"
   rules:
@@ -953,7 +930,7 @@ build gst-omx zynq fedora x86_64:
     - git clone https://github.com/Xilinx/vcu-omx-il.git --branch=release-2019.2 ${CI_PROJECT_DIR}/vcu-omx-il
 
 build gst-omx tizonia fedora x86_64:
-  extends: 'build fedora x86_64'
+  extends: '.build fedora x86_64'
   variables:
     MESON_ARGS: "-Domx=enabled -Dgst-omx:target=tizonia -Dpython=disabled -Dlibav=disabled -Dlibnice=disabled -Dugly=disabled -Dbad=disabled -Ddevtools=disabled -Dges=disabled -Drtsp_server=disabled -Dvaapi=disabled -Dsharp=disabled -Dgst-examples=disabled -Drs=disabled ${MESON_BUILDTYPE_ARGS} --werror"
     PKG_CONFIG_PATH: ${PKG_CONFIG_PATH}:${CI_PROJECT_DIR}/tizonia-install/lib64/pkgconfig/

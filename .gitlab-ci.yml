@@ -173,8 +173,6 @@ build cerbero cross win64 local:
   image: '${CI_REGISTRY_IMAGE}/amd64/fedora:latest'
   extends: '.test'
   <<: *local_rules
-  dependencies:
-    - 'build fedora x86_64 local'
 
 check fedora local:
   extends: '.test fedora x86_64 local'
