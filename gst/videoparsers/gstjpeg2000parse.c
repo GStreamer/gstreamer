@@ -769,6 +769,10 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
         if (has_num_stripes) {
           gst_caps_set_simple (src_caps, "num-stripes", G_TYPE_INT,
               caps_int, NULL);
+          /* remove PTS interpolation in the case of stripes having same PTS */
+          if (caps_int > 1)
+            gst_base_parse_set_pts_interpolation (GST_BASE_PARSE
+                (jpeg2000parse), FALSE);
           /* lets deduce the alignment property */
           if (!caps_string) {
             GST_WARNING_OBJECT (jpeg2000parse,
