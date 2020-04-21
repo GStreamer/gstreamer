@@ -87,6 +87,9 @@ Hardware requirements
   * Intel BayTrail, Braswell
   * Intel Poulsbo (US15W)
   * Intel Medfield or Cedar Trail
+  * Hardwares supported by AMD Radeonsi driver, such as the list below
+    - AMD Carrizo, Bristol Ridge, Raven Ridge, Picasso, Renoir
+    - AMD Tonga, Fiji, Polaris XX, Vega XX, Navi 1X
   * Hardware supported by Mesa VA gallium state-tracker
 
 
