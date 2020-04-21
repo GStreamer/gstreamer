@@ -466,12 +466,43 @@ gst_text_renderer_image_to_argb (GstTextRender * render, guchar * pixbuf,
 }
 
 static GstFlowReturn
+gst_text_render_renegotiate (GstTextRender * render)
+{
+  GstCaps *caps = NULL, *padcaps;
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  gst_text_render_check_argb (render);
+
+  padcaps = gst_pad_query_caps (render->srcpad, NULL);
+  caps = gst_pad_peer_query_caps (render->srcpad, padcaps);
+  gst_caps_unref (padcaps);
+
+  if (!caps || gst_caps_is_empty (caps)) {
+    GST_ELEMENT_ERROR (render, CORE, NEGOTIATION, (NULL), (NULL));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+
+  caps = gst_text_render_fixate_caps (render, caps);
+
+  if (!gst_text_render_src_setcaps (render, caps)) {
+    GST_ELEMENT_ERROR (render, CORE, NEGOTIATION, (NULL), (NULL));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+
+done:
+  if (caps)
+    gst_caps_unref (caps);
+  return ret;
+}
+
+static GstFlowReturn
 gst_text_render_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
 {
   GstTextRender *render;
   GstFlowReturn ret;
   GstBuffer *outbuf;
-  GstCaps *caps = NULL, *padcaps;
   GstMapInfo map;
   guint8 *data;
   gsize size;
@@ -497,24 +528,11 @@ gst_text_render_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
   gst_text_render_render_pangocairo (render);
   gst_buffer_unmap (inbuf, &map);
 
-  gst_text_render_check_argb (render);
-
-  padcaps = gst_pad_query_caps (render->srcpad, NULL);
-  caps = gst_pad_peer_query_caps (render->srcpad, padcaps);
-  gst_caps_unref (padcaps);
-
-  if (!caps || gst_caps_is_empty (caps)) {
-    GST_ELEMENT_ERROR (render, CORE, NEGOTIATION, (NULL), (NULL));
-    ret = GST_FLOW_ERROR;
-    goto done;
-  }
-
-  caps = gst_text_render_fixate_caps (render, caps);
-
-  if (!gst_text_render_src_setcaps (render, caps)) {
-    GST_ELEMENT_ERROR (render, CORE, NEGOTIATION, (NULL), (NULL));
-    ret = GST_FLOW_ERROR;
-    goto done;
+  if (gst_pad_check_reconfigure (render->srcpad)
+      || !gst_pad_has_current_caps (render->srcpad)) {
+    ret = gst_text_render_renegotiate (render);
+    if (ret != GST_FLOW_OK)
+      goto done;
   }
 
   if (render->segment_event) {
@@ -583,8 +601,6 @@ gst_text_render_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
   ret = gst_pad_push (render->srcpad, outbuf);
 
 done:
-  if (caps)
-    gst_caps_unref (caps);
   gst_buffer_unref (inbuf);
 
   return ret;
