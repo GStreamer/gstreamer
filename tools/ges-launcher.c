@@ -338,8 +338,10 @@ bus_message_cb (GstBus * bus, GstMessage * message, GESLauncher * self)
       break;
     }
     case GST_MESSAGE_EOS:
-      ok ("\nDone\n");
-      g_application_quit (G_APPLICATION (self));
+      if (!self->priv->parsed_options.ignore_eos) {
+        ok ("\nDone\n");
+        g_application_quit (G_APPLICATION (self));
+      }
       break;
     case GST_MESSAGE_STATE_CHANGED:
       if (GST_MESSAGE_SRC (message) == GST_OBJECT_CAST (self->priv->pipeline)) {

@@ -267,7 +267,7 @@ static gboolean _nle_composition_remove_object (NleComposition * comp,
     NleObject * object);
 static void _deactivate_stack (NleComposition * comp,
     NleUpdateStackReason reason);
-static gboolean _set_real_eos_seqnum_from_seek (NleComposition * comp,
+static void _set_real_eos_seqnum_from_seek (NleComposition * comp,
     GstEvent * event);
 static void _emit_commited_signal_func (NleComposition * comp, gpointer udata);
 static void _restart_task (NleComposition * comp);
@@ -2772,6 +2772,8 @@ update_start_stop_duration (NleComposition * comp)
 {
   NleObject *obj;
   NleObject *cobj = (NleObject *) comp;
+  gboolean reverse = (comp->priv->segment->rate < 0);
+  GstClockTime prev_stop = NLE_OBJECT_STOP (comp);
   NleCompositionPrivate *priv = comp->priv;
 
   _assert_proper_thread (comp);
@@ -2843,7 +2845,9 @@ update_start_stop_duration (NleComposition * comp)
       }
     }
 
-    priv->segment->stop = obj->stop;
+    if (reverse || priv->segment->stop == prev_stop
+        || obj->stop < priv->segment->stop)
+      priv->segment->stop = obj->stop;
     cobj->stop = obj->stop;
     g_object_notify_by_pspec (G_OBJECT (cobj),
         nleobject_properties[NLEOBJECT_PROP_STOP]);
@@ -3166,42 +3170,52 @@ resync_state:
   return TRUE;
 }
 
-/* WITH OBJECTS LOCK TAKEN */
-static gboolean
+static void
 _set_real_eos_seqnum_from_seek (NleComposition * comp, GstEvent * event)
 {
   GList *tmp;
 
-  gboolean should_check_objects = FALSE;
   NleCompositionPrivate *priv = comp->priv;
   gboolean reverse = (priv->segment->rate < 0);
   gint stack_seqnum = gst_event_get_seqnum (event);
 
-  if (reverse && GST_CLOCK_TIME_IS_VALID (priv->current_stack_start))
-    should_check_objects = TRUE;
-  else if (!reverse && GST_CLOCK_TIME_IS_VALID (priv->current_stack_stop))
-    should_check_objects = TRUE;
+  if (reverse) {
+    if (!GST_CLOCK_TIME_IS_VALID (priv->current_stack_start))
+      goto done;
 
-  if (should_check_objects) {
-    for (tmp = priv->objects_stop; tmp; tmp = g_list_next (tmp)) {
-      NleObject *object = (NleObject *) tmp->data;
+    if (priv->segment->start != 0 &&
+        priv->current_stack_start <= priv->segment->start
+        && priv->current_stack_stop > priv->segment->start) {
+      goto done;
+    }
+  } else {
+    if (!GST_CLOCK_TIME_IS_VALID (priv->current_stack_stop))
+      goto done;
 
-      if (!NLE_IS_SOURCE (object))
-        continue;
-
-      if ((!reverse && priv->current_stack_stop < object->stop) ||
-          (reverse && priv->current_stack_start > object->start)) {
-        priv->next_eos_seqnum = stack_seqnum;
-        g_atomic_int_set (&priv->real_eos_seqnum, 0);
-        return FALSE;
-      }
+    if (GST_CLOCK_TIME_IS_VALID (priv->seek_segment->stop) &&
+        priv->current_stack_start <= priv->segment->stop
+        && priv->current_stack_stop >= priv->segment->stop) {
+      goto done;
     }
   }
 
+  for (tmp = priv->objects_stop; tmp; tmp = g_list_next (tmp)) {
+    NleObject *object = (NleObject *) tmp->data;
+
+    if (!NLE_IS_SOURCE (object))
+      continue;
+
+    if ((!reverse && priv->current_stack_stop < object->stop) ||
+        (reverse && priv->current_stack_start > object->start)) {
+      priv->next_eos_seqnum = stack_seqnum;
+      g_atomic_int_set (&priv->real_eos_seqnum, 0);
+      return;
+    }
+  }
+
+done:
   priv->next_eos_seqnum = stack_seqnum;
   g_atomic_int_set (&priv->real_eos_seqnum, stack_seqnum);
-
-  return TRUE;
 }
 
 #ifndef GST_DISABLE_GST_DEBUG

@@ -72,23 +72,36 @@ foreach t : ges_tests
 endforeach
 
 if gstvalidate_dep.found()
-  scenarios = [
-    'check_video_track_restriction_scale',
-    'check_video_track_restriction_scale_with_keyframes',
-    'check_edit_in_frames',
-    'check_edit_in_frames_with_framerate_mismatch',
-    'check_layer_activness_gaps',
-  ]
+  # filename: is .validatetest
+  scenarios = {
+    'check_video_track_restriction_scale': false,
+    'check_video_track_restriction_scale_with_keyframes': false,
+    'check_edit_in_frames': false,
+    'check_edit_in_frames_with_framerate_mismatch': false,
+    'check_layer_activness_gaps': false,
+    'seek_with_stop': true,
+    'seek_with_stop.check_clock_sync': true,
+    'edit_while_seeked_with_stop': true,
+  }
 
-  env = environment()
-  env.set('GST_PLUGIN_SYSTEM_PATH_1_0', '')
-  env.set('GST_STATE_IGNORE_ELEMENTS', '')
-  env.set('CK_DEFAULT_TIMEOUT', '20')
-  env.set('GST_REGISTRY', '@0@/@1@.registry'.format(meson.current_build_dir(), 'scenarios'))
-  env.set('GST_PLUGIN_PATH_1_0', [meson.build_root()] + pluginsdirs)
-  foreach scenario: scenarios
-    scenario_file = join_paths(meson.current_source_dir(), 'scenarios', scenario + '.scenario')
-    test(scenario, ges_launch, env: env, args: ['--set-scenario', scenario_file])
+  foreach scenario, is_validatetest: scenarios
+
+    env = environment()
+    env.set('GST_PLUGIN_SYSTEM_PATH_1_0', '')
+    env.set('GST_STATE_IGNORE_ELEMENTS', '')
+    env.set('CK_DEFAULT_TIMEOUT', '20')
+    env.set('GST_REGISTRY', '@0@/@1@.registry'.format(meson.current_build_dir(), 'scenarios'))
+    env.set('GST_PLUGIN_PATH_1_0', [meson.build_root()] + pluginsdirs)
+    env.set('GST_VALIDATE_LOGSDIR', meson.current_build_dir() / scenario)
+
+    if is_validatetest
+      testfile = meson.current_source_dir() / 'scenarios' / scenario + '.validatetest'
+      test(scenario, ges_launch, env: env, args: ['--set-test-file', testfile, '--mute'])
+    else
+      scenario_file = meson.current_source_dir() / 'scenarios' / scenario + '.scenario'
+      test(scenario, ges_launch, env: env, args: ['--set-scenario', scenario_file])
+    endif
+
   endforeach
   test('simple_playback_test', ges_launch, env: env, args: ['+test-clip', 'blue', 'd=0.1', '--disable-validate', '--videosink=fakevideosink', '--audiosink=fakesink'])
 endif

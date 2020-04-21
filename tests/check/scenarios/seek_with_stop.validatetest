@@ -1,0 +1,27 @@
+meta,
+    tool = "ges-launch-$(gst_api_version)",
+    args = {
+        --videosink, "$(videosink) name=videosink",
+        --audiosink, "$(audiosink) name=audiosink",
+    },
+    handles-states=true,
+    ignore-eos=true,
+    configs = {
+        "$(validateflow), pad=videosink:sink, record-buffers=true, ignored-fields={\"stream-start=stream-id,group-id,stream\"}",
+        "$(validateflow), pad=audiosink:sink, record-buffers=true, ignored-fields={\"stream-start=stream-id,group-id,stream\"}",
+    }
+
+add-clip, name=c0, asset-id=GESTestClip, layer-priority=0, type=GESTestClip, start=0, duration=1.0
+set-child-properties, element-name=c0, pattern=blue, time-mode=time-code, valignment=center, halignment=center
+
+add-clip, name=c1, asset-id=GESTestClip, layer-priority=0, type=GESTestClip, start=1.0, duration=1.0
+set-child-properties, element-name=c1, pattern=red, time-mode=time-code, valignment=center, halignment=center
+pause
+
+seek, start=0.0, stop=0.5, flags=accurate+flush
+play
+
+seek, on-message=eos, start=0.0, stop=0.5, flags=accurate+flush
+seek, on-message=eos, start=0.0, stop=1.0, flags=accurate+flush
+seek, on-message=eos, start=1.0, stop=1.5, flags=accurate+flush
+stop, on-message=eos

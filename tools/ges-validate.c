@@ -150,6 +150,7 @@ ges_validate_activate (GstPipeline * pipeline, GESLauncher * launcher,
       if (!ges_options)
         ges_options = gst_validate_utils_get_strv (metas, "args");
 
+      gst_structure_get_boolean (metas, "ignore-eos", &opts->ignore_eos);
       if (ges_options) {
         gint i;
         gchar **ges_options_full =

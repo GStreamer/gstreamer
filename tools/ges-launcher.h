@@ -52,6 +52,8 @@ typedef struct
   gchar *audio_track_caps;
   gboolean embed_nesteds;
   gboolean disable_validate;
+
+  gboolean ignore_eos;
 } GESLauncherParsedOptions;
 
 struct _GESLauncher {
