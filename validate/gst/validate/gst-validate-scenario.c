@@ -2,7 +2,7 @@
  *
  * Copyright (C) 2013 Collabora Ltd.
  *  Author: Thibault Saunier <thibault.saunier@collabora.com>
- * Copyright (C) 2018-2019 Igalia S.L
+ * Copyright (C) 2018-2020 Igalia S.L
 
  *
  * gst-validate-scenario.c - Validate Scenario class
@@ -2135,7 +2135,9 @@ execute_next_action_full (GstValidateScenario * scenario, GstMessage * message)
   if (message) {
     if (!_check_message_type (scenario, act, message))
       return G_SOURCE_CONTINUE;
-  } else if (!_check_position (scenario, act, &position, &rate)) {
+  } else if ((act && gst_structure_get_string (act->structure, "on-message") &&
+          !GST_CLOCK_TIME_IS_VALID (act->playback_time)) ||
+      (!_check_position (scenario, act, &position, &rate))) {
     return G_SOURCE_CONTINUE;
   }
 
