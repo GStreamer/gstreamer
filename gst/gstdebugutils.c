@@ -614,6 +614,7 @@ debug_dump_element (GstBin * bin, GstDebugGraphDetails details,
   gchar *state_name = NULL;
   gchar *param_name = NULL;
   const gchar *spc = MAKE_INDENT (indent);
+  static const char *const ignore_propnames[] = { "stats", NULL };
 
   element_iter = gst_bin_iterate_elements (bin);
   elements_done = FALSE;
@@ -628,7 +629,7 @@ debug_dump_element (GstBin * bin, GstDebugGraphDetails details,
         }
         if (details & GST_DEBUG_GRAPH_SHOW_NON_DEFAULT_PARAMS) {
           param_name = debug_dump_get_object_params (G_OBJECT (element),
-              details, NULL);
+              details, ignore_propnames);
         }
         /* elements */
         g_string_append_printf (str, "%ssubgraph cluster_%s {\n", spc,
