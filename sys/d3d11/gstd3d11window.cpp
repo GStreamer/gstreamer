@@ -268,15 +268,9 @@ gst_d3d11_window_dispose (GObject * object)
     gst_d3d11_window_release_resources (self->device, self);
   }
 
-  if (self->converter) {
-    gst_d3d11_color_converter_free (self->converter);
-    self->converter = NULL;
-  }
-
-  if (self->compositor) {
-    gst_d3d11_overlay_compositor_free (self->compositor);
-    self->compositor = NULL;
-  }
+  g_clear_pointer (&self->processor, gst_d3d11_video_processor_free);
+  g_clear_pointer (&self->converter, gst_d3d11_color_converter_free);
+  g_clear_pointer (&self->compositor, gst_d3d11_overlay_compositor_free);
 
   gst_clear_buffer (&self->cached_buffer);
   gst_clear_object (&self->device);
