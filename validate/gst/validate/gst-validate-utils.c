@@ -558,6 +558,7 @@ skip_spaces (gchar * c)
 }
 
 /* Parse file that contains a list of GStructures */
+#define GST_STRUCT_LINE_CONTINUATION_CHARS ",{\\["
 static GList *
 _file_get_structures (GFile * file, gchar ** err)
 {
@@ -609,9 +610,9 @@ _file_get_structures (GFile * file, gchar ** err)
     while (*tmp != '\n' && *tmp) {
       gchar next = *(tmp + 1);
 
-      /* ',' and '\\' are line continuation indicators */
-      if (next && next == '\n' && (*tmp == ',' || *tmp == '\\')) {
-        if (*tmp == ',')
+      if (next && next == '\n'
+          && strchr (GST_STRUCT_LINE_CONTINUATION_CHARS, *tmp)) {
+        if (*tmp != '\\')
           g_string_append_c (l, *tmp);
 
         tmp += 2;
