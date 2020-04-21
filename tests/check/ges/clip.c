@@ -518,6 +518,149 @@ GST_START_TEST (test_split_object)
 
 GST_END_TEST;
 
+typedef struct
+{
+  gboolean duration_cb_called;
+  gboolean clip_added_cb_called;
+  gboolean track_selected_cb_called;
+  GESClip *clip;
+} SplitOrderData;
+
+static void
+_track_selected_cb (GESTimelineElement * el, GParamSpec * spec,
+    SplitOrderData * data)
+{
+  GESClip *clip = GES_CLIP (el->parent);
+
+  fail_unless (data->clip == clip, "Parent is %" GES_FORMAT " rather than %"
+      GES_FORMAT, GES_ARGS (clip), GES_ARGS (data->clip));
+
+  fail_unless (data->duration_cb_called, "notify::duration not emitted "
+      "for neighbour of %" GES_FORMAT, GES_ARGS (data->clip));
+  fail_unless (data->clip_added_cb_called, "child-added not emitted for %"
+      GES_FORMAT, GES_ARGS (data->clip));
+
+  data->track_selected_cb_called = TRUE;
+}
+
+static void
+_child_added_cb (GESClip * clip, GESTimelineElement * child,
+    SplitOrderData * data)
+{
+  fail_unless (data->clip == clip, "Received %" GES_FORMAT " rather than %"
+      GES_FORMAT, GES_ARGS (clip), GES_ARGS (data->clip));
+
+  g_signal_connect (child, "notify::track", G_CALLBACK (_track_selected_cb),
+      data);
+}
+
+static void
+_clip_added_cb (GESLayer * layer, GESClip * clip, SplitOrderData * data)
+{
+  GList *tmp;
+
+  data->clip = clip;
+
+  fail_unless (data->duration_cb_called, "notify::duration not emitted "
+      "for neighbour of %" GES_FORMAT, GES_ARGS (data->clip));
+  /* only called once */
+  fail_if (data->clip_added_cb_called, "clip-added already emitted for %"
+      GES_FORMAT, GES_ARGS (data->clip));
+  fail_if (data->track_selected_cb_called, "track selection already "
+      "occurred for %" GES_FORMAT, GES_ARGS (data->clip));
+
+  data->clip_added_cb_called = TRUE;
+
+  g_signal_connect (clip, "child-added", G_CALLBACK (_child_added_cb), data);
+
+  for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next)
+    g_signal_connect (tmp->data, "notify::track",
+        G_CALLBACK (_track_selected_cb), data);
+}
+
+static void
+_disconnect_cbs (GESLayer * layer, GESClip * clip, SplitOrderData * data)
+{
+  GList *tmp;
+  g_signal_handlers_disconnect_by_func (clip, _child_added_cb, data);
+  for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next)
+    g_signal_handlers_disconnect_by_func (tmp->data, _track_selected_cb, data);
+}
+
+static void
+_duration_cb (GObject * object, GParamSpec * pspec, SplitOrderData * data)
+{
+  /* only called once */
+  fail_if (data->duration_cb_called, "notify::duration of neighbour %"
+      GES_FORMAT " already emitted ", GES_ARGS (object));
+  fail_if (data->clip_added_cb_called, "clip-added already emitted");
+  fail_if (data->track_selected_cb_called, "track selection already "
+      "occurred");
+
+  data->duration_cb_called = TRUE;
+}
+
+GST_START_TEST (test_split_ordering)
+{
+  GESTimeline *timeline;
+  GESLayer *layer;
+  GESClip *clip, *splitclip;
+  SplitOrderData data;
+
+  ges_init ();
+
+  timeline = ges_timeline_new_audio_video ();
+
+  layer = ges_timeline_append_layer (timeline);
+
+  clip = GES_CLIP (ges_test_clip_new ());
+  assert_set_duration (clip, 10);
+
+  /* test order when adding clip to a layer */
+  /* don't care about duration yet */
+  data.duration_cb_called = TRUE;
+  data.clip_added_cb_called = FALSE;
+  data.track_selected_cb_called = FALSE;
+  data.clip = NULL;
+
+  g_signal_connect (layer, "clip-added", G_CALLBACK (_clip_added_cb), &data);
+
+  fail_unless (ges_layer_add_clip (layer, clip));
+
+  fail_unless (data.duration_cb_called);
+  fail_unless (data.clip_added_cb_called);
+  fail_unless (data.track_selected_cb_called);
+  fail_unless (data.clip == clip);
+
+  /* now check for the same ordering when splitting, which the original
+   * clip shrinking before the new one is added to the layer */
+  data.duration_cb_called = FALSE;
+  data.clip_added_cb_called = FALSE;
+  data.track_selected_cb_called = FALSE;
+  data.clip = NULL;
+
+  g_signal_connect (clip, "notify::duration", G_CALLBACK (_duration_cb), &data);
+
+  splitclip = ges_clip_split (clip, 5);
+
+  fail_unless (splitclip);
+  fail_unless (data.duration_cb_called);
+  fail_unless (data.clip_added_cb_called);
+  fail_unless (data.track_selected_cb_called);
+  fail_unless (data.clip == splitclip);
+
+  /* disconnect since track of children will change when timeline is
+   * freed */
+  _disconnect_cbs (layer, clip, &data);
+  _disconnect_cbs (layer, splitclip, &data);
+
+  gst_object_unref (timeline);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
 #define _assert_higher_priority(el, higher) \
 { \
   if (higher) { \
@@ -3183,6 +3326,7 @@ ges_suite (void)
 
   tcase_add_test (tc_chain, test_object_properties);
   tcase_add_test (tc_chain, test_split_object);
+  tcase_add_test (tc_chain, test_split_ordering);
   tcase_add_test (tc_chain, test_split_direct_bindings);
   tcase_add_test (tc_chain, test_split_direct_absolute_bindings);
   tcase_add_test (tc_chain, test_clip_group_ungroup);

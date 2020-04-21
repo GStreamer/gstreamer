@@ -2268,13 +2268,8 @@ ges_clip_split (GESClip * clip, guint64 position)
       inpoint + old_duration * media_duration_factor);
   _set_duration0 (GES_TIMELINE_ELEMENT (new_object), new_duration);
 
-  /* We do not want the timeline to create again TrackElement-s */
-  ges_clip_set_moving_from_layer (new_object, TRUE);
-  /* adding to the same layer should not fail when moving */
-  ges_layer_add_clip (clip->priv->layer, new_object);
-  ges_clip_set_moving_from_layer (new_object, FALSE);
-
-  /* split binding before duration changes */
+  /* split binding before duration changes since shrinking can destroy
+   * binding values */
   track_for_copy = g_hash_table_new_full (NULL, NULL,
       gst_object_unref, gst_object_unref);
   /* _add_child will add core elements at the lowest priority and new
@@ -2297,6 +2292,12 @@ ges_clip_split (GESClip * clip, guint64 position)
   GES_TIMELINE_ELEMENT_SET_BEING_EDITED (clip);
   _set_duration0 (GES_TIMELINE_ELEMENT (clip), old_duration);
   GES_TIMELINE_ELEMENT_UNSET_BEING_EDITED (clip);
+
+  /* We do not want the timeline to create again TrackElement-s */
+  ges_clip_set_moving_from_layer (new_object, TRUE);
+  /* adding to the same layer should not fail when moving */
+  ges_layer_add_clip (clip->priv->layer, new_object);
+  ges_clip_set_moving_from_layer (new_object, FALSE);
 
   /* add to the track after the duration change so we don't overlap! */
   for (tmp = GES_CONTAINER_CHILDREN (new_object); tmp; tmp = tmp->next) {
