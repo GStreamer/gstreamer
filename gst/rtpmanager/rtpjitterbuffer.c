@@ -87,7 +87,7 @@ rtp_jitter_buffer_init (RTPJitterBuffer * jbuf)
 {
   g_mutex_init (&jbuf->clock_lock);
 
-  jbuf->packets = g_queue_new ();
+  g_queue_init (&jbuf->packets);
   jbuf->mode = RTP_JITTER_BUFFER_MODE_SLAVE;
 
   rtp_jitter_buffer_reset_skew (jbuf);
@@ -112,7 +112,10 @@ rtp_jitter_buffer_finalize (GObject * object)
   if (jbuf->pipeline_clock)
     gst_object_unref (jbuf->pipeline_clock);
 
-  g_queue_free (jbuf->packets);
+  /* We cannot use g_queue_clear() as it would pass the wrong size to
+   * g_slice_free() which may lead to data corruption in the slice allocator.
+   */
+  rtp_jitter_buffer_flush (jbuf, NULL, NULL);
 
   g_mutex_clear (&jbuf->clock_lock);
 
@@ -385,7 +388,7 @@ get_buffer_level (RTPJitterBuffer * jbuf)
   guint64 level;
 
   /* first buffer with timestamp */
-  high_buf = (RTPJitterBufferItem *) g_queue_peek_tail_link (jbuf->packets);
+  high_buf = (RTPJitterBufferItem *) g_queue_peek_tail_link (&jbuf->packets);
   while (high_buf) {
     if (high_buf->dts != -1 || high_buf->pts != -1)
       break;
@@ -393,7 +396,7 @@ get_buffer_level (RTPJitterBuffer * jbuf)
     high_buf = (RTPJitterBufferItem *) g_list_previous (high_buf);
   }
 
-  low_buf = (RTPJitterBufferItem *) g_queue_peek_head_link (jbuf->packets);
+  low_buf = (RTPJitterBufferItem *) g_queue_peek_head_link (&jbuf->packets);
   while (low_buf) {
     if (low_buf->dts != -1 || low_buf->pts != -1)
       break;
@@ -672,7 +675,7 @@ no_skew:
 static void
 queue_do_insert (RTPJitterBuffer * jbuf, GList * list, GList * item)
 {
-  GQueue *queue = jbuf->packets;
+  GQueue *queue = &jbuf->packets;
 
   /* It's more likely that the packet was inserted at the tail of the queue */
   if (G_LIKELY (list)) {
@@ -971,7 +974,7 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, RTPJitterBufferItem * item,
   g_return_val_if_fail (jbuf != NULL, FALSE);
   g_return_val_if_fail (item != NULL, FALSE);
 
-  list = jbuf->packets->tail;
+  list = jbuf->packets.tail;
 
   /* no seqnum, simply append then */
   if (item->seqnum == -1)
@@ -1062,7 +1065,7 @@ rtp_jitter_buffer_pop (RTPJitterBuffer * jbuf, gint * percent)
 
   g_return_val_if_fail (jbuf != NULL, NULL);
 
-  queue = jbuf->packets;
+  queue = &jbuf->packets;
 
   item = queue->head;
   if (item) {
@@ -1099,7 +1102,7 @@ rtp_jitter_buffer_peek (RTPJitterBuffer * jbuf)
 {
   g_return_val_if_fail (jbuf != NULL, NULL);
 
-  return (RTPJitterBufferItem *) jbuf->packets->head;
+  return (RTPJitterBufferItem *) jbuf->packets.head;
 }
 
 /**
@@ -1119,7 +1122,7 @@ rtp_jitter_buffer_flush (RTPJitterBuffer * jbuf, GFunc free_func,
   g_return_if_fail (jbuf != NULL);
   g_return_if_fail (free_func != NULL);
 
-  while ((item = g_queue_pop_head_link (jbuf->packets)))
+  while ((item = g_queue_pop_head_link (&jbuf->packets)))
     free_func ((RTPJitterBufferItem *) item, user_data);
 }
 
@@ -1191,7 +1194,7 @@ rtp_jitter_buffer_num_packets (RTPJitterBuffer * jbuf)
 {
   g_return_val_if_fail (jbuf != NULL, 0);
 
-  return jbuf->packets->length;
+  return jbuf->packets.length;
 }
 
 /**
@@ -1212,8 +1215,8 @@ rtp_jitter_buffer_get_ts_diff (RTPJitterBuffer * jbuf)
 
   g_return_val_if_fail (jbuf != NULL, 0);
 
-  high_buf = (RTPJitterBufferItem *) g_queue_peek_tail_link (jbuf->packets);
-  low_buf = (RTPJitterBufferItem *) g_queue_peek_head_link (jbuf->packets);
+  high_buf = (RTPJitterBufferItem *) g_queue_peek_tail_link (&jbuf->packets);
+  low_buf = (RTPJitterBufferItem *) g_queue_peek_head_link (&jbuf->packets);
 
   if (!high_buf || !low_buf || high_buf == low_buf)
     return 0;
@@ -1249,8 +1252,8 @@ rtp_jitter_buffer_get_seqnum_diff (RTPJitterBuffer * jbuf)
 
   g_return_val_if_fail (jbuf != NULL, 0);
 
-  high_buf = (RTPJitterBufferItem *) g_queue_peek_tail_link (jbuf->packets);
-  low_buf = (RTPJitterBufferItem *) g_queue_peek_head_link (jbuf->packets);
+  high_buf = (RTPJitterBufferItem *) g_queue_peek_tail_link (&jbuf->packets);
+  low_buf = (RTPJitterBufferItem *) g_queue_peek_head_link (&jbuf->packets);
 
   while (high_buf && high_buf->seqnum == -1)
     high_buf = (RTPJitterBufferItem *) high_buf->prev;

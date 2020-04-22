@@ -73,7 +73,7 @@ GType rtp_jitter_buffer_mode_get_type (void);
 struct _RTPJitterBuffer {
   GObject        object;
 
-  GQueue        *packets;
+  GQueue         packets;
 
   RTPJitterBufferMode mode;
 
