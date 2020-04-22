@@ -5,7 +5,7 @@ project('gst-svt-av1', 'c',
   default_options : [ 'buildtype=debugoptimized' ])
 
 # standard gst-plugins-bad dependencies and configuration
-gst_req = '>= 1.8'
+gst_req = '>= 1.13.1'
 gst_dep = dependency('gstreamer-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_dep'])
 gstbase_dep = dependency('gstreamer-base-1.0', version : gst_req,
