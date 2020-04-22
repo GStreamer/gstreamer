@@ -73,6 +73,7 @@ void gst_validate_spin_on_fault_signals (void);
 GST_VALIDATE_API
 gboolean gst_validate_element_matches_target (GstElement * element, GstStructure * s);
 gchar * gst_validate_replace_variables_in_string (GstStructure * local_vars, const gchar * in_string);
+GST_VALIDATE_API
 void gst_validate_structure_resolve_variables (GstStructure *structure, GstStructure *local_variables);
 void gst_validate_set_globals (GstStructure *structure);
 

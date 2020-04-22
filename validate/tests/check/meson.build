@@ -5,6 +5,7 @@ validate_tests = [
   ['validate/reporting'],
   ['validate/overrides'],
   ['validate/scenario'],
+  ['validate/utilities'],
   ['validate/expression_parser'],
 ]
 
