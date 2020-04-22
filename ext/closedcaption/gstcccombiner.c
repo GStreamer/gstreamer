@@ -175,8 +175,17 @@ gst_cc_combiner_collect_captions (GstCCCombiner * self, gboolean timeout)
     if (caption_time >= self->current_video_running_time_end) {
       gst_buffer_unref (caption_buf);
       break;
+    } else if (GST_CLOCK_TIME_IS_VALID (self->previous_video_running_time_end)) {
+      if (caption_time < self->previous_video_running_time_end) {
+        GST_WARNING_OBJECT (self,
+            "Caption buffer before end of last video frame, dropping");
+
+        gst_aggregator_pad_drop_buffer (caption_pad);
+        gst_buffer_unref (caption_buf);
+        continue;
+      }
     } else if (caption_time < self->current_video_running_time) {
-      GST_DEBUG_OBJECT (self,
+      GST_WARNING_OBJECT (self,
           "Caption buffer before current video frame, dropping");
 
       gst_aggregator_pad_drop_buffer (caption_pad);
@@ -359,6 +368,8 @@ gst_cc_combiner_aggregate (GstAggregator * aggregator, gboolean timeout)
     flow_ret = GST_FLOW_OK;
   } else {
     gst_buffer_replace (&self->current_video_buffer, NULL);
+    self->previous_video_running_time_end =
+        self->current_video_running_time_end;
     self->current_video_running_time = self->current_video_running_time_end =
         GST_CLOCK_TIME_NONE;
   }
@@ -419,7 +430,7 @@ gst_cc_combiner_stop (GstAggregator * aggregator)
 
   self->video_fps_n = self->video_fps_d = 0;
   self->current_video_running_time = self->current_video_running_time_end =
-      GST_CLOCK_TIME_NONE;
+      self->previous_video_running_time_end = GST_CLOCK_TIME_NONE;
   gst_buffer_replace (&self->current_video_buffer, NULL);
 
   g_array_set_size (self->current_frame_captions, 0);
@@ -436,7 +447,7 @@ gst_cc_combiner_flush (GstAggregator * aggregator)
       GST_AGGREGATOR_PAD (GST_AGGREGATOR_SRC_PAD (aggregator));
 
   self->current_video_running_time = self->current_video_running_time_end =
-      GST_CLOCK_TIME_NONE;
+      self->previous_video_running_time_end = GST_CLOCK_TIME_NONE;
   gst_buffer_replace (&self->current_video_buffer, NULL);
 
   g_array_set_size (self->current_frame_captions, 0);
@@ -630,7 +641,7 @@ gst_cc_combiner_init (GstCCCombiner * self)
       (GDestroyNotify) caption_data_clear);
 
   self->current_video_running_time = self->current_video_running_time_end =
-      GST_CLOCK_TIME_NONE;
+      self->previous_video_running_time_end = GST_CLOCK_TIME_NONE;
 
   self->current_caption_type = GST_VIDEO_CAPTION_TYPE_UNKNOWN;
 }
