@@ -495,19 +495,11 @@ build vs2017 amd64:
 
 build vs2017 x86:
   extends: '.build windows'
-  # Disabled until the container image can be updated
-  rules:
-    - allow_failure: true
-      when: 'manual'
   variables:
     ARCH: 'x86'
 
 build msys2 :
   extends: '.build windows'
-  # Disabled until the container image can be updated
-  rules:
-    - allow_failure: true
-      when: 'manual'
   timeout: '60min'
   script:
     # Sometimes there's seems to be an existing gst-build clone that comes either from the ether or
