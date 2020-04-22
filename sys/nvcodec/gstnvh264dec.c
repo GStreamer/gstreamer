@@ -1011,7 +1011,7 @@ gst_nv_h264_dec_subclass_init (gpointer klass, GstNvH264DecClassData * cdata)
 
 void
 gst_nv_h264_dec_register (GstPlugin * plugin, guint device_id, guint rank,
-    GstCaps * sink_caps, GstCaps * src_caps)
+    GstCaps * sink_caps, GstCaps * src_caps, gboolean is_primary)
 {
   GTypeQuery type_query;
   GTypeInfo type_info = { 0, };
@@ -1048,14 +1048,25 @@ gst_nv_h264_dec_register (GstPlugin * plugin, guint device_id, guint rank,
   type_info.class_init = (GClassInitFunc) gst_nv_h264_dec_subclass_init;
   type_info.class_data = cdata;
 
-  type_name = g_strdup ("GstNvH264StatelessDec");
-  feature_name = g_strdup ("nvh264sldec");
+  if (is_primary) {
+    type_name = g_strdup ("GstNvH264StatelessPrimaryDec");
+    feature_name = g_strdup ("nvh264dec");
+  } else {
+    type_name = g_strdup ("GstNvH264StatelessDec");
+    feature_name = g_strdup ("nvh264sldec");
+  }
 
   if (g_type_from_name (type_name) != 0) {
     g_free (type_name);
     g_free (feature_name);
-    type_name = g_strdup_printf ("GstNvH264StatelessDevice%dDec", device_id);
-    feature_name = g_strdup_printf ("nvh264sldevice%ddec", device_id);
+    if (is_primary) {
+      type_name =
+          g_strdup_printf ("GstNvH264StatelessPrimaryDevice%dDec", device_id);
+      feature_name = g_strdup_printf ("nvh264device%ddec", device_id);
+    } else {
+      type_name = g_strdup_printf ("GstNvH264StatelessDevice%dDec", device_id);
+      feature_name = g_strdup_printf ("nvh264sldevice%ddec", device_id);
+    }
 
     is_default = FALSE;
   }

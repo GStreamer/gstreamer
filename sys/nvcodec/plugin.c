@@ -52,6 +52,8 @@ plugin_init (GstPlugin * plugin)
   /* hardcoded minimum supported version */
   guint api_major_ver = 8;
   guint api_minor_ver = 1;
+  const gchar *env;
+  gboolean use_h264_sl_dec = FALSE;
 
   GST_DEBUG_CATEGORY_INIT (gst_nvcodec_debug, "nvcodec", 0, "nvcodec");
   GST_DEBUG_CATEGORY_INIT (gst_nvdec_debug, "nvdec", 0, "nvdec");
@@ -89,6 +91,26 @@ plugin_init (GstPlugin * plugin)
     return TRUE;
   }
 
+  /* check environment to determine primary h264decoder */
+  env = g_getenv ("GST_USE_NV_STATELESS_CODEC");
+  if (env) {
+    gchar **split;
+    gchar **iter;
+
+    split = g_strsplit (env, ",", 0);
+
+    for (iter = split; *iter; iter++) {
+      if (g_ascii_strcasecmp (*iter, "h264") == 0) {
+        GST_INFO ("Found %s in GST_USE_NV_STATELESS_CODEC environment", *iter);
+        use_h264_sl_dec = TRUE;
+        break;
+      }
+
+    }
+
+    g_strfreev (split);
+  }
+
   for (i = 0; i < dev_count; i++) {
     CUdevice cuda_device;
     CUcontext cuda_ctx;
@@ -115,6 +137,7 @@ plugin_init (GstPlugin * plugin)
         GstCaps *sink_template = NULL;
         GstCaps *src_template = NULL;
         cudaVideoCodec codec = (cudaVideoCodec) j;
+        gboolean register_cuviddec = TRUE;
 
         if (gst_nv_decoder_check_device_caps (cuda_ctx,
                 codec, &sink_template, &src_template)) {
@@ -124,12 +147,21 @@ plugin_init (GstPlugin * plugin)
               "src template %" GST_PTR_FORMAT, codec_name,
               sink_template, src_template);
 
-          gst_nvdec_plugin_init (plugin,
-              i, codec, codec_name, sink_template, src_template);
-
           if (codec == cudaVideoCodec_H264) {
             gst_nv_h264_dec_register (plugin,
-                i, GST_RANK_SECONDARY, sink_template, src_template);
+                i, GST_RANK_SECONDARY, sink_template, src_template, FALSE);
+            if (use_h264_sl_dec) {
+              GST_INFO ("Skip register cuvid parser based nvh264dec");
+              register_cuviddec = FALSE;
+
+              gst_nv_h264_dec_register (plugin,
+                  i, GST_RANK_PRIMARY, sink_template, src_template, TRUE);
+            }
+          }
+
+          if (register_cuviddec) {
+            gst_nvdec_plugin_init (plugin,
+                i, codec, codec_name, sink_template, src_template);
           }
 
           gst_caps_unref (sink_template);

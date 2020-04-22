@@ -41,7 +41,8 @@ void gst_nv_h264_dec_register (GstPlugin * plugin,
                                guint device_id,
                                guint rank,
                                GstCaps * sink_caps,
-                               GstCaps * src_caps);
+                               GstCaps * src_caps,
+                               gboolean is_primary);
 
 G_END_DECLS
 
