@@ -58,6 +58,8 @@ struct _GESAutoTransition
 
   gchar *key;
 
+  gboolean frozen;
+
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };

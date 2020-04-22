@@ -103,6 +103,8 @@ GstDebugCategory * _ges_debug (void);
 
 #define SUPRESS_UNUSED_WARNING(a) (void)a
 
+G_GNUC_INTERNAL void
+ges_timeline_freeze_auto_transitions (GESTimeline * timeline, gboolean freeze);
 
 G_GNUC_INTERNAL gboolean
 ges_timeline_edit (GESTimeline * timeline, GESTimelineElement * element,
@@ -134,10 +136,6 @@ timeline_remove_element       (GESTimeline *timeline,
 G_GNUC_INTERNAL
 GNode *
 timeline_get_tree           (GESTimeline *timeline);
-
-G_GNUC_INTERNAL
-void
-timeline_update_transition (GESTimeline *timeline);
 
 G_GNUC_INTERNAL
 void

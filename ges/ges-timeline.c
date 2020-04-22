@@ -1110,6 +1110,24 @@ done:
   }
 }
 
+void
+ges_timeline_freeze_auto_transitions (GESTimeline * timeline, gboolean freeze)
+{
+  GList *tmp, *trans = g_list_copy (timeline->priv->auto_transitions);
+  for (tmp = trans; tmp; tmp = tmp->next) {
+    GESAutoTransition *auto_transition = tmp->data;
+    auto_transition->frozen = freeze;
+    if (freeze == FALSE) {
+      GST_LOG_OBJECT (timeline, "Un-Freezing %" GES_FORMAT,
+          GES_ARGS (auto_transition->transition_clip));
+      ges_auto_transition_update (auto_transition);
+    } else {
+      GST_LOG_OBJECT (timeline, "Freezing %" GES_FORMAT,
+          GES_ARGS (auto_transition->transition_clip));
+    }
+  }
+  g_list_free (trans);
+}
 
 static gint
 _edit_auto_transition (GESTimeline * timeline, GESTimelineElement * element,
@@ -1215,17 +1233,6 @@ timeline_add_group (GESTimeline * timeline, GESGroup * group)
       gst_object_ref_sink (group));
 
   ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (group), timeline);
-}
-
-void
-timeline_update_transition (GESTimeline * timeline)
-{
-  GList *tmp, *auto_transs;
-
-  auto_transs = g_list_copy (timeline->priv->auto_transitions);
-  for (tmp = auto_transs; tmp; tmp = tmp->next)
-    ges_auto_transition_update (tmp->data);
-  g_list_free (auto_transs);
 }
 
 /**
@@ -1689,8 +1696,7 @@ ges_timeline_add_clip (GESTimeline * timeline, GESClip * clip)
   if (ges_clip_is_moving_from_layer (clip)) {
     GST_DEBUG ("Clip %p moving from one layer to another, not creating "
         "TrackElement", clip);
-    timeline_tree_create_transitions (timeline->priv->tree,
-        ges_timeline_find_auto_transition);
+    /* timeline-tree handles creation of auto-transitions */
     ret = TRUE;
   } else {
     ret = add_object_to_tracks (timeline, clip, NULL);

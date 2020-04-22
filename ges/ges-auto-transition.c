@@ -43,33 +43,25 @@ neighbour_changed_cb (GESClip * clip, GParamSpec * arg G_GNUC_UNUSED,
     GESAutoTransition * self)
 {
   gint64 new_duration;
-  GESTimelineElement *parent =
-      ges_timeline_element_peak_toplevel (GES_TIMELINE_ELEMENT (clip));
+  guint32 layer_prio;
+  GESLayer *layer;
+  GESTimeline *timeline;
 
-  if (GES_TIMELINE_ELEMENT_BEING_EDITED (parent))
+  if (self->frozen) {
+    GST_LOG_OBJECT (self, "Not updating because frozen");
     return;
-
-  if (parent) {
-    GESTimelineElement *prev_topparent =
-        ges_timeline_element_peak_toplevel (GES_TIMELINE_ELEMENT
-        (self->next_source));
-    GESTimelineElement *next_topparent =
-        ges_timeline_element_peak_toplevel (GES_TIMELINE_ELEMENT
-        (self->previous_source));
-
-    if (GES_TIMELINE_ELEMENT_BEING_EDITED (prev_topparent) ||
-        GES_TIMELINE_ELEMENT_BEING_EDITED (next_topparent))
-      return;
-
-    if (parent == prev_topparent && parent == next_topparent) {
-      GST_DEBUG_OBJECT (self,
-          "Moving all inside the same group, nothing to do");
-      return;
-    }
   }
 
-  if (GES_TIMELINE_ELEMENT_LAYER_PRIORITY (self->next_source) !=
-      GES_TIMELINE_ELEMENT_LAYER_PRIORITY (self->previous_source)) {
+  if (self->positioning) {
+    /* this can happen when the transition is moved layers as the layer
+     * may resync its priorities */
+    GST_LOG_OBJECT (self, "Not updating because positioning");
+    return;
+  }
+
+  layer_prio = GES_TIMELINE_ELEMENT_LAYER_PRIORITY (self->next_source);
+
+  if (layer_prio != GES_TIMELINE_ELEMENT_LAYER_PRIORITY (self->previous_source)) {
     GST_DEBUG_OBJECT (self, "Destroy changed layer");
     g_signal_emit (self, auto_transition_signals[DESTROY_ME], 0);
     return;
@@ -88,13 +80,24 @@ neighbour_changed_cb (GESClip * clip, GParamSpec * arg G_GNUC_UNUSED,
     return;
   }
 
+  timeline = GES_TIMELINE_ELEMENT_TIMELINE (self->transition_clip);
+  layer = timeline ? ges_timeline_get_layer (timeline, layer_prio) : NULL;
+  if (!layer) {
+    GST_DEBUG_OBJECT (self, "Destroy no layer");
+    g_signal_emit (self, auto_transition_signals[DESTROY_ME], 0);
+    return;
+  }
+
   self->positioning = TRUE;
   GES_TIMELINE_ELEMENT_SET_BEING_EDITED (self->transition_clip);
   _set_start0 (GES_TIMELINE_ELEMENT (self->transition_clip),
       _START (self->next_source));
   _set_duration0 (GES_TIMELINE_ELEMENT (self->transition_clip), new_duration);
+  ges_clip_move_to_layer (self->transition_clip, layer);
   GES_TIMELINE_ELEMENT_UNSET_BEING_EDITED (self->transition_clip);
   self->positioning = FALSE;
+
+  gst_object_unref (layer);
 }
 
 static void
@@ -153,6 +156,7 @@ ges_auto_transition_new (GESTrackElement * transition,
 {
   GESAutoTransition *self = g_object_new (GES_TYPE_AUTO_TRANSITION, NULL);
 
+  self->frozen = FALSE;
   self->previous_source = previous_source;
   self->next_source = next_source;
   self->transition = transition;

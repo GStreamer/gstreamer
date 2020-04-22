@@ -1541,6 +1541,9 @@ timeline_tree_perform_edits (GNode * root, GHashTable * edits)
   GHashTableIter iter;
   gpointer key, value;
 
+  /* freeze the auto-transitions whilst we edit */
+  ges_timeline_freeze_auto_transitions (root->data, TRUE);
+
   g_hash_table_iter_init (&iter, edits);
   while (g_hash_table_iter_next (&iter, &key, &value)) {
     GESTimelineElement *element = key;
@@ -1548,9 +1551,10 @@ timeline_tree_perform_edits (GNode * root, GHashTable * edits)
     if (!perform_element_edit (element, edit_data))
       no_errors = FALSE;
   }
+  /* allow the transitions to update if they can */
+  ges_timeline_freeze_auto_transitions (root->data, FALSE);
 
   timeline_tree_create_transitions (root, ges_timeline_find_auto_transition);
-  timeline_update_transition (root->data);
   timeline_update_duration (root->data);
 
   return no_errors;
@@ -2032,6 +2036,10 @@ create_transition_if_needed (GESTimeline * timeline, GESTrackElement * prev,
         "]", _START (next), duration);
     ges_timeline_create_transition (timeline, prev, next, NULL, layer,
         _START (next), duration);
+  } else {
+    GST_INFO ("Already have transition %" GES_FORMAT " between %" GES_FORMAT
+        " and %" GES_FORMAT, GES_ARGS (trans), GES_ARGS (prev),
+        GES_ARGS (next));
   }
 }
 
@@ -2043,12 +2051,10 @@ create_transitions (GNode * node,
   GESTimeline *timeline;
   GESLayer *layer;
 
-  if (G_NODE_IS_ROOT (node))
+  if (!GES_IS_SOURCE (node->data))
     return FALSE;
 
   timeline = GES_TIMELINE_ELEMENT_TIMELINE (node->data);
-  if (!GES_IS_SOURCE (node->data))
-    return FALSE;
 
   if (!timeline) {
     GST_INFO ("%" GES_FORMAT " not in timeline yet", GES_ARGS (node->data));
@@ -2064,6 +2070,7 @@ create_transitions (GNode * node,
   if (!ges_layer_get_auto_transition (layer))
     return FALSE;
 
+  GST_LOG (node->data, "Checking for overlaps");
   data.root = g_node_get_root (node);
   check_all_overlaps_with_element (node, &data);
 
