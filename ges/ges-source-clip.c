@@ -53,10 +53,52 @@ enum
   PROP_0,
 };
 
+static GESExtractableInterface *parent_extractable_iface = NULL;
+
+static gchar *
+extractable_check_id (GType type, const gchar * id, GError ** error)
+{
+  if (type == GES_TYPE_SOURCE_CLIP) {
+    g_set_error (error, GES_ERROR, GES_ERROR_ASSET_WRONG_ID,
+        "Only `time-overlay` is supported as an ID for type: `GESSourceClip`,"
+        " got: '%s'", id);
+    return NULL;
+  }
+
+  return parent_extractable_iface->check_id (type, id, error);
+}
+
+static GType
+extractable_get_real_extractable_type (GType wanted_type, const gchar * id)
+{
+  GstStructure *structure;
+
+  if (!id || (wanted_type != GES_TYPE_SOURCE_CLIP
+          && wanted_type != GES_TYPE_TEST_CLIP))
+    return wanted_type;
+
+  structure = gst_structure_new_from_string (id);
+  if (!structure)
+    return wanted_type;
+
+  if (gst_structure_has_name (structure, "time-overlay"))
+    /* Just reusing TestClip to create a GESTimeOverlayClip
+     * as it already does the job! */
+    wanted_type = GES_TYPE_TEST_CLIP;
+
+  gst_structure_free (structure);
+
+  return wanted_type;
+}
+
 static void
 extractable_interface_init (GESExtractableInterface * iface)
 {
   iface->asset_type = GES_TYPE_SOURCE_CLIP_ASSET;
+  iface->get_real_extractable_type = extractable_get_real_extractable_type;
+  iface->check_id = extractable_check_id;
+
+  parent_extractable_iface = g_type_interface_peek_parent (iface);
 }
 
 G_DEFINE_TYPE_WITH_CODE (GESSourceClip, ges_source_clip,

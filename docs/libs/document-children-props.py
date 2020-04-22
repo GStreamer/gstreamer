@@ -33,24 +33,32 @@ if __name__ == "__main__":
     layer = tl.append_layer()
 
     elements = []
-    def add_clip(c, add=True):
+    def add_clip(c, add=True, override_name=None):
         c.props.duration = Gst.SECOND
         c.props.start = layer.get_duration()
         layer.add_clip(c)
         if add:
             elements.extend(c.children)
+        else:
+            if override_name:
+                elements.append((c, override_name))
+            else:
+                elements.append(c)
 
     add_clip(GES.UriClipAsset.request_sync(Gst.filename_to_uri(os.path.join("../../", "tests/check/assets/audio_video.ogg"))).extract())
     add_clip(GES.TestClip.new())
     add_clip(GES.TitleClip.new())
-    transition = GES.TransitionClip.new_for_nick("crossfade")
-    add_clip(transition, False)
-    elements.append(transition)
+
+    add_clip(GES.SourceClip.new_time_overlay(), False, "GESTimeOverlaySourceClip")
+    add_clip(GES.TransitionClip.new_for_nick("crossfade"), False)
 
     for element in elements:
-        gtype = element.__gtype__
+        if isinstance(element, tuple):
+            element, gtype = element
+        else:
+            gtype = element.__gtype__.name
         print(gtype)
-        with open(gtype.name + '-children-props.md', 'w') as f:
+        with open(gtype + '-children-props.md', 'w') as f:
             for prop in GES.TimelineElement.list_children_properties(element):
                 prefix = '#### `%s`\n\n' % (prop.name)
 

@@ -3999,7 +3999,7 @@ GST_START_TEST (test_copy_paste_children_properties)
 
   timeline = ges_timeline_new_audio_video ();
   layer = ges_timeline_append_layer (timeline);
-  clip = GES_TIMELINE_ELEMENT (ges_test_clip_new ());
+  clip = GES_TIMELINE_ELEMENT (ges_source_clip_new_time_overlay ());
   assert_set_duration (clip, 50);
 
   fail_unless (ges_layer_add_clip (layer, GES_CLIP (clip)));

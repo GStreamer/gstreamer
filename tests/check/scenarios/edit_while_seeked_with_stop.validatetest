@@ -12,11 +12,11 @@ meta,
         "$(validateflow), pad=videosink:sink, record-buffers=true, ignored-fields=\"stream-start={stream-id,group-id,stream}\"",
     }
 
-add-clip, name=c0, asset-id=GESTestClip, layer-priority=0, type=GESTestClip, start=0, duration=1.0
-set-child-properties, element-name=c0, pattern=blue, time-mode=time-code, valignment=center, halignment=center
+add-clip, name=c0, asset-id=time-overlay, layer-priority=0, type=GESSourceClip, start=0, duration=1.0
+set-child-properties, element-name=c0, pattern=blue, valignment=center, halignment=center, time-mode=time-code
 
-add-clip, name=c1, asset-id=GESTestClip, layer-priority=0, type=GESTestClip, start=1.0, duration=1.0
-set-child-properties, element-name=c1, pattern=red, time-mode=time-code, valignment=center, halignment=center
+add-clip, name=c1, asset-id=time-overlay, layer-priority=0, type=GESSourceClip, start=1.0, duration=1.0
+set-child-properties, element-name=c1, pattern=red, valignment=center, halignment=center, time-mode=time-code
 commit;
 play
 

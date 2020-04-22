@@ -63,6 +63,8 @@ static void
 ges_extractable_interface_init (GESExtractableInterface * iface)
 {
   iface->set_asset = ges_video_source_set_asset;
+
+  parent_extractable_iface = g_type_interface_peek_parent (iface);
 }
 
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GESVideoSource, ges_video_source,
@@ -233,16 +235,6 @@ ges_video_source_class_init (GESVideoSourceClass * klass)
 static void
 ges_video_source_init (GESVideoSource * self)
 {
-  if (g_once_init_enter (&parent_extractable_iface)) {
-    GESExtractableInterface *iface, *parent_iface;
-
-    iface =
-        G_TYPE_INSTANCE_GET_INTERFACE (self, GES_TYPE_EXTRACTABLE,
-        GESExtractableInterface);
-    parent_iface = g_type_interface_peek_parent (iface);
-    g_once_init_leave (&parent_extractable_iface, parent_iface);
-  }
-
   self->priv = ges_video_source_get_instance_private (self);
   self->priv->positioner = NULL;
   self->priv->capsfilter = NULL;

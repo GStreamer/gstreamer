@@ -1,6 +1,8 @@
 /* GStreamer Editing Services
  * Copyright (C) 2010 Brandon Lewis <brandon.lewis@collabora.co.uk>
  *               2010 Nokia Corporation
+ * Copyright (C) 2020 Igalia S.L
+ *     Author: 2020 Thibault Saunier <tsaunier@igalia.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

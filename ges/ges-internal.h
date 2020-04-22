@@ -501,9 +501,11 @@ ges_video_uri_source_get_natural_size(GESVideoSource* source, gint* width, gint*
 /**********************************
  *  GESTestClipAsset internal API *
  **********************************/
-G_GNUC_INTERNAL gboolean ges_test_clip_asset_get_natural_size(GESAsset *self,
-                                                              gint *width,
-                                                              gint *height);
+G_GNUC_INTERNAL gboolean ges_test_clip_asset_get_natural_size (GESAsset *self,
+                                                               gint *width,
+                                                               gint *height);
+G_GNUC_INTERNAL gchar *ges_test_source_asset_check_id         (GType type, const gchar *id,
+                                                               GError **error);
 
 /************************
  * Our property masks   *

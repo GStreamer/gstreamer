@@ -6,6 +6,7 @@ gi-index
 		ges-uri-clip.h
 		ges-title-clip.h
 		ges-test-clip.h
+		ges-time-overlay-clip.h
 		ges-effect-clip.h
 		ges-transition-clip.h
 	ges-pipeline.h

@@ -5,7 +5,7 @@ description, handles-states=true,
         "--videosink=fakesink"\
     }
 
-add-clip, name=clip, asset-id="framerate=120/1", layer-priority=0, type=GESTestClip, pattern=blue, duration=f240, inpoint=f100
+add-clip, name=clip, asset-id="time-overlay,framerate=120/1", layer-priority=0, type=GESSourceClip, pattern=blue, duration=f240, inpoint=f100
 set-child-properties, element-name=clip, time-mode=time-code
 pause
 

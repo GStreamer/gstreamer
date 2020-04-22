@@ -33,6 +33,7 @@
 #include <ges/ges-clip.h>
 #include <ges/ges-pipeline.h>
 #include <ges/ges-source-clip.h>
+#include <ges/ges-time-overlay-clip.h>
 #include <ges/ges-test-clip.h>
 #include <ges/ges-title-clip.h>
 #include <ges/ges-operation-clip.h>

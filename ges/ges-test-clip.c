@@ -1,6 +1,8 @@
 /* GStreamer Editing Services
  * Copyright (C) 2009 Edward Hervey <edward.hervey@collabora.co.uk>
  *               2009 Nokia Corporation
+ * Copyright (C) 2020 Igalia S.L
+ *     Author: 2020 Thibault Saunier <tsaunier@igalia.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -28,7 +30,7 @@
  * ## Asset
  *
  * The default asset ID is GESTestClip, but the framerate and video
- * size can be overriden using an ID of the form:
+ * size can be overridden using an ID of the form:
  *
  * ```
  * framerate=60/1, width=1920, height=1080, max-duration=5.0
@@ -167,15 +169,21 @@ typedef struct
   GType type;
 } ValidField;
 
-static gchar *
-ges_extractable_check_id (GType type, const gchar * id, GError ** error)
+gchar *
+ges_test_source_asset_check_id (GType type, const gchar * id, GError ** error)
 {
   if (id && g_strcmp0 (id, g_type_name (type))) {
-    gchar *struct_str = g_strdup_printf ("%s,%s", g_type_name (type), id);
     gchar *res = NULL;
-    GstStructure *structure = gst_structure_from_string (struct_str, NULL);
+    GstStructure *structure = gst_structure_from_string (id, NULL);
 
-    GST_DEBUG ("Structure is %s %" GST_PTR_FORMAT, struct_str, structure);
+    if (!structure) {
+      gchar *struct_str = g_strdup_printf ("%s,%s", g_type_name (type), id);
+
+      structure = gst_structure_from_string (struct_str, NULL);
+      g_free (struct_str);
+    }
+
+    GST_INFO ("Test source ID: %" GST_PTR_FORMAT, structure);
     if (!structure) {
       g_set_error (error, GES_ERROR, GES_ERROR_ASSET_WRONG_ID,
           "GESTestClipAsset ID should be in the form: `framerate=30/1, "
@@ -186,6 +194,7 @@ ges_extractable_check_id (GType type, const gchar * id, GError ** error)
         {"height", G_TYPE_INT},
         {"framerate", G_TYPE_NONE},     /* GST_TYPE_FRACTION is not constant */
         {"max-duration", GST_TYPE_CLOCK_TIME},
+        {"disable-timecodestamper", G_TYPE_BOOLEAN},
       };
       gint i;
 
@@ -209,7 +218,6 @@ ges_extractable_check_id (GType type, const gchar * id, GError ** error)
                         field.name)), g_type_name (type));
 
             gst_structure_free (structure);
-            g_free (struct_str);
 
             return FALSE;
           }
@@ -219,7 +227,6 @@ ges_extractable_check_id (GType type, const gchar * id, GError ** error)
       gst_structure_free (structure);
     }
 
-    g_free (struct_str);
     return res;
   }
 
@@ -230,7 +237,7 @@ static void
 ges_extractable_interface_init (GESExtractableInterface * iface)
 {
   iface->asset_type = GES_TYPE_TEST_CLIP_ASSET;
-  iface->check_id = ges_extractable_check_id;
+  iface->check_id = ges_test_source_asset_check_id;
 }
 
 G_DEFINE_TYPE_WITH_CODE (GESTestClip, ges_test_clip, GES_TYPE_SOURCE_CLIP,
@@ -517,7 +524,25 @@ ges_test_clip_create_track_element (GESClip * clip, GESTrackType type)
       ges_track_type_name (type));
 
   if (type == GES_TRACK_TYPE_VIDEO) {
-    res = (GESTrackElement *) ges_video_test_source_new ();
+    gchar *id = NULL;
+    GESAsset *videoasset;
+
+    if (asset) {
+      GstStructure *structure =
+          gst_structure_from_string (ges_asset_get_id (asset), NULL);
+
+      if (structure) {
+        id = g_strdup (gst_structure_get_name (structure));
+        gst_structure_free (structure);
+      }
+    }
+    /* Our asset ID has been verified and thus this should not fail ever */
+    videoasset = ges_asset_request (GES_TYPE_VIDEO_TEST_SOURCE, id, NULL);
+    g_assert (videoasset);
+    g_free (id);
+
+    res = (GESTrackElement *) ges_asset_extract (videoasset, NULL);
+    gst_object_unref (videoasset);
     ges_video_test_source_set_pattern (
         (GESVideoTestSource *) res, priv->vpattern);
   } else if (type == GES_TRACK_TYPE_AUDIO) {

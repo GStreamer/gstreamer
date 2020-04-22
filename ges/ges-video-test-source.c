@@ -1,6 +1,8 @@
 /* GStreamer Editing Services
  * Copyright (C) 2010 Brandon Lewis <brandon.lewis@collabora.co.uk>
  *               2010 Nokia Corporation
+ * Copyright (C) 2020 Igalia S.L
+ *     Author: 2020 Thibault Saunier <tsaunier@igalia.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -38,18 +40,30 @@ struct _GESVideoTestSourcePrivate
 {
   GESVideoTestPattern pattern;
 
-  gboolean use_overlay;
-  GstElement *overlay;
-  GstPad *is_passthrough_pad;
-  GstPad *os_passthrough_pad;
-  GstPad *is_overlay_pad;
-  GstPad *os_overlay_pad;
-
   GstElement *capsfilter;
 };
 
-G_DEFINE_TYPE_WITH_PRIVATE (GESVideoTestSource, ges_video_test_source,
-    GES_TYPE_VIDEO_SOURCE);
+static void
+ges_extractable_interface_init (GESExtractableInterface * iface)
+{
+  iface->check_id = ges_test_source_asset_check_id;
+  iface->asset_type = GES_TYPE_TRACK_ELEMENT_ASSET;
+}
+
+static GstStructure *
+ges_video_test_source_asset_get_config (GESAsset * asset)
+{
+  const gchar *id = ges_asset_get_id (asset);
+  if (g_strcmp0 (id, g_type_name (ges_asset_get_extractable_type (asset))))
+    return gst_structure_from_string (ges_asset_get_id (asset), NULL);
+
+  return NULL;
+}
+
+G_DEFINE_TYPE_WITH_CODE (GESVideoTestSource, ges_video_test_source,
+    GES_TYPE_VIDEO_SOURCE, G_ADD_PRIVATE (GESVideoTestSource)
+    G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
+        ges_extractable_interface_init));
 
 static GstElement *ges_video_test_source_create_source (GESTrackElement * self);
 
@@ -72,101 +86,6 @@ get_natural_size (GESVideoSource * source, gint * width, gint * height)
   }
 
   return TRUE;
-}
-
-enum
-{
-  PROP_0,
-  PROP_USE_TIME_OVERLAY,
-  PROP_LAST
-};
-
-static GParamSpec *properties[PROP_LAST];
-
-static void
-get_property (GObject * object, guint property_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GESVideoTestSource *self = GES_VIDEO_TEST_SOURCE (object);
-
-  switch (property_id) {
-    case PROP_USE_TIME_OVERLAY:
-      g_value_set_boolean (value, self->priv->use_overlay);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-  }
-}
-
-static void
-set_property (GObject * object, guint property_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GESVideoTestSource *self = GES_VIDEO_TEST_SOURCE (object);
-
-  switch (property_id) {
-    case PROP_USE_TIME_OVERLAY:
-    {
-      GstElement *os, *is;
-      gboolean used_overlay = self->priv->use_overlay;
-
-      if (!self->priv->overlay) {
-        GST_ERROR_OBJECT (object, "Overlaying is disabled, you are probably"
-            "missing some GStreamer plugin");
-        return;
-      }
-
-      self->priv->use_overlay = g_value_get_boolean (value);
-      if (used_overlay == self->priv->use_overlay)
-        return;
-
-      is = GST_ELEMENT (gst_object_get_parent (GST_OBJECT (self->
-                  priv->is_overlay_pad)));
-
-      if (!is)
-        return;
-
-      os = GST_ELEMENT (gst_object_get_parent (GST_OBJECT (self->
-                  priv->os_overlay_pad)));
-      if (!os) {
-        gst_object_unref (is);
-        return;
-      }
-
-      g_object_set (is, "active-pad",
-          self->priv->use_overlay ? self->priv->is_overlay_pad : self->
-          priv->is_passthrough_pad, NULL);
-      g_object_set (os, "active-pad",
-          self->priv->use_overlay ? self->priv->os_overlay_pad : self->
-          priv->os_passthrough_pad, NULL);
-
-      gst_object_unref (is);
-      gst_object_unref (os);
-
-      break;
-    }
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-  }
-}
-
-static void
-_set_child_property (GESTimelineElement * self, GObject * child,
-    GParamSpec * pspec, GValue * value)
-{
-  GstElementFactory *f =
-      GST_IS_ELEMENT (child) ? gst_element_get_factory (GST_ELEMENT (child)) :
-      NULL;
-
-  if (!f || g_strcmp0 (GST_OBJECT_NAME (f), "timeoverlay"))
-    goto done;
-
-  GST_INFO_OBJECT (self, "Activating time overlay as time mode is being set");
-  g_object_set (self, "use-time-overlay", TRUE, NULL);
-
-done:
-  GES_TIMELINE_ELEMENT_CLASS (ges_video_test_source_parent_class)
-      ->set_child_property (self, child, pspec, value);
 }
 
 static gboolean
@@ -231,13 +150,6 @@ _get_natural_framerate (GESTimelineElement * element, gint * fps_n,
 static void
 dispose (GObject * object)
 {
-  GESVideoTestSourcePrivate *priv = GES_VIDEO_TEST_SOURCE (object)->priv;
-
-  gst_clear_object (&priv->is_overlay_pad);
-  gst_clear_object (&priv->is_passthrough_pad);
-  gst_clear_object (&priv->os_overlay_pad);
-  gst_clear_object (&priv->os_passthrough_pad);
-
   G_OBJECT_CLASS (ges_video_test_source_parent_class)->dispose (object);
 }
 
@@ -250,33 +162,11 @@ ges_video_test_source_class_init (GESVideoTestSourceClass * klass)
   source_class->create_source = ges_video_test_source_create_source;
   source_class->ABI.abi.get_natural_size = get_natural_size;
 
-  /**
-   * GESVideoTestSource:use-overlay:
-   *
-   * Whether to overlay the test video source with a clock time.
-   * This property is also registered as a child property for the video
-   * test source, so you can set it like any other child property.
-   *
-   * The properties of the corresponding #timeoverlay are also registered
-   * as children properties. If you set any child property from the underlying
-   * `timeoverlay`, this property will be set to %TRUE by default.
-   */
-  properties[PROP_USE_TIME_OVERLAY] =
-      g_param_spec_boolean ("use-time-overlay", "Use-time-overlay",
-      "Use time overlay, setting a child property corresponding to"
-      " GstTimeOverlay will switch this on by default.", FALSE,
-      G_PARAM_READWRITE);
-
-  object_class->get_property = get_property;
-  object_class->set_property = set_property;
   object_class->dispose = dispose;
 
-  GES_TIMELINE_ELEMENT_CLASS (klass)->set_child_property = _set_child_property;
   GES_TIMELINE_ELEMENT_CLASS (klass)->set_parent = _set_parent;
   GES_TIMELINE_ELEMENT_CLASS (klass)->get_natural_framerate =
       _get_natural_framerate;
-
-  g_object_class_install_properties (object_class, PROP_LAST, properties);
 }
 
 static void
@@ -287,63 +177,40 @@ ges_video_test_source_init (GESVideoTestSource * self)
   self->priv->pattern = DEFAULT_VPATTERN;
 }
 
-#define CREATE_ELEMENT(var, ename)                                             \
-  if (!(var = gst_element_factory_make(ename, NULL))) {                        \
-    GST_ERROR_OBJECT(self, "Could not create %s", ename);                      \
-    goto done;                                                                 \
-  }                                                                            \
-  gst_object_ref(var);
+static GstStructure *
+ges_video_test_source_get_config (GESVideoTestSource * self)
+{
+  GESAsset *asset = ges_extractable_get_asset (GES_EXTRACTABLE (self));
+  if (asset)
+    return ges_video_test_source_asset_get_config (asset);
+
+  return NULL;
+}
 
 static GstElement *
 ges_video_test_source_create_overlay (GESVideoTestSource * self)
 {
-  GstElement *bin = NULL, *os = NULL, *is = NULL, *toverlay = NULL, *tcstamper =
-      NULL;
-  GstPad *tmppad;
+  const gchar *bindesc = NULL;
+  GstStructure *config = ges_video_test_source_get_config (self);
 
-  CREATE_ELEMENT (os, "output-selector");
-  gst_util_set_object_arg (G_OBJECT (os), "pad-negotiation-mode", "active");
-  CREATE_ELEMENT (is, "input-selector");
-  CREATE_ELEMENT (tcstamper, "timecodestamper");
-  CREATE_ELEMENT (toverlay, "timeoverlay");
+  if (!config)
+    return NULL;
 
-  bin = gst_bin_new (NULL);
+  if (gst_structure_has_name (config, "time-overlay")) {
+    gboolean disable_timecodestamper;
 
-  gst_bin_add_many (GST_BIN (bin), os, is, tcstamper, toverlay, NULL);
-  self->priv->os_passthrough_pad = gst_element_get_request_pad (os, "src_%u");
-  self->priv->is_passthrough_pad = gst_element_get_request_pad (is, "sink_%u");
+    if (gst_structure_get_boolean (config, "disable-timecodestamper",
+            &disable_timecodestamper))
+      bindesc = "timeoverlay";
+    else
+      bindesc = "timecodestamper ! timeoverlay";
+  }
+  gst_structure_free (config);
 
-  gst_pad_link_full (self->priv->os_passthrough_pad,
-      self->priv->is_passthrough_pad, GST_PAD_LINK_CHECK_NOTHING);
-  gst_element_link (tcstamper, toverlay);
+  if (!bindesc)
+    return NULL;
 
-  self->priv->os_overlay_pad = gst_element_get_request_pad (os, "src_%u");
-  tmppad = gst_element_get_static_pad (tcstamper, "sink");
-  gst_pad_link_full (self->priv->os_overlay_pad, tmppad,
-      GST_PAD_LINK_CHECK_NOTHING);
-  gst_object_unref (tmppad);
-
-  tmppad = gst_element_get_static_pad (toverlay, "src");
-  self->priv->is_overlay_pad = gst_element_get_request_pad (is, "sink_%u");
-  gst_pad_link_full (tmppad, self->priv->is_overlay_pad,
-      GST_PAD_LINK_CHECK_NOTHING);
-  gst_object_unref (tmppad);
-
-  tmppad = gst_element_get_static_pad (os, "sink");
-  gst_element_add_pad (GST_ELEMENT (bin), gst_ghost_pad_new ("sink", tmppad));
-  gst_object_unref (tmppad);
-
-  tmppad = gst_element_get_static_pad (is, "src");
-  gst_element_add_pad (GST_ELEMENT (bin), gst_ghost_pad_new ("src", tmppad));
-  gst_object_unref (tmppad);
-
-done:
-  gst_clear_object (&os);
-  gst_clear_object (&is);
-  gst_clear_object (&tcstamper);
-  gst_clear_object (&toverlay);
-
-  return bin;
+  return gst_parse_bin_from_description (bindesc, TRUE, NULL);
 }
 
 static GstElement *
@@ -352,6 +219,7 @@ ges_video_test_source_create_source (GESTrackElement * element)
   GstCaps *caps;
   gint pattern;
   GstElement *testsrc, *res;
+  GstElement *overlay;
   const gchar *props[] =
       { "pattern", "background-color", "foreground-color", NULL };
   GPtrArray *elements;
@@ -374,18 +242,16 @@ ges_video_test_source_create_source (GESTrackElement * element)
   g_object_set (self->priv->capsfilter, "caps", caps, NULL);
   gst_caps_unref (caps);
 
-  self->priv->overlay = ges_video_test_source_create_overlay (self);
-  if (self->priv->overlay) {
+  overlay = ges_video_test_source_create_overlay (self);
+  if (overlay) {
     const gchar *overlay_props[] =
         { "time-mode", "text-y", "text-x", "text-width", "test-height",
       "halignment", "valignment", "font-desc", NULL
     };
 
-    ges_track_element_add_children_props (element, self->priv->overlay, NULL,
+    ges_track_element_add_children_props (element, overlay, NULL,
         NULL, overlay_props);
-    ges_timeline_element_add_child_property (GES_TIMELINE_ELEMENT (self),
-        properties[PROP_USE_TIME_OVERLAY], G_OBJECT (self));
-    g_ptr_array_add (elements, self->priv->overlay);
+    g_ptr_array_add (elements, overlay);
   }
 
   ges_track_element_add_children_props (element, testsrc, NULL, NULL, props);
@@ -440,7 +306,8 @@ ges_video_test_source_get_pattern (GESVideoTestSource * source)
   return g_value_get_enum (&val);
 }
 
-/* ges_video_test_source_new:
+/**
+ * ges_video_test_source_new:
  *
  * Creates a new #GESVideoTestSource.
  *
