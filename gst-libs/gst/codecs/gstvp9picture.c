@@ -41,7 +41,6 @@ _gst_vp9_picture_free (GstVp9Picture * picture)
 
 /**
  * gst_vp9_picture_new:
- * @buffer: (transfer none): a #GstBuffer
  *
  * Create new #GstVp9Picture
  *

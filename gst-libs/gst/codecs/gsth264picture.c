@@ -370,7 +370,6 @@ gst_h264_dpb_get_long_ref_by_pic_num (GstH264Dpb * dpb, gint pic_num)
 /**
  * gst_h264_dpb_get_lowest_frame_num_short_ref:
  * @dpb: a #GstH264Dpb
- * @pic_num: a picture number
  *
  * Find a short term reference picture which has the lowest frame_num_wrap
  *
@@ -402,7 +401,7 @@ gst_h264_dpb_get_lowest_frame_num_short_ref (GstH264Dpb * dpb)
 /**
  * gst_h264_dpb_get_pictures_not_outputted:
  * @dpb: a #GstH264Dpb
- * @out: (out): a list of #GstH264Dpb
+ * @out: (out) (transfer full): a list of #GstH264Picture
  *
  * Retrieve all not-outputted pictures from @dpb
  */
@@ -426,7 +425,7 @@ gst_h264_dpb_get_pictures_not_outputted (GstH264Dpb * dpb, GList ** out)
 /**
  * gst_h264_dpb_get_pictures_short_term_ref:
  * @dpb: a #GstH264Dpb
- * @out: (out): a list of #GstH264Dpb
+ * @out: (out) (transfer full): a list of #GstH264Picture
  *
  * Retrieve all short-term reference pictures from @dpb
  */
@@ -450,7 +449,7 @@ gst_h264_dpb_get_pictures_short_term_ref (GstH264Dpb * dpb, GList ** out)
 /**
  * gst_h264_dpb_get_pictures_long_term_ref:
  * @dpb: a #GstH264Dpb
- * @out: (out): a list of #GstH264Dpb
+ * @out: (out) (transfer full): a list of #GstH264Picture
  *
  * Retrieve all long-term reference pictures from @dpb
  */

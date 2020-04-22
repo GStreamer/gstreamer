@@ -333,7 +333,7 @@ gst_h265_dpb_get_ref_by_poc (GstH265Dpb * dpb, gint poc)
 }
 
 /**
- * gst_h265_dpb_get_ref_by_poc:
+ * gst_h265_dpb_get_ref_by_poc_lsb:
  * @dpb: a #GstH265Dpb
  * @poc_lsb: a picture order count lsb
  *
@@ -422,7 +422,7 @@ gst_h265_dpb_get_long_ref_by_poc (GstH265Dpb * dpb, gint poc)
 /**
  * gst_h265_dpb_get_pictures_not_outputted:
  * @dpb: a #GstH265Dpb
- * @out: (out): a list of #GstH265Dpb
+ * @out: (out) (transfer full): a list of #GstH265Dpb
  *
  * Retrieve all not-outputted pictures from @dpb
  */
