@@ -173,6 +173,7 @@ G_BEGIN_DECLS
 #define FOURCC_mhlr     GST_MAKE_FOURCC('m','h','l','r')
 #define FOURCC_minf     GST_MAKE_FOURCC('m','i','n','f')
 #define FOURCC_moov     GST_MAKE_FOURCC('m','o','o','v')
+#define FOURCC_mp3_     GST_MAKE_FOURCC('m','p','3',' ')
 #define FOURCC_mp4a     GST_MAKE_FOURCC('m','p','4','a')
 #define FOURCC_mp4s     GST_MAKE_FOURCC('m','p','4','s')
 #define FOURCC_mp4s     GST_MAKE_FOURCC('m','p','4','s')

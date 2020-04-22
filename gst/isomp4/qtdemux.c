@@ -15269,6 +15269,7 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case 0x6d730055:
       /* MPEG layer 3, CBR only (pre QT4.1) */
     case FOURCC__mp3:
+    case FOURCC_mp3_:
       _codec ("MPEG-1 layer 3");
       /* MPEG layer 3, CBR & VBR (QT4.1 and later) */
       caps = gst_caps_new_simple ("audio/mpeg", "layer", G_TYPE_INT, 3,
