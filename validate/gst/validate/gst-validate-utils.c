@@ -608,8 +608,13 @@ _file_get_structures (GFile * file, gchar ** err)
     l = g_string_new (NULL);
     current_lineno = lineno;
     while (*tmp != '\n' && *tmp) {
-      gchar next = *(tmp + 1);
+      gchar next;
 
+      if (*tmp == '#')
+        while (*tmp && *tmp != '\n')
+          tmp++;
+
+      next = *(tmp + 1);
       if (next && next == '\n'
           && strchr (GST_STRUCT_LINE_CONTINUATION_CHARS, *tmp)) {
         if (*tmp != '\\')
