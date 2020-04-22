@@ -3524,6 +3524,7 @@ gst_base_parse_scan_frame (GstBaseParse * parse, GstBaseParseClass * klass)
 
     GST_LOG_OBJECT (parse, "reading buffer size %u", min_size);
 
+    parse->priv->drain = FALSE;
     ret = gst_base_parse_pull_range (parse, min_size, &buffer);
     if (ret != GST_FLOW_OK)
       goto done;
@@ -3592,7 +3593,6 @@ gst_base_parse_scan_frame (GstBaseParse * parse, GstBaseParseClass * klass)
       /* Double our frame size, or increment by at most 64KB */
       fsize += MIN (fsize, 64 * 1024);
     }
-    parse->priv->drain = FALSE;
   }
 
 done:
