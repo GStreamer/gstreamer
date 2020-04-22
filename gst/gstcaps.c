@@ -708,7 +708,7 @@ gst_caps_remove_structure (GstCaps * caps, guint idx)
   GstStructure *structure;
 
   g_return_if_fail (caps != NULL);
-  g_return_if_fail (idx <= gst_caps_get_size (caps));
+  g_return_if_fail (idx < gst_caps_get_size (caps));
   g_return_if_fail (IS_WRITABLE (caps));
 
   structure = gst_caps_remove_and_get_structure (caps, idx);
@@ -958,7 +958,7 @@ gst_caps_set_features (GstCaps * caps, guint index, GstCapsFeatures * features)
   GstCapsFeatures **storage, *old;
 
   g_return_if_fail (caps != NULL);
-  g_return_if_fail (index <= gst_caps_get_size (caps));
+  g_return_if_fail (index < gst_caps_get_size (caps));
   g_return_if_fail (IS_WRITABLE (caps));
 
   storage = gst_caps_get_features_storage_unchecked (caps, index);
