@@ -58,53 +58,6 @@ GST_START_TEST (test_one_buffer)
 
 GST_END_TEST;
 
-static void
-handoff_func (GstElement * clocksync, GstBuffer * buf, GstBuffer ** ret)
-{
-  (void) clocksync;
-  *ret = buf;
-}
-
-GST_START_TEST (test_signal_handoffs)
-{
-  GstHarness *h = gst_harness_new_parse ("clocksync sync=false name=c");
-  GstBuffer *buffer_in;
-  GstBuffer *buffer_signaled = NULL;
-  GstElement *c = gst_bin_get_by_name (GST_BIN (h->element), "c");
-
-  gst_harness_set_src_caps_str (h, "mycaps");
-
-  /* connect to the handoff signal */
-  g_signal_connect (c, "handoff", G_CALLBACK (handoff_func), &buffer_signaled);
-
-  /* first, turn off signal-handoffs */
-  g_object_set (c, "signal-handoffs", FALSE, NULL);
-
-  /* then push a buffer */
-  buffer_in = gst_buffer_new_and_alloc (4);
-  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h, buffer_in));
-
-  /* verify that we got no buffer signaled */
-  fail_unless (buffer_signaled == NULL);
-
-  /* now turn on signal-handoffs */
-  g_object_set (c, "signal-handoffs", TRUE, NULL);
-
-  /* then push another buffer */
-  buffer_in = gst_buffer_new_and_alloc (4);
-  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h, buffer_in));
-
-  /* verify the buffer signaled is equal to the one pushed in */
-  fail_unless (buffer_signaled == buffer_in);
-  ASSERT_BUFFER_REFCOUNT (buffer_signaled, "buffer", 1);
-
-  /* cleanup */
-  gst_object_unref (c);
-  gst_harness_teardown (h);
-}
-
-GST_END_TEST;
-
 GST_START_TEST (test_sync_on_timestamp)
 {
   /* the reason to use the queue in front of the clocksync element
@@ -223,7 +176,6 @@ clocksync_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_one_buffer);
-  tcase_add_test (tc_chain, test_signal_handoffs);
   tcase_add_test (tc_chain, test_sync_on_timestamp);
   tcase_add_test (tc_chain, test_stopping_element_unschedules_sync);
   tcase_add_test (tc_chain, test_no_sync_on_timestamp);

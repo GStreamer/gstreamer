@@ -52,25 +52,15 @@
 GST_DEBUG_CATEGORY_STATIC (gst_clock_sync_debug);
 #define GST_CAT_DEFAULT gst_clock_sync_debug
 
-/* ClockSync signals and args */
-enum
-{
-  SIGNAL_HANDOFF,
-  SIGNAL_HANDOFF_LIST,
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
+/* ClockSync args */
 #define DEFAULT_SYNC                    TRUE
 #define DEFAULT_TS_OFFSET               0
-#define DEFAULT_SIGNAL_HANDOFFS         FALSE
 
 enum
 {
   PROP_0,
   PROP_SYNC,
-  PROP_TS_OFFSET,
-  PROP_SIGNAL_HANDOFFS,
+  PROP_TS_OFFSET
 };
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -109,8 +99,6 @@ static gboolean gst_clock_sync_src_query (GstPad * pad, GstObject * parent,
 static GstStateChangeReturn gst_clocksync_change_state (GstElement * element,
     GstStateChange transition);
 
-static guint gst_clocksync_signals[LAST_SIGNAL] = { 0 };
-
 static void
 gst_clock_sync_class_init (GstClockSyncClass * klass)
 {
@@ -133,43 +121,6 @@ gst_clock_sync_class_init (GstClockSyncClass * klass)
           "Timestamp offset in nanoseconds for synchronisation, negative for earlier sync",
           G_MININT64, G_MAXINT64, DEFAULT_TS_OFFSET,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  /**
-   * GstClockSync::signal-handoffs
-   *
-   * If set to %TRUE, the clocksync will emit a handoff signal when handling a buffer.
-   * When set to %FALSE, no signal will be emitted, which might improve performance.
-   */
-  g_object_class_install_property (gobject_class, PROP_SIGNAL_HANDOFFS,
-      g_param_spec_boolean ("signal-handoffs",
-          "Signal handoffs", "Send a signal before pushing the buffer",
-          DEFAULT_SIGNAL_HANDOFFS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  /**
-   * GstClockSync::handoff:
-   * @clocksync: the clocksync instance
-   * @buffer: the buffer that just has been received
-   * @pad: the pad that received it
-   *
-   * This signal gets emitted before passing the buffer downstream.
-   */
-  gst_clocksync_signals[SIGNAL_HANDOFF] =
-      g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstClockSyncClass, handoff), NULL, NULL,
-      NULL, G_TYPE_NONE, 1, GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE);
-
-  /**
-   * GstClockSync::handoff-list:
-   * @clocksync: the clocksync instance
-   * @buffer_list: the buffer list that just has been received
-   * @pad: the pad that received it
-   *
-   * This signal gets emitted before passing the buffer list downstream.
-   */
-  gst_clocksync_signals[SIGNAL_HANDOFF_LIST] =
-      g_signal_new ("handoff-list", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstClockSyncClass, handoff_list),
-      NULL, NULL, NULL, G_TYPE_NONE, 1,
-      GST_TYPE_BUFFER_LIST | G_SIGNAL_TYPE_STATIC_SCOPE);
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_clocksync_change_state);
@@ -213,7 +164,6 @@ gst_clock_sync_init (GstClockSync * clocksync)
   GST_PAD_SET_PROXY_CAPS (clocksync->srcpad);
   gst_element_add_pad (GST_ELEMENT (clocksync), clocksync->srcpad);
 
-  clocksync->signal_handoffs = DEFAULT_SIGNAL_HANDOFFS;
   clocksync->ts_offset = DEFAULT_TS_OFFSET;
   clocksync->sync = DEFAULT_SYNC;
   g_cond_init (&clocksync->blocked_cond);
@@ -231,9 +181,6 @@ gst_clock_sync_set_property (GObject * object, guint prop_id,
       break;
     case PROP_TS_OFFSET:
       clocksync->ts_offset = g_value_get_int64 (value);
-      break;
-    case PROP_SIGNAL_HANDOFFS:
-      clocksync->signal_handoffs = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -253,9 +200,6 @@ gst_clock_sync_get_property (GObject * object, guint prop_id,
       break;
     case PROP_TS_OFFSET:
       g_value_set_int64 (value, clocksync->ts_offset);
-      break;
-    case PROP_SIGNAL_HANDOFFS:
-      g_value_set_boolean (value, clocksync->signal_handoffs);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -413,9 +357,6 @@ gst_clock_sync_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     }
   }
 
-  if (clocksync->signal_handoffs)
-    g_signal_emit (clocksync, gst_clocksync_signals[SIGNAL_HANDOFF], 0, buf);
-
   /* Forward the buffer */
   return gst_pad_push (clocksync->srcpad, buf);
 }
@@ -456,10 +397,6 @@ gst_clock_sync_chain_list (GstPad * pad, GstObject * parent,
       return ret;
     }
   }
-
-  if (clocksync->signal_handoffs)
-    g_signal_emit (clocksync, gst_clocksync_signals[SIGNAL_HANDOFF_LIST], 0,
-        buffer_list);
 
   /* Forward the buffer list */
 done:

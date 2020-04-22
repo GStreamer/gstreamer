@@ -51,8 +51,6 @@ struct _GstClockSync
   /*< private >*/
   GstPad *sinkpad, *srcpad;
 
-  gboolean       signal_handoffs;
-
   GstSegment     segment;
   GstClockID     clock_id;
   gboolean       flushing;
@@ -65,13 +63,9 @@ struct _GstClockSync
   GstClockTime   upstream_latency;
 };
 
-struct _GstClockSyncClass 
+struct _GstClockSyncClass
 {
   GstElementClass parent_class;
-
-  /* signals */
-  void (*handoff) (GstElement *element, GstBuffer *buf);
-  void (*handoff_list) (GstElement *element, GstBufferList *buffer_list);
 };
 
 GType gst_clock_sync_get_type (void);
