@@ -1546,8 +1546,13 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
     /* expect at least 3 bytes start_code, and 1 bytes NALU header.
      * the length of the NALU payload can be zero.
      * (e.g. EOS/EOB placed at the end of an AU.) */
-    if (size - current_off < 4)
+    if (size - current_off < 4) {
+      /* Finish the frame if there is no more data in the stream */
+      if (drain)
+        break;
+
       goto more;
+    }
   }
 
 end:
