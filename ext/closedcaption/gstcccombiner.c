@@ -145,6 +145,32 @@ gst_cc_combiner_collect_captions (GstCCCombiner * self, gboolean timeout)
       continue;
     }
 
+    if (gst_buffer_get_size (caption_buf) == 0 &&
+        GST_BUFFER_FLAG_IS_SET (caption_buf, GST_BUFFER_FLAG_GAP)) {
+      /* This is a gap, we can go ahead. We only consume it once its end point
+       * is behind the current video running time. Important to note that
+       * we can't deal with gaps with no duration (-1)
+       */
+      if (!GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DURATION (caption_buf))) {
+        GST_ERROR_OBJECT (self, "GAP buffer without a duration");
+
+        gst_buffer_unref (caption_buf);
+        gst_object_unref (caption_pad);
+
+        return GST_FLOW_ERROR;
+      }
+
+      gst_buffer_unref (caption_buf);
+
+      if (caption_time + GST_BUFFER_DURATION (caption_buf) <
+          self->current_video_running_time_end) {
+        gst_aggregator_pad_drop_buffer (caption_pad);
+        continue;
+      } else {
+        break;
+      }
+    }
+
     /* Collected all caption buffers for this video buffer */
     if (caption_time >= self->current_video_running_time_end) {
       gst_buffer_unref (caption_buf);
