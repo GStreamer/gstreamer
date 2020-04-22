@@ -44,6 +44,84 @@ G_BEGIN_DECLS
 #define GST_IS_VAAPIENCODE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_VAAPIENCODE))
 
+#define GST_VAAPI_ENCODE_REGISTER_TYPE(NAME, CODEC, CLASS, _EXT_FMT_)      \
+  static GType encode_type = G_TYPE_INVALID;                               \
+  static gpointer gst_vaapiencode_##NAME##_parent_class = NULL;            \
+  static void                                                              \
+  gst_vaapiencode_##NAME##_class_init (                                    \
+      GstVaapiEncode##CLASS##Class * klass, gpointer data);                \
+  static void gst_vaapiencode_##NAME##_class_intern_init (gpointer klass,  \
+      gpointer data)                                                       \
+  {                                                                        \
+    gst_vaapiencode_##NAME##_parent_class =                                \
+        g_type_class_peek_parent (klass);                                  \
+    gst_vaapiencode_##NAME##_class_init (klass, data);                     \
+  }                                                                        \
+  static void                                                              \
+  gst_vaapiencode_##NAME##_init (GstVaapiEncode##CLASS * encode);          \
+  GType                                                                    \
+  gst_vaapiencode_##NAME##_register_type (GstVaapiDisplay * display)       \
+  {                                                                        \
+    GstCaps *caps;                                                         \
+    guint i, n;                                                            \
+    GTypeInfo type_info = {                                                \
+      sizeof (GstVaapiEncodeClass),                                        \
+      NULL,                                                                \
+      NULL,                                                                \
+      (GClassInitFunc) gst_vaapiencode_##NAME##_class_intern_init,         \
+      NULL,                                                                \
+      NULL,                                                                \
+      sizeof (GstVaapiEncode##CLASS),                                      \
+      0,                                                                   \
+      (GInstanceInitFunc) gst_vaapiencode_##NAME##_init,                   \
+    };                                                                     \
+    GArray *extra_fmts = NULL;                                             \
+    GstVideoFormat ext_video_fmts[] = _EXT_FMT_;                           \
+                                                                           \
+    GST_DEBUG_CATEGORY_INIT (gst_vaapi_##NAME##_encode_debug,              \
+        GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);                              \
+                                                                           \
+    if ((n =  G_N_ELEMENTS (ext_video_fmts)))  {                           \
+      extra_fmts =                                                         \
+          g_array_sized_new (FALSE, FALSE, sizeof (GstVideoFormat), n);    \
+      for (i = 0; i < n; i++)                                              \
+        g_array_append_val (extra_fmts, ext_video_fmts[i]);                \
+    }                                                                      \
+    caps = gst_vaapi_build_template_caps_by_codec (display,                \
+        GST_VAAPI_CONTEXT_USAGE_ENCODE,                                    \
+        GST_VAAPI_CODEC_##CODEC, extra_fmts);                              \
+    g_clear_pointer (&extra_fmts, g_array_unref);                          \
+    if (!caps) {                                                           \
+      GST_ERROR ("failed to get sink caps for " #CODEC                     \
+          " encode, can not register");                                    \
+      return G_TYPE_INVALID;                                               \
+    }                                                                      \
+                                                                           \
+    for (i = 0; i < gst_caps_get_size (caps); i++) {                       \
+      GstStructure *structure = gst_caps_get_structure (caps, i);          \
+      if (!structure)                                                      \
+        continue;                                                          \
+      gst_structure_set (structure, "interlace-mode", G_TYPE_STRING,       \
+          "progressive", NULL);                                            \
+    }                                                                      \
+    GST_DEBUG (#CODEC" encode's sink caps %" GST_PTR_FORMAT, caps);        \
+                                                                           \
+    /* class data will be leaked if the element never gets instantiated */ \
+    GST_MINI_OBJECT_FLAG_SET (caps, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);   \
+    type_info.class_data = caps;                                           \
+    encode_type = g_type_register_static (GST_TYPE_VAAPIENCODE,            \
+        "GstVaapiEncode"#CLASS, &type_info, 0);                            \
+                                                                           \
+    return encode_type;                                                    \
+  }                                                                        \
+                                                                           \
+  GType                                                                    \
+  gst_vaapiencode_##NAME##_get_type (void)                                 \
+  {                                                                        \
+    g_assert (encode_type != G_TYPE_INVALID);                              \
+    return encode_type;                                                    \
+  }
+
 typedef struct _GstVaapiEncode GstVaapiEncode;
 typedef struct _GstVaapiEncodeClass GstVaapiEncodeClass;
 
