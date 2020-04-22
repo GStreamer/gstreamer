@@ -91,7 +91,7 @@
 #define GST_SYSTEM_CLOCK_ENTRY_GET_COND(entry)          (&(entry)->cond_val)
 #define GST_SYSTEM_CLOCK_ENTRY_LOCK(entry)              (g_mutex_lock(GST_SYSTEM_CLOCK_ENTRY_GET_LOCK(entry)))
 #define GST_SYSTEM_CLOCK_ENTRY_UNLOCK(entry)            (g_mutex_unlock(GST_SYSTEM_CLOCK_ENTRY_GET_LOCK(entry)))
-#define GST_SYSTEM_CLOCK_ENTRY_WAIT_UNTIL(entry,ns)     gst_futex_cond_wait_until(GST_SYSTEM_CLOCK_ENTRY_GET_COND(entry),GST_SYSTEM_CLOCK_ENTRY_GET_LOCK(entry),ns)
+#define GST_SYSTEM_CLOCK_ENTRY_WAIT_UNTIL(entry,ns)     gst_futex_cond_wait_until(GST_SYSTEM_CLOCK_ENTRY_GET_COND(entry),GST_SYSTEM_CLOCK_ENTRY_GET_LOCK(entry),(ns))
 #define GST_SYSTEM_CLOCK_ENTRY_BROADCAST(entry)         gst_futex_cond_broadcast(GST_SYSTEM_CLOCK_ENTRY_GET_COND(entry))
 
 #define CLOCK_MIN_WAIT_TIME 100 /* ns */
@@ -290,7 +290,7 @@ init_entry (GstClockEntryImpl * entry)
 #define GST_SYSTEM_CLOCK_ENTRY_GET_COND(entry)          (&(entry)->cond)
 #define GST_SYSTEM_CLOCK_ENTRY_LOCK(entry)              (g_mutex_lock(GST_SYSTEM_CLOCK_ENTRY_GET_LOCK(entry)))
 #define GST_SYSTEM_CLOCK_ENTRY_UNLOCK(entry)            (g_mutex_unlock(GST_SYSTEM_CLOCK_ENTRY_GET_LOCK(entry)))
-#define GST_SYSTEM_CLOCK_ENTRY_WAIT_UNTIL(entry,ns)     g_cond_wait_until(GST_SYSTEM_CLOCK_ENTRY_GET_COND(entry),GST_SYSTEM_CLOCK_ENTRY_GET_LOCK(entry),(ns / 1000))
+#define GST_SYSTEM_CLOCK_ENTRY_WAIT_UNTIL(entry,ns)     g_cond_wait_until(GST_SYSTEM_CLOCK_ENTRY_GET_COND(entry),GST_SYSTEM_CLOCK_ENTRY_GET_LOCK(entry),((ns) / 1000))
 #define GST_SYSTEM_CLOCK_ENTRY_BROADCAST(entry)         g_cond_broadcast(GST_SYSTEM_CLOCK_ENTRY_GET_COND(entry))
 
 #if defined (G_OS_WIN32)
