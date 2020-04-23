@@ -2197,6 +2197,13 @@ do_times:
   rstart = gst_segment_to_running_time (segment, format, cstart);
   rstop = gst_segment_to_running_time (segment, format, cstop);
 
+  /* In reverse playback, play from stop to start */
+  if (segment->rate < 0.0 && GST_CLOCK_TIME_IS_VALID (rstop)) {
+    GstClockTime tmp = rstart;
+    rstart = rstop;
+    rstop = tmp;
+  }
+
   if (GST_CLOCK_TIME_IS_VALID (stop))
     rnext = rstop;
   else
