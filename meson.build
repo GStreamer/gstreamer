@@ -12,12 +12,44 @@ else
   pathsep = ':'
 endif
 
+python3 = import('python').find_installation()
+
+built_subprojects = get_option('built_subprojects')
+if built_subprojects != ''
+  message('Have subprojects list from options')
+else
+  read_file_contents = '''
+import os
+import sys
+
+assert len(sys.argv) >= 2
+fname = sys.argv[1]
+
+with open(fname, 'r') as f:
+    for l in f:
+        print(l)
+'''
+
+  # gst-build will generate this file for us to consume so that subproject
+  # changes can still work
+  fname = join_paths(meson.build_root(), 'GstDocumentedSubprojects')
+  cmdres = run_command(
+      python3,
+      '-c', read_file_contents,
+      fname,
+    )
+  if cmdres.returncode() == 0
+    built_subprojects = cmdres.stdout().strip()
+    message('Have subprojects from file: @0@'.format(fname))
+  endif
+endif
+
 libs = ''
 plugins_doc = ''
 deps = []
 plugins_sitemap = ''
-if get_option('built_subprojects') != ''
-    foreach project_name: get_option('built_subprojects').split(',')
+if built_subprojects != ''
+    foreach project_name: built_subprojects.split(',')
         sub = subproject(project_name)
         if sub.get_variable('build_hotdoc')
             message('Building @0@ documentation'.format(project_name))
