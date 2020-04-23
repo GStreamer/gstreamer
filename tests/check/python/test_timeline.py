@@ -1373,6 +1373,2021 @@ class TestSnapping(common.GESSimpleTimelineTest):
         self.assertEqual(clip1.props.duration, split_position)
         self.assertEqual(clip2.props.start, split_position)
 
+class TestComplexEditing(common.GESTimelineConfigTest):
+
+    def test_normal_move(self):
+        """
+        , . . . . , . . . . , . . . . , . . . . , . . . . , . . . . ,
+        0         5         10        15        20        25        30
+        _____________________________________________________________
+        layer0_______________________________________________________
+
+                            .................g1..................
+                            :                                   :
+                            :                         *=========*
+                            :                         |   c0    |
+                            :                         *=========*
+        ____________________:___________________________________:____
+        layer1______________:___________________________________:____
+                            :                                   :
+                            ..............g0...............     :
+                            :                             :     :
+                            *=======================*     :     :
+                            |           c1          |     :     :
+                            *=========*=============*=====*     :
+                            :         |        c2         |     :
+                            :         *===================*     :
+                            :.............................:     :
+                            :                                   :
+                            :...................................:
+        _____________________________________________________________
+        layer2_______________________________________________________
+
+            *=============================*
+            |              c3             |
+            *=============================*
+        """
+        track = self.add_video_track()
+        c0 = self.add_clip("c0", 0, [track], 23, 5)
+        c1 = self.add_clip("c1", 1, [track], 10, 12)
+        c2 = self.add_clip("c2", 1, [track], 15, 10)
+        self.register_auto_transition(c1, c2, track)
+        c3 = self.add_clip("c3", 2, [track], 2, 15)
+        g0 = self.add_group("g0", [c1, c2])
+        g1 = self.add_group("g1", [c0, g0])
+
+        self.assertTimelineConfig()
+
+        # test invalid edits
+
+        # cannot move c0 up one layer because it would cause a triple
+        # overlap between c1, c2 and c3 when g0 moves
+        self.assertFailEdit(
+            c0, 1, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, 23)
+
+        # cannot move c0, without moving g1, to 21 layer 1 because it
+        # would be completely overlapped by c2
+        self.assertFailEdit(
+            c0, 1, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_START, 20)
+
+        # cannot move c1, without moving g1, with end 25 because it
+        # would be completely overlapped by c2
+        self.assertFailEdit(
+            c0, 1, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_END, 25)
+
+        # cannot move g0 to layer 0 because it would make c0 go to a
+        # negative layer
+        self.assertFailEdit(
+            g0, 0, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, 10)
+
+        # cannot move c1 for same reason
+        self.assertFalse(
+            c1.move_to_layer(self.timeline.get_layer(0)))
+        self.assertTimelineConfig({}, [])
+
+        # failure with snapping
+        self.timeline.set_snapping_distance(1)
+
+        # cannot move to 0 because end edge of c0 would snap with end of
+        # c3, making the new start become negative
+        self.assertFailEdit(
+            g0, 1, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, 0)
+
+        # cannot move start of c1 to 14 because snapping causes a full
+        # overlap with c0
+        self.assertFailEdit(
+            c1, 1, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_START, 14)
+
+        # cannot move end of c2 to 21 because snapping causes a full
+        # overlap with c0
+        self.assertFailEdit(
+            c2, 1, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_END, 21)
+
+        # successes
+        self.timeline.set_snapping_distance(3)
+        # moving c0 also moves g1, along with g0
+        # with no snapping, this would result in a triple overlap between
+        # c1, c2 and c3, but c2's start edge will snap to the end of c3
+        # at a distance of 3 allowing the edit to succeed
+        #
+        # c1 and c3 have a new transition
+        # transition between c1 and c2 is not lost
+        #
+        # NOTE: there is no snapping between c0, c1 or c2 even though
+        # their edges are within distance 2 of each other because they are
+        # all moving
+        self.assertEdit(
+            c0, 1, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, 22, 17,
+            [c2], [c3],
+            {
+                c0 : {"start": 25, "layer": 1},
+                c1 : {"start": 12, "layer": 2},
+                c2 : {"start": 17, "layer": 2},
+                g0 : {"start": 12, "layer": 2},
+                g1 : {"start": 12, "layer": 1}
+            }, [(c3, c1, track)], [])
+
+        """
+        , . . . . , . . . . , . . . . , . . . . , . . . . , . . . . ,
+        0         5         10        15        20        25        30
+        _____________________________________________________________
+        layer0_______________________________________________________
+
+        _____________________________________________________________
+        layer1_______________________________________________________
+
+                                .................g1..................
+                                :                                   :
+                                :                         *=========*
+                                :                         |   c0    |
+                                :                         *=========*
+        ________________________:___________________________________:
+        layer2__________________:___________________________________:
+                                :                                   :
+                                ..............g0...............     :
+                                :                             :     :
+                                *=======================*     :     :
+                                |           c1          |     :     :
+            *===================*=========*=============*=====*     :
+            |              c3             |        c2         |     :
+            *=============================*===================*     :
+                                :.............................:     :
+                                :                                   :
+                                :...................................:
+        """
+        # using EDGE_START we can move without moving parent
+        # snap at same position 17 but with c1's end edge to c3's end
+        # edge
+        # loose transition between c1 and c3
+        self.assertEdit(
+            g0, 0, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_START, 5, 17,
+            [c1], [c3],
+            {
+                c1 : {"start": 5, "layer": 0},
+                c2 : {"start": 10, "layer": 0},
+                g0 : {"start": 5, "layer": 0},
+                g1 : {"start": 5, "duration": 25, "layer": 0},
+            }, [], [(c3, c1, track)])
+
+        """
+        , . . . . , . . . . , . . . . , . . . . , . . . . , . . . . ,
+        0         5         10        15        20        25        30
+        _____________________________________________________________
+        layer0_______________________________________________________
+
+                  .........................g1........................
+                  :                                                 :
+                  ...............g0..............                   :
+                  :                             :                   :
+                  *=======================*     :                   :
+                  |          c1           |     :                   :
+                  *=========*=============*=====*                   :
+                  :         |         c2        |                   :
+                  :         *===================*                   :
+                  :.............................:                   :
+        __________:_________________________________________________:
+        layer1____:_________________________________________________:
+                  :                                                 :
+                  :                                       *=========*
+                  :                                       |   c0    |
+                  :                                       *=========*
+                  :.................................................:
+        _____________________________________________________________
+        layer2_______________________________________________________
+
+            *=============================*
+            |              c3             |
+            *=============================*
+        """
+        # using EDGE_END we can move without moving parent
+        # no snap
+        # loose transition between c1 and c2
+        self.assertEdit(
+            c2, 1, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_END, 21, None,
+            [], [],
+            {
+                c2 : {"duration": 11, "layer": 1},
+                g0 : {"duration": 16},
+            }, [], [(c1, c2, track)])
+
+        # no snapping when we use move layer
+        self.timeline.set_snapping_distance(10)
+        self.assertTrue(
+            c3.move_to_layer(self.timeline.get_layer(1)))
+        self.assertTimelineConfig(
+            new_props={c3 : {"layer": 1}}, new_transitions=[(c3, c2, track)])
+
+    def test_ripple(self):
+        """
+        , . . . . , . . . . , . . . . , . . . . , . . . . , . . . . ,
+        0         5         10        15        20        25        30
+        _____________________________________________________________
+        layer0_______________________________________________________
+
+                      ......................g0.................
+                      :                                       :
+                      *=========*                             :
+                      |    c0   |                             :
+                      *=========*                             :
+        ______________:_______________________________________:______
+        layer1________:_______________________________________:______
+                      :                                       :
+                      :                         *=============*
+                      :                         |      c3     |
+                      :                         *=============*
+                      :.......................................:
+                            *===================*
+                            |         c2        |
+                  *=========*=========*=========*
+                  |        c1         |
+                  *===================*
+        """
+        track = self.add_video_track()
+        c0 = self.add_clip("c0", 0, [track], 7, 5)
+        c1 = self.add_clip("c1", 1, [track], 5, 10)
+        c2 = self.add_clip("c2", 1, [track], 10, 10)
+        c3 = self.add_clip("c3", 1, [track], 20, 7)
+        self.register_auto_transition(c1, c2, track)
+        g0 = self.add_group("g0", [c0, c3])
+
+        self.assertTimelineConfig()
+
+        # test failures
+
+        self.timeline.set_snapping_distance(2)
+
+        # would cause negative layer priority for c0
+        self.assertFailEdit(
+            c1, 0, GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_NONE, 5)
+
+        # would lead to c2 fully overlapping c3 since c2 does ripple
+        # but c3 does not(c3 shares a toplevel with c0, and
+        # GES_EDGE_START, same as NORMAL mode, does not move the
+        # toplevel
+        self.assertFailEdit(
+            c2, 1, GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_END, 25)
+
+        # would lead to c2 fully overlapping c3 since c2 does not
+        # ripple but c3 does
+        self.assertFailEdit(
+            c0, 0, GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_START, 13)
+
+        # add two more clips
+
+        c4 = self.add_clip("c4", 2, [track], 17, 8)
+        c5 = self.add_clip("c5", 2, [track], 21, 8)
+        self.register_auto_transition(c4, c5, track)
+
+        self.assertTimelineConfig()
+
+        """
+        , . . . . , . . . . , . . . . , . . . . , . . . . , . . . . ,
+        0         5         10        15        20        25        30
+        _____________________________________________________________
+        layer0_______________________________________________________
+
+                      ......................g0.................
+                      :                                       :
+                      *=========*                             :
+                      |    c0   |                             :
+                      *=========*                             :
+        ______________:_______________________________________:______
+        layer1________:_______________________________________:______
+                      :                                       :
+                      :                         *=============*
+                      :                         |      c3     |
+                      :                         *=============*
+                      :.......................................:
+                            *===================*
+                            |         c2        |
+                  *=========*=========*=========*
+                  |        c1         |
+                  *===================*
+        _____________________________________________________________
+        layer2_______________________________________________________
+
+                                          *===============*
+                                          |       c4      |
+                                          *=======*=======*=======*
+                                                  |       c5      |
+                                                  *===============*
+        """
+
+        # rippling start of c2 only moves c4 and c5 because c3 is part
+        # of a toplevel with an earlier start
+        # NOTE: snapping only occurs for the edges of c2, in particular
+        # start of c4 does not snap to end of c1
+        self.assertEdit(
+            c2, 1, GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_NONE, 8, 7,
+            [c2], [c0],
+            {
+                c2 : {"start": 7},
+                c4 : {"start": 14},
+                c5 : {"start": 18},
+            }, [], [])
+
+        """
+        , . . . . , . . . . , . . . . , . . . . , . . . . , . . . . ,
+        0         5         10        15        20        25        30
+        _____________________________________________________________
+        layer0_______________________________________________________
+
+                      ......................g0.................
+                      :                                       :
+                      *=========*                             :
+                      |    c0   |                             :
+                      *=========*                             :
+        ______________:_______________________________________:______
+        layer1________:_______________________________________:______
+                      :                                       :
+                      :                         *=============*
+                      :                         |      c3     |
+                      :                         *=============*
+                      :.......................................:
+                      *===================*
+                      |         c2        |
+                  *===*===============*===*
+                  |        c1         |
+                  *===================*
+        _____________________________________________________________
+        layer2_______________________________________________________
+
+                                    *===============*
+                                    |       c4      |
+                                    *=======*=======*=======*
+                                            |       c5      |
+                                            *===============*
+        """
+
+        # rippling end of c2, only c5 moves
+        # NOTE: start edge of c2 does not snap!
+        self.assertEdit(
+            c2, 1, GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_END, 19, 20,
+            [c2], [c3],
+            {
+                c2 : {"duration": 13},
+                c5 : {"start": 21},
+            }, [], [])
+
+        """
+        , . . . . , . . . . , . . . . , . . . . , . . . . , . . . . ,
+        0         5         10        15        20        25        30
+        _____________________________________________________________
+        layer0_______________________________________________________
+
+                      ......................g0.................
+                      :                                       :
+                      *=========*                             :
+                      |    c0   |                             :
+                      *=========*                             :
+        ______________:_______________________________________:______
+        layer1________:_______________________________________:______
+                      :                                       :
+                      :                         *=============*
+                      :                         |      c3     |
+                      :                         *=============*
+                      :.......................................:
+                      *=========================*
+                      |            c2           |
+                  *===*===============*=========*
+                  |        c1         |
+                  *===================*
+        _____________________________________________________________
+        layer2_______________________________________________________
+
+                                    *===============*
+                                    |       c4      |
+                                    *=============*=*=============*
+                                                  |       c5      |
+                                                  *===============*
+        """
+
+        # everything except c1 moves, and to the next layer
+        # end edge of c2 snaps to end of c1
+        # NOTE: does not snap to edges of rippled clips
+        # NOTE: c4 and c5 do not loose their transition when moving
+        # to the new layer
+        self.assertEdit(
+            c2, 2, GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_NONE, 0, 15,
+            [c2], [c1],
+            {
+                c0 : {"start": 2, "layer": 1},
+                c2 : {"start": 2, "layer": 2},
+                c3 : {"start": 15, "layer": 2},
+                c4 : {"start": 9, "layer": 3},
+                c5 : {"start": 16, "layer": 3},
+                g0 : {"start": 2, "layer": 1},
+            }, [(c0, c1, track)], [(c1, c2, track)])
+
+        """
+        , . . . . , . . . . , . . . . , . . . . , . . . . , . . . . ,
+        0         5         10        15        20        25        30
+        _____________________________________________________________
+        layer0_______________________________________________________
+
+        _____________________________________________________________
+        layer1_______________________________________________________
+
+                  *===================*
+                  |        c1         |
+                  *===================*
+            ...................g0....................
+            *=========*                             :
+            |    c0   |                             :
+            *=========*                             :
+        ____:_______________________________________:________________
+        layer2______________________________________:________________
+            :                                       :
+            :                         *=============*
+            :                         |      c3     |
+            :                         *=============*
+            :.......................................:
+            *=========================*
+            |            c2           |
+            *=========================*
+        _____________________________________________________________
+        layer3_______________________________________________________
+
+                          *===============*
+                          |       c4      |
+                          *=============*=*=============*
+                                        |       c5      |
+                                        *===============*
+        """
+
+        # group c1 and c5, and g0 and c2
+        g1 = self.add_group("g1", [c1, c5])
+        g2 = self.add_group("g2", [g0, c2])
+        self.assertTimelineConfig()
+
+        # moving end edge of c0 does not move anything else in the same
+        # toplevel g2
+        # c5 does not move because it is grouped with c1, which starts
+        # earlier than the end edge of c0
+        # only c4 moves
+        # c0 does not snap to c4's start edge
+        self.assertEdit(
+            c0, 1, GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_END, 10, None,
+            [], [],
+            {
+                c0 : {"duration": 8},
+                c4 : {"start": 12},
+            }, [], [])
+
+        """
+        , . . . . , . . . . , . . . . , . . . . , . . . . , . . . . ,
+        0         5         10        15        20        25        30
+        _____________________________________________________________
+        layer0_______________________________________________________
+
+        _____________________________________________________________
+        layer1_______________________________________________________
+
+                  ..................g1.....................
+                  *===================*                   :
+                  |        c1         |                   :
+                  *===================*                   :
+                  :...................................... :
+            ...................g2....................   : :
+            :..................g0...................:   : :
+            *===============*                       :   : :
+            |        c0     |                       :   : :
+            *===============*                       :   : :
+        ____:_______________________________________:___:_:__________
+        layer2______________________________________:___:_:__________
+            :                                       :   : :
+            :                         *=============*   : :
+            :                         |      c3     |   : :
+            :                         *=============*   : :
+            :.......................................:   : :
+            *=========================*             :   : :
+            |            c2           |             :   : :
+            *=========================*             :   : :
+            :.......................................:   : :
+        ________________________________________________:_:__________
+        layer3__________________________________________:_:__________
+                                        ................: :
+                                        *===============* :
+                                        |       c5      | :
+                                        *===============* :
+                                        :.................:
+                                *===============*
+                                |       c4      |
+                                *===============*
+        """
+
+        # rippling start of c5 does not move anything else
+        # end edge snaps to start of c4
+        self.timeline.set_snapping_distance(1)
+        self.assertEdit(
+            c5, 0, GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_START, 18, None,
+            [], [],
+            {
+                c5 : {"start": 18, "layer": 0},
+                g1 : {"layer": 0, "duration": 21},
+            }, [], [(c4, c5, track)])
+
+        """
+        , . . . . , . . . . , . . . . , . . . . , . . . . , . . . . ,
+        0         5         10        15        20        25        30
+        _____________________________________________________________
+        layer0_______________________________________________________
+
+                  ....................g1.....................
+                  :                         *===============*
+                  :                         |       c5      |
+                  :                         *===============*
+        __________:_________________________________________:________
+        layer1____:_________________________________________:________
+                  :                                         :
+                  *===================*                     :
+                  |        c1         |                     :
+                  *===================*                     :
+                  :.........................................:
+            ...................g2....................
+            :..................g0...................:
+            *===============*                       :
+            |        c0     |                       :
+            *===============*                       :
+        ____:_______________________________________:________________
+        layer2______________________________________:________________
+            :                                       :
+            :                         *=============*
+            :                         |      c3     |
+            :                         *=============*
+            :.......................................:
+            *=========================*             :
+            |            c2           |             :
+            *=========================*             :
+            :.......................................:
+        _____________________________________________________________
+        layer3_______________________________________________________
+
+                                *===============*
+                                |       c4      |
+                                *===============*
+        """
+
+        # rippling g1 using c5
+        # initial position would make c1 go negative, but end edge of c1
+        # will snap to end of c0, allowing the edit to succeed
+        # c4 also moves because it is after the start of g1
+        self.timeline.set_snapping_distance(3)
+        self.assertEdit(
+            c5, 1, GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_NONE, 12, 10,
+            [c1], [c0],
+            {
+                c5 : {"start": 13, "layer": 1},
+                c1 : {"start": 0, "layer": 2},
+                g1 : {"start": 0, "layer": 1},
+                c4 : {"start": 7, "layer": 4},
+            }, [(c1, c2, track)], [(c0, c1, track)])
+
+        """
+        , . . . . , . . . . , . . . . , . . . . , . . . . , . . . . ,
+        0         5         10        15        20        25        30
+        _____________________________________________________________
+        layer0_______________________________________________________
+        _____________________________________________________________
+        layer1_______________________________________________________
+
+        ....................g1.....................
+        :                         *===============*
+        :                         |      c5       |
+        :                         *===============*
+        :   ...................g2.................:..
+        :   :..................g0.................:.:
+        :   *===============*                     : :
+        :   |        c0     |                     : :
+        :   *===============*                     : :
+        :___:_____________________________________:_:________________
+        layer2____________________________________:_:________________
+        :   :                                     : :
+        *===================*                     : :
+        |        c1         |                     : :
+        *===================*                     : :
+        :...:.....................................: :
+            :                         *=============*
+            :                         |      c3     |
+            :                         *=============*
+            :.......................................:
+            *=========================*             :
+            |            c2           |             :
+            *=========================*             :
+            :.......................................:
+        _____________________________________________________________
+        layer3_______________________________________________________
+        _____________________________________________________________
+        layer4_______________________________________________________
+
+                                *===============*
+                                |       c4      |
+                                *===============*
+        """
+        # moving start of c1 will move everything expect c5 because they
+        # can snap to c5 since it is not moving
+        # c1 and c2 keep transition
+        self.assertEdit(
+            c1, 1, GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_START, 20, 21,
+            [c1], [c5],
+            {
+                c1 : {"start": 21, "layer": 1},
+                g1 : {"start": 13, "duration": 18},
+                c0 : {"start": 23, "layer": 0},
+                c2 : {"start": 23, "layer": 1},
+                c3 : {"start": 36, "layer": 1},
+                g0 : {"start": 23, "layer": 0},
+                g2 : {"start": 23, "layer": 0},
+                c4 : {"start": 28, "layer": 3},
+            }, [], [])
+
+    def test_trim(self):
+        """
+        , . . . . , . . . . , . . . . , . . . . , . . . . , . . . . ,
+        0         5         10        15        20        25        30
+        _____________________________________________________________
+        layer0_______________________________________________________
+
+                  ..................g2...................
+                  :                                     :
+                  :...............g0.............       :
+                  :             *===============*       :
+                  :             |       a0      |       :
+                  :         *===*=====*=========*       :
+                  :         |    a1   |         :       :
+                  :         *=========*         :       :
+                  *===================*         :       :
+                  |        v0         |         :       :
+                  *===================*         :       :
+                  :.............................:       :
+        __________:_____________________________________:____________
+        layer1____:_____________________________________:____________
+                  :                                     :
+                  :         ............g1..............:
+                  :         :         *=================*
+                  :         :         |       a2        |
+                  :         :         *=================*
+                  :         *===========================*
+                  :         |           v1              |
+                  :         *===========================*
+        __________:_________:___________________________:____________
+        layer2____:_________:___________________________:____________
+                  *=============*     *=================*
+                  |      a3     |     |       a4        |
+                  *=============*     *=================*
+                  :         :...........................:
+                  *=========================*           :
+                  |           v2            |           :
+                  *=============*===========*===========*
+                  :             |           v3          |
+                  :             *=======================*
+                  :.....................................:
+        _____________________________________________________________
+        layer3_______________________________________________________
+
+        *===========================*       *===============*
+        |            v4             |       |       v5      |
+        *===========================*       *===============*
+        """
+        audio_track = self.add_audio_track()
+        video_track = self.add_video_track()
+        a0 = self.add_clip("a0", 0, [audio_track], 12, 8, 5, 15)
+        a1 = self.add_clip("a1", 0, [audio_track], 10, 5)
+        self.register_auto_transition(a1, a0, audio_track)
+        a2 = self.add_clip("a2", 1, [audio_track], 15, 9, 7, 19)
+        a3 = self.add_clip("a3", 2, [audio_track], 5, 7, 10)
+        a4 = self.add_clip("a4", 2, [audio_track], 15, 9)
+
+        v0 = self.add_clip("v0", 0, [video_track], 5, 10, 5)
+        v1 = self.add_clip("v1", 1, [video_track], 10, 14)
+        v2 = self.add_clip("v2", 2, [video_track], 5, 13, 4)
+        v3 = self.add_clip("v3", 2, [video_track], 12, 12)
+        self.register_auto_transition(v2, v3, video_track)
+        v4 = self.add_clip("v4", 3, [video_track], 0, 13)
+        v5 = self.add_clip("v5", 3, [video_track], 18, 8)
+
+        g0 = self.add_group("g0", [a0, a1, v0])
+        g1 = self.add_group("g1", [v1, a2, a4])
+        g2 = self.add_group("g2", [a3, v2, v3, g0, g1])
+
+        self.assertTimelineConfig()
+
+        # edit failures
+
+        # cannot trim end of g0 to 16 because a0 and a1 would fully
+        # overlap
+        self.assertFailEdit(
+            g0, 1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_END, 15)
+
+        # cannot edit to new layer because there would be triple overlaps
+        # between v2, v3, v4 and v5
+        self.assertFailEdit(
+            g2, 1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_END, 20)
+
+        # cannot trim g1 end to 14 because it would result in a negative
+        # duration for a2 and a4
+        self.assertFailEdit(
+            g1, 1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_END, 14)
+
+        # cannot trim end of v2 below its start
+        self.assertFailEdit(
+            v2, 2, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_END, 2)
+
+        # cannot trim end of g0 because a0's duration-limit would be
+        # exceeded
+        self.assertFailEdit(
+            g0, 0, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_END, 23)
+
+        # cannot trim g0 to 12 because a0 and a1 would fully overlap
+        self.assertFailEdit(
+            g0, 0, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 12)
+
+        # cannot trim start of v2 beyond its end point
+        self.assertFailEdit(
+            v2, 2, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 20)
+
+        # with snapping
+        self.timeline.set_snapping_distance(4)
+
+        # cannot trim end of g2 to 19 because v1 and v2 would fully
+        # overlap after snapping to v5 start edge(18)
+        self.assertFailEdit(
+            g2, 0, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_END, 19)
+
+        # cannot trim g2 to 3 because it would snap to start edge of
+        # v4(0), causing v2's in-point to be negative
+        self.assertFailEdit(
+            g2, 0, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 3)
+
+        # success
+
+        self.timeline.set_snapping_distance(2)
+
+        # first trim v4 start
+        self.assertEdit(
+            v4, 3, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 1, None, [], [],
+            {
+                v4 : {"start": 1, "in-point": 1, "duration": 12},
+            }, [], [])
+
+        # and trim v5 end
+        self.assertEdit(
+            v5, 3, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_END, 25, 24,
+            [v5], [a2, a4, v1, v3],
+            {
+                v5 : {"duration": 6},
+            }, [], [])
+
+        """
+        , . . . . , . . . . , . . . . , . . . . , . . . . , . . . . ,
+        0         5         10        15        20        25        30
+        _____________________________________________________________
+        layer0_______________________________________________________
+
+                  ..................g2...................
+                  :                                     :
+                  :...............g0.............       :
+                  :             *===============*       :
+                  :             |       a0      |       :
+                  :         *===*=====*=========*       :
+                  :         |    a1   |         :       :
+                  :         *=========*         :       :
+                  *===================*         :       :
+                  |        v0         |         :       :
+                  *===================*         :       :
+                  :.............................:       :
+        __________:_____________________________________:____________
+        layer1____:_____________________________________:____________
+                  :                                     :
+                  :         ............g1..............:
+                  :         :         *=================*
+                  :         :         |       a2        |
+                  :         :         *=================*
+                  :         *===========================*
+                  :         |           v1              |
+                  :         *===========================*
+        __________:_________:___________________________:____________
+        layer2____:_________:___________________________:____________
+                  *=============*     *=================*
+                  |      a3     |     |       a4        |
+                  *=============*     *=================*
+                  :         :...........................:
+                  *=========================*           :
+                  |           v2            |           :
+                  *=============*===========*===========*
+                  :             |           v3          |
+                  :             *=======================*
+                  :.....................................:
+        _____________________________________________________________
+        layer3_______________________________________________________
+
+          *=========================*       *===========*
+          |          v4             |       |     v5    |
+          *=========================*       *===========*
+        """
+
+        # can trim g2 to 0 even though in-point of v2 is 4 because it will
+        # snap to 1. Note, there is only snapping on the start edge
+        # everything at the start edge is stretched back
+        self.assertEdit(
+            g2, 0, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 0, 1,
+            [v0, v2, a3], [v4],
+            {
+                v0 : {"start": 1, "in-point": 1, "duration": 14},
+                a3 : {"start": 1, "in-point": 6, "duration": 11},
+                v2 : {"start": 1, "in-point": 0, "duration": 17},
+                g0 : {"start": 1, "duration": 19},
+                g2 : {"start": 1, "duration": 23},
+            }, [], [])
+
+        self.timeline.set_snapping_distance(0)
+
+        # trim end to use as a snapping point
+        self.assertEdit(
+            v4, 3, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_END, 11, None, [], [],
+            {
+                v4 : {"duration": 10},
+            }, [], [])
+
+        self.timeline.set_snapping_distance(2)
+        """
+        , . . . . , . . . . , . . . . , . . . . , . . . . , . . . . ,
+        0         5         10        15        20        25        30
+        _____________________________________________________________
+        layer0_______________________________________________________
+
+          ......................g2.......................
+          :                                             :
+          :................g0....................       :
+          :                     *===============*       :
+          :                     |       a0      |       :
+          :                 *===*=====*=========*       :
+          :                 |    a1   |         :       :
+          :                 *=========*         :       :
+          *===========================*         :       :
+          |           v0              |         :       :
+          *===========================*         :       :
+          :.....................................:       :
+        __:_____________________________________________:____________
+        layer1__________________________________________:____________
+          :                                             :
+          :                 ............g1..............:
+          :                 :         *=================*
+          :                 :         |       a2        |
+          :                 :         *=================*
+          :                 *===========================*
+          :                 |           v1              |
+          :                 *===========================*
+        __:_________________:___________________________:____________
+        layer2______________:___________________________:____________
+          *=====================*     *=================*
+          |         a3          |     |       a4        |
+          *=====================*     *=================*
+          :                 :...........................:
+          *=================================*           :
+          |                v2               |           :
+          *=====================*===========*===========*
+          :                     |           v3          |
+          :                     *=======================*
+          :.............................................:
+        _____________________________________________________________
+        layer3_______________________________________________________
+
+          *===================*             *===========*
+          |        v4         |             |     v5    |
+          *===================*             *===========*
+        """
+
+        # can trim g2 to 12 even though it would cause a0 and a1 to fully
+        # overlap because the snapping allows it to succeed
+        self.assertEdit(
+            g2, 0, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 12, 11,
+            [a3, v0, v2], [v4],
+            {
+                v0 : {"start": 11, "in-point": 11, "duration": 4},
+                a1 : {"start": 11, "in-point": 1, "duration": 4},
+                v1 : {"start": 11, "in-point": 1, "duration": 13},
+                a3 : {"start": 11, "in-point": 16, "duration": 1},
+                v2 : {"start": 11, "in-point": 10, "duration": 7},
+                g0 : {"start": 11, "duration": 9},
+                g1 : {"start": 11, "duration": 13},
+                g2 : {"start": 11, "duration": 13},
+            }, [], [])
+
+        # trim end to use as a snapping point
+        self.assertEdit(
+            v5, 4, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_END, 27, None, [], [],
+            {
+                v5 : {"duration": 9, "layer": 4},
+            }, [], [])
+
+        """
+        , . . . . , . . . . , . . . . , . . . . , . . . . , . . . . ,
+        0         5         10        15        20        25        30
+        _____________________________________________________________
+        layer0_______________________________________________________
+
+                              .............g2............
+                              :                         :
+                              :.......g0.........       :
+                              : *===============*       :
+                              : |       a0      |       :
+                              *=*=====*=========*       :
+                              |  a1   |         :       :
+                              *=======*         :       :
+                              *=======*         :       :
+                              |  v0   |         :       :
+                              *=======*         :       :
+                              :.................:       :
+        ______________________:_________________________:____________
+        layer1________________:_________________________:____________
+                              :                         :
+                              :.........g1..............:
+                              :       *=================*
+                              :       |       a2        |
+                              :       *=================*
+                              *=========================*
+                              |         v1              |
+                              *=========================*
+        ______________________:_________________________:____________
+        layer2________________:_________________________:____________
+                              *=*     *=================*
+                              a3|     |       a4        |
+                              *=*     *=================*
+                              :.........................:
+                              *=============*           :
+                              |      v2     |           :
+                              *=*===========*===========*
+                              : |           v3          |
+                              : *=======================*
+                              :.........................:
+        _____________________________________________________________
+        layer3_______________________________________________________
+
+          *===================*
+          |        v4         |
+          *===================*
+        _____________________________________________________________
+        layer4_______________________________________________________
+
+                                            *=================*
+                                            |         v5      |
+                                            *=================*
+        """
+
+        # trim end of g2 and move layer. Without the snap, would fail since
+        # a2's duration-limit is 12.
+        # Even elements not being trimmed will still move layer
+        # a0 and a1 keep transition
+        # v2 and v3 keep transition
+        self.assertEdit(
+            g2, 1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_END, 29, 27,
+            [a2, a4, v1, v3], [v5],
+            {
+                a2 : {"duration": 12, "layer": 2},
+                v1 : {"duration": 16, "layer": 2},
+                a4 : {"duration": 12, "layer": 3},
+                v3 : {"duration": 15, "layer": 3},
+                g1 : {"duration": 16, "layer": 2},
+                g2 : {"duration": 16, "layer": 1},
+                a0 : {"layer": 1},
+                a1 : {"layer": 1},
+                v0 : {"layer": 1},
+                a3 : {"layer": 3},
+                v2 : {"layer": 3},
+                g0 : {"layer": 1},
+            }, [], [])
+
+        # trim start to use as a snapping point
+        self.timeline.set_snapping_distance(0)
+        self.assertEdit(
+            v5, 4, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 19, None,
+            [], [],
+            {
+                v5 : {"start": 19, "in-point": 1, "duration": 8},
+            }, [], [])
+
+        self.timeline.set_snapping_distance(2)
+        """
+        , . . . . , . . . . , . . . . , . . . . , . . . . , . . . . ,
+        0         5         10        15        20        25        30
+        _____________________________________________________________
+        layer0_______________________________________________________
+        _____________________________________________________________
+        layer1_______________________________________________________
+
+                              .............g2..................
+                              :                               :
+                              :.......g0.........             :
+                              : *===============*             :
+                              : |       a0      |             :
+                              *=*=====*=========*             :
+                              |  a1   |         :             :
+                              *=======*         :             :
+                              *=======*         :             :
+                              |  v0   |         :             :
+                              *=======*         :             :
+                              :.................:             :
+        ______________________:_______________________________:______
+        layer2________________:_______________________________:______
+                              :                               :
+                              :.........g1....................:
+                              :       *=======================*
+                              :       |           a2          |
+                              :       *=======================*
+                              *===============================*
+                              |               v1              |
+                              *===============================*
+        ______________________:_______________________________:______
+        layer3________________:_______________________________:______
+                              *=*     *=======================*
+                              a3|     |           a4          |
+                              *=*     *=======================*
+                              :...............................:
+          *===================*=============*                 :
+          |        v4         |      v2     |                 :
+          *===================*=*===========*=================*
+                              : |                v3           |
+                              : *=============================*
+                              :...............................:
+        _____________________________________________________________
+        layer4_______________________________________________________
+
+                                              *===============*
+                                              |       v5      |
+                                              *===============*
+        """
+
+        # trim end of g2 and move layer. Trim at 17 would lead to
+        # v3 being fully overlapped by v2, but snap to 19 makes it work
+        self.assertEdit(
+            g2, 1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_END, 17, 19,
+            [a2, a4, v1, v3], [v5],
+            {
+                a0 : {"duration": 7},
+                a2 : {"duration": 4},
+                v1 : {"duration": 8},
+                a4 : {"duration": 4},
+                v3 : {"duration": 7},
+                g0 : {"duration": 8},
+                g1 : {"duration": 8},
+                g2 : {"duration": 8},
+            }, [], [])
+
+        """
+        , . . . . , . . . . , . . . . , . . . . , . . . . , . . . . ,
+        0         5         10        15        20        25        30
+        _____________________________________________________________
+        layer0_______________________________________________________
+        _____________________________________________________________
+        layer1_______________________________________________________
+
+                              ........g2.......
+                              :               :
+                              :.......g0......:
+                              : *=============*
+                              : |      a0     |
+                              *=*=====*=======*
+                              |  a1   |       :
+                              *=======*       :
+                              *=======*       :
+                              |  v0   |       :
+                              *=======*       :
+                              :...............:
+        ______________________:_______________:______________________
+        layer2________________:_______________:______________________
+                              :               :
+                              :.......g1......:
+                              :       *=======*
+                              :       |   a2  |
+                              :       *=======*
+                              *===============*
+                              |       v1      |
+                              *===============*
+        ______________________:_______________:______________________
+        layer3________________:_______________:______________________
+                              *=*     *=======*
+                              a3|     |   a4  |
+                              *=*     *=======*
+                              :...............:
+          *===================*=============* :
+          |        v4         |      v2     | :
+          *===================*=*===========*=*
+                              : |     v3      |
+                              : *=============*
+                              :...............:
+        _____________________________________________________________
+        layer4_______________________________________________________
+
+                                              *===============*
+                                              |       v5      |
+                                              *===============*
+        """
+
+        # can trim without trimming parent
+        self.assertEdit(
+            v0, 1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 5, None, [], [],
+            {
+                v0 : {"start": 5, "in-point": 5, "duration": 10},
+                g0 : {"start": 5, "duration": 14},
+                g2 : {"start": 5, "duration": 14},
+            }, [], [])
+
+        self.assertEdit(
+            a2, 2, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_END, 23, None, [], [],
+            {
+                a2 : {"duration": 8},
+                g1 : {"duration": 12},
+                g2 : {"duration": 18},
+            }, [], [])
+        """
+        , . . . . , . . . . , . . . . , . . . . , . . . . , . . . . ,
+        0         5         10        15        20        25        30
+        _____________________________________________________________
+        layer0_______________________________________________________
+        _____________________________________________________________
+        layer1_______________________________________________________
+
+                  ...................g2................
+                  :                                   :
+                  :...........g0...............       :
+                  :             *=============*       :
+                  :             |      a0     |       :
+                  :           *=*=====*=======*       :
+                  :           |  a1   |       :       :
+                  :           *=======*       :       :
+                  *===================*       :       :
+                  |         v0        |       :       :
+                  *===================*       :       :
+                  :...........................:       :
+        __________:___________________________________:______________
+        layer2____:___________________________________:______________
+                  :                                   :
+                  :           ............g1..........:
+                  :           :       *===============*
+                  :           :       |       a2      |
+                  :           :       *===============*
+                  :           *===============*       :
+                  :           |       v1      |       :
+                  :           *===============*       :
+        __________:___________:_______________________:______________
+        layer3____:___________:_______________________:______________
+                  :           *=*     *=======*       :
+                  :           a3|     |   a4  |       :
+                  :           *=*     *=======*       :
+                  :           :.......................:
+          *===================*=============*         :
+          |        v4         |      v2     |         :
+          *===================*=*===========*=*       :
+                  :             |     v3      |       :
+                  :             *=============*       :
+                  :...................................:
+        _____________________________________________________________
+        layer4_______________________________________________________
+
+                                              *===============*
+                                              |       v5      |
+                                              *===============*
+        """
+        # same with group within a group
+        self.assertEdit(
+            g0, 0, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 9, 11,
+            [v0], [v1, v2, v4, a3],
+            {
+                v0 : {"start": 11, "in-point": 11, "duration": 4, "layer": 0},
+                a0 : {"layer": 0},
+                a1 : {"layer": 0},
+                g0 : {"start": 11, "duration": 8, "layer": 0},
+                g2 : {"start": 11, "duration": 12, "layer": 0},
+            }, [], [])
+
+        self.assertEdit(
+            g0, 0, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_END, 17, 18,
+            [a0], [v2],
+            {
+                a0 : {"duration": 6},
+                g0 : {"duration": 7},
+            }, [], [])
+
+
+    def test_roll(self):
+        """
+        , . . . . , . . . . , . . . . , . . . . , . . . . , . . . . ,
+        0         5         10        15        20        25        30
+        _____________________________________________________________
+        layer0_______________________________________________________
+
+                      *===============================*                ]
+                      |               c0              |                ]
+        *=============*=====*===================*=====*=============*  ]>video
+        |        c1         |                   |         c2        |  ]
+        *===================*                   *===================*  ]
+                            ..........g0.........
+                            *===========*       :                      ]
+                            |     c3    |       :                      ]>audio0
+                            *===*=======*===*   :                      ]
+                            :   |    c4     |   :                      ] ]
+                            :   *===*=======*===*                        ]
+                            :       |    c5     |                        ]>audio1
+                            :       *===========*                        ]
+        ____________________:___________________:____________________
+        layer1______________:___________________:____________________
+                            :                   :
+        .............g3.....:....               :
+        :     *=================*               :                      ]
+        :     |      c12        |           ....:...g4...............  ]
+        :     *=================*           :   :                   :  ]
+        :........g1.........:   :           :   :.........g2........:  ]>audio0
+        *=============*     :   :           :   *=============*     :  ]
+        |     c8      |     :   :           :   |      c10    |     :  ]
+        *=============*     :   :     *=========*=============*     :  ]
+        :                   :   :     |   c7    |                   :  ] ]
+        :                   *=========*=========*                   :    ]>video
+        :                   |    c6   |     :   :                   :  ] ]
+        :     *=============*=========*     :   :     *=============*  ]
+        :     |     c9      |...:...........:...:     |     c11     |  ]
+        :     *=============*   :           :   :     *=============*  ]
+        :...................:   :           :   :...................:  ]>audio1
+        :.......................:           *=================*     :  ]
+                                            |        c13      |     :  ]
+                                            *=================*     :  ]
+                                            :.......................:
+        """
+        video = self.add_video_track()
+        audio0 = self.add_audio_track()
+        audio1 = self.add_audio_track()
+
+        c0 = self.add_clip("c0", 0, [video], 7, 16)
+        c1 = self.add_clip("c1", 0, [video], 0, 10)
+        c2 = self.add_clip("c2", 0, [video], 20, 10, 20)
+        self.register_auto_transition(c1, c0, video)
+        self.register_auto_transition(c0, c2, video)
+
+        c3 = self.add_clip("c3", 0, [audio0], 10, 6, 2, 38)
+        c4 = self.add_clip("c4", 0, [audio0, audio1], 12, 6, 15)
+        self.register_auto_transition(c3, c4, audio0)
+        c5 = self.add_clip("c5", 0, [audio1], 14, 6, 30, 38)
+        self.register_auto_transition(c4, c5, audio1)
+        c6 = self.add_clip("c6", 1, [audio1, video], 10, 5, 7)
+        c7 = self.add_clip("c7", 1, [audio0, video], 15, 5, 1, 15)
+        g0 = self.add_group("g0", [c3, c4, c5, c6, c7])
+
+        c8 = self.add_clip("c8", 1, [audio0], 0, 7, 3, 13)
+        c9 = self.add_clip("c9", 1, [audio1], 3, 7)
+        g1 = self.add_group("g1", [c8, c9])
+        c10 = self.add_clip("c10", 1, [audio0], 20, 7, 1)
+        c11 = self.add_clip("c11", 1, [audio1], 23, 7, 3, 10)
+        g2 = self.add_group("g2", [c10, c11])
+
+        c12 = self.add_clip("c12", 1, [audio0], 3, 9)
+        self.register_auto_transition(c8, c12, audio0)
+        g3 = self.add_group("g3", [g1, c12])
+        c13 = self.add_clip("c13", 1, [audio1], 18, 9)
+        self.register_auto_transition(c13, c11, audio1)
+        g4 = self.add_group("g4", [g2, c13])
+
+        self.assertTimelineConfig()
+
+        # edit failures
+        self.timeline.set_snapping_distance(2)
+
+        # cannot roll c10 to 22, which snaps to 23, because it will
+        # extend c5 beyond its duration limit of 8
+        self.assertFailEdit(
+            c10, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_START, 22)
+
+        # same with g2
+        self.assertFailEdit(
+            g2, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_START, 22)
+
+        # cannot roll end c9 to 8, which snaps to 7, because it would
+        # cause c3's in-point to become negative
+        self.assertFailEdit(
+            c9, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_END, 8)
+
+        # same with g1
+        self.assertFailEdit(
+            g1, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_END, 8)
+
+        # cannot roll c13 to 19, snap to 20, because it would cause
+        # c4 to fully overlap c5
+        self.assertFailEdit(
+            c13, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_START, 19)
+
+        # cannot roll c12 to 11, snap to 10, because it would cause
+        # c3 to fully overlap c4
+        self.assertFailEdit(
+            c12, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_END, 11)
+
+        # cannot roll c6 to 0 because it would cause c9 to be trimmed
+        # below its start
+        self.assertFailEdit(
+            c6, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_START, 0)
+
+        # cannot roll end c7 to 30 because it would cause c10 to be
+        # trimmed beyond its end
+        self.assertFailEdit(
+            c7, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_END, 30)
+
+        # moving layer is not supported
+        self.assertFailEdit(
+            c0, 2, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_START, 7)
+        self.assertFailEdit(
+            c0, 2, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_END, 23)
+
+        # successes
+        self.timeline.set_snapping_distance(0)
+
+        # c1 and g1 are trimmed at their end
+        # NOTE: c12 is not trimmed even though it shares a group g3
+        # with g1 because g3 does not share the same edge
+        # trim forward
+        self.assertEdit(
+            c6, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_START, 11, None,
+            [], [],
+            {
+                c6 : {"start": 11, "in-point": 8, "duration": 4},
+                c1 : {"duration": 11},
+                c9 : {"duration": 8},
+                g1 : {"duration": 11},
+            }, [], [])
+        # and reset
+        self.assertEdit(
+            c6, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_START, 10, None,
+            [], [],
+            {
+                c6 : {"start": 10, "in-point": 7, "duration": 5},
+                c1 : {"duration": 10},
+                c9 : {"duration": 7},
+                g1 : {"duration": 10},
+            }, [], [])
+
+        # same with g0
+        self.assertEdit(
+            g0, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_START, 11, None,
+            [], [],
+            {
+                c6 : {"start": 11, "in-point": 8, "duration": 4},
+                c3 : {"start": 11, "in-point": 3, "duration": 5},
+                g0 : {"start": 11, "duration": 9},
+                c1 : {"duration": 11},
+                c9 : {"duration": 8},
+                g1 : {"duration": 11},
+            }, [], [])
+        self.assertEdit(
+            g0, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_START, 10, None,
+            [], [],
+            {
+                c6 : {"start": 10, "in-point": 7, "duration": 5},
+                c3 : {"start": 10, "in-point": 2, "duration": 6},
+                g0 : {"start": 10, "duration": 10},
+                c1 : {"duration": 10},
+                c9 : {"duration": 7},
+                g1 : {"duration": 10},
+            }, [], [])
+
+        self.timeline.set_snapping_distance(1)
+        # trim backward
+        # NOTE: c9 has zero width, not considered overlapping with c6
+        # snapping allows the edit to succeed (in-point of c6 no longer
+        # negative)
+        # NOTE: c12 does not move, but c8 does because it is in the same
+        # group as g1
+        # loose transitions
+        self.assertEdit(
+            c6, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_START, 2, 3,
+            [c6], [c12],
+            {
+                c6 : {"start": 3, "in-point": 0, "duration": 12},
+                g0 : {"start": 3, "duration": 17},
+                c1 : {"duration": 3},
+                c8 : {"duration": 3},
+                c9 : {"duration": 0},
+                g1 : {"duration": 3},
+            }, [], [(c1, c0, video), (c8, c12, audio0)])
+
+        # bring back
+        # NOTE: no snapping to c3 start edge because it is part of the
+        # element being edited, g0, even though it doesn't end up changing
+        # gain back new transitions
+        self.assertEdit(
+            g0, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_START, 10, None,
+            [], [],
+            {
+                c6 : {"start": 10, "in-point": 7, "duration": 5},
+                g0 : {"start": 10, "duration": 10},
+                c1 : {"duration": 10},
+                c8 : {"duration": 10},
+                c9 : {"duration": 7},
+                g1 : {"duration": 10},
+            }, [(c1, c0, video), (c8, c12, audio0)], [])
+
+
+        # same but with the end edge of g0
+        self.timeline.set_snapping_distance(0)
+        self.assertEdit(
+            c7, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_END, 19, None, [], [],
+            {
+                c7 : {"duration": 4},
+                c2 : {"start": 19, "in-point": 19, "duration": 11},
+                c10 : {"start": 19, "in-point": 0, "duration": 8},
+                g2 : {"start": 19, "duration": 11},
+            }, [], [])
+        self.assertEdit(
+            c7, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_END, 20, None, [], [],
+            {
+                c7 : {"duration": 5},
+                c2 : {"start": 20, "in-point": 20, "duration": 10},
+                c10 : {"start": 20, "in-point": 1, "duration": 7},
+                g2 : {"start": 20, "duration": 10},
+            }, [], [])
+        # do same with g0
+        self.assertEdit(
+            g0, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_END, 19, None, [], [],
+            {
+                c7 : {"duration": 4},
+                c5 : {"duration": 5},
+                g0 : {"duration": 9},
+                c2 : {"start": 19, "in-point": 19, "duration": 11},
+                c10 : {"start": 19, "in-point": 0, "duration": 8},
+                g2 : {"start": 19, "duration": 11},
+            }, [], [])
+        self.assertEdit(
+            g0, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_END, 20, None, [], [],
+            {
+                c7 : {"duration": 5},
+                c5 : {"duration": 6},
+                g0 : {"duration": 10},
+                c2 : {"start": 20, "in-point": 20, "duration": 10},
+                c10 : {"start": 20, "in-point": 1, "duration": 7},
+                g2 : {"start": 20, "duration": 10},
+            }, [], [])
+
+        self.timeline.set_snapping_distance(1)
+        # trim forwards
+        # NOTE: c10 has zero width, not considered overlapping with c7
+        # snapping allows the edit to succeed (duration of c7 no longer
+        # above its limit)
+        # NOTE: c12 does not move, but c11 does because it is in the same
+        # group as g2
+        self.assertEdit(
+            c7, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_END, 28, 27,
+            [c7], [c13],
+            {
+                c7 : {"duration": 12},
+                g0 : {"duration": 17},
+                c2 : {"start": 27, "in-point": 27, "duration": 3},
+                c10 : {"start": 27, "in-point": 8, "duration": 0},
+                c11 : {"start": 27, "in-point": 7, "duration": 3},
+                g2 : {"start": 27, "duration": 3},
+            }, [], [(c0, c2, video), (c13, c11, audio1)])
+        # bring back using g0
+        # NOTE: no snapping to c5 end edge because it is part of the
+        # element being edited, g0, even though it doesn't end up changing
+        self.assertEdit(
+            g0, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_END, 20, None, [], [],
+            {
+                c7 : {"duration": 5},
+                g0 : {"duration": 10},
+                c2 : {"start": 20, "in-point": 20, "duration": 10},
+                c10 : {"start": 20, "in-point": 1, "duration": 7},
+                c11 : {"start": 20, "in-point": 0, "duration": 10},
+                g2 : {"start": 20, "duration": 10},
+            }, [(c0, c2, video), (c13, c11, audio1)], [])
+
+        # adjust c0 for snapping
+        # doesn't move anything else
+        self.assertEdit(
+            c0, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_START, 8, None,
+            [], [],
+            {
+                c0 : {"start": 8, "in-point": 1, "duration": 15},
+            }, [], [])
+        self.assertEdit(
+            c0, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_END, 22, None, [], [],
+            {
+                c0 : {"duration": 14},
+            }, [], [])
+        """
+        , . . . . , . . . . , . . . . , . . . . , . . . . , . . . . ,
+        0         5         10        15        20        25        30
+        _____________________________________________________________
+        layer0_______________________________________________________
+
+                        *===========================*                  ]
+                        |             c0            |                  ]
+        *===============*===*===================*===*===============*  ]>video
+        |        c1         |                   |         c2        |  ]
+        *===================*                   *===================*  ]
+                            ..........g0.........
+                            *===========*       :                      ]
+                            |     c3    |       :                      ]>audio0
+                            *===*=======*===*   :                      ]
+                            :   |    c4     |   :                      ] ]
+                            :   *===*=======*===*                        ]
+                            :       |    c5     |                        ]>audio1
+                            :       *===========*                        ]
+        ____________________:___________________:____________________
+        layer1______________:___________________:____________________
+                            :                   :
+        .............g3.....:....               :
+        :     *=================*               :                      ]
+        :     |      c12        |           ....:...g4...............  ]
+        :     *=================*           :   :                   :  ]
+        :........g1.........:   :           :   :.........g2........:  ]>audio0
+        *===================*   :           :   *=============*     :  ]
+        |        c8         |   :           :   |      c10    |     :  ]
+        *===================*   :     *=========*=============*     :  ]
+        :                   :   :     |   c7    |                   :  ] ]
+        :                   *=========*=========*                   :    ]>video
+        :                   |    c6   |     :   :                   :  ] ]
+        :     *=============*=========*     :   *===================*  ]
+        :     |     c9      |...:...........:...|        c11        |  ]
+        :     *=============*   :           :   *===================*  ]
+        :...................:   :           :   :...................:  ]>audio1
+        :.......................:           *=================*     :  ]
+                                            |        c13      |     :  ]
+                                            *=================*     :  ]
+                                            :.......................:
+        """
+        # rolling only moves an element if it contains a source that
+        # touches the rolling edge. For a group, any source below it
+        # at the corresponding edge counts, we also prefer trimming the
+        # whole group over just one of its childrens.
+        # As such, when rolling the end of c5, c11 shares the audio1
+        # track and starts when c5 ends, so is set to be trimmed. But it
+        # is also at the start edge of its parent g2, so g2 is set to be
+        # trimmed. However, it is not at the start of g4, so g4 is not
+        # set to be trimmed. As such, c10 will also move, even though it
+        # does not share a track. c2, on the other hand, will not move
+        # NOTE: snapping helps keep c5's duration below its limit (8)
+        self.assertEdit(
+            c5, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_END, 23, 22,
+            [c5], [c0],
+            {
+                c5 : {"duration": 8},
+                g0 : {"duration": 12},
+                c11 : {"start": 22, "in-point": 2, "duration": 8},
+                c10 : {"start": 22, "in-point": 3, "duration": 5},
+                g2 : {"start": 22, "duration": 8},
+            }, [], [])
+
+        # same with c3 at its start edge
+        self.assertEdit(
+            c3, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_START, 7, 8,
+            [c3], [c0],
+            {
+                c3 : {"start": 8, "in-point": 0, "duration": 8},
+                g0 : {"start": 8, "duration": 14},
+                c8 : {"duration": 8},
+                c9 : {"duration": 5},
+                g1 : {"duration": 8},
+            }, [], [])
+        """
+        , . . . . , . . . . , . . . . , . . . . , . . . . , . . . . ,
+        0         5         10        15        20        25        30
+        _____________________________________________________________
+        layer0_______________________________________________________
+
+                        *===========================*                  ]
+                        |             c0            |                  ]
+        *===============*===*===================*===*===============*  ]>video
+        |        c1         |                   |         c2        |  ]
+        *===================*                   *===================*  ]
+                        ..............g0.............
+                        *===============*           :                  ]
+                        |      c3       |           :                  ]>audio0
+                        *=======*=======*===*       :                  ]
+                        :       |    c4     |       :                  ] ]
+                        :       *===*=======*=======*                    ]
+                        :           |      c5       |                    ]>audio1
+                        :           *===============*                    ]
+        ________________:___________________________:________________
+        layer1__________:___________________________:________________
+                        :                           :
+        .............g3.:........                   :
+        :     *=================*                   :                  ]
+        :     |      c12        |           ........:.g4.............  ]
+        :     *=================*           :       :               :  ]
+        :........g1.....:       :           :       :.....g2........:  ]>audio0
+        *===============*       :           :       *=========*     :  ]
+        |      c8       |       :           :       |   c10   |     :  ]
+        *===============*       :     *=========*   *=========*     :  ]
+        :               :       :     |   c7    |   :               :  ] ]
+        :               :   *=========*=========*   :               :    ]>video
+        :               :   |    c6   |     :       :               :  ] ]
+        :     *=========*   *=========*     :       *===============*  ]
+        :     |   c9    |.......:...........:.......|     c11       |  ]
+        :     *=========*       :           :       *===============*  ]
+        :...............:       :           :       :...............:  ]>audio1
+        :.......................:           *=================*     :  ]
+                                            |        c13      |     :  ]
+                                            *=================*     :  ]
+                                            :.......................:
+        """
+        # rolling end of c1 only moves c6, similarly with c2 and c7
+        self.assertEdit(
+            c1, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_END, 8, 8,
+            [c1], [c9, c8, c3, c0],
+            {
+                c1 : {"duration": 8},
+                c6 : {"start": 8, "in-point": 5, "duration": 7},
+            }, [], [(c1, c0, video)])
+        self.assertEdit(
+            c2, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_START, 22, 22,
+            [c2], [c0, c5, c10, c11],
+            {
+                c2 : {"start": 22, "in-point": 22, "duration": 8},
+                c7 : {"duration": 7},
+            }, [], [(c0, c2, video)])
+
+        # move c3 end edge out the way
+        self.timeline.set_snapping_distance(0)
+        self.assertEdit(
+            c3, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_END, 17, None, [], [],
+            {
+                c3: {"duration": 9},
+            }, [], [])
+
+        self.timeline.set_snapping_distance(2)
+
+        """
+        , . . . . , . . . . , . . . . , . . . . , . . . . , . . . . ,
+        0         5         10        15        20        25        30
+        _____________________________________________________________
+        layer0_______________________________________________________
+
+                        *===========================*                  ]
+                        |             c0            |                  ]
+        *===============*===========================*===============*  ]>video
+        |       c1      |                           |      c2       |  ]
+        *===============*                           *===============*  ]
+                        ..............g0.............
+                        *=================*         :                  ]
+                        |      c3         |         :                  ]>audio0
+                        *=======*=========*=*       :                  ]
+                        :       |    c4     |       :                  ] ]
+                        :       *===*=======*=======*                    ]
+                        :           |      c5       |                    ]>audio1
+                        :           *===============*                    ]
+        ________________:___________________________:________________
+        layer1__________:___________________________:________________
+                        :                           :
+        .............g3.:........                   :
+        :     *=================*                   :                  ]
+        :     |      c12        |           ........:.g4.............  ]
+        :     *=================*           :       :               :  ]
+        :........g1.....:       :           :       :.....g2........:  ]>audio0
+        *===============*       :           :       *=========*     :  ]
+        |      c8       |       :           :       |   c10   |     :  ]
+        *===============*       :     *=============*=========*     :  ]
+        :               :       :     |     c7      |               :  ] ]
+        :               *=============*=============*               :    ]>video
+        :               |      c6     |     :       :               :  ] ]
+        :     *=========*=============*     :       *===============*  ]
+        :     |   c9    |.......:...........:.......|     c11       |  ]
+        :     *=========*       :           :       *===============*  ]
+        :...............:       :           :       :...............:  ]>audio1
+        :.......................:           *=================*     :  ]
+                                            |        c13      |     :  ]
+                                            *=================*     :  ]
+                                            :.......................:
+        """
+
+        # can safely roll within a group
+        # NOTE: we do not snap to an edge used in the edit
+        self.assertEdit(
+            c6, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_END, 15, 14,
+            [c6], [c5],
+            {
+                c6: {"duration": 6},
+                c7: {"start": 14, "in-point": 0, "duration": 8},
+            }, [], [])
+        self.assertEdit(
+            c7, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_START, 16, 17,
+            [c7], [c3],
+            {
+                c6: {"duration": 9},
+                c7: {"start": 17, "in-point": 3, "duration": 5},
+            }, [], [])
+
+    def test_snap_from_negative(self):
+        track = self.add_video_track()
+        c0 = self.add_clip("c0", 0, [track], 0, 20)
+        c1 = self.add_clip("c1", 0, [track], 100, 10)
+        g1 = self.add_group("g0", [c0, c1])
+        snap_to = self.add_clip("snap-to", 2, [track], 4, 50)
+
+        self.assertTimelineConfig()
+
+        self.timeline.set_snapping_distance(9)
+        # move without snap would make start edge of c0 go to -5, but this
+        # edge snaps to the start edge of snap_to, allowing the edit to
+        # succeed
+        self.assertEdit(
+            c1, 1, GES.EditMode.NORMAL, GES.Edge.NONE, 95, 4, [c0], [snap_to],
+            {
+                c0 : {"start": 4, "layer": 1},
+                c1 : {"start": 104, "layer": 1},
+                g1 : {"start": 4, "layer": 1},
+            }, [], [])
+
+    def test_move_layer(self):
+        """
+        , . . . . , . . . . , . . . . , . . . . , . . . . , . . . . ,
+        0         5         10        15        20        25        30
+        _____________________________________________________________
+        layer0_______________________________________________________
+
+                                      *===================*
+                                      |         c1        |
+                                      *===================*
+                  ..............g2...............
+                  :                             :
+                  :.............g0..............:
+                  *=============================*
+                  |             c0              |
+                  *=============================*
+                  :                             :
+                  :                             :
+        __________:_____________________________:____________________
+        layer1____:_____________________________:____________________
+                  :                             :
+                  *===================*         :
+                  |        c2         |         :
+                  *===================*         :
+                  :.............................:
+                  :         ...............g1...:..........
+                  :         *=============================*
+                  :         |              c3             |
+                  :         *=============================*
+        __________:_________:_____________________________:__________
+        layer2____:_________:_____________________________:__________
+                  :         :                             :
+                  :         :         *===================*
+                  :         :         |        c5         |
+                  :         :.........*===================*
+                  *===================*         :
+                  |         c4        |         :
+                  *===================*         :
+                  :.............................:
+                            *===================*
+                            |         c6        |
+                            *===================*
+        """
+        track = self.add_video_track()
+        c0 = self.add_clip("c0", 0, [track], 5, 15)
+        c1 = self.add_clip("c1", 0, [track], 15, 10)
+        self.register_auto_transition(c0, c1, track)
+        c2 = self.add_clip("c2", 1, [track], 5, 10)
+        c3 = self.add_clip("c3", 1, [track], 10, 15)
+        self.register_auto_transition(c2, c3, track)
+        c4 = self.add_clip("c4", 2, [track], 5, 10)
+        c5 = self.add_clip("c5", 2, [track], 15, 10)
+        c6 = self.add_clip("c6", 2, [track], 10, 10)
+        self.register_auto_transition(c4, c6, track)
+        self.register_auto_transition(c6, c5, track)
+
+        g0 = self.add_group("g0", [c0, c2])
+        g1 = self.add_group("g1", [c3, c5])
+        g2 = self.add_group("g2", [g0, c4])
+
+        self.assertTimelineConfig()
+
+        layer = self.timeline.get_layer(0)
+        self.assertIsNotNone(layer)
+
+        # don't loose auto-transitions
+        # clips stay in their layer (groups do not move them)
+        self.timeline.move_layer(layer, 2)
+        self.assertTimelineConfig(
+            {
+                c0 : {"layer": 2},
+                c1 : {"layer": 2},
+                c2 : {"layer": 0},
+                c3 : {"layer": 0},
+                c4 : {"layer": 1},
+                c5 : {"layer": 1},
+                c6 : {"layer": 1},
+                g1 : {"layer": 0},
+            })
+        """
+        , . . . . , . . . . , . . . . , . . . . , . . . . , . . . . ,
+        0         5         10        15        20        25        30
+        _____________________________________________________________
+        layer0_______________________________________________________
+
+                  ..............g2...............
+                  :                             :
+                  :.............g0..............:
+                  *===================*         :
+                  |        c2         |         :
+                  *===================*         :
+                  :   ..........................:
+                  :   :     ...............g1..............
+                  :   :     *=============================*
+                  :   :     |              c3             |
+                  :   :     *=============================*
+        __________:___:_____:_____________________________:__________
+        layer1____:___:_____:_____________________________:__________
+                  :   :     :                             :
+                  :   :     :         *===================*
+                  :   :     :         |        c5         |
+                  :   :     :         *===================*
+                  :   :     :.............................:
+                  :   :..........g2.....
+                  :   g0               :
+                  :   :                :
+                  *===================*:
+                  |         c4        |:
+                  *===================*:
+                  :   :................:
+                  :   :     *===================*
+                  :   :     |         c6        |
+                  :   :     *===================*
+        __________:___:______________________________________________
+        layer2____:___:______________________________________________
+                  :   :..........................
+                  *=============================*
+                  |             c0              |
+                  *=============================*
+                  :.............................:
+                  :.............................:
+                                      *===================*
+                                      |         c1        |
+                                      *===================*
+        """
+        layer = self.timeline.get_layer(1)
+        self.assertIsNotNone(layer)
+        self.timeline.move_layer(layer, 0)
+        self.assertTimelineConfig(
+            {
+                c2 : {"layer": 1},
+                c3 : {"layer": 1},
+                c4 : {"layer": 0},
+                c5 : {"layer": 0},
+                c6 : {"layer": 0},
+                g0 : {"layer": 1},
+            })
+        """
+        , . . . . , . . . . , . . . . , . . . . , . . . . , . . . . ,
+        0         5         10        15        20        25        30
+        _____________________________________________________________
+        layer0_______________________________________________________
+
+                            *===================*
+                            |         c6        |
+                            *===================*
+
+                  ..............g2...............
+                  *===================*         :
+                  |         c4        |         :
+                  *===================*         :
+                  :         ...............g1...:..........
+                  :         :         *===================*
+                  :         :         |        c5         |
+                  :         :         *===================*
+        __________:_________:___________________:_________:__________
+        layer1____:_________:___________________:_________:__________
+                  :         :                   :         :
+                  :         *=============================*
+                  :         |              c3             |
+                  :         *=============================*
+                  :         :...................:.........:
+                  :.............g0..............:
+                  *===================*         :
+                  |        c2         |         :
+                  *===================*         :
+                  :.............................:
+        __________:_____________________________:____________________
+        layer2____:_____________________________:____________________
+                  :                             :
+                  *=============================*
+                  |             c0              |
+                  *=============================*
+                  :.............................:
+                  :.............................:
+                                      *===================*
+                                      |         c1        |
+                                      *===================*
+        """
+        self.timeline.append_layer()
+        layer = self.timeline.get_layer(3)
+        self.assertIsNotNone(layer)
+        self.timeline.move_layer(layer, 1)
+        self.assertTimelineConfig(
+            {
+                c0 : {"layer": 3},
+                c1 : {"layer": 3},
+                c2 : {"layer": 2},
+                c3 : {"layer": 2},
+                g0 : {"layer": 2},
+            })
+        layer = self.timeline.get_layer(3)
+        self.assertIsNotNone(layer)
+        self.timeline.move_layer(layer, 0)
+        self.assertTimelineConfig(
+            {
+                c0 : {"layer": 0},
+                c1 : {"layer": 0},
+                c2 : {"layer": 3},
+                c3 : {"layer": 3},
+                c4 : {"layer": 1},
+                c5 : {"layer": 1},
+                c6 : {"layer": 1},
+                g0 : {"layer": 0},
+                g1 : {"layer": 1},
+            })
+        """
+        , . . . . , . . . . , . . . . , . . . . , . . . . , . . . . ,
+        0         5         10        15        20        25        30
+        _____________________________________________________________
+        layer0_______________________________________________________
+
+                                      *===================*
+                                      |         c1        |
+                                      *===================*
+                  ..............g2...............
+                  :.............g0..............:
+                  *=============================*
+                  |             c0              |
+                  *=============================*
+                  :   ..........................:
+        __________:___:______________________________________________
+        layer1____:___:______________________________________________
+                  :   :
+                  :   :.......g2.......
+                  :   g0              :
+                  :   :               :
+                  *===================*
+                  |         c4        |
+                  *===================*
+                  :   :...............:
+                  :   :     *===================*
+                  :   :     |         c6        |
+                  :   :     *===================*
+                  :   :     ...............g1..............
+                  :   :     :         *===================*
+                  :   :     :         |        c5         |
+                  :   :     :         *===================*
+        __________:___:_____:_____________________________:__________
+        layer2____:___:_____:_____________________________:__________
+        __________:___:_____:_____________________________:__________
+        layer3____:___:_____:_____________________________:__________
+                  :   :     :                             :
+                  :   :     *=============================*
+                  :   :     |              c3             |
+                  :   :     *=============================*
+                  :   :     :.............................:
+                  :   :..........................
+                  *===================*         :
+                  |        c2         |         :
+                  *===================*         :
+                  :.............................:
+                  :.............................:
+        """
+        layer = self.timeline.get_layer(1)
+        self.assertTrue(self.timeline.remove_layer(layer))
+
+        # TODO: add tests when removing layers:
+        # FIXME: groups should probably loose their children when they
+        # are removed from the timeline, which would change g1's
+        # priority, but currently c5 remains in the group with priority
+        # of the removed layer
+
+    def test_not_snappable(self):
+        track = self.add_video_track()
+        c0 = self.add_clip("c0", 0, [track], 0, 10)
+        no_source = self.add_clip(
+            "no-source", 0, [], 5, 10, effects=[GES.Effect.new("agingtv")])
+        effect_clip = self.add_clip(
+            "effect-clip", 0, [track], 5, 10, clip_type=GES.EffectClip,
+            asset_id="agingtv || audioecho")
+        text = self.add_clip(
+            "text-clip", 0, [track], 5, 10, clip_type=GES.TextOverlayClip)
+
+        self.assertTimelineConfig()
+
+        self.timeline.set_snapping_distance(20)
+
+        self.assertEdit(
+            c0, 0, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, 8, None,
+            [], [], {c0 : {"start": 8}}, [], [])
+        self.assertEdit(
+            c0, 0, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_START, 5, None,
+            [], [], {c0 : {"start": 5}}, [], [])
+        self.assertEdit(
+            c0, 0, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_END, 8, None,
+            [], [], {c0 : {"duration": 3}}, [], [])
+
+        c1 = self.add_clip("c1", 0, [track], 30, 3)
+        self.assertTimelineConfig()
+
+        # end edge snaps to start of c1
+        self.assertEdit(
+            c0, 0, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, 10, 30,
+            [c0], [c1], {c0 : {"start": 27}}, [], [])
+
 
 class TestTransitions(common.GESSimpleTimelineTest):
 

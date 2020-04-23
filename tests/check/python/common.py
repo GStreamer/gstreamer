@@ -319,3 +319,382 @@ class GESSimpleTimelineTest(GESTest):
             self.assertEqual(len(timeline_groups), i + 1)
 
         return res
+
+
+class GESTimelineConfigTest(GESTest):
+    """
+    Tests where all the configuration changes, snapping positions and
+    auto-transitions are accounted for.
+    """
+
+    def setUp(self):
+        timeline = GES.Timeline.new()
+        self.timeline = timeline
+        timeline.set_auto_transition(True)
+
+        self.snap_occured = False
+        self.snap = None
+
+        def snap_started(tl, el1, el2, pos):
+            if self.snap_occured:
+                raise AssertionError(
+                    "Previous snap {} not accounted for".format(self.snap))
+            self.snap_occured = True
+            if self.snap is not None:
+                raise AssertionError(
+                    "Previous snap {} not ended".format(self.snap))
+            self.snap = (el1.get_parent(), el2.get_parent(), pos)
+
+        def snap_ended(tl, el1, el2, pos):
+            self.assertEqual(
+                self.snap, (el1.get_parent(), el2.get_parent(), pos))
+            self.snap = None
+
+        timeline.connect("snapping-started", snap_started)
+        timeline.connect("snapping-ended", snap_ended)
+
+        self.lost_clips = []
+
+        def unrecord_lost_clip(layer, clip):
+            if clip in self.lost_clips:
+                self.lost_clips.remove(clip)
+
+        def record_lost_clip(layer, clip):
+            self.lost_clips.append(clip)
+
+        def layer_added(tl, layer):
+            layer.connect("clip-added", unrecord_lost_clip)
+            layer.connect("clip-removed", record_lost_clip)
+
+        timeline.connect("layer-added", layer_added)
+
+        self.clips = []
+        self.auto_transitions = {}
+        self.config = {}
+
+    @staticmethod
+    def new_config(start, duration, inpoint, maxduration, layer):
+        return {"start": start, "duration": duration, "in-point": inpoint,
+                "max-duration": maxduration, "layer": layer}
+
+    def add_clip(self, name, layer, tracks, start, duration, inpoint=0,
+                 maxduration=Gst.CLOCK_TIME_NONE, clip_type=GES.TestClip,
+                 asset_id=None, effects=None):
+        """
+        Create a clip with the given @name and properties and add it to the
+        layer of priority @layer to the tracks in @tracks. Also registers
+        its expected configuration.
+        """
+        if effects is None:
+            effects = []
+
+        lay = self.timeline.get_layer(layer)
+        while lay is None:
+            self.timeline.append_layer()
+            lay = self.timeline.get_layer(layer)
+
+        asset = GES.Asset.request(clip_type, asset_id)
+        clip = asset.extract()
+        self.assertTrue(clip.set_name(name))
+        # FIXME: would be better to use select-tracks-for-object
+        # hack around the fact that we cannot use select-tracks-for-object
+        # in python by setting start to large number to ensure no conflict
+        # when adding a clip
+        self.assertTrue(clip.set_start(10000))
+        self.assertTrue(clip.set_duration(duration))
+        self.assertTrue(clip.set_inpoint(inpoint))
+
+        for effect in effects:
+            self.assertTrue(clip.add(effect))
+
+        if lay.add_clip(clip) != True:
+            raise AssertionError(
+                "Failed to add clip {} to layer {}".format(name, layer))
+
+        # then remove the children not in the selected tracks, which may
+        # now allow some clips to fully/triple overlap because they do
+        # not share a track
+        for child in clip.get_children(False):
+            if child.get_track() not in tracks:
+                clip.remove(child)
+
+        # then move to the desired start
+        prev_snap = self.timeline.get_snapping_distance()
+        self.timeline.set_snapping_distance(0)
+        self.assertTrue(clip.set_start(start))
+        self.timeline.set_snapping_distance(prev_snap)
+
+        self.assertTrue(clip.set_max_duration(maxduration))
+
+        self.config[clip] = self.new_config(
+            start, duration, inpoint, maxduration, layer)
+        self.clips.append(clip)
+
+        return clip
+
+    def add_group(self, name, to_group):
+        """
+        Create a group with the given @name and the elements in @to_group.
+        Also registers its expected configuration.
+        """
+        group = GES.Group.new()
+        self.assertTrue(group.set_name(name))
+        start = None
+        end = None
+        layer = None
+        for element in to_group:
+            if start is None:
+                start = element.start
+                end = element.start + element.duration
+                layer = element.get_layer_priority()
+            else:
+                start = min(start, element.start)
+                end = max(end, element.start + element.duration)
+                layer = min(layer, element.get_layer_priority())
+            self.assertTrue(group.add(element))
+
+        self.config[group] = self.new_config(
+            start, end - start, 0, Gst.CLOCK_TIME_NONE, layer)
+        return group
+
+    def register_auto_transition(self, clip1, clip2, track):
+        """
+        Register that we expect an auto-transition to exist between
+        @clip1 and @clip2 in @track.
+        """
+        transition = self._find_transition(clip1, clip2, track)
+        if transition is None:
+            raise AssertionError(
+                "{} and {} have no auto-transition in track {}".format(
+                    clip1, clip2, track))
+        if transition in self.auto_transitions.values():
+            raise AssertionError(
+                "Auto-transition between {} and {} in track {} already "
+                "registered".format(clip1, clip2, track))
+        key = (clip1, clip2, track)
+        if key in self.auto_transitions:
+            raise AssertionError(
+                "Auto-transition already registered for {}".format(key))
+
+        self.auto_transitions[key] = transition
+
+    def add_video_track(self):
+        track = GES.VideoTrack.new()
+        self.assertTrue(self.timeline.add_track(track))
+        return track
+
+    def add_audio_track(self):
+        track = GES.AudioTrack.new()
+        self.assertTrue(self.timeline.add_track(track))
+        return track
+
+    def assertElementConfig(self, element, config):
+        for prop in config:
+            if prop == "layer":
+                val = element.get_layer_priority()
+            else:
+                val = element.get_property(prop)
+
+            if val != config[prop]:
+                raise AssertionError("{} property {}: {} != {}".format(
+                    element, prop, val, config[prop]))
+
+    @staticmethod
+    def _source_in_track(clip, track):
+        if clip.find_track_element(track, GES.Source):
+            return True
+        return False
+
+    def _find_transition(self, clip1, clip2, track):
+        """find transition from earlier clip1 to later clip2"""
+        if not self._source_in_track(clip1, track) or \
+                not self._source_in_track(clip2, track):
+            return None
+
+        layer_prio = clip1.get_layer_priority()
+        if layer_prio != clip2.get_layer_priority():
+            return None
+
+        if clip1.start >= clip2.start:
+            return None
+
+        start = clip2.start
+        end = clip1.start + clip1.duration
+        if start >= end:
+            return None
+        duration = end - start
+
+        layer = self.timeline.get_layer(layer_prio)
+        self.assertIsNotNone(layer)
+
+        for clip in layer.get_clips():
+            children = clip.get_children(False)
+            if len(children) == 1:
+                child = children[0]
+            else:
+                continue
+            if isinstance(clip, GES.TransitionClip) and clip.start == start \
+                    and clip.duration == duration and child.get_track() == track:
+                return clip
+
+        raise AssertionError(
+            "No auto-transition between {} and {} in track {}".format(
+                clip1, clip2, track))
+
+    def _transition_between(self, new, existing, clip1, clip2, track):
+        if clip1.start < clip2.start:
+            entry = (clip1, clip2, track)
+        else:
+            entry = (clip2, clip1, track)
+        trans = self._find_transition(*entry)
+
+        if trans is None:
+            return
+
+        if entry in new:
+            new.remove(entry)
+            self.auto_transitions[entry] = trans
+        elif entry in existing:
+            existing.remove(entry)
+            expect = self.auto_transitions[entry]
+            if trans != expect:
+                raise AssertionError(
+                    "Auto-transition between {} and {} in track {} changed "
+                    "from {} to {}".format(
+                        clip1, clip2, track, expect, trans))
+        else:
+            raise AssertionError(
+                "Unexpected transition found between {} and {} in track {}"
+                "".format(clip1, clip2, track))
+
+    def assertTimelineConfig(
+            self, new_props=None, snap_position=None, snap_froms=None,
+            snap_tos=None, new_transitions=None, lost_transitions=None):
+        """
+        Check that the timeline configuration has only changed by the
+        differences present in @new_props.
+        Check that a snap occurred at @snap_position between one of the
+        clips in @snap_froms and one of the clips in @snap_tos.
+        Check that all new transitions in the timeline are present in
+        @new_transitions.
+        Checl that all the transitions that were lost are in
+        @lost_transitions.
+        """
+        if new_props is None:
+            new_props = {}
+        if snap_froms is None:
+            snap_froms = []
+        if snap_tos is None:
+            snap_tos = []
+        if new_transitions is None:
+            new_transitions = []
+        if lost_transitions is None:
+            lost_transitions = []
+
+        for element, config in new_props.items():
+            if element not in self.config:
+                self.config[element] = {}
+
+            for prop in config:
+                self.config[element][prop] = new_props[element][prop]
+
+        for element, config in self.config.items():
+            self.assertElementConfig(element, config)
+
+        # check that snapping occurred
+        snaps = []
+        for snap_from in snap_froms:
+            for snap_to in snap_tos:
+                snaps.append((snap_from, snap_to, snap_position))
+
+        if self.snap is None:
+            if snaps:
+                raise AssertionError(
+                    "No snap occurred, but expected a snap in {}".format(snaps))
+        elif not snaps:
+            if self.snap_occured:
+                raise AssertionError(
+                    "Snap {} occurred, but expected no snap".format(self.snap))
+        elif self.snap not in snaps:
+            raise AssertionError(
+                "Snap {} occurred, but expected a snap in {}".format(
+                    self.snap, snaps))
+        self.snap_occured = False
+
+        # check that lost transitions are not part of the layer
+        for clip1, clip2, track in lost_transitions:
+            key = (clip1, clip2, track)
+            if key not in self.auto_transitions:
+                raise AssertionError(
+                    "No such auto-transition between {} and {} in track {} "
+                    "is registered".format(clip1, clip2, track))
+            # make sure original transition was removed from the layer
+            trans = self.auto_transitions[key]
+            if trans not in self.lost_clips:
+                raise AssertionError(
+                    "The auto-transition {} between {} and {} track {} was "
+                    "not removed from the layers, but expect it to be lost"
+                    "".format(trans, clip1, clip2, track))
+            self.lost_clips.remove(trans)
+            # make sure a new one wasn't created
+            trans = self._find_transition(clip1, clip2, track)
+            if trans is not None:
+                raise AssertionError(
+                    "Found auto-transition between {} and {} in track {} "
+                    "is present, but expected it to be lost".format(
+                        clip1, clip2, track))
+            # since it was lost, remove it
+            del self.auto_transitions[key]
+
+        # check that all lost clips are accounted for
+        if self.lost_clips:
+            raise AssertionError(
+                "Clips were lost that are not accounted for: {}".format(
+                    self.lost_clips))
+
+        # check that all other transitions are either existing ones or
+        # new ones
+        new = set(new_transitions)
+        existing = set(self.auto_transitions.keys())
+        for i, clip1 in enumerate(self.clips):
+            for clip2 in self.clips[i+1:]:
+                for track in self.timeline.get_tracks():
+                    self._transition_between(
+                        new, existing, clip1, clip2, track)
+
+        # make sure we are not missing any expected transitions
+        if new:
+            raise AssertionError(
+                "Did not find new transitions for {}".format(new))
+        if existing:
+            raise AssertionError(
+                "Did not find existing transitions for {}".format(existing))
+
+        # make sure there aren't any clips we are unaware of
+        transitions = self.auto_transitions.values()
+        for layer in self.timeline.get_layers():
+            for clip in layer.get_clips():
+                if clip not in self.clips and clip not in transitions:
+                    raise AssertionError("Unknown clip {}".format(clip))
+
+    def assertEdit(self, element, layer, mode, edge, position, snap,
+                   snap_froms, snap_tos, new_props, new_transitions,
+                   lost_transitions):
+        if not element.edit([], layer, mode, edge, position):
+            raise AssertionError(
+                "Edit of {} to layer {}, mode {}, edge {}, at position {} "
+                "failed when a success was expected".format(
+                    element, layer, mode, edge, position))
+        self.assertTimelineConfig(
+            new_props=new_props, snap_position=snap, snap_froms=snap_froms,
+            snap_tos=snap_tos, new_transitions=new_transitions,
+            lost_transitions=lost_transitions)
+
+    def assertFailEdit(self, element, layer, mode, edge, position):
+        if element.edit([], layer, mode, edge, position):
+            raise AssertionError(
+                "Edit of {} to layer {}, mode {}, edge {}, at position {} "
+                "succeeded when a failure was expected".format(
+                    element, layer, mode, edge, position))
+        # should be no change or snapping if edit fails
+        self.assertTimelineConfig()
