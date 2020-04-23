@@ -375,7 +375,7 @@ gst_d3d11_vp8_dec_output_picture (GstVp8Decoder * decoder,
 
   if (!view_buffer) {
     GST_ERROR_OBJECT (self, "Could not get output view");
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
