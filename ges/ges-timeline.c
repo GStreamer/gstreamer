@@ -1681,6 +1681,8 @@ ges_timeline_add_clip (GESTimeline * timeline, GESClip * clip)
   /* TODO: extend with GError ** argument, which is accepted by
    * ges_clip_add_child_to_track */
 
+  ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (clip), timeline);
+
   /* We make sure not to be connected twice */
   g_signal_handlers_disconnect_by_func (clip, clip_track_element_added_cb,
       timeline);
@@ -1747,6 +1749,8 @@ ges_timeline_remove_clip (GESTimeline * timeline, GESClip * clip)
       timeline);
   g_signal_handlers_disconnect_by_func (clip, clip_track_element_removed_cb,
       timeline);
+
+  ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (clip), NULL);
 
   GST_DEBUG ("Done");
 }

@@ -508,10 +508,8 @@ ges_layer_remove_clip_internal (GESLayer * layer, GESClip * clip,
   /* inform the clip it's no longer in a layer */
   ges_clip_set_layer (clip, NULL);
   /* so neither in a timeline */
-  if (timeline) {
+  if (timeline)
     ges_timeline_remove_clip (timeline, clip);
-    ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (clip), NULL);
-  }
 
   for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next)
     ges_track_element_set_layer_active (tmp->data, TRUE);
@@ -779,9 +777,6 @@ ges_layer_add_clip (GESLayer * layer, GESClip * clip)
   }
 
   ges_layer_resync_priorities (layer);
-
-  ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (clip),
-      layer->timeline);
 
   /* FIXME: ideally we would only emit if we are going to return TRUE.
    * However, for backward-compatibility, we ensure the "clip-added"
