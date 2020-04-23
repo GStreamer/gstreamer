@@ -42,6 +42,11 @@ G_DEFINE_TYPE (GstSpanPlc, gst_span_plc, GST_TYPE_ELEMENT);
 GST_DEBUG_CATEGORY_STATIC (gst_span_plc_debug);
 #define GST_CAT_DEFAULT gst_span_plc_debug
 
+enum
+{
+  PROP_0,
+  PROP_STATS,
+};
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -67,6 +72,40 @@ static GstFlowReturn gst_span_plc_chain (GstPad * pad, GstObject * parent,
 static gboolean gst_span_plc_event_sink (GstPad * pad, GstObject * parent,
     GstEvent * event);
 
+static GstStructure *
+gst_span_plc_create_stats (GstSpanPlc * self)
+{
+  GstStructure *s;
+
+  GST_OBJECT_LOCK (self);
+  s = gst_structure_new ("application/x-spanplc-stats",
+      "num-pushed", G_TYPE_UINT64, self->num_pushed,
+      "num-gap", G_TYPE_UINT64, self->num_gap,
+      "plc-num-samples", G_TYPE_UINT64, self->plc_num_samples,
+      "plc-duration", G_TYPE_UINT64, self->plc_duration,
+      "pitch", G_TYPE_INT, self->plc_state->pitch,
+      "pitch-offset", G_TYPE_INT, self->plc_state->pitch_offset, NULL);
+  GST_OBJECT_UNLOCK (self);
+
+  return s;
+}
+
+static void
+gst_span_plc_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GstSpanPlc *self = GST_SPAN_PLC (object);
+
+  switch (prop_id) {
+    case PROP_STATS:
+      g_value_take_boxed (value, gst_span_plc_create_stats (self));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
 /* initialize the plugin's class */
 static void
 gst_span_plc_class_init (GstSpanPlcClass * klass)
@@ -82,10 +121,31 @@ gst_span_plc_class_init (GstSpanPlcClass * klass)
       "Adds packet loss concealment to audio",
       "Youness Alaoui <youness.alaoui@collabora.co.uk>");
 
+  gobject_class->get_property = gst_span_plc_get_property;
   gobject_class->dispose = gst_span_plc_dispose;
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_span_plc_change_state);
+
+  /**
+   * GstSpanPlc:stats:
+   *
+   * Various decoder statistics. This property returns a GstStructure
+   * with name application/x-spanplc-stats with the following fields:
+   *
+   * * #guint64 `num-pushed`: the number of packets pushed out.
+   * * #guint64 `num-gap`: the number of gap packets received.
+   * * #guint64 `plc-num-samples`: the number of samples generated using PLC
+   * * #guint64 `plc-duration`: the total duration, in ns, of samples generated using PLC
+   * * #guint `pitch`: pitch estimate, in Hz
+   * * #guint `pitch-offset`: current offset in pitch period, in Hz
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (gobject_class, PROP_STATS,
+      g_param_spec_boxed ("stats", "Statistics",
+          "Various statistics", GST_TYPE_STRUCTURE,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (gst_span_plc_debug, "spanplc",
       0, "spanDSP's packet loss concealment");
@@ -154,6 +214,14 @@ gst_span_plc_change_state (GstElement * element, GstStateChange transition)
       transition);
 
   switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      GST_OBJECT_LOCK (plc);
+      plc->num_pushed = 0;
+      plc->num_gap = 0;
+      plc->plc_num_samples = 0;
+      plc->plc_duration = 0;
+      GST_OBJECT_UNLOCK (plc);
+      break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_span_plc_flush (plc, FALSE);
     default:
@@ -192,6 +260,10 @@ gst_span_plc_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   plc_rx (plc->plc_state, (int16_t *) map.data, map.size / 2);
   gst_buffer_unmap (buffer, &map);
 
+  GST_OBJECT_LOCK (plc);
+  plc->num_pushed++;
+  GST_OBJECT_UNLOCK (plc);
+
   return gst_pad_push (plc->srcpad, buffer);
 }
 
@@ -202,6 +274,7 @@ gst_span_plc_send_fillin (GstSpanPlc * plc, GstClockTime timestamp,
   guint buf_size;
   GstBuffer *buffer = NULL;
   GstMapInfo map;
+  gint num_samples;
 
   buf_size = ((float) duration / GST_SECOND) * plc->sample_rate;
   buf_size *= sizeof (guint16);
@@ -209,10 +282,18 @@ gst_span_plc_send_fillin (GstSpanPlc * plc, GstClockTime timestamp,
   GST_DEBUG_OBJECT (plc, "Missing packet of %" GST_TIME_FORMAT
       " == %d bytes", GST_TIME_ARGS (duration), buf_size);
   gst_buffer_map (buffer, &map, GST_MAP_READWRITE);
-  plc_fillin (plc->plc_state, (int16_t *) map.data, map.size / 2);
+  num_samples = plc_fillin (plc->plc_state, (int16_t *) map.data, map.size / 2);
   gst_buffer_unmap (buffer, &map);
   GST_BUFFER_PTS (buffer) = timestamp;
   GST_BUFFER_DURATION (buffer) = duration;
+
+  GST_OBJECT_LOCK (plc);
+  plc->num_gap++;
+  plc->num_pushed++;
+  plc->plc_num_samples += num_samples;
+  plc->plc_duration += duration;
+  GST_OBJECT_UNLOCK (plc);
+
   gst_pad_push (plc->srcpad, buffer);
 }
 
