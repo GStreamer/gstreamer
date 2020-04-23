@@ -46,6 +46,7 @@
 #include <gst/gst.h>
 #include <gobject/gvaluecollector.h>
 #include "gstutils.h"
+#include "gstquark.h"
 
 /* GstValueUnionFunc:
  * @dest: a #GValue for the result
@@ -2764,18 +2765,15 @@ gst_value_serialize_segment_internal (const GValue * value, gboolean escape)
   gchar *t, *res;
   GstStructure *s;
 
-  s = gst_structure_new ("GstSegment",
-      "flags", GST_TYPE_SEGMENT_FLAGS, seg->flags,
-      "rate", G_TYPE_DOUBLE, seg->rate,
-      "applied-rate", G_TYPE_DOUBLE, seg->applied_rate,
-      "format", GST_TYPE_FORMAT, seg->format,
-      "base", G_TYPE_UINT64, seg->base,
-      "offset", G_TYPE_UINT64, seg->offset,
-      "start", G_TYPE_UINT64, seg->start,
-      "stop", G_TYPE_UINT64, seg->stop,
-      "time", G_TYPE_UINT64, seg->time,
-      "position", G_TYPE_UINT64, seg->position,
-      "duration", G_TYPE_UINT64, seg->duration, NULL);
+  s = gst_structure_new_id (GST_QUARK_SEGMENT, GST_QUARK_FLAGS,
+      GST_TYPE_SEGMENT_FLAGS, seg->flags, GST_QUARK_RATE, G_TYPE_DOUBLE,
+      seg->rate, GST_QUARK_APPLIED_RATE, G_TYPE_DOUBLE, seg->applied_rate,
+      GST_QUARK_FORMAT, GST_TYPE_FORMAT, seg->format, GST_QUARK_BASE,
+      G_TYPE_UINT64, seg->base, GST_QUARK_OFFSET, G_TYPE_UINT64, seg->offset,
+      GST_QUARK_START, G_TYPE_UINT64, seg->start, GST_QUARK_STOP, G_TYPE_UINT64,
+      seg->stop, GST_QUARK_TIME, G_TYPE_UINT64, seg->time, GST_QUARK_POSITION,
+      G_TYPE_UINT64, seg->position, GST_QUARK_DURATION, G_TYPE_UINT64,
+      seg->duration, NULL);
   t = gst_structure_to_string (s);
   if (escape) {
     res = g_strdup_printf ("\"%s\"", t);
@@ -2805,18 +2803,18 @@ gst_value_deserialize_segment (GValue * dest, const gchar * s)
   if (str == NULL)
     return FALSE;
 
-  res = gst_structure_get (str,
-      "flags", GST_TYPE_SEGMENT_FLAGS, &seg.flags,
-      "rate", G_TYPE_DOUBLE, &seg.rate,
-      "applied-rate", G_TYPE_DOUBLE, &seg.applied_rate,
-      "format", GST_TYPE_FORMAT, &seg.format,
-      "base", G_TYPE_UINT64, &seg.base,
-      "offset", G_TYPE_UINT64, &seg.offset,
-      "start", G_TYPE_UINT64, &seg.start,
-      "stop", G_TYPE_UINT64, &seg.stop,
-      "time", G_TYPE_UINT64, &seg.time,
-      "position", G_TYPE_UINT64, &seg.position,
-      "duration", G_TYPE_UINT64, &seg.duration, NULL);
+  res = gst_structure_id_get (str,
+      GST_QUARK_FLAGS, GST_TYPE_SEGMENT_FLAGS, &seg.flags,
+      GST_QUARK_RATE, G_TYPE_DOUBLE, &seg.rate,
+      GST_QUARK_APPLIED_RATE, G_TYPE_DOUBLE, &seg.applied_rate,
+      GST_QUARK_FORMAT, GST_TYPE_FORMAT, &seg.format,
+      GST_QUARK_BASE, G_TYPE_UINT64, &seg.base,
+      GST_QUARK_OFFSET, G_TYPE_UINT64, &seg.offset,
+      GST_QUARK_START, G_TYPE_UINT64, &seg.start,
+      GST_QUARK_STOP, G_TYPE_UINT64, &seg.stop,
+      GST_QUARK_TIME, G_TYPE_UINT64, &seg.time,
+      GST_QUARK_POSITION, G_TYPE_UINT64, &seg.position,
+      GST_QUARK_DURATION, G_TYPE_UINT64, &seg.duration, NULL);
   gst_structure_free (str);
 
   if (res)
