@@ -90,7 +90,8 @@ enum
   PROP_0,
   PROP_USE_INBAND_FEC,
   PROP_APPLY_GAIN,
-  PROP_PHASE_INVERSION
+  PROP_PHASE_INVERSION,
+  PROP_STATS,
 };
 
 
@@ -156,6 +157,29 @@ gst_opus_dec_class_init (GstOpusDecClass * klass)
 
 #endif
 
+  /**
+   * GstOpusDec:stats:
+   *
+   * Various decoder statistics. This property returns a GstStructure
+   * with name application/x-opusdec-stats with the following fields:
+   *
+   * * #guint64 `num-pushed`: the number of packets pushed out.
+   * * #guint64 `num-gap`: the number of gap packets received.
+   * * #guint64 `plc-num-samples`: the number of samples generated using PLC
+   * * #guint64 `plc-duration`: the total duration, in ns, of samples generated using PLC
+   * * #guint32 `bandwidth`: decoder last bandpass, in kHz, or 0 if unknown
+   * * #guint32 `sample-rate`: decoder sampling rate, or 0 if unknown
+   * * #guint32 `gain`: decoder gain adjustement, in Q8 dB units, or 0 if unknown
+   * * #guint32 `last-packet-duration`: duration, in samples, of the last packet successfully decoded or concealed, or 0 if unknown
+   * * #guint `channels`: the number of channels
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (gobject_class, PROP_STATS,
+      g_param_spec_boxed ("stats", "Statistics",
+          "Various statistics", GST_TYPE_STRUCTURE,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
   GST_DEBUG_CATEGORY_INIT (opusdec_debug, "opusdec", 0,
       "opus decoding element");
 }
@@ -214,6 +238,13 @@ gst_opus_dec_start (GstAudioDecoder * dec)
      */
     gst_audio_decoder_set_latency (dec, 120 * GST_MSECOND, 120 * GST_MSECOND);
   }
+
+  GST_OBJECT_LOCK (dec);
+  odec->num_pushed = 0;
+  odec->num_gap = 0;
+  odec->plc_num_samples = 0;
+  odec->plc_duration = 0;
+  GST_OBJECT_UNLOCK (dec);
 
   return TRUE;
 }
@@ -338,7 +369,7 @@ gst_opus_dec_parse_header (GstOpusDec * dec, GstBuffer * buf)
 
   if (!gst_codec_utils_opus_parse_header (buf,
           &dec->sample_rate,
-          &dec->n_channels,
+          (guint8 *) & dec->n_channels,
           &dec->channel_mapping_family,
           &dec->n_streams,
           &dec->n_stereo_streams,
@@ -586,6 +617,10 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
         " plus leftover %" GST_TIME_FORMAT, GST_TIME_ARGS (missing_duration),
         GST_TIME_ARGS (dec->leftover_plc_duration));
 
+    GST_OBJECT_LOCK (dec);
+    dec->num_gap++;
+    GST_OBJECT_UNLOCK (dec);
+
     /* add the leftover PLC duration to that of the buffer */
     missing_duration += dec->leftover_plc_duration;
 
@@ -618,6 +653,11 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
         " num frame samples: %d new leftover: %" GST_TIME_FORMAT,
         GST_TIME_ARGS (aligned_missing_duration), samples,
         GST_TIME_ARGS (dec->leftover_plc_duration));
+
+    GST_OBJECT_LOCK (dec);
+    dec->plc_num_samples += samples;
+    dec->plc_duration += aligned_missing_duration;
+    GST_OBJECT_UNLOCK (dec);
   } else {
     /* use maximum size (120 ms) as the number of returned samples is
        not constant over the stream. */
@@ -766,6 +806,10 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
     gst_buffer_replace (&dec->last_buffer, buffer);
   }
 
+  GST_OBJECT_LOCK (dec);
+  dec->num_pushed++;
+  GST_OBJECT_UNLOCK (dec);
+
   res = gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (dec), outbuf, 1);
 
   if (res != GST_FLOW_OK)
@@ -841,8 +885,8 @@ gst_opus_dec_set_format (GstAudioDecoder * bdec, GstCaps * caps)
     const GstAudioChannelPosition *posn = NULL;
 
     if (!gst_codec_utils_opus_parse_caps (caps, &dec->sample_rate,
-            &dec->n_channels, &dec->channel_mapping_family, &dec->n_streams,
-            &dec->n_stereo_streams, dec->channel_mapping)) {
+            (guint8 *) & dec->n_channels, &dec->channel_mapping_family,
+            &dec->n_streams, &dec->n_stereo_streams, dec->channel_mapping)) {
       ret = FALSE;
       goto done;
     }
@@ -943,6 +987,126 @@ gst_opus_dec_handle_frame (GstAudioDecoder * adec, GstBuffer * buf)
   return res;
 }
 
+/* Called with object lock hold */
+static guint32
+get_bandwidth (GstOpusDec * self)
+{
+  gint err;
+  gint32 bw;
+
+  if (!self->state)
+    return 0;
+
+  err = opus_multistream_decoder_ctl (self->state, OPUS_GET_BANDWIDTH (&bw));
+  if (err != OPUS_OK) {
+    GST_WARNING_OBJECT (self, "Could not retrieve bandwith: %s",
+        opus_strerror (err));
+    return 0;
+  }
+
+  switch (bw) {
+    case OPUS_BANDWIDTH_NARROWBAND:
+      return 4;
+    case OPUS_BANDWIDTH_MEDIUMBAND:
+      return 6;
+    case OPUS_BANDWIDTH_WIDEBAND:
+      return 8;
+    case OPUS_BANDWIDTH_SUPERWIDEBAND:
+      return 12;
+    case OPUS_BANDWIDTH_FULLBAND:
+      return 20;
+    default:
+      GST_WARNING_OBJECT (self, "Unknown bandwith enum: %d", bw);
+      return 0;
+  }
+}
+
+/* Called with object lock hold */
+static guint32
+get_sample_rate (GstOpusDec * self)
+{
+  gint err;
+  gint32 rate;
+
+  if (!self->state)
+    return 0;
+
+  err =
+      opus_multistream_decoder_ctl (self->state, OPUS_GET_SAMPLE_RATE (&rate));
+  if (err != OPUS_OK) {
+    GST_WARNING_OBJECT (self, "Could not retrieve sample rate: %s",
+        opus_strerror (err));
+    return 0;
+  }
+
+  return rate;
+}
+
+/* Called with object lock hold */
+static guint32
+get_gain (GstOpusDec * self)
+{
+  gint err;
+  gint32 gain;
+
+  if (!self->state)
+    return 0;
+
+  err = opus_multistream_decoder_ctl (self->state, OPUS_GET_GAIN (&gain));
+  if (err != OPUS_OK) {
+    GST_WARNING_OBJECT (self, "Could not retrieve gain: %s",
+        opus_strerror (err));
+    return 0;
+  }
+
+  return gain;
+}
+
+/* Called with object lock hold */
+static guint32
+get_last_packet_duration (GstOpusDec * self)
+{
+  gint err;
+  gint32 duration;
+
+  if (!self->state)
+    return 0;
+
+  err =
+      opus_multistream_decoder_ctl (self->state,
+      OPUS_GET_LAST_PACKET_DURATION (&duration));
+  if (err != OPUS_OK) {
+    GST_WARNING_OBJECT (self, "Could not retrieve last packet duration: %s",
+        opus_strerror (err));
+    return 0;
+  }
+
+  return duration;
+}
+
+static GstStructure *
+gst_opus_dec_create_stats (GstOpusDec * self)
+{
+  GstStructure *s;
+
+  GST_OBJECT_LOCK (self);
+
+  s = gst_structure_new ("application/x-opusdec-stats",
+      "num-pushed", G_TYPE_UINT64, self->num_pushed,
+      "num-gap", G_TYPE_UINT64, self->num_gap,
+      "plc-num-samples", G_TYPE_UINT64, self->plc_num_samples,
+      "plc-duration", G_TYPE_UINT64, self->plc_duration,
+      "bandwidth", G_TYPE_UINT, get_bandwidth (self),
+      "sample-rate", G_TYPE_UINT, get_sample_rate (self),
+      "gain", G_TYPE_UINT, get_gain (self),
+      "last-packet-duration", G_TYPE_UINT, get_last_packet_duration (self),
+      "channels", G_TYPE_UINT, self->n_channels, NULL);
+
+  GST_OBJECT_UNLOCK (self);
+
+  return s;
+}
+
 static void
 gst_opus_dec_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
@@ -958,6 +1122,9 @@ gst_opus_dec_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_PHASE_INVERSION:
       g_value_set_boolean (value, dec->phase_inversion);
+      break;
+    case PROP_STATS:
+      g_value_take_boxed (value, gst_opus_dec_create_stats (dec));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
