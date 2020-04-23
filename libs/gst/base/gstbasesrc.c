@@ -2918,10 +2918,6 @@ gst_base_src_loop (GstPad * pad)
       if (GST_CLOCK_TIME_IS_VALID (duration)) {
         if (src->segment.rate >= 0.0)
           position += duration;
-        else if (position > duration)
-          position -= duration;
-        else
-          position = 0;
       }
       break;
     }
