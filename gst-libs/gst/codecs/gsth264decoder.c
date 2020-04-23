@@ -875,6 +875,7 @@ gst_h264_decoder_fill_picture_from_slice (GstH264Decoder * self,
   }
 
   picture->idr = slice->nalu.idr_pic_flag;
+  picture->dec_ref_pic_marking = slice_hdr->dec_ref_pic_marking;
   if (picture->idr)
     picture->idr_pic_id = slice_hdr->idr_pic_id;
 
@@ -1569,6 +1570,47 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
         picture, picture->outputted, picture->ref, picture->frame_num,
         picture->pic_order_cnt);
     gst_h264_dpb_add (priv->dpb, gst_h264_picture_ref (picture));
+  }
+
+  /* C.4.5.3 "Bumping" process for non-DPB full case, DPB full cases should be
+   * covered above */
+  /* FIXME: should cover interlaced streams */
+  if (!picture->outputted && picture->field == GST_H264_PICTURE_FIELD_FRAME) {
+    gboolean do_output = TRUE;
+    if (picture->idr &&
+        !picture->dec_ref_pic_marking.no_output_of_prior_pics_flag) {
+      /* The current picture is an IDR picture and no_output_of_prior_pics_flag
+       * is not equal to 1 and is not inferred to be equal to 1, as specified
+       * in clause C.4.4 */
+      GST_TRACE_OBJECT (self, "Output IDR picture");
+    } else if (picture->mem_mgmt_5) {
+      /* The current picture has memory_management_control_operation equal to 5,
+       * as specified in clause C.4.4 */
+      GST_TRACE_OBJECT (self, "Output mem_mgmt_5 picture");
+    } else if (priv->last_output_poc >= 0 &&
+        picture->pic_order_cnt > priv->last_output_poc &&
+        (picture->pic_order_cnt - priv->last_output_poc) <= 2) {
+      /* NOTE: this condition is not specified by spec but we can output
+       * this picture based on calculated POC and last outputted POC */
+
+      /* NOTE: The assumption here is, every POC of frame will have step of two.
+       * however, if the assumption is wrong, (i.e., POC step is one, not two),
+       * this would break output order. If this assumption is wrong,
+       * please remove this condition.
+       */
+      GST_LOG_OBJECT (self,
+          "Forcing output picture %p (frame num %d, poc %d, last poc %d)",
+          picture, picture->frame_num, picture->pic_order_cnt,
+          priv->last_output_poc);
+    } else {
+      do_output = FALSE;
+      GST_TRACE_OBJECT (self, "Current picture %p (frame num %d, poc %d) "
+          "is not ready to be output picture",
+          picture, picture->frame_num, picture->pic_order_cnt);
+    }
+
+    if (do_output)
+      gst_h264_decoder_do_output_picture (self, picture);
   }
 
   if (not_outputted)
