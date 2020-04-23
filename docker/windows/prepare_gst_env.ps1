@@ -9,7 +9,7 @@ git config --global user.name "Gstbuild Runner"
 (New-Object System.Net.WebClient).DownloadString("https://github.com") >$null
 
 # Download gst-build and all its subprojects
-git clone https://gitlab.freedesktop.org/gstreamer/gst-build.git C:\gst-build
+git clone -b $env:DEFAULT_BRANCH https://gitlab.freedesktop.org/gstreamer/gst-build.git C:\gst-build
 
 # download the subprojects to try and cache them
 meson subprojects download --sourcedir C:\gst-build
