@@ -11,5 +11,5 @@ Description: Unit testing helper library for GStreamer modules, Not Installed
 Requires: gstreamer-@GST_API_VERSION@ = @VERSION@
 Version: @VERSION@
 
-Libs: -L${libdir} -lgstcheck-@GST_API_VERSION@ @LIBM@
+Libs: -L${libdir} -lgstcheck-@GST_API_VERSION@ @LIBM@ @LIBRT@
 Cflags: -I@abs_top_srcdir@/libs -I@abs_top_builddir@/libs
