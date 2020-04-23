@@ -501,6 +501,10 @@ build vs2017 x86:
 build msys2 :
   extends: '.build windows'
   timeout: '60min'
+  rules:
+    - if: '$CI_PROJECT_NAME !~ /^(cerbero|gst-docs|gst-integration-testsuites|gst-omx|gst-plugins-rs|gstreamer-vaapi)$/'
+      allow_failure: true
+      when: 'manual'
   script:
     # Sometimes there's seems to be an existing gst-build clone that comes either from the ether or
     # from a previous job due to some gitlab bug or implicit behavior?
