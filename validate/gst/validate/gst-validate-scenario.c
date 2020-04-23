@@ -1947,7 +1947,8 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
     GstValidateActionType *type = _find_action_type (action->type);
     gboolean can_execute_on_addition =
         type->flags & GST_VALIDATE_ACTION_TYPE_CAN_EXECUTE_ON_ADDITION
-        && !GST_CLOCK_TIME_IS_VALID (action->playback_time);
+        && !GST_CLOCK_TIME_IS_VALID (action->playback_time)
+        && !gst_structure_has_field (action->structure, "on-message");
 
     if (needs_parsing)
       can_execute_on_addition = FALSE;
