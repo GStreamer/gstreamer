@@ -153,17 +153,39 @@ if meson.is_cross_build() or build_machine.system() == 'windows'
         error('Documentation enabled but building the doc while cross building or building on windows is not supported yet.')
     endif
 
+    documented_projects = ''
     message('Documentation not built as building the documentation while cross building or building on windows is not supported yet.')
 else
   hotdoc_p = find_program('hotdoc', required : get_option('doc'))
-  if hotdoc_p.found()
-    if documented_projects != ''
-        subproject('gst-docs', default_options: 'built_subprojects=' + documented_projects)
-      message('Gst docs subprojects: ' + documented_projects)
-    endif
-  else
+  if not hotdoc_p.found()
+    documented_projects = ''
     message('Not building documentation as hotdoc was not found')
   endif
+endif
+
+write_file_contents = '''
+import os
+import sys
+
+assert len(sys.argv) >= 3
+fname = sys.argv[1]
+contents = sys.argv[2]
+
+with open(fname, 'w') as f:
+    f.write(contents)
+'''
+
+configure_file(
+  output : 'GstDocumentedSubprojects',
+  command : [python3,
+             '-c', write_file_contents,
+             '@OUTPUT@',
+             documented_projects]
+)
+
+if documented_projects != ''
+  subproject('gst-docs')
+  message('Gst docs subprojects: ' + documented_projects)
 endif
 
 all_plugins_paths = []
