@@ -280,8 +280,6 @@ gst_jpegenc_term_destination (j_compress_ptr cinfo)
   }
 
   outbuf = gst_buffer_new ();
-  gst_buffer_copy_into (outbuf, jpegenc->current_frame->input_buffer,
-      GST_BUFFER_COPY_METADATA, 0, -1);
   gst_buffer_append_memory (outbuf, jpegenc->output_mem);
   jpegenc->output_mem = NULL;
 
