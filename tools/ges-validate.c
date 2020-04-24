@@ -115,10 +115,13 @@ ges_validate_activate (GstPipeline * pipeline, GESLauncher * launcher,
     return TRUE;
   }
 
-  ges_validate_register_action_types ();
-  ges_validate_register_issues ();
+  gst_validate_init_debug ();
 
-  if (opts->scenario) {
+  if (opts->testfile) {
+    if (opts->scenario)
+      g_error ("Can not specify scenario and testfile at the same time");
+    gst_validate_setup_test_file (opts->testfile, opts->mute);
+  } else if (opts->scenario) {
     if (g_strcmp0 (opts->scenario, "none")) {
       gchar *scenario_name =
           g_strconcat (opts->scenario, "->gespipeline*", NULL);
@@ -126,6 +129,9 @@ ges_validate_activate (GstPipeline * pipeline, GESLauncher * launcher,
       g_free (scenario_name);
     }
   }
+
+  ges_validate_register_action_types ();
+  ges_validate_register_issues ();
 
   runner = gst_validate_runner_new ();
   gst_tracing_register_hook (GST_TRACER (runner), "bin-add-post",
@@ -141,6 +147,8 @@ ges_validate_activate (GstPipeline * pipeline, GESLauncher * launcher,
 
     if (metas) {
       gchar **ges_options = gst_validate_utils_get_strv (metas, "ges-options");
+      if (!ges_options)
+        ges_options = gst_validate_utils_get_strv (metas, "args");
 
       if (ges_options) {
         gint i;
@@ -242,6 +250,13 @@ gboolean
 ges_validate_activate (GstPipeline * pipeline, GESLauncher * launcher,
     GESLauncherParsedOptions * opts)
 {
+  if (opts->testfile) {
+    GST_WARNING ("Trying to run testfile %s, but gst-validate not supported",
+        opts->testfile);
+
+    return FALSE;
+  }
+
   if (opts->scenario) {
     GST_WARNING ("Trying to run scenario %s, but gst-validate not supported",
         opts->scenario);

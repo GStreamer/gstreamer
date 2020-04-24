@@ -39,6 +39,7 @@ typedef struct
   gboolean needs_set_state;
   gboolean smartrender;
   gchar *scenario;
+  gchar *testfile;
   gchar *format;
   gchar *outputuri;
   gchar *encoding_profile;

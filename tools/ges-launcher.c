@@ -131,7 +131,7 @@ retry:
     }
   }
 
-  if (opts->scenario && !load_path) {
+  if ((opts->scenario || opts->testfile) && !load_path) {
     if (!has_video && opts->track_types & GES_TRACK_TYPE_VIDEO) {
       trackv = GES_TRACK (ges_video_track_new ());
 
@@ -212,7 +212,10 @@ _project_loaded_cb (GESProject * project, GESTimeline * timeline,
   if (self->priv->parsed_options.load_path && project_uri
       && ges_validate_activate (GST_PIPELINE (self->priv->pipeline),
           self, opts) == FALSE) {
-    g_error ("Could not activate scenario %s", opts->scenario);
+    if (opts->scenario)
+      g_error ("Could not activate scenario %s", opts->scenario);
+    else
+      g_error ("Could not activate testfile %s", opts->testfile);
     self->priv->seenerrors = TRUE;
     g_application_quit (G_APPLICATION (self));
   }
@@ -239,7 +242,7 @@ _error_loading_asset_cb (GESProject * project, GError * error,
 
 static gboolean
 _create_timeline (GESLauncher * self, const gchar * serialized_timeline,
-    const gchar * proj_uri, const gchar * scenario)
+    const gchar * proj_uri, gboolean validate)
 {
   GESProject *project;
 
@@ -247,7 +250,7 @@ _create_timeline (GESLauncher * self, const gchar * serialized_timeline,
 
   if (proj_uri != NULL) {
     project = ges_project_new (proj_uri);
-  } else if (scenario == NULL) {
+  } else if (!validate) {
     GST_INFO ("serialized timeline is %s", serialized_timeline);
     project = ges_project_new (serialized_timeline);
   } else {
@@ -560,7 +563,8 @@ _create_pipeline (GESLauncher * self, const gchar * serialized_timeline)
 
   self->priv->pipeline = ges_pipeline_new ();
 
-  if (!_create_timeline (self, serialized_timeline, uri, opts->scenario)) {
+  if (!_create_timeline (self, serialized_timeline, uri, opts->scenario
+          || opts->testfile)) {
     GST_ERROR ("Could not create the timeline");
     goto failure;
   }
@@ -773,6 +777,16 @@ ges_launcher_parse_options (GESLauncher * self,
         }
     ,
 #ifdef HAVE_GST_VALIDATE
+    {"set-test-file", 0, 0, G_OPTION_ARG_STRING, &opts->testfile,
+          "ges-launch-1.0 exposes gst-validate functionalities, such as test files and scenarios."
+          " Scenarios describe actions to execute, such as seeks or setting of "
+          "properties. "
+          "GES implements editing-specific actions such as adding or removing "
+          "clips. "
+          "See gst-validate-1.0 --help for more info about validate and "
+          "scenarios, " "and --inspect-action-type.",
+        "</test/file/path>"}
+    ,
     {"set-scenario", 0, 0, G_OPTION_ARG_STRING, &opts->scenario,
           "ges-launch-1.0 exposes gst-validate functionalities, such as scenarios."
           " Scenarios describe actions to execute, such as seeks or setting of "
@@ -890,8 +904,8 @@ _local_command_line (GApplication * application, gchar ** arguments[],
     goto done;
   }
 
-  if (!opts->load_path && !opts->scenario && !opts->list_transitions
-      && (argc <= 1)) {
+  if (!opts->load_path && !opts->scenario && !opts->testfile
+      && !opts->list_transitions && (argc <= 1)) {
     g_printf ("%s", g_option_context_get_help (ctx, TRUE, NULL));
     g_option_context_free (ctx);
     *exit_status = 1;
@@ -1003,6 +1017,7 @@ _finalize (GObject * object)
   g_free (opts->video_track_caps);
   g_free (opts->audio_track_caps);
   g_free (opts->scenario);
+  g_free (opts->testfile);
 
   G_OBJECT_CLASS (ges_launcher_parent_class)->finalize (object);
 }
