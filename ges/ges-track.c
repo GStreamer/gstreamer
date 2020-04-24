@@ -434,7 +434,10 @@ dispose_trackelements_foreach (GESTrackElement * trackelement, GESTrack * track)
 static GstStateChangeReturn
 ges_track_change_state (GstElement * element, GstStateChange transition)
 {
-  if (transition == GST_STATE_CHANGE_READY_TO_PAUSED)
+  GESTrack *track = GES_TRACK (element);
+
+  if (transition == GST_STATE_CHANGE_READY_TO_PAUSED &&
+      track->priv->valid_thread == g_thread_self ())
     track_resort_and_fill_gaps (GES_TRACK (element));
 
   return GST_ELEMENT_CLASS (ges_track_parent_class)->change_state (element,
