@@ -2177,7 +2177,7 @@ execute_next_action_full (GstValidateScenario * scenario, GstMessage * message)
     act->priv->state = _execute_sub_action_action (act);
   }
 
-  if (act->priv->state != GST_VALIDATE_EXECUTE_ACTION_ASYNC) {
+  if (act->priv->state != GST_VALIDATE_EXECUTE_ACTION_ASYNC && act->repeat <= 0) {
     tmp = priv->actions;
     priv->actions = g_list_remove_link (priv->actions, tmp);
 
