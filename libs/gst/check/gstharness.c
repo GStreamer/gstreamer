@@ -435,6 +435,19 @@ gst_harness_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
       HARNESS_UNLOCK (h);
       break;
     }
+    case GST_QUERY_CONTEXT:
+      HARNESS_LOCK (h);
+      if (priv->forwarding && priv->sink_forward_pad != NULL) {
+        GstPad *peer = gst_pad_get_peer (priv->sink_forward_pad);
+        g_assert (peer != NULL);
+        HARNESS_UNLOCK (h);
+        res = gst_pad_query (peer, query);
+        gst_object_unref (peer);
+      } else {
+        HARNESS_UNLOCK (h);
+        res = gst_pad_query_default (pad, parent, query);
+      }
+      break;
     default:
       res = gst_pad_query_default (pad, parent, query);
   }
