@@ -628,6 +628,111 @@ GST_START_TEST (test_ges_timeline_remove_track)
 
 GST_END_TEST;
 
+GST_START_TEST (test_ges_timeline_remove_layer)
+{
+  GESTimeline *timeline;
+  GESLayer *layer0, *layer1, *layer2, *layer3;
+  GESTrack *track;
+  GESClip *s1, *s2, *s3, *s4, *s5;
+  GList *tmp, *clips, *clip, *layers;
+
+  ges_init ();
+
+  timeline = ges_timeline_new ();
+
+  layer0 = ges_timeline_append_layer (timeline);
+  layer1 = ges_timeline_append_layer (timeline);
+  layer2 = ges_timeline_append_layer (timeline);
+
+  assert_equals_int (ges_layer_get_priority (layer0), 0);
+  assert_equals_int (ges_layer_get_priority (layer1), 1);
+  assert_equals_int (ges_layer_get_priority (layer2), 2);
+
+  track = GES_TRACK (ges_video_track_new ());
+  fail_unless (ges_timeline_add_track (timeline, track));
+
+  _CREATE_SOURCE (layer0, s1, 0, 10);
+  _CREATE_SOURCE (layer1, s2, 0, 10);
+  _CREATE_SOURCE (layer1, s3, 10, 20);
+  _CREATE_SOURCE (layer2, s4, 0, 10);
+  _CREATE_SOURCE (layer2, s5, 10, 20);
+
+  assert_num_in_track (track, 5);
+
+  gst_object_ref (layer1);
+  fail_unless (ges_timeline_remove_layer (timeline, layer1));
+  /* check removed, and rest of the layers stay */
+  layers = ges_timeline_get_layers (timeline);
+  fail_if (g_list_find (layers, layer1));
+  fail_unless (g_list_find (layers, layer0));
+  fail_unless (g_list_find (layers, layer2));
+  g_list_free_full (layers, gst_object_unref);
+  /* keeps its layer priority */
+  assert_equals_int (ges_layer_get_priority (layer1), 1);
+
+  /* Rest also keep their layer priority */
+  /* NOTE: it may be better to resync the layer priorities to plug the
+   * gap, but this way we leave the gap open to add the layer back in */
+  assert_equals_int (ges_layer_get_priority (layer0), 0);
+  assert_equals_int (ges_layer_get_priority (layer2), 2);
+  /* clip children removed from track */
+  assert_num_in_track (track, 3);
+
+  fail_unless (ges_layer_get_timeline (layer1) == NULL);
+  clips = ges_layer_get_clips (layer1);
+  for (clip = clips; clip; clip = clip->next) {
+    fail_unless (GES_TIMELINE_ELEMENT_TIMELINE (clip->data) == NULL);
+    for (tmp = GES_CONTAINER_CHILDREN (clip->data); tmp; tmp = tmp->next) {
+      GESTrackElement *el = GES_TRACK_ELEMENT (tmp->data);
+      fail_unless (GES_TIMELINE_ELEMENT_TIMELINE (el) == NULL);
+      fail_unless (ges_track_element_get_track (el) == NULL);
+    }
+  }
+  g_list_free_full (clips, gst_object_unref);
+
+  /* layer2 children have same layer priority */
+  clips = ges_layer_get_clips (layer2);
+  for (clip = clips; clip; clip = clip->next) {
+    fail_unless (GES_TIMELINE_ELEMENT_TIMELINE (clip->data) == timeline);
+    assert_equals_int (GES_TIMELINE_ELEMENT_LAYER_PRIORITY (clip->data), 2);
+    for (tmp = GES_CONTAINER_CHILDREN (clip->data); tmp; tmp = tmp->next) {
+      GESTrackElement *el = GES_TRACK_ELEMENT (tmp->data);
+      fail_unless (GES_TIMELINE_ELEMENT_TIMELINE (el) == timeline);
+      fail_unless (ges_track_element_get_track (el) == track);
+      assert_equals_int (GES_TIMELINE_ELEMENT_LAYER_PRIORITY (el), 2);
+    }
+  }
+  g_list_free_full (clips, gst_object_unref);
+
+  /* layer0 stays the same */
+  clips = ges_layer_get_clips (layer0);
+  for (clip = clips; clip; clip = clip->next) {
+    fail_unless (GES_TIMELINE_ELEMENT_TIMELINE (clip->data) == timeline);
+    assert_equals_int (GES_TIMELINE_ELEMENT_LAYER_PRIORITY (clip->data), 0);
+    for (tmp = GES_CONTAINER_CHILDREN (clip->data); tmp; tmp = tmp->next) {
+      GESTrackElement *el = GES_TRACK_ELEMENT (tmp->data);
+      fail_unless (GES_TIMELINE_ELEMENT_TIMELINE (el) == timeline);
+      fail_unless (ges_track_element_get_track (el) == track);
+      assert_equals_int (GES_TIMELINE_ELEMENT_LAYER_PRIORITY (el), 0);
+    }
+  }
+  g_list_free_full (clips, gst_object_unref);
+
+  /* can add a new layer with the correct priority */
+  layer3 = ges_timeline_append_layer (timeline);
+
+  assert_equals_int (ges_layer_get_priority (layer0), 0);
+  assert_equals_int (ges_layer_get_priority (layer2), 2);
+  assert_equals_int (ges_layer_get_priority (layer3), 3);
+
+  gst_object_unref (layer1);
+  gst_object_unref (timeline);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
 typedef struct
 {
   GESClip *clips[4];
@@ -1088,6 +1193,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_ges_timeline_add_layer);
   tcase_add_test (tc_chain, test_ges_timeline_add_layer_first);
   tcase_add_test (tc_chain, test_ges_timeline_remove_track);
+  tcase_add_test (tc_chain, test_ges_timeline_remove_layer);
   tcase_add_test (tc_chain, test_ges_timeline_multiple_tracks);
   tcase_add_test (tc_chain, test_ges_pipeline_change_state);
   tcase_add_test (tc_chain, test_ges_timeline_element_name);

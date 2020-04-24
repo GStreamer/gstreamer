@@ -835,9 +835,9 @@ sort_layers (gpointer a, gpointer b)
   prio_a = ges_layer_get_priority (layer_a);
   prio_b = ges_layer_get_priority (layer_b);
 
-  if ((gint) prio_a > (guint) prio_b)
+  if (prio_a > prio_b)
     return 1;
-  if ((guint) prio_a < (guint) prio_b)
+  if (prio_a < prio_b)
     return -1;
 
   return 0;
@@ -2063,6 +2063,7 @@ ges_timeline_get_groups (GESTimeline * timeline)
 GESLayer *
 ges_timeline_append_layer (GESTimeline * timeline)
 {
+  GList *tmp;
   guint32 priority;
   GESLayer *layer;
 
@@ -2070,9 +2071,11 @@ ges_timeline_append_layer (GESTimeline * timeline)
   CHECK_THREAD (timeline);
 
   layer = ges_layer_new ();
-  priority = g_list_length (timeline->layers);
-  /* FIXME: if a timeline contains 2 layers with priority 0 and 2, then
-   * this will set the layer priority of the new layer to 2 as well! */
+
+  priority = 0;
+  for (tmp = timeline->layers; tmp; tmp = tmp->next)
+    priority = MAX (priority, ges_layer_get_priority (tmp->data) + 1);
+
   ges_layer_set_priority (layer, priority);
 
   ges_timeline_add_layer (timeline, layer);
