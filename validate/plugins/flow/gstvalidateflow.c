@@ -185,8 +185,7 @@ validate_flow_override_buffer_handler (GstValidateOverride * override,
   if (flow->error_writing_file || !flow->record_buffers)
     return;
 
-  buffer_str =
-      validate_flow_format_buffer (buffer, flow->buffers_checksum,
+  buffer_str = validate_flow_format_buffer (buffer, flow->buffers_checksum,
       flow->logged_fields, flow->ignored_fields);
   validate_flow_override_printf (flow, "buffer: %s\n", buffer_str);
   g_free (buffer_str);
@@ -323,7 +322,7 @@ validate_flow_override_new (GstStructure * config)
   } else {
     flow->mode = VALIDATE_FLOW_MODE_WRITING_EXPECTATIONS;
     flow->output_file_path = g_strdup (flow->expectations_file_path);
-    gst_validate_printf (NULL, "Writing expectations file: %s\n",
+    gst_validate_printf (NULL, "**-> Writing expectations file: '%s'**\n",
         flow->expectations_file_path);
   }
 
@@ -469,7 +468,9 @@ runner_stopping (GstValidateRunner * runner, ValidateFlowOverride * flow)
     lines_actual = g_strsplit (contents, "\n", 0);
   }
 
-  gst_validate_printf (flow, "Checking that flow %s matches expected flow %s\n",
+  gst_validate_printf (flow, "Checking that flow %s matches expected flow %s\n"
+      " $ diff %s %s\n",
+      flow->expectations_file_path, flow->actual_results_file_path,
       flow->expectations_file_path, flow->actual_results_file_path);
 
   for (i = 0; lines_expected[i] && lines_actual[i]; i++) {
@@ -478,11 +479,13 @@ runner_stopping (GstValidateRunner * runner, ValidateFlowOverride * flow)
       goto stop;
     }
   }
-
+  gst_validate_printf (flow, "OK\n");
   if (!lines_expected[i] && lines_actual[i]) {
     show_mismatch_error (flow, lines_expected, lines_actual, i);
+    goto stop;
   } else if (lines_expected[i] && !lines_actual[i]) {
     show_mismatch_error (flow, lines_expected, lines_actual, i);
+    goto stop;
   }
 
 stop:
