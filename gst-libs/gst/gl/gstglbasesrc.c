@@ -261,11 +261,26 @@ gst_gl_base_src_query (GstBaseSrc * bsrc, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:
     {
+      GstGLDisplay *display = NULL;
+      GstGLContext *other = NULL, *local = NULL;
       gboolean ret;
+
       g_rec_mutex_lock (&src->priv->context_lock);
-      ret = gst_gl_handle_context_query ((GstElement *) src, query,
-          src->display, src->context, src->priv->other_context);
+      if (src->display)
+        display = gst_object_ref (src->display);
+      if (src->context)
+        local = gst_object_ref (src->context);
+      if (src->priv->other_context)
+        other = gst_object_ref (src->priv->other_context);
       g_rec_mutex_unlock (&src->priv->context_lock);
+
+      ret = gst_gl_handle_context_query ((GstElement *) src, query,
+          display, local, other);
+
+      gst_clear_object (&display);
+      gst_clear_object (&other);
+      gst_clear_object (&local);
+
       if (ret)
         return ret;
       break;
