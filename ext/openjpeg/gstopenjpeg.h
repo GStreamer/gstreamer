@@ -41,9 +41,11 @@ typedef struct
 {
   GstVideoCodecFrame *frame;
   GstBuffer *output_buffer;
+  GstBuffer *input_buffer;
   gint stripe;
   OpenJPEGErrorCode last_error;
   gboolean direct;
+  gboolean last_subframe;
 } GstOpenJPEGCodecMessage;
 
 #endif /* __GST_OPENJPEG_H__ */

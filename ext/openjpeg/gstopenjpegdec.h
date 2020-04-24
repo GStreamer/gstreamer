@@ -58,15 +58,36 @@ struct _GstOpenJPEGDec
   GstJPEG2000Sampling sampling;
   gint ncomps;
   gint max_threads;  /* atomic */
+  gint max_slice_threads; /* internal openjpeg threading system */
   gint num_procs;
   gint num_stripes;
-  GstVideoCodecFrame *current_frame;
   gboolean drop_subframes;
 
   void (*fill_frame) (GstOpenJPEGDec *self,
                       GstVideoFrame *frame, opj_image_t * image);
 
+  gboolean (*decode_frame) (GstVideoDecoder * decoder, GstVideoCodecFrame *frame);
+
   opj_dparameters_t params;
+
+  guint available_threads;
+  GQueue messages;
+
+  GCond messages_cond;
+  GMutex messages_lock;
+  GMutex decoding_lock;
+  GstFlowReturn downstream_flow_ret;
+  gboolean flushing;
+
+  /* Draining state */
+  GMutex drain_lock;
+  GCond drain_cond;
+  /* TRUE if EOS buffers shouldn't be forwarded */
+  gboolean draining; /* protected by drain_lock */
+
+  int last_error;
+
+  gboolean started;
 };
 
 struct _GstOpenJPEGDecClass
