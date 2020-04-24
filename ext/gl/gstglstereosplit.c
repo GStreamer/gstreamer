@@ -721,7 +721,7 @@ stereosplit_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       if (split->context)
         local = gst_object_ref (split->context);
       if (split->other_context)
-        local = gst_object_ref (split->other_context);
+        other = gst_object_ref (split->other_context);
       g_rec_mutex_unlock (&split->context_lock);
 
       ret = gst_gl_handle_context_query ((GstElement *) split, query,
@@ -768,7 +768,7 @@ stereosplit_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
       if (split->context)
         local = gst_object_ref (split->context);
       if (split->other_context)
-        local = gst_object_ref (split->other_context);
+        other = gst_object_ref (split->other_context);
       g_rec_mutex_unlock (&split->context_lock);
 
       ret = gst_gl_handle_context_query ((GstElement *) split, query,

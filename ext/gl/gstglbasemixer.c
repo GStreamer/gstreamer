@@ -295,7 +295,7 @@ gst_gl_base_mixer_sink_query (GstAggregator * agg, GstAggregatorPad * bpad,
       if (mix->context)
         local = gst_object_ref (mix->context);
       if (mix->priv->other_context)
-        local = gst_object_ref (mix->priv->other_context);
+        other = gst_object_ref (mix->priv->other_context);
       g_rec_mutex_unlock (&mix->priv->context_lock);
 
       ret = gst_gl_handle_context_query ((GstElement *) mix, query,
@@ -545,7 +545,7 @@ gst_gl_base_mixer_src_query (GstAggregator * agg, GstQuery * query)
       if (mix->context)
         local = gst_object_ref (mix->context);
       if (mix->priv->other_context)
-        local = gst_object_ref (mix->priv->other_context);
+        other = gst_object_ref (mix->priv->other_context);
       g_rec_mutex_unlock (&mix->priv->context_lock);
 
       ret = gst_gl_handle_context_query ((GstElement *) mix, query,

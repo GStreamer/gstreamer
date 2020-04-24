@@ -288,7 +288,7 @@ gst_gl_base_filter_query (GstBaseTransform * trans, GstPadDirection direction,
       if (filter->context)
         local = gst_object_ref (filter->context);
       if (filter->priv->other_context)
-        local = gst_object_ref (filter->priv->other_context);
+        other = gst_object_ref (filter->priv->other_context);
       g_rec_mutex_unlock (&filter->priv->context_lock);
 
       ret = gst_gl_handle_context_query ((GstElement *) filter, query,
