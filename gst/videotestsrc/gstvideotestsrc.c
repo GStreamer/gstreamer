@@ -1179,7 +1179,11 @@ gst_video_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
     next_time = gst_util_uint64_scale (src->n_frames,
         src->info.fps_d * GST_SECOND, src->info.fps_n);
     if (src->reverse) {
-      GST_BUFFER_DURATION (buffer) = src->running_time - next_time;
+      /* We already decremented to next frame */
+      GstClockTime prev_pts = gst_util_uint64_scale (src->n_frames + 2,
+          src->info.fps_d * GST_SECOND, src->info.fps_n);
+
+      GST_BUFFER_DURATION (buffer) = prev_pts - GST_BUFFER_PTS (buffer);
     } else {
       GST_BUFFER_DURATION (buffer) = next_time - src->running_time;
     }
