@@ -99,13 +99,35 @@ gst_gl_base_mixer_pad_set_property (GObject * object, guint prop_id,
   }
 }
 
-
 static gboolean
-_find_local_gl_context (GstGLBaseMixer * mix)
+_find_local_gl_context_unlocked (GstGLBaseMixer * mix)
 {
-  GstGLContext *context = mix->context;
+  GstGLContext *context, *prev_context;
+  gboolean ret;
 
-  if (gst_gl_query_local_gl_context (GST_ELEMENT (mix), GST_PAD_SRC, &context)) {
+  if (mix->context && mix->context->display == mix->display)
+    return TRUE;
+
+  context = prev_context = mix->context;
+  g_rec_mutex_unlock (&mix->priv->context_lock);
+  /* we need to drop the lock to query as another element may also be
+   * performing a context query on us which would also attempt to take the
+   * context_lock. Our query could block on the same lock in the other element.
+   */
+  ret =
+      gst_gl_query_local_gl_context (GST_ELEMENT (mix), GST_PAD_SRC, &context);
+  g_rec_mutex_lock (&mix->priv->context_lock);
+  if (ret) {
+    if (mix->context != prev_context) {
+      /* we need to recheck everything since we dropped the lock and the
+       * context has changed */
+      if (mix->context && mix->context->display == mix->display) {
+        if (context != mix->context)
+          gst_clear_object (&context);
+        return TRUE;
+      }
+    }
+
     if (context->display == mix->display) {
       mix->context = context;
       return TRUE;
@@ -113,7 +135,26 @@ _find_local_gl_context (GstGLBaseMixer * mix)
     if (context != mix->context)
       gst_clear_object (&context);
   }
-  if (gst_gl_query_local_gl_context (GST_ELEMENT (mix), GST_PAD_SINK, &context)) {
+
+  context = prev_context = mix->context;
+  g_rec_mutex_unlock (&mix->priv->context_lock);
+  /* we need to drop the lock to query as another element may also be
+   * performing a context query on us which would also attempt to take the
+   * context_lock. Our query could block on the same lock in the other element.
+   */
+  ret =
+      gst_gl_query_local_gl_context (GST_ELEMENT (mix), GST_PAD_SINK, &context);
+  g_rec_mutex_lock (&mix->priv->context_lock);
+  if (ret) {
+    if (mix->context != prev_context) {
+      /* we need to recheck everything now that we dropped the lock */
+      if (mix->context && mix->context->display == mix->display) {
+        if (context != mix->context)
+          gst_clear_object (&context);
+        return TRUE;
+      }
+    }
+
     if (context->display == mix->display) {
       mix->context = context;
       return TRUE;
@@ -121,6 +162,7 @@ _find_local_gl_context (GstGLBaseMixer * mix)
     if (context != mix->context)
       gst_clear_object (&context);
   }
+
   return FALSE;
 }
 
@@ -140,7 +182,7 @@ _get_gl_context_unlocked (GstGLBaseMixer * mix)
 
   gst_gl_display_filter_gl_api (mix->display, mix_class->supported_gl_api);
 
-  _find_local_gl_context (mix);
+  _find_local_gl_context_unlocked (mix);
 
   GST_OBJECT_LOCK (mix->display);
   if (!mix->context) {
@@ -243,11 +285,26 @@ gst_gl_base_mixer_sink_query (GstAggregator * agg, GstAggregatorPad * bpad,
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:
     {
+      GstGLDisplay *display = NULL;
+      GstGLContext *other = NULL, *local = NULL;
       gboolean ret;
+
       g_rec_mutex_lock (&mix->priv->context_lock);
-      ret = gst_gl_handle_context_query ((GstElement *) mix, query,
-          mix->display, mix->context, mix->priv->other_context);
+      if (mix->display)
+        display = gst_object_ref (mix->display);
+      if (mix->context)
+        local = gst_object_ref (mix->context);
+      if (mix->priv->other_context)
+        local = gst_object_ref (mix->priv->other_context);
       g_rec_mutex_unlock (&mix->priv->context_lock);
+
+      ret = gst_gl_handle_context_query ((GstElement *) mix, query,
+          display, local, other);
+
+      gst_clear_object (&display);
+      gst_clear_object (&other);
+      gst_clear_object (&local);
+
       if (ret)
         return ret;
       break;
@@ -438,7 +495,7 @@ gst_gl_base_mixer_activate (GstGLBaseMixer * mix, gboolean active)
     g_rec_mutex_lock (&mix->priv->context_lock);
     if (!gst_gl_ensure_element_data (mix, &mix->display,
             &mix->priv->other_context)) {
-      g_rec_mutex_lock (&mix->priv->context_lock);
+      g_rec_mutex_unlock (&mix->priv->context_lock);
       return FALSE;
     }
 
@@ -478,11 +535,26 @@ gst_gl_base_mixer_src_query (GstAggregator * agg, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:
     {
+      GstGLDisplay *display = NULL;
+      GstGLContext *other = NULL, *local = NULL;
       gboolean ret;
+
       g_rec_mutex_lock (&mix->priv->context_lock);
-      ret = gst_gl_handle_context_query ((GstElement *) mix, query,
-          mix->display, mix->context, mix->priv->other_context);
+      if (mix->display)
+        display = gst_object_ref (mix->display);
+      if (mix->context)
+        local = gst_object_ref (mix->context);
+      if (mix->priv->other_context)
+        local = gst_object_ref (mix->priv->other_context);
       g_rec_mutex_unlock (&mix->priv->context_lock);
+
+      ret = gst_gl_handle_context_query ((GstElement *) mix, query,
+          display, local, other);
+
+      gst_clear_object (&display);
+      gst_clear_object (&other);
+      gst_clear_object (&local);
+
       if (ret)
         return ret;
       break;

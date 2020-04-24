@@ -479,11 +479,34 @@ gst_gl_base_src_stop (GstBaseSrc * basesrc)
 }
 
 static gboolean
-_find_local_gl_context (GstGLBaseSrc * src)
+_find_local_gl_context_unlocked (GstGLBaseSrc * src)
 {
-  GstGLContext *context = src->context;
+  GstGLContext *context, *prev_context;
+  gboolean ret;
 
-  if (gst_gl_query_local_gl_context (GST_ELEMENT (src), GST_PAD_SRC, &context)) {
+  if (src->context && src->context->display == src->display)
+    return TRUE;
+
+  context = prev_context = src->context;
+  g_rec_mutex_unlock (&src->priv->context_lock);
+  /* we need to drop the lock to query as another element may also be
+   * performing a context query on us which would also attempt to take the
+   * context_lock. Our query could block on the same lock in the other element.
+   */
+  ret =
+      gst_gl_query_local_gl_context (GST_ELEMENT (src), GST_PAD_SRC, &context);
+  g_rec_mutex_lock (&src->priv->context_lock);
+  if (ret) {
+    if (src->context != prev_context) {
+      /* we need to recheck everything since we dropped the lock and the
+       * context has changed */
+      if (src->context && src->context->display == src->display) {
+        if (context != src->context)
+          gst_clear_object (&context);
+        return TRUE;
+      }
+    }
+
     if (context->display == src->display) {
       src->context = context;
       return TRUE;
@@ -513,7 +536,7 @@ gst_gl_base_src_find_gl_context_unlocked (GstGLBaseSrc * src)
 
   gst_gl_display_filter_gl_api (src->display, klass->supported_gl_api);
 
-  _find_local_gl_context (src);
+  _find_local_gl_context_unlocked (src);
 
   if (!src->context) {
     GST_OBJECT_LOCK (src->display);

@@ -411,6 +411,9 @@ stereosplit_set_output_caps (GstGLStereoSplit * split, GstCaps * sinkcaps)
     goto fail;
   }
 
+  /* FIXME: Provide left and right caps to do_bufferpool */
+  stereosplit_do_bufferpool (split, left);
+
   g_rec_mutex_lock (&split->context_lock);
   gst_gl_view_convert_set_context (split->viewconvert, split->context);
 
@@ -424,9 +427,6 @@ stereosplit_set_output_caps (GstGLStereoSplit * split, GstCaps * sinkcaps)
     GST_ERROR_OBJECT (split, "Failed to set caps on converter");
     goto fail;
   }
-
-  /* FIXME: Provide left and right caps to do_bufferpool */
-  stereosplit_do_bufferpool (split, left);
   g_rec_mutex_unlock (&split->context_lock);
 
   res = TRUE;
@@ -444,10 +444,33 @@ fail:
 static gboolean
 _find_local_gl_context_unlocked (GstGLStereoSplit * split)
 {
-  GstGLContext *context = split->context;
+  GstGLContext *context, *prev_context;
+  gboolean ret;
 
-  if (gst_gl_query_local_gl_context (GST_ELEMENT (split), GST_PAD_SRC,
-          &context)) {
+  if (split->context && split->context->display == split->display)
+    return TRUE;
+
+  context = prev_context = split->context;
+  g_rec_mutex_unlock (&split->context_lock);
+  /* we need to drop the lock to query as another element may also be
+   * performing a context query on us which would also attempt to take the
+   * context_lock. Our query could block on the same lock in the other element.
+   */
+  ret =
+      gst_gl_query_local_gl_context (GST_ELEMENT (split), GST_PAD_SRC,
+      &context);
+  g_rec_mutex_lock (&split->context_lock);
+  if (ret) {
+    if (split->context != prev_context) {
+      /* we need to recheck everything since we dropped the lock and the
+       * context has changed */
+      if (split->context && split->context->display == split->display) {
+        if (context != split->context)
+          gst_clear_object (&context);
+        return TRUE;
+      }
+    }
+
     if (context->display == split->display) {
       split->context = context;
       return TRUE;
@@ -455,9 +478,27 @@ _find_local_gl_context_unlocked (GstGLStereoSplit * split)
     if (context != split->context)
       gst_clear_object (&context);
   }
-  context = split->context;
-  if (gst_gl_query_local_gl_context (GST_ELEMENT (split), GST_PAD_SINK,
-          &context)) {
+
+  context = prev_context = split->context;
+  g_rec_mutex_unlock (&split->context_lock);
+  /* we need to drop the lock to query as another element may also be
+   * performing a context query on us which would also attempt to take the
+   * context_lock. Our query could block on the same lock in the other element.
+   */
+  ret =
+      gst_gl_query_local_gl_context (GST_ELEMENT (split), GST_PAD_SINK,
+      &context);
+  g_rec_mutex_lock (&split->context_lock);
+  if (ret) {
+    if (split->context != prev_context) {
+      /* we need to recheck everything now that we dropped the lock */
+      if (split->context && split->context->display == split->display) {
+        if (context != split->context)
+          gst_clear_object (&context);
+        return TRUE;
+      }
+    }
+
     if (context->display == split->display) {
       split->context = context;
       return TRUE;
@@ -465,6 +506,7 @@ _find_local_gl_context_unlocked (GstGLStereoSplit * split)
     if (context != split->context)
       gst_clear_object (&context);
   }
+
   return FALSE;
 }
 
@@ -552,7 +594,6 @@ stereosplit_decide_allocation (GstGLStereoSplit * self, GstQuery * query)
     return FALSE;
 
   return TRUE;
-
 }
 
 static gboolean
@@ -670,8 +711,26 @@ stereosplit_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:
     {
-      if (gst_gl_handle_context_query ((GstElement *) split, query,
-              split->display, split->context, split->other_context))
+      GstGLDisplay *display = NULL;
+      GstGLContext *other = NULL, *local = NULL;
+      gboolean ret;
+
+      g_rec_mutex_lock (&split->context_lock);
+      if (split->display)
+        display = gst_object_ref (split->display);
+      if (split->context)
+        local = gst_object_ref (split->context);
+      if (split->other_context)
+        local = gst_object_ref (split->other_context);
+      g_rec_mutex_unlock (&split->context_lock);
+
+      ret = gst_gl_handle_context_query ((GstElement *) split, query,
+          display, local, other);
+
+      gst_clear_object (&display);
+      gst_clear_object (&other);
+      gst_clear_object (&local);
+      if (ret)
         return TRUE;
 
       return gst_pad_query_default (pad, parent, query);
@@ -699,8 +758,26 @@ stereosplit_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:
     {
-      if (gst_gl_handle_context_query ((GstElement *) split, query,
-              split->display, split->context, split->other_context))
+      GstGLDisplay *display = NULL;
+      GstGLContext *other = NULL, *local = NULL;
+      gboolean ret;
+
+      g_rec_mutex_lock (&split->context_lock);
+      if (split->display)
+        display = gst_object_ref (split->display);
+      if (split->context)
+        local = gst_object_ref (split->context);
+      if (split->other_context)
+        local = gst_object_ref (split->other_context);
+      g_rec_mutex_unlock (&split->context_lock);
+
+      ret = gst_gl_handle_context_query ((GstElement *) split, query,
+          display, local, other);
+
+      gst_clear_object (&display);
+      gst_clear_object (&other);
+      gst_clear_object (&local);
+      if (ret)
         return TRUE;
 
       return gst_pad_query_default (pad, parent, query);

@@ -121,6 +121,7 @@ enum
   PROP_LATENCY,
   PROP_START_TIME_SELECTION,
   PROP_START_TIME,
+  PROP_CONTEXT,
 };
 
 enum
@@ -203,6 +204,12 @@ gst_gl_mixer_bin_class_init (GstGLMixerBinClass * klass)
           "Start time to use if start-time-selection=set", 0,
           G_MAXUINT64,
           DEFAULT_START_TIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_CONTEXT,
+      g_param_spec_object ("context",
+          "OpenGL context",
+          "Get OpenGL context",
+          GST_TYPE_GL_CONTEXT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstMixerBin::create-element:

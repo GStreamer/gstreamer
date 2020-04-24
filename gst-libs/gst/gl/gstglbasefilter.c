@@ -181,30 +181,82 @@ gst_gl_base_filter_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
+_find_local_gl_context_unlocked (GstGLBaseFilter * filter)
+{
+  GstGLContext *context, *prev_context;
+  gboolean ret;
+
+  if (filter->context && filter->context->display == filter->display)
+    return TRUE;
+
+  context = prev_context = filter->context;
+  g_rec_mutex_unlock (&filter->priv->context_lock);
+  /* we need to drop the lock to query as another element may also be
+   * performing a context query on us which would also attempt to take the
+   * context_lock. Our query could block on the same lock in the other element.
+   */
+  ret =
+      gst_gl_query_local_gl_context (GST_ELEMENT (filter), GST_PAD_SRC,
+      &context);
+  g_rec_mutex_lock (&filter->priv->context_lock);
+  if (ret) {
+    if (filter->context != prev_context) {
+      /* we need to recheck everything since we dropped the lock and the
+       * context has changed */
+      if (filter->context && filter->context->display == filter->display) {
+        if (context != filter->context)
+          gst_clear_object (&context);
+        return TRUE;
+      }
+    }
+
+    if (context->display == filter->display) {
+      filter->context = context;
+      return TRUE;
+    }
+    if (context != filter->context)
+      gst_clear_object (&context);
+  }
+
+  context = prev_context = filter->context;
+  g_rec_mutex_unlock (&filter->priv->context_lock);
+  /* we need to drop the lock to query as another element may also be
+   * performing a context query on us which would also attempt to take the
+   * context_lock. Our query could block on the same lock in the other element.
+   */
+  ret =
+      gst_gl_query_local_gl_context (GST_ELEMENT (filter), GST_PAD_SINK,
+      &context);
+  g_rec_mutex_lock (&filter->priv->context_lock);
+  if (ret) {
+    if (filter->context != prev_context) {
+      /* we need to recheck everything now that we dropped the lock */
+      if (filter->context && filter->context->display == filter->display) {
+        if (context != filter->context)
+          gst_clear_object (&context);
+        return TRUE;
+      }
+    }
+
+    if (context->display == filter->display) {
+      filter->context = context;
+      return TRUE;
+    }
+    if (context != filter->context)
+      gst_clear_object (&context);
+  }
+
+  return FALSE;
+}
+
+static gboolean
 _find_local_gl_context (GstGLBaseFilter * filter)
 {
-  GstGLContext *context = filter->context;
-
-  if (gst_gl_query_local_gl_context (GST_ELEMENT (filter), GST_PAD_SRC,
-          &context)) {
-    if (context->display == filter->display) {
-      filter->context = context;
-      return TRUE;
-    }
-    if (context != filter->context)
-      gst_clear_object (&context);
-  }
-  context = filter->context;
-  if (gst_gl_query_local_gl_context (GST_ELEMENT (filter), GST_PAD_SINK,
-          &context)) {
-    if (context->display == filter->display) {
-      filter->context = context;
-      return TRUE;
-    }
-    if (context != filter->context)
-      gst_clear_object (&context);
-  }
-  return FALSE;
+  gboolean ret;
+  g_rec_mutex_lock (&filter->priv->context_lock);
+  ret = _find_local_gl_context_unlocked (filter);
+  g_rec_mutex_unlock (&filter->priv->context_lock);
+  return ret;
 }
 
 static gboolean
@@ -218,9 +270,7 @@ gst_gl_base_filter_query (GstBaseTransform * trans, GstPadDirection direction,
     {
       if (direction == GST_PAD_SINK
           && gst_base_transform_is_passthrough (trans)) {
-        g_rec_mutex_lock (&filter->priv->context_lock);
         _find_local_gl_context (filter);
-        g_rec_mutex_unlock (&filter->priv->context_lock);
 
         return gst_pad_peer_query (GST_BASE_TRANSFORM_SRC_PAD (trans), query);
       }
@@ -228,11 +278,26 @@ gst_gl_base_filter_query (GstBaseTransform * trans, GstPadDirection direction,
     }
     case GST_QUERY_CONTEXT:
     {
+      GstGLDisplay *display = NULL;
+      GstGLContext *other = NULL, *local = NULL;
       gboolean ret;
+
       g_rec_mutex_lock (&filter->priv->context_lock);
-      ret = gst_gl_handle_context_query ((GstElement *) filter, query,
-          filter->display, filter->context, filter->priv->other_context);
+      if (filter->display)
+        display = gst_object_ref (filter->display);
+      if (filter->context)
+        local = gst_object_ref (filter->context);
+      if (filter->priv->other_context)
+        local = gst_object_ref (filter->priv->other_context);
       g_rec_mutex_unlock (&filter->priv->context_lock);
+
+      ret = gst_gl_handle_context_query ((GstElement *) filter, query,
+          display, local, other);
+
+      gst_clear_object (&display);
+      gst_clear_object (&other);
+      gst_clear_object (&local);
+
       if (ret)
         return TRUE;
       break;
@@ -418,20 +483,9 @@ gst_gl_base_filter_change_state (GstElement * element,
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
       g_rec_mutex_lock (&filter->priv->context_lock);
-      if (filter->priv->other_context) {
-        gst_object_unref (filter->priv->other_context);
-        filter->priv->other_context = NULL;
-      }
-
-      if (filter->display) {
-        gst_object_unref (filter->display);
-        filter->display = NULL;
-      }
-
-      if (filter->context) {
-        gst_object_unref (filter->context);
-        filter->context = NULL;
-      }
+      gst_clear_object (&filter->priv->other_context);
+      gst_clear_object (&filter->display);
+      gst_clear_object (&filter->context);
       g_rec_mutex_unlock (&filter->priv->context_lock);
       break;
     default:
@@ -487,7 +541,7 @@ gst_gl_base_filter_find_gl_context_unlocked (GstGLBaseFilter * filter)
   if (!filter->context)
     new_context = TRUE;
 
-  _find_local_gl_context (filter);
+  _find_local_gl_context_unlocked (filter);
 
   if (!filter->context) {
     GST_OBJECT_LOCK (filter->display);
