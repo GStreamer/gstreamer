@@ -95,6 +95,8 @@ struct _GstH264DecoderPrivate
   GstH264NalParser *parser;
   GstH264Dpb *dpb;
   GstFlowReturn last_ret;
+  /* used for low-latency vs. high throughput mode decision */
+  gboolean is_live;
 
   /* sps/pps of the current slice */
   const GstH264SPS *active_sps;
@@ -775,6 +777,7 @@ gst_h264_decoder_set_format (GstVideoDecoder * decoder,
 {
   GstH264Decoder *self = GST_H264_DECODER (decoder);
   GstH264DecoderPrivate *priv = self->priv;
+  GstQuery *query;
 
   GST_DEBUG_OBJECT (decoder, "Set format");
 
@@ -850,6 +853,16 @@ gst_h264_decoder_set_format (GstVideoDecoder * decoder,
     }
     gst_buffer_unmap (priv->codec_data, &map);
   }
+
+  /* in case live streaming, we will run on low-latency mode */
+  priv->is_live = FALSE;
+  query = gst_query_new_latency ();
+  if (gst_pad_peer_query (GST_VIDEO_DECODER_SINK_PAD (self), query))
+    gst_query_parse_latency (query, &priv->is_live, NULL, NULL);
+  gst_query_unref (query);
+
+  if (priv->is_live)
+    GST_DEBUG_OBJECT (self, "Live source, will run on low-latency mode");
 
   return TRUE;
 }
@@ -1589,7 +1602,12 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
       GST_TRACE_OBJECT (self, "Output mem_mgmt_5 picture");
     } else if (priv->last_output_poc >= 0 &&
         picture->pic_order_cnt > priv->last_output_poc &&
-        (picture->pic_order_cnt - priv->last_output_poc) <= 2) {
+        (picture->pic_order_cnt - priv->last_output_poc) <= 2 &&
+        /* NOTE: this might have a negative effect on throughput performance
+         * depending on hardware implementation.
+         * TODO: Possible solution is threading but it would make decoding flow
+         * very complicated. */
+        priv->is_live) {
       /* NOTE: this condition is not specified by spec but we can output
        * this picture based on calculated POC and last outputted POC */
 
