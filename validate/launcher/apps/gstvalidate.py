@@ -182,6 +182,26 @@ class FakeMediaDescriptor(MediaDescriptor):
         return self._infos.get('plays-reverse', False)
 
 
+class GstValidateSimpleTestsGenerator(GstValidateTestsGenerator):
+    def __init__(self, name, test_manager, tests_dir):
+        self.tests_dir = tests_dir
+        super().__init__(name, test_manager)
+
+    def populate_tests(self, uri_minfo_special_scenarios, scenarios):
+        for root, _, files in os.walk(self.tests_dir):
+            for f in files:
+                name, ext = os.path.splitext(f)
+                if ext != ".validatetest":
+                    continue
+
+                fpath = os.path.abspath(os.path.join(root, f))
+                pathname = os.path.abspath(os.path.join(root, name))
+                name = pathname.replace(os.path.commonpath([self.tests_dir, root]), '').replace('/', '.')
+                self.add_test(GstValidateSimpleTest(fpath, 'test' + name,
+                                                    self.test_manager.options,
+                                                    self.test_manager.reporter))
+
+
 class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
 
     def __init__(self, name, test_manager, pipeline_template=None,
@@ -191,7 +211,7 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
         @pipeline_template: A template pipeline to be used to generate actual pipelines
         @pipelines_descriptions: A list of tuple of the form:
                                  (test_name, pipeline_description, extra_data)
-                                 extra_data being a dictionnary with the follwing keys:
+                                 extra_data being a dictionary with the following keys:
                                     'scenarios': ["the", "valide", "scenarios", "names"]
                                     'duration': the_duration # in seconds
                                     'timeout': a_timeout # in seconds
@@ -515,10 +535,9 @@ class GstValidateCheckAccurateSeekingTestGenerator(GstValidatePipelineTestsGener
                     continue
 
                 config = [
-                    '%(ssim)s, element-name="videoconvert", reference-images-dir="' + \
-                        reference_frame_dir + '", framerate=%d/%d' % (framerate.numerator, framerate.denominator)
+                    '%(ssim)s, element-name="videoconvert", reference-images-dir="'
+                    + reference_frame_dir + '", framerate=%d/%d' % (framerate.numerator, framerate.denominator)
                 ]
-
 
             pipelines[test_name] = {
                 "pipeline": "uridecodebin uri=" + media_info.get_uri() + " ! deinterlace ! videoconvert ! video/x-raw,interlace-mode=progressive,format=I420 ! videoconvert name=videoconvert ! %(videosink)s",
@@ -649,6 +668,17 @@ class GstValidateMixerTestsGenerator(GstValidatePipelineTestsGenerator):
                                                     pipe,
                                                     scenario=scenario)
                               )
+
+
+class GstValidateSimpleTest(GstValidateTest):
+    def __init__(self, test_file, *args, **kwargs):
+        self.test_file = test_file
+        super().__init__(GstValidateBaseTestManager.COMMAND, *args, **kwargs)
+
+    def build_arguments(self):
+        self.add_arguments('--set-test-file', self.test_file)
+        if self.options.mute:
+            self.add_arguments('--use-fakesinks')
 
 
 class GstValidateLaunchTest(GstValidateTest):
@@ -960,7 +990,7 @@ class GstValidateTestManager(GstValidateBaseTestManager):
         group = parser.add_argument_group("GstValidate tools specific options"
                                           " and behaviours",
                                           description="""When using --wanted-tests, all the scenarios can be used, even those which have
-not been tested and explicitely activated if you set use --wanted-tests ALL""")
+not been tested and explicitly activated if you set use --wanted-tests ALL""")
         group.add_argument("--validate-check-uri", dest="validate_uris",
                            action="append", help="defines the uris to run default tests on")
         group.add_argument("--validate-tools-path", dest="validate_tools_path",
@@ -1035,7 +1065,7 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
             media_descriptor = GstValidateMediaDescriptor(media_info)
 
         try:
-            # Just testing that the vairous mandatory infos are present
+            # Just testing that the various mandatory infos are present
             caps = media_descriptor.get_caps()
             if uri is None or media_descriptor.get_protocol() == Protocols.IMAGESEQUENCE:
                 uri = media_descriptor.get_uri()

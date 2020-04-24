@@ -39,6 +39,7 @@
 #endif
 
 #include "gst-validate-utils.h"
+#include "gst-validate-internal.h"
 #include <gst/gst.h>
 
 #define PARSER_BOOLEAN_EQUALITY_THRESHOLD (1e-10)
@@ -1035,7 +1036,6 @@ gst_validate_replace_variables_in_string (GstStructure * local_vars,
 {
   gint varname_len;
   GMatchInfo *match_info = NULL;
-  const gchar *var_value = NULL;
   gchar *tmpstring, *string = g_strdup (in_string);
 
   if (!_variables_regex)
@@ -1044,6 +1044,8 @@ gst_validate_replace_variables_in_string (GstStructure * local_vars,
   gst_validate_set_globals (NULL);
 
   while (g_regex_match (_variables_regex, string, 0, &match_info)) {
+    const gchar *var_value = NULL;
+
     if (g_match_info_matches (match_info)) {
       GRegex *replace_regex;
       gchar *tmp, *varname, *pvarname = g_match_info_fetch (match_info, 0);
@@ -1101,6 +1103,16 @@ _structure_set_variables (GQuark field_id, GValue * value,
 {
   gchar *str;
 
+  if (GST_VALUE_HOLDS_LIST (value)) {
+    gint i;
+
+    for (i = 0; i < gst_value_list_get_size (value); i++)
+      _structure_set_variables (0, (GValue *) gst_value_list_get_value (value,
+              i), local_variables);
+
+    return TRUE;
+  }
+
   if (!G_VALUE_HOLDS_STRING (value))
     return TRUE;
 
@@ -1140,8 +1152,11 @@ gst_validate_set_globals (GstStructure * structure)
       logsdir = g_get_tmp_dir ();
 
     global_vars =
-        gst_structure_new ("vars", "TMPDIR", G_TYPE_STRING, g_get_tmp_dir (),
-        "LOGSDIR", G_TYPE_STRING, logsdir, NULL);
+        gst_structure_new ("vars",
+        "TMPDIR", G_TYPE_STRING, g_get_tmp_dir (),
+        "LOGSDIR", G_TYPE_STRING, logsdir,
+        "tmpdir", G_TYPE_STRING, g_get_tmp_dir (),
+        "logsdir", G_TYPE_STRING, logsdir, NULL);
   }
 
   if (!structure)
@@ -1190,5 +1205,95 @@ gst_validate_utils_get_strv (GstStructure * str, const gchar * fieldname)
     parsed_list[i] = g_value_dup_string (gst_value_list_get_value (value, i));
   parsed_list[i] = NULL;
   return parsed_list;
+}
 
+static void
+strip_ext (char *fname)
+{
+  char *end = fname + strlen (fname);
+
+  while (end > fname && *end != '.')
+    --end;
+
+  if (end > fname)
+    *end = '\0';
+}
+
+/* NOTE: vars == NULL implies that we are working on a testfile and the variables
+ * will be set globally */
+void
+gst_validate_structure_set_variables_from_struct_file (GstStructure * vars,
+    const gchar * struct_file)
+{
+  gchar *config_dir;
+  gchar *config_fname;
+  gchar *config_name;
+  gchar *t, *config_name_dir;
+  gchar *validateflow, *expectations_dir, *actual_result_dir;
+  const gchar *logdir;
+
+  if (!struct_file)
+    return;
+
+  config_dir = g_path_get_dirname (struct_file);
+  config_fname = g_path_get_basename (struct_file);
+  config_name = g_strdup (config_fname);
+
+  gst_validate_set_globals (NULL);
+  logdir = gst_structure_get_string (global_vars, "logsdir");
+  g_assert (logdir);
+
+  strip_ext (config_name);
+  config_name_dir = g_strdup (config_name);
+  for (t = config_name_dir; *t != '\0'; t++) {
+    if (*t == '.')
+      *t = '/';
+  }
+
+  expectations_dir =
+      g_build_filename (config_dir, config_name, "flow-expectations", NULL);
+  actual_result_dir = g_build_filename (logdir, config_name_dir, NULL);
+  validateflow =
+      g_strdup_printf
+      ("validateflow, expectations-dir=\"%s\", actual-results-dir=\"%s\"",
+      expectations_dir, actual_result_dir);
+  gst_structure_set (!vars ? global_vars : vars,
+      "gst_api_version", G_TYPE_STRING, GST_API_VERSION,
+      !vars ? "test_dir" : "CONFIG_DIR", G_TYPE_STRING, config_dir,
+      !vars ? "test_name" : "CONFIG_NAME", G_TYPE_STRING, config_name,
+      !vars ? "test_name_dir" : "CONFIG_NAME_DIR", G_TYPE_STRING,
+      config_name_dir, !vars ? "test_path" : "CONFIG_PATH", G_TYPE_STRING,
+      struct_file, "validateflow", G_TYPE_STRING, validateflow, NULL);
+
+  g_free (config_dir);
+  g_free (config_name_dir);
+  g_free (config_fname);
+  g_free (config_name);
+  g_free (validateflow);
+  g_free (actual_result_dir);
+  g_free (expectations_dir);
+}
+
+void
+gst_validate_set_test_file_globals (GstStructure * meta, const gchar * testfile,
+    gboolean use_fakesinks)
+{
+  gboolean needs_sync = FALSE;
+  const gchar *videosink, *audiosink;
+
+  if (!use_fakesinks) {
+    videosink = "autovideosink";
+    audiosink = "autoaudiosink";
+  } else if (gst_structure_get_boolean (meta, "need-clock-sync", &needs_sync)
+      && needs_sync) {
+    videosink = "fakevideosink qos=true max-lateness=20000000";
+    audiosink = "fakesink sync=true";
+  } else {
+    videosink = "fakevideosink sync=false";
+    audiosink = "fakesink";
+  }
+
+  gst_structure_set (global_vars,
+      "videosink", G_TYPE_STRING, videosink,
+      "audiosink", G_TYPE_STRING, audiosink, NULL);
 }

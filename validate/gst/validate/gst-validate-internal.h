@@ -41,12 +41,14 @@ extern G_GNUC_INTERNAL GQuark _Q_VALIDATE_MONITOR;
 extern G_GNUC_INTERNAL GType _gst_validate_action_type_type;
 
 void init_scenarios (void);
+void register_action_types (void);
 
 /* FIXME 2.0 Remove that as this is only for backward compatibility
  * as we used to have to print actions in the action execution function
  * and this is done by the scenario itself now */
 G_GNUC_INTERNAL gboolean _action_check_and_set_printed (GstValidateAction *action);
 G_GNUC_INTERNAL gboolean gst_validate_action_is_subaction (GstValidateAction *action);
+G_GNUC_INTERNAL gboolean gst_validate_scenario_check_and_set_needs_clock_sync (GList *structures, GstStructure **meta);
 G_GNUC_INTERNAL void _priv_validate_override_registry_deinit (void);
 
 G_GNUC_INTERNAL GstValidateReportingDetails gst_validate_runner_get_default_reporting_details (GstValidateRunner *runner);
@@ -56,4 +58,8 @@ G_GNUC_INTERNAL void gst_validate_init_runner (void);
 G_GNUC_INTERNAL void gst_validate_deinit_runner (void);
 G_GNUC_INTERNAL void gst_validate_report_deinit (void);
 G_GNUC_INTERNAL gboolean gst_validate_send (JsonNode * root);
+G_GNUC_INTERNAL void gst_validate_set_test_file_globals (GstStructure* meta, const gchar* testfile, gboolean use_fakesinks);
+G_GNUC_INTERNAL gboolean gst_validate_get_test_file_scenario (GList** structs, const gchar** scenario_name, gchar** original_name);
+G_GNUC_INTERNAL GstValidateScenario* gst_validate_scenario_from_structs (GstValidateRunner* runner, GstElement* pipeline, GList* structures,
+    gchar* origin_file);
 #endif

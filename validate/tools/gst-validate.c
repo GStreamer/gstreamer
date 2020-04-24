@@ -45,6 +45,7 @@
 static gint ret = 0;
 static GMainLoop *mainloop;
 static GstElement *pipeline;
+static gboolean is_testfile;
 static gboolean buffering = FALSE;
 
 static gboolean is_live = FALSE;
@@ -90,7 +91,7 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
       break;
     }
     case GST_MESSAGE_EOS:
-      if (!g_getenv ("GST_VALIDATE_SCENARIO"))
+      if (!g_getenv ("GST_VALIDATE_SCENARIO") && !is_testfile)
         g_main_loop_quit (loop);
       break;
     case GST_MESSAGE_ASYNC_DONE:
@@ -198,7 +199,7 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
       if (GST_IS_VALIDATE_SCENARIO (GST_MESSAGE_SRC (message))
           && state == GST_STATE_NULL) {
         gst_validate_printf (GST_MESSAGE_SRC (message),
-            "State change request NULL, quiting mainloop\n");
+            "State change request NULL, quitting mainloop\n");
         g_main_loop_quit (mainloop);
       }
       break;
@@ -301,17 +302,47 @@ _register_playbin_actions (void)
 /* *INDENT-ON* */
 }
 
+int main (int argc, gchar ** argv);
+
+static int
+run_test_from_file (const gchar * testfile, gboolean use_fakesinks)
+{
+  gint argc, ret;
+  gchar **args, **argv;
+  GstStructure *meta = gst_validate_setup_test_file (testfile, use_fakesinks);
+
+  args = gst_validate_utils_get_strv (meta, "args");
+  if (!args)
+    g_error ("No 'args' in .validatetest meta structure: %s",
+        gst_structure_to_string (meta));
+
+  for (argc = 0; args[argc]; argc++);
+  argc++;
+
+  argv = g_new0 (char *, argc + 1);
+  argv[0] = argv[0];
+  memcpy (&argv[1], args, sizeof (char *) * (argc));
+
+  ret = main (argc, argv);
+
+  g_strfreev (args);
+  g_free (argv);
+  return ret;
+
+}
+
 int
 main (int argc, gchar ** argv)
 {
   GError *err = NULL;
   gchar *scenario = NULL, *configs = NULL, *media_info = NULL,
-      *verbosity = NULL;
+      *verbosity = NULL, *testfile = NULL;
   gboolean list_scenarios = FALSE, monitor_handles_state,
       inspect_action_type = FALSE;
   GstStateChangeReturn sret;
   gchar *output_file = NULL;
   BusCallbackData bus_callback_data = { 0, };
+  gboolean use_fakesinks = FALSE;
 
 #ifdef G_OS_UNIX
   guint signal_watch_id;
@@ -319,12 +350,17 @@ main (int argc, gchar ** argv)
   int rep_err;
 
   GOptionEntry options[] = {
+    {"set-test-file", '\0', 0, G_OPTION_ARG_FILENAME, &testfile,
+        "Let you set a all container testfile", NULL},
     {"set-scenario", '\0', 0, G_OPTION_ARG_FILENAME, &scenario,
         "Let you set a scenario, it can be a full path to a scenario file"
           " or the name of the scenario (name of the file without the"
           " '.scenario' extension).", NULL},
     {"list-scenarios", 'l', 0, G_OPTION_ARG_NONE, &list_scenarios,
         "List the available scenarios that can be run", NULL},
+    {"use-fakesinks", 'm', 0, G_OPTION_ARG_NONE, &use_fakesinks,
+        "Use fakesinks when possible. This will have effect when using"
+          " test files.", NULL},
     {"verbosity", 'v', 0, G_OPTION_ARG_STRING, &verbosity,
         "Set overall verbosity as defined by GstValidateVerbosityFlags"
           " as a string", NULL},
@@ -379,6 +415,15 @@ main (int argc, gchar ** argv)
     exit (1);
   }
 
+  gst_init (&argc, &argv);
+  gst_validate_init_debug ();
+  if (testfile) {
+    is_testfile = TRUE;
+    if (scenario)
+      g_error ("Can not specify scenario and testfile at the same time");
+    return run_test_from_file (testfile, use_fakesinks);
+  }
+
   if (scenario || configs) {
     gchar *scenarios;
 
@@ -393,7 +438,6 @@ main (int argc, gchar ** argv)
     g_free (configs);
   }
 
-  gst_init (&argc, &argv);
   gst_validate_init ();
 
   if (list_scenarios || output_file) {
@@ -431,19 +475,26 @@ main (int argc, gchar ** argv)
   /* Create the pipeline */
   argvn = g_new0 (char *, argc);
   memcpy (argvn, argv + 1, sizeof (char *) * (argc - 1));
-  pipeline = (GstElement *) gst_parse_launchv ((const gchar **) argvn, &err);
-  g_free (argvn);
+  if (argc == 2) {
+    gst_validate_printf (NULL, "**-> Pipeline: '%s'**\n", argvn[0]);
+    pipeline = (GstElement *) gst_parse_launch (argvn[0], &err);
+  } else {
+    pipeline = (GstElement *) gst_parse_launchv ((const gchar **) argvn, &err);
+  }
+
   if (!pipeline) {
     g_print ("Failed to create pipeline: %s\n",
         err ? err->message : "unknown reason");
     g_clear_error (&err);
     g_object_unref (runner);
 
+    g_free (argvn);
     exit (1);
   } else if (err) {
     g_printerr ("Erroneous pipeline: %s\n",
         err->message ? err->message : "unknown reason");
     g_clear_error (&err);
+    g_free (argvn);
     return 1;
   }
 
@@ -500,7 +551,12 @@ main (int argc, gchar ** argv)
   g_signal_connect (bus, "message", (GCallback) bus_callback,
       &bus_callback_data);
 
-  g_print ("Starting pipeline\n");
+  if (argc == 2)
+    g_print ("-> Starting pipeline");
+  else
+    g_print ("-> Starting pipeline\n");
+
+  g_free (argvn);
   g_object_get (monitor, "handles-states", &monitor_handles_state, NULL);
   if (monitor_handles_state == FALSE) {
     sret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
@@ -523,7 +579,7 @@ main (int argc, gchar ** argv)
     }
     g_print ("Pipeline started\n");
   } else {
-    g_print ("Letting scenario handle set state\n");
+    g_print ("-> Letting scenario handle set state\n");
   }
 
   g_main_loop_run (mainloop);

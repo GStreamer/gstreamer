@@ -4,6 +4,7 @@ index.md
 	gst-validate-media-check.md
 	gst-validate-launcher.md
 	gst-validate-scenarios.md
+	gst-validate-test-file.md
 	gst-validate-config.md
 	gst-validate-environment-variables.md
 	gst-validate-action-types.md

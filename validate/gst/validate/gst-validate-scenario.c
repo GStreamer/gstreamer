@@ -52,6 +52,7 @@
 #include "gst-validate-reporter.h"
 #include "gst-validate-report.h"
 #include "gst-validate-utils.h"
+#include "gst-validate-internal.h"
 #include "validate.h"
 #include <gst/validate/gst-validate-override.h>
 #include <gst/validate/gst-validate-override-registry.h>
@@ -3438,20 +3439,20 @@ _action_type_has_parameter (GstValidateActionType * atype,
 }
 
 static gboolean
-_load_scenario_file (GstValidateScenario * scenario,
-    const gchar * scenario_file, gboolean * is_config)
+gst_validate_scenario_load_structures (GstValidateScenario * scenario,
+    GList * structures, gboolean * is_config, gchar * origin_file)
 {
   gboolean ret = TRUE;
-  GList *structures, *tmp;
+  GList *tmp;
   GstValidateScenarioPrivate *priv = scenario->priv;
   GList *config;
 
   *is_config = FALSE;
 
-  structures =
-      gst_validate_utils_structs_parse_from_filename (scenario_file, NULL);
-  if (structures == NULL)
-    goto failed;
+  if (!structures) {
+    GST_INFO_OBJECT (scenario, "No structures provided");
+    return FALSE;
+  }
 
   for (tmp = structures; tmp; tmp = tmp->next) {
     GstValidateAction *action;
@@ -3460,7 +3461,7 @@ _load_scenario_file (GstValidateScenario * scenario,
     GstStructure *structure = (GstStructure *) tmp->data;
 
     type = gst_structure_get_name (structure);
-    if (!g_strcmp0 (type, "description")) {
+    if (!g_strcmp0 (type, "description") || !g_strcmp0 (type, "meta")) {
       const gchar *pipeline_name;
 
       gst_structure_get_boolean (structure, "is-config", is_config);
@@ -3494,7 +3495,7 @@ _load_scenario_file (GstValidateScenario * scenario,
         goto failed;
       }
 
-      if (!gst_validate_scenario_load (scenario, location, scenario_file)) {
+      if (!gst_validate_scenario_load (scenario, location, origin_file)) {
         GST_ERROR ("Failed including scenario %s", location);
         goto failed;
       }
@@ -3527,8 +3528,12 @@ _load_scenario_file (GstValidateScenario * scenario,
     }
 
     action = gst_validate_action_new (scenario, action_type, structure, TRUE);
-    if (action->priv->state == GST_VALIDATE_EXECUTE_ACTION_ERROR)
+    if (action->priv->state == GST_VALIDATE_EXECUTE_ACTION_ERROR) {
+      GST_ERROR_OBJECT (scenario, "Newly created action: %" GST_PTR_FORMAT
+          " was in error state", structure);
+
       goto failed;
+    }
 
     action->action_number = priv->num_actions++;
   }
@@ -3556,6 +3561,16 @@ failed:
 
   goto done;
 }
+
+static gboolean
+_load_scenario_file (GstValidateScenario * scenario,
+    gchar * scenario_file, gboolean * is_config)
+{
+  return gst_validate_scenario_load_structures (scenario,
+      gst_validate_utils_structs_parse_from_filename (scenario_file, NULL),
+      is_config, scenario_file);
+}
+
 
 static gboolean
 gst_validate_scenario_load (GstValidateScenario * scenario,
@@ -3958,28 +3973,27 @@ _element_added_cb (GstBin * bin, GstElement * element,
   }
 }
 
-/**
- * gst_validate_scenario_factory_create:
- * @runner: The #GstValidateRunner to use to report issues
- * @pipeline: The pipeline to run the scenario on
- * @scenario_name: The name (or path) of the scenario to run
- *
- * Returns: (transfer full): A #GstValidateScenario or NULL
- */
-GstValidateScenario *
-gst_validate_scenario_factory_create (GstValidateRunner *
-    runner, GstElement * pipeline, const gchar * scenario_name)
+static GstValidateScenario *
+gst_validate_scenario_new (GstValidateRunner *
+    runner, GstElement * pipeline, gchar * scenario_name, GList * structures)
 {
   GList *config;
   GstValidateScenario *scenario =
       g_object_new (GST_TYPE_VALIDATE_SCENARIO, "validate-runner",
       runner, NULL);
 
-  GST_LOG ("Creating scenario %s", scenario_name);
-  if (!gst_validate_scenario_load (scenario, scenario_name, NULL)) {
-    g_object_unref (scenario);
+  if (structures) {
+    gboolean is_config;
+    gst_validate_scenario_load_structures (scenario, structures, &is_config,
+        scenario_name);
+  } else {
 
-    return NULL;
+    GST_LOG ("Creating scenario %s", scenario_name);
+    if (!gst_validate_scenario_load (scenario, scenario_name, NULL)) {
+      g_object_unref (scenario);
+
+      return NULL;
+    }
   }
 
   if (scenario->priv->pipeline_name &&
@@ -3993,6 +4007,10 @@ gst_validate_scenario_factory_create (GstValidateRunner *
 
     return NULL;
   }
+
+  gst_validate_printf (NULL,
+      "\n**-> Running scenario %s on pipeline %s**\n\n", scenario_name,
+      GST_OBJECT_NAME (pipeline));
 
   g_weak_ref_init (&scenario->priv->ref_pipeline, pipeline);
   gst_validate_reporter_set_name (GST_VALIDATE_REPORTER (scenario),
@@ -4038,15 +4056,36 @@ gst_validate_scenario_factory_create (GstValidateRunner *
     _add_execute_actions_gsource (scenario);
   }
 
-  gst_validate_printf (NULL,
-      "\n**-> Running scenario %s on pipeline %s**\n\n", scenario_name,
-      GST_OBJECT_NAME (pipeline));
-
   scenario->priv->overrides =
       gst_validate_override_registry_get_override_for_names
       (gst_validate_override_registry_get (), "scenarios", NULL);
 
   return scenario;
+}
+
+GstValidateScenario *
+gst_validate_scenario_from_structs (GstValidateRunner * runner,
+    GstElement * pipeline, GList * structures, gchar * origin_file)
+{
+  g_return_val_if_fail (structures, NULL);
+
+  return gst_validate_scenario_new (runner, pipeline, origin_file, structures);
+}
+
+/**
+ * gst_validate_scenario_factory_create:
+ * @runner: The #GstValidateRunner to use to report issues
+ * @pipeline: The pipeline to run the scenario on
+ * @scenario_name: The name (or path) of the scenario to run
+ *
+ * Returns: (transfer full): A #GstValidateScenario or NULL
+ */
+GstValidateScenario *
+gst_validate_scenario_factory_create (GstValidateRunner *
+    runner, GstElement * pipeline, const gchar * scenario_name)
+{
+  return gst_validate_scenario_new (runner, pipeline, (gchar *) scenario_name,
+      NULL);
 }
 
 static gboolean
@@ -4064,6 +4103,41 @@ _add_description (GQuark field_id, const GValue * value, KeyFileGroupName * kfg)
   return TRUE;
 }
 
+gboolean
+gst_validate_scenario_check_and_set_needs_clock_sync (GList * structures,
+    GstStructure ** meta)
+{
+  gboolean needs_clock_sync = FALSE;
+  GList *tmp;
+
+  for (tmp = structures; tmp; tmp = tmp->next) {
+    GstStructure *_struct = (GstStructure *) tmp->data;
+    gboolean is_meta = gst_structure_has_name (_struct, "description")
+        || gst_structure_has_name (_struct, "meta");
+
+    if (!is_meta) {
+      GstValidateActionType *type =
+          _find_action_type (gst_structure_get_name (_struct));
+
+      if (type && type->flags & GST_VALIDATE_ACTION_TYPE_NEEDS_CLOCK)
+        needs_clock_sync = TRUE;
+      continue;
+    }
+
+    if (!*meta)
+      *meta = gst_structure_copy (_struct);
+  }
+
+  if (needs_clock_sync) {
+    if (*meta)
+      gst_structure_set (*meta, "need-clock-sync", G_TYPE_BOOLEAN, TRUE, NULL);
+    else
+      *meta = gst_structure_from_string ("description, need-clock-sync=true;",
+          NULL);
+  }
+
+  return needs_clock_sync;
+}
 
 static gboolean
 _parse_scenario (GFile * f, GKeyFile * kf)
@@ -4072,40 +4146,23 @@ _parse_scenario (GFile * f, GKeyFile * kf)
   gchar *path = g_file_get_path (f);
 
   if (g_str_has_suffix (path, GST_VALIDATE_SCENARIO_SUFFIX)) {
-    gboolean needs_clock_sync = FALSE;
-    GstStructure *desc = NULL;
-
+    GstStructure *meta = NULL;
     GList *tmp, *structures = gst_validate_structs_parse_from_gfile (f);
 
-    for (tmp = structures; tmp; tmp = tmp->next) {
-      GstStructure *_struct = (GstStructure *) tmp->data;
-      GstValidateActionType *type =
-          _find_action_type (gst_structure_get_name (_struct));
+    gst_validate_scenario_check_and_set_needs_clock_sync (structures, &meta);
+    for (tmp = structures; tmp; tmp = tmp->next)
+      gst_structure_remove_fields (tmp->data, "__lineno__", "__filename__",
+          NULL);
 
-      gst_structure_remove_fields (_struct, "__lineno__", "__filename__", NULL);
-      if (!desc && gst_structure_has_name (_struct, "description"))
-        desc = gst_structure_copy (_struct);
-      else if (type && type->flags & GST_VALIDATE_ACTION_TYPE_NEEDS_CLOCK)
-        needs_clock_sync = TRUE;
-    }
-
-    if (needs_clock_sync) {
-      if (desc)
-        gst_structure_set (desc, "need-clock-sync", G_TYPE_BOOLEAN, TRUE, NULL);
-      else
-        desc = gst_structure_from_string ("description, need-clock-sync=true;",
-            NULL);
-    }
-
-    if (desc) {
+    if (meta) {
       KeyFileGroupName kfg;
 
       kfg.group_name = g_file_get_path (f);
       kfg.kf = kf;
 
-      gst_structure_foreach (desc,
+      gst_structure_foreach (meta,
           (GstStructureForeachFunc) _add_description, &kfg);
-      gst_structure_free (desc);
+      gst_structure_free (meta);
     } else {
       g_key_file_set_string (kf, path, "noinfo", "nothing");
     }
@@ -4293,7 +4350,7 @@ check_last_sample_internal (GstValidateScenario * scenario,
             &iframe_number)) {
       GST_VALIDATE_REPORT_ACTION (scenario, action,
           SCENARIO_ACTION_EXECUTION_ERROR,
-          "The 'checksum' or 'time-code-frame-number' parametters of the "
+          "The 'checksum' or 'time-code-frame-number' parameters of the "
           "`check-last-sample` action type needs to be specified, none found");
 
       res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
@@ -4306,7 +4363,7 @@ check_last_sample_internal (GstValidateScenario * scenario,
   tc_meta = gst_buffer_get_video_time_code_meta (buffer);
   if (!tc_meta) {
     GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
-        "Could not \"check-last-sample\" as the buffer doesn' contain a TimeCode"
+        "Could not \"check-last-sample\" as the buffer doesn't contain a TimeCode"
         " meta");
     res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
     goto done;
@@ -5085,6 +5142,50 @@ void
 init_scenarios (void)
 {
   GList *tmp;
+
+  register_action_types ();
+
+  for (tmp = gst_validate_plugin_get_config (NULL); tmp; tmp = tmp->next) {
+    const gchar *action_typename;
+    GstStructure *plug_conf = (GstStructure *) tmp->data;
+
+    if ((action_typename = gst_structure_get_string (plug_conf, "action"))) {
+      GstValidateAction *action;
+      GstValidateActionType *atype = _find_action_type (action_typename);
+
+      if (!atype) {
+        g_error ("[CONFIG ERROR] Action type %s not found", action_typename);
+
+        continue;
+      }
+
+
+      if (atype->flags & GST_VALIDATE_ACTION_TYPE_HANDLED_IN_CONFIG) {
+        GST_INFO ("Action type %s from configuration files"
+            " is handled.", action_typename);
+        continue;
+      }
+
+      if (!(atype->flags & GST_VALIDATE_ACTION_TYPE_CONFIG) &&
+          !(_action_type_has_parameter (atype, "as-config"))) {
+        g_error ("[CONFIG ERROR] Action '%s' is not a config action",
+            action_typename);
+
+        continue;
+      }
+
+      gst_structure_set (plug_conf, "as-config", G_TYPE_BOOLEAN, TRUE, NULL);
+      gst_structure_set_name (plug_conf, action_typename);
+
+      action = gst_validate_action_new (NULL, atype, plug_conf, FALSE);
+      gst_validate_action_unref (action);
+    }
+  }
+}
+
+void
+register_action_types (void)
+{
   GST_DEBUG_CATEGORY_INIT (gst_validate_scenario_debug, "gstvalidatescenario",
       GST_DEBUG_FG_YELLOW, "Gst validate scenarios");
 
@@ -5092,7 +5193,7 @@ init_scenarios (void)
   _gst_validate_action_type_type = gst_validate_action_type_get_type ();
 
   /*  *INDENT-OFF* */
-  REGISTER_ACTION_TYPE ("description", NULL,
+  REGISTER_ACTION_TYPE ("meta", NULL,
       ((GstValidateActionParameter [])  {
       {
         .name = "summary",
@@ -5218,7 +5319,7 @@ init_scenarios (void)
       },
       {NULL}
       }),
-      "Allows to describe the scenario in various ways",
+      "Scenario metadata.\nNOTE: it used to be called \"description\"",
       GST_VALIDATE_ACTION_TYPE_CONFIG);
 
   REGISTER_ACTION_TYPE ("seek", _execute_seek,
@@ -5798,43 +5899,6 @@ init_scenarios (void)
       }),
       "Request a video key unit", FALSE);
   /*  *INDENT-ON* */
-
-  for (tmp = gst_validate_plugin_get_config (NULL); tmp; tmp = tmp->next) {
-    const gchar *action_typename;
-    GstStructure *plug_conf = (GstStructure *) tmp->data;
-
-    if ((action_typename = gst_structure_get_string (plug_conf, "action"))) {
-      GstValidateAction *action;
-      GstValidateActionType *atype = _find_action_type (action_typename);
-
-      if (!atype) {
-        g_error ("[CONFIG ERROR] Action type %s not found", action_typename);
-
-        continue;
-      }
-
-
-      if (atype->flags & GST_VALIDATE_ACTION_TYPE_HANDLED_IN_CONFIG) {
-        GST_INFO ("Action type %s from configuration files"
-            " is handled.", action_typename);
-        continue;
-      }
-
-      if (!(atype->flags & GST_VALIDATE_ACTION_TYPE_CONFIG) &&
-          !(_action_type_has_parameter (atype, "as-config"))) {
-        g_error ("[CONFIG ERROR] Action '%s' is not a config action",
-            action_typename);
-
-        continue;
-      }
-
-      gst_structure_set (plug_conf, "as-config", G_TYPE_BOOLEAN, TRUE, NULL);
-      gst_structure_set_name (plug_conf, action_typename);
-
-      action = gst_validate_action_new (NULL, atype, plug_conf, FALSE);
-      gst_validate_action_unref (action);
-    }
-  }
 }
 
 void

@@ -755,13 +755,29 @@ static void
 gst_validate_pipeline_monitor_create_scenarios (GstValidateBinMonitor * monitor)
 {
   /* scenarios currently only make sense for pipelines */
-  const gchar *scenarios_names;
-  gchar **scenarios = NULL;
+  const gchar *scenarios_names, *scenario_name = NULL;
+  gchar **scenarios = NULL, *testfile = NULL;
   GstObject *target =
       gst_validate_monitor_get_target (GST_VALIDATE_MONITOR (monitor));
   GstValidateRunner *runner =
       gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER (monitor));
+  GList *scenario_structs = NULL;
 
+  if (gst_validate_get_test_file_scenario (&scenario_structs, &scenario_name,
+          &testfile)) {
+    if (scenario_name) {
+      monitor->scenario =
+          gst_validate_scenario_factory_create (runner,
+          GST_ELEMENT_CAST (target), scenario_name);
+      goto done;
+    }
+
+    monitor->scenario =
+        gst_validate_scenario_from_structs (runner,
+        GST_ELEMENT_CAST (target), scenario_structs, testfile);
+
+    goto done;
+  }
 
   if ((scenarios_names = g_getenv ("GST_VALIDATE_SCENARIO"))) {
     gint i;

@@ -31,8 +31,8 @@ the \$GST\_VALIDATE\_SCENARIOS\_PATH environment variable.
 
 Each line in the `.scenario` file represent an action (you can also use
 `\ ` at the end of a line write a single action on multiple lines).
-Usually you should start you scenario with a `description` "config"
-action in order for the user to have more information about the
+Usually you should start you scenario with a `meta` structure
+in order for the user to have more information about the
 scenario. It can contain a `summary` field which is a string explaining
 what the scenario does and then several info fields about the scenario.
 You can find more info about it running:
@@ -43,7 +43,7 @@ So a basic scenario file that will seek three times and stop would look
 like:
 
 ```
-description, summary="Seeks at 1.0 to 2.0 then at \
+meta, summary="Seeks at 1.0 to 2.0 then at \
 3.0 to 0.0 and then seeks at \
 1.0 to 2.0 for 1.0 second (between 2.0 and 3.0).", \
 seek=true, duration=5.0, min-media-duration=4.0

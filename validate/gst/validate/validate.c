@@ -38,6 +38,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include <math.h>
+
 #include "validate.h"
 #include "gst-validate-utils.h"
 #include "gst-validate-internal.h"
@@ -54,6 +56,8 @@ static GMutex _gst_validate_registry_mutex;
 static GstRegistry *_gst_validate_registry_default = NULL;
 
 static GList *core_config = NULL;
+static GList *testfile_structs = NULL;
+static gchar *global_testfile = NULL;
 static gboolean validate_initialized = FALSE;
 static gboolean loaded_globals = FALSE;
 GstClockTime _priv_start_time;
@@ -134,11 +138,58 @@ _set_vars_func (GQuark field_id, const GValue * value, GstStructure * vars)
   return TRUE;
 }
 
+static GstStructure *
+get_test_file_meta (void)
+{
+  GList *tmp;
+
+  for (tmp = testfile_structs; tmp; tmp = tmp->next) {
+    if (gst_structure_has_name (tmp->data, "meta"))
+      return tmp->data;
+  }
+
+  return NULL;
+}
+
+static GList *
+get_config_from_structures (GList * structures, GstStructure * local_vars,
+    const gchar * suffix)
+{
+  GList *tmp, *result = NULL;
+
+  for (tmp = structures; tmp; tmp = tmp->next) {
+    GstStructure *structure = tmp->data;
+
+    if (gst_structure_has_name (structure, suffix)) {
+      if (gst_structure_has_field (structure, "set-vars")) {
+        gst_structure_remove_field (structure, "set-vars");
+        if (!local_vars) {
+          GST_WARNING ("Unused `set-vars` config: %" GST_PTR_FORMAT, structure);
+          continue;
+        }
+        gst_structure_foreach (structure,
+            (GstStructureForeachFunc) _set_vars_func, local_vars);
+      } else {
+        gst_validate_structure_resolve_variables (structure, local_vars);
+        result = g_list_append (result, structure);
+      }
+    } else {
+      if (!loaded_globals && gst_structure_has_name (structure, "set-globals")) {
+        gst_validate_structure_resolve_variables (structure, local_vars);
+        gst_validate_set_globals (structure);
+      }
+      gst_structure_free (structure);
+    }
+  }
+
+  return result;
+}
+
 static GList *
 create_config (const gchar * config, const gchar * suffix)
 {
   GstStructure *local_vars;
-  GList *structures = NULL, *tmp, *result = NULL;
+  GList *structures = NULL, *result = NULL;
   gchar *config_file = NULL;
 
   if (!suffix) {
@@ -170,49 +221,58 @@ create_config (const gchar * config, const gchar * suffix)
     }
   }
 
-  if (config_file) {
-    gchar *config_dir = g_path_get_dirname (config_file);
-    gchar *config_fname = g_path_get_basename (config_file);
-    gchar **config_name =
-        g_regex_split_simple ("\\.config", config_fname, 0, 0);
-
-    gst_structure_set (local_vars,
-        "CONFIG_DIR", G_TYPE_STRING, config_dir,
-        "CONFIG_NAME", G_TYPE_STRING, config_name[0],
-        "CONFIG_PATH", G_TYPE_STRING, config_file, NULL);
-
-    g_free (config_dir);
-    g_free (config_fname);
-    g_strfreev (config_name);
-  }
-
+  gst_validate_structure_set_variables_from_struct_file (local_vars,
+      config_file);
   g_free (config_file);
 
-  for (tmp = structures; tmp; tmp = tmp->next) {
-    GstStructure *structure = tmp->data;
-
-    if (gst_structure_has_name (structure, suffix)) {
-      if (gst_structure_has_field (structure, "set-vars")) {
-        gst_structure_remove_field (structure, "set-vars");
-        gst_structure_foreach (structure,
-            (GstStructureForeachFunc) _set_vars_func, local_vars);
-      } else {
-        gst_validate_structure_resolve_variables (structure, local_vars);
-        result = g_list_append (result, structure);
-      }
-    } else {
-      if (!loaded_globals && gst_structure_has_name (structure, "set-globals")) {
-        gst_validate_structure_resolve_variables (structure, local_vars);
-        gst_validate_set_globals (structure);
-      }
-      gst_structure_free (structure);
-    }
-  }
+  result = get_config_from_structures (structures, local_vars, suffix);
 
   loaded_globals = TRUE;
   g_list_free (structures);
   gst_structure_free (local_vars);
   return result;
+}
+
+static GList *
+gst_validate_get_testfile_configs (const gchar * suffix)
+{
+  GList *res = NULL;
+  gchar **config_strs = NULL, *filename = NULL;
+  gint current_lineno = -1;
+  GstStructure *meta = get_test_file_meta ();
+
+  if (!meta)
+    return NULL;
+
+  gst_structure_get (meta,
+      "__lineno__", G_TYPE_INT, &current_lineno,
+      "__filename__", G_TYPE_STRING, &filename, NULL);
+  config_strs = gst_validate_utils_get_strv (meta, "configs");
+
+  if (config_strs) {
+    gint i;
+
+    for (i = 0; config_strs[i]; i++) {
+      GstStructure *tmpstruct =
+          gst_structure_from_string (config_strs[i], NULL);
+
+      if (tmpstruct == NULL) {
+        g_error ("%s:%d: Invalid structure\n  %d | %s\n   %*c|",
+            filename, current_lineno, current_lineno, config_strs[i],
+            (gint) floor (log10 (abs ((current_lineno)))) + 1, ' ');
+      }
+
+      gst_structure_set (tmpstruct,
+          "__lineno__", G_TYPE_INT, current_lineno,
+          "__filename__", G_TYPE_STRING, filename, NULL);
+      res = g_list_append (res, tmpstruct);
+    }
+  }
+
+  g_free (filename);
+  g_strfreev (config_strs);
+
+  return get_config_from_structures (res, NULL, suffix);
 }
 
 /**
@@ -246,10 +306,10 @@ gst_validate_plugin_get_config (GstPlugin * plugin)
     suffix = "core";
   }
 
+  plugin_conf = gst_validate_get_testfile_configs (suffix);
   config = g_getenv ("GST_VALIDATE_CONFIG");
   if (!config) {
-    GST_DEBUG ("GST_VALIDATE_CONFIG not set");
-    return NULL;
+    return plugin_conf;
   }
 
   tmp = g_strsplit (config, G_SEARCHPATH_SEPARATOR_S, -1);
@@ -335,6 +395,13 @@ gst_validate_init_plugins (void)
   gst_registry_fork_set_enabled (TRUE);
 }
 
+void
+gst_validate_init_debug (void)
+{
+  GST_DEBUG_CATEGORY_INIT (gstvalidate_debug, "validate", 0,
+      "Validation library");
+}
+
 /**
  * gst_validate_init:
  *
@@ -348,10 +415,7 @@ gst_validate_init (void)
   if (validate_initialized) {
     return;
   }
-
-  GST_DEBUG_CATEGORY_INIT (gstvalidate_debug, "validate", 0,
-      "Validation library");
-
+  gst_validate_init_debug ();
   _priv_start_time = gst_util_get_timestamp ();
   _Q_VALIDATE_MONITOR = g_quark_from_static_string ("validate-monitor");
 
@@ -383,6 +447,10 @@ gst_validate_deinit (void)
 
   g_clear_object (&_gst_validate_registry_default);
 
+  g_list_free_full (testfile_structs, (GDestroyNotify) gst_structure_free);
+  testfile_structs = NULL;
+  g_clear_pointer (&global_testfile, g_free);
+
   _priv_validate_override_registry_deinit ();
   core_config = NULL;
   validate_initialized = FALSE;
@@ -396,4 +464,86 @@ gboolean
 gst_validate_is_initialized (void)
 {
   return validate_initialized;
+}
+
+gboolean
+gst_validate_get_test_file_scenario (GList ** structs,
+    const gchar ** scenario_name, gchar ** original_name)
+{
+  GList *res = NULL, *tmp;
+  GstStructure *meta = get_test_file_meta ();
+
+  if (!testfile_structs)
+    return FALSE;
+
+  if (meta && gst_structure_has_field (meta, "scenario")) {
+    *scenario_name = gst_structure_get_string (meta, "scenario");
+
+    return TRUE;
+  }
+
+  for (tmp = testfile_structs; tmp; tmp = tmp->next) {
+    GstStructure *structure = NULL;
+
+    if (gst_structure_has_name (tmp->data, "set-globals"))
+      continue;
+
+    structure = gst_structure_copy (tmp->data);
+    if (gst_structure_has_name (structure, "meta"))
+      gst_structure_remove_fields (structure, "configs", "gst-validate-args",
+          NULL);
+    res = g_list_append (res, structure);
+  }
+
+  *structs = res;
+  *original_name = global_testfile;
+
+  return TRUE;
+}
+
+GstStructure *
+gst_validate_setup_test_file (const gchar * testfile, gboolean use_fakesinks)
+{
+  const gchar *tool;
+  GstStructure *res = NULL;
+
+  if (global_testfile)
+    g_error ("A testfile was already loaded: %s", global_testfile);
+
+  gst_validate_set_globals (NULL);
+  gst_validate_structure_set_variables_from_struct_file (NULL, testfile);
+  testfile_structs =
+      gst_validate_utils_structs_parse_from_filename (testfile, NULL);
+
+  if (!testfile_structs)
+    g_error ("Could not load test file: %s", testfile);
+
+  res = testfile_structs->data;
+  if (gst_structure_has_name (testfile_structs->data, "set-globals")) {
+    GstStructure *globals = testfile_structs->data;
+    gst_validate_set_globals (globals);
+    res = testfile_structs->next->data;
+  }
+
+  if (!gst_structure_has_name (res, "meta"))
+    g_error ("First structure of a .validatetest file should be a `meta` or "
+        "`set-gobals` then `meta`, got: %s", gst_structure_to_string (res));
+
+  register_action_types ();
+  gst_validate_scenario_check_and_set_needs_clock_sync (testfile_structs, &res);
+
+  gst_validate_set_test_file_globals (res, testfile, use_fakesinks);
+
+  gst_validate_structure_resolve_variables (res, NULL);
+
+  tool = gst_structure_get_string (res, "tool");
+  if (!tool)
+    tool = "gst-validate-" GST_API_VERSION;
+
+  if (g_strcmp0 (tool, g_get_prgname ()))
+    g_error ("Validate test file: '%s' was made to be run with '%s' not '%s'",
+        testfile, tool, g_get_prgname ());
+  global_testfile = g_strdup (testfile);
+
+  return res;
 }

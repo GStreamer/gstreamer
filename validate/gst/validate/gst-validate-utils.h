@@ -52,6 +52,8 @@ GST_VALIDATE_API
 GList * gst_validate_utils_structs_parse_from_filename         (const gchar * scenario_file,
                                                                 gchar **file_path);
 GST_VALIDATE_API
+GstStructure * gst_validate_utils_test_file_get_meta           (const gchar * testfile, gboolean use_fakesinks);
+GST_VALIDATE_API
 GList * gst_validate_structs_parse_from_gfile            (GFile * scenario_file);
 
 GST_VALIDATE_API
@@ -75,6 +77,7 @@ gboolean gst_validate_element_matches_target (GstElement * element, GstStructure
 gchar * gst_validate_replace_variables_in_string (GstStructure * local_vars, const gchar * in_string);
 GST_VALIDATE_API
 void gst_validate_structure_resolve_variables (GstStructure *structure, GstStructure *local_variables);
-void gst_validate_set_globals (GstStructure *structure);
+void gst_validate_structure_set_variables_from_struct_file(GstStructure* vars, const gchar* struct_file);
+void gst_validate_set_globals(GstStructure* structure);
 
 #endif
