@@ -650,13 +650,14 @@ _file_get_structures (GFile * file, gchar ** err)
         g_string_free (l, TRUE);
         goto failed;
       }
+    } else {
+      gst_structure_set (structure,
+          "__lineno__", G_TYPE_INT, current_lineno,
+          "__filename__", G_TYPE_STRING, filename, NULL);
+      structures = g_list_append (structures, structure);
     }
-    g_string_free (l, TRUE);
 
-    gst_structure_set (structure,
-        "__lineno__", G_TYPE_INT, current_lineno,
-        "__filename__", G_TYPE_STRING, filename, NULL);
-    structures = g_list_append (structures, structure);
+    g_string_free (l, TRUE);
     lineno++;
     if (*tmp)
       tmp++;
