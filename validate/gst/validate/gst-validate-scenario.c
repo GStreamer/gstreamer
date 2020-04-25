@@ -2611,6 +2611,43 @@ _find_elements_defined_in_action (GstValidateScenario * scenario,
 }
 
 static GstValidateExecuteActionReturn
+_execute_check_position (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  GstClockTime expected_pos, pos;
+
+  if (!gst_validate_action_get_clocktime (scenario, action,
+          "expected-position", &expected_pos)) {
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
+        SCENARIO_ACTION_EXECUTION_ERROR,
+        "Could not retrieve expected position in: %" GST_PTR_FORMAT,
+        action->structure);
+
+    return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+  }
+
+  if (!_get_position (scenario, NULL, &pos)) {
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
+        SCENARIO_ACTION_EXECUTION_ERROR, "Could not get pipeline position");
+
+    return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+  }
+
+  if (pos != expected_pos) {
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
+        SCENARIO_ACTION_EXECUTION_ERROR,
+        "Pipeline position doesn't match expectations"
+        " got %" GST_TIME_FORMAT " instead of %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (pos), GST_TIME_ARGS (expected_pos));
+
+    return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+  }
+
+  return GST_VALIDATE_EXECUTE_ACTION_OK;
+
+}
+
+static GstValidateExecuteActionReturn
 _execute_set_or_check_property (GstValidateScenario * scenario,
     GstValidateAction * action)
 {
@@ -6020,6 +6057,16 @@ register_action_types (void)
         {NULL}
       }),
       "Request a video key unit", FALSE);
+
+  REGISTER_ACTION_TYPE("check-position", _execute_check_position,
+      ((GstValidateActionParameter[]) {
+          { .name = "expected-position",
+              .description = "The expected pipeline position",
+              .mandatory = TRUE,
+              .types = "GstClockTime",
+              NULL },
+      }),
+      "Check current pipeline position.\n", GST_VALIDATE_ACTION_TYPE_NONE);
   /*  *INDENT-ON* */
 }
 
