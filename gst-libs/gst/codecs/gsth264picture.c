@@ -110,7 +110,7 @@ struct _GstH264Dpb
 };
 
 /**
- * gst_h264_dpb_new:
+ * gst_h264_dpb_new: (skip)
  *
  * Create new #GstH264Dpb
  *
@@ -401,7 +401,8 @@ gst_h264_dpb_get_lowest_frame_num_short_ref (GstH264Dpb * dpb)
 /**
  * gst_h264_dpb_get_pictures_not_outputted:
  * @dpb: a #GstH264Dpb
- * @out: (out) (transfer full): a list of #GstH264Picture
+ * @out: (out) (element-type GstH264Picture) (transfer full): a list
+ *   of #GstH264Picture
  *
  * Retrieve all not-outputted pictures from @dpb
  */
@@ -425,7 +426,8 @@ gst_h264_dpb_get_pictures_not_outputted (GstH264Dpb * dpb, GList ** out)
 /**
  * gst_h264_dpb_get_pictures_short_term_ref:
  * @dpb: a #GstH264Dpb
- * @out: (out) (transfer full): a list of #GstH264Picture
+ * @out: (out) (element-type GstH264Picture) (transfer full): a list
+ *   of #GstH264Picture
  *
  * Retrieve all short-term reference pictures from @dpb
  */
@@ -449,7 +451,8 @@ gst_h264_dpb_get_pictures_short_term_ref (GstH264Dpb * dpb, GList ** out)
 /**
  * gst_h264_dpb_get_pictures_long_term_ref:
  * @dpb: a #GstH264Dpb
- * @out: (out) (transfer full): a list of #GstH264Picture
+ * @out: (out) (element-type GstH264Picture) (transfer full): a list
+ *   of #GstH264Picture
  *
  * Retrieve all long-term reference pictures from @dpb
  */
@@ -474,7 +477,8 @@ gst_h264_dpb_get_pictures_long_term_ref (GstH264Dpb * dpb, GList ** out)
  * gst_h264_dpb_get_pictures_all:
  * @dpb: a #GstH264Dpb
  *
- * Return: (transfer full): a #GArray of #GstH264Picture stored in @dpb
+ * Return: (element-type GstH264Picture) (transfer full): a #GArray of
+ *   #GstH264Picture stored in @dpb
  */
 GArray *
 gst_h264_dpb_get_pictures_all (GstH264Dpb * dpb)

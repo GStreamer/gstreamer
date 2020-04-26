@@ -104,7 +104,7 @@ gst_vp9_picture_get_user_data (GstVp9Picture * picture)
 }
 
 /**
- * gst_vp9_dpb_new:
+ * gst_vp9_dpb_new: (skip)
  *
  * Create new #GstVp9Dpb
  *
