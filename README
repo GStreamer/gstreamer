@@ -3,8 +3,9 @@
   VA-API support to GStreamer
 
   Copyright (C) 2010-2011 Splitted-Desktop Systems
-  Copyright (C) 2011-2014 Intel Corporation
+  Copyright (C) 2011-2020 Intel Corporation
   Copyright (C) 2011 Collabora Ltd.
+  Copyright (C) 2015-2020 Igalia, S.L.
 
 
 License
@@ -41,6 +42,9 @@ GStreamer and helper libraries.
     display. This plugin also features a "headless" mode (DRM) more
     suited to remote transcode scenarios, with faster throughput.
 
+  * `vaapioverlay` is a accelerated compositor that blends or
+    composite different video streams.
+
 
 Features
 --------
@@ -66,31 +70,18 @@ Features
 Requirements
 ------------
 
-Software requirements
-
-  * GStreamer 1.9.x:
-      libgstreamer1.0-dev (>= 1.9.x)
-      libgstreamer-plugins-base1.0-dev (>= 1.9.x)
-      libgstreamer-plugins-bad1.0-dev (>= 1.9.0)
-
-  * Renderers:
-      DRM: libva-dev (>= 1.1.0), libdrm-dev, libudev-dev
-      X11: libva-dev (>= 1.0.1)
-      GLX: libva-dev (>= 1.0.3)
-      Wayland: libva-dev (>= 1.1.0), libwayland-dev (>= 1.0.2)
-
 Hardware requirements
 
-  * Intel Eaglelake (G45)
-  * Intel Ironlake, Sandybridge, Ivybridge, Haswell, Broadwell,
-    Skylake, etc. (HD Graphics)
-  * Intel BayTrail, Braswell
-  * Intel Poulsbo (US15W)
-  * Intel Medfield or Cedar Trail
-  * Hardwares supported by AMD Radeonsi driver, such as the list below
+  * Hardware supported by i965 driver or iHD, such as
+    - Intel Ironlake, Sandybridge, Ivybridge, Haswell, Broadwell,
+      Skylake, etc. (HD Graphics)
+    - Intel BayTrail, Braswell
+    - Intel Poulsbo (US15W)
+    - Intel Medfield or Cedar Trail
+  * Hardware supported by AMD Radeonsi driver, such as the list below
     - AMD Carrizo, Bristol Ridge, Raven Ridge, Picasso, Renoir
     - AMD Tonga, Fiji, Polaris XX, Vega XX, Navi 1X
-  * Hardware supported by Mesa VA gallium state-tracker
+  * Other hardware supported by Mesa VA gallium state-tracker
 
 
 Usage
