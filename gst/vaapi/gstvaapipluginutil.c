@@ -157,6 +157,11 @@ gst_vaapi_get_display_type_from_gl (GstGLDisplayType gl_display_type,
       return GST_VAAPI_DISPLAY_TYPE_EGL;
     }
 #endif
+#if USE_DRM
+    case GST_GL_DISPLAY_TYPE_GBM:{
+      return GST_VAAPI_DISPLAY_TYPE_DRM;
+    }
+#endif
     default:
       /* unsupported display. Still DRM may work. */
       break;
