@@ -602,6 +602,30 @@ gst_d3d11_device_constructed (GObject * object)
     priv->feature_level = selected_level;
   }
 
+  /* if D3D11_CREATE_DEVICE_DEBUG was enabled but couldn't create device,
+   * try it without the flag again */
+  if (FAILED (hr) && (d3d11_flags & D3D11_CREATE_DEVICE_DEBUG) ==
+      D3D11_CREATE_DEVICE_DEBUG) {
+    GST_WARNING_OBJECT (self, "Couldn't create d3d11 device with debug flag");
+
+    d3d11_flags &= ~D3D11_CREATE_DEVICE_DEBUG;
+
+    hr = D3D11CreateDevice ((IDXGIAdapter *) adapter, D3D_DRIVER_TYPE_UNKNOWN,
+        NULL, d3d11_flags, feature_levels, G_N_ELEMENTS (feature_levels),
+        D3D11_SDK_VERSION, &priv->device, &selected_level,
+        &priv->device_context);
+    priv->feature_level = selected_level;
+
+    if (!gst_d3d11_result (hr, NULL)) {
+      /* Retry if the system could not recognize D3D_FEATURE_LEVEL_11_1 */
+      hr = D3D11CreateDevice ((IDXGIAdapter *) adapter, D3D_DRIVER_TYPE_UNKNOWN,
+          NULL, d3d11_flags, &feature_levels[1],
+          G_N_ELEMENTS (feature_levels) - 1, D3D11_SDK_VERSION, &priv->device,
+          &selected_level, &priv->device_context);
+      priv->feature_level = selected_level;
+    }
+  }
+
   if (gst_d3d11_result (hr, NULL)) {
     GST_DEBUG_OBJECT (self, "Selected feature level 0x%x", selected_level);
   } else {
