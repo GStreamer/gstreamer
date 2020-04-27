@@ -84,7 +84,6 @@ struct _GstRTSPClientPrivate
   GstRTSPClientSendMessagesFunc send_messages_func;
   gpointer send_messages_data;
   GDestroyNotify send_messages_notify;
-  guint close_seq;
   GArray *data_seqs;
 
   GstRTSPSessionPool *session_pool;
@@ -608,7 +607,6 @@ gst_rtsp_client_init (GstRTSPClient * client)
   g_mutex_init (&priv->lock);
   g_mutex_init (&priv->send_lock);
   g_mutex_init (&priv->watch_lock);
-  priv->close_seq = 0;
   priv->data_seqs = g_array_new (FALSE, FALSE, sizeof (DataSeq));
   priv->drop_backlog = DEFAULT_DROP_BACKLOG;
   priv->post_session_timeout = DEFAULT_POST_SESSION_TIMEOUT;
@@ -4784,7 +4782,6 @@ do_send_messages (GstRTSPClient * client, GstRTSPMessage * messages,
   guint id = 0;
   GstRTSPResult ret;
   guint i;
-  gboolean closed = FALSE;
 
   /* send the message */
   if (close)
@@ -4793,15 +4790,6 @@ do_send_messages (GstRTSPClient * client, GstRTSPMessage * messages,
   ret = gst_rtsp_watch_send_messages (priv->watch, messages, n_messages, &id);
   if (ret != GST_RTSP_OK)
     goto error;
-
-  /* if close flag is set, store the seq number so we can wait until it's
-   * written to the client to close the connection */
-  if (close)
-    priv->close_seq = id;
-  /* if the returned id is 0 then the TEARDOWN was already sent directly and
-   * we don't have to wait for it asynchronously */
-  if (closed && id == 0)
-    closed = TRUE;
 
   for (i = 0; i < n_messages; i++) {
     if (gst_rtsp_message_get_type (&messages[i]) == GST_RTSP_MESSAGE_DATA) {
@@ -4839,13 +4827,6 @@ do_send_messages (GstRTSPClient * client, GstRTSPMessage * messages,
     }
   }
 
-  if (closed) {
-    GST_INFO ("client %p: sent close message", client);
-    g_mutex_unlock (&priv->send_lock);
-    gst_rtsp_client_close (client);
-    g_mutex_lock (&priv->send_lock);
-  }
-
   return ret == GST_RTSP_OK;
 
   /* ERRORS */
@@ -4870,7 +4851,6 @@ message_sent (GstRTSPWatch * watch, guint cseq, gpointer user_data)
   GstRTSPClientPrivate *priv = client->priv;
   GstRTSPStreamTransport *trans = NULL;
   guint8 channel = 0;
-  gboolean close = FALSE;
 
   g_mutex_lock (&priv->send_lock);
 
@@ -4878,22 +4858,12 @@ message_sent (GstRTSPWatch * watch, guint cseq, gpointer user_data)
     trans = g_hash_table_lookup (priv->transports, GINT_TO_POINTER (channel));
     set_data_seq (client, channel, 0);
   }
-
-  if (priv->close_seq && priv->close_seq == cseq) {
-    GST_INFO ("client %p: sent close message", client);
-    close = TRUE;
-    priv->close_seq = 0;
-  }
-
   g_mutex_unlock (&priv->send_lock);
 
   if (trans) {
     GST_DEBUG_OBJECT (client, "emit 'message-sent' signal");
     gst_rtsp_stream_transport_message_sent (trans);
   }
-
-  if (close)
-    gst_rtsp_client_close (client);
 
   return GST_RTSP_OK;
 }
