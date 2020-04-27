@@ -49,14 +49,8 @@ struct _GESAutoTransition
   GESTrackElement *next_source;
   GESTrackElement *transition;
 
-  GESLayer *layer;
-
-  GESClip *previous_clip;
-  GESClip *next_clip;
   GESClip *transition_clip;
   gboolean positioning;
-
-  gchar *key;
 
   gboolean frozen;
 

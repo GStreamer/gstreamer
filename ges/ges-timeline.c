@@ -980,6 +980,34 @@ ges_timeline_find_auto_transition (GESTimeline * timeline,
   return NULL;
 }
 
+GESAutoTransition *
+ges_timeline_get_auto_transition_at_end (GESTimeline * timeline,
+    GESTrackElement * source)
+{
+  GList *tmp, *auto_transitions;
+  GESAutoTransition *ret = NULL;
+
+  LOCK_DYN (timeline);
+  auto_transitions = g_list_copy_deep (timeline->priv->auto_transitions,
+      (GCopyFunc) gst_object_ref, NULL);
+  UNLOCK_DYN (timeline);
+
+  for (tmp = auto_transitions; tmp; tmp = tmp->next) {
+    GESAutoTransition *auto_trans = (GESAutoTransition *) tmp->data;
+
+    /* We already have a transition linked to one of the elements we want to
+     * find a transition for */
+    if (auto_trans->previous_source == source) {
+      ret = gst_object_ref (auto_trans);
+      break;
+    }
+  }
+
+  g_list_free_full (auto_transitions, gst_object_unref);
+
+  return ret;
+}
+
 static GESAutoTransition *
 _create_auto_transition_from_transitions (GESTimeline * timeline,
     GESTrackElement * prev, GESTrackElement * next,
@@ -1168,12 +1196,12 @@ _edit_auto_transition (GESTimeline * timeline, GESTimelineElement * element,
       }
 
       if (edge == GES_EDGE_END)
-        replace = GES_TIMELINE_ELEMENT (auto_transition->previous_clip);
+        replace = GES_TIMELINE_ELEMENT (auto_transition->previous_source);
       else
-        replace = GES_TIMELINE_ELEMENT (auto_transition->next_clip);
+        replace = GES_TIMELINE_ELEMENT (auto_transition->next_source);
 
-      GST_INFO_OBJECT (element, "Trimming clip %" GES_FORMAT " in place "
-          "of trimming the corresponding auto-transition", GES_ARGS (replace));
+      GST_INFO_OBJECT (element, "Trimming %" GES_FORMAT " in place  of "
+          "trimming the corresponding auto-transition", GES_ARGS (replace));
       return ges_timeline_element_edit (replace, layers, -1, mode, edge,
           position);
     }

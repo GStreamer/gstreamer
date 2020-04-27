@@ -106,6 +106,9 @@ GstDebugCategory * _ges_debug (void);
 G_GNUC_INTERNAL void
 ges_timeline_freeze_auto_transitions (GESTimeline * timeline, gboolean freeze);
 
+G_GNUC_INTERNAL GESAutoTransition *
+ges_timeline_get_auto_transition_at_end (GESTimeline * timeline, GESTrackElement * source);
+
 G_GNUC_INTERNAL gboolean
 ges_timeline_edit (GESTimeline * timeline, GESTimelineElement * element,
     GList * layers, gint64 new_layer_priority, GESEditMode mode, GESEdge edge,
@@ -154,6 +157,11 @@ ges_timeline_add_clip (GESTimeline * timeline, GESClip * clip);
 
 G_GNUC_INTERNAL void
 ges_timeline_remove_clip (GESTimeline * timeline, GESClip * clip);
+
+G_GNUC_INTERNAL void
+ges_auto_transition_set_previous_source (GESAutoTransition * self, GESTrackElement * source);
+
+
 
 G_GNUC_INTERNAL
 void

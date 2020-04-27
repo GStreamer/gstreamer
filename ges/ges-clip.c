@@ -2204,7 +2204,7 @@ ges_clip_set_top_effect_index (GESClip * clip, GESBaseEffect * effect,
 GESClip *
 ges_clip_split (GESClip * clip, guint64 position)
 {
-  GList *tmp;
+  GList *tmp, *transitions = NULL;
   GESClip *new_object;
   GstClockTime start, inpoint, duration, old_duration, new_duration;
   gdouble media_duration_factor;
@@ -2272,6 +2272,7 @@ ges_clip_split (GESClip * clip, guint64 position)
    * binding values */
   track_for_copy = g_hash_table_new_full (NULL, NULL,
       gst_object_unref, gst_object_unref);
+
   /* _add_child will add core elements at the lowest priority and new
    * non-core effects at the lowest effect priority, so we need to add the
    * highest priority children first to preserve the effect order. The
@@ -2279,14 +2280,29 @@ ges_clip_split (GESClip * clip, guint64 position)
   for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
     GESTrackElement *copy, *orig = tmp->data;
     GESTrack *track = ges_track_element_get_track (orig);
+    GESAutoTransition *trans;
+
     /* FIXME: is position - start + inpoint always the correct splitting
      * point for control bindings? What coordinate system are control
      * bindings given in? */
     copy = ges_clip_copy_track_element_into (new_object, orig,
         position - start + inpoint);
-    if (copy && track)
+
+    if (!copy)
+      continue;
+
+    if (track)
       g_hash_table_insert (track_for_copy, gst_object_ref (copy),
           gst_object_ref (track));
+
+    trans = timeline ?
+        ges_timeline_get_auto_transition_at_end (timeline, orig) : NULL;
+
+    if (trans) {
+      trans->frozen = TRUE;
+      ges_auto_transition_set_previous_source (trans, copy);
+      transitions = g_list_append (transitions, trans);
+    }
   }
 
   GES_TIMELINE_ELEMENT_SET_BEING_EDITED (clip);
@@ -2310,7 +2326,14 @@ ges_clip_split (GESClip * clip, guint64 position)
     }
   }
 
+  for (tmp = transitions; tmp; tmp = tmp->next) {
+    GESAutoTransition *trans = tmp->data;
+    trans->frozen = FALSE;
+    ges_auto_transition_update (trans);
+  }
+
   g_hash_table_unref (track_for_copy);
+  g_list_free_full (transitions, gst_object_unref);
 
   return new_object;
 }

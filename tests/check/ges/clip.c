@@ -308,6 +308,136 @@ GST_START_TEST (test_split_direct_absolute_bindings)
 
 GST_END_TEST;
 
+static GESTimelineElement *
+_find_auto_transition (GESTrack * track, GESClip * from_clip, GESClip * to_clip)
+{
+  GstClockTime start, end;
+  GList *tmp, *track_els;
+  GESTimelineElement *ret = NULL;
+  GESLayer *layer0, *layer1;
+
+  layer0 = ges_clip_get_layer (from_clip);
+  layer1 = ges_clip_get_layer (to_clip);
+
+  fail_unless (layer0 == layer1, "%" GES_FORMAT " and %" GES_FORMAT " do not "
+      "share the same layer", GES_ARGS (from_clip), GES_ARGS (to_clip));
+  gst_object_unref (layer1);
+
+  start = GES_TIMELINE_ELEMENT_START (to_clip);
+  end = GES_TIMELINE_ELEMENT_START (from_clip)
+      + GES_TIMELINE_ELEMENT_DURATION (from_clip);
+
+  fail_if (end <= start, "%" GES_FORMAT " starts after %" GES_FORMAT " ends",
+      GES_ARGS (to_clip), GES_ARGS (from_clip));
+
+  track_els = ges_track_get_elements (track);
+
+  for (tmp = track_els; tmp; tmp = tmp->next) {
+    GESTimelineElement *el = tmp->data;
+    if (GES_IS_TRANSITION (el) && el->start == start
+        && (el->start + el->duration) == end) {
+      fail_if (ret, "Found two transitions %" GES_FORMAT " and %" GES_FORMAT
+          " between %" GES_FORMAT " and %" GES_FORMAT " in track %"
+          GST_PTR_FORMAT, GES_ARGS (el), GES_ARGS (ret), GES_ARGS (from_clip),
+          GES_ARGS (to_clip), track);
+      ret = el;
+    }
+  }
+  fail_unless (ret, "Found no transitions between %" GES_FORMAT " and %"
+      GES_FORMAT " in track %" GST_PTR_FORMAT, GES_ARGS (from_clip),
+      GES_ARGS (to_clip), track);
+
+  g_list_free_full (track_els, gst_object_unref);
+
+  fail_unless (GES_IS_CLIP (ret->parent), "Transition %" GES_FORMAT
+      " between %" GES_FORMAT " and %" GES_FORMAT " in track %"
+      GST_PTR_FORMAT " has no parent clip", GES_ARGS (ret),
+      GES_ARGS (from_clip), GES_ARGS (to_clip), track);
+
+  layer1 = ges_clip_get_layer (GES_CLIP (ret->parent));
+
+  fail_unless (layer0 == layer1, "Transition %" GES_FORMAT " between %"
+      GES_FORMAT " and %" GES_FORMAT " in track %" GST_PTR_FORMAT
+      " belongs to layer %" GST_PTR_FORMAT " rather than %" GST_PTR_FORMAT,
+      GES_ARGS (ret), GES_ARGS (from_clip), GES_ARGS (to_clip), track,
+      layer1, layer0);
+
+  gst_object_unref (layer0);
+  gst_object_unref (layer1);
+
+  return ret;
+}
+
+GST_START_TEST (test_split_with_auto_transitions)
+{
+  GESTimeline *timeline;
+  GESLayer *layer;
+  GESTrack *tracks[3];
+  GESTimelineElement *found;
+  GESTimelineElement *prev_trans[3];
+  GESTimelineElement *post_trans[3];
+  GESAsset *asset;
+  GESClip *clip, *split, *prev, *post;
+  guint i;
+
+  ges_init ();
+
+  timeline = ges_timeline_new ();
+
+  ges_timeline_set_auto_transition (timeline, TRUE);
+
+  tracks[0] = GES_TRACK (ges_audio_track_new ());
+  tracks[1] = GES_TRACK (ges_audio_track_new ());
+  tracks[2] = GES_TRACK (ges_video_track_new ());
+
+  for (i = 0; i < 3; i++)
+    fail_unless (ges_timeline_add_track (timeline, tracks[i]));
+
+  layer = ges_timeline_append_layer (timeline);
+  asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
+
+  prev = ges_layer_add_asset (layer, asset, 0, 0, 10, GES_TRACK_TYPE_UNKNOWN);
+  clip = ges_layer_add_asset (layer, asset, 5, 0, 20, GES_TRACK_TYPE_UNKNOWN);
+  post = ges_layer_add_asset (layer, asset, 20, 0, 10, GES_TRACK_TYPE_UNKNOWN);
+
+  fail_unless (prev);
+  fail_unless (clip);
+  fail_unless (post);
+
+  for (i = 0; i < 3; i++) {
+    prev_trans[i] = _find_auto_transition (tracks[i], prev, clip);
+    post_trans[i] = _find_auto_transition (tracks[i], clip, post);
+    /* 3 sources, 2 auto-transitions */
+    assert_num_in_track (tracks[i], 5);
+
+  }
+
+  /* cannot split within a transition */
+  fail_if (ges_clip_split (clip, 5));
+  fail_if (ges_clip_split (clip, 20));
+
+  /* we should keep the same auto-transitions during a split */
+  split = ges_clip_split (clip, 15);
+  fail_unless (split);
+
+  for (i = 0; i < 3; i++) {
+    found = _find_auto_transition (tracks[i], prev, clip);
+    fail_unless (found == prev_trans[i], "Transition between %" GES_FORMAT
+        " and %" GES_FORMAT " changed", GES_ARGS (prev), GES_ARGS (clip));
+
+    found = _find_auto_transition (tracks[i], split, post);
+    fail_unless (found == post_trans[i], "Transition between %" GES_FORMAT
+        " and %" GES_FORMAT " changed", GES_ARGS (clip), GES_ARGS (post));
+  }
+
+  gst_object_unref (timeline);
+  gst_object_unref (asset);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
 static GPtrArray *
 _select_none (GESTimeline * timeline, GESClip * clip,
     GESTrackElement * track_element, guint * called_p)
@@ -3329,6 +3459,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_split_ordering);
   tcase_add_test (tc_chain, test_split_direct_bindings);
   tcase_add_test (tc_chain, test_split_direct_absolute_bindings);
+  tcase_add_test (tc_chain, test_split_with_auto_transitions);
   tcase_add_test (tc_chain, test_clip_group_ungroup);
   tcase_add_test (tc_chain, test_clip_can_group);
   tcase_add_test (tc_chain, test_adding_children_to_track);

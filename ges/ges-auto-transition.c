@@ -39,8 +39,8 @@ static guint auto_transition_signals[LAST_SIGNAL] = { 0 };
 G_DEFINE_TYPE (GESAutoTransition, ges_auto_transition, G_TYPE_OBJECT);
 
 static void
-neighbour_changed_cb (GESClip * clip, GParamSpec * arg G_GNUC_UNUSED,
-    GESAutoTransition * self)
+neighbour_changed_cb (G_GNUC_UNUSED GObject * object,
+    G_GNUC_UNUSED GParamSpec * arg, GESAutoTransition * self)
 {
   gint64 new_duration;
   guint32 layer_prio;
@@ -110,7 +110,36 @@ _track_changed_cb (GESTrackElement * track_element,
 
     g_signal_emit (self, auto_transition_signals[DESTROY_ME], 0);
   }
+}
 
+static void
+_connect_to_source (GESAutoTransition * self, GESTrackElement * source)
+{
+  g_signal_connect (source, "notify::start",
+      G_CALLBACK (neighbour_changed_cb), self);
+  g_signal_connect_after (source, "notify::priority",
+      G_CALLBACK (neighbour_changed_cb), self);
+  g_signal_connect (source, "notify::duration",
+      G_CALLBACK (neighbour_changed_cb), self);
+
+  g_signal_connect (source, "notify::track",
+      G_CALLBACK (_track_changed_cb), self);
+}
+
+static void
+_disconnect_from_source (GESAutoTransition * self, GESTrackElement * source)
+{
+  g_signal_handlers_disconnect_by_func (source, neighbour_changed_cb, self);
+  g_signal_handlers_disconnect_by_func (source, _track_changed_cb, self);
+}
+
+void
+ges_auto_transition_set_previous_source (GESAutoTransition * self,
+    GESTrackElement * source)
+{
+  _disconnect_from_source (self, self->previous_source);
+  _connect_to_source (self, source);
+  self->previous_source = source;
 }
 
 static void
@@ -123,16 +152,8 @@ ges_auto_transition_finalize (GObject * object)
 {
   GESAutoTransition *self = GES_AUTO_TRANSITION (object);
 
-  g_signal_handlers_disconnect_by_func (self->previous_source,
-      neighbour_changed_cb, self);
-  g_signal_handlers_disconnect_by_func (self->next_source, neighbour_changed_cb,
-      self);
-  g_signal_handlers_disconnect_by_func (self->next_source, _track_changed_cb,
-      self);
-  g_signal_handlers_disconnect_by_func (self->previous_source,
-      _track_changed_cb, self);
-
-  g_free (self->key);
+  _disconnect_from_source (self, self->previous_source);
+  _disconnect_from_source (self, self->next_source);
 
   G_OBJECT_CLASS (ges_auto_transition_parent_class)->finalize (object);
 }
@@ -149,7 +170,6 @@ ges_auto_transition_class_init (GESAutoTransitionClass * klass)
   object_class->finalize = ges_auto_transition_finalize;
 }
 
-
 GESAutoTransition *
 ges_auto_transition_new (GESTrackElement * transition,
     GESTrackElement * previous_source, GESTrackElement * next_source)
@@ -161,47 +181,25 @@ ges_auto_transition_new (GESTrackElement * transition,
   self->next_source = next_source;
   self->transition = transition;
 
-  self->previous_clip =
-      GES_CLIP (GES_TIMELINE_ELEMENT_PARENT (previous_source));
-  self->next_clip = GES_CLIP (GES_TIMELINE_ELEMENT_PARENT (next_source));
   self->transition_clip = GES_CLIP (GES_TIMELINE_ELEMENT_PARENT (transition));
 
-  g_signal_connect (previous_source, "notify::start",
-      G_CALLBACK (neighbour_changed_cb), self);
-  g_signal_connect_after (previous_source, "notify::priority",
-      G_CALLBACK (neighbour_changed_cb), self);
-  g_signal_connect (next_source, "notify::start",
-      G_CALLBACK (neighbour_changed_cb), self);
-  g_signal_connect (next_source, "notify::priority",
-      G_CALLBACK (neighbour_changed_cb), self);
-  g_signal_connect (previous_source, "notify::duration",
-      G_CALLBACK (neighbour_changed_cb), self);
-  g_signal_connect (next_source, "notify::duration",
-      G_CALLBACK (neighbour_changed_cb), self);
-
-  g_signal_connect (next_source, "notify::track",
-      G_CALLBACK (_track_changed_cb), self);
-  g_signal_connect (previous_source, "notify::track",
-      G_CALLBACK (_track_changed_cb), self);
+  _connect_to_source (self, previous_source);
+  _connect_to_source (self, next_source);
 
   GST_DEBUG_OBJECT (self, "Created transition %" GST_PTR_FORMAT
       " between %" GST_PTR_FORMAT "[%" GST_TIME_FORMAT
       " - %" GST_TIME_FORMAT "] and: %" GST_PTR_FORMAT
       "[%" GST_TIME_FORMAT " - %" GST_TIME_FORMAT "]"
-      " in layer nb %i, start: %" GST_TIME_FORMAT " duration: %"
-      GST_TIME_FORMAT, transition, previous_source,
+      " in layer nb %" G_GUINT32_FORMAT ", start: %" GST_TIME_FORMAT
+      " duration: %" GST_TIME_FORMAT, transition, previous_source,
       GST_TIME_ARGS (_START (previous_source)),
       GST_TIME_ARGS (_END (previous_source)),
       next_source,
       GST_TIME_ARGS (_START (next_source)),
       GST_TIME_ARGS (_END (next_source)),
-      ges_layer_get_priority (ges_clip_get_layer
-          (self->previous_clip)),
+      GES_TIMELINE_ELEMENT_LAYER_PRIORITY (next_source),
       GST_TIME_ARGS (_START (transition)),
       GST_TIME_ARGS (_DURATION (transition)));
-
-  self->key = g_strdup_printf ("%p%p", self->previous_source,
-      self->next_source);
 
   return self;
 }
@@ -211,5 +209,5 @@ ges_auto_transition_update (GESAutoTransition * self)
 {
   GST_INFO ("Updating info %s",
       GES_TIMELINE_ELEMENT_NAME (self->transition_clip));
-  neighbour_changed_cb (self->previous_clip, NULL, self);
+  neighbour_changed_cb (NULL, NULL, self);
 }
