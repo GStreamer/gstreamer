@@ -106,4 +106,18 @@ private:
     struct SharedRenderData *m_sharedRenderData;
 };
 
+class CreateSurfaceWorker : public QObject
+{
+  Q_OBJECT
+
+public:
+  CreateSurfaceWorker (struct SharedRenderData * rdata);
+  ~CreateSurfaceWorker ();
+
+  bool event(QEvent *ev) override;
+
+private:
+  struct SharedRenderData *m_sharedRenderData;
+};
+
 #endif /* __QT_QUICK_RENDER_H__ */

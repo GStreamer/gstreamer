@@ -104,13 +104,25 @@ void GstAnimationDriver::setNextTime(qint64 ms)
     m_next = ms;
 }
 
+typedef enum
+{
+  STATE_ERROR = -1,
+  STATE_NEW = 0,
+  STATE_WAITING_FOR_WINDOW,
+  STATE_WINDOW_CREATED,
+  STATE_READY,
+} SharedRenderDataState;
+
 struct SharedRenderData
 {
   volatile int refcount;
+  SharedRenderDataState state;
   GMutex lock;
+  GCond cond;
   GstAnimationDriver *m_animationDriver;
   QOpenGLContext *m_context;
   GstBackingSurface *m_surface;
+  QThread *m_renderThread;
 };
 
 static struct SharedRenderData *
@@ -205,18 +217,78 @@ GstQuickRenderer::GstQuickRenderer()
       gl_mem(NULL),
       m_sharedRenderData(NULL)
 {
-    init_debug ();
+  init_debug ();
 }
 
 static gpointer
 dup_shared_render_data (gpointer data, gpointer user_data)
 {
-    struct SharedRenderData *render_data = (struct SharedRenderData *) data;
+  struct SharedRenderData *render_data = (struct SharedRenderData *) data;
 
-    if (render_data)
-      return shared_render_data_ref (render_data);
+  if (render_data)
+    return shared_render_data_ref (render_data);
 
-    return NULL;
+  return NULL;
+}
+
+class CreateSurfaceEvent : public QEvent
+{
+public:
+  CreateSurfaceEvent (CreateSurfaceWorker * worker)
+      : QEvent(CreateSurfaceEvent::type())
+  {
+    m_worker = worker;
+  }
+
+  ~CreateSurfaceEvent()
+  {
+    GST_TRACE ("%p destroying create surface event", this);
+    delete m_worker;
+  }
+
+  static QEvent::Type type()
+  {
+    if (customEventType == QEvent::None) {
+      int generatedType = QEvent::registerEventType();
+      customEventType = static_cast<QEvent::Type>(generatedType);
+    }
+    return customEventType;
+  }
+
+private:
+  static QEvent::Type customEventType;
+  CreateSurfaceWorker *m_worker;
+};
+
+QEvent::Type CreateSurfaceEvent::customEventType = QEvent::None;
+
+
+CreateSurfaceWorker::CreateSurfaceWorker (struct SharedRenderData * rdata)
+{
+  m_sharedRenderData = shared_render_data_ref (rdata);
+}
+
+CreateSurfaceWorker::~CreateSurfaceWorker ()
+{
+  shared_render_data_unref (m_sharedRenderData);
+}
+
+bool CreateSurfaceWorker::event(QEvent * ev)
+{
+    if (ev->type() == CreateSurfaceEvent::type()) {
+        GST_TRACE ("%p creating surface", m_sharedRenderData);
+        /* create the window surface in the main thread */
+        g_mutex_lock (&m_sharedRenderData->lock);
+        m_sharedRenderData->m_surface = new GstBackingSurface;
+        m_sharedRenderData->m_surface->create();
+        m_sharedRenderData->m_surface->moveToThread (m_sharedRenderData->m_renderThread);
+        GST_TRACE ("%p created surface %p", m_sharedRenderData,
+            m_sharedRenderData->m_surface);
+        g_cond_broadcast (&m_sharedRenderData->cond);
+        g_mutex_unlock (&m_sharedRenderData->lock);
+    }
+
+    return QObject::event(ev);
 }
 
 bool GstQuickRenderer::init (GstGLContext * context, GError ** error)
@@ -232,7 +304,6 @@ bool GstQuickRenderer::init (GstGLContext * context, GError ** error)
             "native context");
         return false;
     }
-    QThread *renderThread = QThread::currentThread();
 
     struct SharedRenderData *render_data = NULL, *old_render_data;
     do {
@@ -249,46 +320,101 @@ bool GstQuickRenderer::init (GstGLContext * context, GError ** error)
                 "qt.gl.render.shared.data", old_render_data, render_data,
                 NULL, NULL));
     m_sharedRenderData = render_data;
+    GST_TRACE ("%p retrieved shared render data %p", this, m_sharedRenderData);
 
     g_mutex_lock (&m_sharedRenderData->lock);
-    if (!m_sharedRenderData->m_context) {
-        m_sharedRenderData->m_context = new QOpenGLContext;
-        GST_TRACE ("%p new QOpenGLContext %p", this, m_sharedRenderData->m_context);
-        m_sharedRenderData->m_context->setNativeHandle(qt_native_context);
+    if (m_sharedRenderData->state == STATE_ERROR) {
+        g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_NOT_FOUND,
+            "In an error state from a previous attempt");
+        g_mutex_unlock (&m_sharedRenderData->lock);
+        return false;
+    }
 
-        m_sharedRenderData->m_surface = new GstBackingSurface;
-        m_sharedRenderData->m_surface->create();  /* FIXME: may need to be called on Qt's main thread */
+    if (m_sharedRenderData->state != STATE_READY) {
+        /* this state handling and locking is so that two qtglrenderer's will
+         * not attempt to create an OpenGL context without freeing the previous
+         * OpenGL context and cause a leak.  It also only allows one
+         * CreateSurfaceEvent() to be posted to the main thread
+         * (QCoreApplication::instance()->thread()) while still allowing
+         * multiple waiters to wait for the window to be created */
+        if (m_sharedRenderData->state == STATE_NEW) {
+            QCoreApplication *app = QCoreApplication::instance ();
 
-        gst_gl_context_activate (context, FALSE);
+            if (!app) {
+                g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_NOT_FOUND,
+                    "Could not retrieve QCoreApplication instance");
+                m_sharedRenderData->state = STATE_ERROR;
+                g_mutex_unlock (&m_sharedRenderData->lock);
+                return false;
+            }
 
-        /* Qt does some things that it may require the OpenGL context current in
-         * ->create() so that it has the necessry information to create the
-         * QOpenGLContext from the native handle. This may fail if the OpenGL
-         * context is already current in another thread so we need to deactivate
-         * the context from GStreamer's thread before asking Qt to create the
-         * QOpenGLContext with ->create().
-         */
-        m_sharedRenderData->m_context->create();
-        m_sharedRenderData->m_context->doneCurrent();
+            m_sharedRenderData->m_renderThread = QThread::currentThread();
+            m_sharedRenderData->m_context = new QOpenGLContext;
+            GST_TRACE ("%p new QOpenGLContext %p", this, m_sharedRenderData->m_context);
+            m_sharedRenderData->m_context->setNativeHandle(qt_native_context);
 
-        m_sharedRenderData->m_context->moveToThread (renderThread);
-        if (!m_sharedRenderData->m_context->makeCurrent(m_sharedRenderData->m_surface)) {
-            g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_NOT_FOUND,
-                "Could not make Qt OpenGL context current");
-            /* try to keep the same OpenGL context state */
-            gst_gl_context_activate (context, TRUE);
-            g_mutex_unlock (&m_sharedRenderData->lock);
-            return false;
+            CreateSurfaceWorker *w = new CreateSurfaceWorker (m_sharedRenderData);
+            GST_TRACE ("%p posting create surface event to main thread with "
+                "worker %p", this, w);
+            w->moveToThread (app->thread());
+            app->postEvent (w, new CreateSurfaceEvent (w));
+            m_sharedRenderData->state = STATE_WAITING_FOR_WINDOW;
         }
 
-        if (!gst_gl_context_activate (context, TRUE)) {
-            g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_NOT_FOUND,
-                "Could not make OpenGL context current again");
-            g_mutex_unlock (&m_sharedRenderData->lock);
-            return false;
+        if (m_sharedRenderData->state == STATE_WAITING_FOR_WINDOW) {
+            gint64 end_time = g_get_monotonic_time () + 5 * G_TIME_SPAN_SECOND;
+            while (!m_sharedRenderData->m_surface) {
+                /* XXX: This might deadlock with the main thread if the
+                 * QCoreApplication is not running and will not be able to
+                 * execute.  We only wait for 5 seconds until a better
+                 * approach can be found here */
+                if (!g_cond_wait_until (&m_sharedRenderData->cond,
+                        &m_sharedRenderData->lock, end_time)) {
+                    g_set_error (error, GST_RESOURCE_ERROR,
+                        GST_RESOURCE_ERROR_NOT_FOUND,
+                        "Could not create Qt window within 5 seconds");
+                    m_sharedRenderData->state = STATE_ERROR;
+                    g_mutex_unlock (&m_sharedRenderData->lock);
+                    return false;
+                }
+            }
+
+            GST_TRACE ("%p surface successfully created", this);
+            m_sharedRenderData->state = STATE_WINDOW_CREATED;
+        }
+
+        if (m_sharedRenderData->state == STATE_WINDOW_CREATED) {
+            /* Qt does some things that may require the OpenGL context current
+             * in ->create() so that it has the necessry information to create
+             * the QOpenGLContext from the native handle. This may fail if the
+             * OpenGL context is already current in another thread so we need
+             * to deactivate the context from GStreamer's thread before asking
+             * Qt to create the QOpenGLContext with ->create().
+             */
+            gst_gl_context_activate (context, FALSE);
+            m_sharedRenderData->m_context->create();
+            m_sharedRenderData->m_context->doneCurrent();
+
+            if (!m_sharedRenderData->m_context->makeCurrent(m_sharedRenderData->m_surface)) {
+                g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_NOT_FOUND,
+                    "Could not make Qt OpenGL context current");
+                /* try to keep the same OpenGL context state */
+                gst_gl_context_activate (context, TRUE);
+                m_sharedRenderData->state = STATE_ERROR;
+                g_mutex_unlock (&m_sharedRenderData->lock);
+                return false;
+            }
+
+            if (!gst_gl_context_activate (context, TRUE)) {
+                g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_NOT_FOUND,
+                    "Could not make OpenGL context current again");
+                m_sharedRenderData->state = STATE_ERROR;
+                g_mutex_unlock (&m_sharedRenderData->lock);
+                return false;
+            }
+            m_sharedRenderData->state = STATE_READY;
         }
     }
-    g_mutex_unlock (&m_sharedRenderData->lock);
 
     m_renderControl = new QQuickRenderControl();
     /* Create a QQuickWindow that is associated with our render control. Note that this
@@ -297,7 +423,8 @@ bool GstQuickRenderer::init (GstGLContext * context, GError ** error)
      */
     m_quickWindow = new QQuickWindow(m_renderControl);
     /* after QQuickWindow creation as QQuickRenderControl requires it */
-    m_renderControl->prepareThread (renderThread);
+    m_renderControl->prepareThread (m_sharedRenderData->m_renderThread);
+    g_mutex_unlock (&m_sharedRenderData->lock);
 
     /* Create a QML engine. */
     m_qmlEngine = new QQmlEngine;
