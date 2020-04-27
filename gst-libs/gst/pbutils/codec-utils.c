@@ -1613,7 +1613,7 @@ gst_codec_utils_opus_parse_caps (GstCaps * caps,
   if (channel_mapping_family)
     *channel_mapping_family = f;
 
-  if (!gst_structure_get_int (s, "channels", &c)) {
+  if (!gst_structure_get_int (s, "channels", &c) || c == 0) {
     if (f == 0)
       c = 2;
     else
