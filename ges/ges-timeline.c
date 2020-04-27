@@ -1048,22 +1048,15 @@ ges_timeline_emit_snapping (GESTimeline * timeline, GESTrackElement * elem1,
 
   g_assert (elem1 != elem2);
 
-  if (last_snap_ts != snap_time) {
+  if (GST_CLOCK_TIME_IS_VALID (last_snap_ts))
     g_signal_emit (timeline, ges_timeline_signals[SNAPING_ENDED], 0,
         priv->last_snaped1, priv->last_snaped2, (last_snap_ts));
 
-    /* We want the snap start signal to be emited anyway */
-    timeline->priv->last_snap_ts = GST_CLOCK_TIME_NONE;
-  }
-
-  if (!GST_CLOCK_TIME_IS_VALID (timeline->priv->last_snap_ts)) {
-    priv->last_snaped1 = elem1;
-    priv->last_snaped2 = elem2;
-    timeline->priv->last_snap_ts = snap_time;
-    g_signal_emit (timeline, ges_timeline_signals[SNAPING_STARTED], 0,
-        elem1, elem2, snap_time);
-  }
-
+  priv->last_snaped1 = elem1;
+  priv->last_snaped2 = elem2;
+  timeline->priv->last_snap_ts = snap_time;
+  g_signal_emit (timeline, ges_timeline_signals[SNAPING_STARTED], 0,
+      elem1, elem2, snap_time);
 }
 
 /* Accept @self == NULL, making it use default framerate */

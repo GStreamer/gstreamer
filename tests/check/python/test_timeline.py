@@ -366,6 +366,7 @@ class TestEditing(common.GESSimpleTimelineTest):
             ]
         ])
 
+        # snap to 20
         clip.props.start = 18
         self.assertTimelineTopology([
             [  # Unique layer
@@ -375,6 +376,7 @@ class TestEditing(common.GESSimpleTimelineTest):
         ])
         self.assertEqual(self.snapped_at, [20])
 
+        # no snapping
         clip.props.start = 30
         self.assertTimelineTopology([
             [  # Unique layer
@@ -384,6 +386,7 @@ class TestEditing(common.GESSimpleTimelineTest):
         ])
         self.assertEqual(self.snapped_at, [20, Gst.CLOCK_TIME_NONE])
 
+        # snap to 20
         clip.props.start = 18
         self.assertTimelineTopology([
             [  # Unique layer
@@ -391,8 +394,8 @@ class TestEditing(common.GESSimpleTimelineTest):
                 (GES.TestClip, 20, 10),
             ]
         ])
-        self.assertEqual(self.snapped_at, [20, Gst.CLOCK_TIME_NONE,
-            Gst.CLOCK_TIME_NONE, 20])
+        self.assertEqual(self.snapped_at, [20, Gst.CLOCK_TIME_NONE, 20])
+        # snap to 20 again
         clip.props.start = 19
         self.assertTimelineTopology([
             [  # Unique layer
@@ -400,8 +403,9 @@ class TestEditing(common.GESSimpleTimelineTest):
                 (GES.TestClip, 20, 10),
             ]
         ])
-        self.assertEqual(self.snapped_at, [20, Gst.CLOCK_TIME_NONE,
-            Gst.CLOCK_TIME_NONE, 20])
+        self.assertEqual(
+            self.snapped_at,
+            [20, Gst.CLOCK_TIME_NONE, 20, Gst.CLOCK_TIME_NONE, 20])
 
     def test_rippling_snaps(self):
         self.timeline.props.auto_transition = True
