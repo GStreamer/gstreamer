@@ -673,14 +673,22 @@ gst_video_rate_push_buffer (GstVideoRate * videorate, GstBuffer * outbuf,
   if (videorate->segment.rate < 0.0) {
     if (videorate->to_rate_numerator) {
       /* interpolate next expected timestamp in the segment */
-      videorate->next_ts =
+      GstClockTimeDiff next_ts =
           videorate->segment.base + videorate->segment.stop -
           videorate->base_ts -
           gst_util_uint64_scale (videorate->out_frame_count + 1,
           videorate->to_rate_denominator * GST_SECOND,
           videorate->to_rate_numerator);
 
-      GST_BUFFER_DURATION (outbuf) = push_ts - videorate->next_ts;
+      videorate->next_ts = next_ts < 0 ? GST_CLOCK_TIME_NONE : next_ts;
+
+      GST_BUFFER_DURATION (outbuf) =
+          gst_util_uint64_scale (videorate->out_frame_count,
+          videorate->to_rate_denominator * GST_SECOND,
+          videorate->to_rate_numerator) -
+          gst_util_uint64_scale (videorate->out_frame_count - 1,
+          videorate->to_rate_denominator * GST_SECOND,
+          videorate->to_rate_numerator);
     } else if (next_intime != GST_CLOCK_TIME_NONE) {
       videorate->next_ts = next_intime;
     } else {
