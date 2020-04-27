@@ -114,6 +114,10 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstH264Decoder, gst_object_unref)
 GST_CODECS_API
 GType gst_h264_decoder_get_type (void);
 
+GST_CODECS_API
+void gst_h264_decoder_set_process_ref_pic_lists (GstH264Decoder * self,
+                                                 gboolean process);
+
 G_END_DECLS
 
 #endif /* __GST_H264_DECODER_H__ */
