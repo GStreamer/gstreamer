@@ -307,9 +307,12 @@ qt_opengl_native_context_from_gst_gl_context (GstGLContext * context)
 #if GST_GL_HAVE_WINDOW_X11 && defined (HAVE_QT_X11)
     if (platform == GST_GL_PLATFORM_GLX) {
         GstGLDisplay *display = gst_gl_context_get_display (context);
+        GstGLWindow *window = gst_gl_context_get_window (context);
         Display *xdisplay = (Display *) gst_gl_display_get_handle (display);
+        Window win = gst_gl_window_get_window_handle (window);
+        gst_object_unref (window);
         gst_object_unref (display);
-        return QVariant::fromValue(QGLXNativeContext((GLXContext) handle, xdisplay));
+        return QVariant::fromValue(QGLXNativeContext((GLXContext) handle, xdisplay, win));
     }
 #endif
 #if GST_GL_HAVE_PLATFORM_EGL && (defined (HAVE_QT_WAYLAND) || defined (HAVE_QT_EGLFS) || defined (HAVE_QT_ANDROID))
