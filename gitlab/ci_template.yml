@@ -103,6 +103,12 @@ gst indent:
 
 .gst_build_template: &gst_build
   - echo $MESON_ARGS
+  # Sometimes, gitlab-runner want to reuse
+  # existing docker volumes without cleaning them up...
+  # Make sure the docker volume is clean
+  - rm -rf gst-build || true
+  - rm -rf meson-logs || true
+  - rm -rf validate-logs || true
 
   - curl -L -o clone_manifest_ref.py "https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/${GST_UPSTREAM_BRANCH}/gitlab/clone_manifest_ref.py"
   - python3 clone_manifest_ref.py --manifest manifest.xml --project gst-build --destination gst-build
@@ -235,11 +241,16 @@ build clang fedora x86_64:
       -l "${CI_PROJECT_DIR}/validate-logs/"
       --xunit-file "${CI_PROJECT_DIR}/validate-logs/xunit.xml"
       ${EXTRA_VALIDATE_ARGS}
+  after_script:
+    - mv gst-build/build/meson-logs/ meson-logs
+    # Cleanup everything else to reduce the size
+    # of the docker volume we leave behind
+    - rm -rf gst-build
   artifacts:
     expire_in: '14 days'
     when: always
     paths:
-      - 'gst-build/build/meson-logs/'
+      - 'meson-logs/'
       - 'validate-logs'
       - 'manifest.xml'
     reports:
