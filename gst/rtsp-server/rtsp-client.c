@@ -4784,8 +4784,12 @@ do_send_messages (GstRTSPClient * client, GstRTSPMessage * messages,
   guint id = 0;
   GstRTSPResult ret;
   guint i;
+  gboolean closed = FALSE;
 
   /* send the message */
+  if (close)
+    GST_INFO ("client %p: sending close message", client);
+
   ret = gst_rtsp_watch_send_messages (priv->watch, messages, n_messages, &id);
   if (ret != GST_RTSP_OK)
     goto error;
@@ -4794,6 +4798,10 @@ do_send_messages (GstRTSPClient * client, GstRTSPMessage * messages,
    * written to the client to close the connection */
   if (close)
     priv->close_seq = id;
+  /* if the returned id is 0 then the TEARDOWN was already sent directly and
+   * we don't have to wait for it asynchronously */
+  if (closed && id == 0)
+    closed = TRUE;
 
   for (i = 0; i < n_messages; i++) {
     if (gst_rtsp_message_get_type (&messages[i]) == GST_RTSP_MESSAGE_DATA) {
@@ -4831,6 +4839,13 @@ do_send_messages (GstRTSPClient * client, GstRTSPMessage * messages,
     }
   }
 
+  if (closed) {
+    GST_INFO ("client %p: sent close message", client);
+    g_mutex_unlock (&priv->send_lock);
+    gst_rtsp_client_close (client);
+    g_mutex_lock (&priv->send_lock);
+  }
+
   return ret == GST_RTSP_OK;
 
   /* ERRORS */
@@ -4865,7 +4880,7 @@ message_sent (GstRTSPWatch * watch, guint cseq, gpointer user_data)
   }
 
   if (priv->close_seq && priv->close_seq == cseq) {
-    GST_INFO ("client %p: send close message", client);
+    GST_INFO ("client %p: sent close message", client);
     close = TRUE;
     priv->close_seq = 0;
   }
