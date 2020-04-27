@@ -812,7 +812,7 @@ gst_multi_queue_class_init (GstMultiQueueClass * klass)
    * with name "application/x-gst-multi-queue-stats" with the following fields:
    *
    * - "queues" GST_TYPE_ARRAY    Contains one GstStructure named "queue_%d"
-   *   (where %d is the queue's ID) per internal queue:
+   *   (where \%d is the queue's ID) per internal queue:
    *   - "buffers" G_TYPE_UINT    The queue's current level of buffers
    *   - "bytes" G_TYPE_UINT    The queue's current level of bytes
    *   - "time" G_TYPE_UINT64    The queue's current level of time
