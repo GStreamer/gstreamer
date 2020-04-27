@@ -6,13 +6,13 @@ FROM 'mcr.microsoft.com/windows/servercore:ltsc2019'
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop';"]
 ENV ErrorActionPreference='Stop'
 
-ARG DEFAULT_BRANCH="master"
-
 COPY install_choco.ps1 C:\
 RUN C:\install_choco.ps1
 
 COPY install_toolchain.ps1 C:\
 RUN C:\install_toolchain.ps1
+
+ARG DEFAULT_BRANCH="master"
 
 COPY prepare_gst_env.ps1 C:\
 RUN C:\prepare_gst_env.ps1
