@@ -1279,10 +1279,10 @@ struct _GstH265PredWeightTable
  * @entry_point_offset_minus1: the entry point offset in bytes.
  * @NumPocTotalCurr: calculated NumPocTotalCurr which is used for
  *   decoding process for reference picture set
- * @header_size: the calculated size of the slice_header() in bits.
+ * @header_size: the calculated size of the slice_header\() in bits.
  * @n_emulation_prevention_bytes: number of emulation prevention bytes (EPB)
- *   in this slice_header()
- * @short_term_ref_pic_set_size: the calculated size of short_term_ref_pic_set()
+ *   in this slice_header\()
+ * @short_term_ref_pic_set_size: the calculated size of short_term_ref_pic_set\()
  *   in bits. (Since: 1.18)
  */
 struct _GstH265SliceHdr
