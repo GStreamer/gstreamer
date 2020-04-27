@@ -181,6 +181,7 @@ typedef struct
   GESTrack *track;
   GstPad *pad;                  /* Pad from the track */
   GstPad *ghostpad;
+  gulong track_element_added_sigid;
 
   gulong probe_id;
   GstStream *stream;
@@ -1523,6 +1524,15 @@ clip_track_element_removed_cb (GESClip * clip,
   }
 }
 
+static void
+track_element_added_cb (GESTrack * track, GESTrackElement * element,
+    GESTimeline * timeline)
+{
+  if (GES_IS_SOURCE (element))
+    timeline_tree_create_transitions_for_track_element (timeline->priv->tree,
+        element, ges_timeline_find_auto_transition);
+}
+
 /* returns TRUE if no errors in adding to tracks */
 static gboolean
 _add_clip_children_to_tracks (GESTimeline * timeline, GESClip * clip,
@@ -2281,6 +2291,8 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
   tr_priv = g_new0 (TrackPrivate, 1);
   tr_priv->timeline = timeline;
   tr_priv->track = track;
+  tr_priv->track_element_added_sigid = g_signal_connect (track,
+      "track-element-added", G_CALLBACK (track_element_added_cb), timeline);
 
   update_stream_object (tr_priv);
   gst_stream_collection_add_stream (timeline->priv->stream_collection,
@@ -2398,6 +2410,8 @@ ges_timeline_remove_track (GESTimeline * timeline, GESTrack * track)
     gst_object_unref (track);
     return FALSE;
   }
+
+  g_signal_handler_disconnect (track, tr_priv->track_element_added_sigid);
 
   /* set track state to NULL */
   gst_element_set_state (GST_ELEMENT (track), GST_STATE_NULL);

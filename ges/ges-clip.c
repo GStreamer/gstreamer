@@ -2610,9 +2610,5 @@ ges_clip_add_child_to_track (GESClip * clip, GESTrackElement * child,
     return NULL;
   }
 
-  if (GES_IS_SOURCE (el))
-    timeline_tree_create_transitions_for_track_element (timeline_get_tree
-        (timeline), el, ges_timeline_find_auto_transition);
-
   return el;
 }
