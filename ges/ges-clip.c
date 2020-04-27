@@ -296,7 +296,8 @@ _update_duration_limit (GESClip * self)
     GST_INFO_OBJECT (self, "duration-limit for the clip is %"
         GST_TIME_FORMAT, GST_TIME_ARGS (duration_limit));
 
-    if (_CLOCK_TIME_IS_LESS (duration_limit, element->duration)) {
+    if (_CLOCK_TIME_IS_LESS (duration_limit, element->duration)
+        && !ELEMENT_FLAG_IS_SET (self, GES_TIMELINE_ELEMENT_SET_SIMPLE)) {
       gboolean res;
 
       GST_INFO_OBJECT (self, "Automatically reducing duration to %"
@@ -1849,11 +1850,12 @@ ges_clip_move_to_layer (GESClip * clip, GESLayer * layer)
 {
   gboolean ret = FALSE;
   GESLayer *current_layer;
-  GESTimeline *current_timeline = GES_TIMELINE_ELEMENT_TIMELINE (clip);
+  GESTimelineElement *element;
 
   g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
   g_return_val_if_fail (GES_IS_LAYER (layer), FALSE);
 
+  element = GES_TIMELINE_ELEMENT (clip);
   current_layer = clip->priv->layer;
 
   if (current_layer == layer) {
@@ -1861,38 +1863,33 @@ ges_clip_move_to_layer (GESClip * clip, GESLayer * layer)
     return TRUE;
   }
 
-  gst_object_ref (clip);
 
   if (current_layer == NULL) {
     GST_DEBUG ("Not moving %p, only adding it to %p", clip, layer);
 
-    ret = ges_layer_add_clip (layer, clip);
-    goto done;
+    return ges_layer_add_clip (layer, clip);
   }
 
-  ELEMENT_SET_FLAG (clip, GES_CLIP_IS_MOVING);
-
-  if (current_timeline != layer->timeline) {
+  if (element->timeline != layer->timeline) {
     /* make sure we can perform the can_move_element_check in the timeline
      * of the layer */
     GST_WARNING_OBJECT (layer, "Cannot move clip %" GES_FORMAT " into "
         "the layer because its timeline %" GST_PTR_FORMAT " does not "
         "match the timeline of the layer %" GST_PTR_FORMAT,
-        GES_ARGS (clip), current_timeline, layer->timeline);
-    ret = FALSE;
-    goto done;
+        GES_ARGS (clip), element->timeline, layer->timeline);
+    return FALSE;
   }
 
   if (layer->timeline
-      && !timeline_tree_can_move_element (timeline_get_tree (layer->timeline),
-          GES_TIMELINE_ELEMENT (clip),
-          ges_layer_get_priority (layer),
-          GES_TIMELINE_ELEMENT_START (clip),
-          GES_TIMELINE_ELEMENT_DURATION (clip), NULL)) {
-    GST_INFO_OBJECT (layer, "Clip %" GES_FORMAT " can't move to layer %d",
-        GES_ARGS (clip), ges_layer_get_priority (layer));
-    goto done;
+      && !ELEMENT_FLAG_IS_SET (clip, GES_TIMELINE_ELEMENT_SET_SIMPLE)) {
+    /* move to new layer, also checks moving of toplevel */
+    return timeline_tree_move (timeline_get_tree (layer->timeline),
+        element, (gint64) ges_layer_get_priority (current_layer) -
+        (gint64) ges_layer_get_priority (layer), 0, GES_EDGE_NONE, 0);
   }
+
+  gst_object_ref (clip);
+  ELEMENT_SET_FLAG (clip, GES_CLIP_IS_MOVING);
 
   GST_DEBUG_OBJECT (clip, "moving to layer %p, priority: %d", layer,
       ges_layer_get_priority (layer));
@@ -2250,7 +2247,7 @@ ges_clip_split (GESClip * clip, guint64 position)
   if (timeline && !timeline_tree_can_move_element (timeline_get_tree
           (timeline), element,
           ges_timeline_element_get_layer_priority (element),
-          start, old_duration, NULL)) {
+          start, old_duration)) {
     GST_WARNING_OBJECT (clip,
         "Can not split %" GES_FORMAT " at %" GST_TIME_FORMAT
         " as timeline would be in an illegal" " state.", GES_ARGS (clip),
@@ -2262,7 +2259,7 @@ ges_clip_split (GESClip * clip, guint64 position)
   if (timeline && !timeline_tree_can_move_element (timeline_get_tree
           (timeline), element,
           ges_timeline_element_get_layer_priority (element),
-          position, new_duration, NULL)) {
+          position, new_duration)) {
     GST_WARNING_OBJECT (clip,
         "Can not split %" GES_FORMAT " at %" GST_TIME_FORMAT
         " as timeline would end up in an illegal" " state.", GES_ARGS (clip),

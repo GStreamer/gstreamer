@@ -1045,21 +1045,21 @@ ges_timeline_element_get_timeline (GESTimelineElement * self)
  * @self: A #GESTimelineElement
  * @start: The desired start position of the element in its timeline
  *
- * Sets #GESTimelineElement:start for the element. This may fail if it
- * would place the timeline in an unsupported configuration.
+ * Sets #GESTimelineElement:start for the element. If the element has a
+ * parent, this will also move its siblings with the same shift.
  *
- * Note that if the element's timeline has a
- * #GESTimeline:snapping-distance set, then the element's
- * #GESTimelineElement:start may instead be set to the edge of some other
- * element in the neighbourhood of @start. In such a case, the return
- * value will still be %TRUE on success.
+ * Whilst the element is part of a #GESTimeline, this is the same as
+ * editing the element with ges_timeline_element_edit() under
+ * #GES_EDIT_MODE_NORMAL with #GES_EDGE_NONE. In particular, the
+ * #GESTimelineElement:start of the element may be snapped to a different
+ * timeline time from the one given. In addition, setting may fail if it
+ * would place the timeline in an unsupported configuration.
  *
  * Returns: %TRUE if @start could be set for @self.
  */
 gboolean
 ges_timeline_element_set_start (GESTimelineElement * self, GstClockTime start)
 {
-  gboolean emit_notify = TRUE;
   GESTimelineElementClass *klass;
   GESTimelineElement *toplevel_container, *parent;
 
@@ -1078,18 +1078,18 @@ ges_timeline_element_set_start (GESTimelineElement * self, GstClockTime start)
       && !ELEMENT_FLAG_IS_SET (self, GES_TIMELINE_ELEMENT_SET_SIMPLE)
       && !ELEMENT_FLAG_IS_SET (toplevel_container,
           GES_TIMELINE_ELEMENT_SET_SIMPLE)) {
-    if (!ges_timeline_move_object_simple (self->timeline, self, NULL,
-            GES_EDGE_NONE, start)) {
-      gst_object_unref (toplevel_container);
-      return FALSE;
-    }
 
-    emit_notify = FALSE;
+    gst_object_unref (toplevel_container);
+
+    return ges_timeline_element_edit (self, NULL, -1, GES_EDIT_MODE_NORMAL,
+        GES_EDGE_NONE, start);
   }
   parent = self->parent;
 
   /* FIXME This should not belong to GESTimelineElement */
-  if (toplevel_container &&
+  /* only check if no timeline, otherwise the timeline-tree will handle this
+   * check */
+  if (!self->timeline && toplevel_container &&
       ((gint64) (_START (toplevel_container) + start - _START (self))) < 0 &&
       parent
       && GES_CONTAINER (parent)->children_control_mode == GES_CHILDREN_UPDATE) {
@@ -1107,7 +1107,7 @@ ges_timeline_element_set_start (GESTimelineElement * self, GstClockTime start)
     gint res = klass->set_start (self, start);
     if (res == FALSE)
       return FALSE;
-    if (res == TRUE && emit_notify) {
+    if (res == TRUE) {
       self->start = start;
       g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_START]);
     }
@@ -1238,17 +1238,16 @@ ges_timeline_element_set_max_duration (GESTimelineElement * self,
  * @self: A #GESTimelineElement
  * @duration: The desired duration in its timeline
  *
- * Sets #GESTimelineElement:duration for the element. This may fail if it
- * would place the timeline in an unsupported configuration, or if the
- * element does not have enough internal content to last for the desired
- * @duration.
+ * Sets #GESTimelineElement:duration for the element.
  *
- * Note that if the element's timeline has a
- * #GESTimeline:snapping-distance set, then the element's
- * #GESTimelineElement:duration may instead be adjusted around @duration
- * such that the edge of @self matches the edge of some other element in
- * the neighbourhood. In such a case, the return value will still be %TRUE
- * on success.
+ * Whilst the element is part of a #GESTimeline, this is the same as
+ * editing the element with ges_timeline_element_edit() under
+ * #GES_EDIT_MODE_TRIM with #GES_EDGE_END. In particular, the
+ * #GESTimelineElement:duration of the element may be snapped to a
+ * different timeline time difference from the one given. In addition,
+ * setting may fail if it would place the timeline in an unsupported
+ * configuration, or the element does not have enough internal content to
+ * last the desired duration.
  *
  * Returns: %TRUE if @duration could be set for @self.
  */
@@ -1257,7 +1256,6 @@ ges_timeline_element_set_duration (GESTimelineElement * self,
     GstClockTime duration)
 {
   GESTimelineElementClass *klass;
-  gboolean emit_notify = TRUE;
   GESTimelineElement *toplevel;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
@@ -1269,19 +1267,9 @@ ges_timeline_element_set_duration (GESTimelineElement * self,
   if (self->timeline &&
       !ELEMENT_FLAG_IS_SET (self, GES_TIMELINE_ELEMENT_SET_SIMPLE) &&
       !ELEMENT_FLAG_IS_SET (toplevel, GES_TIMELINE_ELEMENT_SET_SIMPLE)) {
-    gboolean res;
-
-    res = timeline_trim_object (self->timeline, self,
-        GES_TIMELINE_ELEMENT_LAYER_PRIORITY (self), NULL,
+    gst_object_unref (toplevel);
+    return ges_timeline_element_edit (self, NULL, -1, GES_EDIT_MODE_TRIM,
         GES_EDGE_END, self->start + duration);
-
-    if (!res) {
-      gst_object_unref (toplevel);
-
-      return FALSE;
-    }
-
-    emit_notify = res == -1;
   }
   gst_object_unref (toplevel);
 
@@ -1295,7 +1283,7 @@ ges_timeline_element_set_duration (GESTimelineElement * self,
     gint res = klass->set_duration (self, duration);
     if (res == FALSE)
       return FALSE;
-    if (res == TRUE && emit_notify) {
+    if (res == TRUE) {
       self->duration = duration;
       g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_DURATION]);
     }
@@ -2428,9 +2416,15 @@ ges_timeline_element_get_layer_priority (GESTimelineElement * self)
  * out of bounds, or if it would place the timeline in an unsupported
  * configuration.
  *
+ * Note that if you act on a #GESTrackElement, this will edit its parent
+ * #GESClip instead. Moreover, for any #GESTimelineElement, if you select
+ * #GES_EDGE_NONE for #GES_EDIT_MODE_NORMAL or #GES_EDIT_MODE_RIPPLE, this
+ * will edit the toplevel instead, but still in such a way as to make the
+ * #GESTimelineElement:start of @self reach the edit @position.
+ *
  * Note that if the element's timeline has a
- * #GESTimeline:snapping-distance set, then the edit position may be set
- * to the edge of some element in the neighbourhood of @position.
+ * #GESTimeline:snapping-distance set, then the edit position may be
+ * snapped to the edge of some element under the edited element.
  *
  * @new_layer_priority can be used to switch @self, and other elements
  * moved by the edit, to a new layer. New layers may be be created if the
@@ -2455,35 +2449,26 @@ ges_timeline_element_edit (GESTimelineElement * self, GList * layers,
     gint64 new_layer_priority, GESEditMode mode, GESEdge edge, guint64 position)
 {
   GESTimeline *timeline;
+  guint32 layer_prio;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (position), FALSE);
 
   timeline = GES_TIMELINE_ELEMENT_TIMELINE (self);
-  /* FIXME: handle a NULL timeline! */
-  switch (mode) {
-    case GES_EDIT_MODE_RIPPLE:
-      return timeline_ripple_object (timeline, self,
-          new_layer_priority <
-          0 ? GES_TIMELINE_ELEMENT_LAYER_PRIORITY (self) :
-          new_layer_priority, layers, edge, position);
-    case GES_EDIT_MODE_TRIM:
-      return timeline_trim_object (timeline, self,
-          new_layer_priority <
-          0 ? GES_TIMELINE_ELEMENT_LAYER_PRIORITY (self) :
-          new_layer_priority, layers, edge, position);
-    case GES_EDIT_MODE_NORMAL:
-      return timeline_move_object (timeline, self,
-          new_layer_priority <
-          0 ? GES_TIMELINE_ELEMENT_LAYER_PRIORITY (self) :
-          new_layer_priority, layers, edge, position);
-    case GES_EDIT_MODE_ROLL:
-      return timeline_roll_object (timeline, self, layers, edge, position);
-    case GES_EDIT_MODE_SLIDE:
-      GST_ERROR_OBJECT (self, "Sliding not implemented.");
-      return FALSE;
-  }
-  return FALSE;
+  g_return_val_if_fail (timeline, FALSE);
+
+  layer_prio = GES_TIMELINE_ELEMENT_LAYER_PRIORITY (self);
+
+  if (new_layer_priority < 0)
+    new_layer_priority = layer_prio;
+
+  GST_DEBUG_OBJECT (self, "Editing %s at edge %s to position %"
+      GST_TIME_FORMAT " under %s mode, and to layer %" G_GINT64_FORMAT,
+      self->name, ges_edge_name (edge), GST_TIME_ARGS (position),
+      ges_edit_mode_name (mode), new_layer_priority);
+
+  return ges_timeline_edit (timeline, self, layers, new_layer_priority, mode,
+      edge, position);
 }
 
 /**

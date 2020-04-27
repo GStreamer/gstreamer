@@ -144,6 +144,25 @@ register_ges_edit_mode (GType * id)
   *id = g_enum_register_static ("GESEditMode", edit_mode);
 }
 
+const gchar *
+ges_edit_mode_name (GESEditMode mode)
+{
+  switch (mode) {
+    case GES_EDIT_MODE_NORMAL:
+      return "normal";
+    case GES_EDIT_MODE_RIPPLE:
+      return "ripple";
+    case GES_EDIT_MODE_ROLL:
+      return "roll";
+    case GES_EDIT_MODE_TRIM:
+      return "trim";
+    case GES_EDIT_MODE_SLIDE:
+      return "slide";
+    default:
+      return "unknown";
+  }
+}
+
 GType
 ges_edit_mode_get_type (void)
 {

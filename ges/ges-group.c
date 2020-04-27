@@ -436,12 +436,6 @@ _set_duration (GESTimelineElement * element, GstClockTime duration)
     return GES_TIMELINE_ELEMENT_CLASS (parent_class)->set_duration (element,
         duration);
 
-  if (element->timeline
-      && !timeline_tree_can_move_element (timeline_get_tree (element->timeline),
-          element, _PRIORITY (element), element->start, duration, NULL)) {
-    return FALSE;
-  }
-
   if (container->initiated_move == NULL) {
     gboolean expending = (_DURATION (element) < duration);
 

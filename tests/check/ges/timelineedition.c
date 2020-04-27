@@ -376,8 +376,6 @@ GST_START_TEST (test_snapping)
    */
   fail_unless (ges_timeline_element_set_inpoint (GES_TIMELINE_ELEMENT (clip2),
           5));
-  fail_unless (ges_timeline_element_roll_start (GES_TIMELINE_ELEMENT (clip2),
-          60));
   DEEP_CHECK (clip, 30, 5, 32);
   DEEP_CHECK (clip1, 20, 0, 10);
   DEEP_CHECK (clip2, 62, 5, 60);
@@ -912,9 +910,6 @@ GST_START_TEST (test_timeline_edition_mode)
   CHECK_OBJECT_PROPS (trackelement1, 25, 5, 47);
   CHECK_OBJECT_PROPS (trackelement2, 72, 10, 50);
 
-  fail_if (ges_container_edit (clip2, NULL, -1, GES_EDIT_MODE_ROLL,
-          GES_EDGE_START, 59));
-
   ges_deinit ();
 }
 
@@ -1010,8 +1005,6 @@ GST_START_TEST (test_groups)
 
   fail_if (ges_container_edit (GES_CONTAINER (c1), NULL, 2,
           GES_EDIT_MODE_RIPPLE, GES_EDGE_END, 40) == TRUE);
-  fail_if (ges_container_edit (GES_CONTAINER (c1), NULL, 2,
-          GES_EDIT_MODE_RIPPLE, GES_EDGE_END, 30) == TRUE);
   CHECK_CLIP (c, 10, 0, 10, 1);
   CHECK_CLIP (c1, 20, 0, 10, 2);
   CHECK_CLIP (c2, 30, 0, 10, 2);

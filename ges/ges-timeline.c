@@ -146,10 +146,6 @@ struct _GESTimelinePrivate
   GESTrackElement *last_snaped1;
   GESTrackElement *last_snaped2;
 
-  /* This variable is set to %TRUE when it makes sense to update the transitions,
-   * and %FALSE otherwize */
-  gboolean needs_transitions_update;
-
   GESTrack *auto_transition_track;
   GESTrack *new_track;
 
@@ -559,9 +555,9 @@ ges_timeline_class_init (GESTimelineClass * klass)
    * GESTimeline:snapping-distance:
    *
    * The distance (in nanoseconds) at which a #GESTimelineElement being
-   * moved within the timeline should snap to its neighbours. Note that
-   * such a neighbour includes any element in the timeline, including
-   * across separate layers. 0 means no snapping.
+   * moved within the timeline should snap one of its #GESSource-s with
+   * another #GESSource-s edge. See #GESEditMode for which edges can
+   * snap during an edit. 0 means no snapping.
    */
   properties[PROP_SNAPPING_DISTANCE] =
       g_param_spec_uint64 ("snapping-distance", "Snapping distance",
@@ -674,9 +670,14 @@ ges_timeline_class_init (GESTimelineClass * klass)
    * @position: The position where the two objects will snap to
    *
    * Will be emitted whenever an element's movement invokes a snapping
-   * event (usually by its controlling #GESClip being moved) because its
+   * event during an edit (usually of one of its ancestors) because its
    * start or end point lies within the #GESTimeline:snapping-distance of
    * another element's start or end point.
+   *
+   * See #GESEditMode to see what can snap during an edit.
+   *
+   * Note that only up to one snapping-started signal will be emitted per
+   * element edit within a timeline.
    */
   ges_timeline_signals[SNAPING_STARTED] =
       g_signal_new ("snapping-started", G_TYPE_FROM_CLASS (klass),
@@ -692,11 +693,10 @@ ges_timeline_class_init (GESTimelineClass * klass)
    * @position: The position where the two objects were to be snapped to
    *
    * Will be emitted whenever a snapping event ends. After a snap event
-   * has started (see #GESTimeline::snapping-started), it can end because
-   * the element whose movement created the snap event has since moved
-   * outside of the #GESTimeline:snapping-distance before its position was
-   * committed. It can also end because the element's movement was ended
-   * by a timeline being committed.
+   * has started (see #GESTimeline::snapping-started), it can later end
+   * because either another timeline edit has occurred (which may or may
+   * not have created a new snapping event), or because the timeline has
+   * been committed.
    */
   ges_timeline_signals[SNAPING_ENDED] =
       g_signal_new ("snapping-ended", G_TYPE_FROM_CLASS (klass),
@@ -805,7 +805,6 @@ ges_timeline_init (GESTimeline * self)
   self->priv->last_snap_ts = GST_CLOCK_TIME_NONE;
 
   priv->priv_tracks = NULL;
-  priv->needs_transitions_update = TRUE;
 
   priv->all_elements =
       g_hash_table_new_full (g_str_hash, g_str_equal, g_free, gst_object_unref);
@@ -1029,8 +1028,8 @@ _create_auto_transition_from_transitions (GESTimeline * timeline,
 }
 
 void
-ges_timeline_emit_snapping (GESTimeline * timeline, GESTimelineElement * elem1,
-    GESTimelineElement * elem2, GstClockTime snap_time)
+ges_timeline_emit_snapping (GESTimeline * timeline, GESTrackElement * elem1,
+    GESTrackElement * elem2, GstClockTime snap_time)
 {
   GESTimelinePrivate *priv = timeline->priv;
   GstClockTime last_snap_ts = timeline->priv->last_snap_ts;
@@ -1048,15 +1047,6 @@ ges_timeline_emit_snapping (GESTimeline * timeline, GESTimelineElement * elem1,
   }
 
   g_assert (elem1 != elem2);
-  if (GES_IS_CLIP (elem1)) {
-    g_assert (GES_CONTAINER_CHILDREN (elem1));
-    elem1 = GES_CONTAINER_CHILDREN (elem1)->data;
-  }
-
-  if (GES_IS_CLIP (elem2)) {
-    g_assert (GES_CONTAINER_CHILDREN (elem2));
-    elem2 = GES_CONTAINER_CHILDREN (elem2)->data;
-  }
 
   if (last_snap_ts != snap_time) {
     g_signal_emit (timeline, ges_timeline_signals[SNAPING_ENDED], 0,
@@ -1067,10 +1057,9 @@ ges_timeline_emit_snapping (GESTimeline * timeline, GESTimelineElement * elem1,
   }
 
   if (!GST_CLOCK_TIME_IS_VALID (timeline->priv->last_snap_ts)) {
-    priv->last_snaped1 = (GESTrackElement *) elem1;
-    priv->last_snaped2 = (GESTrackElement *) elem2;
+    priv->last_snaped1 = elem1;
+    priv->last_snaped2 = elem2;
     timeline->priv->last_snap_ts = snap_time;
-
     g_signal_emit (timeline, ges_timeline_signals[SNAPING_STARTED], 0,
         elem1, elem2, snap_time);
   }
@@ -1129,91 +1118,14 @@ done:
 }
 
 
-gboolean
-ges_timeline_trim_object_simple (GESTimeline * timeline,
-    GESTimelineElement * element, guint32 new_layer_priority,
-    GList * layers, GESEdge edge, guint64 position, gboolean snapping)
-{
-
-  return timeline_trim_object (timeline, element, new_layer_priority, layers,
-      edge, position);
-}
-
-gboolean
-timeline_ripple_object (GESTimeline * timeline, GESTimelineElement * obj,
-    gint new_layer_priority, GList * layers, GESEdge edge, guint64 position)
-{
-  gboolean res = TRUE;
-  guint64 new_duration;
-  GstClockTimeDiff diff;
-
-  switch (edge) {
-    case GES_EDGE_NONE:
-      GST_DEBUG ("Simply rippling");
-      diff = GST_CLOCK_DIFF (position, _START (obj));
-
-      timeline->priv->needs_transitions_update = FALSE;
-      res = timeline_tree_ripple (timeline->priv->tree,
-          (gint64) GES_TIMELINE_ELEMENT_LAYER_PRIORITY (obj) -
-          (gint64) new_layer_priority, diff, obj,
-          GES_EDGE_NONE, timeline->priv->snapping_distance);
-      timeline->priv->needs_transitions_update = TRUE;
-
-      break;
-    case GES_EDGE_END:
-      GST_DEBUG ("Rippling end");
-
-      timeline->priv->needs_transitions_update = FALSE;
-      new_duration =
-          CLAMP (GST_CLOCK_DIFF (obj->start, position), 0,
-          GST_CLOCK_TIME_IS_VALID (obj->
-              maxduration) ? GST_CLOCK_DIFF (obj->inpoint,
-              obj->maxduration) : GST_CLOCK_TIME_NONE);
-      res =
-          timeline_tree_ripple (timeline->priv->tree,
-          (gint64) GES_TIMELINE_ELEMENT_LAYER_PRIORITY (obj) -
-          (gint64) new_layer_priority, _DURATION (obj) - new_duration, obj,
-          GES_EDGE_END, timeline->priv->snapping_distance);
-      timeline->priv->needs_transitions_update = TRUE;
-
-      GST_DEBUG ("Done Rippling end");
-      break;
-    case GES_EDGE_START:
-      GST_INFO ("Ripple start doesn't make sense, trimming instead");
-      if (!timeline_trim_object (timeline, obj, -1, layers, edge, position))
-        goto error;
-      break;
-    default:
-      GST_DEBUG ("Can not ripple edge: %i", edge);
-
-      break;
-  }
-
-  return res;
-
-error:
-
-  return FALSE;
-}
-
-gboolean
-timeline_slide_object (GESTimeline * timeline, GESTrackElement * obj,
-    GList * layers, GESEdge edge, guint64 position)
-{
-
-  /* FIXME implement me! */
-  GST_FIXME_OBJECT (timeline, "Slide mode editing not implemented yet");
-
-  return FALSE;
-}
-
-static gboolean
-_trim_transition (GESTimeline * timeline, GESTimelineElement * element,
-    GESEdge edge, GstClockTime position)
+static gint
+_edit_auto_transition (GESTimeline * timeline, GESTimelineElement * element,
+    GList * layers, gint64 new_layer_priority, GESEditMode mode, GESEdge edge,
+    GstClockTime position)
 {
   GList *tmp;
-  GESLayer *layer = ges_timeline_get_layer (timeline,
-      GES_TIMELINE_ELEMENT_LAYER_PRIORITY (element));
+  guint32 layer_prio = ges_timeline_element_get_layer_priority (element);
+  GESLayer *layer = ges_timeline_get_layer (timeline, layer_prio);
 
   if (!ges_layer_get_auto_transition (layer)) {
     gst_object_unref (layer);
@@ -1222,86 +1134,83 @@ _trim_transition (GESTimeline * timeline, GESTimelineElement * element,
 
   gst_object_unref (layer);
   for (tmp = timeline->priv->auto_transitions; tmp; tmp = tmp->next) {
+    GESTimelineElement *replace;
     GESAutoTransition *auto_transition = tmp->data;
 
     if (GES_TIMELINE_ELEMENT (auto_transition->transition) == element ||
         GES_TIMELINE_ELEMENT (auto_transition->transition_clip) == element) {
-      /* Trimming an auto transition means trimming its neighboors */
-      if (!auto_transition->positioning) {
-        if (edge == GES_EDGE_END) {
-          ges_container_edit (GES_CONTAINER (auto_transition->previous_clip),
-              NULL, -1, GES_EDIT_MODE_TRIM, GES_EDGE_END, position);
-        } else {
-          ges_container_edit (GES_CONTAINER (auto_transition->next_clip),
-              NULL, -1, GES_EDIT_MODE_TRIM, GES_EDGE_START, position);
-        }
-
-        return TRUE;
+      if (auto_transition->positioning) {
+        GST_ERROR_OBJECT (element, "Trying to edit an auto-transition "
+            "whilst it is being positioned");
+        return FALSE;
+      }
+      if (new_layer_priority != layer_prio) {
+        GST_WARNING_OBJECT (element, "Cannot edit an auto-transition to a "
+            "new layer");
+        return FALSE;
+      }
+      if (mode != GES_EDIT_MODE_TRIM) {
+        GST_WARNING_OBJECT (element, "Cannot edit an auto-transition "
+            "under the edit mode %i", mode);
+        return FALSE;
       }
 
-      return FALSE;
+      if (edge == GES_EDGE_END)
+        replace = GES_TIMELINE_ELEMENT (auto_transition->previous_clip);
+      else
+        replace = GES_TIMELINE_ELEMENT (auto_transition->next_clip);
+
+      GST_INFO_OBJECT (element, "Trimming clip %" GES_FORMAT " in place "
+          "of trimming the corresponding auto-transition", GES_ARGS (replace));
+      return ges_timeline_element_edit (replace, layers, -1, mode, edge,
+          position);
     }
   }
 
-  return FALSE;
+  return -1;
 }
 
 gboolean
-timeline_trim_object (GESTimeline * timeline, GESTimelineElement * object,
-    guint32 new_layer_priority, GList * layers, GESEdge edge, guint64 position)
-{
-  if ((GES_IS_TRANSITION (object) || GES_IS_TRANSITION_CLIP (object)) &&
-      !ELEMENT_FLAG_IS_SET (object, GES_TIMELINE_ELEMENT_SET_SIMPLE)) {
-    return _trim_transition (timeline, object, edge, position);
-  }
-
-  return timeline_tree_trim (timeline->priv->tree,
-      GES_TIMELINE_ELEMENT (object), (gint64)
-      ges_timeline_element_get_layer_priority (GES_TIMELINE_ELEMENT (object)) -
-      (gint64) new_layer_priority,
-      edge == GES_EDGE_END ? GST_CLOCK_DIFF (position,
-          _START (object) + _DURATION (object)) : GST_CLOCK_DIFF (position,
-          GES_TIMELINE_ELEMENT_START (object)), edge,
-      timeline->priv->snapping_distance);
-}
-
-gboolean
-timeline_roll_object (GESTimeline * timeline, GESTimelineElement * element,
-    GList * layers, GESEdge edge, guint64 position)
-{
-  return timeline_tree_roll (timeline->priv->tree,
-      element,
-      (edge == GES_EDGE_END) ?
-      GST_CLOCK_DIFF (position, _END (element)) :
-      GST_CLOCK_DIFF (position, _START (element)),
-      edge, timeline->priv->snapping_distance);
-}
-
-gboolean
-timeline_move_object (GESTimeline * timeline, GESTimelineElement * object,
-    guint32 new_layer_priority, GList * layers, GESEdge edge, guint64 position)
-{
-  gboolean ret = FALSE;
-  GstClockTimeDiff offset = edge == GES_EDGE_END ?
-      GST_CLOCK_DIFF (position, _START (object) + _DURATION (object)) :
-      GST_CLOCK_DIFF (position, GES_TIMELINE_ELEMENT_START (object));
-
-  ret = timeline_tree_move (timeline->priv->tree,
-      GES_TIMELINE_ELEMENT (object), (gint64)
-      ges_timeline_element_get_layer_priority (GES_TIMELINE_ELEMENT (object)) -
-      (gint64) new_layer_priority, offset, edge,
-      timeline->priv->snapping_distance);
-
-  return ret;
-}
-
-gboolean
-ges_timeline_move_object_simple (GESTimeline * timeline,
-    GESTimelineElement * element, GList * layers, GESEdge edge,
+ges_timeline_edit (GESTimeline * timeline, GESTimelineElement * element,
+    GList * layers, gint64 new_layer_priority, GESEditMode mode, GESEdge edge,
     guint64 position)
 {
-  return timeline_move_object (timeline, element,
-      ges_timeline_element_get_layer_priority (element), NULL, edge, position);
+  GstClockTimeDiff edge_diff = (edge == GES_EDGE_END ?
+      GST_CLOCK_DIFF (position, element->start + element->duration) :
+      GST_CLOCK_DIFF (position, element->start));
+  gint64 prio_diff = (gint64) ges_timeline_element_get_layer_priority (element)
+      - new_layer_priority;
+  gint res = -1;
+
+  if ((GES_IS_TRANSITION (element) || GES_IS_TRANSITION_CLIP (element)))
+    res = _edit_auto_transition (timeline, element, layers, new_layer_priority,
+        mode, edge, position);
+
+  if (res != -1)
+    return res;
+
+  switch (mode) {
+    case GES_EDIT_MODE_RIPPLE:
+      return timeline_tree_ripple (timeline->priv->tree, element, prio_diff,
+          edge_diff, edge, timeline->priv->snapping_distance);
+    case GES_EDIT_MODE_TRIM:
+      return timeline_tree_trim (timeline->priv->tree, element, prio_diff,
+          edge_diff, edge, timeline->priv->snapping_distance);
+    case GES_EDIT_MODE_NORMAL:
+      return timeline_tree_move (timeline->priv->tree, element, prio_diff,
+          edge_diff, edge, timeline->priv->snapping_distance);
+    case GES_EDIT_MODE_ROLL:
+      if (prio_diff != 0) {
+        GST_WARNING_OBJECT (element, "Cannot roll an element to a new layer");
+        return FALSE;
+      }
+      return timeline_tree_roll (timeline->priv->tree, element,
+          edge_diff, edge, timeline->priv->snapping_distance);
+    case GES_EDIT_MODE_SLIDE:
+      GST_ERROR_OBJECT (element, "Sliding not implemented.");
+      return FALSE;
+  }
+  return FALSE;
 }
 
 void

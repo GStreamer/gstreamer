@@ -88,37 +88,11 @@ GstDebugCategory * _ges_debug (void);
 
 #define SUPRESS_UNUSED_WARNING(a) (void)a
 
-G_GNUC_INTERNAL gboolean
-timeline_ripple_object         (GESTimeline *timeline, GESTimelineElement *obj,
-                                gint new_layer_priority,
-                                GList * layers, GESEdge edge,
-                                guint64 position);
 
 G_GNUC_INTERNAL gboolean
-timeline_slide_object          (GESTimeline *timeline, GESTrackElement *obj,
-                                    GList * layers, GESEdge edge, guint64 position);
-
-G_GNUC_INTERNAL gboolean
-timeline_roll_object           (GESTimeline *timeline, GESTimelineElement *obj,
-                                GList * layers, GESEdge edge, guint64 position);
-
-G_GNUC_INTERNAL gboolean
-timeline_trim_object           (GESTimeline *timeline, GESTimelineElement * object,
-                                guint32 new_layer_priority, GList * layers, GESEdge edge,
-                                guint64 position);
-G_GNUC_INTERNAL gboolean
-ges_timeline_trim_object_simple (GESTimeline * timeline, GESTimelineElement * obj,
-                                 guint32 new_layer_priority, GList * layers, GESEdge edge,
-                                 guint64 position, gboolean snapping);
-
-G_GNUC_INTERNAL gboolean
-ges_timeline_move_object_simple (GESTimeline * timeline, GESTimelineElement * object,
-                                 GList * layers, GESEdge edge, guint64 position);
-
-G_GNUC_INTERNAL gboolean
-timeline_move_object           (GESTimeline *timeline, GESTimelineElement * object,
-                                guint32 new_layer_priority, GList * layers, GESEdge edge,
-                                guint64 position);
+ges_timeline_edit (GESTimeline * timeline, GESTimelineElement * element,
+    GList * layers, gint64 new_layer_priority, GESEditMode mode, GESEdge edge,
+    guint64 position);
 
 G_GNUC_INTERNAL void
 timeline_add_group             (GESTimeline *timeline,

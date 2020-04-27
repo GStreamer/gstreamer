@@ -13,19 +13,18 @@ gboolean timeline_tree_can_move_element   (GNode *root,
                                            GESTimelineElement *element,
                                            guint32 priority,
                                            GstClockTime start,
-                                           GstClockTime duration,
-                                           GList *moving_track_elements);
+                                           GstClockTime duration);
 
 gboolean timeline_tree_ripple             (GNode *root,
+                                           GESTimelineElement *element,
                                            gint64 layer_priority_offset,
                                            GstClockTimeDiff offset,
-                                           GESTimelineElement *rippled_element,
-                                           GESEdge moving_edge,
+                                           GESEdge edge,
                                            GstClockTime snapping_distance);
 
 void ges_timeline_emit_snapping           (GESTimeline * timeline,
-                                           GESTimelineElement * elem1,
-                                           GESTimelineElement * elem2,
+                                           GESTrackElement * elem1,
+                                           GESTrackElement * elem2,
                                            GstClockTime snap_time);
 
 gboolean timeline_tree_trim               (GNode *root,

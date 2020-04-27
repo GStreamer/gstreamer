@@ -1199,10 +1199,11 @@ ges_track_add_element (GESTrack * track, GESTrackElement * object)
 
   timeline = track->priv->timeline;
   ges_timeline_element_set_timeline (el, timeline);
+  /* check that we haven't broken the timeline configuration by adding this
+   * element to the track */
   if (timeline
       && !timeline_tree_can_move_element (timeline_get_tree (timeline), el,
-          GES_TIMELINE_ELEMENT_LAYER_PRIORITY (el), el->start, el->duration,
-          NULL)) {
+          GES_TIMELINE_ELEMENT_LAYER_PRIORITY (el), el->start, el->duration)) {
     GST_WARNING_OBJECT (track,
         "Could not add the track element %" GES_FORMAT
         " to the track because it breaks the timeline " "configuration rules",

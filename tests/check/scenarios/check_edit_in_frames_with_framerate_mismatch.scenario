@@ -13,11 +13,11 @@ check-last-sample, sinkpad-caps="video/x-raw", timecode-frame-number=100
 
 edit, element-name=clip, edit-mode=normal, position=1.0
 
-edit, element-name=clip, edit-mode=edit_trim, source-frame=60
+edit, element-name=clip, edit-mode=edit_trim, edge=start, source-frame=60
 edit, element-name=clip, position=0
 commit;
 check-last-sample, sinkpad-caps="video/x-raw", timecode-frame-number=60
 
-edit, element-name=clip, edit-mode=edit_trim, edit-edge=end, source-frame=120
+edit, element-name=clip, edit-mode=edit_trim, edge=start, source-frame=120
 check-ges-properties, element-name=clip, start=0.5
 stop

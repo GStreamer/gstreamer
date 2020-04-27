@@ -395,8 +395,7 @@ GST_START_TEST (test_single_layer_automatic_transition)
 
   transition = objects->next->next->data;
   assert_is_type (transition, GES_TYPE_TRANSITION_CLIP);
-  assert_equals_int (_START (transition), 500);
-  assert_equals_uint64 (_DURATION (transition), 750);
+  CHECK_OBJECT_PROPS (transition, 500, 0, 750);
   g_list_free_full (objects, gst_object_unref);
 
   fail_if (ges_timeline_element_set_start (src1, 250));

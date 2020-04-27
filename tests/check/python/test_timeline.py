@@ -504,14 +504,14 @@ class TestEditing(common.GESSimpleTimelineTest):
 
     def test_trim_start(self):
         clip = self.append_clip()
-        self.assertTrue(clip.edit([], -1, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, 10))
+        self.assertTrue(clip.edit([], -1, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_START, 10))
         self.assertTimelineTopology([
             [  # Unique layer
                 (GES.TestClip, 10, 10),
             ]
         ])
 
-        self.assertFalse(clip.edit([], -1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_NONE, 0))
+        self.assertFalse(clip.edit([], -1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 0))
         self.assertTimelineTopology([
             [  # Unique layer
                 (GES.TestClip, 10, 10),
