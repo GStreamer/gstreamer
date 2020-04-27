@@ -256,6 +256,10 @@ GST_VIDEO_API
 gchar *   gst_video_content_light_level_to_string    (const GstVideoContentLightLevel * linfo);
 
 GST_VIDEO_API
+gboolean  gst_video_content_light_level_is_equal     (const GstVideoContentLightLevel * linfo,
+                                                      const GstVideoContentLightLevel * other);
+
+GST_VIDEO_API
 gboolean  gst_video_content_light_level_from_caps    (GstVideoContentLightLevel * linfo,
                                                       const GstCaps * caps);
 

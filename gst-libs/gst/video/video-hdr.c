@@ -381,6 +381,29 @@ gst_video_content_light_level_to_string (const GstVideoContentLightLevel *
 }
 
 /**
+ * gst_video_content_light_level_is_equal:
+ * @linfo: a #GstVideoContentLightLevel
+ * @other: a #GstVideoContentLightLevel
+ *
+ * Checks equality between @linfo and @other.
+ *
+ * Returns: %TRUE if @linfo and @other are equal.
+ *
+ * Since: 1.20
+ */
+gboolean
+gst_video_content_light_level_is_equal (const GstVideoContentLightLevel * linfo,
+    const GstVideoContentLightLevel * other)
+{
+  g_return_val_if_fail (linfo != NULL, FALSE);
+  g_return_val_if_fail (other != NULL, FALSE);
+
+  return (linfo->max_content_light_level == other->max_content_light_level &&
+      linfo->max_frame_average_light_level ==
+      other->max_frame_average_light_level);
+}
+
+/**
  * gst_video_content_light_level_from_caps:
  * @linfo: a #GstVideoContentLightLevel
  * @caps: a #GstCaps
