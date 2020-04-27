@@ -869,9 +869,64 @@ set_edit_move_values (GESTimelineElement * element, EditData * data)
   return set_layer_priority (element, data);
 }
 
+static gboolean
+set_edit_trim_start_inpoint_value (GESTimelineElement * element,
+    EditData * data)
+{
+  GstClockTime new_inpoint = _clock_time_minus_diff (element->inpoint,
+      data->offset, NULL);
+  if (!GST_CLOCK_TIME_IS_VALID (new_inpoint)) {
+    GST_INFO_OBJECT (element, "Cannot trim start of %" GES_FORMAT
+        " with offset %" G_GINT64_FORMAT " because it would result in an "
+        "invalid in-point", GES_ARGS (element), data->offset);
+    return FALSE;
+  }
+  data->inpoint = new_inpoint;
+  return TRUE;
+}
+
+static gboolean
+set_edit_trim_start_non_core_children (GESTimelineElement * clip,
+    GstClockTimeDiff offset, GHashTable * edit_table)
+{
+  GList *tmp;
+  GESTimelineElement *child;
+  GESTrackElement *el;
+  EditData *data;
+
+  /* need to set in-point of active non-core children to keep their
+   * internal content at the same timeline position. This also ensures
+   * the duration-limit will not be broken */
+  for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
+    child = tmp->data;
+    el = tmp->data;
+    if (ges_track_element_has_internal_source (el)
+        && ges_track_element_is_active (el)
+        && !GES_TRACK_ELEMENT_IS_CORE (child)) {
+
+      GST_INFO_OBJECT (child, "Setting track element %s to trim in-point "
+          "with offset %" G_GINT64_FORMAT " since the parent clip %"
+          GES_FORMAT " is being trimmed at its start", child->name, offset,
+          GES_ARGS (clip));
+
+      if (g_hash_table_contains (edit_table, child)) {
+        GST_ERROR_OBJECT (child, "Already set to be edited");
+        return FALSE;
+      }
+
+      data = new_edit_data (EDIT_TRIM_START, offset, 0);
+      g_hash_table_insert (edit_table, child, data);
+      if (!set_edit_trim_start_inpoint_value (child, data))
+        return FALSE;
+    }
+  }
+  return TRUE;
+}
+
 /* trim the start of a clip or a track element */
 static gboolean
-set_edit_trim_start_values (GESTimelineElement * element, EditData * data)
+set_edit_trim_start_values (GESTimelineElement * element, EditData * data,
+    GHashTable * edit_table)
 {
   GstClockTime new_start =
       _clock_time_minus_diff (element->start, data->offset, NULL);
@@ -892,18 +947,16 @@ set_edit_trim_start_values (GESTimelineElement * element, EditData * data)
   }
   _CHECK_END (element, new_start, new_duration);
 
-  if (!GES_IS_TRACK_ELEMENT (element)
-      || ges_track_element_has_internal_source (GES_TRACK_ELEMENT (element))) {
-    GstClockTime new_inpoint =
-        _clock_time_minus_diff (element->inpoint, data->offset, NULL);
-    if (!GST_CLOCK_TIME_IS_VALID (new_inpoint)) {
-      GST_INFO_OBJECT (element, "Cannot trim start of %" GES_FORMAT
-          " with offset %" G_GINT64_FORMAT " because it would result in an "
-          "invalid in-point", GES_ARGS (element), data->offset);
+  if (GES_IS_CLIP (element)) {
+    if (!set_edit_trim_start_inpoint_value (element, data))
       return FALSE;
-    }
-
-    data->inpoint = new_inpoint;
+    if (!set_edit_trim_start_non_core_children (element, data->offset,
+            edit_table))
+      return FALSE;
+  } else if (GES_IS_TRACK_ELEMENT (element)
+      && ges_track_element_has_internal_source (GES_TRACK_ELEMENT (element))) {
+    if (!set_edit_trim_start_inpoint_value (element, data))
+      return FALSE;
   }
   data->start = new_start;
   data->duration = new_duration;
@@ -955,13 +1008,14 @@ set_edit_trim_end_values (GESTimelineElement * element, EditData * data)
 
 /* handles clips and track elements with no parents */
 static gboolean
-set_clip_edit_values (GESTimelineElement * element, EditData * data)
+set_clip_edit_values (GESTimelineElement * element, EditData * data,
+    GHashTable * edit_table)
 {
   switch (data->mode) {
     case EDIT_MOVE:
       return set_edit_move_values (element, data);
     case EDIT_TRIM_START:
-      return set_edit_trim_start_values (element, data);
+      return set_edit_trim_start_values (element, data, edit_table);
     case EDIT_TRIM_END:
       return set_edit_trim_end_values (element, data);
   }
@@ -1094,7 +1148,7 @@ replace_group_with_clip_edits (GNode * root, GESTimelineElement * group,
       }
       clip_data = new_edit_data (clip_mode, offset, layer_offset);
       g_hash_table_insert (edit_table, clip, clip_data);
-      if (!set_clip_edit_values (clip, clip_data))
+      if (!set_clip_edit_values (clip, clip_data, edit_table))
         goto error;
     }
   }
@@ -1131,7 +1185,7 @@ timeline_tree_set_element_edit_values (GNode * root, GHashTable * edits)
     if (GES_IS_GROUP (element))
       res = replace_group_with_clip_edits (root, element, edits);
     else
-      res = set_clip_edit_values (element, edit_data);
+      res = set_clip_edit_values (element, edit_data, edits);
     if (!res)
       goto error;
   }

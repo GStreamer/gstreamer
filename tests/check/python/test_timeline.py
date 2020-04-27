@@ -522,6 +522,89 @@ class TestEditing(common.GESSimpleTimelineTest):
             ]
         ])
 
+    def test_trim_non_core(self):
+        clip = self.append_clip()
+        self.assertTrue(clip.set_inpoint(12))
+        self.assertTrue(clip.set_max_duration(30))
+        self.assertEqual(clip.get_duration_limit(), 18)
+        for child in clip.get_children(False):
+            self.assertEqual(child.get_inpoint(), 12)
+            self.assertEqual(child.get_max_duration(), 30)
+
+        effect0 = GES.Effect.new("textoverlay")
+        effect0.set_has_internal_source(True)
+        self.assertTrue(effect0.set_inpoint(5))
+        self.assertTrue(effect0.set_max_duration(20))
+        self.assertTrue(clip.add(effect0))
+        self.assertEqual(clip.get_duration_limit(), 15)
+
+        effect1 = GES.Effect.new("agingtv")
+        effect1.set_has_internal_source(False)
+        self.assertTrue(clip.add(effect1))
+
+        effect2 = GES.Effect.new("textoverlay")
+        effect2.set_has_internal_source(True)
+        self.assertTrue(effect2.set_inpoint(8))
+        self.assertTrue(effect2.set_max_duration(18))
+        self.assertTrue(clip.add(effect2))
+        self.assertEqual(clip.get_duration_limit(), 10)
+
+        effect3 = GES.Effect.new("textoverlay")
+        effect3.set_has_internal_source(True)
+        self.assertTrue(effect3.set_inpoint(20))
+        self.assertTrue(effect3.set_max_duration(22))
+        self.assertTrue(effect3.set_active(False))
+        self.assertTrue(clip.add(effect3))
+        self.assertEqual(clip.get_duration_limit(), 10)
+
+        self.assertTrue(clip.set_start(10))
+        self.assertTrue(clip.set_duration(10))
+
+        # cannot trim to a 0 because effect0 would have a negative in-point
+        self.assertFalse(
+            clip.edit([], -1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 0))
+
+        self.assertEqual(clip.start, 10)
+        self.assertEqual(clip.inpoint, 12)
+        self.assertEqual(effect0.inpoint, 5)
+        self.assertEqual(effect1.inpoint, 0)
+        self.assertEqual(effect2.inpoint, 8)
+        self.assertEqual(effect3.inpoint, 20)
+
+        self.assertTrue(
+            clip.edit([], -1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 5))
+
+        self.assertEqual(clip.start, 5)
+        self.assertEqual(clip.duration, 15)
+        self.assertEqual(clip.get_duration_limit(), 15)
+
+        for child in clip.get_children(False):
+            self.assertEqual(child.start, 5)
+            self.assertEqual(child.duration, 15)
+
+        self.assertEqual(clip.inpoint, 7)
+        self.assertEqual(effect0.inpoint, 0)
+        self.assertEqual(effect1.inpoint, 0)
+        self.assertEqual(effect2.inpoint, 3)
+        self.assertEqual(effect3.inpoint, 20)
+
+        self.assertTrue(
+            clip.edit([], -1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 15))
+
+        self.assertEqual(clip.start, 15)
+        self.assertEqual(clip.duration, 5)
+        self.assertEqual(clip.get_duration_limit(), 5)
+
+        for child in clip.get_children(False):
+            self.assertEqual(child.start, 15)
+            self.assertEqual(child.duration, 5)
+
+        self.assertEqual(clip.inpoint, 17)
+        self.assertEqual(effect0.inpoint, 10)
+        self.assertEqual(effect1.inpoint, 0)
+        self.assertEqual(effect2.inpoint, 13)
+        self.assertEqual(effect3.inpoint, 20)
+
     def test_ripple_end(self):
         clip = self.append_clip()
         clip.set_max_duration(20)
