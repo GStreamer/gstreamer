@@ -1707,7 +1707,7 @@ GST_START_TEST (test_play_timeout_connection)
           session) == GST_RTSP_STS_OK);
   sleep (2);
   fail_unless (gst_rtsp_session_pool_cleanup (pool) == 1);
-  sleep (2);
+  sleep (3);
 
   request = create_request (conn, GST_RTSP_TEARDOWN, NULL);
 

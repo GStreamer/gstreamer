@@ -106,6 +106,7 @@ struct _GstRTSPClientPrivate
 
   guint content_length_limit;
 
+  gboolean had_session;
   guint rtsp_ctrl_timeout_id;
   guint rtsp_ctrl_timeout_cnt;
 
@@ -2554,7 +2555,10 @@ rtsp_ctrl_timeout_cb (gpointer user_data)
 
   priv->rtsp_ctrl_timeout_cnt += RTSP_CTRL_CB_INTERVAL;
 
-  if (priv->rtsp_ctrl_timeout_cnt > RTSP_CTRL_TIMEOUT_VALUE) {
+  if ((!priv->had_session
+          && priv->rtsp_ctrl_timeout_cnt > RTSP_CTRL_TIMEOUT_VALUE)
+      || (priv->had_session
+          && priv->rtsp_ctrl_timeout_cnt > priv->post_session_timeout)) {
     GST_DEBUG ("rtsp control session timeout id=%u expired, closing client.",
         priv->rtsp_ctrl_timeout_id);
     g_mutex_lock (&priv->lock);
@@ -2567,23 +2571,6 @@ rtsp_ctrl_timeout_cb (gpointer user_data)
   }
 
   return res;
-}
-
-static gboolean
-rtsp_ctrl_connection_timeout_cb (gpointer user_data)
-{
-  GstRTSPClient *client = (GstRTSPClient *) user_data;
-  GstRTSPClientPrivate *priv = client->priv;
-
-  GST_DEBUG ("rtsp control connection timeout id=%u expired, closing client.",
-      priv->rtsp_ctrl_timeout_id);
-  g_mutex_lock (&priv->lock);
-  priv->rtsp_ctrl_timeout_id = 0;
-  priv->rtsp_ctrl_timeout_cnt = 0;
-  g_mutex_unlock (&priv->lock);
-  gst_rtsp_client_close (client);
-
-  return G_SOURCE_REMOVE;
 }
 
 static void
@@ -2807,6 +2794,8 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
         g_strdup (pipelined_request_id),
         g_strdup (gst_rtsp_session_get_sessionid (session)));
   }
+  /* Remember that we had at least one session in the past */
+  priv->had_session = TRUE;
   rtsp_ctrl_timeout_remove (priv);
 
   if (!klass->configure_client_media (client, media, stream, ctx))
@@ -3755,26 +3744,26 @@ client_session_removed (GstRTSPSessionPool * pool, GstRTSPSession * session,
 
   g_mutex_lock (&priv->lock);
   client_unwatch_session (client, session, NULL);
-  g_mutex_unlock (&priv->lock);
 
   if (!priv->sessions && priv->rtsp_ctrl_timeout_id == 0) {
     if (priv->post_session_timeout > 0) {
-      g_mutex_lock (&priv->lock);
-
-      timer_src = g_timeout_source_new_seconds (priv->post_session_timeout);
-      g_source_set_callback (timer_src, rtsp_ctrl_connection_timeout_cb,
-          client, NULL);
+      timer_src = g_timeout_source_new_seconds (RTSP_CTRL_CB_INTERVAL);
+      g_source_set_callback (timer_src, rtsp_ctrl_timeout_cb, client, NULL);
       priv->rtsp_ctrl_timeout_cnt = 0;
       priv->rtsp_ctrl_timeout_id = g_source_attach (timer_src,
           priv->watch_context);
       g_source_unref (timer_src);
       GST_DEBUG ("rtsp control setting up connection timeout id=%u.",
           priv->rtsp_ctrl_timeout_id);
-
       g_mutex_unlock (&priv->lock);
     } else if (priv->post_session_timeout == 0) {
+      g_mutex_unlock (&priv->lock);
       gst_rtsp_client_close (client);
+    } else {
+      g_mutex_unlock (&priv->lock);
     }
+  } else {
+    g_mutex_unlock (&priv->lock);
   }
 }
 
