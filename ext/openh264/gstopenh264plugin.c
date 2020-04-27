@@ -47,7 +47,7 @@ plugin_init (GstPlugin * plugin)
    * ABI without changing the SONAME.
    */
   OpenH264Version libver = WelsGetCodecVersion ();
-  if (memcmp (&libver, &g_stCodecVersion, sizeof (libver))) {
+  if (memcmp (&libver, &g_stCodecVersion, sizeof (libver)) == 0) {
     gst_element_register (plugin, "openh264dec", GST_RANK_MARGINAL,
         GST_TYPE_OPENH264DEC);
     gst_element_register (plugin, "openh264enc", GST_RANK_MARGINAL,
