@@ -538,7 +538,7 @@ gst_d3d11_vp8_dec_copy_frame_params (GstD3D11Vp8Dec * self,
 
 static void
 gst_d3d11_vp8_dec_copy_reference_frames (GstD3D11Vp8Dec * self,
-    GstVp8Picture * picture, DXVA_PicParams_VP8 * params)
+    DXVA_PicParams_VP8 * params)
 {
   GstVp8Decoder *decoder = GST_VP8_DECODER (self);
   GstD3D11DecoderOutputView *view;
@@ -585,7 +585,7 @@ gst_d3d11_vp8_dec_copy_reference_frames (GstD3D11Vp8Dec * self,
 
 static void
 gst_d3d11_vp8_dec_copy_segmentation_params (GstD3D11Vp8Dec * self,
-    GstVp8Picture * picture, GstVp8Parser * parser, DXVA_PicParams_VP8 * params)
+    GstVp8Parser * parser, DXVA_PicParams_VP8 * params)
 {
   const GstVp8Segmentation *seg = &parser->segmentation;
   gint i;
@@ -808,9 +808,8 @@ gst_d3d11_vp8_dec_decode_picture (GstVp8Decoder * decoder,
   pic_params.StatusReportFeedbackNumber = 1;
 
   gst_d3d11_vp8_dec_copy_frame_params (self, picture, parser, &pic_params);
-  gst_d3d11_vp8_dec_copy_reference_frames (self, picture, &pic_params);
-  gst_d3d11_vp8_dec_copy_segmentation_params (self, picture, parser,
-      &pic_params);
+  gst_d3d11_vp8_dec_copy_reference_frames (self, &pic_params);
+  gst_d3d11_vp8_dec_copy_segmentation_params (self, parser, &pic_params);
 
   return gst_d3d11_vp8_dec_submit_picture_data (self, picture, &pic_params);
 }
