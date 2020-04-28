@@ -35,6 +35,9 @@ GST_DEBUG_CATEGORY_EXTERN (gst_mf_utils_debug);
 #define MAKE_RAW_FORMAT_CAPS(format) \
     "video/x-raw, format = (string) " format
 
+/* No GUID is defined for "Y16 " in mfapi.h, but it's used by several devices */
+DEFINE_MEDIATYPE_GUID (MFVideoFormat_Y16, FCC ('Y16 '));
+
 static struct
 {
   const GUID &mf_format;
@@ -58,6 +61,7 @@ static struct
   {MFVideoFormat_P016,   MAKE_RAW_FORMAT_CAPS ("P016"),  GST_VIDEO_FORMAT_P016_LE},
   {MFVideoFormat_v210,   MAKE_RAW_FORMAT_CAPS ("v210"),  GST_VIDEO_FORMAT_v210},
   {MFVideoFormat_v216,   MAKE_RAW_FORMAT_CAPS ("v216"),  GST_VIDEO_FORMAT_v216},
+  {MFVideoFormat_Y16,    MAKE_RAW_FORMAT_CAPS ("GRAY16_LE"),  GST_VIDEO_FORMAT_GRAY16_LE},
 };
 
 static struct

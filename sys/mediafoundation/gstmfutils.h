@@ -40,7 +40,7 @@ G_BEGIN_DECLS
 
 #define GST_MF_VIDEO_FORMATS \
   "{ BGRx, BGRA, BGR, RGB15, RGB16, VUYA, YUY2, YVYU, UYVY, NV12, YV12, I420," \
-  " P010, P016, v210, v216 }"
+  " P010, P016, v210, v216, GRAY16_LE }"
 
 GstVideoFormat gst_mf_video_subtype_to_video_format (const GUID *subtype);
 
