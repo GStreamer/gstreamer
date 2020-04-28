@@ -1283,6 +1283,21 @@ GST_START_TEST (test_pb_utils_h265_profiles)
   profile = gst_codec_utils_h265_get_profile (profile_tier_level,
       sizeof (profile_tier_level));
   fail_unless_equals_string (profile, "scalable-main-444");
+
+  fill_h265_profile (profile_tier_level, 11, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1);
+  profile = gst_codec_utils_h265_get_profile (profile_tier_level,
+      sizeof (profile_tier_level));
+  fail_unless_equals_string (profile, "screen-extended-main-444-10");
+
+  fill_h265_profile (profile_tier_level, 11, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1);
+  profile = gst_codec_utils_h265_get_profile (profile_tier_level,
+      sizeof (profile_tier_level));
+  fail_unless_equals_string (profile, "screen-extended-main-444");
+
+  fill_h265_profile (profile_tier_level, 11, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1);
+  profile = gst_codec_utils_h265_get_profile (profile_tier_level,
+      sizeof (profile_tier_level));
+  fail_unless_equals_string (profile, "screen-extended-high-throughput-444-14");
 }
 
 GST_END_TEST;
