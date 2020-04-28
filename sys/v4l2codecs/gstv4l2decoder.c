@@ -255,8 +255,7 @@ gst_v4l2_decoder_set_sink_fmt (GstV4l2Decoder * self, guint32 pix_fmt,
   }
 
   if (format.fmt.pix_mp.pixelformat != pix_fmt
-      || format.fmt.pix_mp.width != width
-      || format.fmt.pix_mp.height != height) {
+      || format.fmt.pix_mp.width < width || format.fmt.pix_mp.height < height) {
     GST_WARNING_OBJECT (self, "Failed to set sink format to %"
         GST_FOURCC_FORMAT " %ix%i", GST_FOURCC_ARGS (pix_fmt), width, height);
     errno = EINVAL;
