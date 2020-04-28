@@ -102,7 +102,6 @@ struct _GESClipPrivate
   GList *copied_track_elements;
   GESLayer *copied_layer;
   GESTimeline *copied_timeline;
-  gboolean prevent_priority_offset_update;
   gboolean prevent_resort;
 
   gboolean updating_max_duration;
@@ -350,21 +349,10 @@ _child_priority_changed (GESContainer * container, GESTimelineElement * child)
 {
   /* we do not change the rest of the clip in response to a change in
    * the child priority */
-  guint32 min_prio, max_prio;
-  GESClipPrivate *priv = GES_CLIP (container)->priv;
-
   GST_DEBUG_OBJECT (container, "TimelineElement %" GES_FORMAT
       " priority changed to %u", GES_ARGS (child), _PRIORITY (child));
 
-  if (!priv->prevent_priority_offset_update) {
-    /* Update mapping */
-    _get_priority_range (container, &min_prio, &max_prio);
-
-    _ges_container_set_priority_offset (container, child,
-        min_prio - _PRIORITY (child));
-  }
-
-  if (!priv->prevent_resort) {
+  if (!(GES_CLIP (container))->priv->prevent_resort) {
     _ges_container_sort_children (container);
     _compute_height (container);
   }
@@ -749,9 +737,12 @@ _set_priority (GESTimelineElement * element, guint32 priority)
 {
   GESClipPrivate *priv = GES_CLIP (element)->priv;
   GList *tmp;
-  guint32 min_prio, max_prio;
+  guint32 min_prio, max_prio, min_child_prio = G_MAXUINT32;
   gboolean prev_prevent = priv->prevent_duration_limit_update;
   GESContainer *container = GES_CONTAINER (element);
+
+  for (tmp = container->children; tmp; tmp = g_list_next (tmp))
+    min_child_prio = MIN (min_child_prio, _PRIORITY (tmp->data));
 
   /* send the new 'priority' to determine what the new 'min_prio' should
    * be for the clip */
@@ -759,30 +750,15 @@ _set_priority (GESTimelineElement * element, guint32 priority)
 
   /* offsets will remain constant for the children */
   priv->prevent_resort = TRUE;
-  priv->prevent_priority_offset_update = TRUE;
   priv->prevent_duration_limit_update = TRUE;
   for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
-    guint32 track_element_prio;
-    GESTimelineElement *child = (GESTimelineElement *) tmp->data;
-    gint off = _ges_container_get_priority_offset (container, child);
-
-    if (off >= LAYER_HEIGHT) {
-      GST_ERROR ("%s child %s as a priority offset %d >= LAYER_HEIGHT %d"
-          " ==> clamping it to 0", GES_TIMELINE_ELEMENT_NAME (element),
-          GES_TIMELINE_ELEMENT_NAME (child), off, LAYER_HEIGHT);
-      off = 0;
-    }
-
-    /* Want the priority offset 'off' of each child to stay the same with
-     * the new priority. The offset is calculated from
-     *   offset = min_priority - child_priority
-     */
-    track_element_prio = min_prio - off;
+    GESTimelineElement *child = tmp->data;
+    guint32 track_element_prio = min_prio + (child->priority - min_child_prio);
 
     if (track_element_prio > max_prio) {
-      GST_WARNING ("%p priority of %i, is outside of the its containing "
-          "layer space. (%d/%d) setting it to the maximum it can be",
-          container, priority, min_prio, max_prio);
+      GST_WARNING_OBJECT (container, "%s priority of %i, is outside of its "
+          "containing layer space. (%d/%d) setting it to the maximum it can be",
+          child->name, priority, min_prio, max_prio);
 
       track_element_prio = max_prio;
     }
@@ -792,7 +768,6 @@ _set_priority (GESTimelineElement * element, guint32 priority)
    * offsets. As such, the height and duration-limit remains the same as
    * well. */
   priv->prevent_resort = FALSE;
-  priv->prevent_priority_offset_update = FALSE;
   priv->prevent_duration_limit_update = prev_prevent;
 
   return TRUE;
@@ -861,7 +836,7 @@ _add_child (GESContainer * container, GESTimelineElement * element)
 {
   GESClip *self = GES_CLIP (container);
   GESClipClass *klass = GES_CLIP_GET_CLASS (GES_CLIP (container));
-  guint max_prio, min_prio;
+  guint32 max_prio, min_prio;
   GESTrack *track;
   GESTimeline *timeline = GES_TIMELINE_ELEMENT_TIMELINE (container);
   GESClipPrivate *priv = self->priv;
@@ -1031,8 +1006,6 @@ _child_added (GESContainer * container, GESTimelineElement * element)
 
   g_signal_connect (element, "notify", G_CALLBACK (_child_property_changed_cb),
       self);
-
-  _child_priority_changed (container, element);
 
   if (_IS_CORE_CHILD (element))
     _update_max_duration (container);

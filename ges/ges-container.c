@@ -58,7 +58,6 @@ typedef struct
 
   GstClockTime start_offset;
   GstClockTime duration_offset;
-  gint32 priority_offset;
 
   gulong start_notifyid;
   gulong duration_notifyid;
@@ -696,28 +695,6 @@ _ges_container_set_height (GESContainer * container, guint32 height)
     GST_DEBUG_OBJECT (container, "Updating height %i", container->height);
     g_object_notify (G_OBJECT (container), "height");
   }
-}
-
-gint
-_ges_container_get_priority_offset (GESContainer * container,
-    GESTimelineElement * elem)
-{
-  ChildMapping *map = g_hash_table_lookup (container->priv->mappings, elem);
-
-  g_return_val_if_fail (map, 0);
-
-  return map->priority_offset;
-}
-
-void
-_ges_container_set_priority_offset (GESContainer * container,
-    GESTimelineElement * elem, gint32 priority_offset)
-{
-  ChildMapping *map = g_hash_table_lookup (container->priv->mappings, elem);
-
-  g_return_if_fail (map);
-
-  map->priority_offset = priority_offset;
 }
 
 /**********************************************
