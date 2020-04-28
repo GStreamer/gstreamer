@@ -687,10 +687,21 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     g_signal_emit (identity, gst_identity_signals[SIGNAL_HANDOFF], 0, buf);
 
   if (trans->segment.format == GST_FORMAT_TIME) {
-    rundts = gst_segment_to_running_time (&trans->segment,
-        GST_FORMAT_TIME, GST_BUFFER_DTS (buf));
-    runpts = gst_segment_to_running_time (&trans->segment,
-        GST_FORMAT_TIME, GST_BUFFER_PTS (buf));
+    if (trans->segment.rate > 0) {
+      runpts = gst_segment_to_running_time (&trans->segment,
+          GST_FORMAT_TIME, GST_BUFFER_PTS (buf));
+      rundts = gst_segment_to_running_time (&trans->segment,
+          GST_FORMAT_TIME, GST_BUFFER_DTS (buf));
+    } else {
+      runpts = gst_segment_to_running_time (&trans->segment,
+          GST_FORMAT_TIME, GST_CLOCK_TIME_IS_VALID (buf->duration)
+          && GST_CLOCK_TIME_IS_VALID (buf->pts) ? buf->pts +
+          buf->duration : buf->pts);
+      rundts = gst_segment_to_running_time (&trans->segment,
+          GST_FORMAT_TIME, GST_CLOCK_TIME_IS_VALID (buf->duration)
+          && GST_CLOCK_TIME_IS_VALID (buf->dts) ? buf->dts +
+          buf->duration : buf->dts);
+    }
   }
 
   if (GST_CLOCK_TIME_IS_VALID (rundts))

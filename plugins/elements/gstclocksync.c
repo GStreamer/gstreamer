@@ -338,10 +338,21 @@ gst_clock_sync_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     GstClockTime runtimestamp = 0;
     GstClockTime rundts, runpts;
 
-    rundts = gst_segment_to_running_time (&clocksync->segment,
-        GST_FORMAT_TIME, GST_BUFFER_DTS (buf));
-    runpts = gst_segment_to_running_time (&clocksync->segment,
-        GST_FORMAT_TIME, GST_BUFFER_PTS (buf));
+    if (clocksync->segment.rate > 0.0) {
+      rundts = gst_segment_to_running_time (&clocksync->segment,
+          GST_FORMAT_TIME, GST_BUFFER_DTS (buf));
+      runpts = gst_segment_to_running_time (&clocksync->segment,
+          GST_FORMAT_TIME, GST_BUFFER_PTS (buf));
+    } else {
+      runpts = gst_segment_to_running_time (&clocksync->segment,
+          GST_FORMAT_TIME, GST_CLOCK_TIME_IS_VALID (buf->duration)
+          && GST_CLOCK_TIME_IS_VALID (buf->pts) ? buf->pts +
+          buf->duration : buf->pts);
+      rundts = gst_segment_to_running_time (&clocksync->segment,
+          GST_FORMAT_TIME, GST_CLOCK_TIME_IS_VALID (buf->duration)
+          && GST_CLOCK_TIME_IS_VALID (buf->dts) ? buf->dts +
+          buf->duration : buf->dts);
+    }
 
     if (GST_CLOCK_TIME_IS_VALID (rundts))
       runtimestamp = rundts;
