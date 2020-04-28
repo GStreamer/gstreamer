@@ -762,24 +762,14 @@ gst_rtsp_client_finalize (GObject * obj)
 
   GST_INFO ("finalize client %p", client);
 
-  if (priv->rtsp_ctrl_timeout_id != 0) {
-    GST_DEBUG ("Killing leftover timeout GSource for client %p", client);
-    g_source_destroy (g_main_context_find_source_by_id (priv->watch_context,
-            priv->rtsp_ctrl_timeout_id));
-    priv->rtsp_ctrl_timeout_id = 0;
-    priv->rtsp_ctrl_timeout_cnt = 0;
-  }
+  /* the watch and related state should be cleared before finalize
+   * as the watch actually holds a strong reference to the client */
+  g_assert (priv->watch == NULL);
+  g_assert (priv->watch_context == NULL);
+  g_assert (priv->rtsp_ctrl_timeout_id == 0);
 
-  if (priv->watch)
-    gst_rtsp_watch_set_flushing (priv->watch, TRUE);
   gst_rtsp_client_set_send_func (client, NULL, NULL, NULL);
   gst_rtsp_client_set_send_messages_func (client, NULL, NULL, NULL);
-
-  if (priv->watch)
-    g_source_destroy ((GSource *) priv->watch);
-
-  if (priv->watch_context)
-    g_main_context_unref (priv->watch_context);
 
   /* all sessions should have been removed by now. We keep a ref to
    * the client object for the session removed handler. The ref is
@@ -1316,6 +1306,9 @@ gst_rtsp_client_close (GstRTSPClient * client)
     gst_rtsp_client_set_send_func (client, NULL, NULL, NULL);
     gst_rtsp_client_set_send_messages_func (client, NULL, NULL, NULL);
     rtsp_ctrl_timeout_remove (priv);
+  }
+
+  if (priv->watch_context) {
     g_main_context_unref (priv->watch_context);
     priv->watch_context = NULL;
   }
@@ -5049,6 +5042,12 @@ handle_tunnel (GstRTSPClient * client)
     priv->watch = NULL;
     gst_rtsp_client_set_send_func (client, NULL, NULL, NULL);
     gst_rtsp_client_set_send_messages_func (client, NULL, NULL, NULL);
+    rtsp_ctrl_timeout_remove (priv);
+  }
+
+  if (priv->watch_context) {
+    g_main_context_unref (priv->watch_context);
+    priv->watch_context = NULL;
   }
 
   return GST_RTSP_STS_OK;
@@ -5145,8 +5144,15 @@ client_watch_notify (GstRTSPClient * client)
   GST_INFO ("client %p: watch destroyed", client);
   priv->watch = NULL;
   /* remove all sessions if the media says so and so drop the extra client ref */
+  gst_rtsp_client_set_send_func (client, NULL, NULL, NULL);
+  gst_rtsp_client_set_send_messages_func (client, NULL, NULL, NULL);
   rtsp_ctrl_timeout_remove (priv);
   gst_rtsp_client_session_filter (client, cleanup_session, &closed);
+  if (priv->watch_context) {
+    g_main_context_unref (priv->watch_context);
+    priv->watch_context = NULL;
+  }
+
   if (closed)
     g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_CLOSED], 0, NULL);
   g_object_unref (client);
