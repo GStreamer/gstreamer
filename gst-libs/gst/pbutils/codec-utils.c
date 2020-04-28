@@ -1169,7 +1169,7 @@ gst_codec_utils_h265_get_profile (const guint8 * profile_tier_level, guint len)
   if (profile)
     return profile;
 
-  if (profile_idc >= 4 && profile_idc <= 10 && len >= 11) {
+  if (profile_idc >= 4 && profile_idc <= 11 && len >= 11) {
     GstH265ExtensionProfile ext_profile = { 0, };
 
     /*
@@ -1237,9 +1237,10 @@ gst_codec_utils_h265_get_profile (const guint8 * profile_tier_level, guint len)
             &ext_profile.lower_bit_rate_constraint_flag, 1))
       return NULL;
 
-    if (profile_idc == 5 || profile_idc == 9 || profile_idc == 10 ||
+    if (profile_idc == 5 || profile_idc == 9 ||
+        profile_idc == 10 || profile_idc == 11 ||
         profile_compatibility_flags[5] || profile_compatibility_flags[9] ||
-        profile_compatibility_flags[10]) {
+        profile_compatibility_flags[10] || profile_compatibility_flags[11]) {
       /* Bit 53 - general_max_14bit_constraint_flag */
       if (!gst_bit_reader_get_bits_uint8 (&br,
               &ext_profile.max_14bit_constraint_flag, 1))
@@ -1261,7 +1262,8 @@ gst_codec_utils_h265_get_profile (const guint8 * profile_tier_level, guint len)
     if (profile_idc == 8 || profile_compatibility_flags[8])
       return utils_get_3d_profile (&ext_profile);
 
-    if (profile_idc == 9 || profile_compatibility_flags[9])
+    if (profile_idc == 9 || profile_compatibility_flags[9] ||
+        profile_idc == 11 || profile_compatibility_flags[11])
       return utils_get_screen_content_coding_extensions_profile (&ext_profile);
 
     if (profile_idc == 10 || profile_compatibility_flags[10])
