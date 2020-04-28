@@ -3,8 +3,8 @@ v4l2codecs_sources = [
   'gstv4l2codecallocator.c',
   'gstv4l2codecdevice.c',
   'gstv4l2codech264dec.c',
-  'gstv4l2codecvp8dec.c',
   'gstv4l2codecpool.c',
+  'gstv4l2codecvp8dec.c',
   'gstv4l2decoder.c',
   'gstv4l2format.c',
 ]

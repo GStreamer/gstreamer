@@ -643,6 +643,47 @@ gst_v4l2_decoder_get_property (GObject * object, guint prop_id,
   }
 }
 
+void
+gst_v4l2_decoder_register (GstPlugin * plugin,
+    GType dec_type, GClassInitFunc class_init, GInstanceInitFunc instance_init,
+    const gchar * element_name_tmpl, GstV4l2CodecDevice * device, guint rank)
+{
+  GTypeQuery type_query;
+  GTypeInfo type_info = { 0, };
+  GType subtype;
+  gchar *type_name;
+
+  g_type_query (dec_type, &type_query);
+  memset (&type_info, 0, sizeof (type_info));
+  type_info.class_size = type_query.class_size;
+  type_info.instance_size = type_query.instance_size;
+  type_info.class_init = class_init;
+  type_info.class_data = gst_mini_object_ref (GST_MINI_OBJECT (device));
+  type_info.instance_init = instance_init;
+  GST_MINI_OBJECT_FLAG_SET (device, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
+
+  /* The first decoder to be registered should use a constant name, like
+   * v4l2slvp8dec, for any additional decoders, we create unique names. Decoder
+   * names may change between boots, so this should help gain stable names for
+   * the most common use cases. SL stands for state-less, we differentiate
+   * with v4l2vp8dec as this element may not have the same properties */
+  type_name = g_strdup_printf (element_name_tmpl, "");
+
+  if (g_type_from_name (type_name) != 0) {
+    gchar *basename = g_path_get_basename (device->video_device_path);
+    g_free (type_name);
+    type_name = g_strdup_printf (element_name_tmpl, basename);
+    g_free (basename);
+  }
+
+  subtype = g_type_register_static (dec_type, type_name, &type_info, 0);
+
+  if (!gst_element_register (plugin, type_name, rank, subtype))
+    GST_WARNING ("Failed to register plugin '%s'", type_name);
+
+  g_free (type_name);
+}
+
 GstV4l2Request *
 gst_v4l2_decoder_alloc_request (GstV4l2Decoder * self)
 {

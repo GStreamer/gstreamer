@@ -101,6 +101,14 @@ void              gst_v4l2_decoder_set_property (GObject * object, guint prop_id
 void              gst_v4l2_decoder_get_property (GObject * object, guint prop_id,
                                                  GValue * value, GParamSpec * pspec);
 
+void              gst_v4l2_decoder_register (GstPlugin * plugin,
+                                             GType dec_type,
+                                             GClassInitFunc class_init,
+                                             GInstanceInitFunc instance_init,
+                                             const gchar *element_name_tmpl,
+                                             GstV4l2CodecDevice * device,
+                                             guint rank);
+
 GstV4l2Request   *gst_v4l2_decoder_alloc_request (GstV4l2Decoder * self);
 
 void              gst_v4l2_request_free (GstV4l2Request * request);
