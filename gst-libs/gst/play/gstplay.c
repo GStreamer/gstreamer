@@ -168,7 +168,7 @@ struct _GstPlay
 
   GstPlayState app_state;
 
-  gint buffering;
+  gint buffering_percent;
 
   GstTagList *global_tags;
   GstPlayMediaInfo *media_info;
@@ -918,7 +918,7 @@ on_error (GstPlay * self, GError * err, const GstStructure * details)
   self->is_eos = FALSE;
   gst_element_set_state (self->playbin, GST_STATE_NULL);
   change_state (self, GST_PLAY_STATE_STOPPED);
-  self->buffering = 100;
+  self->buffering_percent = 100;
 
   g_mutex_lock (&self->lock);
   if (self->media_info) {
@@ -1052,7 +1052,7 @@ eos_cb (G_GNUC_UNUSED GstBus * bus, G_GNUC_UNUSED GstMessage * msg,
   api_bus_post_message (self, GST_PLAY_MESSAGE_END_OF_STREAM, NULL);
 
   change_state (self, GST_PLAY_STATE_STOPPED);
-  self->buffering = 100;
+  self->buffering_percent = 100;
   self->is_eos = TRUE;
 }
 
@@ -1078,15 +1078,15 @@ buffering_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg, gpointer user_data)
 
     if (state_ret == GST_STATE_CHANGE_FAILURE) {
       on_error (self, g_error_new (GST_PLAY_ERROR, GST_PLAY_ERROR_FAILED,
-              "Failed to handle buffering_"), NULL);
+              "Failed to handle buffering"), NULL);
       return;
     }
 
     change_state (self, GST_PLAY_STATE_BUFFERING);
   }
 
-  if (self->buffering != percent) {
-    self->buffering = percent;
+  if (self->buffering_percent != percent) {
+    self->buffering_percent = percent;
 
     api_bus_post_message (self, GST_PLAY_MESSAGE_BUFFERING,
         GST_PLAY_MESSAGE_DATA_BUFFERING_PERCENT, G_TYPE_UINT, percent, NULL);
@@ -1320,14 +1320,15 @@ state_changed_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg,
 
         tick_cb (self);
 
-        if (self->target_state >= GST_STATE_PLAYING && self->buffering == 100) {
+        if (self->target_state >= GST_STATE_PLAYING
+            && self->buffering_percent == 100) {
           GstStateChangeReturn state_ret;
 
           state_ret = gst_element_set_state (self->playbin, GST_STATE_PLAYING);
           if (state_ret == GST_STATE_CHANGE_FAILURE)
             on_error (self, g_error_new (GST_PLAY_ERROR,
                     GST_PLAY_ERROR_FAILED, "Failed to play"), NULL);
-        } else if (self->buffering == 100) {
+        } else if (self->buffering_percent == 100) {
           change_state (self, GST_PLAY_STATE_PAUSED);
         }
       } else {
@@ -2562,7 +2563,7 @@ gst_play_main (gpointer data)
   self->target_state = GST_STATE_NULL;
   self->current_state = GST_STATE_NULL;
   change_state (self, GST_PLAY_STATE_STOPPED);
-  self->buffering = 100;
+  self->buffering_percent = 100;
   self->is_eos = FALSE;
   self->is_live = FALSE;
   self->rate = 1.0;
@@ -2692,8 +2693,8 @@ gst_play_play_internal (gpointer user_data)
     change_state (self, GST_PLAY_STATE_BUFFERING);
 
   if (self->current_state >= GST_STATE_PAUSED && !self->is_eos
-      && self->buffering >= 100 && !(self->seek_position != GST_CLOCK_TIME_NONE
-          || self->seek_pending)) {
+      && self->buffering_percent >= 100
+      && !(self->seek_position != GST_CLOCK_TIME_NONE || self->seek_pending)) {
     state_ret = gst_element_set_state (self->playbin, GST_STATE_PLAYING);
   } else {
     state_ret = gst_element_set_state (self->playbin, GST_STATE_PAUSED);
@@ -2836,7 +2837,7 @@ gst_play_stop_internal (GstPlay * self, gboolean transient)
       && self->app_state !=
       GST_PLAY_STATE_STOPPED ? GST_PLAY_STATE_BUFFERING :
       GST_PLAY_STATE_STOPPED);
-  self->buffering = 100;
+  self->buffering_percent = 100;
   self->cached_duration = GST_CLOCK_TIME_NONE;
   g_mutex_lock (&self->lock);
   if (self->media_info) {
