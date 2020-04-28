@@ -827,17 +827,17 @@ typedef struct
 
   /* Tie breaker if more than one profiles are matching */
   guint priority;
-} GstH265FormatRangeExtensionProfile;
+} GstH265ExtensionProfile;
 
 typedef struct
 {
-  const GstH265FormatRangeExtensionProfile *profile;
+  const GstH265ExtensionProfile *profile;
   guint extra_constraints;
-} FormatRangeExtensionProfileMatch;
+} H265ExtensionProfileMatch;
 
 static gint
-sort_fre_profile_matches (FormatRangeExtensionProfileMatch * a,
-    FormatRangeExtensionProfileMatch * b)
+sort_fre_profile_matches (H265ExtensionProfileMatch * a,
+    H265ExtensionProfileMatch * b)
 {
   gint d;
 
@@ -848,7 +848,7 @@ sort_fre_profile_matches (FormatRangeExtensionProfileMatch * a,
   return b->profile->priority - a->profile->priority;
 }
 
-static const GstH265FormatRangeExtensionProfile h265_ext_profiles[] = {
+static const GstH265ExtensionProfile h265_ext_profiles[] = {
   /* FIXME 2.0: Consider ':' separated subsampling notation for consistency
    * https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/merge_requests/23
    */
@@ -992,7 +992,7 @@ gst_codec_utils_h265_get_profile (const guint8 * profile_tier_level, guint len)
     return profile;
 
   if (profile_idc >= 4 && profile_idc <= 10 && len >= 11) {
-    GstH265FormatRangeExtensionProfile ext_profile = { 0, };
+    GstH265ExtensionProfile ext_profile = { 0, };
 
     /*
      * Bit 40 - general_progressive_source_flag
@@ -1071,9 +1071,9 @@ gst_codec_utils_h265_get_profile (const guint8 * profile_tier_level, guint len)
     ext_profile.profile_idc = profile_idc;
 
     for (i = 0; i < G_N_ELEMENTS (h265_ext_profiles); i++) {
-      GstH265FormatRangeExtensionProfile p = h265_ext_profiles[i];
+      GstH265ExtensionProfile p = h265_ext_profiles[i];
       guint extra_constraints = 0;
-      FormatRangeExtensionProfileMatch *m;
+      H265ExtensionProfileMatch *m;
 
       /* Filter out all the profiles having constraints not satisfied by
        * @ext_profile.
@@ -1150,14 +1150,14 @@ gst_codec_utils_h265_get_profile (const guint8 * profile_tier_level, guint len)
         break;
       }
 
-      m = g_new0 (FormatRangeExtensionProfileMatch, 1);
+      m = g_new0 (H265ExtensionProfileMatch, 1);
       m->profile = &h265_ext_profiles[i];
       m->extra_constraints = extra_constraints;
       cand = g_list_prepend (cand, m);
     }
 
     if (!profile && cand) {
-      FormatRangeExtensionProfileMatch *m;
+      H265ExtensionProfileMatch *m;
 
       cand = g_list_sort (cand, (GCompareFunc) sort_fre_profile_matches);
       m = cand->data;
