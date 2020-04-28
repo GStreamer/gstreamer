@@ -388,14 +388,17 @@ gboolean
 uri_clip_set_max_duration (GESTimelineElement * element,
     GstClockTime maxduration)
 {
-  if (_DURATION (element) == GST_CLOCK_TIME_NONE || _DURATION (element) == 0)
-    /* If we don't have a valid duration, use the max duration */
-    /* FIXME: don't do this when we have time effects */
-    _set_duration0 (element, maxduration - _INPOINT (element));
-
-  return
+  gboolean ret =
       GES_TIMELINE_ELEMENT_CLASS (parent_class)->set_max_duration (element,
       maxduration);
+
+  if (ret) {
+    GstClockTime limit = ges_clip_get_duration_limit (GES_CLIP (element));
+    if (GST_CLOCK_TIME_IS_VALID (limit) && (element->duration == 0))
+      _set_duration0 (element, limit);
+  }
+
+  return ret;
 }
 
 /**
