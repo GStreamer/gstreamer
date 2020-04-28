@@ -1,0 +1,31 @@
+meta,
+    tool = "ges-launch-$(gst_api_version)",
+    args = {
+        --track-types, video,
+        --disable-mixing,
+        --videosink, "$(videosink) name=videosink",
+        --audiosink, "$(audiosink) name=audiosink",
+        --video-caps, "video/x-raw,width=1280,height=720,framerate=30/1,format=I420",
+    },
+    handles-states = true,
+    ignore-eos = true,
+    configs = {
+        "$(validateflow), pad=videosink:sink, buffers-checksum=true, ignored-fields=\"stream-start={stream-id, group-id, stream}\"",
+    }
+
+# timecodestamper doesn't allow reverse playback yet
+add-clip, name=c0, asset-id="disable-timecodestamper=true", layer-priority=0, type=GESTestClip, start=0, duration=1.0
+set-child-properties, element-name=c0, pattern=blue
+
+add-clip, name=c1, asset-id="disable-timecodestamper=true", layer-priority=0, type=GESTestClip, start=1.0, duration=1.0
+set-child-properties, element-name=c1, pattern=red
+pause
+
+seek, start=0.0, stop=0.5, flags=accurate+flush, rate=-1.0
+play
+
+seek, on-message=eos, start=0.0, stop=0.5, flags=accurate+flush, rate=-1.0
+seek, on-message=eos, start=0.0, stop=1.0, flags=accurate+flush, rate=-1.0
+seek, on-message=eos, start=1.0, stop=1.5, flags=accurate+flush, rate=-1.0
+
+stop, on-message=eos
