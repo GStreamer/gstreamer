@@ -357,23 +357,27 @@ play_new (gchar ** uris, gdouble initial_volume)
   play->cur_idx = -1;
 
   play->player =
-      gst_player_new (NULL, gst_player_g_main_context_signal_dispatcher_new
-      (NULL));
-
-  g_signal_connect (play->player, "position-updated",
-      G_CALLBACK (position_updated_cb), play);
-  g_signal_connect (play->player, "state-changed",
-      G_CALLBACK (state_changed_cb), play);
-  g_signal_connect (play->player, "buffering", G_CALLBACK (buffering_cb), play);
-  g_signal_connect (play->player, "end-of-stream",
-      G_CALLBACK (end_of_stream_cb), play);
-  g_signal_connect (play->player, "error", G_CALLBACK (error_cb), play);
-
-  g_signal_connect (play->player, "media-info-updated",
-      G_CALLBACK (media_info_cb), play);
+      gst_player_new (NULL);
 
   play->loop = g_main_loop_new (NULL, FALSE);
   play->desired_state = GST_STATE_PLAYING;
+
+  GstPlayerSignalAdapter *player_sig_adapt
+     = gst_player_signal_adapter_new(
+       gst_player_get_message_bus (play->player), 
+       g_main_loop_get_context (play->loop));
+
+  g_signal_connect (player_sig_adapt, "position-updated",
+      G_CALLBACK (position_updated_cb), play);
+  g_signal_connect (player_sig_adapt, "state-changed",
+      G_CALLBACK (state_changed_cb), play);
+  g_signal_connect (player_sig_adapt, "buffering", G_CALLBACK (buffering_cb), play);
+  g_signal_connect (player_sig_adapt, "end-of-stream",
+      G_CALLBACK (end_of_stream_cb), play);
+  g_signal_connect (player_sig_adapt, "error", G_CALLBACK (error_cb), play);
+
+  g_signal_connect (player_sig_adapt, "media-info-updated",
+      G_CALLBACK (media_info_cb), play);
 
   play_set_relative_volume (play, initial_volume - 1.0);
 
