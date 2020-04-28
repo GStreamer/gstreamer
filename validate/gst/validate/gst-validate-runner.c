@@ -636,6 +636,9 @@ gst_validate_runner_add_report (GstValidateRunner * runner,
 
   g_return_if_fail (GST_IS_VALIDATE_RUNNER (runner));
 
+  if (report->level == GST_VALIDATE_REPORT_LEVEL_IGNORE)
+    return;
+
   gst_validate_send (json_boxed_serialize (GST_MINI_OBJECT_TYPE (report),
           report));
   gst_validate_runner_maybe_dot_pipeline (runner, report);

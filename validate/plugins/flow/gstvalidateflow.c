@@ -319,6 +319,8 @@ validate_flow_override_new (GstStructure * config)
   if (g_file_test (flow->expectations_file_path, G_FILE_TEST_EXISTS)) {
     flow->mode = VALIDATE_FLOW_MODE_WRITING_ACTUAL_RESULTS;
     flow->output_file_path = g_strdup (flow->actual_results_file_path);
+    gst_validate_printf (NULL, "**-> Checking expectations file: '%s'**\n",
+        flow->expectations_file_path);
   } else {
     flow->mode = VALIDATE_FLOW_MODE_WRITING_EXPECTATIONS;
     flow->output_file_path = g_strdup (flow->expectations_file_path);
@@ -454,6 +456,7 @@ runner_stopping (GstValidateRunner * runner, ValidateFlowOverride * flow)
           flow->expectations_file_path, error->message);
     }
     lines_expected = g_strsplit (contents, "\n", 0);
+    g_free (contents);
   }
 
   {
@@ -466,6 +469,7 @@ runner_stopping (GstValidateRunner * runner, ValidateFlowOverride * flow)
           flow->actual_results_file_path, error->message);
     }
     lines_actual = g_strsplit (contents, "\n", 0);
+    g_free (contents);
   }
 
   gst_validate_printf (flow, "Checking that flow %s matches expected flow %s\n"

@@ -552,9 +552,9 @@ main (int argc, gchar ** argv)
       &bus_callback_data);
 
   if (argc == 2)
-    g_print ("-> Starting pipeline");
+    g_print ("**-> Starting pipeline**\n");
   else
-    g_print ("-> Starting pipeline\n");
+    g_print ("**-> Starting pipeline**\n");
 
   g_free (argvn);
   g_object_get (monitor, "handles-states", &monitor_handles_state, NULL);
@@ -577,9 +577,9 @@ main (int argc, gchar ** argv)
       default:
         break;
     }
-    g_print ("Pipeline started\n");
+    g_print ("**-> Pipeline started**\n");
   } else {
-    g_print ("-> Letting scenario handle set state\n");
+    g_print ("**-> Letting scenario handle set state**\n");
   }
 
   g_main_loop_run (mainloop);

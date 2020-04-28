@@ -570,6 +570,10 @@ _file_get_structures (GFile * file, gchar ** err)
   gchar *filename = NULL;
   gint lineno = 1, current_lineno;
   GList *structures = NULL;
+  GString *errstr = NULL;
+
+  if (err)
+    errstr = g_string_new (NULL);
 
   /* TODO Handle GCancellable */
   if (!g_file_load_contents (file, NULL, &content, &size, NULL, &error)) {
@@ -586,7 +590,7 @@ _file_get_structures (GFile * file, gchar ** err)
   filename = g_file_get_path (file);
   tmp = content;
   while (*tmp) {
-    GString *l;
+    GString *l, *debug_line;
     GstStructure *structure;
 
     tmp = skip_spaces (tmp);
@@ -607,17 +611,27 @@ _file_get_structures (GFile * file, gchar ** err)
     }
 
     l = g_string_new (NULL);
+    debug_line = g_string_new (NULL);
     current_lineno = lineno;
     while (*tmp != '\n' && *tmp) {
       gchar next;
 
-      if (*tmp == '#')
-        while (*tmp && *tmp != '\n')
+      if (*tmp == '#') {
+        while (*tmp && *tmp != '\n') {
+          g_string_append_c (debug_line, *tmp);
           tmp++;
+        }
+        tmp++;
+        g_string_append_printf (debug_line, "\n  %4d | ", lineno + 1);
+        lineno++;
+        continue;
+      }
 
       next = *(tmp + 1);
       if (next && next == '\n'
           && strchr (GST_STRUCT_LINE_CONTINUATION_CHARS, *tmp)) {
+        g_string_append_c (debug_line, *tmp);
+        g_string_append_printf (debug_line, "\n  %4d | ", lineno + 1);
         if (*tmp != '\\')
           g_string_append_c (l, *tmp);
 
@@ -626,6 +640,7 @@ _file_get_structures (GFile * file, gchar ** err)
         continue;
       }
 
+      g_string_append_c (debug_line, *tmp);
       g_string_append_c (l, *tmp);
       tmp += 1;
     }
@@ -633,22 +648,27 @@ _file_get_structures (GFile * file, gchar ** err)
     /* Blank lines at EOF */
     if (!*l->str) {
       g_string_free (l, TRUE);
+      g_string_free (debug_line, TRUE);
       continue;
     }
 
     structure = gst_structure_from_string (l->str, NULL);
     if (structure == NULL) {
-      GST_ERROR ("Could not parse structure at %s:%d\n     %s", filename,
-          current_lineno, l->str);
-      if (err) {
-        gchar *tmp = *err;
-        *err =
-            g_strdup_printf ("%s\n%s:%d: Invalid structure\n  %d | %s\n   %*c|",
-            tmp ? tmp : "", filename, current_lineno, current_lineno, l->str,
-            (gint) floor (log10 (abs ((current_lineno)))) + 1, ' ');
-        g_free (tmp);
+      GST_ERROR ("Could not parse structure at %s:%d-%d\n     %s", filename,
+          current_lineno, lineno, debug_line->str);
+
+      if (errstr) {
+        g_string_append_printf (errstr,
+            "\n%s:%d-%d: Invalid structure\n  %4d | %s",
+            filename, current_lineno, lineno, current_lineno, debug_line->str);
+
+        if (strchr (debug_line->str, '\n'))
+          g_string_append_printf (errstr, "\n       > %s\n", l->str);
+
+        g_string_append_c (errstr, '\n');
       } else {
         g_string_free (l, TRUE);
+        g_string_free (debug_line, TRUE);
         goto failed;
       }
     } else {
@@ -659,12 +679,15 @@ _file_get_structures (GFile * file, gchar ** err)
     }
 
     g_string_free (l, TRUE);
+    g_string_free (debug_line, TRUE);
     lineno++;
     if (*tmp)
       tmp++;
   }
 
 done:
+  if (err)
+    *err = g_string_free (errstr, errstr->len ? FALSE : TRUE);
   g_free (content);
   g_free (filename);
   return structures;

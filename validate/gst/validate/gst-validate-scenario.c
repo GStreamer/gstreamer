@@ -4088,7 +4088,7 @@ gst_validate_scenario_new (GstValidateRunner *
   }
 
   gst_validate_printf (NULL,
-      "\n**-> Running scenario %s on pipeline %s**\n\n", scenario_name,
+      "**-> Running scenario %s on pipeline %s**\n", scenario_name,
       GST_OBJECT_NAME (pipeline));
 
   g_weak_ref_init (&scenario->priv->ref_pipeline, pipeline);
