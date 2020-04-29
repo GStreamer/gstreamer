@@ -1026,7 +1026,8 @@ gst_nv_h264_dec_register (GstPlugin * plugin, guint device_id, guint rank,
   cdata = g_new0 (GstNvH264DecClassData, 1);
   cdata->sink_caps = gst_caps_from_string ("video/x-h264, "
       "stream-format= (string) { avc, avc3, byte-stream }, "
-      "alignment= (string) au, profile = (string) { high, main }, "
+      "alignment= (string) au, "
+      "profile = (string) { high, main, constrained-baseline, baseline }, "
       "framerate = " GST_VIDEO_FPS_RANGE);
 
   s = gst_caps_get_structure (sink_caps, 0);
