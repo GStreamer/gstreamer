@@ -67,6 +67,7 @@ struct _GstIdentity {
   gboolean 	 check_imperfect_timestamp;
   gboolean 	 check_imperfect_offset;
   gboolean	 single_segment;
+  GstSegment seek_segment;
   GstBufferFlags drop_buffer_flags;
   GstClockTime   prev_timestamp;
   GstClockTime   prev_duration;

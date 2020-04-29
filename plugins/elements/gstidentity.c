@@ -113,6 +113,8 @@ static void gst_identity_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_identity_sink_event (GstBaseTransform * trans,
     GstEvent * event);
+static gboolean gst_identity_src_event (GstBaseTransform * trans,
+    GstEvent * event);
 static GstFlowReturn gst_identity_transform_ip (GstBaseTransform * trans,
     GstBuffer * buf);
 static gboolean gst_identity_start (GstBaseTransform * trans);
@@ -277,6 +279,7 @@ gst_identity_class_init (GstIdentityClass * klass)
       GST_DEBUG_FUNCPTR (gst_identity_change_state);
 
   gstbasetrans_class->sink_event = GST_DEBUG_FUNCPTR (gst_identity_sink_event);
+  gstbasetrans_class->src_event = GST_DEBUG_FUNCPTR (gst_identity_src_event);
   gstbasetrans_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_identity_transform_ip);
   gstbasetrans_class->start = GST_DEBUG_FUNCPTR (gst_identity_start);
@@ -420,7 +423,14 @@ gst_identity_sink_event (GstBaseTransform * trans, GstEvent * event)
 
       /* This is the first segment, send out a (0, -1) segment */
       gst_segment_init (&segment, segment.format);
+      if (identity->seek_segment.format != GST_FORMAT_UNDEFINED) {
+        segment.time = identity->seek_segment.time;
+        segment.base = identity->seek_segment.base;
+        gst_segment_init (&identity->seek_segment, GST_FORMAT_UNDEFINED);
+      }
+
       news = gst_event_new_segment (&segment);
+      GST_EVENT_SEQNUM (news) = GST_EVENT_SEQNUM (event);
 
       gst_pad_event_default (trans->sinkpad, GST_OBJECT_CAST (trans), news);
     } else {
@@ -459,8 +469,11 @@ gst_identity_sink_event (GstBaseTransform * trans, GstEvent * event)
     /* eat up segments */
     gst_event_unref (event);
     ret = TRUE;
-  } else {
-    if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_START) {
+    goto done;
+  }
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_START:
       GST_OBJECT_LOCK (identity);
       identity->flushing = TRUE;
       g_cond_signal (&identity->blocked_cond);
@@ -469,16 +482,58 @@ gst_identity_sink_event (GstBaseTransform * trans, GstEvent * event)
         gst_clock_id_unschedule (identity->clock_id);
       }
       GST_OBJECT_UNLOCK (identity);
-    } else if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
+      break;
+    case GST_EVENT_FLUSH_STOP:
       GST_OBJECT_LOCK (identity);
       identity->flushing = FALSE;
+      trans->have_segment = FALSE;
       GST_OBJECT_UNLOCK (identity);
-    }
-
-    ret = GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans, event);
+      break;
+    default:
+      break;
   }
 
+  ret = GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans, event);
+
+done:
   return ret;
+}
+
+static gboolean
+gst_identity_src_event (GstBaseTransform * trans, GstEvent * event)
+{
+  GstIdentity *identity = GST_IDENTITY (trans);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:
+    {
+      gdouble rate;
+      GstFormat fmt;
+      GstSeekFlags flags;
+      GstSeekType start_type, stop_type;
+      gint64 start, stop;
+      gst_event_parse_seek (event, &rate, &fmt, &flags, &start_type,
+          &start, &stop_type, &stop);
+
+      GST_OBJECT_LOCK (identity);
+      gst_segment_init (&identity->seek_segment, fmt);
+      if (!gst_segment_do_seek (&identity->seek_segment, rate, fmt,
+              flags, start_type, start, stop_type, stop, NULL)) {
+        GST_WARNING_OBJECT (identity, "Could not run seek %" GST_PTR_FORMAT,
+            event);
+        GST_OBJECT_UNLOCK (identity);
+
+        return FALSE;
+      }
+      GST_OBJECT_UNLOCK (identity);
+
+      break;
+    }
+    default:
+      break;
+  }
+
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->src_event (trans, event);
 }
 
 static void
