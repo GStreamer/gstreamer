@@ -4448,21 +4448,24 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
 
     _get_ice_credentials_from_sdp_media (sd->sdp->sdp, i, &ufrag, &pwd);
 
-    if (sd->source == SDP_LOCAL)
+    if (sd->source == SDP_LOCAL) {
       gst_webrtc_ice_set_local_credentials (webrtc->priv->ice,
           item->stream, ufrag, pwd);
-    else
+    } else {
       gst_webrtc_ice_set_remote_credentials (webrtc->priv->ice,
           item->stream, ufrag, pwd);
+    }
     g_free (ufrag);
     g_free (pwd);
   }
 
-  for (i = 0; i < webrtc->priv->ice_stream_map->len; i++) {
-    IceStreamItem *item =
-        &g_array_index (webrtc->priv->ice_stream_map, IceStreamItem, i);
+  if (sd->source == SDP_LOCAL) {
+    for (i = 0; i < webrtc->priv->ice_stream_map->len; i++) {
+      IceStreamItem *item =
+          &g_array_index (webrtc->priv->ice_stream_map, IceStreamItem, i);
 
-    gst_webrtc_ice_gather_candidates (webrtc->priv->ice, item->stream);
+      gst_webrtc_ice_gather_candidates (webrtc->priv->ice, item->stream);
+    }
   }
 
   /* Add any pending trickle ICE candidates if we have both offer and answer */
