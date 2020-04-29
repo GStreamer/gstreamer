@@ -287,11 +287,8 @@ gst_validate_get_testfile_configs (const gchar * suffix)
 GList *
 gst_validate_plugin_get_config (GstPlugin * plugin)
 {
-  GList *plugin_conf = NULL;
   const gchar *suffix;
-  const gchar *config;
-  GStrv tmp;
-  guint i;
+  GList *plugin_conf = NULL;
 
   if (plugin) {
     if ((plugin_conf =
@@ -306,22 +303,7 @@ gst_validate_plugin_get_config (GstPlugin * plugin)
     suffix = "core";
   }
 
-  plugin_conf = gst_validate_get_testfile_configs (suffix);
-  config = g_getenv ("GST_VALIDATE_CONFIG");
-  if (!config) {
-    return plugin_conf;
-  }
-
-  tmp = g_strsplit (config, G_SEARCHPATH_SEPARATOR_S, -1);
-  for (i = 0; tmp[i] != NULL; i++) {
-    GList *l;
-
-    l = create_config (tmp[i], suffix);
-    if (l)
-      plugin_conf = g_list_concat (plugin_conf, l);
-  }
-  g_strfreev (tmp);
-
+  plugin_conf = gst_validate_get_config (suffix);
   if (plugin)
     g_object_set_data_full (G_OBJECT (plugin), GST_VALIDATE_PLUGIN_CONFIG,
         plugin_conf, _free_plugin_config);
@@ -329,6 +311,35 @@ gst_validate_plugin_get_config (GstPlugin * plugin)
     core_config = plugin_conf;
 
   return plugin_conf;
+}
+
+GList *
+gst_validate_get_config (const gchar * structname)
+{
+
+  const gchar *config;
+  GStrv tmp;
+  guint i;
+  GList *configs;
+
+
+  configs = gst_validate_get_testfile_configs (structname);
+  config = g_getenv ("GST_VALIDATE_CONFIG");
+  if (!config) {
+    return configs;
+  }
+
+  tmp = g_strsplit (config, G_SEARCHPATH_SEPARATOR_S, -1);
+  for (i = 0; tmp[i] != NULL; i++) {
+    GList *l;
+
+    l = create_config (tmp[i], structname);
+    if (l)
+      configs = g_list_concat (configs, l);
+  }
+  g_strfreev (tmp);
+
+  return configs;
 }
 
 static void

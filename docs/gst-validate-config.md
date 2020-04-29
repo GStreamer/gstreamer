@@ -27,7 +27,7 @@ See [GstValidateVerbosityFlags](GstValidateVerbosityFlags) for possible values.
 
 The [action type](gst-validate-action-types.md) to execute, the action type
 must be a CONFIG action or the action type must have a `as-config` argument. When the `action`
-is specified in a parametter, a validate action is executed using the other parametters of the
+is specified in a parameter, a validate action is executed using the other parameters of the
 config as configuration for the validate scenario action.
 
 #### Example:
@@ -72,7 +72,7 @@ Defaults variables are:
 - `$(CONFIG_DIR)`: The directory the running scenario is in.
 - `$(CONFIG_NAME)`: The name of the config file
 - `$(LOGSDIR)`: The directory where to place log files. This uses the
-   `GST_VALIDATE_LOGSDIR` environment variable if avalaible or `$(TMPDIR)` if
+   `GST_VALIDATE_LOGSDIR` environment variable if available or `$(TMPDIR)` if
    the variables hasn't been set. (Note that the
    [gst-validate-launcher](gst-validate-launcher.md) set the environment
    variables).
@@ -89,3 +89,18 @@ It is also possible to set global variables (also usable from
 ``` yaml
 set-globals, TESTSUITE_ROOT_DIR=$(CONFIG_DIR)
 ```
+
+## `change-issue-severity` settings parameters
+
+You can change issues severity with the `change-issue-severity` configuration
+with the following parameters:
+
+* `issue-id`: The GQuark name of the issue, for example: `event::segment-has-wrong-start`,
+  You can use `gst-validate-1.0 --print-issue-types` to list all issue types.
+* `new-severity`: The new [`severity`](GstValidateReportLevel) of the issue
+* `element-name` (*optional*): The name of the element the severity
+   change applies to
+* `element-factory-name` (*optional*): The element factory name of the elements the
+   severity change applies to
+* `element-classification` (*optional*): The classification of the elements the
+   severity change applies to

@@ -263,39 +263,42 @@ _add_override_from_struct (GstStructure * soverride)
 
   gboolean registered = FALSE;
 
-  if (!gst_structure_has_name (soverride, "change-severity")) {
-    GST_ERROR ("Currently only 'change-severity' overrides are supported");
+  if (!gst_structure_has_name (soverride, "change-severity")
+      && !gst_structure_has_name (soverride, "change-issue-severity")) {
+    g_error ("Currently only 'change-severity' overrides are supported");
 
     return FALSE;
   }
 
   str_issue_id = gst_structure_get_string (soverride, "issue-id");
   if (!str_issue_id) {
-    GST_ERROR ("No issue id provided in override: %" GST_PTR_FORMAT, soverride);
+    g_error ("No issue id provided in override: %" GST_PTR_FORMAT, soverride);
 
     return FALSE;
   }
 
   issue_id = g_quark_from_string (str_issue_id);
   if (gst_validate_issue_from_id (issue_id) == NULL) {
-    GST_ERROR ("No GstValidateIssue registered for %s", str_issue_id);
+    g_error ("No GstValidateIssue registered for %s", str_issue_id);
 
     return FALSE;
   }
 
   str_new_severity = gst_structure_get_string (soverride, "new-severity");
   if (str_new_severity == NULL) {
-    GST_ERROR ("No 'new-severity' field found in %" GST_PTR_FORMAT, soverride);
+    g_error ("No 'new-severity' field found in %" GST_PTR_FORMAT, soverride);
 
     return FALSE;
   }
 
   level = gst_validate_report_level_from_name (str_new_severity);
   if (level == GST_VALIDATE_REPORT_LEVEL_UNKNOWN) {
-    GST_ERROR ("Unknown level name %s", str_new_severity);
+    g_error ("Unknown level name %s", str_new_severity);
 
     return FALSE;
   }
+  gst_validate_printf (NULL, "**-> Changing issue '%s' severity to: '%s'\n",
+      str_issue_id, str_new_severity);
 
   override = gst_validate_override_new ();
   gst_validate_override_change_severity (override, issue_id, level);
@@ -385,6 +388,11 @@ gst_validate_override_registry_preload (void)
   GModule *module;
   int ret, nloaded = 0;
   gpointer ext_create_overrides;
+  GList *tmp, *overrides = gst_validate_get_config ("change-issue-severity");
+
+  for (tmp = overrides; tmp; tmp = tmp->next)
+    _add_override_from_struct (tmp->data);
+  g_list_free_full (overrides, (GDestroyNotify) gst_structure_free);
 
   sos = g_getenv ("GST_VALIDATE_OVERRIDE");
   if (!sos) {
