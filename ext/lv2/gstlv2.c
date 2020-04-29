@@ -69,38 +69,37 @@ GST_DEBUG_CATEGORY (lv2_debug);
 #error "Unsupported OS"
 #endif
 
-LilvWorld *world = NULL;
-LilvNode *atom_class = NULL;
-LilvNode *audio_class = NULL;
-LilvNode *control_class = NULL;
-LilvNode *cv_class = NULL;
-LilvNode *event_class = NULL;
-LilvNode *input_class = NULL;
-LilvNode *output_class = NULL;
-LilvNode *preset_class = NULL;
-LilvNode *state_iface = NULL;
-LilvNode *state_uri = NULL;
+LilvWorld *gst_lv2_world_node = NULL;
+LilvNode *gst_lv2_audio_node = NULL;
+LilvNode *gst_lv2_control_node = NULL;
+LilvNode *gst_lv2_cv_node = NULL;
+LilvNode *gst_lv2_event_node = NULL;
+LilvNode *gst_lv2_input_node = NULL;
+LilvNode *gst_lv2_output_node = NULL;
+LilvNode *gst_lv2_preset_node = NULL;
+LilvNode *gst_lv2_state_iface_node = NULL;
+LilvNode *gst_lv2_state_uri_node = NULL;
 
-LilvNode *integer_prop = NULL;
-LilvNode *toggled_prop = NULL;
-LilvNode *designation_pred = NULL;
-LilvNode *in_place_broken_pred = NULL;
-LilvNode *optional_pred = NULL;
-LilvNode *group_pred = NULL;
-LilvNode *supports_event_pred = NULL;
-LilvNode *label_pred = NULL;
+LilvNode *gst_lv2_integer_prop_node = NULL;
+LilvNode *gst_lv2_toggled_prop_node = NULL;
+LilvNode *gst_lv2_designation_pred_node = NULL;
+LilvNode *gst_lv2_in_place_broken_pred_node = NULL;
+LilvNode *gst_lv2_optional_pred_node = NULL;
+LilvNode *gst_lv2_group_pred_node = NULL;
+LilvNode *gst_lv2_supports_event_pred_node = NULL;
+LilvNode *gst_lv2_label_pred_node = NULL;
 
-LilvNode *center_role = NULL;
-LilvNode *left_role = NULL;
-LilvNode *right_role = NULL;
-LilvNode *rear_center_role = NULL;
-LilvNode *rear_left_role = NULL;
-LilvNode *rear_right_role = NULL;
-LilvNode *lfe_role = NULL;
-LilvNode *center_left_role = NULL;
-LilvNode *center_right_role = NULL;
-LilvNode *side_left_role = NULL;
-LilvNode *side_right_role = NULL;
+LilvNode *gst_lv2_center_role_node = NULL;
+LilvNode *gst_lv2_left_role_node = NULL;
+LilvNode *gst_lv2_right_role_node = NULL;
+LilvNode *gst_lv2_rear_center_role_node = NULL;
+LilvNode *gst_lv2_rear_left_role_node = NULL;
+LilvNode *gst_lv2_rear_right_role_node = NULL;
+LilvNode *gst_lv2_lfe_role_node = NULL;
+LilvNode *gst_lv2_center_left_role_node = NULL;
+LilvNode *gst_lv2_center_right_role_node = NULL;
+LilvNode *gst_lv2_side_left_role_node = NULL;
+LilvNode *gst_lv2_side_right_role_node = NULL;
 
 GstStructure *lv2_meta_all = NULL;
 
@@ -131,9 +130,11 @@ lv2_count_ports (const LilvPlugin * lv2plugin, guint * audio_in,
   for (i = 0; i < lilv_plugin_get_num_ports (lv2plugin); i++) {
     const LilvPort *port = lilv_plugin_get_port_by_index (lv2plugin, i);
 
-    if (lilv_port_is_a (lv2plugin, port, audio_class)) {
-      const gboolean is_input = lilv_port_is_a (lv2plugin, port, input_class);
-      LilvNodes *lv2group = lilv_port_get (lv2plugin, port, group_pred);
+    if (lilv_port_is_a (lv2plugin, port, gst_lv2_audio_node)) {
+      const gboolean is_input =
+          lilv_port_is_a (lv2plugin, port, gst_lv2_input_node);
+      LilvNodes *lv2group =
+          lilv_port_get (lv2plugin, port, gst_lv2_group_pred_node);
 
       if (lv2group) {
         const gchar *uri = lilv_node_as_uri (lv2group);
@@ -149,8 +150,8 @@ lv2_count_ports (const LilvPlugin * lv2plugin, guint * audio_in,
         (*audio_in)++;
       else
         (*audio_out)++;
-    } else if (lilv_port_is_a (lv2plugin, port, control_class) ||
-        lilv_port_is_a (lv2plugin, port, cv_class)) {
+    } else if (lilv_port_is_a (lv2plugin, port, gst_lv2_control_node) ||
+        lilv_port_is_a (lv2plugin, port, gst_lv2_cv_node)) {
       (*control)++;
     }
   }
@@ -163,7 +164,7 @@ lv2_plugin_discover (GstPlugin * plugin)
 {
   guint audio_in, audio_out, control;
   LilvIter *i;
-  const LilvPlugins *plugins = lilv_world_get_all_plugins (world);
+  const LilvPlugins *plugins = lilv_world_get_all_plugins (gst_lv2_world_node);
 
   for (i = lilv_plugins_begin (plugins); !lilv_plugins_is_end (plugins, i);
       i = lilv_plugins_next (plugins, i)) {
@@ -220,8 +221,9 @@ lv2_plugin_discover (GstPlugin * plugin)
     }
 
     /* check supported extensions */
-    can_do_presets = lilv_plugin_has_extension_data (lv2plugin, state_iface)
-        || lilv_plugin_has_feature (lv2plugin, state_uri)
+    can_do_presets =
+        lilv_plugin_has_extension_data (lv2plugin, gst_lv2_state_iface_node)
+        || lilv_plugin_has_feature (lv2plugin, gst_lv2_state_uri_node)
         || (control > 0);
     GST_INFO ("plugin %s can%s do presets", type_name,
         (can_do_presets ? "" : "'t"));
@@ -257,8 +259,8 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (lv2_debug, "lv2",
       GST_DEBUG_FG_GREEN | GST_DEBUG_BG_BLACK | GST_DEBUG_BOLD, "LV2");
 
-  world = lilv_world_new ();
-  lilv_world_load_all (world);
+  gst_lv2_world_node = lilv_world_new ();
+  lilv_world_load_all (gst_lv2_world_node);
   gst_lv2_host_init ();
 
 /* have been added after lilv-0.22.0, which is the last release */
@@ -269,37 +271,57 @@ plugin_init (GstPlugin * plugin)
 #define LILV_URI_CV_PORT      "http://lv2plug.in/ns/lv2core#CVPort"
 #endif
 
-  atom_class = lilv_new_uri (world, LILV_URI_ATOM_PORT);
-  audio_class = lilv_new_uri (world, LILV_URI_AUDIO_PORT);
-  control_class = lilv_new_uri (world, LILV_URI_CONTROL_PORT);
-  cv_class = lilv_new_uri (world, LILV_URI_CV_PORT);
-  event_class = lilv_new_uri (world, LILV_URI_EVENT_PORT);
-  input_class = lilv_new_uri (world, LILV_URI_INPUT_PORT);
-  output_class = lilv_new_uri (world, LILV_URI_OUTPUT_PORT);
-  preset_class = lilv_new_uri (world, LV2_PRESETS__Preset);
-  state_iface = lilv_new_uri (world, LV2_STATE__interface);
-  state_uri = lilv_new_uri (world, LV2_STATE_URI);
+  gst_lv2_audio_node = lilv_new_uri (gst_lv2_world_node, LILV_URI_AUDIO_PORT);
+  gst_lv2_control_node =
+      lilv_new_uri (gst_lv2_world_node, LILV_URI_CONTROL_PORT);
+  gst_lv2_cv_node = lilv_new_uri (gst_lv2_world_node, LILV_URI_CV_PORT);
+  gst_lv2_event_node = lilv_new_uri (gst_lv2_world_node, LILV_URI_EVENT_PORT);
+  gst_lv2_input_node = lilv_new_uri (gst_lv2_world_node, LILV_URI_INPUT_PORT);
+  gst_lv2_output_node = lilv_new_uri (gst_lv2_world_node, LILV_URI_OUTPUT_PORT);
+  gst_lv2_preset_node = lilv_new_uri (gst_lv2_world_node, LV2_PRESETS__Preset);
+  gst_lv2_state_iface_node =
+      lilv_new_uri (gst_lv2_world_node, LV2_STATE__interface);
+  gst_lv2_state_uri_node = lilv_new_uri (gst_lv2_world_node, LV2_STATE_URI);
 
-  integer_prop = lilv_new_uri (world, LV2_CORE__integer);
-  toggled_prop = lilv_new_uri (world, LV2_CORE__toggled);
-  designation_pred = lilv_new_uri (world, LV2_CORE__designation);
-  in_place_broken_pred = lilv_new_uri (world, LV2_CORE__inPlaceBroken);
-  optional_pred = lilv_new_uri (world, LV2_CORE__optionalFeature);
-  group_pred = lilv_new_uri (world, LV2_PORT_GROUPS__group);
-  supports_event_pred = lilv_new_uri (world, LV2_EVENT__supportsEvent);
-  label_pred = lilv_new_uri (world, LILV_NS_RDFS "label");
+  gst_lv2_integer_prop_node =
+      lilv_new_uri (gst_lv2_world_node, LV2_CORE__integer);
+  gst_lv2_toggled_prop_node =
+      lilv_new_uri (gst_lv2_world_node, LV2_CORE__toggled);
+  gst_lv2_designation_pred_node =
+      lilv_new_uri (gst_lv2_world_node, LV2_CORE__designation);
+  gst_lv2_in_place_broken_pred_node =
+      lilv_new_uri (gst_lv2_world_node, LV2_CORE__inPlaceBroken);
+  gst_lv2_optional_pred_node =
+      lilv_new_uri (gst_lv2_world_node, LV2_CORE__optionalFeature);
+  gst_lv2_group_pred_node =
+      lilv_new_uri (gst_lv2_world_node, LV2_PORT_GROUPS__group);
+  gst_lv2_supports_event_pred_node =
+      lilv_new_uri (gst_lv2_world_node, LV2_EVENT__supportsEvent);
+  gst_lv2_label_pred_node =
+      lilv_new_uri (gst_lv2_world_node, LILV_NS_RDFS "label");
 
-  center_role = lilv_new_uri (world, LV2_PORT_GROUPS__center);
-  left_role = lilv_new_uri (world, LV2_PORT_GROUPS__left);
-  right_role = lilv_new_uri (world, LV2_PORT_GROUPS__right);
-  rear_center_role = lilv_new_uri (world, LV2_PORT_GROUPS__rearCenter);
-  rear_left_role = lilv_new_uri (world, LV2_PORT_GROUPS__rearLeft);
-  rear_right_role = lilv_new_uri (world, LV2_PORT_GROUPS__rearLeft);
-  lfe_role = lilv_new_uri (world, LV2_PORT_GROUPS__lowFrequencyEffects);
-  center_left_role = lilv_new_uri (world, LV2_PORT_GROUPS__centerLeft);
-  center_right_role = lilv_new_uri (world, LV2_PORT_GROUPS__centerRight);
-  side_left_role = lilv_new_uri (world, LV2_PORT_GROUPS__sideLeft);
-  side_right_role = lilv_new_uri (world, LV2_PORT_GROUPS__sideRight);
+  gst_lv2_center_role_node =
+      lilv_new_uri (gst_lv2_world_node, LV2_PORT_GROUPS__center);
+  gst_lv2_left_role_node =
+      lilv_new_uri (gst_lv2_world_node, LV2_PORT_GROUPS__left);
+  gst_lv2_right_role_node =
+      lilv_new_uri (gst_lv2_world_node, LV2_PORT_GROUPS__right);
+  gst_lv2_rear_center_role_node =
+      lilv_new_uri (gst_lv2_world_node, LV2_PORT_GROUPS__rearCenter);
+  gst_lv2_rear_left_role_node =
+      lilv_new_uri (gst_lv2_world_node, LV2_PORT_GROUPS__rearLeft);
+  gst_lv2_rear_right_role_node =
+      lilv_new_uri (gst_lv2_world_node, LV2_PORT_GROUPS__rearRight);
+  gst_lv2_lfe_role_node =
+      lilv_new_uri (gst_lv2_world_node, LV2_PORT_GROUPS__lowFrequencyEffects);
+  gst_lv2_center_left_role_node =
+      lilv_new_uri (gst_lv2_world_node, LV2_PORT_GROUPS__centerLeft);
+  gst_lv2_center_right_role_node =
+      lilv_new_uri (gst_lv2_world_node, LV2_PORT_GROUPS__centerRight);
+  gst_lv2_side_left_role_node =
+      lilv_new_uri (gst_lv2_world_node, LV2_PORT_GROUPS__sideLeft);
+  gst_lv2_side_right_role_node =
+      lilv_new_uri (gst_lv2_world_node, LV2_PORT_GROUPS__sideRight);
 
   gst_plugin_add_dependency_simple (plugin,
       "LV2_PATH:" GST_LV2_ENVVARS, GST_LV2_DEFAULT_PATH, NULL,
@@ -356,39 +378,38 @@ __attribute__ ((destructor))
 #endif
      static void plugin_cleanup (GstPlugin * plugin)
 {
-  lilv_node_free (atom_class);
-  lilv_node_free (audio_class);
-  lilv_node_free (control_class);
-  lilv_node_free (cv_class);
-  lilv_node_free (event_class);
-  lilv_node_free (input_class);
-  lilv_node_free (output_class);
-  lilv_node_free (preset_class);
-  lilv_node_free (state_iface);
-  lilv_node_free (state_uri);
+  lilv_node_free (gst_lv2_audio_node);
+  lilv_node_free (gst_lv2_control_node);
+  lilv_node_free (gst_lv2_cv_node);
+  lilv_node_free (gst_lv2_event_node);
+  lilv_node_free (gst_lv2_input_node);
+  lilv_node_free (gst_lv2_output_node);
+  lilv_node_free (gst_lv2_preset_node);
+  lilv_node_free (gst_lv2_state_iface_node);
+  lilv_node_free (gst_lv2_state_uri_node);
 
-  lilv_node_free (integer_prop);
-  lilv_node_free (toggled_prop);
-  lilv_node_free (designation_pred);
-  lilv_node_free (in_place_broken_pred);
-  lilv_node_free (optional_pred);
-  lilv_node_free (group_pred);
-  lilv_node_free (supports_event_pred);
-  lilv_node_free (label_pred);
+  lilv_node_free (gst_lv2_integer_prop_node);
+  lilv_node_free (gst_lv2_toggled_prop_node);
+  lilv_node_free (gst_lv2_designation_pred_node);
+  lilv_node_free (gst_lv2_in_place_broken_pred_node);
+  lilv_node_free (gst_lv2_optional_pred_node);
+  lilv_node_free (gst_lv2_group_pred_node);
+  lilv_node_free (gst_lv2_supports_event_pred_node);
+  lilv_node_free (gst_lv2_label_pred_node);
 
-  lilv_node_free (center_role);
-  lilv_node_free (left_role);
-  lilv_node_free (right_role);
-  lilv_node_free (rear_center_role);
-  lilv_node_free (rear_left_role);
-  lilv_node_free (rear_right_role);
-  lilv_node_free (lfe_role);
-  lilv_node_free (center_left_role);
-  lilv_node_free (center_right_role);
-  lilv_node_free (side_left_role);
-  lilv_node_free (side_right_role);
+  lilv_node_free (gst_lv2_center_role_node);
+  lilv_node_free (gst_lv2_left_role_node);
+  lilv_node_free (gst_lv2_right_role_node);
+  lilv_node_free (gst_lv2_rear_center_role_node);
+  lilv_node_free (gst_lv2_rear_left_role_node);
+  lilv_node_free (gst_lv2_rear_right_role_node);
+  lilv_node_free (gst_lv2_lfe_role_node);
+  lilv_node_free (gst_lv2_center_left_role_node);
+  lilv_node_free (gst_lv2_center_right_role_node);
+  lilv_node_free (gst_lv2_side_left_role_node);
+  lilv_node_free (gst_lv2_side_right_role_node);
 
-  lilv_world_free (world);
+  lilv_world_free (gst_lv2_world_node);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

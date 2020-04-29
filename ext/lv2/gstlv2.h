@@ -28,40 +28,39 @@
 
 #include "gstlv2utils.h"
 
-extern LilvWorld *world;
-extern LilvNode *atom_class;
-extern LilvNode *audio_class;
-extern LilvNode *control_class;
-extern LilvNode *cv_class;
-extern LilvNode *event_class;
-extern LilvNode *input_class;
-extern LilvNode *output_class;
-extern LilvNode *preset_class;
-extern LilvNode *state_iface;
-extern LilvNode *state_uri;
+G_GNUC_INTERNAL extern LilvWorld *gst_lv2_world_node;
+G_GNUC_INTERNAL extern LilvNode *gst_lv2_audio_node;
+G_GNUC_INTERNAL extern LilvNode *gst_lv2_control_node;
+G_GNUC_INTERNAL extern LilvNode *gst_lv2_cv_node;
+G_GNUC_INTERNAL extern LilvNode *gst_lv2_event_node;
+G_GNUC_INTERNAL extern LilvNode *gst_lv2_input_node;
+G_GNUC_INTERNAL extern LilvNode *gst_lv2_output_node;
+G_GNUC_INTERNAL extern LilvNode *gst_lv2_preset_node;
+G_GNUC_INTERNAL extern LilvNode *gst_lv2_state_iface_node;
+G_GNUC_INTERNAL extern LilvNode *gst_lv2_state_uri_node;
 
-extern LilvNode *integer_prop;
-extern LilvNode *toggled_prop;
-extern LilvNode *designation_pred;
-extern LilvNode *in_place_broken_pred;
-extern LilvNode *optional_pred;
-extern LilvNode *group_pred;
-extern LilvNode *supports_event_pred;
-extern LilvNode *label_pred;
+G_GNUC_INTERNAL extern LilvNode *gst_lv2_integer_prop_node;
+G_GNUC_INTERNAL extern LilvNode *gst_lv2_toggled_prop_node;
+G_GNUC_INTERNAL extern LilvNode *gst_lv2_designation_pred_node;
+G_GNUC_INTERNAL extern LilvNode *gst_lv2_in_place_broken_pred_node;
+G_GNUC_INTERNAL extern LilvNode *gst_lv2_optional_pred_node;
+G_GNUC_INTERNAL extern LilvNode *gst_lv2_group_pred_node;
+G_GNUC_INTERNAL extern LilvNode *gst_lv2_supports_event_pred_node;
+G_GNUC_INTERNAL extern LilvNode *gst_lv2_label_pred_node;
 
-extern LilvNode *center_role;
-extern LilvNode *left_role;
-extern LilvNode *right_role;
-extern LilvNode *rear_center_role;
-extern LilvNode *rear_left_role;
-extern LilvNode *rear_right_role;
-extern LilvNode *lfe_role;
-extern LilvNode *center_left_role;
-extern LilvNode *center_right_role;
-extern LilvNode *side_left_role;
-extern LilvNode *side_right_role;
+G_GNUC_INTERNAL extern LilvNode *gst_lv2_center_role_node;
+G_GNUC_INTERNAL extern LilvNode *gst_lv2_left_role_node;
+G_GNUC_INTERNAL extern LilvNode *gst_lv2_right_role_node;
+G_GNUC_INTERNAL extern LilvNode *gst_lv2_rear_center_role_node;
+G_GNUC_INTERNAL extern LilvNode *gst_lv2_rear_left_role_node;
+G_GNUC_INTERNAL extern LilvNode *gst_lv2_rear_right_role_node;
+G_GNUC_INTERNAL extern LilvNode *gst_lv2_lfe_role_node;
+G_GNUC_INTERNAL extern LilvNode *gst_lv2_center_left_role_node;
+G_GNUC_INTERNAL extern LilvNode *gst_lv2_center_right_role_node;
+G_GNUC_INTERNAL extern LilvNode *gst_lv2_side_left_role_node;
+G_GNUC_INTERNAL extern LilvNode *gst_lv2_side_right_role_node;
 
-extern GstStructure *lv2_meta_all;
+G_GNUC_INTERNAL extern GstStructure *lv2_meta_all;
 
 void gst_lv2_filter_register_element (GstPlugin *plugin,
                                       GstStructure * lv2_meta);
