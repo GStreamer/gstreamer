@@ -1274,3 +1274,27 @@ gst_validate_print_position (GstClockTime position, GstClockTime duration,
 
   g_free (extra_info);
 }
+
+static void
+print_issue (gpointer key, GstValidateIssue * issue, gpointer user_data)
+{
+  gst_validate_printf (NULL, "\n# `%s` (%" G_GUINTPTR_FORMAT ")\n\n",
+      g_quark_to_string (issue->issue_id), issue->issue_id);
+  gst_validate_printf (NULL, "%c%s\n\n", g_ascii_toupper (issue->summary[0]),
+      &issue->summary[1]);
+  if (issue->description)
+    gst_validate_printf (NULL, "%c%s\n\n",
+        g_ascii_toupper (issue->description[0]), &issue->description[1]);
+  gst_validate_printf (NULL, "Area: %s\n", issue->area);
+  gst_validate_printf (NULL, "Name: %s\n", issue->name);
+  gst_validate_printf (NULL, "Default severity: %s\n\n",
+      gst_validate_report_level_get_name (issue->default_level));
+}
+
+void
+gst_validate_print_issues (void)
+{
+  g_return_if_fail (_gst_validate_issues);
+
+  g_hash_table_foreach (_gst_validate_issues, (GHFunc) print_issue, NULL);
+}

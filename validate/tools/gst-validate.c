@@ -338,7 +338,7 @@ main (int argc, gchar ** argv)
   gchar *scenario = NULL, *configs = NULL, *media_info = NULL,
       *verbosity = NULL, *testfile = NULL;
   gboolean list_scenarios = FALSE, monitor_handles_state,
-      inspect_action_type = FALSE;
+      inspect_action_type = FALSE, print_issue_types = FALSE;
   GstStateChangeReturn sret;
   gchar *output_file = NULL;
   BusCallbackData bus_callback_data = { 0, };
@@ -374,6 +374,9 @@ main (int argc, gchar ** argv)
           " If no action type is given the full list of available ones gets printed."
           "Note that passing \"all\" as action type name, makes it output the"
           " full documentation for all types.",
+        NULL},
+    {"print-issue-types", '\0', 0, G_OPTION_ARG_NONE, &print_issue_types,
+          "List all known issue types and their descriptions.",
         NULL},
     {"set-media-info", '\0', 0, G_OPTION_ARG_FILENAME, &media_info,
           "Set a media_info XML file descriptor to share information about the"
@@ -455,6 +458,11 @@ main (int argc, gchar ** argv)
       return -1;
     }
 
+    return 0;
+  }
+
+  if (print_issue_types) {
+    gst_validate_print_issues ();
     return 0;
   }
 
