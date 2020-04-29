@@ -289,8 +289,4 @@ gst_opensles_sink_init (GstOpenSLESSink * sink)
   _opensles_query_capabilities (sink);
 
   gst_audio_base_sink_set_provide_clock (GST_AUDIO_BASE_SINK (sink), TRUE);
-  /* Override some default values to fit on the AudioFlinger behaviour of
-   * processing 20ms buffers as minimum buffer size. */
-  GST_AUDIO_BASE_SINK (sink)->buffer_time = 200000;
-  GST_AUDIO_BASE_SINK (sink)->latency_time = 20000;
 }
