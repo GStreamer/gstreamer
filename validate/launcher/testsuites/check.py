@@ -71,6 +71,11 @@ LONG_VALGRIND_TESTS = [
     (r'check.gst-editing-services.nle_nleoperation.test_pyramid_operations2', 'https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/67'),
     (r'check.gst-editing-services.nle_complex.test_one_above_another', 'https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/67'),
     (r'check.gst-editing-services.nle_nleoperation.test_simple_operation', 'https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/67'),
+    (r'check.gst-editing-services.seek_with_stop.check_clock_sync', 'https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/67'),
+    (r'check.gst-editing-services.edit_while_seeked_with_stop', 'https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/67'),
+    (r'check.gst-editing-services.seek_with_stop', 'https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/67'),
+    (r'check.gst-editing-services.nle_tempochange.test_tempochange_seek', 'https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/67'),
+    (r'check.gst-editing-services.nle_tempochange.test_tempochange_play', 'https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/67'),
 ]
 
 VALGRIND_BLACKLIST = [
