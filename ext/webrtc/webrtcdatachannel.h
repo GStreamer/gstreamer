@@ -27,7 +27,6 @@
 
 G_BEGIN_DECLS
 
-GST_WEBRTC_API
 GType gst_webrtc_data_channel_get_type(void);
 #define GST_TYPE_WEBRTC_DATA_CHANNEL            (gst_webrtc_data_channel_get_type())
 #define GST_WEBRTC_DATA_CHANNEL(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_WEBRTC_DATA_CHANNEL,GstWebRTCDataChannel))
