@@ -183,37 +183,37 @@ static GstAudioChannelPosition
 gst_lv2_filter_role_to_position (LilvNode * role)
 {
   /* Front.  Mono and left/right are mututally exclusive */
-  if (lilv_node_equals (role, center_role)) {
+  if (lilv_node_equals (role, gst_lv2_center_role_node)) {
 
     return GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
-  } else if (lilv_node_equals (role, left_role)) {
+  } else if (lilv_node_equals (role, gst_lv2_left_role_node)) {
     return GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
-  } else if (lilv_node_equals (role, right_role)) {
+  } else if (lilv_node_equals (role, gst_lv2_right_role_node)) {
     return GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
 
     /* Rear. Left/right and center are mututally exclusive */
-  } else if (lilv_node_equals (role, rear_center_role)) {
+  } else if (lilv_node_equals (role, gst_lv2_rear_center_role_node)) {
     return GST_AUDIO_CHANNEL_POSITION_REAR_CENTER;
-  } else if (lilv_node_equals (role, rear_left_role)) {
+  } else if (lilv_node_equals (role, gst_lv2_rear_left_role_node)) {
     return GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
-  } else if (lilv_node_equals (role, rear_right_role)) {
+  } else if (lilv_node_equals (role, gst_lv2_rear_right_role_node)) {
     return GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
 
     /* Subwoofer/low-frequency-effects */
-  } else if (lilv_node_equals (role, lfe_role)) {
+  } else if (lilv_node_equals (role, gst_lv2_lfe_role_node)) {
     return GST_AUDIO_CHANNEL_POSITION_LFE1;
 
     /* Center front speakers. Center and left/right_of_center
      * are mutually exclusive */
-  } else if (lilv_node_equals (role, center_left_role)) {
+  } else if (lilv_node_equals (role, gst_lv2_center_left_role_node)) {
     return GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER;
-  } else if (lilv_node_equals (role, center_right_role)) {
+  } else if (lilv_node_equals (role, gst_lv2_center_right_role_node)) {
     return GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER;
 
     /* sides */
-  } else if (lilv_node_equals (role, side_left_role)) {
+  } else if (lilv_node_equals (role, gst_lv2_side_left_role_node)) {
     return GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT;
-  } else if (lilv_node_equals (role, side_right_role)) {
+  } else if (lilv_node_equals (role, gst_lv2_side_right_role_node)) {
     return GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT;
   }
 
@@ -531,7 +531,8 @@ gst_lv2_filter_init (GstLV2Filter * self, GstLV2FilterClass * klass)
 {
   gst_lv2_init (&self->lv2, &klass->lv2);
 
-  if (!lilv_plugin_has_feature (klass->lv2.plugin, in_place_broken_pred))
+  if (!lilv_plugin_has_feature (klass->lv2.plugin,
+          gst_lv2_in_place_broken_pred_node))
     gst_base_transform_set_in_place (GST_BASE_TRANSFORM (self), TRUE);
 }
 
