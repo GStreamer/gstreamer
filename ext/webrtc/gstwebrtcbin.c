@@ -4032,6 +4032,8 @@ _update_data_channel_from_sdp_media (GstWebRTCBin * webrtc,
     }
   }
 
+  stream->active = TRUE;
+
   receive = TRANSPORT_RECEIVE_BIN (stream->receive_bin);
   transport_receive_bin_set_receive_state (receive, RECEIVE_STATE_PASS);
 }
