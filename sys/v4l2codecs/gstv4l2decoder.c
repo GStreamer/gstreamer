@@ -62,6 +62,10 @@ struct _GstV4l2Decoder
   gint video_fd;
   GstAtomicQueue *request_pool;
 
+  enum v4l2_buf_type src_buf_type;
+  enum v4l2_buf_type sink_buf_type;
+  gboolean mplane;
+
   /* properties */
   gchar *media_device;
   gchar *video_device;
@@ -72,12 +76,12 @@ G_DEFINE_TYPE_WITH_CODE (GstV4l2Decoder, gst_v4l2_decoder, GST_TYPE_OBJECT,
         "V4L2 stateless decoder helper"));
 
 static guint32
-direction_to_buffer_type (GstPadDirection direction)
+direction_to_buffer_type (GstV4l2Decoder * self, GstPadDirection direction)
 {
   if (direction == GST_PAD_SRC)
-    return V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
+    return self->src_buf_type;
   else
-    return V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
+    return self->sink_buf_type;
 }
 
 static void
@@ -130,6 +134,10 @@ gst_v4l2_decoder_new (GstV4l2CodecDevice * device)
 gboolean
 gst_v4l2_decoder_open (GstV4l2Decoder * self)
 {
+  gint ret;
+  struct v4l2_capability querycap;
+  guint32 capabilities;
+
   self->media_fd = open (self->media_device, 0);
   if (self->media_fd < 0) {
     GST_ERROR_OBJECT (self, "Failed to open '%s': %s",
@@ -141,6 +149,32 @@ gst_v4l2_decoder_open (GstV4l2Decoder * self)
   if (self->video_fd < 0) {
     GST_ERROR_OBJECT (self, "Failed to open '%s': %s",
         self->video_device, g_strerror (errno));
+    return FALSE;
+  }
+
+  ret = ioctl (self->video_fd, VIDIOC_QUERYCAP, &querycap);
+  if (ret < 0) {
+    GST_ERROR_OBJECT (self, "VIDIOC_QUERYCAP failed: %s", g_strerror (errno));
+    gst_v4l2_decoder_close (self);
+    return FALSE;
+  }
+
+  if (querycap.capabilities & V4L2_CAP_DEVICE_CAPS)
+    capabilities = querycap.device_caps;
+  else
+    capabilities = querycap.capabilities;
+
+  if (capabilities & V4L2_CAP_VIDEO_M2M_MPLANE) {
+    self->sink_buf_type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
+    self->src_buf_type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
+    self->mplane = TRUE;
+  } else if (capabilities & V4L2_CAP_VIDEO_M2M) {
+    self->sink_buf_type = V4L2_BUF_TYPE_VIDEO_OUTPUT;
+    self->src_buf_type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    self->mplane = FALSE;
+  } else {
+    GST_ERROR_OBJECT (self, "Unsupported memory-2-memory device.");
+    gst_v4l2_decoder_close (self);
     return FALSE;
   }
 
@@ -173,7 +207,7 @@ gboolean
 gst_v4l2_decoder_streamon (GstV4l2Decoder * self, GstPadDirection direction)
 {
   gint ret;
-  guint32 type = direction_to_buffer_type (direction);
+  guint32 type = direction_to_buffer_type (self, direction);
 
   ret = ioctl (self->video_fd, VIDIOC_STREAMON, &type);
   if (ret < 0) {
@@ -188,7 +222,7 @@ gboolean
 gst_v4l2_decoder_streamoff (GstV4l2Decoder * self, GstPadDirection direction)
 {
   gint ret;
-  guint32 type = direction_to_buffer_type (direction);
+  guint32 type = direction_to_buffer_type (self, direction);
 
   ret = ioctl (self->video_fd, VIDIOC_STREAMOFF, &type);
   if (ret < 0) {
@@ -215,7 +249,7 @@ gboolean
 gst_v4l2_decoder_enum_sink_fmt (GstV4l2Decoder * self, gint i,
     guint32 * out_fmt)
 {
-  struct v4l2_fmtdesc fmtdesc = { i, V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE, };
+  struct v4l2_fmtdesc fmtdesc = { i, self->sink_buf_type, };
   gint ret;
 
   g_return_val_if_fail (self->opened, FALSE);
@@ -239,7 +273,8 @@ gst_v4l2_decoder_set_sink_fmt (GstV4l2Decoder * self, guint32 pix_fmt,
     gint width, gint height)
 {
   struct v4l2_format format = (struct v4l2_format) {
-    .type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE,
+    .type = self->sink_buf_type,
+    /* Compatible with .fmt.pix for these field */
     .fmt.pix_mp = (struct v4l2_pix_format_mplane) {
           .pixelformat = pix_fmt,
           .width = width,
@@ -270,7 +305,7 @@ gst_v4l2_decoder_enum_src_formats (GstV4l2Decoder * self)
 {
   gint ret;
   struct v4l2_format fmt = {
-    .type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE,
+    .type = self->src_buf_type,
   };
   GstVideoFormat format;
   GstCaps *caps;
@@ -299,7 +334,7 @@ gst_v4l2_decoder_enum_src_formats (GstV4l2Decoder * self)
   g_value_init (&value, G_TYPE_STRING);
 
   for (i = 0; ret >= 0; i++) {
-    struct v4l2_fmtdesc fmtdesc = { i, V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE, };
+    struct v4l2_fmtdesc fmtdesc = { i, self->src_buf_type, };
 
     ret = ioctl (self->video_fd, VIDIOC_ENUM_FMT, &fmtdesc);
     if (ret < 0) {
@@ -333,7 +368,7 @@ gst_v4l2_decoder_select_src_format (GstV4l2Decoder * self, GstCaps * caps,
 {
   gint ret;
   struct v4l2_format fmt = {
-    .type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE,
+    .type = self->src_buf_type,
   };
   GstStructure *str;
   const gchar *format_str;
@@ -389,7 +424,7 @@ gst_v4l2_decoder_request_buffers (GstV4l2Decoder * self,
   struct v4l2_requestbuffers reqbufs = {
     .count = num_buffers,
     .memory = V4L2_MEMORY_MMAP,
-    .type = direction_to_buffer_type (direction),
+    .type = direction_to_buffer_type (self, direction),
   };
 
   GST_DEBUG_OBJECT (self, "Requesting %u buffers", num_buffers);
@@ -412,10 +447,13 @@ gst_v4l2_decoder_export_buffer (GstV4l2Decoder * self,
   struct v4l2_plane planes[GST_VIDEO_MAX_PLANES] = { {0} };
   struct v4l2_buffer v4l2_buf = {
     .index = 0,
-    .type = direction_to_buffer_type (direction),
-    .length = GST_VIDEO_MAX_PLANES,
-    .m.planes = planes,
+    .type = direction_to_buffer_type (self, direction),
   };
+
+  if (self->mplane) {
+    v4l2_buf.length = GST_VIDEO_MAX_PLANES;
+    v4l2_buf.m.planes = planes;
+  }
 
   ret = ioctl (self->video_fd, VIDIOC_QUERYBUF, &v4l2_buf);
   if (ret < 0) {
@@ -423,30 +461,49 @@ gst_v4l2_decoder_export_buffer (GstV4l2Decoder * self,
     return FALSE;
   }
 
-  *num_fds = v4l2_buf.length;
-  for (i = 0; i < v4l2_buf.length; i++) {
-    struct v4l2_plane *plane = v4l2_buf.m.planes + i;
+  if (self->mplane) {
+    for (i = 0; i < v4l2_buf.length; i++) {
+      struct v4l2_plane *plane = v4l2_buf.m.planes + i;
+      struct v4l2_exportbuffer expbuf = {
+        .type = direction_to_buffer_type (self, direction),
+        .index = index,
+        .plane = i,
+        .flags = O_CLOEXEC | O_RDWR,
+      };
+
+      ret = ioctl (self->video_fd, VIDIOC_EXPBUF, &expbuf);
+      if (ret < 0) {
+        gint j;
+        GST_ERROR_OBJECT (self, "VIDIOC_EXPBUF failed: %s", g_strerror (errno));
+
+        for (j = i - 1; j >= 0; j--)
+          close (fds[j]);
+
+        return FALSE;
+      }
+
+      *num_fds = v4l2_buf.length;
+      fds[i] = expbuf.fd;
+      sizes[i] = plane->length;
+      offsets[i] = plane->data_offset;
+    }
+  } else {
     struct v4l2_exportbuffer expbuf = {
-      .type = direction_to_buffer_type (direction),
+      .type = direction_to_buffer_type (self, direction),
       .index = index,
-      .plane = i,
       .flags = O_CLOEXEC | O_RDWR,
     };
 
     ret = ioctl (self->video_fd, VIDIOC_EXPBUF, &expbuf);
     if (ret < 0) {
-      gint j;
       GST_ERROR_OBJECT (self, "VIDIOC_EXPBUF failed: %s", g_strerror (errno));
-
-      for (j = i - 1; j >= 0; j--)
-        close (fds[j]);
-
       return FALSE;
     }
 
-    fds[i] = expbuf.fd;
-    sizes[i] = plane->length;
-    offsets[i] = plane->data_offset;
+    *num_fds = 1;
+    fds[0] = expbuf.fd;
+    sizes[0] = v4l2_buf.length;
+    offsets[0] = 0;
   }
 
   return TRUE;
@@ -462,15 +519,20 @@ gst_v4l2_decoder_queue_sink_mem (GstV4l2Decoder * self,
     .bytesused = bytesused,
   };
   struct v4l2_buffer buf = {
-    .type = direction_to_buffer_type (GST_PAD_SINK),
+    .type = self->sink_buf_type,
     .memory = V4L2_MEMORY_MMAP,
     .index = gst_v4l2_codec_memory_get_index (mem),
     .timestamp.tv_usec = frame_num,
     .request_fd = request->fd,
     .flags = V4L2_BUF_FLAG_REQUEST_FD,
-    .length = 1,
-    .m.planes = &plane,
   };
+
+  if (self->mplane) {
+    buf.length = 1;
+    buf.m.planes = &plane;
+  } else {
+    buf.bytesused = bytesused;
+  }
 
   ret = ioctl (self->video_fd, VIDIOC_QBUF, &buf);
   if (ret < 0) {
@@ -488,22 +550,26 @@ gst_v4l2_decoder_queue_src_buffer (GstV4l2Decoder * self, GstBuffer * buffer,
     guint32 frame_num)
 {
   gint i, ret;
-  struct v4l2_plane plane[GST_VIDEO_MAX_PLANES];
+  struct v4l2_plane planes[GST_VIDEO_MAX_PLANES];
   struct v4l2_buffer buf = {
-    .type = direction_to_buffer_type (GST_PAD_SRC),
+    .type = self->src_buf_type,
     .memory = V4L2_MEMORY_MMAP,
     .index = gst_v4l2_codec_buffer_get_index (buffer),
-    .length = gst_buffer_n_memory (buffer),
-    .m.planes = plane,
   };
 
-  for (i = 0; i < buf.length; i++) {
-    GstMemory *mem = gst_buffer_peek_memory (buffer, i);
-    /* *INDENT-OFF* */
-    plane[i] = (struct v4l2_plane) {
-      .bytesused = gst_memory_get_sizes (mem, NULL, NULL),
-    };
-    /* *INDENT-ON* */
+  if (self->mplane) {
+    buf.length = gst_buffer_n_memory (buffer);
+    buf.m.planes = planes;
+    for (i = 0; i < buf.length; i++) {
+      GstMemory *mem = gst_buffer_peek_memory (buffer, i);
+      /* *INDENT-OFF* */
+      planes[i] = (struct v4l2_plane) {
+        .bytesused = gst_memory_get_sizes (mem, NULL, NULL),
+      };
+      /* *INDENT-ON* */
+    }
+  } else {
+    buf.bytesused = gst_buffer_get_size (buffer);
   }
 
   ret = ioctl (self->video_fd, VIDIOC_QBUF, &buf);
@@ -519,13 +585,16 @@ gboolean
 gst_v4l2_decoder_dequeue_sink (GstV4l2Decoder * self)
 {
   gint ret;
-  struct v4l2_plane plane[GST_VIDEO_MAX_PLANES] = { {0} };
+  struct v4l2_plane planes[GST_VIDEO_MAX_PLANES] = { {0} };
   struct v4l2_buffer buf = {
-    .type = direction_to_buffer_type (GST_PAD_SINK),
+    .type = self->sink_buf_type,
     .memory = V4L2_MEMORY_MMAP,
-    .length = GST_VIDEO_MAX_PLANES,
-    .m.planes = plane,
   };
+
+  if (self->mplane) {
+    buf.length = GST_VIDEO_MAX_PLANES;
+    buf.m.planes = planes;
+  }
 
   ret = ioctl (self->video_fd, VIDIOC_DQBUF, &buf);
   if (ret < 0) {
@@ -540,13 +609,16 @@ gboolean
 gst_v4l2_decoder_dequeue_src (GstV4l2Decoder * self, guint32 * out_frame_num)
 {
   gint ret;
-  struct v4l2_plane plane[GST_VIDEO_MAX_PLANES] = { {0} };
+  struct v4l2_plane planes[GST_VIDEO_MAX_PLANES] = { {0} };
   struct v4l2_buffer buf = {
-    .type = direction_to_buffer_type (GST_PAD_SRC),
+    .type = self->src_buf_type,
     .memory = V4L2_MEMORY_MMAP,
-    .length = GST_VIDEO_MAX_PLANES,
-    .m.planes = plane,
   };
+
+  if (self->mplane) {
+    buf.length = GST_VIDEO_MAX_PLANES;
+    buf.m.planes = planes;
+  }
 
   ret = ioctl (self->video_fd, VIDIOC_DQBUF, &buf);
   if (ret < 0) {

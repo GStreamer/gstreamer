@@ -98,6 +98,7 @@ gst_v4l2_format_to_video_info (struct v4l2_format * fmt,
 {
   struct FormatEntry *entry = lookup_v4l2_fmt (fmt->fmt.pix_mp.pixelformat);
   struct v4l2_pix_format_mplane *pix_mp = &fmt->fmt.pix_mp;
+  struct v4l2_pix_format *pix = &fmt->fmt.pix;
   gint plane;
   gsize offset = 0;
 
@@ -113,13 +114,22 @@ gst_v4l2_format_to_video_info (struct v4l2_format * fmt,
           pix_mp->width, pix_mp->height))
     return FALSE;
 
-  /* TODO: We don't support multi-allocation yet */
-  g_return_val_if_fail (pix_mp->num_planes == 1, FALSE);
-  out_info->size = pix_mp->plane_fmt[0].sizeimage;
+  if (V4L2_TYPE_IS_MULTIPLANAR (fmt->type)) {
+    /* TODO: We don't support multi-allocation yet */
+    g_return_val_if_fail (pix_mp->num_planes == 1, FALSE);
+    out_info->size = pix_mp->plane_fmt[0].sizeimage;
+  } else {
+    out_info->size = pix->sizeimage;
+  }
 
   for (plane = 0; plane < GST_VIDEO_INFO_N_PLANES (out_info); plane++) {
-    gint stride = extrapolate_stride (out_info->finfo, plane,
-        pix_mp->plane_fmt[0].bytesperline);
+    gint stride;
+
+    if (V4L2_TYPE_IS_MULTIPLANAR (fmt->type))
+      stride = extrapolate_stride (out_info->finfo, plane,
+          pix_mp->plane_fmt[0].bytesperline);
+    else
+      stride = extrapolate_stride (out_info->finfo, plane, pix->bytesperline);
 
     out_info->stride[plane] = stride;
     out_info->offset[plane] = offset;
