@@ -262,7 +262,7 @@ gboolean        gst_navigation_message_parse_event          (GstMessage *message
  * gst_navigation_event_parse_command() to extract the details from the event.
  * @GST_NAVIGATION_EVENT_MOUSE_SCROLL: A mouse scroll event. Use
  * gst_navigation_event_parse_mouse_scroll_event() to extract the details from
- * the event.
+ * the event. (Since: 1.18)
  *
  * Enum values for the various events that an element implementing the
  * GstNavigation interface might send up the pipeline.
