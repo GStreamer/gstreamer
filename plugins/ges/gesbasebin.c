@@ -220,6 +220,7 @@ ges_base_bin_set_timeline (GESBaseBin * self, GESTimeline * timeline)
 
   priv->timeline = gst_object_ref (timeline);
   GST_INFO_OBJECT (sbin, "Setting timeline: %" GST_PTR_FORMAT, timeline);
+  gst_element_set_locked_state (GST_ELEMENT (timeline), TRUE);
   if (!gst_bin_add (sbin, GST_ELEMENT (timeline))) {
     GST_ERROR_OBJECT (sbin, "Could not add timeline to myself!");
 
@@ -284,6 +285,8 @@ ges_base_bin_set_timeline (GESBaseBin * self, GESTimeline * timeline)
     gst_object_unref (proxy_pad);
     GST_DEBUG_OBJECT (sbin, "Adding pad: %" GST_PTR_FORMAT, gpad);
   }
+
+  gst_element_set_locked_state (GST_ELEMENT (timeline), FALSE);
 
   gst_element_no_more_pads (GST_ELEMENT (sbin));
   gst_element_sync_state_with_parent (GST_ELEMENT (timeline));
