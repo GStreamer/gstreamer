@@ -9,7 +9,7 @@ meta,
     ignore-eos=true,
     configs = {
         # Ideally we should be able to record checksums... but they are not reproducible
-        "$(validateflow), pad=videosink:sink, record-buffers=true, ignored-fields={\"stream-start=stream-id,group-id,stream\"}",
+        "$(validateflow), pad=videosink:sink, record-buffers=true, ignored-fields=\"stream-start={stream-id,group-id,stream}\"",
     }
 
 add-clip, name=c0, asset-id=GESTestClip, layer-priority=0, type=GESTestClip, start=0, duration=1.0
