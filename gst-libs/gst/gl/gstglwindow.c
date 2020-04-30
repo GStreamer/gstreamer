@@ -935,6 +935,19 @@ gst_gl_window_send_mouse_event (GstGLWindow * window, const char *event_type,
       event_type, button, posx, posy);
 }
 
+/**
+ * gst_gl_window_send_scroll_event:
+ * @window: a #GstGLWindow
+ * @posx: x position of the mouse cursor
+ * @posy: y position of the mouse cursor
+ * @delta_x: the x offset of the scroll event
+ * @delta_y: the y offset of the scroll event
+ *
+ * Notify a @window about a scroll event. A scroll signal holding the event
+ * coordinates will be emitted.
+ *
+ * Since: 1.18
+ */
 void
 gst_gl_window_send_scroll_event (GstGLWindow * window,
     double posx, double posy, double delta_x, double delta_y)
