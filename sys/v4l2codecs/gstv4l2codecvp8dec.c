@@ -175,6 +175,11 @@ gst_v4l2_codec_vp8_dec_negotiate (GstVideoDecoder * decoder)
   }
 
   filter = gst_v4l2_decoder_enum_src_formats (self->decoder);
+  if (!filter) {
+    GST_ELEMENT_ERROR (self, CORE, NEGOTIATION,
+        ("No supported decoder output formats"), (NULL));
+    return FALSE;
+  }
   GST_DEBUG_OBJECT (self, "Supported output formats: %" GST_PTR_FORMAT, filter);
 
   caps = gst_pad_peer_query_caps (decoder->srcpad, filter);
