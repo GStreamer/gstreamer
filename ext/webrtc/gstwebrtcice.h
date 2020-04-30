@@ -81,8 +81,6 @@ gboolean                    gst_webrtc_ice_set_remote_credentials   (GstWebRTCIC
                                                                      gchar * pwd);
 gboolean                    gst_webrtc_ice_add_turn_server          (GstWebRTCICE * ice,
                                                                      const gchar * uri);
-gboolean                    gst_webrtc_ice_add_local_ip_address     (GstWebRTCICE * ice,
-                                                                     const gchar * address);
 G_END_DECLS
 
 #endif /* __GST_WEBRTC_ICE_H__ */

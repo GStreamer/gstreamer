@@ -348,7 +348,6 @@ enum
   ADD_TURN_SERVER_SIGNAL,
   CREATE_DATA_CHANNEL_SIGNAL,
   ON_DATA_CHANNEL_SIGNAL,
-  ADD_LOCAL_IP_ADDRESS_SIGNAL,
   LAST_SIGNAL,
 };
 
@@ -369,8 +368,7 @@ enum
   PROP_TURN_SERVER,
   PROP_BUNDLE_POLICY,
   PROP_ICE_TRANSPORT_POLICY,
-  PROP_ICE_TCP,
-  PROP_ICE_UDP,
+  PROP_ICE_AGENT,
 };
 
 static guint gst_webrtc_bin_signals[LAST_SIGNAL] = { 0 };
@@ -5026,18 +5024,6 @@ gst_webrtc_bin_add_turn_server (GstWebRTCBin * webrtc, const gchar * uri)
 }
 
 static gboolean
-gst_webrtc_bin_add_local_ip_address (GstWebRTCBin * webrtc,
-    const gchar * address)
-{
-  g_return_val_if_fail (GST_IS_WEBRTC_BIN (webrtc), FALSE);
-  g_return_val_if_fail (address != NULL, FALSE);
-
-  GST_DEBUG_OBJECT (webrtc, "Adding local IP address: %s", address);
-
-  return gst_webrtc_ice_add_local_ip_address (webrtc->priv->ice, address);
-}
-
-static gboolean
 copy_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
 {
   GstPad *gpad = GST_PAD_CAST (user_data);
@@ -5852,8 +5838,6 @@ gst_webrtc_bin_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_STUN_SERVER:
     case PROP_TURN_SERVER:
-    case PROP_ICE_TCP:
-    case PROP_ICE_UDP:
       g_object_set_property (G_OBJECT (webrtc->priv->ice), pspec->name, value);
       break;
     case PROP_BUNDLE_POLICY:
@@ -5925,8 +5909,6 @@ gst_webrtc_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_STUN_SERVER:
     case PROP_TURN_SERVER:
-    case PROP_ICE_TCP:
-    case PROP_ICE_UDP:
       g_object_get_property (G_OBJECT (webrtc->priv->ice), pspec->name, value);
       break;
     case PROP_BUNDLE_POLICY:
@@ -5934,6 +5916,9 @@ gst_webrtc_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_ICE_TRANSPORT_POLICY:
       g_value_set_enum (value, webrtc->ice_transport_policy);
+      break;
+    case PROP_ICE_AGENT:
+      g_value_set_object (value, webrtc->priv->ice);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -6198,16 +6183,10 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
-      PROP_ICE_TCP,
-      g_param_spec_boolean ("ice-tcp", "ICE TCP",
-          "Whether the agent should use ICE-TCP when gathering candidates",
-          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (gobject_class,
-      PROP_ICE_UDP,
-      g_param_spec_boolean ("ice-udp", "ICE UDP",
-          "Whether the agent should use ICE-UDP when gathering candidates",
-          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      PROP_ICE_AGENT,
+      g_param_spec_object ("ice-agent", "WebRTC ICE agent",
+          "The WebRTC ICE agent",
+          GST_TYPE_WEBRTC_ICE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstWebRTCBin::create-offer:
@@ -6437,20 +6416,6 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_CALLBACK (gst_webrtc_bin_add_turn_server), NULL, NULL, NULL,
       G_TYPE_BOOLEAN, 1, G_TYPE_STRING);
-
-  /**
-   * GstWebRTCBin::add-local-ip-address:
-   * @object: the #GstWebRtcBin
-   * @address: The local IP address
-   *
-   * Add a local IP address to use for ICE candidate gathering.  If none
-   * are supplied, they will be discovered automatically
-   */
-  gst_webrtc_bin_signals[ADD_LOCAL_IP_ADDRESS_SIGNAL] =
-      g_signal_new_class_handler ("add-local-ip-address",
-      G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_CALLBACK (gst_webrtc_bin_add_local_ip_address), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_BOOLEAN, 1, G_TYPE_STRING);
 
   /*
    * GstWebRTCBin::create-data-channel:

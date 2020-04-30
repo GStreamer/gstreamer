@@ -48,6 +48,7 @@ enum
   SIGNAL_0,
   ON_ICE_CANDIDATE_SIGNAL,
   ON_ICE_GATHERING_STATE_CHANGE_SIGNAL,
+  ADD_LOCAL_IP_ADDRESS_SIGNAL,
   LAST_SIGNAL,
 };
 
@@ -670,7 +671,7 @@ done:
   return ret;
 }
 
-gboolean
+static gboolean
 gst_webrtc_ice_add_local_ip_address (GstWebRTCICE * ice, const gchar * address)
 {
   gboolean ret = FALSE;
@@ -1018,6 +1019,21 @@ gst_webrtc_ice_class_init (GstWebRTCICEClass * klass)
       g_signal_new ("on-ice-candidate", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL,
       G_TYPE_NONE, 2, G_TYPE_UINT, G_TYPE_STRING);
+
+  /**
+   * GstWebRTCICE::add-local-ip-address:
+   * @object: the #GstWebRtcICE
+   * @address: The local IP address
+   *
+   * Add a local IP address to use for ICE candidate gathering.  If none
+   * are supplied, they will be discovered automatically. Calling this signal
+   * stops automatic ICE gathering.
+   */
+  gst_webrtc_ice_signals[ADD_LOCAL_IP_ADDRESS_SIGNAL] =
+      g_signal_new_class_handler ("add-local-ip-address",
+      G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_CALLBACK (gst_webrtc_ice_add_local_ip_address), NULL, NULL,
+      g_cclosure_marshal_generic, G_TYPE_BOOLEAN, 1, G_TYPE_STRING);
 }
 
 static void
