@@ -107,4 +107,7 @@ G_GNUC_INTERNAL
 const gchar *                       _media_get_ice_ufrag                (const GstSDPMessage * msg,
                                                                              guint media_idx);
 
+G_GNUC_INTERNAL
+gboolean                            _media_is_bundle_only               (const GstSDPMedia * sdp);
+
 #endif /* __WEBRTC_UTILS_H__ */

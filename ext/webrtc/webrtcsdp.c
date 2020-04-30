@@ -919,3 +919,19 @@ _get_bundle_index (GstSDPMessage * sdp, GStrv bundled, guint * idx)
 
   return ret;
 }
+
+gboolean
+_media_is_bundle_only (const GstSDPMedia * media)
+{
+  int i;
+
+  for (i = 0; i < gst_sdp_media_attributes_len (media); i++) {
+    const GstSDPAttribute *attr = gst_sdp_media_get_attribute (media, i);
+
+    if (g_strcmp0 (attr->key, "bundle-only") == 0) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}

@@ -4105,8 +4105,9 @@ _update_transceivers_from_sdp (GstWebRTCBin * webrtc, SDPSource source,
 
   /* FIXME: With some peers, it's possible we could have
    * multiple bundles to deal with, although I've never seen one yet */
-  if (!_parse_bundle (sdp->sdp, &bundled))
-    goto done;
+  if (webrtc->bundle_policy != GST_WEBRTC_BUNDLE_POLICY_NONE)
+    if (!_parse_bundle (sdp->sdp, &bundled))
+      goto done;
 
   if (bundled) {
 
@@ -4255,8 +4256,9 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
     goto out;
   }
 
-  if (!_parse_bundle (sd->sdp->sdp, &bundled))
-    goto out;
+  if (webrtc->bundle_policy != GST_WEBRTC_BUNDLE_POLICY_NONE)
+    if (!_parse_bundle (sd->sdp->sdp, &bundled))
+      goto out;
 
   if (bundled) {
     if (!_get_bundle_index (sd->sdp->sdp, bundled, &bundle_idx)) {
@@ -4412,6 +4414,7 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
   }
 
   for (i = 0; i < gst_sdp_message_medias_len (sd->sdp->sdp); i++) {
+    const GstSDPMedia *media = gst_sdp_message_get_media (sd->sdp->sdp, i);
     gchar *ufrag, *pwd;
     TransportStream *item;
 
@@ -4420,7 +4423,6 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
         _message_media_is_datachannel (sd->sdp->sdp, bundled ? bundle_idx : i));
 
     if (sd->source == SDP_REMOTE) {
-      const GstSDPMedia *media = gst_sdp_message_get_media (sd->sdp->sdp, i);
       guint j;
 
       for (j = 0; j < gst_sdp_media_attributes_len (media); j++) {
@@ -4443,20 +4445,21 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
       }
     }
 
-    if (bundled && bundle_idx != i)
-      continue;
+    if (sd->source == SDP_LOCAL && (!bundled || bundle_idx == i)) {
+      _get_ice_credentials_from_sdp_media (sd->sdp->sdp, i, &ufrag, &pwd);
 
-    _get_ice_credentials_from_sdp_media (sd->sdp->sdp, i, &ufrag, &pwd);
-
-    if (sd->source == SDP_LOCAL) {
       gst_webrtc_ice_set_local_credentials (webrtc->priv->ice,
           item->stream, ufrag, pwd);
-    } else {
+      g_free (ufrag);
+      g_free (pwd);
+    } else if (sd->source == SDP_REMOTE && !_media_is_bundle_only (media)) {
+      _get_ice_credentials_from_sdp_media (sd->sdp->sdp, i, &ufrag, &pwd);
+
       gst_webrtc_ice_set_remote_credentials (webrtc->priv->ice,
           item->stream, ufrag, pwd);
+      g_free (ufrag);
+      g_free (pwd);
     }
-    g_free (ufrag);
-    g_free (pwd);
   }
 
   if (sd->source == SDP_LOCAL) {
