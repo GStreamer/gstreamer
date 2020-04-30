@@ -2316,7 +2316,7 @@ GST_START_TEST (test_children_inpoint)
   CHECK_OBJECT_PROPS (effect, 5, 67, 20);
 
   /* should not be able to set the in-point to non-zero */
-  fail_if (ges_timeline_element_set_inpoint (child0, 40));
+  assert_fail_set_inpoint (child0, 40);
 
   CHECK_OBJECT_PROPS (clip, 5, 30, 20);
   CHECK_OBJECT_PROPS (child0, 5, 0, 20);
@@ -2506,21 +2506,21 @@ GST_START_TEST (test_children_max_duration)
     /* can not set in-point above max_duration, nor max_duration below
      * in-point */
 
-    fail_if (ges_timeline_element_set_max_duration (child0, 29));
+    assert_fail_set_max_duration (child0, 29);
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max + 1);
     CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, new_max - 2);
     CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
-    fail_if (ges_timeline_element_set_max_duration (child1, 29));
+    assert_fail_set_max_duration (child1, 29);
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max + 1);
     CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, new_max - 2);
     CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
-    fail_if (ges_timeline_element_set_max_duration (clip, 29));
+    assert_fail_set_max_duration (clip, 29);
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max + 1);
@@ -2530,21 +2530,21 @@ GST_START_TEST (test_children_max_duration)
     /* can't set the inpoint to (new_max), even though it is lower than
      * our own max-duration (new_max + 1) because it is too high for our
      * sibling child1 */
-    fail_if (ges_timeline_element_set_inpoint (child0, new_max));
+    assert_fail_set_inpoint (child0, new_max);
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max + 1);
     CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, new_max - 2);
     CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
-    fail_if (ges_timeline_element_set_inpoint (child1, new_max));
+    assert_fail_set_inpoint (child1, new_max);
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max + 1);
     CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, new_max - 2);
     CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
-    fail_if (ges_timeline_element_set_inpoint (clip, new_max));
+    assert_fail_set_inpoint (clip, new_max);
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max + 1);
@@ -2591,14 +2591,14 @@ GST_START_TEST (test_children_max_duration)
     CHECK_OBJECT_PROPS_MAX (effect, 5, new_max + 2, 20, new_max + 500);
 
     /* but not higher than our own */
-    fail_if (ges_timeline_element_set_inpoint (effect, new_max + 501));
+    assert_fail_set_inpoint (effect, new_max + 501);
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max + 1);
     CHECK_OBJECT_PROPS_MAX (child1, 5, 30, 20, new_max - 2);
     CHECK_OBJECT_PROPS_MAX (effect, 5, new_max + 2, 20, new_max + 500);
 
-    fail_if (ges_timeline_element_set_max_duration (effect, new_max + 1));
+    assert_fail_set_max_duration (effect, new_max + 1);
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, new_max - 2);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 30, 20, new_max + 1);
@@ -2640,7 +2640,7 @@ GST_START_TEST (test_children_max_duration)
     CHECK_OBJECT_PROPS_MAX (effect, 5, 0, 20, 400);
 
     /* should not be able to set the max-duration to a valid time */
-    fail_if (ges_timeline_element_set_max_duration (child0, 40));
+    assert_fail_set_max_duration (child0, 40);
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, 180);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 0, 20, GST_CLOCK_TIME_NONE);
@@ -2659,7 +2659,7 @@ GST_START_TEST (test_children_max_duration)
 
     /* should not be able to set the max of the clip to anything else
      * when it has no core children with an internal source */
-    fail_if (ges_timeline_element_set_max_duration (clip, 150));
+    assert_fail_set_max_duration (clip, 150);
 
     CHECK_OBJECT_PROPS_MAX (clip, 5, 30, 20, GST_CLOCK_TIME_NONE);
     CHECK_OBJECT_PROPS_MAX (child0, 5, 0, 20, GST_CLOCK_TIME_NONE);
@@ -3054,6 +3054,549 @@ GST_START_TEST (test_duration_limit)
 
   gst_object_unref (timeline);
   gst_object_unref (clip);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_can_set_duration_limit)
+{
+  GESTimeline *timeline;
+  GESLayer *layer;
+  GESClip *clip;
+  GESTrackElement *source0, *source1;
+  GESTrackElement *effect0, *effect1, *effect2;
+  GESTrack *track0, *track1;
+  gint limit_notify_count = 0;
+
+  ges_init ();
+
+  timeline = ges_timeline_new ();
+  track0 = GES_TRACK (ges_video_track_new ());
+  track1 = GES_TRACK (ges_audio_track_new ());
+
+  fail_unless (ges_timeline_add_track (timeline, track0));
+  fail_unless (ges_timeline_add_track (timeline, track1));
+  /* add track3 later */
+
+  layer = ges_timeline_append_layer (timeline);
+
+  /* place a dummy clip at the start of the layer */
+  clip = GES_CLIP (ges_test_clip_new ());
+  assert_set_start (clip, 0);
+  assert_set_duration (clip, 20);
+
+  fail_unless (ges_layer_add_clip (layer, clip));
+
+  /* the clip we will be editing overlaps the first clip at its start */
+  clip = GES_CLIP (ges_test_clip_new ());
+
+  g_signal_connect (clip, "notify::duration-limit", G_CALLBACK (_count_cb),
+      &limit_notify_count);
+
+  assert_set_start (clip, 10);
+  assert_set_duration (clip, 20);
+
+  fail_unless (ges_layer_add_clip (layer, clip));
+
+  source0 =
+      ges_clip_find_track_element (clip, track0, GES_TYPE_VIDEO_TEST_SOURCE);
+  source1 =
+      ges_clip_find_track_element (clip, track1, GES_TYPE_AUDIO_TEST_SOURCE);
+
+  fail_unless (source0);
+  fail_unless (source1);
+
+  gst_object_unref (source0);
+  gst_object_unref (source1);
+
+  assert_equals_int (limit_notify_count, 0);
+  _assert_duration_limit (clip, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 0, 20, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 0, 20, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 0, 20, GST_CLOCK_TIME_NONE);
+
+  assert_set_inpoint (clip, 16);
+
+  assert_equals_int (limit_notify_count, 0);
+  _assert_duration_limit (clip, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 16, 20, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 16, 20, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 16, 20, GST_CLOCK_TIME_NONE);
+
+  assert_set_max_duration (clip, 36);
+
+  assert_equals_int (limit_notify_count, 1);
+  _assert_duration_limit (clip, 20);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 16, 20, 36);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 16, 20, 36);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 16, 20, 36);
+
+  /* add effects */
+  effect0 = GES_TRACK_ELEMENT (ges_effect_new ("agingtv"));
+  effect1 = GES_TRACK_ELEMENT (ges_effect_new ("vertigotv"));
+  effect2 = GES_TRACK_ELEMENT (ges_effect_new ("alpha"));
+
+  ges_track_element_set_has_internal_source (effect0, TRUE);
+  fail_unless (ges_track_element_has_internal_source (effect1) == FALSE);
+  ges_track_element_set_has_internal_source (effect2, TRUE);
+
+  assert_set_max_duration (effect0, 10);
+  /* already set the track */
+  fail_unless (ges_track_add_element (track0, effect0));
+  /* cannot add because it would cause the duration-limit to go to 10,
+   * causing a full overlap with the clip at the beginning of the layer */
+
+  gst_object_ref (effect0);
+  fail_if (ges_container_add (GES_CONTAINER (clip),
+          GES_TIMELINE_ELEMENT (effect0)));
+
+  assert_equals_int (limit_notify_count, 1);
+  _assert_duration_limit (clip, 20);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 16, 20, 36);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 16, 20, 36);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 16, 20, 36);
+
+  /* removing from the track and adding will work, but track selection
+   * will fail */
+  fail_unless (ges_track_remove_element (track0, effect0));
+
+  _assert_add (clip, effect0);
+  fail_if (ges_track_element_get_track (effect0));
+  gst_object_unref (effect0);
+
+  assert_equals_int (limit_notify_count, 1);
+  _assert_duration_limit (clip, 20);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 16, 20, 36);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 16, 20, 36);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 16, 20, 36);
+  CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 20, 10);
+
+  fail_if (ges_clip_add_child_to_track (clip, effect0, track0, NULL));
+
+  /* set max-duration to 11 and we are fine to select a track */
+  assert_set_max_duration (effect0, 11);
+  assert_equals_int (limit_notify_count, 1);
+  _assert_duration_limit (clip, 20);
+
+  fail_unless (ges_clip_add_child_to_track (clip, effect0, track0,
+          NULL) == effect0);
+
+  assert_equals_int (limit_notify_count, 2);
+  _assert_duration_limit (clip, 11);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 16, 11, 36);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 16, 11, 36);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 16, 11, 36);
+  CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 11, 11);
+
+  /* cannot set duration above the limit */
+  assert_fail_set_duration (clip, 12);
+  assert_fail_set_duration (source0, 12);
+  assert_fail_set_duration (effect0, 12);
+
+  /* allow the max_duration to increase again */
+  assert_set_max_duration (effect0, 25);
+
+  assert_equals_int (limit_notify_count, 3);
+  _assert_duration_limit (clip, 20);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 16, 11, 36);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 16, 11, 36);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 16, 11, 36);
+  CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 11, 25);
+
+  assert_set_duration (clip, 20);
+
+  assert_equals_int (limit_notify_count, 3);
+  _assert_duration_limit (clip, 20);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 16, 20, 36);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 16, 20, 36);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 16, 20, 36);
+  CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 20, 25);
+
+  /* add another effect */
+  _assert_add (clip, effect1);
+  fail_unless (ges_track_element_get_track (effect1) == track0);
+
+  assert_equals_int (limit_notify_count, 3);
+  _assert_duration_limit (clip, 20);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 16, 20, 36);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 16, 20, 36);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 16, 20, 36);
+  CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 20, 25);
+  CHECK_OBJECT_PROPS_MAX (effect1, 10, 0, 20, GST_CLOCK_TIME_NONE);
+
+  /* make source0 inactive and reduce its max-duration
+   * note that this causes effect0 and effect1 to also become in-active */
+  _assert_set_active (source0, FALSE);
+  _assert_active (source0, FALSE);
+  _assert_active (effect0, FALSE);
+  _assert_active (effect1, FALSE);
+
+  assert_equals_int (limit_notify_count, 3);
+  _assert_duration_limit (clip, 20);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 16, 20, 36);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 16, 20, 36);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 16, 20, 36);
+  CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 20, 25);
+  CHECK_OBJECT_PROPS_MAX (effect1, 10, 0, 20, GST_CLOCK_TIME_NONE);
+
+  /* can set a low max duration whilst the source is inactive */
+  assert_set_max_duration (source0, 26);
+
+  assert_equals_int (limit_notify_count, 3);
+  _assert_duration_limit (clip, 20);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 16, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 16, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 16, 20, 36);
+  CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 20, 25);
+  CHECK_OBJECT_PROPS_MAX (effect1, 10, 0, 20, GST_CLOCK_TIME_NONE);
+
+  /* add the last effect */
+  assert_set_inpoint (effect2, 7);
+  assert_set_max_duration (effect2, 17);
+  _assert_active (effect2, TRUE);
+
+  /* safe to add because the source is inactive */
+  assert_equals_int (limit_notify_count, 3);
+  _assert_add (clip, effect2);
+  assert_equals_int (limit_notify_count, 3);
+  _assert_active (source0, FALSE);
+  _assert_active (effect0, FALSE);
+  _assert_active (effect1, FALSE);
+  _assert_active (effect2, FALSE);
+
+  fail_unless (ges_track_element_get_track (effect2) == track0);
+
+  assert_equals_int (limit_notify_count, 3);
+  _assert_duration_limit (clip, 20);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 16, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 16, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 16, 20, 36);
+  CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 20, 25);
+  CHECK_OBJECT_PROPS_MAX (effect1, 10, 0, 20, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect2, 10, 7, 20, 17);
+
+  /* want to make the source and its effects active again */
+  assert_set_inpoint (source0, 6);
+  assert_set_max_duration (effect2, 33);
+
+  assert_equals_int (limit_notify_count, 4);
+  _assert_duration_limit (clip, 30);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 6, 20, 36);
+  CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 20, 25);
+  CHECK_OBJECT_PROPS_MAX (effect1, 10, 0, 20, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect2, 10, 7, 20, 33);
+
+  _assert_set_active (source0, TRUE);
+  _assert_set_active (effect0, TRUE);
+  _assert_set_active (effect1, TRUE);
+  _assert_set_active (effect2, TRUE);
+
+  assert_equals_int (limit_notify_count, 5);
+  _assert_duration_limit (clip, 20);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 6, 20, 36);
+  CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 20, 25);
+  CHECK_OBJECT_PROPS_MAX (effect1, 10, 0, 20, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect2, 10, 7, 20, 33);
+
+  /* cannot set in-point of clip to 16, nor of either source */
+  assert_fail_set_inpoint (clip, 16);
+  assert_fail_set_inpoint (source0, 16);
+  assert_fail_set_inpoint (source1, 16);
+
+  assert_equals_int (limit_notify_count, 5);
+  _assert_duration_limit (clip, 20);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 6, 20, 36);
+  CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 20, 25);
+  CHECK_OBJECT_PROPS_MAX (effect1, 10, 0, 20, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect2, 10, 7, 20, 33);
+
+  /* can set just below */
+  assert_set_inpoint (source1, 15);
+
+  assert_equals_int (limit_notify_count, 6);
+  _assert_duration_limit (clip, 11);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 15, 11, 26);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 15, 11, 26);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 15, 11, 36);
+  CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 11, 25);
+  CHECK_OBJECT_PROPS_MAX (effect1, 10, 0, 11, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect2, 10, 7, 11, 33);
+
+  assert_set_inpoint (clip, 6);
+  assert_set_duration (clip, 20);
+
+  assert_equals_int (limit_notify_count, 7);
+  _assert_duration_limit (clip, 20);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 6, 20, 36);
+  CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 20, 25);
+  CHECK_OBJECT_PROPS_MAX (effect1, 10, 0, 20, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect2, 10, 7, 20, 33);
+
+  /* cannot set in-point of non-core in a way that would cause limit to
+   * drop */
+  assert_fail_set_inpoint (effect2, 23);
+  assert_fail_set_inpoint (effect0, 15);
+
+  assert_equals_int (limit_notify_count, 7);
+  _assert_duration_limit (clip, 20);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 6, 20, 36);
+  CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 20, 25);
+  CHECK_OBJECT_PROPS_MAX (effect1, 10, 0, 20, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect2, 10, 7, 20, 33);
+
+  /* can set just below */
+  assert_set_inpoint (effect2, 22);
+
+  assert_equals_int (limit_notify_count, 8);
+  _assert_duration_limit (clip, 11);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 6, 11, 26);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 6, 11, 26);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 6, 11, 36);
+  CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 11, 25);
+  CHECK_OBJECT_PROPS_MAX (effect1, 10, 0, 11, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect2, 10, 22, 11, 33);
+
+  assert_set_inpoint (effect2, 7);
+  assert_set_duration (clip, 20);
+
+  assert_equals_int (limit_notify_count, 9);
+  _assert_duration_limit (clip, 20);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 6, 20, 36);
+  CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 20, 25);
+  CHECK_OBJECT_PROPS_MAX (effect1, 10, 0, 20, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect2, 10, 7, 20, 33);
+
+  /* same but with max-duration */
+
+  /* core */
+  assert_fail_set_max_duration (clip, 16);
+  assert_fail_set_max_duration (source0, 16);
+  assert_fail_set_max_duration (source1, 16);
+
+  assert_equals_int (limit_notify_count, 9);
+  _assert_duration_limit (clip, 20);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 6, 20, 36);
+  CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 20, 25);
+  CHECK_OBJECT_PROPS_MAX (effect1, 10, 0, 20, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect2, 10, 7, 20, 33);
+
+  assert_set_max_duration (source1, 17);
+
+  assert_equals_int (limit_notify_count, 10);
+  _assert_duration_limit (clip, 11);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 6, 11, 17);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 6, 11, 26);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 6, 11, 17);
+  CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 11, 25);
+  CHECK_OBJECT_PROPS_MAX (effect1, 10, 0, 11, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect2, 10, 7, 11, 33);
+
+  assert_set_max_duration (source1, 30);
+  assert_set_duration (clip, 20);
+
+  assert_equals_int (limit_notify_count, 11);
+  _assert_duration_limit (clip, 20);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 6, 20, 30);
+  CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 20, 25);
+  CHECK_OBJECT_PROPS_MAX (effect1, 10, 0, 20, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect2, 10, 7, 20, 33);
+
+  assert_set_max_duration (clip, 17);
+
+  assert_equals_int (limit_notify_count, 12);
+  _assert_duration_limit (clip, 11);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 6, 11, 17);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 6, 11, 17);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 6, 11, 17);
+  CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 11, 25);
+  CHECK_OBJECT_PROPS_MAX (effect1, 10, 0, 11, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect2, 10, 7, 11, 33);
+
+  assert_set_max_duration (clip, 26);
+  assert_set_duration (clip, 20);
+
+  assert_equals_int (limit_notify_count, 13);
+  _assert_duration_limit (clip, 20);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 20, 25);
+  CHECK_OBJECT_PROPS_MAX (effect1, 10, 0, 20, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect2, 10, 7, 20, 33);
+
+  /* non-core */
+  assert_fail_set_max_duration (effect0, 10);
+  assert_fail_set_max_duration (effect2, 17);
+
+  assert_equals_int (limit_notify_count, 13);
+  _assert_duration_limit (clip, 20);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 20, 25);
+  CHECK_OBJECT_PROPS_MAX (effect1, 10, 0, 20, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect2, 10, 7, 20, 33);
+
+  assert_set_max_duration (effect2, 18);
+
+  assert_equals_int (limit_notify_count, 14);
+  _assert_duration_limit (clip, 11);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 6, 11, 26);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 6, 11, 26);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 6, 11, 26);
+  CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 11, 25);
+  CHECK_OBJECT_PROPS_MAX (effect1, 10, 0, 11, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect2, 10, 7, 11, 18);
+
+  assert_set_max_duration (effect2, 33);
+  assert_set_duration (clip, 20);
+
+  assert_equals_int (limit_notify_count, 15);
+  _assert_duration_limit (clip, 20);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 20, 25);
+  CHECK_OBJECT_PROPS_MAX (effect1, 10, 0, 20, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect2, 10, 7, 20, 33);
+
+  /* test setting active */
+  _assert_active (effect2, TRUE);
+  _assert_set_active (effect2, FALSE);
+  assert_set_max_duration (effect2, 17);
+
+  assert_equals_int (limit_notify_count, 15);
+  _assert_duration_limit (clip, 20);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 20, 25);
+  CHECK_OBJECT_PROPS_MAX (effect1, 10, 0, 20, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect2, 10, 7, 20, 17);
+
+  fail_if (ges_track_element_set_active (effect2, TRUE));
+
+  assert_equals_int (limit_notify_count, 15);
+  _assert_duration_limit (clip, 20);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 20, 25);
+  CHECK_OBJECT_PROPS_MAX (effect1, 10, 0, 20, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect2, 10, 7, 20, 17);
+
+  assert_set_inpoint (effect2, 6);
+  _assert_set_active (effect2, TRUE);
+
+  assert_equals_int (limit_notify_count, 16);
+  _assert_duration_limit (clip, 11);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 6, 11, 26);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 6, 11, 26);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 6, 11, 26);
+  CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 11, 25);
+  CHECK_OBJECT_PROPS_MAX (effect1, 10, 0, 11, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect2, 10, 6, 11, 17);
+
+  /* make source0 in-active */
+  _assert_active (source0, TRUE);
+  _assert_set_active (source0, FALSE);
+  _assert_active (source0, FALSE);
+  _assert_active (effect0, FALSE);
+  _assert_active (effect1, FALSE);
+  _assert_active (effect2, FALSE);
+
+  assert_set_duration (source0, 20);
+
+  assert_equals_int (limit_notify_count, 17);
+  _assert_duration_limit (clip, 20);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 20, 25);
+  CHECK_OBJECT_PROPS_MAX (effect1, 10, 0, 20, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect2, 10, 6, 20, 17);
+
+  /* lower duration-limit for source for when it becomes active */
+  assert_set_max_duration (source0, 16);
+
+  assert_equals_int (limit_notify_count, 17);
+  _assert_duration_limit (clip, 20);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 6, 20, 16);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 6, 20, 16);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 20, 25);
+  CHECK_OBJECT_PROPS_MAX (effect1, 10, 0, 20, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect2, 10, 6, 20, 17);
+
+  /* cannot make the source active */
+  fail_if (ges_track_element_set_active (source0, TRUE));
+
+  assert_equals_int (limit_notify_count, 17);
+  _assert_duration_limit (clip, 20);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 6, 20, 16);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 6, 20, 16);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 20, 25);
+  CHECK_OBJECT_PROPS_MAX (effect1, 10, 0, 20, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect2, 10, 6, 20, 17);
+
+  /* nor can we make the effects active because this would activate the
+   * source */
+  fail_if (ges_track_element_set_active (effect0, TRUE));
+  fail_if (ges_track_element_set_active (effect1, TRUE));
+  fail_if (ges_track_element_set_active (effect2, TRUE));
+
+  assert_equals_int (limit_notify_count, 17);
+  _assert_duration_limit (clip, 20);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 6, 20, 16);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 6, 20, 16);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 6, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 20, 25);
+  CHECK_OBJECT_PROPS_MAX (effect1, 10, 0, 20, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect2, 10, 6, 20, 17);
+
+  /* allow it to just succeed */
+  assert_set_inpoint (source0, 5);
+
+  assert_equals_int (limit_notify_count, 18);
+  _assert_duration_limit (clip, 21);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 5, 20, 16);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 5, 20, 16);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 5, 20, 26);
+  CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 20, 25);
+  CHECK_OBJECT_PROPS_MAX (effect1, 10, 0, 20, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect2, 10, 6, 20, 17);
+
+  _assert_set_active (effect1, TRUE);
+
+  assert_equals_int (limit_notify_count, 19);
+  _assert_duration_limit (clip, 11);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 5, 11, 16);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 5, 11, 16);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 5, 11, 26);
+  CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 11, 25);
+  CHECK_OBJECT_PROPS_MAX (effect1, 10, 0, 11, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (effect2, 10, 6, 11, 17);
+
+  gst_object_unref (timeline);
 
   ges_deinit ();
 }
@@ -3670,6 +4213,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_children_inpoint);
   tcase_add_test (tc_chain, test_children_max_duration);
   tcase_add_test (tc_chain, test_duration_limit);
+  tcase_add_test (tc_chain, test_can_set_duration_limit);
   tcase_add_test (tc_chain, test_children_properties_contain);
   tcase_add_test (tc_chain, test_children_properties_change);
   tcase_add_test (tc_chain, test_copy_paste_children_properties);

@@ -106,25 +106,43 @@ G_STMT_START {                                          \
       GST_TIME_ARGS (_MAX_DURATION(obj)), GST_TIME_ARGS (max_duration)); \
 }
 
-#define assert_set_start(obj, start) \
-  fail_unless (ges_timeline_element_set_start (\
-        GES_TIMELINE_ELEMENT (obj), start), \
-        "Could not set the start of " #obj " to " #start)
+#define __assert_timeline_element_set(obj, prop, val) \
+  fail_unless (ges_timeline_element_set_ ## prop ( \
+        GES_TIMELINE_ELEMENT (obj), val), "Could not set the " # prop \
+        " of " #obj "(%s) to " #val, GES_TIMELINE_ELEMENT_NAME (obj))
 
-#define assert_set_duration(obj, duration) \
-  fail_unless (ges_timeline_element_set_duration (\
-        GES_TIMELINE_ELEMENT (obj), duration), \
-        "Could not set the duration of " #obj " to " #duration)
+#define __fail_timeline_element_set(obj, prop, val) \
+  fail_if (ges_timeline_element_set_ ## prop ( \
+        GES_TIMELINE_ELEMENT (obj), val), "Setting the " # prop \
+        " of " #obj "(%s) to " #val " did not fail as expected", \
+        GES_TIMELINE_ELEMENT_NAME (obj))
 
-#define assert_set_inpoint(obj, inpoint) \
-  fail_unless (ges_timeline_element_set_inpoint (\
-        GES_TIMELINE_ELEMENT (obj), inpoint), \
-        "Could not set the in-point of " #obj " to " #inpoint)
 
-#define assert_set_max_duration(obj, max_duration) \
-  fail_unless (ges_timeline_element_set_max_duration (\
-        GES_TIMELINE_ELEMENT (obj), max_duration), \
-        "Could not set the max-duration of " #obj " to " #max_duration)
+#define assert_set_start(obj, val) \
+  __assert_timeline_element_set (obj, start, val)
+
+#define assert_set_duration(obj, val) \
+  __assert_timeline_element_set (obj, duration, val)
+
+#define assert_set_inpoint(obj, val) \
+  __assert_timeline_element_set (obj, inpoint, val)
+
+#define assert_set_max_duration(obj, val) \
+  __assert_timeline_element_set (obj, max_duration, val)
+
+
+#define assert_fail_set_start(obj, val) \
+  __fail_timeline_element_set (obj, start, val)
+
+#define assert_fail_set_duration(obj, val) \
+  __fail_timeline_element_set (obj, duration, val)
+
+#define assert_fail_set_inpoint(obj, val) \
+  __fail_timeline_element_set (obj, inpoint, val)
+
+#define assert_fail_set_max_duration(obj, val) \
+  __fail_timeline_element_set (obj, max_duration, val)
+
 
 #define assert_num_in_track(track, val) \
 { \

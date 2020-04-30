@@ -629,21 +629,21 @@ static gboolean
 _set_inpoint (GESTimelineElement * element, GstClockTime inpoint)
 {
   GESTrackElement *object = GES_TRACK_ELEMENT (element);
+  GESTimelineElement *parent = element->parent;
 
   g_return_val_if_fail (object->priv->nleobject, FALSE);
   if (inpoint && !object->priv->has_internal_source) {
-    GST_WARNING_OBJECT (element, "Can not set an in-point for a track "
+    GST_WARNING_OBJECT (element, "Cannot set an in-point for a track "
         "element that is not registered with internal content");
     return FALSE;
   }
 
-  if (GES_IS_CLIP (element->parent)
-      && !ges_clip_can_set_inpoint_of_child (GES_CLIP (element->parent),
-          element, inpoint)) {
-    GST_WARNING_OBJECT (element, "Can not set an in-point of %"
+  if (GES_IS_CLIP (parent)
+      && !ges_clip_can_set_inpoint_of_child (GES_CLIP (parent), object,
+          inpoint)) {
+    GST_WARNING_OBJECT (element, "Cannot set an in-point of %"
         GST_TIME_FORMAT " because the parent clip %" GES_FORMAT
-        " would not be able to follow",
-        GST_TIME_ARGS (inpoint), GES_ARGS (element->parent));
+        " would not allow it", GST_TIME_ARGS (inpoint), GES_ARGS (parent));
     return FALSE;
   }
 
@@ -677,11 +677,21 @@ static gboolean
 _set_max_duration (GESTimelineElement * element, GstClockTime max_duration)
 {
   GESTrackElement *object = GES_TRACK_ELEMENT (element);
+  GESTimelineElement *parent = element->parent;
 
   if (GST_CLOCK_TIME_IS_VALID (max_duration)
       && !object->priv->has_internal_source) {
-    GST_WARNING_OBJECT (element, "Can not set a max-duration for a track "
+    GST_WARNING_OBJECT (element, "Cannot set a max-duration for a track "
         "element that is not registered with internal content");
+    return FALSE;
+  }
+
+  if (GES_IS_CLIP (parent)
+      && !ges_clip_can_set_max_duration_of_child (GES_CLIP (parent), object,
+          max_duration)) {
+    GST_WARNING_OBJECT (element, "Cannot set a max-duration of %"
+        GST_TIME_FORMAT " because the parent clip %" GES_FORMAT
+        " would not allow it", GST_TIME_ARGS (max_duration), GES_ARGS (parent));
     return FALSE;
   }
 
@@ -693,6 +703,7 @@ static gboolean
 _set_priority (GESTimelineElement * element, guint32 priority)
 {
   GESTrackElement *object = GES_TRACK_ELEMENT (element);
+  GESTimelineElement *parent = element->parent;
 
   g_return_val_if_fail (object->priv->nleobject, FALSE);
 
@@ -706,6 +717,15 @@ _set_priority (GESTimelineElement * element, guint32 priority)
 
   if (G_UNLIKELY (priority == _PRIORITY (object)))
     return FALSE;
+
+  if (GES_IS_CLIP (parent)
+      && !ges_clip_can_set_priority_of_child (GES_CLIP (parent), object,
+          priority)) {
+    GST_WARNING_OBJECT (element, "Cannot set a priority of %"
+        G_GUINT32_FORMAT " because the parent clip %" GES_FORMAT
+        " would not allow it", priority, GES_ARGS (parent));
+    return FALSE;
+  }
 
   g_object_set (object->priv->nleobject, "priority", priority, NULL);
 
@@ -730,6 +750,7 @@ _get_track_types (GESTimelineElement * object)
 gboolean
 ges_track_element_set_active (GESTrackElement * object, gboolean active)
 {
+  GESTimelineElement *parent;
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
   g_return_val_if_fail (object->priv->nleobject, FALSE);
 
@@ -737,6 +758,14 @@ ges_track_element_set_active (GESTrackElement * object, gboolean active)
 
   if (G_UNLIKELY (active == object->active))
     return FALSE;
+
+  parent = GES_TIMELINE_ELEMENT_PARENT (object);
+  if (GES_IS_CLIP (parent)
+      && !ges_clip_can_set_active_of_child (GES_CLIP (parent), object, active)) {
+    GST_WARNING_OBJECT (object, "Cannot set active to %i because the parent "
+        "clip %" GES_FORMAT " would not allow it", active, GES_ARGS (parent));
+    return FALSE;
+  }
 
   g_object_set (object->priv->nleobject, "active",
       active & object->priv->layer_active, NULL);
