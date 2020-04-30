@@ -120,6 +120,17 @@ G_STMT_START {                                               \
   }                                                          \
 } G_STMT_END
 
+/* Structure used to store all seek-related information */
+struct _GstValidatePadSeekData
+{
+  guint32 seqnum;
+  gdouble rate;
+  GstFormat format;
+  GstSeekFlags flags;
+  GstSeekType start_type, stop_type;
+  gint64 start, stop;
+};
+
 typedef struct
 {
   GstClockTime timestamp;
@@ -875,6 +886,26 @@ gst_validate_pad_monitor_check_late_serialized_events (GstValidatePadMonitor *
 }
 
 static void
+seek_data_free (GstValidatePadSeekData * data)
+{
+  g_slice_free (GstValidatePadSeekData, data);
+}
+
+static GstValidatePadSeekData *
+seek_data_for_seqnum (GstValidatePadMonitor * monitor, guint32 seqnum)
+{
+  GList *tmp;
+
+  for (tmp = monitor->seeks; tmp; tmp = tmp->next) {
+    GstValidatePadSeekData *data = (GstValidatePadSeekData *) tmp->data;
+    if (data->seqnum == seqnum)
+      return data;
+  }
+
+  return NULL;
+}
+
+static void
 gst_validate_pad_monitor_dispose (GObject * object)
 {
   GstValidatePadMonitor *monitor = GST_VALIDATE_PAD_MONITOR_CAST (object);
@@ -898,6 +929,8 @@ gst_validate_pad_monitor_dispose (GObject * object)
   gst_caps_replace (&monitor->last_caps, NULL);
   gst_caps_replace (&monitor->last_query_res, NULL);
   gst_caps_replace (&monitor->last_query_filter, NULL);
+
+  g_list_free_full (monitor->seeks, (GDestroyNotify) seek_data_free);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -967,12 +1000,14 @@ gst_validate_pad_monitor_reset (GstValidatePadMonitor * pad_monitor)
   pad_monitor->pending_newsegment_seqnum = GST_SEQNUM_INVALID;
   pad_monitor->pending_eos_seqnum = GST_SEQNUM_INVALID;
 
-  pad_monitor->pending_seek_accurate_time = GST_CLOCK_TIME_NONE;
-
   if (pad_monitor->pending_setcaps_fields)
     gst_structure_free (pad_monitor->pending_setcaps_fields);
   pad_monitor->pending_setcaps_fields =
       gst_structure_new_empty (PENDING_FIELDS);
+  if (pad_monitor->seeks)
+    g_list_free_full (pad_monitor->seeks, (GDestroyNotify) seek_data_free);
+  pad_monitor->current_seek = NULL;
+  pad_monitor->seeks = NULL;
 
   /* FIXME : Why BYTES and not UNDEFINED ? */
   gst_segment_init (&pad_monitor->segment, GST_FORMAT_BYTES);
@@ -1684,13 +1719,19 @@ gst_validate_pad_monitor_common_event_check (GstValidatePadMonitor *
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
     {
-      if (pad_monitor->pending_flush_start_seqnum != GST_SEQNUM_INVALID) {
-        if (seqnum == pad_monitor->pending_flush_start_seqnum) {
-          pad_monitor->pending_flush_start_seqnum = GST_SEQNUM_INVALID;
-        } else {
+      if (pad_monitor->seeks) {
+        GstValidatePadSeekData *seekdata =
+            seek_data_for_seqnum (pad_monitor, seqnum);
+
+        if (!seekdata)
           GST_VALIDATE_REPORT (pad_monitor, FLUSH_START_HAS_WRONG_SEQNUM,
-              "Got: %u Expected: %u", seqnum,
-              pad_monitor->pending_flush_start_seqnum);
+              "Got: %" G_GUINT32_FORMAT " Expected: %" G_GUINT32_FORMAT, seqnum,
+              ((GstValidatePadSeekData *) pad_monitor->seeks->data)->seqnum);
+        else {
+          if (!(seekdata->flags & GST_SEEK_FLAG_FLUSH)) {
+            GST_VALIDATE_REPORT (pad_monitor, EVENT_FLUSH_START_UNEXPECTED,
+                "Received flush-start for a non-flushing seek");
+          }
         }
       }
 
@@ -1699,18 +1740,21 @@ gst_validate_pad_monitor_common_event_check (GstValidatePadMonitor *
             "Received flush-start from when flush-stop was expected");
       }
       pad_monitor->pending_flush_stop = TRUE;
+      /* Remove the current segment seekdata */
+      if (pad_monitor->current_seek) {
+        pad_monitor->seeks =
+            g_list_remove (pad_monitor->seeks, pad_monitor->current_seek);
+        seek_data_free (pad_monitor->current_seek);
+        pad_monitor->current_seek = NULL;
+      }
     }
       break;
     case GST_EVENT_FLUSH_STOP:
     {
-      if (pad_monitor->pending_flush_stop_seqnum != GST_SEQNUM_INVALID) {
-        if (seqnum == pad_monitor->pending_flush_stop_seqnum) {
-          pad_monitor->pending_flush_stop_seqnum = GST_SEQNUM_INVALID;
-        } else {
-          GST_VALIDATE_REPORT (pad_monitor, FLUSH_STOP_HAS_WRONG_SEQNUM,
-              "Got: %u Expected: %u", seqnum,
-              pad_monitor->pending_flush_stop_seqnum);
-        }
+      if (pad_monitor->seeks && !seek_data_for_seqnum (pad_monitor, seqnum)) {
+        GST_VALIDATE_REPORT (pad_monitor, FLUSH_STOP_HAS_WRONG_SEQNUM,
+            "Got: %" G_GUINT32_FORMAT " Expected: %" G_GUINT32_FORMAT, seqnum,
+            ((GstValidatePadSeekData *) pad_monitor->seeks->data)->seqnum);
       }
 
       pad_monitor->pending_newsegment_seqnum = seqnum;
@@ -1897,31 +1941,34 @@ gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
       pad_monitor->pending_buffer_discont = TRUE;
       break;
     case GST_EVENT_SEGMENT:
+    {
+      GstValidatePadSeekData *seekdata =
+          seek_data_for_seqnum (pad_monitor, seqnum);
+
       /* parse segment data to be used if event is handled */
       gst_event_parse_segment (event, &segment);
 
-      GST_DEBUG_OBJECT (pad, "Got segment %" GST_SEGMENT_FORMAT, segment);
-
-      /* Reset expected flush start/stop values, we have a segment */
-      pad_monitor->pending_flush_start_seqnum = GST_SEQNUM_INVALID;
-      pad_monitor->pending_flush_stop_seqnum = GST_SEQNUM_INVALID;
+      GST_DEBUG_OBJECT (pad,
+          "Got segment seqnum:%" G_GUINT32_FORMAT " %" GST_SEGMENT_FORMAT,
+          seqnum, segment);
 
       if (pad_monitor->pending_newsegment_seqnum != GST_SEQNUM_INVALID) {
-        if (pad_monitor->pending_newsegment_seqnum == seqnum) {
-          pad_monitor->pending_newsegment_seqnum = GST_SEQNUM_INVALID;
-          if (GST_CLOCK_TIME_IS_VALID (pad_monitor->pending_seek_accurate_time)) {
-            if (segment->time == pad_monitor->pending_seek_accurate_time) {
-              pad_monitor->pending_seek_accurate_time = GST_CLOCK_TIME_NONE;
-            } else {
-              GST_VALIDATE_REPORT (pad_monitor, SEGMENT_HAS_WRONG_START,
-                  "After an accurate seek, got: %" GST_TIME_FORMAT
-                  " Expected: %" GST_TIME_FORMAT, GST_TIME_ARGS (segment->time),
-                  GST_TIME_ARGS (pad_monitor->pending_seek_accurate_time));
-            }
-          }
-        } else {
+        /* FIXME: Convert to more robust checks */
+        if (pad_monitor->pending_newsegment_seqnum != seqnum) {
           GST_VALIDATE_REPORT (pad_monitor, SEGMENT_HAS_WRONG_SEQNUM,
-              "Got: %u Expected: %u", seqnum, pad_monitor->pending_eos_seqnum);
+              "Got: %u Expected: %u", seqnum,
+              pad_monitor->pending_newsegment_seqnum);
+        }
+      }
+
+      if (seekdata && seekdata != pad_monitor->current_seek) {
+        /* Check for accurate seeks */
+        if (seekdata->flags & GST_SEEK_FLAG_ACCURATE) {
+          if (segment->time != seekdata->start)
+            GST_VALIDATE_REPORT (pad_monitor, SEGMENT_HAS_WRONG_START,
+                "After an accurate seek, got: %" GST_TIME_FORMAT
+                " Expected: %" GST_TIME_FORMAT, GST_TIME_ARGS (segment->time),
+                GST_TIME_ARGS (seekdata->start));
         }
       }
 
@@ -1964,6 +2011,19 @@ gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
           gst_event_replace (&pad_monitor->expected_segment, NULL);
         }
       }
+
+      /* Drop all expected seekdata from before this segment */
+      if (seekdata) {
+        while (pad_monitor->seeks && pad_monitor->seeks->data != seekdata) {
+          GstValidatePadSeekData *tmp =
+              (GstValidatePadSeekData *) pad_monitor->seeks->data;
+          pad_monitor->seeks =
+              g_list_delete_link (pad_monitor->seeks, pad_monitor->seeks);
+          seek_data_free (tmp);
+        }
+      }
+      pad_monitor->current_seek = seekdata;
+    }
       break;
     case GST_EVENT_CAPS:{
       GstCaps *caps;
@@ -2056,100 +2116,52 @@ gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
   return ret;
 }
 
+static GstValidatePadSeekData *
+_store_seek_event_data (GstValidatePadMonitor * pad_monitor, GstEvent * event)
+{
+  GstValidatePadSeekData *data = g_slice_new0 (GstValidatePadSeekData);
+
+  data->seqnum = gst_event_get_seqnum (event);
+  gst_event_parse_seek (event, &data->rate, &data->format, &data->flags,
+      &data->start_type, &data->start, &data->stop_type, &data->stop);
+
+  pad_monitor->seeks = g_list_append (pad_monitor->seeks, data);
+
+  return data;
+}
+
 static gboolean
 gst_validate_pad_monitor_src_event_check (GstValidatePadMonitor * pad_monitor,
     GstObject * parent, GstEvent * event, GstPadEventFunction handler)
 {
   gboolean ret = TRUE;
-  gdouble rate;
-  GstFormat format;
-  gint64 start, stop;
-  GstSeekFlags seek_flags;
-  GstSeekType start_type, stop_type;
-  guint32 seqnum = gst_event_get_seqnum (event);
   GstPad *pad =
       GST_PAD (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR
           (pad_monitor)));
 
   gst_validate_pad_monitor_common_event_check (pad_monitor, event);
 
-  /* pre checks */
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_SEEK:
-    {
-      gst_event_parse_seek (event, &rate, &format, &seek_flags, &start_type,
-          &start, &stop_type, &stop);
-      /* upstream seek - store the seek event seqnum to check
-       * flushes and newsegments share the same */
-    }
-      break;
-      /* both flushes are handled by the common event handling function */
-    case GST_EVENT_FLUSH_START:
-    case GST_EVENT_FLUSH_STOP:
-    case GST_EVENT_NAVIGATION:
-    case GST_EVENT_LATENCY:
-    case GST_EVENT_STEP:
-    case GST_EVENT_QOS:
-    default:
-      break;
-  }
-
   if (handler) {
-    GST_VALIDATE_MONITOR_UNLOCK (pad_monitor);
-    /* Safely store pending accurate seek values */
-    if (GST_EVENT_TYPE (event) == GST_EVENT_SEEK) {
-      if (seek_flags & GST_SEEK_FLAG_ACCURATE && format == GST_FORMAT_TIME) {
-        GST_DEBUG_OBJECT (pad,
-            "Storing expected accurate seek time %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (start));
-        pad_monitor->pending_seek_accurate_time = start;
-      }
-      /* TODO we might need to use a list as multiple seeks can be sent
-       * before the flushes arrive here */
-      if (seek_flags & GST_SEEK_FLAG_FLUSH) {
-        pad_monitor->pending_flush_start_seqnum = seqnum;
-        pad_monitor->pending_flush_stop_seqnum = seqnum;
-      }
-    }
+    GstValidatePadSeekData *seekdata = NULL;
 
-    gst_event_ref (event);
+    GST_DEBUG_OBJECT (pad, "event %" GST_PTR_FORMAT, event);
+
+    /* Safely store pending accurate seek values */
+    if (GST_EVENT_TYPE (event) == GST_EVENT_SEEK)
+      seekdata = _store_seek_event_data (pad_monitor, event);
+    GST_VALIDATE_MONITOR_UNLOCK (pad_monitor);
     ret = pad_monitor->event_func (pad, parent, event);
 
-    if (GST_EVENT_TYPE (event) == GST_EVENT_SEEK) {
-      /* If the seek was already handled (same current seqnum), reset the
-       * expected accurate seek value */
-      if (ret && pad_monitor->has_segment
-          && seqnum == pad_monitor->pending_eos_seqnum) {
-        GST_DEBUG_OBJECT (pad,
-            "Resetting expected accurate seek value, was already handled");
-        pad_monitor->pending_seek_accurate_time = GST_CLOCK_TIME_NONE;
-      } else if (!ret) {
-        /* do not expect any of these events anymore */
-        pad_monitor->pending_flush_start_seqnum = GST_SEQNUM_INVALID;
-        pad_monitor->pending_flush_stop_seqnum = GST_SEQNUM_INVALID;
-        pad_monitor->pending_newsegment_seqnum = GST_SEQNUM_INVALID;
-        pad_monitor->pending_eos_seqnum = GST_SEQNUM_INVALID;
-        pad_monitor->pending_seek_accurate_time = GST_CLOCK_TIME_NONE;
-      }
-    }
     GST_VALIDATE_MONITOR_LOCK (pad_monitor);
+
+    if (seekdata && !ret) {
+      /* Remove failed seek from list */
+      GST_LOG_OBJECT (pad, "Failed seek, removing stored seek data");
+      pad_monitor->seeks = g_list_remove (pad_monitor->seeks, seekdata);
+      g_slice_free (GstValidatePadSeekData, seekdata);
+    }
   }
 
-  /* post checks */
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_FLUSH_START:
-    case GST_EVENT_FLUSH_STOP:
-    case GST_EVENT_QOS:
-    case GST_EVENT_SEEK:
-    case GST_EVENT_NAVIGATION:
-    case GST_EVENT_LATENCY:
-    case GST_EVENT_STEP:
-    default:
-      break;
-  }
-
-  if (handler)
-    gst_event_unref (event);
   gst_object_unref (pad);
   return ret;
 }
@@ -2637,11 +2649,13 @@ gst_validate_pad_monitor_event_probe (GstPad * pad, GstEvent * event,
     gpointer udata)
 {
   GstValidatePadMonitor *monitor = GST_VALIDATE_PAD_MONITOR_CAST (udata);
+  guint32 seqnum = gst_event_get_seqnum (event);
 
   GST_VALIDATE_PAD_MONITOR_PARENT_LOCK (monitor);
   GST_VALIDATE_MONITOR_LOCK (monitor);
 
-  GST_DEBUG_OBJECT (pad, "event %p %s", event, GST_EVENT_TYPE_NAME (event));
+  GST_DEBUG_OBJECT (pad, "event %p %s seqnum:%" G_GUINT32_FORMAT, event,
+      GST_EVENT_TYPE_NAME (event), seqnum);
 
   if (GST_EVENT_IS_SERIALIZED (event)) {
     gint i;
