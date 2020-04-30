@@ -836,12 +836,13 @@ _add_child (GESContainer * container, GESTimelineElement * element)
 {
   GESClip *self = GES_CLIP (container);
   GESClipClass *klass = GES_CLIP_GET_CLASS (GES_CLIP (container));
-  guint32 max_prio, min_prio;
+  guint32 min_prio, max_prio, new_prio;
   GESTrack *track;
   GESTimeline *timeline = GES_TIMELINE_ELEMENT_TIMELINE (container);
   GESClipPrivate *priv = self->priv;
   GESAsset *asset, *creator_asset;
   gboolean prev_prevent = priv->prevent_duration_limit_update;
+  GList *tmp;
 
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (element), FALSE);
 
@@ -879,7 +880,9 @@ _add_child (GESContainer * container, GESTimelineElement * element)
   }
 
   /* NOTE: notifies are currently frozen by ges_container_add */
+
   _get_priority_range (container, &min_prio, &max_prio);
+
   if (creator_asset) {
     /* NOTE: Core track elements that are base effects are added like any
      * other core elements. In particular, they are *not* added to the
@@ -906,10 +909,18 @@ _add_child (GESContainer * container, GESTimelineElement * element)
       }
     }
 
-    /* Always add at the same priority, on top of existing effects */
-    _set_priority0 (element, min_prio + priv->nb_effects);
+    /* new priority is that of the lowest priority core child. Usually
+     * each core child has the same priority.
+     * Also must be lower than all effects */
+    new_prio = min_prio;
+    for (tmp = container->children; tmp; tmp = tmp->next) {
+      if (_IS_CORE_CHILD (tmp->data))
+        new_prio = MAX (new_prio, _PRIORITY (tmp->data));
+      else if (_IS_TOP_EFFECT (tmp->data))
+        new_prio = MAX (new_prio, _PRIORITY (tmp->data) + 1);
+    }
+    _set_priority0 (element, new_prio);
   } else if (GES_CLIP_CLASS_CAN_ADD_EFFECTS (klass) && _IS_TOP_EFFECT (element)) {
-    GList *tmp;
     /* Add the effect at the lowest priority among effects (just after
      * the core elements). Need to shift the core elements up by 1
      * to make room. */
@@ -922,20 +933,34 @@ _add_child (GESContainer * container, GESTimelineElement * element)
       return FALSE;
     }
 
+    /* new priority is the lowest priority effect */
+    new_prio = min_prio;
+    for (tmp = container->children; tmp; tmp = tmp->next) {
+      if (_IS_TOP_EFFECT (tmp->data))
+        new_prio = MAX (new_prio, _PRIORITY (tmp->data) + 1);
+    }
+    /* make sure higher than core */
+    for (tmp = container->children; tmp; tmp = tmp->next) {
+      if (_IS_CORE_CHILD (tmp->data))
+        new_prio = MIN (new_prio, _PRIORITY (tmp->data));
+    }
+
+    priv->nb_effects++;
     GST_DEBUG_OBJECT (self, "Adding %ith effect: %" GES_FORMAT
-        " Priority %i", priv->nb_effects + 1, GES_ARGS (element),
-        min_prio + priv->nb_effects);
+        " Priority %i", priv->nb_effects, GES_ARGS (element), new_prio);
 
     /* changing priorities, and updating their offset */
     priv->prevent_resort = TRUE;
     priv->prevent_duration_limit_update = TRUE;
-    tmp = g_list_nth (container->children, priv->nb_effects);
-    for (; tmp; tmp = tmp->next)
-      ges_timeline_element_set_priority (GES_TIMELINE_ELEMENT (tmp->data),
-          GES_TIMELINE_ELEMENT_PRIORITY (tmp->data) + 1);
 
-    _set_priority0 (element, min_prio + priv->nb_effects);
-    priv->nb_effects++;
+    /* increase the priority of anything with a lower priority */
+    for (tmp = container->children; tmp; tmp = tmp->next) {
+      GESTimelineElement *child = tmp->data;
+      if (child->priority >= new_prio)
+        ges_timeline_element_set_priority (child, child->priority + 1);
+    }
+    _set_priority0 (element, new_prio);
+
     priv->prevent_resort = FALSE;
     priv->prevent_duration_limit_update = prev_prevent;
     /* no need to call _ges_container_sort_children (container) since
@@ -981,7 +1006,7 @@ _remove_child (GESContainer * container, GESTimelineElement * element)
     /* changing priorities, so preventing a re-sort */
     priv->prevent_resort = TRUE;
     priv->prevent_duration_limit_update = TRUE;
-    for (tmp = GES_CONTAINER_CHILDREN (container); tmp; tmp = tmp->next) {
+    for (tmp = container->children; tmp; tmp = tmp->next) {
       guint32 sibling_prio = GES_TIMELINE_ELEMENT_PRIORITY (tmp->data);
       if (sibling_prio > element->priority)
         ges_timeline_element_set_priority (GES_TIMELINE_ELEMENT (tmp->data),
@@ -1983,14 +2008,15 @@ ges_clip_get_top_effects (GESClip * clip)
   GST_DEBUG_OBJECT (clip, "Getting the %i top effects", clip->priv->nb_effects);
   ret = NULL;
 
+  /* should be sorted by priority, but make sure */
+  _ges_container_sort_children (GES_CONTAINER (clip));
+
   for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
     child = tmp->data;
     if (_IS_TOP_EFFECT (child))
       ret = g_list_append (ret, gst_object_ref (child));
   }
 
-  /* list is already sorted by index because the list of children is
-   * sorted by priority */
   return ret;
 }
 
@@ -2002,7 +2028,7 @@ _is_added_effect (GESClip * clip, GESBaseEffect * effect)
         " doe not belong to this clip", GES_ARGS (effect));
     return FALSE;
   }
-  if (_IS_CORE_CHILD (effect)) {
+  if (!_IS_TOP_EFFECT (effect)) {
     GST_WARNING_OBJECT (clip, "The effect %" GES_FORMAT " is not a top "
         "effect of this clip (it is a core element of the clip)",
         GES_ARGS (effect));
@@ -2028,16 +2054,19 @@ _is_added_effect (GESClip * clip, GESBaseEffect * effect)
 gint
 ges_clip_get_top_effect_index (GESClip * clip, GESBaseEffect * effect)
 {
-  guint max_prio, min_prio;
+  GList *top_effects;
+  gint ret;
 
   g_return_val_if_fail (GES_IS_CLIP (clip), -1);
   g_return_val_if_fail (GES_IS_BASE_EFFECT (effect), -1);
   if (!_is_added_effect (clip, effect))
     return -1;
 
-  _get_priority_range (GES_CONTAINER (clip), &min_prio, &max_prio);
+  top_effects = ges_clip_get_top_effects (clip);
+  ret = g_list_index (top_effects, effect);
+  g_list_free_full (top_effects, gst_object_unref);
 
-  return GES_TIMELINE_ELEMENT_PRIORITY (effect) - min_prio;
+  return ret;
 }
 
 /* TODO 2.0 remove as it is Deprecated */
@@ -2074,9 +2103,10 @@ ges_clip_set_top_effect_index (GESClip * clip, GESBaseEffect * effect,
     guint newindex)
 {
   gint inc;
-  GList *tmp;
-  guint current_prio, min_prio, max_prio;
-  GESTrackElement *track_element;
+  GList *top_effects, *tmp;
+  GList *child_data = NULL;
+  guint32 current_prio, new_prio;
+  GESTimelineElement *element, *replace;
 
   g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
   g_return_val_if_fail (GES_IS_BASE_EFFECT (effect), FALSE);
@@ -2084,52 +2114,47 @@ ges_clip_set_top_effect_index (GESClip * clip, GESBaseEffect * effect,
   if (!_is_added_effect (clip, effect))
     return FALSE;
 
-  track_element = GES_TRACK_ELEMENT (effect);
-  current_prio = _PRIORITY (track_element);
+  element = GES_TIMELINE_ELEMENT (effect);
 
-  _get_priority_range (GES_CONTAINER (clip), &min_prio, &max_prio);
+  top_effects = ges_clip_get_top_effects (clip);
+  replace = g_list_nth_data (top_effects, newindex);
+  g_list_free_full (top_effects, gst_object_unref);
 
-  newindex = newindex + min_prio;
-  /*  We don't change the priority */
-  if (current_prio == newindex)
+  if (!replace) {
+    GST_WARNING_OBJECT (clip, "Does not contain %u effects", newindex + 1);
+    return FALSE;
+  }
+
+  if (replace == element)
     return TRUE;
 
-  if (newindex > (clip->priv->nb_effects - 1 + min_prio)) {
-    GST_DEBUG ("You are trying to make %p not a top effect", effect);
-    return FALSE;
-  }
+  current_prio = element->priority;
+  new_prio = replace->priority;
 
-  if (current_prio > clip->priv->nb_effects + min_prio) {
-    GST_ERROR ("%p is not a top effect", effect);
-    return FALSE;
-  }
-
-  GST_DEBUG_OBJECT (clip, "Setting top effect %" GST_PTR_FORMAT "priority: %i",
-      effect, newindex);
-
-  if (current_prio < newindex)
+  if (current_prio < new_prio)
     inc = -1;
   else
     inc = +1;
 
+  GST_DEBUG_OBJECT (clip, "Setting top effect %" GST_PTR_FORMAT "priority: %i",
+      effect, new_prio);
+
   /* prevent a re-sort of the list whilst we are traversing it! */
   clip->priv->prevent_resort = TRUE;
   for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
-    GESTrackElement *tmpo = GES_TRACK_ELEMENT (tmp->data);
-    guint tck_priority = _PRIORITY (tmpo);
+    GESTimelineElement *child = tmp->data;
+    guint32 priority = child->priority;
 
-    if (tmpo == track_element)
+    if (child == element)
       continue;
 
     /* only need to change the priority for those between the new and old
      * index */
-    if ((inc == +1 && tck_priority >= newindex && tck_priority < current_prio)
-        || (inc == -1 && tck_priority <= newindex
-            && tck_priority > current_prio)) {
-      _set_priority0 (GES_TIMELINE_ELEMENT (tmpo), tck_priority + inc);
-    }
+    if ((inc == +1 && priority >= new_prio && priority < current_prio)
+        || (inc == -1 && priority <= new_prio && priority > current_prio))
+      _set_priority0 (child, priority + inc);
   }
-  _set_priority0 (GES_TIMELINE_ELEMENT (track_element), newindex);
+  _set_priority0 (element, new_prio);
 
   clip->priv->prevent_resort = FALSE;
   _ges_container_sort_children (GES_CONTAINER (clip));
