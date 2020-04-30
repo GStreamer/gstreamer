@@ -2049,6 +2049,204 @@ GST_START_TEST (test_can_add_effect)
 
 GST_END_TEST;
 
+#define _assert_active(el, active) \
+  fail_unless (ges_track_element_is_active (el) == active)
+
+#define _assert_set_active(el, active) \
+  fail_unless (ges_track_element_set_active (el, active))
+
+GST_START_TEST (test_children_active)
+{
+  GESTimeline *timeline;
+  GESLayer *layer;
+  GESClip *clip;
+  GESTrack *track0, *track1, *select_track;
+  GESTrackElement *effect0, *effect1, *effect2, *effect3;
+  GESTrackElement *source0, *source1;
+
+  ges_init ();
+
+  timeline = ges_timeline_new ();
+
+  track0 = GES_TRACK (ges_video_track_new ());
+  track1 = GES_TRACK (ges_video_track_new ());
+
+  fail_unless (ges_timeline_add_track (timeline, track0));
+  fail_unless (ges_timeline_add_track (timeline, track1));
+
+  layer = ges_timeline_append_layer (timeline);
+
+  clip = GES_CLIP (ges_test_clip_new ());
+
+  fail_unless (ges_layer_add_clip (layer, clip));
+
+  assert_num_children (clip, 2);
+
+  source0 =
+      ges_clip_find_track_element (clip, track0, GES_TYPE_VIDEO_TEST_SOURCE);
+  source1 =
+      ges_clip_find_track_element (clip, track1, GES_TYPE_VIDEO_TEST_SOURCE);
+
+  fail_unless (source0);
+  fail_unless (source1);
+
+  gst_object_unref (source0);
+  gst_object_unref (source1);
+
+  _assert_active (source0, TRUE);
+  _assert_active (source1, TRUE);
+
+  _assert_set_active (source0, FALSE);
+
+  _assert_active (source0, FALSE);
+  _assert_active (source1, TRUE);
+
+  select_track = track0;
+  g_signal_connect (timeline, "select-tracks-for-object",
+      G_CALLBACK (_select_track), &select_track);
+
+  /* add an active effect should become inactive to match the core */
+  effect0 = GES_TRACK_ELEMENT (ges_effect_new ("videobalance"));
+  _assert_active (effect0, TRUE);
+
+  _assert_add (clip, effect0);
+  fail_if (select_track);
+
+  _assert_active (source0, FALSE);
+  _assert_active (effect0, FALSE);
+  _assert_active (source1, TRUE);
+
+  /* adding inactive to track with inactive core does nothing */
+  effect1 = GES_TRACK_ELEMENT (ges_effect_new ("vertigotv"));
+  _assert_active (effect1, TRUE);
+  _assert_set_active (effect1, FALSE);
+  _assert_active (effect1, FALSE);
+
+  select_track = track0;
+  _assert_add (clip, effect1);
+  fail_if (select_track);
+
+  _assert_active (source0, FALSE);
+  _assert_active (effect0, FALSE);
+  _assert_active (effect1, FALSE);
+  _assert_active (source1, TRUE);
+
+  /* adding active to track with active core does nothing */
+  effect2 = GES_TRACK_ELEMENT (ges_effect_new ("agingtv"));
+  _assert_active (effect2, TRUE);
+
+  select_track = track1;
+  _assert_add (clip, effect2);
+  fail_if (select_track);
+
+  _assert_active (source0, FALSE);
+  _assert_active (effect0, FALSE);
+  _assert_active (effect1, FALSE);
+  _assert_active (source1, TRUE);
+  _assert_active (effect2, TRUE);
+
+  /* adding inactive to track with active core does nothing */
+  effect3 = GES_TRACK_ELEMENT (ges_effect_new ("alpha"));
+  _assert_active (effect3, TRUE);
+  _assert_set_active (effect3, FALSE);
+  _assert_active (effect3, FALSE);
+
+  select_track = track1;
+  _assert_add (clip, effect3);
+  fail_if (select_track);
+
+  _assert_active (source0, FALSE);
+  _assert_active (effect0, FALSE);
+  _assert_active (effect1, FALSE);
+  _assert_active (source1, TRUE);
+  _assert_active (effect2, TRUE);
+  _assert_active (effect3, FALSE);
+
+  /* activate a core does not change non-core */
+  _assert_set_active (source0, TRUE);
+
+  _assert_active (source0, TRUE);
+  _assert_active (effect0, FALSE);
+  _assert_active (effect1, FALSE);
+  _assert_active (source1, TRUE);
+  _assert_active (effect2, TRUE);
+  _assert_active (effect3, FALSE);
+
+  /* but de-activating a core will de-activate the non-core */
+  _assert_set_active (source1, FALSE);
+
+  _assert_active (source0, TRUE);
+  _assert_active (effect0, FALSE);
+  _assert_active (effect1, FALSE);
+  _assert_active (source1, FALSE);
+  _assert_active (effect2, FALSE);
+  _assert_active (effect3, FALSE);
+
+  /* activate a non-core will activate the core */
+  _assert_set_active (effect3, TRUE);
+
+  _assert_active (source0, TRUE);
+  _assert_active (effect0, FALSE);
+  _assert_active (effect1, FALSE);
+  _assert_active (source1, TRUE);
+  _assert_active (effect2, FALSE);
+  _assert_active (effect3, TRUE);
+
+  /* if core is already active, nothing else happens */
+  _assert_set_active (effect0, TRUE);
+
+  _assert_active (source0, TRUE);
+  _assert_active (effect0, TRUE);
+  _assert_active (effect1, FALSE);
+  _assert_active (source1, TRUE);
+  _assert_active (effect2, FALSE);
+  _assert_active (effect3, TRUE);
+
+  _assert_set_active (effect1, TRUE);
+
+  _assert_active (source0, TRUE);
+  _assert_active (effect0, TRUE);
+  _assert_active (effect1, TRUE);
+  _assert_active (source1, TRUE);
+  _assert_active (effect2, FALSE);
+  _assert_active (effect3, TRUE);
+
+  _assert_set_active (effect2, TRUE);
+
+  _assert_active (source0, TRUE);
+  _assert_active (effect0, TRUE);
+  _assert_active (effect1, TRUE);
+  _assert_active (source1, TRUE);
+  _assert_active (effect2, TRUE);
+  _assert_active (effect3, TRUE);
+
+  /* de-activate a core will de-active all the non-core */
+  _assert_set_active (source0, FALSE);
+
+  _assert_active (source0, FALSE);
+  _assert_active (effect0, FALSE);
+  _assert_active (effect1, FALSE);
+  _assert_active (source1, TRUE);
+  _assert_active (effect2, TRUE);
+  _assert_active (effect3, TRUE);
+
+  /* de-activate a non-core does nothing else */
+  _assert_set_active (effect3, FALSE);
+
+  _assert_active (source0, FALSE);
+  _assert_active (effect0, FALSE);
+  _assert_active (effect1, FALSE);
+  _assert_active (source1, TRUE);
+  _assert_active (effect2, TRUE);
+  _assert_active (effect3, FALSE);
+
+  gst_object_unref (timeline);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_children_inpoint)
 {
   GESTimeline *timeline;
@@ -3468,6 +3666,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_effects_priorities);
   tcase_add_test (tc_chain, test_children_time_setters);
   tcase_add_test (tc_chain, test_can_add_effect);
+  tcase_add_test (tc_chain, test_children_active);
   tcase_add_test (tc_chain, test_children_inpoint);
   tcase_add_test (tc_chain, test_children_max_duration);
   tcase_add_test (tc_chain, test_duration_limit);

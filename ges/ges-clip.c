@@ -51,6 +51,11 @@
  * #GESTimeline::select-tracks-for-object signal to coordinate which
  * tracks each element should land in.
  *
+ * Note, no two core children within a clip can share the same #GESTrack.
+ * Therefore, if you use #GESTimeline::select-tracks-for-object, you
+ * should ensure that each core #GESTrackElement is destined for
+ * different #GESTrack-s per clip (or no track).
+ *
  * The #GESTimelineElement:in-point of the clip will control the
  * #GESTimelineElement:in-point of these core elements to be the same
  * value if their #GESTrackElement:has-internal-source is set to %TRUE.
@@ -76,6 +81,24 @@
  * effect will be applied to any source data **before** the other existing
  * effects. You can change the ordering of effects using
  * ges_clip_set_top_effect_index().
+ *
+ * Note, since an effect must be applied on top of a core child, if you
+ * use #GESTimeline::select-tracks-for-object, you should ensure that the
+ * added effects are destined for a #GESTrack that already contains a core
+ * child (note that #GESTimeline::select-tracks-for-object will be called
+ * for the core children before the added effects, so their tracks will be
+ * selected before the effects).
+ *
+ * In addition, if the core child in the track is not
+ * #GESTrackElement:active, then neither can any of its effects be
+ * #GESTrackElement:active. Therefore, if a core child is made in-active,
+ * all of the additional effects in the same track will also become
+ * in-active. Similarly, if an effect is set to be active, then the core
+ * child will also become active, but other effects will be left alone.
+ * Finally, if an active effect is added to the track of an in-active core
+ * child, it will become in-active as well. Note, in contrast, setting a
+ * core child to be active, or an effect to be in-active will *not* change
+ * the other children in the same track.
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -431,42 +454,67 @@ _child_has_internal_source_changed (GESClip * self, GESTimelineElement * child)
 #define _IS_PROP(prop) (g_strcmp0 (name, prop) == 0)
 
 static void
-_child_property_changed_cb (GESTimelineElement * child, GParamSpec * pspec,
-    GESClip * self)
+_child_active_changed (GESClip * self, GESTrackElement * child)
 {
-  gboolean update = FALSE;
-  const gchar *name = pspec->name;
+  GList *tmp;
+  GESTrack *track = ges_track_element_get_track (child);
+  gboolean active = ges_track_element_is_active (child);
+  gboolean is_core = _IS_CORE_CHILD (child);
+  gboolean prev_prevent = self->priv->prevent_duration_limit_update;
 
-  if (_IS_PROP ("track") || _IS_PROP ("active")) {
-    update = TRUE;
-  } else if (_IS_PROP ("priority")) {
-    update = TRUE;
-    _child_priority_changed (GES_CONTAINER (self), child);
-  } else if (_IS_PROP ("in-point")) {
-    update = _child_inpoint_changed (self, child);
-  } else if (_IS_PROP ("max-duration")) {
-    update = TRUE;
-    _child_max_duration_changed (GES_CONTAINER (self), child);
-  } else if (_IS_PROP ("has-internal-source")) {
-    _child_has_internal_source_changed (self, child);
+  /* We want to ensure that each active non-core element has a
+   * corresponding active core element in the same track */
+  if (self->priv->setting_active || !track || is_core == active)
+    return;
+
+  self->priv->prevent_duration_limit_update = TRUE;
+
+  /* If we are core, make all the non-core elements in-active
+   * If we are non-core, make the core element active (should only be one) */
+  for (tmp = GES_CONTAINER_CHILDREN (self); tmp; tmp = tmp->next) {
+    GESTrackElement *sibling = tmp->data;
+
+    if (ges_track_element_get_track (sibling) == track
+        && _IS_CORE_CHILD (sibling) != is_core
+        && ges_track_element_is_active (sibling) != active) {
+
+      GST_INFO_OBJECT (self, "Setting active to %i for child %" GES_FORMAT
+          " since the sibling %" GES_FORMAT " in the same track %"
+          GST_PTR_FORMAT " has been set to %i", active, GES_ARGS (sibling),
+          GES_ARGS (child), track, active);
+
+      if (!ges_track_element_set_active (sibling, active))
+        GST_ERROR_OBJECT (self, "Failed to set active for child %"
+            GES_FORMAT, GES_ARGS (sibling));
+    }
   }
 
-  if (update)
-    _update_duration_limit (self);
+  self->priv->prevent_duration_limit_update = prev_prevent;
 }
 
 /****************************************************
  *              Restrict our children               *
  ****************************************************/
 
-static gboolean
-_track_contains_core (GESClip * clip, GESTrack * track, gboolean core)
+static GESTrackElement *
+_find_core_in_track (GESClip * clip, GESTrack * track)
 {
   GList *tmp;
   for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
     GESTrackElement *child = tmp->data;
-    if (_IS_CORE_CHILD (child) == core
-        && ges_track_element_get_track (child) == track)
+    if (_IS_CORE_CHILD (child) && ges_track_element_get_track (child) == track)
+      return child;
+  }
+  return NULL;
+}
+
+static gboolean
+_track_contains_non_core (GESClip * clip, GESTrack * track)
+{
+  GList *tmp;
+  for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
+    GESTrackElement *child = tmp->data;
+    if (!_IS_CORE_CHILD (child) && ges_track_element_get_track (child) == track)
       return TRUE;
   }
   return FALSE;
@@ -477,6 +525,7 @@ ges_clip_can_set_track_of_child (GESClip * clip, GESTrackElement * child,
     GESTrack * track)
 {
   GESTrack *current_track = ges_track_element_get_track (child);
+  GESTrackElement *core = NULL;
 
   if (clip->priv->allow_any_track)
     return TRUE;
@@ -488,7 +537,7 @@ ges_clip_can_set_track_of_child (GESClip * clip, GESTrackElement * child,
     /* can not remove a core element from a track if a non-core one sits
      * above it */
     if (_IS_CORE_CHILD (child)
-        && _track_contains_core (clip, current_track, FALSE)) {
+        && _track_contains_non_core (clip, current_track)) {
       GST_INFO_OBJECT (clip, "Cannot move the core child %" GES_FORMAT
           " to the track %" GST_PTR_FORMAT " because it has non-core "
           "siblings above it in its current track %" GST_PTR_FORMAT,
@@ -514,17 +563,20 @@ ges_clip_can_set_track_of_child (GESClip * clip, GESTrackElement * child,
           clip_timeline);
       return FALSE;
     }
+
+    core = _find_core_in_track (clip, track);
     /* one core child per track, and other children (effects) can only be
      * placed in a track that already has a core child */
     if (_IS_CORE_CHILD (child)) {
-      if (_track_contains_core (clip, track, TRUE)) {
+      if (core) {
         GST_INFO_OBJECT (clip, "Cannot move the core child %" GES_FORMAT
             " to the track %" GST_PTR_FORMAT " because it contains a "
-            "core sibling", GES_ARGS (child), track);
+            "core sibling %" GES_FORMAT, GES_ARGS (child), track,
+            GES_ARGS (core));
         return FALSE;
       }
     } else {
-      if (!_track_contains_core (clip, track, TRUE)) {
+      if (!core) {
         GST_INFO_OBJECT (clip, "Cannot move the non-core child %"
             GES_FORMAT " to the track %" GST_PTR_FORMAT " because it "
             " does not contain a core sibling", GES_ARGS (child), track);
@@ -533,6 +585,77 @@ ges_clip_can_set_track_of_child (GESClip * clip, GESTrackElement * child,
     }
   }
   return TRUE;
+}
+
+static void
+_update_active_for_track (GESClip * self, GESTrackElement * child)
+{
+  GESTrack *track = ges_track_element_get_track (child);
+  GESTrackElement *core;
+  gboolean active;
+  gboolean prev_prevent = self->priv->prevent_duration_limit_update;
+
+  if (self->priv->allow_any_track || _IS_CORE_CHILD (child) || !track)
+    return;
+
+  /* if we add a non-core to a track, but the core child is inactive, we
+   * also need the non-core to be inactive */
+  core = _find_core_in_track (self, track);
+
+  if (!core) {
+    GST_ERROR_OBJECT (self, "The non-core child %" GES_FORMAT " is in "
+        "the track %" GST_PTR_FORMAT " with no core sibling",
+        GES_ARGS (child), track);
+    active = FALSE;
+  } else {
+    active = ges_track_element_is_active (core);
+  }
+
+  if (!active && ges_track_element_is_active (child)) {
+
+    GST_INFO_OBJECT (self, "De-activating non-core child %" GES_FORMAT
+        " since the core child in the same track %" GST_PTR_FORMAT " is "
+        "not active", GES_ARGS (child), track);
+
+    self->priv->prevent_duration_limit_update = TRUE;
+
+    if (!ges_track_element_set_active (child, FALSE))
+      GST_ERROR_OBJECT (self, "Failed to de-activate child %" GES_FORMAT,
+          GES_ARGS (child));
+
+    self->priv->prevent_duration_limit_update = prev_prevent;
+  }
+}
+
+#define _IS_PROP(prop) (g_strcmp0 (name, prop) == 0)
+
+static void
+_child_property_changed_cb (GESTimelineElement * child, GParamSpec * pspec,
+    GESClip * self)
+{
+  gboolean update = FALSE;
+  const gchar *name = pspec->name;
+
+  if (_IS_PROP ("track")) {
+    update = TRUE;
+    _update_active_for_track (self, GES_TRACK_ELEMENT (child));
+  } else if (_IS_PROP ("active")) {
+    update = TRUE;
+    _child_active_changed (self, GES_TRACK_ELEMENT (child));
+  } else if (_IS_PROP ("priority")) {
+    update = TRUE;
+    _child_priority_changed (GES_CONTAINER (self), child);
+  } else if (_IS_PROP ("in-point")) {
+    update = _child_inpoint_changed (self, child);
+  } else if (_IS_PROP ("max-duration")) {
+    update = TRUE;
+    _child_max_duration_changed (GES_CONTAINER (self), child);
+  } else if (_IS_PROP ("has-internal-source")) {
+    _child_has_internal_source_changed (self, child);
+  }
+
+  if (update)
+    _update_duration_limit (self);
 }
 
 /*****************************************************
@@ -835,7 +958,8 @@ static gboolean
 _add_child (GESContainer * container, GESTimelineElement * element)
 {
   GESClip *self = GES_CLIP (container);
-  GESClipClass *klass = GES_CLIP_GET_CLASS (GES_CLIP (container));
+  GESTrackElement *track_el = GES_TRACK_ELEMENT (element);
+  GESClipClass *klass = GES_CLIP_GET_CLASS (self);
   guint32 min_prio, max_prio, new_prio;
   GESTrack *track;
   GESTimeline *timeline = GES_TIMELINE_ELEMENT_TIMELINE (container);
@@ -855,8 +979,7 @@ _add_child (GESContainer * container, GESTimelineElement * element)
   }
 
   asset = ges_extractable_get_asset (GES_EXTRACTABLE (self));
-  creator_asset =
-      ges_track_element_get_creator_asset (GES_TRACK_ELEMENT (element));
+  creator_asset = ges_track_element_get_creator_asset (track_el);
   if (creator_asset && asset != creator_asset) {
     GST_WARNING_OBJECT (self,
         "Cannot add the track element %" GES_FORMAT " as a child "
@@ -865,7 +988,7 @@ _add_child (GESContainer * container, GESTimelineElement * element)
     return FALSE;
   }
 
-  track = ges_track_element_get_track (GES_TRACK_ELEMENT (element));
+  track = ges_track_element_get_track (track_el);
 
   if (track && ges_track_get_timeline (track) != timeline) {
     /* really, an element in a track should have the same timeline as
@@ -887,18 +1010,20 @@ _add_child (GESContainer * container, GESTimelineElement * element)
     /* NOTE: Core track elements that are base effects are added like any
      * other core elements. In particular, they are *not* added to the
      * list of added effects, so we do not increase nb_effects. */
+    GESTrackElement *core = (track && !priv->allow_any_track) ?
+        _find_core_in_track (self, track) : NULL;
 
-    if (track && !priv->allow_any_track
-        && _track_contains_core (self, track, TRUE)) {
+    if (core) {
       GST_WARNING_OBJECT (self, "Cannot add the core child %" GES_FORMAT
           " because it is in the same track %" GST_PTR_FORMAT " as an "
-          "existing core child", GES_ARGS (element), track);
+          "existing core child %" GES_FORMAT, GES_ARGS (element), track,
+          GES_ARGS (core));
       return FALSE;
     }
 
     /* Set the core element to have the same in-point, which we don't
      * apply to effects */
-    if (ges_track_element_has_internal_source (GES_TRACK_ELEMENT (element))) {
+    if (ges_track_element_has_internal_source (track_el)) {
       /* adding can fail if the max-duration of the element is smaller
        * than the current in-point of the clip */
       if (!_set_inpoint0 (element, _INPOINT (self))) {
@@ -925,13 +1050,13 @@ _add_child (GESContainer * container, GESTimelineElement * element)
      * the core elements). Need to shift the core elements up by 1
      * to make room. */
 
-    if (track && !priv->allow_any_track
-        && !_track_contains_core (GES_CLIP (self), track, TRUE)) {
+    if (track && !priv->allow_any_track && !_find_core_in_track (self, track)) {
       GST_WARNING_OBJECT (self, "Cannot add the effect %" GES_FORMAT
           " because its track %" GST_PTR_FORMAT " does not contain one "
           "of the clip's core children", GES_ARGS (element), track);
       return FALSE;
     }
+    _update_active_for_track (self, track_el);
 
     /* new priority is the lowest priority effect */
     new_prio = min_prio;
@@ -2631,6 +2756,15 @@ ges_clip_add_child_to_track (GESClip * clip, GESTrackElement * child,
       ges_container_remove (GES_CONTAINER (clip), GES_TIMELINE_ELEMENT (el));
     return NULL;
   }
+
+  /* call _child_track_changed now so that the "active" status of the
+   * child can change. Note that this is needed because this method may
+   * be called during ges_container_add, in which case "notify" for el
+   * will be frozen. Thus, _update_active_for_track may not have been
+   * called yet. It is important for us to call this now because when
+   * the elements are un-frozen, we need to ensure the "active" status
+   * is already set before the duration-limit is calculated */
+  _update_active_for_track (clip, el);
 
   return el;
 }
