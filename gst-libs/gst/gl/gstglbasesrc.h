@@ -48,6 +48,8 @@ GType gst_gl_base_src_get_type(void);
  * @running_time: the total running time
  *
  * The parent instance type of a base GStreamer GL Video source.
+ *
+ * Since: 1.18
  */
 struct _GstGLBaseSrc {
   GstPushSrc parent;
@@ -77,6 +79,8 @@ struct _GstGLBaseSrc {
  * @fill_gl_memory: called in the GL thread to fill the current video texture.
  *
  * The base class for GStreamer GL Video sources.
+ *
+ * Since: 1.18
  */
 struct _GstGLBaseSrcClass {
   GstPushSrcClass parent_class;

@@ -39,6 +39,8 @@
  * context. It also provided some wrappers around #GstBaseSrc's `start()` and
  * `stop()` virtual methods that ensure an OpenGL context is available and
  * current in the calling thread.
+ *
+ * Since: 1.18
  */
 
 #define GST_CAT_DEFAULT gst_gl_base_src_debug
