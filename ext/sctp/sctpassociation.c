@@ -36,6 +36,7 @@
 
 GST_DEBUG_CATEGORY_STATIC (gst_sctp_association_debug_category);
 #define GST_CAT_DEFAULT gst_sctp_association_debug_category
+GST_DEBUG_CATEGORY_STATIC (gst_sctp_debug_category);
 
 #define GST_SCTP_ASSOCIATION_STATE_TYPE (gst_sctp_association_state_get_type())
 static GType
@@ -173,12 +174,24 @@ gst_sctp_association_class_init (GstSctpAssociationClass * klass)
   g_object_class_install_properties (gobject_class, NUM_PROPERTIES, properties);
 }
 
+#define USRSCTP_GST_DEBUG_LEVEL GST_LEVEL_DEBUG
+static void
+gst_usrsctp_debug (const gchar * format, ...)
+{
+  va_list varargs;
+
+  va_start (varargs, format);
+  gst_debug_log_valist (gst_sctp_debug_category, USRSCTP_GST_DEBUG_LEVEL,
+      __FILE__, GST_FUNCTION, __LINE__, NULL, format, varargs);
+  va_end (varargs);
+}
+
 static void
 gst_sctp_association_init (GstSctpAssociation * self)
 {
   /* No need to lock mutex here as long as the function is only called from gst_sctp_association_get */
   if (number_of_associations == 0) {
-    usrsctp_init (0, sctp_packet_out, g_print);
+    usrsctp_init (0, sctp_packet_out, gst_usrsctp_debug);
 
     /* Explicit Congestion Notification */
     usrsctp_sysctl_set_sctp_ecn_enable (0);
@@ -195,6 +208,15 @@ gst_sctp_association_init (GstSctpAssociation * self)
 
     usrsctp_sysctl_set_sctp_nr_outgoing_streams_default
         (DEFAULT_NUMBER_OF_SCTP_STREAMS);
+
+#if defined(SCTP_DEBUG) && !defined(GST_DISABLE_GST_DEBUG)
+    if (USRSCTP_GST_DEBUG_LEVEL <= GST_LEVEL_MAX
+        && USRSCTP_GST_DEBUG_LEVEL <= _gst_debug_min
+        && USRSCTP_GST_DEBUG_LEVEL <=
+        gst_debug_category_get_threshold (gst_sctp_debug_category)) {
+      usrsctp_sysctl_set_sctp_debug_on (SCTP_DEBUG_ALL);
+    }
+#endif
   }
   number_of_associations++;
 
@@ -335,6 +357,8 @@ gst_sctp_association_get (guint32 association_id)
   G_LOCK (associations_lock);
   GST_DEBUG_CATEGORY_INIT (gst_sctp_association_debug_category,
       "sctpassociation", 0, "debug category for sctpassociation");
+  GST_DEBUG_CATEGORY_INIT (gst_sctp_debug_category,
+      "sctplib", 0, "debug category for messages from usrsctp");
 
   if (!associations) {
     associations =
