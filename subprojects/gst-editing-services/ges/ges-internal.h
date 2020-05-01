@@ -551,18 +551,32 @@ typedef enum
 } GESTimelineElementFlags;
 
 G_GNUC_INTERNAL GESTimelineElement * ges_timeline_element_peak_toplevel (GESTimelineElement * self);
+
+typedef enum
+{
+  GES_TIMELINE_ELEMENT_CHILD_PROP_FLAG_NONE = (1 << 0),
+  /* Inherit flags from the owner child property registration */
+  GES_TIMELINE_ELEMENT_CHILD_PROP_FLAG_INHERIT = (1 << 1),
+  /* When setting child property, ensure to set value on every registered instances */
+  GES_TIMELINE_ELEMENT_CHILD_PROP_FLAG_SET_ON_ALL_INSTANCES = (1 << 2),
+} GESTimelineElementChildPropertyFlags;
+
 G_GNUC_INTERNAL GESTimelineElement * ges_timeline_element_get_copied_from (GESTimelineElement *self);
 G_GNUC_INTERNAL GESTimelineElementFlags ges_timeline_element_flags (GESTimelineElement *self);
 G_GNUC_INTERNAL void                ges_timeline_element_set_flags (GESTimelineElement *self, GESTimelineElementFlags flags);
 G_GNUC_INTERNAL gboolean            ges_timeline_element_add_child_property_full (GESTimelineElement *self,
                                                                                   GESTimelineElement *owner,
                                                                                   GParamSpec *pspec,
-                                                                                  GObject *child);
+                                                                                  GObject *child,
+                                                                                  GESTimelineElementChildPropertyFlags flags);
 
-G_GNUC_INTERNAL GObject *           ges_timeline_element_get_child_from_child_property (GESTimelineElement * self,
-                                                                                        GParamSpec * pspec);
+G_GNUC_INTERNAL GList *           ges_timeline_element_get_children_from_child_property (GESTimelineElement * self,
+                                                                                         GParamSpec * pspec);
 G_GNUC_INTERNAL GParamSpec **       ges_timeline_element_get_children_properties (GESTimelineElement * self,
                                                                                   guint * n_properties);
+G_GNUC_INTERNAL gboolean            ges_timeline_element_remove_child_property_full  (GESTimelineElement * self,
+                                                                                      GParamSpec * pspec,
+                                                                                      GObject *child);
 
 #define ELEMENT_FLAGS(obj)             (ges_timeline_element_flags (GES_TIMELINE_ELEMENT(obj)))
 #define ELEMENT_SET_FLAG(obj,flag)     (ges_timeline_element_set_flags(GES_TIMELINE_ELEMENT(obj), (ELEMENT_FLAGS(obj) | (flag))))

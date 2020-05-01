@@ -211,7 +211,8 @@ _add_childs_child_property (GESTimelineElement * container_child,
    * instance who the property comes from */
   gboolean res =
       ges_timeline_element_add_child_property_full (GES_TIMELINE_ELEMENT
-      (container), container_child, property, prop_child);
+      (container), container_child, property, prop_child,
+      GES_TIMELINE_ELEMENT_CHILD_PROP_FLAG_INHERIT);
   if (!res)
     GST_INFO_OBJECT (container, "Could not register the child property '%s' "
         "of our child %" GES_FORMAT " for the object %" GST_PTR_FORMAT,
@@ -233,10 +234,14 @@ _ges_container_add_child_properties (GESContainer * container,
 
   for (i = 0; i < n_props; i++) {
     GParamSpec *property = child_props[i];
-    GObject *prop_child =
-        ges_timeline_element_get_child_from_child_property (child, property);
-    if (prop_child)
-      _add_childs_child_property (child, prop_child, property, container);
+    GList *tmp, *children =
+        ges_timeline_element_get_children_from_child_property (child, property);
+
+    for (tmp = children; tmp; tmp = tmp->next)
+      ges_timeline_element_add_child_property_full (GES_TIMELINE_ELEMENT
+          (container), child, property, tmp->data,
+          GES_TIMELINE_ELEMENT_CHILD_PROP_FLAG_INHERIT);
+    g_list_free (children);
     g_param_spec_unref (property);
   }
 
@@ -247,37 +252,8 @@ static void
 _remove_childs_child_property (GESTimelineElement * container_child,
     GObject * prop_child, GParamSpec * property, GESContainer * container)
 {
-  /* NOTE: some children may share the same GParamSpec. Currently, only
-   * the first such child added will have its children properties
-   * successfully registered for the container (even though the GObject
-   * child who the properties belong to will be a different instance). As
-   * such, we only want to remove the child property if it corresponds to
-   * the same instance that the parent container has.
-   * E.g. if we add child1 and child2, that have the same (or some
-   * overlapping) children properties. And child1 is added before child2,
-   * then child2's overlapping children properties would not be registered.
-   * If we remove child2, we do *not* want to removed the child properties
-   * for child1 because they belong to a GObject instance that we still
-   * have in our control.
-   * If we remove child1, we *do* want to remove the child properties for
-   * child1, even though child2 may overlap with some of them, because we
-   * are loosing the specific GObject instance that it belongs to!
-   * We could try and register the ones that match for the other children.
-   * However, it is probably simpler to change
-   * ges_timeline_element_add_child_property_full to accept the same
-   * GParamSpec, for different instances.
-   */
-  GESTimelineElement *element = GES_TIMELINE_ELEMENT (container);
-  GObject *our_prop_child =
-      ges_timeline_element_get_child_from_child_property (element, property);
-  if (our_prop_child == prop_child)
-    ges_timeline_element_remove_child_property (element, property);
-  else
-    GST_INFO_OBJECT (container, "Not removing child property '%s' for child"
-        " %" GES_FORMAT " because it derives from the object %" GST_PTR_FORMAT
-        "(%p) rather than the object %" GST_PTR_FORMAT "(%p)", property->name,
-        GES_ARGS (container_child), prop_child, prop_child, our_prop_child,
-        our_prop_child);
+  ges_timeline_element_remove_child_property_full (GES_TIMELINE_ELEMENT
+      (container), property, prop_child);
 }
 
 static void
@@ -295,10 +271,13 @@ _ges_container_remove_child_properties (GESContainer * container,
 
   for (i = 0; i < n_props; i++) {
     GParamSpec *property = child_props[i];
-    GObject *prop_child =
-        ges_timeline_element_get_child_from_child_property (child, property);
-    if (prop_child)
-      _remove_childs_child_property (child, prop_child, property, container);
+    GList *tmp, *children =
+        ges_timeline_element_get_children_from_child_property (child, property);
+
+    for (tmp = children; tmp; tmp = tmp->next)
+      ges_timeline_element_remove_child_property_full (GES_TIMELINE_ELEMENT
+          (container), property, tmp->data);
+    g_list_free (children);
     g_param_spec_unref (property);
   }
 

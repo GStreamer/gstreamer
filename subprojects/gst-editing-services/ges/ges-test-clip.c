@@ -301,7 +301,7 @@ static void
 ges_test_clip_class_init (GESTestClipClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GESClipClass *timobj_class = GES_CLIP_CLASS (klass);
+  GESClipClass *clip_class = GES_CLIP_CLASS (klass);
 
   object_class->get_property = ges_test_clip_get_property;
   object_class->set_property = ges_test_clip_set_property;
@@ -347,7 +347,7 @@ ges_test_clip_class_init (GESTestClipClass * klass)
       g_param_spec_boolean ("mute", "Mute", "Mute audio track",
           FALSE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
-  timobj_class->create_track_element = ges_test_clip_create_track_element;
+  clip_class->create_track_element = ges_test_clip_create_track_element;
 }
 
 static void
