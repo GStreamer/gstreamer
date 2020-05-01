@@ -517,6 +517,9 @@ GstStructure *  gst_event_writable_structure    (GstEvent *event);
 GST_API
 gboolean        gst_event_has_name              (GstEvent *event, const gchar *name);
 
+GST_API
+gboolean        gst_event_has_name_id           (GstEvent *event, GQuark name);
+
 /* identifiers for events and messages */
 
 GST_API

@@ -5220,7 +5220,7 @@ store_sticky_event (GstPad * pad, GstEvent * event)
   GstEventType type;
   GArray *events;
   gboolean res = FALSE;
-  const gchar *name = NULL;
+  GQuark name_id = 0;
   gboolean insert = TRUE;
 
   type = GST_EVENT_TYPE (event);
@@ -5248,7 +5248,7 @@ store_sticky_event (GstPad * pad, GstEvent * event)
     goto eos;
 
   if (type & GST_EVENT_TYPE_STICKY_MULTI)
-    name = gst_structure_get_name (gst_event_get_structure (event));
+    name_id = gst_structure_get_name_id (gst_event_get_structure (event));
 
   events = pad->priv->events;
   len = events->len;
@@ -5261,7 +5261,7 @@ store_sticky_event (GstPad * pad, GstEvent * event)
 
     if (type == GST_EVENT_TYPE (ev->event)) {
       /* matching types, check matching name if needed */
-      if (name && !gst_event_has_name (ev->event, name))
+      if (name_id && !gst_event_has_name_id (ev->event, name_id))
         continue;
 
       /* overwrite */

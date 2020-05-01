@@ -408,6 +408,29 @@ gst_event_has_name (GstEvent * event, const gchar * name)
 }
 
 /**
+ * gst_event_has_name_id:
+ * @event: The #GstEvent.
+ * @name: name to check as a GQuark
+ *
+ * Checks if @event has the given @name. This function is usually used to
+ * check the name of a custom event.
+ *
+ * Returns: %TRUE if @name matches the name of the event structure.
+ *
+ * Since: 1.18
+ */
+gboolean
+gst_event_has_name_id (GstEvent * event, GQuark name)
+{
+  g_return_val_if_fail (GST_IS_EVENT (event), FALSE);
+
+  if (GST_EVENT_STRUCTURE (event) == NULL)
+    return FALSE;
+
+  return (GST_EVENT_STRUCTURE (event)->name == name);
+}
+
+/**
  * gst_event_get_seqnum:
  * @event: A #GstEvent.
  *
