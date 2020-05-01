@@ -41,7 +41,7 @@ struct _GstAutoConvert
   /*< private >*/
   GstBin bin;                   /* we extend GstBin */
 
-  volatile GList *factories;
+  GList *factories;
 
   GstPad *sinkpad;
   GstPad *srcpad;
