@@ -1191,7 +1191,7 @@ gst_test_clock_id_list_get_latest_time (const GList * pending_list)
  * A "crank" consists of three steps:
  * 1: Wait for a #GstClockID to be registered with the #GstTestClock.
  * 2: Advance the #GstTestClock to the time the #GstClockID is waiting, unless
- *    the clock time is already passed the clock id (Since 1.18).
+ *    the clock time is already passed the clock id (Since: 1.18).
  * 3: Release the #GstClockID wait.
  * A "crank" can be though of as the notion of
  * manually driving the clock forward to its next logical step.

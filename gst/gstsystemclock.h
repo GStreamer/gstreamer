@@ -49,7 +49,7 @@ typedef struct _GstSystemClockPrivate GstSystemClockPrivate;
  *                            point
  * @GST_CLOCK_TYPE_OTHER: some other time source is used (Since: 1.0.5)
  * @GST_CLOCK_TYPE_TAI: time since Epoch, but using International Atomic Time
- *                      as reference (Since 1.18)
+ *                      as reference (Since: 1.18)
  *
  * The different kind of clocks.
  */
