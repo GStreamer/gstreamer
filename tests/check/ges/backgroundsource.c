@@ -395,6 +395,7 @@ GST_START_TEST (test_gap_filling_empty_track)
   gap_object_check (gap, 0, 10, 1);
   fail_unless (ges_timeline_commit (timeline));
 
+  gst_object_unref (asset);
   gst_object_unref (timeline);
 }
 

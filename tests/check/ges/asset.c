@@ -240,6 +240,9 @@ GST_START_TEST (test_uri_clip_change_asset)
   g_free (uri);
   g_free (uri1);
 
+  gst_object_unref (asset1);
+  gst_object_unref (asset);
+
   ges_deinit ();
 }
 

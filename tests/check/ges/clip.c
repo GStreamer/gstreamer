@@ -1037,6 +1037,7 @@ GST_START_TEST (test_clip_group_ungroup)
   assert_num_in_track (video_track, 3);
 
   gst_object_unref (timeline);
+  gst_object_unref (asset);
 
   ges_deinit ();
 }
@@ -1538,6 +1539,7 @@ GST_START_TEST (test_adding_children_to_track)
       ges_clip_get_top_effect_index (clip, GES_BASE_EFFECT (effect2)));
 
   gst_object_unref (timeline);
+  gst_object_unref (asset);
 
   ges_deinit ();
 }

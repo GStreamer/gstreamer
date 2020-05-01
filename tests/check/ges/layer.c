@@ -460,6 +460,7 @@ GST_START_TEST (test_single_layer_automatic_transition)
   g_list_free_full (objects, gst_object_unref);
 
   gst_object_unref (timeline);
+  gst_object_unref (asset);
 
   ges_deinit ();
 }
@@ -928,6 +929,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   ASSERT_OBJECT_REFCOUNT (transition, "layer + timeline", 2);
 
   gst_object_unref (timeline);
+  gst_object_unref (asset);
 
   ges_deinit ();
 }
@@ -1162,6 +1164,7 @@ GST_START_TEST (test_layer_activate_automatic_transition)
 
 
   gst_object_unref (timeline);
+  gst_object_unref (asset);
 
   ges_deinit ();
 }

@@ -716,6 +716,7 @@ GST_START_TEST (test_group_serialization)
 
   g_free (tmpuri);
   gst_object_unref (timeline);
+  gst_object_unref (asset);
 
   ges_deinit ();
 }
@@ -848,6 +849,7 @@ GST_START_TEST (test_children_properties_contain)
   free_children_properties (child_props2, num_props2);
 
   gst_object_unref (timeline);
+  gst_object_unref (asset);
 
   ges_deinit ();
 }

@@ -872,7 +872,7 @@ ges_project_create_asset_sync (GESProject * project, const gchar * id,
   if ((asset = g_hash_table_lookup (project->priv->assets, internal_id))) {
     g_free (internal_id);
 
-    return asset;
+    return gst_object_ref (asset);
   } else if (g_hash_table_lookup (project->priv->loading_assets, internal_id) ||
       g_hash_table_lookup (project->priv->loaded_with_error, internal_id)) {
     g_free (internal_id);
@@ -1059,9 +1059,10 @@ ges_project_list_assets (GESProject * project, GType filter)
  * @project: A #GESProject to save
  * @timeline: The #GESTimeline to save, it must have been extracted from @project
  * @uri: The uri where to save @project and @timeline
- * @formatter_asset: (allow-none): The formatter asset to use or %NULL. If %NULL,
- * will try to save in the same format as the one from which the timeline as been loaded
- * or default to the best formatter as defined in #ges_find_formatter_for_uri
+ * @formatter_asset: (transfer full) (allow-none): The formatter asset to
+ * use or %NULL. If %NULL, will try to save in the same format as the one
+ * from which the timeline as been loaded or default to the best formatter
+ * as defined in #ges_find_formatter_for_uri
  * @overwrite: %TRUE to overwrite file if it exists
  * @error: (out) (allow-none): An error to be set in case something wrong happens or %NULL
  *
