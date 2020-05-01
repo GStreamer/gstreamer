@@ -151,7 +151,7 @@ G_BEGIN_DECLS
  *
  * Checks if the given #GValue contains a #GST_TYPE_STRUCTURE value.
  */
-#define GST_VALUE_HOLDS_STRUCTURE(x)            (G_VALUE_HOLDS((x), _gst_structure_type))
+#define GST_VALUE_HOLDS_STRUCTURE(x)         ((x) != NULL && G_VALUE_TYPE(x) == _gst_structure_type)
 
 /**
  * GST_VALUE_HOLDS_CAPS_FEATURES:
@@ -159,7 +159,7 @@ G_BEGIN_DECLS
  *
  * Checks if the given #GValue contains a #GST_TYPE_CAPS_FEATURES value.
  */
-#define GST_VALUE_HOLDS_CAPS_FEATURES(x)        (G_VALUE_HOLDS((x), _gst_caps_features_type))
+#define GST_VALUE_HOLDS_CAPS_FEATURES(x)         ((x) != NULL && G_VALUE_TYPE(x) == _gst_caps_features_type)
 
 /**
  * GST_VALUE_HOLDS_BUFFER:
@@ -209,7 +209,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.6
  */
-#define GST_VALUE_HOLDS_FLAG_SET(x)     (G_TYPE_CHECK_VALUE_TYPE ((x), GST_TYPE_FLAG_SET))
+#define GST_VALUE_HOLDS_FLAG_SET(x)     (G_TYPE_FUNDAMENTAL (G_VALUE_TYPE ((x))) == GST_TYPE_FLAG_SET)
 
 /**
  * GST_FLAG_SET_MASK_EXACT: (value 4294967295) (type guint)

@@ -5776,7 +5776,7 @@ gst_value_list_equals_range (const GValue * list, const GValue * value)
   /* compare the basic types - they have to match */
   first = VALUE_LIST_GET_VALUE (list, 0);
 #define CHECK_TYPES(type,prefix) \
-  (prefix##_VALUE_HOLDS_##type(first) && GST_VALUE_HOLDS_##type##_RANGE (value))
+  ((first) && G_VALUE_TYPE(first) == prefix##_TYPE_##type && GST_VALUE_HOLDS_##type##_RANGE (value))
   if (CHECK_TYPES (INT, G)) {
     const gint rmin = gst_value_get_int_range_min (value);
     const gint rmax = gst_value_get_int_range_max (value);
