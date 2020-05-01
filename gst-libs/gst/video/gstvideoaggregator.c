@@ -123,17 +123,24 @@ gst_video_aggregator_pad_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstVideoAggregatorPad *pad = GST_VIDEO_AGGREGATOR_PAD (object);
-  GstVideoAggregator *vagg =
-      GST_VIDEO_AGGREGATOR (gst_pad_get_parent (GST_PAD (pad)));
 
   switch (prop_id) {
-    case PROP_PAD_ZORDER:
-      GST_OBJECT_LOCK (vagg);
-      pad->priv->zorder = g_value_get_uint (value);
-      GST_ELEMENT (vagg)->sinkpads = g_list_sort (GST_ELEMENT (vagg)->sinkpads,
-          (GCompareFunc) pad_zorder_compare);
-      GST_OBJECT_UNLOCK (vagg);
+    case PROP_PAD_ZORDER:{
+      GstVideoAggregator *vagg =
+          GST_VIDEO_AGGREGATOR (gst_pad_get_parent (GST_PAD (pad)));
+      if (vagg) {
+        GST_OBJECT_LOCK (vagg);
+        pad->priv->zorder = g_value_get_uint (value);
+        GST_ELEMENT (vagg)->sinkpads =
+            g_list_sort (GST_ELEMENT (vagg)->sinkpads,
+            (GCompareFunc) pad_zorder_compare);
+        GST_OBJECT_UNLOCK (vagg);
+        gst_object_unref (vagg);
+      } else {
+        pad->priv->zorder = g_value_get_uint (value);
+      }
       break;
+    }
     case PROP_PAD_REPEAT_AFTER_EOS:
       pad->priv->repeat_after_eos = g_value_get_boolean (value);
       break;
@@ -144,8 +151,6 @@ gst_video_aggregator_pad_set_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-
-  gst_object_unref (vagg);
 }
 
 static GstFlowReturn
