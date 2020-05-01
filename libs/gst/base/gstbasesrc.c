@@ -3022,10 +3022,9 @@ flushing:
   }
 pause:
   {
-    const gchar *reason = gst_flow_get_name (ret);
     GstEvent *event;
 
-    GST_DEBUG_OBJECT (src, "pausing task, reason %s", reason);
+    GST_DEBUG_OBJECT (src, "pausing task, reason %s", gst_flow_get_name (ret));
     src->running = FALSE;
     gst_pad_pause_task (pad);
     if (ret == GST_FLOW_EOS) {
