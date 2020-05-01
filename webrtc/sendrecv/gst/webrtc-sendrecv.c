@@ -517,7 +517,15 @@ on_answer_created (GstPromise * promise, gpointer user_data)
 }
 
 static void
-on_offer_received (GstSDPMessage * sdp)
+on_offer_set (GstPromise * promise, gpointer user_data)
+{
+  gst_promise_unref (promise);
+  promise = gst_promise_new_with_change_func (on_answer_created, NULL, NULL);
+  g_signal_emit_by_name (webrtc1, "create-answer", NULL, promise);
+}
+
+static void
+on_offer_received (GstSDPMessage *sdp)
 {
   GstWebRTCSessionDescription *offer = NULL;
   GstPromise *promise;
@@ -527,15 +535,11 @@ on_offer_received (GstSDPMessage * sdp)
 
   /* Set remote description on our pipeline */
   {
-    promise = gst_promise_new ();
-    g_signal_emit_by_name (webrtc1, "set-remote-description", offer, promise);
-    gst_promise_interrupt (promise);
-    gst_promise_unref (promise);
+    promise = gst_promise_new_with_change_func (on_offer_set, NULL, NULL);
+    g_signal_emit_by_name (webrtc1, "set-remote-description", offer,
+        promise);
   }
   gst_webrtc_session_description_free (offer);
-
-  promise = gst_promise_new_with_change_func (on_answer_created, NULL, NULL);
-  g_signal_emit_by_name (webrtc1, "create-answer", NULL, promise);
 }
 
 /* One mega message handler for our asynchronous calling mechanism */
