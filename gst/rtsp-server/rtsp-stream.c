@@ -4685,8 +4685,8 @@ gst_rtsp_stream_add_transport (GstRTSPStream * stream,
   g_mutex_lock (&priv->lock);
   res = update_transport (stream, trans, TRUE);
   if (res)
-    gst_rtsp_stream_transport_set_message_sent (trans, on_message_sent, stream,
-        NULL);
+    gst_rtsp_stream_transport_set_message_sent_full (trans, on_message_sent,
+        stream, NULL);
   g_mutex_unlock (&priv->lock);
 
   return res;

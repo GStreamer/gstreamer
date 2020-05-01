@@ -77,6 +77,10 @@ struct _GstRTSPStreamTransportPrivate
   gpointer ms_user_data;
   GDestroyNotify ms_notify;
 
+  GstRTSPMessageSentFuncFull message_sent_full;
+  gpointer msf_user_data;
+  GDestroyNotify msf_notify;
+
   GstRTSPTransport *transport;
   GstRTSPUrl *url;
 
@@ -373,6 +377,34 @@ gst_rtsp_stream_transport_set_message_sent (GstRTSPStreamTransport * trans,
   priv->ms_notify = notify;
 }
 
+/**
+ * gst_rtsp_stream_transport_set_message_sent_full:
+ * @trans: a #GstRTSPStreamTransport
+ * @message_sent: (scope notified): a callback called when a message has been sent
+ * @user_data: (closure): user data passed to callback
+ * @notify: (allow-none): called with the user_data when no longer needed
+ *
+ * Install a callback that will be called when a message has been sent on @trans.
+ *
+ * Since: 1.18
+ */
+void
+gst_rtsp_stream_transport_set_message_sent_full (GstRTSPStreamTransport * trans,
+    GstRTSPMessageSentFuncFull message_sent, gpointer user_data,
+    GDestroyNotify notify)
+{
+  GstRTSPStreamTransportPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_STREAM_TRANSPORT (trans));
+
+  priv = trans->priv;
+
+  priv->message_sent_full = message_sent;
+  if (priv->msf_notify)
+    priv->msf_notify (priv->msf_user_data);
+  priv->msf_user_data = user_data;
+  priv->msf_notify = notify;
+}
 
 /**
  * gst_rtsp_stream_transport_set_transport:
@@ -750,7 +782,7 @@ gst_rtsp_stream_transport_keep_alive (GstRTSPStreamTransport * trans)
  * gst_rtsp_stream_transport_message_sent:
  * @trans: a #GstRTSPStreamTransport
  *
- * Signal the installed message_sent callback for @trans.
+ * Signal the installed message_sent / message_sent_full callback for @trans.
  *
  * Since: 1.16
  */
@@ -761,8 +793,10 @@ gst_rtsp_stream_transport_message_sent (GstRTSPStreamTransport * trans)
 
   priv = trans->priv;
 
+  if (priv->message_sent_full)
+    priv->message_sent_full (trans, priv->msf_user_data);
   if (priv->message_sent)
-    priv->message_sent (trans, priv->ms_user_data);
+    priv->message_sent (priv->ms_user_data);
 }
 
 /**
