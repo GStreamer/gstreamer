@@ -15,8 +15,7 @@ import asyncio
 import websockets
 import argparse
 import http
-
-from concurrent.futures._base import TimeoutError
+import concurrent
 
 class WebRTCSimpleServer(object):
 
@@ -58,7 +57,7 @@ class WebRTCSimpleServer(object):
         while msg is None:
             try:
                 msg = await asyncio.wait_for(ws.recv(), self.keepalive_timeout)
-            except TimeoutError:
+            except (asyncio.exceptions.TimeoutError, concurrent.futures._base.TimeoutError):
                 print('Sending keepalive ping to {!r} in recv'.format(raddr))
                 await ws.ping()
         return msg
