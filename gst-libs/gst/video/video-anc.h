@@ -199,7 +199,7 @@ typedef enum {
  *
  * 2) SMPTE ST2016-1:
  *
- * Since 1.18
+ * Since: 1.18
  */
 typedef enum {
   GST_VIDEO_AFD_SPEC_DVB_ETSI,

@@ -334,7 +334,7 @@ gst_rtsp_url_get_request_uri (const GstRTSPUrl * url)
  * Returns: a string with the request URI combined with the control path.
  * g_free() after usage.
  *
- * Since 1.18
+ * Since: 1.18
  */
 gchar *
 gst_rtsp_url_get_request_uri_with_control (const GstRTSPUrl * url,
