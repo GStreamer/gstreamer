@@ -6061,7 +6061,8 @@ gst_value_can_intersect (const GValue * value1, const GValue * value2)
       return TRUE;
   }
 
-  /* check registered intersect functions */
+  /* check registered intersect functions (only different gtype are checked at
+   * this point) */
   len = gst_value_intersect_funcs->len;
   for (i = 0; i < len; i++) {
     intersect_info = &g_array_index (gst_value_intersect_funcs,
@@ -6116,15 +6117,36 @@ gst_value_intersect (GValue * dest, const GValue * value1,
     return TRUE;
   }
 
-  len = gst_value_intersect_funcs->len;
-  for (i = 0; i < len; i++) {
-    intersect_info = &g_array_index (gst_value_intersect_funcs,
-        GstValueIntersectInfo, i);
-    if (intersect_info->type1 == type1 && intersect_info->type2 == type2) {
-      return intersect_info->func (dest, value1, value2);
-    }
-    if (intersect_info->type1 == type2 && intersect_info->type2 == type1) {
-      return intersect_info->func (dest, value2, value1);
+  if (type1 == type2) {
+    /* Equal type comparison */
+    if (type1 == GST_TYPE_INT_RANGE)
+      return gst_value_intersect_int_range_int_range (dest, value1, value2);
+    if (type1 == GST_TYPE_INT64_RANGE)
+      return gst_value_intersect_int64_range_int64_range (dest, value1, value2);
+    if (type1 == GST_TYPE_DOUBLE_RANGE)
+      return gst_value_intersect_double_range_double_range (dest, value1,
+          value2);
+    if (type1 == GST_TYPE_ARRAY)
+      return gst_value_intersect_array (dest, value1, value2);
+    if (type1 == GST_TYPE_FRACTION_RANGE)
+      return gst_value_intersect_fraction_range_fraction_range (dest, value1,
+          value2);
+    if (type1 == GST_TYPE_FLAG_SET)
+      return gst_value_intersect_flagset_flagset (dest, value1, value2);
+    if (type1 == GST_TYPE_STRUCTURE)
+      return gst_value_intersect_structure_structure (dest, value1, value2);
+  } else {
+    /* Different type comparison */
+    len = gst_value_intersect_funcs->len;
+    for (i = 0; i < len; i++) {
+      intersect_info = &g_array_index (gst_value_intersect_funcs,
+          GstValueIntersectInfo, i);
+      if (intersect_info->type1 == type1 && intersect_info->type2 == type2) {
+        return intersect_info->func (dest, value1, value2);
+      }
+      if (intersect_info->type1 == type2 && intersect_info->type2 == type1) {
+        return intersect_info->func (dest, value2, value1);
+      }
     }
   }
 
@@ -7785,7 +7807,7 @@ G_STMT_START {                                                          \
 
 static const gint GST_VALUE_TABLE_DEFAULT_SIZE = 40;
 static const gint GST_VALUE_UNION_TABLE_DEFAULT_SIZE = 8;
-static const gint GST_VALUE_INTERSECT_TABLE_DEFAULT_SIZE = 16;
+static const gint GST_VALUE_INTERSECT_TABLE_DEFAULT_SIZE = 4;
 static const gint GST_VALUE_SUBTRACT_TABLE_DEFAULT_SIZE = 16;
 
 void
@@ -7904,29 +7926,17 @@ _priv_gst_value_initialize (void)
   g_value_register_transform_func (G_TYPE_STRING, GST_TYPE_FLAG_SET,
       gst_value_transform_string_flagset);
 
+  /* Only register intersection functions for *different* types.
+   * Identical type intersection should be specified directly in
+   * gst_value_intersect() */
   gst_value_register_intersect_func (G_TYPE_INT, GST_TYPE_INT_RANGE,
       gst_value_intersect_int_int_range);
-  gst_value_register_intersect_func (GST_TYPE_INT_RANGE, GST_TYPE_INT_RANGE,
-      gst_value_intersect_int_range_int_range);
   gst_value_register_intersect_func (G_TYPE_INT64, GST_TYPE_INT64_RANGE,
       gst_value_intersect_int64_int64_range);
-  gst_value_register_intersect_func (GST_TYPE_INT64_RANGE,
-      GST_TYPE_INT64_RANGE, gst_value_intersect_int64_range_int64_range);
   gst_value_register_intersect_func (G_TYPE_DOUBLE, GST_TYPE_DOUBLE_RANGE,
       gst_value_intersect_double_double_range);
-  gst_value_register_intersect_func (GST_TYPE_DOUBLE_RANGE,
-      GST_TYPE_DOUBLE_RANGE, gst_value_intersect_double_range_double_range);
-  gst_value_register_intersect_func (GST_TYPE_ARRAY, GST_TYPE_ARRAY,
-      gst_value_intersect_array);
   gst_value_register_intersect_func (GST_TYPE_FRACTION,
       GST_TYPE_FRACTION_RANGE, gst_value_intersect_fraction_fraction_range);
-  gst_value_register_intersect_func (GST_TYPE_FRACTION_RANGE,
-      GST_TYPE_FRACTION_RANGE,
-      gst_value_intersect_fraction_range_fraction_range);
-  gst_value_register_intersect_func (GST_TYPE_FLAG_SET, GST_TYPE_FLAG_SET,
-      gst_value_intersect_flagset_flagset);
-  gst_value_register_intersect_func (GST_TYPE_STRUCTURE, GST_TYPE_STRUCTURE,
-      gst_value_intersect_structure_structure);
 
   gst_value_register_subtract_func (G_TYPE_INT, GST_TYPE_INT_RANGE,
       gst_value_subtract_int_int_range);
