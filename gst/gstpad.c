@@ -6159,14 +6159,12 @@ do_stream_status (GstPad * pad, GstStreamStatusType type,
       GValue value = { 0 };
 
       if (type == GST_STREAM_STATUS_TYPE_ENTER) {
-        gchar *tname, *ename, *pname;
+        gchar *tname;
 
-        /* create a good task name */
-        ename = gst_element_get_name (parent);
-        pname = gst_pad_get_name (pad);
-        tname = g_strdup_printf ("%s:%s", ename, pname);
-        g_free (ename);
-        g_free (pname);
+        /* create a good task name (we can directly grab the parent and pad
+         * names since they both exist at this point, and changing the name of
+         * parent and pad when a pad is activating is a big no-no). */
+        tname = g_strdup_printf ("%s:%s", GST_DEBUG_PAD_NAME (pad));
 
         gst_object_set_name (GST_OBJECT_CAST (task), tname);
         g_free (tname);
