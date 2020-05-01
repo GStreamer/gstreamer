@@ -11,6 +11,7 @@ mf_desktop_sources = [
   'gstmfvideosrc.c',
   'gstmfsourceobject.c',
   'gstmfsourcereader.cpp',
+  'gstmfdevice.c'
 ]
 
 mf_header_deps = [

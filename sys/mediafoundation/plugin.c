@@ -27,6 +27,7 @@
 #include <gst/gst.h>
 #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
 #include "gstmfvideosrc.h"
+#include "gstmfdevice.h"
 #endif
 #include "gstmfutils.h"
 #include "gstmfh264enc.h"
@@ -64,6 +65,8 @@ plugin_init (GstPlugin * plugin)
 #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
   gst_element_register (plugin,
       "mfvideosrc", GST_RANK_SECONDARY, GST_TYPE_MF_VIDEO_SRC);
+  gst_device_provider_register (plugin, "mfdeviceprovider",
+      GST_RANK_SECONDARY, GST_TYPE_MF_DEVICE_PROVIDER);
 #endif
 
   gst_mf_h264_enc_plugin_init (plugin, GST_RANK_SECONDARY);
