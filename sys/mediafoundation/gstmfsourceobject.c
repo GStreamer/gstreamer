@@ -313,8 +313,17 @@ gst_mf_source_object_thread_func (GstMFSourceObject * self)
     }
   }
 
-  if (target)
+  if (target) {
     self->opend = klass->open (self, target->handle);
+
+    g_free (priv->device_path);
+    priv->device_path = g_strdup (target->path);
+
+    g_free (priv->device_name);
+    priv->device_name = g_strdup (target->name);
+
+    priv->device_index = target->index;
+  }
 
   if (activate_list)
     g_list_free_full (activate_list,
