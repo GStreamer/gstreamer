@@ -73,6 +73,14 @@ typedef struct _GstRtmpLocation
   gboolean publish;
 } GstRtmpLocation;
 
+typedef enum
+{
+  GST_RTMP_STOP_COMMAND_NONE = 0,
+  GST_RTMP_STOP_COMMAND_FCUNPUBLISH = (1 << 0),
+  GST_RTMP_STOP_COMMAND_CLOSE_STREAM = (1 << 1),
+  GST_RTMP_STOP_COMMAND_DELETE_STREAM = (1 << 2)
+} GstRtmpStopCommands;
+
 void gst_rtmp_location_copy (GstRtmpLocation * dest,
     const GstRtmpLocation * src);
 void gst_rtmp_location_clear (GstRtmpLocation * uri);
@@ -97,6 +105,9 @@ void gst_rtmp_client_start_play_async (GstRtmpConnection * connection,
     GAsyncReadyCallback callback, gpointer user_data);
 gboolean gst_rtmp_client_start_play_finish (GstRtmpConnection * connection,
     GAsyncResult * result, guint * stream_id, GError ** error);
+
+void gst_rtmp_client_stop_publish (GstRtmpConnection * connection,
+    const gchar * stream, const GstRtmpStopCommands stop_commands);
 
 G_END_DECLS
 #endif
