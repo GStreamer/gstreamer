@@ -833,6 +833,48 @@ beach:
 
 GST_END_VALIDATE_ACTION;
 
+GES_START_VALIDATE_ACTION (_group)
+{
+  gint i;
+  GESContainer *group;
+  GList *containers = NULL;
+  gchar **container_names;
+  const gchar *container_name =
+      gst_structure_get_string (action->structure, "container-name");
+
+  REPORT_UNLESS ((container_names =
+          gst_validate_utils_get_strv (action->structure, "containers")), beach,
+      "Could not get container names from structure %" GST_PTR_FORMAT,
+      action->structure);
+
+  for (i = 0; container_names[i]; i++) {
+    GESContainer *container =
+        (GESContainer *) ges_timeline_get_element (timeline,
+        container_names[i]);
+
+    REPORT_UNLESS (GES_IS_CONTAINER (container), beach, "Could not find %s",
+        container_names[i]);
+
+    containers = g_list_prepend (containers, container);
+  }
+
+  REPORT_UNLESS ((group = ges_container_group (containers)), beach,
+      "Grouping failed");
+
+  if (container_name) {
+    REPORT_UNLESS (ges_timeline_element_set_name (GES_TIMELINE_ELEMENT (group),
+            container_name), beach, "Could not set element name %s",
+        container_name);
+
+  }
+
+beach:
+  g_clear_pointer (&container_names, g_strfreev);
+  g_list_free_full (containers, gst_object_unref);
+}
+
+GST_END_VALIDATE_ACTION;
+
 GES_START_VALIDATE_ACTION (_ungroup)
 {
   GESContainer *container;
@@ -1676,6 +1718,29 @@ ges_validate_register_action_types (void)
         },
         {NULL}
       }, "Remove a child from @container-name.", FALSE);
+
+  gst_validate_register_action_type ("group", "ges", _group,
+      (GstValidateActionParameter []) {
+        {
+          .name = "container-name",
+          .description = "The name of the resulting group",
+          .types = "string",
+          .mandatory = FALSE,
+        },
+        {
+          .name = "containers",
+          .description = "Array of GESContainer names to group",
+          .types = "{ container-name, }",
+          .mandatory = TRUE,
+        },
+        {
+          .name = "project-uri",
+          .description = "The project URI with the serialized timeline to execute the action on",
+          .types = "string",
+          .mandatory = FALSE,
+        },
+        {NULL}
+      }, "Group containers together.", FALSE);
 
   gst_validate_register_action_type ("ungroup-container", "ges", _ungroup,
       (GstValidateActionParameter []) {
