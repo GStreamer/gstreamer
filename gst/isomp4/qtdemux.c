@@ -7856,6 +7856,7 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
       case FOURCC_mp4a:
       case FOURCC_alac:
       case FOURCC_fLaC:
+      case FOURCC_aavd:
       {
         guint32 version;
         guint32 offset;

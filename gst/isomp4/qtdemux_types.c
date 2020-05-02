@@ -225,6 +225,8 @@ static const QtNodeType qt_node_types[] = {
   {FOURCC_av1m, "AV1 Multi-Frame sample group entry", 0},
   {FOURCC_av1s, "AV1 S-Frame sample group entry", 0},
   {FOURCC_av1M, "AV1 Metadata sample group entry", 0},
+  {FOURCC_aavd, "AAX encrypted audio", 0},
+  {FOURCC_adrm, "AAX DRM key data", 0},
   {0, "unknown", 0,},
 };
 
