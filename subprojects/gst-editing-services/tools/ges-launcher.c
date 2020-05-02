@@ -1570,7 +1570,7 @@ _local_command_line (GApplication * application, gchar ** arguments[],
 
   if (opts->inspect_action_type) {
     ges_validate_print_action_types ((const gchar **) &((*arguments)[1]),
-        argc - 1);
+        g_strv_length (*arguments) - 1);
     goto done;
   }
 
