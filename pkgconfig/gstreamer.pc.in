@@ -9,6 +9,7 @@ datarootdir=${prefix}/share
 datadir=${datarootdir}
 girdir=${datadir}/gir-1.0
 typelibdir=${libdir}/girepository-1.0
+pluginscannerdir=${libexecdir}/gstreamer-1.0
 
 Name: GStreamer
 Description: Streaming media framework

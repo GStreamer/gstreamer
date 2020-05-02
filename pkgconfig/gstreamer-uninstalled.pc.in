@@ -10,6 +10,7 @@ girdir=@abs_top_builddir@/gst
 bashhelpersdir=@abs_top_builddir@/data/bash-completion/helpers
 helpersdir=@abs_top_builddir@/libs/gst/helpers
 typelibdir=@abs_top_builddir@/gst
+pluginscannerdir=${helpersdir}
 
 Name: GStreamer Uninstalled
 Description: Streaming media framework, Not Installed
