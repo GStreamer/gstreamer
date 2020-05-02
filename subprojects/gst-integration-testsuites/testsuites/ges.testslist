@@ -762,3 +762,5 @@ ges.test.play_two_nested_back_to_back
 ges.test.seek_on_stack_change_on_internal_subtimeline
 ges.test.videoscale_effect
 ges.test.backward_playback_with_start
+ges.test.check_reverse_source
+ges.test.timelineelement.set_child_prop_on_all_instances

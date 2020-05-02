@@ -1,0 +1,8 @@
+event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_NONE;
+event caps: audio/x-raw, channel-mask=(bitmask)0x0000000000000003, channels=(int)2, format=(string)S32LE, layout=(string)interleaved, rate=(int)44100;
+event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=none, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.000000000
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ description\=\(string\)\"audiotest\\\ wave\"\;";
+event flush-start: (no structure)
+event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
+event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=0:00:01.000000000, rate=-1.000000, flags=0x01, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:01.000000000
+event eos: (no structure)

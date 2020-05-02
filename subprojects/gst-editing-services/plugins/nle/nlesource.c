@@ -38,12 +38,20 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
+enum
+{
+  PROP_0,
+  PROP_REVERSE,
+  PROP_LAST,
+};
+
 GST_DEBUG_CATEGORY_STATIC (nlesource);
 #define GST_CAT_DEFAULT nlesource
 
 #define _do_init \
   GST_DEBUG_CATEGORY_INIT (nlesource, "nlesource", GST_DEBUG_FG_BLUE | GST_DEBUG_BOLD, "GNonLin Source Element");
 #define nle_source_parent_class parent_class
+
 struct _NleSourcePrivate
 {
   gboolean dispose_has_run;
@@ -62,6 +70,10 @@ struct _NleSourcePrivate
   GstEvent *seek_event;
   guint32 flush_seqnum;
   gulong probeid;
+
+
+  /* Identity automatically created to handle reverse playback */
+  GstElement *identity;
 };
 
 G_DEFINE_TYPE_WITH_CODE (NleSource, nle_source, NLE_TYPE_OBJECT,
@@ -80,6 +92,57 @@ nle_source_control_element_func (NleSource * source, GstElement * element);
 static GstStateChangeReturn nle_source_change_state (GstElement * element,
     GstStateChange transition);
 
+static gboolean
+nle_source_commit (NleObject * object, gboolean recurse)
+{
+  NleSource *self = NLE_SOURCE (object);
+
+  if (!NLE_OBJECT_CLASS (parent_class)->commit (object, recurse))
+    return FALSE;
+
+  self->reverse = self->pending_reverse;
+  g_object_set (self->priv->identity, "single-segment", self->reverse, NULL);
+
+  return TRUE;
+}
+
+static void
+nle_source_get_property (GObject * object, guint property_id,
+    GValue * value, GParamSpec * pspec)
+{
+  NleSource *self = NLE_SOURCE (object);
+
+  GST_OBJECT_LOCK (self);
+  switch (property_id) {
+    case PROP_REVERSE:
+      g_value_set_boolean (value, self->pending_reverse);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+  }
+  GST_OBJECT_UNLOCK (self);
+}
+
+static void
+nle_source_set_property (GObject * object, guint property_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  NleSource *self = NLE_SOURCE (object);
+
+  GST_OBJECT_LOCK (self);
+  switch (property_id) {
+    case PROP_REVERSE:
+      self->pending_reverse = g_value_get_boolean (value);
+      if (self->pending_reverse != self->reverse)
+        nle_object_set_commit_needed ((NleObject *) self);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+  }
+  GST_OBJECT_UNLOCK (self);
+}
+
+
 static void
 nle_source_class_init (NleSourceClass * klass)
 {
@@ -92,6 +155,20 @@ nle_source_class_init (NleSourceClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbin_class = (GstBinClass *) klass;
   nleobject_class = (NleObjectClass *) klass;
+
+  gobject_class->get_property = nle_source_get_property;
+  gobject_class->set_property = nle_source_set_property;
+
+  /**
+   * NleSource:reverse:
+   * @reverse: Whether to playback the source reverse or not
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (gobject_class, PROP_REVERSE,
+      g_param_spec_boolean ("reverse", "Reverse",
+          "Whether to playback the source reverse or not", FALSE,
+          G_PARAM_READWRITE));
 
   gst_element_class_set_static_metadata (gstelement_class, "GNonLin Source",
       "Filter/Editor",
@@ -106,6 +183,7 @@ nle_source_class_init (NleSourceClass * klass)
   klass->control_element = GST_DEBUG_FUNCPTR (nle_source_control_element_func);
 
   nleobject_class->prepare = GST_DEBUG_FUNCPTR (nle_source_prepare);
+  nleobject_class->commit = GST_DEBUG_FUNCPTR (nle_source_commit);
 
   gstbin_class->add_element = GST_DEBUG_FUNCPTR (nle_source_add_element);
   gstbin_class->remove_element = GST_DEBUG_FUNCPTR (nle_source_remove_element);
@@ -139,10 +217,19 @@ srcpad_probe_cb (GstPad * pad, GstPadProbeInfo * info, NleSource * source)
 static void
 nle_source_init (NleSource * source)
 {
+  NleSourcePrivate *priv;
+  NleObject *nleobject = NLE_OBJECT (source);
+
   GST_OBJECT_FLAG_SET (source, NLE_OBJECT_SOURCE);
   source->element = NULL;
-  source->priv = nle_source_get_instance_private (source);
-  g_mutex_init (&source->priv->seek_lock);
+  priv = source->priv = nle_source_get_instance_private (source);
+  priv->identity = gst_element_factory_make ("identity", NULL);
+
+  gst_bin_add (GST_BIN (source), priv->identity);
+  nle_object_ghost_pad_set_target (nleobject, nleobject->srcpad,
+      priv->identity->srcpads->data);
+
+  g_mutex_init (&priv->seek_lock);
 
   gst_pad_add_probe (NLE_OBJECT_SRC (source),
       GST_PAD_PROBE_TYPE_EVENT_UPSTREAM, (GstPadProbeCallback) srcpad_probe_cb,
@@ -158,6 +245,8 @@ nle_source_dispose (GObject * object)
   NleObject *nleobject = (NleObject *) object;
   NleSource *source = (NleSource *) object;
   NleSourcePrivate *priv = source->priv;
+  GstElement *tmpidentity;
+
 
   GST_DEBUG_OBJECT (object, "dispose");
 
@@ -173,26 +262,18 @@ nle_source_dispose (GObject * object)
   }
   GST_OBJECT_UNLOCK (object);
 
-
-  if (source->element) {
-    gst_object_unref (source->element);
-    source->element = NULL;
-  }
+  gst_clear_object (&source->element);
+  tmpidentity = priv->identity;
+  priv->identity = NULL;
+  gst_bin_remove (GST_BIN (source), tmpidentity);
 
   priv->dispose_has_run = TRUE;
-  if (priv->ghostedpad)
-    nle_object_ghost_pad_set_target (nleobject, nleobject->srcpad, NULL);
+  nle_object_ghost_pad_set_target (nleobject, nleobject->srcpad, NULL);
 
-  if (priv->staticpad) {
-    gst_object_unref (priv->staticpad);
-    priv->staticpad = NULL;
-  }
+  gst_clear_object (&priv->staticpad);
 
   g_mutex_lock (&priv->seek_lock);
-  if (priv->seek_event) {
-    gst_event_unref (priv->seek_event);
-    priv->seek_event = NULL;
-  }
+  gst_clear_event (&priv->seek_event);
   g_mutex_unlock (&priv->seek_lock);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -225,12 +306,14 @@ element_pad_added_cb (GstElement * element G_GNUC_UNUSED, GstPad * pad,
   }
   gst_caps_unref (srccaps);
 
-  priv->ghostedpad = pad;
-  GST_DEBUG_OBJECT (nleobject, "SET target %" GST_PTR_FORMAT, pad);
-  nle_object_ghost_pad_set_target (nleobject, nleobject->srcpad, pad);
-
-  GST_DEBUG_OBJECT (source, "Using pad pad %s:%s as a target now!",
-      GST_DEBUG_PAD_NAME (pad));
+  if (gst_pad_link (pad, priv->identity->sinkpads->data) != GST_PAD_LINK_OK) {
+    GST_ERROR_OBJECT (source, "Could not link pads: %" GST_PTR_FORMAT
+        " and %" GST_PTR_FORMAT, pad, priv->identity->sinkpads->data);
+  } else {
+    GST_DEBUG_OBJECT (source, "Linked pads: %" GST_PTR_FORMAT
+        " and %" GST_PTR_FORMAT, pad, priv->identity->sinkpads->data);
+    priv->ghostedpad = pad;
+  }
 }
 
 static void
@@ -238,7 +321,6 @@ element_pad_removed_cb (GstElement * element G_GNUC_UNUSED, GstPad * pad,
     NleSource * source)
 {
   NleSourcePrivate *priv = source->priv;
-  NleObject *nleobject = (NleObject *) source;
 
   GST_DEBUG_OBJECT (source, "pad %s:%s (controlled pad %s:%s)",
       GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (priv->ghostedpad));
@@ -249,9 +331,9 @@ element_pad_removed_cb (GstElement * element G_GNUC_UNUSED, GstPad * pad,
 
     GST_DEBUG_OBJECT (source, "Clearing up ghostpad");
 
-    if (nleobject->srcpad)
-      nle_object_ghost_pad_set_target (NLE_OBJECT (source), nleobject->srcpad,
-          NULL);
+    if (priv->identity && !gst_pad_unlink (pad, priv->identity->sinkpads->data))
+      GST_ERROR_OBJECT (source, "Could not unlink pads: %" GST_PTR_FORMAT
+          " and %" GST_PTR_FORMAT, pad, priv->identity->sinkpads->data);
     priv->ghostedpad = NULL;
   } else {
     GST_DEBUG_OBJECT (source, "The removed pad is NOT our controlled pad");
@@ -343,6 +425,9 @@ nle_source_control_element_func (NleSource * source, GstElement * element)
   NleSourcePrivate *priv = source->priv;
   GstPad *pad = NULL;
 
+  if (element == priv->identity)
+    return TRUE;
+
   g_return_val_if_fail (source->element == NULL, FALSE);
 
   GST_DEBUG_OBJECT (source, "element: %" GST_PTR_FORMAT ", source->element:%"
@@ -353,8 +438,13 @@ nle_source_control_element_func (NleSource * source, GstElement * element)
 
   if (get_valid_src_pad (source, source->element, &pad)) {
     priv->staticpad = pad;
-    nle_object_ghost_pad_set_target (NLE_OBJECT (source),
-        NLE_OBJECT_SRC (source), pad);
+    if (gst_pad_link (pad, priv->identity->sinkpads->data) != GST_PAD_LINK_OK) {
+      GST_ERROR_OBJECT (source, "Could not link pads: %" GST_PTR_FORMAT
+          " and %" GST_PTR_FORMAT, pad, priv->identity->sinkpads->data);
+    } else {
+      GST_DEBUG_OBJECT (source, "Linked pads: %" GST_PTR_FORMAT
+          " and %" GST_PTR_FORMAT, pad, priv->identity->sinkpads->data);
+    }
     priv->dynamicpads = FALSE;
   } else {
     priv->dynamicpads = has_dynamic_srcpads (element);
@@ -544,7 +634,8 @@ nle_source_prepare (NleObject * object)
       stop = object->inpoint + object->duration;
 
     g_mutex_lock (&source->priv->seek_lock);
-    source->priv->seek_event = gst_event_new_seek (1.0, GST_FORMAT_TIME,
+    source->priv->seek_event = gst_event_new_seek (source->reverse ? -1.0 : 1.0,
+        GST_FORMAT_TIME,
         GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_FLUSH,
         GST_SEEK_TYPE_SET, start, GST_SEEK_TYPE_SET, stop);
     g_mutex_unlock (&source->priv->seek_lock);

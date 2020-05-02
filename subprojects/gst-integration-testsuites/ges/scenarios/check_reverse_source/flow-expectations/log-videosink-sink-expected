@@ -1,0 +1,37 @@
+event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_NONE;
+event caps: video/x-raw, colorimetry=(string)bt709, format=(string)I420, framerate=(fraction)30/1, height=(int)720, width=(int)1280;
+event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=0:00:01.000000000, flags=0x01, time=0:00:00.000000000, base=0:00:00.000000000, position=none
+buffer: pts=0:00:00.000000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.033333333, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.066666666, dur=0:00:00.033333334, meta=GstVideoMeta
+buffer: pts=0:00:00.100000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.133333333, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.166666666, dur=0:00:00.033333334, meta=GstVideoMeta
+buffer: pts=0:00:00.200000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.233333333, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.266666666, dur=0:00:00.033333334, meta=GstVideoMeta
+buffer: pts=0:00:00.300000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.333333333, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.366666666, dur=0:00:00.033333334, meta=GstVideoMeta
+buffer: pts=0:00:00.400000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.433333333, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.466666666, dur=0:00:00.033333334, meta=GstVideoMeta
+buffer: pts=0:00:00.500000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.533333333, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.566666666, dur=0:00:00.033333334, meta=GstVideoMeta
+buffer: pts=0:00:00.600000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.633333333, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.666666666, dur=0:00:00.033333334, meta=GstVideoMeta
+buffer: pts=0:00:00.700000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.733333333, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.766666666, dur=0:00:00.033333334, meta=GstVideoMeta
+buffer: pts=0:00:00.800000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.833333333, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.866666666, dur=0:00:00.033333334, meta=GstVideoMeta
+buffer: pts=0:00:00.900000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.933333333, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.966666666, dur=0:00:00.033333334, meta=GstVideoMeta
+event caps: video/x-raw, colorimetry=(string)bt601, format=(string)I420, framerate=(fraction)30/1, height=(int)720, width=(int)1280;
+event segment: format=TIME, start=0:00:01.000000000, offset=0:00:00.000000000, stop=0:00:01.000000001, flags=0x01, time=0:00:01.000000000, base=0:00:01.000000000, position=none
+buffer: pts=0:00:01.000000000, dur=0:00:00.000000001, meta=GstVideoMeta
+event eos: (no structure)

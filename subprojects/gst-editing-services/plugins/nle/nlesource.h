@@ -45,6 +45,8 @@ typedef struct _NleSourcePrivate NleSourcePrivate;
 struct _NleSource
 {
   NleObject parent;
+  gboolean  reverse;
+  gboolean  pending_reverse;
 
   /* controlled source element, acces with gst_bin_[add|remove]_element */
   GstElement *element;

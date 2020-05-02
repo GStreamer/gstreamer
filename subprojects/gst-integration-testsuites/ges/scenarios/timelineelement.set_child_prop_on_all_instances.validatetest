@@ -1,0 +1,39 @@
+meta,
+    tool = "ges-launch-$(gst_api_version)",
+    handles-states = true
+
+add-clip, name=c0, asset-id="time-overlay", layer-priority=0, type=GESTestClip, start=0, duration=1.0
+check-child-properties, element-name=videotestsource0, reverse=false
+check-child-properties, element-name=audiotestsource0, reverse=false
+
+set-child-properties, element-name=c0, pattern=blue, valignment=center, halignment=center, reverse=true
+check-child-properties, element-name=videotestsource0, reverse=true
+check-child-properties, element-name=audiotestsource0, reverse=true
+
+set-child-properties, element-name=videotestsource0, reverse=false
+check-child-properties, element-name=videotestsource0, reverse=false
+check-child-properties, element-name=audiotestsource0, reverse=true
+
+
+add-clip, name=c1, asset-id=GESTestClip, layer-priority=0, type=GESTestClip, start=1.0, duration=2.0
+group, containers={c0, c1}, container-name=g0
+
+set-child-properties, element-name=g0, reverse=true
+check-child-properties, element-name=videotestsource0, reverse=true
+check-child-properties, element-name=audiotestsource0, reverse=true
+check-child-properties, element-name=videotestsource1, reverse=true
+check-child-properties, element-name=audiotestsource1, reverse=true
+
+set-child-properties, element-name=audiotestsource1, reverse=false
+check-child-properties, element-name=videotestsource0, reverse=true
+check-child-properties, element-name=audiotestsource0, reverse=true
+check-child-properties, element-name=videotestsource1, reverse=true
+check-child-properties, element-name=audiotestsource1, reverse=false
+
+ungroup-container, container-name=g0
+check-child-properties, element-name=videotestsource0, reverse=true
+check-child-properties, element-name=audiotestsource0, reverse=true
+check-child-properties, element-name=videotestsource1, reverse=true
+check-child-properties, element-name=audiotestsource1, reverse=false
+
+stop
