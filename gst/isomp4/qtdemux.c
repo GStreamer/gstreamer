@@ -111,6 +111,7 @@ GST_DEBUG_CATEGORY (qtdemux_debug);
 #define GST_CAT_DEFAULT qtdemux_debug
 
 typedef struct _QtDemuxCencSampleSetInfo QtDemuxCencSampleSetInfo;
+typedef struct _QtDemuxAavdEncryptionInfo QtDemuxAavdEncryptionInfo;
 
 /* Macros for converting to/from timescale */
 #define QTSTREAMTIME_TO_GSTTIME(stream, value) (gst_util_uint64_scale((value), GST_SECOND, (stream)->timescale))
@@ -232,6 +233,11 @@ struct _QtDemuxCencSampleSetInfo
 
   /* @crypto_info holds one GstStructure per sample */
   GPtrArray *crypto_info;
+};
+
+struct _QtDemuxAavdEncryptionInfo
+{
+  GstStructure *default_properties;
 };
 
 static const gchar *
@@ -2525,6 +2531,12 @@ gst_qtdemux_stream_clear (QtDemuxStream * stream)
         gst_structure_free (info->default_properties);
       if (info->crypto_info)
         g_ptr_array_free (info->crypto_info, TRUE);
+    }
+    if (stream->protection_scheme_type == FOURCC_aavd) {
+      QtDemuxAavdEncryptionInfo *info =
+          (QtDemuxAavdEncryptionInfo *) stream->protection_scheme_info;
+      if (info->default_properties)
+        gst_structure_free (info->default_properties);
     }
     g_free (stream->protection_scheme_info);
     stream->protection_scheme_info = NULL;
@@ -5694,6 +5706,16 @@ gst_qtdemux_push_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
       GST_TIME_ARGS (GST_BUFFER_PTS (buf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_PAD_NAME (stream->pad));
 
+  if (stream->protected && stream->protection_scheme_type == FOURCC_aavd) {
+    GstStructure *crypto_info;
+    QtDemuxAavdEncryptionInfo *info =
+        (QtDemuxAavdEncryptionInfo *) stream->protection_scheme_info;
+
+    crypto_info = gst_structure_copy (info->default_properties);
+    if (!crypto_info || !gst_buffer_add_protection_meta (buf, crypto_info))
+      GST_ERROR_OBJECT (qtdemux, "failed to attach aavd metadata to buffer");
+  }
+
   if (stream->protected && stream->protection_scheme_type == FOURCC_cenc) {
     GstStructure *crypto_info;
     QtDemuxCencSampleSetInfo *info =
@@ -8271,6 +8293,17 @@ gst_qtdemux_configure_protected_caps (GstQTDemux * qtdemux,
   g_return_val_if_fail (gst_caps_get_size (CUR_STREAM (stream)->caps) == 1,
       FALSE);
 
+  if (stream->protection_scheme_type == FOURCC_aavd) {
+    s = gst_caps_get_structure (CUR_STREAM (stream)->caps, 0);
+    if (!gst_structure_has_name (s, "application/x-aavd")) {
+      gst_structure_set (s,
+          "original-media-type", G_TYPE_STRING, gst_structure_get_name (s),
+          NULL);
+      gst_structure_set_name (s, "application/x-aavd");
+    }
+    return TRUE;
+  }
+
   if (stream->protection_scheme_type != FOURCC_cenc) {
     GST_ERROR_OBJECT (qtdemux,
         "unsupported protection scheme: %" GST_FOURCC_FORMAT,
@@ -10249,6 +10282,42 @@ qtdemux_inspect_transformation_matrix (GstQTDemux * qtdemux,
   }
 }
 
+static gboolean
+qtdemux_parse_protection_aavd (GstQTDemux * qtdemux,
+    QtDemuxStream * stream, GNode * container, guint32 * original_fmt)
+{
+  GNode *adrm;
+  guint32 adrm_size;
+  GstBuffer *adrm_buf = NULL;
+  QtDemuxAavdEncryptionInfo *info;
+
+  adrm = qtdemux_tree_get_child_by_type (container, FOURCC_adrm);
+  if (G_UNLIKELY (!adrm)) {
+    GST_ERROR_OBJECT (qtdemux, "aavd box does not contain mandatory adrm box");
+    return FALSE;
+  }
+  adrm_size = QT_UINT32 (adrm->data);
+  adrm_buf =
+      gst_buffer_new_wrapped (g_memdup (adrm->data, adrm_size), adrm_size);
+
+  stream->protection_scheme_type = FOURCC_aavd;
+
+  if (!stream->protection_scheme_info)
+    stream->protection_scheme_info = g_new0 (QtDemuxAavdEncryptionInfo, 1);
+
+  info = (QtDemuxAavdEncryptionInfo *) stream->protection_scheme_info;
+
+  if (info->default_properties)
+    gst_structure_free (info->default_properties);
+  info->default_properties = gst_structure_new ("application/x-aavd",
+      "encrypted", G_TYPE_BOOLEAN, TRUE,
+      "adrm", GST_TYPE_BUFFER, adrm_buf, NULL);
+  gst_buffer_unref (adrm_buf);
+
+  *original_fmt = FOURCC_mp4a;
+  return TRUE;
+}
+
 /* Parses the boxes defined in ISO/IEC 14496-12 that enable support for
  * protected streams (sinf, frma, schm and schi); if the protection scheme is
  * Common Encryption (cenc), the function will also parse the tenc box (defined
@@ -10696,6 +10765,19 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
     if ((fourcc == FOURCC_drms) || (fourcc == FOURCC_drmi))
       goto error_encrypted;
+
+    if (fourcc == FOURCC_aavd) {
+      if (stream->subtype != FOURCC_soun) {
+        GST_ERROR_OBJECT (qtdemux,
+            "Unexpeced stsd type 'aavd' outside 'soun' track");
+      } else {
+        /* encrypted audio with sound sample description v0 */
+        GNode *enc = qtdemux_tree_get_child_by_type (stsd, fourcc);
+        stream->protected = TRUE;
+        if (!qtdemux_parse_protection_aavd (qtdemux, stream, enc, &fourcc))
+          GST_ERROR_OBJECT (qtdemux, "Failed to parse protection scheme info");
+      }
+    }
 
     if (fourcc == FOURCC_encv || fourcc == FOURCC_enca) {
       /* FIXME this looks wrong, there might be multiple children
@@ -12245,16 +12327,22 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
               GST_TAG_BITRATE, bitrate, NULL);
       }
 
+      esds = NULL;
       mp4a = qtdemux_tree_get_child_by_index (stsd, stsd_index);
       if (QTDEMUX_TREE_NODE_FOURCC (mp4a) != fourcc) {
-        if (stream->protected && QTDEMUX_TREE_NODE_FOURCC (mp4a) != FOURCC_enca)
+        if (stream->protected) {
+          if (QTDEMUX_TREE_NODE_FOURCC (mp4a) == FOURCC_aavd) {
+            esds = qtdemux_tree_get_child_by_type (mp4a, FOURCC_esds);
+          }
+          if (QTDEMUX_TREE_NODE_FOURCC (mp4a) != FOURCC_enca) {
+            mp4a = NULL;
+          }
+        } else {
           mp4a = NULL;
-        else if (!stream->protected)
-          mp4a = NULL;
+        }
       }
 
       wave = NULL;
-      esds = NULL;
       if (mp4a) {
         wave = qtdemux_tree_get_child_by_type (mp4a, FOURCC_wave);
         if (wave)
