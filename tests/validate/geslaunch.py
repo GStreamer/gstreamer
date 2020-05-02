@@ -1,6 +1,8 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 #
-# Copyright (c) 2013,Thibault Saunier <thibault.saunier@collabora.com>
+# Copyright (c) 2013, Thibault Saunier <thibault.saunier@collabora.com>
+# Copyright (c) 2020, Igalia S.L
+#    Author: Thibault Saunier <tsaunier@igalia.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -116,15 +118,20 @@ class XgesProjectDescriptor(MediaDescriptor):
 
 class GESTest(GstValidateTest):
     def __init__(self, classname, options, reporter, project, scenario=None,
-                 combination=None, expected_failures=None, nest=False):
+                 combination=None, expected_failures=None, nest=False, testfile=None):
 
         super(GESTest, self).__init__(GES_LAUNCH_COMMAND, classname, options, reporter,
                                       scenario=scenario)
 
         self.project = project
         self.nested = nest
+        self.testfile = testfile
 
     def set_sample_paths(self):
+        if self.testfile:
+            # testfile should be self contained
+            return
+
         if not self.options.paths:
             if self.options.disable_recurse:
                 return
@@ -147,8 +154,11 @@ class GESTest(GstValidateTest):
             else:
                 self.add_arguments("--ges-sample-paths", quote_uri(path))
 
-    def build_arguments(self):
-        GstValidateTest.build_arguments(self)
+    def set_sink_args(self):
+        if self.testfile:
+            # testfile should be self contained and --mute should give required infos.
+            self.add_arguments("--mute")
+            return
 
         if self.options.mute:
             needs_clock = self.scenario.needs_clock_sync() \
@@ -161,13 +171,20 @@ class GESTest(GstValidateTest):
         self.add_arguments("--videosink", videosink + " name=videosink")
         self.add_arguments("--audiosink", audiosink + " name=audiosink")
 
+    def build_arguments(self):
+        GstValidateTest.build_arguments(self)
+
+        self.set_sink_args()
         self.set_sample_paths()
 
         if self.project:
+            assert self.testfile is None
             if self.nested:
                 self.add_arguments("+clip", self.project.get_uri())
             else:
                 self.add_arguments("-l", self.project.get_uri())
+        elif self.testfile:
+            self.add_arguments("--set-test-file", self.testfile)
 
 class GESPlaybackTest(GESTest):
     def __init__(self, classname, options, reporter, project, scenario,nest):
@@ -313,9 +330,20 @@ Available options:""")
             if scenarios_path:
                 for root, dirs, files in os.walk(scenarios_path):
                     for f in files:
-                        if not f.endswith(".scenario"):
-                            continue
+                        name, ext = os.path.splitext(f)
                         f = os.path.join(root, f)
+                        if ext == ".validatetest":
+                            fpath = os.path.abspath(os.path.join(root, f))
+                            pathname = os.path.abspath(os.path.join(root, name))
+                            name = pathname.replace(os.path.commonpath([scenarios_path, root]), '').replace('/', '.')
+                            self.add_test(GESTest('test' + name,
+                                                  self.options,
+                                                  self.reporter,
+                                                  None,
+                                                  testfile=fpath))
+                            continue
+                        elif ext != ".scenario":
+                            continue
                         config = f + ".config"
                         if not os.path.exists(config):
                             config = None
