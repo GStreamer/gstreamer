@@ -256,7 +256,7 @@ nle_object_class_init (NleObjectClass * klass)
   properties[PROP_MEDIA_DURATION_FACTOR] =
       g_param_spec_double ("media-duration-factor", "Media duration factor",
       "The relative rate caused by this object", 0.01, G_MAXDOUBLE,
-      1.0, G_PARAM_READWRITE);
+      1.0, G_PARAM_READWRITE | G_PARAM_DEPRECATED);
   g_object_class_install_property (gobject_class, PROP_MEDIA_DURATION_FACTOR,
       properties[PROP_MEDIA_DURATION_FACTOR]);
 
@@ -693,7 +693,6 @@ nle_object_get_property (GObject * object, guint prop_id,
       g_value_set_boolean (value, NLE_OBJECT_IS_EXPANDABLE (object));
       break;
     case PROP_MEDIA_DURATION_FACTOR:
-      g_warning ("The media-duration-factor property is deprecated");
       g_value_set_double (value, 1.0);
       break;
     default:
