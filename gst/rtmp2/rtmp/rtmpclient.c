@@ -296,6 +296,8 @@ static void socket_connect_done (GObject * source, GAsyncResult * result,
 static void handshake_done (GObject * source, GAsyncResult * result,
     gpointer user_data);
 static void send_connect (GTask * task);
+static void send_stop (GstRtmpConnection * connection, const gchar * stream,
+    const GstRtmpStopCommands stop_commands);
 static void send_secure_token_response (GTask * task,
     GstRtmpConnection * connection, const gchar * challenge);
 static void connection_error (GstRtmpConnection * connection,
@@ -1345,4 +1347,40 @@ gst_rtmp_client_start_play_finish (GstRtmpConnection * connection,
     GAsyncResult * result, guint32 * stream_id, GError ** error)
 {
   return start_stream_finish (connection, result, stream_id, error);
+}
+
+void
+gst_rtmp_client_stop_publish (GstRtmpConnection * connection,
+    const gchar * stream, const GstRtmpStopCommands stop_commands)
+{
+  send_stop (connection, stream, stop_commands);
+}
+
+static void
+send_stop (GstRtmpConnection * connection, const gchar * stream,
+    const GstRtmpStopCommands stop_commands)
+{
+  GstAmfNode *command_object, *stream_name;
+
+  command_object = gst_amf_node_new_null ();
+  stream_name = gst_amf_node_new_string (stream, -1);
+
+  if (stop_commands & GST_RTMP_STOP_COMMAND_FCUNPUBLISH) {
+    GST_DEBUG ("Sending stop command 'FCUnpublish' for stream '%s'", stream);
+    gst_rtmp_connection_send_command (connection, NULL, NULL, 0,
+        "FCUnpublish", command_object, stream_name, NULL);
+  }
+  if (stop_commands & GST_RTMP_STOP_COMMAND_CLOSE_STREAM) {
+    GST_DEBUG ("Sending stop command 'closeStream' for stream '%s'", stream);
+    gst_rtmp_connection_send_command (connection, NULL, NULL, 0,
+        "closeStream", command_object, stream_name, NULL);
+  }
+  if (stop_commands & GST_RTMP_STOP_COMMAND_DELETE_STREAM) {
+    GST_DEBUG ("Sending stop command 'deleteStream' for stream '%s'", stream);
+    gst_rtmp_connection_send_command (connection, NULL, NULL, 0,
+        "deleteStream", command_object, stream_name, NULL);
+  }
+
+  gst_amf_node_free (stream_name);
+  gst_amf_node_free (command_object);
 }

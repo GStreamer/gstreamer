@@ -88,6 +88,8 @@ typedef struct
 
   GPtrArray *headers;
   guint64 last_ts, base_ts;     /* timestamp fixup */
+
+  GstRtmpStopCommands stop_commands;
 } GstRtmp2Sink;
 
 typedef struct
@@ -106,6 +108,7 @@ static void gst_rtmp2_sink_uri_handler_init (GstURIHandlerInterface * iface);
 /* GstBaseSink virtual functions */
 static gboolean gst_rtmp2_sink_start (GstBaseSink * sink);
 static gboolean gst_rtmp2_sink_stop (GstBaseSink * sink);
+static gboolean gst_rtmp2_sink_event (GstBaseSink * sink, GstEvent * event);
 static gboolean gst_rtmp2_sink_unlock (GstBaseSink * sink);
 static gboolean gst_rtmp2_sink_unlock_stop (GstBaseSink * sink);
 static GstFlowReturn gst_rtmp2_sink_render (GstBaseSink * sink,
@@ -147,7 +150,34 @@ enum
   PROP_PEAK_KBPS,
   PROP_CHUNK_SIZE,
   PROP_STATS,
+  PROP_STOP_COMMANDS,
 };
+
+#define DEFAULT_STOP_COMMANDS  GST_RTMP_STOP_COMMAND_FCUNPUBLISH | \
+    GST_RTMP_STOP_COMMAND_DELETE_STREAM /* FCUnpublish + deleteStream */
+
+#define GST_RTMP_STOP_COMMANDS_TYPE \
+    (gst_rtmp2_sink_stop_commands_get_type())
+
+static GType
+gst_rtmp2_sink_stop_commands_get_type (void)
+{
+  static GType type = 0;
+  static const GFlagsValue types[] = {
+    {GST_RTMP_STOP_COMMAND_NONE, "No command", "none"},
+    {GST_RTMP_STOP_COMMAND_FCUNPUBLISH, "FCUnpublish", "fcunpublish"},
+    {GST_RTMP_STOP_COMMAND_CLOSE_STREAM, "closeStream", "closestream"},
+    {GST_RTMP_STOP_COMMAND_DELETE_STREAM, "deleteStream", "deletestream"},
+    {0, NULL, NULL},
+  };
+
+  if (g_once_init_enter (&type)) {
+    GType tmp = g_flags_register_static ("GstRtmp2SinkStopCommandsFlags",
+        types);
+    g_once_init_leave (&type, tmp);
+  }
+  return type;
+}
 
 /* pad templates */
 
@@ -183,6 +213,7 @@ gst_rtmp2_sink_class_init (GstRtmp2SinkClass * klass)
   gobject_class->finalize = gst_rtmp2_sink_finalize;
   base_sink_class->start = GST_DEBUG_FUNCPTR (gst_rtmp2_sink_start);
   base_sink_class->stop = GST_DEBUG_FUNCPTR (gst_rtmp2_sink_stop);
+  base_sink_class->event = GST_DEBUG_FUNCPTR (gst_rtmp2_sink_event);
   base_sink_class->unlock = GST_DEBUG_FUNCPTR (gst_rtmp2_sink_unlock);
   base_sink_class->unlock_stop = GST_DEBUG_FUNCPTR (gst_rtmp2_sink_unlock_stop);
   base_sink_class->render = GST_DEBUG_FUNCPTR (gst_rtmp2_sink_render);
@@ -227,6 +258,12 @@ gst_rtmp2_sink_class_init (GstRtmp2SinkClass * klass)
       g_param_spec_boxed ("stats", "Stats", "Retrieve a statistics structure",
           GST_TYPE_STRUCTURE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_STOP_COMMANDS,
+      g_param_spec_flags ("stop-commands", "Stop commands",
+          "RTMP commands to send on EOS event before closing connection",
+          GST_RTMP_STOP_COMMANDS_TYPE, DEFAULT_STOP_COMMANDS,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   gst_type_mark_as_plugin_api (GST_TYPE_RTMP_LOCATION_HANDLER, 0);
   GST_DEBUG_CATEGORY_INIT (gst_rtmp2_sink_debug_category, "rtmp2sink", 0,
       "debug category for rtmp2sink element");
@@ -249,6 +286,8 @@ gst_rtmp2_sink_init (GstRtmp2Sink * self)
 
   self->headers = g_ptr_array_new_with_free_func
       ((GDestroyNotify) gst_mini_object_unref);
+
+  self->stop_commands = DEFAULT_STOP_COMMANDS;
 }
 
 static void
@@ -360,6 +399,11 @@ gst_rtmp2_sink_set_property (GObject * object, guint property_id,
       set_chunk_size (self);
       g_mutex_unlock (&self->lock);
       break;
+    case PROP_STOP_COMMANDS:
+      GST_OBJECT_LOCK (self);
+      self->stop_commands = g_value_get_flags (value);
+      GST_OBJECT_UNLOCK (self);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -456,6 +500,11 @@ gst_rtmp2_sink_get_property (GObject * object, guint property_id,
       break;
     case PROP_STATS:
       g_value_take_boxed (value, gst_rtmp2_sink_get_stats (self));
+      break;
+    case PROP_STOP_COMMANDS:
+      GST_OBJECT_LOCK (self);
+      g_value_set_flags (value, self->stop_commands);
+      GST_OBJECT_UNLOCK (self);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -554,6 +603,47 @@ gst_rtmp2_sink_stop (GstBaseSink * sink)
   gst_task_join (self->task);
 
   return TRUE;
+}
+
+static gboolean
+stop_publish_invoker (gpointer user_data)
+{
+  GstRtmp2Sink *self = user_data;
+
+  if (self->connection) {
+    GST_OBJECT_LOCK (self);
+    if (self->stop_commands != GST_RTMP_STOP_COMMAND_NONE) {
+      gst_rtmp_client_stop_publish (self->connection, self->location.stream,
+          self->stop_commands);
+    }
+    GST_OBJECT_UNLOCK (self);
+  }
+
+  return G_SOURCE_REMOVE;
+}
+
+static gboolean
+gst_rtmp2_sink_event (GstBaseSink * sink, GstEvent * event)
+{
+  GstEventType type;
+  GstRtmp2Sink *self = GST_RTMP2_SINK (sink);
+
+  type = GST_EVENT_TYPE (event);
+
+  switch (type) {
+    case GST_EVENT_EOS:
+      g_mutex_lock (&self->lock);
+      if (self->loop) {
+        GST_DEBUG_OBJECT (self, "Got EOS: stopping publish");
+        g_main_context_invoke (self->context, stop_publish_invoker, self);
+      }
+      g_mutex_unlock (&self->lock);
+      break;
+    default:
+      break;
+  }
+
+  return GST_BASE_SINK_CLASS (gst_rtmp2_sink_parent_class)->event (sink, event);;
 }
 
 static gboolean
