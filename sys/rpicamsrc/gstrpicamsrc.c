@@ -375,21 +375,21 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_EXPOSURE_MODE,
       g_param_spec_enum ("exposure-mode", "Exposure Mode",
           "Camera exposure mode to use",
-          GST_RPI_CAM_TYPE_RPI_CAM_SRC_EXPOSURE_MODE, EXPOSURE_MODE_DEFAULT,
+          GST_RPI_CAM_SRC_TYPE_EXPOSURE_MODE, EXPOSURE_MODE_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_EXPOSURE_METERING_MODE,
       g_param_spec_enum ("metering-mode", "Exposure Metering Mode",
           "Camera exposure metering mode to use",
-          GST_RPI_CAM_TYPE_RPI_CAM_SRC_EXPOSURE_METERING_MODE,
+          GST_RPI_CAM_SRC_TYPE_EXPOSURE_METERING_MODE,
           EXPOSURE_METERING_MODE_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_DRC,
       g_param_spec_enum ("drc", "DRC level", "Dynamic Range Control level",
-          GST_RPI_CAM_TYPE_RPI_CAM_SRC_DRC_LEVEL, GST_RPI_CAM_SRC_DRC_LEVEL_OFF,
+          GST_RPI_CAM_SRC_TYPE_DRC_LEVEL, GST_RPI_CAM_SRC_DRC_LEVEL_OFF,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_AWB_MODE,
       g_param_spec_enum ("awb-mode", "Automatic White Balance Mode",
-          "White Balance mode", GST_RPI_CAM_TYPE_RPI_CAM_SRC_AWB_MODE,
+          "White Balance mode", GST_RPI_CAM_SRC_TYPE_AWB_MODE,
           GST_RPI_CAM_SRC_AWB_MODE_AUTO,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_AWB_GAIN_RED,
@@ -403,7 +403,7 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_IMAGE_EFFECT,
       g_param_spec_enum ("image-effect", "Image effect",
           "Visual FX to apply to the image",
-          GST_RPI_CAM_TYPE_RPI_CAM_SRC_IMAGE_EFFECT,
+          GST_RPI_CAM_SRC_TYPE_IMAGE_EFFECT,
           GST_RPI_CAM_SRC_IMAGEFX_NONE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #if 0
@@ -461,7 +461,7 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_ANNOTATION_MODE,
       g_param_spec_flags ("annotation-mode", "Annotation Mode",
           "Flags to control annotation of the output video",
-          GST_RPI_CAM_TYPE_RPI_CAM_SRC_ANNOTATION_MODE, 0,
+          GST_RPI_CAM_SRC_TYPE_ANNOTATION_MODE, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_ANNOTATION_TEXT,
       g_param_spec_string ("annotation-text", "Annotation Text",
@@ -470,7 +470,7 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_INTRA_REFRESH_TYPE,
       g_param_spec_enum ("intra-refresh-type", "Intra Refresh Type",
           "Type of Intra Refresh to use, -1 to disable intra refresh",
-          GST_RPI_CAM_TYPE_RPI_CAM_SRC_INTRA_REFRESH_TYPE,
+          GST_RPI_CAM_SRC_TYPE_INTRA_REFRESH_TYPE,
           GST_RPI_CAM_SRC_INTRA_REFRESH_TYPE_NONE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_ANNOTATION_TEXT_SIZE,
