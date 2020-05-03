@@ -222,8 +222,8 @@ translate_seek (ReplayBin * self, GstPad * pad, GstEvent * ievent)
   gst_event_set_seek_trickmode_interval (oevent, self->trickmode_interval);
   gst_event_set_seqnum (oevent, seqnum);
 
-  GST_DEBUG ("Translated event to %" GST_PTR_FORMAT " (remainder: %ld)", oevent,
-      self->remainder);
+  GST_DEBUG ("Translated event to %" GST_PTR_FORMAT
+      " (remainder: %" G_GINT64_FORMAT ")", oevent, self->remainder);
 
 done:
   return oevent;
@@ -354,8 +354,8 @@ translate_segment (GstPad * pad, GstEvent * ievent)
 
     gst_event_unref (ievent);
 
-    GST_DEBUG ("Translated segment: %" GST_PTR_FORMAT ", ts_offset: %lu", ret,
-        self->ts_offset);
+    GST_DEBUG ("Translated segment: %" GST_PTR_FORMAT ", "
+        "ts_offset: %" G_GUINT64_FORMAT, ret, self->ts_offset);
   } else {
     ret = NULL;
   }
@@ -413,7 +413,8 @@ handle_segment_done (ReplayBin * self, GstPad * pad)
     else
       self->ts_offset -= INTERVAL + ustop;
 
-    GST_DEBUG ("New offset: %ld", self->ts_offset);
+    GST_DEBUG ("New offset: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (self->ts_offset));
 
     GST_DEBUG ("Seeking to %" GST_PTR_FORMAT, event);
     target = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
