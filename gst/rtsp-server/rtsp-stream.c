@@ -4282,8 +4282,8 @@ no_stats:
 /**
  * gst_rtsp_stream_get_rates:
  * @stream: a #GstRTSPStream
- * @rate: (allow-none): the configured rate
- * @applied_rate: (allow-none): the configured applied_rate
+ * @rate: (optional) (out caller-allocates): the configured rate
+ * @applied_rate: (optional) (out caller-allocates): the configured applied_rate
  *
  * Retrieve the current rate and/or applied_rate.
  *

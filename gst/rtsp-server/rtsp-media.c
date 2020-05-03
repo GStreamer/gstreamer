@@ -2578,8 +2578,8 @@ conversion_failed:
 /**
  * gst_rtsp_media_get_rates:
  * @media: a #GstRTSPMedia
- * @rate (allow-none): the rate of the current segment
- * @applied_rate (allow-none): the applied_rate of the current segment
+ * @rate: (optional) (out caller-allocates): the rate of the current segment
+ * @applied_rate: (optional) (out caller-allocates): the applied_rate of the current segment
  *
  * Get the rate and applied_rate of the current segment.
  *
