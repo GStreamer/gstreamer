@@ -645,7 +645,7 @@ gst_nv_h264_dec_output_picture (GstH264Decoder * decoder,
   GstVideoCodecFrame *frame = NULL;
   GstBuffer *output_buffer = NULL;
   GstNvDecoderFrame *decoder_frame;
-  gboolean ret = FALSE;
+  gboolean ret G_GNUC_UNUSED = FALSE;
 
   GST_LOG_OBJECT (self,
       "Outputting picture %p (poc %d)", picture, picture->pic_order_cnt);
