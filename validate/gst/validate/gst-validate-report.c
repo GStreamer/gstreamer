@@ -1300,3 +1300,72 @@ gst_validate_print_issues (void)
 
   g_hash_table_foreach (_gst_validate_issues, (GHFunc) print_issue, NULL);
 }
+
+void
+gst_validate_error_structure (gpointer structure, const gchar * format, ...)
+{
+  gchar *filename = NULL;
+  gint lineno = -1;
+  gchar *tmp, *debug = NULL;
+  GString *f = g_string_new (NULL);
+  va_list var_args;
+  gchar *color = NULL;
+
+  const gchar *endcolor = "";
+
+#if GLIB_CHECK_VERSION(2,50,0)
+  if (g_log_writer_supports_color (fileno (stderr))) {
+    color = gst_debug_construct_term_color (GST_DEBUG_FG_RED);
+    endcolor = "\033[0m";
+  }
+#endif
+
+  if (structure) {
+    if (GST_IS_STRUCTURE (structure)) {
+      filename =
+          g_strdup (gst_structure_get_string (structure, "__filename__"));
+      debug = g_strdup (gst_structure_get_string (structure, "__debug__"));
+      gst_structure_get_int (structure, "__lineno__", &lineno);
+      /* We are going to assert... we can boutcher the struct! */
+      gst_structure_remove_fields (structure, "__filename__", "__lineno__",
+          "__debug__", NULL);
+    } else {
+      filename = g_strdup (GST_VALIDATE_ACTION_FILENAME (structure));
+      debug = g_strdup (GST_VALIDATE_ACTION_DEBUG (structure));
+      lineno = GST_VALIDATE_ACTION_LINENO (structure);
+    }
+  }
+
+  va_start (var_args, format);
+  tmp = gst_info_strdup_vprintf (format, var_args);
+  va_end (var_args);
+
+  g_string_append_printf (f, "%s:%d: %s\n",
+      filename ? filename : "Unknown", lineno, tmp);
+
+  if (debug)
+    g_string_append (f, debug);
+
+  g_print ("Bail out! %sERROR%s: %s\n\n", color ? color : "", endcolor, f->str);
+  g_string_free (f, TRUE);
+  g_free (debug);
+  g_free (color);
+  g_free (filename);
+  g_free (tmp);
+
+  exit (-18);
+}
+
+void
+gst_validate_abort (const gchar * format, ...)
+{
+  va_list var_args;
+  gchar *tmp;
+
+  va_start (var_args, format);
+  tmp = gst_info_strdup_vprintf (format, var_args);
+  va_end (var_args);
+
+  g_print ("Bail out! %s\n", tmp);
+  exit (-18);
+}

@@ -57,10 +57,10 @@ static gboolean is_live = FALSE;
 static gboolean
 intr_handler (gpointer user_data)
 {
-  g_print ("interrupt received.\n");
+  gst_validate_printf (NULL, "interrupt received.\n");
 
   if (eos_on_shutdown) {
-    g_print ("Sending EOS to the pipeline\n");
+    gst_validate_printf (NULL, "Sending EOS to the pipeline\n");
     eos_on_shutdown = FALSE;
     gst_element_send_event (GST_ELEMENT_CAST (user_data), gst_event_new_eos ());
     return TRUE;
@@ -90,11 +90,11 @@ _execute_set_restriction (GstValidateScenario * scenario,
     profile_type = g_type_from_name (profile_type_name);
 
     if (profile_type == G_TYPE_NONE) {
-      g_error ("Profile name %s not known", profile_name);
+      gst_validate_abort ("Profile name %s not known", profile_name);
 
       return FALSE;
     } else if (profile_type == GST_TYPE_ENCODING_CONTAINER_PROFILE) {
-      g_error ("Can not set restrictions on container profiles");
+      gst_validate_abort ("Can not set restrictions on container profiles");
 
       return FALSE;
     }
@@ -115,7 +115,7 @@ _execute_set_restriction (GstValidateScenario * scenario,
 
   caps = gst_caps_from_string (restriction_caps);
   if (caps == NULL) {
-    g_error ("Could not parse caps: %s", restriction_caps);
+    gst_validate_abort ("Could not parse caps: %s", restriction_caps);
 
     return FALSE;
   }
@@ -143,7 +143,7 @@ _execute_set_restriction (GstValidateScenario * scenario,
     }
 
     if (!found) {
-      g_error ("Could not find profile for %s%s",
+      gst_validate_abort ("Could not find profile for %s%s",
           profile_type_name ? profile_type_name : "",
           profile_name ? profile_name : "");
 
@@ -239,7 +239,7 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
       }
 
       if (!buffering) {
-        g_print ("\n");
+        gst_validate_printf (NULL, "\n");
       }
 
       gst_message_parse_buffering (message, &percent);
@@ -560,20 +560,20 @@ main (int argc, gchar ** argv)
   g_signal_connect (bus, "message", (GCallback) bus_callback,
       &bus_callback_data);
 
-  g_print ("Starting pipeline\n");
+  gst_validate_printf (NULL, "Starting pipeline\n");
   sret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
   switch (sret) {
     case GST_STATE_CHANGE_FAILURE:
       /* ignore, we should get an error message posted on the bus */
-      g_print ("Pipeline failed to go to PLAYING state\n");
+      gst_validate_printf (NULL, "Pipeline failed to go to PLAYING state\n");
       ret = -1;
       goto exit;
     case GST_STATE_CHANGE_NO_PREROLL:
-      g_print ("Pipeline is live.\n");
+      gst_validate_printf (NULL, "Pipeline is live.\n");
       is_live = TRUE;
       break;
     case GST_STATE_CHANGE_ASYNC:
-      g_print ("Prerolling...\r");
+      gst_validate_printf (NULL, "Prerolling...\r");
       break;
     default:
       break;
@@ -603,7 +603,7 @@ exit:
   gst_validate_deinit ();
   gst_deinit ();
 
-  g_print ("\n=======> Test %s (Return value: %i)\n\n",
+  gst_validate_printf (NULL, "\n=======> Test %s (Return value: %i)\n\n",
       ret == 0 ? "PASSED" : "FAILED", ret);
   return ret;
 }

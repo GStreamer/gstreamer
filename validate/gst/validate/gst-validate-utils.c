@@ -509,7 +509,7 @@ gst_validate_utils_flags_from_str (GType type, const gchar * str_flags)
   g_value_init (&value, type);
 
   if (!gst_value_deserialize (&value, str_flags)) {
-    g_error ("Invalid flags: %s", str_flags);
+    gst_validate_abort ("Invalid flags: %s", str_flags);
 
     return 0;
   }
@@ -536,7 +536,7 @@ gst_validate_utils_enum_from_str (GType type, const gchar * str_enum,
   g_value_init (&value, type);
 
   if (!gst_value_deserialize (&value, str_enum)) {
-    g_error ("Invalid enum: %s", str_enum);
+    gst_validate_abort ("Invalid enum: %s", str_enum);
 
     return FALSE;
   }
@@ -613,6 +613,7 @@ _file_get_structures (GFile * file, gchar ** err)
     l = g_string_new (NULL);
     debug_line = g_string_new (NULL);
     current_lineno = lineno;
+    g_string_append_printf (debug_line, "  %4d | ", lineno);
     while (*tmp != '\n' && *tmp) {
       gchar next;
 
@@ -659,8 +660,8 @@ _file_get_structures (GFile * file, gchar ** err)
 
       if (errstr) {
         g_string_append_printf (errstr,
-            "\n%s:%d-%d: Invalid structure\n  %4d | %s",
-            filename, current_lineno, lineno, current_lineno, debug_line->str);
+            "\n%s:%d-%d: Invalid structure\n%s",
+            filename, current_lineno, lineno, debug_line->str);
 
         if (strchr (debug_line->str, '\n'))
           g_string_append_printf (errstr, "\n       > %s\n", l->str);
@@ -674,7 +675,8 @@ _file_get_structures (GFile * file, gchar ** err)
     } else {
       gst_structure_set (structure,
           "__lineno__", G_TYPE_INT, current_lineno,
-          "__filename__", G_TYPE_STRING, filename, NULL);
+          "__filename__", G_TYPE_STRING, filename,
+          "__debug__", G_TYPE_STRING, debug_line->str, NULL);
       structures = g_list_append (structures, structure);
     }
 
@@ -737,7 +739,8 @@ gst_validate_utils_structs_parse_from_filename (const gchar * scenario_file,
   res = _get_structures (scenario_file, file_path, &err);
 
   if (err)
-    g_error ("Could not get structures from %s:\n%s\n", scenario_file, err);
+    gst_validate_abort ("Could not get structures from %s:\n%s\n",
+        scenario_file, err);
 
   return res;
 }
@@ -753,7 +756,7 @@ gst_validate_structs_parse_from_gfile (GFile * scenario_file)
 
   res = _file_get_structures (scenario_file, &err);
   if (err)
-    g_error ("Could not get structures from %s:\n%s\n",
+    gst_validate_abort ("Could not get structures from %s:\n%s\n",
         g_file_get_uri (scenario_file), err);
 
   return res;
@@ -990,7 +993,7 @@ fault_handler_sighandler (int signum)
       g_printerr ("<Caught SIGNAL: SIGSEGV>\n");
       break;
     case SIGQUIT:
-      g_print ("<Caught SIGNAL: SIGQUIT>\n");
+      gst_validate_printf (NULL, "<Caught SIGNAL: SIGQUIT>\n");
       break;
     default:
       g_printerr ("<Caught SIGNAL: %d>\n", signum);

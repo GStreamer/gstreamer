@@ -250,7 +250,8 @@ gst_validate_report_valist (GstValidateReporter * reporter,
     if (runner)
       gst_validate_runner_printf (runner);
 
-    g_error ("Fatal report received: %" GST_VALIDATE_ERROR_REPORT_PRINT_FORMAT,
+    gst_validate_abort ("Fatal report received: %"
+        GST_VALIDATE_ERROR_REPORT_PRINT_FORMAT,
         GST_VALIDATE_REPORT_PRINT_ARGS (report));
   }
 
@@ -268,7 +269,7 @@ gst_validate_default_log_hanlder (const gchar * log_domain,
   gchar *trace = gst_debug_get_stack_trace (GST_STACK_TRACE_SHOW_FULL);
 
   if (trace) {
-    g_print ("\nStack trace:\n%s\n", trace);
+    gst_validate_printf (NULL, "\nStack trace:\n%s\n", trace);
     g_free (trace);
   }
 

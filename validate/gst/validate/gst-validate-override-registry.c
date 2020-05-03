@@ -265,35 +265,38 @@ _add_override_from_struct (GstStructure * soverride)
 
   if (!gst_structure_has_name (soverride, "change-severity")
       && !gst_structure_has_name (soverride, "change-issue-severity")) {
-    g_error ("Currently only 'change-severity' overrides are supported");
+    gst_validate_abort
+        ("Currently only 'change-severity' overrides are supported");
 
     return FALSE;
   }
 
   str_issue_id = gst_structure_get_string (soverride, "issue-id");
   if (!str_issue_id) {
-    g_error ("No issue id provided in override: %" GST_PTR_FORMAT, soverride);
+    gst_validate_abort ("No issue id provided in override: %" GST_PTR_FORMAT,
+        soverride);
 
     return FALSE;
   }
 
   issue_id = g_quark_from_string (str_issue_id);
   if (gst_validate_issue_from_id (issue_id) == NULL) {
-    g_error ("No GstValidateIssue registered for %s", str_issue_id);
+    gst_validate_abort ("No GstValidateIssue registered for %s", str_issue_id);
 
     return FALSE;
   }
 
   str_new_severity = gst_structure_get_string (soverride, "new-severity");
   if (str_new_severity == NULL) {
-    g_error ("No 'new-severity' field found in %" GST_PTR_FORMAT, soverride);
+    gst_validate_abort ("No 'new-severity' field found in %" GST_PTR_FORMAT,
+        soverride);
 
     return FALSE;
   }
 
   level = gst_validate_report_level_from_name (str_new_severity);
   if (level == GST_VALIDATE_REPORT_LEVEL_UNKNOWN) {
-    g_error ("Unknown level name %s", str_new_severity);
+    gst_validate_abort ("Unknown level name %s", str_new_severity);
 
     return FALSE;
   }

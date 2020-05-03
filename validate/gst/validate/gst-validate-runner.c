@@ -471,7 +471,8 @@ gst_validate_runner_new (void)
     runner = first_runner;
     first_runner = NULL;
   } else if (element_created) {
-    g_error ("Should never create a GstValidateRunner after a GstElement "
+    gst_validate_abort
+        ("Should never create a GstValidateRunner after a GstElement "
         "has been created in the same process.");
 
     return NULL;

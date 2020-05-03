@@ -52,7 +52,7 @@ remove_map (GstRTSPServer * server)
 {
   GstRTSPMountPoints *mounts;
 
-  g_print ("removing /test mount point\n");
+  gst_validate_printf (NULL, "removing /test mount point\n");
   mounts = gst_rtsp_server_get_mount_points (server);
   gst_rtsp_mount_points_remove_factory (mounts, "/test");
   g_object_unref (mounts);

@@ -23,21 +23,24 @@ gst_validate_check_num_instances_data_new (GstStructure * check)
 
   if (!gst_structure_get_int (check, "num-instances",
           &data->expected_n_instances)) {
-    g_error ("[CONFIG ERROR] Mandatory field `num-instances` not found in "
+    gst_validate_abort
+        ("[CONFIG ERROR] Mandatory field `num-instances` not found in "
         "extra-check `num-instances`");
     goto failed;
   }
 
   data->pname = g_strdup (gst_structure_get_string (check, "pipeline-name"));
   if (!data->pname) {
-    g_error ("[CONFIG ERROR] Mandatory field `pipeline` not found in "
+    gst_validate_abort
+        ("[CONFIG ERROR] Mandatory field `pipeline` not found in "
         "extra-check `num-instances`");
     goto failed;
   }
 
   data->klass = g_strdup (gst_structure_get_string (check, "element-klass"));
   if (!data->klass) {
-    g_error ("[CONFIG ERROR] Mandatory field `element-klass` not found in "
+    gst_validate_abort
+        ("[CONFIG ERROR] Mandatory field `element-klass` not found in "
         "extra-check `num-instances`");
     goto failed;
   }

@@ -314,6 +314,10 @@ GST_VALIDATE_API
 void gst_validate_print_position(GstClockTime position, GstClockTime duration, gdouble rate, gchar* extra_info);
 GST_VALIDATE_API void gst_validate_print_issues (void);
 
+GST_VALIDATE_API
+void gst_validate_error_structure (gpointer action, const gchar* format, ...) G_GNUC_PRINTF (2, 3);
+GST_VALIDATE_API
+void gst_validate_abort (const gchar * format, ...) G_GNUC_PRINTF (1, 2);
 G_END_DECLS
 
 #endif /* __GST_VALIDATE_REPORT_H__ */

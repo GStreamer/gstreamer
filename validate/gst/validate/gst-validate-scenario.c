@@ -283,38 +283,6 @@ gst_validate_g_enum_to_string (GType g_enum_type, gint value)
 #endif
 
 static void
-g_error_action (gpointer action, const gchar * format, ...)
-{
-  const gchar *filename = NULL;
-  gint lineno = -1;
-  gchar *f, *tmp;
-  va_list var_args;
-
-  if (action) {
-    if (GST_IS_STRUCTURE (action)) {
-      filename = gst_structure_get_string (action, "__filename__");
-      gst_structure_get_int (action, "__lineno__", &lineno);
-    } else {
-      filename = GST_VALIDATE_ACTION_FILENAME (action);
-      lineno = GST_VALIDATE_ACTION_LINENO (action);
-    }
-  }
-
-  f = filename ? g_strdup_printf ("\n> %s:%d\n> %d | %s\n>  %*c|\n",
-      filename, lineno, lineno, format,
-      (gint) floor (log10 (abs ((lineno)))) + 1, ' ')
-      : g_strdup (format);
-
-  va_start (var_args, format);
-  tmp = gst_info_strdup_vprintf (f, var_args);
-  va_end (var_args);
-  g_free (f);
-
-  g_error ("%s", tmp);
-  g_free (tmp);
-}
-
-static void
 gst_validate_seek_information_free (GstValidateSeekInformation * info)
 {
   gst_validate_action_unref (info->action);
@@ -456,6 +424,7 @@ _action_copy (GstValidateAction * act)
   GST_VALIDATE_ACTION_LINENO (copy) = GST_VALIDATE_ACTION_LINENO (act);
   GST_VALIDATE_ACTION_FILENAME (copy) =
       g_strdup (GST_VALIDATE_ACTION_FILENAME (act));
+  GST_VALIDATE_ACTION_DEBUG (copy) = g_strdup (GST_VALIDATE_ACTION_DEBUG (act));
 
   return copy;
 }
@@ -471,6 +440,7 @@ _action_free (GstValidateAction * action)
 
   g_weak_ref_clear (&action->priv->scenario);
   g_free (GST_VALIDATE_ACTION_FILENAME (action));
+  g_free (GST_VALIDATE_ACTION_DEBUG (action));
 
   g_slice_free (GstValidateActionPrivate, action->priv);
   g_slice_free (GstValidateAction, action);
@@ -515,8 +485,9 @@ gst_validate_action_new (GstValidateScenario * scenario,
   gst_structure_get (structure,
       "__lineno__", G_TYPE_INT, &GST_VALIDATE_ACTION_LINENO (action),
       "__filename__", G_TYPE_STRING, &GST_VALIDATE_ACTION_FILENAME (action),
-      NULL);
-  gst_structure_remove_fields (structure, "__lineno__", "__filename__", NULL);
+      "__debug__", G_TYPE_STRING, &GST_VALIDATE_ACTION_DEBUG (action), NULL);
+  gst_structure_remove_fields (structure, "__lineno__", "__filename__",
+      "__debug__", NULL);
 
   g_weak_ref_set (&action->priv->scenario, scenario);
   if (structure)
@@ -2045,8 +2016,8 @@ _set_action_playback_time (GstValidateScenario * scenario,
 {
   if (!gst_validate_action_get_clocktime (scenario, action,
           "playback-time", &action->playback_time)) {
-    g_error_action (action, "Could not parse playback-time in %" GST_PTR_FORMAT,
-        action->structure);
+    gst_validate_error_structure (action,
+        "Could not parse playback-time in %" GST_PTR_FORMAT, action->structure);
 
     return FALSE;
   }
@@ -2350,7 +2321,8 @@ execute_next_action_full (GstValidateScenario * scenario, GstMessage * message)
       priv->actions = g_list_remove_link (priv->actions, tmp);
 
       if (!gst_validate_parse_next_action_playback_time (scenario)) {
-        g_error_action (priv->actions ? priv->actions->data : NULL,
+        gst_validate_error_structure (priv->actions ? priv->
+            actions->data : NULL,
             "Could not determine next action playback time!");
 
         return G_SOURCE_REMOVE;
@@ -2441,7 +2413,7 @@ execute_next_action_full (GstValidateScenario * scenario, GstMessage * message)
     priv->actions = g_list_remove_link (priv->actions, tmp);
 
     if (!gst_validate_parse_next_action_playback_time (scenario)) {
-      g_error_action (priv->actions ? priv->actions->data : NULL,
+      gst_validate_error_structure (priv->actions ? priv->actions->data : NULL,
           "Could not determine next action playback time!");
 
       return G_SOURCE_REMOVE;
@@ -3313,7 +3285,7 @@ gst_validate_action_default_prepare_func (GstValidateAction * action)
   repeat_expr =
       g_strdup (gst_structure_get_string (action->structure, "repeat"));
   if (!repeat_expr) {
-    g_error_action (action, "Invalid value for 'repeat'");
+    gst_validate_error_structure (action, "Invalid value for 'repeat'");
     goto err;
   }
 
@@ -3321,7 +3293,7 @@ gst_validate_action_default_prepare_func (GstValidateAction * action)
       gst_validate_utils_parse_expression (repeat_expr, _set_variable_func,
       scenario, &error);
   if (error) {
-    g_error_action (action, "Invalid value for 'repeat'");
+    gst_validate_error_structure (action, "Invalid value for 'repeat'");
     goto err;
   }
   g_free (repeat_expr);
@@ -3813,7 +3785,8 @@ gst_validate_scenario_load_structures (GstValidateScenario * scenario,
         continue;
       }
 
-      g_error_action (structure, "We do not handle action types %s", type);
+      gst_validate_error_structure (structure,
+          "We do not handle action types %s", type);
       goto failed;
     }
 
@@ -3827,7 +3800,7 @@ gst_validate_scenario_load_structures (GstValidateScenario * scenario,
         if (action_type->parameters[i].mandatory &&
             gst_structure_has_field (structure,
                 action_type->parameters[i].name) == FALSE) {
-          g_error_action (structure,
+          gst_validate_error_structure (structure,
               "Mandatory field '%s' not present in structure: %" GST_PTR_FORMAT,
               action_type->parameters[i].name, structure);
           goto failed;
@@ -4010,7 +3983,7 @@ done:
   g_strfreev (scenarios);
 
   if (ret == FALSE)
-    g_error ("Could not set scenario %s => EXIT\n", scenario_name);
+    gst_validate_abort ("Could not set scenario %s => EXIT\n", scenario_name);
 
   return ret;
 
@@ -4521,7 +4494,7 @@ _parse_scenario (GFile * f, GKeyFile * kf)
     gst_validate_scenario_check_and_set_needs_clock_sync (structures, &meta);
     for (tmp = structures; tmp; tmp = tmp->next)
       gst_structure_remove_fields (tmp->data, "__lineno__", "__filename__",
-          NULL);
+          "__debug__", NULL);
 
     if (meta) {
       KeyFileGroupName kfg;
@@ -4529,6 +4502,8 @@ _parse_scenario (GFile * f, GKeyFile * kf)
       kfg.group_name = g_file_get_path (f);
       kfg.kf = kf;
 
+      gst_structure_remove_fields (meta, "__lineno__", "__filename__",
+          "__debug__", NULL);
       gst_structure_foreach (meta,
           (GstStructureForeachFunc) _add_description, &kfg);
       gst_structure_free (meta);
@@ -4634,7 +4609,7 @@ gst_validate_list_scenarios (gchar ** scenarios, gint num_scenarios,
 
 done:
   result = g_key_file_to_data (kf, &datalength, &err);
-  g_print ("All scenarios available:\n%s", result);
+  gst_validate_printf (NULL, "All scenarios available:\n%s", result);
 
   if (output_file && !err) {
     if (!g_file_set_contents (output_file, result, datalength, &err)) {
@@ -5573,8 +5548,8 @@ init_scenarios (void)
       GstValidateActionType *atype = _find_action_type (action_typename);
 
       if (!atype) {
-        g_error_action (plug_conf, "[CONFIG ERROR] Action type %s not found",
-            action_typename);
+        gst_validate_error_structure (plug_conf,
+            "[CONFIG ERROR] Action type %s not found", action_typename);
 
         continue;
       }
@@ -5588,7 +5563,7 @@ init_scenarios (void)
 
       if (!(atype->flags & GST_VALIDATE_ACTION_TYPE_CONFIG) &&
           !(_action_type_has_parameter (atype, "as-config"))) {
-        g_error_action (plug_conf,
+        gst_validate_error_structure (plug_conf,
             "[CONFIG ERROR] Action '%s' is not a config action",
             action_typename);
 

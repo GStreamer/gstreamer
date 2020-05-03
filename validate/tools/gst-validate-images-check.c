@@ -108,14 +108,14 @@ main (int argc, char **argv)
   if (ret == 0) {
     ret = rep_err;
     if (rep_err != 0)
-      g_print ("Returning %d as error where found", rep_err);
+      gst_validate_printf (NULL, "Returning %d as error where found", rep_err);
   }
 
   g_object_unref (ssim);
   g_object_unref (runner);
   gst_validate_deinit ();
 
-  g_print ("\n=======> Test %s (Return value: %i)\n\n",
+  gst_validate_printf (NULL, "\n=======> Test %s (Return value: %i)\n\n",
       ret == 0 ? "PASSED" : "FAILED", ret);
 
   return ret;

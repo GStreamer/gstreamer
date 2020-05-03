@@ -27,6 +27,7 @@
 #endif
 
 #include "gst-validate-media-info.h"
+#include "validate.h"
 
 #include <glib/gstdio.h>
 #include <string.h>
@@ -1070,41 +1071,45 @@ gst_validate_media_info_compare (GstValidateMediaInfo * expected,
 {
   gboolean ret = TRUE;
   if (expected->duration != extracted->duration) {
-    g_print ("Duration changed: %" GST_TIME_FORMAT " -> %" GST_TIME_FORMAT "\n",
+    gst_validate_printf (NULL,
+        "Duration changed: %" GST_TIME_FORMAT " -> %" GST_TIME_FORMAT "\n",
         GST_TIME_ARGS (expected->duration),
         GST_TIME_ARGS (extracted->duration));
     ret = FALSE;
   }
   if (expected->file_size != extracted->file_size) {
-    g_print ("File size changed: %" G_GUINT64_FORMAT " -> %" G_GUINT64_FORMAT
-        "\n", expected->file_size, extracted->file_size);
+    gst_validate_printf (NULL,
+        "File size changed: %" G_GUINT64_FORMAT " -> %" G_GUINT64_FORMAT "\n",
+        expected->file_size, extracted->file_size);
     ret = FALSE;
   }
   if (expected->seekable && !extracted->seekable) {
-    g_print ("File isn't seekable anymore\n");
+    gst_validate_printf (NULL, "File isn't seekable anymore\n");
     ret = FALSE;
   }
 
   if (extracted->discover_only == FALSE) {
     if (expected->playback_error == NULL && extracted->playback_error) {
-      g_print ("Playback is now failing with: %s\n", extracted->playback_error);
+      gst_validate_printf (NULL, "Playback is now failing with: %s\n",
+          extracted->playback_error);
       ret = FALSE;
     }
     if (expected->reverse_playback_error == NULL
         && extracted->reverse_playback_error) {
-      g_print ("Reverse playback is now failing with: %s\n",
+      gst_validate_printf (NULL, "Reverse playback is now failing with: %s\n",
           extracted->reverse_playback_error);
       ret = FALSE;
     }
     if (expected->track_switch_error == NULL && extracted->track_switch_error) {
-      g_print ("Track switching is now failing with: %s\n",
+      gst_validate_printf (NULL, "Track switching is now failing with: %s\n",
           extracted->track_switch_error);
       ret = FALSE;
     }
   }
 
   if (extracted->stream_info == NULL || expected->stream_info == NULL) {
-    g_print ("Stream infos could not be retrieved, an error occured\n");
+    gst_validate_printf (NULL,
+        "Stream infos could not be retrieved, an error occured\n");
     ret = FALSE;
   } else if (expected->stream_info
       && !gst_caps_is_equal_fixed (expected->stream_info->caps,
@@ -1112,7 +1117,8 @@ gst_validate_media_info_compare (GstValidateMediaInfo * expected,
     gchar *caps1 = gst_caps_to_string (expected->stream_info->caps);
     gchar *caps2 = gst_caps_to_string (extracted->stream_info->caps);
 
-    g_print ("Media caps changed: '%s' -> '%s'\n", caps1, caps2);
+    gst_validate_printf (NULL, "Media caps changed: '%s' -> '%s'\n", caps1,
+        caps2);
     g_free (caps1);
     g_free (caps2);
     ret = FALSE;

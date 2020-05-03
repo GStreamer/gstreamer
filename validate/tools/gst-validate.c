@@ -54,7 +54,7 @@ static gboolean is_live = FALSE;
 static gboolean
 intr_handler (gpointer user_data)
 {
-  g_print ("interrupt received.\n");
+  gst_validate_printf (NULL, "interrupt received.\n");
 
   GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
       GST_DEBUG_GRAPH_SHOW_ALL, "gst-validate.interrupted");
@@ -137,9 +137,10 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
           GST_DEBUG_GRAPH_SHOW_ALL, "gst-validate.warning");
 
       gst_message_parse_warning (message, &gerror, &debug);
-      g_print ("WARNING: from element %s: %s\n", name, gerror->message);
+      gst_validate_printf (NULL, "WARNING: from element %s: %s\n", name,
+          gerror->message);
       if (debug)
-        g_print ("Additional debug info:\n%s\n", debug);
+        gst_validate_printf (NULL, "Additional debug info:\n%s\n", debug);
 
       g_clear_error (&gerror);
       g_free (debug);
@@ -160,7 +161,7 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
       }
 
       if (!buffering) {
-        g_print ("\n");
+        gst_validate_printf (NULL, "\n");
       }
 
       gst_message_parse_buffering (message, &percent);
@@ -313,7 +314,7 @@ run_test_from_file (const gchar * testfile, gboolean use_fakesinks)
 
   args = gst_validate_utils_get_strv (meta, "args");
   if (!args)
-    g_error ("No 'args' in .validatetest meta structure: %s",
+    gst_validate_abort ("No 'args' in .validatetest meta structure: %s",
         gst_structure_to_string (meta));
 
   for (argc = 0; args[argc]; argc++);
@@ -407,7 +408,8 @@ main (int argc, gchar ** argv)
       "as gstreamer debugging");
 
   if (argc == 1) {
-    g_print ("%s", g_option_context_get_help (ctx, FALSE, NULL));
+    gst_validate_printf (NULL, "%s", g_option_context_get_help (ctx, FALSE,
+            NULL));
     exit (1);
   }
 
@@ -423,7 +425,8 @@ main (int argc, gchar ** argv)
   if (testfile) {
     is_testfile = TRUE;
     if (scenario)
-      g_error ("Can not specify scenario and testfile at the same time");
+      gst_validate_abort
+          ("Can not specify scenario and testfile at the same time");
     return run_test_from_file (testfile, use_fakesinks);
   }
 
@@ -467,7 +470,8 @@ main (int argc, gchar ** argv)
   }
 
   if (argc == 1) {
-    g_print ("%s", g_option_context_get_help (ctx, FALSE, NULL));
+    gst_validate_printf (NULL, "%s", g_option_context_get_help (ctx, FALSE,
+            NULL));
     g_option_context_free (ctx);
     exit (1);
   }
@@ -491,7 +495,7 @@ main (int argc, gchar ** argv)
   }
 
   if (!pipeline) {
-    g_print ("Failed to create pipeline: %s\n",
+    gst_validate_printf (NULL, "Failed to create pipeline: %s\n",
         err ? err->message : "unknown reason");
     g_clear_error (&err);
     g_object_unref (runner);
@@ -560,9 +564,9 @@ main (int argc, gchar ** argv)
       &bus_callback_data);
 
   if (argc == 2)
-    g_print ("**-> Starting pipeline**\n");
+    gst_validate_printf (NULL, "**-> Starting pipeline**\n");
   else
-    g_print ("**-> Starting pipeline**\n");
+    gst_validate_printf (NULL, "**-> Starting pipeline**\n");
 
   g_free (argvn);
   g_object_get (monitor, "handles-states", &monitor_handles_state, NULL);
@@ -571,23 +575,23 @@ main (int argc, gchar ** argv)
     switch (sret) {
       case GST_STATE_CHANGE_FAILURE:
         /* ignore, we should get an error message posted on the bus */
-        g_print ("Pipeline failed to go to PLAYING state\n");
+        gst_validate_printf (NULL, "Pipeline failed to go to PLAYING state\n");
         gst_element_set_state (pipeline, GST_STATE_NULL);
         ret = -1;
         goto exit;
       case GST_STATE_CHANGE_NO_PREROLL:
-        g_print ("Pipeline is live.\n");
+        gst_validate_printf (NULL, "Pipeline is live.\n");
         is_live = TRUE;
         break;
       case GST_STATE_CHANGE_ASYNC:
-        g_print ("Prerolling...\r");
+        gst_validate_printf (NULL, "Prerolling...\r");
         break;
       default:
         break;
     }
-    g_print ("**-> Pipeline started**\n");
+    gst_validate_printf (NULL, "**-> Pipeline started**\n");
   } else {
-    g_print ("**-> Letting scenario handle set state**\n");
+    gst_validate_printf (NULL, "**-> Letting scenario handle set state**\n");
   }
 
   g_main_loop_run (mainloop);
@@ -603,7 +607,8 @@ main (int argc, gchar ** argv)
   if (ret == 0) {
     ret = rep_err;
     if (rep_err != 0)
-      g_print ("Returning %d as errors were found\n", rep_err);
+      gst_validate_printf (NULL, "Returning %d as errors were found\n",
+          rep_err);
   }
 
 exit:
@@ -617,7 +622,7 @@ exit:
   g_source_remove (signal_watch_id);
 #endif
 
-  g_print ("\n=======> Test %s (Return value: %i)\n\n",
+  gst_validate_printf (NULL, "\n=======> Test %s (Return value: %i)\n\n",
       ret == 0 ? "PASSED" : "FAILED", ret);
 
   gst_validate_deinit ();

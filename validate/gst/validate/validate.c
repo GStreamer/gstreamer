@@ -237,7 +237,7 @@ static GList *
 gst_validate_get_testfile_configs (const gchar * suffix)
 {
   GList *res = NULL;
-  gchar **config_strs = NULL, *filename = NULL;
+  gchar **config_strs = NULL, *filename = NULL, *debug = NULL;
   gint current_lineno = -1;
   GstStructure *meta = get_test_file_meta ();
 
@@ -246,6 +246,7 @@ gst_validate_get_testfile_configs (const gchar * suffix)
 
   gst_structure_get (meta,
       "__lineno__", G_TYPE_INT, &current_lineno,
+      "__debug__", G_TYPE_STRING, &debug,
       "__filename__", G_TYPE_STRING, &filename, NULL);
   config_strs = gst_validate_utils_get_strv (meta, "configs");
 
@@ -257,14 +258,14 @@ gst_validate_get_testfile_configs (const gchar * suffix)
           gst_structure_from_string (config_strs[i], NULL);
 
       if (tmpstruct == NULL) {
-        g_error ("%s:%d: Invalid structure\n  %d | %s\n   %*c|",
-            filename, current_lineno, current_lineno, config_strs[i],
-            (gint) floor (log10 (abs ((current_lineno)))) + 1, ' ');
+        gst_validate_abort ("%s:%d: Invalid structure\n  %4d | %s\n%s",
+            filename, current_lineno, current_lineno, config_strs[i], debug);
       }
 
       gst_structure_set (tmpstruct,
           "__lineno__", G_TYPE_INT, current_lineno,
-          "__filename__", G_TYPE_STRING, filename, NULL);
+          "__filename__", G_TYPE_STRING, filename,
+          "__debug__", G_TYPE_STRING, debug, NULL);
       res = g_list_append (res, tmpstruct);
     }
   }
@@ -519,7 +520,7 @@ gst_validate_setup_test_file (const gchar * testfile, gboolean use_fakesinks)
   GstStructure *res = NULL;
 
   if (global_testfile)
-    g_error ("A testfile was already loaded: %s", global_testfile);
+    gst_validate_abort ("A testfile was already loaded: %s", global_testfile);
 
   gst_validate_set_globals (NULL);
   gst_validate_structure_set_variables_from_struct_file (NULL, testfile);
@@ -527,7 +528,7 @@ gst_validate_setup_test_file (const gchar * testfile, gboolean use_fakesinks)
       gst_validate_utils_structs_parse_from_filename (testfile, NULL);
 
   if (!testfile_structs)
-    g_error ("Could not load test file: %s", testfile);
+    gst_validate_abort ("Could not load test file: %s", testfile);
 
   res = testfile_structs->data;
   if (gst_structure_has_name (testfile_structs->data, "set-globals")) {
@@ -537,7 +538,8 @@ gst_validate_setup_test_file (const gchar * testfile, gboolean use_fakesinks)
   }
 
   if (!gst_structure_has_name (res, "meta"))
-    g_error ("First structure of a .validatetest file should be a `meta` or "
+    gst_validate_abort
+        ("First structure of a .validatetest file should be a `meta` or "
         "`set-gobals` then `meta`, got: %s", gst_structure_to_string (res));
 
   register_action_types ();
@@ -552,7 +554,8 @@ gst_validate_setup_test_file (const gchar * testfile, gboolean use_fakesinks)
     tool = "gst-validate-" GST_API_VERSION;
 
   if (g_strcmp0 (tool, g_get_prgname ()))
-    g_error ("Validate test file: '%s' was made to be run with '%s' not '%s'",
+    gst_validate_abort
+        ("Validate test file: '%s' was made to be run with '%s' not '%s'",
         testfile, tool, g_get_prgname ());
   global_testfile = g_strdup (testfile);
 

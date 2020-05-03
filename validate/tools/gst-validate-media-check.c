@@ -112,7 +112,7 @@ main (int argc, gchar ** argv)
         gst_validate_media_descriptor_parser_new (runner, expected_file, NULL);
 
     if (reference == NULL) {
-      g_print ("Could not parse file: %s\n", expected_file);
+      gst_validate_printf (NULL, "Could not parse file: %s\n", expected_file);
       ret = 1;
       goto out;
     }
@@ -136,7 +136,7 @@ main (int argc, gchar ** argv)
       gst_validate_media_descriptor_writer_new_discover (runner, argv[1],
       writer_flags, NULL);
   if (writer == NULL) {
-    g_print ("Could not discover file: %s\n", argv[1]);
+    gst_validate_printf (NULL, "Could not discover file: %s\n", argv[1]);
     ret = 1;
     goto out;
   }
@@ -156,7 +156,7 @@ main (int argc, gchar ** argv)
     }
   } else {
     output = gst_validate_media_descriptor_writer_serialize (writer);
-    g_print ("Media info:\n%s\n", output);
+    gst_validate_printf (NULL, "Media info:\n%s\n", output);
     g_free (output);
   }
 
@@ -180,7 +180,7 @@ out:
   gst_validate_deinit ();
   gst_deinit ();
 
-  g_print ("\n=======> Test %s (Return value: %i)\n\n",
+  gst_validate_printf (NULL, "\n=======> Test %s (Return value: %i)\n\n",
       ret == 0 ? "PASSED" : "FAILED", ret);
 
   return ret;

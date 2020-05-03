@@ -219,7 +219,8 @@ validate_flow_override_new (GstStructure * config)
 {
   ValidateFlowOverride *flow;
   GstValidateOverride *override;
-  gchar *ignored_fields, *logged_fields;
+  gchar *ignored_fields = NULL, *logged_fields;
+  const GValue *tmpval;
 
   flow = g_object_new (VALIDATE_TYPE_FLOW_OVERRIDE, NULL);
   GST_OBJECT_FLAG_SET (flow, GST_OBJECT_FLAG_MAY_BE_LEAKED);
@@ -228,8 +229,8 @@ validate_flow_override_new (GstStructure * config)
   /* pad: Name of the pad where flowing buffers and events will be monitorized. */
   flow->pad_name = gst_structure_get_string (config, "pad");
   if (!flow->pad_name) {
-    g_error ("pad property is mandatory, not found in %s",
-        gst_structure_to_string (config));
+    gst_validate_error_structure (config,
+        "pad property is mandatory, not found in %" GST_PTR_FORMAT, config);
   }
 
   /* record-buffers: Whether buffers will be written to the expectation log. */
@@ -254,14 +255,23 @@ validate_flow_override_new (GstStructure * config)
   flow->ignored_event_types =
       gst_validate_utils_get_strv (config, "ignored-event-types");
 
-  ignored_fields =
-      (gchar *) gst_structure_get_string (config, "ignored-fields");
+  tmpval = gst_structure_get_value (config, "ignored-fields");
+  if (tmpval) {
+    if (!G_VALUE_HOLDS_STRING (tmpval)) {
+      gst_validate_error_structure (config,
+          "Invalid value type for `ignored-fields`: '%s' instead of 'string'",
+          G_VALUE_TYPE_NAME (tmpval));
+    }
+    ignored_fields = (gchar *) g_value_get_string (tmpval);
+  }
+
   if (ignored_fields) {
     ignored_fields = g_strdup_printf ("ignored,%s", ignored_fields);
     flow->ignored_fields = gst_structure_new_from_string (ignored_fields);
     if (!flow->ignored_fields)
-      g_error ("Could not parse 'ignored-event-fields' %s in %s",
-          ignored_fields, gst_structure_to_string (config));
+      gst_validate_error_structure (config,
+          "Could not parse 'ignored-event-fields' structure: `%s`",
+          ignored_fields);
     g_free (ignored_fields);
   } else {
     flow->ignored_fields =
@@ -277,8 +287,8 @@ validate_flow_override_new (GstStructure * config)
     logged_fields = g_strdup_printf ("logged,%s", logged_fields);
     flow->logged_fields = gst_structure_new_from_string (logged_fields);
     if (!flow->logged_fields)
-      g_error ("Could not parse 'logged-fields' %s in %s",
-          logged_fields, gst_structure_to_string (config));
+      gst_validate_error_structure (config,
+          "Could not parse 'logged-fields' %s", logged_fields);
     g_free (logged_fields);
   } else {
     flow->logged_fields = NULL;
@@ -331,7 +341,7 @@ validate_flow_override_new (GstStructure * config)
   {
     gchar *directory_path = g_path_get_dirname (flow->output_file_path);
     if (g_mkdir_with_parents (directory_path, 0755) < 0) {
-      g_error ("Could not create directory tree: %s Reason: %s",
+      gst_validate_abort ("Could not create directory tree: %s Reason: %s",
           directory_path, g_strerror (errno));
     }
     g_free (directory_path);
@@ -339,7 +349,8 @@ validate_flow_override_new (GstStructure * config)
 
   flow->output_file = fopen (flow->output_file_path, "w");
   if (!flow->output_file)
-    g_error ("Could not open for writing: %s", flow->output_file_path);
+    gst_validate_abort ("Could not open for writing: %s",
+        flow->output_file_path);
 
   flow->was_attached = FALSE;
 
@@ -452,7 +463,7 @@ runner_stopping (GstValidateRunner * runner, ValidateFlowOverride * flow)
     GError *error = NULL;
     g_file_get_contents (flow->expectations_file_path, &contents, NULL, &error);
     if (error) {
-      g_error ("Failed to open expectations file: %s Reason: %s",
+      gst_validate_abort ("Failed to open expectations file: %s Reason: %s",
           flow->expectations_file_path, error->message);
     }
     lines_expected = g_strsplit (contents, "\n", 0);
@@ -465,7 +476,7 @@ runner_stopping (GstValidateRunner * runner, ValidateFlowOverride * flow)
     g_file_get_contents (flow->actual_results_file_path, &contents, NULL,
         &error);
     if (error) {
-      g_error ("Failed to open actual results file: %s Reason: %s",
+      gst_validate_abort ("Failed to open actual results file: %s Reason: %s",
           flow->actual_results_file_path, error->message);
     }
     lines_actual = g_strsplit (contents, "\n", 0);
