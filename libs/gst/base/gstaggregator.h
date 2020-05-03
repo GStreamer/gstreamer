@@ -387,7 +387,7 @@ GstClockTime    gst_aggregator_simple_get_next_time (GstAggregator              
 
 GST_BASE_API
 void            gst_aggregator_update_segment       (GstAggregator                * self,
-                                                     GstSegment                   * segment);
+                                                     const GstSegment             * segment);
 
 G_END_DECLS
 

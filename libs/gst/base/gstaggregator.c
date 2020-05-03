@@ -3474,7 +3474,7 @@ gst_aggregator_simple_get_next_time (GstAggregator * self)
  * Since: 1.18
  */
 void
-gst_aggregator_update_segment (GstAggregator * self, GstSegment * segment)
+gst_aggregator_update_segment (GstAggregator * self, const GstSegment * segment)
 {
   g_return_if_fail (GST_IS_AGGREGATOR (self));
   g_return_if_fail (segment != NULL);
