@@ -28,6 +28,9 @@
 #include "gst-validate-pipeline-monitor.h"
 #include "gst-validate-pad-monitor.h"
 #include "gst-validate-monitor-factory.h"
+#include "gst-validate-report.h"
+#include "gst-validate-utils.h"
+#include "validate.h"
 
 #define PRINT_POSITION_TIMEOUT 250
 
@@ -579,8 +582,13 @@ _bus_handler (GstBus * bus, GstMessage * message,
       gst_message_parse_error_details (message, &details);
 
       if (g_error_matches (err, GST_CORE_ERROR, GST_CORE_ERROR_MISSING_PLUGIN)) {
-        GST_VALIDATE_REPORT (monitor, MISSING_PLUGIN,
-            "Error: %s -- Debug message: %s", err->message, debug);
+        if (!gst_validate_fail_on_missing_plugin ()) {
+          gst_validate_skip_test ("missing plugin: %s -- Debug message: %s\n",
+              err->message, debug);
+        } else {
+          GST_VALIDATE_REPORT (monitor, MISSING_PLUGIN,
+              "Error: %s -- Debug message: %s", err->message, debug);
+        }
       } else if ((g_error_matches (err, GST_STREAM_ERROR,
                   GST_STREAM_ERROR_FAILED) && details
               && gst_structure_get_int (details, "flow-return", &error_flow)

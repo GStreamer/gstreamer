@@ -110,6 +110,8 @@ class Reporter(Loggable):
                    Colors.OKBLUE)
         printc("%sPassed: %d" %
                (lenstat * " ", self.stats["passed"]), Colors.OKGREEN)
+        printc("%sSkipped: %d" %
+               (lenstat * " ", self.stats["skipped"]), Colors.WARNING)
         printc("%sFailed: %d" %
                (lenstat * " ", self.stats["failures"]), Colors.FAIL)
         printc("%sKnown error: %d" %

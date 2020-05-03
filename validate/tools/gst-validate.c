@@ -503,6 +503,10 @@ main (int argc, gchar ** argv)
     g_free (argvn);
     exit (1);
   } else if (err) {
+    if (g_error_matches (err, GST_PARSE_ERROR, GST_PARSE_ERROR_NO_SUCH_ELEMENT)) {
+      if (!gst_validate_fail_on_missing_plugin ())
+        gst_validate_skip_test ("missing plugin: %s", err->message);
+    }
     g_printerr ("Erroneous pipeline: %s\n",
         err->message ? err->message : "unknown reason");
     g_clear_error (&err);

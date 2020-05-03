@@ -60,6 +60,10 @@ Default: `GST_CLOCK_TIME_NONE` - disabled
 The maximum number of dropped buffers, a `config::too-many-buffers-dropped` issue will be reported
 if that limit is reached.
 
+### `fail-on-missing-plugin`
+
+Default: `false` meaning that tests are marked as skipped when a GStreamer plugin is missing.
+
 ## Variables
 
 You can use variables in the configs the same way you can set them in

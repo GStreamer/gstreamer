@@ -318,6 +318,8 @@ GST_VALIDATE_API
 void gst_validate_error_structure (gpointer action, const gchar* format, ...) G_GNUC_PRINTF (2, 3);
 GST_VALIDATE_API
 void gst_validate_abort (const gchar * format, ...) G_GNUC_PRINTF (1, 2);
+GST_VALIDATE_API
+void gst_validate_skip_test (const gchar* format, ...);
 G_END_DECLS
 
 #endif /* __GST_VALIDATE_REPORT_H__ */

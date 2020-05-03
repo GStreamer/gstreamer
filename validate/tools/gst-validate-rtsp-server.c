@@ -20,6 +20,7 @@
 /* Cc'd from the test-uri example */
 #include <gst/gst.h>
 
+#include <gst/validate/validate.h>
 #include <gst/rtsp-server/rtsp-server.h>
 #include <gst/rtsp-server/rtsp-media-factory-uri.h>
 

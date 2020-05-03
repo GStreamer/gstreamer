@@ -187,7 +187,7 @@ class Test(Loggable):
 
     def add_env_variable(self, variable, value=None):
         """
-        Only usefull so that the gst-validate-launcher can print the exact
+        Only useful so that the gst-validate-launcher can print the exact
         right command line to reproduce the tests
         """
         if value is None:
@@ -356,7 +356,7 @@ class Test(Loggable):
         self.message = message
         self.error_str = error
 
-        if result not in [Result.PASSED, Result.NOT_RUN]:
+        if result not in [Result.PASSED, Result.NOT_RUN, Result.SKIPPED]:
             self.add_known_issue_information()
 
     def check_results(self):
@@ -753,6 +753,8 @@ class GstValidateListener(socketserver.BaseRequestHandler, Loggable):
                 test.actions_infos[-1]['execution-duration'] = obj['execution-duration']
             elif obj_type == 'report':
                 test.add_report(obj)
+            elif obj_type == 'skip-test':
+                test.set_result(Result.SKIPPED)
 
 
 class GstValidateTest(Test):
@@ -1004,14 +1006,8 @@ class GstValidateTest(Test):
         return result, msg
 
     def check_results(self):
-        if self.result in [Result.FAILED, self.result is Result.PASSED]:
+        if self.result in [Result.FAILED, Result.PASSED, Result.SKIPPED]:
             return
-
-        for report in self.reports:
-            if report.get('issue-id') == 'runtime::missing-plugin':
-                self.set_result(Result.SKIPPED, "%s\n%s" % (report['summary'],
-                                                            report['details']))
-                return
 
         self.debug("%s returncode: %s", self, self.process.returncode)
 
@@ -1090,9 +1086,9 @@ class GstValidateTest(Test):
                 msg += " (Expected errors not found: %s) " % mandatory_failures
                 result = Result.FAILED
         elif self.expected_issues:
-            msg += ' %s(Expected errors occured: %s)%s' % (Colors.OKBLUE,
-                                                           self.expected_issues,
-                                                           Colors.ENDC)
+            msg += ' %s(Expected errors occurred: %s)%s' % (Colors.OKBLUE,
+                                                            self.expected_issues,
+                                                            Colors.ENDC)
             result = Result.KNOWN_ERROR
 
         self.set_result(result, msg.strip())
@@ -1321,7 +1317,7 @@ class GstValidateEncodingTestInterface(object):
                                     'summary': 'Expected stream caps during transcoding do not match expectations',
                                     'level': 'critical',
                                     'detected-on': 'pipeline',
-                                    'details': "Field: %s  (from %s) not in caps of the outputed file %s" % (
+                                    'details': "Field: %s  (from %s) not in caps of the outputted file %s" % (
                                         wanted_caps, c, ccaps)
                                 }
                             )
@@ -1374,7 +1370,7 @@ class TestsManager(Loggable):
                     if regex.findall(test.classname):
                         if failure_def.get('allow_flakiness'):
                             test.allow_flakiness = True
-                            self.debug("%s allow flakyness" % (test.classname))
+                            self.debug("%s allow flakiness" % (test.classname))
                         else:
                             for issue in failure_def['issues']:
                                 issue['bug'] = bugid
@@ -1395,7 +1391,7 @@ class TestsManager(Loggable):
                 if regex.findall(test.classname):
                     if failure_def.get('allow_flakiness'):
                         test.allow_flakiness = True
-                        self.debug("%s allow flakyness" % (test.classname))
+                        self.debug("%s allow flakiness" % (test.classname))
                     else:
                         for issue in failure_def['issues']:
                             issue['bug'] = bugid
@@ -2155,7 +2151,7 @@ class Scenario(object):
         return False
 
     def compatible_with_live_content(self):
-        # if a live content is required it's implicitely compatible with
+        # if a live content is required it's implicitly compatible with
         # live content
         if self.needs_live_content():
             return True
@@ -2342,7 +2338,7 @@ class GstValidateBaseTestManager(TestsManager):
         @scenarios A list or a unic scenario name(s) to be run on the tests.
                     They are just the default scenarios, and then depending on
                     the TestsGenerator to be used you can have more fine grained
-                    control on what to be run on each serie of tests.
+                    control on what to be run on each series of tests.
         """
         if isinstance(scenarios, list):
             self._scenarios.extend(scenarios)
@@ -2367,7 +2363,7 @@ class GstValidateBaseTestManager(TestsManager):
                            formats for transcoding test.
                            They are just the default encoding formats, and then depending on
                            the TestsGenerator to be used you can have more fine grained
-                           control on what to be run on each serie of tests.
+                           control on what to be run on each series of tests.
         """
         if isinstance(encoding_formats, list):
             self._encoding_formats.extend(encoding_formats)
@@ -2563,7 +2559,7 @@ class GstValidateMediaDescriptor(MediaDescriptor):
         for ext in [self.MEDIA_INFO_EXT, self.PUSH_MEDIA_INFO_EXT, self.STREAM_INFO_EXT,
                 self.SKIPPED_MEDIA_INFO_EXT, ]:
             if self._xml_path.endswith(ext):
-               return self._xml_path[:len(self._xml_path) - (len(ext) + 1)]
+                return self._xml_path[:len(self._xml_path) - (len(ext) + 1)]
 
         assert "Not reached" is None
 

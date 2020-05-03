@@ -40,6 +40,7 @@
 
 #include "gst-validate-utils.h"
 #include "gst-validate-internal.h"
+#include "validate.h"
 #include <gst/gst.h>
 
 #define PARSER_BOOLEAN_EQUALITY_THRESHOLD (1e-10)
@@ -1322,4 +1323,21 @@ gst_validate_set_test_file_globals (GstStructure * meta, const gchar * testfile,
   gst_structure_set (global_vars,
       "videosink", G_TYPE_STRING, videosink,
       "audiosink", G_TYPE_STRING, audiosink, NULL);
+}
+
+gboolean
+gst_validate_fail_on_missing_plugin (void)
+{
+
+  GList *config;
+
+  for (config = gst_validate_plugin_get_config (NULL); config;
+      config = config->next) {
+    gboolean fail_on_missing_plugin;
+
+    if (gst_structure_get_boolean (config->data,
+            "fail-on-missing-plugin", &fail_on_missing_plugin))
+      return fail_on_missing_plugin;
+  }
+  return FALSE;
 }

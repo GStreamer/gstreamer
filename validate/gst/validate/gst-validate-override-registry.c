@@ -182,7 +182,7 @@ static void
   for (iter = registry->name_overrides.head; iter; iter = g_list_next (iter)) {
     entry = iter->data;
     if (g_regex_match_simple (entry->name, name, 0, 0)) {
-      GST_INFO_OBJECT (registry, "Adding override %s to %s", entry->name, name);
+      GST_INFO ("%p Adding override %s to %s", registry, entry->name, name);
 
       gst_validate_monitor_attach_override (monitor, entry->override);
     }

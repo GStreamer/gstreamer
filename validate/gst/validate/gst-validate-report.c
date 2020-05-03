@@ -26,6 +26,7 @@
 #endif
 
 
+#include <stdlib.h>             /* exit */
 #include <stdio.h>              /* fprintf */
 #include <glib/gstdio.h>
 #include <errno.h>
@@ -1275,6 +1276,38 @@ gst_validate_print_position (GstClockTime position, GstClockTime duration,
   g_object_unref (jbuilder);
 
   g_free (extra_info);
+}
+
+void
+gst_validate_skip_test (const gchar * format, ...)
+{
+  JsonBuilder *jbuilder;
+  va_list va_args;
+  gchar *tmp;
+
+  va_start (va_args, format);
+  tmp = gst_info_strdup_vprintf (format, va_args);
+  va_end (va_args);
+
+  if (!server_ostream) {
+    gchar *f = g_strconcat ("ok 1 # SKIP ", tmp, NULL);
+
+    g_free (tmp);
+    gst_validate_printf (NULL, "%s", f);
+    return;
+  }
+
+  jbuilder = json_builder_new ();
+  json_builder_begin_object (jbuilder);
+  json_builder_set_member_name (jbuilder, "type");
+  json_builder_add_string_value (jbuilder, "skip-test");
+  json_builder_set_member_name (jbuilder, "details");
+  json_builder_add_string_value (jbuilder, tmp);
+  json_builder_end_object (jbuilder);
+  g_free (tmp);
+
+  gst_validate_send (json_builder_get_root (jbuilder));
+  g_object_unref (jbuilder);
 }
 
 static void
