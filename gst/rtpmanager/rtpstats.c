@@ -622,10 +622,12 @@ rtp_twcc_stats_calculate_windowed_stats (RTPTWCCStats * stats)
     stats->avg_delta_of_delta = avg_delta_of_delta;
   }
 
-  stats->bitrate_sent =
-      gst_util_uint64_scale (bits_sent, GST_SECOND, local_duration);
-  stats->bitrate_recv =
-      gst_util_uint64_scale (bits_recv, GST_SECOND, remote_duration);
+  if (local_duration > 0)
+    stats->bitrate_sent =
+        gst_util_uint64_scale (bits_sent, GST_SECOND, local_duration);
+  if (remote_duration > 0)
+    stats->bitrate_recv =
+        gst_util_uint64_scale (bits_recv, GST_SECOND, remote_duration);
 
   GST_DEBUG ("Got stats: bits_sent: %u, bits_recv: %u, packets_sent = %u, "
       "packets_recv: %u, packetlost_pct = %f, sent_bitrate = %u, "
