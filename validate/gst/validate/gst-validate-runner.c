@@ -764,13 +764,15 @@ _do_report_synthesis (GstValidateRunner * runner)
     if (report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL) {
       criticals = g_list_append (criticals, report);
       gst_validate_report_print_details (report);
-    }
+    } else if (report->issue->flags & GST_VALIDATE_ISSUE_FLAGS_FULL_DETAILS)
+      gst_validate_report_print_details (report);
 
     for (tmp = g_list_next (reports); tmp; tmp = tmp->next) {
       report = (GstValidateReport *) tmp->data;
       gst_validate_report_print_detected_on (report);
 
-      if (report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL) {
+      if ((report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL) ||
+          (report->issue->flags & GST_VALIDATE_ISSUE_FLAGS_FULL_DETAILS)) {
         criticals = g_list_append (criticals, report);
         gst_validate_report_print_details (report);
       }

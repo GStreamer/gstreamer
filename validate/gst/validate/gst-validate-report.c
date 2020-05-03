@@ -463,11 +463,13 @@ gst_validate_report_load_issues (void)
       _
       ("Pad buffers push frequency is lower than the minimum required by the config"),
       NULL);
-  REGISTER_VALIDATE_ISSUE (WARNING, G_LOG_WARNING, _("We got a g_log warning"),
-      NULL);
-  REGISTER_VALIDATE_ISSUE (CRITICAL, G_LOG_CRITICAL,
-      "We got a g_log critical issue", NULL);
-  REGISTER_VALIDATE_ISSUE (ISSUE, G_LOG_ISSUE, "We got a g_log issue", NULL);
+  REGISTER_VALIDATE_ISSUE_FULL (WARNING, G_LOG_WARNING,
+      _("We got a g_log warning"), NULL, GST_VALIDATE_ISSUE_FLAGS_FULL_DETAILS);
+  REGISTER_VALIDATE_ISSUE_FULL (CRITICAL, G_LOG_CRITICAL,
+      "We got a g_log critical issue", NULL,
+      GST_VALIDATE_ISSUE_FLAGS_FULL_DETAILS);
+  REGISTER_VALIDATE_ISSUE_FULL (ISSUE, G_LOG_ISSUE, "We got a g_log issue",
+      NULL, GST_VALIDATE_ISSUE_FLAGS_FULL_DETAILS);
 
   REGISTER_VALIDATE_ISSUE (CRITICAL, PULL_RANGE_FROM_WRONG_THREAD,
       "gst_pad_pull_range called from wrong thread",
