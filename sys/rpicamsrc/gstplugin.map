@@ -1,3 +1,0 @@
-{ global:
-gst_plugin_desc;
-local: *; };

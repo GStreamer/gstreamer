@@ -23,14 +23,10 @@ gstrpicam_enum_types_c = custom_target('gstrpicam-enum-types.c',
   command : [glib_mkenums, '--template', meson.current_source_dir() + '/gstrpicam-enums-template.c', '@INPUT@'],
   capture : true)
 
-mapfile = 'gstplugin.map'
-
 library('gstrpicamsrc',
   rpicamsrc_sources, gstrpicam_enum_types_h, gstrpicam_enum_types_c,
   c_args : gst_rpicamsrc_args,
   include_directories : config_inc,
-  link_args : '-Wl,--version-script,@0@/@1@'.format(meson.current_source_dir(), mapfile),
-  link_depends : mapfile,
   dependencies : [gst_dep, gstbase_dep, gstvideo_dep] + mmal_deps,
   install : true,
   install_dir : plugins_install_dir)
