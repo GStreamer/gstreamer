@@ -33,6 +33,7 @@ from launcher import config
 from launcher.utils import printc, Colors, get_gst_build_valgrind_suppressions
 from launcher.main import setup_launcher_from_args
 from launcher.baseclasses import VALGRIND_TIMEOUT_FACTOR
+from launcher.apps.gstvalidate import GstValidateSimpleTest
 
 
 class MesonTest(Test):
@@ -350,6 +351,13 @@ class GstCheckTestsManager(MesonTestsManager):
             if name in all_sublaunchers_tests:
                 continue
             gst_tests = self.tests_info[test['cmd'][0]][1]
+            if os.path.basename(test['cmd'][0]) in \
+                    ['gst-tester-1.0', 'gst-tester-1.0.exe']:
+                fpath = test['cmd'][1]
+                self.add_test(GstValidateSimpleTest(fpath, name,
+                                                    self.options,
+                                                    self.reporter))
+                continue
             if not gst_tests:
                 child_env = self.get_child_env(name)
                 self.add_test(GstCheckTest(name, self.options, self.reporter, test,
