@@ -137,6 +137,10 @@ struct _GstH264DecoderPrivate
   GArray *ref_pic_list_b0;
   GArray *ref_pic_list_b1;
 
+  /* Reference picture lists, constructed for each slice */
+  GArray *ref_pic_list0;
+  GArray *ref_pic_list1;
+
   /* Cached array to handle pictures to be outputed */
   GArray *to_output;
 };
@@ -178,9 +182,8 @@ static gboolean gst_h264_decoder_finish_current_picture (GstH264Decoder * self);
 static gboolean gst_h264_decoder_finish_picture (GstH264Decoder * self,
     GstH264Picture * picture);
 static void gst_h264_decoder_prepare_ref_pic_lists (GstH264Decoder * self);
-static gboolean gst_h264_decoder_modify_ref_pic_lists (GstH264Decoder * self,
-    GPtrArray * ref_pic_l0, GPtrArray * ref_pic_l1);
 static void gst_h264_decoder_clear_ref_pic_lists (GstH264Decoder * self);
+static gboolean gst_h264_decoder_modify_ref_pic_lists (GstH264Decoder * self);
 
 static void
 gst_h264_decoder_class_init (GstH264DecoderClass * klass)
@@ -224,6 +227,11 @@ gst_h264_decoder_init (GstH264Decoder * self)
   g_array_set_clear_func (priv->ref_pic_list_b1,
       (GDestroyNotify) gst_h264_picture_clear);
 
+  priv->ref_pic_list0 = g_array_sized_new (FALSE, TRUE,
+      sizeof (GstH264Picture *), 32);
+  priv->ref_pic_list1 = g_array_sized_new (FALSE, TRUE,
+      sizeof (GstH264Picture *), 32);
+
   priv->to_output = g_array_sized_new (FALSE, TRUE,
       sizeof (GstH264Picture *), 16);
   g_array_set_clear_func (priv->to_output,
@@ -239,6 +247,8 @@ gst_h264_decoder_finalize (GObject * object)
   g_array_unref (priv->ref_pic_list_p0);
   g_array_unref (priv->ref_pic_list_b0);
   g_array_unref (priv->ref_pic_list_b1);
+  g_array_unref (priv->ref_pic_list0);
+  g_array_unref (priv->ref_pic_list1);
   g_array_unref (priv->to_output);
 }
 
@@ -1924,7 +1934,8 @@ gst_h264_decoder_decode_slice (GstH264Decoder * self)
 
   g_assert (klass->decode_slice);
 
-  ret = klass->decode_slice (self, picture, slice);
+  ret = klass->decode_slice (self, picture, slice, ref_pic_list0,
+      ref_pic_list1);
   if (!ret) {
     GST_WARNING_OBJECT (self,
         "Subclass didn't want to decode picture %p (frame_num %d, poc %d)",
@@ -2162,24 +2173,25 @@ pic_num_f (GstH264Decoder * self, const GstH264Picture * picture)
 /* shift elements on the |array| starting from |from| to |to|,
  * inclusive, one position to the right and insert pic at |from| */
 static void
-shift_right_and_insert (GPtrArray * array, gint from, gint to,
+shift_right_and_insert (GArray * array, gint from, gint to,
     GstH264Picture * picture)
 {
   g_return_if_fail (from <= to);
   g_return_if_fail (array && picture);
 
-  g_ptr_array_set_size (array, to + 2);
-  g_ptr_array_insert (array, from, picture);
+  g_array_set_size (array, to + 2);
+  g_array_insert_val (array, from, picture);
 }
 
 /* This can process either ref_pic_list0 or ref_pic_list1, depending
  * on the list argument. Set up pointers to proper list to be
  * processed here. */
 static gboolean
-modify_ref_pic_list (GstH264Decoder * self, int list, GPtrArray * ref_pic_listx)
+modify_ref_pic_list (GstH264Decoder * self, int list)
 {
   GstH264DecoderPrivate *priv = self->priv;
   GstH264Picture *picture = priv->current_picture;
+  GArray *ref_pic_listx;
   const GstH264SliceHdr *slice_hdr = &priv->current_slice.header;
   const GstH264RefPicListModification *list_mod;
   gboolean ref_pic_list_modification_flag_lX;
@@ -2194,12 +2206,14 @@ modify_ref_pic_list (GstH264Decoder * self, int list, GPtrArray * ref_pic_listx)
   GstH264Picture *pic;
 
   if (list == 0) {
+    ref_pic_listx = priv->ref_pic_list0;
     ref_pic_list_modification_flag_lX =
         slice_hdr->ref_pic_list_modification_flag_l0;
     num_ref_pic_list_modifications = slice_hdr->n_ref_pic_list_modification_l0;
     num_ref_idx_lX_active_minus1 = slice_hdr->num_ref_idx_l0_active_minus1;
     list_mod = slice_hdr->ref_pic_list_modification_l0;
   } else {
+    ref_pic_listx = priv->ref_pic_list1;
     ref_pic_list_modification_flag_lX =
         slice_hdr->ref_pic_list_modification_flag_l1;
     num_ref_pic_list_modifications = slice_hdr->n_ref_pic_list_modification_l1;
@@ -2216,7 +2230,7 @@ modify_ref_pic_list (GstH264Decoder * self, int list, GPtrArray * ref_pic_listx)
    * which must be handled by clients */
   g_assert (num_ref_idx_lX_active_minus1 >= 0);
   if (ref_pic_listx->len > num_ref_idx_lX_active_minus1 + 1)
-    g_ptr_array_set_size (ref_pic_listx, num_ref_idx_lX_active_minus1 + 1);
+    g_array_set_size (ref_pic_listx, num_ref_idx_lX_active_minus1 + 1);
 
   if (!ref_pic_list_modification_flag_lX)
     return TRUE;
@@ -2270,10 +2284,11 @@ modify_ref_pic_list (GstH264Decoder * self, int list, GPtrArray * ref_pic_listx)
 
         for (src = ref_idx_lx, dst = ref_idx_lx;
             src <= num_ref_idx_lX_active_minus1 + 1; src++) {
-          GstH264Picture *src_pic = g_ptr_array_index (ref_pic_listx, src);
+          GstH264Picture *src_pic =
+              g_array_index (ref_pic_listx, GstH264Picture *, src);
           gint src_pic_num_lx = src_pic ? pic_num_f (self, src_pic) : -1;
           if (src_pic_num_lx != pic_num_lx)
-            g_ptr_array_index (ref_pic_listx, dst++) = src_pic;
+            g_array_index (ref_pic_listx, GstH264Picture *, dst++) = src_pic;
         }
 
         break;
@@ -2295,10 +2310,11 @@ modify_ref_pic_list (GstH264Decoder * self, int list, GPtrArray * ref_pic_listx)
 
         for (src = ref_idx_lx, dst = ref_idx_lx;
             src <= num_ref_idx_lX_active_minus1 + 1; src++) {
-          GstH264Picture *src_pic = g_ptr_array_index (ref_pic_listx, src);
+          GstH264Picture *src_pic =
+              g_array_index (ref_pic_listx, GstH264Picture *, src);
           if (long_term_pic_num_f (self, src_pic) !=
               list_mod->value.long_term_pic_num)
-            g_ptr_array_index (ref_pic_listx, dst++) = src_pic;
+            g_array_index (ref_pic_listx, GstH264Picture *, dst++) = src_pic;
         }
 
         break;
@@ -2322,39 +2338,36 @@ modify_ref_pic_list (GstH264Decoder * self, int list, GPtrArray * ref_pic_listx)
    * temporarily made one element longer than the required final list.
    * Resize the list back to its required size. */
   if (ref_pic_listx->len > num_ref_idx_lX_active_minus1 + 1)
-    g_ptr_array_set_size (ref_pic_listx, num_ref_idx_lX_active_minus1 + 1);
+    g_array_set_size (ref_pic_listx, num_ref_idx_lX_active_minus1 + 1);
 
   return TRUE;
 }
 
 static void
-from_list_to_array (GPtrArray * array, GList * list)
+copy_pic_list_into (GArray * dest, GArray * src)
 {
-  GList *l;
+  gint i;
+  g_array_set_size (dest, 0);
 
-  for (l = list; l; l = g_list_next (l))
-    g_ptr_array_add (array, l->data);
+  for (i = 0; i < src->len; i++)
+    g_array_append_val (dest, g_array_index (src, gpointer, i));
 }
 
 static gboolean
-gst_h264_decoder_modify_ref_pic_lists (GstH264Decoder * self,
-    GPtrArray * ref_pic_list0, GPtrArray * ref_pic_list1)
+gst_h264_decoder_modify_ref_pic_lists (GstH264Decoder * self)
 {
   GstH264DecoderPrivate *priv = self->priv;
   GstH264SliceHdr *slice_hdr = &priv->current_slice.header;
 
-  g_ptr_array_set_size (ref_pic_list0, 0);
-  g_ptr_array_set_size (ref_pic_list1, 0);
-
   /* fill reference picture lists for B and S/SP slices */
   if (GST_H264_IS_P_SLICE (slice_hdr) || GST_H264_IS_SP_SLICE (slice_hdr)) {
-    from_list_to_array (ref_pic_list0, priv->ref_pic_list_p0);
-    return modify_ref_pic_list (self, 0, ref_pic_list0);
+    copy_pic_list_into (priv->ref_pic_list0, priv->ref_pic_list_p0);
+    return modify_ref_pic_list (self, 0);
   } else {
-    from_list_to_array (ref_pic_list0, priv->ref_pic_list_b0);
-    from_list_to_array (ref_pic_list1, priv->ref_pic_list_b1);
-    return modify_ref_pic_list (self, 0, ref_pic_list0)
-        && modify_ref_pic_list (self, 1, ref_pic_list1);
+    copy_pic_list_into (priv->ref_pic_list0, priv->ref_pic_list_b0);
+    copy_pic_list_into (priv->ref_pic_list1, priv->ref_pic_list_b1);
+    return modify_ref_pic_list (self, 0)
+        && modify_ref_pic_list (self, 1);
   }
 
   return TRUE;

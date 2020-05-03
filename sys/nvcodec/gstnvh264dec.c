@@ -162,7 +162,8 @@ static GstFlowReturn gst_nv_h264_dec_output_picture (GstH264Decoder *
 static gboolean gst_nv_h264_dec_start_picture (GstH264Decoder * decoder,
     GstH264Picture * picture, GstH264Slice * slice, GstH264Dpb * dpb);
 static gboolean gst_nv_h264_dec_decode_slice (GstH264Decoder * decoder,
-    GstH264Picture * picture, GstH264Slice * slice);
+    GstH264Picture * picture, GstH264Slice * slice, GArray * ref_pic_list0,
+    GArray * ref_pic_list1);
 static gboolean gst_nv_h264_dec_end_picture (GstH264Decoder * decoder,
     GstH264Picture * picture);
 
@@ -907,7 +908,8 @@ gst_nv_h264_dec_start_picture (GstH264Decoder * decoder,
 
 static gboolean
 gst_nv_h264_dec_decode_slice (GstH264Decoder * decoder,
-    GstH264Picture * picture, GstH264Slice * slice)
+    GstH264Picture * picture, GstH264Slice * slice, GArray * ref_pic_list0,
+    GArray * ref_pic_list1)
 {
   GstNvH264Dec *self = GST_NV_H264_DEC (decoder);
   gsize new_size;

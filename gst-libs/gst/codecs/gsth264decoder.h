@@ -69,7 +69,10 @@ struct _GstH264Decoder
  *                  Called per one #GstH264Picture to notify subclass to prepare
  *                  decoding process for the #GstH264Picture
  * @decode_slice:   Provides per slice data with parsed slice header and
- *                  required raw bitstream for subclass to decode it
+ *                  required raw bitstream for subclass to decode it.
+ *                  if gst_h264_decoder_set_process_ref_pic_lists() is called
+ *                  with %TRUE by the subclass, @ref_pic_list0 and @ref_pic_list1
+ *                  are non-%NULL.
  * @end_picture:    Optional.
  *                  Called per one #GstH264Picture to notify subclass to finish
  *                  decoding process for the #GstH264Picture
@@ -97,7 +100,9 @@ struct _GstH264DecoderClass
 
   gboolean      (*decode_slice)     (GstH264Decoder * decoder,
                                      GstH264Picture * picture,
-                                     GstH264Slice * slice);
+                                     GstH264Slice * slice,
+                                     GArray * ref_pic_list0,
+                                     GArray * ref_pic_list1);
 
   gboolean      (*end_picture)      (GstH264Decoder * decoder,
                                      GstH264Picture * picture);

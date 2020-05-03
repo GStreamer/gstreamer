@@ -789,7 +789,8 @@ fail:
 
 static gboolean
 gst_v4l2_codec_h264_dec_decode_slice (GstH264Decoder * decoder,
-    GstH264Picture * picture, GstH264Slice * slice)
+    GstH264Picture * picture, GstH264Slice * slice, GArray * ref_pic_list0,
+    GArray * ref_pic_list1)
 {
   GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
 

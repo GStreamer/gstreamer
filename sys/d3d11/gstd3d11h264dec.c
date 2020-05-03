@@ -157,7 +157,8 @@ static GstFlowReturn gst_d3d11_h264_dec_output_picture (GstH264Decoder *
 static gboolean gst_d3d11_h264_dec_start_picture (GstH264Decoder * decoder,
     GstH264Picture * picture, GstH264Slice * slice, GstH264Dpb * dpb);
 static gboolean gst_d3d11_h264_dec_decode_slice (GstH264Decoder * decoder,
-    GstH264Picture * picture, GstH264Slice * slice);
+    GstH264Picture * picture, GstH264Slice * slice, GArray * ref_pic_list0,
+    GArray * ref_pic_list1);
 static gboolean gst_d3d11_h264_dec_end_picture (GstH264Decoder * decoder,
     GstH264Picture * picture);
 
@@ -912,7 +913,8 @@ gst_d3d11_h264_dec_fill_picture_params (GstD3D11H264Dec * self,
 
 static gboolean
 gst_d3d11_h264_dec_decode_slice (GstH264Decoder * decoder,
-    GstH264Picture * picture, GstH264Slice * slice)
+    GstH264Picture * picture, GstH264Slice * slice, GArray * ref_pic_list0,
+    GArray * ref_pic_list1)
 {
   GstD3D11H264Dec *self = GST_D3D11_H264_DEC (decoder);
   GstH264SPS *sps;
