@@ -335,8 +335,8 @@ gst_v4l2_codec_vp8_dec_fill_frame_header (GstV4l2CodecVp8Dec * self,
       .bit_count = frame_hdr->rd_count
     },
 
-    .width = frame_hdr->width,
-    .height = frame_hdr->height,
+    .width = self->width,
+    .height = self->height,
 
     .horizontal_scale = frame_hdr->horiz_scale_code,
     .vertical_scale = frame_hdr->vert_scale_code,
