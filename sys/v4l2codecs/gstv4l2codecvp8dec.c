@@ -341,6 +341,7 @@ gst_v4l2_codec_vp8_dec_fill_frame_header (GstV4l2CodecVp8Dec * self,
     .horizontal_scale = frame_hdr->horiz_scale_code,
     .vertical_scale = frame_hdr->vert_scale_code,
 
+    .version = frame_hdr->version,
     .prob_skip_false = frame_hdr->prob_skip_false,
     .prob_intra = frame_hdr->prob_intra,
     .prob_last = frame_hdr->prob_last,
