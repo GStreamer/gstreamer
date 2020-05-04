@@ -275,8 +275,11 @@ class LauncherConfig(Loggable):
             self.dest = os.path.join(self.output_dir, "rendered")
         self.privatedir = os.path.join(self.output_dir, "launcher-private")
 
-        if not os.path.exists(self.dest):
-            os.makedirs(self.dest)
+        destparsed = urllib.parse.urlparse(self.dest)
+        if destparsed.scheme == "" or destparsed.scheme == "file":
+            os.makedirs(destparsed.path, exist_ok=True)
+            if destparsed.scheme == "":
+                self.dest = path2url(self.dest)
         if not os.path.exists(self.logsdir):
             os.makedirs(self.logsdir)
         if not os.path.exists(self.privatedir):
@@ -286,9 +289,6 @@ class LauncherConfig(Loggable):
             printc("Log redirection (%s) must be either 'stdout' or 'stderr'."
                    % self.redirect_logs, Colors.FAIL, True)
             return False
-
-        if urllib.parse.urlparse(self.dest).scheme == "":
-            self.dest = path2url(self.dest)
 
         if self.no_color:
             utils.desactivate_colors()
