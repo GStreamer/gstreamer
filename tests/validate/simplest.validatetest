@@ -1,0 +1,17 @@
+meta,
+    handles-states=true,
+    ignore-eos=true,
+    args = {
+        "fakesrc num-buffers=5 ! fakesink sync=true name=sink",
+    },
+    configs = {
+        "core, fail-on-missing-plugin=true",
+        "$(validateflow), pad=sink:sink, buffers-checksum=true",
+    }
+
+play
+crank-clock, expected-elapsed-time=0.0
+crank-clock, repeat=5, expected-elapsed-time=0.0
+
+stop, on-message=eos
+
