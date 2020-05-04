@@ -617,7 +617,26 @@ load_python_formatters (void)
   Py_XDECREF (code);
   Py_XDECREF (res);
   if (PyErr_Occurred ()) {
-    PyErr_Print ();
+    PyObject *exception_backtrace;
+    PyObject *exception_type;
+    PyObject *exception_value, *exception_value_repr, *exception_value_str;
+
+    PyErr_Fetch (&exception_type, &exception_value, &exception_backtrace);
+    PyErr_NormalizeException (&exception_type, &exception_value,
+        &exception_backtrace);
+
+    exception_value_repr = PyObject_Repr (exception_value);
+    exception_value_str =
+        PyUnicode_AsEncodedString (exception_value_repr, "utf-8", "Error ~");
+    GST_INFO ("Could not load OpenTimelineIO formatter: %s",
+        PyBytes_AS_STRING (exception_value_str));
+
+    Py_XDECREF (exception_type);
+    Py_XDECREF (exception_value);
+    Py_XDECREF (exception_backtrace);
+
+    Py_XDECREF (exception_value_repr);
+    Py_XDECREF (exception_value_str);
     PyErr_Clear ();
   }
 
