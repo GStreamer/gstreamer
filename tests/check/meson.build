@@ -180,7 +180,7 @@ foreach t : base_tests
     env.set('GST_PLUGIN_PATH_1_0', [meson.build_root()] + pluginsdirs)
     env.set('GST_REGISTRY', join_paths(meson.current_build_dir(), '@0@.registry'.format(test_name)))
     env.set('GST_PLUGIN_LOADING_WHITELIST', 'gstreamer', 'gst-plugins-base',
-      'gst-plugins-good', 'gst-plugins-ugly','gst-libav',
+      'gst-plugins-good', 'gst-plugins-ugly','gst-libav', 'libnice',
       'gst-plugins-bad@' + meson.build_root())
     test(test_name, exe, env: env, timeout: 3 * 60)
   endif
