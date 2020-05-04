@@ -4444,7 +4444,7 @@ static gboolean
 default_suspend (GstRTSPMedia * media)
 {
   GstRTSPMediaPrivate *priv = media->priv;
-  GstStateChangeReturn ret;
+  GstStateChangeReturn ret = GST_STATE_CHANGE_FAILURE;
 
   switch (priv->suspend_mode) {
     case GST_RTSP_SUSPEND_MODE_NONE:
@@ -4471,6 +4471,12 @@ default_suspend (GstRTSPMedia * media)
     default:
       break;
   }
+
+  /* If we use any suspend mode that changes the state then we must update
+   * expected_async_done, since we might not be doing an asyncronous state
+   * change anymore. */
+  if (ret != GST_STATE_CHANGE_FAILURE && ret != GST_STATE_CHANGE_ASYNC)
+    priv->expected_async_done = FALSE;
 
   return TRUE;
 
