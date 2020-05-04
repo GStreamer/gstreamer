@@ -71,7 +71,7 @@ struct _GstV4l2CodecVp8Dec
 
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstV4l2CodecVp8Dec,
     gst_v4l2_codec_vp8_dec, GST_TYPE_VP8_DECODER,
-    GST_DEBUG_CATEGORY_INIT (v4l2_vp8dec_debug, "v4l2codecs-h264dec", 0,
+    GST_DEBUG_CATEGORY_INIT (v4l2_vp8dec_debug, "v4l2codecs-vp8dec", 0,
         "V4L2 stateless VP8 decoder"));
 #define parent_class gst_v4l2_codec_vp8_dec_parent_class
 
