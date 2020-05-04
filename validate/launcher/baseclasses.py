@@ -2561,7 +2561,7 @@ class GstValidateMediaDescriptor(MediaDescriptor):
             if self._xml_path.endswith(ext):
                 return self._xml_path[:len(self._xml_path) - (len(ext) + 1)]
 
-        assert "Not reached" is None
+        assert "Not reached" == None  # noqa
 
     @staticmethod
     def new_from_uri(uri, verbose=False, include_frames=False, is_push=False, is_skipped=False):

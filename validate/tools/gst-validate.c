@@ -306,7 +306,7 @@ _register_playbin_actions (void)
 int main (int argc, gchar ** argv);
 
 static int
-run_test_from_file (const gchar * testfile, gboolean use_fakesinks)
+run_test_from_file (gchar * testfile, gboolean use_fakesinks)
 {
   gint argc, ret;
   gchar **args, **argv;
@@ -328,8 +328,8 @@ run_test_from_file (const gchar * testfile, gboolean use_fakesinks)
 
   g_strfreev (args);
   g_free (argv);
+  g_free (testfile);
   return ret;
-
 }
 
 int
@@ -427,6 +427,7 @@ main (int argc, gchar ** argv)
     if (scenario)
       gst_validate_abort
           ("Can not specify scenario and testfile at the same time");
+    g_option_context_free (ctx);
     return run_test_from_file (testfile, use_fakesinks);
   }
 

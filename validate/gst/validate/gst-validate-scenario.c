@@ -553,8 +553,6 @@ gst_validate_action_type_new (void)
 
   gst_validate_action_type_init (type);
 
-  /* action types are never freed */
-  GST_MINI_OBJECT_FLAG_SET (type, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
   return type;
 }
 
@@ -3304,6 +3302,7 @@ gst_validate_action_default_prepare_func (GstValidateAction * action)
       action->repeat, NULL);
 
 done:
+  gst_clear_mini_object ((GstMiniObject **) & type);
   if (scenario)
     gst_object_unref (scenario);
 
@@ -4150,6 +4149,8 @@ gst_validate_scenario_finalize (GObject * object)
   g_assert (g_main_context_acquire (g_main_context_default ()));
   g_main_context_release (g_main_context_default ());
 
+  g_list_free_full (priv->seeks,
+      (GDestroyNotify) gst_validate_seek_information_free);
   g_list_free_full (priv->actions, (GDestroyNotify) gst_mini_object_unref);
   g_list_free_full (priv->interlaced_actions,
       (GDestroyNotify) gst_mini_object_unref);

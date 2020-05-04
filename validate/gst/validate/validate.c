@@ -151,6 +151,7 @@ get_test_file_meta (void)
   return NULL;
 }
 
+/* Takes ownership of @structures */
 static GList *
 get_config_from_structures (GList * structures, GstStructure * local_vars,
     const gchar * suffix)
@@ -169,6 +170,7 @@ get_config_from_structures (GList * structures, GstStructure * local_vars,
         }
         gst_structure_foreach (structure,
             (GstStructureForeachFunc) _set_vars_func, local_vars);
+        gst_structure_free (structure);
       } else {
         gst_validate_structure_resolve_variables (structure, local_vars);
         result = g_list_append (result, structure);
@@ -181,6 +183,7 @@ get_config_from_structures (GList * structures, GstStructure * local_vars,
       gst_structure_free (structure);
     }
   }
+  g_list_free (structures);
 
   return result;
 }
@@ -228,7 +231,6 @@ create_config (const gchar * config, const gchar * suffix)
   result = get_config_from_structures (structures, local_vars, suffix);
 
   loaded_globals = TRUE;
-  g_list_free (structures);
   gst_structure_free (local_vars);
   return result;
 }
@@ -271,6 +273,7 @@ gst_validate_get_testfile_configs (const gchar * suffix)
   }
 
   g_free (filename);
+  g_free (debug);
   g_strfreev (config_strs);
 
   return get_config_from_structures (res, NULL, suffix);
