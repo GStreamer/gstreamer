@@ -381,6 +381,11 @@ gst_v4l2_codec_vp8_dec_fill_references (GstV4l2CodecVp8Dec * self)
   if (decoder->alt_ref_picture)
     self->frame_header.alt_frame_ts =
         decoder->alt_ref_picture->system_frame_number * 1000;
+
+  GST_DEBUG_OBJECT (self, "Passing references: last %u, golden %u, alt %u",
+      (guint32) self->frame_header.last_frame_ts / 1000,
+      (guint32) self->frame_header.golden_frame_ts / 1000,
+      (guint32) self->frame_header.alt_frame_ts / 1000);
 }
 
 static gboolean
