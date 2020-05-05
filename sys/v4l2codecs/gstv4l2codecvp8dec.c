@@ -264,7 +264,7 @@ gst_v4l2_codec_vp8_dec_fill_segment_header (struct v4l2_vp8_segment_header
     (segmentation->segmentation_enabled ? V4L2_VP8_SEGMENT_HEADER_FLAG_ENABLED : 0) |
     (segmentation->update_mb_segmentation_map ? V4L2_VP8_SEGMENT_HEADER_FLAG_UPDATE_MAP : 0) |
     (segmentation->update_segment_feature_data ? V4L2_VP8_SEGMENT_HEADER_FLAG_UPDATE_FEATURE_DATA : 0) |
-    (segmentation->segment_feature_mode == 1 ? V4L2_VP8_SEGMENT_HEADER_FLAG_DELTA_VALUE_MODE : 0);
+    (segmentation->segment_feature_mode ? 0 : V4L2_VP8_SEGMENT_HEADER_FLAG_DELTA_VALUE_MODE);
   /* *INDENT-ON* */
 
   for (i = 0; i < 4; i++) {
