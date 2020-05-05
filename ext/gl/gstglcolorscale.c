@@ -22,21 +22,20 @@
  * SECTION:element-glcolorscale
  * @title: glcolorscale
  *
- * video frame scaling and colorspace conversion.
- *
- * ## Scaling and Color space conversion
- *
- * Equivalent to glupload ! gldownload.
+ * glcolorscale implements scaling of GL video frames, equivalent to
+ * #videoscale. The initial implementation also performed colorspace
+ * conversion, hence the name of the element, but support has since
+ * been removed. You should use #glcolorconvert for that purpose.
  *
  * ## Examples
- * |[
- * gst-launch-1.0 -v videotestsrc ! video/x-raw ! glcolorscale ! ximagesink
- * ]| A pipeline to test colorspace conversion.
- * FBO is required.
-  |[
- * gst-launch-1.0 -v videotestsrc ! video/x-raw, width=640, height=480, format=AYUV ! glcolorscale ! \
- *   video/x-raw, width=320, height=240, format=YV12 ! videoconvert ! autovideosink
- * ]| A pipeline to test hardware scaling and colorspace conversion.
+ *
+ * ``` shell
+ * gst-launch-1.0 videotestsrc ! video/x-raw, width=640, height=480 ! glupload ! \
+ * glcolorscale ! glcolorconvert ! gldownload ! video/x-raw, width=320, height=240 ! \
+ * autovideosink
+ * ```
+ *
+ * A pipeline to test hardware scaling and colorspace conversion.
  * FBO and GLSL are required.
  *
  */
