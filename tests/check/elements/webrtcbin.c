@@ -1781,6 +1781,7 @@ have_data_channel_create_data_channel (struct test_webrtc *t,
       &another);
   g_assert_nonnull (another);
   t->data_channel_data = another;
+  t->data_channel_notify = (GDestroyNotify) g_object_unref;
   g_signal_connect (another, "on-error",
       G_CALLBACK (on_channel_error_not_reached), NULL);
 }
