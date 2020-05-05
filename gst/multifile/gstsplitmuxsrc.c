@@ -737,7 +737,11 @@ gst_splitmux_pad_loop (GstPad * pad)
 
   GST_OBJECT_LOCK (splitpad);
   if (splitpad->part_pad == NULL) {
+    GST_DEBUG_OBJECT (splitmux,
+        "Pausing task because part reader is not present");
     GST_OBJECT_UNLOCK (splitpad);
+    gst_pad_pause_task (pad);
+    gst_object_unref (splitmux);
     return;
   }
   part_pad = gst_object_ref (splitpad->part_pad);
