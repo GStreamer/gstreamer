@@ -3811,7 +3811,22 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
   }
 
   if (new_dir != prev_dir) {
-    GST_DEBUG_OBJECT (webrtc, "transceiver direction change");
+    gchar *prev_dir_s, *new_dir_s;
+
+    prev_dir_s =
+        _enum_value_to_string (GST_TYPE_WEBRTC_RTP_TRANSCEIVER_DIRECTION,
+        prev_dir);
+    new_dir_s =
+        _enum_value_to_string (GST_TYPE_WEBRTC_RTP_TRANSCEIVER_DIRECTION,
+        new_dir);
+
+    GST_DEBUG_OBJECT (webrtc, "transceiver %" GST_PTR_FORMAT
+        " direction change from %s to %s", rtp_trans, prev_dir_s, new_dir_s);
+
+    g_free (prev_dir_s);
+    prev_dir_s = NULL;
+    g_free (new_dir_s);
+    new_dir_s = NULL;
 
     if (new_dir == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_INACTIVE) {
       GstWebRTCBinPad *pad;
@@ -3940,7 +3955,7 @@ _generate_data_channel_id (GstWebRTCBin * webrtc)
     }
 
     /* client must generate even ids, server must generate odd ids */
-    if (new_id % 2 == ! !is_client)
+    if (new_id % 2 == !!is_client)
       continue;
 
     channel = _find_data_channel_for_id (webrtc, new_id);
@@ -4395,24 +4410,55 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
     /* media modifications */
     _update_transceivers_from_sdp (webrtc, sd->source, sd->sdp);
 
-    for (tmp = webrtc->priv->pending_sink_transceivers; tmp; tmp = tmp->next) {
+    for (tmp = webrtc->priv->pending_sink_transceivers; tmp;) {
       GstWebRTCBinPad *pad = GST_WEBRTC_BIN_PAD (tmp->data);
+      GstWebRTCRTPTransceiverDirection new_dir;
+      GList *old = tmp;
       const GstSDPMedia *media;
+
+      if (!pad->received_caps) {
+        GST_LOG_OBJECT (pad, "has not received any caps yet. Skipping.");
+        tmp = tmp->next;
+        continue;
+      }
+
+      if (pad->mlineindex >= gst_sdp_message_medias_len (sd->sdp->sdp)) {
+        GST_DEBUG_OBJECT (pad, "not mentioned in this description. Skipping");
+        tmp = tmp->next;
+        continue;
+      }
 
       media = gst_sdp_message_get_media (sd->sdp->sdp, pad->mlineindex);
       /* skip rejected media */
-      /* FIXME: arrange for an appropriate flow return */
-      if (gst_sdp_media_get_port (media) == 0)
+      if (gst_sdp_media_get_port (media) == 0) {
+        /* FIXME: arrange for an appropriate flow return */
+        GST_FIXME_OBJECT (pad, "Media has been rejected.  Need to arrange for "
+            "a more correct flow return.");
+        tmp = tmp->next;
         continue;
+      }
 
+      new_dir = pad->trans->direction;
+      if (new_dir != GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY &&
+          new_dir != GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDRECV) {
+        GST_LOG_OBJECT (pad, "transceiver %" GST_PTR_FORMAT " is not sending "
+            "data at the moment. Not connecting input stream yet", pad->trans);
+        tmp = tmp->next;
+        continue;
+      }
+
+      GST_LOG_OBJECT (pad, "Connecting input stream to rtpbin with "
+          "transceiver %" GST_PTR_FORMAT " and caps %" GST_PTR_FORMAT,
+          pad->trans, pad->received_caps);
       _connect_input_stream (webrtc, pad);
       gst_pad_remove_probe (GST_PAD (pad), pad->block_id);
       pad->block_id = 0;
-    }
 
-    g_list_free_full (webrtc->priv->pending_sink_transceivers,
-        (GDestroyNotify) gst_object_unref);
-    webrtc->priv->pending_sink_transceivers = NULL;
+      tmp = tmp->next;
+      gst_object_unref (old->data);
+      webrtc->priv->pending_sink_transceivers =
+          g_list_delete_link (webrtc->priv->pending_sink_transceivers, old);
+    }
   }
 
   for (i = 0; i < gst_sdp_message_medias_len (sd->sdp->sdp); i++) {
@@ -5640,6 +5686,9 @@ gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
           GST_WEBRTC_RTP_TRANSCEIVER (_create_webrtc_transceiver (webrtc,
               GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDRECV, serial));
       GST_LOG_OBJECT (webrtc, "Created new transceiver %" GST_PTR_FORMAT
+          " for mline %u", trans, serial);
+    } else {
+      GST_LOG_OBJECT (webrtc, "Using existing transceiver %" GST_PTR_FORMAT
           " for mline %u", trans, serial);
     }
     pad->trans = gst_object_ref (trans);
