@@ -156,16 +156,13 @@ _oce_transform_internal_caps (GstGLFilter * filter,
     for (i = 0; i < n; i++) {
       GstCapsFeatures *feat = gst_caps_get_features (removed, i);
 
-      if (feat) {
+      if (feat && gst_caps_features_contains (feat,
+              GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION)) {
         feat = gst_caps_features_copy (feat);
-
-        if (gst_caps_features_contains (feat,
-                GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION)) {
-          /* prefer the passthrough case */
-          gst_caps_features_remove (feat,
-              GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
-          gst_caps_set_features (removed, i, feat);
-        }
+        /* prefer the passthrough case */
+        gst_caps_features_remove (feat,
+            GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
+        gst_caps_set_features (removed, i, feat);
       }
     }
 
