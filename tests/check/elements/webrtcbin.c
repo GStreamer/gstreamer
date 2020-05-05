@@ -499,6 +499,13 @@ test_webrtc_new (void)
   g_mutex_init (&ret->lock);
   g_cond_init (&ret->cond);
 
+  ret->thread = g_thread_new ("test-webrtc", (GThreadFunc) _bus_thread, ret);
+
+  g_mutex_lock (&ret->lock);
+  while (!ret->loop)
+    g_cond_wait (&ret->cond, &ret->lock);
+  g_mutex_unlock (&ret->lock);
+
   ret->bus1 = gst_bus_new ();
   ret->bus2 = gst_bus_new ();
   gst_bus_add_watch (ret->bus1, (GstBusFunc) _bus_watch, ret);
@@ -536,13 +543,6 @@ test_webrtc_new (void)
       G_CALLBACK (_broadcast), ret);
   g_signal_connect_swapped (ret->webrtc2, "notify::ice-connection-state",
       G_CALLBACK (_broadcast), ret);
-
-  ret->thread = g_thread_new ("test-webrtc", (GThreadFunc) _bus_thread, ret);
-
-  g_mutex_lock (&ret->lock);
-  while (!ret->loop)
-    g_cond_wait (&ret->cond, &ret->lock);
-  g_mutex_unlock (&ret->lock);
 
   return ret;
 }
