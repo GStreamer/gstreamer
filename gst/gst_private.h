@@ -92,6 +92,10 @@ struct _GstPluginPrivate {
   GstStructure *cache_data;
 };
 
+/* Private function for getting plugin features directly */
+GList *
+_priv_plugin_get_features(GstRegistry *registry, GstPlugin *plugin);
+
 /* Needed by GstMeta (to access meta seq) and GstBuffer (create/free/iterate) */
 typedef struct _GstMetaItem GstMetaItem;
 struct _GstMetaItem {

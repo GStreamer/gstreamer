@@ -1429,6 +1429,24 @@ gst_registry_get_feature_list_by_plugin (GstRegistry * registry,
       _gst_plugin_feature_filter_plugin_name, FALSE, (gpointer) name);
 }
 
+/* Private function for getting plugin features directly */
+GList *
+_priv_plugin_get_features (GstRegistry * registry, GstPlugin * plugin)
+{
+  GList *res = NULL;
+  GList *walk;
+
+  GST_OBJECT_LOCK (registry);
+  for (walk = registry->priv->features; walk; walk = walk->next) {
+    GstPluginFeature *feat = (GstPluginFeature *) walk->data;
+    if (feat->plugin == plugin)
+      res = g_list_prepend (res, gst_object_ref (feat));
+  }
+  GST_OBJECT_UNLOCK (registry);
+
+  return res;
+}
+
 /* Unref and delete the default registry */
 void
 _priv_gst_registry_cleanup (void)
