@@ -318,7 +318,7 @@
                 },
                 "properties": {
                     "high-percent": {
-                        "blurb": "High threshold for buffering to finish. Only used if use-buffering is True",
+                        "blurb": "High threshold for buffering to finish. Emits GST_MESSAGE_BUFFERING with a value of 100%%",
                         "construct": false,
                         "construct-only": false,
                         "default": "99",
@@ -328,7 +328,7 @@
                         "writable": true
                     },
                     "low-percent": {
-                        "blurb": "Low threshold for buffering to start. Only used if use-buffering is True",
+                        "blurb": "Low threshold for buffering to start. Emits GST_MESSAGE_BUFFERING with a value of 0%%",
                         "construct": false,
                         "construct-only": false,
                         "default": "10",
@@ -539,7 +539,7 @@
                         "writable": true
                     },
                     "processing-deadline": {
-                        "blurb": "Maximum processing deadline in nanoseconds",
+                        "blurb": "Maximum processing time for a buffer in nanoseconds",
                         "construct": false,
                         "construct-only": false,
                         "default": "20000000",
@@ -672,14 +672,16 @@
                             "GstBuffer",
                             "GstPad"
                         ],
-                        "retval": "void"
+                        "retval": "void",
+                        "when": "last"
                     },
                     "preroll-handoff": {
                         "args": [
                             "GstBuffer",
                             "GstPad"
                         ],
-                        "retval": "void"
+                        "retval": "void",
+                        "when": "last"
                     }
                 }
             },
@@ -999,7 +1001,8 @@
                             "GstBuffer",
                             "GstPad"
                         ],
-                        "retval": "void"
+                        "retval": "void",
+                        "when": "last"
                     }
                 }
             },
@@ -1103,7 +1106,7 @@
                         "writable": true
                     },
                     "processing-deadline": {
-                        "blurb": "Maximum processing deadline in nanoseconds",
+                        "blurb": "Maximum processing time for a buffer in nanoseconds",
                         "construct": false,
                         "construct-only": false,
                         "default": "20000000",
@@ -1430,7 +1433,7 @@
                         "writable": true
                     },
                     "processing-deadline": {
-                        "blurb": "Maximum processing deadline in nanoseconds",
+                        "blurb": "Maximum processing time for a buffer in nanoseconds",
                         "construct": false,
                         "construct-only": false,
                         "default": "20000000",
@@ -1898,7 +1901,8 @@
                         "args": [
                             "GstBuffer"
                         ],
-                        "retval": "void"
+                        "retval": "void",
+                        "when": "last"
                     }
                 }
             },
@@ -2068,6 +2072,36 @@
                                 "GObject"
                             ],
                             "properties": {
+                                "current-level-buffers": {
+                                    "blurb": "Current level buffers",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "0",
+                                    "max": "-1",
+                                    "min": "0",
+                                    "type-name": "guint",
+                                    "writable": false
+                                },
+                                "current-level-bytes": {
+                                    "blurb": "Current level bytes",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "0",
+                                    "max": "-1",
+                                    "min": "0",
+                                    "type-name": "guint",
+                                    "writable": false
+                                },
+                                "current-level-time": {
+                                    "blurb": "Current level time",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "0",
+                                    "max": "18446744073709551615",
+                                    "min": "0",
+                                    "type-name": "guint64",
+                                    "writable": false
+                                },
                                 "group-id": {
                                     "blurb": "Group to which this pad belongs",
                                     "construct": false,
@@ -2094,6 +2128,36 @@
                                 "GObject"
                             ],
                             "properties": {
+                                "current-level-buffers": {
+                                    "blurb": "Current level buffers",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "0",
+                                    "max": "-1",
+                                    "min": "0",
+                                    "type-name": "guint",
+                                    "writable": false
+                                },
+                                "current-level-bytes": {
+                                    "blurb": "Current level bytes",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "0",
+                                    "max": "-1",
+                                    "min": "0",
+                                    "type-name": "guint",
+                                    "writable": false
+                                },
+                                "current-level-time": {
+                                    "blurb": "Current level time",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "0",
+                                    "max": "18446744073709551615",
+                                    "min": "0",
+                                    "type-name": "guint64",
+                                    "writable": false
+                                },
                                 "group-id": {
                                     "blurb": "Group to which this pad belongs",
                                     "construct": false,
@@ -2235,6 +2299,14 @@
                         "type-name": "GstObject",
                         "writable": true
                     },
+                    "stats": {
+                        "blurb": "Multiqueue Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-multi-queue-stats;",
+                        "type-name": "GstStructure",
+                        "writable": false
+                    },
                     "sync-by-running-time": {
                         "blurb": "Synchronize deactivated or not-linked streams by running time",
                         "construct": false,
@@ -2254,7 +2326,7 @@
                         "writable": true
                     },
                     "use-buffering": {
-                        "blurb": "Emit GST_MESSAGE_BUFFERING based on low-/high-percent thresholds",
+                        "blurb": "Emit GST_MESSAGE_BUFFERING based on low-/high-percent thresholds (0%% = low-watermark, 100%% = high-watermark)",
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
@@ -2274,27 +2346,32 @@
                 "signals": {
                     "no-more-pads": {
                         "args": [],
-                        "retval": "void"
+                        "retval": "void",
+                        "when": "last"
                     },
                     "overrun": {
                         "args": [],
-                        "retval": "void"
+                        "retval": "void",
+                        "when": "first"
                     },
                     "pad-added": {
                         "args": [
                             "GstPad"
                         ],
-                        "retval": "void"
+                        "retval": "void",
+                        "when": "last"
                     },
                     "pad-removed": {
                         "args": [
                             "GstPad"
                         ],
-                        "retval": "void"
+                        "retval": "void",
+                        "when": "last"
                     },
                     "underrun": {
                         "args": [],
-                        "retval": "void"
+                        "retval": "void",
+                        "when": "first"
                     }
                 }
             },
@@ -2559,19 +2636,23 @@
                 "signals": {
                     "overrun": {
                         "args": [],
-                        "retval": "void"
+                        "retval": "void",
+                        "when": "first"
                     },
                     "pushing": {
                         "args": [],
-                        "retval": "void"
+                        "retval": "void",
+                        "when": "first"
                     },
                     "running": {
                         "args": [],
-                        "retval": "void"
+                        "retval": "void",
+                        "when": "first"
                     },
                     "underrun": {
                         "args": [],
-                        "retval": "void"
+                        "retval": "void",
+                        "when": "first"
                     }
                 }
             },
@@ -2778,7 +2859,7 @@
                         "writable": true
                     },
                     "use-buffering": {
-                        "blurb": "Emit GST_MESSAGE_BUFFERING based on low-/high-percent thresholds",
+                        "blurb": "Emit GST_MESSAGE_BUFFERING based on low-/high-percent thresholds (0%% = low-watermark, 100%% = high-watermark)",
                         "construct": false,
                         "construct-only": false,
                         "default": "false",
@@ -2856,19 +2937,22 @@
                 "signals": {
                     "no-more-pads": {
                         "args": [],
-                        "retval": "void"
+                        "retval": "void",
+                        "when": "last"
                     },
                     "pad-added": {
                         "args": [
                             "GstPad"
                         ],
-                        "retval": "void"
+                        "retval": "void",
+                        "when": "last"
                     },
                     "pad-removed": {
                         "args": [
                             "GstPad"
                         ],
-                        "retval": "void"
+                        "retval": "void",
+                        "when": "last"
                     }
                 }
             },
@@ -3057,7 +3141,8 @@
                             "guint",
                             "GstCaps"
                         ],
-                        "retval": "void"
+                        "retval": "void",
+                        "when": "last"
                     }
                 }
             },

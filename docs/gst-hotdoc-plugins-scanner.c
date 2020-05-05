@@ -274,6 +274,25 @@ _add_signals (GString * json, GObject * object)
       }
       g_string_append_c (json, ']');
 
+      if (query->signal_flags & G_SIGNAL_RUN_FIRST)
+        g_string_append (json, ",\"when\": \"first\"");
+      else if (query->signal_flags & G_SIGNAL_RUN_LAST)
+        g_string_append (json, ",\"when\": \"last\"");
+      else if (query->signal_flags & G_SIGNAL_RUN_CLEANUP)
+        g_string_append (json, ",\"when\": \"cleanup\"");
+
+      if (query->signal_flags & G_SIGNAL_NO_RECURSE)
+        g_string_append (json, ",\"no-recurse\": true");
+
+      if (query->signal_flags & G_SIGNAL_DETAILED)
+        g_string_append (json, ",\"detailed\": true");
+
+      if (query->signal_flags & G_SIGNAL_ACTION)
+        g_string_append (json, ",\"action\": true");
+
+      if (query->signal_flags & G_SIGNAL_NO_HOOKS)
+        g_string_append (json, ",\"no-hooks\": true");
+
       if (g_type_is_a (query->return_type, G_TYPE_ENUM)) {
         g_string_append_c (json, ',');
         _serialize_enum (json, "return-values", query->return_type, NULL);
