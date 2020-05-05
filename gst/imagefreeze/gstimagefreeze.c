@@ -190,14 +190,13 @@ gst_image_freeze_reset (GstImageFreeze * self)
 
   gst_segment_init (&self->segment, GST_FORMAT_TIME);
   self->need_segment = TRUE;
+  self->flushing = TRUE;
 
   self->negotiated_framerate = FALSE;
   self->fps_n = self->fps_d = 0;
   self->offset = 0;
   self->seqnum = 0;
   g_mutex_unlock (&self->lock);
-
-  g_atomic_int_set (&self->seeking, 0);
 }
 
 static gboolean
@@ -659,7 +658,10 @@ gst_image_freeze_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       if (flush) {
         GstEvent *e;
 
-        g_atomic_int_set (&self->seeking, 1);
+        g_mutex_lock (&self->lock);
+        self->flushing = TRUE;
+        g_mutex_unlock (&self->lock);
+
         e = gst_event_new_flush_start ();
         gst_event_set_seqnum (e, seqnum);
         gst_pad_push_event (self->srcpad, e);
@@ -677,6 +679,7 @@ gst_image_freeze_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       last_stop = self->segment.position;
 
       start_task = self->buffer != NULL;
+      self->flushing = FALSE;
       g_mutex_unlock (&self->lock);
 
       if (flush) {
@@ -685,7 +688,6 @@ gst_image_freeze_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         e = gst_event_new_flush_stop (TRUE);
         gst_event_set_seqnum (e, seqnum);
         gst_pad_push_event (self->srcpad, e);
-        g_atomic_int_set (&self->seeking, 0);
       }
 
       if (flags & GST_SEEK_FLAG_SEGMENT) {
@@ -715,8 +717,18 @@ gst_image_freeze_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
     }
     case GST_EVENT_FLUSH_START:
+      g_mutex_lock (&self->lock);
+      self->flushing = TRUE;
+      g_mutex_unlock (&self->lock);
+      ret = gst_pad_push_event (self->sinkpad, event);
+      break;
+    case GST_EVENT_FLUSH_STOP:
       gst_image_freeze_reset (self);
-      /* fall through */
+      g_mutex_lock (&self->lock);
+      self->flushing = FALSE;
+      g_mutex_unlock (&self->lock);
+      ret = gst_pad_push_event (self->sinkpad, event);
+      break;
     default:
       ret = gst_pad_push_event (self->sinkpad, event);
       break;
@@ -815,18 +827,31 @@ gst_image_freeze_src_loop (GstPad * pad)
   gboolean first = FALSE;
 
   g_mutex_lock (&self->lock);
-  if (!self->buffer) {
+  if (self->flushing) {
+    GST_DEBUG_OBJECT (pad, "Flushing");
+    flow_ret = GST_FLOW_FLUSHING;
+    g_mutex_unlock (&self->lock);
+    goto pause_task;
+  } else if (!self->buffer) {
     GST_ERROR_OBJECT (pad, "Have no buffer yet");
     flow_ret = GST_FLOW_ERROR;
     g_mutex_unlock (&self->lock);
     goto pause_task;
   }
 
+  g_assert (self->buffer);
+
+  /* Take a new reference of the buffer here so we're guaranteed to have one
+   * in all the following code even if it disappears while we temporarily
+   * unlock the mutex */
+  buffer = gst_buffer_ref (self->buffer);
+
   if (gst_pad_check_reconfigure (self->srcpad)) {
     GstCaps *buffer_caps = gst_caps_ref (self->buffer_caps);
     g_mutex_unlock (&self->lock);
     if (!gst_image_freeze_sink_setcaps (self, buffer_caps)) {
       gst_caps_unref (buffer_caps);
+      gst_buffer_unref (buffer);
       gst_pad_mark_reconfigure (self->srcpad);
       flow_ret = GST_FLOW_NOT_NEGOTIATED;
       goto pause_task;
@@ -840,13 +865,14 @@ gst_image_freeze_src_loop (GstPad * pad)
     GST_DEBUG_OBJECT (pad, "Buffers left %d", self->num_buffers_left);
     if (self->num_buffers_left == 0) {
       flow_ret = GST_FLOW_EOS;
+      gst_buffer_unref (buffer);
       g_mutex_unlock (&self->lock);
       goto pause_task;
     } else {
       self->num_buffers_left--;
     }
   }
-  buffer = gst_buffer_copy (self->buffer);
+  buffer = gst_buffer_make_writable (buffer);
   g_mutex_unlock (&self->lock);
 
   if (self->need_segment) {
@@ -1001,6 +1027,9 @@ gst_image_freeze_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_image_freeze_reset (self);
+      g_mutex_lock (&self->lock);
+      self->flushing = FALSE;
+      g_mutex_unlock (&self->lock);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_pad_stop_task (self->srcpad);
