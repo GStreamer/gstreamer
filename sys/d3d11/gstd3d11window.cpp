@@ -253,6 +253,11 @@ gst_d3d11_window_release_resources (GstD3D11Device * device,
     window->rtv = NULL;
   }
 
+  if (window->pov) {
+    window->pov->Release ();
+    window->pov = NULL;
+  }
+
   if (window->swap_chain) {
     window->swap_chain->Release ();
     window->swap_chain = NULL;
