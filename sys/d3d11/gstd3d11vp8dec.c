@@ -596,7 +596,6 @@ gst_d3d11_vp8_dec_copy_segmentation_params (GstD3D11Vp8Dec * self,
   params->stVP8Segments.update_mb_segmentation_data =
       seg->update_segment_feature_data;
   params->stVP8Segments.mb_segement_abs_delta = seg->segment_feature_mode;
-  params->stVP8Segments.mb_segement_abs_delta = seg->segment_feature_mode;
 
   for (i = 0; i < 4; i++) {
     params->stVP8Segments.segment_feature_data[0][i] =
