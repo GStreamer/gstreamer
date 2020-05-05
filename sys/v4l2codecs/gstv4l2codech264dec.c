@@ -75,6 +75,9 @@ struct _GstV4l2CodecH264Dec
   struct v4l2_ctrl_h264_decode_params decode_params;
   GArray *slice_params;
 
+  enum v4l2_mpeg_video_h264_decode_mode decode_mode;
+  enum v4l2_mpeg_video_h264_start_code start_code;
+
   GstMemory *bitstream;
   GstMapInfo bitstream_map;
 };
@@ -86,9 +89,42 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstV4l2CodecH264Dec,
 #define parent_class gst_v4l2_codec_h264_dec_parent_class
 
 static gboolean
+is_frame_based (GstV4l2CodecH264Dec * self)
+{
+  return self->decode_mode == V4L2_MPEG_VIDEO_H264_DECODE_MODE_FRAME_BASED;
+}
+
+static gboolean
+is_slice_based (GstV4l2CodecH264Dec * self)
+{
+  return self->decode_mode == V4L2_MPEG_VIDEO_H264_DECODE_MODE_SLICE_BASED;
+}
+
+static gboolean
+needs_start_codes (GstV4l2CodecH264Dec * self)
+{
+  return self->start_code == V4L2_MPEG_VIDEO_H264_START_CODE_ANNEX_B;
+}
+
+
+static gboolean
 gst_v4l2_codec_h264_dec_open (GstVideoDecoder * decoder)
 {
   GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
+  /* *INDENT-OFF* */
+  struct v4l2_ext_control control[] = {
+    {
+      .id = V4L2_CID_MPEG_VIDEO_H264_DECODE_MODE,
+      .ptr = &self->decode_mode,
+      .size = sizeof (self->decode_mode),
+    },
+    {
+      .id = V4L2_CID_MPEG_VIDEO_H264_START_CODE,
+      .ptr = &self->start_code,
+      .size = sizeof (self->start_code),
+    },
+  };
+  /* *INDENT-ON* */
 
   if (!gst_v4l2_decoder_open (self->decoder)) {
     GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ_WRITE,
@@ -96,6 +132,20 @@ gst_v4l2_codec_h264_dec_open (GstVideoDecoder * decoder)
         ("gst_v4l2_decoder_open() failed: %s", g_strerror (errno)));
     return FALSE;
   }
+
+  if (!gst_v4l2_decoder_get_controls (self->decoder, control,
+          G_N_ELEMENTS (control))) {
+    GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ_WRITE,
+        ("Driver did not report framing and start code method."),
+        ("gst_v4l2_decoder_get_controls() failed: %s", g_strerror (errno)));
+    return FALSE;
+  }
+
+  GST_INFO_OBJECT (self, "Opened H264 %s decoder %s",
+      is_frame_based (self) ? "frame based" : "slice based",
+      needs_start_codes (self) ? "using start-codes" : "withouth start-codes");
+  gst_h264_decoder_set_process_ref_pic_lists (GST_H264_DECODER (self),
+      is_slice_based (self));
 
   return TRUE;
 }
@@ -362,7 +412,7 @@ gst_v4l2_codec_h264_dec_fill_scaling_matrix (GstV4l2CodecH264Dec * self,
 
 static void
 gst_v4l2_codec_h264_dec_fill_decoder_params (GstV4l2CodecH264Dec * self,
-    GstH264Picture * picture, GstH264Dpb * dpb)
+    GstH264SliceHdr * slice_hdr, GstH264Picture * picture, GstH264Dpb * dpb)
 {
   GArray *refs = gst_h264_dpb_get_pictures_all (dpb);
   gint i;
@@ -378,14 +428,20 @@ gst_v4l2_codec_h264_dec_fill_decoder_params (GstV4l2CodecH264Dec * self,
 
   for (i = 0; i < refs->len; i++) {
     GstH264Picture *ref_pic = g_array_index (refs, GstH264Picture *, i);
+    gint pic_num = ref_pic->pic_num;
+
+    /* Unwrap pic_num */
+    if (pic_num < 0)
+      pic_num += slice_hdr->max_pic_num;
+
     self->decode_params.dpb[i] = (struct v4l2_h264_dpb_entry) {
       /*
        * The reference is multiplied by 1000 because it's wassed as micro
        * seconds and this TS is nanosecond.
        */
-      .reference_ts = ref_pic->system_frame_number * 1000,
+      .reference_ts = (guint64) ref_pic->system_frame_number * 1000,
       .frame_num = ref_pic->frame_num,
-      .pic_num = ref_pic->pic_num,
+      .pic_num = pic_num,
       .top_field_order_cnt = ref_pic->pic_order_cnt,
       .bottom_field_order_cnt = ref_pic->bottom_field_order_cnt,
       .flags = V4L2_H264_DPB_ENTRY_FLAG_VALID
@@ -398,7 +454,6 @@ gst_v4l2_codec_h264_dec_fill_decoder_params (GstV4l2CodecH264Dec * self,
   g_array_unref (refs);
 }
 
-/* FIXME This is from VA-API, need to check if this is what hantro wants */
 static guint
 get_slice_header_bit_size (GstH264Slice * slice)
 {
@@ -411,26 +466,147 @@ gst_v4l2_codec_h264_dec_fill_slice_params (GstV4l2CodecH264Dec * self,
     GstH264Slice * slice)
 {
   gint n = self->decode_params.num_slices++;
+  gsize slice_size = slice->nalu.size;
+  struct v4l2_ctrl_h264_slice_params *params;
+  gint i, j;
 
   /* Ensure array is large enough */
   if (self->slice_params->len < self->decode_params.num_slices)
     g_array_set_size (self->slice_params, self->slice_params->len * 2);
 
-  /* FIXME This is the subset Hantro uses */
+  if (needs_start_codes (self))
+    slice_size += 3;
+
   /* *INDENT-OFF* */
-  g_array_index (self->slice_params, struct v4l2_ctrl_h264_slice_params, n) =
-      (struct v4l2_ctrl_h264_slice_params) {
-    .size = slice->nalu.size + 3,       /* FIXME HW may not want a start code */
+  params = &g_array_index (self->slice_params, struct v4l2_ctrl_h264_slice_params, n);
+  *params = (struct v4l2_ctrl_h264_slice_params) {
+    .size = slice_size,
+    .start_byte_offset = self->bitstream_map.size,
     .header_bit_size = get_slice_header_bit_size (slice),
     .first_mb_in_slice = slice->header.first_mb_in_slice,
-    .slice_type = slice->header.type,
+    .slice_type = slice->header.type % 5,
     .pic_parameter_set_id = slice->header.pps->id,
+    .colour_plane_id = slice->header.colour_plane_id,
+    .redundant_pic_cnt = slice->header.redundant_pic_cnt,
     .frame_num = slice->header.frame_num,
-    .dec_ref_pic_marking_bit_size = slice->header.dec_ref_pic_marking.bit_size,
     .idr_pic_id = slice->header.idr_pic_id,
+    .pic_order_cnt_lsb = slice->header.pic_order_cnt_lsb,
+    .delta_pic_order_cnt_bottom = slice->header.delta_pic_order_cnt_bottom,
+    .delta_pic_order_cnt0 = slice->header.delta_pic_order_cnt[0],
+    .delta_pic_order_cnt1 = slice->header.delta_pic_order_cnt[1],
+    .pred_weight_table = (struct v4l2_h264_pred_weight_table) {
+      .luma_log2_weight_denom = slice->header.pred_weight_table.luma_log2_weight_denom,
+      .chroma_log2_weight_denom = slice->header.pred_weight_table.chroma_log2_weight_denom,
+    },
+    .dec_ref_pic_marking_bit_size = slice->header.dec_ref_pic_marking.bit_size,
     .pic_order_cnt_bit_size = slice->header.pic_order_cnt_bit_size,
+    .cabac_init_idc = slice->header.cabac_init_idc,
+    .slice_qp_delta = slice->header.slice_qp_delta,
+    .slice_qs_delta = slice->header.slice_qs_delta,
+    .disable_deblocking_filter_idc = slice->header.disable_deblocking_filter_idc,
+    .slice_alpha_c0_offset_div2 = slice->header.slice_alpha_c0_offset_div2,
+    .slice_beta_offset_div2 = slice->header.slice_beta_offset_div2,
+    .num_ref_idx_l0_active_minus1 = slice->header.num_ref_idx_l0_active_minus1,
+    .num_ref_idx_l1_active_minus1 = slice->header.num_ref_idx_l1_active_minus1,
+    .slice_group_change_cycle = slice->header.slice_group_change_cycle,
+
+    .flags = (slice->header.field_pic_flag ? V4L2_H264_SLICE_FLAG_FIELD_PIC : 0) |
+             (slice->header.bottom_field_flag ? V4L2_H264_SLICE_FLAG_BOTTOM_FIELD : 0) |
+             (slice->header.direct_spatial_mv_pred_flag ? V4L2_H264_SLICE_FLAG_DIRECT_SPATIAL_MV_PRED : 0) |
+             (slice->header.sp_for_switch_flag ? V4L2_H264_SLICE_FLAG_SP_FOR_SWITCH : 0), 
   };
   /* *INDENT-ON* */
+
+  for (i = 0; i <= slice->header.num_ref_idx_l0_active_minus1; i++) {
+    params->pred_weight_table.weight_factors[0].luma_weight[i] =
+        slice->header.pred_weight_table.luma_weight_l0[i];
+    params->pred_weight_table.weight_factors[0].luma_offset[i] =
+        slice->header.pred_weight_table.luma_offset_l0[i];
+  }
+
+  if (slice->header.pps->sequence->chroma_array_type != 0) {
+    for (i = 0; i <= slice->header.num_ref_idx_l0_active_minus1; i++) {
+      for (j = 0; j < 2; j++) {
+        params->pred_weight_table.weight_factors[0].chroma_weight[i][j] =
+            slice->header.pred_weight_table.chroma_weight_l0[i][j];
+        params->pred_weight_table.weight_factors[0].chroma_offset[i][j] =
+            slice->header.pred_weight_table.chroma_offset_l0[i][j];
+      }
+    }
+  }
+
+  /* Skip l1 if this is not a B-Frames. */
+  if (slice->header.type % 5 != GST_H264_B_SLICE)
+    return;
+
+  for (i = 0; i <= slice->header.num_ref_idx_l0_active_minus1; i++) {
+    params->pred_weight_table.weight_factors[0].luma_weight[i] =
+        slice->header.pred_weight_table.luma_weight_l0[i];
+    params->pred_weight_table.weight_factors[0].luma_offset[i] =
+        slice->header.pred_weight_table.luma_offset_l0[i];
+  }
+
+  if (slice->header.pps->sequence->chroma_array_type != 0) {
+    for (i = 0; i <= slice->header.num_ref_idx_l1_active_minus1; i++) {
+      for (j = 0; j < 2; j++) {
+        params->pred_weight_table.weight_factors[1].chroma_weight[i][j] =
+            slice->header.pred_weight_table.chroma_weight_l1[i][j];
+        params->pred_weight_table.weight_factors[1].chroma_offset[i][j] =
+            slice->header.pred_weight_table.chroma_offset_l1[i][j];
+      }
+    }
+  }
+}
+
+static guint8
+lookup_dpb_index (struct v4l2_h264_dpb_entry dpb[16], GstH264Picture * ref_pic)
+{
+  guint64 ref_ts;
+  gint i;
+
+  /* Reference list may have wholes in case a ref is missing, we should mark
+   * the whole and avoid moving items in the list */
+  if (!ref_pic)
+    return 0xff;
+
+  ref_ts = (guint64) ref_pic->system_frame_number * 1000;
+  for (i = 0; i < 16; i++) {
+    if (dpb[i].flags & V4L2_H264_DPB_ENTRY_FLAG_ACTIVE
+        && dpb[i].reference_ts == ref_ts)
+      return i;
+  }
+
+  return 0xff;
+}
+
+static void
+gst_v4l2_codec_h264_dec_fill_references (GstV4l2CodecH264Dec * self,
+    GArray * ref_pic_list0, GArray * ref_pic_list1)
+{
+  struct v4l2_ctrl_h264_slice_params *slice_params;
+  gint i;
+
+  slice_params = &g_array_index (self->slice_params,
+      struct v4l2_ctrl_h264_slice_params, 0);
+
+  memset (slice_params->ref_pic_list0, 0xff,
+      sizeof (slice_params->ref_pic_list0));
+  memset (slice_params->ref_pic_list1, 0xff,
+      sizeof (slice_params->ref_pic_list1));
+
+  for (i = 0; i < ref_pic_list0->len; i++) {
+    GstH264Picture *ref_pic =
+        g_array_index (ref_pic_list0, GstH264Picture *, i);
+    slice_params->ref_pic_list0[i] =
+        lookup_dpb_index (self->decode_params.dpb, ref_pic);
+  }
+
+  for (i = 0; i < ref_pic_list1->len; i++) {
+    GstH264Picture *ref_pic =
+        g_array_index (ref_pic_list1, GstH264Picture *, i);
+    slice_params->ref_pic_list1[i] =
+        lookup_dpb_index (self->decode_params.dpb, ref_pic);
+  }
 }
 
 static gboolean
@@ -549,9 +725,11 @@ gst_v4l2_codec_h264_dec_start_picture (GstH264Decoder * decoder,
 
   gst_v4l2_codec_h264_dec_fill_pps (self, slice->header.pps);
   gst_v4l2_codec_h264_dec_fill_scaling_matrix (self, slice->header.pps);
-  gst_v4l2_codec_h264_dec_fill_decoder_params (self, picture, dpb);
-  /* FIXME Move to decode slice */
-  gst_v4l2_codec_h264_dec_fill_slice_params (self, slice);
+  gst_v4l2_codec_h264_dec_fill_decoder_params (self, &slice->header, picture,
+      dpb);
+
+  if (is_frame_based (self))
+    gst_v4l2_codec_h264_dec_fill_slice_params (self, slice);
 
   return TRUE;
 }
@@ -683,10 +861,9 @@ gst_v4l2_codec_h264_dec_reset_picture (GstV4l2CodecH264Dec * self)
 }
 
 static gboolean
-gst_v4l2_codec_h264_dec_end_picture (GstH264Decoder * decoder,
-    GstH264Picture * picture)
+gst_v4l2_codec_h264_dec_submit_bitstream (GstV4l2CodecH264Dec * self,
+    GstH264Picture * picture, guint flags)
 {
-  GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
   GstVideoCodecFrame *frame;
   GstV4l2Request *request;
   GstBuffer *buffer;
@@ -726,7 +903,7 @@ gst_v4l2_codec_h264_dec_end_picture (GstH264Decoder * decoder,
 
   request = gst_v4l2_decoder_alloc_request (self->decoder);
   if (!request) {
-    GST_ELEMENT_ERROR (decoder, RESOURCE, NO_SPACE_LEFT,
+    GST_ELEMENT_ERROR (self, RESOURCE, NO_SPACE_LEFT,
         ("Failed to allocate a media request object."), (NULL));
     goto fail;
   }
@@ -740,7 +917,7 @@ gst_v4l2_codec_h264_dec_end_picture (GstH264Decoder * decoder,
     if (flow_ret == GST_FLOW_FLUSHING)
       GST_DEBUG_OBJECT (self, "Frame decoding aborted, we are flushing.");
     else
-      GST_ELEMENT_ERROR (decoder, RESOURCE, WRITE,
+      GST_ELEMENT_ERROR (self, RESOURCE, WRITE,
           ("No more picture buffer available."), (NULL));
     goto fail;
   }
@@ -754,7 +931,7 @@ gst_v4l2_codec_h264_dec_end_picture (GstH264Decoder * decoder,
 
   if (!gst_v4l2_decoder_set_controls (self->decoder, request, control,
           G_N_ELEMENTS (control))) {
-    GST_ELEMENT_ERROR (decoder, RESOURCE, WRITE,
+    GST_ELEMENT_ERROR (self, RESOURCE, WRITE,
         ("Driver did not accept the bitstream parameters."), (NULL));
     goto fail;
   }
@@ -764,22 +941,21 @@ gst_v4l2_codec_h264_dec_end_picture (GstH264Decoder * decoder,
   self->bitstream_map = (GstMapInfo) GST_MAP_INFO_INIT;
 
   if (!gst_v4l2_decoder_queue_sink_mem (self->decoder, request, self->bitstream,
-          picture->system_frame_number, bytesused)) {
-    GST_ELEMENT_ERROR (decoder, RESOURCE, WRITE,
+          picture->system_frame_number, bytesused, flags)) {
+    GST_ELEMENT_ERROR (self, RESOURCE, WRITE,
         ("Driver did not accept the bitstream data."), (NULL));
     goto fail;
   }
 
-
   if (!gst_v4l2_decoder_queue_src_buffer (self->decoder, buffer,
           picture->system_frame_number)) {
-    GST_ELEMENT_ERROR (decoder, RESOURCE, WRITE,
+    GST_ELEMENT_ERROR (self, RESOURCE, WRITE,
         ("Driver did not accept the picture buffer."), (NULL));
     goto fail;
   }
 
   if (!gst_v4l2_request_queue (request)) {
-    GST_ELEMENT_ERROR (decoder, RESOURCE, WRITE,
+    GST_ELEMENT_ERROR (self, RESOURCE, WRITE,
         ("Driver did not accept the decode request."), (NULL));
     goto fail;
   }
@@ -798,9 +974,25 @@ gst_v4l2_codec_h264_dec_decode_slice (GstH264Decoder * decoder,
     GArray * ref_pic_list1)
 {
   GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
-
-  gsize nal_size = 3 + slice->nalu.size;
+  gsize sc_off = 0;
+  gsize nal_size;
   guint8 *bitstream_data = self->bitstream_map.data + self->bitstream_map.size;
+
+  if (is_slice_based (self)) {
+    /* In slice mode, we submit the pending slice asking the acceletator to hold
+     * on the picture */
+    if (self->bitstream_map.size)
+      gst_v4l2_codec_h264_dec_submit_bitstream (self, picture,
+          V4L2_BUF_FLAG_M2M_HOLD_CAPTURE_BUF);
+
+    gst_v4l2_codec_h264_dec_fill_slice_params (self, slice);
+    gst_v4l2_codec_h264_dec_fill_references (self, ref_pic_list0,
+        ref_pic_list1);
+  }
+
+  if (needs_start_codes (self))
+    sc_off = 3;
+  nal_size = sc_off + slice->nalu.size;
 
   if (self->bitstream_map.size + nal_size > self->bitstream_map.maxsize) {
     GST_ELEMENT_ERROR (decoder, RESOURCE, NO_SPACE_LEFT,
@@ -808,15 +1000,25 @@ gst_v4l2_codec_h264_dec_decode_slice (GstH264Decoder * decoder,
     return FALSE;
   }
 
-  /* FIXME check if the HW needs a start code */
-  bitstream_data[0] = 0x00;
-  bitstream_data[1] = 0x00;
-  bitstream_data[2] = 0x01;
-  memcpy (bitstream_data + 3, slice->nalu.data + slice->nalu.offset,
-      slice->nalu.size);
+  if (needs_start_codes (self)) {
+    bitstream_data[0] = 0x00;
+    bitstream_data[1] = 0x00;
+    bitstream_data[2] = 0x01;
+  }
 
+  memcpy (bitstream_data + sc_off, slice->nalu.data + slice->nalu.offset,
+      slice->nalu.size);
   self->bitstream_map.size += nal_size;
+
   return TRUE;
+}
+
+static gboolean
+gst_v4l2_codec_h264_dec_end_picture (GstH264Decoder * decoder,
+    GstH264Picture * picture)
+{
+  GstV4l2CodecH264Dec *self = GST_V4L2_CODEC_H264_DEC (decoder);
+  return gst_v4l2_codec_h264_dec_submit_bitstream (self, picture, 0);
 }
 
 static void

@@ -579,7 +579,7 @@ gst_v4l2_codec_vp8_dec_end_picture (GstVp8Decoder * decoder,
   self->bitstream_map = (GstMapInfo) GST_MAP_INFO_INIT;
 
   if (!gst_v4l2_decoder_queue_sink_mem (self->decoder, request, self->bitstream,
-          picture->system_frame_number, bytesused)) {
+          picture->system_frame_number, bytesused, 0)) {
     GST_ELEMENT_ERROR (decoder, RESOURCE, WRITE,
         ("Driver did not accept the bitstream data."), (NULL));
     goto fail;

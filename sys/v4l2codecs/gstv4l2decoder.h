@@ -75,7 +75,8 @@ gboolean          gst_v4l2_decoder_queue_sink_mem (GstV4l2Decoder * self,
                                                    GstV4l2Request * request,
                                                    GstMemory * mem,
                                                    guint32 frame_num,
-                                                   gsize bytesused);
+                                                   gsize bytesused,
+                                                   guint flags);
 
 gboolean          gst_v4l2_decoder_dequeue_sink (GstV4l2Decoder * self);
 
@@ -89,6 +90,10 @@ gboolean          gst_v4l2_decoder_dequeue_src (GstV4l2Decoder * self,
 gboolean          gst_v4l2_decoder_set_controls (GstV4l2Decoder * self,
                                                  GstV4l2Request * request,
                                                  struct v4l2_ext_control *control,
+                                                 guint count);
+
+gboolean          gst_v4l2_decoder_get_controls (GstV4l2Decoder * self,
+                                                 struct v4l2_ext_control * control,
                                                  guint count);
 
 void              gst_v4l2_decoder_install_properties (GObjectClass * gobject_class,

@@ -512,7 +512,7 @@ gst_v4l2_decoder_export_buffer (GstV4l2Decoder * self,
 gboolean
 gst_v4l2_decoder_queue_sink_mem (GstV4l2Decoder * self,
     GstV4l2Request * request, GstMemory * mem, guint32 frame_num,
-    gsize bytesused)
+    gsize bytesused, guint flags)
 {
   gint ret;
   struct v4l2_plane plane = {
@@ -524,7 +524,7 @@ gst_v4l2_decoder_queue_sink_mem (GstV4l2Decoder * self,
     .index = gst_v4l2_codec_memory_get_index (mem),
     .timestamp.tv_usec = frame_num,
     .request_fd = request->fd,
-    .flags = V4L2_BUF_FLAG_REQUEST_FD,
+    .flags = V4L2_BUF_FLAG_REQUEST_FD | flags,
   };
 
   if (self->mplane) {
@@ -645,6 +645,26 @@ gst_v4l2_decoder_set_controls (GstV4l2Decoder * self, GstV4l2Request * request,
   ret = ioctl (self->video_fd, VIDIOC_S_EXT_CTRLS, &controls);
   if (ret < 0) {
     GST_ERROR_OBJECT (self, "VIDIOC_S_EXT_CTRLS failed: %s",
+        g_strerror (errno));
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+gboolean
+gst_v4l2_decoder_get_controls (GstV4l2Decoder * self,
+    struct v4l2_ext_control * control, guint count)
+{
+  gint ret;
+  struct v4l2_ext_controls controls = {
+    .controls = control,
+    .count = count,
+  };
+
+  ret = ioctl (self->video_fd, VIDIOC_G_EXT_CTRLS, &controls);
+  if (ret < 0) {
+    GST_ERROR_OBJECT (self, "VIDIOC_G_EXT_CTRLS failed: %s",
         g_strerror (errno));
     return FALSE;
   }
