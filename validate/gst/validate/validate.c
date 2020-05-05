@@ -334,13 +334,13 @@ gst_validate_get_config (const gchar * structname)
   const gchar *config;
   GStrv tmp;
   guint i;
-  GList *configs;
+  GList *testfile_configs = NULL, *configs = NULL;
 
 
-  configs = gst_validate_get_testfile_configs (structname);
+  testfile_configs = gst_validate_get_testfile_configs (structname);
   config = g_getenv ("GST_VALIDATE_CONFIG");
   if (!config) {
-    return configs;
+    return testfile_configs;
   }
 
   tmp = g_strsplit (config, G_SEARCHPATH_SEPARATOR_S, -1);
@@ -355,6 +355,7 @@ gst_validate_get_config (const gchar * structname)
       configs = g_list_concat (configs, l);
   }
   g_strfreev (tmp);
+  configs = g_list_concat (configs, testfile_configs);
 
   return configs;
 }

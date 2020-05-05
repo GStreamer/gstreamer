@@ -598,11 +598,9 @@ class Test(Loggable):
         if not subenv:
             subenv = self.extra_env_variables
 
-        if "GST_VALIDATE_CONFIG" in subenv:
-            subenv['GST_VALIDATE_CONFIG'] = '%s%s%s' % (
-                subenv['GST_VALIDATE_CONFIG'], os.pathsep, config)
-        else:
-            subenv['GST_VALIDATE_CONFIG'] = config
+        cconf = subenv.get('GST_VALIDATE_CONFIG', "")
+        paths = [c for c in cconf.split(os.pathsep) if c] + [config]
+        subenv['GST_VALIDATE_CONFIG'] = os.pathsep.join(paths)
 
     def launch_server(self):
         return None
@@ -904,6 +902,10 @@ class GstValidateTest(Test):
 
     def get_subproc_env(self):
         subproc_env = os.environ.copy()
+
+        if self.options.validate_default_config:
+            self.add_validate_config(self.options.validate_default_config,
+                subproc_env, )
 
         subproc_env["GST_VALIDATE_UUID"] = self.get_uuid()
         subproc_env["GST_VALIDATE_LOGSDIR"] = self.options.logsdir

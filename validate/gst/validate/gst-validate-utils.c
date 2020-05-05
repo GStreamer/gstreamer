@@ -1245,7 +1245,10 @@ gst_validate_replace_variables_in_string (gpointer source,
 
         if (!var_value) {
           gst_validate_error_structure (source,
-              "Trying to use undefined variable `%s`.\n  Available vars:\n    - locals%s\n    - globals%s\n",
+              "Trying to use undefined variable `%s`.\n"
+              "  Available vars:\n"
+              "    - locals%s\n"
+              "    - globals%s\n",
               varname, gst_structure_to_string (local_vars),
               gst_structure_to_string (global_vars));
 

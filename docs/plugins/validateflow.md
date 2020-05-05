@@ -1,62 +1,99 @@
 # Validate Flow plugin
 
-Validate Flow plugin &mdash; GstValidate plugin to record a log of buffers and events and compare them to an expectation file.
+Validate Flow plugin — GstValidate plugin to record a log of buffers and
+events and compare them to an expectation file.
 
 ## Description
 
-This plugin exists for the purpose of testing non-regular-playback use cases where the test author specifies the full pipeline, a series of actions and needs to check whether the generated buffers and events make sense.
+This plugin exists for the purpose of testing non-regular-playback use cases
+where the test author specifies the full pipeline, a series of actions and needs
+to check whether the generated buffers and events make sense.
 
 The testing procedure goes like this:
 
-1. The test author writes a validate configuration where validateflow is used. A pad where monitoring will occur is specified. A scenario containing actions to run (e.g. push buffers from an appsrc) can also be specified.
+1. The test author writes a [.validatetest](gst-validate-test-file.md) test
+   where validateflow is used. A pad where monitoring will occur is specified
+   and possibly a list of [actions](gst-validate-action-types.md) to run can
+   also be specified.
 
-2. The test author runs the test with the desired pipeline, the validate config created before, and the scenario. Since an expectation file does not exist at this point, validateflow will create one. The author should check its contents for any missing or unwanted events. No actual checking is done by validateflow in this step, since there is nothing to compare to yet.
+2. The test author runs the test with the desired pipeline, the configuration
+   and the actions. Since an expectation file does not exist at
+   this point, validateflow will create one. The author should check its
+   contents for any missing or unwanted events. No actual checking is done by
+   validateflow in this step, since there is nothing to compare to yet.
 
-3. Further executions of the test will also record the produced buffers and events, but now they will be compared to the previous log (expectation file). Any difference will be reported as a test failure. The original expectation file is never modified by validateflow. Any desired changes can be made by editing the file manually or deleting it and running the test again.
-
-validateflow can be run standalone with gst-validate-1.0, but most of the time it will be used in `pipelines.json`, run by gst-validate-launcher, which will take care of creating all the necessary files and some configuration boilerplate. To run all these tests execute:
-
-    gst-validate-launcher validate.launch_pipeline.'*' -m
-
-You can also specify a specific test like this:
-
-    gst-validate-launcher validate.launch_pipeline.qtdemux_change_edit_list.default -m
+3. Further executions of the test will also record the produced buffers and
+   events, but now they will be compared to the previous log (expectation file).
+   Any difference will be reported as a test failure. The original expectation
+   file is never modified by validateflow. Any desired changes can be made by
+   editing the file manually or deleting it and running the test again.
 
 ## Example
 
-The following is an example of a test in `pipelines.json` using validateflow. This file can usually be found in `~/gst-validate/gst-integration-testsuites/testsuites/pipelines.json`:
+### Simplest example
 
-``` json
-"qtdemux_change_edit_list":
-{
-    "pipeline": "appsrc ! qtdemux ! fakesink async=false",
-    "config": [
-        "%(validateflow)s, pad=fakesink0:sink, record-buffers=false"
-    ],
-    "scenarios": [
-        {
-            "name": "default",
-            "actions": [
-                "description, seek=false, handles-states=false",
-                "appsrc-push, target-element-name=appsrc0, file-name=\"%(medias)s/fragments/car-20120827-85.mp4/init.mp4\"",
-                "appsrc-push, target-element-name=appsrc0, file-name=\"%(medias)s/fragments/car-20120827-85.mp4/media1.mp4\"",
-                "checkpoint, text=\"A moov with a different edit list is now pushed\"",
-                "appsrc-push, target-element-name=appsrc0, file-name=\"%(medias)s/fragments/car-20120827-86.mp4/init.mp4\"",
-                "appsrc-push, target-element-name=appsrc0, file-name=\"%(medias)s/fragments/car-20120827-86.mp4/media2.mp4\"",
-                "stop"
-            ]
-        }
-    ]
-},
+The following is an example of a `fakesrc.simple.validatetest` file using
+validateflow.
+
+{{ plugins/fakesrc.simple.validatetest.yaml }}
+
+Then generate the expectation file with:
+
+``` bash
+gst-validate-1.0 --set-test-file /path/to/fakesrc.simple.validatetest
 ```
 
-This example shows the elements of a typical validate flow test (a pipeline, a config and a scenario). Some actions typically used together with validateflow can also be seen. Notice variable interpolation is used to fill absolute paths for media files in the scenario (`%(medias)s`). In the configuration, `%(validateflow)s` is expanded to something like this, containing proper paths for expectations and actual results:
+This will generate the
+`/path/to/fakesrc.simple/flow-expectations/log-sink-sink-expected` file
+containing:
+
+{{ plugins/fakesrc.simple/flow-expectations/log-sink-sink-expected.log }}
+
+Note that the test will be marked as "SKIPPED" when we generate expectation
+files.
+
+The test can now be run with:
+
+```
+gst-validate-1.0 --set-test-file /path/to/fakesrc.simple.validatetest
+```
+
+### Example controlling the source
+
+The following is an example of the `qtdemux_change_edit_list.validatetest` file using validateflow.
 
 ``` yaml
-validateflow, expectations-dir="/home/ntrrgc/gst-validate/gst-integration-testsuites/flow-expectations/qtdemux_change_edit_list", actual-results-dir="/home/ntrrgc/gst-validate/logs/validate/launch_pipeline/qtdemux_change_edit_list"
+set-globals, media_dir="$(test_dir)/../../../medias/"
+meta,
+    seek=false,
+    handles-states=false,
+    args = {
+         "appsrc ! qtdemux ! fakesink async=false",
+    },
+    configs = {
+       "$(validateflow), pad=fakesink0:sink, record-buffers=false",
+    }
+
+# Scenario action types
+appsrc-push, target-element-name=appsrc0, file-name="$(media_dir)/fragments/car-20120827-85.mp4/init.mp4"
+appsrc-push, target-element-name=appsrc0, file-name="$(media_dir)/fragments/car-20120827-85.mp4/media1.mp4"
+checkpoint, text="A moov with a different edit list is now pushed"
+appsrc-push, target-element-name=appsrc0, file-name="$(media_dir)/fragments/car-20120827-86.mp4/init.mp4"
+appsrc-push, target-element-name=appsrc0, file-name="$(media_dir)/fragments/car-20120827-86.mp4/media2.mp4"
+stop
 ```
 
-When running the tests, a config file will be created under the hood by gst-validate-launcher and passed as `GST_VALIDATE_CONFIG`. Similarly, scenario files will be created and set in `GST_VALIDATE_SCENARIO`. gst-validate-1.0 will be run with the specified pipeline.
+This example shows the elements of a typical validate flow test (a pipeline, a
+config and a scenario). Some actions typically used together with validateflow
+can also be seen. Notice variable interpolation is used to fill absolute paths
+for media files in the scenario (`$(test_dir)`). In the configuration,
+`$(validateflow)` is expanded to something like this, containing proper paths
+for expectations and actual results (these values are interpolated from the
+`.validatetest` file location):
+
+``` yaml
+validateflow, expectations-dir="/validate/test/file/path/validateqtdemux_change_edit_list/flow-expectations/", actual-results-dir="$(GST_VALIDATE_LOGSDIR)/logs/validate/launch_pipeline/qtdemux_change_edit_list"
+```
 
 The resulting log looks like this:
 
@@ -80,26 +117,63 @@ event caps: video/x-h264, stream-format=(string)avc, alignment=(string)au, level
 
 ## Configuration
 
-In order to use the plugin a validate configuration file must be provided, containing a line starting by `validateflow` followed by a number of settings. Every `validateflow` line creates a `ValidateFlowOverride`, which listens to a given pad. A test may have several `validateflow` lines, therefore having several overrides and listening to different pads with different settings.
+In order to use the plugin a validate configuration file must be provided,
+containing a line starting by `validateflow` followed by a number of settings.
+Every `validateflow` line creates a `ValidateFlowOverride`, which listens to a
+given pad. A test may have several `validateflow` lines, therefore having
+several overrides and listening to different pads with different settings.
 
  * `pad`: Required. Name of the pad that will be monitored.
- * `record-buffers`: Default: false. Whether buffers will be logged. By default only events are logged.
- * `buffers-checksum`: Default: false. Whether a checkum of the buffer data is logged. Implies `record-buffers`.
- * `ignored-fields`: Default: `"stream-start={ stream-id }"` (as they are often non reproducible). Key with a serialized GstValueList(str) of fields to not record.
- * `logged-fields`: Default: `NULL` Key with a serialized GstValueList(str) of fields to record, eg. `logged-event-fields="stream-start={flags}, caps={width, height, framerate}, buffer={pts}"`. Overrides `ignored-event-fields` for specified event types.
+ * `record-buffers`: Default: false. Whether buffers will be logged. By default
+   only events are logged.
+ * `buffers-checksum`: Default: false. Whether a checkum of the buffer data is
+   logged. Implies `record-buffers`.
+ * `ignored-fields`: Default: `"stream-start={ stream-id }"` (as they are often
+   non reproducible). Key with a serialized GstValueList(str) of fields to not
+   record.
+ * `logged-fields`: Default: `NULL` Key with a serialized GstValueList(str) of
+   fields to record, eg. `logged-event-fields="stream-start={flags},
+   caps={width, height, framerate}, buffer={pts}"`. Overrides
+   `ignored-event-fields` for specified event types.
  * `ignored-event-types`: Default: `{ }`. List of event type names to not record
- * `logged-event-types`: Default: `NULL`. List of event type names to not record, if noone provided, all events are logged, except the ones defined in the `ignored-event-types`.
- * `expectations-dir`: Path to the directory where the expectations will be written if they don't exist, relative to the current working directory. By default the current working directory is used, but this setting is usually set automatically as part of the `%(validateflow)s` expansion to a correct path like `~/gst-validate/gst-integration-testsuites/flow-expectations/<test name>`.
- * `actual-results-dir`: Path to the directory where the events will be recorded. The expectation file will be compared to this. By default the current working directory is used, but this setting is usually set automatically as part of the `%(validateflow)s` expansion to the test log directory, i.e. `~/gst-validate/logs/validate/launch_pipeline/<test name>`.
+ * `logged-event-types`: Default: `NULL`. List of event type names to not
+   record, if noone provided, all events are logged, except the ones defined in
+   the `ignored-event-types`.
+ * `expectations-dir`: Path to the directory where the expectations will be
+   written if they don't exist, relative to the current working directory. By
+   default the current working directory is used, but this setting is usually
+   set automatically as part of the `%(validateflow)s` expansion to a correct
+   path like `~/gst-validate/gst-integration-testsuites/flow-expectations/<test
+   name>`.
+ * `actual-results-dir`: Path to the directory where the events will be
+   recorded. The expectation file will be compared to this. By default the
+   current working directory is used, but this setting is usually set
+   automatically as part of the `%(validateflow)s` expansion to the test log
+   directory, i.e. `~/gst-validate/logs/validate/launch_pipeline/<test name>`.
+ * `generate-expectations`: Default: unset. When set to `true` the expectation
+   file will be written and no testing will be done and if set to `false`,
+   the expectation file will be required. If a validateflow config is
+   used without specifying any other parametters, the validateflow plugin will
+   consider that all validateflow overrides will use that value.
+
 
 ## Scenario actions
 
-Scenarios with validateflow work in the same way as other tests. Often validatetests will use appsrc in order to control the flow of data precisely, possibly interleaving events in between. The following is a list of useful actions.
+Scenarios with validateflow work in the same way as other tests. Often
+validatetests will use appsrc in order to control the flow of data precisely,
+possibly interleaving events in between. The following is a list of useful
+actions.
 
- * `appsrc-push`: Pushes a buffer from an appsrc element and waits for the chain operation to finish. A path to a file is provided, optionally with an offset and/or size.
- * `appsrc-eos`: Queues an EOS event from the appsrc. The action finishes immediately at this point.
+ * `appsrc-push`: Pushes a buffer from an appsrc element and waits for the chain
+   operation to finish. A path to a file is provided, optionally with an offset
+   and/or size.
+ * `appsrc-eos`: Queues an EOS event from the appsrc. The action finishes
+   immediately at this point.
  * `stop`: Tears down the pipeline and stops the test.
- * `checkpoint`: Records a "checkpoint" message in all validateflow overrides, with an optional explanation message. This is useful to check certain events or buffers are sent at a specific moment in the scenario, and can also help to the comprehension of the scenario.
+ * `checkpoint`: Records a "checkpoint" message in all validateflow overrides,
+   with an optional explanation message. This is useful to check certain events
+   or buffers are sent at a specific moment in the scenario, and can also help
+   to the comprehension of the scenario.
 
 More details on these actions can be queried from the command line, like this:
 

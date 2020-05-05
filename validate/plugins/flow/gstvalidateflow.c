@@ -69,6 +69,7 @@ struct _ValidateFlowOverride
   gchar *actual_results_file_path;
   ValidateFlowMode mode;
   gboolean was_attached;
+  GstStructure *config;
 
   /* output_file will refer to the expectations file if it did not exist,
    * or to the actual results file otherwise. */
@@ -223,6 +224,8 @@ validate_flow_override_new (GstStructure * config)
   const GValue *tmpval;
 
   flow = g_object_new (VALIDATE_TYPE_FLOW_OVERRIDE, NULL);
+  flow->config = config;
+
   GST_OBJECT_FLAG_SET (flow, GST_OBJECT_FLAG_MAY_BE_LEAKED);
   override = GST_VALIDATE_OVERRIDE (flow);
 
@@ -326,7 +329,41 @@ validate_flow_override_new (GstStructure * config)
     g_free (pad_name_safe);
   }
 
-  if (g_file_test (flow->expectations_file_path, G_FILE_TEST_EXISTS)) {
+  flow->was_attached = FALSE;
+
+  gst_validate_override_register_by_name (flow->pad_name, override);
+
+  override->buffer_handler = validate_flow_override_buffer_handler;
+  override->buffer_probe_handler = validate_flow_override_buffer_handler;
+  override->event_handler = validate_flow_override_event_handler;
+
+  g_signal_connect (flow, "notify::validate-runner",
+      G_CALLBACK (_runner_set), NULL);
+
+  return flow;
+}
+
+static void
+validate_flow_setup_files (ValidateFlowOverride * flow, gint default_generate)
+{
+  gint local_generate_expectations = -1;
+  gboolean generate_if_doesn_exit = default_generate == -1;
+  gboolean exists =
+      g_file_test (flow->expectations_file_path, G_FILE_TEST_EXISTS);
+
+  if (generate_if_doesn_exit) {
+    gst_structure_get_boolean (flow->config, "generate-expectations",
+        &local_generate_expectations);
+    generate_if_doesn_exit = local_generate_expectations == -1;
+  }
+
+  if ((!default_generate || !local_generate_expectations) && !exists) {
+    gst_validate_error_structure (flow->config, "Not writing expectations and"
+        " configured expectation file %s doesn't exist in config:\n       > %"
+        GST_PTR_FORMAT, flow->expectations_file_path, flow->config);
+  }
+
+  if (exists && local_generate_expectations != 1 && default_generate != 1) {
     flow->mode = VALIDATE_FLOW_MODE_WRITING_ACTUAL_RESULTS;
     flow->output_file_path = g_strdup (flow->actual_results_file_path);
     gst_validate_printf (NULL, "**-> Checking expectations file: '%s'**\n",
@@ -352,18 +389,6 @@ validate_flow_override_new (GstStructure * config)
     gst_validate_abort ("Could not open for writing: %s",
         flow->output_file_path);
 
-  flow->was_attached = FALSE;
-
-  gst_validate_override_register_by_name (flow->pad_name, override);
-
-  override->buffer_handler = validate_flow_override_buffer_handler;
-  override->buffer_probe_handler = validate_flow_override_buffer_handler;
-  override->event_handler = validate_flow_override_event_handler;
-
-  g_signal_connect (flow, "notify::validate-runner",
-      G_CALLBACK (_runner_set), NULL);
-
-  return flow;
 }
 
 static void
@@ -484,8 +509,12 @@ runner_stopping (GstValidateRunner * runner, ValidateFlowOverride * flow)
     return;
   }
 
-  if (flow->mode == VALIDATE_FLOW_MODE_WRITING_EXPECTATIONS)
+  if (flow->mode == VALIDATE_FLOW_MODE_WRITING_EXPECTATIONS) {
+    gst_validate_skip_test ("wrote expectation files for %s.\n",
+        flow->pad_name);
+
     return;
+  }
 
   {
     gchar *contents;
@@ -582,6 +611,7 @@ static gboolean
 gst_validate_flow_init (GstPlugin * plugin)
 {
   GList *tmp;
+  gint default_generate = -1;
   GList *config_list = gst_validate_plugin_get_config (plugin);
 
   if (!config_list)
@@ -589,9 +619,25 @@ gst_validate_flow_init (GstPlugin * plugin)
 
   for (tmp = config_list; tmp; tmp = tmp->next) {
     GstStructure *config = tmp->data;
-    ValidateFlowOverride *flow = validate_flow_override_new (config);
+    ValidateFlowOverride *flow;
+
+    if (gst_structure_has_field (config, "generate-expectations") &&
+        !gst_structure_has_field (config, "pad")) {
+      if (!gst_structure_get_boolean (config, "generate-expectations",
+              &default_generate)) {
+        gst_validate_error_structure (config,
+            "Field 'generate-expectations' should be a boolean");
+      }
+
+      continue;
+    }
+
+    flow = validate_flow_override_new (config);
     all_overrides = g_list_append (all_overrides, flow);
   }
+
+  for (tmp = all_overrides; tmp; tmp = tmp->next)
+    validate_flow_setup_files (tmp->data, default_generate);
 
 /*  *INDENT-OFF* */
   gst_validate_register_action_type_dynamic (plugin, "checkpoint",

@@ -1002,6 +1002,12 @@ not been tested and explicitly activated if you set use --wanted-tests ALL""")
         group.add_argument("--validate-enable-iqa-tests", dest="validate_enable_iqa_tests",
                            help="Enable Image Quality Assessment validation tests.",
                            default=False, action='store_true')
+        group.add_argument("--validate-generate-expectations", dest="validate_generate_expectations",
+                           choices=['auto', 'enabled', 'disabled'],
+                           help="Force generating expectations (when set to `enabed`)"
+                                " force failure on missing expactations when set to `disabled`"
+                                " and create if needed when set to `auto`.",
+                           default='auto')
         group.add_argument("--validate-generate-ssim-reference-files",
                            help="(re)generate ssim reference image files.",
                            default=False, action='store_true')
@@ -1199,6 +1205,13 @@ not been tested and explicitly activated if you set use --wanted-tests ALL""")
                     self._run_defaults = False
                     options.wanted_tests[
                         i] = options.wanted_tests[i].replace("ALL", "")
+
+        options.validate_default_config = None
+        if options.validate_generate_expectations != 'auto':
+            options.validate_default_config = os.path.join(options.logsdir, "__validate_default.config")
+            with open(options.validate_default_config, 'w') as f:
+                val = "true" if options.validate_generate_expectations == "enabled" else "false"
+                print("validateflow,generate-expectations=%s" % val, file=f)
         try:
             options.wanted_tests.remove("")
         except ValueError:
