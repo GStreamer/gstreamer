@@ -1082,8 +1082,12 @@ gst_deinterlace_push_history (GstDeinterlace * self, GstBuffer * buffer)
   onefield = GST_VIDEO_FRAME_IS_ONEFIELD (frame);
   fields_to_push = (onefield) ? 1 : 2;
 
-  g_return_if_fail (self->history_count <
-      GST_DEINTERLACE_MAX_FIELD_HISTORY - fields_to_push);
+  if (G_UNLIKELY (self->history_count >=
+          GST_DEINTERLACE_MAX_FIELD_HISTORY - fields_to_push)) {
+    GST_WARNING_OBJECT (self, "history count exceeded limit");
+    gst_video_frame_unmap_and_free (frame);
+    return;
+  }
 
   gst_deinterlace_get_buffer_state (self, frame, &buf_state, &interlacing_mode);
 
