@@ -100,6 +100,16 @@ static void _update_need_negotiation (GstWebRTCBin * webrtc);
 #define GST_CAT_DEFAULT gst_webrtc_bin_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
+static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink_%u",
+    GST_PAD_SINK,
+    GST_PAD_REQUEST,
+    GST_STATIC_CAPS ("application/x-rtp"));
+
+static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src_%u",
+    GST_PAD_SRC,
+    GST_PAD_SOMETIMES,
+    GST_STATIC_CAPS ("application/x-rtp"));
+
 enum
 {
   PROP_PAD_TRANSCEIVER = 1,
@@ -284,9 +294,20 @@ gst_webrtc_bin_pad_init (GstWebRTCBinPad * pad)
 static GstWebRTCBinPad *
 gst_webrtc_bin_pad_new (const gchar * name, GstPadDirection direction)
 {
-  GstWebRTCBinPad *pad =
+  GstWebRTCBinPad *pad;
+  GstPadTemplate *template;
+
+  if (direction == GST_PAD_SINK)
+    template = gst_static_pad_template_get (&sink_template);
+  else if (direction == GST_PAD_SRC)
+    template = gst_static_pad_template_get (&src_template);
+  else
+    g_assert_not_reached ();
+
+  pad =
       g_object_new (gst_webrtc_bin_pad_get_type (), "name", name, "direction",
-      direction, NULL);
+      direction, "template", template, NULL);
+  gst_object_unref (template);
 
   gst_pad_set_event_function (GST_PAD (pad), gst_webrtcbin_sink_event);
 
@@ -309,16 +330,6 @@ G_DEFINE_TYPE_WITH_CODE (GstWebRTCBin, gst_webrtc_bin, GST_TYPE_BIN,
 
 static GstPad *_connect_input_stream (GstWebRTCBin * webrtc,
     GstWebRTCBinPad * pad);
-
-static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink_%u",
-    GST_PAD_SINK,
-    GST_PAD_REQUEST,
-    GST_STATIC_CAPS ("application/x-rtp"));
-
-static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src_%u",
-    GST_PAD_SRC,
-    GST_PAD_SOMETIMES,
-    GST_STATIC_CAPS ("application/x-rtp"));
 
 enum
 {
@@ -4438,6 +4449,12 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
         continue;
       }
 
+      if (!pad->trans) {
+        GST_LOG_OBJECT (pad, "doesn't have a transceiver");
+        tmp = tmp->next;
+        continue;
+      }
+
       new_dir = pad->trans->direction;
       if (new_dir != GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY &&
           new_dir != GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDRECV) {
@@ -5711,11 +5728,18 @@ gst_webrtc_bin_release_pad (GstElement * element, GstPad * pad)
   GstWebRTCBin *webrtc = GST_WEBRTC_BIN (element);
   GstWebRTCBinPad *webrtc_pad = GST_WEBRTC_BIN_PAD (pad);
 
+  GST_DEBUG_OBJECT (webrtc, "Releasing %" GST_PTR_FORMAT, webrtc_pad);
+
+  /* remove the transceiver from the pad so that subsequent code doesn't use
+   * a possibly dead transceiver */
+  PC_LOCK (webrtc);
   if (webrtc_pad->trans)
     gst_object_unref (webrtc_pad->trans);
   webrtc_pad->trans = NULL;
+  PC_UNLOCK (webrtc);
 
   _remove_pad (webrtc, webrtc_pad);
+
   PC_LOCK (webrtc);
   _update_need_negotiation (webrtc);
   PC_UNLOCK (webrtc);
