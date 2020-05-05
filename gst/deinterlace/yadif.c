@@ -35,6 +35,14 @@
 #include "gstdeinterlacemethod.h"
 #include "yadif.h"
 
+#if    __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 96) || defined(__clang__)
+#define ALWAYS_INLINE __attribute__((always_inline)) inline
+#elif defined(_MSC_VER)
+#define ALWAYS_INLINE __forceinline
+#else
+#define ALWAYS_INLINE inline
+#endif
+
 #define GST_TYPE_DEINTERLACE_METHOD_YADIF	(gst_deinterlace_method_yadif_get_type ())
 #define GST_IS_DEINTERLACE_METHOD_YADIF(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_DEINTERLACE_METHOD_YADIF))
 #define GST_IS_DEINTERLACE_METHOD_YADIF_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_DEINTERLACE_METHOD_YADIF))
@@ -51,6 +59,31 @@ G_DEFINE_TYPE (GstDeinterlaceMethodYadif,
 
 static void
 filter_scanline_yadif (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines, guint size,
+    int colors, int y_alternates_every);
+
+static void
+filter_scanline_yadif_planar (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines, guint size);
+
+static void
+filter_scanline_yadif_semiplanar (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines, guint size);
+
+static void
+filter_scanline_yadif_packed_4 (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines, guint size);
+
+static void
+filter_scanline_yadif_packed_yvyu (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines, guint size);
+
+static void
+filter_scanline_yadif_packed_uyvy (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines, guint size);
+
+static void
+filter_scanline_yadif_packed_3 (GstDeinterlaceSimpleMethod * self,
     guint8 * out, const GstDeinterlaceScanlineData * scanlines, guint size);
 
 static void
@@ -76,10 +109,34 @@ static void
   dism_class->copy_scanline_planar_y = copy_scanline;
   dism_class->copy_scanline_planar_u = copy_scanline;
   dism_class->copy_scanline_planar_v = copy_scanline;
+  dism_class->copy_scanline_yuy2 = copy_scanline;
+  dism_class->copy_scanline_yvyu = copy_scanline;
+  dism_class->copy_scanline_uyvy = copy_scanline;
+  dism_class->copy_scanline_ayuv = copy_scanline;
+  dism_class->copy_scanline_argb = copy_scanline;
+  dism_class->copy_scanline_abgr = copy_scanline;
+  dism_class->copy_scanline_rgba = copy_scanline;
+  dism_class->copy_scanline_bgra = copy_scanline;
+  dism_class->copy_scanline_rgb = copy_scanline;
+  dism_class->copy_scanline_bgr = copy_scanline;
+  dism_class->copy_scanline_nv12 = copy_scanline;
+  dism_class->copy_scanline_nv21 = copy_scanline;
 
-  dism_class->interpolate_scanline_planar_y = filter_scanline_yadif;
-  dism_class->interpolate_scanline_planar_u = filter_scanline_yadif;
-  dism_class->interpolate_scanline_planar_v = filter_scanline_yadif;
+  dism_class->interpolate_scanline_planar_y = filter_scanline_yadif_planar;
+  dism_class->interpolate_scanline_planar_u = filter_scanline_yadif_planar;
+  dism_class->interpolate_scanline_planar_v = filter_scanline_yadif_planar;
+  dism_class->interpolate_scanline_yuy2 = filter_scanline_yadif_packed_yvyu;
+  dism_class->interpolate_scanline_yvyu = filter_scanline_yadif_packed_yvyu;
+  dism_class->interpolate_scanline_uyvy = filter_scanline_yadif_packed_uyvy;
+  dism_class->interpolate_scanline_ayuv = filter_scanline_yadif_packed_4;
+  dism_class->interpolate_scanline_argb = filter_scanline_yadif_packed_4;
+  dism_class->interpolate_scanline_abgr = filter_scanline_yadif_packed_4;
+  dism_class->interpolate_scanline_rgba = filter_scanline_yadif_packed_4;
+  dism_class->interpolate_scanline_bgra = filter_scanline_yadif_packed_4;
+  dism_class->interpolate_scanline_rgb = filter_scanline_yadif_packed_3;
+  dism_class->interpolate_scanline_bgr = filter_scanline_yadif_packed_3;
+  dism_class->interpolate_scanline_nv12 = filter_scanline_yadif_semiplanar;
+  dism_class->interpolate_scanline_nv21 = filter_scanline_yadif_semiplanar;
 }
 
 static void
@@ -94,12 +151,12 @@ gst_deinterlace_method_yadif_init (GstDeinterlaceMethodYadif * self)
 #define FFMIN3(a,b,c) FFMIN(FFMIN(a,b),c)
 
 #define CHECK(j)\
-    {   int score = FFABS(s->t0[x - 1 + (j)] - s->b0[x - 1 - (j)])\
-                  + FFABS(s->t0[x  +(j)] - s->b0[x  -(j)])\
-                  + FFABS(s->t0[x + 1 + (j)] - s->b0[x + 1 - (j)]);\
+    {   int score = FFABS(s->t0[x - colors2 * (1 + (j))] - s->b0[x - colors2 * (1 - (j))])\
+                  + FFABS(s->t0[x  + colors2 * (j)] - s->b0[x  -colors2 * (j)])\
+                  + FFABS(s->t0[x + colors2 * (1 + (j))] - s->b0[x + colors2 * (1 - (j))]);\
         if (score < spatial_score) {\
             spatial_score= score;\
-            spatial_pred= (s->t0[x  +(j)] + s->b0[x -(j)])>>1;\
+            spatial_pred= (s->t0[x  +colors2 * ((j))] + s->b0[x - colors2 * (j)])>>1;\
 
 /* The is_not_edge argument here controls when the code will enter a branch
  * which reads up to and including x-3 and x+3. */
@@ -114,10 +171,14 @@ gst_deinterlace_method_yadif_init (GstDeinterlaceMethodYadif * self)
         int temporal_diff2 =(FFABS(s->tp2[x] - c) + FFABS(s->bp2[x] - e) )>>1; \
         int diff = FFMAX3(temporal_diff0 >> 1, temporal_diff1, temporal_diff2); \
         int spatial_pred = (c+e) >> 1; \
+        int colors2 = colors; \
+        if ((y_alternates_every == 1 && (x%2 == 0)) || \
+           (y_alternates_every == 2 && (x%2 == 1))) \
+          colors2 = 2; \
  \
         if (is_not_edge) {\
-            int spatial_score = FFABS(s->t0[x-1] - s->b0[x-1]) + FFABS(c-e) \
-                              + FFABS(s->t0[x+1] - s->b0[x+1]); \
+            int spatial_score = FFABS(s->t0[x-colors2] - s->b0[x-colors2]) + FFABS(c-e) \
+                              + FFABS(s->t0[x+colors2] - s->b0[x+colors2]); \
             CHECK(-1) CHECK(-2) }} }} \
             CHECK( 1) CHECK( 2) }} }} \
         }\
@@ -140,9 +201,10 @@ gst_deinterlace_method_yadif_init (GstDeinterlaceMethodYadif * self)
  \
     }
 
-static void
+ALWAYS_INLINE static void
 filter_line_c (guint8 * dst,
-    const GstDeinterlaceScanlineData * s, int start, int end, int mode)
+    const GstDeinterlaceScanlineData * s, int start, int end, int mode,
+    int colors, int y_alternates_every)
 {
   int x;
   /* The function is called for processing the middle
@@ -154,28 +216,74 @@ filter_line_c (guint8 * dst,
 }
 
 #define MAX_ALIGN 8
-static void
+
+ALWAYS_INLINE static void
 filter_edges (guint8 * dst,
-    const GstDeinterlaceScanlineData * s, int w, int mode)
+    const GstDeinterlaceScanlineData * s, int w, int mode, const int bpp,
+    const int colors, int y_alternates_every)
 {
   int x;
-  const int edge = MAX_ALIGN - 1;
+  const int edge = colors * (MAX_ALIGN / bpp - 1);
+  const int border = 3 * colors;
 
   /* Only edge pixels need to be processed here.  A constant value of false
    * for is_not_edge should let the compiler ignore the whole branch. */
-  FILTER (0, 3, 0)
-      FILTER (w - edge, w - 3, 1)
-      FILTER (w - 3, w, 0)
+  FILTER (0, border, 0)
+      FILTER (w - edge, w - border, 1)
+      FILTER (w - border, w, 0)
 }
 
 static void
-filter_scanline_yadif (GstDeinterlaceSimpleMethod * self,
+filter_scanline_yadif_planar (GstDeinterlaceSimpleMethod * self,
     guint8 * out, const GstDeinterlaceScanlineData * s_orig, guint size)
 {
-  uint8_t *dst = out;
+  filter_scanline_yadif (self, out, s_orig, size, 1, 0);
+}
+
+static void
+filter_scanline_yadif_semiplanar (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const GstDeinterlaceScanlineData * s_orig, guint size)
+{
+  filter_scanline_yadif (self, out, s_orig, size, 2, 0);
+}
+
+static void
+filter_scanline_yadif_packed_3 (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const GstDeinterlaceScanlineData * s_orig, guint size)
+{
+  filter_scanline_yadif (self, out, s_orig, size, 3, 0);
+}
+
+static void
+filter_scanline_yadif_packed_4 (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const GstDeinterlaceScanlineData * s_orig, guint size)
+{
+  filter_scanline_yadif (self, out, s_orig, size, 4, 0);
+}
+
+static void
+filter_scanline_yadif_packed_yvyu (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const GstDeinterlaceScanlineData * s_orig, guint size)
+{
+  filter_scanline_yadif (self, out, s_orig, size, 4, 1);
+}
+
+static void
+filter_scanline_yadif_packed_uyvy (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const GstDeinterlaceScanlineData * s_orig, guint size)
+{
+  filter_scanline_yadif (self, out, s_orig, size, 4, 2);
+}
+
+ALWAYS_INLINE static void
+filter_scanline_yadif (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const GstDeinterlaceScanlineData * s_orig, guint size,
+    int colors, int y_alternates_every)
+{
+  guint8 *dst = out;
   const int bpp = 1;            // Hard code 8-bit atm
   int w = size / bpp;
-  int edge = MAX_ALIGN / bpp - 1;
+  int edge = colors * MAX_ALIGN / bpp - 1;
   GstDeinterlaceScanlineData s = *s_orig;
 
   int mode = (s.tt1 == NULL || s.bb1 == NULL || s.ttp == NULL
@@ -192,6 +300,7 @@ filter_scanline_yadif (GstDeinterlaceSimpleMethod * self,
   if (s.b2 == NULL)
     s.b2 = s.bp2;
 
-  filter_edges (dst, &s, w, mode);
-  filter_line_c (dst, &s, 3, w - edge, mode);
+  filter_edges (dst, &s, w, mode, bpp, colors, y_alternates_every);
+  filter_line_c (dst, &s, colors * 3, w - edge, mode, colors,
+      y_alternates_every);
 }
