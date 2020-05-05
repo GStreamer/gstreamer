@@ -118,7 +118,7 @@ static gboolean
 do_dssim (GstIqa * self, GstVideoFrame * ref, GstVideoFrame * cmp,
     GstBuffer * outbuf, GstStructure * msg_structure, gchar * padname)
 {
-  dssim_attr *attr = dssim_create_attr ();
+  dssim_attr *attr;
   gint y;
   unsigned char **ptrs, **ptrs2;
   GstMapInfo ref_info;
@@ -132,11 +132,8 @@ do_dssim (GstIqa * self, GstVideoFrame * ref, GstVideoFrame * cmp,
   gint i;
   dssim_rgba *out;
   GstStructure *dssim_structure;
+  gboolean ret = TRUE;
 
-  gst_structure_get (msg_structure, "dssim", GST_TYPE_STRUCTURE,
-      &dssim_structure, NULL);
-
-  dssim_set_save_ssim_maps (attr, 1, 1);
   if (ref->info.width != cmp->info.width ||
       ref->info.height != cmp->info.height) {
     GST_OBJECT_UNLOCK (self);
@@ -152,6 +149,12 @@ do_dssim (GstIqa * self, GstVideoFrame * ref, GstVideoFrame * cmp,
     GST_OBJECT_LOCK (self);
     return FALSE;
   }
+
+  gst_structure_get (msg_structure, "dssim", GST_TYPE_STRUCTURE,
+      &dssim_structure, NULL);
+
+  attr = dssim_create_attr ();
+  dssim_set_save_ssim_maps (attr, 1, 1);
 
   gst_buffer_map (ref->buffer, &ref_info, GST_MAP_READ);
   gst_buffer_map (cmp->buffer, &cmp_info, GST_MAP_READ);
@@ -197,7 +200,8 @@ do_dssim (GstIqa * self, GstVideoFrame * ref, GstVideoFrame * cmp,
 
     GST_OBJECT_LOCK (self);
 
-    return FALSE;
+    ret = FALSE;
+    goto cleanup_return;
   }
 
   if (dssim > self->max_dssim) {
@@ -216,6 +220,11 @@ do_dssim (GstIqa * self, GstVideoFrame * ref, GstVideoFrame * cmp,
   gst_structure_set (dssim_structure, padname, G_TYPE_DOUBLE, dssim, NULL);
   gst_structure_set (msg_structure, "dssim", GST_TYPE_STRUCTURE,
       dssim_structure, NULL);
+
+  ret = TRUE;
+
+cleanup_return:
+
   gst_structure_free (dssim_structure);
 
   free (map_meta.data);
@@ -228,7 +237,7 @@ do_dssim (GstIqa * self, GstVideoFrame * ref, GstVideoFrame * cmp,
   dssim_dealloc_image (cmp_image);
   dssim_dealloc_attr (attr);
 
-  return TRUE;
+  return ret;
 }
 #endif
 
