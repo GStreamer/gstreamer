@@ -34,6 +34,8 @@
 typedef int (*GstValidateParseVariableFunc) (const gchar *name,
     double *value, gpointer user_data);
 
+typedef gchar** (*GstValidateGetIncludePathsFunc)(const gchar* includer_file);
+
 GST_VALIDATE_API
 gdouble gst_validate_utils_parse_expression (const gchar *expr,
                                              GstValidateParseVariableFunc variable_func,
@@ -50,11 +52,14 @@ gchar ** gst_validate_utils_get_strv       (GstStructure *str, const gchar *fiel
 
 GST_VALIDATE_API
 GList * gst_validate_utils_structs_parse_from_filename         (const gchar * scenario_file,
+                                                                GstValidateGetIncludePathsFunc get_include_paths_func,
                                                                 gchar **file_path);
 GST_VALIDATE_API
 GstStructure * gst_validate_utils_test_file_get_meta           (const gchar * testfile, gboolean use_fakesinks);
+
 GST_VALIDATE_API
-GList * gst_validate_structs_parse_from_gfile            (GFile * scenario_file);
+GList * gst_validate_structs_parse_from_gfile                  (GFile * scenario_file,
+                                                                GstValidateGetIncludePathsFunc get_include_paths_func);
 
 GST_VALIDATE_API
 gboolean gst_validate_element_has_klass (GstElement * element, const gchar * klass);
@@ -74,9 +79,9 @@ void gst_validate_spin_on_fault_signals (void);
 
 GST_VALIDATE_API
 gboolean gst_validate_element_matches_target (GstElement * element, GstStructure * s);
-gchar * gst_validate_replace_variables_in_string (GstStructure * local_vars, const gchar * in_string);
+gchar * gst_validate_replace_variables_in_string (gpointer incom, GstStructure * local_vars, const gchar * in_string);
 GST_VALIDATE_API
-void gst_validate_structure_resolve_variables (GstStructure *structure, GstStructure *local_variables);
+void gst_validate_structure_resolve_variables (gpointer source, GstStructure *structure, GstStructure *local_variables);
 void gst_validate_structure_set_variables_from_struct_file(GstStructure* vars, const gchar* struct_file);
 void gst_validate_set_globals(GstStructure* structure);
 GST_VALIDATE_API

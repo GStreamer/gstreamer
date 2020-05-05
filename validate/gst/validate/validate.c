@@ -172,12 +172,12 @@ get_config_from_structures (GList * structures, GstStructure * local_vars,
             (GstStructureForeachFunc) _set_vars_func, local_vars);
         gst_structure_free (structure);
       } else {
-        gst_validate_structure_resolve_variables (structure, local_vars);
+        gst_validate_structure_resolve_variables (NULL, structure, local_vars);
         result = g_list_append (result, structure);
       }
     } else {
       if (!loaded_globals && gst_structure_has_name (structure, "set-globals")) {
-        gst_validate_structure_resolve_variables (structure, local_vars);
+        gst_validate_structure_resolve_variables (NULL, structure, local_vars);
         gst_validate_set_globals (structure);
       }
       gst_structure_free (structure);
@@ -202,7 +202,8 @@ create_config (const gchar * config, const gchar * suffix)
 
   local_vars = gst_structure_new_empty ("vars");
   structures =
-      gst_validate_utils_structs_parse_from_filename (config, &config_file);
+      gst_validate_utils_structs_parse_from_filename (config, NULL,
+      &config_file);
   if (!structures) {
     GstCaps *confs = NULL;
 
@@ -343,6 +344,9 @@ gst_validate_get_config (const gchar * structname)
   tmp = g_strsplit (config, G_SEARCHPATH_SEPARATOR_S, -1);
   for (i = 0; tmp[i] != NULL; i++) {
     GList *l;
+
+    if (tmp[i][0] == '\0')
+      continue;
 
     l = create_config (tmp[i], structname);
     if (l)
@@ -553,7 +557,7 @@ gst_validate_setup_test_file (const gchar * testfile, gboolean use_fakesinks)
   gst_validate_set_globals (NULL);
   gst_validate_structure_set_variables_from_struct_file (NULL, testfile);
   testfile_structs =
-      gst_validate_utils_structs_parse_from_filename (testfile, NULL);
+      gst_validate_utils_structs_parse_from_filename (testfile, NULL, NULL);
 
   if (!testfile_structs)
     gst_validate_abort ("Could not load test file: %s", testfile);
@@ -578,7 +582,7 @@ gst_validate_setup_test_file (const gchar * testfile, gboolean use_fakesinks)
   gst_validate_scenario_check_and_set_needs_clock_sync (testfile_structs, &res);
 
   gst_validate_set_test_file_globals (res, testfile, use_fakesinks);
-  gst_validate_structure_resolve_variables (res, NULL);
+  gst_validate_structure_resolve_variables (NULL, res, NULL);
 
   tool = gst_structure_get_string (res, "tool");
   if (!tool)

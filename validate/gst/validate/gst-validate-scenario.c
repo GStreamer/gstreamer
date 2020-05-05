@@ -60,7 +60,6 @@
 #include <gst/validate/gst-validate-override-registry.h>
 #include <gst/validate/gst-validate-pipeline-monitor.h>
 
-#define GST_VALIDATE_SCENARIO_SUFFIX ".scenario"
 #define GST_VALIDATE_SCENARIO_DIRECTORY "scenarios"
 
 #define DEFAULT_SEEK_TOLERANCE (1 * GST_MSECOND)        /* tolerance seek interval
@@ -397,7 +396,7 @@ gst_validate_action_get_type (void)
 static gboolean execute_next_action (GstValidateScenario * scenario);
 static gboolean
 gst_validate_scenario_load (GstValidateScenario * scenario,
-    const gchar * scenario_name, const gchar * relative_scenario);
+    const gchar * scenario_name);
 
 static GstValidateAction *
 _action_copy (GstValidateAction * act)
@@ -707,7 +706,7 @@ gst_validate_action_get_clocktime (GstValidateScenario * scenario,
 
     _update_well_known_vars (scenario);
     strval =
-        gst_validate_replace_variables_in_string (scenario->priv->vars,
+        gst_validate_replace_variables_in_string (action, scenario->priv->vars,
         tmpvalue);
     if (!strval)
       return FALSE;
@@ -3231,7 +3230,7 @@ gst_validate_action_default_prepare_func (GstValidateAction * action)
   GstValidateScenario *scenario = gst_validate_action_get_scenario (action);
 
   _update_well_known_vars (scenario);
-  gst_validate_structure_resolve_variables (action->structure,
+  gst_validate_structure_resolve_variables (action, action->structure,
       scenario->priv->vars);
   for (i = 0; type->parameters[i].name; i++) {
     if (type->parameters[i].types &&
@@ -3684,22 +3683,6 @@ gst_validate_scenario_load_structures (GstValidateScenario * scenario,
       scenario->description = gst_structure_copy (structure);
 
       continue;
-    } else if (!g_strcmp0 (type, "include")) {
-      const gchar *location = gst_structure_get_string (structure, "location");
-
-      if (!location) {
-        GST_ERROR_OBJECT (scenario,
-            "Mandatory field 'location' not present in structure: %"
-            GST_PTR_FORMAT, structure);
-        goto failed;
-      }
-
-      if (!gst_validate_scenario_load (scenario, location, origin_file)) {
-        GST_ERROR ("Failed including scenario %s", location);
-        goto failed;
-      }
-
-      continue;
     } else if (!(action_type = _find_action_type (type))) {
       if (gst_structure_has_field (structure, "optional-action-type")) {
         GST_INFO_OBJECT (scenario,
@@ -3765,26 +3748,12 @@ failed:
   goto done;
 }
 
-static gboolean
-_load_scenario_file (GstValidateScenario * scenario,
-    gchar * scenario_file, gboolean * is_config)
+gchar **
+gst_validate_scenario_get_include_paths (const gchar * relative_scenario)
 {
-  return gst_validate_scenario_load_structures (scenario,
-      gst_validate_utils_structs_parse_from_filename (scenario_file, NULL),
-      is_config, scenario_file);
-}
-
-
-static gboolean
-gst_validate_scenario_load (GstValidateScenario * scenario,
-    const gchar * scenario_name, const gchar * relative_scenario)
-{
-  gchar **scenarios = NULL;
-  guint i;
-  gboolean found_actions = FALSE, is_config, ret = TRUE;
-  gchar *scenarios_path = g_strdup (g_getenv ("GST_VALIDATE_SCENARIOS_PATH"));
-
+  gint n;
   gchar **env_scenariodir;
+  gchar *scenarios_path = g_strdup (g_getenv ("GST_VALIDATE_SCENARIOS_PATH"));
 
   if (relative_scenario) {
     gchar *relative_dir = g_path_get_dirname (relative_scenario);
@@ -3802,12 +3771,46 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
       0) : NULL;
   g_free (scenarios_path);
 
+  n = g_strv_length (env_scenariodir);
+  env_scenariodir = g_realloc_n (env_scenariodir, n + 3, sizeof (gchar *));
+  env_scenariodir[n] = g_build_filename (g_get_user_data_dir (),
+      "gstreamer-" GST_API_VERSION, "validate",
+      GST_VALIDATE_SCENARIO_DIRECTORY, NULL);
+  env_scenariodir[n + 1] =
+      g_build_filename (GST_DATADIR, "gstreamer-" GST_API_VERSION, "validate",
+      GST_VALIDATE_SCENARIO_DIRECTORY, NULL);
+  env_scenariodir[n + 2] = NULL;
+
+  return env_scenariodir;
+}
+
+static gboolean
+_load_scenario_file (GstValidateScenario * scenario,
+    gchar * scenario_file, gboolean * is_config)
+{
+  return gst_validate_scenario_load_structures (scenario,
+      gst_validate_utils_structs_parse_from_filename (scenario_file,
+          (GstValidateGetIncludePathsFunc)
+          gst_validate_scenario_get_include_paths, NULL), is_config,
+      scenario_file);
+}
+
+static gboolean
+gst_validate_scenario_load (GstValidateScenario * scenario,
+    const gchar * scenario_name)
+{
+  gchar **scenarios = NULL;
+  guint i;
+  gboolean found_actions = FALSE, is_config, ret = TRUE;
+  gchar **include_paths = gst_validate_scenario_get_include_paths (NULL);
+
   if (!scenario_name)
     goto invalid_name;
 
   scenarios = g_strsplit (scenario_name, ":", -1);
 
   for (i = 0; scenarios[i]; i++) {
+    guint include_i;
     gchar *lfilename = NULL, *tldir = NULL, *scenario_file = NULL;
 
     /* First check if the scenario name is not a full path to the
@@ -3827,46 +3830,17 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
       lfilename =
           g_strdup_printf ("%s" GST_VALIDATE_SCENARIO_SUFFIX, scenarios[i]);
 
-    if (env_scenariodir) {
-      guint i;
-
-      for (i = 0; env_scenariodir[i]; i++) {
-        tldir = g_build_filename (env_scenariodir[i], lfilename, NULL);
-        if ((ret = _load_scenario_file (scenario, tldir, &is_config))) {
-          scenario_file = tldir;
-          goto check_scenario;
-        }
-        g_free (tldir);
+    for (include_i = 0; include_paths[include_i]; include_i++) {
+      tldir = g_build_filename (include_paths[include_i], lfilename, NULL);
+      if ((ret = _load_scenario_file (scenario, tldir, &is_config))) {
+        scenario_file = tldir;
+        break;
       }
-    }
-
-    tldir = g_build_filename ("data", "scenarios", lfilename, NULL);
-
-    if ((ret = _load_scenario_file (scenario, tldir, &is_config))) {
-      scenario_file = tldir;
-      goto check_scenario;
-    }
-
-    g_free (tldir);
-
-    /* Try from local profiles */
-    tldir =
-        g_build_filename (g_get_user_data_dir (),
-        "gstreamer-" GST_API_VERSION, "validate",
-        GST_VALIDATE_SCENARIO_DIRECTORY, lfilename, NULL);
-
-    if (!(ret = _load_scenario_file (scenario, tldir, &is_config))) {
       g_free (tldir);
-      /* Try from system-wide profiles */
-      tldir = g_build_filename (GST_DATADIR, "gstreamer-" GST_API_VERSION,
-          "validate", GST_VALIDATE_SCENARIO_DIRECTORY, lfilename, NULL);
-
-      if (!(ret = _load_scenario_file (scenario, tldir, &is_config))) {
-        goto error;
-      }
     }
 
-    scenario_file = tldir;
+    if (!ret)
+      goto error;
 
     /* else check scenario */
   check_scenario:
@@ -3899,8 +3873,8 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
 
 done:
 
-  if (env_scenariodir)
-    g_strfreev (env_scenariodir);
+  if (include_paths)
+    g_strfreev (include_paths);
 
   g_strfreev (scenarios);
 
@@ -4248,7 +4222,7 @@ gst_validate_scenario_new (GstValidateRunner *
   } else {
 
     GST_LOG ("Creating scenario %s", scenario_name);
-    if (!gst_validate_scenario_load (scenario, scenario_name, NULL)) {
+    if (!gst_validate_scenario_load (scenario, scenario_name)) {
       g_object_unref (scenario);
 
       return NULL;
@@ -4413,7 +4387,9 @@ _parse_scenario (GFile * f, GKeyFile * kf)
 
   if (g_str_has_suffix (path, GST_VALIDATE_SCENARIO_SUFFIX)) {
     GstStructure *meta = NULL;
-    GList *tmp, *structures = gst_validate_structs_parse_from_gfile (f);
+    GList *tmp, *structures = gst_validate_structs_parse_from_gfile (f,
+        (GstValidateGetIncludePathsFunc)
+        gst_validate_scenario_get_include_paths);
 
     gst_validate_scenario_check_and_set_needs_clock_sync (structures, &meta);
     for (tmp = structures; tmp; tmp = tmp->next)
@@ -6043,20 +6019,6 @@ register_action_types (void)
       "Sets the debug level to be used, same format as\n"
       "setting the GST_DEBUG env variable",
       GST_VALIDATE_ACTION_TYPE_NONE);
-
-  REGISTER_ACTION_TYPE ("include",
-      NULL, /* This is handled directly when loading a scenario */
-      ((GstValidateActionParameter [])
-        {
-          {
-            .name = "location",
-            .description = "The location of the sub scenario to include.",
-            .mandatory = TRUE,
-            .types = "string"},
-          {NULL}
-        }),
-      "Include a sub scenario file.",
-      GST_VALIDATE_ACTION_TYPE_CONFIG);
 
   REGISTER_ACTION_TYPE ("emit-signal", _execute_emit_signal,
       ((GstValidateActionParameter [])

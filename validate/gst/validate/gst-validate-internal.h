@@ -49,7 +49,10 @@ void register_action_types (void);
 G_GNUC_INTERNAL gboolean _action_check_and_set_printed (GstValidateAction *action);
 G_GNUC_INTERNAL gboolean gst_validate_action_is_subaction (GstValidateAction *action);
 G_GNUC_INTERNAL gboolean gst_validate_scenario_check_and_set_needs_clock_sync (GList *structures, GstStructure **meta);
-G_GNUC_INTERNAL void _priv_validate_override_registry_deinit (void);
+
+#define GST_VALIDATE_SCENARIO_SUFFIX ".scenario"
+G_GNUC_INTERNAL gchar** gst_validate_scenario_get_include_paths(const gchar* relative_scenario);
+G_GNUC_INTERNAL void _priv_validate_override_registry_deinit(void);
 
 G_GNUC_INTERNAL GstValidateReportingDetails gst_validate_runner_get_default_reporting_details (GstValidateRunner *runner);
 

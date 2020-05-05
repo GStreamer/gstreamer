@@ -360,7 +360,7 @@ _load_text_override_file (const gchar * filename)
 {
   gint ret = OK;
   GList *structs =
-      gst_validate_utils_structs_parse_from_filename (filename, NULL);
+      gst_validate_utils_structs_parse_from_filename (filename, NULL, NULL);
 
   if (structs) {
     GList *tmp;

@@ -577,7 +577,8 @@ setup_quarks (void)
 /* Parse file that contains a list of GStructures */
 #define GST_STRUCT_LINE_CONTINUATION_CHARS ",{\\["
 static GList *
-_file_get_structures (GFile * file, gchar ** err)
+_file_get_structures (GFile * file, gchar ** err,
+    GstValidateGetIncludePathsFunc get_include_paths_func)
 {
   gsize size;
 
@@ -587,23 +588,42 @@ _file_get_structures (GFile * file, gchar ** err)
   gint lineno = 1, current_lineno;
   GList *structures = NULL;
   GString *errstr = NULL;
+  gchar *red = NULL, *bold = NULL;
+  const gchar *endcolor = "";
 
   if (err)
     errstr = g_string_new (NULL);
 
-  /* TODO Handle GCancellable */
-  if (!g_file_load_contents (file, NULL, &content, &size, NULL, &error)) {
-    GST_WARNING ("Failed to load contents: %d %s", error->code, error->message);
-    g_free (content);
-    g_error_free (error);
-    return NULL;
-  }
-  if (g_strcmp0 (content, "") == 0) {
-    g_free (content);
-    return NULL;
+#if GLIB_CHECK_VERSION(2,50,0)
+  if (g_log_writer_supports_color (fileno (stderr))) {
+    red = gst_debug_construct_term_color (GST_DEBUG_FG_RED);
+    bold = gst_debug_construct_term_color (GST_DEBUG_BOLD);
+    endcolor = "\033[0m";
+  } else
+#endif
+  {
+    red = g_strdup ("");
+    bold = g_strdup ("");
   }
 
+
   filename = g_file_get_path (file);
+  /* TODO Handle GCancellable */
+  if (!g_file_load_contents (file, NULL, &content, &size, NULL, &error)) {
+    if (errstr && !get_include_paths_func)
+      g_string_append_printf (errstr,
+          "\n%s%s:%s %sFailed to load content%s\n      | %s",
+          bold, filename, endcolor, red, endcolor, error->message);
+    else
+      GST_WARNING ("Failed to load contents: %d %s", error->code,
+          error->message);
+    g_error_free (error);
+    goto failed;
+  }
+  if (g_strcmp0 (content, "") == 0) {
+    goto done;
+  }
+
   tmp = content;
   while (*tmp) {
     GString *l, *debug_line;
@@ -673,13 +693,11 @@ _file_get_structures (GFile * file, gchar ** err)
 
     structure = gst_structure_from_string (l->str, NULL);
     if (structure == NULL) {
-      GST_ERROR ("Could not parse structure at %s:%d-%d\n     %s", filename,
-          current_lineno, lineno, debug_line->str);
-
       if (errstr) {
         g_string_append_printf (errstr,
-            "\n%s:%d-%d: Invalid structure\n%s",
-            filename, current_lineno, lineno, debug_line->str);
+            "\n%s%s:%d-%d:%s %sInvalid structure%s\n%s",
+            bold, filename, current_lineno, lineno, endcolor,
+            red, endcolor, debug_line->str);
 
         if (strchr (debug_line->str, '\n'))
           g_string_append_printf (errstr, "\n       > %s\n", l->str);
@@ -691,12 +709,107 @@ _file_get_structures (GFile * file, gchar ** err)
         goto failed;
       }
     } else {
-      setup_quarks ();
-      gst_structure_id_set (structure,
-          lineno_quark, G_TYPE_INT, current_lineno,
-          filename_quark, G_TYPE_STRING, filename,
-          filename_quark, G_TYPE_STRING, debug_line->str, NULL);
-      structures = g_list_append (structures, structure);
+      if (gst_structure_has_name (structure, "include")) {
+        gchar *included_err = NULL;
+        const gchar *location =
+            gst_structure_get_string (structure, "location");
+
+        if (location == NULL) {
+          if (errstr) {
+            g_string_append_printf (errstr,
+                "\n%s%s:%d-%d:%s %sMissing field 'location' in `include` structure%s\n%s",
+                bold, filename, current_lineno, lineno, endcolor,
+                red, endcolor, debug_line->str);
+
+            if (strchr (debug_line->str, '\n'))
+              g_string_append_printf (errstr, "\n       > %s\n", l->str);
+
+            g_string_append_c (errstr, '\n');
+          } else {
+            g_string_free (l, TRUE);
+            g_string_free (debug_line, TRUE);
+            goto failed;
+          }
+        } else {
+          GFile *included = NULL;
+          GList *tmpstructures;
+          gchar **include_dirs = NULL;
+
+          if (!get_include_paths_func
+              && g_str_has_suffix (location, GST_VALIDATE_SCENARIO_SUFFIX)) {
+            GST_INFO
+                ("Trying to include a scenario, take into account scenario include dir");
+
+            get_include_paths_func = (GstValidateGetIncludePathsFunc)
+                gst_validate_scenario_get_include_paths;
+          }
+
+          if (get_include_paths_func)
+            include_dirs = get_include_paths_func (g_file_peek_path (file));
+
+          if (!include_dirs) {
+            GFile *dir = g_file_get_parent (file);
+            included = g_file_resolve_relative_path (dir, location);
+
+            g_object_unref (dir);
+          } else {
+            gint i;
+
+            for (i = 0; include_dirs[i]; i++) {
+              g_clear_object (&included);
+              included =
+                  g_file_new_build_filename (include_dirs[i], location, NULL);
+              if (g_file_query_exists (included, NULL))
+                break;
+
+              /* We let the last attempt fail and report an error in the
+               * including code path */
+            }
+          }
+
+          GST_INFO ("%s including %s", g_file_peek_path (file),
+              g_file_peek_path (included));
+
+          tmpstructures = _file_get_structures (included, &included_err,
+              get_include_paths_func);
+          if (included_err) {
+            if (errstr) {
+              gchar *c;
+
+              g_string_append_printf (errstr,
+                  "\n%s%s:%d-%d:%s %sError including %s%s\n%s",
+                  bold, filename, current_lineno, lineno, endcolor,
+                  red, location, endcolor, debug_line->str);
+
+              if (strchr (debug_line->str, '\n'))
+                g_string_append_printf (errstr, "\n       > %s\n", l->str);
+
+              for (c = included_err; *c != '\0' && *(c + 1) != '\0'; c++) {
+                g_string_append_c (errstr, *c);
+                if (*c == '\n')
+                  g_string_append (errstr, "       | ");
+              }
+              g_free (included_err);
+            } else {
+              g_free (included_err);
+              g_string_free (l, TRUE);
+              g_string_free (debug_line, TRUE);
+              g_object_unref (included);
+              goto failed;
+            }
+          }
+          g_object_unref (included);
+          structures = g_list_concat (structures, tmpstructures);
+        }
+        gst_structure_free (structure);
+      } else {
+        setup_quarks ();
+        gst_structure_id_set (structure,
+            lineno_quark, G_TYPE_INT, current_lineno,
+            filename_quark, G_TYPE_STRING, filename,
+            filename_quark, G_TYPE_STRING, debug_line->str, NULL);
+        structures = g_list_append (structures, structure);
+      }
     }
 
     g_string_free (l, TRUE);
@@ -711,6 +824,8 @@ done:
     *err = g_string_free (errstr, errstr->len ? FALSE : TRUE);
   g_free (content);
   g_free (filename);
+  g_free (bold);
+  g_free (red);
   return structures;
 
 failed:
@@ -722,23 +837,24 @@ failed:
 }
 
 static GList *
-_get_structures (const gchar * scenario_file, gchar ** file_path, gchar ** err)
+_get_structures (const gchar * structured_file, gchar ** file_path,
+    GstValidateGetIncludePathsFunc get_include_paths_func, gchar ** err)
 {
   GFile *file = NULL;
   GList *structs = NULL;
 
-  GST_DEBUG ("Trying to load %s", scenario_file);
-  if ((file = g_file_new_for_path (scenario_file)) == NULL) {
-    GST_WARNING ("%s wrong uri", scenario_file);
+  GST_DEBUG ("Trying to load %s", structured_file);
+  if ((file = g_file_new_for_path (structured_file)) == NULL) {
+    GST_WARNING ("%s wrong uri", structured_file);
     if (err)
-      *err = g_strdup_printf ("%s wrong uri", scenario_file);
+      *err = g_strdup_printf ("%s wrong uri", structured_file);
     return NULL;
   }
 
   if (file_path)
     *file_path = g_file_get_path (file);
 
-  structs = _file_get_structures (file, err);
+  structs = _file_get_structures (file, err, get_include_paths_func);
 
   g_object_unref (file);
 
@@ -749,17 +865,19 @@ _get_structures (const gchar * scenario_file, gchar ** file_path, gchar ** err)
  * gst_validate_utils_structs_parse_from_filename: (skip):
  */
 GList *
-gst_validate_utils_structs_parse_from_filename (const gchar * scenario_file,
-    gchar ** file_path)
+gst_validate_utils_structs_parse_from_filename (const gchar * structured_file,
+    GstValidateGetIncludePathsFunc get_include_paths_func, gchar ** file_path)
 {
   GList *res;
   gchar *err = NULL;
 
-  res = _get_structures (scenario_file, file_path, &err);
+  res =
+      _get_structures (structured_file, file_path, get_include_paths_func,
+      &err);
 
   if (err)
     gst_validate_abort ("Could not get structures from %s:\n%s\n",
-        scenario_file, err);
+        structured_file, err);
 
   return res;
 }
@@ -768,15 +886,16 @@ gst_validate_utils_structs_parse_from_filename (const gchar * scenario_file,
  * gst_validate_structs_parse_from_gfile: (skip):
  */
 GList *
-gst_validate_structs_parse_from_gfile (GFile * scenario_file)
+gst_validate_structs_parse_from_gfile (GFile * structured_file,
+    GstValidateGetIncludePathsFunc get_include_paths_func)
 {
   gchar *err = NULL;
   GList *res;
 
-  res = _file_get_structures (scenario_file, &err);
+  res = _file_get_structures (structured_file, &err, get_include_paths_func);
   if (err)
     gst_validate_abort ("Could not get structures from %s:\n%s\n",
-        g_file_get_uri (scenario_file), err);
+        g_file_get_uri (structured_file), err);
 
   return res;
 }
@@ -1076,8 +1195,8 @@ gst_validate_element_matches_target (GstElement * element, GstStructure * s)
 }
 
 gchar *
-gst_validate_replace_variables_in_string (GstStructure * local_vars,
-    const gchar * in_string)
+gst_validate_replace_variables_in_string (gpointer source,
+    GstStructure * local_vars, const gchar * in_string)
 {
   gint varname_len;
   GMatchInfo *match_info = NULL;
@@ -1111,8 +1230,8 @@ gst_validate_replace_variables_in_string (GstStructure * local_vars,
           var_value = gst_structure_get_string (global_vars, varname);
 
         if (!var_value) {
-          g_error
-              ("Trying to use undefined variable : %s (\nlocals: %s\nglobals: %s\n)",
+          gst_validate_error_structure (source,
+              "Trying to use undefined variable `%s`.\n  Available vars:\n    - locals%s\n    - globals%s\n",
               varname, gst_structure_to_string (local_vars),
               gst_structure_to_string (global_vars));
 
@@ -1143,9 +1262,14 @@ gst_validate_replace_variables_in_string (GstStructure * local_vars,
   return string;
 }
 
+typedef struct
+{
+  gpointer source;
+  GstStructure *local_vars;
+} ReplaceData;
+
 static gboolean
-_structure_set_variables (GQuark field_id, GValue * value,
-    GstStructure * local_variables)
+_structure_set_variables (GQuark field_id, GValue * value, ReplaceData * data)
 {
   gchar *str;
 
@@ -1158,7 +1282,7 @@ _structure_set_variables (GQuark field_id, GValue * value,
 
     for (i = 0; i < gst_value_list_get_size (value); i++)
       _structure_set_variables (0, (GValue *) gst_value_list_get_value (value,
-              i), local_variables);
+              i), data);
 
     return TRUE;
   }
@@ -1166,7 +1290,8 @@ _structure_set_variables (GQuark field_id, GValue * value,
   if (!G_VALUE_HOLDS_STRING (value))
     return TRUE;
 
-  str = gst_validate_replace_variables_in_string (local_variables,
+  str =
+      gst_validate_replace_variables_in_string (data->source, data->local_vars,
       g_value_get_string (value));
   if (str) {
     g_value_set_string (value, str);
@@ -1177,11 +1302,13 @@ _structure_set_variables (GQuark field_id, GValue * value,
 }
 
 void
-gst_validate_structure_resolve_variables (GstStructure * structure,
-    GstStructure * local_variables)
+gst_validate_structure_resolve_variables (gpointer source,
+    GstStructure * structure, GstStructure * local_variables)
 {
+  ReplaceData d = { source ? source : structure, local_variables };
+
   gst_structure_filter_and_map_in_place (structure,
-      (GstStructureFilterMapFunc) _structure_set_variables, local_variables);
+      (GstStructureFilterMapFunc) _structure_set_variables, &d);
 }
 
 static gboolean
