@@ -6191,7 +6191,7 @@ GST_START_TEST (dash_mpdparser_check_mpd_client_set_methods)
       "namespace-ext", "TestNamespaceEXT", "id", "testId", NULL);
   gst_mpd_client_add_baseurl_node (second_mpdclient,
       "url", "TestBaseURL",
-      "service location", "TestServiceLocation",
+      "service-location", "TestServiceLocation",
       "byte-range", "TestByteRange", NULL);
   period_id = gst_mpd_client_set_period_node (second_mpdclient, (gchar *) "TestId", "start", 60000,     // ms
       "duration", 40000, "bitstream-switching", 1, NULL);
