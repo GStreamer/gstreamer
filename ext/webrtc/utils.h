@@ -39,6 +39,7 @@ typedef enum
   GST_WEBRTC_BIN_ERROR_FINGERPRINT,
   GST_WEBRTC_BIN_ERROR_SCTP_FAILURE,
   GST_WEBRTC_BIN_ERROR_DATA_CHANNEL_FAILURE,
+  GST_WEBRTC_BIN_ERROR_CLOSED,
 } GstWebRTCError;
 
 GstPadTemplate *        _find_pad_template          (GstElement * element,

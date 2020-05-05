@@ -91,7 +91,8 @@ _sctp_enqueue_task (GstWebRTCSCTPTransport * sctp, SCTPTask func,
   task->notify = notify;
 
   gst_webrtc_bin_enqueue_task (sctp->webrtcbin,
-      (GstWebRTCBinFunc) _execute_task, task, (GDestroyNotify) _free_task);
+      (GstWebRTCBinFunc) _execute_task, task, (GDestroyNotify) _free_task,
+      NULL);
 }
 
 static void

@@ -745,6 +745,18 @@ _execute_op (GstWebRTCBinTask * op)
 {
   PC_LOCK (op->webrtc);
   if (op->webrtc->priv->is_closed) {
+    if (op->promise) {
+      GError *error =
+          g_error_new (GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_CLOSED,
+          "webrtcbin is closed. aborting execution.");
+      GstStructure *s =
+          gst_structure_new ("application/x-gstwebrtcbin-promise-error",
+          "error", G_TYPE_ERROR, error, NULL);
+
+      gst_promise_reply (op->promise, s);
+
+      g_clear_error (&error);
+    }
     GST_DEBUG_OBJECT (op->webrtc,
         "Peerconnection is closed, aborting execution");
     goto out;
@@ -762,29 +774,39 @@ _free_op (GstWebRTCBinTask * op)
 {
   if (op->notify)
     op->notify (op->data);
+  if (op->promise)
+    gst_promise_unref (op->promise);
   g_free (op);
 }
 
-void
+/*
+ * @promise is for correctly signalling the failure case to the caller when
+ * the user supplies it.  Without passing it in, the promise would never
+ * be replied to in the case that @webrtc becomes closed between the idle
+ * source addition and the the execution of the idle source.
+ */
+gboolean
 gst_webrtc_bin_enqueue_task (GstWebRTCBin * webrtc, GstWebRTCBinFunc func,
-    gpointer data, GDestroyNotify notify)
+    gpointer data, GDestroyNotify notify, GstPromise * promise)
 {
   GstWebRTCBinTask *op;
   GSource *source;
 
-  g_return_if_fail (GST_IS_WEBRTC_BIN (webrtc));
+  g_return_val_if_fail (GST_IS_WEBRTC_BIN (webrtc), FALSE);
 
   if (webrtc->priv->is_closed) {
     GST_DEBUG_OBJECT (webrtc, "Peerconnection is closed, aborting execution");
     if (notify)
       notify (data);
-    return;
+    return FALSE;
   }
   op = g_new0 (GstWebRTCBinTask, 1);
   op->webrtc = webrtc;
   op->op = func;
   op->data = data;
   op->notify = notify;
+  if (promise)
+    op->promise = gst_promise_ref (promise);
 
   source = g_idle_source_new ();
   g_source_set_priority (source, G_PRIORITY_DEFAULT);
@@ -792,6 +814,8 @@ gst_webrtc_bin_enqueue_task (GstWebRTCBin * webrtc, GstWebRTCBinFunc func,
       (GDestroyNotify) _free_op);
   g_source_attach (source, webrtc->priv->main_context);
   g_source_unref (source);
+
+  return TRUE;
 }
 
 /* https://www.w3.org/TR/webrtc/#dom-rtciceconnectionstate */
@@ -1200,7 +1224,7 @@ static void
 _update_ice_gathering_state (GstWebRTCBin * webrtc)
 {
   gst_webrtc_bin_enqueue_task (webrtc, _update_ice_gathering_state_task, NULL,
-      NULL);
+      NULL, NULL);
 }
 
 static void
@@ -1235,7 +1259,7 @@ static void
 _update_ice_connection_state (GstWebRTCBin * webrtc)
 {
   gst_webrtc_bin_enqueue_task (webrtc, _update_ice_connection_state_task, NULL,
-      NULL);
+      NULL, NULL);
 }
 
 static void
@@ -1270,7 +1294,7 @@ static void
 _update_peer_connection_state (GstWebRTCBin * webrtc)
 {
   gst_webrtc_bin_enqueue_task (webrtc, _update_peer_connection_state_task,
-      NULL, NULL);
+      NULL, NULL, NULL);
 }
 
 static gboolean
@@ -1506,7 +1530,7 @@ _update_need_negotiation (GstWebRTCBin * webrtc)
   /* Queue a task to check connection's [[ needNegotiation]] slot and, if still
    * true, fire a simple event named negotiationneeded at connection. */
   gst_webrtc_bin_enqueue_task (webrtc, _check_need_negotiation_task, NULL,
-      NULL);
+      NULL, NULL);
 }
 
 static GstCaps *
@@ -1884,7 +1908,7 @@ _on_sctp_notify_dtls_state (GstWebRTCDTLSTransport * transport,
    * elements */
   if (dtls_state == GST_WEBRTC_DTLS_TRANSPORT_STATE_CONNECTED) {
     gst_webrtc_bin_enqueue_task (webrtc,
-        (GstWebRTCBinFunc) _sctp_check_dtls_state_task, NULL, NULL);
+        (GstWebRTCBinFunc) _sctp_check_dtls_state_task, NULL, NULL, NULL);
   }
 }
 
@@ -1990,7 +2014,7 @@ _get_or_create_data_channel_transports (GstWebRTCBin * webrtc, guint session_id)
        * current state of the connection already without getting the signal
        * called */
       gst_webrtc_bin_enqueue_task (webrtc,
-          (GstWebRTCBinFunc) _sctp_check_dtls_state_task, NULL, NULL);
+          (GstWebRTCBinFunc) _sctp_check_dtls_state_task, NULL, NULL, NULL);
     }
 
     webrtc->priv->sctp_transport = sctp_transport;
@@ -3336,8 +3360,19 @@ gst_webrtc_bin_create_offer (GstWebRTCBin * webrtc,
   data->promise = gst_promise_ref (promise);
   data->type = GST_WEBRTC_SDP_TYPE_OFFER;
 
-  gst_webrtc_bin_enqueue_task (webrtc, (GstWebRTCBinFunc) _create_sdp_task,
-      data, (GDestroyNotify) _free_create_sdp_data);
+  if (!gst_webrtc_bin_enqueue_task (webrtc, (GstWebRTCBinFunc) _create_sdp_task,
+          data, (GDestroyNotify) _free_create_sdp_data, promise)) {
+    GError *error =
+        g_error_new (GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_CLOSED,
+        "Could not create offer. webrtcbin is closed");
+    GstStructure *s =
+        gst_structure_new ("application/x-gstwebrtcbin-promise-error",
+        "error", G_TYPE_ERROR, error, NULL);
+
+    gst_promise_reply (promise, s);
+
+    g_clear_error (&error);
+  }
 }
 
 static void
@@ -3351,8 +3386,19 @@ gst_webrtc_bin_create_answer (GstWebRTCBin * webrtc,
   data->promise = gst_promise_ref (promise);
   data->type = GST_WEBRTC_SDP_TYPE_ANSWER;
 
-  gst_webrtc_bin_enqueue_task (webrtc, (GstWebRTCBinFunc) _create_sdp_task,
-      data, (GDestroyNotify) _free_create_sdp_data);
+  if (!gst_webrtc_bin_enqueue_task (webrtc, (GstWebRTCBinFunc) _create_sdp_task,
+          data, (GDestroyNotify) _free_create_sdp_data, promise)) {
+    GError *error =
+        g_error_new (GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_CLOSED,
+        "Could not create answer. webrtcbin is closed.");
+    GstStructure *s =
+        gst_structure_new ("application/x-gstwebrtcbin-promise-error",
+        "error", G_TYPE_ERROR, error, NULL);
+
+    gst_promise_reply (promise, s);
+
+    g_clear_error (&error);
+  }
 }
 
 static GstWebRTCBinPad *
@@ -3970,7 +4016,7 @@ _generate_data_channel_id (GstWebRTCBin * webrtc)
     }
 
     /* client must generate even ids, server must generate odd ids */
-    if (new_id % 2 == !!is_client)
+    if (new_id % 2 == ! !is_client)
       continue;
 
     channel = _find_data_channel_for_id (webrtc, new_id);
@@ -4634,8 +4680,20 @@ gst_webrtc_bin_set_remote_description (GstWebRTCBin * webrtc,
   sd->source = SDP_REMOTE;
   sd->sdp = gst_webrtc_session_description_copy (remote_sdp);
 
-  gst_webrtc_bin_enqueue_task (webrtc, (GstWebRTCBinFunc) _set_description_task,
-      sd, (GDestroyNotify) _free_set_description_data);
+  if (!gst_webrtc_bin_enqueue_task (webrtc,
+          (GstWebRTCBinFunc) _set_description_task, sd,
+          (GDestroyNotify) _free_set_description_data, promise)) {
+    GError *error =
+        g_error_new (GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_CLOSED,
+        "Could not set remote description. webrtcbin is closed.");
+    GstStructure *s =
+        gst_structure_new ("application/x-gstwebrtcbin-promise-error",
+        "error", G_TYPE_ERROR, error, NULL);
+
+    gst_promise_reply (promise, s);
+
+    g_clear_error (&error);
+  }
 
   return;
 
@@ -4663,8 +4721,20 @@ gst_webrtc_bin_set_local_description (GstWebRTCBin * webrtc,
   sd->source = SDP_LOCAL;
   sd->sdp = gst_webrtc_session_description_copy (local_sdp);
 
-  gst_webrtc_bin_enqueue_task (webrtc, (GstWebRTCBinFunc) _set_description_task,
-      sd, (GDestroyNotify) _free_set_description_data);
+  if (!gst_webrtc_bin_enqueue_task (webrtc,
+          (GstWebRTCBinFunc) _set_description_task, sd,
+          (GDestroyNotify) _free_set_description_data, promise)) {
+    GError *error =
+        g_error_new (GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_CLOSED,
+        "Could not set remote description. webrtcbin is closed");
+    GstStructure *s =
+        gst_structure_new ("application/x-gstwebrtcbin-promise-error",
+        "error", G_TYPE_ERROR, error, NULL);
+
+    gst_promise_reply (promise, s);
+
+    g_clear_error (&error);
+  }
 
   return;
 
@@ -4712,7 +4782,7 @@ gst_webrtc_bin_add_ice_candidate (GstWebRTCBin * webrtc, guint mline,
     item->candidate = g_strdup_printf ("a=%s", attr);
   gst_webrtc_bin_enqueue_task (webrtc,
       (GstWebRTCBinFunc) _add_ice_candidate_task, item,
-      (GDestroyNotify) _free_ice_candidate_item);
+      (GDestroyNotify) _free_ice_candidate_item, NULL);
 }
 
 static void
@@ -4796,7 +4866,7 @@ _on_local_ice_candidate_cb (GstWebRTCICE * ice, guint session_id,
   if (queue_task) {
     GST_TRACE_OBJECT (webrtc, "Queueing on_ice_candidate_task");
     gst_webrtc_bin_enqueue_task (webrtc,
-        (GstWebRTCBinFunc) _on_local_ice_candidate_task, NULL, NULL);
+        (GstWebRTCBinFunc) _on_local_ice_candidate_task, NULL, NULL, NULL);
   }
 }
 
@@ -4866,8 +4936,18 @@ gst_webrtc_bin_get_stats (GstWebRTCBin * webrtc, GstPad * pad,
   if (pad)
     stats->pad = gst_object_ref (pad);
 
-  gst_webrtc_bin_enqueue_task (webrtc, (GstWebRTCBinFunc) _get_stats_task,
-      stats, (GDestroyNotify) _free_get_stats);
+  if (!gst_webrtc_bin_enqueue_task (webrtc, (GstWebRTCBinFunc) _get_stats_task,
+          stats, (GDestroyNotify) _free_get_stats, promise)) {
+    GError *error =
+        g_error_new (GST_WEBRTC_BIN_ERROR, GST_WEBRTC_BIN_ERROR_CLOSED,
+        "Could not retrieve statistics. webrtcbin is closed.");
+    GstStructure *s = gst_structure_new ("application/x-gst-promise-error",
+        "error", G_TYPE_ERROR, error, NULL);
+
+    gst_promise_reply (promise, s);
+
+    g_clear_error (&error);
+  }
 }
 
 static GstWebRTCRTPTransceiver *

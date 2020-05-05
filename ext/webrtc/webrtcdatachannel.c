@@ -283,7 +283,8 @@ _channel_enqueue_task (GstWebRTCDataChannel * channel, ChannelTask func,
   task->notify = notify;
 
   gst_webrtc_bin_enqueue_task (channel->webrtcbin,
-      (GstWebRTCBinFunc) _execute_task, task, (GDestroyNotify) _free_task);
+      (GstWebRTCBinFunc) _execute_task, task, (GDestroyNotify) _free_task,
+      NULL);
 }
 
 static void
