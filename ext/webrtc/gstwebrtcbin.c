@@ -713,9 +713,13 @@ _gst_pc_thread (GstWebRTCBin * webrtc)
 static void
 _start_thread (GstWebRTCBin * webrtc)
 {
+  gchar *name;
+
   PC_LOCK (webrtc);
-  webrtc->priv->thread = g_thread_new ("gst-pc-ops",
-      (GThreadFunc) _gst_pc_thread, webrtc);
+  name = g_strdup_printf ("%s:pc", GST_OBJECT_NAME (webrtc));
+  webrtc->priv->thread = g_thread_new (name, (GThreadFunc) _gst_pc_thread,
+      webrtc);
+  g_free (name);
 
   while (!webrtc->priv->loop)
     PC_COND_WAIT (webrtc);
@@ -5841,6 +5845,21 @@ gst_webrtc_bin_get_property (GObject * object, guint prop_id,
 }
 
 static void
+gst_webrtc_bin_constructed (GObject * object)
+{
+  GstWebRTCBin *webrtc = GST_WEBRTC_BIN (object);
+  gchar *name;
+
+  GST_ERROR_OBJECT (webrtc, "%s", GST_OBJECT_NAME (webrtc));
+  name = g_strdup_printf ("%s:ice", GST_OBJECT_NAME (webrtc));
+  webrtc->priv->ice = gst_webrtc_ice_new (name);
+  g_signal_connect (webrtc->priv->ice, "on-ice-candidate",
+      G_CALLBACK (_on_local_ice_candidate_cb), webrtc);
+
+  g_free (name);
+}
+
+static void
 _free_pending_pad (GstPad * pad)
 {
   gst_object_unref (pad);
@@ -5957,6 +5976,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
       "Filter/Network/WebRTC", "A bin for webrtc connections",
       "Matthew Waters <matthew@centricular.com>");
 
+  gobject_class->constructed = gst_webrtc_bin_constructed;
   gobject_class->get_property = gst_webrtc_bin_get_property;
   gobject_class->set_property = gst_webrtc_bin_set_property;
   gobject_class->dispose = gst_webrtc_bin_dispose;
@@ -6395,9 +6415,6 @@ gst_webrtc_bin_init (GstWebRTCBin * webrtc)
   g_array_set_clear_func (webrtc->priv->session_mid_map,
       (GDestroyNotify) clear_session_mid_item);
 
-  webrtc->priv->ice = gst_webrtc_ice_new ();
-  g_signal_connect (webrtc->priv->ice, "on-ice-candidate",
-      G_CALLBACK (_on_local_ice_candidate_cb), webrtc);
   webrtc->priv->ice_stream_map =
       g_array_new (FALSE, TRUE, sizeof (IceStreamItem));
   webrtc->priv->pending_remote_ice_candidates =

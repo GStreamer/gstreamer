@@ -118,7 +118,7 @@ static void
 _start_thread (GstWebRTCICE * ice)
 {
   g_mutex_lock (&ice->priv->lock);
-  ice->priv->thread = g_thread_new ("gst-nice-ops",
+  ice->priv->thread = g_thread_new (GST_OBJECT_NAME (ice),
       (GThreadFunc) _gst_nice_thread, ice);
 
   while (!ice->priv->loop)
@@ -902,10 +902,26 @@ gst_webrtc_ice_finalize (GObject * object)
 }
 
 static void
+gst_webrtc_ice_constructed (GObject * object)
+{
+  GstWebRTCICE *ice = GST_WEBRTC_ICE (object);
+
+  _start_thread (ice);
+
+  ice->priv->nice_agent = nice_agent_new (ice->priv->main_context,
+      NICE_COMPATIBILITY_RFC5245);
+  g_signal_connect (ice->priv->nice_agent, "new-candidate-full",
+      G_CALLBACK (_on_new_candidate), ice);
+
+  G_OBJECT_CLASS (parent_class)->constructed (object);
+}
+
+static void
 gst_webrtc_ice_class_init (GstWebRTCICEClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
+  gobject_class->constructed = gst_webrtc_ice_constructed;
   gobject_class->get_property = gst_webrtc_ice_get_property;
   gobject_class->set_property = gst_webrtc_ice_set_property;
   gobject_class->finalize = gst_webrtc_ice_finalize;
@@ -964,13 +980,6 @@ gst_webrtc_ice_init (GstWebRTCICE * ice)
       g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
       (GDestroyNotify) gst_uri_unref);
 
-  _start_thread (ice);
-
-  ice->priv->nice_agent = nice_agent_new (ice->priv->main_context,
-      NICE_COMPATIBILITY_RFC5245);
-  g_signal_connect (ice->priv->nice_agent, "new-candidate-full",
-      G_CALLBACK (_on_new_candidate), ice);
-
   ice->priv->nice_stream_map =
       g_array_new (FALSE, TRUE, sizeof (struct NiceStreamItem));
   g_array_set_clear_func (ice->priv->nice_stream_map,
@@ -978,7 +987,7 @@ gst_webrtc_ice_init (GstWebRTCICE * ice)
 }
 
 GstWebRTCICE *
-gst_webrtc_ice_new (void)
+gst_webrtc_ice_new (const gchar * name)
 {
-  return g_object_new (GST_TYPE_WEBRTC_ICE, NULL);
+  return g_object_new (GST_TYPE_WEBRTC_ICE, "name", name, NULL);
 }
