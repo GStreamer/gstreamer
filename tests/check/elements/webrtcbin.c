@@ -1846,7 +1846,7 @@ have_data_channel_check_low_threshold_emitted (struct test_webrtc *t,
 
   g_signal_connect (our, "on-error", G_CALLBACK (on_channel_error_not_reached),
       NULL);
-  g_signal_emit_by_name (our, "send-string", "DATA");
+  g_signal_emit_by_name (our, "send-string", "A");
 }
 
 GST_START_TEST (test_data_channel_low_threshold)

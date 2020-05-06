@@ -527,7 +527,9 @@ _parse_control_packet (GstWebRTCDataChannel * channel, guint8 * data,
       g_set_error (error, GST_WEBRTC_BIN_ERROR,
           GST_WEBRTC_BIN_ERROR_DATA_CHANNEL_FAILURE,
           "Could not send ack packet");
+      return ret;
     }
+
     return ret;
   } else {
     g_set_error (error, GST_WEBRTC_BIN_ERROR,
@@ -1042,7 +1044,11 @@ on_appsrc_data (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
     CHANNEL_LOCK (channel);
     prev_amount = channel->buffered_amount;
     channel->buffered_amount -= size;
-    if (prev_amount > channel->buffered_amount_low_threshold &&
+    GST_TRACE_OBJECT (channel, "checking low-threshold: prev %"
+        G_GUINT64_FORMAT " low-threshold %" G_GUINT64_FORMAT " buffered %"
+        G_GUINT64_FORMAT, prev_amount, channel->buffered_amount_low_threshold,
+        channel->buffered_amount);
+    if (prev_amount >= channel->buffered_amount_low_threshold &&
         channel->buffered_amount < channel->buffered_amount_low_threshold) {
       _channel_enqueue_task (channel, (ChannelTask) _emit_low_threshold,
           NULL, NULL);
