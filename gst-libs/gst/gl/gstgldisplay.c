@@ -911,9 +911,11 @@ gst_gl_display_remove_context (GstGLDisplay * display, GstGLContext * needle)
         GST_INFO_OBJECT (display, "removed context %" GST_PTR_FORMAT
             " from internal list", context);
         return;
-      } else
-        continue;
+      }
+      continue;
     }
+    prev = l;
+    l = l->next;
   }
 
   GST_WARNING_OBJECT (display, "%" GST_PTR_FORMAT " was not found in this "
