@@ -301,7 +301,7 @@ static void gst_deinterlace_get_property (GObject * self, guint prop_id,
 static GstCaps *gst_deinterlace_getcaps (GstDeinterlace * self, GstPad * pad,
     GstCaps * filter);
 static gboolean gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad,
-    GstCaps * caps);
+    GstCaps * caps, gboolean force);
 static gboolean gst_deinterlace_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 static gboolean gst_deinterlace_sink_query (GstPad * pad, GstObject * parent,
@@ -1649,7 +1649,8 @@ restart:
 
       /* setcaps on sink and src pads */
       sinkcaps = gst_pad_get_current_caps (self->sinkpad);
-      if (!sinkcaps || !gst_deinterlace_setcaps (self, self->sinkpad, sinkcaps)) {
+      if (!sinkcaps
+          || !gst_deinterlace_setcaps (self, self->sinkpad, sinkcaps, FALSE)) {
         if (sinkcaps)
           gst_caps_unref (sinkcaps);
         return GST_FLOW_NOT_NEGOTIATED;
@@ -2196,11 +2197,16 @@ gst_deinterlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GST_OBJECT_LOCK (self);
   if (self->reconfigure || gst_pad_check_reconfigure (self->srcpad)) {
     GstCaps *caps;
+    gboolean force_reconfigure = FALSE;
 
-    if ((gint) self->new_fields != -1)
+    if ((gint) self->new_fields != -1) {
+      force_reconfigure |= (self->user_set_fields != self->new_fields);
       self->user_set_fields = self->new_fields;
-    if ((gint) self->new_mode != -1)
+    }
+    if ((gint) self->new_mode != -1) {
+      force_reconfigure |= (self->mode != self->new_mode);
       self->mode = self->new_mode;
+    }
     self->new_mode = -1;
     self->new_fields = -1;
 
@@ -2208,7 +2214,8 @@ gst_deinterlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     GST_OBJECT_UNLOCK (self);
     caps = gst_pad_get_current_caps (self->sinkpad);
     if (caps != NULL) {
-      if (!gst_deinterlace_setcaps (self, self->sinkpad, caps)) {
+      if (!gst_deinterlace_setcaps (self, self->sinkpad, caps,
+              force_reconfigure)) {
         gst_pad_mark_reconfigure (self->srcpad);
         gst_caps_unref (caps);
         if (GST_PAD_IS_FLUSHING (self->srcpad))
@@ -2696,7 +2703,8 @@ gst_deinterlace_do_bufferpool (GstDeinterlace * self, GstCaps * outcaps)
 
 
 static gboolean
-gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
+gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps,
+    gboolean force)
 {
   GstCaps *srccaps = NULL;
   GstVideoInterlaceMode interlacing_mode;
@@ -2705,7 +2713,9 @@ gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
 
   gst_pad_check_reconfigure (self->srcpad);
 
-  if ((current_caps = gst_pad_get_current_caps (pad))) {
+  /* If the force flag is set, always re-check the downstream caps,
+   * and reconfigure as the deinterlace mode has changed */
+  if (!force && (current_caps = gst_pad_get_current_caps (pad))) {
     if (gst_caps_is_equal (caps, current_caps)) {
       GST_DEBUG_OBJECT (pad, "Got same caps again, returning");
       gst_caps_unref (current_caps);
@@ -2979,7 +2989,7 @@ gst_deinterlace_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GstCaps *caps = NULL;
 
       gst_event_parse_caps (event, &caps);
-      res = gst_deinterlace_setcaps (self, pad, caps);
+      res = gst_deinterlace_setcaps (self, pad, caps, FALSE);
       gst_event_unref (event);
       break;
     }
