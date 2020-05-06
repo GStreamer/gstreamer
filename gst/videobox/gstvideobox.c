@@ -147,7 +147,7 @@ fill_ayuv (GstVideoBoxFill fill_type, guint b_alpha,
   width = GST_VIDEO_FRAME_WIDTH (frame);
   height = GST_VIDEO_FRAME_HEIGHT (frame);
 
-  b_alpha = CLAMP (b_alpha, 0, 255);
+  b_alpha = MIN (b_alpha, 255);
 
   if (sdtv)
     empty_pixel = GUINT32_FROM_BE ((b_alpha << 24) |
@@ -1695,7 +1695,7 @@ copy_i420_ayuv (guint i_alpha, GstVideoFrame * dest_frame,
   srcU = srcU + (src_y / 2) * src_strideU + src_x / 2;
   srcV = srcV + (src_y / 2) * src_strideV + src_x / 2;
 
-  i_alpha = CLAMP (i_alpha, 0, 255);
+  i_alpha = MIN (i_alpha, 255);
 
   if (src_sdtv != dest_sdtv) {
     gint i, j, uv_idx;
@@ -1779,7 +1779,7 @@ fill_rgb32 (GstVideoBoxFill fill_type, guint b_alpha,
   p[2] = GST_VIDEO_FRAME_COMP_OFFSET (frame, 1);
   p[3] = GST_VIDEO_FRAME_COMP_OFFSET (frame, 2);
 
-  b_alpha = CLAMP (b_alpha, 0, 255);
+  b_alpha = MIN (b_alpha, 255);
 
   if (GST_VIDEO_FRAME_N_COMPONENTS (frame) == 4) {
     empty_pixel = GUINT32_FROM_LE ((b_alpha << (p[0] * 8)) |
@@ -1886,7 +1886,7 @@ copy_rgb32 (guint i_alpha, GstVideoFrame * dest_frame,
     }
   } else if (out_alpha && !packed_in) {
     w *= 4;
-    i_alpha = CLAMP (i_alpha, 0, 255);
+    i_alpha = MIN (i_alpha, 255);
 
     for (i = 0; i < h; i++) {
       for (j = 0; j < w; j += 4) {
@@ -1899,7 +1899,7 @@ copy_rgb32 (guint i_alpha, GstVideoFrame * dest_frame,
       src += src_stride;
     }
   } else if (out_alpha && packed_in) {
-    i_alpha = CLAMP (i_alpha, 0, 255);
+    i_alpha = MIN (i_alpha, 255);
 
     for (i = 0; i < h; i++) {
       for (j = 0; j < w; j++) {
@@ -1995,7 +1995,7 @@ copy_rgb32_ayuv (guint i_alpha, GstVideoFrame * dest_frame,
     }
   } else if (!packed_in) {
     w *= 4;
-    i_alpha = CLAMP (i_alpha, 0, 255);
+    i_alpha = MIN (i_alpha, 255);
 
     for (i = 0; i < h; i++) {
       for (j = 0; j < w; j += 4) {
@@ -2017,7 +2017,7 @@ copy_rgb32_ayuv (guint i_alpha, GstVideoFrame * dest_frame,
       src += src_stride;
     }
   } else {
-    i_alpha = CLAMP (i_alpha, 0, 255);
+    i_alpha = MIN (i_alpha, 255);
 
     for (i = 0; i < h; i++) {
       for (j = 0; j < w; j++) {
