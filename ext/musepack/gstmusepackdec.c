@@ -282,12 +282,12 @@ gst_musepackdec_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 
   samplerate = g_atomic_int_get (&musepackdec->rate);
 
-  if (samplerate == 0)
-    goto done;
-
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:{
       gint64 cur, cur_off;
+
+      if (samplerate == 0)
+        goto done;
 
       gst_query_parse_position (query, &format, NULL);
 
@@ -307,6 +307,9 @@ gst_musepackdec_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
     }
     case GST_QUERY_DURATION:{
       gint64 len, len_off;
+
+      if (samplerate == 0)
+        goto done;
 
       gst_query_parse_duration (query, &format, NULL);
 
