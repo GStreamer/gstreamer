@@ -954,24 +954,31 @@ gst_tag_list_is_empty (const GstTagList * list)
 }
 
 static gboolean
-gst_tag_list_fields_equal (const GValue * value1, const GValue * value2)
+gst_tag_list_fields_equal (GQuark field_id, const GValue * value2,
+    gpointer data)
 {
+  const GstStructure *struct1 = (const GstStructure *) data;
+  const GValue *value1 = gst_structure_id_get_value (struct1, field_id);
+
   gdouble d1, d2;
 
   if (gst_value_compare (value1, value2) == GST_VALUE_EQUAL)
     return TRUE;
 
   /* fields not equal: add some tolerance for doubles, otherwise bail out */
-  if (!G_VALUE_HOLDS_DOUBLE (value1) || !G_VALUE_HOLDS_DOUBLE (value2))
-    return FALSE;
+  if ((G_VALUE_TYPE (value1) == G_VALUE_TYPE (value2)) &&
+      G_VALUE_TYPE (value1) == G_TYPE_DOUBLE) {
+    d1 = g_value_get_double (value1);
+    d2 = g_value_get_double (value2);
 
-  d1 = g_value_get_double (value1);
-  d2 = g_value_get_double (value2);
+    /* This will only work for 'normal' values and values around 0,
+     * which should be good enough for our purposes here
+     * FIXME: maybe add this to gst_value_compare_double() ? */
+    return (fabs (d1 - d2) < 0.0000001);
 
-  /* This will only work for 'normal' values and values around 0,
-   * which should be good enough for our purposes here
-   * FIXME: maybe add this to gst_value_compare_double() ? */
-  return (fabs (d1 - d2) < 0.0000001);
+  }
+
+  return FALSE;
 }
 
 /**
@@ -987,7 +994,6 @@ gboolean
 gst_tag_list_is_equal (const GstTagList * list1, const GstTagList * list2)
 {
   const GstStructure *s1, *s2;
-  gint num_fields1, num_fields2, i;
 
   g_return_val_if_fail (GST_IS_TAG_LIST (list1), FALSE);
   g_return_val_if_fail (GST_IS_TAG_LIST (list2), FALSE);
@@ -998,28 +1004,14 @@ gst_tag_list_is_equal (const GstTagList * list1, const GstTagList * list2)
   s1 = GST_TAG_LIST_STRUCTURE (list1);
   s2 = GST_TAG_LIST_STRUCTURE (list2);
 
-  num_fields1 = gst_structure_n_fields (s1);
-  num_fields2 = gst_structure_n_fields (s2);
+  if (G_UNLIKELY (s1 == s2))
+    return TRUE;
 
-  if (num_fields1 != num_fields2)
+  if (gst_structure_n_fields (s1) != gst_structure_n_fields (s2)) {
     return FALSE;
-
-  for (i = 0; i < num_fields1; i++) {
-    const GValue *value1, *value2;
-    const gchar *tag_name;
-
-    tag_name = gst_structure_nth_field_name (s1, i);
-    value1 = gst_structure_get_value (s1, tag_name);
-    value2 = gst_structure_get_value (s2, tag_name);
-
-    if (value2 == NULL)
-      return FALSE;
-
-    if (!gst_tag_list_fields_equal (value1, value2))
-      return FALSE;
   }
 
-  return TRUE;
+  return gst_structure_foreach (s1, gst_tag_list_fields_equal, (gpointer) s2);
 }
 
 typedef struct
