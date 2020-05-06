@@ -702,7 +702,12 @@ uridecodebin_pad_added_cb (GstElement * uridecodebin, GstPad * pad,
   g_object_set (ps->sink, "silent", TRUE, NULL);
   g_object_set (ps->queue, "max-size-buffers", 1, "silent", TRUE, NULL);
 
-  caps = gst_pad_query_caps (pad, NULL);
+  caps = gst_pad_get_current_caps (pad);
+  if (!caps) {
+    GST_WARNING ("Couldn't get negotiated caps from %s:%s",
+        GST_DEBUG_PAD_NAME (pad));
+    caps = gst_pad_query_caps (pad, NULL);
+  }
 
   sinkpad = gst_element_get_static_pad (ps->queue, "sink");
   if (sinkpad == NULL)
