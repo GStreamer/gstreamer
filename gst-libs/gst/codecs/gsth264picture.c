@@ -316,7 +316,7 @@ gst_h264_dpb_mark_all_non_ref (GstH264Dpb * dpb)
  *
  * Find a short term reference picture which has matching picture number
  *
- * Returns: (nullable) (transfer full): a #GstH264Picture
+ * Returns: (nullable) (transfer none): a #GstH264Picture
  */
 GstH264Picture *
 gst_h264_dpb_get_short_ref_by_pic_num (GstH264Dpb * dpb, gint pic_num)
@@ -330,7 +330,7 @@ gst_h264_dpb_get_short_ref_by_pic_num (GstH264Dpb * dpb, gint pic_num)
         g_array_index (dpb->pic_list, GstH264Picture *, i);
 
     if (picture->ref && !picture->long_term && picture->pic_num == pic_num)
-      return gst_h264_picture_ref (picture);
+      return picture;
   }
 
   GST_WARNING ("No short term reference picture for %d", pic_num);

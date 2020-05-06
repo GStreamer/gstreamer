@@ -1256,7 +1256,6 @@ gst_h264_decoder_handle_memory_management_opt (GstH264Decoder * self,
         to_mark = gst_h264_dpb_get_short_ref_by_pic_num (priv->dpb, pic_num_x);
         if (to_mark) {
           to_mark->ref = FALSE;
-          gst_h264_picture_unref (to_mark);
         } else {
           GST_WARNING_OBJECT (self, "Invalid short term ref pic num to unmark");
           return FALSE;
@@ -1286,7 +1285,6 @@ gst_h264_decoder_handle_memory_management_opt (GstH264Decoder * self,
         if (to_mark) {
           to_mark->long_term = TRUE;
           to_mark->long_term_frame_idx = ref_pic_marking->long_term_frame_idx;
-          gst_h264_picture_unref (to_mark);
         } else {
           GST_WARNING_OBJECT (self,
               "Invalid short term ref pic num to mark as long ref");
