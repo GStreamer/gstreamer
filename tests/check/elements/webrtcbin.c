@@ -1629,7 +1629,13 @@ static const gchar *test_string = "GStreamer WebRTC is awesome!";
 static void
 on_message_string (GObject * channel, const gchar * str, struct test_webrtc *t)
 {
-  gchar *expected = g_object_steal_data (channel, "expected");
+  GstWebRTCDataChannelState state;
+  gchar *expected;
+
+  g_object_get (channel, "ready-state", &state, NULL);
+  fail_unless_equals_int (GST_WEBRTC_DATA_CHANNEL_STATE_OPEN, state);
+
+  expected = g_object_steal_data (channel, "expected");
   g_assert_cmpstr (expected, ==, str);
   g_free (expected);
 
@@ -1644,8 +1650,6 @@ have_data_channel_transfer_string (struct test_webrtc *t, GstElement * element,
   GstWebRTCDataChannelState state;
 
   g_object_get (our, "ready-state", &state, NULL);
-  fail_unless_equals_int (GST_WEBRTC_DATA_CHANNEL_STATE_OPEN, state);
-  g_object_get (other, "ready-state", &state, NULL);
   fail_unless_equals_int (GST_WEBRTC_DATA_CHANNEL_STATE_OPEN, state);
 
   g_object_set_data_full (our, "expected", g_strdup (test_string), g_free);
@@ -1704,7 +1708,13 @@ GST_END_TEST;
 static void
 on_message_data (GObject * channel, GBytes * data, struct test_webrtc *t)
 {
-  GBytes *expected = g_object_steal_data (channel, "expected");
+  GstWebRTCDataChannelState state;
+  GBytes *expected;
+
+  g_object_get (channel, "ready-state", &state, NULL);
+  fail_unless_equals_int (GST_WEBRTC_DATA_CHANNEL_STATE_OPEN, state);
+
+  expected = g_object_steal_data (channel, "expected");
   g_assert_cmpbytes (data, expected);
   g_bytes_unref (expected);
 
@@ -1720,8 +1730,6 @@ have_data_channel_transfer_data (struct test_webrtc *t, GstElement * element,
   GstWebRTCDataChannelState state;
 
   g_object_get (our, "ready-state", &state, NULL);
-  fail_unless_equals_int (GST_WEBRTC_DATA_CHANNEL_STATE_OPEN, state);
-  g_object_get (other, "ready-state", &state, NULL);
   fail_unless_equals_int (GST_WEBRTC_DATA_CHANNEL_STATE_OPEN, state);
 
   g_object_set_data_full (our, "expected", g_bytes_ref (data),
