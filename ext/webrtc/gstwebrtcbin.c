@@ -5930,7 +5930,6 @@ gst_webrtc_bin_constructed (GObject * object)
   GstWebRTCBin *webrtc = GST_WEBRTC_BIN (object);
   gchar *name;
 
-  GST_ERROR_OBJECT (webrtc, "%s", GST_OBJECT_NAME (webrtc));
   name = g_strdup_printf ("%s:ice", GST_OBJECT_NAME (webrtc));
   webrtc->priv->ice = gst_webrtc_ice_new (name);
   g_signal_connect (webrtc->priv->ice, "on-ice-candidate",
