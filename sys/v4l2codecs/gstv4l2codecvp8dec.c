@@ -159,7 +159,7 @@ gst_v4l2_codec_vp8_dec_negotiate (GstVideoDecoder * decoder)
   gst_v4l2_decoder_streamoff (self->decoder, GST_PAD_SRC);
 
   if (!gst_v4l2_decoder_set_sink_fmt (self->decoder, V4L2_PIX_FMT_VP8_FRAME,
-          self->width, self->height)) {
+          self->width, self->height, 12 /* 8 bits 4:2:0 */ )) {
     GST_ELEMENT_ERROR (self, CORE, NEGOTIATION,
         ("Failed to configure VP8 decoder"),
         ("gst_v4l2_decoder_set_sink_fmt() failed: %s", g_strerror (errno)));

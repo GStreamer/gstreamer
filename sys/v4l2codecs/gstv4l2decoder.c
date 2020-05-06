@@ -270,7 +270,7 @@ gst_v4l2_decoder_enum_sink_fmt (GstV4l2Decoder * self, gint i,
 
 gboolean
 gst_v4l2_decoder_set_sink_fmt (GstV4l2Decoder * self, guint32 pix_fmt,
-    gint width, gint height)
+    gint width, gint height, gint pixel_bitdepth)
 {
   struct v4l2_format format = (struct v4l2_format) {
     .type = self->sink_buf_type,
@@ -282,6 +282,13 @@ gst_v4l2_decoder_set_sink_fmt (GstV4l2Decoder * self, guint32 pix_fmt,
         },
   };
   gint ret;
+  /* Using raw image size for now, it is guarantied to be large enough */
+  gsize sizeimage = (width * height * pixel_bitdepth) / 8;
+
+  if (self->mplane)
+    format.fmt.pix_mp.plane_fmt[0].sizeimage = sizeimage;
+  else
+    format.fmt.pix.sizeimage = sizeimage;
 
   ret = ioctl (self->video_fd, VIDIOC_S_FMT, &format);
   if (ret < 0) {

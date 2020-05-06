@@ -190,6 +190,37 @@ gst_v4l2_codec_h264_dec_stop (GstVideoDecoder * decoder)
   return GST_VIDEO_DECODER_CLASS (parent_class)->stop (decoder);
 }
 
+static gint
+get_pixel_bitdepth (GstV4l2CodecH264Dec * self)
+{
+  gint depth;
+
+  switch (self->chroma_format_idc) {
+    case 0:
+      /* 4:0:0 */
+      depth = self->bitdepth;
+      break;
+    case 1:
+      /* 4:2:0 */
+      depth = self->bitdepth + self->bitdepth / 2;
+      break;
+    case 2:
+      /* 4:2:2 */
+      depth = 2 * self->bitdepth;
+      break;
+    case 3:
+      /* 4:4:4 */
+      depth = 3 * self->bitdepth;
+    default:
+      GST_WARNING_OBJECT (self, "Unsupported chroma format %i",
+          self->chroma_format_idc);
+      depth = 0;
+      break;
+  }
+
+  return depth;
+}
+
 static gboolean
 gst_v4l2_codec_h264_dec_negotiate (GstVideoDecoder * decoder)
 {
@@ -219,7 +250,7 @@ gst_v4l2_codec_h264_dec_negotiate (GstVideoDecoder * decoder)
   gst_v4l2_decoder_streamoff (self->decoder, GST_PAD_SRC);
 
   if (!gst_v4l2_decoder_set_sink_fmt (self->decoder, V4L2_PIX_FMT_H264_SLICE,
-          self->coded_width, self->coded_height)) {
+          self->coded_width, self->coded_height, get_pixel_bitdepth (self))) {
     GST_ELEMENT_ERROR (self, CORE, NEGOTIATION,
         ("Failed to configure H264 decoder"),
         ("gst_v4l2_decoder_set_sink_fmt() failed: %s", g_strerror (errno)));
