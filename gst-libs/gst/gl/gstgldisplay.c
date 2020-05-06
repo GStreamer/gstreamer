@@ -906,12 +906,13 @@ gst_gl_display_remove_context (GstGLDisplay * display, GstGLContext * needle)
       g_weak_ref_clear (l->data);
       g_free (l->data);
       display->priv->contexts = g_list_delete_link (display->priv->contexts, l);
-      l = prev ? prev->next : display->priv->contexts;
       if (context) {
         GST_INFO_OBJECT (display, "removed context %" GST_PTR_FORMAT
             " from internal list", context);
+        gst_object_unref (context);
         return;
       }
+      l = prev ? prev->next : display->priv->contexts;
       continue;
     }
     prev = l;
