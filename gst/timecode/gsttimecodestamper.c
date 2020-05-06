@@ -1047,6 +1047,7 @@ gst_timecodestamper_update_latency (GstTimeCodeStamper * timecodestamper,
   if (!gst_pad_peer_query (pad, query)) {
     GST_WARNING_OBJECT (pad, "Failed to query latency");
     gst_pad_mark_reconfigure (pad);
+    gst_query_unref (query);
     return;
   }
 
@@ -1059,6 +1060,7 @@ gst_timecodestamper_update_latency (GstTimeCodeStamper * timecodestamper,
       "Queried latency: live %d, min latency %" GST_TIME_FORMAT, *live,
       GST_TIME_ARGS (*latency));
   g_mutex_unlock (&timecodestamper->mutex);
+  gst_query_unref (query);
 }
 #endif
 
