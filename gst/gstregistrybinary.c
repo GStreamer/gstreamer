@@ -272,10 +272,15 @@ gst_registry_binary_cache_finish (BinaryRegistryCache * cache, gboolean success)
       goto fsync_failed;
   }
 
-  /* close the file, even when unsuccessful, so not to leak a file descriptor */
-  do {
-    fclose_ret = fclose (cache->cache_file);
-  } while (fclose_ret && errno == EINTR);
+  /* close the file, even when unsuccessful, so not to leak a file descriptor.
+   * We must not retry fclose() on EINTR as POSIX states:
+   *   After the call to fclose(), any use of stream results in undefined
+   *   behavior.
+   * We ensure above with fflush() and fsync() that everything is written out
+   * so chances of running into EINTR are very low. Nonetheless assume that
+   * the file can't be safely renamed, we'll just try again on the next
+   * opportunity. */
+  fclose_ret = fclose (cache->cache_file);
   if (fclose_ret)
     goto fclose_failed;
 
