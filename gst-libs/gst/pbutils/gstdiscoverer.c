@@ -713,7 +713,8 @@ uridecodebin_pad_added_cb (GstElement * uridecodebin, GstPad * pad,
   if (sinkpad == NULL)
     goto error;
 
-  if (is_subtitle_caps (caps)) {
+  if (caps && !gst_caps_is_empty (caps) && !gst_caps_is_any (caps)
+      && is_subtitle_caps (caps)) {
     /* Subtitle streams are sparse and may not provide any information - don't
      * wait for data to preroll */
     ps->probe_id =
@@ -723,7 +724,8 @@ uridecodebin_pad_added_cb (GstElement * uridecodebin, GstPad * pad,
     dc->priv->pending_subtitle_pads++;
   }
 
-  gst_caps_unref (caps);
+  if (caps)
+    gst_caps_unref (caps);
 
   gst_bin_add_many (dc->priv->pipeline, ps->queue, ps->sink, NULL);
 
