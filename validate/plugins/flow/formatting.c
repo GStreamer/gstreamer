@@ -75,7 +75,7 @@ validate_flow_format_segment (const GstSegment * segment,
 {
   Uint64Formatter uint64_format;
   gchar *segment_str;
-  gchar *parts[10];
+  gchar *parts[12];
   GString *format;
   gchar start_str[32], offset_str[32], stop_str[32], time_str[32], base_str[32],
       position_str[32], duration_str[32];
@@ -111,12 +111,18 @@ validate_flow_format_segment (const GstSegment * segment,
   if (segment->applied_rate != 1.0)
     parts[parts_index++] =
         g_strdup_printf ("applied_rate=%f", segment->applied_rate);
-  if (segment->flags)
+
+  if (segment->flags && use_field ("flags", logged_fields, ignored_fields))
     parts[parts_index++] = g_strdup_printf ("flags=0x%02x", segment->flags);
-  parts[parts_index++] =
-      g_strdup_printf ("time=%s, base=%s, position=%s", time_str, base_str,
-      position_str);
-  if (GST_CLOCK_TIME_IS_VALID (segment->duration))
+
+  if (use_field ("time", logged_fields, ignored_fields))
+    parts[parts_index++] = g_strdup_printf ("time=%s", time_str);
+  if (use_field ("base", logged_fields, ignored_fields))
+    parts[parts_index++] = g_strdup_printf ("base=%s", base_str);
+  if (use_field ("position", logged_fields, ignored_fields))
+    parts[parts_index++] = g_strdup_printf ("position=%s", position_str);
+  if (GST_CLOCK_TIME_IS_VALID (segment->duration)
+      && use_field ("duration", logged_fields, ignored_fields))
     parts[parts_index++] = g_strdup_printf ("duration=%s", duration_str);
   parts[parts_index] = NULL;
 
