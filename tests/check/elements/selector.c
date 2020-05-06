@@ -500,10 +500,12 @@ input_selector_push_buffer (gint stream, enum InputSelectorResult res)
   }
 }
 
+/* Consumes a ref to the passed pad */
 static gpointer
 input_selector_do_push_eos (GstPad * pad)
 {
   gst_pad_push_event (pad, gst_event_new_eos ());
+  gst_object_unref (pad);
   return NULL;
 }
 
@@ -533,7 +535,7 @@ input_selector_push_eos (gint stream, gboolean active)
      * from a separate thread. This makes this test racy, but it should only
      * cause false positives, not false negatives */
     GThread *t = g_thread_new ("selector-test-push-eos",
-        (GThreadFunc) input_selector_do_push_eos, pad);
+        (GThreadFunc) input_selector_do_push_eos, gst_object_ref (pad));
 
     /* Sleep half a second to allow the other thread to execute, this is not
      * a definitive solution but there is no way to know when the
