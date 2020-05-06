@@ -268,10 +268,14 @@ gst_deinterlace_simple_method_supported (GstDeinterlaceMethodClass * mklass,
           && klass->copy_scanline_ayuv != NULL);
     case GST_VIDEO_FORMAT_NV12:
       return (klass->interpolate_scanline_nv12 != NULL
-          && klass->copy_scanline_nv12 != NULL);
+          && klass->copy_scanline_nv12 != NULL
+          && klass->interpolate_scanline_planar_y != NULL
+          && klass->copy_scanline_planar_y != NULL);
     case GST_VIDEO_FORMAT_NV21:
       return (klass->interpolate_scanline_nv21 != NULL
-          && klass->copy_scanline_nv21 != NULL);
+          && klass->copy_scanline_nv21 != NULL
+          && klass->interpolate_scanline_planar_y != NULL
+          && klass->copy_scanline_planar_y != NULL);
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_Y444:
@@ -600,18 +604,22 @@ gst_deinterlace_simple_method_deinterlace_frame_nv12 (GstDeinterlaceMethod *
   GstDeinterlaceMethodClass *dm_class = GST_DEINTERLACE_METHOD_GET_CLASS (self);
 #endif
   guint cur_field_flags = history[cur_field_idx].flags;
-  gint i;
   LinesGetter lg = { history, history_count, cur_field_idx, };
 
+  /* Y plane is at position 0 */
   g_assert (self->interpolate_scanline_packed != NULL);
   g_assert (self->copy_scanline_packed != NULL);
+  g_assert (self->interpolate_scanline_planar[0] != NULL);
+  g_assert (self->copy_scanline_planar[0] != NULL);
   g_assert (dm_class->fields_required <= 5);
 
-  for (i = 0; i < 2; i++) {
-    gst_deinterlace_simple_method_deinterlace_frame_planar_plane (self,
-        outframe, &lg, cur_field_flags, i,
-        self->copy_scanline_packed, self->interpolate_scanline_packed);
-  }
+  /* Y plane first, then UV/VU plane */
+  gst_deinterlace_simple_method_deinterlace_frame_planar_plane (self,
+      outframe, &lg, cur_field_flags, 0,
+      self->copy_scanline_planar[0], self->interpolate_scanline_planar[0]);
+  gst_deinterlace_simple_method_deinterlace_frame_planar_plane (self,
+      outframe, &lg, cur_field_flags, 1,
+      self->copy_scanline_packed, self->interpolate_scanline_packed);
 }
 
 static void
@@ -686,10 +694,16 @@ gst_deinterlace_simple_method_setup (GstDeinterlaceMethod * method,
     case GST_VIDEO_FORMAT_NV12:
       self->interpolate_scanline_packed = klass->interpolate_scanline_nv12;
       self->copy_scanline_packed = klass->copy_scanline_nv12;
+      self->interpolate_scanline_planar[0] =
+          klass->interpolate_scanline_planar_y;
+      self->copy_scanline_planar[0] = klass->copy_scanline_planar_y;
       break;
     case GST_VIDEO_FORMAT_NV21:
       self->interpolate_scanline_packed = klass->interpolate_scanline_nv21;
       self->copy_scanline_packed = klass->copy_scanline_nv21;
+      self->interpolate_scanline_planar[0] =
+          klass->interpolate_scanline_planar_y;
+      self->copy_scanline_planar[0] = klass->copy_scanline_planar_y;
       break;
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
