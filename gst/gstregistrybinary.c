@@ -257,6 +257,7 @@ gst_registry_binary_cache_finish (BinaryRegistryCache * cache, gboolean success)
     /* flush the file and make sure the OS's buffer has been written to disk */
     gint fflush_ret, fsync_ret;
     int file_fd;
+
     file_fd = fileno (cache->cache_file);
 
     do {
@@ -297,6 +298,11 @@ gst_registry_binary_cache_finish (BinaryRegistryCache * cache, gboolean success)
   return TRUE;
 
 /* ERRORS */
+fail_before_fclose:
+  {
+    fclose (cache->cache_file);
+  }
+  /* fall through */
 fail_after_fclose:
   {
     g_unlink (cache->tmp_location);
@@ -307,14 +313,14 @@ fail_after_fclose:
 fflush_failed:
   {
     GST_ERROR ("fflush() failed: %s", g_strerror (errno));
-    goto fail_after_fclose;
-  }
-fclose_failed:
-  {
-    GST_ERROR ("fsync() failed: %s", g_strerror (errno));
-    goto fail_after_fclose;
+    goto fail_before_fclose;
   }
 fsync_failed:
+  {
+    GST_ERROR ("fsync() failed: %s", g_strerror (errno));
+    goto fail_before_fclose;
+  }
+fclose_failed:
   {
     GST_ERROR ("fclose() failed: %s", g_strerror (errno));
     goto fail_after_fclose;
