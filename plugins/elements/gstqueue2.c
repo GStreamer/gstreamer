@@ -2806,7 +2806,11 @@ gst_queue2_is_filled (GstQueue2 * queue)
   if (queue->is_eos)
     return TRUE;
 
-#define CHECK_FILLED(format,alt_max) ((queue->max_level.format) > 0 && \
+  /* Check the levels if non-null */
+#define CHECK_FILLED_REAL(format) \
+  ((queue->max_level.format) > 0 && (queue->cur_level.format) >= ((queue->max_level.format)))
+  /* Check the levels if non-null (use the alternative max if non-zero) */
+#define CHECK_FILLED_ALT(format,alt_max) ((queue->max_level.format) > 0 && \
     (queue->cur_level.format) >= ((alt_max) ? \
       MIN ((queue->max_level.format), (alt_max)) : (queue->max_level.format)))
 
@@ -2817,7 +2821,7 @@ gst_queue2_is_filled (GstQueue2 * queue)
     GST_DEBUG_OBJECT (queue,
         "max bytes %u, rb size %" G_GUINT64_FORMAT ", cur bytes %u",
         queue->max_level.bytes, rb_size, queue->cur_level.bytes);
-    return CHECK_FILLED (bytes, rb_size);
+    return CHECK_FILLED_ALT (bytes, rb_size);
   }
 
   /* if using file, we're never filled if we don't have EOS */
@@ -2829,15 +2833,16 @@ gst_queue2_is_filled (GstQueue2 * queue)
     return FALSE;
 
   /* we are filled if one of the current levels exceeds the max */
-  res = CHECK_FILLED (buffers, 0) || CHECK_FILLED (bytes, 0)
-      || CHECK_FILLED (time, 0);
+  res = CHECK_FILLED_REAL (buffers) || CHECK_FILLED_REAL (bytes)
+      || CHECK_FILLED_REAL (time);
 
   /* if we need to, use the rate estimate to check against the max time we are
    * allowed to queue */
   if (queue->use_rate_estimate)
-    res |= CHECK_FILLED (rate_time, 0);
+    res |= CHECK_FILLED_REAL (rate_time);
 
-#undef CHECK_FILLED
+#undef CHECK_FILLED_REAL
+#undef CHECK_FILLED_ALT
   return res;
 }
 
