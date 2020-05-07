@@ -1444,12 +1444,6 @@ gst_h264_parser_identify_nalu_unchecked (GstH264NalParser * nalparser,
     return GST_H264_PARSER_NO_NAL;
   }
 
-  if (offset + off1 == size - 1) {
-    GST_DEBUG ("Missing data to identify nal unit");
-
-    return GST_H264_PARSER_ERROR;
-  }
-
   nalu->sc_offset = offset + off1;
 
   /* sc might have 2 or 3 0-bytes */
