@@ -3235,6 +3235,8 @@ gst_validate_action_default_prepare_func (GstValidateAction * action)
   GstValidateActionType *type = gst_validate_get_action_type (action->type);
   GstValidateScenario *scenario = gst_validate_action_get_scenario (action);
 
+  g_assert (scenario);
+
   _update_well_known_vars (scenario);
   gst_validate_structure_resolve_variables (action, action->structure,
       scenario->priv->vars);
