@@ -1216,6 +1216,10 @@ gst_h265_parse_handle_frame (GstBaseParse * parse,
             ("Error parsing H.265 stream"), ("Invalid H.265 stream"));
         goto invalid_stream;
     }
+
+    /* Ensure we use the TS of the first NAL. This avoids broken timestamp in
+     * the case of a miss-placed filler byte. */
+    gst_base_parse_set_ts_at_offset (parse, nalu.offset);
   }
 
   while (TRUE) {
