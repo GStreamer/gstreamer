@@ -1484,6 +1484,15 @@ gst_h265_parser_identify_nalu (GstH265Parser * parser,
     return GST_H265_PARSER_NO_NAL_END;
   }
 
+  /* Callers assumes that enough data will available to identify the next NAL,
+   * but scan_for_start_codes() only ensure 1 extra byte is available. Ensure
+   * we have the required two header bytes (3 bytes start code and 2 byte
+   * header). */
+  if (size - (nalu->offset + off2) < 5) {
+    GST_DEBUG ("Not enough bytes identify the next NAL.");
+    return GST_H265_PARSER_NO_NAL_END;
+  }
+
   /* Mini performance improvement:
    * We could have a way to store how many 0s were skipped to avoid
    * parsing them again on the next NAL */
