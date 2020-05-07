@@ -567,11 +567,7 @@ main (int argc, gchar ** argv)
   g_signal_connect (bus, "message", (GCallback) bus_callback,
       &bus_callback_data);
 
-  if (argc == 2)
-    gst_validate_printf (NULL, "**-> Starting pipeline**\n");
-  else
-    gst_validate_printf (NULL, "**-> Starting pipeline**\n");
-
+  gst_validate_printf (NULL, "**-> Starting pipeline**\n");
   g_free (argvn);
   g_object_get (monitor, "handles-states", &monitor_handles_state, NULL);
   if (monitor_handles_state == FALSE) {
