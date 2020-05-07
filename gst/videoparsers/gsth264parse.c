@@ -1384,7 +1384,8 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
         }
         break;
       case GST_H264_PARSER_NO_NAL:
-        *skipsize = size - 3;
+        /* Start code may have up to 4 bytes */
+        *skipsize = size - 4;
         goto skip;
         break;
       default:

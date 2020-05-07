@@ -1208,7 +1208,10 @@ gst_h265_parse_handle_frame (GstBaseParse * parse,
         }
         break;
       case GST_H265_PARSER_NO_NAL:
-        *skipsize = size - 3;
+        /* start code may have up to 4 bytes, and we may also get that return
+         * value if only one of the two header bytes are present, make sure
+         * not to skip too much */
+        *skipsize = size - 5;
         goto skip;
       default:
         /* should not really occur either */
