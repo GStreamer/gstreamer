@@ -996,6 +996,40 @@ GST_START_TEST (test_parse_skip_to_4bytes_sc)
 
 GST_END_TEST;
 
+GST_START_TEST (test_parse_sc_with_half_header)
+{
+  GstHarness *h;
+  GstBuffer *buf1, *buf2;
+  GstMapInfo map;
+
+  h = gst_harness_new ("h265parse");
+
+  gst_harness_set_caps_str (h, "video/x-h265, stream-format=byte-stream",
+      "video/x-h265, stream-format=byte-stream, alignment=nal");
+
+  buf1 = composite_buffer (100, 0, 4, h265_vps, sizeof (h265_vps),
+      h265_sps, sizeof (h265_sps), h265_pps, sizeof (h265_pps), h265_idr, 5);
+  buf2 = wrap_buffer (h265_idr + 5, sizeof (h265_idr) - 5, 100, 0);
+
+  fail_unless_equals_int (gst_harness_push (h, buf1), GST_FLOW_OK);
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 0);
+
+  fail_unless_equals_int (gst_harness_push (h, buf2), GST_FLOW_OK);
+  /* The parser will deliver VPS, SPS, PPS as it now have complete cpas */
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 3);
+
+  buf1 = gst_harness_pull (h);
+  gst_buffer_map (buf1, &map, GST_MAP_READ);
+  fail_unless_equals_int (gst_buffer_get_size (buf1), sizeof (h265_vps));
+  gst_buffer_unmap (buf1, &map);
+  gst_buffer_unref (buf1);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+
 
 /* nal->au has latency, but EOS should force the last AU out */
 GST_START_TEST (test_drain)
@@ -1049,6 +1083,7 @@ h265parse_harnessed_suite (void)
   tcase_add_test (tc_chain, test_sliced_au_au);
 
   tcase_add_test (tc_chain, test_parse_skip_to_4bytes_sc);
+  tcase_add_test (tc_chain, test_parse_sc_with_half_header);
 
   tcase_add_test (tc_chain, test_drain);
 
