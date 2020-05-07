@@ -677,6 +677,8 @@ gst_validate_report_level_get_name (GstValidateReportLevel level)
       return "issue";
     case GST_VALIDATE_REPORT_LEVEL_IGNORE:
       return "ignore";
+    case GST_VALIDATE_REPORT_LEVEL_EXPECTED:
+      return "expected";
     default:
       return "unknown";
   }

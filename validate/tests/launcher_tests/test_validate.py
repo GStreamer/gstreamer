@@ -20,6 +20,8 @@
 """
 The GstValidate default testsuite
 """
+import os
+from launcher.apps.gstvalidate import GstValidateSimpleTestsGenerator
 
 TEST_MANAGER = "validate"
 
@@ -43,6 +45,8 @@ def get_pipelines(test_manager):
 
 
 def setup_tests(test_manager, options):
+    testsuite_dir = os.path.realpath(os.path.join(os.path.dirname(__file__)))
+
     print("Setting up tests to test GstValidate")
     # No restriction about scenarios that are potentially used
     valid_scenarios = ["play_15s"]
@@ -51,5 +55,10 @@ def setup_tests(test_manager, options):
                                 ("test_validate", test_manager,
                                  pipelines_descriptions=get_pipelines(test_manager),
                                  valid_scenarios=valid_scenarios))
+
+    test_manager.add_generators(
+        GstValidateSimpleTestsGenerator("simple", test_manager,
+            os.path.join(testsuite_dir))
+    )
 
     return True

@@ -1091,6 +1091,12 @@ class GstValidateTest(Test):
                                                             Colors.ENDC)
             result = Result.KNOWN_ERROR
 
+        if result == Result.PASSED:
+            for report in self.reports:
+                if report["level"] == "expected":
+                    result = Result.KNOWN_ERROR
+                    break
+
         self.set_result(result, msg.strip())
 
     def _generate_expected_issues(self):

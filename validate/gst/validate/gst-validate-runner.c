@@ -93,6 +93,8 @@ struct _GstValidateRunnerPrivate
 
   gchar *pipeline_names;
   gchar **pipeline_names_strv;
+
+  GList *expected_issues;
 };
 
 /* Describes the reporting level to apply to a name pattern */
@@ -448,6 +450,8 @@ gst_validate_runner_init (GstValidateRunner * runner)
   runner->priv->default_level = GST_VALIDATE_SHOW_DEFAULT;
   _init_report_levels (runner);
 
+  runner->priv->expected_issues = gst_validate_get_test_file_expected_issues ();
+
   gst_tracing_register_hook (GST_TRACER (runner), "element-new",
       G_CALLBACK (do_element_new));
 
@@ -629,6 +633,50 @@ gst_validate_runner_maybe_dot_pipeline (GstValidateRunner * runner,
   }
 }
 
+static gboolean
+check_report_expected (GstValidateRunner * runner, GstValidateReport * report)
+{
+  GList *tmp;
+
+#define GET_STR(name) gst_structure_get_string (known_issue, name)
+
+  for (tmp = runner->priv->expected_issues; tmp; tmp = tmp->next) {
+    GstStructure *known_issue = tmp->data;
+    const gchar *id = GET_STR ("issue-id");
+
+    if (!id || g_quark_from_string (id) == report->issue->issue_id) {
+      const gchar *summary = GET_STR ("summary");
+
+      if (!summary || !g_strcmp0 (summary, report->issue->summary)) {
+        const gchar *details = GET_STR ("details");
+
+        if (!details || g_regex_match_simple (details, report->message, 0, 0)) {
+          const gchar *detected_on = GET_STR ("detected-on");
+
+          if (!detected_on || !g_strcmp0 (detected_on, report->reporter_name)) {
+            const gchar *level = GET_STR ("level");
+            const gchar *report_level =
+                gst_validate_report_level_get_name (report->level);
+
+            if (!detected_on || !g_strcmp0 (level, report_level)) {
+              gboolean is_sometimes;
+
+              if (!gst_structure_get_boolean (known_issue, "sometimes",
+                      &is_sometimes) || !is_sometimes)
+                runner->priv->expected_issues =
+                    g_list_remove (runner->priv->expected_issues, known_issue);
+              return TRUE;
+            }
+          }
+        }
+      }
+    }
+#undef GET_STR
+  }
+
+  return FALSE;
+}
+
 void
 gst_validate_runner_add_report (GstValidateRunner * runner,
     GstValidateReport * report)
@@ -639,6 +687,9 @@ gst_validate_runner_add_report (GstValidateRunner * runner,
 
   if (report->level == GST_VALIDATE_REPORT_LEVEL_IGNORE)
     return;
+
+  if (check_report_expected (runner, report))
+    report->level = GST_VALIDATE_REPORT_LEVEL_EXPECTED;
 
   gst_validate_send (json_boxed_serialize (GST_MINI_OBJECT_TYPE (report),
           report));
@@ -841,7 +892,10 @@ int
 gst_validate_runner_exit (GstValidateRunner * runner, gboolean print_result)
 {
   gint ret = 0;
+  GList *tmp;
+
   g_return_val_if_fail (GST_IS_VALIDATE_RUNNER (runner), 1);
+
   g_signal_emit (runner, _signals[STOPPING_SIGNAL], 0);
   if (print_result) {
     ret = gst_validate_runner_printf (runner);
@@ -853,6 +907,26 @@ gst_validate_runner_exit (GstValidateRunner * runner, gboolean print_result)
         ret = 18;
     }
   }
+
+  for (tmp = runner->priv->expected_issues; tmp; tmp = tmp->next) {
+    GstStructure *known_issue = tmp->data;
+    gboolean is_sometimes;
+
+    if (!gst_structure_get_boolean (known_issue, "sometimes", &is_sometimes)
+        || !is_sometimes) {
+      GstStructure *tmp = gst_structure_copy (known_issue);
+      gst_structure_remove_fields (tmp, "__debug__", "__lineno__",
+          "__filename__", NULL);
+      /* Ideally we should report an issue here.. but we do not have a reporter */
+      gst_validate_error_structure (known_issue,
+          "Expected issue didn't happen: '%" GST_PTR_FORMAT "'", tmp);
+      gst_structure_free (tmp);
+    }
+  }
+
+  g_list_free_full (runner->priv->expected_issues,
+      (GDestroyNotify) gst_structure_free);
+  runner->priv->expected_issues = NULL;
 
   return ret;
 }

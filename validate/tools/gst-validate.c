@@ -408,8 +408,7 @@ main (int argc, gchar ** argv)
       "as gstreamer debugging");
 
   if (argc == 1) {
-    gst_validate_printf (NULL, "%s", g_option_context_get_help (ctx, FALSE,
-            NULL));
+    g_print ("%s", g_option_context_get_help (ctx, FALSE, NULL));
     exit (1);
   }
 

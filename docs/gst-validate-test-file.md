@@ -44,8 +44,8 @@ args = {
 
 ## configs
 
-The `config` field is an array of string containing the same content as
-usual [config](gst-validate-config.md) files contain.
+The `configs` field is an array of structures containing the same content as
+usual [configs](gst-validate-config.md) files.
 
 For example:
 
@@ -56,6 +56,40 @@ configs = {
     "$(validateflow), pad=sink1:sink, caps-properties={ width, height };",
 }
 ```
+
+Note: Since this is GstStructure synthax, we need to have the structures in the
+array as strings/within quotes.
+
+## expected-issues
+
+The `expected-issues` field is an array of `expected-issue` structures containing
+information about issues to expect (which can be known bugs or not).
+
+Use `gst-validate-1.0 --print-issue-types` to print information about all issue types.
+
+For example:
+
+``` yaml
+expected-issues = {
+    "expected-issue, issue-id=scenario::not-ended",
+}
+```
+
+Note: Since this is GstStructure synthax, we need to have the structures in the
+array as strings/within quotes.
+
+### Fields:
+
+* `issue-id`: (string): Issue ID - Mandatory if `summary` is not provided.
+* `summary`: (string): Summary - Mandatory if `issue-id` is not provided.
+* `details`: Regex string to match the issue details `detected-on`: (string):
+             The name of the element the issue happened on `level`: (string):
+             Issue level
+* `sometimes`: (boolean): Default: `false` -  Wheteher the issue happens only
+               sometimes if `false` and the issue doesn't happen, an error will
+               be issued.
+* `issue-url`: (string): The url of the issue in the bug tracker if the issue is
+               a bug.
 
 # Variables
 

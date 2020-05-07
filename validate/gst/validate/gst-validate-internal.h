@@ -63,4 +63,5 @@ G_GNUC_INTERNAL gboolean gst_validate_get_test_file_scenario (GList** structs, c
 G_GNUC_INTERNAL GstValidateScenario* gst_validate_scenario_from_structs (GstValidateRunner* runner, GstElement* pipeline, GList* structures,
     gchar* origin_file);
 G_GNUC_INTERNAL GList* gst_validate_get_config(const gchar *structname);
+G_GNUC_INTERNAL GList * gst_validate_get_test_file_expected_issues (void);
 #endif

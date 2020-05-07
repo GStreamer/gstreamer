@@ -236,10 +236,10 @@ create_config (const gchar * config, const gchar * suffix)
 }
 
 static GList *
-gst_validate_get_testfile_configs (const gchar * suffix)
+get_structures_from_array_in_meta (const gchar * fieldname)
 {
   GList *res = NULL;
-  gchar **config_strs = NULL, *filename = NULL, *debug = NULL;
+  gchar **strs = NULL, *filename = NULL, *debug = NULL;
   gint current_lineno = -1;
   GstStructure *meta = get_test_file_meta ();
 
@@ -250,18 +250,17 @@ gst_validate_get_testfile_configs (const gchar * suffix)
       "__lineno__", G_TYPE_INT, &current_lineno,
       "__debug__", G_TYPE_STRING, &debug,
       "__filename__", G_TYPE_STRING, &filename, NULL);
-  config_strs = gst_validate_utils_get_strv (meta, "configs");
+  strs = gst_validate_utils_get_strv (meta, fieldname);
 
-  if (config_strs) {
+  if (strs) {
     gint i;
 
-    for (i = 0; config_strs[i]; i++) {
-      GstStructure *tmpstruct =
-          gst_structure_from_string (config_strs[i], NULL);
+    for (i = 0; strs[i]; i++) {
+      GstStructure *tmpstruct = gst_structure_from_string (strs[i], NULL);
 
       if (tmpstruct == NULL) {
         gst_validate_abort ("%s:%d: Invalid structure\n  %4d | %s\n%s",
-            filename, current_lineno, current_lineno, config_strs[i], debug);
+            filename, current_lineno, current_lineno, strs[i], debug);
       }
 
       gst_structure_set (tmpstruct,
@@ -274,7 +273,15 @@ gst_validate_get_testfile_configs (const gchar * suffix)
 
   g_free (filename);
   g_free (debug);
-  g_strfreev (config_strs);
+  g_strfreev (strs);
+
+  return res;
+}
+
+static GList *
+gst_validate_get_testfile_configs (const gchar * suffix)
+{
+  GList *res = get_structures_from_array_in_meta ("configs");
 
   return get_config_from_structures (res, NULL, suffix);
 }
@@ -481,6 +488,24 @@ gst_validate_is_initialized (void)
   return validate_initialized;
 }
 
+GList *
+gst_validate_get_test_file_expected_issues (void)
+{
+  GList *res = get_structures_from_array_in_meta ("expected-issues"), *tmp;
+
+  for (tmp = res; tmp; tmp = tmp->next) {
+    GstStructure *known_issue = tmp->data;
+    const gchar *summary = gst_structure_get_string (known_issue, "summary");
+    const gchar *id = gst_structure_get_string (known_issue, "issue-id");
+
+    if (!id && !summary)
+      gst_validate_error_structure (known_issue,
+          "Missing 'summary' or 'issue-id' fields.");
+  }
+
+  return res;
+}
+
 gboolean
 gst_validate_get_test_file_scenario (GList ** structs,
     const gchar ** scenario_name, gchar ** original_name)
@@ -553,7 +578,6 @@ gst_validate_setup_test_file (const gchar * testfile, gboolean use_fakesinks)
   gst_validate_scenario_check_and_set_needs_clock_sync (testfile_structs, &res);
 
   gst_validate_set_test_file_globals (res, testfile, use_fakesinks);
-
   gst_validate_structure_resolve_variables (res, NULL);
 
   tool = gst_structure_get_string (res, "tool");
