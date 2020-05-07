@@ -486,6 +486,9 @@ main (int argc, gchar ** argv)
 
   g_option_context_free (ctx);
 
+  if (want_help)
+    exit (0);
+
   if (scenario || configs) {
     gchar *scenarios;
 
