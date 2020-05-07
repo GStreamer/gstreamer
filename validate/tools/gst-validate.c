@@ -321,7 +321,7 @@ run_test_from_file (gchar * testfile, gboolean use_fakesinks)
   argc++;
 
   argv = g_new0 (char *, argc + 1);
-  argv[0] = argv[0];
+  argv[0] = (gchar *) "gst-validate-" GST_API_VERSION;
   memcpy (&argv[1], args, sizeof (char *) * (argc));
 
   ret = main (argc, argv);
