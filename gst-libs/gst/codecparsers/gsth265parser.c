@@ -1414,6 +1414,13 @@ gst_h265_parser_identify_nalu_unchecked (GstH265Parser * parser,
 
   nalu->sc_offset = offset + off1;
 
+  /* The scanner ensures one byte passed the start code but to
+   * identify an HEVC NAL, we need 2. */
+  if (size - nalu->sc_offset - 3 < 2) {
+    GST_DEBUG ("Not enough bytes after start code to identify");
+    return GST_H265_PARSER_NO_NAL;
+  }
+
   /* sc might have 2 or 3 0-bytes */
   if (nalu->sc_offset > 0 && data[nalu->sc_offset - 1] == 00)
     nalu->sc_offset--;
