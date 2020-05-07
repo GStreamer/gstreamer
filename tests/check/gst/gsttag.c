@@ -500,6 +500,21 @@ GST_START_TEST (test_equal)
   gst_tag_list_unref (tags);
   gst_tag_list_unref (tags2);
 
+  /* test comparing lists with equal length but different items */
+
+  tags = gst_tag_list_new_empty ();
+  gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_ARTIST, "Foo", NULL);
+  gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_ARTIST, "Bar", NULL);
+
+  tags2 = gst_tag_list_new_empty ();
+  gst_tag_list_add (tags2, GST_TAG_MERGE_APPEND, GST_TAG_TITLE, "Foo", NULL);
+  gst_tag_list_add (tags2, GST_TAG_MERGE_APPEND, GST_TAG_TITLE, "Bar", NULL);
+
+  fail_unless (!gst_tag_list_is_equal (tags2, tags));
+
+  gst_tag_list_unref (tags);
+  gst_tag_list_unref (tags2);
+
   /* samples */
   buf = gst_buffer_new_wrapped (g_strdup ("test 1-2-3"), 10);
   sample1 = gst_sample_new (buf, NULL, NULL, NULL);

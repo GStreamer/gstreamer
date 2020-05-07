@@ -959,8 +959,12 @@ gst_tag_list_fields_equal (GQuark field_id, const GValue * value2,
 {
   const GstStructure *struct1 = (const GstStructure *) data;
   const GValue *value1 = gst_structure_id_get_value (struct1, field_id);
-
   gdouble d1, d2;
+
+  if (value1 == NULL) {
+    /* no value with this field id, clearly not equal */
+    return FALSE;
+  }
 
   if (gst_value_compare (value1, value2) == GST_VALUE_EQUAL)
     return TRUE;
