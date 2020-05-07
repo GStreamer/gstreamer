@@ -1148,6 +1148,46 @@ GST_START_TEST (test_parse_sei_closedcaptions)
 
 GST_END_TEST;
 
+GST_START_TEST (test_parse_skip_to_4bytes_sc)
+{
+  GstHarness *h;
+  GstBuffer *buf1, *buf2;
+  const guint8 initial_bytes[] = { 0x00, 0x00, 0x00, 0x00, 0x01 };
+  GstMapInfo map;
+
+  h = gst_harness_new ("h264parse");
+
+  gst_harness_set_caps_str (h, "video/x-h264, stream-format=byte-stream",
+      "video/x-h264, stream-format=byte-stream, alignment=nal");
+
+  /* padding bytes, four bytes start code. */
+  buf1 = wrap_buffer (initial_bytes, sizeof (initial_bytes), 100, 0);
+
+  /* The second contains the an AUD, starting from NAL identification byte,
+   * and is followed by SPS, PPS and IDR */
+  buf2 = composite_buffer (100, 0, 4, h264_aud + 4, sizeof (h264_aud) - 4,
+      h264_sps, sizeof (h264_sps), h264_pps, sizeof (h264_pps),
+      h264_idrframe, sizeof (h264_idrframe));
+
+  fail_unless_equals_int (gst_harness_push (h, buf1), GST_FLOW_OK);
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 0);
+
+  fail_unless_equals_int (gst_harness_push (h, buf2), GST_FLOW_OK);
+  /* The parser will deliver AUD, SPS, PPS as it now have complete caps */
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 3);
+
+  buf1 = gst_harness_pull (h);
+  gst_buffer_map (buf1, &map, GST_MAP_READ);
+  fail_unless_equals_int (gst_buffer_get_size (buf1), sizeof (h264_aud));
+  gst_buffer_unmap (buf1, &map);
+  gst_buffer_unref (buf1);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+
 /*
  * TODO:
  *   - Both push- and pull-modes need to be tested
@@ -1258,6 +1298,7 @@ main (int argc, char **argv)
     suite_add_tcase (s, tc_chain);
     tcase_add_test (tc_chain, test_parse_sei_closedcaptions);
     tcase_add_test (tc_chain, test_parse_compatible_caps);
+    tcase_add_test (tc_chain, test_parse_skip_to_4bytes_sc);
     nf += gst_check_run_suite (s, "h264parse", __FILE__);
   }
 
