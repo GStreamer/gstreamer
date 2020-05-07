@@ -537,6 +537,10 @@ gst_validate_setup_test_file (const gchar * testfile, gboolean use_fakesinks)
   if (gst_structure_has_name (testfile_structs->data, "set-globals")) {
     GstStructure *globals = testfile_structs->data;
     gst_validate_set_globals (globals);
+    if (!testfile_structs->next)
+      gst_validate_abort
+          ("Only one `set-globals` structure in %s, nothing to test here.",
+          testfile);
     res = testfile_structs->next->data;
   }
 
