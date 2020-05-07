@@ -1326,6 +1326,7 @@ not_writable:
 discard:
   {
     do_free_buffer (pool, buffer);
+    gst_poll_write_control (pool->priv->poll);
     return;
   }
 }
