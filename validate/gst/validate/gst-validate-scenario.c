@@ -1159,33 +1159,6 @@ gst_validate_scenario_check_dropped (GstValidateScenario * scenario)
 }
 
 static GstValidateExecuteActionReturn
-_execute_stop (GstValidateScenario * scenario, GstValidateAction * action)
-{
-  GstBus *bus;
-  GstValidateScenarioPrivate *priv = scenario->priv;
-
-  DECLARE_AND_GET_PIPELINE (scenario, action);
-
-  bus = gst_element_get_bus (pipeline);
-  SCENARIO_LOCK (scenario);
-  if (priv->execute_actions_source_id) {
-    g_source_remove (priv->execute_actions_source_id);
-    priv->execute_actions_source_id = 0;
-  }
-  SCENARIO_UNLOCK (scenario);
-
-  gst_validate_scenario_check_dropped (scenario);
-
-  gst_bus_post (bus,
-      gst_message_new_request_state (GST_OBJECT_CAST (scenario),
-          GST_STATE_NULL));
-  gst_object_unref (bus);
-  gst_object_unref (pipeline);
-
-  return TRUE;
-}
-
-static GstValidateExecuteActionReturn
 _execute_eos (GstValidateScenario * scenario, GstValidateAction * action)
 {
   gboolean ret;
@@ -3507,56 +3480,6 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
       }
 
       SCENARIO_LOCK (scenario);
-      if (scenario->priv->actions || scenario->priv->interlaced_actions ||
-          scenario->priv->on_addition_actions) {
-        guint nb_actions = 0;
-        gchar *actions = g_strdup (""), *tmpconcat;
-        GList *tmp;
-        GList *all_actions =
-            g_list_concat (g_list_concat (scenario->priv->actions,
-                scenario->priv->interlaced_actions),
-            scenario->priv->on_addition_actions);
-
-        for (tmp = all_actions; tmp; tmp = tmp->next) {
-          gchar *action_string;
-          GstValidateAction *action = (GstValidateAction *) tmp->data;
-          GstValidateActionType *type = _find_action_type (action->type);
-
-          tmpconcat = actions;
-
-          if (type->flags & GST_VALIDATE_ACTION_TYPE_NO_EXECUTION_NOT_FATAL ||
-              action->priv->state == GST_VALIDATE_EXECUTE_ACTION_OK ||
-              action->priv->optional) {
-            gst_validate_action_unref (action);
-
-            continue;
-          }
-
-          nb_actions++;
-
-          action_string = gst_structure_to_string (action->structure);
-          actions =
-              g_strdup_printf ("%s\n%*s%s", actions, 20, "", action_string);
-          gst_validate_action_unref (action);
-          g_free (tmpconcat);
-          g_free (action_string);
-        }
-        g_list_free (all_actions);
-        scenario->priv->actions = NULL;
-        scenario->priv->interlaced_actions = NULL;
-        scenario->priv->on_addition_actions = NULL;
-
-
-        if (nb_actions > 0) {
-          GstClockTime position = GST_CLOCK_TIME_NONE;
-
-          _get_position (scenario, NULL, &position);
-          GST_VALIDATE_REPORT (scenario, SCENARIO_NOT_ENDED,
-              "%i actions were not executed: %s (position: %" GST_TIME_FORMAT
-              ")", nb_actions, actions, GST_TIME_ARGS (position));
-        }
-        g_free (actions);
-      }
       /* Make sure that if there is an ASYNC_DONE in the message queue, we do not
          take it into account */
       g_list_free_full (priv->seeks,
@@ -5195,6 +5118,86 @@ done:
 fail:
   ret = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
   goto done;
+}
+
+static GstValidateExecuteActionReturn
+_execute_stop (GstValidateScenario * scenario, GstValidateAction * action)
+{
+  GstBus *bus;
+  GstValidateScenarioPrivate *priv = scenario->priv;
+
+  DECLARE_AND_GET_PIPELINE (scenario, action);
+
+  bus = gst_element_get_bus (pipeline);
+  SCENARIO_LOCK (scenario);
+  if (priv->execute_actions_source_id) {
+    g_source_remove (priv->execute_actions_source_id);
+    priv->execute_actions_source_id = 0;
+  }
+  if (scenario->priv->actions || scenario->priv->interlaced_actions ||
+      scenario->priv->on_addition_actions) {
+    guint nb_actions = 0;
+    gchar *actions = g_strdup (""), *tmpconcat;
+    GList *tmp;
+    GList *all_actions = g_list_concat (g_list_concat (scenario->priv->actions,
+            scenario->priv->interlaced_actions),
+        scenario->priv->on_addition_actions);
+
+    for (tmp = all_actions; tmp; tmp = tmp->next) {
+      gchar *action_string;
+      GstValidateAction *remaining_action = (GstValidateAction *) tmp->data;
+      GstValidateActionType *type;
+
+      if (remaining_action == action)
+        continue;
+
+      type = _find_action_type (remaining_action->type);
+
+      tmpconcat = actions;
+
+      if (type->flags & GST_VALIDATE_ACTION_TYPE_NO_EXECUTION_NOT_FATAL ||
+          remaining_action->priv->state == GST_VALIDATE_EXECUTE_ACTION_OK ||
+          remaining_action->priv->optional) {
+        gst_validate_action_unref (remaining_action);
+
+        continue;
+      }
+
+      nb_actions++;
+
+      action_string = gst_structure_to_string (remaining_action->structure);
+      actions = g_strdup_printf ("%s\n%*s%s", actions, 20, "", action_string);
+      gst_validate_action_unref (remaining_action);
+      g_free (tmpconcat);
+      g_free (action_string);
+    }
+    g_list_free (all_actions);
+    scenario->priv->actions = NULL;
+    scenario->priv->interlaced_actions = NULL;
+    scenario->priv->on_addition_actions = NULL;
+
+
+    if (nb_actions > 0) {
+      GstClockTime position = GST_CLOCK_TIME_NONE;
+
+      _get_position (scenario, NULL, &position);
+      GST_VALIDATE_REPORT (scenario, SCENARIO_NOT_ENDED,
+          "%i actions were not executed: %s (position: %" GST_TIME_FORMAT
+          ")", nb_actions, actions, GST_TIME_ARGS (position));
+    }
+    g_free (actions);
+  }
+  SCENARIO_UNLOCK (scenario);
+
+  gst_validate_scenario_check_dropped (scenario);
+
+  gst_bus_post (bus,
+      gst_message_new_request_state (GST_OBJECT_CAST (scenario),
+          GST_STATE_NULL));
+  gst_object_unref (bus);
+  gst_object_unref (pipeline);
+
+  return TRUE;
 }
 
 static gboolean
