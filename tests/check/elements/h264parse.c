@@ -180,11 +180,9 @@ verify_buffer (buffer_verify_data_s * vdata, GstBuffer * buffer)
   if (vdata->discard) {
     /* check separate header NALs */
     gint i = vdata->buffer_counter;
-    guint ofs;
     gboolean aud;
 
     /* SEI with start code prefix with 2 0-bytes */
-    ofs = i == 2;
     aud = i == 0;
     fail_unless (i <= 3);
 
@@ -196,8 +194,8 @@ verify_buffer (buffer_verify_data_s * vdata, GstBuffer * buffer)
     } else {
       i -= 1;
 
-      fail_unless (gst_buffer_get_size (buffer) == ctx_headers[i].size - ofs);
-      fail_unless (gst_buffer_memcmp (buffer, 0, ctx_headers[i].data + ofs,
+      fail_unless (gst_buffer_get_size (buffer) == ctx_headers[i].size);
+      fail_unless (gst_buffer_memcmp (buffer, 0, ctx_headers[i].data,
               gst_buffer_get_size (buffer)) == 0);
     }
   } else {
@@ -895,11 +893,6 @@ composite_buffer (GstClockTime pts, GstBufferFlags flags, gint count, ...)
 #define pull_and_check(h, data, pts, flags) \
   pull_and_check_full (h, data, sizeof (data), pts, flags)
 
-/* used to check NALs for which the parser removes the first 0x00 byte;
- * this parser behavior is a bit broken, so we may remove that in the future */
-#define pull_and_check_skip1byte(h, data, pts, flags) \
-  pull_and_check_full (h, data + 1, sizeof (data) - 1, pts, flags)
-
 #define pull_and_drop(h) \
   G_STMT_START { \
     GstBuffer *b = gst_harness_pull (h); \
@@ -936,29 +929,29 @@ GST_START_TEST (test_parse_sliced_nal_nal)
   buf = wrap_buffer (h264_idr_slice_1, sizeof (h264_idr_slice_1), 100, 0);
   fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
   fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
-  pull_and_check_skip1byte (h, h264_idr_slice_1, 100, 0);
+  pull_and_check (h, h264_idr_slice_1, 100, 0);
 
   buf = wrap_buffer (h264_idr_slice_2, sizeof (h264_idr_slice_2), 100, 0);
   fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
   fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
-  pull_and_check_skip1byte (h, h264_idr_slice_2, -1, 0);
+  pull_and_check (h, h264_idr_slice_2, -1, 0);
 
   buf = wrap_buffer (h264_idr_slice_1, sizeof (h264_idr_slice_1), 200, 0);
   fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
   fail_unless_equals_int (gst_harness_buffers_in_queue (h), 2);
   pull_and_check (h, h264_aud, 200, 0);
-  pull_and_check_skip1byte (h, h264_idr_slice_1, 200, 0);
+  pull_and_check (h, h264_idr_slice_1, 200, 0);
 
   buf = wrap_buffer (h264_idr_slice_2, sizeof (h264_idr_slice_2), 200, 0);
   fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
   fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
-  pull_and_check_skip1byte (h, h264_idr_slice_2, -1, 0);
+  pull_and_check (h, h264_idr_slice_2, -1, 0);
 
   buf = wrap_buffer (h264_idr_slice_1, sizeof (h264_idr_slice_1), 250, 0);
   fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
   fail_unless_equals_int (gst_harness_buffers_in_queue (h), 2);
   pull_and_check (h, h264_aud, 250, 0);
-  pull_and_check_skip1byte (h, h264_idr_slice_1, 250, 0);
+  pull_and_check (h, h264_idr_slice_1, 250, 0);
 
   /* 1st slice starts a new AU, even though the previous one is incomplete.
    * DISCONT must also be propagated */
@@ -967,7 +960,7 @@ GST_START_TEST (test_parse_sliced_nal_nal)
   fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
   fail_unless_equals_int (gst_harness_buffers_in_queue (h), 2);
   pull_and_check (h, h264_aud, 400, 0);
-  pull_and_check_skip1byte (h, h264_idr_slice_1, 400, GST_BUFFER_FLAG_DISCONT);
+  pull_and_check (h, h264_idr_slice_1, 400, GST_BUFFER_FLAG_DISCONT);
 
   gst_harness_teardown (h);
 }
@@ -1004,8 +997,8 @@ GST_START_TEST (test_parse_sliced_au_nal)
 
   /* 1st slice here doens't have a PTS
    * because it was present in the first header NAL */
-  pull_and_check_skip1byte (h, h264_idr_slice_1, -1, 0);
-  pull_and_check_skip1byte (h, h264_idr_slice_2, -1, 0);
+  pull_and_check (h, h264_idr_slice_1, -1, 0);
+  pull_and_check (h, h264_idr_slice_2, -1, 0);
 
   /* new AU. we expect AUD to be inserted and 1st slice to have the same PTS */
   buf = composite_buffer (200, 0, 2,
@@ -1014,8 +1007,8 @@ GST_START_TEST (test_parse_sliced_au_nal)
   fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
   fail_unless_equals_int (gst_harness_buffers_in_queue (h), 3);
   pull_and_check (h, h264_aud, 200, 0);
-  pull_and_check_skip1byte (h, h264_idr_slice_1, 200, 0);
-  pull_and_check_skip1byte (h, h264_idr_slice_2, -1, 0);
+  pull_and_check (h, h264_idr_slice_1, 200, 0);
+  pull_and_check (h, h264_idr_slice_2, -1, 0);
 
   /* DISCONT must be propagated */
   buf = composite_buffer (400, GST_BUFFER_FLAG_DISCONT, 2,
@@ -1024,8 +1017,8 @@ GST_START_TEST (test_parse_sliced_au_nal)
   fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
   fail_unless_equals_int (gst_harness_buffers_in_queue (h), 3);
   pull_and_check (h, h264_aud, 400, 0);
-  pull_and_check_skip1byte (h, h264_idr_slice_1, 400, GST_BUFFER_FLAG_DISCONT);
-  pull_and_check_skip1byte (h, h264_idr_slice_2, -1, 0);
+  pull_and_check (h, h264_idr_slice_1, 400, GST_BUFFER_FLAG_DISCONT);
+  pull_and_check (h, h264_idr_slice_2, -1, 0);
 
   gst_harness_teardown (h);
 }
