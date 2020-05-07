@@ -842,12 +842,13 @@ static guint8 h264_idr_slice_2[] = {
 };
 
 static inline GstBuffer *
-wrap_buffer (guint8 * buf, gsize size, GstClockTime pts, GstBufferFlags flags)
+wrap_buffer (const guint8 * buf, gsize size, GstClockTime pts,
+    GstBufferFlags flags)
 {
   GstBuffer *buffer;
 
   buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
-      buf, size, 0, size, NULL, NULL);
+      (gpointer) buf, size, 0, size, NULL, NULL);
   GST_BUFFER_PTS (buffer) = pts;
   GST_BUFFER_FLAGS (buffer) |= flags;
 
@@ -859,7 +860,7 @@ composite_buffer (GstClockTime pts, GstBufferFlags flags, gint count, ...)
 {
   va_list vl;
   gint i;
-  guint8 *data;
+  const guint8 *data;
   gsize size;
   GstBuffer *buffer;
 

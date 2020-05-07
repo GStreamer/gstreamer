@@ -194,7 +194,7 @@ cleanup_element (GstElement * element)
 
 /* inits a standard test */
 void
-gst_parser_test_init (GstParserTest * ptest, guint8 * data, guint size,
+gst_parser_test_init (GstParserTest * ptest, const guint8 * data, guint size,
     guint num)
 {
   /* need these */
@@ -318,7 +318,7 @@ gst_parser_test_run (GstParserTest * test, GstCaps ** out_caps)
  * Test if the parser pushes clean data properly.
  */
 void
-gst_parser_test_normal (guint8 * data, guint size)
+gst_parser_test_normal (const guint8 * data, guint size)
 {
   GstParserTest ptest;
 
@@ -333,7 +333,7 @@ gst_parser_test_normal (guint8 * data, guint size)
  * about stream format. But it should still push the frame forward in EOS.
  */
 void
-gst_parser_test_drain_single (guint8 * data, guint size)
+gst_parser_test_drain_single (const guint8 * data, guint size)
 {
   GstParserTest ptest;
 
@@ -345,8 +345,8 @@ gst_parser_test_drain_single (guint8 * data, guint size)
  * Make sure that parser does not drain garbage when EOS occurs.
  */
 void
-gst_parser_test_drain_garbage (guint8 * data, guint size, guint8 * garbage,
-    guint gsize)
+gst_parser_test_drain_garbage (const guint8 * data, guint size,
+    guint8 * garbage, guint gsize)
 {
   GstParserTest ptest;
 
@@ -362,7 +362,7 @@ gst_parser_test_drain_garbage (guint8 * data, guint size, guint8 * garbage,
  * separate buffers properly.
  */
 void
-gst_parser_test_split (guint8 * data, guint size)
+gst_parser_test_split (const guint8 * data, guint size)
 {
   GstParserTest ptest;
 
@@ -375,7 +375,7 @@ gst_parser_test_split (guint8 * data, guint size)
  * Test if the parser skips garbage between frames properly.
  */
 void
-gst_parser_test_skip_garbage (guint8 * data, guint size, guint8 * garbage,
+gst_parser_test_skip_garbage (const guint8 * data, guint size, guint8 * garbage,
     guint gsize)
 {
   GstParserTest ptest;
@@ -394,7 +394,7 @@ gst_parser_test_skip_garbage (guint8 * data, guint size, guint8 * garbage,
  * Test if the src caps are set according to stream format.
  */
 void
-gst_parser_test_output_caps (guint8 * data, guint size,
+gst_parser_test_output_caps (const guint8 * data, guint size,
     const gchar * input_caps, const gchar * output_caps)
 {
   GstParserTest ptest;
@@ -419,7 +419,7 @@ gst_parser_test_output_caps (guint8 * data, guint size,
  * Test if the src caps are set according to stream format.
  */
 GstCaps *
-gst_parser_test_get_output_caps (guint8 * data, guint size,
+gst_parser_test_get_output_caps (const guint8 * data, guint size,
     const gchar * input_caps)
 {
   GstParserTest ptest;

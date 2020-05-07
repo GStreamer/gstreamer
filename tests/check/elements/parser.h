@@ -43,8 +43,8 @@ typedef struct
 } buffer_verify_data_s;
 
 typedef struct {
-    guint8     *data;
-    guint       size;
+    const guint8     *data;
+    guint             size;
 } datablob;
 
 typedef gboolean (*VerifyBuffer) (buffer_verify_data_s * vdata, GstBuffer * buf);
@@ -84,8 +84,8 @@ typedef struct
   /* series of buffers; middle series considered garbage */
   struct {
     /* data and size */
-    guint8     *data;
-    guint      size;
+    const guint8     *data;
+    guint             size;
     /* num of frames with above data per buffer */
     guint      fpb;
     /* num of buffers */
@@ -98,30 +98,30 @@ typedef struct
 } GstParserTest;
 
 extern
-void gst_parser_test_init (GstParserTest * ptest, guint8 * data, guint size, guint num);
+void gst_parser_test_init (GstParserTest * ptest, const guint8 * data, guint size, guint num);
 
 extern
 void gst_parser_test_run (GstParserTest * test, GstCaps ** out_caps);
 
 extern
-void gst_parser_test_normal (guint8 *data, guint size);
+void gst_parser_test_normal (const guint8 *data, guint size);
 
 extern
-void gst_parser_test_drain_single (guint8 *data, guint size);
+void gst_parser_test_drain_single (const guint8 *data, guint size);
 
 extern
-void gst_parser_test_drain_garbage (guint8 *data, guint size, guint8 *garbage, guint gsize);
+void gst_parser_test_drain_garbage (const guint8 *data, guint size, guint8 *garbage, guint gsize);
 
 extern
-void gst_parser_test_split (guint8 *data, guint size);
+void gst_parser_test_split (const guint8 *data, guint size);
 
 extern
-void gst_parser_test_skip_garbage (guint8 *data, guint size, guint8 *garbage, guint gsize);
+void gst_parser_test_skip_garbage (const guint8 *data, guint size, guint8 *garbage, guint gsize);
 
 extern
-void gst_parser_test_output_caps (guint8 *data, guint size, const gchar * input_caps,
+void gst_parser_test_output_caps (const guint8 *data, guint size, const gchar * input_caps,
                                   const gchar * output_caps);
 
 extern
-GstCaps *gst_parser_test_get_output_caps (guint8 *data, guint size, const gchar * input_caps);
+GstCaps *gst_parser_test_get_output_caps (const guint8 *data, guint size, const gchar * input_caps);
 
