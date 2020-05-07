@@ -997,7 +997,7 @@ convert_cea708_cc_data_cea708_cdp_internal (GstCCConverter * self,
   gst_byte_writer_put_uint8_unchecked (&bw, 0xe0 | fps_entry->max_cc_count);
   gst_byte_writer_put_data_unchecked (&bw, cc_data, cc_data_len);
   while (fps_entry->max_cc_count > cc_data_len / 3) {
-    gst_byte_writer_put_uint8_unchecked (&bw, 0xf8);
+    gst_byte_writer_put_uint8_unchecked (&bw, 0xfa);
     gst_byte_writer_put_uint8_unchecked (&bw, 0x00);
     gst_byte_writer_put_uint8_unchecked (&bw, 0x00);
     cc_data_len += 3;
