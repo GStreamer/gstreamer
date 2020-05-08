@@ -44,7 +44,9 @@ test_printf (const char *format, ...)
   len = __gst_vasprintf (&str, format, varargs);
   va_end (varargs);
 
-  if (len <= 0)
+  /* The length doesn't include the final `\0`, so if it's >= 0 it's allocated
+   * and non-NULL */
+  if (len < 0)
     return NULL;
 
   GST_INFO ("[%s]", str);
