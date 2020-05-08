@@ -2787,7 +2787,7 @@ GST_START_TEST (test_serialize_deserialize_caps)
 
   /* now deserialize again */
   g_value_init (&value2, GST_TYPE_CAPS);
-  gst_value_deserialize (&value2, serialized);
+  fail_unless (gst_value_deserialize (&value2, serialized));
 
   caps2 = g_value_get_boxed (&value2);
   fail_if (GST_CAPS_REFCOUNT_VALUE (caps2) != 1);
