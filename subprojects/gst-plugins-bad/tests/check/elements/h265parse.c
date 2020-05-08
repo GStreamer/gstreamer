@@ -25,6 +25,7 @@
 
 #include <gst/check/check.h>
 #include <gst/video/video-sei.h>
+#include <gst/pbutils/pbutils.h>
 #include "parser.h"
 
 #define SRC_CAPS_TMPL   "video/x-h265, parsed=(boolean)false"
@@ -117,6 +118,19 @@ static const guint8 h265_sei_mdcv[] = {
   0x00, 0x00, 0x00, 0x01, 0x4e, 0x01, 0x89, 0x18, 0x33, 0xc2, 0x86, 0xc4, 0x1d,
   0x4c, 0x0b, 0xb8, 0x84, 0xd0, 0x3e, 0x80, 0x3d, 0x13, 0x40, 0x42, 0x00, 0x98,
   0x96, 0x80, 0x00, 0x00, 0x03, 0x00, 0x01, 0x80
+};
+
+/* hdr10plus user data SEI message.
+ * See https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/-/merge_requests/1242
+ * for the reference test stream.
+ */
+static guint8 h265_sei_hdr10_plus_user_data[] = {
+  0x00, 0x00, 0x00, 0x01, 0x4e, 0x01, 0x04, 0x40, 0xb5, 0x00, 0x3c, 0x00, 0x01,
+  0x04, 0x01, 0x40, 0x00, 0x0c, 0x80, 0x8b, 0x4c, 0x41, 0xff, 0x1b, 0xd6,
+  0x01, 0x03, 0x64, 0x08, 0x00, 0x0c, 0x28, 0xdb, 0x20, 0x50, 0x00, 0xac,
+  0xc8, 0x00, 0xe1, 0x90, 0x03, 0x6e, 0x58, 0x10, 0x32, 0xd0, 0x2a, 0x6a,
+  0xf8, 0x48, 0xf3, 0x18, 0xe1, 0xb4, 0x00, 0x40, 0x44, 0x10, 0x25, 0x09,
+  0xa6, 0xae, 0x5c, 0x83, 0x50, 0xdd, 0xf9, 0x8e, 0xc7, 0xbd, 0x00, 0x80
 };
 
 
@@ -260,6 +274,28 @@ verify_buffer_bs_au (buffer_verify_data_s * vdata, GstBuffer * buffer)
   return TRUE;
 }
 
+static gboolean
+verify_meta_hdr10_plus (buffer_verify_data_s * vdata, GstBuffer * buffer)
+{
+  GstVideoHDRMeta *meta;
+
+  /* Check for GstVideoHDR10PlusMeta content */
+  meta = gst_buffer_get_video_hdr_meta (buffer);
+  if (meta) {
+    GstVideoHDR10Plus hdr10_plus;
+    /* Count the meta received, should be only one. */
+    ctx_meta_count++;
+    fail_unless (meta->data != NULL);
+    fail_unless (gst_video_hdr_parse_hdr10_plus (meta->data, meta->size,
+            &hdr10_plus));
+    fail_unless (hdr10_plus.application_identifier == 0x4);
+    fail_unless (hdr10_plus.application_version == 0x1);
+    fail_unless (hdr10_plus.num_windows == 1);
+  }
+
+  return TRUE;
+}
+
 GST_START_TEST (test_parse_normal)
 {
   gst_parser_test_normal (h265_idr, sizeof (h265_idr));
@@ -355,7 +391,50 @@ GST_START_TEST (test_parse_detect_stream_with_hdr_sei)
       "34000:16000:13250:34500:7500:3000:15635:16450:10000000:1");
   fail_unless_structure_field_string_equals (s, "content-light-level",
       "1000:400");
+  fail_unless_structure_field_string_equals (s, "hdr-format", "hdr10");
 
+
+  g_free (h265_idr_plus_sei);
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_parse_detect_stream_with_hdrplus_sei)
+{
+  GstCaps *caps;
+  GstStructure *s;
+  guint8 *h265_idr_plus_sei;
+
+  gsize h265_idr_plus_sei_size =
+      sizeof (h265_sei_hdr10_plus_user_data) + sizeof (h265_idr);
+
+  h265_idr_plus_sei = malloc (h265_idr_plus_sei_size);
+
+  memcpy (h265_idr_plus_sei, h265_sei_hdr10_plus_user_data,
+      sizeof (h265_sei_hdr10_plus_user_data));
+  memcpy (h265_idr_plus_sei + sizeof (h265_sei_hdr10_plus_user_data), h265_idr,
+      sizeof (h265_idr));
+  ctx_verify_buffer = verify_meta_hdr10_plus;
+
+  caps =
+      gst_parser_test_get_output_caps (h265_idr_plus_sei,
+      h265_idr_plus_sei_size, NULL);
+
+  fail_unless (caps != NULL);
+  fail_unless (ctx_meta_count != 0);
+  /* Check that the negotiated caps are as expected */
+  GST_DEBUG ("output caps: %" GST_PTR_FORMAT, caps);
+  s = gst_caps_get_structure (caps, 0);
+  fail_unless (gst_structure_has_name (s, "video/x-h265"));
+  fail_unless_structure_field_int_equals (s, "width", 16);
+  fail_unless_structure_field_int_equals (s, "height", 16);
+  fail_unless_structure_field_string_equals (s, "stream-format", "byte-stream");
+  fail_unless_structure_field_string_equals (s, "alignment", "au");
+  fail_unless_structure_field_string_equals (s, "profile", "main");
+  fail_unless_structure_field_string_equals (s, "tier", "main");
+  fail_unless_structure_field_string_equals (s, "level", "2.1");
+  fail_unless_structure_field_string_equals (s, "hdr-format", "hdr10+");
   g_free (h265_idr_plus_sei);
   gst_caps_unref (caps);
 }
@@ -374,6 +453,7 @@ h265parse_suite (void)
   tcase_add_test (tc_chain, test_parse_split);
   tcase_add_test (tc_chain, test_parse_detect_stream);
   tcase_add_test (tc_chain, test_parse_detect_stream_with_hdr_sei);
+  tcase_add_test (tc_chain, test_parse_detect_stream_with_hdrplus_sei);
 
   return s;
 }

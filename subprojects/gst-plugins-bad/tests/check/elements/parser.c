@@ -42,6 +42,8 @@ gboolean ctx_frame_generated = FALSE;
 
 gboolean ctx_no_metadata = FALSE;
 
+guint ctx_meta_count = 0;
+
 /* helper variables */
 GList *current_buf = NULL;
 

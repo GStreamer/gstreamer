@@ -61,6 +61,7 @@ extern GstCaps *ctx_output_caps;
 extern guint ctx_discard;
 extern datablob ctx_headers[MAX_HEADERS];
 extern gboolean ctx_no_metadata;
+extern guint ctx_meta_count;
 
 extern VerifyBuffer ctx_verify_buffer;
 extern ElementSetup ctx_setup;
