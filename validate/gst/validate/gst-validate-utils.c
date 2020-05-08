@@ -630,14 +630,16 @@ _file_get_structures (GFile * file, gchar ** err)
       }
 
       next = *(tmp + 1);
-      if (next && next == '\n'
+      if (next && (next == '\n' || next == '\r')
           && strchr (GST_STRUCT_LINE_CONTINUATION_CHARS, *tmp)) {
         g_string_append_c (debug_line, *tmp);
         g_string_append_printf (debug_line, "\n  %4d | ", lineno + 1);
         if (*tmp != '\\')
           g_string_append_c (l, *tmp);
 
-        tmp += 2;
+        tmp++;
+        while (*tmp == '\n' || *tmp == '\r')
+          tmp++;
         lineno++;
         continue;
       }
@@ -1107,7 +1109,8 @@ gst_validate_replace_variables_in_string (GstStructure * local_vars,
       g_free (tmp);
       tmpstring = string;
       string =
-          g_regex_replace (replace_regex, string, -1, 0, var_value, 0, NULL);
+          g_regex_replace_literal (replace_regex, string, -1, 0, var_value, 0,
+          NULL);
 
       GST_INFO ("Setting variable %s to %s", varname, var_value);
       g_free (tmpstring);
@@ -1129,6 +1132,10 @@ _structure_set_variables (GQuark field_id, GValue * value,
     GstStructure * local_variables)
 {
   gchar *str;
+
+  if (field_id == filename_quark || field_id == debug_quark
+      || field_id == debug_quark)
+    return TRUE;
 
   if (GST_VALUE_HOLDS_LIST (value)) {
     gint i;
@@ -1167,6 +1174,22 @@ _set_vars_func (GQuark field_id, const GValue * value, GstStructure * vars)
   gst_structure_id_set_value (vars, field_id, value);
 
   return TRUE;
+}
+
+static void
+structure_set_string_literal (GstStructure * structure, const gchar * fieldname,
+    const gchar * str)
+{
+  gint i;
+  GString *escaped = g_string_sized_new (strlen (str) + 1);
+
+  for (i = 0; str[i] != '\0'; i++) {
+    g_string_append_c (escaped, str[i]);
+    if (str[i] == '\\')
+      g_string_append_c (escaped, '\\');
+  }
+  gst_structure_set (structure, fieldname, G_TYPE_STRING, escaped->str, NULL);
+  g_string_free (escaped, TRUE);
 }
 
 void
@@ -1258,9 +1281,14 @@ gst_validate_structure_set_variables_from_struct_file (GstStructure * vars,
   gchar *t, *config_name_dir;
   gchar *validateflow, *expectations_dir, *actual_result_dir;
   const gchar *logdir;
+  gboolean local = ! !vars;
 
   if (!struct_file)
     return;
+
+
+  if (!vars)
+    vars = global_vars;
 
   config_dir = g_path_get_dirname (struct_file);
   config_fname = g_path_get_basename (struct_file);
@@ -1278,19 +1306,23 @@ gst_validate_structure_set_variables_from_struct_file (GstStructure * vars,
   }
 
   expectations_dir =
-      g_build_filename (config_dir, config_name, "flow-expectations", NULL);
-  actual_result_dir = g_build_filename (logdir, config_name_dir, NULL);
+      g_build_path ("/", config_dir, config_name, "flow-expectations", NULL);
+  actual_result_dir = g_build_path ("/", logdir, config_name_dir, NULL);
   validateflow =
       g_strdup_printf
       ("validateflow, expectations-dir=\"%s\", actual-results-dir=\"%s\"",
       expectations_dir, actual_result_dir);
-  gst_structure_set (!vars ? global_vars : vars,
-      "gst_api_version", G_TYPE_STRING, GST_API_VERSION,
-      !vars ? "test_dir" : "CONFIG_DIR", G_TYPE_STRING, config_dir,
-      !vars ? "test_name" : "CONFIG_NAME", G_TYPE_STRING, config_name,
-      !vars ? "test_name_dir" : "CONFIG_NAME_DIR", G_TYPE_STRING,
-      config_name_dir, !vars ? "test_path" : "CONFIG_PATH", G_TYPE_STRING,
-      struct_file, "validateflow", G_TYPE_STRING, validateflow, NULL);
+
+  structure_set_string_literal (vars, "gst_api_version", GST_API_VERSION);
+  structure_set_string_literal (vars, !local ? "test_dir" : "CONFIG_DIR",
+      config_dir);
+  structure_set_string_literal (vars, !local ? "test_name" : "CONFIG_NAME",
+      config_name);
+  structure_set_string_literal (vars,
+      !local ? "test_name_dir" : "CONFIG_NAME_DIR", config_name_dir);
+  structure_set_string_literal (vars, !local ? "test_path" : "CONFIG_PATH",
+      struct_file);
+  structure_set_string_literal (vars, "validateflow", validateflow);
 
   g_free (config_dir);
   g_free (config_name_dir);
