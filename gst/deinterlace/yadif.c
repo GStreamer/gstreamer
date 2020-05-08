@@ -290,11 +290,12 @@ filter_scanline_yadif (GstDeinterlaceSimpleMethod * self,
       || s.bbp == NULL) ? 2 : 0;
 
   /* When starting up, some data might not yet be available, so use the current frame */
-  if (s.m1 == NULL) {
-    s.tt1 = s.ttp;
+  if (s.m1 == NULL)
     s.m1 = s.mp;
+  if (s.tt1 == NULL)
+    s.tt1 = s.ttp;
+  if (s.bb1 == NULL)
     s.bb1 = s.bbp;
-  }
   if (s.t2 == NULL)
     s.t2 = s.tp2;
   if (s.b2 == NULL)
