@@ -786,6 +786,51 @@ end:
 }
 
 static PyObject *
+_unmap (GstMapInfo ** mapinfo, PyObject * py_mapinfo)
+{
+  PyObject *py_cmapinfo = NULL, *py_mview = NULL, *success = NULL;
+
+  if (!PyObject_HasAttrString (py_mapinfo, "__cmapinfo"))
+    goto done;
+
+  /* Extract attributes from Gst.MapInfo */
+  py_mview = PyObject_GetAttrString (py_mapinfo, "data");
+  if (!py_mview)
+    goto err;
+
+  /* Call the memoryview.release() Python method, there is no C API */
+  if (!PyObject_CallMethod (py_mview, "release", NULL))
+    goto err;
+
+  py_cmapinfo = PyObject_GetAttrString (py_mapinfo, "__cmapinfo");
+  if (!py_cmapinfo)
+    goto err;
+
+  /* Reconstruct GstMapInfo from Gst.MapInfo contents */
+  *mapinfo = PyCapsule_GetPointer (py_cmapinfo, "__cmapinfo");
+  if (!*mapinfo)
+    goto err;
+
+  if (PyObject_DelAttrString (py_mapinfo, "__cmapinfo") == -1)
+    goto err;
+
+done:
+  Py_INCREF (Py_True);
+  success = Py_True;
+  goto end;
+
+err:
+  GST_ERROR ("Could not unmap the GstMapInfo from Gst.MapInfo PyObject");
+  Py_INCREF (Py_False);
+  success = Py_False;
+
+end:
+  Py_XDECREF (py_mview);
+  Py_XDECREF (py_cmapinfo);
+  return success;
+}
+
+static PyObject *
 _gst_memory_override_map (PyObject * self, PyObject * args)
 {
   PyTypeObject *gst_memory_type;
@@ -831,9 +876,9 @@ static PyObject *
 _gst_memory_override_unmap (PyObject * self, PyObject * args)
 {
   PyTypeObject *gst_memory_type;
-  PyObject *py_memory, *py_cmapinfo, *py_mapinfo, *mview, *ret;
+  PyObject *py_memory, *py_mapinfo, *success;
   GstMemory *memory;
-  GstMapInfo *mapinfo;
+  GstMapInfo *mapinfo = NULL;
 
   /* Look up Gst.Buffer and Gst.Mapinfo parameters */
   gst_memory_type = pygobject_lookup_class (_gst_memory_type);
@@ -842,41 +887,17 @@ _gst_memory_override_unmap (PyObject * self, PyObject * args)
     return NULL;
   }
 
-  /* Extract attributes from Gst.MapInfo */
-  if (!(mview = PyObject_GetAttrString (py_mapinfo, "data")))
-    goto err;
+  success = _unmap (&mapinfo, py_mapinfo);
+  if (PyBool_Check (success) && mapinfo) {
+    /* Extract GstBuffer from Gst.Buffer parameter */
+    memory = GST_MEMORY_CAST (pygobject_get (py_memory));
 
-  if (!PyObject_HasAttrString (py_mapinfo, "__cmapinfo"))
-    goto end;
+    /* Unmap the buffer, using reconstructed GstMapInfo */
+    gst_memory_unmap (memory, mapinfo);
+    g_free (mapinfo);
+  }
 
-  if (!(py_cmapinfo = PyObject_GetAttrString (py_mapinfo, "__cmapinfo")))
-    goto err;
-
-  /* Extract GstBuffer from Gst.Buffer parameter */
-  memory = GST_MEMORY_CAST (pygobject_get (py_memory));
-  /* Reconstruct GstMapInfo from Gst.MapInfo contents */
-  mapinfo = PyCapsule_GetPointer (py_cmapinfo, "__cmapinfo");
-
-  /* Call the memoryview.release() Python method, there is no C API */
-  ret = PyObject_CallMethod (mview, "release", NULL);
-  if (!ret)
-    goto err;
-  Py_DECREF (ret);
-  Py_DECREF (py_cmapinfo);
-  PyObject_SetAttrString (py_mapinfo, "__cmapinfo", NULL);
-
-  /* Unmap the buffer, using reconstructed GstMapInfo */
-  gst_memory_unmap (memory, mapinfo);
-
-  g_free (mapinfo);
-end:
-  Py_DECREF (mview);
-  Py_INCREF (Py_True);
-  return Py_True;
-
-err:
-  Py_INCREF (Py_False);
-  return Py_False;
+  return success;
 }
 
 static PyObject *
@@ -970,9 +991,9 @@ static PyObject *
 _gst_buffer_override_unmap (PyObject * self, PyObject * args)
 {
   PyTypeObject *gst_buf_type;
-  PyObject *py_buffer, *py_cmapinfo, *py_mapinfo, *mview, *ret;
+  PyObject *py_buffer, *py_mapinfo, *success;
   GstBuffer *buffer;
-  GstMapInfo *mapinfo;
+  GstMapInfo *mapinfo = NULL;
 
   /* Look up Gst.Buffer and Gst.Mapinfo parameters */
   gst_buf_type = pygobject_lookup_class (_gst_buffer_type);
@@ -981,43 +1002,17 @@ _gst_buffer_override_unmap (PyObject * self, PyObject * args)
     return NULL;
   }
 
-  /* Extract attributes from Gst.MapInfo */
-  if (!(mview = PyObject_GetAttrString (py_mapinfo, "data")))
-    goto err;
+  success = _unmap (&mapinfo, py_mapinfo);
+  if (PyBool_Check (success) && mapinfo) {
+    /* Extract GstBuffer from Gst.Buffer parameter */
+    buffer = GST_BUFFER (pygobject_get (py_buffer));
 
-  if (!PyObject_HasAttrString (py_mapinfo, "__cmapinfo"))
-    goto end;
-
-  if (!(py_cmapinfo = PyObject_GetAttrString (py_mapinfo, "__cmapinfo")))
-    goto err;
-
-  /* Extract GstBuffer from Gst.Buffer parameter */
-  buffer = GST_BUFFER (pygobject_get (py_buffer));
-  /* Reconstruct GstMapInfo from Gst.MapInfo contents */
-  mapinfo = PyCapsule_GetPointer (py_cmapinfo, "__cmapinfo");
-
-  /* Call the memoryview.release() Python method, there is no C API */
-  ret = PyObject_CallMethod (mview, "release", NULL);
-  if (!ret) {
-    GST_ERROR ("Could not call `.release()` on the memoryview.");
-
-    goto err;
+    /* Unmap the buffer, using reconstructed GstMapInfo */
+    gst_buffer_unmap (buffer, mapinfo);
+    g_free (mapinfo);
   }
-  Py_DECREF (ret);
-  Py_DECREF (py_cmapinfo);
-  PyObject_SetAttrString (py_mapinfo, "__cmapinfo", NULL);
 
-  /* Unmap the buffer, using reconstructed GstMapInfo */
-  gst_buffer_unmap (buffer, mapinfo);
-  g_free (mapinfo);
-end:
-  Py_DECREF (mview);
-  Py_INCREF (Py_True);
-  return Py_True;
-
-err:
-  Py_INCREF (Py_False);
-  return Py_False;
+  return success;
 }
 
 static PyMethodDef _gi_gst_functions[] = {
