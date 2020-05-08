@@ -721,10 +721,15 @@ build cerbero cross win64:
     - mkdir ${GSTREAMER_ROOT_ANDROID}
     - tar -C ${GSTREAMER_ROOT_ANDROID} -xf gstreamer-1.0-android-universal-*.tar.bz2
 
-    # gst-examples
+    # gst-examples - player
     - chmod +x ${EXAMPLES_HOME}/gst-examples/playback/player/android/gradlew
     - ${EXAMPLES_HOME}/gst-examples/playback/player/android/gradlew --no-search-upward --no-daemon --project-dir ${EXAMPLES_HOME}/gst-examples/playback/player/android assembleDebug
     - cp ${EXAMPLES_HOME}/gst-examples/playback/player/android/app/build/outputs/apk/debug/*.apk ${EXAMPLES_HOME}/outputs/
+
+    # gst-examples - vulkan
+    - chmod +x ${EXAMPLES_HOME}/gst-examples/vulkan/android/gradlew
+    - ${EXAMPLES_HOME}/gst-examples/vulkan/android/gradlew --no-search-upward --no-daemon --project-dir ${EXAMPLES_HOME}/gst-examples/vulkan/android assembleDebug
+    - cp ${EXAMPLES_HOME}/gst-examples/vulkan/android/build/outputs/apk/debug/*.apk ${EXAMPLES_HOME}/outputs/
 
     # gst-docs android tutorials
     - chmod +x ${EXAMPLES_HOME}/gst-docs/examples/tutorials/android/gradlew
