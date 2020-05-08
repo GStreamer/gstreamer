@@ -860,7 +860,7 @@ GST_START_TEST (test_url_constructors)
 
   url2 = gst_uri_copy (url1);
   fail_unless (gst_uri_equal (url1, url2));
-  gst_uri_set_query_value (url2, "key", "value");
+  fail_unless (gst_uri_set_query_value (url2, "key", "value"));
   fail_unless (!gst_uri_equal (url1, url2));
   gst_uri_unref (url2);
 
