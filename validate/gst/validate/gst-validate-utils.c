@@ -50,6 +50,10 @@
 static GRegex *_variables_regex = NULL;
 static GstStructure *global_vars = NULL;
 
+static GQuark debug_quark = 0;
+static GQuark lineno_quark = 0;
+static GQuark filename_quark = 0;
+
 typedef struct
 {
   const gchar *str;
@@ -559,6 +563,17 @@ skip_spaces (gchar * c)
   return c;
 }
 
+static void
+setup_quarks (void)
+{
+  if (filename_quark)
+    return;
+
+  filename_quark = g_quark_from_static_string ("__filename__");
+  lineno_quark = g_quark_from_static_string ("__lineno__");
+  debug_quark = g_quark_from_static_string ("__debug__");
+}
+
 /* Parse file that contains a list of GStructures */
 #define GST_STRUCT_LINE_CONTINUATION_CHARS ",{\\["
 static GList *
@@ -676,10 +691,11 @@ _file_get_structures (GFile * file, gchar ** err)
         goto failed;
       }
     } else {
-      gst_structure_set (structure,
-          "__lineno__", G_TYPE_INT, current_lineno,
-          "__filename__", G_TYPE_STRING, filename,
-          "__debug__", G_TYPE_STRING, debug_line->str, NULL);
+      setup_quarks ();
+      gst_structure_id_set (structure,
+          lineno_quark, G_TYPE_INT, current_lineno,
+          filename_quark, G_TYPE_STRING, filename,
+          filename_quark, G_TYPE_STRING, debug_line->str, NULL);
       structures = g_list_append (structures, structure);
     }
 
@@ -1201,12 +1217,11 @@ gst_validate_set_globals (GstStructure * structure)
     if (!logsdir)
       logsdir = g_get_tmp_dir ();
 
-    global_vars =
-        gst_structure_new ("vars",
-        "TMPDIR", G_TYPE_STRING, g_get_tmp_dir (),
-        "LOGSDIR", G_TYPE_STRING, logsdir,
-        "tmpdir", G_TYPE_STRING, g_get_tmp_dir (),
-        "logsdir", G_TYPE_STRING, logsdir, NULL);
+    global_vars = gst_structure_new_empty ("vars");
+    structure_set_string_literal (global_vars, "TMPDIR", g_get_tmp_dir ());
+    structure_set_string_literal (global_vars, "LOGSDIR", logsdir);
+    structure_set_string_literal (global_vars, "tmpdir", g_get_tmp_dir ());
+    structure_set_string_literal (global_vars, "logsdir", logsdir);
   }
 
   if (!structure)
