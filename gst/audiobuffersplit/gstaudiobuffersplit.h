@@ -47,7 +47,9 @@ struct _GstAudioBufferSplit {
   gint output_buffer_duration_d;
 
   /* State */
-  GstSegment segment;
+  GstSegment in_segment, out_segment;
+  guint32 segment_seqnum;
+  gboolean segment_pending;
   GstAudioInfo info;
 
   GstAdapter *adapter;

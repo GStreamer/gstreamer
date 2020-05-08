@@ -321,7 +321,9 @@ gst_audio_buffer_split_change_state (GstElement * element,
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_audio_info_init (&self->info);
-      gst_segment_init (&self->segment, GST_FORMAT_TIME);
+      gst_segment_init (&self->in_segment, GST_FORMAT_TIME);
+      gst_segment_init (&self->out_segment, GST_FORMAT_UNDEFINED);
+      self->segment_pending = FALSE;
       GST_OBJECT_LOCK (self);
       gst_audio_stream_align_mark_discont (self->stream_align);
       GST_OBJECT_UNLOCK (self);
@@ -389,7 +391,7 @@ gst_audio_buffer_split_output (GstAudioBufferSplit * self, gboolean force,
 
     resync_time_diff =
         gst_util_uint64_scale (self->current_offset, GST_SECOND, rate);
-    if (self->segment.rate < 0.0) {
+    if (self->out_segment.rate < 0.0) {
       if (resync_time > resync_time_diff)
         GST_BUFFER_TIMESTAMP (buffer) = resync_time - resync_time_diff;
       else
@@ -451,7 +453,7 @@ gst_audio_buffer_split_handle_discont (GstAudioBufferSplit * self,
   GST_OBJECT_LOCK (self);
   discont =
       gst_audio_stream_align_process (self->stream_align,
-      self->segment.rate < 0 ? FALSE : GST_BUFFER_IS_DISCONT (buffer)
+      self->in_segment.rate < 0 ? FALSE : GST_BUFFER_IS_DISCONT (buffer)
       || GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_RESYNC),
       GST_BUFFER_PTS (buffer), gst_buffer_get_size (buffer) / bpf, NULL, NULL,
       NULL);
@@ -463,7 +465,7 @@ gst_audio_buffer_split_handle_discont (GstAudioBufferSplit * self,
   /* Reset */
   self->drop_samples = 0;
 
-  if (self->segment.rate < 0.0) {
+  if (self->in_segment.rate < 0.0) {
     current_timestamp =
         self->resync_time - gst_util_uint64_scale (self->current_offset +
         avail_samples, GST_SECOND, rate);
@@ -589,6 +591,18 @@ gst_audio_buffer_split_handle_discont (GstAudioBufferSplit * self,
     self->current_offset = 0;
     self->accumulated_error = 0;
     self->resync_time = GST_BUFFER_PTS (buffer);
+
+    if (self->segment_pending) {
+      GstEvent *event;
+
+      self->out_segment = self->in_segment;
+      GST_DEBUG_OBJECT (self, "Updating output segment %" GST_SEGMENT_FORMAT,
+          &self->out_segment);
+      event = gst_event_new_segment (&self->out_segment);
+      gst_event_set_seqnum (event, self->segment_seqnum);
+      gst_pad_push_event (self->srcpad, event);
+      self->segment_pending = FALSE;
+    }
   }
 
   return ret;
@@ -621,7 +635,7 @@ gst_audio_buffer_split_clip_buffer_start_for_gapless (GstAudioBufferSplit *
     return NULL;
   }
 
-  if (self->segment.rate < 0.0) {
+  if (self->out_segment.rate < 0.0) {
     buffer =
         gst_audio_buffer_truncate (buffer, bpf, 0,
         nsamples - self->drop_samples);
@@ -660,7 +674,7 @@ gst_audio_buffer_split_sink_chain (GstPad * pad, GstObject * parent,
   }
 
   buffer =
-      gst_audio_buffer_split_clip_buffer (self, buffer, &self->segment, rate,
+      gst_audio_buffer_split_clip_buffer (self, buffer, &self->in_segment, rate,
       bpf);
   if (!buffer)
     return GST_FLOW_OK;
@@ -741,7 +755,9 @@ gst_audio_buffer_split_sink_event (GstPad * pad, GstObject * parent,
       break;
     }
     case GST_EVENT_FLUSH_STOP:
-      gst_segment_init (&self->segment, GST_FORMAT_TIME);
+      gst_segment_init (&self->in_segment, GST_FORMAT_TIME);
+      gst_segment_init (&self->out_segment, GST_FORMAT_UNDEFINED);
+      self->segment_pending = FALSE;
       GST_OBJECT_LOCK (self);
       gst_audio_stream_align_mark_discont (self->stream_align);
       GST_OBJECT_UNLOCK (self);
@@ -751,12 +767,18 @@ gst_audio_buffer_split_sink_event (GstPad * pad, GstObject * parent,
       ret = gst_pad_event_default (pad, parent, event);
       break;
     case GST_EVENT_SEGMENT:
-      gst_event_copy_segment (event, &self->segment);
-      if (self->segment.format != GST_FORMAT_TIME) {
+      gst_event_copy_segment (event, &self->in_segment);
+      if (self->in_segment.format != GST_FORMAT_TIME) {
         gst_event_unref (event);
         ret = FALSE;
       } else {
-        ret = gst_pad_event_default (pad, parent, event);
+        GST_DEBUG_OBJECT (self,
+            "Received new input segment %" GST_SEGMENT_FORMAT,
+            &self->in_segment);
+        self->segment_pending = TRUE;
+        self->segment_seqnum = gst_event_get_seqnum (event);
+        gst_event_unref (event);
+        ret = TRUE;
       }
       break;
     case GST_EVENT_EOS:
