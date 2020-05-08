@@ -1512,7 +1512,7 @@ struct _GstH265RecoveryPoint
 
 /**
  * GstH265RegisteredUserData:
- * The User data registered by Rec. ITU-T T.35 SEI messag.
+ * The User data registered by Rec. ITU-T T.35 SEI message.
  * @country_code: an itu_t_t35_country_code.
  * @country_code_extension: an itu_t_t35_country_code_extension_byte.
  *   Should be ignored when @country_code is not 0xff
