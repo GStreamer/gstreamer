@@ -1259,8 +1259,10 @@ gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
       || in_info->colorimetry.range == GST_VIDEO_COLOR_RANGE_UNKNOWN) {
     if (context->color_range == AVCOL_RANGE_JPEG) {
       out_info->colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
-    } else {
+    } else if (context->color_range == AVCOL_RANGE_MPEG) {
       out_info->colorimetry.range = GST_VIDEO_COLOR_RANGE_16_235;
+    } else {
+      out_info->colorimetry.range = GST_VIDEO_COLOR_RANGE_UNKNOWN;
     }
   }
 
