@@ -162,12 +162,13 @@ GST_START_TEST (test_reply_data)
   r = gst_promise_new ();
 
   s = gst_structure_new ("promise", "test", G_TYPE_INT, 1, NULL);
-  gst_promise_reply (r, s);
+  gst_promise_reply (r, gst_structure_copy (s));
   fail_unless (gst_promise_wait (r) == GST_PROMISE_RESULT_REPLIED);
   ret = gst_promise_get_reply (r);
   fail_unless (gst_structure_is_equal (ret, s));
 
   gst_promise_unref (r);
+  gst_structure_free (s);
 }
 
 GST_END_TEST;
