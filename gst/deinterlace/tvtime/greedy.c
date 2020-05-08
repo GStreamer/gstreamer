@@ -203,6 +203,10 @@ gst_deinterlace_method_greedy_l_class_init (GstDeinterlaceMethodGreedyLClass *
       deinterlace_greedy_interpolate_scanline_orc;
   dism_class->interpolate_scanline_uyvy =
       deinterlace_greedy_interpolate_scanline_orc;
+  dism_class->interpolate_scanline_nv12 =
+      deinterlace_greedy_interpolate_scanline_orc;
+  dism_class->interpolate_scanline_nv21 =
+      deinterlace_greedy_interpolate_scanline_orc;
   dism_class->interpolate_scanline_argb =
       deinterlace_greedy_interpolate_scanline_orc;
   dism_class->interpolate_scanline_abgr =
