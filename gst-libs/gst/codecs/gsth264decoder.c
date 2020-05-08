@@ -1269,7 +1269,6 @@ gst_h264_decoder_handle_memory_management_opt (GstH264Decoder * self,
             ref_pic_marking->long_term_pic_num);
         if (to_mark) {
           to_mark->ref = FALSE;
-          gst_h264_picture_unref (to_mark);
         } else {
           GST_WARNING_OBJECT (self, "Invalid long term ref pic num to unmark");
           return FALSE;
