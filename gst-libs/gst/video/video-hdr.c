@@ -46,6 +46,48 @@
   (m)->min_display_mastering_luminance
 
 /**
+ * gst_video_hdr_format_to_string:
+ * @format: a #GstVideoHDRFormat
+ *
+ * Returns: (nullable): a string containing a descriptive name for
+ * the #GstVideoHDRFormat if there is one, or %NULL otherwise.
+ *
+ * Since: 1.20
+ */
+const gchar *
+gst_video_hdr_format_to_string (GstVideoHDRFormat format)
+{
+  switch (format) {
+    case GST_VIDEO_HDR_FORMAT_HDR10:
+      return "hdr10";
+    case GST_VIDEO_HDR_FORMAT_HDR10_PLUS:
+      return "hdr10+";
+    default:
+      return NULL;
+  }
+}
+
+/**
+ * gst_video_hdr_format_from_string:
+ * @format: (nullable): a #GstVideoHDRFormat
+ *
+ * Returns: the #GstVideoHDRFormat for @format or GST_VIDEO_HDR_FORMAT_NONE when the
+ * string is not a known format.
+ *
+ * Since: 1.20
+ */
+GstVideoHDRFormat
+gst_video_hdr_format_from_string (const gchar * format)
+{
+  if (!g_strcmp0 (format, "hdr10"))
+    return GST_VIDEO_HDR_FORMAT_HDR10;
+  else if (!g_strcmp0 (format, "hdr10+"))
+    return GST_VIDEO_HDR_FORMAT_HDR10_PLUS;
+
+  return GST_VIDEO_HDR_FORMAT_NONE;
+}
+
+/**
  * gst_video_mastering_display_info_init:
  * @minfo: a #GstVideoMasteringDisplayInfo
  *

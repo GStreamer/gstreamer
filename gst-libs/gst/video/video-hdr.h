@@ -56,6 +56,12 @@ typedef struct _GstVideoContentLightLevel GstVideoContentLightLevel;
 typedef struct _GstVideoHDR10Plus GstVideoHDR10Plus;
 typedef struct _GstVideoColorVolumeTransformation GstVideoColorVolumeTransformation;
 
+GST_VIDEO_API
+const gchar* gst_video_hdr_format_to_string (GstVideoHDRFormat format) G_GNUC_CONST;
+
+GST_VIDEO_API
+GstVideoHDRFormat gst_video_hdr_format_from_string (const gchar* format) G_GNUC_CONST;
+
 /**
  * GstVideoHDRMeta:
  * @meta: parent #GstMeta
