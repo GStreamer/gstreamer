@@ -42,14 +42,14 @@ ls $GSTREAMER_ROOT_ANDROID
 
 git clone -b ${DEFAULT_BRANCH} https://gitlab.freedesktop.org/gstreamer/gst-examples.git /android/sources/gst-examples
 chmod +x /android/sources/gst-examples/playback/player/android/gradlew
-/android/sources/gst-examples/playback/player/android/gradlew --no-search-upward --no-daemon --project-dir /android/sources/gst-examples/playback/player/android dependencies --refresh-dependencies
+/android/sources/gst-examples/playback/player/android/gradlew --no-daemon --project-dir /android/sources/gst-examples/playback/player/android dependencies --refresh-dependencies
 
 chmod +x /android/sources/gst-examples/vulkan/android/gradlew
-/android/sources/gst-examples/vulkan/android/gradlew --no-search-upward --no-daemon --project-dir /android/sources/gst-examples/vulkan/android dependencies --refresh-dependencies
+/android/sources/gst-examples/vulkan/android/gradlew --no-daemon --project-dir /android/sources/gst-examples/vulkan/android dependencies --refresh-dependencies
 
 git clone -b ${DEFAULT_BRANCH} https://gitlab.freedesktop.org/gstreamer/gst-docs.git /android/sources/gst-docs
 chmod +x /android/sources/gst-docs/examples/tutorials/android/gradlew
-/android/sources/gst-docs/examples/tutorials/android/gradlew --no-search-upward --no-daemon --project-dir /android/sources/gst-docs/examples/tutorials/android dependencies --refresh-dependencies
+/android/sources/gst-docs/examples/tutorials/android/gradlew --no-daemon --project-dir /android/sources/gst-docs/examples/tutorials/android dependencies --refresh-dependencies
 
 unset GSTREAMER_ROOT_ANDROID
 
