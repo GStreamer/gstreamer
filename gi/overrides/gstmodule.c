@@ -726,36 +726,63 @@ _wrap_gst_memdump (PyObject * whatever, PyObject * string)
 static PyObject *
 _remap (GstMapInfo * mapinfo, PyObject * py_mapinfo)
 {
+  PyObject *success = NULL;
+  PyObject *py_cmapinfo = NULL;
+  PyObject *py_mview = NULL;
+  PyObject *py_memory = NULL;
+  PyObject *py_flags = NULL;
+  PyObject *py_size = NULL;
+  PyObject *py_maxsize = NULL;
 
-  PyObject *mview, *py_memory;
+  /* Fill and encapsulating the mapinfo pointer */
+  py_cmapinfo = PyCapsule_New (mapinfo, "__cmapinfo", NULL);
+  if (!py_cmapinfo
+      || PyObject_SetAttrString (py_mapinfo, "__cmapinfo", py_cmapinfo))
+    goto err;
 
-  /* Create memoryview with compatible flags */
+  /* Fill and create memoryview with compatible flags */
   int flags;
   flags = (mapinfo->flags & GST_MAP_WRITE) ? PyBUF_WRITE : PyBUF_READ;
-  mview =
+  py_mview =
       PyMemoryView_FromMemory ((char *) mapinfo->data, mapinfo->size, flags);
+  if (!py_mview || PyObject_SetAttrString (py_mapinfo, "data", py_mview))
+    goto err;
 
-  /* Box GstMemory into a Gst.Memory */
+  /* Fill and box GstMemory into a Gst.Memory */
   py_memory = pyg_boxed_new (_gst_memory_type, mapinfo->memory, FALSE, FALSE);
+  if (!py_memory || PyObject_SetAttrString (py_mapinfo, "memory", py_memory))
+    goto err;
+
   /* Fill out Gst.MapInfo with values corresponding to GstMapInfo */
-  if (PyObject_SetAttrString (py_mapinfo, "memory", py_memory) == -1)
-    return NULL;
-  if (PyObject_SetAttrString (py_mapinfo, "flags", Py_BuildValue ("i",
-              mapinfo->flags)) == -1)
-    return NULL;
-  if (PyObject_SetAttrString (py_mapinfo, "data", mview) == -1)
-    return NULL;
-  if (PyObject_SetAttrString (py_mapinfo, "size", Py_BuildValue ("i",
-              mapinfo->size)) == -1)
-    return NULL;
-  if (PyObject_SetAttrString (py_mapinfo, "maxsize", Py_BuildValue ("i",
-              mapinfo->maxsize)) == -1)
-    return NULL;
-  if (PyObject_SetAttrString (py_mapinfo, "__cmapinfo", PyCapsule_New (mapinfo,
-              "__cmapinfo", NULL)) == -1)
-    return NULL;
+  py_flags = Py_BuildValue ("i", mapinfo->flags);
+  if (!py_flags || PyObject_SetAttrString (py_mapinfo, "flags", py_flags))
+    goto err;
+
+  py_size = Py_BuildValue ("i", mapinfo->size);
+  if (!py_size || PyObject_SetAttrString (py_mapinfo, "size", py_size))
+    goto err;
+
+  py_maxsize = Py_BuildValue ("i", mapinfo->maxsize);
+  if (!py_maxsize || PyObject_SetAttrString (py_mapinfo, "maxsize", py_maxsize))
+    goto err;
+
   Py_INCREF (Py_True);
-  return Py_True;
+  success = Py_True;
+  goto end;
+
+err:
+  GST_ERROR ("Could not map the Gst.MapInfo PyObject with GstMapInfo");
+  if (py_mview)
+    PyObject_CallMethod (py_mview, "release", NULL);
+
+end:
+  Py_XDECREF (py_cmapinfo);
+  Py_XDECREF (py_mview);
+  Py_XDECREF (py_memory);
+  Py_XDECREF (py_flags);
+  Py_XDECREF (py_size);
+  Py_XDECREF (py_maxsize);
+  return success;
 }
 
 static PyObject *
