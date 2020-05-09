@@ -27,7 +27,7 @@
 #include "vkerror.h"
 
 /* *INDENT-OFF* */
-static const struct 
+static const struct
 {
   VkResult result;
   const char *str;
@@ -63,8 +63,6 @@ _vk_result_to_string (VkResult result)
 
   if (result >= 0)
     return NULL;
-  if (result < VK_RESULT_BEGIN_RANGE)
-    return "Unknown Error";
 
   for (i = 0; i < G_N_ELEMENTS (vk_result_string_map); i++) {
     if (result == vk_result_string_map[i].result)
