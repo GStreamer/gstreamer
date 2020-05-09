@@ -24,11 +24,11 @@
 #ifndef __GST_FFMPEGAUDENC_H__
 #define __GST_FFMPEGAUDENC_H__
 
-G_BEGIN_DECLS
-
 #include <gst/gst.h>
 #include <gst/audio/gstaudioencoder.h>
 #include <libavcodec/avcodec.h>
+
+G_BEGIN_DECLS
 
 typedef struct _GstFFMpegAudEnc GstFFMpegAudEnc;
 

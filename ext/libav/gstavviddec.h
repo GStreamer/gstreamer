@@ -19,11 +19,11 @@
 #ifndef __GST_FFMPEGVIDDEC_H__
 #define __GST_FFMPEGVIDDEC_H__
 
-G_BEGIN_DECLS
-
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <libavcodec/avcodec.h>
+
+G_BEGIN_DECLS
 
 typedef struct _GstFFMpegVidDec GstFFMpegVidDec;
 struct _GstFFMpegVidDec

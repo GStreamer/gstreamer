@@ -21,6 +21,7 @@
 #define __GST_FFMPEG_CODECMAP_H__
 
 #include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
 #include <gst/video/video.h>
