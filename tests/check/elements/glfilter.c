@@ -51,7 +51,7 @@ replace_display (GstHarness * h)
   fail_unless (gst_gl_display_create_context (new_display, NULL, &expected,
           NULL));
   fail_unless (expected != NULL);
-  gst_gl_display_add_context (new_display, expected);
+  fail_unless (gst_gl_display_add_context (new_display, expected));
 
   new_context = gst_context_new (GST_GL_DISPLAY_CONTEXT_TYPE, TRUE);
   gst_context_set_gl_display (new_context, new_display);
