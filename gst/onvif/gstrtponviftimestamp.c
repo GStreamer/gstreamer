@@ -100,6 +100,7 @@ gst_rtp_onvif_timestamp_get_property (GObject * object,
       break;
     case PROP_DROP_OUT_OF_SEGMENT:
       g_value_set_boolean (value, self->prop_drop_out_of_segment);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
