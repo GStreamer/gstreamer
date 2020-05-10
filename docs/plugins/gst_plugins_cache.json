@@ -152,7 +152,7 @@
                 }
             },
             "concat": {
-                "author": "Sebastian Dr\u00f6ge <sebastian@centricular.com>",
+                "author": "Sebastian Dröge <sebastian@centricular.com>",
                 "description": "Concatenate multiple streams",
                 "hierarchy": [
                     "GstConcat",
@@ -210,7 +210,7 @@
                 "rank": "none"
             },
             "dataurisrc": {
-                "author": "Philippe Normand <pnormand@igalia.com>, Sebastian Dr\u00f6ge <sebastian.droege@collabora.co.uk>",
+                "author": "Philippe Normand <pnormand@igalia.com>, Sebastian Dröge <sebastian.droege@collabora.co.uk>",
                 "description": "Handles data: uris",
                 "hierarchy": [
                     "GstDataURISrc",
