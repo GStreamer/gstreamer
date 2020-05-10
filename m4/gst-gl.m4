@@ -179,7 +179,7 @@ case $host in
         AG_GST_CHECK_LIBHEADER(GLES2, GLESv2, glTexImage2D,, GLES2/gl2.h)
       fi
       AC_CHECK_HEADER([GLES3/gl3.h], [HAVE_GLES3_H=yes])
-      AS_IF([test "x$HAVE_GLES3_H" == "xyes"],
+      AS_IF([test "x$HAVE_GLES3_H" = "xyes"],
             [
              AC_CHECK_HEADER([GLES3/gl3ext.h], [HAVE_GLES3EXT3_H=yes], [HAVE_GLES3EXT3_H=no], [#include <GLES3/gl3.h>])
             ])
@@ -290,8 +290,8 @@ case $host in
 
     PKG_CHECK_MODULES(WAYLAND_EGL, wayland-client >= 1.0 wayland-cursor >= 1.0 wayland-egl >= 9.0 wayland-protocols >= 1.15, HAVE_WAYLAND_EGL=yes, HAVE_WAYLAND_EGL=no)
     AC_CHECK_PROGS(WAYLAND_SCANNER, wayland-scanner)
-    if test x"$HAVE_WAYLAND_EGL" == xyes ; then
-      if test x"$WAYLAND_SCANNER" == x ; then
+    if test "x$HAVE_WAYLAND_EGL" = "xyes" ; then
+      if test "x$WAYLAND_SCANNER" = "x" ; then
         AC_MSG_ERROR([Found Wayland libraries, but couldn't find wayland-scanner binary.])
       fi
 
@@ -391,10 +391,10 @@ dnl check if we can include both GL and GLES2 at the same time
 if test "x$HAVE_GL" = "xyes" -a "x$HAVE_GLES2" = "xyes"; then
   GLES3_H_DEFINE=0
   GLES3EXT3_H_DEFINE=0
-  if test "x$HAVE_GLES3_H" == "xyes"; then
+  if test "x$HAVE_GLES3_H" = "xyes"; then
     GLES3_H_DEFINE=1
   fi
-  if test "x$HAVE_GLES3EXT3_H" == "xyes"; then
+  if test "x$HAVE_GLES3EXT3_H" = "xyes"; then
     GLES3EXT3_H_DEFINE=1
   fi
   GL_INCLUDES="
