@@ -122,9 +122,9 @@ if __name__ == "__main__":
 
     modified = dict_recursive_update(cache, plugins)
 
-    with open(output_filename, 'w', newline='\n') as f:
-        json.dump(cache, f, indent=4, sort_keys=True)
+    with open(output_filename, 'w', newline='\n', encoding='utf8') as f:
+        json.dump(cache, f, indent=4, sort_keys=True, ensure_ascii=False)
 
     if modified:
-        with open(cache_filename, 'w', newline='\n') as f:
-            json.dump(cache, f, indent=4, sort_keys=True)
+        with open(cache_filename, 'w', newline='\n', encoding='utf8') as f:
+            json.dump(cache, f, indent=4, sort_keys=True, ensure_ascii=False)
