@@ -21,6 +21,13 @@ else
   if get_option('v4l2codecs').enabled() and not have_v4l2
     error('V4L2i CODECs is requested but kernel headers were not found')
   endif
+
+  # Find makedev in various header files. Different operating systems put the
+  # macro in different header files.
+  foreach name: ['mkdev', 'sysmacros', 'types']
+    have_makedev = cc.has_header_symbol('sys/@0@.h'.format(name), 'makedev')
+    cdata.set10('HAVE_MAKEDEV_IN_' + name.to_upper(), have_makedev)
+  endforeach
 endif
 
 

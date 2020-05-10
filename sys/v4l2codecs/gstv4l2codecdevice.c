@@ -18,6 +18,10 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "gstv4l2codecdevice.h"
 #include "linux/media.h"
 
@@ -25,7 +29,14 @@
 #include <gudev/gudev.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
+
+#if HAVE_MAKEDEV_IN_MKDEV
+#include <sys/mkdev.h>
+#elif HAVE_MAKEDEV_IN_SYSMACROS
 #include <sys/sysmacros.h>
+#elif HAVE_MAKEDEV_IN_TYPES
+#include <sys/types.h>
+#endif
 #include <unistd.h>
 
 #define GST_CAT_DEFAULT gstv4l2codecs_debug

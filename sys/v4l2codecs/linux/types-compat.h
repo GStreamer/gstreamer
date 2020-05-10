@@ -46,7 +46,9 @@
 #  endif
 #endif
 
+typedef gint8   __s8;
 typedef guint8  __u8;
+typedef gint16  __s16;
 typedef guint16 __u16;
 typedef gint32  __s32;
 typedef guint32 __u32;

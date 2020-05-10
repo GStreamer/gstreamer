@@ -24,8 +24,7 @@
 #include <stdint.h>
 #define __user
 #endif
-#include <linux/ioctl.h>
-#include <linux/types.h>
+#include "linux/types-compat.h"
 
 struct media_device_info {
 	char driver[16];
