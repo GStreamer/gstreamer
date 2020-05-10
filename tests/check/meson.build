@@ -55,6 +55,7 @@ base_tests = [
   [['elements/switchbin.c']],
   [['elements/videoframe-audiolevel.c']],
   [['elements/viewfinderbin.c']],
+  [['elements/wasapi2.c'], host_machine.system() != 'windows', ],
   [['libs/h264parser.c'], false, [gstcodecparsers_dep]],
   [['libs/h265parser.c'], false, [gstcodecparsers_dep]],
   [['libs/insertbin.c'], false, [gstinsertbin_dep]],
