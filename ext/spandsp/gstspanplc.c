@@ -75,16 +75,18 @@ static gboolean gst_span_plc_event_sink (GstPad * pad, GstObject * parent,
 static GstStructure *
 gst_span_plc_create_stats (GstSpanPlc * self)
 {
-  GstStructure *s;
+  GstStructure *s = NULL;
 
   GST_OBJECT_LOCK (self);
-  s = gst_structure_new ("application/x-spanplc-stats",
-      "num-pushed", G_TYPE_UINT64, self->num_pushed,
-      "num-gap", G_TYPE_UINT64, self->num_gap,
-      "plc-num-samples", G_TYPE_UINT64, self->plc_num_samples,
-      "plc-duration", G_TYPE_UINT64, self->plc_duration,
-      "pitch", G_TYPE_INT, self->plc_state->pitch,
-      "pitch-offset", G_TYPE_INT, self->plc_state->pitch_offset, NULL);
+  if (self->plc_state) {
+    s = gst_structure_new ("application/x-spanplc-stats",
+        "num-pushed", G_TYPE_UINT64, self->num_pushed,
+        "num-gap", G_TYPE_UINT64, self->num_gap,
+        "plc-num-samples", G_TYPE_UINT64, self->plc_num_samples,
+        "plc-duration", G_TYPE_UINT64, self->plc_duration,
+        "pitch", G_TYPE_INT, self->plc_state->pitch,
+        "pitch-offset", G_TYPE_INT, self->plc_state->pitch_offset, NULL);
+  }
   GST_OBJECT_UNLOCK (self);
 
   return s;
