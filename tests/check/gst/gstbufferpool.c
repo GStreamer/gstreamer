@@ -301,6 +301,41 @@ GST_START_TEST (test_flushing_pool_returns_flushing)
 
 GST_END_TEST;
 
+static gpointer
+unref_buf (gpointer p)
+{
+  GstBuffer *buf = (GstBuffer *) p;
+  /* remove all memory, pool should not reuse this buffer */
+  gst_buffer_remove_all_memory (buf);
+  gst_buffer_unref (buf);
+  return NULL;
+}
+
+GST_START_TEST (test_no_deadlock_for_buffer_discard)
+{
+  GstBufferPool *pool;
+  GstBuffer *buf1, *buf2;
+  GThread *thread;
+
+  pool = create_pool (1, 1, 1);
+  fail_unless (pool);
+  gst_buffer_pool_set_active (pool, TRUE);
+
+  fail_unless (gst_buffer_pool_acquire_buffer (pool, &buf1,
+          NULL) == GST_FLOW_OK);
+  thread = g_thread_new (NULL, unref_buf, buf1);
+  fail_unless (thread);
+  /* we will be blocked here until buf1 unrefed */
+  fail_unless (gst_buffer_pool_acquire_buffer (pool, &buf2,
+          NULL) == GST_FLOW_OK);
+
+  gst_buffer_unref (buf2);
+  g_thread_join (thread);
+  gst_object_unref (pool);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_buffer_pool_suite (void)
 {
@@ -319,6 +354,7 @@ gst_buffer_pool_suite (void)
   tcase_add_test (tc_chain, test_pool_activation_and_config);
   tcase_add_test (tc_chain, test_pool_config_validate);
   tcase_add_test (tc_chain, test_flushing_pool_returns_flushing);
+  tcase_add_test (tc_chain, test_no_deadlock_for_buffer_discard);
 
   return s;
 }
