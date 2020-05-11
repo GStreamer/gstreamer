@@ -2127,13 +2127,12 @@ gst_cc_converter_transform (GstCCConverter * self, GstBuffer * inbuf,
     if (self->current_output_timecode.config.fps_n > 0) {
       gst_buffer_add_video_time_code_meta (outbuf,
           &self->current_output_timecode);
-      /* XXX: discont handling? */
       gst_video_time_code_increment_frame (&self->current_output_timecode);
     }
 
     return GST_FLOW_OK;
   } else {
-    return GST_BASE_TRANSFORM_FLOW_DROPPED;
+    return GST_FLOW_OK;
   }
 }
 
@@ -2181,6 +2180,50 @@ can_generate_output (GstCCConverter * self)
   return FALSE;
 }
 
+static void
+reset_counters (GstCCConverter * self)
+{
+  self->scratch_ccp_len = 0;
+  self->scratch_cea608_1_len = 0;
+  self->scratch_cea608_2_len = 0;
+  self->input_frames = 0;
+  self->output_frames = 1;
+  gst_video_time_code_clear (&self->current_output_timecode);
+  gst_clear_buffer (&self->previous_buffer);
+}
+
+static GstFlowReturn
+drain_input (GstCCConverter * self)
+{
+  GstBaseTransform *trans = GST_BASE_TRANSFORM (self);
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  while (self->scratch_ccp_len > 0 || self->scratch_cea608_1_len > 0
+      || self->scratch_cea608_2_len > 0 || can_generate_output (self)) {
+    GstBuffer *outbuf;
+
+    outbuf = gst_buffer_new_allocate (NULL, MAX_CDP_PACKET_LEN, NULL);
+
+    ret = gst_cc_converter_transform (self, NULL, outbuf);
+    if (gst_buffer_get_size (outbuf) <= 0) {
+      /* try to move the output along */
+      self->input_frames++;
+      gst_buffer_unref (outbuf);
+      continue;
+    } else if (ret != GST_FLOW_OK) {
+      gst_buffer_unref (outbuf);
+      return ret;
+    }
+
+    ret = gst_pad_push (GST_BASE_TRANSFORM_SRC_PAD (trans), outbuf);
+    if (ret != GST_FLOW_OK) {
+      return ret;
+    }
+  }
+
+  return ret;
+}
+
 static GstFlowReturn
 gst_cc_converter_generate_output (GstBaseTransform * base, GstBuffer ** outbuf)
 {
@@ -2199,6 +2242,13 @@ gst_cc_converter_generate_output (GstBaseTransform * base, GstBuffer ** outbuf)
     *outbuf = inbuf;
     ret = GST_FLOW_OK;
   } else {
+    if (inbuf && GST_BUFFER_IS_DISCONT (inbuf)) {
+      ret = drain_input (self);
+      reset_counters (self);
+      if (ret != GST_FLOW_OK)
+        return ret;
+    }
+
     *outbuf = gst_buffer_new_allocate (NULL, MAX_CDP_PACKET_LEN, NULL);
     if (*outbuf == NULL)
       goto no_buffer;
@@ -2215,6 +2265,11 @@ gst_cc_converter_generate_output (GstBaseTransform * base, GstBuffer ** outbuf)
     }
 
     ret = gst_cc_converter_transform (self, inbuf, *outbuf);
+    if (gst_buffer_get_size (*outbuf) <= 0) {
+      gst_buffer_unref (*outbuf);
+      *outbuf = NULL;
+      ret = GST_FLOW_OK;
+    }
 
     if (inbuf)
       gst_buffer_unref (inbuf);
@@ -2241,35 +2296,11 @@ gst_cc_converter_sink_event (GstBaseTransform * trans, GstEvent * event)
     case GST_EVENT_EOS:
       GST_DEBUG_OBJECT (self, "received EOS");
 
-      while (self->scratch_ccp_len > 0 || self->scratch_cea608_1_len > 0
-          || self->scratch_cea608_2_len > 0 || can_generate_output (self)) {
-        GstBuffer *outbuf;
-        GstFlowReturn ret;
+      drain_input (self);
 
-        outbuf = gst_buffer_new_allocate (NULL, MAX_CDP_PACKET_LEN, NULL);
-
-        ret = gst_cc_converter_transform (self, NULL, outbuf);
-        if (ret == GST_BASE_TRANSFORM_FLOW_DROPPED) {
-          /* try to move the output along */
-          self->input_frames++;
-          gst_buffer_unref (outbuf);
-          continue;
-        } else if (ret != GST_FLOW_OK)
-          break;
-
-        ret = gst_pad_push (GST_BASE_TRANSFORM_SRC_PAD (trans), outbuf);
-        if (ret != GST_FLOW_OK)
-          break;
-      }
       /* fallthrough */
     case GST_EVENT_FLUSH_START:
-      self->scratch_ccp_len = 0;
-      self->scratch_cea608_1_len = 0;
-      self->scratch_cea608_2_len = 0;
-      self->input_frames = 0;
-      self->output_frames = 1;
-      gst_video_time_code_clear (&self->current_output_timecode);
-      gst_clear_buffer (&self->previous_buffer);
+      reset_counters (self);
       break;
     default:
       break;
