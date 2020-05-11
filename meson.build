@@ -273,9 +273,9 @@ gstvideo_dep = dependency('gstreamer-video-1.0', version : gst_req,
 gstgl_dep = dependency('gstreamer-gl-1.0', version : gst_req,
     fallback : ['gst-plugins-base', 'gstgl_dep'], required: false)
 
-build_gstgl = gstgl_dep.found() # FIXME: add option?
+have_gstgl = gstgl_dep.found()
 
-if build_gstgl
+if have_gstgl
   if gstgl_dep.type_name() == 'pkgconfig'
     gst_gl_apis = gstgl_dep.get_pkgconfig_variable('gl_apis').split()
     gst_gl_winsys = gstgl_dep.get_pkgconfig_variable('gl_winsys').split()

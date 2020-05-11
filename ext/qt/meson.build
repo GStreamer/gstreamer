@@ -26,7 +26,7 @@ if qt5_option.disabled()
   subdir_done()
 endif
 
-if not build_gstgl
+if not have_gstgl
   if qt5_option.enabled()
     error('qt5 qmlglsink plugin is enabled, but gstreamer-gl-1.0 was not found')
   endif

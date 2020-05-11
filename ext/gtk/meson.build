@@ -12,7 +12,8 @@ optional_deps = []
 
 gtk_dep = dependency('gtk+-3.0', required : get_option('gtk3'))
 if gtk_dep.found()
-  if build_gstgl and gstgl_dep.found() and gtk_dep.version().version_compare('>=3.15.0')
+  # FIXME: automagic
+  if have_gstgl and gtk_dep.version().version_compare('>=3.15.0')
     have_gtk3_gl_windowing = false
 
     if gst_gl_have_window_x11 and gst_gl_have_platform_glx
