@@ -33,7 +33,7 @@ if not have_gstgl
   subdir_done()
 endif
 
-if not add_languages('cpp', required: qt5_option)
+if not add_languages('cpp', native: false, required: qt5_option)
   subdir_done()
 endif
 
