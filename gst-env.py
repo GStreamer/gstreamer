@@ -392,7 +392,7 @@ def get_windows_shell():
     return result.decode().strip()
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="gstreamer-uninstalled")
+    parser = argparse.ArgumentParser(prog="gst-env")
 
     parser.add_argument("--builddir",
                         default=DEFAULT_BUILDDIR,
