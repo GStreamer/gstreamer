@@ -170,7 +170,6 @@ gst_fd_sink_init (GstFdSink * fdsink)
 {
   fdsink->fd = 1;
   fdsink->uri = g_strdup_printf ("fd://%d", fdsink->fd);
-  fdsink->bytes_written = 0;
   fdsink->current_pos = 0;
 
   gst_base_sink_set_sync (GST_BASE_SINK (fdsink), FALSE);
@@ -262,7 +261,6 @@ gst_fd_sink_render_list (GstBaseSink * bsink, GstBufferList * buffer_list)
     ret = gst_writev_buffer_list (GST_OBJECT_CAST (sink), sink->fd, sink->fdset,
         buffer_list, &bytes_written, skip, 0, -1, NULL);
 
-    sink->bytes_written += bytes_written;
     sink->current_pos += bytes_written;
     skip += bytes_written;
 
@@ -298,7 +296,6 @@ gst_fd_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
     ret = gst_writev_buffer (GST_OBJECT_CAST (sink), sink->fd, sink->fdset,
         buffer, &bytes_written, skip, 0, -1, NULL);
 
-    sink->bytes_written += bytes_written;
     sink->current_pos += bytes_written;
     skip += bytes_written;
 
@@ -374,7 +371,6 @@ gst_fd_sink_start (GstBaseSink * basesink)
   gst_poll_add_fd (fdsink->fdset, &fd);
   gst_poll_fd_ctl_write (fdsink->fdset, &fd, TRUE);
 
-  fdsink->bytes_written = 0;
   fdsink->current_pos = 0;
 
   fdsink->seekable = gst_fd_sink_do_seek (fdsink, 0);
