@@ -1,4 +1,4 @@
-if not add_languages('cpp', required: get_option('modplug'))
+if not add_languages('cpp', native: false, required: get_option('modplug'))
   subdir_done()
 endif
 

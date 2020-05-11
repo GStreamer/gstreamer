@@ -34,7 +34,7 @@ plugins = []
 cc = meson.get_compiler('c')
 cxx = meson.get_compiler('cpp')
 
-have_objc = add_languages('objc', required : false)
+have_objc = add_languages('objc', native: false, required: false)
 
 cdata = configuration_data()
 
@@ -369,7 +369,7 @@ if ['darwin', 'ios'].contains(host_system)
 #    cdata.set('HAVE_VIDEOTOOLBOX_10_9_6', 1)
 #  endif
 endif
-have_objcpp = add_languages('objcpp', required : false)
+have_objcpp = add_languages('objcpp', native: false, required: false)
 
 have_orcc = false
 orcc_args = []

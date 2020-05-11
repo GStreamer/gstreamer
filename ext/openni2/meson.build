@@ -1,4 +1,4 @@
-if not add_languages('cpp', required: get_option('openni2'))
+if not add_languages('cpp', native: false, required: get_option('openni2'))
   subdir_done()
 endif
 
