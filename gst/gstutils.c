@@ -3440,7 +3440,7 @@ gst_parse_bin_from_description (const gchar * bin_description,
  *
  * Returns: (transfer floating) (type Gst.Element) (nullable): a newly-created
  *   element, which is guaranteed to be a bin unless
- *   GST_FLAG_NO_SINGLE_ELEMENT_BINS was passed, or %NULL if an error
+ *   #GST_PARSE_FLAG_NO_SINGLE_ELEMENT_BINS was passed, or %NULL if an error
  *   occurred.
  */
 GstElement *
