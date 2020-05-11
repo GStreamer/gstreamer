@@ -33,10 +33,7 @@ if not have_gstgl
   subdir_done()
 endif
 
-if not have_cxx
-  if qt5_option.enabled()
-    error('qt5 qmlglsink plugin is enabled, but no C++ compiler is available')
-  endif
+if not add_languages('cpp', required: qt5_option)
   subdir_done()
 endif
 

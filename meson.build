@@ -16,7 +16,6 @@ else
 endif
 gst_version_is_dev = gst_version_minor % 2 == 1 and gst_version_micro < 90
 
-# FIXME: automagic
 have_cxx = add_languages('cpp', required : false)
 
 glib_req = '>= 2.44.0'
