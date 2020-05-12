@@ -230,8 +230,7 @@ does not apply any longer to master you may be asked to provide an updated
 branch to merge.
 
 If you have created a new plugin, please submit a merge request that adds it to
-the gst-plugins-bad module, including `configure.ac`, the various `Makefile.am`
-modifications, `meson.build` modifications, and all new files.
+the gst-plugins-bad module, including `meson.build` modifications, and all new files.
 
 #### Patch Format
 

@@ -96,18 +96,17 @@ The last command creates two files: `gstmyfilter.c` and `gstmyfilter.h`.
 > It is recommended that you create a copy of the `gst-plugin` directory
 > before continuing.
 
-Now one needs to adjust the `Makefile.am` to use the new filenames and
-run `autogen.sh` from the parent directory to bootstrap the build
-environment. After that, the project can be built and installed using
-the well known `make && sudo make install` commands.
+Now one needs to adjust the `meson.build` to use the new filenames and run
+`meson build` from the parent directory to bootstrap the build
+environment. After that, the project can be built and installed using the well
+known `ninja -C build` commands.
 
 > **Note**
 >
-> Be aware that by default `autogen.sh` and `configure` would choose
-> `/usr/local` as a default location. One would need to add
-> `/usr/local/lib/gstreamer-1.0` to `GST_PLUGIN_PATH` in order to make
-> the new plugin show up in a gstreamer that's been installed from
-> packages.
+> Be aware that by default `meson` will choose `/usr/local` as a default
+> location. One would need to add `/usr/local/lib/gstreamer-1.0` to
+> `GST_PLUGIN_PATH` in order to make the new plugin show up in a gstreamer
+> that's been installed from packages.
 
 > **Note**
 >
