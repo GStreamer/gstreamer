@@ -50,6 +50,7 @@ struct _GstOutputSelector {
   gint pad_negotiation_mode;
 
   GstSegment segment;
+  guint32 segment_seqnum;
 
   /* resend latest buffer after switch */
   gboolean resend_latest;
