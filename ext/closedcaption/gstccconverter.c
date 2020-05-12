@@ -460,8 +460,10 @@ interpolate_time_code_with_framerate (GstCCConverter * self,
   if (!tc || tc->config.fps_n == 0)
     return FALSE;
 
-  gst_util_fraction_multiply (tc->frames, 1, scale_n, scale_d, &output_n,
-      &output_d);
+  if (!gst_util_fraction_multiply (tc->frames, 1, scale_n, scale_d, &output_n,
+          &output_d))
+    /* we should never overflow */
+    g_assert_not_reached ();
 
   tc_str = gst_video_time_code_to_string (tc);
   GST_TRACE_OBJECT (self, "interpolating time code %s with scale %d/%d "
