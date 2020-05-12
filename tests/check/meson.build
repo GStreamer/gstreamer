@@ -113,7 +113,7 @@ core_tests = [
 ]
 
 # Make sure our headers are C++ clean
-if add_languages('cpp', required : false)
+if add_languages('cpp', native: false, required: false)
   core_tests += [
     [ 'gst/gstcpp.cc', not gst_registry ],
     [ 'libs/gstlibscpp.cc', false ],
