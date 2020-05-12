@@ -264,8 +264,6 @@ look something like:
     to seek to. It might not be 100% accurate, but better than
     nothing.
 
-    https://bugzilla.gnome.org/show_bug.cgi?id=987654
-
 Then exit the editor, and you should have a commit.
 
 It's best to run `git add` or `git commit` on specific directories or files
