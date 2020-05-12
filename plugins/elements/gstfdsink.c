@@ -264,7 +264,7 @@ gst_fd_sink_render_list (GstBaseSink * bsink, GstBufferList * buffer_list)
     sink->current_pos += bytes_written;
     skip += bytes_written;
 
-    if (!sink->unlock)
+    if (!sink->unlock || ret != GST_FLOW_FLUSHING)
       break;
 
     ret = gst_base_sink_wait_preroll (GST_BASE_SINK (sink));
@@ -299,7 +299,7 @@ gst_fd_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
     sink->current_pos += bytes_written;
     skip += bytes_written;
 
-    if (!sink->unlock)
+    if (!sink->unlock || ret != GST_FLOW_FLUSHING)
       break;
 
     ret = gst_base_sink_wait_preroll (GST_BASE_SINK (sink));
