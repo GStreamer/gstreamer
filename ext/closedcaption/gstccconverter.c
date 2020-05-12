@@ -1141,9 +1141,9 @@ copy_from_stored_data (GstCCConverter * self, guint8 * out_ccp,
 {
   guint ccp_in_size = 0, cea608_1_in_size = 0, cea608_2_in_size = 0;
 
-  g_assert (out_ccp || !ccp_size);
-  g_assert (cea608_1 || !cea608_1_len);
-  g_assert (cea608_2 || !cea608_2_len);
+  g_assert ((out_ccp && ccp_size) || (!out_ccp && !ccp_size));
+  g_assert ((cea608_1 && cea608_1_len) || (!cea608_1 && !cea608_1_len));
+  g_assert ((cea608_2 && cea608_2_len) || (!cea608_2 && !cea608_2_len));
 
   if (ccp_size) {
     ccp_in_size = *ccp_size;
