@@ -673,7 +673,7 @@ gst_h264_decoder_start_current_picture (GstH264Decoder * self)
 
   sps = priv->active_sps;
 
-  priv->max_frame_num = 1 << (sps->log2_max_frame_num_minus4 + 4);
+  priv->max_frame_num = sps->max_frame_num;
   frame_num = priv->current_slice.header.frame_num;
   if (priv->current_slice.nalu.idr_pic_flag)
     priv->prev_ref_frame_num = 0;
@@ -1919,10 +1919,7 @@ gst_h264_decoder_decode_slice (GstH264Decoder * self)
   GST_LOG_OBJECT (self, "Decode picture %p (frame_num %d, poc %d)",
       picture, picture->frame_num, picture->pic_order_cnt);
 
-  if (slice->header.field_pic_flag == 0)
-    priv->max_pic_num = priv->max_frame_num;
-  else
-    priv->max_pic_num = 2 * priv->max_frame_num;
+  priv->max_pic_num = slice->header.max_pic_num;
 
   if (priv->process_ref_pic_lists) {
     if (!gst_h264_decoder_modify_ref_pic_lists (self))
