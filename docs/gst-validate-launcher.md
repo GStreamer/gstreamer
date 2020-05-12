@@ -5,7 +5,7 @@ short-description: Integration testsuite builder and launcher
 # gst-validate-launcher
 
 `gst-validate-launcher` is an application to run unit or integration testsuites
-providing a set of options and features to help debugging them easier.
+providing a set of options and features to help debugging them.
 
 ## Run the GStreamer unit tests
 
@@ -27,13 +27,16 @@ Or to run unit tests from gst-plugins-base
 gst-validate-launcher check.gst-plugins-base
 ```
 
+You can also run them inside valgrind with the `-vg` option or inside gdb with
+`--gdb` for example.
+
 ## Run the GstValidate default testsuite
 
 GstValidate comes with a default testsuite to be executed on a default
 set of media samples. Those media samples are stored with `git-lfs` so
 you will need it to be able to launch the default testsuite.
 
-We recommendusing `gst-build` to setup everything needed to run the testsuite
+We recommend using `gst-build` to setup everything needed to run the testsuite
 and you can simply do:
 
     gst-validate-launcher validate
