@@ -38,37 +38,9 @@ Makefile, or with autoconf using the pkg.m4 macro (providing
 It is possible to develop and compile against an uninstalled copy of GStreamer
 and its plugins, for example, against git checkouts. This enables you to test
 the latest version of GStreamer without interfering with your system-wide
-installation.
+installation. See the [Building from source using
+meson](installing/building-from-source-using-meson.md) documentation.
 
-There are two ways to achieve such a setup:
-
-1. [`gst-build`][gst-build] is our new meta-build module based on the
-   [Meson build system][meson]. This is the shiny new option. It's fast and
-   simple to get started with, but you will need a recent version of Meson
-   installed. Just check out the git repository and run the `setup.py` script.
-   Once the initial Meson configure stage has passed, you can enter an
-   uninstalled environment by running `ninja uninstalled` in the build
-   directory. This will make sure tools and plugins from the uninstalled build
-   tree are used. Any problems, let us know.
-
-2. [`gst-uninstalled`][gst-uninstalled] is our traditional autotools
-   and libtool-based uninstalled setup tool, but it requires a few extra steps,
-   like manually downloading the needed GStreamer repositories. The
-   [`create-uninstalled-setup.sh`][create-uninstalled] script automates this
-   process. Run `create-uninstalled.sh` and follow its instructions to gain
-   access to an environment where uninstalled GStreamer tools and plugins are
-   used by default. Also, `pkg-config` will prefer uninstalled library copies
-   over installed ones.
-
-Multiple uninstalled setups can be used in parallel, e.g. one for the
-latest stable branch and one for git master. Have a look at the
-[gst-uninstalled][gst-uninstalled] script to see how it determines which
-environment is used.
-
-[gst-build]: https://gitlab.freedesktop.org/gstreamer/gst-build/
-[meson]: http://mesonbuild.com
-[gst-uninstalled]: https://gitlab.freedesktop.org/gstreamer/gstreamer/tree/master/scripts/gst-uninstalled
-[create-uninstalled]: https://gitlab.freedesktop.org/gstreamer/gstreamer/tree/master/scripts/create-uninstalled-setup.sh
 
 ## How can I use GConf to get the system-wide defaults?
 
