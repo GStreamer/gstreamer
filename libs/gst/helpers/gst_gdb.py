@@ -478,11 +478,12 @@ class GdbGstStructure:
 
     @save_memory_access(0)
     def size(self):
-        return int(self.val["fields"]["len"])
+        return int(self.val["fields_len"])
 
     def values(self):
-        for f in _g_array_iter(self.val["fields"],
-                               gdb.lookup_type("GstStructureField")):
+        item = self.val["fields"].cast(gdb.lookup_type("GstStructureField").pointer())
+        for i in range(self.size()):
+            f = item[i]
             key = g_quark_to_string(f["name"])
             value = GdbGValue(f["value"])
             yield(key, value)
