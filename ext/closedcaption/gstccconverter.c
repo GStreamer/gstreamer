@@ -1457,8 +1457,6 @@ convert_cea608_raw_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
   if (!out_fps_entry || out_fps_entry->fps_n == 0)
     g_assert_not_reached ();
 
-  gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
-
   if (!fit_and_scale_cc_data (self, in_fps_entry, out_fps_entry, NULL, 0,
           cea608_1, &cea608_1_len, NULL, 0, tc_meta ? &tc_meta->tc : NULL))
     goto drop;
@@ -1467,14 +1465,14 @@ convert_cea608_raw_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
           cea608_1_len, NULL, 0, cc_data, &cc_data_len))
     goto drop;
 
+  gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
   cc_data_len =
       convert_cea708_cc_data_cea708_cdp_internal (self, cc_data, cc_data_len,
       out.data, out.size, &self->current_output_timecode, out_fps_entry);
   self->output_frames++;
-
-out:
   gst_buffer_unmap (outbuf, &out);
 
+out:
   gst_buffer_set_size (outbuf, cc_data_len);
 
   return GST_FLOW_OK;
@@ -1618,25 +1616,25 @@ convert_cea608_s334_1a_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
   if (!out_fps_entry || out_fps_entry->fps_n == 0)
     g_assert_not_reached ();
 
-  gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
-
   if (!fit_and_scale_cc_data (self, in_fps_entry, out_fps_entry, NULL, 0,
           cea608_1, &cea608_1_len, cea608_2, &cea608_2_len,
-          tc_meta ? &tc_meta->tc : NULL))
+          tc_meta ? &tc_meta->tc : NULL)) {
     goto drop;
+  }
 
   if (!combine_cc_data (self, TRUE, out_fps_entry, NULL, 0, cea608_1,
-          cea608_1_len, cea608_2, cea608_2_len, cc_data, &cc_data_len))
+          cea608_1_len, cea608_2, cea608_2_len, cc_data, &cc_data_len)) {
     goto drop;
+  }
 
+  gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
   cc_data_len =
       convert_cea708_cc_data_cea708_cdp_internal (self, cc_data, cc_data_len,
       out.data, out.size, &self->current_output_timecode, out_fps_entry);
   self->output_frames++;
-
-out:
   gst_buffer_unmap (outbuf, &out);
 
+out:
   gst_buffer_set_size (outbuf, cc_data_len);
 
   return GST_FLOW_OK;
@@ -1771,14 +1769,11 @@ convert_cea708_cc_data_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
           in_fps_entry)) {
     if (inbuf)
       gst_buffer_unmap (inbuf, &in);
-    gst_buffer_set_size (outbuf, cc_data_len);
-    return GST_FLOW_OK;
+    goto drop;
   }
 
   if (inbuf)
     gst_buffer_unmap (inbuf, &in);
-
-  gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
 
   if (!fit_and_scale_cc_data (self, in_fps_entry, out_fps_entry, ccp_data,
           &ccp_data_len, cea608_1, &cea608_1_len, cea608_2, &cea608_2_len,
@@ -1790,14 +1785,14 @@ convert_cea708_cc_data_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
           &cc_data_len))
     goto drop;
 
+  gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
   cc_data_len =
       convert_cea708_cc_data_cea708_cdp_internal (self, cc_data, cc_data_len,
       out.data, out.size, &self->current_output_timecode, out_fps_entry);
   self->output_frames++;
-
-out:
   gst_buffer_unmap (outbuf, &out);
 
+out:
   gst_buffer_set_size (outbuf, cc_data_len);
 
   return GST_FLOW_OK;
