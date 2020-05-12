@@ -216,9 +216,19 @@ GESClip*     ges_clip_split_full                           (GESClip *clip,
                                                             GError ** error);
 
 GES_API
+GstClockTime ges_clip_get_internal_time_from_timeline_time (GESClip * clip,
+                                                            GESTrackElement * child,
+                                                            GstClockTime timeline_time,
+                                                            GError ** error);
+GES_API
+GstClockTime ges_clip_get_timeline_time_from_internal_time (GESClip * clip,
+                                                            GESTrackElement * child,
+                                                            GstClockTime internal_time,
+                                                            GError ** error);
+GES_API
 GstClockTime ges_clip_get_timeline_time_from_source_frame (GESClip * clip,
                                                            GESFrameNumber frame_number,
-                                                           GError ** err);
+                                                           GError ** error);
 
 GES_API
 GstClockTime ges_clip_get_duration_limit (GESClip * clip);

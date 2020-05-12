@@ -56,6 +56,40 @@
  * #GESTimelineElement:start, or having insufficient internal
  * content to last for the desired #GESTimelineElement:duration).
  *
+ * ## Time Coordinates
+ *
+ * There are three main sets of time coordinates to consider when using
+ * timeline elements:
+ *
+ * + Timeline coordinates: these are the time coordinates used in the
+ *   output of the timeline in its #GESTrack-s. Each track share the same
+ *   coordinates, so there is only one set of coordinates for the
+ *   timeline. These extend indefinitely from 0. The times used for
+ *   editing (including setting #GESTimelineElement:start and
+ *   #GESTimelineElement:duration) use these coordinates, since these
+ *   define when an element is present and for how long the element lasts
+ *   for in the timeline.
+ * + Internal source coordinates: these are the time coordinates used
+ *   internally at the element's output. This is only really defined for
+ *   #GESTrackElement-s, where it refers to time coordinates used at the
+ *   final source pad of the wrapped #GstElement-s. However, these
+ *   coordinates may also be used in a #GESClip in reference to its
+ *   children. In particular, these are the coordinates used for
+ *   #GESTimelineElement:in-point and #GESTimelineElement:max-duration.
+ * + Internal sink coordinates: these are the time coordinates used
+ *   internally at the element's input. A #GESSource has no input, so
+ *   these would be undefined. Otherwise, for most #GESTrackElement-s
+ *   these will be the same set of coordinates as the internal source
+ *   coordinates because the element does not change the timing
+ *   internally. Only #GESBaseEffect can support elements where these
+ *   are different. See #GESBaseEffect for more information.
+ *
+ * You can determine the timeline time for a given internal source time
+ * in a #GESTrack in a #GESClip using
+ * ges_clip_get_timeline_time_from_internal_time(), and vice versa using
+ * ges_clip_get_internal_time_from_timeline_time(), for the purposes of
+ * editing and setting timings properties.
+ *
  * ## Children Properties
  *
  * If a timeline element owns another #GstObject and wishes to expose
@@ -2366,7 +2400,7 @@ ges_timeline_element_get_layer_priority (GESTimelineElement * self)
  * @mode: The edit mode
  * @edge: The edge of @self where the edit should occur
  * @position: The edit position: a new location for the edge of @self
- * (in nanoseconds)
+ * (in nanoseconds) in the timeline coordinates
  * @error: (nullable): Return location for an error
  *
  * Edits the element within its timeline by adjusting its

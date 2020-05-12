@@ -4776,7 +4776,424 @@ GST_START_TEST (test_unchanged_after_layer_add_failure)
   gst_object_unref (clip1);
   gst_object_unref (timeline);
 
-  gst_deinit ();
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
+#define _assert_timeline_to_internal(clip, child, in, expect_out) \
+{\
+  GError *error = NULL; \
+  GstClockTime found = ges_clip_get_internal_time_from_timeline_time ( \
+        clip, child, (in) * GST_SECOND, &error); \
+  GstClockTime expect =  expect_out * GST_SECOND; \
+  fail_unless (found == expect, "Conversion from timeline time %" \
+      GST_TIME_FORMAT " to the internal time of %" GES_FORMAT " gave %" \
+      GST_TIME_FORMAT " rather than the expected %" GST_TIME_FORMAT \
+      " (error: %s)", GST_TIME_ARGS ((in) * GST_SECOND), \
+      GES_ARGS (child), GST_TIME_ARGS (found), GST_TIME_ARGS (expect), \
+      error ? error->message : "None"); \
+  fail_if (error); \
+}
+
+#define _assert_timeline_to_internal_fails(clip, child, in, error_code) \
+{ \
+  GError *error = NULL; \
+  GstClockTime found = ges_clip_get_internal_time_from_timeline_time ( \
+        clip, child, (in) * GST_SECOND, &error); \
+  fail_if (GST_CLOCK_TIME_IS_VALID (found), "Conversion from timeline " \
+      "time %" GST_TIME_FORMAT " to the internal time of %" GES_FORMAT \
+      " successfully converted to %" GST_TIME_FORMAT " rather than " \
+      "GST_CLOCK_TIME_NONE", GST_TIME_ARGS ((in) * GST_SECOND), \
+      GES_ARGS (child), GST_TIME_ARGS (found)); \
+  assert_GESError (error, error_code); \
+}
+
+#define _assert_internal_to_timeline(clip, child, in, expect_out) \
+{\
+  GError *error = NULL; \
+  GstClockTime found = ges_clip_get_timeline_time_from_internal_time ( \
+        clip, child, (in) * GST_SECOND, &error); \
+  GstClockTime expect = expect_out * GST_SECOND; \
+  fail_unless (found == expect, "Conversion from the internal time %" \
+      GST_TIME_FORMAT " of %" GES_FORMAT " to the timeline time gave %" \
+      GST_TIME_FORMAT " rather than the expected %" GST_TIME_FORMAT, \
+      GST_TIME_ARGS ((in) * GST_SECOND), GES_ARGS (child), \
+      GST_TIME_ARGS (found), GST_TIME_ARGS (expect)); \
+  fail_if (error); \
+}
+
+#define _assert_internal_to_timeline_fails(clip, child, in, error_code) \
+{\
+  GError *error = NULL; \
+  GstClockTime found = ges_clip_get_timeline_time_from_internal_time ( \
+        clip, child, (in) * GST_SECOND, &error); \
+  fail_if (GST_CLOCK_TIME_IS_VALID (found), "Conversion from the " \
+      "internal time %" GST_TIME_FORMAT " of %" GES_FORMAT " to the " \
+      "timeline time gave %" GST_TIME_FORMAT " rather than " \
+      "GST_CLOCK_TIME_NONE", GST_TIME_ARGS ((in) * GST_SECOND), \
+      GES_ARGS (child), GST_TIME_ARGS (found)); \
+  assert_GESError (error, error_code); \
+}
+
+#define _assert_frame_to_timeline(clip, frame, expect_out) \
+{\
+  GError *error = NULL; \
+  GstClockTime found = ges_clip_get_timeline_time_from_source_frame ( \
+        clip, frame, &error); \
+  GstClockTime expect = expect_out * GST_SECOND; \
+  fail_unless (found == expect, "Conversion from the source frame %" \
+      G_GINT64_FORMAT " to the timeline time gave %" GST_TIME_FORMAT \
+      " rather than the expected %" GST_TIME_FORMAT, frame, \
+      GST_TIME_ARGS (found), GST_TIME_ARGS (expect)); \
+  fail_if (error); \
+}
+
+#define _assert_frame_to_timeline_fails(clip, frame, error_code) \
+{\
+  GError *error = NULL; \
+  GstClockTime found = ges_clip_get_timeline_time_from_source_frame ( \
+        clip, frame, &error); \
+  fail_if (GST_CLOCK_TIME_IS_VALID (found), "Conversion from the " \
+      "source frame %" G_GINT64_FORMAT " to the timeline time gave %" \
+      GST_TIME_FORMAT " rather than the expected GST_CLOCK_TIME_NONE", \
+      frame, GST_TIME_ARGS (found)); \
+  assert_GESError (error, error_code); \
+}
+
+GST_START_TEST (test_convert_time)
+{
+  GESTimeline *timeline;
+  GESTrack *track0, *track1;
+  GESAsset *asset;
+  GESLayer *layer;
+  GESClip *clip;
+  GESTrackElement *source0, *source1, *rate0, *rate1, *rate2, *overlay;
+  GValue val = G_VALUE_INIT;
+
+  ges_init ();
+
+  asset = ges_asset_request (GES_TYPE_TEST_CLIP,
+      "framerate=30/1, max-duration=93.0", NULL);
+  fail_unless (asset);
+
+  timeline = ges_timeline_new ();
+
+  track0 = GES_TRACK (ges_video_track_new ());
+  track1 = GES_TRACK (ges_video_track_new ());
+
+  fail_unless (ges_timeline_add_track (timeline, track0));
+  fail_unless (ges_timeline_add_track (timeline, track1));
+
+  layer = ges_timeline_append_layer (timeline);
+
+  clip = ges_layer_add_asset (layer, asset, 20 * GST_SECOND,
+      13 * GST_SECOND, 10 * GST_SECOND, GES_TRACK_TYPE_VIDEO);
+  fail_unless (clip);
+  CHECK_OBJECT_PROPS_MAX (clip, 20 * GST_SECOND, 13 * GST_SECOND,
+      10 * GST_SECOND, 93 * GST_SECOND);
+
+  source0 =
+      ges_clip_find_track_element (clip, track0, GES_TYPE_VIDEO_TEST_SOURCE);
+  source1 =
+      ges_clip_find_track_element (clip, track1, GES_TYPE_VIDEO_TEST_SOURCE);
+
+  rate0 = GES_TRACK_ELEMENT (ges_effect_new ("videorate"));
+  rate1 = GES_TRACK_ELEMENT (ges_effect_new ("videorate"));
+  rate2 = GES_TRACK_ELEMENT (ges_effect_new ("videorate"));
+  overlay = GES_TRACK_ELEMENT (ges_effect_new ("textoverlay"));
+  ges_track_element_set_has_internal_source (overlay, TRUE);
+  /* enough internal content to last 10 seconds at a rate of 4.0 */
+  assert_set_inpoint (overlay, 7 * GST_SECOND);
+  assert_set_max_duration (overlay, 50 * GST_SECOND);
+
+  fail_unless (ges_track_add_element (track0, rate0));
+  fail_unless (ges_track_add_element (track1, rate1));
+  fail_unless (ges_track_add_element (track1, rate2));
+  fail_unless (ges_track_add_element (track1, overlay));
+
+  _assert_add (clip, rate0);
+  _assert_add (clip, rate2);
+  _assert_add (clip, overlay);
+  _assert_add (clip, rate1);
+
+  /* in track0:
+   *
+   * source0 -> rate0 -> out
+   *
+   * in track1:
+   *
+   * source1 -> rate1 -> overlay -> rate2 -> out
+   */
+
+  g_value_init (&val, G_TYPE_DOUBLE);
+
+  _assert_rate_equal (rate0, "rate", 1.0, val);
+  _assert_rate_equal (rate1, "rate", 1.0, val);
+  _assert_rate_equal (rate2, "rate", 1.0, val);
+
+  /* without rates */
+
+  /* start of the clip */
+  _assert_internal_to_timeline (clip, source0, 13, 20);
+  _assert_internal_to_timeline (clip, source1, 13, 20);
+  _assert_internal_to_timeline (clip, overlay, 7, 20);
+  _assert_frame_to_timeline (clip, 390, 20);
+  _assert_timeline_to_internal (clip, source0, 20, 13);
+  _assert_timeline_to_internal (clip, source1, 20, 13);
+  _assert_timeline_to_internal (clip, overlay, 20, 7);
+
+  /* middle of the clip */
+  _assert_internal_to_timeline (clip, source0, 18, 25);
+  _assert_internal_to_timeline (clip, source1, 18, 25);
+  _assert_internal_to_timeline (clip, overlay, 12, 25);
+  _assert_frame_to_timeline (clip, 540, 25);
+  _assert_timeline_to_internal (clip, source0, 25, 18);
+  _assert_timeline_to_internal (clip, source1, 25, 18);
+  _assert_timeline_to_internal (clip, overlay, 25, 12);
+
+  /* end of the clip */
+  _assert_internal_to_timeline (clip, source0, 23, 30);
+  _assert_internal_to_timeline (clip, source1, 23, 30);
+  _assert_internal_to_timeline (clip, overlay, 17, 30);
+  _assert_frame_to_timeline (clip, 690, 30);
+  _assert_timeline_to_internal (clip, source0, 30, 23);
+  _assert_timeline_to_internal (clip, source1, 30, 23);
+  _assert_timeline_to_internal (clip, overlay, 30, 17);
+
+  /* beyond the end of the clip */
+  /* exceeds the max-duration of the elements, but that is ok */
+  _assert_internal_to_timeline (clip, source0, 123, 130);
+  _assert_internal_to_timeline (clip, source1, 123, 130);
+  _assert_internal_to_timeline (clip, overlay, 117, 130);
+  _assert_frame_to_timeline (clip, 3690, 130);
+  _assert_timeline_to_internal (clip, source0, 130, 123);
+  _assert_timeline_to_internal (clip, source1, 130, 123);
+  _assert_timeline_to_internal (clip, overlay, 130, 117);
+
+  /* before the start of the clip */
+  _assert_internal_to_timeline (clip, source0, 8, 15);
+  _assert_internal_to_timeline (clip, source1, 8, 15);
+  _assert_internal_to_timeline (clip, overlay, 2, 15);
+  _assert_frame_to_timeline (clip, 240, 15);
+  _assert_timeline_to_internal (clip, source0, 15, 8);
+  _assert_timeline_to_internal (clip, source1, 15, 8);
+  _assert_timeline_to_internal (clip, overlay, 15, 2);
+
+  /* too early for overlay */
+  _assert_timeline_to_internal (clip, source0, 10, 3);
+  _assert_timeline_to_internal (clip, source1, 10, 3);
+  _assert_timeline_to_internal_fails (clip, overlay, 10,
+      GES_ERROR_NEGATIVE_TIME);
+
+  /* too early for sources */
+  _assert_timeline_to_internal_fails (clip, source0, 5,
+      GES_ERROR_NEGATIVE_TIME);
+  _assert_timeline_to_internal_fails (clip, source1, 5,
+      GES_ERROR_NEGATIVE_TIME);
+  _assert_timeline_to_internal_fails (clip, overlay, 5,
+      GES_ERROR_NEGATIVE_TIME);
+
+  assert_set_start (clip, 10 * GST_SECOND);
+
+  /* too early in the timeline */
+  _assert_internal_to_timeline_fails (clip, source0, 2,
+      GES_ERROR_NEGATIVE_TIME);
+  _assert_internal_to_timeline_fails (clip, source1, 2,
+      GES_ERROR_NEGATIVE_TIME);
+  _assert_internal_to_timeline (clip, overlay, 2, 5);
+  _assert_frame_to_timeline_fails (clip, 60, GES_ERROR_INVALID_FRAME_NUMBER);
+
+  assert_set_start (clip, 6 * GST_SECOND);
+  _assert_internal_to_timeline_fails (clip, source0, 6,
+      GES_ERROR_NEGATIVE_TIME);
+  _assert_internal_to_timeline_fails (clip, source1, 6,
+      GES_ERROR_NEGATIVE_TIME);
+  _assert_internal_to_timeline_fails (clip, overlay, 0,
+      GES_ERROR_NEGATIVE_TIME);
+  _assert_frame_to_timeline_fails (clip, 180, GES_ERROR_INVALID_FRAME_NUMBER);
+
+  assert_set_start (clip, 20 * GST_SECOND);
+
+  /* now with rate effects
+   * Note, they are currently out of sync */
+  _assert_set_rate (rate0, "rate", 0.5, val);
+  _assert_set_rate (rate1, "rate", 2.0, val);
+  _assert_set_rate (rate2, "rate", 4.0, val);
+
+  CHECK_OBJECT_PROPS_MAX (clip, 20 * GST_SECOND, 13 * GST_SECOND,
+      10 * GST_SECOND, 93 * GST_SECOND);
+
+  /* start of the clip is the same */
+  _assert_internal_to_timeline (clip, source0, 13, 20);
+  _assert_internal_to_timeline (clip, source1, 13, 20);
+  _assert_internal_to_timeline (clip, overlay, 7, 20);
+  _assert_timeline_to_internal (clip, source0, 20, 13);
+  _assert_timeline_to_internal (clip, source1, 20, 13);
+  _assert_timeline_to_internal (clip, overlay, 20, 7);
+
+  /* middle is different */
+  /* 5 seconds in the timeline is 2.5 seconds into the source */
+  _assert_internal_to_timeline (clip, source0, 15.5, 25);
+  /* 5 seconds in the timeline is 40 seconds into the source */
+  _assert_internal_to_timeline (clip, source1, 53, 25);
+  /* 5 seconds in the timeline is 20 seconds into the source */
+  _assert_internal_to_timeline (clip, overlay, 27, 25);
+  /* reverse */
+  _assert_timeline_to_internal (clip, source0, 25, 15.5);
+  _assert_timeline_to_internal (clip, source1, 25, 53);
+  _assert_timeline_to_internal (clip, overlay, 25, 27);
+
+  /* end is different */
+  _assert_internal_to_timeline (clip, source0, 18, 30);
+  _assert_internal_to_timeline (clip, source1, 93, 30);
+  _assert_internal_to_timeline (clip, overlay, 47, 30);
+  _assert_timeline_to_internal (clip, source0, 30, 18);
+  _assert_timeline_to_internal (clip, source1, 30, 93);
+  _assert_timeline_to_internal (clip, overlay, 30, 47);
+
+  /* beyond end is different */
+  _assert_internal_to_timeline (clip, source0, 68, 130);
+  _assert_internal_to_timeline (clip, source1, 893, 130);
+  _assert_internal_to_timeline (clip, overlay, 447, 130);
+  _assert_timeline_to_internal (clip, source0, 130, 68);
+  _assert_timeline_to_internal (clip, source1, 130, 893);
+  _assert_timeline_to_internal (clip, overlay, 130, 447);
+
+  /* before the start */
+  _assert_internal_to_timeline (clip, source0, 12.5, 19);
+  _assert_internal_to_timeline (clip, source1, 5, 19);
+  _assert_internal_to_timeline (clip, overlay, 3, 19);
+  _assert_timeline_to_internal (clip, source0, 19, 12.5);
+  _assert_timeline_to_internal (clip, source1, 19, 5);
+  _assert_timeline_to_internal (clip, overlay, 19, 3);
+
+  /* too early for source1 and overlay */
+  _assert_internal_to_timeline (clip, source0, 12, 18);
+  _assert_timeline_to_internal (clip, source0, 18, 12);
+  _assert_timeline_to_internal_fails (clip, source1, 18,
+      GES_ERROR_NEGATIVE_TIME);
+  _assert_timeline_to_internal_fails (clip, overlay, 18,
+      GES_ERROR_NEGATIVE_TIME);
+
+  assert_set_inpoint (overlay, 8 * GST_SECOND);
+  /* now fine */
+  _assert_internal_to_timeline (clip, overlay, 0, 18);
+  _assert_timeline_to_internal (clip, overlay, 18, 0);
+
+  assert_set_inpoint (overlay, 7 * GST_SECOND);
+
+  /* still not too early for source0 */
+  _assert_internal_to_timeline (clip, source0, 5.5, 5);
+  _assert_timeline_to_internal (clip, source0, 5, 5.5);
+  _assert_timeline_to_internal_fails (clip, source1, 5,
+      GES_ERROR_NEGATIVE_TIME);
+  _assert_timeline_to_internal_fails (clip, overlay, 5,
+      GES_ERROR_NEGATIVE_TIME);
+
+  _assert_internal_to_timeline (clip, source0, 3, 0);
+  _assert_timeline_to_internal (clip, source0, 0, 3);
+  _assert_timeline_to_internal_fails (clip, source1, 5,
+      GES_ERROR_NEGATIVE_TIME);
+  _assert_timeline_to_internal_fails (clip, overlay, 5,
+      GES_ERROR_NEGATIVE_TIME);
+
+  /* too early for the timeline */
+  _assert_internal_to_timeline_fails (clip, source0, 2,
+      GES_ERROR_NEGATIVE_TIME);
+
+  /* re-sync rates between tracks */
+  _assert_set_rate (rate2, "rate", 0.25, val);
+
+  CHECK_OBJECT_PROPS_MAX (clip, 20 * GST_SECOND, 13 * GST_SECOND,
+      10 * GST_SECOND, 93 * GST_SECOND);
+
+  /* start of the clip */
+  _assert_internal_to_timeline (clip, source0, 13, 20);
+  _assert_internal_to_timeline (clip, source1, 13, 20);
+  _assert_internal_to_timeline (clip, overlay, 7, 20);
+  _assert_frame_to_timeline (clip, 390, 20);
+  _assert_timeline_to_internal (clip, source0, 20, 13);
+  _assert_timeline_to_internal (clip, source1, 20, 13);
+  _assert_timeline_to_internal (clip, overlay, 20, 7);
+
+  /* middle of the clip */
+  _assert_internal_to_timeline (clip, source0, 15.5, 25);
+  _assert_internal_to_timeline (clip, source1, 15.5, 25);
+  _assert_internal_to_timeline (clip, overlay, 8.25, 25);
+  _assert_frame_to_timeline (clip, 465, 25);
+  _assert_timeline_to_internal (clip, source0, 25, 15.5);
+  _assert_timeline_to_internal (clip, source1, 25, 15.5);
+  _assert_timeline_to_internal (clip, overlay, 25, 8.25);
+
+  /* end of the clip */
+  _assert_internal_to_timeline (clip, source0, 18, 30);
+  _assert_internal_to_timeline (clip, source1, 18, 30);
+  _assert_internal_to_timeline (clip, overlay, 9.5, 30);
+  _assert_frame_to_timeline (clip, 540, 30);
+  _assert_timeline_to_internal (clip, source0, 30, 18);
+  _assert_timeline_to_internal (clip, source1, 30, 18);
+  _assert_timeline_to_internal (clip, overlay, 30, 9.5);
+
+  /* beyond the end of the clip */
+  /* exceeds the max-duration of the elements, but that is ok */
+  _assert_internal_to_timeline (clip, source0, 68, 130);
+  _assert_internal_to_timeline (clip, source1, 68, 130);
+  _assert_internal_to_timeline (clip, overlay, 34.5, 130);
+  _assert_frame_to_timeline (clip, 2040, 130);
+  _assert_timeline_to_internal (clip, source0, 130, 68);
+  _assert_timeline_to_internal (clip, source1, 130, 68);
+  _assert_timeline_to_internal (clip, overlay, 130, 34.5);
+
+  /* before the start of the clip */
+  _assert_internal_to_timeline (clip, source0, 10.5, 15);
+  _assert_internal_to_timeline (clip, source1, 10.5, 15);
+  _assert_internal_to_timeline (clip, overlay, 5.75, 15);
+  _assert_frame_to_timeline (clip, 315, 15);
+  _assert_timeline_to_internal (clip, source0, 15, 10.5);
+  _assert_timeline_to_internal (clip, source1, 15, 10.5);
+  _assert_timeline_to_internal (clip, overlay, 15, 5.75);
+
+  /* not too early */
+  _assert_internal_to_timeline (clip, source0, 3, 0);
+  _assert_internal_to_timeline (clip, source1, 3, 0);
+  _assert_internal_to_timeline (clip, overlay, 2, 0);
+  _assert_frame_to_timeline (clip, 90, 0);
+  _assert_timeline_to_internal (clip, source0, 0, 3);
+  _assert_timeline_to_internal (clip, source1, 0, 3);
+  _assert_timeline_to_internal (clip, overlay, 0, 2);
+
+  /* too early for timeline */
+  _assert_internal_to_timeline_fails (clip, source0, 2,
+      GES_ERROR_NEGATIVE_TIME);
+  _assert_internal_to_timeline_fails (clip, source1, 2,
+      GES_ERROR_NEGATIVE_TIME);
+  _assert_internal_to_timeline_fails (clip, overlay, 1,
+      GES_ERROR_NEGATIVE_TIME);
+  _assert_frame_to_timeline_fails (clip, 89, GES_ERROR_INVALID_FRAME_NUMBER);
+
+  assert_set_start (clip, 30 * GST_SECOND);
+  /* timeline times have shifted by 10 */
+  _assert_timeline_to_internal (clip, source0, 10, 3);
+  _assert_timeline_to_internal (clip, source1, 10, 3);
+  _assert_timeline_to_internal (clip, overlay, 10, 2);
+
+  _assert_timeline_to_internal (clip, source0, 4, 0);
+  _assert_timeline_to_internal (clip, source1, 4, 0);
+  _assert_timeline_to_internal (clip, overlay, 2, 0);
+  /* too early for internal */
+  _assert_timeline_to_internal_fails (clip, source0, 3,
+      GES_ERROR_NEGATIVE_TIME);
+  _assert_timeline_to_internal_fails (clip, source1, 3,
+      GES_ERROR_NEGATIVE_TIME);
+  _assert_timeline_to_internal_fails (clip, overlay, 1,
+      GES_ERROR_NEGATIVE_TIME);
+
+  g_value_unset (&val);
+  gst_object_unref (asset);
+  gst_object_unref (timeline);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -4813,6 +5230,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_children_properties_change);
   tcase_add_test (tc_chain, test_copy_paste_children_properties);
   tcase_add_test (tc_chain, test_unchanged_after_layer_add_failure);
+  tcase_add_test (tc_chain, test_convert_time);
 
   return s;
 }

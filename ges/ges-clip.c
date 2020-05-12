@@ -138,6 +138,8 @@
 static GList *ges_clip_create_track_elements_func (GESClip * clip,
     GESTrackType type);
 static void _compute_height (GESContainer * container);
+static GstClockTime _convert_core_time (GESClip * clip, GstClockTime time,
+    gboolean to_timeline, gboolean * no_core, GError ** error);
 
 struct _GESClipPrivate
 {
@@ -286,7 +288,8 @@ _duration_limit_data_list_with_data (GESClip * clip, DurationLimitData * data)
 }
 
 static gint
-_cmp_by_track_then_priority (gconstpointer a_p, gconstpointer b_p)
+_cmp_duration_limit_data_by_track_then_priority (gconstpointer a_p,
+    gconstpointer b_p)
 {
   const DurationLimitData *a = a_p, *b = b_p;
   if (a->track < b->track)
@@ -408,7 +411,8 @@ _calculate_duration_limit (GESClip * self, GList * child_data)
   GstClockTime limit = GST_CLOCK_TIME_NONE;
   GList *start, *end;
 
-  child_data = g_list_sort (child_data, _cmp_by_track_then_priority);
+  child_data = g_list_sort (child_data,
+      _cmp_duration_limit_data_by_track_then_priority);
 
   start = child_data;
 
@@ -2680,6 +2684,17 @@ ges_clip_get_duration_limit (GESClip * clip)
   return clip->priv->duration_limit;
 }
 
+static gint
+_cmp_children_by_priority (gconstpointer a_p, gconstpointer b_p)
+{
+  const GESTimelineElement *a = a_p, *b = b_p;
+  if (a->priority > b->priority)
+    return 1;
+  else if (a->priority < b->priority)
+    return -1;
+  return 0;
+}
+
 /**
  * ges_clip_get_top_effects:
  * @clip: A #GESClip
@@ -2702,16 +2717,13 @@ ges_clip_get_top_effects (GESClip * clip)
   GST_DEBUG_OBJECT (clip, "Getting the %i top effects", clip->priv->nb_effects);
   ret = NULL;
 
-  /* should be sorted by priority, but make sure */
-  _ges_container_sort_children (GES_CONTAINER (clip));
-
   for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
     child = tmp->data;
     if (_IS_TOP_EFFECT (child))
       ret = g_list_append (ret, gst_object_ref (child));
   }
 
-  return ret;
+  return g_list_sort (ret, _cmp_children_by_priority);
 }
 
 static gboolean
@@ -3227,42 +3239,673 @@ ges_clip_find_track_elements (GESClip * clip, GESTrack * track,
   return ret;
 }
 
+/* Convert from an internal time of a child within a clip to a
+ * ===========================================================
+ * timeline time
+ * =============
+ *
+ * Given an internal time T for some child in a clip, we want to know
+ * what the corresponding time in the timeline is.
+ *
+ * If the time T is between the in-point and out-point of the child,
+ * then we can convert to the timeline coordinates by answering:
+ *
+ * a) "What is the timeline time at which the internal data from the child
+ * found at time T appears in the timeline output?"
+ *
+ * If the time T is after the out-point of the child, we instead want to
+ * answer:
+ *
+ * b) "If we extended the clip indefinetly in the timeline, what would be
+ * the timeline time at which the internal data from the child found at
+ * time T would appear in the timeline output?"
+ *
+ * However, if the time T is before the in-point of the child, we instead
+ * want to answer a more subtle question:
+ *
+ * c) "If we set the 'in-point' of the child to T, what would we need to
+ * set the 'start' of the clip to such that the internal data from the
+ * child currently found at the *beginning* of the clip would then appear
+ * at the same timeline time?"
+ *
+ * E.g. consider the following children of a clip, all in the same track,
+ * and all active:
+ *                                T
+ *                                :
+ *          +=====================:======+
+ *          |                   _/ \_    |
+ *          |         source   ~(o_o)~   |
+ *          |                   / @ \    |
+ *          +=====================:======+
+ *          i                     :
+ *                                :
+ *          +=====================:======+
+ *          |       time-effect0  :      |  | g0
+ *          +=====================:======+  v
+ *                                :
+ *          +=====================:======+
+ *          |         overlay     :      |
+ *          +=====================:======+
+ *          i'                    :
+ *                                :
+ *          +=====================:======+
+ *          |       time-effect1  :      |  | g1
+ *          +=====================:======+  v
+ *                                :
+ * -------------------------------:-------------------timeline
+ *          S                     X
+ *
+ * where i is the in-point of the source and i' is the in-point of the
+ * overlay. Also, g0 is the sink_to_source translation function for the
+ * first time effect, and g1 is the same for the second. S is the start of
+ * the clip. The ~(o_o)~ figure is the data that appears in the source at
+ * T.
+ *
+ * Essentially, question a) wants us to convert from the time T, where the
+ * data is, which is in the internal time coordinates of the source, to
+ * the timeline time X. First, we subtract i to convert from the internal
+ * source coordinates of the source to the external source coordinates of
+ * the source, then we apply the sink_to_source translation functions,
+ * which act on external source coordinates, then add 'start' to finally
+ * convert to the timeline coordinates. So overall we have
+ *
+ *   X = S + g1(g0(T - i))
+ *
+ * To answer b), T would be beyond the end of the clip. Since g1 and g0
+ * can convert beyond the end time, we similarly compute
+ *
+ *   X = S + g1(g0(T - i))
+ *
+ * The user themselves should note that this could exceed the max-duration
+ * of any of the children.
+ *
+ * Now consider
+ *
+ *    T
+ *    :
+ *    :     +============================+
+ *    :      \_                          |
+ *    :     _o)~        source           |
+ *    :     @ \                          |
+ *    :     +============================+
+ *    :     i
+ *    :
+ *    :     +============================+
+ *    :     |       time-effect0         |  | g0
+ *    :     +============================+  v
+ *    :
+ *    :     +============================+
+ *    :     |           overlay          |
+ *    :     +============================+
+ *    :     i'
+ *    :
+ *    :     +============================+
+ *    :     |       time-effect1         |  | g1
+ *    :     +============================+  v
+ *    :
+ * ---:-----------------------------------------------timeline
+ *    X     S
+ *
+ * To do the same as a), we would need to be able to convert from T to X,
+ * but this isn't defined since the children do not extend to here. More
+ * specifically, the functions g0 and g1 are not defined for negative
+ * times. Instead, we want to answer question c). That is, we want to know
+ * what we should set the start of the clip to to keep the figure at the
+ * same timeline position if we change the in-point of the source to T.
+ *
+ * First, if we set the in-point to T, then we would have
+ *
+ *          T
+ *          :
+ *          +============================+
+ *          |   _/ \_                    |
+ *          |  ~(o_o)~        source     |
+ *          |   / @ \                    |
+ *          +============================+
+ *          :     i
+ *          :     :
+ *          +=====:======================+
+ *          |     :       time-effect0   |  | g0
+ *          +=====:======================+  v
+ *          :     :
+ *          +=====:======================+
+ *          |     :           overlay    |
+ *          +=====:======================+
+ *          :     :
+ *          +=====:======================+
+ *          |     :       time-effect1   |  | g1
+ *          +=====:======================+  v
+ *          :     :
+ * ---:-----:-----:-----------------------------------timeline
+ *    X     S     Y
+ *
+ * In order to make the figure appear at 'start' again, we would need to
+ * reduce the start of the clip by the difference between S and Y, where
+ * Y is the conversion of the previous in-point i to the timeline time.
+ *
+ * Thus,
+ *
+ *   X = S - (Y - S)
+ *     = S - (S + g1(g0(i - T)) - S)
+ *     = S - g1(g0(i - T))
+ *
+ * If this would be negative, the conversion will not be possible.
+ *
+ * Note, we are relying on the *assumption* that the translation functions
+ * *do not* change when we change the in-point. GESBaseEffect only claims
+ * to support such time effects.
+ *
+ * Note that if g0 and g1 are simply identities, and we translate the
+ * internal time using a) and b), we calculate
+ *
+ *   S + (T - i)
+ *
+ * and for c), we calculate
+ *
+ *   S - (i - T) = S + (T - i)
+ *
+ * In summary, if we are converting from internal time T to a timeline
+ * time the return is
+ *
+ *   G(T) = {  S + g1(g0(T - i))   if T >= i,
+ *          {  S - g1(g0(i - T))   otherwise.
+ *
+ * Note that the overlay did not play a role since it overall translates
+ * all received times by the identity. Note that we could similarly want
+ * to convert from an internal time in the overlay to the timeline time.
+ * This would be given by
+ *
+ *   S + g1(T - i')   if T >= i',
+ *   S - g1(i' - T)   otherwise.
+ *
+ *
+ * Convert from a timeline time to an internal time of a child
+ * ===========================================================
+ * in a clip
+ * =========
+ *
+ * We basically want to reverse the previous conversion. Specifically,
+ * when the timeline time X is between the start and end of the clip we
+ * want to answer:
+ *
+ * d) "What is the internal time at which the data from the child that
+ * appears in the timeline at time X is created in the child?"
+ *
+ * If the time X is after the end of the clip, we instead want to answer:
+ *
+ * e) "If we extended the clip indefinetly in the timeline, what would be
+ * the internal time at which the data from the child that appears in the
+ * timeline at time T would be created in the child?"
+ *
+ * However, if the time X is before the start of the child, we instead
+ * want to answer:
+ *
+ * f) "If we set the 'start' of the clip to X, what would we need to
+ * set the 'in-point' of the clip to such that the internal data from the
+ * child currently found at the *beginning* of the clip would then appear
+ * at the same timeline time?"
+ *
+ * Following the same arguments, these would all be answered by
+ *
+ *   F(X) = {  i + f0(f1(X - S))   if X >= S,
+ *          {  i - f0(f1(S - X))   otherwise.
+ *
+ * where f0 and f1 are the corresponding source_to_sink translation
+ * functions, which should be close reverses of g0 and g1, respectively.
+ *
+ * Note that this does indeed reverse the internal to timeline conversion:
+ *
+ *   F(G(T)) = {  i + f0(f1(G(T) - S))   if G(T) >= S,
+ *             {  i - f0(f1(S - G(T)))   otherwise.
+ *
+ * but, since g1 and g0 map from [0,inf) to [0,inf),
+ *
+ *   G(T) - S = {  + g1(g0(T - i))   if T >= i,
+ *              {  - g1(g0(i - T))   otherwise.
+ *            { >= 0                 if T >= i,
+ *            { = 0                  if (T < i and g1(g0(i - T)) = 0)
+ *            { < 0                  otherwise.
+ *
+ * =>   ( G(T) >= S  <==>  T >= i or (T < i and g1(g0(i - T)) = 0) )
+ *
+ * therefore
+ *   F(G(T)) = {  i + f0(f1(g1(g0(T - i))))   if T >= i,
+ *             {  i + f0(f1(0))               if T < i
+ *             {                              and g1(g0(i - T)) = 0,
+ *             {  i - f0(f1(g1(g0(i - T))))   otherwise
+ *
+ *           = {  i + f0(f1(g1(g0(T - i))))   if T >= i,
+ *             {  i - f0(f1(g1(g0(i - T))))   otherwise
+ *
+ *           = T
+ *
+ * because f1 reverses g1, and f0 reverses g0.
+ */
+
+/* returns higher priority first */
+static GList *
+_active_time_effects_in_track_after_priority (GESClip * clip,
+    GESTrack * track, guint32 priority)
+{
+  GList *tmp, *list = NULL;
+
+  for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
+    GESTrackElement *child = tmp->data;
+
+    if (GES_IS_TIME_EFFECT (child)
+        && ges_track_element_get_track (child) == track
+        && ges_track_element_is_active (child)
+        && _PRIORITY (child) < priority)
+      list = g_list_prepend (list, child);
+  }
+
+  return g_list_sort (list, _cmp_children_by_priority);
+}
+
+/**
+ * ges_clip_get_timeline_time_from_internal_time:
+ * @clip: A #GESClip
+ * @child: An #GESTrackElement:active child of @clip with a
+ * #GESTrackElement:track
+ * @internal_time: A time in the internal time coordinates of @child
+ * @error: (nullable): Return location for an error
+ *
+ * Convert the internal source time from the child to a timeline time.
+ * This will take any time effects placed on the clip into account (see
+ * #GESBaseEffect for what time effects are supported, and how to
+ * declare them in GES).
+ *
+ * When @internal_time is above the #GESTimelineElement:in-point of
+ * @child, this will return the timeline time at which the internal
+ * content found at @internal_time appears in the output of the timeline's
+ * track. For example, this would let you know where in the timeline a
+ * particular scene in a media file would appear.
+ *
+ * This will be done assuming the clip has an indefinite end, so the
+ * timeline time may be beyond the end of the clip, or even breaking its
+ * #GESClip:duration-limit.
+ *
+ * If, instead, @internal_time is below the current
+ * #GESTimelineElement:in-point of @child, this will return what you would
+ * need to set the #GESTimelineElement:start of @clip to if you set the
+ * #GESTimelineElement:in-point of @child to @internal_time and wanted to
+ * keep the content of @child currently found at the current
+ * #GESTimelineElement:start of @clip at the same timeline position. If
+ * this would be negative, the conversion fails. This is useful for
+ * determining what position to use in a #GES_EDIT_MODE_TRIM if you wish
+ * to trim to a specific point in the internal content, such as a
+ * particular scene in a media file.
+ *
+ * Note that whilst a clip has no time effects, this second return is
+ * equivalent to finding the timeline time at which the content of @child
+ * at @internal_time would be found in the timeline if it had indefinite
+ * extent in both directions. However, with non-linear time effects this
+ * second return will be more distinct.
+ *
+ * In either case, the returned time would be appropriate to use in
+ * ges_timeline_element_edit() for #GES_EDIT_MODE_TRIM, and similar, if
+ * you wish to use a particular internal point as a reference.
+ *
+ * See ges_clip_get_internal_time_from_timeline_time(), which performs the
+ * reverse, or ges_clip_get_timeline_time_from_source_frame() which does
+ * the same conversion, but using frame numbers.
+ *
+ * Returns: The time in the timeline coordinates corresponding to
+ * @internal_time, or #GST_CLOCK_TIME_NONE if the conversion could not be
+ * performed.
+ */
+GstClockTime
+ges_clip_get_timeline_time_from_internal_time (GESClip * clip,
+    GESTrackElement * child, GstClockTime internal_time, GError ** error)
+{
+  GstClockTime inpoint, start, external_time;
+  gboolean decrease;
+  GESTrack *track;
+  GList *tmp, *time_effects;
+
+  g_return_val_if_fail (GES_IS_CLIP (clip), GST_CLOCK_TIME_NONE);
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (child), GST_CLOCK_TIME_NONE);
+  g_return_val_if_fail (!error || !*error, GST_CLOCK_TIME_NONE);
+
+  if (!g_list_find (GES_CONTAINER_CHILDREN (clip), child)) {
+    GST_WARNING_OBJECT (clip, "The track element %" GES_FORMAT " is not "
+        "a child of the clip", GES_ARGS (child));
+    return GST_CLOCK_TIME_NONE;
+  }
+
+  track = ges_track_element_get_track (child);
+
+  if (!track) {
+    GST_WARNING_OBJECT (clip, "Cannot convert the internal time of the "
+        "child %" GES_FORMAT " to a timeline time because it is not part "
+        "of a track", GES_ARGS (child));
+    return GST_CLOCK_TIME_NONE;
+  }
+
+  if (!ges_track_element_is_active (child)) {
+    GST_WARNING_OBJECT (clip, "Cannot convert the internal time of the "
+        "child %" GES_FORMAT " to a timeline time because it is not "
+        "active in its track", GES_ARGS (child));
+    return GST_CLOCK_TIME_NONE;
+  }
+
+  if (internal_time == GST_CLOCK_TIME_NONE)
+    return GST_CLOCK_TIME_NONE;
+
+  inpoint = _INPOINT (child);
+  if (inpoint <= internal_time) {
+    decrease = FALSE;
+    external_time = internal_time - inpoint;
+  } else {
+    decrease = TRUE;
+    external_time = inpoint - internal_time;
+  }
+
+  time_effects = _active_time_effects_in_track_after_priority (clip, track,
+      _PRIORITY (child));
+
+  /* currently ordered with highest priority (closest to the timeline)
+   * first, with @child being at the *end* of the list.
+   * Want to reverse this so we can convert from the child towards the
+   * timeline */
+  time_effects = g_list_reverse (time_effects);
+
+  for (tmp = time_effects; tmp; tmp = tmp->next) {
+    GESBaseEffect *effect = tmp->data;
+    GHashTable *values = ges_base_effect_get_time_property_values (effect);
+
+    external_time = ges_base_effect_translate_sink_to_source_time (effect,
+        external_time, values);
+    g_hash_table_unref (values);
+  }
+
+  g_list_free (time_effects);
+
+  if (!GST_CLOCK_TIME_IS_VALID (external_time))
+    return GST_CLOCK_TIME_NONE;
+
+  start = _START (clip);
+
+  if (!decrease)
+    return start + external_time;
+
+  if (external_time > start) {
+    GST_INFO_OBJECT (clip, "Cannot convert the internal time %"
+        GST_TIME_FORMAT " of the child %" GES_FORMAT " to a timeline "
+        "time because it would lie before the start of the timeline",
+        GST_TIME_ARGS (internal_time), GES_ARGS (child));
+
+    g_set_error (error, GES_ERROR, GES_ERROR_NEGATIVE_TIME,
+        "The internal time %" GST_TIME_FORMAT " of child \"%s\" "
+        "would correspond to a negative start of -%" GST_TIME_FORMAT
+        " for the clip \"%s\"", GST_TIME_ARGS (internal_time),
+        GES_TIMELINE_ELEMENT_NAME (child),
+        GST_TIME_ARGS (external_time - start),
+        GES_TIMELINE_ELEMENT_NAME (clip));
+
+    return GST_CLOCK_TIME_NONE;
+  }
+
+  return start - external_time;
+}
+
+/**
+ * ges_clip_get_internal_time_from_timeline_time:
+ * @clip: A #GESClip
+ * @child: An #GESTrackElement:active child of @clip with a
+ * #GESTrackElement:track
+ * @timeline_time: A time in the timeline time coordinates
+ * @error: (nullable): Return location for an error
+ *
+ * Convert the timeline time to an internal source time of the child.
+ * This will take any time effects placed on the clip into account (see
+ * #GESBaseEffect for what time effects are supported, and how to
+ * declare them in GES).
+ *
+ * When @timeline_time is above the #GESTimelineElement:start of @clip,
+ * this will return the internal time at which the content that appears at
+ * @timeline_time in the output of the timeline is created in @child. For
+ * example, if @timeline_time corresponds to the current seek position,
+ * this would let you know which part of a media file is being read.
+ *
+ * This will be done assuming the clip has an indefinite end, so the
+ * internal time may be beyond the current out-point of the child, or even
+ * its #GESTimelineElement:max-duration.
+ *
+ * If, instead, @timeline_time is below the current
+ * #GESTimelineElement:start of @clip, this will return what you would
+ * need to set the #GESTimelineElement:in-point of @child to if you set
+ * the #GESTimelineElement:start of @clip to @timeline_time and wanted
+ * to keep the content of @child currently found at the current
+ * #GESTimelineElement:start of @clip at the same timeline position. If
+ * this would be negative, the conversion fails. This is useful for
+ * determining what #GESTimelineElement:in-point would result from a
+ * #GES_EDIT_MODE_TRIM to @timeline_time.
+ *
+ * Note that whilst a clip has no time effects, this second return is
+ * equivalent to finding the internal time at which the content that
+ * appears at @timeline_time in the timeline can be found in @child if it
+ * had indefinite extent in both directions. However, with non-linear time
+ * effects this second return will be more distinct.
+ *
+ * In either case, the returned time would be appropriate to use for the
+ * #GESTimelineElement:in-point or #GESTimelineElement:max-duration of the
+ * child.
+ *
+ * See ges_clip_get_timeline_time_from_internal_time(), which performs the
+ * reverse.
+ *
+ * Returns: The time in the internal coordinates of @child corresponding
+ * to @timeline_time, or #GST_CLOCK_TIME_NONE if the conversion could not
+ * be performed.
+ */
+GstClockTime
+ges_clip_get_internal_time_from_timeline_time (GESClip * clip,
+    GESTrackElement * child, GstClockTime timeline_time, GError ** error)
+{
+  GstClockTime inpoint, start, external_time;
+  gboolean decrease;
+  GESTrack *track;
+  GList *tmp, *time_effects;
+
+  g_return_val_if_fail (GES_IS_CLIP (clip), GST_CLOCK_TIME_NONE);
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (child), GST_CLOCK_TIME_NONE);
+  g_return_val_if_fail (!error || !*error, GST_CLOCK_TIME_NONE);
+
+  if (!g_list_find (GES_CONTAINER_CHILDREN (clip), child)) {
+    GST_WARNING_OBJECT (clip, "The track element %" GES_FORMAT " is not "
+        "a child of the clip", GES_ARGS (child));
+    return GST_CLOCK_TIME_NONE;
+  }
+
+  track = ges_track_element_get_track (child);
+
+  if (!track) {
+    GST_WARNING_OBJECT (clip, "Cannot convert the timeline time to an "
+        "internal time of child %" GES_FORMAT " because it is not part "
+        "of a track", GES_ARGS (child));
+    return GST_CLOCK_TIME_NONE;
+  }
+
+  if (!ges_track_element_is_active (child)) {
+    GST_WARNING_OBJECT (clip, "Cannot convert the timeline time to an "
+        "internal time of child %" GES_FORMAT " because it is not active "
+        "in its track", GES_ARGS (child));
+    return GST_CLOCK_TIME_NONE;
+  }
+
+  if (timeline_time == GST_CLOCK_TIME_NONE)
+    return GST_CLOCK_TIME_NONE;
+
+  start = _START (clip);
+  if (start <= timeline_time) {
+    decrease = FALSE;
+    external_time = timeline_time - start;
+  } else {
+    decrease = TRUE;
+    external_time = start - timeline_time;
+  }
+
+  time_effects = _active_time_effects_in_track_after_priority (clip, track,
+      _PRIORITY (child));
+
+  /* currently ordered with highest priority (closest to the timeline)
+   * first, with @child being at the *end* of the list, which is what we
+   * want */
+
+  for (tmp = time_effects; tmp; tmp = tmp->next) {
+    GESBaseEffect *effect = tmp->data;
+    GHashTable *values = ges_base_effect_get_time_property_values (effect);
+
+    external_time = ges_base_effect_translate_source_to_sink_time (effect,
+        external_time, values);
+    g_hash_table_unref (values);
+  }
+
+  g_list_free (time_effects);
+
+  if (!GST_CLOCK_TIME_IS_VALID (external_time))
+    return GST_CLOCK_TIME_NONE;
+
+  inpoint = _INPOINT (child);
+
+  if (!decrease)
+    return inpoint + external_time;
+
+  if (external_time > inpoint) {
+    GST_INFO_OBJECT (clip, "Cannot convert the timeline time %"
+        GST_TIME_FORMAT " to an internal time of the child %"
+        GES_FORMAT " because it would be before the element has any "
+        "internal content", GST_TIME_ARGS (timeline_time), GES_ARGS (child));
+
+    g_set_error (error, GES_ERROR, GES_ERROR_NEGATIVE_TIME,
+        "The timeline time %" GST_TIME_FORMAT " would correspond to "
+        "a negative in-point of -%" GST_TIME_FORMAT " for the child "
+        "\"%s\" under clip \"%s\"", GST_TIME_ARGS (timeline_time),
+        GST_TIME_ARGS (external_time - inpoint),
+        GES_TIMELINE_ELEMENT_NAME (child), GES_TIMELINE_ELEMENT_NAME (clip));
+
+    return GST_CLOCK_TIME_NONE;
+  }
+
+  return inpoint - external_time;
+}
+
+static GstClockTime
+_convert_core_time (GESClip * clip, GstClockTime time, gboolean to_timeline,
+    gboolean * no_core, GError ** error)
+{
+  GList *tmp;
+  GstClockTime converted = GST_CLOCK_TIME_NONE;
+  GstClockTime half_frame;
+  GESTimeline *timeline = GES_TIMELINE_ELEMENT_TIMELINE (clip);
+  GESClipAsset *asset =
+      GES_CLIP_ASSET (ges_extractable_get_asset (GES_EXTRACTABLE (clip)));
+
+  if (no_core)
+    *no_core = TRUE;
+
+  if (to_timeline)
+    half_frame = timeline ? ges_timeline_get_frame_time (timeline, 1) : 0;
+  else
+    half_frame = ges_clip_asset_get_frame_time (asset, 1);
+  half_frame = GST_CLOCK_TIME_IS_VALID (half_frame) ? half_frame / 2 : 0;
+
+  for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
+    GESTrackElement *child = tmp->data;
+    GESTrack *track = ges_track_element_get_track (child);
+
+    if (_IS_CORE_CHILD (child) && track && ges_track_element_is_active (child)
+        && ges_track_element_has_internal_source (child)) {
+      GstClockTime tmp_time;
+      GError *convert_error = NULL;
+
+      if (no_core)
+        *no_core = FALSE;
+
+      if (to_timeline)
+        tmp_time =
+            ges_clip_get_timeline_time_from_internal_time (clip, child, time,
+            &convert_error);
+      else
+        tmp_time =
+            ges_clip_get_internal_time_from_timeline_time (clip, child, time,
+            &convert_error);
+
+      if (!GST_CLOCK_TIME_IS_VALID (converted)) {
+        converted = tmp_time;
+      } else if (!GST_CLOCK_TIME_IS_VALID (tmp_time)) {
+        GST_WARNING_OBJECT (clip, "The calculated %s time for %s time %"
+            GST_TIME_FORMAT " using core child %" GES_FORMAT " is not "
+            "defined, but it had a definite value of %" GST_TIME_FORMAT
+            " for another core child", to_timeline ? "timeline" : "internal",
+            to_timeline ? "internal" : "timeline", GST_TIME_ARGS (time),
+            GES_ARGS (child), GST_TIME_ARGS (converted));
+      } else if (tmp_time != converted) {
+        GstClockTime diff = (tmp_time > converted) ?
+            tmp_time - converted : converted - tmp_time;
+
+        if (diff > half_frame) {
+          GST_WARNING_OBJECT (clip, "The calculated %s time for %s time %"
+              GST_TIME_FORMAT " using core child %" GES_FORMAT " is %"
+              GST_TIME_FORMAT ", which is different from the value of %"
+              GST_TIME_FORMAT " calculated using a different core child",
+              to_timeline ? "timeline" : "internal",
+              to_timeline ? "internal" : "timeline", GST_TIME_ARGS (time),
+              GES_ARGS (child), GST_TIME_ARGS (tmp_time),
+              GST_TIME_ARGS (converted));
+        }
+
+        /* prefer result from video tracks */
+        if (GES_IS_VIDEO_TRACK (track))
+          converted = tmp_time;
+      }
+      if (convert_error) {
+        if (error) {
+          g_clear_error (error);
+          *error = convert_error;
+        } else {
+          g_error_free (convert_error);
+        }
+      }
+    }
+  }
+
+  return converted;
+}
+
 /**
  * ges_clip_get_timeline_time_from_source_frame:
  * @clip: A #GESClip
- * @frame_number: The frame number to get the corresponding timestamp in the
- *                timeline coordinates
- * @err: A #GError set on errors
+ * @frame_number: The frame number to get the corresponding timestamp of
+ * in the timeline coordinates
+ * @error: (nullable): Return location for an error
  *
- * This method allows you to convert a frame number into a #GstClockTime, this
- * can be used to either seek to a particular frame in the timeline or to later
- * on edit @self with that timestamp.
+ * Convert the source frame number to a timeline time. This acts the same
+ * as ges_clip_get_timeline_time_from_internal_time() using the core
+ * children of the clip and using the frame number to specify the internal
+ * position, rather than a timestamp.
  *
- * This method should be use specifically in the case where you want to trim the
- * clip to a particular frame.
+ * The returned timeline time can be used to seek or edit to a specific
+ * frame.
  *
- * The returned timestamp is in the global #GESTimeline time coordinates of @self, not
- * in the internal time coordinates. In practice, this means that you can not use
- * that time to set the clip #GESTimelineElement:in-point but it can be used in
- * the timeline editing API, for example as the @position argument of the
- * #ges_timeline_element_edit method.
+ * Note that you can get the frame timestamp of a particular clip asset
+ * with ges_clip_asset_get_frame_time().
  *
- * Note that you can get the frame timestamp of a particular clip asset with
- * #ges_clip_asset_get_frame_time.
- *
- * Returns: The timestamp corresponding to @frame_number in the element source
- * in the timeline coordinates.
+ * Returns: The timestamp corresponding to @frame_number in the core
+ * children of @clip, in the timeline coordinates, or #GST_CLOCK_TIME_NONE
+ * if the conversion could not be performed.
  */
 GstClockTime
 ges_clip_get_timeline_time_from_source_frame (GESClip * clip,
-    GESFrameNumber frame_number, GError ** err)
+    GESFrameNumber frame_number, GError ** error)
 {
+  GstClockTime timeline_time = GST_CLOCK_TIME_NONE;
   GstClockTime frame_ts;
   GESClipAsset *asset;
-  GstClockTimeDiff inpoint_diff;
 
   g_return_val_if_fail (GES_IS_CLIP (clip), GST_CLOCK_TIME_NONE);
-  g_return_val_if_fail (!err || !*err, GST_CLOCK_TIME_NONE);
+  g_return_val_if_fail (!error || !*error, GST_CLOCK_TIME_NONE);
 
   if (!GES_FRAME_NUMBER_IS_VALID (frame_number))
     return GST_CLOCK_TIME_NONE;
@@ -3272,15 +3915,16 @@ ges_clip_get_timeline_time_from_source_frame (GESClip * clip,
   if (!GST_CLOCK_TIME_IS_VALID (frame_ts))
     return GST_CLOCK_TIME_NONE;
 
-  inpoint_diff = GST_CLOCK_DIFF (frame_ts, GES_TIMELINE_ELEMENT_INPOINT (clip));
-  if (GST_CLOCK_DIFF (inpoint_diff, _START (clip)) < 0) {
-    g_set_error (err, GES_ERROR, GES_ERROR_INVALID_FRAME_NUMBER,
-        "Requested frame %" G_GINT64_FORMAT
-        " would be outside the timeline.", frame_number);
-    return GST_CLOCK_TIME_NONE;
+  timeline_time = _convert_core_time (clip, frame_ts, TRUE, NULL, error);
+
+  if (error && *error) {
+    g_clear_error (error);
+    g_set_error (error, GES_ERROR, GES_ERROR_INVALID_FRAME_NUMBER,
+        "Requested frame %" G_GINT64_FORMAT " would be outside the "
+        "timeline.", frame_number);
   }
 
-  return GST_CLOCK_DIFF (inpoint_diff, _START (clip));
+  return timeline_time;
 }
 
 /**
