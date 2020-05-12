@@ -1076,6 +1076,12 @@ gst_base_ts_mux_aggregate_buffer (GstBaseTsMux * mux,
 
   GST_DEBUG_OBJECT (mux, "Pads collected");
 
+  if (buf && gst_buffer_get_size (buf) == 0
+      && GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_GAP)) {
+    gst_buffer_unref (buf);
+    return GST_FLOW_OK;
+  }
+
   if (G_UNLIKELY (mux->first)) {
     ret = gst_base_ts_mux_create_streams (mux);
     if (G_UNLIKELY (ret != GST_FLOW_OK)) {
