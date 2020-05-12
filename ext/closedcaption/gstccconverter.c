@@ -1981,7 +1981,6 @@ convert_cea708_cdp_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
   if (!combine_cc_data (self, TRUE, out_fps_entry, ccp_data, ccp_data_len,
           cea608_1, cea608_1_len, cea608_2, cea608_2_len, cc_data,
           &cc_data_len)) {
-    gst_buffer_unmap (outbuf, &out);
     goto out;
   }
 
