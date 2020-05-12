@@ -4,31 +4,43 @@ short-description: Integration testsuite builder and launcher
 
 # gst-validate-launcher
 
-`gst-validate-launcher` is an application to create full testsuites on
-top of the GstValidate tools, testing behaviour with dynamic pipelines
-and user actions (seeking, changing the pipeline state, etc.) as
-described by the [scenario](GstValidateScenario) format.
+`gst-validate-launcher` is an application to run unit or integration testsuites
+providing a set of options and features to help debugging them easier.
+
+## Run the GStreamer unit tests
+
+Running GStreamer unit tests inside `gst-build` is as simple as doing:
+
+```
+gst-validate-launcher check.gst*
+```
+
+If you only want to run GStreamer core tests:
+
+```
+gst-validate-launcher check.gstreamer*
+```
+
+Or to run unit tests from gst-plugins-base
+
+```
+gst-validate-launcher check.gst-plugins-base
+```
 
 ## Run the GstValidate default testsuite
 
 GstValidate comes with a default testsuite to be executed on a default
-set of media samples. Those media samples are stored with `git-annex` so
+set of media samples. Those media samples are stored with `git-lfs` so
 you will need it to be able to launch the default testsuite.
 
-The first time you launch the testsuite, you will need to make sure that
-the media samples are downloaded. To do so and launch the testsuite you
-can simply do:
+We recommendusing `gst-build` to setup everything needed to run the testsuite
+and you can simply do:
 
-    gst-validate-launcher validate --sync
+    gst-validate-launcher validate
 
 This will only launch the GstValidate tests and not other applications
 that might be supported (currently `ges-launch` is also supported and
 has its own default testsuite).
-
-Launching the default testsuite will open/close many windows, you might
-want to mute it so you can keep using your computer:
-
-    gst-validate-launcher validate --sync --mute
 
 ## Example of a testsuite implementation
 
@@ -56,7 +68,7 @@ files, you can use:
     gst-validate-launcher --medias-paths /path/to/sample_files/ --generate-media-info
 
 For remote streams, you should use
-`gst-validate-media-check-GST_API_VERSION`. For an http stream you can
+`gst-validate-media-check-1.0`. For an http stream you can
 for example do:
 
     gst-validate-media-check-GST_API_VERSION http://someonlinestream.com/thestream \
