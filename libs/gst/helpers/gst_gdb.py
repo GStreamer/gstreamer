@@ -450,6 +450,10 @@ class GdbGValue:
                     v += " " if v == "<" else ", "
                     v += str(GdbGValue(l))
                 v += " >"
+            elif tname in ("GEnum"):
+                v = "%s(%s)" % (
+                    g_type_to_name(g_type_to_typenode(self.val["g_type"])),
+                    value["v_int"])
             else:
                 try:
                     v = value.string()
@@ -543,8 +547,11 @@ class GdbGstSegment:
             _gdb_write(indent, "%s:%s %s" %
                        (key, (8-len(key))*" ", self.format_value(value)))
 
-    def print(self, indent):
-        _gdb_write(indent, "segment: %s" % self.fmt)
+    def print(self, indent, seqnum=None):
+        s = "segment:"
+        if seqnum:
+            s += "(seqnum: %s)" % seqnum
+        _gdb_write(indent, s)
         rate = float(self.val["rate"])
         applied_rate = float(self.val["applied_rate"])
         if applied_rate != 1.0:
@@ -583,16 +590,17 @@ class GdbGstEvent:
     @save_memory_access_print("<inaccessible memory>")
     def print(self, indent):
         typestr = self.typestr()
+        seqnum = self.val["event"]["seqnum"]
         if typestr == "caps":
             caps = GdbGstCaps(self.structure().value("caps").value())
-            caps.print(indent, "caps:")
+            caps.print(indent, "caps (seqnum: %s):" % seqnum)
         elif typestr == "stream-start":
             stream_id = self.structure().value("stream-id").value()
-            _gdb_write(indent, "stream-start:")
+            _gdb_write(indent, "stream-start: (seqnum %s)"  % seqnum)
             _gdb_write(indent + 1, "stream-id: %s" % stream_id.string())
         elif typestr == "segment":
             segment = self.structure().value("segment").value()
-            GdbGstSegment(segment).print(indent)
+            GdbGstSegment(segment).print(indent, seqnum)
         elif typestr == "tag":
             struct = self.structure()
             # skip 'GstTagList-'
@@ -600,11 +608,11 @@ class GdbGstEvent:
             t = gdb.lookup_type("GstTagListImpl").pointer()
             s = struct.value("taglist").value().cast(t)["structure"]
             structure = GdbGstStructure(s)
-            _gdb_write(indent, "tag: %s" % name)
+            _gdb_write(indent, "tag: %s (seqnum: %s)" % (name, seqnum))
             for (key, value) in structure.values():
                 _gdb_write(indent+1, "%s: %s" % (key, str(value)))
         else:
-            self.structure().print(indent, typestr)
+            self.structure().print(indent, "%s (seqnum: %s)" % (typestr, seqnum))
 
 
 class GdbGstBuffer:
@@ -966,7 +974,7 @@ class GdbGstElement(GdbGstObject):
 
     @save_memory_access_print("<inaccessible memory>")
     def print_tree(self, indent):
-        _gdb_write(indent, "%s" % self.name())
+        _gdb_write(indent, "%s(%s)" % (self.name(), self.val))
         for child in self.children():
             child.print_tree(indent+1)
 
@@ -1146,6 +1154,8 @@ Usage gst-print <gstreamer-object>"""
             obj = GdbGstQuery(value)
         elif g_inherits_type(value, "GstBuffer"):
             obj = GdbGstBuffer(value)
+        elif is_gst_type(value, "GstStructure"):
+            obj = GdbGstStructure(value)
         else:
             raise Exception("'%s' has an unknown type (%s)" % (arg, value))
 
