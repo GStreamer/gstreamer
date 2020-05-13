@@ -65,6 +65,7 @@ class MesonTest(Test):
         for var, val in self.child_env.items():
             if val != os.environ.get(var):
                 self.add_env_variable(var, val)
+        env["GST_VALIDATE_LOGSDIR"] = self.options.logsdir
 
         return env
 

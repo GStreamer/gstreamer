@@ -159,6 +159,16 @@ class Test(Loggable):
 
         return res
 
+    def copy(self, nth=None):
+        copied_test = copy.copy(self)
+        if nth:
+            copied_test.classname += '_it' + str(nth)
+            copied_test.options = copy.copy(self.options)
+            copied_test.options.logsdir = os.path.join(copied_test.options.logsdir, str(nth))
+            os.makedirs(copied_test.options.logsdir, exist_ok=True)
+
+        return copied_test
+
     def clean(self):
         self.kill_subprocess()
         self.message = ""
@@ -2039,9 +2049,6 @@ class _TestsLauncher(Loggable):
         if not running_tests:
             running_tests = self.tests
 
-        self.total_num_tests = len(self.all_tests)
-        printc("\nRunning %d tests..." % self.total_num_tests, color=Colors.HEADER)
-
         self.reporter.init_timer()
         alone_tests = []
         tests = []
@@ -2054,6 +2061,21 @@ class _TestsLauncher(Loggable):
         max_num_jobs = min(self.options.num_jobs, len(tests))
         jobs_running = 0
 
+        if self.options.forever and len(tests) < self.options.num_jobs and len(tests):
+            max_num_jobs = self.options.num_jobs
+            copied = []
+            i = 0
+            while (len(tests) + len(copied)) < max_num_jobs:
+                copied.append(tests[i].copy(len(copied) + 1))
+
+                i += 1
+                if i >= len(tests):
+                    i = 0
+            tests += copied
+            self.tests += copied
+
+        self.total_num_tests = len(self.all_tests)
+        printc("\nRunning %d tests..." % self.total_num_tests, color=Colors.HEADER)
         # if order of test execution doesn't matter, shuffle
         # the order to optimize cpu usage
         if self.options.shuffle:
