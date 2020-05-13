@@ -716,7 +716,7 @@ _drm_direct_fourcc_from_info (GstVideoInfo * info)
   }
 }
 
-/*
+/**
  * gst_egl_image_check_dmabuf_direct:
  * @context: a #GstGLContext (must be an EGL context)
  * @in_info: a #GstVideoInfo
