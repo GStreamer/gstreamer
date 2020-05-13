@@ -14,7 +14,8 @@ avtp_sources = [
   'gstavtpcrfcheck.c',
 ]
 
-avtp_dep = dependency('avtp', required: get_option('avtp'))
+avtp_dep = dependency('avtp', required: get_option('avtp'),
+                      fallback: ['avtp', 'avtp_dep'])
 
 if avtp_dep.found() and cc.has_type('struct sock_txtime', prefix : '#include <linux/net_tstamp.h>')
   gstavtp = library('gstavtp',
