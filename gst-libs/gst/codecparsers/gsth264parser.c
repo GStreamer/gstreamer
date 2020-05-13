@@ -773,10 +773,10 @@ gst_h264_slice_parse_pred_weight_table (GstH264SliceHdr * slice,
   READ_UE_MAX (nr, p->luma_log2_weight_denom, 7);
   /* set default values */
   default_luma_weight = 1 << p->luma_log2_weight_denom;
-  for (i = 0; i < G_N_ELEMENTS (p->luma_weight_l0); i++)
+  for (i = 0; i <= slice->num_ref_idx_l0_active_minus1; i++)
     p->luma_weight_l0[i] = default_luma_weight;
   if (GST_H264_IS_B_SLICE (slice)) {
-    for (i = 0; i < G_N_ELEMENTS (p->luma_weight_l1); i++)
+    for (i = 0; i <= slice->num_ref_idx_l1_active_minus1; i++)
       p->luma_weight_l1[i] = default_luma_weight;
   }
 
@@ -784,12 +784,12 @@ gst_h264_slice_parse_pred_weight_table (GstH264SliceHdr * slice,
     READ_UE_MAX (nr, p->chroma_log2_weight_denom, 7);
     /* set default values */
     default_chroma_weight = 1 << p->chroma_log2_weight_denom;
-    for (i = 0; i < G_N_ELEMENTS (p->chroma_weight_l0); i++) {
+    for (i = 0; i <= slice->num_ref_idx_l0_active_minus1; i++) {
       p->chroma_weight_l0[i][0] = default_chroma_weight;
       p->chroma_weight_l0[i][1] = default_chroma_weight;
     }
     if (GST_H264_IS_B_SLICE (slice)) {
-      for (i = 0; i < G_N_ELEMENTS (p->chroma_weight_l1); i++) {
+      for (i = 0; i <= slice->num_ref_idx_l0_active_minus1; i++) {
         p->chroma_weight_l1[i][0] = default_chroma_weight;
         p->chroma_weight_l1[i][1] = default_chroma_weight;
       }
