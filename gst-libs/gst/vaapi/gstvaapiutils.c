@@ -238,6 +238,9 @@ string_of_VAProfile (VAProfile profile)
       MAP (HEVCMain422_10);
       MAP (HEVCMain444);
       MAP (HEVCMain444_10);
+      MAP (HEVCSccMain);
+      MAP (HEVCSccMain10);
+      MAP (HEVCSccMain444);
 #endif
       MAP (HEVCMain);
       MAP (HEVCMain10);
