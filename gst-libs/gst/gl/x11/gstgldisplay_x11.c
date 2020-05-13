@@ -131,7 +131,7 @@ gst_gl_display_x11_new (const gchar * name)
 }
 
 /**
- * gst_gl_display_x11_new_with_display:
+ * gst_gl_display_x11_new_with_display: (skip)
  * @display: an existing, x11 display
  *
  * Creates a new display connection from a X11 Display.
