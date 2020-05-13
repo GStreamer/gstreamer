@@ -259,12 +259,12 @@ _gst_egl_image_copy (GstMiniObject * obj)
 }
 
 /**
- * gst_egl_image_new_wrapped: (skip)
+ * gst_egl_image_new_wrapped:
  * @context: a #GstGLContext (must be an EGL context)
  * @image: the image to wrap
  * @format: the #GstGLFormat
  * @user_data: user data
- * @user_data_destroy: (destroy user_data): called when @user_data is no longer needed
+ * @user_data_destroy: (destroy user_data) (scope async): called when @user_data is no longer needed
  *
  * Returns: a new #GstEGLImage wrapping @image
  */
