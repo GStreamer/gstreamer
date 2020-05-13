@@ -1427,6 +1427,7 @@ gst_input_selector_set_property (GObject * object, guint prop_id,
 
       GST_INPUT_SELECTOR_LOCK (sel);
 
+      sel->active_sinkpad_from_user = ! !pad;
 #if DEBUG_CACHED_BUFFERS
       gst_input_selector_debug_cached_buffers (sel);
 #endif
@@ -1814,6 +1815,7 @@ gst_input_selector_release_pad (GstElement * element, GstPad * pad)
     GST_DEBUG_OBJECT (sel, "Deactivating pad %s:%s", GST_DEBUG_PAD_NAME (pad));
     gst_object_unref (sel->active_sinkpad);
     sel->active_sinkpad = NULL;
+    sel->active_sinkpad_from_user = FALSE;
   }
   sel->n_pads--;
   GST_INPUT_SELECTOR_UNLOCK (sel);
@@ -1829,7 +1831,7 @@ gst_input_selector_reset (GstInputSelector * sel)
 
   GST_INPUT_SELECTOR_LOCK (sel);
   /* clear active pad */
-  if (sel->active_sinkpad) {
+  if (sel->active_sinkpad && !sel->active_sinkpad_from_user) {
     gst_object_unref (sel->active_sinkpad);
     sel->active_sinkpad = NULL;
   }
