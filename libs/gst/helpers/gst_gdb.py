@@ -96,7 +96,7 @@ GST_CLOCK_TIME_NONE = 2**64-1
 GST_CLOCK_STIME_NONE = -2**63
 
 
-def format_time(n, signed):
+def format_time(n, signed=False):
     prefix = ""
     invalid = False
     if signed:
@@ -521,7 +521,7 @@ class GdbGstStructure:
         if prefix is not None:
             _gdb_write(indent, "%s: %s" % (prefix, self.name()))
         else:
-            _gdb_write(indent, "%s:" % (prefix, self.name()))
+            _gdb_write(indent, "%s:" % (self.name()))
         for (key, value) in self.values():
             _gdb_write(indent+1, "%s: %s" % (key, str(value)))
 
@@ -605,6 +605,71 @@ class GdbGstEvent:
                 _gdb_write(indent+1, "%s: %s" % (key, str(value)))
         else:
             self.structure().print(indent, typestr)
+
+
+class GdbGstBuffer:
+    def __init__(self, val):
+        self.val = val.cast(gdb.lookup_type("GstBuffer").pointer())
+
+    def print_optional(self, indent, key, skip=None, format_func=str):
+        value = int(self.val[key])
+        if skip is None or value != skip:
+            _gdb_write(indent, "%s:%s %s" %
+                       (key, (8-len(key))*" ", format_func(value)))
+
+    @save_memory_access_print("<inaccessible memory>")
+    def print(self, indent):
+        _gdb_write(indent, "GstBuffer: (0x%x)" % self.val)
+        indent += 1
+        self.print_optional(indent, "pool", 0)
+        self.print_optional(indent, "pts", GST_CLOCK_TIME_NONE, format_time)
+        self.print_optional(indent, "dts", GST_CLOCK_TIME_NONE, format_time)
+        self.print_optional(indent, "duration", GST_CLOCK_TIME_NONE, format_time)
+        self.print_optional(indent, "offset", GST_CLOCK_TIME_NONE)
+        self.print_optional(indent, "offset_end", GST_CLOCK_TIME_NONE)
+
+        impl = self.val.cast(gdb.lookup_type("GstBufferImpl").pointer())
+        meta_item = impl['item']
+        if meta_item:
+            _gdb_write(indent, "Metas:")
+            indent += 1
+            while meta_item:
+                meta = meta_item['meta']
+                meta_type_name = g_type_to_name(meta['info']['type'])
+                _gdb_write(indent, "%s:" % meta_type_name)
+                indent += 1
+                meta_info = str(meta.cast(gdb.lookup_type(meta_type_name)))
+                for l in meta_info.split('\n'):
+                    _gdb_write(indent, l)
+                indent -= 1
+                meta_item = meta_item['next']
+        else:
+            _gdb_write(indent, "(No meta)")
+
+
+class GdbGstQuery:
+    def __init__(self, val):
+        self.val = val.cast(gdb.lookup_type("GstQueryImpl").pointer())
+
+    @save_memory_access("<inaccessible memory>")
+    def typestr(self):
+        t = self.val["query"]["type"]
+        (query_quarks, _) = gdb.lookup_symbol("query_quarks")
+        query_quarks = query_quarks.value()
+        i = 0
+        while query_quarks[i]["name"] != 0:
+            if t == query_quarks[i]["type"]:
+                return query_quarks[i]["name"].string()
+            i += 1
+        return None
+
+    def structure(self):
+        return GdbGstStructure(self.val["structure"])
+
+    @save_memory_access_print("<inaccessible memory>")
+    def print(self, indent):
+        typestr = self.typestr()
+        self.structure().print(indent, typestr)
 
 
 class GdbGstObject:
@@ -1064,7 +1129,7 @@ Usage gst-print <gstreamer-object>"""
     def invoke(self, arg, from_tty):
         value = gdb.parse_and_eval(arg)
         if not value:
-            raise Exception("'%s' is not a valid object" % args[0])
+            raise Exception("'%s' is not a valid object" % arg)
 
         if value.type.code != gdb.TYPE_CODE_PTR:
             value = value.address
@@ -1076,9 +1141,13 @@ Usage gst-print <gstreamer-object>"""
         elif g_inherits_type(value, "GstCaps"):
             obj = GdbGstCaps(value)
         elif g_inherits_type(value, "GstEvent"):
-            obj = GdbGstCaps(value)
+            obj = GdbGstEvent(value)
+        elif g_inherits_type(value, "GstQuery"):
+            obj = GdbGstQuery(value)
+        elif g_inherits_type(value, "GstBuffer"):
+            obj = GdbGstBuffer(value)
         else:
-            raise Exception("'%s' has an unknown type" % arg)
+            raise Exception("'%s' has an unknown type (%s)" % (arg, value))
 
         obj.print(0)
 
