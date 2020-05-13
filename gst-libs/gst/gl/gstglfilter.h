@@ -112,7 +112,7 @@ struct _GstGLFilterClass
   /*< public >*/
   gboolean (*set_caps)          (GstGLFilter* filter, GstCaps* incaps, GstCaps* outcaps);
   gboolean (*filter)            (GstGLFilter *filter, GstBuffer *inbuf, GstBuffer *outbuf);
-  gboolean (*filter_texture)    (GstGLFilter *filter, GstGLMemory *in_tex, GstGLMemory *out_tex);
+  gboolean (*filter_texture)    (GstGLFilter *filter, GstGLMemory *input, GstGLMemory *output);
   gboolean (*init_fbo)          (GstGLFilter *filter);
 
   GstCaps *(*transform_internal_caps) (GstGLFilter *filter,
@@ -126,8 +126,8 @@ GST_GL_API
 void gst_gl_filter_add_rgba_pad_templates (GstGLFilterClass *klass);
 
 GST_GL_API
-gboolean gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
-                                       GstBuffer * outbuf);
+gboolean gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * input,
+                                       GstBuffer * output);
 
 GST_GL_API
 gboolean gst_gl_filter_render_to_target             (GstGLFilter *filter,
