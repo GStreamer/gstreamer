@@ -41,28 +41,49 @@
  * interact with #GESClip-s directly, which will take care of creating and
  * organising the elements of the timeline's tracks.
  *
- * Most subclassed clips will be associated with some *core*
- * #GESTrackElement-s. When such a clip is added to a layer in a timeline,
- * it will create these children and they will be added to the timeline's
- * tracks. You can connect to the #GESContainer::child-added signal to be
- * notified of their creation. If a clip will produce several core
- * elements of the same #GESTrackElement:track-type but they are destined
- * for separate tracks, you should connect to the timeline's
- * #GESTimeline::select-tracks-for-object signal to coordinate which
- * tracks each element should land in.
+ * ## Core Children
  *
- * Note, no two core children within a clip can share the same #GESTrack.
- * Therefore, if you use #GESTimeline::select-tracks-for-object, you
- * should ensure that each core #GESTrackElement is destined for
- * different #GESTrack-s per clip (or no track).
+ * In more detail, clips will usually have some *core* #GESTrackElement
+ * children, which are created by the clip when it is added to a layer in
+ * a timeline. The type and form of these core children will depend on the
+ * clip's subclass. You can use ges_track_element_is_core() to determine
+ * whether a track element is considered such a core track element. Note,
+ * if a core track element is part of a clip, it will always be treated as
+ * a core *child* of the clip. You can connect to the
+ * #GESContainer::child-added signal to be notified of their creation.
+ *
+ * When a child is added to a clip, the timeline will select its tracks
+ * using #GESTimeline::select-tracks-for-object. Note that it may be the
+ * case that the child will still have no set #GESTrackElement:track
+ * after this process. For example, if the timeline does not have a track
+ * of the corresponding #GESTrack:track-type. A clip can safely contain
+ * such children, which may have their track set later, although they will
+ * play no functioning role in the timeline in the meantime.
+ *
+ * If a clip may create track elements with various
+ * #GESTrackElement:track-type(s), such as a #GESUriClip, but you only
+ * want it to create a subset of these types, you should set the
+ * #GESClip:supported-formats of the clip to the subset of types. This
+ * should be done *before* adding the clip to a layer.
+ *
+ * If a clip will produce several core elements of the same
+ * #GESTrackElement:track-type, you should connect to the timeline's
+ * #GESTimeline::select-tracks-for-object signal to coordinate which
+ * tracks each element should land in. Note, no two core children within a
+ * clip can share the same #GESTrack, so you should not select the same
+ * track for two separate core children. Provided you stick to this rule,
+ * it is still safe to select several tracks for the same core child, the
+ * core child will be copied into the additional tracks. You can manually
+ * add the child to more tracks later using ges_clip_add_child_to_track().
+ * If you do not wish to use a core child, you can always select no track.
  *
  * The #GESTimelineElement:in-point of the clip will control the
- * #GESTimelineElement:in-point of these core elements to be the same
+ * #GESTimelineElement:in-point of its core children to be the same
  * value if their #GESTrackElement:has-internal-source is set to %TRUE.
  *
  * The #GESTimelineElement:max-duration of the clip is the minimum
- * #GESTimelineElement:max-duration of its children. If you set its value
- * to anything other than its current value, this will also set the
+ * #GESTimelineElement:max-duration of its core children. If you set its
+ * value to anything other than its current value, this will also set the
  * #GESTimelineElement:max-duration of all its core children to the same
  * value if their #GESTrackElement:has-internal-source is set to %TRUE.
  * As a special case, whilst a clip does not yet have any core children,
@@ -82,12 +103,16 @@
  * effects. You can change the ordering of effects using
  * ges_clip_set_top_effect_index().
  *
- * Note, since an effect must be applied on top of a core child, if you
- * use #GESTimeline::select-tracks-for-object, you should ensure that the
+ * Tracks are selected for top effects in the same way as core children.
+ * If you add a top effect to a clip before it is part of a timeline, and
+ * later add the clip to a timeline, the track selection for the top
+ * effects will occur just after the track selection for the core
+ * children. If you add a top effect to a clip that is already part of a
+ * timeline, the track selection will occur immediately. Since a top
+ * effect must be applied on top of a core child, if you use
+ * #GESTimeline::select-tracks-for-object, you should ensure that the
  * added effects are destined for a #GESTrack that already contains a core
- * child (note that #GESTimeline::select-tracks-for-object will be called
- * for the core children before the added effects, so their tracks will be
- * selected before the effects).
+ * child.
  *
  * In addition, if the core child in the track is not
  * #GESTrackElement:active, then neither can any of its effects be
@@ -173,7 +198,8 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GESClip, ges_clip,
  *                                                  *
  ****************************************************/
 
-#define _IS_CORE_CHILD(child) GES_TRACK_ELEMENT_IS_CORE(child)
+#define _IS_CORE_CHILD(child) \
+    ges_track_element_is_core (GES_TRACK_ELEMENT (child))
 
 #define _IS_TOP_EFFECT(child) \
   (!_IS_CORE_CHILD (child) && GES_IS_BASE_EFFECT (child))

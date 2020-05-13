@@ -83,9 +83,6 @@ GstDebugCategory * _ges_debug (void);
 #define GES_FORMAT GES_TIMELINE_ELEMENT_FORMAT
 #define GES_ARGS GES_TIMELINE_ELEMENT_ARGS
 
-#define GES_TRACK_ELEMENT_IS_CORE(child) \
-  (ges_track_element_get_creator_asset (GES_TRACK_ELEMENT (child)) != NULL)
-
 #define GES_TIMELINE_ELEMENT_SET_BEING_EDITED(element) \
   ELEMENT_SET_FLAG ( \
       ges_timeline_element_peak_toplevel (GES_TIMELINE_ELEMENT (element)), \

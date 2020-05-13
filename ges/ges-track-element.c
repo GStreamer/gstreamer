@@ -1826,3 +1826,33 @@ ges_track_element_get_control_binding (GESTrackElement * object,
       property_name);
   return binding;
 }
+
+
+/**
+ * ges_track_element_is_core:
+ * @object: A #GESTrackElement
+ *
+ * Get whether the given track element is a core track element. That is,
+ * it was created by the @create_track_elements #GESClipClass method for
+ * some #GESClip.
+ *
+ * Note that such a track element can only be added to a clip that shares
+ * the same #GESAsset as the clip that created it. For example, you are
+ * allowed to move core children between clips that resulted from
+ * ges_container_ungroup(), but you could not move the core child from a
+ * #GESUriClip to a #GESTitleClip or another #GESUriClip with a different
+ * #GESUriClip:uri.
+ *
+ * Moreover, if a core track element is added to a clip, it will always be
+ * added as a core child. Therefore, if this returns %TRUE, then @element
+ * will be a core child of its parent clip.
+ *
+ * Returns: %TRUE if @element is a core track element.
+ */
+gboolean
+ges_track_element_is_core (GESTrackElement * object)
+{
+  g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
+
+  return (ges_track_element_get_creator_asset (object) != NULL);
+}

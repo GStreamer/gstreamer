@@ -1308,8 +1308,9 @@ _core_in_track (GESTrack * track, GESClip * clip)
 {
   GList *tmp;
   for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
-    if (GES_TRACK_ELEMENT_IS_CORE (tmp->data)
-        && ges_track_element_get_track (tmp->data) == track) {
+    GESTrackElement *el = tmp->data;
+    if (ges_track_element_is_core (el)
+        && ges_track_element_get_track (el) == track) {
       return tmp->data;
     }
   }
@@ -1331,7 +1332,7 @@ select_tracks_for_object_default (GESTimeline * timeline,
     GESTrack *track = GES_TRACK (tmp->data);
 
     if ((track->type & ges_track_element_get_track_type (tr_object))) {
-      if (GES_TRACK_ELEMENT_IS_CORE (tr_object)) {
+      if (ges_track_element_is_core (tr_object)) {
         core = _core_in_track (track, clip);
         if (core) {
           GST_WARNING_OBJECT (timeline, "The clip '%s' contains multiple "
@@ -1546,7 +1547,7 @@ clip_track_element_removed_cb (GESClip * clip,
     /* if we have non-core elements in the same track, they should be
      * removed from them to preserve the rule that a non-core can only be
      * in the same track as a core element from the same clip */
-    if (GES_TRACK_ELEMENT_IS_CORE (track_element))
+    if (ges_track_element_is_core (track_element))
       ges_clip_empty_from_track (clip, track);
     ges_track_remove_element (track, track_element);
   }
@@ -1573,7 +1574,7 @@ _add_clip_children_to_tracks (GESTimeline * timeline, GESClip * clip,
   children = ges_container_get_children (GES_CONTAINER (clip), FALSE);
   for (tmp = children; tmp; tmp = tmp->next) {
     GESTrackElement *el = tmp->data;
-    if (GES_TRACK_ELEMENT_IS_CORE (el) != add_core)
+    if (ges_track_element_is_core (el) != add_core)
       continue;
     if (g_list_find (blacklist, el))
       continue;

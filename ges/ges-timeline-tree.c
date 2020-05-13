@@ -902,7 +902,7 @@ set_edit_trim_start_non_core_children (GESTimelineElement * clip,
     el = tmp->data;
     if (ges_track_element_has_internal_source (el)
         && ges_track_element_is_active (el)
-        && !GES_TRACK_ELEMENT_IS_CORE (child)) {
+        && !ges_track_element_is_core (el)) {
 
       GST_INFO_OBJECT (child, "Setting track element %s to trim in-point "
           "with offset %" G_GINT64_FORMAT " since the parent clip %"

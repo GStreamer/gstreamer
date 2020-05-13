@@ -134,6 +134,9 @@ GES_API
 GstElement * ges_track_element_get_element     (GESTrackElement * object);
 
 GES_API
+gboolean ges_track_element_is_core             (GESTrackElement * object);
+
+GES_API
 gboolean ges_track_element_set_active          (GESTrackElement * object,
                                                gboolean active);
 

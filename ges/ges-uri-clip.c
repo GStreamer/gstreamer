@@ -278,7 +278,7 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
     GESTrackElement *child = tmp->data;
     GESTrack *track = ges_track_element_get_track (child);
     /* remove our core children */
-    if (GES_TRACK_ELEMENT_IS_CORE (child)) {
+    if (ges_track_element_is_core (child)) {
       if (track)
         g_hash_table_insert (source_by_track, gst_object_ref (track),
             gst_object_ref (child));
@@ -306,7 +306,7 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
      * the same source! */
     for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
       GESTrackElement *child = tmp->data;
-      if (GES_TRACK_ELEMENT_IS_CORE (child)) {
+      if (ges_track_element_is_core (child)) {
         GESTrackElement *orig_source = g_hash_table_lookup (source_by_track,
             ges_track_element_get_track (child));
         contains_core = TRUE;
