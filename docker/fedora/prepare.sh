@@ -107,8 +107,6 @@ dnf install -y \
     mesa-vulkan-drivers \
     wpewebkit \
     wpewebkit-devel \
-    wpebackend-fdo \
-    wpebackend-fdo-devel \
     xorg-x11-server-utils \
     xorg-x11-server-Xvfb
 
