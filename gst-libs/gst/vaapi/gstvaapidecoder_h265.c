@@ -543,7 +543,11 @@ is_scc_profile (GstVaapiProfile profile)
 #if VA_CHECK_VERSION(1,2,0)
   if (profile == GST_VAAPI_PROFILE_H265_SCREEN_EXTENDED_MAIN
       || profile == GST_VAAPI_PROFILE_H265_SCREEN_EXTENDED_MAIN_10
-      || profile == GST_VAAPI_PROFILE_H265_SCREEN_EXTENDED_MAIN_444)
+      || profile == GST_VAAPI_PROFILE_H265_SCREEN_EXTENDED_MAIN_444
+#if VA_CHECK_VERSION(1,8,0)
+      || profile == GST_VAAPI_PROFILE_H265_SCREEN_EXTENDED_MAIN_444_10
+#endif
+      )
     return TRUE;
 #endif
   return FALSE;

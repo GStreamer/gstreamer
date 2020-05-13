@@ -187,6 +187,8 @@ typedef enum {
                                                 GST_VAAPI_MAKE_PROFILE(H265,8),
     GST_VAAPI_PROFILE_H265_SCREEN_EXTENDED_MAIN_444 =
                                                 GST_VAAPI_MAKE_PROFILE(H265,9),
+    GST_VAAPI_PROFILE_H265_SCREEN_EXTENDED_MAIN_444_10 =
+                                                GST_VAAPI_MAKE_PROFILE(H265,10),
     GST_VAAPI_PROFILE_VP9_0                   = GST_VAAPI_MAKE_PROFILE(VP9,1),
     GST_VAAPI_PROFILE_VP9_1                   = GST_VAAPI_MAKE_PROFILE(VP9,2),
     GST_VAAPI_PROFILE_VP9_2                   = GST_VAAPI_MAKE_PROFILE(VP9,3),
