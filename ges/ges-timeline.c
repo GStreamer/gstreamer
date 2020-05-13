@@ -169,6 +169,7 @@ struct _GESTimelinePrivate
   GCond commited_cond;
 
   GThread *valid_thread;
+  gboolean disposed;
 
   GstStreamCollection *stream_collection;
 };
@@ -308,6 +309,12 @@ ges_timeline_set_property (GObject * object, guint property_id,
   }
 }
 
+gboolean
+ges_timeline_is_disposed (GESTimeline * timeline)
+{
+  return timeline->priv->disposed;
+}
+
 static void
 ges_timeline_dispose (GObject * object)
 {
@@ -315,6 +322,7 @@ ges_timeline_dispose (GObject * object)
   GESTimelinePrivate *priv = tl->priv;
   GList *tmp, *groups;
 
+  priv->disposed = TRUE;
   while (tl->layers) {
     GESLayer *layer = (GESLayer *) tl->layers->data;
     ges_timeline_remove_layer (GES_TIMELINE (object), layer);
@@ -2230,7 +2238,9 @@ ges_timeline_remove_layer (GESTimeline * timeline, GESLayer * layer)
 
   g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
   g_return_val_if_fail (GES_IS_LAYER (layer), FALSE);
-  CHECK_THREAD (timeline);
+
+  if (!timeline->priv->disposed)
+    CHECK_THREAD (timeline);
 
   GST_DEBUG ("timeline:%p, layer:%p", timeline, layer);
 

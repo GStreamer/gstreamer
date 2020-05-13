@@ -106,6 +106,8 @@ ges_timeline_freeze_auto_transitions (GESTimeline * timeline, gboolean freeze);
 G_GNUC_INTERNAL GESAutoTransition *
 ges_timeline_get_auto_transition_at_end (GESTimeline * timeline, GESTrackElement * source);
 
+G_GNUC_INTERNAL gboolean ges_timeline_is_disposed (GESTimeline* timeline);
+
 G_GNUC_INTERNAL gboolean
 ges_timeline_edit (GESTimeline * timeline, GESTimelineElement * element,
     GList * layers, gint64 new_layer_priority, GESEditMode mode, GESEdge edge,

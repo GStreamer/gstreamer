@@ -1260,7 +1260,9 @@ ges_track_remove_element (GESTrack * track, GESTrackElement * object)
   g_return_val_if_fail (GES_IS_TRACK (track), FALSE);
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
 
-  CHECK_THREAD (track);
+  if (!track->priv->timeline
+      || !ges_timeline_is_disposed (track->priv->timeline))
+    CHECK_THREAD (track);
 
   return remove_element_internal (track, object, TRUE);
 }
