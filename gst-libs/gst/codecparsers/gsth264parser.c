@@ -2253,8 +2253,17 @@ gst_h264_parser_parse_slice_hdr (GstH264NalParser * nalparser,
 
   /* set default values for fields that might not be present in the bitstream
      and have valid defaults */
-  slice->num_ref_idx_l0_active_minus1 = pps->num_ref_idx_l0_active_minus1;
-  slice->num_ref_idx_l1_active_minus1 = pps->num_ref_idx_l1_active_minus1;
+  if (GST_H264_IS_I_SLICE (slice)) {
+    slice->num_ref_idx_l0_active_minus1 = 0;
+    slice->num_ref_idx_l1_active_minus1 = 0;
+  } else {
+    slice->num_ref_idx_l0_active_minus1 = pps->num_ref_idx_l0_active_minus1;
+
+    if (GST_H264_IS_B_SLICE (slice))
+      slice->num_ref_idx_l1_active_minus1 = pps->num_ref_idx_l1_active_minus1;
+    else
+      slice->num_ref_idx_l1_active_minus1 = 0;
+  }
 
   if (sps->separate_colour_plane_flag)
     READ_UINT8 (&nr, slice->colour_plane_id, 2);
