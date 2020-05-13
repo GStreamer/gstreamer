@@ -364,7 +364,7 @@ play_new (gchar ** uris, gdouble initial_volume)
 
   GstPlayerSignalAdapter *player_sig_adapt
      = gst_player_signal_adapter_new(
-       gst_player_get_message_bus (play->player), 
+       play->player,
        g_main_loop_get_context (play->loop));
 
   g_signal_connect (player_sig_adapt, "position-updated",
