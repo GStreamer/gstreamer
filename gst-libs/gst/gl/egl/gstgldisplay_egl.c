@@ -310,7 +310,7 @@ _ref_if_set (gpointer data, gpointer user_data)
 
 /**
  * gst_gl_display_egl_from_gl_display:
- * @display: an existing #GstGLDisplay
+ * @display: (transfer none): an existing #GstGLDisplay
  *
  * Creates a EGL display connection from a native Display.
  *

@@ -259,7 +259,7 @@ _gst_egl_image_copy (GstMiniObject * obj)
 }
 
 /**
- * gst_egl_image_new_wrapped:
+ * gst_egl_image_new_wrapped: (skip)
  * @context: a #GstGLContext (must be an EGL context)
  * @image: the image to wrap
  * @format: the #GstGLFormat

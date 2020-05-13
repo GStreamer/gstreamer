@@ -33,7 +33,7 @@
 
 /**
  * gst_egl_get_error_string:
- * @err: an EGL error code
+ * @err: (type gint32): an EGL error code
  *
  * Returns: the short string representation of @err
  */
