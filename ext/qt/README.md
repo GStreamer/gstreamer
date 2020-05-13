@@ -48,3 +48,52 @@ make
 
 Copy the built plugin to your $GSTREAMER_ROOT/lib/gstreamer-1.0 or link to it
 directly if it is compiled statically
+
+# Building for Windows using pre-built gstreamer development package and Qt Creator 
+
+## Step 1
+
+Open `qtplugin.pro` in Qt Creator as project and configure it as usual. 
+
+## Step 2
+
+Open `qtplugin.pro` in the editor and make sure `GSTREAMER_PATH` 
+variable in `qmlplugin.pro` is set to the path of your gstreamer SDK installation. This directory 
+should contain subdirectories `bin`, `include`, `lib` etc. Pay attention to the correct choice 
+of x86 or x86_64 platform. 
+
+## Step 3
+
+Build the project as usual.
+
+## Step 3 
+
+Copy the built plugin to your $GSTREAMER_ROOT/lib/gstreamer-1.0 or link to it
+directly if it is compiled statically.
+
+# Building for Windows using pre-built gstreamer development package and Qt on MinGW command line 
+
+## Step 1 
+
+Launch Qt developer command line from the Start menu.
+
+## Step 2 
+
+cd to the directory of the gstqmlgl plugin and make sure `GSTREAMER_PATH` 
+variable in `qmlplugin.pro` is set to the path of your gstreamer SDK installation. This directory 
+should contain subdirectories `bin`, `include`, `lib` etc. Pay attention to the correct choice 
+of x86 or x86_64 platform. 
+
+## Step 3
+
+Run the following commands in the gstqmlgl plugin directory:
+
+```
+qmake 
+mingw32-make
+```
+
+## Step 4
+
+Copy the built plugin to your $GSTREAMER_ROOT/lib/gstreamer-1.0 or link to it
+directly if it is compiled statically.
