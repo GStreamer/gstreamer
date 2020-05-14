@@ -4798,7 +4798,7 @@ gst_value_intersect_list_list (GValue * dest, const GValue * value1,
   gboolean res = FALSE;
   GValue *tmp;
   GType type1, type2;
-  guint it1, len1, it2, len2, itar;
+  guint it1, len1, start2, it2, len2, itar;
   GstValueList *vlist = NULL;
 
   /* If they don't have the same basic type, all bets are off :) */
@@ -4849,10 +4849,11 @@ gst_value_intersect_list_list (GValue * dest, const GValue * value1,
 
   itar = 0;
   tmp = &vlist->fields[0];
+  start2 = 0;
 
   for (it1 = 0; it1 < len1; it1++) {
     const GValue *item1 = VALUE_LIST_GET_VALUE (value1, it1);
-    for (it2 = 0; it2 < len2; it2++) {
+    for (it2 = start2; it2 < len2; it2++) {
       const GValue *item2;
       if (is_visited (it2))
         continue;
@@ -4861,6 +4862,9 @@ gst_value_intersect_list_list (GValue * dest, const GValue * value1,
       if (gst_value_intersect (tmp, item1, item2)) {
         res = TRUE;
         mark_visited (it2);
+        /* Increment our inner-loop starting point */
+        if (it2 == start2)
+          start2++;
 
         /* Move our collection value */
         itar += 1;
