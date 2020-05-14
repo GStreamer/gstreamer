@@ -3350,6 +3350,20 @@ gst_validate_scenario_check_latency (GstValidateScenario * scenario,
 }
 
 static gboolean
+gst_validate_scenario_is_flush_seeking (GstValidateScenario * scenario)
+{
+  GstValidateSeekInformation *seekinfo = scenario->priv->current_seek;
+
+  if (!seekinfo)
+    return FALSE;
+
+  if (!(seekinfo->flags & GST_SEEK_FLAG_FLUSH))
+    return FALSE;
+
+  return seekinfo->action->priv->state == GST_VALIDATE_EXECUTE_ACTION_ASYNC;
+}
+
+static gboolean
 message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
 {
   gboolean is_error = FALSE;
@@ -3366,12 +3380,8 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
 
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_ASYNC_DONE:
-      if (priv->current_seek
-          && ((priv->current_seek->flags & GST_SEEK_FLAG_FLUSH) &&
-              (priv->current_seek->action->priv->state ==
-                  GST_VALIDATE_EXECUTE_ACTION_ASYNC))) {
-        gst_validate_action_set_done (priv->current_seek->action);
-      } else if (scenario->priv->needs_async_done) {
+      if (!gst_validate_scenario_is_flush_seeking (scenario) &&
+          scenario->priv->needs_async_done) {
         scenario->priv->needs_async_done = FALSE;
         if (priv->actions && _action_sets_state (priv->actions->data)
             && !priv->changing_state)
@@ -3387,10 +3397,12 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
       break;
     case GST_MESSAGE_STATE_CHANGED:
     {
-      if (pipeline && GST_MESSAGE_SRC (message) == GST_OBJECT (pipeline)) {
-        GstState nstate, pstate;
 
-        gst_message_parse_state_changed (message, &pstate, &nstate, NULL);
+      if (pipeline && GST_MESSAGE_SRC (message) == GST_OBJECT (pipeline)) {
+        GstState pstate, nstate, pending_state;
+
+        gst_message_parse_state_changed (message, &pstate, &nstate,
+            &pending_state);
 
         if (pstate == GST_STATE_PAUSED && nstate == GST_STATE_READY) {
           /* Reset sink information */
@@ -3401,6 +3413,11 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
           scenario->priv->current_seek = NULL;
           scenario->priv->current_seqnum = GST_SEQNUM_INVALID;
           SCENARIO_UNLOCK (scenario);
+        }
+
+        if (gst_validate_scenario_is_flush_seeking (scenario)
+            && pending_state == GST_STATE_VOID_PENDING) {
+          gst_validate_action_set_done (priv->current_seek->action);
         }
 
         if (scenario->priv->changing_state &&
