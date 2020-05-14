@@ -71,6 +71,14 @@ typedef struct _MsdkSurface
   GstVideoFrame copy;
 } MsdkSurface;
 
+struct _MsdkDecTask
+{
+  MsdkSurface *surface;
+  mfxSyncPoint sync_point;
+
+  gboolean decode_only;
+};
+
 static gboolean gst_msdkdec_drain (GstVideoDecoder * decoder);
 static gboolean gst_msdkdec_flush (GstVideoDecoder * decoder);
 static gboolean gst_msdkdec_negotiate (GstMsdkDec * thiz, gboolean hard_reset);
@@ -119,36 +127,45 @@ gst_msdkdec_get_oldest_frame (GstVideoDecoder * decoder)
   return frame;
 }
 
-static void
-free_surface (GstMsdkDec * thiz, MsdkSurface * s)
+static inline void
+free_surface (MsdkSurface * s)
 {
-  if (s->copy.buffer) {
-    gst_video_frame_unmap (&s->copy);
-    gst_buffer_unref (s->copy.buffer);
-  }
-
-  if (s->data.buffer)
-    gst_video_frame_unmap (&s->data);
-
   gst_buffer_unref (s->buf);
-  thiz->decoded_msdk_surfaces = g_list_remove (thiz->decoded_msdk_surfaces, s);
-
   g_slice_free (MsdkSurface, s);
 }
 
 static void
-gst_msdkdec_free_unlocked_msdk_surfaces (GstMsdkDec * thiz,
-    MsdkSurface * curr_surface)
+unmap_frame (GstMsdkDec * thiz, MsdkSurface * s)
+{
+  if (s->copy.buffer) {
+    /* we allocate this buffer from down stream, we need ref-1 for it */
+    gst_buffer_unref (s->copy.buffer);
+    gst_video_frame_unmap (&s->copy);
+    s->copy.buffer = NULL;
+  }
+
+  if (s->data.buffer) {
+    gst_video_frame_unmap (&s->data);
+    s->data.buffer = NULL;
+  }
+}
+
+static void
+gst_msdkdec_free_unlocked_msdk_surfaces (GstMsdkDec * thiz)
 {
   GList *l;
   MsdkSurface *surface;
 
-  for (l = thiz->decoded_msdk_surfaces; l;) {
+  for (l = thiz->locked_msdk_surfaces; l;) {
+    GList *next = l->next;
     surface = l->data;
-    l = l->next;
-
-    if (surface != curr_surface && surface->surface->Data.Locked == 0)
-      free_surface (thiz, surface);
+    if (surface->surface->Data.Locked == 0) {
+      unmap_frame (thiz, surface);
+      free_surface (surface);
+      thiz->locked_msdk_surfaces =
+          g_list_delete_link (thiz->locked_msdk_surfaces, l);
+    }
+    l = next;
   }
 }
 
@@ -170,8 +187,7 @@ allocate_output_buffer (GstMsdkDec * thiz, GstBuffer ** buffer)
   if (!frame->output_buffer) {
     /* Free un-unsed msdk surfaces firstly, hence the associated mfx
      * surfaces will be moved from used list to available list */
-    if (thiz->postpone_free_surface || thiz->use_video_memory)
-      gst_msdkdec_free_unlocked_msdk_surfaces (thiz, NULL);
+    gst_msdkdec_free_unlocked_msdk_surfaces (thiz);
 
     flow = gst_video_decoder_allocate_output_frame (decoder, frame);
     if (flow != GST_FLOW_OK) {
@@ -183,9 +199,6 @@ allocate_output_buffer (GstMsdkDec * thiz, GstBuffer ** buffer)
   *buffer = gst_buffer_ref (frame->output_buffer);
   gst_buffer_replace (&frame->output_buffer, NULL);
   gst_video_codec_frame_unref (frame);
-
-  if (thiz->postpone_free_surface)
-    GST_MINI_OBJECT_FLAG_SET (*buffer, GST_MINI_OBJECT_FLAG_LOCKABLE);
 
   return GST_FLOW_OK;
 }
@@ -233,7 +246,8 @@ get_surface (GstMsdkDec * thiz, GstBuffer * buffer)
 
   gst_msdk_update_mfx_frame_info_from_mfx_video_param (&i->surface->Info,
       &thiz->param);
-  thiz->decoded_msdk_surfaces = g_list_append (thiz->decoded_msdk_surfaces, i);
+
+  thiz->locked_msdk_surfaces = g_list_append (thiz->locked_msdk_surfaces, i);
   return i;
 
 failed_unref_buffer2:
@@ -619,6 +633,22 @@ _find_msdk_surface (gconstpointer msdk_surface, gconstpointer comp_surface)
   return cached_surface ? cached_surface->surface != _surface : -1;
 }
 
+static void
+finish_task (GstMsdkDec * thiz, MsdkDecTask * task)
+{
+  MsdkSurface *surface = task->surface;
+  if (surface) {
+    if (G_UNLIKELY (surface->copy.buffer)) {
+      unmap_frame (thiz, surface);
+    }
+    thiz->locked_msdk_surfaces =
+        g_list_append (thiz->locked_msdk_surfaces, surface);
+  }
+  task->sync_point = NULL;
+  task->surface = NULL;
+  task->decode_only = FALSE;
+}
+
 static GstFlowReturn
 gst_msdkdec_finish_task (GstMsdkDec * thiz, MsdkDecTask * task)
 {
@@ -627,7 +657,6 @@ gst_msdkdec_finish_task (GstMsdkDec * thiz, MsdkDecTask * task)
   GstVideoCodecFrame *frame;
   MsdkSurface *surface;
   mfxStatus status;
-  GList *l;
   guint64 pts = MFX_TIMESTAMP_UNKNOWN;
 
   if (G_LIKELY (task->sync_point)) {
@@ -640,13 +669,14 @@ gst_msdkdec_finish_task (GstMsdkDec * thiz, MsdkDecTask * task)
     }
   }
 
-  if (task->surface) {
+  surface = task->surface;
+  if (surface) {
     GST_DEBUG_OBJECT (thiz, "Decoded MFX TimeStamp: %" G_GUINT64_FORMAT,
-        (guint64) task->surface->Data.TimeStamp);
-    pts = task->surface->Data.TimeStamp;
+        (guint64) surface->surface->Data.TimeStamp);
+    pts = surface->surface->Data.TimeStamp;
   }
 
-  if (G_LIKELY (task->sync_point || (task->surface && task->decode_only))) {
+  if (G_LIKELY (task->sync_point || (surface && task->decode_only))) {
     gboolean decode_only = task->decode_only;
 
     frame = gst_msdkdec_get_oldest_frame (decoder);
@@ -661,21 +691,16 @@ gst_msdkdec_finish_task (GstMsdkDec * thiz, MsdkDecTask * task)
       frame = gst_msdkdec_get_oldest_frame (decoder);
     }
 
-    l = g_list_find_custom (thiz->decoded_msdk_surfaces, task->surface,
-        _find_msdk_surface);
-    if (l) {
-      surface = l->data;
-    } else {
-      GST_ERROR_OBJECT (thiz, "Couldn't find the cached MSDK surface");
-      return GST_FLOW_ERROR;
-    }
-
     if (G_LIKELY (frame)) {
       if (G_LIKELY (surface->copy.buffer == NULL)) {
+        /* gst_video_decoder_finish_frame will call gst_buffer_make_writable
+         * we need this to avoid copy buffer                               */
+        GST_MINI_OBJECT_FLAG_SET (surface->buf, GST_MINI_OBJECT_FLAG_LOCKABLE);
         frame->output_buffer = gst_buffer_ref (surface->buf);
       } else {
         gst_video_frame_copy (&surface->copy, &surface->data);
         frame->output_buffer = gst_buffer_ref (surface->copy.buffer);
+        unmap_frame (thiz, surface);
       }
       GST_DEBUG_OBJECT (thiz, "surface %p TimeStamp: %" G_GUINT64_FORMAT
           " frame %p TimeStamp: %" G_GUINT64_FORMAT,
@@ -683,11 +708,7 @@ gst_msdkdec_finish_task (GstMsdkDec * thiz, MsdkDecTask * task)
           frame, GST_TO_MFX_TIME (frame->pts));
     }
 
-    if (!thiz->postpone_free_surface)
-      free_surface (thiz, surface);
-    task->sync_point = NULL;
-    task->surface = NULL;
-    task->decode_only = FALSE;
+    finish_task (thiz, task);
 
     if (!frame)
       return GST_FLOW_FLUSHING;
@@ -699,6 +720,7 @@ gst_msdkdec_finish_task (GstMsdkDec * thiz, MsdkDecTask * task)
       GST_ERROR_OBJECT (thiz, "Failed to finish frame");
     return flow;
   }
+  finish_task (thiz, task);
   return GST_FLOW_OK;
 }
 
@@ -842,12 +864,19 @@ release_msdk_surfaces (GstMsdkDec * thiz)
 {
   GList *l;
   MsdkSurface *surface;
+  gint locked = 0;
+  gst_msdkdec_free_unlocked_msdk_surfaces (thiz);
 
-  for (l = thiz->decoded_msdk_surfaces; l;) {
-    surface = l->data;
-    l = l->next;
-    free_surface (thiz, surface);
+  for (l = thiz->locked_msdk_surfaces; l; l = l->next) {
+    surface = (MsdkSurface *) l->data;
+    unmap_frame (thiz, surface);
+    free_surface (surface);
+    locked++;
   }
+  if (locked)
+    GST_ERROR_OBJECT (thiz, "msdk still locked %d surfaces", locked);
+  g_list_free (thiz->locked_msdk_surfaces);
+  thiz->locked_msdk_surfaces = NULL;
 }
 
 /* This will get invoked in the following situations:
@@ -925,6 +954,26 @@ error_negotiate:
   return FALSE;
 }
 
+static inline gboolean
+find_msdk_surface (GstMsdkDec * thiz, MsdkDecTask * task,
+    mfxFrameSurface1 * out_surface)
+{
+  GList *l;
+  task->surface = NULL;
+  if (!out_surface)
+    return TRUE;
+  l = g_list_find_custom (thiz->locked_msdk_surfaces, out_surface,
+      _find_msdk_surface);
+  if (!l) {
+    GST_ERROR_OBJECT (thiz, "msdk return an invalid surface %p", out_surface);
+    return FALSE;
+  }
+  task->surface = (MsdkSurface *) l->data;
+  thiz->locked_msdk_surfaces =
+      g_list_delete_link (thiz->locked_msdk_surfaces, l);
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
 {
@@ -936,6 +985,7 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   MsdkDecTask *task = NULL;
   mfxBitstream bitstream;
   MsdkSurface *surface = NULL;
+  mfxFrameSurface1 *out_surface = NULL;
   mfxSession session;
   mfxStatus status;
   GstMapInfo map_info;
@@ -1116,7 +1166,13 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
 
     status =
         MFXVideoDECODE_DecodeFrameAsync (session, &bitstream, surface->surface,
-        &task->surface, &task->sync_point);
+        &out_surface, &task->sync_point);
+
+    if (!find_msdk_surface (thiz, task, out_surface)) {
+      flow = GST_FLOW_ERROR;
+      goto done;
+    }
+
     GST_DEBUG_OBJECT (decoder, "DecodeFrameAsync => %d", status);
 
     /* media-sdk requires complete reset since the surface is inadequate
@@ -1152,19 +1208,12 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
 
       if (surface->surface->Data.Locked > 0)
         surface = NULL;
-      else if (!thiz->use_video_memory) {
-        /* The for loop will continue because DataLength is greater than 0 so
-         * free the surface right away if not in use. */
-        if (bitstream.DataLength > 0 && task->surface != surface->surface)
-          free_surface (thiz, surface);
-        surface = NULL;
-      }
 
       if (bitstream.DataLength == 0) {
         flow = GST_FLOW_OK;
 
         /* Don't release it if the current surface is in use */
-        if (surface && task->surface == surface->surface)
+        if (surface && task->surface->surface == surface->surface)
           surface = NULL;
 
         break;
@@ -1186,11 +1235,8 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
       /* If device is busy, wait 1ms and retry, as per MSDK's recommendation */
       g_usleep (1000);
 
-      if (task->surface &&
-          task->surface == surface->surface && !task->sync_point) {
-        free_surface (thiz, surface);
+      if (surface->surface->Data.Locked > 0)
         surface = NULL;
-      }
 
       /* If the current surface is still busy, we should do sync operation,
        * then try to decode again
@@ -1218,9 +1264,6 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
     gst_msdkdec_finish_task (thiz, task);
 
 done:
-  if (surface)
-    free_surface (thiz, surface);
-
   gst_buffer_unmap (input_buffer, &map_info);
   gst_buffer_unref (input_buffer);
   return flow;
@@ -1302,8 +1345,9 @@ gst_msdkdec_create_buffer_pool (GstMsdkDec * thiz, GstVideoInfo * info,
   }
 
   config = gst_buffer_pool_get_config (GST_BUFFER_POOL_CAST (pool));
+  /* we need register all bufffers when we create the msdk context, so the buffer pool is not resize able */
   gst_buffer_pool_config_set_params (config, caps,
-      GST_VIDEO_INFO_SIZE (info), num_buffers, 0);
+      GST_VIDEO_INFO_SIZE (info), num_buffers, num_buffers);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
   gst_buffer_pool_config_add_option (config,
       GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
@@ -1316,6 +1360,7 @@ gst_msdkdec_create_buffer_pool (GstMsdkDec * thiz, GstVideoInfo * info,
       gst_buffer_pool_config_add_option (config,
           GST_BUFFER_POOL_OPTION_MSDK_USE_DMABUF);
   }
+
 
   gst_buffer_pool_config_set_video_alignment (config, &align);
   gst_buffer_pool_config_set_allocator (config, allocator, &params);
@@ -1487,6 +1532,7 @@ gst_msdkdec_drain (GstVideoDecoder * decoder)
   GstBuffer *buffer;
   MsdkDecTask *task;
   MsdkSurface *surface = NULL;
+  mfxFrameSurface1 *out_surface;
   mfxSession session;
   mfxStatus status;
   guint i;
@@ -1515,13 +1561,15 @@ gst_msdkdec_drain (GstVideoDecoder * decoder)
 
     status =
         MFXVideoDECODE_DecodeFrameAsync (session, NULL, surface->surface,
-        &task->surface, &task->sync_point);
+        &out_surface, &task->sync_point);
+
+    if (!find_msdk_surface (thiz, task, out_surface)) {
+      return GST_FLOW_ERROR;
+    }
+
     GST_DEBUG_OBJECT (decoder, "DecodeFrameAsync => %d", status);
     if (G_LIKELY (status == MFX_ERR_NONE)) {
       thiz->next_task = (thiz->next_task + 1) % thiz->tasks->len;
-
-      if (surface->surface->Data.Locked == 0)
-        free_surface (thiz, surface);
       surface = NULL;
     } else if (status == MFX_WRN_VIDEO_PARAM_CHANGED) {
       continue;
@@ -1541,16 +1589,12 @@ gst_msdkdec_drain (GstVideoDecoder * decoder)
     } else if (status < MFX_ERR_NONE)
       return GST_FLOW_ERROR;
   }
-  if (surface)
-    free_surface (thiz, surface);
 
   for (i = 0; i < thiz->tasks->len; i++) {
     task = &g_array_index (thiz->tasks, MsdkDecTask, thiz->next_task);
     gst_msdkdec_finish_task (thiz, task);
     thiz->next_task = (thiz->next_task + 1) % thiz->tasks->len;
   }
-
-  release_msdk_surfaces (thiz);
 
   return GST_FLOW_OK;
 }
@@ -1649,11 +1693,7 @@ gst_msdkdec_finalize (GObject * object)
   g_array_unref (thiz->tasks);
   thiz->tasks = NULL;
 
-  /* NULL is the empty list. */
-  if (G_UNLIKELY (thiz->decoded_msdk_surfaces != NULL)) {
-    GST_ERROR_OBJECT (thiz, "leaking %u surfaces",
-        g_list_length (thiz->decoded_msdk_surfaces));
-  }
+  release_msdk_surfaces (thiz);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1762,10 +1802,8 @@ gst_msdkdec_init (GstMsdkDec * thiz)
   thiz->do_renego = TRUE;
   thiz->do_realloc = TRUE;
   thiz->force_reset_on_res_change = TRUE;
-  thiz->postpone_free_surface = FALSE;
   thiz->adapter = gst_adapter_new ();
   thiz->input_state = NULL;
   thiz->pool = NULL;
   thiz->context = NULL;
-  thiz->decoded_msdk_surfaces = NULL;
 }

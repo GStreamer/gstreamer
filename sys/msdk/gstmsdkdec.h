@@ -85,8 +85,6 @@ struct _GstMsdkDec
    * include downstream requirement, msdk suggestion and extra
    * surface allocation for smooth display in render pipeline */
   guint min_prealloc_buffers;
-  /* postpone surface free */
-  gboolean postpone_free_surface;
 
   /* MFX context */
   GstMsdkContext *context;
@@ -95,7 +93,7 @@ struct _GstMsdkDec
   GArray *tasks;
   guint next_task;
 
-  GList *decoded_msdk_surfaces;
+  GList *locked_msdk_surfaces;
 
   /* element properties */
   gboolean hardware;
@@ -115,14 +113,6 @@ struct _GstMsdkDecClass
   gboolean (*preinit_decoder) (GstMsdkDec * decoder);
   /* adjust mfx parameters per codec */
   gboolean (*postinit_decoder) (GstMsdkDec * decoder);
-};
-
-struct _MsdkDecTask
-{
-  mfxFrameSurface1 *surface;
-  mfxSyncPoint sync_point;
-
-  gboolean decode_only;
 };
 
 GType gst_msdkdec_get_type (void);
