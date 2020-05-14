@@ -30,8 +30,8 @@
 #include "gsteglimage.h"
 #include "gstglmemoryegl.h"
 
-GST_DEBUG_CATEGORY_STATIC (gst_gl_display_debug);
-#define GST_CAT_DEFAULT gst_gl_display_debug
+GST_DEBUG_CATEGORY_STATIC (gst_gl_display_egl_debug);
+#define GST_CAT_DEFAULT gst_gl_display_egl_debug
 
 #ifndef EGL_PLATFORM_X11
 #define EGL_PLATFORM_X11 0x31D5
@@ -53,6 +53,18 @@ G_DEFINE_TYPE (GstGLDisplayEGL, gst_gl_display_egl, GST_TYPE_GL_DISPLAY);
 
 static void gst_gl_display_egl_finalize (GObject * object);
 static guintptr gst_gl_display_egl_get_handle (GstGLDisplay * display);
+
+static void
+init_debug (void)
+{
+  static volatile gsize _init = 0;
+
+  if (g_once_init_enter (&_init)) {
+    GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "gldisplayegl", 0,
+        "OpenGL EGL Display");
+    g_once_init_leave (&_init, 1);
+  }
+}
 
 static void
 gst_gl_display_egl_class_init (GstGLDisplayEGLClass * klass)
@@ -110,6 +122,8 @@ gst_gl_display_egl_get_from_native (GstGLDisplayType type, guintptr display)
   g_return_val_if_fail (type != GST_GL_DISPLAY_TYPE_NONE, EGL_NO_DISPLAY);
   g_return_val_if_fail ((type != GST_GL_DISPLAY_TYPE_ANY && display != 0)
       || (type == GST_GL_DISPLAY_TYPE_ANY && display == 0), EGL_NO_DISPLAY);
+
+  init_debug ();
 
   /* given an EGLDisplay already */
   if (type == GST_GL_DISPLAY_TYPE_EGL)
@@ -184,7 +198,7 @@ gst_gl_display_egl_new (void)
 {
   GstGLDisplayEGL *ret;
 
-  GST_DEBUG_CATEGORY_GET (gst_gl_display_debug, "gldisplay");
+  init_debug ();
 
   ret = g_object_new (GST_TYPE_GL_DISPLAY_EGL, NULL);
   gst_object_ref_sink (ret);
@@ -215,7 +229,7 @@ gst_gl_display_egl_new_with_egl_display (gpointer display)
 
   g_return_val_if_fail (display != NULL, NULL);
 
-  GST_DEBUG_CATEGORY_GET (gst_gl_display_debug, "gldisplay");
+  init_debug ();
 
   ret = g_object_new (GST_TYPE_GL_DISPLAY_EGL, NULL);
   gst_object_ref_sink (ret);
@@ -256,7 +270,7 @@ gst_gl_display_egl_from_gl_display (GstGLDisplay * display)
 
   g_return_val_if_fail (GST_IS_GL_DISPLAY (display), NULL);
 
-  GST_DEBUG_CATEGORY_GET (gst_gl_display_debug, "gldisplay");
+  init_debug ();
 
   if (GST_IS_GL_DISPLAY_EGL (display)) {
     GST_LOG_OBJECT (display, "display %" GST_PTR_FORMAT "is already a "
