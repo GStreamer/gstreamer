@@ -2637,14 +2637,6 @@ nle_composition_change_state (GstElement * element, GstStateChange transition)
       _set_all_children_state (comp, GST_STATE_READY);
       _start_task (comp);
       break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      /* state-lock all elements */
-      GST_DEBUG_OBJECT (comp,
-          "Setting all children to READY and locking their state");
-
-      _add_update_compo_action (comp, G_CALLBACK (_initialize_stack_func),
-          COMP_UPDATE_STACK_INITIALIZE);
-      break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       _stop_task (comp);
 
@@ -2682,6 +2674,14 @@ nle_composition_change_state (GstElement * element, GstStateChange transition)
   }
 
   switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      /* state-lock all elements */
+      GST_DEBUG_OBJECT (comp,
+          "Setting all children to READY and locking their state");
+
+      _add_update_compo_action (comp, G_CALLBACK (_initialize_stack_func),
+          COMP_UPDATE_STACK_INITIALIZE);
+      break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       comp->priv->tearing_down_stack = FALSE;
       nle_composition_reset (comp);
