@@ -35,6 +35,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstMFSourceObject        GstMFSourceObject;
 typedef struct _GstMFSourceObjectClass   GstMFSourceObjectClass;
+typedef struct _GstMFSourceObjectPrivate GstMFSourceObjectPrivate;
 
 typedef enum
 {
@@ -56,20 +57,23 @@ struct _GstMFSourceObject
 {
   GstObject parent;
 
-  GstMFSourceType soure_type;
+  gboolean opend;
 
-  gchar *device_path;
-  gchar *device_name;
-  gint device_index;
+  GstMFSourceObjectPrivate *priv;
 };
 
 struct _GstMFSourceObjectClass
 {
   GstObjectClass parent_class;
 
+  gboolean      (*open)        (GstMFSourceObject * object,
+                                IMFActivate * activate);
+
   gboolean      (*start)       (GstMFSourceObject * object);
 
   gboolean      (*stop)        (GstMFSourceObject * object);
+
+  gboolean      (*close)       (GstMFSourceObject * object);
 
   GstFlowReturn (*fill)        (GstMFSourceObject * object,
                                 GstBuffer * buffer);
@@ -100,12 +104,6 @@ GstCaps *       gst_mf_source_object_get_caps     (GstMFSourceObject * object);
 
 gboolean        gst_mf_source_object_set_caps     (GstMFSourceObject * object,
                                                    GstCaps * caps);
-
-/* Utils */
-gboolean        gst_mf_source_enum_device_activate (GstMFSourceType source_type,
-                                                    GList ** device_activates);
-
-void            gst_mf_device_activate_free        (GstMFDeviceActivate * activate);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstMFSourceObject, gst_object_unref)
 

@@ -58,14 +58,36 @@ gst_mf_source_type_get_type (void)
   return source_type;
 }
 
+struct _GstMFSourceObjectPrivate
+{
+  GstMFSourceType soure_type;
+
+  gchar *device_path;
+  gchar *device_name;
+  gint device_index;
+
+  GThread *thread;
+  GMutex lock;
+  GCond cond;
+  GMainContext *context;
+  GMainLoop *loop;
+};
+
+static void gst_mf_source_object_constructed (GObject * object);
+static void gst_mf_source_object_dispose (GObject * object);
 static void gst_mf_source_object_finalize (GObject * object);
 static void gst_mf_source_object_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_mf_source_object_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 
+static gpointer gst_mf_source_object_thread_func (GstMFSourceObject * self);
+static gboolean gst_mf_source_enum_device_activate (GstMFSourceObject * self,
+    GstMFSourceType source_type, GList ** device_activates);
+static void gst_mf_device_activate_free (GstMFDeviceActivate * activate);
+
 #define gst_mf_source_object_parent_class parent_class
-G_DEFINE_ABSTRACT_TYPE (GstMFSourceObject, gst_mf_source_object,
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GstMFSourceObject, gst_mf_source_object,
     GST_TYPE_OBJECT);
 
 static void
@@ -73,6 +95,8 @@ gst_mf_source_object_class_init (GstMFSourceObjectClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
+  gobject_class->constructed = gst_mf_source_object_constructed;
+  gobject_class->dispose = gst_mf_source_object_dispose;
   gobject_class->finalize = gst_mf_source_object_finalize;
   gobject_class->get_property = gst_mf_source_object_get_property;
   gobject_class->set_property = gst_mf_source_object_set_property;
@@ -99,17 +123,65 @@ gst_mf_source_object_class_init (GstMFSourceObjectClass * klass)
 static void
 gst_mf_source_object_init (GstMFSourceObject * self)
 {
-  self->device_index = DEFAULT_DEVICE_INDEX;
-  self->soure_type = DEFAULT_SOURCE_TYPE;
+  GstMFSourceObjectPrivate *priv;
+
+  self->priv = priv = gst_mf_source_object_get_instance_private (self);
+
+  priv->device_index = DEFAULT_DEVICE_INDEX;
+  priv->soure_type = DEFAULT_SOURCE_TYPE;
+
+  g_mutex_init (&priv->lock);
+  g_cond_init (&priv->cond);
+
+  priv->context = g_main_context_new ();
+  priv->loop = g_main_loop_new (priv->context, FALSE);
+}
+
+static void
+gst_mf_source_object_constructed (GObject * object)
+{
+  GstMFSourceObject *self = GST_MF_SOURCE_OBJECT (object);
+  GstMFSourceObjectPrivate *priv = self->priv;
+
+  /* Create thread so that ensure COM thread can be MTA thread */
+  g_mutex_lock (&priv->lock);
+  priv->thread = g_thread_new ("GstMFSourceObject",
+      (GThreadFunc) gst_mf_source_object_thread_func, self);
+  while (!g_main_loop_is_running (priv->loop))
+    g_cond_wait (&priv->cond, &priv->lock);
+  g_mutex_unlock (&priv->lock);
+
+  G_OBJECT_CLASS (parent_class)->constructed (object);
+}
+
+static void
+gst_mf_source_object_dispose (GObject * object)
+{
+  GstMFSourceObject *self = GST_MF_SOURCE_OBJECT (object);
+  GstMFSourceObjectPrivate *priv = self->priv;
+
+  if (priv->loop) {
+    g_main_loop_quit (priv->loop);
+    g_thread_join (priv->thread);
+    g_main_loop_unref (priv->loop);
+    g_main_context_unref (priv->context);
+    priv->loop = NULL;
+  }
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
 gst_mf_source_object_finalize (GObject * object)
 {
   GstMFSourceObject *self = GST_MF_SOURCE_OBJECT (object);
+  GstMFSourceObjectPrivate *priv = self->priv;
 
-  g_free (self->device_path);
-  g_free (self->device_name);
+  g_mutex_clear (&priv->lock);
+  g_cond_clear (&priv->cond);
+
+  g_free (priv->device_path);
+  g_free (priv->device_name);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -119,19 +191,20 @@ gst_mf_source_object_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   GstMFSourceObject *self = GST_MF_SOURCE_OBJECT (object);
+  GstMFSourceObjectPrivate *priv = self->priv;
 
   switch (prop_id) {
     case PROP_DEVICE_PATH:
-      g_value_set_string (value, self->device_path);
+      g_value_set_string (value, priv->device_path);
       break;
     case PROP_DEVICE_NAME:
-      g_value_set_string (value, self->device_name);
+      g_value_set_string (value, priv->device_name);
       break;
     case PROP_DEVICE_INDEX:
-      g_value_set_int (value, self->device_index);
+      g_value_set_int (value, priv->device_index);
       break;
     case PROP_SOURCE_TYPE:
-      g_value_set_enum (value, self->soure_type);
+      g_value_set_enum (value, priv->soure_type);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -144,26 +217,122 @@ gst_mf_source_object_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstMFSourceObject *self = GST_MF_SOURCE_OBJECT (object);
+  GstMFSourceObjectPrivate *priv = self->priv;
 
   switch (prop_id) {
     case PROP_DEVICE_PATH:
-      g_free (self->device_path);
-      self->device_path = g_value_dup_string (value);
+      g_free (priv->device_path);
+      priv->device_path = g_value_dup_string (value);
       break;
     case PROP_DEVICE_NAME:
-      g_free (self->device_name);
-      self->device_name = g_value_dup_string (value);
+      g_free (priv->device_name);
+      priv->device_name = g_value_dup_string (value);
       break;
     case PROP_DEVICE_INDEX:
-      self->device_index = g_value_get_int (value);
+      priv->device_index = g_value_get_int (value);
       break;
     case PROP_SOURCE_TYPE:
-      self->soure_type = g_value_get_enum (value);
+      priv->soure_type = g_value_get_enum (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static gboolean
+gst_mf_source_object_main_loop_running_cb (GstMFSourceObject * self)
+{
+  GstMFSourceObjectPrivate *priv = self->priv;
+
+  GST_TRACE_OBJECT (self, "Main loop running now");
+
+  g_mutex_lock (&priv->lock);
+  g_cond_signal (&priv->cond);
+  g_mutex_unlock (&priv->lock);
+
+  return G_SOURCE_REMOVE;
+}
+
+static gpointer
+gst_mf_source_object_thread_func (GstMFSourceObject * self)
+{
+  GstMFSourceObjectPrivate *priv = self->priv;
+  GstMFSourceObjectClass *klass = GST_MF_SOURCE_OBJECT_GET_CLASS (self);
+  GSource *source;
+  GList *activate_list = NULL;
+  GstMFDeviceActivate *target = NULL;
+  GList *iter;
+
+  g_assert (klass->open != NULL);
+  g_assert (klass->close != NULL);
+
+  CoInitializeEx (NULL, COINIT_MULTITHREADED);
+
+  g_main_context_push_thread_default (priv->context);
+
+  source = g_idle_source_new ();
+  g_source_set_callback (source,
+      (GSourceFunc) gst_mf_source_object_main_loop_running_cb, self, NULL);
+  g_source_attach (source, priv->context);
+  g_source_unref (source);
+
+  if (!gst_mf_source_enum_device_activate (self,
+          priv->soure_type, &activate_list)) {
+    GST_WARNING_OBJECT (self, "No available video capture device");
+    goto run_loop;
+  }
+#ifndef GST_DISABLE_GST_DEBUG
+  for (iter = activate_list; iter; iter = g_list_next (iter)) {
+    GstMFDeviceActivate *activate = (GstMFDeviceActivate *) iter->data;
+
+    GST_DEBUG_OBJECT (self, "device %d, name: \"%s\", path: \"%s\"",
+        activate->index, GST_STR_NULL (activate->name),
+        GST_STR_NULL (activate->path));
+  }
+#endif
+
+  for (iter = activate_list; iter; iter = g_list_next (iter)) {
+    GstMFDeviceActivate *activate = (GstMFDeviceActivate *) iter->data;
+    gboolean match;
+
+    if (priv->device_path && strlen (priv->device_path) > 0) {
+      match = g_ascii_strcasecmp (activate->path, priv->device_path) == 0;
+    } else if (priv->device_name && strlen (priv->device_name) > 0) {
+      match = g_ascii_strcasecmp (activate->name, priv->device_name) == 0;
+    } else if (priv->device_index >= 0) {
+      match = activate->index == priv->device_index;
+    } else {
+      /* pick the first entry */
+      match = TRUE;
+    }
+
+    if (match) {
+      target = activate;
+      break;
+    }
+  }
+
+  if (target)
+    self->opend = klass->open (self, target->handle);
+
+  if (activate_list)
+    g_list_free_full (activate_list,
+        (GDestroyNotify) gst_mf_device_activate_free);
+
+run_loop:
+  GST_TRACE_OBJECT (self, "Starting main loop");
+  g_main_loop_run (priv->loop);
+  GST_TRACE_OBJECT (self, "Stopped main loop");
+
+  klass->stop (self);
+  klass->close (self);
+
+  g_main_context_pop_thread_default (priv->context);
+
+  CoUninitialize ();
+
+  return NULL;
 }
 
 gboolean
@@ -251,9 +420,9 @@ gst_mf_source_object_get_caps (GstMFSourceObject * object)
   return klass->get_caps (object);
 }
 
-gboolean
-gst_mf_source_enum_device_activate (GstMFSourceType source_type,
-    GList ** device_sources)
+static gboolean
+gst_mf_source_enum_device_activate (GstMFSourceObject * self,
+    GstMFSourceType source_type, GList ** device_sources)
 {
   HRESULT hr;
   GList *ret = NULL;
@@ -272,7 +441,7 @@ gst_mf_source_enum_device_activate (GstMFSourceType source_type,
           &MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID);
       break;
     default:
-      GST_ERROR ("Unknown source type %d", source_type);
+      GST_ERROR_OBJECT (self, "Unknown source type %d", source_type);
       return FALSE;
   }
 
@@ -332,7 +501,7 @@ done:
   return ! !ret;
 }
 
-void
+static void
 gst_mf_device_activate_free (GstMFDeviceActivate * activate)
 {
   g_return_if_fail (activate != NULL);

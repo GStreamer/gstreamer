@@ -241,11 +241,13 @@ struct _GstMFCaptureEngine
   gboolean flushing;
 };
 
-static void gst_mf_capture_engine_constructed (GObject * object);
 static void gst_mf_capture_engine_finalize (GObject * object);
 
+static gboolean gst_mf_capture_engine_open (GstMFSourceObject * object,
+    IMFActivate * activate);
 static gboolean gst_mf_capture_engine_start (GstMFSourceObject * object);
 static gboolean gst_mf_capture_engine_stop (GstMFSourceObject * object);
+static gboolean gst_mf_capture_engine_close (GstMFSourceObject * object);
 static GstFlowReturn gst_mf_capture_engine_fill (GstMFSourceObject * object,
     GstBuffer * buffer);
 static gboolean gst_mf_capture_engine_unlock (GstMFSourceObject * object);
@@ -264,11 +266,12 @@ gst_mf_capture_engine_class_init (GstMFCaptureEngineClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstMFSourceObjectClass *source_class = GST_MF_SOURCE_OBJECT_CLASS (klass);
 
-  gobject_class->constructed = gst_mf_capture_engine_constructed;
   gobject_class->finalize = gst_mf_capture_engine_finalize;
 
+  source_class->open = GST_DEBUG_FUNCPTR (gst_mf_capture_engine_open);
   source_class->start = GST_DEBUG_FUNCPTR (gst_mf_capture_engine_start);
   source_class->stop = GST_DEBUG_FUNCPTR (gst_mf_capture_engine_stop);
+  source_class->close = GST_DEBUG_FUNCPTR (gst_mf_capture_engine_close);
   source_class->fill = GST_DEBUG_FUNCPTR (gst_mf_capture_engine_fill);
   source_class->unlock = GST_DEBUG_FUNCPTR (gst_mf_capture_engine_unlock);
   source_class->unlock_stop =
@@ -283,8 +286,6 @@ gst_mf_capture_engine_init (GstMFCaptureEngine * self)
   self->queue = g_queue_new ();
   g_mutex_init (&self->lock);
   g_cond_init (&self->cond);
-
-  CoInitializeEx (NULL, COINIT_MULTITHREADED);
 }
 
 static gboolean
@@ -373,9 +374,10 @@ gst_mf_stream_media_type_free (GstMFStreamMediaType * media_type)
 }
 
 static gboolean
-gst_mf_capture_engine_create (GstMFCaptureEngine * self,
+gst_mf_capture_engine_open (GstMFSourceObject * object,
     IMFActivate * activate)
 {
+  GstMFCaptureEngine *self = GST_MF_CAPTURE_ENGINE (object);
   GList *iter;
   ComPtr<IMFCaptureEngineClassFactory> factory;
   ComPtr<IMFCaptureEngine> engine;
@@ -469,63 +471,36 @@ gst_mf_capture_engine_create (GstMFCaptureEngine * self,
   return TRUE;
 }
 
-static void
-gst_mf_capture_engine_constructed (GObject * object)
+static gboolean
+gst_mf_capture_engine_close (GstMFSourceObject * object)
 {
-  GstMFSourceObject *source = GST_MF_SOURCE_OBJECT (object);
   GstMFCaptureEngine *self = GST_MF_CAPTURE_ENGINE (object);
-  GList *activate_list = NULL;
-  GstMFDeviceActivate *target = NULL;
-  GList *iter;
 
-  if (!gst_mf_source_enum_device_activate (source->soure_type, &activate_list)) {
-    GST_WARNING_OBJECT (self, "No available video capture device");
-    return;
-  }
-#ifndef GST_DISABLE_GST_DEBUG
-  for (iter = activate_list; iter; iter = g_list_next (iter)) {
-    GstMFDeviceActivate *activate = (GstMFDeviceActivate *) iter->data;
+  gst_clear_caps (&self->supported_caps);
 
-    GST_DEBUG_OBJECT (self, "device %d, name: \"%s\", path: \"%s\"",
-        activate->index, GST_STR_NULL (activate->name),
-        GST_STR_NULL (activate->path));
-  }
-#endif
-
-  for (iter = activate_list; iter; iter = g_list_next (iter)) {
-    GstMFDeviceActivate *activate = (GstMFDeviceActivate *) iter->data;
-    gboolean match;
-
-    if (source->device_path && strlen (source->device_path) > 0) {
-      match = g_ascii_strcasecmp (activate->path, source->device_path) == 0;
-    } else if (source->device_name && strlen (source->device_name) > 0) {
-      match = g_ascii_strcasecmp (activate->name, source->device_name) == 0;
-    } else if (source->device_index >= 0) {
-      match = activate->index == source->device_index;
-    } else {
-      /* pick the first entry */
-      match = TRUE;
-    }
-
-    if (match) {
-      target = activate;
-      break;
-    }
+  if (self->media_types) {
+    g_list_free_full (self->media_types,
+        (GDestroyNotify) gst_mf_stream_media_type_free);
+    self->media_types = NULL;
   }
 
-  if (target)
-    gst_mf_capture_engine_create (self, target->handle);
+  if (self->callback_obj) {
+    self->callback_obj->Release ();
+    self->callback_obj = NULL;
+  }
 
-  if (activate_list)
-    g_list_free_full (activate_list,
-        (GDestroyNotify) gst_mf_device_activate_free);
-}
+  if (self->engine) {
+    self->engine->Release ();
+    self->engine = NULL;
+  }
 
-static void
-release_mf_buffer (IMFMediaBuffer * buffer)
-{
-  if (buffer)
-    buffer->Release ();
+  if (self->source) {
+    self->source->Shutdown ();
+    self->source->Release ();
+    self->source = NULL;
+  }
+
+  return TRUE;
 }
 
 static void
@@ -533,31 +508,9 @@ gst_mf_capture_engine_finalize (GObject * object)
 {
   GstMFCaptureEngine *self = GST_MF_CAPTURE_ENGINE (object);
 
-  gst_clear_caps (&self->supported_caps);
-
-  if (self->media_types)
-    g_list_free_full (self->media_types,
-        (GDestroyNotify) gst_mf_stream_media_type_free);
-
-  gst_mf_capture_engine_stop (GST_MF_SOURCE_OBJECT (self));
-  g_queue_free_full (self->queue, (GDestroyNotify) release_mf_buffer);
-
-  if (self->callback_obj) {
-    self->callback_obj->Release ();
-  }
-
-  if (self->engine)
-    self->engine->Release ();
-
-  if (self->source) {
-    self->source->Shutdown ();
-    self->source->Release ();
-  }
-
+  g_queue_free (self->queue);
   g_mutex_clear (&self->lock);
   g_cond_clear (&self->cond);
-
-  CoUninitialize ();
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -710,6 +663,11 @@ gst_mf_capture_engine_stop (GstMFSourceObject * object)
       GST_WARNING_OBJECT (self,
           "Failed to stopping preivew, hr: 0x%x", (guint) hr);
     }
+  }
+
+  while (!g_queue_is_empty (self->queue)) {
+    IMFMediaBuffer *buffer = (IMFMediaBuffer *) g_queue_pop_head (self->queue);
+    buffer->Release ();
   }
 
   return TRUE;
@@ -866,7 +824,7 @@ GstMFSourceObject *
 gst_mf_capture_engine_new (GstMFSourceType type, gint device_index,
     const gchar * device_name, const gchar * device_path)
 {
-  GstMFCaptureEngine *self;
+  GstMFSourceObject *self;
   gchar *name;
   gchar *path;
 
@@ -876,7 +834,7 @@ gst_mf_capture_engine_new (GstMFSourceType type, gint device_index,
   name = device_name ? g_strdup (device_name) : g_strdup ("");
   path = device_path ? g_strdup (device_path) : g_strdup ("");
 
-  self = (GstMFCaptureEngine *) g_object_new (GST_TYPE_MF_CAPTURE_ENGINE,
+  self = (GstMFSourceObject *) g_object_new (GST_TYPE_MF_CAPTURE_ENGINE,
       "source-type", type, "device-index", device_index, "device-name", name,
       "device-path", path, NULL);
 
@@ -884,10 +842,11 @@ gst_mf_capture_engine_new (GstMFSourceType type, gint device_index,
   g_free (name);
   g_free (path);
 
-  if (!self->source) {
-    gst_clear_object (&self);
+  if (!self->opend) {
+    GST_WARNING_OBJECT (self, "Couldn't open device");
+    gst_object_unref (self);
     return NULL;
   }
 
-  return GST_MF_SOURCE_OBJECT (self);
+  return self;
 }
