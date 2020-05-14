@@ -67,6 +67,12 @@ struct _GstMFTransform
 
   gint pending_need_input;
   gint pending_have_output;
+
+  GThread *thread;
+  GMutex lock;
+  GCond cond;
+  GMainContext *context;
+  GMainLoop *loop;
 };
 
 #define gst_mf_transform_parent_class parent_class
@@ -78,6 +84,9 @@ static void gst_mf_transform_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 static void gst_mf_transform_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
+
+static gpointer gst_mf_transform_thread_func (GstMFTransform * self);
+static gboolean gst_mf_transform_close (GstMFTransform * self);
 
 static void
 gst_mf_transform_class_init (GstMFTransformClass * klass)
@@ -109,7 +118,27 @@ gst_mf_transform_init (GstMFTransform * self)
 {
   self->output_queue = g_queue_new ();
 
-  CoInitializeEx (NULL, COINIT_MULTITHREADED);
+  g_mutex_init (&self->lock);
+  g_cond_init (&self->cond);
+
+  self->context = g_main_context_new ();
+  self->loop = g_main_loop_new (self->context, FALSE);
+}
+
+static void
+gst_mf_transform_constructed (GObject * object)
+{
+  GstMFTransform *self = GST_MF_TRANSFORM (object);
+
+  /* Create thread so that ensure COM thread can be MTA thread */
+  g_mutex_lock (&self->lock);
+  self->thread = g_thread_new ("GstMFTransform",
+      (GThreadFunc) gst_mf_transform_thread_func, self);
+  while (!g_main_loop_is_running (self->loop))
+    g_cond_wait (&self->cond, &self->lock);
+  g_mutex_unlock (&self->lock);
+
+  G_OBJECT_CLASS (parent_class)->constructed (object);
 }
 
 static void
@@ -134,17 +163,16 @@ gst_mf_transform_finalize (GObject * object)
 {
   GstMFTransform *self = GST_MF_TRANSFORM (object);
 
-  gst_mf_transform_close (self);
-
-  if (self->activate)
-    self->activate->Release ();
-
-  gst_mf_transform_clear_enum_params (&self->enum_params);
-  g_free (self->device_name);
+  g_main_loop_quit (self->loop);
+  g_thread_join (self->thread);
+  g_main_loop_unref (self->loop);
+  g_main_context_unref (self->context);
 
   g_queue_free_full (self->output_queue, (GDestroyNotify) release_mf_sample);
-
-  CoUninitialize ();
+  gst_mf_transform_clear_enum_params (&self->enum_params);
+  g_free (self->device_name);
+  g_mutex_clear (&self->lock);
+  g_cond_clear (&self->cond);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -203,14 +231,36 @@ gst_mf_transform_set_property (GObject * object, guint prop_id,
   }
 }
 
-static void
-gst_mf_transform_constructed (GObject * object)
+static gboolean
+gst_mf_transform_main_loop_running_cb (GstMFTransform * self)
 {
-  GstMFTransform *self = GST_MF_TRANSFORM (object);
+  GST_TRACE_OBJECT (self, "Main loop running now");
+
+  g_mutex_lock (&self->lock);
+  g_cond_signal (&self->cond);
+  g_mutex_unlock (&self->lock);
+
+  return G_SOURCE_REMOVE;
+}
+
+static gpointer
+gst_mf_transform_thread_func (GstMFTransform * self)
+{
   HRESULT hr;
   IMFActivate **devices = NULL;
   UINT32 num_devices, i;
   LPWSTR name = NULL;
+  GSource *source;
+
+  CoInitializeEx (NULL, COINIT_MULTITHREADED);
+
+  g_main_context_push_thread_default (self->context);
+
+  source = g_idle_source_new ();
+  g_source_set_callback (source,
+      (GSourceFunc) gst_mf_transform_main_loop_running_cb, self, NULL);
+  g_source_attach (source, self->context);
+  g_source_unref (source);
 
   hr = MFTEnumEx (self->enum_params.category, self->enum_params.enum_flags,
       self->enum_params.input_typeinfo, self->enum_params.output_typeinfo,
@@ -218,18 +268,17 @@ gst_mf_transform_constructed (GObject * object)
 
   if (!gst_mf_result (hr)) {
     GST_WARNING_OBJECT (self, "MFTEnumEx failure");
-    return;
+    goto run_loop;
   }
 
   if (num_devices == 0 || self->enum_params.device_index >= num_devices) {
     GST_WARNING_OBJECT (self, "No available device at index %d",
         self->enum_params.device_index);
-    for (i = 0; i < num_devices; i++) {
+    for (i = 0; i < num_devices; i++)
       devices[i]->Release ();
-    }
 
     CoTaskMemFree (devices);
-    return;
+    goto run_loop;
   }
 
   self->activate = devices[self->enum_params.device_index];
@@ -245,16 +294,33 @@ gst_mf_transform_constructed (GObject * object)
     self->device_name = g_utf16_to_utf8 ((const gunichar2 *) name,
         -1, NULL, NULL, NULL);
 
-    CoTaskMemFree (name);
-
     GST_INFO_OBJECT (self, "Open device %s", self->device_name);
+    CoTaskMemFree (name);
   }
 
-done:
   CoTaskMemFree (devices);
 
   self->hardware = ! !(self->enum_params.enum_flags & MFT_ENUM_FLAG_HARDWARE);
   self->initialized = TRUE;
+
+run_loop:
+  GST_TRACE_OBJECT (self, "Starting main loop");
+  g_main_loop_run (self->loop);
+  GST_TRACE_OBJECT (self, "Stopped main loop");
+
+  g_main_context_pop_thread_default (self->context);
+
+  /* cleanup internal COM object here */
+  gst_mf_transform_close (self);
+
+  if (self->activate) {
+    self->activate->Release ();
+    self->activate = NULL;
+  }
+
+  CoUninitialize ();
+
+  return NULL;
 }
 
 static HRESULT
@@ -596,21 +662,28 @@ gst_mf_transform_drain (GstMFTransform * object)
   return TRUE;
 }
 
-gboolean
-gst_mf_transform_open (GstMFTransform * object)
+typedef struct
 {
+  GstMFTransform *object;
+  gboolean invoked;
+  gboolean ret;
+} GstMFTransformOpenData;
+
+static gboolean
+gst_mf_transform_open_internal (GstMFTransformOpenData * data)
+{
+  GstMFTransform *object = data->object;
   HRESULT hr;
 
-  g_return_val_if_fail (GST_IS_MF_TRANSFORM (object), FALSE);
+  data->ret = FALSE;
 
   gst_mf_transform_close (object);
-
   hr = object->activate->ActivateObject (IID_IMFTransform,
       (void **) &object->transform);
 
   if (!gst_mf_result (hr)) {
     GST_WARNING_OBJECT (object, "Couldn't open MFT");
-    return FALSE;
+    goto done;
   }
 
   if (object->hardware) {
@@ -619,20 +692,20 @@ gst_mf_transform_open (GstMFTransform * object)
     hr = object->transform->GetAttributes (attr.GetAddressOf ());
     if (!gst_mf_result (hr)) {
       GST_ERROR_OBJECT (object, "Couldn't get attribute object");
-      goto error;
+      goto done;
     }
 
     hr = attr->SetUINT32 (MF_TRANSFORM_ASYNC_UNLOCK, TRUE);
     if (!gst_mf_result (hr)) {
       GST_ERROR_OBJECT (object, "MF_TRANSFORM_ASYNC_UNLOCK error");
-      goto error;
+      goto done;
     }
 
     hr = object->transform->QueryInterface (IID_IMFMediaEventGenerator,
         (void **) &object->event_gen);
     if (!gst_mf_result (hr)) {
       GST_ERROR_OBJECT (object, "IMFMediaEventGenerator unavailable");
-      goto error;
+      goto done;
     }
   }
 
@@ -649,14 +722,44 @@ gst_mf_transform_open (GstMFTransform * object)
     GST_WARNING_OBJECT (object, "ICodecAPI is unavailable");
   }
 
-  return TRUE;
+  data->ret = TRUE;
 
-error:
-  gst_mf_transform_close (object);
-  return FALSE;
+done:
+  if (!data->ret)
+    gst_mf_transform_close (object);
+
+  g_mutex_lock (&object->lock);
+  data->invoked = TRUE;
+  g_cond_broadcast (&object->cond);
+  g_mutex_unlock (&object->lock);
+
+  return G_SOURCE_REMOVE;
 }
 
 gboolean
+gst_mf_transform_open (GstMFTransform * object)
+{
+  GstMFTransformOpenData data;
+
+  g_return_val_if_fail (GST_IS_MF_TRANSFORM (object), FALSE);
+  g_return_val_if_fail (object->activate != NULL, FALSE);
+
+  data.object = object;
+  data.invoked = FALSE;
+  data.ret = FALSE;
+
+  g_main_context_invoke (object->context,
+      (GSourceFunc) gst_mf_transform_open_internal, &data);
+
+  g_mutex_lock (&object->lock);
+  while (!data.invoked)
+    g_cond_wait (&object->cond, &object->lock);
+  g_mutex_unlock (&object->lock);
+
+  return data.ret;
+}
+
+static gboolean
 gst_mf_transform_close (GstMFTransform * object)
 {
   g_return_val_if_fail (GST_IS_MF_TRANSFORM (object), FALSE);

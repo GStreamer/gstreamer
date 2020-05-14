@@ -48,8 +48,6 @@ GstMFTransform * gst_mf_transform_new             (GstMFTransformEnumParams * pa
 
 gboolean        gst_mf_transform_open             (GstMFTransform * object);
 
-gboolean        gst_mf_transform_close            (GstMFTransform * object);
-
 IMFActivate *   gst_mf_transform_get_activate_handle (GstMFTransform * object);
 
 IMFTransform *  gst_mf_transform_get_transform_handle (GstMFTransform * object);

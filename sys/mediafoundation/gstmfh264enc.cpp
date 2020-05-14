@@ -1353,8 +1353,6 @@ gst_mf_h264_enc_plugin_init (GstPlugin * plugin, guint rank)
   gint i;
   gboolean do_next;
 
-  CoInitializeEx (NULL, COINIT_MULTITHREADED);
-
   GST_DEBUG_CATEGORY_INIT (gst_mf_h264_enc_debug, "mfh264enc", 0, "mfh264enc");
 
   output_type.guidMajorType = MFMediaType_Video;
@@ -1398,6 +1396,4 @@ gst_mf_h264_enc_plugin_init (GstPlugin * plugin, guint rank)
       gst_clear_object (&transform);
     }
   } while (do_next);
-
-  CoUninitialize ();
 }

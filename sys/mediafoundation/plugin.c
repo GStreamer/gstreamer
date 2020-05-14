@@ -41,11 +41,6 @@ GST_DEBUG_CATEGORY (gst_mf_transform_debug);
 
 #define GST_CAT_DEFAULT gst_mf_debug
 
-/* NOTE: If you want to use this plugin in UWP app, don't try to load/initialize
- * this plugin on UI thread, since the UI thread would be STA Thread
- * but this plugin will be initialized with COINIT_MULTITHREADED parameter.
- * This rule can be applied over all GStreamer plugins which are involved with
- * COM libraries  */
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
