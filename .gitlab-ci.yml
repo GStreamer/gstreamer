@@ -60,7 +60,7 @@ test manifest:
     - |
       if [ "$CI_PROJECT_NAMESPACE" = "gstreamer" ]; then
         # Tag the image with the git ref
-        buildah images tag ${LATEST} ${_UID}-${CI_COMMIT_REF_NAME}
+        buildah tag ${LATEST} ${_UID}-${CI_COMMIT_REF_NAME}
         # Push the tags
         buildah login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
         buildah push ${_UID}-${CI_COMMIT_REF_NAME}
