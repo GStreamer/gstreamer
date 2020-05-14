@@ -243,14 +243,12 @@ class JanusGateway:
             return raw
 
 class WebRTCClient:
-    def __init__(self, id_, peer_id, server, signaling):
-        self.id_ = id_
+    def __init__(self, peer_id, server):
         self.conn = None
         self.pipe = None
         self.webrtc = None
         self.peer_id = peer_id
-        self.server = server or 'wss://127.0.0.1:8989'
-        self.signaling = signaling
+        self.signaling = JanusGateway(server)
         self.request = None
         self.offermsg = None
 
@@ -378,7 +376,8 @@ class WebRTCClient:
             sdpmlineindex = ice['sdpMLineIndex']
             self.webrtc.emit('add-ice-candidate', sdpmlineindex, candidate)
 
-    async def loop(self, signaling):
+    async def loop(self):
+        signaling = self.signaling
         await signaling.connect()
         await signaling.attach("janus.plugin.videoroom")
 
@@ -420,6 +419,8 @@ class WebRTCClient:
 
         return 0
 
+    async def close(self):
+        return await self.signaling.close()
 
 def check_plugins():
     needed = ["opus", "vpx", "nice", "webrtc", "dtls", "srtp", "rtp",
@@ -439,16 +440,14 @@ if __name__=='__main__':
     parser.add_argument('label', help='videoroom label')
     parser.add_argument('--server', help='Signalling server to connect to, eg "wss://127.0.0.1:8989"')
     args = parser.parse_args()
-    our_id = random.randrange(10, 10000)
-    signaling = JanusGateway(args.server)
-    c = WebRTCClient(our_id, args.label, args.server, signaling)
+    c = WebRTCClient(args.label, args.server)
     loop = asyncio.get_event_loop()
     try:
         loop.run_until_complete(
-            c.loop(signaling)
+            c.loop()
         )
     except KeyboardInterrupt:
         pass
     finally:
         print("Interrupted, cleaning up")
-        loop.run_until_complete(signaling.close())
+        loop.run_until_complete(c.close())
