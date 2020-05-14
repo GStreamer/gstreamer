@@ -2539,6 +2539,27 @@ make_server_transport (GstRTSPClient * client, GstRTSPMedia * media,
   return st;
 }
 
+static void
+rtsp_ctrl_timeout_remove_unlocked (GstRTSPClientPrivate * priv)
+{
+  if (priv->rtsp_ctrl_timeout != NULL) {
+    GST_DEBUG ("rtsp control session removed timeout %p.",
+        priv->rtsp_ctrl_timeout);
+    g_source_destroy (priv->rtsp_ctrl_timeout);
+    g_source_unref (priv->rtsp_ctrl_timeout);
+    priv->rtsp_ctrl_timeout = NULL;
+    priv->rtsp_ctrl_timeout_cnt = 0;
+  }
+}
+
+static void
+rtsp_ctrl_timeout_remove (GstRTSPClientPrivate * priv)
+{
+  g_mutex_lock (&priv->lock);
+  rtsp_ctrl_timeout_remove_unlocked (priv);
+  g_mutex_unlock (&priv->lock);
+}
+
 static gboolean
 rtsp_ctrl_timeout_cb (gpointer user_data)
 {
@@ -2552,12 +2573,10 @@ rtsp_ctrl_timeout_cb (gpointer user_data)
           && priv->rtsp_ctrl_timeout_cnt > RTSP_CTRL_TIMEOUT_VALUE)
       || (priv->had_session
           && priv->rtsp_ctrl_timeout_cnt > priv->post_session_timeout)) {
+    g_mutex_lock (&priv->lock);
     GST_DEBUG ("rtsp control session timeout %p expired, closing client.",
         priv->rtsp_ctrl_timeout);
-    g_mutex_lock (&priv->lock);
-    g_source_unref (priv->rtsp_ctrl_timeout);
-    priv->rtsp_ctrl_timeout = NULL;
-    priv->rtsp_ctrl_timeout_cnt = 0;
+    rtsp_ctrl_timeout_remove_unlocked (priv);
     g_mutex_unlock (&priv->lock);
     gst_rtsp_client_close (client);
 
@@ -2565,23 +2584,6 @@ rtsp_ctrl_timeout_cb (gpointer user_data)
   }
 
   return res;
-}
-
-static void
-rtsp_ctrl_timeout_remove (GstRTSPClientPrivate * priv)
-{
-  g_mutex_lock (&priv->lock);
-
-  if (priv->rtsp_ctrl_timeout != NULL) {
-    GST_DEBUG ("rtsp control session removed timeout %p.",
-        priv->rtsp_ctrl_timeout);
-    g_source_destroy (priv->rtsp_ctrl_timeout);
-    g_source_unref (priv->rtsp_ctrl_timeout);
-    priv->rtsp_ctrl_timeout = NULL;
-    priv->rtsp_ctrl_timeout_cnt = 0;
-  }
-
-  g_mutex_unlock (&priv->lock);
 }
 
 static gchar *
@@ -5201,8 +5203,8 @@ gst_rtsp_client_attach (GstRTSPClient * client, GMainContext * context)
 
   /* Setting up a timeout for the RTSP control channel until a session
    * is up where it is handling timeouts. */
-  rtsp_ctrl_timeout_remove (priv);      /* removing old if any */
   g_mutex_lock (&priv->lock);
+  rtsp_ctrl_timeout_remove_unlocked (priv);     /* removing old if any */
 
   timer_src = g_timeout_source_new_seconds (RTSP_CTRL_CB_INTERVAL);
   g_source_set_callback (timer_src, rtsp_ctrl_timeout_cb, client, NULL);
