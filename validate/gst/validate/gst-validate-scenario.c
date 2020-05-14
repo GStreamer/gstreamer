@@ -3363,6 +3363,18 @@ gst_validate_scenario_is_flush_seeking (GstValidateScenario * scenario)
   return seekinfo->action->priv->state == GST_VALIDATE_EXECUTE_ACTION_ASYNC;
 }
 
+static void
+gst_validate_scenario_reset (GstValidateScenario * scenario)
+{
+  /* Reset sink information */
+  SCENARIO_LOCK (scenario);
+  g_list_foreach (scenario->priv->sinks, (GFunc) _reset_sink_information, NULL);
+  /* Reset current seek */
+  scenario->priv->current_seek = NULL;
+  scenario->priv->current_seqnum = GST_SEQNUM_INVALID;
+  SCENARIO_UNLOCK (scenario);
+}
+
 static gboolean
 message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
 {
@@ -3381,15 +3393,15 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_ASYNC_DONE:
       if (!gst_validate_scenario_is_flush_seeking (scenario) &&
-          scenario->priv->needs_async_done) {
-        scenario->priv->needs_async_done = FALSE;
+          priv->needs_async_done) {
+        priv->needs_async_done = FALSE;
         if (priv->actions && _action_sets_state (priv->actions->data)
             && !priv->changing_state)
           gst_validate_action_set_done (priv->actions->data);
       }
 
-      if (scenario->priv->needs_playback_parsing) {
-        scenario->priv->needs_playback_parsing = FALSE;
+      if (priv->needs_playback_parsing) {
+        priv->needs_playback_parsing = FALSE;
         if (!gst_validate_parse_next_action_playback_time (scenario))
           return FALSE;
       }
@@ -3397,46 +3409,37 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
       break;
     case GST_MESSAGE_STATE_CHANGED:
     {
+      GstState old_state, state, pending_state;
+      gboolean reached_state;
 
-      if (pipeline && GST_MESSAGE_SRC (message) == GST_OBJECT (pipeline)) {
-        GstState pstate, nstate, pending_state;
+      if (!pipeline || GST_MESSAGE_SRC (message) != GST_OBJECT (pipeline))
+        break;
 
-        gst_message_parse_state_changed (message, &pstate, &nstate,
-            &pending_state);
+      gst_message_parse_state_changed (message, &old_state, &state,
+          &pending_state);
 
-        if (pstate == GST_STATE_PAUSED && nstate == GST_STATE_READY) {
-          /* Reset sink information */
-          SCENARIO_LOCK (scenario);
-          g_list_foreach (scenario->priv->sinks,
-              (GFunc) _reset_sink_information, NULL);
-          /* Reset current seek */
-          scenario->priv->current_seek = NULL;
-          scenario->priv->current_seqnum = GST_SEQNUM_INVALID;
-          SCENARIO_UNLOCK (scenario);
-        }
+      reached_state = pending_state == GST_STATE_VOID_PENDING;
 
-        if (gst_validate_scenario_is_flush_seeking (scenario)
-            && pending_state == GST_STATE_VOID_PENDING) {
-          gst_validate_action_set_done (priv->current_seek->action);
-        }
+      if (old_state == GST_STATE_PAUSED && state == GST_STATE_READY)
+        gst_validate_scenario_reset (scenario);
 
-        if (scenario->priv->changing_state &&
-            scenario->priv->target_state == nstate) {
-          scenario->priv->changing_state = FALSE;
+      if (reached_state && gst_validate_scenario_is_flush_seeking (scenario))
+        gst_validate_action_set_done (priv->current_seek->action);
 
-          if (priv->actions && _action_sets_state (priv->actions->data) &&
-              !priv->needs_async_done)
-            gst_validate_action_set_done (priv->actions->data);
-        }
-
-        if (pstate == GST_STATE_READY && nstate == GST_STATE_PAUSED)
-          _add_execute_actions_gsource (scenario);
-
-        /* GstBin only send a new latency message when reaching PLAYING if
-         * async-handling=true so check the latency manually. */
-        if (nstate == GST_STATE_PLAYING)
-          gst_validate_scenario_check_latency (scenario, pipeline);
+      if (priv->changing_state && priv->target_state == state) {
+        priv->changing_state = FALSE;
+        if (priv->actions && _action_sets_state (priv->actions->data)
+            && reached_state)
+          gst_validate_action_set_done (priv->actions->data);
       }
+
+      if (old_state == GST_STATE_READY && state == GST_STATE_PAUSED)
+        _add_execute_actions_gsource (scenario);
+
+      /* GstBin only send a new latency message when reaching PLAYING if
+       * async-handling=true so check the latency manually. */
+      if (state == GST_STATE_PLAYING)
+        gst_validate_scenario_check_latency (scenario, pipeline);
       break;
     }
     case GST_MESSAGE_ERROR:
@@ -3449,7 +3452,7 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
       GstValidateActionType *stop_action_type;
       GstStructure *s;
 
-      if (!is_error && scenario->priv->ignore_eos) {
+      if (!is_error && priv->ignore_eos) {
         GST_INFO_OBJECT (scenario, "Got EOS but ignoring it!");
         goto done;
       }
