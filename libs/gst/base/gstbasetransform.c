@@ -652,27 +652,30 @@ gst_base_transform_query_caps (GstBaseTransform * trans, GstPad * pad,
     GST_DEBUG_OBJECT (pad, "transformed  %" GST_PTR_FORMAT, peerfilter);
     gst_caps_unref (temp);
 
-    if (peerfilter && !gst_caps_is_empty (peerfilter)) {
-      /* and filter against the template of the other pad */
-      GST_DEBUG_OBJECT (pad, "our template  %" GST_PTR_FORMAT, otempl);
-      /* We keep the caps sorted like the returned caps */
-      temp =
-          gst_caps_intersect_full (peerfilter, otempl,
-          GST_CAPS_INTERSECT_FIRST);
-      GST_DEBUG_OBJECT (pad, "intersected %" GST_PTR_FORMAT, temp);
-      gst_caps_unref (peerfilter);
-      peerfilter = temp;
+    if (peerfilter) {
+      if (!gst_caps_is_empty (peerfilter)) {
+        /* and filter against the template of the other pad */
+        GST_DEBUG_OBJECT (pad, "our template  %" GST_PTR_FORMAT, otempl);
+        /* We keep the caps sorted like the returned caps */
+        temp =
+            gst_caps_intersect_full (peerfilter, otempl,
+            GST_CAPS_INTERSECT_FIRST);
+        GST_DEBUG_OBJECT (pad, "intersected %" GST_PTR_FORMAT, temp);
+        gst_caps_unref (peerfilter);
+        peerfilter = temp;
+      }
+
+      /* If we filter out everything, bail out */
+      if (peerfilter && gst_caps_is_empty (peerfilter)) {
+        GST_DEBUG_OBJECT (pad, "peer filter caps are empty");
+        caps = peerfilter;
+        peerfilter = NULL;
+        goto done;
+      }
     }
   }
 
   GST_DEBUG_OBJECT (pad, "peer filter caps %" GST_PTR_FORMAT, peerfilter);
-
-  if (peerfilter && gst_caps_is_empty (peerfilter)) {
-    GST_DEBUG_OBJECT (pad, "peer filter caps are empty");
-    caps = peerfilter;
-    peerfilter = NULL;
-    goto done;
-  }
 
   /* query the peer with the transformed filter */
   peercaps = gst_pad_peer_query_caps (otherpad, peerfilter);
