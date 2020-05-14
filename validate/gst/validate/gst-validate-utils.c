@@ -1365,7 +1365,7 @@ gst_validate_set_globals (GstStructure * structure)
  * @str: A GstStructure
  * @fieldname: A fieldname containing a GstValueList or is not defined
  *
- * Returns: An array of strings from the GstValueList defined in @fieldname
+ * Returns: (transfer full): An array of strings from the GstValueList defined in @fieldname
  */
 gchar **
 gst_validate_utils_get_strv (GstStructure * str, const gchar * fieldname)
