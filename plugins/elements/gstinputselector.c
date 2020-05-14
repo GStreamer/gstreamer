@@ -1543,6 +1543,20 @@ gst_input_selector_event (GstPad * pad, GstObject * parent, GstEvent * event)
   /* Send upstream events to all sinkpads */
   iter = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (sel));
 
+  GST_INPUT_SELECTOR_LOCK (sel);
+  eventpad = gst_input_selector_get_active_sinkpad (sel);
+  if (eventpad) {
+    gst_object_ref (eventpad);
+    GST_INPUT_SELECTOR_UNLOCK (sel);
+
+    gst_event_ref (event);
+    result |= gst_pad_push_event (eventpad, event);
+    pushed_pads = g_list_append (pushed_pads, eventpad);
+    gst_object_unref (eventpad);
+  } else {
+    GST_INPUT_SELECTOR_UNLOCK (sel);
+  }
+
   /* This is now essentially a copy of gst_pad_event_default_dispatch
    * with a different iterator */
   while (!done) {
