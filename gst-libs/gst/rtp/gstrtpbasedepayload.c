@@ -455,14 +455,14 @@ gst_rtp_base_depayload_handle_buffer (GstRTPBaseDepayload * filter,
            * is not too old, we throw it away as a duplicate. Otherwise we
            * mark discont and continue assuming the sender has restarted. See
            * also RFC 4737. */
-          GST_WARNING ("gap %d <= priv->max_reorder %d -> dropping %d",
-              gap, priv->max_reorder, gap <= priv->max_reorder);
-          if (gap <= priv->max_reorder)
+          if (gap <= priv->max_reorder) {
+            GST_WARNING_OBJECT (filter, "got old packet %u, expected %u, "
+                "gap %d <= max_reorder (%d), dropping!",
+                seqnum, priv->next_seqnum, gap, priv->max_reorder);
             goto dropping;
-
-          GST_LOG_OBJECT (filter,
-              "%d > %d, packet too old, sender likely restarted", gap,
-              priv->max_reorder);
+          }
+          GST_WARNING_OBJECT (filter, "got old packet %u, expected %u, "
+              "marking discont", seqnum, priv->next_seqnum);
           discont = TRUE;
         }
       }
@@ -550,8 +550,6 @@ invalid_buffer:
 dropping:
   {
     gst_rtp_buffer_unmap (&rtp);
-    GST_WARNING_OBJECT (filter, "%d <= %d, dropping old packet", gap,
-        priv->max_reorder);
     gst_buffer_unref (in);
     return GST_FLOW_OK;
   }
