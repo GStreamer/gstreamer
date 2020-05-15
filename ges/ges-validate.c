@@ -328,7 +328,7 @@ GES_START_VALIDATE_ACTION (_remove_clip)
 
   name = gst_structure_get_string (action->structure, "name");
   clip = ges_timeline_get_element (timeline, name);
-  REPORT_UNLESS (GES_IS_CLIP (clip), beach, "Couldnt' find clip: %s", name);
+  REPORT_UNLESS (GES_IS_CLIP (clip), beach, "Couldn't find clip: %s", name);
 
   layer = ges_clip_get_layer (GES_CLIP (clip));
   REPORT_UNLESS (layer, beach, "Clip %s not in a layer", name);
@@ -466,7 +466,7 @@ GES_START_VALIDATE_ACTION (_commit)
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
 
-  gst_validate_printf (action, "Commiting timeline %s\n",
+  gst_validate_printf (action, "Committing timeline %s\n",
       GST_OBJECT_NAME (timeline));
 
   g_signal_connect (bus, "message::async-done", G_CALLBACK (_commit_done_cb),
@@ -515,7 +515,7 @@ typedef struct
   GESTimelineElement *element;
   GstValidateActionReturn res;
   GstClockTime time;
-  gboolean check_children;
+  gboolean on_children;
   GstValidateAction *action;
 } PropertyData;
 
@@ -527,7 +527,7 @@ check_property (GQuark field_id, GValue * expected_value, PropertyData * data)
   const gchar *property = g_quark_to_string (field_id);
   GstControlBinding *binding = NULL;
 
-  if (!data->check_children) {
+  if (!data->on_children) {
     GParamSpec *pspec =
         g_object_class_find_property (G_OBJECT_GET_CLASS (data->element),
         property);
@@ -637,18 +637,25 @@ set_property (GQuark field_id, const GValue * value, PropertyData * data)
 {
   const gchar *property = g_quark_to_string (field_id);
 
-  if (!ges_timeline_element_set_child_property (data->element, property, value)) {
-    gchar *v = gst_value_serialize (value);
+  if (data->on_children) {
+    if (!ges_timeline_element_set_child_property (data->element, property,
+            value)) {
+      gchar *v = gst_value_serialize (value);
 
-    GST_VALIDATE_REPORT_ACTION (data->scenario, data->action,
-        SCENARIO_ACTION_EXECUTION_ERROR,
-        "Could not set %s child property %s to %s",
-        GES_TIMELINE_ELEMENT_NAME (data->element), property, v);
+      GST_VALIDATE_REPORT_ACTION (data->scenario, data->action,
+          SCENARIO_ACTION_EXECUTION_ERROR,
+          "Could not set %s child property %s to %s",
+          GES_TIMELINE_ELEMENT_NAME (data->element), property, v);
 
-    data->res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
-    g_free (v);
+      data->res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+      g_free (v);
 
-    return FALSE;
+      return FALSE;
+    }
+  } else {
+    data->res =
+        gst_validate_object_set_property (GST_VALIDATE_REPORTER
+        (data->scenario), G_OBJECT (data->element), property, value, FALSE);
   }
 
   return TRUE;
@@ -659,16 +666,20 @@ GES_START_VALIDATE_ACTION (set_or_check_properties)
   GESTimelineElement *element;
   GstStructure *structure;
   const gchar *element_name;
+  gboolean is_setting = FALSE;
   PropertyData data = {
     .scenario = scenario,
     .element = NULL,
     .res = GST_VALIDATE_EXECUTE_ACTION_OK,
     .time = GST_CLOCK_TIME_NONE,
-    .check_children =
-        !gst_structure_has_name (action->structure, "check-ges-properties"),
+    .on_children =
+        !gst_structure_has_name (action->structure, "check-ges-properties")
+        && !gst_structure_has_name (action->structure, "set-ges-properties"),
     .action = action,
   };
 
+  is_setting = gst_structure_has_name (action->structure, "set-ges-properties")
+      || gst_structure_has_name (action->structure, "set-child-properties");
   gst_validate_action_get_clocktime (scenario, action, "at-time", &data.time);
 
   structure = gst_structure_copy (action->structure);
@@ -687,8 +698,7 @@ GES_START_VALIDATE_ACTION (set_or_check_properties)
   gst_structure_remove_fields (structure, "element-name", "at-time",
       "project-uri", NULL);
   gst_structure_foreach (structure,
-      gst_structure_has_name (action->structure,
-          "set-child-properties") ? (GstStructureForeachFunc) set_property
+      is_setting ? (GstStructureForeachFunc) set_property
       : (GstStructureForeachFunc) check_property, &data);
   gst_object_unref (element);
 
@@ -711,10 +721,10 @@ GES_START_VALIDATE_ACTION (_set_track_restriction_caps)
 
   REPORT_UNLESS (track_types =
       gst_validate_utils_flags_from_str (GES_TYPE_TRACK_TYPE, track_type_str),
-      done, "Invalide track types: %s", track_type_str);
+      done, "Invalid track types: %s", track_type_str);
 
   REPORT_UNLESS (caps = gst_caps_from_string (caps_str),
-      done, "Invalide track restriction caps: %s", caps_str);
+      done, "Invalid track restriction caps: %s", caps_str);
 
   res = GST_VALIDATE_EXECUTE_ACTION_ERROR;
   for (tmp = timeline->tracks; tmp; tmp = tmp->next) {
@@ -868,7 +878,7 @@ GES_START_VALIDATE_ACTION (_set_control_source)
   REPORT_UNLESS (gst_structure_get (action->structure,
           "element-name", G_TYPE_STRING, &element_name,
           "property-name", G_TYPE_STRING, &property_name, NULL),
-      beach, "Wrong parametters");
+      beach, "Wrong parameters");
 
   TRY_GET ("binding-type", G_TYPE_STRING, &binding_type, NULL);
   TRY_GET ("source-type", G_TYPE_STRING, &source_type, NULL);
@@ -984,7 +994,7 @@ GES_START_VALIDATE_ACTION (_load_project)
   } else {
     uri = g_strdup (gst_structure_get_string (action->structure, "uri"));
     REPORT_UNLESS (uri, local_done,
-        "None of 'uri' or 'content' passed as parametter"
+        "None of 'uri' or 'content' passed as parameter"
         " can't load any timeline!");
   }
 
@@ -1204,7 +1214,7 @@ ges_validate_register_action_types (void)
        },
        "Allows to edit a container (like a GESClip), for more details, have a look at:\n"
        "ges_timeline_element_edit documentation, Note that the timeline will\n"
-       "be commited, and flushed so that the edition is taken into account",
+       "be committed, and flushed so that the edition is taken into account",
        GST_VALIDATE_ACTION_TYPE_NONE);
 
   gst_validate_register_action_type ("edit", "ges", _edit,
@@ -1266,7 +1276,7 @@ ges_validate_register_action_types (void)
        },
        "Allows to edit a element (like a GESClip), for more details, have a look at:\n"
        "ges_timeline_element_edit documentation, Note that the timeline will\n"
-       "be commited, and flushed so that the edition is taken into account",
+       "be committed, and flushed so that the edition is taken into account",
        GST_VALIDATE_ACTION_TYPE_NONE);
 
   gst_validate_register_action_type ("add-asset", "ges", _add_asset,
@@ -1347,7 +1357,7 @@ ges_validate_register_action_types (void)
         },
         {
           .name = "auto-transition",
-          .description = "Wheter auto-transition is activated on the new layer.",
+          .description = "Whether auto-transition is activated on the new layer.",
           .mandatory = FALSE,
           .types="boolean",
           .def = "False"
@@ -1662,7 +1672,7 @@ ges_validate_register_action_types (void)
         },
         {NULL}
       }, "Add a child to @container-name. If asset-id and child-type are specified,"
-       " the child will be created and added. Otherwize @child-name has to be specified"
+       " the child will be created and added. Otherwise @child-name has to be specified"
        " and will be added to the container.", GST_VALIDATE_ACTION_TYPE_NONE);
 
   gst_validate_register_action_type ("container-remove-child", "ges", _container_remove_child,
@@ -1698,7 +1708,7 @@ ges_validate_register_action_types (void)
         },
         {
           .name = "recursive",
-          .description = "Wether to recurse ungrouping or not.",
+          .description = "Whether to recurse ungrouping or not.",
           .types = "boolean",
           .mandatory = FALSE,
         },
