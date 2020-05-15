@@ -217,6 +217,9 @@ struct _GESTimelineElement
  * @set_child_property: Method for setting the child property given by
  * @pspec on @child to @value. Default implementation will use
  * g_object_set_property().
+ * @set_child_property_full: Similar to @set_child_property, except
+ * setting can fail, with the @error being optionally set. Default
+ * implementation will call @set_child_property and return %TRUE.
  * @get_layer_priority: Get the #GESLayer:priority of the layer that this
  * element is part of.
  * @list_children_properties: List the children properties that have been
@@ -265,15 +268,23 @@ struct _GESTimelineElementClass
   gboolean (*lookup_child)                 (GESTimelineElement *self, const gchar *prop_name,
                                             GObject **child, GParamSpec **pspec);
   GESTrackType (*get_track_types)          (GESTimelineElement * self);
-  void         (*set_child_property)       (GESTimelineElement * self, GObject *child,
-                                            GParamSpec *pspec, GValue *value);
+  void         (*set_child_property)       (GESTimelineElement * self,
+                                            GObject *child,
+                                            GParamSpec *pspec,
+                                            GValue *value);
 
   guint32      (*get_layer_priority)       (GESTimelineElement *self);
 
   /*< private > */
   gboolean (*get_natural_framerate) (GESTimelineElement * self, gint *framerate_n, gint *framerate_d);
+
+  gboolean     (*set_child_property_full)  (GESTimelineElement * self,
+                                            GObject *child,
+                                            GParamSpec *pspec,
+                                            const GValue *value,
+                                            GError ** error);
   /* Padding for API extension */
-  gpointer _ges_reserved[GES_PADDING_LARGE - 5];
+  gpointer _ges_reserved[GES_PADDING_LARGE - 6];
 };
 
 GES_API
@@ -370,6 +381,11 @@ GES_API
 gboolean             ges_timeline_element_set_child_property          (GESTimelineElement *self,
                                                                        const gchar *property_name,
                                                                        const GValue * value);
+GES_API
+gboolean             ges_timeline_element_set_child_property_full     (GESTimelineElement *self,
+                                                                       const gchar *property_name,
+                                                                       const GValue * value,
+                                                                       GError ** error);
 GES_API
 gboolean             ges_timeline_element_get_child_property          (GESTimelineElement *self,
                                                                        const gchar *property_name,

@@ -252,14 +252,83 @@ ghost_compatible_pads (GstElement * bin, GstElement * child,
   }
 }
 
+static gdouble
+_get_rate_factor (GESBaseEffect * effect, GHashTable * rate_values)
+{
+  GHashTableIter iter;
+  gpointer key, val;
+  gdouble factor = 1.0;
+
+  g_hash_table_iter_init (&iter, rate_values);
+  while (g_hash_table_iter_next (&iter, &key, &val)) {
+    GValue *value = val;
+    gchar *prop_name = key;
+    gdouble rate = 1.0;
+
+    switch (G_VALUE_TYPE (value)) {
+      case G_TYPE_DOUBLE:
+        rate = g_value_get_double (value);
+        break;
+      case G_TYPE_FLOAT:
+        rate = g_value_get_float (value);
+        break;
+      default:
+        GST_ERROR_OBJECT (effect, "Rate property %s has neither a gdouble "
+            "nor gfloat value", prop_name);
+        break;
+    }
+    factor *= rate;
+  }
+
+  return factor;
+}
+
+static GstClockTime
+_rate_source_to_sink (GESBaseEffect * effect, GstClockTime time,
+    GHashTable * rate_values, gpointer user_data)
+{
+  /* multiply by rate factor
+   * E.g. rate=2.0, then the time 30 at the source would become
+   * 60 at the sink because we are using up twice as much data in a given
+   * time */
+  gdouble rate_factor = _get_rate_factor (effect, rate_values);
+
+  if (time == 0)
+    return 0;
+  if (rate_factor == 0.0) {
+    GST_ERROR_OBJECT (effect, "The rate effect has a rate of 0");
+    return 0;
+  }
+  return (GstClockTime) (time * rate_factor);
+}
+
+static GstClockTime
+_rate_sink_to_source (GESBaseEffect * effect, GstClockTime time,
+    GHashTable * rate_values, gpointer user_data)
+{
+  /* divide by rate factor */
+  gdouble rate_factor = _get_rate_factor (effect, rate_values);
+
+  if (time == 0)
+    return 0;
+  if (rate_factor == 0.0) {
+    GST_ERROR_OBJECT (effect, "The rate effect has a rate of 0");
+    return GST_CLOCK_TIME_NONE;
+  }
+  return (GstClockTime) (time / rate_factor);
+}
+
 static GstElement *
 ges_effect_create_element (GESTrackElement * object)
 {
+  GESBaseEffect *base_effect = GES_BASE_EFFECT (object);
+  GESEffectClass *class;
   GList *tmp;
   GstElement *effect;
   gchar *bin_desc;
   GstCaps *valid_caps;
   gint n_src = 0, n_sink = 0;
+  gboolean is_rate_effect = FALSE;
 
   GError *error = NULL;
   GESEffect *self = GES_EFFECT (object);
@@ -308,6 +377,22 @@ ges_effect_create_element (GESTrackElement * object)
   ges_track_element_add_children_props (object, effect, NULL,
       blacklisted_factories, NULL);
 
+  class = GES_EFFECT_CLASS (g_type_class_peek (GES_TYPE_EFFECT));
+
+  for (tmp = class->rate_properties; tmp; tmp = tmp->next) {
+    gchar *prop = tmp->data;
+    if (ges_timeline_element_lookup_child (GES_TIMELINE_ELEMENT (object), prop,
+            NULL, NULL)) {
+      if (!ges_base_effect_register_time_property (base_effect, prop))
+        GST_ERROR_OBJECT (object, "Failed to register rate property %s", prop);
+      is_rate_effect = TRUE;
+    }
+  }
+  if (is_rate_effect
+      && !ges_base_effect_set_time_translation_funcs (base_effect,
+          _rate_source_to_sink, _rate_sink_to_source, NULL, NULL))
+    GST_ERROR_OBJECT (object, "Failed to set rate translation functions");
+
 done:
   gst_clear_caps (&valid_caps);
 
@@ -352,22 +437,38 @@ ges_effect_new (const gchar * bin_description)
 /**
  * ges_effect_class_register_rate_property:
  * @klass: Instance of the GESEffectClass
- * @element_name: Name of the GstElement that changes the rate
- * @property_name: Name of the property that changes the rate
+ * @element_name: The #GstElementFactory name of the element that changes
+ * the rate
+ * @property_name: The name of the property that changes the rate
  *
- * Register an element that can change the rate at which media is playing. The
- * property type must be float or double, and must be a factor of the rate,
- * i.e. a value of 2.0 must mean that the media plays twice as fast. For
- * example, this is true for the properties 'rate' and 'tempo' of the element
- * 'pitch', which is already registered by default. By registering the element,
- * timeline duration can be correctly converted into media duration, allowing
- * the right segment seeks to be sent to the sources.
+ * Register an element that can change the rate at which media is playing.
+ * The property type must be float or double, and must be a factor of the
+ * rate, i.e. a value of 2.0 must mean that the media plays twice as fast.
+ * Several properties may be registered for a single element type,
+ * provided they all contribute to the rate as independent factors. For
+ * example, this is true for the "GstPitch::rate" and "GstPitch::tempo"
+ * properties. These are already registered by default in GES, along with
+ * #videorate:rate for #videorate and #scaletempo:rate for #scaletempo.
  *
- * A reference to the GESEffectClass can be obtained as follows:
+ * If such a rate property becomes a child property of a #GESEffect upon
+ * its creation (the element is part of its #GESEffect:bin-description),
+ * it will be automatically registered as a time property (see
+ * ges_base_effect_register_time_property()) and will have its time
+ * translation functions set (see
+ * ges_base_effect_set_time_translation_funcs()) to use the overall rate
+ * of the rate properties. Note that if an effect contains a rate
+ * property as well as a non-rate time property, you should ensure to set
+ * the time translation functions to some other methods using
+ * ges_base_effect_set_time_translation_funcs().
+ *
+ * Note, you can obtain a reference to the GESEffectClass using
+ *
+ * ```
  *   GES_EFFECT_CLASS (g_type_class_ref (GES_TYPE_EFFECT));
+ * ```
  *
- * Returns: whether the rate property was succesfully registered. When this
- * method returns false, a warning is emitted with more information.
+ * Returns: %TRUE if the rate property was successfully registered. When
+ * this method returns %FALSE, a warning is emitted with more information.
  */
 gboolean
 ges_effect_class_register_rate_property (GESEffectClass * klass,

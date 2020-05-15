@@ -59,6 +59,7 @@ struct _GESTrackElementPrivate
   GstElement *element;          /* The element contained in the nleobject (can be NULL) */
 
   GESTrack *track;
+  gboolean has_internal_source_forbidden;
   gboolean has_internal_source;
 
   gboolean locked;              /* If TRUE, then moves in sync with its controlling
@@ -818,6 +819,12 @@ ges_track_element_set_has_internal_source (GESTrackElement * object,
   if (G_UNLIKELY (has_internal_source == object->priv->has_internal_source))
     return;
 
+  if (has_internal_source && object->priv->has_internal_source_forbidden) {
+    GST_WARNING_OBJECT (object, "Setting an internal source for this "
+        "element is forbidden");
+    return;
+  }
+
   object->priv->has_internal_source = has_internal_source;
 
   if (!has_internal_source) {
@@ -828,6 +835,13 @@ ges_track_element_set_has_internal_source (GESTrackElement * object,
 
   g_object_notify_by_pspec (G_OBJECT (object),
       properties[PROP_HAS_INTERNAL_SOURCE]);
+}
+
+void
+ges_track_element_set_has_internal_source_is_forbidden (GESTrackElement *
+    element)
+{
+  element->priv->has_internal_source_forbidden = TRUE;
 }
 
 /**
@@ -1124,7 +1138,7 @@ ges_track_element_set_layer_active (GESTrackElement * element, gboolean active)
  * ges_track_element_set_control_source(), and their values are the
  * corresponding created #GstControlBinding.
  *
- * Returns: (element-type gchar* GstControlBinding)(transfer none): A
+ * Returns: (element-type gchar* GstControlBinding*)(transfer none): A
  * hash table containing all child-property-name/control-binding pairs
  * for @trackelement.
  */

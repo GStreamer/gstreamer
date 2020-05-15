@@ -87,6 +87,10 @@ GstDebugCategory * _ges_debug (void);
 #define GES_FORMAT GES_TIMELINE_ELEMENT_FORMAT
 #define GES_ARGS GES_TIMELINE_ELEMENT_ARGS
 
+#define GES_IS_TIME_EFFECT(element) \
+  (GES_IS_BASE_EFFECT (element) \
+  && ges_base_effect_is_time_effect (GES_BASE_EFFECT (element)))
+
 #define GES_TIMELINE_ELEMENT_SET_BEING_EDITED(element) \
   ELEMENT_SET_FLAG ( \
       ges_timeline_element_peak_toplevel (GES_TIMELINE_ELEMENT (element)), \
@@ -412,6 +416,7 @@ G_GNUC_INTERNAL gboolean          ges_clip_can_set_max_duration_of_child (GESCli
 G_GNUC_INTERNAL gboolean          ges_clip_can_set_active_of_child (GESClip * clip, GESTrackElement * child, gboolean active, GError ** error);
 G_GNUC_INTERNAL gboolean          ges_clip_can_set_priority_of_child (GESClip * clip, GESTrackElement * child, guint32 priority, GError ** error);
 G_GNUC_INTERNAL gboolean          ges_clip_can_set_track_of_child (GESClip * clip, GESTrackElement * child, GESTrack * tack, GError ** error);
+G_GNUC_INTERNAL gboolean          ges_clip_can_set_time_property_of_child (GESClip * clip, GESTrackElement * child, GObject * prop_object, GParamSpec * pspec, const GValue * value, GError ** error);
 G_GNUC_INTERNAL void              ges_clip_empty_from_track       (GESClip * clip, GESTrack * track);
 
 /****************************************************
@@ -439,6 +444,9 @@ ges_track_element_set_creator_asset                    (GESTrackElement * self,
 G_GNUC_INTERNAL GESAsset *
 ges_track_element_get_creator_asset                    (GESTrackElement * self);
 
+G_GNUC_INTERNAL void
+ges_track_element_set_has_internal_source_is_forbidden (GESTrackElement * element);
+
 G_GNUC_INTERNAL GstElement* ges_source_create_topbin(const gchar* bin_name, GstElement* sub_element, GPtrArray* elements);
 G_GNUC_INTERNAL void ges_track_set_caps(GESTrack* track,
     const GstCaps* caps);
@@ -454,6 +462,24 @@ G_GNUC_INTERNAL GESVideoUriSource  * ges_video_uri_source_new  (gchar *uri);
 G_GNUC_INTERNAL GESImageSource     * ges_image_source_new      (gchar *uri);
 G_GNUC_INTERNAL GESTitleSource     * ges_title_source_new      (void);
 G_GNUC_INTERNAL GESVideoTestSource * ges_video_test_source_new (void);
+
+/****************************************************
+ *                GESBaseEffect                     *
+ ****************************************************/
+G_GNUC_INTERNAL gchar *
+ges_base_effect_get_time_property_name        (GESBaseEffect * effect,
+                                               GObject * child,
+                                               GParamSpec * pspec);
+G_GNUC_INTERNAL GHashTable *
+ges_base_effect_get_time_property_values      (GESBaseEffect * effect);
+G_GNUC_INTERNAL GstClockTime
+ges_base_effect_translate_source_to_sink_time (GESBaseEffect * effect,
+                                               GstClockTime time,
+                                               GHashTable * time_property_values);
+G_GNUC_INTERNAL GstClockTime
+ges_base_effect_translate_sink_to_source_time (GESBaseEffect * effect,
+                                               GstClockTime time,
+                                               GHashTable * time_property_values);
 
 /****************************************************
  *              GESTimelineElement                  *

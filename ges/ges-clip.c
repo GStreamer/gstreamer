@@ -224,6 +224,7 @@ typedef struct _DurationLimitData
   GstClockTime max_duration;
   GstClockTime inpoint;
   gboolean active;
+  GHashTable *time_property_values;
 } DurationLimitData;
 
 static DurationLimitData *
@@ -239,6 +240,10 @@ _duration_limit_data_new (GESTrackElement * child)
   data->priority = _PRIORITY (child);
   data->active = ges_track_element_is_active (child);
 
+  if (GES_IS_TIME_EFFECT (child))
+    data->time_property_values =
+        ges_base_effect_get_time_property_values (GES_BASE_EFFECT (child));
+
   return data;
 }
 
@@ -248,6 +253,8 @@ _duration_limit_data_free (gpointer data_p)
   DurationLimitData *data = data_p;
   gst_clear_object (&data->track);
   gst_clear_object (&data->child);
+  if (data->time_property_values)
+    g_hash_table_unref (data->time_property_values);
   g_free (data);
 }
 
@@ -288,9 +295,9 @@ _cmp_by_track_then_priority (gconstpointer a_p, gconstpointer b_p)
     return 1;
   /* if higher priority (numerically lower) place later */
   if (a->priority < b->priority)
-    return -1;
-  else if (a->priority > b->priority)
     return 1;
+  else if (a->priority > b->priority)
+    return -1;
   return 0;
 }
 
@@ -298,43 +305,129 @@ _cmp_by_track_then_priority (gconstpointer a_p, gconstpointer b_p)
   ((data->active && GST_CLOCK_TIME_IS_VALID (data->max_duration)) ? \
     data->max_duration - data->inpoint : GST_CLOCK_TIME_NONE)
 
+static GstClockTime
+_calculate_track_duration_limit (GESClip * self, GList * start, GList * end)
+{
+  GList *tmp;
+  DurationLimitData *data = start->data;
+  GstClockTime track_limit;
+
+  /* convert source-duration to timeline-duration
+   * E.g. consider the following stack
+   *
+   *       *=============================*
+   *       |           source            |
+   *       |        in-point = 5         |
+   *       |      max-duration = 20      |
+   *       *=============================*
+   *       5         10        15        20   (internal coordinates)
+   *
+   *  duration-limit = 15 because max-duration - in-point = 15
+   *
+   *       0         5         10        15
+   *       *=============================*
+   *       |         time-effect         |    | sink_to_source
+   *       |         rate = 0.5          |    v    / 0.5
+   *       *=============================*
+   *       0         10        20        30
+   *
+   *  duration-limit = 30 because rate effect can make it last longer
+   *
+   *       13        23        33    (internal coordinates)
+   *       *===================*
+   *       |effect-with-source |
+   *       |   in-point = 13   |
+   *       | max-duration = 33 |
+   *       *===================*
+   *       13        23        33    (internal coordinates)
+   *
+   *  duration-limit = 20 because effect-with-source cannot cover 30
+   *
+   *       0         10        20
+   *       *===================*
+   *       |    time-effect    |    | sink_to_source
+   *       |    rate = 2.0     |    v     / 2.0
+   *       *===================*
+   *       0         5         10
+   *
+   *  duration-limit = 10 because rate effect uses up twice as much
+   *
+   * -----------------------------------------------timeline
+   */
+
+  while (!_IS_CORE_CHILD (data->child)) {
+    GST_WARNING_OBJECT (self, "Child %" GES_FORMAT " has a lower "
+        "priority than the core child in the same track. Ignoring.",
+        GES_ARGS (data->child));
+
+    start = start->next;
+    if (start == end) {
+      GST_ERROR_OBJECT (self, "Track %" GST_PTR_FORMAT " is missing a "
+          "core child", data->track);
+      return GST_CLOCK_TIME_NONE;
+    }
+    data = start->data;
+  }
+
+  track_limit = _INTERNAL_LIMIT (data);
+
+  for (tmp = start->next; tmp != end; tmp = tmp->next) {
+    data = tmp->data;
+
+    if (GES_IS_TIME_EFFECT (data->child)) {
+      GESBaseEffect *effect = GES_BASE_EFFECT (data->child);
+      if (data->inpoint)
+        GST_ERROR_OBJECT (self, "Did not expect an in-point to be set "
+            "for the time effect %" GES_FORMAT, GES_ARGS (effect));
+      if (GST_CLOCK_TIME_IS_VALID (data->max_duration))
+        GST_ERROR_OBJECT (self, "Did not expect a max-duration to be set "
+            "for the time effect %" GES_FORMAT, GES_ARGS (effect));
+
+      if (data->active) {
+        /* for the time effect, the minimum time it will receive is 0
+         * (it should map 0 -> 0), and the maximum time will be track_limit */
+        track_limit = ges_base_effect_translate_sink_to_source_time (effect,
+            track_limit, data->time_property_values);
+      }
+    } else {
+      GstClockTime el_limit = _INTERNAL_LIMIT (data);
+      track_limit = _MIN_CLOCK_TIME (track_limit, el_limit);
+    }
+  }
+
+  GST_LOG_OBJECT (self, "Track duration-limit for track %" GST_PTR_FORMAT
+      " is %" GST_TIME_FORMAT, data->track, GST_TIME_ARGS (track_limit));
+
+  return track_limit;
+}
+
 /* transfer-full of child_data */
 static GstClockTime
 _calculate_duration_limit (GESClip * self, GList * child_data)
 {
   GstClockTime limit = GST_CLOCK_TIME_NONE;
-  GList *tmp;
+  GList *start, *end;
 
   child_data = g_list_sort (child_data, _cmp_by_track_then_priority);
 
-  tmp = child_data;
+  start = child_data;
 
-  while (tmp) {
+  while (start) {
     /* we have the first element in the track, of the lowest priority, and
      * work our way up from here */
-    DurationLimitData *data = tmp->data;
-    GESTrack *track = data->track;
+    GESTrack *track = ((DurationLimitData *) (start->data))->track;
+
+    end = start;
+    do {
+      end = end->next;
+    } while (end && ((DurationLimitData *) (end->data))->track == track);
+
     if (track) {
-      GstClockTime track_limit = _INTERNAL_LIMIT (data);
-
-      for (tmp = tmp->next; tmp; tmp = tmp->next) {
-        data = tmp->data;
-        if (data->track != track)
-          break;
-        track_limit = _MIN_CLOCK_TIME (track_limit, _INTERNAL_LIMIT (data));
-      }
-
-      GST_LOG_OBJECT (self, "duration-limit for track %" GST_PTR_FORMAT
-          " is %" GST_TIME_FORMAT, track, GST_TIME_ARGS (track_limit));
+      GstClockTime track_limit =
+          _calculate_track_duration_limit (self, start, end);
       limit = _MIN_CLOCK_TIME (limit, track_limit);
-    } else {
-      /* children not in a track do not affect the duration-limit */
-      for (tmp = tmp->next; tmp; tmp = tmp->next) {
-        data = tmp->data;
-        if (data->track)
-          break;
-      }
     }
+    start = end;
   }
   GST_LOG_OBJECT (self, "calculated duration-limit for the clip is %"
       GST_TIME_FORMAT, GST_TIME_ARGS (limit));
@@ -969,6 +1062,58 @@ _child_property_changed_cb (GESTimelineElement * child, GParamSpec * pspec,
     _update_duration_limit (self);
 }
 
+/****************************************************
+ *                time properties                   *
+ ****************************************************/
+
+gboolean
+ges_clip_can_set_time_property_of_child (GESClip * clip,
+    GESTrackElement * child, GObject * child_prop_object, GParamSpec * pspec,
+    const GValue * value, GError ** error)
+{
+  if (_IS_TOP_EFFECT (child)) {
+    gchar *prop_name =
+        ges_base_effect_get_time_property_name (GES_BASE_EFFECT (child),
+        child_prop_object, pspec);
+
+    if (prop_name) {
+      GList *child_data;
+      DurationLimitData *data = _duration_limit_data_new (child);
+      GValue *copy = g_new0 (GValue, 1);
+
+      g_value_init (copy, pspec->value_type);
+      g_value_copy (value, copy);
+
+      g_hash_table_insert (data->time_property_values, prop_name, copy);
+
+      child_data = _duration_limit_data_list_with_data (clip, data);
+
+      if (!_can_update_duration_limit (clip, child_data, error)) {
+        gchar *val_str = gst_value_serialize (value);
+        GST_INFO_OBJECT (clip, "Cannot set the child-property %s of "
+            "child %" GES_FORMAT " to %s because the duration-limit "
+            "cannot be adjusted", prop_name, GES_ARGS (child), val_str);
+        g_free (val_str);
+        return FALSE;
+      }
+    }
+  }
+  return TRUE;
+}
+
+static void
+_child_time_property_changed_cb (GESTimelineElement * child,
+    GObject * prop_object, GParamSpec * pspec, GESClip * self)
+{
+  gchar *time_prop =
+      ges_base_effect_get_time_property_name (GES_BASE_EFFECT (child),
+      prop_object, pspec);
+  if (time_prop) {
+    g_free (time_prop);
+    _update_duration_limit (self);
+  }
+}
+
 /*****************************************************
  *                                                   *
  * GESTimelineElement virtual methods implementation *
@@ -1551,6 +1696,10 @@ _child_added (GESContainer * container, GESTimelineElement * element)
   g_signal_connect (element, "notify", G_CALLBACK (_child_property_changed_cb),
       self);
 
+  if (GES_IS_TIME_EFFECT (element))
+    g_signal_connect (element, "deep-notify",
+        G_CALLBACK (_child_time_property_changed_cb), self);
+
   if (_IS_CORE_CHILD (element))
     _update_max_duration (container);
 
@@ -1564,6 +1713,10 @@ _child_removed (GESContainer * container, GESTimelineElement * element)
 
   g_signal_handlers_disconnect_by_func (element, _child_property_changed_cb,
       self);
+  /* NOTE: we do not test if the effect is a time effect since technically
+   * it can stop being a time effect, although this would be rare */
+  g_signal_handlers_disconnect_by_func (element,
+      _child_time_property_changed_cb, self);
 
   if (_IS_CORE_CHILD (element))
     _update_max_duration (container);
@@ -2124,9 +2277,10 @@ ges_clip_class_init (GESClipClass * klass)
    *
    * The maximum #GESTimelineElement:duration that can be *currently* set
    * for the clip, taking into account the #GESTimelineElement:in-point,
-   * #GESTimelineElement:max-duration, GESTrackElement:active, and
-   * #GESTrackElement:track properties of its children. If there is no
-   * limit, this will be set to #GST_CLOCK_TIME_NONE.
+   * #GESTimelineElement:max-duration, #GESTrackElement:active, and
+   * #GESTrackElement:track properties of its children, as well as any
+   * time effects. If there is no limit, this will be set to
+   * #GST_CLOCK_TIME_NONE.
    *
    * Note that whilst a clip has no children in any tracks, the limit will
    * be unknown, and similarly set to #GST_CLOCK_TIME_NONE.

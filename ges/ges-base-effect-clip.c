@@ -31,6 +31,9 @@
  * non-core elements. These additional effects are applied to the output
  * of the core effects of the clip that they share a #GESTrack with. See
  * #GESClip for how to add and move these effects from the clip.
+ *
+ * Note that you cannot add time effects to #GESBaseEffectClip, neither
+ * as core children, nor as additional effects.
  */
 
 /* FIXME: properly handle the priority of the children. How should we sort
@@ -51,15 +54,32 @@ struct _GESBaseEffectClipPrivate
 G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GESBaseEffectClip, ges_base_effect_clip,
     GES_TYPE_OPERATION_CLIP);
 
+static gboolean
+ges_base_effect_clip_add_child (GESContainer * container,
+    GESTimelineElement * element)
+{
+  if (GES_IS_TIME_EFFECT (element)) {
+    GST_WARNING_OBJECT (container, "Cannot add %" GES_FORMAT " as a child "
+        "because it is a time effect", GES_ARGS (element));
+    return FALSE;
+  }
+
+  return
+      GES_CONTAINER_CLASS (ges_base_effect_clip_parent_class)->add_child
+      (container, element);
+}
+
 static void
 ges_base_effect_clip_class_init (GESBaseEffectClipClass * klass)
 {
+  GESContainerClass *container_class = GES_CONTAINER_CLASS (klass);
+
   GES_CLIP_CLASS_CAN_ADD_EFFECTS (klass) = TRUE;
+  container_class->add_child = ges_base_effect_clip_add_child;
 }
 
 static void
 ges_base_effect_clip_init (GESBaseEffectClip * self)
 {
   self->priv = ges_base_effect_clip_get_instance_private (self);
-
 }

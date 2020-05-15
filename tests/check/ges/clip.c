@@ -3621,6 +3621,582 @@ GST_START_TEST (test_can_set_duration_limit)
 
 GST_END_TEST;
 
+#define _assert_set_rate(element, prop_name, rate, val) \
+{ \
+  GError *error = NULL; \
+  if (G_VALUE_TYPE (&val) == G_TYPE_DOUBLE) \
+    g_value_set_double (&val, rate); \
+  else if (G_VALUE_TYPE (&val) == G_TYPE_FLOAT) \
+    g_value_set_float (&val, rate); \
+  \
+  fail_unless (ges_timeline_element_set_child_property_full ( \
+        GES_TIMELINE_ELEMENT (element), prop_name, &val, &error)); \
+  fail_if (error); \
+  g_value_reset (&val); \
+}
+
+#define _assert_fail_set_rate(element, prop_name, rate, val, code) \
+{ \
+  GError * error = NULL; \
+  if (G_VALUE_TYPE (&val) == G_TYPE_DOUBLE) \
+    g_value_set_double (&val, rate); \
+  else if (G_VALUE_TYPE (&val) == G_TYPE_FLOAT) \
+    g_value_set_float (&val, rate); \
+  \
+  fail_if (ges_timeline_element_set_child_property_full ( \
+        GES_TIMELINE_ELEMENT (element), prop_name, &val, &error)); \
+  assert_GESError (error, code); \
+  g_value_reset (&val); \
+}
+
+#define _assert_rate_equal(element, prop_name, rate, val) \
+{ \
+  gdouble found = -1.0; \
+  fail_unless (ges_timeline_element_get_child_property ( \
+        GES_TIMELINE_ELEMENT (element), prop_name, &val)); \
+  \
+  if (G_VALUE_TYPE (&val) == G_TYPE_DOUBLE) \
+    found = g_value_get_double (&val); \
+  else if (G_VALUE_TYPE (&val) == G_TYPE_FLOAT) \
+    found = g_value_get_float (&val); \
+  \
+  fail_unless (found == rate, "found %s: %g != expected: %g", found, \
+      prop_name, rate); \
+  g_value_reset (&val); \
+}
+
+GST_START_TEST (test_rate_effects_duration_limit)
+{
+  GESTimeline *timeline;
+  GESLayer *layer;
+  GESClip *clip;
+  GESTrackElement *source0, *source1;
+  GESTrackElement *overlay0, *overlay1, *videorate, *pitch;
+  GESTrack *track0, *track1;
+  gint limit_notify_count = 0;
+  GValue fval = G_VALUE_INIT;
+  GValue dval = G_VALUE_INIT;
+
+  ges_init ();
+
+  g_value_init (&fval, G_TYPE_FLOAT);
+  g_value_init (&dval, G_TYPE_DOUBLE);
+
+  timeline = ges_timeline_new ();
+  track0 = GES_TRACK (ges_video_track_new ());
+  track1 = GES_TRACK (ges_audio_track_new ());
+
+  fail_unless (ges_timeline_add_track (timeline, track0));
+  fail_unless (ges_timeline_add_track (timeline, track1));
+
+  layer = ges_timeline_append_layer (timeline);
+
+  /* place a dummy clip at the start of the layer */
+  clip = GES_CLIP (ges_test_clip_new ());
+  assert_set_start (clip, 0);
+  assert_set_duration (clip, 26);
+
+  fail_unless (ges_layer_add_clip (layer, clip));
+
+  /* the clip we will be editing overlaps first clip by 16 at its start */
+  clip = GES_CLIP (ges_test_clip_new ());
+
+  g_signal_connect (clip, "notify::duration-limit", G_CALLBACK (_count_cb),
+      &limit_notify_count);
+
+  assert_set_start (clip, 10);
+  assert_set_duration (clip, 64);
+
+  fail_unless (ges_layer_add_clip (layer, clip));
+
+  source0 =
+      ges_clip_find_track_element (clip, track0, GES_TYPE_VIDEO_TEST_SOURCE);
+  source1 =
+      ges_clip_find_track_element (clip, track1, GES_TYPE_AUDIO_TEST_SOURCE);
+
+  fail_unless (source0);
+  fail_unless (source1);
+
+  gst_object_unref (source0);
+  gst_object_unref (source1);
+
+  assert_equals_int (limit_notify_count, 0);
+  _assert_duration_limit (clip, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 0, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 0, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 0, 64, GST_CLOCK_TIME_NONE);
+
+  assert_set_inpoint (clip, 13);
+
+  assert_equals_int (limit_notify_count, 0);
+  _assert_duration_limit (clip, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 13, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 13, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 13, 64, GST_CLOCK_TIME_NONE);
+
+  assert_set_max_duration (clip, 77);
+
+  assert_equals_int (limit_notify_count, 1);
+  _assert_duration_limit (clip, 64);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 13, 64, 77);
+
+  /* add effects */
+  overlay0 = GES_TRACK_ELEMENT (ges_effect_new ("textoverlay"));
+  ges_track_element_set_has_internal_source (overlay0, TRUE);
+
+  videorate = GES_TRACK_ELEMENT (ges_effect_new ("videorate"));
+  fail_unless (ges_base_effect_is_time_effect (GES_BASE_EFFECT (videorate)));
+
+  overlay1 = GES_TRACK_ELEMENT (ges_effect_new ("textoverlay"));
+  ges_track_element_set_has_internal_source (overlay1, TRUE);
+
+  pitch = GES_TRACK_ELEMENT (ges_effect_new ("pitch"));
+  fail_unless (ges_base_effect_is_time_effect (GES_BASE_EFFECT (pitch)));
+
+  /* add overlay1 at highest priority */
+  _assert_add (clip, overlay1);
+
+  assert_equals_int (limit_notify_count, 1);
+  _assert_duration_limit (clip, 64);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (overlay1, 10, 0, 64, GST_CLOCK_TIME_NONE);
+
+  _assert_set_rate (videorate, "rate", 4.0, dval);
+  _assert_rate_equal (videorate, "rate", 4.0, dval);
+  fail_unless (ges_track_add_element (track0, videorate));
+
+  /* cannot add videorate as it would cause the duration-limit to drop
+   * to 16, causing a full overlap */
+  /* track keeps alive */
+  fail_if (ges_container_add (GES_CONTAINER (clip),
+          GES_TIMELINE_ELEMENT (videorate)));
+
+  /* setting to 1.0 makes it work again */
+  _assert_set_rate (videorate, "rate", 1.0, dval);
+  _assert_add (clip, videorate);
+
+  assert_equals_int (limit_notify_count, 1);
+  _assert_duration_limit (clip, 64);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (videorate, 10, 0, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (overlay1, 10, 0, 64, GST_CLOCK_TIME_NONE);
+  _assert_rate_equal (videorate, "rate", 1.0, dval);
+
+  /* add second overlay at lower priority */
+  _assert_add (clip, overlay0);
+
+  assert_equals_int (limit_notify_count, 1);
+  _assert_duration_limit (clip, 64);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (overlay0, 10, 0, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (videorate, 10, 0, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (overlay1, 10, 0, 64, GST_CLOCK_TIME_NONE);
+  _assert_rate_equal (videorate, "rate", 1.0, dval);
+
+  /* also add a pitch element in another track */
+  _assert_add (clip, pitch);
+  _assert_set_rate (pitch, "rate", 1.0, fval);
+  _assert_set_rate (pitch, "tempo", 1.0, fval);
+
+  assert_equals_int (limit_notify_count, 1);
+  _assert_duration_limit (clip, 64);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (overlay0, 10, 0, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (videorate, 10, 0, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (overlay1, 10, 0, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (pitch, 10, 0, 64, GST_CLOCK_TIME_NONE);
+  _assert_rate_equal (videorate, "rate", 1.0, dval);
+  _assert_rate_equal (pitch, "rate", 1.0, fval);
+  _assert_rate_equal (pitch, "tempo", 1.0, fval);
+
+  fail_unless (ges_track_element_get_track (overlay0) == track0);
+  fail_unless (ges_track_element_get_track (videorate) == track0);
+  fail_unless (ges_track_element_get_track (overlay1) == track0);
+  fail_unless (ges_track_element_get_track (pitch) == track1);
+
+  /* flow in track0:
+   * source0 -> overlay0 -> videorate -> overlay1 -> timeline output
+   *
+   * flow in track1:
+   * source1 -> pitch -> timeline output
+   */
+
+  /* cannot set the rates to 4.0 since this would cause a full overlap */
+  _assert_fail_set_rate (videorate, "rate", 4.0, dval,
+      GES_ERROR_INVALID_OVERLAP_IN_TRACK);
+  _assert_fail_set_rate (pitch, "rate", 4.0, fval,
+      GES_ERROR_INVALID_OVERLAP_IN_TRACK);
+  _assert_fail_set_rate (pitch, "tempo", 4.0, fval,
+      GES_ERROR_INVALID_OVERLAP_IN_TRACK);
+
+  assert_equals_int (limit_notify_count, 1);
+  _assert_duration_limit (clip, 64);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (overlay0, 10, 0, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (videorate, 10, 0, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (overlay1, 10, 0, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (pitch, 10, 0, 64, GST_CLOCK_TIME_NONE);
+  _assert_rate_equal (videorate, "rate", 1.0, dval);
+  _assert_rate_equal (pitch, "rate", 1.0, fval);
+  _assert_rate_equal (pitch, "tempo", 1.0, fval);
+
+  /* limit overlay0 */
+  assert_set_max_duration (overlay0, 91);
+
+  assert_equals_int (limit_notify_count, 1);
+  _assert_duration_limit (clip, 64);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (overlay0, 10, 0, 64, 91);
+  CHECK_OBJECT_PROPS_MAX (videorate, 10, 0, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (overlay1, 10, 0, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (pitch, 10, 0, 64, GST_CLOCK_TIME_NONE);
+  _assert_rate_equal (videorate, "rate", 1.0, dval);
+  _assert_rate_equal (pitch, "rate", 1.0, fval);
+  _assert_rate_equal (pitch, "tempo", 1.0, fval);
+
+  assert_set_inpoint (overlay0, 59);
+
+  assert_equals_int (limit_notify_count, 2);
+  _assert_duration_limit (clip, 32);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 13, 32, 77);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 13, 32, 77);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 13, 32, 77);
+  CHECK_OBJECT_PROPS_MAX (overlay0, 10, 59, 32, 91);
+  CHECK_OBJECT_PROPS_MAX (videorate, 10, 0, 32, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (overlay1, 10, 0, 32, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (pitch, 10, 0, 32, GST_CLOCK_TIME_NONE);
+  _assert_rate_equal (videorate, "rate", 1.0, dval);
+  _assert_rate_equal (pitch, "rate", 1.0, fval);
+  _assert_rate_equal (pitch, "tempo", 1.0, fval);
+
+  /* can set pitch rate to 2.0, but not videorate rate because videorate
+   * shares a track with overlay0 */
+
+  _assert_set_rate (pitch, "rate", 2.0, fval);
+  assert_equals_int (limit_notify_count, 2);
+  _assert_fail_set_rate (videorate, "rate", 2.0, dval,
+      GES_ERROR_INVALID_OVERLAP_IN_TRACK);
+  assert_equals_int (limit_notify_count, 2);
+  /* can't set tempo to 2.0 since overall effect would bring duration
+   * limit too low */
+  _assert_fail_set_rate (pitch, "tempo", 2.0, fval,
+      GES_ERROR_INVALID_OVERLAP_IN_TRACK);
+
+  assert_equals_int (limit_notify_count, 2);
+  _assert_duration_limit (clip, 32);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 13, 32, 77);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 13, 32, 77);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 13, 32, 77);
+  CHECK_OBJECT_PROPS_MAX (overlay0, 10, 59, 32, 91);
+  CHECK_OBJECT_PROPS_MAX (videorate, 10, 0, 32, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (overlay1, 10, 0, 32, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (pitch, 10, 0, 32, GST_CLOCK_TIME_NONE);
+  _assert_rate_equal (videorate, "rate", 1.0, dval);
+  _assert_rate_equal (pitch, "rate", 2.0, fval);
+  _assert_rate_equal (pitch, "tempo", 1.0, fval);
+
+  /* cannot set in-point of clip because pitch would cause limit to go
+   * to 16 */
+  assert_fail_set_inpoint (clip, 45);
+  /* same for max-duration of source1 */
+  assert_fail_set_max_duration (source1, 45);
+
+  assert_equals_int (limit_notify_count, 2);
+  _assert_duration_limit (clip, 32);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 13, 32, 77);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 13, 32, 77);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 13, 32, 77);
+  CHECK_OBJECT_PROPS_MAX (overlay0, 10, 59, 32, 91);
+  CHECK_OBJECT_PROPS_MAX (videorate, 10, 0, 32, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (overlay1, 10, 0, 32, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (pitch, 10, 0, 32, GST_CLOCK_TIME_NONE);
+  _assert_rate_equal (videorate, "rate", 1.0, dval);
+  _assert_rate_equal (pitch, "rate", 2.0, fval);
+  _assert_rate_equal (pitch, "tempo", 1.0, fval);
+
+  /* can set rate to 0.5 */
+  _assert_set_rate (videorate, "rate", 0.5, dval);
+
+  /* no change yet, since pitch rate is still 2.0 */
+  assert_equals_int (limit_notify_count, 2);
+  _assert_duration_limit (clip, 32);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 13, 32, 77);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 13, 32, 77);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 13, 32, 77);
+  CHECK_OBJECT_PROPS_MAX (overlay0, 10, 59, 32, 91);
+  CHECK_OBJECT_PROPS_MAX (videorate, 10, 0, 32, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (overlay1, 10, 0, 32, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (pitch, 10, 0, 32, GST_CLOCK_TIME_NONE);
+  _assert_rate_equal (videorate, "rate", 0.5, dval);
+  _assert_rate_equal (pitch, "rate", 2.0, fval);
+  _assert_rate_equal (pitch, "tempo", 1.0, fval);
+
+  _assert_set_rate (pitch, "rate", 0.5, fval);
+
+  assert_equals_int (limit_notify_count, 3);
+  /* duration-limit is 64 because overlay0 only has 32 nanoseconds of
+   * content, stretched to 64 by videorate */
+  _assert_duration_limit (clip, 64);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 13, 32, 77);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 13, 32, 77);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 13, 32, 77);
+  CHECK_OBJECT_PROPS_MAX (overlay0, 10, 59, 32, 91);
+  CHECK_OBJECT_PROPS_MAX (videorate, 10, 0, 32, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (overlay1, 10, 0, 32, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (pitch, 10, 0, 32, GST_CLOCK_TIME_NONE);
+  _assert_rate_equal (videorate, "rate", 0.5, dval);
+  _assert_rate_equal (pitch, "rate", 0.5, fval);
+  _assert_rate_equal (pitch, "tempo", 1.0, fval);
+
+  /* setting the max-duration of the sources does not change the limit
+   * since the limit on overlay0 is fine.
+   * Note that pitch handles the unlimited duration (GST_CLOCK_TIME_NONE)
+   * without any problems */
+  assert_set_max_duration (clip, GST_CLOCK_TIME_NONE);
+
+  assert_equals_int (limit_notify_count, 3);
+  _assert_duration_limit (clip, 64);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 13, 32, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 13, 32, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 13, 32, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (overlay0, 10, 59, 32, 91);
+  CHECK_OBJECT_PROPS_MAX (videorate, 10, 0, 32, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (overlay1, 10, 0, 32, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (pitch, 10, 0, 32, GST_CLOCK_TIME_NONE);
+  _assert_rate_equal (videorate, "rate", 0.5, dval);
+  _assert_rate_equal (pitch, "rate", 0.5, fval);
+  _assert_rate_equal (pitch, "tempo", 1.0, fval);
+
+  assert_set_max_duration (clip, 77);
+
+  assert_equals_int (limit_notify_count, 3);
+  _assert_duration_limit (clip, 64);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 13, 32, 77);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 13, 32, 77);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 13, 32, 77);
+  CHECK_OBJECT_PROPS_MAX (overlay0, 10, 59, 32, 91);
+  CHECK_OBJECT_PROPS_MAX (videorate, 10, 0, 32, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (overlay1, 10, 0, 32, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (pitch, 10, 0, 32, GST_CLOCK_TIME_NONE);
+  _assert_rate_equal (videorate, "rate", 0.5, dval);
+  _assert_rate_equal (pitch, "rate", 0.5, fval);
+  _assert_rate_equal (pitch, "tempo", 1.0, fval);
+
+  /* limit overlay1. It should not be changes by the videorate element
+   * since it acts at a lower priority
+   * first make it last longer, so no change in duration-limit */
+
+  assert_set_max_duration (overlay1, 81);
+
+  assert_equals_int (limit_notify_count, 3);
+  _assert_duration_limit (clip, 64);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 13, 32, 77);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 13, 32, 77);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 13, 32, 77);
+  CHECK_OBJECT_PROPS_MAX (overlay0, 10, 59, 32, 91);
+  CHECK_OBJECT_PROPS_MAX (videorate, 10, 0, 32, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (overlay1, 10, 0, 32, 81);
+  CHECK_OBJECT_PROPS_MAX (pitch, 10, 0, 32, GST_CLOCK_TIME_NONE);
+  _assert_rate_equal (videorate, "rate", 0.5, dval);
+  _assert_rate_equal (pitch, "rate", 0.5, fval);
+  _assert_rate_equal (pitch, "tempo", 1.0, fval);
+
+  /* now make it shorter */
+  assert_set_inpoint (overlay1, 51);
+
+  assert_equals_int (limit_notify_count, 4);
+  _assert_duration_limit (clip, 30);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 13, 30, 77);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 13, 30, 77);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 13, 30, 77);
+  CHECK_OBJECT_PROPS_MAX (overlay0, 10, 59, 30, 91);
+  CHECK_OBJECT_PROPS_MAX (videorate, 10, 0, 30, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (overlay1, 10, 51, 30, 81);
+  CHECK_OBJECT_PROPS_MAX (pitch, 10, 0, 30, GST_CLOCK_TIME_NONE);
+  _assert_rate_equal (videorate, "rate", 0.5, dval);
+  _assert_rate_equal (pitch, "rate", 0.5, fval);
+  _assert_rate_equal (pitch, "tempo", 1.0, fval);
+
+  /* remove the overlay0 limit */
+  assert_set_max_duration (overlay0, GST_CLOCK_TIME_NONE);
+
+  /* no change because of overlay1 */
+  assert_equals_int (limit_notify_count, 4);
+  _assert_duration_limit (clip, 30);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 13, 30, 77);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 13, 30, 77);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 13, 30, 77);
+  CHECK_OBJECT_PROPS_MAX (overlay0, 10, 59, 30, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (videorate, 10, 0, 30, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (overlay1, 10, 51, 30, 81);
+  CHECK_OBJECT_PROPS_MAX (pitch, 10, 0, 30, GST_CLOCK_TIME_NONE);
+  _assert_rate_equal (videorate, "rate", 0.5, dval);
+  _assert_rate_equal (pitch, "rate", 0.5, fval);
+  _assert_rate_equal (pitch, "tempo", 1.0, fval);
+
+  assert_set_max_duration (overlay1, GST_CLOCK_TIME_NONE);
+
+  assert_equals_int (limit_notify_count, 5);
+  _assert_duration_limit (clip, 128);
+  /* can set up to the limit */
+  assert_set_duration (clip, 128);
+
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 13, 128, 77);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 13, 128, 77);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 13, 128, 77);
+  CHECK_OBJECT_PROPS_MAX (overlay0, 10, 59, 128, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (videorate, 10, 0, 128, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (overlay1, 10, 51, 128, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (pitch, 10, 0, 128, GST_CLOCK_TIME_NONE);
+  _assert_rate_equal (videorate, "rate", 0.5, dval);
+  _assert_rate_equal (pitch, "rate", 0.5, fval);
+  _assert_rate_equal (pitch, "tempo", 1.0, fval);
+
+  /* tempo contributes the same factor as rate */
+
+  _assert_set_rate (pitch, "tempo", 2.0, fval);
+
+  assert_equals_int (limit_notify_count, 6);
+  _assert_duration_limit (clip, 64);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (overlay0, 10, 59, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (videorate, 10, 0, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (overlay1, 10, 51, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (pitch, 10, 0, 64, GST_CLOCK_TIME_NONE);
+  _assert_rate_equal (videorate, "rate", 0.5, dval);
+  _assert_rate_equal (pitch, "rate", 0.5, fval);
+  _assert_rate_equal (pitch, "tempo", 2.0, fval);
+
+  _assert_set_rate (videorate, "rate", 0.1, dval);
+  assert_equals_int (limit_notify_count, 6);
+  _assert_set_rate (pitch, "tempo", 0.5, dval);
+
+  assert_equals_int (limit_notify_count, 7);
+  _assert_duration_limit (clip, 256);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (overlay0, 10, 59, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (videorate, 10, 0, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (overlay1, 10, 51, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (pitch, 10, 0, 64, GST_CLOCK_TIME_NONE);
+  _assert_rate_equal (videorate, "rate", 0.1, dval);
+  _assert_rate_equal (pitch, "rate", 0.5, fval);
+  _assert_rate_equal (pitch, "tempo", 0.5, fval);
+
+  _assert_set_rate (pitch, "tempo", 1.0, dval);
+  assert_equals_int (limit_notify_count, 8);
+  _assert_set_rate (videorate, "rate", 0.5, dval);
+
+  assert_equals_int (limit_notify_count, 8);
+  _assert_duration_limit (clip, 128);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (overlay0, 10, 59, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (videorate, 10, 0, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (overlay1, 10, 51, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (pitch, 10, 0, 64, GST_CLOCK_TIME_NONE);
+  _assert_rate_equal (videorate, "rate", 0.5, dval);
+  _assert_rate_equal (pitch, "rate", 0.5, fval);
+  _assert_rate_equal (pitch, "tempo", 1.0, fval);
+
+  /* make videorate in-active */
+  fail_unless (ges_track_element_set_active (videorate, FALSE));
+
+  assert_equals_int (limit_notify_count, 9);
+  _assert_duration_limit (clip, 64);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (overlay0, 10, 59, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (videorate, 10, 0, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (overlay1, 10, 51, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (pitch, 10, 0, 64, GST_CLOCK_TIME_NONE);
+  _assert_rate_equal (videorate, "rate", 0.5, dval);
+  _assert_rate_equal (pitch, "rate", 0.5, fval);
+  _assert_rate_equal (pitch, "tempo", 1.0, fval);
+
+  fail_unless (ges_track_element_set_active (videorate, TRUE));
+
+  assert_equals_int (limit_notify_count, 10);
+  _assert_duration_limit (clip, 128);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (overlay0, 10, 59, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (videorate, 10, 0, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (overlay1, 10, 51, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (pitch, 10, 0, 64, GST_CLOCK_TIME_NONE);
+  _assert_rate_equal (videorate, "rate", 0.5, dval);
+  _assert_rate_equal (pitch, "rate", 0.5, fval);
+  _assert_rate_equal (pitch, "tempo", 1.0, fval);
+
+  /* removing pitch, same effect as making inactive */
+  _assert_remove (clip, pitch);
+
+  assert_equals_int (limit_notify_count, 11);
+  _assert_duration_limit (clip, 64);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (overlay0, 10, 59, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (videorate, 10, 0, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (overlay1, 10, 51, 64, GST_CLOCK_TIME_NONE);
+  _assert_rate_equal (videorate, "rate", 0.5, dval);
+
+  /* no max-duration will give unlimited limit */
+  assert_set_max_duration (source1, GST_CLOCK_TIME_NONE);
+
+  assert_equals_int (limit_notify_count, 12);
+  _assert_duration_limit (clip, 128);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 13, 64, 77);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 13, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (overlay0, 10, 59, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (videorate, 10, 0, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (overlay1, 10, 51, 64, GST_CLOCK_TIME_NONE);
+  _assert_rate_equal (videorate, "rate", 0.5, dval);
+
+  assert_set_max_duration (source0, GST_CLOCK_TIME_NONE);
+
+  assert_equals_int (limit_notify_count, 13);
+  _assert_duration_limit (clip, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (clip, 10, 13, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (source0, 10, 13, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (source1, 10, 13, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (overlay0, 10, 59, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (videorate, 10, 0, 64, GST_CLOCK_TIME_NONE);
+  CHECK_OBJECT_PROPS_MAX (overlay1, 10, 51, 64, GST_CLOCK_TIME_NONE);
+  _assert_rate_equal (videorate, "rate", 0.5, dval);
+
+  gst_object_unref (timeline);
+
+  g_value_unset (&fval);
+  g_value_unset (&dval);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
+
 GST_START_TEST (test_children_properties_contain)
 {
   GESTimeline *timeline;
@@ -4232,6 +4808,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_children_max_duration);
   tcase_add_test (tc_chain, test_duration_limit);
   tcase_add_test (tc_chain, test_can_set_duration_limit);
+  tcase_add_test (tc_chain, test_rate_effects_duration_limit);
   tcase_add_test (tc_chain, test_children_properties_contain);
   tcase_add_test (tc_chain, test_children_properties_change);
   tcase_add_test (tc_chain, test_copy_paste_children_properties);

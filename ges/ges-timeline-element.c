@@ -175,6 +175,15 @@ _set_child_property (GESTimelineElement * self G_GNUC_UNUSED, GObject * child,
 }
 
 static gboolean
+_set_child_property_full (GESTimelineElement * self, GObject * child,
+    GParamSpec * pspec, const GValue * value, GError ** error)
+{
+  GES_TIMELINE_ELEMENT_GET_CLASS (self)->set_child_property (self, child,
+      pspec, (GValue *) value);
+  return TRUE;
+}
+
+static gboolean
 _lookup_child (GESTimelineElement * self, const gchar * prop_name,
     GObject ** child, GParamSpec ** pspec)
 {
@@ -549,7 +558,7 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
 
   /**
    * GESTimelineElement::child-property-removed:
-   * @timeline_element: A #GESTtimelineElement
+   * @timeline_element: A #GESTimelineElement
    * @prop_object: The child whose property has been unregistered
    * @prop: The specification for the property that has been unregistered
    *
@@ -582,6 +591,7 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
       ges_timeline_element_get_children_properties;
   klass->lookup_child = _lookup_child;
   klass->set_child_property = _set_child_property;
+  klass->set_child_property_full = _set_child_property_full;
   klass->get_natural_framerate = _get_natural_framerate;
 }
 
@@ -762,8 +772,8 @@ emit_deep_notify_in_idle (EmitDeepNotifyInIdleData * data)
 }
 
 static void
-child_prop_changed_cb (GObject * child, GParamSpec * arg
-    G_GNUC_UNUSED, GESTimelineElement * self)
+child_prop_changed_cb (GObject * child, GParamSpec * arg,
+    GESTimelineElement * self)
 {
   EmitDeepNotifyInIdleData *data;
 
@@ -786,7 +796,7 @@ child_prop_changed_cb (GObject * child, GParamSpec * arg
 
 static gboolean
 set_child_property_by_pspec (GESTimelineElement * self,
-    GParamSpec * pspec, const GValue * value)
+    GParamSpec * pspec, const GValue * value, GError ** error)
 {
   GESTimelineElementClass *klass;
   GESTimelineElement *setter = self;
@@ -804,6 +814,10 @@ set_child_property_by_pspec (GESTimelineElement * self,
   } else {
     klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
   }
+
+  if (klass->set_child_property_full)
+    return klass->set_child_property_full (setter, handler->child, pspec,
+        value, error);
 
   g_assert (klass->set_child_property);
   klass->set_child_property (setter, handler->child, pspec, (GValue *) value);
@@ -1816,14 +1830,15 @@ ges_timeline_element_set_child_property_by_pspec (GESTimelineElement * self,
   g_return_if_fail (GES_IS_TIMELINE_ELEMENT (self));
   g_return_if_fail (G_IS_PARAM_SPEC (pspec));
 
-  set_child_property_by_pspec (self, pspec, value);
+  set_child_property_by_pspec (self, pspec, value, NULL);
 }
 
 /**
- * ges_timeline_element_set_child_property:
+ * ges_timeline_element_set_child_property_full:
  * @self: A #GESTimelineElement
  * @property_name: The name of the child property to set
  * @value: The value to set the property to
+ * @error: (nullable): Return location for an error
  *
  * Sets the property of a child of the element.
  *
@@ -1840,6 +1855,40 @@ ges_timeline_element_set_child_property_by_pspec (GESTimelineElement * self,
  * property set to @value. Other children that may have also matched the
  * property name (and type name) are left unchanged!
  *
+ * Returns: %TRUE if the property was found and set.
+ */
+gboolean
+ges_timeline_element_set_child_property_full (GESTimelineElement * self,
+    const gchar * property_name, const GValue * value, GError ** error)
+{
+  GParamSpec *pspec;
+  GObject *child;
+
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
+  g_return_val_if_fail (!error || !*error, FALSE);
+
+  if (!ges_timeline_element_lookup_child (self, property_name, &child, &pspec))
+    goto not_found;
+
+  return set_child_property_by_pspec (self, pspec, value, error);
+
+not_found:
+  {
+    GST_WARNING_OBJECT (self, "The %s property doesn't exist", property_name);
+
+    return FALSE;
+  }
+}
+
+/**
+ * ges_timeline_element_set_child_property:
+ * @self: A #GESTimelineElement
+ * @property_name: The name of the child property to set
+ * @value: The value to set the property to
+ *
+ * See ges_timeline_element_set_child_property_full(), which also gives an
+ * error.
+ *
  * Note that ges_timeline_element_set_child_properties() may be more
  * convenient for C programming.
  *
@@ -1849,22 +1898,8 @@ gboolean
 ges_timeline_element_set_child_property (GESTimelineElement * self,
     const gchar * property_name, const GValue * value)
 {
-  GParamSpec *pspec;
-  GObject *child;
-
-  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
-
-  if (!ges_timeline_element_lookup_child (self, property_name, &child, &pspec))
-    goto not_found;
-
-  return set_child_property_by_pspec (self, pspec, value);
-
-not_found:
-  {
-    GST_WARNING_OBJECT (self, "The %s property doesn't exist", property_name);
-
-    return FALSE;
-  }
+  return ges_timeline_element_set_child_property_full (self, property_name,
+      value, NULL);
 }
 
 /**
@@ -2001,7 +2036,7 @@ ges_timeline_element_set_child_property_valist (GESTimelineElement * self,
     if (error)
       goto cant_copy;
 
-    set_child_property_by_pspec (self, pspec, &value);
+    set_child_property_by_pspec (self, pspec, &value, NULL);
 
     g_param_spec_unref (pspec);
     g_value_unset (&value);
