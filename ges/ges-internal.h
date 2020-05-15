@@ -491,7 +491,6 @@ typedef enum
 } GESTimelineElementFlags;
 
 G_GNUC_INTERNAL GESTimelineElement * ges_timeline_element_peak_toplevel (GESTimelineElement * self);
-G_GNUC_INTERNAL gdouble ges_timeline_element_get_media_duration_factor(GESTimelineElement *self);
 G_GNUC_INTERNAL GESTimelineElement * ges_timeline_element_get_copied_from (GESTimelineElement *self);
 G_GNUC_INTERNAL GESTimelineElementFlags ges_timeline_element_flags (GESTimelineElement *self);
 G_GNUC_INTERNAL void                ges_timeline_element_set_flags (GESTimelineElement *self, GESTimelineElementFlags flags);

@@ -2957,8 +2957,9 @@ ges_clip_split_full (GESClip * clip, guint64 position, GError ** error)
 {
   GList *tmp, *transitions = NULL;
   GESClip *new_object;
-  GstClockTime start, inpoint, duration, old_duration, new_duration;
-  gdouble media_duration_factor;
+  gboolean no_core = FALSE;
+  GstClockTime start, inpoint, duration, old_duration, new_duration,
+      new_inpoint;
   GESTimelineElement *element;
   GESTimeline *timeline;
   GHashTable *track_for_copy;
@@ -2985,6 +2986,18 @@ ges_clip_split_full (GESClip * clip, guint64 position, GError ** error)
   layer_prio = ges_timeline_element_get_layer_priority (element);
 
   old_duration = position - start;
+  new_duration = duration + start - position;
+  /* convert the split position into an internal core time */
+  new_inpoint = _convert_core_time (clip, position, FALSE, &no_core, error);
+
+  /* if the split clip does not contain any active core elements with
+   * an internal source, just set the in-point to 0 for the new_object */
+  if (no_core)
+    new_inpoint = 0;
+
+  if (!GST_CLOCK_TIME_IS_VALID (new_inpoint))
+    return NULL;
+
   if (timeline
       && !timeline_tree_can_move_element (timeline_get_tree (timeline), element,
           layer_prio, start, old_duration, error)) {
@@ -2995,7 +3008,6 @@ ges_clip_split_full (GESClip * clip, guint64 position, GError ** error)
     return NULL;
   }
 
-  new_duration = duration + start - position;
   if (timeline
       && !timeline_tree_can_move_element (timeline_get_tree (timeline), element,
           layer_prio, position, new_duration, error)) {
@@ -3011,15 +3023,26 @@ ges_clip_split_full (GESClip * clip, guint64 position, GError ** error)
 
   /* Create the new Clip */
   new_object = GES_CLIP (ges_timeline_element_copy (element, FALSE));
+  new_object->priv->prevent_duration_limit_update = TRUE;
 
   GST_DEBUG_OBJECT (new_object, "New 'splitted' clip");
   /* Set new timing properties on the Clip */
-  media_duration_factor =
-      ges_timeline_element_get_media_duration_factor (element);
   _set_start0 (GES_TIMELINE_ELEMENT (new_object), position);
-  _set_inpoint0 (GES_TIMELINE_ELEMENT (new_object),
-      inpoint + old_duration * media_duration_factor);
+  _set_inpoint0 (GES_TIMELINE_ELEMENT (new_object), new_inpoint);
   _set_duration0 (GES_TIMELINE_ELEMENT (new_object), new_duration);
+
+  /* NOTE: it is technically possible that the new_object may shrink
+   * later on in this method if the clip contains any non-linear time
+   * effects, which cause the duration-limit to drop. However, this
+   * should be safe since we have already checked with timeline-tree
+   * that the split position is not in the middle of an overlap. This
+   * means that the new_object should only be overlapping another
+   * element on its end, which makes shrinking safe.
+   *
+   * The original clip, however, should not shrink if the time effects
+   * obey the property that they do not depend on how much data they
+   * receive, which should be true for the time effects supported by GES.
+   */
 
   /* split binding before duration changes since shrinking can destroy
    * binding values */
@@ -3087,6 +3110,9 @@ ges_clip_split_full (GESClip * clip, guint64 position, GError ** error)
 
   g_hash_table_unref (track_for_copy);
   g_list_free_full (transitions, gst_object_unref);
+
+  new_object->priv->prevent_duration_limit_update = FALSE;
+  _update_duration_limit (new_object);
 
   return new_object;
 }

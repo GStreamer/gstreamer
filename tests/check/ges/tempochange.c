@@ -76,10 +76,6 @@ GST_START_TEST (test_tempochange)
   fail_unless_equals_int64 (_INPOINT (clip3), 7.5 * GST_SECOND);
   fail_unless_equals_int64 (_DURATION (clip3), 3 * GST_SECOND);
 
-  ges_layer_remove_clip (layer, (GESClip *) clip);
-  ges_layer_remove_clip (layer, clip2);
-  ges_layer_remove_clip (layer, clip3);
-
   gst_object_unref (timeline);
 
   ges_deinit ();
