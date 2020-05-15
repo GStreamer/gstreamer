@@ -1431,9 +1431,6 @@ mpegts_base_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   packetizer = base->packetizer;
 
-  if (klass->input_done)
-    gst_buffer_ref (buf);
-
   if (GST_BUFFER_IS_DISCONT (buf)) {
     GST_DEBUG_OBJECT (base, "Got DISCONT buffer, flushing");
     res = mpegts_base_drain (base);
@@ -1501,12 +1498,8 @@ mpegts_base_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     mpegts_packetizer_clear_packet (base->packetizer, &packet);
   }
 
-  if (klass->input_done) {
-    if (res == GST_FLOW_OK)
-      res = klass->input_done (base, buf);
-    else
-      gst_buffer_unref (buf);
-  }
+  if (res == GST_FLOW_OK && klass->input_done)
+    res = klass->input_done (base);
 
   return res;
 }

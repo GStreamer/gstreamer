@@ -1,7 +1,7 @@
 /*
- * mpegtsparse.c - 
+ * mpegtsparse.c -
  * Copyright (C) 2007 Alessandro Decina
- * 
+ *
  * Authors:
  *   Alessandro Decina <alessandro@nnva.org>
  *   Zaheer Abbas Merali <zaheerabbas at merali dot org>
@@ -126,8 +126,7 @@ static gboolean push_event (MpegTSBase * base, GstEvent * event);
 #define mpegts_parse_parent_class parent_class
 G_DEFINE_TYPE (MpegTSParse2, mpegts_parse, GST_TYPE_MPEGTS_BASE);
 static void mpegts_parse_reset (MpegTSBase * base);
-static GstFlowReturn mpegts_parse_input_done (MpegTSBase * base,
-    GstBuffer * buffer);
+static GstFlowReturn mpegts_parse_input_done (MpegTSBase * base);
 static GstFlowReturn
 drain_pending_buffers (MpegTSParse2 * parse, gboolean drain_all);
 
@@ -1088,7 +1087,7 @@ empty_pad (GstPad * pad, MpegTSParse2 * parse)
 }
 
 static GstFlowReturn
-mpegts_parse_input_done (MpegTSBase * base, GstBuffer * buffer)
+mpegts_parse_input_done (MpegTSBase * base)
 {
   MpegTSParse2 *parse = GST_MPEGTS_PARSE (base);
   GstFlowReturn ret = GST_FLOW_OK;

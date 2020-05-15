@@ -210,7 +210,7 @@ struct _MpegTSBaseClass {
   void (*flush) (MpegTSBase * base, gboolean hard);
 
   /* Notifies subclasses input buffer has been handled */
-  GstFlowReturn (*input_done) (MpegTSBase *base, GstBuffer *buffer);
+  GstFlowReturn (*input_done) (MpegTSBase *base);
 
   /* signals */
   void (*pat_info) (GstStructure *pat);
