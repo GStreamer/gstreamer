@@ -1533,7 +1533,7 @@ ges_timeline_set_moving_track_elements (GESTimeline * timeline, gboolean moving)
   }
 }
 
-static void
+void
 ges_timeline_set_track_selection_error (GESTimeline * timeline,
     gboolean was_error, GError * error)
 {
@@ -1549,7 +1549,7 @@ ges_timeline_set_track_selection_error (GESTimeline * timeline,
   UNLOCK_DYN (timeline);
 }
 
-static gboolean
+gboolean
 ges_timeline_take_track_selection_error (GESTimeline * timeline,
     GError ** error)
 {
@@ -1746,12 +1746,15 @@ add_object_to_tracks (GESTimeline * timeline, GESClip * clip,
        * copy will be added to the clip before the track is selected, so
        * the track will not be set in the child-added signal */
       ges_timeline_set_track_selection_error (timeline, FALSE, NULL);
+      ges_clip_set_add_error (clip, NULL);
       if (!ges_container_add (GES_CONTAINER (clip), el)) {
         no_errors = FALSE;
-        GST_ERROR_OBJECT (clip, "Could not add the core element %s "
-            "to the clip", el->name);
+        if (!error)
+          GST_ERROR_OBJECT (clip, "Could not add the core element %s "
+              "to the clip", el->name);
       }
       gst_object_unref (el);
+      ges_clip_take_add_error (clip, error);
 
       if (error && !no_errors)
         goto done;

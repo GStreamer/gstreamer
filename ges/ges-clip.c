@@ -92,12 +92,12 @@
  *
  * ## Effects
  *
- * Some subclasses (#GESSourceClip and #GESBaseEffect) may also allow
+ * Some subclasses (#GESSourceClip and #GESBaseEffectClip) may also allow
  * their objects to have additional non-core #GESBaseEffect-s elements as
  * children. These are additional effects that are applied to the output
  * data of the core elements. They can be added to the clip using
- * ges_container_add(), which will take care of adding the effect to the
- * timeline's tracks. The new effect will be placed between the clip's
+ * ges_clip_add_top_effect(), which will take care of adding the effect to
+ * the timeline's tracks. The new effect will be placed between the clip's
  * core track elements and its other effects. As such, the newly added
  * effect will be applied to any source data **before** the other existing
  * effects. You can change the ordering of effects using
@@ -169,6 +169,11 @@ struct _GESClipPrivate
   gboolean prevent_duration_limit_update;
 
   gboolean allow_any_remove;
+
+  gboolean use_effect_priority;
+  guint32 effect_priority;
+  GError *add_error;
+  GError *remove_error;
 };
 
 enum
@@ -1435,9 +1440,37 @@ _compute_height (GESContainer * container)
   _ges_container_set_height (container, max_prio - min_prio + 1);
 }
 
+void
+ges_clip_take_add_error (GESClip * clip, GError ** error)
+{
+  GESClipPrivate *priv = clip->priv;
+
+  g_clear_error (error);
+  if (error) {
+    if (*error) {
+      GST_ERROR_OBJECT (clip, "Error not handled: %s", (*error)->message);
+      g_error_free (*error);
+    }
+    *error = priv->add_error;
+  } else {
+    g_clear_error (&priv->add_error);
+  }
+  priv->add_error = NULL;
+}
+
+void
+ges_clip_set_add_error (GESClip * clip, GError * error)
+{
+  GESClipPrivate *priv = clip->priv;
+
+  g_clear_error (&priv->add_error);
+  priv->add_error = error;
+}
+
 static gboolean
 _add_child (GESContainer * container, GESTimelineElement * element)
 {
+  gboolean ret = FALSE;
   GESClip *self = GES_CLIP (container);
   GESTrackElement *track_el = GES_TRACK_ELEMENT (element);
   GESClipClass *klass = GES_CLIP_GET_CLASS (self);
@@ -1448,6 +1481,7 @@ _add_child (GESContainer * container, GESTimelineElement * element)
   GESAsset *asset, *creator_asset;
   gboolean prev_prevent = priv->prevent_duration_limit_update;
   GList *tmp;
+  GError *error = NULL;
 
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (element), FALSE);
 
@@ -1456,7 +1490,7 @@ _add_child (GESContainer * container, GESTimelineElement * element)
         "because its timeline is %" GST_PTR_FORMAT " rather than the "
         "clip's timeline %" GST_PTR_FORMAT, GES_ARGS (element),
         element->timeline, timeline);
-    return FALSE;
+    goto done;
   }
 
   asset = ges_extractable_get_asset (GES_EXTRACTABLE (self));
@@ -1466,7 +1500,7 @@ _add_child (GESContainer * container, GESTimelineElement * element)
         "Cannot add the track element %" GES_FORMAT " as a child "
         "because it is a core element created by another clip with a "
         "different asset to the current clip's asset", GES_ARGS (element));
-    return FALSE;
+    goto done;
   }
 
   track = ges_track_element_get_track (track_el);
@@ -1480,7 +1514,7 @@ _add_child (GESContainer * container, GESTimelineElement * element)
         "because its track %" GST_PTR_FORMAT " is part of the timeline %"
         GST_PTR_FORMAT " rather than the clip's timeline %" GST_PTR_FORMAT,
         GES_ARGS (element), track, ges_track_get_timeline (track), timeline);
-    return FALSE;
+    goto done;
   }
 
   /* NOTE: notifies are currently frozen by ges_container_add */
@@ -1522,7 +1556,7 @@ _add_child (GESContainer * container, GESTimelineElement * element)
             " because it is in the same track %" GST_PTR_FORMAT " as an "
             "existing core child %" GES_FORMAT, GES_ARGS (element), track,
             GES_ARGS (core));
-        return FALSE;
+        goto done;
       }
 
       data = _duration_limit_data_new (track_el);
@@ -1531,12 +1565,28 @@ _add_child (GESContainer * container, GESTimelineElement * element)
 
       child_data = _duration_limit_data_list_with_data (self, data);
 
-      if (!_can_update_duration_limit (self, child_data, NULL)) {
-        GST_WARNING_OBJECT (self, "Cannot add core %" GES_FORMAT " as a "
+      if (!_can_update_duration_limit (self, child_data, &error)) {
+        GST_INFO_OBJECT (self, "Cannot add core %" GES_FORMAT " as a "
             "child because the duration-limit cannot be adjusted",
             GES_ARGS (element));
-        return FALSE;
+        goto done;
       }
+    }
+
+    if (GES_CLOCK_TIME_IS_LESS (element->maxduration, new_inpoint)) {
+      GST_INFO_OBJECT (self, "Can not set the in-point of the "
+          "element %" GES_FORMAT " to %" GST_TIME_FORMAT " because its "
+          "max-duration is %" GST_TIME_FORMAT, GES_ARGS (element),
+          GST_TIME_ARGS (new_inpoint), GST_TIME_ARGS (element->maxduration));
+
+      g_set_error (&error, GES_ERROR, GES_ERROR_NOT_ENOUGH_INTERNAL_CONTENT,
+          "Cannot add the child \"%s\" to clip \"%s\" because its max-"
+          "duration is %" GST_TIME_FORMAT ", which is less than the in-"
+          "point of the clip %" GST_TIME_FORMAT, element->name,
+          GES_TIMELINE_ELEMENT_NAME (self),
+          GST_TIME_ARGS (element->maxduration), GST_TIME_ARGS (new_inpoint));
+
+      goto done;
     }
 
     /* adding can fail if the max-duration of the element is smaller
@@ -1545,7 +1595,7 @@ _add_child (GESContainer * container, GESTimelineElement * element)
       GST_WARNING_OBJECT (self, "Could not set the in-point of the "
           "element %" GES_FORMAT " to %" GST_TIME_FORMAT ". Not adding "
           "as a child", GES_ARGS (element), GST_TIME_ARGS (new_inpoint));
-      return FALSE;
+      goto done;
     }
 
     _set_priority0 (element, new_prio);
@@ -1556,10 +1606,14 @@ _add_child (GESContainer * container, GESTimelineElement * element)
      * to make room. */
 
     /* new priority is the lowest priority effect */
-    new_prio = min_prio;
-    for (tmp = container->children; tmp; tmp = tmp->next) {
-      if (_IS_TOP_EFFECT (tmp->data))
-        new_prio = MAX (new_prio, _PRIORITY (tmp->data) + 1);
+    if (priv->use_effect_priority) {
+      new_prio = priv->effect_priority;
+    } else {
+      new_prio = min_prio;
+      for (tmp = container->children; tmp; tmp = tmp->next) {
+        if (_IS_TOP_EFFECT (tmp->data))
+          new_prio = MAX (new_prio, _PRIORITY (tmp->data) + 1);
+      }
     }
     /* make sure higher than core */
     for (tmp = container->children; tmp; tmp = tmp->next) {
@@ -1576,7 +1630,7 @@ _add_child (GESContainer * container, GESTimelineElement * element)
         GST_WARNING_OBJECT (self, "Cannot add the effect %" GES_FORMAT
             " because its track %" GST_PTR_FORMAT " does not contain one "
             "of the clip's core children", GES_ARGS (element), track);
-        return FALSE;
+        goto done;
       }
 
       data = _duration_limit_data_new (track_el);
@@ -1592,11 +1646,11 @@ _add_child (GESContainer * container, GESTimelineElement * element)
           data->priority++;
       }
 
-      if (!_can_update_duration_limit (self, child_data, NULL)) {
-        GST_WARNING_OBJECT (self, "Cannot add effect %" GES_FORMAT " as "
+      if (!_can_update_duration_limit (self, child_data, &error)) {
+        GST_INFO_OBJECT (self, "Cannot add effect %" GES_FORMAT " as "
             "a child because the duration-limit cannot be adjusted",
             GES_ARGS (element));
-        return FALSE;
+        goto done;
       }
     }
 
@@ -1642,13 +1696,46 @@ _add_child (GESContainer * container, GESTimelineElement * element)
       GST_WARNING_OBJECT (self, "Cannot add the track element %"
           GES_FORMAT " because it is not a core element created by the "
           "clip itself", GES_ARGS (element));
-    return FALSE;
+    goto done;
   }
 
   _set_start0 (element, GES_TIMELINE_ELEMENT_START (self));
   _set_duration0 (element, GES_TIMELINE_ELEMENT_DURATION (self));
 
-  return TRUE;
+  ret = TRUE;
+
+done:
+  if (error)
+    ges_clip_set_add_error (self, error);
+
+  return ret;
+}
+
+void
+ges_clip_take_remove_error (GESClip * clip, GError ** error)
+{
+  GESClipPrivate *priv = clip->priv;
+
+  g_clear_error (error);
+  if (error) {
+    if (*error) {
+      GST_ERROR ("Error not handled: %s", (*error)->message);
+      g_error_free (*error);
+    }
+    *error = priv->remove_error;
+  } else {
+    g_clear_error (&priv->remove_error);
+  }
+  priv->remove_error = NULL;
+}
+
+void
+ges_clip_set_remove_error (GESClip * clip, GError * error)
+{
+  GESClipPrivate *priv = clip->priv;
+
+  g_clear_error (&priv->remove_error);
+  priv->remove_error = error;
 }
 
 static gboolean
@@ -1667,6 +1754,7 @@ _remove_child (GESContainer * container, GESTimelineElement * element)
       ges_track_element_get_track (el)) {
     GList *child_data = NULL;
     GList *tmp;
+    GError *error = NULL;
 
     for (tmp = container->children; tmp; tmp = tmp->next) {
       GESTrackElement *child = tmp->data;
@@ -1676,8 +1764,9 @@ _remove_child (GESContainer * container, GESTimelineElement * element)
           g_list_prepend (child_data, _duration_limit_data_new (child));
     }
 
-    if (!_can_update_duration_limit (self, child_data, NULL)) {
-      GST_WARNING_OBJECT (self, "Cannot remove the child %" GES_FORMAT
+    if (!_can_update_duration_limit (self, child_data, &error)) {
+      ges_clip_set_remove_error (self, error);
+      GST_INFO_OBJECT (self, "Cannot remove the child %" GES_FORMAT
           " because the duration-limit cannot be adjusted", GES_ARGS (el));
       return FALSE;
     }
@@ -2249,6 +2338,11 @@ ges_clip_dispose (GObject * object)
   self->priv->copied_track_elements = NULL;
   g_clear_object (&self->priv->copied_layer);
 
+  g_clear_error (&self->priv->add_error);
+  self->priv->add_error = NULL;
+  g_clear_error (&self->priv->remove_error);
+  self->priv->remove_error = NULL;
+
   G_OBJECT_CLASS (ges_clip_parent_class)->dispose (object);
 }
 
@@ -2717,6 +2811,143 @@ _cmp_children_by_priority (gconstpointer a_p, gconstpointer b_p)
 }
 
 /**
+ * ges_clip_add_top_effect:
+ * @clip: A #GESClip
+ * @effect: A top effect to add
+ * @index: The index to add @effect at, or -1 to add at the highest
+ * @error: (nullable): Return location for an error
+ *
+ * Add a top effect to a clip at the given index.
+ *
+ * Unlike using ges_container_add(), this allows you to set the index
+ * in advance. It will also check that no error occurred during the track
+ * selection for the effect.
+ *
+ * Note, only subclasses of #GESClipClass that have
+ * #GES_CLIP_CLASS_CAN_ADD_EFFECTS set to %TRUE (such as #GESSourceClip
+ * and #GESBaseEffectClip) can have additional top effects added.
+ *
+ * Note, if the effect is a time effect, this may be refused if the clip
+ * would not be able to adapt itself once the effect is added.
+ *
+ * Returns: %TRUE if @effect was successfully added to @clip at @index.
+ */
+gboolean
+ges_clip_add_top_effect (GESClip * clip, GESBaseEffect * effect, gint index,
+    GError ** error)
+{
+  GESClipPrivate *priv;
+  GList *top_effects;
+  GESTimelineElement *replace;
+  GESTimeline *timeline;
+  gboolean res;
+
+  g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
+  g_return_val_if_fail (GES_IS_BASE_EFFECT (effect), FALSE);
+  g_return_val_if_fail (!error || !*error, FALSE);
+
+  priv = clip->priv;
+
+  if (index >= 0) {
+    top_effects = ges_clip_get_top_effects (clip);
+    replace = g_list_nth_data (top_effects, index);
+    if (replace) {
+      priv->use_effect_priority = TRUE;
+      priv->effect_priority = replace->priority;
+    }
+    g_list_free_full (top_effects, gst_object_unref);
+  }
+  /* otherwise the default _add_child will place it at the lowest
+   * priority / highest index */
+
+
+  timeline = GES_TIMELINE_ELEMENT_TIMELINE (clip);
+  if (timeline)
+    ges_timeline_set_track_selection_error (timeline, FALSE, NULL);
+
+  /* note, if several tracks are selected, this may lead to several
+   * effects being added to the clip.
+   * The first effect we are adding will use the set effect_priority.
+   * The error on the timeline could be from any of the copies */
+  ges_clip_set_add_error (clip, NULL);
+  res = ges_container_add (GES_CONTAINER (clip), GES_TIMELINE_ELEMENT (effect));
+
+  priv->use_effect_priority = FALSE;
+
+  if (!res) {
+    /* if adding fails, there should have been no track selection, which
+     * means no other elements were added so the clip, so the adding error
+     * for the effect, if any, should still be available on the clip */
+    ges_clip_take_add_error (clip, error);
+    return FALSE;
+  }
+
+  if (timeline && ges_timeline_take_track_selection_error (timeline, error))
+    goto remove;
+
+  return TRUE;
+
+remove:
+  if (!ges_container_remove (GES_CONTAINER (clip),
+          GES_TIMELINE_ELEMENT (effect)))
+    GST_ERROR_OBJECT (clip, "Failed to remove effect %" GES_FORMAT,
+        GES_ARGS (effect));
+
+  return FALSE;
+}
+
+static gboolean
+_is_added_effect (GESClip * clip, GESBaseEffect * effect)
+{
+  if (GES_TIMELINE_ELEMENT_PARENT (effect) != GES_TIMELINE_ELEMENT (clip)) {
+    GST_WARNING_OBJECT (clip, "The effect %" GES_FORMAT
+        " does not belong to this clip", GES_ARGS (effect));
+    return FALSE;
+  }
+  if (!_IS_TOP_EFFECT (effect)) {
+    GST_WARNING_OBJECT (clip, "The effect %" GES_FORMAT " is not a top "
+        "effect of this clip (it is a core element of the clip)",
+        GES_ARGS (effect));
+    return FALSE;
+  }
+  return TRUE;
+}
+
+/**
+ * ges_clip_remove_top_effect:
+ * @clip: A #GESClip
+ * @effect: The top effect to remove
+ * @error: (nullable): Return location for an error
+ *
+ * Remove a top effect from the clip.
+ *
+ * Note, if the effect is a time effect, this may be refused if the clip
+ * would not be able to adapt itself once the effect is removed.
+ *
+ * Returns: %TRUE if @effect was successfully added to @clip at @index.
+ */
+gboolean
+ges_clip_remove_top_effect (GESClip * clip, GESBaseEffect * effect,
+    GError ** error)
+{
+  gboolean res;
+
+  g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
+  g_return_val_if_fail (GES_IS_BASE_EFFECT (effect), FALSE);
+  g_return_val_if_fail (!error || !*error, FALSE);
+  if (!_is_added_effect (clip, effect))
+    return FALSE;
+
+  ges_clip_set_remove_error (clip, NULL);
+  res = ges_container_remove (GES_CONTAINER (clip),
+      GES_TIMELINE_ELEMENT (effect));
+  if (!res)
+    ges_clip_take_remove_error (clip, error);
+
+  return res;
+}
+
+/**
  * ges_clip_get_top_effects:
  * @clip: A #GESClip
  *
@@ -2745,23 +2976,6 @@ ges_clip_get_top_effects (GESClip * clip)
   }
 
   return g_list_sort (ret, _cmp_children_by_priority);
-}
-
-static gboolean
-_is_added_effect (GESClip * clip, GESBaseEffect * effect)
-{
-  if (GES_TIMELINE_ELEMENT_PARENT (effect) != GES_TIMELINE_ELEMENT (clip)) {
-    GST_WARNING_OBJECT (clip, "The effect %" GES_FORMAT
-        " doe not belong to this clip", GES_ARGS (effect));
-    return FALSE;
-  }
-  if (!_IS_TOP_EFFECT (effect)) {
-    GST_WARNING_OBJECT (clip, "The effect %" GES_FORMAT " is not a top "
-        "effect of this clip (it is a core element of the clip)",
-        GES_ARGS (effect));
-    return FALSE;
-  }
-  return TRUE;
 }
 
 /**
@@ -4059,17 +4273,23 @@ ges_clip_add_child_to_track (GESClip * clip, GESTrackElement * child,
 
   /* copy if the element is already in a track */
   if (current_track) {
+    /* TODO: rather than add the effect at the next highest priority, we
+     * want to add copied effect into the same EffectCollection, which all
+     * share the same priority/index */
+    if (_IS_TOP_EFFECT (child)) {
+      clip->priv->use_effect_priority = TRUE;
+      /* add at next lowest priority */
+      clip->priv->effect_priority = GES_TIMELINE_ELEMENT_PRIORITY (child) + 1;
+    }
+
     el = ges_clip_copy_track_element_into (clip, child, GST_CLOCK_TIME_NONE);
+
+    clip->priv->use_effect_priority = FALSE;
     if (!el) {
       GST_ERROR_OBJECT (clip, "Could not add a copy of the track element %"
           GES_FORMAT " to the clip so cannot add it to the track %"
           GST_PTR_FORMAT, GES_ARGS (child), track);
       return NULL;
-    }
-    if (_IS_TOP_EFFECT (child)) {
-      /* add at next lowest priority */
-      ges_clip_set_top_effect_index (clip, GES_BASE_EFFECT (el),
-          ges_clip_get_top_effect_index (clip, GES_BASE_EFFECT (child)) + 1);
     }
   } else {
     el = child;

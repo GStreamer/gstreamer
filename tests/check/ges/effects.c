@@ -674,6 +674,220 @@ GST_START_TEST (test_split_clip_effect_priorities)
 
 GST_END_TEST;
 
+#define _NO_ERROR -1
+#define _set_rate(videorate, rate, error_code) \
+{ \
+  g_value_set_double (&val, rate); \
+  if (error_code != _NO_ERROR) { \
+    fail_if (ges_timeline_element_set_child_property_full ( \
+          GES_TIMELINE_ELEMENT (videorate), "rate", &val, &error)); \
+    assert_GESError (error, error_code); \
+  } else { \
+    fail_unless (ges_timeline_element_set_child_property_full ( \
+          GES_TIMELINE_ELEMENT (videorate), "rate", &val, &error)); \
+    fail_if (error); \
+  } \
+}
+
+#define _add_effect(clip, effect, _index, error_code) \
+{ \
+  gint index = _index; \
+  if (error_code != _NO_ERROR) { \
+    fail_if (ges_clip_add_top_effect (clip, effect, index, &error)); \
+    assert_GESError (error, error_code); \
+  } else { \
+    GList *effects; \
+    gboolean res = ges_clip_add_top_effect (clip, effect, index, &error); \
+    fail_unless (res, "Adding effect " #effect " failed: %s", \
+        error ? error->message : "No error produced"); \
+    fail_if (error); \
+    effects = ges_clip_get_top_effects (clip); \
+    fail_unless (g_list_find (effects, effect)); \
+    if (index < 0 || index >= g_list_length (effects)) \
+      index = g_list_length (effects) - 1; \
+    assert_equals_int (ges_clip_get_top_effect_index (clip, effect), index); \
+    fail_unless (g_list_nth_data (effects, index) == effect); \
+    g_list_free_full (effects, gst_object_unref); \
+  } \
+}
+
+#define _remove_effect(clip, effect, error_code) \
+{ \
+  if (error_code != _NO_ERROR) { \
+    fail_if (ges_clip_remove_top_effect (clip, effect, &error)); \
+    assert_GESError (error, error_code); \
+  } else { \
+    GList *effects; \
+    gboolean res = ges_clip_remove_top_effect (clip, effect, &error); \
+    fail_unless (res, "Removing effect " #effect " failed: %s", \
+        error ? error->message : "No error produced"); \
+    fail_if (error); \
+    effects = ges_clip_get_top_effects (clip); \
+    fail_if (g_list_find (effects, effect)); \
+    g_list_free_full (effects, gst_object_unref); \
+  } \
+}
+
+#define _move_effect(clip, effect, index, error_code) \
+{ \
+  if (error_code != _NO_ERROR) { \
+    fail_if ( \
+        ges_clip_set_top_effect_index_full (clip, effect, index, &error)); \
+    assert_GESError (error, error_code); \
+  } else { \
+    GList *effects; \
+    gboolean res = \
+        ges_clip_set_top_effect_index_full (clip, effect, index, &error); \
+    fail_unless (res, "Moving effect " #effect " failed: %s", \
+        error ? error->message : "No error produced"); \
+    fail_if (error); \
+    effects = ges_clip_get_top_effects (clip); \
+    fail_unless (g_list_find (effects, effect)); \
+    assert_equals_int (ges_clip_get_top_effect_index (clip, effect), index); \
+    fail_unless (g_list_nth_data (effects, index) == effect); \
+    g_list_free_full (effects, gst_object_unref); \
+  } \
+}
+
+GST_START_TEST (test_move_time_effect)
+{
+  GESTimeline *timeline;
+  GESTrack *track;
+  GESLayer *layer;
+  GESAsset *asset;
+  GESClip *clip;
+  GESBaseEffect *rate0, *rate1, *overlay;
+  GError *error = NULL;
+  GValue val = G_VALUE_INIT;
+
+  ges_init ();
+
+  g_value_init (&val, G_TYPE_DOUBLE);
+
+
+  timeline = ges_timeline_new ();
+  track = GES_TRACK (ges_video_track_new ());
+  fail_unless (ges_timeline_add_track (timeline, track));
+
+  layer = ges_timeline_append_layer (timeline);
+
+  /* add a dummy clip for overlap */
+  asset = ges_asset_request (GES_TYPE_TEST_CLIP, "max-duration=16", &error);
+  fail_unless (asset);
+  fail_if (error);
+
+  fail_unless (ges_layer_add_asset_full (layer, asset, 0, 0, 16,
+          GES_TRACK_TYPE_UNKNOWN, &error));
+  fail_if (error);
+
+  clip = GES_CLIP (ges_asset_extract (asset, &error));
+  fail_unless (clip);
+  fail_if (error);
+  assert_set_start (clip, 8);
+  assert_set_duration (clip, 16);
+
+  rate0 = GES_BASE_EFFECT (ges_effect_new ("videorate"));
+  rate1 = GES_BASE_EFFECT (ges_effect_new ("videorate"));
+  overlay = GES_BASE_EFFECT (ges_effect_new ("textoverlay"));
+
+  ges_track_element_set_has_internal_source (GES_TRACK_ELEMENT (overlay), TRUE);
+  /* only has 8ns of content */
+  assert_set_inpoint (overlay, 13);
+  assert_set_max_duration (overlay, 21);
+
+  _set_rate (rate0, 2.0, _NO_ERROR);
+  _set_rate (rate1, 0.5, _NO_ERROR);
+
+  /* keep alive */
+  gst_object_ref (clip);
+  gst_object_ref (rate0);
+  gst_object_ref (rate1);
+  gst_object_ref (overlay);
+
+  /* cannot add to layer with rate effect because it would cause a full
+   * overlap */
+  _add_effect (clip, rate0, 0, _NO_ERROR);
+  fail_if (ges_layer_add_clip_full (layer, clip, &error));
+  assert_GESError (error, GES_ERROR_INVALID_OVERLAP_IN_TRACK);
+  _remove_effect (clip, rate0, _NO_ERROR);
+
+  /* same with overlay */
+  _add_effect (clip, overlay, 0, _NO_ERROR);
+  fail_if (ges_layer_add_clip_full (layer, clip, &error));
+  assert_GESError (error, GES_ERROR_INVALID_OVERLAP_IN_TRACK);
+  _remove_effect (clip, overlay, _NO_ERROR);
+
+  CHECK_OBJECT_PROPS (clip, 8, 0, 16);
+
+  fail_unless (ges_layer_add_clip_full (layer, clip, &error));
+  fail_if (error);
+
+  CHECK_OBJECT_PROPS_MAX (clip, 8, 0, 16, 16);
+
+  /* can't add rate0 or overlay in the same way */
+  _add_effect (clip, rate0, 0, GES_ERROR_INVALID_OVERLAP_IN_TRACK);
+  _add_effect (clip, overlay, 0, GES_ERROR_INVALID_OVERLAP_IN_TRACK);
+
+  /* rate1 extends the duration-limit instead */
+  _add_effect (clip, rate1, 0, _NO_ERROR);
+
+  /* can't add overlay next to the timeline */
+  _add_effect (clip, overlay, 0, GES_ERROR_INVALID_OVERLAP_IN_TRACK);
+  /* but next to source is ok */
+  _add_effect (clip, overlay, 1, _NO_ERROR);
+
+  /* can't add rate0 after overlay */
+  _add_effect (clip, rate0, 1, GES_ERROR_INVALID_OVERLAP_IN_TRACK);
+  /* but before is ok */
+  _add_effect (clip, rate0, -1, _NO_ERROR);
+
+  /* can't move rate0 to end */
+  _move_effect (clip, rate0, 0, GES_ERROR_INVALID_OVERLAP_IN_TRACK);
+  /* can't move overlay to start or end */
+  _move_effect (clip, overlay, 0, GES_ERROR_INVALID_OVERLAP_IN_TRACK);
+  _move_effect (clip, overlay, 2, GES_ERROR_INVALID_OVERLAP_IN_TRACK);
+
+  /* can now move: swap places with rate1 */
+  _set_rate (rate0, 0.5, _NO_ERROR);
+  _move_effect (clip, rate0, 0, _NO_ERROR);
+  _move_effect (clip, rate1, 2, _NO_ERROR);
+  _set_rate (rate1, 2.0, _NO_ERROR);
+
+  /* cannot speed up either rate too much */
+  _set_rate (rate0, 1.0, GES_ERROR_INVALID_OVERLAP_IN_TRACK);
+  _set_rate (rate1, 4.0, GES_ERROR_INVALID_OVERLAP_IN_TRACK);
+
+  /* cannot remove rate0 which is slowing down */
+  _remove_effect (clip, rate0, GES_ERROR_INVALID_OVERLAP_IN_TRACK);
+
+  /* removing the speed-up is fine */
+  _remove_effect (clip, rate1, _NO_ERROR);
+
+  /* removing the overlay is fine */
+  _remove_effect (clip, overlay, _NO_ERROR);
+
+  CHECK_OBJECT_PROPS_MAX (clip, 8, 0, 16, 16);
+  assert_set_max_duration (clip, 8);
+  CHECK_OBJECT_PROPS_MAX (clip, 8, 0, 16, 8);
+  /* still can't remove the slow down since it is the only thing stopping
+   * a full overlap */
+  _remove_effect (clip, rate0, GES_ERROR_INVALID_OVERLAP_IN_TRACK);
+
+  gst_object_unref (clip);
+  /* shouldn't have any problems when removing from the layer */
+  fail_unless (ges_layer_remove_clip (layer, clip));
+
+  g_value_reset (&val);
+  gst_object_unref (rate0);
+  gst_object_unref (rate1);
+  gst_object_unref (overlay);
+  gst_object_unref (asset);
+  gst_object_unref (timeline);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
 
 static Suite *
 ges_suite (void)
@@ -691,6 +905,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_effect_set_properties);
   tcase_add_test (tc_chain, test_clip_signals);
   tcase_add_test (tc_chain, test_split_clip_effect_priorities);
+  tcase_add_test (tc_chain, test_move_time_effect);
 
   return s;
 }

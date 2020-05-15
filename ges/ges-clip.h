@@ -183,6 +183,15 @@ gboolean  ges_clip_move_to_layer_full     (GESClip * clip,
  *                   Effects                        *
  ****************************************************/
 GES_API
+gboolean ges_clip_add_top_effect            (GESClip * clip,
+                                             GESBaseEffect * effect,
+                                             gint index,
+                                             GError ** error);
+GES_API
+gboolean ges_clip_remove_top_effect         (GESClip * clip,
+                                             GESBaseEffect * effect,
+                                             GError ** error);
+GES_API
 GList*   ges_clip_get_top_effects           (GESClip * clip);
 GES_API
 gint     ges_clip_get_top_effect_position   (GESClip * clip,

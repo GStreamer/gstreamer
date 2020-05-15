@@ -122,6 +122,14 @@ ges_timeline_edit (GESTimeline * timeline, GESTimelineElement * element,
     guint64 position, GError ** error);
 
 G_GNUC_INTERNAL void
+ges_timeline_set_track_selection_error  (GESTimeline * timeline,
+                                         gboolean was_error,
+                                         GError * error);
+G_GNUC_INTERNAL gboolean
+ges_timeline_take_track_selection_error (GESTimeline * timeline,
+                                         GError ** error);
+
+G_GNUC_INTERNAL void
 timeline_add_group             (GESTimeline *timeline,
                                 GESGroup *group);
 G_GNUC_INTERNAL void
@@ -420,6 +428,10 @@ G_GNUC_INTERNAL gboolean          ges_clip_can_set_time_property_of_child (GESCl
 G_GNUC_INTERNAL GstClockTime      ges_clip_duration_limit_with_new_children_inpoints (GESClip * clip, GHashTable * child_inpoints);
 G_GNUC_INTERNAL GstClockTime      ges_clip_get_core_internal_time_from_timeline_time (GESClip * clip, GstClockTime timeline_time, gboolean * no_core, GError ** error);
 G_GNUC_INTERNAL void              ges_clip_empty_from_track       (GESClip * clip, GESTrack * track);
+G_GNUC_INTERNAL void              ges_clip_set_add_error          (GESClip * clip, GError * error);
+G_GNUC_INTERNAL void              ges_clip_take_add_error         (GESClip * clip, GError ** error);
+G_GNUC_INTERNAL void              ges_clip_set_remove_error       (GESClip * clip, GError * error);
+G_GNUC_INTERNAL void              ges_clip_take_remove_error      (GESClip * clip, GError ** error);
 
 /****************************************************
  *              GESLayer                            *

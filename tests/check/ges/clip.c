@@ -2010,6 +2010,33 @@ GST_START_TEST (test_children_time_setters)
 
 GST_END_TEST;
 
+GST_START_TEST (test_not_enough_internal_content_for_core)
+{
+  GESTimeline *timeline;
+  GESLayer *layer;
+  GESAsset *asset;
+  GError *error = NULL;
+
+  ges_init ();
+
+  timeline = ges_timeline_new_audio_video ();
+  layer = ges_timeline_append_layer (timeline);
+
+  asset = ges_asset_request (GES_TYPE_TEST_CLIP, "max-duration=30", NULL);
+  fail_unless (asset);
+
+  fail_if (ges_layer_add_asset_full (layer, asset, 0, 31, 10,
+          GES_TRACK_TYPE_UNKNOWN, &error));
+  assert_GESError (error, GES_ERROR_NOT_ENOUGH_INTERNAL_CONTENT);
+
+  gst_object_unref (timeline);
+  gst_object_unref (asset);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_can_add_effect)
 {
   struct CanAddEffectData
@@ -5219,6 +5246,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_clip_find_track_element);
   tcase_add_test (tc_chain, test_effects_priorities);
   tcase_add_test (tc_chain, test_children_time_setters);
+  tcase_add_test (tc_chain, test_not_enough_internal_content_for_core);
   tcase_add_test (tc_chain, test_can_add_effect);
   tcase_add_test (tc_chain, test_children_active);
   tcase_add_test (tc_chain, test_children_inpoint);
