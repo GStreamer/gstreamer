@@ -401,13 +401,13 @@ gst_h264_dpb_get_lowest_frame_num_short_ref (GstH264Dpb * dpb)
 /**
  * gst_h264_dpb_get_pictures_not_outputted:
  * @dpb: a #GstH264Dpb
- * @out: (out) (element-type GstH264Picture) (transfer full): a list
- *   of #GstH264Picture
+ * @out: (out) (element-type GstH264Picture) (transfer full): an array
+ *   of #GstH264Picture pointer
  *
  * Retrieve all not-outputted pictures from @dpb
  */
 void
-gst_h264_dpb_get_pictures_not_outputted (GstH264Dpb * dpb, GList ** out)
+gst_h264_dpb_get_pictures_not_outputted (GstH264Dpb * dpb, GArray * out)
 {
   gint i;
 
@@ -418,21 +418,24 @@ gst_h264_dpb_get_pictures_not_outputted (GstH264Dpb * dpb, GList ** out)
     GstH264Picture *picture =
         g_array_index (dpb->pic_list, GstH264Picture *, i);
 
-    if (!picture->outputted)
-      *out = g_list_append (*out, gst_h264_picture_ref (picture));
+    if (!picture->outputted) {
+      gst_h264_picture_ref (picture);
+      g_array_append_val (out, picture);
+    }
   }
 }
 
 /**
  * gst_h264_dpb_get_pictures_short_term_ref:
  * @dpb: a #GstH264Dpb
- * @out: (out) (element-type GstH264Picture) (transfer full): a list
- *   of #GstH264Picture
+ * @out: (out) (element-type GstH264Picture) (transfer full): an array
+ *   of #GstH264Picture pointers
  *
- * Retrieve all short-term reference pictures from @dpb
+ * Retrieve all short-term reference pictures from @dpb. The picture will be
+ * appended to the array.
  */
 void
-gst_h264_dpb_get_pictures_short_term_ref (GstH264Dpb * dpb, GList ** out)
+gst_h264_dpb_get_pictures_short_term_ref (GstH264Dpb * dpb, GArray * out)
 {
   gint i;
 
@@ -443,21 +446,24 @@ gst_h264_dpb_get_pictures_short_term_ref (GstH264Dpb * dpb, GList ** out)
     GstH264Picture *picture =
         g_array_index (dpb->pic_list, GstH264Picture *, i);
 
-    if (picture->ref && !picture->long_term)
-      *out = g_list_append (*out, gst_h264_picture_ref (picture));
+    if (picture->ref && !picture->long_term) {
+      gst_h264_picture_ref (picture);
+      g_array_append_val (out, picture);
+    }
   }
 }
 
 /**
  * gst_h264_dpb_get_pictures_long_term_ref:
  * @dpb: a #GstH264Dpb
- * @out: (out) (element-type GstH264Picture) (transfer full): a list
- *   of #GstH264Picture
+ * @out: (out) (element-type GstH264Picture) (transfer full): an arrat
+ *   of #GstH264Picture pointer
  *
- * Retrieve all long-term reference pictures from @dpb
+ * Retrieve all long-term reference pictures from @dpb. The picture will be
+ * appended to the array.
  */
 void
-gst_h264_dpb_get_pictures_long_term_ref (GstH264Dpb * dpb, GList ** out)
+gst_h264_dpb_get_pictures_long_term_ref (GstH264Dpb * dpb, GArray * out)
 {
   gint i;
 
@@ -468,8 +474,10 @@ gst_h264_dpb_get_pictures_long_term_ref (GstH264Dpb * dpb, GList ** out)
     GstH264Picture *picture =
         g_array_index (dpb->pic_list, GstH264Picture *, i);
 
-    if (picture->ref && picture->long_term)
-      *out = g_list_append (*out, gst_h264_picture_ref (picture));
+    if (picture->ref && picture->long_term) {
+      gst_h264_picture_ref (picture);
+      g_array_append_val (out, picture);
+    }
   }
 }
 

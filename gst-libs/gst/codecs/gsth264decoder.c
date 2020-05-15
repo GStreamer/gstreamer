@@ -129,6 +129,9 @@ struct _GstH264DecoderPrivate
 
   /* PicOrderCount of the previously outputted frame */
   gint last_output_poc;
+
+  /* Cached array to handle pictures to be outputed */
+  GArray *to_output;
 };
 
 #define parent_class gst_h264_decoder_parent_class
@@ -137,6 +140,8 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstH264Decoder, gst_h264_decoder,
     G_ADD_PRIVATE (GstH264Decoder);
     GST_DEBUG_CATEGORY_INIT (gst_h264_decoder_debug, "h264decoder", 0,
         "H.264 Video Decoder"));
+
+static void gst_h264_decoder_finalize (GObject * object);
 
 static gboolean gst_h264_decoder_start (GstVideoDecoder * decoder);
 static gboolean gst_h264_decoder_stop (GstVideoDecoder * decoder);
@@ -170,6 +175,9 @@ static void
 gst_h264_decoder_class_init (GstH264DecoderClass * klass)
 {
   GstVideoDecoderClass *decoder_class = GST_VIDEO_DECODER_CLASS (klass);
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+  object_class->finalize = GST_DEBUG_FUNCPTR (gst_h264_decoder_finalize);
 
   decoder_class->start = GST_DEBUG_FUNCPTR (gst_h264_decoder_start);
   decoder_class->stop = GST_DEBUG_FUNCPTR (gst_h264_decoder_stop);
@@ -184,9 +192,24 @@ gst_h264_decoder_class_init (GstH264DecoderClass * klass)
 static void
 gst_h264_decoder_init (GstH264Decoder * self)
 {
+  GstH264DecoderPrivate *priv;
+
   gst_video_decoder_set_packetized (GST_VIDEO_DECODER (self), TRUE);
 
-  self->priv = gst_h264_decoder_get_instance_private (self);
+  self->priv = priv = gst_h264_decoder_get_instance_private (self);
+
+  priv->to_output = g_array_sized_new (FALSE, TRUE,
+      sizeof (GstH264Picture *), 16);
+  g_array_set_clear_func (priv->to_output,
+      (GDestroyNotify) gst_h264_picture_clear);
+}
+
+static void
+gst_h264_decoder_finalize (GObject * object)
+{
+  GstH264Decoder *self = GST_H264_DECODER (object);
+  GstH264DecoderPrivate *priv = self->priv;
+  g_array_unref (priv->to_output);
 }
 
 static gboolean
@@ -1199,33 +1222,30 @@ gst_h264_decoder_finish_current_picture (GstH264Decoder * self)
 }
 
 static gint
-poc_asc_compare (const GstH264Picture * a, const GstH264Picture * b)
+poc_asc_compare (const GstH264Picture ** a, const GstH264Picture ** b)
 {
-  return a->pic_order_cnt > b->pic_order_cnt;
+  return (*a)->pic_order_cnt - (*b)->pic_order_cnt;
 }
 
 static gboolean
 gst_h264_decoder_output_all_remaining_pics (GstH264Decoder * self)
 {
   GstH264DecoderPrivate *priv = self->priv;
-  GList *to_output = NULL;
-  GList *iter;
+  GArray *to_output = priv->to_output;
+  gint i;
 
-  gst_h264_dpb_get_pictures_not_outputted (priv->dpb, &to_output);
+  gst_h264_dpb_get_pictures_not_outputted (priv->dpb, to_output);
+  g_array_sort (to_output, (GCompareFunc) poc_asc_compare);
 
-  to_output = g_list_sort (to_output, (GCompareFunc) poc_asc_compare);
-
-  for (iter = to_output; iter; iter = g_list_next (iter)) {
-    GstH264Picture *picture = (GstH264Picture *) iter->data;
+  for (i = 0; i < to_output->len; i++) {
+    GstH264Picture *picture = g_array_index (to_output, GstH264Picture *, i);
 
     GST_LOG_OBJECT (self, "Output picture %p (frame num %d, poc %d)", picture,
         picture->frame_num, picture->pic_order_cnt);
     gst_h264_decoder_do_output_picture (self, picture);
   }
 
-  if (to_output)
-    g_list_free_full (to_output, (GDestroyNotify) gst_h264_picture_unref);
-
+  g_array_set_size (to_output, 0);
   return TRUE;
 }
 
@@ -1292,25 +1312,21 @@ gst_h264_decoder_handle_memory_management_opt (GstH264Decoder * self,
         break;
 
       case 4:{
-        GList *long_terms = NULL;
-        GList *iter;
+        GArray *pictures = gst_h264_dpb_get_pictures_all (priv->dpb);
+        gint i;
 
         /* Unmark all reference pictures with long_term_frame_idx over new max */
         priv->max_long_term_frame_idx =
             ref_pic_marking->max_long_term_frame_idx_plus1 - 1;
 
-        gst_h264_dpb_get_pictures_long_term_ref (priv->dpb, &long_terms);
-
-        for (iter = long_terms; iter; iter = g_list_next (iter)) {
-          GstH264Picture *long_term_picture = (GstH264Picture *) iter->data;
-          if (long_term_picture->long_term_frame_idx >
-              priv->max_long_term_frame_idx)
-            long_term_picture->ref = FALSE;
+        for (i = 0; i < pictures->len; i++) {
+          GstH264Picture *pic = g_array_index (pictures, GstH264Picture *, i);
+          if (pic->long_term &&
+              pic->long_term_frame_idx > priv->max_long_term_frame_idx)
+            pic->ref = FALSE;
         }
 
-        if (long_terms)
-          g_list_free_full (long_terms,
-              (GDestroyNotify) gst_h264_picture_unref);
+        g_array_unref (pictures);
         break;
       }
 
@@ -1322,24 +1338,21 @@ gst_h264_decoder_handle_memory_management_opt (GstH264Decoder * self,
         break;
 
       case 6:{
+        GArray *pictures = gst_h264_dpb_get_pictures_all (priv->dpb);
+        gint i;
+
         /* Replace long term reference pictures with current picture.
          * First unmark if any existing with this long_term_frame_idx... */
-        GList *long_terms = NULL;
-        GList *iter;
 
-        gst_h264_dpb_get_pictures_long_term_ref (priv->dpb, &long_terms);
+        for (i = 0; i < pictures->len; i++) {
+          GstH264Picture *pic = g_array_index (pictures, GstH264Picture *, i);
 
-        for (iter = long_terms; iter; iter = g_list_next (iter)) {
-          GstH264Picture *long_term_picture = (GstH264Picture *) iter->data;
-
-          if (long_term_picture->long_term_frame_idx ==
-              ref_pic_marking->long_term_frame_idx)
-            long_term_picture->ref = FALSE;
+          if (pic->long_term &&
+              pic->long_term_frame_idx == ref_pic_marking->long_term_frame_idx)
+            pic->ref = FALSE;
         }
 
-        if (long_terms)
-          g_list_free_full (long_terms,
-              (GDestroyNotify) gst_h264_picture_unref);
+        g_array_unref (pictures);
 
         /* and mark the current one instead */
         picture->ref = TRUE;
@@ -1453,9 +1466,8 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
     GstH264Picture * picture)
 {
   GstH264DecoderPrivate *priv = self->priv;
-  GList *not_outputted = NULL;
+  GArray *not_outputted = priv->to_output;
   guint num_remaining;
-  GList *iter;
 #ifndef GST_DISABLE_GST_DEBUG
   gint i;
 #endif
@@ -1491,38 +1503,36 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
    * future reference */
 
   /* Get all pictures that haven't been outputted yet */
-  gst_h264_dpb_get_pictures_not_outputted (priv->dpb, &not_outputted);
+  gst_h264_dpb_get_pictures_not_outputted (priv->dpb, not_outputted);
   /* Include the one we've just decoded */
-  not_outputted = g_list_append (not_outputted, picture);
+  g_array_append_val (not_outputted, picture);
 
   /* for debugging */
 #ifndef GST_DISABLE_GST_DEBUG
-  GST_TRACE_OBJECT (self, "Before sorting not outputted list");
-  i = 0;
-  for (iter = not_outputted; iter; iter = g_list_next (iter)) {
-    GstH264Picture *tmp = (GstH264Picture *) iter->data;
-
-    GST_TRACE_OBJECT (self,
-        "\t%dth picture %p (frame_num %d, poc %d)", i, tmp,
-        tmp->frame_num, tmp->pic_order_cnt);
-    i++;
+  if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= GST_LEVEL_TRACE) {
+    GST_TRACE_OBJECT (self, "Before sorting not outputted list");
+    for (i = 0; i < not_outputted->len; i++) {
+      GstH264Picture *tmp = g_array_index (not_outputted, GstH264Picture *, i);
+      GST_TRACE_OBJECT (self,
+          "\t%dth picture %p (frame_num %d, poc %d)", i, tmp,
+          tmp->frame_num, tmp->pic_order_cnt);
+    }
   }
 #endif
 
   /* Sort in output order */
-  not_outputted = g_list_sort (not_outputted, (GCompareFunc) poc_asc_compare);
+  g_array_sort (not_outputted, (GCompareFunc) poc_asc_compare);
 
 #ifndef GST_DISABLE_GST_DEBUG
-  GST_TRACE_OBJECT (self,
-      "After sorting not outputted list in poc ascending order");
-  i = 0;
-  for (iter = not_outputted; iter; iter = g_list_next (iter)) {
-    GstH264Picture *tmp = (GstH264Picture *) iter->data;
-
+  if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= GST_LEVEL_TRACE) {
     GST_TRACE_OBJECT (self,
-        "\t%dth picture %p (frame_num %d, poc %d)", i, tmp,
-        tmp->frame_num, tmp->pic_order_cnt);
-    i++;
+        "After sorting not outputted list in poc ascending order");
+    for (i = 0; i < not_outputted->len; i++) {
+      GstH264Picture *tmp = g_array_index (not_outputted, GstH264Picture *, i);
+      GST_TRACE_OBJECT (self,
+          "\t%dth picture %p (frame_num %d, poc %d)", i, tmp,
+          tmp->frame_num, tmp->pic_order_cnt);
+    }
   }
 #endif
 
@@ -1531,8 +1541,7 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
    * in DPB afterwards would at least be equal to max_num_reorder_frames.
    * If the outputted picture is not a reference picture, it doesn't have
    * to remain in the DPB and can be removed */
-  iter = not_outputted;
-  num_remaining = g_list_length (not_outputted);
+  num_remaining = not_outputted->len;
 
   while (num_remaining > priv->max_num_reorder_frames ||
       /* If the condition below is used, this is an invalid stream. We should
@@ -1544,7 +1553,8 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
       ((gst_h264_dpb_is_full (priv->dpb) && (!picture->outputted
                   || picture->ref))
           && num_remaining)) {
-    GstH264Picture *to_output = (GstH264Picture *) iter->data;
+    GstH264Picture *to_output = g_array_index (not_outputted, GstH264Picture *,
+        not_outputted->len - num_remaining);
 
     if (num_remaining <= priv->max_num_reorder_frames) {
       GST_WARNING_OBJECT (self,
@@ -1562,7 +1572,6 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
         gst_h264_dpb_delete_by_poc (priv->dpb, outputted_poc);
     }
 
-    iter = g_list_next (iter);
     num_remaining--;
   }
 
@@ -1629,9 +1638,7 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
       gst_h264_decoder_do_output_picture (self, picture);
   }
 
-  if (not_outputted)
-    g_list_free_full (not_outputted, (GDestroyNotify) gst_h264_picture_unref);
-
+  g_array_set_size (not_outputted, 0);
   return TRUE;
 }
 
