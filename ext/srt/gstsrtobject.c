@@ -744,6 +744,9 @@ thread_func (gpointer data)
         continue;
       }
 
+      GST_DEBUG_OBJECT (srtobject->element, "Accept to connect %d",
+          caller->sock);
+
       g_mutex_lock (&srtobject->sock_lock);
       srtobject->callers = g_list_append (srtobject->callers, caller);
       g_cond_signal (&srtobject->sock_cond);
@@ -752,8 +755,6 @@ thread_func (gpointer data)
       /* notifying caller-added */
       g_signal_emit_by_name (srtobject->element, "caller-added", caller->sock,
           caller->sockaddr);
-
-      GST_DEBUG_OBJECT (srtobject->element, "Accept to connect");
 
       if (gst_uri_handler_get_uri_type (GST_URI_HANDLER (srtobject->element)) ==
           GST_URI_SRC)
@@ -1146,20 +1147,28 @@ static gboolean
 gst_srt_object_wait_caller (GstSRTObject * srtobject,
     GCancellable * cancellable, GError ** errorj)
 {
-  gboolean ret = FALSE;
-
-  GST_DEBUG_OBJECT (srtobject->element, "Waiting connection from caller");
+  gboolean ret;
 
   g_mutex_lock (&srtobject->sock_lock);
-  while (!g_cancellable_is_cancelled (cancellable)) {
-    ret = (srtobject->callers != NULL);
-    if (ret)
-      break;
-    g_cond_wait (&srtobject->sock_cond, &srtobject->sock_lock);
-  }
-  g_mutex_unlock (&srtobject->sock_lock);
 
-  GST_DEBUG_OBJECT (srtobject->element, "got %s connection", ret ? "a" : "no");
+  if (srtobject->callers == NULL) {
+    GST_INFO_OBJECT (srtobject->element, "Waiting for connection");
+
+    while (!g_cancellable_is_cancelled (cancellable)) {
+      ret = (srtobject->callers != NULL);
+      if (ret)
+        break;
+
+      g_cond_wait (&srtobject->sock_cond, &srtobject->sock_lock);
+    }
+
+    GST_DEBUG_OBJECT (srtobject->element, "Got %s connection",
+        ret ? "a" : "no");
+  } else {
+    ret = TRUE;
+  }
+
+  g_mutex_unlock (&srtobject->sock_lock);
 
   return ret;
 }
@@ -1374,6 +1383,8 @@ gst_srt_object_write_to_callers (GstSRTObject * srtobject,
       gint rest = MIN (mapinfo->size - len, payload_size);
       sent = srt_sendmsg2 (caller->sock, (char *) (msg + len), rest, 0);
       if (sent < 0) {
+        GST_WARNING_OBJECT (srtobject->element, "Dropping caller %d: %s",
+            caller->sock, srt_getlasterror_str ());
         goto err;
       }
       len += sent;
