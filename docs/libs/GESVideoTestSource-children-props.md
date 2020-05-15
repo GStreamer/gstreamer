@@ -12,27 +12,6 @@ Value type: #guint
 
 See #videotestsrc:background-color
 
-#### `fields`
-
-Fields to use for deinterlacing
-
-Valid values:
-  - **All fields** (0) – all
-  - **Top fields only** (1) – top
-  - **Bottom fields only** (2) – bottom
-  - **Automatically detect** (3) – auto
-
-See #deinterlace:fields
-
-#### `font-desc`
-
-Pango font description of font to be used for rendering. See documentation of
-pango_font_description_from_string for syntax.
-
-Value type: #gchararray
-
-See #timeoverlay:font-desc
-
 #### `foreground-color`
 
 Foreground color to use (big-endian ARGB)
@@ -41,36 +20,11 @@ Value type: #guint
 
 See #videotestsrc:foreground-color
 
-#### `halignment`
-
-Horizontal alignment of the text
-
-Valid values:
-  - **left** (0) – left
-  - **center** (1) – center
-  - **right** (2) – right
-  - **position** (4) – Absolute position clamped to canvas
-  - **absolute** (5) – Absolute position
-
-See #timeoverlay:halignment
-
 #### `height`
 
 height of the source
 
 Value type: #gint
-
-#### `mode`
-
-Deinterlace Mode
-
-Valid values:
-  - **Auto detection (best effort)** (0) – auto
-  - **Force deinterlacing** (1) – interlaced
-  - **Run in passthrough mode** (2) – disabled
-  - **Auto detection (strict)** (3) – auto-strict
-
-See #deinterlace:mode
 
 #### `pattern`
 
@@ -116,76 +70,6 @@ Value type: #gint
 y position of the stream
 
 Value type: #gint
-
-#### `text-width`
-
-Resulting width of font rendering
-
-Value type: #guint
-
-See #timeoverlay:text-width
-
-#### `text-x`
-
-Resulting X position of font rendering.
-
-Value type: #gint
-
-See #timeoverlay:text-x
-
-#### `text-y`
-
-Resulting X position of font rendering.
-
-Value type: #gint
-
-See #timeoverlay:text-y
-
-#### `tff`
-
-Deinterlace top field first
-
-Valid values:
-  - **Auto detection** (0) – auto
-  - **Top field first** (1) – tff
-  - **Bottom field first** (2) – bff
-
-See #deinterlace:tff
-
-#### `time-mode`
-
-What time to show
-
-Valid values:
-  - **buffer-time** (0) – buffer-time
-  - **stream-time** (1) – stream-time
-  - **running-time** (2) – running-time
-  - **time-code** (3) – time-code
-
-See #timeoverlay:time-mode
-
-#### `use-time-overlay`
-
-Use time overlay, setting a child property corresponding toGstTimeOverlay will
-switch this on by default.
-
-Value type: #gboolean
-
-See #GESVideoTestSource:use-time-overlay
-
-#### `valignment`
-
-Vertical alignment of the text
-
-Valid values:
-  - **baseline** (0) – baseline
-  - **bottom** (1) – bottom
-  - **top** (2) – top
-  - **position** (3) – Absolute position clamped to canvas
-  - **center** (4) – center
-  - **absolute** (5) – Absolute position
-
-See #timeoverlay:valignment
 
 #### `video-direction`
 

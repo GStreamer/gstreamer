@@ -12,18 +12,6 @@ Value type: #guint
 
 See #timeoverlay:color
 
-#### `fields`
-
-Fields to use for deinterlacing
-
-Valid values:
-  - **All fields** (0) – all
-  - **Top fields only** (1) – top
-  - **Bottom fields only** (2) – bottom
-  - **Automatically detect** (3) – auto
-
-See #deinterlace:fields
-
 #### `font-desc`
 
 Pango font description of font to be used for rendering. See documentation of
@@ -59,18 +47,6 @@ See #timeoverlay:halignment
 height of the source
 
 Value type: #gint
-
-#### `mode`
-
-Deinterlace Mode
-
-Valid values:
-  - **Auto detection (best effort)** (0) – auto
-  - **Force deinterlacing** (1) – interlaced
-  - **Run in passthrough mode** (2) – disabled
-  - **Auto detection (strict)** (3) – auto-strict
-
-See #deinterlace:mode
 
 #### `outline-color`
 
@@ -172,17 +148,6 @@ Resulting X position of font rendering.
 Value type: #gint
 
 See #timeoverlay:text-y
-
-#### `tff`
-
-Deinterlace top field first
-
-Valid values:
-  - **Auto detection** (0) – auto
-  - **Top field first** (1) – tff
-  - **Bottom field first** (2) – bff
-
-See #deinterlace:tff
 
 #### `valignment`
 
