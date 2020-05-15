@@ -628,7 +628,7 @@ void GstQuickRenderer::initializeGstGL ()
      * 2. QAnimationDriver controls the 'animation time' that the Qml scene is
      *    rendered at
      */
-    /* FIXME: what happens with multiple qmlgloverlay elements?  Do we need a 
+    /* FIXME: what happens with multiple qmlgloverlay elements?  Do we need a
      * shared animation driver? */
     g_mutex_lock (&m_sharedRenderData->lock);
     if (m_sharedRenderData->m_animationDriver == nullptr) {
@@ -720,8 +720,9 @@ bool GstQuickRenderer::setQmlScene (const gchar * scene, GError ** error)
         initializeQml();
 
     if (m_errorString != "") {
+        QByteArray string = m_errorString.toUtf8();
         g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_SETTINGS,
-            "%s", m_errorString.toUtf8());
+            "%s", string.constData());
         return FALSE;
     }
 
