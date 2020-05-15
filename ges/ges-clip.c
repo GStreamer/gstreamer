@@ -2083,7 +2083,8 @@ _group (GList * containers)
      * children */
     _update_duration_limit (cclip);
 
-    ges_layer_remove_clip (layer, cclip);
+    if (layer)
+      ges_layer_remove_clip (layer, cclip);
   }
 
   /* Need to update the duration limit.
