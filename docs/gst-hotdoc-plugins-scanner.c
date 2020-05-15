@@ -708,6 +708,9 @@ static void
 _add_object_details (GString * json, GObject * object)
 {
   GType type;
+  GType *interfaces;
+  guint n_interfaces;
+
   g_string_append (json, "\"hierarchy\": [");
 
   for (type = G_OBJECT_TYPE (object);; type = g_type_parent (type)) {
@@ -718,6 +721,21 @@ _add_object_details (GString * json, GObject * object)
       break;
   }
   g_string_append (json, "]");
+
+  interfaces = g_type_interfaces (G_OBJECT_TYPE (object), &n_interfaces);
+  if (n_interfaces) {
+    GType *iface;
+
+    g_string_append (json, ",\"interfaces\": [");
+    for (iface = interfaces; *iface; iface++, n_interfaces--) {
+      g_string_append_printf (json, "\"%s\"%c", g_type_name (*iface),
+          n_interfaces > 1 ? ',' : ' ');
+    }
+
+    g_string_append (json, "]");
+    g_free (interfaces);
+  }
+
   _add_properties (json, object, G_OBJECT_GET_CLASS (object));
   _add_signals (json, object);
 
