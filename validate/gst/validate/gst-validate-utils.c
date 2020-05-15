@@ -731,6 +731,7 @@ _file_get_structures (GFile * file, gchar ** err,
             goto failed;
           }
         } else {
+          gchar *included_path = NULL;
           GFile *included = NULL;
           GList *tmpstructures;
           gchar **include_dirs = NULL;
@@ -745,7 +746,7 @@ _file_get_structures (GFile * file, gchar ** err,
           }
 
           if (get_include_paths_func)
-            include_dirs = get_include_paths_func (g_file_peek_path (file));
+            include_dirs = get_include_paths_func (filename);
 
           if (!include_dirs) {
             GFile *dir = g_file_get_parent (file);
@@ -767,8 +768,9 @@ _file_get_structures (GFile * file, gchar ** err,
             }
           }
 
-          GST_INFO ("%s including %s", g_file_peek_path (file),
-              g_file_peek_path (included));
+          included_path = g_file_get_path (included);
+          GST_INFO ("%s including %s", filename, included_path);
+          g_free (included_path);
 
           tmpstructures = _file_get_structures (included, &included_err,
               get_include_paths_func);
