@@ -401,4 +401,12 @@ gboolean ges_timeline_element_edit                                    (GESTimeli
                                                                        GESEditMode mode,
                                                                        GESEdge edge,
                                                                        guint64 position);
+
+GES_API
+gboolean ges_timeline_element_edit_full                                (GESTimelineElement * self,
+                                                                       gint64 new_layer_priority,
+                                                                       GESEditMode mode,
+                                                                       GESEdge edge,
+                                                                       guint64 position,
+                                                                       GError ** error);
 G_END_DECLS

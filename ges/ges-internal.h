@@ -61,6 +61,10 @@ GstDebugCategory * _ges_debug (void);
 #define _set_duration0 ges_timeline_element_set_duration
 #define _set_priority0 ges_timeline_element_set_priority
 
+#define GES_CLOCK_TIME_IS_LESS(first, second) \
+  (GST_CLOCK_TIME_IS_VALID (first) && (!GST_CLOCK_TIME_IS_VALID (second) \
+  || (first) < (second)))
+
 #define DEFAULT_FRAMERATE_N 30
 #define DEFAULT_FRAMERATE_D 1
 #define DEFAULT_WIDTH 1280
@@ -110,8 +114,8 @@ G_GNUC_INTERNAL gboolean ges_timeline_is_disposed (GESTimeline* timeline);
 
 G_GNUC_INTERNAL gboolean
 ges_timeline_edit (GESTimeline * timeline, GESTimelineElement * element,
-    GList * layers, gint64 new_layer_priority, GESEditMode mode, GESEdge edge,
-    guint64 position);
+    gint64 new_layer_priority, GESEditMode mode, GESEdge edge,
+    guint64 position, GError ** error);
 
 G_GNUC_INTERNAL void
 timeline_add_group             (GESTimeline *timeline,
@@ -152,7 +156,7 @@ G_GNUC_INTERNAL void
 ges_timeline_set_moving_track_elements (GESTimeline * timeline, gboolean moving);
 
 G_GNUC_INTERNAL gboolean
-ges_timeline_add_clip (GESTimeline * timeline, GESClip * clip);
+ges_timeline_add_clip (GESTimeline * timeline, GESClip * clip, GError ** error);
 
 G_GNUC_INTERNAL void
 ges_timeline_remove_clip (GESTimeline * timeline, GESClip * clip);
@@ -403,11 +407,11 @@ G_GNUC_INTERNAL gboolean          ges_clip_is_moving_from_layer   (GESClip *clip
 G_GNUC_INTERNAL void              ges_clip_set_moving_from_layer  (GESClip *clip, gboolean is_moving);
 G_GNUC_INTERNAL GESTrackElement*  ges_clip_create_track_element   (GESClip *clip, GESTrackType type);
 G_GNUC_INTERNAL GList*            ges_clip_create_track_elements  (GESClip *clip, GESTrackType type);
-G_GNUC_INTERNAL gboolean          ges_clip_can_set_inpoint_of_child (GESClip * clip, GESTrackElement * child, GstClockTime inpoint);
-G_GNUC_INTERNAL gboolean          ges_clip_can_set_max_duration_of_child (GESClip * clip, GESTrackElement * child, GstClockTime max_duration);
-G_GNUC_INTERNAL gboolean          ges_clip_can_set_active_of_child (GESClip * clip, GESTrackElement * child, gboolean active);
-G_GNUC_INTERNAL gboolean          ges_clip_can_set_priority_of_child (GESClip * clip, GESTrackElement * child, guint32 priority);
-G_GNUC_INTERNAL gboolean          ges_clip_can_set_track_of_child (GESClip * clip, GESTrackElement * child, GESTrack * tack);
+G_GNUC_INTERNAL gboolean          ges_clip_can_set_inpoint_of_child (GESClip * clip, GESTrackElement * child, GstClockTime inpoint, GError ** error);
+G_GNUC_INTERNAL gboolean          ges_clip_can_set_max_duration_of_child (GESClip * clip, GESTrackElement * child, GstClockTime max_duration, GError ** error);
+G_GNUC_INTERNAL gboolean          ges_clip_can_set_active_of_child (GESClip * clip, GESTrackElement * child, gboolean active, GError ** error);
+G_GNUC_INTERNAL gboolean          ges_clip_can_set_priority_of_child (GESClip * clip, GESTrackElement * child, guint32 priority, GError ** error);
+G_GNUC_INTERNAL gboolean          ges_clip_can_set_track_of_child (GESClip * clip, GESTrackElement * child, GESTrack * tack, GError ** error);
 G_GNUC_INTERNAL void              ges_clip_empty_from_track       (GESClip * clip, GESTrack * track);
 
 /****************************************************
@@ -420,7 +424,7 @@ G_GNUC_INTERNAL void layer_set_priority               (GESLayer * layer, guint p
  *              GESTrackElement                     *
  ****************************************************/
 #define         NLE_OBJECT_TRACK_ELEMENT_QUARK                  (g_quark_from_string ("nle_object_track_element_quark"))
-G_GNUC_INTERNAL gboolean  ges_track_element_set_track           (GESTrackElement * object, GESTrack * track);
+G_GNUC_INTERNAL gboolean  ges_track_element_set_track           (GESTrackElement * object, GESTrack * track, GError ** error);
 G_GNUC_INTERNAL void ges_track_element_copy_properties          (GESTimelineElement * element,
                                                                  GESTimelineElement * elementcopy);
 G_GNUC_INTERNAL void ges_track_element_set_layer_active         (GESTrackElement *element, gboolean active);

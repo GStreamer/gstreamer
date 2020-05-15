@@ -13,14 +13,16 @@ gboolean timeline_tree_can_move_element   (GNode *root,
                                            GESTimelineElement *element,
                                            guint32 priority,
                                            GstClockTime start,
-                                           GstClockTime duration);
+                                           GstClockTime duration,
+                                           GError ** error);
 
 gboolean timeline_tree_ripple             (GNode *root,
                                            GESTimelineElement *element,
                                            gint64 layer_priority_offset,
                                            GstClockTimeDiff offset,
                                            GESEdge edge,
-                                           GstClockTime snapping_distance);
+                                           GstClockTime snapping_distance,
+                                           GError ** error);
 
 void ges_timeline_emit_snapping           (GESTimeline * timeline,
                                            GESTrackElement * elem1,
@@ -32,7 +34,8 @@ gboolean timeline_tree_trim               (GNode *root,
                                            gint64 layer_priority_offset,
                                            GstClockTimeDiff offset,
                                            GESEdge edge,
-                                           GstClockTime snapping_distance);
+                                           GstClockTime snapping_distance,
+                                           GError ** error);
 
 
 gboolean timeline_tree_move               (GNode *root,
@@ -40,13 +43,15 @@ gboolean timeline_tree_move               (GNode *root,
                                            gint64 layer_priority_offset,
                                            GstClockTimeDiff offset,
                                            GESEdge edge,
-                                           GstClockTime snapping_distance);
+                                           GstClockTime snapping_distance,
+                                           GError ** error);
 
 gboolean timeline_tree_roll               (GNode * root,
                                            GESTimelineElement * element,
                                            GstClockTimeDiff offset,
                                            GESEdge edge,
-                                           GstClockTime snapping_distance);
+                                           GstClockTime snapping_distance,
+                                           GError ** error);
 
 typedef GESAutoTransition *
 (*GESTreeGetAutoTransitionFunc)           (GESTimeline * timeline,

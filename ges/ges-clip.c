@@ -212,10 +212,6 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GESClip, ges_clip,
   (GST_CLOCK_TIME_IS_VALID (a) ? \
   (GST_CLOCK_TIME_IS_VALID (b) ? MIN (a, b) : a) : b) \
 
-#define _CLOCK_TIME_IS_LESS(first, second) \
-  (GST_CLOCK_TIME_IS_VALID (first) && (!GST_CLOCK_TIME_IS_VALID (second) \
-  || first < second))
-
 /****************************************************
  *                 duration-limit                   *
  ****************************************************/
@@ -366,7 +362,7 @@ _update_duration_limit (GESClip * self)
     GST_INFO_OBJECT (self, "duration-limit for the clip is %"
         GST_TIME_FORMAT, GST_TIME_ARGS (duration_limit));
 
-    if (_CLOCK_TIME_IS_LESS (duration_limit, element->duration)
+    if (GES_CLOCK_TIME_IS_LESS (duration_limit, element->duration)
         && !GES_TIMELINE_ELEMENT_BEING_EDITED (self)) {
       gboolean res;
 
@@ -379,7 +375,7 @@ _update_duration_limit (GESClip * self)
       if (element->timeline)
         res = timeline_tree_trim (timeline_get_tree (element->timeline),
             element, 0, GST_CLOCK_DIFF (duration_limit, element->duration),
-            GES_EDGE_END, 0);
+            GES_EDGE_END, 0, NULL);
       else
         res = ges_timeline_element_set_duration (element, duration_limit);
 
@@ -396,18 +392,18 @@ _update_duration_limit (GESClip * self)
 
 /* transfer full of child_data */
 static gboolean
-_can_update_duration_limit (GESClip * self, GList * child_data)
+_can_update_duration_limit (GESClip * self, GList * child_data, GError ** error)
 {
   GESTimeline *timeline = GES_TIMELINE_ELEMENT_TIMELINE (self);
   GstClockTime duration = _calculate_duration_limit (self, child_data);
   GESTimelineElement *element = GES_TIMELINE_ELEMENT (self);
 
-  if (_CLOCK_TIME_IS_LESS (duration, element->duration)) {
+  if (GES_CLOCK_TIME_IS_LESS (duration, element->duration)) {
     /* NOTE: timeline would normally not be NULL at this point */
     if (timeline
         && !timeline_tree_can_move_element (timeline_get_tree (timeline),
             element, ges_timeline_element_get_layer_priority (element),
-            element->start, duration)) {
+            element->start, duration, error)) {
       return FALSE;
     }
   }
@@ -446,7 +442,7 @@ _get_priority_range (GESContainer * container, guint32 * min_priority,
 
 gboolean
 ges_clip_can_set_priority_of_child (GESClip * clip, GESTrackElement * child,
-    guint32 priority)
+    guint32 priority, GError ** error)
 {
   GList *child_data;
   DurationLimitData *data;
@@ -459,7 +455,7 @@ ges_clip_can_set_priority_of_child (GESClip * clip, GESTrackElement * child,
 
   child_data = _duration_limit_data_list_with_data (clip, data);
 
-  if (!_can_update_duration_limit (clip, child_data)) {
+  if (!_can_update_duration_limit (clip, child_data, error)) {
     GST_INFO_OBJECT (clip, "Cannot move the child %" GES_FORMAT " from "
         "priority %" G_GUINT32_FORMAT " to %" G_GUINT32_FORMAT " because "
         "the duration-limit cannot be adjusted", GES_ARGS (child),
@@ -489,7 +485,8 @@ _child_priority_changed (GESContainer * container, GESTimelineElement * child)
  ****************************************************/
 
 static gboolean
-_can_set_inpoint_of_core_children (GESClip * clip, GstClockTime inpoint)
+_can_set_inpoint_of_core_children (GESClip * clip, GstClockTime inpoint,
+    GError ** error)
 {
   GList *tmp;
   GList *child_data = NULL;
@@ -505,13 +502,18 @@ _can_set_inpoint_of_core_children (GESClip * clip, GstClockTime inpoint)
         _duration_limit_data_new (GES_TRACK_ELEMENT (child));
 
     if (_IS_CORE_INTERNAL_SOURCE_CHILD (child)) {
-      if (GST_CLOCK_TIME_IS_VALID (child->maxduration)
-          && child->maxduration < inpoint) {
+      if (GES_CLOCK_TIME_IS_LESS (child->maxduration, inpoint)) {
         GST_INFO_OBJECT (clip, "Cannot set the in-point from %"
-            G_GUINT64_FORMAT " to %" G_GUINT64_FORMAT " because it would "
+            GST_TIME_FORMAT " to %" GST_TIME_FORMAT " because it would "
             "cause the in-point of its core child %" GES_FORMAT
-            " to exceed its max-duration", _INPOINT (clip), inpoint,
-            GES_ARGS (child));
+            " to exceed its max-duration", GST_TIME_ARGS (_INPOINT (clip)),
+            GST_TIME_ARGS (inpoint), GES_ARGS (child));
+        g_set_error (error, GES_ERROR, GES_ERROR_NOT_ENOUGH_INTERNAL_CONTENT,
+            "Cannot set the in-point of \"%s\" to %" GST_TIME_FORMAT
+            " because it would exceed the max-duration of %" GST_TIME_FORMAT
+            " for the child \"%s\"", GES_TIMELINE_ELEMENT_NAME (clip),
+            GST_TIME_ARGS (inpoint), GST_TIME_ARGS (child->maxduration),
+            child->name);
 
         _duration_limit_data_free (data);
         g_list_free_full (child_data, _duration_limit_data_free);
@@ -524,10 +526,10 @@ _can_set_inpoint_of_core_children (GESClip * clip, GstClockTime inpoint)
     child_data = g_list_prepend (child_data, data);
   }
 
-  if (!_can_update_duration_limit (clip, child_data)) {
-    GST_INFO_OBJECT (clip, "Cannot set the in-point from %" G_GUINT64_FORMAT
-        " to %" G_GUINT64_FORMAT " because the duration-limit cannot be "
-        "adjusted", _INPOINT (clip), inpoint);
+  if (!_can_update_duration_limit (clip, child_data, error)) {
+    GST_INFO_OBJECT (clip, "Cannot set the in-point from %" GST_TIME_FORMAT
+        " to %" GST_TIME_FORMAT " because the duration-limit cannot be "
+        "adjusted", GST_TIME_ARGS (_INPOINT (clip)), GST_TIME_ARGS (inpoint));
     return FALSE;
   }
 
@@ -538,7 +540,7 @@ _can_set_inpoint_of_core_children (GESClip * clip, GstClockTime inpoint)
  * its children have a max-duration below it */
 gboolean
 ges_clip_can_set_inpoint_of_child (GESClip * clip, GESTrackElement * child,
-    GstClockTime inpoint)
+    GstClockTime inpoint, GError ** error)
 {
   /* don't bother checking if we are setting the value */
   if (clip->priv->setting_inpoint)
@@ -555,11 +557,11 @@ ges_clip_can_set_inpoint_of_child (GESClip * clip, GESTrackElement * child,
 
     child_data = _duration_limit_data_list_with_data (clip, data);
 
-    if (!_can_update_duration_limit (clip, child_data)) {
+    if (!_can_update_duration_limit (clip, child_data, error)) {
       GST_INFO_OBJECT (clip, "Cannot set the in-point of non-core child %"
-          GES_FORMAT " from %" G_GUINT64_FORMAT " to %" G_GUINT64_FORMAT
+          GES_FORMAT " from %" GST_TIME_FORMAT " to %" GST_TIME_FORMAT
           " because the duration-limit cannot be adjusted", GES_ARGS (child),
-          _INPOINT (child), inpoint);
+          GST_TIME_ARGS (_INPOINT (child)), GST_TIME_ARGS (inpoint));
       return FALSE;
     }
 
@@ -568,7 +570,7 @@ ges_clip_can_set_inpoint_of_child (GESClip * clip, GESTrackElement * child,
 
   /* setting the in-point of a core child will shift the in-point of all
    * core children with an internal source */
-  return _can_set_inpoint_of_core_children (clip, inpoint);
+  return _can_set_inpoint_of_core_children (clip, inpoint, error);
 }
 
 /* returns TRUE if duration-limit needs to be updated */
@@ -622,7 +624,7 @@ _update_max_duration (GESContainer * container)
 
 gboolean
 ges_clip_can_set_max_duration_of_child (GESClip * clip, GESTrackElement * child,
-    GstClockTime max_duration)
+    GstClockTime max_duration, GError ** error)
 {
   GList *child_data;
   DurationLimitData *data;
@@ -635,11 +637,11 @@ ges_clip_can_set_max_duration_of_child (GESClip * clip, GESTrackElement * child,
 
   child_data = _duration_limit_data_list_with_data (clip, data);
 
-  if (!_can_update_duration_limit (clip, child_data)) {
+  if (!_can_update_duration_limit (clip, child_data, error)) {
     GST_INFO_OBJECT (clip, "Cannot set the max-duration of child %"
-        GES_FORMAT " from %" G_GUINT64_FORMAT " to %" G_GUINT64_FORMAT
+        GES_FORMAT " from %" GST_TIME_FORMAT " to %" GST_TIME_FORMAT
         " because the duration-limit cannot be adjusted", GES_ARGS (child),
-        _MAXDURATION (child), max_duration);
+        GST_TIME_ARGS (_MAXDURATION (child)), GST_TIME_ARGS (max_duration));
     return FALSE;
   }
 
@@ -685,7 +687,7 @@ _child_has_internal_source_changed (GESClip * self, GESTimelineElement * child)
 
 gboolean
 ges_clip_can_set_active_of_child (GESClip * clip, GESTrackElement * child,
-    gboolean active)
+    gboolean active, GError ** error)
 {
   GESTrack *track = ges_track_element_get_track (child);
   gboolean is_core = _IS_CORE_CHILD (child);
@@ -722,7 +724,7 @@ ges_clip_can_set_active_of_child (GESClip * clip, GESTrackElement * child,
     }
   }
 
-  if (!_can_update_duration_limit (clip, child_data)) {
+  if (!_can_update_duration_limit (clip, child_data, error)) {
     GST_INFO_OBJECT (clip, "Cannot set the active of child %" GES_FORMAT
         " from %i to %i because the duration-limit cannot be adjusted",
         GES_ARGS (child), ges_track_element_is_active (child), active);
@@ -803,7 +805,7 @@ _track_contains_non_core (GESClip * clip, GESTrack * track)
 
 gboolean
 ges_clip_can_set_track_of_child (GESClip * clip, GESTrackElement * child,
-    GESTrack * track)
+    GESTrack * track, GError ** error)
 {
   GList *child_data;
   DurationLimitData *data;
@@ -816,12 +818,14 @@ ges_clip_can_set_track_of_child (GESClip * clip, GESTrackElement * child,
   if (current_track == track)
     return TRUE;
 
+  /* NOTE: we consider the following error cases programming errors by
+   * the user */
   if (current_track) {
     /* can not remove a core element from a track if a non-core one sits
      * above it */
     if (_IS_CORE_CHILD (child)
         && _track_contains_non_core (clip, current_track)) {
-      GST_INFO_OBJECT (clip, "Cannot move the core child %" GES_FORMAT
+      GST_WARNING_OBJECT (clip, "Cannot move the core child %" GES_FORMAT
           " to the track %" GST_PTR_FORMAT " because it has non-core "
           "siblings above it in its current track %" GST_PTR_FORMAT,
           GES_ARGS (child), track, current_track);
@@ -833,13 +837,13 @@ ges_clip_can_set_track_of_child (GESClip * clip, GESTrackElement * child,
     GESTimeline *clip_timeline = GES_TIMELINE_ELEMENT_TIMELINE (clip);
     const GESTimeline *track_timeline = ges_track_get_timeline (track);
     if (track_timeline == NULL) {
-      GST_INFO_OBJECT (clip, "Cannot move the child %" GES_FORMAT
+      GST_WARNING_OBJECT (clip, "Cannot move the child %" GES_FORMAT
           " to the track %" GST_PTR_FORMAT " because it is not part "
           "of a timeline", GES_ARGS (child), track);
       return FALSE;
     }
     if (track_timeline != clip_timeline) {
-      GST_INFO_OBJECT (clip, "Cannot move the child %" GES_FORMAT
+      GST_WARNING_OBJECT (clip, "Cannot move the child %" GES_FORMAT
           " to the track %" GST_PTR_FORMAT " because its timeline %"
           GST_PTR_FORMAT " does not match the clip's timeline %"
           GST_PTR_FORMAT, GES_ARGS (child), track, track_timeline,
@@ -852,7 +856,7 @@ ges_clip_can_set_track_of_child (GESClip * clip, GESTrackElement * child,
      * placed in a track that already has a core child */
     if (_IS_CORE_CHILD (child)) {
       if (core) {
-        GST_INFO_OBJECT (clip, "Cannot move the core child %" GES_FORMAT
+        GST_WARNING_OBJECT (clip, "Cannot move the core child %" GES_FORMAT
             " to the track %" GST_PTR_FORMAT " because it contains a "
             "core sibling %" GES_FORMAT, GES_ARGS (child), track,
             GES_ARGS (core));
@@ -860,7 +864,7 @@ ges_clip_can_set_track_of_child (GESClip * clip, GESTrackElement * child,
       }
     } else {
       if (!core) {
-        GST_INFO_OBJECT (clip, "Cannot move the non-core child %"
+        GST_WARNING_OBJECT (clip, "Cannot move the non-core child %"
             GES_FORMAT " to the track %" GST_PTR_FORMAT " because it "
             " does not contain a core sibling", GES_ARGS (child), track);
         return FALSE;
@@ -881,7 +885,7 @@ ges_clip_can_set_track_of_child (GESClip * clip, GESTrackElement * child,
 
   child_data = _duration_limit_data_list_with_data (clip, data);
 
-  if (!_can_update_duration_limit (clip, child_data)) {
+  if (!_can_update_duration_limit (clip, child_data, error)) {
     GST_INFO_OBJECT (clip, "Cannot move the child %" GES_FORMAT " from "
         "track %" GST_PTR_FORMAT " to track %" GST_PTR_FORMAT " because "
         "the duration-limit cannot be adjusted", GES_ARGS (child),
@@ -1034,7 +1038,7 @@ _set_childrens_inpoint (GESTimelineElement * element, GstClockTime inpoint,
 static gboolean
 _set_inpoint (GESTimelineElement * element, GstClockTime inpoint)
 {
-  if (!_can_set_inpoint_of_core_children (GES_CLIP (element), inpoint)) {
+  if (!_can_set_inpoint_of_core_children (GES_CLIP (element), inpoint, NULL)) {
     GST_WARNING_OBJECT (element, "Cannot set the in-point to %"
         GST_TIME_FORMAT, GST_TIME_ARGS (inpoint));
     return FALSE;
@@ -1097,10 +1101,11 @@ _set_max_duration (GESTimelineElement * element, GstClockTime maxduration)
     child_data = g_list_prepend (child_data, data);
   }
 
-  if (!_can_update_duration_limit (self, child_data)) {
+  if (!_can_update_duration_limit (self, child_data, NULL)) {
     GST_WARNING_OBJECT (self, "Cannot set the max-duration from %"
-        G_GUINT64_FORMAT " to %" G_GUINT64_FORMAT " because the "
-        "duration-limit cannot be adjusted", element->maxduration, maxduration);
+        GST_TIME_FORMAT " to %" GST_TIME_FORMAT " because the "
+        "duration-limit cannot be adjusted",
+        GST_TIME_ARGS (element->maxduration), GST_TIME_ARGS (maxduration));
     return FALSE;
   }
 
@@ -1357,7 +1362,7 @@ _add_child (GESContainer * container, GESTimelineElement * element)
 
       child_data = _duration_limit_data_list_with_data (self, data);
 
-      if (!_can_update_duration_limit (self, child_data)) {
+      if (!_can_update_duration_limit (self, child_data, NULL)) {
         GST_WARNING_OBJECT (self, "Cannot add core %" GES_FORMAT " as a "
             "child because the duration-limit cannot be adjusted",
             GES_ARGS (element));
@@ -1418,7 +1423,7 @@ _add_child (GESContainer * container, GESTimelineElement * element)
           data->priority++;
       }
 
-      if (!_can_update_duration_limit (self, child_data)) {
+      if (!_can_update_duration_limit (self, child_data, NULL)) {
         GST_WARNING_OBJECT (self, "Cannot add effect %" GES_FORMAT " as "
             "a child because the duration-limit cannot be adjusted",
             GES_ARGS (element));
@@ -1502,7 +1507,7 @@ _remove_child (GESContainer * container, GESTimelineElement * element)
           g_list_prepend (child_data, _duration_limit_data_new (child));
     }
 
-    if (!_can_update_duration_limit (self, child_data)) {
+    if (!_can_update_duration_limit (self, child_data, NULL)) {
       GST_WARNING_OBJECT (self, "Cannot remove the child %" GES_FORMAT
           " because the duration-limit cannot be adjusted", GES_ARGS (el));
       return FALSE;
@@ -2338,9 +2343,10 @@ ges_clip_is_moving_from_layer (GESClip * clip)
 }
 
 /**
- * ges_clip_move_to_layer:
+ * ges_clip_move_to_layer_full:
  * @clip: A #GESClip
  * @layer: The new layer
+ * @error: (nullable): Return location for an error
  *
  * Moves a clip to a new layer. If the clip already exists in a layer, it
  * is first removed from its current layer before being added to the new
@@ -2349,7 +2355,7 @@ ges_clip_is_moving_from_layer (GESClip * clip)
  * Returns: %TRUE if @clip was successfully moved to @layer.
  */
 gboolean
-ges_clip_move_to_layer (GESClip * clip, GESLayer * layer)
+ges_clip_move_to_layer_full (GESClip * clip, GESLayer * layer, GError ** error)
 {
   gboolean ret = FALSE;
   GESLayer *current_layer;
@@ -2357,6 +2363,7 @@ ges_clip_move_to_layer (GESClip * clip, GESLayer * layer)
 
   g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
   g_return_val_if_fail (GES_IS_LAYER (layer), FALSE);
+  g_return_val_if_fail (!error || !*error, FALSE);
 
   element = GES_TIMELINE_ELEMENT (clip);
   current_layer = clip->priv->layer;
@@ -2387,7 +2394,7 @@ ges_clip_move_to_layer (GESClip * clip, GESLayer * layer)
     /* move to new layer, also checks moving of toplevel */
     return timeline_tree_move (timeline_get_tree (layer->timeline),
         element, (gint64) ges_layer_get_priority (current_layer) -
-        (gint64) ges_layer_get_priority (layer), 0, GES_EDGE_NONE, 0);
+        (gint64) ges_layer_get_priority (layer), 0, GES_EDGE_NONE, 0, error);
   }
 
   gst_object_ref (clip);
@@ -2416,6 +2423,21 @@ done:
   gst_object_unref (clip);
 
   return ret && (clip->priv->layer == layer);
+}
+
+/**
+ * ges_clip_move_to_layer:
+ * @clip: A #GESClip
+ * @layer: The new layer
+ *
+ * See ges_clip_move_to_layer_full(), which also gives an error.
+ *
+ * Returns: %TRUE if @clip was successfully moved to @layer.
+ */
+gboolean
+ges_clip_move_to_layer (GESClip * clip, GESLayer * layer)
+{
+  return ges_clip_move_to_layer_full (clip, layer, NULL);
 }
 
 /**
@@ -2603,10 +2625,11 @@ ges_clip_set_top_effect_priority (GESClip * clip,
 }
 
 /**
- * ges_clip_set_top_effect_index:
+ * ges_clip_set_top_effect_index_full:
  * @clip: A #GESClip
  * @effect: An effect within @clip to move
  * @newindex: The index for @effect in @clip
+ * @error: (nullable): Return location for an error
  *
  * Set the index of an effect within the clip. See
  * ges_clip_get_top_effect_index(). The new index must be an existing
@@ -2617,8 +2640,8 @@ ges_clip_set_top_effect_priority (GESClip * clip,
  * Returns: %TRUE if @effect was successfully moved to @newindex.
  */
 gboolean
-ges_clip_set_top_effect_index (GESClip * clip, GESBaseEffect * effect,
-    guint newindex)
+ges_clip_set_top_effect_index_full (GESClip * clip, GESBaseEffect * effect,
+    guint newindex, GError ** error)
 {
   gint inc;
   GList *top_effects, *tmp;
@@ -2628,6 +2651,7 @@ ges_clip_set_top_effect_index (GESClip * clip, GESBaseEffect * effect,
 
   g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
   g_return_val_if_fail (GES_IS_BASE_EFFECT (effect), FALSE);
+  g_return_val_if_fail (!error || !*error, FALSE);
 
   if (!_is_added_effect (clip, effect))
     return FALSE;
@@ -2670,8 +2694,8 @@ ges_clip_set_top_effect_index (GESClip * clip, GESBaseEffect * effect,
     child_data = g_list_prepend (child_data, data);
   }
 
-  if (!_can_update_duration_limit (clip, child_data)) {
-    GST_WARNING_OBJECT (clip, "Cannot move top effect %" GES_FORMAT
+  if (!_can_update_duration_limit (clip, child_data, error)) {
+    GST_INFO_OBJECT (clip, "Cannot move top effect %" GES_FORMAT
         " to index %i because the duration-limit cannot adjust",
         GES_ARGS (effect), newindex);
     return FALSE;
@@ -2707,9 +2731,28 @@ ges_clip_set_top_effect_index (GESClip * clip, GESBaseEffect * effect,
 }
 
 /**
- * ges_clip_split:
+ * ges_clip_set_top_effect_index:
+ * @clip: A #GESClip
+ * @effect: An effect within @clip to move
+ * @newindex: The index for @effect in @clip
+ *
+ * See ges_clip_set_top_effect_index_full(), which also gives an error.
+ *
+ * Returns: %TRUE if @effect was successfully moved to @newindex.
+ */
+gboolean
+ges_clip_set_top_effect_index (GESClip * clip, GESBaseEffect * effect,
+    guint newindex)
+{
+  return ges_clip_set_top_effect_index_full (clip, effect, newindex, NULL);
+}
+
+/**
+ * ges_clip_split_full:
  * @clip: The #GESClip to split
- * @position: The timeline position at which to perform the split
+ * @position: The timeline position at which to perform the split, between
+ * the start and end of the clip
+ * @error: (nullable): Return location for an error
  *
  * Splits a clip at the given timeline position into two clips. The clip
  * must already have a #GESClip:layer.
@@ -2743,7 +2786,7 @@ ges_clip_set_top_effect_index (GESClip * clip, GESBaseEffect * effect,
  * from the splitting @clip, or %NULL if @clip can't be split.
  */
 GESClip *
-ges_clip_split (GESClip * clip, guint64 position)
+ges_clip_split_full (GESClip * clip, guint64 position, GError ** error)
 {
   GList *tmp, *transitions = NULL;
   GESClip *new_object;
@@ -2752,10 +2795,12 @@ ges_clip_split (GESClip * clip, guint64 position)
   GESTimelineElement *element;
   GESTimeline *timeline;
   GHashTable *track_for_copy;
+  guint32 layer_prio;
 
   g_return_val_if_fail (GES_IS_CLIP (clip), NULL);
   g_return_val_if_fail (clip->priv->layer, NULL);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (position), NULL);
+  g_return_val_if_fail (!error || !*error, NULL);
 
   element = GES_TIMELINE_ELEMENT (clip);
   timeline = element->timeline;
@@ -2770,26 +2815,26 @@ ges_clip_split (GESClip * clip, guint64 position)
     return NULL;
   }
 
+  layer_prio = ges_timeline_element_get_layer_priority (element);
+
   old_duration = position - start;
-  if (timeline && !timeline_tree_can_move_element (timeline_get_tree
-          (timeline), element,
-          ges_timeline_element_get_layer_priority (element),
-          start, old_duration)) {
-    GST_WARNING_OBJECT (clip,
+  if (timeline
+      && !timeline_tree_can_move_element (timeline_get_tree (timeline), element,
+          layer_prio, start, old_duration, error)) {
+    GST_INFO_OBJECT (clip,
         "Can not split %" GES_FORMAT " at %" GST_TIME_FORMAT
-        " as timeline would be in an illegal" " state.", GES_ARGS (clip),
+        " as timeline would be in an illegal state.", GES_ARGS (clip),
         GST_TIME_ARGS (position));
     return NULL;
   }
 
   new_duration = duration + start - position;
-  if (timeline && !timeline_tree_can_move_element (timeline_get_tree
-          (timeline), element,
-          ges_timeline_element_get_layer_priority (element),
-          position, new_duration)) {
-    GST_WARNING_OBJECT (clip,
+  if (timeline
+      && !timeline_tree_can_move_element (timeline_get_tree (timeline), element,
+          layer_prio, position, new_duration, error)) {
+    GST_INFO_OBJECT (clip,
         "Can not split %" GES_FORMAT " at %" GST_TIME_FORMAT
-        " as timeline would end up in an illegal" " state.", GES_ARGS (clip),
+        " as timeline would be in an illegal state.", GES_ARGS (clip),
         GST_TIME_ARGS (position));
     return NULL;
   }
@@ -2877,6 +2922,22 @@ ges_clip_split (GESClip * clip, guint64 position)
   g_list_free_full (transitions, gst_object_unref);
 
   return new_object;
+}
+
+/**
+ * ges_clip_split:
+ * @clip: The #GESClip to split
+ * @position: The timeline position at which to perform the split
+ *
+ * See ges_clip_split_full(), which also gives an error.
+ *
+ * Returns: (transfer none) (nullable): The newly created clip resulting
+ * from the splitting @clip, or %NULL if @clip can't be split.
+ */
+GESClip *
+ges_clip_split (GESClip * clip, guint64 position)
+{
+  return ges_clip_split_full (clip, position, NULL);
 }
 
 /**
@@ -3073,7 +3134,7 @@ ges_clip_get_timeline_time_from_source_frame (GESClip * clip,
  * @clip: A #GESClip
  * @child: A child of @clip
  * @track: The track to add @child to
- * @err: Return location for an error
+ * @error: (nullable): Return location for an error
  *
  * Adds the track element child of the clip to a specific track.
  *
@@ -3098,14 +3159,12 @@ ges_clip_get_timeline_time_from_source_frame (GESClip * clip,
  * such as causing three sources to overlap at a single time, or causing
  * a source to completely overlap another in the same track.
  *
- * Note that @err will not always be set upon failure.
- *
  * Returns: (transfer none): The element that was added to @track, either
  * @child or a copy of child, or %NULL if the element could not be added.
  */
 GESTrackElement *
 ges_clip_add_child_to_track (GESClip * clip, GESTrackElement * child,
-    GESTrack * track, GError ** err)
+    GESTrack * track, GError ** error)
 {
   GESTimeline *timeline;
   GESTrackElement *el;
@@ -3114,7 +3173,7 @@ ges_clip_add_child_to_track (GESClip * clip, GESTrackElement * child,
   g_return_val_if_fail (GES_IS_CLIP (clip), NULL);
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (child), NULL);
   g_return_val_if_fail (GES_IS_TRACK (track), NULL);
-  g_return_val_if_fail (!err || !*err, NULL);
+  g_return_val_if_fail (!error || !*error, NULL);
 
   timeline = GES_TIMELINE_ELEMENT_TIMELINE (clip);
 
@@ -3164,11 +3223,8 @@ ges_clip_add_child_to_track (GESClip * clip, GESTrackElement * child,
     el = child;
   }
 
-  /* FIXME: set error if can not be added to track:
-   * Either breaks the track rules for the clip, or the timeline
-   * configuration rules */
-  if (!ges_track_add_element (track, el)) {
-    GST_WARNING_OBJECT (clip, "Could not add the track element %"
+  if (!ges_track_add_element_full (track, el, error)) {
+    GST_INFO_OBJECT (clip, "Could not add the track element %"
         GES_FORMAT " to the track %" GST_PTR_FORMAT, GES_ARGS (el), track);
     if (el != child)
       ges_container_remove (GES_CONTAINER (clip), GES_TIMELINE_ELEMENT (el));

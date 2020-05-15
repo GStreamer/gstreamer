@@ -52,19 +52,73 @@
  * content prioritised in the tracks. This ordering can be changed using
  * ges_timeline_move_layer().
  *
+ * ## Editing
+ *
+ * See #GESTimelineElement for the various ways the elements of a timeline
+ * can be edited.
+ *
+ * If you change the timing or ordering of a timeline's
+ * #GESTimelineElement-s, then these changes will not actually be taken
+ * into account in the output of the timeline's tracks until the
+ * ges_timeline_commit() method is called. This allows you to move its
+ * elements around, say, in response to an end user's mouse dragging, with
+ * little expense before finalising their effect on the produced data.
+ *
+ * ## Overlaps and Auto-Transitions
+ *
+ * There are certain restrictions placed on how #GESSource-s may overlap
+ * in a #GESTrack that belongs to a timeline. These will be enforced by
+ * GES, so the user will not need to keep track of them, but they should
+ * be aware that certain edits will be refused as a result if the overlap
+ * rules would be broken.
+ *
+ * Consider two #GESSource-s, `A` and `B`, with start times `startA` and
+ * `startB`, and end times `endA` and `endB`, respectively. The start
+ * time refers to their #GESTimelineElement:start, and the end time is
+ * their #GESTimelineElement:start + #GESTimelineElement:duration. These
+ * two sources *overlap* if:
+ *
+ * + they share the same #GESTrackElement:track (non %NULL), which belongs
+ *   to the timeline;
+ * + they share the same #GES_TIMELINE_ELEMENT_LAYER_PRIORITY; and
+ * + `startA < endB` and `startB < endA `.
+ *
+ * Note that when `startA = endB` or `startB = endA` then the two sources
+ * will *touch* at their edges, but are not considered overlapping.
+ *
+ * If, in addition, `startA < startB < endA`, then we can say that the
+ * end of `A` overlaps the start of `B`.
+ *
+ * If, instead, `startA <= startB` and `endA >= endB`, then we can say
+ * that `A` fully overlaps `B`.
+ *
+ * The overlap rules for a timeline are that:
+ *
+ * 1. One source cannot fully overlap another source.
+ * 2. A source can only overlap the end of up to one other source at its
+ *    start.
+ * 3. A source can only overlap the start of up to one other source at its
+ *    end.
+ *
+ * The last two rules combined essentially mean that at any given timeline
+ * position, only up to two #GESSource-s may overlap at that position. So
+ * triple or more overlaps are not allowed.
+ *
+ * If you switch on #GESTimeline:auto-transition, then at any moment when
+ * the end of one source (the first source) overlaps the start of another
+ * (the second source), a #GESTransitionClip will be automatically created
+ * for the pair in the same layer and it will cover their overlap. If the
+ * two elements are edited in a way such that the end of the first source
+ * no longer overlaps the start of the second, the transition will be
+ * automatically removed from the timeline. However, if the two sources
+ * still overlap at the same edges after the edit, then the same
+ * transition object will be kept, but with its timing and layer adjusted
+ * accordingly.
+ *
  * ## Saving
  *
  * To save/load a timeline, you can use the ges_timeline_load_from_uri()
  * and ges_timeline_save_to_uri() methods that use the default format.
- *
- * ## Editing
- *
- * If you change the timing or ordering of a timeline's
- * #GESTimelineElement-s, then these changes will not actually be taken
- * into account in the timeline until the ges_timeline_commit() method is
- * called. This allows you to move its elements around, say, in
- * response to an end user's mouse dragging, with little expense before
- * finalising their effect.
  *
  * ## Playing
  *
@@ -152,7 +206,11 @@ struct _GESTimelinePrivate
   /* While we are creating and adding the TrackElements for a clip, we need to
    * ignore the child-added signal */
   gboolean track_elements_moving;
-  gboolean track_selection_error;
+  /* whether any error occurred during track selection, including
+   * programming or usage errors */
+  gboolean has_any_track_selection_error;
+  /* error set for non-programming/usage errors */
+  GError *track_selection_error;
   GList *groups;
 
   guint stream_start_group_id;
@@ -355,6 +413,8 @@ ges_timeline_dispose (GObject * object)
 
   gst_clear_object (&priv->auto_transition_track);
   gst_clear_object (&priv->new_track);
+  g_clear_error (&priv->track_selection_error);
+  priv->track_selection_error = NULL;
 
   G_OBJECT_CLASS (ges_timeline_parent_class)->dispose (object);
 }
@@ -553,8 +613,10 @@ ges_timeline_class_init (GESTimelineClass * klass)
   /**
    * GESTimeline:auto-transition:
    *
-   * Whether to automatically create a transition whenever two clips
-   * overlap in the timeline. See #GESLayer:auto-transition.
+   * Whether to automatically create a transition whenever two
+   * #GESSource-s overlap in a track of the timeline. See
+   * #GESLayer:auto-transition if you want this to only happen in some
+   * layers.
    */
   g_object_class_install_property (object_class, PROP_AUTO_TRANSITION,
       g_param_spec_boolean ("auto-transition", "Auto-Transition",
@@ -1168,8 +1230,8 @@ ges_timeline_freeze_auto_transitions (GESTimeline * timeline, gboolean freeze)
 
 static gint
 _edit_auto_transition (GESTimeline * timeline, GESTimelineElement * element,
-    GList * layers, gint64 new_layer_priority, GESEditMode mode, GESEdge edge,
-    GstClockTime position)
+    gint64 new_layer_priority, GESEditMode mode, GESEdge edge,
+    GstClockTime position, GError ** error)
 {
   GList *tmp;
   guint32 layer_prio = ges_timeline_element_get_layer_priority (element);
@@ -1210,8 +1272,8 @@ _edit_auto_transition (GESTimeline * timeline, GESTimelineElement * element,
 
       GST_INFO_OBJECT (element, "Trimming %" GES_FORMAT " in place  of "
           "trimming the corresponding auto-transition", GES_ARGS (replace));
-      return ges_timeline_element_edit (replace, layers, -1, mode, edge,
-          position);
+      return ges_timeline_element_edit_full (replace, -1, mode, edge,
+          position, error);
     }
   }
 
@@ -1220,8 +1282,8 @@ _edit_auto_transition (GESTimeline * timeline, GESTimelineElement * element,
 
 gboolean
 ges_timeline_edit (GESTimeline * timeline, GESTimelineElement * element,
-    GList * layers, gint64 new_layer_priority, GESEditMode mode, GESEdge edge,
-    guint64 position)
+    gint64 new_layer_priority, GESEditMode mode, GESEdge edge,
+    guint64 position, GError ** error)
 {
   GstClockTimeDiff edge_diff = (edge == GES_EDGE_END ?
       GST_CLOCK_DIFF (position, element->start + element->duration) :
@@ -1231,8 +1293,8 @@ ges_timeline_edit (GESTimeline * timeline, GESTimelineElement * element,
   gint res = -1;
 
   if ((GES_IS_TRANSITION (element) || GES_IS_TRANSITION_CLIP (element)))
-    res = _edit_auto_transition (timeline, element, layers, new_layer_priority,
-        mode, edge, position);
+    res = _edit_auto_transition (timeline, element, new_layer_priority, mode,
+        edge, position, error);
 
   if (res != -1)
     return res;
@@ -1240,20 +1302,20 @@ ges_timeline_edit (GESTimeline * timeline, GESTimelineElement * element,
   switch (mode) {
     case GES_EDIT_MODE_RIPPLE:
       return timeline_tree_ripple (timeline->priv->tree, element, prio_diff,
-          edge_diff, edge, timeline->priv->snapping_distance);
+          edge_diff, edge, timeline->priv->snapping_distance, error);
     case GES_EDIT_MODE_TRIM:
       return timeline_tree_trim (timeline->priv->tree, element, prio_diff,
-          edge_diff, edge, timeline->priv->snapping_distance);
+          edge_diff, edge, timeline->priv->snapping_distance, error);
     case GES_EDIT_MODE_NORMAL:
       return timeline_tree_move (timeline->priv->tree, element, prio_diff,
-          edge_diff, edge, timeline->priv->snapping_distance);
+          edge_diff, edge, timeline->priv->snapping_distance, error);
     case GES_EDIT_MODE_ROLL:
       if (prio_diff != 0) {
         GST_WARNING_OBJECT (element, "Cannot roll an element to a new layer");
         return FALSE;
       }
       return timeline_tree_roll (timeline->priv->tree, element,
-          edge_diff, edge, timeline->priv->snapping_distance);
+          edge_diff, edge, timeline->priv->snapping_distance, error);
     case GES_EDIT_MODE_SLIDE:
       GST_ERROR_OBJECT (element, "Sliding not implemented.");
       return FALSE;
@@ -1420,7 +1482,7 @@ _get_selected_tracks (GESTimeline * timeline, GESClip * clip,
  * selected tracks */
 static gboolean
 _add_track_element_to_tracks (GESTimeline * timeline, GESClip * clip,
-    GESTrackElement * track_element)
+    GESTrackElement * track_element, GError ** error)
 {
   guint i;
   gboolean ret = TRUE;
@@ -1428,8 +1490,11 @@ _add_track_element_to_tracks (GESTimeline * timeline, GESClip * clip,
 
   for (i = 0; i < tracks->len; i++) {
     GESTrack *track = GES_TRACK (g_ptr_array_index (tracks, i));
-    if (!ges_clip_add_child_to_track (clip, track_element, track, NULL))
+    if (!ges_clip_add_child_to_track (clip, track_element, track, error)) {
       ret = FALSE;
+      if (error)
+        break;
+    }
   }
 
   g_ptr_array_unref (tracks);
@@ -1439,7 +1504,7 @@ _add_track_element_to_tracks (GESTimeline * timeline, GESClip * clip,
 
 static gboolean
 _try_add_track_element_to_track (GESTimeline * timeline, GESClip * clip,
-    GESTrackElement * track_element, GESTrack * track)
+    GESTrackElement * track_element, GESTrack * track, GError ** error)
 {
   gboolean no_error = TRUE;
   GPtrArray *tracks = _get_selected_tracks (timeline, clip, track_element);
@@ -1449,7 +1514,7 @@ _try_add_track_element_to_track (GESTimeline * timeline, GESClip * clip,
    * if it does we add the track element to the track, or add a copy if
    * the track element is already in a track */
   if (g_ptr_array_find (tracks, track, NULL)) {
-    if (!ges_clip_add_child_to_track (clip, track_element, track, NULL))
+    if (!ges_clip_add_child_to_track (clip, track_element, track, error))
       no_error = FALSE;
   }
 
@@ -1469,21 +1534,46 @@ ges_timeline_set_moving_track_elements (GESTimeline * timeline, gboolean moving)
 }
 
 static void
-_set_track_selection_error (GESTimeline * timeline, gboolean error)
+ges_timeline_set_track_selection_error (GESTimeline * timeline,
+    gboolean was_error, GError * error)
 {
+  GESTimelinePrivate *priv;
+
   LOCK_DYN (timeline);
-  timeline->priv->track_selection_error = error;
+
+  priv = timeline->priv;
+  g_clear_error (&priv->track_selection_error);
+  priv->track_selection_error = error;
+  priv->has_any_track_selection_error = was_error;
+
   UNLOCK_DYN (timeline);
 }
 
 static gboolean
-_get_track_selection_error (GESTimeline * timeline)
+ges_timeline_take_track_selection_error (GESTimeline * timeline,
+    GError ** error)
 {
   gboolean ret;
+  GESTimelinePrivate *priv;
 
   LOCK_DYN (timeline);
-  ret = timeline->priv->track_selection_error;
-  timeline->priv->track_selection_error = FALSE;
+
+  priv = timeline->priv;
+  if (error) {
+    if (*error) {
+      GST_ERROR_OBJECT (timeline, "Error not handled %s", (*error)->message);
+      g_error_free (*error);
+    }
+    *error = priv->track_selection_error;
+  } else if (priv->track_selection_error) {
+    GST_WARNING_OBJECT (timeline, "Got track selection error: %s",
+        priv->track_selection_error->message);
+    g_error_free (priv->track_selection_error);
+  }
+  priv->track_selection_error = NULL;
+  ret = priv->has_any_track_selection_error;
+  priv->has_any_track_selection_error = FALSE;
+
   UNLOCK_DYN (timeline);
 
   return ret;
@@ -1494,7 +1584,8 @@ clip_track_element_added_cb (GESClip * clip,
     GESTrackElement * track_element, GESTimeline * timeline)
 {
   GESTrack *auto_trans_track, *new_track;
-  gboolean error = FALSE;
+  GError *error = NULL;
+  gboolean success = FALSE;
 
   if (timeline->priv->track_elements_moving) {
     GST_DEBUG_OBJECT (timeline, "Ignoring element added: %" GES_FORMAT
@@ -1521,21 +1612,24 @@ clip_track_element_added_cb (GESClip * clip,
 
   if (auto_trans_track) {
     /* don't use track-selection */
-    if (!ges_clip_add_child_to_track (clip, track_element, auto_trans_track,
-            NULL))
-      error = TRUE;
+    success = ! !ges_clip_add_child_to_track (clip, track_element,
+        auto_trans_track, &error);
     gst_object_unref (auto_trans_track);
   } else {
     if (new_track)
-      error =
-          !_try_add_track_element_to_track (timeline, clip, track_element,
-          new_track);
+      success = _try_add_track_element_to_track (timeline, clip, track_element,
+          new_track, &error);
     else
-      error = !_add_track_element_to_tracks (timeline, clip, track_element);
+      success = _add_track_element_to_tracks (timeline, clip, track_element,
+          &error);
   }
 
-  if (error)
-    _set_track_selection_error (timeline, TRUE);
+  if (error || !success) {
+    if (!error)
+      GST_WARNING_OBJECT (timeline, "Track selection failed for %" GES_FORMAT,
+          GES_ARGS (track_element));
+    ges_timeline_set_track_selection_error (timeline, TRUE, error);
+  }
 }
 
 static void
@@ -1573,7 +1667,7 @@ track_element_added_cb (GESTrack * track, GESTrackElement * element,
 /* returns TRUE if no errors in adding to tracks */
 static gboolean
 _add_clip_children_to_tracks (GESTimeline * timeline, GESClip * clip,
-    gboolean add_core, GESTrack * new_track, GList * blacklist)
+    gboolean add_core, GESTrack * new_track, GList * blacklist, GError ** error)
 {
   GList *tmp, *children;
   gboolean no_errors = TRUE;
@@ -1589,13 +1683,19 @@ _add_clip_children_to_tracks (GESTimeline * timeline, GESClip * clip,
     if (ges_track_element_get_track (el) == NULL) {
       gboolean res;
       if (new_track)
-        res = _try_add_track_element_to_track (timeline, clip, el, new_track);
+        res = _try_add_track_element_to_track (timeline, clip, el, new_track,
+            error);
       else
-        res = _add_track_element_to_tracks (timeline, clip, el);
-      if (!res)
+        res = _add_track_element_to_tracks (timeline, clip, el, error);
+      if (!res) {
         no_errors = FALSE;
+        if (error)
+          goto done;
+      }
     }
   }
+
+done:
   g_list_free_full (children, gst_object_unref);
 
   return no_errors;
@@ -1604,12 +1704,10 @@ _add_clip_children_to_tracks (GESTimeline * timeline, GESClip * clip,
 /* returns TRUE if no errors in adding to tracks */
 static gboolean
 add_object_to_tracks (GESTimeline * timeline, GESClip * clip,
-    GESTrack * new_track)
+    GESTrack * new_track, GError ** error)
 {
   GList *tracks, *tmp, *list, *created, *just_added = NULL;
   gboolean no_errors = TRUE;
-  /* TODO: extend with GError ** argument, which is accepted by
-   * ges_clip_add_child_to_track */
 
   GST_DEBUG_OBJECT (timeline, "Creating %" GST_PTR_FORMAT
       " trackelements and adding them to our tracks", clip);
@@ -1619,12 +1717,19 @@ add_object_to_tracks (GESTimeline * timeline, GESClip * clip,
       g_list_copy_deep (timeline->tracks, (GCopyFunc) gst_object_ref, NULL);
   timeline->priv->new_track = new_track ? gst_object_ref (new_track) : NULL;
   UNLOCK_DYN (timeline);
+
   /* create core elements */
   for (tmp = tracks; tmp; tmp = tmp->next) {
     GESTrack *track = GES_TRACK (tmp->data);
     if (new_track && track != new_track)
       continue;
+
     list = ges_clip_create_track_elements (clip, track->type);
+    /* just_added only used for pointer comparison, so safe to include
+     * elements that may be destroyed because they fail to be added to
+     * the clip */
+    just_added = g_list_concat (just_added, list);
+
     for (created = list; created; created = created->next) {
       GESTimelineElement *el = created->data;
 
@@ -1640,21 +1745,25 @@ add_object_to_tracks (GESTimeline * timeline, GESClip * clip,
        * released. And when a child is selected for multiple tracks, their
        * copy will be added to the clip before the track is selected, so
        * the track will not be set in the child-added signal */
-      _set_track_selection_error (timeline, FALSE);
-      if (!ges_container_add (GES_CONTAINER (clip), el))
+      ges_timeline_set_track_selection_error (timeline, FALSE, NULL);
+      if (!ges_container_add (GES_CONTAINER (clip), el)) {
+        no_errors = FALSE;
         GST_ERROR_OBJECT (clip, "Could not add the core element %s "
             "to the clip", el->name);
-      if (_get_track_selection_error (timeline))
-        no_errors = FALSE;
-
+      }
       gst_object_unref (el);
+
+      if (error && !no_errors)
+        goto done;
+
+      if (ges_timeline_take_track_selection_error (timeline, error)) {
+        no_errors = FALSE;
+        if (error)
+          goto done;
+        /* else, carry on as much as we can */
+      }
     }
-    /* just_added only used for pointer comparison, so safe to include
-     * elements that are now destroyed because they failed to be added to
-     * the clip */
-    just_added = g_list_concat (just_added, list);
   }
-  g_list_free_full (tracks, gst_object_unref);
 
   /* set the tracks for the other children, with core elements first to
    * make sure the non-core can be placed above them in the track (a
@@ -1662,11 +1771,21 @@ add_object_to_tracks (GESTimeline * timeline, GESClip * clip,
   /* include just_added as a blacklist to ensure we do not try the track
    * selection a second time when track selection returns no tracks */
   if (!_add_clip_children_to_tracks (timeline, clip, TRUE, new_track,
-          just_added))
+          just_added, error)) {
     no_errors = FALSE;
+    if (error)
+      goto done;
+  }
+
   if (!_add_clip_children_to_tracks (timeline, clip, FALSE, new_track,
-          just_added))
+          just_added, error)) {
     no_errors = FALSE;
+    if (error)
+      goto done;
+  }
+
+done:
+  g_list_free_full (tracks, gst_object_unref);
 
   LOCK_DYN (timeline);
   gst_clear_object (&timeline->priv->new_track);
@@ -1721,12 +1840,10 @@ layer_auto_transition_changed_cb (GESLayer * layer,
 
 /* returns TRUE if selecting of tracks did not error */
 gboolean
-ges_timeline_add_clip (GESTimeline * timeline, GESClip * clip)
+ges_timeline_add_clip (GESTimeline * timeline, GESClip * clip, GError ** error)
 {
   GESProject *project;
   gboolean ret;
-  /* TODO: extend with GError ** argument, which is accepted by
-   * ges_clip_add_child_to_track */
 
   ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (clip), timeline);
 
@@ -1754,7 +1871,7 @@ ges_timeline_add_clip (GESTimeline * timeline, GESClip * clip)
     /* timeline-tree handles creation of auto-transitions */
     ret = TRUE;
   } else {
-    ret = add_object_to_tracks (timeline, clip, NULL);
+    ret = add_object_to_tracks (timeline, clip, NULL, error);
   }
 
   GST_DEBUG ("Done");
@@ -2215,7 +2332,7 @@ ges_timeline_add_layer (GESTimeline * timeline, GESLayer * layer)
   /* add any existing clips to the timeline */
   objects = ges_layer_get_clips (layer);
   for (tmp = objects; tmp; tmp = tmp->next)
-    ges_timeline_add_clip (timeline, tmp->data);
+    ges_timeline_add_clip (timeline, tmp->data, NULL);
   g_list_free_full (objects, gst_object_unref);
 
   return TRUE;
@@ -2361,7 +2478,7 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
     objects = ges_layer_get_clips (tmp->data);
 
     for (obj = objects; obj; obj = obj->next)
-      add_object_to_tracks (timeline, obj->data, track);
+      add_object_to_tracks (timeline, obj->data, track, NULL);
 
     g_list_free_full (objects, gst_object_unref);
   }

@@ -1249,6 +1249,7 @@ GST_START_TEST (test_adding_children_to_track)
   GESTrackElement *source, *effect, *effect2, *added, *added2, *added3;
   GstControlSource *ctrl_source;
   guint selection_called = 0;
+  GError *error = NULL;
 
   ges_init ();
 
@@ -1256,7 +1257,6 @@ GST_START_TEST (test_adding_children_to_track)
   ges_timeline_set_auto_transition (timeline, TRUE);
   track1 = GES_TRACK (ges_video_track_new ());
   track2 = GES_TRACK (ges_video_track_new ());
-
 
   /* only add two for now */
   fail_unless (ges_timeline_add_track (timeline, track1));
@@ -1325,18 +1325,21 @@ GST_START_TEST (test_adding_children_to_track)
   gst_object_unref (ctrl_source);
 
   /* can't add to a track that does not belong to the timeline */
-  fail_if (ges_clip_add_child_to_track (clip, source, track2, NULL));
+  fail_if (ges_clip_add_child_to_track (clip, source, track2, &error));
   assert_num_children (clip, 3);
   fail_unless (ges_track_element_get_track (source) == track1);
   assert_num_in_track (track1, 3);
   assert_num_in_track (track2, 0);
+  /* programming/usage error gives no error code/message */
+  fail_if (error);
 
   /* can't add the clip to a track that already contains our source */
-  fail_if (ges_clip_add_child_to_track (clip, source, track1, NULL));
+  fail_if (ges_clip_add_child_to_track (clip, source, track1, &error));
   assert_num_children (clip, 3);
   fail_unless (ges_track_element_get_track (source) == track1);
   assert_num_in_track (track1, 3);
   assert_num_in_track (track2, 0);
+  fail_if (error);
 
   /* can't remove a core element from its track whilst a non-core sits
    * above it */
@@ -1347,10 +1350,11 @@ GST_START_TEST (test_adding_children_to_track)
   assert_num_in_track (track2, 0);
 
   /* can not add to the same track as it is currently in */
-  fail_if (ges_clip_add_child_to_track (clip, effect, track1, NULL));
+  fail_if (ges_clip_add_child_to_track (clip, effect, track1, &error));
   fail_unless (ges_track_element_get_track (effect) == track1);
   assert_num_in_track (track1, 3);
   assert_num_in_track (track2, 0);
+  fail_if (error);
 
   /* adding another video track, select-tracks-for-object will do nothing
    * since no each track element is already part of a track */
@@ -1360,14 +1364,15 @@ GST_START_TEST (test_adding_children_to_track)
   assert_num_in_track (track2, 0);
 
   /* can not add effect to a track that does not contain a core child */
-  fail_if (ges_clip_add_child_to_track (clip, effect, track2, NULL));
+  fail_if (ges_clip_add_child_to_track (clip, effect, track2, &error));
   assert_num_children (clip, 3);
   assert_num_in_track (track1, 3);
   assert_num_in_track (track2, 0);
+  fail_if (error);
 
   /* can add core */
 
-  added = ges_clip_add_child_to_track (clip, source, track2, NULL);
+  added = ges_clip_add_child_to_track (clip, source, track2, &error);
   fail_unless (added);
   assert_num_children (clip, 4);
   fail_unless (added != source);
@@ -1375,6 +1380,7 @@ GST_START_TEST (test_adding_children_to_track)
   fail_unless (ges_track_element_get_track (added) == track2);
   assert_num_in_track (track1, 3);
   assert_num_in_track (track2, 1);
+  fail_if (error);
 
   assert_equal_children_properties (added, source);
   assert_equal_bindings (added, source);
@@ -1385,8 +1391,9 @@ GST_START_TEST (test_adding_children_to_track)
   assert_equals_int (1,
       ges_clip_get_top_effect_index (clip, GES_BASE_EFFECT (effect2)));
 
-  added2 = ges_clip_add_child_to_track (clip, effect, track2, NULL);
+  added2 = ges_clip_add_child_to_track (clip, effect, track2, &error);
   fail_unless (added2);
+  fail_if (error);
   assert_num_children (clip, 5);
   fail_unless (added2 != effect);
   fail_unless (ges_track_element_get_track (effect) == track1);
@@ -1404,8 +1411,9 @@ GST_START_TEST (test_adding_children_to_track)
   assert_equals_int (2,
       ges_clip_get_top_effect_index (clip, GES_BASE_EFFECT (effect2)));
 
-  added3 = ges_clip_add_child_to_track (clip, effect2, track2, NULL);
+  added3 = ges_clip_add_child_to_track (clip, effect2, track2, &error);
   fail_unless (added3);
+  fail_if (error);
   assert_num_children (clip, 6);
   fail_unless (added3 != effect2);
   fail_unless (ges_track_element_get_track (effect2) == track1);
@@ -1500,36 +1508,41 @@ GST_START_TEST (test_adding_children_to_track)
 
   /* can not add the source to the track because it would overlap another
    * source */
-  fail_if (ges_clip_add_child_to_track (clip, source, track1, NULL));
+  fail_if (ges_clip_add_child_to_track (clip, source, track1, &error));
   assert_num_children (clip, 3);
   assert_num_in_track (track1, 4);
+  assert_GESError (error, GES_ERROR_INVALID_OVERLAP_IN_TRACK);
 
   /* can not add source at time 23 because it would result in three
    * overlapping sources in the track */
   assert_set_start (clip, 23);
-  fail_if (ges_clip_add_child_to_track (clip, source, track1, NULL));
+  fail_if (ges_clip_add_child_to_track (clip, source, track1, &error));
   assert_num_children (clip, 3);
   assert_num_in_track (track1, 4);
+  assert_GESError (error, GES_ERROR_INVALID_OVERLAP_IN_TRACK);
 
   /* can add at 5, with overlap */
   assert_set_start (clip, 5);
-  added = ges_clip_add_child_to_track (clip, source, track1, NULL);
+  added = ges_clip_add_child_to_track (clip, source, track1, &error);
   /* added is the source since it was not already in a track */
   fail_unless (added == source);
+  fail_if (error);
   assert_num_children (clip, 3);
   /* 4 sources + 2 transitions */
   assert_num_in_track (track1, 6);
 
   /* also add effect */
-  added = ges_clip_add_child_to_track (clip, effect, track1, NULL);
+  added = ges_clip_add_child_to_track (clip, effect, track1, &error);
   /* added is the source since it was not already in a track */
   fail_unless (added == effect);
+  fail_if (error);
   assert_num_children (clip, 3);
   assert_num_in_track (track1, 7);
 
-  added = ges_clip_add_child_to_track (clip, effect2, track1, NULL);
+  added = ges_clip_add_child_to_track (clip, effect2, track1, &error);
   /* added is the source since it was not already in a track */
   fail_unless (added == effect2);
+  fail_if (error);
   assert_num_children (clip, 3);
   assert_num_in_track (track1, 8);
 
@@ -3071,6 +3084,7 @@ GST_START_TEST (test_can_set_duration_limit)
   GESTrackElement *effect0, *effect1, *effect2;
   GESTrack *track0, *track1;
   gint limit_notify_count = 0;
+  GError *error = NULL;
 
   ges_init ();
 
@@ -3175,7 +3189,8 @@ GST_START_TEST (test_can_set_duration_limit)
   CHECK_OBJECT_PROPS_MAX (source1, 10, 16, 20, 36);
   CHECK_OBJECT_PROPS_MAX (effect0, 10, 0, 20, 10);
 
-  fail_if (ges_clip_add_child_to_track (clip, effect0, track0, NULL));
+  fail_if (ges_clip_add_child_to_track (clip, effect0, track0, &error));
+  assert_GESError (error, GES_ERROR_INVALID_OVERLAP_IN_TRACK);
 
   /* set max-duration to 11 and we are fine to select a track */
   assert_set_max_duration (effect0, 11);
@@ -3183,7 +3198,8 @@ GST_START_TEST (test_can_set_duration_limit)
   _assert_duration_limit (clip, 20);
 
   fail_unless (ges_clip_add_child_to_track (clip, effect0, track0,
-          NULL) == effect0);
+          &error) == effect0);
+  fail_if (error);
 
   assert_equals_int (limit_notify_count, 2);
   _assert_duration_limit (clip, 11);

@@ -149,6 +149,21 @@ class GESTest(unittest.TestCase):
                    for effect in effects]
         self.assertEqual(indexes, list(range(len(effects))))
 
+    def assertGESError(self, error, code, message=""):
+        if error is None:
+            raise AssertionError(
+                "{}{}Received no error".format(message, message and ": "))
+        if error.domain != "GES_ERROR":
+            raise AssertionError(
+                "{}{}Received error ({}) in domain {} rather than "
+                "GES_ERROR".format(
+                    message, message and ": ", error.message, error.domain))
+        err_code = GES.Error(error.code)
+        if err_code != code:
+            raise AssertionError(
+                "{}{}Received {} error ({}) rather than {}".format(
+                    message, message and ": ", err_code.value_name,
+                    error.message, code.value_name))
 
 class GESSimpleTimelineTest(GESTest):
 
@@ -680,7 +695,7 @@ class GESTimelineConfigTest(GESTest):
     def assertEdit(self, element, layer, mode, edge, position, snap,
                    snap_froms, snap_tos, new_props, new_transitions,
                    lost_transitions):
-        if not element.edit([], layer, mode, edge, position):
+        if not element.edit_full(layer, mode, edge, position):
             raise AssertionError(
                 "Edit of {} to layer {}, mode {}, edge {}, at position {} "
                 "failed when a success was expected".format(
@@ -690,11 +705,31 @@ class GESTimelineConfigTest(GESTest):
             snap_tos=snap_tos, new_transitions=new_transitions,
             lost_transitions=lost_transitions)
 
-    def assertFailEdit(self, element, layer, mode, edge, position):
-        if element.edit([], layer, mode, edge, position):
-            raise AssertionError(
-                "Edit of {} to layer {}, mode {}, edge {}, at position {} "
-                "succeeded when a failure was expected".format(
-                    element, layer, mode, edge, position))
+    def assertFailEdit(self, element, layer, mode, edge, position, err_code):
+        res = None
+        error = None
+        try:
+            res = element.edit_full(layer, mode, edge, position)
+        except GLib.Error as exception:
+            error = exception
+
+        if err_code is None:
+            if res is not False:
+                raise AssertionError(
+                    "Edit of {} to layer {}, mode {}, edge {}, at "
+                    "position {} succeeded when a failure was expected"
+                    "".format(
+                        element, layer, mode, edge, position))
+            if error is not None:
+                raise AssertionError(
+                    "Edit of {} to layer {}, mode {}, edge {}, at "
+                    "position {} did produced an error when none was "
+                    "expected".format(
+                        element, layer, mode, edge, position))
+        else:
+            self.assertGESError(
+                error, err_code,
+                "Edit of {} to layer {}, mode {}, edge {}, at "
+                "position {}".format(element, layer, mode, edge, position))
         # should be no change or snapping if edit fails
         self.assertTimelineConfig()

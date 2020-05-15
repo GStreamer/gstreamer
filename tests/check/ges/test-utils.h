@@ -404,4 +404,13 @@ G_STMT_START {                                          \
   free_children_properties (props2, num2); \
 }
 
+#define assert_GESError(error, error_code) \
+{ \
+  fail_unless (error); \
+  fail_unless (error->domain == GES_ERROR); \
+  assert_equals_int (error->code, error_code); \
+  g_error_free (error); \
+  error = NULL; \
+}
+
 void print_timeline(GESTimeline *timeline);

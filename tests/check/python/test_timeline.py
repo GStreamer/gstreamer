@@ -27,6 +27,7 @@ gi.require_version("GES", "1.0")
 
 from gi.repository import Gst  # noqa
 from gi.repository import GES  # noqa
+from gi.repository import GLib  # noqa
 import unittest  # noqa
 from unittest import mock
 
@@ -561,8 +562,12 @@ class TestEditing(common.GESSimpleTimelineTest):
         self.assertTrue(clip.set_duration(10))
 
         # cannot trim to a 0 because effect0 would have a negative in-point
-        self.assertFalse(
-            clip.edit([], -1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 0))
+        error = None
+        try:
+            clip.edit_full(-1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 0)
+        except GLib.Error as err:
+            error = err
+        self.assertGESError(error, GES.Error.NEGATIVE_TIME)
 
         self.assertEqual(clip.start, 10)
         self.assertEqual(clip.inpoint, 12)
@@ -945,11 +950,20 @@ class TestInvalidOverlaps(common.GESSimpleTimelineTest):
         clip2 = self.add_clip(start=10, in_point=0, duration=4)
         clip3 = self.add_clip(start=12, in_point=0, duration=3)
 
-        self.assertIsNone(clip1.split(13))
-        self.assertIsNone(clip1.split(8))
+        self.assertIsNone(clip1.split_full(13))
+        self.assertIsNone(clip1.split_full(8))
+        self.assertIsNone(clip3.split_full(12))
+        self.assertIsNone(clip3.split_full(15))
 
-        self.assertIsNone(clip3.split(12))
-        self.assertIsNone(clip3.split(15))
+    def _fail_split(self, clip, position):
+        split = None
+        error = None
+        try:
+            split = clip.split_full(position)
+        except GLib.Error as err:
+            error = err
+        self.assertGESError(error, GES.Error.INVALID_OVERLAP_IN_TRACK)
+        self.assertIsNone(split)
 
     def test_split_with_transition(self):
         self.track_types = [GES.TrackType.AUDIO]
@@ -958,22 +972,41 @@ class TestInvalidOverlaps(common.GESSimpleTimelineTest):
 
         clip0 = self.add_clip(start=0, in_point=0, duration=50)
         clip1 = self.add_clip(start=20, in_point=0, duration=50)
+        clip2 = self.add_clip(start=60, in_point=0, duration=20)
         self.assertTimelineTopology([
             [
                 (GES.TestClip, 0, 50),
                 (GES.TransitionClip, 20, 30),
-                (GES.TestClip, 20, 50)
+                (GES.TestClip, 20, 50),
+                (GES.TransitionClip, 60, 10),
+                (GES.TestClip, 60, 20),
             ]
         ])
 
-        # Split should file as the first part of the split
+        # Split should fail as the first part of the split
         # would be fully overlapping clip0
-        self.assertIsNone(clip1.split(40))
+        self._fail_split(clip1, 40)
+
         self.assertTimelineTopology([
             [
                 (GES.TestClip, 0, 50),
                 (GES.TransitionClip, 20, 30),
-                (GES.TestClip, 20, 50)
+                (GES.TestClip, 20, 50),
+                (GES.TransitionClip, 60, 10),
+                (GES.TestClip, 60, 20),
+            ]
+        ])
+
+        # same with end of the clip
+        self._fail_split(clip1, 65)
+
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 0, 50),
+                (GES.TransitionClip, 20, 30),
+                (GES.TestClip, 20, 50),
+                (GES.TransitionClip, 60, 10),
+                (GES.TestClip, 60, 20),
             ]
         ])
 
@@ -1277,79 +1310,82 @@ class TestInvalidOverlaps(common.GESSimpleTimelineTest):
 
 class TestConfigurationRules(common.GESSimpleTimelineTest):
 
-    def _try_add_clip(self, start, duration, layer=None):
+    def _try_add_clip(self, start, duration, layer=None, error=None):
         if layer is None:
             layer = self.layer
         asset = GES.Asset.request(GES.TestClip, None)
+        found_err = None
+        clip = None
         # large inpoint to allow trims
-        return layer.add_asset (asset, start, 1000, duration,
-                GES.TrackType.UNKNOWN)
+        try:
+            clip = layer.add_asset_full(
+                asset, start, 1000, duration, GES.TrackType.UNKNOWN)
+        except GLib.Error as err:
+            found_err = err
+        if error is None:
+            self.assertIsNotNone(clip)
+        else:
+            self.assertIsNone(clip)
+            self.assertGESError(found_err, error)
+        return clip
 
     def test_full_overlap_add(self):
         clip1 = self._try_add_clip(50, 50)
-        self.assertIsNotNone(clip1)
-        self.assertIsNone(self._try_add_clip(50, 50))
-        self.assertIsNone(self._try_add_clip(49, 51))
-        self.assertIsNone(self._try_add_clip(51, 49))
+        self._try_add_clip(50, 50, error=GES.Error.INVALID_OVERLAP_IN_TRACK)
+        self._try_add_clip(49, 51, error=GES.Error.INVALID_OVERLAP_IN_TRACK)
+        self._try_add_clip(51, 49, error=GES.Error.INVALID_OVERLAP_IN_TRACK)
 
     def test_triple_overlap_add(self):
         clip1 = self._try_add_clip(0, 50)
-        self.assertIsNotNone(clip1)
         clip2 = self._try_add_clip(40, 50)
-        self.assertIsNotNone(clip2)
-        self.assertIsNone(self._try_add_clip(40, 10))
-        self.assertIsNone(self._try_add_clip(30, 30))
-        self.assertIsNone(self._try_add_clip(1, 88))
+        self._try_add_clip(39, 12, error=GES.Error.INVALID_OVERLAP_IN_TRACK)
+        self._try_add_clip(30, 30, error=GES.Error.INVALID_OVERLAP_IN_TRACK)
+        self._try_add_clip(1, 88, error=GES.Error.INVALID_OVERLAP_IN_TRACK)
 
     def test_full_overlap_move(self):
         clip1 = self._try_add_clip(0, 50)
-        self.assertIsNotNone(clip1)
         clip2 = self._try_add_clip(50, 50)
-        self.assertIsNotNone(clip2)
         self.assertFalse(clip2.set_start(0))
 
     def test_triple_overlap_move(self):
         clip1 = self._try_add_clip(0, 50)
-        self.assertIsNotNone(clip1)
         clip2 = self._try_add_clip(40, 50)
-        self.assertIsNotNone(clip2)
         clip3 = self._try_add_clip(100, 60)
-        self.assertIsNotNone(clip3)
         self.assertFalse(clip3.set_start(30))
 
     def test_full_overlap_move_into_layer(self):
         clip1 = self._try_add_clip(0, 50)
-        self.assertIsNotNone(clip1)
         layer2 = self.timeline.append_layer()
         clip2 = self._try_add_clip(0, 50, layer2)
-        self.assertIsNotNone(clip2)
-        self.assertFalse(clip2.move_to_layer(self.layer))
+        res = None
+        try:
+            res = clip2.move_to_layer_full(self.layer)
+        except GLib.Error as error:
+            self.assertGESError(error, GES.Error.INVALID_OVERLAP_IN_TRACK)
+        self.assertIsNone(res)
 
     def test_triple_overlap_move_into_layer(self):
         clip1 = self._try_add_clip(0, 50)
-        self.assertIsNotNone(clip1)
         clip2 = self._try_add_clip(40, 50)
-        self.assertIsNotNone(clip2)
         layer2 = self.timeline.append_layer()
         clip3 = self._try_add_clip(30, 30, layer2)
-        self.assertIsNotNone(clip3)
-        self.assertFalse(clip3.move_to_layer(self.layer))
+        res = None
+        try:
+            res = clip3.move_to_layer_full(self.layer)
+        except GLib.Error as error:
+            self.assertGESError(error, GES.Error.INVALID_OVERLAP_IN_TRACK)
+        self.assertIsNone(res)
 
     def test_full_overlap_trim(self):
         clip1 = self._try_add_clip(0, 50)
-        self.assertIsNotNone(clip1)
         clip2 = self._try_add_clip(50, 50)
-        self.assertIsNotNone(clip2)
         self.assertFalse(clip2.trim(0))
         self.assertFalse(clip1.set_duration(100))
 
     def test_triple_overlap_trim(self):
         clip1 = self._try_add_clip(0, 20)
-        self.assertIsNotNone(clip1)
         clip2 = self._try_add_clip(10, 30)
-        self.assertIsNotNone(clip2)
         clip3 = self._try_add_clip(30, 20)
-        self.assertIsNotNone(clip3)
         self.assertFalse(clip3.trim(19))
         self.assertFalse(clip1.set_duration(31))
 
@@ -1506,26 +1542,34 @@ class TestComplexEditing(common.GESTimelineConfigTest):
         # cannot move c0 up one layer because it would cause a triple
         # overlap between c1, c2 and c3 when g0 moves
         self.assertFailEdit(
-            c0, 1, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, 23)
+            c0, 1, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, 23,
+            GES.Error.INVALID_OVERLAP_IN_TRACK)
 
         # cannot move c0, without moving g1, to 21 layer 1 because it
         # would be completely overlapped by c2
         self.assertFailEdit(
-            c0, 1, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_START, 20)
+            c0, 1, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_START, 20,
+            GES.Error.INVALID_OVERLAP_IN_TRACK)
 
         # cannot move c1, without moving g1, with end 25 because it
         # would be completely overlapped by c2
         self.assertFailEdit(
-            c0, 1, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_END, 25)
+            c0, 1, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_END, 25,
+            GES.Error.INVALID_OVERLAP_IN_TRACK)
 
         # cannot move g0 to layer 0 because it would make c0 go to a
         # negative layer
         self.assertFailEdit(
-            g0, 0, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, 10)
+            g0, 0, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, 10,
+            GES.Error.NEGATIVE_LAYER)
 
         # cannot move c1 for same reason
-        self.assertFalse(
-            c1.move_to_layer(self.timeline.get_layer(0)))
+        error = None
+        try:
+            c1.move_to_layer_full(self.timeline.get_layer(0))
+        except GLib.Error as err:
+            error = err
+        self.assertGESError(error, GES.Error.NEGATIVE_LAYER)
         self.assertTimelineConfig({}, [])
 
         # failure with snapping
@@ -1534,17 +1578,20 @@ class TestComplexEditing(common.GESTimelineConfigTest):
         # cannot move to 0 because end edge of c0 would snap with end of
         # c3, making the new start become negative
         self.assertFailEdit(
-            g0, 1, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, 0)
+            g0, 1, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, 0,
+            GES.Error.NEGATIVE_TIME)
 
         # cannot move start of c1 to 14 because snapping causes a full
         # overlap with c0
         self.assertFailEdit(
-            c1, 1, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_START, 14)
+            c1, 1, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_START, 14,
+            GES.Error.INVALID_OVERLAP_IN_TRACK)
 
         # cannot move end of c2 to 21 because snapping causes a full
         # overlap with c0
         self.assertFailEdit(
-            c2, 1, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_END, 21)
+            c2, 1, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_END, 21,
+            GES.Error.INVALID_OVERLAP_IN_TRACK)
 
         # successes
         self.timeline.set_snapping_distance(3)
@@ -1701,19 +1748,22 @@ class TestComplexEditing(common.GESTimelineConfigTest):
 
         # would cause negative layer priority for c0
         self.assertFailEdit(
-            c1, 0, GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_NONE, 5)
+            c1, 0, GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_NONE, 5,
+            GES.Error.NEGATIVE_LAYER)
 
         # would lead to c2 fully overlapping c3 since c2 does ripple
         # but c3 does not(c3 shares a toplevel with c0, and
         # GES_EDGE_START, same as NORMAL mode, does not move the
         # toplevel
         self.assertFailEdit(
-            c2, 1, GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_END, 25)
+            c2, 1, GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_END, 25,
+            GES.Error.INVALID_OVERLAP_IN_TRACK)
 
         # would lead to c2 fully overlapping c3 since c2 does not
         # ripple but c3 does
         self.assertFailEdit(
-            c0, 0, GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_START, 13)
+            c0, 0, GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_START, 13,
+            GES.Error.INVALID_OVERLAP_IN_TRACK)
 
         # add two more clips
 
@@ -2160,34 +2210,41 @@ class TestComplexEditing(common.GESTimelineConfigTest):
         # cannot trim end of g0 to 16 because a0 and a1 would fully
         # overlap
         self.assertFailEdit(
-            g0, 1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_END, 15)
+            g0, 1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_END, 15,
+            GES.Error.INVALID_OVERLAP_IN_TRACK)
 
         # cannot edit to new layer because there would be triple overlaps
         # between v2, v3, v4 and v5
         self.assertFailEdit(
-            g2, 1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_END, 20)
+            g2, 1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_END, 20,
+            GES.Error.INVALID_OVERLAP_IN_TRACK)
 
         # cannot trim g1 end to 14 because it would result in a negative
         # duration for a2 and a4
         self.assertFailEdit(
-            g1, 1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_END, 14)
+            g1, 1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_END, 14,
+            GES.Error.NEGATIVE_TIME)
 
         # cannot trim end of v2 below its start
         self.assertFailEdit(
-            v2, 2, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_END, 2)
+            v2, 2, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_END, 2,
+            GES.Error.NEGATIVE_TIME)
 
         # cannot trim end of g0 because a0's duration-limit would be
         # exceeded
         self.assertFailEdit(
-            g0, 0, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_END, 23)
+            g0, 0, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_END, 23,
+            GES.Error.NOT_ENOUGH_INTERNAL_CONTENT)
 
         # cannot trim g0 to 12 because a0 and a1 would fully overlap
         self.assertFailEdit(
-            g0, 0, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 12)
+            g0, 0, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 12,
+            GES.Error.INVALID_OVERLAP_IN_TRACK)
 
         # cannot trim start of v2 beyond its end point
         self.assertFailEdit(
-            v2, 2, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 20)
+            v2, 2, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 20,
+            GES.Error.NEGATIVE_TIME)
 
         # with snapping
         self.timeline.set_snapping_distance(4)
@@ -2195,12 +2252,14 @@ class TestComplexEditing(common.GESTimelineConfigTest):
         # cannot trim end of g2 to 19 because v1 and v2 would fully
         # overlap after snapping to v5 start edge(18)
         self.assertFailEdit(
-            g2, 0, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_END, 19)
+            g2, 0, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_END, 19,
+            GES.Error.INVALID_OVERLAP_IN_TRACK)
 
         # cannot trim g2 to 3 because it would snap to start edge of
         # v4(0), causing v2's in-point to be negative
         self.assertFailEdit(
-            g2, 0, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 3)
+            g2, 0, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 3,
+            GES.Error.NEGATIVE_TIME)
 
         # success
 
@@ -2737,46 +2796,66 @@ class TestComplexEditing(common.GESTimelineConfigTest):
         # cannot roll c10 to 22, which snaps to 23, because it will
         # extend c5 beyond its duration limit of 8
         self.assertFailEdit(
-            c10, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_START, 22)
+            c10, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_START, 22,
+            GES.Error.NOT_ENOUGH_INTERNAL_CONTENT)
 
         # same with g2
         self.assertFailEdit(
-            g2, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_START, 22)
+            g2, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_START, 22,
+            GES.Error.NOT_ENOUGH_INTERNAL_CONTENT)
 
         # cannot roll end c9 to 8, which snaps to 7, because it would
         # cause c3's in-point to become negative
         self.assertFailEdit(
-            c9, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_END, 8)
+            c9, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_END, 8,
+            GES.Error.NEGATIVE_TIME)
 
         # same with g1
         self.assertFailEdit(
-            g1, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_END, 8)
+            g1, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_END, 8,
+            GES.Error.NEGATIVE_TIME)
 
         # cannot roll c13 to 19, snap to 20, because it would cause
         # c4 to fully overlap c5
         self.assertFailEdit(
-            c13, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_START, 19)
+            c13, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_START, 19,
+            GES.Error.INVALID_OVERLAP_IN_TRACK)
 
         # cannot roll c12 to 11, snap to 10, because it would cause
         # c3 to fully overlap c4
         self.assertFailEdit(
-            c12, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_END, 11)
+            c12, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_END, 11,
+            GES.Error.INVALID_OVERLAP_IN_TRACK)
 
+        # give c6 a bit more allowed duration so we can focus on c9
+        self.assertTrue(c6.set_inpoint(10))
+        self.assertTimelineConfig({ c6 : {"in-point": 10}})
         # cannot roll c6 to 0 because it would cause c9 to be trimmed
         # below its start
         self.assertFailEdit(
-            c6, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_START, 0)
+            c6, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_START, 0,
+            GES.Error.NEGATIVE_TIME)
+        # set back
+        self.assertTrue(c6.set_inpoint(7))
+        self.assertTimelineConfig({ c6 : {"in-point": 7}})
 
+        # give c7 a bit more allowed duration so we can focus on c10
+        self.assertTrue(c7.set_inpoint(0))
+        self.assertTimelineConfig({ c7 : {"in-point": 0}})
         # cannot roll end c7 to 30 because it would cause c10 to be
         # trimmed beyond its end
         self.assertFailEdit(
-            c7, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_END, 30)
+            c7, -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_END, 30,
+            GES.Error.NEGATIVE_TIME)
+        # set back
+        self.assertTrue(c7.set_inpoint(1))
+        self.assertTimelineConfig({ c7 : {"in-point": 1}})
 
         # moving layer is not supported
         self.assertFailEdit(
-            c0, 2, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_START, 7)
+            c0, 2, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_START, 7, None)
         self.assertFailEdit(
-            c0, 2, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_END, 23)
+            c0, 2, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_END, 23, None)
 
         # successes
         self.timeline.set_snapping_distance(0)

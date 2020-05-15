@@ -79,6 +79,8 @@ struct _TreeIterationData
 {
   GNode *root;
   gboolean res;
+  /* an error to set */
+  GError **error;
 
   /* The element we are visiting */
   GESTimelineElement *element;
@@ -299,7 +301,7 @@ _clock_time_plus (GstClockTime time, GstClockTime add)
     return GST_CLOCK_TIME_NONE;
 
   if (time >= (G_MAXUINT64 - add)) {
-    GST_INFO ("The time %" G_GUINT64_FORMAT " would overflow when "
+    GST_ERROR ("The time %" G_GUINT64_FORMAT " would overflow when "
         "adding %" G_GUINT64_FORMAT, time, add);
     return GST_CLOCK_TIME_NONE;
   }
@@ -355,7 +357,7 @@ _abs_clock_time_distance (GstClockTime time1, GstClockTime time2)
     return time2 - time1;
 }
 
-static gboolean
+static void
 get_start_end_from_offset (GESTimelineElement * element, ElementEditMode mode,
     GstClockTimeDiff offset, GstClockTime * start, gboolean * negative_start,
     GstClockTime * end, gboolean * negative_end)
@@ -388,22 +390,6 @@ get_start_end_from_offset (GESTimelineElement * element, ElementEditMode mode,
     *start = new_start;
   if (end)
     *end = new_end;
-
-  if (start && !GST_CLOCK_TIME_IS_VALID (new_start)) {
-    GST_INFO_OBJECT (element, "Cannot edit element %" GES_FORMAT " with "
-        "offset %" G_GINT64_FORMAT " because it would result in an invalid "
-        "start", GES_ARGS (element), offset);
-    return FALSE;
-  }
-
-  if (end && !GST_CLOCK_TIME_IS_VALID (new_end)) {
-    GST_INFO_OBJECT (element, "Cannot edit element %" GES_FORMAT " with "
-        "offset %" G_GINT64_FORMAT " because it would result in an invalid "
-        "end", GES_ARGS (element), offset);
-    return FALSE;
-  }
-
-  return TRUE;
 }
 
 /****************************************************
@@ -571,9 +557,22 @@ timeline_tree_snap (GNode * root, GESTimelineElement * element,
     /* Allow negative start/end positions in case a snap makes them valid!
      * But we can still only snap to an existing edge in the timeline,
      * which should be a valid time */
-    if (!get_start_end_from_offset (GES_TIMELINE_ELEMENT (source), mode,
-            *offset, &start, &negative_start, &end, &negative_end))
+    get_start_end_from_offset (GES_TIMELINE_ELEMENT (source), mode, *offset,
+        &start, &negative_start, &end, &negative_end);
+
+    if (!GST_CLOCK_TIME_IS_VALID (start)) {
+      GST_INFO_OBJECT (element, "Cannot edit element %" GES_FORMAT
+          " with offset %" G_GINT64_FORMAT " because it would result in "
+          "an invalid start", GES_ARGS (element), *offset);
       goto done;
+    }
+
+    if (!GST_CLOCK_TIME_IS_VALID (end)) {
+      GST_INFO_OBJECT (element, "Cannot edit element %" GES_FORMAT
+          " with offset %" G_GINT64_FORMAT " because it would result in "
+          "an invalid end", GES_ARGS (element), *offset);
+      goto done;
+    }
 
     switch (mode) {
       case EDIT_MOVE:
@@ -618,6 +617,41 @@ done:
 /****************************************************
  *                 Check Overlaps                   *
  ****************************************************/
+
+#define _SOURCE_FORMAT "\"%s\"%s%s%s"
+#define _SOURCE_ARGS(element) \
+  element->name, element->parent ? " (parent: \"" : "", \
+  element->parent ? element->parent->name : "", \
+  element->parent ? "\")" : ""
+
+static void
+set_full_overlap_error (GError ** error, GESTimelineElement * super,
+    GESTimelineElement * sub, GESTrack * track)
+{
+  if (error) {
+    gchar *track_name = gst_object_get_name (GST_OBJECT (track));
+    g_set_error (error, GES_ERROR, GES_ERROR_INVALID_OVERLAP_IN_TRACK,
+        "The source " _SOURCE_FORMAT " would totally overlap the "
+        "source " _SOURCE_FORMAT " in the track \"%s\"", _SOURCE_ARGS (super),
+        _SOURCE_ARGS (sub), track_name);
+    g_free (track_name);
+  }
+}
+
+static void
+set_triple_overlap_error (GError ** error, GESTimelineElement * first,
+    GESTimelineElement * second, GESTimelineElement * third, GESTrack * track)
+{
+  if (error) {
+    gchar *track_name = gst_object_get_name (GST_OBJECT (track));
+    g_set_error (error, GES_ERROR, GES_ERROR_INVALID_OVERLAP_IN_TRACK,
+        "The sources " _SOURCE_FORMAT ", " _SOURCE_FORMAT " and "
+        _SOURCE_FORMAT " would all overlap at the same point in the "
+        "track \"%s\"", _SOURCE_ARGS (first), _SOURCE_ARGS (second),
+        _SOURCE_ARGS (third), track_name);
+    g_free (track_name);
+  }
+}
 
 #define _ELEMENT_FORMAT \
   "%s (under %s) [%" GST_TIME_FORMAT " - %" GST_TIME_FORMAT "] " \
@@ -695,10 +729,19 @@ check_overlap_with_element (GNode * node, TreeIterationData * data)
     return FALSE;
   }
 
-  if ((cmp_start <= start && cmp_end >= end) ||
-      (cmp_start >= start && cmp_end <= end)) {
+  if (cmp_start <= start && cmp_end >= end) {
+    /* cmp fully overlaps e */
     GST_INFO (_ELEMENT_FORMAT " and " _ELEMENT_FORMAT " fully overlap",
         _CMP_ARGS, _E_ARGS);
+    set_full_overlap_error (data->error, cmp, e, track);
+    goto error;
+  }
+
+  if (cmp_start >= start && cmp_end <= end) {
+    /* e fully overlaps cmp */
+    GST_INFO (_ELEMENT_FORMAT " and " _ELEMENT_FORMAT " fully overlap",
+        _CMP_ARGS, _E_ARGS);
+    set_full_overlap_error (data->error, e, cmp, track);
     goto error;
   }
 
@@ -710,6 +753,8 @@ check_overlap_with_element (GNode * node, TreeIterationData * data)
     if (data->overlaping_on_start) {
       GST_INFO (_ELEMENT_FORMAT " is overlapped by %s and %s on its start",
           _CMP_ARGS, data->overlaping_on_start->name, e->name);
+      set_triple_overlap_error (data->error, cmp, e, data->overlaping_on_start,
+          track);
       goto error;
     }
     if (GST_CLOCK_TIME_IS_VALID (data->overlap_end_first_time) &&
@@ -717,6 +762,8 @@ check_overlap_with_element (GNode * node, TreeIterationData * data)
       GST_INFO (_ELEMENT_FORMAT " overlaps %s on its start and %s on its "
           "end, but they already overlap each other", _CMP_ARGS, e->name,
           data->overlaping_on_end->name);
+      set_triple_overlap_error (data->error, cmp, e, data->overlaping_on_end,
+          track);
       goto error;
     }
     /* record the time at which the overlapped ends */
@@ -733,6 +780,8 @@ check_overlap_with_element (GNode * node, TreeIterationData * data)
     if (data->overlaping_on_end) {
       GST_INFO (_ELEMENT_FORMAT " is overlapped by %s and %s on its end",
           _CMP_ARGS, data->overlaping_on_end->name, e->name);
+      set_triple_overlap_error (data->error, cmp, e, data->overlaping_on_end,
+          track);
       goto error;
     }
     if (GST_CLOCK_TIME_IS_VALID (data->overlap_start_final_time) &&
@@ -740,6 +789,8 @@ check_overlap_with_element (GNode * node, TreeIterationData * data)
       GST_INFO (_ELEMENT_FORMAT " overlaps %s on its end and %s on its "
           "start, but they already overlap each other", _CMP_ARGS, e->name,
           data->overlaping_on_start->name);
+      set_triple_overlap_error (data->error, cmp, e, data->overlaping_on_start,
+          track);
       goto error;
     }
     /* record the time at which the overlapped starts */
@@ -789,12 +840,14 @@ check_moving_overlaps (GNode * node, TreeIterationData * data)
 /* whether the elements in moving can be moved to their corresponding
  * PositionData */
 static gboolean
-timeline_tree_can_move_elements (GNode * root, GHashTable * moving)
+timeline_tree_can_move_elements (GNode * root, GHashTable * moving,
+    GError ** error)
 {
   TreeIterationData data = tree_iteration_data_init;
   data.moving = moving;
   data.root = root;
   data.res = TRUE;
+  data.error = error;
   /* sufficient to check the leaves, which is all the track elements or
    * empty clips
    * should also be sufficient to only check the moving elements */
@@ -808,8 +861,56 @@ timeline_tree_can_move_elements (GNode * root, GHashTable * moving)
  *               Setting Edit Data                  *
  ****************************************************/
 
+static void
+set_negative_start_error (GError ** error, GESTimelineElement * element,
+    GstClockTime neg_start)
+{
+  g_set_error (error, GES_ERROR, GES_ERROR_NEGATIVE_TIME,
+      "The element \"%s\" would have a negative start of -%"
+      GST_TIME_FORMAT, element->name, GST_TIME_ARGS (neg_start));
+}
+
+static void
+set_negative_duration_error (GError ** error, GESTimelineElement * element,
+    GstClockTime neg_duration)
+{
+  g_set_error (error, GES_ERROR, GES_ERROR_NEGATIVE_TIME,
+      "The element \"%s\" would have a negative duration of -%"
+      GST_TIME_FORMAT, element->name, GST_TIME_ARGS (neg_duration));
+}
+
+static void
+set_negative_inpoint_error (GError ** error, GESTimelineElement * element,
+    GstClockTime neg_inpoint)
+{
+  g_set_error (error, GES_ERROR, GES_ERROR_NEGATIVE_TIME,
+      "The element \"%s\" would have a negative in-point of -%"
+      GST_TIME_FORMAT, element->name, GST_TIME_ARGS (neg_inpoint));
+}
+
+static void
+set_negative_layer_error (GError ** error, GESTimelineElement * element,
+    gint64 neg_layer)
+{
+  g_set_error (error, GES_ERROR, GES_ERROR_NEGATIVE_LAYER,
+      "The element \"%s\" would have a negative layer priority of -%"
+      G_GINT64_FORMAT, element->name, neg_layer);
+}
+
+static void
+set_breaks_duration_limit_error (GError ** error, GESClip * clip,
+    GstClockTime duration, GstClockTime duration_limit)
+{
+  g_set_error (error, GES_ERROR, GES_ERROR_NOT_ENOUGH_INTERNAL_CONTENT,
+      "The clip \"%s\" would have a duration of %" GST_TIME_FORMAT
+      " that would break its duration-limit of %" GST_TIME_FORMAT,
+      GES_TIMELINE_ELEMENT_NAME (clip), GST_TIME_ARGS (duration),
+      GST_TIME_ARGS (duration_limit));
+}
+
 static gboolean
-set_layer_priority (GESTimelineElement * element, EditData * data)
+set_layer_priority (GESTimelineElement * element, EditData * data,
+    GError ** error)
 {
   gint64 layer_offset = data->layer_offset;
   guint32 layer_prio = ges_timeline_element_get_layer_priority (element);
@@ -827,10 +928,12 @@ set_layer_priority (GESTimelineElement * element, EditData * data)
     GST_INFO_OBJECT (element, "%s would have a negative layer priority (%"
         G_GUINT32_FORMAT " - %" G_GINT64_FORMAT ")", element->name,
         layer_prio, layer_offset);
+    set_negative_layer_error (error, element,
+        layer_offset - (gint64) layer_prio);
     return FALSE;
   }
   if ((layer_prio - (gint64) layer_offset) >= G_MAXUINT32) {
-    GST_INFO_OBJECT (element, "%s would have an overflowing layer priority",
+    GST_ERROR_OBJECT (element, "%s would have an overflowing layer priority",
         element->name);
     return FALSE;
   }
@@ -851,34 +954,45 @@ set_layer_priority (GESTimelineElement * element, EditData * data)
   }
 
 static gboolean
-set_edit_move_values (GESTimelineElement * element, EditData * data)
+set_edit_move_values (GESTimelineElement * element, EditData * data,
+    GError ** error)
 {
+  gboolean negative = FALSE;
   GstClockTime new_start =
-      _clock_time_minus_diff (element->start, data->offset, NULL);
-  if (!GST_CLOCK_TIME_IS_VALID (new_start)) {
+      _clock_time_minus_diff (element->start, data->offset, &negative);
+  if (negative || !GST_CLOCK_TIME_IS_VALID (new_start)) {
     GST_INFO_OBJECT (element, "Cannot move %" GES_FORMAT " with offset %"
         G_GINT64_FORMAT " because it would result in an invalid start",
         GES_ARGS (element), data->offset);
+    if (negative)
+      set_negative_start_error (error, element, new_start);
     return FALSE;
   }
   _CHECK_END (element, new_start, element->duration);
   data->start = new_start;
+
+  if (GES_IS_GROUP (element))
+    return TRUE;
+
   GST_INFO_OBJECT (element, "%s will move by setting start to %"
       GST_TIME_FORMAT, element->name, GST_TIME_ARGS (data->start));
 
-  return set_layer_priority (element, data);
+  return set_layer_priority (element, data, error);
 }
 
 static gboolean
 set_edit_trim_start_inpoint_value (GESTimelineElement * element,
-    EditData * data)
+    EditData * data, GError ** error)
 {
+  gboolean negative = FALSE;
   GstClockTime new_inpoint = _clock_time_minus_diff (element->inpoint,
-      data->offset, NULL);
-  if (!GST_CLOCK_TIME_IS_VALID (new_inpoint)) {
+      data->offset, &negative);
+  if (negative || !GST_CLOCK_TIME_IS_VALID (new_inpoint)) {
     GST_INFO_OBJECT (element, "Cannot trim start of %" GES_FORMAT
         " with offset %" G_GINT64_FORMAT " because it would result in an "
         "invalid in-point", GES_ARGS (element), data->offset);
+    if (negative)
+      set_negative_inpoint_error (error, element, new_inpoint);
     return FALSE;
   }
   data->inpoint = new_inpoint;
@@ -887,7 +1001,7 @@ set_edit_trim_start_inpoint_value (GESTimelineElement * element,
 
 static gboolean
 set_edit_trim_start_non_core_children (GESTimelineElement * clip,
-    GstClockTimeDiff offset, GHashTable * edit_table)
+    GstClockTimeDiff offset, GHashTable * edit_table, GError ** error)
 {
   GList *tmp;
   GESTimelineElement *child;
@@ -916,7 +1030,7 @@ set_edit_trim_start_non_core_children (GESTimelineElement * clip,
 
       data = new_edit_data (EDIT_TRIM_START, offset, 0);
       g_hash_table_insert (edit_table, child, data);
-      if (!set_edit_trim_start_inpoint_value (child, data))
+      if (!set_edit_trim_start_inpoint_value (child, data, error))
         return FALSE;
     }
   }
@@ -926,40 +1040,52 @@ set_edit_trim_start_non_core_children (GESTimelineElement * clip,
 /* trim the start of a clip or a track element */
 static gboolean
 set_edit_trim_start_values (GESTimelineElement * element, EditData * data,
-    GHashTable * edit_table)
+    GHashTable * edit_table, GError ** error)
 {
+  gboolean negative = FALSE;
+  GstClockTime new_duration;
   GstClockTime new_start =
-      _clock_time_minus_diff (element->start, data->offset, NULL);
-  GstClockTime new_duration =
-      _clock_time_minus_diff (element->duration, -data->offset, NULL);
+      _clock_time_minus_diff (element->start, data->offset, &negative);
 
-  if (!GST_CLOCK_TIME_IS_VALID (new_start)) {
+  if (negative || !GST_CLOCK_TIME_IS_VALID (new_start)) {
     GST_INFO_OBJECT (element, "Cannot trim start of %" GES_FORMAT
         " with offset %" G_GINT64_FORMAT " because it would result in an "
         "invalid start", GES_ARGS (element), data->offset);
+    if (negative)
+      set_negative_start_error (error, element, new_start);
     return FALSE;
   }
-  if (!GST_CLOCK_TIME_IS_VALID (new_duration)) {
+
+  new_duration =
+      _clock_time_minus_diff (element->duration, -data->offset, &negative);
+
+  if (negative || !GST_CLOCK_TIME_IS_VALID (new_duration)) {
     GST_INFO_OBJECT (element, "Cannot trim start of %" GES_FORMAT
         " with offset %" G_GINT64_FORMAT " because it would result in an "
         "invalid duration", GES_ARGS (element), data->offset);
+    if (negative)
+      set_negative_duration_error (error, element, new_duration);
     return FALSE;
   }
   _CHECK_END (element, new_start, new_duration);
 
+  data->start = new_start;
+  data->duration = new_duration;
+
+  if (GES_IS_GROUP (element))
+    return TRUE;
+
   if (GES_IS_CLIP (element)) {
-    if (!set_edit_trim_start_inpoint_value (element, data))
+    if (!set_edit_trim_start_inpoint_value (element, data, error))
       return FALSE;
     if (!set_edit_trim_start_non_core_children (element, data->offset,
-            edit_table))
+            edit_table, error))
       return FALSE;
   } else if (GES_IS_TRACK_ELEMENT (element)
       && ges_track_element_has_internal_source (GES_TRACK_ELEMENT (element))) {
-    if (!set_edit_trim_start_inpoint_value (element, data))
+    if (!set_edit_trim_start_inpoint_value (element, data, error))
       return FALSE;
   }
-  data->start = new_start;
-  data->duration = new_duration;
 
   /* NOTE: without time effects, the duration-limit will increase with
    * a decrease in in-point by the same amount that duration increases,
@@ -971,53 +1097,64 @@ set_edit_trim_start_values (GESTimelineElement * element, EditData * data,
       "to %" GST_TIME_FORMAT, element->name, GST_TIME_ARGS (data->start),
       GST_TIME_ARGS (data->inpoint), GST_TIME_ARGS (data->duration));
 
-  return set_layer_priority (element, data);
+  return set_layer_priority (element, data, error);
 }
 
 /* trim the end of a clip or a track element */
 static gboolean
-set_edit_trim_end_values (GESTimelineElement * element, EditData * data)
+set_edit_trim_end_values (GESTimelineElement * element, EditData * data,
+    GError ** error)
 {
+  gboolean negative = FALSE;
   GstClockTime new_duration =
-      _clock_time_minus_diff (element->duration, data->offset, NULL);
-  if (!GST_CLOCK_TIME_IS_VALID (new_duration)) {
+      _clock_time_minus_diff (element->duration, data->offset, &negative);
+  if (negative || !GST_CLOCK_TIME_IS_VALID (new_duration)) {
     GST_INFO_OBJECT (element, "Cannot trim end of %" GES_FORMAT
         " with offset %" G_GINT64_FORMAT " because it would result in an "
         "invalid duration", GES_ARGS (element), data->offset);
+    if (negative)
+      set_negative_duration_error (error, element, new_duration);
     return FALSE;
   }
   _CHECK_END (element, element->start, new_duration);
 
   if (GES_IS_CLIP (element)) {
-    GstClockTime limit = ges_clip_get_duration_limit (GES_CLIP (element));
-    if (GST_CLOCK_TIME_IS_VALID (limit) && new_duration > limit) {
+    GESClip *clip = GES_CLIP (element);
+    GstClockTime limit = ges_clip_get_duration_limit (clip);
+
+    if (GES_CLOCK_TIME_IS_LESS (limit, new_duration)) {
       GST_INFO_OBJECT (element, "Cannot trim end of %" GES_FORMAT
           " with offset %" G_GINT64_FORMAT " because the duration would "
           "exceed the clip's duration-limit %" G_GINT64_FORMAT,
           GES_ARGS (element), data->offset, limit);
+
+      set_breaks_duration_limit_error (error, clip, new_duration, limit);
       return FALSE;
     }
   }
 
   data->duration = new_duration;
+
+  if (GES_IS_GROUP (element))
+    return TRUE;
+
   GST_INFO_OBJECT (element, "%s will trim end by setting duration to %"
       GST_TIME_FORMAT, element->name, GST_TIME_ARGS (data->duration));
 
-  return set_layer_priority (element, data);
+  return set_layer_priority (element, data, error);
 }
 
-/* handles clips and track elements with no parents */
 static gboolean
-set_clip_edit_values (GESTimelineElement * element, EditData * data,
-    GHashTable * edit_table)
+set_edit_values (GESTimelineElement * element, EditData * data,
+    GHashTable * edit_table, GError ** error)
 {
   switch (data->mode) {
     case EDIT_MOVE:
-      return set_edit_move_values (element, data);
+      return set_edit_move_values (element, data, error);
     case EDIT_TRIM_START:
-      return set_edit_trim_start_values (element, data, edit_table);
+      return set_edit_trim_start_values (element, data, edit_table, error);
     case EDIT_TRIM_END:
-      return set_edit_trim_end_values (element, data);
+      return set_edit_trim_end_values (element, data, error);
   }
   return FALSE;
 }
@@ -1041,7 +1178,7 @@ add_clips_to_list (GNode * node, GList ** list)
 
 static gboolean
 replace_group_with_clip_edits (GNode * root, GESTimelineElement * group,
-    GHashTable * edit_table)
+    GHashTable * edit_table, GError ** err)
 {
   gboolean ret = TRUE;
   GList *tmp, *clips = NULL;
@@ -1064,12 +1201,25 @@ replace_group_with_clip_edits (GNode * root, GESTimelineElement * group,
       goto error;
     }
 
+    group_edit->start = group->start;
+    group_edit->duration = group->duration;
+
+    /* should only set the start and duration fields, table should not be
+     * needed, so we pass NULL */
+    if (!set_edit_values (group, group_edit, NULL, err))
+      goto error;
+
+    new_start = group_edit->start;
+    new_end = _clock_time_plus (group_edit->start, group_edit->duration);
+
+    if (!GST_CLOCK_TIME_IS_VALID (new_start)
+        || !GST_CLOCK_TIME_IS_VALID (new_end)) {
+      GST_ERROR_OBJECT (group, "Edit data gave an invalid start or end");
+      goto error;
+    }
+
     layer_offset = group_edit->layer_offset;
     mode = group_edit->mode;
-
-    if (!get_start_end_from_offset (group, mode, group_edit->offset,
-            &new_start, NULL, &new_end, NULL))
-      goto error;
 
     /* can traverse leaves to find all the clips since they are at _most_
      * one step above the track elements */
@@ -1148,7 +1298,7 @@ replace_group_with_clip_edits (GNode * root, GESTimelineElement * group,
       }
       clip_data = new_edit_data (clip_mode, offset, layer_offset);
       g_hash_table_insert (edit_table, clip, clip_data);
-      if (!set_clip_edit_values (clip, clip_data, edit_table))
+      if (!set_edit_values (clip, clip_data, edit_table, err))
         goto error;
     }
   }
@@ -1165,7 +1315,8 @@ error:
 /* set the edit values for the entries in @edits
  * any groups in @edits will be replaced by their clip children */
 static gboolean
-timeline_tree_set_element_edit_values (GNode * root, GHashTable * edits)
+timeline_tree_set_element_edit_values (GNode * root, GHashTable * edits,
+    GError ** err)
 {
   gboolean ret = TRUE;
   GESTimelineElement *element;
@@ -1183,9 +1334,9 @@ timeline_tree_set_element_edit_values (GNode * root, GHashTable * edits)
       goto error;
     }
     if (GES_IS_GROUP (element))
-      res = replace_group_with_clip_edits (root, element, edits);
+      res = replace_group_with_clip_edits (root, element, edits, err);
     else
-      res = set_clip_edit_values (element, edit_data, edits);
+      res = set_edit_values (element, edit_data, edits, err);
     if (!res)
       goto error;
   }
@@ -1368,7 +1519,7 @@ add_element_edit (GHashTable * edits, GESTimelineElement * element,
 gboolean
 timeline_tree_can_move_element (GNode * root,
     GESTimelineElement * element, guint32 priority, GstClockTime start,
-    GstClockTime duration)
+    GstClockTime duration, GError ** error)
 {
   gboolean ret = FALSE;
   guint32 layer_prio = ges_timeline_element_get_layer_priority (element);
@@ -1431,10 +1582,10 @@ timeline_tree_can_move_element (GNode * root,
 
   /* assume both edits can be performed if each could occur individually */
   /* should not effect duration or in-point */
-  if (!timeline_tree_set_element_edit_values (root, move_edits))
+  if (!timeline_tree_set_element_edit_values (root, move_edits, error))
     goto done;
   /* should not effect start or in-point or layer */
-  if (!timeline_tree_set_element_edit_values (root, trim_edits))
+  if (!timeline_tree_set_element_edit_values (root, trim_edits, error))
     goto done;
 
   /* merge the two edits into moving positions */
@@ -1483,7 +1634,7 @@ timeline_tree_can_move_element (GNode * root,
   }
 
   /* check overlaps */
-  if (!timeline_tree_can_move_elements (root, moving))
+  if (!timeline_tree_can_move_elements (root, moving, error))
     goto done;
 
   ret = TRUE;
@@ -1624,7 +1775,7 @@ timeline_tree_perform_edits (GNode * root, GHashTable * edits)
 gboolean
 timeline_tree_ripple (GNode * root, GESTimelineElement * element,
     gint64 layer_priority_offset, GstClockTimeDiff offset, GESEdge edge,
-    GstClockTime snapping_distance)
+    GstClockTime snapping_distance, GError ** error)
 {
   gboolean res = TRUE;
   GNode *node;
@@ -1697,12 +1848,12 @@ timeline_tree_ripple (GNode * root, GESTimelineElement * element,
 
   /* check and set edits using snapped values */
   give_edits_same_offset (edits, offset, layer_priority_offset);
-  if (!timeline_tree_set_element_edit_values (root, edits))
+  if (!timeline_tree_set_element_edit_values (root, edits, error))
     goto error;
 
   /* check overlaps */
   set_moving_positions_from_edits (moving, edits);
-  if (!timeline_tree_can_move_elements (root, moving))
+  if (!timeline_tree_can_move_elements (root, moving, error))
     goto error;
 
   /* emit snapping now. Edits should only fail if a programming error
@@ -1731,7 +1882,7 @@ error:
 gboolean
 timeline_tree_trim (GNode * root, GESTimelineElement * element,
     gint64 layer_priority_offset, GstClockTimeDiff offset, GESEdge edge,
-    GstClockTime snapping_distance)
+    GstClockTime snapping_distance, GError ** error)
 {
   gboolean res = TRUE;
   GHashTable *edits = new_edit_table ();
@@ -1778,12 +1929,12 @@ timeline_tree_trim (GNode * root, GESTimelineElement * element,
 
   /* check and set edits using snapped values */
   give_edits_same_offset (edits, offset, layer_priority_offset);
-  if (!timeline_tree_set_element_edit_values (root, edits))
+  if (!timeline_tree_set_element_edit_values (root, edits, error))
     goto error;
 
   /* check overlaps */
   set_moving_positions_from_edits (moving, edits);
-  if (!timeline_tree_can_move_elements (root, moving)) {
+  if (!timeline_tree_can_move_elements (root, moving, error)) {
     goto error;
   }
 
@@ -1813,7 +1964,7 @@ error:
 gboolean
 timeline_tree_move (GNode * root, GESTimelineElement * element,
     gint64 layer_priority_offset, GstClockTimeDiff offset, GESEdge edge,
-    GstClockTime snapping_distance)
+    GstClockTime snapping_distance, GError ** error)
 {
   gboolean res = TRUE;
   GHashTable *edits = new_edit_table ();
@@ -1861,12 +2012,12 @@ timeline_tree_move (GNode * root, GESTimelineElement * element,
 
   /* check and set edits using snapped values */
   give_edits_same_offset (edits, offset, layer_priority_offset);
-  if (!timeline_tree_set_element_edit_values (root, edits))
+  if (!timeline_tree_set_element_edit_values (root, edits, error))
     goto error;
 
   /* check overlaps */
   set_moving_positions_from_edits (moving, edits);
-  if (!timeline_tree_can_move_elements (root, moving)) {
+  if (!timeline_tree_can_move_elements (root, moving, error)) {
     goto error;
   }
 
@@ -1960,7 +2111,8 @@ find_sources_at_position (GNode * node, TreeIterationData * data)
 
 gboolean
 timeline_tree_roll (GNode * root, GESTimelineElement * element,
-    GstClockTimeDiff offset, GESEdge edge, GstClockTime snapping_distance)
+    GstClockTimeDiff offset, GESEdge edge, GstClockTime snapping_distance,
+    GError ** error)
 {
   gboolean res = TRUE;
   GList *tmp;
@@ -2043,12 +2195,12 @@ timeline_tree_roll (GNode * root, GESTimelineElement * element,
 
   /* check and set edits using snapped values */
   give_edits_same_offset (edits, offset, 0);
-  if (!timeline_tree_set_element_edit_values (root, edits))
+  if (!timeline_tree_set_element_edit_values (root, edits, error))
     goto error;
 
   /* check overlaps */
   set_moving_positions_from_edits (moving, edits);
-  if (!timeline_tree_can_move_elements (root, moving)) {
+  if (!timeline_tree_can_move_elements (root, moving, error)) {
     goto error;
   }
 

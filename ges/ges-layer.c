@@ -237,24 +237,8 @@ ges_layer_class_init (GESLayerClass * klass)
    * GESLayer:auto-transition:
    *
    * Whether to automatically create a #GESTransitionClip whenever two
-   * #GESClip-s overlap in the layer. Specifically, if this is set to
-   * %TRUE, then wherever two #GESSource-s (that belong to some clip in
-   * the layer) share the same #GESTrackElement:track and the end time of
-   * one source exceeds the #GESTimelineElement:start time of the other,
-   * there will exist a corresponding #GESTransitionClip in the same
-   * layer. These automatic transitions will be created and removed
-   * accordingly. Their temporal extent will cover the overlap of the
-   * two sources (their #GESTimelineElement:start will be set to the
-   * #GESTimelineElement:start of the later source, and their
-   * #GESTimelineElement:duration will be the difference between the
-   * #GESTimelineElement:start of the later source, and the end time of
-   * the earlier source).
-   *
-   * It may be difficult to use this feature if your timeline has multiple
-   * tracks of the same #GESTrack:track-type and you use the
-   * #GESTimeline::select-tracks-for-object signal. You will have to
-   * ensure that any #GESTransition that belongs to a newly created
-   * transition clip is able to arrive in the correct track.
+   * #GESSource-s that both belong to a #GESClip in the layer overlap.
+   * See #GESTimeline for what counts as an overlap.
    *
    * When a layer is added to a #GESTimeline, if this property is left as
    * %FALSE, but the timeline's #GESTimeline:auto-transition is %TRUE, it
@@ -667,9 +651,10 @@ ges_layer_is_empty (GESLayer * layer)
 }
 
 /**
- * ges_layer_add_clip:
+ * ges_layer_add_clip_full:
  * @layer: The #GESLayer
  * @clip: (transfer floating): The clip to add
+ * @error: (nullable): Return location for an error
  *
  * Adds the given clip to the layer. If the method succeeds, the layer
  * will take ownership of the clip.
@@ -682,17 +667,19 @@ ges_layer_is_empty (GESLayer * layer)
  * if @layer refused to add @clip.
  */
 gboolean
-ges_layer_add_clip (GESLayer * layer, GESClip * clip)
+ges_layer_add_clip_full (GESLayer * layer, GESClip * clip, GError ** error)
 {
-  GList *tmp, *prev_children;
+  GList *tmp, *prev_children, *new_children;
   GESAsset *asset;
   GESLayerPrivate *priv;
   GESLayer *current_layer;
   GESTimeline *timeline;
   GESContainer *container;
+  GError *timeline_error = NULL;
 
   g_return_val_if_fail (GES_IS_LAYER (layer), FALSE);
   g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
+  g_return_val_if_fail (!error || !*error, FALSE);
 
   timeline = GES_TIMELINE_ELEMENT_TIMELINE (clip);
   container = GES_CONTAINER (clip);
@@ -786,9 +773,23 @@ ges_layer_add_clip (GESLayer * layer, GESClip * clip)
 
   prev_children = ges_container_get_children (container, FALSE);
 
-  if (timeline && !ges_timeline_add_clip (timeline, clip)) {
+  if (timeline && !ges_timeline_add_clip (timeline, clip, &timeline_error)) {
+    GST_INFO_OBJECT (layer, "Could not add the clip %" GES_FORMAT
+        " to the timeline %" GST_PTR_FORMAT, GES_ARGS (clip), timeline);
+
+    if (timeline_error) {
+      if (error) {
+        *error = timeline_error;
+      } else {
+        GST_WARNING_OBJECT (timeline, "Adding the clip %" GES_FORMAT
+            " to the timeline failed: %s", GES_ARGS (clip),
+            timeline_error->message);
+        g_error_free (timeline_error);
+      }
+    }
+
     /* remove any track elements that were newly created */
-    GList *new_children = ges_container_get_children (container, FALSE);
+    new_children = ges_container_get_children (container, FALSE);
     for (tmp = new_children; tmp; tmp = tmp->next) {
       if (!g_list_find (prev_children, tmp->data))
         ges_container_remove (container, tmp->data);
@@ -796,8 +797,6 @@ ges_layer_add_clip (GESLayer * layer, GESClip * clip)
     g_list_free_full (prev_children, gst_object_unref);
     g_list_free_full (new_children, gst_object_unref);
 
-    GST_WARNING_OBJECT (layer, "Could not add the clip %" GES_FORMAT
-        " to the timeline %" GST_PTR_FORMAT, GES_ARGS (clip), timeline);
     /* FIXME: change emit signal to FALSE once we are able to delay the
      * "clip-added" signal until after ges_timeline_add_clip */
     ges_layer_remove_clip_internal (layer, clip, TRUE);
@@ -818,7 +817,23 @@ ges_layer_add_clip (GESLayer * layer, GESClip * clip)
 }
 
 /**
- * ges_layer_add_asset:
+ * ges_layer_add_clip:
+ * @layer: The #GESLayer
+ * @clip: (transfer floating): The clip to add
+ *
+ * See ges_layer_add_clip_full(), which also gives an error.
+ *
+ * Returns: %TRUE if @clip was properly added to @layer, or %FALSE
+ * if @layer refused to add @clip.
+ */
+gboolean
+ges_layer_add_clip (GESLayer * layer, GESClip * clip)
+{
+  return ges_layer_add_clip_full (layer, clip, NULL);
+}
+
+/**
+ * ges_layer_add_asset_full:
  * @layer: The #GESLayer
  * @asset: The asset to extract the new clip from
  * @start: The #GESTimelineElement:start value to set on the new clip
@@ -830,6 +845,7 @@ ges_layer_add_clip (GESLayer * layer, GESClip * clip)
  * clip
  * @track_types: The #GESClip:supported-formats to set on the the new
  * clip, or #GES_TRACK_TYPE_UNKNOWN to use the default
+ * @error: (nullable): Return location for an error
  *
  * Extracts a new clip from an asset and adds it to the layer with
  * the given properties.
@@ -837,14 +853,15 @@ ges_layer_add_clip (GESLayer * layer, GESClip * clip)
  * Returns: (transfer none): The newly created clip.
  */
 GESClip *
-ges_layer_add_asset (GESLayer * layer,
+ges_layer_add_asset_full (GESLayer * layer,
     GESAsset * asset, GstClockTime start, GstClockTime inpoint,
-    GstClockTime duration, GESTrackType track_types)
+    GstClockTime duration, GESTrackType track_types, GError ** error)
 {
   GESClip *clip;
 
   g_return_val_if_fail (GES_IS_LAYER (layer), NULL);
   g_return_val_if_fail (GES_IS_ASSET (asset), NULL);
+  g_return_val_if_fail (!error || !*error, NULL);
   g_return_val_if_fail (g_type_is_a (ges_asset_get_extractable_type
           (asset), GES_TYPE_CLIP), NULL);
 
@@ -873,11 +890,38 @@ ges_layer_add_asset (GESLayer * layer,
     _set_duration0 (GES_TIMELINE_ELEMENT (clip), duration);
   }
 
-  if (!ges_layer_add_clip (layer, clip)) {
+  if (!ges_layer_add_clip_full (layer, clip, error)) {
     return NULL;
   }
 
   return clip;
+}
+
+/**
+ * ges_layer_add_asset:
+ * @layer: The #GESLayer
+ * @asset: The asset to extract the new clip from
+ * @start: The #GESTimelineElement:start value to set on the new clip
+ * If `start == #GST_CLOCK_TIME_NONE`, it will be added to the end
+ * of @layer, i.e. it will be set to @layer's duration
+ * @inpoint: The #GESTimelineElement:in-point value to set on the new
+ * clip
+ * @duration: The #GESTimelineElement:duration value to set on the new
+ * clip
+ * @track_types: The #GESClip:supported-formats to set on the the new
+ * clip, or #GES_TRACK_TYPE_UNKNOWN to use the default
+ *
+ * See ges_layer_add_asset_full(), which also gives an error.
+ *
+ * Returns: (transfer none): The newly created clip.
+ */
+GESClip *
+ges_layer_add_asset (GESLayer * layer,
+    GESAsset * asset, GstClockTime start, GstClockTime inpoint,
+    GstClockTime duration, GESTrackType track_types)
+{
+  return ges_layer_add_asset_full (layer, asset, start, inpoint, duration,
+      track_types, NULL);
 }
 
 /**

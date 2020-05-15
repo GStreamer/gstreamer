@@ -48,12 +48,9 @@
  * similar changes in neighbouring or later elements in the timeline.
  *
  * However, a timeline may refuse a change in these properties if they
- * would place the timeline in an unsupported configuration. For example,
- * it is not possible for three #GESSourceClip-s in the same layer and
- * with the same track types to overlap at any given position in the
- * timeline (only two may overlap, which corresponds to a single
- * #GESTransition). Similarly, a #GESSourceClip may not entirely cover
- * another #GESSourceClip in the same layer and with the same track types.
+ * would place the timeline in an unsupported configuration. See
+ * #GESTimeline for its overlap rules.
+ *
  * Additionally, an edit may be refused if it would place one of the
  * timing properties out of bounds (such as a negative time value for
  * #GESTimelineElement:start, or having insufficient internal
@@ -1153,8 +1150,7 @@ ges_timeline_element_set_inpoint (GESTimelineElement * self,
   if (G_UNLIKELY (inpoint == self->inpoint))
     return TRUE;
 
-  if (GST_CLOCK_TIME_IS_VALID (self->maxduration)
-      && inpoint > self->maxduration) {
+  if (GES_CLOCK_TIME_IS_LESS (self->maxduration, inpoint)) {
     GST_WARNING_OBJECT (self, "Can not set an in-point of %" GST_TIME_FORMAT
         " because it exceeds the element's max-duration: %" GST_TIME_FORMAT,
         GST_TIME_ARGS (inpoint), GST_TIME_ARGS (self->maxduration));
@@ -1210,7 +1206,7 @@ ges_timeline_element_set_max_duration (GESTimelineElement * self,
   if (G_UNLIKELY (maxduration == self->maxduration))
     return TRUE;
 
-  if (GST_CLOCK_TIME_IS_VALID (maxduration) && self->inpoint > maxduration) {
+  if (GES_CLOCK_TIME_IS_LESS (maxduration, self->inpoint)) {
     GST_WARNING_OBJECT (self, "Can not set a max-duration of %"
         GST_TIME_FORMAT " because it lies below the element's in-point: %"
         GST_TIME_FORMAT, GST_TIME_ARGS (maxduration),
@@ -2328,17 +2324,15 @@ ges_timeline_element_get_layer_priority (GESTimelineElement * self)
 }
 
 /**
- * ges_timeline_element_edit:
+ * ges_timeline_element_edit_full:
  * @self: The #GESTimelineElement to edit
- * @layers: (element-type GESLayer) (nullable): A whitelist of layers
- * where the edit can be performed, %NULL allows all layers in the
- * timeline
  * @new_layer_priority: The priority/index of the layer @self should be
  * moved to. -1 means no move
  * @mode: The edit mode
  * @edge: The edge of @self where the edit should occur
  * @position: The edit position: a new location for the edge of @self
  * (in nanoseconds)
+ * @error: (nullable): Return location for an error
  *
  * Edits the element within its timeline by adjusting its
  * #GESTimelineElement:start, #GESTimelineElement:duration or
@@ -2363,28 +2357,20 @@ ges_timeline_element_get_layer_priority (GESTimelineElement * self)
  * the corresponding layer priority/index does not yet exist for the
  * timeline.
  *
- * @layers can be used as a whitelist to limit changes to elements that
- * exist in the corresponding layers. If you intend to also switch
- * elements between layers, then you must ensure that all the involved
- * layers are included for the switch to succeed (with the exception of
- * layers may be newly created).
- *
  * Returns: %TRUE if the edit of @self completed, %FALSE on failure.
- *
- * Since: 1.18
  */
 
-/* FIXME: handle the layers argument. Currently we always treat it as if
- * it is NULL in the ges-timeline code */
 gboolean
-ges_timeline_element_edit (GESTimelineElement * self, GList * layers,
-    gint64 new_layer_priority, GESEditMode mode, GESEdge edge, guint64 position)
+ges_timeline_element_edit_full (GESTimelineElement * self,
+    gint64 new_layer_priority, GESEditMode mode, GESEdge edge, guint64 position,
+    GError ** error)
 {
   GESTimeline *timeline;
   guint32 layer_prio;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (position), FALSE);
+  g_return_val_if_fail (!error || !*error, FALSE);
 
   timeline = GES_TIMELINE_ELEMENT_TIMELINE (self);
   g_return_val_if_fail (timeline, FALSE);
@@ -2399,8 +2385,41 @@ ges_timeline_element_edit (GESTimelineElement * self, GList * layers,
       self->name, ges_edge_name (edge), GST_TIME_ARGS (position),
       ges_edit_mode_name (mode), new_layer_priority);
 
-  return ges_timeline_edit (timeline, self, layers, new_layer_priority, mode,
-      edge, position);
+  return ges_timeline_edit (timeline, self, new_layer_priority, mode,
+      edge, position, error);
+}
+
+/**
+ * ges_timeline_element_edit:
+ * @self: The #GESTimelineElement to edit
+ * @layers: (element-type GESLayer) (nullable): A whitelist of layers
+ * where the edit can be performed, %NULL allows all layers in the
+ * timeline.
+ * @new_layer_priority: The priority/index of the layer @self should be
+ * moved to. -1 means no move
+ * @mode: The edit mode
+ * @edge: The edge of @self where the edit should occur
+ * @position: The edit position: a new location for the edge of @self
+ * (in nanoseconds) in the timeline coordinates
+ *
+ * See ges_timeline_element_edit_full(), which also gives an error.
+ *
+ * Note that the @layers argument is currently ignored, so you should
+ * just pass %NULL.
+ *
+ * Returns: %TRUE if the edit of @self completed, %FALSE on failure.
+ *
+ * Since: 1.18
+ */
+
+/* FIXME: handle the layers argument. Currently we always treat it as if
+ * it is NULL in the ges-timeline code */
+gboolean
+ges_timeline_element_edit (GESTimelineElement * self, GList * layers,
+    gint64 new_layer_priority, GESEditMode mode, GESEdge edge, guint64 position)
+{
+  return ges_timeline_element_edit_full (self, new_layer_priority, mode, edge,
+      position, NULL);
 }
 
 /**

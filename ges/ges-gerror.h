@@ -38,6 +38,17 @@ G_BEGIN_DECLS
  * @GES_ERROR_ASSET_WRONG_ID: The ID passed is malformed
  * @GES_ERROR_ASSET_LOADING: An error happened while loading the asset
  * @GES_ERROR_FORMATTER_MALFORMED_INPUT_FILE: The formatted files was malformed
+ * @GES_ERROR_INVALID_FRAME_NUMBER: The frame number is invalid
+ * @GES_ERROR_NEGATIVE_LAYER: The operation would lead to a negative
+ * #GES_TIMELINE_ELEMENT_LAYER_PRIORITY
+ * @GES_ERROR_NEGATIVE_TIME: The operation would lead to a negative time.
+ * E.g. for the #GESTimelineElement:start #GESTimelineElement:duration or
+ * #GESTimelineElement:in-point.
+ * @GES_ERROR_NOT_ENOUGH_INTERNAL_CONTENT: Some #GESTimelineElement does
+ * not have a large enough #GESTimelineElement:max-duration to cover the
+ * desired operation
+ * @GES_ERROR_INVALID_OVERLAP_IN_TRACK: The operation would break one of
+ * the overlap conditions for the #GESTimeline
  */
 typedef enum
 {
@@ -45,6 +56,10 @@ typedef enum
   GES_ERROR_ASSET_LOADING,
   GES_ERROR_FORMATTER_MALFORMED_INPUT_FILE,
   GES_ERROR_INVALID_FRAME_NUMBER,
+  GES_ERROR_NEGATIVE_LAYER,
+  GES_ERROR_NEGATIVE_TIME,
+  GES_ERROR_NOT_ENOUGH_INTERNAL_CONTENT,
+  GES_ERROR_INVALID_OVERLAP_IN_TRACK,
 } GESError;
 
 G_END_DECLS

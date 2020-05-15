@@ -222,7 +222,7 @@ _set_priority (GESTimelineElement * element, guint32 priority)
 
   return timeline_tree_move (timeline_get_tree (timeline),
       element, (gint64) (element->priority) - (gint64) priority, 0,
-      GES_EDGE_NONE, 0);
+      GES_EDGE_NONE, 0, NULL);
 }
 
 static gboolean

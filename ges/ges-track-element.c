@@ -630,6 +630,7 @@ _set_inpoint (GESTimelineElement * element, GstClockTime inpoint)
 {
   GESTrackElement *object = GES_TRACK_ELEMENT (element);
   GESTimelineElement *parent = element->parent;
+  GError *error = NULL;
 
   g_return_val_if_fail (object->priv->nleobject, FALSE);
   if (inpoint && !object->priv->has_internal_source) {
@@ -640,10 +641,12 @@ _set_inpoint (GESTimelineElement * element, GstClockTime inpoint)
 
   if (GES_IS_CLIP (parent)
       && !ges_clip_can_set_inpoint_of_child (GES_CLIP (parent), object,
-          inpoint)) {
+          inpoint, &error)) {
     GST_WARNING_OBJECT (element, "Cannot set an in-point of %"
         GST_TIME_FORMAT " because the parent clip %" GES_FORMAT
-        " would not allow it", GST_TIME_ARGS (inpoint), GES_ARGS (parent));
+        " would not allow it%s%s", GST_TIME_ARGS (inpoint),
+        GES_ARGS (parent), error ? ": " : "", error ? error->message : "");
+    g_clear_error (&error);
     return FALSE;
   }
 
@@ -678,6 +681,7 @@ _set_max_duration (GESTimelineElement * element, GstClockTime max_duration)
 {
   GESTrackElement *object = GES_TRACK_ELEMENT (element);
   GESTimelineElement *parent = element->parent;
+  GError *error = NULL;
 
   if (GST_CLOCK_TIME_IS_VALID (max_duration)
       && !object->priv->has_internal_source) {
@@ -688,10 +692,12 @@ _set_max_duration (GESTimelineElement * element, GstClockTime max_duration)
 
   if (GES_IS_CLIP (parent)
       && !ges_clip_can_set_max_duration_of_child (GES_CLIP (parent), object,
-          max_duration)) {
+          max_duration, &error)) {
     GST_WARNING_OBJECT (element, "Cannot set a max-duration of %"
         GST_TIME_FORMAT " because the parent clip %" GES_FORMAT
-        " would not allow it", GST_TIME_ARGS (max_duration), GES_ARGS (parent));
+        " would not allow it%s%s", GST_TIME_ARGS (max_duration),
+        GES_ARGS (parent), error ? ": " : "", error ? error->message : "");
+    g_clear_error (&error);
     return FALSE;
   }
 
@@ -704,6 +710,7 @@ _set_priority (GESTimelineElement * element, guint32 priority)
 {
   GESTrackElement *object = GES_TRACK_ELEMENT (element);
   GESTimelineElement *parent = element->parent;
+  GError *error = NULL;
 
   g_return_val_if_fail (object->priv->nleobject, FALSE);
 
@@ -720,10 +727,12 @@ _set_priority (GESTimelineElement * element, guint32 priority)
 
   if (GES_IS_CLIP (parent)
       && !ges_clip_can_set_priority_of_child (GES_CLIP (parent), object,
-          priority)) {
+          priority, &error)) {
     GST_WARNING_OBJECT (element, "Cannot set a priority of %"
         G_GUINT32_FORMAT " because the parent clip %" GES_FORMAT
-        " would not allow it", priority, GES_ARGS (parent));
+        " would not allow it%s%s", priority, GES_ARGS (parent),
+        error ? ": " : "", error ? error->message : "");
+    g_clear_error (&error);
     return FALSE;
   }
 
@@ -751,6 +760,7 @@ gboolean
 ges_track_element_set_active (GESTrackElement * object, gboolean active)
 {
   GESTimelineElement *parent;
+  GError *error = NULL;
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
   g_return_val_if_fail (object->priv->nleobject, FALSE);
 
@@ -761,9 +771,13 @@ ges_track_element_set_active (GESTrackElement * object, gboolean active)
 
   parent = GES_TIMELINE_ELEMENT_PARENT (object);
   if (GES_IS_CLIP (parent)
-      && !ges_clip_can_set_active_of_child (GES_CLIP (parent), object, active)) {
-    GST_WARNING_OBJECT (object, "Cannot set active to %i because the parent "
-        "clip %" GES_FORMAT " would not allow it", active, GES_ARGS (parent));
+      && !ges_clip_can_set_active_of_child (GES_CLIP (parent), object, active,
+          &error)) {
+    GST_WARNING_OBJECT (object,
+        "Cannot set active to %i because the parent clip %" GES_FORMAT
+        " would not allow it%s%s", active, GES_ARGS (parent), error ? ": " : "",
+        error ? error->message : "");
+    g_clear_error (&error);
     return FALSE;
   }
 
@@ -1057,7 +1071,8 @@ ges_track_element_add_children_props (GESTrackElement * self,
 
 /* INTERNAL USAGE */
 gboolean
-ges_track_element_set_track (GESTrackElement * object, GESTrack * track)
+ges_track_element_set_track (GESTrackElement * object, GESTrack * track,
+    GError ** error)
 {
   GESTimelineElement *parent = GES_TIMELINE_ELEMENT_PARENT (object);
 
@@ -1066,10 +1081,11 @@ ges_track_element_set_track (GESTrackElement * object, GESTrack * track)
   GST_DEBUG_OBJECT (object, "new track: %" GST_PTR_FORMAT, track);
 
   if (GES_IS_CLIP (parent)
-      && !ges_clip_can_set_track_of_child (GES_CLIP (parent), object, track)) {
-    GST_WARNING_OBJECT (object, "The parent clip %" GES_FORMAT " would "
-        "not allow the track to be set to %" GST_PTR_FORMAT,
-        GES_ARGS (parent), track);
+      && !ges_clip_can_set_track_of_child (GES_CLIP (parent), object, track,
+          error)) {
+    GST_INFO_OBJECT (object,
+        "The parent clip %" GES_FORMAT " would not allow the track to be "
+        "set to %" GST_PTR_FORMAT, GES_ARGS (parent), track);
     return FALSE;
   }
 

@@ -383,7 +383,7 @@ ges_track_get_composition (GESTrack * track)
  */
 static gboolean
 remove_object_internal (GESTrack * track, GESTrackElement * object,
-    gboolean emit)
+    gboolean emit, GError ** error)
 {
   GESTrackPrivate *priv;
   GstElement *nleobject;
@@ -397,8 +397,8 @@ remove_object_internal (GESTrack * track, GESTrackElement * object,
     return FALSE;
   }
 
-  if (!ges_track_element_set_track (object, NULL)) {
-    GST_WARNING_OBJECT (track, "Failed to unset the track for %" GES_FORMAT,
+  if (!ges_track_element_set_track (object, NULL, error)) {
+    GST_INFO_OBJECT (track, "Failed to unset the track for %" GES_FORMAT,
         GES_ARGS (object));
     return FALSE;
   }
@@ -426,7 +426,7 @@ remove_object_internal (GESTrack * track, GESTrackElement * object,
 static void
 dispose_trackelements_foreach (GESTrackElement * trackelement, GESTrack * track)
 {
-  remove_object_internal (track, trackelement, TRUE);
+  remove_object_internal (track, trackelement, TRUE, NULL);
 }
 
 /* GstElement virtual methods */
@@ -1110,7 +1110,7 @@ notify:
 
 static gboolean
 remove_element_internal (GESTrack * track, GESTrackElement * object,
-    gboolean emit)
+    gboolean emit, GError ** error)
 {
   GSequenceIter *it;
   GESTrackPrivate *priv = track->priv;
@@ -1120,7 +1120,7 @@ remove_element_internal (GESTrack * track, GESTrackElement * object,
   it = g_hash_table_lookup (priv->trackelements_iter, object);
   g_sequence_remove (it);
 
-  if (remove_object_internal (track, object, emit) == TRUE) {
+  if (remove_object_internal (track, object, emit, error) == TRUE) {
     ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (object), NULL);
 
     return TRUE;
@@ -1134,9 +1134,10 @@ remove_element_internal (GESTrack * track, GESTrackElement * object,
 }
 
 /**
- * ges_track_add_element:
+ * ges_track_add_element_full:
  * @track: A #GESTrack
  * @object: (transfer floating): The element to add
+ * @error: (nullable): Return location for an error
  *
  * Adds the given track element to the track, which takes ownership of the
  * element.
@@ -1149,13 +1150,15 @@ remove_element_internal (GESTrack * track, GESTrackElement * object,
  * Returns: %TRUE if @object was successfully added to @track.
  */
 gboolean
-ges_track_add_element (GESTrack * track, GESTrackElement * object)
+ges_track_add_element_full (GESTrack * track, GESTrackElement * object,
+    GError ** error)
 {
   GESTimeline *timeline;
   GESTimelineElement *el;
 
   g_return_val_if_fail (GES_IS_TRACK (track), FALSE);
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
+  g_return_val_if_fail (!error || !*error, FALSE);
 
   el = GES_TIMELINE_ELEMENT (object);
 
@@ -1170,8 +1173,8 @@ ges_track_add_element (GESTrack * track, GESTrackElement * object)
     return FALSE;
   }
 
-  if (!ges_track_element_set_track (object, track)) {
-    GST_WARNING_OBJECT (track, "Failed to set the track for %" GES_FORMAT,
+  if (!ges_track_element_set_track (object, track, error)) {
+    GST_INFO_OBJECT (track, "Failed to set the track for %" GES_FORMAT,
         GES_ARGS (object));
     gst_object_ref_sink (object);
     gst_object_unref (object);
@@ -1186,7 +1189,9 @@ ges_track_add_element (GESTrack * track, GESTrackElement * object)
   if (G_UNLIKELY (!ges_nle_composition_add_object (track->priv->composition,
               ges_track_element_get_nleobject (object)))) {
     GST_WARNING ("Couldn't add object to the NleComposition");
-    ges_track_element_set_track (object, NULL);
+    if (!ges_track_element_set_track (object, NULL, NULL))
+      GST_ERROR_OBJECT (track, "Failed to unset track of element %"
+          GES_FORMAT, GES_ARGS (object));
     gst_object_ref_sink (object);
     gst_object_unref (object);
     return FALSE;
@@ -1203,12 +1208,13 @@ ges_track_add_element (GESTrack * track, GESTrackElement * object)
    * element to the track */
   if (timeline
       && !timeline_tree_can_move_element (timeline_get_tree (timeline), el,
-          GES_TIMELINE_ELEMENT_LAYER_PRIORITY (el), el->start, el->duration)) {
-    GST_WARNING_OBJECT (track,
+          GES_TIMELINE_ELEMENT_LAYER_PRIORITY (el), el->start, el->duration,
+          error)) {
+    GST_INFO_OBJECT (track,
         "Could not add the track element %" GES_FORMAT
         " to the track because it breaks the timeline " "configuration rules",
         GES_ARGS (el));
-    remove_element_internal (track, object, FALSE);
+    remove_element_internal (track, object, FALSE, NULL);
     return FALSE;
   }
 
@@ -1216,6 +1222,21 @@ ges_track_add_element (GESTrack * track, GESTrackElement * object)
       GES_TRACK_ELEMENT (object));
 
   return TRUE;
+}
+
+/**
+ * ges_track_add_element:
+ * @track: A #GESTrack
+ * @object: (transfer floating): The element to add
+ *
+ * See ges_track_add_element(), which also gives an error.
+ *
+ * Returns: %TRUE if @object was successfully added to @track.
+ */
+gboolean
+ges_track_add_element (GESTrack * track, GESTrackElement * object)
+{
+  return ges_track_add_element_full (track, object, NULL);
 }
 
 /**
@@ -1245,9 +1266,10 @@ ges_track_get_elements (GESTrack * track)
 }
 
 /**
- * ges_track_remove_element:
+ * ges_track_remove_element_full:
  * @track: A #GESTrack
  * @object: The element to remove
+ * @error: (nullable): Return location for an error
  *
  * Removes the given track element from the track, which revokes
  * ownership of the element.
@@ -1255,16 +1277,33 @@ ges_track_get_elements (GESTrack * track)
  * Returns: %TRUE if @object was successfully removed from @track.
  */
 gboolean
-ges_track_remove_element (GESTrack * track, GESTrackElement * object)
+ges_track_remove_element_full (GESTrack * track, GESTrackElement * object,
+    GError ** error)
 {
   g_return_val_if_fail (GES_IS_TRACK (track), FALSE);
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
+  g_return_val_if_fail (!error || !*error, FALSE);
 
   if (!track->priv->timeline
       || !ges_timeline_is_disposed (track->priv->timeline))
     CHECK_THREAD (track);
 
-  return remove_element_internal (track, object, TRUE);
+  return remove_element_internal (track, object, TRUE, error);
+}
+
+/**
+ * ges_track_remove_element:
+ * @track: A #GESTrack
+ * @object: The element to remove
+ *
+ * See ges_track_remove_element_full(), which also returns an error.
+ *
+ * Returns: %TRUE if @object was successfully removed from @track.
+ */
+gboolean
+ges_track_remove_element (GESTrack * track, GESTrackElement * object)
+{
+  return ges_track_remove_element_full (track, object, NULL);
 }
 
 /**
