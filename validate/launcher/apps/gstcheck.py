@@ -71,11 +71,42 @@ class MesonTest(Test):
 
 
 class GstCheckTest(MesonTest):
+    __gst_paths = {}
+
     def get_valgrind_suppressions(self):
         result = super().get_valgrind_suppressions()
         result.extend(get_gst_build_valgrind_suppressions())
 
         return result
+
+    def get_subproc_env(self):
+        bdir = self.test_infos['__bdir__']
+
+        env = super().get_subproc_env()
+        if 'GST_PLUGIN_PATH' not in env and 'GST_PLUGIN_PATH_1_0' not in env:
+            return env
+
+        plugins_path = self.__gst_paths.get(bdir)
+        if not plugins_path:
+            try:
+                with open(os.path.join(bdir, "GstPluginsPath.json")) as f:
+                    plugins_path = self.__gst_paths[bdir] = set(json.load(f))
+            except FileNotFoundError:
+                pass
+
+        if not plugins_path:
+            return env
+
+        cpath = set(env.get('GST_PLUGIN_PATH', '').split(os.pathsep)) | set(env.get('GST_PLUGIN_PATH_1_0', '').split(os.pathsep))
+        cpath -= set(self.options.meson_build_dirs)
+        cpath |= plugins_path
+
+        env['GST_REGISTRY'] = os.path.normpath(bdir + "/registry.dat")
+        env['GST_PLUGIN_PATH'] = os.pathsep.join(cpath)
+        if 'GST_PLUGIN_PATH_1_0' in env:
+            del env['GST_PLUGIN_PATH_1_0']
+
+        return env
 
 
 class MesonTestsManager(TestsManager):
@@ -114,6 +145,8 @@ class MesonTestsManager(TestsManager):
         if not self.options.meson_build_dirs:
             self.options.meson_build_dirs = [config.BUILDDIR]
 
+        self.options.meson_build_dirs = [os.path.realpath(p) for p in self.options.meson_build_dirs]
+
         mesontests = []
         for i, bdir in enumerate(self.options.meson_build_dirs):
             bdir = os.path.abspath(bdir)
@@ -121,6 +154,7 @@ class MesonTestsManager(TestsManager):
                 [meson, 'introspect', '--tests', bdir])
 
             for test_dict in json.loads(output.decode()):
+                test_dict['__bdir__'] = bdir
                 mesontests.append(test_dict)
 
         return mesontests
