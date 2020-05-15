@@ -1264,7 +1264,7 @@ _amc_gl_copy (GstGLSyncMeta * src, GstBuffer * sbuffer, GstGLSyncMeta * dest,
   g_mutex_lock (&sync->sink->gl_lock);
 
   tmp->refcount = 1;
-  tmp->sink = sync->sink;
+  tmp->sink = gst_object_ref (sync->sink);
   tmp->buffer = dbuffer;
   tmp->oes_mem = (GstGLMemory *) gst_memory_ref ((GstMemory *) sync->oes_mem);
   tmp->surface = g_object_ref (sync->surface);
