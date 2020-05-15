@@ -721,7 +721,7 @@ bool GstQuickRenderer::setQmlScene (const gchar * scene, GError ** error)
 
     if (m_errorString != "") {
         g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_SETTINGS,
-            m_errorString.toUtf8());
+            "%s", m_errorString.toUtf8());
         return FALSE;
     }
 
