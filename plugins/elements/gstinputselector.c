@@ -1572,6 +1572,7 @@ gst_input_selector_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
         gst_event_ref (event);
         result |= gst_pad_push_event (eventpad, event);
+        pushed_pads = g_list_append (pushed_pads, eventpad);
 
         g_value_reset (&item);
         break;
