@@ -55,7 +55,6 @@ buffer: pts=0:00:00.460000000, dur=0:00:00.010000000
 buffer: pts=0:00:00.470000000, dur=0:00:00.010000000
 buffer: pts=0:00:00.480000000, dur=0:00:00.010000000
 buffer: pts=0:00:00.490000000, dur=0:00:00.010000000
-event gap: GstEventGap, timestamp=(guint64)500000000, duration=(guint64)18446744073709551615;
 event eos: (no structure)
 event flush-start: (no structure)
 event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
@@ -110,7 +109,6 @@ buffer: pts=0:00:00.460000000, dur=0:00:00.010000000
 buffer: pts=0:00:00.470000000, dur=0:00:00.010000000
 buffer: pts=0:00:00.480000000, dur=0:00:00.010000000
 buffer: pts=0:00:00.490000000, dur=0:00:00.010000000
-event gap: GstEventGap, timestamp=(guint64)500000000, duration=(guint64)18446744073709551615;
 event eos: (no structure)
 event flush-start: (no structure)
 event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
@@ -215,7 +213,6 @@ buffer: pts=0:00:00.960000000, dur=0:00:00.010000000
 buffer: pts=0:00:00.970000000, dur=0:00:00.010000000
 buffer: pts=0:00:00.980000000, dur=0:00:00.010000000
 buffer: pts=0:00:00.990000000, dur=0:00:00.010000000
-event gap: GstEventGap, timestamp=(guint64)1000000000, duration=(guint64)18446744073709551615;
 event eos: (no structure)
 event flush-start: (no structure)
 event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
@@ -270,5 +267,4 @@ buffer: pts=0:00:01.460000000, dur=0:00:00.010000000
 buffer: pts=0:00:01.470000000, dur=0:00:00.010000000
 buffer: pts=0:00:01.480000000, dur=0:00:00.010000000
 buffer: pts=0:00:01.490000000, dur=0:00:00.010000000
-event gap: GstEventGap, timestamp=(guint64)1500000000, duration=(guint64)18446744073709551615;
 event eos: (no structure)

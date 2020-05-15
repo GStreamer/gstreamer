@@ -1,14 +1,14 @@
 meta,
     tool = "ges-launch-$(gst_api_version)",
     args = {
-        --videosink, "$(videosink) name=videosink",
-        --audiosink, "$(audiosink) name=audiosink",
+        --videosink, "$(videosink) sync=false name=videosink",
+        --audiosink, "$(audiosink) sync=false name=audiosink",
     },
     handles-states=true,
     ignore-eos=true,
     configs = {
-        "$(validateflow), pad=videosink:sink, record-buffers=true, ignored-fields=\"stream-start={stream-id,group-id,stream}, segment={position,}\"",
-        "$(validateflow), pad=audiosink:sink, record-buffers=true, ignored-fields=\"stream-start={stream-id,group-id,stream}, segment={position,}\"",
+        "$(validateflow), pad=videosink:sink, record-buffers=true, ignored-fields=\"stream-start={stream-id,group-id,stream}, segment={position,}\", ignored-event-types={gap}",
+        "$(validateflow), pad=audiosink:sink, record-buffers=true, ignored-fields=\"stream-start={stream-id,group-id,stream}, segment={position,}\", ignored-event-types={gap}",
     }
 
 add-clip, name=c0, asset-id=time-overlay, layer-priority=0, type=GESSourceClip, start=0, duration=1.0
