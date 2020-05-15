@@ -962,6 +962,13 @@ set_layer_priority (GESTimelineElement * element, EditData * data,
 
   data->layer_priority = (guint32) (layer_prio - (gint64) layer_offset);
 
+  if (ges_timeline_layer_priority_in_gap (element->timeline,
+          data->layer_priority)) {
+    GST_ERROR_OBJECT (element, "Edit layer %" G_GUINT32_FORMAT " would "
+        "be within a gap in the timeline layers", data->layer_priority);
+    return FALSE;
+  }
+
   GST_INFO_OBJECT (element, "%s will move to layer %" G_GUINT32_FORMAT,
       element->name, data->layer_priority);
 
@@ -1814,6 +1821,13 @@ perform_element_edit (GESTimelineElement * element, EditData * edit)
         edit->layer_priority);
 
     if (layer == NULL) {
+      /* make sure we won't loop forever */
+      if (ges_timeline_layer_priority_in_gap (timeline, edit->layer_priority)) {
+        GST_ERROR_OBJECT (element, "Requested layer %" G_GUINT32_FORMAT
+            " is within a gap in the timeline layers", edit->layer_priority);
+        goto done;
+      }
+
       do {
         layer = ges_timeline_append_layer (timeline);
       } while (ges_layer_get_priority (layer) < edit->layer_priority);

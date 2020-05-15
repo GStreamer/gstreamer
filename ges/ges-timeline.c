@@ -3074,6 +3074,26 @@ ges_timeline_get_layer (GESTimeline * timeline, guint priority)
   return layer;
 }
 
+gboolean
+ges_timeline_layer_priority_in_gap (GESTimeline * timeline, guint priority)
+{
+  GList *tmp;
+
+  CHECK_THREAD (timeline);
+
+  for (tmp = timeline->layers; tmp; tmp = tmp->next) {
+    GESLayer *layer = GES_LAYER (tmp->data);
+    guint tmp_priority = ges_layer_get_priority (layer);
+
+    if (tmp_priority == priority)
+      return FALSE;
+    else if (tmp_priority > priority)
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
 /**
  * ges_timeline_paste_element:
  * @timeline: The #GESTimeline onto which @element should be pasted

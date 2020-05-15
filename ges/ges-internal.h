@@ -121,6 +121,9 @@ ges_timeline_edit (GESTimeline * timeline, GESTimelineElement * element,
     gint64 new_layer_priority, GESEditMode mode, GESEdge edge,
     guint64 position, GError ** error);
 
+G_GNUC_INTERNAL gboolean
+ges_timeline_layer_priority_in_gap (GESTimeline * timeline, guint layer_priority);
+
 G_GNUC_INTERNAL void
 ges_timeline_set_track_selection_error  (GESTimeline * timeline,
                                          gboolean was_error,
